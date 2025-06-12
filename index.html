@@ -5,189 +5,103 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e');
-      background-size: cover;
-      background-position: center;
-      color: #333;
-      padding: 20px;
-    }
-    .container {
-      max-width: 800px;
-      margin: auto;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #ccc;
-    }
+    body { font-family: Arial, sans-serif; background-image: url('https://source.unsplash.com/featured/?california,coast'); background-size: cover; color: #333; padding: 20px; }
+    .container { max-width: 800px; margin: auto; background: rgba(255,255,255,0.9); padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
     h1, h2 { text-align: center; }
     form { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
     label { font-weight: bold; }
-    input, select, textarea, button {
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      width: 100%;
-    }
-    button {
-      background-color: #007BFF;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
+    input, select, textarea { padding: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; }
+    button { padding: 12px; background-color: #007BFF; color: white; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; }
     button:hover { background-color: #0056b3; }
-    #totalCostBox {
-      margin-top: 20px;
-      padding: 15px;
-      background-color: #e9f5ff;
-      border: 1px solid #b3d8ff;
-      border-radius: 8px;
-    }
+    #totalCostBox { margin-top: 20px; padding: 15px; background-color: #e9f5ff; border: 1px solid #b3d8ff; border-radius: 8px; }
     #totalCostBox p { margin: 6px 0; }
     .highlight { font-weight: bold; color: #007BFF; }
-    .lang-switch { text-align: right; margin-bottom: 10px; }
-    .lang-switch button { margin-left: 10px; padding: 6px 10px; font-size: 14px; }
-    @media (max-width: 600px) {
-      .container { padding: 10px; }
-      h1, h2 { font-size: 20px; }
-    }
   </style>
   <script>
-    function switchLang(lang) {
-      const elements = document.querySelectorAll('[data-vi], [data-en]');
-      elements.forEach(el => {
-        el.textContent = el.getAttribute(`data-${lang}`);
-      });
-    }
+    function showTicketOptions() {
+      const peopleCount = parseInt(document.getElementById("people").value);
+      const ticketContainer = document.getElementById("ticketOptions");
+      ticketContainer.innerHTML = '';
+      if (!peopleCount || peopleCount < 1) return;
 
-    function calculateCost() {
-      const people = parseInt(document.getElementById("people").value) || 0;
-      const days = parseInt(document.getElementById("days").value) || 0;
-      const disneyAdult = parseInt(document.getElementById("disneyAdult").value) || 0;
-      const disneyChild = parseInt(document.getElementById("disneyChild").value) || 0;
-      const universalAdult = parseInt(document.getElementById("universalAdult").value) || 0;
-      const universalChild = parseInt(document.getElementById("universalChild").value) || 0;
-      const homecookDays = parseInt(document.getElementById("homecookDays").value) || 0;
+      // Disneyland Ticket Options
+      ticketContainer.innerHTML += `<h3>Disneyland Ticket Options</h3>
+        <label>Người lớn (Regular): <input type='number' min='0' max='${peopleCount}' name='dlAdultRegular'></label>
+        <label>Trẻ em (Regular): <input type='number' min='0' max='${peopleCount}' name='dlChildRegular'></label>
+        <label>Người lớn (VIP): <input type='number' min='0' max='${peopleCount}' name='dlAdultVIP'></label>
+        <label>Trẻ em (VIP): <input type='number' min='0' max='${peopleCount}' name='dlChildVIP'></label>
+        <label>Chọn công viên: 
+          <select name='dlParkOption'>
+            <option value='single'>Một công viên</option>
+            <option value='both'>Cả hai công viên</option>
+          </select>
+        </label>`;
 
-      const selectedDestinations = document.querySelectorAll('input[name="destination"]:checked');
-
-      let totalTicket = 0;
-      let totalFood = 0;
-      let totalLodging = 0;
-
-      totalTicket += disneyAdult * 150 + disneyChild * 130;
-      totalTicket += universalAdult * 140 + universalChild * 120;
-
-      selectedDestinations.forEach(dest => {
-        switch (dest.value) {
-          case "San Francisco":
-            totalFood += 60;
-            totalLodging += 90;
-            break;
-          case "Las Vegas":
-            totalTicket += 90;
-            totalFood += 70;
-            totalLodging += 120;
-            break;
-          case "Grand Canyon":
-            totalTicket += 110;
-            totalFood += 60;
-            totalLodging += 90;
-            break;
-          case "Yosemite":
-            totalTicket += 90;
-            totalFood += 50;
-            totalLodging += 90;
-            break;
-          case "Orange County Food Tour":
-            totalTicket += 30;
-            totalFood += 90;
-            totalLodging += 60;
-            break;
-          case "Bay Area Food Tour":
-            totalTicket += 40;
-            totalFood += 100;
-            totalLodging += 70;
-            break;
-        }
-      });
-
-      const homecookCost = homecookDays * 35;
-      const dailyCostPerPerson = totalTicket + totalFood + totalLodging;
-      const totalCost = (people * days * dailyCostPerPerson) + (people * homecookCost);
-
-      document.getElementById("costBreakdown").innerHTML = `
-        <p>🎟️ Vé mỗi người/ngày: <span class="highlight">$${totalTicket}</span></p>
-        <p>🍜 Ăn uống mỗi người/ngày: <span class="highlight">$${totalFood}</span></p>
-        <p>🏨 Nhà nghỉ mỗi người/ngày: <span class="highlight">$${totalLodging}</span></p>
-        <p>🍲 Ăn tại nhà (Bay Area): <span class="highlight">$${homecookDays * 35}/người cho ${homecookDays} ngày</span></p>
-        <p>👉 Tổng mỗi người/ngày: <span class="highlight">$${dailyCostPerPerson}</span></p>
-        <p>👥 Tổng chi phí cho ${people} người × ${days} ngày + ăn tại nhà: <span class="highlight">$${totalCost}</span></p>
-      `;
+      // Universal Studios Ticket Options
+      ticketContainer.innerHTML += `<h3>Universal Studios Ticket Options</h3>
+        <label>Người lớn (Regular): <input type='number' min='0' max='${peopleCount}' name='usAdultRegular'></label>
+        <label>Trẻ em (Regular): <input type='number' min='0' max='${peopleCount}' name='usChildRegular'></label>
+        <label>Người lớn (Express Pass): <input type='number' min='0' max='${peopleCount}' name='usAdultVIP'></label>
+        <label>Trẻ em (Express Pass): <input type='number' min='0' max='${peopleCount}' name='usChildVIP'></label>`;
     }
   </script>
 </head>
 <body>
   <div class="container">
-    <div class="lang-switch">
-      <button onclick="switchLang('vi')">🇻🇳 Tiếng Việt</button>
-      <button onclick="switchLang('en')">🇺🇸 English</button>
-    </div>
-    <h1 data-vi="Dịch Vụ Du Lịch Cao Cấp tại Mỹ" data-en="Premium Travel Services in the U.S.">Dịch Vụ Du Lịch Cao Cấp tại Mỹ</h1>
-    <p data-vi="Đặt xe Mercedes 12 chỗ để tham quan California, Nevada và các điểm đến nổi tiếng!" data-en="Book a 12-seat Mercedes van to tour California, Nevada, and popular destinations!">Đặt xe Mercedes 12 chỗ để tham quan California, Nevada và các điểm đến nổi tiếng!</p>
+    <h1>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</h1>
+    <p>Xe Mercedes 12 chỗ, tài xế thân thiện, hành trình trọn gói!</p>
 
-    <h2 data-vi="Đặt Lịch Ngay" data-en="Book Now">Đặt Lịch Ngay</h2>
-    <form oninput="calculateCost()">
-      <label for="name">Họ và tên / Full Name:</label>
+    <h2>Đặt Lịch Ngay</h2>
+    <form action="https://formsubmit.co/johnntd@gmail.com" method="POST" oninput="calculateCost(); showTicketOptions()">
+      <input type="hidden" name="_next" value="https://johnntd.github.io/DuLichCali/thankyou.html">
+      <label for="name">Họ và tên:</label>
       <input type="text" id="name" name="name" required>
 
-      <label for="phone">Số điện thoại / Phone:</label>
+      <label for="phone">Số điện thoại:</label>
       <input type="tel" id="phone" name="phone" required>
 
       <label for="email">Email:</label>
       <input type="email" id="email" name="email">
 
-      <label for="date">Ngày muốn đi / Travel Date:</label>
+      <label for="date">Ngày muốn đi:</label>
       <input type="date" id="date" name="date" required>
 
-      <label for="people">Số người / Number of People (1–12):</label>
+      <label for="people">Số người (tối đa 12):</label>
       <input type="number" id="people" name="people" min="1" max="12" required>
 
-      <label for="days">Số ngày tham quan / Days of Travel:</label>
+      <label for="days">Số ngày tham quan:</label>
       <input type="number" id="days" name="days" min="1" max="14" required>
 
-      <label>Vé Disneyland:</label>
-      <input type="number" id="disneyAdult" placeholder="Người lớn / Adult ($150)" min="0">
-      <input type="number" id="disneyChild" placeholder="Trẻ em / Child ($130)" min="0">
+      <div id="ticketOptions"></div>
 
-      <label>Vé Universal Studios:</label>
-      <input type="number" id="universalAdult" placeholder="Người lớn / Adult ($140)" min="0">
-      <input type="number" id="universalChild" placeholder="Trẻ em / Child ($120)" min="0">
+      <label>Chọn các điểm muốn đi:</label>
+      <div>
+        <label><input type="checkbox" name="destination" value="Disneyland"> ✅ Disneyland</label><br>
+        <label><input type="checkbox" name="destination" value="Universal Studios"> ✅ Universal Studios</label><br>
+        <label><input type="checkbox" name="destination" value="San Francisco"> ✅ San Francisco</label><br>
+        <label><input type="checkbox" name="destination" value="Las Vegas"> ✅ Las Vegas</label><br>
+        <label><input type="checkbox" name="destination" value="Grand Canyon"> ✅ Grand Canyon</label><br>
+        <label><input type="checkbox" name="destination" value="Yosemite"> ✅ Yosemite</label><br>
+        <label><input type="checkbox" name="destination" value="Orange County Food Tour"> ✅ Orange County Food Tour</label><br>
+        <label><input type="checkbox" name="destination" value="Bay Area Food Tour"> ✅ Bay Area Food Tour</label>
+      </div>
 
-      <label>Chọn các điểm tham quan khác:</label>
-      <label><input type="checkbox" name="destination" value="San Francisco"> ✅ San Francisco</label><br>
-      <label><input type="checkbox" name="destination" value="Las Vegas"> ✅ Las Vegas</label><br>
-      <label><input type="checkbox" name="destination" value="Grand Canyon"> ✅ Grand Canyon</label><br>
-      <label><input type="checkbox" name="destination" value="Yosemite"> ✅ Yosemite</label><br>
-      <label><input type="checkbox" name="destination" value="Orange County Food Tour"> ✅ Orange County Food Tour</label><br>
-      <label><input type="checkbox" name="destination" value="Bay Area Food Tour"> ✅ Bay Area Food Tour</label><br>
+      <label><input type="checkbox" id="airport" name="airport"> ✅ Đưa đón sân bay</label><br>
 
-      <label for="homecookDays">Số ngày ăn tại nhà (Bay Area Only) / Home-cooked Days:</label>
+      <label for="homecookDays">Số ngày muốn ăn tại nhà (Bay Area):</label>
       <input type="number" id="homecookDays" name="homecookDays" min="0" max="14">
 
-      <label for="message">Ghi chú thêm / Additional Notes:</label>
+      <label for="message">Ghi chú thêm:</label>
       <textarea id="message" name="message" rows="4"></textarea>
 
       <div id="totalCostBox">
-        <h3>📊 Ước Tính Chi Phí / Estimated Cost:</h3>
+        <h3>📊 Ước Tính Chi Phí:</h3>
         <div id="costBreakdown">
           <p>Chọn điểm đến, số người và số ngày để xem chi phí...</p>
         </div>
       </div>
 
-      <button type="submit">Gửi Yêu Cầu / Submit Request</button>
+      <button type="submit">Gửi Yêu Cầu</button>
     </form>
   </div>
 </body>

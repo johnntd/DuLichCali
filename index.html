@@ -1,0 +1,356 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Description" content="Grok is a free AI assistant designed by xAI to maximize truth and objectivity. Grok offers real-time search, image generation, trend analysis, and more.">
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.6">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Times; -webkit-text-stroke: #000000}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Times; -webkit-text-stroke: #000000; min-height: 14.0px}
+    p.p3 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Times; -webkit-text-stroke: #000000; min-height: 18.0px}
+    p.p4 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Times; -webkit-text-stroke: #000000}
+    li.li5 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Times; color: #0d121f}
+    span.s1 {font-kerning: none}
+    ol.ol1 {list-style-type: decimal}
+  </style>
+</head>
+<body>
+<p class="p1"><span class="s1">&lt;!DOCTYPE html&gt;</span></p>
+<p class="p1"><span class="s1">&lt;html lang="vi"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;head&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;meta charset="UTF-8"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;title&gt;Dịch Vụ Du Lịch Cao Cấp tại Mỹ&lt;/title&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;style&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>body { font-family: Arial, sans-serif; background-color: #f0f0f5; color: #333; padding: 20px; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>h1, h2 { text-align: center; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>form { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>label { font-weight: bold; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>input, select, textarea { padding: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>button { padding: 12px; background-color: #007BFF; color: white; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>button:hover { background-color: #0056b3; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>#totalCostBox { margin-top: 20px; padding: 15px; background-color: #e9f5ff; border: 1px solid #b3d8ff; border-radius: 8px; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>#totalCostBox p { margin: 6px 0; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.highlight { font-weight: bold; color: #007BFF; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;/style&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;script&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>function calculateCost() {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const people = parseInt(document.getElementById("people").value) || 0;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const days = parseInt(document.getElementById("days").value) || 0;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const checkboxes = document.querySelectorAll('input[name="destination"]:checked');</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>let totalTicket = 0;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>let totalFood = 0;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>let totalLodging = 0;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>let airportTransfer = document.getElementById("airport").checked ? 120 : 0;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>let homeCookMeal = document.getElementById("homecook").checked ? 25 * people * days : 0;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>checkboxes.forEach(cb =&gt; {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>switch (cb.value) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>case "Disneyland":</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalTicket += 150; // base ticket, 1-day</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalFood += 50;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalLodging += 80;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>break;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>case "Universal Studios":</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalTicket += 109; // standard 1-day ticket</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalFood += 50;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalLodging += 80;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>break;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>case "San Diego Zoo":</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalTicket += 76;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalFood += 40;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalLodging += 80;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>break;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>case "Bay Area High Tech Tour":</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalTicket += 185;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalFood += 60;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalLodging += 100;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>break;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>case "San Francisco":</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalFood += 60;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalLodging += 100;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>break;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>case "Las Vegas":</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalTicket += 90;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalFood += 70;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalLodging += 120;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>break;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>case "Grand Canyon":</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalTicket += 110;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalFood += 60;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalLodging += 90;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>break;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>case "Yosemite":</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalTicket += 90;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalFood += 50;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalLodging += 90;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>break;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>case "Orange County Food Tour":</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalTicket += 30;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalFood += 90;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalLodging += 60;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>break;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>case "Bay Area Food Tour":</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalTicket += 40;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalFood += 100;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>totalLodging += 70;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>break;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>});</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const ticketPerPerson = totalTicket;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const foodPerPerson = totalFood;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const lodgingPerPerson = totalLodging;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const dailyCostPerPerson = ticketPerPerson + foodPerPerson + lodgingPerPerson;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const totalTripCost = people * days * dailyCostPerPerson + airportTransfer + homeCookMeal;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>document.getElementById("costBreakdown").innerHTML = `</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;p&gt;🎟️ Vé vào cổng mỗi người/ngày: &lt;span class="highlight"&gt;$${ticketPerPerson}&lt;/span&gt;&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;p&gt;🍜 Ăn uống mỗi người/ngày: &lt;span class="highlight"&gt;$${foodPerPerson}&lt;/span&gt;&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;p&gt;🏨 Nhà nghỉ mỗi người/ngày: &lt;span class="highlight"&gt;$${lodgingPerPerson}&lt;/span&gt;&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;p&gt;🚐 Phí đưa đón sân bay: &lt;span class="highlight"&gt;$${airportTransfer}&lt;/span&gt;&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;p&gt;👩‍🍳 Bữa ăn nấu tại nhà: &lt;span class="highlight"&gt;$${homeCookMeal}&lt;/span&gt;&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;p&gt;👉 Tổng mỗi người/ngày: &lt;span class="highlight"&gt;$${dailyCostPerPerson}&lt;/span&gt;&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;p&gt;👥 Tổng chi phí cho ${people} người × ${days} ngày: &lt;span class="highlight"&gt;$${totalTripCost}&lt;/span&gt;&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;/script&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/head&gt;</span></p>
+<p class="p1"><span class="s1">&lt;body&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;div class="container"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;h1&gt;Dịch Vụ Du Lịch Cao Cấp tại Mỹ&lt;/h1&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;p&gt;Đặt xe Mercedes 12 chỗ để tham quan California, Nevada và các điểm đến nổi tiếng!&lt;/p&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;h2&gt;Đặt Lịch Ngay&lt;/h2&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;form oninput="calculateCost()"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;label for="name"&gt;Họ và tên:&lt;/label&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;input type="text" id="name" name="name" required&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;label for="phone"&gt;Số điện thoại:&lt;/label&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;input type="tel" id="phone" name="phone" required&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;label for="email"&gt;Email:&lt;/label&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;input type="email" id="email" name="email"&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;label for="date"&gt;Ngày muốn đi:&lt;/label&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;input type="date" id="date" name="date" required&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;label for="people"&gt;Số người (tối đa 12):&lt;/label&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;input type="number" id="people" name="people" min="1" max="12" required&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;label for="days"&gt;Số ngày tham quan:&lt;/label&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;input type="number" id="days" name="days" min="1" max="14" required&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;label&gt;Chọn các điểm muốn đi:&lt;/label&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;label&gt;&lt;input type="checkbox" name="destination" value="Disneyland"&gt; ✅ Disneyland&lt;/label&gt;&lt;br&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;label&gt;&lt;input type="checkbox" name="destination" value="Universal Studios"&gt; ✅ Universal Studios&lt;/label&gt;&lt;br&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;label&gt;&lt;input type="checkbox" name="destination" value="San Diego Zoo"&gt; ✅ San Diego Zoo&lt;/label&gt;&lt;br&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;label&gt;&lt;input type="checkbox" name="destination" value="Bay Area High Tech Tour"&gt; ✅ Bay Area High Tech Tour&lt;/label&gt;&lt;br&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;label&gt;&lt;input type="checkbox" name="destination" value="San Francisco"&gt; ✅ San Francisco&lt;/label&gt;&lt;br&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;label&gt;&lt;input type="checkbox" name="destination" value="Las Vegas"&gt; ✅ Las Vegas&lt;/label&gt;&lt;br&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;label&gt;&lt;input type="checkbox" name="destination" value="Grand Canyon"&gt; ✅ Grand Canyon&lt;/label&gt;&lt;br&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;label&gt;&lt;input type="checkbox" name="destination" value="Yosemite"&gt; ✅ Yosemite&lt;/label&gt;&lt;br&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;label&gt;&lt;input type="checkbox" name="destination" value="Orange County Food Tour"&gt; ✅ Orange County Food Tour&lt;/label&gt;&lt;br&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;label&gt;&lt;input type="checkbox" name="destination" value="Bay Area Food Tour"&gt; ✅ Bay Area Food Tour&lt;/label&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;label&gt;&lt;input type="checkbox" id="airport"&gt; 🚐 Thêm dịch vụ đưa đón sân bay ($120/lượt)&lt;/label&gt;&lt;br&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;label&gt;&lt;input type="checkbox" id="homecook"&gt; 👩‍🍳 Bữa ăn nấu tại nhà ($25/người/ngày)&lt;/label&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;label for="message"&gt;Ghi chú thêm:&lt;/label&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;textarea id="message" name="message" rows="4"&gt;&lt;/textarea&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;div id="totalCostBox"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;h3&gt;📊 Ước Tính Chi Phí:&lt;/h3&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div id="costBreakdown"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>&lt;p&gt;Chọn điểm đến, số người và số ngày để xem chi phí...&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;button type="submit"&gt;Gửi Yêu Cầu&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/form&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/body&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/html&gt;</span></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p4"><span class="s1">                  onChange={handleChange}</span></p>
+<p class="p4"><span class="s1">                  className="w-full px-4 py-2 border rounded-lg"</span></p>
+<p class="p4"><span class="s1">                  rows="4"</span></p>
+<p class="p4"><span class="s1">                &gt;&lt;/textarea&gt;</span></p>
+<p class="p4"><span class="s1">              &lt;/div&gt;</span></p>
+<p class="p4"><span class="s1">              &lt;button type="submit" className="w-full bg-yellow-500 text-black px-6 py-3 rounded-lg font-semibold </span></p>
+<p class="p4"><span class="s1">              hover:bg-yellow-600"&gt;</span></p>
+<p class="p4"><span class="s1">                Submit Booking</span></p>
+<p class="p4"><span class="s1">              &lt;/button&gt;</span></p>
+<p class="p4"><span class="s1">            &lt;/form&gt;</span></p>
+<p class="p4"><span class="s1">          &lt;/div&gt;</span></p>
+<p class="p4"><span class="s1">        &lt;/section&gt;</span></p>
+<p class="p4"><span class="s1">      );</span></p>
+<p class="p4"><span class="s1">    };</span></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p4"><span class="s1">    // About Component</span></p>
+<p class="p4"><span class="s1">    const About = () =&gt; (</span></p>
+<p class="p4"><span class="s1">      &lt;section id="about" className="py-16 bg-gray-100"&gt;</span></p>
+<p class="p4"><span class="s1">        &lt;div className="container mx-auto px-4"&gt;</span></p>
+<p class="p4"><span class="s1">          &lt;h2 className="text-3xl font-bold text-center mb-12"&gt;About Us&lt;/h2&gt;</span></p>
+<p class="p4"><span class="s1">          &lt;p className="text-lg max-w-2xl mx-auto"&gt;</span></p>
+<p class="p4"><span class="s1">            StarSprinter Tours offers premium transportation and tours in a 12-seat Mercedes-Benz van. Based in </span></p>
+<p class="p4"><span class="s1">            Los Angeles, we serve California and Nevada, providing safe, comfortable, and memorable experiences. </span></p>
+<p class="p4"><span class="s1">            Whether it’s an airport transfer or a tour to Yosemite, we’re here to make your journey unforgettable.</span></p>
+<p class="p4"><span class="s1">          &lt;/p&gt;</span></p>
+<p class="p4"><span class="s1">        &lt;/div&gt;</span></p>
+<p class="p4"><span class="s1">      &lt;/section&gt;</span></p>
+<p class="p4"><span class="s1">    );</span></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p4"><span class="s1">    // Contact Component</span></p>
+<p class="p4"><span class="s1">    const Contact = () =&gt; (</span></p>
+<p class="p4"><span class="s1">      &lt;section id="contact" className="py-16"&gt;</span></p>
+<p class="p4"><span class="s1">        &lt;div className="container mx-auto px-4"&gt;</span></p>
+<p class="p4"><span class="s1">          &lt;h2 className="text-3xl font-bold text-center mb-12"&gt;Contact Us&lt;/h2&gt;</span></p>
+<p class="p4"><span class="s1">          &lt;div className="text-center"&gt;</span></p>
+<p class="p4"><span class="s1">            &lt;p className="mb-4"&gt;Phone: (555) 123-4567&lt;/p&gt;</span></p>
+<p class="p4"><span class="s1">            &lt;p className="mb-4"&gt;Email: info@starsprintertours.com&lt;/p&gt;</span></p>
+<p class="p4"><span class="s1">            &lt;p className="mb-4"&gt;</span></p>
+<p class="p4"><span class="s1">              Follow us: </span></p>
+<p class="p4"><span class="s1">              &lt;a href="https://instagram.com" className="text-yellow-500 mx-2"&gt;Instagram&lt;/a&gt; | </span></p>
+<p class="p4"><span class="s1">              &lt;a href="https://tiktok.com" className="text-yellow-500 mx-2"&gt;TikTok&lt;/a&gt;</span></p>
+<p class="p4"><span class="s1">            &lt;/p&gt;</span></p>
+<p class="p4"><span class="s1">          &lt;/div&gt;</span></p>
+<p class="p4"><span class="s1">        &lt;/div&gt;</span></p>
+<p class="p4"><span class="s1">      &lt;/section&gt;</span></p>
+<p class="p4"><span class="s1">    );</span></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p4"><span class="s1">    // Footer Component</span></p>
+<p class="p4"><span class="s1">    const Footer = () =&gt; (</span></p>
+<p class="p4"><span class="s1">      &lt;footer className="bg-gray-900 text-white py-6"&gt;</span></p>
+<p class="p4"><span class="s1">        &lt;div className="container mx-auto px-4 text-center"&gt;</span></p>
+<p class="p4"><span class="s1">          &lt;p&gt;&amp;copy; 2025 StarSprinter Tours. All rights reserved.&lt;/p&gt;</span></p>
+<p class="p4"><span class="s1">        &lt;/div&gt;</span></p>
+<p class="p4"><span class="s1">      &lt;/footer&gt;</span></p>
+<p class="p4"><span class="s1">    );</span></p>
+<p class="p3"><span class="s1"></span><br></p>
+<p class="p4"><span class="s1">    // Main App Component</span></p>
+<p class="p4"><span class="s1">    const App = () =&gt; (</span></p>
+<p class="p4"><span class="s1">      &lt;div&gt;</span></p>
+<p class="p4"><span class="s1">        &lt;Hero /&gt;</span></p>
+<p class="p4"><span class="s1">        &lt;Services /&gt;</span></p>
+<p class="p4"><span class="s1">        &lt;BookingForm /&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">New conversation - Grok</span></p>
+<ol class="ol1">
+  <li class="li5"></li>
+</ol>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p2"><span class="s1"></span><br></p>
+</body>
+</html>

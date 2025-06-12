@@ -1,210 +1,144 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-image: url('https://source.unsplash.com/featured/?california,coast');
-      background-size: cover;
-      margin: 0;
-      padding: 20px;
-    }
-    .container {
-      background: rgba(255, 255, 255, 0.95);
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 900px;
-      margin: auto;
-      box-shadow: 0 0 10px #aaa;
-    }
-    h1, h2 {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-    label {
-      font-weight: bold;
-      margin-top: 10px;
-      display: block;
-    }
-    input, select, textarea {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      margin-top: 5px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    .cost-box {
-      margin-top: 20px;
-      padding: 15px;
-      background: #f5faff;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-    .highlight {
-      font-weight: bold;
-      color: #007BFF;
-    }
-    .language-toggle {
-      text-align: right;
-      margin-bottom: 10px;
-    }
-    button {
-      background-color: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      padding: 12px;
-      font-size: 16px;
-      cursor: pointer;
-      margin-top: 20px;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Load Google Maps JavaScript API once -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2hdNmd5pVvTynpInJn3DN7htrOLlK0CE&libraries=places" defer></script>
 </head>
 <body>
-  <div class="language-toggle">
-    <button onclick="toggleLanguage()">🌐 Ngôn ngữ / Language</button>
-  </div>
+  <header>
+    <img src="logo.png" alt="Business Logo" id="logo" />
+    <h1>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</h1>
+    <div id="language-toggle">
+      <button onclick="setLanguage('en')">English</button>
+      <button onclick="setLanguage('vi')">Tiếng Việt</button>
+    </div>
+  </header>
 
-  <div class="container">
-    <h1 id="heading">Dịch Vụ Du Lịch Cao Cấp tại Mỹ</h1>
-    <form id="travelForm" onsubmit="return submitForm(event)">
-      <label for="serviceType">Loại dịch vụ / Service Type</label>
-      <select id="serviceType" name="serviceType" onchange="toggleSections()">
-        <option value="airport">🚗 Đưa đón sân bay / Airport Service</option>
-        <option value="tour">🌄 Gói du lịch / Travel Package</option>
-      </select>
+  <main>
+    <section id="service-selection">
+      <label><input type="radio" name="serviceType" value="airport" checked /> 🚗 Airport Service</label>
+      <label><input type="radio" name="serviceType" value="travel" /> 🌄 Travel Package</label>
+    </section>
 
-      <div id="airportSection">
-        <label for="airportMode">Chọn loại / Type</label>
-        <select id="airportMode" name="airportMode">
-          <option value="pickup">Đón tại sân bay / Pickup</option>
-          <option value="dropoff">Đưa ra sân bay / Drop-off</option>
-        </select>
+    <form id="travel-form" action="https://formsubmit.co/johnntd@gmail.com" method="POST">
+      <!-- Airport Pickup/Drop-off Section -->
+      <div id="airport-section">
+        <label>Pickup or Drop-off:
+          <select name="airportService">
+            <option value="pickup">Pickup</option>
+            <option value="dropoff">Drop-off</option>
+          </select>
+        </label>
 
-        <label for="airport">Chọn sân bay / Select Airport</label>
-        <select id="airport" name="airport">
-          <option value="SNA">Orange County (SNA)</option>
-          <option value="LAX">LAX</option>
-          <option value="LGB">Long Beach (LGB)</option>
-        </select>
+        <label>Airport:
+          <select name="airport">
+            <option value="SNA">Orange County (SNA)</option>
+            <option value="LAX">Los Angeles International (LAX)</option>
+            <option value="LGB">Long Beach (LGB)</option>
+          </select>
+        </label>
 
-        <label for="people">Số người / Number of People</label>
-        <input type="number" id="people" name="people" min="1" max="12" required />
+        <fieldset>
+          <legend>Pickup/Drop-off Address</legend>
+          <input type="text" name="addressStreet" placeholder="Street Address" required />
+          <input type="text" name="addressCity" placeholder="City" required />
+          <input type="text" name="addressState" placeholder="State" required />
+          <input type="text" name="addressZip" placeholder="ZIP Code" required />
+        </fieldset>
 
-        <label>Địa chỉ cần đón/trả / Address</label>
-        <input type="text" id="street" name="street" placeholder="Số và tên đường" required />
-        <input type="text" id="city" name="city" placeholder="Thành phố" required />
-        <input type="text" id="state" name="state" placeholder="Tiểu bang" required />
-        <input type="text" id="zip" name="zip" placeholder="Mã vùng" required />
+        <label>Number of People:
+          <input type="number" name="numPeople" min="1" max="12" value="1" />
+        </label>
 
-        <label for="date">Ngày / Date</label>
-        <input type="date" id="date" name="date" required />
+        <label>Date:
+          <input type="date" name="airportDate" required />
+        </label>
 
-        <label for="time">Giờ / Time</label>
-        <input type="time" id="time" name="time" required />
+        <label>Time:
+          <input type="time" name="airportTime" required />
+        </label>
+
+        <div id="airport-cost">Estimated Cost: $<span>0</span></div>
       </div>
 
-      <div class="cost-box" id="costEstimate">
-        <p><strong>Chi phí ước tính / Estimated Cost:</strong></p>
-        <p>📍 Vận chuyển / Transport: <span id="transportCost" class="highlight">$0</span></p>
-        <p><strong>Tổng cộng / Total:</strong> <span id="totalCost" class="highlight">$0</span></p>
+      <!-- Travel Package Section -->
+      <div id="travel-section" style="display: none;">
+        <label>Destinations:
+          <select name="destinations" multiple size="10">
+            <option>Disneyland Park</option>
+            <option>California Adventure Park</option>
+            <option>Universal Studios</option>
+            <option>San Diego Zoo</option>
+            <option>SeaWorld</option>
+            <option>LegoLand</option>
+            <option>Las Vegas</option>
+            <option>Grand Canyon</option>
+            <option>San Francisco</option>
+            <option>Yosemite</option>
+            <option>Lake Tahoe</option>
+            <option>Reno</option>
+            <option>Silicon Valley (Apple, Google, Facebook)</option>
+          </select>
+        </label>
+
+        <label>Travelers:
+          <input type="number" name="travelers" min="1" max="12" value="1" />
+        </label>
+
+        <label>Travel Days:
+          <input type="number" name="travelDays" min="1" />
+        </label>
+
+        <label>Stay:
+          <select name="stayType">
+            <option value="hotel">Hotel (~$180/night)</option>
+            <option value="airbnb">Airbnb (~$140/night)</option>
+          </select>
+        </label>
+
+        <label>Home-cooked Meals (Bay Area):
+          <input type="number" name="mealDays" min="0" value="0" />
+        </label>
+
+        <label>Pickup Date:
+          <input type="date" name="travelDate" />
+        </label>
+
+        <label>Pickup Time:
+          <input type="time" name="travelTime" />
+        </label>
+
+        <label>Include airport pickup?
+          <input type="checkbox" name="includeAirport" />
+        </label>
+
+        <div id="travel-cost-breakdown">
+          <p>Tickets: $<span id="ticketCost">0</span></p>
+          <p>Meals: $<span id="mealCost">0</span></p>
+          <p>Stay: $<span id="stayCost">0</span></p>
+          <p>Transport: $<span id="transportCost">0</span></p>
+          <strong>Total: $<span id="totalCost">0</span></strong>
+        </div>
       </div>
 
-      <label>Phương thức thanh toán / Payment</label>
-      <select id="payment" name="payment">
-        <option value="paypal">💳 Thanh toán ngay qua PayPal</option>
-        <option value="cash">💵 Thanh toán khi đón</option>
-      </select>
+      <!-- Payment Options -->
+      <fieldset>
+        <legend>Payment</legend>
+        <label><input type="radio" name="payment" value="paypal" checked /> Pay via PayPal</label>
+        <label><input type="radio" name="payment" value="later" /> Pay on Pickup</label>
+      </fieldset>
 
-      <label for="name">Họ và tên / Full Name</label>
-      <input type="text" id="name" name="name" required />
-
-      <label for="phone">Số điện thoại / Phone</label>
-      <input type="tel" id="phone" name="phone" required />
-
-      <label for="email">Email</label>
-      <input type="email" id="email" name="email" />
-
-      <button type="submit">Gửi yêu cầu / Submit Request</button>
+      <input type="hidden" name="_next" value="https://johnntd.github.io/DuLichCali/thankyou.html" />
+      <input type="submit" value="Submit" />
     </form>
-  </div>
+  </main>
 
-  <script>
-    function toggleSections() {
-      const serviceType = document.getElementById("serviceType").value;
-      document.getElementById("airportSection").style.display = serviceType === "airport" ? "block" : "none";
-    }
-
-    function toggleLanguage() {
-      const currentLang = document.documentElement.lang;
-      const newLang = currentLang === "vi" ? "en" : "vi";
-      document.documentElement.lang = newLang;
-      document.getElementById("heading").textContent =
-        newLang === "en" ? "Premium Travel Services in the U.S." : "Dịch Vụ Du Lịch Cao Cấp tại Mỹ";
-      // You can expand to toggle more elements as needed
-    }
-
-    function calculateDistanceAndCost() {
-      const service = document.getElementById("serviceType").value;
-      if (service !== "airport") return;
-
-      const origin = "Orange County, CA";
-      const destination = `${document.getElementById("street").value}, ${document.getElementById("city").value}, ${document.getElementById("state").value} ${document.getElementById("zip").value}`;
-
-      const serviceType = document.getElementById("airportMode").value;
-      const passengers = parseInt(document.getElementById("people").value) || 1;
-
-      const baseRate = 2.5; // dollars per mile
-
-      const service = new google.maps.DistanceMatrixService();
-      service.getDistanceMatrix(
-        {
-          origins: [origin],
-          destinations: [destination],
-          travelMode: 'DRIVING',
-          unitSystem: google.maps.UnitSystem.IMPERIAL,
-        },
-        (response, status) => {
-          if (status === "OK") {
-            const distanceText = response.rows[0].elements[0].distance.text;
-            const miles = parseFloat(distanceText.replace(/[^\d.]/g, ""));
-            let cost = miles * baseRate * 2; // round trip
-
-            if (passengers > 3) {
-              cost += (passengers - 3) * 10;
-            }
-
-            document.getElementById("transportCost").textContent = `$${cost.toFixed(2)}`;
-            document.getElementById("totalCost").textContent = `$${cost.toFixed(2)}`;
-          }
-        }
-      );
-    }
-
-    function submitForm(event) {
-      event.preventDefault();
-      alert("Form submitted! Email and text functionality to be integrated.");
-      return false;
-    }
-
-    // Auto-calculate on input changes
-    document.querySelectorAll("#street, #city, #state, #zip, #people").forEach(input => {
-      input.addEventListener("change", calculateDistanceAndCost);
-    });
-
-    window.addEventListener("DOMContentLoaded", () => {
-      toggleSections();
-      calculateDistanceAndCost();
-    });
-  </script>
-
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2hdNmd5pVvTynpInJn3DN7htrOLlK0CE&libraries=places"></script>
+  <footer>
+    <p>Contact: johnntd@gmail.com | Phone: 714-227-6007</p>
+  </footer>
 </body>
 </html>

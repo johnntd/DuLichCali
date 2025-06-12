@@ -72,7 +72,7 @@
           case "Universal Studios": totalTicket += 109; totalFood += 50; totalLodging += 80; break;
           case "San Diego Zoo": totalTicket += 76; totalFood += 40; totalLodging += 80; break;
           case "Bay Area High Tech Tour": totalTicket += 185; totalFood += 60; totalLodging += 100; break;
-          case "San Francisco": totalFood += 60; totalLodging += 100; break;
+          case "San Francisco": totalTicket += 50; totalFood += 60; totalLodging += 100; break;
           case "Las Vegas": totalTicket += 90; totalFood += 70; totalLodging += 120; break;
           case "Grand Canyon": totalTicket += 110; totalFood += 60; totalLodging += 90; break;
           case "Yosemite": totalTicket += 90; totalFood += 50; totalLodging += 90; break;
@@ -105,8 +105,8 @@
     <p>Xe Mercedes 12 chỗ, tài xế thân thiện, hành trình trọn gói!</p>
 
     <h2>Đặt Lịch Ngay</h2>
-    <form action="https://formsubmit.io/send/johnntd@gmail.com" method="POST" oninput="calculateCost()">
-      <input type="hidden" name="_redirect" value="https://johnntd.github.io/DuLichCali/thankyou.html">
+    <form action="https://formsubmit.co/johnntd@gmail.com" method="POST" oninput="calculateCost()">
+      <input type="hidden" name="_next" value="https://johnntd.github.io/DuLichCali/thankyou.html">
 
       <label for="name">Họ và tên:</label>
       <input type="text" id="name" name="name" required>

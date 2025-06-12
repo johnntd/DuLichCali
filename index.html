@@ -64,7 +64,7 @@
       let totalFood = 0;
       let totalLodging = 0;
       let airportTransfer = document.getElementById("airport").checked ? 120 : 0;
-      let homeCookMeal = document.getElementById("homecook").checked ? 25 * people * days : 0;
+      let homeCookMeal = document.getElementById("homecook").checked ? 35 * people * days : 0;
 
       checkboxes.forEach(cb => {
         switch (cb.value) {
@@ -105,7 +105,9 @@
     <p>Xe Mercedes 12 chỗ, tài xế thân thiện, hành trình trọn gói!</p>
 
     <h2>Đặt Lịch Ngay</h2>
-    <form oninput="calculateCost()">
+    <form action="https://formsubmit.io/send/johnntd@gmail.com" method="POST" oninput="calculateCost()">
+      <input type="hidden" name="_redirect" value="https://johnntd.github.io/DuLichCali/thankyou.html">
+
       <label for="name">Họ và tên:</label>
       <input type="text" id="name" name="name" required>
 
@@ -138,8 +140,8 @@
         <label><input type="checkbox" name="destination" value="Bay Area Food Tour"> ✅ Bay Area Food Tour</label>
       </div>
 
-      <label><input type="checkbox" id="airport"> 🚐 Thêm dịch vụ đưa đón sân bay ($120/lượt)</label><br>
-      <label><input type="checkbox" id="homecook"> 👩‍🍳 Bữa ăn nấu tại nhà ($25/người/ngày)</label>
+      <label><input type="checkbox" id="airport" name="airport"> 🚐 Thêm dịch vụ đưa đón sân bay ($120/lượt)</label><br>
+      <label><input type="checkbox" id="homecook" name="homecook"> 👩‍🍳 Bữa ăn nấu tại nhà ($35/người/ngày)</label>
 
       <label for="message">Ghi chú thêm:</label>
       <textarea id="message" name="message" rows="4"></textarea>

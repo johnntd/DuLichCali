@@ -1,69 +1,127 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dịch Vụ Du Lịch & Đưa Đón Sân Bay</title>
   <style>
-    body { font-family: Arial, sans-serif; background-image: url('https://source.unsplash.com/featured/?california,coast'); background-size: cover; color: #333; padding: 20px; }
-    .container { max-width: 800px; margin: auto; background: rgba(255,255,255,0.9); padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
-    h1, h2 { text-align: center; }
-    form { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
-    label { font-weight: bold; }
-    input, select, textarea { padding: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; }
+    body { font-family: Arial, sans-serif; background-image: url('https://source.unsplash.com/featured/?california,coast'); background-size: cover; padding: 20px; color: #333; }
+    .container { max-width: 800px; margin: auto; background: rgba(255,255,255,0.95); padding: 20px; border-radius: 10px; }
+    label, select, input, textarea { display: block; width: 100%; margin-bottom: 12px; font-size: 16px; }
     button { padding: 12px; background-color: #007BFF; color: white; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; }
     button:hover { background-color: #0056b3; }
-    #totalCostBox { margin-top: 20px; padding: 15px; background-color: #e9f5ff; border: 1px solid #b3d8ff; border-radius: 8px; }
-    #totalCostBox p { margin: 6px 0; }
-    .highlight { font-weight: bold; color: #007BFF; }
-    .language-toggle { text-align: right; margin-bottom: 10px; }
+    .section { margin-top: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 10px; background: #f9f9f9; }
+    .toggle-group { display: flex; gap: 20px; margin-bottom: 20px; }
+    .toggle-group input { width: auto; }
+    #costBreakdown { background-color: #eef8ff; padding: 15px; margin-top: 20px; border-radius: 10px; }
   </style>
   <script>
-    function toggleAirportAddress() {
-      const pickup = document.getElementById('airportPickup').checked;
-      const dropoff = document.getElementById('airportDropoff').checked;
-      const addressSection = document.getElementById('airportAddressSection');
-      addressSection.style.display = (pickup || dropoff) ? 'block' : 'none';
+    function toggleServiceType() {
+      const type = document.querySelector('input[name="serviceType"]:checked').value;
+      document.getElementById("travelSection").style.display = (type === 'travel') ? 'block' : 'none';
+      document.getElementById("airportSection").style.display = (type === 'airport') ? 'block' : 'none';
+      document.getElementById("costBreakdown").style.display = 'block';
+    }
+
+    function calculateCost() {
+      const serviceType = document.querySelector('input[name="serviceType"]:checked').value;
+      let total = 0;
+      let breakdown = '';
+
+      if (serviceType === 'airport') {
+        const airport = document.querySelector('select[name="airport_name"]').value;
+        let cost = 0;
+        if (airport === 'LAX') cost = 150;
+        else if (airport === 'SNA') cost = 100;
+        else if (airport === 'LongBeach') cost = 120;
+        total += cost;
+        breakdown += `Chi phí đưa/đón sân bay: $${cost}<br>`;
+      } else {
+        const people = parseInt(document.querySelector('input[name="people"]').value || 0);
+        const days = parseInt(document.querySelector('input[name="days"]').value || 0);
+        const destinations = Array.from(document.querySelector('select[name="destination"]').selectedOptions).map(opt => opt.value);
+        const homecook = parseInt(document.querySelector('input[name="homecookDays"]').value || 0);
+
+        let destCost = destinations.length * 50 * people;
+        let stayCost = 120 * days * people;
+        let foodCost = homecook * 35 * people;
+
+        total = destCost + stayCost + foodCost;
+        breakdown += `Chi phí tham quan: $${destCost}<br>`;
+        breakdown += `Chi phí lưu trú: $${stayCost}<br>`;
+        breakdown += `Chi phí ăn tại nhà: $${foodCost}<br>`;
+      }
+
+      breakdown += `<strong>Tổng cộng: $${total}</strong>`;
+      document.getElementById("costBreakdown").innerHTML = breakdown;
     }
   </script>
 </head>
 <body>
-  <div class="language-toggle">
-    <button onclick="toggleLanguage()">🌐 Ngôn ngữ / Language</button>
-  </div>
   <div class="container">
-    <h1>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</h1>
-    <p>Xe Mercedes 12 chỗ, tài xế thân thiện, hành trình trọn gói!</p>
-    <h2>Đặt Lịch Ngay</h2>
-    <form action="https://formsubmit.co/johnntd@gmail.com" method="POST">
-      <input type="hidden" name="_next" value="https://johnntd.github.io/DuLichCali/thankyou.html">
-      <label for="name">Họ và tên:</label>
-      <input type="text" id="name" name="name" required>
-      <label for="phone">Số điện thoại:</label>
-      <input type="tel" id="phone" name="phone" required>
-      <label for="email">Email:</label>
-      <input type="email" id="email" name="email">
-      <label for="date">Ngày muốn đi:</label>
-      <input type="date" id="date" name="date" required>
+    <h1>Dịch Vụ Du Lịch & Đưa Đón Sân Bay Tại California</h1>
 
-      <label><input type="checkbox" id="airportPickup" name="airportPickup" onchange="toggleAirportAddress()"> ✅ Đón tại sân bay</label>
-      <label><input type="checkbox" id="airportDropoff" name="airportDropoff" onchange="toggleAirportAddress()"> ✅ Đưa ra sân bay</label>
+    <div class="toggle-group">
+      <label><input type="radio" name="serviceType" value="travel" checked onclick="toggleServiceType(); calculateCost();"> Gói Du Lịch Trọn Gói</label>
+      <label><input type="radio" name="serviceType" value="airport" onclick="toggleServiceType(); calculateCost();"> Chỉ Đưa/Đón Sân Bay</label>
+    </div>
 
-      <div id="airportAddressSection" style="display:none">
-        <label for="airportAddress">Địa chỉ đón/trả:</label>
-        <input type="text" id="airportAddress" name="airportAddress">
+    <form action="https://formsubmit.co/johnntd@gmail.com" method="POST" oninput="calculateCost()">
+      <!-- Airport Section -->
+      <div id="airportSection" class="section" style="display: none;">
+        <label>Loại dịch vụ sân bay:</label>
+        <select name="airport_service">
+          <option value="pickup">Đón từ sân bay</option>
+          <option value="dropoff">Đưa ra sân bay</option>
+        </select>
+        <label>Chọn sân bay:</label>
+        <select name="airport_name">
+          <option value="LAX">LAX</option>
+          <option value="SNA">Orange County (SNA)</option>
+          <option value="LongBeach">Long Beach (LGB)</option>
+        </select>
+        <label>Địa chỉ đón/trả:</label>
+        <input type="text" name="address" placeholder="Ví dụ: 1234 Main St, San Jose, CA" />
+        <label>Thời gian:</label>
+        <input type="datetime-local" name="pickup_time" />
       </div>
 
-      <label for="message">Ghi chú thêm:</label>
-      <textarea id="message" name="message" rows="4"></textarea>
-
-      <div id="totalCostBox">
-        <h3>📊 Ước Tính Chi Phí:</h3>
-        <div id="costBreakdown">
-          <p>Vui lòng chọn dịch vụ để xem chi phí ước tính...</p>
-        </div>
+      <!-- Full Travel Section -->
+      <div id="travelSection" class="section">
+        <label>Họ và tên:</label>
+        <input type="text" name="name" required />
+        <label>Số điện thoại:</label>
+        <input type="tel" name="phone" required />
+        <label>Email:</label>
+        <input type="email" name="email" />
+        <label>Ngày bắt đầu:</label>
+        <input type="date" name="date" required />
+        <label>Số người:</label>
+        <input type="number" name="people" min="1" max="12" required />
+        <label>Số ngày tham quan:</label>
+        <input type="number" name="days" min="1" max="14" required />
+        <label>Điểm đến:</label>
+        <select name="destination" multiple>
+          <option value="Disneyland">Disneyland</option>
+          <option value="California Adventure">California Adventure</option>
+          <option value="Universal Studios">Universal Studios</option>
+          <option value="San Francisco">San Francisco</option>
+          <option value="Yosemite">Yosemite</option>
+          <option value="Grand Canyon">Grand Canyon</option>
+          <option value="Las Vegas">Las Vegas</option>
+          <option value="Lake Tahoe">Lake Tahoe</option>
+          <option value="Orange County Food Tour">Orange County Food Tour</option>
+          <option value="Bay Area Food Tour">Bay Area Food Tour</option>
+        </select>
+        <label>Số ngày ăn tại nhà (Bay Area):</label>
+        <input type="number" name="homecookDays" min="0" max="14" />
+        <label>Ghi chú thêm:</label>
+        <textarea name="message" rows="3"></textarea>
       </div>
 
+      <div id="costBreakdown" style="display:none;"></div>
+
+      <input type="hidden" name="_next" value="https://johnntd.github.io/DuLichCali/thankyou.html" />
       <button type="submit">Gửi Yêu Cầu</button>
     </form>
   </div>

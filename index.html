@@ -1,196 +1,210 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-image: url('https://source.unsplash.com/1600x900/?california,travel');
+      background-image: url('https://source.unsplash.com/featured/?california,coast');
       background-size: cover;
-      background-attachment: fixed;
       margin: 0;
-      padding: 0;
+      padding: 20px;
     }
     .container {
-      max-width: 960px;
-      margin: auto;
-      background-color: rgba(255,255,255,0.95);
+      background: rgba(255, 255, 255, 0.95);
       padding: 20px;
       border-radius: 10px;
-      margin-top: 20px;
+      max-width: 900px;
+      margin: auto;
+      box-shadow: 0 0 10px #aaa;
     }
     h1, h2 {
       text-align: center;
-    }
-    label, select, input, textarea {
-      display: block;
-      width: 100%;
       margin-bottom: 10px;
-      padding: 8px;
+    }
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
       font-size: 16px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .cost-box {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f5faff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    .highlight {
+      font-weight: bold;
+      color: #007BFF;
+    }
+    .language-toggle {
+      text-align: right;
+      margin-bottom: 10px;
     }
     button {
       background-color: #007BFF;
       color: white;
-      padding: 12px;
       border: none;
       border-radius: 5px;
+      padding: 12px;
       font-size: 16px;
       cursor: pointer;
+      margin-top: 20px;
     }
     button:hover {
       background-color: #0056b3;
     }
-    .section {
-      display: none;
-    }
-    .visible {
-      display: block;
-    }
-    .lang-toggle {
-      text-align: right;
-      padding: 10px;
-    }
-    #costBreakdown {
-      background: #e6f3ff;
-      border: 1px solid #99d1ff;
-      border-radius: 8px;
-      padding: 10px;
-      margin-top: 15px;
-    }
-    .flex-row {
-      display: flex;
-      gap: 10px;
-    }
-    .flex-row > div {
-      flex: 1;
-    }
   </style>
 </head>
 <body>
-<div class="lang-toggle">
-  <button onclick="toggleLang()">🌐 Ngôn ngữ / Language</button>
-</div>
-<div class="container">
-  <h1 id="mainTitle">Dịch Vụ Du Lịch Cao Cấp tại Mỹ</h1>
-  <form id="travelForm" action="https://formsubmit.co/johnntd@gmail.com" method="POST">
-    <label for="serviceType">Chọn loại dịch vụ / Select service type:</label>
-    <select id="serviceType" name="serviceType" onchange="toggleSection()">
-      <option value="airport">✈️ Đưa đón sân bay / Airport Pickup/Drop-off</option>
-      <option value="tour">🏞️ Gói du lịch / Travel Package</option>
-    </select>
+  <div class="language-toggle">
+    <button onclick="toggleLanguage()">🌐 Ngôn ngữ / Language</button>
+  </div>
 
-    <div id="airportSection" class="section visible">
-      <label for="airportDirection">Bạn cần dịch vụ gì? (Pickup/Drop-off)</label>
-      <select id="airportDirection" name="airportDirection">
-        <option value="pickup">Pickup</option>
-        <option value="dropoff">Drop-off</option>
+  <div class="container">
+    <h1 id="heading">Dịch Vụ Du Lịch Cao Cấp tại Mỹ</h1>
+    <form id="travelForm" onsubmit="return submitForm(event)">
+      <label for="serviceType">Loại dịch vụ / Service Type</label>
+      <select id="serviceType" name="serviceType" onchange="toggleSections()">
+        <option value="airport">🚗 Đưa đón sân bay / Airport Service</option>
+        <option value="tour">🌄 Gói du lịch / Travel Package</option>
       </select>
 
-      <label for="airport">Sân bay:</label>
-      <select id="airport" name="airport">
-        <option value="SNA">Orange County (SNA)</option>
-        <option value="LAX">Los Angeles (LAX)</option>
-        <option value="LGB">Long Beach (LGB)</option>
-      </select>
+      <div id="airportSection">
+        <label for="airportMode">Chọn loại / Type</label>
+        <select id="airportMode" name="airportMode">
+          <option value="pickup">Đón tại sân bay / Pickup</option>
+          <option value="dropoff">Đưa ra sân bay / Drop-off</option>
+        </select>
 
-      <div class="flex-row">
-        <div><label>Street Address: <input type="text" name="street"></label></div>
-        <div><label>City: <input type="text" name="city"></label></div>
+        <label for="airport">Chọn sân bay / Select Airport</label>
+        <select id="airport" name="airport">
+          <option value="SNA">Orange County (SNA)</option>
+          <option value="LAX">LAX</option>
+          <option value="LGB">Long Beach (LGB)</option>
+        </select>
+
+        <label for="people">Số người / Number of People</label>
+        <input type="number" id="people" name="people" min="1" max="12" required />
+
+        <label>Địa chỉ cần đón/trả / Address</label>
+        <input type="text" id="street" name="street" placeholder="Số và tên đường" required />
+        <input type="text" id="city" name="city" placeholder="Thành phố" required />
+        <input type="text" id="state" name="state" placeholder="Tiểu bang" required />
+        <input type="text" id="zip" name="zip" placeholder="Mã vùng" required />
+
+        <label for="date">Ngày / Date</label>
+        <input type="date" id="date" name="date" required />
+
+        <label for="time">Giờ / Time</label>
+        <input type="time" id="time" name="time" required />
       </div>
-      <div class="flex-row">
-        <div><label>State: <input type="text" name="state"></label></div>
-        <div><label>Zip Code: <input type="text" name="zip"></label></div>
+
+      <div class="cost-box" id="costEstimate">
+        <p><strong>Chi phí ước tính / Estimated Cost:</strong></p>
+        <p>📍 Vận chuyển / Transport: <span id="transportCost" class="highlight">$0</span></p>
+        <p><strong>Tổng cộng / Total:</strong> <span id="totalCost" class="highlight">$0</span></p>
       </div>
 
-      <label for="airportDate">Date:</label>
-      <input type="date" id="airportDate" name="airportDate">
-
-      <label for="airportTime">Time:</label>
-      <input type="time" id="airportTime" name="airportTime">
-
-      <label for="peopleCount">Number of people:</label>
-      <input type="number" id="peopleCount" name="peopleCount" min="1" max="12">
-    </div>
-
-    <div id="tourSection" class="section">
-      <label>Chọn điểm đến:</label>
-      <label><input type="checkbox" name="destinations" value="Disneyland"> Disneyland</label>
-      <label><input type="checkbox" name="destinations" value="Universal Studios"> Universal Studios</label>
-      <label><input type="checkbox" name="destinations" value="SeaWorld"> SeaWorld</label>
-      <label><input type="checkbox" name="destinations" value="San Francisco"> San Francisco</label>
-      <label><input type="checkbox" name="destinations" value="Yosemite"> Yosemite</label>
-      <!-- Add more destinations as needed -->
-
-      <label>Số người:</label>
-      <input type="number" name="tourPeople" min="1" max="12">
-
-      <label>Số ngày tham quan:</label>
-      <input type="number" name="tourDays" min="1" max="14">
-
-      <label>Chọn chỗ ở:</label>
-      <select name="lodging">
-        <option value="airbnb">Airbnb</option>
-        <option value="hotel">Hotel</option>
+      <label>Phương thức thanh toán / Payment</label>
+      <select id="payment" name="payment">
+        <option value="paypal">💳 Thanh toán ngay qua PayPal</option>
+        <option value="cash">💵 Thanh toán khi đón</option>
       </select>
 
-      <label>Số ngày ăn cơm nhà (Bay Area only):</label>
-      <input type="number" name="homecookDays" min="0" max="14">
+      <label for="name">Họ và tên / Full Name</label>
+      <input type="text" id="name" name="name" required />
 
-      <label>Ngày đi:</label>
-      <input type="date" name="tourDate">
+      <label for="phone">Số điện thoại / Phone</label>
+      <input type="tel" id="phone" name="phone" required />
 
-      <label>Giờ đón:</label>
-      <input type="time" name="tourTime">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" />
 
-      <label>Pickup từ sân bay?</label>
-      <input type="checkbox" name="includeAirport">
-    </div>
+      <button type="submit">Gửi yêu cầu / Submit Request</button>
+    </form>
+  </div>
 
-    <div id="costBreakdown">
-      <h3>📊 Ước tính chi phí:</h3>
-      <div id="costDetails">Chọn dịch vụ để xem chi phí...</div>
-    </div>
-
-    <label>Chọn hình thức thanh toán:</label>
-    <select name="payment">
-      <option value="paypal">PayPal</option>
-      <option value="paylater">Pay when picked up</option>
-    </select>
-
-    <label for="email">Email:</label>
-    <input type="email" name="email" required>
-
-    <label for="message">Ghi chú:</label>
-    <textarea name="message"></textarea>
-
-    <input type="hidden" name="_next" value="https://johnntd.github.io/DuLichCali/thankyou.html">
-    <button type="submit">Gửi Yêu Cầu / Submit</button>
-  </form>
-</div>
-<script>
-  function toggleSection() {
-    const service = document.getElementById('serviceType').value;
-    document.getElementById('airportSection').classList.remove('visible');
-    document.getElementById('tourSection').classList.remove('visible');
-    if (service === 'airport') {
-      document.getElementById('airportSection').classList.add('visible');
-    } else {
-      document.getElementById('tourSection').classList.add('visible');
+  <script>
+    function toggleSections() {
+      const serviceType = document.getElementById("serviceType").value;
+      document.getElementById("airportSection").style.display = serviceType === "airport" ? "block" : "none";
     }
-  }
 
-  function toggleLang() {
-    const currentLang = document.documentElement.lang;
-    const newLang = currentLang === 'vi' ? 'en' : 'vi';
-    document.documentElement.lang = newLang;
-    document.getElementById('mainTitle').textContent = newLang === 'vi'
-      ? 'Dịch Vụ Du Lịch Cao Cấp tại Mỹ'
-      : 'Premium Travel Services in the U.S.';
-  }
-</script>
+    function toggleLanguage() {
+      const currentLang = document.documentElement.lang;
+      const newLang = currentLang === "vi" ? "en" : "vi";
+      document.documentElement.lang = newLang;
+      document.getElementById("heading").textContent =
+        newLang === "en" ? "Premium Travel Services in the U.S." : "Dịch Vụ Du Lịch Cao Cấp tại Mỹ";
+      // You can expand to toggle more elements as needed
+    }
+
+    function calculateDistanceAndCost() {
+      const service = document.getElementById("serviceType").value;
+      if (service !== "airport") return;
+
+      const origin = "Orange County, CA";
+      const destination = `${document.getElementById("street").value}, ${document.getElementById("city").value}, ${document.getElementById("state").value} ${document.getElementById("zip").value}`;
+
+      const serviceType = document.getElementById("airportMode").value;
+      const passengers = parseInt(document.getElementById("people").value) || 1;
+
+      const baseRate = 2.5; // dollars per mile
+
+      const service = new google.maps.DistanceMatrixService();
+      service.getDistanceMatrix(
+        {
+          origins: [origin],
+          destinations: [destination],
+          travelMode: 'DRIVING',
+          unitSystem: google.maps.UnitSystem.IMPERIAL,
+        },
+        (response, status) => {
+          if (status === "OK") {
+            const distanceText = response.rows[0].elements[0].distance.text;
+            const miles = parseFloat(distanceText.replace(/[^\d.]/g, ""));
+            let cost = miles * baseRate * 2; // round trip
+
+            if (passengers > 3) {
+              cost += (passengers - 3) * 10;
+            }
+
+            document.getElementById("transportCost").textContent = `$${cost.toFixed(2)}`;
+            document.getElementById("totalCost").textContent = `$${cost.toFixed(2)}`;
+          }
+        }
+      );
+    }
+
+    function submitForm(event) {
+      event.preventDefault();
+      alert("Form submitted! Email and text functionality to be integrated.");
+      return false;
+    }
+
+    // Auto-calculate on input changes
+    document.querySelectorAll("#street, #city, #state, #zip, #people").forEach(input => {
+      input.addEventListener("change", calculateDistanceAndCost);
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+      toggleSections();
+      calculateDistanceAndCost();
+    });
+  </script>
+
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2hdNmd5pVvTynpInJn3DN7htrOLlK0CE&libraries=places"></script>
 </body>
 </html>

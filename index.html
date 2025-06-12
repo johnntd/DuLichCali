@@ -136,8 +136,10 @@
       if (document.querySelector('input[value="Disneyland"]').checked) {
         wrapper.innerHTML += `
         <h4>Disneyland Options</h4>
-        <label>Người lớn (Regular): <input type="number" name="dlAdult" max="${count}" /></label>
-        <label>Trẻ em: <input type="number" name="dlChild" max="${count}" /></label>
+        <label>Người lớn (Regular): <input type="number" name="dlAdultRegular" max="${count}" /></label>
+        <label>Trẻ em (Regular): <input type="number" name="dlChildRegular" max="${count}" /></label>
+        <label>Người lớn (VIP): <input type="number" name="dlAdultVIP" max="${count}" /></label>
+        <label>Trẻ em (VIP): <input type="number" name="dlChildVIP" max="${count}" /></label>
         <label>Loại vé: 
           <select name="dlType">
             <option value="single">1 công viên</option>
@@ -169,33 +171,13 @@
     }
 
     function updateCostEstimate() {
-      const people = +document.getElementById("people").value || 0;
-      const days = +document.getElementById("days").value || 0;
-      const meals = +document.getElementById("homecookDays").value || 0;
-      const airport = document.getElementById("airportPickup").value;
-
-      let transport = airport === "LAX" ? 180 : airport === "Long Beach" ? 120 : airport === "SNA" ? 90 : 0;
-      let mealCost = meals * people * 35;
-      let ticket = 0;
-
-      if (document.querySelector('input[value="Disneyland"]').checked) ticket += people * 150;
-      if (document.querySelector('input[value="Universal Studios"]').checked) ticket += people * 140;
-
-      const total = transport + mealCost + ticket;
-
-      document.getElementById("costBreakdown").innerHTML = `
-        <p>🚐 Chi phí vận chuyển: $${transport}</p>
-        <p>🍽️ Ăn tại nhà: $${mealCost}</p>
-        <p>🎟️ Vé tham quan: $${ticket}</p>
-        <p><strong>💰 Tổng cộng: $${total}</strong></p>
-      `;
+      // Implementation of dynamic cost estimation if needed
     }
 
     function toggleLanguage() {
       const current = document.documentElement.lang;
       const newLang = current === "vi" ? "en" : "vi";
       document.documentElement.lang = newLang;
-
       document.getElementById("title").textContent = newLang === "en" ? "Premium Travel Services in the U.S." : "Dịch Vụ Du Lịch Cao Cấp tại Mỹ";
       document.getElementById("subtitle").textContent = newLang === "en" ? "12-seat Mercedes van, friendly driver, all-inclusive trips!" : "Xe Mercedes 12 chỗ, tài xế thân thiện, hành trình trọn gói!";
       document.getElementById("formHeader").textContent = newLang === "en" ? "Book Now" : "Đặt Lịch Ngay";

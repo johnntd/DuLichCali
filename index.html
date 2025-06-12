@@ -1,189 +1,71 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-image: url('https://source.unsplash.com/featured/?california,coast');
-      background-size: cover;
-      color: #333;
-      padding: 20px;
-      margin: 0;
-    }
-    .container {
-      max-width: 850px;
-      margin: auto;
-      background: rgba(255,255,255,0.95);
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #bbb;
-    }
+    body { font-family: Arial, sans-serif; background-image: url('https://source.unsplash.com/featured/?california,coast'); background-size: cover; color: #333; padding: 20px; }
+    .container { max-width: 800px; margin: auto; background: rgba(255,255,255,0.9); padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
     h1, h2 { text-align: center; }
     form { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
     label { font-weight: bold; }
-    input, select, textarea {
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      width: 100%;
-    }
-    button {
-      padding: 12px;
-      background-color: #007BFF;
-      color: white;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
+    input, select, textarea { padding: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; }
+    button { padding: 12px; background-color: #007BFF; color: white; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; }
     button:hover { background-color: #0056b3; }
-    #totalCostBox {
-      background-color: #eef9ff;
-      padding: 10px;
-      border-radius: 8px;
-    }
-    .language-toggle {
-      text-align: right;
-      margin-bottom: 10px;
-    }
+    #totalCostBox { margin-top: 20px; padding: 15px; background-color: #e9f5ff; border: 1px solid #b3d8ff; border-radius: 8px; }
+    #totalCostBox p { margin: 6px 0; }
+    .highlight { font-weight: bold; color: #007BFF; }
+    .language-toggle { text-align: right; margin-bottom: 10px; }
   </style>
+  <script>
+    function toggleAirportAddress() {
+      const pickup = document.getElementById('airportPickup').checked;
+      const dropoff = document.getElementById('airportDropoff').checked;
+      const addressSection = document.getElementById('airportAddressSection');
+      addressSection.style.display = (pickup || dropoff) ? 'block' : 'none';
+    }
+  </script>
 </head>
 <body>
   <div class="language-toggle">
     <button onclick="toggleLanguage()">🌐 Ngôn ngữ / Language</button>
   </div>
   <div class="container">
-    <h1 id="title">Dịch Vụ Du Lịch Cao Cấp tại Mỹ</h1>
-    <p id="subtitle">Xe Mercedes 12 chỗ, tài xế thân thiện, hành trình trọn gói!</p>
-    <h2 id="formHeader">Đặt Lịch Ngay</h2>
-
-    <form id="bookingForm" action="https://formsubmit.co/johnntd@gmail.com" method="POST">
-      <input type="hidden" name="_next" value="https://johnntd.github.io/DuLichCali/thankyou.html" />
+    <h1>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</h1>
+    <p>Xe Mercedes 12 chỗ, tài xế thân thiện, hành trình trọn gói!</p>
+    <h2>Đặt Lịch Ngay</h2>
+    <form action="https://formsubmit.co/johnntd@gmail.com" method="POST">
+      <input type="hidden" name="_next" value="https://johnntd.github.io/DuLichCali/thankyou.html">
       <label for="name">Họ và tên:</label>
-      <input type="text" id="name" name="name" required/>
-
+      <input type="text" id="name" name="name" required>
       <label for="phone">Số điện thoại:</label>
-      <input type="tel" id="phone" name="phone" required/>
-
+      <input type="tel" id="phone" name="phone" required>
       <label for="email">Email:</label>
-      <input type="email" id="email" name="email"/>
-
+      <input type="email" id="email" name="email">
       <label for="date">Ngày muốn đi:</label>
-      <input type="date" id="date" name="date" required/>
+      <input type="date" id="date" name="date" required>
 
-      <label for="people">Số người (1–12):</label>
-      <input type="number" id="people" name="people" min="1" max="12" required oninput="showTicketOptions()"/>
+      <label><input type="checkbox" id="airportPickup" name="airportPickup" onchange="toggleAirportAddress()"> ✅ Đón tại sân bay</label>
+      <label><input type="checkbox" id="airportDropoff" name="airportDropoff" onchange="toggleAirportAddress()"> ✅ Đưa ra sân bay</label>
 
-      <label for="days">Số ngày tham quan:</label>
-      <input type="number" id="days" name="days" min="1" max="14" required/>
-
-      <label>Chọn điểm đến:</label>
-      <div>
-        <label><input type="checkbox" name="destination" value="Disneyland" onchange="showTicketOptions()"/> Disneyland</label><br/>
-        <label><input type="checkbox" name="destination" value="Universal Studios" onchange="showTicketOptions()"/> Universal Studios</label><br/>
-        <label><input type="checkbox" name="destination" value="San Francisco"/> San Francisco</label><br/>
-        <label><input type="checkbox" name="destination" value="Las Vegas"/> Las Vegas</label><br/>
-        <label><input type="checkbox" name="destination" value="Yosemite"/> Yosemite</label><br/>
-        <label><input type="checkbox" name="destination" value="Grand Canyon"/> Grand Canyon</label>
+      <div id="airportAddressSection" style="display:none">
+        <label for="airportAddress">Địa chỉ đón/trả:</label>
+        <input type="text" id="airportAddress" name="airportAddress">
       </div>
-
-      <div id="ticketOptions"></div>
-
-      <label for="airportPickup">Chọn sân bay đón:</label>
-      <select id="airportPickup" name="airportPickup" onchange="toggleDropOff()">
-        <option value="">Không đón sân bay</option>
-        <option value="SNA">Orange County (SNA)</option>
-        <option value="LAX">Los Angeles (LAX)</option>
-        <option value="Long Beach">Long Beach</option>
-      </select>
-
-      <div id="dropOffSection" style="display:none">
-        <label for="dropOff">Địa chỉ cần đưa đến:</label>
-        <input type="text" id="dropOff" name="dropOff"/>
-      </div>
-
-      <label for="homecookDays">Số ngày muốn ăn tại nhà (Bay Area):</label>
-      <input type="number" id="homecookDays" name="homecookDays" min="0" max="14"/>
-
-      <label for="payment">Phương thức thanh toán:</label>
-      <select id="payment" name="payment">
-        <option value="pay_now">Thanh toán ngay (PayPal)</option>
-        <option value="pay_later">Trả khi đón</option>
-      </select>
 
       <label for="message">Ghi chú thêm:</label>
       <textarea id="message" name="message" rows="4"></textarea>
 
       <div id="totalCostBox">
         <h3>📊 Ước Tính Chi Phí:</h3>
-        <div id="costBreakdown">Chọn thông tin để hiển thị chi phí...</div>
+        <div id="costBreakdown">
+          <p>Vui lòng chọn dịch vụ để xem chi phí ước tính...</p>
+        </div>
       </div>
 
       <button type="submit">Gửi Yêu Cầu</button>
     </form>
   </div>
-
-  <script>
-    function showTicketOptions() {
-      const count = parseInt(document.getElementById("people").value);
-      const wrapper = document.getElementById("ticketOptions");
-      wrapper.innerHTML = "";
-
-      if (document.querySelector('input[value="Disneyland"]').checked) {
-        wrapper.innerHTML += `
-        <h4>Disneyland Options</h4>
-        <label>Người lớn (Regular): <input type="number" name="dlAdultRegular" max="${count}" /></label>
-        <label>Trẻ em (Regular): <input type="number" name="dlChildRegular" max="${count}" /></label>
-        <label>Người lớn (VIP): <input type="number" name="dlAdultVIP" max="${count}" /></label>
-        <label>Trẻ em (VIP): <input type="number" name="dlChildVIP" max="${count}" /></label>
-        <label>Loại vé: 
-          <select name="dlType">
-            <option value="single">1 công viên</option>
-            <option value="both">2 công viên</option>
-          </select>
-        </label>`;
-      }
-
-      if (document.querySelector('input[value="Universal Studios"]').checked) {
-        wrapper.innerHTML += `
-        <h4>Universal Studios Options</h4>
-        <label>Người lớn: <input type="number" name="usAdult" max="${count}" /></label>
-        <label>Trẻ em: <input type="number" name="usChild" max="${count}" /></label>
-        <label>Loại vé: 
-          <select name="usType">
-            <option value="regular">Regular</option>
-            <option value="express">Express</option>
-          </select>
-        </label>`;
-      }
-
-      updateCostEstimate();
-    }
-
-    function toggleDropOff() {
-      const airport = document.getElementById("airportPickup").value;
-      const dropOff = document.getElementById("dropOffSection");
-      dropOff.style.display = airport ? "block" : "none";
-    }
-
-    function updateCostEstimate() {
-      // Implementation of dynamic cost estimation if needed
-    }
-
-    function toggleLanguage() {
-      const current = document.documentElement.lang;
-      const newLang = current === "vi" ? "en" : "vi";
-      document.documentElement.lang = newLang;
-      document.getElementById("title").textContent = newLang === "en" ? "Premium Travel Services in the U.S." : "Dịch Vụ Du Lịch Cao Cấp tại Mỹ";
-      document.getElementById("subtitle").textContent = newLang === "en" ? "12-seat Mercedes van, friendly driver, all-inclusive trips!" : "Xe Mercedes 12 chỗ, tài xế thân thiện, hành trình trọn gói!";
-      document.getElementById("formHeader").textContent = newLang === "en" ? "Book Now" : "Đặt Lịch Ngay";
-    }
-
-    document.querySelectorAll("input, select").forEach(el => el.addEventListener("change", updateCostEstimate));
-  </script>
 </body>
 </html>

@@ -1,173 +1,196 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 0;
-      background-image: url('https://source.unsplash.com/featured/?california,sunny,coast');
+      background-image: url('https://source.unsplash.com/1600x900/?california,travel');
       background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
       background-attachment: fixed;
+      margin: 0;
+      padding: 0;
     }
     .container {
-      background-color: rgba(255, 255, 255, 0.9);
-      max-width: 800px;
+      max-width: 960px;
       margin: auto;
+      background-color: rgba(255,255,255,0.95);
       padding: 20px;
       border-radius: 10px;
+      margin-top: 20px;
     }
-    h1, h2, h3 { text-align: center; }
-    form { display: flex; flex-direction: column; gap: 12px; }
-    label { font-weight: bold; }
-    input, select, textarea, button {
-      padding: 10px;
+    h1, h2 {
+      text-align: center;
+    }
+    label, select, input, textarea {
+      display: block;
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 8px;
       font-size: 16px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
     }
-    .hidden { display: none; }
-    .section { margin-top: 20px; padding-top: 10px; border-top: 2px solid #ccc; }
-    .language-toggle {
+    button {
+      background-color: #007BFF;
+      color: white;
+      padding: 12px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .section {
+      display: none;
+    }
+    .visible {
+      display: block;
+    }
+    .lang-toggle {
       text-align: right;
       padding: 10px;
     }
     #costBreakdown {
-      background-color: #f0f8ff;
-      border: 1px solid #a3c0e0;
-      padding: 10px;
+      background: #e6f3ff;
+      border: 1px solid #99d1ff;
       border-radius: 8px;
+      padding: 10px;
+      margin-top: 15px;
+    }
+    .flex-row {
+      display: flex;
+      gap: 10px;
+    }
+    .flex-row > div {
+      flex: 1;
     }
   </style>
-  <script>
-    function toggleServiceSections(value) {
-      document.getElementById("airportSection").style.display = value === "airport" ? "block" : "none";
-      document.getElementById("tourSection").style.display = value === "tour" ? "block" : "none";
-    }
-    function toggleLanguage() {
-      const html = document.documentElement;
-      html.lang = html.lang === "vi" ? "en" : "vi";
-      location.reload();
-    }
-    function updateEstimate() {
-      const service = document.querySelector('input[name="serviceType"]:checked').value;
-      let cost = 0;
-      let breakdown = "<ul>";
-
-      if (service === "airport") {
-        const people = parseInt(document.getElementById("airportPeople").value || 0);
-        const miles = 45; // placeholder
-        cost = 80 + miles * 1.5 + (people > 3 ? (people - 3) * 15 : 0);
-        breakdown += `<li>Airport Transport: $${cost.toFixed(2)}</li>`;
-      } else {
-        const travelers = parseInt(document.getElementById("travelers").value || 0);
-        const days = parseInt(document.getElementById("travelDays").value || 0);
-        cost += travelers * days * 100;
-        breakdown += `<li>Travel Base ($100/day/person): $${(travelers * days * 100).toFixed(2)}</li>`;
-        const homecookDays = parseInt(document.getElementById("homecookDays").value || 0);
-        const foodCost = homecookDays * travelers * 35;
-        cost += foodCost;
-        breakdown += `<li>Homecooked Meals: $${foodCost.toFixed(2)}</li>`;
-      }
-      breakdown += `</ul><strong>Total Estimate: $${cost.toFixed(2)}</strong>`;
-      document.getElementById("costBreakdown").innerHTML = breakdown;
-    }
-  </script>
 </head>
 <body>
-  <div class="language-toggle">
-    <button onclick="toggleLanguage()">🌐 Ngôn ngữ / Language</button>
-  </div>
-  <div class="container">
-    <h1>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</h1>
-    <p><img src="your-logo.png" alt="Logo" height="50"> Gọi 714-227-6007</p>
+<div class="lang-toggle">
+  <button onclick="toggleLang()">🌐 Ngôn ngữ / Language</button>
+</div>
+<div class="container">
+  <h1 id="mainTitle">Dịch Vụ Du Lịch Cao Cấp tại Mỹ</h1>
+  <form id="travelForm" action="https://formsubmit.co/johnntd@gmail.com" method="POST">
+    <label for="serviceType">Chọn loại dịch vụ / Select service type:</label>
+    <select id="serviceType" name="serviceType" onchange="toggleSection()">
+      <option value="airport">✈️ Đưa đón sân bay / Airport Pickup/Drop-off</option>
+      <option value="tour">🏞️ Gói du lịch / Travel Package</option>
+    </select>
 
-    <h2>Chọn Loại Dịch Vụ</h2>
-    <label><input type="radio" name="serviceType" value="airport" onclick="toggleServiceSections('airport')"> 🚕 Đưa/Đón Sân Bay</label>
-    <label><input type="radio" name="serviceType" value="tour" onclick="toggleServiceSections('tour')" checked> 🏞️ Gói Du Lịch</label>
+    <div id="airportSection" class="section visible">
+      <label for="airportDirection">Bạn cần dịch vụ gì? (Pickup/Drop-off)</label>
+      <select id="airportDirection" name="airportDirection">
+        <option value="pickup">Pickup</option>
+        <option value="dropoff">Drop-off</option>
+      </select>
 
-    <form action="https://formsubmit.co/johnntd@gmail.com" method="POST" oninput="updateEstimate()">
-      <input type="hidden" name="_next" value="https://johnntd.github.io/DuLichCali/thankyou.html">
+      <label for="airport">Sân bay:</label>
+      <select id="airport" name="airport">
+        <option value="SNA">Orange County (SNA)</option>
+        <option value="LAX">Los Angeles (LAX)</option>
+        <option value="LGB">Long Beach (LGB)</option>
+      </select>
 
-      <!-- Airport Section -->
-      <div id="airportSection" class="section hidden">
-        <label>Sân Bay:</label>
-        <select name="airport">
-          <option value="SNA">Orange County (SNA)</option>
-          <option value="LAX">LAX</option>
-          <option value="LGB">Long Beach (LGB)</option>
-        </select>
-        <label>Số người:</label>
-        <input type="number" id="airportPeople" name="airportPeople" min="1" max="12">
-        <label>Ngày:</label>
-        <input type="date" name="airportDate">
-        <label>Thời gian:</label>
-        <input type="time" name="airportTime">
-        <label>Địa chỉ đưa/đón:</label>
-        <input type="text" name="street" placeholder="Số nhà và đường">
-        <input type="text" name="city" placeholder="Thành phố">
-        <input type="text" name="state" placeholder="Tiểu bang">
-        <input type="text" name="zip" placeholder="Mã ZIP">
+      <div class="flex-row">
+        <div><label>Street Address: <input type="text" name="street"></label></div>
+        <div><label>City: <input type="text" name="city"></label></div>
+      </div>
+      <div class="flex-row">
+        <div><label>State: <input type="text" name="state"></label></div>
+        <div><label>Zip Code: <input type="text" name="zip"></label></div>
       </div>
 
-      <!-- Tour Section -->
-      <div id="tourSection" class="section">
-        <label>Số người:</label>
-        <input type="number" id="travelers" name="travelers" min="1" max="12">
-        <label>Số ngày tham quan:</label>
-        <input type="number" id="travelDays" name="travelDays" min="1" max="14">
+      <label for="airportDate">Date:</label>
+      <input type="date" id="airportDate" name="airportDate">
 
-        <label>Chọn điểm đến:</label>
-        <select name="destinations" multiple>
-          <option value="Disneyland">Disneyland</option>
-          <option value="Universal Studios">Universal Studios</option>
-          <option value="San Francisco">San Francisco</option>
-          <option value="Las Vegas">Las Vegas</option>
-          <option value="Yosemite">Yosemite</option>
-          <option value="Grand Canyon">Grand Canyon</option>
-        </select>
+      <label for="airportTime">Time:</label>
+      <input type="time" id="airportTime" name="airportTime">
 
-        <label>Ngày đón:</label>
-        <input type="date" name="tourDate">
-        <label>Thời gian đón:</label>
-        <input type="time" name="tourTime">
+      <label for="peopleCount">Number of people:</label>
+      <input type="number" id="peopleCount" name="peopleCount" min="1" max="12">
+    </div>
 
-        <label>Số ngày ăn tại nhà (Bay Area):</label>
-        <input type="number" id="homecookDays" name="homecookDays" min="0" max="14">
-        <label>Chỗ ở:</label>
-        <select name="stay">
-          <option value="airbnb">Airbnb</option>
-          <option value="hotel">Khách sạn</option>
-        </select>
-      </div>
+    <div id="tourSection" class="section">
+      <label>Chọn điểm đến:</label>
+      <label><input type="checkbox" name="destinations" value="Disneyland"> Disneyland</label>
+      <label><input type="checkbox" name="destinations" value="Universal Studios"> Universal Studios</label>
+      <label><input type="checkbox" name="destinations" value="SeaWorld"> SeaWorld</label>
+      <label><input type="checkbox" name="destinations" value="San Francisco"> San Francisco</label>
+      <label><input type="checkbox" name="destinations" value="Yosemite"> Yosemite</label>
+      <!-- Add more destinations as needed -->
 
-      <div class="section">
-        <h3>📊 Ước Tính Chi Phí:</h3>
-        <div id="costBreakdown">
-          <p>Hãy nhập thông tin để xem chi phí...</p>
-        </div>
-      </div>
+      <label>Số người:</label>
+      <input type="number" name="tourPeople" min="1" max="12">
 
-      <div class="section">
-        <label>Họ và tên:</label>
-        <input type="text" name="name" required>
-        <label>Email:</label>
-        <input type="email" name="email">
-        <label>Số điện thoại:</label>
-        <input type="tel" name="phone">
+      <label>Số ngày tham quan:</label>
+      <input type="number" name="tourDays" min="1" max="14">
 
-        <label>Chọn phương thức thanh toán:</label>
-        <select name="payment">
-          <option value="paypal">PayPal (johnntd21@icloud.com)</option>
-          <option value="pickup">Thanh toán khi đón</option>
-        </select>
-        <button type="submit">Gửi Yêu Cầu</button>
-      </div>
-    </form>
-  </div>
+      <label>Chọn chỗ ở:</label>
+      <select name="lodging">
+        <option value="airbnb">Airbnb</option>
+        <option value="hotel">Hotel</option>
+      </select>
+
+      <label>Số ngày ăn cơm nhà (Bay Area only):</label>
+      <input type="number" name="homecookDays" min="0" max="14">
+
+      <label>Ngày đi:</label>
+      <input type="date" name="tourDate">
+
+      <label>Giờ đón:</label>
+      <input type="time" name="tourTime">
+
+      <label>Pickup từ sân bay?</label>
+      <input type="checkbox" name="includeAirport">
+    </div>
+
+    <div id="costBreakdown">
+      <h3>📊 Ước tính chi phí:</h3>
+      <div id="costDetails">Chọn dịch vụ để xem chi phí...</div>
+    </div>
+
+    <label>Chọn hình thức thanh toán:</label>
+    <select name="payment">
+      <option value="paypal">PayPal</option>
+      <option value="paylater">Pay when picked up</option>
+    </select>
+
+    <label for="email">Email:</label>
+    <input type="email" name="email" required>
+
+    <label for="message">Ghi chú:</label>
+    <textarea name="message"></textarea>
+
+    <input type="hidden" name="_next" value="https://johnntd.github.io/DuLichCali/thankyou.html">
+    <button type="submit">Gửi Yêu Cầu / Submit</button>
+  </form>
+</div>
+<script>
+  function toggleSection() {
+    const service = document.getElementById('serviceType').value;
+    document.getElementById('airportSection').classList.remove('visible');
+    document.getElementById('tourSection').classList.remove('visible');
+    if (service === 'airport') {
+      document.getElementById('airportSection').classList.add('visible');
+    } else {
+      document.getElementById('tourSection').classList.add('visible');
+    }
+  }
+
+  function toggleLang() {
+    const currentLang = document.documentElement.lang;
+    const newLang = currentLang === 'vi' ? 'en' : 'vi';
+    document.documentElement.lang = newLang;
+    document.getElementById('mainTitle').textContent = newLang === 'vi'
+      ? 'Dịch Vụ Du Lịch Cao Cấp tại Mỹ'
+      : 'Premium Travel Services in the U.S.';
+  }
+</script>
 </body>
 </html>

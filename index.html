@@ -54,63 +54,27 @@
     function toggleLanguage() {
       const currentLang = document.documentElement.lang;
       const newLang = currentLang === 'vi' ? 'en' : 'vi';
-      const url = new URL(window.location.href);
-      url.searchParams.set('lang', newLang);
-      window.location.href = url.toString();
+      document.documentElement.lang = newLang;
+
+      document.querySelector('h1').textContent = newLang === 'en'
+        ? 'Premium Travel Services in the U.S.'
+        : 'Dịch Vụ Du Lịch Cao Cấp tại Mỹ';
+
+      document.querySelector('h2').textContent = newLang === 'en'
+        ? 'Book Now'
+        : 'Đặt Lịch Ngay';
+
+      document.querySelector('p').textContent = newLang === 'en'
+        ? '12-seat Mercedes van, friendly driver, all-inclusive itinerary!'
+        : 'Xe Mercedes 12 chỗ, tài xế thân thiện, hành trình trọn gói!';
     }
 
     window.addEventListener('DOMContentLoaded', () => {
       const lang = new URLSearchParams(window.location.search).get('lang');
-      if (lang === 'en') {
-        document.documentElement.lang = 'en';
-        document.querySelector('h1').textContent = 'Premium Travel Services in the U.S.';
-        document.querySelector('h2').textContent = 'Book Now';
-        document.querySelector('p').textContent = '12-seat Mercedes van, friendly driver, all-inclusive itinerary!';
+      if (lang) {
+        document.documentElement.lang = lang;
+        toggleLanguage();
       }
     });
   </script>
 </head>
-<body>
-  <div class="language-toggle">
-    <button onclick="toggleLanguage()">🌐 Ngôn ngữ / Language</button>
-  </div>
-  <div class="container">
-    <h1>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</h1>
-    <p>Xe Mercedes 12 chỗ, tài xế thân thiện, hành trình trọn gói!</p>
-    <h2>Đặt Lịch Ngay</h2>
-    <form action="https://formsubmit.co/johnntd@gmail.com" method="POST" oninput="showTicketOptions()">
-      <input type="hidden" name="_next" value="https://johnntd.github.io/DuLichCali/thankyou.html">
-      <label for="name">Họ và tên:</label>
-      <input type="text" id="name" name="name" required>
-      <label for="phone">Số điện thoại:</label>
-      <input type="tel" id="phone" name="phone" required>
-      <label for="email">Email:</label>
-      <input type="email" id="email" name="email">
-      <label for="date">Ngày muốn đi:</label>
-      <input type="date" id="date" name="date" required>
-      <label for="people">Số người (tối đa 12):</label>
-      <input type="number" id="people" name="people" min="1" max="12" required>
-      <label for="days">Số ngày tham quan:</label>
-      <input type="number" id="days" name="days" min="1" max="14" required>
-      <label>Chọn các điểm muốn đi:</label>
-      <div>
-        <label><input type="checkbox" name="destination" value="Disneyland" onchange="showTicketOptions()"> ✅ Disneyland</label><br>
-        <label><input type="checkbox" name="destination" value="Universal Studios" onchange="showTicketOptions()"> ✅ Universal Studios</label><br>
-        <label><input type="checkbox" name="destination" value="San Francisco"> ✅ San Francisco</label><br>
-        <label><input type="checkbox" name="destination" value="Las Vegas"> ✅ Las Vegas</label><br>
-        <label><input type="checkbox" name="destination" value="Grand Canyon"> ✅ Grand Canyon</label><br>
-        <label><input type="checkbox" name="destination" value="Yosemite"> ✅ Yosemite</label><br>
-        <label><input type="checkbox" name="destination" value="Orange County Food Tour"> ✅ Orange County Food Tour</label><br>
-        <label><input type="checkbox" name="destination" value="Bay Area Food Tour"> ✅ Bay Area Food Tour</label>
-      </div>
-      <div id="ticketOptions"></div>
-      <label><input type="checkbox" id="airport" name="airport"> ✅ Đưa đón sân bay</label><br>
-      <label for="homecookDays">Số ngày muốn ăn tại nhà (Bay Area):</label>
-      <input type="number" id="homecookDays" name="homecookDays" min="0" max="14">
-      <label for="message">Ghi chú thêm:</label>
-      <textarea id="message" name="message" rows="4"></textarea>
-      <button type="submit">Gửi Yêu Cầu</button>
-    </form>
-  </div>
-</body>
-</html>

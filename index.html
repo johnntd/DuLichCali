@@ -16,6 +16,7 @@
     #totalCostBox { margin-top: 20px; padding: 15px; background-color: #e9f5ff; border: 1px solid #b3d8ff; border-radius: 8px; }
     #totalCostBox p { margin: 6px 0; }
     .highlight { font-weight: bold; color: #007BFF; }
+    .language-toggle { text-align: right; margin-bottom: 10px; }
   </style>
   <script>
     function showTicketOptions() {
@@ -24,60 +25,77 @@
       ticketContainer.innerHTML = '';
       if (!peopleCount || peopleCount < 1) return;
 
-      // Disneyland Ticket Options
-      ticketContainer.innerHTML += `<h3>Disneyland Ticket Options</h3>
-        <label>Người lớn (Regular): <input type='number' min='0' max='${peopleCount}' name='dlAdultRegular'></label>
-        <label>Trẻ em (Regular): <input type='number' min='0' max='${peopleCount}' name='dlChildRegular'></label>
-        <label>Người lớn (VIP): <input type='number' min='0' max='${peopleCount}' name='dlAdultVIP'></label>
-        <label>Trẻ em (VIP): <input type='number' min='0' max='${peopleCount}' name='dlChildVIP'></label>
-        <label>Chọn công viên: 
-          <select name='dlParkOption'>
-            <option value='single'>Một công viên</option>
-            <option value='both'>Cả hai công viên</option>
-          </select>
-        </label>`;
+      const disneyChecked = document.querySelector('input[value="Disneyland"]').checked;
+      const universalChecked = document.querySelector('input[value="Universal Studios"]').checked;
 
-      // Universal Studios Ticket Options
-      ticketContainer.innerHTML += `<h3>Universal Studios Ticket Options</h3>
-        <label>Người lớn (Regular): <input type='number' min='0' max='${peopleCount}' name='usAdultRegular'></label>
-        <label>Trẻ em (Regular): <input type='number' min='0' max='${peopleCount}' name='usChildRegular'></label>
-        <label>Người lớn (Express Pass): <input type='number' min='0' max='${peopleCount}' name='usAdultVIP'></label>
-        <label>Trẻ em (Express Pass): <input type='number' min='0' max='${peopleCount}' name='usChildVIP'></label>`;
+      if (disneyChecked) {
+        ticketContainer.innerHTML += `<h3>Disneyland Ticket Options</h3>
+          <label>Người lớn (Regular): <input type='number' min='0' max='${peopleCount}' name='dlAdultRegular'></label>
+          <label>Trẻ em (Regular): <input type='number' min='0' max='${peopleCount}' name='dlChildRegular'></label>
+          <label>Người lớn (VIP): <input type='number' min='0' max='${peopleCount}' name='dlAdultVIP'></label>
+          <label>Trẻ em (VIP): <input type='number' min='0' max='${peopleCount}' name='dlChildVIP'></label>
+          <label>Chọn công viên: 
+            <select name='dlParkOption'>
+              <option value='single'>Một công viên</option>
+              <option value='both'>Cả hai công viên</option>
+            </select>
+          </label>`;
+      }
+
+      if (universalChecked) {
+        ticketContainer.innerHTML += `<h3>Universal Studios Ticket Options</h3>
+          <label>Người lớn (Regular): <input type='number' min='0' max='${peopleCount}' name='usAdultRegular'></label>
+          <label>Trẻ em (Regular): <input type='number' min='0' max='${peopleCount}' name='usChildRegular'></label>
+          <label>Người lớn (Express Pass): <input type='number' min='0' max='${peopleCount}' name='usAdultVIP'></label>
+          <label>Trẻ em (Express Pass): <input type='number' min='0' max='${peopleCount}' name='usChildVIP'></label>`;
+      }
     }
+
+    function toggleLanguage() {
+      const currentLang = document.documentElement.lang;
+      const newLang = currentLang === 'vi' ? 'en' : 'vi';
+      const url = new URL(window.location.href);
+      url.searchParams.set('lang', newLang);
+      window.location.href = url.toString();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const lang = new URLSearchParams(window.location.search).get('lang');
+      if (lang === 'en') {
+        document.documentElement.lang = 'en';
+        document.querySelector('h1').textContent = 'Premium Travel Services in the U.S.';
+        document.querySelector('h2').textContent = 'Book Now';
+        document.querySelector('p').textContent = '12-seat Mercedes van, friendly driver, all-inclusive itinerary!';
+      }
+    });
   </script>
 </head>
 <body>
+  <div class="language-toggle">
+    <button onclick="toggleLanguage()">🌐 Ngôn ngữ / Language</button>
+  </div>
   <div class="container">
     <h1>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</h1>
     <p>Xe Mercedes 12 chỗ, tài xế thân thiện, hành trình trọn gói!</p>
-
     <h2>Đặt Lịch Ngay</h2>
-    <form action="https://formsubmit.co/johnntd@gmail.com" method="POST" oninput="calculateCost(); showTicketOptions()">
+    <form action="https://formsubmit.co/johnntd@gmail.com" method="POST" oninput="showTicketOptions()">
       <input type="hidden" name="_next" value="https://johnntd.github.io/DuLichCali/thankyou.html">
       <label for="name">Họ và tên:</label>
       <input type="text" id="name" name="name" required>
-
       <label for="phone">Số điện thoại:</label>
       <input type="tel" id="phone" name="phone" required>
-
       <label for="email">Email:</label>
       <input type="email" id="email" name="email">
-
       <label for="date">Ngày muốn đi:</label>
       <input type="date" id="date" name="date" required>
-
       <label for="people">Số người (tối đa 12):</label>
       <input type="number" id="people" name="people" min="1" max="12" required>
-
       <label for="days">Số ngày tham quan:</label>
       <input type="number" id="days" name="days" min="1" max="14" required>
-
-      <div id="ticketOptions"></div>
-
       <label>Chọn các điểm muốn đi:</label>
       <div>
-        <label><input type="checkbox" name="destination" value="Disneyland"> ✅ Disneyland</label><br>
-        <label><input type="checkbox" name="destination" value="Universal Studios"> ✅ Universal Studios</label><br>
+        <label><input type="checkbox" name="destination" value="Disneyland" onchange="showTicketOptions()"> ✅ Disneyland</label><br>
+        <label><input type="checkbox" name="destination" value="Universal Studios" onchange="showTicketOptions()"> ✅ Universal Studios</label><br>
         <label><input type="checkbox" name="destination" value="San Francisco"> ✅ San Francisco</label><br>
         <label><input type="checkbox" name="destination" value="Las Vegas"> ✅ Las Vegas</label><br>
         <label><input type="checkbox" name="destination" value="Grand Canyon"> ✅ Grand Canyon</label><br>
@@ -85,22 +103,12 @@
         <label><input type="checkbox" name="destination" value="Orange County Food Tour"> ✅ Orange County Food Tour</label><br>
         <label><input type="checkbox" name="destination" value="Bay Area Food Tour"> ✅ Bay Area Food Tour</label>
       </div>
-
+      <div id="ticketOptions"></div>
       <label><input type="checkbox" id="airport" name="airport"> ✅ Đưa đón sân bay</label><br>
-
       <label for="homecookDays">Số ngày muốn ăn tại nhà (Bay Area):</label>
       <input type="number" id="homecookDays" name="homecookDays" min="0" max="14">
-
       <label for="message">Ghi chú thêm:</label>
       <textarea id="message" name="message" rows="4"></textarea>
-
-      <div id="totalCostBox">
-        <h3>📊 Ước Tính Chi Phí:</h3>
-        <div id="costBreakdown">
-          <p>Chọn điểm đến, số người và số ngày để xem chi phí...</p>
-        </div>
-      </div>
-
       <button type="submit">Gửi Yêu Cầu</button>
     </form>
   </div>

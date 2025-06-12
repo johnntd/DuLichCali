@@ -1,211 +1,111 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-image: url('https://source.unsplash.com/featured/?california,coast');
-      background-size: cover;
-      background-position: center;
-      margin: 0;
-      padding: 20px;
-      color: #333;
-    }
-    .container {
-      max-width: 800px;
-      margin: auto;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px #aaa;
-    }
+    body { font-family: Arial, sans-serif; background-image: url('https://source.unsplash.com/featured/?california,coast'); background-size: cover; color: #333; padding: 20px; }
+    .container { max-width: 800px; margin: auto; background: rgba(255,255,255,0.95); padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
     h1, h2 { text-align: center; }
-    label { font-weight: bold; display: block; margin-top: 10px; }
-    input, select, textarea {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      margin-top: 4px;
-      margin-bottom: 12px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    .row { display: flex; gap: 10px; flex-wrap: wrap; }
-    .half { flex: 1 1 48%; }
-    .third { flex: 1 1 30%; }
-    button {
-      padding: 12px;
-      font-size: 16px;
-      background: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      width: 100%;
-    }
-    button:hover { background: #0056b3; }
-    #costBreakdown { margin-top: 20px; padding: 10px; background: #f5faff; border-radius: 8px; }
+    form { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+    label { font-weight: bold; }
+    input, select, textarea { padding: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; }
+    button { padding: 12px; background-color: #007BFF; color: white; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background-color: #0056b3; }
     .language-toggle { text-align: right; margin-bottom: 10px; }
+    #breakdown { margin-top: 10px; font-size: 14px; color: #555; }
   </style>
   <script>
-    function toggleService() {
-      const serviceType = document.querySelector('input[name="service"]:checked').value;
-      document.getElementById("travelForm").style.display = serviceType === "travel" ? "block" : "none";
-      document.getElementById("airportForm").style.display = serviceType === "airport" ? "block" : "none";
+    function toggleFormSection(serviceType) {
+      document.getElementById('airportSection').style.display = serviceType === 'airport' ? 'block' : 'none';
+      document.getElementById('travelSection').style.display = serviceType === 'travel' ? 'block' : 'none';
     }
 
-    function toggleLanguage() {
-      const lang = document.documentElement.lang;
-      document.documentElement.lang = lang === "vi" ? "en" : "vi";
-      location.reload();
+    function updateBreakdown() {
+      const total = 500; // Placeholder for calculation
+      const breakdown = `Chi tiết chi phí:\n- Vận chuyển: $300\n- Vé: $150\n- Ăn uống: $50`;
+      document.getElementById('costBreakdown').innerText = breakdown;
+      document.getElementById('totalCost').innerText = `$${total}`;
     }
-
-    function calculateTransportCost(fromZip, toZip) {
-      // For demo purposes, simple distance estimation based on zip differences
-      const base = 50;
-      const distance = Math.abs(parseInt(fromZip || 0) - parseInt(toZip || 0)) / 10;
-      return Math.round(base + distance * 5);
-    }
-
-    function updateCostBreakdown() {
-      const costBox = document.getElementById("costBreakdown");
-      let html = "";
-
-      const serviceType = document.querySelector('input[name="service"]:checked')?.value;
-
-      if (serviceType === "airport") {
-        const fromZip = document.getElementById("airportFromZip")?.value || "92704";
-        const toZip = document.getElementById("airportToZip")?.value || "92704";
-        const cost = calculateTransportCost(fromZip, toZip);
-        html = `<p>🚗 Chi phí đưa đón: <strong>$${cost}</strong></p>`;
-        document.getElementById("paypalAmount").value = cost;
-      } else {
-        // Placeholder cost logic for travel
-        const people = parseInt(document.getElementById("people").value) || 1;
-        const days = parseInt(document.getElementById("days").value) || 1;
-        const base = 100;
-        const cost = base * people * days;
-        html = `<p>🚌 Gói du lịch: <strong>$${cost}</strong> (${people} người, ${days} ngày)</p>`;
-        document.getElementById("paypalAmount").value = cost;
-      }
-
-      costBox.innerHTML = html;
-    }
-
-    window.addEventListener("DOMContentLoaded", () => {
-      document.querySelectorAll("input, select").forEach(el => {
-        el.addEventListener("change", updateCostBreakdown);
-      });
-      toggleService();
-    });
   </script>
 </head>
 <body>
-  <div class="language-toggle">
-    <button onclick="toggleLanguage()">🌐 Ngôn ngữ / Language</button>
-  </div>
-
   <div class="container">
     <h1>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</h1>
-    <form action="https://formsubmit.co/johnntd@gmail.com" method="POST">
-      <label>Dịch vụ:</label>
-      <div class="row">
-        <label><input type="radio" name="service" value="travel" checked onchange="toggleService()"> Gói Du Lịch</label>
-        <label><input type="radio" name="service" value="airport" onchange="toggleService()"> Đưa đón Sân Bay</label>
+
+    <label>Chọn loại dịch vụ:</label>
+    <select onchange="toggleFormSection(this.value)">
+      <option value="travel">Gói du lịch</option>
+      <option value="airport">Đưa đón sân bay</option>
+    </select>
+
+    <form action="https://formsubmit.co/johnntd@gmail.com" method="POST" oninput="updateBreakdown()">
+      <input type="hidden" name="_next" value="https://johnntd.github.io/DuLichCali/thankyou.html">
+
+      <div id="airportSection" style="display:none">
+        <label for="airportDate">Ngày:</label>
+        <input type="date" id="airportDate" name="airportDate">
+
+        <label for="airportTime">Giờ:</label>
+        <input type="time" id="airportTime" name="airportTime">
+
+        <label>Địa chỉ đón (Số và tên đường, Thành phố, Bang, ZIP):</label>
+        <input type="text" name="pickupStreet" placeholder="Số và tên đường">
+        <input type="text" name="pickupCity" placeholder="Thành phố">
+        <input type="text" name="pickupState" placeholder="Bang">
+        <input type="text" name="pickupZip" placeholder="Mã ZIP">
+
+        <label>Địa chỉ trả (Số và tên đường, Thành phố, Bang, ZIP):</label>
+        <input type="text" name="dropoffStreet" placeholder="Số và tên đường">
+        <input type="text" name="dropoffCity" placeholder="Thành phố">
+        <input type="text" name="dropoffState" placeholder="Bang">
+        <input type="text" name="dropoffZip" placeholder="Mã ZIP">
       </div>
 
-      <!-- Travel Package -->
-      <div id="travelForm">
-        <div class="row">
-          <div class="half">
-            <label for="name">Họ và tên:</label>
-            <input type="text" name="name" id="name" required>
-          </div>
-          <div class="half">
-            <label for="phone">Số điện thoại:</label>
-            <input type="tel" name="phone" id="phone" required>
-          </div>
-        </div>
-        <label for="email">Email:</label>
-        <input type="email" name="email" id="email">
+      <div id="travelSection">
+        <label for="travelDate">Ngày đi:</label>
+        <input type="date" id="travelDate" name="travelDate">
 
-        <div class="row">
-          <div class="half">
-            <label for="date">Ngày khởi hành:</label>
-            <input type="date" name="date" id="date">
-          </div>
-          <div class="half">
-            <label for="days">Số ngày tham quan:</label>
-            <input type="number" name="days" id="days" min="1" max="14">
-          </div>
-        </div>
+        <label for="travelTime">Giờ khởi hành:</label>
+        <input type="time" id="travelTime" name="travelTime">
 
         <label for="people">Số người:</label>
-        <input type="number" name="people" id="people" min="1" max="12">
+        <input type="number" id="people" name="people" min="1" max="12">
+
+        <label for="days">Số ngày đi:</label>
+        <input type="number" id="days" name="days" min="1" max="14">
 
         <label>Chọn điểm đến:</label>
-        <select name="destination[]" multiple>
+        <select name="destination">
           <option value="Disneyland">Disneyland</option>
-          <option value="California Adventure">California Adventure</option>
           <option value="Universal Studios">Universal Studios</option>
           <option value="San Francisco">San Francisco</option>
           <option value="Las Vegas">Las Vegas</option>
           <option value="Grand Canyon">Grand Canyon</option>
           <option value="Yosemite">Yosemite</option>
-          <option value="Lake Tahoe">Lake Tahoe</option>
-        </select>
-
-        <label><input type="checkbox" name="homecook"> Dùng bữa tại nhà (Bay Area)</label>
-
-        <label>Loại chỗ ở:</label>
-        <select name="lodging">
-          <option value="hotel">Khách sạn</option>
-          <option value="airbnb">Airbnb</option>
         </select>
       </div>
 
-      <!-- Airport Pickup Form -->
-      <div id="airportForm" style="display: none;">
-        <label for="airportPickupTime">Thời gian đón:</label>
-        <input type="time" name="airportPickupTime" id="airportPickupTime">
+      <label for="email">Email:</label>
+      <input type="email" name="email" id="email" required>
 
-        <label for="airportFrom">Từ sân bay hoặc địa chỉ:</label>
-        <input type="text" name="airportFrom" id="airportFrom" placeholder="Ví dụ: LAX hoặc 123 Main St">
+      <label for="message">Ghi chú thêm:</label>
+      <textarea name="message" rows="4"></textarea>
 
-        <label for="airportFromZip">Mã vùng (ZIP) nơi đón:</label>
-        <input type="text" name="airportFromZip" id="airportFromZip" placeholder="92704">
-
-        <label for="airportTo">Đến địa chỉ:</label>
-        <input type="text" name="airportTo" id="airportTo">
-
-        <label for="airportToZip">Mã vùng (ZIP) nơi đến:</label>
-        <input type="text" name="airportToZip" id="airportToZip">
+      <div id="breakdown">
+        <strong>Ước tính chi phí:</strong>
+        <div id="costBreakdown">Chưa có dữ liệu...</div>
+        <p><strong>Tổng cộng: <span id="totalCost">$0</span></strong></p>
       </div>
 
-      <div id="costBreakdown">
-        <p>🔍 Ước tính chi phí sẽ hiển thị ở đây.</p>
-      </div>
+      <label>Thanh toán:</label>
+      <select name="payment">
+        <option value="now">Thanh toán trước qua PayPal</option>
+        <option value="later">Thanh toán khi gặp</option>
+      </select>
 
-      <input type="hidden" name="paypalAmount" id="paypalAmount" value="0">
-
-      <div class="row">
-        <div class="half">
-          <label>Hình thức thanh toán:</label>
-          <select name="paymentMethod">
-            <option value="paynow">Thanh toán ngay (PayPal)</option>
-            <option value="paylater">Thanh toán khi gặp</option>
-          </select>
-        </div>
-        <div class="half">
-          <label>Ghi chú:</label>
-          <textarea name="message" rows="3"></textarea>
-        </div>
-      </div>
-
-      <button type="submit">Gửi Yêu Cầu</button>
+      <button type="submit">Gửi yêu cầu</button>
     </form>
   </div>
 </body>

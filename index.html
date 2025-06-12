@@ -58,7 +58,7 @@
     function calculateCost() {
       const people = parseInt(document.getElementById("people").value) || 0;
       const days = parseInt(document.getElementById("days").value) || 0;
-      const checkboxes = document.querySelectorAll('input[name="destination"]:checked');
+      const checkboxes = document.querySelectorAll('input[name="destination[]"]:checked');
 
       let totalTicket = 0;
       let totalFood = 0;
@@ -107,7 +107,8 @@ document.getElementById("costBreakdown").innerHTML = `
     <p>Xe Mercedes 12 chỗ, tài xế thân thiện, hành trình trọn gói!</p>
 
     <h2>Đặt Lịch Ngay</h2>
-    <form action="https://formsubmit.co/johnntd@gmail.com" method="POST" oninput="calculateCost()">
+    <form action="https://formsubmit.co/johnntd@gmail.com">
+<input type="hidden" id="summary" name="summary"> method="POST" oninput="calculateCost()">
 <input type="hidden" id="summary" name="summary">
       <input type="hidden" name="_next" value="https://johnntd.github.io/DuLichCali/thankyou.html">
 
@@ -131,16 +132,16 @@ document.getElementById("costBreakdown").innerHTML = `
 
       <label>Chọn các điểm muốn đi:</label>
       <div>
-        <label><input type="checkbox" name="destination" value="Disneyland"> ✅ Disneyland</label><br>
-        <label><input type="checkbox" name="destination" value="Universal Studios"> ✅ Universal Studios</label><br>
-        <label><input type="checkbox" name="destination" value="San Diego Zoo"> ✅ San Diego Zoo</label><br>
-        <label><input type="checkbox" name="destination" value="Bay Area High Tech Tour"> ✅ Bay Area High Tech Tour</label><br>
-        <label><input type="checkbox" name="destination" value="San Francisco"> ✅ San Francisco</label><br>
-        <label><input type="checkbox" name="destination" value="Las Vegas"> ✅ Las Vegas</label><br>
-        <label><input type="checkbox" name="destination" value="Grand Canyon"> ✅ Grand Canyon</label><br>
-        <label><input type="checkbox" name="destination" value="Yosemite"> ✅ Yosemite</label><br>
-        <label><input type="checkbox" name="destination" value="Orange County Food Tour"> ✅ Orange County Food Tour</label><br>
-        <label><input type="checkbox" name="destination" value="Bay Area Food Tour"> ✅ Bay Area Food Tour</label>
+        <label><input type="checkbox" name="destination[]" value="Disneyland"> ✅ Disneyland</label><br>
+        <label><input type="checkbox" name="destination[]" value="Universal Studios"> ✅ Universal Studios</label><br>
+        <label><input type="checkbox" name="destination[]" value="San Diego Zoo"> ✅ San Diego Zoo</label><br>
+        <label><input type="checkbox" name="destination[]" value="Bay Area High Tech Tour"> ✅ Bay Area High Tech Tour</label><br>
+        <label><input type="checkbox" name="destination[]" value="San Francisco"> ✅ San Francisco</label><br>
+        <label><input type="checkbox" name="destination[]" value="Las Vegas"> ✅ Las Vegas</label><br>
+        <label><input type="checkbox" name="destination[]" value="Grand Canyon"> ✅ Grand Canyon</label><br>
+        <label><input type="checkbox" name="destination[]" value="Yosemite"> ✅ Yosemite</label><br>
+        <label><input type="checkbox" name="destination[]" value="Orange County Food Tour"> ✅ Orange County Food Tour</label><br>
+        <label><input type="checkbox" name="destination[]" value="Bay Area Food Tour"> ✅ Bay Area Food Tour</label>
       </div>
 
       <label><input type="checkbox" id="airport" name="airport"> 🚐 Thêm dịch vụ đưa đón sân bay ($120/lượt)</label><br>

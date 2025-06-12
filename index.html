@@ -87,7 +87,9 @@
       const dailyCostPerPerson = ticketPerPerson + foodPerPerson + lodgingPerPerson;
       const totalTripCost = people * days * dailyCostPerPerson + airportTransfer + homeCookMeal;
 
-      document.getElementById("costBreakdown").innerHTML = `
+      const destinationList = Array.from(checkboxes).map(cb => cb.value).join(', ');
+document.getElementById("summary").value = `Điểm đến: ${destinationList}\nTổng chi phí: $${totalTripCost}`;
+document.getElementById("costBreakdown").innerHTML = `
         <p>🎟️ Vé vào cổng mỗi người/ngày: <span class="highlight">$${ticketPerPerson}</span></p>
         <p>🍜 Ăn uống mỗi người/ngày: <span class="highlight">$${foodPerPerson}</span></p>
         <p>🏨 Nhà nghỉ mỗi người/ngày: <span class="highlight">$${lodgingPerPerson}</span></p>
@@ -106,6 +108,7 @@
 
     <h2>Đặt Lịch Ngay</h2>
     <form action="https://formsubmit.co/johnntd@gmail.com" method="POST" oninput="calculateCost()">
+<input type="hidden" id="summary" name="summary">
       <input type="hidden" name="_next" value="https://johnntd.github.io/DuLichCali/thankyou.html">
 
       <label for="name">Họ và tên:</label>

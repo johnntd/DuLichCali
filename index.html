@@ -1,161 +1,176 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #e6f2ff; margin: 0; padding: 0; }
-    header, footer { background: #0099cc; color: white; text-align: center; padding: 1em; }
-    main { padding: 20px; max-width: 900px; margin: auto; background: white; }
-    label, input, select, textarea { display: block; width: 100%; margin-bottom: 10px; }
-    fieldset { margin-bottom: 20px; }
-    #travel-section, #airport-section, #name-email-section, #travel-cost-breakdown, #airport-cost-section { display: none; }
-    #language-toggle button { margin: 0 5px; }
-    .cost-line { display: flex; justify-content: space-between; }
-    #totalCostDisplay { font-weight: bold; font-size: 1.2em; }
-  </style>
-  <script>
-    function toggleServiceSection(value) {
-      document.getElementById('airport-section').style.display = value === 'airport' ? 'block' : 'none';
-      document.getElementById('travel-section').style.display = value === 'travel' ? 'block' : 'none';
-      document.getElementById('name-phone-section').style.display = value ? 'block' : 'none';
-      document.getElementById('email-section').style.display = value === 'travel' ? 'block' : 'none';
-      document.getElementById('travel-cost-breakdown').style.display = value === 'travel' ? 'block' : 'none';
-      document.getElementById('airport-cost-section').style.display = value === 'airport' ? 'block' : 'none';
-    }
-
-    function updateCosts() {
-      let transportCost = 0;
-      let ticketCost = 0;
-      let mealCost = 0;
-      let stayCost = 0;
-
-      const selectedService = document.querySelector('input[name="serviceType"]:checked').value;
-
-      if (selectedService === 'airport') {
-        const city = document.getElementById('airport-city').value.toLowerCase();
-        if (city && city !== 'orange county') transportCost = 200;
-        else transportCost = 100;
-        document.getElementById('airportEstimatedCost').innerText = '$' + transportCost;
-      } else {
-        const destinations = Array.from(document.getElementById('destinations').selectedOptions).map(opt => opt.value);
-        const travelers = parseInt(document.getElementById('travelers').value || 1);
-        const mealDays = parseInt(document.getElementById('mealDays').value || 0);
-        const stayType = document.getElementById('stayType').value;
-        const travelDays = parseInt(document.getElementById('travelDays').value || 1);
-
-        // Transport cost flat rate by long distance destination
-        if (destinations.some(d => /yos|las vegas|grand canyon|san francisco|bay|tahoe|reno/i.test(d))) transportCost = 350;
-        else transportCost = 150;
-
-        ticketCost = travelers * 100; // base estimate
-        mealCost = mealDays * travelers * 35;
-        stayCost = travelDays * (stayType === 'hotel' ? 180 : 140);
-
-        document.getElementById('ticketCost').innerText = ticketCost;
-        document.getElementById('mealCost').innerText = mealCost;
-        document.getElementById('stayCost').innerText = stayCost;
-        document.getElementById('transportCost').innerText = transportCost;
-        document.getElementById('totalCost').innerText = ticketCost + mealCost + stayCost + transportCost;
-      }
-    }
-  </script>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header>
-    <h1>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</h1>
+    <img src="logo.png" alt="Business Logo" id="logo" />
+    <h1 data-en="Premium Travel Services in the USA" data-vi="Dịch Vụ Du Lịch Cao Cấp tại Mỹ">Dịch Vụ Du Lịch Cao Cấp tại Mỹ</h1>
     <div id="language-toggle">
-      <button onclick="alert('Toggle to English (TBD)')">🇺🇸 English</button>
-      <button onclick="alert('Chuyển sang Tiếng Việt (TBD)')">🇻🇳 Tiếng Việt</button>
+      <button onclick="setLanguage('en')">English</button>
+      <button onclick="setLanguage('vi')">Tiếng Việt</button>
     </div>
   </header>
 
   <main>
-    <form action="https://formsubmit.co/johnntd@gmail.com" method="POST" oninput="updateCosts()">
-      <fieldset>
-        <legend>Choose Service</legend>
-        <label><input type="radio" name="serviceType" value="airport" checked onchange="toggleServiceSection(this.value)" /> Airport Pickup/Drop-off</label>
-        <label><input type="radio" name="serviceType" value="travel" onchange="toggleServiceSection(this.value)" /> Travel Package</label>
-      </fieldset>
+    <section id="service-selection">
+      <label><input type="radio" name="serviceType" value="airport" checked onchange="toggleServiceSections()" /> 🚗 <span data-en="Airport Service" data-vi="Dịch Vụ Đưa Đón Sân Bay">Dịch Vụ Đưa Đón Sân Bay</span></label>
+      <label><input type="radio" name="serviceType" value="travel" onchange="toggleServiceSections()" /> 🌄 <span data-en="Travel Package" data-vi="Gói Du Lịch">Gói Du Lịch</span></label>
+    </section>
 
-      <div id="name-phone-section">
-        <label>Customer Name:<input type="text" name="customerName" required></label>
-        <label>Phone Number:<input type="tel" name="customerPhone" required></label>
-      </div>
-
-      <div id="email-section">
-        <label>Email Address:<input type="email" name="customerEmail"></label>
-      </div>
-
+    <form id="travel-form" action="https://formsubmit.co/johnntd@gmail.com" method="POST">
+      <!-- Airport Pickup/Drop-off Section -->
       <div id="airport-section">
         <fieldset>
-          <legend>Airport Service</legend>
-          <label>Pickup or Drop-off:
-            <select name="airportService">
-              <option value="pickup">Pickup</option>
-              <option value="dropoff">Drop-off</option>
-            </select>
-          </label>
-          <label>Airport:
-            <select name="airport">
-              <option value="SNA">Orange County (SNA)</option>
-              <option value="LAX">LAX</option>
-              <option value="LGB">Long Beach</option>
-            </select>
-          </label>
-          <label>City:<input id="airport-city" name="city" required></label>
-          <div id="airport-cost-section">Estimated Transport Cost: <strong id="airportEstimatedCost">$0</strong></div>
+          <legend data-en="Customer Info" data-vi="Thông Tin Khách Hàng">Thông Tin Khách Hàng</legend>
+          <input type="text" name="airportName" placeholder="Tên Khách" required />
+          <input type="tel" name="airportPhone" placeholder="Số Điện Thoại" required />
         </fieldset>
+
+        <label data-en="Pickup or Drop-off:" data-vi="Đón hoặc Trả:">
+          <select name="airportService">
+            <option value="pickup">Đón</option>
+            <option value="dropoff">Trả</option>
+          </select>
+        </label>
+
+        <label data-en="Airport:" data-vi="Sân Bay:">
+          <select name="airport">
+            <option value="SNA">Orange County (SNA)</option>
+            <option value="LAX">Los Angeles (LAX)</option>
+            <option value="LGB">Long Beach (LGB)</option>
+          </select>
+        </label>
+
+        <fieldset>
+          <legend data-en="Pickup/Drop-off Address" data-vi="Địa Chỉ Đón/Trả">Địa Chỉ Đón/Trả</legend>
+          <input type="text" name="addressStreet" placeholder="Địa chỉ" required />
+          <input type="text" name="addressCity" placeholder="Thành Phố" required />
+          <input type="text" name="addressState" placeholder="Tiểu Bang" required />
+          <input type="text" name="addressZip" placeholder="Mã ZIP" required />
+        </fieldset>
+
+        <label data-en="Number of People:" data-vi="Số Người:">
+          <input type="number" name="numPeople" min="1" max="12" value="1" />
+        </label>
+
+        <label data-en="Date:" data-vi="Ngày:">
+          <input type="date" name="airportDate" required />
+        </label>
+
+        <label data-en="Time:" data-vi="Giờ:">
+          <input type="time" name="airportTime" required />
+        </label>
+
+        <div id="airport-cost">Chi Phí Ước Tính: $<span id="airportEstimate">0</span></div>
       </div>
 
-      <div id="travel-section">
+      <!-- Travel Package Section -->
+      <div id="travel-section" style="display: none;">
         <fieldset>
-          <legend>Travel Package</legend>
-          <label>Destinations:
-            <select id="destinations" name="destinations[]" multiple size="7">
-              <option>Disneyland Park</option>
-              <option>California Adventure Park</option>
-              <option>Universal Studios</option>
-              <option>San Diego Zoo</option>
-              <option>SeaWorld</option>
-              <option>LegoLand</option>
-              <option>Las Vegas</option>
-              <option>Grand Canyon</option>
-              <option>San Francisco</option>
-              <option>Yosemite</option>
-              <option>Lake Tahoe</option>
-              <option>Reno</option>
-              <option>Silicon Valley Tour</option>
-            </select>
-          </label>
-          <label>Travelers:<input id="travelers" name="travelers" type="number" min="1" value="1"></label>
-          <label>Travel Days:<input id="travelDays" name="travelDays" type="number" min="1" value="1"></label>
-          <label>Stay:<select id="stayType" name="stayType"><option value="hotel">Hotel</option><option value="airbnb">Airbnb</option></select></label>
-          <label>Home-cooked Meal Days (Bay Area only):<input id="mealDays" name="mealDays" type="number" min="0" value="0"></label>
+          <legend data-en="Customer Info" data-vi="Thông Tin Khách Hàng">Thông Tin Khách Hàng</legend>
+          <input type="text" name="travelName" placeholder="Tên Khách" required />
+          <input type="tel" name="travelPhone" placeholder="Số Điện Thoại" required />
+          <input type="email" name="travelEmail" placeholder="Email" required />
         </fieldset>
+
+        <label data-en="Destinations:" data-vi="Điểm Đến:">
+          <select name="destinations" multiple size="10">
+            <option>Disneyland Park</option>
+            <option>California Adventure Park</option>
+            <option>Universal Studios</option>
+            <option>San Diego Zoo</option>
+            <option>SeaWorld</option>
+            <option>LegoLand</option>
+            <option>Las Vegas</option>
+            <option>Grand Canyon</option>
+            <option>San Francisco</option>
+            <option>Yosemite</option>
+            <option>Lake Tahoe</option>
+            <option>Reno</option>
+            <option>Silicon Valley (Apple, Google, Facebook)</option>
+          </select>
+        </label>
+
+        <label data-en="Number of Travelers:" data-vi="Số Người Đi Du Lịch:">
+          <input type="number" name="travelers" min="1" max="12" value="1" />
+        </label>
+
+        <label data-en="Number of Travel Days:" data-vi="Số Ngày Du Lịch:">
+          <input type="number" name="travelDays" min="1" />
+        </label>
+
+        <label data-en="Stay Type:" data-vi="Loại Chỗ Ở:">
+          <select name="stayType">
+            <option value="hotel">Khách Sạn (~$180/đêm)</option>
+            <option value="airbnb">Airbnb (~$140/đêm)</option>
+          </select>
+        </label>
+
+        <label data-en="Home-cooked Meals (Bay Area):" data-vi="Bữa Ăn Nhà Nấu (Bay Area):">
+          <input type="number" name="mealDays" min="0" value="0" />
+        </label>
+
+        <label data-en="Pickup Date:" data-vi="Ngày Đón:">
+          <input type="date" name="travelDate" />
+        </label>
+
+        <label data-en="Pickup Time:" data-vi="Giờ Đón:">
+          <input type="time" name="travelTime" />
+        </label>
+
+        <label data-en="Include Airport Pickup?" data-vi="Có Đón Ở Sân Bay?">
+          <input type="checkbox" name="includeAirport" />
+        </label>
+
         <div id="travel-cost-breakdown">
-          <div class="cost-line">Tickets: <span id="ticketCost">0</span></div>
-          <div class="cost-line">Meals: <span id="mealCost">0</span></div>
-          <div class="cost-line">Stay: <span id="stayCost">0</span></div>
-          <div class="cost-line">Transport: <span id="transportCost">0</span></div>
-          <div class="cost-line" id="totalCostDisplay">Total: $<span id="totalCost">0</span></div>
+          <p>Vé Tham Quan: $<span id="ticketCost">0</span></p>
+          <p>Bữa Ăn: $<span id="mealCost">0</span></p>
+          <p>Chỗ Ở: $<span id="stayCost">0</span></p>
+          <p>Chi Phí Di Chuyển: $<span id="transportCost">0</span></p>
+          <strong>Tổng Cộng: $<span id="totalCost">0</span></strong>
         </div>
       </div>
 
+      <!-- Payment Options -->
       <fieldset>
-        <legend>Payment</legend>
-        <label><input type="radio" name="payment" value="paypal" checked> Pay via PayPal</label>
-        <label><input type="radio" name="payment" value="pickup"> Pay on Pickup</label>
+        <legend data-en="Payment" data-vi="Thanh Toán">Thanh Toán</legend>
+        <label><input type="radio" name="payment" value="paypal" checked /> PayPal</label>
+        <label><input type="radio" name="payment" value="later" /> Trả Khi Đón</label>
       </fieldset>
 
-      <input type="hidden" name="_next" value="https://johnntd.github.io/DuLichCali/thankyou.html">
-      <input type="submit" value="Submit">
+      <input type="hidden" name="_next" value="https://johnntd.github.io/DuLichCali/thankyou.html" />
+      <input type="submit" value="Gửi" />
     </form>
   </main>
 
   <footer>
-    <p>Contact: johnntd@gmail.com | Phone: 714-227-6007</p>
+    <p>Liên hệ: johnntd@gmail.com | Điện thoại: 714-227-6007</p>
   </footer>
+
+  <script>
+    function toggleServiceSections() {
+      const isAirport = document.querySelector('input[name="serviceType"]:checked').value === 'airport';
+      document.getElementById('airport-section').style.display = isAirport ? 'block' : 'none';
+      document.getElementById('travel-section').style.display = isAirport ? 'none' : 'block';
+    }
+
+    function setLanguage(lang) {
+      document.querySelectorAll('[data-en]').forEach(el => {
+        el.innerText = el.getAttribute('data-' + lang);
+      });
+      document.documentElement.lang = lang;
+    }
+
+    // Set Vietnamese as default
+    window.onload = () => {
+      setLanguage('vi');
+      toggleServiceSections();
+    };
+  </script>
 </body>
 </html>

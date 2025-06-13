@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</title>
   <link rel="stylesheet" href="styles.css" />
-  <!-- Google Maps API (load once only) -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2hdNmd5pVvTynpInJn3DN7htrOLlK0CE&libraries=places"></script>
 </head>
 <body>
   <header>
@@ -20,18 +18,22 @@
 
   <main>
     <section id="service-selection">
-      <label><input type="radio" name="serviceType" value="airport" checked onchange="toggleServiceSections()" /> 🚗 Airport Service</label>
-      <label><input type="radio" name="serviceType" value="travel" onchange="toggleServiceSections()" /> 🌄 Travel Package</label>
+      <label><input type="radio" name="serviceType" value="airport" checked /> 🚗 Airport Service</label>
+      <label><input type="radio" name="serviceType" value="travel" /> 🌄 Travel Package</label>
     </section>
 
     <form id="travel-form" action="https://formsubmit.co/johnntd@gmail.com" method="POST">
-      <!-- Common Inputs -->
-      <div id="common-fields">
-        <label>Full Name: <input type="text" name="customerName" required /></label>
-        <label>Phone: <input type="tel" name="customerPhone" required /></label>
-        <div id="email-field" style="display:none">
-          <label>Email: <input type="email" name="customerEmail" /></label>
-        </div>
+      <!-- Common Info -->
+      <div id="common-info">
+        <label>Customer Name:
+          <input type="text" name="customerName" required />
+        </label>
+        <label>Phone Number:
+          <input type="tel" name="customerPhone" required />
+        </label>
+        <label id="email-label" style="display:none;">Email:
+          <input type="email" name="customerEmail" />
+        </label>
       </div>
 
       <!-- Airport Pickup/Drop-off Section -->
@@ -53,14 +55,14 @@
 
         <fieldset>
           <legend>Pickup/Drop-off Address</legend>
-          <input type="text" id="addressStreet" name="addressStreet" placeholder="Street Address" required />
-          <input type="text" id="addressCity" name="addressCity" placeholder="City" required />
-          <input type="text" id="addressState" name="addressState" placeholder="State" required />
-          <input type="text" id="addressZip" name="addressZip" placeholder="ZIP Code" required />
+          <input type="text" name="addressStreet" placeholder="Street Address" required />
+          <input type="text" name="addressCity" placeholder="City" required />
+          <input type="text" name="addressState" placeholder="State" required />
+          <input type="text" name="addressZip" placeholder="ZIP Code" required />
         </fieldset>
 
         <label>Number of People:
-          <input type="number" id="numPeople" name="numPeople" min="1" max="12" value="1" onchange="calculateAirportCost()" />
+          <input type="number" name="numPeople" min="1" max="12" value="1" />
         </label>
 
         <label>Date:
@@ -71,13 +73,13 @@
           <input type="time" name="airportTime" required />
         </label>
 
-        <div id="airport-cost">Estimated Cost: $<span id="airportCost">0</span></div>
+        <div id="airport-cost">Estimated Cost: $<span>0</span></div>
       </div>
 
       <!-- Travel Package Section -->
       <div id="travel-section" style="display: none;">
         <label>Destinations:
-          <select name="destinations" multiple size="10">
+          <select name="destinations" multiple size="12">
             <option>Disneyland Park</option>
             <option>California Adventure Park</option>
             <option>Universal Studios</option>
@@ -129,7 +131,7 @@
           <p>Tickets: $<span id="ticketCost">0</span></p>
           <p>Meals: $<span id="mealCost">0</span></p>
           <p>Stay: $<span id="stayCost">0</span></p>
-          <p>Transport: $<span id="transportCost">0</span></p>
+          <p>Transport (per trip): $<span id="transportCost">0</span></p>
           <strong>Total: $<span id="totalCost">0</span></strong>
         </div>
       </div>
@@ -151,41 +153,13 @@
   </footer>
 
   <script>
-    function toggleServiceSections() {
-      const serviceType = document.querySelector('input[name="serviceType"]:checked').value;
-      document.getElementById('airport-section').style.display = serviceType === 'airport' ? 'block' : 'none';
-      document.getElementById('travel-section').style.display = serviceType === 'travel' ? 'block' : 'none';
-      document.getElementById('email-field').style.display = serviceType === 'travel' ? 'block' : 'none';
-    }
-
-    function calculateAirportCost() {
-      const street = document.getElementById('addressStreet').value;
-      const city = document.getElementById('addressCity').value;
-      const state = document.getElementById('addressState').value;
-      const zip = document.getElementById('addressZip').value;
-      const numPeople = parseInt(document.getElementById('numPeople').value);
-      const destination = `${street}, ${city}, ${state} ${zip}`;
-
-      const service = new google.maps.DistanceMatrixService();
-      service.getDistanceMatrix({
-        origins: ['Orange County, CA'],
-        destinations: [destination],
-        travelMode: 'DRIVING',
-      }, (response, status) => {
-        if (status === 'OK') {
-          const distanceMeters = response.rows[0].elements[0].distance.value;
-          const miles = distanceMeters / 1609.34;
-          let cost = miles * 2.5;
-          if (numPeople > 3) cost += (numPeople - 3) * 10;
-          document.getElementById('airportCost').innerText = cost.toFixed(2);
-        }
-      });
-    }
-
-    document.getElementById('addressStreet').addEventListener('blur', calculateAirportCost);
-    document.getElementById('addressCity').addEventListener('blur', calculateAirportCost);
-    document.getElementById('addressState').addEventListener('blur', calculateAirportCost);
-    document.getElementById('addressZip').addEventListener('blur', calculateAirportCost);
+    // Placeholder for script logic: dynamically switch sections, toggle email, calculate estimates etc.
+    document.querySelectorAll('input[name="serviceType"]').forEach(r => r.addEventListener('change', () => {
+      const type = document.querySelector('input[name="serviceType"]:checked').value;
+      document.getElementById('airport-section').style.display = type === 'airport' ? 'block' : 'none';
+      document.getElementById('travel-section').style.display = type === 'travel' ? 'block' : 'none';
+      document.getElementById('email-label').style.display = type === 'travel' ? 'block' : 'none';
+    }));
   </script>
 </body>
 </html>

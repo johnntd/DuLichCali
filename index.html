@@ -4,156 +4,158 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</title>
-  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body { font-family: Arial, sans-serif; background: #e6f2ff; margin: 0; padding: 0; }
+    header, footer { background: #0099cc; color: white; text-align: center; padding: 1em; }
+    main { padding: 20px; max-width: 900px; margin: auto; background: white; }
+    label, input, select, textarea { display: block; width: 100%; margin-bottom: 10px; }
+    fieldset { margin-bottom: 20px; }
+    #travel-section, #airport-section, #name-email-section, #travel-cost-breakdown, #airport-cost-section { display: none; }
+    #language-toggle button { margin: 0 5px; }
+    .cost-line { display: flex; justify-content: space-between; }
+    #totalCostDisplay { font-weight: bold; font-size: 1.2em; }
+  </style>
+  <script>
+    function toggleServiceSection(value) {
+      document.getElementById('airport-section').style.display = value === 'airport' ? 'block' : 'none';
+      document.getElementById('travel-section').style.display = value === 'travel' ? 'block' : 'none';
+      document.getElementById('name-phone-section').style.display = value ? 'block' : 'none';
+      document.getElementById('email-section').style.display = value === 'travel' ? 'block' : 'none';
+      document.getElementById('travel-cost-breakdown').style.display = value === 'travel' ? 'block' : 'none';
+      document.getElementById('airport-cost-section').style.display = value === 'airport' ? 'block' : 'none';
+    }
+
+    function updateCosts() {
+      let transportCost = 0;
+      let ticketCost = 0;
+      let mealCost = 0;
+      let stayCost = 0;
+
+      const selectedService = document.querySelector('input[name="serviceType"]:checked').value;
+
+      if (selectedService === 'airport') {
+        const city = document.getElementById('airport-city').value.toLowerCase();
+        if (city && city !== 'orange county') transportCost = 200;
+        else transportCost = 100;
+        document.getElementById('airportEstimatedCost').innerText = '$' + transportCost;
+      } else {
+        const destinations = Array.from(document.getElementById('destinations').selectedOptions).map(opt => opt.value);
+        const travelers = parseInt(document.getElementById('travelers').value || 1);
+        const mealDays = parseInt(document.getElementById('mealDays').value || 0);
+        const stayType = document.getElementById('stayType').value;
+        const travelDays = parseInt(document.getElementById('travelDays').value || 1);
+
+        // Transport cost flat rate by long distance destination
+        if (destinations.some(d => /yos|las vegas|grand canyon|san francisco|bay|tahoe|reno/i.test(d))) transportCost = 350;
+        else transportCost = 150;
+
+        ticketCost = travelers * 100; // base estimate
+        mealCost = mealDays * travelers * 35;
+        stayCost = travelDays * (stayType === 'hotel' ? 180 : 140);
+
+        document.getElementById('ticketCost').innerText = ticketCost;
+        document.getElementById('mealCost').innerText = mealCost;
+        document.getElementById('stayCost').innerText = stayCost;
+        document.getElementById('transportCost').innerText = transportCost;
+        document.getElementById('totalCost').innerText = ticketCost + mealCost + stayCost + transportCost;
+      }
+    }
+  </script>
 </head>
 <body>
   <header>
-    <img src="logo.png" alt="Business Logo" id="logo" />
     <h1>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</h1>
     <div id="language-toggle">
-      <button onclick="setLanguage('en')">English</button>
-      <button onclick="setLanguage('vi')">Tiếng Việt</button>
+      <button onclick="alert('Toggle to English (TBD)')">🇺🇸 English</button>
+      <button onclick="alert('Chuyển sang Tiếng Việt (TBD)')">🇻🇳 Tiếng Việt</button>
     </div>
   </header>
 
   <main>
-    <section id="service-selection">
-      <label><input type="radio" name="serviceType" value="airport" checked onchange="toggleSections()" /> 🚗 Airport Service</label>
-      <label><input type="radio" name="serviceType" value="travel" onchange="toggleSections()" /> 🌄 Travel Package</label>
-    </section>
+    <form action="https://formsubmit.co/johnntd@gmail.com" method="POST" oninput="updateCosts()">
+      <fieldset>
+        <legend>Choose Service</legend>
+        <label><input type="radio" name="serviceType" value="airport" checked onchange="toggleServiceSection(this.value)" /> Airport Pickup/Drop-off</label>
+        <label><input type="radio" name="serviceType" value="travel" onchange="toggleServiceSection(this.value)" /> Travel Package</label>
+      </fieldset>
 
-    <form id="travel-form" action="https://formsubmit.co/johnntd@gmail.com" method="POST">
-      <!-- Common Fields -->
-      <div id="common-fields">
-        <label>Customer Name: <input type="text" name="customerName" required /></label>
-        <label>Phone Number: <input type="tel" name="phoneNumber" required /></label>
-        <label id="email-label" style="display:none;">Email Address: <input type="email" name="emailAddress" /></label>
+      <div id="name-phone-section">
+        <label>Customer Name:<input type="text" name="customerName" required></label>
+        <label>Phone Number:<input type="tel" name="customerPhone" required></label>
       </div>
 
-      <!-- Airport Pickup/Drop-off Section -->
+      <div id="email-section">
+        <label>Email Address:<input type="email" name="customerEmail"></label>
+      </div>
+
       <div id="airport-section">
-        <label>Pickup or Drop-off:
-          <select name="airportService">
-            <option value="pickup">Pickup</option>
-            <option value="dropoff">Drop-off</option>
-          </select>
-        </label>
-
-        <label>Airport:
-          <select name="airport">
-            <option value="SNA">Orange County (SNA)</option>
-            <option value="LAX">Los Angeles International (LAX)</option>
-            <option value="LGB">Long Beach (LGB)</option>
-          </select>
-        </label>
-
         <fieldset>
-          <legend>Pickup/Drop-off Address</legend>
-          <input type="text" name="addressStreet" placeholder="Street Address" required />
-          <input type="text" name="addressCity" placeholder="City" required />
-          <input type="text" name="addressState" placeholder="State" required />
-          <input type="text" name="addressZip" placeholder="ZIP Code" required />
+          <legend>Airport Service</legend>
+          <label>Pickup or Drop-off:
+            <select name="airportService">
+              <option value="pickup">Pickup</option>
+              <option value="dropoff">Drop-off</option>
+            </select>
+          </label>
+          <label>Airport:
+            <select name="airport">
+              <option value="SNA">Orange County (SNA)</option>
+              <option value="LAX">LAX</option>
+              <option value="LGB">Long Beach</option>
+            </select>
+          </label>
+          <label>City:<input id="airport-city" name="city" required></label>
+          <div id="airport-cost-section">Estimated Transport Cost: <strong id="airportEstimatedCost">$0</strong></div>
         </fieldset>
-
-        <label>Number of People:
-          <input type="number" name="numPeople" min="1" max="12" value="1" />
-        </label>
-
-        <label>Date:
-          <input type="date" name="airportDate" required />
-        </label>
-
-        <label>Time:
-          <input type="time" name="airportTime" required />
-        </label>
-
-        <div id="airport-cost">Estimated Transport Cost: $<span>0</span></div>
       </div>
 
-      <!-- Travel Package Section -->
-      <div id="travel-section" style="display: none;">
-        <label>Destinations:
-          <select name="destinations" multiple size="10">
-            <option>Disneyland Park</option>
-            <option>California Adventure Park</option>
-            <option>Universal Studios</option>
-            <option>San Diego Zoo</option>
-            <option>SeaWorld</option>
-            <option>LegoLand</option>
-            <option>Las Vegas</option>
-            <option>Grand Canyon</option>
-            <option>San Francisco</option>
-            <option>Yosemite</option>
-            <option>Lake Tahoe</option>
-            <option>Reno</option>
-            <option>Silicon Valley (Apple, Google, Facebook)</option>
-          </select>
-        </label>
-
-        <label>Travelers:
-          <input type="number" name="travelers" min="1" max="12" value="1" />
-        </label>
-
-        <label>Travel Days:
-          <input type="number" name="travelDays" min="1" />
-        </label>
-
-        <label>Stay:
-          <select name="stayType">
-            <option value="hotel">Hotel (~$180/night)</option>
-            <option value="airbnb">Airbnb (~$140/night)</option>
-          </select>
-        </label>
-
-        <label>Home-cooked Meals (Bay Area):
-          <input type="number" name="mealDays" min="0" value="0" />
-        </label>
-
-        <label>Pickup Date:
-          <input type="date" name="travelDate" />
-        </label>
-
-        <label>Pickup Time:
-          <input type="time" name="travelTime" />
-        </label>
-
-        <label>Include airport pickup?
-          <input type="checkbox" name="includeAirport" />
-        </label>
-
+      <div id="travel-section">
+        <fieldset>
+          <legend>Travel Package</legend>
+          <label>Destinations:
+            <select id="destinations" name="destinations[]" multiple size="7">
+              <option>Disneyland Park</option>
+              <option>California Adventure Park</option>
+              <option>Universal Studios</option>
+              <option>San Diego Zoo</option>
+              <option>SeaWorld</option>
+              <option>LegoLand</option>
+              <option>Las Vegas</option>
+              <option>Grand Canyon</option>
+              <option>San Francisco</option>
+              <option>Yosemite</option>
+              <option>Lake Tahoe</option>
+              <option>Reno</option>
+              <option>Silicon Valley Tour</option>
+            </select>
+          </label>
+          <label>Travelers:<input id="travelers" name="travelers" type="number" min="1" value="1"></label>
+          <label>Travel Days:<input id="travelDays" name="travelDays" type="number" min="1" value="1"></label>
+          <label>Stay:<select id="stayType" name="stayType"><option value="hotel">Hotel</option><option value="airbnb">Airbnb</option></select></label>
+          <label>Home-cooked Meal Days (Bay Area only):<input id="mealDays" name="mealDays" type="number" min="0" value="0"></label>
+        </fieldset>
         <div id="travel-cost-breakdown">
-          <p>Tickets: $<span id="ticketCost">0</span></p>
-          <p>Meals: $<span id="mealCost">0</span></p>
-          <p>Stay: $<span id="stayCost">0</span></p>
-          <p>Transport: $<span id="transportCost">0</span></p>
-          <strong>Total: $<span id="totalCost">0</span></strong>
+          <div class="cost-line">Tickets: <span id="ticketCost">0</span></div>
+          <div class="cost-line">Meals: <span id="mealCost">0</span></div>
+          <div class="cost-line">Stay: <span id="stayCost">0</span></div>
+          <div class="cost-line">Transport: <span id="transportCost">0</span></div>
+          <div class="cost-line" id="totalCostDisplay">Total: $<span id="totalCost">0</span></div>
         </div>
       </div>
 
-      <!-- Payment Options -->
       <fieldset>
         <legend>Payment</legend>
-        <label><input type="radio" name="payment" value="paypal" checked /> Pay via PayPal</label>
-        <label><input type="radio" name="payment" value="later" /> Pay on Pickup</label>
+        <label><input type="radio" name="payment" value="paypal" checked> Pay via PayPal</label>
+        <label><input type="radio" name="payment" value="pickup"> Pay on Pickup</label>
       </fieldset>
 
-      <input type="hidden" name="_next" value="https://johnntd.github.io/DuLichCali/thankyou.html" />
-      <input type="submit" value="Submit" />
+      <input type="hidden" name="_next" value="https://johnntd.github.io/DuLichCali/thankyou.html">
+      <input type="submit" value="Submit">
     </form>
   </main>
 
   <footer>
     <p>Contact: johnntd@gmail.com | Phone: 714-227-6007</p>
   </footer>
-
-  <script>
-    function toggleSections() {
-      const serviceType = document.querySelector('input[name="serviceType"]:checked').value;
-      document.getElementById('airport-section').style.display = serviceType === 'airport' ? 'block' : 'none';
-      document.getElementById('travel-section').style.display = serviceType === 'travel' ? 'block' : 'none';
-      document.getElementById('email-label').style.display = serviceType === 'travel' ? 'block' : 'none';
-    }
-    toggleSections();
-  </script>
 </body>
 </html>

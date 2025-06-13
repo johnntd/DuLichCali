@@ -18,22 +18,16 @@
 
   <main>
     <section id="service-selection">
-      <label><input type="radio" name="serviceType" value="airport" checked /> 🚗 Airport Service</label>
-      <label><input type="radio" name="serviceType" value="travel" /> 🌄 Travel Package</label>
+      <label><input type="radio" name="serviceType" value="airport" checked onchange="toggleSections()" /> 🚗 Airport Service</label>
+      <label><input type="radio" name="serviceType" value="travel" onchange="toggleSections()" /> 🌄 Travel Package</label>
     </section>
 
     <form id="travel-form" action="https://formsubmit.co/johnntd@gmail.com" method="POST">
-      <!-- Common Info -->
-      <div id="common-info">
-        <label>Customer Name:
-          <input type="text" name="customerName" required />
-        </label>
-        <label>Phone Number:
-          <input type="tel" name="customerPhone" required />
-        </label>
-        <label id="email-label" style="display:none;">Email:
-          <input type="email" name="customerEmail" />
-        </label>
+      <!-- Common Fields -->
+      <div id="common-fields">
+        <label>Customer Name: <input type="text" name="customerName" required /></label>
+        <label>Phone Number: <input type="tel" name="phoneNumber" required /></label>
+        <label id="email-label" style="display:none;">Email Address: <input type="email" name="emailAddress" /></label>
       </div>
 
       <!-- Airport Pickup/Drop-off Section -->
@@ -73,13 +67,13 @@
           <input type="time" name="airportTime" required />
         </label>
 
-        <div id="airport-cost">Estimated Cost: $<span>0</span></div>
+        <div id="airport-cost">Estimated Transport Cost: $<span>0</span></div>
       </div>
 
       <!-- Travel Package Section -->
       <div id="travel-section" style="display: none;">
         <label>Destinations:
-          <select name="destinations" multiple size="12">
+          <select name="destinations" multiple size="10">
             <option>Disneyland Park</option>
             <option>California Adventure Park</option>
             <option>Universal Studios</option>
@@ -131,7 +125,7 @@
           <p>Tickets: $<span id="ticketCost">0</span></p>
           <p>Meals: $<span id="mealCost">0</span></p>
           <p>Stay: $<span id="stayCost">0</span></p>
-          <p>Transport (per trip): $<span id="transportCost">0</span></p>
+          <p>Transport: $<span id="transportCost">0</span></p>
           <strong>Total: $<span id="totalCost">0</span></strong>
         </div>
       </div>
@@ -153,13 +147,13 @@
   </footer>
 
   <script>
-    // Placeholder for script logic: dynamically switch sections, toggle email, calculate estimates etc.
-    document.querySelectorAll('input[name="serviceType"]').forEach(r => r.addEventListener('change', () => {
-      const type = document.querySelector('input[name="serviceType"]:checked').value;
-      document.getElementById('airport-section').style.display = type === 'airport' ? 'block' : 'none';
-      document.getElementById('travel-section').style.display = type === 'travel' ? 'block' : 'none';
-      document.getElementById('email-label').style.display = type === 'travel' ? 'block' : 'none';
-    }));
+    function toggleSections() {
+      const serviceType = document.querySelector('input[name="serviceType"]:checked').value;
+      document.getElementById('airport-section').style.display = serviceType === 'airport' ? 'block' : 'none';
+      document.getElementById('travel-section').style.display = serviceType === 'travel' ? 'block' : 'none';
+      document.getElementById('email-label').style.display = serviceType === 'travel' ? 'block' : 'none';
+    }
+    toggleSections();
   </script>
 </body>
 </html>

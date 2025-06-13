@@ -162,8 +162,10 @@
                     <option value="LAX">LAX</option>
                     <option value="LGB">LGB</option>
                 </select>
-                <label for="pickup-address">Địa Chỉ Đón:</label>
-                <input type="text" id="pickup-address" placeholder="Nhập địa chỉ">
+                <div id="pickup-address-field" class="hidden">
+                    <label for="pickup-address">Địa Chỉ Đón:</label>
+                    <input type="text" id="pickup-address" placeholder="Nhập địa chỉ">
+                </div>
             </div>
             <label for="name">Họ Tên:</label>
             <input type="text" id="name" name="name" required>
@@ -581,12 +583,15 @@
         function toggleLodgingFields() {
             const lodging = document.querySelector('#lodging').value;
             document.querySelector('#no-lodging-fields').classList.toggle('hidden', lodging !== 'none');
+            toggleAirportFields();
             updateCost();
         }
 
         function toggleAirportFields() {
             const pickup = document.querySelector('#airport-pickup').checked;
+            const lodging = document.querySelector('#lodging').value;
             document.querySelector('#airport-fields').classList.toggle('hidden', !pickup);
+            document.querySelector('#pickup-address-field').classList.toggle('hidden', lodging !== 'none' || !pickup);
             updateCost();
         }
 
@@ -624,6 +629,7 @@
             let mealsCost = 0;
             let airportCost = 0;
 
+            // Transportation Cost
             const furthestDestination = allDestinations.reduce((max, dest) => {
                 const destination = destinations.find(d => d.name === dest);
                 return destination.distance > (max.distance || 0) ? destination : max;
@@ -634,6 +640,7 @@
                 transportCost *= 1.2;
             }
 
+            // Admission Cost
             allDestinations.forEach(dest => {
                 const destination = destinations.find(d => d.name === dest);
                 if (['Disneyland', 'California Adventure', 'Universal Studios'].includes(dest)) {
@@ -644,6 +651,7 @@
                 }
             });
 
+            // Lodging Cost
             const primaryDestination = allDestinations[0] || 'Disneyland';
             if (lodging === 'hotel') {
                 const baseCost = lodgingCosts[primaryDestination].hotel;
@@ -653,13 +661,15 @@
                 lodgingCost = baseCost * (1 + (travelers - 1) * 0.1) * days;
             }
 
+            // Meals Cost
             if (meals && allDestinations.some(dest => ['San Francisco', 'Silicon Valley'].includes(dest))) {
                 mealsCost = 35 * travelers * days;
             }
 
+            // Airport Pickup Cost
             if (airportPickup) {
                 if (lodging !== 'none') {
-                    airportCost = 50;
+                    airportCost = travelers <= 3 ? 50 : (50 + 30) * 1.2;
                 } else if (pickupAddress) {
                     if (pickupAddress.match(/90[0-9]{3}/)) airportCost = 100;
                     else if (pickupAddress.match(/908[0-9]{2}/)) airportCost = 80;
@@ -669,13 +679,14 @@
                         const distance = await calculateDistance('Santa Ana, CA', pickupAddress);
                         airportCost = distance ? distance * 2 * 2.50 : 150;
                     }
-                }
-                if (travelers > 3) {
-                    airportCost += 30;
-                    airportCost *= 1.2;
+                    if (travelers > 3) {
+                        airportCost += 30;
+                        airportCost *= 1.2;
+                    }
                 }
             }
 
+            // Update Cost Estimate
             const total = transportCost + admissionCost + lodgingCost + mealsCost + airportCost;
             document.querySelector('#travel-cost').innerHTML = `
                 <h3>${currentLang === 'vi' ? 'Ước Tính Chi Phí' : 'Cost Estimate'}</h3>
@@ -712,6 +723,15 @@
             const phone = document.querySelector('#phone').value;
             const email = document.querySelector('#email').value;
 
+            if (lodging === 'none' && !dropoffAddress) {
+                alert(currentLang === 'vi' ? 'Vui lòng nhập địa chỉ đưa đón khi không chọn chỗ ở.' : 'Please enter a drop-off address when no lodging is selected.');
+                return false;
+            }
+            if (airportPickup && lodging === 'none' && !pickupAddress) {
+                alert(currentLang === 'vi' ? 'Vui lòng nhập địa chỉ đón khi chọn đón sân bay và không có chỗ ở.' : 'Please enter a pickup address when selecting airport pickup with no lodging.');
+                return false;
+            }
+
             try {
                 const docRef = await db.collection('bookings').add({
                     serviceType: 'travel',
@@ -729,7 +749,7 @@
                         meals,
                         airportPickup,
                         airport: airportPickup ? airport : '',
-                        pickupAddress: airportPickup ? pickupAddress : '',
+                        pickupAddress: airportPickup && lodging === 'none' ? pickupAddress : '',
                         name,
                         phone,
                         email
@@ -742,6 +762,7 @@
             } catch (error) {
                 alert(currentLang === 'vi' ? 'Lỗi khi lưu đặt chỗ: ' + error.message : 'Error saving booking: ' + error.message);
             }
+            return false;
         }
 
         // Airport Service Logic
@@ -790,6 +811,11 @@
             const name = document.querySelector('#customer-name').value;
             const phone = document.querySelector('#customer-phone').value;
 
+            if (!address) {
+                alert(currentLang === 'vi' ? 'Vui lòng nhập địa chỉ.' : 'Please enter an address.');
+                return false;
+            }
+
             try {
                 const docRef = await db.collection('bookings').add({
                     serviceType: 'airport',
@@ -811,6 +837,7 @@
             } catch (error) {
                 alert(currentLang === 'vi' ? 'Lỗi khi lưu đặt chỗ: ' + error.message : 'Error saving booking: ' + error.message);
             }
+            return false;
         }
 
         // Initialize

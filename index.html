@@ -5,47 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</title>
   <link rel="stylesheet" href="styles.css" />
-  <!-- Load Google Maps JavaScript API once -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2hdNmd5pVvTynpInJn3DN7htrOLlK0CE&libraries=places"></script>
-  <script>
-    function setLanguage(lang) {
-      // Language toggle logic placeholder
-      alert('Language switched to: ' + lang);
-    }
-
-    function calculateDistanceAndCost() {
-      const serviceType = document.querySelector('input[name="serviceType"]:checked').value;
-      if (serviceType !== 'airport') return;
-
-      const origin = 'Orange County, CA';
-      const street = document.querySelector('[name="addressStreet"]').value;
-      const city = document.querySelector('[name="addressCity"]').value;
-      const state = document.querySelector('[name="addressState"]').value;
-      const zip = document.querySelector('[name="addressZip"]').value;
-      const destination = `${street}, ${city}, ${state} ${zip}`;
-
-      const service = new google.maps.DistanceMatrixService();
-      service.getDistanceMatrix({
-        origins: [origin],
-        destinations: [destination],
-        travelMode: 'DRIVING',
-        unitSystem: google.maps.UnitSystem.IMPERIAL
-      }, function (response, status) {
-        if (status === 'OK') {
-          const distanceText = response.rows[0].elements[0].distance.text;
-          const distanceMiles = parseFloat(distanceText);
-          const cost = distanceMiles * 2.5;
-          document.querySelector('#airport-cost span').textContent = cost.toFixed(2);
-        }
-      });
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('#airport-section input, #airport-section select').forEach(el => {
-        el.addEventListener('change', calculateDistanceAndCost);
-      });
-    });
-  </script>
 </head>
 <body>
   <header>
@@ -59,19 +19,19 @@
 
   <main>
     <section id="service-selection">
-      <label><input type="radio" name="serviceType" value="airport" checked /> 🚗 Airport Service</label>
-      <label><input type="radio" name="serviceType" value="travel" /> 🌄 Travel Package</label>
+      <label><input type="radio" name="serviceType" value="airport" checked onchange="toggleServiceSection()" /> 🚗 Airport Service</label>
+      <label><input type="radio" name="serviceType" value="travel" onchange="toggleServiceSection()" /> 🌄 Travel Package</label>
     </section>
 
     <form id="travel-form" action="https://formsubmit.co/johnntd@gmail.com" method="POST">
       <!-- Airport Pickup/Drop-off Section -->
       <div id="airport-section">
-        <label>Name:
-          <input type="text" name="airportName" required />
-        </label>
-        <label>Phone:
-          <input type="tel" name="airportPhone" required />
-        </label>
+        <fieldset>
+          <legend>Customer Info</legend>
+          <input type="text" name="customerNameAirport" placeholder="Full Name" required />
+          <input type="tel" name="customerPhoneAirport" placeholder="Phone Number" required />
+        </fieldset>
+
         <label>Pickup or Drop-off:
           <select name="airportService">
             <option value="pickup">Pickup</option>
@@ -107,20 +67,17 @@
           <input type="time" name="airportTime" required />
         </label>
 
-        <div id="airport-cost">Estimated Cost: $<span>0</span></div>
+        <div id="airport-cost">Estimated Cost: $<span id="airportCostValue">0</span></div>
       </div>
 
       <!-- Travel Package Section -->
       <div id="travel-section" style="display: none;">
-        <label>Name:
-          <input type="text" name="travelName" required />
-        </label>
-        <label>Phone:
-          <input type="tel" name="travelPhone" required />
-        </label>
-        <label>Email:
-          <input type="email" name="travelEmail" required />
-        </label>
+        <fieldset>
+          <legend>Customer Info</legend>
+          <input type="text" name="customerNameTravel" placeholder="Full Name" required />
+          <input type="tel" name="customerPhoneTravel" placeholder="Phone Number" required />
+          <input type="email" name="customerEmailTravel" placeholder="Email Address" required />
+        </fieldset>
 
         <label>Destinations:
           <select name="destinations" multiple size="10">
@@ -195,5 +152,13 @@
   <footer>
     <p>Contact: johnntd@gmail.com | Phone: 714-227-6007</p>
   </footer>
+
+  <script>
+    function toggleServiceSection() {
+      const serviceType = document.querySelector('input[name="serviceType"]:checked').value;
+      document.getElementById('airport-section').style.display = serviceType === 'airport' ? 'block' : 'none';
+      document.getElementById('travel-section').style.display = serviceType === 'travel' ? 'block' : 'none';
+    }
+  </script>
 </body>
 </html>

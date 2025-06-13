@@ -908,164 +908,195 @@
         }
         
         // Calculate cost for travel service
-        function calculateCost() {
-            // Get package and destinations
-            const package = document.getElementById('package').value;
-            const extraDestinations = Array.from(document.getElementById('extraDestinations').selectedOptions)
-                .map(option => option.value);
-            
-            // Get dates
-            const travelDate = document.getElementById('travelDate').value;
-            const returnDate = document.getElementById('returnDate').value;
-            
-            // Calculate number of days
-            let days = 1;
-            if (travelDate && returnDate) {
-                const startDate = new Date(travelDate);
-                const endDate = new Date(returnDate);
-                days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-            }
-            
-            // Get number of travelers
-            let travelers;
-            if (package === 'disney' || package === 'universal') {
-                const adults = parseInt(document.getElementById('adults').value) || 0;
-                const kids = parseInt(document.getElementById('kids').value) || 0;
-                travelers = adults + kids;
-                document.getElementById('travelers').value = travelers;
-            } else {
-                travelers = parseInt(document.getElementById('travelers').value) || 1;
-            }
-            
-            // Calculate transportation cost
-            let transportationCost = 0;
-            let maxDistance = 0;
-            
-            // Get all selected destinations
-            let destinations = [];
-            switch(package) {
-                case 'disney':
-                    destinations = ['disneyland', 'california_adventure'];
-                    break;
-                case 'san_diego':
-                    destinations = ['san_diego_zoo', 'seaworld', 'legoland'];
-                    break;
-                case 'universal':
-                    destinations = ['universal_studios'];
-                    break;
-                case 'parks':
-                    destinations = ['grand_canyon', 'yosemite'];
-                    break;
-                case 'city':
-                    destinations = ['las_vegas', 'san_francisco', 'reno'];
-                    break;
-                case 'custom':
-                    destinations = [];
-                    break;
-            }
-            
-            // Add extra destinations
-            destinations = destinations.concat(extraDestinations);
-            
-            // Find the furthest destination
-            destinations.forEach(dest => {
+       function calculateCost() {
+    // Get package and destinations
+    const package = document.getElementById('package').value;
+    const extraDestinations = Array.from(document.getElementById('extraDestinations').selectedOptions)
+        .map(option => option.value);
+    
+    // Get dates
+    const travelDate = document.getElementById('travelDate').value;
+    const returnDate = document.getElementById('returnDate').value;
+    
+    // Calculate number of days
+    let days = 1;
+    if (travelDate && returnDate) {
+        const startDate = new Date(travelDate);
+        const endDate = new Date(returnDate);
+        days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+    }
+    
+    // Get number of travelers
+    let travelers;
+    if (package === 'disney' || package === 'universal') {
+        const adults = parseInt(document.getElementById('adults').value) || 0;
+        const kids = parseInt(document.getElementById('kids').value) || 0;
+        travelers = adults + kids;
+        document.getElementById('travelers').value = travelers;
+    } else {
+        travelers = parseInt(document.getElementById('travelers').value) || 1;
+    }
+    
+    // Calculate transportation cost - FIXED
+    let transportationCost = 0;
+    let maxDistance = 0;
+    
+    // Special handling for package destinations
+    switch(package) {
+        case 'disney':
+            maxDistance = 60; // Disneyland round trip distance
+            break;
+        case 'san_diego':
+            maxDistance = 190; // San Diego Zoo round trip distance
+            break;
+        case 'universal':
+            maxDistance = 100; // Universal Studios round trip distance
+            break;
+        case 'parks':
+            maxDistance = 960; // Grand Canyon round trip distance
+            break;
+        case 'city':
+            maxDistance = 860; // San Francisco round trip distance
+            break;
+        default:
+            // For custom packages, find max distance from extra destinations
+            extraDestinations.forEach(dest => {
                 const distance = destinationDistances[dest] || 0;
-                if (distance > maxDistance) {
-                    maxDistance = distance;
-                }
+                if (distance > maxDistance) maxDistance = distance;
             });
-            
-            // Calculate base transportation cost
-            if (maxDistance > 0) {
-                transportationCost = maxDistance * 2.5 * days;
-            }
-            
-            // Apply Mercedes surcharge if more than 3 travelers
-            let mercedesSurcharge = 0;
-            if (travelers > 3) {
-                mercedesSurcharge = 30 * days;
-                transportationCost *= 1.2; // 20% surcharge
-            }
-            transportationCost += mercedesSurcharge;
-            
-            // Calculate admission fees
-            let admissionCost = 0;
-            
-            if (package === 'disney' || package === 'universal') {
-                const adults = parseInt(document.getElementById('adults').value) || 0;
-                const kids = parseInt(document.getElementById('kids').value) || 0;
-                const ticketType = document.getElementById('ticketType').value;
-                
-                destinations.forEach(dest => {
-                    if (admissionFees[dest] && typeof admissionFees[dest] === 'object') {
-                        // Theme park with different ticket types
-                        admissionCost += adults * admissionFees[dest][ticketType].adult;
-                        admissionCost += kids * admissionFees[dest][ticketType].kid;
-                    }
-                });
-            } else {
-                // Non-theme park destinations
-                destinations.forEach(dest => {
-                    if (admissionFees[dest] && typeof admissionFees[dest] === 'number') {
-                        admissionCost += travelers * admissionFees[dest];
-                    }
-                });
-            }
-            
-            // Calculate lodging cost
-            let lodgingCost = 0;
-            const lodgingType = document.getElementById('lodgingType').value;
-            
-            if (lodgingType !== 'none' && days > 1) {
-                // Estimate lodging cost based on primary destination
-                let primaryDestination = destinations[0] || 'disneyland';
-                const lodgingRates = lodgingCosts[primaryDestination] || lodgingCosts.disneyland;
-                
-                if (lodgingType === 'hotel') {
-                    // Hotel cost (need more rooms for >5 people)
-                    const roomsNeeded = travelers > 5 ? 2 : 1;
-                    lodgingCost = roomsNeeded * lodgingRates.hotel * (days - 1);
-                } else if (lodgingType === 'airbnb') {
-                    // Airbnb cost (scales with number of people)
-                    lodgingCost = Math.ceil(travelers / 4) * lodgingRates.airbnb * (days - 1);
-                }
-            }
-            
-            // Calculate meals cost
-            let mealsCost = 0;
-            const includeMeals = document.getElementById('includeMeals').checked;
-            
-            if (includeMeals && package === 'city') {
-                mealsCost = travelers * 35 * days;
-            }
-            
-            // Calculate airport pickup cost
-            let airportPickupCost = 0;
-            const airportPickup = document.getElementById('airportPickup').value;
-            
-            if (airportPickup !== 'none') {
-                // For simplicity, we'll use base costs here
-                // In a real app, you'd calculate based on distance from airport
-                if (travelers <= 3) {
-                    airportPickupCost = 50; // Base Orange County cost
-                } else {
-                    // Mercedes surcharge for >3 travelers
-                    airportPickupCost = 50 * 1.2 + 30;
-                }
-            }
-            
-            // Calculate total cost
-            const totalCost = transportationCost + admissionCost + lodgingCost + mealsCost + airportPickupCost;
-            
-            // Update the cost display
-            document.getElementById('transportationCost').textContent = `$${transportationCost.toFixed(2)}`;
-            document.getElementById('admissionCost').textContent = `$${admissionCost.toFixed(2)}`;
-            document.getElementById('lodgingCost').textContent = `$${lodgingCost.toFixed(2)}`;
-            document.getElementById('mealsCost').textContent = `$${mealsCost.toFixed(2)}`;
-            document.getElementById('airportPickupCost').textContent = `$${airportPickupCost.toFixed(2)}`;
-            document.getElementById('totalCost').textContent = `$${totalCost.toFixed(2)}`;
+    }
+    
+    // Calculate base transportation cost
+    if (maxDistance > 0) {
+        transportationCost = maxDistance * 2.5 * days;
+    }
+    
+    // Apply Mercedes surcharge if more than 3 travelers
+    let mercedesSurcharge = 0;
+    if (travelers > 3) {
+        mercedesSurcharge = 30 * days;
+        transportationCost = transportationCost * 1.2; // 20% surcharge
+    }
+    transportationCost += mercedesSurcharge;
+    
+    // Calculate admission fees - FIXED (was correct)
+    let admissionCost = 0;
+    
+    if (package === 'disney' || package === 'universal') {
+        const adults = parseInt(document.getElementById('adults').value) || 0;
+        const kids = parseInt(document.getElementById('kids').value) || 0;
+        const ticketType = document.getElementById('ticketType').value;
+        
+        // Handle Disney/California Adventure packages
+        if (package === 'disney') {
+            admissionCost += adults * admissionFees.disneyland[ticketType].adult * 2; // 2 parks
+            admissionCost += kids * admissionFees.disneyland[ticketType].kid * 2; // 2 parks
+        } 
+        // Handle Universal package
+        else if (package === 'universal') {
+            admissionCost += adults * admissionFees.universal_studios[ticketType].adult;
+            admissionCost += kids * admissionFees.universal_studios[ticketType].kid;
+        }
+    } else {
+        // Non-theme park destinations
+        let destinations = [];
+        switch(package) {
+            case 'san_diego':
+                destinations = ['san_diego_zoo', 'seaworld', 'legoland'];
+                break;
+            case 'parks':
+                destinations = ['grand_canyon', 'yosemite'];
+                break;
+            case 'city':
+                destinations = ['las_vegas', 'san_francisco', 'reno'];
+                break;
+            default:
+                destinations = extraDestinations;
         }
         
+        destinations.forEach(dest => {
+            if (admissionFees[dest] && typeof admissionFees[dest] === 'number') {
+                admissionCost += travelers * admissionFees[dest];
+            }
+        });
+    }
+    
+    // Calculate lodging cost - FIXED
+    let lodgingCost = 0;
+    const lodgingType = document.getElementById('lodgingType').value;
+    
+    if (lodgingType !== 'none' && days > 1) {
+        const nights = days - 1;
+        let rate = 150; // Default hotel rate
+        
+        // Adjust rate based on destination
+        if (package === 'disney') {
+            rate = 150; // Disneyland area hotels
+        } else if (package === 'universal') {
+            rate = 130; // Universal Studios area hotels
+        } else if (package === 'san_diego') {
+            rate = 140; // San Diego hotels
+        }
+        // Other packages use default rate
+        
+        if (lodgingType === 'hotel') {
+            const roomsNeeded = travelers > 5 ? 2 : 1;
+            lodgingCost = roomsNeeded * rate * nights;
+        } else if (lodgingType === 'airbnb') {
+            const multiplier = Math.ceil(travelers / 4);
+            lodgingCost = multiplier * (rate * 0.8) * nights; // Airbnb is 80% of hotel rate
+        }
+    }
+    
+    // Calculate meals cost
+    let mealsCost = 0;
+    const includeMeals = document.getElementById('includeMeals').checked;
+    
+    if (includeMeals && package === 'city') {
+        mealsCost = travelers * 35 * days;
+    }
+    
+    // Calculate airport pickup cost - FIXED (was correct)
+    let airportPickupCost = 0;
+    const airportPickup = document.getElementById('airportPickup').value;
+    const airportPassengers = travelers;
+    
+    if (airportPickup !== 'none') {
+        // Base cost based on airport
+        let baseCost;
+        switch(airportPickup) {
+            case 'LAX':
+                baseCost = 100;
+                break;
+            case 'SNA':
+                baseCost = 50;
+                break;
+            case 'LGB':
+                baseCost = 80;
+                break;
+            default:
+                baseCost = 150;
+        }
+        
+        // Apply surcharge for larger groups
+        if (airportPassengers > 3) {
+            airportPickupCost = (baseCost * 1.2) + 30;
+        } else {
+            airportPickupCost = baseCost;
+        }
+    }
+    
+    // Calculate total cost
+    const totalCost = transportationCost + admissionCost + lodgingCost + mealsCost + airportPickupCost;
+    
+    // Update the cost display
+    document.getElementById('transportationCost').textContent = `$${transportationCost.toFixed(2)}`;
+    document.getElementById('admissionCost').textContent = `$${admissionCost.toFixed(2)}`;
+    document.getElementById('lodgingCost').textContent = `$${lodgingCost.toFixed(2)}`;
+    document.getElementById('mealsCost').textContent = `$${mealsCost.toFixed(2)}`;
+    document.getElementById('airportPickupCost').textContent = `$${airportPickupCost.toFixed(2)}`;
+    document.getElementById('totalCost').textContent = `$${totalCost.toFixed(2)}`;
+}        
         // Calculate cost for airport service
         function calculateAirportCost() {
             const airport = document.getElementById('airport').value;

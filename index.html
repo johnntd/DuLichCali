@@ -18,19 +18,16 @@
 
   <main>
     <section id="service-selection">
-      <label><input type="radio" name="serviceType" value="airport" checked /> 🚗 Airport Service</label>
-      <label><input type="radio" name="serviceType" value="travel" /> 🌄 Travel Package</label>
+      <label><input type="radio" name="serviceType" value="airport" checked onchange="toggleServiceSections()" /> 🚗 Airport Service</label>
+      <label><input type="radio" name="serviceType" value="travel" onchange="toggleServiceSections()" /> 🌄 Travel Package</label>
     </section>
 
     <form id="travel-form" action="https://formsubmit.co/johnntd@gmail.com" method="POST">
       <!-- Airport Pickup/Drop-off Section -->
       <div id="airport-section">
-        <label>Customer Name:
-          <input type="text" name="customerNameAirport" required />
-        </label>
-        <label>Phone:
-          <input type="tel" name="customerPhoneAirport" required />
-        </label>
+        <label>Customer Name: <input type="text" name="airportName" required></label>
+        <label>Phone Number: <input type="tel" name="airportPhone" required></label>
+
         <label>Pickup or Drop-off:
           <select name="airportService">
             <option value="pickup">Pickup</option>
@@ -71,15 +68,9 @@
 
       <!-- Travel Package Section -->
       <div id="travel-section" style="display: none;">
-        <label>Customer Name:
-          <input type="text" name="customerNameTravel" required />
-        </label>
-        <label>Phone:
-          <input type="tel" name="customerPhoneTravel" required />
-        </label>
-        <label>Email:
-          <input type="email" name="customerEmailTravel" required />
-        </label>
+        <label>Customer Name: <input type="text" name="travelName" required></label>
+        <label>Phone Number: <input type="tel" name="travelPhone" required></label>
+        <label>Email Address: <input type="email" name="travelEmail" required></label>
 
         <label>Destinations:
           <select name="destinations" multiple size="10">
@@ -156,28 +147,17 @@
   </footer>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const airportSection = document.getElementById('airport-section');
-      const travelSection = document.getElementById('travel-section');
-      const serviceRadios = document.querySelectorAll('input[name="serviceType"]');
+    function toggleServiceSections() {
+      const serviceType = document.querySelector('input[name="serviceType"]:checked').value;
+      document.getElementById('airport-section').style.display = serviceType === 'airport' ? 'block' : 'none';
+      document.getElementById('travel-section').style.display = serviceType === 'travel' ? 'block' : 'none';
+    }
 
-      function toggleServiceSections() {
-        const selected = document.querySelector('input[name="serviceType"]:checked').value;
-        if (selected === 'airport') {
-          airportSection.style.display = 'block';
-          travelSection.style.display = 'none';
-        } else {
-          airportSection.style.display = 'none';
-          travelSection.style.display = 'block';
-        }
-      }
+    function setLanguage(lang) {
+      document.documentElement.lang = lang;
+    }
 
-      serviceRadios.forEach(radio => {
-        radio.addEventListener('change', toggleServiceSections);
-      });
-
-      toggleServiceSections();
-    });
+    toggleServiceSections();
   </script>
 </body>
 </html>

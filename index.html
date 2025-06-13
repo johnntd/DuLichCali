@@ -9,7 +9,7 @@
 <body>
   <header>
     <img src="logo.png" alt="Business Logo" id="logo" />
-    <h1 data-en="Premium Travel Services in the USA" data-vi="Dịch Vụ Du Lịch Cao Cấp tại Mỹ">Dịch Vụ Du Lịch Cao Cấp tại Mỹ</h1>
+    <h1>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</h1>
     <div id="language-toggle">
       <button onclick="setLanguage('en')">English</button>
       <button onclick="setLanguage('vi')">Tiếng Việt</button>
@@ -18,67 +18,67 @@
 
   <main>
     <section id="service-selection">
-      <label><input type="radio" name="serviceType" value="airport" checked onchange="toggleServiceSections()" /> 🚗 <span data-en="Airport Service" data-vi="Dịch Vụ Đưa Đón Sân Bay">Dịch Vụ Đưa Đón Sân Bay</span></label>
-      <label><input type="radio" name="serviceType" value="travel" onchange="toggleServiceSections()" /> 🌄 <span data-en="Travel Package" data-vi="Gói Du Lịch">Gói Du Lịch</span></label>
+      <label><input type="radio" name="serviceType" value="airport" checked onchange="toggleService()" /> 🚗 Airport Service</label>
+      <label><input type="radio" name="serviceType" value="travel" onchange="toggleService()" /> 🌄 Travel Package</label>
     </section>
 
     <form id="travel-form" action="https://formsubmit.co/johnntd@gmail.com" method="POST">
+      <!-- Customer Info -->
+      <div id="customer-info">
+        <label>Họ và tên / Full Name:
+          <input type="text" name="customerName" required />
+        </label>
+        <label>Số điện thoại / Phone:
+          <input type="tel" name="customerPhone" required />
+        </label>
+        <label id="email-field">Email:
+          <input type="email" name="customerEmail" />
+        </label>
+      </div>
+
       <!-- Airport Pickup/Drop-off Section -->
       <div id="airport-section">
-        <fieldset>
-          <legend data-en="Customer Info" data-vi="Thông Tin Khách Hàng">Thông Tin Khách Hàng</legend>
-          <input type="text" name="airportName" placeholder="Tên Khách" required />
-          <input type="tel" name="airportPhone" placeholder="Số Điện Thoại" required />
-        </fieldset>
-
-        <label data-en="Pickup or Drop-off:" data-vi="Đón hoặc Trả:">
+        <label>Pickup or Drop-off:
           <select name="airportService">
-            <option value="pickup">Đón</option>
-            <option value="dropoff">Trả</option>
+            <option value="pickup">Pickup</option>
+            <option value="dropoff">Drop-off</option>
           </select>
         </label>
 
-        <label data-en="Airport:" data-vi="Sân Bay:">
+        <label>Airport:
           <select name="airport">
             <option value="SNA">Orange County (SNA)</option>
-            <option value="LAX">Los Angeles (LAX)</option>
+            <option value="LAX">Los Angeles International (LAX)</option>
             <option value="LGB">Long Beach (LGB)</option>
           </select>
         </label>
 
         <fieldset>
-          <legend data-en="Pickup/Drop-off Address" data-vi="Địa Chỉ Đón/Trả">Địa Chỉ Đón/Trả</legend>
-          <input type="text" name="addressStreet" placeholder="Địa chỉ" required />
-          <input type="text" name="addressCity" placeholder="Thành Phố" required />
-          <input type="text" name="addressState" placeholder="Tiểu Bang" required />
-          <input type="text" name="addressZip" placeholder="Mã ZIP" required />
+          <legend>Pickup/Drop-off Address</legend>
+          <input type="text" name="addressStreet" placeholder="Street Address" required />
+          <input type="text" name="addressCity" placeholder="City" required />
+          <input type="text" name="addressState" placeholder="State" required />
+          <input type="text" name="addressZip" placeholder="ZIP Code" required />
         </fieldset>
 
-        <label data-en="Number of People:" data-vi="Số Người:">
+        <label>Number of People:
           <input type="number" name="numPeople" min="1" max="12" value="1" />
         </label>
 
-        <label data-en="Date:" data-vi="Ngày:">
+        <label>Date:
           <input type="date" name="airportDate" required />
         </label>
 
-        <label data-en="Time:" data-vi="Giờ:">
+        <label>Time:
           <input type="time" name="airportTime" required />
         </label>
 
-        <div id="airport-cost">Chi Phí Ước Tính: $<span id="airportEstimate">0</span></div>
+        <div id="airport-cost">Estimated Cost: $<span>0</span></div>
       </div>
 
       <!-- Travel Package Section -->
       <div id="travel-section" style="display: none;">
-        <fieldset>
-          <legend data-en="Customer Info" data-vi="Thông Tin Khách Hàng">Thông Tin Khách Hàng</legend>
-          <input type="text" name="travelName" placeholder="Tên Khách" required />
-          <input type="tel" name="travelPhone" placeholder="Số Điện Thoại" required />
-          <input type="email" name="travelEmail" placeholder="Email" required />
-        </fieldset>
-
-        <label data-en="Destinations:" data-vi="Điểm Đến:">
+        <label>Destinations:
           <select name="destinations" multiple size="10">
             <option>Disneyland Park</option>
             <option>California Adventure Park</option>
@@ -96,81 +96,70 @@
           </select>
         </label>
 
-        <label data-en="Number of Travelers:" data-vi="Số Người Đi Du Lịch:">
+        <label>Travelers:
           <input type="number" name="travelers" min="1" max="12" value="1" />
         </label>
 
-        <label data-en="Number of Travel Days:" data-vi="Số Ngày Du Lịch:">
+        <label>Travel Days:
           <input type="number" name="travelDays" min="1" />
         </label>
 
-        <label data-en="Stay Type:" data-vi="Loại Chỗ Ở:">
+        <label>Stay:
           <select name="stayType">
-            <option value="hotel">Khách Sạn (~$180/đêm)</option>
-            <option value="airbnb">Airbnb (~$140/đêm)</option>
+            <option value="hotel">Hotel (~$180/night)</option>
+            <option value="airbnb">Airbnb (~$140/night)</option>
           </select>
         </label>
 
-        <label data-en="Home-cooked Meals (Bay Area):" data-vi="Bữa Ăn Nhà Nấu (Bay Area):">
+        <label>Home-cooked Meals (Bay Area):
           <input type="number" name="mealDays" min="0" value="0" />
         </label>
 
-        <label data-en="Pickup Date:" data-vi="Ngày Đón:">
+        <label>Pickup Date:
           <input type="date" name="travelDate" />
         </label>
 
-        <label data-en="Pickup Time:" data-vi="Giờ Đón:">
+        <label>Pickup Time:
           <input type="time" name="travelTime" />
         </label>
 
-        <label data-en="Include Airport Pickup?" data-vi="Có Đón Ở Sân Bay?">
+        <label>Include airport pickup?
           <input type="checkbox" name="includeAirport" />
         </label>
 
         <div id="travel-cost-breakdown">
-          <p>Vé Tham Quan: $<span id="ticketCost">0</span></p>
-          <p>Bữa Ăn: $<span id="mealCost">0</span></p>
-          <p>Chỗ Ở: $<span id="stayCost">0</span></p>
-          <p>Chi Phí Di Chuyển: $<span id="transportCost">0</span></p>
-          <strong>Tổng Cộng: $<span id="totalCost">0</span></strong>
+          <p>Tickets: $<span id="ticketCost">0</span></p>
+          <p>Meals: $<span id="mealCost">0</span></p>
+          <p>Stay: $<span id="stayCost">0</span></p>
+          <p>Transport: $<span id="transportCost">0</span></p>
+          <strong>Total: $<span id="totalCost">0</span></strong>
         </div>
       </div>
 
       <!-- Payment Options -->
       <fieldset>
-        <legend data-en="Payment" data-vi="Thanh Toán">Thanh Toán</legend>
-        <label><input type="radio" name="payment" value="paypal" checked /> PayPal</label>
-        <label><input type="radio" name="payment" value="later" /> Trả Khi Đón</label>
+        <legend>Payment</legend>
+        <label><input type="radio" name="payment" value="paypal" checked /> Pay via PayPal</label>
+        <label><input type="radio" name="payment" value="later" /> Pay on Pickup</label>
       </fieldset>
 
       <input type="hidden" name="_next" value="https://johnntd.github.io/DuLichCali/thankyou.html" />
-      <input type="submit" value="Gửi" />
+      <input type="submit" value="Submit" />
     </form>
   </main>
 
   <footer>
-    <p>Liên hệ: johnntd@gmail.com | Điện thoại: 714-227-6007</p>
+    <p>Contact: johnntd@gmail.com | Phone: 714-227-6007</p>
   </footer>
 
   <script>
-    function toggleServiceSections() {
+    function toggleService() {
       const isAirport = document.querySelector('input[name="serviceType"]:checked').value === 'airport';
       document.getElementById('airport-section').style.display = isAirport ? 'block' : 'none';
       document.getElementById('travel-section').style.display = isAirport ? 'none' : 'block';
+      document.getElementById('email-field').style.display = isAirport ? 'none' : 'block';
     }
-
-    function setLanguage(lang) {
-      document.querySelectorAll('[data-en]').forEach(el => {
-        el.innerText = el.getAttribute('data-' + lang);
-      });
-      document.documentElement.lang = lang;
-    }
-
-    // Set Vietnamese as default
-    window.onload = () => {
-      setLanguage('vi');
-      toggleServiceSections();
-    };
+    window.onload = toggleService;
   </script>
 </body>
 </html>

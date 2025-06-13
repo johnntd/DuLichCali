@@ -5,60 +5,44 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</title>
   <link rel="stylesheet" href="styles.css" />
-  <!-- Load Google Maps JavaScript API ONCE -->
+  <!-- Load Google Maps JavaScript API once -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2hdNmd5pVvTynpInJn3DN7htrOLlK0CE&libraries=places"></script>
   <script>
     function setLanguage(lang) {
-      document.documentElement.lang = lang;
-      const elements = document.querySelectorAll('[data-en], [data-vi]');
-      elements.forEach(el => {
-        el.innerText = el.dataset[lang];
-      });
+      // Language toggle logic placeholder
+      alert('Language switched to: ' + lang);
     }
 
-    function toggleSections() {
-      const airportSection = document.getElementById('airport-section');
-      const travelSection = document.getElementById('travel-section');
+    function calculateDistanceAndCost() {
       const serviceType = document.querySelector('input[name="serviceType"]:checked').value;
-      if (serviceType === 'airport') {
-        airportSection.style.display = 'block';
-        travelSection.style.display = 'none';
-      } else {
-        airportSection.style.display = 'none';
-        travelSection.style.display = 'block';
-      }
-    }
+      if (serviceType !== 'airport') return;
 
-    function calculateAirportCost() {
+      const origin = 'Orange County, CA';
       const street = document.querySelector('[name="addressStreet"]').value;
       const city = document.querySelector('[name="addressCity"]').value;
       const state = document.querySelector('[name="addressState"]').value;
       const zip = document.querySelector('[name="addressZip"]').value;
       const destination = `${street}, ${city}, ${state} ${zip}`;
-      const origin = 'Orange County, CA';
 
       const service = new google.maps.DistanceMatrixService();
       service.getDistanceMatrix({
         origins: [origin],
         destinations: [destination],
-        travelMode: 'DRIVING'
-      }, (response, status) => {
+        travelMode: 'DRIVING',
+        unitSystem: google.maps.UnitSystem.IMPERIAL
+      }, function (response, status) {
         if (status === 'OK') {
           const distanceText = response.rows[0].elements[0].distance.text;
-          const distanceMiles = parseFloat(distanceText.replace(/[^0-9.]/g, ''));
+          const distanceMiles = parseFloat(distanceText);
           const cost = distanceMiles * 2.5;
-          document.querySelector('#airport-cost span').innerText = cost.toFixed(2);
+          document.querySelector('#airport-cost span').textContent = cost.toFixed(2);
         }
       });
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('input[name="serviceType"]').forEach(el => {
-        el.addEventListener('change', toggleSections);
-      });
-
-      document.querySelectorAll('#airport-section input').forEach(el => {
-        el.addEventListener('input', calculateAirportCost);
+      document.querySelectorAll('#airport-section input, #airport-section select').forEach(el => {
+        el.addEventListener('change', calculateDistanceAndCost);
       });
     });
   </script>
@@ -82,6 +66,12 @@
     <form id="travel-form" action="https://formsubmit.co/johnntd@gmail.com" method="POST">
       <!-- Airport Pickup/Drop-off Section -->
       <div id="airport-section">
+        <label>Name:
+          <input type="text" name="airportName" required />
+        </label>
+        <label>Phone:
+          <input type="tel" name="airportPhone" required />
+        </label>
         <label>Pickup or Drop-off:
           <select name="airportService">
             <option value="pickup">Pickup</option>
@@ -122,6 +112,16 @@
 
       <!-- Travel Package Section -->
       <div id="travel-section" style="display: none;">
+        <label>Name:
+          <input type="text" name="travelName" required />
+        </label>
+        <label>Phone:
+          <input type="tel" name="travelPhone" required />
+        </label>
+        <label>Email:
+          <input type="email" name="travelEmail" required />
+        </label>
+
         <label>Destinations:
           <select name="destinations" multiple size="10">
             <option>Disneyland Park</option>

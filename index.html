@@ -4,7 +4,50 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</title>
-  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: url('california-bg.jpg') no-repeat center center fixed;
+      background-size: cover;
+    }
+    header, footer {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px;
+      text-align: center;
+    }
+    #logo {
+      max-width: 100px;
+    }
+    main {
+      background: rgba(255, 255, 255, 0.95);
+      margin: auto;
+      padding: 20px;
+      max-width: 800px;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    label, fieldset {
+      margin-bottom: 15px;
+    }
+    input, select, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 20px;
+      }
+      label, input, select, textarea, button {
+        font-size: 14px;
+      }
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -17,149 +60,50 @@
   </header>
 
   <main>
-    <section id="service-selection">
-      <label><input type="radio" name="serviceType" value="airport" checked onchange="toggleService()" /> 🚗 Airport Service</label>
-      <label><input type="radio" name="serviceType" value="travel" onchange="toggleService()" /> 🌄 Travel Package</label>
-    </section>
-
     <form id="travel-form" action="https://formsubmit.co/johnntd@gmail.com" method="POST">
-      <!-- Customer Info -->
-      <div id="customer-info">
-        <label>Họ và tên / Full Name:
-          <input type="text" name="customerName" required />
-        </label>
-        <label>Số điện thoại / Phone:
-          <input type="tel" name="customerPhone" required />
-        </label>
-        <label id="email-field">Email:
-          <input type="email" name="customerEmail" />
-        </label>
-      </div>
-
-      <!-- Airport Pickup/Drop-off Section -->
-      <div id="airport-section">
-        <label>Pickup or Drop-off:
-          <select name="airportService">
-            <option value="pickup">Pickup</option>
-            <option value="dropoff">Drop-off</option>
-          </select>
-        </label>
-
-        <label>Airport:
-          <select name="airport">
-            <option value="SNA">Orange County (SNA)</option>
-            <option value="LAX">Los Angeles International (LAX)</option>
-            <option value="LGB">Long Beach (LGB)</option>
-          </select>
-        </label>
-
-        <fieldset>
-          <legend>Pickup/Drop-off Address</legend>
-          <input type="text" name="addressStreet" placeholder="Street Address" required />
-          <input type="text" name="addressCity" placeholder="City" required />
-          <input type="text" name="addressState" placeholder="State" required />
-          <input type="text" name="addressZip" placeholder="ZIP Code" required />
-        </fieldset>
-
-        <label>Number of People:
-          <input type="number" name="numPeople" min="1" max="12" value="1" />
-        </label>
-
-        <label>Date:
-          <input type="date" name="airportDate" required />
-        </label>
-
-        <label>Time:
-          <input type="time" name="airportTime" required />
-        </label>
-
-        <div id="airport-cost">Estimated Cost: $<span>0</span></div>
-      </div>
-
-      <!-- Travel Package Section -->
-      <div id="travel-section" style="display: none;">
-        <label>Destinations:
-          <select name="destinations" multiple size="10">
-            <option>Disneyland Park</option>
-            <option>California Adventure Park</option>
-            <option>Universal Studios</option>
-            <option>San Diego Zoo</option>
-            <option>SeaWorld</option>
-            <option>LegoLand</option>
-            <option>Las Vegas</option>
-            <option>Grand Canyon</option>
-            <option>San Francisco</option>
-            <option>Yosemite</option>
-            <option>Lake Tahoe</option>
-            <option>Reno</option>
-            <option>Silicon Valley (Apple, Google, Facebook)</option>
-          </select>
-        </label>
-
-        <label>Travelers:
-          <input type="number" name="travelers" min="1" max="12" value="1" />
-        </label>
-
-        <label>Travel Days:
-          <input type="number" name="travelDays" min="1" />
-        </label>
-
-        <label>Stay:
-          <select name="stayType">
-            <option value="hotel">Hotel (~$180/night)</option>
-            <option value="airbnb">Airbnb (~$140/night)</option>
-          </select>
-        </label>
-
-        <label>Home-cooked Meals (Bay Area):
-          <input type="number" name="mealDays" min="0" value="0" />
-        </label>
-
-        <label>Pickup Date:
-          <input type="date" name="travelDate" />
-        </label>
-
-        <label>Pickup Time:
-          <input type="time" name="travelTime" />
-        </label>
-
-        <label>Include airport pickup?
-          <input type="checkbox" name="includeAirport" />
-        </label>
-
-        <div id="travel-cost-breakdown">
-          <p>Tickets: $<span id="ticketCost">0</span></p>
-          <p>Meals: $<span id="mealCost">0</span></p>
-          <p>Stay: $<span id="stayCost">0</span></p>
-          <p>Transport: $<span id="transportCost">0</span></p>
-          <strong>Total: $<span id="totalCost">0</span></strong>
-        </div>
-      </div>
-
-      <!-- Payment Options -->
       <fieldset>
-        <legend>Payment</legend>
-        <label><input type="radio" name="payment" value="paypal" checked /> Pay via PayPal</label>
-        <label><input type="radio" name="payment" value="later" /> Pay on Pickup</label>
+        <legend>Thông tin khách hàng</legend>
+        <input type="text" name="customerName" placeholder="Tên khách hàng" required />
+        <input type="tel" name="customerPhone" placeholder="Số điện thoại" required />
+        <input type="email" name="customerEmail" placeholder="Email" />
+      </fieldset>
+
+      <fieldset>
+        <legend>Dịch vụ</legend>
+        <label><input type="radio" name="serviceType" value="airport" checked /> 🚗 Dịch vụ sân bay</label>
+        <label><input type="radio" name="serviceType" value="travel" /> 🌄 Gói du lịch</label>
+      </fieldset>
+
+      <!-- Các trường nhập liệu dịch vụ sân bay và gói du lịch sẽ được xử lý qua JS -->
+
+      <div id="cost-breakdown">
+        <p>Chi phí vận chuyển: $<span id="transportCost">0</span></p>
+        <p>Vé vào cổng: $<span id="ticketCost">0</span></p>
+        <p>Bữa ăn: $<span id="mealCost">0</span></p>
+        <p>Lưu trú: $<span id="stayCost">0</span></p>
+        <strong>Tổng cộng: $<span id="totalCost">0</span></strong>
+      </div>
+
+      <fieldset>
+        <legend>Thanh toán</legend>
+        <label><input type="radio" name="payment" value="paypal" checked /> Thanh toán qua PayPal</label>
+        <label><input type="radio" name="payment" value="later" /> Thanh toán khi đón</label>
       </fieldset>
 
       <input type="hidden" name="_next" value="https://johnntd.github.io/DuLichCali/thankyou.html" />
-      <input type="submit" value="Submit" />
+      <input type="submit" value="Gửi thông tin" />
     </form>
   </main>
 
   <footer>
-    <p>Contact: johnntd@gmail.com | Phone: 714-227-6007</p>
+    <p>Liên hệ: johnntd@gmail.com | Điện thoại: 714-227-6007</p>
   </footer>
 
   <script>
-    function toggleService() {
-      const isAirport = document.querySelector('input[name="serviceType"]:checked').value === 'airport';
-      document.getElementById('airport-section').style.display = isAirport ? 'block' : 'none';
-      document.getElementById('travel-section').style.display = isAirport ? 'none' : 'block';
-      document.getElementById('email-field').style.display = isAirport ? 'none' : 'block';
+    function setLanguage(lang) {
+      // Placeholder for full language toggle
+      alert("Language switched to: " + lang);
     }
-    window.onload = toggleService;
   </script>
 </body>
 </html>

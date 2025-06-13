@@ -5,8 +5,63 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dịch Vụ Du Lịch Cao Cấp tại Mỹ</title>
   <link rel="stylesheet" href="styles.css" />
-  <!-- Load Google Maps JavaScript API once -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2hdNmd5pVvTynpInJn3DN7htrOLlK0CE&libraries=places" defer></script>
+  <!-- Load Google Maps JavaScript API ONCE -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2hdNmd5pVvTynpInJn3DN7htrOLlK0CE&libraries=places"></script>
+  <script>
+    function setLanguage(lang) {
+      document.documentElement.lang = lang;
+      const elements = document.querySelectorAll('[data-en], [data-vi]');
+      elements.forEach(el => {
+        el.innerText = el.dataset[lang];
+      });
+    }
+
+    function toggleSections() {
+      const airportSection = document.getElementById('airport-section');
+      const travelSection = document.getElementById('travel-section');
+      const serviceType = document.querySelector('input[name="serviceType"]:checked').value;
+      if (serviceType === 'airport') {
+        airportSection.style.display = 'block';
+        travelSection.style.display = 'none';
+      } else {
+        airportSection.style.display = 'none';
+        travelSection.style.display = 'block';
+      }
+    }
+
+    function calculateAirportCost() {
+      const street = document.querySelector('[name="addressStreet"]').value;
+      const city = document.querySelector('[name="addressCity"]').value;
+      const state = document.querySelector('[name="addressState"]').value;
+      const zip = document.querySelector('[name="addressZip"]').value;
+      const destination = `${street}, ${city}, ${state} ${zip}`;
+      const origin = 'Orange County, CA';
+
+      const service = new google.maps.DistanceMatrixService();
+      service.getDistanceMatrix({
+        origins: [origin],
+        destinations: [destination],
+        travelMode: 'DRIVING'
+      }, (response, status) => {
+        if (status === 'OK') {
+          const distanceText = response.rows[0].elements[0].distance.text;
+          const distanceMiles = parseFloat(distanceText.replace(/[^0-9.]/g, ''));
+          const cost = distanceMiles * 2.5;
+          document.querySelector('#airport-cost span').innerText = cost.toFixed(2);
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('input[name="serviceType"]').forEach(el => {
+        el.addEventListener('change', toggleSections);
+      });
+
+      document.querySelectorAll('#airport-section input').forEach(el => {
+        el.addEventListener('input', calculateAirportCost);
+      });
+    });
+  </script>
 </head>
 <body>
   <header>

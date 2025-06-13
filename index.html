@@ -18,16 +18,18 @@
 
   <main>
     <section id="service-selection">
-      <label><input type="radio" name="serviceType" value="airport" checked onchange="toggleServiceSections()" /> 🚗 Airport Service</label>
-      <label><input type="radio" name="serviceType" value="travel" onchange="toggleServiceSections()" /> 🌄 Travel Package</label>
+      <label><input type="radio" name="serviceType" value="airport" checked /> 🚗 Airport Service</label>
+      <label><input type="radio" name="serviceType" value="travel" /> 🌄 Travel Package</label>
     </section>
 
     <form id="travel-form" action="https://formsubmit.co/johnntd@gmail.com" method="POST">
+      <div id="contact-info-airport">
+        <label>Họ tên khách hàng: <input type="text" name="customerNameAirport" required /></label>
+        <label>Số điện thoại: <input type="tel" name="customerPhoneAirport" required /></label>
+      </div>
+
       <!-- Airport Pickup/Drop-off Section -->
       <div id="airport-section">
-        <label>Customer Name: <input type="text" name="airportName" required></label>
-        <label>Phone Number: <input type="tel" name="airportPhone" required></label>
-
         <label>Pickup or Drop-off:
           <select name="airportService">
             <option value="pickup">Pickup</option>
@@ -63,14 +65,16 @@
           <input type="time" name="airportTime" required />
         </label>
 
-        <div id="airport-cost">Estimated Cost: $<span>0</span></div>
+        <div id="airport-cost">Estimated Cost: $<span id="airportEstimate">0</span></div>
       </div>
 
       <!-- Travel Package Section -->
       <div id="travel-section" style="display: none;">
-        <label>Customer Name: <input type="text" name="travelName" required></label>
-        <label>Phone Number: <input type="tel" name="travelPhone" required></label>
-        <label>Email Address: <input type="email" name="travelEmail" required></label>
+        <div id="contact-info-travel">
+          <label>Họ tên khách hàng: <input type="text" name="customerNameTravel" /></label>
+          <label>Số điện thoại: <input type="tel" name="customerPhoneTravel" /></label>
+          <label>Email: <input type="email" name="customerEmailTravel" /></label>
+        </div>
 
         <label>Destinations:
           <select name="destinations" multiple size="10">
@@ -130,7 +134,6 @@
         </div>
       </div>
 
-      <!-- Payment Options -->
       <fieldset>
         <legend>Payment</legend>
         <label><input type="radio" name="payment" value="paypal" checked /> Pay via PayPal</label>
@@ -147,17 +150,40 @@
   </footer>
 
   <script>
-    function toggleServiceSections() {
-      const serviceType = document.querySelector('input[name="serviceType"]:checked').value;
-      document.getElementById('airport-section').style.display = serviceType === 'airport' ? 'block' : 'none';
-      document.getElementById('travel-section').style.display = serviceType === 'travel' ? 'block' : 'none';
-    }
+    // Toggle visibility
+    document.querySelectorAll('input[name="serviceType"]').forEach(radio => {
+      radio.addEventListener('change', function () {
+        const isAirport = this.value === 'airport';
+        document.getElementById('airport-section').style.display = isAirport ? 'block' : 'none';
+        document.getElementById('contact-info-airport').style.display = isAirport ? 'block' : 'none';
+        document.getElementById('travel-section').style.display = isAirport ? 'none' : 'block';
+      });
+    });
 
+    // Estimate live costs (basic estimation)
+    document.getElementById('travel-form').addEventListener('input', () => {
+      const travelers = parseInt(document.querySelector('[name="travelers"]').value || 0);
+      const travelDays = parseInt(document.querySelector('[name="travelDays"]').value || 0);
+      const mealDays = parseInt(document.querySelector('[name="mealDays"]').value || 0);
+      const stayType = document.querySelector('[name="stayType"]').value;
+      const stayCostPerNight = stayType === 'hotel' ? 180 : 140;
+
+      const ticketCost = travelers * 120; // rough estimate per person
+      const mealCost = travelers * mealDays * 35;
+      const stayCost = travelDays * stayCostPerNight;
+      const transportCost = 200; // flat estimate for travel
+
+      document.getElementById('ticketCost').innerText = ticketCost;
+      document.getElementById('mealCost').innerText = mealCost;
+      document.getElementById('stayCost').innerText = stayCost;
+      document.getElementById('transportCost').innerText = transportCost;
+      document.getElementById('totalCost').innerText = ticketCost + mealCost + stayCost + transportCost;
+    });
+
+    // Simple language switch (static)
     function setLanguage(lang) {
-      document.documentElement.lang = lang;
+      alert("Language switch placeholder. In production, implement dynamic i18n content replacement.");
     }
-
-    toggleServiceSections();
   </script>
 </body>
 </html>

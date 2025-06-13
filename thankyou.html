@@ -3,36 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cảm Ơn</title>
+    <title>Cảm Ơn Quý Khách</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #FFD700, #FF8C00);
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .thank-you-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            padding: 30px;
             text-align: center;
-            padding: 50px;
-            background: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e') no-repeat center center fixed;
-            background-size: cover;
-        }
-        .container {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
-            border-radius: 10px;
             max-width: 600px;
-            margin: 0 auto;
+            width: 90%;
         }
-        a {
-            color: #007BFF;
-            text-decoration: none;
+        
+        h1 {
+            color: #1E90FF;
+            margin-bottom: 20px;
         }
-        a:hover {
-            text-decoration: underline;
+        
+        p {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+        
+        .contact-info {
+            margin-top: 20px;
+            font-size: 1rem;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Cảm Ơn!</h1>
-        <p>Yêu cầu đặt chỗ của bạn đã được gửi. Chúng tôi sẽ liên hệ sớm.</p>
-        <a href="index.html">Quay lại Trang Chủ</a>
+    <div class="thank-you-container">
+        <h1 id="thankYouTitle">Cảm Ơn Quý Khách!</h1>
+        <p id="thankYouMessage">Chúng tôi đã nhận được yêu cầu đặt dịch vụ của quý khách. Nhân viên của chúng tôi sẽ liên hệ trong thời gian sớm nhất để xác nhận.</p>
+        <div class="contact-info">
+            <p id="contactInfoText">Mọi thắc mắc xin liên hệ:<br>Duy Hoa, Điện thoại: 714-227-6007<br>Email: <a href="mailto:dulichcali21@gmail.com">dulichcali21@gmail.com</a></p>
+        </div>
+        <a href="index.html" class="btn btn-primary" id="returnHomeBtn">Trở Về Trang Chủ</a>
     </div>
+
+    <script>
+        // Language support
+        const translations = {
+            en: {
+                thankYouTitle: "Thank You!",
+                thankYouMessage: "We have received your service request. Our staff will contact you shortly to confirm your booking.",
+                contactInfoText: "For any questions, please contact:<br>Duy Hoa, Phone: 714-227-6007<br>Email: <a href='mailto:dulichcali21@gmail.com'>dulichcali21@gmail.com</a>",
+                returnHomeBtn: "Return to Homepage"
+            },
+            vi: {
+                thankYouTitle: "Cảm Ơn Quý Khách!",
+                thankYouMessage: "Chúng tôi đã nhận được yêu cầu đặt dịch vụ của quý khách. Nhân viên của chúng tôi sẽ liên hệ trong thời gian sớm nhất để xác nhận.",
+                contactInfoText: "Mọi thắc mắc xin liên hệ:<br>Duy Hoa, Điện thoại: 714-227-6007<br>Email: <a href='mailto:dulichcali21@gmail.com'>dulichcali21@gmail.com</a>",
+                returnHomeBtn: "Trở Về Trang Chủ"
+            }
+        };
+        
+        // Check for language preference (default to Vietnamese)
+        const urlParams = new URLSearchParams(window.location.search);
+        const lang = urlParams.get('lang') || 'vi';
+        
+        // Translate the page
+        document.getElementById('thankYouTitle').textContent = translations[lang].thankYouTitle;
+        document.getElementById('thankYouMessage').innerHTML = translations[lang].thankYouMessage;
+        document.getElementById('contactInfoText').innerHTML = translations[lang].contactInfoText;
+        document.getElementById('returnHomeBtn').textContent = translations[lang].returnHomeBtn;
+    </script>
 </body>
 </html>

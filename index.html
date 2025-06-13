@@ -82,6 +82,13 @@
             }
         }
     </style>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
+    <!-- flatpickr -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- Google Maps API -->
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAoCDsW6-3UzZI11TMH62uLTE1uP1yX2Ts&libraries=places"></script>
 </head>
 <body>
@@ -104,6 +111,7 @@
         <!-- Travel Package Form -->
         <form id="travel-form" action="https://formspree.io/f/xeokgbpo" method="POST" onsubmit="return handleTravelSubmit(event)">
             <h2>Gói Du Lịch</h2>
+            <input type="hidden" name="bookingId" id="bookingId">
             <label for="package">Gói:</label>
             <select id="package" onchange="updateDestinations()">
                 <option value="custom">Đích Đến Tùy Chọn</option>
@@ -118,7 +126,7 @@
             <label for="extra-destinations">Đích Đến Thêm:</label>
             <select id="extra-destinations" multiple onchange="updateCost()"></select>
             <label for="travel-date">Ngày Đi:</label>
-            <input type="date" id="travel-date" required onchange="checkAvailability()">
+            <input type="text" id="travel-date" required placeholder="Chọn ngày" onchange="checkAvailability()">
             <label for="days">Số Ngày:</label>
             <input type="number" id="days" min="1" value="1" required onchange="updateCost()">
             <label for="adults">Người Lớn (Disneyland/Universal):</label>
@@ -181,6 +189,7 @@
         <!-- Airport Service Form -->
         <form id="airport-form" action="https://formspree.io/f/xeokgbpo" method="POST" class="hidden" onsubmit="return handleAirportSubmit(event)">
             <h2>Dịch Vụ Sân Bay</h2>
+            <input type="hidden" name="bookingId" id="airportBookingId">
             <label for="service">Loại Dịch Vụ:</label>
             <select id="service" onchange="toggleAirportServiceFields()">
                 <option value="pickup">Đón</option>
@@ -197,7 +206,7 @@
             <label for="people">Số Người:</label>
             <input type="number" id="people" min="1" max="12" required onchange="updateAirportCost()">
             <label for="date">Ngày:</label>
-            <input type="date" id="date" required onchange="checkAvailability()">
+            <input type="text" id="date" required placeholder="Chọn ngày" onchange="checkAvailability()">
             <label for="time">Giờ:</label>
             <input type="time" id="time" required>
             <label for="customer-name">Họ Tên:</label>
@@ -221,6 +230,18 @@
     </div>
 
     <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAqedC3BuDKq9zlqfRN6Oamuy_sPE8eN_k",
+            authDomain: "dulichcalifornia-b8059.firebaseapp.com",
+            projectId: "dulichcalifornia-b8059",
+            storageBucket: "dulichcalifornia-b8059.firebasestorage.app",
+            messagingSenderId: "925284621075",
+            appId: "1:925284621075:web:65e6125a1bed22206dd8e6"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         // Language Toggle
         const translations = {
             vi: {
@@ -373,7 +394,6 @@
             document.querySelector('label[for="customer-phone"]').textContent = labels.customerPhone;
             document.querySelector('#airport-form button').textContent = labels.submit;
 
-            // Update package options
             const packageSelect = document.querySelector('#package');
             packageSelect.innerHTML = '';
             for (const [key, value] of Object.entries(labels.packages)) {
@@ -383,7 +403,6 @@
                 packageSelect.appendChild(option);
             }
 
-            // Update ticket type options
             const ticketSelect = document.querySelector('#ticket-type');
             ticketSelect.innerHTML = '';
             for (const [key, value] of Object.entries(labels.ticketTypes)) {
@@ -393,7 +412,6 @@
                 ticketSelect.appendChild(option);
             }
 
-            // Update lodging options
             const lodgingSelect = document.querySelector('#lodging');
             lodgingSelect.innerHTML = '';
             for (const [key, value] of Object.entries(labels.lodgingOptions)) {
@@ -453,20 +471,6 @@
             'Silicon Valley': { hotel: 250, airbnb: 200 }
         };
 
-        // Simulated booked dates (replace with real backend)
-        const bookedDates = ['2025-06-15', '2025-06-20'];
-
-        function checkAvailability() {
-            const travelDate = document.querySelector('#travel-date').value;
-            const airportDate = document.querySelector('#date').value;
-            const dateInput = travelDate || airportDate;
-            if (bookedDates.includes(dateInput)) {
-                alert(currentLang === 'vi' ? 'Ngày này đã được đặt. Vui lòng chọn ngày khác.' : 'This date is booked. Please select another date.');
-                document.querySelector('#travel-date').value = '';
-                document.querySelector('#date').value = '';
-            }
-        }
-
         // Google Maps Distance Calculation
         const distanceService = new google.maps.DistanceMatrixService();
         async function calculateDistance(origin, destination) {
@@ -485,6 +489,55 @@
                     }
                 });
             });
+        }
+
+        // Check Availability with Firestore
+        async function checkAvailability() {
+            const travelDateInput = document.querySelector('#travel-date');
+            const airportDateInput = document.querySelector('#date');
+            const dateInput = travelDateInput.value ? travelDateInput : airportDateInput;
+
+            try {
+                const snapshot = await db.collection('bookings')
+                    .where('date', '==', dateInput.value)
+                    .get();
+                
+                if (!snapshot.empty) {
+                    alert(currentLang === 'vi' ? 'Ngày này đã được đặt. Vui lòng chọn ngày khác.' : 'This date is booked. Please select another date.');
+                    dateInput.value = '';
+                }
+            } catch (error) {
+                console.error('Error checking availability:', error);
+                alert(currentLang === 'vi' ? 'Lỗi khi kiểm tra ngày: ' + error.message : 'Error checking date: ' + error.message);
+            }
+        }
+
+        // Initialize flatpickr
+        async function initializeDatePickers() {
+            try {
+                const snapshot = await db.collection('bookings').get();
+                const bookedDates = snapshot.docs.map(doc => doc.data().date);
+
+                flatpickr('#travel-date', {
+                    dateFormat: 'Y-m-d',
+                    minDate: 'today',
+                    disable: bookedDates,
+                    onChange: function(selectedDates, dateStr) {
+                        checkAvailability();
+                    }
+                });
+
+                flatpickr('#date', {
+                    dateFormat: 'Y-m-d',
+                    minDate: 'today',
+                    disable: bookedDates,
+                    onChange: function(selectedDates, dateStr) {
+                        checkAvailability();
+                    }
+                });
+            } catch (error) {
+                console.error('Error initializing date pickers:', error);
+            }
         }
 
         // Travel Package Logic
@@ -571,7 +624,6 @@
             let mealsCost = 0;
             let airportCost = 0;
 
-            // Transportation Cost
             const furthestDestination = allDestinations.reduce((max, dest) => {
                 const destination = destinations.find(d => d.name === dest);
                 return destination.distance > (max.distance || 0) ? destination : max;
@@ -582,7 +634,6 @@
                 transportCost *= 1.2;
             }
 
-            // Admission Cost
             allDestinations.forEach(dest => {
                 const destination = destinations.find(d => d.name === dest);
                 if (['Disneyland', 'California Adventure', 'Universal Studios'].includes(dest)) {
@@ -593,7 +644,6 @@
                 }
             });
 
-            // Lodging Cost
             const primaryDestination = allDestinations[0] || 'Disneyland';
             if (lodging === 'hotel') {
                 const baseCost = lodgingCosts[primaryDestination].hotel;
@@ -603,12 +653,10 @@
                 lodgingCost = baseCost * (1 + (travelers - 1) * 0.1) * days;
             }
 
-            // Meals Cost
             if (meals && allDestinations.some(dest => ['San Francisco', 'Silicon Valley'].includes(dest))) {
                 mealsCost = 35 * travelers * days;
             }
 
-            // Airport Pickup Cost
             if (airportPickup) {
                 if (lodging !== 'none') {
                     airportCost = 50;
@@ -628,7 +676,6 @@
                 }
             }
 
-            // Update Cost Estimate
             const total = transportCost + admissionCost + lodgingCost + mealsCost + airportCost;
             document.querySelector('#travel-cost').innerHTML = `
                 <h3>${currentLang === 'vi' ? 'Ước Tính Chi Phí' : 'Cost Estimate'}</h3>
@@ -642,11 +689,59 @@
             document.querySelector('#paypal-amount').value = (admissionCost + lodgingCost).toFixed(2);
         }
 
-        function handleTravelSubmit(event) {
+        async function handleTravelSubmit(event) {
             event.preventDefault();
             const form = event.target;
-            form.submit();
-            window.location.href = 'thankyou.html';
+
+            const package = document.querySelector('#package').value;
+            const destinations = Array.from(document.querySelector('#destinations').selectedOptions).map(opt => opt.value);
+            const extraDestinations = Array.from(document.querySelector('#extra-destinations').selectedOptions).map(opt => opt.value);
+            const date = document.querySelector('#travel-date').value;
+            const days = document.querySelector('#days').value;
+            const adults = document.querySelector('#adults').value;
+            const kids = document.querySelector('#kids').value;
+            const travelers = document.querySelector('#travelers').value;
+            const ticketType = document.querySelector('#ticket-type').value;
+            const lodging = document.querySelector('#lodging').value;
+            const dropoffAddress = document.querySelector('#dropoff-address').value;
+            const meals = document.querySelector('#meals').checked;
+            const airportPickup = document.querySelector('#airport-pickup').checked;
+            const airport = document.querySelector('#airport').value;
+            const pickupAddress = document.querySelector('#pickup-address').value;
+            const name = document.querySelector('#name').value;
+            const phone = document.querySelector('#phone').value;
+            const email = document.querySelector('#email').value;
+
+            try {
+                const docRef = await db.collection('bookings').add({
+                    serviceType: 'travel',
+                    date: date,
+                    details: {
+                        package,
+                        destinations: [...destinations, ...extraDestinations],
+                        days,
+                        adults,
+                        kids,
+                        travelers,
+                        ticketType,
+                        lodging,
+                        dropoffAddress: lodging === 'none' ? dropoffAddress : '',
+                        meals,
+                        airportPickup,
+                        airport: airportPickup ? airport : '',
+                        pickupAddress: airportPickup ? pickupAddress : '',
+                        name,
+                        phone,
+                        email
+                    },
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                document.querySelector('#bookingId').value = docRef.id;
+                form.submit();
+                window.location.href = 'thankyou.html';
+            } catch (error) {
+                alert(currentLang === 'vi' ? 'Lỗi khi lưu đặt chỗ: ' + error.message : 'Error saving booking: ' + error.message);
+            }
         }
 
         // Airport Service Logic
@@ -682,18 +777,46 @@
             document.querySelector('#paypal-airport-amount').value = cost.toFixed(2);
         }
 
-        function handleAirportSubmit(event) {
+        async function handleAirportSubmit(event) {
             event.preventDefault();
             const form = event.target;
-            form.submit();
-            window.location.href = 'thankyou.html';
+
+            const service = document.querySelector('#service').value;
+            const airport = document.querySelector('#airport-service').value;
+            const address = document.querySelector('#address').value;
+            const people = document.querySelector('#people').value;
+            const date = document.querySelector('#date').value;
+            const time = document.querySelector('#time').value;
+            const name = document.querySelector('#customer-name').value;
+            const phone = document.querySelector('#customer-phone').value;
+
+            try {
+                const docRef = await db.collection('bookings').add({
+                    serviceType: 'airport',
+                    date: date,
+                    details: {
+                        service,
+                        airport,
+                        address,
+                        people,
+                        time,
+                        name,
+                        phone
+                    },
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                document.querySelector('#airportBookingId').value = docRef.id;
+                form.submit();
+                window.location.href = 'thankyou.html';
+            } catch (error) {
+                alert(currentLang === 'vi' ? 'Lỗi khi lưu đặt chỗ: ' + error.message : 'Error saving booking: ' + error.message);
+            }
         }
 
         // Initialize
         updateDestinations();
         updateFormLabels();
-        document.querySelector('#travel-date').min = new Date().toISOString().split('T')[0];
-        document.querySelector('#date').min = new Date().toISOString().split('T')[0];
+        initializeDatePickers();
 
         // Autocomplete for addresses
         const pickupAddress = document.querySelector('#pickup-address');

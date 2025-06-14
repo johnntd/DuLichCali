@@ -1,87 +1,63 @@
-// Firebase configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyAqedC3BuDKq9zlqfRN6Oamuy_sPE8eN_k",
-    authDomain: "dulichcalifornia-b8059.firebaseapp.com",
-    projectId: "dulichcalifornia-b8059",
-    storageBucket: "dulichcalifornia-b8059.appspot.com",
-    messagingSenderId: "925284621075",
-    appId: "1:925284621075:web:65e6125a1bed22206dd8e6"
-};
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
-
-// Language support
-const translations = {
-    en: {
-        // English translations
-    },
-    vi: {
-        // Vietnamese translations
-    }
-};
-
-let currentLanguage = 'vi';
-
-// Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
-    initDatePickers();
-    initServiceToggle();
-    initLanguageToggle();
-    initFormValidation();
-    initCostCalculators();
-    loadBookedDates();
-});
-
-function initDatePickers() {
+    // Initialize date pickers
     flatpickr(".datepicker", {
         locale: "vn",
         minDate: "today",
         dateFormat: "d/m/Y"
     });
-}
 
-function loadBookedDates() {
-    const bookingsRef = database.ref('bookings');
-    bookingsRef.on('value', (snapshot) => {
-        const bookedDates = [];
-        snapshot.forEach((childSnapshot) => {
-            const booking = childSnapshot.val();
-            if (booking.date) bookedDates.push(booking.date);
-        });
-        flatpickr(".datepicker", { disable: bookedDates });
+    // Service type toggle
+    const serviceType = document.getElementById('serviceType');
+    serviceType.addEventListener('change', function() {
+        document.getElementById('travelService').classList.toggle('active', this.value === 'travel');
+        document.getElementById('airportService').classList.toggle('active', this.value === 'airport');
     });
-}
 
-function calculateTransportCost() {
-    // Implementation based on your requirements
-}
+    // Language toggle
+    const languageToggle = document.getElementById('languageToggle');
+    languageToggle.addEventListener('click', function() {
+        const isVietnamese = this.textContent === 'English';
+        this.textContent = isVietnamese ? 'Tiếng Việt' : 'English';
+        
+        // Update all text elements
+        document.getElementById('mainTitle').textContent = isVietnamese ? 
+            'California Travel & Airport Services' : 'Dịch Vụ Du Lịch & Đón Sân Bay California';
+        document.getElementById('serviceTypeLabel').textContent = isVietnamese ? 
+            'Select service type:' : 'Chọn loại dịch vụ:';
+        document.getElementById('travelOption').textContent = isVietnamese ? 
+            'Travel Package' : 'Gói Du Lịch';
+        document.getElementById('airportOption').textContent = isVietnamese ? 
+            'Airport Service' : 'Dịch Vụ Sân Bay';
+    });
 
-function updateCostDisplay() {
-    // Update all cost fields
-}
-
-// Initialize PayPal button
-function initPayPalButton() {
-    paypal.Buttons({
-        createOrder: function(data, actions) {
-            return actions.order.create({
-                purchase_units: [{
-                    amount: {
-                        value: document.getElementById('totalCost').textContent.replace('$', ''),
-                        currency_code: 'USD'
-                    },
-                    payee: {
-                        email_address: 'johnntd21@icloud.com'
-                    }
-                }]
+    // Form submission
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            document.getElementById('loader').style.display = 'flex';
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = 'thankyou.html';
+                } else {
+                    throw new Error('Network response was not ok');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('There was an error submitting your request. Please try again.');
+            })
+            .finally(() => {
+                document.getElementById('loader').style.display = 'none';
             });
-        },
-        onApprove: function(data, actions) {
-            return actions.order.capture().then(function(details) {
-                document.getElementById('travelForm').submit();
-            });
-        }
-    }).render('#paypalButtonContainer');
-}
+        });
+    });
+});

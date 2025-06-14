@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>California Travel & Airport Services</title>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places"></script>
   <style>
     body {
@@ -39,66 +37,99 @@
       height: 300px;
       margin-top: 10px;
     }
+    .language-toggle {
+      text-align: right;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>California Travel & Airport Services</h1>
-    <p><strong>Contact:</strong> Duy Hoa | Phone: 714-227-6007 | Email: dulichcali21@gmail.com</p>
-    <label for="serviceType">Choose Service</label>
-    <select id="serviceType">
-      <option value="pickup">Pickup from Airport</option>
-      <option value="dropoff">Drop-off at Airport</option>
-    </select>
+    <div class="language-toggle">
+      <button onclick="toggleLanguage()">EN | VI</button>
+    </div>
+    <h1 id="title">California Travel & Airport Services</h1>
+    <p id="contact"><strong>Contact:</strong> Duy Hoa | Phone: 714-227-6007 | Email: dulichcali21@gmail.com</p>
 
-    <label for="pickup">Pickup Address or Airport</label>
-    <input type="text" id="pickup" placeholder="Enter pickup location">
+    <form action="https://formspree.io/f/xeokgbpo" method="POST" onsubmit="return handleSubmit(event)">
+      <label for="serviceType" id="labelService">Choose Service</label>
+      <select id="serviceType" name="serviceType" onchange="toggleAirportDropdown()">
+        <option value="pickup">Pickup from Airport</option>
+        <option value="dropoff">Drop-off at Airport</option>
+      </select>
 
-    <label for="dropoff">Drop-off Address or Airport</label>
-    <input type="text" id="dropoff" placeholder="Enter drop-off location">
+      <div id="airportDropdown">
+        <label for="airport" id="labelAirport">Select Airport</label>
+        <select id="airport" name="airport">
+          <option value="John Wayne Airport, Orange County, CA">John Wayne Airport (SNA)</option>
+          <option value="Long Beach Airport, Long Beach, CA">Long Beach Airport (LGB)</option>
+          <option value="Los Angeles International Airport, Los Angeles, CA">LAX - Los Angeles International Airport</option>
+          <option value="Ontario International Airport, Ontario, CA">Ontario International Airport (ONT)</option>
+          <option value="Hollywood Burbank Airport, Burbank, CA">Hollywood Burbank Airport (BUR)</option>
+        </select>
+      </div>
 
-    <label for="datetime">Pickup Date and Time</label>
-    <input type="datetime-local" id="datetime">
+      <label for="pickup" id="labelPickup">Pickup Address</label>
+      <input type="text" id="pickup" name="pickup" placeholder="Enter pickup location">
 
-    <label for="name">Your Name</label>
-    <input type="text" id="name" placeholder="Enter your name">
+      <label for="dropoff" id="labelDropoff">Drop-off Address</label>
+      <input type="text" id="dropoff" name="dropoff" placeholder="Enter drop-off location">
 
-    <label for="phone">Phone Number</label>
-    <input type="tel" id="phone" placeholder="Enter phone number">
+      <label for="passengers" id="labelPassengers">Number of Passengers</label>
+      <input type="number" id="passengers" name="passengers" min="1" max="12" value="1">
 
-    <div id="map"></div>
-    <p id="priceEstimate"></p>
+      <label for="datetime" id="labelDatetime">Pickup Date and Time</label>
+      <input type="datetime-local" id="datetime" name="datetime">
 
-    <button onclick="submitBooking()">Book Now</button>
+      <label for="name" id="labelName">Your Name</label>
+      <input type="text" id="name" name="name" placeholder="Enter your name">
+
+      <label for="phone" id="labelPhone">Phone Number</label>
+      <input type="tel" id="phone" name="phone" placeholder="Enter phone number">
+
+      <div id="map"></div>
+      <p id="priceEstimate"></p>
+
+      <input type="hidden" id="vehicle" name="vehicle" />
+      <input type="hidden" id="price" name="price" />
+
+      <button type="submit" id="bookNow">Book Now</button>
+    </form>
     <p id="status"></p>
   </div>
 
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAqedC3BuDKq9zlqfRN6Oamuy_sPE8eN_k",
-      authDomain: "dulichcalifornia-b8059.firebaseapp.com",
-      projectId: "dulichcalifornia-b8059",
-      storageBucket: "dulichcalifornia-b8059.firebasestorage.app",
-      messagingSenderId: "925284621075",
-      appId: "1:925284621075:web:65e6125a1bed22206dd8e6"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
     let directionsService = new google.maps.DirectionsService();
     let directionsRenderer;
     let map;
+    let pickupAutocomplete, dropoffAutocomplete;
 
     function initMap() {
       map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 33.6846, lng: -117.8265 }, // Orange County
+        center: { lat: 33.6846, lng: -117.8265 },
         zoom: 10,
       });
       directionsRenderer = new google.maps.DirectionsRenderer();
       directionsRenderer.setMap(map);
+      pickupAutocomplete = new google.maps.places.Autocomplete(document.getElementById("pickup"));
+      dropoffAutocomplete = new google.maps.places.Autocomplete(document.getElementById("dropoff"));
     }
     window.initMap = initMap;
     window.onload = initMap;
+
+    function toggleAirportDropdown() {
+      const serviceType = document.getElementById("serviceType").value;
+      const airportSelect = document.getElementById("airportDropdown");
+      if (serviceType === "pickup") {
+        document.getElementById("pickup").style.display = "none";
+        document.getElementById("dropoff").style.display = "block";
+        airportSelect.style.display = "block";
+      } else {
+        document.getElementById("pickup").style.display = "block";
+        document.getElementById("dropoff").style.display = "none";
+        airportSelect.style.display = "block";
+      }
+    }
 
     async function calculateDistance(pickup, dropoff) {
       const service = new google.maps.DistanceMatrixService();
@@ -108,38 +139,81 @@
           destinations: [dropoff],
           travelMode: "DRIVING",
         }, (response, status) => {
-          if (status !== "OK") {
-            return reject("Error: " + status);
-          }
-          const distanceText = response.rows[0].elements[0].distance.text;
-          const distanceValue = response.rows[0].elements[0].distance.value / 1609.34; // in miles
+          if (status !== "OK") return reject("Error: " + status);
+          const distanceValue = response.rows[0].elements[0].distance.value / 1609.34;
           const estimatedPrice = (distanceValue * 2.50 * 0.9).toFixed(2);
-          resolve({ distanceText, estimatedPrice });
+          resolve({ estimatedPrice });
         });
       });
     }
 
-    async function submitBooking() {
-      const pickup = document.getElementById("pickup").value;
-      const dropoff = document.getElementById("dropoff").value;
-      const datetime = document.getElementById("datetime").value;
-      const name = document.getElementById("name").value;
-      const phone = document.getElementById("phone").value;
+    async function handleSubmit(event) {
+      event.preventDefault();
+      const serviceType = document.getElementById("serviceType").value;
+      const airport = document.getElementById("airport").value;
+      const passengers = parseInt(document.getElementById("passengers").value);
+      const pickup = serviceType === "pickup" ? airport : document.getElementById("pickup").value;
+      const dropoff = serviceType === "pickup" ? document.getElementById("dropoff").value : airport;
+      const vehicle = passengers > 4 ? "Mercedes Van" : "Tesla Model Y";
 
-      if (!pickup || !dropoff || !datetime || !name || !phone) {
-        document.getElementById("status").textContent = "Please fill in all fields.";
-        return;
+      if (!pickup || !dropoff) {
+        document.getElementById("status").textContent = "Please complete pickup and drop-off addresses.";
+        return false;
       }
 
       try {
-        const { distanceText, estimatedPrice } = await calculateDistance(pickup, dropoff);
-        document.getElementById("priceEstimate").textContent = `Distance: ${distanceText}, Estimated Price: $${estimatedPrice}`;
-
-        await db.collection("bookings").add({ pickup, dropoff, datetime, name, phone, estimatedPrice });
-        document.getElementById("status").textContent = "Booking submitted! We will contact you soon.";
+        const { estimatedPrice } = await calculateDistance(pickup, dropoff);
+        document.getElementById("vehicle").value = vehicle;
+        document.getElementById("price").value = `$${estimatedPrice}`;
+        event.target.submit();
+        window.location.href = "thankyou.html";
       } catch (err) {
-        document.getElementById("status").textContent = "Error: " + err;
+        document.getElementById("status").textContent = "Error calculating price.";
       }
+    }
+
+    function toggleLanguage() {
+      const en = {
+        title: "California Travel & Airport Services",
+        contact: "Contact: Duy Hoa | Phone: 714-227-6007 | Email: dulichcali21@gmail.com",
+        labelService: "Choose Service",
+        labelAirport: "Select Airport",
+        labelPickup: "Pickup Address",
+        labelDropoff: "Drop-off Address",
+        labelPassengers: "Number of Passengers",
+        labelDatetime: "Pickup Date and Time",
+        labelName: "Your Name",
+        labelPhone: "Phone Number",
+        bookNow: "Book Now"
+      };
+      const vi = {
+        title: "Dịch Vụ Đưa Đón Sân Bay & Du Lịch California",
+        contact: "Liên hệ: Duy Hoa | Điện thoại: 714-227-6007 | Email: dulichcali21@gmail.com",
+        labelService: "Chọn dịch vụ",
+        labelAirport: "Chọn sân bay",
+        labelPickup: "Địa chỉ đón",
+        labelDropoff: "Địa chỉ trả",
+        labelPassengers: "Số hành khách",
+        labelDatetime: "Ngày và giờ đón",
+        labelName: "Tên của bạn",
+        labelPhone: "Số điện thoại",
+        bookNow: "Đặt ngay"
+      };
+
+      const current = document.getElementById("title").textContent;
+      const lang = current.includes("California") ? vi : en;
+
+      document.getElementById("title").textContent = lang.title;
+      document.getElementById("contact").textContent = lang.contact;
+      document.getElementById("labelService").textContent = lang.labelService;
+      document.getElementById("labelAirport").textContent = lang.labelAirport;
+      document.getElementById("labelPickup").textContent = lang.labelPickup;
+      document.getElementById("labelDropoff").textContent = lang.labelDropoff;
+      document.getElementById("labelPassengers").textContent = lang.labelPassengers;
+      document.getElementById("labelDatetime").textContent = lang.labelDatetime;
+      document.getElementById("labelName").textContent = lang.labelName;
+      document.getElementById("labelPhone").textContent = lang.labelPhone;
+      document.getElementById("bookNow").textContent = lang.bookNow;
     }
   </script>
 </body>

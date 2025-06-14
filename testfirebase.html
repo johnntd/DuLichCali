@@ -15,6 +15,7 @@
       padding: 10px;
       border: 1px solid #ccc;
       background-color: #fff;
+      white-space: pre-wrap;
     }
     #error {
       color: red;
@@ -33,6 +34,7 @@
   <p>This page tests Firebase initialization, reading, and writing to the 'bookings' collection.</p>
   <button onclick="testRead()">Test Read from Bookings</button>
   <button onclick="testWrite()">Test Write to Bookings</button>
+  <button onclick="retryTests()">Retry Both Tests</button>
   <div id="output">Results will appear here...</div>
   <div id="error"></div>
 
@@ -41,18 +43,17 @@
     import { getFirestore, collection, getDocs, addDoc } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
 
     // Initialize Firebase
-
+    let db;
     try {
-const firebaseConfig = {
-  apiKey: "AIzaSyAqedC3BuDKq9zlqfRN6Oamuy_sPE8eN_k",
-  authDomain: "dulichcalifornia-b8059.firebaseapp.com",
-  projectId: "dulichcalifornia-b8059",
-  storageBucket: "dulichcalifornia-b8059.firebasestorage.app",
-  messagingSenderId: "925284621075",
-  appId: "1:925284621075:web:65e6125a1bed22206dd8e6"
-};
+      const firebaseApp = initializeApp({
+        apiKey: "AIzaSyAqedC3BuDKq9zlqfRN6Oamuy_sPE8eN_k",
+        authDomain: "dulichcalifornia-b8059.firebaseapp.com",
+        projectId: "dulichcalifornia-b8059",
+        storageBucket: "dulichcalifornia-b8059.firebasestorage.app",
+        messagingSenderId: "925284621075",
+        appId: "1:925284621075:web:65e6125a1bed22206dd8e6"
       });
-      window.db = getFirestore(firebaseApp);
+      db = getFirestore(firebaseApp);
       document.getElementById('output').textContent = 'Firebase initialized successfully';
       console.log('Firebase initialized successfully');
     } catch (err) {
@@ -64,10 +65,10 @@ const firebaseConfig = {
       try {
         const querySnapshot = await getDocs(collection(db, 'bookings'));
         const bookings = querySnapshot.docs.map(doc => doc.data());
-        document.getElementById('output').textContent = 'Read successful. Bookings: ' + JSON.stringify(bookings, null, 2);
+        document.getElementById('output').textContent = 'Read successful. Bookings:\n' + JSON.stringify(bookings, null, 2);
         console.log('Read successful:', bookings);
       } catch (err) {
-        showError('Read failed: ' + err.message);
+        showError('Read failed: ' + err.message + '\nCheck Firestore security rules in Firebase Console.');
       }
     };
 
@@ -83,8 +84,16 @@ const firebaseConfig = {
         document.getElementById('output').textContent = 'Write successful. Document ID: ' + docRef.id;
         console.log('Write successful:', docRef.id);
       } catch (err) {
-        showError('Write failed: ' + err.message);
+        showError('Write failed: ' + err.message + '\nCheck Firestore security rules in Firebase Console.');
       }
+    };
+
+    // Retry Both Tests
+    window.retryTests = async function() {
+      document.getElementById('output').textContent = 'Retrying tests...';
+      document.getElementById('error').textContent = '';
+      await testRead();
+      await testWrite();
     };
 
     // Show Error

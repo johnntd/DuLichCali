@@ -69,12 +69,56 @@
     <h1 id="title">California Travel & Airport Services</h1>
     <p id="contact"><strong>Contact:</strong> Duy Hoa | Phone: 714-227-6007 | Email: dulichcali21@gmail.com</p>
 
-    <!-- Booking Form remains unchanged -->
-    <!-- ... existing form content ... -->
+    <form action="https://formspree.io/f/xeokgbpo" method="POST" onsubmit="return handleSubmit(event)">
+      <label for="serviceType" id="labelService">Choose Service</label>
+      <select id="serviceType" name="serviceType" onchange="toggleFields()">
+        <option value="pickup">Pickup from Airport</option>
+        <option value="dropoff">Drop-off at Airport</option>
+      </select>
 
-    <p id="priceEstimate">Estimated price will appear here.</p>
+      <div id="airportDropdown">
+        <label for="airport" id="labelAirport">Select Airport</label>
+        <select id="airport" name="airport">
+          <option value="John Wayne Airport, Orange County, CA">John Wayne Airport (SNA)</option>
+          <option value="Long Beach Airport, Long Beach, CA">Long Beach Airport (LGB)</option>
+          <option value="Los Angeles International Airport, Los Angeles, CA">LAX - Los Angeles International Airport</option>
+          <option value="Ontario International Airport, Ontario, CA">Ontario International Airport (ONT)</option>
+          <option value="Hollywood Burbank Airport, Burbank, CA">Hollywood Burbank Airport (BUR)</option>
+        </select>
+      </div>
 
-    <!-- Admin Dashboard -->
+      <div id="pickupField">
+        <label for="pickup" id="labelPickup">Pickup Address</label>
+        <input type="text" id="pickup" name="pickup" placeholder="Enter pickup location">
+      </div>
+
+      <div id="dropoffField">
+        <label for="dropoff" id="labelDropoff">Drop-off Address</label>
+        <input type="text" id="dropoff" name="dropoff" placeholder="Enter drop-off location">
+      </div>
+
+      <label for="passengers" id="labelPassengers">Number of Passengers</label>
+      <input type="number" id="passengers" name="passengers" min="1" max="12" value="1">
+
+      <label for="datetime" id="labelDatetime">Pickup Date and Time</label>
+      <input type="datetime-local" id="datetime" name="datetime">
+
+      <label for="name" id="labelName">Your Name</label>
+      <input type="text" id="name" name="name" placeholder="Enter your name">
+
+      <label for="phone" id="labelPhone">Phone Number</label>
+      <input type="tel" id="phone" name="phone" placeholder="Enter phone number">
+
+      <p id="priceEstimate">Estimated price will appear here.</p>
+
+      <input type="hidden" id="vehicle" name="vehicle" />
+      <input type="hidden" id="price" name="price" />
+
+      <button type="submit" id="bookNow">Book Now</button>
+    </form>
+
+    <div id="map"></div>
+
     <div id="adminSection">
       <h2>Admin Booking Dashboard</h2>
       <button onclick="loadBookings()">Load Bookings</button>
@@ -87,33 +131,68 @@
       apiKey: "AIzaSyAqedC3BuDKq9zlqfRN6Oamuy_sPE8eN_k",
       authDomain: "dulichcalifornia-b8059.firebaseapp.com",
       projectId: "dulichcalifornia-b8059",
-      storageBucket: "dulichcalifornia-b8059.firebaseapp.com",
+      storageBucket: "dulichcalifornia-b8059.appspot.com",
       messagingSenderId: "925284621075",
       appId: "1:925284621075:web:65e6125a1bed22206dd8e6"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    function loadBookings() {
-      document.getElementById("adminSection").style.display = "block";
-      const list = document.getElementById("bookingList");
-      list.innerHTML = "Loading...";
-      db.collection("bookings").orderBy("datetime", "desc").get().then(snapshot => {
-        if (snapshot.empty) {
-          list.innerHTML = "No bookings found.";
-          return;
-        }
-        let html = "";
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          html += `<div><strong>${data.name}</strong> (${data.phone})<br>
-                    ${data.pickup} ➝ ${data.dropoff}<br>
-                    Date: ${data.datetime} | ${data.passengers} passengers<br>
-                    Vehicle: ${data.vehicle} | Price: $${data.estimatedPrice}
-                    <hr></div>`;
-        });
-        list.innerHTML = html;
+    let pickupAutocomplete, dropoffAutocomplete;
+    window.onload = () => {
+      new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 33.6846, lng: -117.8265 },
+        zoom: 10
       });
+      pickupAutocomplete = new google.maps.places.Autocomplete(document.getElementById("pickup"));
+      dropoffAutocomplete = new google.maps.places.Autocomplete(document.getElementById("dropoff"));
+      toggleFields();
+    };
+
+    function toggleFields() {
+      const type = document.getElementById("serviceType").value;
+      document.getElementById("pickupField").style.display = type === 'dropoff' ? 'block' : 'none';
+      document.getElementById("dropoffField").style.display = type === 'pickup' ? 'block' : 'none';
+    }
+
+    async function calculateEstimate(pickup, dropoff) {
+      return new Promise((resolve, reject) => {
+        new google.maps.DistanceMatrixService().getDistanceMatrix({
+          origins: [pickup],
+          destinations: [dropoff],
+          travelMode: "DRIVING"
+        }, (res, status) => {
+          if (status !== "OK") return reject(status);
+          const dist = res.rows[0].elements[0].distance.value / 1609.34;
+          resolve((dist * 2.5 * 0.9).toFixed(2));
+        });
+      });
+    }
+
+    document.getElementById("pickup").addEventListener("input", liveEstimate);
+    document.getElementById("dropoff").addEventListener("input", liveEstimate);
+
+    async function liveEstimate() {
+      const type = document.getElementById("serviceType").value;
+      const airport = document.getElementById("airport").value;
+      const pickup = type === 'pickup' ? airport : document.getElementById("pickup").value;
+      const dropoff = type === 'pickup' ? document.getElementById("dropoff").value : airport;
+      if (!pickup || !dropoff) return;
+      try {
+        const price = await calculateEstimate(pickup, dropoff);
+        document.getElementById("priceEstimate").textContent = `Estimated Price: $${price}`;
+        document.getElementById("price").value = price;
+      } catch (err) {
+        document.getElementById("priceEstimate").textContent = "Could not calculate price.";
+      }
+    }
+
+    function handleSubmit(e) {
+      e.preventDefault();
+      const passengers = parseInt(document.getElementById("passengers").value);
+      const vehicle = passengers > 4 ? "Mercedes Van" : "Tesla Model Y";
+      document.getElementById("vehicle").value = vehicle;
+      e.target.submit();
     }
 
     function toggleLanguage() {
@@ -129,40 +208,27 @@
         priceEstimate: "Giá ước tính sẽ hiển thị ở đây.",
         button: "VI | EN"
       };
-      const currentLang = document.getElementById("langBtn").textContent.includes("EN") ? vi : en;
-
-      document.getElementById("title").textContent = currentLang.title;
-      document.getElementById("contact").textContent = currentLang.contact;
-      document.getElementById("priceEstimate").textContent = currentLang.priceEstimate;
-      document.getElementById("langBtn").textContent = currentLang.button;
+      const lang = document.getElementById("langBtn").textContent.includes("EN") ? vi : en;
+      document.getElementById("title").textContent = lang.title;
+      document.getElementById("contact").textContent = lang.contact;
+      document.getElementById("priceEstimate").textContent = lang.priceEstimate;
+      document.getElementById("langBtn").textContent = lang.button;
     }
 
-    const pickupInput = document.getElementById("pickup");
-    const dropoffInput = document.getElementById("dropoff");
-
-    async function liveEstimate() {
-      const pickup = pickupInput.value;
-      const dropoff = dropoffInput.value;
-      if (!pickup || !dropoff) return;
-      try {
-        const service = new google.maps.DistanceMatrixService();
-        service.getDistanceMatrix({
-          origins: [pickup],
-          destinations: [dropoff],
-          travelMode: "DRIVING",
-        }, (response, status) => {
-          if (status !== "OK") return;
-          const distanceValue = response.rows[0].elements[0].distance.value / 1609.34;
-          const estimatedPrice = (distanceValue * 2.5 * 0.9).toFixed(2);
-          document.getElementById("priceEstimate").textContent = `Estimated Price: $${estimatedPrice}`;
+    function loadBookings() {
+      const list = document.getElementById("bookingList");
+      document.getElementById("adminSection").style.display = "block";
+      list.innerHTML = "Loading...";
+      db.collection("bookings").orderBy("datetime", "desc").get().then(snapshot => {
+        if (snapshot.empty) return list.innerHTML = "No bookings found.";
+        let html = "";
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          html += `<div><strong>${d.name}</strong> (${d.phone})<br>${d.pickup} ➝ ${d.dropoff}<br>Date: ${d.datetime} | ${d.passengers} pax<br>Vehicle: ${d.vehicle} | Price: $${d.estimatedPrice}<hr></div>`;
         });
-      } catch (err) {
-        document.getElementById("priceEstimate").textContent = "Could not estimate.";
-      }
+        list.innerHTML = html;
+      });
     }
-
-    pickupInput?.addEventListener("input", () => setTimeout(liveEstimate, 800));
-    dropoffInput?.addEventListener("input", () => setTimeout(liveEstimate, 800));
   </script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js';
 import { getFirestore, collection, getDocs, addDoc } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
 import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-app-check.js';
 
 window.firebaseApp = initializeApp({
   apiKey: "AIzaSyAqedC3BuDKq9zlqfRN6Oamuy_sPE8eN_k",
@@ -12,6 +13,11 @@ window.firebaseApp = initializeApp({
 });
 window.db = getFirestore(window.firebaseApp);
 const auth = getAuth(window.firebaseApp);
+// Initialize App Check
+const appCheck = initializeAppCheck(window.firebaseApp, {
+  provider: new ReCaptchaEnterpriseProvider('6LcqYmArAAAAAJifqnY4dXLf4D7ETfcTX6rOBYAN'),
+  isTokenAutoRefreshEnabled: true
+});
 console.log('Firebase initialized successfully');
 
 // Auto-sign in anonymously
@@ -491,8 +497,8 @@ function updateTravelerInput() {
   const selectedDestinations = Array.from(destinationsSelect.selectedOptions).map(opt => opt.value);
   const isThemePark = selectedDestinations.some(d => ['Disneyland', 'California Adventure', 'Universal Studios'].includes(d));
   ticketType.classList.toggle('hidden', !isThemePark);
-  travelersInput.classList.toggle('hidden', isThemePark);
-  adultKidInput.classList.toggle('hidden', !isThemePark);
+  travelersInput.classList.toggle('hidden', !isThemePark);
+  adultKidInput.classList.toggle('hidden', isThemePark);
   if (isThemePark) {
     numTravelersInput.value = (parseInt(numAdultsInput.value) || 0) + (parseInt(numKidsInput.value) || 0);
   }

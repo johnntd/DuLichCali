@@ -71,7 +71,7 @@
 
     <form action="https://formspree.io/f/xeokgbpo" method="POST" onsubmit="return handleSubmit(event)">
       <label for="serviceType" id="labelService">Choose Service</label>
-      <select id="serviceType" name="serviceType" onchange="toggleFields(); liveEstimate();">
+      <select id="serviceType" name="serviceType" onchange="toggleFields()">
         <option value="pickup">Pickup from Airport</option>
         <option value="dropoff">Drop-off at Airport</option>
       </select>
@@ -89,12 +89,12 @@
 
       <div id="pickupField">
         <label for="pickup" id="labelPickup">Pickup Address</label>
-        <input type="text" id="pickup" name="pickup" placeholder="Enter pickup location" oninput="liveEstimate()">
+        <input type="text" id="pickup" name="pickup" placeholder="Enter pickup location">
       </div>
 
       <div id="dropoffField">
         <label for="dropoff" id="labelDropoff">Drop-off Address</label>
-        <input type="text" id="dropoff" name="dropoff" placeholder="Enter drop-off location" oninput="liveEstimate()">
+        <input type="text" id="dropoff" name="dropoff" placeholder="Enter drop-off location">
       </div>
 
       <label for="passengers" id="labelPassengers">Number of Passengers</label>
@@ -148,6 +148,8 @@
       });
       pickupAutocomplete = new google.maps.places.Autocomplete(document.getElementById("pickup"));
       dropoffAutocomplete = new google.maps.places.Autocomplete(document.getElementById("dropoff"));
+      pickupAutocomplete.addListener("place_changed", liveEstimate);
+      dropoffAutocomplete.addListener("place_changed", liveEstimate);
       toggleFields();
     };
 
@@ -155,6 +157,7 @@
       const type = document.getElementById("serviceType").value;
       document.getElementById("pickupField").style.display = type === 'dropoff' ? 'block' : 'none';
       document.getElementById("dropoffField").style.display = type === 'pickup' ? 'block' : 'none';
+      liveEstimate();
     }
 
     async function calculateEstimate(pickup, dropoff) {
@@ -176,7 +179,7 @@
       const airport = document.getElementById("airport").value;
       const pickup = type === 'pickup' ? airport : document.getElementById("pickup").value;
       const dropoff = type === 'pickup' ? document.getElementById("dropoff").value : airport;
-      if (!pickup || !dropoff) return;
+      if (!pickup || !dropoff || pickup.trim() === '' || dropoff.trim() === '') return;
       try {
         const price = await calculateEstimate(pickup, dropoff);
         document.getElementById("priceEstimate").textContent = `Estimated Price: $${price}`;

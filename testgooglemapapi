@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Google Maps API</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f0f0f0;
+    }
+    #map {
+      height: 400px;
+      width: 100%;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+    }
+    #autocomplete {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    #distance-result {
+      margin-top: 20px;
+      font-size: 16px;
+    }
+    #error {
+      color: red;
+      margin-top: 20px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Test Google Maps API</h1>
+  <p>This page tests your Google Maps API key for Maps, Places, and Distance Matrix APIs.</p>
+  <h2>1. Map Display</h2>
+  <div id="map"></div>
+  <h2>2. Places Autocomplete</h2>
+  <input type="text" id="autocomplete" placeholder="Enter an address (e.g., 123 Main St, Santa Ana, CA)">
+  <h2>3. Distance Matrix</h2>
+  <p>Calculating distance between Santa Ana, CA and Disneyland, CA...</p>
+  <div id="distance-result"></div>
+  <div id="error"></div>
+
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAoCDsW6-3UzZI11TMH62uLTE1uP1yX2Ts&libraries=places"></script>
+  <script>
+    // Initialize Map
+    function initMap() {
+      try {
+        const map = new google.maps.Map(document.getElementById('map'), {
+          center: { lat: 33.8121, lng: -117.9190 }, // Santa Ana, CA
+          zoom: 12
+        });
+        console.log('Map initialized successfully');
+      } catch (err) {
+        showError('Map initialization failed: ' + err.message);
+      }
+    }
+
+    // Initialize Autocomplete
+    function initAutocomplete() {
+      try {
+        const input = document.getElementById('autocomplete');
+        const autocomplete = new google.maps.places.Autocomplete(input, {
+          types: ['address']
+        });
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace();
+          if (place && place.formatted_address) {
+            console.log('Selected place:', place.formatted_address);
+            alert('Selected: ' + place.formatted_address);
+          } else {
+            showError('No valid place selected');
+          }
+        });
+        console.log('Autocomplete initialized successfully');
+      } catch (err) {
+        showError('Autocomplete initialization failed: ' + err.message);
+      }
+    }
+
+    // Test Distance Matrix
+    function testDistanceMatrix() {
+      try {
+        const service = new google.maps.DistanceMatrixService();
+        service.getDistanceMatrix({
+          origins: ['Santa Ana, CA'],
+          destinations: ['Disneyland, Anaheim, CA'],
+          travelMode: 'DRIVING'
+        }, (response, status) => {
+          if (status === 'OK' && response.rows[0].elements[0].status === 'OK') {
+            const distance = response.rows[0].elements[0].distance.text;
+            const duration = response.rows[0].elements[0].duration.text;
+            document.getElementById('distance-result').innerHTML = `Distance: ${distance}<br>Duration: ${duration}`;
+            console.log('Distance Matrix success:', distance, duration);
+          } else {
+            showError('Distance Matrix failed: ' + status);
+          }
+        });
+      } catch (err) {
+        showError('Distance Matrix initialization failed: ' + err.message);
+      }
+    }
+
+    // Show Error Message
+    function showError(message) {
+      const errorDiv = document.getElementById('error');
+      errorDiv.style.display = 'block';
+      errorDiv.innerHTML += `<p>${message}</p>`;
+      console.error(message);
+    }
+
+    // Initialize on Load
+    window.addEventListener('load', () => {
+      if (window.google && window.google.maps) {
+        initMap();
+        initAutocomplete();
+        testDistanceMatrix();
+      } else {
+        showError('Google Maps API failed to load. Check API key or network.');
+      }
+    });
+  </script>
+</body>
+</html>

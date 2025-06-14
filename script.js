@@ -1,6 +1,6 @@
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "YOUR_SECURE_API_KEY",
+    apiKey: "6LcqYmArAAAAAJifqnY4dXLf4D7ETfcTX6rOBYAN",
     authDomain: "dulichcalifornia-b8059.firebaseapp.com",
     projectId: "dulichcalifornia-b8059",
     storageBucket: "dulichcalifornia-b8059.appspot.com",
@@ -8,9 +8,16 @@ const firebaseConfig = {
     appId: "1:925284621075:web:65e6125a1bed22206dd8e6"
 };
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
+// Initialize Firebase + App Check
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
+
+const app = firebase.initializeApp(firebaseConfig);
+
+// Enable App Check (replace with your key)
+const appCheck = initializeAppCheck(app, {
+  provider: new ReCaptchaEnterpriseProvider("6LcqYmArAAAAAJifqnY4dXLf4D7ETfcTX6rOBYAN"), // Your key here
+  isTokenAutoRefreshEnabled: true // Auto-refresh tokens
+});
 
 // Language support
 const translations = {

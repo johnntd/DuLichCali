@@ -1,5 +1,6 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js';
 import { getFirestore, collection, getDocs, addDoc } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js';
 
 window.firebaseApp = initializeApp({
   apiKey: "AIzaSyAqedC3BuDKq9zlqfRN6Oamuy_sPE8eN_k",
@@ -10,7 +11,27 @@ window.firebaseApp = initializeApp({
   appId: "1:925284621075:web:65e6125a1bed22206dd8e6"
 });
 window.db = getFirestore(window.firebaseApp);
+const auth = getAuth(window.firebaseApp);
 console.log('Firebase initialized successfully');
+
+// Auto-sign in anonymously
+try {
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      console.log('Signed in anonymously:', user.uid);
+    } else {
+      signInAnonymously(auth)
+        .then((userCredential) => {
+          console.log('Signed in anonymously:', userCredential.user.uid);
+        })
+        .catch((err) => {
+          console.error('Anonymous sign-in failed:', err.message);
+        });
+    }
+  });
+} catch (err) {
+  console.error('Anonymous sign-in setup failed:', err.message);
+}
 
 // Debounce function
 function debounce(func, wait) {
@@ -107,7 +128,7 @@ async function calculateDistance(address) {
 
 async function updateCostEstimate() {
   try {
-    const selectedDestinations = Array.from(destinations.selectedOptions).map(opt => opt.value);
+    const selectedDestinations = Array.from(destinationsSelect.selectedOptions).map(opt => opt.value);
     const numDays = parseInt(numDaysInput.value) || 1;
     const numTravelers = parseInt(numTravelersInput.value) || 0;
     const numAdults = parseInt(numAdultsInput.value) || 0;

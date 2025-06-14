@@ -37,10 +37,10 @@
 </head>
 <body>
   <h1>Test Firebase for DuLichCali</h1>
-  <p>This page tests Firebase initialization, reading, and writing to the 'bookings' collection.</p>
+  <p>This page tests Firebase initialization, anonymous sign-in, reading, and writing to the 'bookings' collection.</p>
   <button onclick="testRead()">Test Read from Bookings</button>
   <button onclick="testWrite()">Test Write to Bookings</button>
-  <button onclick="retryTests()">Retry Both Tests</button>
+  <button onclick="retryTests()">Retry Tests</button>
   <div class="instructions">
     <p><strong>If permissions errors occur or 'bookings' collection is missing:</strong></p>
     <ol>
@@ -53,14 +53,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /bookings/{document=**} {
-      allow read, write: if true;
+      allow read, write: if request.auth != null;
     }
   }
 }
         </pre>
       </li>
       <li>Click <strong>Publish</strong> and wait 1–2 minutes.</li>
-      <li>Click <strong>Test Write to Bookings</strong> to create the collection, then <strong>Retry Both Tests</strong>.</li>
+      <li>Refresh this page and click <strong>Test Write to Bookings</strong> to create the collection, then <strong>Retry Tests</strong>.</li>
     </ol>
   </div>
   <div id="output">Results will appear here...</div>
@@ -70,9 +70,11 @@ service cloud.firestore {
     // Line 1: Import Firebase modules
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js';
     import { getFirestore, collection, getDocs, addDoc } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
+    import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js';
 
     // Line 5: Initialize Firebase
     let db;
+    let auth;
     try {
       // Line 7: Firebase configuration
       const firebaseApp = initializeApp({
@@ -83,8 +85,9 @@ service cloud.firestore {
         messagingSenderId: "925284621075",
         appId: "1:925284621075:web:65e6125a1bed22206dd8e6"
       });
-      // Line 16: Initialize Firestore
+      // Line 16: Initialize Firestore and Auth
       db = getFirestore(firebaseApp);
+      auth = getAuth(firebaseApp);
       document.getElementById('output').textContent = 'Firebase initialized successfully';
       console.log('Firebase initialized successfully');
     } catch (err) {
@@ -92,10 +95,31 @@ service cloud.firestore {
       showError('Firebase initialization failed: ' + err.message);
     }
 
-    // Line 23: Test Read from Bookings
+    // Line 23: Auto-sign in anonymously
+    try {
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          document.getElementById('output').textContent = 'Signed in anonymously with UID: ' + user.uid;
+          console.log('Signed in anonymously:', user.uid);
+        } else {
+          signInAnonymously(auth)
+            .then((userCredential) => {
+              document.getElementById('output').textContent = 'Signed in anonymously with UID: ' + userCredential.user.uid;
+              console.log('Signed in anonymously:', userCredential.user.uid);
+            })
+            .catch((err) => {
+              showError('Anonymous sign-in failed: ' + err.message);
+            });
+        }
+      });
+    } catch (err) {
+      showError('Anonymous sign-in setup failed: ' + err.message);
+    }
+
+    // Line 37: Test Read from Bookings
     window.testRead = async function() {
       try {
-        // Line 25: Query bookings collection
+        // Line 39: Query bookings collection
         const querySnapshot = await getDocs(collection(db, 'bookings'));
         const bookings = querySnapshot.docs.map(doc => doc.data());
         if (bookings.length === 0) {
@@ -106,15 +130,15 @@ service cloud.firestore {
           console.log('Read successful:', bookings);
         }
       } catch (err) {
-        // Line 34: Catch read errors
+        // Line 48: Catch read errors
         showError('Read failed: ' + err.message + '\nThe "bookings" collection may not exist or you lack read permissions. Update Firestore security rules in Firebase Console.');
       }
     };
 
-    // Line 38: Test Write to Bookings
+    // Line 52: Test Write to Bookings
     window.testWrite = async function() {
       try {
-        // Line 40: Add test document
+        // Line 54: Add test document
         const docRef = await addDoc(collection(db, 'bookings'), {
           date: new Date().toISOString().split('T')[0],
           type: 'test',
@@ -124,26 +148,26 @@ service cloud.firestore {
         document.getElementById('output').textContent = 'Write successful. Document ID: ' + docRef.id + '\nThe "bookings" collection has been created.';
         console.log('Write successful:', docRef.id);
       } catch (err) {
-        // Line 49: Catch write errors
+        // Line 63: Catch write errors
         showError('Write failed: ' + err.message + '\nUnable to create/write to "bookings" collection. Update Firestore security rules in Firebase Console.');
       }
     };
 
-    // Line 53: Retry Both Tests
+    // Line 67: Retry Tests
     window.retryTests = async function() {
       try {
-        // Line 55: Reset output
+        // Line 69: Reset output
         document.getElementById('output').textContent = 'Retrying tests...';
         document.getElementById('error').textContent = '';
         await testRead();
         await testWrite();
       } catch (err) {
-        // Line 60: Catch retry errors
+        // Line 74: Catch retry errors
         showError('Retry failed: ' + err.message);
       }
     };
 
-    // Line 64: Show Error
+    // Line 78: Show Error
     function showError(message) {
       const errorDiv = document.getElementById('error');
       errorDiv.textContent = message;

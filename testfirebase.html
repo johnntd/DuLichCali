@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Firebase</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f0f0f0;
+    }
+    #output {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      background-color: #fff;
+    }
+    #error {
+      color: red;
+      margin-top: 10px;
+    }
+    button {
+      margin: 5px;
+      padding: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Test Firebase for DuLichCali</h1>
+  <p>This page tests Firebase initialization, reading, and writing to the 'bookings' collection.</p>
+  <button onclick="testRead()">Test Read from Bookings</button>
+  <button onclick="testWrite()">Test Write to Bookings</button>
+  <div id="output">Results will appear here...</div>
+  <div id="error"></div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js';
+    import { getFirestore, collection, getDocs, addDoc } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
+
+    // Initialize Firebase
+    try {
+      const firebaseApp = initializeApp({
+        apiKey: "AIzaSyAqedC3BuDKq9zlqfRN6Oamuy_sPE8eN_k",
+        authDomain: "dulichcalifornia-b8059.firebaseapp.com",
+        projectId: "dulichcalifornia-b8059",
+        storageBucket: "dulichcalifornia-b8059.firebasestorage.app",
+        messagingSenderId: "925284621075",
+        appId: "1:925284621075:web:65e6125a1bed22206dd8e6"
+      });
+      window.db = getFirestore(firebaseApp);
+      document.getElementById('output').textContent = 'Firebase initialized successfully';
+      console.log('Firebase initialized successfully');
+    } catch (err) {
+      showError('Firebase initialization failed: ' + err.message);
+    }
+
+    // Test Read from Bookings
+    window.testRead = async function() {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'bookings'));
+        const bookings = querySnapshot.docs.map(doc => doc.data());
+        document.getElementById('output').textContent = 'Read successful. Bookings: ' + JSON.stringify(bookings, null, 2);
+        console.log('Read successful:', bookings);
+      } catch (err) {
+        showError('Read failed: ' + err.message);
+      }
+    };
+
+    // Test Write to Bookings
+    window.testWrite = async function() {
+      try {
+        const docRef = await addDoc(collection(db, 'bookings'), {
+          date: new Date().toISOString().split('T')[0],
+          type: 'test',
+          paymentStatus: 'pending',
+          timestamp: new Date().toISOString()
+        });
+        document.getElementById('output').textContent = 'Write successful. Document ID: ' + docRef.id;
+        console.log('Write successful:', docRef.id);
+      } catch (err) {
+        showError('Write failed: ' + err.message);
+      }
+    };
+
+    // Show Error
+    function showError(message) {
+      const errorDiv = document.getElementById('error');
+      errorDiv.textContent = message;
+      console.error(message);
+    }
+  </script>
+</body>
+</html>

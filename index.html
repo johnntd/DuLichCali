@@ -1,236 +1,246 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Du Lịch California</title>
-  <link rel="stylesheet" href="./style.css">
-  <script async src="https://www.paypal.com/sdk/js?client-id=AYnnJuurmxIuE9uZ8Fe3cmFnqFVElx3G7apdDVkuP7MNlWTmwu2UMJLq2OjldO42UrstA5bhwSeLsRz2"></script>
-  <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initMap"></script>
-  <script>
-    // Bridge for global initMap callback
-    window.initMap = function() {
-      if (window.app && window.app.initMap) {
-        window.app.initMap();
-      } else {
-        console.error('initMap not found in app module');
-      }
-    };
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dịch Vụ Du Lịch California</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/flatpickr.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container mx-auto p-4">
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-4">
-      <h1 class="text-3xl font-bold">Du Lịch California</h1>
-      <div>
-        <button id="lang-toggle" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Chuyển sang Tiếng Anh
-        </button>
-      </div>
-    </div>
-
-    <!-- Contact Info -->
-    <div class="mb-4">
-      <p>Duy Hoa, Phone: <a href="tel:714-227-6007">714-227-6007</a>, Email: <a href="mailto:dulichcali21@gmail.com">dulichcali21@gmail.com</a></p>
-    </div>
-
-    <!-- Service Selection -->
-    <div class="mb-4">
-      <label for="service-type" class="block text-lg font-semibold">Chọn Dịch Vụ:</label>
-      <select id="service-type" class="w-full p-2 rounded bg-white text-black">
-        <option value="travel">Gói Du Lịch</option>
-        <option value="airport">Dịch Vụ Sân Bay</option>
-      </select>
-    </div>
-
-    <!-- Travel Package Form -->
-    <div id="travel-form" class="service-form">
-      <h2 class="text-2xl font-semibold mb-4">Gói Du Lịch</h2>
-      <form id="travel-package-form" action="https://formspree.io/f/xeokgbpo" method="POST">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block">Ngày Đi:</label>
-            <input type="date" id="travel-date" name="date" class="w-full p-2 rounded" required>
-          </div>
-          <div>
-            <label class="block">Giờ Đi:</label>
-            <input type="time" id="travel-time" name="time" class="w-full p-2 rounded" required>
-          </div>
-          <div>
-            <label class="block">Tên Khách Hàng:</label>
-            <input type="text" name="name" class="w-full p-2 rounded" required>
-          </div>
-          <div>
-            <label class="block">Số Điện Thoại:</label>
-            <input type="tel" name="phone" class="w-full p-2 rounded" required>
-          </div>
-          <div>
-            <label class="block">Email:</label>
-            <input type="email" name="email" class="w-full p-2 rounded" required>
-          </div>
-          <div>
-            <label class="block">Sân Bay:</label>
-            <select name="airport" class="w-full p-2 rounded">
-              <option value="LAX">LAX</option>
-              <option value="SNA">SNA</option>
-              <option value="LGB">LGB</option>
-            </select>
-          </div>
-          <div>
-            <label class="block">Gói Du Lịch:</label>
-            <select id="package-type" name="package" class="w-full p-2 rounded" required>
-              <option value="custom">Tùy Chỉnh Điểm Đến</option>
-              <option value="disneyland">Disneyland Adventure</option>
-              <option value="sandiego">San Diego Family Fun</option>
-              <option value="universal">Universal Hollywood</option>
-              <option value="national">National Parks Explorer</option>
-              <option value="city">City Getaway</option>
-            </select>
-          </div>
-          <div id="destinations-selection">
-            <label class="block">Chọn Điểm Đến:</label>
-            <select multiple id="destinations" name="destinations" class="w-full p-2 rounded">
-              <option value="Disneyland">Disneyland</option>
-              <option value="California Adventure">California Adventure</option>
-              <option value="Universal Studios">Universal Studios</option>
-              <option value="San Diego Zoo">San Diego Zoo</option>
-              <option value="SeaWorld">SeaWorld</option>
-              <option value="LegoLand">LegoLand</option>
-              <option value="Las Vegas">Las Vegas</option>
-              <option value="Grand Canyon">Grand Canyon</option>
-              <option value="San Francisco">San Francisco</option>
-              <option value="Yosemite">Yosemite</option>
-              <option value="Lake Tahoe">Lake Tahoe</option>
-              <option value="Reno">Reno</option>
-              <option value="Silicon Valley">Silicon Valley</option>
-            </select>
-          </div>
-          <div id="ticket-type" class="hidden">
-            <label class="block">Loại Vé (Disneyland/Universal):</label>
-            <select name="ticket_type" class="w-full p-2 rounded">
-              <option value="regular">Regular</option>
-              <option value="vip">VIP</option>
-              <option value="express">Express</option>
-            </select>
-          </div>
-          <div id="travelers-input">
-            <label class="block">Số Người (1–12):</label>
-            <input type="number" id="num-travelers" name="num_travelers" min="1" max="12" class="w-full p-2 rounded" required>
-          </div>
-          <div id="adult-kid-input" class="hidden">
-            <label class="block">Số Người Lớn:</label>
-            <input type="number" id="num-adults" name="num_adults" min="0" class="w-full p-2 rounded">
-            <label class="block">Số Trẻ Em:</label>
-            <input type="number" id="num-kids" name="num_kids" min="0" class="w-full p-2 rounded">
-          </div>
-          <div>
-            <label class="block">Số Ngày:</label>
-            <input type="number" id="num-days" name="num_days" min="1" class="w-full p-2 rounded" required>
-          </div>
-          <div>
-            <label class="block">Lưu Trú:</label>
-            <select id="lodging" name="lodging" class="w-full p-2 rounded" required>
-              <option value="none">Không Lưu Trú</option>
-              <option value="airbnb">Airbnb</option>
-              <option value="hotel">Khách Sạn</option>
-            </select>
-          </div>
-          <div id="dropoff-address" class="hidden">
-            <label class="block">Địa Chỉ Đưa Đón:</label>
-            <place-autocomplete-element id="dropoff-address-input" name="dropoff_address" class="w-full"></place-autocomplete-element>
-          </div>
-          <div id="meals-option" class="hidden">
-            <label class="block">Bữa Ăn Tự Chọn (Khu vực Vịnh):</label>
-            <input type="checkbox" id="meals" name="meals"> $35/ngày/người
-          </div>
-          <div>
-            <label class="block">Đón Sân Bay:</label>
-            <input type="checkbox" id="airport-pickup" name="airport_pickup">
-            <div id="airport-pickup-details" class="hidden">
-              <label class="block">Sân Bay:</label>
-              <select name="pickup_airport" class="w-full p-2 rounded">
-                <option value="LAX">LAX</option>
-                <option value="SNA">SNA</option>
-                <option value="LGB">LGB</option>
-              </select>
+    <div class="container">
+        <header>
+            <div class="language-toggle">
+                <button id="language-btn">English <i class="fas fa-language"></i></button>
             </div>
-          </div>
-        </div>
-        <div id="cost-estimate" class="mt-4 p-4 bg-white text-black rounded">
-          <h3 class="text-lg font-semibold">Ước Tính Chi Phí</h3>
-          <p>Phí Vận Chuyển: $<span id="transport-cost">0</span></p>
-          <p>Phí Vé: $<span id="admission-cost">0</span></p>
-          <p>Phí Bữa Ăn: $<span id="meals-cost">0</span></p>
-          <p>Phí Lưu Trú: $<span id="lodging-cost">0</span></p>
-          <p>Tổng Cộng: $<span id="total-cost">0</span></p>
-        </div>
-        <div class="mt-4">
-          <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Gửi Yêu Cầu</button>
-          <div id="paypal-button-container" class="mt-4"></div>
-          <p id="paypal-fallback" class="hidden text-red-500">PayPal hiện không khả dụng. Bạn vẫn có thể gửi yêu cầu và thanh toán sau.</p>
-        </div>
-      </form>
+            <h1 id="main-title">Dịch Vụ Du Lịch California</h1>
+            <div class="contact-info">
+                <p><i class="fas fa-user"></i> Duy Hoa</p>
+                <p><i class="fas fa-phone"></i> <a href="tel:714-227-6007">714-227-6007</a></p>
+                <p><i class="fas fa-envelope"></i> <a href="mailto:dulichcali21@gmail.com">dulichcali21@gmail.com</a></p>
+            </div>
+        </header>
+
+        <main>
+            <div class="service-selector">
+                <select id="service-type">
+                    <option value="travel" selected>Gói Du Lịch</option>
+                    <option value="airport">Dịch Vụ Sân Bay</option>
+                </select>
+            </div>
+
+            <!-- Travel Package Form -->
+            <form id="travel-form" class="service-form active">
+                <div class="form-group">
+                    <label for="travel-package" id="package-label">Gói Du Lịch:</label>
+                    <select id="travel-package" required>
+                        <option value="">-- Chọn gói --</option>
+                        <option value="custom">Điểm Đến Tùy Chỉnh</option>
+                        <option value="disney">Disneyland Adventure (Disneyland + California Adventure)</option>
+                        <option value="san-diego">San Diego Family Fun (San Diego Zoo, SeaWorld, LegoLand)</option>
+                        <option value="universal">Universal Hollywood (Universal Studios)</option>
+                        <option value="parks">National Parks Explorer (Grand Canyon, Yosemite)</option>
+                        <option value="city">City Getaway (Las Vegas, San Francisco, Reno)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="extra-destinations" id="extra-dest-label">Điểm Đến Bổ Sung (tùy chọn, phân cách bằng dấu phẩy):</label>
+                    <input type="text" id="extra-destinations" placeholder="Ví dụ: Lake Tahoe, Silicon Valley">
+                </div>
+
+                <div class="form-group">
+                    <label for="travel-date" id="travel-date-label">Ngày Đi:</label>
+                    <input type="text" id="travel-date" class="datepicker" placeholder="Chọn ngày" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="return-date" id="return-date-label">Ngày Về:</label>
+                    <input type="text" id="return-date" class="datepicker" placeholder="Chọn ngày" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="pickup-time" id="pickup-time-label">Giờ Đón:</label>
+                    <input type="time" id="pickup-time" required>
+                </div>
+
+                <div class="form-group" id="theme-park-options" style="display: none;">
+                    <label id="ticket-type-label">Loại Vé:</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="ticket-type" value="regular" checked> Thường</label>
+                        <label><input type="radio" name="ticket-type" value="express"> Express</label>
+                        <label><input type="radio" name="ticket-type" value="vip"> VIP</label>
+                    </div>
+                </div>
+
+                <div class="form-group" id="non-theme-park-group">
+                    <label for="num-travelers" id="num-travelers-label">Số Lượng Khách (1-12):</label>
+                    <input type="number" id="num-travelers" min="1" max="12" value="1" required>
+                </div>
+
+                <div class="form-group" id="theme-park-travelers" style="display: none;">
+                    <label for="adults" id="adults-label">Người Lớn:</label>
+                    <input type="number" id="adults" min="0" max="12" value="1">
+                    <label for="kids" id="kids-label">Trẻ Em (3-9 tuổi):</label>
+                    <input type="number" id="kids" min="0" max="12" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="lodging" id="lodging-label">Chỗ Ở:</label>
+                    <select id="lodging" required>
+                        <option value="none">Không Cần</option>
+                        <option value="airbnb">Airbnb</option>
+                        <option value="hotel">Khách Sạn</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="dropoff-address-group" style="display: none;">
+                    <label for="dropoff-address" id="dropoff-address-label">Địa Chỉ Đến:</label>
+                    <input type="text" id="dropoff-address" placeholder="Nhập địa chỉ đầy đủ">
+                </div>
+
+                <div class="form-group" id="meal-options" style="display: none;">
+                    <label><input type="checkbox" id="meals"> Bữa Ăn Tự Nấu ($35/người/ngày)</label>
+                </div>
+
+                <div class="form-group">
+                    <label for="airport-pickup" id="airport-pickup-label">Đón Từ Sân Bay:</label>
+                    <select id="airport-pickup">
+                        <option value="none">Không Cần</option>
+                        <option value="LAX">LAX (Los Angeles)</option>
+                        <option value="SNA">SNA (Orange County)</option>
+                        <option value="LGB">LGB (Long Beach)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="customer-name" id="name-label">Họ Tên:</label>
+                    <input type="text" id="customer-name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="customer-phone" id="phone-label">Số Điện Thoại:</label>
+                    <input type="tel" id="customer-phone" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="customer-email" id="email-label">Email:</label>
+                    <input type="email" id="customer-email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="pickup-address" id="pickup-address-label">Địa Chỉ Đón (nếu khác Orange County):</label>
+                    <input type="text" id="pickup-address" placeholder="Nhập địa chỉ đầy đủ nếu cần">
+                </div>
+
+                <div class="cost-estimate">
+                    <h3 id="estimate-title">Ước Tính Chi Phí</h3>
+                    <div class="estimate-details">
+                        <p id="transport-cost">Vận Chuyển: $0</p>
+                        <p id="tickets-cost">Vé Tham Quan: $0</p>
+                        <p id="lodging-cost" style="display: none;">Chỗ Ở: $0</p>
+                        <p id="meals-cost" style="display: none;">Bữa Ăn: $0</p>
+                        <p id="airport-cost" style="display: none;">Đón Sân Bay: $0</p>
+                        <p id="total-cost">Tổng Cộng: $0</p>
+                    </div>
+                </div>
+
+                <button type="submit" id="submit-travel" class="submit-btn">Gửi Yêu Cầu</button>
+                <div id="paypal-button-container-travel" style="display: none;"></div>
+            </form>
+
+            <!-- Airport Service Form -->
+            <form id="airport-form" class="service-form">
+                <div class="form-group">
+                    <label for="service-direction" id="service-direction-label">Loại Dịch Vụ:</label>
+                    <select id="service-direction" required>
+                        <option value="pickup">Đón từ sân bay</option>
+                        <option value="dropoff">Đưa đến sân bay</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="airport" id="airport-label">Sân Bay:</label>
+                    <select id="airport" required>
+                        <option value="LAX">LAX (Los Angeles)</option>
+                        <option value="SNA">SNA (Orange County)</option>
+                        <option value="LGB">LGB (Long Beach)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="airport-dropoff-address-group">
+                    <label for="dropoff-address-airport" id="dropoff-address-airport-label">Địa Chỉ Đến:</label>
+                    <input type="text" id="dropoff-address-airport" required placeholder="Nhập địa chỉ đầy đủ">
+                </div>
+
+                <div class="form-group" id="airport-pickup-address-group" style="display: none;">
+                    <label for="pickup-address-airport" id="pickup-address-airport-label">Địa Chỉ Đón:</label>
+                    <input type="text" id="pickup-address-airport" required placeholder="Nhập địa chỉ đầy đủ">
+                </div>
+
+                <div class="form-group">
+                    <label for="service-date" id="service-date-label">Ngày Dịch Vụ:</label>
+                    <input type="text" id="service-date" class="datepicker" placeholder="Chọn ngày" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="service-time" id="service-time-label">Giờ:</label>
+                    <input type="time" id="service-time" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="num-passengers" id="num-passengers-label">Số Lượng Hành Khách (1-12):</label>
+                    <input type="number" id="num-passengers" min="1" max="12" value="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="customer-name-airport" id="name-airport-label">Họ Tên:</label>
+                    <input type="text" id="customer-name-airport" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="customer-phone-airport" id="phone-airport-label">Số Điện Thoại:</label>
+                    <input type="tel" id="customer-phone-airport" required>
+                </div>
+
+                <div class="cost-estimate">
+                    <h3 id="estimate-title-airport">Ước Tính Chi Phí</h3>
+                    <div class="estimate-details">
+                        <p id="base-cost-airport">Cước Phí Cơ Bản: $0</p>
+                        <p id="surcharge-airport" style="display: none;">Phụ Thu Mercedes: $0</p>
+                        <p id="total-cost-airport">Tổng Cộng: $0</p>
+                    </div>
+                </div>
+
+                <button type="submit" id="submit-airport" class="submit-btn">Gửi Yêu Cầu</button>
+            </form>
+        </main>
     </div>
 
-    <!-- Airport Service Form -->
-    <div id="airport-form" class="service-form hidden">
-      <h2 class="text-2xl font-semibold mb-4">Dịch Vụ Sân Bay</h2>
-      <form id="airport-service-form" action="https://formspree.io/f/xeokgbpo" method="POST">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block">Loại Dịch Vụ:</label>
-            <select id="airport-service-type" name="service_type" class="w-full p-2 rounded" required>
-              <option value="pickup">Đón tại Sân Bay</option>
-              <option value="dropoff">Đưa ra Sân Bay</option>
-            </select>
-          </div>
-          <div>
-            <label class="block">Sân Bay:</label>
-            <select name="airport" class="w-full p-2 rounded" required>
-              <option value="LAX">LAX</option>
-              <option value="SNA">SNA</option>
-              <option value="LGB">LGB</option>
-            </select>
-          </div>
-          <div>
-            <label class="block">Địa Chỉ:</label>
-            <place-autocomplete-element id="airport-address" name="address" class="w-full" required></place-autocomplete-element>
-          </div>
-          <div>
-            <label class="block">Số Người (1–12):</label>
-            <input type="number" name="num_people" min="1" max="12" class="w-full p-2 rounded" required>
-          </div>
-          <div>
-            <label class="block">Ngày:</label>
-            <input type="date" name="date" class="w-full p-2 rounded" required>
-          </div>
-          <div>
-            <label class="block">Giờ:</label>
-            <input type="time" name="time" class="w-full p-2 rounded" required>
-          </div>
-          <div>
-            <label class="block">Tên Khách Hàng:</label>
-            <input type="text" name="name" class="w-full p-2 rounded" required>
-          </div>
-          <div>
-            <label class="block">Số Điện Thoại:</label>
-            <input type="tel" name="phone" class="w-full p-2 rounded" required>
-          </div>
-        </div>
-        <div id="airport-cost-estimate" class="mt-4 p-4 bg-white text-black rounded">
-          <h3 class="text-lg font-semibold">Ước Tính Chi Phí</h3>
-          <p>Phí Vận Chuyển: $<span id="airport-transport-cost">0</span></p>
-          <p>Tổng Cộng: $<span id="airport-total-cost">0</span></p>
-        </div>
-        <div class="mt-4">
-          <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Gửi Yêu Cầu</button>
-          <button id="pay-later" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Thanh Toán Sau</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <script type="module" src="./script.js"></script>
+    <!-- Firebase and other JS libraries -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/flatpickr.min.js"></script>
+    <script src="https://www.payak.com/marty/places.js"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=AYnnJuurmxIuE9uZ8Fe3cmFnqFVElx3G7apdDVkuP7MNlWTmwu2UMJLq2OjldO42UrstA5bhwSeLsRz2&currency=USD"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places"></script>
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAqedC3BuDKq9zlqfRN6Oamuy_sPE8eN_k",
+            authDomain: "dulichcalifornia-b8059.firebaseapp.com",
+            projectId: "dulichcalifornia-b8059",
+            storageBucket: "dulichcalifornia-b8059.appspot.com",
+            messagingSenderId: "925284621075",
+            appId: "1:925284621075:web:65e6125a1bed22206dd8e6"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+    </script>
+    <script src="script.js"></script>
 </body>
 </html>

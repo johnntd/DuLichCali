@@ -155,20 +155,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Service type toggle
-    const serviceType = document.getElementById('service-type');
-    const travelForm = document.getElementById('travel-form');
-    const airportForm = document.getElementById('airport-form');
-    
-    serviceType.addEventListener('change', function() {
-        if (this.value === 'travel') {
-            travelForm.classList.add('active');
-            airportForm.classList.remove('active');
-        } else {
-            travelForm.classList.remove('active');
-            airportForm.classList.add('active');
-        }
-    });
+// Service type toggle - corrected version
+const serviceType = document.getElementById('service-type');
+const travelForm = document.getElementById('travel-form');
+const airportForm = document.getElementById('airport-form');
+
+function toggleServiceForms() {
+    if (serviceType.value === 'travel') {
+        travelForm.classList.add('active');
+        airportForm.classList.remove('active');
+    } else {
+        travelForm.classList.remove('active');
+        airportForm.classList.add('active');
+    }
+}
+
+// Initialize with correct form visible
+toggleServiceForms();
+
+// Add event listener for changes
+serviceType.addEventListener('change', toggleServiceForms);
     
     // Initialize date pickers with disabled dates
     const today = new Date();

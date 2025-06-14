@@ -40,14 +40,111 @@
         <!-- Travel Package Service -->
         <div id="travelService" class="service-section active">
             <form id="travelForm" action="https://formspree.io/f/xeokgbpo" method="POST" novalidate>
-                <!-- Form content remains the same as your original -->
+                <input type="hidden" name="service_type" value="travel">
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="package" class="form-label" id="packageLabel">Gói du lịch:</label>
+                        <select class="form-select" id="package" name="package" required>
+                            <option value="custom" id="customPackage">Điểm Đến Tùy Chọn</option>
+                            <option value="disney" id="disneyPackage">Disneyland Adventure</option>
+                            <option value="san_diego" id="sanDiegoPackage">San Diego Family Fun</option>
+                            <option value="universal" id="universalPackage">Universal Hollywood</option>
+                        </select>
+                        <div class="error-message" id="packageError"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="extraDestinations" class="form-label" id="extraDestinationsLabel">Thêm điểm đến (tùy chọn):</label>
+                        <select class="form-select" id="extraDestinations" name="extraDestinations" multiple>
+                            <option value="disneyland">Disneyland</option>
+                            <option value="universal_studios">Universal Studios</option>
+                            <option value="san_diego_zoo">San Diego Zoo</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="travelDate" class="form-label" id="travelDateLabel">Ngày đi:</label>
+                        <input type="text" class="form-control datepicker" id="travelDate" name="travelDate" required>
+                        <div class="error-message" id="travelDateError"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="returnDate" class="form-label" id="returnDateLabel">Ngày về:</label>
+                        <input type="text" class="form-control datepicker" id="returnDate" name="returnDate" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="travelTime" class="form-label" id="travelTimeLabel">Giờ đón:</label>
+                        <input type="time" class="form-control" id="travelTime" name="travelTime" required>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="customerName" class="form-label" id="customerNameLabel">Họ tên:</label>
+                        <input type="text" class="form-control" id="customerName" name="customerName" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="customerEmail" class="form-label" id="customerEmailLabel">Email:</label>
+                        <input type="email" class="form-control" id="customerEmail" name="customerEmail" required>
+                    </div>
+                </div>
+                
+                <div class="cost-estimate">
+                    <h5 id="costEstimateTitle">Ước Tính Chi Phí</h5>
+                    <div class="cost-item">
+                        <span id="transportationCostLabel">Vận chuyển:</span>
+                        <span id="transportationCost">$0</span>
+                    </div>
+                    <div class="cost-item total-cost">
+                        <span id="totalCostLabel">Tổng cộng:</span>
+                        <span id="totalCost">$0</span>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary" id="submitTravelBtn">Gửi Yêu Cầu</button>
+                    <div id="paypalButtonContainer" class="mt-2"></div>
+                </div>
             </form>
         </div>
         
         <!-- Airport Service -->
         <div id="airportService" class="service-section">
             <form id="airportForm" action="https://formspree.io/f/xeokgbpo" method="POST" novalidate>
-                <!-- Form content remains the same as your original -->
+                <input type="hidden" name="service_type" value="airport">
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="serviceDirection" class="form-label" id="serviceDirectionLabel">Loại dịch vụ:</label>
+                        <select class="form-select" id="serviceDirection" name="serviceDirection">
+                            <option value="pickup">Đón từ sân bay</option>
+                            <option value="dropoff">Trả tại sân bay</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="airport" class="form-label" id="airportLabel">Sân bay:</label>
+                        <select class="form-select" id="airport" name="airport">
+                            <option value="LAX">LAX (Los Angeles)</option>
+                            <option value="SNA" selected>SNA (Orange County)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="airportCustomerName" class="form-label" id="airportCustomerNameLabel">Họ tên:</label>
+                        <input type="text" class="form-control" id="airportCustomerName" name="airportCustomerName" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="airportCustomerPhone" class="form-label" id="airportCustomerPhoneLabel">Điện thoại:</label>
+                        <input type="tel" class="form-control" id="airportCustomerPhone" name="airportCustomerPhone" required>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary" id="submitAirportBtn">Gửi Yêu Cầu</button>
+                </div>
             </form>
         </div>
     </div>
@@ -61,5 +158,40 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="script.js"></script>
+    
+    <script>
+        // Initialize date pickers
+        flatpickr(".datepicker", {
+            locale: "vn",
+            minDate: "today",
+            dateFormat: "d/m/Y"
+        });
+        
+        // Service type toggle
+        document.getElementById('serviceType').addEventListener('change', function() {
+            document.getElementById('travelService').classList.toggle('active', this.value === 'travel');
+            document.getElementById('airportService').classList.toggle('active', this.value === 'airport');
+        });
+        
+        // Form validation
+        document.getElementById('travelForm').addEventListener('submit', function(e) {
+            if (!this.checkValidity()) {
+                e.preventDefault();
+                alert('Vui lòng điền đầy đủ thông tin');
+            }
+        });
+        
+        // Initialize Firebase (replace with your config)
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+            projectId: "YOUR_PROJECT",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+    </script>
 </body>
 </html>

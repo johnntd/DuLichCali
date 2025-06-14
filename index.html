@@ -22,21 +22,35 @@
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAoCDsW6-3UzZI11TMH62uLTE1uP1yX2Ts&libraries=places"></script>
   <style>
     body {
-      background: linear-gradient(to right, #ff7e5f, #feb47b);
+      background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-color: #87ceeb; /* Fallback sky blue */
       font-family: Arial, sans-serif;
-      color: #000; /* Default text color to black */
+      color: #000;
+    }
+    /* Semi-transparent overlay for text readability */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.2);
+      z-index: -1;
     }
     /* Minified Tailwind CSS Subset with modifications */
     *,:before,:after{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}
     html{line-height:1.5;-webkit-text-size-adjust:100%;tab-size:4;font-family:ui-sans-serif,system-ui,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"}
     body{margin:0;line-height:inherit}
-    a{color:#000;text-decoration:underline} /* Links in black with underline for clarity */
+    a{color:#000;text-decoration:underline}
     input,select,textarea{font-family:inherit;font-size:100%;font-weight:inherit;line-height:inherit;color:#000;margin:0;padding:0}
     input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}
     input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}
     button,input:where([type=button]),input:where([type=submit]),input:where([type=reset]){background-color:transparent;background-image:none}
     input:where([type=text]),input:where([type=email]),input:where([type=url]),input:where([type=password]),input:where([type=number]),input:where([type=date]),input:where([type=datetime-local]),input:where([type=month]),input:where([type=search]),input:where([type=tel]),input:where([type=time]),input:where([type=week]),select,textarea{border-width:1px;border-color:#d1d5db;padding:.5rem .75rem;font-size:1rem;line-height:1.5rem;border-radius:.375rem;color:#000}
-    place-autocomplete-element{display:block;width:100%;border:1px solid #d1d5db;padding:.5rem .75rem;font-size:1rem;border-radius:.375rem;background-color:#fff;color:#000}
     .container{width:100%;margin-right:auto;margin-left:auto;padding-right:1rem;padding-left:1rem}
     @media (min-width:640px){.container{max-width:640px}}
     @media (min-width:768px){.container{max-width:768px}}
@@ -74,11 +88,9 @@
     .rounded{border-radius:.375rem}
     .w-full{width:100%}
     @media (min-width:768px){.md\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media (max-width:768px){select,input,button,place-autocomplete-element{width:100%;margin-bottom:2.5rem}}
+    @media (max-width:768px){select,input,button{width:100%;margin-bottom:2.5rem}}
     .container{max-width:1200px;margin:0 auto;padding:20px}
-    /* Ensure labels and form elements are black */
     label, .service-form, #cost-estimate, #airport-cost-estimate {color: #000;}
-    /* Keep white text for buttons */
     .bg-blue-500, .bg-green-500, .bg-gray-500 {color: #fff;}
   </style>
 </head>
@@ -202,7 +214,7 @@
           </div>
           <div id="dropoff-address" class="hidden">
             <label class="block">Địa Chỉ Đưa Đón:</label>
-            <place-autocomplete-element id="dropoff-address-input" name="dropoff_address" class="w-full"></place-autocomplete-element>
+            <input type="text" id="dropoff-address-input" name="dropoff_address" class="w-full p-2 rounded" placeholder="Enter address">
           </div>
           <div id="meals-option" class="hidden">
             <label class="block">Bữa Ăn Tự Chọn (Khu vực Vịnh):</label>
@@ -259,7 +271,7 @@
           </div>
           <div>
             <label class="block">Địa Chỉ:</label>
-            <place-autocomplete-element id="airport-address" name="address" class="w-full"></place-autocomplete-element>
+            <input type="text" id="airport-address" name="address" class="w-full p-2 rounded" placeholder="Enter address" required>
           </div>
           <div>
             <label class="block">Số Người (1–12):</label>
@@ -296,6 +308,15 @@
   </div>
 
   <script>
+    // Debounce function to limit API calls
+    function debounce(func, wait) {
+      let timeout;
+      return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+      };
+    }
+
     // Language Toggle
     const translations = {
       vi: {
@@ -415,6 +436,8 @@
     serviceType.addEventListener('change', () => {
       travelForm.classList.toggle('hidden', serviceType.value !== 'travel');
       airportForm.classList.toggle('hidden', serviceType.value !== 'airport');
+      if (serviceType.value === 'travel') debouncedUpdateCostEstimate();
+      else debouncedUpdateAirportCostEstimate();
     });
 
     // Travel Package Logic
@@ -450,13 +473,13 @@
       }
       updateTravelerInput();
       updateMealsOption();
-      updateCostEstimate();
+      debouncedUpdateCostEstimate();
     });
 
     destinations.addEventListener('change', () => {
       updateTravelerInput();
       updateMealsOption();
-      updateCostEstimate();
+      debouncedUpdateCostEstimate();
     });
 
     function updateTravelerInput() {
@@ -468,29 +491,31 @@
       if (isThemePark) {
         numTravelers.value = (parseInt(numAdults.value) || 0) + (parseInt(numKids.value) || 0);
       }
+      debouncedUpdateCostEstimate();
     }
 
     numAdults.addEventListener('input', () => {
       numTravelers.value = (parseInt(numAdults.value) || 0) + (parseInt(numKids.value) || 0);
-      updateCostEstimate();
+      debouncedUpdateCostEstimate();
     });
 
     numKids.addEventListener('input', () => {
       numTravelers.value = (parseInt(numAdults.value) || 0) + (parseInt(numKids.value) || 0);
-      updateCostEstimate();
+      debouncedUpdateCostEstimate();
     });
 
-    numTravelers.addEventListener('input', updateCostEstimate);
-    document.getElementById('num-days').addEventListener('input', updateCostEstimate);
+    numTravelers.addEventListener('input', debouncedUpdateCostEstimate);
+    document.getElementById('num-days').addEventListener('input', debouncedUpdateCostEstimate);
+    document.querySelector('#ticket-type select').addEventListener('change', debouncedUpdateCostEstimate);
     lodging.addEventListener('change', () => {
-      dropoffAddress.classList.toggle('hidden', lodging.value !== 'none');
-      updateCostEstimate();
+      dropoffAddress.classList.toggle('hidden', lodging.value === 'none');
+      debouncedUpdateCostEstimate();
     });
 
-    mealsOption.addEventListener('change', updateCostEstimate);
+    document.getElementById('meals').addEventListener('change', debouncedUpdateCostEstimate);
     airportPickup.addEventListener('change', () => {
       airportPickupDetails.classList.toggle('hidden', !airportPickup.checked);
-      updateCostEstimate();
+      debouncedUpdateCostEstimate();
     });
 
     function updateMealsOption() {
@@ -500,8 +525,9 @@
 
     // Airport Service Logic
     const airportServiceType = document.getElementById('airport-service-type');
-    airportServiceType.addEventListener('change', updateAirportCostEstimate);
-    document.querySelector('#airport-form input[name="num_people"]').addEventListener('input', updateAirportCostEstimate);
+    airportServiceType.addEventListener('change', debouncedUpdateAirportCostEstimate);
+    document.querySelector('#airport-form input[name="num_people"]').addEventListener('input', debouncedUpdateAirportCostEstimate);
+    document.querySelector('#airport-form select[name="airport"]').addEventListener('change', debouncedUpdateAirportCostEstimate);
 
     // Cost Calculation Logic
     const distances = {
@@ -567,11 +593,11 @@
                 destinations: [destination],
                 travelMode: 'DRIVING'
               }, (response, status) => {
-                if (status === 'OK') {
-                  const distance = response.rows[0].elements[0].distance.value / 1609.34; // Convert meters to miles
+                if (status === 'OK' && response.rows[0].elements[0].status === 'OK') {
+                  const distance = response.rows[0].elements[0].distance.value / 1609.34; // Meters to miles
                   resolve(distance);
                 } else {
-                  console.error('Distance Matrix Error:', status);
+                  console.error('Distance Matrix Error:', status, response);
                   resolve(0);
                 }
               });
@@ -588,162 +614,176 @@
     }
 
     async function updateCostEstimate() {
-      const selectedDestinations = Array.from(destinations.selectedOptions).map(opt => opt.value);
-      const numDays = parseInt(document.getElementById('num-days').value) || 1;
-      const numTravelers = parseInt(numTravelers.value) || 0;
-      const numAdults = parseInt(numAdults.value) || 0;
-      const numKids = parseInt(numKids.value) || 0;
-      const ticket = document.querySelector('#ticket-type select').value;
-      const isMercedes = numTravelers > 3;
-      const lodgingType = lodging.value;
-      const hasMeals = document.getElementById('meals').checked;
-      const hasAirportPickup = airportPickup.checked;
-      const pickupAddress = document.getElementById('dropoff-address-input').value;
+      try {
+        const selectedDestinations = Array.from(destinations.selectedOptions).map(opt => opt.value);
+        const numDays = parseInt(document.getElementById('num-days').value) || 1;
+        const numTravelers = parseInt(numTravelers.value) || 0;
+        const numAdults = parseInt(numAdults.value) || 0;
+        const numKids = parseInt(numKids.value) || 0;
+        const ticket = document.querySelector('#ticket-type select').value;
+        const isMercedes = numTravelers > 3;
+        const lodgingType = lodging.value;
+        const hasMeals = document.getElementById('meals').checked;
+        const hasAirportPickup = airportPickup.checked;
+        const pickupAddress = document.getElementById('dropoff-address-input').value;
 
-      let transportCost = 0;
-      let admissionCost = 0;
-      let mealsCost = 0;
-      let lodgingCost = 0;
+        let transportCost = 0;
+        let admissionCost = 0;
+        let mealsCost = 0;
+        let lodgingCost = 0;
 
-      // Transportation Cost
-      const maxDistance = Math.max(...selectedDestinations.map(d => distances[d] || 0));
-      transportCost = maxDistance * 2.5 * numDays;
-      if (isMercedes) {
-        transportCost += 30 * numDays;
-        transportCost *= 1.2;
-      }
+        // Transportation Cost
+        const maxDistance = Math.max(...selectedDestinations.map(d => distances[d] || 0));
+        transportCost = maxDistance * 2.5 * numDays;
+        if (isMercedes) {
+          transportCost += 30 * numDays;
+          transportCost *= 1.2;
+        }
 
-      // Airport Pickup Cost
-      if (hasAirportPickup && lodgingType === 'none' && pickupAddress) {
-        const zip = pickupAddress.match(/\d{5}/)?.[0];
-        if (zip?.startsWith('90')) {
-          transportCost += 100;
-        } else if (zip?.startsWith('908')) {
-          transportCost += 80;
-        } else if (zip?.match(/^926|^927|^928/) || pickupAddress.includes('Anaheim') || pickupAddress.includes('Irvine') || pickupAddress.includes('Huntington Beach')) {
+        // Airport Pickup Cost
+        if (hasAirportPickup && lodgingType === 'none' && pickupAddress) {
+          const zip = pickupAddress.match(/\d{5}/)?.[0];
+          if (zip?.startsWith('90')) {
+            transportCost += 100;
+          } else if (zip?.startsWith('908')) {
+            transportCost += 80;
+          } else if (zip?.match(/^926|^927|^928/) || pickupAddress.includes('Anaheim') || pickupAddress.includes('Irvine') || pickupAddress.includes('Huntington Beach')) {
+            transportCost += 50;
+          } else {
+            const distance = await calculateDistance(pickupAddress);
+            transportCost += distance * 2.5;
+          }
+          if (numTravelers > 4) {
+            transportCost += 30;
+            transportCost *= 1.2;
+          }
+        } else if (hasAirportPickup) {
           transportCost += 50;
-        } else {
-          const distance = await calculateDistance(pickupAddress);
-          transportCost += distance * 2.5;
+          if (numTravelers > 4) {
+            transportCost += 30;
+            transportCost *= 1.2;
+          }
         }
-        if (numTravelers > 4) {
-          transportCost += 30;
-          transportCost *= 1.2;
+
+        // Admission Cost
+        for (const dest of selectedDestinations) {
+          if (['Disneyland', 'California Adventure', 'Universal Studios'].includes(dest)) {
+            admissionCost += numAdults * admissionFees[dest][ticket].adult + numKids * admissionFees[dest][ticket].kid;
+          } else {
+            admissionCost += numTravelers * (admissionFees[dest]?.adult || 0);
+          }
         }
-      } else if (hasAirportPickup) {
-        transportCost += 50;
-        if (numTravelers > 4) {
-          transportCost += 30;
-          transportCost *= 1.2;
+
+        // Meals Cost
+        if (hasMeals && selectedDestinations.some(d => ['San Francisco', 'Silicon Valley'].includes(d))) {
+          mealsCost = 35 * numTravelers * numDays;
         }
-      }
 
-      // Admission Cost
-      for (const dest of selectedDestinations) {
-        if (['Disneyland', 'California Adventure', 'Universal Studios'].includes(dest)) {
-          admissionCost += numAdults * admissionFees[dest][ticket].adult + numKids * admissionFees[dest][ticket].kid;
-        } else {
-          admissionCost += numTravelers * (admissionFees[dest]?.adult || 0);
+        // Lodging Cost
+        if (lodgingType !== 'none') {
+          const primaryDest = selectedDestinations[0];
+          let baseCost = lodgingCosts[primaryDest]?.[lodgingType] || 150;
+          if (numTravelers > 5) baseCost *= Math.ceil(numTravelers / 5);
+          if (lodgingType === 'airbnb') baseCost += numTravelers * 20;
+          lodgingCost = baseCost * numDays;
         }
-      }
 
-      // Meals Cost
-      if (hasMeals && selectedDestinations.some(d => ['San Francisco', 'Silicon Valley'].includes(d))) {
-        mealsCost = 35 * numTravelers * numDays;
-      }
+        // Update UI
+        document.getElementById('transport-cost').textContent = transportCost.toFixed(2);
+        document.getElementById('admission-cost').textContent = admissionCost.toFixed(2);
+        document.getElementById('meals-cost').textContent = mealsCost.toFixed(2);
+        document.getElementById('lodging-cost').textContent = lodgingCost.toFixed(2);
+        document.getElementById('total-cost').textContent = (transportCost + admissionCost + mealsCost + lodgingCost).toFixed(2);
 
-      // Lodging Cost
-      if (lodgingType !== 'none') {
-        const primaryDest = selectedDestinations[0];
-        let baseCost = lodgingCosts[primaryDest]?.[lodgingType] || 150;
-        if (numTravelers > 5) baseCost *= Math.ceil(numTravelers / 5);
-        if (lodgingType === 'airbnb') baseCost += numTravelers * 20;
-        lodgingCost = baseCost * numDays;
-      }
-
-      // Update UI
-      document.getElementById('transport-cost').textContent = transportCost.toFixed(2);
-      document.getElementById('admission-cost').textContent = admissionCost.toFixed(2);
-      document.getElementById('meals-cost').textContent = mealsCost.toFixed(2);
-      document.getElementById('lodging-cost').textContent = lodgingCost.toFixed(2);
-      document.getElementById('total-cost').textContent = (transportCost + admissionCost + mealsCost + lodgingCost).toFixed(2);
-
-      // PayPal Button
-      const paypalContainer = document.getElementById('paypal-button-container');
-      const paypalFallback = document.getElementById('paypal-fallback');
-      if (window.paypal) {
-        console.log('PayPal SDK loaded successfully');
-        try {
-          paypalContainer.innerHTML = ''; // Clear previous content
-          paypalFallback.classList.add('hidden');
-          paypal.Buttons({
-            createOrder: (data, actions) => {
-              return actions.order.create({
-                purchase_units: [{
-                  amount: {
-                    value: (admissionCost + lodgingCost).toFixed(2),
-                    breakdown: {
-                      item_total: { value: (admissionCost + lodgingCost).toFixed(2), currency_code: 'USD' }
+        // PayPal Button
+        const paypalContainer = document.getElementById('paypal-button-container');
+        const paypalFallback = document.getElementById('paypal-fallback');
+        if (window.paypal) {
+          console.log('PayPal SDK loaded successfully');
+          try {
+            paypalContainer.innerHTML = '';
+            paypalFallback.classList.add('hidden');
+            paypal.Buttons({
+              createOrder: (data, actions) => {
+                return actions.order.create({
+                  purchase_units: [{
+                    amount: {
+                      value: (admissionCost + lodgingCost).toFixed(2),
+                      breakdown: {
+                        item_total: { value: (admissionCost + lodgingCost).toFixed(2), currency_code: 'USD' }
+                      }
                     }
-                  }
-                }]
-              });
-            },
-            onApprove: (data, actions) => {
-              return actions.order.capture().then(() => {
-                document.getElementById('travel-package-form').dataset.paymentStatus = 'completed';
-                document.getElementById('travel-package-form').submit();
-              });
-            },
-            onError: (err) => {
-              console.error('PayPal Button Error:', err);
-              paypalContainer.innerHTML = '<p>Lỗi khi tải thanh toán PayPal. Vui lòng thử lại hoặc gửi yêu cầu mà không thanh toán trước.</p>';
-              paypalFallback.classList.remove('hidden');
-            }
-          }).render('#paypal-button-container');
-        } catch (err) {
-          console.error('PayPal SDK Error:', err);
-          paypalContainer.innerHTML = '<p>Lỗi khi tải PayPal. Vui lòng gửi yêu cầu và thanh toán sau.</p>';
+                  }]
+                });
+              },
+              onApprove: (data, actions) => {
+                return actions.order.capture().then(() => {
+                  document.getElementById('travel-package-form').dataset.paymentStatus = 'completed';
+                  document.getElementById('travel-package-form').submit();
+                });
+              },
+              onError: (err) => {
+                console.error('PayPal Button Error:', err);
+                paypalContainer.innerHTML = '<p>Lỗi khi tải thanh toán PayPal. Vui lòng thử lại hoặc gửi yêu cầu mà không thanh toán trước.</p>';
+                paypalFallback.classList.remove('hidden');
+              }
+            }).render('#paypal-button-container');
+          } catch (err) {
+            console.error('PayPal SDK Error:', err);
+            paypalContainer.innerHTML = '<p>Lỗi khi tải PayPal. Vui lòng gửi yêu cầu và thanh toán sau.</p>';
+            paypalFallback.classList.remove('hidden');
+          }
+        } else {
+          console.error('PayPal SDK not loaded');
+          paypalContainer.innerHTML = '<p>PayPal hiện không khả dụng. Vui lòng gửi yêu cầu và thanh toán sau.</p>';
           paypalFallback.classList.remove('hidden');
         }
-      } else {
-        console.error('PayPal SDK not loaded');
-        paypalContainer.innerHTML = '<p>PayPal hiện không khả dụng. Vui lòng gửi yêu cầu và thanh toán sau.</p>';
-        paypalFallback.classList.remove('hidden');
+      } catch (err) {
+        console.error('Cost Estimate Error:', err);
+        alert(currentLang === 'vi' ? 'Lỗi khi tính toán chi phí. Vui lòng thử lại.' : 'Error calculating cost. Please try again.');
       }
     }
 
     async function updateAirportCostEstimate() {
-      const serviceType = airportServiceType.value;
-      const address = document.getElementById('airport-address').value;
-      const numPeople = parseInt(document.querySelector('#airport-form input[name="num_people"]').value) || 0;
-      const isMercedes = numPeople > 4;
+      try {
+        const serviceType = airportServiceType.value;
+        const address = document.getElementById('airport-address').value;
+        const numPeople = parseInt(document.querySelector('#airport-form input[name="num_people"]').value) || 0;
+        const isMercedes = numPeople > 4;
 
-      let transportCost = 0;
-      if (numPeople < 4) {
-        const zip = address.match(/\d{5}/)?.[0];
-        if (zip?.startsWith('90')) {
-          transportCost = 100;
-        } else if (zip?.startsWith('908')) {
-          transportCost = 80;
-        } else if (zip?.match(/^926|^927|^928/) || address.includes('Anaheim') || address.includes('Irvine') || address.includes('Huntington Beach')) {
-          transportCost = 50;
+        let transportCost = 0;
+        if (numPeople < 4) {
+          const zip = address.match(/\d{5}/)?.[0];
+          if (zip?.startsWith('90')) {
+            transportCost = 100;
+          } else if (zip?.startsWith('908')) {
+            transportCost = 80;
+          } else if (zip?.match(/^926|^927|^928/) || address.includes('Anaheim') || address.includes('Irvine') || address.includes('Huntington Beach')) {
+            transportCost = 50;
+          } else {
+            transportCost = 150;
+          }
         } else {
-          transportCost = 150;
+          const distance = await calculateDistance(address);
+          transportCost = distance * 2.5;
         }
-      } else {
-        const distance = await calculateDistance(address);
-        transportCost = distance * 2.5;
-      }
 
-      if (isMercedes) {
-        transportCost += 30;
-        transportCost *= 1.2;
-      }
+        if (isMercedes) {
+          transportCost += 30;
+          transportCost *= 1.2;
+        }
 
-      document.getElementById('airport-transport-cost').textContent = transportCost.toFixed(2);
-      document.getElementById('airport-total-cost').textContent = transportCost.toFixed(2);
+        document.getElementById('airport-transport-cost').textContent = transportCost.toFixed(2);
+        document.getElementById('airport-total-cost').textContent = transportCost.toFixed(2);
+      } catch (err) {
+        console.error('Airport Cost Estimate Error:', err);
+        alert(currentLang === 'vi' ? 'Lỗi khi tính toán chi phí sân bay. Vui lòng thử lại.' : 'Error calculating airport cost. Please try again.');
+      }
     }
+
+    // Debounced versions of cost update functions
+    const debouncedUpdateCostEstimate = debounce(updateCostEstimate, 500);
+    const debouncedUpdateAirportCostEstimate = debounce(updateAirportCostEstimate, 500);
 
     async function updateCalendar() {
       const travelDate = document.getElementById('travel-date');
@@ -761,6 +801,7 @@
           } else {
             travelDate.setCustomValidity('');
           }
+          debouncedUpdateCostEstimate();
         });
         airportDate.addEventListener('input', () => {
           if (bookedDates.includes(airportDate.value)) {
@@ -768,6 +809,7 @@
           } else {
             airportDate.setCustomValidity('');
           }
+          debouncedUpdateAirportCostEstimate();
         });
       } catch (err) {
         console.error('Firebase Calendar Error:', err);
@@ -775,59 +817,82 @@
     }
 
     // Form Submission
-    document.getElementById('travel-package-form').addEventListener('submit', (e) => {
+    document.getElementById('travel-package-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const paymentStatus = document.getElementById('travel-package-form').dataset.paymentStatus || 'pending';
-      addDoc(collection(db, 'bookings'), {
-        date: document.getElementById('travel-date').value,
-        type: 'travel',
-        paymentStatus: paymentStatus
-      }).then(() => {
+      try {
+        const paymentStatus = document.getElementById('travel-package-form').dataset.paymentStatus || 'pending';
+        await addDoc(collection(db, 'bookings'), {
+          date: document.getElementById('travel-date').value,
+          type: 'travel',
+          paymentStatus: paymentStatus
+        });
         window.location.href = 'thankyou.html';
-      }).catch(err => {
+      } catch (err) {
         console.error('Firebase Error:', err);
         alert(currentLang === 'vi' ? 'Lỗi khi lưu đặt chỗ. Vui lòng thử lại.' : 'Error saving booking. Please try again.');
-      });
+      }
     });
 
-    document.getElementById('airport-service-form').addEventListener('submit', (e) => {
+    document.getElementById('airport-service-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      addDoc(collection(db, 'bookings'), {
-        date: document.querySelector('#airport-form input[name="date"]').value,
-        type: 'airport',
-        paymentStatus: 'pending'
-      }).then(() => {
+      try {
+        await addDoc(collection(db, 'bookings'), {
+          date: document.querySelector('#airport-form input[name="date"]').value,
+          type: 'airport',
+          paymentStatus: 'pending'
+        });
         window.location.href = 'thankyou.html';
-      }).catch(err => {
+      } catch (err) {
         console.error('Firebase Error:', err);
         alert(currentLang === 'vi' ? 'Lỗi khi lưu đặt chỗ. Vui lòng thử lại.' : 'Error saving booking. Please try again.');
-      });
+      }
     });
 
-    // Google Maps Place Autocomplete Element
-    try {
-      const dropoffInput = document.getElementById('dropoff-address-input');
-      const airportAddressInput = document.getElementById('airport-address');
-      dropoffInput.types = ['address'];
-      airportAddressInput.types = ['address'];
-      dropoffInput.addEventListener('gmp-placeselect', () => {
-        console.log('Place selected:', dropoffInput.value);
-        updateCostEstimate();
-      });
-      airportAddressInput.addEventListener('gmp-placeselect', () => {
-        console.log('Place selected:', airportAddressInput.value);
-        updateAirportCostEstimate();
-      });
-    } catch (err) {
-      console.error('Google Maps Autocomplete Error:', err);
-      alert(currentLang === 'vi' ? 'Lỗi khi tải autocomplete địa chỉ. Vui lòng nhập địa chỉ thủ công.' : 'Error loading address autocomplete. Please enter the address manually.');
+    // Google Maps Autocomplete Initialization
+    function initAutocomplete() {
+      try {
+        const dropoffInput = document.getElementById('dropoff-address-input');
+        const airportAddressInput = document.getElementById('airport-address');
+
+        if (!window.google || !window.google.maps) {
+          console.error('Google Maps API not loaded');
+          return;
+        }
+
+        const dropoffAutocomplete = new google.maps.places.Autocomplete(dropoffInput, { types: ['address'] });
+        const airportAutocomplete = new google.maps.places.Autocomplete(airportAddressInput, { types: ['address'] });
+
+        dropoffAutocomplete.addListener('place_changed', () => {
+          const place = dropoffAutocomplete.getPlace();
+          if (place && place.formatted_address) {
+            dropoffInput.value = place.formatted_address;
+            console.log('Dropoff address selected:', place.formatted_address);
+            debouncedUpdateCostEstimate();
+          }
+        });
+
+        airportAutocomplete.addListener('place_changed', () => {
+          const place = airportAutocomplete.getPlace();
+          if (place && place.formatted_address) {
+            airportAddressInput.value = place.formatted_address;
+            console.log('Airport address selected:', place.formatted_address);
+            debouncedUpdateAirportCostEstimate();
+          }
+        });
+      } catch (err) {
+        console.error('Google Maps Autocomplete Error:', err);
+        alert(currentLang === 'vi' ? 'Lỗi khi tải autocomplete địa chỉ. Vui lòng nhập địa chỉ thủ công.' : 'Error loading address autocomplete. Please enter the address manually.');
+      }
     }
 
     // Initialize
-    updateLanguage();
-    updateCalendar();
-    updateCostEstimate();
-    updateAirportCostEstimate();
+    window.addEventListener('load', () => {
+      updateLanguage();
+      updateCalendar();
+      initAutocomplete();
+      if (serviceType.value === 'travel') debouncedUpdateCostEstimate();
+      else debouncedUpdateAirportCostEstimate();
+    });
   </script>
 </body>
 </html>

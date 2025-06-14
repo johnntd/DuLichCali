@@ -39,12 +39,14 @@
   <div id="error"></div>
 
   <script type="module">
+    // Line 1: Import Firebase modules
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js';
     import { getFirestore, collection, getDocs, addDoc } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
 
-    // Initialize Firebase
+    // Line 5: Initialize Firebase
     let db;
     try {
+      // Line 7: Firebase configuration
       const firebaseApp = initializeApp({
         apiKey: "AIzaSyAqedC3BuDKq9zlqfRN6Oamuy_sPE8eN_k",
         authDomain: "dulichcalifornia-b8059.firebaseapp.com",
@@ -53,28 +55,33 @@
         messagingSenderId: "925284621075",
         appId: "1:925284621075:web:65e6125a1bed22206dd8e6"
       });
+      // Line 16: Initialize Firestore
       db = getFirestore(firebaseApp);
       document.getElementById('output').textContent = 'Firebase initialized successfully';
       console.log('Firebase initialized successfully');
     } catch (err) {
+      // Line 20: Catch initialization errors
       showError('Firebase initialization failed: ' + err.message);
     }
 
-    // Test Read from Bookings
+    // Line 23: Test Read from Bookings
     window.testRead = async function() {
       try {
+        // Line 25: Query bookings collection
         const querySnapshot = await getDocs(collection(db, 'bookings'));
         const bookings = querySnapshot.docs.map(doc => doc.data());
         document.getElementById('output').textContent = 'Read successful. Bookings:\n' + JSON.stringify(bookings, null, 2);
         console.log('Read successful:', bookings);
       } catch (err) {
+        // Line 30: Catch read errors
         showError('Read failed: ' + err.message + '\nCheck Firestore security rules in Firebase Console.');
       }
     };
 
-    // Test Write to Bookings
+    // Line 34: Test Write to Bookings
     window.testWrite = async function() {
       try {
+        // Line 36: Add test document
         const docRef = await addDoc(collection(db, 'bookings'), {
           date: new Date().toISOString().split('T')[0],
           type: 'test',
@@ -84,19 +91,26 @@
         document.getElementById('output').textContent = 'Write successful. Document ID: ' + docRef.id;
         console.log('Write successful:', docRef.id);
       } catch (err) {
+        // Line 45: Catch write errors
         showError('Write failed: ' + err.message + '\nCheck Firestore security rules in Firebase Console.');
       }
     };
 
-    // Retry Both Tests
+    // Line 49: Retry Both Tests
     window.retryTests = async function() {
-      document.getElementById('output').textContent = 'Retrying tests...';
-      document.getElementById('error').textContent = '';
-      await testRead();
-      await testWrite();
+      try {
+        // Line 51: Reset output
+        document.getElementById('output').textContent = 'Retrying tests...';
+        document.getElementById('error').textContent = '';
+        await testRead();
+        await testWrite();
+      } catch (err) {
+        // Line 56: Catch retry errors
+        showError('Retry failed: ' + err.message);
+      }
     };
 
-    // Show Error
+    // Line 60: Show Error
     function showError(message) {
       const errorDiv = document.getElementById('error');
       errorDiv.textContent = message;

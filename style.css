@@ -9,7 +9,6 @@ body {
     background: linear-gradient(135deg, var(--sunny-yellow), var(--california-orange));
     font-family: 'Arial', sans-serif;
     min-height: 100vh;
-    color: #333;
 }
 
 .container {
@@ -25,18 +24,6 @@ body {
     text-align: center;
     margin-bottom: 30px;
     color: var(--ocean-blue);
-}
-
-.language-toggle {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-}
-
-.contact-info {
-    text-align: center;
-    margin-bottom: 20px;
-    font-size: 1.1rem;
 }
 
 .service-section {
@@ -55,37 +42,6 @@ body {
     border-left: 5px solid var(--california-orange);
 }
 
-.cost-item {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 5px;
-}
-
-.total-cost {
-    font-weight: bold;
-    border-top: 1px solid #ddd;
-    padding-top: 10px;
-    margin-top: 10px;
-}
-
-/* Accessibility improvements */
-:focus {
-    outline: 3px solid var(--ocean-blue);
-    outline-offset: 2px;
-}
-
-.btn-primary {
-    background-color: var(--ocean-blue);
-    color: white;
-    padding: 12px 24px;
-}
-
-.form-control:focus {
-    border-color: var(--ocean-blue);
-    box-shadow: 0 0 0 0.25rem rgba(30, 144, 255, 0.25);
-}
-
-/* Loading indicator */
 #loader {
     display: none;
     position: fixed;
@@ -95,29 +51,16 @@ body {
     height: 100%;
     background-color: rgba(0,0,0,0.5);
     z-index: 9999;
-    justify-content: center;
-    align-items: center;
 }
 
-.spinner {
-    width: 3rem;
-    height: 3rem;
-}
-
-/* Error messages */
 .error-message {
     color: #dc3545;
     font-size: 0.875rem;
-    margin-top: 0.25rem;
 }
 
 @media (max-width: 768px) {
     .container {
         padding: 15px;
         margin-top: 15px;
-    }
-    
-    .header h1 {
-        font-size: 1.8rem;
     }
 }

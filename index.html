@@ -7,6 +7,16 @@
   <link rel="stylesheet" href="./style.css">
   <script async src="https://www.paypal.com/sdk/js?client-id=AYnnJuurmxIuE9uZ8Fe3cmFnqFVElx3G7apdDVkuP7MNlWTmwu2UMJLq2OjldO42UrstA5bhwSeLsRz2"></script>
   <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initMap"></script>
+  <script>
+    // Bridge for global initMap callback
+    window.initMap = function() {
+      if (window.app && window.app.initMap) {
+        window.app.initMap();
+      } else {
+        console.error('initMap not found in app module');
+      }
+    };
+  </script>
 </head>
 <body>
   <div class="container mx-auto p-4">
@@ -128,7 +138,7 @@
           </div>
           <div id="dropoff-address" class="hidden">
             <label class="block">Địa Chỉ Đưa Đón:</label>
-            <input type="text" id="dropoff-address-input" name="dropoff_address" class="w-full p-2 rounded" placeholder="Enter address">
+            <place-autocomplete-element id="dropoff-address-input" name="dropoff_address" class="w-full"></place-autocomplete-element>
           </div>
           <div id="meals-option" class="hidden">
             <label class="block">Bữa Ăn Tự Chọn (Khu vực Vịnh):</label>
@@ -185,7 +195,7 @@
           </div>
           <div>
             <label class="block">Địa Chỉ:</label>
-            <input type="text" id="airport-address" name="address" class="w-full p-2 rounded" placeholder="Enter address" required>
+            <place-autocomplete-element id="airport-address" name="address" class="w-full" required></place-autocomplete-element>
           </div>
           <div>
             <label class="block">Số Người (1–12):</label>

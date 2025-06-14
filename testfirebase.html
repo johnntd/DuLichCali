@@ -41,14 +41,16 @@
     import { getFirestore, collection, getDocs, addDoc } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
 
     // Initialize Firebase
+
     try {
-      const firebaseApp = initializeApp({
-        apiKey: "AIzaSyAqedC3BuDKq9zlqfRN6Oamuy_sPE8eN_k",
-        authDomain: "dulichcalifornia-b8059.firebaseapp.com",
-        projectId: "dulichcalifornia-b8059",
-        storageBucket: "dulichcalifornia-b8059.firebasestorage.app",
-        messagingSenderId: "925284621075",
-        appId: "1:925284621075:web:65e6125a1bed22206dd8e6"
+const firebaseConfig = {
+  apiKey: "AIzaSyAqedC3BuDKq9zlqfRN6Oamuy_sPE8eN_k",
+  authDomain: "dulichcalifornia-b8059.firebaseapp.com",
+  projectId: "dulichcalifornia-b8059",
+  storageBucket: "dulichcalifornia-b8059.firebasestorage.app",
+  messagingSenderId: "925284621075",
+  appId: "1:925284621075:web:65e6125a1bed22206dd8e6"
+};
       });
       window.db = getFirestore(firebaseApp);
       document.getElementById('output').textContent = 'Firebase initialized successfully';

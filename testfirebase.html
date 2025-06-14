@@ -27,6 +27,12 @@
       font-size: 16px;
       cursor: pointer;
     }
+    .instructions {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #e0f7fa;
+      border: 1px solid #b2ebf2;
+    }
   </style>
 </head>
 <body>
@@ -35,6 +41,28 @@
   <button onclick="testRead()">Test Read from Bookings</button>
   <button onclick="testWrite()">Test Write to Bookings</button>
   <button onclick="retryTests()">Retry Both Tests</button>
+  <div class="instructions">
+    <p><strong>If permissions errors occur or 'bookings' collection is missing:</strong></p>
+    <ol>
+      <li>Go to <a href="https://console.firebase.google.com" target="_blank">Firebase Console</a>.</li>
+      <li>Select project <code>dulichcalifornia-b8059</code>.</li>
+      <li>Navigate to <strong>Firestore Database > Rules</strong>.</li>
+      <li>Set rules to:
+        <pre>
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /bookings/{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+        </pre>
+      </li>
+      <li>Click <strong>Publish</strong> and wait 1–2 minutes.</li>
+      <li>Click <strong>Test Write to Bookings</strong> to create the collection, then <strong>Retry Both Tests</strong>.</li>
+    </ol>
+  </div>
   <div id="output">Results will appear here...</div>
   <div id="error"></div>
 
@@ -70,47 +98,52 @@
         // Line 25: Query bookings collection
         const querySnapshot = await getDocs(collection(db, 'bookings'));
         const bookings = querySnapshot.docs.map(doc => doc.data());
-        document.getElementById('output').textContent = 'Read successful. Bookings:\n' + JSON.stringify(bookings, null, 2);
-        console.log('Read successful:', bookings);
+        if (bookings.length === 0) {
+          document.getElementById('output').textContent = 'Read successful. No bookings found (collection may be empty).';
+          console.log('Read successful: No bookings found');
+        } else {
+          document.getElementById('output').textContent = 'Read successful. Bookings:\n' + JSON.stringify(bookings, null, 2);
+          console.log('Read successful:', bookings);
+        }
       } catch (err) {
-        // Line 30: Catch read errors
-        showError('Read failed: ' + err.message + '\nCheck Firestore security rules in Firebase Console.');
+        // Line 34: Catch read errors
+        showError('Read failed: ' + err.message + '\nThe "bookings" collection may not exist or you lack read permissions. Update Firestore security rules in Firebase Console.');
       }
     };
 
-    // Line 34: Test Write to Bookings
+    // Line 38: Test Write to Bookings
     window.testWrite = async function() {
       try {
-        // Line 36: Add test document
+        // Line 40: Add test document
         const docRef = await addDoc(collection(db, 'bookings'), {
           date: new Date().toISOString().split('T')[0],
           type: 'test',
           paymentStatus: 'pending',
           timestamp: new Date().toISOString()
         });
-        document.getElementById('output').textContent = 'Write successful. Document ID: ' + docRef.id;
+        document.getElementById('output').textContent = 'Write successful. Document ID: ' + docRef.id + '\nThe "bookings" collection has been created.';
         console.log('Write successful:', docRef.id);
       } catch (err) {
-        // Line 45: Catch write errors
-        showError('Write failed: ' + err.message + '\nCheck Firestore security rules in Firebase Console.');
+        // Line 49: Catch write errors
+        showError('Write failed: ' + err.message + '\nUnable to create/write to "bookings" collection. Update Firestore security rules in Firebase Console.');
       }
     };
 
-    // Line 49: Retry Both Tests
+    // Line 53: Retry Both Tests
     window.retryTests = async function() {
       try {
-        // Line 51: Reset output
+        // Line 55: Reset output
         document.getElementById('output').textContent = 'Retrying tests...';
         document.getElementById('error').textContent = '';
         await testRead();
         await testWrite();
       } catch (err) {
-        // Line 56: Catch retry errors
+        // Line 60: Catch retry errors
         showError('Retry failed: ' + err.message);
       }
     };
 
-    // Line 60: Show Error
+    // Line 64: Show Error
     function showError(message) {
       const errorDiv = document.getElementById('error');
       errorDiv.textContent = message;

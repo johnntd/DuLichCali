@@ -1,551 +1,780 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dịch Vụ Du Lịch & Đón Sân Bay California</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <style>
-        :root {
-            --sunny-yellow: #FFD700;
-            --california-orange: #FF8C00;
-            --sky-blue: #87CEEB;
-            --ocean-blue: #1E90FF;
-        }
-        
-        body {
-            background: linear-gradient(135deg, var(--sunny-yellow), var(--california-orange));
-            font-family: 'Arial', sans-serif;
-            min-height: 100vh;
-        }
-        
-        .container {
-            background-color: rgba(255, 255, 255, 0.9);
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-            padding: 25px;
-            margin-top: 30px;
-            margin-bottom: 30px;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            color: var(--ocean-blue);
-        }
-        
-        .language-toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-        }
-        
-        .contact-info {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 1.1rem;
-        }
-        
-        .service-section {
-            display: none;
-        }
-        
-        .service-section.active {
-            display: block;
-        }
-        
-        .cost-estimate {
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 20px;
-            border-left: 5px solid var(--california-orange);
-        }
-        
-        .cost-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-        }
-        
-        .total-cost {
-            font-weight: bold;
-            border-top: 1px solid #ddd;
-            padding-top: 10px;
-            margin-top: 10px;
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-                margin-top: 15px;
-            }
-            
-            .header h1 {
-                font-size: 1.8rem;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Du Lịch California</title>
+  <script async src="https://www.paypal.com/sdk/js?client-id=AYnnJuurmxIuE9uZ8Fe3cmFnqFVElx3G7apdDVkuP7MNlWTmwu2UMJLq2OjldO42UrstA5bhwSeLsRz2"></script>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js';
+    import { getFirestore, collection, getDocs, addDoc } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
+    window.firebaseApp = initializeApp({
+      apiKey: "AIzaSyAqedC3BuDKq9zlqfRN6Oamuy_sPE8eN_k",
+      authDomain: "dulichcalifornia-b8059.firebaseapp.com",
+      projectId: "dulichcalifornia-b8059",
+      storageBucket: "dulichcalifornia-b8059.firebasestorage.app",
+      messagingSenderId: "925284621075",
+      appId: "1:925284621075:web:65e6125a1bed22206dd8e6"
+    });
+    window.db = getFirestore(window.firebaseApp);
+    console.log('Firebase initialized successfully');
+  </script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAoCDsW6-3UzZI11TMH62uLTE1uP1yX2Ts&libraries=places"></script>
+  <style>
+    body {
+      background: linear-gradient(to right, #ff7e5f, #feb47b);
+      font-family: Arial, sans-serif;
+    }
+    /* Minified Tailwind CSS Subset */
+    *,:before,:after{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}html{line-height:1.5;-webkit-text-size-adjust:100%;tab-size:4;font-family:ui-sans-serif,system-ui,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"}body{margin:0;line-height:inherit}a{color:inherit;text-decoration:inherit}input,select,textarea{font-family:inherit;font-size:100%;font-weight:inherit;line-height:inherit;color:inherit;margin:0;padding:0}input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}button,input:where([type=button]),input:where([type=submit]),input:where([type=reset]){background-color:transparent;background-image:none}input:where([type=text]),input:where([type=email]),input:where([type=url]),input:where([type=password]),input:where([type=number]),input:where([type=date]),input:where([type=datetime-local]),input:where([type=month]),input:where([type=search]),input:where([type=tel]),input:where([type=time]),input:where([type=week]),select,textarea{border-width:1px;border-color:#d1d5db;padding:.5rem .75rem;font-size:1rem;line-height:1.5rem;border-radius:.375rem}place-autocomplete-element{display:block;width:100%;border:1px solid #d1d5db;padding:.5rem .75rem;font-size:1rem;border-radius:.375rem;background-color:#fff;color:#000}.container{width:100%;margin-right:auto;margin-left:auto;padding-right:1rem;padding-left:1rem}@media (min-width:640px){.container{max-width:640px}}@media (min-width:768px){.container{max-width:768px}}@media (min-width:1024px){.container{max-width:1024px}}@media (min-width:1280px){.container{max-width:1280px}}.mx-auto{margin-left:auto;margin-right:auto}.mb-4{margin-bottom:1rem}.mt-4{margin-top:1rem}.flex{display:flex}.grid{display:grid}.hidden{display:none}.items-center{align-items:center}.justify-between{justify-content:space-between}.gap-4{gap:1rem}.grid-cols-1{grid-template-columns:repeat(1,minmax(0,1fr))}.p-2{padding:.5rem}.p-4{padding:1rem}.px-4{padding-left:1rem;padding-right:1rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.font-bold{font-weight:700}.font-semibold{font-weight:600}.text-black{color:#000}.text-white{color:#fff}.text-red-500{color:#ef4444}.bg-white{background-color:#fff}.bg-blue-500{background-color:#3b82f6}.bg-green-500{background-color:#22c55e}.bg-gray-500{background-color:#6b7280}.hover\:bg-blue-700:hover{background-color:#1d4ed8}.hover\:bg-green-700:hover{background-color:#15803d}.hover\:bg-gray-700:hover{background-color:#4b5563}.rounded{border-radius:.375rem}.w-full{width:100%}@media (min-width:768px){.md\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:768px){select,input,button,place-autocomplete-element{width:100%;margin-bottom:2.5rem}}.container{max-width:1200px;margin:0 auto;padding:20px}
+  </style>
 </head>
 <body>
-    <div class="container">
-        <button id="languageToggle" class="btn btn-secondary language-toggle">English</button>
-        
-        <div class="header">
-            <h1 id="mainTitle">Dịch Vụ Du Lịch & Đón Sân Bay California</h1>
-        </div>
-        
-        <div class="contact-info">
-            <p id="contactText">Duy Hoa, Điện thoại: 714-227-6007, Email: <a href="mailto:dulichcali21@gmail.com">dulichcali21@gmail.com</a></p>
-        </div>
-        
-        <div class="mb-4">
-            <label for="serviceType" class="form-label" id="serviceTypeLabel">Chọn loại dịch vụ:</label>
-            <select class="form-select" id="serviceType">
-                <option value="travel" selected id="travelOption">Gói Du Lịch</option>
-                <option value="airport" id="airportOption">Dịch Vụ Sân Bay</option>
-            </select>
-        </div>
-        
-        <!-- Travel Package Service -->
-        <div id="travelService" class="service-section active">
-            <form id="travelForm" action="https://formspree.io/f/xeokgbpo" method="POST">
-                <input type="hidden" name="service_type" value="travel">
-                
-                <!-- Package and destination selection -->
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="package" class="form-label" id="packageLabel">Gói du lịch:</label>
-                        <select class="form-select" id="package" name="package">
-                            <option value="custom" id="customPackage">Điểm Đến Tùy Chọn</option>
-                            <option value="disney" id="disneyPackage">Disneyland Adventure (Disneyland + California Adventure)</option>
-                            <option value="san_diego" id="sanDiegoPackage">San Diego Family Fun (San Diego Zoo, SeaWorld, LegoLand)</option>
-                            <option value="universal" id="universalPackage">Universal Hollywood (Universal Studios)</option>
-                            <option value="parks" id="parksPackage">National Parks Explorer (Grand Canyon, Yosemite)</option>
-                            <option value="city" id="cityPackage">City Getaway (Las Vegas, San Francisco, Reno)</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="extraDestinations" class="form-label" id="extraDestinationsLabel">Thêm điểm đến (tùy chọn):</label>
-                        <select class="form-select" id="extraDestinations" name="extraDestinations" multiple>
-                            <option value="disneyland" id="disneylandOption">Disneyland</option>
-                            <option value="california_adventure" id="californiaAdventureOption">California Adventure</option>
-                            <option value="universal_studios" id="universalStudiosOption">Universal Studios</option>
-                            <option value="san_diego_zoo" id="sanDiegoZooOption">San Diego Zoo</option>
-                            <option value="seaworld" id="seaworldOption">SeaWorld</option>
-                            <option value="legoland" id="legolandOption">LegoLand</option>
-                            <option value="las_vegas" id="lasVegasOption">Las Vegas</option>
-                            <option value="grand_canyon" id="grandCanyonOption">Grand Canyon</option>
-                            <option value="san_francisco" id="sanFranciscoOption">San Francisco</option>
-                            <option value="yosemite" id="yosemiteOption">Yosemite</option>
-                            <option value="lake_tahoe" id="lakeTahoeOption">Lake Tahoe</option>
-                            <option value="reno" id="renoOption">Reno</option>
-                            <option value="silicon_valley" id="siliconValleyOption">Silicon Valley</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- Date and time selection -->
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <label for="travelDate" class="form-label" id="travelDateLabel">Ngày đi:</label>
-                        <input type="text" class="form-control datepicker" id="travelDate" name="travelDate" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="returnDate" class="form-label" id="returnDateLabel">Ngày về:</label>
-                        <input type="text" class="form-control datepicker" id="returnDate" name="returnDate" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="travelTime" class="form-label" id="travelTimeLabel">Giờ đón:</label>
-                        <input type="time" class="form-control" id="travelTime" name="travelTime" required>
-                    </div>
-                </div>
-                
-                <!-- Traveler information -->
-                <div class="row mb-3" id="themeParkOptions">
-                    <div class="col-md-4">
-                        <label for="ticketType" class="form-label" id="ticketTypeLabel">Loại vé:</label>
-                        <select class="form-select" id="ticketType" name="ticketType">
-                            <option value="regular" id="regularTicket">Thường</option>
-                            <option value="express" id="expressTicket">Express</option>
-                            <option value="vip" id="vipTicket">VIP</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="adults" class="form-label" id="adultsLabel">Người lớn:</label>
-                        <input type="number" class="form-control" id="adults" name="adults" min="0" value="1">
-                    </div>
-                    <div class="col-md-4">
-                        <label for="kids" class="form-label" id="kidsLabel">Trẻ em (3-9 tuổi):</label>
-                        <input type="number" class="form-control" id="kids" name="kids" min="0" value="0">
-                    </div>
-                </div>
-                
-                <div class="row mb-3" id="nonThemeParkOptions">
-                    <div class="col-md-6">
-                        <label for="travelers" class="form-label" id="travelersLabel">Số lượng khách (1-12):</label>
-                        <input type="number" class="form-control" id="travelers" name="travelers" min="1" max="12" value="1">
-                    </div>
-                </div>
-                
-                <!-- Lodging information -->
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="lodgingType" class="form-label" id="lodgingTypeLabel">Loại chỗ ở:</label>
-                        <select class="form-select" id="lodgingType" name="lodgingType">
-                            <option value="none" id="noLodging">Không cần chỗ ở</option>
-                            <option value="airbnb" id="airbnbOption">Airbnb</option>
-                            <option value="hotel" id="hotelOption">Khách sạn</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6" id="lodgingDetailsSection">
-                        <div id="noLodgingDetails">
-                            <label for="dropOffAddress" class="form-label" id="dropOffAddressLabel">Địa chỉ trả khách:</label>
-                            <input type="text" class="form-control" id="dropOffAddress" name="dropOffAddress">
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Meal options -->
-                <div class="row mb-3" id="mealOptions">
-                    <div class="col-md-12">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="includeMeals" name="includeMeals">
-                            <label class="form-check-label" for="includeMeals" id="includeMealsLabel">Bao gồm bữa ăn tự nấu ($35/ngày/người)</label>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Airport pickup -->
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="airportPickup" class="form-label" id="airportPickupLabel">Đón từ sân bay (tùy chọn):</label>
-                        <select class="form-select" id="airportPickup" name="airportPickup">
-                            <option value="none" selected id="noAirportPickup">Không cần đón</option>
-                            <option value="LAX" id="laxOption">LAX (Los Angeles)</option>
-                            <option value="SNA" id="snaOption">SNA (Orange County)</option>
-                            <option value="LGB" id="lgbOption">LGB (Long Beach)</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- Pickup address (only shown when needed) -->
-                <div class="row mb-3" id="pickupAddressSection" style="display: none;">
-                    <div class="col-md-12">
-                        <label for="pickupAddress" class="form-label" id="pickupAddressLabel">Địa chỉ đón (nếu khác với địa chỉ đăng ký):</label>
-                        <input type="text" class="form-control" id="pickupAddress" name="pickupAddress">
-                    </div>
-                </div>
-                
-                <!-- Customer information -->
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="customerName" class="form-label" id="customerNameLabel">Họ tên:</label>
-                        <input type="text" class="form-control" id="customerName" name="customerName" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="customerEmail" class="form-label" id="customerEmailLabel">Email:</label>
-                        <input type="email" class="form-control" id="customerEmail" name="customerEmail" required>
-                    </div>
-                </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="customerPhone" class="form-label" id="customerPhoneLabel">Điện thoại:</label>
-                        <input type="tel" class="form-control" id="customerPhone" name="customerPhone" required>
-                    </div>
-                </div>
-                
-                <!-- Cost estimate -->
-                <div class="cost-estimate">
-                    <h5 id="costEstimateTitle">Ước Tính Chi Phí</h5>
-                    <div class="cost-item">
-                        <span id="transportationCostLabel">Vận chuyển:</span>
-                        <span id="transportationCost">$0</span>
-                    </div>
-                    <div class="cost-item">
-                        <span id="admissionCostLabel">Vé vào cửa:</span>
-                        <span id="admissionCost">$0</span>
-                    </div>
-                    <div class="cost-item">
-                        <span id="lodgingCostLabel">Chỗ ở:</span>
-                        <span id="lodgingCost">$0</span>
-                    </div>
-                    <div class="cost-item">
-                        <span id="mealsCostLabel">Bữa ăn:</span>
-                        <span id="mealsCost">$0</span>
-                    </div>
-                    <div class="cost-item">
-                        <span id="airportPickupCostLabel">Đón sân bay:</span>
-                        <span id="airportPickupCost">$0</span>
-                    </div>
-                    <div class="cost-item total-cost">
-                        <span id="totalCostLabel">Tổng cộng:</span>
-                        <span id="totalCost">$0</span>
-                    </div>
-                </div>
-                
-                <!-- Submit button -->
-                <div class="d-grid gap-2 mt-4">
-                    <button type="submit" class="btn btn-primary" id="submitTravelBtn">Gửi Yêu Cầu</button>
-                    <div id="paypalButtonContainer" class="mt-2"></div>
-                </div>
-            </form>
-        </div>
-        
-        <!-- Airport Service -->
-        <div id="airportService" class="service-section">
-            <form id="airportForm" action="https://formspree.io/f/xeokgbpo" method="POST">
-                <input type="hidden" name="service_type" value="airport">
-                
-                <!-- Service direction and airport selection -->
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="serviceDirection" class="form-label" id="serviceDirectionLabel">Loại dịch vụ:</label>
-                        <select class="form-select" id="serviceDirection" name="serviceDirection">
-                            <option value="pickup" id="pickupOption">Đón từ sân bay</option>
-                            <option value="dropoff" id="dropoffOption">Trả tại sân bay</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="airport" class="form-label" id="airportLabel">Sân bay:</label>
-                        <select class="form-select" id="airport" name="airport">
-                            <option value="LAX" id="laxAirportOption">LAX (Los Angeles)</option>
-                            <option value="SNA" selected id="snaAirportOption">SNA (Orange County)</option>
-                            <option value="LGB" id="lgbAirportOption">LGB (Long Beach)</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- Date and time selection -->
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="airportDate" class="form-label" id="airportDateLabel">Ngày:</label>
-                        <input type="text" class="form-control datepicker" id="airportDate" name="airportDate" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="airportTime" class="form-label" id="airportTimeLabel">Giờ:</label>
-                        <input type="time" class="form-control" id="airportTime" name="airportTime" required>
-                    </div>
-                </div>
-                
-                <!-- Passenger count -->
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="airportPassengers" class="form-label" id="airportPassengersLabel">Số lượng khách (1-12):</label>
-                        <input type="number" class="form-control" id="airportPassengers" name="airportPassengers" min="1" max="12" value="1">
-                    </div>
-                </div>
-                
-                <!-- Address fields (dynamic based on service direction) -->
-                <div class="row mb-3" id="pickupAddressSectionAirport">
-                    <div class="col-md-12">
-                        <label for="airportPickupAddress" class="form-label" id="airportPickupAddressLabel">Địa chỉ đón:</label>
-                        <input type="text" class="form-control" id="airportPickupAddress" name="airportPickupAddress">
-                    </div>
-                </div>
-                
-                <div class="row mb-3" id="dropoffAddressSectionAirport" style="display: none;">
-                    <div class="col-md-12">
-                        <label for="airportDropoffAddress" class="form-label" id="airportDropoffAddressLabel">Địa chỉ trả:</label>
-                        <input type="text" class="form-control" id="airportDropoffAddress" name="airportDropoffAddress">
-                    </div>
-                </div>
-                
-                <!-- Customer information -->
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="airportCustomerName" class="form-label" id="airportCustomerNameLabel">Họ tên:</label>
-                        <input type="text" class="form-control" id="airportCustomerName" name="airportCustomerName" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="airportCustomerPhone" class="form-label" id="airportCustomerPhoneLabel">Điện thoại:</label>
-                        <input type="tel" class="form-control" id="airportCustomerPhone" name="airportCustomerPhone" required>
-                    </div>
-                </div>
-                
-                <!-- Cost estimate -->
-                <div class="cost-estimate">
-                    <h5 id="airportCostEstimateTitle">Ước Tính Chi Phí</h5>
-                    <div class="cost-item">
-                        <span id="baseCostLabel">Cước phí cơ bản:</span>
-                        <span id="baseCost">$0</span>
-                    </div>
-                    <div class="cost-item">
-                        <span id="mercedesSurchargeLabel">Phụ thu Mercedes:</span>
-                        <span id="mercedesSurcharge">$0</span>
-                    </div>
-                    <div class="cost-item total-cost">
-                        <span id="airportTotalCostLabel">Tổng cộng:</span>
-                        <span id="airportTotalCost">$0</span>
-                    </div>
-                </div>
-                
-                <!-- Submit buttons -->
-                <div class="d-grid gap-2 mt-4">
-                    <button type="submit" class="btn btn-primary" id="submitAirportBtn">Gửi Yêu Cầu</button>
-                    <button type="button" class="btn btn-secondary" id="payLaterBtn">Thanh Toán Sau</button>
-                </div>
-            </form>
-        </div>
+  <div class="container mx-auto p-4 text-white">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-3xl font-bold">Du Lịch California</h1>
+      <div>
+        <button id="lang-toggle" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+          Chuyển sang Tiếng Anh
+        </button>
+      </div>
     </div>
 
-    <!-- JavaScript includes -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vn.js"></script>
-    <script src="https://www.paypal.com/sdk/js?client-id=YOUR_PAYPAL_CLIENT_ID&currency=USD"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAoCDsW6-3UzZI11TMH62uLTE1uP1yX2Ts&libraries=places"></script>
-    
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    
-    <script>
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAqedC3BuDKq9zlqfRN6Oamuy_sPE8eN_k",
-            authDomain: "dulichcalifornia-b8059.firebaseapp.com",
-            projectId: "dulichcalifornia-b8059",
-            storageBucket: "dulichcalifornia-b8059.appspot.com",
-            messagingSenderId: "925284621075",
-            appId: "1:925284621075:web:65e6125a1bed22206dd8e6"
-        };
-        
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        
-        // Language support
-        const translations = {
-            en: {
-                // ... (previous translation objects remain the same)
-                airportPickupAddressLabel: "Drop-off Address:",
-                airportDropoffAddressLabel: "Pickup Address:"
-            },
-            vi: {
-                // ... (previous translation objects remain the same)
-                airportPickupAddressLabel: "Địa chỉ trả:",
-                airportDropoffAddressLabel: "Địa chỉ đón:"
-            }
-        };
-        
-        // Current language (default to Vietnamese)
-        let currentLanguage = 'vi';
-        
-        // Admission fees, distances, etc. (previous declarations remain the same)
-        
-        // Initialize the page
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize date pickers
-            flatpickr(".datepicker", {
-                locale: "vn",
-                minDate: "today",
-                disable: [],
-                dateFormat: "d/m/Y"
-            });
-            
-            // Load booked dates from Firebase
-            loadBookedDates();
-            
-            // Set up service type toggle
-            document.getElementById('serviceType').addEventListener('change', function() {
-                document.getElementById('travelService').classList.toggle('active', this.value === 'travel');
-                document.getElementById('airportService').classList.toggle('active', this.value === 'airport');
-            });
-            
-            // Set up language toggle
-            document.getElementById('languageToggle').addEventListener('click', function() {
-                currentLanguage = currentLanguage === 'en' ? 'vi' : 'en';
-                this.textContent = currentLanguage === 'en' ? 'Tiếng Việt' : 'English';
-                translatePage();
-            });
-            
-            // Set up package type change for travel service
-            document.getElementById('package').addEventListener('change', function() {
-                updatePackageOptions();
-                calculateCost();
-            });
-            
-            // Set up lodging type change
-            document.getElementById('lodgingType').addEventListener('change', function() {
-                updateLodgingDetails();
-                updatePickupAddressVisibility();
-                calculateCost();
-            });
-            
-            // Set up airport pickup change
-            document.getElementById('airportPickup').addEventListener('change', function() {
-                updatePickupAddressVisibility();
-                calculateCost();
-            });
-            
-            // Set up service direction change for airport service
-            document.getElementById('serviceDirection').addEventListener('change', function() {
-                updateAirportServiceFields();
-                calculateAirportCost();
-            });
-            
-            // Set up all event listeners for cost calculation
-            setupCostCalculationListeners();
-            
-            // Initialize Google Places Autocomplete
-            initAutocomplete();
-            
-            // Initialize PayPal button
-            initPayPalButton();
-            
-            // Initialize address fields visibility
-            updatePickupAddressVisibility();
-            updateAirportServiceFields();
+    <!-- Contact Info -->
+    <div class="mb-4">
+      <p>Duy Hoa, Phone: <a href="tel:714-227-6007">714-227-6007</a>, Email: <a href="mailto:dulichcali21@gmail.com">dulichcali21@gmail.com</a></p>
+    </div>
+
+    <!-- Service Selection -->
+    <div class="mb-4">
+      <label for="service-type" class="block text-lg font-semibold">Chọn Dịch Vụ:</label>
+      <select id="service-type" class="w-full p-2 rounded bg-white text-black">
+        <option value="travel">Gói Du Lịch</option>
+        <option value="airport">Dịch Vụ Sân Bay</option>
+      </select>
+    </div>
+
+    <!-- Travel Package Form -->
+    <div id="travel-form" class="service-form">
+      <h2 class="text-2xl font-semibold mb-4">Gói Du Lịch</h2>
+      <form id="travel-package-form" action="https://formspree.io/f/xeokgbpo" method="POST">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block">Ngày Đi:</label>
+            <input type="date" id="travel-date" name="date" class="w-full p-2 rounded" required>
+          </div>
+          <div>
+            <label class="block">Giờ Đi:</label>
+            <input type="time" id="travel-time" name="time" class="w-full p-2 rounded" required>
+          </div>
+          <div>
+            <label class="block">Tên Khách Hàng:</label>
+            <input type="text" name="name" class="w-full p-2 rounded" required>
+          </div>
+          <div>
+            <label class="block">Số Điện Thoại:</label>
+            <input type="tel" name="phone" class="w-full p-2 rounded" required>
+          </div>
+          <div>
+            <label class="block">Email:</label>
+            <input type="email" name="email" class="w-full p-2 rounded" required>
+          </div>
+          <div>
+            <label class="block">Sân Bay:</label>
+            <select name="airport" class="w-full p-2 rounded">
+              <option value="LAX">LAX</option>
+              <option value="SNA">SNA</option>
+              <option value="LGB">LGB</option>
+            </select>
+          </div>
+          <div>
+            <label class="block">Gói Du Lịch:</label>
+            <select id="package-type" name="package" class="w-full p-2 rounded" required>
+              <option value="custom">Tùy Chỉnh Điểm Đến</option>
+              <option value="disneyland">Disneyland Adventure</option>
+              <option value="sandiego">San Diego Family Fun</option>
+              <option value="universal">Universal Hollywood</option>
+              <option value="national">National Parks Explorer</option>
+              <option value="city">City Getaway</option>
+            </select>
+          </div>
+          <div id="destinations-selection">
+            <label class="block">Chọn Điểm Đến:</label>
+            <select multiple id="destinations" name="destinations" class="w-full p-2 rounded">
+              <option value="Disneyland">Disneyland</option>
+              <option value="California Adventure">California Adventure</option>
+              <option value="Universal Studios">Universal Studios</option>
+              <option value="San Diego Zoo">San Diego Zoo</option>
+              <option value="SeaWorld">SeaWorld</option>
+              <option value="LegoLand">LegoLand</option>
+              <option value="Las Vegas">Las Vegas</option>
+              <option value="Grand Canyon">Grand Canyon</option>
+              <option value="San Francisco">San Francisco</option>
+              <option value="Yosemite">Yosemite</option>
+              <option value="Lake Tahoe">Lake Tahoe</option>
+              <option value="Reno">Reno</option>
+              <option value="Silicon Valley">Silicon Valley</option>
+            </select>
+          </div>
+          <div id="ticket-type" class="hidden">
+            <label class="block">Loại Vé (Disneyland/Universal):</label>
+            <select name="ticket_type" class="w-full p-2 rounded">
+              <option value="regular">Regular</option>
+              <option value="vip">VIP</option>
+              <option value="express">Express</option>
+            </select>
+          </div>
+          <div id="travelers-input">
+            <label class="block">Số Người (1–12):</label>
+            <input type="number" id="num-travelers" name="num_travelers" min="1" max="12" class="w-full p-2 rounded" required>
+          </div>
+          <div id="adult-kid-input" class="hidden">
+            <label class="block">Số Người Lớn:</label>
+            <input type="number" id="num-adults" name="num_adults" min="0" class="w-full p-2 rounded">
+            <label class="block">Số Trẻ Em:</label>
+            <input type="number" id="num-kids" name="num_kids" min="0" class="w-full p-2 rounded">
+          </div>
+          <div>
+            <label class="block">Số Ngày:</label>
+            <input type="number" id="num-days" name="num_days" min="1" class="w-full p-2 rounded" required>
+          </div>
+          <div>
+            <label class="block">Lưu Trú:</label>
+            <select id="lodging" name="lodging" class="w-full p-2 rounded" required>
+              <option value="none">Không Lưu Trú</option>
+              <option value="airbnb">Airbnb</option>
+              <option value="hotel">Khách Sạn</option>
+            </select>
+          </div>
+          <div id="dropoff-address" class="hidden">
+            <label class="block">Địa Chỉ Đưa Đón:</label>
+            <place-autocomplete-element id="dropoff-address-input" name="dropoff_address" class="w-full"></place-autocomplete-element>
+          </div>
+          <div id="meals-option" class="hidden">
+            <label class="block">Bữa Ăn Tự Chọn (Khu vực Vịnh):</label>
+            <input type="checkbox" id="meals" name="meals"> $35/ngày/người
+          </div>
+          <div>
+            <label class="block">Đón Sân Bay:</label>
+            <input type="checkbox" id="airport-pickup" name="airport_pickup">
+            <div id="airport-pickup-details" class="hidden">
+              <label class="block">Sân Bay:</label>
+              <select name="pickup_airport" class="w-full p-2 rounded">
+                <option value="LAX">LAX</option>
+                <option value="SNA">SNA</option>
+                <option value="LGB">LGB</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div id="cost-estimate" class="mt-4 p-4 bg-white text-black rounded">
+          <h3 class="text-lg font-semibold">Ước Tính Chi Phí</h3>
+          <p>Phí Vận Chuyển: $<span id="transport-cost">0</span></p>
+          <p>Phí Vé: $<span id="admission-cost">0</span></p>
+          <p>Phí Bữa Ăn: $<span id="meals-cost">0</span></p>
+          <p>Phí Lưu Trú: $<span id="lodging-cost">0</span></p>
+          <p>Tổng Cộng: $<span id="total-cost">0</span></p>
+        </div>
+        <div class="mt-4">
+          <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Gửi Yêu Cầu</button>
+          <div id="paypal-button-container" class="mt-4"></div>
+          <p id="paypal-fallback" class="hidden text-red-500">PayPal hiện không khả dụng. Bạn vẫn có thể gửi yêu cầu và thanh toán sau.</p>
+        </div>
+      </form>
+    </div>
+
+    <!-- Airport Service Form -->
+    <div id="airport-form" class="service-form hidden">
+      <h2 class="text-2xl font-semibold mb-4">Dịch Vụ Sân Bay</h2>
+      <form id="airport-service-form" action="https://formspree.io/f/xeokgbpo" method="POST">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block">Loại Dịch Vụ:</label>
+            <select id="airport-service-type" name="service_type" class="w-full p-2 rounded" required>
+              <option value="pickup">Đón tại Sân Bay</option>
+              <option value="dropoff">Đưa ra Sân Bay</option>
+            </select>
+          </div>
+          <div>
+            <label class="block">Sân Bay:</label>
+            <select name="airport" class="w-full p-2 rounded" required>
+              <option value="LAX">LAX</option>
+              <option value="SNA">SNA</option>
+              <option value="LGB">LGB</option>
+            </select>
+          </div>
+          <div>
+            <label class="block">Địa Chỉ:</label>
+            <place-autocomplete-element id="airport-address" name="address" class="w-full"></place-autocomplete-element>
+          </div>
+          <div>
+            <label class="block">Số Người (1–12):</label>
+            <input type="number" name="num_people" min="1" max="12" class="w-full p-2 rounded" required>
+          </div>
+          <div>
+            <label class="block">Ngày:</label>
+            <input type="date" name="date" class="w-full p-2 rounded" required>
+          </div>
+          <div>
+            <label class="block">Giờ:</label>
+            <input type="time" name="time" class="w-full p-2 rounded" required>
+          </div>
+          <div>
+            <label class="block">Tên Khách Hàng:</label>
+            <input type="text" name="name" class="w-full p-2 rounded" required>
+          </div>
+          <div>
+            <label class="block">Số Điện Thoại:</label>
+            <input type="tel" name="phone" class="w-full p-2 rounded" required>
+          </div>
+        </div>
+        <div id="airport-cost-estimate" class="mt-4 p-4 bg-white text-black rounded">
+          <h3 class="text-lg font-semibold">Ước Tính Chi Phí</h3>
+          <p>Phí Vận Chuyển: $<span id="airport-transport-cost">0</span></p>
+          <p>Tổng Cộng: $<span id="airport-total-cost">0</span></p>
+        </div>
+        <div class="mt-4">
+          <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Gửi Yêu Cầu</button>
+          <button id="pay-later" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Thanh Toán Sau</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Language Toggle
+    const translations = {
+      vi: {
+        title: "Du Lịch California",
+        langToggle: "Chuyển sang Tiếng Anh",
+        serviceLabel: "Chọn Dịch Vụ:",
+        travel: "Gói Du Lịch",
+        airport: "Dịch Vụ Sân Bay",
+        date: "Ngày Đi:",
+        time: "Giờ Đi:",
+        name: "Tên Khách Hàng:",
+        phone: "Số Điện Thoại:",
+        email: "Email:",
+        airportLabel: "Sân Bay:",
+        packageLabel: "Gói Du Lịch:",
+        destinations: "Chọn Điểm Đến:",
+        ticketType: "Loại Vé (Disneyland/Universal):",
+        travelers: "Số Người (1–12):",
+        adults: "Số Người Lớn:",
+        kids: "Số Trẻ Em:",
+        days: "Số Ngày:",
+        lodging: "Lưu Trú:",
+        dropoff: "Địa Chỉ Đưa Đón:",
+        meals: "Bữa Ăn Tự Chọn (Khu vực Vịnh):",
+        airportPickup: "Đón Sân Bay:",
+        costEstimate: "Ước Tính Chi Phí",
+        transport: "Phí Vận Chuyển:",
+        admission: "Phí Vé:",
+        mealsCost: "Phí Bữa Ăn:",
+        lodgingCost: "Phí Lưu Trú:",
+        total: "Tổng Cộng:",
+        submit: "Gửi Yêu Cầu",
+        serviceType: "Loại Dịch Vụ:",
+        address: "Địa Chỉ:",
+        people: "Số Người (1–12):",
+        payLater: "Thanh Toán Sau"
+      },
+      en: {
+        title: "California Travel",
+        langToggle: "Switch to Vietnamese",
+        serviceLabel: "Select Service:",
+        travel: "Travel Package",
+        airport: "Airport Service",
+        date: "Date:",
+        time: "Time:",
+        name: "Customer Name:",
+        phone: "Phone Number:",
+        email: "Email:",
+        airportLabel: "Airport:",
+        packageLabel: "Travel Package:",
+        destinations: "Select Destinations:",
+        ticketType: "Ticket Type (Disneyland/Universal):",
+        travelers: "Number of Travelers (1–12):",
+        adults: "Number of Adults:",
+        kids: "Number of Kids:",
+        days: "Number of Days:",
+        lodging: "Lodging:",
+        dropoff: "Drop-off Address:",
+        meals: "Optional Meals (Bay Area):",
+        airportPickup: "Airport Pickup:",
+        costEstimate: "Cost Estimate",
+        transport: "Transportation Cost:",
+        admission: "Admission Cost:",
+        mealsCost: "Meals Cost:",
+        lodgingCost: "Lodging Cost:",
+        total: "Total:",
+        submit: "Submit Request",
+        serviceType: "Service Type:",
+        address: "Address:",
+        people: "Number of People (1–12):",
+        payLater: "Pay Later"
+      }
+    };
+
+    let currentLang = localStorage.getItem('lang') || 'vi';
+    const langToggle = document.getElementById('lang-toggle');
+    langToggle.addEventListener('click', () => {
+      currentLang = currentLang === 'vi' ? 'en' : 'vi';
+      localStorage.setItem('lang', currentLang);
+      updateLanguage();
+    });
+
+    function updateLanguage() {
+      document.querySelector('h1').textContent = translations[currentLang].title;
+      langToggle.textContent = translations[currentLang].langToggle;
+      document.querySelector('label[for="service-type"]').textContent = translations[currentLang].serviceLabel;
+      document.getElementById('service-type').options[0].text = translations[currentLang].travel;
+      document.getElementById('service-type').options[1].text = translations[currentLang].airport;
+      document.querySelector('#travel-form h2').textContent = translations[currentLang].travel;
+      document.querySelector('#airport-form h2').textContent = translations[currentLang].airport;
+      document.querySelectorAll('#travel-form label').forEach((label, i) => {
+        const keys = ['date', 'time', 'name', 'phone', 'email', 'airportLabel', 'packageLabel', 'destinations', 'ticketType', 'travelers', 'adults', 'kids', 'days', 'lodging', 'dropoff', 'meals', 'airportPickup'];
+        if (i < keys.length) label.textContent = translations[currentLang][keys[i]];
+      });
+      document.querySelectorAll('#airport-form label').forEach((label, i) => {
+        const keys = ['serviceType', 'airportLabel', 'address', 'people', 'date', 'time', 'name', 'phone'];
+        if (i < keys.length) label.textContent = translations[currentLang][keys[i]];
+      });
+      document.querySelector('#travel-form button[type="submit"]').textContent = translations[currentLang].submit;
+      document.querySelector('#airport-form button[type="submit"]').textContent = translations[currentLang].submit;
+      document.getElementById('pay-later').textContent = translations[currentLang].payLater;
+      document.querySelector('#cost-estimate h3').textContent = translations[currentLang].costEstimate;
+      document.querySelector('#airport-cost-estimate h3').textContent = translations[currentLang].costEstimate;
+      document.querySelector('#cost-estimate p:nth-child(2)').innerHTML = `${translations[currentLang].transport} $<span id="transport-cost">0</span>`;
+      document.querySelector('#cost-estimate p:nth-child(3)').innerHTML = `${translations[currentLang].admission} $<span id="admission-cost">0</span>`;
+      document.querySelector('#cost-estimate p:nth-child(4)').innerHTML = `${translations[currentLang].mealsCost} $<span id="meals-cost">0</span>`;
+      document.querySelector('#cost-estimate p:nth-child(5)').innerHTML = `${translations[currentLang].lodgingCost} $<span id="lodging-cost">0</span>`;
+      document.querySelector('#cost-estimate p:nth-child(6)').innerHTML = `${translations[currentLang].total} $<span id="total-cost">0</span>`;
+      document.querySelector('#airport-cost-estimate p:nth-child(2)').innerHTML = `${translations[currentLang].transport} $<span id="airport-transport-cost">0</span>`;
+      document.querySelector('#airport-cost-estimate p:nth-child(3)').innerHTML = `${translations[currentLang].total} $<span id="airport-total-cost">0</span>`;
+    }
+
+    // Service Toggle
+    const serviceType = document.getElementById('service-type');
+    const travelForm = document.getElementById('travel-form');
+    const airportForm = document.getElementById('airport-form');
+    serviceType.addEventListener('change', () => {
+      travelForm.classList.toggle('hidden', serviceType.value !== 'travel');
+      airportForm.classList.toggle('hidden', serviceType.value !== 'airport');
+    });
+
+    // Travel Package Logic
+    const packageType = document.getElementById('package-type');
+    const destinations = document.getElementById('destinations');
+    const ticketType = document.getElementById('ticket-type');
+    const travelersInput = document.getElementById('travelers-input');
+    const adultKidInput = document.getElementById('adult-kid-input');
+    const numTravelers = document.getElementById('num-travelers');
+    const numAdults = document.getElementById('num-adults');
+    const numKids = document.getElementById('num-kids');
+    const lodging = document.getElementById('lodging');
+    const dropoffAddress = document.getElementById('dropoff-address');
+    const mealsOption = document.getElementById('meals-option');
+    const airportPickup = document.getElementById('airport-pickup');
+    const airportPickupDetails = document.getElementById('airport-pickup-details');
+
+    const packageDestinations = {
+      disneyland: ['Disneyland', 'California Adventure'],
+      sandiego: ['San Diego Zoo', 'SeaWorld', 'LegoLand'],
+      universal: ['Universal Studios'],
+      national: ['Grand Canyon', 'Yosemite'],
+      city: ['Las Vegas', 'San Francisco', 'Reno']
+    };
+
+    packageType.addEventListener('change', () => {
+      const isCustom = packageType.value === 'custom';
+      destinations.disabled = !isCustom;
+      if (!isCustom) {
+        Array.from(destinations.options).forEach(opt => {
+          opt.selected = packageDestinations[packageType.value]?.includes(opt.value);
         });
-        
-        // Function to update airport service address fields
-        function updateAirportServiceFields() {
-            const direction = document.getElementById('serviceDirection').value;
-            const pickupSection = document.getElementById('pickupAddressSectionAirport');
-            const dropoffSection = document.getElementById('dropoffAddressSectionAirport');
-            
-            if (direction === 'pickup') {
-                // For airport pickup, show drop-off address
-                pickupSection.style.display = 'none';
-                dropoffSection.style.display = 'block';
-                document.getElementById('airportDropoffAddressLabel').textContent = translations[currentLanguage].airportDropoffAddressLabel;
+      }
+      updateTravelerInput();
+      updateMealsOption();
+      updateCostEstimate();
+    });
+
+    destinations.addEventListener('change', () => {
+      updateTravelerInput();
+      updateMealsOption();
+      updateCostEstimate();
+    });
+
+    function updateTravelerInput() {
+      const selectedDestinations = Array.from(destinations.selectedOptions).map(opt => opt.value);
+      const isThemePark = selectedDestinations.some(d => ['Disneyland', 'California Adventure', 'Universal Studios'].includes(d));
+      ticketType.classList.toggle('hidden', !isThemePark);
+      travelersInput.classList.toggle('hidden', isThemePark);
+      adultKidInput.classList.toggle('hidden', !isThemePark);
+      if (isThemePark) {
+        numTravelers.value = (parseInt(numAdults.value) || 0) + (parseInt(numKids.value) || 0);
+      }
+    }
+
+    numAdults.addEventListener('input', () => {
+      numTravelers.value = (parseInt(numAdults.value) || 0) + (parseInt(numKids.value) || 0);
+      updateCostEstimate();
+    });
+
+    numKids.addEventListener('input', () => {
+      numTravelers.value = (parseInt(numAdults.value) || 0) + (parseInt(numKids.value) || 0);
+      updateCostEstimate();
+    });
+
+    numTravelers.addEventListener('input', updateCostEstimate);
+    document.getElementById('num-days').addEventListener('input', updateCostEstimate);
+    lodging.addEventListener('change', () => {
+      dropoffAddress.classList.toggle('hidden', lodging.value !== 'none');
+      updateCostEstimate();
+    });
+
+    mealsOption.addEventListener('change', updateCostEstimate);
+    airportPickup.addEventListener('change', () => {
+      airportPickupDetails.classList.toggle('hidden', !airportPickup.checked);
+      updateCostEstimate();
+    });
+
+    function updateMealsOption() {
+      const selectedDestinations = Array.from(destinations.selectedOptions).map(opt => opt.value);
+      mealsOption.classList.toggle('hidden', !selectedDestinations.some(d => ['San Francisco', 'Silicon Valley'].includes(d)));
+    }
+
+    // Airport Service Logic
+    const airportServiceType = document.getElementById('airport-service-type');
+    airportServiceType.addEventListener('change', updateAirportCostEstimate);
+    document.querySelector('#airport-form input[name="num_people"]').addEventListener('input', updateAirportCostEstimate);
+
+    // Cost Calculation Logic
+    const distances = {
+      'Disneyland': 60,
+      'California Adventure': 60,
+      'Universal Studios': 100,
+      'San Diego Zoo': 190,
+      'SeaWorld': 190,
+      'LegoLand': 140,
+      'Las Vegas': 540,
+      'Grand Canyon': 960,
+      'San Francisco': 860,
+      'Yosemite': 700,
+      'Lake Tahoe': 960,
+      'Reno': 1000,
+      'Silicon Valley': 760
+    };
+
+    const admissionFees = {
+      'San Diego Zoo': { adult: 70, kid: 70 },
+      'SeaWorld': { adult: 90, kid: 90 },
+      'LegoLand': { adult: 100, kid: 100 },
+      'Las Vegas': { adult: 0, kid: 0 },
+      'Grand Canyon': { adult: 25, kid: 25 },
+      'San Francisco': { adult: 0, kid: 0 },
+      'Yosemite': { adult: 20, kid: 20 },
+      'Lake Tahoe': { adult: 0, kid: 0 },
+      'Reno': { adult: 0, kid: 0 },
+      'Silicon Valley': { adult: 20, kid: 20 },
+      'Disneyland': { regular: { adult: 150, kid: 100 }, vip: { adult: 300, kid: 200 }, express: { adult: 200, kid: 150 } },
+      'California Adventure': { regular: { adult: 150, kid: 100 }, vip: { adult: 300, kid: 200 }, express: { adult: 200, kid: 150 } },
+      'Universal Studios': { regular: { adult: 120, kid: 80 }, vip: { adult: 250, kid: 180 }, express: { adult: 180, kid: 130 } }
+    };
+
+    const lodgingCosts = {
+      'Disneyland': { hotel: 200, airbnb: 150 },
+      'California Adventure': { hotel: 200, airbnb: 150 },
+      'Universal Studios': { hotel: 180, airbnb: 130 },
+      'San Diego Zoo': { hotel: 160, airbnb: 120 },
+      'SeaWorld': { hotel: 160, airbnb: 120 },
+      'LegoLand': { hotel: 160, airbnb: 120 },
+      'Las Vegas': { hotel: 120, airbnb: 100 },
+      'Grand Canyon': { hotel: 140, airbnb: 110 },
+      'San Francisco': { hotel: 250, airbnb: 200 },
+      'Yosemite': { hotel: 180, airbnb: 140 },
+      'Lake Tahoe': { hotel: 200, airbnb: 160 },
+      'Reno': { hotel: 130, airbnb: 100 },
+      'Silicon Valley': { hotel: 250, airbnb: 200 }
+    };
+
+    async function calculateDistance(address) {
+      if (!address) return 0;
+      try {
+        const geocoder = new google.maps.Geocoder();
+        return new Promise((resolve) => {
+          geocoder.geocode({ address }, (results, status) => {
+            if (status === 'OK') {
+              const origin = { lat: 33.8121, lng: -117.9190 }; // Santa Ana
+              const destination = results[0].geometry.location;
+              const service = new google.maps.DistanceMatrixService();
+              service.getDistanceMatrix({
+                origins: [origin],
+                destinations: [destination],
+                travelMode: 'DRIVING'
+              }, (response, status) => {
+                if (status === 'OK') {
+                  const distance = response.rows[0].elements[0].distance.value / 1609.34; // Convert meters to miles
+                  resolve(distance);
+                } else {
+                  console.error('Distance Matrix Error:', status);
+                  resolve(0);
+                }
+              });
             } else {
-                // For airport dropoff, show pickup address
-                pickupSection.style.display = 'block';
-                dropoffSection.style.display = 'none';
-                document.getElementById('airportPickupAddressLabel').textContent = translations[currentLanguage].airportPickupAddressLabel;
+              console.error('Geocode Error:', status);
+              resolve(0);
             }
+          });
+        });
+      } catch (err) {
+        console.error('Google Maps Error:', err);
+        return 0;
+      }
+    }
+
+    async function updateCostEstimate() {
+      const selectedDestinations = Array.from(destinations.selectedOptions).map(opt => opt.value);
+      const numDays = parseInt(document.getElementById('num-days').value) || 1;
+      const numTravelers = parseInt(numTravelers.value) || 0;
+      const numAdults = parseInt(numAdults.value) || 0;
+      const numKids = parseInt(numKids.value) || 0;
+      const ticket = document.querySelector('#ticket-type select').value;
+      const isMercedes = numTravelers > 3;
+      const lodgingType = lodging.value;
+      const hasMeals = document.getElementById('meals').checked;
+      const hasAirportPickup = airportPickup.checked;
+      const pickupAddress = document.getElementById('dropoff-address-input').value;
+
+      let transportCost = 0;
+      let admissionCost = 0;
+      let mealsCost = 0;
+      let lodgingCost = 0;
+
+      // Transportation Cost
+      const maxDistance = Math.max(...selectedDestinations.map(d => distances[d] || 0));
+      transportCost = maxDistance * 2.5 * numDays;
+      if (isMercedes) {
+        transportCost += 30 * numDays;
+        transportCost *= 1.2;
+      }
+
+      // Airport Pickup Cost
+      if (hasAirportPickup && lodgingType === 'none' && pickupAddress) {
+        const zip = pickupAddress.match(/\d{5}/)?.[0];
+        if (zip?.startsWith('90')) {
+          transportCost += 100;
+        } else if (zip?.startsWith('908')) {
+          transportCost += 80;
+        } else if (zip?.match(/^926|^927|^928/) || pickupAddress.includes('Anaheim') || pickupAddress.includes('Irvine') || pickupAddress.includes('Huntington Beach')) {
+          transportCost += 50;
+        } else {
+          const distance = await calculateDistance(pickupAddress);
+          transportCost += distance * 2.5;
         }
-        
-        // Previous functions (loadBookedDates, translatePage, updatePackageOptions, 
-        // updateLodgingDetails, updatePickupAddressVisibility, setupCostCalculationListeners,
-        // initAutocomplete, initPayPalButton, calculateCost, calculateAirportCost) 
-        // remain the same as in previous versions
-        
-        // Form submission handler for travel service
-        document.getElementById('travelForm').addEventListener('submit', function(e) {
-            const lodgingType = document.getElementById('lodgingType').value;
-            const airportPickup = document.getElementById('airportPickup').value;
-            
-            if (airportPickup !== 'none' && lodgingType !== 'none') {
-                document.getElementById('pickupAddress').disabled = true;
+        if (numTravelers > 4) {
+          transportCost += 30;
+          transportCost *= 1.2;
+        }
+      } else if (hasAirportPickup) {
+        transportCost += 50;
+        if (numTravelers > 4) {
+          transportCost += 30;
+          transportCost *= 1.2;
+        }
+      }
+
+      // Admission Cost
+      for (const dest of selectedDestinations) {
+        if (['Disneyland', 'California Adventure', 'Universal Studios'].includes(dest)) {
+          admissionCost += numAdults * admissionFees[dest][ticket].adult + numKids * admissionFees[dest][ticket].kid;
+        } else {
+          admissionCost += numTravelers * (admissionFees[dest]?.adult || 0);
+        }
+      }
+
+      // Meals Cost
+      if (hasMeals && selectedDestinations.some(d => ['San Francisco', 'Silicon Valley'].includes(d))) {
+        mealsCost = 35 * numTravelers * numDays;
+      }
+
+      // Lodging Cost
+      if (lodgingType !== 'none') {
+        const primaryDest = selectedDestinations[0];
+        let baseCost = lodgingCosts[primaryDest]?.[lodgingType] || 150;
+        if (numTravelers > 5) baseCost *= Math.ceil(numTravelers / 5);
+        if (lodgingType === 'airbnb') baseCost += numTravelers * 20;
+        lodgingCost = baseCost * numDays;
+      }
+
+      // Update UI
+      document.getElementById('transport-cost').textContent = transportCost.toFixed(2);
+      document.getElementById('admission-cost').textContent = admissionCost.toFixed(2);
+      document.getElementById('meals-cost').textContent = mealsCost.toFixed(2);
+      document.getElementById('lodging-cost').textContent = lodgingCost.toFixed(2);
+      document.getElementById('total-cost').textContent = (transportCost + admissionCost + mealsCost + lodgingCost).toFixed(2);
+
+      // PayPal Button
+      const paypalContainer = document.getElementById('paypal-button-container');
+      const paypalFallback = document.getElementById('paypal-fallback');
+      if (window.paypal) {
+        console.log('PayPal SDK loaded successfully');
+        try {
+          paypalContainer.innerHTML = ''; // Clear previous content
+          paypalFallback.classList.add('hidden');
+          paypal.Buttons({
+            createOrder: (data, actions) => {
+              return actions.order.create({
+                purchase_units: [{
+                  amount: {
+                    value: (admissionCost + lodgingCost).toFixed(2),
+                    breakdown: {
+                      item_total: { value: (admissionCost + lodgingCost).toFixed(2), currency_code: 'USD' }
+                    }
+                  }
+                }]
+              });
+            },
+            onApprove: (data, actions) => {
+              return actions.order.capture().then(() => {
+                document.getElementById('travel-package-form').dataset.paymentStatus = 'completed';
+                document.getElementById('travel-package-form').submit();
+              });
+            },
+            onError: (err) => {
+              console.error('PayPal Button Error:', err);
+              paypalContainer.innerHTML = '<p>Lỗi khi tải thanh toán PayPal. Vui lòng thử lại hoặc gửi yêu cầu mà không thanh toán trước.</p>';
+              paypalFallback.classList.remove('hidden');
             }
+          }).render('#paypal-button-container');
+        } catch (err) {
+          console.error('PayPal SDK Error:', err);
+          paypalContainer.innerHTML = '<p>Lỗi khi tải PayPal. Vui lòng gửi yêu cầu và thanh toán sau.</p>';
+          paypalFallback.classList.remove('hidden');
+        }
+      } else {
+        console.error('PayPal SDK not loaded');
+        paypalContainer.innerHTML = '<p>PayPal hiện không khả dụng. Vui lòng gửi yêu cầu và thanh toán sau.</p>';
+        paypalFallback.classList.remove('hidden');
+      }
+    }
+
+    async function updateAirportCostEstimate() {
+      const serviceType = airportServiceType.value;
+      const address = document.getElementById('airport-address').value;
+      const numPeople = parseInt(document.querySelector('#airport-form input[name="num_people"]').value) || 0;
+      const isMercedes = numPeople > 4;
+
+      let transportCost = 0;
+      if (numPeople < 4) {
+        const zip = address.match(/\d{5}/)?.[0];
+        if (zip?.startsWith('90')) {
+          transportCost = 100;
+        } else if (zip?.startsWith('908')) {
+          transportCost = 80;
+        } else if (zip?.match(/^926|^927|^928/) || address.includes('Anaheim') || address.includes('Irvine') || address.includes('Huntington Beach')) {
+          transportCost = 50;
+        } else {
+          transportCost = 150;
+        }
+      } else {
+        const distance = await calculateDistance(address);
+        transportCost = distance * 2.5;
+      }
+
+      if (isMercedes) {
+        transportCost += 30;
+        transportCost *= 1.2;
+      }
+
+      document.getElementById('airport-transport-cost').textContent = transportCost.toFixed(2);
+      document.getElementById('airport-total-cost').textContent = transportCost.toFixed(2);
+    }
+
+    async function updateCalendar() {
+      const travelDate = document.getElementById('travel-date');
+      const airportDate = document.querySelector('#airport-form input[name="date"]');
+      try {
+        const querySnapshot = await getDocs(collection(db, 'bookings'));
+        const bookedDates = querySnapshot.docs.map(doc => doc.data().date);
+        console.log('Booked dates:', bookedDates);
+        const today = new Date();
+        travelDate.min = today.toISOString().split('T')[0];
+        airportDate.min = today.toISOString().split('T')[0];
+        travelDate.addEventListener('input', () => {
+          if (bookedDates.includes(travelDate.value)) {
+            travelDate.setCustomValidity(currentLang === 'vi' ? 'Ngày này đã được đặt. Vui lòng chọn ngày khác.' : 'This date is already booked. Please select another date.');
+          } else {
+            travelDate.setCustomValidity('');
+          }
         });
-        
-        // Form submission handler for airport service
-        document.getElementById('airportForm').addEventListener('submit', function(e) {
-            // Ensure the correct address field is included based on service direction
-            const direction = document.getElementById('serviceDirection').value;
-            
-            if (direction === 'pickup') {
-                document.getElementById('airportPickupAddress').disabled = true;
-            } else {
-                document.getElementById('airportDropoffAddress').disabled = true;
-            }
+        airportDate.addEventListener('input', () => {
+          if (bookedDates.includes(airportDate.value)) {
+            airportDate.setCustomValidity(currentLang === 'vi' ? 'Ngày này đã được đặt. Vui lòng chọn ngày khác.' : 'This date is already booked. Please select another date.');
+          } else {
+            airportDate.setCustomValidity('');
+          }
         });
-    </script>
+      } catch (err) {
+        console.error('Firebase Calendar Error:', err);
+      }
+    }
+
+    // Form Submission
+    document.getElementById('travel-package-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const paymentStatus = document.getElementById('travel-package-form').dataset.paymentStatus || 'pending';
+      addDoc(collection(db, 'bookings'), {
+        date: document.getElementById('travel-date').value,
+        type: 'travel',
+        paymentStatus: paymentStatus
+      }).then(() => {
+        window.location.href = 'thankyou.html';
+      }).catch(err => {
+        console.error('Firebase Error:', err);
+        alert(currentLang === 'vi' ? 'Lỗi khi lưu đặt chỗ. Vui lòng thử lại.' : 'Error saving booking. Please try again.');
+      });
+    });
+
+    document.getElementById('airport-service-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      addDoc(collection(db, 'bookings'), {
+        date: document.querySelector('#airport-form input[name="date"]').value,
+        type: 'airport',
+        paymentStatus: 'pending'
+      }).then(() => {
+        window.location.href = 'thankyou.html';
+      }).catch(err => {
+        console.error('Firebase Error:', err);
+        alert(currentLang === 'vi' ? 'Lỗi khi lưu đặt chỗ. Vui lòng thử lại.' : 'Error saving booking. Please try again.');
+      });
+    });
+
+    // Google Maps Place Autocomplete Element
+    try {
+      const dropoffInput = document.getElementById('dropoff-address-input');
+      const airportAddressInput = document.getElementById('airport-address');
+      dropoffInput.types = ['address'];
+      airportAddressInput.types = ['address'];
+      dropoffInput.addEventListener('gmp-placeselect', () => {
+        console.log('Place selected:', dropoffInput.value);
+        updateCostEstimate();
+      });
+      airportAddressInput.addEventListener('gmp-placeselect', () => {
+        console.log('Place selected:', airportAddressInput.value);
+        updateAirportCostEstimate();
+      });
+    } catch (err) {
+      console.error('Google Maps Autocomplete Error:', err);
+      alert(currentLang === 'vi' ? 'Lỗi khi tải autocomplete địa chỉ. Vui lòng nhập địa chỉ thủ công.' : 'Error loading address autocomplete. Please enter the address manually.');
+    }
+
+    // Initialize
+    updateLanguage();
+    updateCalendar();
+    updateCostEstimate();
+    updateAirportCostEstimate();
+  </script>
 </body>
 </html>

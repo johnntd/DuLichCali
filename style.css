@@ -26,6 +26,7 @@ input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}
 input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}
 button,input:where([type=button]),input:where([type=submit]),input:where([type=reset]){background-color:transparent;background-image:none}
 input:where([type=text]),input:where([type=email]),input:where([type=url]),input:where([type=password]),input:where([type=number]),input:where([type=date]),input:where([type=datetime-local]),input:where([type=month]),input:where([type=search]),input:where([type=tel]),input:where([type=time]),input:where([type=week]),select,textarea{border-width:1px;border-color:#d1d5db;padding:.5rem .75rem;font-size:1rem;line-height:1.5rem;border-radius:.375rem;color:#000}
+place-autocomplete-element{display:block;width:100%;border:1px solid #d1d5db;padding:.5rem .75rem;font-size:1rem;border-radius:.375rem;background-color:#fff;color:#000}
 .container{width:100%;margin-right:auto;margin-left:auto;padding-right:1rem;padding-left:1rem}
 @media (min-width:640px){.container{max-width:640px}}
 @media (min-width:768px){.container{max-width:768px}}
@@ -63,7 +64,7 @@ input:where([type=text]),input:where([type=email]),input:where([type=url]),input
 .rounded{border-radius:.375rem}
 .w-full{width:100%}
 @media (min-width:768px){.md\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:768px){select,input,button{width:100%;margin-bottom:2.5rem}}
+@media (max-width:768px){select,input,button,place-autocomplete-element{width:100%;margin-bottom:2.5rem}}
 .container{max-width:1200px;margin:0 auto;padding:20px}
 label, .service-form, #cost-estimate, #airport-cost-estimate {color: #000;}
 .bg-blue-500, .bg-green-500, .bg-gray-500 {color: #fff;}

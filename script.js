@@ -108,16 +108,16 @@ async function calculateDistance(address) {
 async function updateCostEstimate() {
   try {
     const selectedDestinations = Array.from(destinations.selectedOptions).map(opt => opt.value);
-    const numDays = parseInt(document.getElementById('num-days').value) || 1;
-    const numTravelers = parseInt(numTravelers.value) || 0;
-    const numAdults = parseInt(numAdults.value) || 0;
-    const numKids = parseInt(numKids.value) || 0;
-    const ticket = document.querySelector('#ticket-type select').value;
+    const numDays = parseInt(numDaysInput.value) || 1;
+    const numTravelers = parseInt(numTravelersInput.value) || 0;
+    const numAdults = parseInt(numAdultsInput.value) || 0;
+    const numKids = parseInt(numKidsInput.value) || 0;
+    const ticket = ticketTypeSelect.value;
     const isMercedes = numTravelers > 3;
-    const lodgingType = lodging.value;
-    const hasMeals = document.getElementById('meals').checked;
-    const hasAirportPickup = airportPickup.checked;
-    const pickupAddress = document.getElementById('dropoff-address-input').value;
+    const lodgingType = lodgingSelect.value;
+    const hasMeals = mealsCheckbox.checked;
+    const hasAirportPickup = airportPickupCheckbox.checked;
+    const pickupAddress = dropoffAddressInput.value;
 
     let transportCost = 0;
     let admissionCost = 0;
@@ -181,11 +181,11 @@ async function updateCostEstimate() {
     }
 
     // Update UI
-    document.getElementById('transport-cost').textContent = transportCost.toFixed(2);
-    document.getElementById('admission-cost').textContent = admissionCost.toFixed(2);
-    document.getElementById('meals-cost').textContent = mealsCost.toFixed(2);
-    document.getElementById('lodging-cost').textContent = lodgingCost.toFixed(2);
-    document.getElementById('total-cost').textContent = (transportCost + admissionCost + mealsCost + lodgingCost).toFixed(2);
+    transportCostSpan.textContent = transportCost.toFixed(2);
+    admissionCostSpan.textContent = admissionCost.toFixed(2);
+    mealsCostSpan.textContent = mealsCost.toFixed(2);
+    lodgingCostSpan.textContent = lodgingCost.toFixed(2);
+    totalCostSpan.textContent = (transportCost + admissionCost + mealsCost + lodgingCost).toFixed(2);
 
     // PayPal Button
     const paypalContainer = document.getElementById('paypal-button-container');
@@ -238,9 +238,9 @@ async function updateCostEstimate() {
 
 async function updateAirportCostEstimate() {
   try {
-    const serviceType = airportServiceType.value;
-    const address = document.getElementById('airport-address').value;
-    const numPeople = parseInt(document.querySelector('#airport-form input[name="num_people"]').value) || 0;
+    const serviceType = airportServiceTypeSelect.value;
+    const address = airportAddressInput.value;
+    const numPeople = parseInt(numPeopleInput.value) || 0;
     const isMercedes = numPeople > 4;
 
     let transportCost = 0;
@@ -265,8 +265,8 @@ async function updateAirportCostEstimate() {
       transportCost *= 1.2;
     }
 
-    document.getElementById('airport-transport-cost').textContent = transportCost.toFixed(2);
-    document.getElementById('airport-total-cost').textContent = transportCost.toFixed(2);
+    airportTransportCostSpan.textContent = transportCost.toFixed(2);
+    airportTotalCostSpan.textContent = transportCost.toFixed(2);
   } catch (err) {
     console.error('Airport Cost Estimate Error:', err);
     alert(currentLang === 'vi' ? 'Lỗi khi tính toán chi phí sân bay. Vui lòng thử lại.' : 'Error calculating airport cost. Please try again.');
@@ -276,6 +276,47 @@ async function updateAirportCostEstimate() {
 // Debounced versions
 const debouncedUpdateCostEstimate = debounce(updateCostEstimate, 500);
 const debouncedUpdateAirportCostEstimate = debounce(updateAirportCostEstimate, 500);
+
+// DOM Elements
+let serviceTypeSelect, travelForm, airportForm, packageTypeSelect, destinationsSelect, ticketType, ticketTypeSelect,
+    travelersInput, adultKidInput, numTravelersInput, numAdultsInput, numKidsInput, lodgingSelect, dropoffAddress,
+    dropoffAddressInput, mealsCheckbox, mealsOption, airportPickupCheckbox, airportPickupDetails, airportServiceTypeSelect,
+    numPeopleInput, airportAddressInput, travelDateInput, airportDateInput, transportCostSpan, admissionCostSpan,
+    mealsCostSpan, lodgingCostSpan, totalCostSpan, airportTransportCostSpan, airportTotalCostSpan;
+
+function setupDOM() {
+  serviceTypeSelect = document.getElementById('service-type');
+  travelForm = document.getElementById('travel-form');
+  airportForm = document.getElementById('airport-form');
+  packageTypeSelect = document.getElementById('package-type');
+  destinationsSelect = document.getElementById('destinations');
+  ticketType = document.getElementById('ticket-type');
+  ticketTypeSelect = document.querySelector('#ticket-type select');
+  travelersInput = document.getElementById('travelers-input');
+  adultKidInput = document.getElementById('adult-kid-input');
+  numTravelersInput = document.getElementById('num-travelers');
+  numAdultsInput = document.getElementById('num-adults');
+  numKidsInput = document.getElementById('num-kids');
+  lodgingSelect = document.getElementById('lodging');
+  dropoffAddress = document.getElementById('dropoff-address');
+  dropoffAddressInput = document.getElementById('dropoff-address-input');
+  mealsCheckbox = document.getElementById('meals');
+  mealsOption = document.getElementById('meals-option');
+  airportPickupCheckbox = document.getElementById('airport-pickup');
+  airportPickupDetails = document.getElementById('airport-pickup-details');
+  airportServiceTypeSelect = document.getElementById('airport-service-type');
+  numPeopleInput = document.querySelector('#airport-form input[name="num_people"]');
+  airportAddressInput = document.getElementById('airport-address');
+  travelDateInput = document.getElementById('travel-date');
+  airportDateInput = document.querySelector('#airport-form input[name="date"]');
+  transportCostSpan = document.getElementById('transport-cost');
+  admissionCostSpan = document.getElementById('admission-cost');
+  mealsCostSpan = document.getElementById('meals-cost');
+  lodgingCostSpan = document.getElementById('lodging-cost');
+  totalCostSpan = document.getElementById('total-cost');
+  airportTransportCostSpan = document.getElementById('airport-transport-cost');
+  airportTotalCostSpan = document.getElementById('airport-total-cost');
+}
 
 // Language Toggle
 const translations = {
@@ -363,8 +404,8 @@ function updateLanguage() {
   document.querySelector('h1').textContent = translations[currentLang].title;
   langToggle.textContent = translations[currentLang].langToggle;
   document.querySelector('label[for="service-type"]').textContent = translations[currentLang].serviceLabel;
-  document.getElementById('service-type').options[0].text = translations[currentLang].travel;
-  document.getElementById('service-type').options[1].text = translations[currentLang].airport;
+  serviceTypeSelect.options[0].text = translations[currentLang].travel;
+  serviceTypeSelect.options[1].text = translations[currentLang].airport;
   document.querySelector('#travel-form h2').textContent = translations[currentLang].travel;
   document.querySelector('#airport-form h2').textContent = translations[currentLang].airport;
   document.querySelectorAll('#travel-form label').forEach((label, i) => {
@@ -390,31 +431,14 @@ function updateLanguage() {
 }
 
 // Service Toggle
-const serviceType = document.getElementById('service-type');
-const travelForm = document.getElementById('travel-form');
-const airportForm = document.getElementById('airport-form');
-serviceType.addEventListener('change', () => {
-  travelForm.classList.toggle('hidden', serviceType.value !== 'travel');
-  airportForm.classList.toggle('hidden', serviceType.value !== 'airport');
-  if (serviceType.value === 'travel') debouncedUpdateCostEstimate();
+serviceTypeSelect.addEventListener('change', () => {
+  travelForm.classList.toggle('hidden', serviceTypeSelect.value !== 'travel');
+  airportForm.classList.toggle('hidden', serviceTypeSelect.value !== 'airport');
+  if (serviceTypeSelect.value === 'travel') debouncedUpdateCostEstimate();
   else debouncedUpdateAirportCostEstimate();
 });
 
 // Travel Package Logic
-const packageType = document.getElementById('package-type');
-const destinations = document.getElementById('destinations');
-const ticketType = document.getElementById('ticket-type');
-const travelersInput = document.getElementById('travelers-input');
-const adultKidInput = document.getElementById('adult-kid-input');
-const numTravelers = document.getElementById('num-travelers');
-const numAdults = document.getElementById('num-adults');
-const numKids = document.getElementById('num-kids');
-const lodging = document.getElementById('lodging');
-const dropoffAddress = document.getElementById('dropoff-address');
-const mealsOption = document.getElementById('meals-option');
-const airportPickup = document.getElementById('airport-pickup');
-const airportPickupDetails = document.getElementById('airport-pickup-details');
-
 const packageDestinations = {
   disneyland: ['Disneyland', 'California Adventure'],
   sandiego: ['San Diego Zoo', 'SeaWorld', 'LegoLand'],
@@ -423,12 +447,12 @@ const packageDestinations = {
   city: ['Las Vegas', 'San Francisco', 'Reno']
 };
 
-packageType.addEventListener('change', () => {
-  const isCustom = packageType.value === 'custom';
-  destinations.disabled = !isCustom;
+packageTypeSelect.addEventListener('change', () => {
+  const isCustom = packageTypeSelect.value === 'custom';
+  destinationsSelect.disabled = !isCustom;
   if (!isCustom) {
-    Array.from(destinations.options).forEach(opt => {
-      opt.selected = packageDestinations[packageType.value]?.includes(opt.value);
+    Array.from(destinationsSelect.options).forEach(opt => {
+      opt.selected = packageDestinations[packageTypeSelect.value]?.includes(opt.value);
     });
   }
   updateTravelerInput();
@@ -436,87 +460,85 @@ packageType.addEventListener('change', () => {
   debouncedUpdateCostEstimate();
 });
 
-destinations.addEventListener('change', () => {
+destinationsSelect.addEventListener('change', () => {
   updateTravelerInput();
   updateMealsOption();
   debouncedUpdateCostEstimate();
 });
 
 function updateTravelerInput() {
-  const selectedDestinations = Array.from(destinations.selectedOptions).map(opt => opt.value);
+  const selectedDestinations = Array.from(destinationsSelect.selectedOptions).map(opt => opt.value);
   const isThemePark = selectedDestinations.some(d => ['Disneyland', 'California Adventure', 'Universal Studios'].includes(d));
   ticketType.classList.toggle('hidden', !isThemePark);
   travelersInput.classList.toggle('hidden', isThemePark);
   adultKidInput.classList.toggle('hidden', !isThemePark);
   if (isThemePark) {
-    numTravelers.value = (parseInt(numAdults.value) || 0) + (parseInt(numKids.value) || 0);
+    numTravelersInput.value = (parseInt(numAdultsInput.value) || 0) + (parseInt(numKidsInput.value) || 0);
   }
   debouncedUpdateCostEstimate();
 }
 
-numAdults.addEventListener('input', () => {
-  numTravelers.value = (parseInt(numAdults.value) || 0) + (parseInt(numKids.value) || 0);
+numAdultsInput.addEventListener('input', () => {
+  numTravelersInput.value = (parseInt(numAdultsInput.value) || 0) + (parseInt(numKidsInput.value) || 0);
   debouncedUpdateCostEstimate();
 });
 
-numKids.addEventListener('input', () => {
-  numTravelers.value = (parseInt(numAdults.value) || 0) + (parseInt(numKids.value) || 0);
+numKidsInput.addEventListener('input', () => {
+  numTravelersInput.value = (parseInt(numAdultsInput.value) || 0) + (parseInt(numKidsInput.value) || 0);
   debouncedUpdateCostEstimate();
 });
 
-numTravelers.addEventListener('input', debouncedUpdateCostEstimate);
-document.getElementById('num-days').addEventListener('input', debouncedUpdateCostEstimate);
-document.querySelector('#ticket-type select').addEventListener('change', debouncedUpdateCostEstimate);
-lodging.addEventListener('change', () => {
-  dropoffAddress.classList.toggle('hidden', lodging.value === 'none');
+numTravelersInput.addEventListener('input', debouncedUpdateCostEstimate);
+numDaysInput.addEventListener('input', debouncedUpdateCostEstimate);
+ticketTypeSelect.addEventListener('change', debouncedUpdateCostEstimate);
+lodgingSelect.addEventListener('change', () => {
+  dropoffAddress.classList.toggle('hidden', lodgingSelect.value === 'none');
   debouncedUpdateCostEstimate();
 });
 
-document.getElementById('meals').addEventListener('change', debouncedUpdateCostEstimate);
-airportPickup.addEventListener('change', () => {
-  airportPickupDetails.classList.toggle('hidden', !airportPickup.checked);
+mealsCheckbox.addEventListener('change', debouncedUpdateCostEstimate);
+airportPickupCheckbox.addEventListener('change', () => {
+  airportPickupDetails.classList.toggle('hidden', !airportPickupCheckbox.checked);
   debouncedUpdateCostEstimate();
 });
 
 function updateMealsOption() {
-  const selectedDestinations = Array.from(destinations.selectedOptions).map(opt => opt.value);
+  const selectedDestinations = Array.from(destinationsSelect.selectedOptions).map(opt => opt.value);
   mealsOption.classList.toggle('hidden', !selectedDestinations.some(d => ['San Francisco', 'Silicon Valley'].includes(d)));
 }
 
 // Airport Service Logic
-const airportServiceType = document.getElementById('airport-service-type');
-airportServiceType.addEventListener('change', debouncedUpdateAirportCostEstimate);
-document.querySelector('#airport-form input[name="num_people"]').addEventListener('input', debouncedUpdateAirportCostEstimate);
+airportServiceTypeSelect.addEventListener('change', debouncedUpdateAirportCostEstimate);
+numPeopleInput.addEventListener('input', debouncedUpdateAirportCostEstimate);
 document.querySelector('#airport-form select[name="airport"]').addEventListener('change', debouncedUpdateAirportCostEstimate);
 
 async function updateCalendar() {
-  const travelDate = document.getElementById('travel-date');
-  const airportDate = document.querySelector('#airport-form input[name="date"]');
   try {
     const querySnapshot = await getDocs(collection(db, 'bookings'));
     const bookedDates = querySnapshot.docs.map(doc => doc.data().date);
     console.log('Booked dates:', bookedDates);
     const today = new Date();
-    travelDate.min = today.toISOString().split('T')[0];
-    airportDate.min = today.toISOString().split('T')[0];
-    travelDate.addEventListener('input', () => {
-      if (bookedDates.includes(travelDate.value)) {
-        travelDate.setCustomValidity(currentLang === 'vi' ? 'Ngày này đã được đặt. Vui lòng chọn ngày khác.' : 'This date is already booked. Please select another date.');
+    travelDateInput.min = today.toISOString().split('T')[0];
+    airportDateInput.min = today.toISOString().split('T')[0];
+    travelDateInput.addEventListener('input', () => {
+      if (bookedDates.includes(travelDateInput.value)) {
+        travelDateInput.setCustomValidity(currentLang === 'vi' ? 'Ngày này đã được đặt. Vui lòng chọn ngày khác.' : 'This date is already booked. Please select another date.');
       } else {
-        travelDate.setCustomValidity('');
+        travelDateInput.setCustomValidity('');
       }
       debouncedUpdateCostEstimate();
     });
-    airportDate.addEventListener('input', () => {
-      if (bookedDates.includes(airportDate.value)) {
-        airportDate.setCustomValidity(currentLang === 'vi' ? 'Ngày này đã được đặt. Vui lòng chọn ngày khác.' : 'This date is already booked. Please select another date.');
+    airportDateInput.addEventListener('input', () => {
+      if (bookedDates.includes(airportDateInput.value)) {
+        airportDateInput.setCustomValidity(currentLang === 'vi' ? 'Ngày này đã được đặt. Vui lòng chọn ngày khác.' : 'This date is already booked. Please select another date.');
       } else {
-        airportDate.setCustomValidity('');
+        airportDateInput.setCustomValidity('');
       }
       debouncedUpdateAirportCostEstimate();
     });
   } catch (err) {
     console.error('Firebase Calendar Error:', err);
+    // Skip calendar updates if permissions are insufficient
   }
 }
 
@@ -526,7 +548,7 @@ document.getElementById('travel-package-form').addEventListener('submit', async 
   try {
     const paymentStatus = document.getElementById('travel-package-form').dataset.paymentStatus || 'pending';
     await addDoc(collection(db, 'bookings'), {
-      date: document.getElementById('travel-date').value,
+      date: travelDateInput.value,
       type: 'travel',
       paymentStatus: paymentStatus
     });
@@ -541,7 +563,7 @@ document.getElementById('airport-service-form').addEventListener('submit', async
   e.preventDefault();
   try {
     await addDoc(collection(db, 'bookings'), {
-      date: document.querySelector('#airport-form input[name="date"]').value,
+      date: airportDateInput.value,
       type: 'airport',
       paymentStatus: 'pending'
     });
@@ -555,33 +577,19 @@ document.getElementById('airport-service-form').addEventListener('submit', async
 // Google Maps Autocomplete Initialization
 function initAutocomplete() {
   try {
-    const dropoffInput = document.getElementById('dropoff-address-input');
-    const airportAddressInput = document.getElementById('airport-address');
-
     if (!window.google || !window.google.maps) {
       console.error('Google Maps API not loaded');
       return;
     }
 
-    const dropoffAutocomplete = new google.maps.places.Autocomplete(dropoffInput, { types: ['address'] });
-    const airportAutocomplete = new google.maps.places.Autocomplete(airportAddressInput, { types: ['address'] });
-
-    dropoffAutocomplete.addListener('place_changed', () => {
-      const place = dropoffAutocomplete.getPlace();
-      if (place && place.formatted_address) {
-        dropoffInput.value = place.formatted_address;
-        console.log('Dropoff address selected:', place.formatted_address);
-        debouncedUpdateCostEstimate();
-      }
+    dropoffAddressInput.addEventListener('gmp-placeselect', () => {
+      console.log('Dropoff address selected:', dropoffAddressInput.value);
+      debouncedUpdateCostEstimate();
     });
 
-    airportAutocomplete.addListener('place_changed', () => {
-      const place = airportAutocomplete.getPlace();
-      if (place && place.formatted_address) {
-        airportAddressInput.value = place.formatted_address;
-        console.log('Airport address selected:', place.formatted_address);
-        debouncedUpdateAirportCostEstimate();
-      }
+    airportAddressInput.addEventListener('gmp-placeselect', () => {
+      console.log('Airport address selected:', airportAddressInput.value);
+      debouncedUpdateAirportCostEstimate();
     });
   } catch (err) {
     console.error('Google Maps Autocomplete Error:', err);
@@ -589,21 +597,25 @@ function initAutocomplete() {
   }
 }
 
-// Global initMap for Google Maps callback
-window.initMap = function() {
-  initAutocomplete();
-  console.log('Google Maps API loaded and initialized');
-};
-
 // Initialize
-window.addEventListener('load', () => {
+function initialize() {
+  setupDOM();
   updateLanguage();
   updateCalendar();
   if (!window.google || !window.google.maps) {
     console.warn('Google Maps API not yet loaded; waiting for initMap callback');
   } else {
-    initMap();
+    initAutocomplete();
   }
-  if (serviceType.value === 'travel') debouncedUpdateCostEstimate();
+  if (serviceTypeSelect.value === 'travel') debouncedUpdateCostEstimate();
   else debouncedUpdateAirportCostEstimate();
-});
+}
+
+// Export for global access
+window.app = {
+  initMap: initAutocomplete,
+  initialize
+};
+
+// Run initialization
+window.addEventListener('load', initialize);

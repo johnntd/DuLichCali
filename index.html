@@ -71,14 +71,14 @@
 
     <form action="https://formspree.io/f/xeokgbpo" method="POST" onsubmit="return handleSubmit(event)">
       <label for="serviceType" id="labelService">Choose Service</label>
-      <select id="serviceType" name="serviceType" onchange="toggleFields()">
+      <select id="serviceType" name="serviceType" onchange="toggleFields(); liveEstimate();">
         <option value="pickup">Pickup from Airport</option>
         <option value="dropoff">Drop-off at Airport</option>
       </select>
 
       <div id="airportDropdown">
         <label for="airport" id="labelAirport">Select Airport</label>
-        <select id="airport" name="airport">
+        <select id="airport" name="airport" onchange="liveEstimate()">
           <option value="John Wayne Airport, Orange County, CA">John Wayne Airport (SNA)</option>
           <option value="Long Beach Airport, Long Beach, CA">Long Beach Airport (LGB)</option>
           <option value="Los Angeles International Airport, Los Angeles, CA">LAX - Los Angeles International Airport</option>
@@ -89,12 +89,12 @@
 
       <div id="pickupField">
         <label for="pickup" id="labelPickup">Pickup Address</label>
-        <input type="text" id="pickup" name="pickup" placeholder="Enter pickup location">
+        <input type="text" id="pickup" name="pickup" placeholder="Enter pickup location" oninput="liveEstimate()">
       </div>
 
       <div id="dropoffField">
         <label for="dropoff" id="labelDropoff">Drop-off Address</label>
-        <input type="text" id="dropoff" name="dropoff" placeholder="Enter drop-off location">
+        <input type="text" id="dropoff" name="dropoff" placeholder="Enter drop-off location" oninput="liveEstimate()">
       </div>
 
       <label for="passengers" id="labelPassengers">Number of Passengers</label>
@@ -139,6 +139,8 @@
     const db = firebase.firestore();
 
     let pickupAutocomplete, dropoffAutocomplete;
+    let currentLang = 'en';
+
     window.onload = () => {
       new google.maps.Map(document.getElementById("map"), {
         center: { lat: 33.6846, lng: -117.8265 },
@@ -168,9 +170,6 @@
         });
       });
     }
-
-    document.getElementById("pickup").addEventListener("input", liveEstimate);
-    document.getElementById("dropoff").addEventListener("input", liveEstimate);
 
     async function liveEstimate() {
       const type = document.getElementById("serviceType").value;
@@ -208,7 +207,10 @@
         priceEstimate: "Giá ước tính sẽ hiển thị ở đây.",
         button: "VI | EN"
       };
-      const lang = document.getElementById("langBtn").textContent.includes("EN") ? vi : en;
+
+      const lang = currentLang === 'en' ? vi : en;
+      currentLang = currentLang === 'en' ? 'vi' : 'en';
+
       document.getElementById("title").textContent = lang.title;
       document.getElementById("contact").textContent = lang.contact;
       document.getElementById("priceEstimate").textContent = lang.priceEstimate;

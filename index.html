@@ -6,6 +6,7 @@
   <title>Dịch Vụ Đưa Đón & Du Lịch California</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&loading=async&callback=initAutocomplete"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -22,7 +23,7 @@
       padding: 2rem;
       border-radius: 10px;
     }
-    input, select, button {
+    input, select, button, gmp-placeautocomplete {
       width: 100%;
       padding: 10px;
       margin-top: 10px;
@@ -36,7 +37,7 @@
     }
     .estimate-display { font-weight: bold; margin-top: 10px; color: lightgreen; }
     #slotWarning { color: yellow; font-weight: bold; }
-    #map { height: 300px; width: 100%; margin-top: 20px; }
+    #map { height: 400px; width: 100%; margin-top: 2rem; border-radius: 10px; }
   </style>
 </head>
 <body>
@@ -63,12 +64,17 @@
           <option value="LAX Airport, Los Angeles, CA">Sân bay LAX</option>
           <option value="Ontario Airport, Ontario, CA">Sân bay Ontario (ONT)</option>
           <option value="Burbank Airport, Burbank, CA">Sân bay Burbank (BUR)</option>
-          <option value="San Diego International Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
+          <option value="San Diego Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
         </select>
       </div>
 
       <label id="addressLabel" for="address">Địa chỉ đến</label>
-      <input type="text" id="address" name="address" placeholder="Nhập địa chỉ đến hoặc đón" required oninput="updateEstimate()">
+      <gmp-placeautocomplete
+        id="address"
+        input="autocompleteInput"
+        placeholder="Nhập địa chỉ đến hoặc đón"
+      ></gmp-placeautocomplete>
+      <input id="autocompleteInput" type="text" style="display: none;" />
 
       <label for="datetime">Ngày và giờ</label>
       <input type="datetime-local" id="datetime" name="datetime" required>
@@ -104,13 +110,8 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let map;
     function initAutocomplete() {
-      const input = document.getElementById('address');
-      if (google.maps.places) {
-        new google.maps.places.PlaceAutocompleteElement({ inputElement: input });
-      }
-      map = new google.maps.Map(document.getElementById("map"), {
+      const map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: 33.6846, lng: -117.8265 },
         zoom: 8,
       });
@@ -123,9 +124,10 @@
     }
 
     function updateEstimate() {
-      const passengers = Math.min(parseInt(document.getElementById('passengers').value) || 1, 12);
+      const passengers = parseInt(document.getElementById('passengers').value) || 1;
       const airport = document.getElementById('airport').value;
-      const address = document.getElementById('address').value;
+      const addressEl = document.querySelector('gmp-placeautocomplete');
+      const address = addressEl && addressEl.value ? addressEl.value : document.getElementById('autocompleteInput').value;
       const serviceType = document.getElementById('serviceType').value;
 
       const origin = serviceType === 'pickup' ? airport : address;
@@ -139,7 +141,12 @@
         destinations: [destination],
         travelMode: google.maps.TravelMode.DRIVING
       }, (response, status) => {
-        try {
+        if (
+          status === 'OK' &&
+          response.rows[0] &&
+          response.rows[0].elements[0] &&
+          response.rows[0].elements[0].status === 'OK'
+        ) {
           const distMeters = response.rows[0].elements[0].distance.value;
           const miles = distMeters / 1609.34;
           let baseCost = miles * 2.5;
@@ -151,22 +158,18 @@
           }
 
           if (miles > 75) {
-            baseCost += miles * 2.5; // Return trip
+            baseCost += miles * 2.5; // Add return trip
           }
 
           const finalCost = Math.round(baseCost);
           document.getElementById('estimateDisplay').innerText = `Chi phí ước tính: $${finalCost}`;
           document.getElementById('vehicleDisplay').innerText = `Xe: ${vehicle}`;
-        } catch (err) {
+        } else {
           document.getElementById('estimateDisplay').innerText = 'Không thể tính khoảng cách';
           document.getElementById('vehicleDisplay').innerText = '';
         }
       });
     }
-  </script>
-  <script
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete"
-    async defer>
   </script>
 </body>
 </html>

@@ -74,7 +74,16 @@
       </div>
 
       <label id="addressLabel" for="address">Địa chỉ đến</label>
-      <input type="text" id="address" name="address" placeholder="Nhập địa chỉ đến hoặc đón" required>
+      
+      <input
+  type="text"
+  id="address"
+  name="address"
+  placeholder="Nhập địa chỉ đến hoặc đón"
+  required
+  oninput="updateEstimate();"
+  onchange="updateEstimate();"
+/>
 
       <label for="datetime">Ngày và giờ</label>
       <input type="datetime-local" id="datetime" name="datetime" required>

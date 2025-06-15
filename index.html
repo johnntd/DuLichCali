@@ -6,7 +6,7 @@
   <title>Dịch Vụ Đưa Đón & Du Lịch California</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&loading=async&callback=initAutocomplete"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete" async defer></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -23,7 +23,7 @@
       padding: 2rem;
       border-radius: 10px;
     }
-    input, select, button, gmp-placeautocomplete {
+    input, select, button {
       width: 100%;
       padding: 10px;
       margin-top: 10px;
@@ -37,50 +37,46 @@
     }
     .estimate-display { font-weight: bold; margin-top: 10px; color: lightgreen; }
     #slotWarning { color: yellow; font-weight: bold; }
-    #map { height: 400px; width: 100%; margin-top: 2rem; border-radius: 10px; }
+    #map {
+      width: 100%;
+      height: 300px;
+      margin-top: 2rem;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Dịch Vụ Đưa Đón & Du Lịch California</h1>
-    <p>
-      <strong>Liên hệ:</strong> Duy Hoa |
-      <a href="tel:7142276007" style="color: #add8e6;">Điện thoại: 714-227-6007</a> |
-      <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>
-    </p>
+    <p><strong>Liên hệ:</strong> Duy Hoa | 
+      <a href="tel:7142276007" style="color: #add8e6;">714-227-6007</a> |
+      <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">dulichcali21@gmail.com</a></p>
 
-    <form id="bookingForm" method="POST" action="https://formspree.io/f/xeokgbpo">
+    <form id="bookingForm">
       <label for="serviceType">Chọn dịch vụ</label>
-      <select id="serviceType" name="serviceType" onchange="toggleServiceType(); updateEstimate();">
-        <option value="pickup">Đón tại sân bay</option>
+      <select id="serviceType" name="serviceType" onchange="toggleAddressLabel(); updateEstimate();">
+        <option value="pickup">Đón từ sân bay</option>
         <option value="dropoff">Đưa đến sân bay</option>
       </select>
 
-      <div id="airportField">
-        <label for="airport">Chọn sân bay</label>
-        <select id="airport" name="airport" onchange="updateEstimate()">
-          <option value="John Wayne Airport, Orange County, CA">Sân bay John Wayne (SNA)</option>
-          <option value="Long Beach Airport, Long Beach, CA">Sân bay Long Beach (LGB)</option>
-          <option value="LAX Airport, Los Angeles, CA">Sân bay LAX</option>
-          <option value="Ontario Airport, Ontario, CA">Sân bay Ontario (ONT)</option>
-          <option value="Burbank Airport, Burbank, CA">Sân bay Burbank (BUR)</option>
-          <option value="San Diego Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
-        </select>
-      </div>
+      <label for="airport">Chọn sân bay</label>
+      <select id="airport" name="airport" onchange="updateEstimate()">
+        <option value="John Wayne Airport, Orange County, CA">Sân bay John Wayne (SNA)</option>
+        <option value="Long Beach Airport, Long Beach, CA">Sân bay Long Beach (LGB)</option>
+        <option value="LAX Airport, Los Angeles, CA">Sân bay LAX</option>
+        <option value="Ontario Airport, Ontario, CA">Sân bay Ontario (ONT)</option>
+        <option value="Burbank Airport, Burbank, CA">Sân bay Burbank (BUR)</option>
+        <option value="San Diego Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
+      </select>
 
-      <label id="addressLabel" for="address">Địa chỉ đến</label>
-      <gmp-placeautocomplete
-        id="address"
-        input="autocompleteInput"
-        placeholder="Nhập địa chỉ đến hoặc đón"
-      ></gmp-placeautocomplete>
-      <input id="autocompleteInput" type="text" style="display: none;" />
+      <label id="addressLabel" for="address">Địa chỉ đón/đến</label>
+      <gmp-placeautocomplete id="address" input-id="autocomplete-input"></gmp-placeautocomplete>
+      <input id="autocomplete-input" name="address" placeholder="Nhập địa chỉ..." required oninput="updateEstimate()" />
 
       <label for="datetime">Ngày và giờ</label>
       <input type="datetime-local" id="datetime" name="datetime" required>
       <div id="slotWarning"></div>
 
-      <label for="passengers">Số hành khách</label>
+      <label for="passengers">Số hành khách (tối đa 12)</label>
       <input type="number" id="passengers" name="passengers" min="1" max="12" required oninput="updateEstimate()">
 
       <div class="estimate-display" id="estimateDisplay">Chi phí ước tính: $0</div>
@@ -94,9 +90,9 @@
 
       <button type="submit">Gửi yêu cầu</button>
     </form>
-
-    <div id="map"></div>
   </div>
+
+  <div id="map"></div>
 
   <script>
     const firebaseConfig = {
@@ -110,43 +106,29 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    function initAutocomplete() {
-      const map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 33.6846, lng: -117.8265 },
-        zoom: 8,
-      });
-    }
-
-    function toggleServiceType() {
-      const type = document.getElementById('serviceType').value;
-      const label = document.getElementById('addressLabel');
-      label.innerText = (type === 'pickup') ? 'Địa chỉ đến' : 'Địa chỉ đón';
+    function toggleAddressLabel() {
+      const label = document.getElementById("addressLabel");
+      const type = document.getElementById("serviceType").value;
+      label.innerText = (type === "pickup") ? "Địa chỉ đến" : "Địa chỉ đón";
     }
 
     function updateEstimate() {
-      const passengers = parseInt(document.getElementById('passengers').value) || 1;
+      const passengers = Math.min(parseInt(document.getElementById('passengers').value) || 1, 12);
       const airport = document.getElementById('airport').value;
-      const addressEl = document.querySelector('gmp-placeautocomplete');
-      const address = addressEl && addressEl.value ? addressEl.value : document.getElementById('autocompleteInput').value;
+      const address = document.getElementById('autocomplete-input').value;
       const serviceType = document.getElementById('serviceType').value;
 
       const origin = serviceType === 'pickup' ? airport : address;
       const destination = serviceType === 'pickup' ? address : airport;
-
       if (!origin || !destination) return;
 
-      const distanceService = new google.maps.DistanceMatrixService();
-      distanceService.getDistanceMatrix({
+      const service = new google.maps.DistanceMatrixService();
+      service.getDistanceMatrix({
         origins: [origin],
         destinations: [destination],
         travelMode: google.maps.TravelMode.DRIVING
       }, (response, status) => {
-        if (
-          status === 'OK' &&
-          response.rows[0] &&
-          response.rows[0].elements[0] &&
-          response.rows[0].elements[0].status === 'OK'
-        ) {
+        if (status === 'OK' && response.rows[0].elements[0].status === 'OK') {
           const distMeters = response.rows[0].elements[0].distance.value;
           const miles = distMeters / 1609.34;
           let baseCost = miles * 2.5;
@@ -157,17 +139,19 @@
             vehicle = 'Mercedes Van';
           }
 
-          if (miles > 75) {
-            baseCost += miles * 2.5; // Add return trip
-          }
-
+          if (miles > 75) baseCost *= 2;
           const finalCost = Math.round(baseCost);
+
           document.getElementById('estimateDisplay').innerText = `Chi phí ước tính: $${finalCost}`;
           document.getElementById('vehicleDisplay').innerText = `Xe: ${vehicle}`;
-        } else {
-          document.getElementById('estimateDisplay').innerText = 'Không thể tính khoảng cách';
-          document.getElementById('vehicleDisplay').innerText = '';
         }
+      });
+    }
+
+    function initAutocomplete() {
+      new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 33.6846, lng: -117.8265 },
+        zoom: 8
       });
     }
   </script>

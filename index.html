@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -121,17 +121,21 @@
       }
     }
 
+    let currentLanguage = 'en';
     function toggleLanguage() {
       const langBtn = document.getElementById('langBtn');
       const title = document.getElementById('title');
       const contact = document.getElementById('contact');
-      if (langBtn.innerText.includes('EN')) {
+
+      if (currentLanguage === 'en') {
+        currentLanguage = 'vi';
         langBtn.innerText = 'VI | EN';
         title.innerText = 'Dịch Vụ Đưa Đón Sân Bay & Du Lịch California';
         contact.innerHTML = `<strong>Liên hệ:</strong> Duy Hoa |
           <a href="tel:7142276007" style="color: #add8e6;">Điện thoại: 714-227-6007</a> |
           <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>`;
       } else {
+        currentLanguage = 'en';
         langBtn.innerText = 'EN | VI';
         title.innerText = 'California Travel & Airport Services';
         contact.innerHTML = `<strong>Contact:</strong> Duy Hoa |

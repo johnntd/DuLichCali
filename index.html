@@ -6,7 +6,7 @@
   <title>Dịch Vụ Đưa Đón & Du Lịch California</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete" async defer></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -29,33 +29,30 @@
       margin-top: 10px;
       border-radius: 5px;
       border: none;
-      box-sizing: border-box;
     }
     label {
       margin-top: 10px;
       display: block;
       font-weight: bold;
     }
-    .row {
-      display: flex;
-      gap: 10px;
-    }
-    .row > div {
-      flex: 1;
-    }
-    .estimate-row {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-    }
     .estimate-display {
       font-weight: bold;
+      margin-top: 10px;
       color: lightgreen;
-      flex: 1;
     }
-    #slotWarning {
-      color: yellow;
-      font-weight: bold;
+    #slotWarning { color: yellow; font-weight: bold; }
+
+    .row-input {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .row-input .half {
+      flex: 1 1 45%;
+    }
+    .row-input .half input {
+      width: 100%;
+      box-sizing: border-box;
     }
     #map {
       height: 300px;
@@ -81,35 +78,36 @@
         <option value="dropoff">Đưa đến sân bay</option>
       </select>
 
-      <label for="airport">Chọn sân bay</label>
-      <select id="airport" name="airport" onchange="updateEstimate()">
-        <option value="John Wayne Airport, Orange County, CA">Sân bay John Wayne (SNA)</option>
-        <option value="Long Beach Airport, Long Beach, CA">Sân bay Long Beach (LGB)</option>
-        <option value="LAX Airport, Los Angeles, CA">Sân bay LAX</option>
-        <option value="Ontario Airport, Ontario, CA">Sân bay Ontario (ONT)</option>
-        <option value="Burbank Airport, Burbank, CA">Sân bay Burbank (BUR)</option>
-        <option value="San Diego International Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
-      </select>
+      <div id="airportField">
+        <label for="airport">Chọn sân bay</label>
+        <select id="airport" name="airport" onchange="updateEstimate()">
+          <option value="John Wayne Airport, Orange County, CA">Sân bay John Wayne (SNA)</option>
+          <option value="Long Beach Airport, Long Beach, CA">Sân bay Long Beach (LGB)</option>
+          <option value="LAX Airport, Los Angeles, CA">Sân bay LAX</option>
+          <option value="Ontario Airport, Ontario, CA">Sân bay Ontario (ONT)</option>
+          <option value="Burbank Airport, Burbank, CA">Sân bay Burbank (BUR)</option>
+          <option value="San Diego International Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
+        </select>
+      </div>
 
       <label id="addressLabel" for="address">Địa chỉ đến</label>
       <input type="text" id="address" name="address" placeholder="Nhập địa chỉ đến hoặc đón" required oninput="updateEstimate()">
 
-      <div class="row">
-        <div>
+      <div class="row-input">
+        <div class="half">
           <label for="datetime">Ngày và giờ</label>
           <input type="datetime-local" id="datetime" name="datetime" required>
         </div>
-        <div>
+        <div class="half">
           <label for="passengers">Số hành khách</label>
           <input type="number" id="passengers" name="passengers" min="1" max="12" required oninput="updateEstimate()">
         </div>
       </div>
-
       <div id="slotWarning"></div>
 
-      <div class="estimate-row">
-        <div class="estimate-display" id="estimateDisplay">Chi phí ước tính: $0</div>
-        <div class="estimate-display" id="vehicleDisplay">Xe: Tesla Model Y</div>
+      <div class="row-input">
+        <div class="half estimate-display" id="estimateDisplay">Chi phí ước tính: $0</div>
+        <div class="half estimate-display" id="vehicleDisplay">Xe: Tesla Model Y</div>
       </div>
 
       <label for="name">Tên của bạn</label>
@@ -120,9 +118,9 @@
 
       <button type="submit">Gửi yêu cầu</button>
     </form>
-  </div>
 
-  <div id="map"></div>
+    <div id="map"></div>
+  </div>
 
   <script>
     const firebaseConfig = {
@@ -136,33 +134,30 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let map;
     function initAutocomplete() {
+      const input = document.getElementById('address');
+      if (google.maps.places) {
+        new google.maps.places.Autocomplete(input);
+      }
       map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: 33.6846, lng: -117.8265 },
-        zoom: 9
+        zoom: 8,
       });
-
-      const input = document.getElementById("address");
-      const autocomplete = new google.maps.places.Autocomplete(input);
-      autocomplete.bindTo("bounds", map);
     }
 
     function toggleServiceType() {
-      const type = document.getElementById("serviceType").value;
-      const label = document.getElementById("addressLabel");
-      label.innerText = (type === "pickup") ? "Địa chỉ đến" : "Địa chỉ đón";
+      const type = document.getElementById('serviceType').value;
+      const label = document.getElementById('addressLabel');
+      label.innerText = (type === 'pickup') ? 'Địa chỉ đến' : 'Địa chỉ đón';
     }
 
     function updateEstimate() {
-      const passengers = Math.min(parseInt(document.getElementById("passengers").value) || 1, 12);
-      document.getElementById("passengers").value = passengers;
-      const airport = document.getElementById("airport").value;
-      const address = document.getElementById("address").value;
-      const serviceType = document.getElementById("serviceType").value;
-
-      const origin = (serviceType === "pickup") ? airport : address;
-      const destination = (serviceType === "pickup") ? address : airport;
+      const passengers = parseInt(document.getElementById('passengers').value) || 1;
+      const airport = document.getElementById('airport').value;
+      const address = document.getElementById('address').value;
+      const serviceType = document.getElementById('serviceType').value;
+      const origin = serviceType === 'pickup' ? airport : address;
+      const destination = serviceType === 'pickup' ? address : airport;
 
       if (!origin || !destination) return;
 
@@ -172,32 +167,22 @@
         destinations: [destination],
         travelMode: google.maps.TravelMode.DRIVING
       }, (response, status) => {
-        if (
-          status === "OK" &&
-          response.rows[0] &&
-          response.rows[0].elements[0] &&
-          response.rows[0].elements[0].status === "OK"
-        ) {
+        if (status === 'OK' && response.rows[0] && response.rows[0].elements[0] && response.rows[0].elements[0].status === 'OK') {
           const distMeters = response.rows[0].elements[0].distance.value;
           const miles = distMeters / 1609.34;
+          let baseCost = miles * 2.5;
+          let vehicle = 'Tesla Model Y';
 
-          let baseCost = 0;
-          let vehicle = "Tesla Model Y";
-
-          if (passengers <= 3) {
-            baseCost = Math.max(40, miles * 2.5);
+          if (passengers > 4) {
+            baseCost = miles > 75 ? Math.max(150, baseCost + 30) : Math.max(100, baseCost + 30);
+            vehicle = 'Mercedes Van';
           } else {
-            vehicle = "Mercedes Van";
-            if (miles > 75) {
-              baseCost = Math.max(150, miles * 2.5 * 2);
-            } else {
-              baseCost = Math.max(100, miles * 2.5);
-            }
+            baseCost = Math.max(40, baseCost);
           }
 
           const finalCost = Math.round(baseCost);
-          document.getElementById("estimateDisplay").innerText = `Chi phí ước tính: $${finalCost}`;
-          document.getElementById("vehicleDisplay").innerText = `Xe: ${vehicle}`;
+          document.getElementById('estimateDisplay').innerText = `Chi phí ước tính: $${finalCost}`;
+          document.getElementById('vehicleDisplay').innerText = `Xe: ${vehicle}`;
         }
       });
     }

@@ -11,7 +11,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
 
   <!-- Google Maps -->
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete"></script>
+  <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete"></script>
 
   <style>
     body {
@@ -112,18 +112,16 @@
       appId: "1:623460884698:web:a08bd435c453a7b4db05e3"
     };
     firebase.initializeApp(firebaseConfig);
-    firebase.appCheck().activate(null, true);
     const db = firebase.firestore();
 
-    // Google Map
     let map;
     function initAutocomplete() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 33.7456, lng: -117.8678 },
+        zoom: 8
+      });
       const input = document.getElementById('address');
       new google.maps.places.Autocomplete(input);
-      map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 33.7456, lng: -117.8678 }, // OC center
-        zoom: 8,
-      });
     }
 
     function toggleServiceType() {
@@ -158,7 +156,7 @@
           }
 
           if (miles > 75) {
-            cost += miles * 2.5;
+            cost += miles * 2.5; // return trip cost
           }
 
           document.getElementById('estimateDisplay').innerText = `Chi phí ước tính: $${Math.round(cost)}`;
@@ -167,7 +165,6 @@
       });
     }
 
-    // Firestore Calendar Block
     document.getElementById("datetime").addEventListener("change", async () => {
       const date = document.getElementById("datetime").value;
       const snapshot = await db.collection("bookings").where("datetime", "==", date).get();

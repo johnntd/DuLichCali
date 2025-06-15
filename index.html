@@ -6,7 +6,6 @@
   <title>Dịch Vụ Đưa Đón & Du Lịch California</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete"></script>
   <style>
     body {
@@ -38,61 +37,40 @@
     }
     .estimate-display { font-weight: bold; margin-top: 10px; color: lightgreen; }
     #slotWarning { color: yellow; font-weight: bold; }
-    #map { height: 300px; margin-top: 20px; border-radius: 10px; }
+    #map { height: 300px; width: 100%; margin-top: 20px; border-radius: 10px; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Dịch Vụ Đưa Đón & Du Lịch California</h1>
-    <p>
-      <strong>Liên hệ:</strong> Duy Hoa |
-      <a href="tel:7142276007" style="color: #add8e6;">Điện thoại: 714-227-6007</a> |
-      <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>
-    </p>
-
-    <form id="bookingForm" method="POST" action="https://formspree.io/f/xeokgbpo">
-      <label for="serviceType">Chọn dịch vụ</label>
-      <select id="serviceType" name="serviceType" onchange="toggleServiceType(); updateEstimate();">
-        <option value="pickup">Đón tại sân bay</option>
+    <form id="bookingForm">
+      <label for="serviceType">Loại dịch vụ</label>
+      <select id="serviceType" onchange="toggleAddressLabel(); updateEstimate();">
+        <option value="pickup">Đón từ sân bay</option>
         <option value="dropoff">Đưa đến sân bay</option>
       </select>
 
-      <div id="airportField">
-        <label for="airport">Chọn sân bay</label>
-        <select id="airport" name="airport" onchange="updateEstimate()">
-          <option value="John Wayne Airport, Orange County, CA">Sân bay John Wayne (SNA)</option>
-          <option value="Long Beach Airport, Long Beach, CA">Sân bay Long Beach (LGB)</option>
-          <option value="LAX Airport, Los Angeles, CA">Sân bay LAX</option>
-          <option value="Ontario Airport, Ontario, CA">Sân bay Ontario (ONT)</option>
-          <option value="Burbank Airport, Burbank, CA">Sân bay Burbank (BUR)</option>
-          <option value="San Diego International Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
-        </select>
-      </div>
+      <label for="airport">Sân bay</label>
+      <select id="airport" onchange="updateEstimate()">
+        <option value="John Wayne Airport, Orange County, CA">Sân bay John Wayne</option>
+        <option value="Long Beach Airport, Long Beach, CA">Sân bay Long Beach</option>
+        <option value="LAX Airport, Los Angeles, CA">Sân bay LAX</option>
+        <option value="Ontario Airport, Ontario, CA">Sân bay Ontario</option>
+        <option value="Burbank Airport, Burbank, CA">Sân bay Burbank</option>
+        <option value="San Diego Airport, San Diego, CA">Sân bay San Diego</option>
+      </select>
 
-      <label id="addressLabel" for="address">Địa chỉ đến</label>
-      <input type="text" id="address" name="address" placeholder="Nhập địa chỉ đến hoặc đón" required oninput="updateEstimate()" onchange="updateEstimate()">
-
-      <label for="datetime">Ngày và giờ</label>
-      <input type="datetime-local" id="datetime" name="datetime" required>
-      <div id="slotWarning"></div>
+      <label id="addressLabel" for="address">Địa chỉ</label>
+      <input id="address" placeholder="Nhập địa chỉ" oninput="updateEstimate()">
 
       <label for="passengers">Số hành khách</label>
-      <input type="number" id="passengers" name="passengers" min="1" max="12" required oninput="updateEstimate()">
+      <input type="number" id="passengers" min="1" max="12" value="1" oninput="updateEstimate()">
 
       <div class="estimate-display" id="estimateDisplay">Chi phí ước tính: $0</div>
       <div class="estimate-display" id="vehicleDisplay">Xe: Tesla Model Y</div>
-
-      <label for="name">Tên của bạn</label>
-      <input type="text" id="name" name="name" required>
-
-      <label for="phone">Số điện thoại</label>
-      <input type="tel" id="phone" name="phone" required>
-
-      <button type="submit">Gửi yêu cầu</button>
     </form>
+    <div id="map"></div>
   </div>
-
-  <div id="map"></div>
 
   <script>
     const firebaseConfig = {
@@ -107,25 +85,22 @@
     const db = firebase.firestore();
 
     let map;
-
     function initAutocomplete() {
       const input = document.getElementById('address');
-      if (google.maps.places) {
-        new google.maps.places.Autocomplete(input);
+      if (google.maps.places && google.maps.places.PlaceAutocompleteElement) {
+        const el = document.createElement('gmp-placeautocomplete');
+        el.setAttribute('input', 'address');
+        document.body.appendChild(el);
       }
-
-      map = new google.maps.Map(document.getElementById('map'), {
-        center: { lat: 33.6846, lng: -117.8265 },
-        zoom: 8
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 33.7455, lng: -117.8677 },
+        zoom: 8,
       });
-
-      setTimeout(updateEstimate, 500);
     }
 
-    function toggleServiceType() {
+    function toggleAddressLabel() {
       const type = document.getElementById('serviceType').value;
-      const label = document.getElementById('addressLabel');
-      label.innerText = (type === 'pickup') ? 'Địa chỉ đến' : 'Địa chỉ đón';
+      document.getElementById('addressLabel').innerText = (type === 'pickup') ? 'Địa chỉ đến' : 'Địa chỉ đón';
     }
 
     function updateEstimate() {
@@ -134,43 +109,40 @@
       const address = document.getElementById('address').value;
       const serviceType = document.getElementById('serviceType').value;
 
-      const origin = serviceType === 'pickup' ? airport : address;
-      const destination = serviceType === 'pickup' ? address : airport;
+      const origin = (serviceType === 'pickup') ? airport : address;
+      const destination = (serviceType === 'pickup') ? address : airport;
 
       if (!origin || !destination) return;
 
-      const distanceService = new google.maps.DistanceMatrixService();
-      distanceService.getDistanceMatrix({
+      new google.maps.DistanceMatrixService().getDistanceMatrix({
         origins: [origin],
         destinations: [destination],
         travelMode: google.maps.TravelMode.DRIVING
       }, (response, status) => {
         if (
           status === 'OK' &&
-          response.rows[0] &&
-          response.rows[0].elements[0] &&
-          response.rows[0].elements[0].status === 'OK'
+          response.rows[0]?.elements[0]?.status === 'OK'
         ) {
           const distMeters = response.rows[0].elements[0].distance.value;
           const miles = distMeters / 1609.34;
-          let baseCost = miles * 2.5;
+
+          let cost = 0;
           let vehicle = 'Tesla Model Y';
 
-          if (passengers > 3) {
-            baseCost += 30;
+          if (passengers <= 3) {
+            cost = Math.max(40, miles * 2.5);
+          } else {
             vehicle = 'Mercedes Van';
+            if (miles <= 75) {
+              cost = Math.max(100, miles * 2.5);
+            } else {
+              cost = Math.max(150, miles * 2.5 * 2); // extra for return
+            }
           }
 
-          if (miles > 75) {
-            baseCost += miles * 2.5; // return trip cost
-          }
-
-          const finalCost = Math.round(baseCost);
+          const finalCost = Math.round(cost);
           document.getElementById('estimateDisplay').innerText = `Chi phí ước tính: $${finalCost}`;
           document.getElementById('vehicleDisplay').innerText = `Xe: ${vehicle}`;
-        } else {
-          document.getElementById('estimateDisplay').innerText = 'Không thể tính khoảng cách';
-          document.getElementById('vehicleDisplay').innerText = '';
         }
       });
     }

@@ -1,13 +1,12 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dịch Vụ Du Lịch & Đưa Đón Sân Bay California</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete" async defer></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -18,7 +17,7 @@
       color: white;
     }
     .container {
-      background-color: rgba(0,0,0,0.7);
+      background-color: rgba(0, 0, 0, 0.7);
       max-width: 700px;
       margin: 2rem auto;
       padding: 2rem;
@@ -36,9 +35,15 @@
       display: block;
       font-weight: bold;
     }
-    .language-toggle { text-align: right; margin-bottom: 10px; }
-    .estimate-display { font-weight: bold; margin-top: 10px; color: lightgreen; }
-    #slotWarning { color: yellow; font-weight: bold; }
+    .language-toggle {
+      text-align: right;
+      margin-bottom: 10px;
+    }
+    .estimate-display {
+      font-weight: bold;
+      margin-top: 10px;
+      color: lightgreen;
+    }
   </style>
 </head>
 <body>
@@ -52,129 +57,121 @@
       <a href="tel:7142276007" style="color: #add8e6;">Điện thoại: 714-227-6007</a> |
       <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>
     </p>
-
-    <form id="bookingForm" method="POST" action="https://formspree.io/f/xeokgbpo">
-      <label for="serviceType" id="label-serviceType">Loại Dịch Vụ</label>
-      <select id="serviceType" name="serviceType" onchange="toggleServiceType(); updateEstimate();">
-        <option value="pickup">Đón từ Sân Bay</option>
-        <option value="dropoff">Đưa đến Sân Bay</option>
+    <form>
+      <label id="serviceLabel" for="serviceType">Loại dịch vụ</label>
+      <select id="serviceType">
+        <option value="pickup">Đón tại sân bay</option>
+        <option value="dropoff">Đưa đến sân bay</option>
       </select>
 
-      <div id="airportField">
-        <label for="airport" id="label-airport">Chọn Sân Bay</label>
-        <select id="airport" name="airport" onchange="updateEstimate()">
-          <option value="John Wayne Airport, Orange County, CA">John Wayne Airport (SNA)</option>
-          <option value="Long Beach Airport, Long Beach, CA">Long Beach Airport (LGB)</option>
-          <option value="LAX Airport, Los Angeles, CA">Los Angeles International (LAX)</option>
-          <option value="Ontario Airport, Ontario, CA">Ontario International (ONT)</option>
-          <option value="Burbank Airport, Burbank, CA">Hollywood Burbank (BUR)</option>
-        </select>
-      </div>
+      <label id="airportLabel" for="airport">Chọn sân bay</label>
+      <select id="airport">
+        <option value="John Wayne Airport, Orange County, CA">John Wayne (SNA)</option>
+        <option value="Long Beach Airport, Long Beach, CA">Long Beach (LGB)</option>
+        <option value="LAX Airport, Los Angeles, CA">LAX</option>
+        <option value="Ontario Airport, Ontario, CA">Ontario (ONT)</option>
+        <option value="Burbank Airport, Burbank, CA">Burbank (BUR)</option>
+      </select>
 
-      <label for="address" id="addressLabel">Địa Chỉ Đưa Đón</label>
-      <input type="text" id="address" name="address" placeholder="Nhập địa chỉ đưa/đón" required oninput="updateEstimate()">
+      <label id="addressLabel" for="address">Địa chỉ đón/trả</label>
+      <input type="text" id="address" placeholder="Nhập địa chỉ" oninput="updateEstimate()">
 
-      <label for="datetime" id="label-datetime">Ngày & Giờ</label>
-      <input type="datetime-local" id="datetime" name="datetime" required>
-      <div id="slotWarning"></div>
+      <label id="datetimeLabel" for="datetime">Ngày và giờ</label>
+      <input type="datetime-local" id="datetime" required>
 
-      <label for="passengers" id="label-passengers">Số Hành Khách</label>
-      <input type="number" id="passengers" name="passengers" min="1" max="12" required oninput="updateEstimate()">
+      <label id="passengerLabel" for="passengers">Số hành khách</label>
+      <input type="number" id="passengers" min="1" max="12" placeholder="Nhập số lượng" required oninput="updateEstimate()">
 
-      <div class="estimate-display" id="estimateDisplay">Chi Phí Dự Tính: $0</div>
-      <div class="estimate-display" id="vehicleDisplay">Phương Tiện: Tesla Model Y</div>
+      <div class="estimate-display" id="estimateDisplay">Giá ước tính: $0</div>
+      <div class="estimate-display" id="vehicleDisplay">Xe: Tesla Model Y</div>
 
-      <label for="name" id="label-name">Tên</label>
-      <input type="text" id="name" name="name" required>
+      <label id="nameLabel" for="name">Tên của bạn</label>
+      <input type="text" id="name" required placeholder="Nhập tên của bạn">
 
-      <label for="phone" id="label-phone">Số Điện Thoại</label>
-      <input type="tel" id="phone" name="phone" required>
+      <label id="phoneLabel" for="phone">Số điện thoại</label>
+      <input type="tel" id="phone" required placeholder="Nhập số điện thoại">
 
-      <button type="submit" id="submitBtn">Đặt Lịch</button>
+      <button type="submit" id="submitBtn">Gửi yêu cầu</button>
     </form>
   </div>
 
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ",
-      authDomain: "dulichcali-booking-calendar.firebaseapp.com",
-      projectId: "dulichcali-booking-calendar",
-      storageBucket: "dulichcali-booking-calendar.firebasestorage.app",
-      messagingSenderId: "623460884698",
-      appId: "1:623460884698:web:a08bd435c453a7b4db05e3"
+    let currentLang = 'vi';
+    const translations = {
+      vi: {
+        title: "Dịch Vụ Du Lịch & Đưa Đón Sân Bay California",
+        contact: `<strong>Liên hệ:</strong> Duy Hoa |
+          <a href="tel:7142276007" style="color: #add8e6;">Điện thoại: 714-227-6007</a> |
+          <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>` ,
+        serviceLabel: "Loại dịch vụ",
+        airportLabel: "Chọn sân bay",
+        addressLabel: "Địa chỉ đón/trả",
+        datetimeLabel: "Ngày và giờ",
+        passengerLabel: "Số hành khách",
+        nameLabel: "Tên của bạn",
+        phoneLabel: "Số điện thoại",
+        estimate: "Giá ước tính",
+        vehicle: "Xe",
+        submitBtn: "Gửi yêu cầu",
+        addressPlaceholder: "Nhập địa chỉ",
+        namePlaceholder: "Nhập tên của bạn",
+        phonePlaceholder: "Nhập số điện thoại",
+        passengersPlaceholder: "Nhập số lượng"
+      },
+      en: {
+        title: "California Travel & Airport Services",
+        contact: `<strong>Contact:</strong> Duy Hoa |
+          <a href="tel:7142276007" style="color: #add8e6;">Phone: 714-227-6007</a> |
+          <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>` ,
+        serviceLabel: "Service Type",
+        airportLabel: "Select Airport",
+        addressLabel: "Pickup/Drop-off Address",
+        datetimeLabel: "Date and Time",
+        passengerLabel: "Number of Passengers",
+        nameLabel: "Your Name",
+        phoneLabel: "Phone Number",
+        estimate: "Estimated Price",
+        vehicle: "Vehicle",
+        submitBtn: "Submit Request",
+        addressPlaceholder: "Enter address",
+        namePlaceholder: "Enter your name",
+        phonePlaceholder: "Enter phone number",
+        passengersPlaceholder: "Enter number"
+      }
     };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+
+    function toggleLanguage() {
+      currentLang = currentLang === 'en' ? 'vi' : 'en';
+      document.getElementById('langBtn').innerText = currentLang === 'en' ? 'EN | VI' : 'VI | EN';
+      document.getElementById('title').innerText = translations[currentLang].title;
+      document.getElementById('contact').innerHTML = translations[currentLang].contact;
+      document.getElementById('serviceLabel').innerText = translations[currentLang].serviceLabel;
+      document.getElementById('airportLabel').innerText = translations[currentLang].airportLabel;
+      document.getElementById('addressLabel').innerText = translations[currentLang].addressLabel;
+      document.getElementById('datetimeLabel').innerText = translations[currentLang].datetimeLabel;
+      document.getElementById('passengerLabel').innerText = translations[currentLang].passengerLabel;
+      document.getElementById('nameLabel').innerText = translations[currentLang].nameLabel;
+      document.getElementById('phoneLabel').innerText = translations[currentLang].phoneLabel;
+      document.getElementById('submitBtn').innerText = translations[currentLang].submitBtn;
+      document.getElementById('address').placeholder = translations[currentLang].addressPlaceholder;
+      document.getElementById('name').placeholder = translations[currentLang].namePlaceholder;
+      document.getElementById('phone').placeholder = translations[currentLang].phonePlaceholder;
+      document.getElementById('passengers').placeholder = translations[currentLang].passengersPlaceholder;
+      updateEstimate();
+    }
 
     function initAutocomplete() {
       if (google.maps.places) {
-        const input = document.getElementById("address");
-        new google.maps.places.Autocomplete(input);
+        new google.maps.places.Autocomplete(document.getElementById('address'));
       }
     }
 
-    let lang = 'vi';
-    function toggleLanguage() {
-      lang = lang === 'vi' ? 'en' : 'vi';
-      const isVI = lang === 'vi';
-
-      document.getElementById("langBtn").innerText = isVI ? "VI | EN" : "EN | VI";
-      document.getElementById("title").innerText = isVI ? "Dịch Vụ Du Lịch & Đưa Đón Sân Bay California" : "California Travel & Airport Services";
-      document.getElementById("contact").innerHTML = isVI
-        ? '<strong>Liên hệ:</strong> Duy Hoa | <a href="tel:7142276007" style="color: #add8e6;">Điện thoại: 714-227-6007</a> | <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>'
-        : '<strong>Contact:</strong> Duy Hoa | <a href="tel:7142276007" style="color: #add8e6;">Phone: 714-227-6007</a> | <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>';
-
-      document.getElementById("label-serviceType").innerText = isVI ? "Loại Dịch Vụ" : "Service Type";
-      document.getElementById("label-airport").innerText = isVI ? "Chọn Sân Bay" : "Select Airport";
-      document.getElementById("addressLabel").innerText = isVI ? "Địa Chỉ Đưa Đón" : "Pickup/Drop-off Address";
-      document.getElementById("label-datetime").innerText = isVI ? "Ngày & Giờ" : "Date & Time";
-      document.getElementById("label-passengers").innerText = isVI ? "Số Hành Khách" : "Number of Passengers";
-      document.getElementById("label-name").innerText = isVI ? "Tên" : "Name";
-      document.getElementById("label-phone").innerText = isVI ? "Số Điện Thoại" : "Phone Number";
-      document.getElementById("submitBtn").innerText = isVI ? "Đặt Lịch" : "Submit Booking";
-    }
-
-    function toggleServiceType() {
-      const service = document.getElementById("serviceType").value;
-      const label = document.getElementById("addressLabel");
-      label.innerText = lang === "vi"
-        ? service === "pickup" ? "Địa Chỉ Về" : "Địa Chỉ Đón"
-        : service === "pickup" ? "Drop-off Address" : "Pickup Address";
-    }
-
     function updateEstimate() {
-      const passengers = parseInt(document.getElementById("passengers").value) || 1;
-      const airport = document.getElementById("airport").value;
-      const address = document.getElementById("address").value;
-      const type = document.getElementById("serviceType").value;
-
-      const origin = type === 'pickup' ? airport : address;
-      const destination = type === 'pickup' ? address : airport;
-
-      if (!origin || !destination || origin === destination) return;
-
-      const service = new google.maps.DistanceMatrixService();
-      service.getDistanceMatrix({
-        origins: [origin],
-        destinations: [destination],
-        travelMode: 'DRIVING'
-      }, (resp, stat) => {
-        if (stat === 'OK') {
-          const dist = resp.rows[0].elements[0].distance.value / 1609.34;
-          let cost = dist * 2.5 * 0.9;
-          let vehicle = 'Tesla Model Y';
-
-          if (passengers > 3) {
-            cost += 30;
-            vehicle = 'Mercedes Van';
-          }
-
-          if (dist > 75) cost += dist * 2.5 * 0.9;
-
-          document.getElementById("estimateDisplay").innerText = (lang === 'vi' ? 'Chi Phí Dự Tính: $' : 'Estimated Price: $') + Math.round(cost);
-          document.getElementById("vehicleDisplay").innerText = (lang === 'vi' ? 'Phương Tiện: ' : 'Vehicle: ') + vehicle;
-        }
-      });
+      const passengers = parseInt(document.getElementById('passengers').value) || 1;
+      const vehicle = passengers > 3 ? 'Mercedes Van' : 'Tesla Model Y';
+      document.getElementById('vehicleDisplay').innerText = `${translations[currentLang].vehicle}: ${vehicle}`;
+      document.getElementById('estimateDisplay').innerText = `${translations[currentLang].estimate}: đang tính...`;
+      // Add real Google Distance Matrix API logic if desired
     }
   </script>
 </body>

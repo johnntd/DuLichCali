@@ -37,51 +37,37 @@
     }
     .estimate-display { font-weight: bold; margin-top: 10px; color: lightgreen; }
     #slotWarning { color: yellow; font-weight: bold; }
-    #map {
-      width: 100%;
-      height: 300px;
-      margin-top: 20px;
-      border-radius: 10px;
-    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Dịch Vụ Đưa Đón & Du Lịch California</h1>
-    <p>
-      <strong>Liên hệ:</strong> Duy Hoa |
-      <a href="tel:7142276007" style="color: #add8e6;">Điện thoại: 714-227-6007</a> |
-      <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>
-    </p>
-
-    <form id="bookingForm" method="POST" action="https://formspree.io/f/xeokgbpo">
+    <form id="bookingForm">
       <label for="serviceType">Chọn dịch vụ</label>
-      <select id="serviceType" name="serviceType" onchange="toggleServiceType(); updateEstimate();">
-        <option value="pickup">Đón tại sân bay</option>
+      <select id="serviceType" name="serviceType" onchange="toggleAddressLabel(); updateEstimate();">
+        <option value="pickup">Đón từ địa chỉ</option>
         <option value="dropoff">Đưa đến sân bay</option>
       </select>
 
-      <div id="airportField">
-        <label for="airport">Chọn sân bay</label>
-        <select id="airport" name="airport" onchange="updateEstimate()">
-          <option value="John Wayne Airport, Orange County, CA">Sân bay John Wayne (SNA)</option>
-          <option value="Long Beach Airport, Long Beach, CA">Sân bay Long Beach (LGB)</option>
-          <option value="LAX Airport, Los Angeles, CA">Sân bay LAX</option>
-          <option value="Ontario Airport, Ontario, CA">Sân bay Ontario (ONT)</option>
-          <option value="Burbank Airport, Burbank, CA">Sân bay Burbank (BUR)</option>
-          <option value="San Diego International Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
-        </select>
-      </div>
+      <label for="airport">Chọn sân bay</label>
+      <select id="airport" name="airport" onchange="updateEstimate()">
+        <option value="John Wayne Airport, Orange County, CA">John Wayne (SNA)</option>
+        <option value="Long Beach Airport, Long Beach, CA">Long Beach (LGB)</option>
+        <option value="LAX Airport, Los Angeles, CA">LAX</option>
+        <option value="Ontario Airport, Ontario, CA">Ontario (ONT)</option>
+        <option value="Burbank Airport, Burbank, CA">Burbank (BUR)</option>
+        <option value="San Diego Airport, San Diego, CA">San Diego (SAN)</option>
+      </select>
 
-      <label id="addressLabel" for="address">Địa chỉ đến</label>
-      <input type="text" id="address" name="address" placeholder="Nhập địa chỉ đến hoặc đón" required oninput="updateEstimate()">
+      <label id="addressLabel" for="address">Địa chỉ đón</label>
+      <input type="text" id="address" name="address" required oninput="updateEstimate()">
 
       <label for="datetime">Ngày và giờ</label>
       <input type="datetime-local" id="datetime" name="datetime" required>
       <div id="slotWarning"></div>
 
       <label for="passengers">Số hành khách</label>
-      <input type="number" id="passengers" name="passengers" min="1" max="12" required oninput="updateEstimate()">
+      <input type="number" id="passengers" name="passengers" min="1" max="12" required oninput="validatePassenger(); updateEstimate()">
 
       <div class="estimate-display" id="estimateDisplay">Chi phí ước tính: $0</div>
       <div class="estimate-display" id="vehicleDisplay">Xe: Tesla Model Y</div>
@@ -94,8 +80,6 @@
 
       <button type="submit">Gửi yêu cầu</button>
     </form>
-
-    <div id="map"></div>
   </div>
 
   <script>
@@ -110,36 +94,25 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let map;
-    function initAutocomplete() {
-      map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 33.6846, lng: -117.8265 },
-        zoom: 8,
-      });
-      const input = document.getElementById("address");
-      const autocomplete = new google.maps.places.Autocomplete(input);
+    function validatePassenger() {
+      const input = document.getElementById('passengers');
+      if (parseInt(input.value) > 12) input.value = 12;
     }
 
-    function toggleServiceType() {
+    function toggleAddressLabel() {
       const type = document.getElementById('serviceType').value;
       const label = document.getElementById('addressLabel');
       label.innerText = (type === 'pickup') ? 'Địa chỉ đến' : 'Địa chỉ đón';
     }
 
     function updateEstimate() {
-      const passengersInput = document.getElementById('passengers');
-      const airportInput = document.getElementById('airport');
-      const addressInput = document.getElementById('address');
-
-      if (!passengersInput || !airportInput || !addressInput) return;
-
-      const passengers = Math.min(parseInt(passengersInput.value) || 1, 12);
-      const airport = airportInput.value;
-      const address = addressInput.value;
+      const passengers = parseInt(document.getElementById('passengers').value) || 1;
+      const airport = document.getElementById('airport').value;
+      const address = document.getElementById('address').value;
       const serviceType = document.getElementById('serviceType').value;
 
-      const origin = serviceType === 'pickup' ? airport : address;
-      const destination = serviceType === 'pickup' ? address : airport;
+      const origin = serviceType === 'pickup' ? address : airport;
+      const destination = serviceType === 'pickup' ? airport : address;
 
       if (!origin || !destination) return;
 
@@ -151,12 +124,13 @@
       }, (response, status) => {
         if (
           status === 'OK' &&
-          response.rows[0]?.elements[0]?.status === 'OK'
+          response.rows[0] &&
+          response.rows[0].elements[0] &&
+          response.rows[0].elements[0].status === 'OK'
         ) {
           const distMeters = response.rows[0].elements[0].distance.value;
           const miles = distMeters / 1609.34;
-
-          let baseCost = miles * 2.5;
+          let baseCost = miles * 2.5; // No discount
           let vehicle = 'Tesla Model Y';
 
           if (passengers > 3) {
@@ -165,7 +139,7 @@
           }
 
           if (miles > 75) {
-            baseCost += miles * 2.5;
+            baseCost += miles * 2.5; // Round trip cost
           }
 
           const finalCost = Math.round(baseCost);
@@ -176,6 +150,13 @@
           document.getElementById('vehicleDisplay').innerText = '';
         }
       });
+    }
+
+    function initAutocomplete() {
+      const input = document.getElementById('address');
+      if (google.maps.places) {
+        new google.maps.places.Autocomplete(input);
+      }
     }
   </script>
 </body>

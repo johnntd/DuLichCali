@@ -6,7 +6,8 @@
   <title>Dịch Vụ Đưa Đón & Du Lịch California</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete" async defer></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -37,12 +38,7 @@
     }
     .estimate-display { font-weight: bold; margin-top: 10px; color: lightgreen; }
     #slotWarning { color: yellow; font-weight: bold; }
-    #map {
-      width: 100%;
-      height: 300px;
-      margin-top: 2rem;
-      border-radius: 10px;
-    }
+    #map { height: 300px; margin-top: 20px; border-radius: 10px; }
   </style>
 </head>
 <body>
@@ -69,7 +65,7 @@
           <option value="LAX Airport, Los Angeles, CA">Sân bay LAX</option>
           <option value="Ontario Airport, Ontario, CA">Sân bay Ontario (ONT)</option>
           <option value="Burbank Airport, Burbank, CA">Sân bay Burbank (BUR)</option>
-          <option value="San Diego Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
+          <option value="San Diego International Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
         </select>
       </div>
 
@@ -111,15 +107,19 @@
     const db = firebase.firestore();
 
     let map;
+
     function initAutocomplete() {
       const input = document.getElementById('address');
       if (google.maps.places) {
         new google.maps.places.Autocomplete(input);
       }
+
       map = new google.maps.Map(document.getElementById('map'), {
         center: { lat: 33.6846, lng: -117.8265 },
         zoom: 8
       });
+
+      setTimeout(updateEstimate, 500);
     }
 
     function toggleServiceType() {
@@ -129,7 +129,7 @@
     }
 
     function updateEstimate() {
-      const passengers = parseInt(document.getElementById('passengers').value) || 1;
+      const passengers = Math.min(parseInt(document.getElementById('passengers').value) || 1, 12);
       const airport = document.getElementById('airport').value;
       const address = document.getElementById('address').value;
       const serviceType = document.getElementById('serviceType').value;
@@ -140,43 +140,39 @@
       if (!origin || !destination) return;
 
       const distanceService = new google.maps.DistanceMatrixService();
-      distanceService.getDistanceMatrix(
-        {
-          origins: [origin],
-          destinations: [destination],
-          travelMode: google.maps.TravelMode.DRIVING
-        },
-        (response, status) => {
-          if (
-            status === 'OK' &&
-            response.rows[0] &&
-            response.rows[0].elements[0] &&
-            response.rows[0].elements[0].status === 'OK'
-          ) {
-            const distMeters = response.rows[0].elements[0].distance.value;
-            const miles = distMeters / 1609.34;
+      distanceService.getDistanceMatrix({
+        origins: [origin],
+        destinations: [destination],
+        travelMode: google.maps.TravelMode.DRIVING
+      }, (response, status) => {
+        if (
+          status === 'OK' &&
+          response.rows[0] &&
+          response.rows[0].elements[0] &&
+          response.rows[0].elements[0].status === 'OK'
+        ) {
+          const distMeters = response.rows[0].elements[0].distance.value;
+          const miles = distMeters / 1609.34;
+          let baseCost = miles * 2.5;
+          let vehicle = 'Tesla Model Y';
 
-            let baseCost = miles * 2.5;
-            let vehicle = 'Tesla Model Y';
-
-            if (passengers > 3) {
-              baseCost += 30;
-              vehicle = 'Mercedes Van';
-            }
-
-            if (miles > 75) {
-              baseCost += miles * 2.5; // Round trip extra
-            }
-
-            const finalCost = Math.round(baseCost);
-            document.getElementById('estimateDisplay').innerText = `Chi phí ước tính: $${finalCost}`;
-            document.getElementById('vehicleDisplay').innerText = `Xe: ${vehicle}`;
-          } else {
-            document.getElementById('estimateDisplay').innerText = 'Không thể tính khoảng cách';
-            document.getElementById('vehicleDisplay').innerText = '';
+          if (passengers > 3) {
+            baseCost += 30;
+            vehicle = 'Mercedes Van';
           }
+
+          if (miles > 75) {
+            baseCost += miles * 2.5; // return trip cost
+          }
+
+          const finalCost = Math.round(baseCost);
+          document.getElementById('estimateDisplay').innerText = `Chi phí ước tính: $${finalCost}`;
+          document.getElementById('vehicleDisplay').innerText = `Xe: ${vehicle}`;
+        } else {
+          document.getElementById('estimateDisplay').innerText = 'Không thể tính khoảng cách';
+          document.getElementById('vehicleDisplay').innerText = '';
         }
-      );
+      });
     }
   </script>
 </body>

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>California Travel & Airport Services</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -35,32 +35,11 @@
       display: block;
       font-weight: bold;
     }
-    #map { height: 300px; margin-top: 10px; }
-    .language-toggle {
-      text-align: right;
-      margin-bottom: 10px;
-    }
-    #adminSection {
-      background-color: rgba(255,255,255,0.1);
-      padding: 1rem;
-      margin-top: 2rem;
-      border-radius: 10px;
-      display: none;
-    }
-    #bookingList {
-      background-color: white;
-      color: black;
-      padding: 10px;
-      border-radius: 8px;
-      margin-top: 10px;
-      max-height: 300px;
-      overflow-y: auto;
-    }
-    #slotWarning {
-      color: yellow;
-      font-weight: bold;
-      margin-top: 10px;
-    }
+    #map { height: 250px; margin-top: 10px; }
+    .language-toggle { text-align: right; margin-bottom: 10px; }
+    #slotWarning { color: yellow; font-weight: bold; }
+    #adminSection { margin-top: 20px; display: none; }
+    #bookingList { background: white; color: black; padding: 10px; border-radius: 10px; max-height: 300px; overflow-y: auto; }
   </style>
 </head>
 <body>
@@ -69,66 +48,64 @@
       <button onclick="toggleLanguage()" id="langBtn">EN | VI</button>
     </div>
     <h1 id="title">California Travel & Airport Services</h1>
+    <p id="contact">
+      <strong>Contact:</strong> Duy Hoa |
+      <a href="tel:7142276007" style="color: #add8e6;">Phone: 714-227-6007</a> |
+      <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>
+    </p>
 
-<p id="contact">
-  <strong>Contact:</strong> Duy Hoa | 
-  <a href="tel:7142276007" style="color: #add8e6;">Phone: 714-227-6007</a> | 
-  <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>
-</p>
     <form action="https://formspree.io/f/xeokgbpo" method="POST" onsubmit="return handleSubmit(event)">
-      <label for="serviceType" id="labelService">Choose Service</label>
-      <select id="serviceType" name="serviceType" onchange="toggleFields()">
+      <label for="serviceType">Service Type:</label>
+      <select id="serviceType" name="serviceType">
         <option value="pickup">Pickup from Airport</option>
         <option value="dropoff">Drop-off at Airport</option>
       </select>
 
-      <div id="airportDropdown">
-        <label for="airport" id="labelAirport">Select Airport</label>
-        <select id="airport" name="airport" onchange="liveEstimate()">
-          <option value="John Wayne Airport, Orange County, CA">John Wayne Airport (SNA)</option>
-          <option value="Long Beach Airport, Long Beach, CA">Long Beach Airport (LGB)</option>
-          <option value="Los Angeles International Airport, Los Angeles, CA">LAX - Los Angeles International Airport</option>
-          <option value="Ontario International Airport, Ontario, CA">Ontario International Airport (ONT)</option>
-          <option value="Hollywood Burbank Airport, Burbank, CA">Hollywood Burbank Airport (BUR)</option>
-        </select>
-      </div>
+      <label for="airport">Airport:</label>
+      <select id="airport" name="airport">
+        <option value="John Wayne Airport, CA">John Wayne Airport (SNA)</option>
+        <option value="Long Beach Airport, CA">Long Beach Airport (LGB)</option>
+        <option value="Los Angeles International Airport, CA">LAX</option>
+        <option value="Ontario International Airport, CA">Ontario Airport (ONT)</option>
+        <option value="Hollywood Burbank Airport, CA">Burbank Airport (BUR)</option>
+      </select>
 
       <div id="pickupField">
-        <label for="pickup" id="labelPickup">Pickup Address</label>
-        <input type="text" id="pickup" name="pickup" placeholder="Enter pickup location">
+        <label for="pickup">Pickup Address:</label>
+        <input type="text" id="pickup" name="pickup"/>
       </div>
 
-      <div id="dropoffField">
-        <label for="dropoff" id="labelDropoff">Drop-off Address</label>
-        <input type="text" id="dropoff" name="dropoff" placeholder="Enter drop-off location">
+      <div id="dropoffField" style="display:none;">
+        <label for="dropoff">Drop-off Address:</label>
+        <input type="text" id="dropoff" name="dropoff"/>
       </div>
 
-      <label for="passengers" id="labelPassengers">Number of Passengers</label>
-      <input type="number" id="passengers" name="passengers" min="1" max="12" value="1" onchange="liveEstimate()">
+      <label for="datetime">Pickup/Drop-off Date & Time:</label>
+      <input type="datetime-local" id="datetime" name="datetime" required/>
 
-      <label for="datetime" id="labelDatetime">Pickup Date and Time</label>
-      <input type="datetime-local" id="datetime" name="datetime" onchange="checkSlotAvailability()">
-      <div id="slotWarning"></div>
+      <label for="passengers">Number of Passengers (1–12):</label>
+      <input type="number" id="passengers" name="passengers" min="1" max="12" value="1"/>
 
-      <label for="name" id="labelName">Your Name</label>
-      <input type="text" id="name" name="name" placeholder="Enter your name">
-
-      <label for="phone" id="labelPhone">Phone Number</label>
-      <input type="tel" id="phone" name="phone" placeholder="Enter phone number">
+      <p id="vehicleEstimate">Vehicle:</p>
+      <input type="hidden" id="vehicle" name="vehicle"/>
 
       <p id="priceEstimate">Estimated price will appear here.</p>
-      <p id="vehicleEstimate">Vehicle: </p>
+      <input type="hidden" id="price" name="estimatedPrice"/>
 
-      <input type="hidden" id="vehicle" name="vehicle" />
-      <input type="hidden" id="price" name="price" />
+      <div id="slotWarning"></div>
 
-      <button type="submit" id="bookNow">Book Now</button>
+      <label for="name">Your Name:</label>
+      <input type="text" id="name" name="name" required/>
+
+      <label for="phone">Phone Number:</label>
+      <input type="tel" id="phone" name="phone" required/>
+
+      <button type="submit">Submit Booking</button>
     </form>
 
     <div id="map"></div>
 
     <div id="adminSection">
-      <h2>Admin Booking Dashboard</h2>
       <button onclick="loadBookings()">Load Bookings</button>
       <div id="bookingList"></div>
     </div>
@@ -145,8 +122,6 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-
-    let pickupAutocomplete, dropoffAutocomplete;
     let currentLang = 'en';
 
     window.onload = () => {
@@ -154,10 +129,20 @@
         center: { lat: 33.6846, lng: -117.8265 },
         zoom: 10
       });
-      pickupAutocomplete = new google.maps.places.Autocomplete(document.getElementById("pickup"));
-      dropoffAutocomplete = new google.maps.places.Autocomplete(document.getElementById("dropoff"));
-      pickupAutocomplete.addListener("place_changed", liveEstimate);
-      dropoffAutocomplete.addListener("place_changed", liveEstimate);
+
+      const pickupInput = document.getElementById("pickup");
+      const dropoffInput = document.getElementById("dropoff");
+      new google.maps.places.Autocomplete(pickupInput).addListener("place_changed", liveEstimate);
+      new google.maps.places.Autocomplete(dropoffInput).addListener("place_changed", liveEstimate);
+
+      document.getElementById("passengers").addEventListener("input", liveEstimate);
+      document.getElementById("serviceType").addEventListener("change", () => {
+        toggleFields(); liveEstimate();
+      });
+      document.getElementById("datetime").addEventListener("change", () => {
+        checkSlotAvailability(); liveEstimate();
+      });
+
       toggleFields();
     };
 
@@ -165,7 +150,6 @@
       const type = document.getElementById("serviceType").value;
       document.getElementById("pickupField").style.display = type === 'dropoff' ? 'block' : 'none';
       document.getElementById("dropoffField").style.display = type === 'pickup' ? 'block' : 'none';
-      liveEstimate();
     }
 
     async function calculateEstimate(pickup, dropoff, passengers, datetimeStr) {
@@ -179,18 +163,13 @@
           const distMiles = res.rows[0].elements[0].distance.value / 1609.34;
           let basePrice = distMiles * 2.5 * 0.9;
           if (passengers > 3) basePrice += 30;
-
           const dt = new Date(datetimeStr);
           const hour = dt.getHours();
           const holidays = ['1/1', '7/4', '12/25'];
-          const isLate = hour < 6 || hour > 21;
-          const todayStr = `${dt.getMonth() + 1}/${dt.getDate()}`;
-          const isHoliday = holidays.includes(todayStr);
-          if (isLate || isHoliday) basePrice += 20;
-
+          const todayStr = `${dt.getMonth()+1}/${dt.getDate()}`;
+          if (hour < 6 || hour > 21 || holidays.includes(todayStr)) basePrice += 20;
           if (distMiles > 75) basePrice += distMiles * 1.25;
-
-          resolve(basePrice.toFixed(2));
+          resolve({ price: basePrice.toFixed(2), distMiles });
         });
       });
     }
@@ -200,14 +179,16 @@
       const airport = document.getElementById("airport").value;
       const pickup = type === 'pickup' ? airport : document.getElementById("pickup").value;
       const dropoff = type === 'pickup' ? document.getElementById("dropoff").value : airport;
-      const passengers = parseInt(document.getElementById("passengers").value);
+      const passengers = parseInt(document.getElementById("passengers").value || 1);
       const datetime = document.getElementById("datetime").value;
-      if (!pickup || !dropoff || !datetime || pickup.trim() === '' || dropoff.trim() === '') return;
+      if (!pickup || !dropoff || !datetime) return;
+
+      const vehicle = passengers > 3 ? "Mercedes Van" : "Tesla Model Y";
+      document.getElementById("vehicleEstimate").textContent = `Vehicle: ${vehicle}`;
+      document.getElementById("vehicle").value = vehicle;
+
       try {
-        const vehicle = passengers > 3 ? "Mercedes Van" : "Tesla Model Y";
-        document.getElementById("vehicleEstimate").textContent = `Vehicle: ${vehicle}`;
-        document.getElementById("vehicle").value = vehicle;
-        const price = await calculateEstimate(pickup, dropoff, passengers, datetime);
+        const { price } = await calculateEstimate(pickup, dropoff, passengers, datetime);
         document.getElementById("priceEstimate").textContent = `Estimated Price: $${price}`;
         document.getElementById("price").value = price;
       } catch (err) {
@@ -221,41 +202,39 @@
       warning.textContent = "";
       if (!datetime) return;
       const snapshot = await db.collection("bookings").where("datetime", "==", datetime).get();
-      if (!snapshot.empty) {
-        warning.textContent = "⚠️ This time slot is already booked. Please choose another.";
-      }
-      liveEstimate();
+      if (!snapshot.empty) warning.textContent = "⚠️ This time slot is already booked.";
     }
 
     function handleSubmit(e) {
       e.preventDefault();
-      const warning = document.getElementById("slotWarning").textContent;
-      if (warning) return alert("Please choose an available time slot.");
-      const passengers = parseInt(document.getElementById("passengers").value);
-      const vehicle = passengers > 3 ? "Mercedes Van" : "Tesla Model Y";
-      document.getElementById("vehicle").value = vehicle;
+      if (document.getElementById("slotWarning").textContent) {
+        alert("This time slot is already taken.");
+        return false;
+      }
       e.target.submit();
     }
 
     function toggleLanguage() {
       const en = {
         title: "California Travel & Airport Services",
-        contact: "Contact: Duy Hoa | Phone: 714-227-6007 | Email: dulichcali21@gmail.com",
+        contact: `<strong>Contact:</strong> Duy Hoa | 
+          <a href='tel:7142276007' style='color: #add8e6;'>Phone: 714-227-6007</a> | 
+          <a href='mailto:dulichcali21@gmail.com' style='color: #add8e6;'>Email: dulichcali21@gmail.com</a>`,
         priceEstimate: "Estimated price will appear here.",
         button: "EN | VI"
       };
       const vi = {
         title: "Dịch Vụ Đưa Đón Sân Bay & Du Lịch California",
-        contact: "Liên hệ: Duy Hoa | Điện thoại: 714-227-6007 | Email: dulichcali21@gmail.com",
+        contact: `<strong>Liên hệ:</strong> Duy Hoa | 
+          <a href='tel:7142276007' style='color: #add8e6;'>Điện thoại: 714-227-6007</a> | 
+          <a href='mailto:dulichcali21@gmail.com' style='color: #add8e6;'>Email: dulichcali21@gmail.com</a>`,
         priceEstimate: "Giá ước tính sẽ hiển thị ở đây.",
         button: "VI | EN"
       };
-
       const lang = currentLang === 'en' ? vi : en;
       currentLang = currentLang === 'en' ? 'vi' : 'en';
-
       document.getElementById("title").textContent = lang.title;
-      document.getElementById("contact").textContent = lang.contact;
+      document.getElementById("contact").innerHTML = lang.contact;
       document.getElementById("priceEstimate").textContent = lang.priceEstimate;
       document.getElementById("langBtn").textContent = lang.button;
     }

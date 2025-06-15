@@ -111,7 +111,7 @@
       appId: "1:925284621075:web:65e6125a1bed22206dd8e6"
     };
     firebase.initializeApp(firebaseConfig);
-    firebase.appCheck().activate('6LcqYmArAAAAAJifqnY4dXLf4D7ETfcTX6rOBYAN', true); // bypass token during dev
+    firebase.appCheck().activate('6LcqYmArAAAAAJifqnY4dXLf4D7ETfcTX6rOBYAN', true);
     const db = firebase.firestore();
 
     function initAutocomplete() {
@@ -121,7 +121,11 @@
       }
     }
 
-    let currentLanguage = 'en';
+    let currentLanguage = localStorage.getItem('language') || 'vi';
+    window.onload = () => {
+      if (currentLanguage === 'vi') toggleLanguage();
+    };
+
     function toggleLanguage() {
       const langBtn = document.getElementById('langBtn');
       const title = document.getElementById('title');
@@ -142,15 +146,16 @@
           <a href="tel:7142276007" style="color: #add8e6;">Phone: 714-227-6007</a> |
           <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>`;
       }
+      localStorage.setItem('language', currentLanguage);
     }
 
     function toggleServiceType() {
       const type = document.getElementById('serviceType').value;
       const label = document.getElementById('addressLabel');
       if (type === 'pickup') {
-        label.innerText = 'Drop-off Address';
+        label.innerText = currentLanguage === 'vi' ? 'Địa chỉ đến' : 'Drop-off Address';
       } else {
-        label.innerText = 'Pickup Address';
+        label.innerText = currentLanguage === 'vi' ? 'Địa chỉ đón' : 'Pickup Address';
       }
     }
 
@@ -186,16 +191,16 @@
             baseCost += 30;
             vehicle = 'Mercedes Van';
           }
-          
+
           if (miles > 75) {
-            baseCost += miles * 2.5 * 0.9; // return trip charge
+            baseCost += miles * 2.5 * 0.9; // Return trip
           }
-          
+
           const finalCost = Math.round(baseCost);
-          document.getElementById('estimateDisplay').innerText = `Estimated Price: $${finalCost}`;
-          document.getElementById('vehicleDisplay').innerText = `Vehicle: ${vehicle}`;
+          document.getElementById('estimateDisplay').innerText = `${currentLanguage === 'vi' ? 'Giá dự kiến' : 'Estimated Price'}: $${finalCost}`;
+          document.getElementById('vehicleDisplay').innerText = `${currentLanguage === 'vi' ? 'Phương tiện' : 'Vehicle'}: ${vehicle}`;
         } else {
-          document.getElementById('estimateDisplay').innerText = 'Unable to calculate distance.';
+          document.getElementById('estimateDisplay').innerText = currentLanguage === 'vi' ? 'Không thể tính khoảng cách.' : 'Unable to calculate distance.';
           document.getElementById('vehicleDisplay').innerText = '';
         }
       });

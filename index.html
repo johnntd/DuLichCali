@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dịch Vụ Du Lịch & Đón Trả Sân Bay California</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dịch Vụ Du Lịch & Đưa Đón California</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places"></script>
+  <script src="https://unpkg.com/@googlemaps/places@1.2.0/dist/index.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -24,7 +25,7 @@
       padding: 2rem;
       border-radius: 10px;
     }
-    input, select, button {
+    input, select, button, gmpx-placeautocomplete {
       width: 100%;
       padding: 10px;
       margin-top: 10px;
@@ -48,24 +49,61 @@
     <div class="language-toggle">
       <button onclick="toggleLanguage()" id="langBtn">VI | EN</button>
     </div>
-    <h1 id="title">Dịch Vụ Đón Trả Sân Bay & Du Lịch California</h1>
+    <h1 id="title">Dịch Vụ Du Lịch & Đưa Đón California</h1>
     <p id="contact">
       <strong>Liên hệ:</strong> Duy Hoa |
       <a href="tel:7142276007" style="color: #add8e6;">Điện thoại: 714-227-6007</a> |
       <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>
     </p>
-    
+
     <form id="bookingForm">
-      <!-- Dynamic content populated by JS -->
+      <label for="serviceType" id="serviceTypeLabel">Chọn loại dịch vụ</label>
+      <select id="serviceType" onchange="toggleServiceType(); updateEstimate();">
+        <option value="pickup">Đón từ sân bay</option>
+        <option value="dropoff">Đưa đến sân bay</option>
+      </select>
+
+      <label for="airport" id="airportLabel">Chọn sân bay</label>
+      <select id="airport" onchange="updateEstimate()">
+        <option value="John Wayne Airport, Orange County, CA">Sân bay John Wayne (SNA)</option>
+        <option value="Long Beach Airport, Long Beach, CA">Sân bay Long Beach (LGB)</option>
+        <option value="LAX Airport, Los Angeles, CA">Sân bay LAX (Los Angeles)</option>
+        <option value="Ontario Airport, Ontario, CA">Sân bay Ontario (ONT)</option>
+        <option value="Burbank Airport, Burbank, CA">Sân bay Burbank (BUR)</option>
+      </select>
+
+      <label for="address" id="addressLabel">Địa chỉ</label>
+      <gmpx-placeautocomplete id="addressInput" style="color: black;"></gmpx-placeautocomplete>
+
+      <label for="datetime" id="datetimeLabel">Ngày & Giờ</label>
+      <input type="datetime-local" id="datetime" required>
+      <div id="slotWarning"></div>
+
+      <label for="passengers" id="passengersLabel">Số hành khách</label>
+      <input type="number" id="passengers" min="1" max="12" required oninput="updateEstimate()">
+
+      <div class="estimate-display" id="estimateDisplay"></div>
+      <div class="estimate-display" id="vehicleDisplay"></div>
+
+      <label for="name" id="nameLabel">Họ và Tên</label>
+      <input type="text" id="name" required>
+
+      <label for="phone" id="phoneLabel">Số điện thoại</label>
+      <input type="tel" id="phone" required>
+
+      <button type="submit" id="submitBtn">Đặt dịch vụ</button>
     </form>
 
     <div id="adminSection">
-      <button onclick="loadBookings()">Tải danh sách đặt chỗ</button>
+      <button onclick="loadBookings()">Tải danh sách</button>
       <div id="bookingList"></div>
     </div>
   </div>
 
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
     const firebaseConfig = {
       apiKey: "AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ",
       authDomain: "dulichcali-booking-calendar.firebaseapp.com",
@@ -74,16 +112,83 @@
       messagingSenderId: "623460884698",
       appId: "1:623460884698:web:a08bd435c453a7b4db05e3"
     };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
 
-    function initAutocomplete() {
-      const input = document.createElement('gmp-placeautocomplete');
-      input.setAttribute('input-id', 'address');
-      document.getElementById('addressWrapper').appendChild(input);
-    }
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.toggleLanguage = function () {
+      const langBtn = document.getElementById('langBtn');
+      const isVietnamese = document.documentElement.lang === 'vi';
+      document.documentElement.lang = isVietnamese ? 'en' : 'vi';
+      langBtn.innerText = isVietnamese ? 'EN | VI' : 'VI | EN';
+      document.getElementById('title').innerText = isVietnamese ? 'California Travel & Airport Services' : 'Dịch Vụ Du Lịch & Đưa Đón California';
+      document.getElementById('contact').innerHTML = isVietnamese
+        ? `<strong>Contact:</strong> Duy Hoa |
+            <a href="tel:7142276007" style="color: #add8e6;">Phone: 714-227-6007</a> |
+            <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>`
+        : `<strong>Liên hệ:</strong> Duy Hoa |
+            <a href="tel:7142276007" style="color: #add8e6;">Điện thoại: 714-227-6007</a> |
+            <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>`;
+    };
+
+    window.toggleServiceType = function () {
+      const type = document.getElementById('serviceType').value;
+      document.getElementById('addressLabel').innerText = type === 'pickup'
+        ? (document.documentElement.lang === 'vi' ? 'Địa chỉ đến' : 'Drop-off Address')
+        : (document.documentElement.lang === 'vi' ? 'Địa chỉ đón' : 'Pickup Address');
+    };
+
+    window.updateEstimate = async function () {
+      const passengers = parseInt(document.getElementById('passengers').value) || 1;
+      const serviceType = document.getElementById('serviceType').value;
+      const airport = document.getElementById('airport').value;
+      const address = document.querySelector('gmpx-placeautocomplete')?.value || '';
+
+      if (!airport || !address) return;
+
+      const origin = serviceType === 'pickup' ? airport : address;
+      const destination = serviceType === 'pickup' ? address : airport;
+
+      const service = new google.maps.DistanceMatrixService();
+      service.getDistanceMatrix({
+        origins: [origin],
+        destinations: [destination],
+        travelMode: 'DRIVING'
+      }, (response, status) => {
+        if (status === 'OK') {
+          const distance = response.rows[0].elements[0].distance.value / 1609.34;
+          let cost = distance * 2.5 * 0.9;
+          if (passengers > 3) cost += 30;
+          if (distance > 75) cost += distance * 2.5 * 0.9;
+
+          const vehicle = passengers > 3 ? 'Mercedes Van' : 'Tesla Model Y';
+          document.getElementById('estimateDisplay').innerText = `${document.documentElement.lang === 'vi' ? 'Giá ước tính' : 'Estimated Price'}: $${Math.round(cost)}`;
+          document.getElementById('vehicleDisplay').innerText = `${document.documentElement.lang === 'vi' ? 'Xe sử dụng' : 'Vehicle'}: ${vehicle}`;
+        }
+      });
+    };
+
+    document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const datetime = document.getElementById('datetime').value;
+      const bookingsRef = collection(db, 'bookings');
+      const q = query(bookingsRef, where('datetime', '==', datetime));
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+        document.getElementById('slotWarning').innerText = '⚠️ Slot already booked. Please choose another time.';
+        return;
+      }
+      await addDoc(bookingsRef, {
+        name: document.getElementById('name').value,
+        phone: document.getElementById('phone').value,
+        datetime: datetime,
+        airport: document.getElementById('airport').value,
+        address: document.querySelector('gmpx-placeautocomplete')?.value || '',
+        passengers: parseInt(document.getElementById('passengers').value),
+        serviceType: document.getElementById('serviceType').value
+      });
+      window.location.href = 'thankyou.html';
+    });
   </script>
-
-  <!-- Additional JS logic for booking form generation, estimate, Firestore, language toggle, etc., will go here -->
 </body>
 </html>

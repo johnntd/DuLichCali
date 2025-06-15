@@ -10,14 +10,14 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
       background: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e') no-repeat center center fixed;
       background-size: cover;
+      margin: 0;
+      padding: 0;
       color: white;
     }
     .container {
-      background-color: rgba(0, 0, 0, 0.7);
+      background-color: rgba(0,0,0,0.7);
       max-width: 700px;
       margin: 2rem auto;
       padding: 2rem;
@@ -35,16 +35,13 @@
       display: block;
       font-weight: bold;
     }
-    #map {
-      height: 300px;
-      margin-top: 10px;
-    }
+    #map { height: 300px; margin-top: 10px; }
     .language-toggle {
       text-align: right;
       margin-bottom: 10px;
     }
     #adminSection {
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: rgba(255,255,255,0.1);
       padding: 1rem;
       margin-top: 2rem;
       border-radius: 10px;
@@ -72,8 +69,12 @@
       <button onclick="toggleLanguage()" id="langBtn">EN | VI</button>
     </div>
     <h1 id="title">California Travel & Airport Services</h1>
-    <p id="contact"><strong>Contact:</strong> Duy Hoa | Phone: 714-227-6007 | Email: dulichcali21@gmail.com</p>
 
+<p id="contact">
+  <strong>Contact:</strong> Duy Hoa | 
+  <a href="tel:7142276007" style="color: #add8e6;">Phone: 714-227-6007</a> | 
+  <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>
+</p>
     <form action="https://formspree.io/f/xeokgbpo" method="POST" onsubmit="return handleSubmit(event)">
       <label for="serviceType" id="labelService">Choose Service</label>
       <select id="serviceType" name="serviceType" onchange="toggleFields()">
@@ -116,6 +117,7 @@
       <input type="tel" id="phone" name="phone" placeholder="Enter phone number">
 
       <p id="priceEstimate">Estimated price will appear here.</p>
+      <p id="vehicleEstimate">Vehicle: </p>
 
       <input type="hidden" id="vehicle" name="vehicle" />
       <input type="hidden" id="price" name="price" />
@@ -166,7 +168,7 @@
       liveEstimate();
     }
 
-    async function calculateEstimate(pickup, dropoff, passengers) {
+    async function calculateEstimate(pickup, dropoff, passengers, datetimeStr) {
       return new Promise((resolve, reject) => {
         new google.maps.DistanceMatrixService().getDistanceMatrix({
           origins: [pickup],
@@ -174,10 +176,21 @@
           travelMode: "DRIVING"
         }, (res, status) => {
           if (status !== "OK") return reject(status);
-          const dist = res.rows[0].elements[0].distance.value / 1609.34;
-          let base = dist * 2.5 * 0.9;
-          if (passengers > 3) base += 30;
-          resolve(base.toFixed(2));
+          const distMiles = res.rows[0].elements[0].distance.value / 1609.34;
+          let basePrice = distMiles * 2.5 * 0.9;
+          if (passengers > 3) basePrice += 30;
+
+          const dt = new Date(datetimeStr);
+          const hour = dt.getHours();
+          const holidays = ['1/1', '7/4', '12/25'];
+          const isLate = hour < 6 || hour > 21;
+          const todayStr = `${dt.getMonth() + 1}/${dt.getDate()}`;
+          const isHoliday = holidays.includes(todayStr);
+          if (isLate || isHoliday) basePrice += 20;
+
+          if (distMiles > 75) basePrice += distMiles * 1.25;
+
+          resolve(basePrice.toFixed(2));
         });
       });
     }
@@ -188,9 +201,13 @@
       const pickup = type === 'pickup' ? airport : document.getElementById("pickup").value;
       const dropoff = type === 'pickup' ? document.getElementById("dropoff").value : airport;
       const passengers = parseInt(document.getElementById("passengers").value);
-      if (!pickup || !dropoff || pickup.trim() === '' || dropoff.trim() === '') return;
+      const datetime = document.getElementById("datetime").value;
+      if (!pickup || !dropoff || !datetime || pickup.trim() === '' || dropoff.trim() === '') return;
       try {
-        const price = await calculateEstimate(pickup, dropoff, passengers);
+        const vehicle = passengers > 3 ? "Mercedes Van" : "Tesla Model Y";
+        document.getElementById("vehicleEstimate").textContent = `Vehicle: ${vehicle}`;
+        document.getElementById("vehicle").value = vehicle;
+        const price = await calculateEstimate(pickup, dropoff, passengers, datetime);
         document.getElementById("priceEstimate").textContent = `Estimated Price: $${price}`;
         document.getElementById("price").value = price;
       } catch (err) {
@@ -207,6 +224,7 @@
       if (!snapshot.empty) {
         warning.textContent = "⚠️ This time slot is already booked. Please choose another.";
       }
+      liveEstimate();
     }
 
     function handleSubmit(e) {

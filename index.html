@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>California Travel & Airport Services</title>
+  <title>Dịch Vụ Du Lịch & Đưa Đón Sân Bay California</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
@@ -46,60 +46,61 @@
 <body>
   <div class="container">
     <div class="language-toggle">
-      <button onclick="toggleLanguage()" id="langBtn">EN | VI</button>
+      <button onclick="toggleLanguage()" id="langBtn">VI | EN</button>
     </div>
-    <h1 id="title">California Travel & Airport Services</h1>
+    <h1 id="title">Dịch Vụ Đưa Đón Sân Bay & Du Lịch California</h1>
     <p id="contact">
-      <strong>Contact:</strong> Duy Hoa |
-      <a href="tel:7142276007" style="color: #add8e6;">Phone: 714-227-6007</a> |
+      <strong>Liên hệ:</strong> Duy Hoa |
+      <a href="tel:7142276007" style="color: #add8e6;">Điện thoại: 714-227-6007</a> |
       <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>
     </p>
 
     <form id="bookingForm" method="POST" action="https://formspree.io/f/xeokgbpo">
-      <label for="serviceType">Service Type</label>
+      <label for="serviceType">Loại Dịch Vụ</label>
       <select id="serviceType" name="serviceType" onchange="toggleServiceType(); updateEstimate();">
-        <option value="pickup">Pickup from Airport</option>
-        <option value="dropoff">Drop-off at Airport</option>
+        <option value="pickup">Đón tại sân bay</option>
+        <option value="dropoff">Đưa ra sân bay</option>
       </select>
 
       <div id="airportField">
-        <label for="airport">Select Airport</label>
+        <label for="airport">Chọn sân bay</label>
         <select id="airport" name="airport" onchange="updateEstimate()">
-          <option value="John Wayne Airport, Orange County, CA">John Wayne Airport (SNA)</option>
-          <option value="Long Beach Airport, Long Beach, CA">Long Beach Airport (LGB)</option>
-          <option value="LAX Airport, Los Angeles, CA">Los Angeles International (LAX)</option>
-          <option value="Ontario Airport, Ontario, CA">Ontario International (ONT)</option>
-          <option value="Burbank Airport, Burbank, CA">Hollywood Burbank (BUR)</option>
+          <option value="John Wayne Airport, Orange County, CA">Sân bay John Wayne (SNA)</option>
+          <option value="Long Beach Airport, Long Beach, CA">Sân bay Long Beach (LGB)</option>
+          <option value="LAX Airport, Los Angeles, CA">Sân bay Los Angeles (LAX)</option>
+          <option value="Ontario Airport, Ontario, CA">Sân bay Ontario (ONT)</option>
+          <option value="Burbank Airport, Burbank, CA">Sân bay Burbank (BUR)</option>
         </select>
       </div>
 
-      <label id="addressLabel" for="address">Drop-off Address</label>
-      <input type="text" id="address" name="address" placeholder="Enter drop-off or pickup address" required oninput="updateEstimate()">
+      <label id="addressLabel" for="address">Địa chỉ đưa đến</label>
+      <input type="text" id="address" name="address" placeholder="Nhập địa chỉ đón hoặc đưa đến" required oninput="updateEstimate()">
 
-      <label for="datetime">Date and Time</label>
+      <label for="datetime">Ngày và giờ</label>
       <input type="datetime-local" id="datetime" name="datetime" required>
       <div id="slotWarning"></div>
 
-      <label for="passengers">Number of Passengers</label>
+      <label for="passengers">Số lượng hành khách</label>
       <input type="number" id="passengers" name="passengers" min="1" max="12" required oninput="updateEstimate()">
 
-      <div class="estimate-display" id="estimateDisplay">Estimated Price: $0</div>
-      <div class="estimate-display" id="vehicleDisplay">Vehicle: Tesla Model Y</div>
+      <div class="estimate-display" id="estimateDisplay">Giá ước tính: $0</div>
+      <div class="estimate-display" id="vehicleDisplay">Phương tiện: Tesla Model Y</div>
 
-      <label for="name">Your Name</label>
+      <label for="name">Tên của bạn</label>
       <input type="text" id="name" name="name" required>
 
-      <label for="phone">Phone Number</label>
+      <label for="phone">Số điện thoại</label>
       <input type="tel" id="phone" name="phone" required>
 
-      <button type="submit">Submit Booking</button>
+      <button type="submit">Gửi Đặt Chỗ</button>
     </form>
 
     <div id="adminSection">
-      <button onclick="loadBookings()">Load Bookings</button>
+      <button onclick="loadBookings()">Xem đặt chỗ</button>
       <div id="bookingList"></div>
     </div>
   </div>
+
 
   <script>
     const firebaseConfig = {

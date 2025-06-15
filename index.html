@@ -6,8 +6,7 @@
   <title>Dịch Vụ Đưa Đón & Du Lịch California</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&loading=async&callback=initAutocomplete"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -38,16 +37,11 @@
     }
     .estimate-display { font-weight: bold; margin-top: 10px; color: lightgreen; }
     #slotWarning { color: yellow; font-weight: bold; }
-    #mapContainer {
-      max-width: 700px;
-      margin: 1rem auto;
+    #map {
+      width: 100%;
       height: 300px;
       border-radius: 10px;
-      overflow: hidden;
-    }
-    gmp-map {
-      width: 100%;
-      height: 100%;
+      margin-top: 20px;
     }
   </style>
 </head>
@@ -76,14 +70,11 @@
           <option value="Ontario Airport, Ontario, CA">Sân bay Ontario (ONT)</option>
           <option value="Burbank Airport, Burbank, CA">Sân bay Burbank (BUR)</option>
           <option value="San Diego International Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
-          <option value="McClellan–Palomar Airport, Carlsbad, CA">Sân bay Carlsbad (CLD)</option>
         </select>
       </div>
 
       <label id="addressLabel" for="address">Địa chỉ đến</label>
-      <gmp-placeautocomplete id="autocompleteBox">
-        <input type="text" id="address" name="address" placeholder="Nhập địa chỉ đến hoặc đón" required oninput="updateEstimate()">
-      </gmp-placeautocomplete>
+      <input type="text" id="address" name="address" placeholder="Nhập địa chỉ đến hoặc đón" required>
 
       <label for="datetime">Ngày và giờ</label>
       <input type="datetime-local" id="datetime" name="datetime" required>
@@ -103,10 +94,8 @@
 
       <button type="submit">Gửi yêu cầu</button>
     </form>
-  </div>
 
-  <div id="mapContainer">
-    <gmp-map center="33.6846,-117.8265" zoom="8"></gmp-map>
+    <div id="map"></div>
   </div>
 
   <script>
@@ -121,14 +110,14 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    let map;
     function initAutocomplete() {
-      const placeBox = document.querySelector("gmp-placeautocomplete");
-      placeBox.addEventListener("gmp-placeautocomplete-placechange", () => {
-        const place = placeBox.value;
-        if (place) {
-          document.getElementById("address").value = place;
-          updateEstimate();
-        }
+      const input = document.getElementById('address');
+      new google.maps.places.Autocomplete(input);
+
+      map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 33.6846, lng: -117.8265 },
+        zoom: 8
       });
     }
 
@@ -139,7 +128,7 @@
     }
 
     function updateEstimate() {
-      const passengers = Math.min(parseInt(document.getElementById('passengers').value) || 1, 12);
+      const passengers = parseInt(document.getElementById('passengers').value) || 1;
       const airport = document.getElementById('airport').value;
       const address = document.getElementById('address').value;
       const serviceType = document.getElementById('serviceType').value;
@@ -172,7 +161,7 @@
           }
 
           if (miles > 75) {
-            baseCost *= 2;
+            baseCost += miles * 2.5; // Return trip cost
           }
 
           const finalCost = Math.round(baseCost);
@@ -184,6 +173,8 @@
         }
       });
     }
+
+    window.onload = initAutocomplete;
   </script>
 </body>
 </html>

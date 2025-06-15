@@ -208,10 +208,13 @@
           let baseCost = miles * 2.5 * 0.9;
           let vehicle = 'Tesla Model Y';
 
-          if (passengers > 3) {
+          if (passengers >= 4) {
             baseCost += 30;
             vehicle = 'Mercedes Van';
+          } else {
+            vehicle = 'Tesla Model Y';
           }
+          
           if (miles > 75) {
             baseCost += miles * 2.5 * 0.9;
           }

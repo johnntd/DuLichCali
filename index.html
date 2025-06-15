@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dịch Vụ Du Lịch & Đưa Đón Sân Bay California</title>
+  <title>Dịch Vụ Đưa Đón Sân Bay & Du Lịch California</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
@@ -56,14 +56,14 @@
     </p>
 
     <form id="bookingForm" method="POST" action="https://formspree.io/f/xeokgbpo">
-      <label for="serviceType" id="labelServiceType">Loại Dịch Vụ</label>
+      <label for="serviceType">Loại Dịch Vụ</label>
       <select id="serviceType" name="serviceType" onchange="toggleServiceType(); updateEstimate();">
-        <option value="pickup">Đón tại Sân Bay</option>
-        <option value="dropoff">Đưa tới Sân Bay</option>
+        <option value="pickup">Đón tại sân bay</option>
+        <option value="dropoff">Đưa ra sân bay</option>
       </select>
 
       <div id="airportField">
-        <label for="airport" id="labelAirport">Chọn Sân Bay</label>
+        <label for="airport">Chọn Sân Bay</label>
         <select id="airport" name="airport" onchange="updateEstimate()">
           <option value="John Wayne Airport, Orange County, CA">John Wayne Airport (SNA)</option>
           <option value="Long Beach Airport, Long Beach, CA">Long Beach Airport (LGB)</option>
@@ -73,27 +73,32 @@
         </select>
       </div>
 
-      <label id="addressLabel" for="address">Địa Chỉ Đưa Về</label>
-      <input type="text" id="address" name="address" placeholder="Nhập địa chỉ đón/đưa" required oninput="updateEstimate()">
+      <label id="addressLabel" for="address">Địa Chỉ</label>
+      <input type="text" id="address" name="address" placeholder="Nhập địa chỉ đón hoặc trả khách" required oninput="updateEstimate()">
 
-      <label for="datetime" id="labelDatetime">Ngày & Giờ</label>
+      <label for="datetime">Ngày & Giờ</label>
       <input type="datetime-local" id="datetime" name="datetime" required>
       <div id="slotWarning"></div>
 
-      <label for="passengers" id="labelPassengers">Số Hành Khách</label>
+      <label for="passengers">Số Hành Khách</label>
       <input type="number" id="passengers" name="passengers" min="1" max="12" required oninput="updateEstimate()">
 
       <div class="estimate-display" id="estimateDisplay">Giá Ước Tính: $0</div>
       <div class="estimate-display" id="vehicleDisplay">Xe: Tesla Model Y</div>
 
-      <label for="name" id="labelName">Tên Quý Khách</label>
+      <label for="name">Tên của Bạn</label>
       <input type="text" id="name" name="name" required>
 
-      <label for="phone" id="labelPhone">Số Điện Thoại</label>
+      <label for="phone">Số Điện Thoại</label>
       <input type="tel" id="phone" name="phone" required>
 
-      <button type="submit" id="submitBtn">Gửi Yêu Cầu</button>
+      <button type="submit">Gửi Yêu Cầu Đặt Chỗ</button>
     </form>
+
+    <div id="adminSection">
+      <button onclick="loadBookings()">Xem Các Đặt Chỗ</button>
+      <div id="bookingList"></div>
+    </div>
   </div>
 
   <script>
@@ -106,8 +111,61 @@
       appId: "1:623460884698:web:a08bd435c453a7b4db05e3"
     };
     firebase.initializeApp(firebaseConfig);
-    firebase.appCheck().activate(null, true); // Disable for development
+    firebase.appCheck().activate('', true);
     const db = firebase.firestore();
+
+    let currentLanguage = 'vi';
+    const translations = {
+      vi: {
+        title: 'Dịch Vụ Đưa Đón Sân Bay & Du Lịch California',
+        contact: `Liên hệ: Duy Hoa |
+          <a href="tel:7142276007" style="color: #add8e6;">Điện thoại: 714-227-6007</a> |
+          <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>`,
+        labels: {
+          serviceType: 'Loại Dịch Vụ',
+          airport: 'Chọn Sân Bay',
+          address: 'Địa Chỉ',
+          datetime: 'Ngày & Giờ',
+          passengers: 'Số Hành Khách',
+          name: 'Tên của Bạn',
+          phone: 'Số Điện Thoại',
+          submit: 'Gửi Yêu Cầu Đặt Chỗ'
+        }
+      },
+      en: {
+        title: 'California Travel & Airport Services',
+        contact: `Contact: Duy Hoa |
+          <a href="tel:7142276007" style="color: #add8e6;">Phone: 714-227-6007</a> |
+          <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>`,
+        labels: {
+          serviceType: 'Service Type',
+          airport: 'Select Airport',
+          address: 'Address',
+          datetime: 'Date and Time',
+          passengers: 'Number of Passengers',
+          name: 'Your Name',
+          phone: 'Phone Number',
+          submit: 'Submit Booking'
+        }
+      }
+    };
+
+    function toggleLanguage() {
+      currentLanguage = currentLanguage === 'vi' ? 'en' : 'vi';
+      const t = translations[currentLanguage];
+
+      document.getElementById('langBtn').innerText = currentLanguage === 'vi' ? 'VI | EN' : 'EN | VI';
+      document.getElementById('title').innerText = t.title;
+      document.getElementById('contact').innerHTML = t.contact;
+      document.querySelector("label[for='serviceType']").innerText = t.labels.serviceType;
+      document.querySelector("label[for='airport']").innerText = t.labels.airport;
+      document.getElementById('addressLabel').innerText = t.labels.address;
+      document.querySelector("label[for='datetime']").innerText = t.labels.datetime;
+      document.querySelector("label[for='passengers']").innerText = t.labels.passengers;
+      document.querySelector("label[for='name']").innerText = t.labels.name;
+      document.querySelector("label[for='phone']").innerText = t.labels.phone;
+      document.querySelector("button[type='submit']").innerText = t.labels.submit;
+    }
 
     function initAutocomplete() {
       const addressInput = document.getElementById('address');
@@ -116,22 +174,10 @@
       }
     }
 
-    function toggleLanguage() {
-      const btn = document.getElementById('langBtn');
-      const lang = btn.innerText.startsWith('VI') ? 'en' : 'vi';
-      btn.innerText = lang === 'vi' ? 'VI | EN' : 'EN | VI';
-      document.getElementById('title').innerText = lang === 'vi'
-        ? 'Dịch Vụ Đưa Đón Sân Bay & Du Lịch California'
-        : 'California Travel & Airport Services';
-      document.getElementById('contact').innerHTML = lang === 'vi'
-        ? `<strong>Liên hệ:</strong> Duy Hoa | <a href="tel:7142276007" style="color: #add8e6;">Điện thoại: 714-227-6007</a> | <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>`
-        : `<strong>Contact:</strong> Duy Hoa | <a href="tel:7142276007" style="color: #add8e6;">Phone: 714-227-6007</a> | <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>`;
-    }
-
     function toggleServiceType() {
       const type = document.getElementById('serviceType').value;
       const label = document.getElementById('addressLabel');
-      label.innerText = (type === 'pickup') ? 'Địa Chỉ Đưa Về' : 'Địa Chỉ Đón';
+      label.innerText = (type === 'pickup') ? translations[currentLanguage].labels.address : translations[currentLanguage].labels.address;
     }
 
     function updateEstimate() {
@@ -166,16 +212,14 @@
             baseCost += 30;
             vehicle = 'Mercedes Van';
           }
-
           if (miles > 75) {
-            baseCost += miles * 2.5 * 0.9; // Return trip surcharge
+            baseCost += miles * 2.5 * 0.9;
           }
-
           const finalCost = Math.round(baseCost);
           document.getElementById('estimateDisplay').innerText = `Giá Ước Tính: $${finalCost}`;
           document.getElementById('vehicleDisplay').innerText = `Xe: ${vehicle}`;
         } else {
-          document.getElementById('estimateDisplay').innerText = 'Không thể tính toán khoảng cách.';
+          document.getElementById('estimateDisplay').innerText = 'Không thể tính khoảng cách';
           document.getElementById('vehicleDisplay').innerText = '';
         }
       });

@@ -2,17 +2,11 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dịch Vụ Đưa Đón & Du Lịch California</title>
-
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-
-  <!-- Google Maps -->
-  <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete"></script>
-
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -41,24 +35,26 @@
       display: block;
       font-weight: bold;
     }
+    .estimate-display { font-weight: bold; margin-top: 10px; color: lightgreen; }
+    #slotWarning { color: yellow; font-weight: bold; }
     #map {
+      width: 100%;
       height: 300px;
       margin-top: 20px;
       border-radius: 10px;
     }
-    .estimate-display { font-weight: bold; margin-top: 10px; color: lightgreen; }
-    #slotWarning { color: yellow; font-weight: bold; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Dịch Vụ Đưa Đón & Du Lịch California</h1>
-    <p><strong>Liên hệ:</strong> Duy Hoa |
+    <p>
+      <strong>Liên hệ:</strong> Duy Hoa |
       <a href="tel:7142276007" style="color: #add8e6;">Điện thoại: 714-227-6007</a> |
       <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>
     </p>
 
-    <form id="bookingForm">
+    <form id="bookingForm" method="POST" action="https://formspree.io/f/xeokgbpo">
       <label for="serviceType">Chọn dịch vụ</label>
       <select id="serviceType" name="serviceType" onchange="toggleServiceType(); updateEstimate();">
         <option value="pickup">Đón tại sân bay</option>
@@ -78,7 +74,7 @@
       </div>
 
       <label id="addressLabel" for="address">Địa chỉ đến</label>
-      <input type="text" id="address" name="address" required oninput="updateEstimate()">
+      <input type="text" id="address" name="address" placeholder="Nhập địa chỉ đến hoặc đón" required oninput="updateEstimate()">
 
       <label for="datetime">Ngày và giờ</label>
       <input type="datetime-local" id="datetime" name="datetime" required>
@@ -90,7 +86,7 @@
       <div class="estimate-display" id="estimateDisplay">Chi phí ước tính: $0</div>
       <div class="estimate-display" id="vehicleDisplay">Xe: Tesla Model Y</div>
 
-      <label for="name">Tên</label>
+      <label for="name">Tên của bạn</label>
       <input type="text" id="name" name="name" required>
 
       <label for="phone">Số điện thoại</label>
@@ -117,84 +113,70 @@
     let map;
     function initAutocomplete() {
       map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 33.7456, lng: -117.8678 },
-        zoom: 8
+        center: { lat: 33.6846, lng: -117.8265 },
+        zoom: 8,
       });
-      const input = document.getElementById('address');
-      new google.maps.places.Autocomplete(input);
+      const input = document.getElementById("address");
+      const autocomplete = new google.maps.places.Autocomplete(input);
     }
 
     function toggleServiceType() {
       const type = document.getElementById('serviceType').value;
-      document.getElementById('addressLabel').innerText = type === 'pickup' ? 'Địa chỉ đến' : 'Địa chỉ đón';
+      const label = document.getElementById('addressLabel');
+      label.innerText = (type === 'pickup') ? 'Địa chỉ đến' : 'Địa chỉ đón';
     }
 
     function updateEstimate() {
-      const passengers = parseInt(document.getElementById('passengers').value) || 1;
-      const airport = document.getElementById('airport').value;
-      const address = document.getElementById('address').value;
+      const passengersInput = document.getElementById('passengers');
+      const airportInput = document.getElementById('airport');
+      const addressInput = document.getElementById('address');
+
+      if (!passengersInput || !airportInput || !addressInput) return;
+
+      const passengers = Math.min(parseInt(passengersInput.value) || 1, 12);
+      const airport = airportInput.value;
+      const address = addressInput.value;
       const serviceType = document.getElementById('serviceType').value;
+
       const origin = serviceType === 'pickup' ? airport : address;
       const destination = serviceType === 'pickup' ? address : airport;
 
       if (!origin || !destination) return;
 
-      new google.maps.DistanceMatrixService().getDistanceMatrix({
+      const distanceService = new google.maps.DistanceMatrixService();
+      distanceService.getDistanceMatrix({
         origins: [origin],
         destinations: [destination],
-        travelMode: 'DRIVING'
-      }, (res, status) => {
-        if (status === 'OK') {
-          const distMeters = res.rows[0].elements[0].distance.value;
+        travelMode: google.maps.TravelMode.DRIVING
+      }, (response, status) => {
+        if (
+          status === 'OK' &&
+          response.rows[0]?.elements[0]?.status === 'OK'
+        ) {
+          const distMeters = response.rows[0].elements[0].distance.value;
           const miles = distMeters / 1609.34;
-          let cost = miles * 2.5;
+
+          let baseCost = miles * 2.5;
           let vehicle = 'Tesla Model Y';
 
           if (passengers > 3) {
-            cost += 30;
+            baseCost += 30;
             vehicle = 'Mercedes Van';
           }
 
           if (miles > 75) {
-            cost += miles * 2.5; // return trip cost
+            baseCost += miles * 2.5;
           }
 
-          document.getElementById('estimateDisplay').innerText = `Chi phí ước tính: $${Math.round(cost)}`;
+          const finalCost = Math.round(baseCost);
+          document.getElementById('estimateDisplay').innerText = `Chi phí ước tính: $${finalCost}`;
           document.getElementById('vehicleDisplay').innerText = `Xe: ${vehicle}`;
+        } else {
+          document.getElementById('estimateDisplay').innerText = 'Không thể tính khoảng cách';
+          document.getElementById('vehicleDisplay').innerText = '';
         }
       });
     }
-
-    document.getElementById("datetime").addEventListener("change", async () => {
-      const date = document.getElementById("datetime").value;
-      const snapshot = await db.collection("bookings").where("datetime", "==", date).get();
-      document.getElementById("slotWarning").innerText =
-        snapshot.empty ? "" : "❗Khung giờ này đã được đặt.";
-    });
-
-    document.getElementById("bookingForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const data = {
-        name: document.getElementById("name").value,
-        phone: document.getElementById("phone").value,
-        address: document.getElementById("address").value,
-        airport: document.getElementById("airport").value,
-        serviceType: document.getElementById("serviceType").value,
-        passengers: document.getElementById("passengers").value,
-        datetime: document.getElementById("datetime").value,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      };
-
-      const existing = await db.collection("bookings").where("datetime", "==", data.datetime).get();
-      if (!existing.empty) {
-        alert("❗Khung giờ đã có người đặt. Vui lòng chọn giờ khác.");
-        return;
-      }
-
-      await db.collection("bookings").add(data);
-      alert("✅ Đặt thành công!");
-      document.getElementById("bookingForm").reset();
-    });
   </script>
 </body>
 </html>

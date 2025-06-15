@@ -59,6 +59,11 @@
       max-height: 300px;
       overflow-y: auto;
     }
+    #slotWarning {
+      color: yellow;
+      font-weight: bold;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -101,7 +106,8 @@
       <input type="number" id="passengers" name="passengers" min="1" max="12" value="1">
 
       <label for="datetime" id="labelDatetime">Pickup Date and Time</label>
-      <input type="datetime-local" id="datetime" name="datetime">
+      <input type="datetime-local" id="datetime" name="datetime" onchange="checkSlotAvailability()">
+      <div id="slotWarning"></div>
 
       <label for="name" id="labelName">Your Name</label>
       <input type="text" id="name" name="name" placeholder="Enter your name">
@@ -189,8 +195,21 @@
       }
     }
 
+    async function checkSlotAvailability() {
+      const datetime = document.getElementById("datetime").value;
+      const warning = document.getElementById("slotWarning");
+      warning.textContent = "";
+      if (!datetime) return;
+      const snapshot = await db.collection("bookings").where("datetime", "==", datetime).get();
+      if (!snapshot.empty) {
+        warning.textContent = "⚠️ This time slot is already booked. Please choose another.";
+      }
+    }
+
     function handleSubmit(e) {
       e.preventDefault();
+      const warning = document.getElementById("slotWarning").textContent;
+      if (warning) return alert("Please choose an available time slot.");
       const passengers = parseInt(document.getElementById("passengers").value);
       const vehicle = passengers > 4 ? "Mercedes Van" : "Tesla Model Y";
       document.getElementById("vehicle").value = vehicle;

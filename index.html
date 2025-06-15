@@ -57,31 +57,31 @@
 
     <form id="bookingForm" method="POST" action="https://formspree.io/f/xeokgbpo">
       <label for="serviceType">Service Type</label>
-      <select id="serviceType" name="serviceType" onchange="toggleServiceType()">
+      <select id="serviceType" name="serviceType" onchange="toggleServiceType(); updateEstimate();">
         <option value="pickup">Pickup from Airport</option>
         <option value="dropoff">Drop-off at Airport</option>
       </select>
 
       <div id="airportField">
         <label for="airport">Select Airport</label>
-        <select id="airport" name="airport">
-          <option value="SNA">John Wayne Airport (SNA)</option>
-          <option value="LGB">Long Beach Airport (LGB)</option>
-          <option value="LAX">Los Angeles International (LAX)</option>
-          <option value="ONT">Ontario International (ONT)</option>
-          <option value="BUR">Hollywood Burbank (BUR)</option>
+        <select id="airport" name="airport" onchange="updateEstimate()">
+          <option value="John Wayne Airport, Orange County, CA">John Wayne Airport (SNA)</option>
+          <option value="Long Beach Airport, Long Beach, CA">Long Beach Airport (LGB)</option>
+          <option value="LAX Airport, Los Angeles, CA">Los Angeles International (LAX)</option>
+          <option value="Ontario Airport, Ontario, CA">Ontario International (ONT)</option>
+          <option value="Burbank Airport, Burbank, CA">Hollywood Burbank (BUR)</option>
         </select>
       </div>
 
       <label id="addressLabel" for="address">Drop-off Address</label>
-      <input type="text" id="address" name="address" placeholder="Enter drop-off or pickup address" required>
+      <input type="text" id="address" name="address" placeholder="Enter drop-off or pickup address" required oninput="updateEstimate()">
 
       <label for="datetime">Date and Time</label>
       <input type="datetime-local" id="datetime" name="datetime" required>
       <div id="slotWarning"></div>
 
       <label for="passengers">Number of Passengers</label>
-      <input type="number" id="passengers" name="passengers" min="1" max="12" required>
+      <input type="number" id="passengers" name="passengers" min="1" max="12" required oninput="updateEstimate()">
 
       <div class="estimate-display" id="estimateDisplay">Estimated Price: $0</div>
       <div class="estimate-display" id="vehicleDisplay">Vehicle: Tesla Model Y</div>
@@ -148,6 +148,41 @@
       } else {
         label.innerText = 'Pickup Address';
       }
+    }
+
+    function updateEstimate() {
+      const passengers = parseInt(document.getElementById('passengers').value) || 1;
+      const airport = document.getElementById('airport').value;
+      const address = document.getElementById('address').value;
+      const serviceType = document.getElementById('serviceType').value;
+
+      const origin = serviceType === 'pickup' ? airport : address;
+      const destination = serviceType === 'pickup' ? address : airport;
+
+      if (!origin || !destination) return;
+
+      const distanceService = new google.maps.DistanceMatrixService();
+      distanceService.getDistanceMatrix({
+        origins: [origin],
+        destinations: [destination],
+        travelMode: google.maps.TravelMode.DRIVING
+      }, (response, status) => {
+        if (status === 'OK') {
+          const distMeters = response.rows[0].elements[0].distance.value;
+          const miles = distMeters / 1609.34;
+          let baseCost = miles * 2.5 * 0.9;
+          let vehicle = 'Tesla Model Y';
+
+          if (passengers > 3) {
+            baseCost += 30;
+            vehicle = 'Mercedes Van';
+          }
+
+          const finalCost = Math.round(baseCost);
+          document.getElementById('estimateDisplay').innerText = `Estimated Price: $${finalCost}`;
+          document.getElementById('vehicleDisplay').innerText = `Vehicle: ${vehicle}`;
+        }
+      });
     }
   </script>
 </body>

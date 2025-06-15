@@ -6,8 +6,7 @@
   <title>Dịch Vụ Đưa Đón & Du Lịch California</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initMap"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete" async defer></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -36,11 +35,19 @@
       display: block;
       font-weight: bold;
     }
-    .estimate-display { font-weight: bold; margin-top: 10px; color: lightgreen; }
-    #slotWarning { color: yellow; font-weight: bold; }
+    .estimate-display {
+      font-weight: bold;
+      margin-top: 10px;
+      color: lightgreen;
+    }
+    #slotWarning {
+      color: yellow;
+      font-weight: bold;
+    }
     #map {
       height: 300px;
       margin-top: 20px;
+      border-radius: 10px;
     }
   </style>
 </head>
@@ -52,13 +59,14 @@
       <a href="tel:7142276007" style="color: #add8e6;">Điện thoại: 714-227-6007</a> |
       <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>
     </p>
-    <div id="map"></div>
+
     <form id="bookingForm" method="POST" action="https://formspree.io/f/xeokgbpo">
       <label for="serviceType">Chọn dịch vụ</label>
       <select id="serviceType" name="serviceType" onchange="toggleServiceType(); updateEstimate();">
         <option value="pickup">Đón tại sân bay</option>
         <option value="dropoff">Đưa đến sân bay</option>
       </select>
+
       <div id="airportField">
         <label for="airport">Chọn sân bay</label>
         <select id="airport" name="airport" onchange="updateEstimate()">
@@ -67,27 +75,36 @@
           <option value="LAX Airport, Los Angeles, CA">Sân bay LAX</option>
           <option value="Ontario Airport, Ontario, CA">Sân bay Ontario (ONT)</option>
           <option value="Burbank Airport, Burbank, CA">Sân bay Burbank (BUR)</option>
-          <option value="San Diego Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
+          <option value="San Diego International Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
         </select>
       </div>
+
       <label id="addressLabel" for="address">Địa chỉ đến</label>
       <input type="text" id="address" name="address" placeholder="Nhập địa chỉ đến hoặc đón" required oninput="updateEstimate()">
+
       <label for="datetime">Ngày và giờ</label>
       <input type="datetime-local" id="datetime" name="datetime" required>
       <div id="slotWarning"></div>
+
       <label for="passengers">Số hành khách</label>
       <input type="number" id="passengers" name="passengers" min="1" max="12" required oninput="updateEstimate()">
+
       <div class="estimate-display" id="estimateDisplay">Chi phí ước tính: $0</div>
       <div class="estimate-display" id="vehicleDisplay">Xe: Tesla Model Y</div>
+
       <label for="name">Tên của bạn</label>
       <input type="text" id="name" name="name" required>
+
       <label for="phone">Số điện thoại</label>
       <input type="tel" id="phone" name="phone" required>
+
       <button type="submit">Gửi yêu cầu</button>
     </form>
   </div>
+
+  <div id="map"></div>
+
   <script>
-    let map;
     const firebaseConfig = {
       apiKey: "AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ",
       authDomain: "dulichcali-booking-calendar.firebaseapp.com",
@@ -98,52 +115,66 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    function initMap() {
+
+    let map;
+
+    function initAutocomplete() {
+      const input = document.getElementById('address');
+      new google.maps.places.Autocomplete(input);
       map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 33.6846, lng: -117.8265 },
-        zoom: 9,
+        center: { lat: 33.7456, lng: -117.8678 },
+        zoom: 8
       });
     }
+
     function toggleServiceType() {
       const type = document.getElementById('serviceType').value;
       const label = document.getElementById('addressLabel');
       label.innerText = (type === 'pickup') ? 'Địa chỉ đến' : 'Địa chỉ đón';
     }
+
     function updateEstimate() {
       const passengers = Math.min(parseInt(document.getElementById('passengers').value) || 1, 12);
       document.getElementById('passengers').value = passengers;
       const airport = document.getElementById('airport').value;
       const address = document.getElementById('address').value;
       const serviceType = document.getElementById('serviceType').value;
+
       const origin = serviceType === 'pickup' ? airport : address;
       const destination = serviceType === 'pickup' ? address : airport;
+
       if (!origin || !destination) return;
+
       const distanceService = new google.maps.DistanceMatrixService();
       distanceService.getDistanceMatrix({
         origins: [origin],
         destinations: [destination],
         travelMode: google.maps.TravelMode.DRIVING
       }, (response, status) => {
-        try {
-          if (status === 'OK') {
-            const distMeters = response.rows[0].elements[0].distance.value;
-            const miles = distMeters / 1609.34;
-            let baseCost = miles * 2.5;
-            let vehicle = 'Tesla Model Y';
-            if (passengers > 3) {
-              baseCost += 30;
-              vehicle = 'Mercedes Van';
-            }
-            if (miles > 75) {
-              baseCost += miles * 2.5; // round trip cost if >75 miles
-            }
-            const finalCost = Math.round(baseCost);
-            document.getElementById('estimateDisplay').innerText = `Chi phí ước tính: $${finalCost}`;
-            document.getElementById('vehicleDisplay').innerText = `Xe: ${vehicle}`;
-          } else {
-            throw new Error('API status not OK');
+        if (
+          status === 'OK' &&
+          response.rows[0] &&
+          response.rows[0].elements[0] &&
+          response.rows[0].elements[0].status === 'OK'
+        ) {
+          const distMeters = response.rows[0].elements[0].distance.value;
+          const miles = distMeters / 1609.34;
+          let baseCost = miles * 2.5;
+          let vehicle = 'Tesla Model Y';
+
+          if (passengers > 3) {
+            baseCost += 30;
+            vehicle = 'Mercedes Van';
           }
-        } catch (e) {
+
+          if (miles > 75) {
+            baseCost += miles * 2.5;
+          }
+
+          const finalCost = Math.round(baseCost);
+          document.getElementById('estimateDisplay').innerText = `Chi phí ước tính: $${finalCost}`;
+          document.getElementById('vehicleDisplay').innerText = `Xe: ${vehicle}`;
+        } else {
           document.getElementById('estimateDisplay').innerText = 'Không thể tính khoảng cách';
           document.getElementById('vehicleDisplay').innerText = '';
         }

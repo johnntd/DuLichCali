@@ -7,7 +7,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-  <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initMap"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -36,12 +36,11 @@
       display: block;
       font-weight: bold;
     }
-    #map { height: 250px; margin-top: 10px; }
     .language-toggle { text-align: right; margin-bottom: 10px; }
+    .estimate-display { font-weight: bold; margin-top: 10px; color: lightgreen; }
     #slotWarning { color: yellow; font-weight: bold; }
     #adminSection { margin-top: 20px; display: none; }
     #bookingList { background: white; color: black; padding: 10px; border-radius: 10px; max-height: 300px; overflow-y: auto; }
-    .estimate-display { font-weight: bold; margin-top: 10px; color: lightgreen; }
   </style>
 </head>
 <body>
@@ -56,41 +55,36 @@
       <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>
     </p>
 
-    <form action="https://formspree.io/f/xeokgbpo" method="POST" id="bookingForm">
+    <form id="bookingForm" method="POST" action="https://formspree.io/f/xeokgbpo">
       <label for="serviceType">Service Type</label>
-      <select id="serviceType" name="serviceType" required onchange="toggleServiceType()">
+      <select id="serviceType" name="serviceType" onchange="toggleServiceType()">
         <option value="pickup">Pickup from Airport</option>
         <option value="dropoff">Drop-off at Airport</option>
       </select>
 
-      <label for="airport">Select Airport</label>
-      <select id="airport" name="airport" required>
-        <option value="SNA">John Wayne Airport (SNA)</option>
-        <option value="LGB">Long Beach Airport (LGB)</option>
-        <option value="LAX">Los Angeles International Airport (LAX)</option>
-        <option value="ONT">Ontario International Airport (ONT)</option>
-        <option value="BUR">Hollywood Burbank Airport (BUR)</option>
-      </select>
-
-      <div id="pickupGroup">
-        <label for="pickup">Pickup Address</label>
-        <input type="text" id="pickup" name="pickup" placeholder="Enter pickup address">
+      <div id="airportField">
+        <label for="airport">Select Airport</label>
+        <select id="airport" name="airport">
+          <option value="SNA">John Wayne Airport (SNA)</option>
+          <option value="LGB">Long Beach Airport (LGB)</option>
+          <option value="LAX">Los Angeles International (LAX)</option>
+          <option value="ONT">Ontario International (ONT)</option>
+          <option value="BUR">Hollywood Burbank (BUR)</option>
+        </select>
       </div>
 
-      <div id="dropoffGroup">
-        <label for="dropoff">Drop-off Address</label>
-        <input type="text" id="dropoff" name="dropoff" placeholder="Enter drop-off address">
-      </div>
+      <label id="addressLabel" for="address">Drop-off Address</label>
+      <input type="text" id="address" name="address" placeholder="Enter drop-off or pickup address" required>
 
-      <label for="datetime">Pickup/Dropoff Time</label>
-      <input type="datetime-local" id="datetime" name="datetime" required onchange="checkAvailability()">
+      <label for="datetime">Date and Time</label>
+      <input type="datetime-local" id="datetime" name="datetime" required>
+      <div id="slotWarning"></div>
 
       <label for="passengers">Number of Passengers</label>
-      <input type="number" id="passengers" name="passengers" min="1" max="12" required oninput="updateEstimate()">
+      <input type="number" id="passengers" name="passengers" min="1" max="12" required>
 
-      <div class="estimate-display" id="vehicleDisplay"></div>
-      <div class="estimate-display" id="costDisplay"></div>
-      <div id="slotWarning"></div>
+      <div class="estimate-display" id="estimateDisplay">Estimated Price: $0</div>
+      <div class="estimate-display" id="vehicleDisplay">Vehicle: Tesla Model Y</div>
 
       <label for="name">Your Name</label>
       <input type="text" id="name" name="name" required>
@@ -100,8 +94,6 @@
 
       <button type="submit">Submit Booking</button>
     </form>
-
-    <div id="map"></div>
 
     <div id="adminSection">
       <button onclick="loadBookings()">Load Bookings</button>
@@ -118,16 +110,15 @@
       messagingSenderId: "925284621075",
       appId: "1:925284621075:web:65e6125a1bed22206dd8e6"
     };
-
     firebase.initializeApp(firebaseConfig);
     firebase.appCheck().activate('6LcqYmArAAAAAJifqnY4dXLf4D7ETfcTX6rOBYAN', true);
     const db = firebase.firestore();
 
-    function initMap() {
-      new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 33.6846, lng: -117.8265 },
-        zoom: 10
-      });
+    function initAutocomplete() {
+      const addressInput = document.getElementById('address');
+      if (google.maps.places) {
+        new google.maps.places.Autocomplete(addressInput);
+      }
     }
 
     function toggleLanguage() {
@@ -150,33 +141,13 @@
     }
 
     function toggleServiceType() {
-      const serviceType = document.getElementById('serviceType').value;
-      document.getElementById('pickupGroup').style.display = serviceType === 'dropoff' ? 'block' : 'none';
-      document.getElementById('dropoffGroup').style.display = serviceType === 'pickup' ? 'block' : 'none';
-    }
-
-    async function checkAvailability() {
-      const selectedDateTime = document.getElementById('datetime').value;
-      const snapshot = await db.collection('bookings')
-        .where('datetime', '==', selectedDateTime).get();
-      const warning = document.getElementById('slotWarning');
-      if (!snapshot.empty) {
-        warning.innerText = '⚠️ That time slot is already booked! Please choose another.';
+      const type = document.getElementById('serviceType').value;
+      const label = document.getElementById('addressLabel');
+      if (type === 'pickup') {
+        label.innerText = 'Drop-off Address';
       } else {
-        warning.innerText = '';
+        label.innerText = 'Pickup Address';
       }
-    }
-
-    function updateEstimate() {
-      const passengers = parseInt(document.getElementById('passengers').value);
-      const vehicle = passengers <= 3 ? 'Tesla Model Y' : 'Mercedes 12-seat Van';
-      const vehicleSurcharge = passengers > 3 ? 30 : 0;
-      document.getElementById('vehicleDisplay').innerText = `Selected Vehicle: ${vehicle}`;
-      // Mock: You can plug in Google Distance Matrix result here
-      const distanceMiles = 25; // mock value
-      const baseRate = 2.5 * distanceMiles * 0.9;
-      const total = baseRate + vehicleSurcharge;
-      document.getElementById('costDisplay').innerText = `Estimated Cost: $${total.toFixed(2)}`;
     }
   </script>
 </body>

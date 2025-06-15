@@ -64,6 +64,8 @@
           <option value="LAX Airport, Los Angeles, CA">Sân bay LAX</option>
           <option value="Ontario Airport, Ontario, CA">Sân bay Ontario (ONT)</option>
           <option value="Burbank Airport, Burbank, CA">Sân bay Burbank (BUR)</option>
+          <option value="San Diego International Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
+          <option value="McClellan-Palomar Airport, Carlsbad, CA">Sân bay McClellan-Palomar (CLD)</option>
         </select>
       </div>
 
@@ -100,7 +102,7 @@
       appId: "1:623460884698:web:a08bd435c453a7b4db05e3"
     };
     firebase.initializeApp(firebaseConfig);
-    firebase.appCheck().activate(null, true);
+    firebase.appCheck().activate(null, true); // No reCAPTCHA for now
     const db = firebase.firestore();
 
     function initAutocomplete() {
@@ -141,7 +143,7 @@
         ) {
           const distMeters = response.rows[0].elements[0].distance.value;
           const miles = distMeters / 1609.34;
-          let baseCost = miles * 2.5 * 0.9;
+          let baseCost = miles * 2.5;
           let vehicle = 'Tesla Model Y';
 
           if (passengers > 3) {
@@ -150,7 +152,7 @@
           }
 
           if (miles > 75) {
-            baseCost += miles * 2.5 * 0.9;
+            baseCost += miles * 2.5; // return trip charge
           }
 
           const finalCost = Math.round(baseCost);

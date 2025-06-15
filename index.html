@@ -6,7 +6,8 @@
   <title>California Travel & Airport Services</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
+  <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initMap"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -40,6 +41,7 @@
     #slotWarning { color: yellow; font-weight: bold; }
     #adminSection { margin-top: 20px; display: none; }
     #bookingList { background: white; color: black; padding: 10px; border-radius: 10px; max-height: 300px; overflow-y: auto; }
+    .estimate-display { font-weight: bold; margin-top: 10px; color: lightgreen; }
   </style>
 </head>
 <body>
@@ -54,51 +56,47 @@
       <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>
     </p>
 
-    <form action="https://formspree.io/f/xeokgbpo" method="POST" onsubmit="return handleSubmit(event)">
-      <label for="serviceType">Service Type:</label>
-      <select id="serviceType" name="serviceType">
+    <form action="https://formspree.io/f/xeokgbpo" method="POST" id="bookingForm">
+      <label for="serviceType">Service Type</label>
+      <select id="serviceType" name="serviceType" required onchange="toggleServiceType()">
         <option value="pickup">Pickup from Airport</option>
         <option value="dropoff">Drop-off at Airport</option>
       </select>
 
-      <label for="airport">Airport:</label>
-      <select id="airport" name="airport">
-        <option value="John Wayne Airport, CA">John Wayne Airport (SNA)</option>
-        <option value="Long Beach Airport, CA">Long Beach Airport (LGB)</option>
-        <option value="Los Angeles International Airport, CA">LAX</option>
-        <option value="Ontario International Airport, CA">Ontario Airport (ONT)</option>
-        <option value="Hollywood Burbank Airport, CA">Burbank Airport (BUR)</option>
+      <label for="airport">Select Airport</label>
+      <select id="airport" name="airport" required>
+        <option value="SNA">John Wayne Airport (SNA)</option>
+        <option value="LGB">Long Beach Airport (LGB)</option>
+        <option value="LAX">Los Angeles International Airport (LAX)</option>
+        <option value="ONT">Ontario International Airport (ONT)</option>
+        <option value="BUR">Hollywood Burbank Airport (BUR)</option>
       </select>
 
-      <div id="pickupField">
-        <label for="pickup">Pickup Address:</label>
-        <input type="text" id="pickup" name="pickup"/>
+      <div id="pickupGroup">
+        <label for="pickup">Pickup Address</label>
+        <input type="text" id="pickup" name="pickup" placeholder="Enter pickup address">
       </div>
 
-      <div id="dropoffField" style="display:none;">
-        <label for="dropoff">Drop-off Address:</label>
-        <input type="text" id="dropoff" name="dropoff"/>
+      <div id="dropoffGroup">
+        <label for="dropoff">Drop-off Address</label>
+        <input type="text" id="dropoff" name="dropoff" placeholder="Enter drop-off address">
       </div>
 
-      <label for="datetime">Pickup/Drop-off Date & Time:</label>
-      <input type="datetime-local" id="datetime" name="datetime" required/>
+      <label for="datetime">Pickup/Dropoff Time</label>
+      <input type="datetime-local" id="datetime" name="datetime" required onchange="checkAvailability()">
 
-      <label for="passengers">Number of Passengers (1–12):</label>
-      <input type="number" id="passengers" name="passengers" min="1" max="12" value="1"/>
+      <label for="passengers">Number of Passengers</label>
+      <input type="number" id="passengers" name="passengers" min="1" max="12" required oninput="updateEstimate()">
 
-      <p id="vehicleEstimate">Vehicle:</p>
-      <input type="hidden" id="vehicle" name="vehicle"/>
-
-      <p id="priceEstimate">Estimated price will appear here.</p>
-      <input type="hidden" id="price" name="estimatedPrice"/>
-
+      <div class="estimate-display" id="vehicleDisplay"></div>
+      <div class="estimate-display" id="costDisplay"></div>
       <div id="slotWarning"></div>
 
-      <label for="name">Your Name:</label>
-      <input type="text" id="name" name="name" required/>
+      <label for="name">Your Name</label>
+      <input type="text" id="name" name="name" required>
 
-      <label for="phone">Phone Number:</label>
-      <input type="tel" id="phone" name="phone" required/>
+      <label for="phone">Phone Number</label>
+      <input type="tel" id="phone" name="phone" required>
 
       <button type="submit">Submit Booking</button>
     </form>
@@ -120,138 +118,65 @@
       messagingSenderId: "925284621075",
       appId: "1:925284621075:web:65e6125a1bed22206dd8e6"
     };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    let currentLang = 'en';
 
-    window.onload = () => {
+    firebase.initializeApp(firebaseConfig);
+    firebase.appCheck().activate('6LcqYmArAAAAAJifqnY4dXLf4D7ETfcTX6rOBYAN', true);
+    const db = firebase.firestore();
+
+    function initMap() {
       new google.maps.Map(document.getElementById("map"), {
         center: { lat: 33.6846, lng: -117.8265 },
         zoom: 10
       });
-
-      const pickupInput = document.getElementById("pickup");
-      const dropoffInput = document.getElementById("dropoff");
-      new google.maps.places.Autocomplete(pickupInput).addListener("place_changed", liveEstimate);
-      new google.maps.places.Autocomplete(dropoffInput).addListener("place_changed", liveEstimate);
-
-      document.getElementById("passengers").addEventListener("input", liveEstimate);
-      document.getElementById("serviceType").addEventListener("change", () => {
-        toggleFields(); liveEstimate();
-      });
-      document.getElementById("datetime").addEventListener("change", () => {
-        checkSlotAvailability(); liveEstimate();
-      });
-
-      toggleFields();
-    };
-
-    function toggleFields() {
-      const type = document.getElementById("serviceType").value;
-      document.getElementById("pickupField").style.display = type === 'dropoff' ? 'block' : 'none';
-      document.getElementById("dropoffField").style.display = type === 'pickup' ? 'block' : 'none';
-    }
-
-    async function calculateEstimate(pickup, dropoff, passengers, datetimeStr) {
-      return new Promise((resolve, reject) => {
-        new google.maps.DistanceMatrixService().getDistanceMatrix({
-          origins: [pickup],
-          destinations: [dropoff],
-          travelMode: "DRIVING"
-        }, (res, status) => {
-          if (status !== "OK") return reject(status);
-          const distMiles = res.rows[0].elements[0].distance.value / 1609.34;
-          let basePrice = distMiles * 2.5 * 0.9;
-          if (passengers > 3) basePrice += 30;
-          const dt = new Date(datetimeStr);
-          const hour = dt.getHours();
-          const holidays = ['1/1', '7/4', '12/25'];
-          const todayStr = `${dt.getMonth()+1}/${dt.getDate()}`;
-          if (hour < 6 || hour > 21 || holidays.includes(todayStr)) basePrice += 20;
-          if (distMiles > 75) basePrice += distMiles * 1.25;
-          resolve({ price: basePrice.toFixed(2), distMiles });
-        });
-      });
-    }
-
-    async function liveEstimate() {
-      const type = document.getElementById("serviceType").value;
-      const airport = document.getElementById("airport").value;
-      const pickup = type === 'pickup' ? airport : document.getElementById("pickup").value;
-      const dropoff = type === 'pickup' ? document.getElementById("dropoff").value : airport;
-      const passengers = parseInt(document.getElementById("passengers").value || 1);
-      const datetime = document.getElementById("datetime").value;
-      if (!pickup || !dropoff || !datetime) return;
-
-      const vehicle = passengers > 3 ? "Mercedes Van" : "Tesla Model Y";
-      document.getElementById("vehicleEstimate").textContent = `Vehicle: ${vehicle}`;
-      document.getElementById("vehicle").value = vehicle;
-
-      try {
-        const { price } = await calculateEstimate(pickup, dropoff, passengers, datetime);
-        document.getElementById("priceEstimate").textContent = `Estimated Price: $${price}`;
-        document.getElementById("price").value = price;
-      } catch (err) {
-        document.getElementById("priceEstimate").textContent = "Could not calculate price.";
-      }
-    }
-
-    async function checkSlotAvailability() {
-      const datetime = document.getElementById("datetime").value;
-      const warning = document.getElementById("slotWarning");
-      warning.textContent = "";
-      if (!datetime) return;
-      const snapshot = await db.collection("bookings").where("datetime", "==", datetime).get();
-      if (!snapshot.empty) warning.textContent = "⚠️ This time slot is already booked.";
-    }
-
-    function handleSubmit(e) {
-      e.preventDefault();
-      if (document.getElementById("slotWarning").textContent) {
-        alert("This time slot is already taken.");
-        return false;
-      }
-      e.target.submit();
     }
 
     function toggleLanguage() {
-      const en = {
-        title: "California Travel & Airport Services",
-        contact: `<strong>Contact:</strong> Duy Hoa | 
-          <a href='tel:7142276007' style='color: #add8e6;'>Phone: 714-227-6007</a> | 
-          <a href='mailto:dulichcali21@gmail.com' style='color: #add8e6;'>Email: dulichcali21@gmail.com</a>`,
-        priceEstimate: "Estimated price will appear here.",
-        button: "EN | VI"
-      };
-      const vi = {
-        title: "Dịch Vụ Đưa Đón Sân Bay & Du Lịch California",
-        contact: `<strong>Liên hệ:</strong> Duy Hoa | 
-          <a href='tel:7142276007' style='color: #add8e6;'>Điện thoại: 714-227-6007</a> | 
-          <a href='mailto:dulichcali21@gmail.com' style='color: #add8e6;'>Email: dulichcali21@gmail.com</a>`,
-        priceEstimate: "Giá ước tính sẽ hiển thị ở đây.",
-        button: "VI | EN"
-      };
-      const lang = currentLang === 'en' ? vi : en;
-      currentLang = currentLang === 'en' ? 'vi' : 'en';
-      document.getElementById("title").textContent = lang.title;
-      document.getElementById("contact").innerHTML = lang.contact;
-      document.getElementById("priceEstimate").textContent = lang.priceEstimate;
-      document.getElementById("langBtn").textContent = lang.button;
+      const langBtn = document.getElementById('langBtn');
+      const title = document.getElementById('title');
+      const contact = document.getElementById('contact');
+      if (langBtn.innerText.includes('EN')) {
+        langBtn.innerText = 'VI | EN';
+        title.innerText = 'Dịch Vụ Đưa Đón Sân Bay & Du Lịch California';
+        contact.innerHTML = `<strong>Liên hệ:</strong> Duy Hoa |
+          <a href="tel:7142276007" style="color: #add8e6;">Điện thoại: 714-227-6007</a> |
+          <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>`;
+      } else {
+        langBtn.innerText = 'EN | VI';
+        title.innerText = 'California Travel & Airport Services';
+        contact.innerHTML = `<strong>Contact:</strong> Duy Hoa |
+          <a href="tel:7142276007" style="color: #add8e6;">Phone: 714-227-6007</a> |
+          <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>`;
+      }
     }
 
-    function loadBookings() {
-      const list = document.getElementById("bookingList");
-      document.getElementById("adminSection").style.display = "block";
-      list.innerHTML = "Loading...";
-      db.collection("bookings").orderBy("datetime", "desc").get().then(snapshot => {
-        if (snapshot.empty) return list.innerHTML = "No bookings found.";
-        let html = "";
-        snapshot.forEach(doc => {
-          const d = doc.data();
-          html += `<div><strong>${d.name}</strong> (${d.phone})<br>${d.pickup} ➝ ${d.dropoff}<br>Date: ${d.datetime} | ${d.passengers} pax<br>Vehicle: ${d.vehicle} | Price: $${d.estimatedPrice}<hr></div>`;
-        });
-        list.innerHTML = html;
-      });
+    function toggleServiceType() {
+      const serviceType = document.getElementById('serviceType').value;
+      document.getElementById('pickupGroup').style.display = serviceType === 'dropoff' ? 'block' : 'none';
+      document.getElementById('dropoffGroup').style.display = serviceType === 'pickup' ? 'block' : 'none';
+    }
+
+    async function checkAvailability() {
+      const selectedDateTime = document.getElementById('datetime').value;
+      const snapshot = await db.collection('bookings')
+        .where('datetime', '==', selectedDateTime).get();
+      const warning = document.getElementById('slotWarning');
+      if (!snapshot.empty) {
+        warning.innerText = '⚠️ That time slot is already booked! Please choose another.';
+      } else {
+        warning.innerText = '';
+      }
+    }
+
+    function updateEstimate() {
+      const passengers = parseInt(document.getElementById('passengers').value);
+      const vehicle = passengers <= 3 ? 'Tesla Model Y' : 'Mercedes 12-seat Van';
+      const vehicleSurcharge = passengers > 3 ? 30 : 0;
+      document.getElementById('vehicleDisplay').innerText = `Selected Vehicle: ${vehicle}`;
+      // Mock: You can plug in Google Distance Matrix result here
+      const distanceMiles = 25; // mock value
+      const baseRate = 2.5 * distanceMiles * 0.9;
+      const total = baseRate + vehicleSurcharge;
+      document.getElementById('costDisplay').innerText = `Estimated Cost: $${total.toFixed(2)}`;
     }
   </script>
 </body>

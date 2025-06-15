@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -111,7 +111,7 @@
       appId: "1:925284621075:web:65e6125a1bed22206dd8e6"
     };
     firebase.initializeApp(firebaseConfig);
-    firebase.appCheck().activate('6LcqYmArAAAAAJifqnY4dXLf4D7ETfcTX6rOBYAN', true);
+    firebase.appCheck().activate('6LcqYmArAAAAAJifqnY4dXLf4D7ETfcTX6rOBYAN', true); // bypass token during dev
     const db = firebase.firestore();
 
     function initAutocomplete() {
@@ -171,7 +171,12 @@
         destinations: [destination],
         travelMode: google.maps.TravelMode.DRIVING
       }, (response, status) => {
-        if (status === 'OK') {
+        if (
+          status === 'OK' &&
+          response.rows[0] &&
+          response.rows[0].elements[0] &&
+          response.rows[0].elements[0].status === 'OK'
+        ) {
           const distMeters = response.rows[0].elements[0].distance.value;
           const miles = distMeters / 1609.34;
           let baseCost = miles * 2.5 * 0.9;
@@ -185,6 +190,9 @@
           const finalCost = Math.round(baseCost);
           document.getElementById('estimateDisplay').innerText = `Estimated Price: $${finalCost}`;
           document.getElementById('vehicleDisplay').innerText = `Vehicle: ${vehicle}`;
+        } else {
+          document.getElementById('estimateDisplay').innerText = 'Unable to calculate distance.';
+          document.getElementById('vehicleDisplay').innerText = '';
         }
       });
     }

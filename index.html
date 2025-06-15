@@ -186,7 +186,11 @@
             baseCost += 30;
             vehicle = 'Mercedes Van';
           }
-
+          
+          if (miles > 75) {
+            baseCost += miles * 2.5 * 0.9; // return trip charge
+          }
+          
           const finalCost = Math.round(baseCost);
           document.getElementById('estimateDisplay').innerText = `Estimated Price: $${finalCost}`;
           document.getElementById('vehicleDisplay').innerText = `Vehicle: ${vehicle}`;

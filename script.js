@@ -60,21 +60,38 @@ const firebaseConfig = {
       });
     }
 
-  async function submitBooking(event) {
+let lastCalculatedMiles = 0; // Global variable set during cost estimation
+
+async function submitBooking(event) {
   event.preventDefault();
+
   const form = document.getElementById('bookingForm');
   const datetime = document.getElementById('datetime').value;
+  const selectedTime = new Date(datetime);
   const slotRef = db.collection('bookings').doc(datetime);
 
-  const doc = await slotRef.get();
-  if (doc.exists) {
-    document.getElementById('slotWarning').innerText = 'Khung giờ đã được đặt. Vui lòng chọn giờ khác.';
-    return false;
+  // Get all bookings in the same day
+  const snapshot = await db.collection('bookings').get();
+
+  for (const doc of snapshot.docs) {
+    const bookedTime = new Date(doc.id);
+    const distance = doc.data().distance || 10; // Default to 10 miles if missing
+    const bufferMinutes = Math.ceil(distance * 2) + 15;
+
+    const timeDifference = Math.abs((selectedTime - bookedTime) / 60000); // in minutes
+    if (timeDifference < bufferMinutes) {
+      document.getElementById('slotWarning').innerText =
+        `Khung giờ xung đột với lịch ${bookedTime.toLocaleTimeString()} (cần cách ${bufferMinutes} phút).`;
+      return false;
+    }
   }
 
-  await slotRef.set({ booked: true });
+  // Save new booking
+  await slotRef.set({
+    booked: true,
+    distance: lastCalculatedMiles // Must be set by updateEstimate()
+  });
 
-  // Allow native form submission to Formspree after booking is saved
   form.removeEventListener('submit', submitBooking);
   form.submit();
-  }
+}

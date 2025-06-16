@@ -205,19 +205,26 @@ function toggleServiceType() {
   const addressLabel = document.getElementById('addressLabel');
   const airportField = document.getElementById('airportField');
   const lodgingField = document.getElementById('lodgingField');
+  const tourDaysInput = document.getElementById('tourDays');
 
   if (type === 'pickup') {
     addressLabel.innerText = 'Địa chỉ đến';
     airportField.style.display = 'block';
     lodgingField.style.display = 'none';
+    tourDaysInput.disabled = true;
+    tourDaysInput.value = '';
   } else if (type === 'dropoff') {
     addressLabel.innerText = 'Địa chỉ đón';
     airportField.style.display = 'block';
     lodgingField.style.display = 'none';
+    tourDaysInput.disabled = true;
+    tourDaysInput.value = '';
   } else {
+    // Tour services
     addressLabel.innerText = 'Địa chỉ của bạn';
     airportField.style.display = 'none';
     lodgingField.style.display = 'block';
+    tourDaysInput.disabled = false;
   }
 
   updateEstimate();

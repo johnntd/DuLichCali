@@ -41,21 +41,6 @@ function initGoogleAPI() {
   });
 }
 
-// --- Autocomplete using new PlaceAutocompleteElement ---
-function initAutocomplete() {
-  const addressInput = document.getElementById("address");
-  if (!window.google || !window.google.maps || !addressInput) return;
-
-  const placeAutocomplete = document.createElement('gmpx-placeautocomplete');
-  placeAutocomplete.setAttribute('input', 'address');
-  document.body.appendChild(placeAutocomplete);
-
-  new google.maps.Map(document.getElementById("map"), {
-    center: { lat: 33.7456, lng: -117.8678 },
-    zoom: 8
-  });
-}
-
 // --- Booking Submission ---
 async function submitBooking(event) {
   event.preventDefault();
@@ -228,6 +213,5 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // --- Init on Load ---
 window.initMap = () => {
-  initAutocomplete();
   initGoogleAPI();
 };

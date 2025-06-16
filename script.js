@@ -191,12 +191,12 @@ function updateEstimate() {
           const passengerSurcharge = (passengers > 6) ? 150 : 0;
 
           let ticketCostPerPerson = 0;
-          if (serviceType === 'lasvegas') ticketCostPerPerson = 80;
-          else if (serviceType === 'yosemite') ticketCostPerPerson = 60;
-          else if (serviceType === 'sanfrancisco') ticketCostPerPerson = 70;
+          if (serviceType === 'lasvegas') ticketCostPerPerson = 0;
+          else if (serviceType === 'yosemite') ticketCostPerPerson = 0;
+          else if (serviceType === 'sanfrancisco') ticketCostPerPerson = 0;
           const ticketCost = ticketCostPerPerson * passengers;
 
-          const mealCost = 40 * days * passengers;
+          const mealCost = 0;
           const tolls = 50;
 
           cost = fuelCost + lodgingCost + vanCost + passengerSurcharge + ticketCost + mealCost + tolls;

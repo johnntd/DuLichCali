@@ -131,9 +131,7 @@ function updateEstimate() {
 
   const passengers = parseInt(document.getElementById('passengers').value) || 1;
   const airport = document.getElementById('airport').value;
-  const addressEl = document.getElementById('address');
-  const placeResult = addressEl.getPlace ? addressEl.getPlace() : null;
-  const address = placeResult ? placeResult.formatted_address : "";
+  const address = document.getElementById('address')?.value || '';
 
   const serviceType = document.getElementById('serviceType').value;
   const origin = (serviceType === 'pickup') ? airport : address;
@@ -209,9 +207,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       instance.set('disable', unavailable);
     }
   });
+
+  // ✅ Call the Google API initialization here
+  initGoogleAPI();
 });
 
-// --- Init on Load ---
-window.initMap = () => {
-  initGoogleAPI();
-};

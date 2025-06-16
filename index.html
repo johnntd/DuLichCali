@@ -7,8 +7,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script> 
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete"></script>
-  <script src="https://apis.google.com/js/api.js"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places"></script>
   <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()" async defer></script>
   <script src="https://accounts.google.com/gsi/client" onload="gisLoaded()" async defer></script>
   <script src="calendar.js"></script>
@@ -74,7 +73,7 @@
       <input type="tel" id="phone" name="phone" required>
       <input type="hidden" name="message" id="bookingSummary" />
       <button type="submit">Gửi yêu cầu</button>
-      <button onclick="initGoogleAPI()">Đăng nhập Google để đồng bộ lịch</button>
+      <button type="button" onclick="initGoogleAPI()">🔐 Đăng nhập Google để đồng bộ lịch</button>
     </form>
       <!-- Aligned Google Map Inside Container -->
     <div id="map"></div>

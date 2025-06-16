@@ -15,35 +15,27 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
 
-  <!-- Google Maps JS (classic Autocomplete) -->
-<script>
-  function initMap() {
-    const map = new google.maps.Map(document.getElementById('map'), {
-      center: { lat: 33.6846, lng: -117.8265 },
-      zoom: 9
-    });
+  <!-- Google Maps Autocomplete -->
+  <script>
+    function initMap() {
+      const map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 33.6846, lng: -117.8265 },
+        zoom: 9
+      });
 
-    const input = document.getElementById('address');
-    const autocomplete = new google.maps.places.Autocomplete(input);
-  }
-</script>
+      const input = document.getElementById('address');
+      const autocomplete = new google.maps.places.Autocomplete(input);
+    }
+  </script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initMap"></script>
 
-<!-- Google Maps API with callback -->
-<script
-  async
-  defer
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initMap">
-</script>
-  
   <!-- Flatpickr -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
   <!-- Styles -->
   <link rel="stylesheet" href="style.css" />
-
 </head>
-
 <body>
   <div class="container">
     <h1>Dịch Vụ Đưa Đón & Du Lịch California</h1>
@@ -58,6 +50,9 @@
       <select id="serviceType" name="serviceType" onchange="toggleServiceType(); updateEstimate();">
         <option value="pickup">Đón tại sân bay</option>
         <option value="dropoff">Đưa đến sân bay</option>
+        <option value="lasvegas">Du lịch Las Vegas</option>
+        <option value="yosemite">Du lịch Yosemite</option>
+        <option value="sanfrancisco">Du lịch San Francisco</option>
       </select>
 
       <div id="airportField">
@@ -73,12 +68,15 @@
       </div>
 
       <label id="addressLabel" for="address">Địa chỉ đến</label>
-      <input
-  id="address"
-  type="text"
-  placeholder="Nhập địa chỉ đến hoặc đón"
-  required
-      />
+      <input id="address" type="text" placeholder="Nhập địa chỉ đến hoặc đón" required />
+
+      <div id="lodgingOptions" style="display: none;">
+        <label for="lodging">Chọn chỗ ở</label>
+        <select id="lodging" name="lodging" onchange="updateEstimate()">
+          <option value="hotel">Khách sạn</option>
+          <option value="airbnb">Airbnb</option>
+        </select>
+      </div>
 
       <div class="flex-row">
         <input type="text" id="datetime" name="datetime" required placeholder="Chọn ngày và giờ" />
@@ -109,8 +107,6 @@
 
     <div id="map"></div>
   </div>
-
-  <!-- Scripts -->
   <script src="script.js" defer></script>
 </body>
 </html>

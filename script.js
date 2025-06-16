@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // --- Init on Load ---
-window.addEventListener('load', () => {
+window.initMap = () => {
   initAutocomplete();
   initGoogleAPI();
-});
+};

@@ -33,9 +33,6 @@ window.initMap = function () {
   });
 
   // 2. Load the Places Plus library for gmpx-placeautocomplete
-  const script = document.createElement('script');
-  script.async = true;
-  script.defer = true;
   document.head.appendChild(script);
 };
 

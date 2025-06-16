@@ -145,6 +145,7 @@ function updateEstimate() {
   const airport = document.getElementById('airport')?.value || '';
   const address = document.getElementById('address')?.value || '';
   const lodging = document.getElementById('lodging')?.value || '';
+  const days = parseInt(document.getElementById('days')?.value) || 1;
 
   const origin = (serviceType === 'pickup') ? airport : address;
   const destination = (serviceType === 'pickup') ? address : airport;
@@ -168,19 +169,34 @@ function updateEstimate() {
         lastCalculatedMiles = miles;
 
         let cost = 0;
+
         if (['pickup', 'dropoff'].includes(serviceType)) {
           cost = (passengers < 4)
             ? Math.max(40, miles * 2.5)
             : (miles > 75 ? Math.max(150, miles * 2.5 * 2) : Math.max(125, miles * 2.5));
         } else {
-          if (serviceType === 'lasvegas') {
-            cost = 400 + (passengers > 6 ? 200 : 0);
-          } else if (serviceType === 'yosemite') {
-            cost = 500 + (passengers > 6 ? 200 : 0);
-          } else if (serviceType === 'sanfrancisco') {
-            cost = 350 + (passengers > 6 ? 150 : 0);
-          }
-          cost += (lodging === 'hotel') ? 150 : (lodging === 'airbnb' ? 100 : 0);
+          // --- Tour package cost breakdown ---
+          const fuelCost = miles * 2 * 2.5;
+
+          const lodgingCost = (lodging === 'hotel')
+            ? 150 * days * passengers
+            : (lodging === 'airbnb')
+              ? 100 * days * passengers
+              : 0;
+
+          const vanCost = 100 * days;
+          const passengerSurcharge = (passengers > 6) ? 150 : 0;
+
+          let ticketCostPerPerson = 0;
+          if (serviceType === 'lasvegas') ticketCostPerPerson = 80;
+          else if (serviceType === 'yosemite') ticketCostPerPerson = 60;
+          else if (serviceType === 'sanfrancisco') ticketCostPerPerson = 70;
+          const ticketCost = ticketCostPerPerson * passengers;
+
+          const mealCost = 40 * days * passengers;
+          const tolls = 50;
+
+          cost = fuelCost + lodgingCost + vanCost + passengerSurcharge + ticketCost + mealCost + tolls;
         }
 
         const vehicle = (passengers > 3) ? 'Mercedes Van' : 'Tesla Model Y';

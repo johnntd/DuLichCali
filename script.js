@@ -15,20 +15,19 @@ const db = firebase.firestore();
 let lastCalculatedMiles = 0;
 let gapiInited = false;
 let tokenClient;
-// Call this safely when the page and gapi are ready
+
 function safeInitGoogleAPI() {
   if (typeof gapi !== "undefined") {
     initGoogleAPI();
   } else {
-    setTimeout(safeInitGoogleAPI, 100); // Retry every 100ms until gapi is available
+    setTimeout(safeInitGoogleAPI, 100);
   }
 }
-// --- Google Calendar API Setup ---
 
+// --- Google Calendar API Setup ---
 window.initMap = function () {
-  // 1. Render the visible map
   const map = new google.maps.Map(document.getElementById('map'), {
-    center: { lat: 33.6846, lng: -117.8265 }, // Orange County, CA
+    center: { lat: 33.6846, lng: -117.8265 },
     zoom: 9
   });
 };
@@ -224,14 +223,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // ✅ Call the Google API initialization here
-  safeInitGoogleAPI(); // not initGoogleAPI()
+  safeInitGoogleAPI();
 });
+
 window.gapiLoaded = () => initGoogleAPI();
+
 customElements.whenDefined('gmpx-placeautocomplete').then(() => {
-  console.log('gmpx-placeautocomplete is ready');
   const placeBox = document.querySelector('#address');
-  if (placeBox) {
-    placeBox.disabled = false;
-  }
+  if (placeBox) placeBox.disabled = false;
 });

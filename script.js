@@ -25,6 +25,12 @@ function safeInitGoogleAPI() {
 }
 
 // --- Google Calendar API Setup ---
+await fetch('/api/book', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name, airport, address, phone, datetime })
+});
+
 function initGoogleAPI() {
   gapi.load('client', async () => {
     try {
@@ -48,6 +54,8 @@ function initGoogleAPI() {
     }
   });
 }
+
+
 
 // --- Booking Submission ---
 async function submitBooking(event) {

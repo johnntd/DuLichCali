@@ -31,7 +31,6 @@ function initAutocomplete() {
   });
 }
 
-let tokenClient;
 let gapiInited = false;
 
 function initGoogleAPI() {

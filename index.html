@@ -1,261 +1,118 @@
-// --- Firebase Initialization ---
-const firebaseConfig = {
-  apiKey: "AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ",
-  authDomain: "dulichcali-booking-calendar.firebaseapp.com",
-  projectId: "dulichcali-booking-calendar",
-  storageBucket: "dulichcali-booking-calendar.appspot.com",
-  messagingSenderId: "623460884698",
-  appId: "1:623460884698:web:a08bd435c453a7b4db05e3"
-};
-firebase.initializeApp(firebaseConfig);
-firebase.auth().signInAnonymously().catch(console.error);
-const db = firebase.firestore();
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
+  <title>Dịch Vụ Đưa Đón & Du Lịch California</title>
 
-// --- Global variables ---
-let lastCalculatedMiles = 0;
-let gapiInited = false;
-let tokenClient;
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
-function safeInitGoogleAPI() {
-  if (typeof gapi !== "undefined") {
-    initGoogleAPI();
-  } else {
-    setTimeout(safeInitGoogleAPI, 100);
-  }
-}
+  <!-- Google API Client -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js" async defer></script>
 
-// --- Google Calendar API Setup ---
-function initGoogleAPI() {
-  gapi.load('client', async () => {
-    try {
-      await gapi.client.init({
-        apiKey: firebaseConfig.apiKey,
-        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"],
+  <!-- Google Maps JS (classic Autocomplete) -->
+  <script>
+    function initMap() {
+      const map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 33.6846, lng: -117.8265 },
+        zoom: 9
       });
-      gapiInited = true;
-
-      tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: '623460884698-0k6g2r4ltb3c0d9hs0odms2b5j2hsp67.apps.googleusercontent.com',
-        scope: 'https://www.googleapis.com/auth/calendar.events',
-        callback: (tokenResponse) => {
-          if (!tokenResponse || tokenResponse.error) {
-            console.error("Access token error", tokenResponse);
-          }
-        }
-      });
-    } catch (err) {
-      console.error("Google API Init Failed:", err);
-    }
-  });
-}
-
-// --- Booking Submission ---
-async function submitBooking(event) {
-  event.preventDefault();
-  const form = document.getElementById('bookingForm');
-  const datetime = document.getElementById('datetime').value;
-  const selectedTime = new Date(datetime);
-  const slotRef = db.collection('bookings').doc(datetime);
-
-  const snapshot = await db.collection('bookings').get();
-  for (const doc of snapshot.docs) {
-    const bookedTime = new Date(doc.id);
-    const distance = doc.data().distance || 10;
-    const bufferMinutes = Math.ceil(distance * 2) + 15;
-    const diff = Math.abs((selectedTime - bookedTime) / 60000);
-    if (diff < bufferMinutes) {
-      document.getElementById('slotWarning').innerText =
-        `Khung giờ xung đột với lịch ${bookedTime.toLocaleTimeString()} (cần cách ${bufferMinutes} phút).`;
-      return false;
-    }
-  }
-
-  const name = document.getElementById('name').value;
-  const phone = document.getElementById('phone').value;
-  const airport = document.getElementById('airport')?.value || '';
-  const address = document.getElementById('address').value;
-  const serviceType = document.getElementById('serviceType').value;
-  const lodging = document.getElementById('lodging')?.value || '';
-
-  const summary = `Khách hàng: ${name}
-Dịch vụ: ${serviceType}
-Sân bay/Điểm đến: ${airport || address}
-Địa chỉ: ${address}
-Loại chỗ ở: ${lodging}
-Số điện thoại: ${phone}
-Thời gian: ${selectedTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
-  document.getElementById('bookingSummary').value = summary;
-
-  await slotRef.set({
-    booked: true,
-    distance: lastCalculatedMiles,
-    name,
-    phone,
-    airport,
-    address,
-    serviceType,
-    lodging
-  });
-
-  if (gapiInited && tokenClient) {
-    tokenClient.callback = async (resp) => {
-      if (resp.error !== undefined) {
-        console.error('Auth failed:', resp);
-        return;
+      const input = document.getElementById('address');
+      if (input) {
+        const autocomplete = new google.maps.places.Autocomplete(input);
       }
-
-      const event = {
-        summary: `Dịch vụ: ${name}`,
-        location: airport || address,
-        description: summary,
-        start: {
-          dateTime: selectedTime.toISOString(),
-          timeZone: 'America/Los_Angeles',
-        },
-        end: {
-          dateTime: new Date(selectedTime.getTime() + 60 * 60 * 1000).toISOString(),
-          timeZone: 'America/Los_Angeles',
-        },
-      };
-
-      try {
-        await gapi.client.calendar.events.insert({
-          calendarId: 'primary',
-          resource: event
-        });
-        console.log('Event added to Google Calendar');
-      } catch (err) {
-        console.error('Failed to add to calendar:', err);
-      }
-    };
-
-    tokenClient.requestAccessToken();
-  }
-
-  form.removeEventListener('submit', submitBooking);
-  form.submit();
-}
-
-// --- Estimate Update ---
-function updateEstimate() {
-  lastCalculatedMiles = 0;
-
-  const passengers = parseInt(document.getElementById('passengers').value) || 1;
-  const serviceType = document.getElementById('serviceType').value;
-  const airport = document.getElementById('airport')?.value || '';
-  const address = document.getElementById('address')?.value || '';
-  const lodging = document.getElementById('lodging')?.value || '';
-
-  const origin = (serviceType === 'pickup') ? airport : address;
-  const destination = (serviceType === 'pickup') ? address : airport;
-
-  if (!origin || !destination) {
-    document.getElementById('estimateDisplay').value = "$0";
-    document.getElementById('vehicleDisplay').value = "";
-    return;
-  }
-
-  const distanceService = new google.maps.DistanceMatrixService();
-  distanceService.getDistanceMatrix({
-    origins: [origin],
-    destinations: [destination],
-    travelMode: google.maps.TravelMode.DRIVING
-  }, (response, status) => {
-    if (status === 'OK') {
-      const element = response.rows[0].elements[0];
-      if (element && element.status === 'OK') {
-        const miles = element.distance.value / 1609.34;
-        lastCalculatedMiles = miles;
-
-        let cost = 0;
-        if (['pickup', 'dropoff'].includes(serviceType)) {
-          cost = (passengers < 4)
-            ? Math.max(40, miles * 2.5)
-            : (miles > 75 ? Math.max(150, miles * 2.5 * 2) : Math.max(125, miles * 2.5));
-        } else {
-          if (serviceType === 'lasvegas') {
-            cost = 400 + (passengers > 6 ? 200 : 0);
-          } else if (serviceType === 'yosemite') {
-            cost = 500 + (passengers > 6 ? 200 : 0);
-          } else if (serviceType === 'sanfrancisco') {
-            cost = 350 + (passengers > 6 ? 150 : 0);
-          }
-          cost += (lodging === 'hotel') ? 150 : (lodging === 'airbnb' ? 100 : 0);
-        }
-
-        const vehicle = (passengers > 3) ? 'Mercedes Van' : 'Tesla Model Y';
-
-        document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
-        document.getElementById('vehicleDisplay').value = `${vehicle}`;
-      } else {
-        document.getElementById('estimateDisplay').value = "$0";
-        document.getElementById('vehicleDisplay').value = "";
-      }
-    } else {
-      console.error("DistanceMatrix error:", status);
-      document.getElementById('estimateDisplay').value = "$0";
-      document.getElementById('vehicleDisplay').value = "";
     }
-  });
-}
+  </script>
+  <script
+    async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initMap">
+  </script>
 
-// --- Toggle Service Type ---
-function toggleServiceType() {
-  const type = document.getElementById('serviceType').value;
-  const addressLabel = document.getElementById('addressLabel');
-  const airportField = document.getElementById('airportField');
-  const lodgingField = document.getElementById('lodgingField');
+  <!-- Flatpickr -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-  if (type === 'pickup') {
-    addressLabel.innerText = 'Địa chỉ đến';
-    airportField.style.display = 'block';
-    lodgingField.style.display = 'none';
-  } else if (type === 'dropoff') {
-    addressLabel.innerText = 'Địa chỉ đón';
-    airportField.style.display = 'block';
-    lodgingField.style.display = 'none';
-  } else {
-    addressLabel.innerText = 'Địa chỉ của bạn';
-    airportField.style.display = 'none';
-    lodgingField.style.display = 'block';
-  }
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css" />
+</head>
 
-  updateEstimate();
-}
+<body>
+  <div class="container">
+    <h1>Dịch Vụ Đưa Đón & Du Lịch California</h1>
+    <p>
+      <strong>Liên hệ:</strong> Duy Hoa |
+      <a href="tel:7142276007" style="color: #add8e6;">Điện thoại: 714-227-6007</a> |
+      <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>
+    </p>
 
-// --- Flatpickr Setup ---
-document.addEventListener('DOMContentLoaded', async () => {
-  const today = new Date();
-  flatpickr("#datetime", {
-    enableTime: true,
-    time_24hr: false,
-    dateFormat: "Y-m-d H:i",
-    minDate: today,
-    onOpen: async function (_, dateStr, instance) {
-      const dateOnlyStr = dateStr.split(' ')[0];
-      const snapshot = await db.collection('bookings').get();
-      const unavailable = [];
-      snapshot.forEach(doc => {
-        const bookedTime = new Date(doc.id);
-        const bookedDateStr = bookedTime.toISOString().split('T')[0];
-        if (bookedDateStr === dateOnlyStr) {
-          const buffer = Math.ceil((doc.data().distance || 10) * 2) + 15;
-          const from = new Date(bookedTime.getTime() - buffer * 60000);
-          const to = new Date(bookedTime.getTime() + buffer * 60000);
-          unavailable.push({ from, to });
-        }
-      });
-      instance.set('disable', unavailable);
-    }
-  });
+    <form id="bookingForm" method="POST" action="https://formspree.io/f/xeokgbpo" onsubmit="return submitBooking(event)">
+      <label for="serviceType">Chọn dịch vụ</label>
+      <select id="serviceType" name="serviceType" onchange="toggleServiceType(); updateEstimate();">
+        <option value="pickup">Đón tại sân bay</option>
+        <option value="dropoff">Đưa đến sân bay</option>
+        <option value="lasvegas">Du lịch Las Vegas</option>
+        <option value="yosemite">Du lịch Yosemite</option>
+        <option value="sanfrancisco">Du lịch San Francisco</option>
+      </select>
 
-  safeInitGoogleAPI();
-});
+      <div id="airportField">
+        <label for="airport">Chọn sân bay</label>
+        <select id="airport" name="airport" onchange="updateEstimate()">
+          <option value="John Wayne Airport, Orange County, CA">Sân bay John Wayne (SNA)</option>
+          <option value="Long Beach Airport, Long Beach, CA">Sân bay Long Beach (LGB)</option>
+          <option value="LAX Airport, Los Angeles, CA">Sân bay LAX</option>
+          <option value="Ontario Airport, Ontario, CA">Sân bay Ontario (ONT)</option>
+          <option value="Burbank Airport, Burbank, CA">Sân bay Burbank (BUR)</option>
+          <option value="San Diego Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
+        </select>
+      </div>
 
-window.gapiLoaded = () => initGoogleAPI();
+      <div id="lodgingField" style="display:none;">
+        <label for="lodging">Chọn nơi lưu trú</label>
+        <select id="lodging" name="lodging" onchange="updateEstimate()">
+          <option value="hotel">Khách sạn</option>
+          <option value="airbnb">Airbnb</option>
+        </select>
+      </div>
 
-customElements.whenDefined('gmpx-placeautocomplete').then(() => {
-  console.log('Place Autocomplete ready');
-  const input = document.querySelector('#address');
-  input.disabled = false;
-});
+      <label id="addressLabel" for="address">Địa chỉ đến</label>
+      <input id="address" type="text" placeholder="Nhập địa chỉ đến hoặc đón" required />
+
+      <div class="flex-row">
+        <input type="text" id="datetime" name="datetime" required placeholder="Chọn ngày và giờ" />
+        <input type="number" id="passengers" name="passengers" min="1" max="12" placeholder="Số khách" required oninput="updateEstimate()">
+      </div>
+      <div id="slotWarning"></div>
+
+      <div class="flex-row">
+        <div class="half-width">
+          <label for="estimateDisplay">Chi phí ước tính</label>
+          <input type="text" id="estimateDisplay" class="estimate-display" readonly value="$0" />
+        </div>
+        <div class="half-width">
+          <label for="vehicleDisplay">Xe</label>
+          <input type="text" id="vehicleDisplay" class="estimate-display" readonly value="Mercedes Van" />
+        </div>
+      </div>
+
+      <label for="name">Tên của bạn</label>
+      <input type="text" id="name" name="name" required>
+
+      <label for="phone">Số điện thoại</label>
+      <input type="tel" id="phone" name="phone" required>
+
+      <input type="hidden" name="message" id="bookingSummary" />
+      <button type="submit">Gửi yêu cầu</button>
+    </form>
+
+    <div id="map"></div>
+  </div>
+
+  <script src="script.js" defer></script>
+</body>
+</html>

@@ -24,6 +24,14 @@ function safeInitGoogleAPI() {
   }
 }
 // --- Google Calendar API Setup ---
+
+function initMap() {
+  const map = new google.maps.Map(document.getElementById('map'), {
+    center: { lat: 33.6846, lng: -117.8265 }, // Example: Irvine, CA
+    zoom: 9,
+  });
+}
+
 function initGoogleAPI() {
   gapi.load('client', async () => {
     try {

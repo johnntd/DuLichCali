@@ -22,16 +22,22 @@ function initAutocomplete() {
       updateEstimate();
     });
   }
-  
+
+  new google.maps.Map(document.getElementById("map"), {
+    center: { lat: 33.7456, lng: -117.8678 },
+    zoom: 8
+  });
+}
+
 function initGoogleAPI() {
   gapi.load('client:auth2', async () => {
     await gapi.client.init({
       apiKey: firebaseConfig.apiKey,
-      clientId: 'YOUR_CLIENT_ID.apps.googleusercontent.com',
+      clientId: '925284621075-q59fpmsgi5jjnc28ue72tjfqmn381lei.apps.googleusercontent.com',
       discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"],
       scope: "https://www.googleapis.com/auth/calendar"
     });
-    
+
     gapi.auth2.getAuthInstance().signIn();
   });
 }
@@ -56,11 +62,7 @@ async function addToCalendar(booking) {
     resource: event
   });
 }
-  new google.maps.Map(document.getElementById("map"), {
-    center: { lat: 33.7456, lng: -117.8678 },
-    zoom: 8
-  });
-}
+
 function toggleServiceType() {
   const type = document.getElementById('serviceType').value;
   const label = document.getElementById('addressLabel');
@@ -69,7 +71,7 @@ function toggleServiceType() {
 }
 
 function updateEstimate() {
-  lastCalculatedMiles = 0; // Reset every time user updates input
+  lastCalculatedMiles = 0;
 
   const passengers = parseInt(document.getElementById('passengers').value) || 1;
   const airport = document.getElementById('airport').value;
@@ -105,12 +107,10 @@ function updateEstimate() {
         document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
         document.getElementById('vehicleDisplay').value = `${vehicle}`;
       } else {
-        // Invalid distance result
         document.getElementById('estimateDisplay').value = "$0";
         document.getElementById('vehicleDisplay').value = "";
       }
     } else {
-      // Distance matrix failed
       console.error("DistanceMatrix error:", status);
       document.getElementById('estimateDisplay').value = "$0";
       document.getElementById('vehicleDisplay').value = "";
@@ -118,9 +118,9 @@ function updateEstimate() {
   });
 }
 
-  let lastCalculatedMiles = 0;
+let lastCalculatedMiles = 0;
 
-  async function fetchUnavailableSlots(dateStr) {
+async function fetchUnavailableSlots(dateStr) {
   const snapshot = await db.collection('bookings').get();
   const unavailable = [];
 
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     dateFormat: "Y-m-d H:i",
     minDate: today,
     onOpen: async function(selectedDates, dateStr, instance) {
-      const dateOnlyStr = (new Date()).toISOString().split('T')[0];
+      const dateOnlyStr = dateStr.split(' ')[0];
       const unavailableRanges = await fetchUnavailableSlots(dateOnlyStr);
       instance.set('disable', unavailableRanges);
     }
@@ -179,7 +179,6 @@ async function submitBooking(event) {
     }
   }
 
-  // 🧠 Add this to generate Vietnamese summary
   const name = document.getElementById('name').value;
   const phone = document.getElementById('phone').value;
   const airport = document.getElementById('airport').value;
@@ -198,7 +197,6 @@ ${serviceType === 'pickup' ? 'Địa chỉ đến' : 'Địa chỉ đón'}: ${ad
 Số điện thoại: ${phone}
 Thời gian: ${timeString}`;
 
-  // Set the hidden input value to summary
   const hiddenInput = document.getElementById('bookingSummary');
   if (hiddenInput) {
     hiddenInput.value = summary;
@@ -206,21 +204,20 @@ Thời gian: ${timeString}`;
 
   await slotRef.set({
     booked: true,
-    distance: lastCalculatedMiles
+    distance: lastCalculatedMiles,
+    name,
+    phone,
+    airport,
+    address,
+    serviceType
   });
 
-  // calendar update
-  await slotRef.set({
-  booked: true,
-  distance: lastCalculatedMiles,
-  name,
-  phone,
-  airport,
-  address,
-  serviceType
-});
-
-await addToCalendar({ datetime, name, phone, airport, address, serviceType });
+  await addToCalendar({ datetime, name, phone, airport, address, serviceType });
   form.removeEventListener('submit', submitBooking);
   form.submit();
 }
+
+window.addEventListener('load', () => {
+  initAutocomplete();
+  initGoogleAPI();
+});

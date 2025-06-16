@@ -271,6 +271,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   safeInitGoogleAPI();
+  toggleServiceType(); // Ensure proper initial UI state on load
 });
 
 window.gapiLoaded = () => initGoogleAPI();

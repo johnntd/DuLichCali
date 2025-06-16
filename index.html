@@ -25,6 +25,9 @@
       const input = document.getElementById('address');
       if (input) {
         const autocomplete = new google.maps.places.Autocomplete(input);
+        autocomplete.addListener('place_changed', () => {
+        updateEstimate(); // call estimate function when address is selected
+});
       }
     }
   </script>

@@ -5,7 +5,8 @@ const firebaseConfig = {
   projectId: "dulichcali-booking-calendar",
   storageBucket: "dulichcali-booking-calendar.appspot.com",
   messagingSenderId: "623460884698",
-  appId: "1:623460884698:web:a08bd435c453a7b4db05e3"
+  appId: "1:623460884698:web:a08bd435c453a7b4db05e3",
+  googleApiKey: "623460884698-0k6g2r4ltb3c0d9hs0odms2b5j2hsp67.apps.googleusercontent.com"
 };
 firebase.initializeApp(firebaseConfig);
 firebase.auth().signInAnonymously().catch(console.error);
@@ -44,7 +45,7 @@ function initGoogleAPI() {
   gapi.load('client', async () => {
     try {
       await gapi.client.init({
-        apiKey: firebaseConfig.apiKey,
+        apiKey: firebaseConfig.googleApiKey,
         discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"],
       });
       gapiInited = true;

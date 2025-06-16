@@ -26,11 +26,13 @@ function safeInitGoogleAPI() {
 
 // --- Google Calendar API Setup ---
 window.initMap = function () {
+  // Initialize map (optional for display)
   const map = new google.maps.Map(document.getElementById('map'), {
     center: { lat: 33.6846, lng: -117.8265 },
     zoom: 9
   });
 
+  // ✅ Enable Google Places Autocomplete
   const input = document.getElementById('address');
   const autocomplete = new google.maps.places.Autocomplete(input);
 };

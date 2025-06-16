@@ -209,6 +209,18 @@ Thời gian: ${timeString}`;
     distance: lastCalculatedMiles
   });
 
+  // calendar update
+  await slotRef.set({
+  booked: true,
+  distance: lastCalculatedMiles,
+  name,
+  phone,
+  airport,
+  address,
+  serviceType
+});
+
+await addToCalendar({ datetime, name, phone, airport, address, serviceType });
   form.removeEventListener('submit', submitBooking);
   form.submit();
 }

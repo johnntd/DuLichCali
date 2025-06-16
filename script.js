@@ -56,16 +56,21 @@ const firebaseConfig = {
       });
     }
 
-    async function submitBooking(event) {
-      event.preventDefault();
-      const form = document.getElementById('bookingForm');
-      const datetime = document.getElementById('datetime').value;
-      const slotRef = db.collection('bookings').doc(datetime);
-      const doc = await slotRef.get();
-      if (doc.exists) {
-        document.getElementById('slotWarning').innerText = 'Khung giờ đã được đặt. Vui lòng chọn giờ khác.';
-        return false;
-      }
-      await slotRef.set({ booked: true });
-      form.submit();
-    }
+  async function submitBooking(event) {
+  event.preventDefault();
+  const form = document.getElementById('bookingForm');
+  const datetime = document.getElementById('datetime').value;
+  const slotRef = db.collection('bookings').doc(datetime);
+
+  const doc = await slotRef.get();
+  if (doc.exists) {
+    document.getElementById('slotWarning').innerText = 'Khung giờ đã được đặt. Vui lòng chọn giờ khác.';
+    return false;
+  }
+
+  await slotRef.set({ booked: true });
+
+  // Allow native form submission to Formspree after booking is saved
+  form.removeEventListener('submit', submitBooking);
+  form.submit();
+  }

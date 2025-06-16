@@ -32,11 +32,11 @@ function authenticateAndAddEvent(eventData) {
     if (resp.error !== undefined) throw resp;
 
     try {
-      await gapi.client.calendar.events.insert({
+      const response = await gapi.client.calendar.events.insert({
         calendarId: 'primary',
         resource: eventData,
       });
-      console.log('Event added to Google Calendar');
+      console.log('Event added to Google Calendar:', response.result);
     } catch (err) {
       console.error('Failed to add event:', err);
     }
@@ -67,30 +67,3 @@ function createEventObject(name, phone, datetime, address, airport, type) {
     },
   };
 }
-
-async function addToCalendar(booking) {
-  const event = {
-    summary: `📅 ${booking.serviceType === 'pickup' ? 'Đón khách' : 'Đưa khách'} - ${booking.name}`,
-    location: booking.address,
-    description: `Sân bay: ${booking.airport}, Điện thoại: ${booking.phone}`,
-    start: {
-      dateTime: new Date(booking.datetime).toISOString(),
-      timeZone: 'America/Los_Angeles'
-    },
-    end: {
-      dateTime: new Date(new Date(booking.datetime).getTime() + 60 * 60 * 1000).toISOString(),
-      timeZone: 'America/Los_Angeles'
-    }
-  };
-
-  try {
-    const response = await gapi.client.calendar.events.insert({
-      calendarId: 'primary',
-      resource: event
-    });
-    console.log('Event created:', response.result);
-  } catch (err) {
-    console.error('Calendar event creation failed:', err);
-  }
-}
-// Call `authenticateAndAddEvent(createEventObject(...))` after successful Firestore save

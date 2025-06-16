@@ -138,12 +138,37 @@ async function submitBooking(event) {
     const distance = doc.data().distance || 10;
     const bufferMinutes = Math.ceil(distance * 2) + 15;
 
-    const timeDifference = Math.abs((selectedTime - bookedTime) / 60000);
-    if (timeDifference < bufferMinutes) {
+    const diff = Math.abs((selectedTime - bookedTime) / 60000);
+    if (diff < bufferMinutes) {
       document.getElementById('slotWarning').innerText =
         `Khung giờ xung đột với lịch ${bookedTime.toLocaleTimeString()} (cần cách ${bufferMinutes} phút).`;
       return false;
     }
+  }
+
+  // 🧠 Add this to generate Vietnamese summary
+  const name = document.getElementById('name').value;
+  const phone = document.getElementById('phone').value;
+  const airport = document.getElementById('airport').value;
+  const address = document.getElementById('address').value;
+  const serviceType = document.getElementById('serviceType').value;
+  const timeString = selectedTime.toLocaleTimeString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+
+  const summary = `Khách hàng: ${name}
+Dịch vụ: ${serviceType === 'pickup' ? 'Đón tại sân bay' : 'Đưa đến sân bay'}
+Sân bay: ${airport}
+${serviceType === 'pickup' ? 'Địa chỉ đến' : 'Địa chỉ đón'}: ${address}
+Số điện thoại: ${phone}
+Thời gian: ${timeString}`;
+
+  // Set the hidden input value to summary
+  const hiddenInput = document.getElementById('bookingSummary');
+  if (hiddenInput) {
+    hiddenInput.value = summary;
   }
 
   await slotRef.set({

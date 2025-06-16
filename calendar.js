@@ -5,7 +5,6 @@ const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/
 const SCOPES = 'https://www.googleapis.com/auth/calendar.events';
 
 let gapiInited = false;
-let tokenClient;
 
 function gapiLoaded() {
   gapi.load('client', async () => {

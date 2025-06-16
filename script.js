@@ -211,4 +211,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ✅ Call the Google API initialization here
   initGoogleAPI();
 });
+window.gapiLoaded = () => initGoogleAPI();
 

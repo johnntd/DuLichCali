@@ -25,7 +25,6 @@ function safeInitGoogleAPI() {
 }
 
 // --- Google Calendar API Setup ---
-
 function initGoogleAPI() {
   gapi.load('client', async () => {
     try {
@@ -50,8 +49,6 @@ function initGoogleAPI() {
   });
 }
 
-
-
 // --- Booking Submission ---
 async function submitBooking(event) {
   event.preventDefault();
@@ -75,14 +72,16 @@ async function submitBooking(event) {
 
   const name = document.getElementById('name').value;
   const phone = document.getElementById('phone').value;
-  const airport = document.getElementById('airport').value;
+  const airport = document.getElementById('airport')?.value || '';
   const address = document.getElementById('address').value;
   const serviceType = document.getElementById('serviceType').value;
+  const lodging = document.getElementById('lodging')?.value || '';
 
   const summary = `Khách hàng: ${name}
-Dịch vụ: ${serviceType === 'pickup' ? 'Đón tại sân bay' : 'Đưa đến sân bay'}
-Sân bay: ${airport}
-${serviceType === 'pickup' ? 'Địa chỉ đến' : 'Địa chỉ đón'}: ${address}
+Dịch vụ: ${serviceType}
+Sân bay/Điểm đến: ${airport || address}
+Địa chỉ: ${address}
+Loại chỗ ở: ${lodging}
 Số điện thoại: ${phone}
 Thời gian: ${selectedTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
   document.getElementById('bookingSummary').value = summary;
@@ -94,7 +93,8 @@ Thời gian: ${selectedTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minut
     phone,
     airport,
     address,
-    serviceType
+    serviceType,
+    lodging
   });
 
   if (gapiInited && tokenClient) {
@@ -105,9 +105,9 @@ Thời gian: ${selectedTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minut
       }
 
       const event = {
-        summary: `${serviceType === 'pickup' ? 'Đón khách' : 'Đưa khách'}: ${name}`,
-        location: serviceType === 'pickup' ? airport : address,
-        description: `Khách: ${name}\nSĐT: ${phone}\n${serviceType === 'pickup' ? 'Đến' : 'Đón'}: ${serviceType === 'pickup' ? address : airport}`,
+        summary: `Dịch vụ: ${name}`,
+        location: airport || address,
+        description: summary,
         start: {
           dateTime: selectedTime.toISOString(),
           timeZone: 'America/Los_Angeles',
@@ -141,10 +141,11 @@ function updateEstimate() {
   lastCalculatedMiles = 0;
 
   const passengers = parseInt(document.getElementById('passengers').value) || 1;
-  const airport = document.getElementById('airport').value;
-  const address = document.getElementById('address')?.value || '';
-
   const serviceType = document.getElementById('serviceType').value;
+  const airport = document.getElementById('airport')?.value || '';
+  const address = document.getElementById('address')?.value || '';
+  const lodging = document.getElementById('lodging')?.value || '';
+
   const origin = (serviceType === 'pickup') ? airport : address;
   const destination = (serviceType === 'pickup') ? address : airport;
 
@@ -166,9 +167,21 @@ function updateEstimate() {
         const miles = element.distance.value / 1609.34;
         lastCalculatedMiles = miles;
 
-        let cost = (passengers < 4)
-          ? Math.max(40, miles * 2.5)
-          : (miles > 75 ? Math.max(150, miles * 2.5 * 2) : Math.max(125, miles * 2.5));
+        let cost = 0;
+        if (['pickup', 'dropoff'].includes(serviceType)) {
+          cost = (passengers < 4)
+            ? Math.max(40, miles * 2.5)
+            : (miles > 75 ? Math.max(150, miles * 2.5 * 2) : Math.max(125, miles * 2.5));
+        } else {
+          if (serviceType === 'lasvegas') {
+            cost = 400 + (passengers > 6 ? 200 : 0);
+          } else if (serviceType === 'yosemite') {
+            cost = 500 + (passengers > 6 ? 200 : 0);
+          } else if (serviceType === 'sanfrancisco') {
+            cost = 350 + (passengers > 6 ? 150 : 0);
+          }
+          cost += (lodging === 'hotel') ? 150 : (lodging === 'airbnb' ? 100 : 0);
+        }
 
         const vehicle = (passengers > 3) ? 'Mercedes Van' : 'Tesla Model Y';
 
@@ -189,7 +202,24 @@ function updateEstimate() {
 // --- Toggle Service Type ---
 function toggleServiceType() {
   const type = document.getElementById('serviceType').value;
-  document.getElementById('addressLabel').innerText = (type === 'pickup') ? 'Địa chỉ đến' : 'Địa chỉ đón';
+  const addressLabel = document.getElementById('addressLabel');
+  const airportField = document.getElementById('airportField');
+  const lodgingField = document.getElementById('lodgingField');
+
+  if (type === 'pickup') {
+    addressLabel.innerText = 'Địa chỉ đến';
+    airportField.style.display = 'block';
+    lodgingField.style.display = 'none';
+  } else if (type === 'dropoff') {
+    addressLabel.innerText = 'Địa chỉ đón';
+    airportField.style.display = 'block';
+    lodgingField.style.display = 'none';
+  } else {
+    addressLabel.innerText = 'Địa chỉ của bạn';
+    airportField.style.display = 'none';
+    lodgingField.style.display = 'block';
+  }
+
   updateEstimate();
 }
 

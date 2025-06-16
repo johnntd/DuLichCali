@@ -1,16 +1,21 @@
 const firebaseConfig = {
-      apiKey: "AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ",
-      authDomain: "dulichcali-booking-calendar.firebaseapp.com",
-      projectId: "dulichcali-booking-calendar",
-      storageBucket: "dulichcali-booking-calendar.appspot.com",
-      messagingSenderId: "623460884698",
-      appId: "1:623460884698:web:a08bd435c453a7b4db05e3"
-    };
-    firebase.auth().signInAnonymously().catch((error) => {
-    console.error("Anonymous login failed:", error);
-    });
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+  apiKey: "AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ",
+  authDomain: "dulichcali-booking-calendar.firebaseapp.com",
+  projectId: "dulichcali-booking-calendar",
+  storageBucket: "dulichcali-booking-calendar.appspot.com",
+  messagingSenderId: "623460884698",
+  appId: "1:623460884698:web:a08bd435c453a7b4db05e3"
+};
+
+// ✅ Initialize Firebase FIRST
+firebase.initializeApp(firebaseConfig);
+
+// ✅ Then sign in anonymously
+firebase.auth().signInAnonymously().catch((error) => {
+  console.error("Anonymous login failed:", error);
+});
+
+const db = firebase.firestore();
 
     function initAutocomplete() {
       const input = document.getElementById('address');

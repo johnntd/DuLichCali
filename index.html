@@ -5,18 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
   <title>Dịch Vụ Đưa Đón & Du Lịch California</title>
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script> 
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
+  <!-- Google API & Auth -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
-  <script src="calendar.js"></script>
-  <!-- Flatpickr CSS -->
+
+  <!-- Styles and Libraries -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
-  <!-- Flatpickr JS -->
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <!-- External CSS -->
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -57,14 +58,14 @@
       <div id="slotWarning"></div>
 
       <div class="flex-row">
-      <div class="half-width">
-      <label for="estimateDisplay">Chi phí ước tính</label>
-      <input type="text" id="estimateDisplay" class="estimate-display" readonly value="$0" />
-      </div>
-      <div class="half-width">
-      <label for="vehicleDisplay">Xe</label>
-      <input type="text" id="vehicleDisplay" class="estimate-display" readonly value="Tesla Model Y" />
-      </div>
+        <div class="half-width">
+          <label for="estimateDisplay">Chi phí ước tính</label>
+          <input type="text" id="estimateDisplay" class="estimate-display" readonly value="$0" />
+        </div>
+        <div class="half-width">
+          <label for="vehicleDisplay">Xe</label>
+          <input type="text" id="vehicleDisplay" class="estimate-display" readonly value="Tesla Model Y" />
+        </div>
       </div>
 
       <label for="name">Tên của bạn</label>
@@ -72,20 +73,21 @@
 
       <label for="phone">Số điện thoại</label>
       <input type="tel" id="phone" name="phone" required>
+
       <input type="hidden" name="message" id="bookingSummary" />
       <button type="submit">Gửi yêu cầu</button>
       <button type="button" onclick="initGoogleAPI()">🔐 Đăng nhập Google để đồng bộ lịch</button>
     </form>
-      <!-- Aligned Google Map Inside Container -->
-    <div id="map"></div>
-    </div>
 
-    <!-- External JS -->
-    <script src="script.js"></script>
-    <script
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete"
-  async
-  defer>
+    <div id="map"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="calendar.js"></script>
+  <script src="script.js"></script>
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete"
+    async defer>
   </script>
 </body>
 </html>

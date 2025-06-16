@@ -143,9 +143,13 @@ Thời gian: ${selectedTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minut
 // --- Estimate Update ---
 function updateEstimate() {
   lastCalculatedMiles = 0;
+
   const passengers = parseInt(document.getElementById('passengers').value) || 1;
   const airport = document.getElementById('airport').value;
-  const address = document.getElementById('address').value;
+  const addressEl = document.getElementById('address');
+  const placeResult = addressEl.getPlace ? addressEl.getPlace() : null;
+  const address = placeResult ? placeResult.formatted_address : "";
+
   const serviceType = document.getElementById('serviceType').value;
   const origin = (serviceType === 'pickup') ? airport : address;
   const destination = (serviceType === 'pickup') ? address : airport;
@@ -167,15 +171,23 @@ function updateEstimate() {
       if (element && element.status === 'OK') {
         const miles = element.distance.value / 1609.34;
         lastCalculatedMiles = miles;
-        const cost = passengers < 4 ? Math.max(40, miles * 2.5) :
-          miles > 75 ? Math.max(150, miles * 2.5 * 2) : Math.max(125, miles * 2.5);
-        const vehicle = passengers > 3 ? 'Mercedes Van' : 'Tesla Model Y';
+
+        let cost = (passengers < 4)
+          ? Math.max(40, miles * 2.5)
+          : (miles > 75 ? Math.max(150, miles * 2.5 * 2) : Math.max(125, miles * 2.5));
+
+        const vehicle = (passengers > 3) ? 'Mercedes Van' : 'Tesla Model Y';
 
         document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
-        document.getElementById('vehicleDisplay').value = vehicle;
+        document.getElementById('vehicleDisplay').value = `${vehicle}`;
+      } else {
+        document.getElementById('estimateDisplay').value = "$0";
+        document.getElementById('vehicleDisplay').value = "";
       }
     } else {
       console.error("DistanceMatrix error:", status);
+      document.getElementById('estimateDisplay').value = "$0";
+      document.getElementById('vehicleDisplay').value = "";
     }
   });
 }

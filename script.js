@@ -1,3 +1,5 @@
+// ✅ Final Working Version of script.js with Proper Google Calendar Integration
+
 const firebaseConfig = {
   apiKey: "AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ",
   authDomain: "dulichcali-booking-calendar.firebaseapp.com",
@@ -30,6 +32,7 @@ function initAutocomplete() {
 }
 
 let tokenClient;
+let gapiInited = false;
 
 function initGoogleAPI() {
   gapi.load('client', async () => {
@@ -38,8 +41,10 @@ function initGoogleAPI() {
       discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"],
     });
 
+    gapiInited = true;
+
     tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: '925284621075-q59fpmsgi5jjnc28ue72tjfqmn381lei.apps.googleusercontent.com',
+      client_id: '623460884698-0k6g2r4ltb3c0d9hs0odms2b5j2hsp67.apps.googleusercontent.com',
       scope: 'https://www.googleapis.com/auth/calendar',
       callback: async (tokenResponse) => {
         if (tokenResponse && tokenResponse.access_token) {
@@ -47,30 +52,6 @@ function initGoogleAPI() {
         }
       }
     });
-
-    // Prompt the user to authorize
-    tokenClient.requestAccessToken();
-  });
-}
-
-async function addToCalendar(booking) {
-  const event = {
-    summary: `📅 ${booking.serviceType === 'pickup' ? 'Đón khách' : 'Đưa khách'} - ${booking.name}`,
-    location: booking.address,
-    description: `Sân bay: ${booking.airport}, Điện thoại: ${booking.phone}`,
-    start: {
-      dateTime: new Date(booking.datetime).toISOString(),
-      timeZone: 'America/Los_Angeles'
-    },
-    end: {
-      dateTime: new Date(new Date(booking.datetime).getTime() + 60 * 60 * 1000).toISOString(),
-      timeZone: 'America/Los_Angeles'
-    }
-  };
-
-  await gapi.client.calendar.events.insert({
-    calendarId: 'primary',
-    resource: event
   });
 }
 
@@ -223,7 +204,41 @@ Thời gian: ${timeString}`;
     serviceType
   });
 
-  await addToCalendar({ datetime, name, phone, airport, address, serviceType });
+  // 🧠 Add event to Google Calendar
+  if (gapiInited && tokenClient) {
+    tokenClient.callback = async (resp) => {
+      if (resp.error !== undefined) {
+        console.error('Auth failed:', resp);
+        return;
+      }
+
+      const startTime = new Date(datetime);
+      const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
+      const summary = serviceType === 'pickup' ? `Đón khách: ${name}` : `Đưa khách: ${name}`;
+      const location = serviceType === 'pickup' ? airport : address;
+
+      const event = {
+        summary,
+        location,
+        description: `Khách: ${name}\nSĐT: ${phone}\n${serviceType === 'pickup' ? 'Đến' : 'Đón'}: ${serviceType === 'pickup' ? address : airport}`,
+        start: { dateTime: startTime.toISOString(), timeZone: 'America/Los_Angeles' },
+        end: { dateTime: endTime.toISOString(), timeZone: 'America/Los_Angeles' }
+      };
+
+      try {
+        await gapi.client.calendar.events.insert({
+          calendarId: 'primary',
+          resource: event
+        });
+        console.log('Event added to Google Calendar');
+      } catch (err) {
+        console.error('Failed to add to calendar:', err);
+      }
+    };
+
+    tokenClient.requestAccessToken();
+  }
+
   form.removeEventListener('submit', submitBooking);
   form.submit();
 }

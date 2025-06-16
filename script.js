@@ -28,10 +28,12 @@ function safeInitGoogleAPI() {
 window.initMap = function () {
   const map = new google.maps.Map(document.getElementById('map'), {
     center: { lat: 33.6846, lng: -117.8265 },
-    zoom: 10
+    zoom: 9
   });
+
+  const input = document.getElementById('address');
+  const autocomplete = new google.maps.places.Autocomplete(input);
 };
-window.initMap = initMap; // <== Make it globally available
 
 function initGoogleAPI() {
   gapi.load('client', async () => {

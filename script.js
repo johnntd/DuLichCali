@@ -235,4 +235,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   safeInitGoogleAPI(); // not initGoogleAPI()
 });
 window.gapiLoaded = () => initGoogleAPI();
-
+customElements.whenDefined('gmpx-placeautocomplete').then(() => {
+  console.log('gmpx-placeautocomplete is ready');
+  const placeBox = document.querySelector('#address');
+  if (placeBox) {
+    placeBox.disabled = false;
+  }
+});

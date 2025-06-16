@@ -7,58 +7,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e') no-repeat center center fixed;
-      background-size: cover;
-      margin: 0;
-      padding: 0;
-      color: white;
-    }
-    .container {
-      background-color: rgba(0,0,0,0.7);
-      max-width: 700px;
-      margin: 2rem auto;
-      padding: 2rem;
-      border-radius: 10px;
-    }
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 5px;
-      border: none;
-      box-sizing: border-box;
-    }
-    label {
-      margin-top: 10px;
-      display: block;
-      font-weight: bold;
-    }
-    .flex-row {
-      display: flex;
-      gap: 10px;
-    }
-    .flex-row input,
-    .flex-row select,
-    .flex-row .half-width {
-      flex: 1;
-    }
-    .estimate-display {
-      font-weight: bold;
-      margin-top: 10px;
-      color: black;
-    }
-    #slotWarning { color: yellow; font-weight: bold; }
-      #map {
-      margin-top: 20px;
-      height: 300px;
-      width: 100%;
-      border-radius: 10px;
-    }
-  </style>
- 
+  <!-- External CSS -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">

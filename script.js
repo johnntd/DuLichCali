@@ -5,62 +5,64 @@ const firebaseConfig = {
   storageBucket: "dulichcali-booking-calendar.appspot.com",
   messagingSenderId: "623460884698",
   appId: "1:623460884698:web:a08bd435c453a7b4db05e3"
-  };
-  firebase.initializeApp(firebaseConfig);
-  firebase.auth().signInAnonymously().catch((error) => {
+};
+
+firebase.initializeApp(firebaseConfig);
+firebase.auth().signInAnonymously().catch((error) => {
   console.error("Anonymous login failed:", error);
+});
+
+const db = firebase.firestore();
+
+function initAutocomplete() {
+  const input = document.getElementById('address');
+  if (google.maps.places && input) {
+    new google.maps.places.Autocomplete(input);
+  }
+  new google.maps.Map(document.getElementById("map"), {
+    center: { lat: 33.7456, lng: -117.8678 },
+    zoom: 7
   });
+}
 
-  const db = firebase.firestore();
+function toggleServiceType() {
+  const type = document.getElementById('serviceType').value;
+  const label = document.getElementById('addressLabel');
+  label.innerText = (type === 'pickup') ? 'Địa chỉ đến' : 'Địa chỉ đón';
+  updateEstimate();
+}
 
-    function initAutocomplete() {
-      const input = document.getElementById('address');
-      if (google.maps.places && input) {
-        new google.maps.places.Autocomplete(input);
+function updateEstimate() {
+  const passengers = parseInt(document.getElementById('passengers').value) || 1;
+  const airport = document.getElementById('airport').value;
+  const address = document.getElementById('address').value;
+  const serviceType = document.getElementById('serviceType').value;
+  const origin = (serviceType === 'pickup') ? airport : address;
+  const destination = (serviceType === 'pickup') ? address : airport;
+
+  if (!origin || !destination) return;
+
+  const distanceService = new google.maps.DistanceMatrixService();
+  distanceService.getDistanceMatrix({
+    origins: [origin],
+    destinations: [destination],
+    travelMode: google.maps.TravelMode.DRIVING
+  }, (response, status) => {
+    if (status === 'OK') {
+      const element = response.rows[0].elements[0];
+      if (element && element.status === 'OK') {
+        const miles = element.distance.value / 1609.34;
+        lastCalculatedMiles = miles;
+        let cost = (passengers < 4) ? Math.max(40, miles * 2.5) : (miles > 75 ? Math.max(150, miles * 2.5 * 2) : Math.max(100, miles * 2.5));
+        const vehicle = (passengers > 3) ? 'Mercedes Van' : 'Tesla Model Y';
+        document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
+        document.getElementById('vehicleDisplay').value = `${vehicle}`;
       }
-      new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 33.7456, lng: -117.8678 },
-        zoom: 7
-      });
     }
+  });
+}
 
-    function toggleServiceType() {
-      const type = document.getElementById('serviceType').value;
-      const label = document.getElementById('addressLabel');
-      label.innerText = (type === 'pickup') ? 'Địa chỉ đến' : 'Địa chỉ đón';
-      updateEstimate();
-    }
-
-    function updateEstimate() {
-      const passengers = parseInt(document.getElementById('passengers').value) || 1;
-      const airport = document.getElementById('airport').value;
-      const address = document.getElementById('address').value;
-      const serviceType = document.getElementById('serviceType').value;
-      const origin = (serviceType === 'pickup') ? airport : address;
-      const destination = (serviceType === 'pickup') ? address : airport;
-
-      if (!origin || !destination) return;
-
-      const distanceService = new google.maps.DistanceMatrixService();
-      distanceService.getDistanceMatrix({
-        origins: [origin],
-        destinations: [destination],
-        travelMode: google.maps.TravelMode.DRIVING
-      }, (response, status) => {
-        if (status === 'OK') {
-          const element = response.rows[0].elements[0];
-          if (element && element.status === 'OK') {
-            const miles = element.distance.value / 1609.34;
-            let cost = (passengers < 4) ? Math.max(40, miles * 2.5) : (miles > 75 ? Math.max(150, miles * 2.5 * 2) : Math.max(100, miles * 2.5));
-            const vehicle = (passengers > 3) ? 'Mercedes Van' : 'Tesla Model Y';
-            document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
-            document.getElementById('vehicleDisplay').value = `${vehicle}`;
-          }
-        }
-      });
-    }
-
-let lastCalculatedMiles = 0; // Global variable set during cost estimation
+let lastCalculatedMiles = 0;
 
 async function fetchUnavailableSlots(dateStr) {
   const snapshot = await db.collection('bookings').get();
@@ -70,12 +72,33 @@ async function fetchUnavailableSlots(dateStr) {
     const bookedTime = new Date(doc.id);
     const bookedDateStr = bookedTime.toISOString().split('T')[0];
     if (bookedDateStr === dateStr) {
-      unavailable.push(bookedTime.toISOString());
+      const distance = doc.data().distance || 10;
+      const bufferMinutes = Math.ceil(distance * 2) + 15;
+      const from = new Date(bookedTime.getTime() - bufferMinutes * 60000);
+      const to = new Date(bookedTime.getTime() + bufferMinutes * 60000);
+      unavailable.push({ from, to });
     }
   });
 
-  return unavailable; // Array of ISO strings like '2025-06-15T10:00:00.000Z'
+  return unavailable;
 }
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const dateInput = document.getElementById('datetime');
+  const today = new Date();
+
+  flatpickr(dateInput, {
+    enableTime: true,
+    time_24hr: false,
+    dateFormat: "Y-m-d H:i",
+    minDate: today,
+    onOpen: async function(selectedDates, dateStr, instance) {
+      const dateOnlyStr = (new Date()).toISOString().split('T')[0];
+      const unavailableRanges = await fetchUnavailableSlots(dateOnlyStr);
+      instance.set('disable', unavailableRanges);
+    }
+  });
+});
 
 async function submitBooking(event) {
   event.preventDefault();
@@ -85,15 +108,14 @@ async function submitBooking(event) {
   const selectedTime = new Date(datetime);
   const slotRef = db.collection('bookings').doc(datetime);
 
-  // Get all bookings in the same day
   const snapshot = await db.collection('bookings').get();
 
   for (const doc of snapshot.docs) {
     const bookedTime = new Date(doc.id);
-    const distance = doc.data().distance || 10; // Default to 10 miles if missing
+    const distance = doc.data().distance || 10;
     const bufferMinutes = Math.ceil(distance * 2) + 15;
 
-    const timeDifference = Math.abs((selectedTime - bookedTime) / 60000); // in minutes
+    const timeDifference = Math.abs((selectedTime - bookedTime) / 60000);
     if (timeDifference < bufferMinutes) {
       document.getElementById('slotWarning').innerText =
         `Khung giờ xung đột với lịch ${bookedTime.toLocaleTimeString()} (cần cách ${bufferMinutes} phút).`;
@@ -101,10 +123,9 @@ async function submitBooking(event) {
     }
   }
 
-  // Save new booking
   await slotRef.set({
     booked: true,
-    distance: lastCalculatedMiles // Must be set by updateEstimate()
+    distance: lastCalculatedMiles
   });
 
   form.removeEventListener('submit', submitBooking);

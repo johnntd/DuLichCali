@@ -16,7 +16,10 @@
   <script src="https://apis.google.com/js/api.js" async defer onload="gapiLoaded()"></script>
 
   <!-- Google Maps - Load async only AFTER initAutocomplete exists -->
-  <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&v=weekly&solution_channel=GMP_QB_placeautocomplete_v1"></script>
+  <script
+  async
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&v=weekly&solution_channel=GMP_QB_placeautocomplete_v1&callback=initMap&loading=async">
+  </script>
   
   <!-- Flatpickr -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />

@@ -16,6 +16,19 @@
   <script src="https://apis.google.com/js/api.js" async defer></script>
 
   <!-- Google Maps JS (classic Autocomplete) -->
+<script>
+  function initMap() {
+    const map = new google.maps.Map(document.getElementById('map'), {
+      center: { lat: 33.6846, lng: -117.8265 },
+      zoom: 9
+    });
+
+    const input = document.getElementById('address');
+    const autocomplete = new google.maps.places.Autocomplete(input);
+  }
+</script>
+
+<!-- Google Maps API with callback -->
 <script
   async
   defer

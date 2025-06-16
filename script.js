@@ -22,7 +22,40 @@ function initAutocomplete() {
       updateEstimate();
     });
   }
+  
+function initGoogleAPI() {
+  gapi.load('client:auth2', async () => {
+    await gapi.client.init({
+      apiKey: firebaseConfig.apiKey,
+      clientId: 'YOUR_CLIENT_ID.apps.googleusercontent.com',
+      discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"],
+      scope: "https://www.googleapis.com/auth/calendar"
+    });
+    
+    gapi.auth2.getAuthInstance().signIn();
+  });
+}
 
+async function addToCalendar(booking) {
+  const event = {
+    summary: `📅 ${booking.serviceType === 'pickup' ? 'Đón khách' : 'Đưa khách'} - ${booking.name}`,
+    location: booking.address,
+    description: `Sân bay: ${booking.airport}, Điện thoại: ${booking.phone}`,
+    start: {
+      dateTime: new Date(booking.datetime).toISOString(),
+      timeZone: 'America/Los_Angeles'
+    },
+    end: {
+      dateTime: new Date(new Date(booking.datetime).getTime() + 60 * 60 * 1000).toISOString(),
+      timeZone: 'America/Los_Angeles'
+    }
+  };
+
+  await gapi.client.calendar.events.insert({
+    calendarId: 'primary',
+    resource: event
+  });
+}
   new google.maps.Map(document.getElementById("map"), {
     center: { lat: 33.7456, lng: -117.8678 },
     zoom: 8

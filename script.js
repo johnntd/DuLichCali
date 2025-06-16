@@ -53,7 +53,7 @@ function updateEstimate() {
       if (element && element.status === 'OK') {
         const miles = element.distance.value / 1609.34;
         lastCalculatedMiles = miles;
-        let cost = (passengers < 4) ? Math.max(40, miles * 2.5) : (miles > 75 ? Math.max(150, miles * 2.5 * 2) : Math.max(100, miles * 2.5));
+        let cost = (passengers < 4) ? Math.max(40, miles * 2.5) : (miles > 75 ? Math.max(150, miles * 2.5 * 2) : Math.max(120, miles * 2.5));
         const vehicle = (passengers > 3) ? 'Mercedes Van' : 'Tesla Model Y';
         document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
         document.getElementById('vehicleDisplay').value = `${vehicle}`;

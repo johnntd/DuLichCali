@@ -1,114 +1,71 @@
-// main.js - Handles Google Maps, cost estimation, form submission, and Firebase logic
-
-// Firebase config
 const firebaseConfig = {
-  apiKey: "AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ",
-  authDomain: "dulichcali-booking-calendar.firebaseapp.com",
-  projectId: "dulichcali-booking-calendar",
-  storageBucket: "dulichcali-booking-calendar.appspot.com",
-  messagingSenderId: "623460884698",
-  appId: "1:623460884698:web:a08bd435c453a7b4db05e3"
-};
+      apiKey: "AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ",
+      authDomain: "dulichcali-booking-calendar.firebaseapp.com",
+      projectId: "dulichcali-booking-calendar",
+      storageBucket: "dulichcali-booking-calendar.appspot.com",
+      messagingSenderId: "623460884698",
+      appId: "1:623460884698:web:a08bd435c453a7b4db05e3"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-// Global Variables
-let map, directionsService, directionsRenderer;
-
-function initAutocomplete() {
-  map = new google.maps.Map(document.getElementById("map"), {
-    center: { lat: 33.6846, lng: -117.8265 },
-    zoom: 8,
-  });
-
-  directionsService = new google.maps.DirectionsService();
-  directionsRenderer = new google.maps.DirectionsRenderer();
-  directionsRenderer.setMap(map);
-
-  const pickupInput = document.getElementById("pickup");
-  const dropoffInput = document.getElementById("dropoff");
-
-  if (pickupInput) {
-    new google.maps.places.PlaceAutocompleteElement({ inputElement: pickupInput });
-  }
-
-  if (dropoffInput) {
-    new google.maps.places.PlaceAutocompleteElement({ inputElement: dropoffInput });
-  }
-}
-
-function calculateDistance(callback) {
-  const pickup = document.getElementById("pickup")?.value;
-  const dropoff = document.getElementById("dropoff")?.value;
-
-  if (!pickup || !dropoff) return;
-
-  const service = new google.maps.DistanceMatrixService();
-  service.getDistanceMatrix(
-    {
-      origins: [pickup],
-      destinations: [dropoff],
-      travelMode: google.maps.TravelMode.DRIVING,
-      unitSystem: google.maps.UnitSystem.IMPERIAL,
-    },
-    (response, status) => {
-      if (status !== "OK") {
-        console.error("Error with DistanceMatrixService:", status);
-        return;
+    function initAutocomplete() {
+      const input = document.getElementById('address');
+      if (google.maps.places && input) {
+        new google.maps.places.Autocomplete(input);
       }
-      const distanceText = response.rows[0].elements[0].distance.text;
-      const miles = parseFloat(distanceText.replace(/[^0-9.]/g, ""));
-      callback(miles);
-    }
-  );
-}
-
-function estimateCost() {
-  calculateDistance((miles) => {
-    const guests = parseInt(document.getElementById("guests").value);
-    let baseCost = 0;
-
-    if (guests < 4) {
-      baseCost = 40;
-    } else {
-      baseCost = miles > 75 ? 150 : 100;
+      new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 33.7456, lng: -117.8678 },
+        zoom: 7
+      });
     }
 
-    const totalCost = miles * 2.5 + (miles > 75 ? baseCost : 0);
-    document.getElementById("cost").value = `$${Math.round(totalCost)}`;
-  });
-}
+    function toggleServiceType() {
+      const type = document.getElementById('serviceType').value;
+      const label = document.getElementById('addressLabel');
+      label.innerText = (type === 'pickup') ? 'Địa chỉ đến' : 'Địa chỉ đón';
+      updateEstimate();
+    }
 
-document.getElementById("guests").addEventListener("change", estimateCost);
-document.getElementById("pickup").addEventListener("change", estimateCost);
-document.getElementById("dropoff").addEventListener("change", estimateCost);
+    function updateEstimate() {
+      const passengers = parseInt(document.getElementById('passengers').value) || 1;
+      const airport = document.getElementById('airport').value;
+      const address = document.getElementById('address').value;
+      const serviceType = document.getElementById('serviceType').value;
+      const origin = (serviceType === 'pickup') ? airport : address;
+      const destination = (serviceType === 'pickup') ? address : airport;
 
-// Handle booking form submission
-async function handleFormSubmission(e) {
-  e.preventDefault();
+      if (!origin || !destination) return;
 
-  const form = document.getElementById("booking-form");
-  const formData = new FormData(form);
-  const date = formData.get("date");
-  const time = formData.get("time");
+      const distanceService = new google.maps.DistanceMatrixService();
+      distanceService.getDistanceMatrix({
+        origins: [origin],
+        destinations: [destination],
+        travelMode: google.maps.TravelMode.DRIVING
+      }, (response, status) => {
+        if (status === 'OK') {
+          const element = response.rows[0].elements[0];
+          if (element && element.status === 'OK') {
+            const miles = element.distance.value / 1609.34;
+            let cost = (passengers < 4) ? Math.max(40, miles * 2.5) : (miles > 75 ? Math.max(150, miles * 2.5 * 2) : Math.max(100, miles * 2.5));
+            const vehicle = (passengers > 3) ? 'Mercedes Van' : 'Tesla Model Y';
+            document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
+            document.getElementById('vehicleDisplay').value = `${vehicle}`;
+          }
+        }
+      });
+    }
 
-  const slotRef = db.collection("bookings").doc(`${date}_${time}`);
-  const slot = await slotRef.get();
-
-  if (slot.exists) {
-    alert("This time slot is already booked.");
-    return;
-  }
-
-  await slotRef.set({
-    ...Object.fromEntries(formData),
-    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-  });
-
-  alert("Booking submitted!");
-  form.reset();
-}
-
-document.getElementById("booking-form").addEventListener("submit", handleFormSubmission);
+    async function submitBooking(event) {
+      event.preventDefault();
+      const form = document.getElementById('bookingForm');
+      const datetime = document.getElementById('datetime').value;
+      const slotRef = db.collection('bookings').doc(datetime);
+      const doc = await slotRef.get();
+      if (doc.exists) {
+        document.getElementById('slotWarning').innerText = 'Khung giờ đã được đặt. Vui lòng chọn giờ khác.';
+        return false;
+      }
+      await slotRef.set({ booked: true });
+      form.submit();
+    }

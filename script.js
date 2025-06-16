@@ -1,5 +1,3 @@
-// ✅ Final Working Version of script.js with Proper Google Calendar Integration
-
 const firebaseConfig = {
   apiKey: "AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ",
   authDomain: "dulichcali-booking-calendar.firebaseapp.com",

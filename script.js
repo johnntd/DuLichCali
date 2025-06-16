@@ -6,11 +6,7 @@ const firebaseConfig = {
   messagingSenderId: "623460884698",
   appId: "1:623460884698:web:a08bd435c453a7b4db05e3"
 };
-
-// ✅ Initialize Firebase FIRST
 firebase.initializeApp(firebaseConfig);
-
-// ✅ Then sign in anonymously
 firebase.auth().signInAnonymously().catch((error) => {
   console.error("Anonymous login failed:", error);
 });

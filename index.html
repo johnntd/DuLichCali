@@ -59,9 +59,14 @@
           <option value="San Diego Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
         </select>
       </div>
-
+   
       <label id="addressLabel" for="address">Địa chỉ đến</label>
-      <input type="text" id="address" name="address" placeholder="Nhập địa chỉ đến hoặc đón" required oninput="updateEstimate()">
+      <gmpx-placeautocomplete
+      id="address"
+      style="width: 100%;"
+      placeholder="Nhập địa chỉ đến hoặc đón"
+      required
+      ></gmpx-placeautocomplete>
 
       <div class="flex-row">
         <input type="text" id="datetime" name="datetime" required placeholder="Chọn ngày và giờ" />

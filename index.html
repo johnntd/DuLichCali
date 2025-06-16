@@ -15,14 +15,13 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
 
-  <!-- Google Maps (Correct Key) -->
-  <script
+  <!-- Google Maps JS (classic Autocomplete) -->
+<script
   async
   defer
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initMap&loading=async"
-  ></script>
-  <script async defer src="https://www.gstatic.com/maps-platform/places-plus/places-plus.min.js"></script>
-
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initMap">
+</script>
+  
   <!-- Flatpickr -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -30,8 +29,6 @@
   <!-- Styles -->
   <link rel="stylesheet" href="style.css" />
 
-  <!-- Places Plus for gmpx-placeautocomplete -->
-  <script async defer src="https://www.gstatic.com/maps-platform/places-plus/places-plus.min.js"></script>
 </head>
 
 <body>
@@ -63,12 +60,12 @@
       </div>
 
       <label id="addressLabel" for="address">Địa chỉ đến</label>
-      <gmpx-placeautocomplete
+      <input
   id="address"
-  style="width: 100%;"
+  type="text"
   placeholder="Nhập địa chỉ đến hoặc đón"
   required
-></gmpx-placeautocomplete>
+      />
 
       <div class="flex-row">
         <input type="text" id="datetime" name="datetime" required placeholder="Chọn ngày và giờ" />

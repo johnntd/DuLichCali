@@ -9,28 +9,29 @@
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script> 
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
   <!-- Google API Client -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
 
-  <!-- ✅ Unified Google Maps + Places + gmpx usage -->
-<script
-  async
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ&libraries=places&v=weekly&solution_channel=GMP_QB_placeautocomplete_v1&callback=initMap&loading=async">
-</script>
-  
+  <!-- Google Maps (Correct Key) -->
+  <script
+    async
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ&libraries=places&v=weekly&solution_channel=GMP_QB_placeautocomplete_v1&callback=initMap&loading=async">
+  </script>
+
   <!-- Flatpickr -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
   <!-- Styles -->
   <link rel="stylesheet" href="style.css" />
-  <!-- ✅ Correct library for gmpx-placeautocomplete -->
+
+  <!-- Places Plus for gmpx-placeautocomplete -->
   <script async defer src="https://www.gstatic.com/maps-platform/places-plus/places-plus.min.js"></script>
 </head>
-  
+
 <body>
   <div class="container">
     <h1>Dịch Vụ Đưa Đón & Du Lịch California</h1>
@@ -58,15 +59,15 @@
           <option value="San Diego Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
         </select>
       </div>
-   
+
       <label id="addressLabel" for="address">Địa chỉ đến</label>
       <gmpx-placeautocomplete
-  id="address"
-  style="width: 100%;"
-  placeholder="Nhập địa chỉ đến hoặc đón"
-  required
-  disabled
-></gmpx-placeautocomplete>
+        id="address"
+        style="width: 100%;"
+        placeholder="Nhập địa chỉ đến hoặc đón"
+        required
+        disabled
+      ></gmpx-placeautocomplete>
 
       <div class="flex-row">
         <input type="text" id="datetime" name="datetime" required placeholder="Chọn ngày và giờ" />
@@ -97,9 +98,9 @@
     </form>
 
     <div id="map"></div>
-
   </div>
-    <!-- Load your scripts AFTER dependencies -->
+
+  <!-- Scripts -->
   <script src="script.js" defer></script>
 </body>
 </html>

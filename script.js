@@ -26,10 +26,18 @@ function safeInitGoogleAPI() {
 // --- Google Calendar API Setup ---
 
 window.initMap = function () {
+  // 1. Render the visible map
   const map = new google.maps.Map(document.getElementById('map'), {
     center: { lat: 33.6846, lng: -117.8265 }, // Orange County, CA
     zoom: 9
   });
+
+  // 2. Load the Places Plus library for gmpx-placeautocomplete
+  const script = document.createElement('script');
+  script.src = "https://www.gstatic.com/maps-platform/places-plus/places-plus.min.js";
+  script.async = true;
+  script.defer = true;
+  document.head.appendChild(script);
 };
 
 function initGoogleAPI() {

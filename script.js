@@ -62,6 +62,21 @@ const firebaseConfig = {
 
 let lastCalculatedMiles = 0; // Global variable set during cost estimation
 
+async function fetchUnavailableSlots(dateStr) {
+  const snapshot = await db.collection('bookings').get();
+  const unavailable = [];
+
+  snapshot.forEach(doc => {
+    const bookedTime = new Date(doc.id);
+    const bookedDateStr = bookedTime.toISOString().split('T')[0];
+    if (bookedDateStr === dateStr) {
+      unavailable.push(bookedTime.toISOString());
+    }
+  });
+
+  return unavailable; // Array of ISO strings like '2025-06-15T10:00:00.000Z'
+}
+
 async function submitBooking(event) {
   event.preventDefault();
 

@@ -172,8 +172,8 @@
             const miles = element.distance.value / 1609.34;
             let cost = (passengers < 4) ? Math.max(40, miles * 2.5) : (miles > 75 ? Math.max(150, miles * 2.5 * 2) : Math.max(100, miles * 2.5));
             const vehicle = (passengers > 3) ? 'Mercedes Van' : 'Tesla Model Y';
-            document.getElementById('estimateDisplay').innerText = `Chi phí ước tính: $${Math.round(cost)}`;
-            document.getElementById('vehicleDisplay').innerText = `Xe: ${vehicle}`;
+            document.getElementById('estimateDisplay').value = `Chi phí ước tính: $${Math.round(cost)}`;
+            document.getElementById('vehicleDisplay').value = `Xe: ${vehicle}`;
           }
         }
       });

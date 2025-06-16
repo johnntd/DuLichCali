@@ -29,16 +29,27 @@ function initAutocomplete() {
   });
 }
 
+let tokenClient;
+
 function initGoogleAPI() {
-  gapi.load('client:auth2', async () => {
+  gapi.load('client', async () => {
     await gapi.client.init({
       apiKey: firebaseConfig.apiKey,
-      clientId: '623460884698-0k6g2r4ltb3c0d9hs0odms2b5j2hsp67.apps.googleusercontent.com',
       discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"],
-      scope: "https://www.googleapis.com/auth/calendar"
     });
 
-    gapi.auth2.getAuthInstance().signIn();
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: '925284621075-q59fpmsgi5jjnc28ue72tjfqmn381lei.apps.googleusercontent.com',
+      scope: 'https://www.googleapis.com/auth/calendar',
+      callback: async (tokenResponse) => {
+        if (tokenResponse && tokenResponse.access_token) {
+          console.log('Access token received:', tokenResponse.access_token);
+        }
+      }
+    });
+
+    // Prompt the user to authorize
+    tokenClient.requestAccessToken();
   });
 }
 

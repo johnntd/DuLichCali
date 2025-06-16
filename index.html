@@ -98,9 +98,15 @@
       <div id="slotWarning"></div>
 
       <div class="flex-row">
-        <div class="estimate-display" id="estimateDisplay">Chi phí ước tính: $0</div>
-        <div class="estimate-display" id="vehicleDisplay">Xe: Tesla Model Y</div>
-      </div>
+  <div class="half-width">
+    <label for="estimateDisplay">Chi phí ước tính</label>
+    <input type="text" id="estimateDisplay" class="estimate-display" readonly value="Chi phí ước tính: $0" />
+  </div>
+  <div class="half-width">
+    <label for="vehicleDisplay">Xe</label>
+    <input type="text" id="vehicleDisplay" class="estimate-display" readonly value="Xe: Tesla Model Y" />
+  </div>
+</div>
 
       <label for="name">Tên của bạn</label>
       <input type="text" id="name" name="name" required>

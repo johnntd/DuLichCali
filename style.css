@@ -7,7 +7,7 @@
       color: white;
     }
     .container {
-      background-color: rgba(0,0,0,0.7);
+      background-color: rgba(28, 107, 160, 0.85); /* Ocean blue with slight transparency */
       max-width: 700px;
       margin: 2rem auto;
       padding: 2rem;

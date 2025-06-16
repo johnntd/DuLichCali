@@ -145,8 +145,9 @@ function updateEstimate() {
   const airport = document.getElementById('airport')?.value || '';
   const address = document.getElementById('address')?.value || '';
   const lodging = document.getElementById('lodging')?.value || '';
-  const days = parseInt(document.getElementById('days')?.value) || 1;
-
+  const daysInput = document.getElementById('days');
+  const days = (daysInput && !isNaN(daysInput.value) && parseInt(daysInput.value) > 0) ? parseInt(daysInput.value) : 1;
+  
   const origin = (serviceType === 'pickup') ? airport : address;
   const destination = (serviceType === 'pickup') ? address : airport;
 

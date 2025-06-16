@@ -5,13 +5,13 @@ const firebaseConfig = {
   storageBucket: "dulichcali-booking-calendar.appspot.com",
   messagingSenderId: "623460884698",
   appId: "1:623460884698:web:a08bd435c453a7b4db05e3"
-};
-firebase.initializeApp(firebaseConfig);
-firebase.auth().signInAnonymously().catch((error) => {
+  };
+  firebase.initializeApp(firebaseConfig);
+  firebase.auth().signInAnonymously().catch((error) => {
   console.error("Anonymous login failed:", error);
-});
+  });
 
-const db = firebase.firestore();
+  const db = firebase.firestore();
 
     function initAutocomplete() {
       const input = document.getElementById('address');

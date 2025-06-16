@@ -15,7 +15,14 @@ const db = firebase.firestore();
 let lastCalculatedMiles = 0;
 let gapiInited = false;
 let tokenClient;
-
+// Call this safely when the page and gapi are ready
+function safeInitGoogleAPI() {
+  if (typeof gapi !== "undefined") {
+    initGoogleAPI();
+  } else {
+    setTimeout(safeInitGoogleAPI, 100); // Retry every 100ms until gapi is available
+  }
+}
 // --- Google Calendar API Setup ---
 function initGoogleAPI() {
   gapi.load('client', async () => {
@@ -209,7 +216,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // ✅ Call the Google API initialization here
-  initGoogleAPI();
+  safeInitGoogleAPI(); // not initGoogleAPI()
 });
 window.gapiLoaded = () => initGoogleAPI();
 

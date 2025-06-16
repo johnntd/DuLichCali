@@ -50,6 +50,54 @@
       <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>
     </p>
 
+    <!-- Tour Service Section -->
+<div id="tourSection">
+  <label for="tourDestination">Chọn điểm du lịch</label>
+  <select id="tourDestination" name="tourDestination" onchange="togglePickupOptions(); updateTourEstimate();">
+    <option value="">-- Chọn điểm --</option>
+    <option value="lasvegas">Las Vegas</option>
+    <option value="yosemite">Yosemite</option>
+    <option value="sanfrancisco">San Francisco</option>
+  </select>
+
+  <label for="pickupType">Điểm đón khách</label>
+  <select id="pickupType" name="pickupType" onchange="togglePickupInput(); updateTourEstimate();">
+    <option value="">-- Chọn --</option>
+    <option value="airport">Sân bay</option>
+    <option value="address">Địa chỉ cá nhân</option>
+  </select>
+
+  <div id="pickupAirportField" style="display: none;">
+    <label for="pickupAirport">Chọn sân bay</label>
+    <select id="pickupAirport" name="pickupAirport" onchange="updateTourEstimate()">
+      <option value="John Wayne Airport, Orange County, CA">John Wayne (SNA)</option>
+      <option value="Long Beach Airport, Long Beach, CA">Long Beach (LGB)</option>
+      <option value="LAX Airport, Los Angeles, CA">LAX</option>
+      <option value="Ontario Airport, Ontario, CA">Ontario (ONT)</option>
+      <option value="Burbank Airport, Burbank, CA">Burbank (BUR)</option>
+    </select>
+  </div>
+
+  <div id="pickupAddressField" style="display: none;">
+    <label for="pickupAddress">Địa chỉ đón</label>
+    <input id="pickupAddress" type="text" placeholder="Nhập địa chỉ đón" />
+  </div>
+
+  <label for="tourDays">Số ngày tham quan</label>
+  <input type="number" id="tourDays" name="tourDays" min="1" max="7" placeholder="Ví dụ: 3" required oninput="updateTourEstimate()" />
+
+  <div class="flex-row">
+    <div class="half-width">
+      <label for="tourEstimate">Chi phí tour</label>
+      <input type="text" id="tourEstimate" class="estimate-display" readonly value="$0" />
+    </div>
+    <div class="half-width">
+      <label for="tourVehicle">Xe sử dụng</label>
+      <input type="text" id="tourVehicle" class="estimate-display" readonly value="Mercedes Van" />
+    </div>
+  </div>
+</div>
+    
     <form id="bookingForm" method="POST" action="https://formspree.io/f/xeokgbpo" onsubmit="return submitBooking(event)">
       <label for="serviceType">Chọn dịch vụ</label>
       <select id="serviceType" name="serviceType" onchange="toggleServiceType(); updateEstimate();">

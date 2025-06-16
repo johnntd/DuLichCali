@@ -9,17 +9,31 @@
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script> 
 
-  <!-- Google API & Auth -->
+  <!-- Google API Client -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
 
-  <!-- Styles and Libraries -->
+  <!-- Load your scripts AFTER dependencies -->
+  <script src="calendar.js" defer></script>
+  <script src="script.js" defer></script>
+
+  <!-- Google Maps - Load async only AFTER initAutocomplete exists -->
+  <script 
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places"
+    async defer
+    onload="initAutocomplete()">
+  </script>
+
+  <!-- Flatpickr -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+  <!-- Styles -->
   <link rel="stylesheet" href="style.css" />
 </head>
+  
 <body>
   <div class="container">
     <h1>Dịch Vụ Đưa Đón & Du Lịch California</h1>
@@ -81,13 +95,5 @@
 
     <div id="map"></div>
   </div>
-
-  <!-- Scripts -->
-  <script src="calendar.js"></script>
-  <script src="script.js"></script>
-  <script
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete"
-    async defer>
-  </script>
 </body>
 </html>

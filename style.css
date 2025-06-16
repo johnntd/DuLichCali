@@ -1,54 +1,88 @@
-    body {
-      font-family: Arial, sans-serif;
-      background: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e') no-repeat center center fixed;
-      background-size: cover;
-      margin: 0;
-      padding: 0;
-      color: white;
-    }
-    .container {
-      background-color: rgba(28, 107, 160, 0.85); /* Ocean blue */
-      max-width: 700px;
-      margin: 2rem auto;
-      padding: 2rem;
-      border-radius: 10px;
-    }
-    input, select, button {
-      width: 100%;
-      height: 44px;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 5px;
-      border: none;
-      box-sizing: border-box;
-    }
-    label {
-      margin-top: 10px;
-      display: block;
-      font-weight: bold;
-    }
-    .flex-row {
-      display: flex;
-      gap: 10px;
-    }
-    .flex-row input,
-    .flex-row select,
-    .flex-row .half-width {
-      flex: 1;
-    }
-    .estimate-display {
-      font-weight: bold;
-      margin-top: 10px;
-      color: black;
-    }
-    #slotWarning { color: yellow; font-weight: bold; }
-      #map {
-      margin-top: 20px;
-      height: 300px;
-      width: 100%;
-      border-radius: 10px;
-    }
-    #address {
+   body {
+  font-family: Arial, sans-serif;
+  background: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e') no-repeat center center fixed;
+  background-size: cover;
+  margin: 0;
+  padding: 0;
+  color: white;
+}
+
+.container {
+  background-color: rgba(28, 107, 160, 0.85); /* Ocean blue */
+  max-width: 700px;
+  margin: 2rem auto;
+  padding: 2rem;
+  border-radius: 10px;
+}
+
+input, select, button {
+  width: 100%;
+  height: 44px;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 5px;
+  border: none;
+  box-sizing: border-box;
+}
+
+label {
+  margin-top: 10px;
+  display: block;
+  font-weight: bold;
+}
+
+/* 🔧 Make flex-row consistent and full-width */
+.flex-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ✅ Equal-width third columns */
+.third-width {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* ✅ Equal-width half columns for consistency */
+.half-width {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.flex-row input,
+.flex-row select {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.estimate-display {
+  font-weight: bold;
+  margin-top: 10px;
+  color: black;
+}
+
+#slotWarning {
+  color: yellow;
+  font-weight: bold;
+}
+
+#map {
+  margin-top: 20px;
+  height: 300px;
+  width: 100%;
+  border-radius: 10px;
+}
+
+#address {
   width: 100%;
   padding: 10px;
   font-size: 16px;
@@ -56,10 +90,4 @@
   margin-top: 10px;
   border: 1px solid #ccc;
   box-sizing: border-box;
-}
-
-.third-width {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
 }

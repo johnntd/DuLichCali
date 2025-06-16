@@ -31,9 +31,6 @@ window.initMap = function () {
     center: { lat: 33.6846, lng: -117.8265 }, // Orange County, CA
     zoom: 9
   });
-
-  // 2. Load the Places Plus library for gmpx-placeautocomplete
-  document.head.appendChild(script);
 };
 
 function initGoogleAPI() {

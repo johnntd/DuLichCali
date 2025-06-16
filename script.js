@@ -17,14 +17,17 @@ const db = firebase.firestore();
 function initAutocomplete() {
   const input = document.getElementById('address');
   if (google.maps.places && input) {
-    new google.maps.places.Autocomplete(input);
+    const autocomplete = new google.maps.places.Autocomplete(input);
+    autocomplete.addListener('place_changed', () => {
+      updateEstimate();
+    });
   }
+
   new google.maps.Map(document.getElementById("map"), {
     center: { lat: 33.7456, lng: -117.8678 },
-    zoom: 7
+    zoom: 8
   });
 }
-
 function toggleServiceType() {
   const type = document.getElementById('serviceType').value;
   const label = document.getElementById('addressLabel');

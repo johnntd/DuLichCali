@@ -29,8 +29,6 @@ function initAutocomplete() {
   });
 }
 
-let gapiInited = false;
-
 function initGoogleAPI() {
   gapi.load('client', async () => {
     await gapi.client.init({

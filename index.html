@@ -6,9 +6,12 @@
   <title>Dịch Vụ Đưa Đón & Du Lịch California</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script> 
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initAutocomplete"></script>
+  <!-- Flatpickr CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <!-- Flatpickr JS -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <!-- External CSS -->
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -44,7 +47,7 @@
       <input type="text" id="address" name="address" placeholder="Nhập địa chỉ đến hoặc đón" required oninput="updateEstimate()">
 
       <div class="flex-row">
-        <input type="datetime-local" id="datetime" name="datetime" required>
+        <input type="text" id="datetime" name="datetime" required placeholder="Chọn ngày và giờ" />
         <input type="number" id="passengers" name="passengers" min="1" max="12" placeholder="Số khách" required oninput="updateEstimate()">
       </div>
       <div id="slotWarning"></div>

@@ -25,12 +25,13 @@ function safeInitGoogleAPI() {
 }
 
 // --- Google Calendar API Setup ---
-window.initMap = function () {
+function initMap() {
   const map = new google.maps.Map(document.getElementById('map'), {
     center: { lat: 33.6846, lng: -117.8265 },
     zoom: 9
   });
-};
+}
+window.initMap = initMap; // <== Make it globally available
 
 function initGoogleAPI() {
   gapi.load('client', async () => {

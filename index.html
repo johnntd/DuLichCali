@@ -27,7 +27,8 @@
 
   <!-- Styles -->
   <link rel="stylesheet" href="style.css" />
-  <script async defer src="https://www.gstatic.com/maps-platform/places/places.js"></script>
+  <!-- ✅ Correct library for gmpx-placeautocomplete -->
+  <script async defer src="https://www.gstatic.com/maps-platform/places-plus/places-plus.min.js"></script>
 </head>
   
 <body>
@@ -60,11 +61,12 @@
    
       <label id="addressLabel" for="address">Địa chỉ đến</label>
       <gmpx-placeautocomplete
-      id="address"
-      style="width: 100%;"
-      placeholder="Nhập địa chỉ đến hoặc đón"
-      required
-      ></gmpx-placeautocomplete>
+  id="address"
+  style="width: 100%;"
+  placeholder="Nhập địa chỉ đến hoặc đón"
+  required
+  disabled
+></gmpx-placeautocomplete>
 
       <div class="flex-row">
         <input type="text" id="datetime" name="datetime" required placeholder="Chọn ngày và giờ" />

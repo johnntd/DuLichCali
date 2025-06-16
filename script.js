@@ -145,9 +145,8 @@ function updateEstimate() {
   const airport = document.getElementById('airport')?.value || '';
   const address = document.getElementById('address')?.value || '';
   const lodging = document.getElementById('lodging')?.value || '';
-  const daysInput = document.getElementById('days');
-  const days = (daysInput && !isNaN(daysInput.value) && parseInt(daysInput.value) > 0) ? parseInt(daysInput.value) : 1;
-  
+  const days = parseInt(document.getElementById('days')?.value) || 1;
+
   const origin = (serviceType === 'pickup') ? airport : address;
   const destination = (serviceType === 'pickup') ? address : airport;
 
@@ -176,14 +175,17 @@ function updateEstimate() {
             ? Math.max(40, miles * 2.5)
             : (miles > 75 ? Math.max(150, miles * 2.5 * 2) : Math.max(125, miles * 2.5));
         } else {
-          // --- Tour package cost breakdown ---
+          // --- Tour package calculation ---
           const fuelCost = miles * 2 * 2.5;
+          let lodgingCost = 0;
 
-          const lodgingCost = (lodging === 'hotel')
-            ? 150 * days * passengers
-            : (lodging === 'airbnb')
-              ? 100 * days * passengers
-              : 0;
+          if (lodging === 'hotel') {
+            const hotelRoomsNeeded = Math.min(2, Math.ceil(passengers / 4));
+            lodgingCost = 150 * days * hotelRoomsNeeded;
+          } else if (lodging === 'airbnb') {
+            const airbnbUnitsNeeded = Math.min(2, Math.ceil(passengers / 8));
+            lodgingCost = 165 * days * airbnbUnitsNeeded;
+          }
 
           const vanCost = 100 * days;
           const passengerSurcharge = (passengers > 6) ? 150 : 0;
@@ -201,7 +203,6 @@ function updateEstimate() {
         }
 
         const vehicle = (passengers > 3) ? 'Mercedes Van' : 'Tesla Model Y';
-
         document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
         document.getElementById('vehicleDisplay').value = `${vehicle}`;
       } else {
@@ -215,7 +216,6 @@ function updateEstimate() {
     }
   });
 }
-
 // --- Toggle Service Type ---
 function toggleServiceType() {
   const type = document.getElementById('serviceType').value;

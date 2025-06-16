@@ -25,12 +25,12 @@ function safeInitGoogleAPI() {
 }
 
 // --- Google Calendar API Setup ---
-function initMap() {
+window.initMap = function () {
   const map = new google.maps.Map(document.getElementById('map'), {
     center: { lat: 33.6846, lng: -117.8265 },
-    zoom: 9
+    zoom: 10
   });
-}
+};
 window.initMap = initMap; // <== Make it globally available
 
 function initGoogleAPI() {
@@ -230,6 +230,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 window.gapiLoaded = () => initGoogleAPI();
 
 customElements.whenDefined('gmpx-placeautocomplete').then(() => {
-  const placeBox = document.querySelector('#address');
-  if (placeBox) placeBox.disabled = false;
+  console.log('Place Autocomplete ready');
+  const input = document.querySelector('#address');
+  input.disabled = false;
 });

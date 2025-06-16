@@ -33,6 +33,8 @@ function toggleServiceType() {
 }
 
 function updateEstimate() {
+  lastCalculatedMiles = 0; // Reset every time user updates input
+
   const passengers = parseInt(document.getElementById('passengers').value) || 1;
   const airport = document.getElementById('airport').value;
   const address = document.getElementById('address').value;
@@ -40,7 +42,11 @@ function updateEstimate() {
   const origin = (serviceType === 'pickup') ? airport : address;
   const destination = (serviceType === 'pickup') ? address : airport;
 
-  if (!origin || !destination) return;
+  if (!origin || !destination) {
+    document.getElementById('estimateDisplay').value = "$0";
+    document.getElementById('vehicleDisplay').value = "";
+    return;
+  }
 
   const distanceService = new google.maps.DistanceMatrixService();
   distanceService.getDistanceMatrix({
@@ -53,18 +59,32 @@ function updateEstimate() {
       if (element && element.status === 'OK') {
         const miles = element.distance.value / 1609.34;
         lastCalculatedMiles = miles;
-        let cost = (passengers < 4) ? Math.max(40, miles * 2.5) : (miles > 75 ? Math.max(150, miles * 2.5 * 2) : Math.max(120, miles * 2.5));
+
+        let cost = (passengers < 4)
+          ? Math.max(40, miles * 2.5)
+          : (miles > 75 ? Math.max(150, miles * 2.5 * 2) : Math.max(125, miles * 2.5));
+
         const vehicle = (passengers > 3) ? 'Mercedes Van' : 'Tesla Model Y';
+
         document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
         document.getElementById('vehicleDisplay').value = `${vehicle}`;
+      } else {
+        // Invalid distance result
+        document.getElementById('estimateDisplay').value = "$0";
+        document.getElementById('vehicleDisplay').value = "";
       }
+    } else {
+      // Distance matrix failed
+      console.error("DistanceMatrix error:", status);
+      document.getElementById('estimateDisplay').value = "$0";
+      document.getElementById('vehicleDisplay').value = "";
     }
   });
 }
 
-let lastCalculatedMiles = 0;
+  let lastCalculatedMiles = 0;
 
-async function fetchUnavailableSlots(dateStr) {
+  async function fetchUnavailableSlots(dateStr) {
   const snapshot = await db.collection('bookings').get();
   const unavailable = [];
 

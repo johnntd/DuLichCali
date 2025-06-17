@@ -15,7 +15,7 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
 
-  <!-- Google Maps JS (classic Autocomplete) -->
+  <!-- Google Maps JS -->
   <script>
     function initMap() {
       const map = new google.maps.Map(document.getElementById('map'), {
@@ -26,15 +26,12 @@
       if (input) {
         const autocomplete = new google.maps.places.Autocomplete(input);
         autocomplete.addListener('place_changed', () => {
-        updateEstimate(); // call estimate function when address is selected
-});
+          updateEstimate();
+        });
       }
     }
   </script>
-  <script
-    async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initMap">
-  </script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initMap"></script>
 
   <!-- Flatpickr -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
@@ -43,51 +40,50 @@
   <!-- Styles -->
   <link rel="stylesheet" href="style.css" />
 </head>
-  
-<section class="search-panel">
-  <h2>Chọn điểm đến & ngày</h2>
-  <div class="search-row">
-    <select id="serviceType" onchange="toggleServiceType(); updateEstimate();">
-      <option value="">
-        Chọn dịch vụ...
-      </option>
-      <option value="pickup">Đón sân bay</option>
-      <option value="dropoff">Đưa sân bay</option>
-      <option value="lasvegas">Tour Las Vegas</option>
-      <option value="yosemite">Tour Yosemite</option>
-      <option value="sanfrancisco">Tour San Francisco</option>
-    </select>
 
-    <input id="address" type="text" placeholder="Nhập địa chỉ hoặc sân bay">
-    <input id="dates" type="text" placeholder="Chọn ngày!" readonly>
-  </div>
-
-  <div class="search-row">
-    <input id="passengers" type="number" min="1" max="12" placeholder="Số khách">
-    <input id="days" type="number" min="1" max="7" placeholder="Số ngày (Tour only)">
-    <button id="checkEstimate" onclick="updateEstimate()">Tính Giá</button>
-  </div>
-</section>
-
-<section class="services">
-  <div class="card">
-    <img src="lasvegas.jpg" alt="Las Vegas Tour">
-    <h3>Tour Las Vegas</h3>
-    <p>2‑7 ngày, giá từ …</p>
-    <button onclick="selectService('lasvegas')">Chọn</button>
-  </div>
-  <!-- Similarly add cards for Yosemite, SF etc. -->
-</section>
-  
 <body>
   <div class="container">
     <h1>Dịch Vụ Đưa Đón & Du Lịch California</h1>
     <p>
       <strong>Liên hệ:</strong> Duy Hoa |
-      <a href="tel:7142276007" style="color: #add8e6;">Điện thoại: 714-227-6007</a> |
-      <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>
+      <a href="tel:7142276007">Điện thoại: 714-227-6007</a> |
+      <a href="mailto:dulichcali21@gmail.com">Email: dulichcali21@gmail.com</a>
     </p>
 
+    <!-- Hero / Search Panel Section -->
+    <section class="search-panel">
+      <h2>Chọn điểm đến & ngày</h2>
+      <div class="search-row">
+        <select id="serviceType" onchange="toggleServiceType(); updateEstimate();">
+          <option value="">Chọn dịch vụ...</option>
+          <option value="pickup">Đón sân bay</option>
+          <option value="dropoff">Đưa sân bay</option>
+          <option value="lasvegas">Tour Las Vegas</option>
+          <option value="yosemite">Tour Yosemite</option>
+          <option value="sanfrancisco">Tour San Francisco</option>
+        </select>
+        <input id="address" type="text" placeholder="Nhập địa chỉ hoặc sân bay">
+        <input id="dates" type="text" placeholder="Chọn ngày!" readonly>
+      </div>
+      <div class="search-row">
+        <input id="passengers" type="number" min="1" max="12" placeholder="Số khách">
+        <input id="days" type="number" min="1" max="7" placeholder="Số ngày (Tour only)">
+        <button id="checkEstimate" onclick="updateEstimate()">Tính Giá</button>
+      </div>
+    </section>
+
+    <!-- Tour Cards Section -->
+    <section class="services">
+      <div class="card">
+        <img src="lasvegas.jpg" alt="Las Vegas Tour" />
+        <h3>Tour Las Vegas</h3>
+        <p>2‑7 ngày, giá từ …</p>
+        <button onclick="selectService('lasvegas')">Chọn</button>
+      </div>
+      <!-- More cards... -->
+    </section>
+
+    <!-- Booking Form -->
     <form id="bookingForm" method="POST" action="https://formspree.io/f/xeokgbpo" onsubmit="return submitBooking(event)">
       <label for="serviceType">Chọn dịch vụ</label>
       <select id="serviceType" name="serviceType" onchange="toggleServiceType(); updateEstimate();">
@@ -101,12 +97,12 @@
       <div id="airportField">
         <label for="airport">Chọn sân bay</label>
         <select id="airport" name="airport" onchange="updateEstimate()">
-          <option value="John Wayne Airport, Orange County, CA">Sân bay John Wayne (SNA)</option>
-          <option value="Long Beach Airport, Long Beach, CA">Sân bay Long Beach (LGB)</option>
-          <option value="LAX Airport, Los Angeles, CA">Sân bay LAX</option>
-          <option value="Ontario Airport, Ontario, CA">Sân bay Ontario (ONT)</option>
-          <option value="Burbank Airport, Burbank, CA">Sân bay Burbank (BUR)</option>
-          <option value="San Diego Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
+          <option value="John Wayne Airport, Orange County, CA">SNA</option>
+          <option value="Long Beach Airport, Long Beach, CA">LGB</option>
+          <option value="LAX Airport, Los Angeles, CA">LAX</option>
+          <option value="Ontario Airport, Ontario, CA">ONT</option>
+          <option value="Burbank Airport, Burbank, CA">BUR</option>
+          <option value="San Diego Airport, San Diego, CA">SAN</option>
         </select>
       </div>
 
@@ -119,38 +115,36 @@
         </select>
       </div>
 
-      <label id="addressLabel" for="address">Địa chỉ đến</label>
-      <input id="address" type="text" placeholder="Nhập địa chỉ đến hoặc đón" required />
+      <label for="address">Địa chỉ đến</label>
+      <input id="address" name="address" type="text" placeholder="Nhập địa chỉ đến hoặc đón" required />
 
+      <label for="datetime">Ngày và giờ</label>
+      <input type="text" id="datetime" name="datetime" required placeholder="Chọn ngày và giờ" />
 
-    <label for="datetime">Ngày và giờ</label>
-    <input type="text" id="datetime" name="datetime" required placeholder="Chọn ngày và giờ" />
- 
-    <label for="passengers">Số khách</label>
-    <input type="number" id="passengers" name="passengers" min="1" max="12" placeholder="Số khách" required oninput="updateEstimate()">
+      <label for="passengers">Số khách</label>
+      <input type="number" id="passengers" name="passengers" min="1" max="12" required />
 
-    <label for="days">Số ngày tham quan</label>
-    <input type="number" id="days" name="days" min="1" max="7" placeholder="Số ngày" oninput="updateEstimate()">
+      <label for="days">Số ngày tham quan</label>
+      <input type="number" id="days" name="days" min="1" max="7" placeholder="Số ngày" />
 
-      
       <div id="slotWarning"></div>
 
       <div class="flex-row">
         <div class="half-width">
           <label for="estimateDisplay">Chi phí ước tính</label>
-          <input type="text" id="estimateDisplay" class="estimate-display" readonly value="$0" />
+          <input type="text" id="estimateDisplay" readonly value="$0" />
         </div>
         <div class="half-width">
           <label for="vehicleDisplay">Xe</label>
-          <input type="text" id="vehicleDisplay" class="estimate-display" readonly value="Mercedes Van" />
+          <input type="text" id="vehicleDisplay" readonly value="Mercedes Van" />
         </div>
       </div>
 
       <label for="name">Tên của bạn</label>
-      <input type="text" id="name" name="name" required>
+      <input type="text" id="name" name="name" required />
 
       <label for="phone">Số điện thoại</label>
-      <input type="tel" id="phone" name="phone" required>
+      <input type="tel" id="phone" name="phone" required />
 
       <input type="hidden" name="message" id="bookingSummary" />
       <button type="submit">Gửi yêu cầu</button>

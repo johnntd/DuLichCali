@@ -13,6 +13,7 @@ body {
   margin: 2rem auto;
   padding: 2rem;
   border-radius: 10px;
+  box-sizing: border-box;
 }
 
 input, select, button {
@@ -23,6 +24,7 @@ input, select, button {
   border-radius: 5px;
   border: none;
   box-sizing: border-box;
+  font-size: 16px;
 }
 
 label {
@@ -66,6 +68,7 @@ label {
   font-weight: bold;
   margin-top: 10px;
   color: black;
+  background: white;
 }
 
 #slotWarning {
@@ -91,12 +94,12 @@ label {
 }
 
 .search-panel {
-  background: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.95);
   padding: 20px;
   border-radius: 10px;
-  margin: -80px auto 30px auto;
-  max-width: 700px;
+  margin-bottom: 30px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  color: black;
 }
 
 .search-row {
@@ -143,20 +146,4 @@ label {
   width: calc(100% - 20px);
   cursor: pointer;
   border-radius: 4px;
-}
-
-@media (max-width: 600px) {
-  .half-width {
-    flex: 1 1 100%;
-  }
-
-  .search-panel,
-  .container {
-    margin: 1rem;
-    padding: 1rem;
-  }
-
-  .services .card {
-    width: 100%;
-  }
 }

@@ -143,3 +143,11 @@ label {
   cursor: pointer;
   border-radius: 4px;
 }
+@media (max-width: 600px) {
+  .half-width {
+    flex: 1 1 100%; /* Stack vertically */
+  }
+  .services .card {
+    width: 100%; /* Full width cards on small screens */
+  }
+}

@@ -151,3 +151,8 @@ label {
     width: 100%; /* Full width cards on small screens */
   }
 }
+.search-panel {
+  width: 100%;
+  max-width: 700px;
+  margin: 1rem auto;
+}

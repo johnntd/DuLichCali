@@ -52,10 +52,10 @@ label {
 
 /* ✅ Equal-width half columns for consistency */
 .half-width {
-  flex: 1;
+  flex: 1 1 100%;   /* Full width on mobile */
+  min-width: 45%;  /* Prevents them from being too narrow on larger screens */
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
 }
 
 .flex-row input,

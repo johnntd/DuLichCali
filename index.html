@@ -87,20 +87,15 @@
       <label id="addressLabel" for="address">Địa chỉ đến</label>
       <input id="address" type="text" placeholder="Nhập địa chỉ đến hoặc đón" required />
 
-      <div class="flex-row">
-  <div class="half-width">
+
     <label for="datetime">Ngày và giờ</label>
     <input type="text" id="datetime" name="datetime" required placeholder="Chọn ngày và giờ" />
-  </div>
-
-  <div class="half-width">
+ 
     <label for="passengers">Số khách</label>
     <input type="number" id="passengers" name="passengers" min="1" max="12" placeholder="Số khách" required oninput="updateEstimate()">
-  </div>
-      </div>
 
-  <label for="days">Số ngày tham quan</label>
-  <input type="number" id="days" name="days" min="1" max="7" placeholder="Số ngày" oninput="updateEstimate()">
+    <label for="days">Số ngày tham quan</label>
+    <input type="number" id="days" name="days" min="1" max="7" placeholder="Số ngày" oninput="updateEstimate()">
 
       
       <div id="slotWarning"></div>

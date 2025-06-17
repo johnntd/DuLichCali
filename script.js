@@ -11,6 +11,7 @@ firebase.initializeApp(firebaseConfig);
 firebase.auth().signInAnonymously().catch(console.error);
 const db = firebase.firestore();
 
+// --- Global variables ---
 let lastCalculatedMiles = 0;
 let gapiInited = false;
 let tokenClient;
@@ -23,6 +24,7 @@ function safeInitGoogleAPI() {
   }
 }
 
+// --- Google Calendar API Setup ---
 function initGoogleAPI() {
   gapi.load('client', async () => {
     try {
@@ -47,32 +49,7 @@ function initGoogleAPI() {
   });
 }
 
-function toggleServiceType() {
-  const type = document.getElementById('serviceType').value;
-  const addressLabel = document.getElementById('addressLabel');
-  const airportField = document.getElementById('airportField');
-  const lodgingField = document.getElementById('lodgingField');
-  const daysInput = document.getElementById('days');
-
-  if (type === 'pickup') {
-    addressLabel.innerText = 'Địa chỉ đến';
-    airportField.style.display = 'block';
-    lodgingField.style.display = 'none';
-    daysInput.disabled = true;
-  } else if (type === 'dropoff') {
-    addressLabel.innerText = 'Địa chỉ đón';
-    airportField.style.display = 'block';
-    lodgingField.style.display = 'none';
-    daysInput.disabled = true;
-  } else {
-    addressLabel.innerText = 'Địa chỉ của bạn';
-    airportField.style.display = 'none';
-    lodgingField.style.display = 'block';
-    daysInput.disabled = false;
-  }
-  updateEstimate();
-}
-
+// --- Booking Submission ---
 async function submitBooking(event) {
   event.preventDefault();
   const form = document.getElementById('bookingForm');
@@ -145,12 +122,15 @@ async function submitBooking(event) {
         console.error('Failed to add to calendar:', err);
       }
     };
+
     tokenClient.requestAccessToken();
   }
+
   form.removeEventListener('submit', submitBooking);
   form.submit();
 }
 
+// --- Estimate Update ---
 function updateEstimate() {
   lastCalculatedMiles = 0;
 
@@ -193,27 +173,64 @@ function updateEstimate() {
           let lodgingCost = 0;
 
           if (lodging === 'hotel') {
-            const hotelRooms = Math.min(2, Math.ceil(passengers / 4));
-            lodgingCost = hotelRooms * 150 * days;
+            const hotelRoomsNeeded = Math.min(2, Math.ceil(passengers / 4));
+            lodgingCost = 150 * days * hotelRoomsNeeded;
           } else if (lodging === 'airbnb') {
-            const airbnbUnits = Math.min(2, Math.ceil(passengers / 8));
-            lodgingCost = airbnbUnits * 165 * days;
+            const airbnbUnitsNeeded = Math.min(2, Math.ceil(passengers / 8));
+            lodgingCost = 165 * days * airbnbUnitsNeeded;
           }
 
           const vanCost = 100 * days;
           const passengerSurcharge = (passengers > 6) ? 150 : 0;
           const tolls = 50;
+
           cost = fuelCost + lodgingCost + vanCost + passengerSurcharge + tolls;
         }
 
         const vehicle = (passengers > 3) ? 'Mercedes Van' : 'Tesla Model Y';
         document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
         document.getElementById('vehicleDisplay').value = `${vehicle}`;
+      } else {
+        document.getElementById('estimateDisplay').value = "$0";
+        document.getElementById('vehicleDisplay').value = "";
       }
+    } else {
+      console.error("DistanceMatrix error:", status);
+      document.getElementById('estimateDisplay').value = "$0";
+      document.getElementById('vehicleDisplay').value = "";
     }
   });
 }
 
+// --- Toggle Service Type ---
+function toggleServiceType() {
+  const type = document.getElementById('serviceType').value;
+  const addressLabel = document.getElementById('addressLabel');
+  const airportField = document.getElementById('airportField');
+  const lodgingField = document.getElementById('lodgingField');
+  const daysInput = document.getElementById('days');
+
+  if (type === 'pickup') {
+    addressLabel.innerText = 'Địa chỉ đến';
+    airportField.style.display = 'block';
+    lodgingField.style.display = 'none';
+    daysInput.disabled = true;
+  } else if (type === 'dropoff') {
+    addressLabel.innerText = 'Địa chỉ đón';
+    airportField.style.display = 'block';
+    lodgingField.style.display = 'none';
+    daysInput.disabled = true;
+  } else {
+    addressLabel.innerText = 'Địa chỉ của bạn';
+    airportField.style.display = 'none';
+    lodgingField.style.display = 'block';
+    daysInput.disabled = false;
+  }
+
+  updateEstimate();
+}
+
+// --- Flatpickr Setup ---
 document.addEventListener('DOMContentLoaded', async () => {
   const today = new Date();
   flatpickr("#datetime", {
@@ -246,6 +263,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 window.gapiLoaded = () => initGoogleAPI();
 
 customElements.whenDefined('gmpx-placeautocomplete').then(() => {
+  console.log('Place Autocomplete ready');
   const input = document.querySelector('#address');
   input.disabled = false;
 });

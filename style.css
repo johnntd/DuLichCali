@@ -1,4 +1,4 @@
-   body {
+body {
   font-family: Arial, sans-serif;
   background: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e') no-repeat center center fixed;
   background-size: cover;
@@ -31,7 +31,7 @@ label {
   font-weight: bold;
 }
 
-/* 🔧 Make flex-row consistent and full-width */
+/* 🔧 Improved row handling */
 .flex-row {
   display: flex;
   flex-wrap: wrap;
@@ -41,7 +41,16 @@ label {
   box-sizing: border-box;
 }
 
-/* ✅ Equal-width third columns */
+/* ✅ Half-width columns with consistent spacing */
+.half-width {
+  flex: 1 1 calc(50% - 10px);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+/* ✅ Third-width for 3 items per row */
 .third-width {
   flex: 1;
   display: flex;
@@ -50,21 +59,14 @@ label {
   box-sizing: border-box;
 }
 
-/* ✅ Equal-width half columns for consistency */
-.half-width {
-  flex: 1 1 100%;   /* Full width on mobile */
-  min-width: 45%;  /* Prevents them from being too narrow on larger screens */
-  display: flex;
-  flex-direction: column;
-}
-
+/* 🛠 Fix mobile spacing on inputs inside .flex-row */
 .flex-row input,
 .flex-row select {
-  width: 100%;
-  gap: 10px;
   margin-top: 4px;
+  width: 100%;
 }
 
+/* Estimate display box */
 .estimate-display {
   font-weight: bold;
   margin-top: 10px;

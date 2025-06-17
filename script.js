@@ -175,7 +175,6 @@ function updateEstimate() {
             ? Math.max(40, miles * 2.5)
             : (miles > 75 ? Math.max(150, miles * 2.5 * 2) : Math.max(125, miles * 2.5));
         } else {
-          // --- Tour package calculation ---
           const fuelCost = miles * 2 * 2.5;
           let lodgingCost = 0;
 
@@ -216,7 +215,7 @@ function updateEstimate() {
     }
   });
 }
-// --- Toggle Service Type ---
+
 function toggleServiceType() {
   const type = document.getElementById('serviceType').value;
   const addressLabel = document.getElementById('addressLabel');
@@ -228,17 +227,17 @@ function toggleServiceType() {
     addressLabel.innerText = 'Địa chỉ đến';
     airportField.style.display = 'block';
     lodgingField.style.display = 'none';
-    daysInput.disabled = true; // disable for pickup
+    daysInput.disabled = true;
   } else if (type === 'dropoff') {
     addressLabel.innerText = 'Địa chỉ đón';
     airportField.style.display = 'block';
     lodgingField.style.display = 'none';
-    daysInput.disabled = true; // disable for dropoff
+    daysInput.disabled = true;
   } else {
     addressLabel.innerText = 'Địa chỉ của bạn';
     airportField.style.display = 'none';
     lodgingField.style.display = 'block';
-    daysInput.disabled = false; // ✅ enable for tour services
+    daysInput.disabled = false;
   }
 
   updateEstimate();
@@ -271,7 +270,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   safeInitGoogleAPI();
-  toggleServiceType(); // Ensure proper initial UI state on load
+  toggleServiceType();
 });
 
 window.gapiLoaded = () => initGoogleAPI();

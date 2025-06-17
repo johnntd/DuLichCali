@@ -43,7 +43,42 @@
   <!-- Styles -->
   <link rel="stylesheet" href="style.css" />
 </head>
+  
+<section class="search-panel">
+  <h2>Chọn điểm đến & ngày</h2>
+  <div class="search-row">
+    <select id="serviceType" onchange="toggleServiceType(); updateEstimate();">
+      <option value="">
+        Chọn dịch vụ...
+      </option>
+      <option value="pickup">Đón sân bay</option>
+      <option value="dropoff">Đưa sân bay</option>
+      <option value="lasvegas">Tour Las Vegas</option>
+      <option value="yosemite">Tour Yosemite</option>
+      <option value="sanfrancisco">Tour San Francisco</option>
+    </select>
 
+    <input id="address" type="text" placeholder="Nhập địa chỉ hoặc sân bay">
+    <input id="dates" type="text" placeholder="Chọn ngày!" readonly>
+  </div>
+
+  <div class="search-row">
+    <input id="passengers" type="number" min="1" max="12" placeholder="Số khách">
+    <input id="days" type="number" min="1" max="7" placeholder="Số ngày (Tour only)">
+    <button id="checkEstimate" onclick="updateEstimate()">Tính Giá</button>
+  </div>
+</section>
+
+<section class="services">
+  <div class="card">
+    <img src="lasvegas.jpg" alt="Las Vegas Tour">
+    <h3>Tour Las Vegas</h3>
+    <p>2‑7 ngày, giá từ …</p>
+    <button onclick="selectService('lasvegas')">Chọn</button>
+  </div>
+  <!-- Similarly add cards for Yosemite, SF etc. -->
+</section>
+  
 <body>
   <div class="container">
     <h1>Dịch Vụ Đưa Đón & Du Lịch California</h1>

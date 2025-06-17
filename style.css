@@ -8,7 +8,7 @@ body {
 }
 
 .container {
-  background-color: rgba(28, 107, 160, 0.85); /* Ocean blue */
+  background-color: rgba(28, 107, 160, 0.85);
   max-width: 700px;
   margin: 2rem auto;
   padding: 2rem;
@@ -31,7 +31,6 @@ label {
   font-weight: bold;
 }
 
-/* 🔧 Improved row handling */
 .flex-row {
   display: flex;
   flex-wrap: wrap;
@@ -41,7 +40,6 @@ label {
   box-sizing: border-box;
 }
 
-/* ✅ Half-width columns with consistent spacing */
 .half-width {
   flex: 1 1 calc(50% - 10px);
   display: flex;
@@ -50,7 +48,6 @@ label {
   min-width: 0;
 }
 
-/* ✅ Third-width for 3 items per row */
 .third-width {
   flex: 1;
   display: flex;
@@ -59,15 +56,12 @@ label {
   box-sizing: border-box;
 }
 
-/* 🛠 Fix mobile spacing on inputs inside .flex-row */
 .flex-row input,
 .flex-row select {
   margin-top: 4px;
-  margin-bottom: 20px;
   width: 100%;
 }
 
-/* Estimate display box */
 .estimate-display {
   font-weight: bold;
   margin-top: 10px;
@@ -104,15 +98,18 @@ label {
   max-width: 700px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
+
 .search-row {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
   margin-bottom: 15px;
 }
+
 .search-row > * {
   flex: 1 1 120px;
 }
+
 .services {
   display: flex;
   flex-wrap: wrap;
@@ -120,6 +117,7 @@ label {
   justify-content: center;
   margin-bottom: 40px;
 }
+
 .services .card {
   background: white;
   color: #333;
@@ -129,11 +127,13 @@ label {
   text-align: center;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
+
 .services .card img {
   width: 100%;
   height: 120px;
   object-fit: cover;
 }
+
 .services .card button {
   background: #1c6ba0;
   color: white;
@@ -144,16 +144,19 @@ label {
   cursor: pointer;
   border-radius: 4px;
 }
+
 @media (max-width: 600px) {
   .half-width {
-    flex: 1 1 100%; /* Stack vertically */
+    flex: 1 1 100%;
   }
+
+  .search-panel,
+  .container {
+    margin: 1rem;
+    padding: 1rem;
+  }
+
   .services .card {
-    width: 100%; /* Full width cards on small screens */
+    width: 100%;
   }
-}
-.search-panel {
-  width: 100%;
-  max-width: 700px;
-  margin: 1rem auto;
 }

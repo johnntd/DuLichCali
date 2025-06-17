@@ -63,6 +63,7 @@ label {
 .flex-row input,
 .flex-row select {
   margin-top: 4px;
+  margin-bottom: 20px;
   width: 100%;
 }
 

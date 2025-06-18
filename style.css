@@ -90,23 +90,29 @@ button:hover {
 }
 
 .search-panel {
-  background: rgba(255, 255, 255, 0.95);
-  color: black;
+  background: rgba(255,255,255,0.95);
   padding: 20px;
   border-radius: 10px;
-  margin-bottom: 30px;
+  margin: 20px auto;
+  max-width: 680px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* ✅ Center content horizontally */
+  gap: 10px;
 }
 
 .search-row {
   display: flex;
-  gap: 10px;
   flex-wrap: wrap;
-  margin-bottom: 15px;
+  justify-content: center; /* ✅ Center row items */
+  gap: 10px;
+  width: 100%;
 }
 
 .search-row > * {
-  flex: 1 1 120px;
+  flex: 1 1 200px;
+  max-width: 220px;
 }
 
 .services {

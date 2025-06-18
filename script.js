@@ -218,15 +218,18 @@ function toggleServiceType() {
   const type = document.getElementById('serviceType').value;
   const airportField = document.getElementById('airportField');
   const lodgingField = document.getElementById('lodgingField');
+  const lodgingSelect = document.getElementById('lodging');
   const daysInput = document.getElementById('days');
 
   if (type === 'pickup' || type === 'dropoff') {
     airportField.style.display = 'block';
     lodgingField.style.display = 'none';
+    lodgingSelect.disabled = true;
     daysInput.disabled = true;
   } else {
     airportField.style.display = 'none';
     lodgingField.style.display = 'block';
+    lodgingSelect.disabled = false;
     daysInput.disabled = false;
   }
 

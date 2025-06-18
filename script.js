@@ -131,76 +131,100 @@ async function submitBooking(event) {
 }
 
 // --- Estimate Update ---
-function updateEstimate() {
+/* ――― CONFIG – edit these two numbers if prices change ――― */
+const CALIFORNIA_AVG_FUEL_PRICE = 5.00; // USD / gallon (update monthly!)
+const VAN_MPG = 14;                      // Sprinter-type average mpg
+/* --------------------------------------------------------- */
+
+
+/* ---------- REPLACE your entire old updateEstimate with this one ---------- */
+function updateEstimate () {
   lastCalculatedMiles = 0;
 
-  const passengers = parseInt(document.getElementById('passengers').value) || 1;
+  /* grab user inputs */
+  const passengers  = +document.getElementById('passengers').value || 1;
   const serviceType = document.getElementById('serviceType').value;
-  const airport = document.getElementById('airport')?.value || '';
-  const address = document.getElementById('address')?.value || '';
-  const lodging = document.getElementById('lodging')?.value || '';
-  const days = parseInt(document.getElementById('days')?.value) || 1;
+  const airport     = document.getElementById('airport')?.value || '';
+  const address     = document.getElementById('address')?.value || '';
+  const lodging     = document.getElementById('lodging')?.value || '';
+  const days        = +document.getElementById('days')?.value   || 1;
 
-  const origin = (serviceType === 'pickup') ? airport : address;
+  /* determine origin / destination for distance   */
+  const origin      = (serviceType === 'pickup') ? airport : address;
   const destination = (serviceType === 'pickup') ? address : airport;
 
+  /* bail early if we can’t compute */
   if (!origin || !destination) {
-    document.getElementById('estimateDisplay').value = "$0";
-    document.getElementById('vehicleDisplay').value = "";
+    document.getElementById('estimateDisplay').value = '$0';
+    document.getElementById('vehicleDisplay').value  = '';
     return;
   }
 
-  const distanceService = new google.maps.DistanceMatrixService();
-  distanceService.getDistanceMatrix({
-    origins: [origin],
-    destinations: [destination],
-    travelMode: google.maps.TravelMode.DRIVING
-  }, (response, status) => {
-    if (status === 'OK') {
-      const element = response.rows[0].elements[0];
-      if (element && element.status === 'OK') {
-        const miles = element.distance.value / 1609.34;
-        lastCalculatedMiles = miles;
+  /* ask Google for the road-distance */
+  new google.maps.DistanceMatrixService().getDistanceMatrix(
+    {
+      origins:      [origin],
+      destinations: [destination],
+      travelMode:   google.maps.TravelMode.DRIVING
+    },
+    (resp, status) => {
+      if (status !== 'OK') {
+        console.error('DistanceMatrix error:', status);
+        document.getElementById('estimateDisplay').value = '$0';
+        return;
+      }
 
-        let cost = 0;
+      const element = resp.rows[0].elements[0];
+      if (!element || element.status !== 'OK') {
+        document.getElementById('estimateDisplay').value = '$0';
+        return;
+      }
 
-        if (['pickup', 'dropoff'].includes(serviceType)) {
-          cost = (passengers < 4)
-            ? Math.max(40, miles * 2.5)
-            : (miles > 75 ? Math.max(150, miles * 2.5 * 2) : Math.max(125, miles * 2.5));
-        } else {
-          const fuelCost = miles * 2 * 2.5;
-          let lodgingCost = 0;
+      /* ---------- DISTANCE in miles ---------- */
+      const miles = element.distance.value / 1609.34;   // metres → miles
+      lastCalculatedMiles = miles;
 
-          if (lodging === 'hotel') {
-            const hotelRoomsNeeded = Math.min(2, Math.ceil(passengers / 4));
-            lodgingCost = 150 * days * hotelRoomsNeeded;
-          } else if (lodging === 'airbnb') {
-            const airbnbUnitsNeeded = Math.min(2, Math.ceil(passengers / 8));
-            lodgingCost = 165 * days * airbnbUnitsNeeded;
-          }
+      /* ---------- PRICE CALCULATION ---------- */
+      let cost = 0;
 
-          const vanCost = 100 * days;
-          const passengerSurcharge = (passengers > 6) ? 150 : 0;
-          const tolls = 50;
+      /** 1. Simple airport shuttle */
+      if (['pickup', 'dropoff'].includes(serviceType)) {
+        const fuelPerMile   = CALIFORNIA_AVG_FUEL_PRICE / VAN_MPG; // $/mile
+        const vanCost       = 150 + (miles * fuelPerMile);         // base + fuel
+        cost = (passengers < 4)
+          ? Math.max(40, vanCost)
+          : Math.max(125, vanCost * 1.6);  // same multiplier logic as before
 
-          cost = fuelCost + lodgingCost + vanCost + passengerSurcharge + tolls;
+      /** 2. Multi-day tours */
+      } else {
+        /*  2-a  Van fee (base + fuel) */
+        const fuelPerMile = CALIFORNIA_AVG_FUEL_PRICE / VAN_MPG;
+        const vanCost = 150 + (miles * 2 /*round-trip*/ * fuelPerMile);
+
+        /*  2-b  Lodging */
+        let lodgingCost = 0;
+        if (lodging === 'hotel') {
+          const roomsNeeded = Math.ceil(passengers / 5);
+          lodgingCost = roomsNeeded * 150 * days;
+        } else if (lodging === 'airbnb') {
+          const unitsNeeded = Math.ceil(passengers / 8);
+          lodgingCost = unitsNeeded * 165 * days;
         }
 
-        const vehicle = (passengers > 3) ? 'Mercedes Van' : 'Tesla Model Y';
-        document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
-        document.getElementById('vehicleDisplay').value = `${vehicle}`;
-      } else {
-        document.getElementById('estimateDisplay').value = "$0";
-        document.getElementById('vehicleDisplay').value = "";
+        /*  2-c  Misc / tolls      */
+        const misc = 50;
+
+        cost = vanCost + lodgingCost + misc;
       }
-    } else {
-      console.error("DistanceMatrix error:", status);
-      document.getElementById('estimateDisplay').value = "$0";
-      document.getElementById('vehicleDisplay').value = "";
+
+      /* ---------- update UI ---------- */
+      document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
+      document.getElementById('vehicleDisplay').value  =
+        (passengers > 3) ? 'Mercedes Van' : 'Tesla Model Y';
     }
-  });
+  );
 }
+/* -------------------------------------------------------------------------- */
 
 // --- Toggle Service Type ---
 function toggleServiceType() {

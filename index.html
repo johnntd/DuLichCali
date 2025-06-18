@@ -92,6 +92,7 @@
         <input id="datetime" type="text" placeholder="Chọn ngày và giờ" readonly>
       </div>
       <div class="search-row">
+         <div id="airportField">
         <select id="airport" name="airport" onchange="updateEstimate()">
           <option value="John Wayne Airport, Orange County, CA">Sân bay John Wayne (SNA)</option>
           <option value="Long Beach Airport, Long Beach, CA">Sân bay Long Beach (LGB)</option>
@@ -100,11 +101,14 @@
           <option value="Burbank Airport, Burbank, CA">Sân bay Burbank (BUR)</option>
           <option value="San Diego Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
         </select>
+         </div>
+         <div id="lodgingField">
         <select id="lodging" name="lodging" onchange="updateEstimate()">
           <option value="">Tự lo chỗ ở</option>
           <option value="hotel">Khách sạn</option>
           <option value="airbnb">Airbnb</option>
         </select>
+         </div>
         <input id="passengers" type="number" min="1" max="12" placeholder="Số khách">
         <input id="days" type="number" min="1" max="7" placeholder="Số ngày (Tour only)">
         <button onclick="updateEstimate()">Tính Giá</button>

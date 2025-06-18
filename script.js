@@ -216,23 +216,15 @@ function updateEstimate () {
 // --- Toggle Service Type ---
 function toggleServiceType() {
   const type = document.getElementById('serviceType').value;
-  const addressLabel = document.getElementById('addressLabel');
   const airportField = document.getElementById('airportField');
   const lodgingField = document.getElementById('lodgingField');
   const daysInput = document.getElementById('days');
 
-  if (type === 'pickup') {
-    addressLabel.innerText = 'Địa chỉ đến';
-    airportField.style.display = 'block';
-    lodgingField.style.display = 'none';
-    daysInput.disabled = true;
-  } else if (type === 'dropoff') {
-    addressLabel.innerText = 'Địa chỉ đón';
+  if (type === 'pickup' || type === 'dropoff') {
     airportField.style.display = 'block';
     lodgingField.style.display = 'none';
     daysInput.disabled = true;
   } else {
-    addressLabel.innerText = 'Địa chỉ của bạn';
     airportField.style.display = 'none';
     lodgingField.style.display = 'block';
     daysInput.disabled = false;

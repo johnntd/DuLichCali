@@ -14,9 +14,20 @@
   <!-- Google API Client -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
-
-  <!-- Google Maps -->
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAhuG4Bg-PBtG2JdnrZYj6ZLb2HXG1RNF4&libraries=places&callback=initMap"></script>
+  <script src="script.js" defer></script>
+ <!-- Google Maps JS (classic Autocomplete) -->
+  <script>
+    function initMap() {
+      const map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 33.6846, lng: -117.8265 },
+        zoom: 9
+      });
+      const input = document.getElementById('address');
+      if (input) {More actions
+        const autocomplete = new google.maps.places.Autocomplete(input);
+        autocomplete.addListener('place_changed', () => {
+        updateEstimate(); // call estimate function when address is selected
+});
 
   <!-- Flatpickr -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
@@ -138,6 +149,6 @@
     <div id="map"></div>
   </div>
 
-  <script src="script.js" defer></script>
+  
 </body>
 </html>

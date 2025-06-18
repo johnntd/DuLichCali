@@ -76,8 +76,10 @@ async function submitBooking(event) {
   const address = document.getElementById('address').value;
   const serviceType = document.getElementById('serviceType').value;
   const lodging = document.getElementById('lodging')?.value || '';
+  const passengers = document.getElementById('passengers').value;
+  const days = document.getElementById('days').value;
 
-  const summary = `Khách hàng: ${name}\nDịch vụ: ${serviceType}\nSân bay/Điểm đến: ${airport || address}\nĐịa chỉ: ${address}\nLoại chỗ ở: ${lodging}\nSố điện thoại: ${phone}\nThời gian: ${selectedTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
+  const summary = `Khách hàng: ${name}\nDịch vụ: ${serviceType}\nSân bay/Điểm đến: ${airport || address}\nĐịa chỉ: ${address}\nLoại chỗ ở: ${lodging}\nSố khách: ${passengers}\nSố ngày: ${days}\nSố điện thoại: ${phone}\nThời gian: ${selectedTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
   document.getElementById('bookingSummary').value = summary;
 
   await slotRef.set({
@@ -88,7 +90,9 @@ async function submitBooking(event) {
     airport,
     address,
     serviceType,
-    lodging
+    lodging,
+    passengers,
+    days
   });
 
   if (gapiInited && tokenClient) {
@@ -136,31 +140,25 @@ const CALIFORNIA_AVG_FUEL_PRICE = 5.00; // USD / gallon (update monthly!)
 const VAN_MPG = 14;                      // Sprinter-type average mpg
 /* --------------------------------------------------------- */
 
-
-/* ---------- REPLACE your entire old updateEstimate with this one ---------- */
 function updateEstimate () {
   lastCalculatedMiles = 0;
 
-  /* grab user inputs */
   const passengers  = +document.getElementById('passengers').value || 1;
   const serviceType = document.getElementById('serviceType').value;
   const airport     = document.getElementById('airport')?.value || '';
-  const address     = document.getElementById('address')?.value || '';
+  const address     = document.getElementById('address').value || '';
   const lodging     = document.getElementById('lodging')?.value || '';
   const days        = +document.getElementById('days')?.value   || 1;
 
-  /* determine origin / destination for distance   */
   const origin      = (serviceType === 'pickup') ? airport : address;
   const destination = (serviceType === 'pickup') ? address : airport;
 
-  /* bail early if we can’t compute */
   if (!origin || !destination) {
     document.getElementById('estimateDisplay').value = '$0';
     document.getElementById('vehicleDisplay').value  = '';
     return;
   }
 
-  /* ask Google for the road-distance */
   new google.maps.DistanceMatrixService().getDistanceMatrix(
     {
       origins:      [origin],
@@ -180,28 +178,21 @@ function updateEstimate () {
         return;
       }
 
-      /* ---------- DISTANCE in miles ---------- */
-      const miles = element.distance.value / 1609.34;   // metres → miles
+      const miles = element.distance.value / 1609.34;
       lastCalculatedMiles = miles;
 
-      /* ---------- PRICE CALCULATION ---------- */
       let cost = 0;
 
-      /** 1. Simple airport shuttle */
       if (['pickup', 'dropoff'].includes(serviceType)) {
-        const fuelPerMile   = CALIFORNIA_AVG_FUEL_PRICE / VAN_MPG; // $/mile
-        const vanCost       = 150 + (miles * fuelPerMile);         // base + fuel
+        const fuelPerMile   = CALIFORNIA_AVG_FUEL_PRICE / VAN_MPG;
+        const vanCost       = 150 + (miles * fuelPerMile);
         cost = (passengers < 4)
           ? Math.max(40, vanCost)
-          : Math.max(125, vanCost * 1.6);  // same multiplier logic as before
-
-      /** 2. Multi-day tours */
+          : Math.max(125, vanCost * 1.6);
       } else {
-        /*  2-a  Van fee (base + fuel) */
         const fuelPerMile = CALIFORNIA_AVG_FUEL_PRICE / VAN_MPG;
-        const vanCost = 150 + (miles * 2 /*round-trip*/ * fuelPerMile);
+        const vanCost = 150 + (miles * 2 * fuelPerMile);
 
-        /*  2-b  Lodging */
         let lodgingCost = 0;
         if (lodging === 'hotel') {
           const roomsNeeded = Math.ceil(passengers / 5);
@@ -211,20 +202,16 @@ function updateEstimate () {
           lodgingCost = unitsNeeded * 165 * days;
         }
 
-        /*  2-c  Misc / tolls      */
         const misc = 50;
-
         cost = vanCost + lodgingCost + misc;
       }
 
-      /* ---------- update UI ---------- */
       document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
       document.getElementById('vehicleDisplay').value  =
         (passengers > 3) ? 'Mercedes Van' : 'Tesla Model Y';
     }
   );
 }
-/* -------------------------------------------------------------------------- */
 
 // --- Toggle Service Type ---
 function toggleServiceType() {

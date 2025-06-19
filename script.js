@@ -191,7 +191,8 @@ function updateEstimate () {
           : Math.max(125, vanCost * 1.6);
       } else {
         const fuelPerMile = CALIFORNIA_AVG_FUEL_PRICE / VAN_MPG;
-        const vanCost = 150 + (miles * 2 * fuelPerMile);
+        const vanCostPerDay = 150 + (miles * 2 * fuelPerMile);
+        const vanCost       = vanCostPerDay * days;
 
         let lodgingCost = 0;
         if (lodging === 'hotel') {

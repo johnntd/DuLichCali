@@ -214,8 +214,8 @@ function updateEstimate () {
           wearCost = passengers > 8 ? 150 : passengers > 4 ? 100 : 50;
         }
 
-        cost = 180 + (roundtripMiles * fuelPerMile * 2.5);
-        cost += lodgingCost + miscCost + wearCost;
+        cost = (180 + (roundtripMiles * fuelPerMile * 2.5)) * days;
+        cost += lodgingCost + miscCost*days + wearCost*days;
 
         // Minimum tour cost
         cost = Math.max(cost, 300 * days);

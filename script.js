@@ -155,15 +155,15 @@ function updateEstimate () {
 
   if (!origin || !destination) {
     document.getElementById('estimateDisplay').value = '$0';
-    document.getElementById('vehicleDisplay').value  = '';
+    document.getElementById('vehicleDisplay').value = '';
     return;
   }
 
   new google.maps.DistanceMatrixService().getDistanceMatrix(
     {
-      origins: [origin],
+      origins:      [origin],
       destinations: [destination],
-      travelMode: google.maps.TravelMode.DRIVING
+      travelMode:   google.maps.TravelMode.DRIVING
     },
     (resp, status) => {
       if (status !== 'OK') {
@@ -181,30 +181,28 @@ function updateEstimate () {
       const miles = element.distance.value / 1609.34;
       lastCalculatedMiles = miles;
 
-      let cost = 0;
-      const roundTripMiles = miles * 2;
       const fuelPerMile = CALIFORNIA_AVG_FUEL_PRICE / VAN_MPG;
+      let cost = 0;
 
       if (['pickup', 'dropoff'].includes(serviceType)) {
-        if (miles < 20) {
-          cost = (passengers <= 3) ? 40 : 100;
+        if (passengers > 3) {
+          const vanCost = 150 + (miles * fuelPerMile);
+          cost = Math.max(125, vanCost * 1.6);
         } else {
-          if (passengers <= 3) {
-            // Tesla
-            const teslaBase = 30;
-            cost = teslaBase + (roundTripMiles * fuelPerMile);
-          } else {
-            // Van
-            const vanBase = 150;
-            const vanCost = vanBase + (roundTripMiles * fuelPerMile);
-            cost = Math.max(125, vanCost * 1.6); // Optional multiplier for profit
-          }
+          const teslaCost = 30 + (miles * fuelPerMile);
+          cost = Math.max(40, teslaCost);
         }
-      } else {
-        // Tour service
-        const vanCost = 150 + (roundTripMiles * fuelPerMile);
-        let lodgingCost = 0;
 
+        // Enforce minimum for long-distance
+        if (miles >= 300) {
+          cost = Math.max(cost, (passengers > 3 ? 799 : 599));
+        }
+
+      } else {
+        // Tour calculation
+        const vanCost = 150 + (miles * 2 * fuelPerMile);
+
+        let lodgingCost = 0;
         if (lodging === 'hotel') {
           const rooms = Math.ceil(passengers / 5);
           lodgingCost = rooms * 150 * days;
@@ -214,23 +212,19 @@ function updateEstimate () {
         }
 
         const misc = 50;
-        cost = vanCost + lodgingCost + (days * 75) + misc;
+        cost = vanCost + lodgingCost + misc;
+
+        if (miles >= 150) {
+          cost = Math.max(cost, 2.25 * miles);
+        }
       }
 
       document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
       document.getElementById('vehicleDisplay').value =
-        (passengers > 3 || serviceType === 'tour') ? 'Mercedes Van' : 'Tesla Model Y';
+        (passengers > 3) ? 'Mercedes Van' : 'Tesla Model Y';
 
-      // Optional debug log
       console.log({
-        origin,
-        destination,
-        passengers,
-        miles: miles.toFixed(2),
-        serviceType,
-        lodging,
-        days,
-        cost: Math.round(cost)
+        origin, destination, passengers, miles: miles.toFixed(2), serviceType, cost: Math.round(cost)
       });
     }
   );

@@ -186,7 +186,7 @@ function updateEstimate () {
       if (['pickup', 'dropoff'].includes(serviceType)) {
         const fuelPerMile   = CALIFORNIA_AVG_FUEL_PRICE / VAN_MPG;
         const vanCost       = 150 + (miles * fuelPerMile);
-        const carCost       = 40 + (miles * fulePerMile);
+        const carCost       = 40 + (miles * fuelPerMile);
         cost = (passengers < 4)
           ? Math.max(40, carCost)
           : Math.max(125, vanCost * 1.6);

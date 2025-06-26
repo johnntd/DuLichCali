@@ -135,100 +135,89 @@ async function submitBooking(event) {
 }
 
 // --- Estimate Update ---
-/* ――― CONFIG ――― */
-const CALIFORNIA_AVG_FUEL_PRICE = 5.00; // USD / gallon
-const VAN_MPG = 14;                     // average MPG for van
-/* ――― END CONFIG ――― */
+const CALIFORNIA_AVG_FUEL_PRICE = 5.00;
+const VAN_MPG = 14;
 
-function updateEstimate () {
+function updateEstimate() {
   lastCalculatedMiles = 0;
 
-  const passengers  = +document.getElementById('passengers').value || 1;
+  const passengers = +document.getElementById('passengers').value || 1;
   const serviceType = document.getElementById('serviceType').value;
-  const airport     = document.getElementById('airport')?.value || '';
-  const address     = document.getElementById('address').value || '';
-  const lodging     = document.getElementById('lodging')?.value || '';
-  const days        = +document.getElementById('days')?.value   || 1;
+  const airport = document.getElementById('airport')?.value || '';
+  const address = document.getElementById('address').value || '';
+  const lodging = document.getElementById('lodging')?.value || '';
+  const days = +document.getElementById('days')?.value || 1;
 
-  const origin      = (serviceType === 'pickup') ? airport : address;
+  const origin = (serviceType === 'pickup') ? airport : address;
   const destination = (serviceType === 'pickup') ? address : airport;
 
   if (!origin || !destination) {
     document.getElementById('estimateDisplay').value = '$0';
-    document.getElementById('vehicleDisplay').value  = '';
+    document.getElementById('vehicleDisplay').value = '';
     return;
   }
 
-  new google.maps.DistanceMatrixService().getDistanceMatrix(
-    {
-      origins:      [origin],
-      destinations: [destination],
-      travelMode:   google.maps.TravelMode.DRIVING
-    },
-    (resp, status) => {
-      if (status !== 'OK') {
-        console.error('DistanceMatrix error:', status);
-        document.getElementById('estimateDisplay').value = '$0';
-        return;
-      }
+  new google.maps.DistanceMatrixService().getDistanceMatrix({
+    origins: [origin],
+    destinations: [destination],
+    travelMode: google.maps.TravelMode.DRIVING
+  }, (resp, status) => {
+    if (status !== 'OK') {
+      document.getElementById('estimateDisplay').value = '$0';
+      return;
+    }
 
-      const element = resp.rows[0].elements[0];
-      if (!element || element.status !== 'OK') {
-        document.getElementById('estimateDisplay').value = '$0';
-        return;
-      }
+    const element = resp.rows[0].elements[0];
+    if (!element || element.status !== 'OK') {
+      document.getElementById('estimateDisplay').value = '$0';
+      return;
+    }
 
-      const miles = element.distance.value / 1609.34;
-      lastCalculatedMiles = miles;
+    const miles = element.distance.value / 1609.34;
+    lastCalculatedMiles = miles;
 
-      const fuelPerMile = CALIFORNIA_AVG_FUEL_PRICE / VAN_MPG;
-      let cost = 0;
-      let vehicle = '';
+    const fuelPerMile = CALIFORNIA_AVG_FUEL_PRICE / VAN_MPG;
+    let cost = 0;
+    let vehicle = '';
 
-      if (['pickup', 'dropoff'].includes(serviceType)) {
-        // Airport pickup/drop-off pricing
-        if (passengers <= 3) {
-          cost = Math.max(40, 35 + (miles * fuelPerMile));
-          vehicle = 'Tesla Model Y';
-        } else {
-          const multiplier = miles > 175 ? 3.5 : 2.5;
-          cost = Math.max(125, 150 + (miles * fuelPerMile * multiplier));
-          vehicle = 'Mercedes Van';
-        }
+    if (['pickup', 'dropoff'].includes(serviceType)) {
+      if (passengers <= 3) {
+        cost = Math.max(40, 35 + (miles * fuelPerMile));
+        vehicle = 'Tesla Model Y';
       } else {
-        // Tour pricing (round trip)
-        const roundtripMiles = miles * 2;
-        const baseCost = 180 + (roundtripMiles * fuelPerMile * 2.5);
-
-        let lodgingCost = 0;
-        if (lodging === 'hotel') {
-          const rooms = Math.ceil(passengers / 5);
-          lodgingCost = rooms * 150 * days;
-        } else if (lodging === 'airbnb') {
-          const units = Math.ceil(passengers / 8);
-          lodgingCost = units * 165 * days;
-        }
-
-        const miscCost = 50 * days;
-        cost = baseCost + lodgingCost + miscCost;
-
-        // Minimum cost per day rule
-        cost = Math.max(cost, 250 * days);
-
+        const multiplier = (miles > 175) ? 3.5 : 2.5;
+        cost = Math.max(125, 150 + (miles * fuelPerMile * multiplier));
         vehicle = 'Mercedes Van';
       }
+    } else {
+      const roundtripMiles = miles * 2;
+      const miscCost = 50 * days;
 
-      document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
-      document.getElementById('vehicleDisplay').value  = vehicle;
+      let lodgingCost = 0;
+      if (lodging === 'hotel') {
+        let rooms = 1;
+        if (passengers > 8) rooms = 3;
+        else if (passengers > 4) rooms = 2;
+        lodgingCost = rooms * 150 * days;
+      } else if (lodging === 'airbnb') {
+        let costPerNight = 165;
+        if (passengers > 8) costPerNight = 280;
+        else if (passengers > 4) costPerNight = 220;
+        lodgingCost = costPerNight * days;
+      }
 
-      console.log({
-        origin, destination, passengers, miles: miles.toFixed(2), serviceType, cost: Math.round(cost)
-      });
+      cost = 180 + (roundtripMiles * fuelPerMile * 2.5);
+      cost += lodgingCost + miscCost;
+
+      cost = Math.max(cost, 250 * days);
+      vehicle = 'Mercedes Van';
     }
-  );
+
+    document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
+    document.getElementById('vehicleDisplay').value = vehicle;
+  });
 }
 
-// --- Toggle Service Type ---
 function toggleServiceType() {
   const type = document.getElementById('serviceType').value;
   const airportField = document.getElementById('airportField');
@@ -284,7 +273,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 window.gapiLoaded = () => initGoogleAPI();
 
 customElements.whenDefined('gmpx-placeautocomplete').then(() => {
-  console.log('Place Autocomplete ready');
   const input = document.querySelector('#address');
   input.disabled = false;
 });

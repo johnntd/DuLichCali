@@ -136,34 +136,34 @@ async function submitBooking(event) {
 
 // --- Estimate Update ---
 /* ――― CONFIG – edit these two numbers if prices change ――― */
-const CALIFORNIA_AVG_FUEL_PRICE = 5.00; // USD / gallon (update monthly!)
+const CALIFORNIA_AVG_FUEL_PRICE = 5.00; // USD / gallon
 const VAN_MPG = 14;                      // Sprinter-type average mpg
 /* --------------------------------------------------------- */
 
 function updateEstimate() {
   lastCalculatedMiles = 0;
-  
-  const passengers  = +document.getElementById('passengers').value || 1;
-  const serviceType = document.getElementById('serviceType').value;
+
+  const passengers  = +document.getElementById('passengers')?.value || 1;
+  const serviceType = document.getElementById('serviceType')?.value;
   const airport     = document.getElementById('airport')?.value || '';
-  const address     = document.getElementById('address').value || '';
+  const address     = document.getElementById('address')?.value || '';
   const lodging     = document.getElementById('lodging')?.value || '';
-  const days        = +document.getElementById('days')?.value || 1;
+  const days        = +document.getElementById('days')?.value   || 1;
 
   const origin      = (serviceType === 'pickup') ? airport : address;
   const destination = (serviceType === 'pickup') ? address : airport;
 
   if (!origin || !destination) {
     document.getElementById('estimateDisplay').value = '$0';
-    document.getElementById('vehicleDisplay').value = '';
+    document.getElementById('vehicleDisplay').value  = '';
     return;
   }
 
   new google.maps.DistanceMatrixService().getDistanceMatrix(
     {
-      origins: [origin],
+      origins:      [origin],
       destinations: [destination],
-      travelMode: google.maps.TravelMode.DRIVING,
+      travelMode:   google.maps.TravelMode.DRIVING
     },
     (resp, status) => {
       if (status !== 'OK') {
@@ -178,68 +178,63 @@ function updateEstimate() {
         return;
       }
 
-      const miles = element.distance.value / 1609.34; // convert meters to miles
+      const miles = element.distance.value / 1609.34;
       lastCalculatedMiles = miles;
 
       const fuelPerMile = CALIFORNIA_AVG_FUEL_PRICE / VAN_MPG;
       let cost = 0;
-      let vanCost = 0;
-      let lodgingCost = 0;
-      
-     if (['pickup', 'dropoff'].includes(serviceType)) {
-  const totalMiles = miles * 2;
-  vanCost = 150 + (totalMiles * fuelPerMile);
 
-  if (passengers < 4) {
-    cost = Math.max(40, vanCost); // Tesla flat rate minimum
-  } else {
-    cost = vanCost * 1.5; // Slight scaling for van
-    if (miles < 30 && cost < 100) {
-      cost = 100; // base van cost minimum for local trips
-    } else if (miles > 100 && cost < 300) {
-      cost = 300; // minimum for long van trip
-    }
-  }
-}
-      
-      
-      else {
-        // For tours
-        const totalMiles = miles * 2;
-        vanCost = 150 + (totalMiles * fuelPerMile);
+      if (['pickup', 'dropoff'].includes(serviceType)) {
+        const roundTripMiles = miles * 2;
+        const vanCost = 150 + (roundTripMiles * fuelPerMile);
 
-        // Lodging cost based on type and people
+        if (passengers < 4) {
+          cost = Math.max(40, vanCost); // Tesla for 1–3 people
+        } else {
+          cost = vanCost * 1.5;
+          if (miles < 30 && cost < 100) {
+            cost = 100;
+          } else if (miles > 100 && cost < 300) {
+            cost = 300;
+          }
+        }
+      } else {
+        // Tour logic
+        const roundTripMiles = miles * 2;
+        const vanCost = 150 + (roundTripMiles * fuelPerMile);
+
         let lodgingCost = 0;
         if (lodging === 'hotel') {
-          const rooms = Math.ceil(passengers / 5);
-          lodgingCost = rooms * 150 * days;
+          const roomsNeeded = Math.ceil(passengers / 5);
+          lodgingCost = roomsNeeded * 150 * days;
         } else if (lodging === 'airbnb') {
-          const units = Math.ceil(passengers / 8);
-          lodgingCost = units * 165 * days;
+          const unitsNeeded = Math.ceil(passengers / 8);
+          lodgingCost = unitsNeeded * 165 * days;
         } else {
-          // No lodging, but still calculate base day cost
-          lodgingCost = days * 50; // base daily service cost
+          // Still account for days even if customer arranges their own lodging
+          lodgingCost = days * 50; // Base overhead per day
         }
 
-        const misc = 50; // fixed misc cost
+        const misc = 50; // driver food or parking
         cost = vanCost + lodgingCost + misc;
       }
 
-      // Choose vehicle type
-      const vehicle = (passengers > 3 || serviceType !== 'pickup') ? 'Mercedes Van' : 'Tesla Model Y';
-
       document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
-      document.getElementById('vehicleDisplay').value = vehicle;
+      document.getElementById('vehicleDisplay').value =
+        (passengers > 3 || serviceType !== 'pickup' && serviceType !== 'dropoff')
+          ? 'Mercedes Van'
+          : 'Tesla Model Y';
 
-      // Debugging log
       console.log({
+        origin,
+        destination,
         passengers,
-        miles,
-        fuelPerMile,
+        miles: miles.toFixed(2),
         serviceType,
-        vanCost,
-        lodgingCost,
-        totalCost: cost
+        lodging,
+        days,
+        fuelPerMile: fuelPerMile.toFixed(2),
+        estimate: Math.round(cost)
       });
     }
   );

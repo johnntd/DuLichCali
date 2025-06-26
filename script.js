@@ -187,7 +187,7 @@ function updateEstimate () {
 
       if (['pickup', 'dropoff'].includes(serviceType)) {
         if (passengers <= 3) {
-          cost = Math.max(40, 35 + (miles * fuelPerMile));
+          cost = Math.max(40, 35 + (miles * fuelPerMile * 2.5));
           vehicle = 'Tesla Model Y';
         } else {
           cost = Math.max(125, 150 + (miles * fuelPerMile * 2.5));
@@ -208,7 +208,7 @@ function updateEstimate () {
         const miscCost = 50 * days;
 
         if (passengers <= 3) {
-          cost = 35 + (roundtripMiles * fuelPerMile);
+          cost = 35 + (roundtripMiles * fuelPerMile * 2.5);
           vehicle = 'Tesla Model Y';
         } else {
           cost = 150 + (roundtripMiles * fuelPerMile * 2.5);

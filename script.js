@@ -186,20 +186,24 @@ function updateEstimate() {
       let vanCost = 0;
       let lodgingCost = 0;
       
-      if (['pickup', 'dropoff'].includes(serviceType)) {
-        // Round trip considered for driver
-        const totalMiles = miles * 2;
-        vanCost = 150 + (totalMiles * fuelPerMile);
+     if (['pickup', 'dropoff'].includes(serviceType)) {
+  const totalMiles = miles * 2;
+  vanCost = 150 + (totalMiles * fuelPerMile);
 
-        cost = (passengers < 4)
-          ? Math.max(40, vanCost)
-          : Math.max(125, vanCost * 1.6);
-
-        // Enforce a minimum for long distances
-        if (miles > 100 && cost < 300) {
-          cost = 300;
-        }
-      } else {
+  if (passengers < 4) {
+    cost = Math.max(40, vanCost); // Tesla flat rate minimum
+  } else {
+    cost = vanCost * 1.5; // Slight scaling for van
+    if (miles < 30 && cost < 100) {
+      cost = 100; // base van cost minimum for local trips
+    } else if (miles > 100 && cost < 300) {
+      cost = 300; // minimum for long van trip
+    }
+  }
+}
+      
+      
+      else {
         // For tours
         const totalMiles = miles * 2;
         vanCost = 150 + (totalMiles * fuelPerMile);

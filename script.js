@@ -180,6 +180,7 @@ function updateEstimate () {
       lastCalculatedMiles = miles;
 
       const fuelPerMile = CALIFORNIA_AVG_FUEL_PRICE / VAN_MPG;
+      const multiplier = miles > 175 ? 3.5 : 2.5;
       let cost = 0;
       let vehicle = '';
 
@@ -189,7 +190,7 @@ function updateEstimate () {
           cost = Math.max(40, 35 + (miles * fuelPerMile));
           vehicle = 'Tesla Model Y';
         } else {
-          const multiplier = miles > 175 ? 3.5 : 2.5;
+          
           cost = Math.max(125, 150 + (miles * fuelPerMile * multiplier));
           vehicle = 'Mercedes Van';
         }

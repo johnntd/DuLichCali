@@ -186,14 +186,16 @@ function updateEstimate () {
       let vehicle = '';
 
       if (['pickup', 'dropoff'].includes(serviceType)) {
+        // Airport pickup/drop-off pricing
         if (passengers <= 3) {
-          cost = Math.max(40, 35 + (miles * fuelPerMile * 2.5));
+          cost = Math.max(40, 35 + (miles * fuelPerMile));
           vehicle = 'Tesla Model Y';
         } else {
           cost = Math.max(125, 150 + (miles * fuelPerMile * 2.5));
           vehicle = 'Mercedes Van';
         }
       } else {
+        // Tour pricing (round trip)
         const roundtripMiles = miles * 2;
 
         let lodgingCost = 0;
@@ -208,7 +210,7 @@ function updateEstimate () {
         const miscCost = 50 * days;
 
         if (passengers <= 3) {
-          cost = 35 + (roundtripMiles * fuelPerMile * 2.5);
+          cost = 35 + (roundtripMiles * fuelPerMile);
           vehicle = 'Tesla Model Y';
         } else {
           cost = 150 + (roundtripMiles * fuelPerMile * 2.5);

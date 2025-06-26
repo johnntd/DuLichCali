@@ -138,85 +138,102 @@ async function submitBooking(event) {
 const CALIFORNIA_AVG_FUEL_PRICE = 5.00;
 const VAN_MPG = 14;
 
-function updateEstimate() {
+function updateEstimate () {
   lastCalculatedMiles = 0;
 
-  const passengers = +document.getElementById('passengers').value || 1;
+  const passengers  = +document.getElementById('passengers').value || 1;
   const serviceType = document.getElementById('serviceType').value;
-  const airport = document.getElementById('airport')?.value || '';
-  const address = document.getElementById('address').value || '';
-  const lodging = document.getElementById('lodging')?.value || '';
-  const days = +document.getElementById('days')?.value || 1;
+  const airport     = document.getElementById('airport')?.value || '';
+  const address     = document.getElementById('address').value || '';
+  const lodging     = document.getElementById('lodging')?.value || '';
+  const days        = +document.getElementById('days')?.value   || 1;
 
-  const origin = (serviceType === 'pickup') ? airport : address;
+  const origin      = (serviceType === 'pickup') ? airport : address;
   const destination = (serviceType === 'pickup') ? address : airport;
 
   if (!origin || !destination) {
     document.getElementById('estimateDisplay').value = '$0';
-    document.getElementById('vehicleDisplay').value = '';
+    document.getElementById('vehicleDisplay').value  = '';
     return;
   }
 
-  new google.maps.DistanceMatrixService().getDistanceMatrix({
-    origins: [origin],
-    destinations: [destination],
-    travelMode: google.maps.TravelMode.DRIVING
-  }, (resp, status) => {
-    if (status !== 'OK') {
-      document.getElementById('estimateDisplay').value = '$0';
-      return;
-    }
+  new google.maps.DistanceMatrixService().getDistanceMatrix(
+    {
+      origins:      [origin],
+      destinations: [destination],
+      travelMode:   google.maps.TravelMode.DRIVING
+    },
+    (resp, status) => {
+      if (status !== 'OK') {
+        console.error('DistanceMatrix error:', status);
+        document.getElementById('estimateDisplay').value = '$0';
+        return;
+      }
 
-    const element = resp.rows[0].elements[0];
-    if (!element || element.status !== 'OK') {
-      document.getElementById('estimateDisplay').value = '$0';
-      return;
-    }
+      const element = resp.rows[0].elements[0];
+      if (!element || element.status !== 'OK') {
+        document.getElementById('estimateDisplay').value = '$0';
+        return;
+      }
 
-    const miles = element.distance.value / 1609.34;
-    lastCalculatedMiles = miles;
+      const miles = element.distance.value / 1609.34;
+      lastCalculatedMiles = miles;
 
-    const fuelPerMile = CALIFORNIA_AVG_FUEL_PRICE / VAN_MPG;
-    let cost = 0;
-    let vehicle = '';
+      const fuelPerMile = CALIFORNIA_AVG_FUEL_PRICE / VAN_MPG;
+      let cost = 0;
+      let vehicle = '';
 
-    if (['pickup', 'dropoff'].includes(serviceType)) {
-      if (passengers <= 3) {
-        cost = Math.max(40, 35 + (miles * fuelPerMile));
-        vehicle = 'Tesla Model Y';
+      if (['pickup', 'dropoff'].includes(serviceType)) {
+        // Airport pickup/drop-off pricing
+        if (passengers <= 3) {
+          cost = Math.max(40, 35 + (miles * fuelPerMile));
+          vehicle = 'Tesla Model Y';
+        } else {
+          const multiplier = miles > 175 ? 3.5 : 2.5;
+          cost = Math.max(125, 150 + (miles * fuelPerMile * multiplier));
+          vehicle = 'Mercedes Van';
+        }
       } else {
-        const multiplier = (miles > 175) ? 3.5 : 2.5;
-        cost = Math.max(125, 150 + (miles * fuelPerMile * multiplier));
+        // Tour pricing (round trip)
+        const roundtripMiles = miles * 2;
+        let lodgingCost = 0;
+
+        if (lodging === 'hotel') {
+          const roomsNeeded = passengers > 8 ? 3 : passengers > 4 ? 2 : 1;
+          lodgingCost = roomsNeeded * 150 * days;
+        } else if (lodging === 'airbnb') {
+          const unitsNeeded = Math.ceil(passengers / 8);
+          lodgingCost = unitsNeeded * 165 * days; // Use real API in future
+        }
+
+        const miscCost = 50 * days;
+
+        // Wear & tear when no lodging selected
+        let wearCost = 0;
+        if (!lodging) {
+          wearCost = passengers > 8 ? 150 : passengers > 4 ? 100 : 50;
+        }
+
+        cost = 180 + (roundtripMiles * fuelPerMile * 2.5);
+        cost += lodgingCost + miscCost + wearCost;
+
+        // Minimum tour cost
+        cost = Math.max(cost, 300 * days);
+
         vehicle = 'Mercedes Van';
       }
-    } else {
-      const roundtripMiles = miles * 2;
-      const miscCost = 50 * days;
 
-      let lodgingCost = 0;
-      if (lodging === 'hotel') {
-        let rooms = 1;
-        if (passengers > 8) rooms = 3;
-        else if (passengers > 4) rooms = 2;
-        lodgingCost = rooms * 150 * days;
-      } else if (lodging === 'airbnb') {
-        let costPerNight = 165;
-        if (passengers > 8) costPerNight = 280;
-        else if (passengers > 4) costPerNight = 220;
-        lodgingCost = costPerNight * days;
-      }
+      document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
+      document.getElementById('vehicleDisplay').value  = vehicle;
 
-      cost = 180 + (roundtripMiles * fuelPerMile * 2.5);
-      cost += lodgingCost + miscCost;
-
-      cost = Math.max(cost, 250 * days);
-      vehicle = 'Mercedes Van';
+      console.log({
+        origin, destination, passengers, miles: miles.toFixed(2), serviceType, cost: Math.round(cost)
+      });
     }
-
-    document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
-    document.getElementById('vehicleDisplay').value = vehicle;
-  });
+  );
 }
+
+// --- toggleService funtion ---
 
 function toggleServiceType() {
   const type = document.getElementById('serviceType').value;

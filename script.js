@@ -142,7 +142,7 @@ const VAN_MPG = 14;                      // Sprinter-type average mpg
 
 function updateEstimate() {
   lastCalculatedMiles = 0;
-
+  
   const passengers  = +document.getElementById('passengers').value || 1;
   const serviceType = document.getElementById('serviceType').value;
   const airport     = document.getElementById('airport')?.value || '';
@@ -184,7 +184,8 @@ function updateEstimate() {
       const fuelPerMile = CALIFORNIA_AVG_FUEL_PRICE / VAN_MPG;
       let cost = 0;
       let vanCost = 0;
-
+      let lodgingCost = 0;
+      
       if (['pickup', 'dropoff'].includes(serviceType)) {
         // Round trip considered for driver
         const totalMiles = miles * 2;

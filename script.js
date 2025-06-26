@@ -191,7 +191,8 @@ function updateEstimate () {
           cost = Math.max(40, 35 + (miles * fuelPerMile));
           vehicle = 'Tesla Model Y';
         } else {
-          cost = Math.max(125, 150 + (miles * fuelPerMile * 2.5));
+          const multiplier = (miles > 175) ? 3.5 : 2.5;
+          cost = Math.max(125, 150 + (miles * fuelPerMile * multiplier));
           vehicle = 'Mercedes Van';
         }
       } else {
@@ -222,6 +223,10 @@ function updateEstimate () {
 
       document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
       document.getElementById('vehicleDisplay').value  = vehicle;
+
+      console.log({
+        origin, destination, passengers, miles: miles.toFixed(2), serviceType, cost: Math.round(cost)
+      });
     }
   );
 }

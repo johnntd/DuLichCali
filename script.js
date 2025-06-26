@@ -148,7 +148,7 @@ function updateEstimate () {
   const airport     = document.getElementById('airport')?.value || '';
   const address     = document.getElementById('address').value || '';
   const lodging     = document.getElementById('lodging')?.value || '';
-  const days        = +document.getElementById('days')?.value || 1;
+  const days        = +document.getElementById('days')?.value   || 1;
 
   const origin      = (serviceType === 'pickup') ? airport : address;
   const destination = (serviceType === 'pickup') ? address : airport;
@@ -183,33 +183,48 @@ function updateEstimate () {
 
       const fuelPerMile = CALIFORNIA_AVG_FUEL_PRICE / VAN_MPG;
       let cost = 0;
+      let vehicle = '';
 
       if (['pickup', 'dropoff'].includes(serviceType)) {
-        if (passengers > 3) {
-          const vanCost = 150 + (miles * fuelPerMile);
-          cost = Math.max(125, vanCost * 2.5);
-        } else {
-          const teslaCost = 30 + (miles * fuelPerMile);
-          cost = Math.max(40, teslaCost);
-        }
-
-        // Minimum pricing for long trips
-        if (miles >= 300) {
-          cost = Math.max(cost, (passengers > 3 ? 799 : 599));
-        }
-
-      } else {
-        // Tour Mode: Round trip van cost
-        const roundTripMiles = miles * 2;
+        // Airport pickup/drop-off pricing
         if (passengers <= 3) {
-  // Tesla for 1–3 people
-  vanCost = 30 + (miles * 2 * fuelPerMile);
-} else {
-  // Mercedes Van for 4+ people
-  vanCost = 150 + (miles * 2 * fuelPerMile * 2.5);
+          cost = Math.max(40, 35 + (miles * fuelPerMile));
+          vehicle = 'Tesla Model Y';
+        } else {
+          cost = Math.max(125, 150 + (miles * fuelPerMile * 2.5));
+          vehicle = 'Mercedes Van';
+        }
+      } else {
+        // Tour pricing (round trip)
+        const roundtripMiles = miles * 2;
+
+        let lodgingCost = 0;
+        if (lodging === 'hotel') {
+          const roomsNeeded = Math.ceil(passengers / 5);
+          lodgingCost = roomsNeeded * 150 * days;
+        } else if (lodging === 'airbnb') {
+          const unitsNeeded = Math.ceil(passengers / 8);
+          lodgingCost = unitsNeeded * 165 * days;
+        }
+
+        const miscCost = 50 * days;
+
+        if (passengers <= 3) {
+          cost = 35 + (roundtripMiles * fuelPerMile);
+          vehicle = 'Tesla Model Y';
+        } else {
+          cost = 150 + (roundtripMiles * fuelPerMile * 2.5);
+          vehicle = 'Mercedes Van';
+        }
+
+        cost += lodgingCost + miscCost;
+      }
+
+      document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
+      document.getElementById('vehicleDisplay').value  = vehicle;
+    }
+  );
 }
-        
-        
 
         // Lodging
         let lodgingCost = 0;

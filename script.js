@@ -186,7 +186,6 @@ function updateEstimate () {
       let vehicle = '';
 
       if (['pickup', 'dropoff'].includes(serviceType)) {
-        // Airport pickup/drop-off pricing
         if (passengers <= 3) {
           cost = Math.max(40, 35 + (miles * fuelPerMile));
           vehicle = 'Tesla Model Y';
@@ -195,7 +194,6 @@ function updateEstimate () {
           vehicle = 'Mercedes Van';
         }
       } else {
-        // Tour pricing (round trip)
         const roundtripMiles = miles * 2;
 
         let lodgingCost = 0;
@@ -222,37 +220,6 @@ function updateEstimate () {
 
       document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
       document.getElementById('vehicleDisplay').value  = vehicle;
-    }
-  );
-}
-
-        // Lodging
-        let lodgingCost = 0;
-        if (lodging === 'hotel') {
-          const rooms = Math.ceil(passengers / 5);
-          lodgingCost = rooms * 150 * days;
-        } else if (lodging === 'airbnb') {
-          const units = Math.ceil(passengers / 8);
-          lodgingCost = units * 165 * days;
-        }
-
-        const miscPerDay = 50;
-        const miscTotal = miscPerDay * days;
-
-        // Final cost
-        cost = vanCost + lodgingCost + miscTotal;
-
-        // Minimum cost: $250 per day
-        cost = Math.max(cost, 250 * days);
-      }
-
-      document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
-      document.getElementById('vehicleDisplay').value  =
-        (passengers > 3) ? 'Mercedes Van' : 'Tesla Model Y';
-
-      console.log({
-        origin, destination, passengers, miles: miles.toFixed(2), serviceType, cost: Math.round(cost)
-      });
     }
   );
 }

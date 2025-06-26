@@ -155,7 +155,7 @@ function updateEstimate () {
 
   if (!origin || !destination) {
     document.getElementById('estimateDisplay').value = '$0';
-    document.getElementById('vehicleDisplay').value = '';
+    document.getElementById('vehicleDisplay').value  = '';
     return;
   }
 
@@ -193,15 +193,17 @@ function updateEstimate () {
           cost = Math.max(40, teslaCost);
         }
 
-        // Enforce minimum for long-distance
+        // Minimum pricing for long trips
         if (miles >= 300) {
           cost = Math.max(cost, (passengers > 3 ? 799 : 599));
         }
 
       } else {
-        // Tour calculation
-        const vanCost = 150 + (miles * 2 * fuelPerMile);
+        // Tour Mode: Round trip van cost
+        const roundTripMiles = miles * 2;
+        const vanCost = 150 + (roundTripMiles * fuelPerMile);
 
+        // Lodging
         let lodgingCost = 0;
         if (lodging === 'hotel') {
           const rooms = Math.ceil(passengers / 5);
@@ -211,16 +213,18 @@ function updateEstimate () {
           lodgingCost = units * 165 * days;
         }
 
-        const misc = 50;
-        cost = vanCost + lodgingCost + misc;
+        const miscPerDay = 50;
+        const miscTotal = miscPerDay * days;
 
-        if (miles >= 150) {
-          cost = Math.max(cost, 2.25 * miles);
-        }
+        // Final cost
+        cost = vanCost + lodgingCost + miscTotal;
+
+        // Minimum cost: $250 per day
+        cost = Math.max(cost, 250 * days);
       }
 
       document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
-      document.getElementById('vehicleDisplay').value =
+      document.getElementById('vehicleDisplay').value  =
         (passengers > 3) ? 'Mercedes Van' : 'Tesla Model Y';
 
       console.log({

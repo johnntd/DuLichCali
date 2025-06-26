@@ -191,34 +191,31 @@ function updateEstimate () {
           cost = Math.max(40, 35 + (miles * fuelPerMile));
           vehicle = 'Tesla Model Y';
         } else {
-          const multiplier = (miles > 175) ? 3.5 : 2.5;
+          const multiplier = miles > 175 ? 3.5 : 2.5;
           cost = Math.max(125, 150 + (miles * fuelPerMile * multiplier));
           vehicle = 'Mercedes Van';
         }
       } else {
         // Tour pricing (round trip)
         const roundtripMiles = miles * 2;
+        const baseCost = 180 + (roundtripMiles * fuelPerMile * 2.5);
 
         let lodgingCost = 0;
         if (lodging === 'hotel') {
-          const roomsNeeded = Math.ceil(passengers / 5);
-          lodgingCost = roomsNeeded * 150 * days;
+          const rooms = Math.ceil(passengers / 5);
+          lodgingCost = rooms * 150 * days;
         } else if (lodging === 'airbnb') {
-          const unitsNeeded = Math.ceil(passengers / 8);
-          lodgingCost = unitsNeeded * 165 * days;
+          const units = Math.ceil(passengers / 8);
+          lodgingCost = units * 165 * days;
         }
 
         const miscCost = 50 * days;
+        cost = baseCost + lodgingCost + miscCost;
 
-        if (passengers <= 3) {
-          cost = 35 + (roundtripMiles * fuelPerMile);
-          vehicle = 'Tesla Model Y';
-        } else {
-          cost = 150 + (roundtripMiles * fuelPerMile * 2.5);
-          vehicle = 'Mercedes Van';
-        }
+        // Minimum cost per day rule
+        cost = Math.max(cost, 250 * days);
 
-        cost += lodgingCost + miscCost;
+        vehicle = 'Mercedes Van';
       }
 
       document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;

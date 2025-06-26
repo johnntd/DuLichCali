@@ -187,7 +187,7 @@ function updateEstimate () {
       if (['pickup', 'dropoff'].includes(serviceType)) {
         if (passengers > 3) {
           const vanCost = 150 + (miles * fuelPerMile);
-          cost = Math.max(125, vanCost * 1.6);
+          cost = Math.max(125, vanCost * 2.5);
         } else {
           const teslaCost = 30 + (miles * fuelPerMile);
           cost = Math.max(40, teslaCost);
@@ -201,7 +201,15 @@ function updateEstimate () {
       } else {
         // Tour Mode: Round trip van cost
         const roundTripMiles = miles * 2;
-        const vanCost = 150 + (roundTripMiles * fuelPerMile);
+        if (passengers <= 3) {
+  // Tesla for 1–3 people
+  vanCost = 30 + (miles * 2 * fuelPerMile);
+} else {
+  // Mercedes Van for 4+ people
+  vanCost = 150 + (miles * 2 * fuelPerMile * 2.5);
+}
+        
+        
 
         // Lodging
         let lodgingCost = 0;

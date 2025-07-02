@@ -114,8 +114,7 @@ label {
   gap: 10px;
   flex-wrap: wrap;
   margin-bottom: 15px;
-  align-items: stretch; /* Stretch items to match height */
-  min-height: 44px; /* Minimum height to ensure alignment */
+  align-items: baseline; /* Align items by baseline */
 }
 
 .search-row > * {
@@ -126,6 +125,7 @@ label {
   align-items: center; /* Center content vertically within each item */
   padding: 0 10px; /* Consistent padding */
   box-sizing: border-box;
+  vertical-align: baseline; /* Align text baseline */
 }
 
 #airportField,
@@ -137,8 +137,16 @@ label {
   display: none; /* Hidden by default, shown via toggleServiceType */
 }
 
+/* Wrapper for button to control alignment */
+.button-wrapper {
+  flex: 1 1 150px; /* Match other items' flex */
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .search-panel button {
-  flex: 0 0 auto; /* Button should not grow, fixed width */
   background-color: #1c6ba0;
   color: white;
   border: none;
@@ -146,9 +154,7 @@ label {
   padding: 10px;
   height: 44px; /* Match input/select height */
   box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center; /* Center button text */
+  margin: 0; /* Remove any default margin */
 }
 
 .search-panel button:hover {
@@ -168,6 +174,10 @@ label {
 
   #airportField,
   #lodgingField {
+    width: 100%;
+  }
+
+  .button-wrapper {
     width: 100%;
   }
 }

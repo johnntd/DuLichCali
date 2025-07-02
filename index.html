@@ -92,6 +92,7 @@
     </select>
     <div id="airportField">
       <select id="airport" name="airport" onchange="updateEstimate()">
+        <option value="">Chọn sân bay...</option>
         <option value="John Wayne Airport, Orange County, CA">Sân bay John Wayne (SNA)</option>
         <option value="Long Beach Airport, Long Beach, CA">Sân bay Long Beach (LGB)</option>
         <option value="LAX Airport, Los Angeles, CA">Sân bay LAX</option>
@@ -100,8 +101,8 @@
         <option value="San Diego Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
       </select>
     </div>
-    <input id="passengers" type="number" min="1" max="12" placeholder="Số khách" onchange="updateEstimate()">
-    <input id="address" type="text" placeholder="Nhập địa chỉ hoặc sân bay">
+    <input id="passengers" type="number" min="1" max="12" placeholder="Số khách" onchange="updateEstimate()" required>
+    <input id="address" type="text" placeholder="Nhập địa chỉ hoặc sân bay" onchange="updateEstimate()">
     <input id="datetime" type="text" placeholder="Chọn ngày và giờ" readonly>
   </div>
   <div class="search-row">
@@ -112,8 +113,8 @@
         <option value="airbnb">Airbnb</option>
       </select>
     </div>
-    <input id="days" type="number" min="1" max="7" placeholder="Số ngày (Tour only)" onchange="updateEstimate()">
-    <button onclick="updateEstimate()">Tính Giá</button>
+    <input id="days" type="number" min="1" max="7" placeholder="Số ngày (Tour only)" onchange="updateEstimate()" required>
+    <button type="button" onclick="updateEstimate()">Tính Giá</button>
   </div>
 
   <div class="flex-row">
@@ -123,11 +124,10 @@
     </div>
     <div class="half-width">
       <label for="vehicleDisplay">Xe</label>
-      <input type="text" id="vehicleDisplay" class="estimate-display" readonly value="Mercedes Van" />
+      <input type="text" id="vehicleDisplay" class="estimate-display" readonly value="" />
     </div>
   </div>
 </section>
-
     <!-- Booking Form -->
     <form id="bookingForm" method="POST" action="https://formspree.io/f/xeokgbpo" onsubmit="return submitBooking(event)">
       <label for="name">Tên của bạn</label>

@@ -189,7 +189,7 @@ function updateEstimate() {
         // Airport pickup/drop-off pricing with return trip for >100 miles
         const baseFee = 50;
         const serviceFee = 400; // Adjusted to hit $700 target
-        const extraPassengerFee = passengers > 3 ? (passengers - 3) * 30 : 0; // $30 per extra passenger
+        const extraPassengerFee = 0; //passengers > 3 ? (passengers - 3) * 30 : 0; // $30 per extra passenger
         const longTripSurcharge = miles > 300 ? 75 : 0; // Surcharge for long trips
 
         if (passengers <= 3) {

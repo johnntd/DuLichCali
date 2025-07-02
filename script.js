@@ -138,30 +138,30 @@ async function submitBooking(event) {
 const CALIFORNIA_AVG_FUEL_PRICE = 5.00;
 const VAN_MPG = 14;
 
-function updateEstimate () {
-  lastCalculatedMiles = 0;
+function updateEstimate() {
+  let lastCalculatedMiles = 0;
 
-  const passengers  = +document.getElementById('passengers').value || 1;
+  const passengers = +document.getElementById('passengers').value || 1;
   const serviceType = document.getElementById('serviceType').value;
-  const airport     = document.getElementById('airport')?.value || '';
-  const address     = document.getElementById('address').value || '';
-  const lodging     = document.getElementById('lodging')?.value || '';
-  const days        = +document.getElementById('days')?.value   || 1;
+  const airport = document.getElementById('airport')?.value || '';
+  const address = document.getElementById('address').value || '';
+  const lodging = document.getElementById('lodging')?.value || '';
+  const days = +document.getElementById('days')?.value || 1;
 
-  const origin      = (serviceType === 'pickup') ? airport : address;
+  const origin = (serviceType === 'pickup') ? airport : address;
   const destination = (serviceType === 'pickup') ? address : airport;
 
   if (!origin || !destination) {
     document.getElementById('estimateDisplay').value = '$0';
-    document.getElementById('vehicleDisplay').value  = '';
+    document.getElementById('vehicleDisplay').value = '';
     return;
   }
 
   new google.maps.DistanceMatrixService().getDistanceMatrix(
     {
-      origins:      [origin],
+      origins: [origin],
       destinations: [destination],
-      travelMode:   google.maps.TravelMode.DRIVING
+      travelMode: google.maps.TravelMode.DRIVING
     },
     (resp, status) => {
       if (status !== 'OK') {
@@ -179,20 +179,28 @@ function updateEstimate () {
       const miles = element.distance.value / 1609.34;
       lastCalculatedMiles = miles;
 
-      const fuelPerMile = CALIFORNIA_AVG_FUEL_PRICE / VAN_MPG;
-      const multiplier = miles > 100 ? 4 : 2.5;
+      const fuelPerMile = CALIFORNIA_AVG_FUEL_PRICE / VAN_MPG; // e.g., $4.50 / 15 = $0.30/mile
+      const multiplier = miles > 100 ? 3 : 2; // Adjusted multiplier for return trip
       let cost = 0;
       let vehicle = '';
 
       if (['pickup', 'dropoff'].includes(serviceType)) {
-        // Airport pickup/drop-off pricing
+        // Airport pickup/drop-off pricing with return trip for >100 miles
+        const effectiveMiles = miles > 100 ? miles * 2 : miles; // Double miles for return trip if >100 miles
+        const serviceFee = 150; // Base service fee
+        const extraPassengerFee = passengers > 3 ? (passengers - 3) * 50 : 0; // $50 per extra passenger
+
         if (passengers <= 3) {
-          cost = Math.max(40, 35 + (miles * fuelPerMile));
+          cost = Math.max(40, 100 + (effectiveMiles * fuelPerMile * multiplier)) + serviceFee;
           vehicle = 'Tesla Model Y';
         } else {
-          
-          cost = Math.max(125, 120 + (miles * fuelPerMile * multiplier));
+          cost = Math.max(125, 100 + (effectiveMiles * fuelPerMile * multiplier)) + serviceFee + extraPassengerFee;
           vehicle = 'Mercedes Van';
+        }
+
+        // Long-trip surcharge for distances >300 miles (e.g., Orange County to San Jose)
+        if (miles > 300) {
+          cost += 100; // Additional fee for long distances
         }
       } else {
         // Tour pricing (round trip)
@@ -225,16 +233,16 @@ function updateEstimate () {
       }
 
       document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
-      document.getElementById('vehicleDisplay').value  = vehicle;
+      document.getElementById('vehicleDisplay').value = vehicle;
 
       console.log({
-        origin, destination, passengers, miles: miles.toFixed(2), serviceType, cost: Math.round(cost)
+        origin, destination, passengers, miles: miles.toFixed(2), serviceType, cost: Math.round(cost), effectiveMiles
       });
     }
   );
 }
 
-// --- toggleService funtion ---
+// --- toggleService function ---
 
 function toggleServiceType() {
   const type = document.getElementById('serviceType').value;

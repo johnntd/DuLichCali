@@ -193,9 +193,9 @@ function updateEstimate() {
 
       if (['pickup', 'dropoff'].includes(serviceType)) {
         const baseFee = 100;
-        const serviceFee = 0;//400; // Adjusted to hit $700 target
+        const serviceFee = miles > 300 ? 400 : 0; // Adjusted to hit $700 target
         const extraPassengerFee = 0;//passengers > 3 ? (passengers - 3) * 30 : 0; // $30 per extra passenger
-        const longTripSurcharge = miles > 300 ? 475 : 0; // Surcharge for long trips
+        const longTripSurcharge = miles > 300 ? 75 : 0; // Surcharge for long trips
 
         if (passengers <= 3) {
           cost = Math.max(100, baseFee + (miles * 0.22 * multiplier)) + serviceFee;

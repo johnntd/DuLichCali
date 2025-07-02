@@ -117,7 +117,45 @@ label {
 }
 
 .search-row > * {
-  flex: 1 1 120px;
+  flex: 1 1 150px; /* Increased min-width for better spacing */
+  margin-top: 0; /* Override global margin-top for inputs/selects */
+}
+
+#airportField,
+#lodgingField {
+  flex: 1 1 180px; /* Specific width for airport and lodging selects */
+}
+
+#lodgingField {
+  display: none; /* Hidden by default, shown via toggleServiceType */
+}
+
+.search-panel button {
+  flex: 0 0 auto; /* Button should not grow, fixed width */
+  background-color: #1c6ba0;
+  color: white;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+}
+
+.search-panel button:hover {
+  background-color: #00897b;
+}
+
+@media (max-width: 600px) {
+  .search-row {
+    flex-direction: column;
+  }
+
+  .search-row > * {
+    width: 100%; /* Full width on mobile */
+  }
+
+  #airportField,
+  #lodgingField {
+    width: 100%;
+  }
 }
 
 .services {

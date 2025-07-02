@@ -149,8 +149,14 @@ function updateEstimate() {
   const lodging = document.getElementById('lodging')?.value || '';
   const days = +document.getElementById('days')?.value || 1;
 
-  const origin = (serviceType === 'pickup') ? airport : address;
-  const destination = (serviceType === 'pickup') ? address : airport;
+  let origin, destination;
+  if (['pickup', 'dropoff'].includes(serviceType)) {
+    origin = (serviceType === 'pickup') ? airport : address;
+    destination = (serviceType === 'pickup') ? address : airport;
+  } else { // Tour services
+    origin = getTourOrigin(serviceType); // Use service-specific origin
+    destination = address; // Address as destination for tours
+  }
 
   if (!origin || !destination) {
     document.getElementById('estimateDisplay').value = '$0';
@@ -186,10 +192,9 @@ function updateEstimate() {
       let vehicle = '';
 
       if (['pickup', 'dropoff'].includes(serviceType)) {
-        // Airport pickup/drop-off pricing with return trip for >100 miles
         const baseFee = 100;
-        const serviceFee = miles > 300 ? 400 : 0; // Adjusted to hit $700 target
-        const extraPassengerFee = 0; //passengers > 3 ? (passengers - 3) * 30 : 0; // $30 per extra passenger
+        const serviceFee = 0;//400; // Adjusted to hit $700 target
+        const extraPassengerFee = passengers > 3 ? (passengers - 3) * 30 : 0; // $30 per extra passenger
         const longTripSurcharge = miles > 300 ? 75 : 0; // Surcharge for long trips
 
         if (passengers <= 3) {
@@ -217,12 +222,10 @@ function updateEstimate() {
           lodgingCost = roomsNeeded * 150 * days;
         } else if (lodging === 'airbnb') {
           const unitsNeeded = Math.ceil(passengers / 8);
-          lodgingCost = unitsNeeded * 165 * days; // Use real API in future
+          lodgingCost = unitsNeeded * 165 * days;
         }
 
         const miscCost = 50 * days;
-
-        // Wear & tear when no lodging selected
         let wearCost = 0;
         if (!lodging) {
           wearCost = passengers > 8 ? 150 : passengers > 4 ? 100 : 50;
@@ -230,8 +233,6 @@ function updateEstimate() {
 
         cost = (180 + (roundtripMiles * fuelPerMile * multiplier)) * days;
         cost += lodgingCost + miscCost + wearCost * days;
-
-        // Minimum tour cost
         cost = Math.max(cost, 300 * days);
 
         vehicle = 'Mercedes Van';
@@ -247,7 +248,19 @@ function updateEstimate() {
   );
 }
 
-// --- toggleService function ---
+// Helper function to get tour origin based on service type
+function getTourOrigin(serviceType) {
+  switch (serviceType) {
+    case 'lasvegas':
+      return 'Las Vegas, NV, USA';
+    case 'yosemite':
+      return 'Yosemite National Park, CA, USA';
+    case 'sanfrancisco':
+      return 'San Francisco, CA, USA';
+    default:
+      return ''; // Fallback, should not occur
+  }
+}
 
 function toggleServiceType() {
   const type = document.getElementById('serviceType').value;

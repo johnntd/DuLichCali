@@ -79,54 +79,54 @@
       </div>
     </section>
 
-    <!-- Search Panel -->
-    <section class="search-panel">
-      <div class="search-row">
-        <select id="serviceType" onchange="toggleServiceType(); updateEstimate();">
-          <option value="">Chọn dịch vụ...</option>
-          <option value="pickup">Đón sân bay</option>
-          <option value="dropoff">Đưa sân bay</option>
-          <option value="lasvegas">Tour Las Vegas</option>
-          <option value="yosemite">Tour Yosemite</option>
-          <option value="sanfrancisco">Tour San Francisco</option>
-        </select>
-        <input id="address" type="text" placeholder="Nhập địa chỉ hoặc sân bay">
-        <input id="datetime" type="text" placeholder="Chọn ngày và giờ" readonly>
-      </div>
-      <div class="search-row">
-         <div id="airportField">
-        <select id="airport" name="airport" onchange="updateEstimate()">
-          <option value="John Wayne Airport, Orange County, CA">Sân bay John Wayne (SNA)</option>
-          <option value="Long Beach Airport, Long Beach, CA">Sân bay Long Beach (LGB)</option>
-          <option value="LAX Airport, Los Angeles, CA">Sân bay LAX</option>
-          <option value="Ontario Airport, Ontario, CA">Sân bay Ontario (ONT)</option>
-          <option value="Burbank Airport, Burbank, CA">Sân bay Burbank (BUR)</option>
-          <option value="San Diego Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
-        </select>
-         </div>
-         <div id="lodgingField">
-        <select id="lodging" name="lodging" onchange="updateEstimate()">
-          <option value="">Tự lo chỗ ở</option>
-          <option value="hotel">Khách sạn</option>
-          <option value="airbnb">Airbnb</option>
-        </select>
-         </div>
-        <input id="passengers" type="number" min="1" max="12" placeholder="Số khách">
-        <input id="days" type="number" min="1" max="7" placeholder="Số ngày (Tour only)">
-        <button onclick="updateEstimate()">Tính Giá</button>
-      </div>
+<!-- Search Panel -->
+<section class="search-panel">
+  <div class="search-row">
+    <select id="serviceType" onchange="toggleServiceType(); updateEstimate();">
+      <option value="">Chọn dịch vụ...</option>
+      <option value="pickup">Đón sân bay</option>
+      <option value="dropoff">Đưa sân bay</option>
+      <option value="lasvegas">Tour Las Vegas</option>
+      <option value="yosemite">Tour Yosemite</option>
+      <option value="sanfrancisco">Tour San Francisco</option>
+    </select>
+    <div id="airportField">
+      <select id="airport" name="airport" onchange="updateEstimate()">
+        <option value="John Wayne Airport, Orange County, CA">Sân bay John Wayne (SNA)</option>
+        <option value="Long Beach Airport, Long Beach, CA">Sân bay Long Beach (LGB)</option>
+        <option value="LAX Airport, Los Angeles, CA">Sân bay LAX</option>
+        <option value="Ontario Airport, Ontario, CA">Sân bay Ontario (ONT)</option>
+        <option value="Burbank Airport, Burbank, CA">Sân bay Burbank (BUR)</option>
+        <option value="San Diego Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
+      </select>
+    </div>
+    <input id="passengers" type="number" min="1" max="12" placeholder="Số khách" onchange="updateEstimate()">
+    <input id="address" type="text" placeholder="Nhập địa chỉ hoặc sân bay">
+    <input id="datetime" type="text" placeholder="Chọn ngày và giờ" readonly>
+  </div>
+  <div class="search-row">
+    <div id="lodgingField">
+      <select id="lodging" name="lodging" onchange="updateEstimate()">
+        <option value="">Tự lo chỗ ở</option>
+        <option value="hotel">Khách sạn</option>
+        <option value="airbnb">Airbnb</option>
+      </select>
+    </div>
+    <input id="days" type="number" min="1" max="7" placeholder="Số ngày (Tour only)" onchange="updateEstimate()">
+    <button onclick="updateEstimate()">Tính Giá</button>
+  </div>
 
-      <div class="flex-row">
-        <div class="half-width">
-          <label for="estimateDisplay">Chi phí ước tính</label>
-          <input type="text" id="estimateDisplay" class="estimate-display" readonly value="$0" />
-        </div>
-        <div class="half-width">
-          <label for="vehicleDisplay">Xe</label>
-          <input type="text" id="vehicleDisplay" class="estimate-display" readonly value="Mercedes Van" />
-        </div>
-      </div>
-    </section>
+  <div class="flex-row">
+    <div class="half-width">
+      <label for="estimateDisplay">Chi phí ước tính</label>
+      <input type="text" id="estimateDisplay" class="estimate-display" readonly value="$0" />
+    </div>
+    <div class="half-width">
+      <label for="vehicleDisplay">Xe</label>
+      <input type="text" id="vehicleDisplay" class="estimate-display" readonly value="Mercedes Van" />
+    </div>
+  </div>
+</section>
 
     <!-- Booking Form -->
     <form id="bookingForm" method="POST" action="https://formspree.io/f/xeokgbpo" onsubmit="return submitBooking(event)">

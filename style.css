@@ -114,11 +114,13 @@ label {
   gap: 10px;
   flex-wrap: wrap;
   margin-bottom: 15px;
+  align-items: center; /* Added to vertically align items */
 }
 
 .search-row > * {
   flex: 1 1 150px; /* Increased min-width for better spacing */
   margin-top: 0; /* Override global margin-top for inputs/selects */
+  height: 44px; /* Ensure consistent height */
 }
 
 #airportField,
@@ -137,6 +139,8 @@ label {
   border: none;
   cursor: pointer;
   padding: 10px;
+  height: 44px; /* Match input/select height */
+  box-sizing: border-box; /* Include padding in height */
 }
 
 .search-panel button:hover {
@@ -150,6 +154,7 @@ label {
 
   .search-row > * {
     width: 100%; /* Full width on mobile */
+    height: auto; /* Allow natural height on mobile */
   }
 
   #airportField,

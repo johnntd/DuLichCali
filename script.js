@@ -63,8 +63,8 @@ function renderDestCards() {
     const cost = d.cost.transport;
     return `
       <div class="dest-card" role="listitem" onclick="openDestination('${d.id}')" aria-label="${d.name.vi}">
-        <div class="dest-card__img">
-          <img src="${d.image}" alt="${d.name.vi}" loading="lazy">
+        <div class="dest-card__img" style="background:${d.gradient}">
+          <img src="${d.image}" alt="${d.name.vi}" loading="lazy" onerror="this.style.opacity='0'">
           <div class="dest-card__gradient"></div>
         </div>
         <div class="dest-card__body">
@@ -88,8 +88,8 @@ function renderDestList() {
     const highlights = d.highlights.slice(0, 3);
     return `
       <div class="dest-full-card" onclick="openDestination('${d.id}')">
-        <div class="dest-full-card__hero">
-          <img src="${d.image}" alt="${d.name.vi}" loading="lazy">
+        <div class="dest-full-card__hero" style="background:${d.gradient}">
+          <img src="${d.image}" alt="${d.name.vi}" loading="lazy" onerror="this.style.opacity='0'">
           <div class="dest-full-card__hero-overlay"></div>
           <div class="dest-full-card__tagline">
             <div class="dest-full-card__state">${d.state}</div>
@@ -664,6 +664,11 @@ function openDestination(destId) {
     poster.src = dest.image || '';
     poster.alt = dest.name.vi;
     poster.classList.remove('dest-modal__poster--hidden');
+    poster.onerror = () => {
+      poster.style.opacity = '0';
+      const videoWrap = document.querySelector('.dest-modal__video-wrap');
+      if (videoWrap) videoWrap.style.background = dest.gradient;
+    };
   }
 
   // Build info sheet
@@ -833,7 +838,7 @@ function renderTourChoiceGrid() {
       ? `${dest.state} · từ $${cost.min}`
       : `${dur.min}–${dur.max} ngày · từ $${cost.min}`;
     return `<button class="tour-choice" data-svc="${dest.id}" onclick="selectService('${dest.id}')">
-      <div class="tour-choice__img" style="background-image:url('${dest.image}')"></div>
+      <div class="tour-choice__img" style="background-image:url('${dest.image}'),${dest.gradient};background-size:cover,cover;background-position:center,center"></div>
       <div class="tour-choice__body">
         <strong>${dest.name.vi}</strong>
         <span>${sub}</span>

@@ -847,8 +847,68 @@ function renderTourChoiceGrid() {
   }).join('');
 }
 
+// ── Region UI ─────────────────────────────────────────────────
+/**
+ * Renders all region-dependent UI elements from a single region config.
+ * Called by DLCRegion.init() on load and DLCRegion.setRegion() on manual change.
+ */
+function updateRegionUI(region) {
+  // 1. App bar call button → primary host
+  const callBtn = document.getElementById('appBarCallBtn');
+  if (callBtn) {
+    callBtn.href = `tel:${region.hosts[0].phone}`;
+  }
+
+  // 2. Region tag strip
+  const regionTag = document.getElementById('regionTag');
+  if (regionTag) {
+    const otherRegions = Object.values(DLCRegion.all)
+      .filter(r => r.id !== region.id)
+      .map(r =>
+        `<button class="region-option" onclick="DLCRegion.setRegion('${r.id}',updateRegionUI);document.getElementById('regionPicker').hidden=true">${r.nameVi}</button>`
+      ).join('');
+    document.getElementById('regionPicker').innerHTML = otherRegions;
+
+    regionTag.innerHTML =
+      `<span class="region-tag__loc">📍 ${region.nameVi}</span>` +
+      `<span class="region-tag__sep">·</span>` +
+      `<span class="region-tag__vehicle">${region.vehicle.name} · ${region.vehicle.seats} ghế</span>` +
+      `<button class="region-tag__change" onclick="toggleRegionPicker()">Đổi vùng ›</button>`;
+    regionTag.hidden = false;
+  }
+
+  // 3. Contact strip → all hosts for this region
+  const strip = document.getElementById('contactStrip');
+  if (strip) {
+    strip.innerHTML = region.hosts.map((h, i) =>
+      (i > 0 ? '<div class="contact-strip__divider"></div>' : '') +
+      `<a href="tel:${h.phone}" class="contact-strip__item">` +
+        `<span class="contact-strip__name">${h.name}</span>` +
+        `<span class="contact-strip__num">${h.display}</span>` +
+      `</a>`
+    ).join('');
+  }
+
+  // 4. Booking form call-alt link → primary host
+  const callAlt = document.getElementById('submitCallAlt');
+  if (callAlt) {
+    callAlt.href        = `tel:${region.hosts[0].phone}`;
+    callAlt.textContent = `Hoặc gọi ngay: ${region.hosts[0].display}`;
+  }
+}
+
+function toggleRegionPicker() {
+  const picker = document.getElementById('regionPicker');
+  if (picker) picker.hidden = !picker.hidden;
+}
+
 // ── DOMContentLoaded ─────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+
+  // Region detection — fires updateRegionUI once region is known
+  if (window.DLCRegion) {
+    DLCRegion.init(updateRegionUI);
+  }
 
   // Render data-driven UI
   renderDestCards();

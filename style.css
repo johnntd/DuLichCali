@@ -527,6 +527,53 @@ select.field-input {
 }
 .trust-cell span:last-child { font-size: .72rem; color: var(--muted); }
 
+/* ── Region Service Block ───────────────────────────────────── */
+.region-tag {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .3rem .6rem;
+  padding: .55rem 1rem;
+  background: var(--navy-800);
+  border-top: 1px solid var(--border-g);
+  font-size: .7rem;
+}
+.region-tag__loc    { color: var(--gold-lt); font-weight: 600; letter-spacing: .04em; }
+.region-tag__sep    { color: var(--border-g); }
+.region-tag__vehicle { color: var(--muted); }
+.region-tag__change {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--border-g);
+  color: var(--muted);
+  font-size: .65rem;
+  padding: .18rem .55rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: color .2s, border-color .2s;
+}
+.region-tag__change:hover { color: var(--gold-lt); border-color: var(--gold-lt); }
+
+.region-picker {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  padding: .5rem 1rem;
+  background: var(--navy-800);
+  border-bottom: 1px solid var(--border-g);
+}
+.region-option {
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--border-g);
+  color: var(--cream);
+  font-size: .75rem;
+  padding: .3rem .85rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.region-option:hover { background: var(--gold); color: var(--navy); border-color: var(--gold); }
+
 /* ── Contact Strip ──────────────────────────────────────────── */
 .contact-strip {
   display: flex;

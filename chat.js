@@ -21,6 +21,22 @@
   const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
   const MAX_TOKENS   = 550;
 
+  // ── Region helpers ───────────────────────────────────────────
+  // Always read from DLCRegion.current at call time so replies reflect
+  // the live region without needing to restart the chat session.
+
+  function regionPhone() {
+    return window.DLCRegion ? DLCRegion.current.hosts[0].display : '714-227-6007';
+  }
+  function regionHostName() {
+    return window.DLCRegion ? DLCRegion.current.hosts[0].name : 'Duy Hoa';
+  }
+  // Resolve region from query text; falls back to current UI region.
+  function resolveRegion(text) {
+    if (!window.DLCRegion) return null;
+    return DLCRegion.detectFromText(text || '') || DLCRegion.current;
+  }
+
   // ══════════════════════════════════════════════════════════════
   //  NATURAL LANGUAGE PARSER
   //  Extracts intent + parameters from free-text questions
@@ -231,7 +247,7 @@
     // "from San Jose to San Francisco" → point-to-point transfer
     const est = DLCPricing.estimateCityToCity({ from, to, passengers, roundTrip: false });
     if (!est) {
-      return `Tôi chưa có dữ liệu khoảng cách cho tuyến ${titleCase(from)} → ${titleCase(to)}.\n\nVui lòng nhập địa chỉ đầy đủ trong tab Đặt chỗ để tính giá chính xác, hoặc gọi 714-227-6007.`;
+      return `Tôi chưa có dữ liệu khoảng cách cho tuyến ${titleCase(from)} → ${titleCase(to)}.\n\nVui lòng nhập địa chỉ đầy đủ trong tab Đặt chỗ để tính giá chính xác, hoặc gọi ${regionPhone()}.`;
     }
     const rtEst = DLCPricing.estimateCityToCity({ from, to, passengers, roundTrip: true });
     return [
@@ -242,7 +258,7 @@
       `🚗 ${est.vehicle} (${passengers} khách) · ~${est.miles} dặm`,
       '',
       'Đây là ước tính sơ bộ. Giá chính xác phụ thuộc vào địa chỉ đón/trả cụ thể.',
-      'Nhập địa chỉ trong tab Đặt chỗ hoặc gọi 714-227-6007.',
+      `Nhập địa chỉ trong tab Đặt chỗ hoặc gọi ${regionPhone()}.`,
     ].filter(Boolean).join('\n');
   }
 
@@ -274,7 +290,7 @@
     if (ocEst && Math.abs(ocEst.total - est.total) > 50) {
       lines.push(``, `ℹ️ So với Orange County (~$${ocEst.total}): ${est.total < ocEst.total ? 'rẻ hơn' : 'đắt hơn'} khoảng $${Math.abs(ocEst.total - est.total)}.`);
     }
-    lines.push(``, `Đây là ước tính sơ bộ. Giá cuối phụ thuộc vào địa chỉ đón thực tế.`, `Gọi 714-227-6007 để nhận báo giá trọn gói.`);
+    lines.push(``, `Đây là ước tính sơ bộ. Giá cuối phụ thuộc vào địa chỉ đón thực tế.`, `Gọi ${regionPhone()} để nhận báo giá trọn gói.`);
     return lines.join('\n');
   }
 
@@ -315,7 +331,7 @@
       hasAddress
         ? 'Đây là ước tính từ vị trí bạn đã nhập. Giá chính xác sẽ được xác nhận sau khi đặt.'
         : 'Đây là ước tính sơ bộ từ Orange County. Giá có thể thay đổi theo địa chỉ đón thực tế.',
-      'Gọi 714-227-6007 để nhận báo giá trọn gói.',
+      `Gọi ${regionPhone()} để nhận báo giá trọn gói.`,
     ];
     return lines.join('\n');
   }
@@ -380,7 +396,7 @@
       ...lines,
       '',
       `${cheapName} là lựa chọn tiết kiệm nhất.`,
-      fromCity ? 'Giá là ước tính sơ bộ — gọi 714-227-6007 để nhận báo giá chính xác.' : 'Cho tôi biết thành phố đón để ước tính chính xác hơn.',
+      fromCity ? `Giá là ước tính sơ bộ — gọi ${regionPhone()} để nhận báo giá chính xác.` : 'Cho tôi biết thành phố đón để ước tính chính xác hơn.',
     ].join('\n');
   }
 
@@ -424,7 +440,7 @@
       '• Số ngày (cho tour)',
       '• Loại chỗ ở nếu muốn tính luôn (khách sạn / Airbnb)',
       '',
-      'Bạn có thể dùng tab Đặt chỗ để nhập thông tin và nhận ước tính ngay, hoặc gọi 714-227-6007.',
+      `Bạn có thể dùng tab Đặt chỗ để nhập thông tin và nhận ước tính ngay, hoặc gọi ${regionPhone()}.`,
     ].join('\n');
   }
 
@@ -440,27 +456,54 @@
     },
     {
       match: [/cảm ơn|thank/i],
-      reply: () => 'Không có gì! Nếu cần ước tính chi tiết hơn, cứ hỏi tôi. Để đặt chỗ chính thức, gọi Duy Hoa: 714-227-6007 😊'
+      reply: () => `Không có gì! Nếu cần ước tính chi tiết hơn, cứ hỏi tôi. Để đặt chỗ chính thức, gọi ${regionHostName()}: ${regionPhone()} 😊`
     },
     {
       match: [/điện thoại|số điện|phone|contact|liên hệ/i],
-      reply: () => 'Liên hệ Du Lịch Cali:\n📞 Duy Hoa: 714-227-6007\n📞 Dinh: 562-331-3809\n📧 dulichcali21@gmail.com\n\nPhục vụ 7 ngày / tuần.'
+      reply: (text) => {
+        const r     = resolveRegion(text);
+        const hosts = r ? r.hosts : [{ name: 'Duy Hoa', display: '714-227-6007' }];
+        return [
+          'Liên hệ Du Lịch Cali:',
+          ...hosts.map(h => `📞 ${h.name}: ${h.display}`),
+          '📧 dulichcali21@gmail.com',
+          '',
+          'Phục vụ 7 ngày / tuần.',
+        ].join('\n');
+      }
     },
     {
       match: [/đặt|book|reserve/i],
-      reply: () => 'Để đặt chỗ:\n• Bấm tab "Đặt chỗ" trong ứng dụng này — nhập thông tin và nhận ước tính tức thì\n• Hoặc gọi: Duy Hoa 714-227-6007\n\nSau khi gửi form, chúng tôi xác nhận trong 2 tiếng.'
+      reply: () => `Để đặt chỗ:\n• Bấm tab "Đặt chỗ" trong ứng dụng này — nhập thông tin và nhận ước tính tức thì\n• Hoặc gọi: ${regionHostName()} ${regionPhone()}\n\nSau khi gửi form, chúng tôi xác nhận trong 2 tiếng.`
     },
     {
       match: [/giờ|mấy giờ|open|hours|working/i],
-      reply: () => 'Phục vụ 7 ngày/tuần. Gọi bất kỳ lúc nào:\n• Duy Hoa: 714-227-6007\n• Dinh: 562-331-3809\nThường phản hồi trong 1–2 tiếng.'
+      reply: () => {
+        const r = resolveRegion('');
+        const hosts = r ? r.hosts : [{ name: 'Duy Hoa', display: '714-227-6007' }];
+        return `Phục vụ 7 ngày/tuần. Gọi bất kỳ lúc nào:\n${hosts.map(h => `• ${h.name}: ${h.display}`).join('\n')}\nThường phản hồi trong 1–2 tiếng.`;
+      }
     },
     {
-      match: [/xe|vehicle|car|tesla|van|mercedes/i],
-      reply: () => 'Đội xe Du Lịch Cali:\n🚗 Tesla Model Y — 1–3 khách (điện, cao cấp, yên tĩnh)\n🚐 Mercedes-Benz Van — 4–12 khách (rộng rãi, thoải mái)\n\nXe sạch sẽ, mới, đầy đủ tiện nghi.'
+      match: [/xe|vehicle|car|toyota|sienna|tesla|van|mercedes/i],
+      reply: (text) => {
+        const r = resolveRegion(text);
+        if (r && r.id === 'bayarea') {
+          const hosts = r.hosts.map(h => `${h.name} (${h.display})`).join(', ');
+          return `Xe phục vụ vùng Bay Area:\n🚐 ${r.vehicle.name} — tối đa ${r.vehicle.seats} ghế\n\nLiên hệ: ${hosts}`;
+        }
+        return 'Đội xe Du Lịch Cali:\n🚗 Tesla Model Y — 1–3 khách (điện, cao cấp, yên tĩnh)\n🚐 Mercedes-Benz Van — 4–12 khách (rộng rãi, thoải mái)\n\nXe sạch sẽ, mới, đầy đủ tiện nghi.';
+      }
     },
     {
       match: [/sân bay|airport/i],
-      reply: () => 'Đưa đón 6 sân bay vùng Southern California:\n• LAX (Los Angeles) · SNA (John Wayne/OC)\n• LGB (Long Beach) · ONT (Ontario)\n• BUR (Burbank) · SAN (San Diego)\n\nGiá từ $100. Cho tôi biết thành phố đón của bạn để ước tính cụ thể hơn!'
+      reply: (text) => {
+        const r = resolveRegion(text);
+        if (r && r.id === 'bayarea') {
+          return `Đưa đón sân bay vùng Bay Area:\n• SFO (San Francisco) · SJC (San Jose) · OAK (Oakland)\n\nGiá từ $100. Cho tôi biết địa chỉ đón để ước tính cụ thể!`;
+        }
+        return 'Đưa đón 6 sân bay Nam California:\n• LAX (Los Angeles) · SNA (John Wayne/OC)\n• LGB (Long Beach) · ONT (Ontario)\n• BUR (Burbank) · SAN (San Diego)\n\nGiá từ $100. Cho tôi biết thành phố đón để ước tính cụ thể hơn!';
+      }
     },
   ];
 
@@ -477,7 +520,8 @@
   // ══════════════════════════════════════════════════════════════
 
   function buildSystemPrompt() {
-    const staticCtx = typeof buildAIContext === 'function' ? buildAIContext() : '';
+    const staticCtx  = typeof buildAIContext === 'function' ? buildAIContext() : '';
+    const regionCtx  = window.DLCRegion ? DLCRegion.buildAIRegionContext() : '';
 
     // Build live pricing snapshot for Claude
     let pricingSnapshot = '';
@@ -515,12 +559,13 @@ PRICING LOGIC SUMMARY:
 - Transfer (pickup/dropoff): base $100 + $0.22/mile (Tesla ≤3 pax) or + surcharges (Van ≥4 pax)
 - Tour: (180 + roundtrip_miles × fuel/VAN_MPG) × days + service $50/day + optional lodging
 - Vehicle: Tesla Model Y (1–3 pax), Mercedes Van (4–12 pax)
-- Always label estimates; recommend calling 714-227-6007 for exact quotes`;
+- Always label estimates; recommend calling ${regionPhone()} for exact quotes`;
     }
 
     return `You are a smart, trustworthy AI travel concierge for Du Lịch Cali, a professional Vietnamese transportation and tour service in Southern California. You speak both Vietnamese and English fluently.
 
 ${staticCtx}
+${regionCtx}
 ${pricingSnapshot}
 
 BEHAVIOR GUIDELINES:
@@ -531,7 +576,7 @@ BEHAVIOR GUIDELINES:
 - Ask for missing info (pax count, city, days) only when needed — don't overwhelm
 - Compare options when helpful ("San Francisco may be cheaper than Yosemite for X people")
 - Explain pricing logic clearly when asked (fuel, distance, vehicle size)
-- For exact quotes, recommend calling 714-227-6007 or using the Đặt chỗ tab
+- For exact quotes, recommend calling ${regionPhone()} or using the Đặt chỗ tab
 - Keep responses concise — 3–6 lines for estimates, slightly more for complex questions
 - Be warm, helpful, and professional — like a knowledgeable travel friend`;
   }
@@ -589,7 +634,7 @@ BEHAVIOR GUIDELINES:
     }
 
     // 4. Fallback
-    return 'Cảm ơn bạn đã liên hệ Du Lịch Cali! Để được hỗ trợ nhanh nhất, gọi Duy Hoa: 714-227-6007 hoặc dùng tab "Đặt chỗ" để đặt dịch vụ và xem ước tính ngay.';
+    return `Cảm ơn bạn đã liên hệ Du Lịch Cali! Để được hỗ trợ nhanh nhất, gọi ${regionHostName()}: ${regionPhone()} hoặc dùng tab "Đặt chỗ" để đặt dịch vụ và xem ước tính ngay.`;
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -648,7 +693,7 @@ BEHAVIOR GUIDELINES:
       const intent = parseIntent(text);
       reply = buildPricingReply(intent, text)
            || staticReply(text)
-           || 'Xin lỗi, có lỗi xảy ra. Vui lòng gọi 714-227-6007 để được hỗ trợ ngay.';
+           || `Xin lỗi, có lỗi xảy ra. Vui lòng gọi ${regionPhone()} để được hỗ trợ ngay.`;
     }
 
     state.loading = false;

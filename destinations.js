@@ -647,8 +647,8 @@ Vehicles: Tesla Model Y (1–3 passengers), Mercedes Van (4–12 passengers)
 Starting from $100, priced by distance.
 
 CONTACT:
-Duy Hoa: 714-227-6007
-Dinh: 562-331-3809
+Orange County — Duy Hoa: 714-227-6007 · John: 408-439-7522
+Bay Area — Dung Pham: 408-859-6718 · John: 408-439-7522
 Email: dulichcali21@gmail.com
 Book online at: www.dulichcali21.com`;
 }

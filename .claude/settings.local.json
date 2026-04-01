@@ -67,7 +67,24 @@
       "Bash(node --check /Users/johntd/Documents/claude-projects/ai_dulich_cali/DuLichCali/voice.js)",
       "Bash(node --check /Users/johntd/Documents/claude-projects/ai_dulich_cali/DuLichCali/chat.js)",
       "Bash(node --check /Users/johntd/Documents/claude-projects/ai_dulich_cali/DuLichCali/pricing.js)",
-      "Bash(git -C /Users/johntd/Documents/claude-projects/ai_dulich_cali/DuLichCali remote -v)"
+      "Bash(git -C /Users/johntd/Documents/claude-projects/ai_dulich_cali/DuLichCali remote -v)",
+      "Bash(git remote:*)",
+      "Bash(curl -s https://api.github.com/repos/johnntd/DuLichCali/pages)",
+      "Bash(dig www.dulichcali21.com +short)",
+      "Bash(dig dulichcali21.com +short)",
+      "Bash(curl -sI https://www.dulichcali21.com)",
+      "Bash(curl -s https://www.dulichcali21.com/index.html)",
+      "Bash(curl -sI https://www.dulichcali21.com/style.css)",
+      "Bash(grep -E \"last-modified|cache-control|etag|content-length\" echo \"---\" curl -sI https://www.dulichcali21.com/script.js)",
+      "Bash(grep -E \"last-modified|cache-control|etag|content-length\" echo \"---\" curl -sI https://www.dulichcali21.com/destinations.js)",
+      "Bash(/tmp/dlc_screenshot.py:*)",
+      "Bash(playwright install:*)",
+      "Bash(/tmp/dlc_scroll.py:*)",
+      "Bash(curl -s http://localhost:8765/)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(grep -E \"\\\\.\\(jpg|jpeg|png|webp|avif\\)$\")"
     ]
   }
 }

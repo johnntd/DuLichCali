@@ -13,7 +13,7 @@ const DESTINATIONS = [
       vi: 'Las Vegas quyến rũ với những khách sạn xa hoa, show diễn đẳng cấp thế giới, ẩm thực phong phú và The Strip huyền thoại sáng rực suốt đêm.',
       en: 'Las Vegas dazzles with luxury hotels, world-class shows, incredible dining, and the legendary Strip that never sleeps.'
     },
-    image:          'lasvegas.jpg',
+    image:          'lasvegas.jpg?v=20260402',
     youtubeId:      'DDOgFWzPwIU', // Official Visit Las Vegas (LVCVA) campaign — verify at youtube.com/watch?v=DDOgFWzPwIU
     hook:           'Thành phố không bao giờ ngủ — ánh đèn rực rỡ, show diễn đỉnh cao và những trải nghiệm xa hoa chỉ có ở đây.',
     highlightTags:  ['The Strip', 'Bellagio', 'Fremont Street', 'Grand Canyon', 'World Buffets'],
@@ -50,7 +50,7 @@ const DESTINATIONS = [
       vi: 'Yosemite hấp dẫn bởi những vách đá granite khổng lồ, thác nước hùng vĩ, rừng Sequoia ngàn tuổi và bầu trời đêm đầy sao hoang dã.',
       en: 'Yosemite captivates with towering granite walls, spectacular waterfalls, ancient giant sequoias, and some of the darkest night skies in California.'
     },
-    image:          'yosemite.jpg',
+    image:          'yosemite.jpg?v=20260402',
     youtubeId:      'REqXEsUP56o', // Giants of Yosemite — PARKLIGHT cinematic timelapse series — verify at youtube.com/watch?v=REqXEsUP56o
     hook:           'Những vách đá granit ngàn tuổi, thác nước hùng vĩ và bầu trời đêm trong vắt — thiên nhiên ở dạng thuần khiết nhất.',
     highlightTags:  ['Half Dome', 'El Capitan', 'Yosemite Falls', 'Mariposa Grove', 'Glacier Point'],
@@ -88,7 +88,7 @@ const DESTINATIONS = [
       vi: 'San Francisco quyến rũ bởi Cầu Cổng Vàng biểu tượng, khu phố Tàu sầm uất, xe điện leo đồi lịch sử và ẩm thực phong phú bên vịnh biển.',
       en: 'San Francisco enchants with the iconic Golden Gate Bridge, vibrant Chinatown, historic cable cars, Alcatraz island, and a world-class food scene.'
     },
-    image:          'sanfrancisco.jpg',
+    image:          'sanfrancisco.jpg?v=20260402',
     youtubeId:      'Vvata0OboBs', // Best of San Francisco in Beautiful 4K — verify at youtube.com/watch?v=Vvata0OboBs
     hook:           'Cầu Cổng Vàng, xe điện leo đồi, Alcatraz và ẩm thực đỉnh cao bên vịnh biển thơ mộng.',
     highlightTags:  ['Golden Gate', 'Alcatraz', 'Cable Cars', "Fisherman's Wharf", 'Chinatown'],
@@ -128,7 +128,7 @@ const DESTINATIONS = [
       vi: 'Los Angeles thu hút bởi Hollywood huyền thoại, bãi biển Santa Monica thơ mộng, mua sắm Beverly Hills và văn hóa ẩm thực đa dạng nhất nước Mỹ.',
       en: 'Los Angeles captivates with iconic Hollywood, breathtaking Santa Monica beach, Beverly Hills luxury shopping, and the most diverse food scene in America.'
     },
-    image:          'losangeles.jpg',
+    image:          'losangeles.jpg?v=20260402',
     youtubeId:      'iBZ5gWAa_MI',
     hook:           'Hollywood huyền thoại, Beverly Hills xa hoa và bãi biển dát vàng — thành phố của những giấc mơ.',
     highlightTags:  ['Hollywood', 'Beverly Hills', 'Santa Monica', 'Griffith Observatory', 'Venice Beach'],
@@ -166,7 +166,7 @@ const DESTINATIONS = [
       vi: 'San Diego quyến rũ bởi bãi biển hoàn hảo, Vườn thú nổi tiếng thế giới, khu Old Town lịch sử và cuộc sống ngoài trời sôi động quanh năm.',
       en: "San Diego enchants with perfect beaches, the world-renowned Zoo, historic Old Town, and year-round outdoor living in America's sunniest city."
     },
-    image:          'sandiego.jpg',
+    image:          'sandiego.jpg?v=20260402',
     youtubeId:      'HMqXkwIWtyQ',
     hook:           'Bãi biển hoàn hảo, vườn thú đẳng cấp thế giới và khí hậu lý tưởng 365 ngày — thiên đường phía Nam California.',
     highlightTags:  ['San Diego Zoo', 'Balboa Park', 'Coronado Beach', 'Gaslamp Quarter', 'Old Town'],
@@ -204,7 +204,7 @@ const DESTINATIONS = [
       vi: 'Anaheim là nhà của Disneyland huyền thoại — "Nơi hạnh phúc nhất trên trái đất" với hàng chục trò chơi đỉnh cao, Disney California Adventure và những kỷ niệm gia đình không thể quên.',
       en: 'Home of the legendary Disneyland Resort with thrilling rides, Disney California Adventure park, Star Wars Galaxy\'s Edge, and magical family memories.'
     },
-    image:          'anaheim.jpg',
+    image:          'anaheim.jpg?v=20260402',
     youtubeId:      'HEWRxOXidCU',
     hook:           'Disneyland — nơi phép thuật trở thành hiện thực, nụ cười trẻ thơ và những kỷ niệm gia đình vĩnh cửu.',
     highlightTags:  ['Disneyland', 'California Adventure', "Galaxy's Edge", 'Fantasyland', 'Downtown Disney'],
@@ -242,7 +242,7 @@ const DESTINATIONS = [
       vi: 'Napa Valley quyến rũ bởi những vườn nho trải dài, hơn 400 hầm rượu đẳng cấp, ẩm thực farm-to-table và phong cảnh thung lũng đẹp như tranh.',
       en: 'Napa Valley captivates with rolling vineyards, 400+ world-class wineries, farm-to-table dining, and breathtaking California wine country scenery.'
     },
-    image:          'napavalley.jpg',
+    image:          'napavalley.jpg?v=20260402',
     youtubeId:      'V9K64GQ-yIY',
     hook:           'Những vườn nho trải dài vô tận, rượu vang đẳng cấp thế giới và bữa ăn farm-to-table giữa thiên nhiên.',
     highlightTags:  ['Wine Tasting', 'Castello di Amorosa', 'Hot Air Balloon', 'Oxbow Market', 'Vineyard'],
@@ -280,7 +280,7 @@ const DESTINATIONS = [
       vi: 'Lake Tahoe hút hồn bởi làn nước trong vắt có thể nhìn thấy đáy 21m, bãi biển cát trắng mùa hè và resort trượt tuyết đẳng cấp mùa đông.',
       en: 'Lake Tahoe mesmerizes with crystal-clear water visible 70 feet deep, white sandy beaches in summer, and world-class ski resorts in winter.'
     },
-    image:          'laketahoe.jpg',
+    image:          'laketahoe.jpg?v=20260402',
     youtubeId:      'kkRWHC8GQRY',
     hook:           'Nước hồ xanh ngắt trong vắt nhìn thấy đáy, bãi cát trắng mùa hè và ski resort đỉnh cao mùa đông.',
     highlightTags:  ['Emerald Bay', 'Sand Harbor', 'Heavenly Resort', 'Skiing', 'Tahoe City'],
@@ -318,7 +318,7 @@ const DESTINATIONS = [
       vi: 'Monterey và Big Sur quyến rũ bởi đường Highway 1 huyền thoại, vách đá dựng đứng bên Thái Bình Dương, thủy cung biển tầm cỡ thế giới và rừng thông Cypress cổ kính.',
       en: 'Monterey and Big Sur captivate with legendary Highway 1, towering sea cliffs, world-class aquarium, and ancient Cypress forests meeting the Pacific Ocean.'
     },
-    image:          'monterey.jpg',
+    image:          'monterey.jpg?v=20260402',
     youtubeId:      'CX4lHnLT3U8',
     hook:           'Đường Highway 1 huyền thoại uốn lượn bên vách đá Thái Bình Dương, rừng Cypress ngàn tuổi và thủy cung biển kỳ diệu.',
     highlightTags:  ['Highway 1', 'Big Sur', 'Aquarium', 'Bixby Bridge', 'Cannery Row'],
@@ -356,7 +356,7 @@ const DESTINATIONS = [
       vi: '17-Mile Drive là con đường ven biển huyền thoại qua bán đảo Monterey, nổi tiếng với Lone Cypress ngàn tuổi, sân golf Pebble Beach đẳng cấp PGA và cảnh biển ngoạn mục.',
       en: '17-Mile Drive is a legendary private coastal route through Pebble Beach — famous for the ancient Lone Cypress, world-famous Pebble Beach Golf Links, and spectacular ocean scenery.'
     },
-    image:          '17miledrive.jpg',
+    image:          '17miledrive.jpg?v=20260402',
     youtubeId:      '8MBgXEJ_cSU',
     hook:           'Lone Cypress ngàn tuổi trơ trên mỏm đá biển, sân golf Pebble Beach đẳng cấp PGA và hoàng hôn nghẹt thở.',
     highlightTags:  ['Lone Cypress', 'Pebble Beach Golf', 'Seal Rocks', 'Bird Rock', 'Spanish Bay'],
@@ -394,7 +394,7 @@ const DESTINATIONS = [
       vi: 'Palm Springs quyến rũ bởi kiến trúc mid-century modern và resort đẳng cấp; Joshua Tree National Park bên cạnh là thiên đường cây xương rồng kỳ lạ và ngắm sao đêm đẹp nhất California.',
       en: 'Palm Springs enchants with iconic mid-century architecture and luxury resorts; nearby Joshua Tree National Park offers otherworldly cactus landscapes and the best stargazing in California.'
     },
-    image:          'palmsprings.jpg',
+    image:          'palmsprings.jpg?v=20260402',
     youtubeId:      'n4dE9LKRJXU',
     hook:           'Sa mạc bí ẩn với cây Joshua Tree kỳ lạ, bầu trời đêm đầy sao và Palm Springs resort xa hoa.',
     highlightTags:  ['Joshua Tree', 'Aerial Tramway', 'Palm Canyon', 'Desert Stars', 'Coachella Valley'],
@@ -432,7 +432,7 @@ const DESTINATIONS = [
       vi: 'Sequoia và Kings Canyon hấp dẫn bởi những cây Sequoia Giant cao hơn 80m, già hơn 2000 năm tuổi — trong đó có General Sherman lớn nhất thế giới và Kings Canyon sâu hơn Grand Canyon.',
       en: 'Sequoia and Kings Canyon amaze with Giant Sequoias towering over 80 meters — including General Sherman, the world\'s largest tree by volume — and a canyon deeper than the Grand Canyon.'
     },
-    image:          'sequoia.jpg',
+    image:          'sequoia.jpg?v=20260402',
     youtubeId:      'zHpDaFImkxQ',
     hook:           'Những cây khổng lồ 2000 năm tuổi, cao 84m và General Sherman — cây lớn nhất Trái Đất tính theo thể tích.',
     highlightTags:  ['General Sherman', 'Giant Forest', 'Moro Rock', 'Kings Canyon', 'Crystal Cave'],
@@ -470,7 +470,7 @@ const DESTINATIONS = [
       vi: 'Santa Barbara quyến rũ bởi kiến trúc Tây Ban Nha-Moorish trắng ngà bên bờ biển, State Street sầm uất, Mission Santa Barbara lịch sử và rượu vang Santa Ynez Valley tuyệt hảo.',
       en: "Santa Barbara enchants with whitewashed Spanish-Moorish architecture along a stunning coastline, upscale State Street, historic Mission, and excellent Santa Ynez Valley wines."
     },
-    image:          'santabarbara.jpg',
+    image:          'santabarbara.jpg?v=20260402',
     youtubeId:      'FHvBmR-Hn7Y',
     hook:           'Kiến trúc Tây Ban Nha trắng tinh bên biển xanh, nhà thờ mission lịch sử và rượu vang Santa Ynez đỉnh cao.',
     highlightTags:  ['Mission Santa Barbara', 'Stearns Wharf', 'State Street', 'Santa Ynez Wine', 'East Beach'],
@@ -508,7 +508,7 @@ const DESTINATIONS = [
       vi: 'Solvang là ngôi làng Đan Mạch thu nhỏ ở California, nổi tiếng với kiến trúc half-timbered châu Âu cổ kính, những cối xay gió và bánh Danish pastry thơm ngon.',
       en: 'Solvang is a charming Danish village in California wine country, famous for European half-timbered architecture, windmills, and irresistible Danish pastries and aebleskiver.'
     },
-    image:          'solvang.jpg',
+    image:          'solvang.jpg?v=20260402',
     youtubeId:      'Y5s7bO_BXHE',
     hook:           'Ngôi làng Đan Mạch cổ tích với cối xay gió, bánh pastry thơm lừng và kiến trúc châu Âu giữa lòng California.',
     highlightTags:  ['Danish Architecture', 'Windmills', 'Aebleskiver', 'Santa Ynez Wine', 'Hans Christian Andersen'],
@@ -547,7 +547,7 @@ const DESTINATIONS = [
       vi: 'Grand Canyon choáng ngợp bởi hẻm núi sâu 1.6km, rộng 16km và dài 446km — kiệt tác thiên nhiên được điêu khắc bởi sông Colorado trong 6 triệu năm.',
       en: 'Grand Canyon overwhelms with its staggering 1-mile-deep, 10-mile-wide, 277-mile-long gorge — sculpted by the Colorado River over 6 million years of geological time.'
     },
-    image:          'grandcanyon.jpg',
+    image:          'grandcanyon.jpg?v=20260402',
     youtubeId:      'EQsEUKDuZik',
     hook:           'Hẻm núi sâu 1.6km điêu khắc trong 6 triệu năm — vẻ đẹp hùng vĩ ngoài mọi ngôn từ, phải đến mới hiểu.',
     highlightTags:  ['South Rim', 'Skywalk', 'Colorado River', 'Bright Angel Trail', 'Helicopter Tour'],

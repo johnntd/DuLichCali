@@ -2,149 +2,692 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
-  <title>Dịch Vụ Đưa Đón & Du Lịch California</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#050b1a" />
+  <title>Du Lịch Cali — Tour & Đưa Đón Sân Bay California</title>
+  <meta name="description" content="Dịch vụ đưa đón sân bay và tour du lịch California chuyên nghiệp. Las Vegas, San Francisco, Yosemite. Duy Hoa: 714-227-6007.">
   <meta name='impact-site-verification' value='a197decf-5fcf-41d2-bc41-1d354542e163'>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,300;0,6..96,400;1,6..96,300;1,6..96,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
-  <!-- Google API Client -->
+  <!-- Google OAuth + API (for calendar) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
 
-  <!-- Google Maps JS (classic Autocomplete) -->
+  <!-- Google Maps: define initMap before loading the script -->
   <script>
     window.initMap = function () {
-      const map = new google.maps.Map(document.getElementById('map'), {
-        center: { lat: 33.6846, lng: -117.8265 },
-        zoom: 9
-      });
-
+      // Initialize autocomplete on address field
       const input = document.getElementById('address');
-      if (input) {
-        const autocomplete = new google.maps.places.Autocomplete(input);
-        autocomplete.addListener('place_changed', () => {
-          updateEstimate();
+      if (input && typeof google !== 'undefined') {
+        const ac = new google.maps.places.Autocomplete(input);
+        ac.addListener('place_changed', () => {
+          if (typeof updateEstimate === 'function') updateEstimate();
         });
       }
     };
   </script>
-  <script
-    async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ&libraries=places&callback=initMap"
-  ></script>
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ&libraries=places&callback=initMap">
+  </script>
 
-  <!-- Flatpickr -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <!-- Flatpickr date/time picker -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-  <!-- Styles -->
-  <link rel="stylesheet" href="style.css" />
-  <!-- Main Script -->
-  <script src="script.js" defer></script>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Dịch Vụ Đưa Đón & Du Lịch California</h1>
-<p>
-  <strong>Liên hệ:</strong> Duy Hoa |
-  <a href="tel:7142276007" style="color: #add8e6;">Điện thoại: 714-227-6007</a> |
-  Dinh |
-  <a href="tel:5623313809" style="color: #add8e6;">Điện thoại: 562-331-3809</a> |
-  <a href="mailto:dulichcali21@gmail.com" style="color: #add8e6;">Email: dulichcali21@gmail.com</a>
-</p>
+<div id="app">
 
-    <!-- Tour Services -->
-    <section class="services">
-      <div class="card">
-        <img src="lasvegas.jpg" alt="Las Vegas Tour">
-        <h3>Tour Las Vegas</h3>
-        <p>2‐7 ngày, giá từ ...</p>
-        <button onclick="document.getElementById('serviceType').value='lasvegas'; toggleServiceType(); updateEstimate();">Chọn</button>
+  <!-- ════════════════════════════════════════════════
+       APP BAR (always visible)
+  ════════════════════════════════════════════════ -->
+  <header class="app-bar">
+    <div class="app-bar__brand">✦ Du Lịch Cali</div>
+    <a href="tel:7142276007" class="app-bar__call">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.79-1.35a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7a2 2 0 011.72 2.09z"/>
+      </svg>
+      Gọi ngay
+    </a>
+  </header>
+
+  <!-- ════════════════════════════════════════════════
+       MAIN — 4 SCREENS (SPA)
+  ════════════════════════════════════════════════ -->
+  <main class="app-main" id="appMain">
+
+    <!-- ─────────────────────────────────────────
+         SCREEN 1: HOME
+    ───────────────────────────────────────── -->
+    <section id="screenHome" class="screen screen--active" role="tabpanel" aria-labelledby="tabHome">
+
+      <!-- Hero -->
+      <div class="hero">
+        <div class="hero__parallax" id="heroBg"></div>
+        <div class="hero__overlay"></div>
+        <div class="hero__content">
+          <p class="hero__eyebrow">Dịch Vụ Du Lịch Chuyên Nghiệp</p>
+          <h1 class="hero__title">Khám Phá<br><em>California</em></h1>
+          <p class="hero__sub">15 điểm đến · 6 sân bay · AI tư vấn 24/7</p>
+          <div class="hero__ctas">
+            <button class="btn btn--gold" onclick="switchScreen('screenBook')">Đặt Chỗ Ngay</button>
+            <button class="btn btn--ghost" onclick="switchScreen('screenDest')">Xem Tour</button>
+          </div>
+        </div>
       </div>
-      <div class="card">
-        <img src="sanfrancisco.jpg" alt="San Francisco Tour">
-        <h3>Tour San Francisco</h3>
-        <p>2‐7 ngày, giá từ ...</p>
-        <button onclick="document.getElementById('serviceType').value='sanfrancisco'; toggleServiceType(); updateEstimate();">Chọn</button>
+
+      <!-- Destination cards (horizontal scroll) -->
+      <section class="home-section">
+        <div class="section-hdr">
+          <h2 class="section-title">Điểm Đến Nổi Bật</h2>
+          <button class="see-all" onclick="switchScreen('screenDest')">Xem tất cả</button>
+        </div>
+        <div class="dest-row" id="destCards" role="list">
+          <!-- Rendered by renderDestCards() in script.js -->
+        </div>
+      </section>
+
+      <!-- Quick estimate strip -->
+      <section class="home-section">
+        <div class="section-hdr">
+          <h2 class="section-title">Ước Tính Chi Phí</h2>
+        </div>
+        <div class="quick-est-card">
+          <select class="quick-est__select" id="quickService" onchange="renderQuickEstimate()">
+            <option value="">Chọn dịch vụ để ước tính...</option>
+            <optgroup label="✈ Đưa Đón Sân Bay">
+              <option value="pickup">Đón sân bay</option>
+              <option value="dropoff">Đưa sân bay</option>
+            </optgroup>
+            <optgroup label="🗺 Tour California">
+              <option value="losangeles">Tour Los Angeles</option>
+              <option value="sandiego">Tour San Diego</option>
+              <option value="anaheim">Tour Anaheim · Disneyland</option>
+              <option value="santabarbara">Tour Santa Barbara</option>
+              <option value="solvang">Tour Solvang</option>
+              <option value="palmsprings">Tour Palm Springs · Joshua Tree</option>
+              <option value="sequoia">Tour Sequoia · Kings Canyon</option>
+              <option value="monterey">Tour Monterey · Big Sur</option>
+              <option value="17miledrive">Tour 17-Mile Drive</option>
+              <option value="yosemite">Tour Yosemite</option>
+              <option value="napavalley">Tour Napa Valley</option>
+              <option value="laketahoe">Tour Lake Tahoe</option>
+              <option value="sanfrancisco">Tour San Francisco</option>
+            </optgroup>
+            <optgroup label="🎰 Tour Ngoài Bang">
+              <option value="lasvegas">Tour Las Vegas</option>
+              <option value="grandcanyon">Tour Grand Canyon</option>
+            </optgroup>
+          </select>
+          <div class="quick-est__result" id="quickEstResult" aria-live="polite"></div>
+          <div class="quick-est__note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Giá chính xác phụ thuộc khoảng cách và số khách.
+            <button onclick="switchScreen('screenBook')" class="link-btn">Tính giá đầy đủ →</button>
+          </div>
+          <div class="gas-price-badge" id="gasPriceBadge" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- Services highlight -->
+      <section class="home-section">
+        <div class="section-hdr"><h2 class="section-title">Dịch Vụ</h2></div>
+
+        <!-- Transport row -->
+        <div class="svc-category-label">Vận Chuyển</div>
+        <div class="svc-row svc-row--4">
+          <div class="svc-card" onclick="selectServiceAndBook('pickup')">
+            <div class="svc-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <polyline points="6 9 12 15 18 9"/><path d="M12 3v12M3 21h18"/>
+              </svg>
+            </div>
+            <strong>Đón Sân Bay</strong>
+            <span>6 sân bay</span>
+          </div>
+          <div class="svc-card" onclick="selectServiceAndBook('dropoff')">
+            <div class="svc-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <polyline points="18 15 12 9 6 15"/><path d="M12 21V9M3 3h18"/>
+              </svg>
+            </div>
+            <strong>Đưa Sân Bay</strong>
+            <span>6 sân bay</span>
+          </div>
+          <div class="svc-card" onclick="switchScreen('screenBook')">
+            <div class="svc-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h5l3 5v4h-8V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+              </svg>
+            </div>
+            <strong>Xe Riêng</strong>
+            <span>Tesla · Van</span>
+          </div>
+          <div class="svc-card" onclick="switchScreen('screenChat')">
+            <div class="svc-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <path d="M3 12h3m12 0h3M12 3v3m0 12v3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6 2.1-2.1"/>
+              </svg>
+            </div>
+            <strong>Liên Tỉnh</strong>
+            <span>Báo giá AI</span>
+          </div>
+        </div>
+
+        <!-- Tour row -->
+        <div class="svc-category-label">Tour Du Lịch</div>
+        <div class="svc-row svc-row--3">
+          <div class="svc-card svc-card--wide" onclick="switchScreen('screenDest')">
+            <div class="svc-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+              </svg>
+            </div>
+            <strong>Tour Trọn Gói</strong>
+            <span>15 điểm đến CA & NV & AZ</span>
+          </div>
+          <div class="svc-card" onclick="switchScreen('screenChat')">
+            <div class="svc-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+            </div>
+            <strong>Lên Kế Hoạch</strong>
+            <span>Riêng theo yêu cầu</span>
+          </div>
+          <div class="svc-card" onclick="switchScreen('screenDest')">
+            <div class="svc-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </div>
+            <strong>Khám Phá</strong>
+            <span>Video & chi tiết</span>
+          </div>
+        </div>
+
+        <!-- Tools row -->
+        <div class="svc-category-label">Công Cụ Thông Minh</div>
+        <div class="svc-row svc-row--4">
+          <div class="svc-card svc-card--accent" onclick="document.getElementById('quickService').focus(); document.getElementById('quickService').scrollIntoView({behavior:'smooth'})">
+            <div class="svc-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+            </div>
+            <strong>Ước Tính Giá</strong>
+            <span>Tức thì</span>
+          </div>
+          <div class="svc-card svc-card--accent" onclick="switchScreen('screenChat')">
+            <div class="svc-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
+            <strong>Trợ Lý AI</strong>
+            <span>Hỏi 24/7</span>
+          </div>
+          <div class="svc-card svc-card--accent" onclick="switchScreen('screenChat')">
+            <div class="svc-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/>
+              </svg>
+            </div>
+            <strong>Giọng Nói</strong>
+            <span>Tiếng Việt · EN</span>
+          </div>
+          <div class="svc-card svc-card--accent" onclick="switchScreen('screenBook')">
+            <div class="svc-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+            <strong>Đặt Chỗ</strong>
+            <span>Online 24/7</span>
+          </div>
+        </div>
+
+        <!-- 4-button CTA -->
+        <div class="home-cta-row">
+          <button class="home-cta-btn home-cta-btn--gold" onclick="switchScreen('screenBook')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Đặt Chỗ Ngay
+          </button>
+          <button class="home-cta-btn" onclick="document.getElementById('quickService').focus(); document.getElementById('quickService').scrollIntoView({behavior:'smooth'})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Ước Tính Giá
+          </button>
+          <button class="home-cta-btn" onclick="switchScreen('screenChat')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Hỏi AI
+          </button>
+          <button class="home-cta-btn" onclick="switchScreen('screenDest')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+            Điểm Đến
+          </button>
+        </div>
+      </section>
+
+      <!-- Trust numbers -->
+      <section class="home-section">
+        <div class="trust-grid">
+          <div class="trust-cell"><span class="trust-num">6+</span><span>Năm kinh nghiệm</span></div>
+          <div class="trust-cell"><span class="trust-num">500+</span><span>Chuyến thành công</span></div>
+          <div class="trust-cell"><span class="trust-num">6</span><span>Sân bay phục vụ</span></div>
+          <div class="trust-cell"><span class="trust-num">24/7</span><span>Hỗ trợ khách hàng</span></div>
+        </div>
+      </section>
+
+      <!-- Contact footer strip -->
+      <div class="contact-strip">
+        <a href="tel:7142276007" class="contact-strip__item">
+          <span class="contact-strip__name">Duy Hoa</span>
+          <span class="contact-strip__num">714-227-6007</span>
+        </a>
+        <div class="contact-strip__divider"></div>
+        <a href="tel:5623313809" class="contact-strip__item">
+          <span class="contact-strip__name">Dinh</span>
+          <span class="contact-strip__num">562-331-3809</span>
+        </a>
       </div>
-      <div class="card">
-        <img src="yosemite.jpg" alt="Yosemite Tour">
-        <h3>Tour Yosemite</h3>
-        <p>2‐7 ngày, giá từ ...</p>
-        <button onclick="document.getElementById('serviceType').value='yosemite'; toggleServiceType(); updateEstimate();">Chọn</button>
+
+      <div class="screen-spacer"></div>
+    </section>
+
+    <!-- ─────────────────────────────────────────
+         SCREEN 2: DESTINATIONS
+    ───────────────────────────────────────── -->
+    <section id="screenDest" class="screen" role="tabpanel" aria-labelledby="tabDest">
+      <div class="screen-top">
+        <h2 class="screen-top__title">Điểm Đến</h2>
+        <p class="screen-top__sub">Chọn điểm đến để xem chi tiết và đặt tour</p>
+      </div>
+
+      <!-- Full destination cards (rendered by JS) -->
+      <div id="destList"></div>
+
+      <!-- Airport section -->
+      <div class="airport-block home-section">
+        <div class="section-hdr"><h2 class="section-title">Đưa Đón Sân Bay</h2></div>
+        <div class="airport-card">
+          <div class="airport-card__header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            </svg>
+            <strong>6 Sân Bay Phục Vụ</strong>
+          </div>
+          <div class="airport-chips" id="airportChips"></div>
+          <div class="airport-vehicles">
+            <div class="vehicle-pill">
+              <strong>Tesla Model Y</strong>
+              <span>1–3 khách</span>
+            </div>
+            <div class="vehicle-pill">
+              <strong>Mercedes Van</strong>
+              <span>4–12 khách</span>
+            </div>
+          </div>
+          <button class="btn btn--gold btn--full" style="margin-top:1rem" onclick="selectServiceAndBook('pickup')">Đặt Đưa Đón Ngay</button>
+        </div>
+      </div>
+
+      <div class="screen-spacer"></div>
+    </section>
+
+    <!-- ─────────────────────────────────────────
+         SCREEN 3: BOOK (multi-step wizard)
+    ───────────────────────────────────────── -->
+    <section id="screenBook" class="screen" role="tabpanel" aria-labelledby="tabBook">
+
+      <!-- Wizard progress bar -->
+      <div class="wiz-progress" id="wizProgress" role="progressbar" aria-valuemin="1" aria-valuemax="5" aria-valuenow="1">
+        <div class="wiz-progress__bar" id="wizBar"></div>
+        <div class="wiz-progress__steps" id="wizStepDots"></div>
+      </div>
+
+      <!-- ── Step 1: Service type ── -->
+      <div class="wiz-step" id="wStep1">
+        <div class="wiz-header">
+          <h2>Chọn Dịch Vụ</h2>
+          <p>Bạn cần dịch vụ gì?</p>
+        </div>
+        <!-- Airport transfer options -->
+        <div class="service-choice-grid">
+          <button class="svc-choice" data-svc="pickup" onclick="selectService('pickup')">
+            <div class="svc-choice__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <polyline points="6 9 12 15 18 9"/><path d="M12 3v12M3 21h18"/>
+              </svg>
+            </div>
+            <strong>Đón Sân Bay</strong>
+            <span>Chúng tôi đón bạn từ sân bay</span>
+          </button>
+          <button class="svc-choice" data-svc="dropoff" onclick="selectService('dropoff')">
+            <div class="svc-choice__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <polyline points="18 15 12 9 6 15"/><path d="M12 21V9M3 3h18"/>
+              </svg>
+            </div>
+            <strong>Đưa Sân Bay</strong>
+            <span>Chúng tôi đưa bạn đến sân bay</span>
+          </button>
+        </div>
+        <!-- Tour selection grid (dynamically rendered from DESTINATIONS) -->
+        <div class="svc-section-label">Chọn Tour</div>
+        <div class="tour-choice-grid" id="tourChoiceGrid">
+          <!-- Populated by renderTourChoiceGrid() in script.js -->
+        </div>
+      </div>
+
+      <!-- ── Step 2: Location ── -->
+      <div class="wiz-step" id="wStep2" style="display:none">
+        <div class="wiz-header">
+          <h2>Địa Điểm</h2>
+          <p id="wStep2Sub">Nhập thông tin địa điểm</p>
+        </div>
+        <div class="form-fields">
+          <div class="field-wrap" id="wAirportWrap">
+            <label class="field-label" for="airport">Sân bay</label>
+            <select class="field-input" id="airport" name="airport" onchange="updateEstimate()">
+              <option value="">Chọn sân bay...</option>
+              <!-- Populated by JS from AIRPORTS data -->
+            </select>
+          </div>
+          <div class="field-wrap">
+            <label class="field-label" for="address">Địa chỉ của bạn</label>
+            <input class="field-input" type="text" id="address" name="address"
+              placeholder="Nhập địa chỉ (tìm kiếm tự động)" autocomplete="off" onchange="updateEstimate()">
+          </div>
+          <div class="field-wrap" id="wLodgingWrap" style="display:none">
+            <label class="field-label" for="lodging">Chỗ ở (tùy chọn)</label>
+            <select class="field-input" id="lodging" name="lodging" onchange="updateEstimate()">
+              <option value="">Tự lo chỗ ở</option>
+              <option value="hotel">Đặt khách sạn (est. +$150/đêm)</option>
+              <option value="airbnb">Đặt Airbnb (est. +$165/đêm)*</option>
+            </select>
+            <p class="field-note">*Ước tính — Airbnb không có API chính thức. Giá thực tế có thể khác.</p>
+          </div>
+        </div>
+        <div class="wiz-nav">
+          <button class="btn btn--ghost" onclick="goStep(1)">← Quay lại</button>
+          <button class="btn btn--gold" onclick="goStep(3)">Tiếp →</button>
+        </div>
+      </div>
+
+      <!-- ── Step 3: Schedule ── -->
+      <div class="wiz-step" id="wStep3" style="display:none">
+        <div class="wiz-header">
+          <h2>Lịch Trình</h2>
+          <p>Chọn ngày giờ và số lượng khách</p>
+        </div>
+        <div class="form-fields">
+          <div class="field-wrap">
+            <label class="field-label" for="datetime">Ngày và Giờ</label>
+            <input class="field-input" type="text" id="datetime" placeholder="Chọn ngày và giờ..." readonly>
+          </div>
+          <div class="field-wrap">
+            <label class="field-label" for="passengers">Số Khách</label>
+            <input class="field-input" type="number" id="passengers" name="passengers"
+              min="1" max="12" placeholder="1–12 người" value="2" onchange="updateEstimate()">
+          </div>
+          <div class="field-wrap" id="wDaysWrap" style="display:none">
+            <label class="field-label" for="days">Số Ngày</label>
+            <input class="field-input" type="number" id="days" name="days"
+              min="1" max="7" placeholder="1–7 ngày" value="2" onchange="updateEstimate()">
+          </div>
+        </div>
+        <div class="wiz-nav">
+          <button class="btn btn--ghost" onclick="goStep(2)">← Quay lại</button>
+          <button class="btn btn--gold" onclick="goStep(4)">Tính Giá →</button>
+        </div>
+      </div>
+
+      <!-- ── Step 4: Estimate ── -->
+      <div class="wiz-step" id="wStep4" style="display:none">
+        <div class="wiz-header">
+          <h2>Báo Giá Ước Tính</h2>
+          <p>Dựa trên thông tin bạn đã nhập</p>
+        </div>
+
+        <div class="estimate-card" id="wizEstimateCard">
+          <div class="est-row">
+            <span class="est-label">Chi phí ước tính</span>
+            <span class="est-val" id="estimateDisplay">—</span>
+          </div>
+          <div class="est-divider"></div>
+          <div class="est-row">
+            <span class="est-label">Phương tiện</span>
+            <span class="est-val est-val--sm" id="vehicleDisplay">—</span>
+          </div>
+          <div class="est-row" id="gasRow" style="display:none">
+            <span class="est-label">Giá xăng hiện tại</span>
+            <span class="est-val est-val--sm" id="gasPriceDisplay">—</span>
+          </div>
+          <p class="est-disclaimer" id="estDisclaimer">
+            Đây là ước tính. Giá cuối cùng sẽ được xác nhận khi chúng tôi liên hệ với bạn.
+          </p>
+        </div>
+
+        <!-- Hotel price info -->
+        <div class="lodging-info-card" id="lodgingInfoCard" style="display:none"></div>
+
+        <div class="wiz-nav">
+          <button class="btn btn--ghost" onclick="goStep(3)">← Quay lại</button>
+          <button class="btn btn--gold" onclick="goStep(5)">Đặt Chỗ →</button>
+        </div>
+      </div>
+
+      <!-- ── Step 5: Contact + Submit ── -->
+      <div class="wiz-step" id="wStep5" style="display:none">
+        <div class="wiz-header">
+          <h2>Thông Tin Liên Hệ</h2>
+          <p>Điền tên và số điện thoại để chúng tôi xác nhận</p>
+        </div>
+
+        <form id="bookingForm" method="POST" action="https://formspree.io/f/xeokgbpo"
+          onsubmit="return submitBooking(event)">
+
+          <div class="form-fields">
+            <div class="field-wrap">
+              <label class="field-label" for="name">Tên của bạn</label>
+              <input class="field-input" type="text" id="name" name="name"
+                placeholder="Họ và tên đầy đủ" required autocomplete="name">
+            </div>
+            <div class="field-wrap">
+              <label class="field-label" for="phone">Số điện thoại</label>
+              <input class="field-input" type="tel" id="phone" name="phone"
+                placeholder="(xxx) xxx-xxxx" required autocomplete="tel">
+            </div>
+          </div>
+
+          <!-- Booking summary (hidden, sent to Formspree) -->
+          <input type="hidden" name="serviceType" id="serviceType" value="">
+          <input type="hidden" name="message" id="bookingSummary">
+
+          <div class="slot-warning" id="slotWarning" role="alert"></div>
+
+          <button type="submit" class="btn btn--gold btn--full btn--submit" id="submitBtn">
+            Gửi Yêu Cầu Đặt Chỗ
+          </button>
+          <p class="submit-note">✦ Chúng tôi sẽ liên hệ trong vòng 2 tiếng để xác nhận lịch và báo giá chính xác</p>
+
+          <a href="tel:7142276007" class="submit-callalt">
+            Hoặc gọi ngay: 714-227-6007
+          </a>
+        </form>
+
+        <div class="wiz-nav" style="margin-top:0">
+          <button class="btn btn--ghost" onclick="goStep(4)">← Quay lại</button>
+        </div>
+      </div>
+
+      <div class="screen-spacer"></div>
+    </section>
+
+    <!-- ─────────────────────────────────────────
+         SCREEN 4: CHAT (AI Concierge)
+    ───────────────────────────────────────── -->
+    <section id="screenChat" class="screen screen--chat" role="tabpanel" aria-labelledby="tabChat">
+      <div class="chat-screen">
+
+        <!-- Chat header -->
+        <div class="chat-header">
+          <div class="chat-header__avatar">✦</div>
+          <div class="chat-header__info">
+            <strong>Trợ Lý Du Lịch</strong>
+            <span class="chat-status">
+              <span class="chat-status__dot"></span>
+              Du Lịch Cali AI
+            </span>
+          </div>
+        </div>
+
+        <!-- Suggestion chips -->
+        <div class="chat-chips-wrap" id="chatChips">
+          <button class="chat-chip" data-q="Giá tour Las Vegas bao nhiêu?">Giá tour Las Vegas?</button>
+          <button class="chat-chip" data-q="Đưa đón sân bay LAX như thế nào?">Đưa đón LAX</button>
+          <button class="chat-chip" data-q="Tour Yosemite mấy ngày?">Yosemite mấy ngày?</button>
+          <button class="chat-chip" data-q="Số điện thoại liên hệ?">Số điện thoại?</button>
+          <button class="chat-chip" data-q="What airports do you serve?">Airports served?</button>
+        </div>
+
+        <!-- Messages -->
+        <div class="chat-messages" id="chatMessages" aria-live="polite" aria-label="Chat messages"></div>
+
+        <!-- Input bar (sticky to bottom) -->
+        <div class="chat-input-bar">
+          <button class="chat-mic" id="chatMicBtn" data-state="idle"
+            aria-label="Nhấn để nói" onclick="DLCVoice.toggleListen()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+          </button>
+          <input class="chat-input" type="text" id="chatInput"
+            placeholder="Hỏi về tour, giá cả, đặt chỗ..." autocomplete="off"
+            aria-label="Nhập câu hỏi">
+          <button class="chat-send" id="chatSend" aria-label="Gửi">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </div>
+
       </div>
     </section>
 
-<!-- Search Panel -->
-<section class="search-panel">
-  <div class="search-row">
-    <select id="serviceType" onchange="toggleServiceType(); updateEstimate();">
-      <option value="">Chọn dịch vụ...</option>
-      <option value="pickup">Đón sân bay</option>
-      <option value="dropoff">Đưa sân bay</option>
-      <option value="lasvegas">Tour Las Vegas</option>
-      <option value="yosemite">Tour Yosemite</option>
-      <option value="sanfrancisco">Tour San Francisco</option>
-    </select>
-    <div id="airportField">
-      <select id="airport" name="airport" onchange="updateEstimate()">
-        <option value="">Chọn sân bay...</option>
-        <option value="John Wayne Airport, Orange County, CA">Sân bay John Wayne (SNA)</option>
-        <option value="Long Beach Airport, Long Beach, CA">Sân bay Long Beach (LGB)</option>
-        <option value="LAX Airport, Los Angeles, CA">Sân bay LAX</option>
-        <option value="Ontario Airport, Ontario, CA">Sân bay Ontario (ONT)</option>
-        <option value="Burbank Airport, Burbank, CA">Sân bay Burbank (BUR)</option>
-        <option value="San Diego Airport, San Diego, CA">Sân bay San Diego (SAN)</option>
-      </select>
+  </main>
+
+  <!-- ════════════════════════════════════════════════
+       BOTTOM NAVIGATION
+  ════════════════════════════════════════════════ -->
+  <nav class="bottom-nav" role="tablist" aria-label="Main navigation">
+
+    <button class="nav-tab nav-tab--active" id="tabHome"
+      data-screen="screenHome" role="tab" aria-selected="true" aria-controls="screenHome" onclick="switchScreen('screenHome')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <span>Trang chủ</span>
+    </button>
+
+    <button class="nav-tab" id="tabDest"
+      data-screen="screenDest" role="tab" aria-selected="false" aria-controls="screenDest" onclick="switchScreen('screenDest')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+      </svg>
+      <span>Điểm đến</span>
+    </button>
+
+    <button class="nav-tab nav-tab--center" id="tabBook"
+      data-screen="screenBook" role="tab" aria-selected="false" aria-controls="screenBook" onclick="switchScreen('screenBook')">
+      <div class="nav-center-btn" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </div>
+      <span>Đặt chỗ</span>
+    </button>
+
+    <button class="nav-tab" id="tabChat"
+      data-screen="screenChat" role="tab" aria-selected="false" aria-controls="screenChat" onclick="switchScreen('screenChat')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+      </svg>
+      <span>Hỏi AI</span>
+    </button>
+
+  </nav>
+
+  <!-- ════════════════════════════════════════════════
+       DESTINATION VIDEO MODAL
+  ════════════════════════════════════════════════ -->
+  <div id="destModal" class="dest-modal" hidden role="dialog" aria-modal="true" aria-label="Điểm đến">
+
+    <!-- Video player area -->
+    <div class="dest-modal__video-wrap">
+      <img class="dest-modal__poster" id="destPoster" src="" alt="" aria-hidden="true">
+      <!-- iframe injected here by loadDestVideo() -->
+      <div class="dest-modal__vid-grad" aria-hidden="true"></div>
+
+      <!-- Back button -->
+      <button class="dest-modal__back" id="destModalClose" onclick="closeDestination()" aria-label="Quay lại">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </button>
+
+      <!-- Sound toggle — shown only once video starts playing -->
+      <button class="dest-modal__sound" id="destSoundBtn" onclick="toggleDestSound()" aria-label="Bật âm thanh" style="display:none">
+        <!-- Icon injected by JS -->
+      </button>
     </div>
-    <input id="passengers" type="number" min="1" max="12" placeholder="Số khách" onchange="updateEstimate()" required>
-    <input id="datetime" type="text" placeholder="Chọn ngày và giờ" readonly>
-    <input id="address" type="text" placeholder="Nhập địa chỉ hoặc sân bay" onchange="updateEstimate()">
+
+    <!-- Scrollable content sheet -->
+    <div class="dest-modal__sheet" id="destSheet">
+      <!-- Populated by openDestination() -->
+    </div>
+
   </div>
-  <div class="search-row">
-    <div id="lodgingField">
-      <select id="lodging" name="lodging" onchange="updateEstimate()">
-        <option value="">Tự lo chỗ ở</option>
-        <option value="hotel">Khách sạn</option>
-        <option value="airbnb">Airbnb</option>
-      </select>
-    </div>
-    <input id="days" type="number" min="1" max="7" placeholder="Số ngày (Tour only)" onchange="updateEstimate()" required>
-    <div class="button-wrapper">
-      <button type="button" onclick="updateEstimate()">Tính Giá</button>
+
+  <!-- ════════════════════════════════════════════════
+       HIGHLIGHT DETAIL SHEET
+  ════════════════════════════════════════════════ -->
+  <div id="hlSheet" class="hl-sheet" hidden role="dialog" aria-modal="true" aria-label="Chi tiết điểm tham quan">
+    <div class="hl-sheet__backdrop" onclick="closeHighlight()"></div>
+    <div class="hl-sheet__card">
+      <div class="hl-sheet__drag" aria-hidden="true"></div>
+      <button class="hl-sheet__close" onclick="closeHighlight()" aria-label="Đóng">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <div class="hl-sheet__body" id="hlSheetBody"></div>
     </div>
   </div>
 
-  <div class="flex-row">
-    <div class="half-width">
-      <label for="estimateDisplay">Chi phí ước tính</label>
-      <input type="text" id="estimateDisplay" class="estimate-display" readonly value="$0" />
-    </div>
-    <div class="half-width">
-      <label for="vehicleDisplay">Xe</label>
-      <input type="text" id="vehicleDisplay" class="estimate-display" readonly value="" />
-    </div>
-  </div>
-</section>
-    
-    <!-- Booking Form -->
-    <form id="bookingForm" method="POST" action="https://formspree.io/f/xeokgbpo" onsubmit="return submitBooking(event)">
-      <label for="name">Tên của bạn</label>
-      <input type="text" id="name" name="name" required>
+</div><!-- #app -->
 
-      <label for="phone">Số điện thoại</label>
-      <input type="tel" id="phone" name="phone" required>
-
-      <input type="hidden" name="message" id="bookingSummary" />
-      <div id="slotWarning"></div>
-      <button type="submit">Gửi yêu cầu</button>
-    </form>
-
-    <div id="map"></div>
-  </div>
+<!-- Data + modules (load before script.js) -->
+<script src="destinations.js"></script>
+<script src="pricing.js"></script>
+<script src="voice.js"></script>
+<script src="chat.js"></script>
+<script src="script.js" defer></script>
 </body>
 </html>

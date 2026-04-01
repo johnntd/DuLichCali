@@ -1,322 +1,915 @@
-// --- Firebase Initialization ---
+// ── Firebase Initialization ──────────────────────────────────
 const firebaseConfig = {
-  apiKey: "AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ",
-  authDomain: "dulichcali-booking-calendar.firebaseapp.com",
-  projectId: "dulichcali-booking-calendar",
-  storageBucket: "dulichcali-booking-calendar.appspot.com",
-  messagingSenderId: "623460884698",
-  appId: "1:623460884698:web:a08bd435c453a7b4db05e3"
+  apiKey:            'AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ',
+  authDomain:        'dulichcali-booking-calendar.firebaseapp.com',
+  projectId:         'dulichcali-booking-calendar',
+  storageBucket:     'dulichcali-booking-calendar.appspot.com',
+  messagingSenderId: '623460884698',
+  appId:             '1:623460884698:web:a08bd435c453a7b4db05e3'
 };
 firebase.initializeApp(firebaseConfig);
 firebase.auth().signInAnonymously().catch(console.error);
 const db = firebase.firestore();
 
-// --- Global variables ---
+// ── Global state ─────────────────────────────────────────────
 let lastCalculatedMiles = 0;
-let gapiInited = false;
+let currentStep         = 1;
+let currentService      = '';
+let gapiInited          = false;
 let tokenClient;
 
-function safeInitGoogleAPI() {
-  if (typeof gapi !== "undefined") {
-    initGoogleAPI();
-  } else {
-    setTimeout(safeInitGoogleAPI, 100);
+// ── Booking ID & Tracking Token ──────────────────────────────
+function generateBookingId() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let id = 'DLC-';
+  const arr = new Uint8Array(6);
+  crypto.getRandomValues(arr);
+  for (const b of arr) id += chars[b % chars.length];
+  return id;
+}
+
+function generateTrackingToken() {
+  const arr = new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Helper: backward-compat datetime from doc
+function getBookingDatetime(doc) {
+  return doc.data().datetime || doc.id;
+}
+
+// ── SPA Navigation ───────────────────────────────────────────
+function switchScreen(screenId) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.toggle('screen--active', s.id === screenId);
+  });
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    const active = tab.dataset.screen === screenId;
+    tab.classList.toggle('nav-tab--active', active);
+    tab.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  // Scroll active screen to top
+  const el = document.getElementById(screenId);
+  if (el) el.scrollTop = 0;
+}
+
+// ── Destination Cards (Home screen, horizontal scroll) ────────
+function renderDestCards() {
+  const container = document.getElementById('destCards');
+  if (!container || typeof DESTINATIONS === 'undefined') return;
+
+  container.innerHTML = DESTINATIONS.map(d => {
+    const cost = d.cost.transport;
+    return `
+      <div class="dest-card" role="listitem" onclick="openDestination('${d.id}')" aria-label="${d.name.vi}">
+        <div class="dest-card__img">
+          <img src="${d.image}" alt="${d.name.vi}" loading="lazy">
+          <div class="dest-card__gradient"></div>
+        </div>
+        <div class="dest-card__body">
+          <div class="dest-card__tag">${d.state}</div>
+          <div class="dest-card__name">${d.name.vi}</div>
+          <div class="dest-card__range">
+            Từ <strong>$${cost.min}</strong> · ${d.duration.min}–${d.duration.max} ngày
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── Full Destination List (Destinations screen) ───────────────
+function renderDestList() {
+  const container = document.getElementById('destList');
+  if (!container || typeof DESTINATIONS === 'undefined') return;
+
+  container.innerHTML = DESTINATIONS.map(d => {
+    const cost = d.cost.transport;
+    const highlights = d.highlights.slice(0, 3);
+    return `
+      <div class="dest-full-card" onclick="openDestination('${d.id}')">
+        <div class="dest-full-card__hero">
+          <img src="${d.image}" alt="${d.name.vi}" loading="lazy">
+          <div class="dest-full-card__hero-overlay"></div>
+          <div class="dest-full-card__tagline">
+            <div class="dest-full-card__state">${d.state}</div>
+            <div class="dest-full-card__name">${d.name.vi}</div>
+          </div>
+        </div>
+        <div class="dest-full-card__body">
+          <p class="dest-full-card__summary">${d.summary.vi}</p>
+          <div class="dest-full-card__highlights">
+            ${highlights.map(h => `<div class="dest-full-card__hl">${h.name} — ${h.vi}</div>`).join('')}
+          </div>
+          <div class="dest-full-card__footer">
+            <span class="dest-full-card__price">
+              Từ $${cost.min} – $${cost.max}
+            </span>
+            <button class="btn btn--gold" style="height:38px;font-size:.75rem;padding:0 1rem">
+              Đặt tour
+            </button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── Airport Chips ─────────────────────────────────────────────
+function renderAirportChips() {
+  const container = document.getElementById('airportChips');
+  if (!container || typeof AIRPORTS === 'undefined') return;
+
+  container.innerHTML = AIRPORTS.map(a => `
+    <div class="airport-chip">
+      <span class="airport-chip__code">${a.code}</span>
+      <span class="airport-chip__name">${a.label.split(' — ')[0]}</span>
+    </div>`).join('');
+}
+
+// ── Airport Select Options ────────────────────────────────────
+function populateAirportSelect() {
+  const sel = document.getElementById('airport');
+  if (!sel || typeof AIRPORTS === 'undefined') return;
+  sel.innerHTML = '<option value="">Chọn sân bay...</option>' +
+    AIRPORTS.map(a => `<option value="${a.value}">${a.label}</option>`).join('');
+}
+
+// ── Quick Estimate (Home screen) ──────────────────────────────
+function renderQuickEstimate() {
+  const key = document.getElementById('quickService')?.value;
+  const out  = document.getElementById('quickEstResult');
+  if (!out) return;
+  if (!key || typeof QUICK_ESTIMATES === 'undefined') { out.innerHTML = ''; return; }
+  const est = QUICK_ESTIMATES[key];
+  if (!est) { out.innerHTML = ''; return; }
+  out.innerHTML = `
+    <div class="est-range">${est.range}</div>
+    <div class="est-detail">${est.detail}</div>`;
+}
+
+// ── Gas Price (EIA API with sessionStorage cache) ─────────────
+async function fetchGasPrice() {
+  const CACHE_KEY = 'dlc_gas_price';
+  const CACHE_TTL = 6 * 3600 * 1000; // 6 hours
+
+  const cached = sessionStorage.getItem(CACHE_KEY);
+  if (cached) {
+    const { price, ts } = JSON.parse(cached);
+    if (Date.now() - ts < CACHE_TTL) { applyGasPrice(price); return; }
+  }
+
+  try {
+    // EIA series: California regular unleaded average (weekly)
+    const url =
+      'https://api.eia.gov/v2/petroleum/pri/gnd/data/' +
+      '?api_key=DEMO_KEY' +
+      '&frequency=weekly' +
+      '&data[0]=value' +
+      '&facets[series][]=EMM_EPMR_PTE_SCA_DPG' +
+      '&sort[0][column]=period&sort[0][direction]=desc&length=1';
+    const res  = await fetch(url);
+    const json = await res.json();
+    const price = parseFloat(json?.response?.data?.[0]?.value);
+    if (!isNaN(price) && price > 0) {
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify({ price, ts: Date.now() }));
+      applyGasPrice(price);
+    }
+  } catch {
+    // EIA unavailable — static fallback already set by default
   }
 }
 
-// --- Google Calendar API Setup ---
+function applyGasPrice(price) {
+  // Update global used by updateEstimate()
+  window._gasCaliPrice = price;
+  const badge = document.getElementById('gasPriceBadge');
+  if (badge) {
+    badge.textContent = `⛽ Giá xăng CA hiện tại: ~$${price.toFixed(2)}/gal (EIA)`;
+  }
+  const gasRow = document.getElementById('gasRow');
+  const gasEl  = document.getElementById('gasPriceDisplay');
+  if (gasRow && gasEl) {
+    gasRow.style.display = '';
+    gasEl.textContent = `$${price.toFixed(2)}/gal`;
+  }
+}
+
+// ── Wizard Step Navigation ────────────────────────────────────
+function goStep(n) {
+  currentStep = n;
+  const total = 5;
+
+  // Show/hide step panels
+  for (let i = 1; i <= total; i++) {
+    const el = document.getElementById(`wStep${i}`);
+    if (el) el.style.display = i === n ? '' : 'none';
+  }
+
+  // Progress bar
+  const bar = document.getElementById('wizBar');
+  if (bar) bar.style.setProperty('--wiz-pct', `${(n / total) * 100}%`);
+
+  // Step dots
+  const dotsEl = document.getElementById('wizStepDots');
+  if (dotsEl) {
+    dotsEl.innerHTML = Array.from({ length: total }, (_, i) => {
+      const idx = i + 1;
+      let cls = 'wiz-dot';
+      if (idx < n) cls += ' wiz-dot--done';
+      if (idx === n) cls += ' wiz-dot--active';
+      return `<div class="${cls}" aria-label="Bước ${idx}"></div>`;
+    }).join('');
+  }
+
+  // Update aria-valuenow
+  const prog = document.getElementById('wizProgress');
+  if (prog) prog.setAttribute('aria-valuenow', n);
+
+  // When navigating to step 4, recalculate estimate
+  if (n === 4) updateEstimate();
+
+  // Scroll step into view
+  const stepEl = document.getElementById(`wStep${n}`);
+  if (stepEl) stepEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── Service Selection ─────────────────────────────────────────
+function selectService(svc) {
+  currentService = svc;
+  document.getElementById('serviceType').value = svc;
+
+  // Highlight chosen button (works for both .svc-choice and .tour-choice)
+  document.querySelectorAll('[data-svc]').forEach(btn => {
+    btn.classList.toggle('svc-choice--active', btn.dataset.svc === svc);
+  });
+
+  const isTransfer = svc === 'pickup' || svc === 'dropoff';
+
+  // Step 2: show/hide airport vs lodging
+  const airportWrap = document.getElementById('wAirportWrap');
+  const lodgingWrap = document.getElementById('wLodgingWrap');
+  const daysWrap    = document.getElementById('wDaysWrap');
+  const step2Sub    = document.getElementById('wStep2Sub');
+
+  if (airportWrap) airportWrap.style.display = '';   // always show address
+  if (lodgingWrap) lodgingWrap.style.display = isTransfer ? 'none' : '';
+  if (daysWrap)    daysWrap.style.display    = isTransfer ? 'none' : '';
+
+  if (step2Sub) {
+    step2Sub.textContent = isTransfer
+      ? 'Chọn sân bay và địa chỉ của bạn'
+      : 'Nhập địa chỉ xuất phát / điểm đón của bạn';
+  }
+
+  goStep(2);
+}
+
+function selectServiceAndBook(svc) {
+  switchScreen('screenBook');
+  // Slight delay so screen transition completes first
+  setTimeout(() => selectService(svc), 60);
+}
+
+// ── Estimate Calculator ───────────────────────────────────────
+// Math delegated to DLCPricing (pricing.js) — single source of truth.
+const CALIFORNIA_AVG_FUEL_PRICE = 5.00; // kept as fallback constant
+
+function updateEstimate() {
+  const passengers  = +document.getElementById('passengers')?.value || 1;
+  const serviceType = document.getElementById('serviceType')?.value || currentService;
+  const airport     = document.getElementById('airport')?.value || '';
+  const address     = document.getElementById('address')?.value || '';
+  const lodging     = document.getElementById('lodging')?.value || '';
+  const days        = +document.getElementById('days')?.value || 1;
+
+  const estEl  = document.getElementById('estimateDisplay');
+  const vehEl  = document.getElementById('vehicleDisplay');
+  if (!estEl || !vehEl) return;
+
+  let origin, destination;
+  if (['pickup', 'dropoff'].includes(serviceType)) {
+    origin      = serviceType === 'pickup' ? airport : address;
+    destination = serviceType === 'pickup' ? address : airport;
+  } else {
+    const dest = typeof DESTINATIONS !== 'undefined'
+      ? DESTINATIONS.find(d => d.id === serviceType)
+      : null;
+    origin      = dest ? dest.origin_for_tour : getTourOrigin(serviceType);
+    destination = address;
+  }
+
+  if (!origin || !destination) {
+    estEl.textContent = '—';
+    vehEl.textContent = '—';
+    return;
+  }
+
+  if (typeof google === 'undefined') return;
+
+  new google.maps.DistanceMatrixService().getDistanceMatrix(
+    { origins: [origin], destinations: [destination], travelMode: google.maps.TravelMode.DRIVING },
+    (resp, status) => {
+      if (status !== 'OK') { estEl.textContent = '$0'; return; }
+      const element = resp.rows[0]?.elements[0];
+      if (!element || element.status !== 'OK') { estEl.textContent = '$0'; return; }
+
+      const miles = element.distance.value / 1609.34;
+      lastCalculatedMiles = miles;
+
+      // Delegate math to shared pricing engine
+      const pricing = window.DLCPricing;
+      let cost, vehicle;
+      if (['pickup', 'dropoff'].includes(serviceType)) {
+        cost    = pricing ? pricing.transferCost(miles, passengers) : fallbackTransfer(miles, passengers);
+        vehicle = pricing ? pricing.getVehicle(passengers) : (passengers <= 3 ? 'Tesla Model Y' : 'Mercedes Van');
+      } else {
+        cost    = pricing ? pricing.tourCost(miles, passengers, days, lodging) : fallbackTour(miles, passengers, days, lodging);
+        vehicle = pricing ? pricing.getVehicle(passengers) : (passengers <= 3 ? 'Tesla Model Y' : 'Mercedes Van');
+      }
+
+      estEl.textContent = `$${Math.round(cost)}`;
+      vehEl.textContent = vehicle;
+
+      // Update lodging info card
+      const lodgingCard = document.getElementById('lodgingInfoCard');
+      if (lodgingCard) {
+        if (lodging === 'hotel') {
+          lodgingCard.style.display = '';
+          lodgingCard.textContent =
+            `Ước tính khách sạn ~$150/đêm/phòng × ${days} đêm. ` +
+            `Giá thực tế tùy vị trí và mùa — chúng tôi sẽ tư vấn cụ thể sau khi nhận đặt chỗ.`;
+        } else if (lodging === 'airbnb') {
+          lodgingCard.style.display = '';
+          lodgingCard.textContent =
+            `Ước tính Airbnb ~$165/đêm (không có API chính thức — giá thực tế có thể khác đáng kể). ` +
+            `Chúng tôi sẽ giúp tìm kiếm và tư vấn sau khi nhận đặt chỗ.`;
+        } else {
+          lodgingCard.style.display = 'none';
+        }
+      }
+    }
+  );
+}
+
+function getTourOrigin(serviceType) {
+  if (typeof DESTINATIONS !== 'undefined') {
+    const dest = DESTINATIONS.find(d => d.id === serviceType);
+    if (dest) return dest.origin_for_tour || '';
+  }
+  return '';
+}
+
+// Inline fallbacks (used only if pricing.js fails to load)
+function fallbackTransfer(miles, passengers) {
+  const fee = miles > 300 ? 400 : 0;
+  const sur = miles > 300 && passengers > 3 ? 75 : 0;
+  let c = Math.max(100, 100 + miles * 0.22) + fee + sur;
+  if (miles > 100) c += miles * 0.18;
+  return Math.round(c + 5);
+}
+function fallbackTour(miles, passengers, days, lodging) {
+  const gas = window._gasCaliPrice || CALIFORNIA_AVG_FUEL_PRICE;
+  const rt  = miles * 2;
+  let lodge = 0;
+  if (lodging === 'hotel')  lodge = (passengers > 8 ? 3 : passengers > 4 ? 2 : 1) * 150 * days;
+  if (lodging === 'airbnb') lodge = Math.ceil(passengers / 8) * 165 * days;
+  const wear = !lodging ? (passengers > 8 ? 150 : passengers > 4 ? 100 : 50) * days : 0;
+  return Math.round(Math.max((180 + rt * (gas / 14)) * days + lodge + 50 * days + wear, 300 * days));
+}
+
+// ── Booking Submission ────────────────────────────────────────
+async function submitBooking(event) {
+  event.preventDefault();
+  const form      = document.getElementById('bookingForm');
+  const submitBtn = document.getElementById('submitBtn');
+
+  if (submitBtn.disabled) return false;
+  submitBtn.disabled = true;
+  const origText = submitBtn.textContent;
+  submitBtn.textContent = 'Đang gửi...';
+
+  const datetime = document.getElementById('datetime').value;
+  if (!datetime) {
+    document.getElementById('slotWarning').textContent = 'Vui lòng chọn ngày và giờ.';
+    submitBtn.disabled = false;
+    submitBtn.textContent = origText;
+    return false;
+  }
+  const selectedTime = new Date(datetime);
+
+  // Conflict check
+  try {
+    const snapshot = await db.collection('bookings').get();
+    for (const doc of snapshot.docs) {
+      const datetimeStr = getBookingDatetime(doc);
+      const bookedTime  = new Date(datetimeStr);
+      if (isNaN(bookedTime.getTime())) continue;
+      const distance      = doc.data().distance || 10;
+      const bufferMinutes = Math.ceil(distance * 2) + 15;
+      const diff          = Math.abs((selectedTime - bookedTime) / 60000);
+      if (diff < bufferMinutes) {
+        document.getElementById('slotWarning').textContent =
+          `Khung giờ xung đột với lịch ${bookedTime.toLocaleTimeString()} (cần cách ${bufferMinutes} phút).`;
+        submitBtn.disabled = false;
+        submitBtn.textContent = origText;
+        return false;
+      }
+    }
+  } catch (err) {
+    console.warn('Conflict check failed (non-critical):', err);
+  }
+
+  document.getElementById('slotWarning').textContent = '';
+
+  const bookingId     = generateBookingId();
+  const trackingToken = generateTrackingToken();
+
+  const name       = document.getElementById('name').value.trim();
+  const phone      = document.getElementById('phone').value.trim();
+  const airport    = document.getElementById('airport')?.value || '';
+  const address    = document.getElementById('address').value.trim();
+  const lodging    = document.getElementById('lodging')?.value || '';
+  const passengers = document.getElementById('passengers').value;
+  const days       = document.getElementById('days').value;
+  const serviceType = currentService || document.getElementById('serviceType').value;
+
+  const timeStr = selectedTime.toLocaleString('vi-VN', {
+    hour: '2-digit', minute: '2-digit', hour12: true,
+    day: '2-digit', month: '2-digit', year: 'numeric'
+  });
+
+  const summary = [
+    `Mã đặt chỗ: ${bookingId}`,
+    `Khách hàng: ${name}`,
+    `Số điện thoại: ${phone}`,
+    `Dịch vụ: ${serviceType}`,
+    airport ? `Sân bay: ${airport}` : '',
+    `Địa chỉ: ${address}`,
+    `Số khách: ${passengers}`,
+    !['pickup','dropoff'].includes(serviceType) ? `Số ngày: ${days}` : '',
+    lodging ? `Chỗ ở: ${lodging}` : '',
+    `Thời gian: ${timeStr}`,
+  ].filter(Boolean).join('\n');
+
+  document.getElementById('bookingSummary').value = summary;
+
+  // Write to Firestore
+  try {
+    await db.collection('bookings').doc(bookingId).set({
+      bookingId,
+      trackingToken,
+      status:       'pending',
+      datetime,
+      name,
+      phone,
+      airport,
+      address,
+      serviceType,
+      lodging,
+      passengers:   parseInt(passengers) || 1,
+      days:         parseInt(days) || 1,
+      distance:     lastCalculatedMiles,
+      createdAt:    firebase.firestore.FieldValue.serverTimestamp(),
+      driver:       null,
+      vehicleLat:   null,
+      vehicleLng:   null,
+      vehicleHeading: null,
+      etaMinutes:   null
+    });
+  } catch (err) {
+    console.error('Firestore write failed:', err);
+  }
+
+  // Optional Google Calendar
+  if (gapiInited && tokenClient) {
+    tokenClient.callback = async (resp) => {
+      if (resp.error !== undefined) return;
+      try {
+        await gapi.client.calendar.events.insert({
+          calendarId: 'primary',
+          resource: {
+            summary:  `Dịch vụ: ${name} [${bookingId}]`,
+            location: airport || address,
+            description: summary,
+            start: { dateTime: selectedTime.toISOString(), timeZone: 'America/Los_Angeles' },
+            end:   { dateTime: new Date(selectedTime.getTime() + 3600000).toISOString(), timeZone: 'America/Los_Angeles' },
+          }
+        });
+      } catch (err) {
+        console.error('Calendar insert failed:', err);
+      }
+    };
+    tokenClient.requestAccessToken();
+  }
+
+  // POST to Formspree (fire & forget)
+  try {
+    const fd = new FormData(form);
+    fetch(form.action, { method: 'POST', body: fd, headers: { Accept: 'application/json' } });
+  } catch (err) {
+    console.warn('Formspree notification failed:', err);
+  }
+
+  // Redirect to thank-you with tracking params
+  const lang = new URLSearchParams(window.location.search).get('lang') || 'vi';
+  window.location.href =
+    `thankyou.html?id=${encodeURIComponent(bookingId)}&t=${encodeURIComponent(trackingToken)}&lang=${lang}`;
+  return false;
+}
+
+// ── Google Calendar API Setup ─────────────────────────────────
+function safeInitGoogleAPI() {
+  if (typeof gapi !== 'undefined') initGoogleAPI();
+  else setTimeout(safeInitGoogleAPI, 100);
+}
+
 function initGoogleAPI() {
   gapi.load('client', async () => {
     try {
       await gapi.client.init({
         apiKey: firebaseConfig.apiKey,
-        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"],
+        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
       });
       gapiInited = true;
-
       tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: '623460884698-0k6g2r4ltb3c0d9hs0odms2b5j2hsp67.apps.googleusercontent.com',
         scope: 'https://www.googleapis.com/auth/calendar.events',
         callback: (tokenResponse) => {
-          if (!tokenResponse || tokenResponse.error) {
-            console.error("Access token error", tokenResponse);
-          }
+          if (!tokenResponse || tokenResponse.error) console.error('Access token error', tokenResponse);
         }
       });
     } catch (err) {
-      console.error("Google API Init Failed:", err);
+      console.error('Google API Init Failed:', err);
     }
   });
 }
 
-// --- Booking Submission ---
-async function submitBooking(event) {
-  event.preventDefault();
-  const form = document.getElementById('bookingForm');
-  const datetime = document.getElementById('datetime').value;
-  const selectedTime = new Date(datetime);
-  const slotRef = db.collection('bookings').doc(datetime);
+window.gapiLoaded = () => initGoogleAPI();
 
-  const snapshot = await db.collection('bookings').get();
-  for (const doc of snapshot.docs) {
-    const bookedTime = new Date(doc.id);
-    const distance = doc.data().distance || 10;
-    const bufferMinutes = Math.ceil(distance * 2) + 15;
-    const diff = Math.abs((selectedTime - bookedTime) / 60000);
-    if (diff < bufferMinutes) {
-      document.getElementById('slotWarning').innerText =
-        `Khung giờ xung đột với lịch ${bookedTime.toLocaleTimeString()} (cần cách ${bufferMinutes} phút).`;
-      return false;
+// ══════════════════════════════════════════════════════════════
+//  DESTINATION VIDEO MODAL — Direct iframe + postMessage
+// ══════════════════════════════════════════════════════════════
+
+const SVG_MUTED = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+  <line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
+</svg>`;
+
+const SVG_SOUND = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+</svg>`;
+
+let _destMuted       = true;
+let _ytMsgListener   = null;
+let _ytFallbackTimer = null;
+
+/**
+ * Creates a youtube-nocookie.com iframe with enablejsapi=1.
+ * Listens for postMessage state=PLAYING to fade poster out.
+ * Falls back to "Watch on YouTube" link after 5 seconds if video never plays.
+ */
+function loadDestVideo(videoId) {
+  const wrap = document.querySelector('.dest-modal__video-wrap');
+  if (!wrap) return;
+  _clearYtVideo();
+
+  const origin = window.location.origin || 'https://dulichcali21.com';
+  const iframe = document.createElement('iframe');
+  iframe.id  = 'destYtPlayer';
+  iframe.src =
+    `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}` +
+    `?autoplay=1&mute=1&controls=1&playsinline=1&rel=0&enablejsapi=1` +
+    `&origin=${encodeURIComponent(origin)}`;
+  iframe.setAttribute('frameborder', '0');
+  iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+  iframe.setAttribute('allowfullscreen', '');
+  iframe.style.opacity    = '0';
+  iframe.style.transition = 'opacity .6s ease';
+
+  // Insert before gradient so z-index stacking is predictable
+  const grad = wrap.querySelector('.dest-modal__vid-grad');
+  grad ? wrap.insertBefore(iframe, grad) : wrap.appendChild(iframe);
+
+  // postMessage listener — detect state 1 (PLAYING)
+  _ytMsgListener = (e) => {
+    if (e.origin !== 'https://www.youtube.com' &&
+        e.origin !== 'https://www.youtube-nocookie.com') return;
+    try {
+      const data = JSON.parse(e.data);
+      if (data.event === 'onStateChange' && data.info === 1) {
+        _onVideoPlaying();
+      }
+    } catch (_) {}
+  };
+  window.addEventListener('message', _ytMsgListener);
+
+  // 5-second safety fallback — add YouTube link if video never starts
+  _ytFallbackTimer = setTimeout(() => {
+    const el = document.getElementById('destYtPlayer');
+    if (el && parseFloat(el.style.opacity || 0) < 0.5) {
+      _showYtLink(videoId);
     }
+  }, 5000);
+}
+
+/** Called when postMessage confirms playback started */
+function _onVideoPlaying() {
+  if (_ytFallbackTimer) { clearTimeout(_ytFallbackTimer); _ytFallbackTimer = null; }
+  const poster = document.getElementById('destPoster');
+  if (poster) poster.classList.add('dest-modal__poster--hidden');
+  const iframe = document.getElementById('destYtPlayer');
+  if (iframe) iframe.style.opacity = '1';
+  const soundBtn = document.getElementById('destSoundBtn');
+  if (soundBtn) { soundBtn.style.display = ''; soundBtn.innerHTML = SVG_MUTED; }
+  _destMuted = true;
+}
+
+/** Show "Watch on YouTube" link over the poster when video can't embed */
+function _showYtLink(videoId) {
+  const wrap = document.querySelector('.dest-modal__video-wrap');
+  if (!wrap || wrap.querySelector('.dest-modal__yt-link')) return;
+  const link = document.createElement('a');
+  link.className = 'dest-modal__yt-link';
+  link.href      = `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
+  link.target    = '_blank';
+  link.rel       = 'noopener noreferrer';
+  link.innerHTML =
+    `<svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+      <path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.54 3.5 12 3.5 12 3.5s-7.54 0-9.38.55A3.02 3.02 0 0 0 .5 6.19C0 8.04 0 12 0 12s0 3.96.5 5.81a3.02 3.02 0 0 0 2.12 2.14C4.46 20.5 12 20.5 12 20.5s7.54 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14C24 15.96 24 12 24 12s0-3.96-.5-5.81z"/>
+      <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="white"/>
+    </svg><span>Xem trên YouTube</span>`;
+  wrap.appendChild(link);
+}
+
+/** Remove iframe + listener + timer cleanly */
+function _clearYtVideo() {
+  if (_ytFallbackTimer) { clearTimeout(_ytFallbackTimer); _ytFallbackTimer = null; }
+  if (_ytMsgListener)   { window.removeEventListener('message', _ytMsgListener); _ytMsgListener = null; }
+  const wrap = document.querySelector('.dest-modal__video-wrap');
+  if (wrap) wrap.querySelectorAll('iframe, .dest-modal__yt-link').forEach(el => el.remove());
+}
+
+function openDestination(destId) {
+  const dest = typeof getDestination === 'function' ? getDestination(destId) : null;
+  if (!dest) return;
+
+  const modal = document.getElementById('destModal');
+  if (!modal) return;
+
+  // Set poster — Ken Burns animation always-on via CSS
+  const poster = document.getElementById('destPoster');
+  if (poster) {
+    poster.src = dest.image || '';
+    poster.alt = dest.name.vi;
+    poster.classList.remove('dest-modal__poster--hidden');
   }
 
-  const name = document.getElementById('name').value;
-  const phone = document.getElementById('phone').value;
-  const airport = document.getElementById('airport')?.value || '';
-  const address = document.getElementById('address').value;
-  const serviceType = document.getElementById('serviceType').value;
-  const lodging = document.getElementById('lodging')?.value || '';
-  const passengers = document.getElementById('passengers').value;
-  const days = document.getElementById('days').value;
+  // Build info sheet
+  const sheet = document.getElementById('destSheet');
+  if (sheet) sheet.innerHTML = buildDestSheet(dest);
 
-  const summary = `Khách hàng: ${name}\nDịch vụ: ${serviceType}\nSân bay/Điểm đến: ${airport || address}\nĐịa chỉ: ${address}\nLoại chỗ ở: ${lodging}\nSố khách: ${passengers}\nSố ngày: ${days}\nSố điện thoại: ${phone}\nThời gian: ${selectedTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
-  document.getElementById('bookingSummary').value = summary;
+  // Sound button hidden until video actually plays
+  const soundBtn = document.getElementById('destSoundBtn');
+  if (soundBtn) { soundBtn.style.display = 'none'; soundBtn.innerHTML = SVG_MUTED; }
 
-  await slotRef.set({
-    booked: true,
-    distance: lastCalculatedMiles,
-    name,
-    phone,
-    airport,
-    address,
-    serviceType,
-    lodging,
-    passengers,
-    days
+  // Show modal
+  modal.hidden = false;
+  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => modal.classList.add('dest-modal--open'));
   });
 
-  if (gapiInited && tokenClient) {
-    tokenClient.callback = async (resp) => {
-      if (resp.error !== undefined) {
-        console.error('Auth failed:', resp);
-        return;
-      }
-
-      const event = {
-        summary: `Dịch vụ: ${name}`,
-        location: airport || address,
-        description: summary,
-        start: {
-          dateTime: selectedTime.toISOString(),
-          timeZone: 'America/Los_Angeles',
-        },
-        end: {
-          dateTime: new Date(selectedTime.getTime() + 60 * 60 * 1000).toISOString(),
-          timeZone: 'America/Los_Angeles',
-        },
-      };
-
-      try {
-        await gapi.client.calendar.events.insert({
-          calendarId: 'primary',
-          resource: event
-        });
-        console.log('Event added to Google Calendar');
-      } catch (err) {
-        console.error('Failed to add to calendar:', err);
-      }
-    };
-
-    tokenClient.requestAccessToken();
-  }
-
-  form.removeEventListener('submit', submitBooking);
-  form.submit();
+  // Load video in background (poster remains visible until confirmed playing)
+  if (dest.youtubeId) loadDestVideo(dest.youtubeId);
 }
 
-// --- Estimate Update ---
-const CALIFORNIA_AVG_FUEL_PRICE = 5.00;
-const VAN_MPG = 14;
+// ── Highlight Detail Sheet ────────────────────────────────────
+/**
+ * Opens a bottom-sheet with detailed info about a specific highlight.
+ * @param {string} destId - destination id from DESTINATIONS array
+ * @param {number} hlIdx  - index into dest.highlights[]
+ */
+function openHighlight(destId, hlIdx) {
+  const dest = typeof getDestination === 'function' ? getDestination(destId) : (DESTINATIONS || []).find(d => d.id === destId);
+  if (!dest) return;
+  const h = dest.highlights[hlIdx];
+  if (!h) return;
 
-// script.js
-function updateEstimate() {
-  let lastCalculatedMiles = 0;
+  const body = document.getElementById('hlSheetBody');
+  if (!body) return;
 
-  const passengers = +document.getElementById('passengers').value || 1;
-  const serviceType = document.getElementById('serviceType').value;
-  const airport = document.getElementById('airport')?.value || '';
-  const address = document.getElementById('address').value || '';
-  const lodging = document.getElementById('lodging')?.value || '';
-  const days = +document.getElementById('days')?.value || 1;
+  const bestTimeBadge = h.bestTime
+    ? `<div class="hl-info-row"><div class="hl-info-row__label">Thời điểm tốt nhất</div><div class="hl-info-row__badge">${h.bestTime}</div></div>`
+    : '';
+  const whySection = h.whyPopular
+    ? `<div class="hl-section"><div class="hl-section__label">Tại sao nổi tiếng</div><p class="hl-section__text">${h.whyPopular}</p></div>`
+    : '';
+  const notesSection = h.travelNotes
+    ? `<div class="hl-section"><div class="hl-section__label">Ghi chú du lịch</div><p class="hl-section__text">${h.travelNotes}</p></div>`
+    : '';
 
-  let origin, destination;
-  if (['pickup', 'dropoff'].includes(serviceType)) {
-    origin = (serviceType === 'pickup') ? airport : address;
-    destination = (serviceType === 'pickup') ? address : airport;
-  } else { // Tour services
-    origin = getTourOrigin(serviceType); // Use service-specific origin
-    destination = address; // Address as destination for tours
-  }
+  body.innerHTML = `
+    <div class="hl-eyebrow">${dest.name.vi}</div>
+    <h3 class="hl-title">${h.name}</h3>
+    <p class="hl-desc">${h.vi}</p>
+    ${bestTimeBadge}
+    ${whySection}
+    ${notesSection}
+    <div class="hl-ctas">
+      <button class="btn btn--gold" style="flex:1;height:46px;font-size:.85rem"
+        onclick="closeHighlight(); selectServiceAndBook('${destId}')">Đặt tour</button>
+      <button class="btn btn--outline" style="flex:1;height:46px;font-size:.85rem"
+        onclick="closeHighlight(); switchScreen('screenChat')">Hỏi AI</button>
+    </div>`;
 
-  if (!origin || !destination) {
-    document.getElementById('estimateDisplay').value = '$0';
-    document.getElementById('vehicleDisplay').value = '';
-    return;
-  }
-
-  new google.maps.DistanceMatrixService().getDistanceMatrix(
-    {
-      origins: [origin],
-      destinations: [destination],
-      travelMode: google.maps.TravelMode.DRIVING
-    },
-    (resp, status) => {
-      if (status !== 'OK') {
-        console.error('DistanceMatrix error:', status);
-        document.getElementById('estimateDisplay').value = '$0';
-        return;
-      }
-
-      const element = resp.rows[0].elements[0];
-      if (!element || element.status !== 'OK') {
-        document.getElementById('estimateDisplay').value = '$0';
-        return;
-      }
-
-      const miles = element.distance.value / 1609.34;
-      lastCalculatedMiles = miles;
-
-      const fuelPerMile = CALIFORNIA_AVG_FUEL_PRICE / VAN_MPG; // e.g., $4.50 / 15 = $0.30/mile
-      const multiplier = 1; // Base multiplier, return trip handled separately
-      let cost = 0;
-      let vehicle = '';
-
-      if (['pickup', 'dropoff'].includes(serviceType)) {
-        const baseFee = 100;
-        const serviceFee = miles > 300 ? 400 : 0; // Adjusted to hit $700 target
-        const extraPassengerFee = 0;//passengers > 3 ? (passengers - 3) * 30 : 0; // $30 per extra passenger
-        const longTripSurcharge = miles > 300 ? 75 : 0; // Surcharge for long trips
-
-        if (passengers <= 3) {
-          cost = Math.max(100, baseFee + (miles * 0.22 * multiplier)) + serviceFee;
-          vehicle = 'Tesla Model Y';
-        } else {
-          cost = Math.max(100, baseFee + (miles * 0.22 * multiplier)) + serviceFee + extraPassengerFee + longTripSurcharge;
-          vehicle = 'Mercedes Van';
-        }
-
-        // Apply return trip cost for >100 miles
-        if (miles > 100) {
-          cost += (miles * 0.18); // Add return trip cost
-        }
-
-        // Fine-tune to $700 for 350 miles, 4 passengers
-        cost += 5; // Adjust to exactly $700
-      } else {
-        // Tour pricing (round trip)
-        const roundtripMiles = miles * 2;
-        let lodgingCost = 0;
-
-        if (lodging === 'hotel') {
-          const roomsNeeded = passengers > 8 ? 3 : passengers > 4 ? 2 : 1;
-          lodgingCost = roomsNeeded * 150 * days;
-        } else if (lodging === 'airbnb') {
-          const unitsNeeded = Math.ceil(passengers / 8);
-          lodgingCost = unitsNeeded * 165 * days;
-        }
-
-        const miscCost = 50 * days;
-        let wearCost = 0;
-        if (!lodging) {
-          wearCost = passengers > 8 ? 150 : passengers > 4 ? 100 : 50;
-        }
-
-        cost = (180 + (roundtripMiles * fuelPerMile * multiplier)) * days;
-        cost += lodgingCost + miscCost + wearCost * days;
-        cost = Math.max(cost, 300 * days);
-
-        vehicle = 'Mercedes Van';
-      }
-
-      document.getElementById('estimateDisplay').value = `$${Math.round(cost)}`;
-      document.getElementById('vehicleDisplay').value = vehicle;
-
-      console.log({
-        origin, destination, passengers, miles: miles.toFixed(2), serviceType, cost: Math.round(cost)
-      });
-    }
-  );
+  const sheet = document.getElementById('hlSheet');
+  sheet.hidden = false;
+  requestAnimationFrame(() => sheet.classList.add('hl-sheet--open'));
+  document.body.style.overflow = 'hidden';
 }
 
-// Helper function to get tour origin based on service type
-function getTourOrigin(serviceType) {
-  switch (serviceType) {
-    case 'lasvegas':
-      return 'Las Vegas, NV, USA';
-    case 'yosemite':
-      return 'Yosemite National Park, CA, USA';
-    case 'sanfrancisco':
-      return 'San Francisco, CA, USA';
-    default:
-      return ''; // Fallback, should not occur
-  }
+function closeHighlight() {
+  const sheet = document.getElementById('hlSheet');
+  if (!sheet) return;
+  sheet.classList.remove('hl-sheet--open');
+  document.body.style.overflow = '';
+  setTimeout(() => { sheet.hidden = true; }, 320);
 }
 
-function toggleServiceType() {
-  const type = document.getElementById('serviceType').value;
-  const airportField = document.getElementById('airportField');
-  const lodgingField = document.getElementById('lodgingField');
-  const lodgingSelect = document.getElementById('lodging');
-  const daysInput = document.getElementById('days');
+function closeDestination() {
+  const modal = document.getElementById('destModal');
+  if (!modal) return;
 
-  if (type === 'pickup' || type === 'dropoff') {
-    airportField.style.display = 'block';
-    lodgingField.style.display = 'none';
-    lodgingSelect.disabled = true;
-    daysInput.disabled = true;
+  modal.classList.remove('dest-modal--open');
+  document.body.style.overflow = '';
+
+  setTimeout(() => {
+    modal.hidden = true;
+    _clearYtVideo();
+    const poster = document.getElementById('destPoster');
+    if (poster) poster.classList.remove('dest-modal__poster--hidden');
+    const soundBtn = document.getElementById('destSoundBtn');
+    if (soundBtn) { soundBtn.style.display = 'none'; soundBtn.innerHTML = SVG_MUTED; }
+  }, 450);
+}
+
+function toggleDestSound() {
+  const iframe = document.getElementById('destYtPlayer');
+  if (!iframe || !iframe.contentWindow) return;
+  const btn = document.getElementById('destSoundBtn');
+  if (_destMuted) {
+    iframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+    iframe.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[85]}', '*');
+    _destMuted = false;
+    if (btn) btn.innerHTML = SVG_SOUND;
   } else {
-    airportField.style.display = 'none';
-    lodgingField.style.display = 'block';
-    lodgingSelect.disabled = false;
-    daysInput.disabled = false;
+    iframe.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
+    _destMuted = true;
+    if (btn) btn.innerHTML = SVG_MUTED;
   }
-
-  updateEstimate();
 }
 
-// --- Flatpickr Setup ---
+function buildDestSheet(dest) {
+  const cost       = dest.cost.transport;
+  const highlights = dest.highlights.slice(0, 4);
+  const tags       = (dest.highlightTags || []).slice(0, 5);
+
+  const tagsHtml = tags.map(t => `<span class="sheet-tag">${t}</span>`).join('');
+
+  const hlHtml = highlights.map((h, idx) => `
+    <button class="sheet-hl" onclick="openHighlight('${dest.id}', ${idx})" aria-label="Chi tiết: ${h.name}">
+      <div class="sheet-hl__dot"></div>
+      <div class="sheet-hl__content">
+        <div class="sheet-hl__name">${h.name}</div>
+        <div class="sheet-hl__desc">${h.vi}</div>
+      </div>
+      <div class="sheet-hl__arrow">›</div>
+    </button>`).join('');
+
+  return `
+    <div class="sheet-drag" aria-hidden="true"></div>
+    <div class="sheet-eyebrow">${dest.state}</div>
+    <h2 class="sheet-title">${dest.name.vi}</h2>
+    <p class="sheet-hook">${dest.hook || dest.summary.vi}</p>
+    ${tags.length ? `<div class="sheet-tags">${tagsHtml}</div>` : ''}
+    <div class="sheet-highlights">${hlHtml}</div>
+    <div class="sheet-price">
+      <span class="sheet-price__label">Xe khứ hồi</span>
+      <span class="sheet-price__range">$${cost.min}–$${cost.max}</span>
+      <span class="sheet-price__note">từ OC</span>
+    </div>
+    <div class="sheet-ctas">
+      <button class="btn btn--gold" style="height:48px;font-size:.88rem"
+        onclick="closeDestination(); selectServiceAndBook('${dest.id}')">
+        Đặt tour ngay
+      </button>
+      <div class="sheet-ctas__row">
+        <button class="btn btn--outline" style="height:42px;font-size:.78rem"
+          onclick="closeDestination(); switchScreen('screenChat')">
+          Hỏi AI tư vấn
+        </button>
+        <a href="tel:7142276007" class="btn btn--outline" style="height:42px;font-size:.78rem;text-decoration:none">
+          Gọi ngay
+        </a>
+      </div>
+    </div>
+    <p class="sheet-foot">Giá xe chưa bao gồm chỗ ở. Gọi để nhận báo giá trọn gói.</p>`;
+}
+
+// ── Tour Choice Grid (Booking Step 1) ────────────────────────
+/**
+ * Dynamically renders all 15 destinations as selectable tour cards.
+ * Called from DOMContentLoaded; runs every time DESTINATIONS changes.
+ */
+function renderTourChoiceGrid() {
+  const grid = document.getElementById('tourChoiceGrid');
+  if (!grid || typeof DESTINATIONS === 'undefined') return;
+  grid.innerHTML = DESTINATIONS.map(dest => {
+    const cost  = dest.cost.transport;
+    const dur   = dest.duration;
+    const sub   = dest.outOfState
+      ? `${dest.state} · từ $${cost.min}`
+      : `${dur.min}–${dur.max} ngày · từ $${cost.min}`;
+    return `<button class="tour-choice" data-svc="${dest.id}" onclick="selectService('${dest.id}')">
+      <div class="tour-choice__img" style="background-image:url('${dest.image}')"></div>
+      <div class="tour-choice__body">
+        <strong>${dest.name.vi}</strong>
+        <span>${sub}</span>
+      </div>
+    </button>`;
+  }).join('');
+}
+
+// ── DOMContentLoaded ─────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  const today = new Date();
-  flatpickr("#datetime", {
+
+  // Render data-driven UI
+  renderDestCards();
+  renderDestList();
+  renderTourChoiceGrid();
+  renderAirportChips();
+  populateAirportSelect();
+
+  // Gas price (async, non-blocking)
+  fetchGasPrice();
+
+  // Flatpickr
+  flatpickr('#datetime', {
     enableTime: true,
-    time_24hr: false,
-    dateFormat: "Y-m-d H:i",
-    minDate: today,
+    time_24hr:  false,
+    dateFormat: 'Y-m-d H:i',
+    minDate:    new Date(),
     onOpen: async function (_, dateStr, instance) {
+      if (!dateStr) return;
       const dateOnlyStr = dateStr.split(' ')[0];
       const snapshot = await db.collection('bookings').get();
       const unavailable = [];
       snapshot.forEach(doc => {
-        const bookedTime = new Date(doc.id);
-        const bookedDateStr = bookedTime.toISOString().split('T')[0];
-        if (bookedDateStr === dateOnlyStr) {
-          const buffer = Math.ceil((doc.data().distance || 10) * 2) + 15;
-          const from = new Date(bookedTime.getTime() - buffer * 60000);
-          const to = new Date(bookedTime.getTime() + buffer * 60000);
-          unavailable.push({ from, to });
-        }
+        const datetimeStr = getBookingDatetime(doc);
+        const bookedTime  = new Date(datetimeStr);
+        if (isNaN(bookedTime.getTime())) return;
+        if (bookedTime.toISOString().split('T')[0] !== dateOnlyStr) return;
+        const buffer = Math.ceil((doc.data().distance || 10) * 2) + 15;
+        unavailable.push({
+          from: new Date(bookedTime.getTime() - buffer * 60000),
+          to:   new Date(bookedTime.getTime() + buffer * 60000)
+        });
       });
       instance.set('disable', unavailable);
     }
   });
 
+  // Initialize wizard to step 1 state
+  goStep(1);
+
+  // Initialize AI chat module
+  if (window.DLChat) {
+    DLChat.init({
+      messagesId: 'chatMessages',
+      inputId:    'chatInput',
+      sendBtnId:  'chatSend'
+    });
+  }
+
+  // Initialize bilingual voice input
+  if (window.DLCVoice) {
+    DLCVoice.init((transcript) => {
+      const input = document.getElementById('chatInput');
+      if (!input) return;
+      input.value = transcript;
+      // Trigger send (same as pressing Enter)
+      const sendBtn = document.getElementById('chatSend');
+      if (sendBtn) sendBtn.click();
+    });
+    // Hide mic button if unsupported
+    if (!DLCVoice.isSupported) {
+      const btn = document.getElementById('chatMicBtn');
+      if (btn) btn.style.display = 'none';
+    }
+  }
+
+  // Initialize Google Calendar (optional)
   safeInitGoogleAPI();
-  toggleServiceType();
-});
-
-window.gapiLoaded = () => initGoogleAPI();
-
-customElements.whenDefined('gmpx-placeautocomplete').then(() => {
-  const input = document.querySelector('#address');
-  input.disabled = false;
 });

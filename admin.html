@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Du Lịch Cali</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+  <style>
+    :root {
+      --navy-900: #050b1a;
+      --navy-800: #081228;
+      --navy-700: #0d1a36;
+      --gold:     #c8922a;
+      --gold-lt:  #e8b84b;
+      --cream:    #f0e6d3;
+      --text:     #a8becf;
+      --muted:    #526878;
+      --border:   rgba(255,255,255,0.07);
+      --border-g: rgba(200,146,42,0.28);
+      --danger:   #e05a5a;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      font-family: 'Jost', system-ui, sans-serif;
+      background: var(--navy-900);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── PIN modal ──────────────────────────────── */
+    #pinModal {
+      position: fixed; inset: 0; z-index: 300;
+      background: var(--navy-900);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .pin-card {
+      background: var(--navy-800);
+      border: 1px solid var(--border-g);
+      border-radius: 12px;
+      padding: 2.5rem 2rem;
+      max-width: 340px; width: 90%;
+      text-align: center;
+    }
+    .pin-brand {
+      font-family: 'Bodoni Moda', serif;
+      color: var(--gold-lt);
+      font-size: 1.1rem;
+      margin-bottom: 1.5rem;
+    }
+    .pin-card h2 {
+      font-family: 'Bodoni Moda', serif;
+      color: var(--cream);
+      font-size: 1.3rem;
+      font-weight: 400;
+      margin-bottom: 0.4rem;
+    }
+    .pin-card p { font-size: 0.82rem; color: var(--muted); margin-bottom: 1.5rem; }
+    .pin-input {
+      width: 100%; height: 48px;
+      background: var(--navy-700);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--cream);
+      font-family: 'Jost', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.15em;
+      text-align: center;
+      padding: 0 1rem;
+      margin-bottom: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .pin-input:focus { border-color: var(--gold); }
+    .pin-error {
+      font-size: 0.78rem;
+      color: var(--danger);
+      min-height: 1.2em;
+      margin-bottom: 0.75rem;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; justify-content: center;
+      height: 44px; padding: 0 1.75rem; width: 100%;
+      background: var(--gold); color: var(--navy-900);
+      font-family: 'Jost', sans-serif; font-size: 0.8rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      border: none; border-radius: 4px; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover { background: var(--gold-lt); }
+
+    /* ── Main app (hidden until authenticated) ── */
+    #app { display: none; height: 100vh; flex-direction: column; }
+    #app.visible { display: flex; }
+
+    /* ── Admin nav ──────────────────────────────── */
+    .admin-nav {
+      flex: none;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.5rem;
+      height: 56px;
+      background: var(--navy-800);
+      border-bottom: 1px solid var(--border-g);
+    }
+    .admin-nav .brand {
+      font-family: 'Bodoni Moda', serif;
+      color: var(--gold-lt);
+      font-size: 1rem;
+    }
+    .admin-nav .badge {
+      background: rgba(200,146,42,0.12);
+      border: 1px solid var(--border-g);
+      border-radius: 20px;
+      padding: 0.2rem 0.7rem;
+      font-size: 0.72rem;
+      color: var(--gold-lt);
+      letter-spacing: 0.05em;
+    }
+    .btn-sm {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      padding: 0.3rem 0.7rem;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-sm:hover { border-color: var(--text); color: var(--text); }
+
+    /* ── Layout ─────────────────────────────────── */
+    .admin-body {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* ── Booking list (sidebar) ─────────────────── */
+    .booking-list {
+      width: 280px;
+      flex: none;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .list-header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .list-title { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .list-count { font-size: 0.72rem; color: var(--muted); }
+    .list-scroll { flex: 1; overflow-y: auto; }
+
+    .booking-item {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .booking-item:hover { background: rgba(255,255,255,0.03); }
+    .booking-item.active { background: rgba(200,146,42,0.08); border-left: 2px solid var(--gold); }
+
+    .item-name {
+      font-size: 0.85rem;
+      color: var(--cream);
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+    .item-meta {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 20px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .status-pending     { background: rgba(82,104,120,0.2);  color: #7a9bb0; }
+    .status-confirmed   { background: rgba(200,146,42,0.12); color: var(--gold-lt); }
+    .status-assigned    { background: rgba(200,146,42,0.18); color: var(--gold-lt); }
+    .status-on_the_way  { background: rgba(100,160,220,0.15); color: #82b8e8; }
+    .status-arrived     { background: rgba(100,200,140,0.15); color: #74c296; }
+    .status-in_progress { background: rgba(100,180,240,0.2);  color: #6eb8f0; }
+    .status-completed   { background: rgba(100,200,100,0.12); color: #7ac87a; }
+    .status-cancelled   { background: rgba(224,90,90,0.12);   color: #e08a8a; }
+
+    /* ── Detail panel ───────────────────────────── */
+    .detail-panel {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      color: var(--muted);
+      text-align: center;
+    }
+    .empty-state .big-icon { font-size: 2rem; opacity: 0.4; }
+    .empty-state p { font-size: 0.82rem; }
+
+    .detail-section {
+      background: var(--navy-800);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+    }
+    .detail-section h3 {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 0.85rem;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem 1.25rem;
+    }
+    .info-item {}
+    .info-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .info-value { font-size: 0.85rem; color: var(--cream); margin-top: 0.15rem; word-break: break-word; }
+    .info-value.mono { font-family: monospace; letter-spacing: 0.05em; color: var(--gold-lt); }
+
+    /* Status buttons */
+    .status-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .btn-status {
+      flex: 1; min-width: 140px;
+      height: 38px; padding: 0 1rem;
+      background: var(--navy-700);
+      border: 1px solid var(--border-g);
+      border-radius: 4px;
+      color: var(--gold-lt);
+      font-family: 'Jost', sans-serif;
+      font-size: 0.75rem; font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .btn-status:hover { background: rgba(200,146,42,0.15); }
+    .btn-status.next { background: var(--gold); color: var(--navy-900); border-color: var(--gold); }
+    .btn-status.next:hover { background: var(--gold-lt); }
+
+    /* Driver assignment */
+    .driver-select {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .driver-btn {
+      flex: 1; min-width: 120px;
+      height: 36px;
+      background: var(--navy-700);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: 'Jost', sans-serif;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .driver-btn:hover { border-color: var(--gold); color: var(--gold-lt); }
+    .driver-btn.selected { border-color: var(--gold); background: rgba(200,146,42,0.12); color: var(--gold-lt); }
+
+    /* ETA input */
+    .eta-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .eta-input {
+      width: 80px; height: 36px;
+      background: var(--navy-700);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--cream);
+      font-family: 'Jost', sans-serif;
+      font-size: 0.9rem;
+      text-align: center;
+      padding: 0 0.5rem;
+      outline: none;
+    }
+    .eta-input:focus { border-color: var(--gold); }
+    .eta-label { font-size: 0.8rem; color: var(--muted); }
+    .btn-save {
+      height: 36px; padding: 0 1rem;
+      background: rgba(200,146,42,0.12);
+      border: 1px solid var(--border-g);
+      border-radius: 4px;
+      color: var(--gold-lt);
+      font-family: 'Jost', sans-serif;
+      font-size: 0.75rem; font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-save:hover { background: rgba(200,146,42,0.22); }
+
+    /* GPS streaming */
+    .gps-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .btn-gps {
+      height: 40px; padding: 0 1.25rem;
+      border-radius: 4px;
+      font-family: 'Jost', sans-serif;
+      font-size: 0.78rem; font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+    .btn-gps.start {
+      background: #2d8c4e;
+      color: #fff;
+    }
+    .btn-gps.start:hover { background: #38a85f; }
+    .btn-gps.stop {
+      background: var(--danger);
+      color: #fff;
+    }
+    .btn-gps.stop:hover { background: #e87070; }
+    .gps-status {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .gps-status.active { color: #38a85f; }
+
+    /* Link / copy */
+    .link-row {
+      display: flex; gap: 0.5rem; flex-wrap: wrap;
+    }
+    .btn-link {
+      height: 36px; padding: 0 1rem;
+      background: var(--navy-700);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: 'Jost', sans-serif;
+      font-size: 0.75rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex; align-items: center;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-link:hover { border-color: var(--gold-lt); color: var(--gold-lt); }
+    .copy-feedback {
+      font-size: 0.75rem;
+      color: #38a85f;
+      transition: opacity 0.3s;
+    }
+    .copy-feedback.hidden { opacity: 0; }
+
+    /* Mobile responsive */
+    @media (max-width: 640px) {
+      .booking-list { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+      .admin-body { flex-direction: column; }
+      .detail-panel { padding: 1rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PIN modal -->
+  <div id="pinModal">
+    <div class="pin-card">
+      <div class="pin-brand">✦ Du Lịch Cali</div>
+      <h2>Trang Quản Trị</h2>
+      <p>Nhập mã PIN để đăng nhập</p>
+      <input type="password" id="pinInput" class="pin-input" placeholder="● ● ● ● ● ●"
+        maxlength="20" autocomplete="off" inputmode="numeric">
+      <div class="pin-error" id="pinError"></div>
+      <button class="btn-primary" onclick="verifyPin()">Đăng nhập</button>
+    </div>
+  </div>
+
+  <!-- Main admin app -->
+  <div id="app">
+    <nav class="admin-nav">
+      <div class="brand">✦ Du Lịch Cali Admin</div>
+      <div style="display:flex;gap:0.75rem;align-items:center">
+        <span class="badge" id="liveIndicator">Live</span>
+        <button class="btn-sm" onclick="logout()">Đăng xuất</button>
+      </div>
+    </nav>
+
+    <div class="admin-body">
+      <!-- Booking list -->
+      <div class="booking-list">
+        <div class="list-header">
+          <span class="list-title">Đặt chỗ</span>
+          <span class="list-count" id="listCount">0 mục</span>
+        </div>
+        <div class="list-scroll" id="bookingList"></div>
+      </div>
+
+      <!-- Detail panel -->
+      <div class="detail-panel" id="detailPanel">
+        <div class="empty-state" id="emptyState">
+          <div class="big-icon">◎</div>
+          <p>Chọn một đặt chỗ để xem chi tiết</p>
+        </div>
+
+        <!-- Detail content (hidden until booking selected) -->
+        <div id="detailContent" style="display:none">
+
+          <!-- Booking info -->
+          <div class="detail-section">
+            <h3>Thông tin đặt chỗ</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Mã đặt chỗ</div>
+                <div class="info-value mono" id="di-id">—</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Trạng thái</div>
+                <div class="info-value" id="di-status">—</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Khách hàng</div>
+                <div class="info-value" id="di-name">—</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Điện thoại</div>
+                <div class="info-value" id="di-phone">—</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Dịch vụ</div>
+                <div class="info-value" id="di-service">—</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Thời gian</div>
+                <div class="info-value" id="di-datetime">—</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Từ</div>
+                <div class="info-value" id="di-from">—</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Đến</div>
+                <div class="info-value" id="di-to">—</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Số khách</div>
+                <div class="info-value" id="di-pax">—</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Khoảng cách</div>
+                <div class="info-value" id="di-dist">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status management -->
+          <div class="detail-section">
+            <h3>Cập nhật trạng thái</h3>
+            <div class="status-actions" id="statusActions"></div>
+          </div>
+
+          <!-- Driver assignment -->
+          <div class="detail-section">
+            <h3>Phân công tài xế</h3>
+            <div class="driver-select">
+              <button class="driver-btn" data-name="Duy Hoa" data-phone="7142276007"
+                onclick="assignDriver(this)">Duy Hoa · 714-227-6007</button>
+              <button class="driver-btn" data-name="Dinh" data-phone="5623313809"
+                onclick="assignDriver(this)">Dinh · 562-331-3809</button>
+            </div>
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:0.6rem" id="driverStatus"></div>
+          </div>
+
+          <!-- ETA -->
+          <div class="detail-section">
+            <h3>Thời gian dự kiến (ETA)</h3>
+            <div class="eta-row">
+              <input type="number" id="etaInput" class="eta-input" min="1" max="240" placeholder="—">
+              <span class="eta-label">phút</span>
+              <button class="btn-save" onclick="saveEta()">Lưu</button>
+            </div>
+          </div>
+
+          <!-- GPS Streaming -->
+          <div class="detail-section">
+            <h3>GPS Streaming (từ điện thoại này)</h3>
+            <div class="gps-row">
+              <button class="btn-gps start" id="gpsStartBtn" onclick="startGps()">Bắt đầu GPS</button>
+              <button class="btn-gps stop" id="gpsStopBtn" onclick="stopGps()" style="display:none">Dừng GPS</button>
+              <span class="gps-status" id="gpsStatus">Chưa bắt đầu</span>
+            </div>
+            <div style="font-size:0.72rem;color:var(--muted);margin-top:0.6rem">
+              Mở trên điện thoại để phát vị trí thực tế cho khách theo dõi.
+            </div>
+          </div>
+
+          <!-- Tracking link -->
+          <div class="detail-section">
+            <h3>Link theo dõi</h3>
+            <div class="link-row">
+              <a id="openTrackingBtn" href="#" target="_blank" class="btn-link">Mở trang theo dõi</a>
+              <button class="btn-link" onclick="copyTrackingLink()">Sao chép link</button>
+              <span class="copy-feedback hidden" id="copyFeedback">Đã sao chép!</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── Config ───────────────────────────────────────────────────
+    const ADMIN_PIN = 'DLC2025'; // Simple client-side PIN — change as needed
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ",
+      authDomain: "dulichcali-booking-calendar.firebaseapp.com",
+      projectId: "dulichcali-booking-calendar",
+      storageBucket: "dulichcali-booking-calendar.appspot.com",
+      messagingSenderId: "623460884698",
+      appId: "1:623460884698:web:a08bd435c453a7b4db05e3"
+    };
+    firebase.initializeApp(firebaseConfig);
+    firebase.auth().signInAnonymously().catch(console.error);
+    const db = firebase.firestore();
+
+    // ── State ────────────────────────────────────────────────────
+    let allBookings    = {};     // bookingId → data
+    let selectedId     = null;
+    let gpsWatchId     = null;
+    let unsubscribeAll = null;
+
+    // ── PIN auth ─────────────────────────────────────────────────
+    function verifyPin() {
+      const val = document.getElementById('pinInput').value.trim();
+      if (val === ADMIN_PIN) {
+        sessionStorage.setItem('adminAuth', 'true');
+        document.getElementById('pinModal').style.display = 'none';
+        document.getElementById('app').classList.add('visible');
+        startListening();
+      } else {
+        document.getElementById('pinError').textContent = 'Mã PIN không đúng. Vui lòng thử lại.';
+        document.getElementById('pinInput').value = '';
+      }
+    }
+
+    document.getElementById('pinInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') verifyPin();
+    });
+
+    function logout() {
+      sessionStorage.removeItem('adminAuth');
+      if (unsubscribeAll) unsubscribeAll();
+      stopGps();
+      location.reload();
+    }
+
+    // ── Real-time booking listener ───────────────────────────────
+    function startListening() {
+      unsubscribeAll = db.collection('bookings')
+        .orderBy('createdAt', 'desc')
+        .limit(50)
+        .onSnapshot(snapshot => {
+          allBookings = {};
+          snapshot.forEach(doc => { allBookings[doc.id] = doc.data(); });
+          renderList();
+          if (selectedId && allBookings[selectedId]) {
+            renderDetail(selectedId, allBookings[selectedId]);
+          }
+        }, err => console.error('Snapshot error:', err));
+    }
+
+    // ── Booking list ─────────────────────────────────────────────
+    function renderList() {
+      const container = document.getElementById('bookingList');
+      const count = Object.keys(allBookings).length;
+      document.getElementById('listCount').textContent = `${count} mục`;
+
+      if (count === 0) {
+        container.innerHTML = '<div style="padding:2rem 1rem;text-align:center;color:var(--muted);font-size:0.82rem">Chưa có đặt chỗ nào.</div>';
+        return;
+      }
+
+      container.innerHTML = Object.entries(allBookings).map(([id, data]) => {
+        const dt = data.datetime ? new Date(data.datetime) : null;
+        const dtStr = dt && !isNaN(dt) ? dt.toLocaleDateString('vi-VN', {
+          day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true
+        }) : data.datetime || id;
+
+        const statusLabel = {
+          pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận', assigned: 'Có tài xế',
+          on_the_way: 'Trên đường', arrived: 'Đã đến', in_progress: 'Di chuyển',
+          completed: 'Hoàn thành', cancelled: 'Đã hủy'
+        }[data.status] || data.status;
+
+        const active = id === selectedId ? ' active' : '';
+        return `
+          <div class="booking-item${active}" onclick="selectBooking('${id}')">
+            <div class="item-name">${escHtml(data.name || '—')}</div>
+            <div class="item-meta">${escHtml(dtStr)}</div>
+            <span class="status-badge status-${data.status || 'pending'}">${escHtml(statusLabel)}</span>
+          </div>`;
+      }).join('');
+    }
+
+    // ── Booking selection & detail ───────────────────────────────
+    function selectBooking(id) {
+      selectedId = id;
+      const data = allBookings[id];
+      if (!data) return;
+      renderList(); // re-render to update active state
+      renderDetail(id, data);
+    }
+
+    function renderDetail(id, data) {
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('detailContent').style.display = 'flex';
+      document.getElementById('detailContent').style.flexDirection = 'column';
+      document.getElementById('detailContent').style.gap = '1.25rem';
+
+      // Info fields
+      document.getElementById('di-id').textContent = id;
+      document.getElementById('di-name').textContent = data.name || '—';
+      document.getElementById('di-phone').textContent = data.phone || '—';
+
+      const statusLabel = {
+        pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận', assigned: 'Có tài xế',
+        on_the_way: 'Trên đường đến', arrived: 'Đã đến điểm đón',
+        in_progress: 'Đang di chuyển', completed: 'Hoàn thành', cancelled: 'Đã hủy'
+      }[data.status] || data.status;
+      document.getElementById('di-status').innerHTML = `<span class="status-badge status-${data.status}">${statusLabel}</span>`;
+
+      const serviceLabels = {
+        pickup: 'Đón sân bay', dropoff: 'Đưa sân bay',
+        lasvegas: 'Tour Las Vegas', yosemite: 'Tour Yosemite', sanfrancisco: 'Tour San Francisco'
+      };
+      document.getElementById('di-service').textContent = serviceLabels[data.serviceType] || data.serviceType || '—';
+
+      const dt = data.datetime ? new Date(data.datetime) : null;
+      document.getElementById('di-datetime').textContent = dt && !isNaN(dt)
+        ? dt.toLocaleString('vi-VN', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true })
+        : data.datetime || '—';
+
+      const isTransfer = data.serviceType === 'pickup' || data.serviceType === 'dropoff';
+      document.getElementById('di-from').textContent = isTransfer
+        ? (data.serviceType === 'pickup' ? (data.airport || '—') : (data.address || '—'))
+        : '—';
+      document.getElementById('di-to').textContent = isTransfer
+        ? (data.serviceType === 'pickup' ? (data.address || '—') : (data.airport || '—'))
+        : (data.address || '—');
+
+      document.getElementById('di-pax').textContent = data.passengers ? `${data.passengers} người` : '—';
+      document.getElementById('di-dist').textContent = data.distance ? `${Math.round(data.distance)} dặm` : '—';
+
+      // Status action buttons
+      renderStatusActions(data.status);
+
+      // Driver status
+      const driverStatusEl = document.getElementById('driverStatus');
+      if (data.driver && data.driver.name) {
+        driverStatusEl.textContent = `Tài xế hiện tại: ${data.driver.name} · ${data.driver.phone || ''}`;
+        document.querySelectorAll('.driver-btn').forEach(btn => {
+          btn.classList.toggle('selected', btn.dataset.name === data.driver.name);
+        });
+      } else {
+        driverStatusEl.textContent = 'Chưa phân công tài xế';
+        document.querySelectorAll('.driver-btn').forEach(btn => btn.classList.remove('selected'));
+      }
+
+      // ETA
+      document.getElementById('etaInput').value = data.etaMinutes || '';
+
+      // Tracking link
+      const trackUrl = `${location.origin}${location.pathname.replace('admin.html', '')}tracking.html?id=${encodeURIComponent(id)}&t=${encodeURIComponent(data.trackingToken || '')}`;
+      document.getElementById('openTrackingBtn').href = trackUrl;
+
+      // Vehicle position info
+      const hasPos = data.vehicleLat != null && data.vehicleLng != null;
+      document.getElementById('gpsStatus').textContent = gpsWatchId
+        ? 'GPS đang phát...'
+        : hasPos ? `Vị trí: ${data.vehicleLat?.toFixed(4)}, ${data.vehicleLng?.toFixed(4)}` : 'Chưa có vị trí';
+      document.getElementById('gpsStatus').className = gpsWatchId ? 'gps-status active' : 'gps-status';
+    }
+
+    // ── Status action buttons ────────────────────────────────────
+    const STATUS_FLOW = {
+      pending:     ['confirmed'],
+      confirmed:   ['assigned', 'pending'],
+      assigned:    ['on_the_way', 'confirmed'],
+      on_the_way:  ['arrived', 'assigned'],
+      arrived:     ['in_progress', 'on_the_way'],
+      in_progress: ['completed', 'arrived'],
+      completed:   [],
+    };
+
+    const STATUS_BTN_LABELS = {
+      pending:     'Chờ xác nhận',
+      confirmed:   'Xác nhận',
+      assigned:    'Đã phân công tài xế',
+      on_the_way:  'Bắt đầu di chuyển đến khách',
+      arrived:     'Đã đến điểm đón',
+      in_progress: 'Bắt đầu chuyến đi',
+      completed:   'Hoàn thành chuyến',
+    };
+
+    function renderStatusActions(currentStatus) {
+      const container = document.getElementById('statusActions');
+      const nextStates = STATUS_FLOW[currentStatus] || [];
+      if (nextStates.length === 0) {
+        container.innerHTML = '<span style="font-size:0.8rem;color:var(--muted)">Chuyến đã hoàn thành.</span>';
+        return;
+      }
+      container.innerHTML = nextStates.map((st, i) => {
+        const isNext = i === 0;
+        return `<button class="btn-status${isNext ? ' next' : ''}" onclick="updateStatus('${st}')">
+          ${STATUS_BTN_LABELS[st] || st}
+        </button>`;
+      }).join('');
+    }
+
+    async function updateStatus(newStatus) {
+      if (!selectedId) return;
+      await db.collection('bookings').doc(selectedId).update({ status: newStatus });
+    }
+
+    // ── Driver assignment ────────────────────────────────────────
+    async function assignDriver(btn) {
+      if (!selectedId) return;
+      document.querySelectorAll('.driver-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      await db.collection('bookings').doc(selectedId).update({
+        driver: { name: btn.dataset.name, phone: btn.dataset.phone }
+      });
+      document.getElementById('driverStatus').textContent =
+        `Tài xế: ${btn.dataset.name} · ${btn.dataset.phone}`;
+    }
+
+    // ── ETA ──────────────────────────────────────────────────────
+    async function saveEta() {
+      if (!selectedId) return;
+      const val = parseInt(document.getElementById('etaInput').value);
+      if (isNaN(val) || val < 1) return;
+      await db.collection('bookings').doc(selectedId).update({ etaMinutes: val });
+    }
+
+    // ── GPS Streaming ────────────────────────────────────────────
+    function startGps() {
+      if (!selectedId) { alert('Vui lòng chọn đặt chỗ trước.'); return; }
+      if (!navigator.geolocation) { alert('Thiết bị này không hỗ trợ GPS.'); return; }
+
+      document.getElementById('gpsStartBtn').style.display = 'none';
+      document.getElementById('gpsStopBtn').style.display  = 'inline-flex';
+      document.getElementById('gpsStatus').textContent = 'Đang lấy GPS...';
+      document.getElementById('gpsStatus').className   = 'gps-status active';
+
+      const watchId = navigator.geolocation.watchPosition(
+        pos => {
+          const { latitude: lat, longitude: lng, heading } = pos.coords;
+          db.collection('bookings').doc(selectedId).update({
+            vehicleLat: lat,
+            vehicleLng: lng,
+            vehicleHeading: heading || 0
+          }).catch(console.error);
+          document.getElementById('gpsStatus').textContent = `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        },
+        err => {
+          console.error('GPS error:', err);
+          document.getElementById('gpsStatus').textContent = 'Lỗi GPS: ' + err.message;
+          document.getElementById('gpsStatus').className   = 'gps-status';
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      );
+      gpsWatchId = watchId;
+    }
+
+    function stopGps() {
+      if (gpsWatchId !== null) {
+        navigator.geolocation.clearWatch(gpsWatchId);
+        gpsWatchId = null;
+      }
+      document.getElementById('gpsStartBtn').style.display = 'inline-flex';
+      document.getElementById('gpsStopBtn').style.display  = 'none';
+      document.getElementById('gpsStatus').textContent = 'GPS đã dừng';
+      document.getElementById('gpsStatus').className   = 'gps-status';
+    }
+
+    // ── Copy tracking link ───────────────────────────────────────
+    async function copyTrackingLink() {
+      if (!selectedId || !allBookings[selectedId]) return;
+      const data = allBookings[selectedId];
+      const trackUrl = `${location.origin}${location.pathname.replace('admin.html', '')}tracking.html?id=${encodeURIComponent(selectedId)}&t=${encodeURIComponent(data.trackingToken || '')}`;
+      try {
+        await navigator.clipboard.writeText(trackUrl);
+        const fb = document.getElementById('copyFeedback');
+        fb.classList.remove('hidden');
+        setTimeout(() => fb.classList.add('hidden'), 2200);
+      } catch (err) {
+        prompt('Sao chép link:', trackUrl);
+      }
+    }
+
+    // ── Utilities ────────────────────────────────────────────────
+    function escHtml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ── Startup ──────────────────────────────────────────────────
+    if (sessionStorage.getItem('adminAuth') === 'true') {
+      document.getElementById('pinModal').style.display = 'none';
+      document.getElementById('app').classList.add('visible');
+      startListening();
+    }
+  </script>
+
+</body>
+</html>

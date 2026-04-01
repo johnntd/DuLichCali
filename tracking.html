@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Theo Dõi Chuyến Đi — Du Lịch Cali</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+  <style>
+    :root {
+      --navy-900: #050b1a;
+      --navy-800: #081228;
+      --navy-700: #0d1a36;
+      --gold:     #c8922a;
+      --gold-lt:  #e8b84b;
+      --cream:    #f0e6d3;
+      --text:     #a8becf;
+      --muted:    #526878;
+      --border-g: rgba(200,146,42,0.28);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: 'Jost', system-ui, sans-serif;
+      background: var(--navy-900);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    /* ── Overlays ───────────────────────────────── */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--navy-900);
+      gap: 1rem;
+    }
+    .overlay--hidden { display: none; }
+
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid rgba(200,146,42,0.2);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .overlay p { color: var(--muted); font-size: 0.85rem; }
+
+    .overlay-card {
+      background: var(--navy-800);
+      border: 1px solid var(--border-g);
+      border-radius: 12px;
+      padding: 2.5rem 2rem;
+      max-width: 380px;
+      width: 90%;
+      text-align: center;
+    }
+    .overlay-icon {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: rgba(200,146,42,0.12);
+      border: 1px solid var(--border-g);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      color: var(--gold-lt);
+      margin-bottom: 1.25rem;
+    }
+    .overlay-card h2 {
+      font-family: 'Bodoni Moda', serif;
+      color: var(--cream);
+      font-size: 1.5rem;
+      font-weight: 400;
+      margin-bottom: 0.5rem;
+    }
+    .overlay-card p { color: var(--text); font-size: 0.88rem; line-height: 1.6; margin-bottom: 1.5rem; }
+    .btn-gold {
+      display: inline-flex; align-items: center; justify-content: center;
+      height: 44px; padding: 0 1.75rem;
+      background: var(--gold); color: var(--navy-900);
+      font-family: 'Jost', sans-serif; font-size: 0.78rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;
+      border-radius: 4px; border: none; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-gold:hover { background: var(--gold-lt); }
+
+    /* ── Nav bar ────────────────────────────────── */
+    .track-nav {
+      flex: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.25rem;
+      height: 52px;
+      background: rgba(5,11,26,0.85);
+      backdrop-filter: blur(12px) saturate(140%);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      z-index: 10;
+    }
+    .nav-brand {
+      font-family: 'Bodoni Moda', serif;
+      color: var(--gold-lt);
+      font-size: 1rem;
+      font-weight: 400;
+    }
+    .booking-badge {
+      background: rgba(200,146,42,0.12);
+      border: 1px solid var(--border-g);
+      border-radius: 20px;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.75rem;
+      color: var(--gold-lt);
+      letter-spacing: 0.06em;
+      font-weight: 600;
+    }
+
+    /* ── Map ────────────────────────────────────── */
+    #map {
+      flex: 1;
+      min-height: 0;
+      background: var(--navy-800);
+    }
+
+    /* ── Bottom panel ───────────────────────────── */
+    .track-panel {
+      flex: none;
+      height: 310px;
+      overflow-y: auto;
+      background: var(--navy-800);
+      border-top: 1px solid var(--border-g);
+      padding-bottom: env(safe-area-inset-bottom, 0);
+      -webkit-overflow-scrolling: touch;
+    }
+    .track-inner {
+      padding: 1rem 1.25rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* ── Progress stepper ───────────────────────── */
+    .progress-stepper {
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+    }
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      gap: 0.35rem;
+    }
+    .step-dot {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--muted);
+      background: transparent;
+      transition: all 0.3s;
+      position: relative;
+      z-index: 1;
+    }
+    .step.active .step-dot {
+      border-color: var(--gold);
+      background: var(--gold);
+      box-shadow: 0 0 0 3px rgba(200,146,42,0.25);
+    }
+    .step.done .step-dot {
+      border-color: var(--gold);
+      background: var(--gold);
+    }
+    .step.pulsing .step-dot {
+      border-color: var(--gold-lt);
+      background: var(--gold-lt);
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(200,146,42,0.5); }
+      50%       { box-shadow: 0 0 0 6px rgba(200,146,42,0);  }
+    }
+    .step-label {
+      font-size: 0.67rem;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+    .step.active .step-label, .step.done .step-label { color: var(--gold-lt); }
+    .step.pulsing .step-label { color: var(--cream); }
+
+    .step-connector {
+      flex: 1;
+      height: 2px;
+      background: var(--muted);
+      opacity: 0.3;
+      margin-top: 8px;
+      transition: background 0.3s, opacity 0.3s;
+    }
+    .step-connector.done {
+      background: var(--gold);
+      opacity: 0.7;
+    }
+
+    /* ── Status section ─────────────────────────── */
+    .status-section { text-align: center; }
+    .status-msg {
+      font-size: 0.95rem;
+      color: var(--cream);
+      font-weight: 500;
+    }
+    .status-eta {
+      font-size: 0.8rem;
+      color: var(--gold-lt);
+      margin-top: 0.2rem;
+    }
+
+    /* ── Driver card ────────────────────────────── */
+    .driver-card {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      background: var(--navy-700);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+    }
+    .driver-avatar {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: rgba(200,146,42,0.12);
+      border: 1px solid var(--border-g);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--gold-lt);
+      flex-shrink: 0;
+    }
+    .driver-avatar svg { width: 22px; height: 22px; }
+    .driver-info { flex: 1; min-width: 0; }
+    .driver-name { font-size: 0.9rem; color: var(--cream); font-weight: 600; }
+    .driver-role { font-size: 0.72rem; color: var(--muted); margin-top: 0.1rem; }
+
+    .call-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      height: 36px; padding: 0 1rem;
+      background: rgba(200,146,42,0.12);
+      border: 1px solid var(--border-g);
+      border-radius: 4px;
+      color: var(--gold-lt);
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .call-btn:hover { background: rgba(200,146,42,0.22); }
+
+    /* ── Booking summary ────────────────────────── */
+    .booking-summary {
+      background: var(--navy-700);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .summary-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.7rem;
+    }
+    .summary-pin {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem; font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .summary-pin.pin-a {
+      background: var(--gold);
+      color: var(--navy-900);
+    }
+    .summary-pin.pin-b {
+      background: transparent;
+      border: 2px solid var(--gold);
+      color: var(--gold-lt);
+    }
+    .summary-text {
+      font-size: 0.82rem;
+      color: var(--text);
+      line-height: 1.4;
+    }
+    .summary-meta {
+      font-size: 0.75rem;
+      color: var(--muted);
+      padding-top: 0.35rem;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      margin-top: 0.1rem;
+    }
+
+    /* ── Footer home link ───────────────────────── */
+    .panel-footer {
+      text-align: center;
+      padding-top: 0.25rem;
+    }
+    .panel-footer a {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    .panel-footer a:hover { color: var(--text); }
+
+    /* ── Mobile adjustments ─────────────────────── */
+    @media (max-height: 700px) {
+      .track-panel { height: 260px; }
+    }
+    @media (max-width: 400px) {
+      .step-label { font-size: 0.6rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+
+  <!-- Define callback BEFORE loading Maps API -->
+  <script>
+    window.initTrackingMap = function () {
+      const DARK_STYLES = [
+        { elementType: 'geometry', stylers: [{ color: '#0b1928' }] },
+        { elementType: 'labels.text.stroke', stylers: [{ color: '#0b1928' }] },
+        { elementType: 'labels.text.fill', stylers: [{ color: '#6b8299' }] },
+        { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#14263d' }] },
+        { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#0b1928' }] },
+        { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#c8922a' }] },
+        { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#7a5510' }] },
+        { featureType: 'road.highway', elementType: 'labels.text.fill', stylers: [{ color: '#f0e6d3' }] },
+        { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#8899aa' }] },
+        { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#050f1e' }] },
+        { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#2e4a62' }] },
+        { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+        { featureType: 'transit', stylers: [{ visibility: 'off' }] }
+      ];
+
+      window._trackingMap = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 33.7, lng: -117.9 },
+        zoom: 12,
+        styles: DARK_STYLES,
+        disableDefaultUI: true,
+        zoomControl: true,
+        zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_TOP }
+      });
+
+      window._routeRenderer = new google.maps.DirectionsRenderer({
+        suppressMarkers: true,
+        polylineOptions: { strokeColor: '#c8922a', strokeWeight: 3, strokeOpacity: 0.85 }
+      });
+      window._routeRenderer.setMap(window._trackingMap);
+
+      // If data arrived before map was ready, apply it now
+      if (window._pendingBookingData) {
+        applyMapUpdate(window._pendingBookingData);
+        window._pendingBookingData = null;
+      }
+    };
+  </script>
+
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ&callback=initTrackingMap">
+  </script>
+</head>
+<body>
+
+  <!-- Loading overlay -->
+  <div id="loadingOverlay" class="overlay">
+    <div class="spinner"></div>
+    <p>Đang tải thông tin chuyến đi...</p>
+  </div>
+
+  <!-- Error overlay -->
+  <div id="errorOverlay" class="overlay overlay--hidden">
+    <div class="overlay-card">
+      <div class="overlay-icon">!</div>
+      <h2>Không thể tải</h2>
+      <p id="errorMsg">Link theo dõi không hợp lệ hoặc đã hết hạn.</p>
+      <a href="index.html" class="btn-gold">Quay về trang chủ</a>
+    </div>
+  </div>
+
+  <!-- Completed overlay -->
+  <div id="completedOverlay" class="overlay overlay--hidden">
+    <div class="overlay-card">
+      <div class="overlay-icon">✓</div>
+      <h2>Chuyến đi hoàn thành!</h2>
+      <p>Cảm ơn quý khách đã tin dùng Du Lịch Cali.<br>Chúc quý khách một ngày tốt lành.</p>
+      <a href="index.html" class="btn-gold">Đặt chuyến mới</a>
+    </div>
+  </div>
+
+  <!-- Navigation bar -->
+  <nav class="track-nav">
+    <div class="nav-brand">✦ Du Lịch Cali</div>
+    <div class="booking-badge" id="navBookingId"></div>
+  </nav>
+
+  <!-- Google Maps -->
+  <div id="map"></div>
+
+  <!-- Tracking panel -->
+  <div class="track-panel">
+    <div class="track-inner">
+
+      <!-- Progress stepper (5 steps) -->
+      <div class="progress-stepper" id="stepper">
+        <div class="step" data-step="1"><div class="step-dot"></div><div class="step-label">Xác nhận</div></div>
+        <div class="step-connector" data-connector="1"></div>
+        <div class="step" data-step="2"><div class="step-dot"></div><div class="step-label">Tài xế</div></div>
+        <div class="step-connector" data-connector="2"></div>
+        <div class="step" data-step="3"><div class="step-dot"></div><div class="step-label">Trên đường</div></div>
+        <div class="step-connector" data-connector="3"></div>
+        <div class="step" data-step="4"><div class="step-dot"></div><div class="step-label">Di chuyển</div></div>
+        <div class="step-connector" data-connector="4"></div>
+        <div class="step" data-step="5"><div class="step-dot"></div><div class="step-label">Xong</div></div>
+      </div>
+
+      <!-- Status + ETA -->
+      <div class="status-section">
+        <div class="status-msg" id="statusMsg">Đang chờ xác nhận...</div>
+        <div class="status-eta" id="statusEta"></div>
+      </div>
+
+      <!-- Driver card (hidden until driver assigned) -->
+      <div class="driver-card" id="driverCard" style="display:none">
+        <div class="driver-avatar">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+        </div>
+        <div class="driver-info">
+          <div class="driver-name" id="driverName">—</div>
+          <div class="driver-role">Tài xế</div>
+        </div>
+        <a id="driverCallBtn" href="#" class="call-btn">Gọi điện</a>
+      </div>
+
+      <!-- Booking summary -->
+      <div class="booking-summary" id="bookingSummaryPanel">
+        <div class="summary-row">
+          <div class="summary-pin pin-a">A</div>
+          <span class="summary-text" id="summaryFrom">—</span>
+        </div>
+        <div class="summary-row">
+          <div class="summary-pin pin-b">B</div>
+          <span class="summary-text" id="summaryTo">—</span>
+        </div>
+        <div class="summary-meta" id="summaryMeta"></div>
+      </div>
+
+      <!-- Footer -->
+      <div class="panel-footer">
+        <a href="index.html">Quay về trang chủ</a>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // ── Firebase init ───────────────────────────────────────────
+    const firebaseConfig = {
+      apiKey: "AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ",
+      authDomain: "dulichcali-booking-calendar.firebaseapp.com",
+      projectId: "dulichcali-booking-calendar",
+      storageBucket: "dulichcali-booking-calendar.appspot.com",
+      messagingSenderId: "623460884698",
+      appId: "1:623460884698:web:a08bd435c453a7b4db05e3"
+    };
+    firebase.initializeApp(firebaseConfig);
+    firebase.auth().signInAnonymously().catch(console.error);
+    const db = firebase.firestore();
+
+    // ── State ────────────────────────────────────────────────────
+    let vehicleMarker = null;
+    let routeRequested = false;
+
+    const STATUS_MESSAGES = {
+      pending:     'Đang chờ xác nhận đặt chỗ...',
+      confirmed:   'Đặt chỗ đã được xác nhận!',
+      assigned:    'Tài xế đã được phân công.',
+      on_the_way:  'Xe đang trên đường đến...',
+      arrived:     'Xe đã đến điểm đón!',
+      in_progress: 'Đang di chuyển đến điểm đến...',
+      completed:   'Chuyến đi hoàn thành!'
+    };
+
+    // Status → active step count (1–5)
+    const STATUS_STEP = {
+      pending: 0, confirmed: 1, assigned: 2,
+      on_the_way: 3, arrived: 3, in_progress: 4, completed: 5
+    };
+
+    // ── UI helpers ───────────────────────────────────────────────
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.add('overlay--hidden');
+    }
+    function showError(msg) {
+      hideLoading();
+      document.getElementById('errorMsg').textContent = msg;
+      document.getElementById('errorOverlay').classList.remove('overlay--hidden');
+    }
+    function showCompleted() {
+      hideLoading();
+      document.getElementById('completedOverlay').classList.remove('overlay--hidden');
+    }
+
+    function updateProgress(status) {
+      const activeStep = STATUS_STEP[status] ?? 0;
+      document.querySelectorAll('.step').forEach(el => {
+        const s = parseInt(el.dataset.step);
+        el.classList.remove('done', 'active', 'pulsing');
+        if (s < activeStep)       el.classList.add('done');
+        else if (s === activeStep) {
+          el.classList.add(status === 'in_progress' ? 'pulsing' : 'active');
+        }
+      });
+      document.querySelectorAll('.step-connector').forEach(el => {
+        const c = parseInt(el.dataset.connector);
+        el.classList.toggle('done', c < activeStep);
+      });
+    }
+
+    function updateStatusMessage(status, etaMinutes) {
+      document.getElementById('statusMsg').textContent = STATUS_MESSAGES[status] || 'Đang cập nhật...';
+      const etaEl = document.getElementById('statusEta');
+      if (etaMinutes && ['on_the_way', 'in_progress'].includes(status)) {
+        etaEl.textContent = `Dự kiến đến trong khoảng ${etaMinutes} phút`;
+      } else {
+        etaEl.textContent = '';
+      }
+    }
+
+    function updateDriverCard(driver) {
+      const card = document.getElementById('driverCard');
+      if (!driver || !driver.name) { card.style.display = 'none'; return; }
+      card.style.display = 'flex';
+      document.getElementById('driverName').textContent = driver.name;
+      const callBtn = document.getElementById('driverCallBtn');
+      if (driver.phone) {
+        callBtn.href = `tel:${driver.phone.replace(/\D/g, '')}`;
+        callBtn.style.display = 'inline-flex';
+      } else {
+        callBtn.style.display = 'none';
+      }
+    }
+
+    function updateBookingSummary(data) {
+      const isPickup    = data.serviceType === 'pickup';
+      const isDropoff   = data.serviceType === 'dropoff';
+      const isTransfer  = isPickup || isDropoff;
+
+      let fromText, toText;
+      if (isPickup) {
+        fromText = data.airport || 'Sân bay';
+        toText   = data.address || '—';
+      } else if (isDropoff) {
+        fromText = data.address || '—';
+        toText   = data.airport || 'Sân bay';
+      } else {
+        // Tour
+        fromText = 'Điểm xuất phát';
+        toText   = data.address || '—';
+      }
+
+      document.getElementById('summaryFrom').textContent = fromText;
+      document.getElementById('summaryTo').textContent   = toText;
+
+      const dt = data.datetime ? new Date(data.datetime) : null;
+      const dtStr = dt && !isNaN(dt) ? dt.toLocaleString('vi-VN', {
+        weekday: 'short', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: true
+      }) : '';
+
+      const parts = [];
+      if (dtStr) parts.push(dtStr);
+      if (data.passengers) parts.push(`${data.passengers} khách`);
+      document.getElementById('summaryMeta').textContent = parts.join(' · ');
+    }
+
+    // ── Vehicle marker ───────────────────────────────────────────
+    function createVehicleIcon(heading) {
+      return {
+        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+        fillColor: '#c8922a',
+        fillOpacity: 1,
+        strokeColor: '#f0e6d3',
+        strokeWeight: 1.5,
+        scale: 7,
+        rotation: heading || 0
+      };
+    }
+
+    function applyMapUpdate(data) {
+      const map = window._trackingMap;
+      if (!map) { window._pendingBookingData = data; return; }
+
+      const hasVehicle = data.vehicleLat != null && data.vehicleLng != null;
+
+      if (hasVehicle) {
+        const pos = { lat: data.vehicleLat, lng: data.vehicleLng };
+        if (!vehicleMarker) {
+          vehicleMarker = new google.maps.Marker({
+            position: pos, map,
+            icon: createVehicleIcon(data.vehicleHeading || 0),
+            title: 'Xe của bạn', zIndex: 10
+          });
+        } else {
+          vehicleMarker.setPosition(pos);
+          vehicleMarker.setIcon(createVehicleIcon(data.vehicleHeading || 0));
+        }
+        map.panTo(pos);
+      }
+
+      // Render route when vehicle is moving
+      const activeStatuses = ['on_the_way', 'arrived', 'in_progress'];
+      if (hasVehicle && activeStatuses.includes(data.status)) {
+        renderRoute(data);
+      } else if (window._routeRenderer) {
+        window._routeRenderer.setDirections({ routes: [] });
+      }
+    }
+
+    function renderRoute(data) {
+      if (!window._trackingMap || !window._routeRenderer) return;
+      const vehiclePos = { lat: data.vehicleLat, lng: data.vehicleLng };
+
+      let origin, destination;
+      if (data.status === 'in_progress') {
+        // Vehicle is carrying passenger — show remaining route to destination
+        origin      = vehiclePos;
+        destination = data.serviceType === 'pickup'
+          ? (data.address  || data.airport)
+          : (data.airport  || data.address);
+      } else {
+        // Vehicle heading to pickup point
+        origin      = vehiclePos;
+        destination = data.serviceType === 'pickup'
+          ? (data.address || data.airport)
+          : (data.airport || data.address);
+      }
+
+      if (!destination) return;
+
+      const ds = new google.maps.DirectionsService();
+      ds.route({
+        origin, destination,
+        travelMode: google.maps.TravelMode.DRIVING
+      }, (result, status) => {
+        if (status === 'OK') window._routeRenderer.setDirections(result);
+      });
+    }
+
+    // ── Main tracking logic ──────────────────────────────────────
+    function loadTracking() {
+      const params    = new URLSearchParams(window.location.search);
+      const bookingId = params.get('id');
+      const token     = params.get('t');
+
+      if (!bookingId || !token) { showError('Link theo dõi không hợp lệ.'); return; }
+
+      document.getElementById('navBookingId').textContent = bookingId;
+
+      db.collection('bookings').doc(bookingId).onSnapshot(doc => {
+        if (!doc.exists) { showError('Không tìm thấy đặt chỗ. Mã có thể không đúng.'); return; }
+
+        const data = doc.data();
+        if (data.trackingToken !== token) { showError('Link theo dõi không hợp lệ.'); return; }
+
+        hideLoading();
+
+        if (data.status === 'completed') { showCompleted(); return; }
+
+        updateProgress(data.status);
+        updateStatusMessage(data.status, data.etaMinutes);
+        updateDriverCard(data.driver);
+        updateBookingSummary(data);
+        applyMapUpdate(data);
+
+      }, err => {
+        console.error(err);
+        showError('Không thể tải thông tin chuyến đi. Vui lòng thử lại.');
+      });
+    }
+
+    // Start tracking when page loads
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) loadTracking();
+    });
+  </script>
+
+</body>
+</html>

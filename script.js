@@ -114,12 +114,22 @@ function renderDestList() {
   }).join('');
 }
 
+// ── Airport helpers ───────────────────────────────────────────
+/** Returns airports for the current region; falls back to all if no match. */
+function getRegionAirports() {
+  if (typeof AIRPORTS === 'undefined') return [];
+  if (!window.DLCRegion) return AIRPORTS;
+  const id       = DLCRegion.current.id;
+  const filtered = AIRPORTS.filter(a => a.region === id);
+  return filtered.length ? filtered : AIRPORTS;
+}
+
 // ── Airport Chips ─────────────────────────────────────────────
 function renderAirportChips() {
   const container = document.getElementById('airportChips');
-  if (!container || typeof AIRPORTS === 'undefined') return;
-
-  container.innerHTML = AIRPORTS.map(a => `
+  if (!container) return;
+  const airports = getRegionAirports();
+  container.innerHTML = airports.map(a => `
     <div class="airport-chip">
       <span class="airport-chip__code">${a.code}</span>
       <span class="airport-chip__name">${a.label.split(' — ')[0]}</span>
@@ -129,9 +139,13 @@ function renderAirportChips() {
 // ── Airport Select Options ────────────────────────────────────
 function populateAirportSelect() {
   const sel = document.getElementById('airport');
-  if (!sel || typeof AIRPORTS === 'undefined') return;
-  sel.innerHTML = '<option value="">Chọn sân bay...</option>' +
-    AIRPORTS.map(a => `<option value="${a.value}">${a.label}</option>`).join('');
+  if (!sel) return;
+  const airports  = getRegionAirports();
+  const regionName = window.DLCRegion ? DLCRegion.current.nameVi : 'Sân bay';
+  sel.innerHTML = `<option value="">Chọn sân bay...</option>` +
+    `<optgroup label="${regionName}">` +
+    airports.map(a => `<option value="${a.value}">${a.label}</option>`).join('') +
+    `</optgroup>`;
 }
 
 // ── Quick Estimate (Home screen) ──────────────────────────────
@@ -895,6 +909,33 @@ function updateRegionUI(region) {
     callAlt.href        = `tel:${region.hosts[0].phone}`;
     callAlt.textContent = `Hoặc gọi ngay: ${region.hosts[0].display}`;
   }
+
+  // 5. Airport chips + booking form dropdown → region airports
+  renderAirportChips();
+  populateAirportSelect();
+
+  // 6. Airport section on Destinations screen → count, label, vehicles
+  const airportCount = document.getElementById('airportCount');
+  if (airportCount) {
+    const n = getRegionAirports().length;
+    airportCount.textContent = `${n} Sân Bay Phục Vụ`;
+  }
+  const airportVehicles = document.getElementById('airportVehicles');
+  if (airportVehicles) {
+    if (region.id === 'bayarea') {
+      airportVehicles.innerHTML =
+        `<div class="vehicle-pill"><strong>${region.vehicle.name}</strong><span>Tối đa ${region.vehicle.seats} khách</span></div>`;
+    } else {
+      airportVehicles.innerHTML =
+        `<div class="vehicle-pill"><strong>Tesla Model Y</strong><span>1–3 khách</span></div>` +
+        `<div class="vehicle-pill"><strong>Mercedes Van</strong><span>4–12 khách</span></div>`;
+    }
+  }
+
+  // 7. Homepage service card airport count labels
+  document.querySelectorAll('.svc-airport-count').forEach(el => {
+    el.textContent = `${getRegionAirports().length} sân bay`;
+  });
 }
 
 function toggleRegionPicker() {
@@ -914,8 +955,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderDestCards();
   renderDestList();
   renderTourChoiceGrid();
-  renderAirportChips();
-  populateAirportSelect();
+  // Note: renderAirportChips() and populateAirportSelect() are called inside
+  // updateRegionUI() so they always render with the correct region's airports.
 
   // Gas price (async, non-blocking)
   fetchGasPrice();

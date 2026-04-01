@@ -579,12 +579,17 @@ const DESTINATIONS = [
 
 /** Airport pickup/dropoff service info */
 const AIRPORTS = [
-  { value: 'John Wayne Airport, Orange County, CA', label: 'John Wayne — SNA',  code: 'SNA', lat: 33.6762,  lng: -117.8675 },
-  { value: 'Long Beach Airport, Long Beach, CA',    label: 'Long Beach — LGB',  code: 'LGB', lat: 33.8177,  lng: -118.1516 },
-  { value: 'LAX Airport, Los Angeles, CA',          label: 'Los Angeles — LAX', code: 'LAX', lat: 33.9425,  lng: -118.4081 },
-  { value: 'Ontario Airport, Ontario, CA',          label: 'Ontario — ONT',     code: 'ONT', lat: 34.0558,  lng: -117.6013 },
-  { value: 'Burbank Airport, Burbank, CA',          label: 'Burbank — BUR',     code: 'BUR', lat: 34.2007,  lng: -118.3585 },
-  { value: 'San Diego Airport, San Diego, CA',      label: 'San Diego — SAN',   code: 'SAN', lat: 32.7338,  lng: -117.1933 },
+  // ── Orange County / Southern California ──────────────────────
+  { value: 'John Wayne Airport, Orange County, CA',              label: 'John Wayne — SNA',    code: 'SNA', region: 'oc',      lat: 33.6762,  lng: -117.8675 },
+  { value: 'Long Beach Airport, Long Beach, CA',                 label: 'Long Beach — LGB',    code: 'LGB', region: 'oc',      lat: 33.8177,  lng: -118.1516 },
+  { value: 'LAX Airport, Los Angeles, CA',                       label: 'Los Angeles — LAX',   code: 'LAX', region: 'oc',      lat: 33.9425,  lng: -118.4081 },
+  { value: 'Ontario Airport, Ontario, CA',                       label: 'Ontario — ONT',       code: 'ONT', region: 'oc',      lat: 34.0558,  lng: -117.6013 },
+  { value: 'Burbank Airport, Burbank, CA',                       label: 'Burbank — BUR',       code: 'BUR', region: 'oc',      lat: 34.2007,  lng: -118.3585 },
+  { value: 'San Diego Airport, San Diego, CA',                   label: 'San Diego — SAN',     code: 'SAN', region: 'oc',      lat: 32.7338,  lng: -117.1933 },
+  // ── Bay Area / Northern California ───────────────────────────
+  { value: 'San Francisco International Airport, San Francisco, CA', label: 'San Francisco — SFO', code: 'SFO', region: 'bayarea', lat: 37.6213, lng: -122.3790 },
+  { value: 'Oakland International Airport, Oakland, CA',             label: 'Oakland — OAK',       code: 'OAK', region: 'bayarea', lat: 37.7213, lng: -122.2208 },
+  { value: 'San Jose Mineta International Airport, San Jose, CA',     label: 'San Jose — SJC',      code: 'SJC', region: 'bayarea', lat: 37.3626, lng: -121.9290 },
 ];
 
 /** Static quick estimates for display (no Distance Matrix needed) */
@@ -636,14 +641,17 @@ function buildAIContext() {
   Hotels: $${h.budget}–$${h.luxury}/night`;
   }).join('\n');
 
-  const airportList = AIRPORTS.map(a => a.code).join(', ');
+  const ocAirports  = AIRPORTS.filter(a => a.region === 'oc').map(a => a.code).join(', ');
+  const bayAirports = AIRPORTS.filter(a => a.region === 'bayarea').map(a => a.code).join(', ');
 
   return `TOUR DESTINATIONS:
 ${dests}
 
 AIRPORT TRANSFER SERVICE:
-Airports: ${airportList}
-Vehicles: Tesla Model Y (1–3 passengers), Mercedes Van (4–12 passengers)
+Orange County airports: ${ocAirports}
+Bay Area airports: ${bayAirports}
+OC vehicles: Tesla Model Y (1–3 passengers), Mercedes Van (4–12 passengers)
+Bay Area vehicle: Toyota Sienna (up to 8 passengers)
 Starting from $100, priced by distance.
 
 CONTACT:

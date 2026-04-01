@@ -144,16 +144,17 @@
 
   function extractAirport(text) {
     const t = text.toLowerCase();
-    const codes = ['lax', 'sna', 'lgb', 'ont', 'bur', 'san', 'sfo', 'sjc', 'smf'];
+    const codes = ['lax', 'sna', 'lgb', 'ont', 'bur', 'san', 'sfo', 'oak', 'sjc', 'smf'];
     for (const code of codes) {
       if (new RegExp(`\\b${code}\\b`).test(t)) return code;
     }
-    if (/john wayne/i.test(text))           return 'sna';
-    if (/long beach.*airport/i.test(text))  return 'lgb';
-    if (/burbank.*airport/i.test(text))     return 'bur';
-    if (/san francisco.*airport/i.test(text)) return 'sfo';
-    if (/san jose.*airport|mineta/i.test(text)) return 'sjc';
-    if (/sacramento.*airport/i.test(text))  return 'smf';
+    if (/john wayne/i.test(text))                    return 'sna';
+    if (/long beach.*airport/i.test(text))           return 'lgb';
+    if (/burbank.*airport/i.test(text))              return 'bur';
+    if (/san francisco.*airport/i.test(text))        return 'sfo';
+    if (/oakland.*airport/i.test(text))              return 'oak';
+    if (/san jose.*airport|mineta/i.test(text))      return 'sjc';
+    if (/sacramento.*airport/i.test(text))           return 'smf';
     return null;
   }
 

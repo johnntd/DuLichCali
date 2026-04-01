@@ -103,6 +103,7 @@ const DLCPricing = (() => {
     'bur': 55,   // Burbank
     'san': 90,   // San Diego
     'sfo': 395,  // San Francisco International
+    'oak': 395,  // Oakland International
     'sjc': 420,  // San Jose Mineta
     'smf': 495,  // Sacramento
   };

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#050b1a" />
+  <meta name="theme-color" content="#0a1628" />
   <title>Du Lịch Cali — Tour & Đưa Đón Sân Bay California</title>
   <meta name="description" content="Dịch vụ đưa đón sân bay và tour du lịch California chuyên nghiệp. Las Vegas, San Francisco, Yosemite. Duy Hoa: 714-227-6007.">
   <meta name='impact-site-verification' value='a197decf-5fcf-41d2-bc41-1d354542e163'>
@@ -405,6 +405,24 @@
           <p id="wStep2Sub">Nhập thông tin địa điểm</p>
         </div>
         <div class="form-fields">
+          <!-- Pickup type toggle (airport transfers only) -->
+          <div class="field-wrap" id="wPickupTypeWrap" style="display:none">
+            <label class="field-label">Điểm đón / trả</label>
+            <div class="pickup-toggle" id="pickupToggle">
+              <button type="button" class="pickup-toggle__btn pickup-toggle__btn--active" data-pickup="airport" onclick="setPickupType('airport')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="16" height="16">
+                  <polyline points="6 9 12 15 18 9"/><path d="M12 3v12M3 21h18"/>
+                </svg>
+                Sân Bay
+              </button>
+              <button type="button" class="pickup-toggle__btn" data-pickup="address" onclick="setPickupType('address')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="16" height="16">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+                </svg>
+                Địa Chỉ Riêng
+              </button>
+            </div>
+          </div>
           <div class="field-wrap" id="wAirportWrap">
             <label class="field-label" for="airport">Sân bay</label>
             <select class="field-input" id="airport" name="airport" onchange="updateEstimate()">
@@ -412,7 +430,7 @@
               <!-- Populated by JS from AIRPORTS data -->
             </select>
           </div>
-          <div class="field-wrap">
+          <div class="field-wrap" id="wAddressWrap">
             <label class="field-label" for="address">Địa chỉ của bạn</label>
             <input class="field-input" type="text" id="address" name="address"
               placeholder="Nhập địa chỉ (tìm kiếm tự động)" autocomplete="off" onchange="updateEstimate()">
@@ -474,6 +492,15 @@
             <span class="est-val" id="estimateDisplay">—</span>
           </div>
           <div class="est-divider"></div>
+          <div class="est-row" id="uberCompareRow" style="display:none">
+            <span class="est-label">Uber ước tính</span>
+            <span class="est-val est-val--sm est-val--strike" id="uberEstDisplay">—</span>
+          </div>
+          <div class="est-row" id="savingsRow" style="display:none">
+            <span class="est-label">Bạn tiết kiệm</span>
+            <span class="est-val est-val--sm est-val--savings" id="savingsDisplay">—</span>
+          </div>
+          <div class="est-divider"></div>
           <div class="est-row">
             <span class="est-label">Phương tiện</span>
             <span class="est-val est-val--sm" id="vehicleDisplay">—</span>
@@ -483,7 +510,7 @@
             <span class="est-val est-val--sm" id="gasPriceDisplay">—</span>
           </div>
           <p class="est-disclaimer" id="estDisclaimer">
-            Đây là ước tính. Giá cuối cùng sẽ được xác nhận khi chúng tôi liên hệ với bạn.
+            Giá thấp hơn Uber ~20%. Giá cuối cùng sẽ được xác nhận khi chúng tôi liên hệ.
           </p>
         </div>
 

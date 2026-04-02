@@ -17,8 +17,28 @@ const DLCPricing = (() => {
   // ── Constants ────────────────────────────────────────────────
   const FUEL_FALLBACK   = 5.00;  // $/gal — used when EIA price not yet loaded
   const VAN_MPG         = 14;    // Mercedes-Benz Sprinter Van fuel economy
+  const SIENNA_MPG      = 20;    // Toyota Sienna Hybrid fuel economy
   const TESLA_RATE      = 0.22;  // $/mile energy equivalent for Tesla Model Y
   const BASE_MIN        = 100;   // Minimum transfer fare
+  const UBER_DISCOUNT   = 0.20;  // We charge 20% less than Uber
+
+  // ── Uber-equivalent rate estimation (per-mile + per-minute) ──
+  // Based on average Uber/Lyft rates in California (2025-2026 market data).
+  // UberX: ~$1.50 base + $0.90/mile + $0.25/min
+  // UberXL/Van: ~$2.50 base + $1.50/mile + $0.40/min
+  // We estimate total trip time as miles / 35 mph average speed.
+  const UBER_RATES = {
+    sedan: { base: 1.50, perMile: 0.90, perMin: 0.25, bookingFee: 3.50, minFare: 8.00 },
+    van:   { base: 2.50, perMile: 1.50, perMin: 0.40, bookingFee: 5.50, minFare: 15.00 },
+  };
+
+  /** Estimate what Uber would charge for the same trip */
+  function estimateUberPrice(miles, vehicleType) {
+    const rate = UBER_RATES[vehicleType] || UBER_RATES.sedan;
+    const estMinutes = Math.round((miles / 35) * 60); // avg 35 mph
+    const uberTotal = rate.base + (miles * rate.perMile) + (estMinutes * rate.perMin) + rate.bookingFee;
+    return Math.max(uberTotal, rate.minFare);
+  }
 
   // ── Approximate distances (one-way miles from Orange County) ─
   const OC_TO_DEST = {
@@ -232,7 +252,11 @@ const DLCPricing = (() => {
       : FUEL_FALLBACK;
   }
 
-  function getVehicle(passengers) {
+  function getVehicle(passengers, regionId) {
+    // Bay Area uses Toyota Sienna for all passenger counts
+    if (regionId === 'bayarea' || (typeof window !== 'undefined' && window.DLCRegion && window.DLCRegion.current.id === 'bayarea' && !regionId)) {
+      return 'Toyota Sienna';
+    }
     return passengers <= 3 ? 'Tesla Model Y' : 'Mercedes Van';
   }
 
@@ -256,18 +280,53 @@ const DLCPricing = (() => {
 
   // ── Core Math: Transfer cost by exact miles ──────────────────
   /**
+   * Smart pricing: estimate Uber equivalent, then charge 20% less.
+   * Van (4+ passengers) costs more than sedan (1-3 passengers).
+   *
    * @param {number} miles      One-way distance
    * @param {number} passengers Number of passengers
    * @returns {number}          Estimated cost in USD (rounded)
    */
   function transferCost(miles, passengers) {
-    const longHaul     = miles > 300;
-    const serviceFee   = longHaul ? 400 : 0;
-    const surcharge    = longHaul && passengers > 3 ? 75 : 0;
-    let cost = Math.max(BASE_MIN, BASE_MIN + miles * TESLA_RATE) + serviceFee + surcharge;
-    if (miles > 100) cost += miles * 0.18;
-    cost += 5; // misc/booking fee
-    return Math.round(cost);
+    const isVan      = passengers > 3;
+    const vehType    = isVan ? 'van' : 'sedan';
+    const uberPrice  = estimateUberPrice(miles, vehType);
+
+    // Our price = Uber price minus 20% discount
+    let ourPrice = uberPrice * (1 - UBER_DISCOUNT);
+
+    // Long-haul adjustments (driver time, overnight, etc.)
+    const longHaul = miles > 300;
+    if (longHaul) {
+      // Add driver compensation for long trips
+      ourPrice += 250;
+      if (isVan) ourPrice += 50; // larger vehicle wear
+    } else if (miles > 100) {
+      // Medium distance: small surcharge for highway tolls/time
+      ourPrice += miles * 0.10;
+    }
+
+    // Enforce minimum fare
+    const minFare = isVan ? 120 : BASE_MIN;
+    ourPrice = Math.max(minFare, ourPrice);
+
+    return Math.round(ourPrice);
+  }
+
+  /** Returns transfer cost breakdown with Uber comparison */
+  function transferCostWithComparison(miles, passengers) {
+    const isVan     = passengers > 3;
+    const vehType   = isVan ? 'van' : 'sedan';
+    const uberPrice = estimateUberPrice(miles, vehType);
+    const ourPrice  = transferCost(miles, passengers);
+    const savings   = Math.round(uberPrice - ourPrice);
+    return {
+      ourPrice,
+      uberEstimate: Math.round(uberPrice),
+      savings,
+      savingsPercent: Math.round((savings / uberPrice) * 100),
+      vehicleType: vehType,
+    };
   }
 
   // ── Core Math: Tour cost by distance + trip params ───────────
@@ -279,8 +338,10 @@ const DLCPricing = (() => {
    * @returns {number}          Estimated total cost in USD (rounded)
    */
   function tourCost(miles, passengers, days, lodging) {
-    const gasPrice      = getFuelPrice();
-    const fuelPerMile   = gasPrice / VAN_MPG;
+    const gasPrice       = getFuelPrice();
+    const isVan          = passengers > 3;
+    const mpg            = isVan ? VAN_MPG : 30; // Tesla-equivalent efficiency for sedan
+    const fuelPerMile    = gasPrice / mpg;
     const roundtripMiles = miles * 2;
 
     let lodgingCost = 0;
@@ -297,11 +358,21 @@ const DLCPricing = (() => {
       ? (passengers > 8 ? 150 : passengers > 4 ? 100 : 50) * days
       : 0;
 
-    let cost = (180 + roundtripMiles * fuelPerMile) * days
+    // Base driver rate: higher for van due to vehicle size/wear
+    const driverRate = isVan ? 220 : 180;
+
+    let cost = (driverRate + roundtripMiles * fuelPerMile) * days
                + lodgingCost
                + 50 * days   // service/tolls
                + wearCost;
-    cost = Math.max(cost, 300 * days);
+
+    // Compare with Uber equivalent for the transport portion and ensure 20% savings
+    const uberTransport = estimateUberPrice(roundtripMiles, isVan ? 'van' : 'sedan') * days;
+    const uberBasedPrice = uberTransport * (1 - UBER_DISCOUNT) + lodgingCost + wearCost;
+    // Use whichever is more reasonable (don't undercut ourselves on long tours)
+    cost = Math.max(cost, uberBasedPrice * 0.85);
+
+    cost = Math.max(cost, (isVan ? 350 : 300) * days);
     return Math.round(cost);
   }
 
@@ -502,7 +573,9 @@ const DLCPricing = (() => {
   return {
     // Core math (used by script.js updateEstimate)
     transferCost,
+    transferCostWithComparison,
     tourCost,
+    estimateUberPrice,
     // Higher-level estimates (used by AI chat)
     estimateTour,
     estimateTransfer,
@@ -521,5 +594,6 @@ const DLCPricing = (() => {
     AIRPORT_TO_OC,
     ORIGIN_TO_DEST,
     FUEL_FALLBACK,
+    UBER_DISCOUNT,
   };
 })();

@@ -6,17 +6,25 @@
 
 /* ── Custom Properties ──────────────────────────────────────── */
 :root {
-  --navy-900: #050b1a;
-  --navy-800: #081228;
-  --navy-700: #0d1a36;
-  --gold:     #c8922a;
-  --gold-lt:  #e8b84b;
-  --gold-dim: rgba(200,146,42,0.14);
-  --cream:    #f0e6d3;
-  --text:     #a8becf;
-  --muted:    #526878;
-  --border:   rgba(255,255,255,0.07);
-  --border-g: rgba(200,146,42,0.28);
+  --navy-900: #0a1628;
+  --navy-800: #0f1f3a;
+  --navy-700: #162a4a;
+  --gold:     #f5a623;
+  --gold-lt:  #ffc857;
+  --gold-dim: rgba(245,166,35,0.16);
+  --cream:    #fff8ee;
+  --text:     #c8dced;
+  --muted:    #6b8fa8;
+  --border:   rgba(255,255,255,0.10);
+  --border-g: rgba(245,166,35,0.35);
+
+  /* California brights */
+  --sky:      #38bdf8;
+  --sky-lt:   #7dd3fc;
+  --ocean:    #0ea5e9;
+  --sunset:   #fb923c;
+  --coral:    #f97316;
+  --poppy:    #ef4444;
 
   --font-d: 'Bodoni Moda', Georgia, serif;
   --font-b: 'Jost', system-ui, sans-serif;
@@ -28,7 +36,7 @@
   --app-bar-h:    56px;
   --bottom-nav-h: 64px;
 
-  --shadow-card: 0 8px 28px rgba(0,0,0,0.35);
+  --shadow-card: 0 8px 28px rgba(0,0,0,0.30);
 }
 
 /* ── Reset ──────────────────────────────────────────────────── */
@@ -66,7 +74,7 @@ button { cursor: pointer; font-family: var(--font-b); }
   align-items: center;
   justify-content: space-between;
   padding: 0 1rem;
-  background: rgba(5,11,26,.92);
+  background: rgba(10,22,40,.94);
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
   border-bottom: 1px solid var(--border-g);
@@ -128,7 +136,7 @@ button { cursor: pointer; font-family: var(--font-b); }
   padding-bottom: env(safe-area-inset-bottom, 0px);
   display: flex;
   align-items: stretch;
-  background: rgba(8,18,40,.96);
+  background: rgba(10,22,40,.96);
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
   border-top: 1px solid var(--border-g);
@@ -160,10 +168,10 @@ button { cursor: pointer; font-family: var(--font-b); }
 .nav-center-btn {
   width: 52px; height: 52px;
   display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-lt) 100%);
+  background: linear-gradient(135deg, var(--sunset) 0%, var(--gold-lt) 100%);
   border-radius: 50%;
   margin-top: -20px;
-  box-shadow: 0 4px 18px rgba(200,146,42,.45);
+  box-shadow: 0 4px 18px rgba(245,166,35,.50);
   color: var(--navy-900);
   transition: box-shadow .2s, transform .2s;
 }
@@ -193,7 +201,7 @@ button { cursor: pointer; font-family: var(--font-b); }
   text-decoration: none;
 }
 .btn--gold { background: var(--gold); color: var(--navy-900); }
-.btn--gold:hover { background: var(--gold-lt); color: var(--navy-900); box-shadow: 0 6px 20px rgba(200,146,42,.38); }
+.btn--gold:hover { background: var(--gold-lt); color: var(--navy-900); box-shadow: 0 6px 20px rgba(245,166,35,.45); }
 .btn--ghost { background: rgba(255,255,255,.06); color: var(--cream); border: 1px solid rgba(255,255,255,.14); }
 .btn--ghost:hover { background: rgba(255,255,255,.1); color: var(--cream); }
 .btn--full { width: 100%; }
@@ -252,6 +260,30 @@ select.field-input {
 .field-wrap { display: flex; flex-direction: column; }
 .form-fields { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem; }
 
+/* ── Pickup Type Toggle ────────────────────────────────────── */
+.pickup-toggle {
+  display: flex; gap: .5rem;
+}
+.pickup-toggle__btn {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center; gap: .4rem;
+  height: 44px;
+  background: var(--navy-700);
+  color: var(--muted);
+  border: 2px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: .82rem; font-weight: 600; font-family: var(--font-b);
+  cursor: pointer;
+  transition: all .2s;
+}
+.pickup-toggle__btn:hover { border-color: var(--gold); color: var(--text); }
+.pickup-toggle__btn--active {
+  background: var(--gold-dim);
+  border-color: var(--gold);
+  color: var(--gold-lt);
+}
+.pickup-toggle__btn--active svg { stroke: var(--gold-lt); }
+
 /* ── Hero ───────────────────────────────────────────────────── */
 .hero {
   position: relative;
@@ -272,7 +304,7 @@ select.field-input {
 .hero__overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(5,11,26,.35) 0%, rgba(5,11,26,.6) 50%, rgba(5,11,26,.97) 100%);
+  background: linear-gradient(180deg, rgba(10,22,40,.25) 0%, rgba(10,22,40,.55) 50%, rgba(10,22,40,.95) 100%);
 }
 
 .hero__content {
@@ -304,7 +336,7 @@ select.field-input {
   letter-spacing: .01em;
   margin-bottom: .6rem;
 }
-.hero__title em { font-style: italic; color: var(--gold-lt); }
+.hero__title em { font-style: italic; color: var(--sky-lt); }
 
 .hero__sub {
   font-size: .78rem;
@@ -886,6 +918,8 @@ select.field-input {
 }
 .est-val { font-family: var(--font-d); font-size: 1.8rem; font-weight: 400; color: var(--cream); text-align: right; }
 .est-val--sm { font-size: 1.1rem; color: var(--text); }
+.est-val--strike { text-decoration: line-through; color: var(--muted); font-size: 1rem; }
+.est-val--savings { color: #22c55e; font-weight: 600; }
 .est-divider { height: 1px; background: var(--border); margin: .2rem 0; }
 .est-disclaimer {
   font-size: .72rem; color: var(--muted); line-height: 1.45;
@@ -1530,7 +1564,7 @@ select.field-input {
 .svc-card__icon {
   width: 30px; height: 30px;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(212,175,55,.1);
+  background: rgba(245,166,35,.12);
   border-radius: var(--r-sm);
   margin-bottom: .2rem;
 }
@@ -1539,8 +1573,10 @@ select.field-input {
 .svc-card span { font-size: .68rem; color: var(--muted); }
 
 .svc-card--wide { grid-column: span 1; }
-.svc-card--accent { border-color: rgba(212,175,55,.2); background: rgba(212,175,55,.05); }
-.svc-card--accent:hover { border-color: var(--gold); background: rgba(212,175,55,.1); }
+.svc-card--accent { border-color: rgba(56,189,248,.2); background: rgba(56,189,248,.06); }
+.svc-card--accent:hover { border-color: var(--sky); background: rgba(56,189,248,.12); }
+.svc-card--accent .svc-card__icon { background: rgba(56,189,248,.12); }
+.svc-card--accent .svc-card__icon svg { stroke: var(--sky); }
 
 /* Mobile: collapse 4-col to 2×2 */
 @media (max-width: 380px) {

@@ -18,6 +18,12 @@ let currentService      = '';
 let gapiInited          = false;
 let tokenClient;
 
+// ── Region-aware vehicle helper ──────────────────────────────
+function getRegionVehicle(passengers) {
+  if (window.DLCRegion && DLCRegion.current.id === 'bayarea') return 'Toyota Sienna';
+  return passengers <= 3 ? 'Tesla Model Y' : 'Mercedes Van';
+}
+
 // ── Booking ID & Tracking Token ──────────────────────────────
 function generateBookingId() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -247,6 +253,35 @@ function goStep(n) {
   if (stepEl) stepEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+// ── Pickup Type Toggle (airport vs personal address) ─────────
+let currentPickupType = 'airport'; // 'airport' | 'address'
+
+function setPickupType(type) {
+  currentPickupType = type;
+  const airportWrap = document.getElementById('wAirportWrap');
+  const addressWrap = document.getElementById('wAddressWrap');
+
+  // Toggle visibility: show one, hide the other
+  if (airportWrap) airportWrap.style.display = type === 'airport' ? '' : 'none';
+  if (addressWrap) addressWrap.style.display = type === 'address' ? '' : 'none';
+
+  // Clear the hidden field so it doesn't affect estimate
+  if (type === 'airport') {
+    const addr = document.getElementById('address');
+    if (addr) addr.value = '';
+  } else {
+    const apt = document.getElementById('airport');
+    if (apt) apt.value = '';
+  }
+
+  // Toggle button styling
+  document.querySelectorAll('.pickup-toggle__btn').forEach(btn => {
+    btn.classList.toggle('pickup-toggle__btn--active', btn.dataset.pickup === type);
+  });
+
+  updateEstimate();
+}
+
 // ── Service Selection ─────────────────────────────────────────
 function selectService(svc) {
   currentService = svc;
@@ -259,20 +294,30 @@ function selectService(svc) {
 
   const isTransfer = svc === 'pickup' || svc === 'dropoff';
 
-  // Step 2: show/hide airport vs lodging
-  const airportWrap = document.getElementById('wAirportWrap');
-  const lodgingWrap = document.getElementById('wLodgingWrap');
-  const daysWrap    = document.getElementById('wDaysWrap');
-  const step2Sub    = document.getElementById('wStep2Sub');
+  // Step 2: show/hide pickup toggle, airport vs address, lodging
+  const pickupTypeWrap = document.getElementById('wPickupTypeWrap');
+  const airportWrap    = document.getElementById('wAirportWrap');
+  const addressWrap    = document.getElementById('wAddressWrap');
+  const lodgingWrap    = document.getElementById('wLodgingWrap');
+  const daysWrap       = document.getElementById('wDaysWrap');
+  const step2Sub       = document.getElementById('wStep2Sub');
 
-  if (airportWrap) airportWrap.style.display = '';   // always show address
-  if (lodgingWrap) lodgingWrap.style.display = isTransfer ? 'none' : '';
-  if (daysWrap)    daysWrap.style.display    = isTransfer ? 'none' : '';
-
-  if (step2Sub) {
-    step2Sub.textContent = isTransfer
-      ? 'Chọn sân bay và địa chỉ của bạn'
-      : 'Nhập địa chỉ xuất phát / điểm đón của bạn';
+  if (isTransfer) {
+    // Show the toggle so user picks airport OR address
+    if (pickupTypeWrap) pickupTypeWrap.style.display = '';
+    // Reset to airport by default
+    setPickupType('airport');
+    if (lodgingWrap) lodgingWrap.style.display = 'none';
+    if (daysWrap)    daysWrap.style.display    = 'none';
+    if (step2Sub) step2Sub.textContent = 'Chọn điểm đón hoặc trả khách';
+  } else {
+    // Tour: hide toggle, show only address field
+    if (pickupTypeWrap) pickupTypeWrap.style.display = 'none';
+    if (airportWrap) airportWrap.style.display = 'none';
+    if (addressWrap) addressWrap.style.display = '';
+    if (lodgingWrap) lodgingWrap.style.display = '';
+    if (daysWrap)    daysWrap.style.display    = '';
+    if (step2Sub) step2Sub.textContent = 'Nhập địa chỉ xuất phát / điểm đón của bạn';
   }
 
   goStep(2);
@@ -335,14 +380,46 @@ function updateEstimate() {
       let cost, vehicle;
       if (['pickup', 'dropoff'].includes(serviceType)) {
         cost    = pricing ? pricing.transferCost(miles, passengers) : fallbackTransfer(miles, passengers);
-        vehicle = pricing ? pricing.getVehicle(passengers) : (passengers <= 3 ? 'Tesla Model Y' : 'Mercedes Van');
+        vehicle = pricing ? pricing.getVehicle(passengers) : getRegionVehicle(passengers);
       } else {
         cost    = pricing ? pricing.tourCost(miles, passengers, days, lodging) : fallbackTour(miles, passengers, days, lodging);
-        vehicle = pricing ? pricing.getVehicle(passengers) : (passengers <= 3 ? 'Tesla Model Y' : 'Mercedes Van');
+        vehicle = pricing ? pricing.getVehicle(passengers) : getRegionVehicle(passengers);
       }
 
       estEl.textContent = `$${Math.round(cost)}`;
       vehEl.textContent = vehicle;
+
+      // Show Uber comparison for transfers
+      const uberRow    = document.getElementById('uberCompareRow');
+      const savingsRow = document.getElementById('savingsRow');
+      const uberEl     = document.getElementById('uberEstDisplay');
+      const savingsEl  = document.getElementById('savingsDisplay');
+
+      if (pricing && pricing.transferCostWithComparison && ['pickup', 'dropoff'].includes(serviceType)) {
+        const comp = pricing.transferCostWithComparison(miles, passengers);
+        if (uberRow && uberEl) {
+          uberRow.style.display = '';
+          uberEl.textContent = `$${comp.uberEstimate}`;
+        }
+        if (savingsRow && savingsEl) {
+          savingsRow.style.display = '';
+          savingsEl.textContent = `-$${comp.savings} (${comp.savingsPercent}%)`;
+        }
+      } else {
+        // For tours, show a simpler comparison
+        const isVan = passengers > 3;
+        const uberEq = pricing ? Math.round(pricing.estimateUberPrice(miles * 2, isVan ? 'van' : 'sedan') * (days || 1)) : 0;
+        if (uberRow && uberEl && uberEq > 0) {
+          uberRow.style.display = '';
+          uberEl.textContent = `~$${uberEq}`;
+        }
+        if (savingsRow && savingsEl && uberEq > cost) {
+          savingsRow.style.display = '';
+          savingsEl.textContent = `-$${Math.round(uberEq - cost)}`;
+        } else if (savingsRow) {
+          savingsRow.style.display = 'none';
+        }
+      }
 
       // Update lodging info card
       const lodgingCard = document.getElementById('lodgingInfoCard');
@@ -374,12 +451,17 @@ function getTourOrigin(serviceType) {
 }
 
 // Inline fallbacks (used only if pricing.js fails to load)
+// Uses simplified Uber-based pricing: estimate Uber then discount 20%
 function fallbackTransfer(miles, passengers) {
-  const fee = miles > 300 ? 400 : 0;
-  const sur = miles > 300 && passengers > 3 ? 75 : 0;
-  let c = Math.max(100, 100 + miles * 0.22) + fee + sur;
-  if (miles > 100) c += miles * 0.18;
-  return Math.round(c + 5);
+  const isVan = passengers > 3;
+  const perMile = isVan ? 1.50 : 0.90;
+  const base = isVan ? 2.50 : 1.50;
+  const estMin = Math.round((miles / 35) * 60);
+  const perMin = isVan ? 0.40 : 0.25;
+  const uberEst = base + miles * perMile + estMin * perMin + 4;
+  let price = uberEst * 0.80; // 20% less
+  if (miles > 300) price += 250;
+  return Math.round(Math.max(price, isVan ? 120 : 100));
 }
 function fallbackTour(miles, passengers, days, lodging) {
   const gas = window._gasCaliPrice || CALIFORNIA_AVG_FUEL_PRICE;

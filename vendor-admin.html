@@ -620,22 +620,128 @@
       text-align: center; padding: 1.25rem;
       font-size: .8rem; color: var(--muted);
     }
+
+    /* ── Auth loading overlay ───────────────────────────────────────── */
+    #authLoading {
+      position: fixed; inset: 0; z-index: 200;
+      background: var(--navy-900);
+      display: flex; align-items: center; justify-content: center;
+    }
+    #authLoading.hidden { display: none; }
+
+    /* ── Bell button in top bar ─────────────────────────────────────── */
+    .btn-bell {
+      position: relative;
+      width: 38px; height: 38px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border);
+      border-radius: 8px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .18s;
+    }
+    .btn-bell:hover { background: rgba(255,255,255,.1); }
+    .btn-bell svg { width: 18px; height: 18px; stroke: var(--muted); transition: stroke .18s; }
+    .btn-bell.has-unread svg { stroke: var(--gold); }
+    .bell-count {
+      position: absolute; top: -5px; right: -5px;
+      min-width: 16px; height: 16px;
+      background: var(--danger); border: 2px solid var(--navy-800);
+      border-radius: 8px;
+      font-family: var(--font-b); font-size: .52rem; font-weight: 700;
+      color: #fff; padding: 0 .25rem;
+      display: none; align-items: center; justify-content: center;
+    }
+    .btn-bell.has-unread .bell-count { display: flex; }
+
+    /* ── Notification badge on tab ──────────────────────────────────── */
+    .notif-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 16px; height: 16px;
+      background: var(--danger); border-radius: 8px;
+      font-size: .52rem; font-weight: 700;
+      color: #fff; padding: 0 .28rem;
+      margin-left: .28rem; vertical-align: middle;
+    }
+    .notif-badge:empty { display: none; }
+
+    /* ── New-order popup notification ───────────────────────────────── */
+    #notifPopup {
+      position: fixed;
+      top: env(safe-area-inset-top, 0px);
+      left: 0; right: 0;
+      z-index: 500;
+      padding: .5rem .75rem;
+      transform: translateY(-110%);
+      transition: transform .32s cubic-bezier(.32,.72,0,1);
+      pointer-events: none;
+    }
+    #notifPopup.show { transform: translateY(0); pointer-events: all; }
+    .np-inner {
+      background: var(--navy-800);
+      border: 1px solid var(--gold);
+      border-radius: 12px;
+      padding: .85rem 1rem;
+      display: flex; align-items: center; gap: .7rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5);
+    }
+    .np-icon { font-size: 1.35rem; flex-shrink: 0; }
+    .np-content { flex: 1; min-width: 0; }
+    .np-title { font-size: .78rem; font-weight: 700; color: var(--gold); margin-bottom: .08rem; }
+    .np-msg { font-size: .72rem; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .np-view {
+      height: 32px; padding: 0 .7rem; flex-shrink: 0;
+      background: var(--gold); color: var(--navy-900);
+      border: none; border-radius: 6px; cursor: pointer;
+      font-family: var(--font-b); font-size: .68rem; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase;
+    }
+    .np-close {
+      width: 28px; height: 28px; flex-shrink: 0;
+      background: rgba(255,255,255,.07); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--muted);
+      font-size: 1.1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── Notification list ──────────────────────────────────────────── */
+    .notif-card {
+      background: var(--navy-800);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: .85rem 1rem;
+      margin-bottom: .5rem;
+      cursor: pointer;
+      transition: border-color .18s;
+    }
+    .notif-card.unread {
+      border-color: rgba(245,166,35,.4);
+      background: rgba(245,166,35,.04);
+    }
+    .notif-card__top {
+      display: flex; justify-content: space-between;
+      align-items: flex-start; margin-bottom: .2rem;
+    }
+    .notif-card__title-wrap { display: flex; align-items: center; gap: .4rem; }
+    .notif-card__dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--gold); flex-shrink: 0;
+    }
+    .notif-card__title { font-size: .82rem; font-weight: 600; color: var(--cream); }
+    .notif-card__time { font-size: .64rem; color: var(--muted); white-space: nowrap; }
+    .notif-card__msg  { font-size: .74rem; color: var(--text); line-height: 1.45; }
+    .notif-card__date { font-size: .68rem; color: var(--muted); margin-top: .2rem; }
+    .notif-card__actions { margin-top: .5rem; display: flex; gap: .35rem; flex-wrap: wrap; }
+    .notif-empty {
+      text-align: center; padding: 2.5rem 1rem;
+      color: var(--muted); font-size: .82rem; line-height: 1.6;
+    }
   </style>
 </head>
 <body>
 
-<!-- ── PIN Gate ──────────────────────────────────────────────────── -->
-<div id="pinModal">
-  <div class="pin-card">
-    <div class="pin-emoji">🧑‍🍳</div>
-    <div class="pin-brand">Nhà Bếp Của Emily</div>
-    <p class="pin-sub">Nhập mã PIN để quản lý thực đơn</p>
-    <input type="tel" id="pinInput" class="pin-input"
-      placeholder="_ _ _ _" maxlength="6"
-      autocomplete="off" inputmode="numeric" pattern="[0-9]*">
-    <div class="pin-error" id="pinError"></div>
-    <button class="btn-pin" id="pinBtn">Đăng nhập</button>
-  </div>
+<!-- ── Auth loading (shown while Firebase resolves auth state) ─── -->
+<div id="authLoading">
+  <div class="va-spinner"></div>
 </div>
 
 <!-- ── App ───────────────────────────────────────────────────────── -->
@@ -645,10 +751,16 @@
   <div class="va-bar">
     <div class="va-bar__inner">
       <div class="va-bar__left">
-        <div class="va-bar__name">Nhà Bếp Của Emily</div>
-        <div class="va-bar__label">Menu Admin</div>
+        <div class="va-bar__name" id="barVendorName">Vendor Dashboard</div>
+        <div class="va-bar__label" id="barVendorId">&#8230;</div>
       </div>
-      <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <button class="btn-bell" id="bellBtn" onclick="switchTab('notifs')" title="Thông báo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span id="bellCount" class="bell-count"></span>
+        </button>
+        <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+      </div>
     </div>
   </div>
 
@@ -658,7 +770,7 @@
     <!-- Link to public page -->
     <div class="va-link-strip">
       <span class="va-link-strip__label">Public page:</span>
-      <a class="va-link-strip__url" href="/foods/?id=nha-bep-cua-emily" target="_blank">
+      <a class="va-link-strip__url" id="publicPageLink" href="/foods/?id=nha-bep-cua-emily" target="_blank">
         /foods/?id=nha-bep-cua-emily
       </a>
     </div>
@@ -679,6 +791,7 @@
     <div class="va-tabs">
       <button class="va-tab active" id="tabMenu" onclick="switchTab('menu')">Thực Đơn</button>
       <button class="va-tab" id="tabOrders" onclick="switchTab('orders')">Đơn Hàng<span id="ordersCount"></span></button>
+      <button class="va-tab" id="tabNotifs" onclick="switchTab('notifs')">Thông Báo<span id="notifBadge" class="notif-badge"></span></button>
     </div>
 
     <!-- Menu tab -->
@@ -728,6 +841,32 @@
       </div>
     </div>
 
+    <!-- Notifications tab -->
+    <div id="notifsTab" style="display:none">
+      <div class="va-section-hdr">
+        <div class="va-section-title">Thông Báo</div>
+        <button class="btn btn--ghost btn--sm" onclick="markAllRead()">&#10003; Đọc tất cả</button>
+      </div>
+      <div class="va-loading-state" id="notifsLoading">
+        <div class="va-spinner"></div>
+        Đang tải...
+      </div>
+      <div id="notifsList" style="display:none"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- New-order popup (slides down from top when a booking arrives) -->
+<div id="notifPopup">
+  <div class="np-inner">
+    <div class="np-icon">&#128276;</div>
+    <div class="np-content">
+      <div class="np-title" id="popupTitle">Đơn hàng mới!</div>
+      <div class="np-msg" id="popupMsg"></div>
+    </div>
+    <button class="np-view" onclick="openNotifTab()">Xem</button>
+    <button class="np-close" onclick="dismissPopup()">&#215;</button>
   </div>
 </div>
 
@@ -836,9 +975,11 @@
 
 <script>
   // ── Config ──────────────────────────────────────────────────────────────
-  // Change VENDOR_PIN to something only Loan knows before going live.
-  var VENDOR_PIN = '2438';
-  var VENDOR_ID  = 'nha-bep-cua-emily';
+  // VENDOR_ID resolved dynamically via Firebase Auth → vendorUsers collection.
+  // First-time setup: go to /vendor-login → "Tạo tài khoản lần đầu" (setup code = '2438').
+  var VENDOR_ID = null;
+  var vendorRef = null;
+  var menuRef   = null;
 
   // ── Seed data (written to Firestore on first use) ────────────────────────
   var SEED_VENDOR = {
@@ -884,67 +1025,59 @@
   if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
   var db      = firebase.firestore();
   var storage = firebase.storage();
-
-  var vendorRef = db.collection('vendors').doc(VENDOR_ID);
-  var menuRef   = vendorRef.collection('menuItems');
+  var auth    = firebase.auth();
 
   // ── State ─────────────────────────────────────────────────────────────────
-  var allItems     = {};
-  var unsubMenu    = null;
-  var _authReady   = false;   // true once signInAnonymously() resolves
-  var _pendingStart = false;  // true if user unlocked before auth resolved
+  var allItems          = {};
+  var unsubMenu         = null;
+  var unsubNotifs       = null;
+  var allNotifs         = [];
+  var _knownNotifIds    = {};
+  var _initialNotifLoad = false;
+  var _popupTimer       = null;
 
-  // ── Auth: wait for anonymous sign-in before touching Firestore ────────────
-  firebase.auth().signInAnonymously().then(function () {
-    _authReady = true;
-    if (_pendingStart) { _pendingStart = false; startApp(); }
-  }).catch(function () {
-    // auth failed — still attempt Firestore (rules may allow open access)
-    _authReady = true;
-    if (_pendingStart) { _pendingStart = false; startApp(); }
-  });
-
-  // ── PIN auth ──────────────────────────────────────────────────────────────
-  document.getElementById('pinInput').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') verifyPin();
-  });
-  document.getElementById('pinBtn').addEventListener('click', verifyPin);
-
-  function verifyPin() {
-    var val = document.getElementById('pinInput').value.trim();
-    if (val === VENDOR_PIN) {
-      sessionStorage.setItem('vendorAuth_' + VENDOR_ID, '1');
-      document.getElementById('pinModal').style.display = 'none';
+  // ── Auth: email/password via Firebase — redirect if not signed in ─────────
+  auth.onAuthStateChanged(function (user) {
+    if (!user) {
+      window.location.href = '/vendor-login';
+      return;
+    }
+    // Look up which vendor this user manages
+    db.collection('vendorUsers').doc(user.uid).get().then(function (doc) {
+      if (!doc.exists) {
+        auth.signOut().then(function () { window.location.href = '/vendor-login'; });
+        return;
+      }
+      VENDOR_ID = doc.data().vendorId;
+      vendorRef = db.collection('vendors').doc(VENDOR_ID);
+      menuRef   = vendorRef.collection('menuItems');
+      // Update top bar
+      var bn = document.getElementById('barVendorName');
+      var bi = document.getElementById('barVendorId');
+      if (bi) bi.textContent = VENDOR_ID;
+      // Show app
+      document.getElementById('authLoading').classList.add('hidden');
       document.getElementById('app').classList.add('visible');
       document.getElementById('fabAdd').classList.add('visible');
-      if (_authReady) { startApp(); } else { _pendingStart = true; }
-    } else {
-      document.getElementById('pinError').textContent = 'Mã PIN không đúng. Vui lòng thử lại.';
-      document.getElementById('pinInput').value = '';
-    }
-  }
+      startApp();
+    }).catch(function () {
+      window.location.href = '/vendor-login';
+    });
+  });
 
   function logout() {
-    sessionStorage.removeItem('vendorAuth_' + VENDOR_ID);
-    if (unsubMenu) unsubMenu();
-    location.reload();
+    if (unsubMenu)   unsubMenu();
+    if (unsubOrders) unsubOrders();
+    if (unsubNotifs) unsubNotifs();
+    auth.signOut().then(function () { window.location.href = '/vendor-login'; });
   }
-
-  // Auto-restore session
-  (function checkSession() {
-    if (sessionStorage.getItem('vendorAuth_' + VENDOR_ID) === '1') {
-      document.getElementById('pinModal').style.display = 'none';
-      document.getElementById('app').classList.add('visible');
-      document.getElementById('fabAdd').classList.add('visible');
-      if (_authReady) { startApp(); } else { _pendingStart = true; }
-    }
-  })();
 
   // ── App start ─────────────────────────────────────────────────────────────
   function startApp() {
     loadCapacity();
     seedIfNeeded();
     subscribeMenuItems();
+    subscribeNotifications();
     // Show a friendly error if Firestore hasn't delivered data after 8 seconds
     setTimeout(function () {
       var loading = document.getElementById('loadingState');
@@ -1373,17 +1506,32 @@
     _activeTab = tab;
     document.getElementById('tabMenu').classList.toggle('active', tab === 'menu');
     document.getElementById('tabOrders').classList.toggle('active', tab === 'orders');
+    document.getElementById('tabNotifs').classList.toggle('active', tab === 'notifs');
     document.getElementById('menuTab').style.display   = tab === 'menu'   ? '' : 'none';
     document.getElementById('ordersTab').style.display = tab === 'orders' ? '' : 'none';
+    document.getElementById('notifsTab').style.display = tab === 'notifs' ? '' : 'none';
     if (tab === 'orders' && !unsubOrders) subscribeOrders();
+    if (tab === 'notifs') renderNotifications();
   }
 
   // ── Daily capacity ────────────────────────────────────────────────────────
   function loadCapacity() {
     vendorRef.get().then(function (doc) {
       if (doc.exists) {
-        var cap = doc.data().defaultDailyCapacity;
+        var data = doc.data();
+        var cap = data.defaultDailyCapacity;
         document.getElementById('capInput').value = (cap != null) ? cap : 300;
+        // Update top bar with vendor's actual name
+        var el = document.getElementById('barVendorName');
+        if (el && data.businessName) el.textContent = data.businessName;
+        // Update public page link
+        var link = document.getElementById('publicPageLink');
+        if (link && data.category) {
+          var catPath = data.category === 'food' ? 'foods' :
+                        data.category === 'nails' ? 'nailsalon' : 'hairsalon';
+          link.href = '/' + catPath + '/?id=' + VENDOR_ID;
+          link.textContent = '/' + catPath + '/?id=' + VENDOR_ID;
+        }
       } else {
         document.getElementById('capInput').value = 300;
       }
@@ -1687,6 +1835,175 @@
     }).then(function () {
       var msgs = { confirmed:'Đã xác nhận!', completed:'Hoàn thành!', cancelled:'Đã huỷ đơn.' };
       showToast(msgs[newStatus] || 'Đã cập nhật.', 'success');
+    }).catch(function (err) {
+      showToast('Lỗi: ' + err.message, 'error');
+    });
+  }
+
+  // ── Notifications ─────────────────────────────────────────────────────────
+
+  function subscribeNotifications() {
+    if (unsubNotifs) unsubNotifs();
+    _knownNotifIds    = {};
+    _initialNotifLoad = false;
+
+    var ref = vendorRef.collection('notifications')
+      .orderBy('createdAt', 'desc').limit(50);
+
+    unsubNotifs = ref.onSnapshot(function (snap) {
+      var toPopup = [];
+
+      snap.docChanges().forEach(function (change) {
+        if (change.type === 'added') {
+          var id   = change.doc.id;
+          var data = change.doc.data();
+          // Only popup for notifications added AFTER we started listening
+          if (_initialNotifLoad && !_knownNotifIds[id]) {
+            toPopup.push(Object.assign({ id: id }, data));
+          }
+          _knownNotifIds[id] = true;
+        }
+      });
+
+      _initialNotifLoad = true;
+
+      // Show popup for newest incoming notification
+      if (toPopup.length > 0) showOrderPopup(toPopup[0]);
+
+      allNotifs = [];
+      snap.forEach(function (d) { allNotifs.push(Object.assign({ id: d.id }, d.data())); });
+
+      if (_activeTab === 'notifs') renderNotifications();
+      updateNotifBadge();
+    }, function (err) {
+      console.warn('[notifs] listener error:', err.code || err.message);
+    });
+  }
+
+  // ── Render notification list ───────────────────────────────────────────────
+  function renderNotifications() {
+    var loading = document.getElementById('notifsLoading');
+    var list    = document.getElementById('notifsList');
+    if (!loading || !list) return;
+
+    loading.style.display = 'none';
+    list.style.display    = 'block';
+
+    if (allNotifs.length === 0) {
+      list.innerHTML = '<div class="notif-empty">Chưa có thông báo nào.<br>Đơn hàng mới sẽ xuất hiện ở đây.</div>';
+      return;
+    }
+
+    var html = '';
+    allNotifs.forEach(function (n) {
+      var isUnread = !n.read;
+      var cls = 'notif-card' + (isUnread ? ' unread' : '');
+      var timeStr = '';
+      if (n.createdAt && n.createdAt.toDate) {
+        var d = n.createdAt.toDate();
+        timeStr = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
+      }
+      var dateLabel = '';
+      if (n.requestedDate && /^\d{4}-\d{2}-\d{2}$/.test(n.requestedDate)) {
+        var d2 = new Date(n.requestedDate + 'T12:00:00');
+        var dayNames = ['CN','T2','T3','T4','T5','T6','T7'];
+        dateLabel = dayNames[d2.getDay()] + ' ' + d2.getDate() + '/' + (d2.getMonth() + 1);
+      }
+      html += '<div class="' + cls + '" onclick="markNotifRead(\'' + n.id + '\')">' +
+        '<div class="notif-card__top">' +
+          '<div class="notif-card__title-wrap">' +
+            (isUnread ? '<div class="notif-card__dot"></div>' : '') +
+            '<div class="notif-card__title">' + esc(n.title || 'Thông báo') + '</div>' +
+          '</div>' +
+          '<div class="notif-card__time">' + esc(timeStr) + '</div>' +
+        '</div>' +
+        '<div class="notif-card__msg">' + esc(n.message || '') + '</div>' +
+        (dateLabel ? '<div class="notif-card__date">&#128197; ' + esc(dateLabel) + '</div>' : '') +
+        '<div class="notif-card__actions">';
+
+      if (n.bookingId && !n.acknowledged) {
+        html += '<button class="btn btn--ok btn--sm" onclick="event.stopPropagation();confirmFromNotif(\'' + esc(n.id) + '\',\'' + esc(n.bookingId) + '\')">' +
+          '&#10003; Xác nhận</button>';
+      }
+      if (n.customerPhone) {
+        html += '<a href="tel:' + esc(n.customerPhone) + '" class="btn btn--ghost btn--sm" onclick="event.stopPropagation()">&#128222; Gọi</a>';
+      }
+
+      html += '</div></div>';
+    });
+
+    list.innerHTML = html;
+  }
+
+  // ── Notification badge (tab + bell) ───────────────────────────────────────
+  function updateNotifBadge() {
+    var unread = allNotifs.filter(function (n) { return !n.read; }).length;
+    var badge    = document.getElementById('notifBadge');
+    var bellBtn  = document.getElementById('bellBtn');
+    var bellCnt  = document.getElementById('bellCount');
+    var countStr = unread > 0 ? (unread > 99 ? '99+' : String(unread)) : '';
+    if (badge)   badge.textContent   = countStr;
+    if (bellCnt) bellCnt.textContent = countStr;
+    if (bellBtn) bellBtn.classList.toggle('has-unread', unread > 0);
+  }
+
+  // ── New-order popup ───────────────────────────────────────────────────────
+  function showOrderPopup(notif) {
+    document.getElementById('popupTitle').textContent = notif.title   || 'Đơn hàng mới!';
+    document.getElementById('popupMsg').textContent   = notif.message || '';
+    clearTimeout(_popupTimer);
+    document.getElementById('notifPopup').classList.add('show');
+    _popupTimer = setTimeout(dismissPopup, 8000);
+  }
+
+  function dismissPopup() {
+    clearTimeout(_popupTimer);
+    document.getElementById('notifPopup').classList.remove('show');
+  }
+
+  function openNotifTab() {
+    dismissPopup();
+    switchTab('notifs');
+  }
+
+  // ── Mark read / mark all ──────────────────────────────────────────────────
+  function markNotifRead(notifId) {
+    vendorRef.collection('notifications').doc(notifId).update({
+      read:   true,
+      readAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(function () {});
+  }
+
+  function markAllRead() {
+    var unread = allNotifs.filter(function (n) { return !n.read; });
+    if (unread.length === 0) { showToast('Không có thông báo chưa đọc.', 'success'); return; }
+    var batch = db.batch();
+    unread.forEach(function (n) {
+      batch.update(vendorRef.collection('notifications').doc(n.id), {
+        read:   true,
+        readAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    });
+    batch.commit().then(function () {
+      showToast('Đã đánh dấu đọc ' + unread.length + ' thông báo.', 'success');
+    }).catch(function (err) {
+      showToast('Lỗi: ' + err.message, 'error');
+    });
+  }
+
+  // ── Confirm booking from notification ─────────────────────────────────────
+  function confirmFromNotif(notifId, bookingId) {
+    vendorRef.collection('bookings').doc(bookingId).update({
+      status:    'confirmed',
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function () {
+      return vendorRef.collection('notifications').doc(notifId).update({
+        acknowledged: true,
+        read:         true,
+        readAt:       firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }).then(function () {
+      showToast('Đã xác nhận đơn hàng!', 'success');
     }).catch(function (err) {
       showToast('Lỗi: ' + err.message, 'error');
     });

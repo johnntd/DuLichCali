@@ -988,7 +988,33 @@
           orderData.createdAt = window.firebase.firestore.FieldValue.serverTimestamp();
           orderData.updatedAt = window.firebase.firestore.FieldValue.serverTimestamp();
           window.dlcDb.collection('vendors').doc(biz.id).collection('bookings').add(orderData)
-            .then(function () {
+            .then(function (docRef) {
+              // Write real-time notification so vendor sees it instantly
+              var notifMsg = String(orderData.quantity) + ' ' +
+                             (orderData.variant || orderData.itemName || '') +
+                             (orderData.customerName ? ' · ' + orderData.customerName : '');
+              var notifData = {
+                type:          'new_booking',
+                title:         'Đơn hàng mới!',
+                message:       notifMsg.trim(),
+                bookingId:     docRef.id,
+                customerName:  orderData.customerName  || '',
+                customerPhone: orderData.customerPhone || '',
+                requestedDate: orderData.requestedDate || '',
+                itemName:      orderData.variant || orderData.itemName || '',
+                quantity:      orderData.quantity,
+                subtotal:      orderData.subtotal,
+                read:          false,
+                acknowledged:  false,
+                createdAt:     window.firebase.firestore.FieldValue.serverTimestamp(),
+                // Extension points — set true when sent via those channels
+                pushSent:  false,
+                emailSent: false,
+                smsSent:   false
+              };
+              window.dlcDb.collection('vendors').doc(biz.id)
+                .collection('notifications').add(notifData)
+                .catch(function (e) { console.warn('[notif] write failed:', e.message); });
               form.style.display = 'none';
               successDiv.classList.add('show');
             })

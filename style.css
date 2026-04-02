@@ -6,22 +6,22 @@
 
 /* ── Custom Properties ──────────────────────────────────────── */
 :root {
-  --navy-900: #071b2f;
-  --navy-800: #0c2540;
-  --navy-700: #143358;
+  --navy-900: #0d2f50;
+  --navy-800: #123b62;
+  --navy-700: #194a78;
   --gold:     #f5a623;
   --gold-lt:  #ffc857;
   --gold-dim: rgba(245,166,35,0.16);
   --cream:    #fff8ee;
-  --text:     #bdd4e8;
-  --muted:    #5a8fad;
-  --border:   rgba(255,255,255,0.10);
-  --border-g: rgba(245,166,35,0.35);
+  --text:     #c8e4f8;
+  --muted:    #6ab0d4;
+  --border:   rgba(255,255,255,0.13);
+  --border-g: rgba(245,166,35,0.38);
 
   /* California brights — actively used */
   --sky:      #38bdf8;
   --sky-lt:   #7dd3fc;
-  --sky-dim:  rgba(56,189,248,0.12);
+  --sky-dim:  rgba(56,189,248,0.14);
   --ocean:    #0ea5e9;
   --sunset:   #fb923c;
   --coral:    #f97316;
@@ -75,7 +75,7 @@ button { cursor: pointer; font-family: var(--font-b); }
   align-items: center;
   justify-content: space-between;
   padding: 0 1rem;
-  background: rgba(7,27,47,.94);
+  background: rgba(13,47,80,.94);
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
   border-bottom: 1px solid var(--border-g);
@@ -137,7 +137,7 @@ button { cursor: pointer; font-family: var(--font-b); }
   padding-bottom: env(safe-area-inset-bottom, 0px);
   display: flex;
   align-items: stretch;
-  background: rgba(7,27,47,.96);
+  background: rgba(13,47,80,.96);
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
   border-top: 1px solid var(--border-g);
@@ -305,7 +305,7 @@ select.field-input {
 .hero__overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(7,27,47,.15) 0%, rgba(7,20,38,.55) 50%, rgba(18,8,3,.94) 100%);
+  background: linear-gradient(180deg, rgba(13,47,80,.15) 0%, rgba(13,47,80,.55) 50%, rgba(20,10,3,.94) 100%);
 }
 
 .hero__content {
@@ -410,7 +410,7 @@ select.field-input {
 .dest-card__gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, transparent 30%, rgba(7,20,38,.82) 100%);
+  background: linear-gradient(to bottom, transparent 30%, rgba(13,47,80,.82) 100%);
 }
 
 .dest-card__body { padding: .8rem .9rem 1rem; }
@@ -670,7 +670,7 @@ select.field-input {
 .dest-full-card__hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, transparent 35%, rgba(7,20,38,.92) 100%);
+  background: linear-gradient(to bottom, transparent 35%, rgba(13,47,80,.92) 100%);
 }
 
 .dest-full-card__tagline { position: absolute; bottom: .9rem; left: 1rem; right: 1rem; }
@@ -1226,7 +1226,7 @@ select.field-input {
 @media (min-width: 900px) {
   #app { max-width: 500px; margin: 0 auto; }
   #app { border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
-  body { background: #030e1c; }
+  body { background: #0a2540; }
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1296,7 +1296,7 @@ select.field-input {
   position: absolute;
   inset: auto 0 0 0;
   height: 60%;
-  background: linear-gradient(to bottom, transparent 0%, rgba(7,20,38,.95) 100%);
+  background: linear-gradient(to bottom, transparent 0%, rgba(13,47,80,.95) 100%);
   pointer-events: none;
   z-index: 3;
 }
@@ -1308,7 +1308,7 @@ select.field-input {
   left: .85rem;
   width: 40px; height: 40px;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(8,18,40,.65);
+  background: rgba(13,47,80,.65);
   border: 1px solid rgba(255,255,255,.18);
   border-radius: 50%;
   color: var(--cream);
@@ -1319,7 +1319,7 @@ select.field-input {
 }
 .dest-modal__back { z-index: 5; }
 .dest-modal__back svg { width: 20px; height: 20px; }
-.dest-modal__back:hover { background: rgba(8,18,40,.88); }
+.dest-modal__back:hover { background: rgba(13,47,80,.88); }
 
 /* Sound toggle button */
 .dest-modal__sound {
@@ -1328,7 +1328,7 @@ select.field-input {
   right: .85rem;
   width: 40px; height: 40px;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(8,18,40,.65);
+  background: rgba(13,47,80,.65);
   border: 1px solid rgba(255,255,255,.18);
   border-radius: 50%;
   color: var(--cream);
@@ -1339,7 +1339,7 @@ select.field-input {
 }
 .dest-modal__sound { z-index: 5; }
 .dest-modal__sound svg { width: 20px; height: 20px; }
-.dest-modal__sound:hover { background: rgba(8,18,40,.88); }
+.dest-modal__sound:hover { background: rgba(13,47,80,.88); }
 
 /* ── Scrollable Info Sheet ──────────────────────────────────── */
 .dest-modal__sheet {

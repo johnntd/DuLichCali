@@ -1,0 +1,19 @@
+{
+  "name": "dulichi-cali-functions",
+  "version": "1.0.0",
+  "description": "Firebase Cloud Functions — DuLichCali vendor SMS notifications via Twilio",
+  "main": "index.js",
+  "engines": {
+    "node": "20"
+  },
+  "scripts": {
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.4.0",
+    "firebase-functions": "^5.0.0",
+    "twilio": "^5.3.0"
+  },
+  "private": true
+}

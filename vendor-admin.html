@@ -792,6 +792,7 @@
       <button class="va-tab active" id="tabMenu" onclick="switchTab('menu')">Thực Đơn</button>
       <button class="va-tab" id="tabOrders" onclick="switchTab('orders')">Đơn Hàng<span id="ordersCount"></span></button>
       <button class="va-tab" id="tabNotifs" onclick="switchTab('notifs')">Thông Báo<span id="notifBadge" class="notif-badge"></span></button>
+      <button class="va-tab" id="tabSettings" onclick="switchTab('settings')">Cài Đặt</button>
     </div>
 
     <!-- Menu tab -->
@@ -852,6 +853,35 @@
         Đang tải...
       </div>
       <div id="notifsList" style="display:none"></div>
+    </div>
+
+    <!-- Settings tab -->
+    <div id="settingsTab" style="display:none">
+      <div class="va-section-hdr">
+        <div class="va-section-title">Cài Đặt</div>
+      </div>
+
+      <!-- SMS notification card -->
+      <div class="va-cap-card">
+        <div class="va-cap-card__title">&#128242; Thông Báo SMS</div>
+        <div class="f-toggle-row" style="margin-bottom:.9rem">
+          <span class="f-toggle-label">Nhận SMS khi có đơn hàng mới</span>
+          <div class="f-toggle" id="smsToggle" onclick="toggleSms()">
+            <div class="f-toggle__knob"></div>
+          </div>
+        </div>
+        <div style="margin-bottom:.65rem">
+          <label style="display:block;font-size:.75rem;color:var(--text-muted);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.08em">Số điện thoại nhận SMS</label>
+          <input type="tel" id="smsPhoneInput"
+            placeholder="+14081234567"
+            style="width:100%;box-sizing:border-box;height:44px;background:var(--navy-900);border:1px solid var(--border-g);border-radius:8px;color:var(--text);font-size:.95rem;padding:0 .75rem;font-family:var(--font-b)">
+          <div style="font-size:.72rem;color:var(--text-muted);margin-top:.3rem">Định dạng quốc tế: +1XXXXXXXXXX (Mỹ)</div>
+        </div>
+        <div class="va-cap-card__row">
+          <button class="btn btn--gold btn--sm" onclick="saveSmsSettings()">Lưu cài đặt SMS</button>
+          <span id="smsSaveStatus" style="font-size:.8rem;color:var(--text-muted)"></span>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -996,7 +1026,9 @@
     description:          'Mỗi cuốn chả giò là cả tâm huyết của gia đình Emily — nhân thịt heo, nấm hương và cà rốt tươi, gói bằng bánh tráng mỏng, chiên vàng giòn rụm. Không chất bảo quản, handmade từng mẻ.',
     heroImage:            '',
     active:               true,
-    defaultDailyCapacity: 300
+    defaultDailyCapacity: 300,
+    smsEnabled:           false,
+    notificationPhone:    ''
   };
 
   var SEED_ITEM = {
@@ -1075,6 +1107,7 @@
   // ── App start ─────────────────────────────────────────────────────────────
   function startApp() {
     loadCapacity();
+    loadSmsSettings();
     seedIfNeeded();
     subscribeMenuItems();
     subscribeNotifications();
@@ -1507,9 +1540,11 @@
     document.getElementById('tabMenu').classList.toggle('active', tab === 'menu');
     document.getElementById('tabOrders').classList.toggle('active', tab === 'orders');
     document.getElementById('tabNotifs').classList.toggle('active', tab === 'notifs');
-    document.getElementById('menuTab').style.display   = tab === 'menu'   ? '' : 'none';
-    document.getElementById('ordersTab').style.display = tab === 'orders' ? '' : 'none';
-    document.getElementById('notifsTab').style.display = tab === 'notifs' ? '' : 'none';
+    document.getElementById('tabSettings').classList.toggle('active', tab === 'settings');
+    document.getElementById('menuTab').style.display     = tab === 'menu'     ? '' : 'none';
+    document.getElementById('ordersTab').style.display   = tab === 'orders'   ? '' : 'none';
+    document.getElementById('notifsTab').style.display   = tab === 'notifs'   ? '' : 'none';
+    document.getElementById('settingsTab').style.display = tab === 'settings' ? '' : 'none';
     if (tab === 'orders' && !unsubOrders) subscribeOrders();
     if (tab === 'notifs') renderNotifications();
   }
@@ -1555,6 +1590,50 @@
       }
     }).catch(function (err) {
       showToast('Lỗi: ' + err.message, 'error');
+    });
+  }
+
+  // ── SMS settings ──────────────────────────────────────────────────────────
+  function loadSmsSettings() {
+    vendorRef.get().then(function (doc) {
+      if (!doc.exists) return;
+      var data = doc.data();
+      var toggle = document.getElementById('smsToggle');
+      var phoneInput = document.getElementById('smsPhoneInput');
+      if (toggle) toggle.classList.toggle('on', !!data.smsEnabled);
+      if (phoneInput) phoneInput.value = data.notificationPhone || '';
+    }).catch(function () {});
+  }
+
+  function toggleSms() {
+    var toggle = document.getElementById('smsToggle');
+    toggle.classList.toggle('on');
+  }
+
+  function saveSmsSettings() {
+    var toggle   = document.getElementById('smsToggle');
+    var phone    = (document.getElementById('smsPhoneInput').value || '').trim();
+    var enabled  = toggle.classList.contains('on');
+    var status   = document.getElementById('smsSaveStatus');
+
+    // Validate phone: must be E.164 if provided
+    if (phone && !/^\+1[0-9]{10}$/.test(phone)) {
+      status.textContent = '✕ Số điện thoại phải là +1XXXXXXXXXX';
+      status.style.color = '#f87171';
+      return;
+    }
+
+    vendorRef.update({
+      smsEnabled:        enabled,
+      notificationPhone: phone,
+      updatedAt:         firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function () {
+      status.textContent = '✓ Đã lưu';
+      status.style.color = 'var(--gold)';
+      setTimeout(function () { status.textContent = ''; }, 3000);
+    }).catch(function (err) {
+      status.textContent = '✕ ' + err.message;
+      status.style.color = '#f87171';
     });
   }
 

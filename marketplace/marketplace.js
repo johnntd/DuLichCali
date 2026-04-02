@@ -131,9 +131,13 @@
   }
 
   function renderBizCard(biz) {
+    var heroBgStyle = biz.heroImage
+      ? 'background-image:url(' + escAttr(biz.heroImage) + ');background-size:cover;background-position:center;'
+      : 'background:' + biz.heroGradient + ';';
+
     return '<div class="mp-biz-card" data-id="' + escHtml(biz.id) + '">' +
       '<div class="mp-biz-card__hero">' +
-        '<div class="mp-biz-card__hero-bg" style="background:' + biz.heroGradient + '"></div>' +
+        '<div class="mp-biz-card__hero-bg" style="' + heroBgStyle + '"></div>' +
         '<div class="mp-biz-card__hero-overlay"></div>' +
         '<div class="mp-biz-card__badge">' + escHtml(biz.region) + '</div>' +
       '</div>' +
@@ -165,6 +169,12 @@
     }
 
     var backUrl = window.location.pathname;
+
+    // Route food vendors to their own renderer
+    if (biz.vendorType === 'foodvendor') {
+      renderFoodVendorDetail(biz);
+      return;
+    }
 
     var html =
       renderAppBar(backUrl, 'Danh sách', biz.name, biz.phone) +
@@ -401,6 +411,315 @@
     '</div>';
   }
 
+  // ── Food Vendor Detail Page ────────────────────────────────────────────────────
+
+  // Public entry point — shows loading state, then fetches Firestore data if available
+  function renderFoodVendorDetail(biz) {
+    var backUrl = window.location.pathname;
+
+    // Immediate skeleton so the page isn't blank
+    _container.innerHTML =
+      renderAppBar(backUrl, 'Danh sách', biz.name, biz.phone) +
+      '<div class="mp-fv-loading">' +
+        '<div class="mp-fv-spinner"></div>' +
+        '<p>Đang tải thực đơn...</p>' +
+      '</div>';
+
+    if (window.dlcDb) {
+      loadFoodVendorFirestore(biz, function (mergedBiz) {
+        _renderFoodVendorContent(mergedBiz);
+      });
+    } else {
+      _renderFoodVendorContent(biz);
+    }
+  }
+
+  // Fetch vendor doc + menuItems subcollection from Firestore and merge with static data
+  function loadFoodVendorFirestore(biz, callback) {
+    var db = window.dlcDb;
+    var vendorRef = db.collection('vendors').doc(biz.id);
+
+    vendorRef.get().then(function (vendorDoc) {
+      // Start from a shallow copy of the static biz object
+      var merged = {};
+      for (var k in biz) { if (Object.prototype.hasOwnProperty.call(biz, k)) merged[k] = biz[k]; }
+
+      if (vendorDoc.exists) {
+        var vd = vendorDoc.data();
+        if (vd.description) merged.description = vd.description;
+        if (vd.heroImage)   merged.heroImage   = vd.heroImage;
+        if (vd.active === false) merged.active  = false;
+      }
+
+      // Load menu items (no compound index required — filter client-side)
+      vendorRef.collection('menuItems').get().then(function (snap) {
+        if (!snap.empty) {
+          var items = [];
+          snap.forEach(function (d) {
+            var item = d.data();
+            if (item.active === false) return;   // skip inactive
+
+            // Normalize variants: string[] or object[] → {id, label, labelEn}[]
+            var variants = (item.variants || []).map(function (v, i) {
+              if (v && typeof v === 'object' && v.id) return v;
+              var s = String(v || '');
+              var slug = s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || ('v' + i);
+              return { id: slug, label: s, labelEn: s };
+            });
+
+            items.push({
+              id: d.id,
+              name: item.name || '',
+              nameEn: item.nameEn || item.name || '',
+              variants: variants,
+              pricePerUnit: Number(item.price) || 0.50,
+              unit: item.unit || 'each',
+              unitEn: item.unit || 'each',
+              minimumOrderQty: item.minimumOrderQty || 30,
+              image: item.image || merged.heroImage || '',
+              description: item.description || '',
+              active: true,
+              featured: !!item.featured,
+              sortOrder: item.sortOrder || 0
+            });
+          });
+
+          items.sort(function (a, b) { return a.sortOrder - b.sortOrder; });
+
+          if (items.length > 0) {
+            merged.products = items;
+
+            // Refresh AI system prompt with live menu data
+            if (merged.aiReceptionist) {
+              var menuLines = items.map(function (it) {
+                return it.name + ': $' + it.pricePerUnit.toFixed(2) + '/each, min ' + it.minimumOrderQty;
+              }).join('; ');
+              merged.aiReceptionist = {};
+              for (var ak in biz.aiReceptionist) {
+                if (Object.prototype.hasOwnProperty.call(biz.aiReceptionist, ak)) {
+                  merged.aiReceptionist[ak] = biz.aiReceptionist[ak];
+                }
+              }
+              merged.aiReceptionist.systemExtra =
+                'You are the AI receptionist for ' + merged.name + ' in ' + merged.city + ' Bay Area. ' +
+                'Contact: ' + (merged.hosts && merged.hosts[0] ? merged.hosts[0].name : 'Loan') + ' at ' + merged.phoneDisplay + '. ' +
+                'Address: ' + merged.address + '. ' +
+                'Current menu: ' + menuLines + '. ' +
+                'Variants per item (if any) are listed as product options such as Raw or Fresh. ' +
+                'Be warm and helpful. Answer in the same language as the customer (Vietnamese or English).';
+            }
+          }
+        }
+
+        callback(merged);
+      }).catch(function (err) {
+        console.warn('[DLC] menuItems load error:', err.message);
+        callback(merged);
+      });
+    }).catch(function (err) {
+      console.warn('[DLC] vendor load error:', err.message);
+      callback(biz);
+    });
+  }
+
+  // Internal renderer — called after Firestore data is ready (or on fallback)
+  function _renderFoodVendorContent(biz) {
+    var backUrl = window.location.pathname;
+
+    var html =
+      renderAppBar(backUrl, 'Danh sách', biz.name, biz.phone) +
+      '<main class="mp-main">' +
+        renderFoodVendorHero(biz) +
+        renderInfoStrip(biz) +
+        renderFoodVendorAbout(biz) +
+        renderProductsSection(biz) +
+        renderOrderInquirySection(biz) +
+        renderAiSection(biz) +
+        renderContactSection(biz) +
+        '<div class="mp-spacer"></div>' +
+      '</main>' +
+      renderFooter();
+
+    _container.innerHTML = html;
+
+    if (biz.orderEnabled) {
+      initOrderInquiryForm(biz);
+    }
+
+    if (biz.aiReceptionist && biz.aiReceptionist.enabled) {
+      Receptionist.init(biz, 'aiWidget_' + biz.id);
+    }
+  }
+
+  function renderFoodVendorHero(biz) {
+    var bgStyle = biz.heroImage
+      ? 'background-image:url(' + escAttr(biz.heroImage) + ');background-size:cover;background-position:center;'
+      : 'background:' + biz.heroGradient + ';';
+
+    return '<div class="mp-detail-hero mp-food-hero">' +
+      '<div class="mp-detail-hero__bg" style="' + bgStyle + '"></div>' +
+      '<div class="mp-food-hero__overlay"></div>' +
+      '<div class="mp-detail-hero__content">' +
+        '<div class="mp-detail-hero__region">' + escHtml(biz.region) + ' · ' + escHtml(biz.city) + '</div>' +
+        '<h1 class="mp-detail-hero__name">' + escHtml(biz.name) + '</h1>' +
+        '<p class="mp-detail-hero__tagline">' + escHtml(biz.tagline) + '</p>' +
+        '<div style="display:flex;gap:.5rem;margin-top:1.1rem;flex-wrap:wrap;">' +
+          '<button class="mp-btn mp-btn--primary" onclick="document.getElementById(\'orderSection_' + biz.id + '\').scrollIntoView({behavior:\'smooth\'})">' +
+            calendarIcon + 'Đặt Đơn Ngay' +
+          '</button>' +
+          '<a href="tel:' + biz.phone + '" class="mp-btn mp-btn--ghost">' +
+            phoneIcon + escHtml(biz.phoneDisplay) +
+          '</a>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderFoodVendorAbout(biz) {
+    return '<div class="mp-section">' +
+      '<div class="mp-section-hdr">' +
+        '<h2 class="mp-section-title">Về Chúng Tôi</h2>' +
+      '</div>' +
+      '<div class="mp-booking-card">' +
+        '<p style="line-height:1.75;color:var(--text);font-size:.88rem">' + escHtml(biz.description) + '</p>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderProductsSection(biz) {
+    if (!biz.products || biz.products.length === 0) return '';
+
+    var productsHtml = biz.products.filter(function (p) { return p.active; }).map(function (product) {
+      var variantsHtml = (product.variants || []).map(function (v) {
+        return '<span class="mp-product__variant">' + escHtml(v.labelEn) + '</span>';
+      }).join('');
+
+      var priceStr = '$' + product.pricePerUnit.toFixed(2) + ' / ' + escHtml(product.unitEn);
+      var minTotal = '$' + (product.pricePerUnit * product.minimumOrderQty).toFixed(2);
+
+      var imgHtml = product.image
+        ? '<div class="mp-product-card__img-wrap">' +
+            '<img class="mp-product-card__img" src="' + escAttr(product.image) + '" alt="' + escAttr(product.nameEn || product.name) + '" loading="lazy" onerror="this.parentElement.style.display=\'none\'">' +
+          '</div>'
+        : '';
+
+      return '<div class="mp-product-card">' +
+        imgHtml +
+        '<div class="mp-product-card__body">' +
+          '<div class="mp-product-card__name">' + escHtml(product.name) + '</div>' +
+          '<p class="mp-product-card__desc">' + escHtml(product.description) + '</p>' +
+          (variantsHtml ? '<div class="mp-product-card__variants">' + variantsHtml + '</div>' : '') +
+          '<div class="mp-product-card__pricing">' +
+            '<div class="mp-product-card__price">' + priceStr + '</div>' +
+            '<div class="mp-product-card__minorder">' +
+              'Min. order: <strong>' + product.minimumOrderQty + ' ' + escHtml(product.unitEn) + 's</strong> &nbsp;·&nbsp; ' + minTotal + ' minimum' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    return '<div class="mp-section">' +
+      '<div class="mp-section-hdr">' +
+        '<h2 class="mp-section-title">Thực Đơn & Giá</h2>' +
+      '</div>' +
+      '<div class="mp-products-list">' + productsHtml + '</div>' +
+    '</div>';
+  }
+
+  function renderOrderInquirySection(biz) {
+    if (!biz.orderEnabled || !biz.products || biz.products.length === 0) return '';
+
+    var activeProducts = biz.products.filter(function (p) { return p.active; });
+    var firstProduct = activeProducts[0] || null;
+    var minQty = firstProduct ? firstProduct.minimumOrderQty : 30;
+    var pricePerUnit = firstProduct ? firstProduct.pricePerUnit : 0.50;
+    var minTotal = '$' + (pricePerUnit * minQty).toFixed(2);
+
+    var itemOpts = activeProducts.map(function (p) {
+      return '<option value="' + escAttr(p.id) + '" data-price="' + p.pricePerUnit + '" data-min="' + p.minimumOrderQty + '">' +
+        escHtml(p.name) +
+      '</option>';
+    }).join('');
+
+    var variantOpts = (firstProduct && firstProduct.variants ? firstProduct.variants : []).map(function (v) {
+      return '<option value="' + escAttr(v.id) + '">' + escHtml(v.labelEn) + '</option>';
+    }).join('');
+
+    return '<div class="mp-section" id="orderSection_' + biz.id + '">' +
+      '<div class="mp-section-hdr">' +
+        '<h2 class="mp-section-title">Đặt Hàng</h2>' +
+      '</div>' +
+      '<div class="mp-booking-card">' +
+        '<p class="mp-form-note" style="margin-bottom:1.1rem">Điền thông tin để đặt hàng — chúng tôi sẽ xác nhận qua điện thoại. ' +
+          '<strong style="color:var(--gold-lt)">Tối thiểu ' + minQty + ' cuốn (' + minTotal + ').</strong>' +
+        '</p>' +
+        '<form id="orderForm_' + biz.id + '" class="mp-booking-form">' +
+          '<input type="hidden" name="_subject" value="Order Inquiry — ' + escAttr(biz.name) + '">' +
+          '<input type="hidden" name="business" value="' + escAttr(biz.name) + '">' +
+          '<input type="hidden" name="business_phone" value="' + escAttr(biz.phoneDisplay) + '">' +
+          '<div class="mp-form-row">' +
+            '<label class="mp-label" for="ofName_' + biz.id + '">Your Name</label>' +
+            '<input class="mp-input" type="text" id="ofName_' + biz.id + '" name="customer_name" placeholder="Full name" required>' +
+          '</div>' +
+          '<div class="mp-form-row">' +
+            '<label class="mp-label" for="ofPhone_' + biz.id + '">Phone Number</label>' +
+            '<input class="mp-input" type="tel" id="ofPhone_' + biz.id + '" name="customer_phone" placeholder="(408) 555-0000" required>' +
+          '</div>' +
+          '<div class="mp-form-row">' +
+            '<label class="mp-label" for="ofItem_' + biz.id + '">Item</label>' +
+            '<select class="mp-input" id="ofItem_' + biz.id + '" name="item" required>' +
+              '<option value="">— Select item —</option>' +
+              itemOpts +
+            '</select>' +
+          '</div>' +
+          '<div class="mp-form-row">' +
+            '<label class="mp-label" for="ofVariant_' + biz.id + '">Type</label>' +
+            '<select class="mp-input" id="ofVariant_' + biz.id + '" name="variant" required>' +
+              '<option value="">— Select type —</option>' +
+              variantOpts +
+            '</select>' +
+          '</div>' +
+          '<div class="mp-form-row">' +
+            '<label class="mp-label" for="ofQty_' + biz.id + '">' +
+              'Quantity <span class="mp-minorder-badge">Min. ' + minQty + '</span>' +
+            '</label>' +
+            '<input class="mp-input" type="number" id="ofQty_' + biz.id + '" name="quantity" ' +
+              'min="' + minQty + '" step="1" placeholder="' + minQty + '" required ' +
+              'data-price="' + pricePerUnit + '" data-min="' + minQty + '">' +
+            '<div class="mp-minorder-warn" id="ofMinWarn_' + biz.id + '">' +
+              'Minimum order is ' + minQty + ' pieces.' +
+            '</div>' +
+            '<div class="mp-subtotal" id="ofSubtotal_' + biz.id + '">' +
+              'Estimated total: <strong id="ofSubtotalAmt_' + biz.id + '"></strong>' +
+            '</div>' +
+          '</div>' +
+          '<div class="mp-form-row">' +
+            '<label class="mp-label" for="ofDelivery_' + biz.id + '">Pickup / Delivery</label>' +
+            '<select class="mp-input" id="ofDelivery_' + biz.id + '" name="pickup_delivery">' +
+              '<option value="pickup">Pickup at vendor address</option>' +
+              '<option value="delivery">Delivery (discuss with vendor)</option>' +
+            '</select>' +
+          '</div>' +
+          '<div class="mp-form-row">' +
+            '<label class="mp-label" for="ofNotes_' + biz.id + '">Notes (optional)</label>' +
+            '<textarea class="mp-input" id="ofNotes_' + biz.id + '" name="notes" placeholder="Preferred pickup date/time, special requests..."></textarea>' +
+          '</div>' +
+          '<p class="mp-form-note">We\'ll confirm your order by phone. Or call us directly: <a href="tel:' + biz.phone + '" style="color:var(--gold-lt)">' + escHtml(biz.phoneDisplay) + '</a>.</p>' +
+          '<div class="mp-spacer"></div>' +
+          '<button type="submit" class="mp-btn mp-btn--primary mp-btn--full" id="ofSubmit_' + biz.id + '">' +
+            sendIcon + ' Send Order Inquiry' +
+          '</button>' +
+          '<div class="mp-form-success" id="orderSuccess_' + biz.id + '">' +
+            checkIcon +
+            '<p>Order inquiry sent!</p>' +
+            '<p style="margin-top:.5rem;font-size:.8rem;color:var(--muted)">We\'ll call you soon to confirm. Or reach Loan at <a href="tel:' + biz.phone + '" style="color:var(--gold-lt)">' + escHtml(biz.phoneDisplay) + '</a>.</p>' +
+          '</div>' +
+        '</form>' +
+      '</div>' +
+    '</div>';
+  }
+
   // ── Booking Form Logic ─────────────────────────────────────────────────────────
 
   function initBookingForm(biz) {
@@ -440,6 +759,87 @@
             submitBtn.textContent = 'Gửi Đặt Lịch';
           }
           alert('Có lỗi xảy ra: ' + err.message + '\nVui lòng gọi trực tiếp: ' + biz.phoneDisplay);
+        });
+    });
+  }
+
+  function initOrderInquiryForm(biz) {
+    var form = document.getElementById('orderForm_' + biz.id);
+    var successDiv = document.getElementById('orderSuccess_' + biz.id);
+    var qtyInput = document.getElementById('ofQty_' + biz.id);
+    var subtotalDiv = document.getElementById('ofSubtotal_' + biz.id);
+    var subtotalAmt = document.getElementById('ofSubtotalAmt_' + biz.id);
+    var minWarn = document.getElementById('ofMinWarn_' + biz.id);
+    var submitBtn = document.getElementById('ofSubmit_' + biz.id);
+
+    if (!form || !successDiv) return;
+
+    // Live estimated subtotal
+    if (qtyInput && subtotalDiv && subtotalAmt) {
+      qtyInput.addEventListener('input', function () {
+        var qty = parseInt(qtyInput.value, 10) || 0;
+        var price = parseFloat(qtyInput.getAttribute('data-price')) || 0.50;
+        var minQty = parseInt(qtyInput.getAttribute('data-min'), 10) || 30;
+
+        if (qty > 0) {
+          subtotalAmt.textContent = '$' + (qty * price).toFixed(2);
+          subtotalDiv.style.display = 'block';
+          if (qty < minQty) {
+            if (minWarn) minWarn.style.display = 'block';
+            subtotalDiv.classList.add('mp-subtotal--warn');
+          } else {
+            if (minWarn) minWarn.style.display = 'none';
+            subtotalDiv.classList.remove('mp-subtotal--warn');
+          }
+        } else {
+          subtotalDiv.style.display = 'none';
+          if (minWarn) minWarn.style.display = 'none';
+        }
+      });
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      var qty = qtyInput ? (parseInt(qtyInput.value, 10) || 0) : 0;
+      var minQty = qtyInput ? (parseInt(qtyInput.getAttribute('data-min'), 10) || 30) : 30;
+
+      if (qty < minQty) {
+        alert('Minimum order is ' + minQty + ' pieces. Please update the quantity.');
+        if (qtyInput) qtyInput.focus();
+        return;
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending...';
+      }
+
+      var formData = new FormData(form);
+      var price = qtyInput ? (parseFloat(qtyInput.getAttribute('data-price')) || 0.50) : 0.50;
+      formData.set('estimated_total', '$' + (qty * price).toFixed(2));
+
+      fetch('https://formspree.io/f/' + biz.formspreeId, {
+        method: 'POST',
+        body: formData,
+        headers: { 'Accept': 'application/json' }
+      })
+        .then(function (res) {
+          if (res.ok) {
+            form.style.display = 'none';
+            successDiv.classList.add('show');
+          } else {
+            return res.json().then(function (data) {
+              throw new Error((data.errors || []).map(function (err) { return err.message; }).join(', ') || 'Send failed');
+            });
+          }
+        })
+        .catch(function (err) {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Send Order Inquiry';
+          }
+          alert('Error: ' + err.message + '\nPlease call directly: ' + biz.phoneDisplay);
         });
     });
   }
@@ -529,6 +929,42 @@
       if (/xin ch[àa]o|hello|hi\b|ch[àa]o|hey/.test(t)) {
         return biz.aiReceptionist.welcomeMessage;
       }
+
+      // ── Food vendor specific ────────────────────────────────────────────────
+      if (biz.vendorType === 'foodvendor' && biz.products && biz.products.length > 0) {
+        var fp = biz.products[0];
+
+        // Raw vs fresh / type selection
+        if (/raw|s[ôo]ng|t[ươu][ởo]i|fresh|lo[ạa]i|types?|ki[êe]u|ch[ọo]n/.test(t)) {
+          return 'We offer two types:\n• Raw (Sống) — uncooked, fry fresh at home for maximum crunch\n• Fresh (Tươi) — fully cooked and ready to eat\n\nBoth are $' + fp.pricePerUnit.toFixed(2) + ' each. Minimum ' + fp.minimumOrderQty + ' pieces per order.';
+        }
+
+        // Minimum order
+        if (/minimum|t[ốo]i thi[ểe]u|[íi]t nh[ấa]t|less than|fewer|under|[íi]t h[ơo]n/.test(t)) {
+          return 'Our minimum order is ' + fp.minimumOrderQty + ' eggrolls ($' + (fp.pricePerUnit * fp.minimumOrderQty).toFixed(2) + ' total). This ensures freshness and quality for every batch. We cannot process orders under ' + fp.minimumOrderQty + ' pieces.';
+        }
+
+        // Pricing
+        if (/gi[áa]|price|cost|bao nhi[êe]u|how much|ph[íi]|ti[êề]n/.test(t)) {
+          return 'Eggroll (Chả Giò): $' + fp.pricePerUnit.toFixed(2) + ' per piece\nMinimum order: ' + fp.minimumOrderQty + ' pieces\nMinimum total: $' + (fp.pricePerUnit * fp.minimumOrderQty).toFixed(2) + '\n\nScroll down to use the order form, or call Loan at ' + biz.phoneDisplay + '.';
+        }
+
+        // What is sold / menu
+        if (/ch[ảa] gi[òo]|eggroll|egg.?roll|menu|b[áa]n g[ìi]|sell|what.*have/.test(t)) {
+          return 'We make handmade Vietnamese Eggrolls (Chả Giò)!\n• Filling: pork, mushroom & carrot\n• Wrapped in thin crispy rice paper\n• Option: Raw (fry at home) or Fresh (ready to eat)\n• $0.50 each · Min 30 pieces ($15.00)\n\nPerfect for family dinners, gatherings & parties!';
+        }
+
+        // Pickup / delivery
+        if (/pickup|pick.?up|l[ấa]y h[àà]ng|[đd][ếe]n l[ấa]y|delivery|giao h[àà]ng|ship/.test(t)) {
+          return 'Pickup address:\n' + biz.address + '\n\nFor delivery arrangements, contact Loan at ' + biz.phoneDisplay + ' to coordinate.';
+        }
+
+        // How to order
+        if (/[đd][ặa]t h[àà]ng|order|c[áa]ch [đd][ặa]t|mua|buy|how.*order/.test(t)) {
+          return 'To place an order:\n1. Use the order inquiry form on this page (scroll down)\n2. Or call Loan directly at ' + biz.phoneDisplay + '\n\nMin order: ' + fp.minimumOrderQty + ' eggrolls ($' + (fp.pricePerUnit * fp.minimumOrderQty).toFixed(2) + ').';
+        }
+      }
+      // ── End food vendor ─────────────────────────────────────────────────────
 
       // Hours / opening
       if (/gi[ờo]|hours?|m[ởo] c[ửu]a|open/.test(t)) {

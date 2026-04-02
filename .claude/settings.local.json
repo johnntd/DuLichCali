@@ -84,7 +84,14 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(grep -E \"\\\\.\\(jpg|jpeg|png|webp|avif\\)$\")"
+      "Bash(grep -E \"\\\\.\\(jpg|jpeg|png|webp|avif\\)$\")",
+      "Bash(git pull:*)",
+      "Bash(ls -la *.jpg)",
+      "Bash(git fetch:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(grep -E '\\\\.\\(jpg|jpeg|png|webp\\)$')",
+      "Bash(grep -E '\\\\.\\(jpg|jpeg\\)$')",
+      "Bash(sort -k4 -n)"
     ]
   }
 }

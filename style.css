@@ -107,6 +107,28 @@ button { cursor: pointer; font-family: var(--font-b); }
 .app-bar__call svg { width: 14px; height: 14px; flex-shrink: 0; }
 .app-bar__call:hover { background: var(--gold-lt); color: var(--navy-900); }
 
+.app-bar__market {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  height: 34px;
+  padding: 0 .85rem;
+  background: var(--gold-dim);
+  border: 1px solid rgba(245,166,35,.35);
+  border-radius: 999px;
+  color: var(--gold);
+  font-family: var(--font-b);
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.app-bar__market:hover { background: rgba(245,166,35,.26); }
+.app-bar__market svg { width: 14px; height: 14px; flex-shrink: 0; }
+
 /* App Main */
 .app-main {
   flex: 1;
@@ -183,6 +205,10 @@ button { cursor: pointer; font-family: var(--font-b); }
   transform: translateY(-2px);
 }
 .nav-tab--center.nav-tab--active { color: var(--gold); }
+
+/* Marketplace tab — always shows a gold tint to invite taps */
+.nav-tab--market { color: var(--gold); }
+.nav-tab--market:hover { color: var(--gold-lt); }
 
 /* ── Shared Buttons ─────────────────────────────────────────── */
 .btn {
@@ -1638,6 +1664,54 @@ select.field-input {
 }
 .home-cta-btn--gold svg { stroke: #1a0800; }
 .home-cta-btn--gold:hover { filter: brightness(1.1); transform: translateY(-2px); }
+
+/* ── Marketplace quick-access tiles ──────────────────────────── */
+.mkt-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .65rem;
+}
+.mkt-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .45rem;
+  padding: 1.05rem .4rem 1.15rem;
+  background: var(--navy-800);
+  border: 1px solid rgba(245,166,35,.22);
+  border-radius: 14px;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  min-height: 90px;
+  transition: background .2s, border-color .2s, transform .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.mkt-tile:hover, .mkt-tile:active {
+  background: rgba(245,166,35,.09);
+  border-color: var(--gold);
+  transform: translateY(-2px);
+}
+.mkt-tile__icon {
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--gold-dim);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.mkt-tile__icon svg { width: 20px; height: 20px; stroke: var(--gold); }
+.mkt-tile__label {
+  font-size: .79rem;
+  font-weight: 600;
+  color: var(--cream);
+  line-height: 1.2;
+}
+.mkt-tile__hint { font-size: .65rem; color: var(--muted); }
+.mkt-tile--featured {
+  border-color: rgba(245,166,35,.4);
+  background: rgba(245,166,35,.07);
+}
+.mkt-tile--featured .mkt-tile__icon { background: rgba(245,166,35,.22); }
 
 /* ══════════════════════════════════════════════════════════════
    HIGHLIGHT DETAIL BOTTOM SHEET

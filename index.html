@@ -53,6 +53,12 @@
   ════════════════════════════════════════════════ -->
   <header class="app-bar">
     <div class="app-bar__brand">✦ Du Lịch Cali</div>
+    <a href="/foods" class="app-bar__market">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+      </svg>
+      Marketplace
+    </a>
     <a href="tel:7142276007" class="app-bar__call" id="appBarCallBtn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.79-1.35a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7a2 2 0 011.72 2.09z"/>
@@ -275,6 +281,47 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
             Điểm Đến
           </button>
+        </div>
+      </section>
+
+      <!-- ── Marketplace ──────────────────────────────────────── -->
+      <section class="home-section">
+        <div class="section-hdr">
+          <h2 class="section-title">Marketplace</h2>
+          <a href="/foods" class="see-all">Xem tất cả</a>
+        </div>
+        <div class="mkt-grid">
+          <a href="/nailsalon" class="mkt-tile">
+            <div class="mkt-tile__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83"/>
+              </svg>
+            </div>
+            <span class="mkt-tile__label">Nails Salon</span>
+            <span class="mkt-tile__hint">Bay Area · OC</span>
+          </a>
+          <a href="/hairsalon" class="mkt-tile">
+            <div class="mkt-tile__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
+                <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+                <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+                <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+              </svg>
+            </div>
+            <span class="mkt-tile__label">Hair Salon</span>
+            <span class="mkt-tile__hint">Bay Area · OC</span>
+          </a>
+          <a href="/foods" class="mkt-tile mkt-tile--featured">
+            <div class="mkt-tile__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/>
+                <line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>
+              </svg>
+            </div>
+            <span class="mkt-tile__label">Food Services</span>
+            <span class="mkt-tile__hint">Đặt đồ ăn</span>
+          </a>
         </div>
       </section>
 
@@ -666,6 +713,13 @@
         <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
       </svg>
       <span>Hỏi AI</span>
+    </button>
+
+    <button class="nav-tab nav-tab--market" onclick="window.location.href='/foods'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+      </svg>
+      <span>Marketplace</span>
     </button>
 
   </nav>

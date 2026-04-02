@@ -290,6 +290,64 @@
       }
     },
 
+    // ─── FOOD VENDORS (home-based / order-by-inquiry) ─────────────────────────────
+    {
+      id: 'nha-bep-cua-emily',
+      category: 'food',
+      vendorType: 'foodvendor',   // differentiates home vendor from restaurant
+      active: true,
+      name: 'Nhà Bếp Của Emily',
+      tagline: 'Chả Giò Handmade · San Jose · Bay Area',
+      region: 'Bay Area',
+      city: 'San Jose',
+      address: '2534 Clarebank Way, San Jose, CA 95121',
+      phone: '4089312438',
+      phoneDisplay: '408-931-2438',
+      heroImage: '../nha-bep-emily-eggroll.jpg',
+      hosts: [
+        {
+          name: 'Loan',
+          phone: '4089312438',
+          display: '408-931-2438',
+          role: 'Owner & Home Chef'
+        }
+      ],
+      description:
+        'Mỗi cuốn chả giò là cả tâm huyết của gia đình Emily — nhân thịt heo, nấm hương và cà rốt tươi, gói bằng bánh tráng mỏng, chiên vàng giòn rụm. Làm thủ công từng mẻ, không chất bảo quản, hương vị đậm đà như bà nấu. Có hai lựa chọn: sống để bạn tự chiên tươi tại nhà — giòn tan theo ý bạn, hoặc tươi chín sẵn sàng thưởng thức ngay. Đặt hàng tối thiểu 30 cuốn. Liên hệ Loan để sắp xếp.',
+      heroGradient:
+        'linear-gradient(135deg,#78350f 0%,#92400e 50%,#7c2d12 100%)',
+      orderEnabled: true,
+      formspreeId: 'xeokgbpo',
+      // ── Products (food vendor model — replaces services/hours) ─────────────────
+      products: [
+        {
+          id: 'eggroll',
+          name: 'Chả Giò (Eggroll)',
+          nameEn: 'Eggroll',
+          variants: [
+            { id: 'raw',   label: 'Sống (Raw)',   labelEn: 'Raw — to fry fresh at home' },
+            { id: 'fresh', label: 'Tươi (Fresh)', labelEn: 'Fresh — cooked & ready to serve' }
+          ],
+          pricePerUnit: 0.50,
+          unit: 'cuốn',
+          unitEn: 'piece',
+          minimumOrderQty: 30,
+          image: '../nha-bep-emily-eggroll.jpg',
+          description: 'Chả giò nhân thịt heo, nấm hương và cà rốt tươi — gói bằng bánh tráng mỏng, chiên giòn vàng thơm phức. Làm thủ công từng mẻ với nguyên liệu sạch, không chất bảo quản. Perfect for family dinners, gatherings, and parties.',
+          active: true
+        }
+      ],
+      aiReceptionist: {
+        enabled: true,
+        name: 'Emily',
+        welcomeMessage:
+          'Xin chào! Nhà Bếp Của Emily đây. Chúng tôi làm chả giò handmade — giòn tan, thơm phức! Tôi có thể giúp bạn tìm hiểu sản phẩm, báo giá hoặc hướng dẫn đặt hàng. Bạn muốn biết gì ạ?',
+        quickReplies: ['Giá chả giò?', 'Đặt hàng', 'Sống hay tươi?', 'Địa chỉ & liên hệ'],
+        systemExtra:
+          'You are the AI receptionist for Nhà Bếp Của Emily, a home-based Vietnamese food vendor in San Jose Bay Area. Contact: Loan at 408-931-2438. Address: 2534 Clarebank Way, San Jose, CA 95121. We sell handmade Vietnamese eggrolls (Chả Giò). Price: $0.50 per eggroll. Minimum order: 30 eggrolls ($15.00 total). Two options: Raw (Sống) — customers fry at home for maximum freshness and crunch; Fresh (Tươi) — cooked and ready to serve. Filling: pork, mushroom, carrot. No preservatives, handmade every batch. Order via the inquiry form on this page or call Loan directly. Be warm, friendly, and helpful. Answer in same language as customer (Vietnamese or English).'
+      }
+    },
+
     {
       id: 'com-tam-oc',
       category: 'food',

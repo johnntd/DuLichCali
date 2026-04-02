@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d2f50" />
+  <title>Marketplace · Du Lịch Cali Services</title>
+  <meta name="description" content="Dịch vụ địa phương tại California — Ẩm thực, Nail, Tóc và nhiều hơn nữa.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,300;0,6..96,400;1,6..96,300;1,6..96,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../marketplace/marketplace.css">
+  <style>
+    /* ── Hub-specific styles ── */
+    .hub-app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--navy-900);
+    }
+
+    /* App bar */
+    .hub-bar {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+      background: rgba(13,47,80,.94);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      gap: .75rem;
+    }
+    .hub-bar__back {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--gold-dim);
+      color: var(--gold);
+      flex-shrink: 0;
+      text-decoration: none;
+    }
+    .hub-bar__back svg { display: block; }
+    .hub-bar__title {
+      font-family: var(--font-d);
+      font-size: 1.1rem;
+      font-weight: 400;
+      color: var(--gold-lt);
+      letter-spacing: .03em;
+    }
+
+    /* Hero */
+    .hub-hero {
+      padding: 2rem 1.25rem 1.5rem;
+      text-align: center;
+    }
+    .hub-hero__eyebrow {
+      font-size: .72rem;
+      font-weight: 500;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: .5rem;
+    }
+    .hub-hero__h1 {
+      font-family: var(--font-d);
+      font-size: 2rem;
+      font-weight: 300;
+      color: var(--gold-lt);
+      line-height: 1.2;
+      margin-bottom: .6rem;
+    }
+    .hub-hero__sub {
+      font-size: .88rem;
+      color: var(--text);
+      opacity: .75;
+      max-width: 300px;
+      margin: 0 auto;
+      line-height: 1.5;
+    }
+
+    /* Category grid */
+    .hub-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 0 1.25rem 2rem;
+    }
+
+    .hub-card {
+      display: flex;
+      align-items: center;
+      gap: 1.1rem;
+      padding: 1.25rem 1.1rem;
+      border-radius: var(--r-lg);
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      text-decoration: none;
+      color: var(--text);
+      transition: background .18s, border-color .18s, transform .15s;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .hub-card:active {
+      transform: scale(.98);
+    }
+    @media (hover: hover) {
+      .hub-card:hover {
+        background: rgba(255,255,255,.07);
+        border-color: var(--border-g);
+      }
+    }
+
+    .hub-card--food {
+      border-color: rgba(245,166,35,.3);
+      background: rgba(245,166,35,.06);
+    }
+    .hub-card--nails {
+      border-color: rgba(56,189,248,.2);
+      background: rgba(56,189,248,.05);
+    }
+    .hub-card--hair {
+      border-color: rgba(251,146,60,.2);
+      background: rgba(251,146,60,.05);
+    }
+
+    .hub-card__icon {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--r-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 1.75rem;
+    }
+    .hub-card--food .hub-card__icon  { background: rgba(245,166,35,.18); }
+    .hub-card--nails .hub-card__icon { background: rgba(56,189,248,.18); }
+    .hub-card--hair .hub-card__icon  { background: rgba(251,146,60,.18); }
+
+    .hub-card__body { flex: 1; min-width: 0; }
+    .hub-card__name {
+      font-family: var(--font-d);
+      font-size: 1.15rem;
+      font-weight: 400;
+      color: #e8f4fd;
+      margin-bottom: .18rem;
+    }
+    .hub-card--food .hub-card__name  { color: var(--gold-lt); }
+    .hub-card--nails .hub-card__name { color: var(--sky-lt); }
+    .hub-card--hair .hub-card__name  { color: #fdba74; }
+
+    .hub-card__desc {
+      font-size: .82rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .hub-card__badge {
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: .18rem .52rem;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+    .hub-card--food .hub-card__badge {
+      background: var(--gold-dim);
+      color: var(--gold);
+    }
+    .hub-card--nails .hub-card__badge {
+      background: var(--sky-dim);
+      color: var(--sky);
+    }
+    .hub-card--hair .hub-card__badge {
+      background: rgba(251,146,60,.15);
+      color: var(--sunset);
+    }
+
+    .hub-card__arrow {
+      color: var(--muted);
+      flex-shrink: 0;
+      opacity: .6;
+    }
+
+    /* Footer nudge */
+    .hub-footer {
+      margin-top: auto;
+      padding: 1rem 1.25rem 2rem;
+      text-align: center;
+      font-size: .78rem;
+      color: var(--muted);
+      opacity: .6;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+<div class="hub-app">
+
+  <!-- App Bar -->
+  <header class="hub-bar">
+    <a href="/" class="hub-bar__back" aria-label="Quay lại trang chủ">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </a>
+    <span class="hub-bar__title">Marketplace</span>
+  </header>
+
+  <!-- Hero -->
+  <section class="hub-hero">
+    <p class="hub-hero__eyebrow">Dịch vụ địa phương · California</p>
+    <h1 class="hub-hero__h1">Chọn danh mục</h1>
+    <p class="hub-hero__sub">Ẩm thực, làm móng, tóc và nhiều hơn nữa từ các nhà cung cấp Việt tại Bay Area &amp; Orange County.</p>
+  </section>
+
+  <!-- Category Cards -->
+  <main class="hub-grid">
+
+    <!-- Food Services -->
+    <a href="/foods" class="hub-card hub-card--food">
+      <div class="hub-card__icon">🍜</div>
+      <div class="hub-card__body">
+        <div class="hub-card__name">Ẩm Thực</div>
+        <div class="hub-card__desc">Đặt đồ ăn, catering sự kiện · Bay Area &amp; OC</div>
+      </div>
+      <span class="hub-card__badge">Food</span>
+      <svg class="hub-card__arrow" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </a>
+
+    <!-- Nail Salon -->
+    <a href="/nailsalon" class="hub-card hub-card--nails">
+      <div class="hub-card__icon">💅</div>
+      <div class="hub-card__body">
+        <div class="hub-card__name">Nail Salon</div>
+        <div class="hub-card__desc">Manicure, pedicure, gel, acrylic · Bay Area &amp; OC</div>
+      </div>
+      <span class="hub-card__badge">Nails</span>
+      <svg class="hub-card__arrow" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </a>
+
+    <!-- Hair Salon -->
+    <a href="/hairsalon" class="hub-card hub-card--hair">
+      <div class="hub-card__icon">✂️</div>
+      <div class="hub-card__body">
+        <div class="hub-card__name">Hair Salon</div>
+        <div class="hub-card__desc">Cắt tóc, nhuộm, uốn, duỗi · Bay Area &amp; OC</div>
+      </div>
+      <span class="hub-card__badge">Hair</span>
+      <svg class="hub-card__arrow" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </a>
+
+  </main>
+
+  <footer class="hub-footer">
+    Du Lịch Cali Services · dulichcali21@gmail.com<br>
+    714-227-6007 · 562-331-3809
+  </footer>
+</div>
+</body>
+</html>

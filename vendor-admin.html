@@ -13,6 +13,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
   <style>
     /* ── Design tokens ──────────────────────────────────────────────────── */
@@ -379,6 +380,63 @@
       #drawer.open { transform: translateX(-50%) translateY(0); }
       #fabAdd { right: calc(50% - 280px + 1.5rem); }
     }
+
+    /* ── Image upload widget ─────────────────────────────────────────────── */
+    .img-upload-area {
+      position: relative;
+      width: 100%;
+      min-height: 140px;
+      background: rgba(255,255,255,.04);
+      border: 2px dashed rgba(255,255,255,.18);
+      border-radius: var(--r);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      overflow: hidden;
+      transition: border-color .2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .img-upload-area:hover, .img-upload-area:active { border-color: var(--gold); }
+    .img-preview {
+      width: 100%; height: 160px;
+      object-fit: cover;
+      display: block;
+    }
+    .img-placeholder {
+      display: flex; flex-direction: column;
+      align-items: center; gap: .55rem;
+      padding: 1.5rem; color: var(--muted);
+      font-size: .8rem; text-align: center;
+    }
+    .img-placeholder svg { width: 32px; height: 32px; stroke: var(--muted); }
+    .img-change-btn {
+      position: absolute; bottom: .5rem; right: .5rem;
+      background: rgba(13,47,80,.82);
+      border: 1px solid var(--border-g);
+      border-radius: 999px;
+      color: var(--gold);
+      font-size: .72rem; font-weight: 600;
+      padding: .3rem .75rem;
+      cursor: pointer;
+    }
+    .img-upload-overlay {
+      position: absolute; inset: 0;
+      background: rgba(13,47,80,.88);
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center; gap: .65rem;
+    }
+    .img-upload-overlay.active { display: flex; }
+    .img-progress-track {
+      width: 70%; height: 4px;
+      background: rgba(255,255,255,.15); border-radius: 2px; overflow: hidden;
+    }
+    .img-progress-fill {
+      height: 100%; width: 0%;
+      background: var(--gold); border-radius: 2px;
+      transition: width .15s;
+    }
+    .img-progress-label { font-size: .75rem; color: var(--cream); }
   </style>
 </head>
 <body>
@@ -492,10 +550,27 @@
     </div>
 
     <div class="f-row">
-      <label class="f-label" for="fImage">URL hình ảnh (tùy chọn)</label>
-      <input class="f-input" type="url" id="fImage"
-        placeholder="https://...">
-      <span class="f-hint">Link trực tiếp đến ảnh JPG/PNG</span>
+      <label class="f-label">Hình ảnh</label>
+      <div class="img-upload-area" id="imgUploadArea" onclick="document.getElementById('fImageFile').click()">
+        <img id="imgPreview" class="img-preview" style="display:none" alt="">
+        <div class="img-placeholder" id="imgPlaceholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          <span>Nhấn để chọn ảnh<br><small style="font-size:.68rem;opacity:.7">Thư viện hoặc chụp ảnh mới</small></span>
+        </div>
+        <button type="button" class="img-change-btn" id="imgChangeBtn"
+          style="display:none" onclick="event.stopPropagation();document.getElementById('fImageFile').click()">
+          Đổi ảnh
+        </button>
+        <div class="img-upload-overlay" id="imgOverlay">
+          <div class="img-progress-track"><div class="img-progress-fill" id="imgFill"></div></div>
+          <span class="img-progress-label" id="imgLabel">Đang tải...</span>
+        </div>
+      </div>
+      <input type="file" id="fImageFile" accept="image/*" style="display:none" onchange="handleImageUpload(this)">
+      <input type="hidden" id="fImage">
     </div>
 
     <div class="f-toggle-row">
@@ -573,7 +648,8 @@
   };
 
   if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-  var db = firebase.firestore();
+  var db      = firebase.firestore();
+  var storage = firebase.storage();
 
   var vendorRef = db.collection('vendors').doc(VENDOR_ID);
   var menuRef   = vendorRef.collection('menuItems');
@@ -814,6 +890,7 @@
       document.getElementById('fUnit').value      = item.unit || 'each';
       document.getElementById('fMinQty').value    = item.minimumOrderQty || 30;
       document.getElementById('fImage').value     = item.image || '';
+      setImgPreview(item.image || '');
       document.getElementById('fVariants').value  = (item.variants || []).map(function (v) {
         return typeof v === 'object' ? (v.labelEn || v.label || '') : v;
       }).join(', ');
@@ -840,8 +917,71 @@
     document.getElementById('fMinQty').value       = '30';
     document.getElementById('fVariants').value     = '';
     document.getElementById('fImage').value        = '';
+    document.getElementById('fImageFile').value    = '';
+    setImgPreview('');
     setToggle('fActive',   true);
     setToggle('fFeatured', false);
+  }
+
+  // ── Image upload ──────────────────────────────────────────────────────────
+  function setImgPreview(url) {
+    var preview     = document.getElementById('imgPreview');
+    var placeholder = document.getElementById('imgPlaceholder');
+    var changeBtn   = document.getElementById('imgChangeBtn');
+    if (url) {
+      preview.src = url;
+      preview.style.display = 'block';
+      placeholder.style.display = 'none';
+      changeBtn.style.display = 'block';
+    } else {
+      preview.src = '';
+      preview.style.display = 'none';
+      placeholder.style.display = 'flex';
+      changeBtn.style.display = 'none';
+    }
+  }
+
+  function handleImageUpload(input) {
+    var file = input.files[0];
+    if (!file) return;
+
+    // Show local preview immediately
+    var reader = new FileReader();
+    reader.onload = function (e) { setImgPreview(e.target.result); };
+    reader.readAsDataURL(file);
+
+    // Upload to Firebase Storage
+    var ext      = file.name.split('.').pop() || 'jpg';
+    var fileName = Date.now() + '.' + ext;
+    var ref      = storage.ref('vendors/' + VENDOR_ID + '/menu/' + fileName);
+    var overlay  = document.getElementById('imgOverlay');
+    var fill     = document.getElementById('imgFill');
+    var label    = document.getElementById('imgLabel');
+
+    overlay.classList.add('active');
+    fill.style.width = '0%';
+
+    var task = ref.put(file);
+
+    task.on('state_changed',
+      function (snap) {
+        var pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
+        fill.style.width = pct + '%';
+        label.textContent = 'Đang tải... ' + pct + '%';
+      },
+      function (err) {
+        overlay.classList.remove('active');
+        showToast('Lỗi tải ảnh: ' + (err.code || err.message), 'error');
+      },
+      function () {
+        task.snapshot.ref.getDownloadURL().then(function (url) {
+          document.getElementById('fImage').value = url;
+          overlay.classList.remove('active');
+          setImgPreview(url);
+          showToast('Tải ảnh thành công!', 'success');
+        });
+      }
+    );
   }
 
   // ── Toggle helpers ────────────────────────────────────────────────────────

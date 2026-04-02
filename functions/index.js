@@ -124,17 +124,21 @@ exports.onVendorNotification = onDocumentCreated(
     const body = buildSmsBody(notifData, vendor);
     log(`sending to ${vendor.notificationPhone}: "${body.split('\n')[0]}..."`);
 
+    // ── Build message params ───────────────────────────────────────────────────
+    // If TWILIO_FROM_NUMBER starts with 'MG' it's a Messaging Service SID
+    // (required for A2P 10DLC compliance on US long codes).
+    // Otherwise treat it as a plain E.164 phone number.
+    const msgParams = fromNumber.startsWith('MG')
+      ? { messagingServiceSid: fromNumber, to: vendor.notificationPhone, body }
+      : { from: fromNumber,               to: vendor.notificationPhone, body };
+
     // ── Send with in-function retry (3 attempts, short backoff) ───────────────
     const client      = twilio(accountSid, authToken);
     const maxAttempts = 3;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        const msg = await client.messages.create({
-          from: fromNumber,
-          to:   vendor.notificationPhone,
-          body,
-        });
+        const msg = await client.messages.create(msgParams);
 
         // Twilio should always return a SID on success
         if (!msg.sid) {

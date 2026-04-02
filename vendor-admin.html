@@ -963,16 +963,26 @@
 
     var task = ref.put(file);
 
-    // Bail out after 12 s if no progress — usually means Storage not enabled
-    var uploadTimer = setTimeout(function () {
-      try { task.cancel(); } catch (e) {}
-      overlay.classList.remove('active');
-      showToast('Tải ảnh thất bại. Vào Firebase Console → Storage → Get Started để bật Storage.', 'error');
-    }, 12000);
+    // Reset-on-progress timer: if no new progress for 10 s, bail out
+    var uploadTimer;
+    function resetUploadTimer() {
+      clearTimeout(uploadTimer);
+      uploadTimer = setTimeout(function () {
+        try { task.cancel(); } catch (e) {}
+        overlay.classList.remove('active');
+        showToast(
+          'Tải ảnh thất bại (stuck at 0%). ' +
+          'Hãy vào Firebase Console → Storage → Get Started để bật Storage, ' +
+          'sau đó cập nhật Storage Rules.',
+          'error'
+        );
+      }, 10000);
+    }
+    resetUploadTimer();
 
     task.on('state_changed',
       function (snap) {
-        clearTimeout(uploadTimer);
+        resetUploadTimer(); // restart timer on each progress tick
         var pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
         fill.style.width = pct + '%';
         label.textContent = 'Đang tải... ' + pct + '%';

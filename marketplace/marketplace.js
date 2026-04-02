@@ -930,39 +930,102 @@
         return biz.aiReceptionist.welcomeMessage;
       }
 
-      // ── Food vendor specific ────────────────────────────────────────────────
+      // ── Food vendor: deterministic answers ─────────────────────────────────
       if (biz.vendorType === 'foodvendor' && biz.products && biz.products.length > 0) {
-        var fp = biz.products[0];
 
-        // Raw vs fresh / type selection
-        if (/raw|s[ôo]ng|t[ươu][ởo]i|fresh|lo[ạa]i|types?|ki[êe]u|ch[ọo]n/.test(t)) {
-          return 'We offer two types:\n• Raw (Sống) — uncooked, fry fresh at home for maximum crunch\n• Fresh (Tươi) — fully cooked and ready to eat\n\nBoth are $' + fp.pricePerUnit.toFixed(2) + ' each. Minimum ' + fp.minimumOrderQty + ' pieces per order.';
+        // 1. QUANTITY PRICING — highest priority
+        // Catches: "how much is 30 egg rolls?", "price for 50?", "100 pieces?"
+        var calc = Receptionist._computePrice(biz, t);
+        if (calc) {
+          var pLabel = calc.product.nameEn || calc.product.name;
+          var ans = calc.qty + ' ' + pLabel + (calc.qty !== 1 ? 's' : '') +
+            ' = $' + calc.subtotal.toFixed(2) +
+            ' (at $' + calc.price.toFixed(2) + ' each)';
+          if (calc.belowMin) {
+            ans += '.\n\nNote: the minimum order is ' + calc.minQty + ' pieces' +
+              ' ($' + calc.minSubtotal.toFixed(2) + ' total) — you\'d need to order at least ' + calc.minQty + '.';
+          } else {
+            ans += '.\n\nTo order, use the form below or call Loan at ' + biz.phoneDisplay + '.';
+          }
+          return ans;
         }
 
-        // Minimum order
-        if (/minimum|t[ốo]i thi[ểe]u|[íi]t nh[ấa]t|less than|fewer|under|[íi]t h[ơo]n/.test(t)) {
-          return 'Our minimum order is ' + fp.minimumOrderQty + ' eggrolls ($' + (fp.pricePerUnit * fp.minimumOrderQty).toFixed(2) + ' total). This ensures freshness and quality for every batch. We cannot process orders under ' + fp.minimumOrderQty + ' pieces.';
+        // 2. Variants / types
+        if (/raw|s[ôo]ng|t[ươu][ởo]i|fresh|lo[ạa]i|types?|variant|ki[êe]u|ch[ọo]n/.test(t)) {
+          var varLines = [];
+          biz.products.forEach(function (p) {
+            (p.variants || []).forEach(function (v) {
+              varLines.push('• ' + (typeof v === 'object' ? (v.labelEn || v.label) : v));
+            });
+          });
+          var fp2 = biz.products[0];
+          return (fp2.nameEn || fp2.name) + ' is available in:\n' +
+            (varLines.length ? varLines.join('\n') : '• Contact us for options') +
+            '\n\n$' + Number(fp2.pricePerUnit).toFixed(2) + ' each · Min ' + fp2.minimumOrderQty + ' pieces';
         }
 
-        // Pricing
+        // 3. Minimum order
+        if (/minimum|min order|t[ốo]i thi[ểe]u|[íi]t nh[ấa]t|less than|fewer|under/.test(t)) {
+          var fp3 = biz.products[0];
+          return 'Minimum order is ' + fp3.minimumOrderQty + ' pieces' +
+            ' ($' + (Number(fp3.pricePerUnit) * fp3.minimumOrderQty).toFixed(2) + ' total).' +
+            ' This ensures every batch is made fresh.';
+        }
+
+        // 4. Price per unit (no quantity specified)
         if (/gi[áa]|price|cost|bao nhi[êe]u|how much|ph[íi]|ti[êề]n/.test(t)) {
-          return 'Eggroll (Chả Giò): $' + fp.pricePerUnit.toFixed(2) + ' per piece\nMinimum order: ' + fp.minimumOrderQty + ' pieces\nMinimum total: $' + (fp.pricePerUnit * fp.minimumOrderQty).toFixed(2) + '\n\nScroll down to use the order form, or call Loan at ' + biz.phoneDisplay + '.';
+          var prLines = biz.products.map(function (p) {
+            return '• ' + (p.nameEn || p.name) + ': $' + Number(p.pricePerUnit).toFixed(2) + ' each' +
+              ' (min ' + p.minimumOrderQty + ' pcs = $' + (Number(p.pricePerUnit) * p.minimumOrderQty).toFixed(2) + ')';
+          });
+          return prLines.join('\n') + '\n\nTry asking "How much is 50 egg rolls?" for an exact total.';
         }
 
-        // What is sold / menu
-        if (/ch[ảa] gi[òo]|eggroll|egg.?roll|menu|b[áa]n g[ìi]|sell|what.*have/.test(t)) {
-          return 'We make handmade Vietnamese Eggrolls (Chả Giò)!\n• Filling: pork, mushroom & carrot\n• Wrapped in thin crispy rice paper\n• Option: Raw (fry at home) or Fresh (ready to eat)\n• $0.50 each · Min 30 pieces ($15.00)\n\nPerfect for family dinners, gatherings & parties!';
+        // 5. Menu / what do you sell
+        if (/menu|sell|have|available|b[áa]n g[ìi]|what.*have|what.*sell/.test(t)) {
+          var mLines = biz.products.map(function (p) {
+            var vNames = (p.variants || []).map(function (v) {
+              return typeof v === 'object' ? (v.labelEn || v.label) : v;
+            });
+            var line = '• ' + (p.nameEn || p.name) +
+              ' — $' + Number(p.pricePerUnit).toFixed(2) + '/each, min ' + p.minimumOrderQty;
+            if (vNames.length) line += ' · Types: ' + vNames.join(', ');
+            return line;
+          });
+          return biz.name + ' offers:\n' + mLines.join('\n') +
+            '\n\nHandmade, no preservatives. Perfect for parties & family dinners!';
         }
 
-        // Pickup / delivery
-        if (/pickup|pick.?up|l[ấa]y h[àà]ng|[đd][ếe]n l[ấa]y|delivery|giao h[àà]ng|ship/.test(t)) {
-          return 'Pickup address:\n' + biz.address + '\n\nFor delivery arrangements, contact Loan at ' + biz.phoneDisplay + ' to coordinate.';
+        // 6. Pickup / delivery
+        if (/pickup|pick.?up|l[ấa]y h[àà]ng|delivery|giao|ship/.test(t)) {
+          return 'Pickup at:\n' + biz.address + '\n\nFor delivery, contact Loan: ' + biz.phoneDisplay;
         }
 
-        // How to order
-        if (/[đd][ặa]t h[àà]ng|order|c[áa]ch [đd][ặa]t|mua|buy|how.*order/.test(t)) {
-          return 'To place an order:\n1. Use the order inquiry form on this page (scroll down)\n2. Or call Loan directly at ' + biz.phoneDisplay + '\n\nMin order: ' + fp.minimumOrderQty + ' eggrolls ($' + (fp.pricePerUnit * fp.minimumOrderQty).toFixed(2) + ').';
+        // 7. How to order
+        if (/order|[đd][ặa]t|mua|buy|how.*get/.test(t)) {
+          var fp7 = biz.products[0];
+          return 'To order:\n1. Use the inquiry form on this page\n2. Or call Loan at ' + biz.phoneDisplay +
+            '\n\nMin order: ' + fp7.minimumOrderQty + ' pcs ($' + (Number(fp7.pricePerUnit) * fp7.minimumOrderQty).toFixed(2) + ').';
         }
+
+        // 8. Contact / phone
+        if (/phone|call|contact|s[ốo]|g[ọo]i|[đd]i[ệe]n/.test(t)) {
+          var cLines = (biz.hosts || []).map(function (h) { return h.name + ': ' + h.display; });
+          return 'Contact ' + biz.name + ':\n' + (cLines.length ? cLines.join('\n') : biz.phoneDisplay);
+        }
+
+        // 9. Address / location
+        if (/address|location|where|[đd][ịi]a ch[ỉi]|[ởo] [đd][âa]u/.test(t)) {
+          return biz.name + ' is at:\n' + biz.address;
+        }
+
+        // 10. Food vendor default
+        return 'Hi! I can answer questions about ' + biz.name + ':\n' +
+          '• Pricing (try: "How much is 50 egg rolls?")\n' +
+          '• Menu items & variants\n' +
+          '• Minimum order & how to order\n' +
+          '• Pickup address & contact\n\n' +
+          'Or call Loan directly: ' + biz.phoneDisplay;
       }
       // ── End food vendor ─────────────────────────────────────────────────────
 
@@ -1024,9 +1087,36 @@
 
     _askClaude: function (biz, text, apiKey) {
       var ai = biz.aiReceptionist;
-      var systemPrompt = 'You are ' + ai.name + ', receptionist for ' + biz.name + ' in ' + biz.city + '. ' +
-        (ai.systemExtra || '') +
-        ' Keep responses concise (2-3 sentences max). Always offer to help with booking.';
+      var systemPrompt = 'You are ' + ai.name + ', AI assistant for ' + biz.name + '. ';
+
+      if (biz.vendorType === 'foodvendor' && biz.products && biz.products.length) {
+        systemPrompt += 'You have FULL access to the menu and MUST answer pricing questions directly — never say "contact the vendor" for anything listed below.\n\n';
+        systemPrompt += 'MENU & PRICING:\n';
+        biz.products.forEach(function (p) {
+          var price  = Number(p.pricePerUnit);
+          var minQty = Number(p.minimumOrderQty);
+          var vLabels = (p.variants || []).map(function (v) {
+            return typeof v === 'object' ? (v.labelEn || v.label) : v;
+          }).join(', ');
+          systemPrompt += '- ' + (p.nameEn || p.name) +
+            ': $' + price.toFixed(2) + ' each' +
+            ', minimum ' + minQty + ' pieces' +
+            ', min total $' + (price * minQty).toFixed(2);
+          if (vLabels) systemPrompt += ', variants: ' + vLabels;
+          systemPrompt += '\n';
+        });
+        systemPrompt += '\nRULES:\n';
+        systemPrompt += '- "How much is X items?" → multiply X × price, give exact dollar total. If X < minimum, state both the cost AND the minimum.\n';
+        systemPrompt += '- "What variants/types?" → list from menu data above.\n';
+        systemPrompt += '- "What is price/cost?" → state price per piece and minimum order total.\n';
+        systemPrompt += '- "Phone/contact?" → ' + (biz.hosts && biz.hosts[0] ? biz.hosts[0].name : 'owner') + ' at ' + biz.phoneDisplay + '\n';
+        systemPrompt += '- "Address/location?" → ' + biz.address + '\n';
+        systemPrompt += '\nOnly say "contact vendor" for things NOT in the data above (e.g. delivery scheduling, custom orders, real-time availability).';
+      } else {
+        systemPrompt += (ai.systemExtra || '');
+      }
+
+      systemPrompt += '\n\nRespond in the same language as the user. Keep it concise (2-3 sentences).';
 
       return fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -1050,6 +1140,61 @@
           ? data.content[0].text
           : 'Xin lỗi, tôi không thể trả lời ngay lúc này.';
       });
+    },
+
+    // ── Deterministic pricing engine ──────────────────────────────────────────
+    // Extracts a quantity from the message, matches to a product, returns calc.
+    // Returns null if no quantity or no product could be determined.
+    _computePrice: function (biz, text) {
+      if (!biz.products || !biz.products.length) return null;
+
+      // Must contain at least one number
+      var qtyMatch = text.match(/\b(\d+)\b/);
+      if (!qtyMatch) return null;
+      var qty = parseInt(qtyMatch[1], 10);
+      if (qty <= 0 || qty > 9999) return null;
+
+      var tl = text.toLowerCase();
+      var product = null;
+
+      // Try to match by product id / name / nameEn
+      for (var i = 0; i < biz.products.length; i++) {
+        var p = biz.products[i];
+        var keys = [
+          (p.id      || '').toLowerCase(),
+          (p.name    || '').toLowerCase(),
+          (p.nameEn  || '').toLowerCase()
+        ];
+        for (var j = 0; j < keys.length; j++) {
+          if (keys[j] && tl.indexOf(keys[j]) !== -1) { product = p; break; }
+        }
+        if (product) break;
+      }
+
+      // Common keyword fallbacks (egg roll variants)
+      if (!product && /egg.?roll|ch[aả]\s*gi[oò]|eggroll/.test(tl)) {
+        product = biz.products[0];
+      }
+
+      // Single-product vendor: assume the product if message has price/quantity intent
+      if (!product && biz.products.length === 1) {
+        var intent = /how much|price|cost|gi[áa]|bao nhi[êe]u|ph[íi]|\$|each|per|piece|roll|item|order/.test(tl);
+        if (intent) product = biz.products[0];
+      }
+
+      if (!product) return null;
+
+      var price  = Number(product.pricePerUnit) || 0;
+      var minQty = Number(product.minimumOrderQty) || 1;
+      return {
+        product:     product,
+        qty:         qty,
+        price:       price,
+        subtotal:    qty * price,
+        belowMin:    qty < minQty,
+        minQty:      minQty,
+        minSubtotal: minQty * price
+      };
     },
 
     _appendMessage: function (container, text, type) {

@@ -31,7 +31,7 @@ No build step. No framework. All files are served as-is.
 - **Destination modal**: full-screen cinematic video modal using YouTube IFrame API; slides up over the app
 - **Booking wizard**: 5-step flow; `goStep(n)` manages visibility + progress bar (`--wiz-pct` CSS var)
 - **Data layer**: `DESTINATIONS`, `AIRPORTS`, `QUICK_ESTIMATES` arrays in `destinations.js`
-- **Firebase Firestore**: booking storage (v9.22.0 compat SDK)
+- **Firebase Firestore**: booking storage (v9.22.0 compat SDK) — project ID: `dulichcali-booking-calendar`
 - **EIA Gas Price API**: California fuel price with 6h sessionStorage cache
 
 ### Styling Conventions

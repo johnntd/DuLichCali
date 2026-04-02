@@ -945,55 +945,77 @@
     var file = input.files[0];
     if (!file) return;
 
+    var overlay = document.getElementById('imgOverlay');
+    var fill    = document.getElementById('imgFill');
+    var label   = document.getElementById('imgLabel');
+
+    function uploadFail(msg) {
+      overlay.classList.remove('active');
+      // Show error directly in the overlay AND as a toast
+      label.textContent = msg;
+      overlay.classList.add('active');
+      showToast(msg, 'error');
+      setTimeout(function () { overlay.classList.remove('active'); }, 6000);
+    }
+
     // Show local preview immediately
     var reader = new FileReader();
     reader.onload = function (e) { setImgPreview(e.target.result); };
     reader.readAsDataURL(file);
 
-    // Upload to Firebase Storage
-    var ext      = file.name.split('.').pop() || 'jpg';
-    var fileName = Date.now() + '.' + ext;
-    var ref      = storage.ref('vendors/' + VENDOR_ID + '/menu/' + fileName);
-    var overlay  = document.getElementById('imgOverlay');
-    var fill     = document.getElementById('imgFill');
-    var label    = document.getElementById('imgLabel');
-
     overlay.classList.add('active');
     fill.style.width = '0%';
+    label.textContent = 'Đang kết nối...';
 
-    var task = ref.put(file);
-
-    // Reset-on-progress timer: if no new progress for 10 s, bail out
-    var uploadTimer;
-    function resetUploadTimer() {
-      clearTimeout(uploadTimer);
-      uploadTimer = setTimeout(function () {
-        try { task.cancel(); } catch (e) {}
-        overlay.classList.remove('active');
-        showToast(
-          'Tải ảnh thất bại (stuck at 0%). ' +
-          'Hãy vào Firebase Console → Storage → Get Started để bật Storage, ' +
-          'sau đó cập nhật Storage Rules.',
-          'error'
-        );
-      }, 10000);
+    // Check Storage is available
+    if (typeof firebase.storage !== 'function') {
+      uploadFail('Firebase Storage SDK chưa tải. Reload trang và thử lại.');
+      return;
     }
-    resetUploadTimer();
+
+    var ext      = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    var fileName = Date.now() + '.' + ext;
+    var task;
+
+    // Start stall timer BEFORE put() — catches crashes and hangs
+    var uploadTimer = setTimeout(function () {
+      try { if (task) task.cancel(); } catch (e) {}
+      uploadFail('Hết giờ chờ. Firebase Storage chưa được bật hoặc Rules chưa đúng. Vào Firebase Console → Storage → Get Started.');
+    }, 10000);
+
+    try {
+      var ref = storage.ref('vendors/' + VENDOR_ID + '/menu/' + fileName);
+      task = ref.put(file);
+    } catch (e) {
+      clearTimeout(uploadTimer);
+      uploadFail('Lỗi Storage: ' + (e.message || String(e)));
+      return;
+    }
+
+    label.textContent = 'Đang tải... 0%';
 
     task.on('state_changed',
       function (snap) {
-        resetUploadTimer(); // restart timer on each progress tick
-        var pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
+        // Reset stall timer on each real progress tick
+        clearTimeout(uploadTimer);
+        uploadTimer = setTimeout(function () {
+          try { task.cancel(); } catch (e) {}
+          uploadFail('Upload bị treo. Kiểm tra Firebase Storage Rules.');
+        }, 10000);
+        var pct = snap.totalBytes
+          ? Math.round(snap.bytesTransferred / snap.totalBytes * 100)
+          : 0;
         fill.style.width = pct + '%';
         label.textContent = 'Đang tải... ' + pct + '%';
       },
       function (err) {
         clearTimeout(uploadTimer);
-        overlay.classList.remove('active');
-        var msg = err.code === 'storage/unauthorized'
-          ? 'Lỗi quyền Storage. Vào Firebase Console → Storage → Rules và cho phép write.'
-          : 'Lỗi tải ảnh: ' + (err.code || err.message);
-        showToast(msg, 'error');
+        var msg = {
+          'storage/unauthorized': 'Lỗi quyền. Vào Firebase Console → Storage → Rules → cho phép write.',
+          'storage/canceled':     'Đã huỷ.',
+          'storage/unknown':      'Lỗi mạng hoặc Storage chưa bật. Code: ' + err.serverResponse
+        }[err.code] || ('Lỗi: ' + err.code + ' — ' + err.message);
+        uploadFail(msg);
       },
       function () {
         clearTimeout(uploadTimer);
@@ -1002,6 +1024,8 @@
           overlay.classList.remove('active');
           setImgPreview(url);
           showToast('Tải ảnh thành công!', 'success');
+        }).catch(function (e) {
+          uploadFail('Upload xong nhưng không lấy được URL: ' + e.message);
         });
       }
     );

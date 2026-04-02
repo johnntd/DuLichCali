@@ -527,6 +527,99 @@
       text-align: center; padding: 2.5rem 1rem;
       color: var(--muted); font-size: .82rem; line-height: 1.6;
     }
+
+    /* ── View toggle (cal / list) ───────────────────────────────────── */
+    .va-view-toggle { display: flex; gap: .25rem; }
+    .va-view-btn {
+      width: 34px; height: 30px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: .85rem; cursor: pointer;
+      transition: all .18s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .va-view-btn.active {
+      background: var(--gold-dim);
+      border-color: var(--border-g);
+      color: var(--gold);
+    }
+
+    /* ── Calendar grid ──────────────────────────────────────────────── */
+    .cal-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: .75rem;
+    }
+    .cal-month-label {
+      font-family: var(--font-d); font-size: 1rem; color: var(--cream);
+    }
+    .cal-nav-btn {
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text);
+      font-size: 1.25rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .18s;
+    }
+    .cal-nav-btn:hover { background: rgba(255,255,255,.1); }
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 2px; margin-bottom: .75rem;
+    }
+    .cal-dow {
+      text-align: center;
+      font-size: .56rem; font-weight: 700;
+      letter-spacing: .05em; text-transform: uppercase;
+      color: var(--muted); padding: .25rem 0;
+    }
+    .cal-cell {
+      min-height: 46px; border-radius: 6px;
+      padding: .28rem .2rem;
+      cursor: pointer; transition: background .15s;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .cal-cell.empty { cursor: default; }
+    .cal-cell:not(.empty):hover { background: rgba(255,255,255,.07); }
+    .cal-cell.selected { background: var(--gold-dim); border: 1px solid var(--border-g); }
+    .cal-day { font-size: .8rem; color: var(--text); line-height: 1.7; }
+    .cal-cell.today .cal-day {
+      background: var(--gold); color: var(--navy-900);
+      border-radius: 50%; width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .72rem;
+    }
+    .cal-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--sky); margin: 1px auto 0;
+    }
+    .cal-dot.pending  { background: var(--gold); }
+    .cal-dot.low      { background: var(--sunset); }
+    .cal-dot.full     { background: var(--danger); }
+    .cal-cell-qty { font-size: .54rem; color: var(--muted); line-height: 1.2; }
+
+    /* ── Calendar detail panel ──────────────────────────────────────── */
+    .cal-detail {
+      background: var(--navy-800);
+      border: 1px solid var(--border-g);
+      border-radius: 12px; overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    .cal-detail__hdr {
+      padding: .65rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .cal-detail__date { font-family: var(--font-d); font-size: .9rem; color: var(--cream); }
+    .cal-detail__cap { font-size: .68rem; color: var(--muted); }
+    .cal-detail__cap.cap-low  { color: var(--sunset); }
+    .cal-detail__cap.cap-full { color: var(--danger); }
+    .cal-detail__body { padding: .5rem .5rem; }
+    .cal-detail__empty {
+      text-align: center; padding: 1.25rem;
+      font-size: .8rem; color: var(--muted);
+    }
   </style>
 </head>
 <body>
@@ -606,14 +699,33 @@
     <!-- Orders tab -->
     <div id="ordersTab" style="display:none">
       <div class="va-section-hdr">
-        <div class="va-section-title">Đơn Hàng Theo Ngày</div>
-        <span class="va-count" id="ordersTotal"></span>
+        <div class="va-section-title">Đơn Hàng</div>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          <span class="va-count" id="ordersTotal"></span>
+          <div class="va-view-toggle">
+            <button class="va-view-btn active" id="btnCalView" onclick="setOrderView('cal')" title="Lịch">&#128197;</button>
+            <button class="va-view-btn" id="btnListView" onclick="setOrderView('list')" title="Danh sách">&#9776;</button>
+          </div>
+        </div>
       </div>
       <div class="va-loading-state" id="ordersLoading">
         <div class="va-spinner"></div>
         Đang tải đơn hàng...
       </div>
-      <div id="ordersList" style="display:none"></div>
+      <!-- Calendar view -->
+      <div id="calView" style="display:none">
+        <div class="cal-nav">
+          <button class="cal-nav-btn" onclick="calPrev()">&#8249;</button>
+          <div class="cal-month-label" id="calMonthLabel"></div>
+          <button class="cal-nav-btn" onclick="calNext()">&#8250;</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-detail" id="calDetail" style="display:none"></div>
+      </div>
+      <!-- List view -->
+      <div id="listView" style="display:none">
+        <div id="ordersList"></div>
+      </div>
     </div>
 
   </div>
@@ -1249,9 +1361,13 @@
   }
 
   // ── Tabs ──────────────────────────────────────────────────────────────────
-  var _activeTab = 'menu';
+  var _activeTab  = 'menu';
+  var _orderView  = 'cal';   // 'cal' | 'list'
+  var _calYear    = new Date().getFullYear();
+  var _calMonth   = new Date().getMonth();  // 0-indexed
+  var _calSelDate = null;
   var unsubOrders = null;
-  var allOrders = [];
+  var allOrders   = [];
 
   function switchTab(tab) {
     _activeTab = tab;
@@ -1285,56 +1401,217 @@
       status.textContent = '✓ Đã lưu: ' + val + ' cuốn/ngày';
       setTimeout(function () { status.textContent = ''; }, 3000);
       showToast('Cập nhật sản lượng: ' + val + ' cuốn/ngày', 'success');
-      // Re-render orders so capacity bars refresh
-      if (_activeTab === 'orders') renderOrders();
+      if (_activeTab === 'orders') {
+        if (_orderView === 'cal') renderCalendar();
+        else renderOrders();
+      }
     }).catch(function (err) {
       showToast('Lỗi: ' + err.message, 'error');
     });
   }
 
-  // ── Orders real-time listener ──────────────────────────────────────────────
+  // ── Orders real-time listener (bookings collection) ───────────────────────
   function subscribeOrders() {
     if (unsubOrders) unsubOrders();
-    var ordersRef = vendorRef.collection('orders');
+    var bookingsRef = vendorRef.collection('bookings');
     document.getElementById('ordersLoading').style.display = 'flex';
-    document.getElementById('ordersList').style.display = 'none';
+    document.getElementById('calView').style.display  = 'none';
+    document.getElementById('listView').style.display = 'none';
 
     function handleOrderSnap(snap) {
       allOrders = [];
       snap.forEach(function (d) { allOrders.push(Object.assign({ id: d.id }, d.data())); });
-      renderOrders();
+      // Update counts
+      var active = allOrders.filter(function (o) { return o.status !== 'cancelled'; });
+      document.getElementById('ordersCount').textContent = active.length ? ' (' + active.length + ')' : '';
+      document.getElementById('ordersTotal').textContent = allOrders.length + ' đơn';
+      // Hide loading, show active view
+      document.getElementById('ordersLoading').style.display = 'none';
+      document.getElementById('calView').style.display  = _orderView === 'cal'  ? '' : 'none';
+      document.getElementById('listView').style.display = _orderView === 'list' ? '' : 'none';
+      if (_orderView === 'cal') renderCalendar();
+      else renderOrders();
     }
     function handleOrderErr(err2) {
       document.getElementById('ordersLoading').innerHTML =
         '<div style="color:var(--danger);padding:1rem;font-size:.8rem">Lỗi tải đơn hàng: ' + esc(err2.code || err2.message) + '</div>';
     }
 
-    // Try ordering by requestedDate; fall back if index missing
-    unsubOrders = ordersRef.orderBy('requestedDate').onSnapshot(handleOrderSnap, function () {
-      unsubOrders = ordersRef.onSnapshot(handleOrderSnap, handleOrderErr);
+    unsubOrders = bookingsRef.orderBy('requestedDate').onSnapshot(handleOrderSnap, function () {
+      unsubOrders = bookingsRef.onSnapshot(handleOrderSnap, handleOrderErr);
     });
   }
 
-  // ── Render orders grouped by date ─────────────────────────────────────────
-  function renderOrders() {
-    var loading = document.getElementById('ordersLoading');
-    var list    = document.getElementById('ordersList');
-    if (!loading || !list) return;
+  // ── View toggle ────────────────────────────────────────────────────────────
+  function setOrderView(v) {
+    _orderView = v;
+    document.getElementById('btnCalView').classList.toggle('active', v === 'cal');
+    document.getElementById('btnListView').classList.toggle('active', v === 'list');
+    // Only toggle if data is loaded (loading panel is hidden)
+    if (document.getElementById('ordersLoading').style.display === 'none') {
+      document.getElementById('calView').style.display  = v === 'cal'  ? '' : 'none';
+      document.getElementById('listView').style.display = v === 'list' ? '' : 'none';
+      if (v === 'cal') renderCalendar();
+      else renderOrders();
+    }
+  }
 
-    loading.style.display = 'none';
-    list.style.display = 'block';
+  // ── Calendar helpers ───────────────────────────────────────────────────────
+  function _fmtDate(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function calPrev() {
+    _calMonth--;
+    if (_calMonth < 0) { _calMonth = 11; _calYear--; }
+    _calSelDate = null;
+    document.getElementById('calDetail').style.display = 'none';
+    renderCalendar();
+  }
+
+  function calNext() {
+    _calMonth++;
+    if (_calMonth > 11) { _calMonth = 0; _calYear++; }
+    _calSelDate = null;
+    document.getElementById('calDetail').style.display = 'none';
+    renderCalendar();
+  }
+
+  function renderCalendar() {
+    var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    document.getElementById('calMonthLabel').textContent = monthNames[_calMonth] + ' ' + _calYear;
 
     var maxCap = parseInt(document.getElementById('capInput').value, 10) || 300;
-    var active = allOrders.filter(function (o) { return o.status !== 'cancelled'; });
-    document.getElementById('ordersCount').textContent = active.length ? ' (' + active.length + ')' : '';
-    document.getElementById('ordersTotal').textContent  = allOrders.length + ' đơn';
+    var todayStr = _fmtDate(new Date());
+
+    // Build dayMap: dateStr → { booked, hasPending }
+    var dayMap = {};
+    allOrders.forEach(function (o) {
+      var k = o.requestedDate;
+      if (!k || !/^\d{4}-\d{2}-\d{2}$/.test(k)) return;
+      var parts = k.split('-');
+      if (parseInt(parts[0], 10) !== _calYear || parseInt(parts[1], 10) - 1 !== _calMonth) return;
+      if (!dayMap[k]) dayMap[k] = { booked: 0, hasPending: false };
+      if (o.status !== 'cancelled') dayMap[k].booked += Number(o.quantity) || 0;
+      if (o.status === 'pending') dayMap[k].hasPending = true;
+    });
+
+    var firstDow   = new Date(_calYear, _calMonth, 1).getDay();
+    var daysInMonth = new Date(_calYear, _calMonth + 1, 0).getDate();
+    var html = '';
+
+    // Day-of-week headers
+    ['CN','T2','T3','T4','T5','T6','T7'].forEach(function (d) {
+      html += '<div class="cal-dow">' + d + '</div>';
+    });
+    // Empty leading cells
+    for (var e = 0; e < firstDow; e++) html += '<div class="cal-cell empty"></div>';
+    // Day cells
+    for (var day = 1; day <= daysInMonth; day++) {
+      var mm  = String(_calMonth + 1).padStart(2, '0');
+      var dd  = String(day).padStart(2, '0');
+      var ds  = _calYear + '-' + mm + '-' + dd;
+      var info = dayMap[ds];
+      var isToday = ds === todayStr;
+      var isSel   = ds === _calSelDate;
+      var cls = 'cal-cell' + (isToday ? ' today' : '') + (isSel ? ' selected' : '');
+
+      html += '<div class="' + cls + '" onclick="selectCalDate(\'' + ds + '\')">';
+      html += '<div class="cal-day">' + day + '</div>';
+      if (info) {
+        var rem  = Math.max(0, maxCap - info.booked);
+        var dotCls = rem <= 0 ? 'full' : (rem < 60 ? 'low' : '');
+        if (info.hasPending && !dotCls) dotCls = 'pending';
+        html += '<div class="cal-dot ' + dotCls + '"></div>';
+        html += '<div class="cal-cell-qty">' + info.booked + '</div>';
+      }
+      html += '</div>';
+    }
+
+    document.getElementById('calGrid').innerHTML = html;
+    if (_calSelDate) renderCalDetail(_calSelDate);
+  }
+
+  function selectCalDate(dateStr) {
+    _calSelDate = dateStr;
+    renderCalendar();
+    renderCalDetail(dateStr);
+    document.getElementById('calDetail').style.display = '';
+    // Scroll detail into view on mobile
+    setTimeout(function () {
+      var el = document.getElementById('calDetail');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 80);
+  }
+
+  function renderCalDetail(dateStr) {
+    var maxCap    = parseInt(document.getElementById('capInput').value, 10) || 300;
+    var dayOrders = allOrders.filter(function (o) { return o.requestedDate === dateStr; });
+    var d         = new Date(dateStr + 'T12:00:00');
+    var days      = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+    var dateLabel = days[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
+
+    var booked    = dayOrders.reduce(function (s, o) {
+      return o.status !== 'cancelled' ? s + (Number(o.quantity) || 0) : s;
+    }, 0);
+    var remaining = Math.max(0, maxCap - booked);
+    var capCls = remaining <= 0 ? 'cap-full' : (remaining < 60 ? 'cap-low' : '');
+    var capTxt = remaining <= 0
+      ? 'Hết chỗ · ' + booked + '/' + maxCap
+      : booked + '/' + maxCap + ' · còn ' + remaining;
+
+    var html = '<div class="cal-detail__hdr">' +
+      '<div class="cal-detail__date">' + esc(dateLabel) + '</div>' +
+      '<div class="cal-detail__cap ' + capCls + '">' + esc(capTxt) + '</div>' +
+      '</div><div class="cal-detail__body">';
+
+    if (dayOrders.length === 0) {
+      html += '<div class="cal-detail__empty">Không có đơn hàng ngày này.</div>';
+    } else {
+      dayOrders.forEach(function (o) {
+        var stCls = 'st--' + (o.status || 'pending');
+        var stLbl = { pending:'Chờ xác nhận', confirmed:'Đã xác nhận', completed:'Hoàn thành', cancelled:'Đã huỷ' }[o.status] || o.status;
+        html += '<div class="va-order-card">' +
+          '<div class="va-order-card__top">' +
+            '<div class="va-order-card__name">' + esc(o.customerName || '—') + '</div>' +
+            '<div class="va-order-card__amt">' + (o.subtotal != null ? '$' + Number(o.subtotal).toFixed(2) : '') + '</div>' +
+          '</div>' +
+          '<div class="va-order-card__meta">' +
+            (o.customerPhone ? '<a href="tel:' + esc(o.customerPhone) + '" style="color:var(--sky-lt)">' + esc(o.customerPhone) + '</a> · ' : '') +
+            esc(o.quantity) + ' · ' + esc(o.variant || o.itemName || '') +
+            ' · <span class="' + stCls + '">' + esc(stLbl) + '</span>' +
+            (o.requestedTime ? '<br>' + esc(o.requestedTime) : '') +
+            (o.notes ? '<br><em style="opacity:.75">' + esc(o.notes) + '</em>' : '') +
+          '</div>' +
+          '<div class="va-order-card__actions">' +
+            (o.status === 'pending'
+              ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'confirmed\')">&#10003; Xác nhận</button>'
+              : '') +
+            (o.status === 'confirmed'
+              ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'completed\')">&#10003; Hoàn thành</button>'
+              : '') +
+            (o.status !== 'cancelled' && o.status !== 'completed'
+              ? '<button class="btn btn--danger btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'cancelled\')">&#10005; Huỷ</button>'
+              : '') +
+          '</div>' +
+        '</div>';
+      });
+    }
+    html += '</div>';
+    document.getElementById('calDetail').innerHTML = html;
+  }
+
+  // ── Render orders list (grouped by date) ──────────────────────────────────
+  function renderOrders() {
+    var list = document.getElementById('ordersList');
+    if (!list) return;
+    var maxCap = parseInt(document.getElementById('capInput').value, 10) || 300;
 
     if (allOrders.length === 0) {
       list.innerHTML = '<div class="va-orders-empty">Chưa có đơn hàng nào.<br>Đơn hàng từ trang công khai sẽ xuất hiện ở đây.</div>';
       return;
     }
 
-    // Group by requestedDate
     var groups = {};
     allOrders.forEach(function (o) {
       var k = o.requestedDate || '(no date)';
@@ -1346,8 +1623,8 @@
     var html = '';
 
     dateKeys.forEach(function (k) {
-      var orders = groups[k];
-      var booked = orders.reduce(function (s, o) {
+      var orders   = groups[k];
+      var booked   = orders.reduce(function (s, o) {
         return o.status !== 'cancelled' ? s + (Number(o.quantity) || 0) : s;
       }, 0);
       var remaining = Math.max(0, maxCap - booked);
@@ -1359,8 +1636,8 @@
       var dateLabel = k;
       if (/^\d{4}-\d{2}-\d{2}$/.test(k)) {
         var d = new Date(k + 'T12:00:00');
-        var days = ['CN','T2','T3','T4','T5','T6','T7'];
-        dateLabel = days[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear().toString().slice(-2);
+        var dayNames = ['CN','T2','T3','T4','T5','T6','T7'];
+        dateLabel = dayNames[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear().toString().slice(-2);
       }
 
       html += '<div class="va-date-group">' +
@@ -1381,22 +1658,22 @@
             (o.customerPhone ? '<a href="tel:' + esc(o.customerPhone) + '" style="color:var(--sky-lt)">' + esc(o.customerPhone) + '</a> · ' : '') +
             esc(o.quantity) + ' · ' + esc(o.variant || o.itemName || '') +
             ' · <span class="' + stCls + '">' + esc(stLbl) + '</span>' +
+            (o.requestedTime ? '<br>' + esc(o.requestedTime) : '') +
             (o.notes ? '<br><em style="opacity:.75">' + esc(o.notes) + '</em>' : '') +
           '</div>' +
           '<div class="va-order-card__actions">' +
             (o.status === 'pending'
-              ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'confirmed\')">✓ Xác nhận</button>'
+              ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'confirmed\')">&#10003; Xác nhận</button>'
               : '') +
             (o.status === 'confirmed'
-              ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'completed\')">✓ Hoàn thành</button>'
+              ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'completed\')">&#10003; Hoàn thành</button>'
               : '') +
             (o.status !== 'cancelled' && o.status !== 'completed'
-              ? '<button class="btn btn--danger btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'cancelled\')">✕ Huỷ</button>'
+              ? '<button class="btn btn--danger btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'cancelled\')">&#10005; Huỷ</button>'
               : '') +
           '</div>' +
         '</div>';
       });
-
       html += '</div>';
     });
 
@@ -1404,7 +1681,7 @@
   }
 
   function setOrderStatus(orderId, newStatus) {
-    vendorRef.collection('orders').doc(orderId).update({
+    vendorRef.collection('bookings').doc(orderId).update({
       status:    newStatus,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }).then(function () {

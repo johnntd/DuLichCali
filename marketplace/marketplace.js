@@ -32,7 +32,7 @@
       if (!window.dlcDb || !dateStr) return Promise.resolve(0);
       return window.dlcDb
         .collection('vendors').doc(vendorId)
-        .collection('orders')
+        .collection('bookings')
         .where('requestedDate', '==', dateStr)
         .get()
         .then(function (snap) {
@@ -978,14 +978,16 @@
           requestedDate: dateStr,
           subtotal:      parseFloat((qty * price).toFixed(2)),
           status:        'pending',
-          notes:         notesInput ? notesInput.value.trim() : ''
+          notes:         notesInput ? notesInput.value.trim() : '',
+          bookingType:   'order',
+          capacityUnitsUsed: qty
         };
 
         // Save to Firestore
         if (window.dlcDb && window.firebase) {
           orderData.createdAt = window.firebase.firestore.FieldValue.serverTimestamp();
           orderData.updatedAt = window.firebase.firestore.FieldValue.serverTimestamp();
-          window.dlcDb.collection('vendors').doc(biz.id).collection('orders').add(orderData)
+          window.dlcDb.collection('vendors').doc(biz.id).collection('bookings').add(orderData)
             .then(function () {
               form.style.display = 'none';
               successDiv.classList.add('show');

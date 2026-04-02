@@ -22,6 +22,96 @@
   var _categoryId = null;
   var _container = null;
 
+  // ── Capacity Engine ────────────────────────────────────────────────────────────
+  // Queries Firestore to determine how many slots remain on a given date.
+
+  var CapacityEngine = {
+
+    // Returns Promise<number> — total booked (non-cancelled) qty for a vendor+date
+    getBookedQty: function (vendorId, dateStr) {
+      if (!window.dlcDb || !dateStr) return Promise.resolve(0);
+      return window.dlcDb
+        .collection('vendors').doc(vendorId)
+        .collection('orders')
+        .where('requestedDate', '==', dateStr)
+        .get()
+        .then(function (snap) {
+          var total = 0;
+          snap.forEach(function (d) {
+            var o = d.data();
+            if (o.status !== 'cancelled') total += Number(o.quantity) || 0;
+          });
+          return total;
+        })
+        .catch(function () { return 0; });
+    },
+
+    // Returns Promise<{date, max, booked, remaining}>
+    getCapacityInfo: function (biz, dateStr) {
+      var maxCap = Number(biz.defaultDailyCapacity) || 300;
+      return CapacityEngine.getBookedQty(biz.id, dateStr).then(function (booked) {
+        return {
+          date:      dateStr,
+          max:       maxCap,
+          booked:    booked,
+          remaining: Math.max(0, maxCap - booked)
+        };
+      });
+    }
+  };
+
+  // ── Date helpers ───────────────────────────────────────────────────────────────
+
+  function _parseDateFromText(text) {
+    var t = (text || '').toLowerCase();
+    var today = new Date();
+    var dow = today.getDay();
+
+    // dayNames[i] = keywords that map to weekday index i (0=Sun … 6=Sat)
+    var dayNames = [
+      ['sunday', 'chủ nhật', 'chu nhat'],
+      ['monday', 'thứ hai', 'thu hai'],
+      ['tuesday', 'thứ ba', 'thu ba'],
+      ['wednesday', 'thứ tư', 'thu tu', 'thu 4'],
+      ['thursday', 'thứ năm', 'thu nam', 'thu 5'],
+      ['friday', 'thứ sáu', 'thu sau', 'thu 6'],
+      ['saturday', 'thứ bảy', 'thu bay', 'thu 7']
+    ];
+
+    for (var i = 0; i < dayNames.length; i++) {
+      for (var j = 0; j < dayNames[i].length; j++) {
+        if (t.indexOf(dayNames[i][j]) !== -1) {
+          var diff = i - dow;
+          if (diff <= 0) diff += 7; // always look forward to the next occurrence
+          var d = new Date(today);
+          d.setDate(today.getDate() + diff);
+          return _fmtDate(d);
+        }
+      }
+    }
+
+    if (/tomorrow|ng[àa]y mai/.test(t)) {
+      var d2 = new Date(today);
+      d2.setDate(today.getDate() + 1);
+      return _fmtDate(d2);
+    }
+    if (/\btoday\b|h[ôo]m nay/.test(t)) return _fmtDate(today);
+    return null;
+  }
+
+  function _fmtDate(d) {
+    return d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0');
+  }
+
+  function _dayLabel(dateStr) {
+    var d = new Date(dateStr + 'T12:00:00');
+    var days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return days[d.getDay()] + ' (' + months[d.getMonth()] + ' ' + d.getDate() + ')';
+  }
+
   // ── Init ───────────────────────────────────────────────────────────────────────
 
   function init(categoryId) {
@@ -446,9 +536,10 @@
 
       if (vendorDoc.exists) {
         var vd = vendorDoc.data();
-        if (vd.description) merged.description = vd.description;
-        if (vd.heroImage)   merged.heroImage   = vd.heroImage;
-        if (vd.active === false) merged.active  = false;
+        if (vd.description)              merged.description          = vd.description;
+        if (vd.heroImage)                merged.heroImage            = vd.heroImage;
+        if (vd.active === false)         merged.active               = false;
+        if (vd.defaultDailyCapacity != null) merged.defaultDailyCapacity = Number(vd.defaultDailyCapacity);
       }
 
       // Load menu items (no compound index required — filter client-side)
@@ -695,6 +786,12 @@
             '</div>' +
           '</div>' +
           '<div class="mp-form-row">' +
+            '<label class="mp-label" for="ofDate_' + biz.id + '">Requested Date *</label>' +
+            '<input class="mp-input" type="date" id="ofDate_' + biz.id + '" name="requested_date" ' +
+              'min="' + _fmtDate(new Date()) + '" required>' +
+            '<div class="mp-capacity-info" id="ofCap_' + biz.id + '" style="display:none"></div>' +
+          '</div>' +
+          '<div class="mp-form-row">' +
             '<label class="mp-label" for="ofDelivery_' + biz.id + '">Pickup / Delivery</label>' +
             '<select class="mp-input" id="ofDelivery_' + biz.id + '" name="pickup_delivery">' +
               '<option value="pickup">Pickup at vendor address</option>' +
@@ -764,45 +861,80 @@
   }
 
   function initOrderInquiryForm(biz) {
-    var form = document.getElementById('orderForm_' + biz.id);
+    var form       = document.getElementById('orderForm_' + biz.id);
     var successDiv = document.getElementById('orderSuccess_' + biz.id);
-    var qtyInput = document.getElementById('ofQty_' + biz.id);
-    var subtotalDiv = document.getElementById('ofSubtotal_' + biz.id);
-    var subtotalAmt = document.getElementById('ofSubtotalAmt_' + biz.id);
-    var minWarn = document.getElementById('ofMinWarn_' + biz.id);
-    var submitBtn = document.getElementById('ofSubmit_' + biz.id);
+    var qtyInput   = document.getElementById('ofQty_' + biz.id);
+    var dateInput  = document.getElementById('ofDate_' + biz.id);
+    var capDiv     = document.getElementById('ofCap_' + biz.id);
+    var subtotalDiv= document.getElementById('ofSubtotal_' + biz.id);
+    var subtotalAmt= document.getElementById('ofSubtotalAmt_' + biz.id);
+    var minWarn    = document.getElementById('ofMinWarn_' + biz.id);
+    var submitBtn  = document.getElementById('ofSubmit_' + biz.id);
 
     if (!form || !successDiv) return;
 
-    // Live estimated subtotal
-    if (qtyInput && subtotalDiv && subtotalAmt) {
-      qtyInput.addEventListener('input', function () {
-        var qty = parseInt(qtyInput.value, 10) || 0;
-        var price = parseFloat(qtyInput.getAttribute('data-price')) || 0.50;
-        var minQty = parseInt(qtyInput.getAttribute('data-min'), 10) || 30;
+    var _capCache = {}; // dateStr → {max,booked,remaining}
 
-        if (qty > 0) {
-          subtotalAmt.textContent = '$' + (qty * price).toFixed(2);
-          subtotalDiv.style.display = 'block';
-          if (qty < minQty) {
-            if (minWarn) minWarn.style.display = 'block';
-            subtotalDiv.classList.add('mp-subtotal--warn');
-          } else {
-            if (minWarn) minWarn.style.display = 'none';
-            subtotalDiv.classList.remove('mp-subtotal--warn');
-          }
+    // Live estimated subtotal
+    function updateSubtotal() {
+      if (!qtyInput || !subtotalDiv || !subtotalAmt) return;
+      var qty    = parseInt(qtyInput.value, 10) || 0;
+      var price  = parseFloat(qtyInput.getAttribute('data-price')) || 0.75;
+      var minQty = parseInt(qtyInput.getAttribute('data-min'), 10) || 30;
+      if (qty > 0) {
+        subtotalAmt.textContent = '$' + (qty * price).toFixed(2);
+        subtotalDiv.style.display = 'block';
+        if (qty < minQty) {
+          if (minWarn) minWarn.style.display = 'block';
+          subtotalDiv.classList.add('mp-subtotal--warn');
         } else {
-          subtotalDiv.style.display = 'none';
           if (minWarn) minWarn.style.display = 'none';
+          subtotalDiv.classList.remove('mp-subtotal--warn');
         }
+      } else {
+        subtotalDiv.style.display = 'none';
+        if (minWarn) minWarn.style.display = 'none';
+      }
+    }
+
+    if (qtyInput) qtyInput.addEventListener('input', updateSubtotal);
+
+    // Show capacity info for selected date
+    function showCapInfo(info) {
+      if (!capDiv) return;
+      capDiv.style.display = 'block';
+      if (info.remaining <= 0) {
+        capDiv.textContent = 'Fully booked on this date. Please choose another date.';
+        capDiv.className = 'mp-capacity-info mp-capacity-info--full';
+      } else if (info.remaining < 60) {
+        capDiv.textContent = 'Only ' + info.remaining + ' spots left (max ' + info.max + '/day).';
+        capDiv.className = 'mp-capacity-info mp-capacity-info--low';
+      } else {
+        capDiv.textContent = info.remaining + ' spots available on this date (max ' + info.max + '/day).';
+        capDiv.className = 'mp-capacity-info mp-capacity-info--ok';
+      }
+    }
+
+    if (dateInput) {
+      dateInput.addEventListener('change', function () {
+        var ds = dateInput.value;
+        if (!ds) { if (capDiv) capDiv.style.display = 'none'; return; }
+        if (_capCache[ds]) { showCapInfo(_capCache[ds]); return; }
+        if (capDiv) { capDiv.textContent = 'Checking availability…'; capDiv.style.display = 'block'; capDiv.className = 'mp-capacity-info'; }
+        CapacityEngine.getCapacityInfo(biz, ds).then(function (info) {
+          _capCache[ds] = info;
+          showCapInfo(info);
+        });
       });
     }
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
 
-      var qty = qtyInput ? (parseInt(qtyInput.value, 10) || 0) : 0;
+      var qty    = qtyInput ? (parseInt(qtyInput.value, 10) || 0) : 0;
       var minQty = qtyInput ? (parseInt(qtyInput.getAttribute('data-min'), 10) || 30) : 30;
+      var price  = qtyInput ? (parseFloat(qtyInput.getAttribute('data-price')) || 0.75) : 0.75;
+      var dateStr = dateInput ? dateInput.value : '';
 
       if (qty < minQty) {
         alert('Minimum order is ' + minQty + ' pieces. Please update the quantity.');
@@ -810,37 +942,79 @@
         return;
       }
 
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Sending...';
+      function doSubmit(capInfo) {
+        if (capInfo && qty > capInfo.remaining) {
+          var msg = capInfo.remaining <= 0
+            ? 'Sorry, ' + _dayLabel(capInfo.date) + ' is fully booked (max ' + capInfo.max + '/day). Please choose another date.'
+            : 'Only ' + capInfo.remaining + ' spots left on ' + _dayLabel(capInfo.date) + ' (max ' + capInfo.max + '/day). Please reduce your quantity or choose another date.';
+          alert(msg);
+          return;
+        }
+
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Sending…'; }
+
+        // Build order data
+        var itemSelect = document.getElementById('ofItem_' + biz.id);
+        var variantSel = document.getElementById('ofVariant_' + biz.id);
+        var nameInput  = document.getElementById('ofName_' + biz.id);
+        var phoneInput = document.getElementById('ofPhone_' + biz.id);
+        var notesInput = document.getElementById('ofNotes_' + biz.id);
+
+        var itemId = itemSelect ? itemSelect.value : (biz.products && biz.products[0] ? biz.products[0].id : '');
+        var itemName = '';
+        if (biz.products) {
+          for (var pi = 0; pi < biz.products.length; pi++) {
+            if (biz.products[pi].id === itemId) { itemName = biz.products[pi].name; break; }
+          }
+        }
+
+        var orderData = {
+          customerName:  nameInput  ? nameInput.value.trim()  : '',
+          customerPhone: phoneInput ? phoneInput.value.trim() : '',
+          itemId:        itemId,
+          itemName:      itemName,
+          variant:       variantSel ? variantSel.value : '',
+          quantity:      qty,
+          requestedDate: dateStr,
+          subtotal:      parseFloat((qty * price).toFixed(2)),
+          status:        'pending',
+          notes:         notesInput ? notesInput.value.trim() : ''
+        };
+
+        // Save to Firestore
+        if (window.dlcDb && window.firebase) {
+          orderData.createdAt = window.firebase.firestore.FieldValue.serverTimestamp();
+          orderData.updatedAt = window.firebase.firestore.FieldValue.serverTimestamp();
+          window.dlcDb.collection('vendors').doc(biz.id).collection('orders').add(orderData)
+            .then(function () {
+              form.style.display = 'none';
+              successDiv.classList.add('show');
+            })
+            .catch(function (err) {
+              console.warn('[order] Firestore save failed:', err.message);
+              // Show success anyway — customer will call to confirm
+              form.style.display = 'none';
+              successDiv.classList.add('show');
+            });
+        } else {
+          form.style.display = 'none';
+          successDiv.classList.add('show');
+        }
       }
 
-      var formData = new FormData(form);
-      var price = qtyInput ? (parseFloat(qtyInput.getAttribute('data-price')) || 0.50) : 0.50;
-      formData.set('estimated_total', '$' + (qty * price).toFixed(2));
-
-      fetch('https://formspree.io/f/' + biz.formspreeId, {
-        method: 'POST',
-        body: formData,
-        headers: { 'Accept': 'application/json' }
-      })
-        .then(function (res) {
-          if (res.ok) {
-            form.style.display = 'none';
-            successDiv.classList.add('show');
-          } else {
-            return res.json().then(function (data) {
-              throw new Error((data.errors || []).map(function (err) { return err.message; }).join(', ') || 'Send failed');
-            });
-          }
-        })
-        .catch(function (err) {
-          if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Send Order Inquiry';
-          }
-          alert('Error: ' + err.message + '\nPlease call directly: ' + biz.phoneDisplay);
-        });
+      // Validate capacity then submit
+      if (dateStr) {
+        if (_capCache[dateStr]) {
+          doSubmit(_capCache[dateStr]);
+        } else {
+          CapacityEngine.getCapacityInfo(biz, dateStr).then(function (info) {
+            _capCache[dateStr] = info;
+            doSubmit(info);
+          });
+        }
+      } else {
+        doSubmit(null);
+      }
     });
   }
 
@@ -894,35 +1068,36 @@
       var typingId = 'typing_' + Date.now();
       Receptionist._appendTyping(messagesEl, typingId);
 
-      // Try Claude API first if key exists
       var apiKey = null;
-      try {
-        apiKey = localStorage.getItem('dlc_claude_key');
-      } catch (e) {}
+      try { apiKey = localStorage.getItem('dlc_claude_key'); } catch (e) {}
 
-      if (apiKey) {
-        Receptionist._askClaude(biz, text, apiKey)
-          .then(function (reply) {
-            Receptionist._removeTyping(messagesEl, typingId);
-            Receptionist._appendMessage(messagesEl, reply, 'bot');
-          })
-          .catch(function () {
-            // Fall back to rule-based
-            Receptionist._removeTyping(messagesEl, typingId);
-            var reply = Receptionist._ruleBasedReply(biz, text);
-            Receptionist._appendMessage(messagesEl, reply, 'bot');
-          });
-      } else {
-        // Simulate short delay for natural feel
-        setTimeout(function () {
-          Receptionist._removeTyping(messagesEl, typingId);
-          var reply = Receptionist._ruleBasedReply(biz, text);
-          Receptionist._appendMessage(messagesEl, reply, 'bot');
-        }, 650);
+      // Pre-fetch capacity if food vendor + date found in message
+      var capPromise = Promise.resolve(null);
+      if (biz.vendorType === 'foodvendor') {
+        var ds = _parseDateFromText(text);
+        if (ds) capPromise = CapacityEngine.getCapacityInfo(biz, ds);
       }
+
+      capPromise.then(function (capInfo) {
+        if (apiKey) {
+          return Receptionist._askClaude(biz, text, apiKey, capInfo)
+            .catch(function () {
+              return Receptionist._ruleBasedReply(biz, text, capInfo);
+            });
+        } else {
+          return new Promise(function (resolve) {
+            setTimeout(function () {
+              resolve(Receptionist._ruleBasedReply(biz, text, capInfo));
+            }, capInfo ? 200 : 650);
+          });
+        }
+      }).then(function (reply) {
+        Receptionist._removeTyping(messagesEl, typingId);
+        Receptionist._appendMessage(messagesEl, reply, 'bot');
+      });
     },
 
-    _ruleBasedReply: function (biz, text) {
+    _ruleBasedReply: function (biz, text, capInfo) {
       var t = text.toLowerCase();
 
       // Greetings
@@ -933,7 +1108,48 @@
       // ── Food vendor: deterministic answers ─────────────────────────────────
       if (biz.vendorType === 'foodvendor' && biz.products && biz.products.length > 0) {
 
-        // 1. QUANTITY PRICING — highest priority
+        // 0. DATE + CAPACITY (capInfo pre-fetched by _sendMessage)
+        if (capInfo) {
+          var label  = _dayLabel(capInfo.date);
+          var calc0  = Receptionist._computePrice(biz, t);
+          var isVi   = /[\u1E00-\u1EFF]|tôi|mu[ốo]n|v[àa]o|th[ứu]|bao nhi[êe]u|ch[ảa]\s*gi[oò]/.test(text);
+          var lines  = [];
+
+          if (calc0) {
+            var pLbl = calc0.product.nameEn || calc0.product.name;
+            lines.push(calc0.qty + ' ' + pLbl + (calc0.qty !== 1 ? 's' : '') +
+              ' = $' + calc0.subtotal.toFixed(2) +
+              ' (at $' + calc0.price.toFixed(2) + ' each)');
+            if (calc0.belowMin) {
+              lines.push(isVi
+                ? 'Lưu ý: số lượng tối thiểu là ' + calc0.minQty + ' cái ($' + calc0.minSubtotal.toFixed(2) + ').'
+                : 'Note: minimum order is ' + calc0.minQty + ' pieces ($' + calc0.minSubtotal.toFixed(2) + ').');
+            }
+          }
+
+          if (capInfo.remaining <= 0) {
+            lines.push(isVi
+              ? label + ' đã hết chỗ (' + capInfo.booked + '/' + capInfo.max + '). Vui lòng chọn ngày khác.'
+              : label + ' is fully booked (' + capInfo.booked + '/' + capInfo.max + '). Please choose another date.');
+          } else if (calc0 && !calc0.belowMin && calc0.qty > capInfo.remaining) {
+            lines.push(isVi
+              ? 'Ngày ' + label + ' chỉ còn ' + capInfo.remaining + ' cuốn (tối đa ' + capInfo.max + '/ngày, đã đặt ' + capInfo.booked + '). Bạn muốn đặt ' + capInfo.remaining + ' cuốn hoặc chọn ngày khác?'
+              : 'For ' + label + ': only ' + capInfo.remaining + ' left (max ' + capInfo.max + '/day, ' + capInfo.booked + ' already booked). Would you like to order ' + capInfo.remaining + ' instead, or choose another date?');
+          } else {
+            lines.push(isVi
+              ? 'Ngày ' + label + ': còn ' + capInfo.remaining + ' cuốn (tối đa ' + capInfo.max + '/ngày).'
+              : label + ': ' + capInfo.remaining + ' spots available (max ' + capInfo.max + '/day).');
+            if (calc0 && !calc0.belowMin) {
+              lines.push(isVi
+                ? 'Điền form bên dưới để đặt hàng hoặc gọi Loan: ' + biz.phoneDisplay
+                : 'Use the form below to place your order, or call Loan: ' + biz.phoneDisplay);
+            }
+          }
+
+          return lines.join('\n\n');
+        }
+
+        // 1. QUANTITY PRICING — highest priority (no date)
         // Catches: "how much is 30 egg rolls?", "price for 50?", "100 pieces?"
         var calc = Receptionist._computePrice(biz, t);
         if (calc) {
@@ -1085,7 +1301,7 @@
         'Bạn muốn hỏi gì ạ? Hoặc gọi trực tiếp: ' + biz.phoneDisplay;
     },
 
-    _askClaude: function (biz, text, apiKey) {
+    _askClaude: function (biz, text, apiKey, capInfo) {
       var ai = biz.aiReceptionist;
       var systemPrompt = 'You are ' + ai.name + ', AI assistant for ' + biz.name + '. ';
 
@@ -1111,7 +1327,20 @@
         systemPrompt += '- "What is price/cost?" → state price per piece and minimum order total.\n';
         systemPrompt += '- "Phone/contact?" → ' + (biz.hosts && biz.hosts[0] ? biz.hosts[0].name : 'owner') + ' at ' + biz.phoneDisplay + '\n';
         systemPrompt += '- "Address/location?" → ' + biz.address + '\n';
-        systemPrompt += '\nOnly say "contact vendor" for things NOT in the data above (e.g. delivery scheduling, custom orders, real-time availability).';
+        if (capInfo) {
+          var capLbl = _dayLabel(capInfo.date);
+          systemPrompt += '\nDAILY CAPACITY for ' + capLbl + ':\n';
+          systemPrompt += '- Max per day: ' + capInfo.max + '\n';
+          systemPrompt += '- Already booked: ' + capInfo.booked + '\n';
+          systemPrompt += '- Remaining slots: ' + capInfo.remaining + '\n';
+          if (capInfo.remaining <= 0) {
+            systemPrompt += '- STATUS: FULLY BOOKED. Tell customer to choose another date.\n';
+          } else {
+            systemPrompt += '- STATUS: ' + capInfo.remaining + ' slots still open.\n';
+          }
+          systemPrompt += 'When answering about ordering on ' + capLbl + ', always mention remaining capacity.\n';
+        }
+        systemPrompt += '\nOnly say "contact vendor" for things NOT in the data above (e.g. delivery scheduling, custom orders).';
       } else {
         systemPrompt += (ai.systemExtra || '');
       }

@@ -437,6 +437,96 @@
       transition: width .15s;
     }
     .img-progress-label { font-size: .75rem; color: var(--cream); }
+
+    /* ── Capacity card ──────────────────────────────────────────────── */
+    .va-cap-card {
+      background: var(--navy-800);
+      border: 1px solid var(--border-g);
+      border-radius: 12px;
+      padding: .9rem 1rem;
+      margin-bottom: .9rem;
+    }
+    .va-cap-card__title {
+      font-size: .58rem; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: .55rem;
+    }
+    .va-cap-card__row { display: flex; gap: .5rem; align-items: center; }
+    .va-cap-input {
+      flex: 1; height: 44px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      color: var(--cream);
+      font-family: var(--font-b); font-size: .95rem;
+      padding: 0 12px; outline: none;
+      transition: border-color .2s;
+    }
+    .va-cap-input:focus { border-color: var(--gold); }
+    .va-cap-sub  { font-size: .68rem; color: var(--muted); margin-top: .3rem; }
+    .va-cap-status { font-size: .7rem; color: var(--success); margin-top: .25rem; min-height: 1em; }
+
+    /* ── Tabs ───────────────────────────────────────────────────────── */
+    .va-tabs { display: flex; gap: .45rem; margin-bottom: .9rem; }
+    .va-tab {
+      flex: 1; height: 38px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-family: var(--font-b); font-size: .72rem; font-weight: 600;
+      letter-spacing: .06em; text-transform: uppercase;
+      cursor: pointer; transition: all .18s;
+    }
+    .va-tab.active {
+      background: var(--gold-dim);
+      border-color: var(--border-g);
+      color: var(--gold);
+    }
+
+    /* ── Order cards ────────────────────────────────────────────────── */
+    .va-date-group { margin-bottom: 1.1rem; }
+    .va-date-group__hdr {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      margin-bottom: .5rem;
+      padding-bottom: .4rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .va-date-group__label {
+      font-family: var(--font-d); font-size: .95rem; color: var(--cream);
+    }
+    .va-date-group__cap {
+      font-size: .68rem; color: var(--muted);
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border);
+      border-radius: 20px; padding: .16rem .5rem;
+    }
+    .va-date-group__cap.cap-low  { color: var(--sunset); border-color: rgba(251,146,60,.35); }
+    .va-date-group__cap.cap-full { color: var(--danger); border-color: rgba(248,113,113,.35); }
+    .va-order-card {
+      background: var(--navy-800);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: .8rem .9rem;
+      margin-bottom: .5rem;
+    }
+    .va-order-card__top {
+      display: flex; justify-content: space-between;
+      align-items: flex-start; margin-bottom: .25rem;
+    }
+    .va-order-card__name { font-size: .9rem; font-weight: 600; color: var(--cream); }
+    .va-order-card__amt  { font-size: .9rem; color: var(--gold-lt); font-family: var(--font-d); }
+    .va-order-card__meta { font-size: .74rem; color: var(--muted); line-height: 1.55; }
+    .va-order-card__actions { margin-top: .6rem; display: flex; gap: .38rem; flex-wrap: wrap; }
+    .st--pending   { color: var(--gold); }
+    .st--confirmed { color: var(--sky); }
+    .st--completed { color: var(--success); }
+    .st--cancelled { color: var(--danger); }
+    .va-orders-empty {
+      text-align: center; padding: 2.5rem 1rem;
+      color: var(--muted); font-size: .82rem; line-height: 1.6;
+    }
   </style>
 </head>
 <body>
@@ -480,19 +570,50 @@
       </a>
     </div>
 
-    <!-- Section header -->
-    <div class="va-section-hdr">
-      <div class="va-section-title">Thực Đơn Hiện Tại</div>
-      <span class="va-count" id="itemCount"></span>
+    <!-- Daily capacity card (always visible) -->
+    <div class="va-cap-card">
+      <div class="va-cap-card__title">Sản Lượng Hàng Ngày · Daily Capacity</div>
+      <div class="va-cap-card__row">
+        <input type="number" class="va-cap-input" id="capInput"
+          min="1" max="9999" step="1" placeholder="300">
+        <button class="btn btn--primary btn--sm" onclick="saveCapacity()">Lưu</button>
+      </div>
+      <div class="va-cap-sub">Tổng số chả giò Loan có thể làm mỗi ngày</div>
+      <div class="va-cap-status" id="capStatus"></div>
     </div>
 
-    <!-- Items -->
-    <div id="itemsContainer">
-      <div class="va-loading-state" id="loadingState">
-        <div class="va-spinner"></div>
-        Đang tải...
+    <!-- Tab bar -->
+    <div class="va-tabs">
+      <button class="va-tab active" id="tabMenu" onclick="switchTab('menu')">Thực Đơn</button>
+      <button class="va-tab" id="tabOrders" onclick="switchTab('orders')">Đơn Hàng<span id="ordersCount"></span></button>
+    </div>
+
+    <!-- Menu tab -->
+    <div id="menuTab">
+      <div class="va-section-hdr">
+        <div class="va-section-title">Thực Đơn Hiện Tại</div>
+        <span class="va-count" id="itemCount"></span>
       </div>
-      <div class="va-item-list" id="itemList" style="display:none"></div>
+      <div id="itemsContainer">
+        <div class="va-loading-state" id="loadingState">
+          <div class="va-spinner"></div>
+          Đang tải...
+        </div>
+        <div class="va-item-list" id="itemList" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Orders tab -->
+    <div id="ordersTab" style="display:none">
+      <div class="va-section-hdr">
+        <div class="va-section-title">Đơn Hàng Theo Ngày</div>
+        <span class="va-count" id="ordersTotal"></span>
+      </div>
+      <div class="va-loading-state" id="ordersLoading">
+        <div class="va-spinner"></div>
+        Đang tải đơn hàng...
+      </div>
+      <div id="ordersList" style="display:none"></div>
     </div>
 
   </div>
@@ -609,26 +730,27 @@
 
   // ── Seed data (written to Firestore on first use) ────────────────────────
   var SEED_VENDOR = {
-    slug:         'nha-bep-cua-emily',
-    businessName: 'Nhà Bếp Của Emily',
-    category:     'food',
-    vendorType:   'foodvendor',
-    contactName:  'Loan',
-    phone:        '4089312438',
-    phoneDisplay: '408-931-2438',
-    address:      '2534 Clarebank Way, San Jose, CA 95121',
-    region:       'Bay Area',
-    city:         'San Jose',
-    description:  'Mỗi cuốn chả giò là cả tâm huyết của gia đình Emily — nhân thịt heo, nấm hương và cà rốt tươi, gói bằng bánh tráng mỏng, chiên vàng giòn rụm. Không chất bảo quản, handmade từng mẻ.',
-    heroImage:    '',
-    active:       true
+    slug:                 'nha-bep-cua-emily',
+    businessName:         'Nhà Bếp Của Emily',
+    category:             'food',
+    vendorType:           'foodvendor',
+    contactName:          'Loan',
+    phone:                '4089312438',
+    phoneDisplay:         '408-931-2438',
+    address:              '2534 Clarebank Way, San Jose, CA 95121',
+    region:               'Bay Area',
+    city:                 'San Jose',
+    description:          'Mỗi cuốn chả giò là cả tâm huyết của gia đình Emily — nhân thịt heo, nấm hương và cà rốt tươi, gói bằng bánh tráng mỏng, chiên vàng giòn rụm. Không chất bảo quản, handmade từng mẻ.',
+    heroImage:            '',
+    active:               true,
+    defaultDailyCapacity: 300
   };
 
   var SEED_ITEM = {
     name:            'Chả Giò (Eggroll)',
     description:     'Chả giò nhân thịt heo, nấm hương và cà rốt tươi — gói bằng bánh tráng mỏng, chiên giòn vàng thơm phức. Handmade, không chất bảo quản. Perfect for family dinners and parties.',
     variants:        ['Raw — to fry fresh at home', 'Fresh — cooked & ready to serve'],
-    price:           0.50,
+    price:           0.75,
     unit:            'each',
     minimumOrderQty: 30,
     image:           '',
@@ -708,6 +830,7 @@
 
   // ── App start ─────────────────────────────────────────────────────────────
   function startApp() {
+    loadCapacity();
     seedIfNeeded();
     subscribeMenuItems();
     // Show a friendly error if Firestore hasn't delivered data after 8 seconds
@@ -1123,6 +1246,173 @@
       .replace(/&/g, '&amp;').replace(/</g, '&lt;')
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+  }
+
+  // ── Tabs ──────────────────────────────────────────────────────────────────
+  var _activeTab = 'menu';
+  var unsubOrders = null;
+  var allOrders = [];
+
+  function switchTab(tab) {
+    _activeTab = tab;
+    document.getElementById('tabMenu').classList.toggle('active', tab === 'menu');
+    document.getElementById('tabOrders').classList.toggle('active', tab === 'orders');
+    document.getElementById('menuTab').style.display   = tab === 'menu'   ? '' : 'none';
+    document.getElementById('ordersTab').style.display = tab === 'orders' ? '' : 'none';
+    if (tab === 'orders' && !unsubOrders) subscribeOrders();
+  }
+
+  // ── Daily capacity ────────────────────────────────────────────────────────
+  function loadCapacity() {
+    vendorRef.get().then(function (doc) {
+      if (doc.exists) {
+        var cap = doc.data().defaultDailyCapacity;
+        document.getElementById('capInput').value = (cap != null) ? cap : 300;
+      } else {
+        document.getElementById('capInput').value = 300;
+      }
+    }).catch(function () {});
+  }
+
+  function saveCapacity() {
+    var val = parseInt(document.getElementById('capInput').value, 10);
+    if (isNaN(val) || val < 1) { showToast('Số lượng không hợp lệ.', 'error'); return; }
+    vendorRef.update({
+      defaultDailyCapacity: val,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function () {
+      var status = document.getElementById('capStatus');
+      status.textContent = '✓ Đã lưu: ' + val + ' cuốn/ngày';
+      setTimeout(function () { status.textContent = ''; }, 3000);
+      showToast('Cập nhật sản lượng: ' + val + ' cuốn/ngày', 'success');
+      // Re-render orders so capacity bars refresh
+      if (_activeTab === 'orders') renderOrders();
+    }).catch(function (err) {
+      showToast('Lỗi: ' + err.message, 'error');
+    });
+  }
+
+  // ── Orders real-time listener ──────────────────────────────────────────────
+  function subscribeOrders() {
+    if (unsubOrders) unsubOrders();
+    var ordersRef = vendorRef.collection('orders');
+    document.getElementById('ordersLoading').style.display = 'flex';
+    document.getElementById('ordersList').style.display = 'none';
+
+    function handleOrderSnap(snap) {
+      allOrders = [];
+      snap.forEach(function (d) { allOrders.push(Object.assign({ id: d.id }, d.data())); });
+      renderOrders();
+    }
+    function handleOrderErr(err2) {
+      document.getElementById('ordersLoading').innerHTML =
+        '<div style="color:var(--danger);padding:1rem;font-size:.8rem">Lỗi tải đơn hàng: ' + esc(err2.code || err2.message) + '</div>';
+    }
+
+    // Try ordering by requestedDate; fall back if index missing
+    unsubOrders = ordersRef.orderBy('requestedDate').onSnapshot(handleOrderSnap, function () {
+      unsubOrders = ordersRef.onSnapshot(handleOrderSnap, handleOrderErr);
+    });
+  }
+
+  // ── Render orders grouped by date ─────────────────────────────────────────
+  function renderOrders() {
+    var loading = document.getElementById('ordersLoading');
+    var list    = document.getElementById('ordersList');
+    if (!loading || !list) return;
+
+    loading.style.display = 'none';
+    list.style.display = 'block';
+
+    var maxCap = parseInt(document.getElementById('capInput').value, 10) || 300;
+    var active = allOrders.filter(function (o) { return o.status !== 'cancelled'; });
+    document.getElementById('ordersCount').textContent = active.length ? ' (' + active.length + ')' : '';
+    document.getElementById('ordersTotal').textContent  = allOrders.length + ' đơn';
+
+    if (allOrders.length === 0) {
+      list.innerHTML = '<div class="va-orders-empty">Chưa có đơn hàng nào.<br>Đơn hàng từ trang công khai sẽ xuất hiện ở đây.</div>';
+      return;
+    }
+
+    // Group by requestedDate
+    var groups = {};
+    allOrders.forEach(function (o) {
+      var k = o.requestedDate || '(no date)';
+      if (!groups[k]) groups[k] = [];
+      groups[k].push(o);
+    });
+
+    var dateKeys = Object.keys(groups).sort();
+    var html = '';
+
+    dateKeys.forEach(function (k) {
+      var orders = groups[k];
+      var booked = orders.reduce(function (s, o) {
+        return o.status !== 'cancelled' ? s + (Number(o.quantity) || 0) : s;
+      }, 0);
+      var remaining = Math.max(0, maxCap - booked);
+      var capCls = remaining <= 0 ? 'cap-full' : (remaining < 60 ? 'cap-low' : '');
+      var capTxt = remaining <= 0
+        ? 'Hết chỗ (' + booked + '/' + maxCap + ')'
+        : booked + '/' + maxCap + ' · còn ' + remaining;
+
+      var dateLabel = k;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(k)) {
+        var d = new Date(k + 'T12:00:00');
+        var days = ['CN','T2','T3','T4','T5','T6','T7'];
+        dateLabel = days[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear().toString().slice(-2);
+      }
+
+      html += '<div class="va-date-group">' +
+        '<div class="va-date-group__hdr">' +
+          '<div class="va-date-group__label">' + esc(dateLabel) + '</div>' +
+          '<div class="va-date-group__cap ' + capCls + '">' + esc(capTxt) + '</div>' +
+        '</div>';
+
+      orders.forEach(function (o) {
+        var stCls = 'st--' + (o.status || 'pending');
+        var stLbl = { pending:'Chờ xác nhận', confirmed:'Đã xác nhận', completed:'Hoàn thành', cancelled:'Đã huỷ' }[o.status] || o.status;
+        html += '<div class="va-order-card">' +
+          '<div class="va-order-card__top">' +
+            '<div class="va-order-card__name">' + esc(o.customerName || '—') + '</div>' +
+            '<div class="va-order-card__amt">' + (o.subtotal != null ? '$' + Number(o.subtotal).toFixed(2) : '') + '</div>' +
+          '</div>' +
+          '<div class="va-order-card__meta">' +
+            (o.customerPhone ? '<a href="tel:' + esc(o.customerPhone) + '" style="color:var(--sky-lt)">' + esc(o.customerPhone) + '</a> · ' : '') +
+            esc(o.quantity) + ' · ' + esc(o.variant || o.itemName || '') +
+            ' · <span class="' + stCls + '">' + esc(stLbl) + '</span>' +
+            (o.notes ? '<br><em style="opacity:.75">' + esc(o.notes) + '</em>' : '') +
+          '</div>' +
+          '<div class="va-order-card__actions">' +
+            (o.status === 'pending'
+              ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'confirmed\')">✓ Xác nhận</button>'
+              : '') +
+            (o.status === 'confirmed'
+              ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'completed\')">✓ Hoàn thành</button>'
+              : '') +
+            (o.status !== 'cancelled' && o.status !== 'completed'
+              ? '<button class="btn btn--danger btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'cancelled\')">✕ Huỷ</button>'
+              : '') +
+          '</div>' +
+        '</div>';
+      });
+
+      html += '</div>';
+    });
+
+    list.innerHTML = html;
+  }
+
+  function setOrderStatus(orderId, newStatus) {
+    vendorRef.collection('orders').doc(orderId).update({
+      status:    newStatus,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function () {
+      var msgs = { confirmed:'Đã xác nhận!', completed:'Hoàn thành!', cancelled:'Đã huỷ đơn.' };
+      showToast(msgs[newStatus] || 'Đã cập nhật.', 'success');
+    }).catch(function (err) {
+      showToast('Lỗi: ' + err.message, 'error');
+    });
   }
 </script>
 </body>

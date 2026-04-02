@@ -378,12 +378,13 @@ function updateEstimate() {
       // Delegate math to shared pricing engine
       const pricing = window.DLCPricing;
       let cost, vehicle;
+      const regionId = window.DLCRegion?.current?.id;
       if (['pickup', 'dropoff'].includes(serviceType)) {
         cost    = pricing ? pricing.transferCost(miles, passengers) : fallbackTransfer(miles, passengers);
-        vehicle = pricing ? pricing.getVehicle(passengers) : getRegionVehicle(passengers);
+        vehicle = pricing ? pricing.getVehicle(passengers, regionId) : getRegionVehicle(passengers);
       } else {
         cost    = pricing ? pricing.tourCost(miles, passengers, days, lodging) : fallbackTour(miles, passengers, days, lodging);
-        vehicle = pricing ? pricing.getVehicle(passengers) : getRegionVehicle(passengers);
+        vehicle = pricing ? pricing.getVehicle(passengers, regionId) : getRegionVehicle(passengers);
       }
 
       estEl.textContent = `$${Math.round(cost)}`;

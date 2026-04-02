@@ -389,9 +389,9 @@
     <div class="pin-emoji">🧑‍🍳</div>
     <div class="pin-brand">Nhà Bếp Của Emily</div>
     <p class="pin-sub">Nhập mã PIN để quản lý thực đơn</p>
-    <input type="password" id="pinInput" class="pin-input"
-      placeholder="● ● ● ● ●" maxlength="20"
-      autocomplete="off" inputmode="numeric">
+    <input type="tel" id="pinInput" class="pin-input"
+      placeholder="_ _ _ _" maxlength="6"
+      autocomplete="off" inputmode="numeric" pattern="[0-9]*">
     <div class="pin-error" id="pinError"></div>
     <button class="btn-pin" id="pinBtn">Đăng nhập</button>
   </div>
@@ -529,7 +529,7 @@
 <script>
   // ── Config ──────────────────────────────────────────────────────────────
   // Change VENDOR_PIN to something only Loan knows before going live.
-  var VENDOR_PIN = 'EMILY2025';
+  var VENDOR_PIN = '2438';
   var VENDOR_ID  = 'nha-bep-cua-emily';
 
   // ── Seed data (written to Firestore on first use) ────────────────────────

@@ -1197,12 +1197,13 @@ function _hpCatLabel(c)  { return { nails: 'Nail Salon', hair: 'Tiệm Tóc', fo
 function _hpCatAccent(c) { return { nails: '#f472b6', hair: '#38bdf8', food: '#f59e0b' }[c] || 'var(--gold)'; }
 
 // ── HTML builders ─────────────────────────────────────────────
+const _CAT_PATHS = { nails: 'nailsalon/', hair: 'hairsalon/', food: 'foods/' };
+
 function buildVendorCardHtml(biz) {
   const avail  = computeBizAvailability(biz);
   const accent = _hpCatAccent(biz.category);
-  const href   = biz.id
-    ? `marketplace/index.html?id=${biz.id}`
-    : `marketplace/index.html?cat=${biz.category}`;
+  const catPath = _CAT_PATHS[biz.category] || ('marketplace/index.html?cat=' + biz.category);
+  const href   = biz.id ? catPath + '?id=' + biz.id : catPath;
   const bg     = biz.heroImage
     ? `background:${biz.heroGradient};background-image:url(${biz.heroImage});background-size:cover;background-position:center`
     : `background:${biz.heroGradient}`;
@@ -1257,7 +1258,8 @@ function renderAvailabilityHighlights(regionId, driverAvailable) {
     const avail = computeBizAvailability(biz);
     if (avail.status === 'closed') continue;
     const label = biz.name.length > 20 ? biz.name.slice(0, 18) + '…' : biz.name;
-    const nav   = `HomepagePersonalizer.track('${biz.category}'); window.location.href='marketplace/index.html?id=${biz.id}'`;
+    const catPath = _CAT_PATHS[biz.category] || 'marketplace/index.html';
+    const nav   = `HomepagePersonalizer.track('${biz.category}'); window.location.href='${catPath}?id=${biz.id}'`;
     chips.push(buildAvailChipHtml(avail.label, label, avail.status, nav));
   }
 
@@ -1283,6 +1285,8 @@ function initHomepageIntelligence(region, driverAvailable) {
 function heroCarouselCta(service) {
   if (service === 'travel') {
     switchScreen('screenBook');
+  } else if (_CAT_PATHS[service]) {
+    window.location.href = _CAT_PATHS[service];
   } else {
     window.location.href = 'marketplace/index.html?cat=' + service;
   }

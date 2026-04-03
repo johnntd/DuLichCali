@@ -1183,7 +1183,10 @@ BEHAVIOR GUIDELINES:
     const intent = parseIntent(text);
 
     // ── 0a. Detect new workflow intent (before marketplace/pricing) ─
-    if (WF && !intent.isPricing) {
+    // NOTE: Check !WF.isActive() (not !intent.isPricing) so that booking
+    // messages like "đặt tour Las Vegas, giá bao nhiêu?" still trigger the
+    // workflow instead of falling through to buildPricingReply with defaults.
+    if (WF && !WF.isActive()) {
       const wfIntent = WF.detectIntent(text);
       if (wfIntent) {
         WF.startWorkflow(wfIntent, text);

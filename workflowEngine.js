@@ -352,6 +352,49 @@
 
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
 
+  // ── Correction Detection ───────────────────────────────────────────────────
+  // Returns true when the message looks like the user is correcting a
+  // previously supplied value rather than answering a new question.
+  function isCorrectionText(text) {
+    return /thay đổi|sửa lại|sửa thành|đổi thành|đổi lại|nhầm|lầm rồi|thực ra|actually|wait,?\s|change.*to|no[,.\s]|không phải|không là|là \d+ người|đổi.*người|đổi.*ngày|update|not \d|lại \d|nhóm \d+ người/i
+           .test(text);
+  }
+
+  // ── Field label map (for correction acknowledgements) ─────────────────────
+  var FIELD_LABELS = {
+    passengers:     'Số người',
+    requestedDate:  'Ngày',
+    arrivalTime:    'Giờ đến',
+    departureTime:  'Giờ đi',
+    requestedTime:  'Giờ hẹn',
+    airport:        'Sân bay',
+    airline:        'Hãng bay',
+    customerName:   'Tên',
+    customerPhone:  'Điện thoại',
+    dropoffAddress: 'Địa chỉ đến',
+    pickupAddress:  'Điểm đón',
+    address:        'Địa chỉ giao',
+    quantity:       'Số lượng',
+    serviceType:    'Dịch vụ',
+    days:           'Số ngày',
+    destination:    'Điểm đến',
+    fulfillment:    'Hình thức nhận',
+    variant:        'Loại',
+    lodging:        'Chỗ ở',
+  };
+
+  function fmtFieldLabel(key) {
+    return FIELD_LABELS[key] || key;
+  }
+
+  function fmtFieldVal(key, val) {
+    if (val === null || val === undefined) return '—';
+    if (key === 'requestedDate') return fmtDate(val);
+    if (key === 'arrivalTime' || key === 'requestedTime' || key === 'departureTime') return fmtTime(val);
+    if (typeof val === 'object' && val.name) return val.name;
+    return String(val);
+  }
+
   // ── Hotel Suggestion Data ──────────────────────────────────────────────────
 
   var HOTEL_SUGGESTIONS = {
@@ -1146,6 +1189,38 @@
     return collected;
   }
 
+  // ── Extract fields that OVERWRITE already-collected values (corrections) ───
+  // Used only when isCorrectionText() is true.  Unlike extractAllFromText,
+  // this DOES re-examine already-collected fields so that "change 6 → 3 people"
+  // can update an existing passengers value.
+  function extractCorrectedFields(text, intent) {
+    var wf = WORKFLOWS[intent];
+    if (!wf || !draft) return {};
+    var updates = {};
+    var currentFields = draft.collectedFields;
+
+    for (var i = 0; i < wf.fields.length; i++) {
+      var fd = wf.fields[i];
+      if (!fd.extract) continue;
+      if (fd.showIf && !fd.showIf(currentFields)) continue;
+      if (currentFields[fd.key] === undefined) continue; // only update *existing* fields
+
+      try {
+        var val = fd.extract(text, currentFields);
+        if (val === null || val === undefined) continue;
+        // Ignore if same as current
+        if (JSON.stringify(val) === JSON.stringify(currentFields[fd.key])) continue;
+        // Validate
+        if (fd.validate) {
+          var err = fd.validate(val, Object.assign({}, currentFields, updates));
+          if (err) continue;
+        }
+        updates[fd.key] = val;
+      } catch(e) {}
+    }
+    return updates;
+  }
+
   // ── Find next required field missing ──────────────────────────────────────
 
   function findNextField(intent) {
@@ -1207,6 +1282,25 @@
     var wf = WORKFLOWS[draft.intent];
     if (!wf) { clearDraft(); draft = null; return null; }
 
+    // ── Mid-flow correction: user is updating a previously answered field ──
+    // Check BEFORE awaiting-confirm so "actually 3 people" works at any stage.
+    if (!draft.awaitingConfirm && isCorrectionText(userText) &&
+        Object.keys(draft.collectedFields).length > 0) {
+      var corr = extractCorrectedFields(userText, draft.intent);
+      if (Object.keys(corr).length > 0) {
+        Object.assign(draft.collectedFields, corr);
+        draft.awaitingField = null;    // re-evaluate which field to ask next
+        var corrKeys = Object.keys(corr);
+        var corrAck = '✅ Đã cập nhật — ' + corrKeys.map(function(k) {
+          return fmtFieldLabel(k) + ': ' + fmtFieldVal(k, corr[k]);
+        }).join(', ') + '.';
+        saveDraft(draft);
+        // Fall through to normal field-finding logic below (do not return here).
+        // We prepend the ack by storing it and appending to the next question.
+        draft._correctionAck = corrAck;
+      }
+    }
+
     // ── Awaiting confirmation ──────────────────────────────────────────────
     if (draft.awaitingConfirm) {
       var yn = X.yesNo(userText);
@@ -1214,14 +1308,13 @@
         return { type: 'finalize' };
       } else if (yn === false) {
         draft.awaitingConfirm = false;
-        // Try to extract a field correction from this reply
-        var corrected = extractAllFromText(userText, draft.intent);
-        if (Object.keys(corrected).length > 0) {
-          Object.assign(draft.collectedFields, corrected);
-        }
+        // Also try to pick up new values / corrections from this reply
+        var corrAtConf = extractCorrectedFields(userText, draft.intent);
+        var newAtConf  = extractAllFromText(userText, draft.intent);
+        Object.assign(draft.collectedFields, corrAtConf, newAtConf);
         var next2 = findNextField(draft.intent);
         if (!next2) {
-          // Still all good — re-show summary
+          // All fields still complete — re-show summary
           draft.awaitingConfirm = true;
           saveDraft(draft);
           return wf.summary(draft.collectedFields) +
@@ -1272,6 +1365,11 @@
         draft.collectedFields[nextFd.key] = '';
         return process(userText);
       }
+      // Prepend any correction acknowledgment
+      var ack = draft._correctionAck || '';
+      delete draft._correctionAck;
+      if (ack) q = ack + '\n' + q;
+
       // Build chips if field defines them
       var fieldChips = null;
       if (nextFd.chips) {
@@ -1296,9 +1394,13 @@
     // ── All required fields collected ──────────────────────────────────────
     draft.awaitingConfirm = true;
     draft.awaitingField   = null;
+    var ackFinal = draft._correctionAck || '';
+    delete draft._correctionAck;
     saveDraft(draft);
+    var summaryText = (ackFinal ? ackFinal + '\n\n' : '') +
+      wf.summary(draft.collectedFields) + '\n\n✅ Thông tin đầy đủ! Bạn có muốn xác nhận không?';
     return { type:'message',
-      text: wf.summary(draft.collectedFields) + '\n\n✅ Thông tin đầy đủ! Bạn có muốn xác nhận không?',
+      text: summaryText,
       chips: [
         { label:'✅ Xác nhận đặt chỗ',     value:'xác nhận' },
         { label:'✏️ Chỉnh sửa thông tin',  value:'không' },

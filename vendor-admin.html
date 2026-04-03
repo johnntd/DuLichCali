@@ -735,6 +735,9 @@
       text-align: center; padding: 2.5rem 1rem;
       color: var(--muted); font-size: .82rem; line-height: 1.6;
     }
+    .notif-card__type-icon { font-size: .85rem; flex-shrink: 0; line-height: 1; }
+    .notif-card--question { border-color: rgba(56,189,248,.35); }
+    .notif-card--question.unread { background: rgba(56,189,248,.04); }
   </style>
 </head>
 <body>
@@ -1975,8 +1978,10 @@
 
     var html = '';
     allNotifs.forEach(function (n) {
-      var isUnread = !n.read;
-      var cls = 'notif-card' + (isUnread ? ' unread' : '');
+      var isUnread   = !n.read;
+      var isQuestion = n.type === 'buyer_question';
+      var cls = 'notif-card' + (isUnread ? ' unread' : '') + (isQuestion ? ' notif-card--question' : '');
+      var typeIcon = isQuestion ? '&#128172;' : '&#128722;'; // 💬 or 🛒
       var timeStr = '';
       if (n.createdAt && n.createdAt.toDate) {
         var d = n.createdAt.toDate();
@@ -1992,6 +1997,7 @@
         '<div class="notif-card__top">' +
           '<div class="notif-card__title-wrap">' +
             (isUnread ? '<div class="notif-card__dot"></div>' : '') +
+            '<div class="notif-card__type-icon">' + typeIcon + '</div>' +
             '<div class="notif-card__title">' + esc(n.title || 'Thông báo') + '</div>' +
           '</div>' +
           '<div class="notif-card__time">' + esc(timeStr) + '</div>' +
@@ -2028,7 +2034,9 @@
 
   // ── New-order popup ───────────────────────────────────────────────────────
   function showOrderPopup(notif) {
-    document.getElementById('popupTitle').textContent = notif.title   || 'Đơn hàng mới!';
+    var isQuestion = notif.type === 'buyer_question';
+    document.querySelector('#notifPopup .np-icon').innerHTML = isQuestion ? '&#128172;' : '&#128276;';
+    document.getElementById('popupTitle').textContent = notif.title   || (isQuestion ? 'Câu hỏi từ khách!' : 'Đơn hàng mới!');
     document.getElementById('popupMsg').textContent   = notif.message || '';
     clearTimeout(_popupTimer);
     document.getElementById('notifPopup').classList.add('show');

@@ -21,6 +21,114 @@
   const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
   const MAX_TOKENS   = 550;
 
+  // ── Marketplace Vendor Catalog ───────────────────────────────
+  // Compact reference for rule-based pricing; mirrors services-data.js.
+  // Update here when vendor data changes.
+  const VENDOR_CATALOG = [
+    {
+      id: 'nha-bep-cua-emily', name: 'Nhà Bếp Của Emily',
+      category: 'food', region: 'Bay Area', city: 'San Jose',
+      contact: 'Loan', phone: '408-931-2438',
+      products: [{
+        keywords: ['egg roll','eggroll','chả giò','cha gio'],
+        name: 'Chả Giò', nameEn: 'Eggroll',
+        pricePerUnit: 0.75, unit: 'cuốn', unitEn: 'piece',
+        minOrder: 30, maxPerDay: 300,
+        variants: 'Sống (Raw) hoặc Tươi (Fresh)',
+        orderNote: 'Đặt trước 24h. Gọi Loan: 408-931-2438.',
+      }],
+    },
+    {
+      id: 'dung-nails', name: 'Dung Nails & Spa',
+      category: 'nails', region: 'Bay Area', city: 'San Jose',
+      contact: 'Dung Pham', phone: '408-859-6718',
+      hours: 'T2-6: 9am-7pm · T7: 9am-6pm · CN: 10am-5pm',
+      bookingNote: 'Đặt lịch: 408-859-6718.',
+      services: [
+        { keywords: ['manicure','làm móng tay'],          name: 'Manicure',         priceMin: 20 },
+        { keywords: ['pedicure','làm móng chân'],          name: 'Pedicure',         priceMin: 30 },
+        { keywords: ['gel nails','gel color','gel'],       name: 'Gel Nails',        priceMin: 35 },
+        { keywords: ['acrylic','full set'],                name: 'Acrylic Full Set', priceMin: 45 },
+        { keywords: ['nail art','vẽ móng'],                name: 'Nail Art',         priceMin: 10 },
+        { keywords: ['spa package','spa nails'],           name: 'Spa Package',      priceMin: 65 },
+      ],
+    },
+    {
+      id: 'beauty-nails-oc', name: 'Beauty Nails OC',
+      category: 'nails', region: 'Orange County', city: 'Westminster',
+      contact: 'Duy Hoa', phone: '714-227-6007',
+      hours: 'T2-6: 9:30am-7:30pm · T7: 9am-7pm · CN: 10am-6pm',
+      bookingNote: 'Đặt lịch: 714-227-6007.',
+      services: [
+        { keywords: ['manicure','làm móng tay'],          name: 'Manicure',         priceMin: 18 },
+        { keywords: ['pedicure','làm móng chân'],          name: 'Pedicure',         priceMin: 28 },
+        { keywords: ['gel color','gel'],                  name: 'Gel Color',         priceMin: 30 },
+        { keywords: ['acrylic','full set'],               name: 'Full Set Acrylic',  priceMin: 40 },
+        { keywords: ['ombre'],                            name: 'Ombre Nails',       priceMin: 55 },
+        { keywords: ['nail art','vẽ móng'],               name: 'Nail Art',          priceMin:  8 },
+      ],
+    },
+    {
+      id: 'viet-hair-bayarea', name: 'Việt Hair Studio',
+      category: 'hair', region: 'Bay Area', city: 'San Jose',
+      contact: 'John', phone: '408-439-7522',
+      hours: 'T3-6: 10am-7pm · T7: 9am-6pm · CN: 10am-5pm · Nghỉ T2',
+      bookingNote: 'Đặt lịch: 408-439-7522.',
+      services: [
+        { keywords: ['men haircut','cắt tóc nam'],               name: 'Cắt Tóc Nam',    priceMin:  20 },
+        { keywords: ['women haircut','cắt tóc nữ','cắt tóc'],   name: 'Cắt Tóc Nữ',    priceMin:  30 },
+        { keywords: ['perm','uốn tóc','uốn'],                   name: 'Uốn Tóc',        priceMin:  80 },
+        { keywords: ['straighten','duỗi','thẳng tóc'],          name: 'Duỗi/Thẳng',    priceMin: 100 },
+        { keywords: ['hair color','nhuộm tóc','nhuộm'],         name: 'Nhuộm Tóc',     priceMin:  60 },
+        { keywords: ['highlight'],                               name: 'Highlight',      priceMin:  80 },
+      ],
+    },
+    {
+      id: 'cali-hair-oc', name: 'Cali Hair & Beauty',
+      category: 'hair', region: 'Orange County', city: 'Garden Grove',
+      contact: 'Duy Hoa', phone: '714-227-6007',
+      hours: 'T2-6: 9am-7pm · T7: 8:30am-7pm · CN: 10am-6pm',
+      bookingNote: 'Đặt lịch: 714-227-6007.',
+      services: [
+        { keywords: ['men haircut','cắt tóc nam'],               name: 'Cắt Tóc Nam',       priceMin:  18 },
+        { keywords: ['women haircut','cắt tóc nữ','cắt tóc'],   name: 'Cắt Tóc Nữ',       priceMin:  28 },
+        { keywords: ['korean perm','uốn hàn','uốn'],            name: 'Uốn Hàn Quốc',     priceMin: 120 },
+        { keywords: ['keratin','duỗi'],                         name: 'Keratin Treatment',  priceMin: 150 },
+        { keywords: ['balayage','nhuộm'],                       name: 'Nhuộm Balayage',    priceMin: 100 },
+        { keywords: ['conditioning','dưỡng tóc'],               name: 'Deep Conditioning',  priceMin:  40 },
+      ],
+    },
+    {
+      id: 'pho-bac-bayarea', name: 'Phở Bắc Bay Area',
+      category: 'food', region: 'Bay Area', city: 'San Jose',
+      contact: 'John', phone: '408-439-7522',
+      hours: 'T2-5: 10am-9pm · T6-7: 9am-10pm · CN: 9am-9pm',
+      bookingNote: 'Đặt bàn: 408-439-7522.',
+      services: [
+        { keywords: ['phở','pho'],                              name: 'Phở Bò Đặc Biệt', priceMin: 15 },
+        { keywords: ['bún bò','bun bo'],                       name: 'Bún Bò Huế',       priceMin: 14 },
+        { keywords: ['cơm tấm bay area','com tam'],            name: 'Cơm Tấm Sườn',    priceMin: 16 },
+        { keywords: ['bún chả','bun cha'],                     name: 'Bún Chả',          priceMin: 15 },
+        { keywords: ['gỏi cuốn','fresh roll'],                 name: 'Gỏi Cuốn',         priceMin:  8 },
+        { keywords: ['catering bay area'],                     name: 'Catering',          priceMin: null },
+      ],
+    },
+    {
+      id: 'com-tam-oc', name: 'Cơm Tấm Dì Tám',
+      category: 'food', region: 'Orange County', city: 'Westminster',
+      contact: 'Duy Hoa', phone: '714-227-6007',
+      hours: 'T2-6: 10am-9:30pm · T7: 8am-10pm · CN: 8am-9pm',
+      bookingNote: 'Đặt bàn: 714-227-6007.',
+      services: [
+        { keywords: ['cơm tấm dì tám','com tam oc'],           name: 'Cơm Tấm Đặc Biệt', priceMin: 14 },
+        { keywords: ['hủ tiếu','hu tieu'],                     name: 'Hủ Tiếu Nam Vang',  priceMin: 14 },
+        { keywords: ['bánh mì','banh mi'],                     name: 'Bánh Mì',            priceMin:  8 },
+        { keywords: ['chả giò oc'],                            name: 'Chả Giò',            priceMin: 10 },
+        { keywords: ['catering oc','catering sự kiện'],        name: 'Catering',           priceMin: null },
+      ],
+    },
+  ];
+
   // ── Region helpers ───────────────────────────────────────────
   // Always read from DLCRegion.current at call time so replies reflect
   // the live region without needing to restart the chat session.
@@ -55,6 +163,7 @@
       isGreeting:   /^(xin chào|chào|hello|hi\b|hey\b|alo)/i.test(text.trim()),
       isContact:    /điện thoại|số điện|phone|contact|liên hệ|gọi|email/i.test(text),
       isBook:       /đặt|book|reserve|đặt chỗ|đặt tour/i.test(text),
+      isTracking:   /track|theo dõi|kiểm tra|check.*order|check.*status|tình trạng|đơn hàng|đơn đặt|mã đặt|booking.*id|trạng thái|status|DLC-/i.test(text),
       isVehicle:    /xe|vehicle|car|tesla|van|mercedes/i.test(text),
       isRoute:      route !== null,
 
@@ -66,6 +175,8 @@
       airport:    extractAirport(text),
       lodging:    extractLodging(text),
       route,      // { from, to } or null
+      isMarketplace:   /egg.?roll|chả giò|cha gio|nail|manicure|pedicure|gel nails|acrylic|nail art|hair salon|tiệm tóc|tiệm nail|cắt tóc|uốn tóc|nhuộm tóc|keratin|balayage|phở|bún bò|cơm tấm|catering|nhà bếp|emily/i.test(text),
+      isQuantityQuery: !!extractQuantity(text),
     };
   }
 
@@ -516,6 +627,343 @@
   }
 
   // ══════════════════════════════════════════════════════════════
+  //  ORDER TRACKING BY PHONE NUMBER
+  //  Queries Firestore bookings collection by customer phone
+  // ══════════════════════════════════════════════════════════════
+
+  /** Extract a phone number from user text (US formats) */
+  function extractPhone(text) {
+    // Match patterns: 408-859-6718, (408) 859-6718, 4088596718, 408.859.6718
+    const m = text.match(/\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}/);
+    return m ? m[0].replace(/[\s.\-()]/g, '') : null;
+  }
+
+  /** Extract a booking ID like DLC-XXXXXX */
+  function extractBookingId(text) {
+    const m = text.match(/DLC-[A-Z0-9]{5,8}/i);
+    return m ? m[0].toUpperCase() : null;
+  }
+
+  /** Status labels in Vietnamese */
+  const STATUS_LABELS = {
+    pending:    '⏳ Chờ xác nhận',
+    confirmed:  '✅ Đã xác nhận',
+    enroute:    '🚗 Đang trên đường',
+    completed:  '✔️ Hoàn thành',
+    cancelled:  '❌ Đã hủy',
+  };
+
+  /**
+   * Look up bookings by phone number or booking ID from Firestore.
+   * Returns a formatted status string for the chat.
+   */
+  async function lookupBooking(text) {
+    if (typeof firebase === 'undefined' || !firebase.firestore) return null;
+    const db = firebase.firestore();
+
+    const bookingId = extractBookingId(text);
+    const phone     = extractPhone(text);
+
+    if (!bookingId && !phone) {
+      return 'Để kiểm tra đơn đặt chỗ, vui lòng cho tôi biết:\n• **Số điện thoại** bạn đã dùng khi đặt chỗ\n• Hoặc **mã đặt chỗ** (ví dụ: DLC-ABC123)\n\nVí dụ: "Kiểm tra đơn 408-859-6718"';
+    }
+
+    try {
+      let snapshot;
+      if (bookingId) {
+        // Direct lookup by booking ID
+        const doc = await db.collection('bookings').doc(bookingId).get();
+        if (!doc.exists) return `Không tìm thấy đơn với mã **${bookingId}**. Vui lòng kiểm tra lại mã đặt chỗ.`;
+        snapshot = { docs: [doc] };
+      } else {
+        // Query by phone number
+        snapshot = await db.collection('bookings')
+          .where('phone', '==', phone)
+          .orderBy('createdAt', 'desc')
+          .limit(5)
+          .get();
+
+        if (snapshot.empty) {
+          // Try with formatted phone variations
+          const formatted = phone.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+          snapshot = await db.collection('bookings')
+            .where('phone', '==', formatted)
+            .orderBy('createdAt', 'desc')
+            .limit(5)
+            .get();
+        }
+
+        if (snapshot.empty) {
+          return `Không tìm thấy đơn đặt chỗ nào với số điện thoại **${phone.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3')}**.\n\nVui lòng kiểm tra lại số điện thoại hoặc cung cấp mã đặt chỗ (ví dụ: DLC-ABC123).`;
+        }
+      }
+
+      const results = snapshot.docs.map(doc => {
+        const d = doc.data();
+        const status = STATUS_LABELS[d.status] || d.status || '⏳ Chờ xác nhận';
+        const dt = d.datetime ? new Date(d.datetime).toLocaleString('vi-VN', {
+          day: '2-digit', month: '2-digit', year: 'numeric',
+          hour: '2-digit', minute: '2-digit', hour12: true
+        }) : 'Chưa xác định';
+        const svc = d.serviceType || '';
+        const pax = d.passengers || '';
+
+        return [
+          `📋 **Mã: ${d.bookingId || doc.id}**`,
+          `   Trạng thái: ${status}`,
+          `   Dịch vụ: ${svc}`,
+          `   Thời gian: ${dt}`,
+          pax ? `   Số khách: ${pax}` : '',
+          d.airport ? `   Sân bay: ${d.airport}` : '',
+          d.address ? `   Địa chỉ: ${d.address}` : '',
+        ].filter(Boolean).join('\n');
+      });
+
+      const header = results.length === 1
+        ? 'Đây là thông tin đơn đặt chỗ của bạn:'
+        : `Tìm thấy **${results.length}** đơn đặt chỗ:`;
+
+      return [
+        header,
+        '',
+        ...results,
+        '',
+        `Nếu cần hỗ trợ thêm, gọi ${regionHostName()}: ${regionPhone()}`,
+      ].join('\n');
+
+    } catch (err) {
+      console.error('Booking lookup error:', err);
+      return `Xin lỗi, không thể tra cứu lúc này. Vui lòng gọi ${regionHostName()}: ${regionPhone()} để kiểm tra trực tiếp.`;
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  //  MARKETPLACE ENGINE — product pricing, vendor orders, AI context
+  // ══════════════════════════════════════════════════════════════
+
+  /** Extract a numeric quantity from text: "30 egg rolls", "50 cuốn", "order 100" */
+  function extractQuantity(text) {
+    const m = text.match(/(\d+)\s*(?:cuốn|cái|piece|roll|phần|tô|dĩa)/i)
+           || text.match(/(?:order|đặt|mua|cần)\s+(\d+)\b/i)
+           || text.match(/\b(\d+)\s+(?:egg|chả|spring|bánh)\b/i);
+    const n = m ? parseInt(m[1], 10) : null;
+    return n && n > 0 ? n : null;
+  }
+
+  /**
+   * Find the matching vendor product or service from free text.
+   * Returns { vendor, product, isService:false } or { vendor, service, isService:true } or null.
+   */
+  function findProductMatch(text) {
+    const t = text.toLowerCase();
+    for (const vendor of VENDOR_CATALOG) {
+      if (vendor.products) {
+        for (const product of vendor.products) {
+          if (product.keywords.some(kw => t.includes(kw))) {
+            return { vendor, product, isService: false };
+          }
+        }
+      }
+      if (vendor.services) {
+        for (const svc of vendor.services) {
+          if (svc.keywords.some(kw => t.includes(kw))) {
+            return { vendor, service: svc, isService: true };
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Build a marketplace pricing or info reply.
+   * Handles: food product unit pricing, salon/restaurant service pricing,
+   * category listings by region.
+   * Returns a formatted string or null (fall-through to Claude/fallback).
+   */
+  function buildMarketplaceReply(text) {
+    const t     = text.toLowerCase();
+    const qty   = extractQuantity(text);
+    const match = findProductMatch(text);
+
+    // ── Food vendor with unit pricing (e.g. Emily's egg rolls) ────────────
+    if (match && !match.isService) {
+      const { vendor, product } = match;
+      const q     = qty || product.minOrder;
+      const total = (q * product.pricePerUnit).toFixed(2);
+
+      if (q < product.minOrder) {
+        return [
+          `${product.name} — ${vendor.name}`,
+          '',
+          `Số lượng tối thiểu: **${product.minOrder} ${product.unit}** ($${(product.minOrder * product.pricePerUnit).toFixed(2)}).`,
+          `Bạn yêu cầu ${q} — cần đặt thêm ${product.minOrder - q} ${product.unit}.`,
+          product.variants ? `Tùy chọn: ${product.variants}` : '',
+          '',
+          product.orderNote,
+        ].filter(Boolean).join('\n');
+      }
+
+      const overCapNote = product.maxPerDay && q > product.maxPerDay
+        ? `\n⚠️ Sản lượng tối đa ${product.maxPerDay}/ngày — đơn lớn cần đặt trước nhiều ngày.`
+        : '';
+
+      return [
+        `${product.name} — ${vendor.name}`,
+        '',
+        `💰 ${q} ${product.unit} = **$${total}**`,
+        `   ($${product.pricePerUnit}/${product.unitEn} · tối thiểu ${product.minOrder} ${product.unit})`,
+        product.variants ? `   Tùy chọn: ${product.variants}` : '',
+        overCapNote,
+        '',
+        product.orderNote,
+      ].filter(Boolean).join('\n');
+    }
+
+    // ── Salon / restaurant service pricing ────────────────────────────────
+    if (match && match.isService) {
+      const { vendor, service } = match;
+      const priceStr = service.priceMin != null ? `từ $${service.priceMin}` : 'Liên hệ';
+      return [
+        `${service.name} — ${vendor.name}`,
+        '',
+        `💰 ${priceStr} (giá cuối tùy mức độ)`,
+        `📍 ${vendor.region} · ${vendor.city}`,
+        vendor.hours ? `🕐 ${vendor.hours}` : '',
+        '',
+        vendor.bookingNote,
+      ].filter(Boolean).join('\n');
+    }
+
+    // ── Category listing by region ─────────────────────────────────────────
+    const regionId   = window.DLCRegion ? DLCRegion.current.id : 'oc';
+    const regionName = regionId === 'bayarea' ? 'Bay Area' : 'Orange County';
+    let category = null;
+    if (/nail|làm móng|tiệm nail/i.test(t))                         category = 'nails';
+    else if (/hair|tóc|tiệm tóc|salon tóc/i.test(t))               category = 'hair';
+    else if (/food|nhà hàng|ăn|catering|thức ăn|đặt ăn/i.test(t)) category = 'food';
+
+    if (category) {
+      const all      = VENDOR_CATALOG.filter(v => v.category === category);
+      const hits     = all.filter(v => v.region === regionName);
+      const display  = hits.length > 0 ? hits : all;
+      const catLabel = category === 'nails' ? 'nail' : category === 'hair' ? 'tóc' : 'ăn uống';
+      const lines    = display.map(v => {
+        const items = (v.services || []).slice(0, 3)
+          .map(s => `${s.name}${s.priceMin != null ? ' $' + s.priceMin + '+' : ''}`).join(' · ');
+        const pLine = (v.products || []).map(p =>
+          `${p.name} $${p.pricePerUnit}/${p.unitEn} (min ${p.minOrder})`).join(' · ');
+        return `📍 **${v.name}** (${v.city})\n   ${items || pLine}\n   ${v.contact}: ${v.phone}`;
+      });
+      return [`Dịch vụ ${catLabel} tại ${regionName}:`, '', ...lines].join('\n');
+    }
+
+    // ── Emily specifically ─────────────────────────────────────────────────
+    if (/emily|nhà bếp/i.test(t)) {
+      const emily = VENDOR_CATALOG.find(v => v.id === 'nha-bep-cua-emily');
+      if (emily) {
+        const p = emily.products[0];
+        return [
+          `${emily.name} — ${emily.city}, Bay Area`,
+          '',
+          `🥟 ${p.name}: $${p.pricePerUnit}/${p.unitEn} · tối thiểu ${p.minOrder} ${p.unit} ($${(p.minOrder * p.pricePerUnit).toFixed(2)})`,
+          `   Tùy chọn: ${p.variants}`,
+          `   Sản lượng tối đa: ${p.maxPerDay}/ngày`,
+          '',
+          p.orderNote,
+        ].join('\n');
+      }
+    }
+
+    return null; // No marketplace match — fall through
+  }
+
+  /**
+   * Look up marketplace orders (vendor sub-collections) by customer phone.
+   * Queries all known vendors in parallel so it's fast.
+   */
+  async function lookupVendorOrder(text) {
+    if (typeof firebase === 'undefined' || !firebase.firestore) return null;
+    const phone = extractPhone(text);
+    if (!phone) return null;
+    const db      = firebase.firestore();
+    const queries = VENDOR_CATALOG.map(v =>
+      db.collection('vendors').doc(v.id).collection('bookings')
+        .where('customerPhone', '==', phone)
+        .orderBy('createdAt', 'desc').limit(2).get()
+        .then(snap => snap.docs.map(d => ({ vendorName: v.name, ...d.data() })))
+        .catch(() => [])
+    );
+    const results = (await Promise.all(queries)).flat();
+    if (!results.length) return null;
+    const stLbl = {
+      pending:   '⏳ Chờ xác nhận',
+      confirmed: '✅ Đã xác nhận',
+      completed: '✔️ Hoàn thành',
+      cancelled: '❌ Đã hủy',
+    };
+    const cards = results.map(o => [
+      `📋 **${o.vendorName}**`,
+      `   ${o.itemName || o.category || ''} × ${o.quantity || ''}`,
+      `   ${stLbl[o.status] || o.status || '⏳ Chờ'}`,
+      o.requestedDate ? `   Ngày: ${o.requestedDate}` : '',
+    ].filter(Boolean).join('\n'));
+    const fmt = phone.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+    return [`Đơn marketplace cho ${fmt}:`, '', ...cards].join('\n');
+  }
+
+  /**
+   * Create a buyer-question notification in the vendor's Firestore sub-collection.
+   * The vendor-admin onSnapshot listener picks this up in real-time and shows a popup.
+   * Silent fail — notification creation is best-effort.
+   */
+  async function createBuyerQuestion(vendorId, question, customerPhone) {
+    if (typeof firebase === 'undefined' || !firebase.firestore) return;
+    try {
+      const user = firebase.auth ? firebase.auth().currentUser : null;
+      if (!user) return; // Requires Firebase auth (anonymous is fine)
+      await firebase.firestore()
+        .collection('vendors').doc(vendorId)
+        .collection('notifications').add({
+          type:          'buyer_question',
+          title:         'Câu Hỏi Từ Khách Hàng',
+          message:       question,
+          customerPhone: customerPhone || null,
+          read:          false,
+          createdAt:     firebase.firestore.FieldValue.serverTimestamp(),
+        });
+    } catch (_) {}
+  }
+
+  /** Compact vendor + product summary injected into the Claude system prompt. */
+  function buildVendorContextForAI() {
+    return `
+MARKETPLACE VENDORS (use exact prices — do NOT guess):
+
+FOOD:
+• Nhà Bếp Của Emily [Bay Area/San Jose]
+  - Chả Giò (Eggroll): $0.75/piece. Min order: 30 pieces = $22.50. Max 300/day.
+  - Options: Raw (Sống) or Cooked (Tươi). 24h advance order. Contact: Loan 408-931-2438.
+• Phở Bắc Bay Area [Bay Area/San Jose] — Phở $15 · Bún Bò $14 · Cơm Tấm $16. Catering. John 408-439-7522.
+• Cơm Tấm Dì Tám [OC/Westminster] — Cơm Tấm $14 · Hủ Tiếu $14 · Bánh Mì $8. Catering. Duy Hoa 714-227-6007.
+
+NAIL SALONS:
+• Dung Nails & Spa [Bay Area/San Jose] — Manicure $20+ · Pedicure $30+ · Gel $35+ · Acrylic $45+ · Spa $65+. Dung Pham 408-859-6718.
+• Beauty Nails OC [OC/Westminster] — Manicure $18+ · Pedicure $28+ · Gel $30+ · Acrylic $40+ · Ombre $55+. Duy Hoa 714-227-6007.
+
+HAIR SALONS:
+• Việt Hair Studio [Bay Area/San Jose] — Cut $20-30+ · Perm $80+ · Straighten $100+ · Color $60+ · Highlight $80+. John 408-439-7522.
+• Cali Hair & Beauty [OC/Garden Grove] — Cut $18-28+ · Korean Perm $120+ · Keratin $150+ · Balayage $100+. Duy Hoa 714-227-6007.
+
+MARKETPLACE PRICING RULES:
+- When quantity given, compute exact total: qty × unit_price (30 egg rolls = 30 × $0.75 = $22.50)
+- Always enforce minimum orders. Emily min 30 = $22.50.
+- Services quoted "from $X" — final price depends on hair length / nail condition
+- For ordering food: give contact + remind them to order 24h ahead
+- For appointments: give contact + hours`;
+  }
+
+  // ══════════════════════════════════════════════════════════════
   //  CLAUDE API INTEGRATION
   //  Enriched system prompt with current estimates + form state
   // ══════════════════════════════════════════════════════════════
@@ -523,6 +971,7 @@
   function buildSystemPrompt() {
     const staticCtx  = typeof buildAIContext === 'function' ? buildAIContext() : '';
     const regionCtx  = window.DLCRegion ? DLCRegion.buildAIRegionContext() : '';
+    const vendorCtx  = buildVendorContextForAI();
 
     // Build live pricing snapshot for Claude
     let pricingSnapshot = '';
@@ -557,16 +1006,23 @@ ESTIMATE CONFIDENCE LEVELS:
 - "confirmed quote" / "báo giá xác nhận": after manual review by our team
 
 PRICING LOGIC SUMMARY:
-- Transfer (pickup/dropoff): base $100 + $0.22/mile (Tesla ≤3 pax) or + surcharges (Van ≥4 pax)
-- Tour: (180 + roundtrip_miles × fuel/VAN_MPG) × days + service $50/day + optional lodging
-- Vehicle: Tesla Model Y (1–3 pax), Mercedes Van (4–12 pax)
-- Always label estimates; recommend calling ${regionPhone()} for exact quotes`;
+- Transfer (pickup/dropoff): Uber market rate minus 20% discount
+- Tour: driver rate + fuel + service + optional lodging — van pricing is higher than sedan
+- Vehicle: Tesla Model Y (1–3 pax), Mercedes Van (4–12 pax), Toyota Sienna (Bay Area)
+- Always label estimates; recommend calling ${regionPhone()} for exact quotes
+
+ORDER TRACKING:
+- Customers can check order status by providing their phone number or booking ID (e.g. DLC-ABC123)
+- The system automatically queries Firestore and returns booking status
+- If a customer asks about their order, ask for their phone number or booking ID
+- Statuses: pending (chờ xác nhận), confirmed (đã xác nhận), enroute (đang trên đường), completed (hoàn thành), cancelled (đã hủy)`;
     }
 
-    return `You are a smart, trustworthy AI travel concierge for Du Lịch Cali, a professional Vietnamese transportation and tour service in Southern California. You speak both Vietnamese and English fluently.
+    return `You are a smart, bilingual AI receptionist for Du Lịch Cali — a Vietnamese-American travel, transportation, and marketplace service in California. You handle travel bookings AND marketplace vendor questions (food, nails, hair).
 
 ${staticCtx}
 ${regionCtx}
+${vendorCtx}
 ${pricingSnapshot}
 
 BEHAVIOR GUIDELINES:
@@ -615,7 +1071,25 @@ BEHAVIOR GUIDELINES:
   async function getReply(text, history) {
     const intent = parseIntent(text);
 
-    // 1. Pricing engine — always runs first for pricing/route questions
+    // 0a. Travel booking order tracking (phone or DLC-XXXXXX code)
+    if (intent.isTracking) {
+      const trackingResult = await lookupBooking(text);
+      if (trackingResult) return trackingResult;
+    }
+
+    // 0b. Marketplace vendor order lookup (phone → vendors/*/bookings)
+    if (intent.isTracking) {
+      const vendorResult = await lookupVendorOrder(text);
+      if (vendorResult) return vendorResult;
+    }
+
+    // 0c. Marketplace pricing engine (food/nail/hair — runs before Claude)
+    if (intent.isMarketplace || intent.isQuantityQuery) {
+      const mktReply = buildMarketplaceReply(text);
+      if (mktReply) return mktReply;
+    }
+
+    // 1. Travel pricing engine — always runs first for pricing/route questions
     if (intent.isRoute || intent.isPricing || intent.isComparison || intent.isExplain ||
         intent.isInfoNeeded || (intent.isTour && intent.destId) ||
         (intent.isTransfer && (intent.city || intent.airport)) ||
@@ -634,7 +1108,18 @@ BEHAVIOR GUIDELINES:
       return await callClaude(history);
     }
 
-    // 4. Fallback
+    // 3b. Marketplace fallback — try rule-based one more time without intent guard
+    //     (catches queries that didn't trigger isMarketplace/isQuantityQuery)
+    if (!CLAUDE_KEY) {
+      const mktFallback = buildMarketplaceReply(text);
+      if (mktFallback) return mktFallback;
+    }
+
+    // 4. Fallback — and notify relevant vendor if identifiable
+    const fallbackVendor = findProductMatch(text);
+    if (fallbackVendor) {
+      createBuyerQuestion(fallbackVendor.vendor.id, text, null);
+    }
     return `Cảm ơn bạn đã liên hệ Du Lịch Cali! Để được hỗ trợ nhanh nhất, gọi ${regionHostName()}: ${regionPhone()} hoặc dùng tab "Đặt chỗ" để đặt dịch vụ và xem ước tính ngay.`;
   }
 
@@ -724,7 +1209,7 @@ BEHAVIOR GUIDELINES:
     });
 
     // Welcome message — show live estimates if DLCPricing is ready
-    let welcome = 'Xin chào! Tôi là trợ lý du lịch của Du Lịch Cali.\n\nTôi có thể:\n• Ước tính chi phí tour (Las Vegas, Yosemite, San Francisco)\n• Ước tính đưa đón sân bay theo địa chỉ của bạn\n• Giải thích cách tính giá\n• So sánh các lựa chọn\n\nBạn muốn đi đâu? Cho tôi biết số người đi để tôi ước tính ngay!';
+    let welcome = 'Xin chào! Tôi là trợ lý Du Lịch Cali.\n\nTôi có thể giúp bạn:\n• 🥟 Báo giá sản phẩm & dịch vụ: chả giò, nail, tóc, nhà hàng\n• ✈️ Ước tính tour & đưa đón sân bay (Las Vegas, Yosemite, SF)\n• 📋 Kiểm tra đơn hàng (nhập số điện thoại hoặc mã DLC-XXXXXX)\n• 🗺️ So sánh Bay Area vs Orange County\n\nVí dụ: "30 chả giò bao nhiêu tiền?" hoặc "giá manicure tại San Jose?"';
     pushMsg('assistant', welcome);
   }
 

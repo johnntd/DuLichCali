@@ -169,6 +169,12 @@
       return renderBizCard(biz);
     }).join('');
 
+    var _catHeroImages = {
+      nails: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=1400&auto=format&fit=crop&q=80',
+      hair:  'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1400&auto=format&fit=crop&q=80',
+      food:  '/nha-bep-emily-eggroll.jpg'
+    };
+
     var html =
       renderAppBar('/', 'Trang chủ', category.nameVi, null) +
       '<main class="mp-main">' +
@@ -177,7 +183,8 @@
           category.nameVi,
           category.tagline,
           category.heroGradient,
-          []
+          [],
+          _catHeroImages[categoryId] || null
         ) +
         '<div class="mp-section">' +
           '<div class="mp-section-hdr">' +
@@ -201,7 +208,10 @@
     });
   }
 
-  function renderHero(eyebrow, title, sub, gradient, ctas) {
+  function renderHero(eyebrow, title, sub, gradient, ctas, bgImage) {
+    var heroBgStyle = bgImage
+      ? 'background-image:url(' + escAttr(bgImage) + ');background-size:cover;background-position:center;'
+      : 'background:' + gradient + ';';
     var ctasHtml = ctas.map(function (c) {
       return '<a href="' + c.href + '" class="mp-btn ' + c.cls + '">' +
         (c.icon || '') + escHtml(c.label) +
@@ -209,7 +219,7 @@
     }).join('');
 
     return '<div class="mp-hero">' +
-      '<div class="mp-hero__bg" style="background:' + gradient + '"></div>' +
+      '<div class="mp-hero__bg" style="' + heroBgStyle + '"></div>' +
       '<div class="mp-hero__overlay"></div>' +
       '<div class="mp-hero__content">' +
         '<div class="mp-hero__eyebrow">' + escHtml(eyebrow) + '</div>' +
@@ -271,11 +281,17 @@
       '<main class="mp-main">' +
         renderDetailHero(biz) +
         renderInfoStrip(biz) +
-        renderServicesSection(biz) +
-        renderHoursSection(biz) +
-        (biz.bookingEnabled ? renderBookingSection(biz) : '') +
-        renderAiSection(biz) +
-        renderContactSection(biz) +
+        '<div class="mp-detail-body">' +
+          '<div class="mp-detail-col mp-detail-col--left">' +
+            renderServicesSection(biz) +
+            renderHoursSection(biz) +
+          '</div>' +
+          '<div class="mp-detail-col mp-detail-col--right">' +
+            (biz.bookingEnabled ? renderBookingSection(biz) : '') +
+            renderAiSection(biz) +
+            renderContactSection(biz) +
+          '</div>' +
+        '</div>' +
         '<div class="mp-spacer"></div>' +
       '</main>' +
       renderFooter();
@@ -294,8 +310,11 @@
   }
 
   function renderDetailHero(biz) {
+    var heroBgStyle = biz.heroImage
+      ? 'background-image:url(' + escAttr(biz.heroImage) + ');background-size:cover;background-position:center;'
+      : 'background:' + biz.heroGradient + ';';
     return '<div class="mp-detail-hero">' +
-      '<div class="mp-detail-hero__bg" style="background:' + biz.heroGradient + '"></div>' +
+      '<div class="mp-detail-hero__bg" style="' + heroBgStyle + '"></div>' +
       '<div class="mp-detail-hero__overlay"></div>' +
       '<div class="mp-detail-hero__content">' +
         '<div class="mp-detail-hero__region">' + escHtml(biz.region) + ' · ' + escHtml(biz.city) + '</div>' +
@@ -643,11 +662,17 @@
       '<main class="mp-main">' +
         renderFoodVendorHero(biz) +
         renderInfoStrip(biz) +
-        renderFoodVendorAbout(biz) +
-        renderProductsSection(biz) +
-        renderOrderInquirySection(biz) +
-        renderAiSection(biz) +
-        renderContactSection(biz) +
+        '<div class="mp-detail-body">' +
+          '<div class="mp-detail-col mp-detail-col--left">' +
+            renderFoodVendorAbout(biz) +
+            renderProductsSection(biz) +
+          '</div>' +
+          '<div class="mp-detail-col mp-detail-col--right">' +
+            renderOrderInquirySection(biz) +
+            renderAiSection(biz) +
+            renderContactSection(biz) +
+          '</div>' +
+        '</div>' +
         '<div class="mp-spacer"></div>' +
       '</main>' +
       renderFooter();

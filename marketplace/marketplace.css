@@ -1310,6 +1310,55 @@ select.mp-input option {
   .mp-section { padding: 2.5rem 3rem 0; }
 }
 
+/* ── Detail Page Two-Column Layout ────────────────────────────────────────── */
+
+.mp-detail-body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Left col: services / menu / about */
+.mp-detail-col--left {}
+
+/* Right col: booking / order / AI / contact */
+.mp-detail-col--right {}
+
+@media (min-width: 1024px) {
+  /* Two-column detail layout */
+  .mp-detail-body {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    align-items: start;
+  }
+
+  /* Subtle divider between columns */
+  .mp-detail-col--left {
+    border-right: 1px solid var(--border);
+  }
+
+  /* Right col gets slight indent */
+  .mp-detail-col--right .mp-section {
+    padding-left: 2.5rem;
+  }
+
+  /* Taller heroes on desktop */
+  .mp-detail-hero  { min-height: 420px; }
+  .mp-food-hero    { min-height: 460px; }
+
+  /* More breathing room in hero content */
+  .mp-detail-hero__content { padding: 2rem 2.5rem 2.5rem; }
+}
+
+@media (min-width: 1280px) {
+  .mp-detail-body {
+    grid-template-columns: 1fr 440px;
+  }
+  .mp-detail-hero  { min-height: 480px; }
+  .mp-food-hero    { min-height: 520px; }
+  .mp-detail-hero__content { padding: 2.5rem 3rem 3rem; }
+  .mp-detail-hero__name    { font-size: clamp(2.4rem, 4vw, 3.5rem); }
+}
+
 /* ── Capacity Info (order form) ────────────────────────────────────────────── */
 
 .mp-capacity-info {

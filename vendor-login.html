@@ -312,7 +312,7 @@
         // No vendor context — check which vendor this user manages
         db.collection('vendorUsers').doc(user.uid).get().then(function (doc) {
           if (doc.exists) {
-            window.location.href = '/vendor-admin';
+            window.location.href = 'vendor-admin.html';
           } else {
             // Authenticated but no vendor — need to pick vendor first
             auth.signOut().then(function () {
@@ -329,7 +329,7 @@
       db.collection('vendorUsers').doc(user.uid).get().then(function (doc) {
         if (doc.exists && doc.data().vendorId === VENDOR_ID) {
           // Fully linked — go to admin
-          window.location.href = '/vendor-admin';
+          window.location.href = 'vendor-admin.html';
         } else if (!doc.exists) {
           // Auth user exists but no vendor mapping — offer claim flow
           document.getElementById('authChecking').classList.add('hidden');
@@ -371,7 +371,7 @@
         '<span class="vendor-btn__name">' + cfg.name + '</span>' +
         '<span class="vendor-btn__id">' + vid + '</span>';
       btn.onclick = function () {
-        window.location.href = '/vendor-login?id=' + vid;
+        window.location.href = 'vendor-login.html?id=' + vid;
       };
       grid.appendChild(btn);
     });
@@ -408,7 +408,7 @@
     auth.signInWithEmailAndPassword(email, pass).then(function (cred) {
       return db.collection('vendorUsers').doc(cred.user.uid).get().then(function (doc) {
         if (doc.exists && doc.data().vendorId === VENDOR_ID) {
-          window.location.href = '/vendor-admin';
+          window.location.href = 'vendor-admin.html';
         } else if (!doc.exists) {
           // Existing Auth account, no vendor mapping — offer claim flow
           var display = document.getElementById('claimEmailDisplay');
@@ -474,17 +474,17 @@
     auth.createUserWithEmailAndPassword(email, pass).then(function (cred) {
       return writeMapping(cred.user.uid);
     }).then(function () {
-      window.location.href = '/vendor-admin';
+      window.location.href = 'vendor-admin.html';
     }).catch(function (err) {
       // If account already exists, sign in and complete vendor link
       if (err.code === 'auth/email-already-in-use') {
         auth.signInWithEmailAndPassword(email, pass).then(function (cred) {
           return db.collection('vendorUsers').doc(cred.user.uid).get().then(function (doc) {
             if (doc.exists && doc.data().vendorId === VENDOR_ID) {
-              window.location.href = '/vendor-admin';
+              window.location.href = 'vendor-admin.html';
             } else if (!doc.exists) {
               return writeMapping(cred.user.uid).then(function () {
-                window.location.href = '/vendor-admin';
+                window.location.href = 'vendor-admin.html';
               });
             } else {
               auth.signOut();
@@ -534,7 +534,7 @@
       email:     user.email || '',
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }).then(function () {
-      window.location.href = '/vendor-admin';
+      window.location.href = 'vendor-admin.html';
     }).catch(function (err) {
       btn.disabled = false;
       errEl.textContent = 'Lỗi: ' + err.message;

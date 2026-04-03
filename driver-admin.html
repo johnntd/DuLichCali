@@ -407,19 +407,19 @@
   // ── Auth gate ─────────────────────────────────────────────────────────────
   auth.onAuthStateChanged(function (user) {
     if (!user) {
-      window.location.href = '/driver-login';
+      window.location.href = 'driver-login.html';
       return;
     }
     db.collection('driverUsers').doc(user.uid).get().then(function (doc) {
       if (!doc.exists) {
-        auth.signOut().then(function () { window.location.href = '/driver-login'; });
+        auth.signOut().then(function () { window.location.href = 'driver-login.html'; });
         return;
       }
       _driverId = doc.data().driverId || user.uid;
       document.getElementById('driverEmail').textContent = user.email || '';
       loadDriver();
     }).catch(function () {
-      window.location.href = '/driver-login';
+      window.location.href = 'driver-login.html';
     });
   });
 
@@ -618,7 +618,7 @@
 
   // ── Sign out ──────────────────────────────────────────────────────────────
   function doSignOut() {
-    auth.signOut().then(function () { window.location.href = '/driver-login'; });
+    auth.signOut().then(function () { window.location.href = 'driver-login.html'; });
   }
 
   // ── Toast ─────────────────────────────────────────────────────────────────

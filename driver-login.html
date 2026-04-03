@@ -196,7 +196,7 @@
     if (user) {
       db.collection('driverUsers').doc(user.uid).get().then(function (doc) {
         if (doc.exists) {
-          window.location.href = '/driver-admin';
+          window.location.href = 'driver-admin.html';
         } else {
           // Signed in but not a driver account — sign out
           auth.signOut().then(function () {
@@ -316,7 +316,7 @@
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
     }).then(function () {
-      window.location.href = '/driver-admin';
+      window.location.href = 'driver-admin.html';
     }).catch(function (err) {
       btn.disabled = false;
       var msgs = {

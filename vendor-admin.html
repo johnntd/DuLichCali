@@ -1474,7 +1474,7 @@
 
   // ── Auth: email/password via Firebase — redirect if not signed in ─────────
   function goToLogin(vendorId) {
-    var url = '/vendor-login' + (vendorId ? '?id=' + encodeURIComponent(vendorId) : '');
+    var url = 'vendor-login.html' + (vendorId ? '?id=' + encodeURIComponent(vendorId) : '');
     window.location.href = url;
   }
 

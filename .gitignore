@@ -1,3 +1,5 @@
 .DS_Store
 .claude/settings.local.json
 .claude/worktrees/
+node_modules/
+remotion-promo/node_modules/

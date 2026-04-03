@@ -1031,7 +1031,7 @@
 
     .var-row {
       display: grid;
-      grid-template-columns: 1fr 48px auto;
+      grid-template-columns: 1fr 82px 48px auto;
       gap: .45rem;
       align-items: center;
       background: rgba(255,255,255,.03);
@@ -1039,6 +1039,19 @@
       border-radius: 7px;
       padding: .5rem .6rem;
     }
+    .var-row__price {
+      background: var(--navy-900);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--cream);
+      font-family: var(--font-b); font-size: .82rem;
+      padding: .45rem .5rem;
+      width: 100%;
+      outline: none; transition: border-color .18s;
+    }
+    .var-row__price:focus { border-color: var(--gold); }
+    .var-row__price::placeholder { color: var(--muted); opacity: .7; }
+
     .var-row__label {
       background: var(--navy-900);
       border: 1px solid var(--border);
@@ -1351,14 +1364,7 @@
     </div>
 
     <div class="f-row">
-      <label class="f-label">Loại sản phẩm (Variants)</label>
-      <div class="var-builder" id="variantBuilder"></div>
-      <button type="button" class="var-add-btn" onclick="appendVariantRow('','')">+ Thêm loại</button>
-      <span class="f-hint">Mỗi loại có thể có ảnh riêng — VD: Raw (chưa chiên) · Fresh (chiên sẵn). Nhấn 🖼 để upload ảnh từng loại.</span>
-    </div>
-
-    <div class="f-row">
-      <label class="f-label">Hình ảnh</label>
+      <label class="f-label">Ảnh Sản Phẩm <small style="font-weight:400;opacity:.6">(hiển thị trên trang danh mục)</small></label>
       <div class="img-upload-area" id="imgUploadArea" onclick="document.getElementById('fImageFile').click()">
         <img id="imgPreview" class="img-preview" style="display:none" alt="">
         <div class="img-placeholder" id="imgPlaceholder">
@@ -1379,6 +1385,7 @@
       </div>
       <input type="file" id="fImageFile" accept="image/*" style="display:none" onchange="handleImageUpload(this)">
       <input type="hidden" id="fImage">
+      <span class="f-hint">Ảnh chính cho thẻ sản phẩm — hiển thị khi khách duyệt menu. Mỗi loại (raw/fresh) có thể có ảnh riêng bên dưới.</span>
     </div>
 
     <!-- Focal point editor — shown only after an image is loaded -->
@@ -1404,6 +1411,13 @@
         </div>
       </div>
       <span class="f-hint">Kéo để chọn vùng hiển thị chính — dùng hộp nhỏ bên trái để xem trước.</span>
+    </div>
+
+    <div class="f-row">
+      <label class="f-label">Loại sản phẩm &amp; Giá <small style="font-weight:400;opacity:.6">(Variants)</small></label>
+      <div class="var-builder" id="variantBuilder"></div>
+      <button type="button" class="var-add-btn" onclick="appendVariantRow('','','')">+ Thêm loại</button>
+      <span class="f-hint">Mỗi loại có giá &amp; ảnh riêng — VD: Raw $0.75 / Fresh $0.80. Nhấn 🖼 để upload ảnh từng loại.</span>
     </div>
 
     <div class="f-group" style="margin-top:1rem">
@@ -1537,8 +1551,8 @@
       displayNameVi:   'Chả Giò',
       description:     'Chả giò nhân thịt heo, nấm hương và cà rốt tươi — gói bằng bánh tráng mỏng, chiên giòn vàng thơm phức. Handmade, không chất bảo quản. Perfect for family dinners and parties.',
       variants:        [
-        { key: 'raw',   label: 'Raw — to fry fresh at home',       imageUrl: '' },
-        { key: 'fresh', label: 'Fresh — cooked & ready to serve',  imageUrl: '' }
+        { key: 'raw',   label: 'Raw — to fry fresh at home',       imageUrl: '', price: 0.75 },
+        { key: 'fresh', label: 'Fresh — cooked & ready to serve',  imageUrl: '', price: 0.75 }
       ],
       price:           0.75,
       unit:            'each',
@@ -1899,9 +1913,9 @@
       clearVariantBuilder();
       (item.variants || []).forEach(function (v) {
         if (v && typeof v === 'object') {
-          appendVariantRow(v.label || v.labelEn || '', v.imageUrl || '');
+          appendVariantRow(v.label || v.labelEn || '', v.imageUrl || '', v.price != null ? v.price : '');
         } else if (v) {
-          appendVariantRow(String(v), '');
+          appendVariantRow(String(v), '', '');
         }
       });
       setToggle('fActive',   item.active !== false);
@@ -3167,7 +3181,7 @@
     if (builder) builder.innerHTML = '';
   }
 
-  function appendVariantRow(label, imageUrl) {
+  function appendVariantRow(label, imageUrl, price) {
     var builder = document.getElementById('variantBuilder');
     if (!builder) return;
     var idx = builder.querySelectorAll('.var-row').length;
@@ -3175,6 +3189,7 @@
 
     var hasImg = imageUrl ? ' loaded' : '';
     var iconHidden = imageUrl ? ' hidden' : '';
+    var priceVal = (price != null && price !== '') ? String(price) : '';
 
     var row = document.createElement('div');
     row.className = 'var-row';
@@ -3183,6 +3198,9 @@
       '<input type="text" class="var-row__label f-input" ' +
         'placeholder="Tên loại (VD: Raw, Fresh)" value="' + esc(label) + '" ' +
         'aria-label="Variant label">' +
+      '<input type="number" class="var-row__price" ' +
+        'placeholder="Giá $" min="0" step="0.01" value="' + esc(priceVal) + '" ' +
+        'aria-label="Variant price">' +
       '<label class="var-row__img-wrap" title="Upload ảnh cho loại này">' +
         '<img class="var-row__thumb' + hasImg + '" ' +
           'src="' + esc(imageUrl || '') + '" alt="">' +
@@ -3288,6 +3306,8 @@
       var label   = labelEl ? labelEl.value.trim() : '';
       if (!label) return;   // skip empty rows
       var imageUrl = urlEl ? urlEl.value.trim() : '';
+      var priceEl  = row.querySelector('.var-row__price');
+      var varPrice = priceEl ? parseFloat(priceEl.value) : NaN;
       var key = label.toLowerCase()
         .replace(/[àáạảãâầấậẩẫăằắặẳẵ]/g, 'a')
         .replace(/[èéẹẻẽêềếệểễ]/g, 'e')
@@ -3297,7 +3317,7 @@
         .replace(/[đ]/g, 'd')
         .replace(/[^a-z0-9]+/g, '_')
         .replace(/^_+|_+$/g, '') || ('v' + result.length);
-      result.push({ key: key, label: label, imageUrl: imageUrl });
+      result.push({ key: key, label: label, imageUrl: imageUrl, price: isNaN(varPrice) ? null : varPrice });
     });
     return result;
   }

@@ -575,11 +575,12 @@
               if (v && typeof v === 'object') {
                 var id  = v.id || v.key || ('v' + i);
                 var lbl = v.label || v.labelEn || String(v);
-                return { id: id, label: lbl, labelEn: lbl, imageUrl: v.imageUrl || '' };
+                var vPrice = (v.price != null && !isNaN(Number(v.price))) ? Number(v.price) : null;
+                return { id: id, label: lbl, labelEn: lbl, imageUrl: v.imageUrl || '', price: vPrice };
               }
               var s    = String(v || '');
               var slug = s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || ('v' + i);
-              return { id: slug, label: s, labelEn: s, imageUrl: '' };
+              return { id: slug, label: s, labelEn: s, imageUrl: '', price: null };
             });
 
             items.push({
@@ -762,7 +763,10 @@
           ? ' data-img="' + escAttr(v.imageUrl) + '" data-prod="' + escAttr(product.id) + '" ' +
             'onclick="dlcSwapVariantImg(this)" style="cursor:pointer" title="' + escAttr(v.labelEn) + '"'
           : '';
-        return '<span class="mp-product__variant"' + imgAttr + '>' + escHtml(v.labelEn) + '</span>';
+        var vPriceHtml = (v.price != null && v.price > 0)
+          ? ' <span class="mp-product__variant-price">$' + v.price.toFixed(2) + '</span>'
+          : '';
+        return '<span class="mp-product__variant"' + imgAttr + '>' + escHtml(v.labelEn) + vPriceHtml + '</span>';
       }).join('');
 
       var priceStr = '$' + product.pricePerUnit.toFixed(2) + ' / ' + escHtml(product.unitEn);

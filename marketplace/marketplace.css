@@ -1166,6 +1166,7 @@ select.mp-input option {
 .mp-product__variant {
   display: inline-flex;
   align-items: center;
+  gap: .35rem;
   height: 26px;
   padding: 0 .75rem;
   background: var(--sky-dim);
@@ -1175,6 +1176,13 @@ select.mp-input option {
   font-weight: 600;
   color: var(--sky-lt);
   letter-spacing: .04em;
+}
+.mp-product__variant-price {
+  font-size: .64rem;
+  font-weight: 700;
+  color: var(--gold-lt, #ffc857);
+  letter-spacing: 0;
+  opacity: .9;
 }
 
 .mp-product-card__pricing {

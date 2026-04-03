@@ -1301,38 +1301,15 @@ function switchHpPanel(panel) {
 }
 
 // ── Travel Services Carousel ──────────────────────────────────
-var TRAVEL_SERVICES = [
+// Service cards appended after destinations
+var _TRAVEL_SERVICES_EXTRA = [
   {
     chip: 'Sân Bay',
-    title: 'Đón Sân Bay',
+    title: 'Đưa Đón Sân Bay',
     sub: 'LAX · SFO · SJC · OAK · SAN · BUR',
     img: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=600&auto=format&fit=crop&q=80',
     cta: 'Đặt với AI',
     intent: 'airport'
-  },
-  {
-    chip: 'Sân Bay',
-    title: 'Đưa Ra Sân Bay',
-    sub: 'Đưa từ nhà ra sân bay đúng giờ',
-    img: 'https://images.unsplash.com/photo-1530521954074-e64f6810b32d?w=600&auto=format&fit=crop&q=80',
-    cta: 'Đặt với AI',
-    intent: 'airport'
-  },
-  {
-    chip: 'Tour',
-    title: 'Las Vegas',
-    sub: 'The Strip · Bellagio · Grand Canyon · 2–3 ngày',
-    img: 'lasvegas.jpg?v=20260402',
-    cta: 'Lên kế hoạch',
-    intent: 'tour'
-  },
-  {
-    chip: 'Tour',
-    title: 'Yosemite',
-    sub: 'Half Dome · Yosemite Falls · El Capitan',
-    img: 'yosemite.jpg?v=20260402',
-    cta: 'Lên kế hoạch',
-    intent: 'tour'
   },
   {
     chip: 'Xe Riêng',
@@ -1355,19 +1332,46 @@ var TRAVEL_SERVICES = [
 function renderTravelCarousel() {
   var container = document.getElementById('travCarousel');
   if (!container) return;
-  container.innerHTML = TRAVEL_SERVICES.map(function(s) {
-    var intent = s.intent;
-    return '<div class="trav-card" role="listitem" onclick="openAIWithIntent(\'' + intent + '\')" aria-label="' + s.title + '">' +
-      '<div class="trav-card__bg" style="background-image:url(\'' + s.img + '\')"></div>' +
-      '<div class="trav-card__overlay"></div>' +
-      '<div class="trav-card__body">' +
-        '<span class="trav-card__chip">' + s.chip + '</span>' +
-        '<h3 class="trav-card__title">' + s.title + '</h3>' +
-        '<p class="trav-card__sub">' + s.sub + '</p>' +
-        '<button class="trav-card__cta" onclick="event.stopPropagation();openAIWithIntent(\'' + intent + '\')">' + s.cta + '</button>' +
-      '</div>' +
-    '</div>';
-  }).join('');
+
+  var cards = [];
+
+  // All destinations from DESTINATIONS array (destinations.js)
+  if (typeof DESTINATIONS !== 'undefined') {
+    cards = DESTINATIONS.map(function(dest) {
+      var chip = dest.duration
+        ? (dest.duration.min + '–' + dest.duration.max + ' ' + dest.duration.unit)
+        : 'Du Lịch';
+      var id = dest.id;
+      return '<div class="trav-card" role="listitem" onclick="openDestination(\'' + id + '\')" aria-label="' + dest.name.vi + '">' +
+        '<div class="trav-card__bg" style="background-image:url(\'' + dest.image + '\')"></div>' +
+        '<div class="trav-card__overlay"></div>' +
+        '<div class="trav-card__body">' +
+          '<span class="trav-card__chip">' + chip + '</span>' +
+          '<h3 class="trav-card__title">' + dest.name.vi + '</h3>' +
+          '<p class="trav-card__sub">' + dest.tagline.vi + '</p>' +
+          '<button class="trav-card__cta" onclick="event.stopPropagation();openDestination(\'' + id + '\')">Khám phá</button>' +
+        '</div>' +
+      '</div>';
+    });
+  }
+
+  // Append service cards
+  _TRAVEL_SERVICES_EXTRA.forEach(function(s) {
+    cards.push(
+      '<div class="trav-card" role="listitem" onclick="openAIWithIntent(\'' + s.intent + '\')" aria-label="' + s.title + '">' +
+        '<div class="trav-card__bg" style="background-image:url(\'' + s.img + '\')"></div>' +
+        '<div class="trav-card__overlay"></div>' +
+        '<div class="trav-card__body">' +
+          '<span class="trav-card__chip">' + s.chip + '</span>' +
+          '<h3 class="trav-card__title">' + s.title + '</h3>' +
+          '<p class="trav-card__sub">' + s.sub + '</p>' +
+          '<button class="trav-card__cta" onclick="event.stopPropagation();openAIWithIntent(\'' + s.intent + '\')">' + s.cta + '</button>' +
+        '</div>' +
+      '</div>'
+    );
+  });
+
+  container.innerHTML = cards.join('');
 }
 
 // ── All Homepage Vendors (non-region-gated fallback) ──────────

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms of Service — Du Lịch Cali</title>
+  <meta name="description" content="Terms of Service for Du Lịch Cali — California travel, airport transfer, and marketplace services.">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;1,6..96,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy-900: #0d2f50;
+      --navy-800: #123b62;
+      --navy-700: #194a78;
+      --gold:     #f5a623;
+      --gold-lt:  #ffc857;
+      --cream:    #fff8ee;
+      --text:     #c8e4f8;
+      --muted:    #6ab0d4;
+      --border:   rgba(255,255,255,0.13);
+      --font-d: 'Bodoni Moda', Georgia, serif;
+      --font-b: 'Jost', system-ui, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-b);
+      background: var(--navy-900);
+      color: var(--text);
+      line-height: 1.7;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 40% at 50% 0%, rgba(245,166,35,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 50% at 85% 85%, rgba(14,165,233,0.06) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── App Bar ── */
+    .app-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.25rem;
+      background: rgba(13,47,80,.94);
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      border-bottom: 1px solid rgba(245,166,35,0.18);
+    }
+
+    .app-bar__brand {
+      font-family: var(--font-d);
+      font-size: 1.1rem;
+      color: var(--gold-lt);
+      letter-spacing: .04em;
+      text-decoration: none;
+    }
+
+    .app-bar__back {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .82rem;
+      font-weight: 500;
+      color: var(--muted);
+      text-decoration: none;
+      padding: .4rem .75rem;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      transition: color .2s, border-color .2s;
+    }
+
+    .app-bar__back:hover { color: var(--text); border-color: rgba(255,255,255,0.25); }
+    .app-bar__back svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    /* ── Main content ── */
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 5rem;
+    }
+
+    /* ── Hero header ── */
+    .doc-header {
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .doc-header__eyebrow {
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: .75rem;
+    }
+
+    .doc-header__title {
+      font-family: var(--font-d);
+      font-size: clamp(1.9rem, 5vw, 2.8rem);
+      font-weight: 400;
+      color: var(--cream);
+      line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+
+    .doc-header__meta {
+      font-size: .82rem;
+      color: var(--muted);
+    }
+
+    /* ── Sections ── */
+    .doc-section {
+      margin-bottom: 2.75rem;
+    }
+
+    .doc-section h2 {
+      font-family: var(--font-d);
+      font-size: 1.15rem;
+      font-weight: 400;
+      color: var(--gold-lt);
+      margin-bottom: 1rem;
+      padding-bottom: .5rem;
+      border-bottom: 1px solid rgba(245,166,35,0.18);
+    }
+
+    .doc-section p {
+      font-size: .93rem;
+      color: var(--text);
+      margin-bottom: .85rem;
+    }
+
+    .doc-section p:last-child { margin-bottom: 0; }
+
+    .doc-section ul {
+      list-style: none;
+      margin: .5rem 0 .85rem 0;
+      padding: 0;
+    }
+
+    .doc-section ul li {
+      font-size: .93rem;
+      color: var(--text);
+      padding: .3rem 0 .3rem 1.25rem;
+      position: relative;
+    }
+
+    .doc-section ul li::before {
+      content: '·';
+      position: absolute;
+      left: 0;
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    /* ── Highlight box ── */
+    .info-box {
+      background: rgba(25,74,120,.35);
+      border-left: 3px solid var(--gold);
+      border-radius: 0 8px 8px 0;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0 .85rem;
+    }
+
+    .info-box p { font-size: .88rem; margin-bottom: 0; }
+
+    /* ── Contact box ── */
+    .contact-box {
+      background: rgba(25,74,120,.45);
+      border: 1px solid rgba(245,166,35,0.22);
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      margin-top: .5rem;
+    }
+
+    .contact-box p { margin-bottom: .4rem; font-size: .9rem; }
+    .contact-box a { color: var(--gold-lt); text-decoration: none; }
+    .contact-box a:hover { color: var(--cream); }
+
+    /* ── Footer ── */
+    .site-footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 1.5rem 1.5rem 2.5rem;
+      border-top: 1px solid var(--border);
+      font-size: .8rem;
+      color: var(--muted);
+    }
+
+    .site-footer a { color: var(--muted); text-decoration: none; }
+    .site-footer a:hover { color: var(--text); }
+    .site-footer__links { display: flex; justify-content: center; gap: 1.5rem; margin-bottom: .75rem; }
+
+    /* ── Desktop ── */
+    @media (min-width: 768px) {
+      .page-wrap { padding: 3.5rem 2.5rem 5rem; }
+      .doc-header { margin-bottom: 3.5rem; }
+    }
+
+    @media (min-width: 1200px) {
+      .page-wrap { padding: 4rem 3rem 6rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="app-bar">
+    <a href="/" class="app-bar__brand">✦ Du Lịch Cali</a>
+    <a href="/" class="app-bar__back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 5l-7 7 7 7"/>
+      </svg>
+      Back to Home
+    </a>
+  </header>
+
+  <main class="page-wrap">
+
+    <div class="doc-header">
+      <div class="doc-header__eyebrow">Legal</div>
+      <h1 class="doc-header__title">Terms of Service</h1>
+      <p class="doc-header__meta">Last updated: April 3, 2026 &nbsp;·&nbsp; Du Lịch Cali</p>
+    </div>
+
+    <div class="doc-section">
+      <h2>Agreement to Terms</h2>
+      <p>These Terms of Service ("Terms") govern your use of the Du Lịch Cali website at <strong>www.dulichcali21.com</strong> and all services offered through it, including airport transportation, California tours, food ordering, and local marketplace services.</p>
+      <p>By using our website or submitting a booking, you agree to be bound by these Terms. If you do not agree, please do not use our services.</p>
+    </div>
+
+    <div class="doc-section">
+      <h2>Use of Service</h2>
+      <p>Du Lịch Cali provides a platform that connects customers with travel, transportation, and local service vendors in California. You may use our services only for lawful purposes and in accordance with these Terms.</p>
+      <p>You agree not to:</p>
+      <ul>
+        <li>Submit false, inaccurate, or misleading booking information</li>
+        <li>Use the service for any illegal or unauthorized purpose</li>
+        <li>Interfere with or disrupt the operation of our website or services</li>
+        <li>Attempt to gain unauthorized access to any part of our systems</li>
+      </ul>
+    </div>
+
+    <div class="doc-section">
+      <h2>Booking Responsibilities</h2>
+      <p>When you place a booking through Du Lịch Cali, you are responsible for:</p>
+      <ul>
+        <li>Providing accurate contact information, travel details, and special requirements</li>
+        <li>Being available at the agreed pickup time and location</li>
+        <li>Notifying us promptly if your travel plans change</li>
+        <li>Ensuring the number of passengers and luggage does not exceed what was specified at booking</li>
+        <li>Treating drivers, guides, and vendor staff with respect</li>
+      </ul>
+      <p>Bookings submitted through our AI chat or booking form are <strong>reservation requests</strong>. A booking is confirmed only when our team contacts you to verify the details and confirm availability.</p>
+    </div>
+
+    <div class="doc-section">
+      <h2>Vendor Responsibilities</h2>
+      <p>Vendors listed in the Du Lịch Cali Marketplace (restaurants, nail salons, hair salons, and other businesses) are independent businesses, not employees of Du Lịch Cali. Each vendor is responsible for:</p>
+      <ul>
+        <li>The quality, accuracy, and fulfillment of their products and services</li>
+        <li>Food safety and preparation standards</li>
+        <li>Appointment availability and timely service</li>
+        <li>Communicating any changes to hours, pricing, or availability</li>
+      </ul>
+      <p>Du Lịch Cali facilitates connections between customers and vendors but is not responsible for vendor actions, product quality disputes, or service failures by independent vendors.</p>
+    </div>
+
+    <div class="doc-section">
+      <h2>Pricing Disclaimer</h2>
+      <p>All prices displayed on this website are <strong>estimates only</strong> unless explicitly confirmed in writing by our team. Final pricing may vary based on:</p>
+      <ul>
+        <li>Actual distance and route conditions</li>
+        <li>Number of passengers and luggage</li>
+        <li>Current fuel prices</li>
+        <li>Tolls, parking, and airport fees</li>
+        <li>Seasonal demand and vehicle availability</li>
+        <li>Special requests or changes made after initial booking</li>
+      </ul>
+      <div class="info-box">
+        <p>Price estimates shown during AI chat or on booking forms are provided for planning purposes only. Always confirm the final price with our team before your service date.</p>
+      </div>
+    </div>
+
+    <div class="doc-section">
+      <h2>Cancellation Policy</h2>
+      <p>We understand that plans change. Our general cancellation guidelines are:</p>
+      <ul>
+        <li><strong>More than 24 hours before service:</strong> Cancellations are accepted with no charge. Contact us as soon as possible.</li>
+        <li><strong>Less than 24 hours before service:</strong> A cancellation fee may apply depending on the service type and whether a driver or guide has already been dispatched.</li>
+        <li><strong>No-show:</strong> If you are not present at the agreed pickup time and location without prior notice, the full service fee may be charged.</li>
+        <li><strong>Food orders:</strong> Orders in preparation cannot be cancelled. Please contact us as early as possible if you need to cancel a food order.</li>
+      </ul>
+      <p>To cancel or modify a booking, contact us by phone or email. Cancellation policies for specific services may differ — our team will clarify at the time of booking confirmation.</p>
+    </div>
+
+    <div class="doc-section">
+      <h2>Limitation of Liability</h2>
+      <p>To the maximum extent permitted by applicable law, Du Lịch Cali shall not be liable for:</p>
+      <ul>
+        <li>Delays or service disruptions caused by traffic, weather, road closures, or other factors outside our control</li>
+        <li>Loss, damage, or theft of personal property during service</li>
+        <li>Actions or omissions of independent vendors listed in our Marketplace</li>
+        <li>Indirect, incidental, or consequential damages arising from use of our services</li>
+        <li>Inaccuracies in estimated pricing, travel times, or availability</li>
+      </ul>
+      <p>Our total liability for any claim arising from use of our services shall not exceed the amount actually paid by you for the specific service giving rise to the claim.</p>
+    </div>
+
+    <div class="doc-section">
+      <h2>Intellectual Property</h2>
+      <p>All content on this website — including text, images, logos, and design — is the property of Du Lịch Cali or its content partners. You may not reproduce, distribute, or create derivative works from our content without written permission.</p>
+    </div>
+
+    <div class="doc-section">
+      <h2>Governing Law</h2>
+      <p>These Terms are governed by the laws of the State of California, United States, without regard to conflict of law principles. Any disputes arising from these Terms or your use of our services shall be resolved in the courts of Orange County, California.</p>
+    </div>
+
+    <div class="doc-section">
+      <h2>Changes to These Terms</h2>
+      <p>We may update these Terms from time to time. When we do, we will update the "last updated" date at the top of this page. Continued use of our services after any changes constitutes your acceptance of the updated Terms.</p>
+    </div>
+
+    <div class="doc-section">
+      <h2>Contact Us</h2>
+      <p>If you have questions or concerns about these Terms, please contact us:</p>
+      <div class="contact-box">
+        <p><strong>Du Lịch Cali</strong></p>
+        <p>Duy Hoa: <a href="tel:7142276007">714-227-6007</a></p>
+        <p>Dinh: <a href="tel:5623313809">562-331-3809</a></p>
+        <p>Email: <a href="mailto:dulichcali21@gmail.com">dulichcali21@gmail.com</a></p>
+        <p>Website: <a href="https://www.dulichcali21.com">www.dulichcali21.com</a></p>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__links">
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+      <a href="/">Home</a>
+    </div>
+    <p>&copy; 2024–2026 Du Lịch Cali. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>

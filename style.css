@@ -2600,44 +2600,8 @@ select.field-input {
   .hc__chip { margin-bottom: 1rem; }
   .hc__dots { left: 4rem; transform: none; }
 
-  /* ── Home two-column layout ── */
-  .home-body {
-    display: grid;
-    grid-template-columns: 1fr 320px;
-    grid-template-rows: auto;
-    gap: 0;
-    max-width: none;
-    margin: 0;
-  }
-
-  /* Featured vendors + destinations + AI bar: left col */
-  #hpFeatured                { grid-column: 1; padding: 1.75rem 1.5rem .75rem 2.5rem; }
-  #hpAvail                   { grid-column: 1 / -1; padding: 1rem 2.5rem .5rem; }
-  .home-section--dest        { grid-column: 1; padding: 1.75rem 1.5rem .75rem 2.5rem; }
-  .ai-bar                    { grid-column: 1; margin: 0 1.5rem 1.5rem 2.5rem; }
-
-  /* Services + marketplace + trust: right sidebar col */
-  .home-section--svc  {
-    grid-column: 2;
-    grid-row: 1 / 5;
-    padding: 1.75rem 2rem .75rem 1.25rem;
-    border-left: 1px solid var(--border);
-  }
-  .home-section--mkt  {
-    grid-column: 2;
-    padding: 0 2rem .75rem 1.25rem;
-    border-left: 1px solid var(--border);
-  }
-
-  /* Trust: full width */
-  .home-section--trust {
-    grid-column: 1 / -1;
-    padding: 1.5rem 2.5rem .75rem;
-    border-top: 1px solid var(--border);
-  }
-
-  /* Contact/region: full width */
-  .region-service { grid-column: 1 / -1; }
+  /* ── Home panel layout (replaces 2-col grid) ── */
+  .home-body { display: block; }
 
   /* Destinations: 4-col grid */
   .dest-row {
@@ -2650,27 +2614,15 @@ select.field-input {
   .dest-card { flex: none; }
   .dest-card__img { height: 160px; }
 
-  /* Service cards: 1 column in sidebar, always expanded */
+  /* Service cards: 3-column grid in travel panel */
   .svc-fc-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: .75rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
   }
   .svc-fc-wrap .svc-fc { margin: 0; }
   .svc-fc-wrap .svc-fc__body { display: block !important; max-height: none; }
   .svc-fc-wrap .svc-fc__arr { display: none; }
-
-  /* Marketplace: vertical list in sidebar */
-  .mkt-grid { grid-template-columns: 1fr; gap: .5rem; }
-  .mkt-tile {
-    flex-direction: row;
-    justify-content: flex-start;
-    gap: .85rem;
-    padding: .75rem 1rem;
-    min-height: auto;
-    text-align: left;
-  }
-  .mkt-tile__icon { flex-shrink: 0; }
 
   /* Trust: 4 cols */
   .trust-grid { grid-template-columns: repeat(4, 1fr); padding: 0; }
@@ -2700,9 +2652,9 @@ select.field-input {
   }
   .dest-modal__video-wrap { height: 50vh; }
 
-  /* Vendor homepage row: 2 cards in sidebar, grid in main */
+  /* Vendor homepage row: 3-column in main panel */
   .hp-vendor-row {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     padding: 0 0 .5rem;
   }
 
@@ -2725,8 +2677,8 @@ select.field-input {
   .hc { height: 68vh; min-height: 520px; }
   .hc__title { font-size: clamp(4rem, 5vw, 6.5rem); }
 
-  /* Wider right panel on very large screens */
-  .home-body { grid-template-columns: 1fr 380px; }
+  /* Marketplace grid: 4-col at wide screens */
+  .mkt-featured-grid { grid-template-columns: repeat(4, 1fr); }
 
   /* Destinations: 5-col grid */
   .dest-row { grid-template-columns: repeat(5, 1fr); }
@@ -2739,3 +2691,316 @@ select.field-input {
   .hp-vendor-row { grid-template-columns: repeat(3, 1fr); }
 }
 
+
+/* ═══════════════════════════════════════════════════════
+   HOMEPAGE PANEL SYSTEM
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Panel Tab Navigation ─────────────────────────────── */
+.hp-tabs {
+  display: flex;
+  align-items: center;
+  padding: 0 .5rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(13,47,80,.97);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.hp-tabs::-webkit-scrollbar { display: none; }
+
+.hp-tab {
+  display: flex;
+  align-items: center;
+  gap: .38rem;
+  height: 42px;
+  padding: 0 .9rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-family: var(--font-b);
+  font-size: .74rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color .18s, border-color .18s;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.hp-tab svg { width: 13px; height: 13px; flex-shrink: 0; }
+.hp-tab--active { color: var(--gold); border-bottom-color: var(--gold); }
+.hp-tab:hover:not(.hp-tab--active) { color: var(--cream); }
+
+/* ── Panel Content ────────────────────────────────────── */
+.hp-panel { display: none; overflow-y: auto; }
+.hp-panel--active { display: block; }
+
+/* ── Marketplace Featured Tiles ─────────────────────────
+   Replaces the old 3-icon mkt-grid with cinematic image tiles
+   ──────────────────────────────────────────────────────── */
+.mkt-featured-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: .65rem;
+  padding: .25rem 1rem 1.5rem;
+}
+
+.mkt-feat-tile {
+  position: relative;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--navy-800);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 165px;
+  transition: border-color .2s, transform .15s;
+}
+.mkt-feat-tile:hover { border-color: var(--border-g); }
+.mkt-feat-tile:active { transform: scale(.98); }
+
+.mkt-feat-tile__img {
+  flex: 1;
+  background-size: cover;
+  background-position: center;
+  min-height: 110px;
+}
+
+.mkt-feat-tile__body {
+  padding: .6rem .85rem .75rem;
+  background: linear-gradient(0deg, rgba(13,47,80,.96) 0%, rgba(13,47,80,.75) 100%);
+}
+
+.mkt-feat-tile__cat {
+  display: inline-block;
+  font-size: .59rem;
+  font-weight: 700;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: .18rem;
+}
+
+.mkt-feat-tile__name {
+  font-family: var(--font-d);
+  font-size: .98rem;
+  font-weight: 400;
+  color: var(--cream);
+  margin: 0 0 .12rem;
+  line-height: 1.2;
+}
+
+.mkt-feat-tile__desc {
+  font-size: .68rem;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Wide tile: full-width food tile with side image */
+.mkt-feat-tile--wide {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  min-height: 110px;
+}
+.mkt-feat-tile--wide .mkt-feat-tile__img {
+  width: 130px;
+  min-height: auto;
+  flex: none;
+}
+.mkt-feat-tile--wide .mkt-feat-tile__body {
+  flex: 1;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: none;
+  padding: .9rem 1.1rem;
+}
+
+/* ── AI Concierge Panel ─────────────────────────────────── */
+.ai-concierge-panel {
+  padding: 2rem 1.25rem 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.75rem;
+  text-align: center;
+  min-height: 55vh;
+  justify-content: center;
+}
+
+.ai-concierge-panel__hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .85rem;
+}
+
+.ai-concierge-panel__orb {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 38%, rgba(245,166,35,.22) 0%, rgba(13,47,80,.9) 70%);
+  border: 1px solid var(--border-g);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.85rem;
+  box-shadow: 0 0 40px rgba(245,166,35,.18), inset 0 0 20px rgba(245,166,35,.06);
+  animation: orb-pulse 3s ease-in-out infinite;
+}
+
+@keyframes orb-pulse {
+  0%, 100% { box-shadow: 0 0 40px rgba(245,166,35,.18), inset 0 0 20px rgba(245,166,35,.06); }
+  50%       { box-shadow: 0 0 60px rgba(245,166,35,.28), inset 0 0 30px rgba(245,166,35,.1); }
+}
+
+.ai-concierge-panel__hero h2 {
+  font-family: var(--font-d);
+  font-size: 2.1rem;
+  font-weight: 300;
+  color: var(--cream);
+  letter-spacing: .02em;
+  margin: 0;
+}
+
+.ai-concierge-panel__hero p {
+  font-size: .84rem;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.65;
+}
+
+.ai-concierge-panel__prompts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: .6rem;
+  width: 100%;
+  max-width: 380px;
+}
+
+.ai-prompt-btn {
+  padding: .82rem .9rem;
+  background: var(--navy-800);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--text);
+  font-family: var(--font-b);
+  font-size: .76rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color .18s, background .18s, color .18s;
+  text-align: left;
+  line-height: 1.4;
+}
+.ai-prompt-btn:hover {
+  border-color: var(--border-g);
+  background: rgba(245,166,35,.06);
+  color: var(--cream);
+}
+
+.ai-concierge-panel__cta {
+  max-width: 280px;
+  width: 100%;
+}
+
+/* ── Sidebar: Đặt chỗ + AI highlighted ──────────────────── */
+@media (min-width: 1200px) {
+  /* Panel tabs get more breathing room on desktop */
+  .hp-tabs { padding: 0 2rem; }
+  .hp-tab { height: 48px; font-size: .76rem; padding: 0 1.25rem; }
+
+  /* Panel content fills available height */
+  .hp-panel--active {
+    height: 100%;
+    overflow-y: auto;
+  }
+
+  /* Marketplace grid: 3-col at desktop */
+  .mkt-featured-grid {
+    grid-template-columns: repeat(3, 1fr);
+    padding: .5rem 2rem 2rem;
+    gap: 1rem;
+  }
+  .mkt-feat-tile--wide {
+    grid-column: auto;
+    flex-direction: column;
+    min-height: 175px;
+  }
+  .mkt-feat-tile--wide .mkt-feat-tile__img {
+    width: auto;
+    min-height: 118px;
+    flex: 1;
+  }
+  .mkt-feat-tile--wide .mkt-feat-tile__body {
+    background: linear-gradient(0deg, rgba(13,47,80,.96) 0%, rgba(13,47,80,.75) 100%);
+    padding: .6rem .85rem .75rem;
+  }
+
+  /* AI panel: bigger */
+  .ai-concierge-panel {
+    padding: 3rem 2.5rem;
+    min-height: 65vh;
+  }
+  .ai-concierge-panel__prompts {
+    max-width: 480px;
+  }
+
+  /* Sidebar: Book tab always gold-tinted */
+  .bottom-nav #tabBook {
+    color: var(--gold);
+    border-left-color: rgba(245,166,35,.5);
+  }
+  /* Sidebar: AI/Chat tab prominent */
+  .bottom-nav #tabChat {
+    background: rgba(245,166,35,.07);
+    border-left-color: var(--gold);
+    color: var(--gold-lt);
+  }
+  /* Sidebar panel switching items */
+  .bottom-nav #tabChat.nav-tab--active {
+    background: rgba(245,166,35,.14);
+    color: var(--gold-lt);
+  }
+}
+
+@media (min-width: 768px) {
+  .mkt-featured-grid {
+    grid-template-columns: repeat(3, 1fr);
+    padding: .5rem 1.5rem 1.5rem;
+    gap: 1rem;
+  }
+  .mkt-feat-tile--wide {
+    grid-column: auto;
+    flex-direction: column;
+    min-height: 175px;
+  }
+  .mkt-feat-tile--wide .mkt-feat-tile__img {
+    width: auto;
+    min-height: 118px;
+    flex: 1;
+  }
+  .mkt-feat-tile--wide .mkt-feat-tile__body {
+    background: linear-gradient(0deg, rgba(13,47,80,.96) 0%, rgba(13,47,80,.75) 100%);
+    padding: .6rem .85rem .75rem;
+  }
+
+  .hp-tabs { padding: 0 1.25rem; }
+  .hp-tab { height: 44px; }
+
+  .ai-concierge-panel {
+    padding: 2.5rem 2rem 3rem;
+    min-height: 60vh;
+  }
+  .ai-concierge-panel__prompts {
+    max-width: 460px;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

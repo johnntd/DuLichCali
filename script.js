@@ -1281,6 +1281,25 @@ function initHomepageIntelligence(region, driverAvailable) {
   renderAvailabilityHighlights(regionId, driverAvailable ?? true);
 }
 
+// ── Homepage Panel Switcher ───────────────────────────────────
+function switchHpPanel(panel) {
+  document.querySelectorAll('.hp-tab').forEach(function(t) {
+    var active = t.dataset.panel === panel;
+    t.classList.toggle('hp-tab--active', active);
+    t.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  document.querySelectorAll('.hp-panel').forEach(function(p) {
+    var id = 'panel' + panel.charAt(0).toUpperCase() + panel.slice(1);
+    var active = p.id === id;
+    p.classList.toggle('hp-panel--active', active);
+    if (active) {
+      p.removeAttribute('hidden');
+    } else {
+      p.setAttribute('hidden', '');
+    }
+  });
+}
+
 // ── Hero Carousel ─────────────────────────────────────────────
 function heroCarouselCta(service) {
   if (service === 'travel') {

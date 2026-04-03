@@ -356,10 +356,10 @@ select.field-input {
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(0,0,0,.06)  0%,
-    rgba(0,0,0,.14) 38%,
-    rgba(0,0,0,.70) 78%,
-    rgba(0,0,0,.88) 100%
+    rgba(0,0,0,.02)  0%,
+    rgba(0,0,0,.08) 35%,
+    rgba(0,0,0,.62) 72%,
+    rgba(0,0,0,.84) 100%
   );
 }
 .hc__gradient::after {
@@ -1633,9 +1633,8 @@ select.field-input {
 }
 
 @media (min-width: 900px) {
-  #app { max-width: 500px; margin: 0 auto; }
-  #app { border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
-  body { background: #0a2540; }
+  /* No 500px cap — full-width at all desktop sizes */
+  body { background: #07213a; }
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -2430,33 +2429,54 @@ select.field-input {
 /* ── Tablet: 768px – 1199px ─────────────────────────────────── */
 @media (min-width: 768px) {
 
-  /* Override the 900px phone-cap rule */
+  /* Full-width — no phone cap */
   #app {
     max-width: none !important;
     border-left: none !important;
     border-right: none !important;
   }
 
-  /* Wider hero */
-  .hc { height: 52vh; min-height: 360px; }
-  .hc__title { font-size: clamp(2.4rem, 5vw, 4rem); }
+  /* Taller, more dramatic hero */
+  .hc { height: 60vh; min-height: 420px; }
+  .hc__title { font-size: clamp(2.8rem, 6vw, 4.8rem); }
+  .hc__body { padding: 0 3rem 4rem; }
 
-  /* Section padding */
+  /* Section max-width + padding */
   .home-section { padding: 2rem 2rem .75rem; }
+  .home-body { max-width: 1000px; margin: 0 auto; }
 
-  /* Service cards: 3-column grid when wrapper is present */
+  /* Destinations: 3-col grid (no more horizontal scroll) */
+  .dest-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    overflow-x: visible;
+    gap: 1rem;
+    padding-bottom: 0;
+  }
+  .dest-card { flex: none; }
+  .dest-card__img { height: 150px; }
+
+  /* Service cards: 3-column always expanded */
   .svc-fc-wrap {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
   }
-  /* Un-expand all cards on tablet (always show open on big screen) */
+  .svc-fc-wrap .svc-fc { margin: 0; }
   .svc-fc-wrap .svc-fc__body { display: block !important; }
   .svc-fc-wrap .svc-fc__arr { display: none; }
 
-  /* Destination row: 4-up scroll */
-  .dest-card { flex: 0 0 220px; }
-  .dest-card__img { height: 150px; }
+  /* Marketplace grid: 3 cols */
+  .mkt-grid { grid-template-columns: repeat(3, 1fr); }
+
+  /* AI bar: more prominent */
+  .ai-bar { margin: 0 0 1.5rem; padding: 1.25rem 1.5rem 1.1rem; }
+  .ai-bar__text strong { font-size: 1.05rem; }
+  .ai-bar__chips { gap: .55rem; }
+  .ai-bar__chip { padding: .38rem .9rem; font-size: .75rem; }
+
+  /* Trust grid: 4 cols */
+  .trust-grid { grid-template-columns: repeat(4, 1fr); }
 
   /* Destinations screen: 2-column grid */
   #destList {
@@ -2467,11 +2487,6 @@ select.field-input {
   }
   #destList .dest-full-card { margin: 0; }
 
-  /* Marketplace grid: 3 cols */
-  .mkt-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
   /* Booking wizard: center + cap width */
   #screenBook .screen-pad { max-width: 740px; margin: 0 auto; }
   .wiz-step { padding: 2rem 2.5rem; }
@@ -2480,13 +2495,13 @@ select.field-input {
   #screenChat { display: flex; flex-direction: column; align-items: center; }
   #screenChat > * { width: 100%; max-width: 760px; }
 
-  /* Vendor homepage row: 2-column cards */
+  /* Vendor homepage row: 3-column grid */
   .hp-vendor-row {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
     overflow-x: visible;
-    padding: 0 2rem .5rem;
+    padding: 0 0 .5rem;
   }
   .hp-vendor-card { flex: none; width: auto; }
 
@@ -2510,7 +2525,9 @@ select.field-input {
   .app-bar {
     grid-area: header;
     height: var(--app-bar-h);
+    padding: 0 2.5rem;
   }
+  .app-bar__brand { font-size: 1.3rem; }
 
   .app-main {
     grid-area: main;
@@ -2547,7 +2564,7 @@ select.field-input {
   }
   .nav-tab svg { width: 18px; height: 18px; flex-shrink: 0; }
 
-  /* Center book button becomes a horizontal pill in sidebar */
+  /* Center book button → horizontal pill in sidebar */
   .nav-tab--center {
     overflow: visible;
     margin: .75rem 1rem;
@@ -2571,25 +2588,92 @@ select.field-input {
     letter-spacing: .06em;
     color: var(--navy-900);
   }
-  /* Hide the span "Đặt chỗ" text below the circle — shown via ::after instead */
   .nav-tab--center > span { display: none; }
 
-  /* ── Content Screens on Desktop ── */
+  /* ── Screens ── */
   .screen { border-radius: 0; }
 
-  /* Home: wider content */
-  .home-section { padding: 2rem 2.5rem .75rem; }
-  .hc { height: 46vh; min-height: 320px; }
-  .hc__title { font-size: clamp(2.8rem, 4.5vw, 5rem); }
+  /* Hero: cinematic at desktop */
+  .hc { height: 66vh; min-height: 480px; }
+  .hc__title { font-size: clamp(3.2rem, 5vw, 5.5rem); }
+  .hc__body { padding: 0 4rem 5rem; align-items: flex-start; text-align: left; }
+  .hc__chip { margin-bottom: 1rem; }
+  .hc__dots { left: 4rem; transform: none; }
 
-  /* Service cards: 3 cols, always expanded */
-  .svc-fc-wrap {
+  /* ── Home two-column layout ── */
+  .home-body {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.25rem;
+    grid-template-columns: 1fr 320px;
+    grid-template-rows: auto;
+    gap: 0;
+    max-width: none;
+    margin: 0;
   }
-  .svc-fc-wrap .svc-fc__body { display: block !important; }
+
+  /* Featured vendors + destinations + AI bar: left col */
+  #hpFeatured                { grid-column: 1; padding: 1.75rem 1.5rem .75rem 2.5rem; }
+  #hpAvail                   { grid-column: 1 / -1; padding: 1rem 2.5rem .5rem; }
+  .home-section--dest        { grid-column: 1; padding: 1.75rem 1.5rem .75rem 2.5rem; }
+  .ai-bar                    { grid-column: 1; margin: 0 1.5rem 1.5rem 2.5rem; }
+
+  /* Services + marketplace + trust: right sidebar col */
+  .home-section--svc  {
+    grid-column: 2;
+    grid-row: 1 / 5;
+    padding: 1.75rem 2rem .75rem 1.25rem;
+    border-left: 1px solid var(--border);
+  }
+  .home-section--mkt  {
+    grid-column: 2;
+    padding: 0 2rem .75rem 1.25rem;
+    border-left: 1px solid var(--border);
+  }
+
+  /* Trust: full width */
+  .home-section--trust {
+    grid-column: 1 / -1;
+    padding: 1.5rem 2.5rem .75rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Contact/region: full width */
+  .region-service { grid-column: 1 / -1; }
+
+  /* Destinations: 4-col grid */
+  .dest-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    overflow-x: visible;
+    gap: 1rem;
+    padding-bottom: 0;
+  }
+  .dest-card { flex: none; }
+  .dest-card__img { height: 160px; }
+
+  /* Service cards: 1 column in sidebar, always expanded */
+  .svc-fc-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  .svc-fc-wrap .svc-fc { margin: 0; }
+  .svc-fc-wrap .svc-fc__body { display: block !important; max-height: none; }
   .svc-fc-wrap .svc-fc__arr { display: none; }
+
+  /* Marketplace: vertical list in sidebar */
+  .mkt-grid { grid-template-columns: 1fr; gap: .5rem; }
+  .mkt-tile {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: .85rem;
+    padding: .75rem 1rem;
+    min-height: auto;
+    text-align: left;
+  }
+  .mkt-tile__icon { flex-shrink: 0; }
+
+  /* Trust: 4 cols */
+  .trust-grid { grid-template-columns: repeat(4, 1fr); padding: 0; }
 
   /* Destinations screen: 3-column grid */
   #destList {
@@ -2598,11 +2682,7 @@ select.field-input {
     gap: 1.25rem;
     padding: 1.5rem 2rem;
   }
-
-  /* Marketplace: 4 cols */
-  .mkt-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
+  #destList .dest-full-card { margin: 0; }
 
   /* Booking: wider */
   #screenBook .screen-pad { max-width: 860px; margin: 0 auto; }
@@ -2620,17 +2700,21 @@ select.field-input {
   }
   .dest-modal__video-wrap { height: 50vh; }
 
-  /* Vendor homepage row: 4 cards */
+  /* Vendor homepage row: 2 cards in sidebar, grid in main */
   .hp-vendor-row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    overflow-x: visible;
-    padding: 0 2.5rem .5rem;
+    grid-template-columns: repeat(2, 1fr);
+    padding: 0 0 .5rem;
   }
 
   /* Chat: constrained width centered */
   #screenChat { display: flex; flex-direction: column; align-items: center; }
   #screenChat > * { width: 100%; max-width: 860px; }
+
+  /* AI bar: bigger on desktop */
+  .ai-bar { padding: 1.4rem 1.75rem 1.25rem; }
+  .ai-bar__text strong { font-size: 1.1rem; }
+  .ai-bar__text span { font-size: .78rem; }
+  .ai-bar__orb { font-size: 1.8rem; }
 
 }
 
@@ -2638,8 +2722,20 @@ select.field-input {
 @media (min-width: 1600px) {
   #app { grid-template-columns: 260px 1fr; }
 
+  .hc { height: 68vh; min-height: 520px; }
+  .hc__title { font-size: clamp(4rem, 5vw, 6.5rem); }
+
+  /* Wider right panel on very large screens */
+  .home-body { grid-template-columns: 1fr 380px; }
+
+  /* Destinations: 5-col grid */
+  .dest-row { grid-template-columns: repeat(5, 1fr); }
+  .dest-card__img { height: 170px; }
+
+  /* Destinations screen: 4-column grid */
   #destList { grid-template-columns: repeat(4, 1fr); }
-  .mkt-grid { grid-template-columns: repeat(5, 1fr); }
-  .hp-vendor-row { grid-template-columns: repeat(4, 1fr); }
+
+  /* Vendor row: 3 cards */
+  .hp-vendor-row { grid-template-columns: repeat(3, 1fr); }
 }
 

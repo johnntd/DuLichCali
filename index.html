@@ -60,7 +60,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-  <link rel="stylesheet" href="style.css?v=20260406">
+  <link rel="stylesheet" href="style.css?v=20260403b">
 </head>
 <body>
 <div id="app">
@@ -176,7 +176,10 @@
           <div class="hc__progress-bar" id="hcProgressBar"></div>
         </div>
 
-      </div>
+      </div><!-- /.hc -->
+
+      <!-- ── Below-hero layout wrapper (2-col on desktop) ─────── -->
+      <div class="home-body">
 
       <!-- ── Featured Vendors (personalized by region) ──────── -->
       <section id="hpFeatured" class="home-section" hidden>
@@ -195,8 +198,8 @@
         <div class="hp-avail-row" id="hpAvailChips" role="list"></div>
       </section>
 
-      <!-- Destination cards (horizontal scroll) -->
-      <section class="home-section">
+      <!-- Destination cards -->
+      <section class="home-section home-section--dest">
         <div class="section-hdr">
           <h2 class="section-title">Điểm Đến Nổi Bật</h2>
           <button class="see-all" onclick="switchScreen('screenDest')">Xem tất cả</button>
@@ -225,7 +228,7 @@
       </div>
 
       <!-- Travel Services — 3 expandable feature cards -->
-      <section class="home-section">
+      <section class="home-section home-section--svc">
         <div class="section-hdr"><h2 class="section-title">Dịch Vụ</h2></div>
 
         <div class="svc-fc-wrap">
@@ -329,7 +332,7 @@
       </section>
 
       <!-- ── Marketplace ──────────────────────────────────────── -->
-      <section class="home-section">
+      <section class="home-section home-section--mkt">
         <div class="section-hdr">
           <h2 class="section-title">Marketplace</h2>
           <a href="/marketplace" class="see-all">Xem tất cả</a>
@@ -370,7 +373,7 @@
       </section>
 
       <!-- Trust numbers -->
-      <section class="home-section">
+      <section class="home-section home-section--trust">
         <div class="trust-grid">
           <div class="trust-cell"><span class="trust-num">6+</span><span>Năm kinh nghiệm</span></div>
           <div class="trust-cell"><span class="trust-num">500+</span><span>Chuyến thành công</span></div>
@@ -400,6 +403,8 @@
           </a>
         </div>
       </div>
+
+      </div><!-- /.home-body -->
 
       <div class="screen-spacer"></div>
     </section>

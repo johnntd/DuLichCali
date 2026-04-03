@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0d2f50">
+  <title>Đăng Nhập · Tài Xế · Du Lịch Cali</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400&family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+  <style>
+    :root {
+      --navy-900: #0d2f50; --navy-800: #123b62; --navy-700: #194a78;
+      --gold: #f5a623; --gold-lt: #ffc857; --gold-dim: rgba(245,166,35,.14);
+      --cream: #fff8ee; --text: #c8e4f8; --muted: #6ab0d4;
+      --border: rgba(255,255,255,.12); --border-g: rgba(245,166,35,.35);
+      --danger: #f87171; --success: #4ade80;
+      --font-d: 'Bodoni Moda', Georgia, serif;
+      --font-b: 'Jost', system-ui, sans-serif;
+      --r: 8px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      min-height: 100%; font-family: var(--font-b);
+      background: var(--navy-900); color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      display: flex; align-items: center; justify-content: center;
+      padding: 2rem 1.25rem;
+      padding-top: calc(2rem + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+    }
+    #authChecking {
+      position: fixed; inset: 0; z-index: 200;
+      background: var(--navy-900);
+      display: flex; align-items: center; justify-content: center;
+    }
+    #authChecking.hidden { display: none; }
+    .va-spinner {
+      width: 28px; height: 28px;
+      border: 2px solid rgba(255,255,255,.12); border-top-color: var(--gold);
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .login-wrap { width: 100%; max-width: 380px; }
+    .login-brand { text-align: center; margin-bottom: 2rem; }
+    .login-brand__icon { font-size: 2.5rem; margin-bottom: .5rem; }
+    .login-brand__name { font-family: var(--font-d); font-size: 1.4rem; color: var(--cream); }
+    .login-brand__sub { font-size: .72rem; color: var(--muted); margin-top: .2rem; }
+    .login-card {
+      background: var(--navy-800); border: 1px solid var(--border-g);
+      border-radius: 16px; padding: 1.75rem 1.5rem;
+    }
+    .login-card-title {
+      font-size: .65rem; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 1.25rem;
+    }
+    .screen { }
+    .screen.hidden { display: none; }
+    .f-row { display: flex; flex-direction: column; gap: .35rem; margin-bottom: .9rem; }
+    .f-label {
+      font-size: .6rem; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase; color: var(--gold);
+    }
+    .f-input {
+      width: 100%; height: 52px;
+      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12);
+      border-radius: var(--r); color: var(--cream);
+      font-family: var(--font-b); font-size: .95rem;
+      padding: 0 14px; outline: none;
+      transition: border-color .2s, background .2s;
+    }
+    .f-input:focus { border-color: var(--gold); background: rgba(245,166,35,.05); }
+    .f-input::placeholder { color: var(--muted); }
+    .error-msg { font-size: .74rem; color: var(--danger); min-height: 1.2em; margin: .3rem 0 .6rem; }
+    .btn-primary {
+      width: 100%; height: 54px;
+      background: var(--gold); color: var(--navy-900);
+      font-family: var(--font-b); font-size: .83rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      border: none; border-radius: var(--r);
+      cursor: pointer; transition: background .2s; margin-top: .25rem;
+    }
+    .btn-primary:hover { background: var(--gold-lt); }
+    .btn-primary:disabled { opacity: .45; pointer-events: none; }
+    .btn-ghost {
+      width: 100%; height: 42px;
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--border); border-radius: var(--r);
+      cursor: pointer; font-family: var(--font-b); font-size: .75rem;
+      letter-spacing: .06em; text-transform: uppercase;
+      transition: all .18s; margin-top: .6rem;
+    }
+    .btn-ghost:hover { border-color: var(--text); color: var(--text); }
+    .divider {
+      display: flex; align-items: center; gap: .75rem; margin: 1rem 0;
+    }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .divider span { font-size: .65rem; color: var(--muted); white-space: nowrap; }
+    .setup-hint { font-size: .74rem; color: var(--muted); line-height: 1.55; margin-bottom: 1.25rem; }
+    .setup-hint strong { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<div id="authChecking"><div class="va-spinner"></div></div>
+
+<div class="login-wrap">
+  <div class="login-brand">
+    <div class="login-brand__icon">&#128663;</div>
+    <div class="login-brand__name">Driver Portal</div>
+    <div class="login-brand__sub">Du Lịch Cali · Tài Xế</div>
+  </div>
+
+  <!-- Login screen -->
+  <div id="loginScreen" class="login-card screen">
+    <div class="login-card-title">Đăng Nhập</div>
+    <div class="f-row">
+      <label class="f-label" for="loginEmail">Email</label>
+      <input class="f-input" type="email" id="loginEmail"
+        placeholder="email@example.com" autocomplete="email">
+    </div>
+    <div class="f-row">
+      <label class="f-label" for="loginPassword">Mật khẩu</label>
+      <input class="f-input" type="password" id="loginPassword"
+        placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <div class="error-msg" id="loginError"></div>
+    <button class="btn-primary" id="btnLogin" onclick="doLogin()">Đăng Nhập</button>
+    <div class="divider"><span>chưa có tài khoản?</span></div>
+    <button class="btn-ghost" onclick="showScreen('setup')">Tạo tài khoản tài xế &#8594;</button>
+  </div>
+
+  <!-- First-time setup screen -->
+  <div id="setupScreen" class="login-card screen hidden">
+    <div class="login-card-title">Tạo Tài Khoản Tài Xế</div>
+    <div class="setup-hint">
+      Dùng để đăng ký tài xế mới.<br>
+      Bạn cần <strong>mã tài xế</strong> do admin cung cấp để tiếp tục.
+    </div>
+    <div class="f-row">
+      <label class="f-label" for="setupName">Họ và tên</label>
+      <input class="f-input" type="text" id="setupName"
+        placeholder="Nguyễn Văn A" autocomplete="name">
+    </div>
+    <div class="f-row">
+      <label class="f-label" for="setupEmail">Email</label>
+      <input class="f-input" type="email" id="setupEmail"
+        placeholder="email@example.com" autocomplete="email">
+    </div>
+    <div class="f-row">
+      <label class="f-label" for="setupPassword">Mật khẩu (tối thiểu 6 ký tự)</label>
+      <input class="f-input" type="password" id="setupPassword"
+        placeholder="••••••••" autocomplete="new-password">
+    </div>
+    <div class="f-row">
+      <label class="f-label" for="setupCode">Mã tài xế</label>
+      <input class="f-input" type="text" id="setupCode"
+        placeholder="Mã do admin cung cấp" autocomplete="off">
+    </div>
+    <div class="error-msg" id="setupError"></div>
+    <button class="btn-primary" id="btnSetup" onclick="doSetup()">Tạo Tài Khoản</button>
+    <button class="btn-ghost" onclick="showScreen('login')">&#8592; Quay lại đăng nhập</button>
+  </div>
+</div>
+
+<script>
+  // ── Config ────────────────────────────────────────────────────────────────
+  // DRIVER_SETUP_CODE: shared secret given to all new drivers by admin.
+  // Change this to rotate access — old accounts remain valid.
+  var DRIVER_SETUP_CODE = 'dlcdriver2025';
+
+  // ── Firebase ──────────────────────────────────────────────────────────────
+  var firebaseConfig = {
+    apiKey:            'AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ',
+    authDomain:        'dulichcali-booking-calendar.firebaseapp.com',
+    projectId:         'dulichcali-booking-calendar',
+    storageBucket:     'dulichcali-booking-calendar.appspot.com',
+    messagingSenderId: '623460884698',
+    appId:             '1:623460884698:web:a08bd435c453a7b4db05e3'
+  };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  var db   = firebase.firestore();
+  var auth = firebase.auth();
+
+  // ── Auth state — redirect if already signed in as a driver ───────────────
+  auth.onAuthStateChanged(function (user) {
+    if (user) {
+      db.collection('driverUsers').doc(user.uid).get().then(function (doc) {
+        if (doc.exists) {
+          window.location.href = '/driver-admin';
+        } else {
+          // Signed in but not a driver account — sign out
+          auth.signOut().then(function () {
+            document.getElementById('authChecking').classList.add('hidden');
+          });
+        }
+      }).catch(function () {
+        document.getElementById('authChecking').classList.add('hidden');
+      });
+    } else {
+      document.getElementById('authChecking').classList.add('hidden');
+    }
+  });
+
+  // ── Screen switching ──────────────────────────────────────────────────────
+  function showScreen(name) {
+    document.getElementById('loginScreen').classList.toggle('hidden', name !== 'login');
+    document.getElementById('setupScreen').classList.toggle('hidden', name !== 'setup');
+    document.getElementById('loginError').textContent = '';
+    document.getElementById('setupError').textContent = '';
+  }
+
+  // ── Login ─────────────────────────────────────────────────────────────────
+  function doLogin() {
+    var email = document.getElementById('loginEmail').value.trim();
+    var pass  = document.getElementById('loginPassword').value;
+    var errEl = document.getElementById('loginError');
+    var btn   = document.getElementById('btnLogin');
+    errEl.textContent = '';
+    if (!email || !pass) { errEl.textContent = 'Vui lòng điền đầy đủ email và mật khẩu.'; return; }
+    btn.disabled = true;
+    auth.signInWithEmailAndPassword(email, pass).then(function (cred) {
+      return db.collection('driverUsers').doc(cred.user.uid).get().then(function (doc) {
+        if (!doc.exists) {
+          auth.signOut();
+          errEl.textContent = 'Tài khoản này chưa được đăng ký là tài xế.';
+          btn.disabled = false;
+        }
+        // redirect handled by onAuthStateChanged
+      });
+    }).catch(function (err) {
+      btn.disabled = false;
+      var msgs = {
+        'auth/user-not-found':     'Email không tồn tại.',
+        'auth/wrong-password':     'Mật khẩu không đúng.',
+        'auth/invalid-email':      'Email không hợp lệ.',
+        'auth/invalid-credential': 'Email hoặc mật khẩu không đúng.',
+        'auth/too-many-requests':  'Quá nhiều lần thử. Vui lòng thử lại sau.'
+      };
+      errEl.textContent = msgs[err.code] || ('Lỗi: ' + err.message);
+    });
+  }
+
+  // ── First-time driver setup ───────────────────────────────────────────────
+  function doSetup() {
+    var name  = document.getElementById('setupName').value.trim();
+    var email = document.getElementById('setupEmail').value.trim();
+    var pass  = document.getElementById('setupPassword').value;
+    var code  = document.getElementById('setupCode').value.trim();
+    var errEl = document.getElementById('setupError');
+    var btn   = document.getElementById('btnSetup');
+    errEl.textContent = '';
+
+    if (!name || !email || !pass || !code) {
+      errEl.textContent = 'Vui lòng điền đầy đủ thông tin.'; return;
+    }
+    if (code !== DRIVER_SETUP_CODE) {
+      errEl.textContent = 'Mã tài xế không đúng.'; return;
+    }
+    if (pass.length < 6) {
+      errEl.textContent = 'Mật khẩu phải có ít nhất 6 ký tự.'; return;
+    }
+
+    btn.disabled = true;
+    var newUid;
+    auth.createUserWithEmailAndPassword(email, pass).then(function (cred) {
+      newUid = cred.user.uid;
+      // Mapping doc: driverUsers/{uid} → { driverId }
+      // driverId = uid (simplest — one-to-one, no slug collision)
+      return db.collection('driverUsers').doc(newUid).set({
+        driverId:  newUid,
+        email:     email,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }).then(function () {
+      // Seed driver profile doc
+      return db.collection('drivers').doc(newUid).set({
+        authUid:           newUid,
+        email:             email,
+        fullName:          name,
+        phone:             '',
+        active:            false,
+        rideServiceEnabled: false,
+        regions:           [],
+        vehicle: {
+          make:  '',
+          model: '',
+          year:  '',
+          color: '',
+          seats: 4,
+          plate: ''
+        },
+        availability: {
+          timezone: 'America/Los_Angeles',
+          weeklySchedule: {
+            0: { enabled: false, start: '09:00', end: '22:00' },
+            1: { enabled: true,  start: '08:00', end: '22:00' },
+            2: { enabled: true,  start: '08:00', end: '22:00' },
+            3: { enabled: true,  start: '08:00', end: '22:00' },
+            4: { enabled: true,  start: '08:00', end: '22:00' },
+            5: { enabled: true,  start: '08:00', end: '22:00' },
+            6: { enabled: true,  start: '08:00', end: '22:00' }
+          },
+          blackoutDates: []
+        },
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }).then(function () {
+      window.location.href = '/driver-admin';
+    }).catch(function (err) {
+      btn.disabled = false;
+      var msgs = {
+        'auth/email-already-in-use': 'Email này đã được đăng ký. Vui lòng đăng nhập.',
+        'auth/invalid-email':        'Email không hợp lệ.',
+        'auth/weak-password':        'Mật khẩu quá yếu (tối thiểu 6 ký tự).'
+      };
+      errEl.textContent = msgs[err.code] || ('Lỗi: ' + err.message);
+    });
+  }
+
+  // ── Enter key ─────────────────────────────────────────────────────────────
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter') return;
+    var onSetup = !document.getElementById('setupScreen').classList.contains('hidden');
+    if (onSetup) doSetup(); else doLogin();
+  });
+</script>
+</body>
+</html>

@@ -152,7 +152,7 @@
         <!-- Transport row -->
         <div class="svc-category-label">Vận Chuyển</div>
         <div class="svc-row svc-row--4">
-          <div class="svc-card" onclick="selectServiceAndBook('pickup')">
+          <div class="svc-card" data-ride-gate onclick="selectServiceAndBook('pickup')">
             <div class="svc-card__icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
                 <polyline points="6 9 12 15 18 9"/><path d="M12 3v12M3 21h18"/>
@@ -161,7 +161,7 @@
             <strong>Đón Sân Bay</strong>
             <span class="svc-airport-count">6 sân bay</span>
           </div>
-          <div class="svc-card" onclick="selectServiceAndBook('dropoff')">
+          <div class="svc-card" data-ride-gate onclick="selectServiceAndBook('dropoff')">
             <div class="svc-card__icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
                 <polyline points="18 15 12 9 6 15"/><path d="M12 21V9M3 3h18"/>
@@ -393,7 +393,7 @@
               <span>4–12 khách</span>
             </div>
           </div>
-          <button class="btn btn--gold btn--full" style="margin-top:1rem" onclick="selectServiceAndBook('pickup')">Đặt Đưa Đón Ngay</button>
+          <button class="btn btn--gold btn--full" data-ride-gate style="margin-top:1rem" onclick="selectServiceAndBook('pickup')">Đặt Đưa Đón Ngay</button>
         </div>
       </div>
 
@@ -419,7 +419,7 @@
         </div>
         <!-- Airport transfer options -->
         <div class="service-choice-grid">
-          <button class="svc-choice" data-svc="pickup" onclick="selectService('pickup')">
+          <button class="svc-choice" data-svc="pickup" data-ride-gate onclick="selectService('pickup')">
             <div class="svc-choice__icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
                 <polyline points="6 9 12 15 18 9"/><path d="M12 3v12M3 21h18"/>
@@ -428,7 +428,7 @@
             <strong>Đón Sân Bay</strong>
             <span>Chúng tôi đón bạn từ sân bay</span>
           </button>
-          <button class="svc-choice" data-svc="dropoff" onclick="selectService('dropoff')">
+          <button class="svc-choice" data-svc="dropoff" data-ride-gate onclick="selectService('dropoff')">
             <div class="svc-choice__icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
                 <polyline points="18 15 12 9 6 15"/><path d="M12 21V9M3 3h18"/>
@@ -642,6 +642,7 @@
           <button class="chat-chip" data-q="Tour Yosemite mấy ngày?">Yosemite mấy ngày?</button>
           <button class="chat-chip" data-q="Số điện thoại liên hệ?">Số điện thoại?</button>
           <button class="chat-chip" data-q="What airports do you serve?">Airports served?</button>
+          <button class="chat-chip" data-q="Kiểm tra đơn đặt chỗ">Kiểm tra đơn hàng</button>
         </div>
 
         <!-- Messages -->

@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0d2f50">
+  <title>Driver Admin · Du Lịch Cali</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400&family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+  <style>
+    :root {
+      --navy-900: #0d2f50; --navy-800: #123b62; --navy-700: #194a78;
+      --gold: #f5a623; --gold-lt: #ffc857; --gold-dim: rgba(245,166,35,.14);
+      --cream: #fff8ee; --text: #c8e4f8; --muted: #6ab0d4;
+      --border: rgba(255,255,255,.12); --border-g: rgba(245,166,35,.35);
+      --danger: #f87171; --success: #4ade80;
+      --font-d: 'Bodoni Moda', Georgia, serif;
+      --font-b: 'Jost', system-ui, sans-serif;
+      --r: 8px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      min-height: 100%; font-family: var(--font-b);
+      background: var(--navy-900); color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Auth loading overlay ── */
+    #authChecking {
+      position: fixed; inset: 0; z-index: 200;
+      background: var(--navy-900);
+      display: flex; align-items: center; justify-content: center;
+    }
+    #authChecking.hidden { display: none; }
+    .va-spinner {
+      width: 28px; height: 28px;
+      border: 2px solid rgba(255,255,255,.12); border-top-color: var(--gold);
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Save toast ── */
+    #saveToast {
+      position: fixed; bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+      left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--navy-700); border: 1px solid var(--border-g);
+      color: var(--cream); font-size: .78rem; font-weight: 600;
+      padding: .55rem 1.2rem; border-radius: 999px;
+      transition: transform .28s cubic-bezier(.34,1.56,.64,1);
+      white-space: nowrap; z-index: 100;
+    }
+    #saveToast.show { transform: translateX(-50%) translateY(0); }
+    #saveToast.toast-err { background: rgba(248,113,113,.2); border-color: var(--danger); color: var(--danger); }
+
+    /* ── Page layout ── */
+    .page-wrap {
+      max-width: 520px; margin: 0 auto;
+      padding: 1.5rem 1rem 4rem;
+      padding-top: calc(1.5rem + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* ── Top bar ── */
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.75rem;
+    }
+    .top-bar__brand { font-family: var(--font-d); font-size: 1.2rem; color: var(--cream); }
+    .top-bar__sub { font-size: .65rem; color: var(--muted); margin-top: .1rem; letter-spacing: .06em; }
+    .btn-signout {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted); font-family: var(--font-b); font-size: .65rem;
+      font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      padding: .4rem .75rem; border-radius: 6px; cursor: pointer;
+      transition: all .18s;
+    }
+    .btn-signout:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* ── Status toggles ── */
+    .status-strip {
+      display: grid; grid-template-columns: 1fr 1fr; gap: .75rem;
+      margin-bottom: 1.5rem;
+    }
+    .status-card {
+      background: var(--navy-800); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1rem;
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; transition: border-color .2s;
+      user-select: none;
+    }
+    .status-card:hover { border-color: var(--border-g); }
+    .status-card.on { border-color: var(--success); background: rgba(74,222,128,.06); }
+    .status-card__label { font-size: .6rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: .2rem; }
+    .status-card__val { font-size: .82rem; font-weight: 600; color: var(--text); }
+    .status-card.on .status-card__val { color: var(--success); }
+    .toggle-pill {
+      width: 38px; height: 22px; border-radius: 999px;
+      background: rgba(255,255,255,.12); position: relative;
+      transition: background .2s; flex-shrink: 0;
+    }
+    .toggle-pill::after {
+      content: ''; position: absolute;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--muted); top: 3px; left: 3px;
+      transition: transform .2s, background .2s;
+    }
+    .status-card.on .toggle-pill { background: var(--success); }
+    .status-card.on .toggle-pill::after { transform: translateX(16px); background: #fff; }
+
+    /* ── Section cards ── */
+    .section {
+      background: var(--navy-800); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.25rem 1.1rem;
+      margin-bottom: 1rem;
+    }
+    .section-title {
+      font-size: .6rem; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 1rem;
+    }
+    .f-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .65rem; }
+    .f-grid .f-row { margin-bottom: 0; }
+    .f-row { margin-bottom: .75rem; }
+    .f-row:last-child { margin-bottom: 0; }
+    .f-label {
+      display: block; font-size: .58rem; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase; color: var(--gold);
+      margin-bottom: .3rem;
+    }
+    .f-input {
+      width: 100%; height: 46px;
+      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12);
+      border-radius: var(--r); color: var(--cream);
+      font-family: var(--font-b); font-size: .88rem;
+      padding: 0 12px; outline: none;
+      transition: border-color .2s, background .2s;
+    }
+    .f-input:focus { border-color: var(--gold); background: rgba(245,166,35,.05); }
+    .f-input::placeholder { color: var(--muted); }
+    .f-input[type="number"] { -moz-appearance: textfield; }
+    .f-input[type="number"]::-webkit-outer-spin-button,
+    .f-input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    /* ── Region checkboxes ── */
+    .region-list { display: flex; flex-direction: column; gap: .55rem; }
+    .region-item {
+      display: flex; align-items: center; gap: .75rem;
+      background: rgba(255,255,255,.04); border: 1px solid var(--border);
+      border-radius: var(--r); padding: .75rem 1rem;
+      cursor: pointer; user-select: none; transition: border-color .2s;
+    }
+    .region-item:hover { border-color: var(--border-g); }
+    .region-item.checked { border-color: var(--gold); background: var(--gold-dim); }
+    .region-check {
+      width: 18px; height: 18px; border-radius: 4px;
+      border: 1.5px solid var(--border); background: rgba(255,255,255,.05);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all .15s;
+    }
+    .region-item.checked .region-check {
+      background: var(--gold); border-color: var(--gold);
+    }
+    .region-check::after {
+      content: ''; display: none; width: 5px; height: 9px;
+      border: 2px solid var(--navy-900); border-top: none; border-left: none;
+      transform: rotate(45deg) translate(-1px, -1px);
+    }
+    .region-item.checked .region-check::after { display: block; }
+    .region-name { font-size: .85rem; font-weight: 600; color: var(--text); }
+    .region-sub { font-size: .65rem; color: var(--muted); margin-top: .05rem; }
+
+    /* ── Weekly schedule ── */
+    .day-list { display: flex; flex-direction: column; gap: .5rem; }
+    .day-row {
+      display: grid; grid-template-columns: 2.4rem 7rem 1fr 1fr;
+      align-items: center; gap: .6rem;
+    }
+    .day-toggle {
+      width: 32px; height: 19px; border-radius: 999px;
+      background: rgba(255,255,255,.1); position: relative;
+      cursor: pointer; transition: background .18s; flex-shrink: 0;
+    }
+    .day-toggle::after {
+      content: ''; position: absolute;
+      width: 13px; height: 13px; border-radius: 50%;
+      background: var(--muted); top: 3px; left: 3px;
+      transition: transform .18s, background .18s;
+    }
+    .day-toggle.on { background: var(--gold); }
+    .day-toggle.on::after { transform: translateX(13px); background: var(--navy-900); }
+    .day-name { font-size: .78rem; font-weight: 600; color: var(--text); }
+    .day-name.off { color: var(--muted); }
+    .day-time {
+      height: 36px; background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1); border-radius: 6px;
+      color: var(--cream); font-family: var(--font-b); font-size: .78rem;
+      padding: 0 8px; outline: none; width: 100%;
+      transition: border-color .18s; cursor: pointer;
+    }
+    .day-time:focus { border-color: var(--gold); }
+    .day-time:disabled { opacity: .3; cursor: not-allowed; }
+    .day-label { font-size: .58rem; color: var(--muted); text-align: center; letter-spacing: .06em; }
+
+    /* ── Blackout dates ── */
+    .blackout-list { display: flex; flex-wrap: wrap; gap: .4rem; min-height: 1rem; margin-bottom: .65rem; }
+    .blackout-chip {
+      display: inline-flex; align-items: center; gap: .3rem;
+      background: rgba(248,113,113,.12); border: 1px solid rgba(248,113,113,.3);
+      color: var(--danger); font-size: .7rem; border-radius: 999px;
+      padding: .2rem .6rem; cursor: default;
+    }
+    .blackout-chip button {
+      background: none; border: none; color: var(--danger);
+      cursor: pointer; font-size: .8rem; line-height: 1; padding: 0 0 0 .1rem;
+    }
+    .blackout-add { display: flex; gap: .5rem; align-items: center; margin-top: .5rem; }
+    .blackout-add .f-input { flex: 1; height: 38px; font-size: .8rem; }
+    .btn-sm {
+      height: 38px; padding: 0 .9rem;
+      background: var(--gold-dim); border: 1px solid var(--border-g);
+      color: var(--gold); font-family: var(--font-b); font-size: .72rem;
+      font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+      border-radius: 6px; cursor: pointer; white-space: nowrap;
+      transition: background .18s;
+    }
+    .btn-sm:hover { background: rgba(245,166,35,.25); }
+
+    /* ── Save button ── */
+    .btn-save {
+      width: 100%; height: 54px; margin-top: .5rem;
+      background: var(--gold); color: var(--navy-900);
+      font-family: var(--font-b); font-size: .85rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      border: none; border-radius: var(--r);
+      cursor: pointer; transition: background .2s;
+    }
+    .btn-save:hover { background: var(--gold-lt); }
+    .btn-save:disabled { opacity: .45; pointer-events: none; }
+  </style>
+</head>
+<body>
+
+<div id="authChecking"><div class="va-spinner"></div></div>
+
+<div class="page-wrap" id="mainContent" style="display:none">
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div>
+      <div class="top-bar__brand">Driver Portal</div>
+      <div class="top-bar__sub" id="driverEmail">Du Lịch Cali · Tài Xế</div>
+    </div>
+    <button class="btn-signout" onclick="doSignOut()">Đăng Xuất</button>
+  </div>
+
+  <!-- Status toggles -->
+  <div class="status-strip">
+    <div class="status-card" id="cardActive" onclick="toggleActive()">
+      <div>
+        <div class="status-card__label">Hoạt Động</div>
+        <div class="status-card__val" id="activeLabel">Tắt</div>
+      </div>
+      <div class="toggle-pill" id="pillActive"></div>
+    </div>
+    <div class="status-card" id="cardRide" onclick="toggleRide()">
+      <div>
+        <div class="status-card__label">Nhận Chuyến</div>
+        <div class="status-card__val" id="rideLabel">Tắt</div>
+      </div>
+      <div class="toggle-pill" id="pillRide"></div>
+    </div>
+  </div>
+
+  <!-- Profile section -->
+  <div class="section">
+    <div class="section-title">Thông Tin Cá Nhân</div>
+    <div class="f-row">
+      <label class="f-label" for="fName">Họ và tên</label>
+      <input class="f-input" type="text" id="fName" placeholder="Nguyễn Văn A">
+    </div>
+    <div class="f-row">
+      <label class="f-label" for="fPhone">Số điện thoại</label>
+      <input class="f-input" type="tel" id="fPhone" placeholder="714-555-0100">
+    </div>
+  </div>
+
+  <!-- Vehicle section -->
+  <div class="section">
+    <div class="section-title">Thông Tin Xe</div>
+    <div class="f-grid" style="margin-bottom:.65rem">
+      <div class="f-row">
+        <label class="f-label" for="fMake">Hãng xe</label>
+        <input class="f-input" type="text" id="fMake" placeholder="Toyota">
+      </div>
+      <div class="f-row">
+        <label class="f-label" for="fModel">Model</label>
+        <input class="f-input" type="text" id="fModel" placeholder="Sienna">
+      </div>
+    </div>
+    <div class="f-grid" style="margin-bottom:.65rem">
+      <div class="f-row">
+        <label class="f-label" for="fYear">Năm</label>
+        <input class="f-input" type="text" id="fYear" placeholder="2023">
+      </div>
+      <div class="f-row">
+        <label class="f-label" for="fColor">Màu xe</label>
+        <input class="f-input" type="text" id="fColor" placeholder="Pearl White">
+      </div>
+    </div>
+    <div class="f-grid">
+      <div class="f-row">
+        <label class="f-label" for="fSeats">Số ghế</label>
+        <input class="f-input" type="number" id="fSeats" placeholder="8" min="1" max="20">
+      </div>
+      <div class="f-row">
+        <label class="f-label" for="fPlate">Biển số</label>
+        <input class="f-input" type="text" id="fPlate" placeholder="7ABC123">
+      </div>
+    </div>
+  </div>
+
+  <!-- Service regions -->
+  <div class="section">
+    <div class="section-title">Khu Vực Phục Vụ</div>
+    <div class="region-list">
+      <div class="region-item" id="regionBayarea" onclick="toggleRegion('bayarea')">
+        <div class="region-check"></div>
+        <div>
+          <div class="region-name">Bay Area</div>
+          <div class="region-sub">SFO · SJC · OAK · Bắc California</div>
+        </div>
+      </div>
+      <div class="region-item" id="regionOc" onclick="toggleRegion('oc')">
+        <div class="region-check"></div>
+        <div>
+          <div class="region-name">Orange County</div>
+          <div class="region-sub">LAX · SNA · LGB · Nam California</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weekly schedule -->
+  <div class="section">
+    <div class="section-title">Lịch Làm Việc Hàng Tuần</div>
+    <div class="day-list" id="dayList"></div>
+  </div>
+
+  <!-- Blackout dates -->
+  <div class="section">
+    <div class="section-title">Ngày Nghỉ (Blackout Dates)</div>
+    <div class="blackout-list" id="blackoutList"></div>
+    <div class="blackout-add">
+      <input class="f-input" type="date" id="newBlackout">
+      <button class="btn-sm" onclick="addBlackout()">+ Thêm</button>
+    </div>
+  </div>
+
+  <button class="btn-save" id="btnSave" onclick="doSave()">Lưu Thay Đổi</button>
+
+</div>
+
+<div id="saveToast">&#10003; Đã lưu</div>
+
+<script>
+  // ── Firebase ──────────────────────────────────────────────────────────────
+  var firebaseConfig = {
+    apiKey:            'AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ',
+    authDomain:        'dulichcali-booking-calendar.firebaseapp.com',
+    projectId:         'dulichcali-booking-calendar',
+    storageBucket:     'dulichcali-booking-calendar.appspot.com',
+    messagingSenderId: '623460884698',
+    appId:             '1:623460884698:web:a08bd435c453a7b4db05e3'
+  };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  var db   = firebase.firestore();
+  var auth = firebase.auth();
+
+  // ── State ─────────────────────────────────────────────────────────────────
+  var _driverId = null;
+  var _state = {
+    active: false,
+    rideServiceEnabled: false,
+    regions: [],
+    blackoutDates: [],
+    weeklySchedule: {
+      0: { enabled: false, start: '09:00', end: '22:00' },
+      1: { enabled: true,  start: '08:00', end: '22:00' },
+      2: { enabled: true,  start: '08:00', end: '22:00' },
+      3: { enabled: true,  start: '08:00', end: '22:00' },
+      4: { enabled: true,  start: '08:00', end: '22:00' },
+      5: { enabled: true,  start: '08:00', end: '22:00' },
+      6: { enabled: true,  start: '08:00', end: '22:00' }
+    }
+  };
+
+  var DAYS_VI = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+  var DAYS_FULL = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+
+  // ── Auth gate ─────────────────────────────────────────────────────────────
+  auth.onAuthStateChanged(function (user) {
+    if (!user) {
+      window.location.href = '/driver-login';
+      return;
+    }
+    db.collection('driverUsers').doc(user.uid).get().then(function (doc) {
+      if (!doc.exists) {
+        auth.signOut().then(function () { window.location.href = '/driver-login'; });
+        return;
+      }
+      _driverId = doc.data().driverId || user.uid;
+      document.getElementById('driverEmail').textContent = user.email || '';
+      loadDriver();
+    }).catch(function () {
+      window.location.href = '/driver-login';
+    });
+  });
+
+  // ── Load driver doc ───────────────────────────────────────────────────────
+  function loadDriver() {
+    db.collection('drivers').doc(_driverId).get().then(function (doc) {
+      document.getElementById('authChecking').classList.add('hidden');
+      document.getElementById('mainContent').style.display = '';
+
+      if (!doc.exists) return; // new driver — show empty form
+
+      var d = doc.data();
+      document.getElementById('fName').value  = d.fullName || '';
+      document.getElementById('fPhone').value = d.phone || '';
+
+      var v = d.vehicle || {};
+      document.getElementById('fMake').value  = v.make  || '';
+      document.getElementById('fModel').value = v.model || '';
+      document.getElementById('fYear').value  = v.year  || '';
+      document.getElementById('fColor').value = v.color || '';
+      document.getElementById('fSeats').value = v.seats != null ? v.seats : 4;
+      document.getElementById('fPlate').value = v.plate || '';
+
+      _state.active             = !!d.active;
+      _state.rideServiceEnabled = !!d.rideServiceEnabled;
+      _state.regions            = Array.isArray(d.regions) ? d.regions.slice() : [];
+      _state.blackoutDates      = (d.availability && Array.isArray(d.availability.blackoutDates))
+                                    ? d.availability.blackoutDates.slice() : [];
+
+      var ws = (d.availability && d.availability.weeklySchedule) || {};
+      for (var i = 0; i <= 6; i++) {
+        if (ws[i]) {
+          _state.weeklySchedule[i] = {
+            enabled: !!ws[i].enabled,
+            start:   ws[i].start || '08:00',
+            end:     ws[i].end   || '22:00'
+          };
+        }
+      }
+
+      renderAll();
+    }).catch(function () {
+      document.getElementById('authChecking').classList.add('hidden');
+      document.getElementById('mainContent').style.display = '';
+    });
+  }
+
+  // ── Render helpers ────────────────────────────────────────────────────────
+  function renderAll() {
+    renderToggles();
+    renderRegions();
+    renderSchedule();
+    renderBlackout();
+  }
+
+  function renderToggles() {
+    setCard('cardActive', 'activeLabel', _state.active,             'Bật', 'Tắt');
+    setCard('cardRide',   'rideLabel',   _state.rideServiceEnabled, 'Bật', 'Tắt');
+  }
+
+  function setCard(cardId, labelId, on, textOn, textOff) {
+    document.getElementById(cardId).classList.toggle('on', on);
+    document.getElementById(labelId).textContent = on ? textOn : textOff;
+  }
+
+  function renderRegions() {
+    ['bayarea', 'oc'].forEach(function (rid) {
+      var el = document.getElementById('region' + rid.charAt(0).toUpperCase() + rid.slice(1));
+      if (el) el.classList.toggle('checked', _state.regions.indexOf(rid) !== -1);
+    });
+  }
+
+  function renderSchedule() {
+    var container = document.getElementById('dayList');
+    container.innerHTML = '';
+    for (var i = 0; i <= 6; i++) {
+      (function(day) {
+        var sched = _state.weeklySchedule[day];
+        var row = document.createElement('div');
+        row.className = 'day-row';
+        row.innerHTML =
+          '<div class="day-toggle' + (sched.enabled ? ' on' : '') + '" data-day="' + day + '"></div>' +
+          '<div class="day-name' + (!sched.enabled ? ' off' : '') + '">' + DAYS_FULL[day] + '</div>' +
+          '<input type="time" class="day-time" data-day="' + day + '" data-type="start" value="' + sched.start + '"' + (!sched.enabled ? ' disabled' : '') + '>' +
+          '<input type="time" class="day-time" data-day="' + day + '" data-type="end"   value="' + sched.end   + '"' + (!sched.enabled ? ' disabled' : '') + '>';
+        container.appendChild(row);
+      })(i);
+    }
+
+    container.querySelectorAll('.day-toggle').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var d = parseInt(el.getAttribute('data-day'));
+        _state.weeklySchedule[d].enabled = !_state.weeklySchedule[d].enabled;
+        renderSchedule();
+      });
+    });
+
+    container.querySelectorAll('.day-time').forEach(function(el) {
+      el.addEventListener('change', function() {
+        var d = parseInt(el.getAttribute('data-day'));
+        var t = el.getAttribute('data-type');
+        _state.weeklySchedule[d][t] = el.value;
+      });
+    });
+  }
+
+  function renderBlackout() {
+    var list = document.getElementById('blackoutList');
+    list.innerHTML = '';
+    _state.blackoutDates.slice().sort().forEach(function(d) {
+      var chip = document.createElement('div');
+      chip.className = 'blackout-chip';
+      chip.innerHTML = d + '<button onclick="removeBlackout(\'' + d + '\')">&times;</button>';
+      list.appendChild(chip);
+    });
+  }
+
+  // ── Toggle handlers ───────────────────────────────────────────────────────
+  function toggleActive() {
+    _state.active = !_state.active;
+    renderToggles();
+  }
+
+  function toggleRide() {
+    _state.rideServiceEnabled = !_state.rideServiceEnabled;
+    renderToggles();
+  }
+
+  function toggleRegion(rid) {
+    var idx = _state.regions.indexOf(rid);
+    if (idx === -1) { _state.regions.push(rid); }
+    else            { _state.regions.splice(idx, 1); }
+    renderRegions();
+  }
+
+  // ── Blackout dates ────────────────────────────────────────────────────────
+  function addBlackout() {
+    var val = document.getElementById('newBlackout').value;
+    if (!val) return;
+    if (_state.blackoutDates.indexOf(val) === -1) {
+      _state.blackoutDates.push(val);
+      renderBlackout();
+    }
+    document.getElementById('newBlackout').value = '';
+  }
+
+  function removeBlackout(d) {
+    var idx = _state.blackoutDates.indexOf(d);
+    if (idx !== -1) { _state.blackoutDates.splice(idx, 1); renderBlackout(); }
+  }
+
+  // ── Save ──────────────────────────────────────────────────────────────────
+  function doSave() {
+    var btn = document.getElementById('btnSave');
+    btn.disabled = true;
+
+    var weeklySchedule = {};
+    for (var i = 0; i <= 6; i++) {
+      weeklySchedule[i] = {
+        enabled: _state.weeklySchedule[i].enabled,
+        start:   _state.weeklySchedule[i].start,
+        end:     _state.weeklySchedule[i].end
+      };
+    }
+
+    var payload = {
+      fullName:           document.getElementById('fName').value.trim(),
+      phone:              document.getElementById('fPhone').value.trim(),
+      active:             _state.active,
+      rideServiceEnabled: _state.rideServiceEnabled,
+      regions:            _state.regions,
+      vehicle: {
+        make:  document.getElementById('fMake').value.trim(),
+        model: document.getElementById('fModel').value.trim(),
+        year:  document.getElementById('fYear').value.trim(),
+        color: document.getElementById('fColor').value.trim(),
+        seats: parseInt(document.getElementById('fSeats').value) || 4,
+        plate: document.getElementById('fPlate').value.trim()
+      },
+      availability: {
+        timezone:       'America/Los_Angeles',
+        weeklySchedule: weeklySchedule,
+        blackoutDates:  _state.blackoutDates
+      },
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    db.collection('drivers').doc(_driverId).update(payload).then(function () {
+      btn.disabled = false;
+      showToast('&#10003; Đã lưu', false);
+    }).catch(function (err) {
+      btn.disabled = false;
+      showToast('Lỗi: ' + err.message, true);
+    });
+  }
+
+  // ── Sign out ──────────────────────────────────────────────────────────────
+  function doSignOut() {
+    auth.signOut().then(function () { window.location.href = '/driver-login'; });
+  }
+
+  // ── Toast ─────────────────────────────────────────────────────────────────
+  var _toastTimer = null;
+  function showToast(msg, isErr) {
+    var el = document.getElementById('saveToast');
+    el.innerHTML = msg;
+    el.classList.toggle('toast-err', !!isErr);
+    el.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(function () { el.classList.remove('show'); }, 2600);
+  }
+
+  // ── Build schedule rows on first load ─────────────────────────────────────
+  renderSchedule();
+</script>
+</body>
+</html>

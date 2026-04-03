@@ -1026,12 +1026,64 @@ function toggleRegionPicker() {
   if (picker) picker.hidden = !picker.hidden;
 }
 
+// ── Ride-service availability gating ─────────────────────────
+// Queries the `drivers` collection for active, ride-enabled drivers whose
+// regions include the current region and who are available right now.
+// Fails open (shows ride service) if Firestore is unavailable.
+async function checkRideServiceAvailability(regionId) {
+  try {
+    const snap = await db.collection('drivers')
+      .where('active', '==', true)
+      .where('rideServiceEnabled', '==', true)
+      .get();
+
+    const now      = new Date();
+    const day      = now.getDay();                           // 0=Sun … 6=Sat
+    const nowMins  = now.getHours() * 60 + now.getMinutes();
+    const todayStr = now.toISOString().split('T')[0];        // YYYY-MM-DD
+
+    const hasAvailable = snap.docs.some(doc => {
+      const d = doc.data();
+      if (!(d.regions || []).includes(regionId)) return false;
+      if ((d.availability?.blackoutDates || []).includes(todayStr)) return false;
+      const sched = d.availability?.weeklySchedule?.[day];
+      if (!sched?.enabled) return false;
+      const [sh, sm] = (sched.start || '00:00').split(':').map(Number);
+      const [eh, em] = (sched.end   || '23:59').split(':').map(Number);
+      return nowMins >= sh * 60 + sm && nowMins <= eh * 60 + em;
+    });
+
+    updateRideServiceCards(hasAvailable);
+  } catch (_) {
+    updateRideServiceCards(true); // fail open — never hide service on error
+  }
+}
+
+// Toggle ride-gated UI elements based on driver availability.
+function updateRideServiceCards(available) {
+  document.querySelectorAll('[data-ride-gate]').forEach(el => {
+    el.classList.toggle('ride-unavailable', !available);
+    var existing = el.querySelector('.ride-unavail-badge');
+    if (!available && !existing) {
+      var badge = document.createElement('div');
+      badge.className = 'ride-unavail-badge';
+      badge.innerHTML = '<span>Tạm Nghỉ</span>';
+      el.appendChild(badge);
+    } else if (available && existing) {
+      existing.remove();
+    }
+  });
+}
+
 // ── DOMContentLoaded ─────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
 
-  // Region detection — fires updateRegionUI once region is known
+  // Region detection — fires updateRegionUI + availability check on each region change
   if (window.DLCRegion) {
-    DLCRegion.init(updateRegionUI);
+    DLCRegion.init(function(region) {
+      updateRegionUI(region);
+      checkRideServiceAvailability(region.id);
+    });
   }
 
   // Render data-driven UI

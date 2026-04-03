@@ -119,8 +119,11 @@ window.DLCRegion = {
     this._current = _DLC_REGIONS[_DLC_DEFAULT_REGION_ID];
     if (onRegionSet) onRegionSet(this._current);
 
-    // 2b. Try geolocation — updates UI if a better match is found
-    if (!('geolocation' in navigator)) return;
+    // 2b. Try GPS geolocation — updates UI if a better match is found
+    if (!('geolocation' in navigator)) {
+      this._tryIPGeolocation(onRegionSet);
+      return;
+    }
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -130,9 +133,35 @@ window.DLCRegion = {
           if (onRegionSet) onRegionSet(this._current);
         }
       },
-      () => { /* permission denied — keep default, no action needed */ },
+      () => {
+        // GPS denied or timed out — fall back to IP-based detection
+        // so Bay Area users don't silently default to Orange County.
+        this._tryIPGeolocation(onRegionSet);
+      },
       { timeout: 5000, maximumAge: 3600000 }
     );
+  },
+
+  /**
+   * IP-based region detection fallback (ipapi.co — free, HTTPS, no API key).
+   * Only fires when GPS is unavailable or denied. Silently no-ops on failure.
+   */
+  async _tryIPGeolocation(onRegionSet) {
+    try {
+      const ctrl = new AbortController();
+      setTimeout(() => ctrl.abort(), 4000);
+      const resp = await fetch('https://ipapi.co/json/', { signal: ctrl.signal });
+      const data = await resp.json();
+      if (typeof data.latitude === 'number' && typeof data.longitude === 'number') {
+        const detected = this._detectFromCoords(data.latitude, data.longitude);
+        if (detected.id !== this._current.id) {
+          this._current = detected;
+          if (onRegionSet) onRegionSet(this._current);
+        }
+      }
+    } catch (_) {
+      // IP lookup failed — keep default region
+    }
   },
 
   /**

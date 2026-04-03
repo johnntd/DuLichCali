@@ -212,13 +212,35 @@
     <button class="btn-primary" id="btnSetup" onclick="doSetup()">Tạo Tài Khoản</button>
     <button class="btn-ghost" onclick="showScreen('login')">&#8592; Quay lại đăng nhập</button>
   </div>
+
+  <!-- Claim screen — shown when an existing Auth account has no vendor mapping -->
+  <div id="claimScreen" class="login-card screen hidden">
+    <div class="login-card-title">Liên Kết Tài Khoản</div>
+    <div class="setup-hint">
+      Tài khoản email này tồn tại nhưng chưa được liên kết với cửa hàng.<br>
+      Nhập <strong>mã thiết lập</strong> để hoàn tất liên kết.
+    </div>
+    <div class="f-row">
+      <label class="f-label">Email đã đăng nhập</label>
+      <div id="claimEmailDisplay" style="font-size:.85rem;color:var(--muted);padding:.5rem 0;"></div>
+    </div>
+    <div class="f-row">
+      <label class="f-label" for="claimCode">Mã thiết lập</label>
+      <input class="f-input" type="text" id="claimCode"
+        placeholder="Mã do admin cung cấp"
+        autocomplete="off" inputmode="numeric">
+    </div>
+    <div class="error-msg" id="claimError"></div>
+    <button class="btn-primary" id="btnClaim" onclick="doClaim()">Liên Kết Tài Khoản</button>
+    <button class="btn-ghost" onclick="doSignOutAndGoLogin()">&#8592; Đăng xuất · Dùng email khác</button>
+  </div>
 </div>
 
 <script>
   // ── Per-vendor config ─────────────────────────────────────────────────────
   // Each vendor's login page has their own VENDOR_ID + SETUP_CODE.
-  // SETUP_CODE is used once to create the first admin account for this vendor.
-  // After that, it's login-only — SETUP_CODE cannot create a second account.
+  // SETUP_CODE is used once to create the first admin account for this vendor,
+  // OR to claim an existing Auth account that has no vendor mapping.
   var VENDOR_ID  = 'nha-bep-cua-emily';
   var SETUP_CODE = '2438';
 
@@ -238,18 +260,22 @@
   // ── Auth state check — redirect if already signed in ─────────────────────
   auth.onAuthStateChanged(function (user) {
     if (user) {
-      // Already signed in — verify they own this vendor then redirect
       db.collection('vendorUsers').doc(user.uid).get().then(function (doc) {
         if (doc.exists && doc.data().vendorId === VENDOR_ID) {
+          // Fully linked — go to admin
           window.location.href = '/vendor-admin';
+        } else if (!doc.exists) {
+          // Auth user exists but no vendor mapping — offer claim flow
+          document.getElementById('authChecking').classList.add('hidden');
+          var display = document.getElementById('claimEmailDisplay');
+          if (display) display.textContent = user.email || '';
+          showScreen('claim');
         } else {
-          // Signed in but not for this vendor — sign out and show login
+          // Mapped to a different vendor — sign out
           auth.signOut().then(function () {
             document.getElementById('authChecking').classList.add('hidden');
-            if (doc.exists) {
-              document.getElementById('loginError').textContent =
-                'Tài khoản này không có quyền truy cập trang vendor này.';
-            }
+            document.getElementById('loginError').textContent =
+              'Tài khoản này không có quyền truy cập trang vendor này.';
           });
         }
       }).catch(function () {
@@ -264,8 +290,10 @@
   function showScreen(name) {
     document.getElementById('loginScreen').classList.toggle('hidden', name !== 'login');
     document.getElementById('setupScreen').classList.toggle('hidden', name !== 'setup');
+    document.getElementById('claimScreen').classList.toggle('hidden', name !== 'claim');
     document.getElementById('loginError').textContent = '';
     document.getElementById('setupError').textContent = '';
+    if (document.getElementById('claimError')) document.getElementById('claimError').textContent = '';
   }
 
   // ── Login ──────────────────────────────────────────────────────────────────
@@ -281,14 +309,20 @@
     }
     btn.disabled = true;
     auth.signInWithEmailAndPassword(email, pass).then(function (cred) {
-      // Verify this account is mapped to VENDOR_ID
       return db.collection('vendorUsers').doc(cred.user.uid).get().then(function (doc) {
-        if (!doc.exists || doc.data().vendorId !== VENDOR_ID) {
+        if (doc.exists && doc.data().vendorId === VENDOR_ID) {
+          window.location.href = '/vendor-admin';
+        } else if (!doc.exists) {
+          // Existing Auth account, no vendor mapping — offer claim flow
+          var display = document.getElementById('claimEmailDisplay');
+          if (display) display.textContent = email;
+          showScreen('claim');
+          btn.disabled = false;
+        } else {
+          // Mapped to a different vendor
           auth.signOut();
           errEl.textContent = 'Tài khoản này không có quyền truy cập trang vendor này.';
           btn.disabled = false;
-        } else {
-          window.location.href = '/vendor-admin';
         }
       });
     }).catch(function (err) {
@@ -327,27 +361,17 @@
     }
 
     btn.disabled = true;
-    // Check if a vendorUsers doc for this vendorId already exists
-    // (prevent creating multiple admin accounts via setup screen)
-    db.collection('vendorUsers').where('vendorId', '==', VENDOR_ID).limit(1).get()
-      .then(function (snap) {
-        if (!snap.empty) {
-          errEl.textContent = 'Tài khoản cho cửa hàng này đã tồn tại. Vui lòng đăng nhập.';
-          btn.disabled = false;
-          return;
-        }
-        // Create Firebase Auth account
-        return auth.createUserWithEmailAndPassword(email, pass).then(function (cred) {
-          // Write vendor mapping
-          return db.collection('vendorUsers').doc(cred.user.uid).set({
-            vendorId:  VENDOR_ID,
-            email:     email,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-        }).then(function () {
-          window.location.href = '/vendor-admin';
-        });
-      })
+    // Create Firebase Auth account (allow multiple admins per vendor)
+    auth.createUserWithEmailAndPassword(email, pass).then(function (cred) {
+      // Write vendor mapping
+      return db.collection('vendorUsers').doc(cred.user.uid).set({
+        vendorId:  VENDOR_ID,
+        email:     email,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }).then(function () {
+      window.location.href = '/vendor-admin';
+    })
       .catch(function (err) {
         btn.disabled = false;
         var msgs = {
@@ -359,11 +383,41 @@
       });
   }
 
+  // ── Claim existing auth account ───────────────────────────────────────────
+  // Used when vendor already has a Firebase Auth account but no vendorUsers
+  // mapping doc — e.g. pre-email-auth migration (legacy vendors like Loan).
+  function doClaim() {
+    var code  = document.getElementById('claimCode').value.trim();
+    var errEl = document.getElementById('claimError');
+    var btn   = document.getElementById('btnClaim');
+    errEl.textContent = '';
+    if (!code) { errEl.textContent = 'Vui lòng nhập mã thiết lập.'; return; }
+    if (code !== SETUP_CODE) { errEl.textContent = 'Mã thiết lập không đúng.'; return; }
+    var user = auth.currentUser;
+    if (!user) { showScreen('login'); return; }
+    btn.disabled = true;
+    db.collection('vendorUsers').doc(user.uid).set({
+      vendorId:  VENDOR_ID,
+      email:     user.email || '',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function () {
+      window.location.href = '/vendor-admin';
+    }).catch(function (err) {
+      btn.disabled = false;
+      errEl.textContent = 'Lỗi: ' + err.message;
+    });
+  }
+
+  function doSignOutAndGoLogin() {
+    auth.signOut().then(function () { showScreen('login'); });
+  }
+
   // ── Enter key support ─────────────────────────────────────────────────────
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Enter') return;
     var onSetup = !document.getElementById('setupScreen').classList.contains('hidden');
-    if (onSetup) doSetup(); else doLogin();
+    var onClaim = !document.getElementById('claimScreen').classList.contains('hidden');
+    if (onSetup) doSetup(); else if (onClaim) doClaim(); else doLogin();
   });
 </script>
 </body>

@@ -1847,3 +1847,33 @@ select.field-input {
 @media (min-width: 900px) {
   .hl-sheet__card { max-width: 500px; margin: 0 auto; border-radius: var(--r-xl) var(--r-xl) 0 0; }
 }
+
+/* ── Ride service availability gating ─────────────────────────────────────── */
+[data-ride-gate] { position: relative; }
+[data-ride-gate].ride-unavailable {
+  opacity: .45;
+  pointer-events: none;
+  cursor: default;
+}
+.ride-unavail-badge {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(13,47,80,.55);
+  border-radius: inherit;
+  pointer-events: none;
+}
+.ride-unavail-badge span {
+  background: rgba(248,113,113,.15);
+  border: 1px solid rgba(248,113,113,.4);
+  color: #f87171;
+  font-size: .6rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: .2rem .55rem;
+  border-radius: 4px;
+}
+

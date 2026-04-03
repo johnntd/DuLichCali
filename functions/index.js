@@ -328,20 +328,20 @@ function httpsPost(hostname, path, headers, bodyObj) {
   });
 }
 
-async function serverCallClaude(system, userContent, jsonMode, claudeKey) {
+async function serverCallClaude(system, userContent, jsonMode, claudeKey, maxTokens) {
   const sysPrompt = jsonMode ? system + '\n\nRespond ONLY with valid JSON. No markdown.' : system;
   const raw = await httpsPost('api.anthropic.com', '/v1/messages',
     { 'x-api-key': claudeKey, 'anthropic-version': '2023-06-01' },
-    { model: 'claude-haiku-4-5-20251001', max_tokens: 1200, system: sysPrompt,
+    { model: 'claude-haiku-4-5-20251001', max_tokens: maxTokens || 1200, system: sysPrompt,
       messages: [{ role: 'user', content: userContent }] }
   );
   const d = JSON.parse(raw);
   return d.content[0].text;
 }
 
-async function serverCallOpenAI(system, userContent, jsonMode, openaiKey) {
+async function serverCallOpenAI(system, userContent, jsonMode, openaiKey, maxTokens) {
   const sysPrompt = jsonMode ? system + '\n\nRespond ONLY with valid JSON.' : system;
-  const body = { model: 'gpt-4o-mini', max_tokens: 1200,
+  const body = { model: 'gpt-4o-mini', max_tokens: maxTokens || 1200,
     messages: [{ role: 'system', content: sysPrompt }, { role: 'user', content: userContent }] };
   if (jsonMode) body.response_format = { type: 'json_object' };
   const raw = await httpsPost('api.openai.com', '/v1/chat/completions',
@@ -436,5 +436,88 @@ exports.aiOrchestrate = onCall(
       latency_ms:  Date.now() - t0,
       error:       null,
     };
+  }
+);
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  AI PROXY — Thin relay for vendor dashboard marketing content generation
+//
+//  Called by marketingEngine.js when no local dev key is present.
+//  Accepts: { provider, system, messages, maxTokens, jsonMode }
+//  Returns: { ok: true, text } | { ok: false, vendorMessage, debugCode }
+//
+//  Auth required — vendor must be logged in via Firebase Auth.
+// ══════════════════════════════════════════════════════════════════════════════
+
+exports.aiProxy = onCall(
+  {
+    region: 'us-central1',
+    secrets: [OPENAI_API_KEY, GEMINI_API_KEY, CLAUDE_API_KEY],
+    timeoutSeconds: 55,
+    cors: true,
+  },
+  async (request) => {
+    // ── Auth gate ───────────────────────────────────────────────────────────
+    if (!request.auth) {
+      return { ok: false, vendorMessage: 'Vui lòng đăng nhập lại để sử dụng AI.', debugCode: 'UNAUTHENTICATED' };
+    }
+
+    const { provider, system, messages, maxTokens, jsonMode } = request.data || {};
+
+    if (!provider || !system) {
+      return { ok: false, vendorMessage: 'Yêu cầu không hợp lệ.', debugCode: 'INVALID_REQUEST' };
+    }
+
+    const claudeKey = CLAUDE_API_KEY.value();
+    const openaiKey = OPENAI_API_KEY.value();
+    const geminiKey = GEMINI_API_KEY.value();
+
+    // Build user content from messages array
+    const userContent = (messages || []).map(m => m.content).join('\n') || 'Generate content.';
+    const mt = maxTokens || 1000;
+
+    try {
+      let text;
+
+      if (provider === 'claude') {
+        if (!claudeKey) return { ok: false, vendorMessage: 'Dịch vụ AI tạm thời không khả dụng.', debugCode: 'NO_CLAUDE_KEY' };
+        text = await serverCallClaude(system, userContent, jsonMode !== false, claudeKey, mt);
+      } else if (provider === 'openai') {
+        if (!openaiKey) return { ok: false, vendorMessage: 'Dịch vụ AI tạm thời không khả dụng.', debugCode: 'NO_OPENAI_KEY' };
+        text = await serverCallOpenAI(system, userContent, jsonMode !== false, openaiKey, mt);
+      } else if (provider === 'gemini') {
+        if (!geminiKey) return { ok: false, vendorMessage: 'Dịch vụ AI tạm thời không khả dụng.', debugCode: 'NO_GEMINI_KEY' };
+        const prompt = system + '\n\nRespond ONLY with valid JSON.\n\n' + userContent;
+        text = await serverCallGemini(prompt, geminiKey);
+      } else {
+        return { ok: false, vendorMessage: 'Nhà cung cấp AI không được hỗ trợ.', debugCode: 'UNKNOWN_PROVIDER' };
+      }
+
+      return { ok: true, text };
+
+    } catch (err) {
+      console.error(`[aiProxy] ${provider} error for uid=${request.auth.uid}:`, err.message);
+
+      // Classify error for vendor-friendly messages
+      const msg = err.message || '';
+      let vendorMessage = 'AI không phản hồi. Vui lòng thử lại sau.';
+      let debugCode = 'AI_ERROR';
+
+      if (/rate.?limit|429/i.test(msg)) {
+        vendorMessage = 'AI đang bận. Vui lòng thử lại sau 30 giây.';
+        debugCode = 'RATE_LIMIT';
+      } else if (/401|unauthorized|invalid.*key/i.test(msg)) {
+        vendorMessage = 'Lỗi xác thực dịch vụ AI. Liên hệ hỗ trợ.';
+        debugCode = 'AUTH_ERROR';
+      } else if (/timeout|ETIMEDOUT|ECONNRESET/i.test(msg)) {
+        vendorMessage = 'AI mất quá nhiều thời gian. Vui lòng thử lại.';
+        debugCode = 'TIMEOUT';
+      } else if (/network|ENOTFOUND|fetch/i.test(msg)) {
+        vendorMessage = 'Lỗi kết nối mạng. Kiểm tra internet và thử lại.';
+        debugCode = 'NETWORK_ERROR';
+      }
+
+      return { ok: false, vendorMessage, debugCode };
+    }
   }
 );

@@ -2351,3 +2351,225 @@ select.field-input {
 .svc-fc__cta svg { width: 15px; height: 15px; }
 .svc-fc__cta:hover { background: var(--gold-lt); }
 
+/* ══════════════════════════════════════════════════════════════
+   RESPONSIVE — TABLET (768px+) & DESKTOP (1200px+)
+   Replaces the narrow 500px phone-cap with a real multi-column
+   adaptive layout.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Tablet: 768px – 1199px ─────────────────────────────────── */
+@media (min-width: 768px) {
+
+  /* Override the 900px phone-cap rule */
+  #app {
+    max-width: none !important;
+    border-left: none !important;
+    border-right: none !important;
+  }
+
+  /* Wider hero */
+  .hc { height: 52vh; min-height: 360px; }
+  .hc__title { font-size: clamp(2.4rem, 5vw, 4rem); }
+
+  /* Section padding */
+  .home-section { padding: 2rem 2rem .75rem; }
+
+  /* Service cards: 3-column grid when wrapper is present */
+  .svc-fc-wrap {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  /* Un-expand all cards on tablet (always show open on big screen) */
+  .svc-fc-wrap .svc-fc__body { display: block !important; }
+  .svc-fc-wrap .svc-fc__arr { display: none; }
+
+  /* Destination row: 4-up scroll */
+  .dest-card { flex: 0 0 220px; }
+  .dest-card__img { height: 150px; }
+
+  /* Destinations screen: 2-column grid */
+  #destList {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+  }
+  #destList .dest-full-card { margin: 0; }
+
+  /* Marketplace grid: 3 cols */
+  .mkt-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* Booking wizard: center + cap width */
+  #screenBook .screen-pad { max-width: 740px; margin: 0 auto; }
+  .wiz-step { padding: 2rem 2.5rem; }
+
+  /* Chat: center */
+  #screenChat { display: flex; flex-direction: column; align-items: center; }
+  #screenChat > * { width: 100%; max-width: 760px; }
+
+  /* Vendor homepage row: 2-column cards */
+  .hp-vendor-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    overflow-x: visible;
+    padding: 0 2rem .5rem;
+  }
+  .hp-vendor-card { flex: none; width: auto; }
+
+}
+
+/* ── Desktop: 1200px+ ────────────────────────────────────────── */
+@media (min-width: 1200px) {
+
+  /* ── App Shell: CSS Grid with left sidebar ── */
+  #app {
+    display: grid;
+    grid-template-areas:
+      "header  header"
+      "sidenav main";
+    grid-template-columns: 240px 1fr;
+    grid-template-rows: var(--app-bar-h) 1fr;
+    height: 100dvh;
+    height: 100vh;
+  }
+
+  .app-bar {
+    grid-area: header;
+    height: var(--app-bar-h);
+  }
+
+  .app-main {
+    grid-area: main;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar Nav (was bottom-nav) ── */
+  .bottom-nav {
+    grid-area: sidenav;
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    padding-bottom: 0;
+    border-top: none;
+    border-right: 1px solid var(--border-g);
+    overflow-y: auto;
+    padding-top: 1rem;
+  }
+
+  .nav-tab {
+    flex: none;
+    flex-direction: row;
+    justify-content: flex-start;
+    height: 48px;
+    padding: 0 1.25rem;
+    gap: .75rem;
+    font-size: .76rem;
+    border-left: 3px solid transparent;
+    text-align: left;
+  }
+  .nav-tab--active {
+    border-left-color: var(--gold);
+    background: rgba(245,166,35,.08);
+  }
+  .nav-tab svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+  /* Center book button becomes a horizontal pill in sidebar */
+  .nav-tab--center {
+    overflow: visible;
+    margin: .75rem 1rem;
+    height: auto;
+    padding: 0;
+    flex-direction: row;
+    justify-content: center;
+  }
+  .nav-center-btn {
+    width: 100%;
+    height: 44px;
+    border-radius: var(--r-md);
+    margin-top: 0;
+    justify-content: center;
+    gap: .5rem;
+  }
+  .nav-center-btn::after {
+    content: "Đặt chỗ";
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    color: var(--navy-900);
+  }
+  /* Hide the span "Đặt chỗ" text below the circle — shown via ::after instead */
+  .nav-tab--center > span { display: none; }
+
+  /* ── Content Screens on Desktop ── */
+  .screen { border-radius: 0; }
+
+  /* Home: wider content */
+  .home-section { padding: 2rem 2.5rem .75rem; }
+  .hc { height: 46vh; min-height: 320px; }
+  .hc__title { font-size: clamp(2.8rem, 4.5vw, 5rem); }
+
+  /* Service cards: 3 cols, always expanded */
+  .svc-fc-wrap {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+  .svc-fc-wrap .svc-fc__body { display: block !important; }
+  .svc-fc-wrap .svc-fc__arr { display: none; }
+
+  /* Destinations screen: 3-column grid */
+  #destList {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    padding: 1.5rem 2rem;
+  }
+
+  /* Marketplace: 4 cols */
+  .mkt-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  /* Booking: wider */
+  #screenBook .screen-pad { max-width: 860px; margin: 0 auto; }
+  .wiz-step { padding: 2.5rem 3rem; }
+
+  /* Destination modal: wider + centered */
+  .dest-modal {
+    max-width: 1000px !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) translateY(100%) !important;
+  }
+  .dest-modal--open {
+    transform: translateX(-50%) translateY(0) !important;
+  }
+  .dest-modal__video-wrap { height: 50vh; }
+
+  /* Vendor homepage row: 4 cards */
+  .hp-vendor-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    overflow-x: visible;
+    padding: 0 2.5rem .5rem;
+  }
+
+  /* Chat: constrained width centered */
+  #screenChat { display: flex; flex-direction: column; align-items: center; }
+  #screenChat > * { width: 100%; max-width: 860px; }
+
+}
+
+/* ── Wide: 1600px+ ──────────────────────────────────────────── */
+@media (min-width: 1600px) {
+  #app { grid-template-columns: 260px 1fr; }
+
+  #destList { grid-template-columns: repeat(4, 1fr); }
+  .mkt-grid { grid-template-columns: repeat(5, 1fr); }
+  .hp-vendor-row { grid-template-columns: repeat(4, 1fr); }
+}
+

@@ -1,0 +1,18 @@
+{
+  "vendorName":      "Nhà Bếp Của Emily",
+  "vendorTagline":   "Homemade Vietnamese Kitchen · San Jose",
+  "itemName":        "Chuối Đậu Nấu Ốc",
+  "itemNameEn":      "Northern Vietnamese Snail Stew",
+  "itemDescription": "Ốc tươi, đậu phụ và chuối xanh — ninh trong nước dùng nghệ thơm, thêm rau thơm và ớt. Đậm đà, chua nhẹ, ấm lòng.",
+  "itemImage":       "nha-bep-emily-chuoi-dau-nau-oc.jpg",
+  "pricePerUnit":    15,
+  "unit":            "phần",
+  "minimumOrderQty": 1,
+  "variants":        [],
+  "tags":            ["Miền Bắc", "Homemade", "Thảo Dược", "Comfort Food", "Limited Batch"],
+  "ctaText":         "Đặt Ngay",
+  "ctaSubtext":      "Authentic Northern Vietnamese · Limited Batch",
+  "phone":           "408-931-2438",
+  "promoText":       "Fresh snails · Turmeric broth · Handmade daily",
+  "accentColor":     "#d97706"
+}

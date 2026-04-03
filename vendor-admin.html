@@ -24,6 +24,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
   <script src="aiOrchestrator.js?v=20260406"></script>
   <script src="marketingEngine.js?v=20260406"></script>
 
@@ -883,6 +884,147 @@
       cursor: pointer;
     }
     .focal-pct { font-size: .67rem; color: var(--text); width: 28px; text-align: right; }
+
+    /* ── Item thumbnail in admin list ──────────────────────────── */
+    .va-item-card {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      grid-template-rows: auto auto;
+      gap: 0 .75rem;
+      align-items: start;
+    }
+    .va-item-thumb {
+      grid-row: 1 / 3;
+      width: 72px; height: 72px;
+      border-radius: 8px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .va-item-thumb img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+    }
+    .va-item-thumb--empty { color: var(--muted); font-size: 1.4rem; }
+    .va-tag--video { background: rgba(99,102,241,.12); border-color: rgba(99,102,241,.3); color: #a5b4fc; }
+
+    /* Undo grid for action row (full-width) */
+    .va-item-card__header { grid-column: 2; }
+    .va-item-card__desc   { grid-column: 2; }
+    .va-item-card__actions { grid-column: 1 / 3; margin-top: .5rem; }
+    .ai-result-panel { grid-column: 1 / 3; }
+
+    /* ══════════════════════════════════════════════════════════════
+       RESPONSIVE — TABLET (768px+) & DESKTOP (1200px+)
+       ══════════════════════════════════════════════════════════════ */
+
+    /* ── Tablet: 768px – 1199px ─────────────────────────────────── */
+    @media (min-width: 768px) {
+      #app { max-width: none; }
+      .va-body { max-width: none !important; padding: 1.25rem 2rem 4rem; }
+
+      /* Menu items: 2-column grid */
+      .va-item-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+      .va-item-card { margin-bottom: 0; }
+
+      /* Drawer: centered, not full-width */
+      #drawer { max-width: 620px; left: 50%; right: auto; width: 100%;
+                transform: translateX(-50%) translateY(100%) !important; }
+      #drawer.open { transform: translateX(-50%) translateY(0) !important; }
+      #fabAdd { right: calc(50% - 310px + 1.5rem); }
+    }
+
+    /* ── Desktop: 1200px+ ────────────────────────────────────────── */
+    @media (min-width: 1200px) {
+      /* App: stretch full viewport */
+      #app { max-width: none; }
+
+      /* Remove centered cap from tablet rule */
+      .va-body {
+        max-width: none !important;
+        display: grid;
+        grid-template-columns: 248px 1fr;
+        grid-template-rows: auto auto auto 1fr;
+        gap: 0 1.5rem;
+        padding: 1.5rem 2rem 2rem;
+        align-items: start;
+        min-height: 0;
+      }
+
+      /* Link strip spans full width */
+      .va-link-strip { grid-column: 1 / 3; margin-bottom: 1rem; }
+
+      /* Capacity card: sidebar column 1 */
+      #dailyCapCard { grid-column: 1; grid-row: 2; }
+
+      /* Tab buttons: sidebar column 1, vertical stack */
+      .va-tabs {
+        grid-column: 1;
+        grid-row: 3;
+        flex-direction: column;
+        gap: .25rem;
+        margin-bottom: 0;
+        margin-top: .75rem;
+        position: sticky;
+        top: 80px;
+      }
+      .va-tab {
+        flex: none;
+        height: 42px;
+        text-align: left;
+        justify-content: flex-start;
+        padding: 0 1rem;
+        border-radius: 8px;
+        border-left: 3px solid transparent;
+        border-top: 1px solid var(--border);
+        border-right: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+      }
+      .va-tab.active {
+        border-left-color: var(--gold);
+        border-top-color: var(--border-g);
+        border-right-color: var(--border-g);
+        border-bottom-color: var(--border-g);
+      }
+
+      /* Tab content panels: main column 2, rows 2-4 */
+      #menuTab    { grid-column: 2; grid-row: 2 / 5; }
+      #ordersTab  { grid-column: 2; grid-row: 2 / 5; }
+      #notifsTab  { grid-column: 2; grid-row: 2 / 5; }
+      #settingsTab{ grid-column: 2; grid-row: 2 / 5; }
+
+      /* Menu items: 3-column grid in main content area */
+      .va-item-list { grid-template-columns: repeat(3, 1fr); }
+
+      /* Drawer: slides from right instead of bottom on desktop */
+      #drawerOverlay { background: rgba(0,0,0,.45); }
+      #drawer {
+        top: 0; bottom: 0; left: auto;
+        right: 0 !important;
+        max-width: 520px !important;
+        max-height: none;
+        border-radius: 0;
+        border-top: none;
+        border-left: 1px solid var(--border-g);
+        transform: translateX(100%) !important;
+      }
+      #drawer.open { transform: translateX(0) !important; }
+      .drawer-handle { display: none; }
+
+      /* FAB: fixed bottom-right */
+      #fabAdd { right: 2rem; bottom: 2rem; }
+
+      /* Wider form layout in drawer */
+      .drawer-form { padding: 1.5rem 1.75rem 2rem; }
+    }
+
+    /* ── Wide: 1600px+ ──────────────────────────────────────────── */
+    @media (min-width: 1600px) {
+      .va-body { grid-template-columns: 270px 1fr; }
+      .va-item-list { grid-template-columns: repeat(4, 1fr); }
+    }
   </style>
 </head>
 <body>
@@ -924,7 +1066,7 @@
     </div>
 
     <!-- Daily capacity card (always visible) -->
-    <div class="va-cap-card">
+    <div class="va-cap-card" id="dailyCapCard">
       <div class="va-cap-card__title">Sản Lượng Hàng Ngày · Daily Capacity</div>
       <div class="va-cap-card__row">
         <input type="number" class="va-cap-input" id="capInput"
@@ -1032,41 +1174,15 @@
       </div>
     </div>
 
-    <!-- AI Engine Settings -->
+    <!-- AI Engine Status -->
     <div class="va-cap-card" style="margin-top:.9rem">
-      <div class="va-cap-card__title">&#10024; AI Engines</div>
+      <div class="va-cap-card__title">&#10024; AI Content Engine</div>
       <div class="ai-provider-row" id="aiProviderChips">
         <!-- populated by renderAIProviderChips() -->
       </div>
-      <p style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem;line-height:1.55">
-        Nhập API key để bật từng AI engine. Key được lưu cục bộ trên thiết bị này.
+      <p style="font-size:.72rem;color:var(--muted);margin:.55rem 0 0;line-height:1.55">
+        Tính năng AI được vận hành bởi nền tảng Du Lịch Cali. Không cần cấu hình thêm.
       </p>
-
-      <div style="margin-bottom:.55rem">
-        <label style="display:block;font-size:.7rem;color:var(--text-muted);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.08em">Claude (Anthropic)</label>
-        <div class="va-cap-card__row">
-          <input type="password" id="keyClaude" placeholder="sk-ant-..." class="va-cap-input" autocomplete="off">
-          <button class="btn btn--ghost btn--sm" onclick="saveAIKey('claude', document.getElementById('keyClaude').value)">Lưu</button>
-        </div>
-      </div>
-
-      <div style="margin-bottom:.55rem">
-        <label style="display:block;font-size:.7rem;color:var(--text-muted);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.08em">OpenAI (GPT-4o mini)</label>
-        <div class="va-cap-card__row">
-          <input type="password" id="keyOpenAI" placeholder="sk-..." class="va-cap-input" autocomplete="off">
-          <button class="btn btn--ghost btn--sm" onclick="saveAIKey('openai', document.getElementById('keyOpenAI').value)">Lưu</button>
-        </div>
-      </div>
-
-      <div style="margin-bottom:.55rem">
-        <label style="display:block;font-size:.7rem;color:var(--text-muted);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.08em">Google Gemini 1.5 Flash</label>
-        <div class="va-cap-card__row">
-          <input type="password" id="keyGemini" placeholder="AI..." class="va-cap-input" autocomplete="off">
-          <button class="btn btn--ghost btn--sm" onclick="saveAIKey('gemini', document.getElementById('keyGemini').value)">Lưu</button>
-        </div>
-      </div>
-
-      <div class="va-cap-status" id="aiKeySaveStatus"></div>
     </div>
 
   </div>
@@ -1191,11 +1307,26 @@
     </div>
 
     <div class="f-group" style="margin-top:1rem">
-      <label class="f-label" for="fVideoUrl">Video URL (Promo MP4)</label>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.3rem">
+        <label class="f-label" for="fVideoUrl">Video URL (Promo MP4)</label>
+        <button type="button" class="btn--ai btn--sm" onclick="showVideoGenCmd()" style="font-size:.62rem;padding:.18rem .5rem">
+          🎬 Generate Command
+        </button>
+      </div>
       <input type="url" id="fVideoUrl" class="f-input" placeholder="https://storage.googleapis.com/... (leave blank if none)">
-      <p style="font-size:.78rem;color:var(--muted,#888);margin-top:4px">
-        Generated with <code>node remotion-promo/generate-promo.js --upload</code>. Paste the returned URL here.
-      </p>
+      <div id="videoGenCmdPanel" style="display:none;margin-top:.6rem;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:.65rem .75rem">
+        <div style="font-size:.62rem;color:#a78bfa;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.4rem">CLI Command — run in project root</div>
+        <textarea id="videoGenCmdText" readonly class="f-textarea"
+          style="font-family:monospace;font-size:.68rem;min-height:72px;resize:none;background:rgba(0,0,0,.2);color:#e2e8f0;border-color:rgba(255,255,255,.12)"
+          onclick="this.select()"></textarea>
+        <div style="display:flex;gap:.4rem;margin-top:.45rem">
+          <button type="button" class="btn btn--ghost btn--sm" onclick="copyVideoGenCmd()" style="font-size:.68rem">Copy Command</button>
+          <span id="videoGenCmdCopied" style="font-size:.68rem;color:var(--success);display:none;align-self:center">✓ Copied!</span>
+        </div>
+        <div style="font-size:.65rem;color:var(--muted);margin-top:.4rem;line-height:1.5">
+          After running: <strong>paste the printed URL above</strong> and save.
+        </div>
+      </div>
     </div>
 
     <div class="f-toggle-row">
@@ -1534,13 +1665,20 @@
       var hasInstrs = item.preparationInstructions || item.reheatingInstructions ||
                       item.storageInstructions || item.servingNotes || item.allergenNotes;
 
+      var thumbHtml = item.image
+        ? '<div class="va-item-thumb"><img src="' + esc(item.image) + '" alt="' + esc(item.name) + '" loading="lazy" onerror="this.parentElement.classList.add(\'va-item-thumb--empty\');this.remove()"></div>'
+        : '<div class="va-item-thumb va-item-thumb--empty" title="No photo yet — click Edit to upload">📷</div>';
+
       return '<div class="va-item-card' + (inactive ? ' inactive' : '') + '">' +
+        thumbHtml +
         '<div class="va-item-card__header">' +
           '<div>' +
             '<div class="va-item-card__name">' + esc(item.name) + '</div>' +
             '<div class="va-item-card__meta">' +
               (inactive ? '<span class="va-tag va-tag--off">Inactive</span>' : '') +
               (item.featured ? '<span class="va-tag va-tag--star">Featured</span>' : '') +
+              (item.videoUrl ? '<span class="va-tag va-tag--video">🎥 Video</span>' : '') +
+              (!item.image ? '<span class="va-tag va-tag--off" title="No photo — upload in Edit">📷 No photo</span>' : '') +
               (hasInstrs ? '<span class="va-tag va-tag--info">📋 Instrs</span>' : '') +
               (item.minimumOrderQty ? '<span class="va-tag">Min ' + item.minimumOrderQty + '</span>' : '') +
               variants +
@@ -1783,6 +1921,63 @@
     return document.getElementById(id).classList.contains('on');
   }
 
+  function showVideoGenCmd() {
+    var panel   = document.getElementById('videoGenCmdPanel');
+    var cmdText = document.getElementById('videoGenCmdText');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    if (panel.style.display === 'none') return;
+
+    var name    = (document.getElementById('fName').value || 'item').trim();
+    var desc    = (document.getElementById('fDesc').value || '').trim().slice(0, 100);
+    var price   = document.getElementById('fPrice').value || '0';
+    var unit    = document.getElementById('fUnit').value || 'each';
+    var image   = document.getElementById('fImage').value.trim();
+    var slug    = name.toLowerCase()
+      .replace(/[àáạảãâầấậẩẫăằắặẳẵ]/g,'a')
+      .replace(/[èéẹẻẽêềếệểễ]/g,'e')
+      .replace(/[ìíịỉĩ]/g,'i')
+      .replace(/[òóọỏõôồốộổỗơờớợởỡ]/g,'o')
+      .replace(/[ùúụủũưừứựửữ]/g,'u')
+      .replace(/[ỳýỵỷỹ]/g,'y')
+      .replace(/đ/g,'d').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+
+    var props = {
+      vendorName:  currentVendor && currentVendor.name ? currentVendor.name : 'Nhà Bếp Của Emily',
+      vendorTagline: currentVendor && currentVendor.tagline ? currentVendor.tagline : '',
+      itemName: name,
+      itemNameEn: name,
+      itemDescription: desc,
+      pricePerUnit: parseFloat(price) || 0,
+      unit: unit,
+      accentColor: '#f59e0b'
+    };
+    if (image && !image.startsWith('http')) {
+      props.itemImage = image.replace('../','');
+    } else if (image) {
+      props.itemImage = image;
+    }
+
+    var cmd = 'cd remotion-promo && node generate-promo.js \\\n';
+    cmd += '  --name "' + slug + '" \\\n';
+    if (image && !image.startsWith('http')) {
+      cmd += '  --image "../' + image.replace('../','') + '" \\\n';
+    }
+    cmd += '  --props \'' + JSON.stringify(props) + '\' \\\n';
+    cmd += '  --upload';
+
+    cmdText.value = cmd;
+  }
+
+  function copyVideoGenCmd() {
+    var text = document.getElementById('videoGenCmdText').value;
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(function () {
+      var badge = document.getElementById('videoGenCmdCopied');
+      badge.style.display = 'inline';
+      setTimeout(function () { badge.style.display = 'none'; }, 2500);
+    });
+  }
+
   // ── Save item ─────────────────────────────────────────────────────────────
   function saveItem() {
     var name   = document.getElementById('fName').value.trim();
@@ -1987,30 +2182,17 @@
 
   // ── AI Engine helpers ──────────────────────────────────────────────────────
 
-  function saveAIKey(provider, value) {
-    var status = document.getElementById('aiKeySaveStatus');
-    if (!window.DLCOrchestrator) {
-      status.textContent = '✕ aiOrchestrator.js chưa được tải.';
-      status.style.color = 'var(--danger)';
-      return;
-    }
-    var trimmed = (value || '').trim();
-    DLCOrchestrator.setKey(provider, trimmed || null);
-    status.textContent = trimmed ? ('✓ ' + provider + ' key đã lưu.') : ('✓ ' + provider + ' key đã xóa.');
-    status.style.color = 'var(--success)';
-    setTimeout(function() { status.textContent = ''; }, 3000);
-    renderAIProviderChips();
-  }
+  // saveAIKey kept as no-op for backward compatibility (no longer exposed in UI)
+  function saveAIKey(provider, value) { /* keys managed server-side */ }
 
   function renderAIProviderChips() {
     var wrap = document.getElementById('aiProviderChips');
-    if (!wrap || !window.DLCOrchestrator) return;
-    var st = DLCOrchestrator.getProviderStatus();
-    wrap.innerHTML = Object.keys(st).map(function(p) {
-      var info = st[p];
-      var cls  = info.configured ? 'ok' : 'off';
-      return '<div class="ai-provider-chip ' + cls + '"><div class="ai-dot"></div>' + esc(info.label) + '</div>';
-    }).join('');
+    if (!wrap) return;
+    // Show platform-managed status — no key check needed
+    wrap.innerHTML =
+      '<div class="ai-provider-chip ok"><div class="ai-dot"></div>Claude</div>' +
+      '<div class="ai-provider-chip ok"><div class="ai-dot"></div>GPT-4o mini</div>' +
+      '<div class="ai-provider-chip ok"><div class="ai-dot"></div>Gemini Flash</div>';
   }
 
   // Cached enhancement results keyed by itemId (for Apply All)
@@ -2019,11 +2201,6 @@
   var _aiAbVariant = {};
 
   async function generateAIContent(itemId) {
-    var engine = window.DLCMarketing || window.DLCOrchestrator;
-    if (!engine) {
-      alert('marketingEngine.js / aiOrchestrator.js chưa tải.');
-      return;
-    }
     var item = allItems[itemId];
     if (!item) return;
 
@@ -2033,38 +2210,37 @@
 
     btn.disabled    = true;
     btn.textContent = '⏳ Đang tạo...';
-    panel.style.display = 'none';
+
+    // Show progress card
+    panel.innerHTML = renderAIProgressCard('Đang phân tích sản phẩm...');
+    panel.style.display = 'block';
 
     var vendorObj = {
-      id:     VENDOR_ID || '',
-      name:   document.querySelector('.va-vendor-name')?.textContent || VENDOR_ID || '',
-      city:   '',
-      region: localStorage.getItem('dlc_ai_region') || 'oc',
-      phone:  '',
+      id:       VENDOR_ID || '',
+      name:     document.querySelector('.va-vendor-name')?.textContent || VENDOR_ID || '',
+      city:     '',
+      region:   localStorage.getItem('dlc_ai_region') || 'oc',
+      category: item.category || 'food',
+      phone:    '',
     };
 
     try {
-      var result;
-      if (window.DLCMarketing && DLCMarketing.enhance) {
-        result = await DLCMarketing.enhance(item, vendorObj, { region: vendorObj.region });
-      } else {
-        // Fallback to orchestrator
-        var raw = await DLCOrchestrator.generateFoodContent(VENDOR_ID, item, vendorObj);
-        var cd  = (raw.content && raw.content.data) || {};
-        result  = {
-          provider: (raw.content && raw.content.provider) || 'AI',
-          versionId: 'v' + Date.now().toString(36).toUpperCase(),
-          fields: {
-            title:       { vi: cd.title || '', en: cd.titleEn || '', ab: [] },
-            description: { vi: cd.description || '' },
-            adCopy:      { vi: cd.adCopy || '' },
-            tags:        { values: cd.tags || [] },
-          },
-          errors: raw.errors || [],
-        };
+      // Stage 1: check engine loaded
+      if (!window.DLCMarketing) {
+        throw Object.assign(new Error('marketingEngine.js chưa tải'), { vendorMessage: 'Trang chưa sẵn sàng. Vui lòng tải lại (F5).' });
       }
 
-      _aiResults[itemId]  = result;
+      // Stage 2: show progress
+      panel.innerHTML = renderAIProgressCard('Đang tạo nội dung marketing...');
+
+      var result = await DLCMarketing.enhance(item, vendorObj, { region: vendorObj.region });
+
+      // Stage 3: surface any partial errors as warnings, not fatal
+      if (result.errors && result.errors.length) {
+        console.warn('[generateAIContent] partial errors:', result.errors);
+      }
+
+      _aiResults[itemId]   = result;
       _aiAbVariant[itemId] = 'A';
 
       panel.innerHTML     = renderAIReviewPanel(itemId, result);
@@ -2073,11 +2249,43 @@
       btn.disabled        = false;
 
     } catch (err) {
-      panel.innerHTML     = '<div style="color:var(--danger);font-size:.74rem">✕ Lỗi: ' + esc(err.message) + '</div>';
+      // Use vendorMessage if set (from aiProxy), otherwise map raw error
+      var userMsg = err.vendorMessage || getVendorFriendlyError(err);
+      panel.innerHTML     = renderAIErrorCard(userMsg, err.debugCode);
       panel.style.display = 'block';
-      btn.textContent     = '✨ AI Content';
+      btn.textContent     = '✨ Thử lại';
       btn.disabled        = false;
     }
+  }
+
+  function renderAIProgressCard(msg) {
+    return '<div style="display:flex;align-items:center;gap:.6rem;padding:.65rem .75rem;background:var(--navy-900);border-radius:8px;border:1px solid var(--border-g)">' +
+      '<div style="width:14px;height:14px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0"></div>' +
+      '<span style="font-size:.78rem;color:var(--text-muted)">' + esc(msg) + '</span>' +
+      '</div>';
+  }
+
+  function renderAIErrorCard(msg, debugCode) {
+    var hint = debugCode === 'UNAUTHENTICATED'
+      ? ' Vui lòng đăng xuất và đăng nhập lại.'
+      : debugCode === 'RATE_LIMIT'
+      ? ' Thử lại sau 30 giây.'
+      : '';
+    return '<div style="padding:.65rem .75rem;background:rgba(239,68,68,.08);border-radius:8px;border:1px solid rgba(239,68,68,.25)">' +
+      '<div style="font-size:.78rem;color:#f87171;margin-bottom:.2rem;font-weight:600">Không thể tạo nội dung</div>' +
+      '<div style="font-size:.75rem;color:var(--text-muted)">' + esc(msg) + esc(hint) + '</div>' +
+      '</div>';
+  }
+
+  function getVendorFriendlyError(err) {
+    var msg = (err.message || '').toLowerCase();
+    if (/no-.*-key|no key|chưa tải/.test(msg))     return 'Dịch vụ AI chưa sẵn sàng. Vui lòng tải lại trang.';
+    if (/rate.?limit|429/.test(msg))                return 'AI đang bận. Vui lòng thử lại sau 30 giây.';
+    if (/timeout|etimedout/.test(msg))              return 'AI mất quá nhiều thời gian. Vui lòng thử lại.';
+    if (/network|enotfound|fetch/.test(msg))        return 'Lỗi kết nối mạng. Kiểm tra internet và thử lại.';
+    if (/auth|unauthorized|401/.test(msg))          return 'Lỗi xác thực. Vui lòng đăng nhập lại.';
+    if (/all providers failed/.test(msg))           return 'AI tạm thời không khả dụng. Vui lòng thử lại sau.';
+    return 'Đã có lỗi xảy ra. Vui lòng thử lại.';
   }
 
   function renderAIReviewPanel(itemId, result) {

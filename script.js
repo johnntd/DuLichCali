@@ -1200,7 +1200,9 @@ function _hpCatAccent(c) { return { nails: '#f472b6', hair: '#38bdf8', food: '#f
 function buildVendorCardHtml(biz) {
   const avail  = computeBizAvailability(biz);
   const accent = _hpCatAccent(biz.category);
-  const href   = `marketplace/index.html?cat=${biz.category}`;
+  const href   = biz.id
+    ? `marketplace/index.html?id=${biz.id}`
+    : `marketplace/index.html?cat=${biz.category}`;
   const bg     = biz.heroImage
     ? `background:${biz.heroGradient};background-image:url(${biz.heroImage});background-size:cover;background-position:center`
     : `background:${biz.heroGradient}`;
@@ -1255,7 +1257,7 @@ function renderAvailabilityHighlights(regionId, driverAvailable) {
     const avail = computeBizAvailability(biz);
     if (avail.status === 'closed') continue;
     const label = biz.name.length > 20 ? biz.name.slice(0, 18) + '…' : biz.name;
-    const nav   = `HomepagePersonalizer.track('${biz.category}'); window.location.href='marketplace/index.html?cat=${biz.category}'`;
+    const nav   = `HomepagePersonalizer.track('${biz.category}'); window.location.href='marketplace/index.html?id=${biz.id}'`;
     chips.push(buildAvailChipHtml(avail.label, label, avail.status, nav));
   }
 
@@ -1299,6 +1301,7 @@ var HeroCarousel = (function () {
     if (!el) return;
     slides = el.querySelectorAll('.hc__slide');
     dots   = el.querySelectorAll('.hc__dot');
+    SLIDES = slides.length; // always matches actual slide count in HTML
     bar    = document.getElementById('hcProgressBar');
 
     dots.forEach(function (dot) {

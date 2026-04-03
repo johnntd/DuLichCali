@@ -518,67 +518,91 @@ Return JSON matching FoodPromoSchema exactly:
         console.warn(`[marketing] ${provider} failed:`, err.message);
       }
     }
-    return { data: null, error: 'All providers failed' };
+    return { data: null, error: 'ai_unavailable' };
   }
 
-  // ── Raw provider calls (mirrors adapters in orchestrator) ─────────────────
+  // ── Raw provider calls ────────────────────────────────────────────────────
+  // Production path: route through Firebase aiProxy callable (no client-side keys needed).
+  // Dev/admin override: if a local key exists in localStorage, call the API directly.
   async function callProviderRaw(provider, taskDef) {
     const keyMap = { claude: 'dlc_claude_key', openai: 'dlc_openai_key', gemini: 'dlc_gemini_key' };
-    const key = localStorage.getItem(keyMap[provider]);
-    if (!key) throw new Error('no-' + provider + '-key');
+    const localKey = localStorage.getItem(keyMap[provider]);
 
-    if (provider === 'openai') {
-      const body = {
-        model: 'gpt-4o-mini', max_tokens: taskDef.maxTokens || 1000,
-        messages: [
-          { role: 'system', content: taskDef.system + '\n\nRespond ONLY with valid JSON. No markdown.' },
-          ...(taskDef.messages || []),
-        ],
-        response_format: { type: 'json_object' },
-      };
-      const res = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e?.error?.message || `OpenAI ${res.status}`); }
-      return (await res.json()).choices[0].message.content;
+    // ── Dev override: direct browser API call ──────────────────────────────
+    if (localKey) {
+      if (provider === 'openai') {
+        const body = {
+          model: 'gpt-4o-mini', max_tokens: taskDef.maxTokens || 1000,
+          messages: [
+            { role: 'system', content: taskDef.system + '\n\nRespond ONLY with valid JSON. No markdown.' },
+            ...(taskDef.messages || []),
+          ],
+          response_format: { type: 'json_object' },
+        };
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localKey}` },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e?.error?.message || `OpenAI ${res.status}`); }
+        return (await res.json()).choices[0].message.content;
+      }
+
+      if (provider === 'claude') {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json', 'x-api-key': localKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true',
+          },
+          body: JSON.stringify({
+            model: 'claude-haiku-4-5-20251001', max_tokens: taskDef.maxTokens || 1000,
+            system: taskDef.system + '\n\nRespond ONLY with valid JSON. No markdown.',
+            messages: taskDef.messages || [],
+          }),
+        });
+        if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e?.error?.message || `Claude ${res.status}`); }
+        return (await res.json()).content[0].text;
+      }
+
+      if (provider === 'gemini') {
+        const parts = [
+          { text: taskDef.system + '\n\nRespond ONLY with valid JSON.' },
+          ...(taskDef.messages || []).map(m => ({ text: m.content })),
+        ];
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${localKey}`;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts }] }),
+        });
+        if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e?.error?.message || `Gemini ${res.status}`); }
+        return (await res.json()).candidates[0].content.parts[0].text;
+      }
+
+      throw new Error(`Unknown provider: ${provider}`);
     }
 
-    if (provider === 'claude') {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json', 'x-api-key': key,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001', max_tokens: taskDef.maxTokens || 1000,
-          system: taskDef.system + '\n\nRespond ONLY with valid JSON. No markdown.',
-          messages: taskDef.messages || [],
-        }),
-      });
-      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e?.error?.message || `Claude ${res.status}`); }
-      return (await res.json()).content[0].text;
+    // ── Production path: Firebase callable proxy ───────────────────────────
+    if (!window.firebase || typeof firebase.functions !== 'function') {
+      throw new Error('Dịch vụ AI chưa sẵn sàng. Vui lòng tải lại trang.');
     }
-
-    if (provider === 'gemini') {
-      const parts = [
-        { text: taskDef.system + '\n\nRespond ONLY with valid JSON.' },
-        ...(taskDef.messages || []).map(m => ({ text: m.content })),
-      ];
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts }] }),
-      });
-      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e?.error?.message || `Gemini ${res.status}`); }
-      return (await res.json()).candidates[0].content.parts[0].text;
+    const fn = firebase.functions().httpsCallable('aiProxy', { timeout: 55000 });
+    const res = await fn({
+      provider,
+      system:    taskDef.system,
+      messages:  taskDef.messages || [],
+      maxTokens: taskDef.maxTokens || 1000,
+      jsonMode:  !!taskDef.schema,
+    });
+    if (!res.data.ok) {
+      const e = new Error(res.data.vendorMessage || 'AI không khả dụng');
+      e.vendorMessage = res.data.vendorMessage;
+      e.debugCode     = res.data.debugCode;
+      throw e;
     }
-
-    throw new Error(`Unknown provider: ${provider}`);
+    return res.data.text;
   }
 
   // ══════════════════════════════════════════════════════════════

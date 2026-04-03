@@ -19,7 +19,7 @@
   // ── Config ───────────────────────────────────────────────────
   const CLAUDE_KEY   = localStorage.getItem('dlc_claude_key') || null;
   const CLAUDE_MODEL = 'claude-haiku-4-5-20251001';
-  const MAX_TOKENS   = 550;
+  const MAX_TOKENS   = 900;
 
   // ── Marketplace Vendor Catalog ───────────────────────────────
   // Compact reference for rule-based pricing; mirrors services-data.js.
@@ -1124,7 +1124,7 @@ BEHAVIOR GUIDELINES:
         model:      CLAUDE_MODEL,
         max_tokens: MAX_TOKENS,
         system:     buildSystemPrompt(),
-        messages:   history.slice(-14),
+        messages:   history.slice(-20),
       }),
     });
     if (!res.ok) {
@@ -1136,443 +1136,66 @@ BEHAVIOR GUIDELINES:
   }
 
   // ══════════════════════════════════════════════════════════════
-  //  BOOKING FLOW STATE MACHINE
-  //  Conversational multi-step booking collection.
-  //  Triggered by openAIWithIntent('airport') or openAIWithIntent('tour').
+  //  WORKFLOW ENGINE INTEGRATION  (see workflowEngine.js)
   // ══════════════════════════════════════════════════════════════
 
-  const flowState = { type: null, step: 0, data: {} };
-
-  function flowActive() { return flowState.type !== null; }
-  function flowReset()  { flowState.type = null; flowState.step = 0; flowState.data = {}; }
-
-  const FLOW_STEPS = {
-    airport_pickup: [
-      {
-        field: 'airport',
-        ask: '✈️ Bạn đến sân bay nào?\n(LAX · SNA · LGB · ONT · BUR · SAN · SFO · SJC · OAK · SMF)',
-        extract: t => extractAirport(t),
-        err: 'Tôi chưa nhận ra sân bay này. Vui lòng nhập mã như LAX, SNA, SFO, SJC...',
-      },
-      {
-        field: 'airline',
-        ask: 'Hãng bay và số hiệu chuyến? (VD: United 123)\nGõ "bỏ qua" nếu chưa có.',
-        extract: t => {
-          if (/bỏ qua|skip|chưa biết|không biết/i.test(t)) return '';
-          const m = t.match(/[a-zA-Z]{2,}\s*\d{2,4}/);
-          return m ? m[0].toUpperCase() : t.trim().slice(0, 40) || '';
-        },
-        optional: true,
-      },
-      {
-        field: 'arrivalTime',
-        ask: 'Giờ hạ cánh dự kiến? (VD: 2:30 PM hoặc 14:30)',
-        extract: t => {
-          const m = t.match(/\d{1,2}:\d{2}\s*(am|pm)?/i) || t.match(/\d{1,2}\s*(am|pm|SA|CH)/i);
-          return m ? m[0].replace(/SA/i,'AM').replace(/CH/i,'PM').toUpperCase() : null;
-        },
-        err: 'Vui lòng nhập giờ hạ cánh (VD: 3:45 PM).',
-      },
-      {
-        field: 'date',
-        ask: 'Ngày đến? (VD: 15/4 hoặc April 15)',
-        extract: t => {
-          const m = t.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-]\d{2,4})?/)
-                 || t.match(/(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*[\s,]+\d{1,2}/i)
-                 || t.match(/\d{1,2}[\s\/]+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*/i);
-          return m ? m[0] : null;
-        },
-        err: 'Vui lòng nhập ngày (VD: 15/4).',
-      },
-      {
-        field: 'passengers',
-        ask: 'Có bao nhiêu hành khách?',
-        extract: t => extractPassengers(t) || (parseInt(t) >= 1 && parseInt(t) <= 20 ? parseInt(t) : null),
-        err: 'Vui lòng nhập số hành khách (VD: 2).',
-      },
-      {
-        field: 'dropoffAddress',
-        ask: 'Địa chỉ đưa về? (thành phố hoặc địa chỉ cụ thể)',
-        extract: t => t.trim().length >= 3 ? t.trim() : null,
-        err: 'Vui lòng nhập địa chỉ đưa về.',
-      },
-      {
-        field: 'name',
-        ask: 'Tên của bạn là gì?',
-        extract: t => t.trim().replace(/^(tôi là|tên tôi là|my name is|i am|i'm)\s+/i, '').slice(0, 50) || null,
-        err: 'Vui lòng nhập tên của bạn.',
-      },
-      {
-        field: 'phone',
-        ask: 'Số điện thoại liên hệ?',
-        extract: t => { const m = t.match(/\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}/); return m ? m[0].replace(/[\s.\-()]/g, '') : null; },
-        err: 'Vui lòng nhập số điện thoại 10 chữ số.',
-      },
-    ],
-
-    airport_dropoff: [
-      {
-        field: 'airport',
-        ask: '✈️ Bạn cần đưa tới sân bay nào?\n(LAX · SNA · LGB · ONT · BUR · SAN · SFO · SJC · OAK)',
-        extract: t => extractAirport(t),
-        err: 'Tôi chưa nhận ra sân bay này. Vui lòng nhập mã như LAX, SNA, SFO...',
-      },
-      {
-        field: 'flightTime',
-        ask: 'Chuyến bay cất cánh lúc mấy giờ?',
-        extract: t => {
-          const m = t.match(/\d{1,2}:\d{2}\s*(am|pm)?/i) || t.match(/\d{1,2}\s*(am|pm|SA|CH)/i);
-          return m ? m[0].replace(/SA/i,'AM').replace(/CH/i,'PM').toUpperCase() : null;
-        },
-        err: 'Vui lòng nhập giờ bay (VD: 6:00 AM).',
-      },
-      {
-        field: 'date',
-        ask: 'Ngày đi? (VD: 20/4)',
-        extract: t => {
-          const m = t.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-]\d{2,4})?/)
-                 || t.match(/(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*[\s,]+\d{1,2}/i);
-          return m ? m[0] : null;
-        },
-        err: 'Vui lòng nhập ngày đi.',
-      },
-      {
-        field: 'passengers',
-        ask: 'Có bao nhiêu hành khách?',
-        extract: t => extractPassengers(t) || (parseInt(t) >= 1 && parseInt(t) <= 20 ? parseInt(t) : null),
-        err: 'Vui lòng nhập số hành khách.',
-      },
-      {
-        field: 'pickupAddress',
-        ask: 'Địa chỉ đón? (thành phố hoặc địa chỉ đầy đủ)',
-        extract: t => t.trim().length >= 3 ? t.trim() : null,
-        err: 'Vui lòng nhập địa chỉ đón.',
-      },
-      {
-        field: 'name',
-        ask: 'Tên của bạn là gì?',
-        extract: t => t.trim().replace(/^(tôi là|tên tôi là|my name is|i am|i'm)\s+/i, '').slice(0, 50) || null,
-        err: 'Vui lòng nhập tên của bạn.',
-      },
-      {
-        field: 'phone',
-        ask: 'Số điện thoại liên hệ?',
-        extract: t => { const m = t.match(/\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}/); return m ? m[0].replace(/[\s.\-()]/g, '') : null; },
-        err: 'Vui lòng nhập số điện thoại 10 chữ số.',
-      },
-    ],
-
-    tour: [
-      {
-        field: 'destination',
-        ask: '🗺️ Bạn muốn đi đâu?\n(Las Vegas · Yosemite · San Francisco · Disneyland · Grand Canyon và nhiều điểm khác)',
-        extract: t => extractDestId(t) || (t.trim().length >= 3 ? t.trim() : null),
-        err: 'Vui lòng nhập điểm đến (VD: Las Vegas, Yosemite).',
-      },
-      {
-        field: 'days',
-        ask: 'Chuyến đi bao nhiêu ngày?',
-        extract: t => extractDays(t) || (parseInt(t) >= 1 && parseInt(t) <= 14 ? parseInt(t) : null),
-        err: 'Vui lòng nhập số ngày (1–14).',
-      },
-      {
-        field: 'passengers',
-        ask: 'Có bao nhiêu người đi?',
-        extract: t => extractPassengers(t) || (parseInt(t) >= 1 && parseInt(t) <= 20 ? parseInt(t) : null),
-        err: 'Vui lòng nhập số người.',
-      },
-      {
-        field: 'lodging',
-        ask: 'Bạn cần bao gồm chỗ ở không?\n(Có khách sạn · Airbnb · hoặc "không" nếu tự túc)',
-        extract: t => {
-          if (/không|no\b|tự túc|khong/i.test(t)) return 'none';
-          if (/hotel|khách sạn/i.test(t))          return 'hotel';
-          if (/airbnb|nhà thuê/i.test(t))           return 'airbnb';
-          if (/có\b|yes\b|cần/i.test(t))            return 'hotel';
-          return null;
-        },
-        err: 'Vui lòng nhập: "khách sạn", "Airbnb", hoặc "không".',
-      },
-      {
-        field: 'pickupCity',
-        ask: 'Địa chỉ đón bạn ở đâu? (thành phố hoặc địa chỉ cụ thể)',
-        extract: t => t.trim().length >= 3 ? t.trim() : null,
-        err: 'Vui lòng nhập địa chỉ đón.',
-      },
-      {
-        field: 'name',
-        ask: 'Tên của bạn là gì?',
-        extract: t => t.trim().replace(/^(tôi là|tên tôi là|my name is|i am|i'm)\s+/i, '').slice(0, 50) || null,
-        err: 'Vui lòng nhập tên của bạn.',
-      },
-      {
-        field: 'phone',
-        ask: 'Số điện thoại liên hệ?',
-        extract: t => { const m = t.match(/\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}/); return m ? m[0].replace(/[\s.\-()]/g, '') : null; },
-        err: 'Vui lòng nhập số điện thoại 10 chữ số.',
-      },
-    ],
-  };
-
-  function isFlowCancel(t) {
-    return /^(hủy|cancel|thôi|stop|thoát|exit)\b/i.test(t.trim());
-  }
-
-  async function processFlow(text) {
-    if (isFlowCancel(text)) {
-      flowReset();
-      return 'Đã hủy. Bạn cần tôi giúp gì khác không?';
-    }
-
-    const steps = FLOW_STEPS[flowState.type];
-    if (!steps) { flowReset(); return null; }
-
-    // Confirm step (all fields collected)
-    if (flowState.step >= steps.length) {
-      return processFlowConfirm(text);
-    }
-
-    const step = steps[flowState.step];
-    const value = step.extract(text);
-
-    if ((value === null || value === undefined) && !step.optional) {
-      return step.err || 'Vui lòng nhập thông tin hợp lệ.';
-    }
-
-    if (value !== null && value !== undefined) flowState.data[step.field] = value;
-    flowState.step++;
-
-    if (flowState.step >= steps.length) return buildFlowSummary();
-    return steps[flowState.step].ask;
-  }
-
-  function fmtPhone(p) { return p ? p.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3') : ''; }
-
-  function buildFlowSummary() {
-    const d = flowState.data;
-    const type = flowState.type;
-    const pax = d.passengers || 1;
-    let lines = [];
-    let est = null;
-
-    if (type === 'airport_pickup') {
-      est = typeof DLCPricing !== 'undefined' ? DLCPricing.estimateTransfer({
-        airport: d.airport || '', fromCity: d.dropoffAddress || '', passengers: pax, direction: 'pickup'
-      }) : null;
-      lines = [
-        '📋 Xác nhận đặt dịch vụ đưa đón sân bay:',
-        '',
-        `✈️  Sân bay đến: ${(d.airport || '').toUpperCase()}`,
-        d.airline    ? `🛫  Chuyến bay: ${d.airline}`          : '',
-        d.arrivalTime? `🕐  Giờ hạ cánh: ${d.arrivalTime}`     : '',
-        d.date       ? `📅  Ngày: ${d.date}`                   : '',
-        `👥  Hành khách: ${pax} người`,
-        `📍  Địa chỉ về: ${d.dropoffAddress || ''}`,
-        `👤  Tên: ${d.name || ''}`,
-        `📞  SĐT: ${fmtPhone(d.phone)}`,
-        est          ? `\n💰  Ước tính: ~$${est.total} (${est.vehicle})` : '',
-      ];
-    } else if (type === 'airport_dropoff') {
-      est = typeof DLCPricing !== 'undefined' ? DLCPricing.estimateTransfer({
-        airport: d.airport || '', fromCity: d.pickupAddress || '', passengers: pax, direction: 'dropoff'
-      }) : null;
-      lines = [
-        '📋 Xác nhận đặt dịch vụ ra sân bay:',
-        '',
-        `✈️  Sân bay: ${(d.airport || '').toUpperCase()}`,
-        d.flightTime ? `🕐  Giờ bay: ${d.flightTime}`          : '',
-        d.date       ? `📅  Ngày: ${d.date}`                   : '',
-        `👥  Hành khách: ${pax} người`,
-        `📍  Địa chỉ đón: ${d.pickupAddress || ''}`,
-        `👤  Tên: ${d.name || ''}`,
-        `📞  SĐT: ${fmtPhone(d.phone)}`,
-        est          ? `\n💰  Ước tính: ~$${est.total} (${est.vehicle})` : '',
-      ];
-    } else if (type === 'tour') {
-      const days   = d.days   || 2;
-      const destId = typeof d.destination === 'string' && d.destination.length <= 20 ? d.destination : null;
-      const lodge  = d.lodging !== 'none' ? d.lodging : null;
-      est = destId && typeof DLCPricing !== 'undefined' ? DLCPricing.estimateTour({ destId, passengers: pax, days, lodging: lodge }) : null;
-      const destLabel = destId && typeof DESTINATIONS !== 'undefined'
-        ? (DESTINATIONS.find(x => x.id === destId)?.name.vi || d.destination)
-        : (d.destination || '');
-      const lodgeLabel = { hotel: 'Khách sạn', airbnb: 'Airbnb', none: 'Tự túc' }[d.lodging] || d.lodging || '';
-      lines = [
-        '📋 Xác nhận đặt tour du lịch:',
-        '',
-        `🗺️  Điểm đến: ${destLabel}`,
-        `📅  Thời gian: ${days} ngày`,
-        `👥  Số người: ${pax} người`,
-        `🏨  Chỗ ở: ${lodgeLabel}`,
-        `📍  Địa chỉ đón: ${d.pickupCity || ''}`,
-        `👤  Tên: ${d.name || ''}`,
-        `📞  SĐT: ${fmtPhone(d.phone)}`,
-        est ? `\n💰  Ước tính: ~$${est.total} (~$${est.perPerson}/người · ${est.vehicle})` : '',
-      ];
-    }
-
-    lines.push('', 'Gõ "xác nhận" để đặt chỗ, hoặc "hủy" để thôi.');
-    return lines.filter(l => l !== '').join('\n');
-  }
-
-  async function processFlowConfirm(text) {
-    if (!/xác nhận|confirm\b|ok\b|đồng ý|yes\b|có\b/i.test(text.trim())) {
-      flowReset();
-      return 'Đã hủy yêu cầu. Bạn cần tôi giúp gì khác không?';
-    }
-
-    const d = { ...flowState.data };
-    const type = flowState.type;
-    flowReset();
-
-    const bookingId = await createFlowBooking(type, d);
-    if (bookingId) {
-      return [
-        `✅ Đặt chỗ thành công!`,
-        `Mã đặt chỗ: ${bookingId}`,
-        '',
-        'Chúng tôi sẽ liên hệ xác nhận trong vòng 2 tiếng.',
-        `Kiểm tra đơn: nhập mã "${bookingId}" hoặc SĐT ${fmtPhone(d.phone)} vào chat.`,
-        '',
-        `Cần hỗ trợ ngay: gọi ${regionPhone()}.`,
-      ].join('\n');
-    }
-    return [
-      `✅ Yêu cầu đã được ghi nhận!`,
-      '',
-      `Chúng tôi sẽ liên hệ ${fmtPhone(d.phone)} để xác nhận.`,
-      `Hoặc gọi ngay: ${regionPhone()}.`,
-    ].join('\n');
-  }
-
-  async function createFlowBooking(type, d) {
-    if (typeof firebase === 'undefined' || !firebase.firestore) return null;
-    try {
-      const bookingId = 'DLC-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-      const serviceMap = {
-        airport_pickup:  'Đưa đón sân bay (đón)',
-        airport_dropoff: 'Đưa đón sân bay (ra)',
-        tour:            'Tour du lịch',
-      };
-      const booking = {
-        bookingId,
-        serviceType: serviceMap[type] || type,
-        status:      'pending',
-        name:        d.name     || '',
-        phone:       d.phone    || '',
-        passengers:  d.passengers || 1,
-        createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
-        source:      'chat_flow',
-      };
-
-      if (type === 'airport_pickup') {
-        Object.assign(booking, {
-          airport:     (d.airport || '').toUpperCase(),
-          airline:     d.airline      || '',
-          arrivalTime: d.arrivalTime  || '',
-          datetime:    [d.date, d.arrivalTime].filter(Boolean).join(' '),
-          address:     d.dropoffAddress || '',
-        });
-      } else if (type === 'airport_dropoff') {
-        Object.assign(booking, {
-          airport:    (d.airport || '').toUpperCase(),
-          flightTime: d.flightTime || '',
-          datetime:   [d.date, d.flightTime].filter(Boolean).join(' '),
-          address:    d.pickupAddress || '',
-        });
-      } else if (type === 'tour') {
-        Object.assign(booking, {
-          destination: d.destination || '',
-          days:        d.days        || 2,
-          lodging:     d.lodging     || 'none',
-          address:     d.pickupCity  || '',
-        });
-      }
-
-      const db = firebase.firestore();
-      await db.collection('bookings').doc(bookingId).set(booking);
-
-      // Notify admin
-      const location = booking.address || booking.airport || '';
-      await db.collection('vendors').doc('admin-dlc').collection('notifications').add({
-        type:          'new_booking',
-        title:         `${serviceMap[type] || type} — ${booking.name}`,
-        message:       `${booking.passengers} người · ${booking.phone}` +
-                       (booking.airport   ? ` · ${booking.airport}` : '') +
-                       (booking.datetime  ? ` · ${booking.datetime}` : '') +
-                       (booking.address   ? `\nĐịa chỉ: ${booking.address}` : ''),
-        bookingId,
-        customerPhone: booking.phone,
-        requestedDate: booking.datetime || '',
-        pickupAddress: booking.address  || '',
-        airport:       booking.airport  || '',
-        read:          false,
-        createdAt:     firebase.firestore.FieldValue.serverTimestamp(),
-      });
-
-      return bookingId;
-    } catch (err) {
-      console.error('Flow booking error:', err);
-      return null;
-    }
-  }
-
-  /** Start a booking flow and return the intro+first-question string, or null if invalid type. */
-  function startBookingFlow(type) {
-    const typeMap = {
-      airport:         'airport_pickup',
-      airport_pickup:  'airport_pickup',
-      airport_dropoff: 'airport_dropoff',
-      tour:            'tour',
-    };
-    const resolved = typeMap[type];
-    if (!resolved || !FLOW_STEPS[resolved]) return null;
-
-    flowState.type = resolved;
-    flowState.step = 0;
-    flowState.data = {};
-
-    const intros = {
-      airport_pickup:  '✈️ Tôi sẽ giúp bạn đặt dịch vụ đón tại sân bay.\nGõ "hủy" bất cứ lúc nào để thoát.\n\n',
-      airport_dropoff: '✈️ Tôi sẽ giúp bạn đặt dịch vụ đưa ra sân bay.\nGõ "hủy" bất cứ lúc nào để thoát.\n\n',
-      tour:            '🗺️ Tôi sẽ giúp bạn lên kế hoạch tour du lịch.\nGõ "hủy" bất cứ lúc nào để thoát.\n\n',
-    };
-    return intros[resolved] + FLOW_STEPS[resolved][0].ask;
-  }
 
   // ══════════════════════════════════════════════════════════════
   //  MAIN SEND HANDLER
-  //  Priority: 0) booking flow  1) pricing engine  2) static rules  3) Claude API  4) fallback
+  //  Priority: 0) DLCWorkflow  1) tracking  2) marketplace  3) pricing  4) static  5) Claude  6) fallback
   // ══════════════════════════════════════════════════════════════
 
   async function getReply(text, history) {
-    // ── Active booking flow takes priority over everything ───────
-    if (flowActive()) {
-      const flowReply = await processFlow(text);
-      if (flowReply !== null) return flowReply;
+    const WF = window.DLCWorkflow;
+
+    // ── 0. Active workflow takes absolute priority ────────────────
+    if (WF && WF.isActive()) {
+      const result = WF.process(text);
+      if (result && typeof result === 'object' && result.type === 'finalize') {
+        try {
+          const orderId = await WF.finalize();
+          return [
+            '✅ Đặt chỗ thành công!',
+            `Mã đơn: ${orderId}`,
+            '',
+            'Chúng tôi sẽ liên hệ xác nhận trong vòng 2 tiếng.',
+            `Cần hỗ trợ ngay: gọi ${regionPhone()}.`,
+          ].join('\n');
+        } catch (e) {
+          console.error('finalize error', e);
+          return `Xin lỗi, có lỗi khi lưu đơn. Vui lòng thử lại hoặc gọi ${regionPhone()}.`;
+        }
+      }
+      if (result !== null) return result;
     }
 
     const intent = parseIntent(text);
 
-    // 0a. Travel booking order tracking (phone or DLC-XXXXXX code)
+    // ── 0a. Detect new workflow intent (before marketplace/pricing) ─
+    if (WF && !intent.isPricing) {
+      const wfIntent = WF.detectIntent(text);
+      if (wfIntent) {
+        WF.startWorkflow(wfIntent, text);
+        const result = WF.process(text);
+        if (typeof result === 'string') return result;
+      }
+    }
+
+    // ── 1. Order tracking ─────────────────────────────────────────
     if (intent.isTracking) {
       const trackingResult = await lookupBooking(text);
       if (trackingResult) return trackingResult;
-    }
-
-    // 0b. Marketplace vendor order lookup (phone → vendors/*/bookings)
-    if (intent.isTracking) {
       const vendorResult = await lookupVendorOrder(text);
       if (vendorResult) return vendorResult;
     }
 
-    // 0c. Marketplace pricing engine (food/nail/hair — runs before Claude)
+    // ── 2. Marketplace pricing engine ────────────────────────────
     if (intent.isMarketplace || intent.isQuantityQuery) {
       const mktReply = buildMarketplaceReply(text);
       if (mktReply) return mktReply;
     }
 
-    // 1. Travel pricing engine — always runs first for pricing/route questions
+    // ── 3. Travel pricing engine ──────────────────────────────────
     if (intent.isRoute || intent.isPricing || intent.isComparison || intent.isExplain ||
         intent.isInfoNeeded || (intent.isTour && intent.destId) ||
         (intent.isTransfer && (intent.city || intent.airport)) ||
@@ -1581,24 +1204,23 @@ BEHAVIOR GUIDELINES:
       if (pricingReply) return pricingReply;
     }
 
-    // 2. Static rules — greetings, contacts, vehicles
+    // ── 4. Static rules ───────────────────────────────────────────
     const staticR = staticReply(text);
     if (staticR && !CLAUDE_KEY) return staticR;
     if (staticR && !intent.isPricing) return staticR;
 
-    // 3. Claude AI (if key configured)
+    // ── 5. Claude AI ──────────────────────────────────────────────
     if (CLAUDE_KEY) {
       return await callClaude(history);
     }
 
-    // 3b. Marketplace fallback — try rule-based one more time without intent guard
-    //     (catches queries that didn't trigger isMarketplace/isQuantityQuery)
+    // ── 5b. Marketplace fallback ──────────────────────────────────
     if (!CLAUDE_KEY) {
       const mktFallback = buildMarketplaceReply(text);
       if (mktFallback) return mktFallback;
     }
 
-    // 4. Fallback — and notify relevant vendor if identifiable
+    // ── 6. Fallback ───────────────────────────────────────────────
     const fallbackVendor = findProductMatch(text);
     if (fallbackVendor) {
       createBuyerQuestion(fallbackVendor.vendor.id, text, null);
@@ -1691,8 +1313,21 @@ BEHAVIOR GUIDELINES:
       });
     });
 
-    // Welcome message — show live estimates if DLCPricing is ready
-    let welcome = 'Xin chào! Tôi là trợ lý Du Lịch Cali.\n\nTôi có thể giúp bạn:\n• 🥟 Báo giá sản phẩm & dịch vụ: chả giò, nail, tóc, nhà hàng\n• ✈️ Ước tính tour & đưa đón sân bay (Las Vegas, Yosemite, SF)\n• 📋 Kiểm tra đơn hàng (nhập số điện thoại hoặc mã DLC-XXXXXX)\n• 🗺️ So sánh Bay Area vs Orange County\n\nVí dụ: "30 chả giò bao nhiêu tiền?" hoặc "giá manicure tại San Jose?"';
+    // Welcome message
+    const welcome = [
+      'Xin chào! Tôi là trợ lý Du Lịch Cali.',
+      '',
+      'Tôi có thể giúp bạn đặt trực tiếp:',
+      '• 🥟 Đặt món ăn (chả giò, chuối đậu nấu ốc...)',
+      '• ✈️ Đặt dịch vụ đón/đưa sân bay (LAX, SFO, SJC...)',
+      '• 💅 Đặt lịch nail (manicure, pedicure...)',
+      '• 💇 Đặt lịch làm tóc (cắt, nhuộm...)',
+      '• 🗺️ Đặt tour du lịch (Las Vegas, Yosemite, SF...)',
+      '',
+      'Hoặc hỏi giá, so sánh, kiểm tra đơn hàng.',
+      '',
+      'Ví dụ: "đặt 50 chả giò", "đón sân bay LAX ngày 20/4", "giá manicure San Jose?"',
+    ].join('\n');
     pushMsg('assistant', welcome);
   }
 
@@ -1705,10 +1340,24 @@ BEHAVIOR GUIDELINES:
   window.DLChat = {
     init,
     send,
-    /** Start a structured booking flow and inject the intro message into chat. */
+    /** Start a workflow and inject the first question into chat. */
     startFlow: function(type) {
-      const intro = startBookingFlow(type);
-      if (intro) pushMsg('assistant', intro);
+      const WF = window.DLCWorkflow;
+      if (!WF) return;
+      const typeMap = {
+        airport:         'airport_pickup',
+        airport_pickup:  'airport_pickup',
+        airport_dropoff: 'airport_dropoff',
+        tour:            'tour_request',
+        food:            'food_order',
+        nail:            'nail_appointment',
+        hair:            'hair_appointment',
+      };
+      const intent = typeMap[type] || type;
+      if (!WF.WORKFLOWS[intent]) return;
+      WF.startWorkflow(intent, '');
+      const result = WF.process('');
+      if (typeof result === 'string' && result) pushMsg('assistant', result);
     },
   };
 })();

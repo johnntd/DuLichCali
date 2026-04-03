@@ -1,0 +1,23 @@
+{
+  "name": "dulichcali-remotion-promo",
+  "version": "1.0.0",
+  "description": "Remotion food promo video generator for DuLichCali marketplace",
+  "scripts": {
+    "start": "npx remotion studio src/index.ts",
+    "render": "npx remotion render src/index.ts FoodPromo out/food-promo.mp4",
+    "generate": "node generate-promo.js"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.240",
+    "@remotion/google-fonts": "4.0.240",
+    "remotion": "4.0.240",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.1",
+    "@types/react-dom": "18.3.1",
+    "typescript": "^5.0.0"
+  }
+}

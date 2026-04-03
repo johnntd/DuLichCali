@@ -1300,6 +1300,89 @@ function switchHpPanel(panel) {
   });
 }
 
+// ── Travel Services Carousel ──────────────────────────────────
+var TRAVEL_SERVICES = [
+  {
+    chip: 'Sân Bay',
+    title: 'Đón Sân Bay',
+    sub: 'LAX · SFO · SJC · OAK · SAN · BUR',
+    img: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=600&auto=format&fit=crop&q=80',
+    cta: 'Đặt với AI',
+    intent: 'airport'
+  },
+  {
+    chip: 'Sân Bay',
+    title: 'Đưa Ra Sân Bay',
+    sub: 'Đưa từ nhà ra sân bay đúng giờ',
+    img: 'https://images.unsplash.com/photo-1530521954074-e64f6810b32d?w=600&auto=format&fit=crop&q=80',
+    cta: 'Đặt với AI',
+    intent: 'airport'
+  },
+  {
+    chip: 'Tour',
+    title: 'Las Vegas',
+    sub: 'The Strip · Bellagio · Grand Canyon · 2–3 ngày',
+    img: 'lasvegas.jpg?v=20260402',
+    cta: 'Lên kế hoạch',
+    intent: 'tour'
+  },
+  {
+    chip: 'Tour',
+    title: 'Yosemite',
+    sub: 'Half Dome · Yosemite Falls · El Capitan',
+    img: 'yosemite.jpg?v=20260402',
+    cta: 'Lên kế hoạch',
+    intent: 'tour'
+  },
+  {
+    chip: 'Xe Riêng',
+    title: 'Xe Riêng Cao Cấp',
+    sub: 'Tesla · Mercedes Van · Bay Area ↔ OC',
+    img: 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600&auto=format&fit=crop&q=80',
+    cta: 'Đặt với AI',
+    intent: 'ride'
+  },
+  {
+    chip: 'Tùy Chỉnh',
+    title: 'Kế Hoạch Riêng',
+    sub: '15 điểm đến · AI tư vấn 24/7',
+    img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&auto=format&fit=crop&q=75',
+    cta: 'Hỏi AI',
+    intent: 'tour'
+  }
+];
+
+function renderTravelCarousel() {
+  var container = document.getElementById('travCarousel');
+  if (!container) return;
+  container.innerHTML = TRAVEL_SERVICES.map(function(s) {
+    var intent = s.intent;
+    return '<div class="trav-card" role="listitem" onclick="openAIWithIntent(\'' + intent + '\')" aria-label="' + s.title + '">' +
+      '<div class="trav-card__bg" style="background-image:url(\'' + s.img + '\')"></div>' +
+      '<div class="trav-card__overlay"></div>' +
+      '<div class="trav-card__body">' +
+        '<span class="trav-card__chip">' + s.chip + '</span>' +
+        '<h3 class="trav-card__title">' + s.title + '</h3>' +
+        '<p class="trav-card__sub">' + s.sub + '</p>' +
+        '<button class="trav-card__cta" onclick="event.stopPropagation();openAIWithIntent(\'' + intent + '\')">' + s.cta + '</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ── All Homepage Vendors (non-region-gated fallback) ──────────
+function renderAllHomepageVendors() {
+  var container = document.getElementById('hpVendorCards');
+  var section   = document.getElementById('hpFeatured');
+  if (!container || !window.MARKETPLACE) return;
+  var vendors = MARKETPLACE.businesses
+    .filter(function(b) { return b.active && b.homepageActive; })
+    .sort(function(a, b) { return (a.featuredPriority || 99) - (b.featuredPriority || 99); });
+  if (!vendors.length) return;
+  container.innerHTML = vendors.map(buildVendorCardHtml).join('');
+  if (section) section.hidden = false;
+}
+
 // ── Hero Carousel ─────────────────────────────────────────────
 function heroCarouselCta(service) {
   if (service === 'travel') {
@@ -1494,6 +1577,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Render data-driven UI
+  renderTravelCarousel();
+  renderAllHomepageVendors();
   renderDestCards();
   renderDestList();
   renderTourChoiceGrid();

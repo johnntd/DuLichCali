@@ -191,11 +191,6 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
           Marketplace
         </button>
-        <button class="hp-tab" id="hpTabAI" data-panel="ai"
-          onclick="switchHpPanel('ai')" role="tab" aria-selected="false" aria-controls="panelAI">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-          AI Chat
-        </button>
       </nav>
 
       <!-- ── Panel A: Du Lịch ───────────────────────────────────── -->
@@ -207,17 +202,6 @@
             <h2 class="section-title">Có Sẵn Hôm Nay</h2>
           </div>
           <div class="hp-avail-row" id="hpAvailChips" role="list"></div>
-        </section>
-
-        <!-- Destination cards -->
-        <section class="home-section home-section--dest">
-          <div class="section-hdr">
-            <h2 class="section-title">Điểm Đến Nổi Bật</h2>
-            <button class="see-all" onclick="switchScreen('screenDest')">Xem tất cả</button>
-          </div>
-          <div class="dest-row" id="destCards" role="list">
-            <!-- Rendered by renderDestCards() in script.js -->
-          </div>
         </section>
 
         <!-- AI Concierge bar -->
@@ -238,113 +222,13 @@
           </div>
         </div>
 
-        <!-- Travel service cards (airport, ride, tour) -->
-        <section class="home-section home-section--svc">
-          <div class="section-hdr"><h2 class="section-title">Dịch Vụ Du Lịch</h2></div>
-
-          <div class="svc-fc-wrap">
-
-          <!-- Card 1: Airport Transfer -->
-          <div class="svc-fc" id="fcAirport">
-            <button class="svc-fc__hdr" onclick="toggleFc('fcAirport')" aria-expanded="false">
-              <div class="svc-fc__ico svc-fc__ico--air">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                  <path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 19.5 2.5S18 2 16.5 3.5L13 7 4.8 5.2 3.4 6.6l8 5-2.5 3h-2l-1.5 1.5 2.5 2.5 2.5 2.5L12 19h2l3-2.5 5 8 1.4-1.4z"/>
-                </svg>
-              </div>
-              <div class="svc-fc__inf">
-                <strong>Đưa Đón Sân Bay</strong>
-                <span id="fcAirSub">6 sân bay · LAX · SFO · SJC và thêm</span>
-              </div>
-              <svg class="svc-fc__arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="svc-fc__body">
-              <div class="svc-fc__det">
-                <div class="svc-fc__row">
-                  <span>✅ Đón từ sân bay về nhà</span>
-                  <span>✅ Đưa từ nhà ra sân bay</span>
-                </div>
-                <div class="svc-fc__row">
-                  <span>🚗 Tesla Model Y · Mercedes Van</span>
-                  <span>👥 1–12 khách</span>
-                </div>
-                <div class="svc-fc__tags" id="fcAirTags"></div>
-              </div>
-              <button class="svc-fc__cta" onclick="openAIWithIntent('airport')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                Đặt với AI
-              </button>
-            </div>
+        <!-- Travel Services Carousel -->
+        <section class="home-section">
+          <div class="section-hdr">
+            <h2 class="section-title">Dịch Vụ Du Lịch</h2>
+            <button class="see-all" onclick="switchScreen('screenDest')">Xem tất cả</button>
           </div>
-
-          <!-- Card 2: Private Ride -->
-          <div class="svc-fc" id="fcRide">
-            <button class="svc-fc__hdr" onclick="toggleFc('fcRide')" aria-expanded="false">
-              <div class="svc-fc__ico svc-fc__ico--ride">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                  <rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h5l3 5v4h-8V8z"/>
-                  <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
-                </svg>
-              </div>
-              <div class="svc-fc__inf">
-                <strong>Xe Riêng Cao Cấp</strong>
-                <span>Tesla · Mercedes · Liên tỉnh · Sự kiện</span>
-              </div>
-              <svg class="svc-fc__arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="svc-fc__body">
-              <div class="svc-fc__det">
-                <div class="svc-fc__row">
-                  <span>🚘 Xe sang trọng riêng tư</span>
-                  <span>🛣 Bay Area ↔ Orange County</span>
-                </div>
-                <div class="svc-fc__row">
-                  <span>📍 Bất kỳ điểm đến nào</span>
-                  <span>💼 Phù hợp doanh nhân & gia đình</span>
-                </div>
-              </div>
-              <button class="svc-fc__cta" onclick="openAIWithIntent('ride')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                Đặt với AI
-              </button>
-            </div>
-          </div>
-
-          <!-- Card 3: Tour Packages -->
-          <div class="svc-fc" id="fcTour">
-            <button class="svc-fc__hdr" onclick="toggleFc('fcTour')" aria-expanded="false">
-              <div class="svc-fc__ico svc-fc__ico--tour">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                  <polygon points="3 11 22 2 13 21 11 13 3 11"/>
-                </svg>
-              </div>
-              <div class="svc-fc__inf">
-                <strong>Tour & Gói Du Lịch</strong>
-                <span>15 điểm đến · CA · NV · AZ · AI lên kế hoạch</span>
-              </div>
-              <svg class="svc-fc__arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="svc-fc__body">
-              <div class="svc-fc__det">
-                <div class="svc-fc__tags" id="fcTourTags"></div>
-                <div class="svc-fc__row" style="margin-top:.5rem">
-                  <span>🏨 Tùy chọn khách sạn / Airbnb</span>
-                  <span>👨‍👩‍👧‍👦 Nhóm 1–12 người</span>
-                </div>
-              </div>
-              <button class="svc-fc__cta" onclick="openAIWithIntent('tour')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                Lên Kế Hoạch với AI
-              </button>
-            </div>
-          </div>
-
-          </div><!-- /.svc-fc-wrap -->
-        </section>
-
-        <!-- Vehicle quick-book card -->
-        <section class="home-section" id="vehicleCard" style="display:none">
-          <!-- Filled by JS if driver available -->
+          <div class="trav-carousel" id="travCarousel" role="list"></div>
         </section>
 
         <!-- Trust numbers -->
@@ -379,72 +263,17 @@
       <!-- ── Panel B: Marketplace ───────────────────────────────── -->
       <div class="hp-panel" id="panelMarket" role="tabpanel" aria-labelledby="hpTabMarket" hidden>
 
-        <!-- Personalized featured vendors (filled by JS when region detected) -->
-        <section id="hpFeatured" class="home-section" hidden>
+        <!-- All featured vendors — populated by renderAllHomepageVendors() -->
+        <section id="hpFeatured" class="home-section">
           <div class="section-hdr">
-            <h2 class="section-title" id="hpFeaturedTitle">Đề Xuất Gần Bạn</h2>
+            <h2 class="section-title" id="hpFeaturedTitle">Dịch Vụ Nổi Bật</h2>
             <a href="marketplace/" class="see-all">Xem tất cả</a>
           </div>
           <div class="hp-vendor-row" id="hpVendorCards" role="list"></div>
         </section>
 
-        <!-- Category featured tiles with real images -->
-        <section class="home-section">
-          <div class="section-hdr">
-            <h2 class="section-title">Danh Mục Dịch Vụ</h2>
-            <a href="marketplace/" class="see-all">Tất cả</a>
-          </div>
-          <div class="mkt-featured-grid">
-            <a href="nailsalon/" class="mkt-feat-tile">
-              <div class="mkt-feat-tile__img" style="background-image:url('https://images.unsplash.com/photo-1604654894610-df63bc536371?w=700&auto=format&fit=crop&q=85')"></div>
-              <div class="mkt-feat-tile__body">
-                <span class="mkt-feat-tile__cat">Beauty</span>
-                <h3 class="mkt-feat-tile__name">Nail Salon</h3>
-                <p class="mkt-feat-tile__desc">Gel · Acrylic · Pedicure · Bay Area & OC</p>
-              </div>
-            </a>
-            <a href="hairsalon/" class="mkt-feat-tile">
-              <div class="mkt-feat-tile__img" style="background-image:url('https://images.unsplash.com/photo-1560066984-138dadb4c035?w=700&auto=format&fit=crop&q=85')"></div>
-              <div class="mkt-feat-tile__body">
-                <span class="mkt-feat-tile__cat">Beauty</span>
-                <h3 class="mkt-feat-tile__name">Hair Salon</h3>
-                <p class="mkt-feat-tile__desc">Cắt · Nhuộm · Uốn · Duỗi · Bay Area & OC</p>
-              </div>
-            </a>
-            <a href="foods/" class="mkt-feat-tile mkt-feat-tile--wide">
-              <div class="mkt-feat-tile__img" style="background-image:url('/nha-bep-emily-eggroll.jpg')"></div>
-              <div class="mkt-feat-tile__body">
-                <span class="mkt-feat-tile__cat">Food</span>
-                <h3 class="mkt-feat-tile__name">Ẩm Thực Việt</h3>
-                <p class="mkt-feat-tile__desc">Chả Giò · Phở · Cơm Tấm · Catering · Bay Area & OC</p>
-              </div>
-            </a>
-          </div>
-        </section>
-
       </div><!-- /#panelMarket -->
 
-      <!-- ── Panel C: AI Concierge ──────────────────────────────── -->
-      <div class="hp-panel" id="panelAI" role="tabpanel" aria-labelledby="hpTabAI" hidden>
-
-        <div class="ai-concierge-panel">
-          <div class="ai-concierge-panel__hero">
-            <div class="ai-concierge-panel__orb">✦</div>
-            <h2>AI Du Lịch Cali</h2>
-            <p>Đặt chỗ · Tư vấn · Kiểm tra đơn hàng — 24/7</p>
-          </div>
-          <div class="ai-concierge-panel__prompts">
-            <button class="ai-prompt-btn" onclick="openAIWithIntent('airport')">✈ Đặt đưa đón sân bay</button>
-            <button class="ai-prompt-btn" onclick="openAIWithIntent('tour')">🗺 Lên kế hoạch tour</button>
-            <button class="ai-prompt-btn" onclick="openAIWithIntent('order')">🥟 Đặt đồ ăn Việt</button>
-            <button class="ai-prompt-btn" onclick="openAIWithIntent('price')">💰 Hỏi giá & so sánh</button>
-          </div>
-          <button class="btn btn--gold btn--full ai-concierge-panel__cta" onclick="switchScreen('screenChat')">
-            Mở AI Concierge →
-          </button>
-        </div>
-
-      </div><!-- /#panelAI -->
 
       <div class="screen-spacer"></div>
     </section>

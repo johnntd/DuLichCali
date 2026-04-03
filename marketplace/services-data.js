@@ -64,6 +64,7 @@
       ],
       description:
         'Tiệm nail chuyên nghiệp hơn 10 năm kinh nghiệm tại Bay Area. Sản phẩm an toàn, đội ngũ lành nghề, không gian thoải mái.',
+      heroImage: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=80',
       heroGradient:
         'linear-gradient(135deg,#831843 0%,#9d174d 40%,#4c1d95 100%)',
       services: [
@@ -120,6 +121,7 @@
       ],
       description:
         'Điểm đến làm đẹp tin cậy tại Quận Cam. Không gian thoải mái, sản phẩm an toàn, thợ lành nghề.',
+      heroImage: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=80',
       heroGradient:
         'linear-gradient(135deg,#be185d 0%,#db2777 40%,#7c3aed 100%)',
       services: [
@@ -177,6 +179,7 @@
       ],
       description:
         'Phong cách tóc kết hợp nghệ thuật Á Đông và xu hướng quốc tế. Stylist giàu kinh nghiệm tư vấn kiểu tóc phù hợp với khuôn mặt và phong cách.',
+      heroImage: 'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=600&auto=format&fit=crop&q=80',
       heroGradient:
         'linear-gradient(135deg,#064e3b 0%,#065f46 40%,#1e40af 100%)',
       services: [
@@ -234,6 +237,7 @@
       ],
       description:
         'Tọa lạc tại Little Saigon Garden Grove. Chuyên cắt uốn nhuộm và chăm sóc tóc theo phong cách Việt–Mỹ hiện đại. Đội ngũ thợ luôn cập nhật xu hướng mới.',
+      heroImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&auto=format&fit=crop&q=80',
       heroGradient:
         'linear-gradient(135deg,#92400e 0%,#b45309 40%,#7c2d12 100%)',
       services: [
@@ -339,7 +343,7 @@
       address: '2534 Clarebank Way, San Jose, CA 95121',
       phone: '4089312438',
       phoneDisplay: '408-931-2438',
-      heroImage: '../nha-bep-emily-eggroll.jpg',
+      heroImage: '/nha-bep-emily-eggroll.jpg',
       hosts: [
         {
           name: 'Loan',
@@ -369,7 +373,7 @@
           unit: 'cuốn',
           unitEn: 'piece',
           minimumOrderQty: 30,
-          image: '../nha-bep-emily-eggroll.jpg',
+          image: '/nha-bep-emily-eggroll.jpg',
           videoUrl: null,
           videoStatus: 'none',
           videoGeneratedAt: null,

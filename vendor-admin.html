@@ -1025,6 +1025,99 @@
       .va-body { grid-template-columns: 270px 1fr; }
       .va-item-list { grid-template-columns: repeat(4, 1fr); }
     }
+
+    /* ── Variant builder ─────────────────────────────────────────── */
+    .var-builder { display: flex; flex-direction: column; gap: .5rem; }
+
+    .var-row {
+      display: grid;
+      grid-template-columns: 1fr 48px auto;
+      gap: .45rem;
+      align-items: center;
+      background: rgba(255,255,255,.03);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: .5rem .6rem;
+    }
+    .var-row__label {
+      background: var(--navy-900);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--font-b);
+      font-size: .85rem;
+      height: 38px;
+      padding: 0 .65rem;
+      outline: none;
+      transition: border-color .18s;
+    }
+    .var-row__label:focus { border-color: var(--gold); }
+
+    .var-row__img-wrap {
+      position: relative;
+      width: 48px; height: 48px;
+      border-radius: 6px;
+      border: 1px dashed rgba(255,255,255,.22);
+      background: rgba(255,255,255,.04);
+      cursor: pointer;
+      overflow: hidden;
+      flex-shrink: 0;
+      transition: border-color .18s;
+    }
+    .var-row__img-wrap:hover { border-color: var(--gold); }
+    .var-row__thumb {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+    .var-row__thumb.loaded { display: block; }
+    .var-row__img-icon {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .95rem; color: var(--muted);
+      pointer-events: none;
+    }
+    .var-row__img-icon.hidden { display: none; }
+    .var-row__img-prog {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,.65);
+      display: none;
+      align-items: center; justify-content: center;
+      font-size: .55rem; color: #fff; font-weight: 700;
+    }
+    .var-row__img-prog.active { display: flex; }
+    .var-row__file { display: none; }
+
+    .var-row__remove {
+      background: none; border: none;
+      color: var(--muted); cursor: pointer;
+      font-size: 1.1rem; line-height: 1;
+      padding: .25rem .35rem;
+      border-radius: 5px;
+      transition: color .15s, background .15s;
+      flex-shrink: 0;
+    }
+    .var-row__remove:hover { color: var(--danger); background: rgba(248,113,113,.1); }
+
+    .var-add-btn {
+      display: flex; align-items: center; justify-content: center;
+      gap: .4rem; width: 100%; margin-top: .35rem;
+      height: 36px; background: transparent;
+      border: 1px dashed rgba(255,255,255,.18);
+      border-radius: 7px; color: var(--muted);
+      font-family: var(--font-b); font-size: .8rem;
+      cursor: pointer; transition: border-color .18s, color .18s;
+    }
+    .var-add-btn:hover { border-color: var(--gold); color: var(--gold-lt); }
+
+    /* AI advanced section toggle */
+    .ai-advanced-details summary {
+      list-style: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .ai-advanced-details summary::-webkit-details-marker { display: none; }
+    .ai-advanced-details[open] .ai-adv-arrow { transform: rotate(180deg); }
+    .ai-adv-arrow { transition: transform .2s; font-size: .7rem; color: var(--muted); }
   </style>
   <link rel="stylesheet" href="/desktop.css">
 </head>
@@ -1173,17 +1266,23 @@
           <span id="smsSaveStatus" style="font-size:.8rem;color:var(--text-muted)"></span>
         </div>
       </div>
-    </div>
 
-    <!-- AI Engine Status -->
-    <div class="va-cap-card" style="margin-top:.9rem">
-      <div class="va-cap-card__title">&#10024; AI Content Engine</div>
-      <div class="ai-provider-row" id="aiProviderChips">
-        <!-- populated by renderAIProviderChips() -->
-      </div>
-      <p style="font-size:.72rem;color:var(--muted);margin:.55rem 0 0;line-height:1.55">
-        Tính năng AI được vận hành bởi nền tảng Du Lịch Cali. Không cần cấu hình thêm.
-      </p>
+      <!-- AI / Marketing tools — collapsed by default, not part of normal workflow -->
+      <details class="va-cap-card ai-advanced-details" style="margin-top:.9rem">
+        <summary class="va-cap-card__title">
+          <span>✨ Công Cụ Marketing AI</span>
+          <span class="ai-adv-arrow">▾</span>
+        </summary>
+        <div style="margin-top:.75rem">
+          <div class="ai-provider-row" id="aiProviderChips">
+            <!-- populated by renderAIProviderChips() -->
+          </div>
+          <p style="font-size:.72rem;color:var(--muted);margin:.55rem 0 0;line-height:1.55">
+            Tính năng AI được vận hành bởi nền tảng Du Lịch Cali. Không cần cấu hình thêm.<br>
+            Dùng nút <strong style="color:var(--gold)">✨ AI Content</strong> trên từng món trong tab Thực Đơn để tạo nội dung marketing.
+          </p>
+        </div>
+      </details>
     </div>
 
   </div>
@@ -1252,10 +1351,10 @@
     </div>
 
     <div class="f-row">
-      <label class="f-label" for="fVariants">Loại (phân cách bởi dấu phẩy)</label>
-      <input class="f-input" type="text" id="fVariants"
-        placeholder="Raw, Fresh">
-      <span class="f-hint">Ví dụ: Raw, Fresh · Để trống nếu không có loại</span>
+      <label class="f-label">Loại sản phẩm (Variants)</label>
+      <div class="var-builder" id="variantBuilder"></div>
+      <button type="button" class="var-add-btn" onclick="appendVariantRow('','')">+ Thêm loại</button>
+      <span class="f-hint">Mỗi loại có thể có ảnh riêng — VD: Raw (chưa chiên) · Fresh (chiên sẵn). Nhấn 🖼 để upload ảnh từng loại.</span>
     </div>
 
     <div class="f-row">
@@ -1431,7 +1530,10 @@
     name:            'Chả Giò (Eggroll)',
     displayNameVi:   'Chả Giò',
     description:     'Chả giò nhân thịt heo, nấm hương và cà rốt tươi — gói bằng bánh tráng mỏng, chiên giòn vàng thơm phức. Handmade, không chất bảo quản. Perfect for family dinners and parties.',
-    variants:        ['Raw — to fry fresh at home', 'Fresh — cooked & ready to serve'],
+    variants:        [
+      { key: 'raw',   label: 'Raw — to fry fresh at home',       imageUrl: '' },
+      { key: 'fresh', label: 'Fresh — cooked & ready to serve',  imageUrl: '' }
+    ],
     price:           0.75,
     unit:            'each',
     minimumOrderQty: 30,
@@ -1471,6 +1573,10 @@
   var _knownNotifIds    = {};
   var _initialNotifLoad = false;
   var _popupTimer       = null;
+  // Image upload tracking — prevents saving before upload completes
+  var _activeUploadTask  = null;   // main item image upload task
+  var _varUploadTasks    = {};     // per-variant upload tasks keyed by row index
+  var _uploadsInProgress = 0;      // counter; Save is blocked while > 0
 
   // ── Auth: email/password via Firebase — redirect if not signed in ─────────
   function goToLogin(vendorId) {
@@ -1719,9 +1825,14 @@
       document.getElementById('fImagePosY').value = item.imagePositionY != null ? item.imagePositionY : 50;
       setImgPreview(item.image || '');
       updateFocalPreview();
-      document.getElementById('fVariants').value  = (item.variants || []).map(function (v) {
-        return typeof v === 'object' ? (v.labelEn || v.label || '') : v;
-      }).join(', ');
+      clearVariantBuilder();
+      (item.variants || []).forEach(function (v) {
+        if (v && typeof v === 'object') {
+          appendVariantRow(v.label || v.labelEn || '', v.imageUrl || '');
+        } else if (v) {
+          appendVariantRow(String(v), '');
+        }
+      });
       setToggle('fActive',   item.active !== false);
       setToggle('fFeatured', !!item.featured);
       // Instruction fields
@@ -1745,6 +1856,16 @@
   }
 
   function closeDrawer() {
+    // Cancel any in-progress uploads so stale URLs don't leak to a later save
+    if (_activeUploadTask) {
+      try { _activeUploadTask.cancel(); } catch (e) {}
+      _activeUploadTask = null;
+    }
+    Object.keys(_varUploadTasks).forEach(function(k) {
+      try { _varUploadTasks[k].cancel(); } catch (e) {}
+    });
+    _varUploadTasks = {};
+    _uploadsInProgress = 0;
     document.getElementById('drawerOverlay').classList.remove('show');
     document.getElementById('drawer').classList.remove('open');
   }
@@ -1757,7 +1878,7 @@
     document.getElementById('fPrice').value        = '';
     document.getElementById('fUnit').value         = 'each';
     document.getElementById('fMinQty').value       = '30';
-    document.getElementById('fVariants').value     = '';
+    clearVariantBuilder();
     document.getElementById('fImage').value        = '';
     document.getElementById('fVideoUrl').value     = '';
     document.getElementById('fImageFile').value    = '';
@@ -1812,6 +1933,21 @@
     if (yLbl) yLbl.textContent = y + '%';
   }
 
+  function _setSaveBlocked(blocked) {
+    var btn = document.getElementById('saveBtn');
+    if (!btn) return;
+    if (blocked) {
+      btn.disabled = true;
+      btn.dataset.uploadBlocked = '1';
+      btn.title = 'Đang tải ảnh — vui lòng chờ...';
+    } else {
+      btn.dataset.uploadBlocked = '';
+      btn.title = '';
+      // Only re-enable if no other block
+      if (_uploadsInProgress <= 0) btn.disabled = false;
+    }
+  }
+
   function handleImageUpload(input) {
     var file = input.files[0];
     if (!file) return;
@@ -1821,24 +1957,29 @@
     var label   = document.getElementById('imgLabel');
 
     function uploadFail(msg) {
+      _uploadsInProgress = Math.max(0, _uploadsInProgress - 1);
+      _activeUploadTask = null;
+      _setSaveBlocked(false);
       overlay.classList.remove('active');
-      // Show error directly in the overlay AND as a toast
       label.textContent = msg;
       overlay.classList.add('active');
       showToast(msg, 'error');
       setTimeout(function () { overlay.classList.remove('active'); }, 6000);
     }
 
-    // Show local preview immediately
+    // Show local preview immediately (base64 — not the final URL)
     var reader = new FileReader();
     reader.onload = function (e) { setImgPreview(e.target.result); };
     reader.readAsDataURL(file);
+
+    // Block Save until upload finishes
+    _uploadsInProgress++;
+    _setSaveBlocked(true);
 
     overlay.classList.add('active');
     fill.style.width = '0%';
     label.textContent = 'Đang kết nối...';
 
-    // Check Storage is available
     if (typeof firebase.storage !== 'function') {
       uploadFail('Firebase Storage SDK chưa tải. Reload trang và thử lại.');
       return;
@@ -1848,15 +1989,15 @@
     var fileName = Date.now() + '.' + ext;
     var task;
 
-    // Start stall timer BEFORE put() — catches crashes and hangs
     var uploadTimer = setTimeout(function () {
       try { if (task) task.cancel(); } catch (e) {}
-      uploadFail('Hết giờ chờ. Firebase Storage chưa được bật hoặc Rules chưa đúng. Vào Firebase Console → Storage → Get Started.');
-    }, 10000);
+      uploadFail('Hết giờ chờ. Firebase Storage chưa bật hoặc Rules chưa đúng.');
+    }, 15000);
 
     try {
       var ref = storage.ref('vendors/' + VENDOR_ID + '/menu/' + fileName);
       task = ref.put(file);
+      _activeUploadTask = task;
     } catch (e) {
       clearTimeout(uploadTimer);
       uploadFail('Lỗi Storage: ' + (e.message || String(e)));
@@ -1867,12 +2008,11 @@
 
     task.on('state_changed',
       function (snap) {
-        // Reset stall timer on each real progress tick
         clearTimeout(uploadTimer);
         uploadTimer = setTimeout(function () {
           try { task.cancel(); } catch (e) {}
           uploadFail('Upload bị treo. Kiểm tra Firebase Storage Rules.');
-        }, 10000);
+        }, 15000);
         var pct = snap.totalBytes
           ? Math.round(snap.bytesTransferred / snap.totalBytes * 100)
           : 0;
@@ -1890,10 +2030,14 @@
       },
       function () {
         clearTimeout(uploadTimer);
+        _activeUploadTask = null;
+        _uploadsInProgress = Math.max(0, _uploadsInProgress - 1);
         task.snapshot.ref.getDownloadURL().then(function (url) {
+          // Persist final Firebase URL to hidden field — this is what gets saved
           document.getElementById('fImage').value = url;
           overlay.classList.remove('active');
           setImgPreview(url);
+          _setSaveBlocked(false);
           showToast('Tải ảnh thành công!', 'success');
         }).catch(function (e) {
           uploadFail('Upload xong nhưng không lấy được URL: ' + e.message);
@@ -1989,11 +2133,14 @@
     if (isNaN(price) || price < 0) { showToast('Giá không hợp lệ.', 'error'); return; }
     if (isNaN(minQty) || minQty < 1) { showToast('Số lượng tối thiểu phải ≥ 1.', 'error'); return; }
 
-    // Variants: "Raw, Fresh" → ["Raw", "Fresh"]
-    var variantStr = document.getElementById('fVariants').value.trim();
-    var variants = variantStr
-      ? variantStr.split(',').map(function (v) { return v.trim(); }).filter(Boolean)
-      : [];
+    // Guard: block save if any upload is still in progress
+    if (_uploadsInProgress > 0) {
+      showToast('Đang tải ảnh — vui lòng đợi trước khi lưu.', 'error');
+      return;
+    }
+
+    // Collect variants as objects {key, label, imageUrl}
+    var variants = getVariantObjects();
 
     var data = {
       name:                    name,
@@ -2940,6 +3087,148 @@
     }).catch(function (err) {
       showToast('Lỗi: ' + err.message, 'error');
     });
+  }
+
+  // ── Variant builder ───────────────────────────────────────────────────────
+
+  function clearVariantBuilder() {
+    var builder = document.getElementById('variantBuilder');
+    if (builder) builder.innerHTML = '';
+  }
+
+  function appendVariantRow(label, imageUrl) {
+    var builder = document.getElementById('variantBuilder');
+    if (!builder) return;
+    var idx = builder.querySelectorAll('.var-row').length;
+    var fileId = 'varFile_' + idx + '_' + Date.now();
+
+    var hasImg = imageUrl ? ' loaded' : '';
+    var iconHidden = imageUrl ? ' hidden' : '';
+
+    var row = document.createElement('div');
+    row.className = 'var-row';
+    row.dataset.varIdx = String(idx);
+    row.innerHTML =
+      '<input type="text" class="var-row__label f-input" ' +
+        'placeholder="Tên loại (VD: Raw, Fresh)" value="' + esc(label) + '" ' +
+        'aria-label="Variant label">' +
+      '<label class="var-row__img-wrap" title="Upload ảnh cho loại này">' +
+        '<img class="var-row__thumb' + hasImg + '" ' +
+          'src="' + esc(imageUrl || '') + '" alt="">' +
+        '<span class="var-row__img-icon' + iconHidden + '">🖼</span>' +
+        '<span class="var-row__img-prog" id="varProg_' + idx + '"></span>' +
+        '<input type="file" class="var-row__file" accept="image/*" ' +
+          'id="' + fileId + '">' +
+      '</label>' +
+      '<input type="hidden" class="var-img-url" value="' + esc(imageUrl || '') + '">' +
+      '<button type="button" class="var-row__remove" ' +
+        'onclick="removeVariantRow(this)" title="Xóa loại">×</button>';
+
+    // Wire file input change after DOM insertion (avoids inline handler escaping issues)
+    builder.appendChild(row);
+    var fileInput = document.getElementById(fileId);
+    if (fileInput) {
+      fileInput.addEventListener('change', function () {
+        handleVariantImageUpload(this, row);
+      });
+      // Also trigger on label click (the label wraps the file input)
+    }
+  }
+
+  function removeVariantRow(btn) {
+    var row = btn.closest('.var-row');
+    if (row) row.remove();
+  }
+
+  function handleVariantImageUpload(input, row) {
+    var file = input.files[0];
+    if (!file || !row) return;
+
+    var thumb    = row.querySelector('.var-row__thumb');
+    var icon     = row.querySelector('.var-row__img-icon');
+    var progEl   = row.querySelector('.var-row__img-prog');
+    var urlInput = row.querySelector('.var-img-url');
+    var idx      = row.dataset.varIdx;
+
+    // Immediate local preview (base64)
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      if (thumb) { thumb.src = e.target.result; thumb.classList.add('loaded'); }
+      if (icon)  icon.classList.add('hidden');
+    };
+    reader.readAsDataURL(file);
+
+    if (!VENDOR_ID || typeof firebase === 'undefined' || typeof firebase.storage !== 'function') {
+      showToast('Không thể upload ảnh loại — Storage chưa sẵn sàng.', 'error');
+      return;
+    }
+
+    _uploadsInProgress++;
+    _setSaveBlocked(true);
+    if (progEl) { progEl.classList.add('active'); progEl.textContent = '0%'; }
+
+    var ext      = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    var fileName = 'v' + idx + '_' + Date.now() + '.' + ext;
+    var ref  = storage.ref('vendors/' + VENDOR_ID + '/menu/' + fileName);
+    var task = ref.put(file);
+    _varUploadTasks[idx] = task;
+
+    task.on('state_changed',
+      function (snap) {
+        var pct = snap.totalBytes ? Math.round(snap.bytesTransferred / snap.totalBytes * 100) : 0;
+        if (progEl) progEl.textContent = pct + '%';
+      },
+      function (err) {
+        _uploadsInProgress = Math.max(0, _uploadsInProgress - 1);
+        delete _varUploadTasks[idx];
+        _setSaveBlocked(false);
+        if (progEl) progEl.classList.remove('active');
+        showToast('Lỗi upload ảnh loại: ' + (err.code || err.message), 'error');
+      },
+      function () {
+        task.snapshot.ref.getDownloadURL().then(function (url) {
+          if (urlInput) urlInput.value = url;
+          if (thumb)    { thumb.src = url; thumb.classList.add('loaded'); }
+          if (icon)     icon.classList.add('hidden');
+          if (progEl)   progEl.classList.remove('active');
+          _uploadsInProgress = Math.max(0, _uploadsInProgress - 1);
+          delete _varUploadTasks[idx];
+          _setSaveBlocked(false);
+          showToast('Ảnh loại đã tải lên!', 'success');
+        }).catch(function (e) {
+          _uploadsInProgress = Math.max(0, _uploadsInProgress - 1);
+          delete _varUploadTasks[idx];
+          _setSaveBlocked(false);
+          if (progEl) progEl.classList.remove('active');
+          showToast('Lỗi lấy URL ảnh loại: ' + e.message, 'error');
+        });
+      }
+    );
+  }
+
+  function getVariantObjects() {
+    var builder = document.getElementById('variantBuilder');
+    if (!builder) return [];
+    var rows   = builder.querySelectorAll('.var-row');
+    var result = [];
+    rows.forEach(function (row) {
+      var labelEl = row.querySelector('.var-row__label');
+      var urlEl   = row.querySelector('.var-img-url');
+      var label   = labelEl ? labelEl.value.trim() : '';
+      if (!label) return;   // skip empty rows
+      var imageUrl = urlEl ? urlEl.value.trim() : '';
+      var key = label.toLowerCase()
+        .replace(/[àáạảãâầấậẩẫăằắặẳẵ]/g, 'a')
+        .replace(/[èéẹẻẽêềếệểễ]/g, 'e')
+        .replace(/[ìíịỉĩ]/g, 'i')
+        .replace(/[òóọỏõôồốộổỗơờớợởỡ]/g, 'o')
+        .replace(/[ùúụủũưừứựửữ]/g, 'u')
+        .replace(/[đ]/g, 'd')
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '') || ('v' + result.length);
+      result.push({ key: key, label: label, imageUrl: imageUrl });
+    });
+    return result;
   }
 
   // ── Confirm booking from notification ─────────────────────────────────────

@@ -569,12 +569,17 @@
             var item = d.data();
             if (item.active === false) return;   // skip inactive
 
-            // Normalize variants: string[] or object[] → {id, label, labelEn}[]
+            // Normalize variants → {id, label, labelEn, imageUrl}[]
+            // Supports legacy string[], old {id,label} objects, and new {key,label,imageUrl} objects
             var variants = (item.variants || []).map(function (v, i) {
-              if (v && typeof v === 'object' && v.id) return v;
-              var s = String(v || '');
+              if (v && typeof v === 'object') {
+                var id  = v.id || v.key || ('v' + i);
+                var lbl = v.label || v.labelEn || String(v);
+                return { id: id, label: lbl, labelEn: lbl, imageUrl: v.imageUrl || '' };
+              }
+              var s    = String(v || '');
               var slug = s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || ('v' + i);
-              return { id: slug, label: s, labelEn: s };
+              return { id: slug, label: s, labelEn: s, imageUrl: '' };
             });
 
             items.push({
@@ -747,7 +752,11 @@
 
     var productsHtml = biz.products.filter(function (p) { return p.active; }).map(function (product) {
       var variantsHtml = (product.variants || []).map(function (v) {
-        return '<span class="mp-product__variant">' + escHtml(v.labelEn) + '</span>';
+        var imgAttr = v.imageUrl
+          ? ' data-img="' + escAttr(v.imageUrl) + '" data-prod="' + escAttr(product.id) + '" ' +
+            'onclick="dlcSwapVariantImg(this)" style="cursor:pointer" title="' + escAttr(v.labelEn) + '"'
+          : '';
+        return '<span class="mp-product__variant"' + imgAttr + '>' + escHtml(v.labelEn) + '</span>';
       }).join('');
 
       var priceStr = '$' + product.pricePerUnit.toFixed(2) + ' / ' + escHtml(product.unitEn);
@@ -758,27 +767,48 @@
       var posY  = (product.imagePositionY != null ? product.imagePositionY : 50) + '%';
       var imgPos = 'object-position:' + posX + ' ' + posY + ';';
 
+      // Default display image: item.image first; fall back to first variant that has imageUrl
+      var defaultImg = product.image || '';
+      if (!defaultImg) {
+        var firstVariantWithImg = (product.variants || []).find(function (v) { return v.imageUrl; });
+        if (firstVariantWithImg) defaultImg = firstVariantWithImg.imageUrl;
+      }
+
+      // Build variant image map as JSON for JS-driven image swapping
+      var varImgMap = {};
+      (product.variants || []).forEach(function (v) {
+        if (v.imageUrl) varImgMap[v.id] = v.imageUrl;
+      });
+      var hasVariantImgs = Object.keys(varImgMap).length > 0;
+
       var mediaHtml = '';
       if (product.videoUrl) {
         mediaHtml =
           '<div class="mp-product-card__media-wrap">' +
             '<video class="mp-product-card__promo-video" autoplay muted loop playsinline ' +
               'style="' + imgPos + '" ' +
-              'poster="' + escAttr(product.image || '') + '">' +
+              'poster="' + escAttr(defaultImg) + '">' +
               '<source src="' + escAttr(product.videoUrl) + '" type="video/mp4">' +
             '</video>' +
             '<span class="mp-product-card__video-badge">▶ Video</span>' +
           '</div>';
-      } else if (product.image) {
+      } else if (defaultImg) {
         mediaHtml =
-          '<div class="mp-product-card__media-wrap">' +
-            '<img class="mp-product-card__img" src="' + escAttr(product.image) + '" ' +
+          '<div class="mp-product-card__media-wrap" id="pcard-media-' + escAttr(product.id) + '">' +
+            '<img class="mp-product-card__img" ' +
+              'id="pcard-img-' + escAttr(product.id) + '" ' +
+              'src="' + escAttr(defaultImg) + '" ' +
               'style="' + imgPos + '" ' +
               'alt="' + escAttr(product.nameEn || product.name) + '" loading="lazy" ' +
               'onerror="this.parentElement.style.display=\'none\'">' +
           '</div>';
       }
       var imgHtml = mediaHtml; // keep variable name for compatibility below
+
+      // Encode variant→image map as data attribute for JS swapping in order form
+      var varImgAttr = hasVariantImgs
+        ? ' data-var-images="' + escAttr(JSON.stringify(varImgMap)) + '" data-default-img="' + escAttr(defaultImg) + '"'
+        : '';
 
       // Tags: shown when the product has tags defined
       var tagsHtml = (product.tags && product.tags.length > 0)
@@ -799,7 +829,7 @@
 
       var instrHtml = buildInstructionsHtml(product);
 
-      return '<div class="mp-product-card">' +
+      return '<div class="mp-product-card" data-product-id="' + escAttr(product.id) + '"' + varImgAttr + '>' +
         imgHtml +
         '<div class="mp-product-card__body">' +
           '<div class="mp-product-card__name">' + escHtml(product.name) + '</div>' +
@@ -1046,7 +1076,7 @@
           minBadge.textContent = 'Min. ' + product.minimumOrderQty;
         }
 
-        // Update variant select
+        // Update variant select (store imageUrl on each option for later swap)
         if (variantSelectEl && variantRowEl) {
           var variants = product.variants || [];
           if (variants.length === 0) {
@@ -1059,9 +1089,37 @@
             variantSelectEl.innerHTML   =
               '<option value="">— Select type —</option>' +
               variants.map(function (v) {
-                return '<option value="' + escAttr(v.id) + '">' + escHtml(v.labelEn) + '</option>';
+                return '<option value="' + escAttr(v.id) + '" data-img="' + escAttr(v.imageUrl || '') + '">' + escHtml(v.labelEn) + '</option>';
               }).join('');
           }
+        }
+
+        // Reset product card image to this product's default when item changes
+        dlcResetProductImg(product);
+      });
+    }
+
+    // Swap product card image when variant is selected
+    if (variantSelectEl) {
+      variantSelectEl.addEventListener('change', function () {
+        var selOpt = variantSelectEl.options[variantSelectEl.selectedIndex];
+        if (!selOpt) return;
+        var selectedId = itemSelectEl ? itemSelectEl.value : '';
+        var product = null;
+        if (biz.products) {
+          for (var pi = 0; pi < biz.products.length; pi++) {
+            if (biz.products[pi].id === selectedId) { product = biz.products[pi]; break; }
+          }
+        }
+        if (!product) return;
+        var varImg = selOpt.dataset.img || '';
+        var imgEl  = document.getElementById('pcard-img-' + product.id);
+        if (imgEl) {
+          imgEl.src = varImg || product.image || (function () {
+            // fall back to first variant with image
+            var fb = (product.variants || []).find(function (v) { return v.imageUrl; });
+            return fb ? fb.imageUrl : '';
+          })();
         }
       });
     }
@@ -1680,3 +1738,32 @@
   window.Receptionist = Receptionist;
 
 })();
+
+// ── Variant image swap helpers (global, called from onclick attributes) ──────
+// Swap product card image when a variant chip is clicked
+function dlcSwapVariantImg(chip) {
+  var img   = chip.dataset.img;
+  var prodId = chip.dataset.prod;
+  if (!img || !prodId) return;
+  var imgEl = document.getElementById('pcard-img-' + prodId);
+  if (imgEl) imgEl.src = img;
+  // Mark selected chip
+  var wrap = chip.closest('.mp-product-card__variants');
+  if (wrap) {
+    wrap.querySelectorAll('.mp-product__variant').forEach(function (c) { c.style.opacity = '0.55'; });
+    chip.style.opacity = '1';
+  }
+}
+
+// Reset product card to its default image (called when item changes in order form)
+function dlcResetProductImg(product) {
+  if (!product) return;
+  var imgEl = document.getElementById('pcard-img-' + product.id);
+  if (!imgEl) return;
+  var defaultImg = product.image || '';
+  if (!defaultImg) {
+    var fb = (product.variants || []).find(function (v) { return v.imageUrl; });
+    if (fb) defaultImg = fb.imageUrl;
+  }
+  if (defaultImg) imgEl.src = defaultImg;
+}

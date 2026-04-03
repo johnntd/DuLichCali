@@ -24,6 +24,27 @@
   --r-sm: 4px;
   --r-md: 8px;
   --r-lg: 12px;
+
+  /* ── Layout & Container Tokens ──────────────────── */
+  --container-md:  960px;
+  --container-lg:  1280px;
+  --container-xl:  1440px;
+
+  /* ── Spacing Scale ───────────────────────────────── */
+  --space-1: .5rem;     /* 8px  */
+  --space-2: .75rem;    /* 12px */
+  --space-3: 1.25rem;   /* 20px */
+  --space-4: 2rem;      /* 32px */
+  --space-5: 3rem;      /* 48px */
+  --space-6: 4rem;      /* 64px */
+
+  /* ── Component Height Tokens ─────────────────────── */
+  --btn-h:    48px;   /* standard — matches main app .btn */
+  --btn-h-sm: 38px;
+  --btn-h-lg: 54px;
+
+  /* ── Card Token ──────────────────────────────────── */
+  --card-r: 14px;     /* unified card border-radius */
 }
 
 /* ── Base & Reset ──────────────────────────────────────────────────────────── */
@@ -209,7 +230,7 @@ button {
   align-items: center;
   justify-content: center;
   gap: .4rem;
-  height: 46px;
+  height: var(--btn-h);   /* 48px — standardized with main app .btn */
   padding: 0 1.4rem;
   font-size: .8rem;
   font-weight: 600;
@@ -308,6 +329,13 @@ button {
   .mp-grid {
     grid-template-columns: 1fr 1fr;
   }
+
+  /* At 520px+, cards are wide enough for aspect-ratio to look great */
+  .mp-biz-card__hero {
+    aspect-ratio: 16 / 10;
+    height: auto;
+    min-height: 110px;
+  }
 }
 
 /* ── Business Card ─────────────────────────────────────────────────────────── */
@@ -328,9 +356,12 @@ button {
 }
 
 .mp-biz-card__hero {
+  /* Mobile: fixed height keeps small 2-col cards from being too short */
   height: 140px;
   position: relative;
   overflow: hidden;
+  /* Smooth image transition on hover */
+  transition: height .3s ease;
 }
 
 .mp-biz-card__hero-bg {
@@ -420,7 +451,8 @@ button {
 .mp-detail-hero {
   position: relative;
   overflow: hidden;
-  min-height: 260px;
+  /* Increased: 260→290px so the hero reads properly on small screens */
+  min-height: 290px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -1019,16 +1051,14 @@ select.mp-input option {
 .mp-product-card__media-wrap {
   position: relative;
   width: 100%;
-  height: 280px;
+  /* Aspect-ratio scales naturally at every breakpoint.
+     3/2 = 250px tall at 375px wide (mobile) — was hardcoded 280px.
+     On desktop left column (~600px wide) = 400px — still cinematic. */
+  aspect-ratio: 3 / 2;
   overflow: hidden;
   background: #111;
 }
 
-.mp-product-card__img-wrap {
-  width: 100%;
-  height: 210px;
-  overflow: hidden;
-}
 
 .mp-product-card__img {
   width: 100%;
@@ -1324,9 +1354,10 @@ select.mp-input option {
   .mp-bar__title { font-size: 1.15rem; }
 
   /* Taller, wider hero */
-  .mp-hero { min-height: 300px; padding: 5rem 3rem 3.5rem; }
+  .mp-hero { min-height: 340px; padding: 5rem 3rem 3.5rem; }
   .mp-hero__content { max-width: 900px; }
-  .mp-hero__title { font-size: clamp(2.2rem, 5vw, 3.5rem); }
+  .mp-hero__title { font-size: clamp(2.4rem, 5vw, 3.8rem); }
+  .mp-hero__sub { font-size: .88rem; }
 
   /* Business card grid: 3-col */
   .mp-grid {
@@ -1335,14 +1366,22 @@ select.mp-input option {
     gap: 1.25rem;
   }
 
+  /* Biz card: larger text on tablet */
+  .mp-biz-card__name { font-size: 1.2rem; }
+  .mp-biz-card__tagline { font-size: .78rem; }
+
   /* Services grid: 3-col */
   .mp-services-grid { grid-template-columns: repeat(3, 1fr); gap: 1rem; }
 
-  /* Detail hero taller */
-  .mp-detail-hero { min-height: 320px; }
+  /* Detail hero taller on tablet */
+  .mp-detail-hero { min-height: 340px; }
+  .mp-food-hero { min-height: 380px; }
 
   /* Section padding */
   .mp-section { padding: 2rem 2rem 0; }
+
+  /* Section title: larger on tablet */
+  .mp-section-title { font-size: 1.45rem; }
 
   /* Max-width content centering */
   .mp-main { max-width: 1100px; margin: 0 auto; }
@@ -1351,19 +1390,42 @@ select.mp-input option {
 /* ── Desktop 1200px+ ────────────────────────────────────────────────────────── */
 @media (min-width: 1200px) {
   .mp-bar { padding: 0 3.5rem; }
-  .mp-hero { padding: 6rem 4rem 4rem; }
 
-  /* Business card grid: 4-col */
+  /* Category hero: cinematic on desktop */
+  .mp-hero {
+    padding: 6rem 4rem 4rem;
+    min-height: 420px;
+  }
+  .mp-hero__title { font-size: clamp(3rem, 5vw, 4.2rem); }
+
+  /* Business card grid: 4-col, wider gap */
   .mp-grid {
     grid-template-columns: repeat(4, 1fr);
     padding: 0 3rem;
+    gap: 1.5rem;
   }
 
-  /* Services grid: 4-col */
+  /* Biz card: premium typography on desktop */
+  .mp-biz-card__name    { font-size: 1.25rem; }
+  .mp-biz-card__tagline { font-size: .80rem; }
+  .mp-biz-card__body    { padding: 1.1rem 1.25rem 1.3rem; }
+
+  /* Section title: display-scale on desktop */
+  .mp-section-title { font-size: 1.6rem; }
+  .mp-section { padding: 2.5rem 3rem 0; }
+
+  /* Global services grid: 4-col for directory pages */
   .mp-services-grid { grid-template-columns: repeat(4, 1fr); }
 
+  /* But inside a detail page left-column, 4-col services is too dense → 2-col */
+  .mp-detail-col--left .mp-services-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .mp-main { max-width: 1400px; }
-  .mp-section { padding: 2.5rem 3rem 0; }
+
+  /* Product card media: cap at 380px tall on wide screens to avoid over-dominance */
+  .mp-product-card__media-wrap { max-height: 380px; }
 }
 
 /* ── Detail Page Two-Column Layout ────────────────────────────────────────── */

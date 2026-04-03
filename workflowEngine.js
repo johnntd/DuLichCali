@@ -278,15 +278,111 @@
 
     lodging: function(text) {
       var t = text.toLowerCase();
-      if (/không\b|no\b|tự túc|không cần|none/.test(t)) return 'none';
-      if (/hotel|khách sạn/.test(t)) return 'hotel';
-      if (/airbnb|nhà thuê/.test(t)) return 'airbnb';
-      if (/có\b|yes\b|cần\b/.test(t)) return 'hotel';
+      if (/\b(không cần|tự túc|none|no lodging|self.?book|tôi tự đặt)\b/.test(t)) return 'none';
+      if (/^(không|no)$/i.test(t.trim())) return 'none';
+      if (/\b(airbnb|nhà thuê|house rental|home rental|thuê nhà)\b/.test(t)) return 'airbnb';
+      // Strip / casino / resort → hotel
+      if (/\b(strip|the strip|on the strip|vegas strip|casino|resort)\b/.test(t)) return 'hotel';
+      if (/\b(hotel|khách sạn|motel|lodge|inn|hostel)\b/.test(t)) return 'hotel';
+      if (/\b(4[\s-]?star|5[\s-]?star|four[\s-]?star|five[\s-]?star|luxury|sang trọng|cao cấp|budget hotel)\b/.test(t)) return 'hotel';
+      if (/\b(cần\b|need|muốn|có\b|yes\b|chỗ ở|chỗ ngủ|overnight|stay)\b/.test(t)) return 'hotel';
+      return null;
+    },
+
+    hotelArea: function(text) {
+      var t = text.toLowerCase();
+      if (/\b(strip|the strip|on the strip|vegas strip|mid.?strip|south.?strip|north.?strip)\b/.test(t)) return 'strip';
+      if (/\b(downtown|fremont|fremont street|old vegas)\b/.test(t)) return 'downtown';
+      if (/\b(off.?strip|off the strip|henderson|summerlin)\b/.test(t)) return 'off_strip';
+      if (/\b(near airport|airport area)\b/.test(t)) return 'airport';
+      if (/\b(city center|union square|trung tâm|fisherman|wharf|pier)\b/.test(t)) return 'city_center';
+      if (/\b(beach|biển|waterfront)\b/.test(t)) return 'beach';
+      return null;
+    },
+
+    hotelBudget: function(text) {
+      var t = text.toLowerCase();
+      if (/\b(budget|cheap|affordable|rẻ|tiết kiệm|economy|value)\b/.test(t)) return 'budget';
+      if (/\b(luxury|5[\s-]?star|five[\s-]?star|upscale|premium|sang trọng|cao cấp|vip)\b/.test(t)) return 'premium';
+      if (/\b(mid.?range|moderate|trung bình|4[\s-]?star|four[\s-]?star|reasonable|decent|standard)\b/.test(t)) return 'midrange';
+      var nums = (text.match(/\$\s*(\d+)/g)||[]).map(function(s){return parseInt(s.replace(/\D/g,''));});
+      if (nums.length) {
+        var avg = nums.reduce(function(a,b){return a+b;},0)/nums.length;
+        return avg < 110 ? 'budget' : avg < 220 ? 'midrange' : 'premium';
+      }
+      return null;
+    },
+
+    bookingMode: function(text) {
+      var t = text.toLowerCase();
+      if (/\b(tự|myself|self|tôi tự|tự đặt|tự lo|book myself|tôi sẽ đặt)\b/.test(t)) return 'self';
+      if (/\b(vendor|giúp|lo cho|handle|nhờ|book for me|du lịch cali lo|các bạn lo|hộ tôi)\b/.test(t)) return 'vendor';
+      if (/\b(tôi chọn|chọn|i want|i choose|muốn ở)\b/.test(t)) return 'vendor';
       return null;
     },
   };
 
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+  // ── Hotel Suggestion Data ──────────────────────────────────────────────────
+
+  var HOTEL_SUGGESTIONS = {
+    lasvegas: {
+      strip: [
+        { name:'Bellagio',          area:'Mid Strip',   budgetTier:'premium',  stars:5, priceFrom:180, priceTo:380, highlight:'Đài phun nước huyền thoại, sòng bạc sang trọng' },
+        { name:'The Cosmopolitan',  area:'Mid Strip',   budgetTier:'premium',  stars:5, priceFrom:160, priceTo:350, highlight:'Thiết kế hiện đại, nhà hàng nổi tiếng' },
+        { name:'MGM Grand',         area:'South Strip', budgetTier:'midrange', stars:4, priceFrom:90,  priceTo:220, highlight:'Casino lớn nhất Mỹ, đa dạng nhà hàng & show' },
+        { name:'Paris Las Vegas',   area:'Mid Strip',   budgetTier:'midrange', stars:4, priceFrom:80,  priceTo:195, highlight:'Tháp Eiffel thu nhỏ, view The Strip đẹp' },
+        { name:'New York-New York', area:'South Strip', budgetTier:'midrange', stars:4, priceFrom:70,  priceTo:165, highlight:'Roller coaster, nhiều show, không khí sôi động' },
+        { name:'Excalibur Hotel',   area:'South Strip', budgetTier:'budget',   stars:3, priceFrom:45,  priceTo:120, highlight:'Thân thiện gia đình, vị trí tốt trên Strip' },
+        { name:'Luxor Las Vegas',   area:'South Strip', budgetTier:'budget',   stars:3, priceFrom:50,  priceTo:130, highlight:'Thiết kế kim tự tháp độc đáo, giá hợp lý' },
+      ],
+      downtown: [
+        { name:'Golden Nugget',     area:'Fremont St',  budgetTier:'midrange', stars:4, priceFrom:60,  priceTo:150, highlight:'Khách sạn nổi tiếng nhất Downtown Las Vegas' },
+      ],
+      off_strip: [
+        { name:'Red Rock Casino Resort', area:'Summerlin', budgetTier:'midrange', stars:4, priceFrom:70, priceTo:160, highlight:'Gần Red Rock Canyon, yên tĩnh hơn Strip' },
+      ],
+    },
+    sanfrancisco: {
+      city_center: [
+        { name:'Hotel Nikko SF',         area:'Union Square', budgetTier:'midrange', stars:4, priceFrom:140, priceTo:280, highlight:'Trung tâm thành phố, gần cửa hàng' },
+        { name:'Marriott Union Square',  area:'Union Square', budgetTier:'premium',  stars:4, priceFrom:200, priceTo:400, highlight:'Gần cửa hàng, nhà hàng, giao thông thuận tiện' },
+      ],
+      beach: [
+        { name:"Hyatt Fisherman's Wharf", area:"Fisherman's Wharf", budgetTier:'midrange', stars:4, priceFrom:160, priceTo:320, highlight:"Gần Fisherman's Wharf và Ghirardelli Square" },
+      ],
+    },
+    yosemite: {
+      city_center: [
+        { name:'Yosemite Valley Lodge', area:'Yosemite Valley', budgetTier:'midrange', stars:3, priceFrom:180, priceTo:325, highlight:'Ngay trong công viên, gần Yosemite Falls' },
+        { name:'Tenaya Lodge',          area:'Fish Camp',       budgetTier:'premium',  stars:4, priceFrom:220, priceTo:450, highlight:'Resort cao cấp, gần lối vào phía Nam' },
+      ],
+    },
+    grandcanyon: {
+      city_center: [
+        { name:'El Tovar Hotel',        area:'South Rim',       budgetTier:'premium',  stars:4, priceFrom:200, priceTo:350, highlight:'Khách sạn lịch sử ngay tại vành miệng' },
+        { name:'Bright Angel Lodge',    area:'South Rim',       budgetTier:'budget',   stars:3, priceFrom:80,  priceTo:160, highlight:'Cạnh bờ vực, hướng tới đoàn hiking' },
+      ],
+    },
+  };
+
+  function getHotelSuggestions(destId, area, budgetTier) {
+    var dest = destId && HOTEL_SUGGESTIONS[destId];
+    if (!dest) return [];
+    var hotels = [];
+    if (area && dest[area]) {
+      hotels = dest[area].slice();
+    } else {
+      var keys = Object.keys(dest);
+      for (var i = 0; i < keys.length; i++) hotels = hotels.concat(dest[keys[i]]);
+    }
+    if (budgetTier) {
+      var filtered = hotels.filter(function(h){ return h.budgetTier === budgetTier; });
+      if (filtered.length > 0) hotels = filtered;
+    }
+    return hotels.slice(0, 5);
+  }
 
   // ── Rough estimate helpers ─────────────────────────────────────────────────
 
@@ -738,10 +834,89 @@
         {
           key: 'lodging',
           question: function() {
-            return 'Bạn có cần hỗ trợ chỗ ở không?\n• Có khách sạn\n• Airbnb\n• Không cần (tự túc)';
+            return 'Bạn có cần hỗ trợ chỗ ở không?';
           },
           extract: function(t) { return X.lodging(t); },
           optional: true,
+          chips: function() {
+            return [
+              { label: '🏨 Có, cần khách sạn', value: 'hotel' },
+              { label: '🏠 Airbnb / Nhà thuê',  value: 'airbnb' },
+              { label: '✅ Không cần (tự túc)', value: 'không cần chỗ ở' },
+            ];
+          },
+        },
+        {
+          key: 'hotelArea',
+          question: function(f) {
+            var dest = typeof f.destination === 'object' ? f.destination.id : '';
+            if (dest === 'lasvegas') return 'Bạn muốn ở khu vực nào tại Las Vegas?';
+            if (dest === 'sanfrancisco') return 'Bạn muốn ở khu vực nào tại San Francisco?';
+            return 'Bạn muốn ở khu vực nào?';
+          },
+          extract: function(t) { return X.hotelArea(t); },
+          optional: function(f) {
+            var dest = typeof f.destination === 'object' ? f.destination.id : '';
+            return f.lodging !== 'hotel' || !HOTEL_SUGGESTIONS[dest];
+          },
+          showIf: function(f) {
+            var dest = typeof f.destination === 'object' ? f.destination.id : '';
+            return f.lodging === 'hotel' && !!HOTEL_SUGGESTIONS[dest];
+          },
+          chips: function(f) {
+            var dest = typeof f.destination === 'object' ? f.destination.id : '';
+            if (dest === 'lasvegas') return [
+              { label: '✨ The Strip',              value: 'strip' },
+              { label: '🏙️ Downtown (Fremont St)',  value: 'downtown' },
+              { label: '🏷️ Off Strip (rẻ hơn)',    value: 'off_strip' },
+            ];
+            if (dest === 'sanfrancisco') return [
+              { label: '🏙️ City Center',            value: 'city_center' },
+              { label: "🐟 Fisherman's Wharf",      value: 'beach' },
+            ];
+            return null;
+          },
+        },
+        {
+          key: 'hotelBudget',
+          question: function() { return 'Ngân sách khách sạn mỗi đêm?'; },
+          extract: function(t) { return X.hotelBudget(t); },
+          optional: function(f) { return f.lodging !== 'hotel'; },
+          showIf: function(f) { return f.lodging === 'hotel'; },
+          chips: function() {
+            return [
+              { label: '💰 Tiết kiệm (~$50-120/đêm)',  value: 'budget' },
+              { label: '⭐ Tầm trung (~$120-220/đêm)', value: 'midrange' },
+              { label: '✨ Cao cấp ($220+/đêm)',        value: 'premium' },
+              { label: 'Không có sở thích đặc biệt',   value: 'midrange' },
+            ];
+          },
+        },
+        {
+          key: 'bookingMode',
+          question: function() {
+            return 'Bạn muốn tự đặt khách sạn, hay nhờ Du Lịch Cali hỗ trợ đặt giúp?';
+          },
+          extract: function(t) { return X.bookingMode(t); },
+          optional: function(f) { return f.lodging !== 'hotel'; },
+          showIf: function(f) { return f.lodging === 'hotel'; },
+          chips: function() {
+            return [
+              { label: '🤝 Du Lịch Cali lo giúp tôi',   value: 'vendor' },
+              { label: '🔗 Tôi tự đặt (cần gợi ý link)', value: 'self' },
+            ];
+          },
+        },
+        {
+          key: 'chosenHotel',
+          question: null,
+          extract: function(t) {
+            var m = t.match(/(?:muốn ở|chọn|ở|stay at|book)\s+([A-Za-zÀ-ỹ\s\-&'The]+?)(?:,|\s*nhờ|\s*và|\s*$)/i);
+            if (m && m[1] && m[1].trim().length >= 3) return m[1].trim().slice(0,60);
+            return null;
+          },
+          optional: true,
+          showIf: function(f) { return f.lodging === 'hotel'; },
         },
         {
           key: 'customerName',
@@ -757,7 +932,7 @@
         },
         {
           key: 'notes',
-          question: function() { return 'Yêu cầu đặc biệt hoặc ngân sách dự kiến?\n(Gõ "không" nếu không có)'; },
+          question: function() { return 'Yêu cầu đặc biệt?\n(Gõ "không" nếu không có)'; },
           extract: function(t) { return /^(không|no|none|n\/a|skip|-)$/i.test(t.trim()) ? '' : t.trim(); },
           optional: true,
         },
@@ -766,7 +941,10 @@
         var dest = typeof f.destination === 'object' ? f.destination.name : (f.destination||'');
         var destId = typeof f.destination === 'object' ? f.destination.id : '';
         var est = estimateTour(f.passengers, f.days, destId);
-        var lodgeLabel = { hotel:'Khách sạn', airbnb:'Airbnb', none:'Tự túc' }[f.lodging] || '';
+        var lodgeLabel = { hotel:'Khách sạn', airbnb:'Airbnb', none:'Tự túc' }[f.lodging] || (f.lodging||'');
+        var areaLabel  = { strip:'The Strip', downtown:'Downtown', off_strip:'Off Strip', city_center:'City Center', beach:'Near Beach', airport:'Near Airport' }[f.hotelArea] || (f.hotelArea||'');
+        var budgLabel  = { budget:'Tiết kiệm', midrange:'Tầm trung', premium:'Cao cấp' }[f.hotelBudget] || (f.hotelBudget||'');
+        var modeLabel  = f.bookingMode === 'vendor' ? 'Du Lịch Cali hỗ trợ đặt' : f.bookingMode === 'self' ? 'Tự đặt' : '';
         var lines = [
           '📋 Tóm tắt yêu cầu tour:',
           '• Điểm đến:  ' + dest,
@@ -774,12 +952,16 @@
           '• Số ngày:   ' + (f.days||'') + ' ngày',
           '• Số người:  ' + (f.passengers||'') + ' người',
           '• Xuất phát: ' + (f.startingPoint||''),
-          lodgeLabel ? '• Chỗ ở:     ' + lodgeLabel : null,
+          lodgeLabel                      ? '• Chỗ ở:     ' + lodgeLabel  : null,
+          f.chosenHotel                   ? '  Khách sạn: ' + f.chosenHotel : null,
+          areaLabel && !f.chosenHotel     ? '  Khu vực:   ' + areaLabel   : null,
+          budgLabel && !f.chosenHotel     ? '  Ngân sách: ' + budgLabel   : null,
+          modeLabel                       ? '  Đặt phòng: ' + modeLabel   : null,
           '• Tên:       ' + (f.customerName||''),
           '• SĐT:       ' + fmtPhone(f.customerPhone),
           f.notes ? '• Ghi chú:   ' + f.notes : null,
           '',
-          est ? '💰 Ước tính: ' + est : null,
+          est ? '💰 Ước tính transport: ' + est : null,
         ];
         return lines.filter(function(v) { return v !== null; }).join('\n');
       },
@@ -937,7 +1119,10 @@
         saveDraft(draft);
         return 'Đã cập nhật. Vui lòng tiếp tục: ' + (getQ(next2)||'');
       } else {
-        return 'Gõ "có" để xác nhận hoặc "không" để chỉnh sửa.';
+        return { type:'message', text:'Bạn muốn xác nhận hay chỉnh sửa?', chips:[
+          { label:'✅ Xác nhận đặt chỗ',     value:'xác nhận' },
+          { label:'✏️ Chỉnh sửa thông tin',  value:'không' },
+        ]};
       }
     }
 
@@ -975,6 +1160,24 @@
         draft.collectedFields[nextFd.key] = '';
         return process(userText);
       }
+      // Build chips if field defines them
+      var fieldChips = null;
+      if (nextFd.chips) {
+        try { fieldChips = typeof nextFd.chips === 'function' ? nextFd.chips(draft.collectedFields) : nextFd.chips; } catch(e) {}
+      }
+      // For bookingMode: also inject hotel suggestions when lodging=hotel
+      var fieldHotels = null;
+      if (nextFd.key === 'bookingMode' && draft.collectedFields.lodging === 'hotel') {
+        var destId = typeof draft.collectedFields.destination === 'object' ? draft.collectedFields.destination.id : '';
+        var sugg = getHotelSuggestions(destId, draft.collectedFields.hotelArea, draft.collectedFields.hotelBudget);
+        if (sugg.length) fieldHotels = sugg;
+      }
+      if ((fieldChips && fieldChips.length) || fieldHotels) {
+        var richText = fieldHotels
+          ? 'Đây là các khách sạn phù hợp với yêu cầu của bạn:\n\n' + q
+          : q;
+        return { type:'message', text:richText, chips:fieldChips||null, hotels:fieldHotels||null };
+      }
       return q;
     }
 
@@ -982,8 +1185,13 @@
     draft.awaitingConfirm = true;
     draft.awaitingField   = null;
     saveDraft(draft);
-    return wf.summary(draft.collectedFields) +
-      '\n\n✅ Thông tin đầy đủ! Bạn có muốn xác nhận không?\nGõ "có" để đặt hoặc "không" để chỉnh sửa.';
+    return { type:'message',
+      text: wf.summary(draft.collectedFields) + '\n\n✅ Thông tin đầy đủ! Bạn có muốn xác nhận không?',
+      chips: [
+        { label:'✅ Xác nhận đặt chỗ',     value:'xác nhận' },
+        { label:'✏️ Chỉnh sửa thông tin',  value:'không' },
+      ],
+    };
   }
 
   // ── Finalize ───────────────────────────────────────────────────────────────
@@ -1071,17 +1279,23 @@
         bookingId:orderId, trackingToken:genId().replace('DLC-','')+genId().replace('DLC-',''),
         status:'pending', serviceType:dest.id||'tour', datetime:f.requestedDate||'',
         address:f.startingPoint||'', passengers:f.passengers||1, days:f.days||1,
-        lodging, name:f.customerName||'', phone:f.customerPhone||'',
+        lodging, hotelArea:f.hotelArea||'', hotelBudget:f.hotelBudget||'',
+        chosenHotel:f.chosenHotel||'', bookingMode:f.bookingMode||'',
+        name:f.customerName||'', phone:f.customerPhone||'',
         notes:f.notes||'', source:'ai_chat',
         driver:null,vehicleLat:null,vehicleLng:null,vehicleHeading:null,etaMinutes:null,
         createdAt:fv.serverTimestamp(),
       });
+      var hotelNote = f.lodging === 'hotel'
+        ? ' · Khách sạn' + (f.chosenHotel ? ': '+f.chosenHotel : (f.hotelArea ? ' ('+f.hotelArea+')' : '')) + (f.bookingMode === 'vendor' ? ' — nhờ DLC đặt' : '')
+        : '';
       await db.collection('vendors').doc('admin-dlc').collection('notifications').add({
         type:'new_booking',
         title:'🗺️ Tour '+(dest.name||'')+' — '+(f.customerName||''),
-        message:(f.passengers||1)+' người · '+(f.days||1)+' ngày · '+fmtPhone(f.customerPhone)+' · '+fmtDate(f.requestedDate),
+        message:(f.passengers||1)+' người · '+(f.days||1)+' ngày · '+fmtPhone(f.customerPhone)+' · '+fmtDate(f.requestedDate)+hotelNote,
         bookingId:orderId, customerPhone:f.customerPhone||'',
         requestedDate:f.requestedDate||'', destination:dest.name||'',
+        lodging, hotelArea:f.hotelArea||'', chosenHotel:f.chosenHotel||'', bookingMode:f.bookingMode||'',
         read:false, createdAt:fv.serverTimestamp(),
       });
     }

@@ -1154,19 +1154,26 @@ BEHAVIOR GUIDELINES:
       if (result && typeof result === 'object' && result.type === 'finalize') {
         try {
           const orderId = await WF.finalize();
-          return [
-            '✅ Đặt chỗ thành công!',
-            `Mã đơn: ${orderId}`,
-            '',
-            'Chúng tôi sẽ liên hệ xác nhận trong vòng 2 tiếng.',
-            `Cần hỗ trợ ngay: gọi ${regionPhone()}.`,
-          ].join('\n');
+          return {
+            type: 'message',
+            text: [
+              '✅ Đặt chỗ thành công!',
+              `Mã đơn: ${orderId}`,
+              '',
+              'Chúng tôi sẽ liên hệ xác nhận trong vòng 2 tiếng.',
+              `Cần hỗ trợ ngay: gọi ${regionPhone()}.`,
+            ].join('\n'),
+            chips: null,
+            hotels: null,
+          };
         } catch (e) {
           console.error('finalize error', e);
           return `Xin lỗi, có lỗi khi lưu đơn. Vui lòng thử lại hoặc gọi ${regionPhone()}.`;
         }
       }
-      if (result !== null) return result;
+      if (result && typeof result === 'object' && result.type === 'message') return result;
+      if (typeof result === 'string') return result;
+      // result === null → fall through to general handlers
     }
 
     const intent = parseIntent(text);
@@ -1177,6 +1184,7 @@ BEHAVIOR GUIDELINES:
       if (wfIntent) {
         WF.startWorkflow(wfIntent, text);
         const result = WF.process(text);
+        if (result && typeof result === 'object' && result.type === 'message') return result;
         if (typeof result === 'string') return result;
       }
     }
@@ -1239,18 +1247,64 @@ BEHAVIOR GUIDELINES:
     inputEl: null,
   };
 
-  function pushMsg(role, content) {
-    state.history.push({ role, content });
+  function pushMsg(role, content, extras) {
+    const msg = { role, content: String(content || '') };
+    if (extras) Object.assign(msg, extras);
+    state.history.push(msg);
     renderAll();
+  }
+
+  function renderHotelCard(h) {
+    const stars = '★'.repeat(h.stars || 0);
+    const tierLabel = { budget:'Tiết kiệm', midrange:'Tầm trung', premium:'Cao cấp' }[h.budgetTier] || '';
+    const chooseVal = `Tôi muốn ở ${h.name} - nhờ Du Lịch Cali đặt giúp`;
+    return `<div class="hotel-card">` +
+      `<div class="hotel-card__header">` +
+        `<span class="hotel-card__name">${escapeHtml(h.name)}</span>` +
+        `<span class="hotel-card__stars">${escapeHtml(stars)}</span>` +
+      `</div>` +
+      `<div class="hotel-card__meta">` +
+        `<span class="hotel-card__area">${escapeHtml(h.area || '')}</span>` +
+        `<span class="hotel-card__price">~$${h.priceFrom}–$${h.priceTo}/đêm</span>` +
+      `</div>` +
+      `<div class="hotel-card__highlight">${escapeHtml(h.highlight || '')}</div>` +
+      `<div class="hotel-card__footer">` +
+        `<span class="hotel-card__tier">${escapeHtml(tierLabel)}</span>` +
+        `<button class="hotel-card__btn" data-value="${escapeHtml(chooseVal)}">Chọn</button>` +
+      `</div>` +
+    `</div>`;
   }
 
   function renderAll() {
     if (!state.msgsEl) return;
-    state.msgsEl.innerHTML = state.history.map(m => `
-      <div class="cmsg cmsg--${m.role}">
-        ${m.role === 'assistant' ? '<div class="cmsg__avatar">✦</div>' : ''}
-        <div class="cmsg__bubble">${escapeHtml(m.content).replace(/\n/g, '<br>')}</div>
-      </div>`).join('');
+    const lastIdx = state.history.length - 1;
+    state.msgsEl.innerHTML = state.history.map((m, idx) => {
+      const isLast = idx === lastIdx;
+      let html = `<div class="cmsg cmsg--${m.role}">` +
+        (m.role === 'assistant' ? '<div class="cmsg__avatar">✦</div>' : '') +
+        `<div class="cmsg__bubble">${escapeHtml(m.content || '').replace(/\n/g, '<br>')}</div>` +
+        `</div>`;
+
+      // Hotel cards — only on last assistant message
+      if (m.role === 'assistant' && m.hotels && m.hotels.length && isLast) {
+        html += `<div class="cmsg-hotels">${m.hotels.map(renderHotelCard).join('')}</div>`;
+      }
+
+      // Choice chips — only on last assistant message
+      if (m.role === 'assistant' && m.chips && m.chips.length && isLast) {
+        html += `<div class="cmsg-chips-row">${
+          m.chips.map(c =>
+            `<button class="cmsg-chip" data-value="${escapeHtml(c.value)}">${escapeHtml(c.label)}</button>`
+          ).join('')
+        }</div>`;
+      }
+      return html;
+    }).join('');
+
+    // Bind chip + hotel card button clicks
+    state.msgsEl.querySelectorAll('.cmsg-chip, .hotel-card__btn').forEach(btn => {
+      btn.addEventListener('click', () => send(btn.dataset.value));
+    });
 
     if (state.loading) {
       const dots = document.createElement('div');
@@ -1288,7 +1342,11 @@ BEHAVIOR GUIDELINES:
     }
 
     state.loading = false;
-    pushMsg('assistant', reply);
+    if (reply && typeof reply === 'object' && reply.type === 'message') {
+      pushMsg('assistant', reply.text || '', { chips: reply.chips || null, hotels: reply.hotels || null });
+    } else {
+      pushMsg('assistant', reply || '');
+    }
   }
 
   // ── Public init ──────────────────────────────────────────────

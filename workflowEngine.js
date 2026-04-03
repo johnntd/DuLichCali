@@ -320,6 +320,34 @@
       if (/\b(tôi chọn|chọn|i want|i choose|muốn ở)\b/.test(t)) return 'vendor';
       return null;
     },
+
+    luggage: function(text) {
+      var t = text.trim().toLowerCase();
+      if (/^(0|không có|none|no|xách tay|không)$/.test(t)) return 0;
+      var m = text.match(/(\d+)\s*(?:kiện|bag|bags|suitcase|vali|piece|chiếc)/i);
+      if (!m) m = text.match(/^(\d+)$/);
+      var n = m ? parseInt(m[1]) : NaN;
+      return (isNaN(n) || n < 0 || n > 50) ? null : n;
+    },
+
+    terminal: function(text) {
+      var t = text.trim();
+      if (/không biết|bỏ qua|skip|chưa biết|chưa|không nhớ/i.test(t)) return '';
+      if (/TBIT|Tom Bradley|international terminal/i.test(t)) return 'TBIT (Tom Bradley Intl)';
+      var m = t.match(/\b(?:terminal|cổng|T)\s*([1-9][0-9]?|[A-E])\b/i);
+      if (m) return 'Terminal ' + m[1].toUpperCase();
+      if (/^T?[1-9][A-Z]?$/i.test(t)) return 'Terminal ' + t.toUpperCase().replace(/^T/, '');
+      return null;
+    },
+
+    region: function(text) {
+      var t = text.toLowerCase();
+      if (/bay area|san jose|sjc|san francisco|sfo|oakland|fremont|santa clara|sunnyvale|milpitas|cupertino|palo alto/.test(t)) return 'Bay Area';
+      if (/orange county|\boc\b|anaheim|irvine|garden grove|santa ana|westminster|fountain valley|los angeles|\bla\b|san diego|socal|southern/.test(t)) return 'Southern CA';
+      if (/^1$/.test(t.trim())) return 'Bay Area';
+      if (/^2$/.test(t.trim())) return 'Southern CA';
+      return null;
+    },
   };
 
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
@@ -403,6 +431,34 @@
       return r ? '~$' + r.total + ' (~$' + r.perPerson + '/người · ' + r.vehicle + ')' : null;
     }
     return null;
+  }
+
+  // ── Maps & Address Helpers ─────────────────────────────────────────────────
+
+  function buildMapsLink(address) {
+    if (!address) return null;
+    return 'https://maps.google.com/?q=' + encodeURIComponent(address);
+  }
+
+  var AIRPORT_LOCATIONS = {
+    LAX: { name:'Los Angeles International Airport', address:'1 World Way, Los Angeles, CA 90045' },
+    SNA: { name:'John Wayne Airport',                address:'18601 Airport Way, Santa Ana, CA 92707' },
+    ONT: { name:'Ontario International Airport',     address:'2900 E Airport Dr, Ontario, CA 91761' },
+    BUR: { name:'Hollywood Burbank Airport',         address:'2627 N Hollywood Way, Burbank, CA 91505' },
+    LGB: { name:'Long Beach Airport',                address:'4100 Donald Douglas Dr, Long Beach, CA 90808' },
+    SFO: { name:'San Francisco International Airport', address:'San Francisco, CA 94128' },
+    SJC: { name:'San Jose International Airport',    address:'1701 Airport Blvd, San Jose, CA 95110' },
+    OAK: { name:'Oakland International Airport',     address:'1 Airport Dr, Oakland, CA 94621' },
+    PSP: { name:'Palm Springs International Airport', address:'3400 E Tahquitz Canyon Way, Palm Springs, CA 92262' },
+    SAN: { name:'San Diego International Airport',   address:'3225 N Harbor Dr, San Diego, CA 92101' },
+    SMF: { name:'Sacramento International Airport',  address:'6900 Airport Blvd, Sacramento, CA 95837' },
+  };
+
+  function buildAirportMapsLink(airportCode, terminal) {
+    var ap = AIRPORT_LOCATIONS[airportCode];
+    if (!ap) return null;
+    var query = terminal ? ap.name + ' ' + terminal : ap.name;
+    return 'https://maps.google.com/?q=' + encodeURIComponent(query);
   }
 
   // ── Workflow Definitions ───────────────────────────────────────────────────
@@ -551,6 +607,18 @@
           optional: false,
         },
         {
+          key: 'terminal',
+          question: function() { return 'Cổng/Terminal bạn đến? (VD: Terminal 4, TBIT)\nGõ "không biết" nếu chưa rõ.'; },
+          extract: function(t) { return X.terminal(t); },
+          optional: true,
+        },
+        {
+          key: 'luggageCount',
+          question: function() { return 'Có bao nhiêu kiện hành lý ký gửi? (Gõ "0" nếu chỉ xách tay)'; },
+          extract: function(t) { return X.luggage(t); },
+          optional: true,
+        },
+        {
           key: 'dropoffAddress',
           question: function() { return 'Địa chỉ điểm đến sau sân bay?\n(thành phố hoặc địa chỉ cụ thể)'; },
           extract: function(t) { return X.address(t) || (t.trim().length >= 3 ? t.trim() : null); },
@@ -570,8 +638,8 @@
         },
         {
           key: 'notes',
-          question: function() { return 'Số kiện hành lý hoặc yêu cầu đặc biệt?\n(Gõ "không" nếu không có)'; },
-          extract: function(t) { return /^(không|no|none|n\/a|skip|-|0)$/i.test(t.trim()) ? '' : t.trim(); },
+          question: function() { return 'Yêu cầu đặc biệt?\n(Gõ "không" nếu không có)'; },
+          extract: function(t) { return /^(không|no|none|n\/a|skip|-)$/i.test(t.trim()) ? '' : t.trim(); },
           optional: true,
         },
       ],
@@ -580,16 +648,19 @@
         var lines = [
           '📋 Tóm tắt đặt đón sân bay:',
           '• Sân bay:      ' + (f.airport||''),
-          f.airline  ? '• Chuyến bay:   ' + f.airline : null,
+          f.terminal      ? '• Terminal:     ' + f.terminal : null,
+          f.airline       ? '• Chuyến bay:   ' + f.airline : null,
           '• Ngày đến:     ' + fmtDate(f.requestedDate),
           '• Giờ hạ cánh:  ' + fmtTime(f.arrivalTime),
           '• Hành khách:   ' + (f.passengers||'') + ' người',
+          f.luggageCount !== undefined && f.luggageCount !== null
+            ? '• Hành lý:      ' + (f.luggageCount === 0 ? 'Xách tay (không ký gửi)' : f.luggageCount + ' kiện') : null,
           '• Điểm đến:     ' + (f.dropoffAddress||''),
           '• Tên:          ' + (f.customerName||''),
           '• SĐT:          ' + fmtPhone(f.customerPhone),
-          f.notes    ? '• Ghi chú:      ' + f.notes : null,
+          f.notes         ? '• Ghi chú:      ' + f.notes : null,
           '',
-          est        ? '💰 Ước tính: ' + est : null,
+          est             ? '💰 Ước tính: ' + est : null,
           '⏱ Tài xế chờ tại cửa Arrivals/Baggage Claim.',
         ];
         return lines.filter(function(v) { return v !== null; }).join('\n');
@@ -642,6 +713,18 @@
           optional: false,
         },
         {
+          key: 'terminal',
+          question: function() { return 'Cổng/Terminal cần đến? (VD: Terminal 2, TBIT)\nGõ "không biết" nếu chưa rõ.'; },
+          extract: function(t) { return X.terminal(t); },
+          optional: true,
+        },
+        {
+          key: 'luggageCount',
+          question: function() { return 'Có bao nhiêu kiện hành lý ký gửi? (Gõ "0" nếu chỉ xách tay)'; },
+          extract: function(t) { return X.luggage(t); },
+          optional: true,
+        },
+        {
           key: 'customerName',
           question: function() { return 'Tên hành khách chính?'; },
           extract: function(t) { return X.name(t); },
@@ -655,8 +738,8 @@
         },
         {
           key: 'notes',
-          question: function() { return 'Số kiện hành lý hoặc yêu cầu đặc biệt?\n(Gõ "không" nếu không có)'; },
-          extract: function(t) { return /^(không|no|none|n\/a|skip|-|0)$/i.test(t.trim()) ? '' : t.trim(); },
+          question: function() { return 'Yêu cầu đặc biệt?\n(Gõ "không" nếu không có)'; },
+          extract: function(t) { return /^(không|no|none|n\/a|skip|-)$/i.test(t.trim()) ? '' : t.trim(); },
           optional: true,
         },
       ],
@@ -665,16 +748,19 @@
         var lines = [
           '📋 Tóm tắt đặt ra sân bay:',
           '• Sân bay:      ' + (f.airport||''),
-          f.airline  ? '• Chuyến bay:   ' + f.airline : null,
+          f.terminal      ? '• Terminal:     ' + f.terminal : null,
+          f.airline       ? '• Chuyến bay:   ' + f.airline : null,
           '• Ngày bay:     ' + fmtDate(f.requestedDate),
           '• Giờ cất cánh: ' + fmtTime(f.departureTime),
           '• Điểm đón:     ' + (f.pickupAddress||''),
           '• Hành khách:   ' + (f.passengers||'') + ' người',
+          f.luggageCount !== undefined && f.luggageCount !== null
+            ? '• Hành lý:      ' + (f.luggageCount === 0 ? 'Xách tay (không ký gửi)' : f.luggageCount + ' kiện') : null,
           '• Tên:          ' + (f.customerName||''),
           '• SĐT:          ' + fmtPhone(f.customerPhone),
-          f.notes    ? '• Ghi chú:      ' + f.notes : null,
+          f.notes         ? '• Ghi chú:      ' + f.notes : null,
           '',
-          est        ? '💰 Ước tính: ' + est : null,
+          est             ? '💰 Ước tính: ' + est : null,
         ];
         return lines.filter(function(v) { return v !== null; }).join('\n');
       },
@@ -692,6 +778,18 @@
           },
           extract: function(t) { return X.nailService(t); },
           optional: false,
+        },
+        {
+          key: 'region',
+          question: function() { return 'Bạn ở khu vực nào tại California?'; },
+          extract: function(t) { return X.region(t); },
+          optional: true,
+          chips: function() {
+            return [
+              { label: '🌉 Bay Area (San Jose / SF)',   value: 'Bay Area' },
+              { label: '☀️ Southern CA (OC / LA)',      value: 'Southern CA' },
+            ];
+          },
         },
         {
           key: 'requestedDate',
@@ -728,11 +826,12 @@
         return [
           '📋 Tóm tắt lịch hẹn nail:',
           '• Dịch vụ:   ' + (f.serviceType||''),
+          f.region    ? '• Khu vực:   ' + f.region : null,
           '• Ngày:      ' + fmtDate(f.requestedDate),
           '• Giờ:       ' + fmtTime(f.requestedTime),
           '• Tên:       ' + (f.customerName||''),
           '• SĐT:       ' + fmtPhone(f.customerPhone),
-          f.notes ? '• Yêu cầu:   ' + f.notes : null,
+          f.notes     ? '• Yêu cầu:   ' + f.notes : null,
         ].filter(function(v) { return v !== null; }).join('\n');
       },
     },
@@ -749,6 +848,18 @@
           },
           extract: function(t) { return X.hairService(t); },
           optional: false,
+        },
+        {
+          key: 'region',
+          question: function() { return 'Bạn ở khu vực nào tại California?'; },
+          extract: function(t) { return X.region(t); },
+          optional: true,
+          chips: function() {
+            return [
+              { label: '🌉 Bay Area (San Jose / SF)',   value: 'Bay Area' },
+              { label: '☀️ Southern CA (OC / LA)',      value: 'Southern CA' },
+            ];
+          },
         },
         {
           key: 'requestedDate',
@@ -785,11 +896,12 @@
         return [
           '📋 Tóm tắt lịch hẹn tóc:',
           '• Dịch vụ:   ' + (f.serviceType||''),
+          f.region    ? '• Khu vực:   ' + f.region : null,
           '• Ngày:      ' + fmtDate(f.requestedDate),
           '• Giờ:       ' + fmtTime(f.requestedTime),
           '• Tên:       ' + (f.customerName||''),
           '• SĐT:       ' + fmtPhone(f.customerPhone),
-          f.notes ? '• Yêu cầu:   ' + f.notes : null,
+          f.notes     ? '• Yêu cầu:   ' + f.notes : null,
         ].filter(function(v) { return v !== null; }).join('\n');
       },
     },
@@ -1210,6 +1322,23 @@
       var item     = typeof f.item === 'object' ? f.item : {};
       var vendorId = item.vendorId || 'nha-bep-emily';
       var subtotal = (item.price||0) * (f.quantity||0);
+      var deliveryAddr = f.fulfillment === 'delivery' ? (f.address||'') : null;
+      var deliveryMapsLink = deliveryAddr ? buildMapsLink(deliveryAddr) : null;
+
+      // Build rich notification body
+      var msgLines = [
+        '📦 ' + (f.quantity||0) + ' × ' + (item.name||''),
+        f.variant               ? '   Loại: ' + f.variant : null,
+        '📅 ' + fmtDate(f.requestedDate) + ' lúc ' + fmtTime(f.requestedTime),
+        f.fulfillment === 'delivery'
+          ? ('🚗 Giao đến: ' + (deliveryAddr||'') + (deliveryMapsLink ? '\n   Map: ' + deliveryMapsLink : ''))
+          : '🏪 Khách tự đến lấy',
+        '👤 ' + (f.customerName||'') + ' · ' + fmtPhone(f.customerPhone),
+        f.notes                 ? '📝 ' + f.notes : null,
+        '💰 Tổng: $' + subtotal.toFixed(2),
+        '🔖 Mã đơn: ' + orderId,
+      ];
+      var msg = msgLines.filter(function(v){return v!==null;}).join('\n');
 
       await db.collection('vendors').doc(vendorId).collection('bookings').add({
         type:'food_order', bookingId:orderId, vendorId,
@@ -1217,32 +1346,56 @@
         variant:f.variant||'', fulfillment:f.fulfillment||'pickup',
         requestedDate:f.requestedDate||'', requestedTime:f.requestedTime||'',
         subtotal, customerName:f.customerName||'', customerPhone:f.customerPhone||'',
-        deliveryAddress:f.fulfillment==='delivery'?(f.address||''):null,
+        deliveryAddress:deliveryAddr,
         notes:f.notes||'', status:'pending', source:'ai_chat',
         createdAt:fv.serverTimestamp(),
       });
       await db.collection('vendors').doc(vendorId).collection('notifications').add({
         type:'new_order',
-        title:'🛒 Đơn hàng mới — '+(f.customerName||''),
-        message:(f.quantity||0)+' '+(item.name||'')+' · '+fmtPhone(f.customerPhone)+' · '+fmtDate(f.requestedDate)+' '+fmtTime(f.requestedTime),
+        title:'🛒 Đơn hàng mới — ' + (f.customerName||''),
+        message: msg,
         bookingId:orderId, customerName:f.customerName||'', customerPhone:f.customerPhone||'',
         itemName:item.name||'', quantity:f.quantity||0, subtotal,
         requestedDate:f.requestedDate||'', fulfillment:f.fulfillment||'pickup',
+        deliveryAddress:deliveryAddr||'', deliveryMapsLink:deliveryMapsLink||'',
         read:false, createdAt:fv.serverTimestamp(),
       });
 
     } else if (draft.intent === 'airport_pickup' || draft.intent === 'airport_dropoff') {
-      var isPickup  = draft.intent === 'airport_pickup';
-      var timeField = isPickup ? f.arrivalTime : f.departureTime;
-      var datetime  = (f.requestedDate && timeField) ? f.requestedDate + 'T' + timeField + ':00' : (f.requestedDate||'');
-      var addrField = isPickup ? (f.dropoffAddress||'') : (f.pickupAddress||'');
-      var trackingToken = genId().replace('DLC-','')+genId().replace('DLC-','');
+      var isPickup      = draft.intent === 'airport_pickup';
+      var timeField     = isPickup ? f.arrivalTime : f.departureTime;
+      var datetime      = (f.requestedDate && timeField) ? f.requestedDate + 'T' + timeField + ':00' : (f.requestedDate||'');
+      var addrField     = isPickup ? (f.dropoffAddress||'') : (f.pickupAddress||'');
+      trackingToken     = genId().replace('DLC-','')+genId().replace('DLC-','');
+
+      var airportMapsLink  = buildAirportMapsLink(f.airport, f.terminal);
+      var addrMapsLink     = buildMapsLink(addrField);
+      var luggageStr       = f.luggageCount === 0 ? 'Xách tay' : (f.luggageCount ? f.luggageCount + ' kiện' : '');
+      var timeLabel        = isPickup ? 'Hạ cánh' : 'Cất cánh';
+
+      var driverBriefLines = [
+        (isPickup ? '✈️ ĐÓN SÂN BAY' : '✈️ ĐƯA RA SÂN BAY') + ' — ' + orderId,
+        '',
+        '👤 Khách: ' + (f.customerName||'') + ' · ' + fmtPhone(f.customerPhone),
+        '🛫 Sân bay: ' + (f.airport||'') + (f.terminal ? ' · ' + f.terminal : ''),
+        airportMapsLink ? '   Map sân bay: ' + airportMapsLink : null,
+        f.airline       ? '✈️  Bay: ' + f.airline : null,
+        '📅 ' + fmtDate(f.requestedDate) + ' · ' + timeLabel + ': ' + fmtTime(timeField),
+        '👥 ' + (f.passengers||1) + ' người' + (luggageStr ? ' · ' + luggageStr : ''),
+        isPickup
+          ? ('📍 Điểm đến: ' + addrField + (addrMapsLink ? '\n   Map: ' + addrMapsLink : ''))
+          : ('🚗 Đón tại: ' + addrField + (addrMapsLink ? '\n   Map: ' + addrMapsLink : '')),
+        f.notes         ? '📝 ' + f.notes : null,
+        isPickup        ? '⏱ Chờ tại cửa Arrivals/Baggage Claim.' : null,
+      ];
+      var driverBrief = driverBriefLines.filter(function(v){return v!==null;}).join('\n');
 
       await db.collection('bookings').doc(orderId).set({
-        bookingId:orderId, trackingToken:trackingToken,
+        bookingId:orderId, trackingToken,
         status:'pending', serviceType:isPickup?'pickup':'dropoff', datetime,
-        airport:f.airport||'', airline:f.airline||'', address:addrField,
-        passengers:f.passengers||1, name:f.customerName||'', phone:f.customerPhone||'',
+        airport:f.airport||'', airline:f.airline||'', terminal:f.terminal||'',
+        address:addrField, passengers:f.passengers||1, luggageCount:f.luggageCount||0,
+        name:f.customerName||'', phone:f.customerPhone||'',
         notes:f.notes||'', source:'ai_chat',
         driver:null,vehicleLat:null,vehicleLng:null,vehicleHeading:null,etaMinutes:null,
         createdAt:fv.serverTimestamp(),
@@ -1250,16 +1403,34 @@
       await db.collection('vendors').doc('admin-dlc').collection('notifications').add({
         type:'new_booking',
         title:(isPickup?'✈️ Đón sân bay':'✈️ Ra sân bay')+' — '+(f.customerName||''),
-        message:(f.passengers||1)+' người · '+fmtPhone(f.customerPhone)+' · '+(f.airport||'')+' · '+fmtDate(f.requestedDate)+' '+fmtTime(timeField),
+        message: driverBrief,
         bookingId:orderId, customerPhone:f.customerPhone||'',
-        requestedDate:f.requestedDate||'', airport:f.airport||'',
-        pickupAddress:isPickup?'':addrField, read:false, createdAt:fv.serverTimestamp(),
+        requestedDate:f.requestedDate||'', airport:f.airport||'', terminal:f.terminal||'',
+        airline:f.airline||'', passengers:f.passengers||1, luggageCount:f.luggageCount||0,
+        pickupAddress:isPickup?'':addrField, dropoffAddress:isPickup?addrField:'',
+        airportMapsLink:airportMapsLink||'', addrMapsLink:addrMapsLink||'',
+        read:false, createdAt:fv.serverTimestamp(),
       });
 
     } else if (draft.intent === 'nail_appointment' || draft.intent === 'hair_appointment') {
-      var svcLabel2 = draft.intent === 'nail_appointment' ? 'Nail' : 'Tóc';
+      var isNail    = draft.intent === 'nail_appointment';
+      var svcEmoji  = isNail ? '💅' : '✂️';
+      var svcLabel2 = isNail ? 'Nail' : 'Tóc';
+
+      var apptMsgLines = [
+        svcEmoji + ' LỊCH HẸN ' + svcLabel2.toUpperCase() + ' — ' + orderId,
+        '',
+        '💆 Dịch vụ: ' + (f.serviceType||''),
+        f.region      ? '📍 Khu vực: ' + f.region : null,
+        '📅 ' + fmtDate(f.requestedDate) + ' lúc ' + fmtTime(f.requestedTime),
+        '👤 ' + (f.customerName||'') + ' · ' + fmtPhone(f.customerPhone),
+        f.notes       ? '📝 ' + f.notes : null,
+      ];
+      var apptMsg = apptMsgLines.filter(function(v){return v!==null;}).join('\n');
+
       await db.collection('bookings').doc(orderId).set({
         bookingId:orderId, type:draft.intent, serviceType:f.serviceType||'',
+        region:f.region||'',
         requestedDate:f.requestedDate||'', requestedTime:f.requestedTime||'',
         name:f.customerName||'', phone:f.customerPhone||'',
         notes:f.notes||'', status:'pending', source:'ai_chat',
@@ -1267,19 +1438,40 @@
       });
       await db.collection('vendors').doc('admin-dlc').collection('notifications').add({
         type:'new_appointment',
-        title:'💅 Lịch hẹn '+svcLabel2+' — '+(f.customerName||''),
-        message:(f.serviceType||'')+' · '+fmtPhone(f.customerPhone)+' · '+fmtDate(f.requestedDate)+' '+fmtTime(f.requestedTime),
+        title: svcEmoji + ' Lịch hẹn ' + svcLabel2 + ' — ' + (f.customerName||''),
+        message: apptMsg,
         bookingId:orderId, customerName:f.customerName||'', customerPhone:f.customerPhone||'',
-        serviceType:f.serviceType||'', requestedDate:f.requestedDate||'',
+        serviceType:f.serviceType||'', region:f.region||'',
+        requestedDate:f.requestedDate||'', requestedTime:f.requestedTime||'',
         read:false, createdAt:fv.serverTimestamp(),
       });
 
     } else if (draft.intent === 'tour_request') {
       var dest   = typeof f.destination === 'object' ? f.destination : { id:'', name:String(f.destination||'') };
       var lodging = f.lodging || 'none';
-      var trackingToken = genId().replace('DLC-','')+genId().replace('DLC-','');
+      trackingToken = genId().replace('DLC-','')+genId().replace('DLC-','');
+
+      var startMapsLink = buildMapsLink(f.startingPoint);
+      var lodgeLabel2 = { hotel:'Khách sạn', airbnb:'Airbnb', none:'Tự túc' }[lodging] || lodging;
+
+      var tourMsgLines = [
+        '🗺️ TOUR ' + (dest.name||'').toUpperCase() + ' — ' + orderId,
+        '',
+        '📍 Xuất phát: ' + (f.startingPoint||'') + (startMapsLink ? '\n   Map: ' + startMapsLink : ''),
+        '🏁 Điểm đến: ' + (dest.name||''),
+        '📅 Khởi hành: ' + fmtDate(f.requestedDate) + ' · ' + (f.days||1) + ' ngày',
+        '👥 ' + (f.passengers||1) + ' người',
+        '🏨 Chỗ ở: ' + lodgeLabel2 +
+          (f.chosenHotel ? ' — ' + f.chosenHotel : '') +
+          (f.hotelArea && !f.chosenHotel ? ' (' + f.hotelArea + ')' : '') +
+          (f.bookingMode === 'vendor' ? ' — nhờ DLC đặt' : ''),
+        '👤 ' + (f.customerName||'') + ' · ' + fmtPhone(f.customerPhone),
+        f.notes ? '📝 ' + f.notes : null,
+      ];
+      var tourMsg = tourMsgLines.filter(function(v){return v!==null;}).join('\n');
+
       await db.collection('bookings').doc(orderId).set({
-        bookingId:orderId, trackingToken:trackingToken,
+        bookingId:orderId, trackingToken,
         status:'pending', serviceType:dest.id||'tour', datetime:f.requestedDate||'',
         address:f.startingPoint||'', passengers:f.passengers||1, days:f.days||1,
         lodging, hotelArea:f.hotelArea||'', hotelBudget:f.hotelBudget||'',
@@ -1289,15 +1481,13 @@
         driver:null,vehicleLat:null,vehicleLng:null,vehicleHeading:null,etaMinutes:null,
         createdAt:fv.serverTimestamp(),
       });
-      var hotelNote = f.lodging === 'hotel'
-        ? ' · Khách sạn' + (f.chosenHotel ? ': '+f.chosenHotel : (f.hotelArea ? ' ('+f.hotelArea+')' : '')) + (f.bookingMode === 'vendor' ? ' — nhờ DLC đặt' : '')
-        : '';
       await db.collection('vendors').doc('admin-dlc').collection('notifications').add({
         type:'new_booking',
-        title:'🗺️ Tour '+(dest.name||'')+' — '+(f.customerName||''),
-        message:(f.passengers||1)+' người · '+(f.days||1)+' ngày · '+fmtPhone(f.customerPhone)+' · '+fmtDate(f.requestedDate)+hotelNote,
+        title:'🗺️ Tour ' + (dest.name||'') + ' — ' + (f.customerName||''),
+        message: tourMsg,
         bookingId:orderId, customerPhone:f.customerPhone||'',
         requestedDate:f.requestedDate||'', destination:dest.name||'',
+        passengers:f.passengers||1, days:f.days||1,
         lodging, hotelArea:f.hotelArea||'', chosenHotel:f.chosenHotel||'', bookingMode:f.bookingMode||'',
         read:false, createdAt:fv.serverTimestamp(),
       });

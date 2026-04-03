@@ -2,13 +2,16 @@
   "name": "Du Lịch Cali",
   "short_name": "DuLịchCali",
   "description": "Dịch vụ đưa đón sân bay, tour du lịch và ẩm thực California",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0a2344",
   "theme_color": "#0a2344",
   "lang": "vi",
   "categories": ["travel", "food", "lifestyle"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "icons/favicon-16.png",
@@ -36,7 +39,7 @@
       "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ]
 }

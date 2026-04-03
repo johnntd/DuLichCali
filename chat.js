@@ -1153,15 +1153,19 @@ BEHAVIOR GUIDELINES:
       const result = WF.process(text);
       if (result && typeof result === 'object' && result.type === 'finalize') {
         try {
-          const orderId = await WF.finalize();
+          const res = await WF.finalize();
+          const orderId = res.id || res;
+          const token   = res.token || null;
+          let url = `thankyou.html?id=${encodeURIComponent(orderId)}&lang=vi`;
+          if (token) url += `&t=${encodeURIComponent(token)}`;
+          setTimeout(() => { window.location.href = url; }, 2200);
           return {
             type: 'message',
             text: [
               '✅ Đặt chỗ thành công!',
-              `Mã đơn: ${orderId}`,
+              `Mã đơn: **${orderId}**`,
               '',
-              'Chúng tôi sẽ liên hệ xác nhận trong vòng 2 tiếng.',
-              `Cần hỗ trợ ngay: gọi ${regionPhone()}.`,
+              'Đang chuyển đến trang xác nhận...',
             ].join('\n'),
             chips: null,
             hotels: null,

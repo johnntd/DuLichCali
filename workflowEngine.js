@@ -1204,6 +1204,7 @@
     var db = firebase.firestore();
     var f  = draft.collectedFields;
     var orderId = genId();
+    var trackingToken = null;
 
     if (draft.intent === 'food_order') {
       var item     = typeof f.item === 'object' ? f.item : {};
@@ -1235,9 +1236,10 @@
       var timeField = isPickup ? f.arrivalTime : f.departureTime;
       var datetime  = (f.requestedDate && timeField) ? f.requestedDate + 'T' + timeField + ':00' : (f.requestedDate||'');
       var addrField = isPickup ? (f.dropoffAddress||'') : (f.pickupAddress||'');
+      var trackingToken = genId().replace('DLC-','')+genId().replace('DLC-','');
 
       await db.collection('bookings').doc(orderId).set({
-        bookingId:orderId, trackingToken:genId().replace('DLC-','')+genId().replace('DLC-',''),
+        bookingId:orderId, trackingToken:trackingToken,
         status:'pending', serviceType:isPickup?'pickup':'dropoff', datetime,
         airport:f.airport||'', airline:f.airline||'', address:addrField,
         passengers:f.passengers||1, name:f.customerName||'', phone:f.customerPhone||'',
@@ -1275,8 +1277,9 @@
     } else if (draft.intent === 'tour_request') {
       var dest   = typeof f.destination === 'object' ? f.destination : { id:'', name:String(f.destination||'') };
       var lodging = f.lodging || 'none';
+      var trackingToken = genId().replace('DLC-','')+genId().replace('DLC-','');
       await db.collection('bookings').doc(orderId).set({
-        bookingId:orderId, trackingToken:genId().replace('DLC-','')+genId().replace('DLC-',''),
+        bookingId:orderId, trackingToken:trackingToken,
         status:'pending', serviceType:dest.id||'tour', datetime:f.requestedDate||'',
         address:f.startingPoint||'', passengers:f.passengers||1, days:f.days||1,
         lodging, hotelArea:f.hotelArea||'', hotelBudget:f.hotelBudget||'',
@@ -1301,7 +1304,7 @@
     }
 
     clearDraft(); draft = null;
-    return orderId;
+    return { id: orderId, token: trackingToken || null };
   }
 
   function cancel() { clearDraft(); draft = null; }

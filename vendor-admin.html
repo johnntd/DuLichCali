@@ -1526,29 +1526,62 @@
     notificationPhone:    ''
   };
 
-  var SEED_ITEM = {
-    name:            'Chả Giò (Eggroll)',
-    displayNameVi:   'Chả Giò',
-    description:     'Chả giò nhân thịt heo, nấm hương và cà rốt tươi — gói bằng bánh tráng mỏng, chiên giòn vàng thơm phức. Handmade, không chất bảo quản. Perfect for family dinners and parties.',
-    variants:        [
-      { key: 'raw',   label: 'Raw — to fry fresh at home',       imageUrl: '' },
-      { key: 'fresh', label: 'Fresh — cooked & ready to serve',  imageUrl: '' }
-    ],
-    price:           0.75,
-    unit:            'each',
-    minimumOrderQty: 30,
-    image:           '',
-    videoUrl:        '',
-    videoStatus:     'none',
-    active:          true,
-    featured:        true,
-    sortOrder:       0,
-    preparationInstructions: 'Chiên trong dầu nóng 350°F (175°C) trong 8–10 phút, lật đều. Khi vàng giòn là được. Không cần rã đông — chiên thẳng từ tủ lạnh cho kết quả giòn nhất.',
-    reheatingInstructions:   'Lò nướng 325°F 5–7 phút, hoặc nồi chiên không dầu (air fryer) 320°F 4 phút. Tránh dùng lò vi sóng — làm mất độ giòn.',
-    storageInstructions:     'Tủ lạnh: tối đa 3 ngày. Đông lạnh: tối đa 2 tháng (không cần rã đông trước khi chiên). Không để nhiệt độ phòng quá 2 giờ.',
-    servingNotes:            'Ăn nóng khi mới chiên. Dùng kèm tương ớt, hoisin, hoặc nước chấm chua ngọt. Đặt trên giấy thấm dầu 1 phút trước khi ăn.',
-    allergenNotes:           'Chứa: thịt heo, nấm hương, cà rốt, hành tây, bún tàu (miến). Vỏ bánh tráng gạo (không gluten). Không đậu phộng.'
-  };
+  // ── Canonical menu items — single source of truth for Firestore seed/migration ──
+  // canonicalId must match services-data.js product id (nha-bep-cua-emily.products[].id)
+  // ensureCanonicalItems() uses this to safely add any missing items without touching
+  // items that Loan has already edited manually.
+  var CANONICAL_ITEMS = [
+    {
+      canonicalId:     'eggroll',               // ← stable id, matches services-data.js
+      name:            'Chả Giò (Eggroll)',
+      displayNameVi:   'Chả Giò',
+      description:     'Chả giò nhân thịt heo, nấm hương và cà rốt tươi — gói bằng bánh tráng mỏng, chiên giòn vàng thơm phức. Handmade, không chất bảo quản. Perfect for family dinners and parties.',
+      variants:        [
+        { key: 'raw',   label: 'Raw — to fry fresh at home',       imageUrl: '' },
+        { key: 'fresh', label: 'Fresh — cooked & ready to serve',  imageUrl: '' }
+      ],
+      price:           0.75,
+      unit:            'each',
+      minimumOrderQty: 30,
+      image:           '',
+      videoUrl:        '',
+      videoStatus:     'none',
+      active:          true,
+      featured:        true,
+      sortOrder:       0,
+      preparationInstructions: 'Chiên trong dầu nóng 350°F (175°C) trong 8–10 phút, lật đều. Khi vàng giòn là được. Không cần rã đông — chiên thẳng từ tủ lạnh cho kết quả giòn nhất.',
+      reheatingInstructions:   'Lò nướng 325°F 5–7 phút, hoặc nồi chiên không dầu (air fryer) 320°F 4 phút. Tránh dùng lò vi sóng — làm mất độ giòn.',
+      storageInstructions:     'Tủ lạnh: tối đa 3 ngày. Đông lạnh: tối đa 2 tháng (không cần rã đông trước khi chiên). Không để nhiệt độ phòng quá 2 giờ.',
+      servingNotes:            'Ăn nóng khi mới chiên. Dùng kèm tương ớt, hoisin, hoặc nước chấm chua ngọt. Đặt trên giấy thấm dầu 1 phút trước khi ăn.',
+      allergenNotes:           'Chứa: thịt heo, nấm hương, cà rốt, hành tây, bún tàu (miến). Vỏ bánh tráng gạo (không gluten). Không đậu phộng.'
+    },
+    {
+      canonicalId:     'chuoi-dau-nau-oc',      // ← stable id, matches services-data.js
+      name:            'Chuối Đậu Nấu Ốc',
+      displayNameVi:   'Chuối Đậu Nấu Ốc',
+      nameEn:          'Northern Vietnamese Snail, Tofu & Green Banana Stew',
+      description:     'A traditional Northern Vietnamese specialty featuring fresh snails, tofu, and green banana simmered in a rich turmeric broth with herbs and chili. Savory, slightly tangy, and deeply comforting.',
+      tags:            ['Miền Bắc', 'Homemade', 'Thảo Dược', 'Comfort Food', 'Limited Batch'],
+      variants:        [],
+      price:           15,
+      unit:            'phần',
+      minimumOrderQty: 1,
+      image:           '',
+      videoUrl:        '',
+      videoStatus:     'none',
+      active:          true,
+      featured:        false,
+      sortOrder:       1,
+      preparationInstructions: 'Hâm nóng trên bếp nhỏ lửa 5–8 phút. Thêm rau thơm tươi trước khi dùng để giữ hương vị.',
+      reheatingInstructions:   'Hâm lại bằng nồi nhỏ lửa, không dùng lò vi sóng để tránh làm mất độ tươi của ốc.',
+      storageInstructions:     'Tủ lạnh: tối đa 2 ngày. Không đông lạnh — ốc tươi sẽ mất kết cấu sau khi đông.',
+      servingNotes:            'Dùng nóng với bún hoặc cơm trắng. Thêm mắm tôm và ớt tươi theo khẩu vị.',
+      allergenNotes:           'Chứa: ốc (shellfish/snail), đậu phụ (đậu nành/soy), hành, ớt. Không gluten. Món chay không ăn được (có ốc).'
+    }
+  ];
+
+  // Keep SEED_ITEM for backward-compat reference (not used in seeding; ensureCanonicalItems() handles all seeding now)
+  var SEED_ITEM = CANONICAL_ITEMS[0];
 
   // ── Firebase ─────────────────────────────────────────────────────────────
   var firebaseConfig = {
@@ -1643,8 +1676,22 @@
     }, 8000);
   }
 
-  // ── Seed Firestore on first use ───────────────────────────────────────────
+  // ── Seed Firestore on first use + migrate any missing canonical items ────────
+  //
+  // ensureCanonicalItems() replaces the old "seed one item if empty" approach.
+  // It is idempotent: safe to run on every admin load.
+  //
+  // Algorithm:
+  //   1. Fetch all existing menuItems from Firestore
+  //   2. Build a Set of present canonicalId values
+  //   3. For each item in CANONICAL_ITEMS that is NOT present → add it
+  //   4. Items Loan edited manually (no canonicalId) are NEVER touched
+  //
+  // This guarantees the public page and vendor admin always read from the
+  // same Firestore collection and never diverge.
+  //
   function seedIfNeeded() {
+    // ── 1. Seed vendor document if it doesn't exist ──
     vendorRef.get().then(function (doc) {
       if (!doc.exists) {
         var data = Object.assign({}, SEED_VENDOR, {
@@ -1662,21 +1709,45 @@
       console.error('[seed] vendor get failed:', err);
     });
 
-    menuRef.limit(1).get().then(function (snap) {
-      if (snap.empty) {
-        var item = Object.assign({}, SEED_ITEM, {
+    // ── 2. Ensure ALL canonical menu items exist in Firestore ──
+    ensureCanonicalItems();
+  }
+
+  function ensureCanonicalItems() {
+    // Read ALL existing items (no limit) so we can check for each canonicalId
+    menuRef.get().then(function (snap) {
+      // Primary deduplication key: canonicalId (new items written with this field)
+      // Secondary key: item name lowercased (catches legacy items seeded without canonicalId)
+      // Both checks prevent creating duplicates when the collection already has items.
+      var presentById   = {};
+      var presentByName = {};
+      snap.forEach(function (d) {
+        var data = d.data();
+        if (data.canonicalId) presentById[data.canonicalId] = true;
+        if (data.name)        presentByName[data.name.toLowerCase()] = true;
+      });
+
+      // Add any canonical item that is missing by BOTH checks
+      CANONICAL_ITEMS.forEach(function (template) {
+        var byId   = presentById[template.canonicalId];
+        var byName = presentByName[template.name.toLowerCase()];
+        if (byId || byName) {
+          // Already in Firestore (found by id or name) — don't touch it
+          return;
+        }
+        var item = Object.assign({}, template, {
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         menuRef.add(item).then(function () {
-          console.log('[seed] eggroll item created');
+          console.log('[seed] canonical item added:', template.name, '(', template.canonicalId, ')');
         }).catch(function (err) {
-          console.error('[seed] item add failed:', err);
+          console.error('[seed] item add failed:', template.canonicalId, err);
           showToast('Lỗi tạo món: ' + (err.code || err.message), 'error');
         });
-      }
+      });
     }).catch(function (err) {
-      console.error('[seed] menuItems get failed:', err);
+      console.error('[seed] canonical check failed:', err);
     });
   }
 

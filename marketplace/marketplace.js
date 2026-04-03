@@ -669,8 +669,8 @@
         renderInfoStrip(biz) +
         '<div class="mp-detail-body">' +
           '<div class="mp-detail-col mp-detail-col--left">' +
-            renderFoodVendorAbout(biz) +
             renderProductsSection(biz) +
+            renderFoodVendorAbout(biz) +
           '</div>' +
           '<div class="mp-detail-col mp-detail-col--right">' +
             renderOrderInquirySection(biz) +
@@ -744,7 +744,13 @@
        '</div>';
      });
     if (!rows.length) return '';
-    return '<div class="mp-instr-block">' + rows.join('') + '</div>';
+    return '<details class="mp-instr-details">' +
+      '<summary class="mp-instr-summary">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="mp-instr-summary__chevron"><polyline points="6 9 12 15 18 9"/></svg>' +
+        'Hướng Dẫn Sử Dụng' +
+      '</summary>' +
+      '<div class="mp-instr-block">' + rows.join('') + '</div>' +
+    '</details>';
   }
 
   function renderProductsSection(biz) {
@@ -781,6 +787,18 @@
       });
       var hasVariantImgs = Object.keys(varImgMap).length > 0;
 
+      // Reusable SVG image-placeholder icon (no emoji, per design guidelines)
+      var _phIcon =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" class="mp-product-img-placeholder__icon">' +
+          '<path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>' +
+          '<circle cx="12" cy="13" r="4"/>' +
+        '</svg>';
+      var _ph =
+        '<div class="mp-product-img-placeholder" id="pcard-ph-' + escAttr(product.id) + '">' +
+          _phIcon +
+          '<span class="mp-product-img-placeholder__text">Ảnh chưa có</span>' +
+        '</div>';
+
       var mediaHtml = '';
       if (product.videoUrl) {
         mediaHtml =
@@ -793,6 +811,7 @@
             '<span class="mp-product-card__video-badge">▶ Video</span>' +
           '</div>';
       } else if (defaultImg) {
+        // Image exists: render it + hidden placeholder; onerror swaps them
         mediaHtml =
           '<div class="mp-product-card__media-wrap" id="pcard-media-' + escAttr(product.id) + '">' +
             '<img class="mp-product-card__img" ' +
@@ -800,7 +819,15 @@
               'src="' + escAttr(defaultImg) + '" ' +
               'style="' + imgPos + '" ' +
               'alt="' + escAttr(product.nameEn || product.name) + '" loading="lazy" ' +
-              'onerror="this.parentElement.style.display=\'none\'">' +
+              'onerror="this.style.display=\'none\';var ph=document.getElementById(\'pcard-ph-' + escAttr(product.id) + '\');if(ph)ph.style.display=\'flex\'">' +
+            _ph.replace('id="pcard-ph-' + escAttr(product.id) + '"',
+                        'id="pcard-ph-' + escAttr(product.id) + '" style="display:none"') +
+          '</div>';
+      } else {
+        // No image URL — show placeholder immediately
+        mediaHtml =
+          '<div class="mp-product-card__media-wrap">' +
+            _ph +
           '</div>';
       }
       var imgHtml = mediaHtml; // keep variable name for compatibility below

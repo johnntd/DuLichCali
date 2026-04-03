@@ -58,7 +58,66 @@ function switchScreen(screenId) {
   // Scroll active screen to top
   const el = document.getElementById(screenId);
   if (el) el.scrollTop = 0;
+  // Keep back button state accurate after screen change
+  _updateBackBtn();
 }
+
+// ── Global Back Navigation System ───────────────────────────
+// Evaluates current app state and returns the appropriate back
+// action: closes modal, collapses sheet, or steps backward.
+// No manual stack needed — derived from live DOM state.
+
+function _getBackAction() {
+  // Priority 1: highlight detail sheet
+  const hlSheet = document.getElementById('hlSheet');
+  if (hlSheet && !hlSheet.hidden && hlSheet.classList.contains('hl-sheet--open')) {
+    return closeHighlight;
+  }
+  // Priority 2: destination video modal
+  const destModal = document.getElementById('destModal');
+  if (destModal && !destModal.hidden && destModal.classList.contains('dest-modal--open')) {
+    return closeDestination;
+  }
+  // Priority 3: booking wizard steps 2–5
+  if (typeof currentStep !== 'undefined' && currentStep > 1) {
+    const step = currentStep; // capture before closure
+    return function () { goStep(step - 1); };
+  }
+  return null;
+}
+
+function _updateBackBtn() {
+  const btn = document.getElementById('globalBack');
+  if (!btn) return;
+  btn.hidden = !_getBackAction();
+}
+
+function globalBack() {
+  const action = _getBackAction();
+  if (action) {
+    action();
+    // Re-evaluate after the action settles (modals use CSS transitions)
+    setTimeout(_updateBackBtn, 120);
+  }
+}
+
+// Browser/OS back gesture support
+window.addEventListener('popstate', function () {
+  const action = _getBackAction();
+  if (action) {
+    action();
+    setTimeout(_updateBackBtn, 120);
+  }
+});
+
+// Hash-based deep linking (from marketplace bottom nav links like ../#travel)
+document.addEventListener('DOMContentLoaded', function () {
+  const hash = location.hash;
+  if      (hash === '#travel' || hash === '#destinations') switchScreen('screenDest');
+  else if (hash === '#ai'     || hash === '#chat')         switchScreen('screenChat');
+  else if (hash === '#book'   || hash === '#booking')      switchScreen('screenBook');
+  _updateBackBtn(); // initialise back button state
+});
 
 // ── Destination Cards (Home screen, horizontal scroll) ────────
 function renderDestCards() {
@@ -251,6 +310,9 @@ function goStep(n) {
   // Scroll step into view
   const stepEl = document.getElementById(`wStep${n}`);
   if (stepEl) stepEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Show/hide back button based on wizard depth
+  _updateBackBtn();
 }
 
 // ── Pickup Type Toggle (airport vs personal address) ─────────
@@ -785,6 +847,9 @@ function openDestination(destId) {
 
   // Load video in background (poster remains visible until confirmed playing)
   if (dest.youtubeId) loadDestVideo(dest.youtubeId);
+
+  // Show back button when modal opens
+  setTimeout(_updateBackBtn, 60);
 }
 
 // ── Highlight Detail Sheet ────────────────────────────────────
@@ -830,6 +895,7 @@ function openHighlight(destId, hlIdx) {
   sheet.hidden = false;
   requestAnimationFrame(() => sheet.classList.add('hl-sheet--open'));
   document.body.style.overflow = 'hidden';
+  setTimeout(_updateBackBtn, 60);
 }
 
 function closeHighlight() {
@@ -837,7 +903,10 @@ function closeHighlight() {
   if (!sheet) return;
   sheet.classList.remove('hl-sheet--open');
   document.body.style.overflow = '';
-  setTimeout(() => { sheet.hidden = true; }, 320);
+  setTimeout(() => {
+    sheet.hidden = true;
+    _updateBackBtn(); // re-evaluate: may still have dest modal open
+  }, 320);
 }
 
 function closeDestination() {
@@ -854,6 +923,7 @@ function closeDestination() {
     if (poster) poster.classList.remove('dest-modal__poster--hidden');
     const soundBtn = document.getElementById('destSoundBtn');
     if (soundBtn) { soundBtn.style.display = 'none'; soundBtn.innerHTML = SVG_MUTED; }
+    _updateBackBtn(); // hide back button once modal is fully gone
   }, 450);
 }
 

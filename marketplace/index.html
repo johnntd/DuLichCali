@@ -18,6 +18,59 @@
       display: flex;
       flex-direction: column;
       background: var(--navy-900);
+      /* Reserve space so content clears the fixed bottom nav on mobile */
+      padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* ── Persistent bottom nav (mobile + tablet) ── */
+    .hub-bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(64px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      display: flex;
+      align-items: stretch;
+      background: rgba(13,47,80,.96);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border-top: 1px solid rgba(245,166,35,.22);
+      z-index: 40;
+    }
+    .hub-nav-tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .22rem;
+      color: rgba(90,140,175,.65);
+      font-size: .62rem;
+      font-weight: 500;
+      letter-spacing: .04em;
+      text-decoration: none;
+      -webkit-tap-highlight-color: transparent;
+      cursor: pointer;
+      transition: color .18s;
+    }
+    .hub-nav-tab svg { width: 20px; height: 20px; flex-shrink: 0; }
+    .hub-nav-tab--active { color: #f0b429; }
+    /* Center AI tab elevated circle */
+    .hub-nav-tab--center { position: relative; overflow: visible; }
+    .hub-nav-center-btn {
+      width: 48px; height: 48px;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #e55a3c 0%, #d4840a 55%, #f0b429 100%);
+      border-radius: 50%;
+      margin-top: -18px;
+      box-shadow: 0 4px 16px rgba(245,166,35,.45);
+      color: #0a1c33;
+    }
+    /* Hide on desktop — marketplace pages use header back button instead */
+    @media (min-width: 1200px) {
+      .hub-bottom-nav { display: none; }
+      .hub-app { padding-bottom: 0; }
     }
 
     /* App bar */
@@ -275,6 +328,55 @@
       <a href="/terms" style="color:inherit;text-decoration:none;">Terms of Service</a>
     </span>
   </footer>
+
+  <!-- ── Persistent bottom nav (same 5 tabs, Shops active) ─────── -->
+  <nav class="hub-bottom-nav" aria-label="App navigation">
+
+    <a href="../" class="hub-nav-tab" aria-label="Trang chủ">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <span>Trang chủ</span>
+    </a>
+
+    <a href="../#travel" class="hub-nav-tab" aria-label="Du Lịch">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="10" r="3"/>
+        <path d="M12 2a8 8 0 00-8 8c0 5.25 7.5 12 8 12s8-6.75 8-12a8 8 0 00-8-8z"/>
+      </svg>
+      <span>Du Lịch</span>
+    </a>
+
+    <a href="../#ai" class="hub-nav-tab hub-nav-tab--center" aria-label="AI Concierge">
+      <div class="hub-nav-center-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+        </svg>
+      </div>
+      <span>AI</span>
+    </a>
+
+    <a href="../#book" class="hub-nav-tab" aria-label="Đặt chỗ">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <span>Đặt chỗ</span>
+    </a>
+
+    <a href="./" class="hub-nav-tab hub-nav-tab--active" aria-label="Marketplace" aria-current="page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <path d="M16 10a4 4 0 01-8 0"/>
+      </svg>
+      <span>Shops</span>
+    </a>
+
+  </nav>
+
 </div>
 </body>
 </html>

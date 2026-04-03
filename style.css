@@ -184,6 +184,7 @@ button { cursor: pointer; font-family: var(--font-b); }
   letter-spacing: .04em;
   transition: color .2s;
   -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
 }
 .nav-tab svg { width: 20px; height: 20px; }
 .nav-tab--active { color: var(--gold); }
@@ -207,6 +208,37 @@ button { cursor: pointer; font-family: var(--font-b); }
   transform: translateY(-2px);
 }
 .nav-tab--center.nav-tab--active { color: var(--gold); }
+
+/* ── Sidebar-only labels (hidden on mobile, shown in 1200px+ sidebar) ── */
+.sidebar-label, .sidebar-divider { display: none; }
+
+/* ── Global Floating Back Button ────────────────────────── */
+/* Appears above bottom nav; only shown via JS (_updateBackBtn) */
+.global-back {
+  position: fixed;
+  bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 10px);
+  left: 12px;
+  z-index: 80;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.13);
+  background: rgba(10, 28, 52, .90);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  color: var(--cream);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 14px rgba(0,0,0,.50);
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.global-back svg { width: 20px; height: 20px; pointer-events: none; }
+.global-back:hover  { transform: scale(1.07); box-shadow: 0 5px 18px rgba(0,0,0,.55); }
+.global-back:active { transform: scale(0.93); }
+.global-back[hidden] { display: none; }
 
 
 /* ── Shared Buttons ─────────────────────────────────────────── */
@@ -2538,7 +2570,33 @@ select.field-input {
     border-top: none;
     border-right: 1px solid var(--border-g);
     overflow-y: auto;
-    padding-top: 1rem;
+    padding-top: .75rem;
+  }
+
+  /* Sidebar section label */
+  .sidebar-label {
+    display: block;
+    padding: .85rem 1.25rem .35rem;
+    font-size: .6rem;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: rgba(106,176,212,.4);
+  }
+  /* Sidebar divider */
+  .sidebar-divider {
+    display: block;
+    height: 1px;
+    background: rgba(255,255,255,.06);
+    margin: .5rem 1.25rem;
+  }
+
+  /* Desktop: back button moves into the main content column */
+  .global-back {
+    position: fixed;
+    bottom: auto;
+    top: calc(var(--app-bar-h) + 12px);
+    left: calc(240px + 14px);
   }
 
   .nav-tab {
@@ -2665,6 +2723,7 @@ select.field-input {
 /* ── Wide: 1600px+ ──────────────────────────────────────────── */
 @media (min-width: 1600px) {
   #app { grid-template-columns: 260px 1fr; }
+  .global-back { left: calc(260px + 14px); }
 
   .hc { height: 68vh; min-height: 520px; }
   .hc__title { font-size: clamp(4rem, 5vw, 6.5rem); }

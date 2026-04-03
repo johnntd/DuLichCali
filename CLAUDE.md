@@ -145,7 +145,6 @@ No build step. No framework. All files are served as-is.
 
 ### Contact / Business Info
 
-- Duy Hoa: 714-227-6007
-- Dinh: 562-331-3809
+- Phone: +1 (408) 916-3439
 - Email: dulichcali21@gmail.com
 - Site: www.dulichcali21.com

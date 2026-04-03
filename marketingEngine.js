@@ -728,7 +728,7 @@ Price: $${item.pricePerUnit || item.price || '?'}`;
         fields: {
           title: { vi: 'Tour Las Vegas Trọn Gói · 2 Ngày', en: 'All-Inclusive Las Vegas Tour · 2 Days', ab: [] },
           description: { vi: 'Khám phá Las Vegas cùng Du Lịch Cali — không lo đặt xe, không lo đường đi. Tài xế song ngữ, xe mới, đón tận nhà đến khách sạn. Chia nhóm 6-12 người: chi phí chia đều, trải nghiệm tối đa.', en: 'Experience Las Vegas stress-free with Du Lịch Cali — no rental car hassles, no navigation. Bilingual driver, new vehicle, door-to-door service. Split 6-12 ways for unbeatable value.' },
-          adCopy: { vi: '🎰 Las Vegas từ ~$165/người · Đón tận nhà · Gọi Duy Hoa: 714-227-6007', en: '🎰 Las Vegas from ~$165/person · Door-to-door · Call Duy Hoa: 714-227-6007' },
+          adCopy: { vi: '🎰 Las Vegas từ ~$165/người · Đón tận nhà · Gọi Du Lịch Cali: 408-916-3439', en: '🎰 Las Vegas from ~$165/person · Door-to-door · Call Du Lịch Cali: 408-916-3439' },
           promoText: { vi: '✅ Đặt trước 1 tuần để đảm bảo chỗ' },
           tags: { values: ['Las Vegas', 'tour', 'trọn gói', 'nhóm gia đình', 'Orange County', 'tài xế song ngữ'] },
         },
@@ -739,7 +739,7 @@ Price: $${item.pricePerUnit || item.price || '?'}`;
         fields: {
           title: { vi: 'Acrylic Full Set Cao Cấp', en: 'Premium Acrylic Full Set', ab: [] },
           description: { vi: 'Bộ acrylic hoàn hảo bắt đầu từ $40 — thợ lành nghề với kinh nghiệm 10+ năm, móng đẹp bền lâu, dụng cụ khử trùng 100%. Đặt lịch ngay để không phải chờ đợi.', en: 'Premium acrylic full set from $40 — skilled technicians with 10+ years experience, long-lasting results, fully sterilized tools. Book now and skip the wait.' },
-          adCopy: { vi: '💅 Acrylic Full Set từ $40 · Thợ lành nghề · Gọi: 714-227-6007', en: '💅 Acrylic Full Set from $40 · Experienced techs · Call: 714-227-6007' },
+          adCopy: { vi: '💅 Acrylic Full Set từ $40 · Thợ lành nghề · Gọi: 408-916-3439', en: '💅 Acrylic Full Set from $40 · Experienced techs · Call: 408-916-3439' },
           promoText: { vi: '📅 Đặt lịch online — không cần chờ' },
           tags: { values: ['acrylic nails', 'full set', 'nail salon', 'Westminster', 'Orange County', 'Vietnamese nail'] },
         },

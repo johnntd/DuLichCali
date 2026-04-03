@@ -36,7 +36,6 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Subtle background gradient */
     body::before {
       content: '';
       position: fixed;
@@ -48,167 +47,92 @@
       z-index: 0;
     }
 
-    /* ── App Bar ── */
     .app-bar {
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      position: sticky; top: 0; z-index: 100;
       height: 56px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       padding: 0 1.25rem;
       background: rgba(13,47,80,.94);
       backdrop-filter: blur(16px) saturate(160%);
       -webkit-backdrop-filter: blur(16px) saturate(160%);
       border-bottom: 1px solid rgba(245,166,35,0.18);
     }
-
     .app-bar__brand {
-      font-family: var(--font-d);
-      font-size: 1.1rem;
-      color: var(--gold-lt);
-      letter-spacing: .04em;
-      text-decoration: none;
+      font-family: var(--font-d); font-size: 1.1rem; color: var(--gold-lt);
+      letter-spacing: .04em; text-decoration: none;
     }
-
     .app-bar__back {
-      display: flex;
-      align-items: center;
-      gap: .4rem;
-      font-size: .82rem;
-      font-weight: 500;
-      color: var(--muted);
-      text-decoration: none;
-      padding: .4rem .75rem;
-      border: 1px solid var(--border);
-      border-radius: 20px;
+      display: flex; align-items: center; gap: .4rem;
+      font-size: .82rem; font-weight: 500; color: var(--muted);
+      text-decoration: none; padding: .4rem .75rem;
+      border: 1px solid var(--border); border-radius: 20px;
       transition: color .2s, border-color .2s;
     }
-
     .app-bar__back:hover { color: var(--text); border-color: rgba(255,255,255,0.25); }
     .app-bar__back svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-    /* ── Main content ── */
     .page-wrap {
-      position: relative;
-      z-index: 1;
-      max-width: 760px;
-      margin: 0 auto;
+      position: relative; z-index: 1;
+      max-width: 760px; margin: 0 auto;
       padding: 3rem 1.5rem 5rem;
     }
 
-    /* ── Hero header ── */
     .doc-header {
-      margin-bottom: 3rem;
-      padding-bottom: 2rem;
+      margin-bottom: 3rem; padding-bottom: 2rem;
       border-bottom: 1px solid var(--border);
     }
-
     .doc-header__eyebrow {
-      font-size: .75rem;
-      font-weight: 600;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: .75rem;
+      font-size: .75rem; font-weight: 600; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--gold); margin-bottom: .75rem;
     }
-
     .doc-header__title {
       font-family: var(--font-d);
       font-size: clamp(1.9rem, 5vw, 2.8rem);
-      font-weight: 400;
-      color: var(--cream);
-      line-height: 1.2;
-      margin-bottom: 1rem;
+      font-weight: 400; color: var(--cream);
+      line-height: 1.2; margin-bottom: 1rem;
     }
+    .doc-header__meta { font-size: .82rem; color: var(--muted); }
 
-    .doc-header__meta {
-      font-size: .82rem;
-      color: var(--muted);
-    }
-
-    /* ── Sections ── */
-    .doc-section {
-      margin-bottom: 2.75rem;
-    }
+    .doc-section { margin-bottom: 2.75rem; }
 
     .doc-section h2 {
-      font-family: var(--font-d);
-      font-size: 1.15rem;
-      font-weight: 400;
-      color: var(--gold-lt);
-      margin-bottom: 1rem;
-      padding-bottom: .5rem;
+      font-family: var(--font-d); font-size: 1.15rem; font-weight: 400;
+      color: var(--gold-lt); margin-bottom: 1rem; padding-bottom: .5rem;
       border-bottom: 1px solid rgba(245,166,35,0.18);
     }
-
-    .doc-section p {
-      font-size: .93rem;
-      color: var(--text);
-      margin-bottom: .85rem;
-    }
-
+    .doc-section p { font-size: .93rem; color: var(--text); margin-bottom: .85rem; }
     .doc-section p:last-child { margin-bottom: 0; }
 
-    .doc-section ul {
-      list-style: none;
-      margin: .5rem 0 .85rem 0;
-      padding: 0;
-    }
-
+    .doc-section ul { list-style: none; margin: .5rem 0 .85rem; padding: 0; }
     .doc-section ul li {
-      font-size: .93rem;
-      color: var(--text);
-      padding: .3rem 0 .3rem 1.25rem;
-      position: relative;
+      font-size: .93rem; color: var(--text);
+      padding: .3rem 0 .3rem 1.25rem; position: relative;
     }
-
     .doc-section ul li::before {
-      content: '·';
-      position: absolute;
-      left: 0;
-      color: var(--gold);
-      font-weight: 700;
+      content: '·'; position: absolute; left: 0; color: var(--gold); font-weight: 700;
     }
 
-    /* ── Contact box ── */
     .contact-box {
       background: rgba(25,74,120,.45);
       border: 1px solid rgba(245,166,35,0.22);
-      border-radius: 10px;
-      padding: 1.25rem 1.5rem;
-      margin-top: .5rem;
+      border-radius: 10px; padding: 1.25rem 1.5rem; margin-top: .5rem;
     }
-
     .contact-box p { margin-bottom: .4rem; font-size: .9rem; }
     .contact-box a { color: var(--gold-lt); text-decoration: none; }
     .contact-box a:hover { color: var(--cream); }
 
-    /* ── Footer ── */
     .site-footer {
-      position: relative;
-      z-index: 1;
-      text-align: center;
+      position: relative; z-index: 1; text-align: center;
       padding: 1.5rem 1.5rem 2.5rem;
       border-top: 1px solid var(--border);
-      font-size: .8rem;
-      color: var(--muted);
+      font-size: .8rem; color: var(--muted);
     }
-
     .site-footer a { color: var(--muted); text-decoration: none; }
     .site-footer a:hover { color: var(--text); }
     .site-footer__links { display: flex; justify-content: center; gap: 1.5rem; margin-bottom: .75rem; }
 
-    /* ── Desktop ── */
-    @media (min-width: 768px) {
-      .page-wrap { padding: 3.5rem 2.5rem 5rem; }
-      .doc-header { margin-bottom: 3.5rem; }
-    }
-
-    @media (min-width: 1200px) {
-      .page-wrap { padding: 4rem 3rem 6rem; }
-    }
+    @media (min-width: 768px) { .page-wrap { padding: 3.5rem 2.5rem 5rem; } }
+    @media (min-width: 1200px) { .page-wrap { padding: 4rem 3rem 6rem; } }
   </style>
 </head>
 <body>
@@ -232,86 +156,63 @@
     </div>
 
     <div class="doc-section">
-      <h2>Introduction</h2>
-      <p>Du Lịch Cali ("we", "our", or "us") provides travel, airport transfer, and local marketplace services to the Vietnamese-American community in California. This Privacy Policy explains how we collect, use, and protect the personal information you share with us when using our website at <strong>www.dulichcali21.com</strong>.</p>
-      <p>By using our services, you agree to the collection and use of information as described in this policy. We do not sell your personal information to third parties.</p>
+      <p>Du Lịch Cali ("we", "our", or "us") operates the website <strong>https://www.dulichcali21.com</strong>. This Privacy Policy explains how we collect, use, and protect your personal information.</p>
     </div>
 
     <div class="doc-section">
-      <h2>Information We Collect</h2>
-      <p>We collect only the information necessary to fulfill your service request:</p>
+      <h2>1. Information We Collect</h2>
       <ul>
-        <li><strong>Name</strong> — to identify you and confirm your booking</li>
-        <li><strong>Phone number</strong> — to contact you regarding your booking or order</li>
-        <li><strong>Booking and order details</strong> — service type, dates, times, destination, number of passengers, luggage information, food orders, and any special requests</li>
-        <li><strong>Delivery or pickup address</strong> — when you request delivery or need transportation to/from a specific location</li>
-        <li><strong>Location information</strong> — if you use location-based features (such as entering your current location for transportation requests), this information is used only for that specific request</li>
+        <li>Name</li>
+        <li>Phone number</li>
+        <li>Booking/service details</li>
+        <li>Location (for coordination)</li>
+        <li>Device/usage data</li>
       </ul>
-      <p>We do not collect payment card information directly. Any payment processing is handled separately between you and our team.</p>
     </div>
 
     <div class="doc-section">
-      <h2>How We Use Your Information</h2>
-      <p>Your information is used solely to provide and improve our services:</p>
+      <h2>2. How We Use Data</h2>
       <ul>
-        <li>Process and confirm your bookings, reservations, and food orders</li>
-        <li>Contact you to confirm details or notify you of changes</li>
-        <li>Connect you with our drivers, guides, or vendor partners</li>
-        <li>Provide customer support and respond to your inquiries</li>
-        <li>Send order status updates and booking confirmations</li>
-        <li>Improve our service quality based on booking patterns</li>
+        <li>Process bookings</li>
+        <li>Connect customers with vendors</li>
+        <li>Send confirmations and updates</li>
+        <li>Improve service</li>
       </ul>
-      <p>We will never use your phone number or personal information for unsolicited marketing without your explicit consent.</p>
     </div>
 
     <div class="doc-section">
-      <h2>Third-Party Services</h2>
-      <p>We use trusted third-party services to operate our platform. These providers have their own privacy policies governing their data practices:</p>
+      <h2>3. Sharing</h2>
+      <p>Shared only with:</p>
       <ul>
-        <li><strong>Google Firebase (Firestore &amp; Hosting)</strong> — We use Firebase to store booking and order data securely in the cloud, and to host our website. Firebase is a Google service subject to Google's Privacy Policy.</li>
-        <li><strong>Google Maps</strong> — We use Google Maps to display location-based information, generate directions, and provide map links to drivers. Use of this feature is subject to Google's Privacy Policy and Terms of Service.</li>
-        <li><strong>Twilio</strong> — We use Twilio to send SMS notifications to our team when a booking is confirmed. Your phone number is not sent to Twilio.</li>
+        <li>Vendors (for fulfilling requests)</li>
+        <li>Firebase (hosting/database)</li>
+        <li>Google Maps (navigation)</li>
       </ul>
-      <p>We encourage you to review the privacy policies of these third-party services if you have questions about how they handle data.</p>
+      <p><strong>We DO NOT sell data.</strong></p>
     </div>
 
     <div class="doc-section">
-      <h2>Data Storage and Security</h2>
-      <p>Your booking and order data is stored securely in Google Firebase (Firestore), which uses industry-standard encryption both in transit (TLS/HTTPS) and at rest.</p>
-      <p>Access to your data is restricted to authorized Du Lịch Cali staff and the specific vendor (e.g., restaurant, nail salon) fulfilling your order. We do not share your information with any other third parties.</p>
-      <p>We retain your booking data for a reasonable period to fulfill your request and for record-keeping purposes. You may request deletion of your data at any time by contacting us.</p>
+      <h2>4. Security</h2>
+      <p>Data stored securely via Firebase with industry-standard encryption in transit and at rest.</p>
     </div>
 
     <div class="doc-section">
-      <h2>Your Rights</h2>
-      <p>You have the right to:</p>
+      <h2>5. California Rights</h2>
+      <p>Users may request:</p>
       <ul>
-        <li>Request access to the personal information we hold about you</li>
-        <li>Request correction of inaccurate information</li>
-        <li>Request deletion of your personal data</li>
-        <li>Opt out of any non-essential communications</li>
+        <li>Data access</li>
+        <li>Deletion</li>
+        <li>Usage explanation</li>
       </ul>
-      <p>To exercise any of these rights, please contact us using the information below.</p>
+      <p>To exercise these rights, contact us using the information below.</p>
     </div>
 
     <div class="doc-section">
-      <h2>Children's Privacy</h2>
-      <p>Our services are not directed to children under 13 years of age. We do not knowingly collect personal information from children. If you believe a child has provided us with personal information, please contact us and we will promptly delete it.</p>
-    </div>
-
-    <div class="doc-section">
-      <h2>Changes to This Policy</h2>
-      <p>We may update this Privacy Policy from time to time. When we do, we will update the "last updated" date at the top of this page. We encourage you to review this page periodically. Continued use of our services after any changes constitutes your acceptance of the updated policy.</p>
-    </div>
-
-    <div class="doc-section">
-      <h2>Contact Us</h2>
-      <p>If you have questions, concerns, or requests regarding your privacy, please reach out to us:</p>
+      <h2>6. Contact</h2>
       <div class="contact-box">
         <p><strong>Du Lịch Cali</strong></p>
-        <p>Duy Hoa: <a href="tel:7142276007">714-227-6007</a></p>
-        <p>Dinh: <a href="tel:5623313809">562-331-3809</a></p>
         <p>Email: <a href="mailto:dulichcali21@gmail.com">dulichcali21@gmail.com</a></p>
+        <p>Phone: <a href="tel:4089163439">+1 (408) 916-3439</a></p>
         <p>Website: <a href="https://www.dulichcali21.com">www.dulichcali21.com</a></p>
       </div>
     </div>

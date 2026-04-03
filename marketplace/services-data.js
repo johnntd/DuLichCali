@@ -109,13 +109,13 @@
       region: 'Orange County',
       city: 'Westminster',
       address: 'Westminster, CA',
-      phone: '7142276007',
-      phoneDisplay: '714-227-6007',
+      phone: '4089163439',
+      phoneDisplay: '408-916-3439',
       hosts: [
         {
-          name: 'Duy Hoa',
-          phone: '7142276007',
-          display: '714-227-6007',
+          name: 'Du Lịch Cali',
+          phone: '4089163439',
+          display: '408-916-3439',
           role: 'Owner'
         }
       ],
@@ -147,7 +147,7 @@
           'Chào mừng đến Beauty Nails OC! Tôi là Amy, sẵn sàng hỗ trợ đặt lịch hoặc giải đáp thắc mắc. Bạn muốn biết gì ạ?',
         quickReplies: ['Bảng giá', 'Đặt lịch hẹn', 'Giờ hoạt động', 'Dịch vụ'],
         systemExtra:
-          'You are Amy, receptionist for Beauty Nails OC in Westminster Orange County. Owner: Duy Hoa 714-227-6007. Specializes in nail services. Always warm and professional.'
+          'You are Amy, receptionist for Beauty Nails OC in Westminster Orange County. Contact: Du Lịch Cali 408-916-3439. Specializes in nail services. Always warm and professional.'
       }
     },
 
@@ -167,13 +167,13 @@
       region: 'Bay Area',
       city: 'San Jose',
       address: 'San Jose, CA',
-      phone: '4084397522',
-      phoneDisplay: '408-439-7522',
+      phone: '4089163439',
+      phoneDisplay: '408-916-3439',
       hosts: [
         {
-          name: 'John',
-          phone: '4084397522',
-          display: '408-439-7522',
+          name: 'Du Lịch Cali',
+          phone: '4089163439',
+          display: '408-916-3439',
           role: 'Senior Stylist'
         }
       ],
@@ -206,7 +206,7 @@
           'Xin chào! Đây là Việt Hair Studio. Tôi là Mia, trợ lý đặt lịch. Tôi có thể giúp bạn đặt lịch, tư vấn kiểu tóc hoặc báo giá dịch vụ. Bạn cần hỗ trợ gì?',
         quickReplies: ['Đặt lịch cắt tóc', 'Bảng giá', 'Giờ mở cửa', 'Tư vấn kiểu tóc'],
         systemExtra:
-          'You are Mia, receptionist for Việt Hair Studio in San Jose Bay Area. Senior stylist: John 408-439-7522. Specializes in Asian hair styling cuts perms straightening coloring. Respond in same language as customer.'
+          'You are Mia, receptionist for Việt Hair Studio in San Jose Bay Area. Contact: Du Lịch Cali 408-916-3439. Specializes in Asian hair styling cuts perms straightening coloring. Respond in same language as customer.'
       }
     },
 
@@ -225,13 +225,13 @@
       region: 'Orange County',
       city: 'Garden Grove',
       address: 'Garden Grove, CA',
-      phone: '7142276007',
-      phoneDisplay: '714-227-6007',
+      phone: '4089163439',
+      phoneDisplay: '408-916-3439',
       hosts: [
         {
-          name: 'Duy Hoa',
-          phone: '7142276007',
-          display: '714-227-6007',
+          name: 'Du Lịch Cali',
+          phone: '4089163439',
+          display: '408-916-3439',
           role: 'Owner'
         }
       ],
@@ -263,7 +263,7 @@
           'Chào bạn! Cali Hair & Beauty Little Saigon đây. Tôi là Sophie. Mình có thể đặt lịch, báo giá hoặc tư vấn kiểu tóc. Bạn muốn dịch vụ gì?',
         quickReplies: ['Đặt lịch', 'Báo giá nhuộm', 'Xem dịch vụ', 'Giờ làm việc'],
         systemExtra:
-          'You are Sophie, receptionist for Cali Hair & Beauty in Garden Grove Orange County near Little Saigon. Owner: Duy Hoa 714-227-6007. Specializes in Vietnamese and Korean hair styling techniques.'
+          'You are Sophie, receptionist for Cali Hair & Beauty in Garden Grove Orange County near Little Saigon. Contact: Du Lịch Cali 408-916-3439. Specializes in Vietnamese and Korean hair styling techniques.'
       }
     },
 
@@ -283,13 +283,13 @@
       region: 'Bay Area',
       city: 'San Jose',
       address: 'San Jose, CA',
-      phone: '4084397522',
-      phoneDisplay: '408-439-7522',
+      phone: '4089163439',
+      phoneDisplay: '408-916-3439',
       hosts: [
         {
-          name: 'John',
-          phone: '4084397522',
-          display: '408-439-7522',
+          name: 'Du Lịch Cali',
+          phone: '4089163439',
+          display: '408-916-3439',
           role: 'Manager'
         }
       ],
@@ -320,7 +320,7 @@
           'Chào mừng đến Phở Bắc Bay Area! Tôi là Mai. Tôi có thể giúp bạn đặt bàn, xem thực đơn hoặc đặt catering. Bạn cần gì ạ?',
         quickReplies: ['Thực đơn', 'Đặt bàn', 'Giờ mở cửa', 'Đặt catering'],
         systemExtra:
-          'You are Mai, receptionist for Phở Bắc Bay Area restaurant in San Jose. Manager: John 408-439-7522. Specializes in traditional Hanoi pho and Vietnamese food. Also offers catering. Respond warmly in same language used.'
+          'You are Mai, receptionist for Phở Bắc Bay Area restaurant in San Jose. Contact: Du Lịch Cali 408-916-3439. Specializes in traditional Hanoi pho and Vietnamese food. Also offers catering. Respond warmly in same language used.'
       }
     },
 
@@ -442,13 +442,13 @@
       region: 'Orange County',
       city: 'Westminster',
       address: 'Westminster, CA',
-      phone: '7142276007',
-      phoneDisplay: '714-227-6007',
+      phone: '4089163439',
+      phoneDisplay: '408-916-3439',
       hosts: [
         {
-          name: 'Duy Hoa',
-          phone: '7142276007',
-          display: '714-227-6007',
+          name: 'Du Lịch Cali',
+          phone: '4089163439',
+          display: '408-916-3439',
           role: 'Manager'
         }
       ],
@@ -479,7 +479,7 @@
           'Xin chào! Cơm Tấm Dì Tám đây! Tôi là Lan, sẵn sàng hỗ trợ đặt bàn, xem thực đơn hoặc hỏi về catering. Bạn cần gì ạ?',
         quickReplies: ['Xem thực đơn', 'Đặt bàn', 'Giờ mở cửa', 'Catering tiệc'],
         systemExtra:
-          'You are Lan, receptionist for Cơm Tấm Dì Tám restaurant in Westminster Orange County. Manager: Duy Hoa 714-227-6007. Specializes in Southern Vietnamese food especially cơm tấm broken rice with grilled pork. Also does catering.'
+          'You are Lan, receptionist for Cơm Tấm Dì Tám restaurant in Westminster Orange County. Contact: Du Lịch Cali 408-916-3439. Specializes in Southern Vietnamese food especially cơm tấm broken rice with grilled pork. Also does catering.'
       }
     }
   ];

@@ -26,8 +26,7 @@ const _DLC_REGIONS = {
 
     // First host = primary (used for app bar call button, fallback phone)
     hosts: [
-      { name: 'Dung Pham', phone: '4088596718', display: '408-859-6718' },
-      { name: 'John',      phone: '4084397522', display: '408-439-7522' },
+      { name: 'Du Lịch Cali', phone: '4089163439', display: '408-916-3439' },
     ],
 
     vehicle:  { name: 'Toyota Sienna', seats: 8 },
@@ -57,8 +56,7 @@ const _DLC_REGIONS = {
 
     // First host = primary
     hosts: [
-      { name: 'Duy Hoa', phone: '7142276007', display: '714-227-6007' },
-      { name: 'John',    phone: '4084397522', display: '408-439-7522' },
+      { name: 'Du Lịch Cali', phone: '4089163439', display: '408-916-3439' },
     ],
 
     vehicle:  { name: 'Tesla Model Y / Mercedes Van', seats: 12 },
@@ -241,11 +239,11 @@ ALL REGIONAL SERVICE PROFILES (use for cross-region questions):
 ${allProfiles}
 
 REGIONAL RULES FOR AI:
-- Bay Area hosts: Dung Pham (408-859-6718) and John (408-439-7522)
+- Bay Area hosts: Dung Pham (408-859-6718) — driver/service contact
 - Bay Area vehicle: Toyota Sienna, 8 seats max
-- Orange County hosts: Duy Hoa (714-227-6007) and John (408-439-7522)
+- Orange County hosts: Du Lịch Cali (408-916-3439)
 - Orange County vehicles: Tesla Model Y (1-3 pax) or Mercedes Van (4-12 pax)
-- John (408-439-7522) serves both Bay Area and Orange County
+- Main booking line: Du Lịch Cali 408-916-3439 (serves both regions)
 - If user asks capacity for Bay Area, answer: Toyota Sienna, up to 8 seats
 - If region is unclear, ask: "Bạn đang ở vùng nào — Bay Area hay Orange County?"`;
   },

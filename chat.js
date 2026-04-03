@@ -75,9 +75,9 @@
     {
       id: 'beauty-nails-oc', name: 'Beauty Nails OC',
       category: 'nails', region: 'Orange County', city: 'Westminster',
-      contact: 'Duy Hoa', phone: '714-227-6007',
+      contact: 'Du Lịch Cali', phone: '408-916-3439',
       hours: 'T2-6: 9:30am-7:30pm · T7: 9am-7pm · CN: 10am-6pm',
-      bookingNote: 'Đặt lịch: 714-227-6007.',
+      bookingNote: 'Đặt lịch: 408-916-3439.',
       services: [
         { keywords: ['manicure','làm móng tay'],          name: 'Manicure',         priceMin: 18 },
         { keywords: ['pedicure','làm móng chân'],          name: 'Pedicure',         priceMin: 28 },
@@ -90,9 +90,9 @@
     {
       id: 'viet-hair-bayarea', name: 'Việt Hair Studio',
       category: 'hair', region: 'Bay Area', city: 'San Jose',
-      contact: 'John', phone: '408-439-7522',
+      contact: 'Du Lịch Cali', phone: '408-916-3439',
       hours: 'T3-6: 10am-7pm · T7: 9am-6pm · CN: 10am-5pm · Nghỉ T2',
-      bookingNote: 'Đặt lịch: 408-439-7522.',
+      bookingNote: 'Đặt lịch: 408-916-3439.',
       services: [
         { keywords: ['men haircut','cắt tóc nam'],               name: 'Cắt Tóc Nam',    priceMin:  20 },
         { keywords: ['women haircut','cắt tóc nữ','cắt tóc'],   name: 'Cắt Tóc Nữ',    priceMin:  30 },
@@ -105,9 +105,9 @@
     {
       id: 'cali-hair-oc', name: 'Cali Hair & Beauty',
       category: 'hair', region: 'Orange County', city: 'Garden Grove',
-      contact: 'Duy Hoa', phone: '714-227-6007',
+      contact: 'Du Lịch Cali', phone: '408-916-3439',
       hours: 'T2-6: 9am-7pm · T7: 8:30am-7pm · CN: 10am-6pm',
-      bookingNote: 'Đặt lịch: 714-227-6007.',
+      bookingNote: 'Đặt lịch: 408-916-3439.',
       services: [
         { keywords: ['men haircut','cắt tóc nam'],               name: 'Cắt Tóc Nam',       priceMin:  18 },
         { keywords: ['women haircut','cắt tóc nữ','cắt tóc'],   name: 'Cắt Tóc Nữ',       priceMin:  28 },
@@ -120,9 +120,9 @@
     {
       id: 'pho-bac-bayarea', name: 'Phở Bắc Bay Area',
       category: 'food', region: 'Bay Area', city: 'San Jose',
-      contact: 'John', phone: '408-439-7522',
+      contact: 'Du Lịch Cali', phone: '408-916-3439',
       hours: 'T2-5: 10am-9pm · T6-7: 9am-10pm · CN: 9am-9pm',
-      bookingNote: 'Đặt bàn: 408-439-7522.',
+      bookingNote: 'Đặt bàn: 408-916-3439.',
       services: [
         { keywords: ['phở','pho'],                              name: 'Phở Bò Đặc Biệt', priceMin: 15 },
         { keywords: ['bún bò','bun bo'],                       name: 'Bún Bò Huế',       priceMin: 14 },
@@ -135,9 +135,9 @@
     {
       id: 'com-tam-oc', name: 'Cơm Tấm Dì Tám',
       category: 'food', region: 'Orange County', city: 'Westminster',
-      contact: 'Duy Hoa', phone: '714-227-6007',
+      contact: 'Du Lịch Cali', phone: '408-916-3439',
       hours: 'T2-6: 10am-9:30pm · T7: 8am-10pm · CN: 8am-9pm',
-      bookingNote: 'Đặt bàn: 714-227-6007.',
+      bookingNote: 'Đặt bàn: 408-916-3439.',
       services: [
         { keywords: ['cơm tấm dì tám','com tam oc'],           name: 'Cơm Tấm Đặc Biệt', priceMin: 14 },
         { keywords: ['hủ tiếu','hu tieu'],                     name: 'Hủ Tiếu Nam Vang',  priceMin: 14 },
@@ -153,7 +153,7 @@
   // the live region without needing to restart the chat session.
 
   function regionPhone() {
-    return window.DLCRegion ? DLCRegion.current.hosts[0].display : '714-227-6007';
+    return window.DLCRegion ? DLCRegion.current.hosts[0].display : '408-916-3439';
   }
   function regionHostName() {
     return window.DLCRegion ? DLCRegion.current.hosts[0].name : 'Duy Hoa';
@@ -593,7 +593,7 @@
       match: [/điện thoại|số điện|phone|contact|liên hệ/i],
       reply: (text) => {
         const r     = resolveRegion(text);
-        const hosts = r ? r.hosts : [{ name: 'Duy Hoa', display: '714-227-6007' }];
+        const hosts = r ? r.hosts : [{ name: 'Du Lịch Cali', display: '408-916-3439' }];
         return [
           'Liên hệ Du Lịch Cali:',
           ...hosts.map(h => `📞 ${h.name}: ${h.display}`),
@@ -611,7 +611,7 @@
       match: [/giờ|mấy giờ|open|hours|working/i],
       reply: () => {
         const r = resolveRegion('');
-        const hosts = r ? r.hosts : [{ name: 'Duy Hoa', display: '714-227-6007' }];
+        const hosts = r ? r.hosts : [{ name: 'Du Lịch Cali', display: '408-916-3439' }];
         return `Phục vụ 7 ngày/tuần. Gọi bất kỳ lúc nào:\n${hosts.map(h => `• ${h.name}: ${h.display}`).join('\n')}\nThường phản hồi trong 1–2 tiếng.`;
       }
     },
@@ -1016,16 +1016,16 @@ FOOD:
 • Nhà Bếp Của Emily [Bay Area/San Jose]
   - Chả Giò (Eggroll): $0.75/piece. Min order: 30 pieces = $22.50. Max 300/day.
   - Options: Raw (Sống) or Cooked (Tươi). 24h advance order. Contact: Loan 408-931-2438.
-• Phở Bắc Bay Area [Bay Area/San Jose] — Phở $15 · Bún Bò $14 · Cơm Tấm $16. Catering. John 408-439-7522.
-• Cơm Tấm Dì Tám [OC/Westminster] — Cơm Tấm $14 · Hủ Tiếu $14 · Bánh Mì $8. Catering. Duy Hoa 714-227-6007.
+• Phở Bắc Bay Area [Bay Area/San Jose] — Phở $15 · Bún Bò $14 · Cơm Tấm $16. Catering. Du Lịch Cali 408-916-3439.
+• Cơm Tấm Dì Tám [OC/Westminster] — Cơm Tấm $14 · Hủ Tiếu $14 · Bánh Mì $8. Catering. Du Lịch Cali 408-916-3439.
 
 NAIL SALONS:
 • Dung Nails & Spa [Bay Area/San Jose] — Manicure $20+ · Pedicure $30+ · Gel $35+ · Acrylic $45+ · Spa $65+. Dung Pham 408-859-6718.
-• Beauty Nails OC [OC/Westminster] — Manicure $18+ · Pedicure $28+ · Gel $30+ · Acrylic $40+ · Ombre $55+. Duy Hoa 714-227-6007.
+• Beauty Nails OC [OC/Westminster] — Manicure $18+ · Pedicure $28+ · Gel $30+ · Acrylic $40+ · Ombre $55+. Du Lịch Cali 408-916-3439.
 
 HAIR SALONS:
-• Việt Hair Studio [Bay Area/San Jose] — Cut $20-30+ · Perm $80+ · Straighten $100+ · Color $60+ · Highlight $80+. John 408-439-7522.
-• Cali Hair & Beauty [OC/Garden Grove] — Cut $18-28+ · Korean Perm $120+ · Keratin $150+ · Balayage $100+. Duy Hoa 714-227-6007.
+• Việt Hair Studio [Bay Area/San Jose] — Cut $20-30+ · Perm $80+ · Straighten $100+ · Color $60+ · Highlight $80+. Du Lịch Cali 408-916-3439.
+• Cali Hair & Beauty [OC/Garden Grove] — Cut $18-28+ · Korean Perm $120+ · Keratin $150+ · Balayage $100+. Du Lịch Cali 408-916-3439.
 
 MARKETPLACE PRICING RULES:
 - When quantity given, compute exact total: qty × unit_price (30 egg rolls = 30 × $0.75 = $22.50)

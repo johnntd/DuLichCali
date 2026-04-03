@@ -420,7 +420,7 @@ Draft a reply in the same language the customer used (Vietnamese or English).
 Be concise (2-4 sentences), helpful, and offer a clear next step.`,
       messages: [{
         role: 'user',
-        content: `Customer: "${message}"\nCategory: ${category || 'general'}\nContext: ${context || ''}\nContact: ${phone || '714-227-6007'}`,
+        content: `Customer: "${message}"\nCategory: ${category || 'general'}\nContext: ${context || ''}\nContact: ${phone || '408-916-3439'}`,
       }],
       schema: null,
       maxTokens: 300,

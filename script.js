@@ -912,7 +912,7 @@ function buildDestSheet(dest) {
           onclick="closeDestination(); switchScreen('screenChat')">
           Hỏi AI tư vấn
         </button>
-        <a href="tel:7142276007" class="btn btn--outline" style="height:42px;font-size:.78rem;text-decoration:none">
+        <a href="tel:4089163439" class="btn btn--outline" style="height:42px;font-size:.78rem;text-decoration:none">
           Gọi ngay
         </a>
       </div>

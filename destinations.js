@@ -655,8 +655,7 @@ Bay Area vehicle: Toyota Sienna (up to 8 passengers)
 Starting from $100, priced by distance.
 
 CONTACT:
-Orange County — Duy Hoa: 714-227-6007 · John: 408-439-7522
-Bay Area — Dung Pham: 408-859-6718 · John: 408-439-7522
+Phone: +1 (408) 916-3439
 Email: dulichcali21@gmail.com
 Book online at: www.dulichcali21.com`;
 }

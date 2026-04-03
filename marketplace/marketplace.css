@@ -1359,6 +1359,53 @@ select.mp-input option {
   .mp-detail-hero__name    { font-size: clamp(2.4rem, 4vw, 3.5rem); }
 }
 
+/* ── About Prose ───────────────────────────────────────────────────────────── */
+
+.mp-about-prose {
+  font-size: .92rem;
+  line-height: 1.85;
+  color: var(--text);
+  max-width: 680px;
+}
+
+/* ── Panel Form (lighter booking / order container) ────────────────────────── */
+
+.mp-panel-form {
+  background: rgba(18,59,98,.35);
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: var(--r-lg);
+  padding: 1.25rem;
+}
+
+/* ── Form Row Duo (name + phone side-by-side) ──────────────────────────────── */
+
+.mp-form-row-duo {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: .65rem;
+  margin-bottom: 1rem;
+}
+
+.mp-form-row-duo .mp-form-row {
+  margin-bottom: 0;
+}
+
+@media (min-width: 420px) {
+  .mp-form-row-duo {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ── Sticky right column on desktop ───────────────────────────────────────── */
+
+@media (min-width: 1024px) {
+  .mp-detail-col--right {
+    position: sticky;
+    top: 60px;
+    align-self: start;
+  }
+}
+
 /* ── Capacity Info (order form) ────────────────────────────────────────────── */
 
 .mp-capacity-info {

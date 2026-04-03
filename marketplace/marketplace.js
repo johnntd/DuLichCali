@@ -370,9 +370,7 @@
       '<div class="mp-section-hdr">' +
         '<h2 class="mp-section-title">Giờ Mở Cửa</h2>' +
       '</div>' +
-      '<div class="mp-booking-card">' +
-        '<table class="mp-hours-table"><tbody>' + rowsHtml + '</tbody></table>' +
-      '</div>' +
+      '<table class="mp-hours-table"><tbody>' + rowsHtml + '</tbody></table>' +
     '</div>';
   }
 
@@ -391,19 +389,21 @@
       '<div class="mp-section-hdr">' +
         '<h2 class="mp-section-title">' + title + '</h2>' +
       '</div>' +
-      '<div class="mp-booking-card">' +
+      '<div class="mp-panel-form">' +
         '<form id="bookingForm_' + biz.id + '" class="mp-booking-form">' +
           '<input type="hidden" name="_subject" value="Đặt lịch mới — ' + escAttr(biz.name) + '">' +
           '<input type="hidden" name="business" value="' + escAttr(biz.name) + '">' +
           '<input type="hidden" name="category" value="' + escAttr(biz.category) + '">' +
           '<input type="hidden" name="location" value="' + escAttr(biz.address) + '">' +
-          '<div class="mp-form-row">' +
-            '<label class="mp-label" for="bfName_' + biz.id + '">Họ & Tên</label>' +
-            '<input class="mp-input" type="text" id="bfName_' + biz.id + '" name="name" placeholder="Nguyễn Văn A" required>' +
-          '</div>' +
-          '<div class="mp-form-row">' +
-            '<label class="mp-label" for="bfPhone_' + biz.id + '">Số Điện Thoại</label>' +
-            '<input class="mp-input" type="tel" id="bfPhone_' + biz.id + '" name="phone" placeholder="(714) 555-0000" required>' +
+          '<div class="mp-form-row-duo">' +
+            '<div class="mp-form-row">' +
+              '<label class="mp-label" for="bfName_' + biz.id + '">Họ & Tên</label>' +
+              '<input class="mp-input" type="text" id="bfName_' + biz.id + '" name="name" placeholder="Nguyễn Văn A" required>' +
+            '</div>' +
+            '<div class="mp-form-row">' +
+              '<label class="mp-label" for="bfPhone_' + biz.id + '">Số Điện Thoại</label>' +
+              '<input class="mp-input" type="tel" id="bfPhone_' + biz.id + '" name="phone" placeholder="(714) 555-0000" required>' +
+            '</div>' +
           '</div>' +
           specificFields +
           '<div class="mp-form-row">' +
@@ -717,9 +717,7 @@
       '<div class="mp-section-hdr">' +
         '<h2 class="mp-section-title">Về Chúng Tôi</h2>' +
       '</div>' +
-      '<div class="mp-booking-card">' +
-        '<p style="line-height:1.75;color:var(--text);font-size:.88rem">' + escHtml(biz.description) + '</p>' +
-      '</div>' +
+      '<p class="mp-about-prose">' + escHtml(biz.description) + '</p>' +
     '</div>';
   }
 
@@ -851,8 +849,8 @@
       '<div class="mp-section-hdr">' +
         '<h2 class="mp-section-title">Đặt Hàng</h2>' +
       '</div>' +
-      '<div class="mp-booking-card">' +
-        '<p class="mp-form-note" style="margin-bottom:1.1rem">Điền thông tin để đặt hàng — chúng tôi sẽ xác nhận qua điện thoại. ' +
+      '<div class="mp-panel-form">' +
+        '<p class="mp-form-note" style="margin-bottom:1rem">Điền thông tin để đặt hàng — chúng tôi sẽ xác nhận qua điện thoại. ' +
           (activeProducts.length === 1 && minQty > 1
             ? '<strong style="color:var(--gold-lt)">Tối thiểu ' + minQty + ' ' + escHtml((firstProduct && firstProduct.unit) || 'phần') + ' (' + minTotal + ').</strong>'
             : '<strong style="color:var(--gold-lt)">Chọn sản phẩm để xem giá.</strong>') +
@@ -861,13 +859,15 @@
           '<input type="hidden" name="_subject" value="Order Inquiry — ' + escAttr(biz.name) + '">' +
           '<input type="hidden" name="business" value="' + escAttr(biz.name) + '">' +
           '<input type="hidden" name="business_phone" value="' + escAttr(biz.phoneDisplay) + '">' +
-          '<div class="mp-form-row">' +
-            '<label class="mp-label" for="ofName_' + biz.id + '">Your Name</label>' +
-            '<input class="mp-input" type="text" id="ofName_' + biz.id + '" name="customer_name" placeholder="Full name" required>' +
-          '</div>' +
-          '<div class="mp-form-row">' +
-            '<label class="mp-label" for="ofPhone_' + biz.id + '">Phone Number</label>' +
-            '<input class="mp-input" type="tel" id="ofPhone_' + biz.id + '" name="customer_phone" placeholder="(408) 555-0000" required>' +
+          '<div class="mp-form-row-duo">' +
+            '<div class="mp-form-row">' +
+              '<label class="mp-label" for="ofName_' + biz.id + '">Your Name</label>' +
+              '<input class="mp-input" type="text" id="ofName_' + biz.id + '" name="customer_name" placeholder="Full name" required>' +
+            '</div>' +
+            '<div class="mp-form-row">' +
+              '<label class="mp-label" for="ofPhone_' + biz.id + '">Phone Number</label>' +
+              '<input class="mp-input" type="tel" id="ofPhone_' + biz.id + '" name="customer_phone" placeholder="(408) 555-0000" required>' +
+            '</div>' +
           '</div>' +
           '<div class="mp-form-row">' +
             '<label class="mp-label" for="ofItem_' + biz.id + '">Item</label>' +

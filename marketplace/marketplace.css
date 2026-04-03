@@ -1256,17 +1256,58 @@ select.mp-input option {
   }
 }
 
-@media (min-width: 900px) {
-  body {
-    background: #0a2540;
+/* ── Tablet 768px+ ─────────────────────────────────────────────────────────── */
+@media (min-width: 768px) {
+  body { background: #07213a; }
+
+  /* Full-width — no phone cap */
+  .mp-app { max-width: none !important; border: none !important; }
+
+  /* Wider bar */
+  .mp-bar { padding: 0 2.5rem; height: 60px; }
+  .mp-bar__title { font-size: 1.15rem; }
+
+  /* Taller, wider hero */
+  .mp-hero { min-height: 300px; padding: 5rem 3rem 3.5rem; }
+  .mp-hero__content { max-width: 900px; }
+  .mp-hero__title { font-size: clamp(2.2rem, 5vw, 3.5rem); }
+
+  /* Business card grid: 3-col */
+  .mp-grid {
+    grid-template-columns: repeat(3, 1fr);
+    padding: 0 2rem;
+    gap: 1.25rem;
   }
 
-  .mp-app {
-    max-width: 500px;
-    margin: 0 auto;
-    border-left: 1px solid var(--border);
-    border-right: 1px solid var(--border);
+  /* Services grid: 3-col */
+  .mp-services-grid { grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+
+  /* Detail hero taller */
+  .mp-detail-hero { min-height: 320px; }
+
+  /* Section padding */
+  .mp-section { padding: 2rem 2rem 0; }
+
+  /* Max-width content centering */
+  .mp-main { max-width: 1100px; margin: 0 auto; }
+}
+
+/* ── Desktop 1200px+ ────────────────────────────────────────────────────────── */
+@media (min-width: 1200px) {
+  .mp-bar { padding: 0 3.5rem; }
+  .mp-hero { padding: 6rem 4rem 4rem; }
+
+  /* Business card grid: 4-col */
+  .mp-grid {
+    grid-template-columns: repeat(4, 1fr);
+    padding: 0 3rem;
   }
+
+  /* Services grid: 4-col */
+  .mp-services-grid { grid-template-columns: repeat(4, 1fr); }
+
+  .mp-main { max-width: 1400px; }
+  .mp-section { padding: 2.5rem 3rem 0; }
 }
 
 /* ── Capacity Info (order form) ────────────────────────────────────────────── */

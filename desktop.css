@@ -1,0 +1,95 @@
+/* ================================================================
+   Du Lịch Cali — Shared Desktop Responsive Overrides
+   Linked from every page. Provides tablet + desktop layout upgrades
+   for pages that have inline or isolated mobile-only CSS.
+   ================================================================ */
+
+/* ── Tablet 768px+ ──────────────────────────────────────────── */
+@media (min-width: 768px) {
+
+  /* ── Marketplace Hub (.hub-*) ── */
+  .hub-app { max-width: none !important; }
+
+  .hub-bar {
+    padding: 0 2.5rem;
+    height: 60px;
+  }
+
+  .hub-hero {
+    padding: 3.5rem 2.5rem 2.5rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .hub-hero__h1 { font-size: clamp(2.2rem, 5vw, 3.2rem); }
+  .hub-hero__sub { max-width: 520px; font-size: .95rem; }
+
+  .hub-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 2rem 3rem;
+    flex-direction: unset;
+  }
+
+  /* ── Vendor Admin (.va-*) ── */
+  .va-bar { padding: 0 2rem; }
+  .va-bar__inner { max-width: 1200px; margin: 0 auto; }
+  .va-body {
+    padding: 2rem 3rem 4rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* ── Driver Admin (.page-wrap) ── */
+  .page-wrap {
+    max-width: 900px !important;
+    padding: 0 2rem;
+  }
+
+  .top-bar { padding: 0 2rem; }
+
+  /* ── Auth / Login pages (.login-wrap) ── */
+  .login-wrap {
+    max-width: 480px !important;
+  }
+
+  /* ── Admin page ── */
+  .admin-nav { padding: 0 2rem; }
+  .admin-body { gap: 0; }
+  .booking-list { width: 340px; flex-shrink: 0; }
+
+  /* ── Thank You page ── */
+  .card { max-width: 620px !important; }
+}
+
+/* ── Desktop 1200px+ ─────────────────────────────────────────── */
+@media (min-width: 1200px) {
+
+  /* ── Marketplace Hub ── */
+  .hub-hero {
+    padding: 5rem 3rem 3.5rem;
+    max-width: 1200px;
+  }
+
+  .hub-grid {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 1200px;
+    gap: 1.5rem;
+    padding: 0 3rem 4rem;
+  }
+
+  /* ── Vendor Admin ── */
+  .va-body {
+    padding: 2.5rem 4rem 5rem;
+    max-width: 1400px;
+  }
+
+  /* ── Driver Admin ── */
+  .page-wrap { max-width: 1100px !important; }
+
+  /* ── Admin ── */
+  .booking-list { width: 380px; }
+}

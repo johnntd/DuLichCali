@@ -107,27 +107,6 @@ button { cursor: pointer; font-family: var(--font-b); }
 .app-bar__call svg { width: 14px; height: 14px; flex-shrink: 0; }
 .app-bar__call:hover { background: var(--gold-lt); color: var(--navy-900); }
 
-.app-bar__market {
-  display: inline-flex;
-  align-items: center;
-  gap: .3rem;
-  height: 34px;
-  padding: 0 .85rem;
-  background: var(--gold-dim);
-  border: 1px solid rgba(245,166,35,.35);
-  border-radius: 999px;
-  color: var(--gold);
-  font-family: var(--font-b);
-  font-size: .72rem;
-  font-weight: 600;
-  letter-spacing: .04em;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: background .2s;
-  -webkit-tap-highlight-color: transparent;
-}
-.app-bar__market:hover { background: rgba(245,166,35,.26); }
-.app-bar__market svg { width: 14px; height: 14px; flex-shrink: 0; }
 
 /* App Main */
 .app-main {
@@ -229,9 +208,6 @@ button { cursor: pointer; font-family: var(--font-b); }
 }
 .nav-tab--center.nav-tab--active { color: var(--gold); }
 
-/* Marketplace tab — always shows a gold tint to invite taps */
-.nav-tab--market { color: var(--gold); }
-.nav-tab--market:hover { color: var(--gold-lt); }
 
 /* ── Shared Buttons ─────────────────────────────────────────── */
 .btn {

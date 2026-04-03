@@ -71,12 +71,7 @@
   ════════════════════════════════════════════════ -->
   <header class="app-bar">
     <div class="app-bar__brand">✦ Du Lịch Cali</div>
-    <a href="marketplace/" class="app-bar__market">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
-      </svg>
-      Marketplace
-    </a>
+
     <a href="tel:4089163439" class="app-bar__call" id="appBarCallBtn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.79-1.35a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7a2 2 0 011.72 2.09z"/>
@@ -179,95 +174,72 @@
 
       </div><!-- /.hc -->
 
-      <!-- ── Home Panel Tabs ────────────────────────────────────── -->
-      <nav class="hp-tabs" role="tablist" aria-label="Home sections">
-        <button class="hp-tab hp-tab--active" id="hpTabTravel" data-panel="travel"
-          onclick="switchHpPanel('travel')" role="tab" aria-selected="true" aria-controls="panelTravel">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-          Du Lịch
-        </button>
-        <button class="hp-tab" id="hpTabMarket" data-panel="market"
-          onclick="switchHpPanel('market')" role="tab" aria-selected="false" aria-controls="panelMarket">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-          Marketplace
-        </button>
-      </nav>
+      <!-- ── Marketplace section ──────────────────────────────── -->
+      <section id="hpFeatured" class="home-section">
+        <div class="section-hdr">
+          <h2 class="section-title" id="hpFeaturedTitle">Dịch Vụ Nổi Bật</h2>
+          <a href="marketplace/" class="see-all">Xem tất cả</a>
+        </div>
+        <div class="hp-vendor-row" id="hpVendorCards" role="list"></div>
+      </section>
 
-      <!-- ── Panel A: Du Lịch ───────────────────────────────────── -->
-      <div class="hp-panel hp-panel--active" id="panelTravel" role="tabpanel" aria-labelledby="hpTabTravel">
+      <!-- Availability highlights (driver + open vendors) -->
+      <section id="hpAvail" class="home-section" hidden>
+        <div class="section-hdr">
+          <h2 class="section-title">Có Sẵn Hôm Nay</h2>
+        </div>
+        <div class="hp-avail-row" id="hpAvailChips" role="list"></div>
+      </section>
 
-        <!-- Availability highlights (driver + open vendors) -->
-        <section id="hpAvail" class="home-section" hidden>
-          <div class="section-hdr">
-            <h2 class="section-title">Có Sẵn Hôm Nay</h2>
-          </div>
-          <div class="hp-avail-row" id="hpAvailChips" role="list"></div>
-        </section>
-
-        <!-- AI Concierge bar -->
-        <div class="ai-bar" onclick="openAIWithIntent('')" role="button" tabindex="0"
-             aria-label="Mở trợ lý AI" onkeydown="if(event.key==='Enter'||event.key===' ')openAIWithIntent('')">
-          <div class="ai-bar__inner">
-            <span class="ai-bar__orb">✦</span>
-            <div class="ai-bar__text">
-              <strong>Trợ Lý Du Lịch AI</strong>
-              <span>Hỏi về tour · giá cả · sân bay · đặt chỗ 24/7</span>
-            </div>
-          </div>
-          <div class="ai-bar__chips">
-            <button class="ai-bar__chip" onclick="event.stopPropagation();openAIWithIntent('airport')">✈ Sân Bay</button>
-            <button class="ai-bar__chip" onclick="event.stopPropagation();openAIWithIntent('tour')">🗺 Tour</button>
-            <button class="ai-bar__chip" onclick="event.stopPropagation();openAIWithIntent('price')">💰 Giá</button>
-            <button class="ai-bar__chip" onclick="event.stopPropagation();openAIWithIntent('order')">📋 Đơn hàng</button>
+      <!-- AI Concierge bar -->
+      <div class="ai-bar" onclick="openAIWithIntent('')" role="button" tabindex="0"
+           aria-label="Mở trợ lý AI" onkeydown="if(event.key==='Enter'||event.key===' ')openAIWithIntent('')">
+        <div class="ai-bar__inner">
+          <span class="ai-bar__orb">✦</span>
+          <div class="ai-bar__text">
+            <strong>Trợ Lý Du Lịch AI</strong>
+            <span>Hỏi về tour · giá cả · sân bay · đặt chỗ 24/7</span>
           </div>
         </div>
-
-        <!-- Travel Services Carousel -->
-        <section class="home-section">
-          <div class="section-hdr">
-            <h2 class="section-title">Dịch Vụ Du Lịch</h2>
-            <button class="see-all" onclick="switchScreen('screenDest')">Xem tất cả</button>
-          </div>
-          <div class="trav-carousel" id="travCarousel" role="list"></div>
-        </section>
-
-        <!-- Trust numbers -->
-        <section class="home-section home-section--trust">
-          <div class="trust-grid">
-            <div class="trust-cell"><span class="trust-num">6+</span><span>Năm kinh nghiệm</span></div>
-            <div class="trust-cell"><span class="trust-num">500+</span><span>Chuyến thành công</span></div>
-            <div class="trust-cell"><span class="trust-num">6</span><span>Sân bay phục vụ</span></div>
-            <div class="trust-cell"><span class="trust-num">24/7</span><span>Hỗ trợ khách hàng</span></div>
-          </div>
-        </section>
-
-        <!-- Region service indicator + contact strip -->
-        <div class="region-service" id="regionService">
-          <div class="region-tag" id="regionTag" hidden></div>
-          <div class="region-picker" id="regionPicker" hidden></div>
-          <div class="contact-strip" id="contactStrip">
-            <a href="tel:4089163439" class="contact-strip__item">
-              <span class="contact-strip__name">Du Lịch Cali</span>
-              <span class="contact-strip__num">408-916-3439</span>
-            </a>
-          </div>
+        <div class="ai-bar__chips">
+          <button class="ai-bar__chip" onclick="event.stopPropagation();openAIWithIntent('airport')">✈ Sân Bay</button>
+          <button class="ai-bar__chip" onclick="event.stopPropagation();openAIWithIntent('tour')">🗺 Tour</button>
+          <button class="ai-bar__chip" onclick="event.stopPropagation();openAIWithIntent('price')">💰 Giá</button>
+          <button class="ai-bar__chip" onclick="event.stopPropagation();openAIWithIntent('order')">📋 Đơn hàng</button>
         </div>
+      </div>
 
-      </div><!-- /#panelTravel -->
+      <!-- ── Travel section ────────────────────────────────────── -->
+      <!-- Travel Services Carousel -->
+      <section class="home-section">
+        <div class="section-hdr">
+          <h2 class="section-title">Dịch Vụ Du Lịch</h2>
+          <button class="see-all" onclick="switchScreen('screenDest')">Xem tất cả</button>
+        </div>
+        <div class="trav-carousel" id="travCarousel" role="list"></div>
+      </section>
 
-      <!-- ── Panel B: Marketplace ───────────────────────────────── -->
-      <div class="hp-panel" id="panelMarket" role="tabpanel" aria-labelledby="hpTabMarket" hidden>
+      <!-- Trust numbers -->
+      <section class="home-section home-section--trust">
+        <div class="trust-grid">
+          <div class="trust-cell"><span class="trust-num">6+</span><span>Năm kinh nghiệm</span></div>
+          <div class="trust-cell"><span class="trust-num">500+</span><span>Chuyến thành công</span></div>
+          <div class="trust-cell"><span class="trust-num">6</span><span>Sân bay phục vụ</span></div>
+          <div class="trust-cell"><span class="trust-num">24/7</span><span>Hỗ trợ khách hàng</span></div>
+        </div>
+      </section>
 
-        <!-- All featured vendors — populated by renderAllHomepageVendors() -->
-        <section id="hpFeatured" class="home-section">
-          <div class="section-hdr">
-            <h2 class="section-title" id="hpFeaturedTitle">Dịch Vụ Nổi Bật</h2>
-            <a href="marketplace/" class="see-all">Xem tất cả</a>
-          </div>
-          <div class="hp-vendor-row" id="hpVendorCards" role="list"></div>
-        </section>
-
-      </div><!-- /#panelMarket -->
+      <!-- Region service indicator + contact strip -->
+      <div class="region-service" id="regionService">
+        <div class="region-tag" id="regionTag" hidden></div>
+        <div class="region-picker" id="regionPicker" hidden></div>
+        <div class="contact-strip" id="contactStrip">
+          <a href="tel:4089163439" class="contact-strip__item">
+            <span class="contact-strip__name">Du Lịch Cali</span>
+            <span class="contact-strip__num">408-916-3439</span>
+          </a>
+        </div>
+      </div>
 
 
       <div class="screen-spacer"></div>
@@ -641,13 +613,6 @@
       <span>Đặt chỗ</span>
     </button>
 
-    <button class="nav-tab nav-tab--market" onclick="window.location.href='marketplace/'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/>
-        <path d="M16 10a4 4 0 01-8 0"/>
-      </svg>
-      <span>Shops</span>
-    </button>
 
   </nav>
 

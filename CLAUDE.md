@@ -1,5 +1,28 @@
 # Du Lịch Cali — Claude Code Instructions
 
+## PRODUCTION DOMAIN — NON-NEGOTIABLE RULE
+
+**Production URL:** `https://www.dulichcali21.com` — this is the ONLY launch URL that matters.
+
+**Deployment method:** `git push origin main` → GitHub Pages auto-builds and serves `www.dulichcali21.com`.
+
+**Firebase web.app URL** (`https://dulichcali-booking-calendar.web.app`) is staging/test only. Never treat it as done.
+
+### Mandatory after EVERY task that touches any file:
+
+1. Commit changes with `git add <files> && git commit`
+2. Push with `git push origin main`
+3. Verify production by curling a changed file: `curl -s "https://www.dulichcali21.com/<file>" | head -5`
+4. Explicitly confirm: `✔ Production domain updated — https://www.dulichcali21.com`
+
+### Failure condition:
+
+If changes are only on local or only on `web.app` → the task is **NOT complete**. Fix immediately.
+
+### Never run `firebase deploy` as the final deploy step. The production deploy is always `git push origin main`.
+
+---
+
 ## Permissions & Workflow
 
 - **Auto-mode is always on.** Proceed with all file edits, writes, and implementations without asking for permission.

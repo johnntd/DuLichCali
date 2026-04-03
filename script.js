@@ -1348,7 +1348,7 @@ function renderAvailabilityHighlights(regionId, driverAvailable) {
 function initHomepageIntelligence(region, driverAvailable) {
   const regionId = region?.id || 'oc';
   renderFeaturedVendors(regionId);
-  renderAvailabilityHighlights(regionId, driverAvailable ?? true);
+  // renderAvailabilityHighlights removed — "Có Sẵn Hôm Nay" section removed from homepage
 }
 
 // ── Homepage Panel Switcher ───────────────────────────────────

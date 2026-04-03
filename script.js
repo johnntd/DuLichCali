@@ -1075,6 +1075,93 @@ function updateRideServiceCards(available) {
   });
 }
 
+// ── Hero Carousel ─────────────────────────────────────────────
+function heroCarouselCta(service) {
+  if (service === 'travel') {
+    switchScreen('screenBook');
+  } else {
+    window.location.href = 'marketplace/index.html?cat=' + service;
+  }
+}
+
+var HeroCarousel = (function () {
+  var SLIDES   = 4;
+  var DURATION = 5000;
+  var current  = 0;
+  var timer    = null;
+  var slides, dots, bar;
+  var startX = 0;
+
+  function init() {
+    var el = document.getElementById('heroCarousel');
+    if (!el) return;
+    slides = el.querySelectorAll('.hc__slide');
+    dots   = el.querySelectorAll('.hc__dot');
+    bar    = document.getElementById('hcProgressBar');
+
+    dots.forEach(function (dot) {
+      dot.addEventListener('click', function () {
+        goto(parseInt(dot.dataset.dot, 10));
+      });
+    });
+
+    el.addEventListener('touchstart', function (e) {
+      startX = e.changedTouches[0].clientX;
+    }, { passive: true });
+
+    el.addEventListener('touchend', function (e) {
+      var dx = e.changedTouches[0].clientX - startX;
+      if (Math.abs(dx) < 44) return;
+      goto(dx < 0 ? (current + 1) % SLIDES : (current - 1 + SLIDES) % SLIDES);
+    }, { passive: true });
+
+    start();
+  }
+
+  function goto(idx) {
+    slides[current].classList.remove('hc__slide--active');
+    dots[current].classList.remove('hc__dot--active');
+    dots[current].setAttribute('aria-selected', 'false');
+    current = idx;
+    slides[current].classList.add('hc__slide--active');
+    dots[current].classList.add('hc__dot--active');
+    dots[current].setAttribute('aria-selected', 'true');
+    stop();
+    start();
+  }
+
+  function start() {
+    animateProgress();
+    timer = setTimeout(function () {
+      goto((current + 1) % SLIDES);
+    }, DURATION);
+  }
+
+  function stop() {
+    clearTimeout(timer);
+    if (bar) {
+      bar.style.transition = 'none';
+      bar.style.width = '0%';
+      void bar.offsetWidth; // force reflow
+    }
+  }
+
+  function animateProgress() {
+    if (!bar) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      bar.style.width = '100%';
+      return;
+    }
+    bar.style.transition = 'none';
+    bar.style.width = '0%';
+    void bar.offsetWidth; // force reflow
+    bar.style.transition = 'width ' + DURATION + 'ms linear';
+    bar.style.width = '100%';
+  }
+
+  return { init: init, goto: goto };
+})();
+
 // ── DOMContentLoaded ─────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
 
@@ -1124,6 +1211,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Initialize wizard to step 1 state
   goStep(1);
+
+  // Initialize hero carousel
+  HeroCarousel.init();
 
   // Initialize AI chat module
   if (window.DLChat) {

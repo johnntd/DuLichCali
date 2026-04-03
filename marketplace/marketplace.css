@@ -1096,6 +1096,44 @@ select.mp-input option {
   color: var(--sunset);
 }
 
+/* ── Product Instructions ────────────────────────────────────────────────────── */
+
+.mp-instr-block {
+  margin-top: .9rem;
+  padding-top: .9rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: .7rem;
+}
+
+.mp-instr-row {
+  display: flex;
+  align-items: flex-start;
+  gap: .5rem;
+}
+
+.mp-instr-icon {
+  font-size: .95rem;
+  flex-shrink: 0;
+  line-height: 1.45;
+}
+
+.mp-instr-label {
+  font-size: .62rem;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  margin-bottom: .18rem;
+}
+
+.mp-instr-text {
+  font-size: .78rem;
+  color: var(--muted);
+  line-height: 1.62;
+}
+
 /* ── Order Form Extras ─────────────────────────────────────────────────────── */
 
 .mp-minorder-badge {

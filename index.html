@@ -77,19 +77,74 @@
     ───────────────────────────────────────── -->
     <section id="screenHome" class="screen screen--active" role="tabpanel" aria-labelledby="tabHome">
 
-      <!-- Hero -->
-      <div class="hero">
-        <div class="hero__parallax" id="heroBg"></div>
-        <div class="hero__overlay"></div>
-        <div class="hero__content">
-          <p class="hero__eyebrow">Dịch Vụ Du Lịch Chuyên Nghiệp</p>
-          <h1 class="hero__title">Khám Phá<br><em>California</em></h1>
-          <p class="hero__sub">15 điểm đến · 6 sân bay · AI tư vấn 24/7</p>
-          <div class="hero__ctas">
-            <button class="btn btn--gold" onclick="switchScreen('screenBook')">Đặt Chỗ Ngay</button>
-            <button class="btn btn--ghost" onclick="switchScreen('screenDest')">Xem Tour</button>
+      <!-- Hero Carousel -->
+      <div class="hc" id="heroCarousel" aria-roledescription="carousel" aria-label="Dịch vụ nổi bật">
+
+        <!-- Slide 1: Food -->
+        <div class="hc__slide hc__slide--active" data-idx="0" role="group" aria-label="1 của 4"
+             style="--accent:#f59e0b;--accent-glow:rgba(245,158,11,.45);">
+          <div class="hc__bg" style="background-image:url('https://images.unsplash.com/photo-1562802378-063ec186a863?w=900&auto=format&fit=crop&q=75')"></div>
+          <div class="hc__gradient"></div>
+          <div class="hc__body">
+            <span class="hc__chip">Ẩm Thực Việt</span>
+            <h2 class="hc__title">Món Ngon<br><em>Nhà Làm</em></h2>
+            <p class="hc__sub">Chả giò · Phở · Bún bò — giao tận nơi</p>
+            <button class="hc__cta" onclick="heroCarouselCta('food')">Xem Thực Đơn</button>
           </div>
         </div>
+
+        <!-- Slide 2: Nails -->
+        <div class="hc__slide" data-idx="1" role="group" aria-label="2 của 4"
+             style="--accent:#f472b6;--accent-glow:rgba(244,114,182,.45);">
+          <div class="hc__bg" style="background-image:url('https://images.unsplash.com/photo-1604654894610-df63bc536371?w=900&auto=format&fit=crop&q=75')"></div>
+          <div class="hc__gradient"></div>
+          <div class="hc__body">
+            <span class="hc__chip">Làm Nail</span>
+            <h2 class="hc__title">Tiệm Nail<br><em>Gần Bạn</em></h2>
+            <p class="hc__sub">Gel · Acrylic · Pedicure · Waxing</p>
+            <button class="hc__cta" onclick="heroCarouselCta('nails')">Tìm Tiệm Nail</button>
+          </div>
+        </div>
+
+        <!-- Slide 3: Hair -->
+        <div class="hc__slide" data-idx="2" role="group" aria-label="3 của 4"
+             style="--accent:#38bdf8;--accent-glow:rgba(56,189,248,.45);">
+          <div class="hc__bg" style="background-image:url('https://images.unsplash.com/photo-1560066984-138dadb4c035?w=900&auto=format&fit=crop&q=75')"></div>
+          <div class="hc__gradient"></div>
+          <div class="hc__body">
+            <span class="hc__chip">Làm Tóc</span>
+            <h2 class="hc__title">Tóc Đẹp<br><em>Mỗi Ngày</em></h2>
+            <p class="hc__sub">Cắt · Nhuộm · Uốn · Duỗi</p>
+            <button class="hc__cta" onclick="heroCarouselCta('hair')">Tìm Tiệm Tóc</button>
+          </div>
+        </div>
+
+        <!-- Slide 4: Travel -->
+        <div class="hc__slide" data-idx="3" role="group" aria-label="4 của 4"
+             style="--accent:#fb923c;--accent-glow:rgba(251,146,60,.45);">
+          <div class="hc__bg" style="background-image:url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&auto=format&fit=crop&q=75')"></div>
+          <div class="hc__gradient"></div>
+          <div class="hc__body">
+            <span class="hc__chip">Du Lịch</span>
+            <h2 class="hc__title">Khám Phá<br><em>California</em></h2>
+            <p class="hc__sub">15 điểm đến · 6 sân bay · AI tư vấn 24/7</p>
+            <button class="hc__cta" onclick="heroCarouselCta('travel')">Đặt Chỗ Ngay</button>
+          </div>
+        </div>
+
+        <!-- Dot indicators -->
+        <div class="hc__dots" role="tablist" aria-label="Chọn slide">
+          <button class="hc__dot hc__dot--active" data-dot="0" role="tab" aria-selected="true"  aria-label="Slide 1"></button>
+          <button class="hc__dot"                 data-dot="1" role="tab" aria-selected="false" aria-label="Slide 2"></button>
+          <button class="hc__dot"                 data-dot="2" role="tab" aria-selected="false" aria-label="Slide 3"></button>
+          <button class="hc__dot"                 data-dot="3" role="tab" aria-selected="false" aria-label="Slide 4"></button>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="hc__progress" role="none">
+          <div class="hc__progress-bar" id="hcProgressBar"></div>
+        </div>
+
       </div>
 
       <!-- Destination cards (horizontal scroll) -->

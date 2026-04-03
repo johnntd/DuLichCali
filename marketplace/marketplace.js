@@ -561,6 +561,7 @@
             items.push({
               id: d.id,
               name: item.name || '',
+              displayNameVi: item.displayNameVi || '',
               nameEn: item.nameEn || item.name || '',
               variants: variants,
               pricePerUnit: Number(item.price) || 0.50,
@@ -571,7 +572,12 @@
               description: item.description || '',
               active: true,
               featured: !!item.featured,
-              sortOrder: item.sortOrder || 0
+              sortOrder: item.sortOrder || 0,
+              preparationInstructions: item.preparationInstructions || '',
+              reheatingInstructions:   item.reheatingInstructions   || '',
+              storageInstructions:     item.storageInstructions      || '',
+              servingNotes:            item.servingNotes             || '',
+              allergenNotes:           item.allergenNotes            || ''
             });
           });
 
@@ -583,8 +589,14 @@
             // Refresh AI system prompt with live menu data
             if (merged.aiReceptionist) {
               var menuLines = items.map(function (it) {
-                return it.name + ': $' + it.pricePerUnit.toFixed(2) + '/each, min ' + it.minimumOrderQty;
-              }).join('; ');
+                var line = it.name + ': $' + it.pricePerUnit.toFixed(2) + '/each, min ' + it.minimumOrderQty;
+                if (it.preparationInstructions) line += '; how to cook: ' + it.preparationInstructions;
+                if (it.reheatingInstructions)   line += '; how to reheat: ' + it.reheatingInstructions;
+                if (it.storageInstructions)      line += '; storage: ' + it.storageInstructions;
+                if (it.servingNotes)             line += '; serving: ' + it.servingNotes;
+                if (it.allergenNotes)            line += '; allergens: ' + it.allergenNotes;
+                return line;
+              }).join(' | ');
               merged.aiReceptionist = {};
               for (var ak in biz.aiReceptionist) {
                 if (Object.prototype.hasOwnProperty.call(biz.aiReceptionist, ak)) {
@@ -677,6 +689,27 @@
     '</div>';
   }
 
+  function buildInstructionsHtml(product) {
+    var rows = [
+      { key: 'preparationInstructions', icon: '🍳', label: 'Cách Chế Biến' },
+      { key: 'reheatingInstructions',   icon: '♨️', label: 'Hâm Nóng'      },
+      { key: 'storageInstructions',     icon: '🧊', label: 'Bảo Quản'       },
+      { key: 'servingNotes',            icon: '🍽️', label: 'Ghi Chú'        },
+      { key: 'allergenNotes',           icon: '⚠️', label: 'Thành Phần'     },
+    ].filter(function (r) { return product[r.key]; })
+     .map(function (r) {
+       return '<div class="mp-instr-row">' +
+         '<span class="mp-instr-icon">' + r.icon + '</span>' +
+         '<div>' +
+           '<div class="mp-instr-label">' + r.label + '</div>' +
+           '<div class="mp-instr-text">'  + escHtml(product[r.key]) + '</div>' +
+         '</div>' +
+       '</div>';
+     });
+    if (!rows.length) return '';
+    return '<div class="mp-instr-block">' + rows.join('') + '</div>';
+  }
+
   function renderProductsSection(biz) {
     if (!biz.products || biz.products.length === 0) return '';
 
@@ -694,6 +727,8 @@
           '</div>'
         : '';
 
+      var instrHtml = buildInstructionsHtml(product);
+
       return '<div class="mp-product-card">' +
         imgHtml +
         '<div class="mp-product-card__body">' +
@@ -706,6 +741,7 @@
               'Min. order: <strong>' + product.minimumOrderQty + ' ' + escHtml(product.unitEn) + 's</strong> &nbsp;·&nbsp; ' + minTotal + ' minimum' +
             '</div>' +
           '</div>' +
+          instrHtml +
         '</div>' +
       '</div>';
     }).join('');

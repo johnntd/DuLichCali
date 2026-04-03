@@ -30,12 +30,17 @@
       category: 'food', region: 'Bay Area', city: 'San Jose',
       contact: 'Loan', phone: '408-931-2438',
       products: [{
-        keywords: ['egg roll','eggroll','chả giò','cha gio'],
+        keywords: ['egg roll','eggroll','chả giò','cha gio','emily','nhà bếp'],
         name: 'Chả Giò', nameEn: 'Eggroll',
         pricePerUnit: 0.75, unit: 'cuốn', unitEn: 'piece',
         minOrder: 30, maxPerDay: 300,
         variants: 'Sống (Raw) hoặc Tươi (Fresh)',
         orderNote: 'Đặt trước 24h. Gọi Loan: 408-931-2438.',
+        preparationInstructions: 'Chiên trong dầu nóng 350°F (175°C) trong 8–10 phút, lật đều. Khi vàng giòn là được. Không cần rã đông — chiên thẳng từ tủ lạnh.',
+        reheatingInstructions:   'Lò nướng 325°F 5–7 phút, hoặc air fryer 320°F 4 phút. Tránh lò vi sóng — làm mất độ giòn.',
+        storageInstructions:     'Tủ lạnh: tối đa 3 ngày. Đông lạnh: tối đa 2 tháng. Chiên thẳng từ đông lạnh, không cần rã đông.',
+        servingNotes:            'Ăn nóng khi mới chiên. Dùng kèm tương ớt, hoisin, hoặc nước chấm chua ngọt.',
+        allergenNotes:           'Thịt heo, nấm hương, cà rốt, hành tây, bún tàu. Vỏ bánh tráng gạo (không gluten). Không đậu phộng.',
       }],
     },
     {
@@ -175,7 +180,7 @@
       airport:    extractAirport(text),
       lodging:    extractLodging(text),
       route,      // { from, to } or null
-      isMarketplace:   /egg.?roll|chả giò|cha gio|nail|manicure|pedicure|gel nails|acrylic|nail art|hair salon|tiệm tóc|tiệm nail|cắt tóc|uốn tóc|nhuộm tóc|keratin|balayage|phở|bún bò|cơm tấm|catering|nhà bếp|emily/i.test(text),
+      isMarketplace:   /egg.?roll|chả giò|cha gio|nail|manicure|pedicure|gel nails|acrylic|nail art|hair salon|tiệm tóc|tiệm nail|cắt tóc|uốn tóc|nhuộm tóc|keratin|balayage|phở|bún bò|cơm tấm|catering|nhà bếp|emily|how.*fry|fry.*roll|chiên.*chả|chả.*chiên|reheat|hâm nóng|air fryer|bảo quản|tủ lạnh|đông lạnh|thành phần|dị ứng|allergen/i.test(text),
       isQuantityQuery: !!extractQuantity(text),
     };
   }
@@ -785,6 +790,59 @@
     const t     = text.toLowerCase();
     const qty   = extractQuantity(text);
     const match = findProductMatch(text);
+
+    // ── Buyer instruction queries (cook/reheat/store/allergen) ────────────
+    if (match && !match.isService) {
+      const { vendor, product } = match;
+
+      if (/fry|chiên|cook|nấu|prepare|chế biến|how.*make|làm.*thế nào|bao lâu|how long|minute|phút/i.test(t)
+          && product.preparationInstructions) {
+        return [
+          `🍳 **Cách Chế Biến** — ${product.name}`,
+          '',
+          product.preparationInstructions,
+          product.servingNotes ? `\n🍽️ ${product.servingNotes}` : '',
+          '',
+          `📞 ${vendor.contact}: ${vendor.phone}`,
+        ].filter(Boolean).join('\n');
+      }
+
+      if (/reheat|hâm|warm.*up|heat.*up|microwave|air.?fryer|oven|lò nướng/i.test(t)
+          && product.reheatingInstructions) {
+        return [
+          `♨️ **Hâm Nóng** — ${product.name}`,
+          '',
+          product.reheatingInstructions,
+        ].filter(Boolean).join('\n');
+      }
+
+      if (/stor|bảo quản|tủ lạnh|fridge|freeze|đông lạnh|refrigerat|how long.*keep|bao lâu.*giữ/i.test(t)
+          && product.storageInstructions) {
+        return [
+          `🧊 **Bảo Quản** — ${product.name}`,
+          '',
+          product.storageInstructions,
+        ].filter(Boolean).join('\n');
+      }
+
+      if (/allergen|thành phần|ingredient|gluten|pork|thịt heo|nấm|peanut|đậu phộng|mushroom/i.test(t)
+          && product.allergenNotes) {
+        return [
+          `⚠️ **Thành Phần** — ${product.name}`,
+          '',
+          product.allergenNotes,
+        ].filter(Boolean).join('\n');
+      }
+
+      if (/serv|ăn cùng|dùng với|sauce|nước chấm|tương/i.test(t)
+          && product.servingNotes) {
+        return [
+          `🍽️ **Phục Vụ** — ${product.name}`,
+          '',
+          product.servingNotes,
+        ].filter(Boolean).join('\n');
+      }
+    }
 
     // ── Food vendor with unit pricing (e.g. Emily's egg rolls) ────────────
     if (match && !match.isService) {

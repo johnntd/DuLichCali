@@ -361,26 +361,59 @@
     }
 
     btn.disabled = true;
-    // Create Firebase Auth account (allow multiple admins per vendor)
-    auth.createUserWithEmailAndPassword(email, pass).then(function (cred) {
-      // Write vendor mapping
-      return db.collection('vendorUsers').doc(cred.user.uid).set({
+
+    // Helper: write vendorUsers mapping then redirect
+    function writeMapping(uid) {
+      return db.collection('vendorUsers').doc(uid).set({
         vendorId:  VENDOR_ID,
         email:     email,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
+    }
+
+    // Create Firebase Auth account (allow multiple admins per vendor)
+    auth.createUserWithEmailAndPassword(email, pass).then(function (cred) {
+      return writeMapping(cred.user.uid);
     }).then(function () {
       window.location.href = '/vendor-admin';
-    })
-      .catch(function (err) {
-        btn.disabled = false;
-        var msgs = {
-          'auth/email-already-in-use': 'Email này đã được đăng ký. Vui lòng đăng nhập.',
-          'auth/invalid-email':        'Email không hợp lệ.',
-          'auth/weak-password':        'Mật khẩu quá yếu (tối thiểu 6 ký tự).'
-        };
-        errEl.textContent = msgs[err.code] || ('Lỗi: ' + err.message);
-      });
+    }).catch(function (err) {
+      // If account already exists (e.g. previous attempt where mapping write failed),
+      // sign in automatically and complete the vendor link.
+      if (err.code === 'auth/email-already-in-use') {
+        auth.signInWithEmailAndPassword(email, pass).then(function (cred) {
+          return db.collection('vendorUsers').doc(cred.user.uid).get().then(function (doc) {
+            if (doc.exists && doc.data().vendorId === VENDOR_ID) {
+              // Already fully linked — go straight to admin
+              window.location.href = '/vendor-admin';
+            } else if (!doc.exists) {
+              // Auth exists but vendor mapping is missing — write it now
+              return writeMapping(cred.user.uid).then(function () {
+                window.location.href = '/vendor-admin';
+              });
+            } else {
+              // Mapped to a different vendor
+              auth.signOut();
+              errEl.textContent = 'Tài khoản này không có quyền truy cập trang vendor này.';
+              btn.disabled = false;
+            }
+          });
+        }).catch(function (signInErr) {
+          btn.disabled = false;
+          var msgs = {
+            'auth/wrong-password':    'Email đã tồn tại nhưng mật khẩu không đúng. Hãy thử đăng nhập.',
+            'auth/invalid-credential':'Email đã tồn tại nhưng mật khẩu không đúng. Hãy thử đăng nhập.',
+          };
+          errEl.textContent = msgs[signInErr.code] || ('Email đã được đăng ký. Vui lòng đăng nhập.');
+        });
+        return;
+      }
+      btn.disabled = false;
+      var msgs = {
+        'auth/invalid-email':  'Email không hợp lệ.',
+        'auth/weak-password':  'Mật khẩu quá yếu (tối thiểu 6 ký tự).'
+      };
+      errEl.textContent = msgs[err.code] || ('Lỗi: ' + err.message);
+    });
   }
 
   // ── Claim existing auth account ───────────────────────────────────────────

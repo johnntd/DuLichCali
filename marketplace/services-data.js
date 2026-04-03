@@ -335,7 +335,12 @@
           minimumOrderQty: 30,
           image: '../nha-bep-emily-eggroll.jpg',
           description: 'Chả giò nhân thịt heo, nấm hương và cà rốt tươi — gói bằng bánh tráng mỏng, chiên giòn vàng thơm phức. Làm thủ công từng mẻ với nguyên liệu sạch, không chất bảo quản. Perfect for family dinners, gatherings, and parties.',
-          active: true
+          active: true,
+          preparationInstructions: 'Chiên trong dầu nóng 350°F (175°C) trong 8–10 phút, lật đều. Khi vàng giòn là được. Không cần rã đông — chiên thẳng từ tủ lạnh cho kết quả giòn nhất.',
+          reheatingInstructions:   'Lò nướng 325°F 5–7 phút, hoặc nồi chiên không dầu (air fryer) 320°F 4 phút. Tránh dùng lò vi sóng — làm mất độ giòn.',
+          storageInstructions:     'Tủ lạnh: tối đa 3 ngày. Đông lạnh: tối đa 2 tháng (không cần rã đông trước khi chiên).',
+          servingNotes:            'Ăn nóng khi mới chiên. Dùng kèm tương ớt, hoisin, hoặc nước chấm chua ngọt.',
+          allergenNotes:           'Chứa: thịt heo, nấm hương, cà rốt, hành tây, bún tàu (miến). Vỏ bánh tráng gạo (không gluten). Không đậu phộng.'
         }
       ],
       aiReceptionist: {

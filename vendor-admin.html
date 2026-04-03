@@ -738,6 +738,23 @@
     .notif-card__type-icon { font-size: .85rem; flex-shrink: 0; line-height: 1; }
     .notif-card--question { border-color: rgba(56,189,248,.35); }
     .notif-card--question.unread { background: rgba(56,189,248,.04); }
+
+    /* ── Instruction section in drawer ──────────────────────────────────────── */
+    .f-section-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      margin: 1.1rem 0 0; padding: .65rem 0 .5rem;
+      border-top: 1px solid var(--border);
+      cursor: pointer; user-select: none;
+      font-size: .72rem; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--muted);
+      transition: color .15s;
+    }
+    .f-section-hdr:hover { color: var(--text); }
+    .f-section-hdr.open  { color: var(--gold); }
+    .f-section-chevron   { font-size: .9rem; transition: transform .2s; }
+    .f-section-hdr.open .f-section-chevron { transform: rotate(180deg); }
+    .f-instr-fields { padding-top: .4rem; }
+    .va-tag--info { background: rgba(56,189,248,.12); border-color: rgba(56,189,248,.3); color: #7dd3fc; }
   </style>
 </head>
 <body>
@@ -923,6 +940,11 @@
     </div>
 
     <div class="f-row">
+      <label class="f-label" for="fNameVi">Tên tiếng Việt <small style="font-weight:400;opacity:.6">(tùy chọn)</small></label>
+      <input class="f-input" type="text" id="fNameVi" placeholder="Chả Giò...">
+    </div>
+
+    <div class="f-row">
       <label class="f-label" for="fDesc">Mô tả</label>
       <textarea class="f-textarea" id="fDesc"
         placeholder="Nhân thịt heo, nấm, cà rốt — handmade mỗi ngày..."></textarea>
@@ -994,6 +1016,46 @@
       </button>
     </div>
 
+    <!-- ── Buyer Instructions (collapsible) ────────────────────────────── -->
+    <div class="f-section-hdr" id="instrHdr" onclick="toggleInstr()">
+      <span>📋 Hướng Dẫn Người Mua</span>
+      <span class="f-section-chevron" id="instrChevron">▾</span>
+    </div>
+    <div id="instrFields" class="f-instr-fields" style="display:none">
+
+      <div class="f-row">
+        <label class="f-label" for="fPrep">🍳 Cách Chế Biến / Nấu</label>
+        <textarea class="f-textarea" id="fPrep" rows="3"
+          placeholder="Ví dụ: Chiên 350°F trong 8–10 phút, lật đều. Không cần rã đông..."></textarea>
+      </div>
+
+      <div class="f-row">
+        <label class="f-label" for="fReheat">♨️ Hâm Nóng</label>
+        <textarea class="f-textarea" id="fReheat" rows="2"
+          placeholder="Ví dụ: Lò nướng 325°F 5 phút, hoặc air fryer 320°F 4 phút..."></textarea>
+      </div>
+
+      <div class="f-row">
+        <label class="f-label" for="fStorage">🧊 Bảo Quản</label>
+        <textarea class="f-textarea" id="fStorage" rows="2"
+          placeholder="Ví dụ: Tủ lạnh 3 ngày, đông lạnh 2 tháng..."></textarea>
+      </div>
+
+      <div class="f-row">
+        <label class="f-label" for="fServing">🍽️ Ghi Chú Phục Vụ</label>
+        <textarea class="f-textarea" id="fServing" rows="2"
+          placeholder="Ví dụ: Dùng kèm tương ớt, ăn nóng tốt nhất..."></textarea>
+      </div>
+
+      <div class="f-row">
+        <label class="f-label" for="fAllergen">⚠️ Thành Phần / Dị Ứng</label>
+        <textarea class="f-textarea" id="fAllergen" rows="2"
+          placeholder="Ví dụ: Thịt heo, nấm, cà rốt. Không gluten. Không đậu phộng..."></textarea>
+      </div>
+
+    </div>
+    <!-- ─────────────────────────────────────────────────────────────────── -->
+
     <div class="drawer-actions">
       <button class="btn btn--ghost" onclick="closeDrawer()">Huỷ</button>
       <button class="btn btn--primary" id="saveBtn" onclick="saveItem()">
@@ -1036,6 +1098,7 @@
 
   var SEED_ITEM = {
     name:            'Chả Giò (Eggroll)',
+    displayNameVi:   'Chả Giò',
     description:     'Chả giò nhân thịt heo, nấm hương và cà rốt tươi — gói bằng bánh tráng mỏng, chiên giòn vàng thơm phức. Handmade, không chất bảo quản. Perfect for family dinners and parties.',
     variants:        ['Raw — to fry fresh at home', 'Fresh — cooked & ready to serve'],
     price:           0.75,
@@ -1044,7 +1107,12 @@
     image:           '',
     active:          true,
     featured:        true,
-    sortOrder:       0
+    sortOrder:       0,
+    preparationInstructions: 'Chiên trong dầu nóng 350°F (175°C) trong 8–10 phút, lật đều. Khi vàng giòn là được. Không cần rã đông — chiên thẳng từ tủ lạnh cho kết quả giòn nhất.',
+    reheatingInstructions:   'Lò nướng 325°F 5–7 phút, hoặc nồi chiên không dầu (air fryer) 320°F 4 phút. Tránh dùng lò vi sóng — làm mất độ giòn.',
+    storageInstructions:     'Tủ lạnh: tối đa 3 ngày. Đông lạnh: tối đa 2 tháng (không cần rã đông trước khi chiên). Không để nhiệt độ phòng quá 2 giờ.',
+    servingNotes:            'Ăn nóng khi mới chiên. Dùng kèm tương ớt, hoisin, hoặc nước chấm chua ngọt. Đặt trên giấy thấm dầu 1 phút trước khi ăn.',
+    allergenNotes:           'Chứa: thịt heo, nấm hương, cà rốt, hành tây, bún tàu (miến). Vỏ bánh tráng gạo (không gluten). Không đậu phộng.'
   };
 
   // ── Firebase ─────────────────────────────────────────────────────────────
@@ -1255,6 +1323,8 @@
       var variants = (item.variants || []).map(function (v) {
         return '<span class="va-tag">' + esc(typeof v === 'object' ? (v.labelEn || v.label || '') : v) + '</span>';
       }).join('');
+      var hasInstrs = item.preparationInstructions || item.reheatingInstructions ||
+                      item.storageInstructions || item.servingNotes || item.allergenNotes;
 
       return '<div class="va-item-card' + (inactive ? ' inactive' : '') + '">' +
         '<div class="va-item-card__header">' +
@@ -1263,6 +1333,7 @@
             '<div class="va-item-card__meta">' +
               (inactive ? '<span class="va-tag va-tag--off">Inactive</span>' : '') +
               (item.featured ? '<span class="va-tag va-tag--star">Featured</span>' : '') +
+              (hasInstrs ? '<span class="va-tag va-tag--info">📋 Instrs</span>' : '') +
               (item.minimumOrderQty ? '<span class="va-tag">Min ' + item.minimumOrderQty + '</span>' : '') +
               variants +
             '</div>' +
@@ -1300,6 +1371,20 @@
       }).join(', ');
       setToggle('fActive',   item.active !== false);
       setToggle('fFeatured', !!item.featured);
+      // Instruction fields
+      document.getElementById('fNameVi').value   = item.displayNameVi           || '';
+      document.getElementById('fPrep').value     = item.preparationInstructions || '';
+      document.getElementById('fReheat').value   = item.reheatingInstructions   || '';
+      document.getElementById('fStorage').value  = item.storageInstructions     || '';
+      document.getElementById('fServing').value  = item.servingNotes            || '';
+      document.getElementById('fAllergen').value = item.allergenNotes           || '';
+      // Auto-expand instruction section if any field has content
+      var hasInstrs = item.preparationInstructions || item.reheatingInstructions ||
+                      item.storageInstructions || item.servingNotes || item.allergenNotes;
+      if (hasInstrs) {
+        document.getElementById('instrHdr').classList.add('open');
+        document.getElementById('instrFields').style.display = '';
+      }
     }
 
     document.getElementById('drawerOverlay').classList.add('show');
@@ -1325,6 +1410,15 @@
     setImgPreview('');
     setToggle('fActive',   true);
     setToggle('fFeatured', false);
+    // Instruction fields
+    document.getElementById('fNameVi').value   = '';
+    document.getElementById('fPrep').value     = '';
+    document.getElementById('fReheat').value   = '';
+    document.getElementById('fStorage').value  = '';
+    document.getElementById('fServing').value  = '';
+    document.getElementById('fAllergen').value = '';
+    document.getElementById('instrHdr').classList.remove('open');
+    document.getElementById('instrFields').style.display = 'none';
   }
 
   // ── Image upload ──────────────────────────────────────────────────────────
@@ -1435,6 +1529,14 @@
     );
   }
 
+  // ── Instruction section toggle ────────────────────────────────────────────
+  function toggleInstr() {
+    var hdr    = document.getElementById('instrHdr');
+    var fields = document.getElementById('instrFields');
+    var open   = hdr.classList.toggle('open');
+    fields.style.display = open ? '' : 'none';
+  }
+
   // ── Toggle helpers ────────────────────────────────────────────────────────
   function setToggle(id, on) {
     var el = document.getElementById(id);
@@ -1464,16 +1566,22 @@
       : [];
 
     var data = {
-      name:            name,
-      description:     document.getElementById('fDesc').value.trim(),
-      price:           price,
-      unit:            document.getElementById('fUnit').value.trim() || 'each',
-      minimumOrderQty: minQty,
-      variants:        variants,
-      image:           document.getElementById('fImage').value.trim(),
-      active:          getToggle('fActive'),
-      featured:        getToggle('fFeatured'),
-      updatedAt:       firebase.firestore.FieldValue.serverTimestamp()
+      name:                    name,
+      displayNameVi:           document.getElementById('fNameVi').value.trim(),
+      description:             document.getElementById('fDesc').value.trim(),
+      price:                   price,
+      unit:                    document.getElementById('fUnit').value.trim() || 'each',
+      minimumOrderQty:         minQty,
+      variants:                variants,
+      image:                   document.getElementById('fImage').value.trim(),
+      active:                  getToggle('fActive'),
+      featured:                getToggle('fFeatured'),
+      preparationInstructions: document.getElementById('fPrep').value.trim(),
+      reheatingInstructions:   document.getElementById('fReheat').value.trim(),
+      storageInstructions:     document.getElementById('fStorage').value.trim(),
+      servingNotes:            document.getElementById('fServing').value.trim(),
+      allergenNotes:           document.getElementById('fAllergen').value.trim(),
+      updatedAt:               firebase.firestore.FieldValue.serverTimestamp()
     };
 
     var editId = document.getElementById('fEditId').value;

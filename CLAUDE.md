@@ -1,34 +1,69 @@
 # Du Lịch Cali — Claude Code Instructions
 
+## HOSTING ARCHITECTURE — NON-NEGOTIABLE
+
+| Role | Platform | Detail |
+|------|----------|--------|
+| **Live website host** | **Firebase Hosting** | Serves the production app to real users |
+| **Production domain** | **`https://www.dulichcali21.com`** | The only URL that counts as "done" |
+| **Source control / backup** | GitHub (`johnntd/DuLichCali`) | Code repo and version history — NOT a web host |
+| **Staging / preview only** | `https://dulichcali-booking-calendar.web.app` | For testing — never treat as production |
+
+**GitHub is NOT the live website host.**
+`git push origin main` keeps the repo current but does NOT deploy the live site.
+Deploying to `web.app` only is NOT production.
+A task is NOT complete until changes are visible at `https://www.dulichcali21.com`.
+
+### Anti-patterns — NEVER do these:
+
+- Treating `git push origin main` as the production deploy step
+- Treating `https://dulichcali-booking-calendar.web.app` as the production URL
+- Finishing a session without verifying `https://www.dulichcali21.com` reflects the latest changes
+- Enabling or relying on GitHub Pages as a hosting path for this project
+
+---
+
 ## PRODUCTION DOMAIN — NON-NEGOTIABLE RULE
 
 **Production URL:** `https://www.dulichcali21.com` — this is the ONLY launch URL that matters.
 
-**Deployment method:** `git push origin main` → GitHub Pages auto-builds and serves `www.dulichcali21.com`.
+**Deployment method:** `firebase deploy --only hosting` → Firebase Hosting serves `www.dulichcali21.com`.
 
 **Firebase web.app URL** (`https://dulichcali-booking-calendar.web.app`) is staging/test only. Never treat it as done.
+
+### Deploy workflow (every task):
+
+1. Edit and test locally at `http://localhost:8080` (`python3 -m http.server 8080` from project root)
+2. Commit: `git add <files> && git commit`
+3. Push to repo: `git push origin main`
+4. **Deploy to production**: `firebase deploy --only hosting`
+5. Verify: `curl -s "https://www.dulichcali21.com/<changed-file>" | head -5`
+6. Confirm: `✔ Production domain updated — https://www.dulichcali21.com`
+
+Steps 2–3 (git) and step 4 (firebase deploy) are both required. Git keeps the repo current; only Firebase deploy updates the live site.
 
 ### Multi-phase work: local testing first
 
 When working on a series of phases or features before a final release:
-- **Do NOT push to production between phases** — accumulate changes locally, commit to git, but hold the push.
-- **Test locally** at `http://localhost:8080` using `python3 -m http.server 8080` from the project root.
-- Only `git push origin main` when ALL phases in the current batch are complete and locally verified.
-- After the final push, verify production: `curl -s "https://www.dulichcali21.com/<file>" | head -5`
+- **Do NOT deploy between phases** — accumulate changes locally, commit to git, but hold the deploy.
+- Only `firebase deploy --only hosting` when ALL phases in the current batch are complete and locally verified.
+- After the final deploy, verify production by curling a changed file.
 - End every completed batch with: `✔ Production domain updated — https://www.dulichcali21.com`
 
 ### Single-task deploys (default when no batch is active):
 
 1. Commit changes with `git add <files> && git commit`
-2. Push with `git push origin main`
-3. Verify production by curling a changed file
-4. Explicitly confirm: `✔ Production domain updated — https://www.dulichcali21.com`
+2. Push to repo: `git push origin main`
+3. Deploy: `firebase deploy --only hosting`
+4. Verify production by curling a changed file
+5. Confirm: `✔ Production domain updated — https://www.dulichcali21.com`
 
-### Failure condition:
+### Failure conditions:
 
-If a batch is complete and changes are still only on local → push immediately. Never finish a conversation with unpushed completed work.
-
-### Never run `firebase deploy` as the final deploy step. The production deploy is always `git push origin main`.
+- Changes committed and pushed but `firebase deploy` not run → production is NOT updated. Run `firebase deploy --only hosting`.
+- Task "complete" but `www.dulichcali21.com` shows old content → NOT done. Deploy and verify.
+- Deployed only to `web.app` → NOT production. That is staging only.
+- Session ended without confirming production → failure. Never finish with undeployed completed work.
 
 ---
 

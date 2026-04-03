@@ -16,6 +16,7 @@
     }
   ],
   "hosting": {
+    "site": "dulichcali-booking-calendar",
     "public": ".",
     "ignore": [
       "firebase.json",

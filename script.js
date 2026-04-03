@@ -1054,8 +1054,10 @@ async function checkRideServiceAvailability(regionId) {
     });
 
     updateRideServiceCards(hasAvailable);
+    return hasAvailable;
   } catch (_) {
     updateRideServiceCards(true); // fail open — never hide service on error
+    return true;
   }
 }
 
@@ -1073,6 +1075,206 @@ function updateRideServiceCards(available) {
       existing.remove();
     }
   });
+}
+
+// ── Homepage Intelligence ─────────────────────────────────────
+// Part 1: User behavior tracking & personalization
+// Part 2: Dynamic featured vendors
+// Part 3: Real-time availability highlights
+
+// ── Time / hours helpers ──────────────────────────────────────
+function _dlcHoursForDay(biz, jsDay) {
+  // jsDay: 0=Sun,1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat
+  // Vi keys: 'Chủ Nhật'=Sun, 'Thứ 2'=Mon … 'Thứ 7'=Sat
+  const hours = biz.hours;
+  if (!hours) return null;
+  const thuNum = jsDay === 0 ? null : jsDay + 1; // Mon=2 … Sat=7; Sun=null
+
+  for (const key of Object.keys(hours)) {
+    if (key === 'Chủ Nhật') { if (jsDay === 0) return hours[key]; continue; }
+    const m = key.match(/Thứ\s*(\d+)(?:[–\-](\d+))?/);
+    if (!m || thuNum === null) continue;
+    const s = parseInt(m[1], 10), e = m[2] ? parseInt(m[2], 10) : s;
+    if (thuNum >= s && thuNum <= e) return hours[key];
+  }
+  return null;
+}
+
+function _dlcParseTimeStr(str) {
+  // '9:00 AM' → minutes since midnight, null if unparseable
+  const m = (str || '').trim().match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!m) return null;
+  let h = parseInt(m[1], 10), min = parseInt(m[2], 10);
+  const pm = m[3].toUpperCase() === 'PM';
+  if (pm && h !== 12) h += 12;
+  if (!pm && h === 12) h = 0;
+  return h * 60 + min;
+}
+
+function _dlcFmtMins(mins) {
+  let h = Math.floor(mins / 60);
+  const m = mins % 60;
+  const sfx = h >= 12 ? 'PM' : 'AM';
+  if (h > 12) h -= 12;
+  if (h === 0) h = 12;
+  return h + (m ? ':' + String(m).padStart(2, '0') : '') + '\u202f' + sfx;
+}
+
+// ── Vendor availability ───────────────────────────────────────
+function computeBizAvailability(biz) {
+  // Returns { status: 'now'|'soon'|'order'|'closed', label, sublabel }
+  if (biz.availabilityType === 'order_window') {
+    return { status: 'order', label: 'Đang nhận đơn', sublabel: 'Giao cuối tuần' };
+  }
+
+  const now   = new Date();
+  const jsDay = now.getDay();
+  const cur   = now.getHours() * 60 + now.getMinutes();
+  const hoursStr = _dlcHoursForDay(biz, jsDay);
+
+  if (hoursStr && hoursStr !== 'Nghỉ') {
+    const parts = hoursStr.split('–').map(s => s.trim());
+    const open  = _dlcParseTimeStr(parts[0]);
+    const close = _dlcParseTimeStr(parts[1]);
+    if (open !== null && close !== null) {
+      if (cur >= open && cur < close)
+        return { status: 'now',  label: 'Đang mở cửa', sublabel: 'Đến ' + _dlcFmtMins(close) };
+      if (cur < open)
+        return { status: 'soon', label: 'Mở cửa sớm',  sublabel: 'Lúc ' + _dlcFmtMins(open) };
+    }
+  }
+
+  // Look ahead up to 6 days
+  const VI_DAYS = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+  for (let i = 1; i <= 6; i++) {
+    const d = (jsDay + i) % 7;
+    const h = _dlcHoursForDay(biz, d);
+    if (h && h !== 'Nghỉ') return { status: 'soon', label: 'Mở ' + VI_DAYS[d], sublabel: '' };
+  }
+
+  return { status: 'closed', label: 'Tạm đóng', sublabel: '' };
+}
+
+// ── User behavior tracking ────────────────────────────────────
+const HomepagePersonalizer = (() => {
+  const LS_KEY = 'dlc_behavior';
+
+  function getScores() {
+    try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch (_) { return {}; }
+  }
+
+  function track(catId) {
+    const s = getScores();
+    s[catId] = (s[catId] || 0) + 1;
+    try { localStorage.setItem(LS_KEY, JSON.stringify(s)); } catch (_) {}
+  }
+
+  function getTopCategories(regionId) {
+    const s = getScores();
+    const defaults = regionId === 'bayarea'
+      ? ['food', 'travel', 'nails', 'hair']
+      : ['food', 'nails', 'hair', 'travel'];
+    return [...defaults].sort((a, b) => (s[b] || 0) - (s[a] || 0));
+  }
+
+  function getContext() {
+    const regionId = window.DLCRegion?.current?.id || 'oc';
+    return { regionId, topCategories: getTopCategories(regionId), scores: getScores() };
+  }
+
+  return { track, getTopCategories, getContext };
+})();
+
+// ── Featured vendor helpers ───────────────────────────────────
+function getFeaturedVendors(regionId) {
+  if (!window.MARKETPLACE) return [];
+  return MARKETPLACE.businesses
+    .filter(b => b.active && b.homepageActive && b.featuredRegions?.includes(regionId))
+    .sort((a, b) => (a.featuredPriority || 99) - (b.featuredPriority || 99));
+}
+
+function _hpCatLabel(c)  { return { nails: 'Nail Salon', hair: 'Tiệm Tóc', food: 'Ẩm Thực' }[c] || c; }
+function _hpCatAccent(c) { return { nails: '#f472b6', hair: '#38bdf8', food: '#f59e0b' }[c] || 'var(--gold)'; }
+
+// ── HTML builders ─────────────────────────────────────────────
+function buildVendorCardHtml(biz) {
+  const avail  = computeBizAvailability(biz);
+  const accent = _hpCatAccent(biz.category);
+  const href   = `marketplace/index.html?cat=${biz.category}`;
+  const bg     = biz.heroImage
+    ? `background:${biz.heroGradient};background-image:url(${biz.heroImage});background-size:cover;background-position:center`
+    : `background:${biz.heroGradient}`;
+  const trk = `HomepagePersonalizer.track('${biz.category}')`;
+
+  return `<div class="hp-vendor-card" role="listitem"
+    onclick="${trk}; window.location.href='${href}'">
+    <div class="hp-vendor-card__img" style="${bg}">
+      <span class="hp-vendor-card__cat" style="--cat-accent:${accent}">${_hpCatLabel(biz.category)}</span>
+      <span class="hp-avail-badge hp-avail-badge--${avail.status}">${avail.label}</span>
+    </div>
+    <div class="hp-vendor-card__body">
+      <div class="hp-vendor-card__name">${biz.name}</div>
+      <div class="hp-vendor-card__city">${biz.city}</div>
+      <div class="hp-vendor-card__promo">${biz.shortPromoText || biz.tagline}</div>
+    </div>
+  </div>`;
+}
+
+function buildAvailChipHtml(label, sublabel, status, onclick) {
+  const sub = sublabel ? `<span class="hp-chip__sub">${sublabel}</span>` : '';
+  const oc  = onclick  ? ` onclick="${onclick}"` : '';
+  return `<div class="hp-chip hp-chip--${status}"${oc}>
+    <span class="hp-chip__label">${label}</span>${sub}
+  </div>`;
+}
+
+// ── Homepage renderers ────────────────────────────────────────
+function renderFeaturedVendors(regionId) {
+  const section   = document.getElementById('hpFeatured');
+  const container = document.getElementById('hpVendorCards');
+  const titleEl   = document.getElementById('hpFeaturedTitle');
+  if (!section || !container) return;
+
+  const vendors = getFeaturedVendors(regionId);
+  if (!vendors.length) { section.hidden = true; return; }
+
+  const regionName = window.DLCRegion?.current?.name;
+  if (titleEl && regionName) titleEl.textContent = `Đề Xuất Tại ${regionName}`;
+
+  container.innerHTML = vendors.map(buildVendorCardHtml).join('');
+  section.hidden = false;
+}
+
+function renderAvailabilityHighlights(regionId, driverAvailable) {
+  const section   = document.getElementById('hpAvail');
+  const container = document.getElementById('hpAvailChips');
+  if (!section || !container) return;
+
+  const chips = [];
+  for (const biz of getFeaturedVendors(regionId)) {
+    const avail = computeBizAvailability(biz);
+    if (avail.status === 'closed') continue;
+    const label = biz.name.length > 20 ? biz.name.slice(0, 18) + '…' : biz.name;
+    const nav   = `HomepagePersonalizer.track('${biz.category}'); window.location.href='marketplace/index.html?cat=${biz.category}'`;
+    chips.push(buildAvailChipHtml(avail.label, label, avail.status, nav));
+  }
+
+  if (driverAvailable) {
+    chips.push(buildAvailChipHtml(
+      'Xe có sẵn', 'Đặt ngay', 'driver',
+      "HomepagePersonalizer.track('travel'); switchScreen('screenBook')"
+    ));
+  }
+
+  if (!chips.length) { section.hidden = true; return; }
+  container.innerHTML = chips.join('');
+  section.hidden = false;
+}
+
+function initHomepageIntelligence(region, driverAvailable) {
+  const regionId = region?.id || 'oc';
+  renderFeaturedVendors(regionId);
+  renderAvailabilityHighlights(regionId, driverAvailable ?? true);
 }
 
 // ── Hero Carousel ─────────────────────────────────────────────
@@ -1162,14 +1364,106 @@ var HeroCarousel = (function () {
   return { init: init, goto: goto };
 })();
 
+// ── AI-Centric Homepage Functions ────────────────────────────
+
+/**
+ * Toggle expand/collapse of a service feature card.
+ * Only one card is open at a time.
+ */
+function toggleFc(cardId) {
+  var card = document.getElementById(cardId);
+  if (!card) return;
+  var isOpen = card.classList.contains('svc-fc--open');
+  // Close all
+  document.querySelectorAll('.svc-fc--open').forEach(function(c) {
+    c.classList.remove('svc-fc--open');
+    var hdr = c.querySelector('.svc-fc__hdr');
+    if (hdr) hdr.setAttribute('aria-expanded', 'false');
+  });
+  // Open this one if it was closed
+  if (!isOpen) {
+    card.classList.add('svc-fc--open');
+    var hdr = card.querySelector('.svc-fc__hdr');
+    if (hdr) hdr.setAttribute('aria-expanded', 'true');
+  }
+}
+
+/**
+ * Switch to AI chat and send a pre-loaded intent message.
+ * @param {string} intent - 'airport'|'tour'|'ride'|'price'|'order'|''
+ */
+function openAIWithIntent(intent) {
+  switchScreen('screenChat');
+
+  // Airport and tour use structured booking flows
+  if (intent === 'airport' || intent === 'tour') {
+    setTimeout(function() {
+      if (window.DLChat && DLChat.startFlow) DLChat.startFlow(intent);
+    }, 300);
+    return;
+  }
+
+  var prompts = {
+    ride:  'Tôi cần đặt xe riêng cao cấp',
+    price: 'Cho tôi biết bảng giá dịch vụ',
+    order: 'Kiểm tra đơn đặt chỗ của tôi'
+  };
+  var prompt = intent && prompts[intent];
+  if (prompt) {
+    setTimeout(function() {
+      if (window.DLChat && DLChat.send) DLChat.send(prompt);
+    }, 300);
+  }
+}
+
+/**
+ * Populate airport chips and tour destination tags inside the feature cards.
+ * Called after region is known and DESTINATIONS / AIRPORTS are loaded.
+ */
+function renderFeatureCards() {
+  // Airport tags (region-filtered)
+  var airTags = document.getElementById('fcAirTags');
+  if (airTags && typeof AIRPORTS !== 'undefined') {
+    var regionId = window.DLCRegion ? DLCRegion.current.id : 'oc';
+    var filtered = AIRPORTS.filter(function(a) {
+      return !a.region || a.region === regionId;
+    });
+    if (filtered.length === 0) filtered = AIRPORTS.slice(0, 6);
+    airTags.innerHTML = filtered.map(function(a) {
+      return '<span class="svc-fc__tag">' + a.code + '</span>';
+    }).join('');
+  }
+  // Airport subtitle (region-specific count)
+  var airSub = document.getElementById('fcAirSub');
+  if (airSub && window.DLCRegion) {
+    var r = DLCRegion.current;
+    if (r && r.airports && r.airports.length) {
+      var codes = r.airports;
+      airSub.textContent = codes.length + ' sân bay · ' + codes.slice(0, 3).join(' · ') +
+        (codes.length > 3 ? ' và thêm' : '');
+    }
+  }
+  // Tour destination tags
+  var tourTags = document.getElementById('fcTourTags');
+  if (tourTags && typeof DESTINATIONS !== 'undefined') {
+    var names = DESTINATIONS.slice(0, 9).map(function(d) {
+      return d.name ? (d.name.vi || d.name.en || d.id) : d.id;
+    });
+    tourTags.innerHTML = names.map(function(n) {
+      return '<span class="svc-fc__tag">' + n + '</span>';
+    }).join('') + '<span class="svc-fc__tag">+ thêm</span>';
+  }
+}
+
 // ── DOMContentLoaded ─────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
 
-  // Region detection — fires updateRegionUI + availability check on each region change
+  // Region detection — fires updateRegionUI + availability check + homepage intelligence
   if (window.DLCRegion) {
-    DLCRegion.init(function(region) {
+    DLCRegion.init(async function(region) {
       updateRegionUI(region);
-      checkRideServiceAvailability(region.id);
+      const driverAvail = await checkRideServiceAvailability(region.id);
+      initHomepageIntelligence(region, driverAvail);
     });
   }
 
@@ -1177,6 +1471,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderDestCards();
   renderDestList();
   renderTourChoiceGrid();
+  renderFeatureCards();
   // Note: renderAirportChips() and populateAirportSelect() are called inside
   // updateRegionUI() so they always render with the correct region's airports.
 

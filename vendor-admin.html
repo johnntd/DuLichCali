@@ -3,8 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#0d2f50">
+  <meta name="theme-color" content="#0a2344">
   <title>Menu Admin · Nhà Bếp Của Emily</title>
+
+  <!-- ── Icons & PWA ───────────────────────────────────────────────────────── -->
+  <link rel="icon" type="image/x-icon"  href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DuLịchCali Admin">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400&family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,6 +24,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <script src="aiOrchestrator.js?v=20260406"></script>
+  <script src="marketingEngine.js?v=20260406"></script>
 
   <style>
     /* ── Design tokens ──────────────────────────────────────────────────── */
@@ -466,6 +478,97 @@
     .va-cap-sub  { font-size: .68rem; color: var(--muted); margin-top: .3rem; }
     .va-cap-status { font-size: .7rem; color: var(--success); margin-top: .25rem; min-height: 1em; }
 
+    /* ── AI content generation ───────────────────────────────────────── */
+    .btn--ai {
+      background: linear-gradient(135deg, rgba(139,92,246,.18) 0%, rgba(99,102,241,.12) 100%);
+      border: 1px solid rgba(139,92,246,.4);
+      color: #a78bfa;
+      font-size: .68rem; font-weight: 600;
+      padding: .3rem .65rem; border-radius: 6px;
+      cursor: pointer; white-space: nowrap;
+      transition: border-color .18s, background .18s;
+    }
+    .btn--ai:hover { border-color: rgba(139,92,246,.7); }
+    .btn--ai:disabled { opacity: .45; cursor: default; }
+
+    .ai-result-panel {
+      margin-top: .7rem;
+      background: rgba(139,92,246,.07);
+      border: 1px solid rgba(139,92,246,.22);
+      border-radius: 8px; padding: .75rem .85rem;
+      font-size: .74rem; line-height: 1.55;
+    }
+    .ai-result-panel__title {
+      font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      color: #a78bfa; margin-bottom: .4rem;
+    }
+    .ai-result-field { margin-bottom: .35rem; }
+    .ai-result-field strong { color: var(--cream); }
+    .ai-result-field span  { color: var(--muted); }
+    .ai-tags { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .25rem; }
+    .ai-tag  {
+      padding: .1rem .42rem; background: rgba(139,92,246,.12);
+      border: 1px solid rgba(139,92,246,.28); border-radius: 20px;
+      font-size: .62rem; color: #c4b5fd;
+    }
+    .ai-render-box {
+      margin-top: .5rem; background: rgba(0,0,0,.3);
+      border: 1px solid rgba(255,255,255,.08); border-radius: 6px;
+      padding: .5rem .6rem; font-family: monospace; font-size: .62rem;
+      color: var(--muted); word-break: break-all;
+    }
+    .ai-provider-row { display: flex; gap: .45rem; flex-wrap: wrap; margin-bottom: .65rem; }
+    .ai-provider-chip {
+      display: flex; align-items: center; gap: .35rem;
+      padding: .28rem .65rem; border-radius: 20px; font-size: .7rem;
+      border: 1px solid var(--border);
+    }
+    .ai-provider-chip.ok  { border-color: rgba(74,222,128,.35); color: var(--success); background: rgba(74,222,128,.07); }
+    .ai-provider-chip.off { border-color: var(--border); color: var(--muted); }
+    .ai-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    /* ── AI Review panel (per-field accept/edit) ─────────────────── */
+    .ai-review-header {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: .4rem; margin-bottom: .6rem;
+    }
+    .ai-review-meta { font-size: .62rem; color: var(--muted); }
+    .ai-ab-chips { display: flex; gap: .3rem; }
+    .ai-ab-chip {
+      padding: .15rem .5rem; border-radius: 20px; font-size: .64rem; font-weight: 600;
+      border: 1px solid rgba(139,92,246,.35); color: #a78bfa; cursor: pointer;
+      background: transparent; transition: background .15s, border-color .15s;
+    }
+    .ai-ab-chip.active { background: rgba(139,92,246,.22); border-color: rgba(139,92,246,.7); }
+    .ai-field-row {
+      display: grid; grid-template-columns: 1fr auto;
+      gap: .25rem .45rem; align-items: start;
+      padding: .4rem 0; border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .ai-field-row:last-of-type { border-bottom: none; }
+    .ai-field-label { font-size: .62rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #a78bfa; margin-bottom: .15rem; }
+    .ai-field-value { font-size: .74rem; color: var(--cream); line-height: 1.5; }
+    .ai-field-value em { color: var(--muted); font-style: normal; }
+    .ai-field-apply {
+      grid-column: 2; grid-row: 1 / 3; align-self: center;
+      padding: .25rem .55rem; font-size: .64rem; font-weight: 600;
+      background: rgba(74,222,128,.1); border: 1px solid rgba(74,222,128,.35);
+      color: var(--success); border-radius: 6px; cursor: pointer; white-space: nowrap;
+      transition: background .15s;
+    }
+    .ai-field-apply:hover { background: rgba(74,222,128,.2); }
+    .ai-field-apply.applied { background: rgba(74,222,128,.25); border-color: var(--success); }
+    .ai-apply-all-row {
+      display: flex; justify-content: flex-end; gap: .45rem; margin-top: .55rem;
+    }
+    .btn--ai-apply-all {
+      padding: .35rem .85rem; font-size: .74rem; font-weight: 700;
+      background: linear-gradient(135deg, rgba(139,92,246,.25), rgba(99,102,241,.18));
+      border: 1px solid rgba(139,92,246,.55); color: #c4b5fd;
+      border-radius: var(--r); cursor: pointer; transition: border-color .15s;
+    }
+    .btn--ai-apply-all:hover { border-color: rgba(139,92,246,.9); }
+
     /* ── Tabs ───────────────────────────────────────────────────────── */
     .va-tabs { display: flex; gap: .45rem; margin-bottom: .9rem; }
     .va-tab {
@@ -755,6 +858,31 @@
     .f-section-hdr.open .f-section-chevron { transform: rotate(180deg); }
     .f-instr-fields { padding-top: .4rem; }
     .va-tag--info { background: rgba(56,189,248,.12); border-color: rgba(56,189,248,.3); color: #7dd3fc; }
+
+    /* ── Focal point editor ───────────────────────────────────────────────── */
+    .focal-editor {
+      display: flex; gap: .75rem; align-items: flex-start;
+      padding: .6rem .75rem; background: rgba(255,255,255,.03);
+      border: 1px solid var(--border); border-radius: 8px; margin-top: .35rem;
+    }
+    .focal-preview-wrap {
+      width: 72px; height: 72px; border-radius: 7px;
+      overflow: hidden; flex-shrink: 0;
+      background: rgba(255,255,255,.06); border: 1px solid var(--border);
+    }
+    .focal-preview-img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: 50% 50%;
+      display: block;
+    }
+    .focal-sliders { flex: 1; display: flex; flex-direction: column; gap: .45rem; }
+    .focal-slider-row { display: flex; align-items: center; gap: .4rem; }
+    .focal-lbl { font-size: .67rem; color: var(--muted); width: 52px; flex-shrink: 0; }
+    .focal-range {
+      flex: 1; height: 4px; accent-color: var(--gold);
+      cursor: pointer;
+    }
+    .focal-pct { font-size: .67rem; color: var(--text); width: 28px; text-align: right; }
   </style>
 </head>
 <body>
@@ -904,6 +1032,43 @@
       </div>
     </div>
 
+    <!-- AI Engine Settings -->
+    <div class="va-cap-card" style="margin-top:.9rem">
+      <div class="va-cap-card__title">&#10024; AI Engines</div>
+      <div class="ai-provider-row" id="aiProviderChips">
+        <!-- populated by renderAIProviderChips() -->
+      </div>
+      <p style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem;line-height:1.55">
+        Nhập API key để bật từng AI engine. Key được lưu cục bộ trên thiết bị này.
+      </p>
+
+      <div style="margin-bottom:.55rem">
+        <label style="display:block;font-size:.7rem;color:var(--text-muted);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.08em">Claude (Anthropic)</label>
+        <div class="va-cap-card__row">
+          <input type="password" id="keyClaude" placeholder="sk-ant-..." class="va-cap-input" autocomplete="off">
+          <button class="btn btn--ghost btn--sm" onclick="saveAIKey('claude', document.getElementById('keyClaude').value)">Lưu</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:.55rem">
+        <label style="display:block;font-size:.7rem;color:var(--text-muted);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.08em">OpenAI (GPT-4o mini)</label>
+        <div class="va-cap-card__row">
+          <input type="password" id="keyOpenAI" placeholder="sk-..." class="va-cap-input" autocomplete="off">
+          <button class="btn btn--ghost btn--sm" onclick="saveAIKey('openai', document.getElementById('keyOpenAI').value)">Lưu</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:.55rem">
+        <label style="display:block;font-size:.7rem;color:var(--text-muted);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.08em">Google Gemini 1.5 Flash</label>
+        <div class="va-cap-card__row">
+          <input type="password" id="keyGemini" placeholder="AI..." class="va-cap-input" autocomplete="off">
+          <button class="btn btn--ghost btn--sm" onclick="saveAIKey('gemini', document.getElementById('keyGemini').value)">Lưu</button>
+        </div>
+      </div>
+
+      <div class="va-cap-status" id="aiKeySaveStatus"></div>
+    </div>
+
   </div>
 </div>
 
@@ -1000,6 +1165,39 @@
       <input type="hidden" id="fImage">
     </div>
 
+    <!-- Focal point editor — shown only after an image is loaded -->
+    <div class="f-row" id="focalPointRow" style="display:none">
+      <label class="f-label">Focal Point (Image Crop)</label>
+      <div class="focal-editor">
+        <div class="focal-preview-wrap">
+          <img class="focal-preview-img" id="focalPreviewImg" alt="preview">
+        </div>
+        <div class="focal-sliders">
+          <div class="focal-slider-row">
+            <span class="focal-lbl">← Ngang →</span>
+            <input type="range" id="fImagePosX" min="0" max="100" value="50"
+                   class="focal-range" oninput="updateFocalPreview()">
+            <span class="focal-pct" id="focalValX">50%</span>
+          </div>
+          <div class="focal-slider-row">
+            <span class="focal-lbl">↑ Dọc ↓</span>
+            <input type="range" id="fImagePosY" min="0" max="100" value="50"
+                   class="focal-range" oninput="updateFocalPreview()">
+            <span class="focal-pct" id="focalValY">50%</span>
+          </div>
+        </div>
+      </div>
+      <span class="f-hint">Kéo để chọn vùng hiển thị chính — dùng hộp nhỏ bên trái để xem trước.</span>
+    </div>
+
+    <div class="f-group" style="margin-top:1rem">
+      <label class="f-label" for="fVideoUrl">Video URL (Promo MP4)</label>
+      <input type="url" id="fVideoUrl" class="f-input" placeholder="https://storage.googleapis.com/... (leave blank if none)">
+      <p style="font-size:.78rem;color:var(--muted,#888);margin-top:4px">
+        Generated with <code>node remotion-promo/generate-promo.js --upload</code>. Paste the returned URL here.
+      </p>
+    </div>
+
     <div class="f-toggle-row">
       <span class="f-toggle-label">Đang bán (Active)</span>
       <button type="button" class="f-toggle on" id="fActive"
@@ -1071,7 +1269,8 @@
 <script>
   // ── Config ──────────────────────────────────────────────────────────────
   // VENDOR_ID resolved dynamically via Firebase Auth → vendorUsers collection.
-  // First-time setup: go to /vendor-login → "Tạo tài khoản lần đầu" (setup code = '2438').
+  // First-time setup: go to /vendor-login?id=<vendorId> → "Tạo tài khoản lần đầu"
+  // Setup code = last 4 digits of the vendor's registered phone number.
   var VENDOR_ID = null;
   var vendorRef = null;
   var menuRef   = null;
@@ -1105,6 +1304,8 @@
     unit:            'each',
     minimumOrderQty: 30,
     image:           '',
+    videoUrl:        '',
+    videoStatus:     'none',
     active:          true,
     featured:        true,
     sortOrder:       0,
@@ -1140,15 +1341,20 @@
   var _popupTimer       = null;
 
   // ── Auth: email/password via Firebase — redirect if not signed in ─────────
+  function goToLogin(vendorId) {
+    var url = '/vendor-login' + (vendorId ? '?id=' + encodeURIComponent(vendorId) : '');
+    window.location.href = url;
+  }
+
   auth.onAuthStateChanged(function (user) {
     if (!user) {
-      window.location.href = '/vendor-login';
+      goToLogin(null);
       return;
     }
     // Look up which vendor this user manages
     db.collection('vendorUsers').doc(user.uid).get().then(function (doc) {
       if (!doc.exists) {
-        auth.signOut().then(function () { window.location.href = '/vendor-login'; });
+        auth.signOut().then(function () { goToLogin(null); });
         return;
       }
       VENDOR_ID = doc.data().vendorId;
@@ -1162,9 +1368,10 @@
       document.getElementById('authLoading').classList.add('hidden');
       document.getElementById('app').classList.add('visible');
       document.getElementById('fabAdd').classList.add('visible');
+      renderAIProviderChips();
       startApp();
     }).catch(function () {
-      window.location.href = '/vendor-login';
+      goToLogin(null);
     });
   });
 
@@ -1172,7 +1379,8 @@
     if (unsubMenu)   unsubMenu();
     if (unsubOrders) unsubOrders();
     if (unsubNotifs) unsubNotifs();
-    auth.signOut().then(function () { window.location.href = '/vendor-login'; });
+    var vid = VENDOR_ID;
+    auth.signOut().then(function () { goToLogin(vid); });
   }
 
   // ── App start ─────────────────────────────────────────────────────────────
@@ -1346,7 +1554,9 @@
           (inactive
             ? '<button class="btn btn--ok btn--sm" onclick="setActive(\'' + item.id + '\', true)">✓ Activate</button>'
             : '<button class="btn btn--danger btn--sm" onclick="setActive(\'' + item.id + '\', false)">⊗ Deactivate</button>') +
+          '<button class="btn--ai" id="aiBtn-' + item.id + '" onclick="generateAIContent(\'' + item.id + '\')">✨ AI Content</button>' +
         '</div>' +
+        '<div class="ai-result-panel" id="aiPanel-' + item.id + '" style="display:none"></div>' +
       '</div>';
     }).join('');
   }
@@ -1365,7 +1575,11 @@
       document.getElementById('fUnit').value      = item.unit || 'each';
       document.getElementById('fMinQty').value    = item.minimumOrderQty || 30;
       document.getElementById('fImage').value     = item.image || '';
+      document.getElementById('fVideoUrl').value  = item.videoUrl || '';
+      document.getElementById('fImagePosX').value = item.imagePositionX != null ? item.imagePositionX : 50;
+      document.getElementById('fImagePosY').value = item.imagePositionY != null ? item.imagePositionY : 50;
       setImgPreview(item.image || '');
+      updateFocalPreview();
       document.getElementById('fVariants').value  = (item.variants || []).map(function (v) {
         return typeof v === 'object' ? (v.labelEn || v.label || '') : v;
       }).join(', ');
@@ -1406,8 +1620,12 @@
     document.getElementById('fMinQty').value       = '30';
     document.getElementById('fVariants').value     = '';
     document.getElementById('fImage').value        = '';
+    document.getElementById('fVideoUrl').value     = '';
     document.getElementById('fImageFile').value    = '';
+    document.getElementById('fImagePosX').value    = '50';
+    document.getElementById('fImagePosY').value    = '50';
     setImgPreview('');
+    updateFocalPreview();
     setToggle('fActive',   true);
     setToggle('fFeatured', false);
     // Instruction fields
@@ -1437,6 +1655,22 @@
       placeholder.style.display = 'flex';
       changeBtn.style.display = 'none';
     }
+    // Show/hide focal point editor
+    var focalRow = document.getElementById('focalPointRow');
+    var focalImg = document.getElementById('focalPreviewImg');
+    if (focalRow) focalRow.style.display = url ? '' : 'none';
+    if (focalImg && url) focalImg.src = url;
+  }
+
+  function updateFocalPreview() {
+    var x   = document.getElementById('fImagePosX').value;
+    var y   = document.getElementById('fImagePosY').value;
+    var img = document.getElementById('focalPreviewImg');
+    if (img) img.style.objectPosition = x + '% ' + y + '%';
+    var xLbl = document.getElementById('focalValX');
+    var yLbl = document.getElementById('focalValY');
+    if (xLbl) xLbl.textContent = x + '%';
+    if (yLbl) yLbl.textContent = y + '%';
   }
 
   function handleImageUpload(input) {
@@ -1574,6 +1808,9 @@
       minimumOrderQty:         minQty,
       variants:                variants,
       image:                   document.getElementById('fImage').value.trim(),
+      imagePositionX:          parseInt(document.getElementById('fImagePosX').value, 10) || 50,
+      imagePositionY:          parseInt(document.getElementById('fImagePosY').value, 10) || 50,
+      videoUrl:                document.getElementById('fVideoUrl').value.trim() || null,
       active:                  getToggle('fActive'),
       featured:                getToggle('fFeatured'),
       preparationInstructions: document.getElementById('fPrep').value.trim(),
@@ -1746,6 +1983,288 @@
       status.textContent = '✕ ' + err.message;
       status.style.color = '#f87171';
     });
+  }
+
+  // ── AI Engine helpers ──────────────────────────────────────────────────────
+
+  function saveAIKey(provider, value) {
+    var status = document.getElementById('aiKeySaveStatus');
+    if (!window.DLCOrchestrator) {
+      status.textContent = '✕ aiOrchestrator.js chưa được tải.';
+      status.style.color = 'var(--danger)';
+      return;
+    }
+    var trimmed = (value || '').trim();
+    DLCOrchestrator.setKey(provider, trimmed || null);
+    status.textContent = trimmed ? ('✓ ' + provider + ' key đã lưu.') : ('✓ ' + provider + ' key đã xóa.');
+    status.style.color = 'var(--success)';
+    setTimeout(function() { status.textContent = ''; }, 3000);
+    renderAIProviderChips();
+  }
+
+  function renderAIProviderChips() {
+    var wrap = document.getElementById('aiProviderChips');
+    if (!wrap || !window.DLCOrchestrator) return;
+    var st = DLCOrchestrator.getProviderStatus();
+    wrap.innerHTML = Object.keys(st).map(function(p) {
+      var info = st[p];
+      var cls  = info.configured ? 'ok' : 'off';
+      return '<div class="ai-provider-chip ' + cls + '"><div class="ai-dot"></div>' + esc(info.label) + '</div>';
+    }).join('');
+  }
+
+  // Cached enhancement results keyed by itemId (for Apply All)
+  var _aiResults = {};
+  // Track which A/B variant is selected per item
+  var _aiAbVariant = {};
+
+  async function generateAIContent(itemId) {
+    var engine = window.DLCMarketing || window.DLCOrchestrator;
+    if (!engine) {
+      alert('marketingEngine.js / aiOrchestrator.js chưa tải.');
+      return;
+    }
+    var item = allItems[itemId];
+    if (!item) return;
+
+    var btn   = document.getElementById('aiBtn-' + itemId);
+    var panel = document.getElementById('aiPanel-' + itemId);
+    if (!btn || !panel) return;
+
+    btn.disabled    = true;
+    btn.textContent = '⏳ Đang tạo...';
+    panel.style.display = 'none';
+
+    var vendorObj = {
+      id:     VENDOR_ID || '',
+      name:   document.querySelector('.va-vendor-name')?.textContent || VENDOR_ID || '',
+      city:   '',
+      region: localStorage.getItem('dlc_ai_region') || 'oc',
+      phone:  '',
+    };
+
+    try {
+      var result;
+      if (window.DLCMarketing && DLCMarketing.enhance) {
+        result = await DLCMarketing.enhance(item, vendorObj, { region: vendorObj.region });
+      } else {
+        // Fallback to orchestrator
+        var raw = await DLCOrchestrator.generateFoodContent(VENDOR_ID, item, vendorObj);
+        var cd  = (raw.content && raw.content.data) || {};
+        result  = {
+          provider: (raw.content && raw.content.provider) || 'AI',
+          versionId: 'v' + Date.now().toString(36).toUpperCase(),
+          fields: {
+            title:       { vi: cd.title || '', en: cd.titleEn || '', ab: [] },
+            description: { vi: cd.description || '' },
+            adCopy:      { vi: cd.adCopy || '' },
+            tags:        { values: cd.tags || [] },
+          },
+          errors: raw.errors || [],
+        };
+      }
+
+      _aiResults[itemId]  = result;
+      _aiAbVariant[itemId] = 'A';
+
+      panel.innerHTML     = renderAIReviewPanel(itemId, result);
+      panel.style.display = 'block';
+      btn.textContent     = '✨ AI Content';
+      btn.disabled        = false;
+
+    } catch (err) {
+      panel.innerHTML     = '<div style="color:var(--danger);font-size:.74rem">✕ Lỗi: ' + esc(err.message) + '</div>';
+      panel.style.display = 'block';
+      btn.textContent     = '✨ AI Content';
+      btn.disabled        = false;
+    }
+  }
+
+  function renderAIReviewPanel(itemId, result) {
+    var f   = result.fields || {};
+    var ab  = _aiAbVariant[itemId] || 'A';
+    var vid = result.versionId || '';
+
+    // Header
+    var html = '<div class="ai-review-header">';
+    html += '<div><div class="ai-result-panel__title">✨ AI Marketing Content</div>';
+    html += '<div class="ai-review-meta">' + esc(result.provider || 'AI') + (vid ? ' · ' + esc(vid) : '') + (result.region ? ' · ' + esc(result.region) : '') + '</div></div>';
+
+    // A/B chip selector (if variants exist)
+    var abVariants = (f.title && f.title.ab) || [];
+    if (abVariants.length >= 2) {
+      html += '<div class="ai-ab-chips">';
+      abVariants.forEach(function(v) {
+        var active = v.id === ab ? ' active' : '';
+        html += '<button class="ai-ab-chip' + active + '" onclick="selectABVariant(\'' + esc(itemId) + '\',\'' + esc(v.id) + '\')">' + esc(v.id) + '</button>';
+      });
+      html += '</div>';
+    }
+    html += '</div>'; // end header
+
+    // Title field
+    var titleVi = '';
+    var titleEn = '';
+    if (abVariants.length >= 2) {
+      var chosen = abVariants.find(function(v){ return v.id === ab; }) || abVariants[0];
+      titleVi = chosen.vi || '';
+      titleEn = chosen.en || '';
+    } else {
+      titleVi = (f.title && f.title.vi) || '';
+      titleEn = (f.title && f.title.en) || '';
+    }
+    if (titleVi) {
+      html += aiFieldRow(itemId, 'Tên món', titleVi, titleEn, 'name');
+    }
+
+    // Description
+    var descVi = (f.description && f.description.vi) || '';
+    if (descVi) html += aiFieldRow(itemId, 'Mô tả (VI)', descVi, '', 'description');
+
+    // Description EN
+    var descEn = (f.description && f.description.en) || '';
+    if (descEn) html += aiFieldRow(itemId, 'Mô tả (EN)', descEn, '', 'descriptionEn');
+
+    // Ad copy
+    var adVi = (f.adCopy && f.adCopy.vi) || '';
+    if (adVi) html += aiFieldRow(itemId, 'Quảng cáo (VI)', adVi, '', 'adCopyVi');
+
+    var adEn = (f.adCopy && f.adCopy.en) || '';
+    if (adEn) html += aiFieldRow(itemId, 'Quảng cáo (EN)', adEn, '', 'adCopyEn');
+
+    // Promo text
+    var promoVi = (f.promoText && f.promoText.vi) || '';
+    if (promoVi) html += aiFieldRow(itemId, 'Promo Text', promoVi, '', 'promoText');
+
+    // Short description
+    var shortVi = (f.shortDescription && f.shortDescription.vi) || '';
+    if (shortVi) html += aiFieldRow(itemId, 'Mô tả ngắn', shortVi, '', 'shortDescription');
+
+    // Tags
+    var tags = (f.tags && f.tags.values) || [];
+    if (tags.length) {
+      html += '<div class="ai-field-row">';
+      html += '<div><div class="ai-field-label">Tags</div>';
+      html += '<div class="ai-tags">' + tags.map(function(t){ return '<span class="ai-tag">' + esc(t) + '</span>'; }).join('') + '</div></div>';
+      html += '<button class="ai-field-apply" onclick="applyAISuggestion(\'' + esc(itemId) + '\',\'tags\',' + JSON.stringify(tags) + ')">✓ Áp dụng</button>';
+      html += '</div>';
+    }
+
+    // Video script section (collapsed info only)
+    var vs     = f.videoScript || {};
+    var rProps = vs.remotionProps;
+    var rCmd   = vs.renderCmd || (rProps && window.DLCOrchestrator && DLCOrchestrator.buildRenderCommand ? DLCOrchestrator.buildRenderCommand(rProps) : '');
+    if (rProps || rCmd) {
+      html += '<details style="margin-top:.5rem">';
+      html += '<summary style="font-size:.65rem;color:#a78bfa;cursor:pointer;list-style:none">🎬 Video Script ▾</summary>';
+      if (rProps && rProps.accentColor) {
+        html += '<div style="margin-top:.35rem;font-size:.72rem">Màu accent: <span style="color:' + esc(rProps.accentColor) + '">' + esc(rProps.accentColor) + ' ■</span></div>';
+      }
+      if (rCmd) {
+        html += '<div class="ai-render-box" style="margin-top:.35rem">' + esc(rCmd) + '</div>';
+      }
+      html += '</details>';
+    }
+
+    // Errors
+    if (result.errors && result.errors.length) {
+      html += '<div style="margin-top:.4rem;font-size:.68rem;color:var(--danger)">⚠ ' + result.errors.map(esc).join(' | ') + '</div>';
+    }
+
+    // Apply All button
+    html += '<div class="ai-apply-all-row"><button class="btn--ai-apply-all" onclick="applyAllAISuggestions(\'' + esc(itemId) + '\')">✓ Áp dụng tất cả</button></div>';
+
+    return html;
+  }
+
+  function aiFieldRow(itemId, label, primary, secondary, field) {
+    var val = secondary ? primary + ' · ' + secondary : primary;
+    // Use primary value for apply (Firestore field)
+    var applyVal = JSON.stringify(primary);
+    var html = '<div class="ai-field-row">';
+    html += '<div><div class="ai-field-label">' + esc(label) + '</div>';
+    html += '<div class="ai-field-value">' + esc(primary);
+    if (secondary) html += ' <em>· ' + esc(secondary) + '</em>';
+    html += '</div></div>';
+    html += '<button class="ai-field-apply" id="aiApply-' + esc(itemId) + '-' + esc(field) + '" onclick="applyAISuggestion(\'' + esc(itemId) + '\',\'' + esc(field) + '\',' + applyVal + ')">✓ Áp dụng</button>';
+    html += '</div>';
+    return html;
+  }
+
+  function selectABVariant(itemId, variantId) {
+    _aiAbVariant[itemId] = variantId;
+    var result = _aiResults[itemId];
+    if (!result) return;
+    var panel = document.getElementById('aiPanel-' + itemId);
+    if (panel) panel.innerHTML = renderAIReviewPanel(itemId, result);
+  }
+
+  async function applyAISuggestion(itemId, field, value) {
+    if (!menuRef) return;
+    var btnId = 'aiApply-' + itemId + '-' + field;
+    var btn   = document.getElementById(btnId);
+
+    // Map marketing engine field names to Firestore document fields
+    var fsField = field;
+    if (field === 'descriptionEn') fsField = 'descriptionEn';
+    if (field === 'adCopyVi')     fsField = 'adCopyVi';
+    if (field === 'adCopyEn')     fsField = 'adCopyEn';
+
+    var update = {};
+    update[fsField] = value;
+
+    try {
+      if (btn) { btn.disabled = true; btn.textContent = '…'; }
+      await menuRef.doc(itemId).update(update);
+      if (btn) { btn.classList.add('applied'); btn.textContent = '✓ Đã lưu'; btn.disabled = false; }
+    } catch (err) {
+      if (btn) { btn.textContent = '✕ Lỗi'; btn.disabled = false; }
+      console.error('applyAISuggestion:', err);
+    }
+  }
+
+  async function applyAllAISuggestions(itemId) {
+    var result = _aiResults[itemId];
+    if (!result || !menuRef) return;
+    var f  = result.fields || {};
+    var ab = _aiAbVariant[itemId] || 'A';
+
+    var update = {};
+
+    // Title — pick active A/B variant
+    var abVariants = (f.title && f.title.ab) || [];
+    if (abVariants.length >= 2) {
+      var chosen = abVariants.find(function(v){ return v.id === ab; }) || abVariants[0];
+      if (chosen.vi) update.name = chosen.vi;
+    } else if (f.title && f.title.vi) {
+      update.name = f.title.vi;
+    }
+
+    if (f.description && f.description.vi)  update.description   = f.description.vi;
+    if (f.description && f.description.en)  update.descriptionEn = f.description.en;
+    if (f.adCopy      && f.adCopy.vi)       update.adCopyVi      = f.adCopy.vi;
+    if (f.adCopy      && f.adCopy.en)       update.adCopyEn      = f.adCopy.en;
+    if (f.promoText   && f.promoText.vi)    update.promoText     = f.promoText.vi;
+    if (f.shortDescription && f.shortDescription.vi) update.shortDescription = f.shortDescription.vi;
+    if (f.tags        && f.tags.values && f.tags.values.length) update.tags = f.tags.values;
+
+    if (!Object.keys(update).length) return;
+
+    var applyBtn = document.querySelector('#aiPanel-' + itemId + ' .btn--ai-apply-all');
+    if (applyBtn) { applyBtn.disabled = true; applyBtn.textContent = '⏳ Đang lưu...'; }
+
+    try {
+      await menuRef.doc(itemId).update(update);
+      if (applyBtn) { applyBtn.textContent = '✓ Đã áp dụng ' + Object.keys(update).length + ' trường'; }
+      // Mark individual apply buttons as done
+      Object.keys(update).forEach(function(f) {
+        var btn = document.getElementById('aiApply-' + itemId + '-' + f);
+        if (btn) { btn.classList.add('applied'); btn.textContent = '✓ Đã lưu'; }
+      });
+    } catch (err) {
+      if (applyBtn) { applyBtn.textContent = '✕ Lỗi'; applyBtn.disabled = false; }
+      console.error('applyAllAISuggestions:', err);
+    }
   }
 
   // ── Orders real-time listener (bookings collection) ───────────────────────
@@ -2121,6 +2640,12 @@
       if (n.customerPhone) {
         html += '<a href="tel:' + esc(n.customerPhone) + '" class="btn btn--ghost btn--sm" onclick="event.stopPropagation()">&#128222; Gọi</a>';
       }
+      // Google Maps link: prefer pickup address, fall back to airport name
+      var mapsAddr = (n.pickupAddress && n.pickupAddress.trim()) || '';
+      if (!mapsAddr && n.airport) mapsAddr = n.airport + ' Airport California';
+      if (mapsAddr) {
+        html += '<a href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(mapsAddr) + '" target="_blank" rel="noopener" class="btn btn--ghost btn--sm" onclick="event.stopPropagation()">&#128205; Bản đồ</a>';
+      }
 
       html += '</div></div>';
     });
@@ -2140,8 +2665,30 @@
     if (bellBtn) bellBtn.classList.toggle('has-unread', unread > 0);
   }
 
+  // ── Notification sound (Web Audio API — no external file needed) ────────
+  function playNotifSound() {
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      function beep(freq, startAt, dur, vol) {
+        var osc  = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + startAt);
+        gain.gain.setValueAtTime(vol || 0.28, ctx.currentTime + startAt);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startAt + dur);
+        osc.start(ctx.currentTime + startAt);
+        osc.stop(ctx.currentTime + startAt + dur);
+      }
+      beep(880, 0,    0.18);
+      beep(1100, 0.2, 0.22);
+    } catch (e) {}
+  }
+
   // ── New-order popup ───────────────────────────────────────────────────────
   function showOrderPopup(notif) {
+    playNotifSound();
     var isQuestion = notif.type === 'buyer_question';
     document.querySelector('#notifPopup .np-icon').innerHTML = isQuestion ? '&#128172;' : '&#128276;';
     document.getElementById('popupTitle').textContent = notif.title   || (isQuestion ? 'Câu hỏi từ khách!' : 'Đơn hàng mới!');

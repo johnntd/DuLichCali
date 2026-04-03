@@ -1,30 +1,40 @@
 'use strict';
 
 /**
- * DuLichCali — Vendor SMS Notification Function
+ * DuLichCali — Firebase Cloud Functions
  *
- * Triggered on: vendors/{vendorId}/notifications/{notificationId} onCreate
+ * Functions:
+ *  1. onVendorNotification  — Twilio SMS on new vendor notification
+ *  2. aiOrchestrate         — Secure server-side AI orchestration proxy
  *
- * Reads the vendor doc to check smsEnabled + notificationPhone,
- * then sends an SMS via Twilio and updates the notification doc with delivery status.
+ * Secrets (Google Cloud Secret Manager):
+ *   SMS:  TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER
+ *   AI:   OPENAI_API_KEY, GEMINI_API_KEY, CLAUDE_API_KEY
  *
- * Credentials live in Google Cloud Secret Manager (never in code or env files).
- * Set them once with:
+ * Set secrets once with:
  *   firebase functions:secrets:set TWILIO_ACCOUNT_SID
- *   firebase functions:secrets:set TWILIO_AUTH_TOKEN
- *   firebase functions:secrets:set TWILIO_FROM_NUMBER
+ *   firebase functions:secrets:set OPENAI_API_KEY
+ *   firebase functions:secrets:set GEMINI_API_KEY
+ *   firebase functions:secrets:set CLAUDE_API_KEY
  */
 
 const { onDocumentCreated } = require('firebase-functions/v2/firestore');
+const { onCall }            = require('firebase-functions/v2/https');
 const { defineSecret }      = require('firebase-functions/params');
 const admin                 = require('firebase-admin');
 const twilio                = require('twilio');
+const https                 = require('https');
 
 // ── Secrets (Google Cloud Secret Manager) ────────────────────────────────────
 // These are injected at runtime — never stored in code or .env files.
 const TWILIO_ACCOUNT_SID = defineSecret('TWILIO_ACCOUNT_SID');
 const TWILIO_AUTH_TOKEN  = defineSecret('TWILIO_AUTH_TOKEN');
 const TWILIO_FROM_NUMBER = defineSecret('TWILIO_FROM_NUMBER');
+
+// AI provider secrets
+const OPENAI_API_KEY  = defineSecret('OPENAI_API_KEY');
+const GEMINI_API_KEY  = defineSecret('GEMINI_API_KEY');
+const CLAUDE_API_KEY  = defineSecret('CLAUDE_API_KEY');
 
 // ── Firebase Admin ────────────────────────────────────────────────────────────
 if (!admin.apps.length) admin.initializeApp();
@@ -266,3 +276,165 @@ function stripDiacritics(str) {
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  AI ORCHESTRATION — Secure server-side proxy
+//
+//  Called by the browser via: firebase.functions().httpsCallable('aiOrchestrate')
+//  Keeps API keys in Google Cloud Secret Manager, not exposed to the browser.
+//
+//  Request format: { taskType: string, payload: object }
+//  Response format: standard orchestrator result object (see aiOrchestrator.js)
+//
+//  To add a new AI provider: extend PROVIDER_ROUTES and add a callXxx() helper.
+// ══════════════════════════════════════════════════════════════════════════════
+
+const AI_ROUTES = {
+  'chat.general':        { primary: 'claude',  fallback: 'openai'  },
+  'chat.marketplace':    { primary: 'claude',  fallback: 'openai'  },
+  'booking.create':      { primary: 'claude',  fallback: 'openai'  },
+  'booking.analyze':     { primary: 'claude',  fallback: 'openai'  },
+  'travel.plan':         { primary: 'claude',  fallback: 'gemini'  },
+  'content.generate':    { primary: 'openai',  fallback: 'claude'  },
+  'content.ad_copy':     { primary: 'openai',  fallback: 'claude'  },
+  'video.script':        { primary: 'openai',  fallback: 'claude'  },
+  'search.web':          { primary: 'gemini',  fallback: 'openai'  },
+  'image.analyze':       { primary: 'gemini',  fallback: null      },
+  'support.classify':    { primary: 'claude',  fallback: 'openai'  },
+  'support.draft_reply': { primary: 'claude',  fallback: 'openai'  },
+};
+
+/**
+ * Simple HTTPS fetch wrapper for Node.js (no external SDK needed).
+ * Returns response body as string.
+ */
+function httpsPost(hostname, path, headers, bodyObj) {
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify(bodyObj);
+    const req  = https.request(
+      { hostname, path, method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body), ...headers } },
+      (res) => {
+        let data = '';
+        res.on('data', c => data += c);
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) resolve(data);
+          else reject(new Error(`HTTP ${res.statusCode}: ${data.slice(0, 200)}`));
+        });
+      }
+    );
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
+
+async function serverCallClaude(system, userContent, jsonMode, claudeKey) {
+  const sysPrompt = jsonMode ? system + '\n\nRespond ONLY with valid JSON. No markdown.' : system;
+  const raw = await httpsPost('api.anthropic.com', '/v1/messages',
+    { 'x-api-key': claudeKey, 'anthropic-version': '2023-06-01' },
+    { model: 'claude-haiku-4-5-20251001', max_tokens: 1200, system: sysPrompt,
+      messages: [{ role: 'user', content: userContent }] }
+  );
+  const d = JSON.parse(raw);
+  return d.content[0].text;
+}
+
+async function serverCallOpenAI(system, userContent, jsonMode, openaiKey) {
+  const sysPrompt = jsonMode ? system + '\n\nRespond ONLY with valid JSON.' : system;
+  const body = { model: 'gpt-4o-mini', max_tokens: 1200,
+    messages: [{ role: 'system', content: sysPrompt }, { role: 'user', content: userContent }] };
+  if (jsonMode) body.response_format = { type: 'json_object' };
+  const raw = await httpsPost('api.openai.com', '/v1/chat/completions',
+    { 'Authorization': `Bearer ${openaiKey}` }, body);
+  const d = JSON.parse(raw);
+  return d.choices[0].message.content;
+}
+
+async function serverCallGemini(prompt, geminiKey) {
+  const raw = await httpsPost(
+    'generativelanguage.googleapis.com',
+    `/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+    {},
+    { contents: [{ parts: [{ text: prompt }] }] }
+  );
+  const d = JSON.parse(raw);
+  return d.candidates[0].content.parts[0].text;
+}
+
+exports.aiOrchestrate = onCall(
+  {
+    region: 'us-central1',
+    secrets: [OPENAI_API_KEY, GEMINI_API_KEY, CLAUDE_API_KEY],
+    timeoutSeconds: 60,
+    cors: true,
+  },
+  async (request) => {
+    const { taskType, payload } = request.data || {};
+    if (!taskType) throw new Error('taskType is required');
+
+    const route = AI_ROUTES[taskType];
+    if (!route) throw new Error(`Unknown taskType: ${taskType}`);
+
+    const t0        = Date.now();
+    const jsonMode  = !['chat.general','chat.marketplace','support.draft_reply'].includes(taskType);
+    const userContent = typeof payload === 'string' ? payload : JSON.stringify(payload || {});
+
+    // Simple system prompt — for full task prompts use aiOrchestrator.js client-side
+    const system = `You are an AI assistant for Du Lịch Cali, a Vietnamese-American travel and marketplace service. Task: ${taskType}. Be concise and accurate.`;
+
+    const claudeKey = CLAUDE_API_KEY.value();
+    const openaiKey = OPENAI_API_KEY.value();
+    const geminiKey = GEMINI_API_KEY.value();
+
+    const providerFns = {
+      claude: () => serverCallClaude(system, userContent, jsonMode, claudeKey),
+      openai: () => serverCallOpenAI(system, userContent, jsonMode, openaiKey),
+      gemini: () => serverCallGemini(system + '\n\n' + userContent, geminiKey),
+    };
+
+    let rawText, usedProvider, error = null;
+
+    try {
+      rawText      = await providerFns[route.primary]();
+      usedProvider = route.primary;
+    } catch (primaryErr) {
+      console.warn(`[aiOrchestrate] ${route.primary} failed for ${taskType}:`, primaryErr.message);
+      if (route.fallback && providerFns[route.fallback]) {
+        try {
+          rawText      = await providerFns[route.fallback]();
+          usedProvider = route.fallback;
+        } catch (fallbackErr) {
+          error = `${route.primary}: ${primaryErr.message} | ${route.fallback}: ${fallbackErr.message}`;
+        }
+      } else {
+        error = primaryErr.message;
+      }
+    }
+
+    if (error) {
+      return { intent: taskType, data: null, ui_response: '', confidence: 0, provider: null, latency_ms: Date.now() - t0, error };
+    }
+
+    let data;
+    if (jsonMode) {
+      try {
+        const clean = rawText.replace(/^```(?:json)?\s*/m, '').replace(/\s*```\s*$/m, '').trim();
+        data = JSON.parse(clean);
+      } catch (_) {
+        data = { raw: rawText };
+      }
+    } else {
+      data = { text: rawText };
+    }
+
+    return {
+      intent:      taskType,
+      data,
+      ui_response: data.ui_response || (data.text ? data.text.slice(0, 200) : ''),
+      confidence:  data.confidence  || 0.9,
+      provider:    usedProvider,
+      latency_ms:  Date.now() - t0,
+      error:       null,
+    };
+  }
+);

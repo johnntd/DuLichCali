@@ -568,7 +568,16 @@
               unit: item.unit || 'each',
               unitEn: item.unit || 'each',
               minimumOrderQty: item.minimumOrderQty || 30,
-              image: item.image || merged.heroImage || '',
+              // Item image — intentional fallback order:
+              // 1. item.image (Firebase Storage URL or relative path from vendor-admin)
+              // 2. item.imageUrl (alternate field name)
+              // 3. '' — render nothing; never fall back to vendor heroImage
+              image: item.image || item.imageUrl || '',
+              imagePositionX: item.imagePositionX != null ? item.imagePositionX : 50,
+              imagePositionY: item.imagePositionY != null ? item.imagePositionY : 50,
+              videoUrl: item.videoUrl || null,
+              tags: item.tags || [],
+              shortDescription: item.shortDescription || '',
               description: item.description || '',
               active: true,
               featured: !!item.featured,
@@ -721,9 +730,47 @@
       var priceStr = '$' + product.pricePerUnit.toFixed(2) + ' / ' + escHtml(product.unitEn);
       var minTotal = '$' + (product.pricePerUnit * product.minimumOrderQty).toFixed(2);
 
-      var imgHtml = product.image
-        ? '<div class="mp-product-card__img-wrap">' +
-            '<img class="mp-product-card__img" src="' + escAttr(product.image) + '" alt="' + escAttr(product.nameEn || product.name) + '" loading="lazy" onerror="this.parentElement.style.display=\'none\'">' +
+      // object-position drives the focal point set in vendor-admin
+      var posX  = (product.imagePositionX != null ? product.imagePositionX : 50) + '%';
+      var posY  = (product.imagePositionY != null ? product.imagePositionY : 50) + '%';
+      var imgPos = 'object-position:' + posX + ' ' + posY + ';';
+
+      var mediaHtml = '';
+      if (product.videoUrl) {
+        mediaHtml =
+          '<div class="mp-product-card__media-wrap">' +
+            '<video class="mp-product-card__promo-video" autoplay muted loop playsinline ' +
+              'style="' + imgPos + '" ' +
+              'poster="' + escAttr(product.image || '') + '">' +
+              '<source src="' + escAttr(product.videoUrl) + '" type="video/mp4">' +
+            '</video>' +
+            '<span class="mp-product-card__video-badge">▶ Video</span>' +
+          '</div>';
+      } else if (product.image) {
+        mediaHtml =
+          '<div class="mp-product-card__media-wrap">' +
+            '<img class="mp-product-card__img" src="' + escAttr(product.image) + '" ' +
+              'style="' + imgPos + '" ' +
+              'alt="' + escAttr(product.nameEn || product.name) + '" loading="lazy" ' +
+              'onerror="this.parentElement.style.display=\'none\'">' +
+          '</div>';
+      }
+      var imgHtml = mediaHtml; // keep variable name for compatibility below
+
+      // Tags: shown when the product has tags defined
+      var tagsHtml = (product.tags && product.tags.length > 0)
+        ? '<div class="mp-product-tags">' +
+            product.tags.map(function (t) {
+              return '<span class="mp-product-tag">' + escHtml(t) + '</span>';
+            }).join('') +
+          '</div>'
+        : '';
+
+      // Min-order line: skip when minimumOrderQty === 1 (per-serving dish)
+      var minOrderHtml = product.minimumOrderQty > 1
+        ? '<div class="mp-product-card__minorder">' +
+            'Min. order: <strong>' + product.minimumOrderQty + ' ' + escHtml(product.unitEn) + (product.minimumOrderQty > 1 ? 's' : '') + '</strong>' +
+            ' &nbsp;·&nbsp; ' + minTotal + ' minimum' +
           '</div>'
         : '';
 
@@ -733,13 +780,12 @@
         imgHtml +
         '<div class="mp-product-card__body">' +
           '<div class="mp-product-card__name">' + escHtml(product.name) + '</div>' +
+          tagsHtml +
           '<p class="mp-product-card__desc">' + escHtml(product.description) + '</p>' +
           (variantsHtml ? '<div class="mp-product-card__variants">' + variantsHtml + '</div>' : '') +
           '<div class="mp-product-card__pricing">' +
             '<div class="mp-product-card__price">' + priceStr + '</div>' +
-            '<div class="mp-product-card__minorder">' +
-              'Min. order: <strong>' + product.minimumOrderQty + ' ' + escHtml(product.unitEn) + 's</strong> &nbsp;·&nbsp; ' + minTotal + ' minimum' +
-            '</div>' +
+            minOrderHtml +
           '</div>' +
           instrHtml +
         '</div>' +
@@ -769,9 +815,12 @@
       '</option>';
     }).join('');
 
-    var variantOpts = (firstProduct && firstProduct.variants ? firstProduct.variants : []).map(function (v) {
+    var firstVariants = (firstProduct && firstProduct.variants) ? firstProduct.variants : [];
+    var variantOpts = firstVariants.map(function (v) {
       return '<option value="' + escAttr(v.id) + '">' + escHtml(v.labelEn) + '</option>';
     }).join('');
+    // Hide variant row initially if first product has no variants
+    var variantRowStyle = firstVariants.length === 0 ? ' style="display:none"' : '';
 
     return '<div class="mp-section" id="orderSection_' + biz.id + '">' +
       '<div class="mp-section-hdr">' +
@@ -779,7 +828,9 @@
       '</div>' +
       '<div class="mp-booking-card">' +
         '<p class="mp-form-note" style="margin-bottom:1.1rem">Điền thông tin để đặt hàng — chúng tôi sẽ xác nhận qua điện thoại. ' +
-          '<strong style="color:var(--gold-lt)">Tối thiểu ' + minQty + ' cuốn (' + minTotal + ').</strong>' +
+          (activeProducts.length === 1 && minQty > 1
+            ? '<strong style="color:var(--gold-lt)">Tối thiểu ' + minQty + ' ' + escHtml((firstProduct && firstProduct.unit) || 'phần') + ' (' + minTotal + ').</strong>'
+            : '<strong style="color:var(--gold-lt)">Chọn sản phẩm để xem giá.</strong>') +
         '</p>' +
         '<form id="orderForm_' + biz.id + '" class="mp-booking-form">' +
           '<input type="hidden" name="_subject" value="Order Inquiry — ' + escAttr(biz.name) + '">' +
@@ -800,9 +851,9 @@
               itemOpts +
             '</select>' +
           '</div>' +
-          '<div class="mp-form-row">' +
+          '<div class="mp-form-row" id="ofVariantRow_' + biz.id + '"' + variantRowStyle + '>' +
             '<label class="mp-label" for="ofVariant_' + biz.id + '">Type</label>' +
-            '<select class="mp-input" id="ofVariant_' + biz.id + '" name="variant" required>' +
+            '<select class="mp-input" id="ofVariant_' + biz.id + '" name="variant"' + (firstVariants.length > 0 ? ' required' : '') + '>' +
               '<option value="">— Select type —</option>' +
               variantOpts +
             '</select>' +
@@ -935,6 +986,61 @@
 
     if (qtyInput) qtyInput.addEventListener('input', updateSubtotal);
 
+    // Dynamically update variant select + min qty when item selection changes
+    var itemSelectEl   = document.getElementById('ofItem_' + biz.id);
+    var variantRowEl   = document.getElementById('ofVariantRow_' + biz.id);
+    var variantSelectEl = document.getElementById('ofVariant_' + biz.id);
+
+    if (itemSelectEl) {
+      itemSelectEl.addEventListener('change', function () {
+        var selectedId = itemSelectEl.value;
+        var product = null;
+        if (biz.products) {
+          for (var pi = 0; pi < biz.products.length; pi++) {
+            if (biz.products[pi].id === selectedId) { product = biz.products[pi]; break; }
+          }
+        }
+        if (!product) return;
+
+        // Update qty input min/price attributes
+        if (qtyInput) {
+          var newMin = product.minimumOrderQty;
+          qtyInput.setAttribute('data-price', product.pricePerUnit);
+          qtyInput.setAttribute('data-min',   newMin);
+          qtyInput.min         = newMin;
+          qtyInput.placeholder = newMin;
+          if (!qtyInput.value || parseInt(qtyInput.value, 10) < newMin) {
+            qtyInput.value = newMin;
+          }
+          updateSubtotal();
+        }
+
+        // Update min-order badge label
+        var minBadge = qtyInput ? qtyInput.parentElement.querySelector('.mp-minorder-badge') : null;
+        if (minBadge && product.minimumOrderQty > 1) {
+          minBadge.textContent = 'Min. ' + product.minimumOrderQty;
+        }
+
+        // Update variant select
+        if (variantSelectEl && variantRowEl) {
+          var variants = product.variants || [];
+          if (variants.length === 0) {
+            variantRowEl.style.display  = 'none';
+            variantSelectEl.required    = false;
+            variantSelectEl.innerHTML   = '';
+          } else {
+            variantRowEl.style.display  = '';
+            variantSelectEl.required    = true;
+            variantSelectEl.innerHTML   =
+              '<option value="">— Select type —</option>' +
+              variants.map(function (v) {
+                return '<option value="' + escAttr(v.id) + '">' + escHtml(v.labelEn) + '</option>';
+              }).join('');
+          }
+        }
+      });
+    }
+
     // Show capacity info for selected date
     function showCapInfo(info) {
       if (!capDiv) return;
@@ -973,7 +1079,7 @@
       var dateStr = dateInput ? dateInput.value : '';
 
       if (qty < minQty) {
-        alert('Minimum order is ' + minQty + ' pieces. Please update the quantity.');
+        alert('Minimum order is ' + minQty + '. Please update the quantity.');
         if (qtyInput) qtyInput.focus();
         return;
       }

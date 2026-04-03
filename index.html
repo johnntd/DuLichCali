@@ -3,10 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0d2f50" />
+  <meta name="theme-color" content="#0a2344" />
   <title>Du Lịch Cali — Tour & Đưa Đón Sân Bay California</title>
   <meta name="description" content="Dịch vụ đưa đón sân bay và tour du lịch California chuyên nghiệp. Las Vegas, San Francisco, Yosemite. Duy Hoa: 714-227-6007.">
   <meta name='impact-site-verification' value='a197decf-5fcf-41d2-bc41-1d354542e163'>
+
+  <!-- ── Icons & PWA ───────────────────────────────────────────────────────── -->
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon"  href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+  <!-- Apple Touch Icon (used for Add to Home Screen on iPhone/iPad) -->
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <!-- Web App Manifest (PWA) -->
+  <link rel="manifest" href="manifest.json">
+  <!-- iOS standalone display -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DuLịchCali">
+  <!-- Windows tile -->
+  <meta name="msapplication-TileColor" content="#0a2344">
+  <meta name="msapplication-TileImage" content="icons/icon-192.png">
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -80,15 +97,15 @@
       <!-- Hero Carousel -->
       <div class="hc" id="heroCarousel" aria-roledescription="carousel" aria-label="Dịch vụ nổi bật">
 
-        <!-- Slide 1: Food -->
+        <!-- Slide 1: Food — Emily's Chả Giò (authentic Vietnamese dish photo) -->
         <div class="hc__slide hc__slide--active" data-idx="0" role="group" aria-label="1 của 4"
              style="--accent:#f59e0b;--accent-glow:rgba(245,158,11,.45);">
-          <div class="hc__bg" style="background-image:url('https://images.unsplash.com/photo-1562802378-063ec186a863?w=900&auto=format&fit=crop&q=75')"></div>
+          <div class="hc__bg" style="background-image:url('nha-bep-emily-eggroll.jpg');background-position:center 55%;"></div>
           <div class="hc__gradient"></div>
           <div class="hc__body">
-            <span class="hc__chip">Ẩm Thực Việt</span>
-            <h2 class="hc__title">Món Ngon<br><em>Nhà Làm</em></h2>
-            <p class="hc__sub">Chả giò · Phở · Bún bò — giao tận nơi</p>
+            <span class="hc__chip">🇻🇳 Ẩm Thực Việt Nam</span>
+            <h2 class="hc__title">Authentic Vietnamese<br><em>Food Near You</em></h2>
+            <p class="hc__sub">Fresh · Homemade · Local — Chả Giò · Phở · Bún Bò Huế</p>
             <button class="hc__cta" onclick="heroCarouselCta('food')">Xem Thực Đơn</button>
           </div>
         </div>
@@ -128,7 +145,7 @@
             <span class="hc__chip">Du Lịch</span>
             <h2 class="hc__title">Khám Phá<br><em>California</em></h2>
             <p class="hc__sub">15 điểm đến · 6 sân bay · AI tư vấn 24/7</p>
-            <button class="hc__cta" onclick="heroCarouselCta('travel')">Đặt Chỗ Ngay</button>
+            <button class="hc__cta" onclick="openAIWithIntent('tour')">Lên Kế Hoạch với AI</button>
           </div>
         </div>
 
@@ -147,6 +164,23 @@
 
       </div>
 
+      <!-- ── Featured Vendors (personalized by region) ──────── -->
+      <section id="hpFeatured" class="home-section" hidden>
+        <div class="section-hdr">
+          <h2 class="section-title" id="hpFeaturedTitle">Đề Xuất Gần Bạn</h2>
+          <button class="see-all" onclick="window.location.href='marketplace/index.html'">Xem tất cả</button>
+        </div>
+        <div class="hp-vendor-row" id="hpVendorCards" role="list"></div>
+      </section>
+
+      <!-- ── Availability Highlights ──────────────────────── -->
+      <section id="hpAvail" class="home-section" hidden>
+        <div class="section-hdr">
+          <h2 class="section-title">Có Sẵn Hôm Nay</h2>
+        </div>
+        <div class="hp-avail-row" id="hpAvailChips" role="list"></div>
+      </section>
+
       <!-- Destination cards (horizontal scroll) -->
       <section class="home-section">
         <div class="section-hdr">
@@ -158,184 +192,121 @@
         </div>
       </section>
 
-      <!-- Quick estimate strip -->
-      <section class="home-section">
-        <div class="section-hdr">
-          <h2 class="section-title">Ước Tính Chi Phí</h2>
-        </div>
-        <div class="quick-est-card">
-          <select class="quick-est__select" id="quickService" onchange="renderQuickEstimate()">
-            <option value="">Chọn dịch vụ để ước tính...</option>
-            <optgroup label="✈ Đưa Đón Sân Bay">
-              <option value="pickup">Đón sân bay</option>
-              <option value="dropoff">Đưa sân bay</option>
-            </optgroup>
-            <optgroup label="🗺 Tour California">
-              <option value="losangeles">Tour Los Angeles</option>
-              <option value="sandiego">Tour San Diego</option>
-              <option value="anaheim">Tour Anaheim · Disneyland</option>
-              <option value="santabarbara">Tour Santa Barbara</option>
-              <option value="solvang">Tour Solvang</option>
-              <option value="palmsprings">Tour Palm Springs · Joshua Tree</option>
-              <option value="sequoia">Tour Sequoia · Kings Canyon</option>
-              <option value="monterey">Tour Monterey · Big Sur</option>
-              <option value="17miledrive">Tour 17-Mile Drive</option>
-              <option value="yosemite">Tour Yosemite</option>
-              <option value="napavalley">Tour Napa Valley</option>
-              <option value="laketahoe">Tour Lake Tahoe</option>
-              <option value="sanfrancisco">Tour San Francisco</option>
-            </optgroup>
-            <optgroup label="🎰 Tour Ngoài Bang">
-              <option value="lasvegas">Tour Las Vegas</option>
-              <option value="grandcanyon">Tour Grand Canyon</option>
-            </optgroup>
-          </select>
-          <div class="quick-est__result" id="quickEstResult" aria-live="polite"></div>
-          <div class="quick-est__note">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            Giá chính xác phụ thuộc khoảng cách và số khách.
-            <button onclick="switchScreen('screenBook')" class="link-btn">Tính giá đầy đủ →</button>
+      <!-- AI Concierge Bar -->
+      <div class="ai-bar" onclick="openAIWithIntent('')" role="button" tabindex="0"
+           aria-label="Mở trợ lý AI" onkeydown="if(event.key==='Enter'||event.key===' ')openAIWithIntent('')">
+        <div class="ai-bar__inner">
+          <span class="ai-bar__orb">✦</span>
+          <div class="ai-bar__text">
+            <strong>Trợ Lý Du Lịch AI</strong>
+            <span>Hỏi về tour · giá cả · sân bay · đặt chỗ 24/7</span>
           </div>
-          <div class="gas-price-badge" id="gasPriceBadge" aria-live="polite"></div>
         </div>
-      </section>
+        <div class="ai-bar__chips">
+          <button class="ai-bar__chip" onclick="event.stopPropagation();openAIWithIntent('airport')">✈ Sân Bay</button>
+          <button class="ai-bar__chip" onclick="event.stopPropagation();openAIWithIntent('tour')">🗺 Tour</button>
+          <button class="ai-bar__chip" onclick="event.stopPropagation();openAIWithIntent('price')">💰 Giá</button>
+          <button class="ai-bar__chip" onclick="event.stopPropagation();openAIWithIntent('order')">📋 Đơn hàng</button>
+        </div>
+      </div>
 
-      <!-- Services highlight -->
+      <!-- Travel Services — 3 expandable feature cards -->
       <section class="home-section">
         <div class="section-hdr"><h2 class="section-title">Dịch Vụ</h2></div>
 
-        <!-- Transport row -->
-        <div class="svc-category-label">Vận Chuyển</div>
-        <div class="svc-row svc-row--4">
-          <div class="svc-card" data-ride-gate onclick="selectServiceAndBook('pickup')">
-            <div class="svc-card__icon">
+        <!-- Card 1: Airport Transfer -->
+        <div class="svc-fc" id="fcAirport">
+          <button class="svc-fc__hdr" onclick="toggleFc('fcAirport')" aria-expanded="false">
+            <div class="svc-fc__ico svc-fc__ico--air">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                <polyline points="6 9 12 15 18 9"/><path d="M12 3v12M3 21h18"/>
+                <path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 19.5 2.5S18 2 16.5 3.5L13 7 4.8 5.2 3.4 6.6l8 5-2.5 3h-2l-1.5 1.5 2.5 2.5 2.5 2.5L12 19h2l3-2.5 5 8 1.4-1.4z"/>
               </svg>
             </div>
-            <strong>Đón Sân Bay</strong>
-            <span class="svc-airport-count">6 sân bay</span>
-          </div>
-          <div class="svc-card" data-ride-gate onclick="selectServiceAndBook('dropoff')">
-            <div class="svc-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                <polyline points="18 15 12 9 6 15"/><path d="M12 21V9M3 3h18"/>
-              </svg>
+            <div class="svc-fc__inf">
+              <strong>Đưa Đón Sân Bay</strong>
+              <span id="fcAirSub">6 sân bay · LAX · SFO · SJC và thêm</span>
             </div>
-            <strong>Đưa Sân Bay</strong>
-            <span class="svc-airport-count">6 sân bay</span>
-          </div>
-          <div class="svc-card" onclick="switchScreen('screenBook')">
-            <div class="svc-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                <rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h5l3 5v4h-8V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
-              </svg>
+            <svg class="svc-fc__arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="svc-fc__body">
+            <div class="svc-fc__det">
+              <div class="svc-fc__row">
+                <span>✅ Đón từ sân bay về nhà</span>
+                <span>✅ Đưa từ nhà ra sân bay</span>
+              </div>
+              <div class="svc-fc__row">
+                <span>🚗 Tesla Model Y · Mercedes Van</span>
+                <span>👥 1–12 khách</span>
+              </div>
+              <div class="svc-fc__tags" id="fcAirTags"></div>
             </div>
-            <strong>Xe Riêng</strong>
-            <span>Tesla · Van</span>
-          </div>
-          <div class="svc-card" onclick="switchScreen('screenChat')">
-            <div class="svc-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                <path d="M3 12h3m12 0h3M12 3v3m0 12v3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6 2.1-2.1"/>
-              </svg>
-            </div>
-            <strong>Liên Tỉnh</strong>
-            <span>Báo giá AI</span>
+            <button class="svc-fc__cta" onclick="openAIWithIntent('airport')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              Đặt với AI
+            </button>
           </div>
         </div>
 
-        <!-- Tour row -->
-        <div class="svc-category-label">Tour Du Lịch</div>
-        <div class="svc-row svc-row--3">
-          <div class="svc-card svc-card--wide" onclick="switchScreen('screenDest')">
-            <div class="svc-card__icon">
+        <!-- Card 2: Private Ride -->
+        <div class="svc-fc" id="fcRide">
+          <button class="svc-fc__hdr" onclick="toggleFc('fcRide')" aria-expanded="false">
+            <div class="svc-fc__ico svc-fc__ico--ride">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h5l3 5v4h-8V8z"/>
+                <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+              </svg>
+            </div>
+            <div class="svc-fc__inf">
+              <strong>Xe Riêng Cao Cấp</strong>
+              <span>Tesla · Mercedes · Liên tỉnh · Sự kiện</span>
+            </div>
+            <svg class="svc-fc__arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="svc-fc__body">
+            <div class="svc-fc__det">
+              <div class="svc-fc__row">
+                <span>🚘 Xe sang trọng riêng tư</span>
+                <span>🛣 Bay Area ↔ Orange County</span>
+              </div>
+              <div class="svc-fc__row">
+                <span>📍 Bất kỳ điểm đến nào</span>
+                <span>💼 Phù hợp doanh nhân & gia đình</span>
+              </div>
+            </div>
+            <button class="svc-fc__cta" onclick="openAIWithIntent('ride')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              Đặt với AI
+            </button>
+          </div>
+        </div>
+
+        <!-- Card 3: Tour Packages -->
+        <div class="svc-fc" id="fcTour">
+          <button class="svc-fc__hdr" onclick="toggleFc('fcTour')" aria-expanded="false">
+            <div class="svc-fc__ico svc-fc__ico--tour">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
                 <polygon points="3 11 22 2 13 21 11 13 3 11"/>
               </svg>
             </div>
-            <strong>Tour Trọn Gói</strong>
-            <span>15 điểm đến CA & NV & AZ</span>
-          </div>
-          <div class="svc-card" onclick="switchScreen('screenChat')">
-            <div class="svc-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-              </svg>
+            <div class="svc-fc__inf">
+              <strong>Tour & Gói Du Lịch</strong>
+              <span>15 điểm đến · CA · NV · AZ · AI lên kế hoạch</span>
             </div>
-            <strong>Lên Kế Hoạch</strong>
-            <span>Riêng theo yêu cầu</span>
-          </div>
-          <div class="svc-card" onclick="switchScreen('screenDest')">
-            <div class="svc-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              </svg>
-            </div>
-            <strong>Khám Phá</strong>
-            <span>Video & chi tiết</span>
-          </div>
-        </div>
-
-        <!-- Tools row -->
-        <div class="svc-category-label">Công Cụ Thông Minh</div>
-        <div class="svc-row svc-row--4">
-          <div class="svc-card svc-card--accent" onclick="document.getElementById('quickService').focus(); document.getElementById('quickService').scrollIntoView({behavior:'smooth'})">
-            <div class="svc-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-              </svg>
-            </div>
-            <strong>Ước Tính Giá</strong>
-            <span>Tức thì</span>
-          </div>
-          <div class="svc-card svc-card--accent" onclick="switchScreen('screenChat')">
-            <div class="svc-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-              </svg>
-            </div>
-            <strong>Trợ Lý AI</strong>
-            <span>Hỏi 24/7</span>
-          </div>
-          <div class="svc-card svc-card--accent" onclick="switchScreen('screenChat')">
-            <div class="svc-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/>
-              </svg>
-            </div>
-            <strong>Giọng Nói</strong>
-            <span>Tiếng Việt · EN</span>
-          </div>
-          <div class="svc-card svc-card--accent" onclick="switchScreen('screenBook')">
-            <div class="svc-card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-              </svg>
-            </div>
-            <strong>Đặt Chỗ</strong>
-            <span>Online 24/7</span>
-          </div>
-        </div>
-
-        <!-- 4-button CTA -->
-        <div class="home-cta-row">
-          <button class="home-cta-btn home-cta-btn--gold" onclick="switchScreen('screenBook')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Đặt Chỗ Ngay
+            <svg class="svc-fc__arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
-          <button class="home-cta-btn" onclick="document.getElementById('quickService').focus(); document.getElementById('quickService').scrollIntoView({behavior:'smooth'})">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            Ước Tính Giá
-          </button>
-          <button class="home-cta-btn" onclick="switchScreen('screenChat')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            Hỏi AI
-          </button>
-          <button class="home-cta-btn" onclick="switchScreen('screenDest')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-            Điểm Đến
-          </button>
+          <div class="svc-fc__body">
+            <div class="svc-fc__det">
+              <div class="svc-fc__tags" id="fcTourTags"></div>
+              <div class="svc-fc__row" style="margin-top:.5rem">
+                <span>🏨 Tùy chọn khách sạn / Airbnb</span>
+                <span>👨‍👩‍👧‍👦 Nhóm 1–12 người</span>
+              </div>
+            </div>
+            <button class="svc-fc__cta" onclick="openAIWithIntent('tour')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              Lên Kế Hoạch với AI
+            </button>
+          </div>
         </div>
       </section>
 
@@ -830,10 +801,13 @@
 </div><!-- #app -->
 
 <!-- Data + modules (load before script.js) -->
+<script src="marketplace/services-data.js?v=20260406"></script>
 <script src="regions.js?v=20260406"></script>
 <script src="destinations.js?v=20260406"></script>
 <script src="pricing.js?v=20260406"></script>
 <script src="voice.js?v=20260406"></script>
+<script src="aiOrchestrator.js?v=20260406"></script>
+<script src="marketingEngine.js?v=20260406"></script>
 <script src="chat.js?v=20260406"></script>
 <script src="script.js?v=20260406" defer></script>
 </body>

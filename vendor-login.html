@@ -74,6 +74,10 @@
       font-family: var(--font-d); font-size: 1.4rem; color: var(--cream);
     }
     .login-brand__sub { font-size: .72rem; color: var(--muted); margin-top: .2rem; }
+    #vendorNameDisplay {
+      font-size: .8rem; color: var(--gold); margin-top: .4rem;
+      min-height: 1.2em;
+    }
 
     .login-card {
       background: var(--navy-800);
@@ -148,6 +152,24 @@
       line-height: 1.55; margin-bottom: 1.25rem;
     }
     .setup-hint strong { color: var(--text); }
+
+    /* ── Vendor picker ────────────────────────────────────────────── */
+    .vendor-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: .6rem; margin-bottom: 1rem;
+    }
+    .vendor-btn {
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: .7rem .6rem;
+      cursor: pointer; text-align: left;
+      transition: border-color .2s, background .2s;
+      color: var(--text); font-family: var(--font-b);
+    }
+    .vendor-btn:hover { border-color: var(--gold); background: var(--gold-dim); }
+    .vendor-btn__name { font-size: .75rem; font-weight: 600; display: block; }
+    .vendor-btn__id   { font-size: .6rem; color: var(--muted); margin-top: .1rem; display: block; }
   </style>
 </head>
 <body>
@@ -160,10 +182,18 @@
     <div class="login-brand__icon">&#127978;</div>
     <div class="login-brand__name">Vendor Dashboard</div>
     <div class="login-brand__sub">Du Lịch Cali · Marketplace</div>
+    <div id="vendorNameDisplay"></div>
+  </div>
+
+  <!-- Vendor picker — shown when no ?id= param -->
+  <div id="pickerScreen" class="login-card screen hidden">
+    <div class="login-card-title">Chọn Cửa Hàng</div>
+    <div class="setup-hint">Chọn cửa hàng của bạn để đăng nhập:</div>
+    <div class="vendor-grid" id="vendorGrid"></div>
   </div>
 
   <!-- Login screen -->
-  <div id="loginScreen" class="login-card screen">
+  <div id="loginScreen" class="login-card screen hidden">
     <div class="login-card-title">Đăng Nhập</div>
     <div class="f-row">
       <label class="f-label" for="loginEmail">Email</label>
@@ -190,7 +220,7 @@
     <div class="login-card-title">Tạo Tài Khoản</div>
     <div class="setup-hint">
       Dùng để tạo tài khoản quản lý cửa hàng lần đầu.<br>
-      Bạn cần <strong>mã thiết lập</strong> do admin cung cấp để tiếp tục.
+      Bạn cần <strong>mã thiết lập</strong> (4 số cuối số điện thoại đăng ký) để tiếp tục.
     </div>
     <div class="f-row">
       <label class="f-label" for="setupEmail">Email</label>
@@ -203,10 +233,10 @@
         placeholder="••••••••" autocomplete="new-password">
     </div>
     <div class="f-row">
-      <label class="f-label" for="setupCode">Mã thiết lập</label>
+      <label class="f-label" for="setupCode">Mã thiết lập (4 số cuối SĐT)</label>
       <input class="f-input" type="text" id="setupCode"
-        placeholder="Mã do admin cung cấp"
-        autocomplete="off" inputmode="numeric">
+        placeholder="VD: 2438"
+        autocomplete="off" inputmode="numeric" maxlength="4">
     </div>
     <div class="error-msg" id="setupError"></div>
     <button class="btn-primary" id="btnSetup" onclick="doSetup()">Tạo Tài Khoản</button>
@@ -218,17 +248,17 @@
     <div class="login-card-title">Liên Kết Tài Khoản</div>
     <div class="setup-hint">
       Tài khoản email này tồn tại nhưng chưa được liên kết với cửa hàng.<br>
-      Nhập <strong>mã thiết lập</strong> để hoàn tất liên kết.
+      Nhập <strong>mã thiết lập</strong> (4 số cuối SĐT) để hoàn tất liên kết.
     </div>
     <div class="f-row">
       <label class="f-label">Email đã đăng nhập</label>
       <div id="claimEmailDisplay" style="font-size:.85rem;color:var(--muted);padding:.5rem 0;"></div>
     </div>
     <div class="f-row">
-      <label class="f-label" for="claimCode">Mã thiết lập</label>
+      <label class="f-label" for="claimCode">Mã thiết lập (4 số cuối SĐT)</label>
       <input class="f-input" type="text" id="claimCode"
-        placeholder="Mã do admin cung cấp"
-        autocomplete="off" inputmode="numeric">
+        placeholder="VD: 2438"
+        autocomplete="off" inputmode="numeric" maxlength="4">
     </div>
     <div class="error-msg" id="claimError"></div>
     <button class="btn-primary" id="btnClaim" onclick="doClaim()">Liên Kết Tài Khoản</button>
@@ -237,12 +267,29 @@
 </div>
 
 <script>
-  // ── Per-vendor config ─────────────────────────────────────────────────────
-  // Each vendor's login page has their own VENDOR_ID + SETUP_CODE.
-  // SETUP_CODE is used once to create the first admin account for this vendor,
-  // OR to claim an existing Auth account that has no vendor mapping.
-  var VENDOR_ID  = 'nha-bep-cua-emily';
-  var SETUP_CODE = '2438';
+  // ── Vendor registry ───────────────────────────────────────────────────────
+  // setupCode = last 4 digits of the vendor's registered phone number.
+  // This is the one-time credential to link an Auth account to a vendor.
+  var VENDOR_REGISTRY = {
+    'nha-bep-cua-emily': { name: 'Nhà Bếp Của Emily',   setupCode: '2438' },
+    'dung-nails':         { name: 'Dung Nails & Spa',    setupCode: '6718' },
+    'beauty-nails-oc':   { name: 'Beauty Nails OC',      setupCode: '6007' },
+    'viet-hair-bayarea': { name: 'Việt Hair Studio',     setupCode: '7522' },
+    'cali-hair-oc':      { name: 'Cali Hair & Beauty',   setupCode: '6007' },
+    'pho-bac-bayarea':   { name: 'Phở Bắc Bay Area',     setupCode: '7522' },
+    'com-tam-oc':        { name: 'Cơm Tấm Dì Tám',       setupCode: '6007' }
+  };
+
+  // ── Resolve VENDOR_ID from URL ?id= param ─────────────────────────────────
+  var _params   = new URLSearchParams(window.location.search);
+  var VENDOR_ID = _params.get('id') || '';
+  var VENDOR_CFG = VENDOR_ID ? VENDOR_REGISTRY[VENDOR_ID] : null;
+  var SETUP_CODE = VENDOR_CFG ? VENDOR_CFG.setupCode : '';
+
+  // Show vendor name under brand header
+  if (VENDOR_CFG) {
+    document.getElementById('vendorNameDisplay').textContent = VENDOR_CFG.name;
+  }
 
   // ── Firebase ───────────────────────────────────────────────────────────────
   var firebaseConfig = {
@@ -260,6 +307,24 @@
   // ── Auth state check — redirect if already signed in ─────────────────────
   auth.onAuthStateChanged(function (user) {
     if (user) {
+      if (!VENDOR_ID) {
+        // No vendor context — check which vendor this user manages
+        db.collection('vendorUsers').doc(user.uid).get().then(function (doc) {
+          if (doc.exists) {
+            window.location.href = '/vendor-admin';
+          } else {
+            // Authenticated but no vendor — need to pick vendor first
+            auth.signOut().then(function () {
+              document.getElementById('authChecking').classList.add('hidden');
+              showPicker();
+            });
+          }
+        }).catch(function () {
+          document.getElementById('authChecking').classList.add('hidden');
+          showPicker();
+        });
+        return;
+      }
       db.collection('vendorUsers').doc(user.uid).get().then(function (doc) {
         if (doc.exists && doc.data().vendorId === VENDOR_ID) {
           // Fully linked — go to admin
@@ -275,25 +340,52 @@
           auth.signOut().then(function () {
             document.getElementById('authChecking').classList.add('hidden');
             document.getElementById('loginError').textContent =
-              'Tài khoản này không có quyền truy cập trang vendor này.';
+              'Tài khoản này không có quyền truy cập cửa hàng này.';
+            showScreen('login');
           });
         }
       }).catch(function () {
         document.getElementById('authChecking').classList.add('hidden');
+        showScreen('login');
       });
     } else {
       document.getElementById('authChecking').classList.add('hidden');
+      if (!VENDOR_ID || !VENDOR_CFG) {
+        showPicker();
+      } else {
+        showScreen('login');
+      }
     }
   });
 
+  // ── Vendor picker (no ?id= param) ─────────────────────────────────────────
+  function showPicker() {
+    var grid = document.getElementById('vendorGrid');
+    grid.innerHTML = '';
+    Object.keys(VENDOR_REGISTRY).forEach(function (vid) {
+      var cfg = VENDOR_REGISTRY[vid];
+      var btn = document.createElement('button');
+      btn.className = 'vendor-btn';
+      btn.innerHTML =
+        '<span class="vendor-btn__name">' + cfg.name + '</span>' +
+        '<span class="vendor-btn__id">' + vid + '</span>';
+      btn.onclick = function () {
+        window.location.href = '/vendor-login?id=' + vid;
+      };
+      grid.appendChild(btn);
+    });
+    showScreen('picker');
+  }
+
   // ── Screen switching ───────────────────────────────────────────────────────
   function showScreen(name) {
-    document.getElementById('loginScreen').classList.toggle('hidden', name !== 'login');
-    document.getElementById('setupScreen').classList.toggle('hidden', name !== 'setup');
-    document.getElementById('claimScreen').classList.toggle('hidden', name !== 'claim');
-    document.getElementById('loginError').textContent = '';
-    document.getElementById('setupError').textContent = '';
-    if (document.getElementById('claimError')) document.getElementById('claimError').textContent = '';
+    ['picker','login','setup','claim'].forEach(function (s) {
+      document.getElementById(s + 'Screen').classList.toggle('hidden', s !== name);
+    });
+    ['loginError','setupError','claimError'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = '';
+    });
   }
 
   // ── Login ──────────────────────────────────────────────────────────────────
@@ -305,6 +397,10 @@
     errEl.textContent = '';
     if (!email || !pass) {
       errEl.textContent = 'Vui lòng điền đầy đủ email và mật khẩu.';
+      return;
+    }
+    if (!VENDOR_ID) {
+      errEl.textContent = 'Vui lòng chọn cửa hàng trước.';
       return;
     }
     btn.disabled = true;
@@ -321,7 +417,7 @@
         } else {
           // Mapped to a different vendor
           auth.signOut();
-          errEl.textContent = 'Tài khoản này không có quyền truy cập trang vendor này.';
+          errEl.textContent = 'Tài khoản này không có quyền truy cập cửa hàng này.';
           btn.disabled = false;
         }
       });
@@ -347,12 +443,16 @@
     var btn    = document.getElementById('btnSetup');
     errEl.textContent = '';
 
+    if (!VENDOR_ID || !SETUP_CODE) {
+      errEl.textContent = 'Lỗi: không xác định được cửa hàng.';
+      return;
+    }
     if (!email || !pass || !code) {
       errEl.textContent = 'Vui lòng điền đầy đủ thông tin.';
       return;
     }
     if (code !== SETUP_CODE) {
-      errEl.textContent = 'Mã thiết lập không đúng.';
+      errEl.textContent = 'Mã thiết lập không đúng. Nhập 4 số cuối số điện thoại đăng ký.';
       return;
     }
     if (pass.length < 6) {
@@ -362,7 +462,6 @@
 
     btn.disabled = true;
 
-    // Helper: write vendorUsers mapping then redirect
     function writeMapping(uid) {
       return db.collection('vendorUsers').doc(uid).set({
         vendorId:  VENDOR_ID,
@@ -371,61 +470,61 @@
       });
     }
 
-    // Create Firebase Auth account (allow multiple admins per vendor)
     auth.createUserWithEmailAndPassword(email, pass).then(function (cred) {
       return writeMapping(cred.user.uid);
     }).then(function () {
       window.location.href = '/vendor-admin';
     }).catch(function (err) {
-      // If account already exists (e.g. previous attempt where mapping write failed),
-      // sign in automatically and complete the vendor link.
+      // If account already exists, sign in and complete vendor link
       if (err.code === 'auth/email-already-in-use') {
         auth.signInWithEmailAndPassword(email, pass).then(function (cred) {
           return db.collection('vendorUsers').doc(cred.user.uid).get().then(function (doc) {
             if (doc.exists && doc.data().vendorId === VENDOR_ID) {
-              // Already fully linked — go straight to admin
               window.location.href = '/vendor-admin';
             } else if (!doc.exists) {
-              // Auth exists but vendor mapping is missing — write it now
               return writeMapping(cred.user.uid).then(function () {
                 window.location.href = '/vendor-admin';
               });
             } else {
-              // Mapped to a different vendor
               auth.signOut();
-              errEl.textContent = 'Tài khoản này không có quyền truy cập trang vendor này.';
+              errEl.textContent = 'Tài khoản này đã được liên kết với cửa hàng khác.';
               btn.disabled = false;
             }
           });
         }).catch(function (signInErr) {
           btn.disabled = false;
           var msgs = {
-            'auth/wrong-password':    'Email đã tồn tại nhưng mật khẩu không đúng. Hãy thử đăng nhập.',
-            'auth/invalid-credential':'Email đã tồn tại nhưng mật khẩu không đúng. Hãy thử đăng nhập.',
+            'auth/wrong-password':     'Email đã tồn tại nhưng mật khẩu không đúng. Hãy thử đăng nhập.',
+            'auth/invalid-credential': 'Email đã tồn tại nhưng mật khẩu không đúng. Hãy thử đăng nhập.'
           };
-          errEl.textContent = msgs[signInErr.code] || ('Email đã được đăng ký. Vui lòng đăng nhập.');
+          errEl.textContent = msgs[signInErr.code] || 'Email đã được đăng ký. Vui lòng đăng nhập.';
         });
         return;
       }
       btn.disabled = false;
       var msgs = {
-        'auth/invalid-email':  'Email không hợp lệ.',
-        'auth/weak-password':  'Mật khẩu quá yếu (tối thiểu 6 ký tự).'
+        'auth/invalid-email': 'Email không hợp lệ.',
+        'auth/weak-password': 'Mật khẩu quá yếu (tối thiểu 6 ký tự).'
       };
       errEl.textContent = msgs[err.code] || ('Lỗi: ' + err.message);
     });
   }
 
   // ── Claim existing auth account ───────────────────────────────────────────
-  // Used when vendor already has a Firebase Auth account but no vendorUsers
-  // mapping doc — e.g. pre-email-auth migration (legacy vendors like Loan).
   function doClaim() {
     var code  = document.getElementById('claimCode').value.trim();
     var errEl = document.getElementById('claimError');
     var btn   = document.getElementById('btnClaim');
     errEl.textContent = '';
+    if (!VENDOR_ID || !SETUP_CODE) {
+      errEl.textContent = 'Lỗi: không xác định được cửa hàng.';
+      return;
+    }
     if (!code) { errEl.textContent = 'Vui lòng nhập mã thiết lập.'; return; }
-    if (code !== SETUP_CODE) { errEl.textContent = 'Mã thiết lập không đúng.'; return; }
+    if (code !== SETUP_CODE) {
+      errEl.textContent = 'Mã thiết lập không đúng. Nhập 4 số cuối SĐT đăng ký.';
+      return;
+    }
     var user = auth.currentUser;
     if (!user) { showScreen('login'); return; }
     btn.disabled = true;
@@ -448,8 +547,10 @@
   // ── Enter key support ─────────────────────────────────────────────────────
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Enter') return;
-    var onSetup = !document.getElementById('setupScreen').classList.contains('hidden');
-    var onClaim = !document.getElementById('claimScreen').classList.contains('hidden');
+    var onPicker = !document.getElementById('pickerScreen').classList.contains('hidden');
+    var onSetup  = !document.getElementById('setupScreen').classList.contains('hidden');
+    var onClaim  = !document.getElementById('claimScreen').classList.contains('hidden');
+    if (onPicker) return;
     if (onSetup) doSetup(); else if (onClaim) doClaim(); else doLogin();
   });
 </script>

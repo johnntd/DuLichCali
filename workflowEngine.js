@@ -648,7 +648,14 @@
       fields: [
         {
           key: 'airport',
-          question: function() { return '✈️ Bạn đến sân bay nào?\n(LAX · SNA · ONT · BUR · SFO · SJC · OAK...)'; },
+          question: function() {
+            var hint = '';
+            if (window.DLCLocation && DLCLocation.state && DLCLocation.state.lat) {
+              var near = DLCLocation.nearestAirports(2).map(function(a) { return a.code; }).join(', ');
+              hint = '\n(Gần bạn nhất: ' + near + ')';
+            }
+            return '✈️ Bạn đến sân bay nào?' + hint + '\n(LAX · SNA · ONT · BUR · SFO · SJC · OAK...)';
+          },
           extract: function(t) { return X.airport(t); },
           optional: false,
         },
@@ -694,8 +701,20 @@
         },
         {
           key: 'dropoffAddress',
-          question: function() { return 'Địa chỉ điểm đến sau sân bay?\n(thành phố hoặc địa chỉ cụ thể)'; },
-          extract: function(t) { return X.address(t) || (t.trim().length >= 3 ? t.trim() : null); },
+          question: function() {
+            var hint = '';
+            if (window.DLCLocation && DLCLocation.pickupHint()) {
+              hint = '\n(Vị trí hiện tại: ' + DLCLocation.pickupHint() + ' — gõ "đây" để dùng)';
+            }
+            return 'Địa chỉ điểm đến sau sân bay?' + hint + '\n(thành phố hoặc địa chỉ cụ thể)';
+          },
+          extract: function(t) {
+            if (/\bđây\b|\bhere\b|chỗ tôi|vị trí.*tôi|current.?loc/i.test(t)) {
+              var loc = window.DLCLocation && DLCLocation.pickupHint();
+              if (loc) return loc;
+            }
+            return X.address(t) || (t.trim().length >= 3 ? t.trim() : null);
+          },
           optional: false,
         },
         {
@@ -748,7 +767,14 @@
       fields: [
         {
           key: 'airport',
-          question: function() { return '✈️ Bạn cần đưa tới sân bay nào?\n(LAX · SNA · ONT · BUR · SFO · SJC · OAK...)'; },
+          question: function() {
+            var hint = '';
+            if (window.DLCLocation && DLCLocation.state && DLCLocation.state.lat) {
+              var near = DLCLocation.nearestAirports(2).map(function(a) { return a.code; }).join(', ');
+              hint = '\n(Gần bạn nhất: ' + near + ')';
+            }
+            return '✈️ Bạn cần đưa tới sân bay nào?' + hint + '\n(LAX · SNA · ONT · BUR · SFO · SJC · OAK...)';
+          },
           extract: function(t) { return X.airport(t); },
           optional: false,
         },
@@ -776,8 +802,20 @@
         },
         {
           key: 'pickupAddress',
-          question: function() { return 'Địa chỉ đón bạn (điểm xuất phát)?'; },
-          extract: function(t) { return X.address(t) || (t.trim().length >= 3 ? t.trim() : null); },
+          question: function() {
+            var hint = '';
+            if (window.DLCLocation && DLCLocation.pickupHint()) {
+              hint = '\n(Vị trí hiện tại: ' + DLCLocation.pickupHint() + ' — gõ "đây" để dùng)';
+            }
+            return 'Địa chỉ đón bạn (điểm xuất phát)?' + hint;
+          },
+          extract: function(t) {
+            if (/\bđây\b|\bhere\b|chỗ tôi|vị trí.*tôi|current.?loc/i.test(t)) {
+              var loc = window.DLCLocation && DLCLocation.pickupHint();
+              if (loc) return loc;
+            }
+            return X.address(t) || (t.trim().length >= 3 ? t.trim() : null);
+          },
           optional: false,
         },
         {
@@ -847,8 +885,20 @@
       fields: [
         {
           key: 'pickupAddress',
-          question: function() { return '📍 Địa chỉ đón bạn?\n(Thành phố hoặc địa chỉ cụ thể — VD: San Jose, 1234 Main St, Orange County...)'; },
-          extract: function(t) { return X.address(t) || (t.trim().length >= 3 ? t.trim() : null); },
+          question: function() {
+            var hint = '';
+            if (window.DLCLocation && DLCLocation.pickupHint()) {
+              hint = '\n(Vị trí hiện tại: ' + DLCLocation.pickupHint() + ' — gõ "đây" để dùng)';
+            }
+            return '📍 Địa chỉ đón bạn?' + hint + '\n(Thành phố hoặc địa chỉ cụ thể — VD: San Jose, 1234 Main St, Orange County...)';
+          },
+          extract: function(t) {
+            if (/\bđây\b|\bhere\b|chỗ tôi|vị trí.*tôi|current.?loc/i.test(t)) {
+              var loc = window.DLCLocation && DLCLocation.pickupHint();
+              if (loc) return loc;
+            }
+            return X.address(t) || (t.trim().length >= 3 ? t.trim() : null);
+          },
           optional: false,
         },
         {

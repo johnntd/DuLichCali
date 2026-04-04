@@ -1598,6 +1598,11 @@ function homeAiSend(text) {
  * @param {string} intent - 'airport'|'tour'|'ride'|'price'|'order'|''
  */
 function openAIWithIntent(intent) {
+  // Silently request geolocation for transport-related intents (non-blocking)
+  if (/airport|ride|private/.test(intent) && window.DLCLocation) {
+    DLCLocation.request(null, null);
+  }
+
   switchScreen('screenChat');
 
   // Intents that map directly to structured booking workflows

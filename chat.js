@@ -299,6 +299,11 @@
   }
 
   function extractCity(text) {
+    // Check landmarks first (e.g. "Santana Row" → "san jose")
+    if (window.DLCLocation) {
+      const lm = DLCLocation.lookupLandmark(text);
+      if (lm && lm.city) return lm.city;
+    }
     if (!window.DLCPricing) return null;
     const t = text.toLowerCase();
     const cities = Object.keys(DLCPricing.CITY_TO_OC).sort((a, b) => b.length - a.length);
@@ -309,6 +314,11 @@
   }
 
   function extractAirport(text) {
+    // Check landmarks first (e.g. "Santana Row" → nearest airport SJC)
+    if (window.DLCLocation) {
+      const lm = DLCLocation.lookupLandmark(text);
+      if (lm && lm.airport) return lm.airport.toLowerCase();
+    }
     const t = text.toLowerCase();
     const codes = ['lax', 'sna', 'lgb', 'ont', 'bur', 'san', 'sfo', 'oak', 'sjc', 'smf'];
     for (const code of codes) {
@@ -1253,7 +1263,14 @@ ORDER TRACKING:
     };
     const modeHint = state.agentMode ? modeHints[state.agentMode] + '\n\n' : '';
 
-    return `${modeHint}You are the AI assistant for Du Lịch Cali — a Vietnamese-American travel, transportation, and marketplace service in California.
+    // Inject customer location context if available
+    const locationCtx = (window.DLCLocation && DLCLocation.getContext())
+      ? DLCLocation.getContext() + '\n' +
+        'Use this to give better suggestions: prefer the nearest airport when relevant, ' +
+        'and skip asking for pickup city if the customer says "here" or "current location".\n\n'
+      : '';
+
+    return `${modeHint}${locationCtx}You are the AI assistant for Du Lịch Cali — a Vietnamese-American travel, transportation, and marketplace service in California.
 
 YOUR ROLE:
 1. Answer questions about DLC services, pricing, and vendors directly.

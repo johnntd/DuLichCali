@@ -39,16 +39,23 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
 
+  <!-- Location awareness module (must load before Maps callback) -->
+  <script src="location.js?v=20260404"></script>
+
   <!-- Google Maps: define initMap before loading the script -->
   <script>
     window.initMap = function () {
-      // Initialize autocomplete on address field
+      // Initialize autocomplete on booking form address field
       const input = document.getElementById('address');
       if (input && typeof google !== 'undefined') {
         const ac = new google.maps.places.Autocomplete(input);
         ac.addListener('place_changed', () => {
           if (typeof updateEstimate === 'function') updateEstimate();
         });
+      }
+      // Silently request geolocation once Maps SDK is ready (enables reverse geocoding)
+      if (window.DLCLocation) {
+        DLCLocation.request(null, null);
       }
     };
   </script>
@@ -60,7 +67,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-  <link rel="stylesheet" href="style.css?v=20260404e">
+  <link rel="stylesheet" href="style.css?v=20260404f">
   <link rel="stylesheet" href="desktop.css">
 </head>
 <body>

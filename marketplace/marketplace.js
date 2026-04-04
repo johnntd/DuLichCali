@@ -1682,10 +1682,11 @@
       }
 
       // ── Food vendor: deterministic answers ─────────────────────────────────
-      // Prefer _staticProducts (always current from services-data.js) when Firestore
-      // items are sparse or still loading — same source-selection logic as _askClaude.
-      var _bestProducts = (biz._staticProducts && biz._staticProducts.length > (biz.products || []).length)
-        ? biz._staticProducts : (biz.products || []);
+      // Always use live Firestore products (biz.products) when the vendor has any items
+      // configured there. Fall back to _staticProducts only when Firestore returned
+      // zero items (vendor has not set up their menu yet).
+      var _bestProducts = (biz.products && biz.products.length > 0)
+        ? biz.products : (biz._staticProducts || []);
       if (biz.vendorType === 'foodvendor' && _bestProducts.length > 0) {
 
         // 0. DATE + CAPACITY (capInfo pre-fetched by _sendMessage)
@@ -1909,10 +1910,9 @@
 
       if (biz.vendorType === 'foodvendor') {
         // ── ORDER INTAKE AGENT (food vendors: Emily, etc.) ────────────────────
-        // Use the richer product list: _staticProducts (has full descriptions) vs Firestore products
-        var products = (biz._staticProducts && biz._staticProducts.length > (biz.products || []).length)
-          ? biz._staticProducts
-          : (biz.products || []);
+        // Always prefer live Firestore products; static is emergency fallback only
+        var products = (biz.products && biz.products.length > 0)
+          ? biz.products : (biz._staticProducts || []);
 
         var menuBlock = 'MENU & PRICING:\n';
         products.forEach(function (p) {
@@ -2062,9 +2062,9 @@
     // Extracts a quantity from the message, matches to a product, returns calc.
     // Returns null if no quantity or no product could be determined.
     _computePrice: function (biz, text) {
-      // Use richer of static vs Firestore products — same logic as _askClaude / _ruleBasedReply
-      var _products = (biz._staticProducts && biz._staticProducts.length > (biz.products || []).length)
-        ? biz._staticProducts : (biz.products || []);
+      // Always prefer live Firestore products; static is emergency fallback only
+      var _products = (biz.products && biz.products.length > 0)
+        ? biz.products : (biz._staticProducts || []);
       if (!_products.length) return null;
 
       // Must contain at least one number

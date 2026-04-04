@@ -2663,8 +2663,8 @@ select.field-input {
   }
   .dest-modal__video-wrap { height: 50vh; }
 
-  /* Vendor homepage row: desktop sizing, keep horizontal scroll */
-  .hp-vendor-row { padding: 0 2rem .5rem; }
+  /* Vendor homepage row: desktop sizing — section provides the left/right padding */
+  .hp-vendor-row { padding: 0 0 .5rem; }
   .hp-vendor-card { flex: 0 0 260px; max-width: 260px; }
 
   /* Chat: constrained width centered */

@@ -1638,22 +1638,47 @@
         systemPrompt += 'You have FULL access to the menu and MUST answer pricing questions directly — never say "contact the vendor" for anything listed below.\n\n';
         systemPrompt += 'MENU & PRICING:\n';
         biz.products.forEach(function (p) {
-          var price  = Number(p.pricePerUnit);
-          var minQty = Number(p.minimumOrderQty);
-          var vLabels = (p.variants || []).map(function (v) {
-            return typeof v === 'object' ? (v.labelEn || v.label) : v;
-          }).join(', ');
-          systemPrompt += '- ' + (p.nameEn || p.name) +
-            ': $' + price.toFixed(2) + ' each' +
-            ', minimum ' + minQty + ' pieces' +
-            ', min total $' + (price * minQty).toFixed(2);
-          if (vLabels) systemPrompt += ', variants: ' + vLabels;
-          systemPrompt += '\n';
+          var basePrice = Number(p.pricePerUnit);
+          var minQty    = Number(p.minimumOrderQty);
+          var variantsWithPrice = (p.variants || []).filter(function (v) {
+            return v && typeof v === 'object' && v.price != null && Number(v.price) > 0;
+          });
+
+          if (variantsWithPrice.length > 0) {
+            // Each variant has its own price — list them individually
+            systemPrompt += '- ' + (p.nameEn || p.name) + ' (minimum ' + minQty + ' pieces per order):\n';
+            variantsWithPrice.forEach(function (v) {
+              var vPrice = Number(v.price);
+              var lbl    = v.labelEn || v.label || '';
+              systemPrompt += '    • ' + lbl + ': $' + vPrice.toFixed(2) + ' each' +
+                ', min total $' + (vPrice * minQty).toFixed(2) + '\n';
+            });
+            // Also list any variants without explicit prices using base price
+            var variantsNoPrice = (p.variants || []).filter(function (v) {
+              return !(v && typeof v === 'object' && v.price != null && Number(v.price) > 0);
+            });
+            variantsNoPrice.forEach(function (v) {
+              var lbl = (v && typeof v === 'object') ? (v.labelEn || v.label) : String(v);
+              if (lbl) systemPrompt += '    • ' + lbl + ': $' + basePrice.toFixed(2) + ' each\n';
+            });
+          } else {
+            // No per-variant prices — single price for all
+            var vLabels = (p.variants || []).map(function (v) {
+              return typeof v === 'object' ? (v.labelEn || v.label) : v;
+            }).join(', ');
+            systemPrompt += '- ' + (p.nameEn || p.name) +
+              ': $' + basePrice.toFixed(2) + ' each' +
+              ', minimum ' + minQty + ' pieces' +
+              ', min total $' + (basePrice * minQty).toFixed(2);
+            if (vLabels) systemPrompt += ', variants: ' + vLabels;
+            systemPrompt += '\n';
+          }
         });
         systemPrompt += '\nRULES:\n';
-        systemPrompt += '- "How much is X items?" → multiply X × price, give exact dollar total. If X < minimum, state both the cost AND the minimum.\n';
-        systemPrompt += '- "What variants/types?" → list from menu data above.\n';
-        systemPrompt += '- "What is price/cost?" → state price per piece and minimum order total.\n';
+        systemPrompt += '- "How much is X cooked/fresh/raw?" → use the SPECIFIC variant price listed above, multiply X × that variant price. Never use another variant\'s price.\n';
+        systemPrompt += '- "How much is X items?" → if no variant specified, list both variant prices and totals.\n';
+        systemPrompt += '- "What variants/types?" → list each variant and its price from menu data above.\n';
+        systemPrompt += '- "What is price/cost?" → state each variant price per piece and its minimum order total separately.\n';
         systemPrompt += '- "Phone/contact?" → ' + (biz.hosts && biz.hosts[0] ? biz.hosts[0].name : 'owner') + ' at ' + biz.phoneDisplay + '\n';
         systemPrompt += '- "Address/location?" → ' + biz.address + '\n';
         if (capInfo) {

@@ -1084,12 +1084,6 @@
       display: none;
     }
     .var-row__thumb.loaded { display: block; }
-    .var-row__img-icon {
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: .95rem; color: var(--muted);
-      pointer-events: none;
-    }
     .var-row__img-icon.hidden { display: none; }
     .var-row__img-prog {
       position: absolute; inset: 0;
@@ -1111,6 +1105,31 @@
       flex-shrink: 0;
     }
     .var-row__remove:hover { color: var(--danger); background: rgba(248,113,113,.1); }
+
+    /* Column headers above variant rows */
+    .var-col-headers {
+      display: grid;
+      grid-template-columns: 1fr 82px 48px auto;
+      gap: .45rem;
+      padding: .15rem .6rem .25rem;
+      font-size: .68rem;
+      color: var(--muted);
+      letter-spacing: .03em;
+      text-transform: uppercase;
+    }
+    .var-col-headers span { text-align: left; }
+    .var-col-headers span:nth-child(3) { text-align: center; }
+
+    /* Variant image icon: SVG + text label */
+    .var-row__img-icon {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 2px;
+      pointer-events: none;
+    }
+    .var-row__img-icon svg { width: 16px; height: 16px; stroke: var(--muted); fill: none; stroke-width: 1.5; stroke-linecap: round; }
+    .var-row__img-icon small { font-size: .5rem; color: var(--muted); letter-spacing: .02em; text-transform: uppercase; line-height: 1; }
 
     .var-add-btn {
       display: flex; align-items: center; justify-content: center;
@@ -1364,7 +1383,7 @@
     </div>
 
     <div class="f-row">
-      <label class="f-label">Ảnh Sản Phẩm <small style="font-weight:400;opacity:.6">(hiển thị trên trang danh mục)</small></label>
+      <label class="f-label">Ảnh Mặc Định / Default Card Image <small style="font-weight:400;opacity:.6">— dùng trên trang danh mục &amp; làm ảnh dự phòng khi chưa chọn loại</small></label>
       <div class="img-upload-area" id="imgUploadArea" onclick="document.getElementById('fImageFile').click()">
         <img id="imgPreview" class="img-preview" style="display:none" alt="">
         <div class="img-placeholder" id="imgPlaceholder">
@@ -1385,7 +1404,7 @@
       </div>
       <input type="file" id="fImageFile" accept="image/*" style="display:none" onchange="handleImageUpload(this)">
       <input type="hidden" id="fImage">
-      <span class="f-hint">Ảnh chính — bắt buộc để hiển thị trên marketplace. Upload xong mới nhấn Lưu. Ảnh riêng theo loại (raw/fresh) thêm trong phần Variants bên dưới.</span>
+      <span class="f-hint">Ảnh 1/3 — ảnh mặc định cho thẻ sản phẩm. Ảnh theo loại (raw/fresh) upload ở phần Variants bên dưới (Ảnh 2/3 và 3/3).</span>
     </div>
 
     <!-- Focal point editor — shown only after an image is loaded -->
@@ -1415,9 +1434,15 @@
 
     <div class="f-row">
       <label class="f-label">Loại sản phẩm &amp; Giá <small style="font-weight:400;opacity:.6">(Variants)</small></label>
+      <div class="var-col-headers">
+        <span>Tên loại / Type</span>
+        <span>Giá / Price</span>
+        <span>Ảnh</span>
+        <span></span>
+      </div>
       <div class="var-builder" id="variantBuilder"></div>
       <button type="button" class="var-add-btn" onclick="appendVariantRow('','','')">+ Thêm loại</button>
-      <span class="f-hint">Mỗi loại có giá &amp; ảnh riêng — VD: Raw $0.75 / Fresh $1.00. Nếu điền giá ở đây, giá cơ bản bên trên có thể để trống.</span>
+      <span class="f-hint">Ảnh 2/3 và 3/3 — mỗi loại có giá &amp; ảnh riêng. VD: Raw $0.75 (ảnh chả giò sống) / Fresh $1.00 (ảnh chả giò chín). Khi khách chọn loại, ảnh tự động thay đổi trên trang công khai.</span>
     </div>
 
     <div class="f-group" style="margin-top:1rem">
@@ -3294,10 +3319,13 @@
       '<input type="number" class="var-row__price" ' +
         'placeholder="Giá $" min="0" step="0.01" value="' + esc(priceVal) + '" ' +
         'aria-label="Variant price">' +
-      '<label class="var-row__img-wrap" title="Upload ảnh cho loại này">' +
+      '<label class="var-row__img-wrap" title="Ảnh riêng cho loại này — click để upload">' +
         '<img class="var-row__thumb' + hasImg + '" ' +
           'src="' + esc(imageUrl || '') + '" alt="">' +
-        '<span class="var-row__img-icon' + iconHidden + '">🖼</span>' +
+        '<span class="var-row__img-icon' + iconHidden + '">' +
+          '<svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>' +
+          '<small>Ảnh</small>' +
+        '</span>' +
         '<span class="var-row__img-prog" id="varProg_' + idx + '"></span>' +
         '<input type="file" class="var-row__file" accept="image/*" ' +
           'id="' + fileId + '">' +

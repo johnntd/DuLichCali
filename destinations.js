@@ -357,7 +357,7 @@ const DESTINATIONS = [
       en: '17-Mile Drive is a legendary private coastal route through Pebble Beach — famous for the ancient Lone Cypress, world-famous Pebble Beach Golf Links, and spectacular ocean scenery.'
     },
     image:          '17miledrive.jpg?v=20260402',
-    youtubeId:      'eJYmH748VYo', // Best Things to See on 17-Mile Drive (Carried Away Travels) — embeddable, verified 2026-04
+    youtubeId:      'nvijnN0eb2c', // 17 Mile Drive — user-selected, embeddable, verified 2026-04
     hook:           'Lone Cypress ngàn tuổi trơ trên mỏm đá biển, sân golf Pebble Beach đẳng cấp PGA và hoàng hôn nghẹt thở.',
     highlightTags:  ['Lone Cypress', 'Pebble Beach Golf', 'Seal Rocks', 'Bird Rock', 'Spanish Bay'],
     distance_miles: 335,

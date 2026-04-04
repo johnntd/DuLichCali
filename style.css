@@ -934,7 +934,7 @@ select.field-input {
 /* ── Airport & Ride Panel  (.home-ride-grid / .home-ride-tile) ── */
 .home-ride-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: .75rem;
   padding: 0 1rem;
   margin-bottom: .5rem;
@@ -971,23 +971,6 @@ select.field-input {
   color: var(--muted);
   font-family: var(--font-b);
   line-height: 1.4;
-}
-/* Wide (full-width) tile — used by private ride */
-.home-ride-tile--wide {
-  grid-column: 1 / -1;
-  flex-direction: row;
-  align-items: center;
-  gap: .9rem;
-}
-.home-ride-tile--wide .home-ride-tile__icon {
-  margin-bottom: 0;
-  font-size: 1.7rem;
-  flex-shrink: 0;
-}
-.home-ride-tile--wide .home-ride-tile__body {
-  display: flex;
-  flex-direction: column;
-  gap: .15rem;
 }
 
 /* ── Region Service Block ───────────────────────────────────── */
@@ -2723,8 +2706,8 @@ select.field-input {
   /* Trust: 4 cols */
   .trust-grid { grid-template-columns: repeat(4, 1fr); padding: 0; }
 
-  /* Ride grid: max-width constrained */
-  .home-ride-grid { padding: 0; max-width: 480px; gap: 1rem; }
+  /* Ride grid: 3-column, matches marketplace/tour row width */
+  .home-ride-grid { padding: 0; max-width: 720px; gap: 1rem; }
   .home-ride-tile { padding: 1.3rem 1.1rem; }
   .home-ride-tile__icon { font-size: 1.75rem; }
   .home-ride-tile__name { font-size: .92rem; }

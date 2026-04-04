@@ -67,7 +67,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-  <link rel="stylesheet" href="style.css?v=20260404f">
+  <link rel="stylesheet" href="style.css?v=20260404g">
   <link rel="stylesheet" href="desktop.css">
 </head>
 <body>
@@ -250,28 +250,26 @@
       <section id="hpAirport" class="home-section">
         <div class="section-hdr">
           <h2 class="section-title">Đưa Đón &amp; Xe Riêng</h2>
-          <button class="see-all" onclick="openAIWithIntent('airport_pickup')">Đặt ngay</button>
+          <button class="see-all" onclick="selectServiceAndBook('pickup')">Đặt ngay</button>
         </div>
         <div class="home-ride-grid">
-          <div class="home-ride-tile" onclick="openAIWithIntent('airport_pickup')" role="button" tabindex="0"
-               onkeydown="if(event.key==='Enter')openAIWithIntent('airport_pickup')">
+          <div class="home-ride-tile" onclick="selectServiceAndBook('pickup')" role="button" tabindex="0"
+               onkeydown="if(event.key==='Enter')selectServiceAndBook('pickup')">
             <span class="home-ride-tile__icon" aria-hidden="true">🛬</span>
             <strong class="home-ride-tile__name">Đón Sân Bay</strong>
             <span class="home-ride-tile__sub">Bay đến · Tài xế chờ tại Arrivals</span>
           </div>
-          <div class="home-ride-tile" onclick="openAIWithIntent('airport_dropoff')" role="button" tabindex="0"
-               onkeydown="if(event.key==='Enter')openAIWithIntent('airport_dropoff')">
+          <div class="home-ride-tile" onclick="selectServiceAndBook('dropoff')" role="button" tabindex="0"
+               onkeydown="if(event.key==='Enter')selectServiceAndBook('dropoff')">
             <span class="home-ride-tile__icon" aria-hidden="true">🛫</span>
             <strong class="home-ride-tile__name">Ra Sân Bay</strong>
             <span class="home-ride-tile__sub">Bay đi · Đón tận nhà đúng giờ</span>
           </div>
-          <div class="home-ride-tile home-ride-tile--wide" onclick="openAIWithIntent('ride')" role="button" tabindex="0"
-               onkeydown="if(event.key==='Enter')openAIWithIntent('ride')">
+          <div class="home-ride-tile" onclick="selectServiceAndBook('pickup')" role="button" tabindex="0"
+               onkeydown="if(event.key==='Enter')selectServiceAndBook('pickup')">
             <span class="home-ride-tile__icon" aria-hidden="true">🚗</span>
-            <div class="home-ride-tile__body">
-              <strong class="home-ride-tile__name">Xe Riêng Cao Cấp · Điểm A → Điểm B</strong>
-              <span class="home-ride-tile__sub">Tesla Model Y · Mercedes Van · Giá thấp hơn Uber ~20%</span>
-            </div>
+            <strong class="home-ride-tile__name">Xe Riêng Cao Cấp</strong>
+            <span class="home-ride-tile__sub">Tesla Model Y · Mercedes Van · −20% vs Uber</span>
           </div>
         </div>
       </section>

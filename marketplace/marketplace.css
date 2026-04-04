@@ -855,6 +855,53 @@ select.mp-input option {
   color: var(--muted);
 }
 
+/* ── Escalation: pending + vendor response bubbles ─────────────────────── */
+.mp-ai__bubble--pending {
+  background: rgba(220, 145, 0, .12);
+  border: 1px solid rgba(220, 145, 0, .35);
+  color: #e8a800;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: .82rem;
+}
+
+.mp-ai__pending-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #e8a800;
+  animation: pendingPulse 1.2s ease-in-out infinite;
+}
+.mp-ai__pending-dot:nth-child(2) { animation-delay: .2s; }
+.mp-ai__pending-dot:nth-child(3) { animation-delay: .4s; }
+
+@keyframes pendingPulse {
+  0%, 80%, 100% { opacity: .3; transform: scale(.8); }
+  40%           { opacity: 1;  transform: scale(1);  }
+}
+
+.mp-ai__bubble--vendor {
+  border-left: 3px solid #3fb86a;
+}
+.mp-ai__bubble--vendor-confirmed {
+  background: rgba(63, 184, 106, .12);
+  border-color: #3fb86a;
+  color: #3fb86a;
+}
+.mp-ai__bubble--vendor-declined {
+  background: rgba(224, 82, 82, .1);
+  border-color: #e05252;
+  color: #e05252;
+}
+.mp-ai__bubble--vendor-replied,
+.mp-ai__bubble--vendor-timeout {
+  background: rgba(255,255,255,.04);
+  border-color: #6c8ebf;
+  color: var(--text);
+}
+
 .mp-ai__input-bar {
   display: flex;
   align-items: center;

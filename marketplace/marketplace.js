@@ -1426,6 +1426,137 @@
     return 'Hi! I\'m ' + (ai.name || 'here') + '. How can I help with your order today?';
   }
 
+  // ── EscalationEngine ─────────────────────────────────────────────────────
+  // Handles AI → vendor escalation and real-time response relay.
+  //
+  // Flow:
+  //   1. AI appends [ESCALATE:type] to its reply when intake is complete
+  //   2. _sendMessage detects marker, strips it, shows the AI summary to user
+  //   3. EscalationEngine.create() writes a doc to Firestore escalations/
+  //   4. Vendor sees the request in admin → Confirm / Decline / Reply
+  //   5. onSnapshot fires → vendor response rendered in user chat
+  //   6. 20-minute timeout → fallback "please call directly" message
+  //
+  var EscalationEngine = {
+    TIMEOUT_MS: 20 * 60 * 1000,
+
+    parseMarker: function (reply) {
+      var m = reply.match(/\[ESCALATE:(order|appointment|reservation|question)\]/i);
+      return m ? m[1].toLowerCase() : null;
+    },
+
+    stripMarker: function (reply) {
+      return reply.replace(/\s*\[ESCALATE:[^\]]+\]/gi, '').trim();
+    },
+
+    create: function (biz, messagesEl, escalationType) {
+      var db = window.dlcDb;
+      if (!db) {
+        console.warn('[escalation] No Firestore db — escalation skipped');
+        return;
+      }
+
+      // Build a compact summary from the last 4 history messages (2 turns)
+      var history = biz._aiHistory || [];
+      var summary = history.slice(-4).map(function (m) {
+        return (m.role === 'user' ? 'Khách: ' : 'AI: ') + m.content.slice(0, 150);
+      }).join('\n');
+
+      var escId     = 'esc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+      var pendingId = EscalationEngine._showPending(messagesEl);
+      var hostName  = (biz.aiReceptionist && biz.aiReceptionist.hostName) || biz.name || 'Nhà hàng';
+      var phone     = biz.phone || biz.phoneDisplay || '';
+
+      db.collection('escalations').doc(escId).set({
+        vendorId:       biz.id || biz.slug || '',
+        vendorName:     biz.name || '',
+        escalationType: escalationType,
+        summary:        summary,
+        status:         'pending_vendor_response',
+        createdAt:      firebase.firestore.FieldValue.serverTimestamp(),
+        vendorMessage:  null
+      }).then(function () {
+        var unsub;
+        var timerHandle = setTimeout(function () {
+          if (unsub) unsub();
+          EscalationEngine._removePending(messagesEl, pendingId);
+          db.collection('escalations').doc(escId)
+            .update({ status: 'vendor_timeout' }).catch(function () {});
+          EscalationEngine._appendVendorMsg(messagesEl,
+            'Rất tiếc, ' + hostName + ' chưa phản hồi kịp lúc. ' +
+            'Vui lòng liên hệ trực tiếp qua số ' + phone + '.',
+            'timeout');
+        }, EscalationEngine.TIMEOUT_MS);
+
+        unsub = db.collection('escalations').doc(escId).onSnapshot(function (snap) {
+          if (!snap.exists) return;
+          var data   = snap.data();
+          var status = data.status;
+          if (status === 'pending_vendor_response') return; // still waiting
+
+          clearTimeout(timerHandle);
+          unsub();
+          EscalationEngine._removePending(messagesEl, pendingId);
+
+          var vmsg = data.vendorMessage ? ' — ' + data.vendorMessage : '';
+          if (status === 'vendor_confirmed') {
+            EscalationEngine._appendVendorMsg(messagesEl,
+              '✓ ' + hostName + ' đã xác nhận!' + vmsg,
+              'confirmed');
+          } else if (status === 'vendor_declined') {
+            EscalationEngine._appendVendorMsg(messagesEl,
+              hostName + ' xin lỗi, không thể thực hiện.' + vmsg +
+              ' Vui lòng liên hệ ' + phone + '.',
+              'declined');
+          } else if (status === 'vendor_replied') {
+            EscalationEngine._appendVendorMsg(messagesEl,
+              hostName + ': ' + (data.vendorMessage || ''),
+              'replied');
+          }
+        }, function (err) {
+          console.warn('[escalation] listener error:', err.message);
+        });
+
+      }).catch(function (err) {
+        console.warn('[escalation] create failed:', err.message);
+        EscalationEngine._removePending(messagesEl, pendingId);
+      });
+    },
+
+    _showPending: function (messagesEl) {
+      var id  = 'esc_p_' + Date.now();
+      var div = document.createElement('div');
+      div.className = 'mp-ai__msg mp-ai__msg--bot';
+      div.id        = id;
+      div.innerHTML =
+        '<div class="mp-ai__bubble mp-ai__bubble--pending">' +
+          '<span class="mp-ai__pending-dot"></span>' +
+          '<span class="mp-ai__pending-dot"></span>' +
+          '<span class="mp-ai__pending-dot"></span>' +
+          '&nbsp;Đang chờ xác nhận từ nhà hàng\u2026' +
+        '</div>';
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      return id;
+    },
+
+    _removePending: function (messagesEl, id) {
+      var el = document.getElementById(id);
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    },
+
+    _appendVendorMsg: function (messagesEl, text, type) {
+      var div    = document.createElement('div');
+      div.className = 'mp-ai__msg mp-ai__msg--bot';
+      var bubble = document.createElement('div');
+      bubble.className = 'mp-ai__bubble mp-ai__bubble--vendor mp-ai__bubble--vendor-' + (type || 'replied');
+      bubble.textContent = text;
+      div.appendChild(bubble);
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+  };
+
   var Receptionist = {
 
     init: function (biz, containerId) {
@@ -1525,11 +1656,20 @@
           });
         }
       }).then(function (reply) {
+        // Detect escalation marker — strip it before storing/displaying
+        var escalationType = EscalationEngine.parseMarker(reply);
+        var cleanReply     = escalationType ? EscalationEngine.stripMarker(reply) : reply;
+
         // Record assistant reply; cap history at 20 messages (10 turns)
-        biz._aiHistory.push({ role: 'assistant', content: reply });
+        biz._aiHistory.push({ role: 'assistant', content: cleanReply });
         if (biz._aiHistory.length > 20) biz._aiHistory = biz._aiHistory.slice(-20);
         Receptionist._removeTyping(messagesEl, typingId);
-        Receptionist._appendMessage(messagesEl, reply, 'bot');
+        if (cleanReply) Receptionist._appendMessage(messagesEl, cleanReply, 'bot');
+
+        // If escalation requested, forward to vendor via Firestore
+        if (escalationType) {
+          EscalationEngine.create(biz, messagesEl, escalationType);
+        }
       });
     },
 
@@ -1811,7 +1951,7 @@
           sharedRules +
           '- SELECTED ITEM: Once a dish is chosen, never ask "which dish?" again.\n' +
           '- PRICING: Quote exact prices above — never say "contact vendor" for listed items.\n' +
-          '- ORDER COMPLETE: Summarize all 6 fields, then say customer can text ' + hostName + ' at ' + phone + ' to confirm.';
+          '- ORDER COMPLETE: Summarize all 6 fields, then end your message with [ESCALATE:order] on its own line — this forwards the order to the vendor for real-time confirmation.';
 
         if (capInfo) {
           var capLbl = _dayLabel(capInfo.date);
@@ -1849,7 +1989,7 @@
           '  1. SERVICE wanted  2. PREFERRED DATE & TIME  3. CUSTOMER NAME + PHONE\n\n' +
           sharedRules +
           '- PRICING: Answer pricing/hours questions directly from the data above.\n' +
-          '- APPOINTMENT COMPLETE: Summarize service, date/time, name/phone, then say customer can call/text ' + hostName + ' at ' + phone + ' to confirm.';
+          '- APPOINTMENT COMPLETE: Summarize service, date/time, name/phone, then end your message with [ESCALATE:appointment] on its own line — this forwards the request to the vendor for confirmation.';
 
       } else if (biz.bookingType === 'reservation') {
         // ── RESERVATION INTAKE AGENT (restaurants, any future reservation vendor) ──
@@ -1870,7 +2010,7 @@
           '  1. PARTY SIZE  2. DATE & TIME (must be within hours above)  3. CUSTOMER NAME + PHONE  4. SPECIAL REQUESTS (optional)\n\n' +
           sharedRules +
           '- HOURS: Never accept a reservation outside listed hours.\n' +
-          '- RESERVATION COMPLETE: Summarize all details, then say customer can call/text ' + hostName + ' at ' + phone + ' to confirm.';
+          '- RESERVATION COMPLETE: Summarize all details, then end your message with [ESCALATE:reservation] on its own line — this forwards the reservation to the vendor for confirmation.';
 
       } else {
         // ── GENERIC FALLBACK (unknown vendor type — still history-aware) ─────────

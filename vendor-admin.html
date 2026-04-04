@@ -1287,6 +1287,17 @@
 
     <!-- Notifications tab -->
     <div id="notifsTab" style="display:none">
+
+      <!-- AI Escalations (pending customer requests) -->
+      <div id="escalationsSection" style="display:none">
+        <div class="va-section-hdr" style="margin-bottom:.4rem">
+          <div class="va-section-title" style="color:#e8a800">&#128172; Yêu Cầu AI Đang Chờ</div>
+          <span id="escalationsBadge" style="background:#e8a800;color:#000;border-radius:99px;padding:2px 9px;font-size:.75rem;font-weight:700;display:none"></span>
+        </div>
+        <div id="escalationsList"></div>
+        <div style="height:.5rem"></div>
+      </div>
+
       <div class="va-section-hdr">
         <div class="va-section-title">Thông Báo</div>
         <button class="btn btn--ghost btn--sm" onclick="markAllRead()">&#10003; Đọc tất cả</button>
@@ -1856,6 +1867,7 @@
     seedIfNeeded();
     subscribeMenuItems();
     subscribeNotifications();
+    subscribeEscalations();
     // Show a friendly error if Firestore hasn't delivered data after 8 seconds
     setTimeout(function () {
       var loading = document.getElementById('loadingState');
@@ -3433,6 +3445,106 @@
     }, function (err) {
       console.warn('[notifs] listener error:', err.code || err.message);
     });
+  }
+
+  // ── Escalations ──────────────────────────────────────────────────────────
+  var _unsubEscalations = null;
+
+  function subscribeEscalations() {
+    if (_unsubEscalations) _unsubEscalations();
+    if (!VENDOR_ID) return;
+
+    // Single equality where — no composite index needed.
+    // Filter pending + sort client-side.
+    var ref = db.collection('escalations')
+      .where('vendorId', '==', VENDOR_ID)
+      .limit(50);
+
+    _unsubEscalations = ref.onSnapshot(function (snap) {
+      var items = [];
+      snap.forEach(function (d) {
+        var data = d.data();
+        if (data.status === 'pending_vendor_response') {
+          items.push(Object.assign({ id: d.id }, data));
+        }
+      });
+      // Newest first
+      items.sort(function (a, b) {
+        var ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+        var tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+        return tb - ta;
+      });
+      renderEscalations(items);
+    }, function (err) {
+      console.warn('[escalations] listener error:', err.code || err.message);
+    });
+  }
+
+  function renderEscalations(items) {
+    var section = document.getElementById('escalationsSection');
+    var list    = document.getElementById('escalationsList');
+    var badge   = document.getElementById('escalationsBadge');
+    if (!section || !list) return;
+
+    if (items.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+
+    section.style.display = 'block';
+    badge.textContent     = items.length;
+    badge.style.display   = 'inline-block';
+
+    var typeLabels = { order: '&#128722; Đơn hàng', appointment: '&#128197; Hẹn', reservation: '&#128203; Đặt chỗ', question: '&#128172; Câu hỏi' };
+
+    list.innerHTML = items.map(function (item) {
+      var timeStr = '';
+      if (item.createdAt && item.createdAt.toDate) {
+        var d = item.createdAt.toDate();
+        timeStr = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
+      }
+      var typeLabel = typeLabels[item.escalationType] || item.escalationType || 'Yêu cầu';
+      var summaryHtml = item.summary
+        ? '<div style="font-size:.78rem;color:var(--text-muted);margin:.3rem 0 .6rem;white-space:pre-line;line-height:1.45">' + esc(item.summary) + '</div>'
+        : '';
+      var escId = item.id;
+
+      var replyInputId = 'esc_reply_' + escId;
+      return '<div class="notif-card" style="border-left:3px solid #e8a800">' +
+        '<div class="notif-card__top">' +
+          '<div class="notif-card__title-wrap">' +
+            '<div class="notif-card__dot"></div>' +
+            '<div class="notif-card__type-icon">&#128172;</div>' +
+            '<div class="notif-card__title">' + typeLabel + '</div>' +
+          '</div>' +
+          '<div class="notif-card__time">' + timeStr + '</div>' +
+        '</div>' +
+        summaryHtml +
+        '<div class="notif-card__actions" style="flex-wrap:wrap;gap:.4rem">' +
+          '<button class="btn btn--ok btn--sm" onclick="respondEscalation(\'' + escId + '\',\'vendor_confirmed\',null)">' +
+            '&#10003; Xác nhận</button>' +
+          '<button class="btn btn--ghost btn--sm" style="border-color:#e05252;color:#e05252" onclick="respondEscalation(\'' + escId + '\',\'vendor_declined\',null)">' +
+            '&#10007; Từ chối</button>' +
+        '</div>' +
+        '<div style="display:flex;gap:.4rem;margin-top:.4rem">' +
+          '<input id="' + replyInputId + '" type="text" placeholder="Nhắn tin tới khách…" ' +
+            'style="flex:1;height:36px;padding:0 10px;background:var(--navy-900);border:1px solid var(--border-g);border-radius:8px;color:var(--text);font-size:.82rem;font-family:var(--font-b)">' +
+          '<button class="btn btn--gold btn--sm" onclick="respondEscalation(\'' + escId + '\',\'vendor_replied\',document.getElementById(\'' + replyInputId + '\').value)">' +
+            '&#128172; Gửi</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function respondEscalation(escId, status, message) {
+    var update = { status: status };
+    if (message && message.trim()) update.vendorMessage = message.trim();
+    db.collection('escalations').doc(escId).update(update)
+      .then(function () {
+        var labels = { vendor_confirmed: 'Đã xác nhận!', vendor_declined: 'Đã từ chối.', vendor_replied: 'Đã gửi phản hồi!' };
+        showToast(labels[status] || 'Đã cập nhật.', 'success');
+      })
+      .catch(function (err) { showToast('Lỗi: ' + err.message, 'error'); });
   }
 
   // ── Render notification list ───────────────────────────────────────────────

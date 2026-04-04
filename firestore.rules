@@ -24,6 +24,13 @@ service cloud.firestore {
       allow read:   if request.auth != null;
     }
 
+    // AI-to-vendor escalations — public create+read; vendor update requires auth
+    match /escalations/{escalationId} {
+      allow create: if true;
+      allow read:   if true;
+      allow update: if request.auth != null;
+    }
+
     // Everything else — deny by default
     match /{document=**} {
       allow read, write: if false;

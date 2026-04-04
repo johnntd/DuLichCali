@@ -523,13 +523,15 @@ Return JSON matching FoodPromoSchema exactly:
 
   // ── Raw provider calls ────────────────────────────────────────────────────
   // Production path: route through Firebase aiProxy callable (no client-side keys needed).
-  // Dev/admin override: if a local key exists in localStorage, call the API directly.
+  // Dev/admin override: if a local key exists in localStorage AND running on localhost,
+  // call the API directly (CORS only works from localhost for these APIs).
   async function callProviderRaw(provider, taskDef) {
     const keyMap = { claude: 'dlc_claude_key', openai: 'dlc_openai_key', gemini: 'dlc_gemini_key' };
     const localKey = localStorage.getItem(keyMap[provider]);
+    const isLocalhost = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
 
-    // ── Dev override: direct browser API call ──────────────────────────────
-    if (localKey) {
+    // ── Dev override: direct browser API call (localhost only) ─────────────
+    if (localKey && isLocalhost) {
       if (provider === 'openai') {
         const body = {
           model: 'gpt-4o-mini', max_tokens: taskDef.maxTokens || 1000,

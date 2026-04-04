@@ -1683,10 +1683,11 @@
 
       // ── Food vendor: deterministic answers ─────────────────────────────────
       // Always use live Firestore products (biz.products) when the vendor has any items
-      // configured there. Fall back to _staticProducts only when Firestore returned
-      // zero items (vendor has not set up their menu yet).
-      var _bestProducts = (biz.products && biz.products.length > 0)
-        ? biz.products : (biz._staticProducts || []);
+      // Always use live Firestore data. If vendor has no items configured, tell the customer.
+      var _bestProducts = (biz.products && biz.products.length > 0) ? biz.products : [];
+      if (biz.vendorType === 'foodvendor' && _bestProducts.length === 0) {
+        return 'Hiện tại nhà hàng chưa có món nào trong thực đơn. Vui lòng quay lại sau hoặc liên hệ trực tiếp với chúng tôi để biết thêm thông tin.';
+      }
       if (biz.vendorType === 'foodvendor' && _bestProducts.length > 0) {
 
         // 0. DATE + CAPACITY (capInfo pre-fetched by _sendMessage)
@@ -1910,9 +1911,11 @@
 
       if (biz.vendorType === 'foodvendor') {
         // ── ORDER INTAKE AGENT (food vendors: Emily, etc.) ────────────────────
-        // Always prefer live Firestore products; static is emergency fallback only
-        var products = (biz.products && biz.products.length > 0)
-          ? biz.products : (biz._staticProducts || []);
+        // Always use live Firestore products. If vendor has nothing configured, tell customer.
+        var products = (biz.products && biz.products.length > 0) ? biz.products : [];
+        if (!products.length) {
+          return Promise.resolve('Hiện tại nhà hàng chưa có món nào trong thực đơn. Vui lòng quay lại sau hoặc liên hệ trực tiếp với chúng tôi để biết thêm thông tin.');
+        }
 
         var menuBlock = 'MENU & PRICING:\n';
         products.forEach(function (p) {
@@ -2062,9 +2065,8 @@
     // Extracts a quantity from the message, matches to a product, returns calc.
     // Returns null if no quantity or no product could be determined.
     _computePrice: function (biz, text) {
-      // Always prefer live Firestore products; static is emergency fallback only
-      var _products = (biz.products && biz.products.length > 0)
-        ? biz.products : (biz._staticProducts || []);
+      // Always use live Firestore products only — no static fallback
+      var _products = (biz.products && biz.products.length > 0) ? biz.products : [];
       if (!_products.length) return null;
 
       // Must contain at least one number

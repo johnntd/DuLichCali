@@ -357,6 +357,56 @@
       opacity: .6;
       line-height: 1.5;
     }
+
+    /* ── Tablet 768px+ ── */
+    @media (min-width: 768px) {
+      .hub-bar { padding: 0 2.5rem; height: 60px; }
+
+      .hub-hero { padding: 3.5rem 2.5rem 2.75rem; }
+      .hub-hero__h1 { font-size: clamp(2.4rem, 5vw, 3.4rem); }
+      .hub-hero__sub { max-width: 540px; font-size: .95rem; }
+
+      .hub-section-label { padding: 1.75rem 2rem .75rem; }
+
+      .hub-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 2rem 3.5rem;
+      }
+
+      .hub-card__visual { height: 165px; }
+      .hub-card__svg-icon { width: 60px; height: 60px; }
+      .hub-card__name { font-size: 1.25rem; }
+      .hub-card__content { padding: 1.2rem 1.4rem 1.5rem; }
+    }
+
+    /* ── Desktop 1200px+ ── */
+    @media (min-width: 1200px) {
+      .hub-bottom-nav { display: none; }
+      .hub-app { padding-bottom: 0; }
+
+      .hub-hero { padding: 5rem 3.5rem 4rem; }
+      .hub-hero__h1 { font-size: clamp(2.8rem, 4vw, 4rem); }
+      .hub-hero__sub { max-width: 580px; font-size: 1rem; }
+
+      .hub-section-label { padding: 2rem 3.5rem .75rem; }
+
+      .hub-grid {
+        grid-template-columns: repeat(3, 1fr);
+        max-width: 1360px;
+        gap: 1.75rem;
+        padding: 0 3.5rem 5rem;
+      }
+
+      .hub-card__visual { height: 200px; }
+      .hub-card__svg-icon { width: 72px; height: 72px; }
+      .hub-card__name { font-size: 1.4rem; }
+      .hub-card__desc { font-size: .86rem; }
+      .hub-card__content { padding: 1.4rem 1.6rem 1.75rem; }
+      .hub-card__cta { font-size: .84rem; margin-top: .5rem; }
+    }
   </style>
 </head>
 <body>

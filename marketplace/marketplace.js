@@ -149,6 +149,9 @@
 
   function renderFooter() {
     return '<footer class="mp-footer">' +
+      '<button class="mp-footer__back-btn" onclick="history.back()" aria-label="Quay lại trang trước">' +
+        arrowLeftIcon + 'Quay lại' +
+      '</button>' +
       '<div class="mp-footer__brand">Du Lịch Cali Services</div>' +
       '<div class="mp-footer__sub">© ' + new Date().getFullYear() + ' · dulichcali21.com · (714) 227-6007</div>' +
       '</footer>';

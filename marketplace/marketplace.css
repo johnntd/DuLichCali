@@ -974,10 +974,32 @@ select.mp-input option {
 /* ── Footer ────────────────────────────────────────────────────────────────── */
 
 .mp-footer {
-  padding: 2rem 1rem;
+  padding: 1.25rem 1rem 2rem;
   border-top: 1px solid var(--border);
   text-align: center;
 }
+
+.mp-footer__back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  width: 100%;
+  min-height: 52px;
+  margin-bottom: 1.25rem;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 12px;
+  color: var(--sky-lt);
+  font-family: var(--font-b);
+  font-size: .92rem;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .15s;
+}
+.mp-footer__back-btn:active { background: rgba(255,255,255,.12); }
+.mp-footer__back-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
 
 .mp-footer__brand {
   font-family: var(--font-d);

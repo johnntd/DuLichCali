@@ -1572,6 +1572,25 @@ function toggleFc(cardId) {
 }
 
 /**
+ * Home screen AI card helpers — navigate to chat and seed the user's message.
+ */
+function homeAiSubmit() {
+  var input = document.getElementById('homeAiInput');
+  if (!input) return;
+  var text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  homeAiSend(text);
+}
+
+function homeAiSend(text) {
+  switchScreen('screenChat');
+  setTimeout(function () {
+    if (window.DLChat && DLChat.send) DLChat.send(text);
+  }, 220);
+}
+
+/**
  * Switch to AI chat and send a pre-loaded intent message.
  * @param {string} intent - 'airport'|'tour'|'ride'|'price'|'order'|''
  */

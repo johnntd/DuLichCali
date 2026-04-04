@@ -2275,78 +2275,155 @@ select.field-input {
 }
 
 /* ============================================================
-   AI CONCIERGE BAR  (.ai-bar)
+   HOME AI CONCIERGE CARD  (.home-ai-card)
    ============================================================ */
-.ai-bar {
+.home-ai-card {
   margin: 0 1rem 1.25rem;
-  padding: 1rem 1rem .9rem;
-  background: linear-gradient(135deg, rgba(245,166,35,.09) 0%, rgba(245,166,35,.04) 100%);
-  border: 1px solid rgba(245,166,35,.32);
-  border-radius: 16px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: .65rem;
-  position: relative;
+  background: linear-gradient(160deg, rgba(12,30,58,.98) 0%, rgba(6,18,40,.98) 100%);
+  border: 1px solid rgba(245,166,35,.38);
+  border-radius: 18px;
   overflow: hidden;
-  transition: border-color .2s, background .2s;
+  position: relative;
 }
-.ai-bar:hover { border-color: rgba(245,166,35,.52); background: linear-gradient(135deg, rgba(245,166,35,.14) 0%, rgba(245,166,35,.07) 100%); }
-.ai-bar::before {
+.home-ai-card::before {
   content: '';
   position: absolute;
-  top: -45px; left: -45px;
-  width: 180px; height: 180px;
-  background: radial-gradient(circle, rgba(245,166,35,.18) 0%, transparent 70%);
+  top: -55px; right: -40px;
+  width: 210px; height: 210px;
+  background: radial-gradient(circle, rgba(245,166,35,.13) 0%, transparent 65%);
   pointer-events: none;
 }
-.ai-bar__inner {
+
+.home-ai-card__header {
   display: flex;
   align-items: center;
-  gap: .75rem;
+  gap: .65rem;
+  padding: .8rem 1rem .7rem;
+  border-bottom: 1px solid rgba(255,255,255,.07);
 }
-.ai-bar__orb {
-  font-size: 1.5rem;
+.home-ai-card__orb {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, rgba(245,166,35,.2), rgba(245,166,35,.07));
+  border: 1px solid rgba(245,166,35,.38);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
   color: var(--gold);
   flex-shrink: 0;
-  line-height: 1;
   animation: orb-pulse 2.8s ease-in-out infinite;
 }
 @keyframes orb-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50%       { opacity: .7; transform: scale(.9); }
 }
-.ai-bar__text strong {
+.home-ai-card__title strong {
   display: block;
-  font-size: .92rem;
+  font-size: .88rem;
   color: var(--cream);
   font-weight: 600;
+  font-family: var(--font-b);
+  line-height: 1.3;
 }
-.ai-bar__text span {
-  font-size: .7rem;
-  color: var(--muted);
-}
-.ai-bar__chips {
+.home-ai-card__online {
   display: flex;
-  gap: .4rem;
+  align-items: center;
+  gap: .28rem;
+  font-size: .67rem;
+  color: #5ec474;
+  margin-top: 2px;
+  font-family: var(--font-b);
+}
+.home-ai-card__dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #5ec474;
+  flex-shrink: 0;
+  animation: online-blink 2.2s ease-in-out infinite;
+}
+@keyframes online-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .35; }
+}
+
+.home-ai-card__body {
+  padding: .8rem 1rem .6rem;
+  display: flex;
+  flex-direction: column;
+  gap: .65rem;
+}
+.home-ai-card__bubble {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 3px 12px 12px 12px;
+  padding: .6rem .9rem;
+  font-size: .79rem;
+  color: var(--text);
+  line-height: 1.55;
+  font-family: var(--font-b);
+}
+.home-ai-card__chips {
+  display: flex;
+  gap: .38rem;
   flex-wrap: wrap;
 }
-.ai-bar__chip {
-  padding: .28rem .7rem;
+.home-ai-card__chip {
+  padding: .28rem .72rem;
   background: rgba(245,166,35,.1);
-  border: 1px solid rgba(245,166,35,.24);
+  border: 1px solid rgba(245,166,35,.25);
   border-radius: 20px;
   color: var(--gold-lt);
   font-family: var(--font-b);
-  font-size: .7rem;
+  font-size: .71rem;
   cursor: pointer;
   white-space: nowrap;
-  transition: background .18s, border-color .18s;
+  transition: background .15s, border-color .15s;
   line-height: 1.5;
 }
-.ai-bar__chip:hover {
+.home-ai-card__chip:hover, .home-ai-card__chip:focus {
   background: rgba(245,166,35,.22);
-  border-color: rgba(245,166,35,.48);
+  border-color: rgba(245,166,35,.52);
+  outline: none;
+}
+
+.home-ai-card__input-bar {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .5rem .7rem .7rem;
+  border-top: 1px solid rgba(255,255,255,.07);
+}
+.home-ai-card__input {
+  flex: 1;
+  height: 40px;
+  padding: 0 .85rem;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 20px;
+  color: var(--cream);
+  font-family: var(--font-b);
+  font-size: .8rem;
+  outline: none;
+  transition: border-color .18s, background .18s;
+}
+.home-ai-card__input:focus {
+  border-color: rgba(245,166,35,.5);
+  background: rgba(255,255,255,.1);
+}
+.home-ai-card__input::placeholder { color: var(--muted); font-size: .76rem; }
+.home-ai-card__send {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), #c9832a);
+  border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity .18s, transform .14s;
+}
+.home-ai-card__send:hover { opacity: .86; transform: scale(1.06); }
+.home-ai-card__send svg {
+  width: 15px; height: 15px;
+  stroke: #0a1628;
 }
 
 /* ============================================================
@@ -2497,11 +2574,14 @@ select.field-input {
   /* Marketplace grid: 3 cols */
   .mkt-grid { grid-template-columns: repeat(3, 1fr); }
 
-  /* AI bar: more prominent */
-  .ai-bar { margin: 0 0 1.5rem; padding: 1.25rem 1.5rem 1.1rem; }
-  .ai-bar__text strong { font-size: 1.05rem; }
-  .ai-bar__chips { gap: .55rem; }
-  .ai-bar__chip { padding: .38rem .9rem; font-size: .75rem; }
+  /* AI card: more prominent on desktop */
+  .home-ai-card { margin: 0 0 1.5rem; }
+  .home-ai-card__title strong { font-size: 1rem; }
+  .home-ai-card__bubble { font-size: .84rem; padding: .7rem 1rem; }
+  .home-ai-card__chips { gap: .5rem; }
+  .home-ai-card__chip { padding: .33rem .88rem; font-size: .74rem; }
+  .home-ai-card__input { font-size: .84rem; }
+  .home-ai-card__input-bar { padding: .55rem .85rem .8rem; }
 
   /* Trust grid: 4 cols */
   .trust-grid { grid-template-columns: repeat(4, 1fr); }

@@ -239,21 +239,46 @@
         <div class="hp-vendor-row" id="hpVendorCards" role="list"></div>
       </section>
 
-      <!-- AI Concierge bar -->
-      <div class="ai-bar" onclick="openAIWithIntent('')" role="button" tabindex="0"
-           aria-label="Mở trợ lý AI" onkeydown="if(event.key==='Enter'||event.key===' ')openAIWithIntent('')">
-        <div class="ai-bar__inner">
-          <span class="ai-bar__orb">✦</span>
-          <div class="ai-bar__text">
-            <strong>Trợ Lý Du Lịch AI</strong>
-            <span>Hỏi về tour · giá cả · sân bay · đặt chỗ 24/7</span>
+      <!-- ── Inline AI Concierge Card ───────────────────────────── -->
+      <div class="home-ai-card" id="homeAiCard" role="region" aria-label="Trợ lý AI Du Lịch Cali">
+
+        <!-- Header -->
+        <div class="home-ai-card__header">
+          <div class="home-ai-card__orb" aria-hidden="true">✦</div>
+          <div class="home-ai-card__title">
+            <strong>Trợ Lý AI Du Lịch Cali</strong>
+            <span class="home-ai-card__online">
+              <span class="home-ai-card__dot"></span>Sẵn sàng hỗ trợ
+            </span>
           </div>
         </div>
-        <div class="ai-bar__chips">
-          <button class="ai-bar__chip" onclick="event.stopPropagation();openAIWithIntent('airport')">✈ Sân Bay</button>
-          <button class="ai-bar__chip" onclick="event.stopPropagation();openAIWithIntent('tour')">🗺 Tour</button>
-          <button class="ai-bar__chip" onclick="event.stopPropagation();openAIWithIntent('price')">💰 Giá</button>
-          <button class="ai-bar__chip" onclick="event.stopPropagation();openAIWithIntent('order')">📋 Đơn hàng</button>
+
+        <!-- Welcome bubble + quick chips -->
+        <div class="home-ai-card__body">
+          <div class="home-ai-card__bubble">
+            Xin chào! Tôi có thể giúp bạn đặt món ăn Việt, xe đón sân bay, lịch nail &amp; tóc, tour California — hoặc trả lời bất kỳ câu hỏi nào. Hãy hỏi tôi!
+          </div>
+          <div class="home-ai-card__chips" role="list">
+            <button class="home-ai-card__chip" onclick="homeAiSend('Đặt xe đón sân bay')" role="listitem">✈ Sân bay</button>
+            <button class="home-ai-card__chip" onclick="homeAiSend('Tôi muốn đặt tour du lịch')" role="listitem">🗺 Tour</button>
+            <button class="home-ai-card__chip" onclick="homeAiSend('Đặt món ăn Việt')" role="listitem">🥟 Đặt món</button>
+            <button class="home-ai-card__chip" onclick="homeAiSend('Đặt lịch nail')" role="listitem">💅 Nail</button>
+            <button class="home-ai-card__chip" onclick="homeAiSend('Cho tôi biết bảng giá')" role="listitem">💰 Bảng giá</button>
+          </div>
+        </div>
+
+        <!-- Input bar -->
+        <div class="home-ai-card__input-bar">
+          <input type="text" id="homeAiInput" class="home-ai-card__input"
+                 placeholder="Hỏi AI về giá, đặt chỗ, tour…"
+                 aria-label="Nhập câu hỏi cho AI"
+                 onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();homeAiSubmit()}">
+          <button class="home-ai-card__send" onclick="homeAiSubmit()" aria-label="Gửi">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
         </div>
       </div>
 

@@ -2277,8 +2277,11 @@ select.field-input {
 /* ============================================================
    HOME AI CONCIERGE CARD  (.home-ai-card)
    ============================================================ */
+.home-section--ai {
+  padding-bottom: 1.5rem;
+}
 .home-ai-card {
-  margin: 0 1rem 1.25rem;
+  margin: 0;
   background: linear-gradient(160deg, rgba(12,30,58,.98) 0%, rgba(6,18,40,.98) 100%);
   border: 1px solid rgba(245,166,35,.38);
   border-radius: 18px;
@@ -2574,8 +2577,9 @@ select.field-input {
   /* Marketplace grid: 3 cols */
   .mkt-grid { grid-template-columns: repeat(3, 1fr); }
 
-  /* AI card: more prominent on desktop */
-  .home-ai-card { margin: 0 0 1.5rem; }
+  /* AI card: clean bottom panel on desktop, max-width centered */
+  .home-section--ai { padding: 2rem 2rem 2rem; }
+  .home-ai-card { max-width: 680px; }
   .home-ai-card__title strong { font-size: 1rem; }
   .home-ai-card__bubble { font-size: .84rem; padding: .7rem 1rem; }
   .home-ai-card__chips { gap: .5rem; }

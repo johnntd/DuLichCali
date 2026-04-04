@@ -1679,14 +1679,26 @@
       var ai = biz.aiReceptionist;
       var systemPrompt;
 
-      if (biz.vendorType === 'foodvendor') {
-        // ── Ordering-agent system prompt ────────────────────────────────────────
-        var today     = new Date();
-        var todayStr  = today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        var tomorrow  = new Date(today); tomorrow.setDate(today.getDate() + 1);
-        var tomorrowStr = tomorrow.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      // ── Shared date context (all agent types) ─────────────────────────────────
+      var today       = new Date();
+      var todayStr    = today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      var tomorrow    = new Date(today); tomorrow.setDate(today.getDate() + 1);
+      var tomorrowStr = tomorrow.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      var hostName    = biz.hosts && biz.hosts[0] ? biz.hosts[0].name : (ai.name || 'the owner');
+      var phone       = biz.phoneDisplay || '';
 
-        // Use the richer product list: _staticProducts (has descriptions) or products (Firestore)
+      // ── Shared booking-agent rules (all slot-filling agents) ─────────────────
+      var sharedRules =
+        'CRITICAL RULES:\n' +
+        '- MEMORY: Never forget what the customer already told you. Do not reset context between turns.\n' +
+        '- NEXT FIELD ONLY: Ask for the next missing field only — never dump all questions at once.\n' +
+        '- DATE RESOLUTION: Resolve relative dates ("tomorrow", "this Saturday") to actual calendar dates using TODAY.\n' +
+        '- RESET FORBIDDEN: Never pivot to "how can I help?" until the booking/order is fully confirmed.\n' +
+        '- Respond in the same language as the customer. Keep answers brief and action-oriented.\n';
+
+      if (biz.vendorType === 'foodvendor') {
+        // ── ORDER INTAKE AGENT (food vendors: Emily, etc.) ────────────────────
+        // Use the richer product list: _staticProducts (has full descriptions) vs Firestore products
         var products = (biz._staticProducts && biz._staticProducts.length > (biz.products || []).length)
           ? biz._staticProducts
           : (biz.products || []);
@@ -1699,19 +1711,16 @@
           var variantsWithPrice = (p.variants || []).filter(function (v) {
             return v && typeof v === 'object' && v.price != null && Number(v.price) > 0;
           });
-
           if (variantsWithPrice.length > 0) {
             menuBlock += '- ' + pName + ' (min ' + minQty + ' pieces):\n';
             variantsWithPrice.forEach(function (v) {
               var vPrice = Number(v.price);
               var lbl    = v.labelEn || v.label || '';
-              menuBlock += '    • ' + lbl + ': $' + vPrice.toFixed(2) + '/each' +
-                ' (min total $' + (vPrice * minQty).toFixed(2) + ')\n';
+              menuBlock += '    • ' + lbl + ': $' + vPrice.toFixed(2) + '/each (min total $' + (vPrice * minQty).toFixed(2) + ')\n';
             });
-            var variantsNoPrice = (p.variants || []).filter(function (v) {
+            (p.variants || []).filter(function (v) {
               return !(v && typeof v === 'object' && v.price != null && Number(v.price) > 0);
-            });
-            variantsNoPrice.forEach(function (v) {
+            }).forEach(function (v) {
               var lbl = (v && typeof v === 'object') ? (v.labelEn || v.label) : String(v);
               if (lbl) menuBlock += '    • ' + lbl + ': $' + basePrice.toFixed(2) + '/each\n';
             });
@@ -1719,62 +1728,96 @@
             var vLabels = (p.variants || []).map(function (v) {
               return typeof v === 'object' ? (v.labelEn || v.label) : v;
             }).filter(Boolean).join(', ');
-            menuBlock += '- ' + pName + ': $' + basePrice.toFixed(2) + '/each' +
-              ', min ' + minQty + ' pieces ($' + (basePrice * minQty).toFixed(2) + ' min order)';
+            menuBlock += '- ' + pName + ': $' + basePrice.toFixed(2) + '/each, min ' + minQty + ' pcs ($' + (basePrice * minQty).toFixed(2) + ' min)';
             if (vLabels) menuBlock += '; options: ' + vLabels;
             menuBlock += '\n';
           }
         });
 
-        var hostName = biz.hosts && biz.hosts[0] ? biz.hosts[0].name : 'Loan';
-        var phone    = biz.phoneDisplay || '';
-
         systemPrompt =
-          'You are ' + ai.name + ', the AI ordering assistant for ' + biz.name + '.\n\n' +
-
-          'TODAY: ' + todayStr + '\n' +
-          '"Tomorrow" = ' + tomorrowStr + '\n\n' +
-
+          'You are ' + ai.name + ', order assistant for ' + biz.name + '.\n\n' +
+          'TODAY: ' + todayStr + '\n"Tomorrow" = ' + tomorrowStr + '\n\n' +
           menuBlock + '\n' +
-
           'CONTACT & LOGISTICS:\n' +
-          '- Contact: ' + hostName + ' at ' + phone + '\n' +
+          '- ' + hostName + ': ' + phone + '\n' +
           '- Address: ' + biz.address + '\n' +
-          '- Pickup available. Delivery: ask customer, vendor confirms.\n' +
-          '- Place order at least 1 day in advance.\n\n' +
-
+          '- Pickup available. Delivery: ask customer, vendor confirms. Order 1+ day in advance.\n\n' +
           'YOUR JOB — ORDER INTAKE AGENT:\n' +
-          'Collect a complete order. Required fields:\n' +
-          '  1. ITEM — which dish(es)\n' +
-          '  2. VARIANT — e.g. Raw (Sống) or Fresh (Tươi), if item has variants\n' +
-          '  3. QTY — number of pieces/trays (check minimum)\n' +
-          '  4. DATE — pickup/delivery date\n' +
-          '  5. METHOD — pickup or delivery\n' +
-          '  6. CUSTOMER NAME + PHONE\n\n' +
-
-          'CRITICAL RULES:\n' +
-          '- MEMORY: Never forget what the customer already told you. If they said "bún chả" or "50 pieces", keep it. Do not reset the order context between turns.\n' +
-          '- SELECTED ITEM: Once a dish is chosen, treat it as locked. Do not ask "which dish?" again.\n' +
-          '- NEXT FIELD ONLY: Ask for the next missing field only. Do not ask all fields at once.\n' +
-          '- DATE RESOLUTION: Always resolve relative dates ("tomorrow", "this Saturday") to actual dates using TODAY above.\n' +
-          '- RESET FORBIDDEN: Never say "how can I help you?" or pivot to a new topic until the order is fully confirmed and summarized.\n' +
-          '- PRICING: Always quote exact prices from the menu above. Never say "contact vendor" for any item listed.\n' +
-          '- ORDER COMPLETE: When all 6 fields are collected, output a full order summary then say the customer can text ' + hostName + ' at ' + phone + ' to confirm.\n\n' +
-          'Respond in the same language as the customer. Keep answers brief and action-oriented.';
+          'Collect these fields in order, asking only the next missing one:\n' +
+          '  1. ITEM (which dish)\n  2. VARIANT (if applicable)\n  3. QTY (check minimum)\n' +
+          '  4. DATE  5. METHOD (pickup/delivery)  6. NAME + PHONE\n\n' +
+          sharedRules +
+          '- SELECTED ITEM: Once a dish is chosen, never ask "which dish?" again.\n' +
+          '- PRICING: Quote exact prices above — never say "contact vendor" for listed items.\n' +
+          '- ORDER COMPLETE: Summarize all 6 fields, then say customer can text ' + hostName + ' at ' + phone + ' to confirm.';
 
         if (capInfo) {
           var capLbl = _dayLabel(capInfo.date);
-          systemPrompt += '\n\nCAPACITY for ' + capLbl + ': max=' + capInfo.max +
-            ', booked=' + capInfo.booked + ', remaining=' + capInfo.remaining + '.';
-          if (capInfo.remaining <= 0) {
-            systemPrompt += ' FULLY BOOKED — tell customer to choose a different date.';
-          }
+          systemPrompt += '\n\nCAPACITY for ' + capLbl + ': max=' + capInfo.max + ', booked=' + capInfo.booked + ', remaining=' + capInfo.remaining + '.';
+          if (capInfo.remaining <= 0) systemPrompt += ' FULLY BOOKED — tell customer to choose a different date.';
         }
+
+      } else if (biz.bookingType === 'appointment' || biz.availabilityType === 'appointment') {
+        // ── APPOINTMENT INTAKE AGENT (nail/hair salons, any future appointment vendor) ──
+        var servicesBlock = '';
+        if (biz.services && biz.services.length) {
+          servicesBlock = 'SERVICES & PRICING:\n';
+          biz.services.forEach(function (s) {
+            servicesBlock += '- ' + s.name + ': ' + (s.price || '');
+            if (s.duration) servicesBlock += ' (' + s.duration + ')';
+            if (s.desc)     servicesBlock += ' — ' + s.desc;
+            servicesBlock += '\n';
+          });
+          servicesBlock += '\n';
+        }
+        var hoursBlock = '';
+        if (biz.hours) {
+          hoursBlock = 'HOURS:\n';
+          Object.keys(biz.hours).forEach(function (day) { hoursBlock += '- ' + day + ': ' + biz.hours[day] + '\n'; });
+          hoursBlock += '\n';
+        }
+        systemPrompt =
+          'You are ' + ai.name + ', appointment assistant for ' + biz.name + '.\n\n' +
+          'TODAY: ' + todayStr + '\n"Tomorrow" = ' + tomorrowStr + '\n\n' +
+          servicesBlock +
+          hoursBlock +
+          'CONTACT:\n- ' + hostName + ': ' + phone + '\n- Address: ' + biz.address + '\n\n' +
+          'YOUR JOB — APPOINTMENT INTAKE AGENT:\n' +
+          'Collect these fields in order, asking only the next missing one:\n' +
+          '  1. SERVICE wanted  2. PREFERRED DATE & TIME  3. CUSTOMER NAME + PHONE\n\n' +
+          sharedRules +
+          '- PRICING: Answer pricing/hours questions directly from the data above.\n' +
+          '- APPOINTMENT COMPLETE: Summarize service, date/time, name/phone, then say customer can call/text ' + hostName + ' at ' + phone + ' to confirm.';
+
+      } else if (biz.bookingType === 'reservation') {
+        // ── RESERVATION INTAKE AGENT (restaurants, any future reservation vendor) ──
+        var resHoursBlock = '';
+        if (biz.hours) {
+          resHoursBlock = 'HOURS:\n';
+          Object.keys(biz.hours).forEach(function (day) { resHoursBlock += '- ' + day + ': ' + biz.hours[day] + '\n'; });
+          resHoursBlock += '\n';
+        }
+        systemPrompt =
+          'You are ' + ai.name + ', reservation assistant for ' + biz.name + '.\n\n' +
+          'TODAY: ' + todayStr + '\n"Tomorrow" = ' + tomorrowStr + '\n\n' +
+          resHoursBlock +
+          'CONTACT:\n- ' + hostName + ': ' + phone + '\n- Address: ' + biz.address + '\n\n' +
+          (ai.systemExtra ? 'ABOUT: ' + ai.systemExtra + '\n\n' : '') +
+          'YOUR JOB — RESERVATION INTAKE AGENT:\n' +
+          'Collect these fields in order, asking only the next missing one:\n' +
+          '  1. PARTY SIZE  2. DATE & TIME (must be within hours above)  3. CUSTOMER NAME + PHONE  4. SPECIAL REQUESTS (optional)\n\n' +
+          sharedRules +
+          '- HOURS: Never accept a reservation outside listed hours.\n' +
+          '- RESERVATION COMPLETE: Summarize all details, then say customer can call/text ' + hostName + ' at ' + phone + ' to confirm.';
+
       } else {
-        // ── Non-food vendor: generic Q&A assistant ──────────────────────────────
-        systemPrompt = 'You are ' + ai.name + ', AI assistant for ' + biz.name + '. ' +
-          (ai.systemExtra || '') +
-          '\n\nRespond in the same language as the user. Keep it concise (2-3 sentences).';
+        // ── GENERIC FALLBACK (unknown vendor type — still history-aware) ─────────
+        systemPrompt =
+          'You are ' + ai.name + ', AI assistant for ' + biz.name + '. ' +
+          (ai.systemExtra || '') + '\n\n' +
+          'TODAY: ' + todayStr + '.\n' +
+          'Use the conversation history — never repeat questions already answered.\n' +
+          'Respond in the same language as the customer. Keep it concise.';
       }
 
       // Use full conversation history (already includes current user message)

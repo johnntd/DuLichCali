@@ -259,17 +259,34 @@
         </div>
       </section>
 
-      <!-- ── AI Launcher — bottom of homepage ─────────────────── -->
-      <div class="home-ai-launcher" onclick="switchScreen('screenChat')" role="button" tabindex="0"
-           aria-label="Mở trợ lý AI Du Lịch Cali"
-           onkeydown="if(event.key==='Enter'||event.key===' ')switchScreen('screenChat')">
-        <span class="home-ai-launcher__orb" aria-hidden="true">✨</span>
-        <div class="home-ai-launcher__text">
-          <strong>Trợ Lý Du Lịch Cali AI</strong>
-          <span>Hỏi về món ăn, tour, sân bay, nail, tóc…</span>
+      <!-- ── AI Services Panel ─────────────────────────────────── -->
+      <section class="home-section home-ai-panel" aria-label="Trợ lý AI Du Lịch Cali">
+        <div class="section-hdr">
+          <h2 class="section-title">Trợ Lý AI Du Lịch Cali</h2>
         </div>
-        <span class="home-ai-launcher__arrow" aria-hidden="true">›</span>
-      </div>
+        <p class="home-ai-panel__sub">Chọn dịch vụ bạn cần để được hỗ trợ nhanh hơn</p>
+        <div class="home-ai-panel__grid">
+
+          <button class="home-ai-svc" onclick="openAIWithIntent('airport')">
+            <span class="home-ai-svc__icon" aria-hidden="true">✈️</span>
+            <span class="home-ai-svc__name">Sân Bay</span>
+            <span class="home-ai-svc__hint">Đón / đưa tại 6 sân bay</span>
+          </button>
+
+          <button class="home-ai-svc" onclick="openAIWithIntent('tour')">
+            <span class="home-ai-svc__icon" aria-hidden="true">🗺️</span>
+            <span class="home-ai-svc__name">Tour Du Lịch</span>
+            <span class="home-ai-svc__hint">Lên kế hoạch &amp; báo giá</span>
+          </button>
+
+          <button class="home-ai-svc" onclick="homeAiSend('Tôi cần hỗ trợ về dịch vụ marketplace — món ăn, nail, tóc, hoặc hỏi về vendor')">
+            <span class="home-ai-svc__icon" aria-hidden="true">🛍️</span>
+            <span class="home-ai-svc__name">Marketplace</span>
+            <span class="home-ai-svc__hint">Món ăn, nail, tóc, vendor</span>
+          </button>
+
+        </div>
+      </section>
 
       <!-- Region service indicator + contact strip -->
       <div class="region-service" id="regionService">

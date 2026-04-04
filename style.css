@@ -2275,59 +2275,59 @@ select.field-input {
 }
 
 /* ============================================================
-   HOME AI LAUNCHER  (.home-ai-launcher)
-   Compact bottom launcher — clicks open screenChat, no inline chat
+   HOME AI SERVICES PANEL  (.home-ai-panel / .home-ai-svc)
+   3-button panel at bottom of homepage — each opens chat in a mode
    ============================================================ */
-.home-ai-launcher {
+.home-ai-panel__sub {
+  margin: -.3rem 0 .9rem;
+  font-size: .77rem;
+  color: var(--muted);
+  font-family: var(--font-b);
+  line-height: 1.4;
+}
+.home-ai-panel__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .6rem;
+}
+.home-ai-svc {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: .75rem;
-  margin: 0 1rem 1.25rem;
-  padding: .9rem 1.1rem;
-  background: linear-gradient(135deg, rgba(12,30,58,.97) 0%, rgba(6,18,40,.97) 100%);
-  border: 1px solid rgba(245,166,35,.38);
-  border-radius: 14px;
+  gap: .28rem;
+  padding: .85rem .4rem .8rem;
+  background: var(--navy-800);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
   cursor: pointer;
-  transition: border-color .2s, background .2s;
+  text-align: center;
+  transition: border-color .18s, background .18s;
   -webkit-tap-highlight-color: transparent;
+  width: 100%;
 }
-.home-ai-launcher:hover {
-  border-color: rgba(245,166,35,.65);
-  background: linear-gradient(135deg, rgba(18,42,76,.98) 0%, rgba(8,22,50,.98) 100%);
+.home-ai-svc:hover, .home-ai-svc:focus-visible {
+  border-color: rgba(245,166,35,.55);
+  background: rgba(18,42,76,.8);
+  outline: none;
 }
-.home-ai-launcher__orb {
-  font-size: 1.55rem;
-  flex-shrink: 0;
+.home-ai-svc__icon {
+  font-size: 1.4rem;
   line-height: 1;
 }
-.home-ai-launcher__text {
-  flex: 1;
-  min-width: 0;
-}
-.home-ai-launcher__text strong {
+.home-ai-svc__name {
   display: block;
-  color: var(--cream);
-  font-size: .88rem;
+  font-size: .76rem;
   font-weight: 600;
+  color: var(--cream);
   font-family: var(--font-b);
   line-height: 1.3;
 }
-.home-ai-launcher__text span {
-  display: block;
-  color: rgba(255,255,255,.48);
-  font-size: .73rem;
+.home-ai-svc__hint {
+  display: none;
+  font-size: .64rem;
+  color: var(--muted);
   font-family: var(--font-b);
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.home-ai-launcher__arrow {
-  color: var(--gold);
-  font-size: 1.4rem;
-  line-height: 1;
-  flex-shrink: 0;
-  opacity: .75;
+  line-height: 1.35;
 }
 
 /* ============================================================
@@ -2478,10 +2478,12 @@ select.field-input {
   /* Marketplace grid: 3 cols */
   .mkt-grid { grid-template-columns: repeat(3, 1fr); }
 
-  /* AI launcher: constrain width on desktop */
-  .home-ai-launcher { max-width: 540px; margin: 0 0 1.5rem; }
-  .home-ai-launcher__text strong { font-size: .95rem; }
-  .home-ai-launcher__text span { font-size: .78rem; }
+  /* AI panel: wider cards, show hint text, 3 cols */
+  .home-ai-panel__grid { gap: .85rem; }
+  .home-ai-svc { padding: 1.1rem .75rem 1rem; }
+  .home-ai-svc__icon { font-size: 1.65rem; }
+  .home-ai-svc__name { font-size: .84rem; }
+  .home-ai-svc__hint { display: block; }
 
   /* Trust grid: 4 cols */
   .trust-grid { grid-template-columns: repeat(4, 1fr); }
@@ -2654,6 +2656,13 @@ select.field-input {
 
   /* Trust: 4 cols */
   .trust-grid { grid-template-columns: repeat(4, 1fr); padding: 0; }
+
+  /* AI panel: max-width constrained, larger cards */
+  .home-ai-panel__grid { max-width: 640px; gap: 1rem; }
+  .home-ai-svc { padding: 1.25rem .9rem 1.15rem; }
+  .home-ai-svc__icon { font-size: 1.85rem; }
+  .home-ai-svc__name { font-size: .9rem; }
+  .home-ai-svc__hint { font-size: .7rem; }
 
   /* Destinations screen: 3-column grid */
   #destList {

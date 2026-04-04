@@ -167,7 +167,7 @@ const DESTINATIONS = [
       en: "San Diego enchants with perfect beaches, the world-renowned Zoo, historic Old Town, and year-round outdoor living in America's sunniest city."
     },
     image:          'sandiego.jpg?v=20260402',
-    youtubeId:      'P6LFqvpjyng', // San Diego CA 4K (Martin Nunez Photography) — embeddable, verified 2026-04
+    youtubeId:      'L0KgFehx9XI', // San Diego — user-selected, embeddable, verified 2026-04
     hook:           'Bãi biển hoàn hảo, vườn thú đẳng cấp thế giới và khí hậu lý tưởng 365 ngày — thiên đường phía Nam California.',
     highlightTags:  ['San Diego Zoo', 'Balboa Park', 'Coronado Beach', 'Gaslamp Quarter', 'Old Town'],
     distance_miles: 90,

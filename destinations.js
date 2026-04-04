@@ -205,7 +205,7 @@ const DESTINATIONS = [
       en: 'Home of the legendary Disneyland Resort with thrilling rides, Disney California Adventure park, Star Wars Galaxy\'s Edge, and magical family memories.'
     },
     image:          'anaheim.jpg?v=20260402',
-    youtubeId:      'D1IxTrD8z7A', // 5 Amazing Things at Disneyland Resort (Visit California) — embeddable, verified 2026-04
+    youtubeId:      'NbKUJH-bKns', // Disneyland — user-selected, embeddable, verified 2026-04
     hook:           'Disneyland — nơi phép thuật trở thành hiện thực, nụ cười trẻ thơ và những kỷ niệm gia đình vĩnh cửu.',
     highlightTags:  ['Disneyland', 'California Adventure', "Galaxy's Edge", 'Fantasyland', 'Downtown Disney'],
     distance_miles: 10,

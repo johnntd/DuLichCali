@@ -868,17 +868,23 @@
 
       var mediaHtml = '';
       if (product.videoUrl) {
+        // Click-to-play: inline preview (muted/loop) + click opens unmuted modal
         mediaHtml =
-          '<div class="mp-product-card__media-wrap">' +
+          '<div class="mp-product-card__media-wrap mp-product-card__media-wrap--video" ' +
+            'onclick="dlcOpenVideoModal(\'' + escAttr(product.videoUrl) + '\',\'' + escAttr(product.nameEn || product.name) + '\')" ' +
+            'title="Nhấn để xem video">' +
             '<video class="mp-product-card__promo-video" autoplay muted loop playsinline ' +
               'style="' + imgPos + '" ' +
               'poster="' + escAttr(defaultImg) + '">' +
               '<source src="' + escAttr(product.videoUrl) + '" type="video/mp4">' +
             '</video>' +
-            '<span class="mp-product-card__video-badge">▶ Video</span>' +
+            '<span class="mp-product-card__video-badge">▶ Xem Video</span>' +
           '</div>';
       } else if (defaultImg) {
         // Image exists: render it + hidden placeholder; onerror swaps them
+        var pendingBadge = (product.videoStatus === 'pending')
+          ? '<span class="mp-product-card__video-pending">&#127902; Promo Video Coming</span>'
+          : '';
         mediaHtml =
           '<div class="mp-product-card__media-wrap" id="pcard-media-' + escAttr(product.id) + '">' +
             '<img class="mp-product-card__img" ' +
@@ -889,6 +895,7 @@
               'onerror="this.style.display=\'none\';var ph=document.getElementById(\'pcard-ph-' + escAttr(product.id) + '\');if(ph)ph.style.display=\'flex\'">' +
             _ph.replace('id="pcard-ph-' + escAttr(product.id) + '"',
                         'id="pcard-ph-' + escAttr(product.id) + '" style="display:none"') +
+            pendingBadge +
           '</div>';
       } else {
         // No image URL — show placeholder immediately
@@ -1867,6 +1874,47 @@
   window.Receptionist = Receptionist;
 
 })();
+
+// ── Video modal (click-to-play unmuted) ───────────────────────────────────────
+function dlcOpenVideoModal(videoUrl, title) {
+  var existing = document.getElementById('dlcVideoModal');
+  if (existing) existing.remove();
+
+  var modal = document.createElement('div');
+  modal.id = 'dlcVideoModal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-label', title || 'Video');
+  modal.innerHTML =
+    '<div class="dlc-video-modal__backdrop" onclick="dlcCloseVideoModal()"></div>' +
+    '<div class="dlc-video-modal__box">' +
+      '<button class="dlc-video-modal__close" onclick="dlcCloseVideoModal()" aria-label="Đóng">&#215;</button>' +
+      (title ? '<div class="dlc-video-modal__title">' + title + '</div>' : '') +
+      '<video class="dlc-video-modal__video" controls autoplay playsinline>' +
+        '<source src="' + videoUrl + '" type="video/mp4">' +
+      '</video>' +
+    '</div>';
+
+  document.body.appendChild(modal);
+  document.addEventListener('keydown', _dlcVideoModalKeydown);
+  // Prevent body scroll
+  document.body.style.overflow = 'hidden';
+}
+
+function dlcCloseVideoModal() {
+  var modal = document.getElementById('dlcVideoModal');
+  if (modal) {
+    var vid = modal.querySelector('video');
+    if (vid) { vid.pause(); vid.src = ''; }
+    modal.remove();
+  }
+  document.removeEventListener('keydown', _dlcVideoModalKeydown);
+  document.body.style.overflow = '';
+}
+
+function _dlcVideoModalKeydown(e) {
+  if (e.key === 'Escape') dlcCloseVideoModal();
+}
 
 // ── Variant image swap helpers (global, called from onclick attributes) ──────
 // Swap product card image when a variant chip is clicked

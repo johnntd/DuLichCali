@@ -528,10 +528,11 @@ Return JSON matching FoodPromoSchema exactly:
   async function callProviderRaw(provider, taskDef) {
     const keyMap = { claude: 'dlc_claude_key', openai: 'dlc_openai_key', gemini: 'dlc_gemini_key' };
     const localKey = localStorage.getItem(keyMap[provider]);
-    // ── Direct browser API call when a local key is set ───────────────────
-    // Bypasses aiProxy Cloud Function (which requires server-side key config).
-    // Both Anthropic and OpenAI support CORS from browser origins.
-    if (localKey) {
+    const isLocalhost = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
+
+    // ── Dev override: direct browser API call (localhost only) ─────────────
+    // Production uses aiProxy Cloud Function (keys stay server-side in Secret Manager).
+    if (localKey && isLocalhost) {
       if (provider === 'openai') {
         const body = {
           model: 'gpt-4o-mini', max_tokens: taskDef.maxTokens || 1000,

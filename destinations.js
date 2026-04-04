@@ -89,7 +89,7 @@ const DESTINATIONS = [
       en: 'San Francisco enchants with the iconic Golden Gate Bridge, vibrant Chinatown, historic cable cars, Alcatraz island, and a world-class food scene.'
     },
     image:          'sanfrancisco.jpg?v=20260402',
-    youtubeId:      'Vvata0OboBs', // Best of San Francisco in Beautiful 4K — verify at youtube.com/watch?v=Vvata0OboBs
+    youtubeId:      'edKuGYd-S88', // Travel Guide San Francisco (SacTV) — embeddable, verified 2026-04
     hook:           'Cầu Cổng Vàng, xe điện leo đồi, Alcatraz và ẩm thực đỉnh cao bên vịnh biển thơ mộng.',
     highlightTags:  ['Golden Gate', 'Alcatraz', 'Cable Cars', "Fisherman's Wharf", 'Chinatown'],
     distance_miles: 400,
@@ -129,7 +129,7 @@ const DESTINATIONS = [
       en: 'Los Angeles captivates with iconic Hollywood, breathtaking Santa Monica beach, Beverly Hills luxury shopping, and the most diverse food scene in America.'
     },
     image:          'losangeles.jpg?v=20260402',
-    youtubeId:      'iBZ5gWAa_MI',
+    youtubeId:      'yXyVHG0z7Nw', // Downtown Los Angeles drone (Jason Daniel Shaw) — embeddable, verified 2026-04
     hook:           'Hollywood huyền thoại, Beverly Hills xa hoa và bãi biển dát vàng — thành phố của những giấc mơ.',
     highlightTags:  ['Hollywood', 'Beverly Hills', 'Santa Monica', 'Griffith Observatory', 'Venice Beach'],
     distance_miles: 35,
@@ -167,7 +167,7 @@ const DESTINATIONS = [
       en: "San Diego enchants with perfect beaches, the world-renowned Zoo, historic Old Town, and year-round outdoor living in America's sunniest city."
     },
     image:          'sandiego.jpg?v=20260402',
-    youtubeId:      'HMqXkwIWtyQ',
+    youtubeId:      'P6LFqvpjyng', // San Diego CA 4K (Martin Nunez Photography) — embeddable, verified 2026-04
     hook:           'Bãi biển hoàn hảo, vườn thú đẳng cấp thế giới và khí hậu lý tưởng 365 ngày — thiên đường phía Nam California.',
     highlightTags:  ['San Diego Zoo', 'Balboa Park', 'Coronado Beach', 'Gaslamp Quarter', 'Old Town'],
     distance_miles: 90,
@@ -205,7 +205,7 @@ const DESTINATIONS = [
       en: 'Home of the legendary Disneyland Resort with thrilling rides, Disney California Adventure park, Star Wars Galaxy\'s Edge, and magical family memories.'
     },
     image:          'anaheim.jpg?v=20260402',
-    youtubeId:      'HEWRxOXidCU',
+    youtubeId:      'D1IxTrD8z7A', // 5 Amazing Things at Disneyland Resort (Visit California) — embeddable, verified 2026-04
     hook:           'Disneyland — nơi phép thuật trở thành hiện thực, nụ cười trẻ thơ và những kỷ niệm gia đình vĩnh cửu.',
     highlightTags:  ['Disneyland', 'California Adventure', "Galaxy's Edge", 'Fantasyland', 'Downtown Disney'],
     distance_miles: 10,
@@ -243,7 +243,7 @@ const DESTINATIONS = [
       en: 'Napa Valley captivates with rolling vineyards, 400+ world-class wineries, farm-to-table dining, and breathtaking California wine country scenery.'
     },
     image:          'napavalley.jpg?v=20260402',
-    youtubeId:      'V9K64GQ-yIY',
+    youtubeId:      'dplrw7R1JKc', // Get to Know Napa Valley Wine (Wine Folly) — embeddable, verified 2026-04
     hook:           'Những vườn nho trải dài vô tận, rượu vang đẳng cấp thế giới và bữa ăn farm-to-table giữa thiên nhiên.',
     highlightTags:  ['Wine Tasting', 'Castello di Amorosa', 'Hot Air Balloon', 'Oxbow Market', 'Vineyard'],
     distance_miles: 430,
@@ -281,7 +281,7 @@ const DESTINATIONS = [
       en: 'Lake Tahoe mesmerizes with crystal-clear water visible 70 feet deep, white sandy beaches in summer, and world-class ski resorts in winter.'
     },
     image:          'laketahoe.jpg?v=20260402',
-    youtubeId:      'kkRWHC8GQRY',
+    youtubeId:      'e8S6zfy0CKY', // Summer & Winter In Lake Tahoe 4K (Travel Guides) — embeddable, verified 2026-04
     hook:           'Nước hồ xanh ngắt trong vắt nhìn thấy đáy, bãi cát trắng mùa hè và ski resort đỉnh cao mùa đông.',
     highlightTags:  ['Emerald Bay', 'Sand Harbor', 'Heavenly Resort', 'Skiing', 'Tahoe City'],
     distance_miles: 490,
@@ -319,7 +319,7 @@ const DESTINATIONS = [
       en: 'Monterey and Big Sur captivate with legendary Highway 1, towering sea cliffs, world-class aquarium, and ancient Cypress forests meeting the Pacific Ocean.'
     },
     image:          'monterey.jpg?v=20260402',
-    youtubeId:      'CX4lHnLT3U8',
+    youtubeId:      'MoyK0YWoD3E', // Big Sur California 4K (Martin Nunez Photography) — embeddable, verified 2026-04
     hook:           'Đường Highway 1 huyền thoại uốn lượn bên vách đá Thái Bình Dương, rừng Cypress ngàn tuổi và thủy cung biển kỳ diệu.',
     highlightTags:  ['Highway 1', 'Big Sur', 'Aquarium', 'Bixby Bridge', 'Cannery Row'],
     distance_miles: 330,
@@ -357,7 +357,7 @@ const DESTINATIONS = [
       en: '17-Mile Drive is a legendary private coastal route through Pebble Beach — famous for the ancient Lone Cypress, world-famous Pebble Beach Golf Links, and spectacular ocean scenery.'
     },
     image:          '17miledrive.jpg?v=20260402',
-    youtubeId:      '8MBgXEJ_cSU',
+    youtubeId:      'eJYmH748VYo', // Best Things to See on 17-Mile Drive (Carried Away Travels) — embeddable, verified 2026-04
     hook:           'Lone Cypress ngàn tuổi trơ trên mỏm đá biển, sân golf Pebble Beach đẳng cấp PGA và hoàng hôn nghẹt thở.',
     highlightTags:  ['Lone Cypress', 'Pebble Beach Golf', 'Seal Rocks', 'Bird Rock', 'Spanish Bay'],
     distance_miles: 335,
@@ -395,7 +395,7 @@ const DESTINATIONS = [
       en: 'Palm Springs enchants with iconic mid-century architecture and luxury resorts; nearby Joshua Tree National Park offers otherworldly cactus landscapes and the best stargazing in California.'
     },
     image:          'palmsprings.jpg?v=20260402',
-    youtubeId:      'n4dE9LKRJXU',
+    youtubeId:      'JGHNCn-GDtg', // Palm Springs & Joshua Tree weekend trip — embeddable, verified 2026-04
     hook:           'Sa mạc bí ẩn với cây Joshua Tree kỳ lạ, bầu trời đêm đầy sao và Palm Springs resort xa hoa.',
     highlightTags:  ['Joshua Tree', 'Aerial Tramway', 'Palm Canyon', 'Desert Stars', 'Coachella Valley'],
     distance_miles: 110,
@@ -433,7 +433,7 @@ const DESTINATIONS = [
       en: 'Sequoia and Kings Canyon amaze with Giant Sequoias towering over 80 meters — including General Sherman, the world\'s largest tree by volume — and a canyon deeper than the Grand Canyon.'
     },
     image:          'sequoia.jpg?v=20260402',
-    youtubeId:      'zHpDaFImkxQ',
+    youtubeId:      'mfGaXDJfbSU', // Giant Forest Sequoia 4K HDR (KSL featured) — embeddable, verified 2026-04
     hook:           'Những cây khổng lồ 2000 năm tuổi, cao 84m và General Sherman — cây lớn nhất Trái Đất tính theo thể tích.',
     highlightTags:  ['General Sherman', 'Giant Forest', 'Moro Rock', 'Kings Canyon', 'Crystal Cave'],
     distance_miles: 260,
@@ -471,7 +471,7 @@ const DESTINATIONS = [
       en: "Santa Barbara enchants with whitewashed Spanish-Moorish architecture along a stunning coastline, upscale State Street, historic Mission, and excellent Santa Ynez Valley wines."
     },
     image:          'santabarbara.jpg?v=20260402',
-    youtubeId:      'FHvBmR-Hn7Y',
+    youtubeId:      'UbtojV5GqCo', // California 101: Santa Barbara (Visit California official) — embeddable, verified 2026-04
     hook:           'Kiến trúc Tây Ban Nha trắng tinh bên biển xanh, nhà thờ mission lịch sử và rượu vang Santa Ynez đỉnh cao.',
     highlightTags:  ['Mission Santa Barbara', 'Stearns Wharf', 'State Street', 'Santa Ynez Wine', 'East Beach'],
     distance_miles: 110,
@@ -509,7 +509,7 @@ const DESTINATIONS = [
       en: 'Solvang is a charming Danish village in California wine country, famous for European half-timbered architecture, windmills, and irresistible Danish pastries and aebleskiver.'
     },
     image:          'solvang.jpg?v=20260402',
-    youtubeId:      'Y5s7bO_BXHE',
+    youtubeId:      'nilz8zcCugI', // Solvang Danish Village California — embeddable, verified 2026-04
     hook:           'Ngôi làng Đan Mạch cổ tích với cối xay gió, bánh pastry thơm lừng và kiến trúc châu Âu giữa lòng California.',
     highlightTags:  ['Danish Architecture', 'Windmills', 'Aebleskiver', 'Santa Ynez Wine', 'Hans Christian Andersen'],
     distance_miles: 165,
@@ -548,7 +548,7 @@ const DESTINATIONS = [
       en: 'Grand Canyon overwhelms with its staggering 1-mile-deep, 10-mile-wide, 277-mile-long gorge — sculpted by the Colorado River over 6 million years of geological time.'
     },
     image:          'grandcanyon.jpg?v=20260402',
-    youtubeId:      'EQsEUKDuZik',
+    youtubeId:      '_hoGpYyn4Bs', // More Than A View — Grand Canyon In Depth Ep.1 (NPS official) — embeddable, verified 2026-04
     hook:           'Hẻm núi sâu 1.6km điêu khắc trong 6 triệu năm — vẻ đẹp hùng vĩ ngoài mọi ngôn từ, phải đến mới hiểu.',
     highlightTags:  ['South Rim', 'Skywalk', 'Colorado River', 'Bright Angel Trail', 'Helicopter Tour'],
     distance_miles: 490,

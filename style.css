@@ -1963,11 +1963,7 @@ select.field-input {
 .dest-modal__yt-link:hover { background: rgba(200, 0, 0, .95); transform: translateX(-50%) scale(1.04); }
 .dest-modal__yt-link svg { flex-shrink: 0; }
 
-/* Ensure modal sits outside the 500px max-width constraint on desktop */
-@media (min-width: 900px) {
-  .dest-modal { max-width: 500px; left: 50%; right: auto; transform: translateX(-50%) translateY(100%); }
-  .dest-modal--open { transform: translateX(-50%) translateY(0); }
-}
+/* Desktop modal width is handled by the 1200px rule below — no cap at 900px */
 
 /* ══════════════════════════════════════════════════════════════
    NEW SERVICE GRID (11 services in 3 category rows)

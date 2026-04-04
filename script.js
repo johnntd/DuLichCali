@@ -1600,16 +1600,24 @@ function homeAiSend(text) {
 function openAIWithIntent(intent) {
   switchScreen('screenChat');
 
-  // Airport and tour use structured booking flows
-  if (intent === 'airport' || intent === 'tour') {
+  // Intents that map directly to structured booking workflows
+  var structuredFlows = {
+    airport:         'airport',
+    airport_pickup:  'airport_pickup',
+    airport_dropoff: 'airport_dropoff',
+    tour:            'tour',
+    ride:            'ride',
+    private_ride:    'ride',
+  };
+  if (Object.prototype.hasOwnProperty.call(structuredFlows, intent)) {
+    var flowKey = structuredFlows[intent];
     setTimeout(function() {
-      if (window.DLChat && DLChat.startFlow) DLChat.startFlow(intent);
+      if (window.DLChat && DLChat.startFlow) DLChat.startFlow(flowKey);
     }, 300);
     return;
   }
 
   var prompts = {
-    ride:  'Tôi cần đặt xe riêng cao cấp',
     price: 'Cho tôi biết bảng giá dịch vụ',
     order: 'Kiểm tra đơn đặt chỗ của tôi'
   };

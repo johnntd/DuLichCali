@@ -972,6 +972,23 @@ select.field-input {
   font-family: var(--font-b);
   line-height: 1.4;
 }
+/* Wide (full-width) tile — used by private ride */
+.home-ride-tile--wide {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: center;
+  gap: .9rem;
+}
+.home-ride-tile--wide .home-ride-tile__icon {
+  margin-bottom: 0;
+  font-size: 1.7rem;
+  flex-shrink: 0;
+}
+.home-ride-tile--wide .home-ride-tile__body {
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+}
 
 /* ── Region Service Block ───────────────────────────────────── */
 .region-tag {

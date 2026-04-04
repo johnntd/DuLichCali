@@ -1362,6 +1362,10 @@ BEHAVIOR GUIDELINES:
     // Hair appointment — must have booking intent
     { intent: 'hair_booking',
       pattern: /(?:đặt|book|hẹn)\s*(?:lịch\s*)?(?:tóc|hair|cắt|nhuộm|keratin|uốn|duỗi|balayage)|(?:hair|tóc|cắt tóc)\s*(?:appointment|lịch|hẹn|đặt)/i },
+
+    // Private ride — point-to-point, no airport involved
+    { intent: 'private_ride',
+      pattern: /\bxe riêng\b|private.?ride|thuê xe điểm đến|đặt xe.*điểm|xe từ\b|xe đến\b/i },
   ];
 
   // Map router intents to workflowEngine keys
@@ -1369,6 +1373,7 @@ BEHAVIOR GUIDELINES:
     travel_tour:  'tour_request',
     nail_booking: 'nail_appointment',
     hair_booking: 'hair_appointment',
+    private_ride: 'private_ride',
   };
 
   // Airport pickup vs dropoff from message text
@@ -1788,12 +1793,15 @@ BEHAVIOR GUIDELINES:
         food:            'food_order',
         nail:            'nail_appointment',
         hair:            'hair_appointment',
+        ride:            'private_ride',
+        private_ride:    'private_ride',
       };
       const intent = typeMap[type] || type;
       if (!WF.WORKFLOWS[intent]) return;
       // Set agent mode from flow type so Claude stays focused on the right domain
       const modeMap = {
         airport_pickup: 'airport', airport_dropoff: 'airport',
+        private_ride:   'airport',
         tour_request:   'tour',
         food_order: 'marketplace', nail_appointment: 'marketplace', hair_appointment: 'marketplace',
       };

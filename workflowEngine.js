@@ -476,6 +476,37 @@
     return null;
   }
 
+  // Returns Uber comparison pricing for a private ride (A→B, no airport)
+  function estimateRide(passengers, fromCity, toCity) {
+    var p = Math.max(1, passengers || 2);
+    if (typeof DLCPricing !== 'undefined') {
+      // Try to look up distance using fromCity/toCity in pricing tables
+      var r = DLCPricing.estimateTransfer({ fromCity: fromCity || '', airport: toCity || '', passengers: p, direction: 'dropoff' });
+      if (r && r.miles) {
+        var cmp = DLCPricing.transferCostWithComparison(r.miles, p);
+        return {
+          ourPrice: cmp.ourPrice,
+          uberEst:  cmp.uberEstimate,
+          savings:  cmp.savings,
+          vehicle:  DLCPricing.getVehicle ? DLCPricing.getVehicle(p) : (p > 3 ? 'Mercedes Van' : 'Tesla Model Y'),
+          miles:    r.miles,
+          approx:   false,
+        };
+      }
+    }
+    // Fallback rough estimate based on passenger count
+    var isVan   = p > 3;
+    var minFare = isVan ? 120 : 100;
+    var uberEst = Math.round(minFare / 0.8);
+    return {
+      ourPrice: minFare,
+      uberEst:  uberEst,
+      savings:  uberEst - minFare,
+      vehicle:  isVan ? 'Mercedes Van' : 'Tesla Model Y',
+      approx:   true,
+    };
+  }
+
   // ── Maps & Address Helpers ─────────────────────────────────────────────────
 
   function buildMapsLink(address) {
@@ -805,6 +836,84 @@
           '',
           est             ? '💰 Ước tính: ' + est : null,
         ];
+        return lines.filter(function(v) { return v !== null; }).join('\n');
+      },
+    },
+
+    private_ride: {
+      label: 'Xe Riêng Cao Cấp',
+      intro: '🚗 Tôi sẽ giúp bạn đặt xe riêng cao cấp. Gõ "hủy" bất cứ lúc nào để thoát.\n',
+      detectKeywords: /\bxe riêng\b|private.?ride|luxury.?ride|đặt xe.*điểm|thuê xe điểm đến/i,
+      fields: [
+        {
+          key: 'pickupAddress',
+          question: function() { return '📍 Địa chỉ đón bạn?\n(Thành phố hoặc địa chỉ cụ thể — VD: San Jose, 1234 Main St, Orange County...)'; },
+          extract: function(t) { return X.address(t) || (t.trim().length >= 3 ? t.trim() : null); },
+          optional: false,
+        },
+        {
+          key: 'dropoffAddress',
+          question: function() { return '🏁 Điểm đến của bạn?\n(Thành phố hoặc địa chỉ cụ thể)'; },
+          extract: function(t) { return X.address(t) || (t.trim().length >= 3 ? t.trim() : null); },
+          optional: false,
+        },
+        {
+          key: 'requestedDate',
+          question: function() { return 'Ngày đi? (VD: 15/4, thứ Sáu, ngày mai)'; },
+          extract: function(t) { return X.date(t); },
+          optional: false,
+        },
+        {
+          key: 'requestedTime',
+          question: function() { return 'Mấy giờ xuất phát? (VD: 9:00 AM, 14:30)'; },
+          extract: function(t) { return X.time(t); },
+          optional: false,
+        },
+        {
+          key: 'passengers',
+          question: function() { return 'Có bao nhiêu hành khách?'; },
+          extract: function(t) { return X.passengers(t) || X.quantity(t); },
+          optional: false,
+        },
+        {
+          key: 'customerName',
+          question: function() { return 'Tên của bạn?'; },
+          extract: function(t) { return X.name(t); },
+          optional: false,
+        },
+        {
+          key: 'customerPhone',
+          question: function() { return 'Số điện thoại liên lạc?'; },
+          extract: function(t) { return X.phone(t); },
+          optional: false,
+        },
+        {
+          key: 'notes',
+          question: function() { return 'Yêu cầu đặc biệt?\n(Gõ "không" nếu không có)'; },
+          extract: function(t) { return /^(không|no|none|n\/a|skip|-)$/i.test(t.trim()) ? '' : t.trim(); },
+          optional: true,
+        },
+      ],
+      summary: function(f) {
+        var est = estimateRide(f.passengers, f.pickupAddress, f.dropoffAddress);
+        var lines = [
+          '📋 Tóm tắt đặt xe riêng cao cấp:',
+          '• Điểm đón:   ' + (f.pickupAddress || ''),
+          '• Điểm đến:   ' + (f.dropoffAddress || ''),
+          '• Ngày:       ' + fmtDate(f.requestedDate),
+          '• Giờ:        ' + fmtTime(f.requestedTime),
+          '• Hành khách: ' + (f.passengers || '') + ' người',
+          '• Tên:        ' + (f.customerName || ''),
+          '• SĐT:        ' + fmtPhone(f.customerPhone),
+          f.notes ? '• Ghi chú:    ' + f.notes : null,
+          '',
+        ];
+        if (est) {
+          lines.push('💰 So sánh giá (' + est.vehicle + '):');
+          lines.push('   Uber/Lyft ước tính: ~$' + est.uberEst);
+          lines.push('   DuLịchCali (-20%):  ~$' + est.ourPrice + '  ← tiết kiệm ~$' + est.savings);
+          if (est.approx) lines.push('   ⚠️ Giá sơ bộ — đội sẽ xác nhận sau khi đặt.');
+        }
         return lines.filter(function(v) { return v !== null; }).join('\n');
       },
     },
@@ -1591,6 +1700,53 @@
         requestedDate:f.requestedDate||'', destination:dest.name||'',
         passengers:f.passengers||1, days:f.days||1,
         lodging, hotelArea:f.hotelArea||'', chosenHotel:f.chosenHotel||'', bookingMode:f.bookingMode||'',
+        read:false, createdAt:fv.serverTimestamp(),
+      });
+
+    } else if (draft.intent === 'private_ride') {
+      var datetime = (f.requestedDate && f.requestedTime)
+        ? f.requestedDate + 'T' + f.requestedTime + ':00'
+        : (f.requestedDate || '');
+      var pickupMapsLink  = buildMapsLink(f.pickupAddress);
+      var dropoffMapsLink = buildMapsLink(f.dropoffAddress);
+      var rideEst = estimateRide(f.passengers, f.pickupAddress, f.dropoffAddress);
+      trackingToken = genId().replace('DLC-','') + genId().replace('DLC-','');
+
+      var rideBriefLines = [
+        '🚗 XE RIÊNG CAO CẤP — ' + orderId,
+        '',
+        '👤 Khách: ' + (f.customerName||'') + ' · ' + fmtPhone(f.customerPhone),
+        '📍 Đón tại: ' + (f.pickupAddress||'') + (pickupMapsLink ? '\n   Map: ' + pickupMapsLink : ''),
+        '🏁 Điểm đến: ' + (f.dropoffAddress||'') + (dropoffMapsLink ? '\n   Map: ' + dropoffMapsLink : ''),
+        '📅 ' + fmtDate(f.requestedDate) + ' · ' + fmtTime(f.requestedTime),
+        '👥 ' + (f.passengers||1) + ' người · ' + rideEst.vehicle,
+        rideEst.ourPrice
+          ? '💰 DLC ~$' + rideEst.ourPrice + (rideEst.uberEst ? ' (Uber ~$' + rideEst.uberEst + ')' : '')
+          : null,
+        f.notes ? '📝 ' + f.notes : null,
+      ];
+      var rideBrief = rideBriefLines.filter(function(v){return v!==null;}).join('\n');
+
+      await db.collection('bookings').doc(orderId).set({
+        bookingId:orderId, trackingToken,
+        status:'pending', serviceType:'private_ride', datetime,
+        pickupAddress:f.pickupAddress||'', dropoffAddress:f.dropoffAddress||'',
+        passengers:f.passengers||1,
+        name:f.customerName||'', phone:f.customerPhone||'',
+        notes:f.notes||'', source:'ai_chat',
+        estimatedPrice: rideEst ? rideEst.ourPrice : null,
+        driver:null, vehicleLat:null, vehicleLng:null, vehicleHeading:null, etaMinutes:null,
+        createdAt:fv.serverTimestamp(),
+      });
+      await db.collection('vendors').doc('admin-dlc').collection('notifications').add({
+        type:'new_booking',
+        title:'🚗 Xe riêng — ' + (f.customerName||''),
+        message: rideBrief,
+        bookingId:orderId, customerPhone:f.customerPhone||'',
+        requestedDate:f.requestedDate||'', requestedTime:f.requestedTime||'',
+        pickupAddress:f.pickupAddress||'', dropoffAddress:f.dropoffAddress||'',
+        pickupMapsLink:pickupMapsLink||'', dropoffMapsLink:dropoffMapsLink||'',
+        passengers:f.passengers||1, estimatedPrice:rideEst ? rideEst.ourPrice : null,
         read:false, createdAt:fv.serverTimestamp(),
       });
     }

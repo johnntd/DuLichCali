@@ -281,7 +281,7 @@ const DESTINATIONS = [
       en: 'Lake Tahoe mesmerizes with crystal-clear water visible 70 feet deep, white sandy beaches in summer, and world-class ski resorts in winter.'
     },
     image:          'laketahoe.jpg?v=20260402',
-    youtubeId:      'e8S6zfy0CKY', // Summer & Winter In Lake Tahoe 4K (Travel Guides) — embeddable, verified 2026-04
+    youtubeId:      'wbyj9P-bsUI', // Lake Tahoe — user-selected, embeddable, verified 2026-04
     hook:           'Nước hồ xanh ngắt trong vắt nhìn thấy đáy, bãi cát trắng mùa hè và ski resort đỉnh cao mùa đông.',
     highlightTags:  ['Emerald Bay', 'Sand Harbor', 'Heavenly Resort', 'Skiing', 'Tahoe City'],
     distance_miles: 490,

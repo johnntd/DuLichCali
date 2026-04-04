@@ -598,7 +598,8 @@ Be concise (2-4 sentences), helpful, and offer a clear next step.`,
       });
       return ref.id;
     } catch (e) {
-      console.error('[orchestrator] queueRenderJob failed:', e);
+      // videoRenderJobs may not have Firestore rules yet — non-fatal, job just won't be queued
+      console.warn('[orchestrator] queueRenderJob skipped:', e.code || e.message);
       return null;
     }
   }

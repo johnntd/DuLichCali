@@ -5,14 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0d2f50" />
   <title>Marketplace · Du Lịch Cali Services</title>
-  <meta name="description" content="Dịch vụ địa phương tại California — Ẩm thực, Nail, Tóc và nhiều hơn nữa.">
+  <meta name="description" content="Dịch vụ địa phương tại California — Ẩm thực, Nail, Tóc và nhiều hơn nữa từ các nhà cung cấp Việt.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,300;0,6..96,400;1,6..96,300;1,6..96,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../marketplace/marketplace.css">
   <link rel="stylesheet" href="../desktop.css">
   <style>
-    /* ── Hub-specific styles ── */
+    /* ─────────────────────────────────────────────────────
+       Marketplace Hub — full-page redesign
+       ───────────────────────────────────────────────────── */
+
     .hub-app {
       min-height: 100vh;
       display: flex;
@@ -21,14 +24,13 @@
       padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
     }
 
-    /* ── Persistent bottom nav ── */
+    /* ── Bottom nav ──────────────────────────────────────── */
     .hub-bottom-nav {
       position: fixed;
       bottom: 0; left: 0; right: 0;
       height: calc(64px + env(safe-area-inset-bottom, 0px));
       padding-bottom: env(safe-area-inset-bottom, 0px);
-      display: flex;
-      align-items: stretch;
+      display: flex; align-items: stretch;
       background: rgba(13,47,80,.96);
       backdrop-filter: blur(20px) saturate(160%);
       -webkit-backdrop-filter: blur(20px) saturate(160%);
@@ -36,20 +38,12 @@
       z-index: 40;
     }
     .hub-nav-tab {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: .22rem;
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: .22rem;
       color: rgba(90,140,175,.65);
-      font-size: .62rem;
-      font-weight: 500;
-      letter-spacing: .04em;
-      text-decoration: none;
-      -webkit-tap-highlight-color: transparent;
-      cursor: pointer;
-      transition: color .18s;
+      font-size: .62rem; font-weight: 500; letter-spacing: .04em;
+      text-decoration: none; -webkit-tap-highlight-color: transparent;
+      cursor: pointer; transition: color .18s;
     }
     .hub-nav-tab svg { width: 20px; height: 20px; flex-shrink: 0; }
     .hub-nav-tab--active { color: #f0b429; }
@@ -58,354 +52,385 @@
       width: 48px; height: 48px;
       display: flex; align-items: center; justify-content: center;
       background: linear-gradient(135deg, #e55a3c 0%, #d4840a 55%, #f0b429 100%);
-      border-radius: 50%;
-      margin-top: -18px;
+      border-radius: 50%; margin-top: -18px;
       box-shadow: 0 4px 16px rgba(245,166,35,.45);
       color: #0a1c33;
     }
-    @media (min-width: 1200px) {
-      .hub-bottom-nav { display: none; }
-      .hub-app { padding-bottom: 0; }
-    }
 
-    /* ── App Bar ── */
+    /* ── App bar ─────────────────────────────────────────── */
     .hub-bar {
-      height: 56px;
-      display: flex;
-      align-items: center;
+      height: 56px; display: flex; align-items: center;
       padding: 0 1.25rem;
       background: rgba(13,47,80,.94);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      gap: .75rem;
+      position: sticky; top: 0; z-index: 50; gap: .75rem;
     }
     .hub-bar__back {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      background: var(--gold-dim);
-      color: var(--gold);
-      flex-shrink: 0;
-      text-decoration: none;
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--gold-dim); color: var(--gold);
+      flex-shrink: 0; text-decoration: none;
     }
     .hub-bar__back svg { display: block; }
     .hub-bar__title {
-      font-family: var(--font-d);
-      font-size: 1.1rem;
-      font-weight: 400;
-      color: var(--gold-lt);
-      letter-spacing: .03em;
+      font-family: var(--font-d); font-size: 1.1rem;
+      font-weight: 400; color: var(--gold-lt); letter-spacing: .03em;
     }
 
-    /* ── Hero — full-width, left-aligned, atmospheric ── */
+    /* ── HERO — split: text + food mosaic ──────────────── */
     .hub-hero {
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 0;
       position: relative;
-      padding: 2.5rem 1.5rem 2.25rem;
       overflow: hidden;
-      background:
-        radial-gradient(ellipse 60% 50% at 100% 0%, rgba(245,166,35,.12) 0%, transparent 70%),
-        linear-gradient(160deg, rgba(245,166,35,.08) 0%, rgba(56,189,248,.05) 60%, transparent 100%);
-      border-bottom: 1px solid rgba(245,166,35,.18);
+      border-bottom: 1px solid rgba(245,166,35,.15);
     }
-    /* Decorative gradient accent bar at bottom of hero */
-    .hub-hero::after {
+    .hub-hero::before {
       content: '';
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent 0%, rgba(245,166,35,.4) 40%, rgba(56,189,248,.25) 70%, transparent 100%);
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 0% 100%, rgba(245,166,35,.1) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 100% 0%, rgba(56,189,248,.07) 0%, transparent 60%);
+      pointer-events: none; z-index: 0;
     }
 
+    /* Text side */
+    .hub-hero__text {
+      position: relative; z-index: 1;
+      padding: 2rem 1.5rem 2.5rem;
+      display: flex; flex-direction: column; gap: .75rem;
+    }
     .hub-hero__eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: .5rem;
-      font-size: .68rem;
-      font-weight: 600;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 1rem;
+      display: inline-flex; align-items: center; gap: .5rem;
+      font-size: .68rem; font-weight: 600; letter-spacing: .18em;
+      text-transform: uppercase; color: var(--gold);
     }
     .hub-hero__eyebrow::before {
-      content: '';
-      display: block;
-      width: 24px; height: 1px;
-      background: var(--gold);
-      opacity: .7;
+      content: ''; display: block;
+      width: 22px; height: 1px; background: var(--gold); opacity: .7;
     }
-
     .hub-hero__h1 {
       font-family: var(--font-d);
-      font-size: 2.2rem;
-      font-weight: 300;
-      color: var(--gold-lt);
-      line-height: 1.15;
-      margin-bottom: .85rem;
+      font-size: 2.2rem; font-weight: 300;
+      color: var(--gold-lt); line-height: 1.12;
     }
-    .hub-hero__h1 em {
-      font-style: italic;
-      color: #c8e4f8;
-    }
-
+    .hub-hero__h1 em { font-style: italic; color: #c8e4f8; }
     .hub-hero__sub {
-      font-size: .88rem;
-      color: var(--text);
-      opacity: .82;
-      line-height: 1.65;
-      max-width: 480px;
-      margin-bottom: 1.5rem;
+      font-size: .88rem; color: var(--text);
+      opacity: .82; line-height: 1.65; max-width: 440px;
     }
-
-    /* Stats pills */
+    .hub-hero__cta {
+      display: inline-flex; align-items: center; gap: .5rem;
+      margin-top: .25rem;
+      background: linear-gradient(135deg, rgba(245,166,35,.2) 0%, rgba(251,146,60,.15) 100%);
+      border: 1px solid rgba(245,166,35,.4);
+      color: var(--gold-lt);
+      font-size: .85rem; font-weight: 600; letter-spacing: .04em;
+      padding: .65rem 1.4rem;
+      border-radius: 30px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background .2s, border-color .2s, transform .15s;
+      align-self: flex-start;
+    }
+    .hub-hero__cta:hover {
+      background: linear-gradient(135deg, rgba(245,166,35,.3) 0%, rgba(251,146,60,.22) 100%);
+      border-color: rgba(245,166,35,.6);
+      transform: translateY(-1px);
+    }
     .hub-hero__stats {
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      flex-wrap: wrap;
+      display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
     }
     .hub-stat {
-      display: inline-flex;
-      align-items: center;
-      gap: .3rem;
-      font-size: .74rem;
-      color: var(--muted);
+      font-size: .72rem; color: var(--muted);
       background: rgba(255,255,255,.05);
-      border: 1px solid rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 20px; padding: .2rem .65rem;
+    }
+    .hub-stat strong { color: var(--gold-lt); font-weight: 600; }
+
+    /* Food mosaic side */
+    .hub-hero__mosaic {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      height: 220px;
+    }
+    .hub-mosaic-cell {
+      overflow: hidden;
+      background: var(--navy-700);
+    }
+    .hub-mosaic-cell:first-child { border-radius: 0 0 0 0; }
+    .hub-mosaic-cell img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+      transition: transform 6s ease;
+    }
+    .hub-mosaic-cell:hover img { transform: scale(1.04); }
+
+    /* ── Category filter tabs ────────────────────────────── */
+    .hub-filter {
+      display: flex; align-items: center; gap: .5rem;
+      padding: 1.25rem 1.25rem .75rem;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .hub-filter::-webkit-scrollbar { display: none; }
+    .hub-filter-label {
+      font-size: .68rem; font-weight: 600;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: var(--muted); opacity: .7;
+      flex-shrink: 0; margin-right: .25rem;
+    }
+    .hub-filter__tab {
+      flex-shrink: 0;
+      display: inline-flex; align-items: center; gap: .35rem;
+      font-family: var(--font-b); font-size: .8rem; font-weight: 500;
+      padding: .4rem 1rem;
       border-radius: 20px;
-      padding: .22rem .72rem;
-      line-height: 1.4;
-    }
-    .hub-stat strong {
-      color: var(--gold-lt);
-      font-weight: 600;
-    }
-
-    /* Section label above grid */
-    .hub-section-label {
-      padding: 1.5rem 1.25rem .75rem;
-      font-size: .68rem;
-      font-weight: 600;
-      letter-spacing: .14em;
-      text-transform: uppercase;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
       color: var(--muted);
-      opacity: .75;
+      cursor: pointer; transition: all .18s;
+      -webkit-tap-highlight-color: transparent;
     }
+    .hub-filter__tab:hover { border-color: rgba(245,166,35,.3); color: var(--text); }
+    .hub-filter__tab--active {
+      border-color: rgba(245,166,35,.5);
+      background: rgba(245,166,35,.1);
+      color: var(--gold-lt);
+    }
+    .hub-filter__dot {
+      width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+    }
+    .hub-filter__tab--food .hub-filter__dot   { background: var(--gold); }
+    .hub-filter__tab--nails .hub-filter__dot  { background: var(--sky); }
+    .hub-filter__tab--hair .hub-filter__dot   { background: var(--sunset); }
 
-    /* ── Category grid ── */
-    .hub-grid {
+    /* ── Vendor grid ─────────────────────────────────────── */
+    .hub-vendor-grid {
       display: grid;
       grid-template-columns: 1fr;
       gap: 1rem;
       padding: 0 1.25rem 2.5rem;
     }
 
-    /* ── Category Cards — vertical tile format ── */
-    .hub-card {
-      display: flex;
-      flex-direction: column;
-      border-radius: 16px;
+    /* ── Vendor cards — image-led, travel-quality ────────── */
+    .hub-vendor-card {
+      display: flex; flex-direction: column;
+      border-radius: 14px; overflow: hidden;
       background: rgba(255,255,255,.04);
       border: 1px solid var(--border);
-      text-decoration: none;
-      color: var(--text);
-      overflow: hidden;
+      text-decoration: none; color: var(--text);
       transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
     }
-    .hub-card:active { transform: scale(.98); }
+    .hub-vendor-card:active { transform: scale(.98); }
     @media (hover: hover) {
-      .hub-card:hover { transform: translateY(-4px); }
-      .hub-card--food:hover  {
-        border-color: rgba(245,166,35,.5);
-        box-shadow: 0 16px 48px rgba(245,166,35,.14), 0 4px 16px rgba(0,0,0,.25);
-      }
-      .hub-card--nails:hover {
-        border-color: rgba(56,189,248,.45);
-        box-shadow: 0 16px 48px rgba(56,189,248,.12), 0 4px 16px rgba(0,0,0,.25);
-      }
-      .hub-card--hair:hover {
-        border-color: rgba(251,146,60,.45);
-        box-shadow: 0 16px 48px rgba(251,146,60,.12), 0 4px 16px rgba(0,0,0,.25);
+      .hub-vendor-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(245,166,35,.3);
+        box-shadow: 0 14px 44px rgba(0,0,0,.3), 0 2px 8px rgba(245,166,35,.08);
       }
     }
 
-    /* Card accent modifier */
-    .hub-card--food  { border-color: rgba(245,166,35,.2);  background: rgba(245,166,35,.04); }
-    .hub-card--nails { border-color: rgba(56,189,248,.18); background: rgba(56,189,248,.03); }
-    .hub-card--hair  { border-color: rgba(251,146,60,.18); background: rgba(251,146,60,.03); }
-
-    /* Visual zone — top portion of card */
-    .hub-card__visual {
-      height: 148px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    /* Card image zone */
+    .hub-vendor-card__img-wrap {
       position: relative;
+      aspect-ratio: 16 / 9;
       overflow: hidden;
-      flex-shrink: 0;
+      background: var(--navy-700);
     }
-    .hub-card--food  .hub-card__visual { background: linear-gradient(140deg, rgba(245,166,35,.24) 0%, rgba(251,146,60,.2) 100%); }
-    .hub-card--nails .hub-card__visual { background: linear-gradient(140deg, rgba(56,189,248,.2) 0%, rgba(139,92,246,.16) 100%); }
-    .hub-card--hair  .hub-card__visual { background: linear-gradient(140deg, rgba(251,146,60,.22) 0%, rgba(249,115,22,.18) 100%); }
+    .hub-vendor-card__img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+      transition: transform .45s ease;
+    }
+    @media (hover: hover) {
+      .hub-vendor-card:hover .hub-vendor-card__img { transform: scale(1.06); }
+    }
 
-    /* Decorative background circles */
-    .hub-card__visual::before,
-    .hub-card__visual::after {
+    /* Gradient overlay at bottom of image */
+    .hub-vendor-card__img-wrap::after {
       content: '';
-      position: absolute;
-      border-radius: 50%;
+      position: absolute; inset: 0;
+      background: linear-gradient(0deg, rgba(13,47,80,.7) 0%, transparent 50%);
+      pointer-events: none;
     }
-    .hub-card__visual::before {
-      width: 120px; height: 120px;
-      top: -30px; right: -20px;
-      opacity: .25;
-    }
-    .hub-card__visual::after {
-      width: 80px; height: 80px;
-      bottom: -22px; left: 14px;
-      opacity: .2;
-    }
-    .hub-card--food  .hub-card__visual::before { background: #f5a623; }
-    .hub-card--food  .hub-card__visual::after  { background: #fb923c; }
-    .hub-card--nails .hub-card__visual::before { background: #38bdf8; }
-    .hub-card--nails .hub-card__visual::after  { background: #8b5cf6; }
-    .hub-card--hair  .hub-card__visual::before { background: #fb923c; }
-    .hub-card--hair  .hub-card__visual::after  { background: #f97316; }
 
-    /* SVG icon centered in visual zone */
-    .hub-card__svg-icon {
-      width: 52px; height: 52px;
-      position: relative; z-index: 1;
-      flex-shrink: 0;
+    /* Category badge on image */
+    .hub-vendor-card__badge {
+      position: absolute; top: 10px; left: 10px;
+      z-index: 1;
+      font-size: .62rem; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+      padding: .22rem .6rem;
+      border-radius: 20px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
-    .hub-card--food  .hub-card__svg-icon { color: #ffc857; }
-    .hub-card--nails .hub-card__svg-icon { color: #7dd3fc; }
-    .hub-card--hair  .hub-card__svg-icon { color: #fdba74; }
+    .hub-vendor-card[data-cat="food"]  .hub-vendor-card__badge { background: rgba(245,166,35,.25); color: var(--gold-lt); border: 1px solid rgba(245,166,35,.4); }
+    .hub-vendor-card[data-cat="nails"] .hub-vendor-card__badge { background: rgba(56,189,248,.2);  color: var(--sky-lt);  border: 1px solid rgba(56,189,248,.35); }
+    .hub-vendor-card[data-cat="hair"]  .hub-vendor-card__badge { background: rgba(251,146,60,.2);  color: #fdba74;        border: 1px solid rgba(251,146,60,.35); }
 
-    /* Content zone — bottom portion of card */
-    .hub-card__content {
-      padding: 1.1rem 1.25rem 1.35rem;
-      display: flex;
-      flex-direction: column;
-      gap: .45rem;
+    /* Region badge on image (bottom right) */
+    .hub-vendor-card__region {
+      position: absolute; bottom: 10px; right: 10px;
+      z-index: 1;
+      font-size: .62rem; font-weight: 500;
+      color: rgba(200,228,248,.8);
+      background: rgba(13,47,80,.55);
+      backdrop-filter: blur(4px);
+      padding: .18rem .55rem;
+      border-radius: 10px;
+    }
+
+    /* Card content */
+    .hub-vendor-card__content {
+      padding: 1rem 1.1rem 1.25rem;
+      display: flex; flex-direction: column; gap: .35rem;
       flex: 1;
     }
-    .hub-card__header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: .6rem;
-    }
-    .hub-card__name {
+    .hub-vendor-card__name {
       font-family: var(--font-d);
-      font-size: 1.2rem;
-      font-weight: 400;
-      line-height: 1.2;
+      font-size: 1.1rem; font-weight: 400; line-height: 1.2;
+      color: var(--gold-lt);
     }
-    .hub-card--food  .hub-card__name { color: var(--gold-lt); }
-    .hub-card--nails .hub-card__name { color: var(--sky-lt); }
-    .hub-card--hair  .hub-card__name { color: #fdba74; }
-
-    .hub-card__badge {
-      font-size: .63rem;
-      font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      padding: .2rem .55rem;
-      border-radius: 20px;
-      flex-shrink: 0;
-      margin-top: .15rem;
+    .hub-vendor-card__tagline {
+      font-size: .78rem; color: var(--muted); line-height: 1.45;
     }
-    .hub-card--food  .hub-card__badge { background: var(--gold-dim); color: var(--gold); }
-    .hub-card--nails .hub-card__badge { background: var(--sky-dim);  color: var(--sky); }
-    .hub-card--hair  .hub-card__badge { background: rgba(251,146,60,.15); color: var(--sunset); }
+    .hub-vendor-card__cta {
+      display: flex; align-items: center; gap: .35rem;
+      font-size: .76rem; font-weight: 600; letter-spacing: .04em;
+      color: var(--gold); margin-top: .3rem;
+    }
 
-    .hub-card__desc {
-      font-size: .81rem;
+    /* ── No-results message ──────────────────────────────── */
+    .hub-no-results {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 3rem 1rem;
       color: var(--muted);
-      line-height: 1.5;
+      font-size: .88rem;
     }
 
-    .hub-card__cta {
-      display: flex;
-      align-items: center;
-      gap: .35rem;
-      font-size: .79rem;
-      font-weight: 600;
-      letter-spacing: .04em;
-      margin-top: .3rem;
-    }
-    .hub-card--food  .hub-card__cta { color: var(--gold); }
-    .hub-card--nails .hub-card__cta { color: var(--sky); }
-    .hub-card--hair  .hub-card__cta { color: var(--sunset); }
-
-    /* ── Footer ── */
+    /* ── Footer ──────────────────────────────────────────── */
     .hub-footer {
       margin-top: auto;
       padding: 1rem 1.5rem 2rem;
-      text-align: center;
-      font-size: .78rem;
-      color: var(--muted);
-      opacity: .6;
-      line-height: 1.5;
+      text-align: center; font-size: .78rem;
+      color: var(--muted); opacity: .6; line-height: 1.5;
     }
 
-    /* ── Tablet 768px+ ── */
+    /* ════════════════════════════════════════════════════
+       TABLET 640px+
+       ════════════════════════════════════════════════════ */
+    @media (min-width: 640px) {
+      .hub-vendor-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* ════════════════════════════════════════════════════
+       TABLET 768px+
+       ════════════════════════════════════════════════════ */
     @media (min-width: 768px) {
       .hub-bar { padding: 0 2.5rem; height: 60px; }
 
-      .hub-hero { padding: 3.5rem 2.5rem 2.75rem; }
-      .hub-hero__h1 { font-size: clamp(2.4rem, 5vw, 3.4rem); }
-      .hub-hero__sub { max-width: 540px; font-size: .95rem; }
+      /* Hero: side-by-side layout */
+      .hub-hero {
+        flex-direction: row;
+        align-items: stretch;
+        min-height: 360px;
+      }
+      .hub-hero__text {
+        flex: 1;
+        padding: 3.5rem 2.5rem 3rem;
+        justify-content: center;
+      }
+      .hub-hero__h1 { font-size: clamp(2.4rem, 4vw, 3.2rem); }
+      .hub-hero__sub { font-size: .93rem; }
 
-      .hub-section-label { padding: 1.75rem 2rem .75rem; }
-
-      .hub-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1.25rem;
-        max-width: 1280px;
-        margin: 0 auto;
-        padding: 0 2rem 3.5rem;
+      .hub-hero__mosaic {
+        flex: 0 0 42%;
+        height: auto;
+        min-height: 320px;
+        gap: 5px;
       }
 
-      .hub-card__visual { height: 165px; }
-      .hub-card__svg-icon { width: 60px; height: 60px; }
-      .hub-card__name { font-size: 1.25rem; }
-      .hub-card__content { padding: 1.2rem 1.4rem 1.5rem; }
+      /* Filter */
+      .hub-filter { padding: 1.5rem 2.5rem .75rem; }
+
+      /* Vendor grid */
+      .hub-vendor-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+        padding: 0 2.5rem 3.5rem;
+      }
+      .hub-vendor-card__name { font-size: 1.15rem; }
     }
 
-    /* ── Desktop 1200px+ ── */
+    /* ════════════════════════════════════════════════════
+       DESKTOP 1200px+
+       ════════════════════════════════════════════════════ */
     @media (min-width: 1200px) {
       .hub-bottom-nav { display: none; }
       .hub-app { padding-bottom: 0; }
 
-      .hub-hero { padding: 5rem 3.5rem 4rem; }
-      .hub-hero__h1 { font-size: clamp(2.8rem, 4vw, 4rem); }
-      .hub-hero__sub { max-width: 580px; font-size: 1rem; }
+      .hub-bar { padding: 0 3.5rem; }
 
-      .hub-section-label { padding: 2rem 3.5rem .75rem; }
+      /* Hero: text takes 45%, mosaic takes 55% */
+      .hub-hero { min-height: 440px; }
+      .hub-hero__text {
+        flex: 0 0 48%;
+        padding: 5rem 3.5rem 4rem;
+      }
+      .hub-hero__h1 { font-size: clamp(2.8rem, 3.5vw, 4rem); }
+      .hub-hero__sub { font-size: 1rem; max-width: 480px; }
+      .hub-hero__cta { font-size: .9rem; padding: .75rem 1.75rem; }
 
-      .hub-grid {
-        grid-template-columns: repeat(3, 1fr);
-        max-width: 1360px;
-        gap: 1.75rem;
-        padding: 0 3.5rem 5rem;
+      .hub-hero__mosaic {
+        flex: 1;
+        gap: 6px;
       }
 
-      .hub-card__visual { height: 200px; }
-      .hub-card__svg-icon { width: 72px; height: 72px; }
-      .hub-card__name { font-size: 1.4rem; }
-      .hub-card__desc { font-size: .86rem; }
-      .hub-card__content { padding: 1.4rem 1.6rem 1.75rem; }
-      .hub-card__cta { font-size: .84rem; margin-top: .5rem; }
+      /* Mosaic: first cell taller on the left */
+      .hub-mosaic-cell:nth-child(1),
+      .hub-mosaic-cell:nth-child(3) {
+        /* left column — grid handles this via grid-column */
+      }
+
+      /* Filter */
+      .hub-filter {
+        padding: 2rem 3.5rem .75rem;
+        gap: .6rem;
+      }
+      .hub-filter__tab { font-size: .84rem; padding: .45rem 1.1rem; }
+
+      /* Vendor grid: 3 columns */
+      .hub-vendor-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        padding: 0 3.5rem 5rem;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+      .hub-vendor-card__name { font-size: 1.2rem; }
+      .hub-vendor-card__tagline { font-size: .82rem; }
+      .hub-vendor-card__content { padding: 1.1rem 1.25rem 1.4rem; gap: .4rem; }
+    }
+
+    /* ════════════════════════════════════════════════════
+       WIDE 1600px+
+       ════════════════════════════════════════════════════ */
+    @media (min-width: 1600px) {
+      .hub-hero__text { flex: 0 0 42%; padding: 6rem 4rem 5rem; }
+      .hub-hero { min-height: 500px; }
     }
   </style>
 </head>
@@ -422,96 +447,218 @@
     <span class="hub-bar__title">Marketplace</span>
   </header>
 
-  <!-- Hero — full-width atmospheric, left-aligned -->
-  <section class="hub-hero">
-    <p class="hub-hero__eyebrow">Dịch vụ địa phương · California</p>
-    <h1 class="hub-hero__h1">Dịch Vụ<br><em>Cộng Đồng Việt</em></h1>
-    <p class="hub-hero__sub">Ẩm thực, làm móng, tóc và nhiều hơn nữa từ các nhà cung cấp Việt tại Bay Area &amp; Orange County.</p>
-    <div class="hub-hero__stats">
-      <span class="hub-stat"><strong>3</strong>&nbsp;Danh Mục</span>
-      <span class="hub-stat"><strong>6+</strong>&nbsp;Cửa Hàng</span>
-      <span class="hub-stat">Bay Area · OC</span>
+  <!-- ── HERO: food showcase + headline ── -->
+  <section class="hub-hero" aria-label="Giới thiệu Marketplace">
+
+    <!-- Text side -->
+    <div class="hub-hero__text">
+      <p class="hub-hero__eyebrow">Dịch vụ địa phương · California</p>
+      <h1 class="hub-hero__h1">Dịch Vụ<br><em>Cộng Đồng Việt</em></h1>
+      <p class="hub-hero__sub">Ẩm thực handmade, làm móng, tóc và nhiều hơn nữa từ các nhà cung cấp Việt tại Bay Area &amp; Orange County.</p>
+      <div class="hub-hero__stats">
+        <span class="hub-stat"><strong>6+</strong>&nbsp;Cửa hàng</span>
+        <span class="hub-stat">Bay Area · OC</span>
+        <span class="hub-stat">Đặt ngay hôm nay</span>
+      </div>
+      <a href="#vendors" class="hub-hero__cta" onclick="document.getElementById('vendors').scrollIntoView({behavior:'smooth'});return false;">
+        Khám phá ngay
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </a>
     </div>
+
+    <!-- Food photo mosaic (2×2 grid) -->
+    <div class="hub-hero__mosaic" aria-hidden="true">
+      <div class="hub-mosaic-cell">
+        <img
+          src="https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=600&h=400&fit=crop&auto=format&q=80"
+          alt="Phở bò truyền thống"
+          loading="eager"
+          onerror="this.parentElement.style.background='linear-gradient(135deg,#7f1d1d,#92400e)'">
+      </div>
+      <div class="hub-mosaic-cell">
+        <img
+          src="/nha-bep-emily-eggroll.jpg"
+          alt="Chả giò handmade"
+          loading="eager"
+          onerror="this.parentElement.style.background='linear-gradient(135deg,#78350f,#7c2d12)'">
+      </div>
+      <div class="hub-mosaic-cell">
+        <img
+          src="https://images.unsplash.com/photo-1562802378-063ec186a863?w=600&h=400&fit=crop&auto=format&q=80"
+          alt="Gỏi cuốn tươi"
+          loading="eager"
+          onerror="this.parentElement.style.background='linear-gradient(135deg,#064e3b,#065f46)'">
+      </div>
+      <div class="hub-mosaic-cell">
+        <img
+          src="https://images.unsplash.com/photo-1547592180-85f173990554?w=600&h=400&fit=crop&auto=format&q=80"
+          alt="Ẩm thực Việt"
+          loading="eager"
+          onerror="this.parentElement.style.background='linear-gradient(135deg,#831843,#9d174d)'">
+      </div>
+    </div>
+
   </section>
 
-  <!-- Section label -->
-  <div class="hub-section-label" aria-hidden="true">Chọn danh mục</div>
+  <!-- ── CATEGORY FILTER TABS ── -->
+  <div class="hub-filter" role="tablist" aria-label="Lọc theo danh mục">
+    <span class="hub-filter-label">Lọc:</span>
+    <button class="hub-filter__tab hub-filter__tab--active" data-cat="all" role="tab" aria-selected="true">
+      Tất cả
+    </button>
+    <button class="hub-filter__tab hub-filter__tab--food" data-cat="food" role="tab" aria-selected="false">
+      <span class="hub-filter__dot"></span>
+      Ẩm Thực
+    </button>
+    <button class="hub-filter__tab hub-filter__tab--nails" data-cat="nails" role="tab" aria-selected="false">
+      <span class="hub-filter__dot"></span>
+      Nail Salon
+    </button>
+    <button class="hub-filter__tab hub-filter__tab--hair" data-cat="hair" role="tab" aria-selected="false">
+      <span class="hub-filter__dot"></span>
+      Hair Salon
+    </button>
+  </div>
 
-  <!-- Category Cards — 3-column on tablet/desktop, single col on mobile -->
-  <main class="hub-grid">
+  <!-- ── VENDOR GRID — links directly to vendor detail pages ── -->
+  <main id="vendors" class="hub-vendor-grid">
 
-    <!-- Food Services -->
-    <a href="../foods/" class="hub-card hub-card--food">
-      <div class="hub-card__visual">
-        <!-- Utensils / Food SVG icon -->
-        <svg class="hub-card__svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/>
-          <path d="M7 2v20"/>
-          <path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/>
-        </svg>
+    <!-- ─── FOOD ─────────────────────────────────────────── -->
+
+    <!-- Nhà Bếp Của Emily -->
+    <a href="../foods/?id=nha-bep-cua-emily" class="hub-vendor-card" data-cat="food"
+       aria-label="Nhà Bếp Của Emily — Chả Giò Handmade, San Jose">
+      <div class="hub-vendor-card__img-wrap">
+        <img class="hub-vendor-card__img"
+          src="/nha-bep-emily-eggroll.jpg"
+          alt="Chả giò handmade Nhà Bếp Của Emily"
+          loading="lazy"
+          onerror="this.src='https://images.unsplash.com/photo-1562802378-063ec186a863?w=600&h=340&fit=crop&q=80'">
+        <span class="hub-vendor-card__badge">Ẩm Thực</span>
+        <span class="hub-vendor-card__region">Bay Area</span>
       </div>
-      <div class="hub-card__content">
-        <div class="hub-card__header">
-          <div class="hub-card__name">Ẩm Thực</div>
-          <span class="hub-card__badge">Food</span>
-        </div>
-        <div class="hub-card__desc">Đặt đồ ăn, catering sự kiện · Bay Area &amp; OC</div>
-        <div class="hub-card__cta">
-          Khám phá
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
+      <div class="hub-vendor-card__content">
+        <div class="hub-vendor-card__name">Nhà Bếp Của Emily</div>
+        <div class="hub-vendor-card__tagline">Chả Giò Handmade · San Jose · Min. 30 cuốn</div>
+        <div class="hub-vendor-card__cta">
+          Đặt hàng
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       </div>
     </a>
 
-    <!-- Nail Salon -->
-    <a href="../nailsalon/" class="hub-card hub-card--nails">
-      <div class="hub-card__visual">
-        <!-- Sparkle / nail art SVG icon -->
-        <svg class="hub-card__svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2l2.09 6.43H21l-5.47 3.97 2.09 6.43L12 14.85l-5.62 4.08 2.09-6.43L3 8.43h6.91L12 2z"/>
-          <path d="M12 8v8M8.5 10l7 4M15.5 10l-7 4"/>
-        </svg>
+    <!-- Phở Bắc Bay Area -->
+    <a href="../foods/?id=pho-bac-bayarea" class="hub-vendor-card" data-cat="food"
+       aria-label="Phở Bắc Bay Area — Phở gia truyền Hà Nội, San Jose">
+      <div class="hub-vendor-card__img-wrap">
+        <img class="hub-vendor-card__img"
+          src="https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=600&h=340&fit=crop&auto=format&q=80"
+          alt="Phở Bắc Bay Area"
+          loading="lazy"
+          onerror="this.parentElement.style.background='linear-gradient(135deg,#7f1d1d,#92400e)'">
+        <span class="hub-vendor-card__badge">Ẩm Thực</span>
+        <span class="hub-vendor-card__region">Bay Area</span>
       </div>
-      <div class="hub-card__content">
-        <div class="hub-card__header">
-          <div class="hub-card__name">Nail Salon</div>
-          <span class="hub-card__badge">Nails</span>
-        </div>
-        <div class="hub-card__desc">Manicure, pedicure, gel, acrylic · Bay Area &amp; OC</div>
-        <div class="hub-card__cta">
-          Khám phá
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
+      <div class="hub-vendor-card__content">
+        <div class="hub-vendor-card__name">Phở Bắc Bay Area</div>
+        <div class="hub-vendor-card__tagline">Phở gia truyền Hà Nội · Đặt bàn &amp; Catering</div>
+        <div class="hub-vendor-card__cta">
+          Đặt bàn
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       </div>
     </a>
 
-    <!-- Hair Salon -->
-    <a href="../hairsalon/" class="hub-card hub-card--hair">
-      <div class="hub-card__visual">
-        <!-- Scissors SVG icon -->
-        <svg class="hub-card__svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="6" cy="6" r="3"/>
-          <circle cx="6" cy="18" r="3"/>
-          <line x1="20" y1="4" x2="8.12" y2="15.88"/>
-          <line x1="14.47" y1="14.48" x2="20" y2="20"/>
-          <line x1="8.12" y1="8.12" x2="12" y2="12"/>
-        </svg>
+    <!-- ─── NAIL SALONS ─────────────────────────────────── -->
+
+    <!-- Dung Nails -->
+    <a href="../nailsalon/?id=dung-nails" class="hub-vendor-card" data-cat="nails"
+       aria-label="Dung Nails & Spa — San Jose, Bay Area">
+      <div class="hub-vendor-card__img-wrap">
+        <img class="hub-vendor-card__img"
+          src="https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&h=340&fit=crop&auto=format&q=80"
+          alt="Dung Nails & Spa"
+          loading="lazy"
+          onerror="this.parentElement.style.background='linear-gradient(135deg,#831843,#4c1d95)'">
+        <span class="hub-vendor-card__badge">Nail Salon</span>
+        <span class="hub-vendor-card__region">Bay Area</span>
       </div>
-      <div class="hub-card__content">
-        <div class="hub-card__header">
-          <div class="hub-card__name">Hair Salon</div>
-          <span class="hub-card__badge">Hair</span>
+      <div class="hub-vendor-card__content">
+        <div class="hub-vendor-card__name">Dung Nails &amp; Spa</div>
+        <div class="hub-vendor-card__tagline">Gel · Acrylic · Spa Package · San Jose</div>
+        <div class="hub-vendor-card__cta">
+          Đặt lịch
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
-        <div class="hub-card__desc">Cắt tóc, nhuộm, uốn, duỗi · Bay Area &amp; OC</div>
-        <div class="hub-card__cta">
-          Khám phá
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
+      </div>
+    </a>
+
+    <!-- Beauty Nails OC -->
+    <a href="../nailsalon/?id=beauty-nails-oc" class="hub-vendor-card" data-cat="nails"
+       aria-label="Beauty Nails OC — Westminster, Orange County">
+      <div class="hub-vendor-card__img-wrap">
+        <img class="hub-vendor-card__img"
+          src="https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&h=340&fit=crop&auto=format&q=80&sat=-20"
+          alt="Beauty Nails OC"
+          loading="lazy"
+          onerror="this.parentElement.style.background='linear-gradient(135deg,#be185d,#7c3aed)'">
+        <span class="hub-vendor-card__badge">Nail Salon</span>
+        <span class="hub-vendor-card__region">Orange County</span>
+      </div>
+      <div class="hub-vendor-card__content">
+        <div class="hub-vendor-card__name">Beauty Nails OC</div>
+        <div class="hub-vendor-card__tagline">Phong cách sang trọng · Little Saigon</div>
+        <div class="hub-vendor-card__cta">
+          Đặt lịch
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+    </a>
+
+    <!-- ─── HAIR SALONS ──────────────────────────────────── -->
+
+    <!-- Việt Hair Studio -->
+    <a href="../hairsalon/?id=viet-hair-bayarea" class="hub-vendor-card" data-cat="hair"
+       aria-label="Việt Hair Studio — San Jose, Bay Area">
+      <div class="hub-vendor-card__img-wrap">
+        <img class="hub-vendor-card__img"
+          src="https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=600&h=340&fit=crop&auto=format&q=80"
+          alt="Việt Hair Studio"
+          loading="lazy"
+          onerror="this.parentElement.style.background='linear-gradient(135deg,#064e3b,#1e40af)'">
+        <span class="hub-vendor-card__badge">Hair Salon</span>
+        <span class="hub-vendor-card__region">Bay Area</span>
+      </div>
+      <div class="hub-vendor-card__content">
+        <div class="hub-vendor-card__name">Việt Hair Studio</div>
+        <div class="hub-vendor-card__tagline">Cắt · Uốn · Nhuộm Á Đông · San Jose</div>
+        <div class="hub-vendor-card__cta">
+          Đặt lịch
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+    </a>
+
+    <!-- Cali Hair & Beauty -->
+    <a href="../hairsalon/?id=cali-hair-oc" class="hub-vendor-card" data-cat="hair"
+       aria-label="Cali Hair & Beauty — Garden Grove, Orange County">
+      <div class="hub-vendor-card__img-wrap">
+        <img class="hub-vendor-card__img"
+          src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&h=340&fit=crop&auto=format&q=80"
+          alt="Cali Hair & Beauty"
+          loading="lazy"
+          onerror="this.parentElement.style.background='linear-gradient(135deg,#064e3b,#7c2d12)'">
+        <span class="hub-vendor-card__badge">Hair Salon</span>
+        <span class="hub-vendor-card__region">Orange County</span>
+      </div>
+      <div class="hub-vendor-card__content">
+        <div class="hub-vendor-card__name">Cali Hair &amp; Beauty</div>
+        <div class="hub-vendor-card__tagline">Uốn Hàn · Keratin · Balayage · Little Saigon</div>
+        <div class="hub-vendor-card__cta">
+          Đặt lịch
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       </div>
     </a>
@@ -528,9 +675,8 @@
     </span>
   </footer>
 
-  <!-- ── Persistent bottom nav (same 5 tabs, Shops active) ── -->
+  <!-- ── Persistent bottom nav ── -->
   <nav class="hub-bottom-nav" aria-label="App navigation">
-
     <a href="../" class="hub-nav-tab" aria-label="Trang chủ">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
@@ -538,7 +684,6 @@
       </svg>
       <span>Trang chủ</span>
     </a>
-
     <a href="../#travel" class="hub-nav-tab" aria-label="Du Lịch">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="10" r="3"/>
@@ -546,7 +691,6 @@
       </svg>
       <span>Du Lịch</span>
     </a>
-
     <a href="../#ai" class="hub-nav-tab hub-nav-tab--center" aria-label="AI Concierge">
       <div class="hub-nav-center-btn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -555,7 +699,6 @@
       </div>
       <span>AI</span>
     </a>
-
     <a href="../#book" class="hub-nav-tab" aria-label="Đặt chỗ">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -564,7 +707,6 @@
       </svg>
       <span>Đặt chỗ</span>
     </a>
-
     <a href="./" class="hub-nav-tab hub-nav-tab--active" aria-label="Marketplace" aria-current="page">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
@@ -573,9 +715,51 @@
       </svg>
       <span>Shops</span>
     </a>
-
   </nav>
 
 </div>
+
+<!-- ── Category filter logic ── -->
+<script>
+(function () {
+  var tabs   = document.querySelectorAll('.hub-filter__tab');
+  var cards  = document.querySelectorAll('.hub-vendor-card');
+
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      var cat = tab.dataset.cat;
+
+      // Update active tab
+      tabs.forEach(function (t) {
+        t.classList.remove('hub-filter__tab--active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      tab.classList.add('hub-filter__tab--active');
+      tab.setAttribute('aria-selected', 'true');
+
+      // Filter cards with fade
+      var visible = 0;
+      cards.forEach(function (card) {
+        var show = (cat === 'all' || card.dataset.cat === cat);
+        if (show) {
+          card.style.display = '';
+          card.style.opacity = '0';
+          requestAnimationFrame(function () {
+            card.style.transition = 'opacity .2s ease, transform .2s ease';
+            card.style.opacity = '1';
+          });
+          visible++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      // Show no-results if needed
+      var noRes = document.querySelector('.hub-no-results');
+      if (noRes) noRes.style.display = visible === 0 ? '' : 'none';
+    });
+  });
+})();
+</script>
 </body>
 </html>

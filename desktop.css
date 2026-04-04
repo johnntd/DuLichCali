@@ -7,37 +7,8 @@
 /* ── Tablet 768px+ ──────────────────────────────────────────── */
 @media (min-width: 768px) {
 
-  /* ── Marketplace Hub (.hub-*) ── */
+  /* ── Marketplace Hub (.hub-*) — tablet overrides ── */
   .hub-app { max-width: none !important; }
-
-  .hub-bar {
-    padding: 0 2.5rem;
-    height: 60px;
-  }
-
-  /* Hero: full-width background, left-aligned, no centering constraint */
-  .hub-hero {
-    padding: 3.5rem 2.5rem 2.75rem;
-  }
-  .hub-hero__h1 { font-size: clamp(2.4rem, 5vw, 3.4rem); }
-  .hub-hero__sub { max-width: 540px; font-size: .95rem; }
-
-  .hub-section-label { padding: 1.75rem 2rem .75rem; }
-
-  .hub-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.25rem;
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 2rem 3.5rem;
-  }
-
-  /* Cards: vertical tiles — larger visual zone on tablet */
-  .hub-card__visual { height: 165px; }
-  .hub-card__svg-icon { width: 60px; height: 60px; }
-  .hub-card__name { font-size: 1.25rem; }
-  .hub-card__content { padding: 1.2rem 1.4rem 1.5rem; }
 
   /* ── Vendor Admin (.va-*) ── */
   .va-bar { padding: 0 2rem; }
@@ -74,31 +45,7 @@
 @media (min-width: 1200px) {
 
   /* ── Marketplace Hub ── */
-
-  /* Hero: full-width background, generous desktop padding, no max-width centering */
-  .hub-hero {
-    padding: 5rem 3.5rem 4rem;
-  }
-  .hub-hero__h1  { font-size: clamp(2.8rem, 4vw, 4rem); }
-  .hub-hero__sub { max-width: 580px; font-size: 1rem; }
-
-  .hub-section-label { padding: 2rem 3.5rem .75rem; }
-
-  /* Grid: wider container on desktop, 3 columns, generous gaps */
-  .hub-grid {
-    grid-template-columns: repeat(3, 1fr);
-    max-width: 1360px;
-    gap: 1.75rem;
-    padding: 0 3.5rem 5rem;
-  }
-
-  /* Cards: larger visual zone + richer content on desktop */
-  .hub-card__visual  { height: 200px; }
-  .hub-card__svg-icon { width: 72px; height: 72px; }
-  .hub-card__name    { font-size: 1.4rem; }
-  .hub-card__desc    { font-size: .86rem; }
-  .hub-card__content { padding: 1.4rem 1.6rem 1.75rem; }
-  .hub-card__cta     { font-size: .84rem; margin-top: .5rem; }
+  /* All hub-* layout now handled by inline style in marketplace/index.html */
 
   /* Marketplace bar: slightly larger title */
   .mp-bar__title { font-size: 1.2rem; }

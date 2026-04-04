@@ -162,10 +162,12 @@
   function renderBottomNav(backHref) {
     var homeIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><polyline points="9 21 9 12 15 12 15 21"/></svg>';
     var gridIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>';
+    // Back uses browser history so the correct previous page is always restored,
+    // regardless of whether the user arrived from homepage, marketplace hub, or elsewhere.
     return '<nav class="mp-bottom-nav" aria-label="Điều hướng trang">' +
-      '<a href="' + escAttr(backHref) + '" class="mp-bottom-nav__tab">' +
+      '<button type="button" class="mp-bottom-nav__tab" onclick="history.back()" aria-label="Quay lại trang trước">' +
         arrowLeftIcon + '<span>Quay lại</span>' +
-      '</a>' +
+      '</button>' +
       '<a href="/" class="mp-bottom-nav__tab">' +
         homeIcon + '<span>Trang chủ</span>' +
       '</a>' +

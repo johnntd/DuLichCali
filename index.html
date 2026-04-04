@@ -60,7 +60,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-  <link rel="stylesheet" href="style.css?v=20260404d">
+  <link rel="stylesheet" href="style.css?v=20260404e">
   <link rel="stylesheet" href="desktop.css">
 </head>
 <body>
@@ -268,16 +268,6 @@
           <button class="see-all" onclick="switchScreen('screenDest')">Xem tất cả</button>
         </div>
         <div class="trav-carousel" id="travCarousel" role="list"></div>
-      </section>
-
-      <!-- Trust numbers -->
-      <section class="home-section home-section--trust">
-        <div class="trust-grid">
-          <div class="trust-cell"><span class="trust-num">6+</span><span>Năm kinh nghiệm</span></div>
-          <div class="trust-cell"><span class="trust-num">500+</span><span>Chuyến thành công</span></div>
-          <div class="trust-cell"><span class="trust-num">6</span><span>Sân bay phục vụ</span></div>
-          <div class="trust-cell"><span class="trust-num">24/7</span><span>Hỗ trợ khách hàng</span></div>
-        </div>
       </section>
 
       <!-- ── AI Services Panel (mirrors 3 homepage panels) ───────── -->
@@ -698,16 +688,33 @@
 
     <!-- Sidebar divider + label (desktop only, invisible on mobile) -->
     <span class="sidebar-divider" aria-hidden="true"></span>
-    <span class="sidebar-label" aria-hidden="true">Địa phương</span>
+    <span class="sidebar-label" aria-hidden="true">Dịch Vụ</span>
 
-    <button class="nav-tab" id="tabShops" data-section="marketplace"
-      onclick="window.location.href='marketplace/'" aria-label="Marketplace">
+    <a class="nav-tab" id="tabShops" href="marketplace/" aria-label="Marketplace">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
         <line x1="3" y1="6" x2="21" y2="6"/>
         <path d="M16 10a4 4 0 01-8 0"/>
       </svg>
-      <span>Shops</span>
+      <span>Marketplace</span>
+    </a>
+
+    <!-- Service shortcuts: desktop sidebar only -->
+    <button class="nav-tab sidebar-svc" onclick="openAIWithIntent('airport')" aria-label="Sân Bay & Xe">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 2 11 13"/>
+        <path d="M22 2 15 22 11 13 2 9l20-7z"/>
+      </svg>
+      <span>Sân Bay &amp; Xe</span>
+    </button>
+
+    <button class="nav-tab sidebar-svc" onclick="openAIWithIntent('tour')" aria-label="Tour & Du Lịch">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
+        <line x1="9" y1="3" x2="9" y2="18"/>
+        <line x1="15" y1="6" x2="15" y2="21"/>
+      </svg>
+      <span>Tour &amp; Du Lịch</span>
     </button>
 
   </nav>

@@ -580,6 +580,8 @@
         var vd = vendorDoc.data();
         if (vd.description)              merged.description          = vd.description;
         if (vd.heroImage)                merged.heroImage            = vd.heroImage;
+        if (vd.heroImagePositionX != null) merged.heroImagePositionX = vd.heroImagePositionX;
+        if (vd.heroImagePositionY != null) merged.heroImagePositionY = vd.heroImagePositionY;
         if (vd.active === false)         merged.active               = false;
         if (vd.defaultDailyCapacity != null) merged.defaultDailyCapacity = Number(vd.defaultDailyCapacity);
       }
@@ -734,8 +736,10 @@
   }
 
   function renderFoodVendorHero(biz) {
+    var posX = biz.heroImagePositionX != null ? biz.heroImagePositionX : 50;
+    var posY = biz.heroImagePositionY != null ? biz.heroImagePositionY : 50;
     var bgStyle = biz.heroImage
-      ? 'background-image:url(' + escAttr(biz.heroImage) + ');background-size:cover;background-position:center;'
+      ? 'background-image:url(' + escAttr(biz.heroImage) + ');background-size:cover;background-position:' + posX + '% ' + posY + '%;'
       : 'background:' + biz.heroGradient + ';';
 
     return '<div class="mp-detail-hero mp-food-hero">' +

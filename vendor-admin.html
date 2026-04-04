@@ -1326,6 +1326,40 @@
         </div>
       </div>
 
+      <!-- Vendor hero image card -->
+      <div class="va-cap-card" style="margin-top:.9rem">
+        <div class="va-cap-card__title">&#128247; Ảnh Nền Cửa Hàng</div>
+        <p style="font-size:.78rem;color:var(--text-muted);margin:0 0 .75rem;line-height:1.5">Ảnh nền hiển thị ở đầu trang cửa hàng. Kích thước đề xuất: 1200×500px.</p>
+        <!-- Preview -->
+        <div id="heroImgPreviewWrap" style="width:100%;height:140px;border-radius:8px;overflow:hidden;background:var(--navy-900);border:1px solid var(--border-g);margin-bottom:.75rem;position:relative;">
+          <img id="heroImgPreview" src="" alt="Hero preview" style="width:100%;height:100%;object-fit:cover;display:none;">
+          <div id="heroImgPlaceholder" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:.8rem;">Chưa có ảnh nền</div>
+        </div>
+        <!-- Upload -->
+        <label class="btn btn--ghost btn--sm" style="cursor:pointer;display:inline-block">
+          &#128444; Chọn Ảnh
+          <input type="file" accept="image/*" style="display:none" onchange="handleHeroImageUpload(this)">
+        </label>
+        <span id="heroUploadStatus" style="font-size:.78rem;color:var(--text-muted);margin-left:.5rem"></span>
+        <!-- Focal point sliders -->
+        <div style="margin-top:.75rem">
+          <label style="display:block;font-size:.75rem;color:var(--text-muted);margin-bottom:.25rem;text-transform:uppercase;letter-spacing:.08em">Vị trí ngang (trái ← → phải)</label>
+          <input type="range" id="heroImgX" min="0" max="100" value="50"
+            style="width:100%;accent-color:var(--gold)"
+            oninput="updateHeroPreviewPosition()">
+        </div>
+        <div style="margin-top:.45rem">
+          <label style="display:block;font-size:.75rem;color:var(--text-muted);margin-bottom:.25rem;text-transform:uppercase;letter-spacing:.08em">Vị trí dọc (trên ↑ ↓ dưới)</label>
+          <input type="range" id="heroImgY" min="0" max="100" value="50"
+            style="width:100%;accent-color:var(--gold)"
+            oninput="updateHeroPreviewPosition()">
+        </div>
+        <div class="va-cap-card__row" style="margin-top:.75rem">
+          <button class="btn btn--gold btn--sm" onclick="saveHeroImage()">Lưu ảnh nền</button>
+          <span id="heroSaveStatus" style="font-size:.8rem;color:var(--text-muted)"></span>
+        </div>
+      </div>
+
       <!-- AI / Marketing tools — collapsed by default, not part of normal workflow -->
       <details class="va-cap-card ai-advanced-details" style="margin-top:.9rem">
         <summary class="va-cap-card__title">
@@ -1742,6 +1776,7 @@
   function startApp() {
     loadCapacity();
     loadSmsSettings();
+    loadHeroImage();
     seedIfNeeded();
     subscribeMenuItems();
     subscribeNotifications();
@@ -2556,6 +2591,113 @@
     }).catch(function (err) {
       status.textContent = '✕ ' + err.message;
       status.style.color = '#f87171';
+    });
+  }
+
+  // ── Vendor hero image ─────────────────────────────────────────────────────
+  var _heroImageUrl = '';
+
+  function loadHeroImage() {
+    vendorRef.get().then(function (doc) {
+      if (!doc.exists) return;
+      var data = doc.data();
+      if (data.heroImage) {
+        _heroImageUrl = data.heroImage;
+        _setHeroPreview(data.heroImage);
+        var x = data.heroImagePositionX != null ? data.heroImagePositionX : 50;
+        var y = data.heroImagePositionY != null ? data.heroImagePositionY : 50;
+        document.getElementById('heroImgX').value = x;
+        document.getElementById('heroImgY').value = y;
+        updateHeroPreviewPosition();
+      }
+    }).catch(function () {});
+  }
+
+  function _setHeroPreview(url) {
+    var img         = document.getElementById('heroImgPreview');
+    var placeholder = document.getElementById('heroImgPlaceholder');
+    if (url) {
+      img.src = url;
+      img.style.display = '';
+      placeholder.style.display = 'none';
+      updateHeroPreviewPosition();
+    } else {
+      img.style.display = 'none';
+      placeholder.style.display = '';
+    }
+  }
+
+  function updateHeroPreviewPosition() {
+    var img = document.getElementById('heroImgPreview');
+    if (!img) return;
+    var x = document.getElementById('heroImgX').value;
+    var y = document.getElementById('heroImgY').value;
+    img.style.objectPosition = x + '% ' + y + '%';
+  }
+
+  function handleHeroImageUpload(input) {
+    var file = input.files[0];
+    if (!file) return;
+    if (!VENDOR_ID) { showToast('Thiếu vendorId.', 'error'); return; }
+
+    var status = document.getElementById('heroUploadStatus');
+    status.textContent = 'Đang tải lên...';
+    status.style.color = 'var(--text-muted)';
+
+    var previewReader = new FileReader();
+    previewReader.onload = function (e) { _setHeroPreview(e.target.result); };
+    previewReader.readAsDataURL(file);
+
+    var ext      = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    var fileName = 'hero_' + Date.now() + '.' + ext;
+
+    var b64reader = new FileReader();
+    b64reader.onload = function (ev) {
+      var base64 = ev.target.result.split(',')[1];
+      var fn = firebase.functions().httpsCallable('uploadVendorImage');
+      fn({ vendorId: VENDOR_ID, base64: base64, fileName: fileName, mimeType: file.type })
+        .then(function (result) {
+          if (result.data && result.data.ok && result.data.url) {
+            _heroImageUrl = result.data.url;
+            _setHeroPreview(result.data.url);
+            status.textContent = '✓ Đã tải lên — nhấn Lưu để áp dụng';
+            status.style.color = 'var(--gold)';
+          } else {
+            throw new Error((result.data && result.data.error) || 'Lỗi không rõ');
+          }
+        })
+        .catch(function (err) {
+          status.textContent = '✕ ' + (err.message || 'Lỗi upload');
+          status.style.color = '#f87171';
+          showToast('Lỗi upload ảnh nền: ' + (err.message || String(err)), 'error');
+        });
+    };
+    b64reader.onerror = function () {
+      status.textContent = '✕ Không đọc được file';
+      status.style.color = '#f87171';
+    };
+    b64reader.readAsDataURL(file);
+  }
+
+  function saveHeroImage() {
+    var saveStatus = document.getElementById('heroSaveStatus');
+    if (!_heroImageUrl) { showToast('Chưa chọn ảnh nền.', 'error'); return; }
+    var x = parseInt(document.getElementById('heroImgX').value, 10);
+    var y = parseInt(document.getElementById('heroImgY').value, 10);
+    vendorRef.update({
+      heroImage:          _heroImageUrl,
+      heroImagePositionX: x,
+      heroImagePositionY: y,
+      updatedAt:          firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function () {
+      saveStatus.textContent = '✓ Đã lưu';
+      saveStatus.style.color = 'var(--gold)';
+      document.getElementById('heroUploadStatus').textContent = '';
+      setTimeout(function () { saveStatus.textContent = ''; }, 3000);
+      showToast('Đã lưu ảnh nền!', 'success');
+    }).catch(function (err) {
+      saveStatus.textContent = '✕ ' + err.message;
+      saveStatus.style.color = '#f87171';
     });
   }
 

@@ -464,7 +464,7 @@ button {
   position: absolute;
   inset: 0;
   background-size: cover;
-  background-position: center;
+  /* background-position set via inline style (heroImagePositionX/Y) */
 }
 
 .mp-detail-hero__overlay {

@@ -658,6 +658,9 @@
           items.sort(function (a, b) { return a.sortOrder - b.sortOrder; });
 
           if (items.length > 0) {
+            // Preserve the richer static product list so _askClaude can use it
+            // even after Firestore items replace merged.products
+            merged._staticProducts = (biz.products || []).slice();
             merged.products = items;
 
             // Refresh AI system prompt with live menu data
@@ -1425,6 +1428,10 @@
     },
 
     _sendMessage: function (biz, text, messagesEl) {
+      // ── Conversation history (per vendor, per page session) ─────────────
+      if (!biz._aiHistory) biz._aiHistory = [];
+      biz._aiHistory.push({ role: 'user', content: text });
+
       // Add user bubble
       Receptionist._appendMessage(messagesEl, text, 'user');
 
@@ -1456,6 +1463,9 @@
           });
         }
       }).then(function (reply) {
+        // Record assistant reply; cap history at 20 messages (10 turns)
+        biz._aiHistory.push({ role: 'assistant', content: reply });
+        if (biz._aiHistory.length > 20) biz._aiHistory = biz._aiHistory.slice(-20);
         Receptionist._removeTyping(messagesEl, typingId);
         Receptionist._appendMessage(messagesEl, reply, 'bot');
       });
@@ -1667,74 +1677,108 @@
 
     _askClaude: function (biz, text, apiKey, capInfo) {
       var ai = biz.aiReceptionist;
-      var systemPrompt = 'You are ' + ai.name + ', AI assistant for ' + biz.name + '. ';
+      var systemPrompt;
 
-      if (biz.vendorType === 'foodvendor' && biz.products && biz.products.length) {
-        systemPrompt += 'You have FULL access to the menu and MUST answer pricing questions directly — never say "contact the vendor" for anything listed below.\n\n';
-        systemPrompt += 'MENU & PRICING:\n';
-        biz.products.forEach(function (p) {
-          var basePrice = Number(p.pricePerUnit);
-          var minQty    = Number(p.minimumOrderQty);
+      if (biz.vendorType === 'foodvendor') {
+        // ── Ordering-agent system prompt ────────────────────────────────────────
+        var today     = new Date();
+        var todayStr  = today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        var tomorrow  = new Date(today); tomorrow.setDate(today.getDate() + 1);
+        var tomorrowStr = tomorrow.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+        // Use the richer product list: _staticProducts (has descriptions) or products (Firestore)
+        var products = (biz._staticProducts && biz._staticProducts.length > (biz.products || []).length)
+          ? biz._staticProducts
+          : (biz.products || []);
+
+        var menuBlock = 'MENU & PRICING:\n';
+        products.forEach(function (p) {
+          var basePrice = Number(p.pricePerUnit || p.price || 0);
+          var minQty    = Number(p.minimumOrderQty || 1);
+          var pName     = p.nameEn || p.name || p.displayNameVi || '';
           var variantsWithPrice = (p.variants || []).filter(function (v) {
             return v && typeof v === 'object' && v.price != null && Number(v.price) > 0;
           });
 
           if (variantsWithPrice.length > 0) {
-            // Each variant has its own price — list them individually
-            systemPrompt += '- ' + (p.nameEn || p.name) + ' (minimum ' + minQty + ' pieces per order):\n';
+            menuBlock += '- ' + pName + ' (min ' + minQty + ' pieces):\n';
             variantsWithPrice.forEach(function (v) {
               var vPrice = Number(v.price);
               var lbl    = v.labelEn || v.label || '';
-              systemPrompt += '    • ' + lbl + ': $' + vPrice.toFixed(2) + ' each' +
-                ', min total $' + (vPrice * minQty).toFixed(2) + '\n';
+              menuBlock += '    • ' + lbl + ': $' + vPrice.toFixed(2) + '/each' +
+                ' (min total $' + (vPrice * minQty).toFixed(2) + ')\n';
             });
-            // Also list any variants without explicit prices using base price
             var variantsNoPrice = (p.variants || []).filter(function (v) {
               return !(v && typeof v === 'object' && v.price != null && Number(v.price) > 0);
             });
             variantsNoPrice.forEach(function (v) {
               var lbl = (v && typeof v === 'object') ? (v.labelEn || v.label) : String(v);
-              if (lbl) systemPrompt += '    • ' + lbl + ': $' + basePrice.toFixed(2) + ' each\n';
+              if (lbl) menuBlock += '    • ' + lbl + ': $' + basePrice.toFixed(2) + '/each\n';
             });
-          } else {
-            // No per-variant prices — single price for all
+          } else if (basePrice > 0) {
             var vLabels = (p.variants || []).map(function (v) {
               return typeof v === 'object' ? (v.labelEn || v.label) : v;
-            }).join(', ');
-            systemPrompt += '- ' + (p.nameEn || p.name) +
-              ': $' + basePrice.toFixed(2) + ' each' +
-              ', minimum ' + minQty + ' pieces' +
-              ', min total $' + (basePrice * minQty).toFixed(2);
-            if (vLabels) systemPrompt += ', variants: ' + vLabels;
-            systemPrompt += '\n';
+            }).filter(Boolean).join(', ');
+            menuBlock += '- ' + pName + ': $' + basePrice.toFixed(2) + '/each' +
+              ', min ' + minQty + ' pieces ($' + (basePrice * minQty).toFixed(2) + ' min order)';
+            if (vLabels) menuBlock += '; options: ' + vLabels;
+            menuBlock += '\n';
           }
         });
-        systemPrompt += '\nRULES:\n';
-        systemPrompt += '- "How much is X cooked/fresh/raw?" → use the SPECIFIC variant price listed above, multiply X × that variant price. Never use another variant\'s price.\n';
-        systemPrompt += '- "How much is X items?" → if no variant specified, list both variant prices and totals.\n';
-        systemPrompt += '- "What variants/types?" → list each variant and its price from menu data above.\n';
-        systemPrompt += '- "What is price/cost?" → state each variant price per piece and its minimum order total separately.\n';
-        systemPrompt += '- "Phone/contact?" → ' + (biz.hosts && biz.hosts[0] ? biz.hosts[0].name : 'owner') + ' at ' + biz.phoneDisplay + '\n';
-        systemPrompt += '- "Address/location?" → ' + biz.address + '\n';
+
+        var hostName = biz.hosts && biz.hosts[0] ? biz.hosts[0].name : 'Loan';
+        var phone    = biz.phoneDisplay || '';
+
+        systemPrompt =
+          'You are ' + ai.name + ', the AI ordering assistant for ' + biz.name + '.\n\n' +
+
+          'TODAY: ' + todayStr + '\n' +
+          '"Tomorrow" = ' + tomorrowStr + '\n\n' +
+
+          menuBlock + '\n' +
+
+          'CONTACT & LOGISTICS:\n' +
+          '- Contact: ' + hostName + ' at ' + phone + '\n' +
+          '- Address: ' + biz.address + '\n' +
+          '- Pickup available. Delivery: ask customer, vendor confirms.\n' +
+          '- Place order at least 1 day in advance.\n\n' +
+
+          'YOUR JOB — ORDER INTAKE AGENT:\n' +
+          'Collect a complete order. Required fields:\n' +
+          '  1. ITEM — which dish(es)\n' +
+          '  2. VARIANT — e.g. Raw (Sống) or Fresh (Tươi), if item has variants\n' +
+          '  3. QTY — number of pieces/trays (check minimum)\n' +
+          '  4. DATE — pickup/delivery date\n' +
+          '  5. METHOD — pickup or delivery\n' +
+          '  6. CUSTOMER NAME + PHONE\n\n' +
+
+          'CRITICAL RULES:\n' +
+          '- MEMORY: Never forget what the customer already told you. If they said "bún chả" or "50 pieces", keep it. Do not reset the order context between turns.\n' +
+          '- SELECTED ITEM: Once a dish is chosen, treat it as locked. Do not ask "which dish?" again.\n' +
+          '- NEXT FIELD ONLY: Ask for the next missing field only. Do not ask all fields at once.\n' +
+          '- DATE RESOLUTION: Always resolve relative dates ("tomorrow", "this Saturday") to actual dates using TODAY above.\n' +
+          '- RESET FORBIDDEN: Never say "how can I help you?" or pivot to a new topic until the order is fully confirmed and summarized.\n' +
+          '- PRICING: Always quote exact prices from the menu above. Never say "contact vendor" for any item listed.\n' +
+          '- ORDER COMPLETE: When all 6 fields are collected, output a full order summary then say the customer can text ' + hostName + ' at ' + phone + ' to confirm.\n\n' +
+          'Respond in the same language as the customer. Keep answers brief and action-oriented.';
+
         if (capInfo) {
           var capLbl = _dayLabel(capInfo.date);
-          systemPrompt += '\nDAILY CAPACITY for ' + capLbl + ':\n';
-          systemPrompt += '- Max per day: ' + capInfo.max + '\n';
-          systemPrompt += '- Already booked: ' + capInfo.booked + '\n';
-          systemPrompt += '- Remaining slots: ' + capInfo.remaining + '\n';
+          systemPrompt += '\n\nCAPACITY for ' + capLbl + ': max=' + capInfo.max +
+            ', booked=' + capInfo.booked + ', remaining=' + capInfo.remaining + '.';
           if (capInfo.remaining <= 0) {
-            systemPrompt += '- STATUS: FULLY BOOKED. Tell customer to choose another date.\n';
-          } else {
-            systemPrompt += '- STATUS: ' + capInfo.remaining + ' slots still open.\n';
+            systemPrompt += ' FULLY BOOKED — tell customer to choose a different date.';
           }
-          systemPrompt += 'When answering about ordering on ' + capLbl + ', always mention remaining capacity.\n';
         }
-        systemPrompt += '\nOnly say "contact vendor" for things NOT in the data above (e.g. delivery scheduling, custom orders).';
       } else {
-        systemPrompt += (ai.systemExtra || '');
+        // ── Non-food vendor: generic Q&A assistant ──────────────────────────────
+        systemPrompt = 'You are ' + ai.name + ', AI assistant for ' + biz.name + '. ' +
+          (ai.systemExtra || '') +
+          '\n\nRespond in the same language as the user. Keep it concise (2-3 sentences).';
       }
 
-      systemPrompt += '\n\nRespond in the same language as the user. Keep it concise (2-3 sentences).';
+      // Use full conversation history (already includes current user message)
+      var messages = (biz._aiHistory || []).slice(-20);
 
       return fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -1746,9 +1790,9 @@
         },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 256,
+          max_tokens: 384,
           system: systemPrompt,
-          messages: [{ role: 'user', content: text }]
+          messages: messages
         })
       }).then(function (res) {
         if (!res.ok) throw new Error('API error ' + res.status);

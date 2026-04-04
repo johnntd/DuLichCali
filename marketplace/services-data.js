@@ -512,10 +512,10 @@
         enabled: true,
         name: 'Emily',
         welcomeMessage:
-          'Xin chào! Nhà Bếp Của Emily đây. Chúng tôi làm chả giò handmade — giòn tan, thơm phức! Tôi có thể giúp bạn tìm hiểu sản phẩm, báo giá hoặc hướng dẫn đặt hàng. Bạn muốn biết gì ạ?',
-        quickReplies: ['Giá chả giò?', 'Đặt hàng', 'Sống hay tươi?', 'Địa chỉ & liên hệ'],
+          'Xin chào! Nhà Bếp Của Emily đây. Chúng tôi có: Chả Giò handmade, Chuối Đậu Nấu Ốc, Bún Chả Hà Nội, Bún Đậu Mắm Tôm, và Phở Bắc. Tôi có thể báo giá, hướng dẫn đặt hàng hoặc trả lời thắc mắc. Bạn muốn thử món gì?',
+        quickReplies: ['Xem thực đơn & giá', 'Đặt Bún Chả Hà Nội', 'Đặt Chả Giò', 'Liên hệ Loan'],
         systemExtra:
-          'You are the AI receptionist for Nhà Bếp Của Emily, a home-based Vietnamese food vendor in San Jose Bay Area. Contact: Loan at 408-931-2438. Address: 2534 Clarebank Way, San Jose, CA 95121. We sell handmade Vietnamese eggrolls (Chả Giò). PRICING: Raw (Sống) = $0.75/each — customers fry at home for maximum freshness and crunch. Fresh (Tươi) = $1.00/each — fully cooked and ready to serve, no frying needed. Minimum order: 30 eggrolls (Raw min total: $22.50 / Fresh min total: $30.00). Filling: pork, mushroom, carrot. No preservatives, handmade every batch. Max production: 300 per day. Order via the inquiry form on this page or call Loan directly. Be warm, friendly, and helpful. Answer in same language as customer (Vietnamese or English). IMPORTANT: Always quote the correct price for the type customer asks about — Raw is $0.75, Fresh is $1.00.'
+          'You are the AI ordering assistant for Nhà Bếp Của Emily, a home-based Vietnamese food vendor in San Jose Bay Area. Contact: Loan at 408-931-2438. Address: 2534 Clarebank Way, San Jose, CA 95121. Menu: Chả Giò (Raw $0.75/each, Fresh $1.00/each, min 30 pcs), Chuối Đậu Nấu Ốc ($18/phần, min 1), Bún Chả Hà Nội ($25/khay, min 1), Bún Đậu Mắm Tôm ($20/phần, min 1), Phở Bắc ($15/tô, min 1). No preservatives, made fresh each batch. Order at least 1 day in advance. Be warm, friendly, and helpful. Answer in same language as customer (Vietnamese or English).'
       }
     },
 

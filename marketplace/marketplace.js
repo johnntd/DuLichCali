@@ -561,6 +561,14 @@
         if (vd.defaultDailyCapacity != null) merged.defaultDailyCapacity = Number(vd.defaultDailyCapacity);
       }
 
+      // Build a lookup of static product images so Firestore items with image:''
+      // (from canonical seed data) can still show the static fallback image.
+      // Keyed by product id / canonicalId (both are 'eggroll', 'chuoi-dau-nau-oc', etc.)
+      var staticProdMap = {};
+      (biz.products || []).forEach(function(p) {
+        if (p.id) staticProdMap[p.id] = p;
+      });
+
       // Load menu items (no compound index required — filter client-side)
       vendorRef.collection('menuItems').get().then(function (snap) {
         if (!snap.empty) {
@@ -569,8 +577,8 @@
             var item = d.data();
             if (item.active === false) return;   // skip inactive
 
-            // Normalize variants → {id, label, labelEn, imageUrl}[]
-            // Supports legacy string[], old {id,label} objects, and new {key,label,imageUrl} objects
+            // Normalize variants → {id, label, labelEn, imageUrl, price}[]
+            // Supports legacy string[], old {id,label} objects, and new {key,label,imageUrl,price} objects
             var variants = (item.variants || []).map(function (v, i) {
               if (v && typeof v === 'object') {
                 var id  = v.id || v.key || ('v' + i);
@@ -583,6 +591,13 @@
               return { id: slug, label: s, labelEn: s, imageUrl: '', price: null };
             });
 
+            // Image fallback: Firestore item.image → item.imageUrl → matching static product image
+            // Canonical seed items are seeded with image:'' — this ensures the static photo still shows
+            // until the vendor uploads their own via vendor-admin.
+            var staticMatch = staticProdMap[item.canonicalId] || staticProdMap[d.id] || null;
+            var resolvedImage = item.image || item.imageUrl ||
+                                (staticMatch && staticMatch.image ? staticMatch.image : '') || '';
+
             items.push({
               id: d.id,
               name: item.name || '',
@@ -593,11 +608,8 @@
               unit: item.unit || 'each',
               unitEn: item.unit || 'each',
               minimumOrderQty: item.minimumOrderQty || 30,
-              // Item image — intentional fallback order:
-              // 1. item.image (Firebase Storage URL or relative path from vendor-admin)
-              // 2. item.imageUrl (alternate field name)
-              // 3. '' — render nothing; never fall back to vendor heroImage
-              image: item.image || item.imageUrl || '',
+              // Image: Firestore upload URL → static fallback (see resolvedImage above)
+              image: resolvedImage,
               imagePositionX: item.imagePositionX != null ? item.imagePositionX : 50,
               imagePositionY: item.imagePositionY != null ? item.imagePositionY : 50,
               videoUrl: item.videoUrl || null,
@@ -769,8 +781,28 @@
         return '<span class="mp-product__variant"' + imgAttr + '>' + escHtml(v.labelEn) + vPriceHtml + '</span>';
       }).join('');
 
-      var priceStr = '$' + product.pricePerUnit.toFixed(2) + ' / ' + escHtml(product.unitEn);
-      var minTotal = '$' + (product.pricePerUnit * product.minimumOrderQty).toFixed(2);
+      // ISSUE 2 FIX: Display variant prices as "$X.XX (raw) / $Y.YY (fresh)" when available.
+      // Falls back to base pricePerUnit when no variant prices are set.
+      var variantsWithPrice = (product.variants || []).filter(function(v) {
+        return v.price != null && v.price > 0;
+      });
+      var effectivePrice = product.pricePerUnit; // used for minTotal calculation
+      var priceStr;
+      if (variantsWithPrice.length > 1) {
+        // Multiple variants with prices: show as "$0.75 (raw) / $1.25 (fresh)"
+        priceStr = variantsWithPrice.map(function(v) {
+          var shortLabel = (v.labelEn || '').split(/[\s\u2014\-]+/)[0].toLowerCase();
+          return '$' + v.price.toFixed(2) + ' (' + escHtml(shortLabel) + ')';
+        }).join(' / ');
+        // Use the lowest variant price for minTotal estimate
+        effectivePrice = variantsWithPrice.reduce(function(mn, v) { return Math.min(mn, v.price); }, Infinity);
+      } else if (variantsWithPrice.length === 1) {
+        priceStr = '$' + variantsWithPrice[0].price.toFixed(2) + ' / ' + escHtml(product.unitEn);
+        effectivePrice = variantsWithPrice[0].price;
+      } else {
+        priceStr = '$' + product.pricePerUnit.toFixed(2) + ' / ' + escHtml(product.unitEn);
+      }
+      var minTotal = '$' + (effectivePrice * product.minimumOrderQty).toFixed(2);
 
       // object-position drives the focal point set in vendor-admin
       var posX  = (product.imagePositionX != null ? product.imagePositionX : 50) + '%';
@@ -1107,7 +1139,7 @@
           minBadge.textContent = 'Min. ' + product.minimumOrderQty;
         }
 
-        // Update variant select (store imageUrl on each option for later swap)
+        // Update variant select (store imageUrl + price on each option for later swap)
         if (variantSelectEl && variantRowEl) {
           var variants = product.variants || [];
           if (variants.length === 0) {
@@ -1120,7 +1152,8 @@
             variantSelectEl.innerHTML   =
               '<option value="">— Select type —</option>' +
               variants.map(function (v) {
-                return '<option value="' + escAttr(v.id) + '" data-img="' + escAttr(v.imageUrl || '') + '">' + escHtml(v.labelEn) + '</option>';
+                var priceAttr = (v.price != null && v.price > 0) ? ' data-price="' + v.price + '"' : '';
+                return '<option value="' + escAttr(v.id) + '" data-img="' + escAttr(v.imageUrl || '') + '"' + priceAttr + '>' + escHtml(v.labelEn) + '</option>';
               }).join('');
           }
         }
@@ -1130,7 +1163,7 @@
       });
     }
 
-    // Swap product card image when variant is selected
+    // Swap product card image + update price when variant is selected
     if (variantSelectEl) {
       variantSelectEl.addEventListener('change', function () {
         var selOpt = variantSelectEl.options[variantSelectEl.selectedIndex];
@@ -1143,6 +1176,15 @@
           }
         }
         if (!product) return;
+
+        // ISSUE 2 FIX: Update price when variant has its own price
+        var variantPrice = selOpt.dataset.price ? parseFloat(selOpt.dataset.price) : NaN;
+        if (!isNaN(variantPrice) && variantPrice > 0 && qtyInput) {
+          qtyInput.setAttribute('data-price', variantPrice);
+          updateSubtotal();
+        }
+
+        // Swap product card image
         var varImg = selOpt.dataset.img || '';
         var imgEl  = document.getElementById('pcard-img-' + product.id);
         if (imgEl) {

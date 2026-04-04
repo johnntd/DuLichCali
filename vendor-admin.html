@@ -1423,11 +1423,28 @@
     <div class="f-group" style="margin-top:1rem">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.3rem">
         <label class="f-label" for="fVideoUrl">Video URL (Promo MP4)</label>
-        <button type="button" class="btn--ai btn--sm" onclick="showVideoGenCmd()" style="font-size:.62rem;padding:.18rem .5rem">
-          🎬 Generate Command
-        </button>
+        <div style="display:flex;gap:.35rem;align-items:center">
+          <button type="button" class="btn--ai btn--sm" id="generateVideoBtn"
+            onclick="generateVideoAuto()" style="font-size:.62rem;padding:.22rem .6rem;background:linear-gradient(135deg,#7c3aed,#a855f7);border-color:#7c3aed">
+            ▶ Generate Video
+          </button>
+          <button type="button" class="btn--ai btn--sm" onclick="showVideoGenCmd()" style="font-size:.62rem;padding:.18rem .5rem">
+            🎬 CLI
+          </button>
+        </div>
       </div>
-      <input type="url" id="fVideoUrl" class="f-input" placeholder="https://storage.googleapis.com/... (leave blank if none)">
+      <input type="url" id="fVideoUrl" class="f-input" placeholder="https://storage.googleapis.com/... (leave blank if none)"
+        oninput="updateVideoPreview()">
+      <!-- Video preview (shown when URL is filled) -->
+      <div id="videoPreviewWrap" style="display:none;margin-top:.5rem;border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,.12)">
+        <video id="videoPreviewEl" controls muted playsinline loop
+          style="width:100%;max-height:200px;background:#000;display:block;object-fit:contain">
+          <source id="videoPreviewSrc" src="" type="video/mp4">
+        </video>
+      </div>
+      <!-- Auto-generate status panel -->
+      <div id="videoGenStatus" style="display:none;margin-top:.5rem;font-size:.75rem;padding:.5rem .7rem;border-radius:6px;border:1px solid var(--border-g)"></div>
+      <!-- CLI panel (collapsed) -->
       <div id="videoGenCmdPanel" style="display:none;margin-top:.6rem;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:.65rem .75rem">
         <div style="font-size:.62rem;color:#a78bfa;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.4rem">CLI Command — run in project root</div>
         <textarea id="videoGenCmdText" readonly class="f-textarea"
@@ -1869,7 +1886,7 @@
             '<div class="va-item-card__meta">' +
               (inactive ? '<span class="va-tag va-tag--off">Inactive</span>' : '') +
               (item.featured ? '<span class="va-tag va-tag--star">Featured</span>' : '') +
-              (item.videoUrl ? '<span class="va-tag va-tag--video">🎥 Video</span>' : '') +
+              (item.videoUrl ? '<span class="va-tag va-tag--video">🎥 Video</span>' : item.videoStatus === 'generating' ? '<span class="va-tag" style="color:#a78bfa;border-color:#a78bfa">⏳ Đang tạo video...</span>' : '') +
               (!item.image ? '<span class="va-tag va-tag--off" title="No photo — upload in Edit">📷 No photo</span>' : '') +
               (hasInstrs ? '<span class="va-tag va-tag--info">📋 Instrs</span>' : '') +
               (item.minimumOrderQty ? '<span class="va-tag">Min ' + item.minimumOrderQty + '</span>' : '') +
@@ -1906,6 +1923,7 @@
       document.getElementById('fMinQty').value    = item.minimumOrderQty || 30;
       document.getElementById('fImage').value     = item.image || '';
       document.getElementById('fVideoUrl').value  = item.videoUrl || '';
+      updateVideoPreview();
       document.getElementById('fImagePosX').value = item.imagePositionX != null ? item.imagePositionX : 50;
       document.getElementById('fImagePosY').value = item.imagePositionY != null ? item.imagePositionY : 50;
       setImgPreview(item.image || '');
@@ -1966,6 +1984,9 @@
     clearVariantBuilder();
     document.getElementById('fImage').value        = '';
     document.getElementById('fVideoUrl').value     = '';
+    updateVideoPreview();
+    var vs = document.getElementById('videoGenStatus');
+    if (vs) vs.style.display = 'none';
     document.getElementById('fImageFile').value    = '';
     document.getElementById('fImagePosX').value    = '50';
     document.getElementById('fImagePosY').value    = '50';
@@ -2206,6 +2227,82 @@
       badge.style.display = 'inline';
       setTimeout(function () { badge.style.display = 'none'; }, 2500);
     });
+  }
+
+  // ── Video preview: shows a player when a URL is entered ──────────────────────
+  function updateVideoPreview() {
+    var url  = document.getElementById('fVideoUrl').value.trim();
+    var wrap = document.getElementById('videoPreviewWrap');
+    var src  = document.getElementById('videoPreviewSrc');
+    var vid  = document.getElementById('videoPreviewEl');
+    if (!wrap) return;
+    if (url) {
+      wrap.style.display = 'block';
+      if (src.src !== url) {
+        src.src = url;
+        if (vid) vid.load();
+      }
+    } else {
+      wrap.style.display = 'none';
+      if (src) src.src = '';
+    }
+  }
+
+  // ── Automated video generation via Firebase Cloud Function ───────────────────
+  function generateVideoAuto() {
+    var editId = document.getElementById('fEditId').value;
+    if (!editId) {
+      showToast('Lưu sản phẩm trước khi tạo video.', 'error');
+      return;
+    }
+    if (!VENDOR_ID) {
+      showToast('Lỗi: VENDOR_ID chưa sẵn sàng.', 'error');
+      return;
+    }
+
+    var btn    = document.getElementById('generateVideoBtn');
+    var status = document.getElementById('videoGenStatus');
+
+    function setStatus(msg, type) {
+      if (!status) return;
+      status.style.display = 'block';
+      status.style.background = type === 'error'   ? 'rgba(239,68,68,.1)'   :
+                                 type === 'success' ? 'rgba(74,222,128,.1)'  :
+                                 'rgba(167,139,250,.1)';
+      status.style.borderColor = type === 'error'   ? 'rgba(239,68,68,.35)' :
+                                  type === 'success' ? 'rgba(74,222,128,.35)' :
+                                  'rgba(167,139,250,.35)';
+      status.style.color = type === 'error' ? '#f87171' : type === 'success' ? '#4ade80' : '#c4b5fd';
+      status.textContent = msg;
+    }
+
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang tạo...'; }
+    setStatus('Đang khởi tạo — video sẽ sẵn sàng trong ~60 giây...', 'info');
+
+    // Call the Firebase Cloud Function
+    var fn = firebase.functions().httpsCallable('generateItemVideo');
+    fn({ vendorId: VENDOR_ID, itemId: editId })
+      .then(function (result) {
+        var data = result.data;
+        if (data && data.ok && data.videoUrl) {
+          document.getElementById('fVideoUrl').value = data.videoUrl;
+          updateVideoPreview();
+          setStatus('✓ Video đã tạo xong! Nhấn Lưu lại để cập nhật.', 'success');
+          showToast('Video đã tạo thành công!', 'success');
+        } else {
+          var msg = (data && data.error) || 'Lỗi không xác định.';
+          setStatus('✗ ' + msg, 'error');
+          showToast('Lỗi tạo video: ' + msg, 'error');
+        }
+      })
+      .catch(function (err) {
+        var msg = err.message || 'Lỗi kết nối.';
+        setStatus('✗ ' + msg, 'error');
+        showToast('Lỗi: ' + msg, 'error');
+      })
+      .finally(function () {
+        if (btn) { btn.disabled = false; btn.textContent = '▶ Generate Video'; }
+      });
   }
 
   // ── Save item ─────────────────────────────────────────────────────────────

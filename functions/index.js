@@ -24,6 +24,11 @@ const { defineSecret }      = require('firebase-functions/params');
 const admin                 = require('firebase-admin');
 const twilio                = require('twilio');
 const https                 = require('https');
+const os                    = require('os');
+const path                  = require('path');
+const fs                    = require('fs');
+const ffmpegPath            = require('ffmpeg-static');
+const ffmpeg                = require('fluent-ffmpeg');
 
 // ── Secrets (Google Cloud Secret Manager) ────────────────────────────────────
 // These are injected at runtime — never stored in code or .env files.
@@ -521,3 +526,251 @@ exports.aiProxy = onCall(
     }
   }
 );
+
+// ── generateItemVideo ─────────────────────────────────────────────────────────
+// Callable function: accepts {vendorId, itemId}
+// Creates a 15-second promotional MP4 using ffmpeg, uploads to Firebase Storage,
+// updates the menuItem document with videoUrl, and returns { ok, videoUrl }.
+// Requires ffmpeg-static + fluent-ffmpeg in package.json.
+exports.generateItemVideo = onCall(
+  {
+    region:         'us-central1',
+    timeoutSeconds: 300,
+    memory:         '2GiB',
+    cors:           true,
+  },
+  async (request) => {
+    if (!request.auth) {
+      return { ok: false, error: 'Vui lòng đăng nhập lại.', debugCode: 'UNAUTHENTICATED' };
+    }
+
+    const { vendorId, itemId } = request.data || {};
+    if (!vendorId || !itemId) {
+      return { ok: false, error: 'Thiếu vendorId hoặc itemId.', debugCode: 'INVALID_REQUEST' };
+    }
+
+    // ── Load item + vendor data ─────────────────────────────────────────────────
+    const itemRef = db.collection('vendors').doc(vendorId).collection('menuItems').doc(itemId);
+    const [itemSnap, vendorSnap] = await Promise.all([
+      itemRef.get(),
+      db.collection('vendors').doc(vendorId).get(),
+    ]);
+
+    if (!itemSnap.exists) {
+      return { ok: false, error: 'Không tìm thấy sản phẩm.', debugCode: 'NOT_FOUND' };
+    }
+
+    const item   = itemSnap.data();
+    const vendor = vendorSnap.data() || {};
+
+    const vendorName = vendor.businessName || 'Du Lịch Cali';
+    const itemName   = item.displayNameVi || item.name || 'Sản phẩm';
+    const price      = item.price != null ? '$' + Number(item.price).toFixed(2) : '';
+    const unit       = item.unit || 'each';
+    const minQty     = item.minimumOrderQty || 1;
+    const imageUrl   = item.image || item.imageUrl || '';
+
+    // ── Temp paths ─────────────────────────────────────────────────────────────
+    const tmpDir     = os.tmpdir();
+    const imgPath    = path.join(tmpDir, `dlc-vid-${itemId}-bg.jpg`);
+    const outPath    = path.join(tmpDir, `dlc-vid-${itemId}.mp4`);
+    const placeholderPath = path.join(tmpDir, `dlc-vid-${itemId}-bg-solid.png`);
+
+    // Mark as generating in Firestore immediately (so admin UI can show spinner)
+    await itemRef.update({
+      videoStatus: 'generating',
+      updatedAt:   admin.firestore.FieldValue.serverTimestamp(),
+    }).catch(() => {});
+
+    try {
+      // ── Download item image ───────────────────────────────────────────────────
+      let bgInput = null;
+      if (imageUrl) {
+        try {
+          await _downloadToFile(imageUrl, imgPath);
+          bgInput = imgPath;
+        } catch (dlErr) {
+          console.warn('[generateItemVideo] image download failed:', dlErr.message);
+        }
+      }
+
+      // If no image available, create a solid navy background via ffmpeg lavfi
+      if (!bgInput) {
+        bgInput = null; // signal to use lavfi color source
+      }
+
+      // ── Build price line ──────────────────────────────────────────────────────
+      const variants = item.variants || [];
+      let priceLine = price ? price + ' / ' + unit : '';
+      const variantsWithPrice = variants.filter(v => v.price != null && v.price > 0);
+      if (variantsWithPrice.length > 1) {
+        priceLine = variantsWithPrice.map(v => {
+          const lbl = (v.labelEn || v.label || '').split(/[\s\u2014\-]+/)[0];
+          return '$' + Number(v.price).toFixed(2) + ' ' + lbl;
+        }).join('  /  ');
+      }
+
+      const minLine = minQty > 1 ? 'Min. ' + minQty + ' ' + unit + 's' : '';
+      const ctaLine = 'Dat hang ngay';  // ASCII safe for drawtext
+
+      // ── Run ffmpeg ────────────────────────────────────────────────────────────
+      await _renderPromoVideo({
+        bgInput,
+        outPath,
+        vendorName,
+        itemName,
+        priceLine,
+        minLine,
+        ctaLine,
+      });
+
+      // ── Upload to Firebase Storage ────────────────────────────────────────────
+      const bucket   = admin.storage().bucket();
+      const destPath = `vendors/${vendorId}/videos/${Date.now()}-${itemId}.mp4`;
+
+      await bucket.upload(outPath, {
+        destination: destPath,
+        metadata:    { contentType: 'video/mp4' },
+        public:      true,
+      });
+
+      // Build public URL (no signed URL needed — file is public)
+      const bucketName = bucket.name;
+      const encodedPath = encodeURIComponent(destPath).replace(/%2F/g, '%2F');
+      const publicUrl = `https://storage.googleapis.com/${bucketName}/${encodeURIComponent(destPath)}`;
+
+      // Try to get a signed download URL instead (more robust)
+      let videoUrl = publicUrl;
+      try {
+        const [signed] = await bucket.file(destPath).getSignedUrl({
+          action:  'read',
+          expires: '03-14-2100',
+        });
+        videoUrl = signed;
+      } catch (signErr) {
+        console.warn('[generateItemVideo] signed URL failed, using public URL:', signErr.message);
+      }
+
+      // ── Update Firestore ──────────────────────────────────────────────────────
+      await itemRef.update({
+        videoUrl:          videoUrl,
+        videoStatus:       'ready',
+        videoGeneratedAt:  admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt:         admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      return { ok: true, videoUrl };
+
+    } catch (err) {
+      console.error('[generateItemVideo] error:', err.message, err.stack);
+      await itemRef.update({ videoStatus: 'error', updatedAt: admin.firestore.FieldValue.serverTimestamp() }).catch(() => {});
+      return { ok: false, error: 'Lỗi tạo video: ' + err.message, debugCode: 'RENDER_ERROR' };
+
+    } finally {
+      // Clean up temp files
+      [imgPath, outPath, placeholderPath].forEach(f => {
+        try { if (fs.existsSync(f)) fs.unlinkSync(f); } catch (_) {}
+      });
+    }
+  }
+);
+
+// ── ffmpeg render helper ──────────────────────────────────────────────────────
+function _renderPromoVideo({ bgInput, outPath, vendorName, itemName, priceLine, minLine, ctaLine }) {
+  return new Promise((resolve, reject) => {
+    // Font: use a built-in safe default
+    // drawtext fontfile path is optional when using fontname on Linux
+    const W = 1080, H = 1920, DUR = 15;
+
+    // Sanitize text for ffmpeg drawtext (escape colons, single-quotes, backslashes)
+    function esc(t) {
+      return (t || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/:/g, '\\:');
+    }
+
+    const vendorEsc = esc(vendorName);
+    const itemEsc   = esc(itemName);
+    const priceEsc  = esc(priceLine);
+    const minEsc    = esc(minLine);
+    const ctaEsc    = esc(ctaLine);
+
+    // Build video filter chain
+    // Layer 1: background (image scaled/cropped to 1080x1920, or solid navy)
+    // Layer 2: dark gradient overlay (semi-transparent black, bottom-heavy)
+    // Layer 3: text overlays
+
+    const textFilters = [
+      // Vendor name — top area, small
+      `drawtext=text='${vendorEsc}':fontsize=44:fontcolor=0xFFD700:x=(w-text_w)/2:y=160:shadowcolor=black:shadowx=2:shadowy=2`,
+      // Item name — center-top, large
+      `drawtext=text='${itemEsc}':fontsize=92:fontcolor=white:x=(w-text_w)/2:y=820:shadowcolor=black:shadowx=3:shadowy=3`,
+      // Price line
+      ...(priceLine ? [`drawtext=text='${priceEsc}':fontsize=60:fontcolor=0xFFA500:x=(w-text_w)/2:y=940:shadowcolor=black:shadowx=2:shadowy=2`] : []),
+      // Min order
+      ...(minLine   ? [`drawtext=text='${minEsc}':fontsize=42:fontcolor=0xCCCCCC:x=(w-text_w)/2:y=1020:shadowcolor=black:shadowx=1:shadowy=1`] : []),
+      // CTA bottom
+      `drawtext=text='${ctaEsc}':fontsize=64:fontcolor=white:x=(w-text_w)/2:y=1680:box=1:boxcolor=0xE67E22@0.9:boxborderw=20:shadowcolor=black:shadowx=2:shadowy=2`,
+    ].join(',');
+
+    let cmd;
+    if (bgInput) {
+      // Use the provided image as background
+      cmd = ffmpeg(bgInput)
+        .inputOptions(['-loop 1'])
+        .outputOptions([
+          '-t', String(DUR),
+          '-vf', `scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},` +
+                 `colorchannelmixer=rr=0.4:gg=0.4:bb=0.4,` +
+                 `drawbox=x=0:y=h*0.6:w=iw:h=ih:color=black@0.55:t=fill,` +
+                 textFilters,
+          '-c:v', 'libx264',
+          '-preset', 'fast',
+          '-crf', '23',
+          '-pix_fmt', 'yuv420p',
+          '-r', '25',
+          '-an',
+          '-movflags', '+faststart',
+        ]);
+    } else {
+      // Solid navy background (no image)
+      cmd = ffmpeg()
+        .input(`color=c=0x0d2f50:s=${W}x${H}:r=25`)
+        .inputFormat('lavfi')
+        .outputOptions([
+          '-t', String(DUR),
+          '-vf', textFilters,
+          '-c:v', 'libx264',
+          '-preset', 'fast',
+          '-crf', '23',
+          '-pix_fmt', 'yuv420p',
+          '-r', '25',
+          '-an',
+          '-movflags', '+faststart',
+        ]);
+    }
+
+    cmd
+      .setFfmpegPath(ffmpegPath)
+      .on('error', reject)
+      .on('end', resolve)
+      .save(outPath);
+  });
+}
+
+// ── HTTPS download helper ─────────────────────────────────────────────────────
+function _downloadToFile(url, destPath) {
+  return new Promise((resolve, reject) => {
+    const file = fs.createWriteStream(destPath);
+    const protocol = url.startsWith('https') ? require('https') : require('http');
+    protocol.get(url, res => {
+      if (res.statusCode !== 200) {
+        file.close();
+        return reject(new Error('HTTP ' + res.statusCode + ' for ' + url));
+      }
+      res.pipe(file);
+      file.on('finish', () => file.close(resolve));
+    }).on('error', err => {
+      file.close();
+      reject(err);
+    });
+  });
+}

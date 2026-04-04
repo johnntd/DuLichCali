@@ -3148,7 +3148,7 @@ select.field-input {
   background: none;
   border: none;
   cursor: pointer;
-  padding: .35rem;
+  padding: .55rem;
   border-radius: 8px;
   color: #0a2344;
   display: flex;
@@ -3156,8 +3156,14 @@ select.field-input {
   justify-content: center;
   transition: background .15s;
   flex-shrink: 0;
+  min-width: 44px;
+  min-height: 44px;
 }
 .ri-back:hover { background: #f1f4f8; }
+.ri-back:focus-visible {
+  outline: 2px solid #0a2344;
+  outline-offset: 2px;
+}
 .ri-title {
   font: 600 1.1rem var(--font-d, 'Bodoni Moda', serif);
   color: #0a2344;
@@ -3171,7 +3177,7 @@ select.field-input {
   padding: 0 .75rem;
   border-bottom: 1px solid #e8edf2;
   flex-shrink: 0;
-  gap: .25rem;
+  gap: .5rem;
 }
 .ri-tab {
   flex: 1;
@@ -3183,13 +3189,20 @@ select.field-input {
   color: #6b7a8d;
   cursor: pointer;
   white-space: nowrap;
-  transition: color .15s, border-color .15s;
+  transition: color .15s, border-color .15s, background .15s;
   min-width: 0;
+  min-height: 44px;
+  border-radius: 6px 6px 0 0;
 }
+.ri-tab:hover { background: #f4f7fb; color: #3a4b5c; }
 .ri-tab--active {
   color: #0a2344;
   border-bottom-color: var(--gold, #c9a84c);
   font-weight: 600;
+}
+.ri-tab:focus-visible {
+  outline: 2px solid #0a2344;
+  outline-offset: -2px;
 }
 
 /* Scrollable body */
@@ -3302,6 +3315,9 @@ select.field-input {
   flex-shrink: 0;
 }
 @keyframes ri-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .ri-est-spinner { animation: none; border-top-color: #0a2344; opacity: .7; }
+}
 .ri-est-hint {
   padding: 1rem;
   color: #8695a6;
@@ -3399,10 +3415,15 @@ select.field-input {
   font: 600 .95rem var(--font-b, 'Jost', sans-serif);
   cursor: pointer;
   transition: background .15s, transform .1s;
+  min-height: 44px;
 }
 .ri-submit:hover { background: #122f5c; }
 .ri-submit:active { transform: scale(.98); }
 .ri-submit:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.ri-submit:focus-visible {
+  outline: 2px solid #c9a84c;
+  outline-offset: 2px;
+}
 
 /* Success screen */
 .ri-success {

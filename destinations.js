@@ -243,7 +243,7 @@ const DESTINATIONS = [
       en: 'Napa Valley captivates with rolling vineyards, 400+ world-class wineries, farm-to-table dining, and breathtaking California wine country scenery.'
     },
     image:          'napavalley.jpg?v=20260402',
-    youtubeId:      'dplrw7R1JKc', // Get to Know Napa Valley Wine (Wine Folly) — embeddable, verified 2026-04
+    youtubeId:      'inDuJrJPtaI', // Napa Valley — user-selected, embeddable, verified 2026-04
     hook:           'Những vườn nho trải dài vô tận, rượu vang đẳng cấp thế giới và bữa ăn farm-to-table giữa thiên nhiên.',
     highlightTags:  ['Wine Tasting', 'Castello di Amorosa', 'Hot Air Balloon', 'Oxbow Market', 'Vineyard'],
     distance_miles: 430,

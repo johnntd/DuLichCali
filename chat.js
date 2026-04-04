@@ -1261,9 +1261,10 @@ BEHAVIOR GUIDELINES:
       pattern: /đặt bàn|reserve.*table|book.*table|đặt.*chỗ ngồi/i },
 
     // Food ordering — ordering intent PLUS food item or vendor name
+    // 'also' includes both Vietnamese (with diacritics) and ASCII romanized forms
     { intent: 'food_order',
       pattern: /(?:(?:đặt|order|muốn|want|cho\s+(?:tôi|mình)|i.?d\s+like)\s*(?:\d+\s*)?(?:hàng|món|food|ăn)?\b)|\b\d+\s*(?:tray|khay|phần|tô|cuốn|piece|pcs?|cái)\b/i,
-      also:    /bún chả|chả giò|cha gio|phở|pho\b|bún đậu|chuối đậu|emily|nhà bếp|nha bep/i },
+      also:    /bún chả|bun cha|chả giò|cha gio|phở|pho\b|bún đậu|bun dau|chuối đậu|chuoi dau|emily|nhà bếp|nha bep/i },
 
     // Nail appointment — must have booking intent, not just a price question
     { intent: 'nail_booking',

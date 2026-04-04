@@ -209,8 +209,7 @@ button { cursor: pointer; font-family: var(--font-b); }
 }
 .nav-tab--center.nav-tab--active { color: var(--gold); }
 
-/* ── Sidebar-only labels (hidden on mobile, shown in 1200px+ sidebar) ── */
-.sidebar-label, .sidebar-divider, .sidebar-svc { display: none; }
+/* sidebar-label, sidebar-divider, sidebar-svc removed from nav */
 
 /* ── Global Floating Back Button ────────────────────────── */
 /* Appears above bottom nav; only shown via JS (_updateBackBtn) */
@@ -2561,113 +2560,25 @@ select.field-input {
 /* ── Desktop: 1200px+ ────────────────────────────────────────── */
 @media (min-width: 1200px) {
 
-  /* ── App Shell: CSS Grid with left sidebar ── */
-  #app {
-    display: grid;
-    grid-template-areas:
-      "header  header"
-      "sidenav main";
-    grid-template-columns: 240px 1fr;
-    grid-template-rows: var(--app-bar-h) 1fr;
-    height: 100dvh;
-    height: 100vh;
-  }
-
+  /* ── App Shell: full-width, no sidebar — base flex-column applies ── */
   .app-bar {
-    grid-area: header;
-    height: var(--app-bar-h);
     padding: 0 2.5rem;
   }
   .app-bar__brand { font-size: 1.3rem; }
 
-  .app-main {
-    grid-area: main;
-    overflow: hidden;
-  }
-
-  /* ── Sidebar Nav (was bottom-nav) ── */
-  .bottom-nav {
-    grid-area: sidenav;
-    flex-direction: column;
-    align-items: stretch;
-    height: auto;
-    padding-bottom: 0;
-    border-top: none;
-    border-right: 1px solid var(--border-g);
-    overflow-y: auto;
-    padding-top: .75rem;
-  }
-
-  /* Sidebar section label */
-  .sidebar-label {
-    display: block;
-    padding: .85rem 1.25rem .35rem;
-    font-size: .6rem;
-    font-weight: 600;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: rgba(106,176,212,.4);
-  }
-  /* Sidebar divider */
-  .sidebar-divider {
-    display: block;
-    height: 1px;
-    background: rgba(255,255,255,.06);
-    margin: .5rem 1.25rem;
-  }
-  /* Sidebar service shortcuts — desktop only */
-  .sidebar-svc { display: flex; }
-
-  /* Desktop: back button moves into the main content column */
-  .global-back {
-    position: fixed;
-    bottom: auto;
-    top: calc(var(--app-bar-h) + 12px);
-    left: calc(240px + 14px);
-  }
-
+  /* Bottom nav: stays at bottom as horizontal bar, tabs centered */
+  .bottom-nav { justify-content: center; }
   .nav-tab {
     flex: none;
+    width: 110px;
     flex-direction: row;
-    justify-content: flex-start;
-    height: 48px;
-    padding: 0 1.25rem;
-    gap: .75rem;
-    font-size: .76rem;
-    border-left: 3px solid transparent;
-    text-align: left;
-  }
-  .nav-tab--active {
-    border-left-color: var(--gold);
-    background: rgba(245,166,35,.08);
+    gap: .55rem;
+    font-size: .8rem;
+    padding: 0 .5rem;
   }
   .nav-tab svg { width: 18px; height: 18px; flex-shrink: 0; }
-
-  /* Center book button → horizontal pill in sidebar */
-  .nav-tab--center {
-    overflow: visible;
-    margin: .75rem 1rem;
-    height: auto;
-    padding: 0;
-    flex-direction: row;
-    justify-content: center;
-  }
-  .nav-center-btn {
-    width: 100%;
-    height: 44px;
-    border-radius: var(--r-md);
-    margin-top: 0;
-    justify-content: center;
-    gap: .5rem;
-  }
-  .nav-center-btn::after {
-    content: "Đặt chỗ";
-    font-size: .78rem;
-    font-weight: 700;
-    letter-spacing: .06em;
-    color: var(--navy-900);
-  }
-  .nav-tab--center > span { display: none; }
+  /* AI center button: reset the mobile pop-up margin */
+  .nav-center-btn { margin-top: -8px; }
 
   /* ── Screens ── */
   .screen { border-radius: 0; }
@@ -2765,9 +2676,6 @@ select.field-input {
 
 /* ── Wide: 1600px+ ──────────────────────────────────────────── */
 @media (min-width: 1600px) {
-  #app { grid-template-columns: 260px 1fr; }
-  .global-back { left: calc(260px + 14px); }
-
   .hc { height: 68vh; min-height: 520px; }
   .hc__title { font-size: clamp(4rem, 5vw, 6.5rem); }
 
@@ -3157,22 +3065,6 @@ select.field-input {
     max-width: 480px;
   }
 
-  /* Sidebar: Book tab always gold-tinted */
-  .bottom-nav #tabBook {
-    color: var(--gold);
-    border-left-color: rgba(245,166,35,.5);
-  }
-  /* Sidebar: AI/Chat tab prominent */
-  .bottom-nav #tabChat {
-    background: rgba(245,166,35,.07);
-    border-left-color: var(--gold);
-    color: var(--gold-lt);
-  }
-  /* Sidebar panel switching items */
-  .bottom-nav #tabChat.nav-tab--active {
-    background: rgba(245,166,35,.14);
-    color: var(--gold-lt);
-  }
 }
 
 @media (min-width: 768px) {

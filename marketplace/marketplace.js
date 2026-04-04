@@ -582,9 +582,12 @@
             var variants = (item.variants || []).map(function (v, i) {
               if (v && typeof v === 'object') {
                 var id  = v.id || v.key || ('v' + i);
-                var lbl = v.label || v.labelEn || String(v);
+                // Support both label (legacy) and name (new API-compat field)
+                var lbl = v.label || v.name || v.labelEn || String(v);
                 var vPrice = (v.price != null && !isNaN(Number(v.price))) ? Number(v.price) : null;
-                return { id: id, label: lbl, labelEn: lbl, imageUrl: v.imageUrl || '', price: vPrice };
+                // Support both imageUrl (camelCase) and image_url (snake_case)
+                var vImg = v.imageUrl || v.image_url || '';
+                return { id: id, label: lbl, labelEn: lbl, imageUrl: vImg, price: vPrice };
               }
               var s    = String(v || '');
               var slug = s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || ('v' + i);

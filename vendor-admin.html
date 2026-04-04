@@ -1346,9 +1346,9 @@
 
     <div class="f-row-2">
       <div class="f-row">
-        <label class="f-label" for="fPrice">Giá (USD) *</label>
+        <label class="f-label" for="fPrice">Giá cơ bản (USD) <small style="font-weight:400;opacity:.6">— để trống nếu dùng giá theo loại</small></label>
         <input class="f-input" type="number" id="fPrice"
-          placeholder="0.50" min="0" step="0.01">
+          placeholder="0.75 — hoặc để trống nếu có variants" min="0" step="0.01">
       </div>
       <div class="f-row">
         <label class="f-label" for="fUnit">Đơn vị</label>
@@ -1385,7 +1385,7 @@
       </div>
       <input type="file" id="fImageFile" accept="image/*" style="display:none" onchange="handleImageUpload(this)">
       <input type="hidden" id="fImage">
-      <span class="f-hint">Ảnh chính cho thẻ sản phẩm — hiển thị khi khách duyệt menu. Mỗi loại (raw/fresh) có thể có ảnh riêng bên dưới.</span>
+      <span class="f-hint">Ảnh chính — bắt buộc để hiển thị trên marketplace. Upload xong mới nhấn Lưu. Ảnh riêng theo loại (raw/fresh) thêm trong phần Variants bên dưới.</span>
     </div>
 
     <!-- Focal point editor — shown only after an image is loaded -->
@@ -1417,7 +1417,7 @@
       <label class="f-label">Loại sản phẩm &amp; Giá <small style="font-weight:400;opacity:.6">(Variants)</small></label>
       <div class="var-builder" id="variantBuilder"></div>
       <button type="button" class="var-add-btn" onclick="appendVariantRow('','','')">+ Thêm loại</button>
-      <span class="f-hint">Mỗi loại có giá &amp; ảnh riêng — VD: Raw $0.75 / Fresh $0.80. Nhấn 🖼 để upload ảnh từng loại.</span>
+      <span class="f-hint">Mỗi loại có giá &amp; ảnh riêng — VD: Raw $0.75 / Fresh $1.00. Nếu điền giá ở đây, giá cơ bản bên trên có thể để trống.</span>
     </div>
 
     <div class="f-group" style="margin-top:1rem">
@@ -2308,21 +2308,40 @@
   // ── Save item ─────────────────────────────────────────────────────────────
   function saveItem() {
     var name   = document.getElementById('fName').value.trim();
-    var price  = parseFloat(document.getElementById('fPrice').value);
     var minQty = parseInt(document.getElementById('fMinQty').value, 10);
 
     if (!name) { showToast('Vui lòng nhập tên món.', 'error'); return; }
-    if (isNaN(price) || price < 0) { showToast('Giá không hợp lệ.', 'error'); return; }
     if (isNaN(minQty) || minQty < 1) { showToast('Số lượng tối thiểu phải ≥ 1.', 'error'); return; }
 
     // Guard: block save if any upload is still in progress
     if (_uploadsInProgress > 0) {
-      showToast('Đang tải ảnh — vui lòng đợi trước khi lưu.', 'error');
+      showToast('Ảnh đang tải lên — vui lòng đợi trước khi lưu.', 'error');
       return;
     }
 
-    // Collect variants as objects {key, label, imageUrl}
+    // Collect variants FIRST — needed to resolve pricing logic
     var variants = getVariantObjects();
+    var variantsWithPrice = variants.filter(function(v) {
+      return v.price != null && !isNaN(v.price) && v.price >= 0;
+    });
+
+    // PRICE RESOLUTION:
+    // If variants have prices → base price is optional; derive from min variant price.
+    // If no variant prices → base price field is required.
+    var priceRaw = document.getElementById('fPrice').value;
+    var price    = parseFloat(priceRaw);
+
+    if (isNaN(price) || price < 0) {
+      if (variantsWithPrice.length > 0) {
+        // Derive base price from the cheapest variant so Firestore always has a numeric price.
+        price = variantsWithPrice.reduce(function(mn, v) { return Math.min(mn, v.price); }, Infinity);
+      } else {
+        showToast('Nhập giá sản phẩm hoặc thêm giá cho từng loại.', 'error');
+        return;
+      }
+    }
+
+    var imgUrl = document.getElementById('fImage').value.trim();
 
     var data = {
       name:                    name,
@@ -2332,7 +2351,8 @@
       unit:                    document.getElementById('fUnit').value.trim() || 'each',
       minimumOrderQty:         minQty,
       variants:                variants,
-      image:                   document.getElementById('fImage').value.trim(),
+      // image field: Firebase Storage download URL (set by handleImageUpload on upload complete)
+      image:                   imgUrl,
       imagePositionX:          parseInt(document.getElementById('fImagePosX').value, 10) || 50,
       imagePositionY:          parseInt(document.getElementById('fImagePosY').value, 10) || 50,
       videoUrl:                document.getElementById('fVideoUrl').value.trim() || null,
@@ -2346,7 +2366,12 @@
       updatedAt:               firebase.firestore.FieldValue.serverTimestamp()
     };
 
-    var editId = document.getElementById('fEditId').value;
+    // Debug: log the full payload so issues are visible in browser console
+    console.log('[saveItem] payload:', JSON.stringify(
+      Object.assign({}, data, { updatedAt: '<serverTimestamp>' }), null, 2
+    ));
+
+    var editId  = document.getElementById('fEditId').value;
     var saveBtn = document.getElementById('saveBtn');
     saveBtn.disabled = true;
 
@@ -2363,7 +2388,8 @@
       closeDrawer();
       saveBtn.disabled = false;
     }).catch(function (err) {
-      showToast('Lỗi: ' + (err.message || err.code), 'error');
+      console.error('[saveItem] Firestore write failed:', err);
+      showToast('Lỗi lưu: ' + (err.message || err.code || 'unknown'), 'error');
       saveBtn.disabled = false;
     });
   }
@@ -3414,7 +3440,16 @@
         .replace(/[đ]/g, 'd')
         .replace(/[^a-z0-9]+/g, '_')
         .replace(/^_+|_+$/g, '') || ('v' + result.length);
-      result.push({ key: key, label: label, imageUrl: imageUrl, price: isNaN(varPrice) ? null : varPrice });
+      // Field names: key (slug), label (display), name (alias for API compat),
+      // imageUrl (camelCase for marketplace.js), image_url (snake_case alias)
+      result.push({
+        key:       key,
+        label:     label,
+        name:      label,       // alias — matches expected { name, price, image_url } shape
+        imageUrl:  imageUrl,
+        image_url: imageUrl,    // alias for external API consumers
+        price:     isNaN(varPrice) ? null : varPrice
+      });
     });
     return result;
   }

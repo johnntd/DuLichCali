@@ -89,7 +89,7 @@ const DESTINATIONS = [
       en: 'San Francisco enchants with the iconic Golden Gate Bridge, vibrant Chinatown, historic cable cars, Alcatraz island, and a world-class food scene.'
     },
     image:          'sanfrancisco.jpg?v=20260402',
-    youtubeId:      'edKuGYd-S88', // Travel Guide San Francisco (SacTV) — embeddable, verified 2026-04
+    youtubeId:      '-ZuS0iiUH7I', // San Francisco — user-selected, embeddable, verified 2026-04
     hook:           'Cầu Cổng Vàng, xe điện leo đồi, Alcatraz và ẩm thực đỉnh cao bên vịnh biển thơ mộng.',
     highlightTags:  ['Golden Gate', 'Alcatraz', 'Cable Cars', "Fisherman's Wharf", 'Chinatown'],
     distance_miles: 400,

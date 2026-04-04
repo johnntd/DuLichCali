@@ -632,7 +632,7 @@
               displayNameVi: item.displayNameVi || '',
               nameEn: item.nameEn || item.name || '',
               variants: variants,
-              pricePerUnit: Number(item.price) || 0.50,
+              pricePerUnit: Number(item.price != null ? item.price : item.pricePerUnit) || 0,
               unit: item.unit || 'each',
               unitEn: item.unit || 'each',
               minimumOrderQty: item.minimumOrderQty || 30,
@@ -1682,7 +1682,11 @@
       }
 
       // ── Food vendor: deterministic answers ─────────────────────────────────
-      if (biz.vendorType === 'foodvendor' && biz.products && biz.products.length > 0) {
+      // Prefer _staticProducts (always current from services-data.js) when Firestore
+      // items are sparse or still loading — same source-selection logic as _askClaude.
+      var _bestProducts = (biz._staticProducts && biz._staticProducts.length > (biz.products || []).length)
+        ? biz._staticProducts : (biz.products || []);
+      if (biz.vendorType === 'foodvendor' && _bestProducts.length > 0) {
 
         // 0. DATE + CAPACITY (capInfo pre-fetched by _sendMessage)
         if (capInfo) {
@@ -1745,12 +1749,12 @@
         // 2. Variants / types
         if (/raw|s[ôo]ng|t[ươu][ởo]i|fresh|lo[ạa]i|types?|variant|ki[êe]u|ch[ọo]n/.test(t)) {
           var varLines = [];
-          biz.products.forEach(function (p) {
+          _bestProducts.forEach(function (p) {
             (p.variants || []).forEach(function (v) {
               varLines.push('• ' + (typeof v === 'object' ? (v.labelEn || v.label) : v));
             });
           });
-          var fp2 = biz.products[0];
+          var fp2 = _bestProducts[0];
           return (fp2.nameEn || fp2.name) + ' is available in:\n' +
             (varLines.length ? varLines.join('\n') : '• Contact us for options') +
             '\n\n$' + Number(fp2.pricePerUnit).toFixed(2) + ' each · Min ' + fp2.minimumOrderQty + ' pieces';
@@ -1758,7 +1762,7 @@
 
         // 3. Minimum order
         if (/minimum|min order|t[ốo]i thi[ểe]u|[íi]t nh[ấa]t|less than|fewer|under/.test(t)) {
-          var fp3 = biz.products[0];
+          var fp3 = _bestProducts[0];
           return 'Minimum order is ' + fp3.minimumOrderQty + ' pieces' +
             ' ($' + (Number(fp3.pricePerUnit) * fp3.minimumOrderQty).toFixed(2) + ' total).' +
             ' This ensures every batch is made fresh.';
@@ -1766,25 +1770,29 @@
 
         // 4. Price per unit (no quantity specified)
         if (/gi[áa]|price|cost|bao nhi[êe]u|how much|ph[íi]|ti[êề]n/.test(t)) {
-          var prLines = biz.products.map(function (p) {
-            return '• ' + (p.nameEn || p.name) + ': $' + Number(p.pricePerUnit).toFixed(2) + ' each' +
-              ' (min ' + p.minimumOrderQty + ' pcs = $' + (Number(p.pricePerUnit) * p.minimumOrderQty).toFixed(2) + ')';
+          var prLines = _bestProducts.map(function (p) {
+            var baseP = Number(p.pricePerUnit || p.price || 0);
+            return '• ' + (p.nameEn || p.name) + ': $' + baseP.toFixed(2) + ' each' +
+              ' (min ' + p.minimumOrderQty + ' ' + (p.unitEn || p.unit || 'pcs') +
+              ' = $' + (baseP * p.minimumOrderQty).toFixed(2) + ')';
           });
-          return prLines.join('\n') + '\n\nTry asking "How much is 50 egg rolls?" for an exact total.';
+          return prLines.join('\n') + '\n\nAsk me about any specific dish for more details!';
         }
 
         // 5. Menu / what do you sell
         if (/menu|sell|have|available|b[áa]n g[ìi]|what.*have|what.*sell/.test(t)) {
-          var mLines = biz.products.map(function (p) {
+          var mLines = _bestProducts.map(function (p) {
+            var baseP = Number(p.pricePerUnit || p.price || 0);
             var vNames = (p.variants || []).map(function (v) {
               return typeof v === 'object' ? (v.labelEn || v.label) : v;
             });
             var line = '• ' + (p.nameEn || p.name) +
-              ' — $' + Number(p.pricePerUnit).toFixed(2) + '/each, min ' + p.minimumOrderQty;
-            if (vNames.length) line += ' · Types: ' + vNames.join(', ');
+              ' — $' + baseP.toFixed(2) + '/each, min ' + p.minimumOrderQty +
+              ' ' + (p.unitEn || p.unit || 'pcs');
+            if (vNames.length) line += ' · Options: ' + vNames.join(', ');
             return line;
           });
-          return biz.name + ' offers:\n' + mLines.join('\n') +
+          return biz.name + ' menu:\n' + mLines.join('\n') +
             '\n\nHandmade, no preservatives. Perfect for parties & family dinners!';
         }
 
@@ -1795,9 +1803,10 @@
 
         // 7. How to order
         if (/order|[đd][ặa]t|mua|buy|how.*get/.test(t)) {
-          var fp7 = biz.products[0];
+          var fp7 = _bestProducts[0];
           return 'To order:\n1. Use the inquiry form on this page\n2. Or call Loan at ' + biz.phoneDisplay +
-            '\n\nMin order: ' + fp7.minimumOrderQty + ' pcs ($' + (Number(fp7.pricePerUnit) * fp7.minimumOrderQty).toFixed(2) + ').';
+            '\n\nMin order: ' + fp7.minimumOrderQty + ' ' + (fp7.unitEn || fp7.unit || 'pcs') +
+            ' ($' + (Number(fp7.pricePerUnit || fp7.price || 0) * fp7.minimumOrderQty).toFixed(2) + ').';
         }
 
         // 8. Contact / phone
@@ -2053,7 +2062,10 @@
     // Extracts a quantity from the message, matches to a product, returns calc.
     // Returns null if no quantity or no product could be determined.
     _computePrice: function (biz, text) {
-      if (!biz.products || !biz.products.length) return null;
+      // Use richer of static vs Firestore products — same logic as _askClaude / _ruleBasedReply
+      var _products = (biz._staticProducts && biz._staticProducts.length > (biz.products || []).length)
+        ? biz._staticProducts : (biz.products || []);
+      if (!_products.length) return null;
 
       // Must contain at least one number
       var qtyMatch = text.match(/\b(\d+)\b/);
@@ -2065,8 +2077,8 @@
       var product = null;
 
       // Try to match by product id / name / nameEn
-      for (var i = 0; i < biz.products.length; i++) {
-        var p = biz.products[i];
+      for (var i = 0; i < _products.length; i++) {
+        var p = _products[i];
         var keys = [
           (p.id      || '').toLowerCase(),
           (p.name    || '').toLowerCase(),
@@ -2080,18 +2092,18 @@
 
       // Common keyword fallbacks (egg roll variants)
       if (!product && /egg.?roll|ch[aả]\s*gi[oò]|eggroll/.test(tl)) {
-        product = biz.products[0];
+        product = _products[0];
       }
 
       // Single-product vendor: assume the product if message has price/quantity intent
-      if (!product && biz.products.length === 1) {
+      if (!product && _products.length === 1) {
         var intent = /how much|price|cost|gi[áa]|bao nhi[êe]u|ph[íi]|\$|each|per|piece|roll|item|order/.test(tl);
-        if (intent) product = biz.products[0];
+        if (intent) product = _products[0];
       }
 
       if (!product) return null;
 
-      var price  = Number(product.pricePerUnit) || 0;
+      var price  = Number(product.pricePerUnit || product.price) || 0;
       var minQty = Number(product.minimumOrderQty) || 1;
       return {
         product:     product,

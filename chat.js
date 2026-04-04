@@ -1159,10 +1159,24 @@ ORDER TRACKING:
 - Statuses: pending (chờ xác nhận), confirmed (đã xác nhận), enroute (đang trên đường), completed (hoàn thành), cancelled (đã hủy)`;
     }
 
-    return `You are the master AI agent for Du Lịch Cali — a Vietnamese-American travel, transportation, and marketplace service in California. You handle TWO types of interactions:
+    return `You are the master concierge for Du Lịch Cali — a Vietnamese-American travel, transportation, and marketplace service in California.
 
-1. TRAVEL & TRANSPORT — tours, airport transfers, multi-city trips
-2. MARKETPLACE INTAKE — take food orders, nail/hair appointments, restaurant reservations inline
+YOUR ROLE:
+1. Answer general questions about Du Lịch Cali services, pricing, and vendors directly.
+2. When a user is ready to BOOK or ORDER, route them to the correct specialist — the system handles the handoff automatically.
+
+WHAT YOU CAN ANSWER DIRECTLY:
+- What services DLC offers (tours, transfers, nail, hair, food, restaurants)
+- Which vendors exist, where they are, and their approximate pricing
+- Travel pricing estimates for tours and airport transfers
+- General information about any vendor from the data below
+
+WHAT ROUTES TO A SPECIALIST (happens automatically — just acknowledge warmly):
+- Food orders → vendor-page food specialist (live menu + Firestore)
+- Restaurant reservations → vendor-page reservation specialist
+- Airport transfer bookings → airport workflow (starts immediately on this page)
+- Tour bookings → tour workflow (starts immediately on this page)
+- Nail/hair appointment bookings → appointment workflow (starts immediately on this page)
 
 ${staticCtx}
 ${regionCtx}
@@ -1213,13 +1227,161 @@ BEHAVIOR GUIDELINES:
   }
 
   // ══════════════════════════════════════════════════════════════
-  //  WORKFLOW ENGINE INTEGRATION  (see workflowEngine.js)
+  //  AGENT ROUTER
+  //
+  //  Layer 1 — Homepage master agent: classifies intent, then:
+  //    • food_order / restaurant_reservation → navigate to vendor page
+  //      (vendor-page Receptionist is the food/restaurant specialist)
+  //    • airport_transfer / travel_tour / nail_booking / hair_booking
+  //      → activate DLCWorkflow specialist (saves to Firestore, stays on page)
+  //    • general / info / pricing → fall through to Claude + rules
+  //
+  //  Layer 2 — Specialist agents:
+  //    • DLCWorkflow (airport, tour, nail, hair): structured slot-fill, Firestore
+  //    • Receptionist (food vendors, restaurants): per-vendor page, live Firestore data
+  //    • Claude (general): dynamic system prompt from live MARKETPLACE data
   // ══════════════════════════════════════════════════════════════
 
+  // Intent routing rules — ordered from most specific to most general.
+  // 'also' is a secondary pattern (AND condition).
+  const ROUTER_RULES = [
+    // Airport transfers — any airport code/keyword
+    { intent: 'airport_transfer',
+      pattern: /\b(?:airport|sân bay|phi tr[uư]ờng|sjc|sfo|lax|oak|sna)\b/i },
+
+    // Tours — destination required alongside tour/travel keyword
+    { intent: 'travel_tour',
+      pattern: /\btour\b/i,
+      also:    /yosemite|las vegas|grand canyon|big sur|joshua tree|sequoia|solvang|disneyland|napa|monterey|san diego|san francisco|17.?mile/i },
+    { intent: 'travel_tour',   // destination alone is enough
+      pattern: /\b(?:yosemite|las vegas|grand canyon|joshua tree|sequoia|solvang|disneyland|napa valley)\b/i },
+
+    // Restaurant reservation — explicit reservation keywords
+    { intent: 'restaurant_reservation',
+      pattern: /đặt bàn|reserve.*table|book.*table|đặt.*chỗ ngồi/i },
+
+    // Food ordering — ordering intent PLUS food item or vendor name
+    { intent: 'food_order',
+      pattern: /(?:(?:đặt|order|muốn|want|cho\s+(?:tôi|mình)|i.?d\s+like)\s*(?:\d+\s*)?(?:hàng|món|food|ăn)?\b)|\b\d+\s*(?:tray|khay|phần|tô|cuốn|piece|pcs?|cái)\b/i,
+      also:    /bún chả|chả giò|cha gio|phở|pho\b|bún đậu|chuối đậu|emily|nhà bếp|nha bep/i },
+
+    // Nail appointment — must have booking intent, not just a price question
+    { intent: 'nail_booking',
+      pattern: /(?:đặt|book|hẹn)\s*(?:lịch\s*)?(?:nail|manicure|pedicure|gel nail|acrylic|móng)|(?:nail|móng|manicure|pedicure)\s*(?:appointment|lịch|hẹn|đặt)/i },
+
+    // Hair appointment — must have booking intent
+    { intent: 'hair_booking',
+      pattern: /(?:đặt|book|hẹn)\s*(?:lịch\s*)?(?:tóc|hair|cắt|nhuộm|keratin|uốn|duỗi|balayage)|(?:hair|tóc|cắt tóc)\s*(?:appointment|lịch|hẹn|đặt)/i },
+  ];
+
+  // Map router intents to workflowEngine keys
+  const ROUTER_TO_WORKFLOW = {
+    travel_tour:  'tour_request',
+    nail_booking: 'nail_appointment',
+    hair_booking: 'hair_appointment',
+  };
+
+  // Airport pickup vs dropoff from message text
+  function airportDirection(text) {
+    return /đón|pick.?up|từ sân bay|airport.*to|arrive|bay về|bay đến/i.test(text)
+      ? 'airport_pickup' : 'airport_dropoff';
+  }
+
+  // Classify a message — returns intent string or null
+  function routerClassify(text) {
+    for (const rule of ROUTER_RULES) {
+      if (!rule.pattern.test(text)) continue;
+      if (rule.also && !rule.also.test(text)) continue;
+      return rule.intent;
+    }
+    return null;
+  }
+
+  // Find the best vendor for food/restaurant intents
+  function routerFindVendor(text, intent) {
+    const businesses = (window.MARKETPLACE && window.MARKETPLACE.businesses) || [];
+    const active = businesses.filter(b => b.active !== false);
+    const t = text.toLowerCase();
+
+    if (intent === 'food_order') {
+      const foodVendors = active.filter(b => b.vendorType === 'foodvendor');
+      for (const biz of foodVendors) {
+        // Vendor name match
+        if (/emily|nhà bếp|nha bep/i.test(text) && biz.id === 'nha-bep-cua-emily') return biz;
+        // Product keyword match (any 4+ char word from product name/id)
+        for (const p of (biz.products || [])) {
+          const pname  = (p.nameEn || p.name || '').toLowerCase();
+          const pid    = (p.id || p.canonicalId || '').toLowerCase().replace(/-/g, ' ');
+          const words  = [...pname.split(/\s+/), ...pid.split(/\s+/)].filter(w => w.length >= 4);
+          if (words.some(w => t.includes(w))) return biz;
+        }
+      }
+      return foodVendors[0] || null;
+    }
+
+    if (intent === 'restaurant_reservation') {
+      const restaurants = active.filter(b => b.category === 'food' && b.bookingType === 'reservation');
+      if (/phở bắc|pho bac/i.test(text)) return restaurants.find(r => r.id === 'pho-bac-bayarea') || restaurants[0];
+      if (/cơm tấm|com tam|dì tám|di tam/i.test(text)) return restaurants.find(r => r.id === 'com-tam-oc') || restaurants[0];
+      return restaurants[0] || null;
+    }
+
+    return null;
+  }
+
+  // Extract key fields from user message to pass as context
+  function routerExtractFields(text) {
+    const fields = {};
+
+    // Date
+    if (/\btomorrow\b|ngày mai/i.test(text)) {
+      const d = new Date(); d.setDate(d.getDate() + 1);
+      fields.requestedDate      = d.toISOString().slice(0, 10);
+      fields.requestedDateLabel = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+    } else {
+      const DAY_NAMES = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+      const dm = text.match(/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i);
+      if (dm) {
+        const target = DAY_NAMES.indexOf(dm[1].toLowerCase());
+        const nd = new Date();
+        const diff = (target - nd.getDay() + 7) % 7 || 7;
+        nd.setDate(nd.getDate() + diff);
+        fields.requestedDate      = nd.toISOString().slice(0, 10);
+        fields.requestedDateLabel = dm[1] + ', ' + nd.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+      }
+    }
+
+    // Quantity
+    const qm = text.match(/\b(\d+)\s*(?:tray|khay|phần|tô|cuốn|piece|pcs?|cái)\b/i);
+    if (qm) fields.quantity = parseInt(qm[1]);
+
+    // Phone
+    const pm = text.match(/\b(\d{10})\b|\b(\d{3})[.\-\s](\d{3})[.\-\s](\d{4})\b/);
+    if (pm) fields.customerPhone = pm[0].replace(/\D/g, '');
+
+    // Street address
+    const am = text.match(/\d+\s+[A-Z][a-z]+(?:\s+[A-Za-z]+)*\s+(?:Way|St(?:reet)?|Ave(?:nue)?|Blvd|Dr(?:ive)?|Rd|Lane|Ln|Ct|Court|Place|Circle|Cir)\b[^,]*/i);
+    if (am) fields.address = am[0].trim();
+
+    return fields;
+  }
+
+  // Vendor category → sub-directory path
+  const VENDOR_CAT_PATH = { food: 'foods', nails: 'nailsalon', hair: 'hairsalon' };
+
+  function routerVendorUrl(vendor) {
+    const cat = VENDOR_CAT_PATH[vendor.category] || vendor.category;
+    return '/' + cat + '/?id=' + vendor.id;
+  }
+
+  function routerSaveContext(ctx) {
+    try { sessionStorage.setItem('dlc_agent_ctx', JSON.stringify(ctx)); } catch(e) {}
+  }
 
   // ══════════════════════════════════════════════════════════════
   //  MAIN SEND HANDLER
-  //  Priority: 0) DLCWorkflow  1) tracking  2) marketplace  3) pricing  4) static  5) Claude  6) fallback
+  //  Priority: 0) DLCWorkflow active  0b) Router  0a) WF.detectIntent
+  //            1) tracking  2) marketplace  3) pricing  4) static  5) Claude  6) fallback
   // ══════════════════════════════════════════════════════════════
 
   async function getReply(text, history) {
@@ -1259,10 +1421,49 @@ BEHAVIOR GUIDELINES:
 
     const intent = parseIntent(text);
 
-    // ── 0a. Detect new workflow intent (before marketplace/pricing) ─
-    // NOTE: Check !WF.isActive() (not !intent.isPricing) so that booking
-    // messages like "đặt tour Las Vegas, giá bao nhiêu?" still trigger the
-    // workflow instead of falling through to buildPricingReply with defaults.
+    // ── 0b. Router: classify intent and route to specialist ───────
+    // Runs before WF.detectIntent to catch broader patterns and handle
+    // food/restaurant orders via vendor-page navigation rather than the
+    // narrow workflowEngine food flow.
+    if (!(WF && WF.isActive())) {
+      const routedIntent = routerClassify(text);
+
+      if (routedIntent === 'food_order' || routedIntent === 'restaurant_reservation') {
+        // ── Navigate to vendor-page specialist ─────────────────────
+        const vendor = routerFindVendor(text, routedIntent);
+        if (vendor) {
+          const fields      = routerExtractFields(text);
+          const url         = routerVendorUrl(vendor);
+          const transitMsg  = routedIntent === 'food_order'
+            ? 'Đang mở trợ lý đặt món của ' + vendor.name + '…'
+            : 'Đang mở trợ lý đặt bàn của ' + vendor.name + '…';
+          routerSaveContext({ intent: routedIntent, vendorId: vendor.id,
+                              originalMessage: text, extractedFields: fields });
+          setTimeout(() => { window.location.href = url; }, 1600);
+          return { type: 'message', text: transitMsg, chips: null, hotels: null };
+        }
+      }
+
+      if (routedIntent === 'airport_transfer' && WF) {
+        const wfKey = airportDirection(text);
+        if (WF.startWorkflow(wfKey, text)) {
+          const r = WF.process(text);
+          if (r && typeof r === 'object' && r.type === 'message') return r;
+          if (typeof r === 'string') return r;
+        }
+      }
+
+      if (routedIntent && ROUTER_TO_WORKFLOW[routedIntent] && WF) {
+        const wfKey = ROUTER_TO_WORKFLOW[routedIntent];
+        if (WF.startWorkflow(wfKey, text)) {
+          const r = WF.process(text);
+          if (r && typeof r === 'object' && r.type === 'message') return r;
+          if (typeof r === 'string') return r;
+        }
+      }
+    }
+
+    // ── 0a. Fallback workflow detection (narrow built-in patterns) ─
     if (WF && !WF.isActive()) {
       const wfIntent = WF.detectIntent(text);
       if (wfIntent) {

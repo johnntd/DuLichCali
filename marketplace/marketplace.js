@@ -1387,6 +1387,45 @@
 
   // ── AI Receptionist ────────────────────────────────────────────────────────────
 
+  // Build an opener message when the homepage router hands off to this vendor page.
+  // Uses extracted context fields so the specialist continues where the user left off.
+  function _buildHandoffOpener(biz, ctx) {
+    var fields = ctx.extractedFields || {};
+    var text   = (ctx.originalMessage || '').toLowerCase();
+    var ai     = biz.aiReceptionist || {};
+
+    // Try to match product name from the original message
+    var itemName = '';
+    if (biz.products) {
+      for (var i = 0; i < biz.products.length; i++) {
+        var p    = biz.products[i];
+        var pn   = (p.nameEn || p.name || '').toLowerCase();
+        var pid  = (p.id || p.canonicalId || '').toLowerCase().replace(/-/g, ' ');
+        var words = (pn + ' ' + pid).split(/\s+/).filter(function(w) { return w.length >= 4; });
+        if (words.some(function(w) { return text.includes(w); })) {
+          itemName = p.nameEn || p.name;
+          break;
+        }
+      }
+    }
+
+    var parts = [];
+    if (itemName)                  parts.push(itemName);
+    if (fields.quantity)           parts.push(fields.quantity + ' phần');
+    if (fields.requestedDateLabel) parts.push('for ' + fields.requestedDateLabel);
+
+    if (parts.length > 0) {
+      var confirmed = parts.join(', ');
+      // Determine next missing field
+      if (!fields.requestedDate) {
+        return 'I can help with ' + confirmed + '. What date would you like?';
+      }
+      return 'I can help with ' + confirmed + '. Would you like pickup or delivery?';
+    }
+
+    return 'Hi! I\'m ' + (ai.name || 'here') + '. How can I help with your order today?';
+  }
+
   var Receptionist = {
 
     init: function (biz, containerId) {
@@ -1425,6 +1464,29 @@
           Receptionist._sendMessage(biz, text, messagesEl);
         });
       });
+
+      // ── Context handoff from homepage router ──────────────────────
+      // When the homepage routes "I want bun cha hanoi tomorrow" → this
+      // vendor page, the context is in sessionStorage. We seed the AI
+      // history so the specialist continues from where the user left off.
+      try {
+        var rawCtx = sessionStorage.getItem('dlc_agent_ctx');
+        if (rawCtx) {
+          sessionStorage.removeItem('dlc_agent_ctx');
+          var ctx = JSON.parse(rawCtx);
+          if (ctx.vendorId === biz.id && ctx.originalMessage) {
+            // Seed history: user's original message is turn 1
+            biz._aiHistory = [{ role: 'user', content: ctx.originalMessage }];
+            // Build context-aware opener without an extra API call
+            var opener = _buildHandoffOpener(biz, ctx);
+            Receptionist._appendMessage(messagesEl, opener, 'bot');
+            // Push opener as turn 2 so future Claude calls see the full thread
+            biz._aiHistory.push({ role: 'assistant', content: opener });
+            // Scroll chat into view smoothly
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+          }
+        }
+      } catch(e) { console.warn('[DLC] handoff context error:', e); }
     },
 
     _sendMessage: function (biz, text, messagesEl) {

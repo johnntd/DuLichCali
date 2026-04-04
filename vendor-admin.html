@@ -12,7 +12,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
   <link rel="manifest" href="manifest.json">
-  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="DuLịchCali Admin">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2083,73 +2083,43 @@
     _setSaveBlocked(true);
 
     overlay.classList.add('active');
-    fill.style.width = '0%';
-    label.textContent = 'Đang kết nối...';
-
-    if (typeof firebase.storage !== 'function') {
-      uploadFail('Firebase Storage SDK chưa tải. Reload trang và thử lại.');
-      return;
-    }
+    fill.style.width = '30%';
+    label.textContent = 'Đang tải lên...';
 
     var ext      = (file.name.split('.').pop() || 'jpg').toLowerCase();
     var fileName = Date.now() + '.' + ext;
-    var task;
 
-    var uploadTimer = setTimeout(function () {
-      try { if (task) task.cancel(); } catch (e) {}
-      uploadFail('Hết giờ chờ. Firebase Storage chưa bật hoặc Rules chưa đúng.');
-    }, 15000);
+    // Read file as base64 and send via Cloud Function (no Firebase Storage CORS needed)
+    var b64reader = new FileReader();
+    b64reader.onload = function (ev) {
+      var base64 = ev.target.result.split(',')[1]; // strip data:image/...;base64,
+      fill.style.width = '60%';
+      label.textContent = 'Đang xử lý...';
 
-    try {
-      var ref = storage.ref('vendors/' + VENDOR_ID + '/menu/' + fileName);
-      task = ref.put(file);
-      _activeUploadTask = task;
-    } catch (e) {
-      clearTimeout(uploadTimer);
-      uploadFail('Lỗi Storage: ' + (e.message || String(e)));
-      return;
-    }
-
-    label.textContent = 'Đang tải... 0%';
-
-    task.on('state_changed',
-      function (snap) {
-        clearTimeout(uploadTimer);
-        uploadTimer = setTimeout(function () {
-          try { task.cancel(); } catch (e) {}
-          uploadFail('Upload bị treo. Kiểm tra Firebase Storage Rules.');
-        }, 15000);
-        var pct = snap.totalBytes
-          ? Math.round(snap.bytesTransferred / snap.totalBytes * 100)
-          : 0;
-        fill.style.width = pct + '%';
-        label.textContent = 'Đang tải... ' + pct + '%';
-      },
-      function (err) {
-        clearTimeout(uploadTimer);
-        var msg = {
-          'storage/unauthorized': 'Lỗi quyền. Vào Firebase Console → Storage → Rules → cho phép write.',
-          'storage/canceled':     'Đã huỷ.',
-          'storage/unknown':      'Lỗi mạng hoặc Storage chưa bật. Code: ' + err.serverResponse
-        }[err.code] || ('Lỗi: ' + err.code + ' — ' + err.message);
-        uploadFail(msg);
-      },
-      function () {
-        clearTimeout(uploadTimer);
-        _activeUploadTask = null;
-        _uploadsInProgress = Math.max(0, _uploadsInProgress - 1);
-        task.snapshot.ref.getDownloadURL().then(function (url) {
-          // Persist final Firebase URL to hidden field — this is what gets saved
-          document.getElementById('fImage').value = url;
-          overlay.classList.remove('active');
-          setImgPreview(url);
-          _setSaveBlocked(false);
-          showToast('Tải ảnh thành công!', 'success');
-        }).catch(function (e) {
-          uploadFail('Upload xong nhưng không lấy được URL: ' + e.message);
+      var fn = firebase.functions().httpsCallable('uploadVendorImage');
+      fn({ vendorId: VENDOR_ID, base64: base64, fileName: fileName, mimeType: file.type })
+        .then(function (result) {
+          fill.style.width = '100%';
+          if (result.data && result.data.ok && result.data.url) {
+            document.getElementById('fImage').value = result.data.url;
+            overlay.classList.remove('active');
+            setImgPreview(result.data.url);
+            _uploadsInProgress = Math.max(0, _uploadsInProgress - 1);
+            _activeUploadTask = null;
+            _setSaveBlocked(false);
+            showToast('Tải ảnh thành công!', 'success');
+          } else {
+            uploadFail('Lỗi upload: ' + ((result.data && result.data.error) || 'Không rõ'));
+          }
+        })
+        .catch(function (err) {
+          uploadFail('Lỗi upload: ' + (err.message || String(err)));
         });
-      }
-    );
+    };
+    b64reader.onerror = function () {
+      uploadFail('Không đọc được file ảnh.');
+    };
+    b64reader.readAsDataURL(file);
   }
 
   // ── Instruction section toggle ────────────────────────────────────────────
@@ -3363,59 +3333,61 @@
     var idx      = row.dataset.varIdx;
 
     // Immediate local preview (base64)
-    var reader = new FileReader();
-    reader.onload = function (e) {
+    var previewReader = new FileReader();
+    previewReader.onload = function (e) {
       if (thumb) { thumb.src = e.target.result; thumb.classList.add('loaded'); }
       if (icon)  icon.classList.add('hidden');
     };
-    reader.readAsDataURL(file);
+    previewReader.readAsDataURL(file);
 
-    if (!VENDOR_ID || typeof firebase === 'undefined' || typeof firebase.storage !== 'function') {
-      showToast('Không thể upload ảnh loại — Storage chưa sẵn sàng.', 'error');
+    if (!VENDOR_ID) {
+      showToast('Không thể upload ảnh loại — thiếu vendorId.', 'error');
       return;
     }
 
     _uploadsInProgress++;
     _setSaveBlocked(true);
-    if (progEl) { progEl.classList.add('active'); progEl.textContent = '0%'; }
+    if (progEl) { progEl.classList.add('active'); progEl.textContent = 'Đang tải...'; }
 
     var ext      = (file.name.split('.').pop() || 'jpg').toLowerCase();
     var fileName = 'v' + idx + '_' + Date.now() + '.' + ext;
-    var ref  = storage.ref('vendors/' + VENDOR_ID + '/menu/' + fileName);
-    var task = ref.put(file);
-    _varUploadTasks[idx] = task;
 
-    task.on('state_changed',
-      function (snap) {
-        var pct = snap.totalBytes ? Math.round(snap.bytesTransferred / snap.totalBytes * 100) : 0;
-        if (progEl) progEl.textContent = pct + '%';
-      },
-      function (err) {
-        _uploadsInProgress = Math.max(0, _uploadsInProgress - 1);
-        delete _varUploadTasks[idx];
-        _setSaveBlocked(false);
-        if (progEl) progEl.classList.remove('active');
-        showToast('Lỗi upload ảnh loại: ' + (err.code || err.message), 'error');
-      },
-      function () {
-        task.snapshot.ref.getDownloadURL().then(function (url) {
-          if (urlInput) urlInput.value = url;
-          if (thumb)    { thumb.src = url; thumb.classList.add('loaded'); }
-          if (icon)     icon.classList.add('hidden');
-          if (progEl)   progEl.classList.remove('active');
-          _uploadsInProgress = Math.max(0, _uploadsInProgress - 1);
-          delete _varUploadTasks[idx];
-          _setSaveBlocked(false);
-          showToast('Ảnh loại đã tải lên!', 'success');
-        }).catch(function (e) {
+    var b64reader = new FileReader();
+    b64reader.onload = function (ev) {
+      var base64 = ev.target.result.split(',')[1];
+      var fn = firebase.functions().httpsCallable('uploadVendorImage');
+      fn({ vendorId: VENDOR_ID, base64: base64, fileName: fileName, mimeType: file.type })
+        .then(function (result) {
+          if (result.data && result.data.ok && result.data.url) {
+            var url = result.data.url;
+            if (urlInput) urlInput.value = url;
+            if (thumb)    { thumb.src = url; thumb.classList.add('loaded'); }
+            if (icon)     icon.classList.add('hidden');
+            if (progEl)   progEl.classList.remove('active');
+            _uploadsInProgress = Math.max(0, _uploadsInProgress - 1);
+            delete _varUploadTasks[idx];
+            _setSaveBlocked(false);
+            showToast('Ảnh loại đã tải lên!', 'success');
+          } else {
+            throw new Error((result.data && result.data.error) || 'Lỗi không rõ');
+          }
+        })
+        .catch(function (err) {
           _uploadsInProgress = Math.max(0, _uploadsInProgress - 1);
           delete _varUploadTasks[idx];
           _setSaveBlocked(false);
           if (progEl) progEl.classList.remove('active');
-          showToast('Lỗi lấy URL ảnh loại: ' + e.message, 'error');
+          showToast('Lỗi upload ảnh loại: ' + (err.message || String(err)), 'error');
         });
-      }
-    );
+    };
+    b64reader.onerror = function () {
+      _uploadsInProgress = Math.max(0, _uploadsInProgress - 1);
+      delete _varUploadTasks[idx];
+      _setSaveBlocked(false);
+      if (progEl) progEl.classList.remove('active');
+      showToast('Không đọc được file ảnh loại.', 'error');
+    };
+    b64reader.readAsDataURL(file);
   }
 
   function getVariantObjects() {

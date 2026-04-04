@@ -774,3 +774,43 @@ function _downloadToFile(url, destPath) {
     });
   });
 }
+
+// ── uploadVendorImage — image upload proxy (bypasses Firebase Storage CORS) ───
+// Accepts base64-encoded image, stores in GCS bucket, returns public URL.
+// Bucket: dulichcali-vendor-images (CORS + public read already configured)
+const IMAGE_BUCKET = 'dulichcali-vendor-images';
+
+exports.uploadVendorImage = onCall(
+  { region: 'us-central1', cors: true },
+  async (request) => {
+    if (!request.auth) {
+      return { ok: false, error: 'Vui lòng đăng nhập lại.' };
+    }
+
+    const { vendorId, base64, fileName, mimeType } = request.data || {};
+    if (!vendorId || !base64 || !fileName) {
+      return { ok: false, error: 'Thiếu vendorId, base64, hoặc fileName.' };
+    }
+
+    const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 128);
+    const gcsPath  = `vendors/${vendorId}/menu/${safeName}`;
+
+    try {
+      const bucket = admin.storage().bucket(IMAGE_BUCKET);
+      const file   = bucket.file(gcsPath);
+      const buffer = Buffer.from(base64, 'base64');
+
+      await file.save(buffer, {
+        contentType: mimeType || 'image/jpeg',
+        metadata:    { cacheControl: 'public, max-age=31536000' },
+      });
+      await file.makePublic();
+
+      const publicUrl = `https://storage.googleapis.com/${IMAGE_BUCKET}/${gcsPath}`;
+      return { ok: true, url: publicUrl };
+    } catch (err) {
+      console.error('[uploadVendorImage] Error:', err);
+      return { ok: false, error: err.message };
+    }
+  }
+);

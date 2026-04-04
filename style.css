@@ -2688,15 +2688,22 @@ select.field-input {
   #screenBook .screen-pad { max-width: 860px; margin: 0 auto; }
   .wiz-step { padding: 2.5rem 3rem; }
 
-  /* Destination modal: wider + centered */
+  /* Destination modal: floating desktop panel
+     Use explicit left + right (both defined) so the browser can compute width.
+     calc(50vw - 500px) centers a 1000px panel in any viewport ≥ 1200px. */
   .dest-modal {
-    max-width: 1000px !important;
-    left: 50% !important;
-    right: auto !important;
-    transform: translateX(-50%) translateY(100%) !important;
+    top: 4vh !important;
+    bottom: 4vh !important;
+    left: calc(50vw - 500px) !important;
+    right: calc(50vw - 500px) !important;
+    max-width: none !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    box-shadow: 0 32px 80px rgba(0, 0, 0, .55) !important;
+    transform: translateY(110%) !important;
   }
   .dest-modal--open {
-    transform: translateX(-50%) translateY(0) !important;
+    transform: translateY(0) !important;
   }
   .dest-modal__video-wrap { height: 50vh; }
 

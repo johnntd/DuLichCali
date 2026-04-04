@@ -1586,7 +1586,10 @@ function homeAiSubmit() {
 function homeAiSend(text) {
   switchScreen('screenChat');
   setTimeout(function () {
-    if (window.DLChat && DLChat.send) DLChat.send(text);
+    if (window.DLChat) {
+      if (DLChat.setMode) DLChat.setMode('marketplace');
+      if (DLChat.send) DLChat.send(text);
+    }
   }, 220);
 }
 

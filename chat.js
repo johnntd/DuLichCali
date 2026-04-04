@@ -55,6 +55,42 @@
           servingNotes:            'Dùng nóng với bún hoặc cơm trắng. Thêm mắm tôm và ớt tươi theo khẩu vị.',
           allergenNotes:           'Ốc (shellfish), đậu phụ (soy), hành, ớt. Không gluten. Không ăn được cho người ăn chay (có ốc).',
         },
+        {
+          keywords: ['bún chả hà nội','bun cha hanoi','bún chả emily','nhà bếp bún chả','charcoal pork noodle'],
+          name: 'Bún Chả Hà Nội', nameEn: 'Hanoi Grilled Pork & Vermicelli',
+          pricePerUnit: 18, unit: 'phần', unitEn: 'serving',
+          minOrder: 2, maxPerDay: 30,
+          orderNote: 'Đặt trước — số lượng có hạn. Gọi Loan: 408-931-2438.',
+          preparationInstructions: 'Hâm lại chả trên chảo không dầu lửa vừa 3–5 phút mỗi bên. Bún và rau sống dùng nguội.',
+          reheatingInstructions:   'Chả: chảo không dầu 3 phút mỗi bên. Không dùng lò vi sóng — mất độ cháy mặt đặc trưng.',
+          storageInstructions:     'Tủ lạnh: tối đa 2 ngày. Bún và chả để riêng để bún không bị ướt.',
+          servingNotes:            'Ăn kèm nước chấm pha sẵn. Vắt chanh và thêm ớt tươi theo khẩu vị.',
+          allergenNotes:           'Chứa: thịt heo, nước mắm (fish sauce). Bún gạo (không gluten). Rau sống đa dạng.',
+        },
+        {
+          keywords: ['bún đậu mắm tôm','bun dau mam tom','bún đậu emily','nhà bếp bún đậu','đậu phụ chiên mắm tôm'],
+          name: 'Bún Đậu Mắm Tôm', nameEn: 'Vermicelli with Fried Tofu & Shrimp Paste',
+          pricePerUnit: 15, unit: 'phần', unitEn: 'serving',
+          minOrder: 1, maxPerDay: 30,
+          orderNote: 'Đặt trước — số lượng có hạn. Gọi Loan: 408-931-2438.',
+          preparationInstructions: 'Đậu phụ chiên lại trên chảo dầu nóng 2–3 phút để giữ độ giòn. Bún và rau sống ăn nguội.',
+          reheatingInstructions:   'Chỉ hâm lại đậu phụ — chảo hoặc nồi chiên không dầu 300°F 5 phút. Bún và rau không hâm.',
+          storageInstructions:     'Tủ lạnh: tối đa 2 ngày. Để riêng đậu, bún, rau, và mắm tôm để giữ tươi ngon.',
+          servingNotes:            'Thêm ớt tươi và quất vắt vào mắm tôm. Ăn ngay sau khi chiên đậu để đảm bảo độ giòn.',
+          allergenNotes:           'Chứa: đậu phụ (soy), thịt heo, mắm tôm (shrimp paste/shellfish), nước mắm. Bún gạo (không gluten).',
+        },
+        {
+          keywords: ['phở bắc emily','pho bac emily','nhà bếp phở','emily phở','northern beef pho emily'],
+          name: 'Phở Bắc', nameEn: 'Northern Vietnamese Beef Pho',
+          pricePerUnit: 18, unit: 'tô', unitEn: 'bowl',
+          minOrder: 1, maxPerDay: 20,
+          orderNote: 'Đặt trước — số lượng có hạn. Gọi Loan: 408-931-2438.',
+          preparationInstructions: 'Hâm nóng nước dùng đến sôi nhẹ. Trụng bánh phở trong nước sôi 30 giây. Chan nước dùng nóng lên thịt tái — sức nóng sẽ chín thịt vừa phải.',
+          reheatingInstructions:   'Nước dùng hâm trên bếp nhỏ lửa — không dùng lò vi sóng. Bánh phở trụng riêng qua nước sôi.',
+          storageInstructions:     'Nước dùng tủ lạnh 2 ngày, đông lạnh 1 tháng. Bánh phở và thịt để riêng.',
+          servingNotes:            'Dùng nóng với hành lá, rau thơm. Thêm tương hoisin và tương ớt theo khẩu vị.',
+          allergenNotes:           'Chứa: thịt bò, nước mắm (fish sauce). Bánh phở gạo (không gluten).',
+        },
       ],
     },
     {
@@ -791,6 +827,49 @@
         }
       }
     }
+
+    // Fallback: search live window.MARKETPLACE for vendors/products not in VENDOR_CATALOG
+    const catIds = new Set(VENDOR_CATALOG.map(v => v.id));
+    const businesses = (window.MARKETPLACE && window.MARKETPLACE.businesses) || [];
+    for (const biz of businesses.filter(b => b.active !== false && !catIds.has(b.id))) {
+      for (const p of (biz.products || [])) {
+        if (p.active === false) continue;
+        const terms = [
+          (p.nameEn || '').toLowerCase(),
+          (p.name   || '').toLowerCase(),
+          (p.id     || '').toLowerCase().replace(/-/g, ' '),
+        ].join(' ').split(/\s+/).filter(w => w.length >= 4);
+        if (terms.some(w => t.includes(w))) {
+          return {
+            vendor: {
+              id: biz.id, name: biz.name, category: biz.category || 'food',
+              region: biz.region || '', city: biz.city || '',
+              contact: (biz.hosts && biz.hosts[0]) ? biz.hosts[0].name : biz.name,
+              phone: biz.phoneDisplay || biz.phone || '',
+            },
+            product: {
+              keywords: [],
+              name: p.name || p.nameEn || '',
+              nameEn: p.nameEn || '',
+              pricePerUnit: Number(p.pricePerUnit || p.price || 0),
+              unit: p.unit || 'phần', unitEn: p.unitEn || 'serving',
+              minOrder: Number(p.minimumOrderQty || p.minOrder || 1),
+              maxPerDay: null,
+              variants: (p.variants || []).filter(v => v && v.price > 0)
+                .map(v => v.labelEn || v.label).join(' hoặc ') || null,
+              orderNote: 'Đặt trước qua ' + biz.name + ' · ' + (biz.phoneDisplay || biz.phone || ''),
+              preparationInstructions: p.preparationInstructions || null,
+              reheatingInstructions:   p.reheatingInstructions   || null,
+              storageInstructions:     p.storageInstructions     || null,
+              servingNotes:            p.servingNotes            || null,
+              allergenNotes:           p.allergenNotes           || null,
+            },
+            isService: false,
+          };
+        }
+      }
+    }
+
     return null;
   }
 
@@ -958,8 +1037,16 @@
     if (typeof firebase === 'undefined' || !firebase.firestore) return null;
     const phone = extractPhone(text);
     if (!phone) return null;
-    const db      = firebase.firestore();
-    const queries = VENDOR_CATALOG.map(v =>
+    const db = firebase.firestore();
+    // Merge VENDOR_CATALOG + live MARKETPLACE vendor IDs, deduplicating
+    const seen = new Set();
+    const allVendors = [
+      ...VENDOR_CATALOG.map(v => ({ id: v.id, name: v.name })),
+      ...((window.MARKETPLACE && window.MARKETPLACE.businesses) || [])
+        .filter(b => b.active !== false)
+        .map(b => ({ id: b.id, name: b.name })),
+    ].filter(v => { if (seen.has(v.id)) return false; seen.add(v.id); return true; });
+    const queries = allVendors.map(v =>
       db.collection('vendors').doc(v.id).collection('bookings')
         .where('customerPhone', '==', phone)
         .orderBy('createdAt', 'desc').limit(2).get()
@@ -1159,24 +1246,26 @@ ORDER TRACKING:
 - Statuses: pending (chờ xác nhận), confirmed (đã xác nhận), enroute (đang trên đường), completed (hoàn thành), cancelled (đã hủy)`;
     }
 
-    return `You are the master concierge for Du Lịch Cali — a Vietnamese-American travel, transportation, and marketplace service in California.
+    const modeHints = {
+      airport:     'CURRENT SESSION: Customer opened the Airport & Transportation assistant. Prioritize airport pickup/dropoff info, luxury rides, vehicle options, and transfer pricing.',
+      tour:        'CURRENT SESSION: Customer opened the Tour & Travel assistant. Prioritize destinations, multi-day tours, hotel suggestions, and travel pricing.',
+      marketplace: 'CURRENT SESSION: Customer opened the Marketplace assistant. Prioritize food vendors, ordering info, nail/hair salons, and product pricing.',
+    };
+    const modeHint = state.agentMode ? modeHints[state.agentMode] + '\n\n' : '';
+
+    return `${modeHint}You are the AI assistant for Du Lịch Cali — a Vietnamese-American travel, transportation, and marketplace service in California.
 
 YOUR ROLE:
-1. Answer general questions about Du Lịch Cali services, pricing, and vendors directly.
-2. When a user is ready to BOOK or ORDER, route them to the correct specialist — the system handles the handoff automatically.
+1. Answer questions about DLC services, pricing, and vendors directly.
+2. Help customers with pricing estimates, vendor info, and general inquiries.
+
+NOTE: Structured booking flows (airport workflows, tour workflows, nail/hair appointments, food orders) are handled automatically by the system BEFORE reaching you. You do NOT need to initiate or route these — just answer questions and provide information. The system has already activated the relevant specialist if needed.
 
 WHAT YOU CAN ANSWER DIRECTLY:
 - What services DLC offers (tours, transfers, nail, hair, food, restaurants)
 - Which vendors exist, where they are, and their approximate pricing
 - Travel pricing estimates for tours and airport transfers
 - General information about any vendor from the data below
-
-WHAT ROUTES TO A SPECIALIST (happens automatically — just acknowledge warmly):
-- Food orders → vendor-page food specialist (live menu + Firestore)
-- Restaurant reservations → vendor-page reservation specialist
-- Airport transfer bookings → airport workflow (starts immediately on this page)
-- Tour bookings → tour workflow (starts immediately on this page)
-- Nail/hair appointment bookings → appointment workflow (starts immediately on this page)
 
 ${staticCtx}
 ${regionCtx}
@@ -1531,6 +1620,7 @@ BEHAVIOR GUIDELINES:
     loading: false,
     msgsEl:  null,
     inputEl: null,
+    agentMode: null, // null | 'airport' | 'tour' | 'marketplace'
   };
 
   function pushMsg(role, content, extras) {
@@ -1684,6 +1774,8 @@ BEHAVIOR GUIDELINES:
   window.DLChat = {
     init,
     send,
+    /** Set the active agent mode for context-aware system prompts. */
+    setMode: function(mode) { state.agentMode = mode; },
     /** Start a workflow and inject the first question into chat. */
     startFlow: function(type) {
       const WF = window.DLCWorkflow;
@@ -1699,6 +1791,13 @@ BEHAVIOR GUIDELINES:
       };
       const intent = typeMap[type] || type;
       if (!WF.WORKFLOWS[intent]) return;
+      // Set agent mode from flow type so Claude stays focused on the right domain
+      const modeMap = {
+        airport_pickup: 'airport', airport_dropoff: 'airport',
+        tour_request:   'tour',
+        food_order: 'marketplace', nail_appointment: 'marketplace', hair_appointment: 'marketplace',
+      };
+      state.agentMode = modeMap[intent] || null;
       WF.startWorkflow(intent, '');
       const result = WF.process('');
       if (typeof result === 'string' && result) pushMsg('assistant', result);

@@ -60,7 +60,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-  <link rel="stylesheet" href="style.css?v=20260404c">
+  <link rel="stylesheet" href="style.css?v=20260404d">
   <link rel="stylesheet" href="desktop.css">
 </head>
 <body>
@@ -230,20 +230,41 @@
 
       </div><!-- /.hc -->
 
-      <!-- ── Marketplace section ──────────────────────────────── -->
+      <!-- ── Panel 1: Marketplace ──────────────────────────────── -->
       <section id="hpFeatured" class="home-section">
         <div class="section-hdr">
-          <h2 class="section-title" id="hpFeaturedTitle">Dịch Vụ Nổi Bật</h2>
+          <h2 class="section-title" id="hpFeaturedTitle">Marketplace</h2>
           <a href="marketplace/" class="see-all">Xem tất cả</a>
         </div>
         <div class="hp-vendor-row" id="hpVendorCards" role="list"></div>
       </section>
 
-      <!-- ── Travel section ────────────────────────────────────── -->
-      <!-- Travel Services Carousel -->
+      <!-- ── Panel 2: Airport & Ride ────────────────────────────── -->
+      <section id="hpAirport" class="home-section">
+        <div class="section-hdr">
+          <h2 class="section-title">Đưa Đón &amp; Xe Riêng</h2>
+          <button class="see-all" onclick="openAIWithIntent('airport')">Đặt ngay</button>
+        </div>
+        <div class="home-ride-grid">
+          <div class="home-ride-tile" onclick="openAIWithIntent('airport')" role="button" tabindex="0"
+               onkeydown="if(event.key==='Enter')openAIWithIntent('airport')">
+            <span class="home-ride-tile__icon" aria-hidden="true">✈️</span>
+            <strong class="home-ride-tile__name">Đưa Đón Sân Bay</strong>
+            <span class="home-ride-tile__sub">SFO · SJC · OAK · LAX · BUR · LGB</span>
+          </div>
+          <div class="home-ride-tile" onclick="openAIWithIntent('airport')" role="button" tabindex="0"
+               onkeydown="if(event.key==='Enter')openAIWithIntent('airport')">
+            <span class="home-ride-tile__icon" aria-hidden="true">🚗</span>
+            <strong class="home-ride-tile__name">Xe Riêng Cao Cấp</strong>
+            <span class="home-ride-tile__sub">Tesla Model Y · Mercedes Van · 24/7</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Panel 3: Tour & Du Lịch ───────────────────────────── -->
       <section class="home-section">
         <div class="section-hdr">
-          <h2 class="section-title">Dịch Vụ Du Lịch</h2>
+          <h2 class="section-title">Tour &amp; Du Lịch California</h2>
           <button class="see-all" onclick="switchScreen('screenDest')">Xem tất cả</button>
         </div>
         <div class="trav-carousel" id="travCarousel" role="list"></div>
@@ -259,30 +280,33 @@
         </div>
       </section>
 
-      <!-- ── AI Services Panel ─────────────────────────────────── -->
+      <!-- ── AI Services Panel (mirrors 3 homepage panels) ───────── -->
       <section class="home-section home-ai-panel" aria-label="Trợ lý AI Du Lịch Cali">
         <div class="section-hdr">
           <h2 class="section-title">Trợ Lý AI Du Lịch Cali</h2>
         </div>
-        <p class="home-ai-panel__sub">Chọn dịch vụ bạn cần để được hỗ trợ nhanh hơn</p>
+        <p class="home-ai-panel__sub">Hỏi AI về bất kỳ dịch vụ nào — chọn lĩnh vực để bắt đầu</p>
         <div class="home-ai-panel__grid">
 
-          <button class="home-ai-svc" onclick="openAIWithIntent('airport')">
-            <span class="home-ai-svc__icon" aria-hidden="true">✈️</span>
-            <span class="home-ai-svc__name">Sân Bay</span>
-            <span class="home-ai-svc__hint">Đón / đưa tại 6 sân bay</span>
-          </button>
-
-          <button class="home-ai-svc" onclick="openAIWithIntent('tour')">
-            <span class="home-ai-svc__icon" aria-hidden="true">🗺️</span>
-            <span class="home-ai-svc__name">Tour Du Lịch</span>
-            <span class="home-ai-svc__hint">Lên kế hoạch &amp; báo giá</span>
-          </button>
-
-          <button class="home-ai-svc" onclick="homeAiSend('Tôi cần hỗ trợ về dịch vụ marketplace — món ăn, nail, tóc, hoặc hỏi về vendor')">
+          <!-- Mirrors Panel 1: Marketplace -->
+          <button class="home-ai-svc" onclick="homeAiSend('Tôi cần hỗ trợ về marketplace — món ăn, nail, tóc, hoặc hỏi về vendor')">
             <span class="home-ai-svc__icon" aria-hidden="true">🛍️</span>
             <span class="home-ai-svc__name">Marketplace</span>
             <span class="home-ai-svc__hint">Món ăn, nail, tóc, vendor</span>
+          </button>
+
+          <!-- Mirrors Panel 2: Airport & Ride -->
+          <button class="home-ai-svc" onclick="openAIWithIntent('airport')">
+            <span class="home-ai-svc__icon" aria-hidden="true">✈️</span>
+            <span class="home-ai-svc__name">Sân Bay &amp; Xe</span>
+            <span class="home-ai-svc__hint">Đưa đón, xe riêng, 24/7</span>
+          </button>
+
+          <!-- Mirrors Panel 3: Tour & Travel -->
+          <button class="home-ai-svc" onclick="openAIWithIntent('tour')">
+            <span class="home-ai-svc__icon" aria-hidden="true">🗺️</span>
+            <span class="home-ai-svc__name">Tour &amp; Du Lịch</span>
+            <span class="home-ai-svc__hint">Lên kế hoạch &amp; báo giá</span>
           </button>
 
         </div>

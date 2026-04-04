@@ -95,6 +95,38 @@ A change that works on mobile but breaks desktop (or vice versa) is **not comple
 
 ---
 
+## Homepage 3-Panel Architecture — NON-NEGOTIABLE
+
+The homepage (`screenHome`) is permanently organized into **3 main service panels** plus a matching AI panel.
+
+### The 3 Panels
+
+| # | Panel | Section ID | Content |
+|---|-------|-----------|---------|
+| 1 | **Marketplace** | `#hpFeatured` | Vendor cards — food, nail, hair, future local vendors |
+| 2 | **Airport & Ride** | `#hpAirport` | Airport pickup/dropoff tiles, private ride |
+| 3 | **Tour & Travel** | (travel carousel) | Tour carousel, California destinations |
+
+### AI Panel (always at bottom, above contact strip)
+
+There must be **exactly 3 AI launcher buttons**, in this order, each mapping to one panel:
+
+| Button | Maps To | JS Call |
+|--------|---------|---------|
+| 🛍️ Marketplace | Panel 1 | `homeAiSend('marketplace...')` |
+| ✈️ Sân Bay & Xe | Panel 2 | `openAIWithIntent('airport')` |
+| 🗺️ Tour & Du Lịch | Panel 3 | `openAIWithIntent('tour')` |
+
+### Rules
+
+- AI must **NOT** be rendered inline inside homepage content sections
+- AI chat opens via `switchScreen('screenChat')` — never as raw text in the page
+- The AI panel lives in its own `<section class="home-section home-ai-panel">` after the trust stats
+- Homepage section order: Hero → Marketplace → Airport/Ride → Tour/Travel → Trust Stats → AI Panel → Contact Strip
+- Any future homepage changes must preserve this 3-panel + 3-AI-launcher structure
+
+---
+
 ## Permissions & Workflow
 
 - **Auto-mode is always on.** Proceed with all file edits, writes, and implementations without asking for permission.

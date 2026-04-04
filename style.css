@@ -931,6 +931,48 @@ select.field-input {
 .trust-cell:nth-child(4) .trust-num { color: var(--gold-lt); }
 .trust-cell span:last-child { font-size: .72rem; color: var(--muted); }
 
+/* ── Airport & Ride Panel  (.home-ride-grid / .home-ride-tile) ── */
+.home-ride-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+  padding: 0 1rem;
+  margin-bottom: .5rem;
+}
+.home-ride-tile {
+  background: var(--navy-800);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+  cursor: pointer;
+  transition: border-color .18s, background .18s;
+  -webkit-tap-highlight-color: transparent;
+}
+.home-ride-tile:hover, .home-ride-tile:focus-visible {
+  border-color: rgba(56,189,248,.45);
+  background: rgba(14,38,72,.85);
+  outline: none;
+}
+.home-ride-tile__icon { font-size: 1.4rem; line-height: 1; margin-bottom: .1rem; }
+.home-ride-tile__name {
+  display: block;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--cream);
+  font-family: var(--font-b);
+  line-height: 1.3;
+}
+.home-ride-tile__sub {
+  display: block;
+  font-size: .69rem;
+  color: var(--muted);
+  font-family: var(--font-b);
+  line-height: 1.4;
+}
+
 /* ── Region Service Block ───────────────────────────────────── */
 .region-tag {
   display: flex;
@@ -1655,6 +1697,11 @@ select.field-input {
   .dest-card__img { height: 140px; }
 
   .trust-grid { padding: 0 1.5rem; }
+  .home-ride-grid { padding: 0 1.5rem; gap: .85rem; }
+  .home-ride-tile { padding: 1.15rem 1rem; }
+  .home-ride-tile__icon { font-size: 1.6rem; }
+  .home-ride-tile__name { font-size: .88rem; }
+  .home-ride-tile__sub { font-size: .72rem; }
 
   .wiz-step { padding: 1.5rem; }
 
@@ -2656,6 +2703,13 @@ select.field-input {
 
   /* Trust: 4 cols */
   .trust-grid { grid-template-columns: repeat(4, 1fr); padding: 0; }
+
+  /* Ride grid: max-width constrained */
+  .home-ride-grid { padding: 0; max-width: 480px; gap: 1rem; }
+  .home-ride-tile { padding: 1.3rem 1.1rem; }
+  .home-ride-tile__icon { font-size: 1.75rem; }
+  .home-ride-tile__name { font-size: .92rem; }
+  .home-ride-tile__sub { font-size: .74rem; }
 
   /* AI panel: max-width constrained, larger cards */
   .home-ai-panel__grid { max-width: 640px; gap: 1rem; }

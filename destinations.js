@@ -14,7 +14,7 @@ const DESTINATIONS = [
       en: 'Las Vegas dazzles with luxury hotels, world-class shows, incredible dining, and the legendary Strip that never sleeps.'
     },
     image:          'lasvegas.jpg?v=20260402',
-    youtubeId:      'DDOgFWzPwIU', // Official Visit Las Vegas (LVCVA) campaign — verify at youtube.com/watch?v=DDOgFWzPwIU
+    youtubeId:      'upNaWVdaXss', // Las Vegas — user-selected, embeddable, verified 2026-04
     hook:           'Thành phố không bao giờ ngủ — ánh đèn rực rỡ, show diễn đỉnh cao và những trải nghiệm xa hoa chỉ có ở đây.',
     highlightTags:  ['The Strip', 'Bellagio', 'Fremont Street', 'Grand Canyon', 'World Buffets'],
     distance_miles: 270,

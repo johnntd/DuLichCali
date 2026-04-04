@@ -319,7 +319,7 @@ const DESTINATIONS = [
       en: 'Monterey and Big Sur captivate with legendary Highway 1, towering sea cliffs, world-class aquarium, and ancient Cypress forests meeting the Pacific Ocean.'
     },
     image:          'monterey.jpg?v=20260402',
-    youtubeId:      'MoyK0YWoD3E', // Big Sur California 4K (Martin Nunez Photography) — embeddable, verified 2026-04
+    youtubeId:      'd3DV-W-oM14', // Big Sur — user-selected, embeddable, verified 2026-04
     hook:           'Đường Highway 1 huyền thoại uốn lượn bên vách đá Thái Bình Dương, rừng Cypress ngàn tuổi và thủy cung biển kỳ diệu.',
     highlightTags:  ['Highway 1', 'Big Sur', 'Aquarium', 'Bixby Bridge', 'Cannery Row'],
     distance_miles: 330,

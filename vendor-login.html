@@ -153,6 +153,18 @@
     }
     .setup-hint strong { color: var(--text); }
 
+    /* ── Remember me ─────────────────────────────────────────────── */
+    .remember-row {
+      display: flex; align-items: center; gap: .5rem;
+      margin: -.3rem 0 .8rem;
+    }
+    .remember-row input[type="checkbox"] {
+      width: 16px; height: 16px; accent-color: var(--gold); cursor: pointer;
+    }
+    .remember-row label {
+      font-size: .72rem; color: var(--muted); cursor: pointer;
+    }
+
     /* ── Vendor picker ────────────────────────────────────────────── */
     .vendor-grid {
       display: grid; grid-template-columns: 1fr 1fr;
@@ -205,6 +217,10 @@
       <label class="f-label" for="loginPassword">Mật khẩu</label>
       <input class="f-input" type="password" id="loginPassword"
         placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <div class="remember-row">
+      <input type="checkbox" id="rememberMe">
+      <label for="rememberMe">Ghi nhớ đăng nhập</label>
     </div>
     <div class="error-msg" id="loginError"></div>
     <button class="btn-primary" id="btnLogin" onclick="doLogin()">Đăng Nhập</button>
@@ -405,6 +421,13 @@
       return;
     }
     btn.disabled = true;
+    // Remember me — save or clear email
+    var remember = document.getElementById('rememberMe');
+    if (remember && remember.checked) {
+      localStorage.setItem('dlc_vendor_email', email);
+    } else {
+      localStorage.removeItem('dlc_vendor_email');
+    }
     auth.signInWithEmailAndPassword(email, pass).then(function (cred) {
       return db.collection('vendorUsers').doc(cred.user.uid).get().then(function (doc) {
         if (doc.exists && doc.data().vendorId === VENDOR_ID) {
@@ -544,6 +567,17 @@
   function doSignOutAndGoLogin() {
     auth.signOut().then(function () { showScreen('login'); });
   }
+
+  // ── Pre-fill email from localStorage (Remember Me) ───────────────────────
+  (function () {
+    var saved = localStorage.getItem('dlc_vendor_email');
+    if (saved) {
+      var emailEl  = document.getElementById('loginEmail');
+      var remEl    = document.getElementById('rememberMe');
+      if (emailEl) emailEl.value = saved;
+      if (remEl)   remEl.checked = true;
+    }
+  })();
 
   // ── Enter key support ─────────────────────────────────────────────────────
   document.addEventListener('keydown', function (e) {

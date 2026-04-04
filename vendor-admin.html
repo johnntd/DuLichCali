@@ -623,10 +623,11 @@
     .va-order-card__amt  { font-size: .9rem; color: var(--gold-lt); font-family: var(--font-d); }
     .va-order-card__meta { font-size: .74rem; color: var(--muted); line-height: 1.55; }
     .va-order-card__actions { margin-top: .6rem; display: flex; gap: .38rem; flex-wrap: wrap; }
-    .st--pending   { color: var(--gold); }
-    .st--confirmed { color: var(--sky); }
-    .st--completed { color: var(--success); }
-    .st--cancelled { color: var(--danger); }
+    .st--pending    { color: var(--gold); }
+    .st--confirmed  { color: #38bdf8; }
+    .st--preparing  { color: var(--sunset); }
+    .st--completed  { color: var(--success); }
+    .st--cancelled  { color: var(--danger); }
     .va-orders-empty {
       text-align: center; padding: 2.5rem 1rem;
       color: var(--muted); font-size: .82rem; line-height: 1.6;
@@ -806,6 +807,32 @@
       font-size: 1.1rem; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
     }
+
+    /* Popup quick-action buttons */
+    .np-actions { display: flex; gap: .3rem; flex-wrap: wrap; margin-top: .5rem; }
+    .np-action-btn {
+      display: inline-flex; align-items: center;
+      height: 26px; padding: 0 .55rem;
+      border-radius: 5px; font-size: .64rem; font-weight: 600;
+      letter-spacing: .03em; cursor: pointer; text-decoration: none;
+      border: 1px solid var(--border); color: var(--text);
+      background: rgba(255,255,255,.06);
+      font-family: var(--font-b); transition: background .15s;
+    }
+    .np-action-btn:hover { background: rgba(255,255,255,.14); }
+    .np-action-confirm {
+      background: rgba(74,222,128,.12); border-color: rgba(74,222,128,.35); color: var(--success);
+    }
+    .np-action-confirm:hover { background: rgba(74,222,128,.22); }
+
+    /* Order card contact row */
+    .va-order-card__contact {
+      display: flex; gap: .3rem; flex-wrap: wrap; margin-top: .45rem;
+    }
+    .btn--call { background: rgba(56,189,248,.08); border-color: rgba(56,189,248,.28); color: #7dd3fc; }
+    .btn--call:hover { background: rgba(56,189,248,.16); }
+    .btn--text { background: rgba(167,139,250,.08); border-color: rgba(167,139,250,.3); color: #c4b5fd; }
+    .btn--text:hover { background: rgba(167,139,250,.16); }
 
     /* ── Notification list ──────────────────────────────────────────── */
     .notif-card {
@@ -1323,12 +1350,12 @@
 <!-- New-order popup (slides down from top when a booking arrives) -->
 <div id="notifPopup">
   <div class="np-inner">
-    <div class="np-icon">&#128276;</div>
+    <div class="np-icon" id="popupIcon">&#128276;</div>
     <div class="np-content">
       <div class="np-title" id="popupTitle">Đơn hàng mới!</div>
       <div class="np-msg" id="popupMsg"></div>
+      <div class="np-actions" id="popupActions"></div>
     </div>
-    <button class="np-view" onclick="openNotifTab()">Xem</button>
     <button class="np-close" onclick="dismissPopup()">&#215;</button>
   </div>
 </div>
@@ -1662,6 +1689,7 @@
   var _knownNotifIds    = {};
   var _initialNotifLoad = false;
   var _popupTimer       = null;
+  var _currentPopupNotif = null;   // holds the notif object for quick-action buttons
   // Image upload tracking — prevents saving before upload completes
   var _activeUploadTask  = null;   // main item image upload task
   var _varUploadTasks    = {};     // per-variant upload tasks keyed by row index
@@ -2826,6 +2854,45 @@
     }
   }
 
+  // ── Messaging service layer (isolated for future Twilio integration) ─────
+  var OrderMessaging = {
+    call: function (phone) {
+      window.location.href = 'tel:' + phone;
+    },
+    text: function (phone, body) {
+      window.location.href = 'sms:' + phone + '?body=' + encodeURIComponent(body);
+    }
+    // Future: twilio: function(phone, body) { /* call Cloud Function */ }
+  };
+
+  // Build a prefilled SMS message for an order/notification object
+  function buildSmsMessage(obj) {
+    var vendorName = (typeof SEED_VENDOR !== 'undefined' && SEED_VENDOR.businessName)
+      ? SEED_VENDOR.businessName : 'Du Lịch Cali';
+    var greeting = obj.customerName ? 'Xin chào ' + obj.customerName + '! ' : '';
+    var item = obj.variant || obj.itemName || 'món đã đặt';
+    var qty  = obj.quantity ? obj.quantity + ' ' + item : item;
+    var date = '';
+    if (obj.requestedDate && /^\d{4}-\d{2}-\d{2}$/.test(obj.requestedDate)) {
+      var d = new Date(obj.requestedDate + 'T12:00:00');
+      date = ' ngày ' + d.getDate() + '/' + (d.getMonth() + 1);
+    }
+    return greeting + 'Đơn hàng ' + qty + date + ' đã được xác nhận. Cảm ơn bạn! - ' + vendorName;
+  }
+
+  // Confirm from the popup notification (uses _currentPopupNotif)
+  function confirmFromPopup() {
+    if (!_currentPopupNotif || !_currentPopupNotif.bookingId) return;
+    var notif = _currentPopupNotif;
+    confirmFromNotif(notif.id, notif.bookingId);
+    // Update button state in popup
+    var actions = document.getElementById('popupActions');
+    if (actions) {
+      var btn = actions.querySelector('.np-action-confirm');
+      if (btn) { btn.textContent = '✓ Đã xác nhận!'; btn.disabled = true; }
+    }
+  }
+
   // ── Orders real-time listener (bookings collection) ───────────────────────
   function subscribeOrders() {
     if (unsubOrders) unsubOrders();
@@ -2984,33 +3051,12 @@
     if (dayOrders.length === 0) {
       html += '<div class="cal-detail__empty">Không có đơn hàng ngày này.</div>';
     } else {
-      dayOrders.forEach(function (o) {
-        var stCls = 'st--' + (o.status || 'pending');
-        var stLbl = { pending:'Chờ xác nhận', confirmed:'Đã xác nhận', completed:'Hoàn thành', cancelled:'Đã huỷ' }[o.status] || o.status;
-        html += '<div class="va-order-card">' +
-          '<div class="va-order-card__top">' +
-            '<div class="va-order-card__name">' + esc(o.customerName || '—') + '</div>' +
-            '<div class="va-order-card__amt">' + (o.subtotal != null ? '$' + Number(o.subtotal).toFixed(2) : '') + '</div>' +
-          '</div>' +
-          '<div class="va-order-card__meta">' +
-            (o.customerPhone ? '<a href="tel:' + esc(o.customerPhone) + '" style="color:var(--sky-lt)">' + esc(o.customerPhone) + '</a> · ' : '') +
-            esc(o.quantity) + ' · ' + esc(o.variant || o.itemName || '') +
-            ' · <span class="' + stCls + '">' + esc(stLbl) + '</span>' +
-            (o.requestedTime ? '<br>' + esc(o.requestedTime) : '') +
-            (o.notes ? '<br><em style="opacity:.75">' + esc(o.notes) + '</em>' : '') +
-          '</div>' +
-          '<div class="va-order-card__actions">' +
-            (o.status === 'pending'
-              ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'confirmed\')">&#10003; Xác nhận</button>'
-              : '') +
-            (o.status === 'confirmed'
-              ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'completed\')">&#10003; Hoàn thành</button>'
-              : '') +
-            (o.status !== 'cancelled' && o.status !== 'completed'
-              ? '<button class="btn btn--danger btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'cancelled\')">&#10005; Huỷ</button>'
-              : '') +
-          '</div>' +
-        '</div>';
+      // Sort: pending first
+      var statusOrder = { pending:0, confirmed:1, preparing:2, completed:3, cancelled:4 };
+      dayOrders.slice().sort(function(a,b){
+        return (statusOrder[a.status]||9)-(statusOrder[b.status]||9);
+      }).forEach(function (o) {
+        html += _renderOrderCard(o);
       });
     }
     html += '</div>';
@@ -3062,33 +3108,12 @@
           '<div class="va-date-group__cap ' + capCls + '">' + esc(capTxt) + '</div>' +
         '</div>';
 
-      orders.forEach(function (o) {
-        var stCls = 'st--' + (o.status || 'pending');
-        var stLbl = { pending:'Chờ xác nhận', confirmed:'Đã xác nhận', completed:'Hoàn thành', cancelled:'Đã huỷ' }[o.status] || o.status;
-        html += '<div class="va-order-card">' +
-          '<div class="va-order-card__top">' +
-            '<div class="va-order-card__name">' + esc(o.customerName || '—') + '</div>' +
-            '<div class="va-order-card__amt">' + (o.subtotal != null ? '$' + Number(o.subtotal).toFixed(2) : '') + '</div>' +
-          '</div>' +
-          '<div class="va-order-card__meta">' +
-            (o.customerPhone ? '<a href="tel:' + esc(o.customerPhone) + '" style="color:var(--sky-lt)">' + esc(o.customerPhone) + '</a> · ' : '') +
-            esc(o.quantity) + ' · ' + esc(o.variant || o.itemName || '') +
-            ' · <span class="' + stCls + '">' + esc(stLbl) + '</span>' +
-            (o.requestedTime ? '<br>' + esc(o.requestedTime) : '') +
-            (o.notes ? '<br><em style="opacity:.75">' + esc(o.notes) + '</em>' : '') +
-          '</div>' +
-          '<div class="va-order-card__actions">' +
-            (o.status === 'pending'
-              ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'confirmed\')">&#10003; Xác nhận</button>'
-              : '') +
-            (o.status === 'confirmed'
-              ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'completed\')">&#10003; Hoàn thành</button>'
-              : '') +
-            (o.status !== 'cancelled' && o.status !== 'completed'
-              ? '<button class="btn btn--danger btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'cancelled\')">&#10005; Huỷ</button>'
-              : '') +
-          '</div>' +
-        '</div>';
+      // Sort: pending first, then confirmed/preparing, then completed/cancelled
+      var statusOrder = { pending:0, confirmed:1, preparing:2, completed:3, cancelled:4 };
+      orders.slice().sort(function(a, b) {
+        return (statusOrder[a.status] || 9) - (statusOrder[b.status] || 9);
+      }).forEach(function (o) {
+        html += _renderOrderCard(o);
       });
       html += '</div>';
     });
@@ -3096,12 +3121,56 @@
     list.innerHTML = html;
   }
 
+  // Shared order card renderer (used by renderOrders and renderCalDetail)
+  function _renderOrderCard(o) {
+    var stCls = 'st--' + (o.status || 'pending');
+    var stLbl = { pending:'Chờ xác nhận', confirmed:'Đã xác nhận', preparing:'Đang chuẩn bị', completed:'Hoàn thành', cancelled:'Đã huỷ' }[o.status] || o.status;
+    var smsBody = buildSmsMessage(o);
+    var html = '<div class="va-order-card">' +
+      '<div class="va-order-card__top">' +
+        '<div class="va-order-card__name">' + esc(o.customerName || '—') + '</div>' +
+        '<div class="va-order-card__amt">' + (o.subtotal != null ? '$' + Number(o.subtotal).toFixed(2) : '') + '</div>' +
+      '</div>' +
+      '<div class="va-order-card__meta">' +
+        esc(o.quantity) + ' · ' + esc(o.variant || o.itemName || '') +
+        ' · <span class="' + stCls + '">' + esc(stLbl) + '</span>' +
+        (o.requestedTime ? '<br>' + esc(o.requestedTime) : '') +
+        (o.notes ? '<br><em style="opacity:.75">' + esc(o.notes) + '</em>' : '') +
+      '</div>';
+
+    // Contact actions (call + text)
+    if (o.customerPhone) {
+      html += '<div class="va-order-card__contact">' +
+        '<a href="tel:' + esc(o.customerPhone) + '" class="btn btn--ghost btn--call btn--sm">&#128222; Gọi</a>' +
+        '<a href="sms:' + esc(o.customerPhone) + '?body=' + encodeURIComponent(smsBody) + '" class="btn btn--ghost btn--text btn--sm">&#128172; Nhắn</a>' +
+      '</div>';
+    }
+
+    // Status actions
+    html += '<div class="va-order-card__actions">' +
+      (o.status === 'pending'
+        ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'confirmed\')">&#10003; Xác nhận</button>'
+        : '') +
+      (o.status === 'confirmed'
+        ? '<button class="btn btn--ghost btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'preparing\')" style="border-color:rgba(251,146,60,.35);color:var(--sunset)">&#9203; Đang chuẩn bị</button>'
+          + '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'completed\')">&#10003; Hoàn thành</button>'
+        : '') +
+      (o.status === 'preparing'
+        ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'completed\')">&#10003; Hoàn thành</button>'
+        : '') +
+      (o.status !== 'cancelled' && o.status !== 'completed'
+        ? '<button class="btn btn--danger btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'cancelled\')">&#10005; Huỷ</button>'
+        : '') +
+    '</div></div>';
+    return html;
+  }
+
   function setOrderStatus(orderId, newStatus) {
     vendorRef.collection('bookings').doc(orderId).update({
       status:    newStatus,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }).then(function () {
-      var msgs = { confirmed:'Đã xác nhận!', completed:'Hoàn thành!', cancelled:'Đã huỷ đơn.' };
+      var msgs = { confirmed:'Đã xác nhận!', preparing:'Đang chuẩn bị!', completed:'Hoàn thành!', cancelled:'Đã huỷ đơn.' };
       showToast(msgs[newStatus] || 'Đã cập nhật.', 'success');
     }).catch(function (err) {
       showToast('Lỗi: ' + err.message, 'error');
@@ -3197,7 +3266,9 @@
           '&#10003; Xác nhận</button>';
       }
       if (n.customerPhone) {
-        html += '<a href="tel:' + esc(n.customerPhone) + '" class="btn btn--ghost btn--sm" onclick="event.stopPropagation()">&#128222; Gọi</a>';
+        html += '<a href="tel:' + esc(n.customerPhone) + '" class="btn btn--ghost btn--call btn--sm" onclick="event.stopPropagation()">&#128222; Gọi</a>';
+        var notifSms = buildSmsMessage(n);
+        html += '<a href="sms:' + esc(n.customerPhone) + '?body=' + encodeURIComponent(notifSms) + '" class="btn btn--ghost btn--text btn--sm" onclick="event.stopPropagation()">&#128172; Nhắn</a>';
       }
       // Google Maps link: prefer pickup address, fall back to airport name
       var mapsAddr = (n.pickupAddress && n.pickupAddress.trim()) || '';
@@ -3248,10 +3319,25 @@
   // ── New-order popup ───────────────────────────────────────────────────────
   function showOrderPopup(notif) {
     playNotifSound();
+    _currentPopupNotif = notif;
     var isQuestion = notif.type === 'buyer_question';
-    document.querySelector('#notifPopup .np-icon').innerHTML = isQuestion ? '&#128172;' : '&#128276;';
+    document.getElementById('popupIcon').innerHTML = isQuestion ? '&#128172;' : '&#128276;';
     document.getElementById('popupTitle').textContent = notif.title   || (isQuestion ? 'Câu hỏi từ khách!' : 'Đơn hàng mới!');
     document.getElementById('popupMsg').textContent   = notif.message || '';
+
+    // Build quick-action buttons
+    var actionsHtml = '';
+    if (notif.bookingId && !notif.acknowledged) {
+      actionsHtml += '<button class="np-action-btn np-action-confirm" onclick="confirmFromPopup()">&#10003; Xác nhận</button>';
+    }
+    if (notif.customerPhone) {
+      actionsHtml += '<a href="tel:' + esc(notif.customerPhone) + '" class="np-action-btn" onclick="dismissPopup()">&#128222; Gọi</a>';
+      var smsBody = buildSmsMessage(notif);
+      actionsHtml += '<a href="sms:' + esc(notif.customerPhone) + '?body=' + encodeURIComponent(smsBody) + '" class="np-action-btn" onclick="dismissPopup()">&#128172; Nhắn</a>';
+    }
+    actionsHtml += '<button class="np-action-btn" onclick="openNotifTab()">Xem chi tiết</button>';
+    document.getElementById('popupActions').innerHTML = actionsHtml;
+
     clearTimeout(_popupTimer);
     document.getElementById('notifPopup').classList.add('show');
     _popupTimer = setTimeout(dismissPopup, 8000);

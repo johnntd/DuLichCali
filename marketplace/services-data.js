@@ -295,6 +295,7 @@
       ],
       description:
         'Hương vị phở Hà Nội chính gốc, nước dùng hầm xương bò 12 tiếng. Thực đơn phong phú với nhiều món truyền thống Việt Nam. Nhận đặt catering cho sự kiện và tiệc nhà.',
+      heroImage: '/images/hero-pho-bac.jpg',
       heroGradient:
         'linear-gradient(135deg,#7f1d1d 0%,#991b1b 40%,#92400e 100%)',
       services: [
@@ -343,7 +344,7 @@
       address: '2534 Clarebank Way, San Jose, CA 95121',
       phone: '4089312438',
       phoneDisplay: '408-931-2438',
-      heroImage: '/nha-bep-emily-eggroll.jpg',
+      heroImage: '/images/hero-cha-gio.jpg',
       hosts: [
         {
           name: 'Loan',
@@ -373,7 +374,7 @@
           unit: 'cuốn',
           unitEn: 'piece',
           minimumOrderQty: 30,
-          image: '/nha-bep-emily-eggroll.jpg',
+          image: '/images/hero-cha-gio.jpg',
           videoUrl: null,
           videoStatus: 'none',
           videoGeneratedAt: null,
@@ -399,7 +400,7 @@
           unitEn: 'serving',
           minimumOrderQty: 1,
           sortOrder: 1,
-          image: '',
+          image: '/images/hero-chuoi-dau-nau-oc.jpg',
           videoUrl: null,
           videoStatus: 'none',
           videoGeneratedAt: null,

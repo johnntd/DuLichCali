@@ -1009,30 +1009,99 @@
 
   /** Compact vendor + product summary injected into the Claude system prompt. */
   function buildVendorContextForAI() {
-    return `
-MARKETPLACE VENDORS (use exact prices — do NOT guess):
+    // Dynamic: built from window.MARKETPLACE (services-data.js) so it stays in sync
+    var today    = new Date();
+    var todayStr = today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    var tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+    var tomorrowStr = tomorrow.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-FOOD:
-• Nhà Bếp Của Emily [Bay Area/San Jose]
-  - Chả Giò (Eggroll): $0.75/piece. Min order: 30 pieces = $22.50. Max 300/day.
-  - Options: Raw (Sống) or Cooked (Tươi). 24h advance order. Contact: Loan 408-931-2438.
-• Phở Bắc Bay Area [Bay Area/San Jose] — Phở $15 · Bún Bò $14 · Cơm Tấm $16. Catering. Du Lịch Cali 408-916-3439.
-• Cơm Tấm Dì Tám [OC/Westminster] — Cơm Tấm $14 · Hủ Tiếu $14 · Bánh Mì $8. Catering. Du Lịch Cali 408-916-3439.
+    var lines = 'TODAY: ' + todayStr + '\n"Tomorrow" = ' + tomorrowStr + '\n\n';
+    lines += 'MARKETPLACE VENDORS — You are a full INTAKE AGENT for all of these. Take orders/bookings inline.\n\n';
 
-NAIL SALONS:
-• Dung Nails & Spa [Bay Area/San Jose] — Manicure $20+ · Pedicure $30+ · Gel $35+ · Acrylic $45+ · Spa $65+. Dung Pham 408-859-6718.
-• Beauty Nails OC [OC/Westminster] — Manicure $18+ · Pedicure $28+ · Gel $30+ · Acrylic $40+ · Ombre $55+. Du Lịch Cali 408-916-3439.
+    var businesses = (window.MARKETPLACE && window.MARKETPLACE.businesses) ? window.MARKETPLACE.businesses : [];
+    var active = businesses.filter(function (b) { return b.active !== false; });
 
-HAIR SALONS:
-• Việt Hair Studio [Bay Area/San Jose] — Cut $20-30+ · Perm $80+ · Straighten $100+ · Color $60+ · Highlight $80+. Du Lịch Cali 408-916-3439.
-• Cali Hair & Beauty [OC/Garden Grove] — Cut $18-28+ · Korean Perm $120+ · Keratin $150+ · Balayage $100+. Du Lịch Cali 408-916-3439.
+    var food  = active.filter(function (b) { return b.category === 'food';  });
+    var nails = active.filter(function (b) { return b.category === 'nails'; });
+    var hair  = active.filter(function (b) { return b.category === 'hair';  });
 
-MARKETPLACE PRICING RULES:
-- When quantity given, compute exact total: qty × unit_price (30 egg rolls = 30 × $0.75 = $22.50)
-- Always enforce minimum orders. Emily min 30 = $22.50.
-- Services quoted "from $X" — final price depends on hair length / nail condition
-- For ordering food: give contact + remind them to order 24h ahead
-- For appointments: give contact + hours`;
+    // ── FOOD ─────────────────────────────────────────────────────────────────
+    if (food.length) {
+      lines += 'FOOD:\n';
+      food.forEach(function (biz) {
+        var host = biz.hosts && biz.hosts[0] ? biz.hosts[0].name + ' ' : '';
+        lines += '• ' + biz.name + ' [' + (biz.city || biz.region || '') + ']\n';
+        lines += '  Contact: ' + host + biz.phoneDisplay + ' | ' + biz.address + '\n';
+
+        if (biz.vendorType === 'foodvendor' && biz.products && biz.products.length) {
+          biz.products.forEach(function (p) {
+            var basePrice = Number(p.pricePerUnit || p.price || 0);
+            var minQty    = Number(p.minimumOrderQty || 1);
+            var pName     = p.nameEn || p.name || '';
+            var vwp = (p.variants || []).filter(function (v) {
+              return v && typeof v === 'object' && v.price != null && Number(v.price) > 0;
+            });
+            if (vwp.length > 0) {
+              lines += '  - ' + pName + ' (min ' + minQty + ' pcs):\n';
+              vwp.forEach(function (v) {
+                var vp = Number(v.price);
+                lines += '    • ' + (v.labelEn || v.label) + ': $' + vp.toFixed(2) + '/ea (min $' + (vp * minQty).toFixed(2) + ')\n';
+              });
+            } else if (basePrice > 0) {
+              lines += '  - ' + pName + ': $' + basePrice.toFixed(2) + '/ea, min ' + minQty + ' ($' + (basePrice * minQty).toFixed(2) + ' min)\n';
+            }
+          });
+          lines += '  ORDER: item → variant → qty → date → pickup/delivery → name + phone\n';
+        } else if (biz.services && biz.services.length) {
+          lines += '  Menu: ' + biz.services.slice(0, 5).map(function (s) { return s.name + ' ' + (s.price || ''); }).join(' · ') + '\n';
+          lines += '  RESERVATION: party size → date & time → name + phone\n';
+        }
+      });
+      lines += '\n';
+    }
+
+    // ── NAIL SALONS ──────────────────────────────────────────────────────────
+    if (nails.length) {
+      lines += 'NAIL SALONS:\n';
+      nails.forEach(function (biz) {
+        lines += '• ' + biz.name + ' [' + (biz.city || '') + '] — ' + biz.phoneDisplay + '\n';
+        if (biz.services && biz.services.length) {
+          lines += '  Services: ' + biz.services.map(function (s) { return s.name + ' ' + s.price; }).join(' · ') + '\n';
+        }
+        if (biz.hours) {
+          lines += '  Hours: ' + Object.keys(biz.hours).map(function (d) { return d + ': ' + biz.hours[d]; }).join(' | ') + '\n';
+        }
+        lines += '  APPOINTMENT: service → date & time → name + phone\n';
+      });
+      lines += '\n';
+    }
+
+    // ── HAIR SALONS ──────────────────────────────────────────────────────────
+    if (hair.length) {
+      lines += 'HAIR SALONS:\n';
+      hair.forEach(function (biz) {
+        lines += '• ' + biz.name + ' [' + (biz.city || '') + '] — ' + biz.phoneDisplay + '\n';
+        if (biz.services && biz.services.length) {
+          lines += '  Services: ' + biz.services.map(function (s) { return s.name + ' ' + s.price; }).join(' · ') + '\n';
+        }
+        if (biz.hours) {
+          lines += '  Hours: ' + Object.keys(biz.hours).map(function (d) { return d + ': ' + biz.hours[d]; }).join(' | ') + '\n';
+        }
+        lines += '  APPOINTMENT: service → date & time → name + phone\n';
+      });
+      lines += '\n';
+    }
+
+    lines +=
+      'INTAKE AGENT RULES (apply to ALL vendors and ALL booking types):\n' +
+      '- MEMORY: Never forget what the customer said in prior turns. Never reset context mid-conversation.\n' +
+      '- NEXT FIELD ONLY: Ask for the next missing field only — never dump all questions at once.\n' +
+      '- DATE RESOLUTION: Resolve relative dates (tomorrow, this Saturday) to actual calendar dates using TODAY.\n' +
+      '- INLINE INTAKE: Do not just say "call the vendor." Collect all required fields yourself, then give the vendor contact at the end to confirm.\n' +
+      '- EXACT PRICING: Compute totals from the data above. Never guess (e.g. 50 pcs × $0.75 = $37.50). Services quoted "from $X" depend on condition.\n' +
+      '- COMPLETION: When all fields are collected, output a full summary and instruct customer to contact vendor to confirm.\n';
+
+    return lines;
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -1090,24 +1159,32 @@ ORDER TRACKING:
 - Statuses: pending (chờ xác nhận), confirmed (đã xác nhận), enroute (đang trên đường), completed (hoàn thành), cancelled (đã hủy)`;
     }
 
-    return `You are a smart, bilingual AI receptionist for Du Lịch Cali — a Vietnamese-American travel, transportation, and marketplace service in California. You handle travel bookings AND marketplace vendor questions (food, nails, hair).
+    return `You are the master AI agent for Du Lịch Cali — a Vietnamese-American travel, transportation, and marketplace service in California. You handle TWO types of interactions:
+
+1. TRAVEL & TRANSPORT — tours, airport transfers, multi-city trips
+2. MARKETPLACE INTAKE — take food orders, nail/hair appointments, restaurant reservations inline
 
 ${staticCtx}
 ${regionCtx}
 ${vendorCtx}
 ${pricingSnapshot}
 
+UNIVERSAL AGENT RULES (apply to EVERY interaction):
+- MEMORY: Never forget what the customer already told you. Do NOT reset context between turns.
+- NEXT FIELD ONLY: For bookings, ask for the next missing field only — never list all questions at once.
+- DATE RESOLUTION: Always resolve "tomorrow", "this Saturday", etc. to actual dates using TODAY (see vendor section above).
+- INLINE INTAKE: When a customer wants to book/order something, collect all required fields yourself. Do NOT just say "call the vendor." Give vendor contact ONLY at the end to confirm.
+- RESET FORBIDDEN: Never pivot to "how can I help you today?" until the current booking/order is fully summarized and confirmed.
+
 BEHAVIOR GUIDELINES:
 - Respond in the SAME LANGUAGE the user writes in (Vietnamese ↔ English)
-- For pricing questions: use the estimate data above, never invent numbers outside that range
+- For travel pricing: use the estimate data above, never invent numbers outside that range
 - Always distinguish between rough estimate (sơ bộ), better estimate (tốt hơn), and confirmed quote
-- Explicitly state estimates may change based on exact pickup/dropoff addresses
 - Ask for missing info (pax count, city, days) only when needed — don't overwhelm
 - Compare options when helpful ("San Francisco may be cheaper than Yosemite for X people")
-- Explain pricing logic clearly when asked (fuel, distance, vehicle size)
-- For exact quotes, recommend calling ${regionPhone()} or using the Đặt chỗ tab
+- For exact travel quotes, recommend calling ${regionPhone()} or using the Đặt chỗ tab
 - Keep responses concise — 3–6 lines for estimates, slightly more for complex questions
-- Be warm, helpful, and professional — like a knowledgeable travel friend`;
+- Be warm, helpful, and professional — like a knowledgeable local friend`;
   }
 
   async function callClaude(history) {

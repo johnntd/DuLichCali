@@ -20,7 +20,13 @@ let tokenClient;
 
 // ── Region-aware vehicle helper ──────────────────────────────
 function getRegionVehicle(passengers) {
-  if (window.DLCRegion && DLCRegion.current.id === 'bayarea') return 'Toyota Sienna';
+  const drivers = window._availableDrivers || [];
+  const match = drivers.find(d => d.vehicle && d.vehicle.seats && d.vehicle.seats >= passengers)
+             || drivers[0];
+  if (match && match.vehicle && match.vehicle.make) {
+    const v = match.vehicle;
+    return [v.make, v.model].filter(Boolean).join(' ');
+  }
   return passengers <= 3 ? 'Tesla Model Y' : 'Mercedes Van';
 }
 
@@ -1122,6 +1128,20 @@ async function checkRideServiceAvailability(regionId) {
       const [eh, em] = (sched.end   || '23:59').split(':').map(Number);
       return nowMins >= sh * 60 + sm && nowMins <= eh * 60 + em;
     });
+
+    // Store available driver vehicle data for ride form
+    window._availableDrivers = snap.docs
+      .filter(doc => {
+        const d = doc.data();
+        if (!(d.regions || []).includes(regionId)) return false;
+        if ((d.availability?.blackoutDates || []).includes(todayStr)) return false;
+        const sched = d.availability?.weeklySchedule?.[day];
+        if (!sched?.enabled) return false;
+        const [sh, sm] = (sched.start || '00:00').split(':').map(Number);
+        const [eh, em] = (sched.end   || '23:59').split(':').map(Number);
+        return nowMins >= sh * 60 + sm && nowMins <= eh * 60 + em;
+      })
+      .map(doc => ({ id: doc.id, ...doc.data() }));
 
     window._rideServiceAvailable = hasAvailable;
     updateRideServiceCards(hasAvailable);

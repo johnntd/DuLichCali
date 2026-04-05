@@ -242,6 +242,82 @@
     }
     .btn-save:hover { background: var(--gold-lt); }
     .btn-save:disabled { opacity: .45; pointer-events: none; }
+
+    /* ── Driver tabs ── */
+    .drv-tabs {
+      display: flex; border-bottom: 1px solid var(--border-g);
+      margin-bottom: 1.5rem;
+    }
+    .drv-tab {
+      flex: 1; height: 40px;
+      background: transparent; border: none; border-bottom: 2px solid transparent;
+      color: var(--muted); font-family: var(--font-b); font-size: .75rem;
+      font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+      cursor: pointer; transition: color .18s, border-color .18s;
+      position: relative;
+    }
+    .drv-tab:hover { color: var(--text); }
+    .drv-tab.active { color: var(--gold-lt); border-bottom-color: var(--gold); }
+    .drv-tab-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 18px; height: 18px; padding: 0 4px;
+      background: var(--danger); color: #fff;
+      font-size: .6rem; font-weight: 800; border-radius: 999px;
+      margin-left: .3rem; vertical-align: middle;
+    }
+    .drv-tab-badge.hidden { display: none; }
+    .drv-panel { display: none; }
+    .drv-panel.active { display: block; }
+
+    /* ── Ride notification cards ── */
+    .ride-notif-list { display: flex; flex-direction: column; gap: .75rem; }
+    .ride-notif-card {
+      background: var(--navy-800); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.1rem;
+      transition: border-color .2s;
+    }
+    .ride-notif-card.new { border-color: rgba(245,166,35,.4); }
+    .ride-notif-card__type {
+      font-size: .6rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--gold); margin-bottom: .5rem;
+    }
+    .ride-notif-card__row {
+      display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: .4rem;
+    }
+    .ride-notif-card__field { }
+    .ride-notif-card__label { font-size: .58rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+    .ride-notif-card__val { font-size: .85rem; color: var(--cream); font-weight: 600; }
+    .ride-notif-card__price { font-size: 1.1rem; color: var(--gold); font-weight: 700; }
+    .ride-notif-card__actions { display: flex; gap: .5rem; margin-top: .85rem; }
+    .btn-accept {
+      flex: 1; height: 44px;
+      background: var(--gold); color: var(--navy-900);
+      border: none; border-radius: var(--r);
+      font-family: var(--font-b); font-size: .8rem; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+      cursor: pointer; transition: background .18s;
+    }
+    .btn-accept:hover { background: var(--gold-lt); }
+    .btn-accept:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-skip {
+      height: 44px; padding: 0 1rem;
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted); border-radius: var(--r);
+      font-family: var(--font-b); font-size: .75rem;
+      cursor: pointer; transition: all .18s;
+    }
+    .btn-skip:hover { border-color: var(--text); color: var(--text); }
+    .ride-notif-empty {
+      text-align: center; padding: 2.5rem 1rem;
+      color: var(--muted); font-size: .82rem;
+    }
+    .ride-notif-empty .big { font-size: 2rem; margin-bottom: .5rem; }
+    .notif-accepted-badge {
+      display: inline-block; padding: .2rem .6rem;
+      background: rgba(74,222,128,.12); border: 1px solid rgba(74,222,128,.3);
+      color: var(--success); font-size: .65rem; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase; border-radius: 999px;
+    }
   </style>
   <link rel="stylesheet" href="/desktop.css">
 </head>
@@ -259,6 +335,15 @@
     </div>
     <button class="btn-signout" onclick="doSignOut()">Đăng Xuất</button>
   </div>
+
+  <!-- Tab bar -->
+  <div class="drv-tabs">
+    <button class="drv-tab active" onclick="drvTab('profile')">Hồ Sơ</button>
+    <button class="drv-tab" onclick="drvTab('rides')">Chuyến Mới <span class="drv-tab-badge hidden" id="rideBadge">0</span></button>
+  </div>
+
+  <!-- Profile panel -->
+  <div id="panelProfile" class="drv-panel active">
 
   <!-- Status toggles -->
   <div class="status-strip">
@@ -365,6 +450,18 @@
 
   <button class="btn-save" id="btnSave" onclick="doSave()">Lưu Thay Đổi</button>
 
+  </div><!-- /panelProfile -->
+
+  <!-- Rides panel -->
+  <div id="panelRides" class="drv-panel">
+    <div class="ride-notif-list" id="rideNotifList">
+      <div class="ride-notif-empty">
+        <div class="big">🚗</div>
+        <div>Đang tải chuyến đi…</div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <div id="saveToast">&#10003; Đã lưu</div>
@@ -385,6 +482,9 @@
 
   // ── State ─────────────────────────────────────────────────────────────────
   var _driverId = null;
+  var _driverName = '';
+  var _driverPhone = '';
+  var _unsubRideNotifs = null;
   var _state = {
     active: false,
     rideServiceEnabled: false,
@@ -434,6 +534,9 @@
       var d = doc.data();
       document.getElementById('fName').value  = d.fullName || '';
       document.getElementById('fPhone').value = d.phone || '';
+      _driverName  = d.fullName || '';
+      _driverPhone = d.phone    || '';
+      document.getElementById('driverEmail').textContent = _driverName || (auth.currentUser && auth.currentUser.email) || '';
 
       var v = d.vehicle || {};
       document.getElementById('fMake').value  = v.make  || '';
@@ -461,6 +564,7 @@
       }
 
       renderAll();
+      listenRideNotifs();
     }).catch(function () {
       document.getElementById('authChecking').classList.add('hidden');
       document.getElementById('mainContent').style.display = '';
@@ -630,6 +734,107 @@
     el.classList.add('show');
     clearTimeout(_toastTimer);
     _toastTimer = setTimeout(function () { el.classList.remove('show'); }, 2600);
+  }
+
+  // ── Tab switching ─────────────────────────────────────────────────────────
+  function drvTab(tab) {
+    document.querySelectorAll('.drv-tab').forEach(function(btn, i) {
+      btn.classList.toggle('active', ['profile','rides'][i] === tab);
+    });
+    document.getElementById('panelProfile').classList.toggle('active', tab === 'profile');
+    document.getElementById('panelRides').classList.toggle('active',  tab === 'rides');
+    if (tab === 'rides' && _unsubRideNotifs === null) listenRideNotifs();
+  }
+
+  // ── Real-time ride notifications listener ─────────────────────────────────
+  function listenRideNotifs() {
+    if (_unsubRideNotifs) _unsubRideNotifs();
+    _unsubRideNotifs = db.collection('rideNotifications')
+      .where('status', 'in', ['new', 'accepted'])
+      .orderBy('createdAt', 'desc')
+      .limit(30)
+      .onSnapshot(function(snap) {
+        renderRideNotifs(snap.docs);
+        var newCount = snap.docs.filter(function(d) { return d.data().status === 'new'; }).length;
+        var badge = document.getElementById('rideBadge');
+        badge.textContent = newCount;
+        badge.classList.toggle('hidden', newCount === 0);
+      }, function() {});
+  }
+
+  function renderRideNotifs(docs) {
+    var list = document.getElementById('rideNotifList');
+    if (!docs.length) {
+      list.innerHTML = '<div class="ride-notif-empty"><div class="big">✓</div><div>Chưa có chuyến đi mới.</div></div>';
+      return;
+    }
+    var svcLabel = { airport_pickup: '✈ Đón Sân Bay', airport_dropoff: '✈ Ra Sân Bay', private_ride: '🚗 Xe Riêng' };
+    list.innerHTML = docs.map(function(doc) {
+      var d = doc.data();
+      var isNew = d.status === 'new';
+      var isAcceptedByMe = d.status === 'accepted' && d.acceptedBy === _driverId;
+      var price = d.estimatedPrice ? '$' + Number(d.estimatedPrice).toFixed(0) : '—';
+      var miles = d.estimatedMiles ? Number(d.estimatedMiles).toFixed(1) + ' mi' : '';
+      var dateInfo = d.arrivalDate || d.arrivalTime
+        ? (d.arrivalDate || '') + (d.arrivalTime ? ' ' + d.arrivalTime : '')
+        : '';
+      return '<div class="ride-notif-card' + (isNew ? ' new' : '') + '" id="rn-' + doc.id + '">' +
+        '<div class="ride-notif-card__type">' + (svcLabel[d.serviceType] || d.serviceLabel || d.serviceType || 'Chuyến Xe') + '</div>' +
+        '<div class="ride-notif-card__row">' +
+          '<div class="ride-notif-card__field"><div class="ride-notif-card__label">Khách</div><div class="ride-notif-card__val">' + esc(d.customerName || '—') + '</div></div>' +
+          '<div class="ride-notif-card__field"><div class="ride-notif-card__label">Khách</div><div class="ride-notif-card__val">' + (d.passengers || 1) + ' người</div></div>' +
+          (d.airport ? '<div class="ride-notif-card__field"><div class="ride-notif-card__label">Sân Bay</div><div class="ride-notif-card__val">' + esc(d.airport) + '</div></div>' : '') +
+          (dateInfo ? '<div class="ride-notif-card__field"><div class="ride-notif-card__label">Thời Gian</div><div class="ride-notif-card__val">' + esc(dateInfo) + '</div></div>' : '') +
+        '</div>' +
+        '<div class="ride-notif-card__row">' +
+          '<div class="ride-notif-card__field"><div class="ride-notif-card__label">Giá Ước Tính</div><div class="ride-notif-card__price">' + price + '</div></div>' +
+          (miles ? '<div class="ride-notif-card__field"><div class="ride-notif-card__label">Khoảng Cách</div><div class="ride-notif-card__val">' + miles + '</div></div>' : '') +
+          '<div class="ride-notif-card__field"><div class="ride-notif-card__label">Mã</div><div class="ride-notif-card__val" style="font-family:monospace;font-size:.75rem;color:var(--gold)">' + esc(d.bookingId || doc.id.slice(0,8)) + '</div></div>' +
+        '</div>' +
+        '<div class="ride-notif-card__actions">' +
+          (isAcceptedByMe
+            ? '<span class="notif-accepted-badge">✓ Bạn đã nhận chuyến này</span>'
+            : isNew
+              ? '<button class="btn-accept" onclick="acceptRide(\'' + doc.id + '\',\'' + esc(d.bookingId||'') + '\')" id="btn-accept-' + doc.id + '">Nhận Chuyến</button>' +
+                '<button class="btn-skip" onclick="skipRide(\'' + doc.id + '\')">Bỏ qua</button>'
+              : '<span style="font-size:.72rem;color:var(--muted)">Đã có tài xế nhận</span>'
+          ) +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  async function acceptRide(notifId, bookingId) {
+    var btn = document.getElementById('btn-accept-' + notifId);
+    if (btn) { btn.disabled = true; btn.textContent = 'Đang xử lý…'; }
+    try {
+      var ts = firebase.firestore.FieldValue.serverTimestamp();
+      // Mark notification accepted
+      await db.collection('rideNotifications').doc(notifId).update({
+        status: 'accepted', acceptedBy: _driverId,
+        acceptedByName: _driverName, acceptedAt: ts
+      });
+      // Assign driver on booking record
+      if (bookingId) {
+        await db.collection('bookings').doc(bookingId).update({
+          status: 'assigned',
+          driver: { driverId: _driverId, name: _driverName, phone: _driverPhone }
+        });
+      }
+      showToast('✓ Đã nhận chuyến! Liên hệ khách ngay.', false);
+    } catch(e) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Nhận Chuyến'; }
+      showToast('Lỗi: ' + e.message, true);
+    }
+  }
+
+  function skipRide(notifId) {
+    var card = document.getElementById('rn-' + notifId);
+    if (card) card.style.opacity = '.35';
   }
 
   // ── Build schedule rows on first load ─────────────────────────────────────

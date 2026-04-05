@@ -34,6 +34,7 @@ window.RideIntake = (function () {
   var _timer   = null;
   var _ac      = {};
   var _busy    = false;
+  var _driverVehicle = null; // { name, seats } loaded from Firestore active driver
 
   // ── Step management ───────────────────────────────────────────────────────────
   function open(type) {
@@ -54,6 +55,27 @@ window.RideIntake = (function () {
     } else {
       showPicker();
     }
+    _fetchDriverVehicle(); // async, non-blocking
+  }
+
+  function _fetchDriverVehicle() {
+    if (typeof firebase === 'undefined' || !firebase.firestore) return;
+    firebase.firestore().collection('drivers')
+      .where('active', '==', true)
+      .where('rideServiceEnabled', '==', true)
+      .get()
+      .then(function(snap) {
+        if (snap.empty) return;
+        var d = snap.docs[0].data();
+        if (d.vehicle && d.vehicle.make) {
+          _driverVehicle = {
+            name:  [d.vehicle.make, d.vehicle.model, d.vehicle.year].filter(Boolean).join(' '),
+            seats: d.vehicle.seats || 4,
+            driverId: snap.docs[0].id,
+            driverName: d.fullName || ''
+          };
+        }
+      }).catch(function() {});
   }
 
   function showUnavailable() {
@@ -506,7 +528,9 @@ window.RideIntake = (function () {
   function buildBookingData(bookingId) {
     var paxId = _type === 'pickup' ? 'ri_p_passengers' : _type === 'dropoff' ? 'ri_d_passengers' : 'ri_r_passengers';
     var base = {
-      bookingId: bookingId, status: 'pending', vehicle: VAN.name,
+      bookingId: bookingId, status: 'pending',
+      vehicle: _driverVehicle ? _driverVehicle.name : VAN.name,
+      driverId: _driverVehicle ? _driverVehicle.driverId : null,
       serviceType: _type === 'ride' ? 'private_ride' : (_type === 'pickup' ? 'airport_pickup' : 'airport_dropoff'),
       passengers:    parseInt(val(paxId) || '1', 10),
       customerName:  val(_type === 'pickup' ? 'ri_p_name'  : _type === 'dropoff' ? 'ri_d_name'  : 'ri_r_name'),

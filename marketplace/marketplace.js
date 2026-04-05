@@ -177,6 +177,163 @@
     '</nav>';
   }
 
+  // ── Vendor Bottom Nav (Salon pages) ───────────────────────────────────────────
+  // 5-button persistent nav: Home · Book · AI (center) · Interpreter · Call
+  // Only used for nails/hair vendor detail pages. No links to main site.
+
+  function renderVendorBottomNav(biz) {
+    var homeIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><polyline points="9 21 9 12 15 12 15 21"/></svg>';
+    var sparkIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2z"/></svg>';
+    var globeIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>';
+
+    return '<nav class="mp-vnav" aria-label="Quick actions">' +
+      '<button type="button" class="mp-vnav__tab" onclick="window._vnav.scrollTop()" aria-label="Scroll to top">' +
+        homeIco + '<span>Home</span>' +
+      '</button>' +
+      '<button type="button" class="mp-vnav__tab" onclick="window._vnav.scrollBook()" aria-label="Book appointment">' +
+        calendarIcon + '<span>Book</span>' +
+      '</button>' +
+      '<button type="button" class="mp-vnav__tab mp-vnav__tab--ai" onclick="window._vnav.focusAi()" aria-label="Chat with AI receptionist">' +
+        '<div class="mp-vnav__ai-ring">' + sparkIco + '</div>' +
+        '<span>AI</span>' +
+      '</button>' +
+      '<button type="button" class="mp-vnav__tab" onclick="window._vnav.toggleInterp()" aria-label="Live interpreter">' +
+        globeIco + '<span>Interpret</span>' +
+      '</button>' +
+      '<a href="tel:' + (biz.phone || '') + '" class="mp-vnav__tab mp-vnav__tab--call" aria-label="Call shop">' +
+        phoneIcon + '<span>Call</span>' +
+      '</a>' +
+    '</nav>';
+  }
+
+  function renderInterpPanel(biz) {
+    return '<div id="interpBackdrop_' + biz.id + '" class="mp-interp__backdrop" onclick="window._interp.close()"></div>' +
+      '<div id="interpPanel_' + biz.id + '" class="mp-interp" role="dialog" aria-label="Live Interpreter">' +
+        '<div class="mp-interp__handle"></div>' +
+        '<div class="mp-interp__header">' +
+          '<span class="mp-interp__title">Live Interpreter</span>' +
+          '<button type="button" class="mp-interp__close" onclick="window._interp.close()" aria-label="Close">&#10005;</button>' +
+        '</div>' +
+        '<div class="mp-interp__langs">' +
+          '<select id="interpFrom_' + biz.id + '" class="mp-interp__select" onchange="window._interp.syncLangs()">' +
+            '<option value="en">English</option>' +
+            '<option value="vi">Ti&#7871;ng Vi&#7879;t</option>' +
+            '<option value="es">Espa&#241;ol</option>' +
+          '</select>' +
+          '<span class="mp-interp__arrow">&#8594;</span>' +
+          '<select id="interpTo_' + biz.id + '" class="mp-interp__select">' +
+            '<option value="vi">Ti&#7871;ng Vi&#7879;t</option>' +
+            '<option value="en">English</option>' +
+            '<option value="es">Espa&#241;ol</option>' +
+          '</select>' +
+        '</div>' +
+        '<textarea id="interpInput_' + biz.id + '" class="mp-interp__input" placeholder="Type message to translate..." rows="3"></textarea>' +
+        '<button type="button" class="mp-interp__btn" onclick="window._interp.translate()">Translate</button>' +
+        '<div id="interpOutput_' + biz.id + '" class="mp-interp__output"></div>' +
+      '</div>';
+  }
+
+  function _interpFallback(fromLang, toLang, text, output) {
+    var url = 'https://translate.google.com/?sl=' + fromLang + '&tl=' + toLang +
+      '&text=' + encodeURIComponent(text) + '&op=translate';
+    output.innerHTML = '<a href="' + url + '" target="_blank" rel="noopener" style="color:var(--gold)">Open in Google Translate &#8599;</a>';
+  }
+
+  function _initVendorNav(biz) {
+    window._vnav = {
+      scrollTop: function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+      scrollBook: function () {
+        var el = document.getElementById('bookingSection_' + biz.id);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      },
+      focusAi: function () {
+        var el = document.getElementById('aiWidget_' + biz.id);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          setTimeout(function () {
+            var inp = el.querySelector('input[type="text"],textarea,.mp-ai__input');
+            if (inp) inp.focus();
+          }, 420);
+        }
+      },
+      toggleInterp: function () {
+        window._interp.toggle();
+      }
+    };
+
+    window._interp = (function () {
+      var panel    = document.getElementById('interpPanel_'    + biz.id);
+      var backdrop = document.getElementById('interpBackdrop_' + biz.id);
+      var fromSel  = document.getElementById('interpFrom_'     + biz.id);
+      var toSel    = document.getElementById('interpTo_'       + biz.id);
+      var inputEl  = document.getElementById('interpInput_'    + biz.id);
+      var outputEl = document.getElementById('interpOutput_'   + biz.id);
+
+      return {
+        open: function () {
+          panel.classList.add('is-open');
+          backdrop.classList.add('is-open');
+        },
+        close: function () {
+          panel.classList.remove('is-open');
+          backdrop.classList.remove('is-open');
+        },
+        toggle: function () {
+          if (panel.classList.contains('is-open')) this.close(); else this.open();
+        },
+        // Prevent From == To by swapping To when From changes
+        syncLangs: function () {
+          var from = fromSel.value;
+          var to   = toSel.value;
+          if (from === to) {
+            var opts = ['en', 'vi', 'es'];
+            toSel.value = opts.find(function (o) { return o !== from; }) || 'en';
+          }
+        },
+        translate: function () {
+          var from = fromSel.value;
+          var to   = toSel.value;
+          var text = (inputEl.value || '').trim();
+          if (!text) return;
+          if (from === to) { outputEl.textContent = text; return; }
+
+          outputEl.textContent = '...';
+
+          var apiKey = localStorage.getItem('dlc_claude_key');
+          if (!apiKey) { _interpFallback(from, to, text, outputEl); return; }
+
+          var labels = { en: 'English', vi: 'Vietnamese', es: 'Spanish' };
+          fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+              'x-api-key': apiKey,
+              'anthropic-version': '2023-06-01',
+              'content-type': 'application/json',
+              'anthropic-dangerous-direct-browser-access': 'true'
+            },
+            body: JSON.stringify({
+              model: 'claude-haiku-4-5-20251001',
+              max_tokens: 512,
+              messages: [{
+                role: 'user',
+                content: 'Translate from ' + labels[from] + ' to ' + labels[to] +
+                  '. Return only the translated text, no explanation:\n\n' + text
+              }]
+            })
+          })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            outputEl.textContent =
+              (d.content && d.content[0] && d.content[0].text) || 'Translation error.';
+          })
+          .catch(function () { _interpFallback(from, to, text, outputEl); });
+        }
+      };
+    }());
+  }
+
   // ── Directory ──────────────────────────────────────────────────────────────────
 
   function renderDirectory(categoryId) {
@@ -651,7 +808,8 @@
         '<div class="mp-spacer"></div>' +
       '</main>' +
       renderFooter() +
-      renderBottomNav(backUrl);
+      renderInterpPanel(biz) +
+      renderVendorBottomNav(biz);
 
     _container.innerHTML = html;
 
@@ -662,6 +820,8 @@
     if (biz.aiReceptionist && biz.aiReceptionist.enabled) {
       Receptionist.init(biz, 'aiWidget_' + biz.id);
     }
+
+    _initVendorNav(biz);
   }
 
   // ── Food Vendor Detail Page ────────────────────────────────────────────────────

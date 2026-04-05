@@ -143,6 +143,24 @@
       font-size: 3.5rem;
     }
 
+    /* 4-photo collage banner (food card) */
+    .qr-card__hero-collage {
+      width: 100%;
+      height: 148px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .qr-card__hero-collage img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+    }
+
     /* Card body */
     .qr-card__body {
       padding: 1.4rem 1.4rem 0;
@@ -308,6 +326,7 @@
     body.print-mode .qr-card__img { width: 180px; height: 180px; }
     body.print-mode .qr-card__hero { height: 120px; }
     body.print-mode .qr-card__hero-placeholder { height: 120px; }
+    body.print-mode .qr-card__hero-collage { height: 120px; }
 
     /* ══ @MEDIA PRINT ═════════════════════════════ */
     @media print {
@@ -325,6 +344,7 @@
       .qr-card__img { width: 160px !important; height: 160px !important; }
       .qr-card__hero { height: 110px !important; }
       .qr-card__hero-placeholder { height: 110px !important; }
+      .qr-card__hero-collage { height: 110px !important; }
       .page-header { margin-bottom: 1rem !important; }
     }
 
@@ -334,6 +354,7 @@
       .qr-card__img { width: 160px; height: 160px; }
       .qr-card__hero { height: 110px; }
       .qr-card__hero-placeholder { height: 110px; font-size: 2.5rem; }
+      .qr-card__hero-collage { height: 110px; }
       .qr-card__body { padding: 1rem 1rem 0; }
       .qr-card__title { font-size: 1.1rem; }
       .qr-card__actions { padding: 0 1rem 1rem; }
@@ -391,7 +412,13 @@
       cta:     '👉 Scan to Order',
       url:     BASE + '/food',
       accent:  '#f59e0b',
-      img:     '/images/hero-cha-gio.jpg',
+      img:     null,
+      imgs:    [
+        '/images/hero-bun-cha-hanoi.jpg',
+        '/images/hero-cha-gio.jpg',
+        '/images/hero-bun-dau-mam-tom.jpg',
+        '/images/hero-chuoi-dau-nau-oc.jpg',
+      ],
     },
     {
       id:      'nails',
@@ -469,7 +496,19 @@
     card.appendChild(accentBar);
 
     /* ── Hero image ── */
-    if (svc.img) {
+    if (svc.imgs) {
+      /* 4-photo collage (food) */
+      var collage = document.createElement('div');
+      collage.className = 'qr-card__hero-collage';
+      svc.imgs.forEach(function(src, i) {
+        var ci = document.createElement('img');
+        ci.src = src;
+        ci.alt = svc.title + ' ' + (i + 1);
+        ci.loading = 'lazy';
+        collage.appendChild(ci);
+      });
+      card.appendChild(collage);
+    } else if (svc.img) {
       var hero = document.createElement('img');
       hero.className = 'qr-card__hero';
       hero.src = svc.img;

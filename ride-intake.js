@@ -74,6 +74,13 @@ window.RideIntake = (function () {
             driverId: snap.docs[0].id,
             driverName: d.fullName || ''
           };
+          // Update hardcoded vehicle labels in the UI
+          var seats = _driverVehicle.seats;
+          var label = _driverVehicle.name;
+          var sub = document.getElementById('riPickerSub');
+          if (sub) sub.textContent = 'Tài xế chuyên nghiệp · ' + label + ' ' + seats + ' chỗ';
+          var box = document.getElementById('riVehicleBox');
+          if (box) box.innerHTML = label + '<br>' + seats + ' chỗ<br>Chưa bao gồm tip';
         }
       }).catch(function() {});
   }
@@ -188,7 +195,14 @@ window.RideIntake = (function () {
     }
 
     // Price: show hint/box on step 2 (addresses entered)
-    if (n === 2) { scheduleDistance(); }
+    if (n === 2) {
+      scheduleDistance();
+      // Sync vehicle label with actual driver vehicle (may have resolved after modal opened)
+      if (_driverVehicle) {
+        var box2 = document.getElementById('riVehicleBox');
+        if (box2) box2.innerHTML = _driverVehicle.name + '<br>' + _driverVehicle.seats + ' chỗ<br>Chưa bao gồm tip';
+      }
+    }
     if (n !== 2) { showPriceHint(); }
 
     // Scroll top

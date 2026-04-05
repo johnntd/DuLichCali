@@ -1664,12 +1664,30 @@ function homeAiSubmit() {
   homeAiSend(text);
 }
 
+/**
+ * Open chat in Marketplace mode — clears history, shows marketplace greeting + chips.
+ * Called from the Marketplace AI launcher button on the homepage.
+ */
+function openMarketplaceChat() {
+  switchScreen('screenChat');
+  setTimeout(function() {
+    if (window.DLChat && DLChat.openWithMode) DLChat.openWithMode('marketplace');
+  }, 220);
+}
+
+/**
+ * Open chat in Marketplace mode and send a user text message.
+ * Called when the user submits the home panel text input.
+ */
 function homeAiSend(text) {
   switchScreen('screenChat');
   setTimeout(function () {
     if (window.DLChat) {
-      if (DLChat.setMode) DLChat.setMode('marketplace');
-      if (DLChat.send) DLChat.send(text);
+      if (DLChat.openWithMode) DLChat.openWithMode('marketplace', text);
+      else {
+        if (DLChat.setMode) DLChat.setMode('marketplace');
+        if (DLChat.send) DLChat.send(text);
+      }
     }
   }, 220);
 }
@@ -1697,8 +1715,15 @@ function openAIWithIntent(intent) {
   };
   if (Object.prototype.hasOwnProperty.call(structuredFlows, intent)) {
     var flowKey = structuredFlows[intent];
+    // Determine mode for this flow so openWithMode shows the right greeting
+    var modeForFlow = /tour/.test(flowKey) ? 'tour' : 'airport';
     setTimeout(function() {
-      if (window.DLChat && DLChat.startFlow) DLChat.startFlow(flowKey);
+      if (window.DLChat) {
+        // Open with mode greeting first (resets history + shows mode-specific greeting+chips)
+        if (DLChat.openWithMode) DLChat.openWithMode(modeForFlow);
+        // Then start the workflow — its first question appends after the greeting
+        if (DLChat.startFlow) DLChat.startFlow(flowKey);
+      }
     }, 300);
     return;
   }

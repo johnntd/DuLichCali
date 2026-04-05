@@ -1841,11 +1841,72 @@ BEHAVIOR GUIDELINES:
     if (text) { send(text); state.inputEl.value = ''; }
   }
 
+  // Per-mode greetings and chip sets — strict domain content only
+  const MODE_GREETINGS = {
+    marketplace: {
+      text: 'Xin chào! Tôi có thể giúp bạn với Marketplace — món ăn, nail, tóc, hoặc hỏi về vendor.\n\nBạn cần dịch vụ nào?',
+      chips: [
+        { label: 'Đặt món ăn',      value: 'Tôi muốn đặt món ăn' },
+        { label: 'Hỏi giá chả giò', value: 'Giá chả giò bao nhiêu?' },
+        { label: 'Đặt nail',        value: 'Tôi muốn đặt lịch nail' },
+        { label: 'Đặt tóc',         value: 'Tôi muốn đặt lịch làm tóc' },
+        { label: 'Xem vendor',      value: 'Có những vendor nào đang hoạt động?' },
+      ],
+    },
+    airport: {
+      text: 'Xin chào! Tôi là trợ lý sân bay & xe riêng của Du Lịch Cali.\n\nTôi có thể giúp:\n• Đặt xe đón/đưa sân bay\n• Xe riêng điểm-đến-điểm\n• Báo giá và xe có sẵn\n\nBạn cần gì?',
+      chips: [
+        { label: 'Đón sân bay', value: 'Tôi cần xe đón tại sân bay' },
+        { label: 'Đưa sân bay', value: 'Tôi cần xe ra sân bay' },
+        { label: 'Xe riêng',    value: 'Tôi cần xe riêng' },
+        { label: 'Hỏi giá',    value: 'Giá đưa đón sân bay bao nhiêu?' },
+      ],
+    },
+    tour: {
+      text: 'Xin chào! Tôi là trợ lý tour & du lịch của Du Lịch Cali.\n\nTôi có thể giúp:\n• Đặt tour nhiều ngày\n• Tư vấn điểm đến California\n• Ước tính chi phí tour\n\nBạn muốn đi đâu?',
+      chips: [
+        { label: 'Tour Las Vegas',     value: 'Giá tour Las Vegas bao nhiêu?' },
+        { label: 'Tour Yosemite',      value: 'Tour Yosemite mấy ngày?' },
+        { label: 'Tour San Francisco', value: 'Tour San Francisco thế nào?' },
+        { label: 'So sánh tour',       value: 'So sánh các tour California' },
+      ],
+    },
+  };
+
   window.DLChat = {
     init,
     send,
     /** Set the active agent mode for context-aware system prompts. */
     setMode: function(mode) { state.agentMode = mode; },
+
+    /**
+     * Open chat in a specific mode — resets history, sets mode, shows mode greeting + chips.
+     * Called by openMarketplaceChat(), openAIWithIntent(), etc.
+     * @param {string} mode  'marketplace' | 'airport' | 'tour'
+     * @param {string} [pendingText]  Optional user text to send after greeting
+     */
+    openWithMode: function(mode, pendingText) {
+      // Reset conversation state completely
+      state.history = [];
+      state.agentMode = mode;
+      if (state.msgsEl) state.msgsEl.innerHTML = '';
+
+      // Hide static general chips — mode chips are delivered via greeting message
+      const chipWrap = document.getElementById('chatChips');
+      if (chipWrap) chipWrap.style.display = 'none';
+
+      // Push mode-specific greeting with mode-specific chips
+      const cfg = MODE_GREETINGS[mode];
+      if (cfg) {
+        pushMsg('assistant', cfg.text, { chips: cfg.chips });
+      }
+
+      // If caller wants to send a user message after greeting, do it after brief delay
+      if (pendingText) {
+        setTimeout(function() { send(pendingText); }, 150);
+      }
+    },
+
     /** Start a workflow and inject the first question into chat. */
     startFlow: function(type) {
       const WF = window.DLCWorkflow;

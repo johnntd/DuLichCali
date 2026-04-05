@@ -1218,7 +1218,7 @@
       const knownIds = new Set(VENDOR_LIST.map(v => v.id));
       const allVendors = [
         ...VENDOR_LIST.map(v => ({
-          id:v.id, name:fv[v.id]?.name||v.name, cat:v.cat, region:v.region,
+          id:v.id, name:v.name, cat:v.cat, region:v.region,
           phone:fv[v.id]?.phone||'', isNew:false
         })),
         ...Object.entries(fv).filter(([id])=>!knownIds.has(id)).map(([id,d])=>({

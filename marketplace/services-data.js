@@ -38,7 +38,7 @@
   var businesses = [
     // ─── NAIL SALONS ────────────────────────────────────────────────────────────
     {
-      id: 'dung-nails',
+      id: 'luxurious-nails',
       category: 'nails',
       active: true,
       featured: true,

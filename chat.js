@@ -94,7 +94,7 @@
       ],
     },
     {
-      id: 'dung-nails', name: 'Luxurious Nails & Spa',
+      id: 'luxurious-nails', name: 'Luxurious Nails & Spa',
       category: 'nails', region: 'Bay Area', city: 'San Jose',
       contact: 'Dung Pham', phone: '408-859-6718',
       hours: 'T2-6: 9am-7pm · T7: 9am-6pm · CN: 10am-5pm',

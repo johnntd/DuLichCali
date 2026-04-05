@@ -331,16 +331,31 @@ window.RideIntake = (function () {
     if (!pair) { showPriceHint(); return; }
     if (typeof google === 'undefined' || !google.maps) { showPriceHint(); return; }
     showPriceLoading();
-    new google.maps.DistanceMatrixService().getDistanceMatrix(
-      { origins: [pair.origin], destinations: [pair.destination], travelMode: google.maps.TravelMode.DRIVING },
-      function (resp, status) {
-        if (status !== 'OK') { showPriceHint('Không tìm được tuyến đường.'); return; }
-        var el = resp.rows[0] && resp.rows[0].elements[0];
-        if (!el || el.status !== 'OK') { showPriceHint('Không tìm được tuyến đường.'); return; }
-        _quote = calcQuote(el.distance.value / 1609.34, el.duration.value / 60);
-        showPrice(_quote);
+    // Routes API — RouteMatrix (replaces deprecated DistanceMatrixService)
+    google.maps.importLibrary('routes').then(function (lib) {
+      return new lib.RouteMatrix().computeRouteMatrix({
+        origins:      [{ waypoint: { address: pair.origin } }],
+        destinations: [{ waypoint: { address: pair.destination } }],
+        travelMode:   'DRIVE',
+      });
+    }).then(function (resp) {
+      if (!resp || !resp.length) { showPriceHint('Không tìm được tuyến đường.'); return; }
+      var el = resp[0];
+      if (el.condition === 'ROUTE_NOT_FOUND' || !el.distanceMeters) {
+        showPriceHint('Không tìm được tuyến đường.');
+        return;
       }
-    );
+      var distMiles = el.distanceMeters / 1609.34;
+      // duration may arrive as seconds (number), "1234s" (string), or {seconds:N} (proto)
+      var durSec = typeof el.duration === 'number' ? el.duration
+                 : (el.duration && typeof el.duration === 'object' && 'seconds' in el.duration)
+                   ? Number(el.duration.seconds)
+                   : parseInt(String(el.duration));
+      _quote = calcQuote(distMiles, durSec / 60);
+      showPrice(_quote);
+    }).catch(function () {
+      showPriceHint('Không tìm được tuyến đường.');
+    });
   }
 
   // ── Price display ─────────────────────────────────────────────────────────────

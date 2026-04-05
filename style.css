@@ -1623,6 +1623,7 @@ select.field-input {
 
 /* ── Google Places Autocomplete — Dark Override ─────────────── */
 .pac-container {
+  z-index: 9200 !important;
   background: var(--navy-700) !important;
   border: 1px solid var(--border-g) !important;
   border-radius: var(--r-md) !important;

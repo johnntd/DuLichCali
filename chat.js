@@ -94,7 +94,7 @@
       ],
     },
     {
-      id: 'dung-nails', name: 'Dung Nails & Spa',
+      id: 'dung-nails', name: 'Luxurious Nails & Spa',
       category: 'nails', region: 'Bay Area', city: 'San Jose',
       contact: 'Dung Pham', phone: '408-859-6718',
       hours: 'T2-6: 9am-7pm · T7: 9am-6pm · CN: 10am-5pm',
@@ -1173,11 +1173,19 @@
       lines += 'NAIL SALONS:\n';
       nails.forEach(function (biz) {
         lines += '• ' + biz.name + ' [' + (biz.city || '') + '] — ' + biz.phoneDisplay + '\n';
-        if (biz.services && biz.services.length) {
-          lines += '  Services: ' + biz.services.map(function (s) { return s.name + ' ' + s.price; }).join(' · ') + '\n';
+        var activeServices = (biz.services || []).filter(function (s) { return s.active !== false; });
+        if (activeServices.length) {
+          lines += '  Services: ' + activeServices.map(function (s) { return s.name + ' ' + s.price; }).join(' · ') + '\n';
         }
         if (biz.hours) {
           lines += '  Hours: ' + Object.keys(biz.hours).map(function (d) { return d + ': ' + biz.hours[d]; }).join(' | ') + '\n';
+        }
+        var activeStaff = (biz.staff || []).filter(function (m) { return m.active !== false; });
+        if (activeStaff.length) {
+          lines += '  Staff: ' + activeStaff.map(function (m) { return m.name + ' (' + (m.role || '') + (m.specialties && m.specialties.length ? ' · ' + m.specialties.join(', ') : '') + ')'; }).join(' | ') + '\n';
+        }
+        if (biz.features && biz.features.length) {
+          lines += '  Highlights: ' + biz.features.join(' · ') + '\n';
         }
         lines += '  APPOINTMENT: service → date & time → name + phone\n';
       });

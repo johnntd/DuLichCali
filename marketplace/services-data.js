@@ -45,10 +45,10 @@
       featuredPriority: 2,
       featuredRegions: ['bayarea'],
       homepageActive: true,
-      shortPromoText: 'Gel nails & spa cao cấp — đặt lịch ngay',
+      shortPromoText: 'Nail cao cấp & spa sang trọng — đặt lịch ngay',
       availabilityType: 'appointment',
-      name: 'Dung Nails & Spa',
-      tagline: 'Dịch vụ nail cao cấp · Bay Area',
+      name: 'Luxurious Nails & Spa',
+      tagline: 'Nail cao cấp & spa sang trọng · Bay Area',
       region: 'Bay Area',
       city: 'San Jose',
       address: 'San Jose, CA',
@@ -62,18 +62,39 @@
           role: 'Owner & Nail Tech'
         }
       ],
+      staff: [
+        {
+          name: 'Helen',
+          active: true,
+          role: 'Senior Nail Tech',
+          specialties: ['Acrylic Full Set', 'Nail Art', 'Gel Nails']
+        },
+        {
+          name: 'Tracy',
+          active: false,
+          role: 'Nail Tech',
+          specialties: ['Manicure Cơ Bản', 'Pedicure Cơ Bản', 'Gel Nails']
+        }
+      ],
+      features: [
+        'Hơn 10 năm kinh nghiệm tại Bay Area',
+        'Sản phẩm an toàn, không độc hại',
+        'Không gian sang trọng, thoải mái',
+        'Thợ lành nghề, tỉ mỉ từng chi tiết',
+        'Nhận walk-in và đặt lịch trước'
+      ],
       description:
-        'Tiệm nail chuyên nghiệp hơn 10 năm kinh nghiệm tại Bay Area. Sản phẩm an toàn, đội ngũ lành nghề, không gian thoải mái.',
+        'Tiệm nail sang trọng hơn 10 năm kinh nghiệm tại Bay Area. Sản phẩm an toàn, đội ngũ lành nghề, không gian cao cấp và thoải mái.',
       heroImage: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=80',
       heroGradient:
         'linear-gradient(135deg,#831843 0%,#9d174d 40%,#4c1d95 100%)',
       services: [
-        { name: 'Manicure Cơ Bản',  price: '$20+', duration: '45 phút',  desc: 'Làm sạch dũa và sơn móng tay' },
-        { name: 'Pedicure Cơ Bản',  price: '$30+', duration: '60 phút',  desc: 'Chăm sóc toàn diện bàn chân' },
-        { name: 'Gel Nails',         price: '$35+', duration: '60 phút',  desc: 'Sơn gel bền màu 3-4 tuần' },
-        { name: 'Acrylic Full Set',  price: '$45+', duration: '75 phút',  desc: 'Đắp acrylic tạo hình móng đẹp' },
-        { name: 'Nail Art',          price: '$10+', duration: '+30 phút', desc: 'Vẽ hoa văn nghệ thuật' },
-        { name: 'Spa Package',       price: '$65+', duration: '2 giờ',    desc: 'Manicure + pedicure + massage trọn gói' }
+        { name: 'Manicure Cơ Bản',  price: '$20+', duration: '45 phút',  desc: 'Làm sạch dũa và sơn móng tay',                  active: true  },
+        { name: 'Pedicure Cơ Bản',  price: '$30+', duration: '60 phút',  desc: 'Chăm sóc toàn diện bàn chân',                   active: true  },
+        { name: 'Gel Nails',         price: '$35+', duration: '60 phút',  desc: 'Sơn gel bền màu 3-4 tuần',                      active: true  },
+        { name: 'Acrylic Full Set',  price: '$45+', duration: '75 phút',  desc: 'Đắp acrylic tạo hình móng đẹp',                 active: true  },
+        { name: 'Nail Art',          price: '$10+', duration: '+30 phút', desc: 'Vẽ hoa văn nghệ thuật',                          active: true  },
+        { name: 'Spa Package',       price: '$65+', duration: '2 giờ',    desc: 'Manicure + pedicure + massage trọn gói',         active: true  }
       ],
       hours: {
         'Thứ 2–6':    '9:00 AM – 7:00 PM',
@@ -87,10 +108,10 @@
         enabled: true,
         name: 'Lily',
         welcomeMessage:
-          'Xin chào! Tôi là Lily, trợ lý tiệm Dung Nails. Tôi có thể giúp bạn đặt lịch, xem bảng giá hoặc trả lời thắc mắc. Bạn cần gì ạ?',
+          'Xin chào! Tôi là Lily, trợ lý tiệm Luxurious Nails & Spa. Tôi có thể giúp bạn đặt lịch, xem bảng giá hoặc trả lời thắc mắc. Bạn cần gì ạ?',
         quickReplies: ['Bảng giá', 'Đặt lịch', 'Giờ mở cửa', 'Địa chỉ'],
         systemExtra:
-          'You are Lily, receptionist for Dung Nails & Spa in San Jose Bay Area. Owner: Dung Pham 408-859-6718. Specializes in manicure pedicure gel acrylic nails. Always friendly and professional. Answer in same language as customer (Vietnamese or English).'
+          'You are Lily, receptionist for Luxurious Nails & Spa in San Jose Bay Area. Owner: Dung Pham 408-859-6718. Specializes in manicure pedicure gel acrylic nails. Always friendly and professional. Answer in same language as customer (Vietnamese or English).'
       }
     },
 

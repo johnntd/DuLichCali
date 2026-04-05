@@ -1975,10 +1975,11 @@
 
       } else if (biz.bookingType === 'appointment' || biz.availabilityType === 'appointment') {
         // ── APPOINTMENT INTAKE AGENT (nail/hair salons, any future appointment vendor) ──
+        var activeServices = (biz.services || []).filter(function (s) { return s.active !== false; });
         var servicesBlock = '';
-        if (biz.services && biz.services.length) {
+        if (activeServices.length) {
           servicesBlock = 'SERVICES & PRICING:\n';
-          biz.services.forEach(function (s) {
+          activeServices.forEach(function (s) {
             servicesBlock += '- ' + s.name + ': ' + (s.price || '');
             if (s.duration) servicesBlock += ' (' + s.duration + ')';
             if (s.desc)     servicesBlock += ' — ' + s.desc;
@@ -1992,11 +1993,28 @@
           Object.keys(biz.hours).forEach(function (day) { hoursBlock += '- ' + day + ': ' + biz.hours[day] + '\n'; });
           hoursBlock += '\n';
         }
+        var activeStaff = (biz.staff || []).filter(function (m) { return m.active !== false; });
+        var staffBlock = '';
+        if (activeStaff.length) {
+          staffBlock = 'AVAILABLE STAFF:\n';
+          activeStaff.forEach(function (m) {
+            staffBlock += '- ' + m.name + ' (' + (m.role || 'Nail Tech') + ')';
+            if (m.specialties && m.specialties.length) staffBlock += ' · specialties: ' + m.specialties.join(', ');
+            staffBlock += '\n';
+          });
+          staffBlock += '\n';
+        }
+        var featuresBlock = '';
+        if (biz.features && biz.features.length) {
+          featuresBlock = 'SALON HIGHLIGHTS: ' + biz.features.join(' · ') + '\n\n';
+        }
         systemPrompt =
           'You are ' + ai.name + ', appointment assistant for ' + biz.name + '.\n\n' +
           'TODAY: ' + todayStr + '\n"Tomorrow" = ' + tomorrowStr + '\n\n' +
           servicesBlock +
           hoursBlock +
+          staffBlock +
+          featuresBlock +
           'CONTACT:\n- ' + hostName + ': ' + phone + '\n- Address: ' + biz.address + '\n\n' +
           'YOUR JOB — APPOINTMENT INTAKE AGENT:\n' +
           'Collect these fields in order, asking only the next missing one:\n' +

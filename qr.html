@@ -1,169 +1,345 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QR Codes · Du Lịch Cali</title>
+  <title>QR Code Cards · Du Lịch Cali</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;600;700&family=Bodoni+Moda:opsz,wght@6..96,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,600;6..96,700&display=swap" rel="stylesheet">
   <style>
+    /* ── Variables ──────────────────────────────── */
     :root {
       --navy: #0d2f50;
       --gold: #f5a623;
-      --font: 'Jost', system-ui, sans-serif;
+      --bg:   #f2ede6;
+      --card: #ffffff;
+      --font-d: 'Bodoni Moda', Georgia, serif;
+      --font-b: 'Jost', system-ui, sans-serif;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: var(--font);
-      background: #f4f0ea;
+      font-family: var(--font-b);
+      background: var(--bg);
       color: #1a1a1a;
       min-height: 100vh;
-      padding: 2rem 1rem 4rem;
+      padding: 2.5rem 1rem 5rem;
     }
 
+    /* ── Page Header ────────────────────────────── */
     .page-header {
       text-align: center;
-      margin-bottom: 2.5rem;
+      margin-bottom: 3rem;
     }
     .page-header__logo {
-      font-family: 'Bodoni Moda', Georgia, serif;
-      font-size: 1.9rem;
+      font-family: var(--font-d);
+      font-size: 2rem;
       color: var(--navy);
       letter-spacing: .04em;
+      margin-bottom: .25rem;
     }
     .page-header__sub {
-      font-size: .9rem;
-      color: #555;
-      margin-top: .3rem;
+      font-size: .88rem;
+      color: #666;
+      margin-bottom: .35rem;
     }
     .page-header__site {
       display: inline-block;
-      margin-top: .4rem;
-      font-size: .78rem;
+      font-size: .74rem;
       color: var(--navy);
-      opacity: .55;
+      opacity: .5;
       font-family: monospace;
+      letter-spacing: .04em;
     }
 
+    /* ── Print Mode Toggle ──────────────────────── */
+    .mode-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .65rem;
+      margin: 1.5rem auto 0;
+      flex-wrap: wrap;
+    }
+    .mode-label {
+      font-size: .8rem;
+      color: #888;
+    }
+    .toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .45rem 1.1rem;
+      border-radius: 99px;
+      border: 1.5px solid var(--navy);
+      background: transparent;
+      color: var(--navy);
+      font-family: var(--font-b);
+      font-size: .8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .toggle-btn:hover { background: var(--navy); color: #fff; }
+    .toggle-btn.active { background: var(--navy); color: #fff; }
+    .toggle-btn svg { flex-shrink: 0; }
+
+    /* ── QR Grid ────────────────────────────────── */
     .qr-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-      gap: 1.5rem;
-      max-width: 960px;
-      margin: 0 auto;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.75rem;
+      max-width: 1100px;
+      margin: 2.5rem auto 0;
     }
 
+    /* ── QR Card ────────────────────────────────── */
     .qr-card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 1.4rem 1.2rem;
-      text-align: center;
-      box-shadow: 0 2px 14px rgba(0,0,0,.09);
+      background: var(--card);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow:
+        0 2px 6px rgba(0,0,0,.06),
+        0 8px 28px rgba(0,0,0,.11),
+        0 0 0 1px rgba(0,0,0,.04);
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow .2s, transform .2s;
+      page-break-inside: avoid;
+    }
+    .qr-card:hover {
+      box-shadow:
+        0 4px 12px rgba(0,0,0,.09),
+        0 16px 40px rgba(0,0,0,.14),
+        0 0 0 1px rgba(0,0,0,.04);
+      transform: translateY(-3px);
+    }
+
+    /* Top accent bar */
+    .qr-card__accent {
+      height: 4px;
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    /* Hero image banner */
+    .qr-card__hero {
+      width: 100%;
+      height: 148px;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+      flex-shrink: 0;
+    }
+    .qr-card__hero-placeholder {
+      width: 100%;
+      height: 148px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 3.5rem;
+    }
+
+    /* Card body */
+    .qr-card__body {
+      padding: 1.4rem 1.4rem 0;
+      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: .6rem;
-      page-break-inside: avoid;
+      text-align: center;
     }
-    .qr-card__icon { font-size: 2rem; line-height: 1; }
+
+    /* Category badge */
+    .qr-card__badge {
+      display: inline-block;
+      padding: .22rem .7rem;
+      border-radius: 99px;
+      font-size: .63rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: .7rem;
+      color: #fff;
+    }
+
+    /* Title */
     .qr-card__title {
-      font-size: .95rem;
+      font-family: var(--font-d);
+      font-size: 1.35rem;
       font-weight: 700;
       color: var(--navy);
-    }
-    .qr-card__sub {
-      font-size: .72rem;
-      color: #666;
-      line-height: 1.4;
+      letter-spacing: .01em;
+      line-height: 1.2;
+      margin-bottom: .4rem;
     }
 
-    /* The QR image itself */
+    /* Sub */
+    .qr-card__sub {
+      font-size: .82rem;
+      color: #555;
+      line-height: 1.5;
+      margin-bottom: 1.2rem;
+      font-weight: 500;
+    }
+    .qr-card--food .qr-card__sub {
+      font-size: .88rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    /* QR image */
     .qr-card__img {
-      width: 180px;
-      height: 180px;
+      width: 210px;
+      height: 210px;
       border: 3px solid var(--navy);
-      border-radius: 10px;
+      border-radius: 12px;
       display: block;
       background: #fff;
+      margin: 0 auto .9rem;
     }
 
+    /* CTA line */
+    .qr-card__cta {
+      font-size: .9rem;
+      font-weight: 700;
+      color: var(--navy);
+      letter-spacing: .01em;
+      margin-bottom: .6rem;
+    }
+
+    /* URL */
     .qr-card__url {
-      font-size: .68rem;
-      color: #888;
+      font-size: .64rem;
+      color: #aaa;
       word-break: break-all;
       font-family: monospace;
-      line-height: 1.4;
+      letter-spacing: .02em;
+      margin-bottom: 1.2rem;
     }
 
+    /* Action buttons */
     .qr-card__actions {
       display: flex;
       gap: .5rem;
-      flex-wrap: wrap;
       justify-content: center;
+      padding: 0 1.4rem 1.4rem;
+      flex-wrap: wrap;
     }
     .qr-btn {
       font-size: .72rem;
-      padding: .3rem .75rem;
+      padding: .32rem .8rem;
       border-radius: 20px;
       border: 1.5px solid var(--navy);
       background: transparent;
       color: var(--navy);
       cursor: pointer;
-      font-family: var(--font);
+      font-family: var(--font-b);
+      font-weight: 600;
       transition: background .15s, color .15s;
       text-decoration: none;
-      display: inline-block;
-      line-height: 1.6;
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      line-height: 1.7;
     }
     .qr-btn:hover { background: var(--navy); color: #fff; }
     .qr-btn--dl { background: var(--navy); color: #fff; border-color: var(--navy); }
     .qr-btn--dl:hover { opacity: .85; }
-    .qr-btn.copied { background: #22c55e; border-color: #22c55e; color: #fff; }
+    .qr-btn.copied { background: #16a34a; border-color: #16a34a; color: #fff; }
 
+    /* Page actions */
     .page-actions {
       display: flex;
       gap: 1rem;
       justify-content: center;
-      margin: 2.5rem auto 0;
+      margin: 3rem auto 0;
       flex-wrap: wrap;
-      max-width: 960px;
+      max-width: 1100px;
     }
     .btn {
-      padding: .65rem 1.8rem;
-      border-radius: 24px;
+      padding: .7rem 2rem;
+      border-radius: 26px;
       font-size: .9rem;
-      font-family: var(--font);
-      font-weight: 600;
+      font-family: var(--font-b);
+      font-weight: 700;
       cursor: pointer;
       border: none;
-      transition: opacity .15s;
+      transition: opacity .15s, transform .15s;
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
     }
-    .btn:hover { opacity: .85; }
+    .btn:hover { opacity: .86; transform: translateY(-1px); }
     .btn--primary   { background: var(--navy); color: #fff; }
     .btn--secondary { background: var(--gold); color: var(--navy); }
 
     .notice {
       text-align: center;
-      font-size: .8rem;
-      color: #888;
+      font-size: .78rem;
+      color: #999;
       margin-top: 1rem;
     }
 
-    @media (max-width: 520px) {
-      .qr-grid { grid-template-columns: 1fr 1fr; gap: .9rem; }
-      .qr-card { padding: .9rem .7rem; }
-      .qr-card__img { width: 130px; height: 130px; }
+    /* ══ PRINT MODE (screen toggle) ══════════════ */
+    body.print-mode {
+      background: #fff;
+      padding: 1rem;
+    }
+    body.print-mode .qr-card {
+      box-shadow: 0 0 0 1px #ddd;
+      border-radius: 14px;
+      transform: none !important;
+    }
+    body.print-mode .qr-card:hover { transform: none; box-shadow: 0 0 0 1px #ddd; }
+    body.print-mode .qr-card__actions,
+    body.print-mode .page-actions,
+    body.print-mode .notice,
+    body.print-mode .mode-toggle { display: none !important; }
+    body.print-mode .qr-grid {
+      gap: 1.25rem;
+      grid-template-columns: repeat(3, 1fr);
+      max-width: 900px;
+    }
+    body.print-mode .page-header { margin-bottom: 1.5rem; }
+    body.print-mode .qr-card__img { width: 180px; height: 180px; }
+    body.print-mode .qr-card__hero { height: 120px; }
+    body.print-mode .qr-card__hero-placeholder { height: 120px; }
+
+    /* ══ @MEDIA PRINT ═════════════════════════════ */
+    @media print {
+      body { background: white !important; padding: .5rem !important; }
+      .qr-card__actions,
+      .page-actions,
+      .notice,
+      .mode-toggle { display: none !important; }
+      .qr-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: .85rem !important;
+        max-width: 100% !important;
+      }
+      .qr-card { box-shadow: none !important; border: 1px solid #ccc !important; border-radius: 10px !important; }
+      .qr-card__img { width: 160px !important; height: 160px !important; }
+      .qr-card__hero { height: 110px !important; }
+      .qr-card__hero-placeholder { height: 110px !important; }
+      .page-header { margin-bottom: 1rem !important; }
     }
 
-    @media print {
-      body { background: white; padding: .5rem; }
-      .page-actions, .qr-btn, .notice { display: none !important; }
-      .qr-grid { grid-template-columns: repeat(3, 1fr); gap: .75rem; max-width: 100%; }
-      .qr-card { box-shadow: none; border: 1px solid #ccc; padding: .75rem; }
-      .qr-card__img { width: 140px; height: 140px; }
-      .page-header { margin-bottom: 1rem; }
+    /* ── Responsive ─────────────────────────────── */
+    @media (max-width: 600px) {
+      .qr-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+      .qr-card__img { width: 160px; height: 160px; }
+      .qr-card__hero { height: 110px; }
+      .qr-card__hero-placeholder { height: 110px; font-size: 2.5rem; }
+      .qr-card__body { padding: 1rem 1rem 0; }
+      .qr-card__title { font-size: 1.1rem; }
+      .qr-card__actions { padding: 0 1rem 1rem; }
+    }
+    @media (max-width: 380px) {
+      .qr-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -171,161 +347,257 @@
 
 <div class="page-header">
   <div class="page-header__logo">Du Lịch Cali</div>
-  <div class="page-header__sub">QR Codes — Quảng cáo mạng xã hội &amp; tài liệu in</div>
+  <div class="page-header__sub">Marketing QR Cards — Social Media &amp; Print Materials</div>
   <div class="page-header__site">www.dulichcali21.com</div>
+
+  <div class="mode-toggle">
+    <span class="mode-label">View:</span>
+    <button class="toggle-btn active" id="btnScreen" onclick="setMode('screen')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      Screen
+    </button>
+    <button class="toggle-btn" id="btnPrint" onclick="setMode('print')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Print Layout
+    </button>
+  </div>
 </div>
 
 <div class="qr-grid" id="qrGrid"></div>
 
 <div class="page-actions">
-  <button class="btn btn--primary" onclick="window.print()">In tất cả QR Codes</button>
+  <button class="btn btn--primary" onclick="window.print()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    Print All QR Cards
+  </button>
+  <button class="btn btn--secondary" onclick="setMode('print')">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+    Preview Print Layout
+  </button>
 </div>
-<p class="notice">Bấm "Tải PNG" để lưu từng QR · Bấm "In tất cả" để in toàn bộ trang</p>
+<p class="notice">Click "Download PNG" to save individual QR codes · "Print All" to print poster-ready cards</p>
 
 <script>
-  var BASE = 'https://www.dulichcali21.com';
-  var QR_API = 'https://api.qrserver.com/v1/create-qr-code/';
+  var BASE    = 'https://www.dulichcali21.com';
+  var QR_API  = 'https://api.qrserver.com/v1/create-qr-code/';
 
   var SERVICES = [
     {
-      id:    'food',
-      icon:  '🥟',
-      title: 'Đặt Món Ăn',
-      sub:   'Chả giò · Phở Bắc · Chuối đậu nấu ốc',
-      url:   BASE + '/food',
-      color: 'dark: #0d2f50',
+      id:      'food',
+      title:   'Vietnamese Food',
+      titleVi: 'Đặt Món Ăn',
+      badge:   'Authentic · Handmade',
+      sub:     'Chả Giò  •  Bún Chả Hà Nội  •  Bún Đậu Mắm Tôm',
+      cta:     '👉 Scan to Order',
+      url:     BASE + '/food',
+      accent:  '#f59e0b',
+      img:     '/images/hero-cha-gio.jpg',
     },
     {
-      id:    'nails',
-      icon:  '💅',
-      title: 'Nail Salon',
-      sub:   'Manicure · Pedicure · Gel · Acrylic',
-      url:   BASE + '/nails',
+      id:      'nails',
+      title:   'Nail Salon',
+      titleVi: 'Làm Nail',
+      badge:   'Bay Area & OC',
+      sub:     'Gel · Acrylic · Ombre · Nail Art · Pedicure',
+      cta:     '👉 Scan to Book',
+      url:     BASE + '/nails',
+      accent:  '#f472b6',
+      img:     'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=500&auto=format&fit=crop&q=90',
     },
     {
-      id:    'hair',
-      icon:  '💇',
-      title: 'Salon Tóc',
-      sub:   'Cắt · Nhuộm · Keratin · Uốn · Duỗi',
-      url:   BASE + '/hair',
+      id:      'hair',
+      title:   'Hair Salon',
+      titleVi: 'Salon Tóc',
+      badge:   'Bay Area & OC',
+      sub:     'Color · Balayage · Keratin · Cut & Style',
+      cta:     '👉 Scan to Book',
+      url:     BASE + '/hair',
+      accent:  '#c084fc',
+      img:     'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&auto=format&fit=crop&q=85',
     },
     {
-      id:    'airport',
-      icon:  '✈️',
-      title: 'Đưa Đón Sân Bay',
-      sub:   'LAX · SNA · SFO · SJC · 24/7',
-      url:   BASE + '/airport',
+      id:      'airport',
+      title:   'Airport & Private Rides',
+      titleVi: 'Đưa Đón Sân Bay',
+      badge:   'LAX · SNA · SFO · SJC',
+      sub:     'Fixed Price · 20% Below Uber · Professional Drivers',
+      cta:     '👉 Scan to Book Ride',
+      url:     BASE + '/airport',
+      accent:  '#38bdf8',
+      img:     'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=500&auto=format&fit=crop&q=85',
     },
     {
-      id:    'tour',
-      icon:  '🗺️',
-      title: 'Tour Du Lịch',
-      sub:   'Las Vegas · Yosemite · San Francisco',
-      url:   BASE + '/tour',
+      id:      'tour',
+      title:   'California Tours',
+      titleVi: 'Tour Du Lịch',
+      badge:   'Bilingual Guides',
+      sub:     'Las Vegas · Yosemite · San Francisco · Grand Canyon',
+      cta:     '👉 Scan to Explore',
+      url:     BASE + '/tour',
+      accent:  '#fb923c',
+      img:     'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500&auto=format&fit=crop&q=80',
     },
     {
-      id:    'home',
-      icon:  '🏠',
-      title: 'Trang Chủ',
-      sub:   'Du Lịch Cali — Tất cả dịch vụ',
-      url:   BASE,
+      id:      'home',
+      title:   'All Services',
+      titleVi: 'Tất Cả Dịch Vụ',
+      badge:   'Du Lịch Cali',
+      sub:     'Food · Nails · Hair · Airport · Tours',
+      cta:     '👉 Scan to Discover',
+      url:     BASE,
+      accent:  '#0d2f50',
+      img:     null,  // uses placeholder with brand gradient
     },
   ];
 
+  /* ── QR image URL ───────────────────────────── */
   function qrSrc(url, size) {
-    // api.qrserver.com: free, reliable, no API key needed
     return QR_API + '?size=' + size + 'x' + size +
            '&data=' + encodeURIComponent(url) +
            '&color=0d2f50&bgcolor=ffffff&qzone=1&format=png&ecc=M';
   }
 
+  /* ── Build one card ─────────────────────────── */
   function buildCard(svc) {
     var card = document.createElement('div');
-    card.className = 'qr-card';
+    card.className = 'qr-card qr-card--' + svc.id;
 
-    // Icon + title + sub
-    var icon = document.createElement('div');
-    icon.className = 'qr-card__icon';
-    icon.textContent = svc.icon;
+    /* ── Accent top bar ── */
+    var accentBar = document.createElement('div');
+    accentBar.className = 'qr-card__accent';
+    accentBar.style.background = svc.accent;
+    card.appendChild(accentBar);
 
+    /* ── Hero image ── */
+    if (svc.img) {
+      var hero = document.createElement('img');
+      hero.className = 'qr-card__hero';
+      hero.src = svc.img;
+      hero.alt = svc.title;
+      hero.loading = 'lazy';
+      card.appendChild(hero);
+    } else {
+      /* Home: gradient placeholder */
+      var ph = document.createElement('div');
+      ph.className = 'qr-card__hero-placeholder';
+      ph.style.background = 'linear-gradient(135deg, #0d2f50 0%, #1a4a7e 100%)';
+      var starSpan = document.createElement('span');
+      starSpan.style.cssText = 'font-size:3.2rem;color:#f5a623;text-shadow:0 0 30px rgba(245,166,35,.5)';
+      starSpan.textContent = '✦';
+      ph.appendChild(starSpan);
+      card.appendChild(ph);
+    }
+
+    /* ── Card body ── */
+    var body = document.createElement('div');
+    body.className = 'qr-card__body';
+
+    /* Badge */
+    var badge = document.createElement('div');
+    badge.className = 'qr-card__badge';
+    badge.style.background = svc.accent;
+    badge.textContent = svc.badge;
+    body.appendChild(badge);
+
+    /* Title */
     var title = document.createElement('div');
     title.className = 'qr-card__title';
     title.textContent = svc.title;
+    body.appendChild(title);
 
+    /* Sub */
     var sub = document.createElement('div');
     sub.className = 'qr-card__sub';
     sub.textContent = svc.sub;
+    body.appendChild(sub);
 
-    // QR image — loaded from api.qrserver.com
+    /* QR image */
     var img = document.createElement('img');
     img.className = 'qr-card__img';
-    img.src = qrSrc(svc.url, 300);  // request 300px for crispness, display at 180px
-    img.alt = 'QR code cho ' + svc.title;
+    img.src = qrSrc(svc.url, 420);   /* 420px from API → displays at 210px (2×) */
+    img.alt = 'QR code for ' + svc.title;
     img.loading = 'lazy';
+    body.appendChild(img);
 
-    // URL display
+    /* CTA */
+    var cta = document.createElement('div');
+    cta.className = 'qr-card__cta';
+    cta.textContent = svc.cta;
+    body.appendChild(cta);
+
+    /* URL */
     var urlDiv = document.createElement('div');
     urlDiv.className = 'qr-card__url';
     urlDiv.textContent = svc.url;
+    body.appendChild(urlDiv);
 
-    // Action buttons
+    card.appendChild(body);
+
+    /* ── Action buttons ── */
     var actions = document.createElement('div');
     actions.className = 'qr-card__actions';
 
-    // Copy link button
+    /* Copy link */
     var copyBtn = document.createElement('button');
     copyBtn.className = 'qr-btn';
-    copyBtn.textContent = 'Sao chép link';
+    copyBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy Link';
     copyBtn.onclick = function() {
       navigator.clipboard.writeText(svc.url).then(function() {
-        copyBtn.textContent = 'Đã sao chép!';
+        copyBtn.textContent = '✓ Copied!';
         copyBtn.classList.add('copied');
         setTimeout(function() {
-          copyBtn.textContent = 'Sao chép link';
+          copyBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy Link';
           copyBtn.classList.remove('copied');
         }, 2000);
       }).catch(function() {
-        // Fallback for browsers without clipboard API
         var tmp = document.createElement('input');
         tmp.value = svc.url;
         document.body.appendChild(tmp);
         tmp.select();
         document.execCommand('copy');
         document.body.removeChild(tmp);
-        copyBtn.textContent = 'Đã sao chép!';
+        copyBtn.textContent = '✓ Copied!';
         copyBtn.classList.add('copied');
         setTimeout(function() {
-          copyBtn.textContent = 'Sao chép link';
+          copyBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy Link';
           copyBtn.classList.remove('copied');
         }, 2000);
       });
     };
 
-    // Download PNG button — links directly to API with download filename
+    /* Download PNG */
     var dlLink = document.createElement('a');
     dlLink.className = 'qr-btn qr-btn--dl';
-    dlLink.textContent = 'Tải PNG';
-    dlLink.href = qrSrc(svc.url, 400);  // 400px for download quality
-    dlLink.download = 'qr-dulicali-' + svc.id + '.png';
-    dlLink.target = '_blank';  // fallback if download attr doesn't work cross-origin
+    dlLink.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download PNG';
+    dlLink.href = qrSrc(svc.url, 600);   /* 600px for download */
+    dlLink.download = 'qr-dulichcali-' + svc.id + '.png';
+    dlLink.target = '_blank';
 
     actions.appendChild(copyBtn);
     actions.appendChild(dlLink);
-
-    card.appendChild(icon);
-    card.appendChild(title);
-    card.appendChild(sub);
-    card.appendChild(img);
-    card.appendChild(urlDiv);
     card.appendChild(actions);
 
     return card;
   }
 
+  /* ── Render grid ────────────────────────────── */
   var grid = document.getElementById('qrGrid');
   SERVICES.forEach(function(svc) {
     grid.appendChild(buildCard(svc));
   });
+
+  /* ── Print mode toggle ─────────────────────── */
+  function setMode(mode) {
+    if (mode === 'print') {
+      document.body.classList.add('print-mode');
+      document.getElementById('btnPrint').classList.add('active');
+      document.getElementById('btnScreen').classList.remove('active');
+    } else {
+      document.body.classList.remove('print-mode');
+      document.getElementById('btnScreen').classList.add('active');
+      document.getElementById('btnPrint').classList.remove('active');
+    }
+  }
 </script>
 </body>
 </html>

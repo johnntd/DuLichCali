@@ -4,15 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QR Codes · Du Lịch Cali</title>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;600;700&family=Bodoni+Moda:opsz,wght@6..96,700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --navy: #0d2f50; --navy-800: #123b62;
-      --gold: #f5a623; --cream: #fff8ee;
+      --navy: #0d2f50;
+      --gold: #f5a623;
       --font: 'Jost', system-ui, sans-serif;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    @import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;600;700&family=Bodoni+Moda:opsz,wght@6..96,700&display=swap');
 
     body {
       font-family: var(--font);
@@ -28,7 +29,7 @@
     }
     .page-header__logo {
       font-family: 'Bodoni Moda', Georgia, serif;
-      font-size: 1.8rem;
+      font-size: 1.9rem;
       color: var(--navy);
       letter-spacing: .04em;
     }
@@ -39,81 +40,98 @@
     }
     .page-header__site {
       display: inline-block;
-      margin-top: .5rem;
-      font-size: .8rem;
+      margin-top: .4rem;
+      font-size: .78rem;
       color: var(--navy);
-      opacity: .6;
+      opacity: .55;
+      font-family: monospace;
     }
 
     .qr-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
       gap: 1.5rem;
-      max-width: 900px;
+      max-width: 960px;
       margin: 0 auto;
     }
 
     .qr-card {
       background: #fff;
       border-radius: 16px;
-      padding: 1.5rem;
+      padding: 1.4rem 1.2rem;
       text-align: center;
-      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+      box-shadow: 0 2px 14px rgba(0,0,0,.09);
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: .75rem;
+      gap: .6rem;
       page-break-inside: avoid;
     }
-    .qr-card__icon {
-      font-size: 2rem;
-      line-height: 1;
-    }
+    .qr-card__icon { font-size: 2rem; line-height: 1; }
     .qr-card__title {
-      font-size: 1rem;
+      font-size: .95rem;
       font-weight: 700;
       color: var(--navy);
     }
     .qr-card__sub {
-      font-size: .75rem;
+      font-size: .72rem;
       color: #666;
       line-height: 1.4;
     }
-    .qr-card canvas {
-      border-radius: 8px;
+
+    /* The QR image itself */
+    .qr-card__img {
+      width: 180px;
+      height: 180px;
       border: 3px solid var(--navy);
+      border-radius: 10px;
       display: block;
+      background: #fff;
     }
+
     .qr-card__url {
-      font-size: .7rem;
+      font-size: .68rem;
       color: #888;
       word-break: break-all;
       font-family: monospace;
+      line-height: 1.4;
     }
-    .qr-card__copy {
-      font-size: .75rem;
-      padding: .35rem .85rem;
-      border: 1.5px solid var(--navy);
+
+    .qr-card__actions {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .qr-btn {
+      font-size: .72rem;
+      padding: .3rem .75rem;
       border-radius: 20px;
+      border: 1.5px solid var(--navy);
       background: transparent;
       color: var(--navy);
       cursor: pointer;
       font-family: var(--font);
       transition: background .15s, color .15s;
+      text-decoration: none;
+      display: inline-block;
+      line-height: 1.6;
     }
-    .qr-card__copy:hover { background: var(--navy); color: #fff; }
-    .qr-card__copy.copied { background: #22c55e; border-color: #22c55e; color: #fff; }
+    .qr-btn:hover { background: var(--navy); color: #fff; }
+    .qr-btn--dl { background: var(--navy); color: #fff; border-color: var(--navy); }
+    .qr-btn--dl:hover { opacity: .85; }
+    .qr-btn.copied { background: #22c55e; border-color: #22c55e; color: #fff; }
 
-    .actions {
+    .page-actions {
       display: flex;
       gap: 1rem;
       justify-content: center;
-      margin: 2rem auto 0;
+      margin: 2.5rem auto 0;
       flex-wrap: wrap;
-      max-width: 900px;
+      max-width: 960px;
     }
     .btn {
-      padding: .65rem 1.6rem;
+      padding: .65rem 1.8rem;
       border-radius: 24px;
       font-size: .9rem;
       font-family: var(--font);
@@ -123,7 +141,7 @@
       transition: opacity .15s;
     }
     .btn:hover { opacity: .85; }
-    .btn--primary { background: var(--navy); color: #fff; }
+    .btn--primary   { background: var(--navy); color: #fff; }
     .btn--secondary { background: var(--gold); color: var(--navy); }
 
     .notice {
@@ -133,17 +151,19 @@
       margin-top: 1rem;
     }
 
-    @media (max-width: 500px) {
-      .qr-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
-      .qr-card { padding: 1rem; }
+    @media (max-width: 520px) {
+      .qr-grid { grid-template-columns: 1fr 1fr; gap: .9rem; }
+      .qr-card { padding: .9rem .7rem; }
+      .qr-card__img { width: 130px; height: 130px; }
     }
 
     @media print {
-      body { background: white; padding: 0; }
-      .actions, .qr-card__copy, .notice { display: none; }
-      .qr-grid { grid-template-columns: repeat(3, 1fr); gap: 1rem; max-width: 100%; }
-      .qr-card { box-shadow: none; border: 1px solid #ddd; }
-      .page-header { margin-bottom: 1.5rem; }
+      body { background: white; padding: .5rem; }
+      .page-actions, .qr-btn, .notice { display: none !important; }
+      .qr-grid { grid-template-columns: repeat(3, 1fr); gap: .75rem; max-width: 100%; }
+      .qr-card { box-shadow: none; border: 1px solid #ccc; padding: .75rem; }
+      .qr-card__img { width: 140px; height: 140px; }
+      .page-header { margin-bottom: 1rem; }
     }
   </style>
 </head>
@@ -151,28 +171,29 @@
 
 <div class="page-header">
   <div class="page-header__logo">Du Lịch Cali</div>
-  <div class="page-header__sub">QR Codes — Dùng cho mạng xã hội và tài liệu in</div>
-  <span class="page-header__site">www.dulichcali21.com</span>
+  <div class="page-header__sub">QR Codes — Quảng cáo mạng xã hội &amp; tài liệu in</div>
+  <div class="page-header__site">www.dulichcali21.com</div>
 </div>
 
 <div class="qr-grid" id="qrGrid"></div>
 
-<div class="actions">
+<div class="page-actions">
   <button class="btn btn--primary" onclick="window.print()">In tất cả QR Codes</button>
-  <button class="btn btn--secondary" onclick="downloadAll()">Tải xuống (ZIP)</button>
 </div>
-<p class="notice">Mỗi QR code dẫn thẳng vào dịch vụ — không cần đi qua trang chủ.</p>
+<p class="notice">Bấm "Tải PNG" để lưu từng QR · Bấm "In tất cả" để in toàn bộ trang</p>
 
 <script>
-  const BASE = 'https://www.dulichcali21.com';
+  var BASE = 'https://www.dulichcali21.com';
+  var QR_API = 'https://api.qrserver.com/v1/create-qr-code/';
 
-  const SERVICES = [
+  var SERVICES = [
     {
       id:    'food',
       icon:  '🥟',
       title: 'Đặt Món Ăn',
       sub:   'Chả giò · Phở Bắc · Chuối đậu nấu ốc',
       url:   BASE + '/food',
+      color: 'dark: #0d2f50',
     },
     {
       id:    'nails',
@@ -211,25 +232,49 @@
     },
   ];
 
-  const QR_SIZE = 180;
-  const canvases = {};
+  function qrSrc(url, size) {
+    // api.qrserver.com: free, reliable, no API key needed
+    return QR_API + '?size=' + size + 'x' + size +
+           '&data=' + encodeURIComponent(url) +
+           '&color=0d2f50&bgcolor=ffffff&qzone=1&format=png&ecc=M';
+  }
 
-  async function renderCard(svc) {
-    const card = document.createElement('div');
+  function buildCard(svc) {
+    var card = document.createElement('div');
     card.className = 'qr-card';
 
-    const canvas = document.createElement('canvas');
-    canvases[svc.id] = canvas;
+    // Icon + title + sub
+    var icon = document.createElement('div');
+    icon.className = 'qr-card__icon';
+    icon.textContent = svc.icon;
 
-    await QRCode.toCanvas(canvas, svc.url, {
-      width: QR_SIZE,
-      margin: 1,
-      color: { dark: '#0d2f50', light: '#ffffff' },
-      errorCorrectionLevel: 'M',
-    });
+    var title = document.createElement('div');
+    title.className = 'qr-card__title';
+    title.textContent = svc.title;
 
-    const copyBtn = document.createElement('button');
-    copyBtn.className = 'qr-card__copy';
+    var sub = document.createElement('div');
+    sub.className = 'qr-card__sub';
+    sub.textContent = svc.sub;
+
+    // QR image — loaded from api.qrserver.com
+    var img = document.createElement('img');
+    img.className = 'qr-card__img';
+    img.src = qrSrc(svc.url, 300);  // request 300px for crispness, display at 180px
+    img.alt = 'QR code cho ' + svc.title;
+    img.loading = 'lazy';
+
+    // URL display
+    var urlDiv = document.createElement('div');
+    urlDiv.className = 'qr-card__url';
+    urlDiv.textContent = svc.url;
+
+    // Action buttons
+    var actions = document.createElement('div');
+    actions.className = 'qr-card__actions';
+
+    // Copy link button
+    var copyBtn = document.createElement('button');
+    copyBtn.className = 'qr-btn';
     copyBtn.textContent = 'Sao chép link';
     copyBtn.onclick = function() {
       navigator.clipboard.writeText(svc.url).then(function() {
@@ -239,56 +284,48 @@
           copyBtn.textContent = 'Sao chép link';
           copyBtn.classList.remove('copied');
         }, 2000);
+      }).catch(function() {
+        // Fallback for browsers without clipboard API
+        var tmp = document.createElement('input');
+        tmp.value = svc.url;
+        document.body.appendChild(tmp);
+        tmp.select();
+        document.execCommand('copy');
+        document.body.removeChild(tmp);
+        copyBtn.textContent = 'Đã sao chép!';
+        copyBtn.classList.add('copied');
+        setTimeout(function() {
+          copyBtn.textContent = 'Sao chép link';
+          copyBtn.classList.remove('copied');
+        }, 2000);
       });
     };
 
-    card.innerHTML =
-      '<div class="qr-card__icon">' + svc.icon + '</div>' +
-      '<div class="qr-card__title">' + svc.title + '</div>' +
-      '<div class="qr-card__sub">'   + svc.sub   + '</div>';
-    card.appendChild(canvas);
-    card.innerHTML += '<div class="qr-card__url">' + svc.url + '</div>';
-    card.appendChild(copyBtn);
+    // Download PNG button — links directly to API with download filename
+    var dlLink = document.createElement('a');
+    dlLink.className = 'qr-btn qr-btn--dl';
+    dlLink.textContent = 'Tải PNG';
+    dlLink.href = qrSrc(svc.url, 400);  // 400px for download quality
+    dlLink.download = 'qr-dulicali-' + svc.id + '.png';
+    dlLink.target = '_blank';  // fallback if download attr doesn't work cross-origin
+
+    actions.appendChild(copyBtn);
+    actions.appendChild(dlLink);
+
+    card.appendChild(icon);
+    card.appendChild(title);
+    card.appendChild(sub);
+    card.appendChild(img);
+    card.appendChild(urlDiv);
+    card.appendChild(actions);
 
     return card;
   }
 
-  async function init() {
-    const grid = document.getElementById('qrGrid');
-    for (const svc of SERVICES) {
-      const card = await renderCard(svc);
-      grid.appendChild(card);
-    }
-  }
-
-  // Download individual canvas as PNG
-  function downloadCanvas(canvas, filename) {
-    const link = document.createElement('a');
-    link.download = filename;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  }
-
-  // Download all QR codes one by one (browsers block ZIP without server)
-  function downloadAll() {
-    SERVICES.forEach(function(svc) {
-      const canvas = canvases[svc.id];
-      if (canvas) {
-        setTimeout(function() { downloadCanvas(canvas, 'qr-' + svc.id + '.png'); }, 300 * SERVICES.indexOf(svc));
-      }
-    });
-  }
-
-  // Allow clicking a canvas to download it
-  document.getElementById('qrGrid').addEventListener('click', function(e) {
-    const canvas = e.target.closest('.qr-card') && e.target.closest('.qr-card').querySelector('canvas');
-    if (e.target.tagName === 'CANVAS' && canvas) {
-      const svc = SERVICES.find(function(s) { return canvases[s.id] === canvas; });
-      if (svc) downloadCanvas(canvas, 'qr-' + svc.id + '.png');
-    }
+  var grid = document.getElementById('qrGrid');
+  SERVICES.forEach(function(svc) {
+    grid.appendChild(buildCard(svc));
   });
-
-  init();
 </script>
 </body>
 </html>

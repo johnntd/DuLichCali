@@ -5,11 +5,13 @@
 window.RideIntake = (function () {
   'use strict';
 
-  // ── Van constants ────────────────────────────────────────────────────────────
+  // ── Vehicle rate card (calibrated to real UberXL prices, −20% for DLC) ──────
+  // Uber XL actual: $25–35 for 10 mi / 17 min in Bay Area/SoCal
+  // base $3 + booking $2.50 + 10×$2.30 + 17×$0.30 ≈ $34 — matches real UberXL
   var VAN = {
-    name: '12-Seat Mercedes Sprinter Van',
-    mpg: 14, wearPerMile: 0.22, discount: 0.20,
-    uber: { base: 10.00, perMile: 5.50, perMin: 0.90, bookingFee: 7.50, minFare: 65.00 },
+    name: 'Tesla Model Y',
+    mpg: 999, wearPerMile: 0.08, discount: 0.20,
+    uber: { base: 3.00, perMile: 2.30, perMin: 0.30, bookingFee: 2.50, minFare: 25.00 },
   };
 
   // ── Airport data ─────────────────────────────────────────────────────────────

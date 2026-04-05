@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Codes · Du Lịch Cali</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <style>
+    :root {
+      --navy: #0d2f50; --navy-800: #123b62;
+      --gold: #f5a623; --cream: #fff8ee;
+      --font: 'Jost', system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    @import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;600;700&family=Bodoni+Moda:opsz,wght@6..96,700&display=swap');
+
+    body {
+      font-family: var(--font);
+      background: #f4f0ea;
+      color: #1a1a1a;
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    .page-header__logo {
+      font-family: 'Bodoni Moda', Georgia, serif;
+      font-size: 1.8rem;
+      color: var(--navy);
+      letter-spacing: .04em;
+    }
+    .page-header__sub {
+      font-size: .9rem;
+      color: #555;
+      margin-top: .3rem;
+    }
+    .page-header__site {
+      display: inline-block;
+      margin-top: .5rem;
+      font-size: .8rem;
+      color: var(--navy);
+      opacity: .6;
+    }
+
+    .qr-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1.5rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .qr-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 1.5rem;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .75rem;
+      page-break-inside: avoid;
+    }
+    .qr-card__icon {
+      font-size: 2rem;
+      line-height: 1;
+    }
+    .qr-card__title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .qr-card__sub {
+      font-size: .75rem;
+      color: #666;
+      line-height: 1.4;
+    }
+    .qr-card canvas {
+      border-radius: 8px;
+      border: 3px solid var(--navy);
+      display: block;
+    }
+    .qr-card__url {
+      font-size: .7rem;
+      color: #888;
+      word-break: break-all;
+      font-family: monospace;
+    }
+    .qr-card__copy {
+      font-size: .75rem;
+      padding: .35rem .85rem;
+      border: 1.5px solid var(--navy);
+      border-radius: 20px;
+      background: transparent;
+      color: var(--navy);
+      cursor: pointer;
+      font-family: var(--font);
+      transition: background .15s, color .15s;
+    }
+    .qr-card__copy:hover { background: var(--navy); color: #fff; }
+    .qr-card__copy.copied { background: #22c55e; border-color: #22c55e; color: #fff; }
+
+    .actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin: 2rem auto 0;
+      flex-wrap: wrap;
+      max-width: 900px;
+    }
+    .btn {
+      padding: .65rem 1.6rem;
+      border-radius: 24px;
+      font-size: .9rem;
+      font-family: var(--font);
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity .15s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn--primary { background: var(--navy); color: #fff; }
+    .btn--secondary { background: var(--gold); color: var(--navy); }
+
+    .notice {
+      text-align: center;
+      font-size: .8rem;
+      color: #888;
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 500px) {
+      .qr-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+      .qr-card { padding: 1rem; }
+    }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .actions, .qr-card__copy, .notice { display: none; }
+      .qr-grid { grid-template-columns: repeat(3, 1fr); gap: 1rem; max-width: 100%; }
+      .qr-card { box-shadow: none; border: 1px solid #ddd; }
+      .page-header { margin-bottom: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="page-header__logo">Du Lịch Cali</div>
+  <div class="page-header__sub">QR Codes — Dùng cho mạng xã hội và tài liệu in</div>
+  <span class="page-header__site">www.dulichcali21.com</span>
+</div>
+
+<div class="qr-grid" id="qrGrid"></div>
+
+<div class="actions">
+  <button class="btn btn--primary" onclick="window.print()">In tất cả QR Codes</button>
+  <button class="btn btn--secondary" onclick="downloadAll()">Tải xuống (ZIP)</button>
+</div>
+<p class="notice">Mỗi QR code dẫn thẳng vào dịch vụ — không cần đi qua trang chủ.</p>
+
+<script>
+  const BASE = 'https://www.dulichcali21.com';
+
+  const SERVICES = [
+    {
+      id:    'food',
+      icon:  '🥟',
+      title: 'Đặt Món Ăn',
+      sub:   'Chả giò · Phở Bắc · Chuối đậu nấu ốc',
+      url:   BASE + '/food',
+    },
+    {
+      id:    'nails',
+      icon:  '💅',
+      title: 'Nail Salon',
+      sub:   'Manicure · Pedicure · Gel · Acrylic',
+      url:   BASE + '/nails',
+    },
+    {
+      id:    'hair',
+      icon:  '💇',
+      title: 'Salon Tóc',
+      sub:   'Cắt · Nhuộm · Keratin · Uốn · Duỗi',
+      url:   BASE + '/hair',
+    },
+    {
+      id:    'airport',
+      icon:  '✈️',
+      title: 'Đưa Đón Sân Bay',
+      sub:   'LAX · SNA · SFO · SJC · 24/7',
+      url:   BASE + '/airport',
+    },
+    {
+      id:    'tour',
+      icon:  '🗺️',
+      title: 'Tour Du Lịch',
+      sub:   'Las Vegas · Yosemite · San Francisco',
+      url:   BASE + '/tour',
+    },
+    {
+      id:    'home',
+      icon:  '🏠',
+      title: 'Trang Chủ',
+      sub:   'Du Lịch Cali — Tất cả dịch vụ',
+      url:   BASE,
+    },
+  ];
+
+  const QR_SIZE = 180;
+  const canvases = {};
+
+  async function renderCard(svc) {
+    const card = document.createElement('div');
+    card.className = 'qr-card';
+
+    const canvas = document.createElement('canvas');
+    canvases[svc.id] = canvas;
+
+    await QRCode.toCanvas(canvas, svc.url, {
+      width: QR_SIZE,
+      margin: 1,
+      color: { dark: '#0d2f50', light: '#ffffff' },
+      errorCorrectionLevel: 'M',
+    });
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'qr-card__copy';
+    copyBtn.textContent = 'Sao chép link';
+    copyBtn.onclick = function() {
+      navigator.clipboard.writeText(svc.url).then(function() {
+        copyBtn.textContent = 'Đã sao chép!';
+        copyBtn.classList.add('copied');
+        setTimeout(function() {
+          copyBtn.textContent = 'Sao chép link';
+          copyBtn.classList.remove('copied');
+        }, 2000);
+      });
+    };
+
+    card.innerHTML =
+      '<div class="qr-card__icon">' + svc.icon + '</div>' +
+      '<div class="qr-card__title">' + svc.title + '</div>' +
+      '<div class="qr-card__sub">'   + svc.sub   + '</div>';
+    card.appendChild(canvas);
+    card.innerHTML += '<div class="qr-card__url">' + svc.url + '</div>';
+    card.appendChild(copyBtn);
+
+    return card;
+  }
+
+  async function init() {
+    const grid = document.getElementById('qrGrid');
+    for (const svc of SERVICES) {
+      const card = await renderCard(svc);
+      grid.appendChild(card);
+    }
+  }
+
+  // Download individual canvas as PNG
+  function downloadCanvas(canvas, filename) {
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }
+
+  // Download all QR codes one by one (browsers block ZIP without server)
+  function downloadAll() {
+    SERVICES.forEach(function(svc) {
+      const canvas = canvases[svc.id];
+      if (canvas) {
+        setTimeout(function() { downloadCanvas(canvas, 'qr-' + svc.id + '.png'); }, 300 * SERVICES.indexOf(svc));
+      }
+    });
+  }
+
+  // Allow clicking a canvas to download it
+  document.getElementById('qrGrid').addEventListener('click', function(e) {
+    const canvas = e.target.closest('.qr-card') && e.target.closest('.qr-card').querySelector('canvas');
+    if (e.target.tagName === 'CANVAS' && canvas) {
+      const svc = SERVICES.find(function(s) { return canvases[s.id] === canvas; });
+      if (svc) downloadCanvas(canvas, 'qr-' + svc.id + '.png');
+    }
+  });
+
+  init();
+</script>
+</body>
+</html>

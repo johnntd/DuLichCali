@@ -117,11 +117,33 @@ window.addEventListener('popstate', function () {
 });
 
 // Hash-based deep linking (from marketplace bottom nav links like ../#travel)
+// Query-param entry routing: ?entry=airport|tour|marketplace|food|hair|nails
 document.addEventListener('DOMContentLoaded', function () {
-  const hash = location.hash;
+  const hash  = location.hash;
+  const entry = new URLSearchParams(location.search).get('entry');
+
   if      (hash === '#travel' || hash === '#destinations') switchScreen('screenDest');
   else if (hash === '#ai'     || hash === '#chat')         switchScreen('screenChat');
   else if (hash === '#book'   || hash === '#booking')      switchScreen('screenBook');
+
+  // entry= param: used by QR codes and social media deep links
+  // Delay to allow DLChat.init() and all module setup to complete first
+  if (entry) {
+    setTimeout(function () {
+      if (entry === 'airport' || entry === 'ride') {
+        switchScreen('screenChat');
+        setTimeout(function () { if (window.DLChat && DLChat.openWithMode) DLChat.openWithMode('airport'); }, 200);
+        setTimeout(function () { if (window.DLChat && DLChat.startFlow) DLChat.startFlow('airport'); }, 250);
+      } else if (entry === 'tour') {
+        switchScreen('screenChat');
+        setTimeout(function () { if (window.DLChat && DLChat.openWithMode) DLChat.openWithMode('tour'); }, 200);
+        setTimeout(function () { if (window.DLChat && DLChat.startFlow) DLChat.startFlow('tour'); }, 250);
+      } else if (entry === 'marketplace' || entry === 'food' || entry === 'hair' || entry === 'nails') {
+        openMarketplaceChat();
+      }
+    }, 600);
+  }
+
   _updateBackBtn(); // initialise back button state
 });
 

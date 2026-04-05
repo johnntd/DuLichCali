@@ -819,6 +819,14 @@ function mktCta(cat) {
 /* ── Init on DOM ready ── */
 document.addEventListener('DOMContentLoaded', function () {
   MktCarousel.init();
+
+  // Deep-link entry: ?cat=food|hair|nails auto-activates the category filter
+  // Used by QR codes, social media links, and direct service links
+  var deepCat = new URLSearchParams(window.location.search).get('cat');
+  if (deepCat && deepCat !== 'all') {
+    // Small delay so the carousel finishes init before we scroll
+    setTimeout(function () { mktCta(deepCat); }, 120);
+  }
 });
 </script>
 </body>

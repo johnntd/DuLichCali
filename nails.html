@@ -235,10 +235,33 @@
     </a>
   </div>
 
-  <a href="/" class="lp-back">← Về trang chủ Du Lịch Cali</a>
+  <section id="lpVendorSection" class="home-section" style="padding:1.5rem 0 .5rem;">
+    <div class="section-hdr" style="padding:0 1rem;">
+      <h2 class="section-title">Tiệm Nail</h2>
+    </div>
+    <div id="lpVendorGrid"></div>
+  </section>
+
+  <div id="lpNav"></div>
 
 </div>
 
+<script src="/marketplace/services-data.js"></script>
+<script src="/landing-nav.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    LandingNav.init({
+      category: 'nails',
+      aiEntry:  'marketplace',
+      tab1Label: 'Nail Salon',
+      tab1Icon:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 015 5v6a5 5 0 01-10 0V7a5 5 0 015-5z"/><path d="M9 17v2a3 3 0 006 0v-2"/></svg>',
+      tab1Href:  '/nails',
+      tab2Label: 'Đặt Lịch',
+      tab2Href:  '/marketplace/?cat=nails',
+      tab4Label: 'Tiệm Nail',
+    });
+  });
+</script>
 <script>
   (function() {
     var DURATION = 5000, current = 0, timer = null, slides, dots, bar, startX = 0;

@@ -216,7 +216,7 @@
   </div>
 
   <!-- Destination Highlights -->
-  <section class="lp-section home-section">
+  <section id="lpVendorSection" class="lp-section home-section">
     <div class="section-hdr">
       <h2 class="section-title">Điểm Đến Nổi Bật</h2>
     </div>
@@ -300,9 +300,25 @@
     </a>
   </div>
 
-  <a href="/" class="lp-back">← Về trang chủ Du Lịch Cali</a>
+  <div id="lpNav"></div>
 
 </div><!-- /.lp -->
+
+<script src="/landing-nav.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    LandingNav.init({
+      category: 'tour',
+      aiEntry:  'tour',
+      tab1Label: 'Tour',
+      tab1Icon:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 00-8 8c0 5.25 7.5 12 8 12s8-6.75 8-12a8 8 0 00-8-8z"/></svg>',
+      tab1Href:  '/tour',
+      tab2Label: 'Lên Kế Hoạch',
+      tab2Href:  '/?entry=tour',
+      tab4Label: 'Điểm Đến',
+    });
+  });
+</script>
 
 <script>
   (function() {

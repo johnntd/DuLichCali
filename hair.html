@@ -248,10 +248,33 @@
     </a>
   </div>
 
-  <a href="/" class="lp-back">← Về trang chủ Du Lịch Cali</a>
+  <section id="lpVendorSection" class="home-section" style="padding:1.5rem 0 .5rem;">
+    <div class="section-hdr" style="padding:0 1rem;">
+      <h2 class="section-title">Tiệm Tóc</h2>
+    </div>
+    <div id="lpVendorGrid"></div>
+  </section>
+
+  <div id="lpNav"></div>
 
 </div>
 
+<script src="/marketplace/services-data.js"></script>
+<script src="/landing-nav.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    LandingNav.init({
+      category: 'hair',
+      aiEntry:  'marketplace',
+      tab1Label: 'Salon Tóc',
+      tab1Icon:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>',
+      tab1Href:  '/hair',
+      tab2Label: 'Đặt Lịch',
+      tab2Href:  '/marketplace/?cat=hair',
+      tab4Label: 'Tiệm Tóc',
+    });
+  });
+</script>
 <script>
   (function() {
     var DURATION = 5000, current = 0, timer = null, slides, dots, bar, startX = 0;

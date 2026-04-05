@@ -261,10 +261,33 @@
     </a>
   </div>
 
-  <a href="/" class="lp-back">← Về trang chủ Du Lịch Cali</a>
+  <section id="lpVendorSection" class="home-section" style="padding:1.5rem 0 .5rem;">
+    <div class="section-hdr" style="padding:0 1rem;">
+      <h2 class="section-title">Cửa Hàng</h2>
+    </div>
+    <div id="lpVendorGrid"></div>
+  </section>
+
+  <div id="lpNav"></div>
 
 </div>
 
+<script src="/marketplace/services-data.js"></script>
+<script src="/landing-nav.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    LandingNav.init({
+      category: 'food',
+      aiEntry:  'marketplace',
+      tab1Label: 'Ẩm Thực',
+      tab1Icon:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>',
+      tab1Href:  '/food',
+      tab2Label: 'Đặt Món',
+      tab2Href:  '/marketplace/?cat=food',
+      tab4Label: 'Cửa Hàng',
+    });
+  });
+</script>
 <script>
   (function() {
     var DURATION = 5000, current = 0, timer = null, slides, dots, bar, startX = 0;

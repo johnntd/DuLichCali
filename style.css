@@ -3149,12 +3149,13 @@ gmp-placeautocomplete.field-input::part(input):focus {
   z-index: 1;
   background: #0a2344;
   width: 100%;
-  max-height: 92vh;
-  border-radius: 20px 20px 0 0;
+  max-height: 100dvh;
+  border-radius: 16px 16px 0 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 -4px 60px rgba(0,0,0,.38);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Drag handle */
@@ -3309,6 +3310,16 @@ gmp-placeautocomplete.field-input::part(input):focus {
   min-height: 1.6rem;
   transition: color .2s;
 }
+/* ── Inline error message ── */
+.ri-error-msg {
+  font: 600 .78rem var(--font-b, 'Jost', sans-serif);
+  color: #f87171;
+  text-align: center;
+  padding: .3rem 1rem 0;
+  min-height: 1.2rem;
+  transition: opacity .2s;
+}
+.ri-error-msg:empty { opacity: 0; }
 
 /* ── Optional details (collapsible) ── */
 .ri-optional {
@@ -3687,4 +3698,131 @@ gmp-placeautocomplete.ri-input::part(input):focus {
   .ri-picker { padding: 1.25rem 1.25rem 1.5rem; }
   .ri-scrollbody { padding: 1.1rem 1.25rem; }
   .ri-footer { padding: .95rem 1.25rem; }
+}
+
+/* ── Landing Page — Fixed Bottom Nav ────────────────────────── */
+.lp-nav-fixed {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+}
+
+/* ── Landing Page — Vendor Grid ──────────────────────────────── */
+.lp-vendor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+  padding: 0 1rem;
+}
+
+.lp-vendor-card {
+  background: var(--navy-800);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color .22s, transform .22s;
+  -webkit-tap-highlight-color: transparent;
+}
+.lp-vendor-card:hover { border-color: var(--border-g); transform: translateY(-3px); }
+.lp-vendor-card:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+.lp-vendor-card__img {
+  height: 110px;
+  position: relative;
+  overflow: hidden;
+}
+.lp-vendor-card__body { padding: .75rem .75rem .85rem; }
+.lp-vendor-card__name { font-family: var(--font-d); font-size: .9rem; font-weight: 400; color: var(--cream); display: block; margin-bottom: .1rem; }
+.lp-vendor-card__city { font-size: .66rem; color: var(--muted); display: block; }
+.lp-vendor-card__promo { font-size: .68rem; color: var(--gold); display: block; margin-top: .2rem; }
+.lp-vendor-card__hours { font-size: .66rem; color: var(--sky-lt); display: block; margin-top: .15rem; }
+.lp-vendor-card__phone { display: block; margin-top: .5rem; font-size: .76rem; font-weight: 600; color: var(--gold); text-decoration: none; }
+.lp-vendor-card__phone:hover { color: var(--gold-lt); }
+
+/* ── Availability Badge ───────────────────────────────────────── */
+.lp-avail {
+  position: absolute;
+  top: .5rem; right: .5rem;
+  font-size: .62rem; font-weight: 700; letter-spacing: .06em;
+  padding: .2rem .55rem;
+  border-radius: 99px;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.lp-avail--now    { background: rgba(34,197,94,.18);   color: #4ade80; border: 1px solid rgba(34,197,94,.35); }
+.lp-avail--order  { background: rgba(245,158,11,.18);  color: #fbbf24; border: 1px solid rgba(245,158,11,.35); }
+.lp-avail--soon   { background: rgba(99,102,241,.18);  color: #a5b4fc; border: 1px solid rgba(99,102,241,.35); }
+.lp-avail--closed { background: rgba(100,116,139,.14); color: #94a3b8; border: 1px solid rgba(100,116,139,.25); }
+
+/* ── Status Panels (loading / empty) ─────────────────────────── */
+.lp-status-panel { padding: 2rem 1rem; text-align: center; }
+
+.lp-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: .45rem;
+  padding: 3rem 1rem;
+}
+.lp-loading__dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+  animation: lpDotPulse 1.4s infinite ease-in-out both;
+}
+.lp-loading__dot:nth-child(1) { animation-delay: -.32s; }
+.lp-loading__dot:nth-child(2) { animation-delay: -.16s; }
+@keyframes lpDotPulse {
+  0%, 80%, 100% { transform: scale(0); opacity: .4; }
+  40%           { transform: scale(1); opacity: 1; }
+}
+
+.lp-empty__icon  { font-size: 2.2rem; margin-bottom: .75rem; }
+.lp-empty__title { font-family: var(--font-d); font-size: 1rem; color: var(--cream); margin: 0 0 .4rem; }
+.lp-empty__sub   { font-size: .8rem; color: var(--muted); margin: 0 0 1.2rem; line-height: 1.5; }
+.lp-empty__cta {
+  display: inline-flex; align-items: center; gap: .35rem;
+  background: var(--gold); color: var(--navy-900);
+  font-weight: 700; font-size: .82rem; padding: .6rem 1.4rem;
+  border-radius: 99px; text-decoration: none; margin-bottom: .65rem;
+}
+.lp-empty__ai {
+  display: block; font-size: .78rem; color: var(--sky-lt);
+  text-decoration: underline; text-underline-offset: 3px;
+}
+
+/* ── Rides Ready Panel ────────────────────────────────────────── */
+.lp-rides-ready { padding: .5rem 1rem 0; }
+.lp-rides-ready__hdr { margin-bottom: .75rem; }
+.lp-rides-ready__vehicle { font-size: .76rem; color: var(--muted); margin-top: .35rem; }
+.lp-rides-ready__grid { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+
+.lp-rides-tile {
+  background: var(--navy-800);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 1rem .85rem;
+  display: flex; flex-direction: column; align-items: center; gap: .4rem;
+  text-align: center; cursor: pointer;
+  transition: border-color .18s, transform .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.lp-rides-tile:hover { border-color: var(--border-g); transform: translateY(-2px); }
+.lp-rides-tile span    { font-size: 1.6rem; }
+.lp-rides-tile strong  { font-size: .82rem; font-weight: 700; color: var(--cream); display: block; font-family: var(--font-b); }
+.lp-rides-tile em      { font-size: .65rem; color: var(--muted); font-style: normal; display: block; line-height: 1.35; }
+.lp-rides-tile--wide   { grid-column: span 2; }
+
+@media (min-width: 768px) {
+  .lp-vendor-grid { grid-template-columns: repeat(3, 1fr); padding: 0 2rem; }
+  .lp-rides-ready { padding: .5rem 2rem 0; }
+  .lp-rides-ready__grid { grid-template-columns: repeat(3, 1fr); }
+  .lp-rides-tile--wide { grid-column: span 1; }
+}
+@media (min-width: 1200px) {
+  .lp-vendor-grid,
+  .lp-rides-ready { max-width: 960px; margin-left: auto; margin-right: auto; padding-left: 0; padding-right: 0; }
 }

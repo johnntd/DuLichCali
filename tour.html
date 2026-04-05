@@ -2,21 +2,351 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a2344">
   <title>Tour Du Lịch California · Du Lịch Cali</title>
-  <meta name="description" content="Đặt tour du lịch California — Las Vegas, Yosemite, San Francisco, Grand Canyon. Hướng dẫn viên song ngữ.">
+  <meta name="description" content="Tour du lịch California: Las Vegas, Yosemite, San Francisco, Grand Canyon. Hướng dẫn viên song ngữ. Gọi: +1 (408) 916-3439.">
   <meta property="og:title" content="Tour Du Lịch California · Du Lịch Cali">
-  <meta property="og:description" content="Đặt tour du lịch California — Las Vegas, Yosemite, San Francisco. Hướng dẫn viên song ngữ.">
+  <meta property="og:description" content="Tour Las Vegas, Yosemite, San Francisco, Grand Canyon. Hướng dẫn viên song ngữ Việt-Anh.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,300;0,6..96,400;1,6..96,300;1,6..96,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/style.css?v=20260404u">
+  <link rel="stylesheet" href="/desktop.css">
+
   <style>
-    body { margin: 0; background: #0d2f50; display: flex; align-items: center; justify-content: center; height: 100vh; flex-direction: column; gap: 16px; font-family: system-ui, sans-serif; color: #c8e4f8; }
-    .sp { width: 44px; height: 44px; border: 3px solid rgba(245,166,35,.2); border-top-color: #f5a623; border-radius: 50%; animation: spin .7s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    p { font-size: .9rem; opacity: .7; margin: 0; }
+    html, body { height: auto; min-height: 100vh; }
+    body { overflow-y: auto; overflow-x: hidden; }
+
+    .lp { display: flex; flex-direction: column; background: var(--navy-900); min-height: 100vh; }
+
+    .hc { height: 76vh; min-height: 380px; }
+    @media (min-width: 768px) { .hc { height: 70vh; min-height: 460px; } }
+
+    /* Destination highlight cards */
+    .dest-highlights {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .75rem;
+      padding: 0 1rem;
+    }
+    .dest-card-lp {
+      background: var(--navy-800);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color .22s, transform .22s;
+      -webkit-tap-highlight-color: transparent;
+      text-decoration: none;
+      display: block;
+    }
+    .dest-card-lp:hover { border-color: var(--border-g); transform: translateY(-3px); }
+    .dest-card-lp__img {
+      height: 110px;
+      overflow: hidden;
+      position: relative;
+    }
+    .dest-card-lp__img img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+    .dest-card-lp:hover .dest-card-lp__img img { transform: scale(1.06); }
+    .dest-card-lp__body { padding: .75rem .7rem; }
+    .dest-card-lp__name {
+      font-family: var(--font-d);
+      font-size: .9rem;
+      font-weight: 400;
+      color: var(--cream);
+      display: block;
+      margin-bottom: .18rem;
+    }
+    .dest-card-lp__sub {
+      font-size: .68rem;
+      color: var(--muted);
+      display: block;
+      line-height: 1.4;
+    }
+    .dest-card-lp__price {
+      font-size: .72rem;
+      color: var(--gold);
+      font-weight: 600;
+      display: block;
+      margin-top: .3rem;
+    }
+
+    /* AI block */
+    .lp-ai {
+      margin: 1rem 1rem 0;
+      background: linear-gradient(135deg, var(--navy-800) 0%, #0e2c54 100%);
+      border: 1px solid var(--border-g);
+      border-radius: 16px;
+      padding: 1.6rem 1.4rem;
+      text-align: center;
+    }
+    .lp-ai__icon { font-size: 2rem; margin-bottom: .5rem; }
+    .lp-ai__title { font-family: var(--font-d); font-size: 1.15rem; font-weight: 400; color: var(--cream); margin: 0 0 .4rem; }
+    .lp-ai__sub { font-size: .8rem; color: var(--muted); margin: 0 0 1.2rem; line-height: 1.5; }
+    .lp-ai__btn {
+      display: inline-flex; align-items: center; gap: .45rem;
+      background: var(--gold); color: var(--navy-900);
+      font-family: var(--font-b); font-weight: 700; font-size: .84rem; letter-spacing: .04em;
+      padding: .72rem 1.6rem; border-radius: 99px; border: none; cursor: pointer;
+      text-decoration: none; transition: background .18s;
+    }
+    .lp-ai__btn:hover { background: var(--gold-lt); color: var(--navy-900); }
+
+    /* Tour CTA link */
+    .lp-cta-row {
+      display: flex; gap: .75rem; padding: 0 1rem;
+      flex-wrap: wrap;
+    }
+    .lp-cta-btn {
+      flex: 1; min-width: 140px;
+      display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+      padding: .75rem 1rem;
+      border-radius: 10px; border: none; cursor: pointer;
+      font-family: var(--font-b); font-weight: 600; font-size: .84rem;
+      text-decoration: none; transition: opacity .18s;
+    }
+    .lp-cta-btn--primary { background: var(--gold); color: var(--navy-900); }
+    .lp-cta-btn--ghost { background: var(--navy-800); color: var(--cream); border: 1px solid var(--border); }
+    .lp-cta-btn:hover { opacity: .85; }
+
+    .lp-contact {
+      margin: 1.2rem 1rem 0;
+      padding: 1.1rem 1.2rem;
+      background: rgba(255,255,255,.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    }
+    .lp-contact__label { font-size: .72rem; color: var(--muted); display: block; margin-bottom: .1rem; }
+    .lp-contact__num { font-family: var(--font-d); font-size: 1.05rem; color: var(--gold); text-decoration: none; }
+    .lp-contact__num:hover { color: var(--gold-lt); }
+    .lp-contact__call {
+      display: inline-flex; align-items: center; gap: .35rem;
+      background: var(--gold); color: var(--navy-900);
+      font-weight: 700; font-size: .75rem; padding: .5rem 1rem;
+      border-radius: 99px; text-decoration: none; flex-shrink: 0;
+    }
+
+    .lp-back {
+      display: block; text-align: center; padding: 1.2rem 1rem;
+      font-size: .78rem; color: var(--muted); text-decoration: none;
+      border-top: 1px solid var(--border); margin-top: 1.5rem;
+    }
+    .lp-back:hover { color: var(--cream); }
+
+    @media (min-width: 768px) {
+      .lp-section { padding: 2rem 2rem .75rem; }
+      .dest-highlights { grid-template-columns: repeat(4, 1fr); padding: 0 2rem; }
+      .dest-card-lp__img { height: 130px; }
+      .lp-ai, .lp-contact { margin-left: 2rem; margin-right: 2rem; }
+      .lp-cta-row { padding: 0 2rem; }
+    }
+    @media (min-width: 1200px) {
+      .dest-highlights, .lp-ai, .lp-contact, .lp-cta-row { max-width: 960px; margin-left: auto; margin-right: auto; }
+      .lp-section { max-width: 960px; margin-left: auto; margin-right: auto; }
+    }
   </style>
 </head>
 <body>
-  <div class="sp"></div>
-  <p>Đang mở dịch vụ tour…</p>
-  <script>window.location.replace('/#travel');</script>
+<div class="lp">
+
+  <header class="app-bar">
+    <a href="/" class="app-bar__brand" style="text-decoration:none; color:var(--cream);">✦ Du Lịch Cali</a>
+    <a href="tel:4089163439" class="app-bar__call">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.79-1.35a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7a2 2 0 011.72 2.09z"/>
+      </svg>
+      Gọi ngay
+    </a>
+  </header>
+
+  <!-- Hero Carousel -->
+  <div class="hc" id="heroCarousel" aria-roledescription="carousel" aria-label="Tour du lịch California">
+
+    <!-- Slide 1: Mountains / Yosemite -->
+    <div class="hc__slide hc__slide--active" data-idx="0" role="group" aria-label="1 của 2"
+         style="--accent:#fb923c;--accent-glow:rgba(251,146,60,.45);">
+      <div class="hc__bg" style="background-image:url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1400&auto=format&fit=crop&q=80');background-position:center center;"></div>
+      <div class="hc__gradient"></div>
+      <div class="hc__body">
+        <span class="hc__chip">🏔️ Du Lịch California</span>
+        <h1 class="hc__title">Khám Phá<br><em>California</em></h1>
+        <p class="hc__sub">Yosemite · Las Vegas · San Francisco · 15+ điểm đến</p>
+        <a href="/?entry=tour" class="hc__cta" style="text-decoration:none;">Lên Kế Hoạch Ngay</a>
+      </div>
+    </div>
+
+    <!-- Slide 2: Las Vegas -->
+    <div class="hc__slide" data-idx="1" role="group" aria-label="2 của 2"
+         style="--accent:#f59e0b;--accent-glow:rgba(245,158,11,.45);">
+      <div class="hc__bg" style="background-image:url('https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?w=1400&auto=format&fit=crop&q=85');background-position:center 40%;"></div>
+      <div class="hc__gradient"></div>
+      <div class="hc__body">
+        <span class="hc__chip">🎰 Las Vegas · Nevada</span>
+        <h2 class="hc__title">Las Vegas<br><em>Ánh Đèn Không Ngủ</em></h2>
+        <p class="hc__sub">Strip · Shows · Buffet · Casinos · Day trips từ LA</p>
+        <a href="/?entry=tour" class="hc__cta" style="text-decoration:none;">Đặt tour Las Vegas</a>
+      </div>
+    </div>
+
+    <div class="hc__dots" role="tablist" aria-label="Chọn slide">
+      <button class="hc__dot hc__dot--active" data-dot="0" role="tab" aria-selected="true"  aria-label="Slide 1"></button>
+      <button class="hc__dot"                 data-dot="1" role="tab" aria-selected="false" aria-label="Slide 2"></button>
+    </div>
+    <div class="hc__progress" role="none">
+      <div class="hc__progress-bar" id="hcProgressBar"></div>
+    </div>
+  </div>
+
+  <!-- Destination Highlights -->
+  <section class="lp-section home-section">
+    <div class="section-hdr">
+      <h2 class="section-title">Điểm Đến Nổi Bật</h2>
+    </div>
+    <div class="dest-highlights">
+
+      <a href="/?entry=tour" class="dest-card-lp">
+        <div class="dest-card-lp__img">
+          <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&auto=format&fit=crop&q=80" alt="Yosemite National Park" loading="lazy">
+        </div>
+        <div class="dest-card-lp__body">
+          <span class="dest-card-lp__name">Yosemite</span>
+          <span class="dest-card-lp__sub">National Park · Thác nước · Núi đá</span>
+          <span class="dest-card-lp__price">Từ $85/người</span>
+        </div>
+      </a>
+
+      <a href="/?entry=tour" class="dest-card-lp">
+        <div class="dest-card-lp__img">
+          <img src="https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?w=400&auto=format&fit=crop&q=85" alt="Las Vegas" loading="lazy">
+        </div>
+        <div class="dest-card-lp__body">
+          <span class="dest-card-lp__name">Las Vegas</span>
+          <span class="dest-card-lp__sub">Strip · Casinos · Shows đêm</span>
+          <span class="dest-card-lp__price">Từ $75/người</span>
+        </div>
+      </a>
+
+      <a href="/?entry=tour" class="dest-card-lp">
+        <div class="dest-card-lp__img">
+          <img src="https://images.unsplash.com/photo-1449034446853-66c86144b0ad?w=400&auto=format&fit=crop&q=85" alt="San Francisco" loading="lazy">
+        </div>
+        <div class="dest-card-lp__body">
+          <span class="dest-card-lp__name">San Francisco</span>
+          <span class="dest-card-lp__sub">Golden Gate · Pier 39 · Chinatown</span>
+          <span class="dest-card-lp__price">Từ $65/người</span>
+        </div>
+      </a>
+
+      <a href="/?entry=tour" class="dest-card-lp">
+        <div class="dest-card-lp__img">
+          <img src="https://images.unsplash.com/photo-1462275646964-a0e3386b89fa?w=400&auto=format&fit=crop&q=85" alt="Grand Canyon" loading="lazy">
+        </div>
+        <div class="dest-card-lp__body">
+          <span class="dest-card-lp__name">Grand Canyon</span>
+          <span class="dest-card-lp__sub">South Rim · Helicopter tours</span>
+          <span class="dest-card-lp__price">Từ $120/người</span>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- CTA Buttons -->
+  <div class="lp-cta-row" style="margin-top:.75rem;">
+    <a href="/?entry=tour" class="lp-cta-btn lp-cta-btn--primary">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Lên kế hoạch tour
+    </a>
+    <a href="/" class="lp-cta-btn lp-cta-btn--ghost">Xem tất cả điểm đến</a>
+  </div>
+
+  <!-- AI CTA -->
+  <div class="lp-ai" style="margin-top:1.5rem;">
+    <div class="lp-ai__icon">🗺️</div>
+    <p class="lp-ai__title">Trợ Lý AI Tour &amp; Du Lịch</p>
+    <p class="lp-ai__sub">Hỏi về lịch trình, giá tour, điểm đến — AI tư vấn tức thì bằng tiếng Việt</p>
+    <a href="/?entry=tour" class="lp-ai__btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      Chat với AI ngay
+    </a>
+  </div>
+
+  <div class="lp-contact">
+    <div>
+      <span class="lp-contact__label">Đặt tour · Du Lịch Cali</span>
+      <a href="tel:4089163439" class="lp-contact__num">408-916-3439</a>
+    </div>
+    <a href="tel:4089163439" class="lp-contact__call">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.79-1.35a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7a2 2 0 011.72 2.09z"/></svg>
+      Gọi ngay
+    </a>
+  </div>
+
+  <a href="/" class="lp-back">← Về trang chủ Du Lịch Cali</a>
+
+</div><!-- /.lp -->
+
+<script>
+  (function() {
+    var DURATION = 5000;
+    var current = 0;
+    var timer = null;
+    var slides, dots, bar;
+    var startX = 0;
+
+    function init() {
+      var el = document.getElementById('heroCarousel');
+      if (!el) return;
+      slides = el.querySelectorAll('.hc__slide');
+      dots   = el.querySelectorAll('.hc__dot');
+      bar    = document.getElementById('hcProgressBar');
+      dots.forEach(function(dot) {
+        dot.addEventListener('click', function() { goto(parseInt(dot.dataset.dot, 10)); });
+      });
+      el.addEventListener('touchstart', function(e) { startX = e.changedTouches[0].clientX; }, { passive: true });
+      el.addEventListener('touchend', function(e) {
+        var dx = e.changedTouches[0].clientX - startX;
+        if (Math.abs(dx) < 44) return;
+        goto(dx < 0 ? (current + 1) % slides.length : (current - 1 + slides.length) % slides.length);
+      }, { passive: true });
+      start();
+    }
+
+    function goto(idx) {
+      slides[current].classList.remove('hc__slide--active');
+      dots[current].classList.remove('hc__dot--active');
+      dots[current].setAttribute('aria-selected', 'false');
+      current = idx;
+      slides[current].classList.add('hc__slide--active');
+      dots[current].classList.add('hc__dot--active');
+      dots[current].setAttribute('aria-selected', 'true');
+      stop(); start();
+    }
+
+    function start() {
+      animateProgress();
+      timer = setTimeout(function() { goto((current + 1) % slides.length); }, DURATION);
+    }
+
+    function stop() {
+      clearTimeout(timer);
+      if (bar) { bar.style.transition = 'none'; bar.style.width = '0%'; void bar.offsetWidth; }
+    }
+
+    function animateProgress() {
+      if (!bar) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { bar.style.width = '100%'; return; }
+      bar.style.transition = 'none'; bar.style.width = '0%'; void bar.offsetWidth;
+      bar.style.transition = 'width ' + DURATION + 'ms linear';
+      bar.style.width = '100%';
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  })();
+</script>
 </body>
 </html>

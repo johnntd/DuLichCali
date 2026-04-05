@@ -2,21 +2,675 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Đưa Đón Sân Bay · Du Lịch Cali</title>
-  <meta name="description" content="Đặt xe đưa đón sân bay — LAX, SNA, SFO, SJC. Xe sang, giá hợp lý, 24/7.">
-  <meta property="og:title" content="Đưa Đón Sân Bay · Du Lịch Cali">
-  <meta property="og:description" content="Đặt xe đưa đón sân bay LAX, SNA, SFO, SJC. Xe sang, 24/7.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a2344">
+  <title>Đưa Đón Sân Bay & Xe Riêng · Du Lịch Cali</title>
+  <meta name="description" content="Đặt xe đưa đón sân bay LAX, SNA, SFO, SJC, OAK 24/7. Xe sang, giá cố định, rẻ hơn Uber 20%. Gọi: +1 (408) 916-3439.">
+  <meta property="og:title" content="Đưa Đón Sân Bay & Xe Riêng · Du Lịch Cali">
+  <meta property="og:description" content="Đặt xe đưa đón sân bay 24/7. LAX · SNA · SFO · SJC · OAK. Rẻ hơn Uber 20%.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,300;0,6..96,400;1,6..96,300;1,6..96,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Firebase (required by ride-intake.js for booking submission) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script>
+    firebase.initializeApp({
+      apiKey:            'AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ',
+      authDomain:        'dulichcali-booking-calendar.firebaseapp.com',
+      projectId:         'dulichcali-booking-calendar',
+      storageBucket:     'dulichcali-booking-calendar.appspot.com',
+      messagingSenderId: '623460884698',
+      appId:             '1:623460884698:web:a08bd435c453a7b4db05e3'
+    });
+    firebase.auth().signInAnonymously().catch(console.error);
+  </script>
+
+  <!-- Google Maps (for address autocomplete in ride form) -->
+  <script>
+    window.initMap = function() {
+      if (window.DLCLocation) DLCLocation.request(null, null);
+    };
+  </script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ&libraries=places&callback=initMap&loading=async"></script>
+
+  <link rel="stylesheet" href="/style.css?v=20260404u">
+  <link rel="stylesheet" href="/desktop.css">
+
   <style>
-    body { margin: 0; background: #0d2f50; display: flex; align-items: center; justify-content: center; height: 100vh; flex-direction: column; gap: 16px; font-family: system-ui, sans-serif; color: #c8e4f8; }
-    .sp { width: 44px; height: 44px; border: 3px solid rgba(245,166,35,.2); border-top-color: #f5a623; border-radius: 50%; animation: spin .7s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    p { font-size: .9rem; opacity: .7; margin: 0; }
+    /* ── Landing page overrides (undo SPA body lock) ── */
+    html, body { height: auto; min-height: 100vh; }
+    body { overflow-y: auto; overflow-x: hidden; }
+
+    /* Page wrapper */
+    .lp { display: flex; flex-direction: column; background: var(--navy-900); min-height: 100vh; }
+
+    /* Hero: taller than homepage since no bottom nav */
+    .hc { height: 76vh; min-height: 380px; }
+    @media (min-width: 768px) { .hc { height: 70vh; min-height: 460px; } }
+
+    /* Section layout */
+    .lp-section { padding: 1.6rem 1rem .6rem; }
+    .lp-section--last { padding-bottom: 1.5rem; }
+
+    /* AI CTA block */
+    .lp-ai {
+      margin: 1rem 1rem 0;
+      background: linear-gradient(135deg, var(--navy-800) 0%, #0e2c54 100%);
+      border: 1px solid var(--border-g);
+      border-radius: 16px;
+      padding: 1.6rem 1.4rem;
+      text-align: center;
+    }
+    .lp-ai__icon { font-size: 2rem; margin-bottom: .5rem; }
+    .lp-ai__title {
+      font-family: var(--font-d);
+      font-size: 1.15rem;
+      font-weight: 400;
+      color: var(--cream);
+      margin: 0 0 .4rem;
+    }
+    .lp-ai__sub {
+      font-size: .8rem;
+      color: var(--muted);
+      margin: 0 0 1.2rem;
+      line-height: 1.5;
+    }
+    .lp-ai__btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      background: var(--gold);
+      color: var(--navy-900);
+      font-family: var(--font-b);
+      font-weight: 700;
+      font-size: .84rem;
+      letter-spacing: .04em;
+      padding: .72rem 1.6rem;
+      border-radius: 99px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .18s;
+    }
+    .lp-ai__btn:hover { background: var(--gold-lt); color: var(--navy-900); }
+
+    /* Contact */
+    .lp-contact {
+      margin: 1.2rem 1rem 0;
+      padding: 1.1rem 1.2rem;
+      background: rgba(255,255,255,.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .lp-contact__label { font-size: .72rem; color: var(--muted); display: block; margin-bottom: .1rem; }
+    .lp-contact__num {
+      font-family: var(--font-d);
+      font-size: 1.05rem;
+      color: var(--gold);
+      text-decoration: none;
+    }
+    .lp-contact__num:hover { color: var(--gold-lt); }
+    .lp-contact__call {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      background: var(--gold);
+      color: var(--navy-900);
+      font-weight: 700;
+      font-size: .75rem;
+      padding: .5rem 1rem;
+      border-radius: 99px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    /* Back link */
+    .lp-back {
+      display: block;
+      text-align: center;
+      padding: 1.2rem 1rem;
+      font-size: .78rem;
+      color: var(--muted);
+      text-decoration: none;
+      border-top: 1px solid var(--border);
+      margin-top: 1.5rem;
+    }
+    .lp-back:hover { color: var(--cream); }
+
+    /* ── Desktop overrides ── */
+    @media (min-width: 768px) {
+      .lp-section { padding: 2rem 2rem .75rem; }
+      .lp-ai { margin: 1.5rem 2rem 0; padding: 2rem; }
+      .lp-contact { margin: 1.5rem 2rem 0; padding: 1.25rem 1.5rem; }
+    }
+    @media (min-width: 1200px) {
+      .lp-content { max-width: 960px; margin: 0 auto; width: 100%; }
+      .lp-section, .lp-ai, .lp-contact { margin-left: auto; margin-right: auto; max-width: 960px; }
+    }
   </style>
 </head>
 <body>
-  <div class="sp"></div>
-  <p>Đang mở dịch vụ sân bay…</p>
-  <script>window.location.replace('/#airport');</script>
+<div class="lp">
+
+  <!-- App Bar -->
+  <header class="app-bar">
+    <a href="/" class="app-bar__brand" style="text-decoration:none; color:var(--cream);">✦ Du Lịch Cali</a>
+    <a href="tel:4089163439" class="app-bar__call">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.79-1.35a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7a2 2 0 011.72 2.09z"/>
+      </svg>
+      Gọi ngay
+    </a>
+  </header>
+
+  <!-- Hero Carousel -->
+  <div class="hc" id="heroCarousel" aria-roledescription="carousel" aria-label="Dịch vụ đưa đón sân bay">
+
+    <!-- Slide 1: Airport Pickup -->
+    <div class="hc__slide hc__slide--active" data-idx="0" role="group" aria-label="1 của 2"
+         style="--accent:#38bdf8;--accent-glow:rgba(56,189,248,.45);">
+      <div class="hc__bg" style="background-image:url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1400&auto=format&fit=crop&q=85');background-position:center 55%;"></div>
+      <div class="hc__gradient"></div>
+      <div class="hc__body">
+        <span class="hc__chip">✈️ Đưa Đón Sân Bay · 24/7</span>
+        <h1 class="hc__title">Airport Pickup<br><em>An Toàn &amp; Đúng Giờ</em></h1>
+        <p class="hc__sub">SFO · SJC · OAK · LAX · SNA · BUR · Đặt Trước 24/7</p>
+        <button class="hc__cta" onclick="RideIntake.open('pickup')">Đặt xe đón sân bay</button>
+      </div>
+    </div>
+
+    <!-- Slide 2: Private Ride -->
+    <div class="hc__slide" data-idx="1" role="group" aria-label="2 của 2"
+         style="--accent:#fb923c;--accent-glow:rgba(251,146,60,.45);">
+      <div class="hc__bg" style="background-image:url('https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=1400&auto=format&fit=crop&q=85');background-position:center 40%;"></div>
+      <div class="hc__gradient"></div>
+      <div class="hc__body">
+        <span class="hc__chip">🚗 Xe Riêng Cao Cấp</span>
+        <h2 class="hc__title">Xe Riêng<br><em>Tiết Kiệm 20%</em></h2>
+        <p class="hc__sub">Tesla Model Y · Mercedes Van · 12 chỗ · Rẻ hơn Uber 20%</p>
+        <button class="hc__cta" onclick="RideIntake.open('ride')">Đặt xe riêng ngay</button>
+      </div>
+    </div>
+
+    <!-- Dot indicators -->
+    <div class="hc__dots" role="tablist" aria-label="Chọn slide">
+      <button class="hc__dot hc__dot--active" data-dot="0" role="tab" aria-selected="true"  aria-label="Slide 1"></button>
+      <button class="hc__dot"                 data-dot="1" role="tab" aria-selected="false" aria-label="Slide 2"></button>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="hc__progress" role="none">
+      <div class="hc__progress-bar" id="hcProgressBar"></div>
+    </div>
+
+  </div><!-- /.hc -->
+
+  <!-- ── Ride Service Tiles ── -->
+  <section class="lp-section home-section" id="rideSection">
+    <div class="section-hdr">
+      <h2 class="section-title">Đưa Đón &amp; Xe Riêng</h2>
+    </div>
+    <div class="home-ride-grid">
+      <div class="home-ride-tile" onclick="RideIntake.open('pickup')" role="button" tabindex="0"
+           onkeydown="if(event.key==='Enter')RideIntake.open('pickup')">
+        <span class="home-ride-tile__icon" aria-hidden="true">🛬</span>
+        <strong class="home-ride-tile__name">Đón Sân Bay</strong>
+        <span class="home-ride-tile__sub">Bay đến · Tài xế chờ tại Arrivals</span>
+      </div>
+      <div class="home-ride-tile" onclick="RideIntake.open('dropoff')" role="button" tabindex="0"
+           onkeydown="if(event.key==='Enter')RideIntake.open('dropoff')">
+        <span class="home-ride-tile__icon" aria-hidden="true">🛫</span>
+        <strong class="home-ride-tile__name">Ra Sân Bay</strong>
+        <span class="home-ride-tile__sub">Bay đi · Đón tận nhà đúng giờ</span>
+      </div>
+      <div class="home-ride-tile" onclick="RideIntake.open('ride')" role="button" tabindex="0"
+           onkeydown="if(event.key==='Enter')RideIntake.open('ride')">
+        <span class="home-ride-tile__icon" aria-hidden="true">🚗</span>
+        <strong class="home-ride-tile__name">Xe Riêng Cao Cấp</strong>
+        <span class="home-ride-tile__sub">Mercedes Van · 12 chỗ · −20% vs Uber</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── AI CTA ── -->
+  <div class="lp-ai">
+    <div class="lp-ai__icon">✈️</div>
+    <p class="lp-ai__title">Trợ Lý AI Sân Bay &amp; Xe</p>
+    <p class="lp-ai__sub">Hỏi về giá, sân bay, hành trình — AI trả lời tức thì bằng tiếng Việt</p>
+    <a href="/?entry=airport" class="lp-ai__btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      Chat với AI ngay
+    </a>
+  </div>
+
+  <!-- ── Contact ── -->
+  <div class="lp-contact">
+    <div>
+      <span class="lp-contact__label">Hỗ trợ 24/7 · Du Lịch Cali</span>
+      <a href="tel:4089163439" class="lp-contact__num">408-916-3439</a>
+    </div>
+    <a href="tel:4089163439" class="lp-contact__call">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.79-1.35a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7a2 2 0 011.72 2.09z"/></svg>
+      Gọi ngay
+    </a>
+  </div>
+
+  <a href="/" class="lp-back">← Về trang chủ Du Lịch Cali</a>
+
+</div><!-- /.lp -->
+
+<!-- ═══════════════════════════════════════════════════════
+     RIDE INTAKE MODAL  v2  (full functional, same as index.html)
+═══════════════════════════════════════════════════════ -->
+<div id="rideIntakeModal" class="ri-modal" hidden>
+  <div class="ri-overlay"></div>
+  <div class="ri-panel">
+
+    <!-- Header -->
+    <div class="ri-header">
+      <button class="ri-back-btn" id="riBackBtn" onclick="RideIntake.backToPicker()" aria-label="Quay lại" hidden>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      </button>
+      <h2 class="ri-title" id="riTitle">Đặt Xe Đưa Đón</h2>
+      <button class="ri-close-btn" onclick="RideIntake.close()" aria-label="Đóng">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- STEP 1: Service Picker -->
+    <div class="ri-picker" id="riPicker">
+      <p class="ri-picker__sub" id="riPickerSub">Tài xế chuyên nghiệp · Mercedes Sprinter Van 12 chỗ</p>
+      <div class="ri-picker__grid">
+        <button class="ri-svc-card" onclick="RideIntake.goForm('pickup')">
+          <div class="ri-svc-card__icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" style="transform:rotate(135deg)">
+              <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+            </svg>
+          </div>
+          <div class="ri-svc-card__text">
+            <strong>Đón Sân Bay</strong>
+            <span>Bay đến · Tài xế chờ tại cửa Arrivals</span>
+          </div>
+        </button>
+        <button class="ri-svc-card" onclick="RideIntake.goForm('dropoff')">
+          <div class="ri-svc-card__icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" style="transform:rotate(-45deg)">
+              <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+            </svg>
+          </div>
+          <div class="ri-svc-card__text">
+            <strong>Ra Sân Bay</strong>
+            <span>Bay đi · Đón tận nhà đúng giờ</span>
+          </div>
+        </button>
+        <button class="ri-svc-card ri-svc-card--wide" onclick="RideIntake.goForm('ride')">
+          <div class="ri-svc-card__icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 17H3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h13l3 4v3a2 2 0 0 1-2 2h-1"/>
+              <circle cx="7" cy="17" r="2"/><circle cx="15" cy="17" r="2"/>
+            </svg>
+          </div>
+          <div class="ri-svc-card__text">
+            <strong>Xe Riêng Cao Cấp</strong>
+            <span>Đến bất kỳ điểm nào · Không cần sân bay</span>
+          </div>
+        </button>
+      </div>
+      <div class="ri-van-badge">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Rẻ hơn Uber <strong>20%</strong> &nbsp;·&nbsp; Đặt trước · Giá cố định
+      </div>
+    </div>
+
+    <!-- STEP 2: Form -->
+    <div class="ri-form-wrap" id="riFormWrap" hidden>
+      <div class="ri-scrollbody" id="riBody">
+        <div class="ri-step-ind" id="riStepInd"></div>
+        <form id="riForm" onsubmit="return false" autocomplete="on">
+
+          <!-- Pickup fields -->
+          <div id="riPickupFields">
+            <div class="ri-substep" id="ri_p_s1">
+              <div class="ri-row">
+                <div class="ri-field ri-field--full">
+                  <label class="ri-label" for="ri_p_airport">Sân bay đến <span class="ri-req">*</span></label>
+                  <select class="ri-select" id="ri_p_airport"><option value="">— Chọn sân bay —</option></select>
+                  <span class="ri-loc-badge" id="riLocBadgeP" hidden><span class="ri-loc-dot"></span>Sắp xếp gần bạn nhất</span>
+                </div>
+              </div>
+              <div class="ri-row">
+                <div class="ri-field">
+                  <label class="ri-label" for="ri_arrival_date">Ngày đến <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="date" id="ri_arrival_date">
+                </div>
+                <div class="ri-field">
+                  <label class="ri-label" for="ri_arrival_time">Giờ hạ cánh <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="time" id="ri_arrival_time">
+                </div>
+              </div>
+            </div>
+            <div class="ri-substep" id="ri_p_s2" hidden>
+              <div class="ri-row">
+                <div class="ri-field ri-field--full">
+                  <label class="ri-label" for="ri_dropoff_addr">Địa chỉ điểm đến <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="text" id="ri_dropoff_addr" placeholder="Địa chỉ, thành phố, hoặc tên khách sạn" autocomplete="off" oninput="RideIntake.schedule()">
+                </div>
+              </div>
+              <div class="ri-row">
+                <div class="ri-field ri-field--full">
+                  <label class="ri-label" for="ri_p_passengers">Số hành khách <span class="ri-req">*</span></label>
+                  <select class="ri-select" id="ri_p_passengers">
+                    <option value="">— Chọn —</option>
+                    <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
+                    <option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
+                  </select>
+                </div>
+              </div>
+              <details class="ri-optional">
+                <summary>Thêm chi tiết (tùy chọn)</summary>
+                <div class="ri-optional-body">
+                  <div class="ri-row">
+                    <div class="ri-field">
+                      <label class="ri-label" for="ri_p_flight">Số chuyến bay</label>
+                      <input class="ri-input" type="text" id="ri_p_flight" placeholder="VD: United 714" autocomplete="off">
+                    </div>
+                    <div class="ri-field">
+                      <label class="ri-label" for="ri_p_terminal">Terminal</label>
+                      <input class="ri-input" type="text" id="ri_p_terminal" placeholder="VD: TBIT, T5">
+                    </div>
+                  </div>
+                  <div class="ri-row">
+                    <div class="ri-field ri-field--full">
+                      <label class="ri-label" for="ri_p_luggage">Hành lý ký gửi</label>
+                      <select class="ri-select" id="ri_p_luggage">
+                        <option value="0">Không có (chỉ xách tay)</option>
+                        <option value="1">1 kiện</option><option value="2">2 kiện</option>
+                        <option value="3">3 kiện</option><option value="4">4 kiện</option><option value="5">5+ kiện</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </details>
+            </div>
+            <div class="ri-substep" id="ri_p_s3" hidden>
+              <div class="ri-row">
+                <div class="ri-field">
+                  <label class="ri-label" for="ri_p_name">Họ tên <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="text" id="ri_p_name" placeholder="Tên đầy đủ" autocomplete="name">
+                </div>
+                <div class="ri-field">
+                  <label class="ri-label" for="ri_p_phone">Điện thoại <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="tel" id="ri_p_phone" placeholder="(xxx) xxx-xxxx" autocomplete="tel">
+                </div>
+              </div>
+              <div class="ri-row">
+                <div class="ri-field ri-field--full">
+                  <label class="ri-label" for="ri_p_notes">Ghi chú (tùy chọn)</label>
+                  <textarea class="ri-input ri-textarea" id="ri_p_notes" placeholder="Wheelchair, trẻ em, yêu cầu đặc biệt..." rows="2"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dropoff fields -->
+          <div id="riDropoffFields" hidden>
+            <div class="ri-substep" id="ri_d_s1">
+              <div class="ri-row">
+                <div class="ri-field ri-field--full">
+                  <label class="ri-label" for="ri_d_airport">Sân bay cần đến <span class="ri-req">*</span></label>
+                  <select class="ri-select" id="ri_d_airport"><option value="">— Chọn sân bay —</option></select>
+                  <span class="ri-loc-badge" id="riLocBadgeD" hidden><span class="ri-loc-dot"></span>Sắp xếp gần bạn nhất</span>
+                </div>
+              </div>
+              <div class="ri-row">
+                <div class="ri-field">
+                  <label class="ri-label" for="ri_depart_date">Ngày bay <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="date" id="ri_depart_date">
+                </div>
+                <div class="ri-field">
+                  <label class="ri-label" for="ri_depart_time">Giờ cất cánh <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="time" id="ri_depart_time">
+                </div>
+              </div>
+            </div>
+            <div class="ri-substep" id="ri_d_s2" hidden>
+              <div class="ri-row">
+                <div class="ri-field ri-field--full">
+                  <label class="ri-label" for="ri_pickup_addr">Địa chỉ đón <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="text" id="ri_pickup_addr" placeholder="Địa chỉ nhà hoặc khách sạn" autocomplete="off" oninput="RideIntake.schedule()">
+                </div>
+              </div>
+              <div class="ri-row">
+                <div class="ri-field ri-field--full">
+                  <label class="ri-label" for="ri_d_passengers">Số hành khách <span class="ri-req">*</span></label>
+                  <select class="ri-select" id="ri_d_passengers">
+                    <option value="">— Chọn —</option>
+                    <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
+                    <option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
+                  </select>
+                </div>
+              </div>
+              <details class="ri-optional">
+                <summary>Thêm chi tiết (tùy chọn)</summary>
+                <div class="ri-optional-body">
+                  <div class="ri-row">
+                    <div class="ri-field">
+                      <label class="ri-label" for="ri_d_flight">Số chuyến bay</label>
+                      <input class="ri-input" type="text" id="ri_d_flight" placeholder="VD: VN 456" autocomplete="off">
+                    </div>
+                    <div class="ri-field">
+                      <label class="ri-label" for="ri_d_terminal">Terminal</label>
+                      <input class="ri-input" type="text" id="ri_d_terminal" placeholder="VD: Terminal 2">
+                    </div>
+                  </div>
+                  <div class="ri-row">
+                    <div class="ri-field ri-field--full">
+                      <label class="ri-label" for="ri_d_luggage">Hành lý ký gửi</label>
+                      <select class="ri-select" id="ri_d_luggage">
+                        <option value="0">Không có (chỉ xách tay)</option>
+                        <option value="1">1 kiện</option><option value="2">2 kiện</option>
+                        <option value="3">3 kiện</option><option value="4">4 kiện</option><option value="5">5+ kiện</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </details>
+            </div>
+            <div class="ri-substep" id="ri_d_s3" hidden>
+              <div class="ri-row">
+                <div class="ri-field">
+                  <label class="ri-label" for="ri_d_name">Họ tên <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="text" id="ri_d_name" placeholder="Tên đầy đủ" autocomplete="name">
+                </div>
+                <div class="ri-field">
+                  <label class="ri-label" for="ri_d_phone">Điện thoại <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="tel" id="ri_d_phone" placeholder="(xxx) xxx-xxxx" autocomplete="tel">
+                </div>
+              </div>
+              <div class="ri-row">
+                <div class="ri-field ri-field--full">
+                  <label class="ri-label" for="ri_d_notes">Ghi chú (tùy chọn)</label>
+                  <textarea class="ri-input ri-textarea" id="ri_d_notes" placeholder="Hành lý, wheelchair, yêu cầu đặc biệt..." rows="2"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ride fields -->
+          <div id="riRideFields" hidden>
+            <div class="ri-substep" id="ri_r_s1">
+              <div class="ri-row">
+                <div class="ri-field ri-field--full">
+                  <label class="ri-label" for="ri_from_addr">Điểm đón <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="text" id="ri_from_addr" placeholder="Địa chỉ, thành phố hoặc địa điểm" autocomplete="off" oninput="RideIntake.schedule()">
+                </div>
+              </div>
+              <div class="ri-row">
+                <div class="ri-field ri-field--full">
+                  <label class="ri-label" for="ri_to_addr">Điểm đến <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="text" id="ri_to_addr" placeholder="Địa chỉ, thành phố hoặc địa điểm" autocomplete="off" oninput="RideIntake.schedule()">
+                </div>
+              </div>
+            </div>
+            <div class="ri-substep" id="ri_r_s2" hidden>
+              <div class="ri-row">
+                <div class="ri-field">
+                  <label class="ri-label" for="ri_ride_date">Ngày đi <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="date" id="ri_ride_date">
+                </div>
+                <div class="ri-field">
+                  <label class="ri-label" for="ri_ride_time">Giờ xuất phát <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="time" id="ri_ride_time">
+                </div>
+              </div>
+              <div class="ri-row">
+                <div class="ri-field ri-field--full">
+                  <label class="ri-label" for="ri_r_passengers">Số hành khách <span class="ri-req">*</span></label>
+                  <select class="ri-select" id="ri_r_passengers">
+                    <option value="">— Chọn —</option>
+                    <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
+                    <option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="ri-substep" id="ri_r_s3" hidden>
+              <div class="ri-row">
+                <div class="ri-field">
+                  <label class="ri-label" for="ri_r_name">Họ tên <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="text" id="ri_r_name" placeholder="Tên đầy đủ" autocomplete="name">
+                </div>
+                <div class="ri-field">
+                  <label class="ri-label" for="ri_r_phone">Điện thoại <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="tel" id="ri_r_phone" placeholder="(xxx) xxx-xxxx" autocomplete="tel">
+                </div>
+              </div>
+              <div class="ri-row">
+                <div class="ri-field ri-field--full">
+                  <label class="ri-label" for="ri_r_notes">Ghi chú (tùy chọn)</label>
+                  <textarea class="ri-input ri-textarea" id="ri_r_notes" placeholder="Điểm dừng, yêu cầu đặc biệt..." rows="2"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </form>
+
+        <!-- Live price estimate -->
+        <div class="ri-price-box" id="riPriceBox" hidden>
+          <div class="ri-price-box__left">
+            <span class="ri-price-badge">−20% so với Uber</span>
+            <span class="ri-price-box__label">Ước tính giá chuyến đi</span>
+            <span class="ri-price-box__value" id="riPriceAmt">~$—</span>
+            <span class="ri-price-box__save" id="riPriceSave"></span>
+          </div>
+          <div class="ri-price-box__right" id="riVehicleBox">Mercedes Van<br>12 chỗ<br>Chưa bao gồm tip</div>
+        </div>
+        <div class="ri-price-hint" id="riPriceHint">Nhập địa chỉ để xem giá ước tính</div>
+        <div class="ri-price-loading" id="riPriceLoading" hidden>
+          <div class="ri-price-spinner"></div>Đang tính khoảng cách...
+        </div>
+
+      </div><!-- /ri-scrollbody -->
+    </div><!-- /ri-form-wrap -->
+
+    <!-- Success screen -->
+    <div class="ri-success" id="riSuccess" hidden>
+      <div class="ri-success__icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h3 class="ri-success__title">Đặt Xe Thành Công!</h3>
+      <p class="ri-success__sub">Mã đặt chỗ của bạn:</p>
+      <div class="ri-success__id" id="riSuccessId">DLC-XXXXXX</div>
+      <p class="ri-success__msg">Chúng tôi sẽ xác nhận trong <strong>30 phút</strong>.<br>Cần gấp? Gọi <a href="tel:4089163439">(408) 916-3439</a>.</p>
+    </div>
+
+    <!-- Footer -->
+    <div class="ri-footer" id="riFooter" hidden>
+      <div class="ri-footer__est" id="riFooterEst" hidden>
+        <span class="ri-footer__est-label">Ước tính</span>
+        <span class="ri-footer__est-amt" id="riFooterAmt">—</span>
+      </div>
+      <button class="ri-submit" id="riSubmit" onclick="RideIntake.nextSubStep()">
+        Tiếp theo
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+
+  </div><!-- /ri-panel -->
+</div><!-- /rideIntakeModal -->
+
+<!-- Location module (region detection for airport sorting) -->
+<script src="/location.js?v=20260404"></script>
+<!-- Ride intake modal JS -->
+<script src="/ride-intake.js?v=20260404b"></script>
+
+<script>
+  // Self-contained hero carousel
+  (function() {
+    var DURATION = 5000;
+    var current  = 0;
+    var timer    = null;
+    var slides, dots, bar;
+    var startX = 0;
+
+    function init() {
+      var el = document.getElementById('heroCarousel');
+      if (!el) return;
+      slides = el.querySelectorAll('.hc__slide');
+      dots   = el.querySelectorAll('.hc__dot');
+      bar    = document.getElementById('hcProgressBar');
+      dots.forEach(function(dot) {
+        dot.addEventListener('click', function() { goto(parseInt(dot.dataset.dot, 10)); });
+      });
+      el.addEventListener('touchstart', function(e) { startX = e.changedTouches[0].clientX; }, { passive: true });
+      el.addEventListener('touchend', function(e) {
+        var dx = e.changedTouches[0].clientX - startX;
+        if (Math.abs(dx) < 44) return;
+        goto(dx < 0 ? (current + 1) % slides.length : (current - 1 + slides.length) % slides.length);
+      }, { passive: true });
+      start();
+    }
+
+    function goto(idx) {
+      slides[current].classList.remove('hc__slide--active');
+      dots[current].classList.remove('hc__dot--active');
+      dots[current].setAttribute('aria-selected', 'false');
+      current = idx;
+      slides[current].classList.add('hc__slide--active');
+      dots[current].classList.add('hc__dot--active');
+      dots[current].setAttribute('aria-selected', 'true');
+      stop(); start();
+    }
+
+    function start() {
+      animateProgress();
+      timer = setTimeout(function() { goto((current + 1) % slides.length); }, DURATION);
+    }
+
+    function stop() {
+      clearTimeout(timer);
+      if (bar) { bar.style.transition = 'none'; bar.style.width = '0%'; void bar.offsetWidth; }
+    }
+
+    function animateProgress() {
+      if (!bar) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { bar.style.width = '100%'; return; }
+      bar.style.transition = 'none'; bar.style.width = '0%'; void bar.offsetWidth;
+      bar.style.transition = 'width ' + DURATION + 'ms linear';
+      bar.style.width = '100%';
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  })();
+</script>
 </body>
 </html>

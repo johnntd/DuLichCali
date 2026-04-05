@@ -2,21 +2,262 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a2344">
   <title>Nail Salon · Du Lịch Cali</title>
-  <meta name="description" content="Đặt lịch nail — manicure, pedicure, gel nail, acrylic. Salon uy tín tại California.">
+  <meta name="description" content="Đặt lịch nail: manicure, pedicure, gel nail, acrylic, nail art, ombre. Salon uy tín tại Bay Area & OC, California.">
   <meta property="og:title" content="Nail Salon · Du Lịch Cali">
-  <meta property="og:description" content="Đặt lịch nail — manicure, pedicure, gel nail, acrylic.">
+  <meta property="og:description" content="Đặt lịch nail — Gel · Acrylic · Ombre · Nail Art · Pedicure. Bay Area & OC.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,300;0,6..96,400;1,6..96,300;1,6..96,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/style.css?v=20260404u">
+  <link rel="stylesheet" href="/desktop.css">
+
   <style>
-    body { margin: 0; background: #0d2f50; display: flex; align-items: center; justify-content: center; height: 100vh; flex-direction: column; gap: 16px; font-family: system-ui, sans-serif; color: #c8e4f8; }
-    .sp { width: 44px; height: 44px; border: 3px solid rgba(245,166,35,.2); border-top-color: #f5a623; border-radius: 50%; animation: spin .7s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    p { font-size: .9rem; opacity: .7; margin: 0; }
+    html, body { height: auto; min-height: 100vh; }
+    body { overflow-y: auto; overflow-x: hidden; }
+    .lp { display: flex; flex-direction: column; background: var(--navy-900); min-height: 100vh; }
+    .hc { height: 76vh; min-height: 380px; }
+    @media (min-width: 768px) { .hc { height: 72vh; min-height: 460px; } }
+
+    .svc-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: .65rem; padding: 0 1rem;
+    }
+    .svc-item {
+      background: var(--navy-800); border: 1px solid var(--border); border-radius: var(--r-md);
+      padding: 1rem .9rem; display: flex; align-items: flex-start; gap: .75rem;
+      transition: border-color .18s; cursor: pointer; text-decoration: none;
+    }
+    .svc-item:hover { border-color: rgba(244,114,182,.45); }
+    .svc-item__icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: rgba(244,114,182,.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; flex-shrink: 0;
+    }
+    .svc-item__name { font-size: .84rem; font-weight: 600; color: var(--cream); display: block; margin-bottom: .15rem; font-family: var(--font-b); }
+    .svc-item__sub { font-size: .68rem; color: var(--muted); display: block; line-height: 1.4; }
+
+    .lp-ai {
+      margin: 1rem 1rem 0;
+      background: linear-gradient(135deg, var(--navy-800) 0%, #0e2c54 100%);
+      border: 1px solid var(--border-g); border-radius: 16px; padding: 1.6rem 1.4rem; text-align: center;
+    }
+    .lp-ai__icon { font-size: 2rem; margin-bottom: .5rem; }
+    .lp-ai__title { font-family: var(--font-d); font-size: 1.15rem; font-weight: 400; color: var(--cream); margin: 0 0 .4rem; }
+    .lp-ai__sub { font-size: .8rem; color: var(--muted); margin: 0 0 1.2rem; line-height: 1.5; }
+    .lp-ai__btn {
+      display: inline-flex; align-items: center; gap: .45rem;
+      background: var(--gold); color: var(--navy-900);
+      font-family: var(--font-b); font-weight: 700; font-size: .84rem; letter-spacing: .04em;
+      padding: .72rem 1.6rem; border-radius: 99px; border: none; cursor: pointer; text-decoration: none; transition: background .18s;
+    }
+    .lp-ai__btn:hover { background: var(--gold-lt); color: var(--navy-900); }
+
+    .lp-cta-row { display: flex; gap: .75rem; padding: 0 1rem; flex-wrap: wrap; }
+    .lp-cta-btn {
+      flex: 1; min-width: 140px;
+      display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+      padding: .75rem 1rem; border-radius: 10px; border: none; cursor: pointer;
+      font-family: var(--font-b); font-weight: 600; font-size: .84rem; text-decoration: none; transition: opacity .18s;
+    }
+    .lp-cta-btn--primary { background: var(--gold); color: var(--navy-900); }
+    .lp-cta-btn--ghost { background: var(--navy-800); color: var(--cream); border: 1px solid var(--border); }
+    .lp-cta-btn:hover { opacity: .85; }
+
+    .lp-contact {
+      margin: 1.2rem 1rem 0; padding: 1.1rem 1.2rem;
+      background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 12px;
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    }
+    .lp-contact__label { font-size: .72rem; color: var(--muted); display: block; margin-bottom: .1rem; }
+    .lp-contact__num { font-family: var(--font-d); font-size: 1.05rem; color: var(--gold); text-decoration: none; }
+    .lp-contact__num:hover { color: var(--gold-lt); }
+    .lp-contact__call {
+      display: inline-flex; align-items: center; gap: .35rem; background: var(--gold); color: var(--navy-900);
+      font-weight: 700; font-size: .75rem; padding: .5rem 1rem; border-radius: 99px; text-decoration: none; flex-shrink: 0;
+    }
+
+    .lp-back {
+      display: block; text-align: center; padding: 1.2rem 1rem; font-size: .78rem; color: var(--muted);
+      text-decoration: none; border-top: 1px solid var(--border); margin-top: 1.5rem;
+    }
+    .lp-back:hover { color: var(--cream); }
+
+    @media (min-width: 768px) {
+      .svc-grid { grid-template-columns: repeat(3, 1fr); padding: 0 2rem; }
+      .lp-ai, .lp-contact { margin-left: 2rem; margin-right: 2rem; }
+      .lp-cta-row { padding: 0 2rem; }
+    }
+    @media (min-width: 1200px) {
+      .svc-grid, .lp-ai, .lp-contact, .lp-cta-row { max-width: 960px; margin-left: auto; margin-right: auto; }
+    }
   </style>
 </head>
 <body>
-  <div class="sp"></div>
-  <p>Đang mở dịch vụ nail…</p>
-  <script>window.location.replace('marketplace/?cat=nails');</script>
+<div class="lp">
+
+  <header class="app-bar">
+    <a href="/" class="app-bar__brand" style="text-decoration:none; color:var(--cream);">✦ Du Lịch Cali</a>
+    <a href="tel:4089163439" class="app-bar__call">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.79-1.35a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7a2 2 0 011.72 2.09z"/>
+      </svg>
+      Gọi ngay
+    </a>
+  </header>
+
+  <!-- Hero Carousel -->
+  <div class="hc" id="heroCarousel" aria-roledescription="carousel" aria-label="Nail salon">
+
+    <div class="hc__slide hc__slide--active" data-idx="0" role="group" aria-label="1 của 2"
+         style="--accent:#f472b6;--accent-glow:rgba(244,114,182,.45);">
+      <div class="hc__bg" style="background-image:url('https://images.unsplash.com/photo-1604654894610-df63bc536371?w=1400&auto=format&fit=crop&q=90');background-position:center 35%;"></div>
+      <div class="hc__gradient"></div>
+      <div class="hc__body">
+        <span class="hc__chip">💅 Nail Salon · Bay Area &amp; OC</span>
+        <h1 class="hc__title">Nail Đẹp<br><em>Sang Trọng</em></h1>
+        <p class="hc__sub">Gel · Acrylic · Ombre · Nail Art · Pedicure</p>
+        <a href="/marketplace/?cat=nails" class="hc__cta" style="text-decoration:none;">Đặt lịch ngay</a>
+      </div>
+    </div>
+
+    <div class="hc__slide" data-idx="1" role="group" aria-label="2 của 2"
+         style="--accent:#fb7185;--accent-glow:rgba(251,113,133,.42);">
+      <div class="hc__bg" style="background-image:url('https://images.unsplash.com/photo-1604654894610-df63bc536371?w=1400&auto=format&fit=crop&q=90');background-position:center 55%;"></div>
+      <div class="hc__gradient"></div>
+      <div class="hc__body">
+        <span class="hc__chip">🌸 Nail Art &amp; Thiết Kế</span>
+        <h2 class="hc__title">Nail Art<br><em>Độc Đáo &amp; Tinh Tế</em></h2>
+        <p class="hc__sub">Hoa · Đá · Foil · 3D · Chrome · Theo yêu cầu</p>
+        <a href="/marketplace/?cat=nails" class="hc__cta" style="text-decoration:none;">Xem thiết kế</a>
+      </div>
+    </div>
+
+    <div class="hc__dots" role="tablist" aria-label="Chọn slide">
+      <button class="hc__dot hc__dot--active" data-dot="0" role="tab" aria-selected="true"  aria-label="Slide 1"></button>
+      <button class="hc__dot"                 data-dot="1" role="tab" aria-selected="false" aria-label="Slide 2"></button>
+    </div>
+    <div class="hc__progress" role="none"><div class="hc__progress-bar" id="hcProgressBar"></div></div>
+  </div>
+
+  <!-- Services List -->
+  <section class="home-section" style="padding:1.6rem 0 .6rem;">
+    <div class="section-hdr" style="padding:0 1rem;">
+      <h2 class="section-title">Dịch Vụ Nail</h2>
+      <a href="/marketplace/?cat=nails" class="see-all">Đặt lịch</a>
+    </div>
+    <div class="svc-grid">
+      <a href="/marketplace/?cat=nails" class="svc-item">
+        <div class="svc-item__icon">💅</div>
+        <div>
+          <span class="svc-item__name">Gel Nail</span>
+          <span class="svc-item__sub">Bền · Bóng · Màu đẹp · 3 tuần</span>
+        </div>
+      </a>
+      <a href="/marketplace/?cat=nails" class="svc-item">
+        <div class="svc-item__icon">💎</div>
+        <div>
+          <span class="svc-item__name">Acrylic Nail</span>
+          <span class="svc-item__sub">Đắp bột · Nối móng · Chắc bền</span>
+        </div>
+      </a>
+      <a href="/marketplace/?cat=nails" class="svc-item">
+        <div class="svc-item__icon">🌈</div>
+        <div>
+          <span class="svc-item__name">Ombre Nail</span>
+          <span class="svc-item__sub">Chuyển màu · Gradient nhẹ</span>
+        </div>
+      </a>
+      <a href="/marketplace/?cat=nails" class="svc-item">
+        <div class="svc-item__icon">🌸</div>
+        <div>
+          <span class="svc-item__name">Nail Art</span>
+          <span class="svc-item__sub">3D · Foil · Chrome · Theo mẫu</span>
+        </div>
+      </a>
+      <a href="/marketplace/?cat=nails" class="svc-item">
+        <div class="svc-item__icon">🦶</div>
+        <div>
+          <span class="svc-item__name">Pedicure</span>
+          <span class="svc-item__sub">Làm đẹp bàn chân · Trị liệu</span>
+        </div>
+      </a>
+      <a href="/marketplace/?cat=nails" class="svc-item">
+        <div class="svc-item__icon">✨</div>
+        <div>
+          <span class="svc-item__name">Manicure</span>
+          <span class="svc-item__sub">Cắt dũa · Dưỡng móng · Đơn giản</span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <div class="lp-cta-row" style="margin-top:.75rem;">
+    <a href="/marketplace/?cat=nails" class="lp-cta-btn lp-cta-btn--primary">Đặt lịch ngay</a>
+    <a href="/?entry=marketplace" class="lp-cta-btn lp-cta-btn--ghost">Hỏi AI về dịch vụ</a>
+  </div>
+
+  <div class="lp-ai" style="margin-top:1.5rem;">
+    <div class="lp-ai__icon">💅</div>
+    <p class="lp-ai__title">Trợ Lý AI Nail Salon</p>
+    <p class="lp-ai__sub">Hỏi về bảng giá, salon gần nhất, dịch vụ phù hợp — AI tư vấn bằng tiếng Việt</p>
+    <a href="/?entry=marketplace" class="lp-ai__btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      Chat với AI ngay
+    </a>
+  </div>
+
+  <div class="lp-contact">
+    <div>
+      <span class="lp-contact__label">Đặt lịch nail · Du Lịch Cali</span>
+      <a href="tel:4089163439" class="lp-contact__num">408-916-3439</a>
+    </div>
+    <a href="tel:4089163439" class="lp-contact__call">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.72 6.72l1.79-1.35a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7a2 2 0 011.72 2.09z"/></svg>
+      Gọi ngay
+    </a>
+  </div>
+
+  <a href="/" class="lp-back">← Về trang chủ Du Lịch Cali</a>
+
+</div>
+
+<script>
+  (function() {
+    var DURATION = 5000, current = 0, timer = null, slides, dots, bar, startX = 0;
+    function init() {
+      var el = document.getElementById('heroCarousel');
+      if (!el) return;
+      slides = el.querySelectorAll('.hc__slide'); dots = el.querySelectorAll('.hc__dot'); bar = document.getElementById('hcProgressBar');
+      dots.forEach(function(d) { d.addEventListener('click', function() { goto(parseInt(d.dataset.dot,10)); }); });
+      el.addEventListener('touchstart', function(e) { startX = e.changedTouches[0].clientX; }, { passive: true });
+      el.addEventListener('touchend', function(e) {
+        var dx = e.changedTouches[0].clientX - startX;
+        if (Math.abs(dx) < 44) return;
+        goto(dx < 0 ? (current+1)%slides.length : (current-1+slides.length)%slides.length);
+      }, { passive: true });
+      start();
+    }
+    function goto(idx) {
+      slides[current].classList.remove('hc__slide--active'); dots[current].classList.remove('hc__dot--active'); dots[current].setAttribute('aria-selected','false');
+      current = idx;
+      slides[current].classList.add('hc__slide--active'); dots[current].classList.add('hc__dot--active'); dots[current].setAttribute('aria-selected','true');
+      stop(); start();
+    }
+    function start() { animateProgress(); timer = setTimeout(function() { goto((current+1)%slides.length); }, DURATION); }
+    function stop() { clearTimeout(timer); if (bar) { bar.style.transition='none'; bar.style.width='0%'; void bar.offsetWidth; } }
+    function animateProgress() {
+      if (!bar) return;
+      if (window.matchMedia('(prefers-reduced-motion:reduce)').matches) { bar.style.width='100%'; return; }
+      bar.style.transition='none'; bar.style.width='0%'; void bar.offsetWidth;
+      bar.style.transition='width '+DURATION+'ms linear'; bar.style.width='100%';
+    }
+    document.addEventListener('DOMContentLoaded', init);
+  })();
+</script>
 </body>
 </html>

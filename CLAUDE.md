@@ -174,6 +174,61 @@ A customer form that shows all fields at once, or that requires more than 3 inpu
 
 ---
 
+## Category Landing Page Architecture
+
+Each service category has a dedicated standalone landing page at the root:
+
+| URL | File | Purpose |
+|-----|------|---------|
+| `/airport` | `airport.html` | Airport & Ride landing page — full functional page with ride intake modal |
+| `/tour` | `tour.html` | Tour & Travel landing page — destination highlights, AI entry |
+| `/food` | `food.html` | Food landing page — menu highlights, links to marketplace |
+| `/hair` | `hair.html` | Hair Salon landing page — services list, links to marketplace |
+| `/nails` | `nails.html` | Nail Salon landing page — services list, links to marketplace |
+
+### Design Rules
+
+- All landing pages use the **same premium design language** as the homepage (`style.css` + `desktop.css` loaded, then body scroll override)
+- Every page has its own **hero carousel** with category-specific slides and CSS accent colors
+- Pages are **standalone** (scrollable body, not SPA-locked) — override: `html,body { height:auto; } body { overflow-y:auto; }`
+- The `.hc` hero carousel height is `76vh` on landing pages (vs `60vh` on SPA homepage) since there is no bottom nav
+- Self-contained carousel JS is inlined in each page (same IIFE pattern as `HeroCarousel` in `script.js`)
+
+### AI Entry Points
+
+| Page | AI button destination | Mode |
+|------|-----------------------|------|
+| `airport.html` | `/?entry=airport` | airport (structured workflow) |
+| `tour.html` | `/?entry=tour` | tour (structured workflow) |
+| `food.html` | `/?entry=marketplace` | marketplace |
+| `hair.html` | `/?entry=marketplace` | marketplace |
+| `nails.html` | `/?entry=marketplace` | marketplace |
+
+The `?entry=` URL param is handled in `script.js` DOMContentLoaded — opens the main site's SPA AI in the correct mode.
+
+### Booking Actions
+
+- **airport.html**: Fully functional — includes ride intake modal HTML + loads Firebase + `location.js` + `ride-intake.js`. Tiles call `RideIntake.open('pickup'|'dropoff'|'ride')` directly.
+- **tour.html**: Destination highlight cards link to `/?entry=tour` (AI plans tour).
+- **food/hair/nails**: Service cards and CTA buttons link to `marketplace/?cat=X` for actual booking.
+
+### Carousel Accent Colors
+
+| Page | Accent | Glow |
+|------|--------|------|
+| airport (slide 1) | `#38bdf8` (sky blue) | `rgba(56,189,248,.45)` |
+| airport (slide 2) | `#fb923c` (sunset) | `rgba(251,146,60,.45)` |
+| tour (slide 1) | `#fb923c` | `rgba(251,146,60,.45)` |
+| food | `#f59e0b`, `#fbbf24`, `#f97316`, `#84cc16`, `#fbbf24` | per slide |
+| hair | `#c084fc` (purple) | `rgba(192,132,252,.48)` |
+| nails | `#f472b6` (pink) | `rgba(244,114,182,.45)` |
+
+### QR Code Usage
+
+These pages are the canonical QR code destinations (see `qr.html`). Each page works as a self-contained entry point for social media links, printed materials, and QR scans.
+
+---
+
 ## Permissions & Workflow
 
 - **Auto-mode is always on.** Proceed with all file edits, writes, and implementations without asking for permission.

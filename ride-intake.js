@@ -35,9 +35,6 @@ window.RideIntake = (function () {
   var _ac      = {};
   var _busy    = false;
 
-  // IDs of address inputs that get replaced by PlaceAutocompleteElement
-  var _PAC_IDS = ['ri_dropoff_addr', 'ri_pickup_addr', 'ri_from_addr', 'ri_to_addr'];
-
   // ── Step management ───────────────────────────────────────────────────────────
   function open(type) {
     _quote = null;
@@ -256,17 +253,6 @@ window.RideIntake = (function () {
 
   // ── Form reset ───────────────────────────────────────────────────────────────
   function resetForm() {
-    // Remove any PlaceAutocompleteElements and restore original inputs
-    _PAC_IDS.forEach(function (id) {
-      var acEl = _ac[id];
-      if (acEl && acEl.parentNode && acEl.tagName) {
-        acEl.parentNode.removeChild(acEl);
-      }
-      var inp = document.getElementById(id);
-      if (inp) inp.style.display = '';
-      delete _ac[id];
-    });
-
     var f = document.getElementById('riForm');
     if (f) f.reset();
 
@@ -283,40 +269,16 @@ window.RideIntake = (function () {
     (ids[_type] || []).forEach(function (id) {
       var input = document.getElementById(id);
       if (!input || _ac[id]) return;
-
-      if (google.maps.places.PlaceAutocompleteElement) {
-        // New API (March 2025+) — web component replaces the input visually
-        var acEl = new google.maps.places.PlaceAutocompleteElement({
-          componentRestrictions: { country: 'us' },
-        });
-        acEl.className = 'ri-pac-el';
-        acEl.setAttribute('placeholder', input.getAttribute('placeholder') || '');
-        // Insert before original input, hide original (keeps it as data store)
-        input.parentNode.insertBefore(acEl, input);
-        input.style.display = 'none';
-        // On selection: write formatted address to hidden input, trigger pricing
-        acEl.addEventListener('gmp-placeselect', function (evt) {
-          var place = evt.place;
-          if (!place) return;
-          place.fetchFields({ fields: ['formattedAddress'] }).then(function () {
-            input.value = place.formattedAddress || '';
-            scheduleDistance();
-          }).catch(function () { scheduleDistance(); });
-        });
-        _ac[id] = acEl;
-      } else {
-        // Legacy fallback — still functional, shows deprecation notice in console
-        var ac = new google.maps.places.Autocomplete(input, {
-          componentRestrictions: { country: 'us' },
-          fields: ['formatted_address'],
-        });
-        ac.addListener('place_changed', function () {
-          var p = ac.getPlace();
-          if (p && p.formatted_address) input.value = p.formatted_address;
-          scheduleDistance();
-        });
-        _ac[id] = ac;
-      }
+      var ac = new google.maps.places.Autocomplete(input, {
+        componentRestrictions: { country: 'us' },
+        fields: ['formatted_address'],
+      });
+      ac.addListener('place_changed', function () {
+        var p = ac.getPlace();
+        if (p && p.formatted_address) input.value = p.formatted_address;
+        scheduleDistance();
+      });
+      _ac[id] = ac;
     });
   }
 
@@ -552,19 +514,7 @@ window.RideIntake = (function () {
   }
 
   // ── Utilities ─────────────────────────────────────────────────────────────────
-  function val(id) {
-    // For PlaceAutocompleteElement fields: confirmed selection lives in hidden input;
-    // fall back to the element's typed text so partially-typed addresses still pass.
-    var acEl = _ac[id];
-    if (acEl && acEl.tagName) {
-      var hidden = document.getElementById(id);
-      var confirmed = hidden ? hidden.value.trim() : '';
-      if (confirmed) return confirmed;
-      try { return (acEl.value || '').trim(); } catch (_) { return ''; }
-    }
-    var e = document.getElementById(id);
-    return e ? e.value.trim() : '';
-  }
+  function val(id)         { var e = document.getElementById(id); return e ? e.value.trim() : ''; }
   function setText(id, t)  { var e = document.getElementById(id); if (e) e.textContent = t; }
   function setHide(id, h)  { var e = document.getElementById(id); if (e) e.hidden = !!h; }
   function svcLabel()      { return { pickup:'Đón Sân Bay', dropoff:'Ra Sân Bay', ride:'Xe Riêng' }[_type] || _type; }

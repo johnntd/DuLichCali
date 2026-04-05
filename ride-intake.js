@@ -58,31 +58,37 @@ window.RideIntake = (function () {
     _fetchDriverVehicle(); // async, non-blocking
   }
 
+  function _applyDriverVehicle(d, driverId) {
+    var v = (d && d.vehicle) || {};
+    _driverVehicle = {
+      name:       [v.make, v.model, v.year].filter(Boolean).join(' ') || (d && d.fullName ? d.fullName + "'s vehicle" : 'Xe Riêng'),
+      seats:      v.seats || 4,
+      driverId:   driverId || '',
+      driverName: (d && d.fullName) || ''
+    };
+    var sub = document.getElementById('riPickerSub');
+    if (sub) sub.textContent = 'Tài xế chuyên nghiệp · ' + _driverVehicle.name + ' ' + _driverVehicle.seats + ' chỗ';
+    var box = document.getElementById('riVehicleBox');
+    if (box) box.innerHTML = _driverVehicle.name + '<br>' + _driverVehicle.seats + ' chỗ<br>Chưa bao gồm tip';
+  }
+
   function _fetchDriverVehicle() {
+    // 1. Use window._activeDrivers (all active, set by checkRideServiceAvailability at page load)
+    var pool = window._activeDrivers || window._availableDrivers;
+    if (pool && pool.length) {
+      var best = pool.find(function(d) { return d.vehicle && d.vehicle.make; }) || pool[0];
+      _applyDriverVehicle(best, best.id);
+      return;
+    }
+    // 2. Fallback: query Firestore directly (e.g. page loaded before availability check finished)
     if (typeof firebase === 'undefined' || !firebase.firestore) return;
     firebase.firestore().collection('drivers')
       .where('active', '==', true)
       .get()
       .then(function(snap) {
-        if (snap.empty) return;
-        // Find first driver that has vehicle info filled in
-        var doc = snap.docs.find(function(d) {
-          var v = d.data().vehicle;
-          return v && v.make;
-        }) || snap.docs[0];
-        var d = doc.data();
-        var v = d.vehicle || {};
-        _driverVehicle = {
-          name:     [v.make, v.model, v.year].filter(Boolean).join(' ') || 'Tesla Model Y',
-          seats:    v.seats || 4,
-          driverId: doc.id,
-          driverName: d.fullName || ''
-        };
-        // Update hardcoded vehicle labels in the UI
-        var sub = document.getElementById('riPickerSub');
-        if (sub) sub.textContent = 'Tài xế chuyên nghiệp · ' + _driverVehicle.name + ' ' + _driverVehicle.seats + ' chỗ';
-        var box = document.getElementById('riVehicleBox');
-        if (box) box.innerHTML = _driverVehicle.name + '<br>' + _driverVehicle.seats + ' chỗ<br>Chưa bao gồm tip';
+        if (snap.empty) { console.warn('[RideIntake] No active drivers found in Firestore'); return; }
+        var best = snap.docs.find(function(d) { return d.data().vehicle && d.data().vehicle.make; }) || snap.docs[0];
+        _applyDriverVehicle(best.data(), best.id);
       }).catch(function(err) { console.error('[RideIntake] _fetchDriverVehicle failed:', err); });
   }
 

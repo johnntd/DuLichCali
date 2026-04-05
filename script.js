@@ -1108,9 +1108,9 @@ function toggleRegionPicker() {
 // Fails open (shows ride service) if Firestore is unavailable.
 async function checkRideServiceAvailability(regionId) {
   try {
+    // Query all active drivers regardless of rideServiceEnabled — we need vehicle data for display
     const snap = await db.collection('drivers')
       .where('active', '==', true)
-      .where('rideServiceEnabled', '==', true)
       .get();
 
     const now      = new Date();
@@ -1118,8 +1118,11 @@ async function checkRideServiceAvailability(regionId) {
     const nowMins  = now.getHours() * 60 + now.getMinutes();
     const todayStr = now.toISOString().split('T')[0];        // YYYY-MM-DD
 
-    const hasAvailable = snap.docs.some(doc => {
-      const d = doc.data();
+    // Store ALL active drivers for vehicle display (regardless of schedule/region)
+    window._activeDrivers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    const isScheduledAvailable = doc => {
+      const d = doc.data ? doc.data() : doc;
       if (!(d.regions || []).includes(regionId)) return false;
       if ((d.availability?.blackoutDates || []).includes(todayStr)) return false;
       const sched = d.availability?.weeklySchedule?.[day];
@@ -1127,20 +1130,13 @@ async function checkRideServiceAvailability(regionId) {
       const [sh, sm] = (sched.start || '00:00').split(':').map(Number);
       const [eh, em] = (sched.end   || '23:59').split(':').map(Number);
       return nowMins >= sh * 60 + sm && nowMins <= eh * 60 + em;
-    });
+    };
 
-    // Store available driver vehicle data for ride form
+    const hasAvailable = snap.docs.some(isScheduledAvailable);
+
+    // Store on-shift drivers for assignment logic
     window._availableDrivers = snap.docs
-      .filter(doc => {
-        const d = doc.data();
-        if (!(d.regions || []).includes(regionId)) return false;
-        if ((d.availability?.blackoutDates || []).includes(todayStr)) return false;
-        const sched = d.availability?.weeklySchedule?.[day];
-        if (!sched?.enabled) return false;
-        const [sh, sm] = (sched.start || '00:00').split(':').map(Number);
-        const [eh, em] = (sched.end   || '23:59').split(':').map(Number);
-        return nowMins >= sh * 60 + sm && nowMins <= eh * 60 + em;
-      })
+      .filter(isScheduledAvailable)
       .map(doc => ({ id: doc.id, ...doc.data() }));
 
     window._rideServiceAvailable = hasAvailable;

@@ -125,6 +125,13 @@ document.addEventListener('DOMContentLoaded', function () {
   if      (hash === '#travel' || hash === '#destinations') switchScreen('screenDest');
   else if (hash === '#ai'     || hash === '#chat')         switchScreen('screenChat');
   else if (hash === '#book'   || hash === '#booking')      switchScreen('screenBook');
+  else if (hash === '#airport' || hash === '#ride') {
+    // Stay on screenHome, scroll to the Airport & Ride section
+    setTimeout(function() {
+      var sec = document.getElementById('hpAirport');
+      if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
+  }
 
   // entry= param: used by QR codes and social media deep links
   // Delay to allow DLChat.init() and all module setup to complete first

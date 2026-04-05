@@ -15,7 +15,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <!-- Static salon data -->
-  <script src="marketplace/services-data.js?v=20260405a"></script>
+  <script src="marketplace/services-data.js?v=20260405b"></script>
 
   <style>
     :root {
@@ -116,11 +116,23 @@
     /* ── Section header ── */
     .sa-section-header {
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 1.25rem;
+      margin-bottom: 1.25rem; flex-wrap: wrap; gap: .5rem;
     }
     .sa-section-title {
       font-family: var(--font-d); font-size: 1.35rem; color: var(--cream);
     }
+
+    /* ── Category tabs ── */
+    .cat-tabs { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .cat-tab {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 20px; color: var(--muted);
+      font-family: var(--font-b); font-size: .62rem; font-weight: 700;
+      padding: .28rem .7rem; cursor: pointer; letter-spacing: .04em; text-transform: uppercase;
+      transition: all .15s; white-space: nowrap;
+    }
+    .cat-tab:hover { border-color: var(--text); color: var(--text); }
+    .cat-tab.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold-lt); }
 
     /* ── Cards ── */
     .sa-card {
@@ -134,17 +146,46 @@
 
     /* ── Service/staff row ── */
     .sa-item {
-      display: flex; align-items: flex-start; gap: 1rem;
-      padding: .85rem 1.1rem;
+      display: flex; align-items: flex-start; gap: .85rem;
+      padding: .85rem 1rem;
       background: var(--navy-800);
       border: 1px solid var(--border);
       border-radius: var(--r);
       margin-bottom: .6rem;
     }
-    .sa-item__info { flex: 1; }
-    .sa-item__name { font-size: .9rem; font-weight: 600; color: var(--cream); }
-    .sa-item__meta { font-size: .72rem; color: var(--muted); margin-top: .2rem; }
-    .sa-item__actions { display: flex; gap: .4rem; flex-wrap: wrap; align-items: center; }
+    .sa-item.inactive-dim { opacity: .52; }
+    .sa-item__img {
+      width: 56px; height: 56px; flex-shrink: 0;
+      border-radius: 6px; object-fit: cover;
+      background: var(--navy-700);
+    }
+    .sa-item__img-ph {
+      width: 56px; height: 56px; flex-shrink: 0;
+      border-radius: 6px; background: var(--navy-700);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+    }
+    .sa-item__info { flex: 1; min-width: 0; }
+    .sa-item__name { font-size: .88rem; font-weight: 600; color: var(--cream); display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; }
+    .sa-item__meta { font-size: .7rem; color: var(--muted); margin-top: .2rem; line-height: 1.4; }
+    .sa-item__actions { display: flex; gap: .4rem; flex-wrap: wrap; align-items: center; flex-shrink: 0; }
+
+    /* ── Category badge ── */
+    .cat-badge {
+      display: inline-block; font-size: .53rem; font-weight: 700;
+      padding: 1px 5px; border-radius: 3px;
+      background: rgba(245,166,35,.12); border: 1px solid rgba(245,166,35,.22);
+      color: var(--gold); text-transform: uppercase; letter-spacing: .04em;
+    }
+
+    /* ── Staff schedule pills ── */
+    .sched-pills { display: flex; gap: .2rem; margin-top: .3rem; flex-wrap: wrap; }
+    .sched-pill {
+      font-size: .56rem; font-weight: 700; padding: 1px 5px;
+      border-radius: 3px; text-transform: uppercase; letter-spacing: .03em;
+    }
+    .sched-pill--on  { background: rgba(74,222,128,.1); color: var(--success); border: 1px solid rgba(74,222,128,.28); }
+    .sched-pill--off { background: transparent; color: var(--muted); border: 1px solid var(--border); opacity: .55; }
 
     /* ── Buttons ── */
     .btn {
@@ -158,10 +199,7 @@
       padding: .5rem 1.1rem;
     }
     .btn--primary:hover { opacity: .88; }
-    .btn--sm {
-      font-size: .65rem; font-weight: 700;
-      padding: .28rem .6rem;
-    }
+    .btn--sm { font-size: .65rem; font-weight: 700; padding: .28rem .6rem; }
     .btn--outline {
       background: transparent; border: 1px solid var(--border);
       color: var(--muted);
@@ -185,7 +223,6 @@
     }
     .toggle-pill.on  { background: rgba(74,222,128,.1); border-color: rgba(74,222,128,.35); color: var(--success); }
     .toggle-pill.off { color: var(--muted); }
-    .inactive-dim { opacity: .5; }
 
     /* ── Empty state ── */
     .sa-empty { text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: .85rem; }
@@ -193,18 +230,62 @@
     /* ── Hours grid ── */
     .hours-grid { display: flex; flex-direction: column; gap: .55rem; }
     .hours-row {
-      display: flex; align-items: center; gap: .75rem;
+      display: flex; align-items: center; gap: .65rem;
       flex-wrap: wrap;
     }
-    .hours-row__day { width: 80px; font-size: .78rem; font-weight: 600; color: var(--cream); }
+    .hours-row__day { width: 72px; font-size: .78rem; font-weight: 600; color: var(--cream); }
     .hours-input {
       background: var(--navy-900); border: 1px solid var(--border);
       border-radius: 5px; color: var(--cream);
       font-family: var(--font-b); font-size: .78rem;
-      padding: .3rem .55rem; width: 90px;
+      padding: .3rem .5rem; width: 86px;
     }
     .hours-input:focus { outline: none; border-color: var(--gold); }
+    .hours-input:disabled { opacity: .4; }
     .hours-row__closed { font-size: .72rem; color: var(--muted); display: flex; align-items: center; gap: .3rem; cursor: pointer; }
+
+    /* ── Per-day schedule editor (staff modal) ── */
+    .schedule-editor {
+      border: 1px solid var(--border); border-radius: 6px;
+      padding: .5rem .7rem; display: flex; flex-direction: column; gap: 0;
+    }
+    .sched-row {
+      display: flex; align-items: center; gap: .5rem;
+      padding: .32rem 0;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .sched-row:last-child { border-bottom: none; }
+    .sched-day-lbl {
+      width: 62px; font-size: .72rem; font-weight: 600; color: var(--text);
+      display: flex; align-items: center; gap: .3rem; cursor: pointer; flex-shrink: 0;
+    }
+    .sched-day-lbl input[type="checkbox"] { cursor: pointer; }
+    .sched-sep { font-size: .7rem; color: var(--muted); }
+
+    /* ── Staff assignment checkboxes (service modal) ── */
+    .staff-checks { display: flex; flex-direction: column; gap: .38rem; padding: .4rem 0; }
+    .staff-check { display: flex; align-items: center; gap: .45rem; font-size: .8rem; color: var(--text); cursor: pointer; }
+    .staff-check input[type="checkbox"] { cursor: pointer; }
+
+    /* ── Availability cards ── */
+    .avail-grid { display: flex; flex-direction: column; gap: .6rem; }
+    .avail-card {
+      background: var(--navy-800); border: 1px solid var(--border);
+      border-radius: var(--r); padding: .9rem 1.1rem;
+    }
+    .avail-card.avail-now { border-color: rgba(74,222,128,.35); background: rgba(74,222,128,.04); }
+    .avail-name { font-size: .9rem; font-weight: 600; color: var(--cream); display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+    .avail-hours { font-size: .72rem; color: var(--gold-lt); margin-top: .25rem; }
+    .avail-specs { font-size: .68rem; color: var(--muted); margin-top: .12rem; }
+    .avail-role  { font-size: .7rem; color: var(--muted); }
+    .avail-badge {
+      display: inline-block; font-size: .54rem; font-weight: 700;
+      padding: 1px 6px; border-radius: 3px;
+      text-transform: uppercase; letter-spacing: .04em;
+    }
+    .avail-badge--now   { background: rgba(74,222,128,.15); border: 1px solid rgba(74,222,128,.4); color: var(--success); }
+    .avail-badge--today { background: rgba(245,166,35,.1); border: 1px solid rgba(245,166,35,.28); color: var(--gold); }
+    .avail-badge--off   { background: transparent; border: 1px solid var(--border); color: var(--muted); }
 
     /* ── Form / modal ── */
     .sa-modal-backdrop {
@@ -219,12 +300,12 @@
       border: 1px solid var(--border-g);
       border-radius: 12px;
       padding: 1.5rem 1.75rem;
-      width: 100%; max-width: 440px;
+      width: 100%; max-width: 460px;
       max-height: 90vh; overflow-y: auto;
     }
     .sa-modal h3 { font-family: var(--font-d); font-size: 1.1rem; color: var(--cream); margin-bottom: 1.1rem; }
     .sa-field { margin-bottom: .85rem; }
-    .sa-field label { display: block; font-size: .7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .3rem; }
+    .sa-field label { display: block; font-size: .68rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .3rem; }
     .sa-input {
       width: 100%; background: var(--navy-900);
       border: 1px solid var(--border); border-radius: 6px;
@@ -232,14 +313,21 @@
       padding: .5rem .8rem;
     }
     .sa-input:focus { outline: none; border-color: var(--gold); }
+    .sa-select {
+      width: 100%; background: var(--navy-900);
+      border: 1px solid var(--border); border-radius: 6px;
+      color: var(--cream); font-family: var(--font-b); font-size: .85rem;
+      padding: .5rem .8rem; cursor: pointer;
+    }
+    .sa-select:focus { outline: none; border-color: var(--gold); }
     .sa-modal-actions { display: flex; gap: .6rem; justify-content: flex-end; margin-top: 1.25rem; }
     .sa-msg { font-size: .72rem; margin-top: .5rem; }
+    .sa-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
 
     /* ── Appointment card ── */
     .appt-card {
       background: var(--navy-800); border: 1px solid var(--border);
-      border-radius: var(--r); padding: .9rem 1.1rem;
-      margin-bottom: .6rem;
+      border-radius: var(--r); padding: .9rem 1.1rem; margin-bottom: .6rem;
     }
     .appt-card__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: .3rem; }
     .appt-card__name { font-weight: 600; color: var(--cream); font-size: .88rem; }
@@ -251,12 +339,18 @@
 
     /* ── Status badge ── */
     .status-badge {
-      display: inline-block; font-size: .58rem; font-weight: 700;
-      padding: 1px 6px; border-radius: 3px;
+      display: inline-block; font-size: .56rem; font-weight: 700;
+      padding: 1px 5px; border-radius: 3px;
       text-transform: uppercase; letter-spacing: .04em;
     }
     .status-badge--active { background: rgba(74,222,128,.1); border: 1px solid rgba(74,222,128,.3); color: var(--success); }
     .status-badge--inactive { background: var(--navy-700); border: 1px solid var(--border); color: var(--muted); }
+
+    /* ── Today heading ── */
+    .today-heading {
+      font-size: .72rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: .85rem;
+    }
 
     /* ── Toast ── */
     #toast {
@@ -265,6 +359,7 @@
       border-radius: 8px; padding: .6rem 1.25rem;
       font-size: .8rem; color: var(--cream);
       opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 999;
+      white-space: nowrap;
     }
     #toast.show { opacity: 1; }
 
@@ -276,16 +371,17 @@
       .mobile-tabs {
         display: flex; overflow-x: auto; gap: 0;
         background: var(--navy-800); border-bottom: 1px solid var(--border);
-        flex-shrink: 0;
+        flex-shrink: 0; -webkit-overflow-scrolling: touch;
       }
       .mobile-tab-btn {
-        flex: 1; min-width: 70px; padding: .6rem .3rem;
+        flex-shrink: 0; padding: .6rem .6rem;
         background: transparent; border: none; border-bottom: 2px solid transparent;
-        font-family: var(--font-b); font-size: .62rem; font-weight: 600;
+        font-family: var(--font-b); font-size: .6rem; font-weight: 600;
         color: var(--muted); text-transform: uppercase; letter-spacing: .04em;
         cursor: pointer; white-space: nowrap;
       }
       .mobile-tab-btn.active { color: var(--gold-lt); border-bottom-color: var(--gold); }
+      .sa-item__actions { justify-content: flex-end; }
     }
     @media (min-width: 768px) {
       .mobile-tabs { display: none; }
@@ -326,6 +422,7 @@
   <div class="mobile-tabs">
     <button class="mobile-tab-btn active" onclick="switchTab('services')">Dịch Vụ</button>
     <button class="mobile-tab-btn" onclick="switchTab('staff')">Nhân Viên</button>
+    <button class="mobile-tab-btn" onclick="switchTab('availability')">Hôm Nay</button>
     <button class="mobile-tab-btn" onclick="switchTab('hours')">Giờ Mở</button>
     <button class="mobile-tab-btn" onclick="switchTab('appointments')">Lịch Hẹn</button>
     <button class="mobile-tab-btn" onclick="switchTab('settings')">Cài Đặt</button>
@@ -336,11 +433,12 @@
 
     <!-- Sidebar nav -->
     <nav class="va-sidebar">
-      <button class="va-nav-btn active" id="nav-services" onclick="switchTab('services')">Dịch Vụ</button>
-      <button class="va-nav-btn" id="nav-staff" onclick="switchTab('staff')">Nhân Viên</button>
-      <button class="va-nav-btn" id="nav-hours" onclick="switchTab('hours')">Giờ Mở Cửa</button>
-      <button class="va-nav-btn" id="nav-appointments" onclick="switchTab('appointments')">Lịch Hẹn</button>
-      <button class="va-nav-btn" id="nav-settings" onclick="switchTab('settings')">Cài Đặt</button>
+      <button class="va-nav-btn active" id="nav-services"      onclick="switchTab('services')">Dịch Vụ</button>
+      <button class="va-nav-btn"        id="nav-staff"         onclick="switchTab('staff')">Nhân Viên</button>
+      <button class="va-nav-btn"        id="nav-availability"  onclick="switchTab('availability')">Hôm Nay</button>
+      <button class="va-nav-btn"        id="nav-hours"         onclick="switchTab('hours')">Giờ Mở Cửa</button>
+      <button class="va-nav-btn"        id="nav-appointments"  onclick="switchTab('appointments')">Lịch Hẹn</button>
+      <button class="va-nav-btn"        id="nav-settings"      onclick="switchTab('settings')">Cài Đặt</button>
     </nav>
 
     <!-- Main -->
@@ -352,6 +450,9 @@
           <div class="sa-section-title">Dịch Vụ</div>
           <button class="btn btn--primary btn--sm" onclick="openServiceModal(null)">+ Thêm Dịch Vụ</button>
         </div>
+        <div class="cat-tabs" id="catTabs">
+          <button class="cat-tab active" data-cat="all" onclick="filterCat('all',this)">Tất cả</button>
+        </div>
         <div id="servicesList"><div class="sa-empty">Đang tải…</div></div>
       </div>
 
@@ -362,6 +463,16 @@
           <button class="btn btn--primary btn--sm" onclick="openStaffModal(null)">+ Thêm Nhân Viên</button>
         </div>
         <div id="staffList"><div class="sa-empty">Đang tải…</div></div>
+      </div>
+
+      <!-- ── Availability tab ── -->
+      <div class="tab-panel" id="panel-availability">
+        <div class="sa-section-header">
+          <div class="sa-section-title">Hôm Nay</div>
+          <button class="btn btn--outline btn--sm" onclick="renderAvailability()">Làm Mới</button>
+        </div>
+        <div class="today-heading" id="todayHeading"></div>
+        <div class="avail-grid" id="availList"><div class="sa-empty">Đang tải…</div></div>
       </div>
 
       <!-- ── Hours tab ── -->
@@ -419,27 +530,52 @@
   </div>
 </div>
 
-<!-- Service modal -->
+<!-- ── Service modal ── -->
 <div class="sa-modal-backdrop hidden" id="serviceModal">
   <div class="sa-modal">
     <h3 id="serviceModalTitle">Thêm Dịch Vụ</h3>
     <input type="hidden" id="serviceDocId">
+
     <div class="sa-field">
       <label>Tên Dịch Vụ *</label>
       <input class="sa-input" id="svcName" placeholder="Gel Nails, Manicure…">
     </div>
+
     <div class="sa-field">
-      <label>Giá</label>
-      <input class="sa-input" id="svcPrice" placeholder="$35+">
+      <label>Danh Mục</label>
+      <select class="sa-select" id="svcCategory">
+        <option value="">— Chọn danh mục —</option>
+      </select>
     </div>
-    <div class="sa-field">
-      <label>Thời Gian</label>
-      <input class="sa-input" id="svcDuration" placeholder="60 phút">
+
+    <div class="sa-row2">
+      <div class="sa-field">
+        <label>Giá</label>
+        <input class="sa-input" id="svcPrice" placeholder="$35+">
+      </div>
+      <div class="sa-field">
+        <label>Thời Gian</label>
+        <input class="sa-input" id="svcDuration" placeholder="60 phút">
+      </div>
     </div>
+
     <div class="sa-field">
       <label>Mô Tả</label>
       <textarea class="sa-input" id="svcDesc" rows="2" placeholder="Mô tả dịch vụ…"></textarea>
     </div>
+
+    <div class="sa-field">
+      <label>Ảnh URL (Unsplash hoặc link ảnh)</label>
+      <input class="sa-input" id="svcImageUrl" placeholder="https://images.unsplash.com/…">
+    </div>
+
+    <div class="sa-field">
+      <label>Nhân Viên Thực Hiện</label>
+      <div id="svcStaffChecks" class="staff-checks">
+        <span style="color:var(--muted);font-size:.72rem">Chưa có nhân viên</span>
+      </div>
+    </div>
+
     <div class="sa-modal-actions">
       <button class="btn btn--outline btn--sm" onclick="closeServiceModal()">Hủy</button>
       <button class="btn btn--primary btn--sm" onclick="saveService()">Lưu</button>
@@ -448,27 +584,32 @@
   </div>
 </div>
 
-<!-- Staff modal -->
+<!-- ── Staff modal ── -->
 <div class="sa-modal-backdrop hidden" id="staffModal">
   <div class="sa-modal">
     <h3 id="staffModalTitle">Thêm Nhân Viên</h3>
     <input type="hidden" id="staffDocId">
+
     <div class="sa-field">
       <label>Tên *</label>
       <input class="sa-input" id="staffName" placeholder="Tên nhân viên…">
     </div>
+
     <div class="sa-field">
       <label>Vai Trò</label>
       <input class="sa-input" id="staffRole" placeholder="Senior Nail Tech, Nail Tech…">
     </div>
+
     <div class="sa-field">
-      <label>Chuyên Môn (phân cách bởi dấu phẩy)</label>
+      <label>Chuyên Môn (cách nhau bởi dấu phẩy)</label>
       <input class="sa-input" id="staffSpecialties" placeholder="Gel Nails, Acrylic, Nail Art">
     </div>
+
     <div class="sa-field">
-      <label>Lịch Làm (phân cách bởi dấu phẩy)</label>
-      <input class="sa-input" id="staffDays" placeholder="Mon, Tue, Wed, Thu, Fri, Sat">
+      <label>Lịch Làm Việc</label>
+      <div class="schedule-editor" id="schedEditor"></div>
     </div>
+
     <div class="sa-modal-actions">
       <button class="btn btn--outline btn--sm" onclick="closeStaffModal()">Hủy</button>
       <button class="btn btn--primary btn--sm" onclick="saveStaff()">Lưu</button>
@@ -481,7 +622,7 @@
 <div id="toast"></div>
 
 <script>
-  // ── Firebase config (same project as vendor-admin) ──────────────────────────
+  // ── Firebase config ──────────────────────────────────────────────────────────
   var firebaseConfig = {
     apiKey:            'AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ',
     authDomain:        'dulichcali-booking-calendar.firebaseapp.com',
@@ -490,28 +631,51 @@
     messagingSenderId: '477366827450',
     appId:             '1:477366827450:web:90cd82bbc79019bb4d8c77'
   };
-  var app = firebase.initializeApp(firebaseConfig);
-  var db  = firebase.firestore();
+  var app  = firebase.initializeApp(firebaseConfig);
+  var db   = firebase.firestore();
   var auth = firebase.auth();
 
-  // ── Vendor category fallback map ──────────────────────────────────────────
+  // ── Vendor category fallback map ─────────────────────────────────────────────
   var VENDOR_CATEGORY_MAP = {
     'nha-bep-cua-emily': 'food', 'pho-bac-bayarea': 'food', 'com-tam-oc': 'food',
-    'luxurious-nails': 'nails', 'beauty-nails-oc': 'nails',
+    'luxurious-nails': 'nails',  'beauty-nails-oc': 'nails',
     'viet-hair-bayarea': 'hair', 'cali-hair-oc': 'hair'
   };
 
-  // ── State ────────────────────────────────────────────────────────────────
-  var VENDOR_ID   = null;
-  var VENDOR_CAT  = null;
-  var vendorRef   = null;
-  var servicesRef = null;
-  var staffRef    = null;
-  var unsubSvcs   = null;
-  var unsubStaff  = null;
-  var unsubAppts  = null;
+  // ── Day metadata ─────────────────────────────────────────────────────────────
+  var DAYS = [
+    { key:'mon', label:'Thứ 2', short:'T2' },
+    { key:'tue', label:'Thứ 3', short:'T3' },
+    { key:'wed', label:'Thứ 4', short:'T4' },
+    { key:'thu', label:'Thứ 5', short:'T5' },
+    { key:'fri', label:'Thứ 6', short:'T6' },
+    { key:'sat', label:'Thứ 7', short:'T7' },
+    { key:'sun', label:'CN',    short:'CN' }
+  ];
+  var DAY_JS_TO_KEY = ['sun','mon','tue','wed','thu','fri','sat'];
 
-  // ── Utility ──────────────────────────────────────────────────────────────
+  var DEFAULT_HOURS = {
+    mon:{open:'09:00',close:'19:00',closed:false}, tue:{open:'09:00',close:'19:00',closed:false},
+    wed:{open:'09:00',close:'19:00',closed:false}, thu:{open:'09:00',close:'19:00',closed:false},
+    fri:{open:'09:00',close:'19:00',closed:false}, sat:{open:'09:00',close:'18:00',closed:false},
+    sun:{open:'10:00',close:'17:00',closed:false}
+  };
+
+  // ── State ────────────────────────────────────────────────────────────────────
+  var VENDOR_ID      = null;
+  var VENDOR_CAT     = null;
+  var vendorRef      = null;
+  var servicesRef    = null;
+  var staffRef       = null;
+  var unsubSvcs      = null;
+  var unsubStaff     = null;
+  var unsubAppts     = null;
+  var currentCatFilter   = 'all';
+  var allServiceDocs     = [];   // [{id, data}] — full snapshot for filtering
+  var currentStaffData   = [];   // [{id, name, data}] — for service modal checkboxes + availability
+  var SERVICE_CATS       = [];   // [{key, label}] — loaded from static data
+
+  // ── Utility ─────────────────────────────────────────────────────────────────
   function esc(s) {
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
@@ -520,8 +684,13 @@
     t.textContent = msg; t.classList.add('show');
     setTimeout(function(){ t.classList.remove('show'); }, 2800);
   }
+  function timeToMins(t) {
+    if (!t) return 0;
+    var p = t.split(':');
+    return parseInt(p[0]||0,10)*60 + parseInt(p[1]||0,10);
+  }
 
-  // ── Auth ─────────────────────────────────────────────────────────────────
+  // ── Auth ─────────────────────────────────────────────────────────────────────
   auth.onAuthStateChanged(function(user) {
     if (!user) { window.location.href = 'vendor-login.html'; return; }
 
@@ -531,33 +700,35 @@
       VENDOR_ID  = doc.data().vendorId;
       VENDOR_CAT = VENDOR_CATEGORY_MAP[VENDOR_ID] || 'nails';
 
-      // Food vendors belong in vendor-admin.html, not here
       if (VENDOR_CAT === 'food') { window.location.href = 'vendor-admin.html'; return; }
 
       vendorRef   = db.collection('vendors').doc(VENDOR_ID);
       servicesRef = vendorRef.collection('services');
       staffRef    = vendorRef.collection('staff');
 
-      // Resolve business name and public link
       var staticData = (window.MARKETPLACE && window.MARKETPLACE.getBusiness)
         ? window.MARKETPLACE.getBusiness(VENDOR_ID) : null;
 
+      // Load service categories from static data
+      SERVICE_CATS = (staticData && staticData.serviceCategories) || [];
+      buildCatTabs();
+      populateCategorySelect();
+
       vendorRef.get().then(function(vdoc) {
-        var vdata     = vdoc.exists ? vdoc.data() : {};
-        var bizName   = vdata.businessName || (staticData && staticData.name) || VENDOR_ID;
-        var catSlug   = VENDOR_CAT === 'hair' ? 'hairsalon' : 'nailsalon';
-        var pubUrl    = '/' + catSlug + '/?id=' + VENDOR_ID;
+        var vdata   = vdoc.exists ? vdoc.data() : {};
+        var bizName = vdata.businessName || (staticData && staticData.name) || VENDOR_ID;
+        var catSlug = VENDOR_CAT === 'hair' ? 'hairsalon' : 'nailsalon';
+        var pubUrl  = '/' + catSlug + '/?id=' + VENDOR_ID;
 
         document.getElementById('barName').textContent = bizName;
         document.getElementById('barId').textContent   = VENDOR_ID;
         var pl = document.getElementById('publicLink');
         pl.href = pubUrl; pl.textContent = pubUrl;
 
-        // Prefill settings
-        document.getElementById('settingName').value    = vdata.businessName || (staticData && staticData.name) || '';
+        document.getElementById('settingName').value    = vdata.businessName || (staticData && staticData.name)        || '';
         document.getElementById('settingPhone').value   = vdata.phoneDisplay  || (staticData && staticData.phoneDisplay) || '';
-        document.getElementById('settingAddress').value = vdata.address       || (staticData && staticData.address) || '';
-        document.getElementById('settingDesc').value    = vdata.description   || (staticData && staticData.description) || '';
+        document.getElementById('settingAddress').value = vdata.address       || (staticData && staticData.address)      || '';
+        document.getElementById('settingDesc').value    = vdata.description   || (staticData && staticData.description)  || '';
 
         document.getElementById('authLoading').classList.add('hidden');
         document.getElementById('app').classList.add('visible');
@@ -578,13 +749,13 @@
   });
 
   function logout() {
-    if (unsubSvcs)   unsubSvcs();
-    if (unsubStaff)  unsubStaff();
-    if (unsubAppts)  unsubAppts();
+    if (unsubSvcs)  unsubSvcs();
+    if (unsubStaff) unsubStaff();
+    if (unsubAppts) unsubAppts();
     auth.signOut().then(function(){ window.location.href = 'vendor-login.html?id=' + (VENDOR_ID||''); });
   }
 
-  // ── Seed from services-data.js on first load ─────────────────────────────
+  // ── Seed from services-data.js on first load ─────────────────────────────────
   function seedIfNeeded(staticData) {
     if (!staticData) return;
     var ts = firebase.firestore.FieldValue.serverTimestamp;
@@ -614,13 +785,18 @@
       (staticData.services || []).forEach(function(svc, i) {
         var ref = servicesRef.doc();
         batch.set(ref, {
-          name:      svc.name || '',
-          price:     svc.price || '',
-          duration:  svc.duration || '',
-          desc:      svc.desc || '',
-          active:    svc.active !== false,
-          sortOrder: i,
-          createdAt: ts(), updatedAt: ts()
+          name:          svc.name || '',
+          category:      svc.category || '',
+          price:         svc.price || '',
+          priceFrom:     svc.priceFrom || 0,
+          duration:      svc.duration || '',
+          durationMins:  svc.durationMins || 0,
+          desc:          svc.desc || '',
+          imageUrl:      svc.imageUrl || '',
+          assignedStaff: svc.assignedStaff || [],
+          active:        svc.active !== false,
+          sortOrder:     i,
+          createdAt:     ts(), updatedAt: ts()
         });
       });
       batch.commit().catch(function(){});
@@ -632,69 +808,121 @@
       var batch = db.batch();
       (staticData.staff || []).forEach(function(s, i) {
         var ref = staffRef.doc();
+        // Support new per-day schedule format
+        var sched = {};
+        if (s.schedule && typeof s.schedule === 'object' && !Array.isArray(s.schedule)) {
+          // New format: { mon: { active, start, end }, ... }
+          sched = s.schedule;
+        } else if (s.schedule && s.schedule.days) {
+          // Old format: { days: ['Mon','Tue',...] }
+          var dayNames = ['sun','mon','tue','wed','thu','fri','sat'];
+          var oldDays = (s.schedule.days || []).map(function(d){ return d.toLowerCase().slice(0,3); });
+          dayNames.forEach(function(dk) {
+            sched[dk] = { active: oldDays.indexOf(dk) >= 0, start: '09:00', end: '18:00' };
+          });
+        }
         batch.set(ref, {
-          name:        s.name || '',
-          role:        s.role || '',
-          specialties: s.specialties || [],
-          days:        (s.schedule && s.schedule.days) || [],
-          active:      s.active !== false,
-          sortOrder:   i,
-          createdAt:   ts(), updatedAt: ts()
+          name:          s.name || '',
+          role:          s.role || '',
+          specialties:   s.specialties || [],
+          assignedServices: s.assignedServices || [],
+          schedule:      sched,
+          active:        s.active !== false,
+          sortOrder:     i,
+          createdAt:     ts(), updatedAt: ts()
         });
       });
       batch.commit().catch(function(){});
     });
   }
 
-  // ── Tab navigation ────────────────────────────────────────────────────────
-  var TABS = ['services','staff','hours','appointments','settings'];
-  function switchTab(tab) {
-    TABS.forEach(function(t) {
-      var panel = document.getElementById('panel-' + t);
-      var nav   = document.getElementById('nav-' + t);
-      if (panel) panel.classList.toggle('active', t === tab);
-      if (nav)   nav.classList.toggle('active', t === tab);
-    });
-    // Mobile tabs
-    document.querySelectorAll('.mobile-tab-btn').forEach(function(btn, i) {
-      btn.classList.toggle('active', TABS[i] === tab);
-    });
-    if (tab === 'appointments') subscribeAppointments();
+  // ── Category tabs ────────────────────────────────────────────────────────────
+  function buildCatTabs() {
+    var container = document.getElementById('catTabs');
+    var extra = SERVICE_CATS.map(function(c) {
+      return '<button class="cat-tab" data-cat="' + esc(c.key) + '" onclick="filterCat(\'' + esc(c.key) + '\',this)">' + esc(c.label) + '</button>';
+    }).join('');
+    container.innerHTML = '<button class="cat-tab active" data-cat="all" onclick="filterCat(\'all\',this)">Tất cả</button>' + extra;
   }
 
-  // ── Services ─────────────────────────────────────────────────────────────
+  function populateCategorySelect() {
+    var sel = document.getElementById('svcCategory');
+    var opts = SERVICE_CATS.map(function(c) {
+      return '<option value="' + esc(c.key) + '">' + esc(c.label) + '</option>';
+    }).join('');
+    sel.innerHTML = '<option value="">— Chọn danh mục —</option>' + opts;
+  }
+
+  function filterCat(cat, btn) {
+    currentCatFilter = cat;
+    document.querySelectorAll('.cat-tab').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    reRenderServices();
+  }
+
+  // ── Services ─────────────────────────────────────────────────────────────────
   function subscribeServices() {
     if (unsubSvcs) unsubSvcs();
-    unsubSvcs = servicesRef.orderBy('sortOrder').onSnapshot(renderServices, function() {
-      unsubSvcs = servicesRef.onSnapshot(renderServices);
+    unsubSvcs = servicesRef.orderBy('sortOrder').onSnapshot(function(snap) {
+      allServiceDocs = snap.docs.map(function(d){ return { id: d.id, data: d.data() }; });
+      reRenderServices();
+    }, function() {
+      unsubSvcs = servicesRef.onSnapshot(function(snap) {
+        allServiceDocs = snap.docs.map(function(d){ return { id: d.id, data: d.data() }; });
+        reRenderServices();
+      });
     });
   }
 
-  function renderServices(snap) {
+  function catLabel(key) {
+    for (var i = 0; i < SERVICE_CATS.length; i++) {
+      if (SERVICE_CATS[i].key === key) return SERVICE_CATS[i].label;
+    }
+    return key;
+  }
+
+  function reRenderServices() {
     var el = document.getElementById('servicesList');
-    if (snap.empty) {
-      el.innerHTML = '<div class="sa-empty">Chưa có dịch vụ nào. Nhấn "+ Thêm Dịch Vụ" để bắt đầu.</div>';
+    var filtered = currentCatFilter === 'all'
+      ? allServiceDocs
+      : allServiceDocs.filter(function(d){ return d.data.category === currentCatFilter; });
+
+    if (!filtered.length) {
+      el.innerHTML = '<div class="sa-empty">' +
+        (allServiceDocs.length ? 'Không có dịch vụ nào trong danh mục này.' : 'Chưa có dịch vụ nào. Nhấn "+ Thêm Dịch Vụ" để bắt đầu.') +
+        '</div>';
       return;
     }
-    el.innerHTML = snap.docs.map(function(d) {
-      var s = d.data();
+
+    el.innerHTML = filtered.map(function(item) {
+      var s  = item.data;
+      var id = item.id;
+      var imgHtml = s.imageUrl
+        ? '<img class="sa-item__img" src="' + esc(s.imageUrl) + '" alt="' + esc(s.name) + '" loading="lazy" onerror="this.style.display=\'none\'">'
+        : '<div class="sa-item__img-ph">💅</div>';
+      var staffMeta = (s.assignedStaff && s.assignedStaff.length)
+        ? ' · ' + esc(s.assignedStaff.join(', ')) : '';
+      var catHtml = s.category ? ' <span class="cat-badge">' + esc(catLabel(s.category)) + '</span>' : '';
       return '<div class="sa-item' + (s.active === false ? ' inactive-dim' : '') + '">' +
+        imgHtml +
         '<div class="sa-item__info">' +
-          '<div class="sa-item__name">' + esc(s.name) +
+          '<div class="sa-item__name">' + esc(s.name) + catHtml +
             ' <span class="status-badge status-badge--' + (s.active !== false ? 'active' : 'inactive') + '">' +
-            (s.active !== false ? 'Active' : 'Inactive') + '</span></div>' +
-          '<div class="sa-item__meta">' +
-            (s.price ? esc(s.price) : '') +
-            (s.duration ? ' · ' + esc(s.duration) : '') +
-            (s.desc ? ' — ' + esc(s.desc) : '') +
+            (s.active !== false ? 'Active' : 'Off') + '</span>' +
           '</div>' +
+          '<div class="sa-item__meta">' +
+            esc(s.price || '') +
+            (s.duration ? ' · ' + esc(s.duration) : '') +
+            staffMeta +
+          '</div>' +
+          (s.desc ? '<div class="sa-item__meta" style="margin-top:.1rem;font-size:.67rem;opacity:.8">' + esc(s.desc.slice(0,80)) + (s.desc.length>80?'…':'') + '</div>' : '') +
         '</div>' +
         '<div class="sa-item__actions">' +
           '<button class="toggle-pill ' + (s.active !== false ? 'on' : 'off') + '" ' +
-            'onclick="toggleService(\'' + d.id + '\',' + (s.active === false) + ')">' +
+            'onclick="toggleService(\'' + id + '\',' + (s.active === false) + ')">' +
             (s.active !== false ? '● On' : '○ Off') + '</button>' +
-          '<button class="btn btn--outline btn--sm" onclick="openServiceModal(\'' + d.id + '\')">Edit</button>' +
-          '<button class="btn btn--danger btn--sm" onclick="deleteService(\'' + d.id + '\')">Xóa</button>' +
+          '<button class="btn btn--outline btn--sm" onclick="openServiceModal(\'' + id + '\')">Edit</button>' +
+          '<button class="btn btn--danger btn--sm" onclick="deleteService(\'' + id + '\')">Xóa</button>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -711,21 +939,39 @@
   function openServiceModal(id) {
     document.getElementById('serviceModal').classList.remove('hidden');
     document.getElementById('svcMsg').textContent = '';
+
+    // Build staff checkboxes from current snapshot
+    var staffHtml = currentStaffData.length
+      ? currentStaffData.map(function(s) {
+          return '<label class="staff-check"><input type="checkbox" value="' + esc(s.name) + '"> ' + esc(s.name) + '</label>';
+        }).join('')
+      : '<span style="color:var(--muted);font-size:.72rem">Chưa có nhân viên</span>';
+    document.getElementById('svcStaffChecks').innerHTML = staffHtml;
+
     if (!id) {
       document.getElementById('serviceModalTitle').textContent = 'Thêm Dịch Vụ';
       document.getElementById('serviceDocId').value = '';
-      ['svcName','svcPrice','svcDuration','svcDesc'].forEach(function(f){ document.getElementById(f).value = ''; });
+      ['svcName','svcPrice','svcDuration','svcDesc','svcImageUrl'].forEach(function(f){ document.getElementById(f).value = ''; });
+      document.getElementById('svcCategory').value = '';
       return;
     }
+
     servicesRef.doc(id).get().then(function(doc) {
       if (!doc.exists) return;
       var d = doc.data();
       document.getElementById('serviceModalTitle').textContent = 'Chỉnh Sửa Dịch Vụ';
-      document.getElementById('serviceDocId').value = id;
-      document.getElementById('svcName').value     = d.name || '';
-      document.getElementById('svcPrice').value    = d.price || '';
-      document.getElementById('svcDuration').value = d.duration || '';
-      document.getElementById('svcDesc').value     = d.desc || '';
+      document.getElementById('serviceDocId').value   = id;
+      document.getElementById('svcName').value        = d.name     || '';
+      document.getElementById('svcCategory').value    = d.category || '';
+      document.getElementById('svcPrice').value       = d.price    || '';
+      document.getElementById('svcDuration').value    = d.duration || '';
+      document.getElementById('svcDesc').value        = d.desc     || '';
+      document.getElementById('svcImageUrl').value    = d.imageUrl || '';
+      // Check assigned staff boxes
+      var assigned = d.assignedStaff || [];
+      document.querySelectorAll('#svcStaffChecks input[type="checkbox"]').forEach(function(cb) {
+        cb.checked = assigned.indexOf(cb.value) >= 0;
+      });
     });
   }
   function closeServiceModal() { document.getElementById('serviceModal').classList.add('hidden'); }
@@ -733,12 +979,24 @@
   function saveService() {
     var name = document.getElementById('svcName').value.trim();
     if (!name) { document.getElementById('svcMsg').textContent = 'Vui lòng nhập tên dịch vụ.'; return; }
+    var assignedStaff = Array.from(
+      document.querySelectorAll('#svcStaffChecks input[type="checkbox"]:checked')
+    ).map(function(cb){ return cb.value; });
+    var priceRaw  = document.getElementById('svcPrice').value.trim();
+    var priceFrom = parseFloat(priceRaw.replace(/[^0-9.]/g,'')) || 0;
+    var durRaw    = document.getElementById('svcDuration').value.trim();
+    var durMins   = parseInt(durRaw) || 0;
     var data = {
-      name:      name,
-      price:     document.getElementById('svcPrice').value.trim(),
-      duration:  document.getElementById('svcDuration').value.trim(),
-      desc:      document.getElementById('svcDesc').value.trim(),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      name:          name,
+      category:      document.getElementById('svcCategory').value,
+      price:         priceRaw,
+      priceFrom:     priceFrom,
+      duration:      durRaw,
+      durationMins:  durMins,
+      desc:          document.getElementById('svcDesc').value.trim(),
+      imageUrl:      document.getElementById('svcImageUrl').value.trim(),
+      assignedStaff: assignedStaff,
+      updatedAt:     firebase.firestore.FieldValue.serverTimestamp()
     };
     var docId = document.getElementById('serviceDocId').value;
     var prom = docId
@@ -748,11 +1006,17 @@
         .catch(function(e){ document.getElementById('svcMsg').textContent = 'Lỗi: ' + e.message; });
   }
 
-  // ── Staff ─────────────────────────────────────────────────────────────────
+  // ── Staff ─────────────────────────────────────────────────────────────────────
   function subscribeStaff() {
     if (unsubStaff) unsubStaff();
-    unsubStaff = staffRef.orderBy('sortOrder').onSnapshot(renderStaff, function() {
-      unsubStaff = staffRef.onSnapshot(renderStaff);
+    unsubStaff = staffRef.orderBy('sortOrder').onSnapshot(function(snap) {
+      currentStaffData = snap.docs.map(function(d){ return { id: d.id, name: d.data().name, data: d.data() }; });
+      renderStaff(snap);
+    }, function() {
+      unsubStaff = staffRef.onSnapshot(function(snap) {
+        currentStaffData = snap.docs.map(function(d){ return { id: d.id, name: d.data().name, data: d.data() }; });
+        renderStaff(snap);
+      });
     });
   }
 
@@ -763,16 +1027,23 @@
       return;
     }
     el.innerHTML = snap.docs.map(function(d) {
-      var s = d.data();
+      var s    = d.data();
+      var sched = s.schedule || {};
       var specs = (s.specialties || []).join(', ');
-      var days  = (s.days || []).join(', ');
+      var pills = DAYS.map(function(day) {
+        var ds = sched[day.key];
+        var on = ds && ds.active;
+        return '<span class="sched-pill sched-pill--' + (on?'on':'off') + '" title="' +
+          (on ? (ds.start+' – '+ds.end) : 'Nghỉ') + '">' + day.short + '</span>';
+      }).join('');
       return '<div class="sa-item' + (s.active === false ? ' inactive-dim' : '') + '">' +
         '<div class="sa-item__info">' +
           '<div class="sa-item__name">' + esc(s.name) +
             ' <span class="status-badge status-badge--' + (s.active !== false ? 'active' : 'inactive') + '">' +
-            (s.active !== false ? 'Active' : 'Inactive') + '</span></div>' +
+            (s.active !== false ? 'Active' : 'Off') + '</span>' +
+          '</div>' +
           '<div class="sa-item__meta">' + esc(s.role || '—') + (specs ? ' · ' + esc(specs) : '') + '</div>' +
-          (days ? '<div class="sa-item__meta">Lịch: ' + esc(days) + '</div>' : '') +
+          '<div class="sched-pills">' + pills + '</div>' +
         '</div>' +
         '<div class="sa-item__actions">' +
           '<button class="toggle-pill ' + (s.active !== false ? 'on' : 'off') + '" ' +
@@ -793,24 +1064,50 @@
     staffRef.doc(id).delete().then(function(){ showToast('Đã xóa nhân viên.'); });
   }
 
+  // Build per-day schedule editor HTML
+  function buildSchedEditor(sched) {
+    return DAYS.map(function(day) {
+      var ds = (sched && sched[day.key]) || { active: false, start: '09:00', end: '18:00' };
+      var on = ds.active || false;
+      return '<div class="sched-row">' +
+        '<label class="sched-day-lbl">' +
+          '<input type="checkbox" id="sschd-' + day.key + '-on"' + (on?' checked':'') +
+            ' onchange="toggleSchedDay(\'' + day.key + '\')">' +
+          ' ' + day.label +
+        '</label>' +
+        '<input class="hours-input" id="sschd-' + day.key + '-start" type="time" value="' + (ds.start||'09:00') + '"' + (!on?' disabled':'') + '>' +
+        '<span class="sched-sep">–</span>' +
+        '<input class="hours-input" id="sschd-' + day.key + '-end" type="time" value="' + (ds.end||'18:00') + '"' + (!on?' disabled':'') + '>' +
+      '</div>';
+    }).join('');
+  }
+
+  function toggleSchedDay(key) {
+    var on = document.getElementById('sschd-' + key + '-on').checked;
+    document.getElementById('sschd-' + key + '-start').disabled = !on;
+    document.getElementById('sschd-' + key + '-end').disabled   = !on;
+  }
+
   function openStaffModal(id) {
     document.getElementById('staffModal').classList.remove('hidden');
     document.getElementById('staffMsg').textContent = '';
+
     if (!id) {
       document.getElementById('staffModalTitle').textContent = 'Thêm Nhân Viên';
       document.getElementById('staffDocId').value = '';
-      ['staffName','staffRole','staffSpecialties','staffDays'].forEach(function(f){ document.getElementById(f).value = ''; });
+      ['staffName','staffRole','staffSpecialties'].forEach(function(f){ document.getElementById(f).value = ''; });
+      document.getElementById('schedEditor').innerHTML = buildSchedEditor(null);
       return;
     }
     staffRef.doc(id).get().then(function(doc) {
       if (!doc.exists) return;
       var d = doc.data();
       document.getElementById('staffModalTitle').textContent = 'Chỉnh Sửa Nhân Viên';
-      document.getElementById('staffDocId').value        = id;
-      document.getElementById('staffName').value         = d.name || '';
-      document.getElementById('staffRole').value         = d.role || '';
-      document.getElementById('staffSpecialties').value  = (d.specialties||[]).join(', ');
-      document.getElementById('staffDays').value         = (d.days||[]).join(', ');
+      document.getElementById('staffDocId').value       = id;
+      document.getElementById('staffName').value        = d.name || '';
+      document.getElementById('staffRole').value        = d.role || '';
+      document.getElementById('staffSpecialties').value = (d.specialties||[]).join(', ');
+      document.getElementById('schedEditor').innerHTML  = buildSchedEditor(d.schedule);
     });
   }
   function closeStaffModal() { document.getElementById('staffModal').classList.add('hidden'); }
@@ -818,11 +1115,19 @@
   function saveStaff() {
     var name = document.getElementById('staffName').value.trim();
     if (!name) { document.getElementById('staffMsg').textContent = 'Vui lòng nhập tên nhân viên.'; return; }
+    var sched = {};
+    DAYS.forEach(function(day) {
+      sched[day.key] = {
+        active: document.getElementById('sschd-' + day.key + '-on').checked,
+        start:  document.getElementById('sschd-' + day.key + '-start').value || '09:00',
+        end:    document.getElementById('sschd-' + day.key + '-end').value   || '18:00'
+      };
+    });
     var data = {
       name:        name,
       role:        document.getElementById('staffRole').value.trim(),
       specialties: document.getElementById('staffSpecialties').value.split(',').map(function(s){ return s.trim(); }).filter(Boolean),
-      days:        document.getElementById('staffDays').value.split(',').map(function(s){ return s.trim(); }).filter(Boolean),
+      schedule:    sched,
       updatedAt:   firebase.firestore.FieldValue.serverTimestamp()
     };
     var docId = document.getElementById('staffDocId').value;
@@ -833,43 +1138,92 @@
         .catch(function(e){ document.getElementById('staffMsg').textContent = 'Lỗi: ' + e.message; });
   }
 
-  // ── Hours ─────────────────────────────────────────────────────────────────
-  var DAYS = [
-    { key:'mon', label:'Thứ 2' },
-    { key:'tue', label:'Thứ 3' },
-    { key:'wed', label:'Thứ 4' },
-    { key:'thu', label:'Thứ 5' },
-    { key:'fri', label:'Thứ 6' },
-    { key:'sat', label:'Thứ 7' },
-    { key:'sun', label:'CN'    }
-  ];
-  var DEFAULT_HOURS = { mon:{open:'09:00',close:'19:00',closed:false}, tue:{open:'09:00',close:'19:00',closed:false}, wed:{open:'09:00',close:'19:00',closed:false}, thu:{open:'09:00',close:'19:00',closed:false}, fri:{open:'09:00',close:'19:00',closed:false}, sat:{open:'09:00',close:'18:00',closed:false}, sun:{open:'10:00',close:'17:00',closed:false} };
+  // ── Availability ─────────────────────────────────────────────────────────────
+  function renderAvailability() {
+    var el   = document.getElementById('availList');
+    var head = document.getElementById('todayHeading');
 
+    var dayKeys  = ['sun','mon','tue','wed','thu','fri','sat'];
+    var dayLabels= ['Chủ Nhật','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7'];
+    var now      = new Date();
+    var todayKey = dayKeys[now.getDay()];
+    var todayLbl = dayLabels[now.getDay()];
+    var nowMins  = now.getHours() * 60 + now.getMinutes();
+    var timeStr  = now.toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit'});
+
+    head.textContent = todayLbl + ' — ' + timeStr;
+
+    if (!currentStaffData.length) {
+      el.innerHTML = '<div class="sa-empty">Đang tải dữ liệu nhân viên…</div>';
+      return;
+    }
+
+    var html = '';
+    currentStaffData.forEach(function(item) {
+      var s   = item.data;
+      if (!s.active) return;
+      var ds  = s.schedule && s.schedule[todayKey];
+      var working    = ds && ds.active;
+      var nowWorking = false;
+      if (working && ds.start && ds.end) {
+        var startM = timeToMins(ds.start);
+        var endM   = timeToMins(ds.end);
+        nowWorking = nowMins >= startM && nowMins < endM;
+      }
+      var badge = nowWorking
+        ? '<span class="avail-badge avail-badge--now">Đang làm</span>'
+        : working
+          ? '<span class="avail-badge avail-badge--today">Hôm nay</span>'
+          : '<span class="avail-badge avail-badge--off">Nghỉ</span>';
+      html += '<div class="avail-card' + (nowWorking ? ' avail-now' : '') + '">' +
+        '<div class="avail-name">' + esc(s.name) + badge + '</div>' +
+        (s.role ? '<div class="avail-role">' + esc(s.role) + '</div>' : '') +
+        (working ? '<div class="avail-hours">' + esc(ds.start) + ' – ' + esc(ds.end) + '</div>' : '') +
+        (s.specialties && s.specialties.length
+          ? '<div class="avail-specs">' + esc(s.specialties.slice(0,4).join(', ')) + '</div>' : '') +
+      '</div>';
+    });
+
+    el.innerHTML = html || '<div class="sa-empty">Không có nhân viên hoạt động nào được tìm thấy.</div>';
+  }
+
+  // ── Tab navigation ───────────────────────────────────────────────────────────
+  var TABS = ['services','staff','availability','hours','appointments','settings'];
+  function switchTab(tab) {
+    TABS.forEach(function(t) {
+      var panel = document.getElementById('panel-' + t);
+      var nav   = document.getElementById('nav-'   + t);
+      if (panel) panel.classList.toggle('active', t === tab);
+      if (nav)   nav.classList.toggle('active',   t === tab);
+    });
+    document.querySelectorAll('.mobile-tab-btn').forEach(function(btn, i) {
+      btn.classList.toggle('active', TABS[i] === tab);
+    });
+    if (tab === 'appointments')  subscribeAppointments();
+    if (tab === 'availability')  renderAvailability();
+  }
+
+  // ── Hours ─────────────────────────────────────────────────────────────────────
   function loadHoursGrid(hoursSchedule) {
-    var h = hoursSchedule || DEFAULT_HOURS;
+    var h    = hoursSchedule || DEFAULT_HOURS;
     var grid = document.getElementById('hoursGrid');
     grid.innerHTML = DAYS.map(function(d) {
       var day = h[d.key] || DEFAULT_HOURS[d.key];
       var isClosed = day.closed || false;
       return '<div class="hours-row" id="hrow-' + d.key + '">' +
         '<span class="hours-row__day">' + d.label + '</span>' +
-        '<input class="hours-input" id="hopen-' + d.key + '" type="time" value="' + (day.open||'09:00') + '" ' + (isClosed?'disabled':'') + '>' +
+        '<input class="hours-input" id="hopen-'  + d.key + '" type="time" value="' + (day.open  ||'09:00') + '"' + (isClosed?' disabled':'') + '>' +
         '<span style="font-size:.72rem;color:var(--muted)">–</span>' +
-        '<input class="hours-input" id="hclose-' + d.key + '" type="time" value="' + (day.close||'18:00') + '" ' + (isClosed?'disabled':'') + '>' +
-        '<label class="hours-row__closed">' +
-          '<input type="checkbox" id="hclosed-' + d.key + '" ' + (isClosed?'checked':'') + ' onchange="toggleDayClosed(\'' + d.key + '\')">' +
-          ' Đóng' +
-        '</label>' +
+        '<input class="hours-input" id="hclose-' + d.key + '" type="time" value="' + (day.close ||'18:00') + '"' + (isClosed?' disabled':'') + '>' +
+        '<label class="hours-row__closed"><input type="checkbox" id="hclosed-' + d.key + '"' + (isClosed?' checked':'') + ' onchange="toggleDayClosed(\'' + d.key + '\')"> Đóng</label>' +
       '</div>';
     }).join('');
   }
 
   function toggleDayClosed(key) {
-    var cb   = document.getElementById('hclosed-' + key);
-    var open = document.getElementById('hopen-'   + key);
-    var cls  = document.getElementById('hclose-'  + key);
-    open.disabled = cb.checked;
-    cls.disabled  = cb.checked;
+    var cb = document.getElementById('hclosed-' + key);
+    document.getElementById('hopen-'  + key).disabled = cb.checked;
+    document.getElementById('hclose-' + key).disabled = cb.checked;
   }
 
   function saveHours() {
@@ -894,7 +1248,7 @@
       });
   }
 
-  // ── Appointments ──────────────────────────────────────────────────────────
+  // ── Appointments ──────────────────────────────────────────────────────────────
   var apptSubscribed = false;
   function subscribeAppointments() {
     if (apptSubscribed) return;
@@ -910,13 +1264,13 @@
         return;
       }
       el.innerHTML = snap.docs.map(function(d) {
-        var a = d.data();
+        var a  = d.data();
         var dt = a.requestedDate || a.date || '';
-        var time = a.requestedTime || a.time || '';
+        var tm = a.requestedTime || a.time || '';
         return '<div class="appt-card">' +
           '<div class="appt-card__header">' +
             '<span class="appt-card__name">' + esc(a.customerName || a.name || 'Khách') + '</span>' +
-            '<span class="appt-card__date">' + esc(dt) + (time ? ' · ' + esc(time) : '') + '</span>' +
+            '<span class="appt-card__date">'  + esc(dt) + (tm ? ' · ' + esc(tm) : '') + '</span>' +
           '</div>' +
           '<div class="appt-card__meta">' +
             (a.service ? 'Dịch vụ: ' + esc(a.service) + ' · ' : '') +
@@ -932,7 +1286,7 @@
     });
   }
 
-  // ── Settings ──────────────────────────────────────────────────────────────
+  // ── Settings ──────────────────────────────────────────────────────────────────
   function saveSettings() {
     var data = {
       businessName: document.getElementById('settingName').value.trim(),

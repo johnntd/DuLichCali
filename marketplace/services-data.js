@@ -67,15 +67,33 @@
           name: 'Helen',
           active: true,
           role: 'Senior Nail Tech',
-          specialties: ['Acrylic Full Set', 'Nail Art', 'Gel Nails'],
-          schedule: { days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] }
+          specialties: ['Acrylic Full Set', 'Nail Art', 'Gel Nails', 'Chrome Powder', 'Ombre', '3D Art'],
+          assignedServices: ['Manicure Cơ Bản', 'French Manicure', 'Hot Oil Manicure', 'Gel Manicure', 'Gel Extensions', 'Shellac', 'Acrylic Full Set', 'Acrylic Fill', 'Pink & White', 'Nail Art Cơ Bản', 'Nail Art Phức Tạp', '3D Nail Art', 'Chrome Powder', 'Ombre Nails', 'Spa Package', 'French Tip Add-on'],
+          schedule: {
+            mon: { active: true,  start: '09:00', end: '19:00' },
+            tue: { active: true,  start: '09:00', end: '19:00' },
+            wed: { active: true,  start: '09:00', end: '19:00' },
+            thu: { active: true,  start: '09:00', end: '19:00' },
+            fri: { active: true,  start: '09:00', end: '19:00' },
+            sat: { active: true,  start: '09:00', end: '18:00' },
+            sun: { active: false, start: '10:00', end: '17:00' }
+          }
         },
         {
           name: 'Tracy',
-          active: false,
+          active: true,
           role: 'Nail Tech',
-          specialties: ['Manicure Cơ Bản', 'Pedicure Cơ Bản', 'Gel Nails'],
-          schedule: { days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] }
+          specialties: ['Manicure', 'Pedicure', 'Gel Nails', 'Spa Pedicure'],
+          assignedServices: ['Manicure Cơ Bản', 'French Manicure', 'Pedicure Cơ Bản', 'Spa Pedicure', 'Deluxe Pedicure', 'Gel Manicure', 'Shellac', 'Nail Repair', 'Paraffin Wax'],
+          schedule: {
+            mon: { active: true,  start: '10:00', end: '18:00' },
+            tue: { active: true,  start: '10:00', end: '18:00' },
+            wed: { active: true,  start: '10:00', end: '18:00' },
+            thu: { active: true,  start: '10:00', end: '18:00' },
+            fri: { active: true,  start: '10:00', end: '18:00' },
+            sat: { active: false, start: '09:00', end: '18:00' },
+            sun: { active: false, start: '10:00', end: '17:00' }
+          }
         }
       ],
       features: [
@@ -91,12 +109,100 @@
       heroGradient:
         'linear-gradient(135deg,#831843 0%,#9d174d 40%,#4c1d95 100%)',
       services: [
-        { name: 'Manicure Cơ Bản',  price: '$20+', duration: '45 phút',  desc: 'Làm sạch dũa và sơn móng tay',                  active: true  },
-        { name: 'Pedicure Cơ Bản',  price: '$30+', duration: '60 phút',  desc: 'Chăm sóc toàn diện bàn chân',                   active: true  },
-        { name: 'Gel Nails',         price: '$35+', duration: '60 phút',  desc: 'Sơn gel bền màu 3-4 tuần',                      active: true  },
-        { name: 'Acrylic Full Set',  price: '$45+', duration: '75 phút',  desc: 'Đắp acrylic tạo hình móng đẹp',                 active: true  },
-        { name: 'Nail Art',          price: '$10+', duration: '+30 phút', desc: 'Vẽ hoa văn nghệ thuật',                          active: true  },
-        { name: 'Spa Package',       price: '$65+', duration: '2 giờ',    desc: 'Manicure + pedicure + massage trọn gói',         active: true  }
+        // ── Manicure ──────────────────────────────────────────────────────
+        { category: 'manicure', name: 'Manicure Cơ Bản',   price: '$20+', priceFrom: 20, duration: '45 phút', durationMins: 45, active: true,
+          desc: 'Làm sạch, dũa và sơn móng tay. Kèm massage tay nhẹ nhàng.',
+          imageUrl: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=85',
+          assignedStaff: ['Helen', 'Tracy'] },
+        { category: 'manicure', name: 'French Manicure',    price: '$25+', priceFrom: 25, duration: '50 phút', durationMins: 50, active: true,
+          desc: 'Móng tay trắng tinh tế — kiểu dáng thanh lịch, không bao giờ lỗi mốt.',
+          imageUrl: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=85&sat=-20',
+          assignedStaff: ['Helen', 'Tracy'] },
+        { category: 'manicure', name: 'Hot Oil Manicure',   price: '$30+', priceFrom: 30, duration: '55 phút', durationMins: 55, active: true,
+          desc: 'Manicure cao cấp với dầu nóng dưỡng ẩm sâu — hoàn hảo cho móng khô, dễ gãy.',
+          imageUrl: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=85',
+          assignedStaff: ['Helen'] },
+        // ── Pedicure ──────────────────────────────────────────────────────
+        { category: 'pedicure', name: 'Pedicure Cơ Bản',   price: '$30+', priceFrom: 30, duration: '60 phút', durationMins: 60, active: true,
+          desc: 'Chăm sóc toàn diện bàn chân — ngâm, tẩy da chết, cắt tỉa, sơn màu.',
+          imageUrl: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=600&auto=format&fit=crop&q=85',
+          assignedStaff: ['Helen', 'Tracy'] },
+        { category: 'pedicure', name: 'Spa Pedicure',       price: '$45+', priceFrom: 45, duration: '75 phút', durationMins: 75, active: true,
+          desc: 'Trải nghiệm thư giãn — ngâm muối biển, đắp mặt nạ bàn chân, massage bắp chân.',
+          imageUrl: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=600&auto=format&fit=crop&q=85',
+          assignedStaff: ['Tracy'] },
+        { category: 'pedicure', name: 'Deluxe Pedicure',    price: '$60+', priceFrom: 60, duration: '90 phút', durationMins: 90, active: true,
+          desc: 'Pedicure cao cấp nhất — tẩy tế bào chết, paraffin, massage sâu, sơn gel.',
+          imageUrl: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=600&auto=format&fit=crop&q=85',
+          assignedStaff: ['Tracy'] },
+        // ── Gel / Shellac ─────────────────────────────────────────────────
+        { category: 'gel', name: 'Gel Manicure',            price: '$35+', priceFrom: 35, duration: '60 phút', durationMins: 60, active: true,
+          desc: 'Sơn gel bền màu 3-4 tuần, bóng đẹp, không chip. Màu sắc phong phú.',
+          imageUrl: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=600&auto=format&fit=crop&q=85',
+          assignedStaff: ['Helen', 'Tracy'] },
+        { category: 'gel', name: 'Gel Extensions',          price: '$55+', priceFrom: 55, duration: '80 phút', durationMins: 80, active: true,
+          desc: 'Nối móng gel tự nhiên — nhẹ hơn acrylic, bền, linh hoạt hình dạng.',
+          imageUrl: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=600&auto=format&fit=crop&q=85',
+          assignedStaff: ['Helen'] },
+        { category: 'gel', name: 'Shellac',                 price: '$38+', priceFrom: 38, duration: '60 phút', durationMins: 60, active: true,
+          desc: 'Shellac CND — kết hợp sơn thường và gel, bền 2 tuần, bảo vệ móng tự nhiên.',
+          imageUrl: 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=600&auto=format&fit=crop&q=85',
+          assignedStaff: ['Helen', 'Tracy'] },
+        // ── Acrylic / Enhancements ────────────────────────────────────────
+        { category: 'acrylic', name: 'Acrylic Full Set',    price: '$45+', priceFrom: 45, duration: '75 phút', durationMins: 75, active: true,
+          desc: 'Bộ acrylic đầy đủ — đắp bột tạo hình móng dài, chắc, đẹp. Nhiều hình dạng.',
+          imageUrl: 'https://images.unsplash.com/photo-1632345031435-8727f592d8db?w=600&auto=format&fit=crop&q=85',
+          assignedStaff: ['Helen'] },
+        { category: 'acrylic', name: 'Acrylic Fill',        price: '$30+', priceFrom: 30, duration: '50 phút', durationMins: 50, active: true,
+          desc: 'Đắp lại phần móng mọc ra — giữ nguyên hình dạng, tiết kiệm hơn full set.',
+          imageUrl: 'https://images.unsplash.com/photo-1632345031435-8727f592d8db?w=600&auto=format&fit=crop&q=85',
+          assignedStaff: ['Helen'] },
+        { category: 'acrylic', name: 'Pink & White',        price: '$55+', priceFrom: 55, duration: '90 phút', durationMins: 90, active: true,
+          desc: 'Acrylic hai màu hồng trắng tự nhiên — kiểu French cổ điển sang trọng, bền lâu.',
+          imageUrl: 'https://images.unsplash.com/photo-1632345031435-8727f592d8db?w=600&auto=format&fit=crop&q=85',
+          assignedStaff: ['Helen'] },
+        // ── Nail Art ──────────────────────────────────────────────────────
+        { category: 'nailart', name: 'Nail Art Cơ Bản',    price: '$10+', priceFrom: 10, duration: '+20 phút', durationMins: 20, active: true,
+          desc: 'Hoa văn đơn giản — chấm bi, sọc, hoa nhỏ. Thêm vào bất kỳ dịch vụ nào.',
+          imageUrl: 'https://images.unsplash.com/photo-1636018492665-21ce4ac4e0f1?w=600&auto=format&fit=crop&q=85',
+          assignedStaff: ['Helen', 'Tracy'] },
+        { category: 'nailart', name: 'Nail Art Phức Tạp',  price: '$20+', priceFrom: 20, duration: '+40 phút', durationMins: 40, active: true,
+          desc: 'Thiết kế chi tiết — hoa 3D, đính đá, gradient, marble. Nghệ thuật trên đầu ngón tay.',
+          imageUrl: 'https://images.unsplash.com/photo-1636018492665-21ce4ac4e0f1?w=600&auto=format&fit=crop&q=85',
+          assignedStaff: ['Helen'] },
+        { category: 'nailart', name: 'Chrome Powder',       price: '$15+', priceFrom: 15, duration: '+15 phút', durationMins: 15, active: true,
+          desc: 'Bột chrome tạo hiệu ứng gương siêu bóng — silver, gold, rose gold, holographic.',
+          imageUrl: 'https://images.unsplash.com/photo-1636018492665-21ce4ac4e0f1?w=600&auto=format&fit=crop&q=85',
+          assignedStaff: ['Helen'] },
+        { category: 'nailart', name: 'Ombre Nails',         price: '$20+', priceFrom: 20, duration: '+25 phút', durationMins: 25, active: true,
+          desc: 'Chuyển màu gradient mượt mà — ombre một màu hoặc nhiều màu phối hợp tinh tế.',
+          imageUrl: 'https://images.unsplash.com/photo-1636018492665-21ce4ac4e0f1?w=600&auto=format&fit=crop&q=85',
+          assignedStaff: ['Helen'] },
+        // ── Add-ons ───────────────────────────────────────────────────────
+        { category: 'addon', name: 'Spa Package',           price: '$65+', priceFrom: 65, duration: '2 giờ',   durationMins: 120, active: true,
+          desc: 'Manicure + Pedicure + massage tay chân trọn gói — trải nghiệm thư giãn hoàn chỉnh.',
+          imageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&auto=format&fit=crop&q=85',
+          assignedStaff: ['Helen', 'Tracy'] },
+        { category: 'addon', name: 'Paraffin Wax',          price: '$15+', priceFrom: 15, duration: '+15 phút', durationMins: 15, active: true,
+          desc: 'Đắp sáp paraffin dưỡng ẩm sâu cho tay hoặc chân — da mềm mịn, bổ sung vào bất kỳ dịch vụ.',
+          imageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&auto=format&fit=crop&q=85',
+          assignedStaff: ['Tracy'] },
+        { category: 'addon', name: 'Nail Repair',            price: '$5+',  priceFrom: 5,  duration: '+10 phút', durationMins: 10, active: true,
+          desc: 'Sửa 1 móng bị gãy hoặc bong — nhanh chóng, giá hợp lý.',
+          imageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&auto=format&fit=crop&q=85',
+          assignedStaff: ['Helen', 'Tracy'] },
+        { category: 'addon', name: 'French Tip Add-on',     price: '$8+',  priceFrom: 8,  duration: '+15 phút', durationMins: 15, active: true,
+          desc: 'Thêm French tip trắng vào bất kỳ dịch vụ manicure hoặc pedicure.',
+          imageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&auto=format&fit=crop&q=85',
+          assignedStaff: ['Helen', 'Tracy'] }
+      ],
+      serviceCategories: [
+        { key: 'manicure', label: 'Manicure' },
+        { key: 'pedicure', label: 'Pedicure' },
+        { key: 'gel',      label: 'Gel / Shellac' },
+        { key: 'acrylic',  label: 'Acrylic' },
+        { key: 'nailart',  label: 'Nail Art' },
+        { key: 'addon',    label: 'Add-ons' }
       ],
       hours: {
         'Thứ 2–6':    '9:00 AM – 7:00 PM',
@@ -111,9 +217,9 @@
         name: 'Lily',
         welcomeMessage:
           'Xin chào! Tôi là Lily, trợ lý tiệm Luxurious Nails & Spa. Tôi có thể giúp bạn đặt lịch, xem bảng giá hoặc trả lời thắc mắc. Bạn cần gì ạ?',
-        quickReplies: ['Bảng giá', 'Đặt lịch', 'Giờ mở cửa', 'Địa chỉ'],
+        quickReplies: ['Bảng giá', 'Đặt lịch', 'Giờ mở cửa', 'Helen có mặt không?'],
         systemExtra:
-          'You are Lily, receptionist for Luxurious Nails & Spa in San Jose Bay Area. Owner: Dung Pham 408-859-6718. Specializes in manicure pedicure gel acrylic nails. Always friendly and professional. Answer in same language as customer (Vietnamese or English).'
+          'You are Lily, receptionist for Luxurious Nails & Spa in San Jose Bay Area. Owner: Dung Pham 408-859-6718. Full nail service salon: manicure, pedicure, gel, acrylic, nail art, add-ons. Staff: Helen (Mon-Sat, 9am-7pm, specializes in acrylic/nail art/gel), Tracy (Mon-Fri, 10am-6pm, specializes in manicure/pedicure/gel). Always friendly and professional. Answer in same language as customer (Vietnamese or English).'
       }
     },
 

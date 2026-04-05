@@ -1839,13 +1839,40 @@
       var _activeSvcs = (biz.services || []).filter(function (s) { return s.active !== false; });
       var _activeStaff = (biz.staff || []).filter(function (m) { return m.active !== false; });
 
-      // Helper: compute which staff work today by schedule.days
+      // Helper: check if a staff member works today (supports both schedule formats)
+      // New format: { mon: { active, start, end }, ... }
+      // Old format: { days: ['Mon','Tue',...] }
       function _staffWorkingToday(staffList) {
-        var now = new Date();
-        var dow = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][now.getDay()];
+        var now    = new Date();
+        var keyMap = ['sun','mon','tue','wed','thu','fri','sat'];
+        var oldKey = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][now.getDay()];
+        var newKey = keyMap[now.getDay()];
+        var nowMins = now.getHours() * 60 + now.getMinutes();
         return staffList.filter(function (m) {
-          if (!m.schedule || !m.schedule.days || !m.schedule.days.length) return true;
-          return m.schedule.days.indexOf(dow) !== -1;
+          if (!m.schedule) return true;
+          // New per-day format
+          if (m.schedule[newKey] !== undefined) {
+            return m.schedule[newKey].active === true;
+          }
+          // Old days-array format fallback
+          if (m.schedule.days && m.schedule.days.length) {
+            return m.schedule.days.indexOf(oldKey) !== -1;
+          }
+          return true;
+        });
+      }
+      // Helper: staff working right now (has hours and current time is within them)
+      function _staffWorkingNow(staffList) {
+        var now    = new Date();
+        var keyMap = ['sun','mon','tue','wed','thu','fri','sat'];
+        var newKey = keyMap[now.getDay()];
+        var nowMins = now.getHours() * 60 + now.getMinutes();
+        function toMins(t) { if (!t) return 0; var p = t.split(':'); return +p[0]*60 + +p[1]; }
+        return _staffWorkingToday(staffList).filter(function (m) {
+          if (!m.schedule || !m.schedule[newKey]) return false;
+          var ds = m.schedule[newKey];
+          if (!ds.start || !ds.end) return false;
+          return nowMins >= toMins(ds.start) && nowMins < toMins(ds.end);
         });
       }
 
@@ -1880,8 +1907,14 @@
             ? 'Hôm nay (' + todayDow + ') chưa có thợ làm việc. Vui lòng gọi ' + biz.phoneDisplay + ' để đặt hẹn.'
             : 'No staff scheduled today (' + todayDow + '). Call ' + biz.phoneDisplay + ' to book.';
         }
+        var todayDowKey2 = ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()];
         var staffLines = todayWorking.map(function (m) {
-          return '• ' + m.name + ' — ' + (m.role || 'Nail Tech') + (m.specialties && m.specialties.length ? ' · ' + m.specialties.join(', ') : '');
+          var line = '• ' + m.name + ' — ' + (m.role || 'Nail Tech');
+          if (m.specialties && m.specialties.length) line += ' · ' + m.specialties.join(', ');
+          if (m.schedule && m.schedule[todayDowKey2] && m.schedule[todayDowKey2].start) {
+            line += ' (' + m.schedule[todayDowKey2].start + '–' + m.schedule[todayDowKey2].end + ')';
+          }
+          return line;
         }).join('\n');
         return isVi2
           ? 'Hôm nay (' + todayDow + ') có ' + todayWorking.length + ' thợ:\n' + staffLines + '\n\nĐặt lịch qua form bên dưới hoặc gọi: ' + biz.phoneDisplay
@@ -2105,11 +2138,14 @@
           hoursBlock += '\n';
         }
         var activeStaffArr = (biz.staff || []).filter(function (m) { return m.active !== false; });
-        // Compute which staff work today by schedule.days
-        var todayDowShort = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][today.getDay()];
+        // Compute which staff work today — supports new {mon:{active,start,end}} and old {days:[]} formats
+        var todayDowKey = ['sun','mon','tue','wed','thu','fri','sat'][today.getDay()];
+        var todayDowOld = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][today.getDay()];
         var workingTodayArr = activeStaffArr.filter(function (m) {
-          if (!m.schedule || !m.schedule.days || !m.schedule.days.length) return true;
-          return m.schedule.days.indexOf(todayDowShort) !== -1;
+          if (!m.schedule) return true;
+          if (m.schedule[todayDowKey] !== undefined) return m.schedule[todayDowKey].active === true;
+          if (m.schedule.days && m.schedule.days.length) return m.schedule.days.indexOf(todayDowOld) !== -1;
+          return true;
         });
         var staffBlock = '';
         if (workingTodayArr.length) {
@@ -2117,6 +2153,10 @@
           workingTodayArr.forEach(function (m) {
             staffBlock += '- ' + m.name + ' (' + (m.role || 'Nail Tech') + ')';
             if (m.specialties && m.specialties.length) staffBlock += ' · specialties: ' + m.specialties.join(', ');
+            // Include today's hours if available in new format
+            if (m.schedule && m.schedule[todayDowKey] && m.schedule[todayDowKey].start) {
+              staffBlock += ' · hours: ' + m.schedule[todayDowKey].start + '–' + m.schedule[todayDowKey].end;
+            }
             staffBlock += '\n';
           });
           staffBlock += '\n';

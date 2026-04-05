@@ -423,6 +423,7 @@ window.DLCRouteMatrix = async function(origin, destination) {
     origins:      [origin],
     destinations: [destination],
     travelMode,
+    fields: ['distanceMeters', 'duration', 'status', 'originIndex', 'destinationIndex'],
   });
   const row = rows && rows[0];
   if (!row || (row.status && row.status !== 'OK')) throw new Error('no-route');

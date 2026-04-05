@@ -1836,16 +1836,37 @@
       VENDOR_ID = doc.data().vendorId;
       vendorRef = db.collection('vendors').doc(VENDOR_ID);
       menuRef   = vendorRef.collection('menuItems');
-      // Update top bar
-      var bn = document.getElementById('barVendorName');
-      var bi = document.getElementById('barVendorId');
-      if (bi) bi.textContent = VENDOR_ID;
-      // Show app
-      document.getElementById('authLoading').classList.add('hidden');
-      document.getElementById('app').classList.add('visible');
-      document.getElementById('fabAdd').classList.add('visible');
-      renderAIProviderChips();
-      startApp();
+      // Fetch vendor doc to get business name + category for dynamic public page link
+      vendorRef.get().then(function (vdoc) {
+        var vdata = vdoc.exists ? vdoc.data() : {};
+        var bizName = vdata.businessName || vdata.name || VENDOR_ID;
+        var cat = vdata.category || vdata.vendorType || '';
+        // Update top bar
+        var bn = document.getElementById('barVendorName');
+        var bi = document.getElementById('barVendorId');
+        if (bn) bn.textContent = bizName;
+        if (bi) bi.textContent = bizName;
+        // Update public page link based on category
+        var catPath = { food:'foods', foodvendor:'foods', nails:'nailsalon', nail:'nailsalon', hair:'hairsalon' }[cat] || 'foods';
+        var pubUrl = '/' + catPath + '/?id=' + VENDOR_ID;
+        var pl = document.getElementById('publicPageLink');
+        if (pl) { pl.href = pubUrl; pl.textContent = pubUrl; }
+        // Show app
+        document.getElementById('authLoading').classList.add('hidden');
+        document.getElementById('app').classList.add('visible');
+        document.getElementById('fabAdd').classList.add('visible');
+        renderAIProviderChips();
+        startApp();
+      }).catch(function () {
+        // Fallback: show app anyway
+        var bi = document.getElementById('barVendorId');
+        if (bi) bi.textContent = VENDOR_ID;
+        document.getElementById('authLoading').classList.add('hidden');
+        document.getElementById('app').classList.add('visible');
+        document.getElementById('fabAdd').classList.add('visible');
+        renderAIProviderChips();
+        startApp();
+      });
     }).catch(function () {
       goToLogin(null);
     });
@@ -1898,6 +1919,9 @@
   // same Firestore collection and never diverge.
   //
   function seedIfNeeded() {
+    // Seeding only applies to Emily's kitchen — other vendors manage their own menus
+    if (VENDOR_ID !== 'nha-bep-cua-emily') return;
+
     // ── 1. Seed vendor document if it doesn't exist ──
     vendorRef.get().then(function (doc) {
       if (!doc.exists) {

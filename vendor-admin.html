@@ -2061,7 +2061,14 @@
   function handleSnapshot(snap) {
     allItems = {};
     snap.forEach(function (d) {
-      allItems[d.id] = Object.assign({ id: d.id }, d.data());
+      var data = d.data();
+      // Skip Emily's canonical items if they ended up in a non-Emily vendor's collection
+      if (VENDOR_ID !== 'nha-bep-cua-emily' && EMILY_CANONICAL_IDS.indexOf(data.canonicalId) !== -1) {
+        // Also delete it from Firestore so it doesn't keep appearing
+        d.ref.delete().catch(function(){});
+        return;
+      }
+      allItems[d.id] = Object.assign({ id: d.id }, data);
     });
     renderItems();
   }

@@ -1885,6 +1885,7 @@
     loadCapacity();
     loadSmsSettings();
     loadHeroImage();
+    purgeEmilyItemsIfNeeded();
     seedIfNeeded();
     subscribeMenuItems();
     subscribeNotifications();
@@ -1918,6 +1919,27 @@
   // This guarantees the public page and vendor admin always read from the
   // same Firestore collection and never diverge.
   //
+  // Remove any Emily canonical items that were incorrectly seeded into a non-Emily vendor
+  var EMILY_CANONICAL_IDS = ['eggroll','chuoi-dau-nau-oc','bun-cha-hanoi','bun-dau-mam-tom','pho-bac'];
+  function purgeEmilyItemsIfNeeded() {
+    if (VENDOR_ID === 'nha-bep-cua-emily') return;
+    menuRef.get().then(function(snap) {
+      var toDelete = [];
+      snap.forEach(function(d) {
+        if (EMILY_CANONICAL_IDS.indexOf(d.data().canonicalId) !== -1) {
+          toDelete.push(d.ref);
+        }
+      });
+      if (toDelete.length === 0) return;
+      console.log('[cleanup] Removing ' + toDelete.length + ' incorrectly-seeded Emily items from ' + VENDOR_ID);
+      var batch = db.batch();
+      toDelete.forEach(function(ref) { batch.delete(ref); });
+      batch.commit().then(function() {
+        showToast(toDelete.length + ' món ăn của Emily đã được xóa khỏi tài khoản này.', 'info');
+      });
+    });
+  }
+
   function seedIfNeeded() {
     // Seeding only applies to Emily's kitchen — other vendors manage their own menus
     if (VENDOR_ID !== 'nha-bep-cua-emily') return;

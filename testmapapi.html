@@ -95,7 +95,7 @@
           origins:      ['Santa Ana, CA'],
           destinations: ['Disneyland, Anaheim, CA'],
           travelMode,
-          fields: ['distanceMeters', 'duration', 'status', 'originIndex', 'destinationIndex'],
+          fields: ['distanceMeters', 'travelDuration', 'staticDuration', 'condition', 'originIndex', 'destinationIndex'],
         });
         if (!resp || !resp.length || !resp[0].distanceMeters) { showError('Route Matrix: no route returned'); return; }
         const el       = resp[0];

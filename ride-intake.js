@@ -347,8 +347,11 @@ window.RideIntake = (function () {
     }
 
     google.maps.importLibrary('routes').then(function (lib) {
-      if (!lib || !lib.RouteMatrix) { legacyDistance(); return; }
-      new lib.RouteMatrix().computeRouteMatrix({
+      // RouteMatrix may be a direct export OR under the global google.maps.routes namespace
+      var RouteMatrix = (lib && lib.RouteMatrix)
+                     || (google.maps.routes && google.maps.routes.RouteMatrix);
+      if (!RouteMatrix) { legacyDistance(); return; }
+      new RouteMatrix().computeRouteMatrix({
         origins:      [{ waypoint: { address: pair.origin } }],
         destinations: [{ waypoint: { address: pair.destination } }],
         travelMode:   'DRIVE',
@@ -356,7 +359,7 @@ window.RideIntake = (function () {
         if (!resp || !resp.length || !resp[0].distanceMeters) throw new Error('no-route');
         var el        = resp[0];
         var distMiles = el.distanceMeters / 1609.34;
-        var durSec    = typeof el.duration === 'number'   ? el.duration
+        var durSec    = typeof el.duration === 'number'            ? el.duration
                       : (el.duration && 'seconds' in el.duration) ? Number(el.duration.seconds)
                       : parseInt(String(el.duration));
         _quote = calcQuote(distMiles, durSec / 60);

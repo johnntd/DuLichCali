@@ -166,10 +166,10 @@
   <!-- Hero Carousel -->
   <div class="hc" id="heroCarousel" aria-roledescription="carousel" aria-label="Tour du lịch California">
 
-    <!-- Slide 1: Mountains / Yosemite -->
-    <div class="hc__slide hc__slide--active" data-idx="0" role="group" aria-label="1 của 2"
+    <!-- Slide 1: California -->
+    <div class="hc__slide hc__slide--active" data-idx="0" role="group" aria-label="1 của 3"
          style="--accent:#fb923c;--accent-glow:rgba(251,146,60,.45);">
-      <div class="hc__bg" style="background-image:url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1400&auto=format&fit=crop&q=80');background-position:center center;"></div>
+      <div class="hc__bg" style="background-image:url('/images/tour-1.jpg');background-position:center center;"></div>
       <div class="hc__gradient"></div>
       <div class="hc__body">
         <span class="hc__chip">🏔️ Du Lịch California</span>
@@ -180,9 +180,9 @@
     </div>
 
     <!-- Slide 2: Las Vegas -->
-    <div class="hc__slide" data-idx="1" role="group" aria-label="2 của 2"
+    <div class="hc__slide" data-idx="1" role="group" aria-label="2 của 3"
          style="--accent:#f59e0b;--accent-glow:rgba(245,158,11,.45);">
-      <div class="hc__bg" style="background-image:url('https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?w=1400&auto=format&fit=crop&q=85');background-position:center 40%;"></div>
+      <div class="hc__bg" style="background-image:url('/images/tour-2.jpg');background-position:center center;"></div>
       <div class="hc__gradient"></div>
       <div class="hc__body">
         <span class="hc__chip">🎰 Las Vegas · Nevada</span>
@@ -192,9 +192,23 @@
       </div>
     </div>
 
+    <!-- Slide 3: Nature / National Parks -->
+    <div class="hc__slide" data-idx="2" role="group" aria-label="3 của 3"
+         style="--accent:#fb923c;--accent-glow:rgba(251,146,60,.45);">
+      <div class="hc__bg" style="background-image:url('/images/tour-3.jpg');background-position:center center;"></div>
+      <div class="hc__gradient"></div>
+      <div class="hc__body">
+        <span class="hc__chip">🌲 Yosemite · Grand Canyon</span>
+        <h2 class="hc__title">Thiên Nhiên<br><em>Hùng Vĩ Nước Mỹ</em></h2>
+        <p class="hc__sub">Yosemite · Grand Canyon · Big Sur · Sequoia</p>
+        <a href="/?entry=tour" class="hc__cta" style="text-decoration:none;">Khám phá ngay</a>
+      </div>
+    </div>
+
     <div class="hc__dots" role="tablist" aria-label="Chọn slide">
       <button class="hc__dot hc__dot--active" data-dot="0" role="tab" aria-selected="true"  aria-label="Slide 1"></button>
       <button class="hc__dot"                 data-dot="1" role="tab" aria-selected="false" aria-label="Slide 2"></button>
+      <button class="hc__dot"                 data-dot="2" role="tab" aria-selected="false" aria-label="Slide 3"></button>
     </div>
     <div class="hc__progress" role="none">
       <div class="hc__progress-bar" id="hcProgressBar"></div>

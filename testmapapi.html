@@ -99,11 +99,13 @@
           travelMode,
           fields: ['distanceMeters', 'condition', 'originIndex', 'destinationIndex', 'localizedValues'],
         });
-        if (!resp || !resp.length || !resp[0].distanceMeters) { showError('Route Matrix: no route returned'); return; }
-        const el    = resp[0];
-        const miles = (el.distanceMeters / 1609.34).toFixed(1);
-        console.log('Route Matrix full element:', JSON.stringify(el));
-        document.getElementById('distance-result').innerHTML = `Distance: ${miles} mi`;
+        console.log('RouteMatrix raw resp:', JSON.stringify(resp));
+        if (!resp || !resp.length) { showError('Route Matrix: empty response'); return; }
+        const el = resp[0];
+        console.log('resp[0] keys:', Object.keys(el).join(', '));
+        const distM = el.distanceMeters || el.distance_meters || (el.distance && el.distance.value);
+        const miles = distM ? (distM / 1609.34).toFixed(1) : '?';
+        document.getElementById('distance-result').innerHTML = `Distance: ${miles} mi | condition: ${el.condition} | full: ${JSON.stringify(el)}`;
         console.log('Route Matrix success:', miles, 'mi | full:', JSON.stringify(el));
       } catch (err) {
         showError('Route Matrix failed: ' + err.message);

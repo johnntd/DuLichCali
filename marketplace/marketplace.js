@@ -300,6 +300,12 @@
       return;
     }
 
+    // Route salon vendors through async Firestore loader
+    if (biz.category === 'nails' || biz.category === 'hair') {
+      renderSalonVendorDetail(biz);
+      return;
+    }
+
     var html =
       renderAppBar(backUrl, 'Danh sách', biz.name, biz.phone) +
       '<main class="mp-main">' +
@@ -367,7 +373,16 @@
   }
 
   function renderServicesSection(biz) {
-    var itemsHtml = biz.services.map(function (svc) {
+    var activeSvcs = (biz.services || []).filter(function (svc) { return svc.active !== false; });
+
+    if (!activeSvcs.length) {
+      return '<div class="mp-section">' +
+        '<div class="mp-section-hdr"><h2 class="mp-section-title">Dịch vụ & Giá</h2></div>' +
+        '<p style="color:var(--muted-lt,#8ab5cc);padding:.75rem 0;font-size:.9rem;">Vui lòng liên hệ trực tiếp để biết thêm thông tin dịch vụ.</p>' +
+      '</div>';
+    }
+
+    var itemsHtml = activeSvcs.map(function (svc) {
       return '<div class="mp-svc-item">' +
         '<div class="mp-svc-item__name">' + escHtml(svc.name) + '</div>' +
         '<div class="mp-svc-item__meta">' +
@@ -543,6 +558,110 @@
         hostsHtml +
       '</div>' +
     '</div>';
+  }
+
+  // ── Salon Vendor Detail Page ──────────────────────────────────────────────────
+
+  function renderSalonVendorDetail(biz) {
+    var backUrl = window.location.pathname;
+    _container.innerHTML =
+      renderAppBar(backUrl, 'Danh sách', biz.name, biz.phone) +
+      '<div class="mp-fv-loading">' +
+        '<div class="mp-fv-spinner"></div>' +
+        '<p>Đang tải dịch vụ...</p>' +
+      '</div>';
+
+    if (window.dlcDb) {
+      loadSalonVendorFirestore(biz, function (mergedBiz) {
+        _renderSalonDetailContent(mergedBiz, backUrl);
+      });
+    } else {
+      _renderSalonDetailContent(biz, backUrl);
+    }
+  }
+
+  function loadSalonVendorFirestore(biz, callback) {
+    var db = window.dlcDb;
+    var vendorRef = db.collection('vendors').doc(biz.id);
+
+    vendorRef.get().then(function (vendorDoc) {
+      var merged = {};
+      for (var k in biz) { if (Object.prototype.hasOwnProperty.call(biz, k)) merged[k] = biz[k]; }
+
+      if (vendorDoc.exists) {
+        var vd = vendorDoc.data();
+        if (vd.description)  merged.description  = vd.description;
+        if (vd.heroImage)    merged.heroImage     = vd.heroImage;
+        if (vd.active === false) merged.active    = false;
+      }
+
+      // Load only active services from Firestore
+      vendorRef.collection('services')
+        .where('active', '==', true)
+        .get()
+        .then(function (snap) {
+          if (!snap.empty) {
+            var svcs = [];
+            snap.forEach(function (d) {
+              var s = d.data();
+              svcs.push({
+                id:           d.id,
+                name:         s.name         || '',
+                category:     s.category     || '',
+                price:        s.price        || '',
+                priceFrom:    s.priceFrom    || 0,
+                duration:     s.duration     || '',
+                durationMins: s.durationMins || 0,
+                desc:         s.desc         || '',
+                imageUrl:     s.imageUrl     || '',
+                assignedStaff: s.assignedStaff || [],
+                active:       true,
+                sortOrder:    s.sortOrder    || 0
+              });
+            });
+            svcs.sort(function (a, b) { return a.sortOrder - b.sortOrder; });
+            merged.services = svcs;
+          } else {
+            // No active services in Firestore — keep static list but filter to active
+            merged.services = (biz.services || []).filter(function (s) { return s.active !== false; });
+          }
+          callback(merged);
+        })
+        .catch(function () { callback(merged); });
+    }).catch(function () { callback(biz); });
+  }
+
+  function _renderSalonDetailContent(biz, backUrl) {
+    var html =
+      renderAppBar(backUrl, 'Danh sách', biz.name, biz.phone) +
+      '<main class="mp-main">' +
+        renderDetailHero(biz) +
+        renderInfoStrip(biz) +
+        '<div class="mp-detail-body">' +
+          '<div class="mp-detail-col mp-detail-col--left">' +
+            renderServicesSection(biz) +
+            renderHoursSection(biz) +
+          '</div>' +
+          '<div class="mp-detail-col mp-detail-col--right">' +
+            (biz.bookingEnabled ? renderBookingSection(biz) : '') +
+            renderAiSection(biz) +
+            renderContactSection(biz) +
+          '</div>' +
+        '</div>' +
+        '<div class="mp-spacer"></div>' +
+      '</main>' +
+      renderFooter() +
+      renderBottomNav(backUrl);
+
+    _container.innerHTML = html;
+
+    if (biz.bookingEnabled) {
+      initBookingForm(biz);
+    }
+
+    if (biz.aiReceptionist && biz.aiReceptionist.enabled) {
+      Receptionist.init(biz, 'aiWidget_' + biz.id);
+    }
   }
 
   // ── Food Vendor Detail Page ────────────────────────────────────────────────────
@@ -2130,6 +2249,8 @@
             servicesBlock += '\n';
           });
           servicesBlock += '\n';
+        } else {
+          servicesBlock = 'SERVICES: Please contact the salon directly for current service availability and pricing.\n\n';
         }
         var hoursBlock = '';
         if (biz.hours) {

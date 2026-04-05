@@ -15,7 +15,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <!-- Static salon data -->
-  <script src="marketplace/services-data.js?v=20260405b"></script>
+  <script src="marketplace/services-data.js?v=20260405c"></script>
 
   <style>
     :root {
@@ -674,6 +674,8 @@
   var allServiceDocs     = [];   // [{id, data}] — full snapshot for filtering
   var currentStaffData   = [];   // [{id, name, data}] — for service modal checkboxes + availability
   var SERVICE_CATS       = [];   // [{key, label}] — loaded from static data
+  var CATALOG_VERSION    = 2;    // Bump this to force a full catalog reset on next login
+  var _catalogSeeding    = false;
 
   // ── Utility ─────────────────────────────────────────────────────────────────
   function esc(s) {
@@ -778,28 +780,14 @@
       }
     });
 
-    // Seed services subcollection if empty
-    servicesRef.limit(1).get().then(function(snap) {
-      if (!snap.empty) return;
-      var batch = db.batch();
-      (staticData.services || []).forEach(function(svc, i) {
-        var ref = servicesRef.doc();
-        batch.set(ref, {
-          name:          svc.name || '',
-          category:      svc.category || '',
-          price:         svc.price || '',
-          priceFrom:     svc.priceFrom || 0,
-          duration:      svc.duration || '',
-          durationMins:  svc.durationMins || 0,
-          desc:          svc.desc || '',
-          imageUrl:      svc.imageUrl || '',
-          assignedStaff: svc.assignedStaff || [],
-          active:        svc.active !== false,
-          sortOrder:     i,
-          createdAt:     ts(), updatedAt: ts()
-        });
-      });
-      batch.commit().catch(function(){});
+    // Seed/reset services based on catalogVersion — bump CATALOG_VERSION to force a full reset
+    vendorRef.get().then(function(vdoc) {
+      var vdata = vdoc.exists ? vdoc.data() : {};
+      var currentVersion = vdata.catalogVersion || 0;
+      if (currentVersion >= CATALOG_VERSION) return;
+      if (_catalogSeeding) return;
+      _catalogSeeding = true;
+      _resetServiceCatalog(staticData, currentVersion);
     });
 
     // Seed staff subcollection if empty
@@ -833,6 +821,62 @@
         });
       });
       batch.commit().catch(function(){});
+    });
+  }
+
+  // ── Catalog version reset ─────────────────────────────────────────────────────
+  function _resetServiceCatalog(staticData, currentVersion) {
+    var ts = firebase.firestore.FieldValue.serverTimestamp;
+    var svcs = staticData.services || [];
+
+    function _doBatchAdd() {
+      var batch = db.batch();
+      svcs.forEach(function(svc, i) {
+        batch.set(servicesRef.doc(), {
+          name:          svc.name || '',
+          category:      svc.category || '',
+          price:         svc.price || '',
+          priceFrom:     svc.priceFrom || 0,
+          duration:      svc.duration || '',
+          durationMins:  svc.durationMins || 0,
+          desc:          svc.desc || '',
+          imageUrl:      svc.imageUrl || '',
+          assignedStaff: svc.assignedStaff || [],
+          active:        svc.active !== false,
+          sortOrder:     i,
+          createdAt:     ts(), updatedAt: ts()
+        });
+      });
+      batch.commit()
+        .then(function() { return vendorRef.update({ catalogVersion: CATALOG_VERSION }); })
+        .then(function() {
+          _catalogSeeding = false;
+          showToast('✓ Catalog reset: ' + svcs.length + ' services loaded (all disabled by default).');
+        })
+        .catch(function(err) {
+          _catalogSeeding = false;
+          console.error('[DLC] catalog batch-add failed', err);
+        });
+    }
+
+    if (currentVersion === 0) {
+      // First-ever seed — no existing docs to delete
+      _doBatchAdd();
+      return;
+    }
+
+    // Upgrading: delete all existing services first, then re-add
+    servicesRef.get().then(function(snap) {
+      if (snap.empty) { _doBatchAdd(); return; }
+      var delBatch = db.batch();
+      snap.docs.forEach(function(d) { delBatch.delete(d.ref); });
+      delBatch.commit().then(_doBatchAdd).catch(function(err) {
+        _catalogSeeding = false;
+        console.error('[DLC] catalog delete failed', err);
+      });
+    }).catch(function(err) {
+      _catalogSeeding = false;
+      console.error('[DLC] catalog fetch failed', err);
     });
   }
 

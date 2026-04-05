@@ -746,54 +746,111 @@
     }
   }
 
+  // Convert vendor-admin hoursSchedule {mon:{open,close,closed},...} → display hours {label: 'H AM – H PM'}
+  function _hoursScheduleToHours(hs) {
+    var keys      = ['mon','tue','wed','thu','fri','sat','sun'];
+    var labels    = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    function fmt(t) {
+      if (!t) return '';
+      var p = t.split(':'), h = +p[0], m = +p[1];
+      var ap = h < 12 ? 'AM' : 'PM'; h = h % 12 || 12;
+      return h + (m ? ':' + (m < 10 ? '0' : '') + m : '') + ' ' + ap;
+    }
+    var result = {};
+    keys.forEach(function (k, i) {
+      var d = hs[k];
+      if (!d) return;
+      result[labels[i]] = d.closed ? 'Closed' : (fmt(d.open) + ' – ' + fmt(d.close));
+    });
+    return Object.keys(result).length ? result : null;
+  }
+
   function loadSalonVendorFirestore(biz, callback) {
     var db = window.dlcDb;
     var vendorRef = db.collection('vendors').doc(biz.id);
 
     vendorRef.get().then(function (vendorDoc) {
+      // Start from a shallow copy of the static biz object
       var merged = {};
       for (var k in biz) { if (Object.prototype.hasOwnProperty.call(biz, k)) merged[k] = biz[k]; }
 
       if (vendorDoc.exists) {
         var vd = vendorDoc.data();
-        if (vd.description)  merged.description  = vd.description;
-        if (vd.heroImage)    merged.heroImage     = vd.heroImage;
-        if (vd.active === false) merged.active    = false;
+        if (vd.description)              merged.description = vd.description;
+        if (vd.heroImage)                merged.heroImage   = vd.heroImage;
+        if (vd.active === false)         merged.active      = false;
+        // Map hoursSchedule (vendor-admin format) → biz.hours (display format)
+        // This ensures hours saved in vendor-admin appear on public page + AI
+        if (vd.hoursSchedule) {
+          var mapped = _hoursScheduleToHours(vd.hoursSchedule);
+          if (mapped) merged.hours = mapped;
+        }
       }
 
-      // Load only active services from Firestore
-      vendorRef.collection('services')
-        .where('active', '==', true)
-        .get()
-        .then(function (snap) {
-          if (!snap.empty) {
-            var svcs = [];
-            snap.forEach(function (d) {
-              var s = d.data();
-              svcs.push({
-                id:           d.id,
-                name:         s.name         || '',
-                category:     s.category     || '',
-                price:        s.price        || '',
-                priceFrom:    s.priceFrom    || 0,
-                duration:     s.duration     || '',
-                durationMins: s.durationMins || 0,
-                desc:         s.desc         || '',
-                imageUrl:     s.imageUrl     || '',
-                assignedStaff: s.assignedStaff || [],
-                active:       true,
-                sortOrder:    s.sortOrder    || 0
-              });
+      // ── Load services + staff in parallel ─────────────────────────────────────
+      // Both subcollections are authoritative: vendor-admin writes here, public page reads here.
+      Promise.all([
+        vendorRef.collection('services').where('active', '==', true).get(),
+        vendorRef.collection('staff').get()
+      ]).then(function (results) {
+        var svcSnap   = results[0];
+        var staffSnap = results[1];
+
+        // ── SERVICES ────────────────────────────────────────────────────────────
+        if (!svcSnap.empty) {
+          var svcs = [];
+          svcSnap.forEach(function (d) {
+            var s = d.data();
+            svcs.push({
+              id:            d.id,
+              name:          s.name          || '',
+              category:      s.category      || '',
+              price:         s.price         || '',
+              priceFrom:     s.priceFrom     || 0,
+              duration:      s.duration      || '',
+              durationMins:  s.durationMins  || 0,
+              desc:          s.desc          || '',
+              imageUrl:      s.imageUrl      || '',
+              assignedStaff: s.assignedStaff || [],
+              active:        true,
+              sortOrder:     s.sortOrder     || 0
             });
-            svcs.sort(function (a, b) { return a.sortOrder - b.sortOrder; });
-            merged.services = svcs;
-          } else {
-            // No active services in Firestore — keep static list but filter to active
-            merged.services = (biz.services || []).filter(function (s) { return s.active !== false; });
-          }
-          callback(merged);
-        })
-        .catch(function () { callback(merged); });
+          });
+          svcs.sort(function (a, b) { return a.sortOrder - b.sortOrder; });
+          merged.services = svcs;
+        } else {
+          // No active services enabled yet — show empty list, not the disabled static catalog
+          merged.services = [];
+        }
+
+        // ── STAFF ────────────────────────────────────────────────────────────────
+        // Firestore staff subcollection is the authoritative source.
+        // Vendor-admin saves here; public page + AI must read from here.
+        if (!staffSnap.empty) {
+          var staffArr = [];
+          staffSnap.forEach(function (d) {
+            var s = d.data();
+            staffArr.push({
+              id:               d.id,
+              name:             s.name             || '',
+              role:             s.role             || 'Nail Tech',
+              specialties:      s.specialties      || [],
+              assignedServices: s.assignedServices || [],
+              schedule:         s.schedule         || {},
+              active:           s.active !== false,
+              sortOrder:        s.sortOrder        || 0
+            });
+          });
+          staffArr.sort(function (a, b) { return a.sortOrder - b.sortOrder; });
+          merged.staff = staffArr;
+        }
+        // If Firestore staff subcollection is empty, keep static biz.staff as last-resort fallback
+
+        callback(merged);
+      }).catch(function (err) {
+        console.warn('[DLC] salon Firestore load error:', err);
+        callback(merged);
+      });
     }).catch(function () { callback(biz); });
   }
 

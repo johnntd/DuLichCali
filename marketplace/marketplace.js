@@ -1006,7 +1006,8 @@
         '<div class="mp-spacer"></div>' +
       '</main>' +
       renderFooter() +
-      renderBottomNav(backUrl);
+      renderInterpPanel(biz) +
+      renderVendorBottomNav(biz);
 
     _container.innerHTML = html;
 
@@ -1017,6 +1018,8 @@
     if (biz.aiReceptionist && biz.aiReceptionist.enabled) {
       Receptionist.init(biz, 'aiWidget_' + biz.id);
     }
+
+    _initVendorNav(biz);
   }
 
   function renderFoodVendorHero(biz) {

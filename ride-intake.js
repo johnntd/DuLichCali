@@ -344,6 +344,11 @@ window.RideIntake = (function () {
   }
 
   // ── Google Places Autocomplete ────────────────────────────────────────────────
+  function _scrollInputIntoView(el) {
+    if (!el || !el.scrollIntoView) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
   function initAutocomplete() {
     if (typeof google === 'undefined' || !google.maps) return;
     var ids = { pickup: ['ri_dropoff_addr'], dropoff: ['ri_pickup_addr'], ride: ['ri_from_addr','ri_to_addr'] };
@@ -359,6 +364,9 @@ window.RideIntake = (function () {
         pac.placeholder = input.placeholder || '';
         input.parentNode.replaceChild(pac, input);
         pac.addEventListener('gmp-placeselect', function() { scheduleDistance(); });
+        pac.addEventListener('focus', function() {
+          setTimeout(function() { _scrollInputIntoView(pac); }, 350);
+        });
         _ac[id] = pac;
       }).catch(function() { _initAutocompleteLegacy(id, input); });
     });
@@ -373,6 +381,9 @@ window.RideIntake = (function () {
       var p = ac.getPlace();
       if (p && p.formatted_address) input.value = p.formatted_address;
       scheduleDistance();
+    });
+    input.addEventListener('focus', function() {
+      setTimeout(function() { _scrollInputIntoView(input); }, 350);
     });
     _ac[id] = ac;
   }

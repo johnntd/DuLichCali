@@ -3370,6 +3370,7 @@ gmp-placeautocomplete.field-input::part(input):focus {
   flex: 1;
   overflow-y: auto;
   padding: 1rem;
+  padding-bottom: 80px;
   -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
@@ -3417,6 +3418,12 @@ gmp-placeautocomplete.field-input::part(input):focus {
 /* PlaceAutocompleteElement (gmp-placeautocomplete) — ride-intake address fields */
 gmp-placeautocomplete.ri-input {
   display: block; width: 100%; min-height: 44px;
+  --gmp-font-family: var(--font-b, 'Jost', sans-serif);
+  --gmp-font-size: .9rem;
+  --gmp-color-surface: rgba(255,255,255,.11);
+  --gmp-color-on-surface: #f0e6d3;
+  --gmp-color-primary: #c9a84c;
+  --gmp-border-radius: 10px;
 }
 gmp-placeautocomplete.ri-input::part(input) {
   width: 100%; min-height: 44px;
@@ -3480,6 +3487,8 @@ gmp-placeautocomplete.ri-input::part(input):focus {
   box-shadow: 0 0 0 3px rgba(201,168,76,.12);
   background: rgba(255,255,255,.08);
 }
+/* Google Places autocomplete dropdown must clear the ride-intake modal overlay */
+.pac-container { z-index: 9200 !important; }
 
 /* Location badge */
 .ri-loc-badge {

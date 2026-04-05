@@ -210,7 +210,7 @@
     return {
       // Service intent
       isTour:       /tour|chuyến|du lịch|trip|visit|thăm|đi|yosemite|vegas|san francisco|sf\b|golden gate|cầu vàng|disneyland|disney|anaheim|napa|tahoe|monterey|big sur|sequoia|kings canyon|santa barbara|solvang|palm springs|joshua tree|grand canyon|17.?mile|pebble beach|los angeles|san diego/i.test(text),
-      isTransfer:   /airport|sân bay|đón|pickup|pick.?up|dropoff|drop.?off|đưa|limo|transfer|đưa đón/i.test(text),
+      isTransfer:   /airport|sân bay|đón|pickup|pick.?up|dropoff|drop.?off|đưa|limo|transfer|đưa đón|\btake me\b|\bpick me up\b|\bneed a ride\b|\bneed a car\b|\bgive me a ride\b|\bdrop me\b/i.test(text),
       isComparison: /cheaper|rẻ hơn|so sánh|compare|which|cái nào|nào rẻ|nào tốt|difference|khác nhau/i.test(text),
       isPricing:    /bao nhiêu|giá|cost|price|how much|estimate|ước tính|khoảng|phí|tiền|fee|charge/i.test(text),
       isExplain:    /why|tại sao|how.*calc|tính như thế nào|explain|breakdown|gồm gì|bao gồm|cấu thành/i.test(text),
@@ -382,6 +382,18 @@
     }
 
     // ── Transfer / Airport ────────────────────────────────────
+    // Resolve "here / my location / my home" to the customer's detected city
+    if (intent.isTransfer) {
+      const _impliesHere = /\b(here|my\s+(?:location|home|place|house|address)|current\s+location|nhà tôi|chỗ tôi|chỗ của tôi)\b/i.test(rawText);
+      if (_impliesHere && !intent.city) {
+        const hint = window.DLCLocation && DLCLocation.pickupHint ? DLCLocation.pickupHint() : null;
+        if (hint) {
+          intent.city = hint;
+        } else if (intent.airport) {
+          return `What city or address would you like to be picked up from? Once I have your location I can calculate the transfer to ${intent.airport.toUpperCase()}.`;
+        }
+      }
+    }
     if (intent.isTransfer && (intent.city || intent.airport)) {
       return buildTransferReply(intent, passengers);
     }
@@ -1313,6 +1325,37 @@ ORDER TRACKING:
 - Do NOT provide pricing, vendor names, or scheduling for out-of-scope services.\n`;
     }
 
+    // Build driver availability context for airport mode
+    let driverCtx = '';
+    if (mode === 'airport') {
+      const avail = window._rideServiceAvailable;
+      const driverCount = window._availableDrivers ? window._availableDrivers.length : 0;
+      if (avail === true) {
+        driverCtx = `\nDRIVER AVAILABILITY: Service is currently AVAILABLE. ${driverCount} driver${driverCount !== 1 ? 's' : ''} active right now.\n`;
+      } else if (avail === false) {
+        driverCtx = '\nDRIVER AVAILABILITY: No drivers are currently available. Advise the customer to call +1 (408) 916-3439 to arrange future bookings.\n';
+      }
+      // Airport transfer pricing snapshot
+      if (typeof DLCPricing !== 'undefined' && DLCPricing.estimateTransfer) {
+        const airports = (window.DLCRegion && DLCRegion.current && DLCRegion.current.airports) || ['SJC','SFO','OAK','LAX','SNA'];
+        const sampleCities = (window.DLCRegion && DLCRegion.current && DLCRegion.current.id === 'bayarea')
+          ? ['San Jose', 'San Francisco', 'Oakland', 'Fremont']
+          : ['Anaheim', 'Irvine', 'Los Angeles', 'Long Beach'];
+        const lines = [];
+        sampleCities.forEach(function(city) {
+          airports.slice(0, 2).forEach(function(ap) {
+            try {
+              const est = DLCPricing.estimateTransfer({ city: city, airport: ap, passengers: 2 });
+              if (est && est.dlcPrice) lines.push(`  ${city} ↔ ${ap}: ~$${est.dlcPrice}`);
+            } catch(e) {}
+          });
+        });
+        if (lines.length) {
+          driverCtx += '\nAIRPORT TRANSFER PRICING EXAMPLES (2 passengers):\n' + lines.join('\n') + '\n';
+        }
+      }
+    }
+
     const modeHints = {
       airport:     'CURRENT SESSION: Customer opened the Airport & Transportation assistant. Focus on airport pickup/dropoff, private rides, vehicle options, and transfer pricing.',
       tour:        'CURRENT SESSION: Customer opened the Tour & Travel assistant. Focus on destinations, multi-day tours, hotel suggestions, and travel pricing.',
@@ -1327,7 +1370,7 @@ ORDER TRACKING:
         'and skip asking for pickup city if the customer says "here" or "current location".\n\n'
       : '';
 
-    return `${modeHint}${scopeBlock}${locationCtx}You are the AI assistant for Du Lịch Cali — a Vietnamese-American travel, transportation, and marketplace service in California.
+    return `${modeHint}${scopeBlock}${driverCtx}${locationCtx}You are the AI assistant for Du Lịch Cali — a Vietnamese-American travel, transportation, and marketplace service in California.
 
 YOUR ROLE:
 1. Answer questions about DLC services, pricing, and vendors directly.
@@ -1440,6 +1483,10 @@ BEHAVIOR GUIDELINES:
     // Private ride — point-to-point, no airport involved
     { intent: 'private_ride',
       pattern: /\bxe riêng\b|private.?ride|thuê xe điểm đến|đặt xe.*điểm|xe từ\b|xe đến\b/i },
+
+    // Generic ride request — "take me", "pick me up", "I need a ride", etc.
+    { intent: 'airport_transfer',
+      pattern: /\btake me\b|\bpick me up\b|\bneed a (?:ride|car|lift)\b|\bgive me a ride\b|\bdrop me (?:off|at)\b/i },
   ];
 
   // Map router intents to workflowEngine keys

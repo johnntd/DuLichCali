@@ -328,6 +328,7 @@
       grid-template-columns: repeat(3, 1fr);
       max-width: 900px;
     }
+    body.print-mode .section-heading { margin-top: 1.5rem; }
     body.print-mode .page-header { margin-bottom: 1.5rem; }
     body.print-mode .qr-card__img { width: 180px; height: 180px; }
     body.print-mode .qr-card__hero { height: 120px; }
@@ -346,12 +347,46 @@
         gap: .85rem !important;
         max-width: 100% !important;
       }
+      .section-heading { margin-top: 1.5rem !important; }
       .qr-card { box-shadow: none !important; border: 1px solid #ccc !important; border-radius: 10px !important; }
       .qr-card__img { width: 160px !important; height: 160px !important; }
       .qr-card__hero { height: 110px !important; }
       .qr-card__hero-placeholder { height: 110px !important; }
       .qr-card__hero-collage { height: 110px !important; }
       .page-header { margin-bottom: 1rem !important; }
+    }
+
+    /* ── Section Heading ────────────────────────── */
+    .section-heading {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      max-width: 1100px;
+      margin: 3.5rem auto 0;
+    }
+    .section-heading__line {
+      flex: 1;
+      height: 1px;
+      background: #d0cbc3;
+    }
+    .section-heading__text {
+      font-family: var(--font-d);
+      font-size: 1.05rem;
+      color: var(--navy);
+      white-space: nowrap;
+      opacity: .65;
+      letter-spacing: .04em;
+    }
+    .section-heading__badge {
+      font-size: .65rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      background: var(--navy);
+      color: #fff;
+      padding: .18rem .6rem;
+      border-radius: 99px;
+      opacity: .55;
     }
 
     /* ── Responsive ─────────────────────────────── */
@@ -391,6 +426,15 @@
 </div>
 
 <div class="qr-grid" id="qrGrid"></div>
+
+<div class="section-heading">
+  <div class="section-heading__line"></div>
+  <div class="section-heading__text">Individual Vendor Pages</div>
+  <span class="section-heading__badge">Direct Links</span>
+  <div class="section-heading__line"></div>
+</div>
+
+<div class="qr-grid" id="qrVendorGrid"></div>
 
 <div class="page-actions">
   <button class="btn btn--primary" onclick="window.print()">
@@ -541,10 +585,10 @@
       hero.loading = 'lazy';
       card.appendChild(hero);
     } else {
-      /* Home: gradient placeholder */
+      /* Gradient placeholder — uses svc.gradient if provided, else navy brand */
       var ph = document.createElement('div');
       ph.className = 'qr-card__hero-placeholder';
-      ph.style.background = 'linear-gradient(135deg, #0d2f50 0%, #1a4a7e 100%)';
+      ph.style.background = svc.gradient || 'linear-gradient(135deg, #0d2f50 0%, #1a4a7e 100%)';
       var starSpan = document.createElement('span');
       starSpan.style.cssText = 'font-size:3.2rem;color:#f5a623;text-shadow:0 0 30px rgba(245,166,35,.5)';
       starSpan.textContent = '✦';
@@ -644,10 +688,104 @@
     return card;
   }
 
-  /* ── Render grid ────────────────────────────── */
+  /* ── Individual vendor pages ────────────────── */
+  /* Nail banner — shared across ALL nail salon vendor cards */
+  var _NAIL_IMGS = ['/images/nails-1.jpg', '/images/nails-2.jpg', '/images/nails-3.jpg'];
+
+  var VENDORS = [
+    /* ── Nail Salons ── */
+    {
+      id:      'luxurious-nails',
+      title:   'Luxurious Nails & Spa',
+      titleVi: 'Làm Nail · San Jose',
+      badge:   'San Jose, CA',
+      sub:     'Gel · Acrylic · Ombre · Nail Art · Pedicure',
+      cta:     'Scan to Book',
+      url:     BASE + '/marketplace/?id=luxurious-nails',
+      accent:  '#f472b6',
+      imgs:    _NAIL_IMGS,
+    },
+    {
+      id:      'beauty-nails-oc',
+      title:   'Beauty Nails OC',
+      titleVi: 'Làm Nail · Westminster',
+      badge:   'Westminster, CA',
+      sub:     'Gel · Acrylic · Ombre · Nail Art · Pedicure',
+      cta:     'Scan to Book',
+      url:     BASE + '/marketplace/?id=beauty-nails-oc',
+      accent:  '#f472b6',
+      imgs:    _NAIL_IMGS,
+    },
+    /* ── Hair Salons ── */
+    {
+      id:      'viet-hair-bayarea',
+      title:   'Việt Hair Studio',
+      titleVi: 'Salon Tóc · San Jose',
+      badge:   'San Jose, CA',
+      sub:     'Cắt · Nhuộm · Uốn · Highlight · Keratin',
+      cta:     'Scan to Book',
+      url:     BASE + '/marketplace/?id=viet-hair-bayarea',
+      accent:  '#c084fc',
+      img:     'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=600&auto=format&fit=crop&q=80',
+    },
+    {
+      id:      'cali-hair-oc',
+      title:   'Cali Hair & Beauty',
+      titleVi: 'Salon Tóc · Garden Grove',
+      badge:   'Garden Grove, CA',
+      sub:     'Cắt · Balayage · Uốn Hàn Quốc · Highlight · Deep Conditioning',
+      cta:     'Scan to Book',
+      url:     BASE + '/marketplace/?id=cali-hair-oc',
+      accent:  '#c084fc',
+      img:     'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&auto=format&fit=crop&q=80',
+    },
+    /* ── Food Vendors ── */
+    {
+      id:      'pho-bac-bayarea',
+      title:   'Phở Bắc Bay Area',
+      titleVi: 'Phở Hà Nội · San Jose',
+      badge:   'San Jose, CA',
+      sub:     'Phở Bò · Bún Bò Huế · Bún Chả · Cơm Tấm · Catering',
+      cta:     'Scan to Order',
+      url:     BASE + '/marketplace/?id=pho-bac-bayarea',
+      accent:  '#f59e0b',
+      img:     BASE + '/images/hero-pho-bac.jpg',
+    },
+    {
+      id:      'nha-bep-cua-emily',
+      title:   'Nhà Bếp Của Emily',
+      titleVi: 'Đặt Món · San Jose',
+      badge:   'San Jose, CA',
+      sub:     'Chả Giò · Bún Chả Hà Nội · Chuối Đậu Nấu Ốc · Phở Bắc',
+      cta:     'Scan to Order',
+      url:     BASE + '/marketplace/?id=nha-bep-cua-emily',
+      accent:  '#f97316',
+      imgs:    [BASE + '/images/hero-cha-gio.jpg', BASE + '/images/hero-bun-cha-hanoi.jpg', BASE + '/images/hero-chuoi-dau-nau-oc.jpg'],
+    },
+    {
+      id:      'com-tam-oc',
+      title:   'Cơm Tấm Dì Tám',
+      titleVi: 'Cơm Tấm · Westminster',
+      badge:   'Westminster, CA',
+      sub:     'Cơm Tấm Sườn · Hủ Tiếu · Bánh Mì · Chả Giò · Catering',
+      cta:     'Scan to Order',
+      url:     BASE + '/marketplace/?id=com-tam-oc',
+      accent:  '#dc2626',
+      img:     null,
+      gradient: 'linear-gradient(135deg, #dc2626 0%, #b45309 50%, #92400e 100%)',
+    },
+  ];
+
+  /* ── Render category grid ────────────────────── */
   var grid = document.getElementById('qrGrid');
   SERVICES.forEach(function(svc) {
     grid.appendChild(buildCard(svc));
+  });
+
+  /* ── Render vendor grid ──────────────────────── */
+  var vendorGrid = document.getElementById('qrVendorGrid');
+  VENDORS.forEach(function(svc) {
+    vendorGrid.appendChild(buildCard(svc));
   });
 
   /* ── Print mode toggle ─────────────────────── */

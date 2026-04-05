@@ -3193,12 +3193,12 @@ select.field-input {
   padding: 1.1rem 1rem 1.5rem;
   overflow-y: auto;
   flex: 1;
-  background: #fff;
+  background: #07101e;
 }
 .ri-picker__sub {
   text-align: center;
   font: 400 .82rem var(--font-b, 'Jost', sans-serif);
-  color: #94a3b8;
+  color: rgba(255,255,255,.45);
   margin: 0 0 1.1rem;
 }
 .ri-picker__grid {
@@ -3207,8 +3207,8 @@ select.field-input {
   gap: .7rem;
 }
 .ri-svc-card {
-  background: #f8fafc;
-  border: 1.5px solid #e2e8f0;
+  background: rgba(255,255,255,.04);
+  border: 1.5px solid rgba(255,255,255,.09);
   border-radius: 14px;
   padding: 1.25rem .9rem 1.1rem;
   cursor: pointer;
@@ -3222,12 +3222,12 @@ select.field-input {
   min-height: 120px;
 }
 .ri-svc-card:hover {
-  border-color: #0a2344;
-  background: #f0f4fb;
-  box-shadow: 0 2px 12px rgba(10,35,68,.1);
+  border-color: #c9a84c;
+  background: rgba(201,168,76,.07);
+  box-shadow: 0 2px 16px rgba(201,168,76,.12);
 }
 .ri-svc-card:active { transform: scale(.97); }
-.ri-svc-card:focus-visible { outline: 2px solid #0a2344; outline-offset: 2px; }
+.ri-svc-card:focus-visible { outline: 2px solid #c9a84c; outline-offset: 2px; }
 .ri-svc-card--wide {
   grid-column: 1 / -1;
   flex-direction: row;
@@ -3241,8 +3241,8 @@ select.field-input {
   width: 44px;
   height: 44px;
   border-radius: 11px;
-  background: #0a2344;
-  color: #fff;
+  background: linear-gradient(135deg, #c9a84c 0%, #e2b855 100%);
+  color: #07101e;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3255,12 +3255,12 @@ select.field-input {
 }
 .ri-svc-card strong {
   font: 600 .92rem var(--font-b, 'Jost', sans-serif);
-  color: #0a2344;
+  color: #f0e6d3;
   display: block;
 }
 .ri-svc-card span {
   font: 400 .76rem var(--font-b, 'Jost', sans-serif);
-  color: #64748b;
+  color: rgba(255,255,255,.42);
   display: block;
   line-height: 1.35;
 }
@@ -3284,7 +3284,7 @@ select.field-input {
 /* ── Sub-step indicator ── */
 .ri-step-ind {
   font: 500 .72rem var(--font-b, 'Jost', sans-serif);
-  color: #94a3b8;
+  color: rgba(255,255,255,.38);
   letter-spacing: .06em;
   text-transform: uppercase;
   padding: .65rem 1rem .1rem;
@@ -3296,14 +3296,14 @@ select.field-input {
 /* ── Optional details (collapsible) ── */
 .ri-optional {
   margin-top: .85rem;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid rgba(255,255,255,.07);
   padding-top: .6rem;
 }
 .ri-optional > summary {
   list-style: none;
   cursor: pointer;
   font: 500 .8rem var(--font-b, 'Jost', sans-serif);
-  color: #64748b;
+  color: rgba(255,255,255,.42);
   display: flex;
   align-items: center;
   gap: .4rem;
@@ -3315,14 +3315,14 @@ select.field-input {
 .ri-optional > summary::before {
   content: '+';
   width: 18px; height: 18px;
-  background: #f1f5f9;
+  background: rgba(255,255,255,.08);
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: .85rem;
   font-weight: 700;
-  color: #0a2344;
+  color: #c9a84c;
   flex-shrink: 0;
   line-height: 1;
 }
@@ -3335,7 +3335,7 @@ select.field-input {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #fff;
+  background: #07101e;
   min-height: 0;
 }
 .ri-scrollbody {
@@ -3353,7 +3353,7 @@ select.field-input {
   font: 600 .72rem var(--font-b, 'Jost', sans-serif);
   letter-spacing: .07em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: rgba(201,168,76,.65);
   margin: 1rem 0 .45rem;
 }
 .ri-sec:first-child { margin-top: 0; }
@@ -3362,33 +3362,38 @@ select.field-input {
 .ri-row { display: flex; gap: .55rem; margin-bottom: .6rem; }
 .ri-field { flex: 1; display: flex; flex-direction: column; gap: .28rem; min-width: 0; }
 .ri-field--full { flex: 1 1 100%; }
-.ri-label { font: 500 .79rem var(--font-b, 'Jost', sans-serif); color: #374151; }
-.ri-req { color: #dc2626; }
+.ri-label {
+  font: 600 .72rem var(--font-b, 'Jost', sans-serif);
+  color: #c9a84c;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+.ri-req { color: #f87171; }
 
 /* Inputs */
 .ri-input, .ri-select {
   width: 100%;
   box-sizing: border-box;
-  background: #f8fafc;
-  border: 1.5px solid #e2e8f0;
+  background: rgba(255,255,255,.05);
+  border: 1.5px solid rgba(255,255,255,.1);
   border-radius: 10px;
   padding: .68rem .85rem;
   font: 400 .9rem var(--font-b, 'Jost', sans-serif);
-  color: #1e293b;
+  color: #f0e6d3;
   min-height: 44px;
   transition: border-color .15s, box-shadow .15s, background .15s;
   -webkit-appearance: none;
   appearance: none;
 }
-.ri-input::placeholder { color: #94a3b8; }
+.ri-input::placeholder { color: rgba(255,255,255,.25); }
 .ri-input:focus, .ri-select:focus {
   outline: none;
-  border-color: #0a2344;
-  box-shadow: 0 0 0 3px rgba(10,35,68,.1);
-  background: #fff;
+  border-color: #c9a84c;
+  box-shadow: 0 0 0 3px rgba(201,168,76,.12);
+  background: rgba(255,255,255,.08);
 }
 .ri-select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c9a84c' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right .85rem center;
   padding-right: 2.4rem;
@@ -3473,7 +3478,7 @@ select.field-input {
 }
 .ri-price-hint {
   font: 400 .8rem var(--font-b, 'Jost', sans-serif);
-  color: #94a3b8;
+  color: rgba(255,255,255,.35);
   text-align: center;
   padding: .85rem 0 .25rem;
 }
@@ -3484,14 +3489,14 @@ select.field-input {
   justify-content: center;
   gap: .5rem;
   font: 400 .8rem var(--font-b, 'Jost', sans-serif);
-  color: #64748b;
+  color: rgba(255,255,255,.42);
   padding: .85rem 0 .25rem;
 }
 .ri-price-loading[hidden] { display: none; }
 .ri-price-spinner {
   width: 14px; height: 14px;
-  border: 2px solid #e2e8f0;
-  border-top-color: #0a2344;
+  border: 2px solid rgba(255,255,255,.12);
+  border-top-color: #c9a84c;
   border-radius: 50%;
   animation: ri-spin .7s linear infinite;
   flex-shrink: 0;
@@ -3512,51 +3517,51 @@ select.field-input {
   text-align: center;
   padding: 2.5rem 1.5rem;
   gap: .55rem;
-  background: #fff;
+  background: #07101e;
 }
 .ri-success[hidden] { display: none; }
 .ri-success__icon {
   width: 64px; height: 64px;
-  background: #dcfce7;
+  background: rgba(201,168,76,.15);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #16a34a;
+  color: #c9a84c;
   margin-bottom: .5rem;
 }
 .ri-success__title {
   font: 600 1.3rem var(--font-d, 'Bodoni Moda', serif);
-  color: #0a2344; margin: 0;
+  color: #f0e6d3; margin: 0;
 }
 .ri-success__sub {
-  color: #64748b;
+  color: rgba(255,255,255,.45);
   font: 400 .88rem var(--font-b, 'Jost', sans-serif);
   margin: 0;
 }
 .ri-success__id {
   font: 700 1.4rem var(--font-d, 'Bodoni Moda', serif);
-  color: #0a2344;
-  background: #f0f6ff;
-  border: 2px solid #0a2344;
+  color: #c9a84c;
+  background: rgba(201,168,76,.08);
+  border: 2px solid rgba(201,168,76,.4);
   border-radius: 10px;
   padding: .5rem 1.5rem;
   letter-spacing: .1em;
   margin: .35rem 0;
 }
 .ri-success__msg {
-  color: #475569;
+  color: rgba(255,255,255,.45);
   font: 400 .87rem var(--font-b, 'Jost', sans-serif);
   line-height: 1.55; max-width: 280px; margin: 0;
 }
-.ri-success__msg a { color: #0a2344; font-weight: 600; }
+.ri-success__msg a { color: #c9a84c; font-weight: 600; }
 
 /* Footer */
 .ri-footer {
   flex-shrink: 0;
   padding: .85rem 1rem;
-  border-top: 1px solid #f1f5f9;
-  background: #fff;
+  border-top: 1px solid rgba(255,255,255,.07);
+  background: #07101e;
   display: flex;
   align-items: center;
   gap: .75rem;
@@ -3571,11 +3576,11 @@ select.field-input {
 .ri-footer__est[hidden] { display: none; }
 .ri-footer__est-label {
   font: 400 .68rem var(--font-b, 'Jost', sans-serif);
-  color: #94a3b8;
+  color: rgba(255,255,255,.38);
 }
 .ri-footer__est-amt {
   font: 700 1.2rem var(--font-d, 'Bodoni Moda', serif);
-  color: #0a2344;
+  color: #c9a84c;
 }
 .ri-submit {
   flex: 1;

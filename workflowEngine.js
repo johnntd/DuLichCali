@@ -63,7 +63,11 @@
   var X = {
 
     quantity: function(text) {
-      var m = text.match(/(\d+)\s*(?:cuốn|cái|tô|phần|piece|roll|order|chiếc)?/i)
+      // "a tray" or "one tray" → 1; "2 trays" → 2
+      var trayM = text.match(/(\d+)\s*tray/i);
+      if (trayM) return parseInt(trayM[1]);
+      if (/\btray\b/i.test(text)) return 1;
+      var m = text.match(/(\d+)\s*(?:cuốn|cái|tô|phần|piece|roll|order|chiếc|serving|bowl)/i)
            || text.match(/^(\d+)$/);
       var n = m ? parseInt(m[1]) : NaN;
       return (isNaN(n) || n < 1 || n > 9999) ? null : n;
@@ -71,8 +75,16 @@
 
     foodVariant: function(text) {
       var t = text.toLowerCase();
-      if (/raw|sống|chưa chiên|tươi\b|uncooked/.test(t)) return 'sống (raw)';
-      if (/fried|chiên|chín|cooked|sẵn/.test(t)) return 'chiên sẵn (fried)';
+      // Eggroll: raw vs fresh-cooked
+      if (/raw|sống|chưa chiên|uncooked/.test(t)) return 'Sống (Raw)';
+      if (/\bfresh\b|tươi\b/.test(t) && !/unfresh/.test(t)) return 'Tươi (Fresh)';
+      if (/fried|chiên|chín|cooked|sẵn/.test(t)) return 'Chiên Sẵn (Fried)';
+      // Bún Chả variants
+      if (/lá\s*lốt|la\s*lot|lolot|betel|leaf/.test(t)) return 'Chả Lá Lốt';
+      if (/chả\s*viên|cha\s*vien|patties|patty|\bviên\b/.test(t)) return 'Chả Viên';
+      // Phở variants
+      if (/tái.*viên|rare.*meatball|viên.*tái|meatball.*rare/.test(t)) return 'Tái + Bò Viên';
+      if (/\btái\b|rare\s*beef|\btai\b/.test(t)) return 'Tái';
       return null;
     },
 
@@ -223,11 +235,59 @@
     },
 
     foodItem: function(text) {
-      if (/egg.?roll|chả\s*giò|cha\s*gio/i.test(text)) {
-        return { id:'cha-gio', name:'Chả Giò (Egg Rolls)', price:0.75, unit:'cuốn', minOrder:30, vendorId:'nha-bep-emily', hasVariant:true };
-      }
-      if (/chuối\s*đậu|chuoi\s*dau|\bốc\b|snail/i.test(text)) {
-        return { id:'chuoi-dau-nau-oc', name:'Chuối Đậu Nấu Ốc', price:18.00, unit:'tô', minOrder:1, vendorId:'nha-bep-emily', hasVariant:false };
+      // Dynamic: read from live MARKETPLACE data so prices/items stay in sync
+      var t = text.toLowerCase();
+      var businesses = (window.MARKETPLACE && window.MARKETPLACE.businesses) ? window.MARKETPLACE.businesses : [];
+      var foodVendors = businesses.filter(function(b) {
+        return b.vendorType === 'foodvendor' && b.active !== false;
+      });
+      for (var e = 0; e < foodVendors.length; e++) {
+        var biz = foodVendors[e];
+        var products = (biz.products || []).filter(function(p) { return p.active !== false; });
+        for (var i = 0; i < products.length; i++) {
+          var p = products[i];
+          var terms = [
+            (p.name || '').toLowerCase(),
+            (p.nameEn || '').toLowerCase(),
+            (p.displayNameVi || '').toLowerCase(),
+            (p.id || '').replace(/-/g, ' '),
+          ];
+          var matched = terms.some(function(term) {
+            if (!term) return false;
+            if (t.includes(term)) return true;
+            // Require at least 2 significant words to all match (avoids false positives)
+            var words = term.split(/\s+/).filter(function(w) { return w.length >= 4; });
+            return words.length >= 2 && words.every(function(w) { return t.includes(w); });
+          });
+          if (!matched) continue;
+          // Build variant info from live data
+          var pricedV = (p.variants || []).filter(function(v) {
+            return v && typeof v === 'object' && v.price != null && Number(v.price) > 0;
+          });
+          var labelledV = (p.variants || []).filter(function(v) {
+            return v && typeof v === 'object' && (v.label || v.labelEn);
+          });
+          var hasVariant = pricedV.length > 0 || labelledV.length > 0;
+          var variantOpts = pricedV.length > 0
+            ? pricedV.map(function(v) { return (v.labelEn || v.label) + ' ($' + Number(v.price).toFixed(2) + ')'; }).join(' hoặc ')
+            : labelledV.map(function(v) { return v.labelEn || v.label; }).filter(Boolean).join(' hoặc ');
+          return {
+            id:              p.id,
+            name:            p.name || p.nameEn || '',
+            nameEn:          p.nameEn || '',
+            price:           Number(p.pricePerUnit || 0),
+            unit:            p.unit || 'phần',
+            unitEn:          p.unitEn || 'serving',
+            minOrder:        Number(p.minimumOrderQty || 1),
+            vendorId:        biz.id,
+            vendorName:      biz.name,
+            hasVariant:      hasVariant,
+            variantOptions:  variantOpts,
+            variantQuestion: hasVariant
+              ? 'Bạn muốn loại nào?\n• ' + variantOpts.replace(' hoặc ', '\n• ')
+              : null,
+          };
+        }
       }
       return null;
     },
@@ -542,7 +602,7 @@
     food_order: {
       label: 'Đặt Món Ăn',
       intro: '🥟 Tôi sẽ giúp bạn đặt món. Gõ "hủy" bất cứ lúc nào để thoát.\n',
-      detectKeywords: /(?:\border\b|đặt\s*(?:mua\s*|hàng\s*)?(?:\d+\s*)?|muốn\s+(?:đặt|mua|order)|can\s+i\s+(?:order|get)|i\s+(?:want|need)\s+to|cho\s+(?:tôi|mình)|i'd\s+like)\s*\d*\s*(?:egg.?roll|chả\s*giò|cha\s*gio|chuối\s*đậu|ốc\b)|\b(?:egg.?roll|chả\s*giò|cha\s*gio)\b.*\b(?:order|đặt|mua|\d+\s*cuốn)\b/i,
+      detectKeywords: /(?:\border\b|đặt\s*(?:mua\s*|hàng\s*)?(?:\d+\s*)?|muốn\s+(?:đặt|mua|order)|can\s+i\s+(?:order|get)|i\s+(?:want|need)\s+to|cho\s+(?:tôi|mình)|i'd\s+like)\s*\d*\s*(?:a\s+)?(?:tray\s+of\s+)?(?:egg.?roll|chả\s*giò|cha\s*gio|chuối\s*đậu|chuoi\s*dau|ốc\b|snail|bún\s*chả|bun\s*cha|bún\s*đậu|bun\s*dau|phở|pho\b)|\b(?:egg.?roll|chả\s*giò|cha\s*gio|bún\s*chả|bun\s*cha|phở\s*bắc|pho\s*bac|chuối\s*đậu)\b.*\b(?:order|đặt|mua|\d+\s*(?:cuốn|phần|tô|piece|tray))\b/i,
       fields: [
         {
           key: 'item',
@@ -568,12 +628,13 @@
         {
           key: 'variant',
           question: function(f) {
-            if ((f.item||{}).hasVariant) return 'Bạn muốn chả giò sống (raw) để tự chiên hay chiên sẵn (fried)?';
-            return null;
+            var item = f.item || {};
+            if (!item.hasVariant) return null;
+            return item.variantQuestion || ('Bạn muốn chọn loại nào?\n• ' + (item.variantOptions || ''));
           },
           extract: function(t) { return X.foodVariant(t); },
           optional: function(f) { return !(f.item && f.item.hasVariant); },
-          showIf: function(f) { return f.item && f.item.hasVariant; },
+          showIf: function(f) { return !!(f.item && f.item.hasVariant); },
         },
         {
           key: 'fulfillment',
@@ -621,10 +682,13 @@
       ],
       summary: function(f) {
         var item = f.item || {};
-        var sub  = ((item.price||0) * (f.quantity||0)).toFixed(2);
+        // Use variant price if available, else base price
+        var unitPrice = item.price || 0;
+        var sub = (unitPrice * (f.quantity||0)).toFixed(2);
         var lines = [
           '📋 Tóm tắt đơn hàng:',
-          '• Món:       ' + (item.name||f.item||''),
+          item.vendorName ? '• Nhà hàng:  ' + item.vendorName : null,
+          '• Món:       ' + (item.name||''),
           '• Số lượng:  ' + f.quantity + ' ' + (item.unit||'cái'),
           f.variant ? '• Loại:      ' + f.variant : null,
           '• Nhận hàng: ' + (f.fulfillment==='delivery' ? 'Giao hàng tận nơi' : 'Tự đến lấy'),
@@ -635,7 +699,7 @@
           '• SĐT:       ' + fmtPhone(f.customerPhone),
           f.notes    ? '• Ghi chú:   ' + f.notes : null,
           '',
-          '💰 Tổng: $' + sub + ' (' + f.quantity + ' × $' + (item.price||0) + '/' + (item.unit||'cái') + ')',
+          unitPrice > 0 ? '💰 Tổng: $' + sub + ' (' + f.quantity + ' × $' + unitPrice + '/' + (item.unit||'cái') + ')' : null,
         ];
         return lines.filter(function(v) { return v !== null; }).join('\n');
       },

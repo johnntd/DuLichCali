@@ -1914,7 +1914,7 @@
       if (biz.vendorType === 'foodvendor') {
         // ── ORDER INTAKE AGENT (food vendors: Emily, etc.) ────────────────────
         // Always use live Firestore products. If vendor has nothing configured, tell customer.
-        var products = (biz.products && biz.products.length > 0) ? biz.products : [];
+        var products = (biz.products || []).filter(function(p) { return p.active !== false; });
         if (!products.length) {
           return Promise.resolve('Hiện tại nhà hàng chưa có món nào trong thực đơn. Vui lòng quay lại sau hoặc liên hệ trực tiếp với chúng tôi để biết thêm thông tin.');
         }

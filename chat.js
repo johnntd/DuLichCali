@@ -1140,8 +1140,9 @@
         lines += '• ' + biz.name + ' [' + (biz.city || biz.region || '') + ']\n';
         lines += '  Contact: ' + host + biz.phoneDisplay + ' | ' + biz.address + '\n';
 
-        if (biz.vendorType === 'foodvendor' && biz.products && biz.products.length) {
-          biz.products.forEach(function (p) {
+        var activeProds = (biz.products || []).filter(function(p) { return p.active !== false; });
+        if (biz.vendorType === 'foodvendor' && activeProds.length) {
+          activeProds.forEach(function (p) {
             var basePrice = Number(p.pricePerUnit || p.price || 0);
             var minQty    = Number(p.minimumOrderQty || 1);
             var pName     = p.nameEn || p.name || '';

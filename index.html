@@ -858,16 +858,17 @@
       <div class="ri-form-wrap" id="riFormWrap" hidden>
         <div class="ri-scrollbody" id="riBody">
           <div class="ri-step-ind" id="riStepInd"></div>
+          <div class="ri-error-msg" id="riErrorMsg"></div>
           <form id="riForm" onsubmit="return false" autocomplete="on">
 
             <!-- Pickup fields — 3 sub-steps -->
             <div id="riPickupFields">
-              <!-- Step 1: Flight info -->
+              <!-- Step 1: Airport + date/time + destination -->
               <div class="ri-substep" id="ri_p_s1">
                 <div class="ri-row">
                   <div class="ri-field ri-field--full">
                     <label class="ri-label" for="ri_p_airport">Sân bay đến <span class="ri-req">*</span></label>
-                    <select class="ri-select" id="ri_p_airport">
+                    <select class="ri-select" id="ri_p_airport" onchange="RideIntake.schedule()">
                       <option value="">— Chọn sân bay —</option>
                     </select>
                     <span class="ri-loc-badge" id="riLocBadgeP" hidden>
@@ -885,15 +886,15 @@
                     <input class="ri-input" type="time" id="ri_arrival_time">
                   </div>
                 </div>
-              </div>
-              <!-- Step 2: Destination + party -->
-              <div class="ri-substep" id="ri_p_s2" hidden>
                 <div class="ri-row">
                   <div class="ri-field ri-field--full">
                     <label class="ri-label" for="ri_dropoff_addr">Địa chỉ điểm đến <span class="ri-req">*</span></label>
                     <input class="ri-input" type="text" id="ri_dropoff_addr" placeholder="Địa chỉ, thành phố, hoặc tên khách sạn" autocomplete="off" oninput="RideIntake.schedule()">
                   </div>
                 </div>
+              </div>
+              <!-- Step 2: Party size + optional flight details -->
+              <div class="ri-substep" id="ri_p_s2" hidden>
                 <div class="ri-row">
                   <div class="ri-field ri-field--full">
                     <label class="ri-label" for="ri_p_passengers">Số hành khách <span class="ri-req">*</span></label>
@@ -904,31 +905,26 @@
                     </select>
                   </div>
                 </div>
-                <details class="ri-optional">
-                  <summary>Thêm chi tiết (tùy chọn)</summary>
-                  <div class="ri-optional-body">
-                    <div class="ri-row">
-                      <div class="ri-field">
-                        <label class="ri-label" for="ri_p_flight">Số chuyến bay</label>
-                        <input class="ri-input" type="text" id="ri_p_flight" placeholder="VD: United 714" autocomplete="off">
-                      </div>
-                      <div class="ri-field">
-                        <label class="ri-label" for="ri_p_terminal">Terminal</label>
-                        <input class="ri-input" type="text" id="ri_p_terminal" placeholder="VD: TBIT, T5">
-                      </div>
-                    </div>
-                    <div class="ri-row">
-                      <div class="ri-field ri-field--full">
-                        <label class="ri-label" for="ri_p_luggage">Hành lý ký gửi</label>
-                        <select class="ri-select" id="ri_p_luggage">
-                          <option value="0">Không có (chỉ xách tay)</option>
-                          <option value="1">1 kiện</option><option value="2">2 kiện</option>
-                          <option value="3">3 kiện</option><option value="4">4 kiện</option><option value="5">5+ kiện</option>
-                        </select>
-                      </div>
-                    </div>
+                <div class="ri-row">
+                  <div class="ri-field ri-field--full">
+                    <label class="ri-label" for="ri_p_luggage">Hành lý ký gửi <span style="color:rgba(255,255,255,.4);font-weight:400">(tùy chọn)</span></label>
+                    <select class="ri-select" id="ri_p_luggage">
+                      <option value="0">Không có (chỉ xách tay)</option>
+                      <option value="1">1 kiện</option><option value="2">2 kiện</option>
+                      <option value="3">3 kiện</option><option value="4">4 kiện</option><option value="5">5+ kiện</option>
+                    </select>
                   </div>
-                </details>
+                </div>
+                <div class="ri-row">
+                  <div class="ri-field">
+                    <label class="ri-label" for="ri_p_flight">Số chuyến bay <span style="color:rgba(255,255,255,.4);font-weight:400">(tùy chọn)</span></label>
+                    <input class="ri-input" type="text" id="ri_p_flight" placeholder="VD: United 714" autocomplete="off">
+                  </div>
+                  <div class="ri-field">
+                    <label class="ri-label" for="ri_p_terminal">Terminal <span style="color:rgba(255,255,255,.4);font-weight:400">(tùy chọn)</span></label>
+                    <input class="ri-input" type="text" id="ri_p_terminal" placeholder="VD: TBIT, T5">
+                  </div>
+                </div>
               </div>
               <!-- Step 3: Contact -->
               <div class="ri-substep" id="ri_p_s3" hidden>
@@ -953,12 +949,18 @@
 
             <!-- Dropoff fields — 3 sub-steps -->
             <div id="riDropoffFields" hidden>
-              <!-- Step 1: Airport + time -->
+              <!-- Step 1: Pickup address + airport + date/time -->
               <div class="ri-substep" id="ri_d_s1">
                 <div class="ri-row">
                   <div class="ri-field ri-field--full">
+                    <label class="ri-label" for="ri_pickup_addr">Địa chỉ đón <span class="ri-req">*</span></label>
+                    <input class="ri-input" type="text" id="ri_pickup_addr" placeholder="Địa chỉ nhà hoặc khách sạn" autocomplete="off" oninput="RideIntake.schedule()">
+                  </div>
+                </div>
+                <div class="ri-row">
+                  <div class="ri-field ri-field--full">
                     <label class="ri-label" for="ri_d_airport">Sân bay cần đến <span class="ri-req">*</span></label>
-                    <select class="ri-select" id="ri_d_airport">
+                    <select class="ri-select" id="ri_d_airport" onchange="RideIntake.schedule()">
                       <option value="">— Chọn sân bay —</option>
                     </select>
                     <span class="ri-loc-badge" id="riLocBadgeD" hidden>
@@ -977,14 +979,8 @@
                   </div>
                 </div>
               </div>
-              <!-- Step 2: Pickup address + party -->
+              <!-- Step 2: Party size + optional flight details -->
               <div class="ri-substep" id="ri_d_s2" hidden>
-                <div class="ri-row">
-                  <div class="ri-field ri-field--full">
-                    <label class="ri-label" for="ri_pickup_addr">Địa chỉ đón <span class="ri-req">*</span></label>
-                    <input class="ri-input" type="text" id="ri_pickup_addr" placeholder="Địa chỉ nhà hoặc khách sạn" autocomplete="off" oninput="RideIntake.schedule()">
-                  </div>
-                </div>
                 <div class="ri-row">
                   <div class="ri-field ri-field--full">
                     <label class="ri-label" for="ri_d_passengers">Số hành khách <span class="ri-req">*</span></label>
@@ -995,31 +991,26 @@
                     </select>
                   </div>
                 </div>
-                <details class="ri-optional">
-                  <summary>Thêm chi tiết (tùy chọn)</summary>
-                  <div class="ri-optional-body">
-                    <div class="ri-row">
-                      <div class="ri-field">
-                        <label class="ri-label" for="ri_d_flight">Số chuyến bay</label>
-                        <input class="ri-input" type="text" id="ri_d_flight" placeholder="VD: VN 456" autocomplete="off">
-                      </div>
-                      <div class="ri-field">
-                        <label class="ri-label" for="ri_d_terminal">Terminal</label>
-                        <input class="ri-input" type="text" id="ri_d_terminal" placeholder="VD: Terminal 2">
-                      </div>
-                    </div>
-                    <div class="ri-row">
-                      <div class="ri-field ri-field--full">
-                        <label class="ri-label" for="ri_d_luggage">Hành lý ký gửi</label>
-                        <select class="ri-select" id="ri_d_luggage">
-                          <option value="0">Không có (chỉ xách tay)</option>
-                          <option value="1">1 kiện</option><option value="2">2 kiện</option>
-                          <option value="3">3 kiện</option><option value="4">4 kiện</option><option value="5">5+ kiện</option>
-                        </select>
-                      </div>
-                    </div>
+                <div class="ri-row">
+                  <div class="ri-field ri-field--full">
+                    <label class="ri-label" for="ri_d_luggage">Hành lý ký gửi <span style="color:rgba(255,255,255,.4);font-weight:400">(tùy chọn)</span></label>
+                    <select class="ri-select" id="ri_d_luggage">
+                      <option value="0">Không có (chỉ xách tay)</option>
+                      <option value="1">1 kiện</option><option value="2">2 kiện</option>
+                      <option value="3">3 kiện</option><option value="4">4 kiện</option><option value="5">5+ kiện</option>
+                    </select>
                   </div>
-                </details>
+                </div>
+                <div class="ri-row">
+                  <div class="ri-field">
+                    <label class="ri-label" for="ri_d_flight">Số chuyến bay <span style="color:rgba(255,255,255,.4);font-weight:400">(tùy chọn)</span></label>
+                    <input class="ri-input" type="text" id="ri_d_flight" placeholder="VD: VN 456" autocomplete="off">
+                  </div>
+                  <div class="ri-field">
+                    <label class="ri-label" for="ri_d_terminal">Terminal <span style="color:rgba(255,255,255,.4);font-weight:400">(tùy chọn)</span></label>
+                    <input class="ri-input" type="text" id="ri_d_terminal" placeholder="VD: Terminal 2">
+                  </div>
+                </div>
               </div>
               <!-- Step 3: Contact -->
               <div class="ri-substep" id="ri_d_s3" hidden>
@@ -1044,7 +1035,7 @@
 
             <!-- Private Ride fields — 3 sub-steps -->
             <div id="riRideFields" hidden>
-              <!-- Step 1: Route -->
+              <!-- Step 1: Route + date/time -->
               <div class="ri-substep" id="ri_r_s1">
                 <div class="ri-row">
                   <div class="ri-field ri-field--full">
@@ -1058,9 +1049,6 @@
                     <input class="ri-input" type="text" id="ri_to_addr" placeholder="Địa chỉ, thành phố hoặc địa điểm" autocomplete="off" oninput="RideIntake.schedule()">
                   </div>
                 </div>
-              </div>
-              <!-- Step 2: Schedule + party -->
-              <div class="ri-substep" id="ri_r_s2" hidden>
                 <div class="ri-row">
                   <div class="ri-field">
                     <label class="ri-label" for="ri_ride_date">Ngày đi <span class="ri-req">*</span></label>
@@ -1071,6 +1059,9 @@
                     <input class="ri-input" type="time" id="ri_ride_time">
                   </div>
                 </div>
+              </div>
+              <!-- Step 2: Party size -->
+              <div class="ri-substep" id="ri_r_s2" hidden>
                 <div class="ri-row">
                   <div class="ri-field ri-field--full">
                     <label class="ri-label" for="ri_r_passengers">Số hành khách <span class="ri-req">*</span></label>

@@ -174,9 +174,9 @@ window.RideIntake = (function () {
 
   // ── Sub-step navigation (progressive disclosure) ──────────────────────────────
   var STEP_LABELS = {
-    pickup:  ['Chuyến Bay', 'Điểm Đến', 'Liên Hệ'],
-    dropoff: ['Chuyến Bay', 'Điểm Đón', 'Liên Hệ'],
-    ride:    ['Lộ Trình',   'Lịch Đi',  'Liên Hệ'],
+    pickup:  ['Điểm Đến & Chuyến Bay', 'Chi Tiết', 'Liên Hệ'],
+    dropoff: ['Điểm Đón & Chuyến Bay', 'Chi Tiết', 'Liên Hệ'],
+    ride:    ['Lộ Trình & Lịch Đi',   'Chi Tiết', 'Liên Hệ'],
   };
 
   function goSubStep(n) {
@@ -223,9 +223,8 @@ window.RideIntake = (function () {
     var body = document.getElementById('riBody');
     if (body) body.scrollTop = 0;
 
-    // Init autocomplete on step where address fields appear
-    var acStep = (_type === 'ride') ? 1 : 2;
-    if (n === acStep) setTimeout(initAutocomplete, 60);
+    // Init autocomplete on step 1 (all types now have address fields on step 1)
+    if (n === 1) setTimeout(initAutocomplete, 60);
   }
 
   function nextSubStep() {
@@ -246,26 +245,26 @@ window.RideIntake = (function () {
         if (!val('ri_p_airport'))     errors.push('Vui lòng chọn sân bay đến');
         if (!val('ri_arrival_date'))  errors.push('Vui lòng nhập ngày đến');
         if (!val('ri_arrival_time'))  errors.push('Vui lòng nhập giờ hạ cánh');
-      } else if (step === 2) {
         if (!val('ri_dropoff_addr'))  errors.push('Vui lòng nhập địa chỉ điểm đến');
+      } else if (step === 2) {
         if (!val('ri_p_passengers')) errors.push('Vui lòng chọn số hành khách');
       }
     } else if (_type === 'dropoff') {
       if (step === 1) {
+        if (!val('ri_pickup_addr'))   errors.push('Vui lòng nhập địa chỉ đón');
         if (!val('ri_d_airport'))     errors.push('Vui lòng chọn sân bay cần đến');
         if (!val('ri_depart_date'))   errors.push('Vui lòng nhập ngày bay');
         if (!val('ri_depart_time'))   errors.push('Vui lòng nhập giờ cất cánh');
       } else if (step === 2) {
-        if (!val('ri_pickup_addr'))   errors.push('Vui lòng nhập địa chỉ đón');
         if (!val('ri_d_passengers')) errors.push('Vui lòng chọn số hành khách');
       }
     } else if (_type === 'ride') {
       if (step === 1) {
         if (!val('ri_from_addr'))     errors.push('Vui lòng nhập điểm đón');
         if (!val('ri_to_addr'))       errors.push('Vui lòng nhập điểm đến');
-      } else if (step === 2) {
         if (!val('ri_ride_date'))     errors.push('Vui lòng nhập ngày đi');
         if (!val('ri_ride_time'))     errors.push('Vui lòng nhập giờ xuất phát');
+      } else if (step === 2) {
         if (!val('ri_r_passengers')) errors.push('Vui lòng chọn số hành khách');
       }
     }
@@ -273,15 +272,11 @@ window.RideIntake = (function () {
   }
 
   function showInlineError(msg) {
-    var ind = document.getElementById('riStepInd');
-    if (!ind) return;
-    var orig = ind.textContent;
-    ind.textContent = '⚠ ' + msg;
-    ind.style.color = '#e05a5a';
-    setTimeout(function () {
-      ind.textContent = orig;
-      ind.style.color = '';
-    }, 2800);
+    var errEl = document.getElementById('riErrorMsg');
+    if (!errEl) return;
+    errEl.textContent = '⚠ ' + msg;
+    clearTimeout(errEl._t);
+    errEl._t = setTimeout(function () { errEl.textContent = ''; }, 2800);
   }
 
   // ── Airport options sorted by proximity ──────────────────────────────────────

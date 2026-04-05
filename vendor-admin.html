@@ -1834,6 +1834,17 @@
         return;
       }
       VENDOR_ID = doc.data().vendorId;
+      // Salon vendors (nails/hair) have their own dedicated admin
+      var VENDOR_CATEGORY_MAP_CHK = {
+        'nha-bep-cua-emily':'food','pho-bac-bayarea':'food','com-tam-oc':'food',
+        'luxurious-nails':'nails','beauty-nails-oc':'nails',
+        'viet-hair-bayarea':'hair','cali-hair-oc':'hair'
+      };
+      var vendorCat = VENDOR_CATEGORY_MAP_CHK[VENDOR_ID] || 'food';
+      if (vendorCat === 'nails' || vendorCat === 'hair') {
+        window.location.href = 'salon-admin.html';
+        return;
+      }
       vendorRef = db.collection('vendors').doc(VENDOR_ID);
       menuRef   = vendorRef.collection('menuItems');
       // Fetch vendor doc to get business name + category for dynamic public page link

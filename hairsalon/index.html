@@ -11,6 +11,26 @@
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,300;0,6..96,400;1,6..96,300;1,6..96,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../marketplace/marketplace.css?v=20260404a">
   <link rel="stylesheet" href="../desktop.css">
+
+  <!-- Firebase: required for live staff/services/hours data in Salon AI -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script>
+    (function () {
+      var cfg = {
+        apiKey:            'AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ',
+        authDomain:        'dulichcali-booking-calendar.firebaseapp.com',
+        projectId:         'dulichcali-booking-calendar',
+        storageBucket:     'dulichcali-booking-calendar.appspot.com',
+        messagingSenderId: '623460884698',
+        appId:             '1:623460884698:web:a08bd435c453a7b4db05e3'
+      };
+      if (!firebase.apps.length) { firebase.initializeApp(cfg); }
+      firebase.auth().signInAnonymously().catch(function () {});
+      window.dlcDb = firebase.firestore();
+    })();
+  </script>
 </head>
 <body>
 <div id="mpApp" class="mp-app"></div>

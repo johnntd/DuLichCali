@@ -417,8 +417,8 @@ window.DLCRouteMatrix = async function(origin, destination) {
   const lib = await google.maps.importLibrary('routes');
   const RouteMatrix = lib.RouteMatrix;
   if (!RouteMatrix) throw new Error('RouteMatrix not available');
-  // Routes library TravelMode uses 'DRIVE', not 'DRIVING' (that's the legacy maps TravelMode)
-  const travelMode = (lib.TravelMode && lib.TravelMode.DRIVE) ? lib.TravelMode.DRIVE : 'DRIVE';
+  // Routes library TravelMode uses DRIVING (same as legacy maps TravelMode)
+  const travelMode = (lib.TravelMode && lib.TravelMode.DRIVING) || 'DRIVING';
   const rows = await RouteMatrix.computeRouteMatrix({
     origins:      [origin],
     destinations: [destination],

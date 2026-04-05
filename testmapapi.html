@@ -92,8 +92,8 @@
         if (!RouteMatrix) { showError('RouteMatrix not available in this Maps build'); return; }
         const travelMode = (lib.TravelMode && lib.TravelMode.DRIVE) ? lib.TravelMode.DRIVE : 'DRIVE';
         const resp = await RouteMatrix.computeRouteMatrix({
-          origins:      [{ waypoint: { address: 'Santa Ana, CA' } }],
-          destinations: [{ waypoint: { address: 'Disneyland, Anaheim, CA' } }],
+          origins:      ['Santa Ana, CA'],
+          destinations: ['Disneyland, Anaheim, CA'],
           travelMode,
         });
         if (!resp || !resp.length || !resp[0].distanceMeters) { showError('Route Matrix: no route returned'); return; }

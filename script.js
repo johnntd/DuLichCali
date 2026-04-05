@@ -420,8 +420,8 @@ window.DLCRouteMatrix = async function(origin, destination) {
   // Routes library TravelMode uses 'DRIVE', not 'DRIVING' (that's the legacy maps TravelMode)
   const travelMode = (lib.TravelMode && lib.TravelMode.DRIVE) ? lib.TravelMode.DRIVE : 'DRIVE';
   const rows = await RouteMatrix.computeRouteMatrix({
-    origins:      [{ waypoint: { address: origin      } }],
-    destinations: [{ waypoint: { address: destination } }],
+    origins:      [origin],
+    destinations: [destination],
     travelMode,
   });
   const row = rows && rows[0];

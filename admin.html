@@ -412,13 +412,36 @@
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 1rem 1.25rem;
-      display: flex; align-items: center; gap: 1rem;
-      flex-wrap: wrap;
+      display: flex; flex-direction: column; gap: 0.75rem;
     }
+    .vendor-card__main { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
     .vendor-card__info { flex: 1; min-width: 140px; }
     .vendor-card__name { font-size: 0.88rem; color: var(--cream); font-weight: 600; }
     .vendor-card__meta { font-size: 0.72rem; color: var(--muted); margin-top: 0.15rem; }
     .vendor-card__actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .vendor-card__login {
+      border-top: 1px solid var(--border);
+      padding-top: 0.75rem;
+      display: flex; flex-direction: column; gap: 0.5rem;
+    }
+    .vcl-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; font-size: 0.75rem; }
+    .vcl-label { color: var(--muted); min-width: 120px; flex-shrink: 0; }
+    .vcl-url { color: var(--gold-lt); font-size: 0.7rem; word-break: break-all; flex: 1; text-decoration: none; }
+    .vcl-url:hover { text-decoration: underline; }
+    .vcl-pin {
+      color: var(--cream); background: var(--navy-700);
+      border: 1px solid var(--border); border-radius: 4px;
+      padding: 2px 10px; font-family: monospace; font-size: 0.9rem; letter-spacing: 0.18em;
+    }
+    .vcl-pin-input {
+      width: 76px; height: 28px; padding: 0 0.5rem;
+      background: var(--navy-700); border: 1px solid var(--border);
+      border-radius: 4px; color: var(--cream);
+      font-family: 'Jost', sans-serif; font-size: 0.82rem;
+      text-align: center; letter-spacing: 0.12em; outline: none;
+    }
+    .vcl-pin-input:focus { border-color: var(--gold); }
+    .vcl-msg { font-size: 0.7rem; }
     .btn-vend {
       height: 30px; padding: 0 0.75rem;
       border-radius: 4px; border: 1px solid var(--border);
@@ -1104,6 +1127,16 @@
     }
 
     // ── Vendor Management ─────────────────────────────────────────
+    const VENDOR_DEFAULT_CODES = {
+      'nha-bep-cua-emily': '2438',
+      'dung-nails':         '6718',
+      'beauty-nails-oc':   '6007',
+      'viet-hair-bayarea': '7522',
+      'cali-hair-oc':      '6007',
+      'pho-bac-bayarea':   '7522',
+      'com-tam-oc':        '6007'
+    };
+
     const VENDOR_LIST = [
       { id: 'nha-bep-cua-emily', name: 'Nhà Bếp Của Emily',  cat: 'Food',  region: 'Bay Area' },
       { id: 'dung-nails',         name: 'Luxurious Nails & Spa', cat: 'Nails', region: 'Bay Area' },
@@ -1130,16 +1163,37 @@
         const stLabel = { active:'Hoạt động', blocked:'Bị chặn', deactivated:'Tạm dừng', archived:'Lưu trữ' }[st] || st;
         const stClass = 'status-' + st;
         const note = vdata.adminNote ? `<span style="font-size:.68rem;color:var(--muted)"> — ${escHtml(vdata.adminNote)}</span>` : '';
+        const currentPin = vdata.setupCode || VENDOR_DEFAULT_CODES[v.id] || '—';
+        const pinSource = vdata.setupCode ? '' : ' <span style="color:var(--muted);font-size:.65rem">(mặc định)</span>';
+        const loginUrl = `https://www.dulichcali21.com/vendor-login.html?id=${v.id}`;
         return `<div class="vendor-card" id="vc-${v.id}">
-          <div class="vendor-card__info">
-            <div class="vendor-card__name">${escHtml(v.name)}</div>
-            <div class="vendor-card__meta">${v.cat} · ${v.region} · <span class="${stClass}">${stLabel}</span>${note}</div>
+          <div class="vendor-card__main">
+            <div class="vendor-card__info">
+              <div class="vendor-card__name">${escHtml(v.name)}</div>
+              <div class="vendor-card__meta">${v.cat} · ${v.region} · <span class="${stClass}">${stLabel}</span>${note}</div>
+            </div>
+            <div class="vendor-card__actions">
+              ${st !== 'active'      ? `<button class="btn-vend success" onclick="setVendorStatus('${v.id}','active','')">Mở lại</button>` : ''}
+              ${st !== 'blocked'     ? `<button class="btn-vend danger"  onclick="promptBlock('${v.id}')">Chặn</button>` : ''}
+              ${st !== 'deactivated' ? `<button class="btn-vend"         onclick="setVendorStatus('${v.id}','deactivated','')">Tạm dừng</button>` : ''}
+              ${st !== 'archived'    ? `<button class="btn-vend"         onclick="setVendorStatus('${v.id}','archived','')">Lưu trữ</button>` : ''}
+              <button class="btn-vend" onclick="toggleVendorLogin('${v.id}')">🔐 Login</button>
+            </div>
           </div>
-          <div class="vendor-card__actions">
-            ${st !== 'active'      ? `<button class="btn-vend success" onclick="setVendorStatus('${v.id}','active','')">Mở lại</button>` : ''}
-            ${st !== 'blocked'     ? `<button class="btn-vend danger"  onclick="promptBlock('${v.id}')">Chặn</button>` : ''}
-            ${st !== 'deactivated' ? `<button class="btn-vend"         onclick="setVendorStatus('${v.id}','deactivated','')">Tạm dừng</button>` : ''}
-            ${st !== 'archived'    ? `<button class="btn-vend"         onclick="setVendorStatus('${v.id}','archived','')">Lưu trữ</button>` : ''}
+          <div class="vendor-card__login" id="vcl-${v.id}" style="display:none">
+            <div class="vcl-row">
+              <span class="vcl-label">URL đăng nhập:</span>
+              <a class="vcl-url" href="${loginUrl}" target="_blank">${loginUrl}</a>
+              <button class="btn-vend" onclick="copyVendorUrl('${v.id}')">Copy</button>
+            </div>
+            <div class="vcl-row">
+              <span class="vcl-label">Mã PIN hiện tại:</span>
+              <code class="vcl-pin" id="vpin-display-${v.id}">${escHtml(currentPin)}</code>${pinSource}
+              <input class="vcl-pin-input" id="vpin-input-${v.id}" type="text" maxlength="6"
+                inputmode="numeric" placeholder="Mã mới">
+              <button class="btn-vend success" onclick="saveVendorPin('${v.id}')">Lưu PIN</button>
+              <span class="vcl-msg" id="vpin-msg-${v.id}"></span>
+            </div>
           </div>
         </div>`;
       }).join('');
@@ -1161,6 +1215,49 @@
         loadVendorPanel(); // refresh
       } catch(e) {
         alert('Lỗi: ' + e.message);
+      }
+    }
+
+    function toggleVendorLogin(vendorId) {
+      const panel = document.getElementById('vcl-' + vendorId);
+      if (!panel) return;
+      panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+    }
+
+    function copyVendorUrl(vendorId) {
+      const url = `https://www.dulichcali21.com/vendor-login.html?id=${vendorId}`;
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = document.querySelector(`#vcl-${vendorId} .btn-vend`);
+        if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy'; }, 2000); }
+      }).catch(() => {});
+    }
+
+    async function saveVendorPin(vendorId) {
+      const input = document.getElementById('vpin-input-' + vendorId);
+      const msgEl = document.getElementById('vpin-msg-' + vendorId);
+      const displayEl = document.getElementById('vpin-display-' + vendorId);
+      if (!input || !msgEl) return;
+      const pin = input.value.trim();
+      if (!pin || pin.length < 3) {
+        msgEl.style.color = 'var(--danger)';
+        msgEl.textContent = 'Mã PIN phải có ít nhất 3 ký tự.';
+        return;
+      }
+      msgEl.style.color = 'var(--muted)';
+      msgEl.textContent = 'Đang lưu…';
+      try {
+        await db.collection('vendors').doc(vendorId).set({
+          setupCode: pin,
+          adminUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        if (displayEl) displayEl.textContent = pin;
+        input.value = '';
+        msgEl.style.color = '#7ac87a';
+        msgEl.textContent = 'Đã lưu!';
+        setTimeout(() => { msgEl.textContent = ''; }, 3000);
+      } catch(e) {
+        msgEl.style.color = 'var(--danger)';
+        msgEl.textContent = 'Lỗi: ' + e.message;
       }
     }
 

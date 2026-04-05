@@ -321,6 +321,15 @@
   var db   = firebase.firestore();
   var auth = firebase.auth();
 
+  // ── Override SETUP_CODE from Firestore (admin-set PIN takes precedence) ───
+  if (VENDOR_ID && VENDOR_CFG) {
+    db.collection('vendors').doc(VENDOR_ID).get().then(function(doc) {
+      if (doc.exists && doc.data().setupCode) {
+        SETUP_CODE = doc.data().setupCode;
+      }
+    }).catch(function() {}); // silently fall back to hardcoded VENDOR_REGISTRY value
+  }
+
   // ── Auth state check — redirect if already signed in ─────────────────────
   auth.onAuthStateChanged(function (user) {
     if (user) {

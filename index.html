@@ -67,7 +67,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-  <link rel="stylesheet" href="style.css?v=20260404l">
+  <link rel="stylesheet" href="style.css?v=20260404m">
   <link rel="stylesheet" href="desktop.css">
 </head>
 <body>
@@ -842,215 +842,248 @@
       <!-- ── STEP 2: Form ── -->
       <div class="ri-form-wrap" id="riFormWrap" hidden>
         <div class="ri-scrollbody" id="riBody">
+          <div class="ri-step-ind" id="riStepInd"></div>
           <form id="riForm" onsubmit="return false" autocomplete="on">
 
-            <!-- Pickup fields -->
+            <!-- Pickup fields — 3 sub-steps -->
             <div id="riPickupFields">
-              <div class="ri-sec">Sân Bay &amp; Chuyến Bay</div>
-              <div class="ri-row">
-                <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_p_airport">Sân bay đến <span class="ri-req">*</span></label>
-                  <select class="ri-select" id="ri_p_airport" onchange="RideIntake.schedule()">
-                    <option value="">— Chọn sân bay —</option>
-                  </select>
-                  <span class="ri-loc-badge" id="riLocBadgeP" hidden>
-                    <span class="ri-loc-dot"></span>Sắp xếp gần bạn nhất
-                  </span>
+              <!-- Step 1: Flight info -->
+              <div class="ri-substep" id="ri_p_s1">
+                <div class="ri-row">
+                  <div class="ri-field ri-field--full">
+                    <label class="ri-label" for="ri_p_airport">Sân bay đến <span class="ri-req">*</span></label>
+                    <select class="ri-select" id="ri_p_airport">
+                      <option value="">— Chọn sân bay —</option>
+                    </select>
+                    <span class="ri-loc-badge" id="riLocBadgeP" hidden>
+                      <span class="ri-loc-dot"></span>Sắp xếp gần bạn nhất
+                    </span>
+                  </div>
+                </div>
+                <div class="ri-row">
+                  <div class="ri-field">
+                    <label class="ri-label" for="ri_arrival_date">Ngày đến <span class="ri-req">*</span></label>
+                    <input class="ri-input" type="date" id="ri_arrival_date">
+                  </div>
+                  <div class="ri-field">
+                    <label class="ri-label" for="ri_arrival_time">Giờ hạ cánh <span class="ri-req">*</span></label>
+                    <input class="ri-input" type="time" id="ri_arrival_time">
+                  </div>
                 </div>
               </div>
-              <div class="ri-row">
-                <div class="ri-field">
-                  <label class="ri-label" for="ri_arrival_date">Ngày đến <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="date" id="ri_arrival_date">
+              <!-- Step 2: Destination + party -->
+              <div class="ri-substep" id="ri_p_s2" hidden>
+                <div class="ri-row">
+                  <div class="ri-field ri-field--full">
+                    <label class="ri-label" for="ri_dropoff_addr">Địa chỉ điểm đến <span class="ri-req">*</span></label>
+                    <input class="ri-input" type="text" id="ri_dropoff_addr" placeholder="Địa chỉ, thành phố, hoặc tên khách sạn" autocomplete="off" oninput="RideIntake.schedule()">
+                  </div>
                 </div>
-                <div class="ri-field">
-                  <label class="ri-label" for="ri_arrival_time">Giờ hạ cánh <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="time" id="ri_arrival_time">
+                <div class="ri-row">
+                  <div class="ri-field ri-field--full">
+                    <label class="ri-label" for="ri_p_passengers">Số hành khách <span class="ri-req">*</span></label>
+                    <select class="ri-select" id="ri_p_passengers">
+                      <option value="">— Chọn —</option>
+                      <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
+                      <option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
+                    </select>
+                  </div>
                 </div>
+                <details class="ri-optional">
+                  <summary>Thêm chi tiết (tùy chọn)</summary>
+                  <div class="ri-optional-body">
+                    <div class="ri-row">
+                      <div class="ri-field">
+                        <label class="ri-label" for="ri_p_flight">Số chuyến bay</label>
+                        <input class="ri-input" type="text" id="ri_p_flight" placeholder="VD: United 714" autocomplete="off">
+                      </div>
+                      <div class="ri-field">
+                        <label class="ri-label" for="ri_p_terminal">Terminal</label>
+                        <input class="ri-input" type="text" id="ri_p_terminal" placeholder="VD: TBIT, T5">
+                      </div>
+                    </div>
+                    <div class="ri-row">
+                      <div class="ri-field ri-field--full">
+                        <label class="ri-label" for="ri_p_luggage">Hành lý ký gửi</label>
+                        <select class="ri-select" id="ri_p_luggage">
+                          <option value="0">Không có (chỉ xách tay)</option>
+                          <option value="1">1 kiện</option><option value="2">2 kiện</option>
+                          <option value="3">3 kiện</option><option value="4">4 kiện</option><option value="5">5+ kiện</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </details>
               </div>
-              <div class="ri-row">
-                <div class="ri-field">
-                  <label class="ri-label" for="ri_p_flight">Số chuyến bay</label>
-                  <input class="ri-input" type="text" id="ri_p_flight" placeholder="VD: United 714" autocomplete="off">
+              <!-- Step 3: Contact -->
+              <div class="ri-substep" id="ri_p_s3" hidden>
+                <div class="ri-row">
+                  <div class="ri-field">
+                    <label class="ri-label" for="ri_p_name">Họ tên <span class="ri-req">*</span></label>
+                    <input class="ri-input" type="text" id="ri_p_name" placeholder="Tên đầy đủ" autocomplete="name">
+                  </div>
+                  <div class="ri-field">
+                    <label class="ri-label" for="ri_p_phone">Điện thoại <span class="ri-req">*</span></label>
+                    <input class="ri-input" type="tel" id="ri_p_phone" placeholder="(xxx) xxx-xxxx" autocomplete="tel">
+                  </div>
                 </div>
-                <div class="ri-field">
-                  <label class="ri-label" for="ri_p_terminal">Terminal</label>
-                  <input class="ri-input" type="text" id="ri_p_terminal" placeholder="VD: TBIT, T5">
-                </div>
-              </div>
-              <div class="ri-sec">Điểm Đến</div>
-              <div class="ri-row">
-                <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_dropoff_addr">Địa chỉ điểm đến <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="text" id="ri_dropoff_addr" placeholder="Địa chỉ, thành phố, hoặc tên khách sạn" autocomplete="off" oninput="RideIntake.schedule()">
-                </div>
-              </div>
-              <div class="ri-row">
-                <div class="ri-field">
-                  <label class="ri-label" for="ri_p_passengers">Hành khách <span class="ri-req">*</span></label>
-                  <select class="ri-select" id="ri_p_passengers">
-                    <option value="">— Chọn —</option>
-                    <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
-                    <option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
-                  </select>
-                </div>
-                <div class="ri-field">
-                  <label class="ri-label" for="ri_p_luggage">Hành lý</label>
-                  <select class="ri-select" id="ri_p_luggage">
-                    <option value="0">Không có</option>
-                    <option value="1">1 kiện</option><option value="2">2 kiện</option>
-                    <option value="3">3 kiện</option><option value="4">4 kiện</option><option value="5">5+ kiện</option>
-                  </select>
-                </div>
-              </div>
-              <div class="ri-sec">Thông Tin Liên Lạc</div>
-              <div class="ri-row">
-                <div class="ri-field">
-                  <label class="ri-label" for="ri_p_name">Họ tên <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="text" id="ri_p_name" placeholder="Tên đầy đủ" autocomplete="name">
-                </div>
-                <div class="ri-field">
-                  <label class="ri-label" for="ri_p_phone">Điện thoại <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="tel" id="ri_p_phone" placeholder="(xxx) xxx-xxxx" autocomplete="tel">
-                </div>
-              </div>
-              <div class="ri-row">
-                <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_p_notes">Ghi chú</label>
-                  <textarea class="ri-input ri-textarea" id="ri_p_notes" placeholder="Wheelchair, trẻ em, yêu cầu đặc biệt..." rows="2"></textarea>
+                <div class="ri-row">
+                  <div class="ri-field ri-field--full">
+                    <label class="ri-label" for="ri_p_notes">Ghi chú (tùy chọn)</label>
+                    <textarea class="ri-input ri-textarea" id="ri_p_notes" placeholder="Wheelchair, trẻ em, yêu cầu đặc biệt..." rows="2"></textarea>
+                  </div>
                 </div>
               </div>
             </div><!-- /riPickupFields -->
 
-            <!-- Dropoff fields -->
+            <!-- Dropoff fields — 3 sub-steps -->
             <div id="riDropoffFields" hidden>
-              <div class="ri-sec">Điểm Đón</div>
-              <div class="ri-row">
-                <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_pickup_addr">Địa chỉ đón <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="text" id="ri_pickup_addr" placeholder="Địa chỉ nhà hoặc khách sạn" autocomplete="off" oninput="RideIntake.schedule()">
+              <!-- Step 1: Airport + time -->
+              <div class="ri-substep" id="ri_d_s1">
+                <div class="ri-row">
+                  <div class="ri-field ri-field--full">
+                    <label class="ri-label" for="ri_d_airport">Sân bay cần đến <span class="ri-req">*</span></label>
+                    <select class="ri-select" id="ri_d_airport">
+                      <option value="">— Chọn sân bay —</option>
+                    </select>
+                    <span class="ri-loc-badge" id="riLocBadgeD" hidden>
+                      <span class="ri-loc-dot"></span>Sắp xếp gần bạn nhất
+                    </span>
+                  </div>
+                </div>
+                <div class="ri-row">
+                  <div class="ri-field">
+                    <label class="ri-label" for="ri_depart_date">Ngày bay <span class="ri-req">*</span></label>
+                    <input class="ri-input" type="date" id="ri_depart_date">
+                  </div>
+                  <div class="ri-field">
+                    <label class="ri-label" for="ri_depart_time">Giờ cất cánh <span class="ri-req">*</span></label>
+                    <input class="ri-input" type="time" id="ri_depart_time">
+                  </div>
                 </div>
               </div>
-              <div class="ri-sec">Sân Bay &amp; Chuyến Bay</div>
-              <div class="ri-row">
-                <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_d_airport">Sân bay cần đến <span class="ri-req">*</span></label>
-                  <select class="ri-select" id="ri_d_airport" onchange="RideIntake.schedule()">
-                    <option value="">— Chọn sân bay —</option>
-                  </select>
-                  <span class="ri-loc-badge" id="riLocBadgeD" hidden>
-                    <span class="ri-loc-dot"></span>Sắp xếp gần bạn nhất
-                  </span>
+              <!-- Step 2: Pickup address + party -->
+              <div class="ri-substep" id="ri_d_s2" hidden>
+                <div class="ri-row">
+                  <div class="ri-field ri-field--full">
+                    <label class="ri-label" for="ri_pickup_addr">Địa chỉ đón <span class="ri-req">*</span></label>
+                    <input class="ri-input" type="text" id="ri_pickup_addr" placeholder="Địa chỉ nhà hoặc khách sạn" autocomplete="off" oninput="RideIntake.schedule()">
+                  </div>
                 </div>
+                <div class="ri-row">
+                  <div class="ri-field ri-field--full">
+                    <label class="ri-label" for="ri_d_passengers">Số hành khách <span class="ri-req">*</span></label>
+                    <select class="ri-select" id="ri_d_passengers">
+                      <option value="">— Chọn —</option>
+                      <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
+                      <option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
+                    </select>
+                  </div>
+                </div>
+                <details class="ri-optional">
+                  <summary>Thêm chi tiết (tùy chọn)</summary>
+                  <div class="ri-optional-body">
+                    <div class="ri-row">
+                      <div class="ri-field">
+                        <label class="ri-label" for="ri_d_flight">Số chuyến bay</label>
+                        <input class="ri-input" type="text" id="ri_d_flight" placeholder="VD: VN 456" autocomplete="off">
+                      </div>
+                      <div class="ri-field">
+                        <label class="ri-label" for="ri_d_terminal">Terminal</label>
+                        <input class="ri-input" type="text" id="ri_d_terminal" placeholder="VD: Terminal 2">
+                      </div>
+                    </div>
+                    <div class="ri-row">
+                      <div class="ri-field ri-field--full">
+                        <label class="ri-label" for="ri_d_luggage">Hành lý ký gửi</label>
+                        <select class="ri-select" id="ri_d_luggage">
+                          <option value="0">Không có (chỉ xách tay)</option>
+                          <option value="1">1 kiện</option><option value="2">2 kiện</option>
+                          <option value="3">3 kiện</option><option value="4">4 kiện</option><option value="5">5+ kiện</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </details>
               </div>
-              <div class="ri-row">
-                <div class="ri-field">
-                  <label class="ri-label" for="ri_depart_date">Ngày bay <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="date" id="ri_depart_date">
+              <!-- Step 3: Contact -->
+              <div class="ri-substep" id="ri_d_s3" hidden>
+                <div class="ri-row">
+                  <div class="ri-field">
+                    <label class="ri-label" for="ri_d_name">Họ tên <span class="ri-req">*</span></label>
+                    <input class="ri-input" type="text" id="ri_d_name" placeholder="Tên đầy đủ" autocomplete="name">
+                  </div>
+                  <div class="ri-field">
+                    <label class="ri-label" for="ri_d_phone">Điện thoại <span class="ri-req">*</span></label>
+                    <input class="ri-input" type="tel" id="ri_d_phone" placeholder="(xxx) xxx-xxxx" autocomplete="tel">
+                  </div>
                 </div>
-                <div class="ri-field">
-                  <label class="ri-label" for="ri_depart_time">Giờ cất cánh <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="time" id="ri_depart_time">
-                </div>
-              </div>
-              <div class="ri-row">
-                <div class="ri-field">
-                  <label class="ri-label" for="ri_d_flight">Số chuyến bay</label>
-                  <input class="ri-input" type="text" id="ri_d_flight" placeholder="VD: VN 456" autocomplete="off">
-                </div>
-                <div class="ri-field">
-                  <label class="ri-label" for="ri_d_terminal">Terminal</label>
-                  <input class="ri-input" type="text" id="ri_d_terminal" placeholder="VD: Terminal 2">
-                </div>
-              </div>
-              <div class="ri-row">
-                <div class="ri-field">
-                  <label class="ri-label" for="ri_d_passengers">Hành khách <span class="ri-req">*</span></label>
-                  <select class="ri-select" id="ri_d_passengers">
-                    <option value="">— Chọn —</option>
-                    <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
-                    <option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
-                  </select>
-                </div>
-                <div class="ri-field">
-                  <label class="ri-label" for="ri_d_luggage">Hành lý</label>
-                  <select class="ri-select" id="ri_d_luggage">
-                    <option value="0">Không có</option>
-                    <option value="1">1 kiện</option><option value="2">2 kiện</option>
-                    <option value="3">3 kiện</option><option value="4">4 kiện</option><option value="5">5+ kiện</option>
-                  </select>
-                </div>
-              </div>
-              <div class="ri-sec">Thông Tin Liên Lạc</div>
-              <div class="ri-row">
-                <div class="ri-field">
-                  <label class="ri-label" for="ri_d_name">Họ tên <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="text" id="ri_d_name" placeholder="Tên đầy đủ" autocomplete="name">
-                </div>
-                <div class="ri-field">
-                  <label class="ri-label" for="ri_d_phone">Điện thoại <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="tel" id="ri_d_phone" placeholder="(xxx) xxx-xxxx" autocomplete="tel">
-                </div>
-              </div>
-              <div class="ri-row">
-                <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_d_notes">Ghi chú</label>
-                  <textarea class="ri-input ri-textarea" id="ri_d_notes" placeholder="Hành lý, wheelchair, yêu cầu đặc biệt..." rows="2"></textarea>
+                <div class="ri-row">
+                  <div class="ri-field ri-field--full">
+                    <label class="ri-label" for="ri_d_notes">Ghi chú (tùy chọn)</label>
+                    <textarea class="ri-input ri-textarea" id="ri_d_notes" placeholder="Hành lý, wheelchair, yêu cầu đặc biệt..." rows="2"></textarea>
+                  </div>
                 </div>
               </div>
             </div><!-- /riDropoffFields -->
 
-            <!-- Private Ride fields -->
+            <!-- Private Ride fields — 3 sub-steps -->
             <div id="riRideFields" hidden>
-              <div class="ri-sec">Lộ Trình</div>
-              <div class="ri-row">
-                <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_from_addr">Điểm đón <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="text" id="ri_from_addr" placeholder="Địa chỉ, thành phố hoặc địa điểm" autocomplete="off" oninput="RideIntake.schedule()">
+              <!-- Step 1: Route -->
+              <div class="ri-substep" id="ri_r_s1">
+                <div class="ri-row">
+                  <div class="ri-field ri-field--full">
+                    <label class="ri-label" for="ri_from_addr">Điểm đón <span class="ri-req">*</span></label>
+                    <input class="ri-input" type="text" id="ri_from_addr" placeholder="Địa chỉ, thành phố hoặc địa điểm" autocomplete="off" oninput="RideIntake.schedule()">
+                  </div>
+                </div>
+                <div class="ri-row">
+                  <div class="ri-field ri-field--full">
+                    <label class="ri-label" for="ri_to_addr">Điểm đến <span class="ri-req">*</span></label>
+                    <input class="ri-input" type="text" id="ri_to_addr" placeholder="Địa chỉ, thành phố hoặc địa điểm" autocomplete="off" oninput="RideIntake.schedule()">
+                  </div>
                 </div>
               </div>
-              <div class="ri-row">
-                <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_to_addr">Điểm đến <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="text" id="ri_to_addr" placeholder="Địa chỉ, thành phố hoặc địa điểm" autocomplete="off" oninput="RideIntake.schedule()">
+              <!-- Step 2: Schedule + party -->
+              <div class="ri-substep" id="ri_r_s2" hidden>
+                <div class="ri-row">
+                  <div class="ri-field">
+                    <label class="ri-label" for="ri_ride_date">Ngày đi <span class="ri-req">*</span></label>
+                    <input class="ri-input" type="date" id="ri_ride_date">
+                  </div>
+                  <div class="ri-field">
+                    <label class="ri-label" for="ri_ride_time">Giờ xuất phát <span class="ri-req">*</span></label>
+                    <input class="ri-input" type="time" id="ri_ride_time">
+                  </div>
+                </div>
+                <div class="ri-row">
+                  <div class="ri-field ri-field--full">
+                    <label class="ri-label" for="ri_r_passengers">Số hành khách <span class="ri-req">*</span></label>
+                    <select class="ri-select" id="ri_r_passengers">
+                      <option value="">— Chọn —</option>
+                      <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
+                      <option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
+                    </select>
+                  </div>
                 </div>
               </div>
-              <div class="ri-sec">Lịch Đi</div>
-              <div class="ri-row">
-                <div class="ri-field">
-                  <label class="ri-label" for="ri_ride_date">Ngày đi <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="date" id="ri_ride_date">
+              <!-- Step 3: Contact -->
+              <div class="ri-substep" id="ri_r_s3" hidden>
+                <div class="ri-row">
+                  <div class="ri-field">
+                    <label class="ri-label" for="ri_r_name">Họ tên <span class="ri-req">*</span></label>
+                    <input class="ri-input" type="text" id="ri_r_name" placeholder="Tên đầy đủ" autocomplete="name">
+                  </div>
+                  <div class="ri-field">
+                    <label class="ri-label" for="ri_r_phone">Điện thoại <span class="ri-req">*</span></label>
+                    <input class="ri-input" type="tel" id="ri_r_phone" placeholder="(xxx) xxx-xxxx" autocomplete="tel">
+                  </div>
                 </div>
-                <div class="ri-field">
-                  <label class="ri-label" for="ri_ride_time">Giờ xuất phát <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="time" id="ri_ride_time">
-                </div>
-              </div>
-              <div class="ri-row">
-                <div class="ri-field">
-                  <label class="ri-label" for="ri_r_passengers">Hành khách <span class="ri-req">*</span></label>
-                  <select class="ri-select" id="ri_r_passengers">
-                    <option value="">— Chọn —</option>
-                    <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
-                    <option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
-                  </select>
-                </div>
-              </div>
-              <div class="ri-sec">Thông Tin Liên Lạc</div>
-              <div class="ri-row">
-                <div class="ri-field">
-                  <label class="ri-label" for="ri_r_name">Họ tên <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="text" id="ri_r_name" placeholder="Tên đầy đủ" autocomplete="name">
-                </div>
-                <div class="ri-field">
-                  <label class="ri-label" for="ri_r_phone">Điện thoại <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="tel" id="ri_r_phone" placeholder="(xxx) xxx-xxxx" autocomplete="tel">
-                </div>
-              </div>
-              <div class="ri-row">
-                <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_r_notes">Ghi chú</label>
-                  <textarea class="ri-input ri-textarea" id="ri_r_notes" placeholder="Điểm dừng, yêu cầu đặc biệt..." rows="2"></textarea>
+                <div class="ri-row">
+                  <div class="ri-field ri-field--full">
+                    <label class="ri-label" for="ri_r_notes">Ghi chú (tùy chọn)</label>
+                    <textarea class="ri-input ri-textarea" id="ri_r_notes" placeholder="Điểm dừng, yêu cầu đặc biệt..." rows="2"></textarea>
+                  </div>
                 </div>
               </div>
             </div><!-- /riRideFields -->
@@ -1092,8 +1125,8 @@
           <span class="ri-footer__est-label">Ước tính</span>
           <span class="ri-footer__est-amt" id="riFooterAmt">—</span>
         </div>
-        <button class="ri-submit" id="riSubmit" onclick="RideIntake.submit()">
-          Xác Nhận Đặt Xe
+        <button class="ri-submit" id="riSubmit" onclick="RideIntake.nextSubStep()">
+          Tiếp theo
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </button>
       </div>

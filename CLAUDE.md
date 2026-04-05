@@ -127,6 +127,53 @@ There must be **exactly 3 AI launcher buttons**, in this order, each mapping to 
 
 ---
 
+## Customer Form UI/UX Rules — NON-NEGOTIABLE
+
+DuLichCali is an AI-assisted service platform. Customer-facing booking and order forms must feel like a **guided conversation**, not an admin data-entry screen.
+
+### Core Principles
+
+1. **Minimal first step** — Show only the 2–3 most essential inputs first. Never dump all fields on screen at once.
+2. **Progressive disclosure** — Reveal additional fields step-by-step as the user advances. Each sub-step should have at most 3 required fields.
+3. **AI-assisted** — Let smart defaults, location awareness, and prior context do the heavy lifting. Forms support the user, not interrogate them.
+4. **Optional fields are collapsed** — Non-critical fields (flight number, terminal, luggage, notes) must be hidden inside a collapsible "More details (optional)" section.
+5. **Mobile-first** — Easy to scan and complete with one hand. No long scrolling walls of required inputs.
+6. **Confidence-building, not overwhelming** — Customer forms are the last moment before trust. Simplicity = trust.
+
+### Design Reference
+
+- Clean card layout with strong visual hierarchy
+- Generous spacing between field groups
+- Elegant Bodoni Moda / Jost typography
+- Clear, prominent CTA button per step
+- Step indicator ("Step 1 / 3 — Flight Info") so user knows progress
+- Navy header + gold CTA = brand-consistent
+
+### Form Structure Rule
+
+All customer-facing modal booking forms (airport, ride, food, nail, hair, tour) must use **3-sub-step progressive disclosure**:
+
+| Step | Content | Max fields shown |
+|------|---------|-----------------|
+| 1 | Core service info (what/where/when) | 3 required |
+| 2 | Secondary info (address, party size) | 2–3 required + collapsed optional |
+| 3 | Contact info (name + phone) | 2 required + optional notes |
+
+### Hard Rules
+
+- **NEVER** show 10+ fields at once in a customer form
+- **NEVER** apply admin-style complexity to customer booking flows
+- **NEVER** mix admin/vendor/driver operational fields into customer forms
+- Admin, vendor, and driver forms may be more detailed — that is correct and expected
+- Any future customer form changes must preserve this 3-step progressive disclosure pattern
+- The ride intake modal (`ride-intake.js` + `index.html`) is the canonical reference implementation
+
+### Failure Condition
+
+A customer form that shows all fields at once, or that requires more than 3 inputs before the user can advance, is **not acceptable**. Fix before deploying.
+
+---
+
 ## Permissions & Workflow
 
 - **Auto-mode is always on.** Proceed with all file edits, writes, and implementations without asking for permission.

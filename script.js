@@ -1123,9 +1123,11 @@ async function checkRideServiceAvailability(regionId) {
       return nowMins >= sh * 60 + sm && nowMins <= eh * 60 + em;
     });
 
+    window._rideServiceAvailable = hasAvailable;
     updateRideServiceCards(hasAvailable);
     return hasAvailable;
   } catch (_) {
+    window._rideServiceAvailable = true; // fail open
     updateRideServiceCards(true); // fail open — never hide service on error
     return true;
   }
@@ -1139,7 +1141,7 @@ function updateRideServiceCards(available) {
     if (!available && !existing) {
       var badge = document.createElement('div');
       badge.className = 'ride-unavail-badge';
-      badge.innerHTML = '<span>Tạm Nghỉ</span>';
+      badge.innerHTML = '<span>Không Có Xe</span>';
       el.appendChild(badge);
     } else if (available && existing) {
       existing.remove();

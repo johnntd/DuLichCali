@@ -37,6 +37,11 @@ window.RideIntake = (function () {
 
   // ── Step management ───────────────────────────────────────────────────────────
   function open(type) {
+    // Block if driver availability has been checked and no driver is available
+    if (window._rideServiceAvailable === false) {
+      showUnavailable();
+      return;
+    }
     _quote = null;
     _busy  = false;
     var modal = document.getElementById('rideIntakeModal');
@@ -49,6 +54,27 @@ window.RideIntake = (function () {
     } else {
       showPicker();
     }
+  }
+
+  function showUnavailable() {
+    var modal = document.getElementById('rideIntakeModal');
+    if (!modal) return;
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    setHide('riPicker', true);
+    setHide('riFormWrap', true);
+    setHide('riSuccess', true);
+    setHide('riFooter', true);
+    setHide('riBackBtn', true);
+    setText('riTitle', 'Dịch Vụ Xe');
+    var body = document.getElementById('riBody');
+    if (body) body.innerHTML =
+      '<div style="text-align:center;padding:2.5rem 1.5rem">' +
+        '<div style="font-size:2.5rem;margin-bottom:1rem">🚫</div>' +
+        '<p style="font-size:1.05rem;font-weight:600;color:var(--cream);margin:0 0 .5rem">Hiện Không Có Xe</p>' +
+        '<p style="font-size:.85rem;color:var(--muted);margin:0 0 1.5rem">Tài xế chưa có lịch trống lúc này.<br>Vui lòng liên hệ trực tiếp để đặt xe.</p>' +
+        '<a href="tel:+14089163439" style="display:inline-flex;align-items:center;gap:.45rem;background:var(--gold);color:#07101e;font-weight:700;font-size:.9rem;padding:.7rem 1.4rem;border-radius:999px;text-decoration:none">📞 Gọi Ngay</a>' +
+      '</div>';
   }
 
   function close() {

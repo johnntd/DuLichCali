@@ -400,11 +400,8 @@ function selectServiceAndBook(svc) {
 // ── Shared Distance Helper ────────────────────────────────────────────────────
 // Single source of truth for all distance calculations across the app.
 //
-// Migration note: replaces the legacy global google.maps.DistanceMatrixService()
-// pattern with the new importLibrary('routes') approach. This resolves Google's
-// deprecation warning about unimported API usage. RouteMatrix.computeRouteMatrix
-// (routes.googleapis.com) requires a separate API key permission not currently
-// configured; DistanceMatrixService via importLibrary is the correct migration path.
+// Uses RouteMatrix.computeRouteMatrix (routes.googleapis.com) — the current
+// recommended Google Maps JS API for matrix distance calculations.
 //
 // Usage: const { distMiles, durMins } = await DLCRouteMatrix(origin, destination);
 //   origin / destination: any string Google Maps can geocode (address, airport name, etc.)
@@ -417,23 +414,24 @@ function selectServiceAndBook(svc) {
 //
 window.DLCRouteMatrix = async function(origin, destination) {
   if (typeof google === 'undefined' || !google.maps) throw new Error('Maps not loaded');
-  // Load via importLibrary — eliminates legacy global access deprecation warning
-  const { DistanceMatrixService, TravelMode } = await google.maps.importLibrary('routes');
-  const svc = new DistanceMatrixService();
-  return new Promise(function(resolve, reject) {
-    svc.getDistanceMatrix(
-      { origins: [origin], destinations: [destination], travelMode: TravelMode.DRIVING },
-      function(resp, status) {
-        if (status !== 'OK') { reject(new Error(status)); return; }
-        const el = resp.rows[0] && resp.rows[0].elements[0];
-        if (!el || el.status !== 'OK') { reject(new Error('no-route')); return; }
-        resolve({
-          distMiles: el.distance.value / 1609.34,
-          durMins:   el.duration.value / 60,
-        });
-      }
-    );
+  const lib = await google.maps.importLibrary('routes');
+  const RouteMatrix = lib.RouteMatrix;
+  const TravelMode  = lib.TravelMode;
+  if (!RouteMatrix) throw new Error('RouteMatrix not available');
+  const rows = await RouteMatrix.computeRouteMatrix({
+    origins:      [{ waypoint: { address: origin      } }],
+    destinations: [{ waypoint: { address: destination } }],
+    travelMode:   TravelMode.DRIVING,
   });
+  const row = rows && rows[0];
+  if (!row || row.status !== 'OK') throw new Error('no-route');
+  const durSec  = typeof row.duration === 'number' ? row.duration
+                : (row.duration && 'seconds' in row.duration) ? Number(row.duration.seconds)
+                : parseInt(String(row.duration)) || 0;
+  return {
+    distMiles: row.distanceMeters / 1609.34,
+    durMins:   durSec / 60,
+  };
 };
 
 // ── Estimate Calculator ───────────────────────────────────────

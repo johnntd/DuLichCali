@@ -147,6 +147,15 @@
       '</div>';
   }
 
+  // Clean vendor-owned top bar for salon pages — only vendor name, no global contact
+  function renderSalonBar(biz) {
+    return '<div class="mp-bar mp-bar--vendor">' +
+      '<button type="button" class="mp-bar__back mp-bar__back--icon" onclick="history.back()" aria-label="Back">' + arrowLeftIcon + '</button>' +
+      '<span class="mp-bar__title">' + escHtml(biz.name) + '</span>' +
+      '<div class="mp-bar__spacer"></div>' +
+    '</div>';
+  }
+
   function renderFooter() {
     return '<footer class="mp-footer">' +
       '<button class="mp-footer__back-btn" onclick="history.back()" aria-label="Quay lại trang trước">' +
@@ -790,7 +799,7 @@
 
   function _renderSalonDetailContent(biz, backUrl) {
     var html =
-      renderAppBar(backUrl, 'Danh sách', biz.name, biz.phone) +
+      renderSalonBar(biz) +
       '<main class="mp-main">' +
         renderDetailHero(biz) +
         renderInfoStrip(biz) +
@@ -802,12 +811,10 @@
           '<div class="mp-detail-col mp-detail-col--right">' +
             (biz.bookingEnabled ? renderBookingSection(biz) : '') +
             renderAiSection(biz) +
-            renderContactSection(biz) +
           '</div>' +
         '</div>' +
         '<div class="mp-spacer"></div>' +
       '</main>' +
-      renderFooter() +
       renderInterpPanel(biz) +
       renderVendorBottomNav(biz);
 
@@ -988,7 +995,7 @@
     var backUrl = window.location.pathname;
 
     var html =
-      renderAppBar(backUrl, 'Danh sách', biz.name, biz.phone) +
+      renderSalonBar(biz) +
       '<main class="mp-main">' +
         renderFoodVendorHero(biz) +
         renderInfoStrip(biz) +
@@ -1000,12 +1007,10 @@
           '<div class="mp-detail-col mp-detail-col--right">' +
             renderOrderInquirySection(biz) +
             renderAiSection(biz) +
-            renderContactSection(biz) +
           '</div>' +
         '</div>' +
         '<div class="mp-spacer"></div>' +
       '</main>' +
-      renderFooter() +
       renderInterpPanel(biz) +
       renderVendorBottomNav(biz);
 
@@ -1909,6 +1914,17 @@
       if (!biz._aiHistory) biz._aiHistory = [];
       biz._aiHistory.push({ role: 'user', content: text });
 
+      // ── Staff memory: track named staff across conversation turns ─────────
+      // Allows follow-up questions ("when will SHE be available?") to resolve correctly
+      if (biz.staff) {
+        var _allSt = biz.staff.filter(function (m) { return m.active !== false; });
+        _allSt.forEach(function (m) {
+          if (new RegExp('\\b' + m.name + '\\b', 'i').test(text)) {
+            biz._selectedStaff = m;
+          }
+        });
+      }
+
       // Add user bubble
       Receptionist._appendMessage(messagesEl, text, 'user');
 
@@ -2202,55 +2218,176 @@
         return null;
       }
 
-      var _todayDow    = new Date().toLocaleDateString('en-US', { weekday:'long' });
-      var _todayDowEs  = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][new Date().getDay()];
-      var _todayDowKey = ['sun','mon','tue','wed','thu','fri','sat'][new Date().getDay()];
+      var _now         = new Date();
+      var _todayDow    = _now.toLocaleDateString('en-US', { weekday:'long' });
+      var _todayDowEs  = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][_now.getDay()];
+      var _todayDowKey = ['sun','mon','tue','wed','thu','fri','sat'][_now.getDay()];
+      var _dowKeys     = ['sun','mon','tue','wed','thu','fri','sat'];
+      var _dowLong     = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      var _dowLongEs   = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+      var _dowLongVi   = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+
+      // Returns { dayIndex, dowLong, dowLongEs, dowLongVi, schedule } for a staff member's
+      // next working day after `fromDate` (today by default). Returns null if never works.
+      function _getNextWorkDay(member, fromDate) {
+        var base = fromDate || _now;
+        for (var i = 1; i <= 7; i++) {
+          var d   = new Date(base);
+          d.setDate(base.getDate() + i);
+          var key = _dowKeys[d.getDay()];
+          if (!member.schedule) return { dayIndex: d.getDay(), dowLong: _dowLong[d.getDay()], dowLongEs: _dowLongEs[d.getDay()], dowLongVi: _dowLongVi[d.getDay()], schedule: null };
+          var ds  = member.schedule[key];
+          if (ds && ds.active === true) {
+            return { dayIndex: d.getDay(), dowLong: _dowLong[d.getDay()], dowLongEs: _dowLongEs[d.getDay()], dowLongVi: _dowLongVi[d.getDay()], schedule: ds };
+          }
+        }
+        return null;
+      }
+
+      // Returns human-readable work hours string for a schedule entry, e.g. "10 AM – 6 PM"
+      function _fmtHrs(ds) {
+        if (!ds || !ds.start) return '';
+        function _fmt(t) {
+          var p = t.split(':'), h = +p[0], m = +p[1];
+          var ampm = h < 12 ? 'AM' : 'PM';
+          h = h % 12 || 12;
+          return h + (m ? ':' + (m < 10 ? '0' : '') + m : '') + ' ' + ampm;
+        }
+        return _fmt(ds.start) + ' – ' + _fmt(ds.end);
+      }
 
       // ── 1. STAFF AVAILABILITY ─────────────────────────────────────────────────
-      // EN: "who is available today", "is Helen working", "who can do gel today"
-      // ES: "¿quién está disponible?", "¿trabaja Helen hoy?", "¿está Tracy?"
-      // VI: "ai rảnh hôm nay", "Helen có mặt không"
+      // Covers:
+      //   "is Tracy available?", "is Helen working today?", "who's available this afternoon?"
+      //   "when will Tracy be available?", "what time does Tracy work?"
+      //   "is Tracy available tomorrow?", "is she/he working?"
+      //   "can Tracy do gel manicure tomorrow?", "who can do acrylic today?"
+      //   Spanish / Vietnamese equivalents
+
+      // Resolve pronouns using stored staff context from prior turns
+      var _pronounRef = biz._selectedStaff && /\b(she|he|her|him|they)\b/i.test(text) ? biz._selectedStaff : null;
+
+      var _namedStaff = null;
+      _activeStaff.forEach(function (m) { if (new RegExp('\\b' + m.name + '\\b', 'i').test(text)) _namedStaff = m; });
+      var _targetStaff = _namedStaff || _pronounRef;
+
+      // Target day: "today", "tomorrow", a day of week, or default to today
+      var _targetDayOffset = 0;
+      var _targetDayLabel  = _todayDow;
+      var _targetDayKey    = _todayDowKey;
+      var _targetDayLabelEs = _todayDowEs;
+      var _targetDayLabelVi = _dowLongVi[_now.getDay()];
+      (function () {
+        var tl2 = text.toLowerCase();
+        if (/tomorrow|mañana|manana|ngày mai/i.test(tl2)) {
+          _targetDayOffset = 1;
+        } else {
+          for (var di = 0; di < _dowKeys.length; di++) {
+            if (new RegExp(_dowLong[di], 'i').test(tl2) || new RegExp(_dowLongEs[di], 'i').test(tl2) || new RegExp(_dowLongVi[di].toLowerCase(), 'i').test(tl2)) {
+              var diff = ((di - _now.getDay()) + 7) % 7 || 7;
+              _targetDayOffset = diff;
+              break;
+            }
+          }
+        }
+        if (_targetDayOffset > 0) {
+          var td = new Date(_now); td.setDate(_now.getDate() + _targetDayOffset);
+          _targetDayLabel   = _dowLong[td.getDay()];
+          _targetDayKey     = _dowKeys[td.getDay()];
+          _targetDayLabelEs = _dowLongEs[td.getDay()];
+          _targetDayLabelVi = _dowLongVi[td.getDay()];
+        }
+      }());
+
       var _isStaffQ =
-        /\bavail|\bwho\s+(?:is|are|can|'s)\b|who.*(?:work|free|today)\b|is\s+\w+\s+(?:avail|in|working|free|there)|can\s+I\s+(?:book|see|get)\s+with|staff\s*today|working today/i.test(text) ||
-        /(quién|quien).*(disponible|trabaja|está|esta)|(está|esta|trabaja).*(hoy|disponible|libre)|disponible.*hoy|hay.*disponible/i.test(text) ||
+        // availability / working status
+        /\bavail|\bwho\s+(?:is|are|can|'s)\b|who.*(?:work|free|today|tomorrow)\b|is\s+\w+\s+(?:avail|in|working|free|there)/i.test(text) ||
+        /can\s+I\s+(?:book|see|get)\s+with|staff\s*today|working\s*(today|tomorrow)/i.test(text) ||
+        // "when will X be available", "what time does X work", "what days does X work"
+        /when\s+(?:will|is|can|does)\s+\w+\s+(?:be\s+(?:avail|in|working|free)|work|come\s+in)/i.test(text) ||
+        /what\s+(?:time|days?|hours?)\s+does\s+\w+\s+work/i.test(text) ||
+        /what\s+(?:time|days?|hours?)\s+(?:is|are)\s+\w+\s+(?:avail|working|in)/i.test(text) ||
+        // pronoun follow-ups: "when will she be available?", "is he working tomorrow?"
+        (_pronounRef && /when|avail|work|free|time|schedule|tomorrow|today/i.test(text)) ||
+        // "can Tracy do gel manicure tomorrow", "who can do acrylic today"
+        /can\s+\w+\s+do\b|who\s+can\s+do\b/i.test(text) ||
+        // Spanish
+        /(quién|quien).*(disponible|trabaja|está|esta)|(está|esta|trabaja).*(hoy|mañana|disponible|libre)/i.test(text) ||
+        /disponible.*(?:hoy|mañana)|hay.*disponible|cuándo.*trabaja|cuando.*trabaja/i.test(text) ||
+        // Vietnamese
         /ai\s*r[ảa]nh|r[ảa]nh.*kh[ôo]ng|c[óo]\s*ai\b|h[ôo]m nay.*ai|ai.*h[ôo]m nay/i.test(text) ||
-        _activeStaff.some(function (m) { return new RegExp('\\b' + m.name + '\\b', 'i').test(text) && /avail|work|free|today|disponible|trabaja|r[ảa]nh/i.test(text); });
+        /khi\s*n[àa]o.*r[ảa]nh|r[ảa]nh.*ng[àa]y/i.test(text) ||
+        // named staff + any schedule/time intent
+        (_namedStaff !== null && /avail|work|free|today|tomorrow|when|time|schedule|hours?|r[ảa]nh|h[ôo]m|ng[àa]y mai|disponible|trabaja|mañana/i.test(text));
 
       if (_isStaffQ) {
-        var todayWorking = _staffWorkingToday(_activeStaff);
-        var specificPerson = null;
-        _activeStaff.forEach(function (m) { if (new RegExp('\\b' + m.name + '\\b', 'i').test(text)) specificPerson = m; });
+        var _isFutureQ = /when\s+will|when\s+(?:is|does)|next\s+(?:time|day|avail)|khi\s*n[àa]o|cuándo/i.test(text) || _targetDayOffset > 0;
 
-        if (specificPerson) {
-          var spOn  = _staffWorkingToday([specificPerson]).length > 0;
-          var spDs  = spOn && specificPerson.schedule && specificPerson.schedule[_todayDowKey];
-          var spHrs = spDs ? ' (' + spDs.start + '–' + spDs.end + ')' : '';
-          var spSp  = (specificPerson.specialties || []).join(', ') || 'general nail services';
-          if (lang === 'es') return spOn
-            ? specificPerson.name + ' está disponible hoy (' + _todayDowEs + ')' + spHrs + '.\nEspecialidades: ' + spSp + '.\nLlame para reservar: ' + biz.phoneDisplay
-            : specificPerson.name + ' no está en el horario de hoy. Llame para confirmar: ' + biz.phoneDisplay;
-          if (lang === 'vi') return spOn
-            ? specificPerson.name + ' có mặt hôm nay (' + _todayDow + ')' + spHrs + '.\nChuyên môn: ' + spSp + '.\nĐặt lịch: ' + biz.phoneDisplay
-            : specificPerson.name + ' không có lịch hôm nay. Vui lòng gọi ' + biz.phoneDisplay;
-          return spOn
-            ? specificPerson.name + ' is available today (' + _todayDow + ')' + spHrs + '.\nSpecialties: ' + spSp + '.\nBook via the form below or call: ' + biz.phoneDisplay
-            : specificPerson.name + ' is not scheduled today. Call ' + biz.phoneDisplay + ' to confirm.';
+        // ── Specific person named or resolved by pronoun ───────────────────────
+        if (_targetStaff) {
+          var sp    = _targetStaff;
+          var spSp  = (sp.specialties || []).join(', ') || 'general nail services';
+          var targetDate = _targetDayOffset > 0 ? (function () { var d = new Date(_now); d.setDate(_now.getDate() + _targetDayOffset); return d; }()) : _now;
+          var spDs  = sp.schedule && sp.schedule[_targetDayKey];
+          var spOn  = sp.schedule
+            ? (spDs && spDs.active === true)
+            : true; // no schedule = always available
+
+          if (spOn) {
+            // Working on target day — report hours
+            var spHrs = _fmtHrs(spDs);
+            if (lang === 'es') return sp.name + ' trabaja el ' + _targetDayLabelEs + (spHrs ? ' de ' + spHrs : '') + '.\nEspecialidades: ' + spSp + '.\n¿Le gustaría reservar una cita?';
+            if (lang === 'vi') return sp.name + ' làm việc ' + (_targetDayOffset === 0 ? 'hôm nay' : _targetDayLabelVi) + (spHrs ? ' từ ' + spHrs : '') + '.\nChuyên môn: ' + spSp + '.\nBạn muốn đặt lịch không?';
+            return sp.name + ' is working ' + (_targetDayOffset === 0 ? 'today (' + _todayDow + ')' : _targetDayLabel) + (spHrs ? ' from ' + spHrs : '') + '.\nSpecialties: ' + spSp + '.\nWould you like to book an appointment?';
+          } else {
+            // Not working on target day — find next available day
+            var next = _getNextWorkDay(sp, targetDate);
+            if (next) {
+              var nextHrs = _fmtHrs(next.schedule);
+              if (_isFutureQ || _targetDayOffset === 0) {
+                // User asked "when will she be available" or "is Tracy available today" (and she's not)
+                if (lang === 'es') return sp.name + ' no trabaja ' + (_targetDayOffset === 0 ? 'hoy (' + _todayDowEs + ')' : 'el ' + _targetDayLabelEs) + '.\nSu próximo día disponible es el ' + next.dowLongEs + (nextHrs ? ' de ' + nextHrs : '') + '.';
+                if (lang === 'vi') return sp.name + ' không làm ' + (_targetDayOffset === 0 ? 'hôm nay (' + _todayDow + ')' : _targetDayLabelVi) + '.\nNgày làm việc tiếp theo: ' + next.dowLongVi + (nextHrs ? ' từ ' + nextHrs : '') + '.';
+                return sp.name + ' is not working ' + (_targetDayOffset === 0 ? 'today (' + _todayDow + ')' : _targetDayLabel) + '.\nNext available: ' + next.dowLong + (nextHrs ? ' from ' + nextHrs : '') + '.';
+              } else {
+                if (lang === 'es') return sp.name + ' no trabaja el ' + _targetDayLabelEs + '.\nPróximo día: ' + next.dowLongEs + (nextHrs ? ' de ' + nextHrs : '') + '.';
+                if (lang === 'vi') return sp.name + ' không làm ' + _targetDayLabelVi + '.\nNgày tiếp theo: ' + next.dowLongVi + (nextHrs ? ' từ ' + nextHrs : '') + '.';
+                return sp.name + ' is not working ' + _targetDayLabel + '.\nNext available: ' + next.dowLong + (nextHrs ? ' from ' + nextHrs : '') + '.';
+              }
+            } else {
+              // Extremely rare: staff works no days at all
+              if (lang === 'es') return sp.name + ' no está disponible esta semana. Llame para confirmar: ' + biz.phoneDisplay;
+              if (lang === 'vi') return sp.name + ' không có lịch tuần này. Gọi: ' + biz.phoneDisplay;
+              return sp.name + ' has no scheduled days this week. Call: ' + biz.phoneDisplay;
+            }
+          }
         }
 
-        if (!todayWorking.length) {
-          if (lang === 'es') return 'No hay técnicos programados para hoy (' + _todayDowEs + '). Llame para confirmar: ' + biz.phoneDisplay;
-          if (lang === 'vi') return 'Hôm nay (' + _todayDow + ') chưa có thợ. Vui lòng gọi ' + biz.phoneDisplay;
-          return 'No staff scheduled today (' + _todayDow + '). Call ' + biz.phoneDisplay + ' to confirm.';
+        // ── No specific person — list all staff available on target day ─────────
+        var targetDateAll = _targetDayOffset > 0 ? (function () { var d = new Date(_now); d.setDate(_now.getDate() + _targetDayOffset); return d; }()) : _now;
+        var _staffOnTargetDay = _activeStaff.filter(function (m) {
+          if (!m.schedule) return true;
+          var ds2 = m.schedule[_targetDayKey];
+          return ds2 && ds2.active === true;
+        });
+
+        if (!_staffOnTargetDay.length) {
+          if (lang === 'es') return 'No hay técnicos programados para el ' + _targetDayLabelEs + '.\nLlame para confirmar disponibilidad: ' + biz.phoneDisplay;
+          if (lang === 'vi') return 'Không có thợ vào ' + (_targetDayOffset === 0 ? 'hôm nay (' + _todayDow + ')' : _targetDayLabelVi) + '.\nGọi để xác nhận: ' + biz.phoneDisplay;
+          return 'No staff scheduled ' + (_targetDayOffset === 0 ? 'today (' + _todayDow + ')' : _targetDayLabel) + '.\nCall to confirm: ' + biz.phoneDisplay;
         }
-        var staffLines = todayWorking.map(function (m) {
-          var ds  = m.schedule && m.schedule[_todayDowKey];
-          var hrs = ds && ds.start ? ' (' + ds.start + '–' + ds.end + ')' : '';
+        var staffLines = _staffOnTargetDay.map(function (m) {
+          var ds  = m.schedule && m.schedule[_targetDayKey];
+          var hrs = _fmtHrs(ds);
           var sp  = m.specialties && m.specialties.length ? ' · ' + m.specialties.join(', ') : '';
-          return '• ' + m.name + ' — ' + (m.role || 'Nail Tech') + sp + hrs;
+          return '• ' + m.name + ' — ' + (m.role || 'Nail Tech') + sp + (hrs ? ' (' + hrs + ')' : '');
         }).join('\n');
-        if (lang === 'es') return 'Disponibles hoy (' + _todayDowEs + '):\n' + staffLines + '\n\nReserve una cita: ' + biz.phoneDisplay;
-        if (lang === 'vi') return 'Hôm nay (' + _todayDow + ') có ' + todayWorking.length + ' thợ:\n' + staffLines + '\n\nĐặt lịch: ' + biz.phoneDisplay;
-        return 'Available today (' + _todayDow + '):\n' + staffLines + '\n\nBook via the form below or call: ' + biz.phoneDisplay;
+        var dayRef = _targetDayOffset === 0 ? _todayDow : _targetDayLabel;
+        var dayRefEs = _targetDayOffset === 0 ? _todayDowEs : _targetDayLabelEs;
+        var dayRefVi = _targetDayOffset === 0 ? _dowLongVi[_now.getDay()] : _targetDayLabelVi;
+        if (lang === 'es') return 'Personal disponible el ' + dayRefEs + ':\n' + staffLines + '\n\n¿Con quién le gustaría reservar?';
+        if (lang === 'vi') return 'Thợ có mặt ' + (_targetDayOffset === 0 ? 'hôm nay' : dayRefVi) + ':\n' + staffLines + '\n\nBạn muốn đặt với ai?';
+        return 'Staff available ' + (_targetDayOffset === 0 ? 'today' : dayRef) + ':\n' + staffLines + '\n\nWho would you like to book with?';
       }
 
       // ── 2. DO YOU DO / OFFER X ────────────────────────────────────────────────
@@ -2533,33 +2670,34 @@
           hoursBlock += '\n';
         }
         var activeStaffArr = (biz.staff || []).filter(function (m) { return m.active !== false; });
-        // Compute which staff work today — supports new {mon:{active,start,end}} and old {days:[]} formats
-        var todayDowKey = ['sun','mon','tue','wed','thu','fri','sat'][today.getDay()];
-        var todayDowOld = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][today.getDay()];
-        var workingTodayArr = activeStaffArr.filter(function (m) {
-          if (!m.schedule) return true;
-          if (m.schedule[todayDowKey] !== undefined) return m.schedule[todayDowKey].active === true;
-          if (m.schedule.days && m.schedule.days.length) return m.schedule.days.indexOf(todayDowOld) !== -1;
-          return true;
-        });
+        var _clDowKeys  = ['sun','mon','tue','wed','thu','fri','sat'];
+        var _clDowLabel = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        var todayDowKey = _clDowKeys[today.getDay()];
+        // Build FULL weekly schedule for every staff member — gives Claude everything needed
+        // to answer temporal questions: "when will Tracy be available?", "is she working tomorrow?"
         var staffBlock = '';
-        if (workingTodayArr.length) {
-          staffBlock = 'STAFF WORKING TODAY (' + todayStr + '):\n';
-          workingTodayArr.forEach(function (m) {
-            staffBlock += '- ' + m.name + ' (' + (m.role || 'Nail Tech') + ')';
-            if (m.specialties && m.specialties.length) staffBlock += ' · specialties: ' + m.specialties.join(', ');
-            // Include today's hours if available in new format
-            if (m.schedule && m.schedule[todayDowKey] && m.schedule[todayDowKey].start) {
-              staffBlock += ' · hours: ' + m.schedule[todayDowKey].start + '–' + m.schedule[todayDowKey].end;
-            }
-            staffBlock += '\n';
-          });
-          staffBlock += '\n';
-        } else if (activeStaffArr.length) {
-          staffBlock = 'ALL STAFF (call to confirm today\'s schedule):\n';
+        if (activeStaffArr.length) {
+          staffBlock = 'STAFF — FULL WEEKLY SCHEDULES (TODAY is ' + _clDowLabel[today.getDay()] + '):\n';
           activeStaffArr.forEach(function (m) {
             staffBlock += '- ' + m.name + ' (' + (m.role || 'Nail Tech') + ')';
             if (m.specialties && m.specialties.length) staffBlock += ' · specialties: ' + m.specialties.join(', ');
+            staffBlock += '\n  Works: ';
+            if (m.schedule) {
+              var workDays = _clDowKeys.filter(function (k) { return m.schedule[k] && m.schedule[k].active === true; });
+              if (workDays.length) {
+                workDays.forEach(function (k, i) {
+                  var ds2 = m.schedule[k];
+                  staffBlock += _clDowLabel[_clDowKeys.indexOf(k)] + ' ' + ds2.start + '-' + ds2.end;
+                  if (i < workDays.length - 1) staffBlock += ', ';
+                });
+              } else {
+                staffBlock += 'no days scheduled this week';
+              }
+              var todayDs = m.schedule[todayDowKey];
+              staffBlock += todayDs && todayDs.active ? ' | TODAY: working ' + todayDs.start + '-' + todayDs.end : ' | TODAY: OFF';
+            } else {
+              staffBlock += 'all days (no fixed schedule)';
+            }
             staffBlock += '\n';
           });
           staffBlock += '\n';
@@ -2594,14 +2732,18 @@
           '1. NAIL SPECIALIST — Answer every question directly and immediately. Use SERVICES list for exact prices. Use NAIL SERVICE KNOWLEDGE for general questions. Never say "I don\'t know" or deflect when data is present.\n' +
           '2. APPOINTMENT BOOKING — Collect one field at a time: SERVICE → PREFERRED STAFF (optional) → DATE & TIME → NAME + PHONE\n\n' +
           'DIRECT ANSWER RULES:\n' +
-          '- Staff availability: List from STAFF WORKING TODAY with hours. Be specific.\n' +
+          '- Staff availability TODAY: Check "TODAY: working/OFF" in STAFF section above. List working staff with their hours.\n' +
+          '- Staff availability FUTURE ("when will Tracy be available?", "is she working tomorrow?"): Use the weekly schedule to find their next working day and report it with hours. NEVER say "call to confirm" when schedule data is present.\n' +
+          '- Staff follow-up ("when will she be available?"): "she/he" refers to the most recently named staff member in conversation history.\n' +
+          '- Staff + service ("can Tracy do gel manicure tomorrow?"): Check Tracy\'s schedule for tomorrow AND her specialties.\n' +
           '- Pricing: Quote exact price from SERVICES if listed. If not listed, say "Call for current pricing: ' + phone + '"\n' +
           '- Walk-ins: Yes, accepted. Appointments prioritized.\n' +
           '- Service not in list: "We don\'t currently offer that — please call: ' + phone + '"\n' +
-          '- NO GENERIC OPENER: Never reply with "How can I help?" to a specific question. Answer the question first.\n\n' +
+          '- NO GENERIC OPENER: Never reply with "How can I help?" to a specific question. Answer the question directly.\n' +
+          '- NO UNNECESSARY ESCALATION: Only say "call owner" for truly unknown info. Schedule is known — use it.\n\n' +
           sharedRules +
-          '- LANGUAGE: You are fully fluent in English, Spanish, and Vietnamese. Always respond in the exact language the customer writes in. Spanish in -> Spanish out. Vietnamese in -> Vietnamese out. English in -> English out. Never switch languages.\n' +
-          '- VOICE READY: Keep responses concise and natural — no markdown asterisks or headers. This AI also runs as a voice receptionist.\n' +
+          '- LANGUAGE: You are fully fluent in English, Spanish, and Vietnamese. Always respond in the exact language the customer writes in. Never switch languages.\n' +
+          '- VOICE READY: Keep responses concise and natural — no markdown asterisks or headers.\n' +
           '- APPOINTMENT COMPLETE: Once service, date/time, name, and phone are collected, summarize and end with [ESCALATE:appointment] on its own line.';
 
       } else if (biz.bookingType === 'reservation') {

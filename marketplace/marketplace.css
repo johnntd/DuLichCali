@@ -157,6 +157,27 @@ button {
   height: 13px;
 }
 
+/* Vendor-owned bar — salon pages only: just vendor name, no global contact */
+.mp-bar--vendor {
+  justify-content: flex-start; /* title is absolutely centered */
+}
+
+/* Back arrow only, no text */
+.mp-bar__back--icon {
+  font-size: 0;
+  min-width: 36px;
+  cursor: pointer;
+  color: var(--sky-lt);
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+/* Right spacer mirrors back button width for perfect centering */
+.mp-bar__spacer {
+  min-width: 36px;
+}
+
 /* ── Hero ──────────────────────────────────────────────────────────────────── */
 
 .mp-hero {

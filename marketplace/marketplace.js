@@ -1834,60 +1834,171 @@
       }
       // ── End food vendor ─────────────────────────────────────────────────────
 
-      // Hours / opening
-      if (/gi[ờo]|hours?|m[ởo] c[ửu]a|open/.test(t)) {
-        var hoursText = 'Giờ mở cửa:\n';
-        Object.keys(biz.hours).forEach(function (day) {
-          hoursText += '• ' + day + ': ' + biz.hours[day] + '\n';
+      // ── Appointment / nail / hair vendor handlers ───────────────────────────
+
+      var _activeSvcs = (biz.services || []).filter(function (s) { return s.active !== false; });
+      var _activeStaff = (biz.staff || []).filter(function (m) { return m.active !== false; });
+
+      // Helper: compute which staff work today by schedule.days
+      function _staffWorkingToday(staffList) {
+        var now = new Date();
+        var dow = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][now.getDay()];
+        return staffList.filter(function (m) {
+          if (!m.schedule || !m.schedule.days || !m.schedule.days.length) return true;
+          return m.schedule.days.indexOf(dow) !== -1;
         });
-        return hoursText.trim();
+      }
+
+      // Staff availability — "who is available", "ai rảnh", "is Helen available", "who can do gel today"
+      if (/\bavail|who.*(?:work|free|in|on|today|now|open)\b|(?:free|work|in|on|today).*\b(?:now|today)\b|ai.*r[ảa]nh|r[ảa]nh.*kh[ôo]ng|c[óo]\s*ai|h[ôo]m nay.*ai|ai.*h[ôo]m nay|is\s+\w+\s+(?:available|in|working|free|there)|can\s+I\s+(?:book|see|get)\s+with|th[ợợ]|staff|th[àa]nh vi[êe]n/i.test(text) ||
+          /(?:helen|tracy)\s*(?:available|free|in|working|today|r[ảa]nh|c[óo]\s*kh[ôo]ng)/i.test(text)) {
+        var todayWorking = _staffWorkingToday(_activeStaff);
+        var todayDow = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+        var isVi2 = /[\u00C0-\u024F\u1E00-\u1EFF]|h[ôo]m nay|r[ảa]nh|c[óo] ai|ai/.test(text);
+
+        // Check if asking about a specific person
+        var specificPerson = null;
+        _activeStaff.forEach(function (m) {
+          if (new RegExp('\\b' + m.name + '\\b', 'i').test(text)) specificPerson = m;
+        });
+
+        if (specificPerson) {
+          var spWorking = _staffWorkingToday([specificPerson]).length > 0;
+          if (isVi2) {
+            return spWorking
+              ? specificPerson.name + ' có mặt hôm nay (' + todayDow + ').\nChuyên môn: ' + (specificPerson.specialties || []).join(', ') + '.\nĐặt lịch qua form bên dưới hoặc gọi: ' + biz.phoneDisplay
+              : specificPerson.name + ' không có lịch làm việc hôm nay. Vui lòng gọi ' + biz.phoneDisplay + ' để biết thêm.';
+          } else {
+            return spWorking
+              ? specificPerson.name + ' is available today (' + todayDow + ').\nSpecialties: ' + (specificPerson.specialties || []).join(', ') + '.\nBook via the form below or call: ' + biz.phoneDisplay
+              : specificPerson.name + ' is not scheduled today. Call ' + biz.phoneDisplay + ' for more info.';
+          }
+        }
+
+        if (todayWorking.length === 0) {
+          return isVi2
+            ? 'Hôm nay (' + todayDow + ') chưa có thợ làm việc. Vui lòng gọi ' + biz.phoneDisplay + ' để đặt hẹn.'
+            : 'No staff scheduled today (' + todayDow + '). Call ' + biz.phoneDisplay + ' to book.';
+        }
+        var staffLines = todayWorking.map(function (m) {
+          return '• ' + m.name + ' — ' + (m.role || 'Nail Tech') + (m.specialties && m.specialties.length ? ' · ' + m.specialties.join(', ') : '');
+        }).join('\n');
+        return isVi2
+          ? 'Hôm nay (' + todayDow + ') có ' + todayWorking.length + ' thợ:\n' + staffLines + '\n\nĐặt lịch qua form bên dưới hoặc gọi: ' + biz.phoneDisplay
+          : 'Available today (' + todayDow + '):\n' + staffLines + '\n\nBook via the form below or call: ' + biz.phoneDisplay;
+      }
+
+      // Specific service inquiry — "do you do gel", "bạn có làm acrylic không"
+      if (/do\s+you\s+(?:do|offer|have)|can\s+you\s+do|c[óo]\s+(?:d[ịi]ch\s+v[ụu]|l[àa]m)|b[ạa]n\s+c[óo]\s+l[àa]m|c[óo]\s+l[àa]m\s+kh[ôo]ng/.test(t)) {
+        var svcKeywords = {
+          'gel': 'Gel Nails', 'acrylic': 'Acrylic Full Set', 'pedicure': 'Pedicure',
+          'manicure': 'Manicure', 'nail art': 'Nail Art', 'spa': 'Spa Package',
+          'dip powder': null, 'ombre': null
+        };
+        var foundSvc = null;
+        Object.keys(svcKeywords).forEach(function (kw) {
+          if (t.indexOf(kw) !== -1 && !foundSvc) {
+            var targetName = svcKeywords[kw];
+            if (targetName) {
+              foundSvc = _activeSvcs.find(function (s) { return s.name.toLowerCase().indexOf(kw) !== -1 || s.name === targetName; });
+            }
+          }
+        });
+        if (foundSvc) {
+          return 'Yes! We offer ' + foundSvc.name + ' starting at ' + foundSvc.price +
+            (foundSvc.duration ? ' (' + foundSvc.duration + ')' : '') + '.\n' +
+            (foundSvc.desc ? foundSvc.desc + '\n\n' : '\n') +
+            'Book via the form below or call: ' + biz.phoneDisplay;
+        }
+      }
+
+      // Walk-in questions
+      if (/walk.?in|kh[ôo]ng\s+c[ầa]n\s+h[ẹe]n|kh[ôo]ng\s+[đd][ặa]t\s+tr[ướ]c|drop.?in/.test(t)) {
+        var isVi3 = /[\u00C0-\u024F\u1E00-\u1EFF]/.test(text);
+        return isVi3
+          ? biz.name + ' nhận cả walk-in (đến thẳng) và đặt lịch trước.\nĐặt lịch trước được ưu tiên — gọi ' + biz.phoneDisplay + ' hoặc dùng form bên dưới để đặt chỗ.'
+          : biz.name + ' accepts both walk-ins and appointments.\nAppointments are prioritized — call ' + biz.phoneDisplay + ' or use the booking form below.';
+      }
+
+      // Hours / opening
+      if (/gi[ờo]|hours?|m[ởo] c[ửu]a|open|[đd][óo]ng c[ửu]a|close/.test(t)) {
+        var hoursText = biz.hours
+          ? Object.keys(biz.hours).map(function (d) { return '• ' + d + ': ' + biz.hours[d]; }).join('\n')
+          : biz.phoneDisplay;
+        var isViH = /[\u00C0-\u024F\u1E00-\u1EFF]/.test(text);
+        return (isViH ? 'Giờ mở cửa ' + biz.name + ':\n' : biz.name + ' hours:\n') + hoursText;
       }
 
       // Pricing / services list
-      if (/gi[áa]|price|b[ảa]ng gi[áa]|pricing|cost|ph[íi]/.test(t)) {
-        var priceText = 'Bảng giá dịch vụ:\n';
-        biz.services.forEach(function (svc) {
-          priceText += '• ' + svc.name + ': ' + svc.price + ' (' + svc.duration + ')\n';
+      if (/gi[áa]|price|b[ảa]ng gi[áa]|pricing|cost|ph[íi]|how much|bao nhi[êe]u/.test(t)) {
+        var isViP = /[\u00C0-\u024F\u1E00-\u1EFF]/.test(text);
+        // Check if asking about a specific service
+        var specificSvc = null;
+        _activeSvcs.forEach(function (s) {
+          var sn = s.name.toLowerCase();
+          if (!specificSvc && (t.indexOf(sn) !== -1 || (sn.split(' ').some(function (w) { return w.length > 3 && t.indexOf(w) !== -1; })))) {
+            specificSvc = s;
+          }
+        });
+        if (specificSvc) {
+          return specificSvc.name + ': ' + specificSvc.price +
+            (specificSvc.duration ? ' (' + specificSvc.duration + ')' : '') +
+            (specificSvc.desc ? '\n' + specificSvc.desc : '') +
+            '\n\n' + (isViP ? 'Đặt lịch: ' : 'Book: ') + biz.phoneDisplay;
+        }
+        var priceText = (isViP ? 'Bảng giá dịch vụ:\n' : 'Services & Pricing:\n');
+        _activeSvcs.forEach(function (svc) {
+          priceText += '• ' + svc.name + ': ' + svc.price + (svc.duration ? ' (' + svc.duration + ')' : '') + '\n';
         });
         return priceText.trim();
       }
 
       // Address / location
-      if (/[đd][ịi]a ch[ỉi]|address|location|[ởo] [đd][âa]u|[đd][ườo]ng/.test(t)) {
-        return biz.name + ' tọa lạc tại ' + biz.address + '.\nĐặt hẹn và thắc mắc xin liên hệ: ' + biz.phoneDisplay;
+      if (/[đd][ịi]a ch[ỉi]|address|location|[ởo] [đd][âa]u|[đd][ườo]ng|where/.test(t)) {
+        return biz.name + (biz.address ? ' — ' + biz.address : '') + '.\n' +
+          (biz.phoneDisplay ? 'Liên hệ: ' + biz.phoneDisplay : '');
       }
 
-      // Booking
-      if (/[đd][ặa]t l[ịi]ch|[đd][ặa]t b[àa]n|book|appointment|reservation|h[ẹe]n/.test(t)) {
-        return 'Cuộn xuống phần đặt lịch phía dưới để đặt ' +
-          (biz.bookingType === 'reservation' ? 'bàn' : 'lịch hẹn') +
-          ' trực tuyến. Hoặc gọi trực tiếp: ' + biz.phoneDisplay + ' để được hỗ trợ ngay.';
+      // Booking / appointment request
+      if (/[đd][ặa]t l[ịi]ch|[đd][ặa]t h[ẹe]n|book|appointment|reservation|h[ẹe]n|schedule/.test(t)) {
+        var isViB = /[\u00C0-\u024F\u1E00-\u1EFF]/.test(text);
+        return isViB
+          ? 'Để đặt lịch, bạn có thể:\n1. Điền form đặt lịch bên dưới\n2. Gọi trực tiếp: ' + biz.phoneDisplay + '\n\nVui lòng cho biết dịch vụ và ngày giờ bạn muốn.'
+          : 'To book an appointment:\n1. Use the booking form below\n2. Or call: ' + biz.phoneDisplay + '\n\nJust let us know the service and your preferred date/time!';
       }
 
       // Services / menu
-      if (/d[ịi]ch v[ụu]|service|l[àa]m g[ìi]|menu|th[ựu]c [đd][ơo]n/.test(t)) {
-        var svcText = 'Dịch vụ của ' + biz.name + ':\n';
-        biz.services.forEach(function (svc) {
-          svcText += '• ' + svc.name + ' — ' + svc.price + '\n';
+      if (/d[ịi]ch v[ụu]|service|what.*(?:do|offer|have)|offer|menu|nail\s+(?:type|option|style)|c[óo]\s+nh[ữu]ng|danh\s+s[áa]ch/.test(t)) {
+        var isViS = /[\u00C0-\u024F\u1E00-\u1EFF]/.test(text);
+        var svcText = (isViS ? 'Dịch vụ của ' + biz.name + ':\n' : biz.name + ' services:\n');
+        _activeSvcs.forEach(function (svc) {
+          svcText += '• ' + svc.name + ' — ' + svc.price + (svc.duration ? ' (' + svc.duration + ')' : '') + '\n';
         });
+        svcText += '\n' + (isViS ? 'Đặt lịch: ' : 'Book: ') + biz.phoneDisplay;
         return svcText.trim();
       }
 
-      // Phone / call
-      if (/[đd]i[ệe]n tho[ại]i|phone|g[ọo]i|call|s[ốo] m[áa]y/.test(t)) {
-        var phones = biz.hosts.map(function (h) {
-          return h.name + ': ' + h.display + ' (' + h.role + ')';
-        }).join('\n');
-        return 'Liên hệ ' + biz.name + ':\n' + phones;
+      // Phone / call / contact
+      if (/[đd]i[ệe]n tho[ại]i|phone|g[ọo]i|call|s[ốo] m[áa]y|contact|li[êe]n h[ệe]/.test(t)) {
+        var phones2 = (biz.hosts || []).map(function (h) { return h.name + ': ' + (h.display || h.phone); }).join('\n');
+        return 'Liên hệ ' + biz.name + ':\n' + (phones2 || biz.phoneDisplay);
       }
 
-      // Default
-      return 'Cảm ơn bạn đã liên hệ ' + biz.name + '! Tôi có thể giúp bạn:\n' +
-        '• Xem bảng giá dịch vụ\n' +
-        '• Đặt lịch hẹn\n' +
-        '• Giờ mở cửa\n' +
-        '• Thông tin liên hệ\n\n' +
-        'Bạn muốn hỏi gì ạ? Hoặc gọi trực tiếp: ' + biz.phoneDisplay;
+      // Default — still useful, but bilingual and more concise
+      var isViDef = /[\u00C0-\u024F\u1E00-\u1EFF]/.test(text);
+      return isViDef
+        ? 'Tôi có thể giúp bạn tại ' + biz.name + ':\n' +
+          '• Xem giá dịch vụ\n' +
+          '• Kiểm tra thợ rảnh hôm nay\n' +
+          '• Giờ mở cửa\n' +
+          '• Đặt lịch hẹn\n\n' +
+          'Hỏi trực tiếp bằng tiếng Việt hoặc tiếng Anh. Gọi: ' + biz.phoneDisplay
+        : 'How can I help you at ' + biz.name + '?\n' +
+          '• Check who\'s available today\n' +
+          '• View services & pricing\n' +
+          '• Hours & location\n' +
+          '• Book an appointment\n\n' +
+          'Ask me anything, or call: ' + biz.phoneDisplay;
     },
 
     _askClaude: function (biz, text, apiKey, capInfo) {
@@ -1993,11 +2104,25 @@
           Object.keys(biz.hours).forEach(function (day) { hoursBlock += '- ' + day + ': ' + biz.hours[day] + '\n'; });
           hoursBlock += '\n';
         }
-        var activeStaff = (biz.staff || []).filter(function (m) { return m.active !== false; });
+        var activeStaffArr = (biz.staff || []).filter(function (m) { return m.active !== false; });
+        // Compute which staff work today by schedule.days
+        var todayDowShort = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][today.getDay()];
+        var workingTodayArr = activeStaffArr.filter(function (m) {
+          if (!m.schedule || !m.schedule.days || !m.schedule.days.length) return true;
+          return m.schedule.days.indexOf(todayDowShort) !== -1;
+        });
         var staffBlock = '';
-        if (activeStaff.length) {
-          staffBlock = 'AVAILABLE STAFF:\n';
-          activeStaff.forEach(function (m) {
+        if (workingTodayArr.length) {
+          staffBlock = 'STAFF WORKING TODAY (' + todayStr + '):\n';
+          workingTodayArr.forEach(function (m) {
+            staffBlock += '- ' + m.name + ' (' + (m.role || 'Nail Tech') + ')';
+            if (m.specialties && m.specialties.length) staffBlock += ' · specialties: ' + m.specialties.join(', ');
+            staffBlock += '\n';
+          });
+          staffBlock += '\n';
+        } else if (activeStaffArr.length) {
+          staffBlock = 'ALL STAFF (call to confirm today\'s schedule):\n';
+          activeStaffArr.forEach(function (m) {
             staffBlock += '- ' + m.name + ' (' + (m.role || 'Nail Tech') + ')';
             if (m.specialties && m.specialties.length) staffBlock += ' · specialties: ' + m.specialties.join(', ');
             staffBlock += '\n';
@@ -2009,19 +2134,22 @@
           featuresBlock = 'SALON HIGHLIGHTS: ' + biz.features.join(' · ') + '\n\n';
         }
         systemPrompt =
-          'You are ' + ai.name + ', appointment assistant for ' + biz.name + '.\n\n' +
+          'You are ' + ai.name + ', salon assistant and appointment taker for ' + biz.name + '.\n\n' +
           'TODAY: ' + todayStr + '\n"Tomorrow" = ' + tomorrowStr + '\n\n' +
           servicesBlock +
           hoursBlock +
           staffBlock +
           featuresBlock +
-          'CONTACT:\n- ' + hostName + ': ' + phone + '\n- Address: ' + biz.address + '\n\n' +
-          'YOUR JOB — APPOINTMENT INTAKE AGENT:\n' +
-          'Collect these fields in order, asking only the next missing one:\n' +
-          '  1. SERVICE wanted  2. PREFERRED DATE & TIME  3. CUSTOMER NAME + PHONE\n\n' +
+          'CONTACT:\n- ' + hostName + ': ' + phone + '\n- Address: ' + (biz.address || 'San Jose, CA') + '\n\n' +
+          'YOUR DUAL ROLE:\n' +
+          '1. SALON ASSISTANT — Answer any question directly using the data above: staff availability, services offered, pricing, hours, address, walk-ins. Answer first, do NOT ask for booking info before answering.\n' +
+          '2. APPOINTMENT BOOKING — When the customer wants to book, collect one field at a time: SERVICE → DATE & TIME → NAME + PHONE\n\n' +
+          'AVAILABILITY RULE: When asked who\'s available or working today, list the staff in STAFF WORKING TODAY. Be direct and specific.\n' +
+          'WALK-IN RULE: The salon accepts walk-ins and appointments. Appointments are prioritized.\n\n' +
           sharedRules +
-          '- PRICING: Answer pricing/hours questions directly from the data above.\n' +
-          '- APPOINTMENT COMPLETE: Summarize service, date/time, name/phone, then end your message with [ESCALATE:appointment] on its own line — this forwards the request to the vendor for confirmation.';
+          '- LANGUAGE: Respond in the same language as the customer (Vietnamese or English). Never switch languages mid-conversation.\n' +
+          '- PRICING: Answer pricing questions immediately from SERVICES & PRICING above. Never say "I don\'t know" when data is available.\n' +
+          '- APPOINTMENT COMPLETE: Summarize service, date/time, name/phone, then end your message with [ESCALATE:appointment] on its own line.';
 
       } else if (biz.bookingType === 'reservation') {
         // ── RESERVATION INTAKE AGENT (restaurants, any future reservation vendor) ──

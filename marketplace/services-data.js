@@ -67,13 +67,15 @@
           name: 'Helen',
           active: true,
           role: 'Senior Nail Tech',
-          specialties: ['Acrylic Full Set', 'Nail Art', 'Gel Nails']
+          specialties: ['Acrylic Full Set', 'Nail Art', 'Gel Nails'],
+          schedule: { days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] }
         },
         {
           name: 'Tracy',
           active: false,
           role: 'Nail Tech',
-          specialties: ['Manicure Cơ Bản', 'Pedicure Cơ Bản', 'Gel Nails']
+          specialties: ['Manicure Cơ Bản', 'Pedicure Cơ Bản', 'Gel Nails'],
+          schedule: { days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] }
         }
       ],
       features: [

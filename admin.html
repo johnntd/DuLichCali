@@ -37,8 +37,8 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ── PIN modal ──────────────────────────────── */
-    #pinModal {
+    /* ── Login modal ──────────────────────────────── */
+    #loginModal {
       position: fixed; inset: 0; z-index: 300;
       background: var(--navy-900);
       display: flex; align-items: center; justify-content: center;
@@ -72,11 +72,11 @@
       border-radius: 6px;
       color: var(--cream);
       font-family: 'Jost', sans-serif;
-      font-size: 1.1rem;
-      letter-spacing: 0.15em;
-      text-align: center;
+      font-size: 0.95rem;
+      letter-spacing: 0.02em;
+      text-align: left;
       padding: 0 1rem;
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
       outline: none;
       transition: border-color 0.2s;
     }
@@ -97,6 +97,7 @@
       transition: background 0.2s;
     }
     .btn-primary:hover { background: var(--gold-lt); }
+    .btn-primary:disabled { opacity: .55; cursor: not-allowed; }
 
     /* ── Main app (hidden until authenticated) ── */
     #app { display: none; height: 100vh; flex-direction: column; }
@@ -392,16 +393,18 @@
 </head>
 <body>
 
-  <!-- PIN modal -->
-  <div id="pinModal">
+  <!-- Login modal -->
+  <div id="loginModal">
     <div class="pin-card">
       <div class="pin-brand">✦ Du Lịch Cali</div>
       <h2>Trang Quản Trị</h2>
-      <p>Nhập mã PIN để đăng nhập</p>
-      <input type="password" id="pinInput" class="pin-input" placeholder="● ● ● ● ● ●"
-        maxlength="20" autocomplete="off" inputmode="numeric">
-      <div class="pin-error" id="pinError"></div>
-      <button class="btn-primary" onclick="verifyPin()">Đăng nhập</button>
+      <p>Đăng nhập bằng tài khoản admin</p>
+      <input type="email" id="loginEmail" class="pin-input"
+        placeholder="Email" autocomplete="email">
+      <input type="password" id="loginPassword" class="pin-input"
+        placeholder="Mật khẩu" autocomplete="current-password">
+      <div class="pin-error" id="loginError"></div>
+      <button class="btn-primary" id="loginBtn" onclick="signIn()">Đăng nhập</button>
     </div>
   </div>
 
@@ -542,8 +545,6 @@
 
   <script>
     // ── Config ───────────────────────────────────────────────────
-    const ADMIN_PIN = 'DLC2025'; // Simple client-side PIN — change as needed
-
     const firebaseConfig = {
       apiKey: "AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ",
       authDomain: "dulichcali-booking-calendar.firebaseapp.com",
@@ -553,7 +554,6 @@
       appId: "1:623460884698:web:a08bd435c453a7b4db05e3"
     };
     firebase.initializeApp(firebaseConfig);
-    firebase.auth().signInAnonymously().catch(console.error);
     const db = firebase.firestore();
 
     // ── State ────────────────────────────────────────────────────
@@ -562,30 +562,59 @@
     let gpsWatchId     = null;
     let unsubscribeAll = null;
 
-    // ── PIN auth ─────────────────────────────────────────────────
-    function verifyPin() {
-      const val = document.getElementById('pinInput').value.trim();
-      if (val === ADMIN_PIN) {
-        sessionStorage.setItem('adminAuth', 'true');
-        document.getElementById('pinModal').style.display = 'none';
-        document.getElementById('app').classList.add('visible');
-        startListening();
-      } else {
-        document.getElementById('pinError').textContent = 'Mã PIN không đúng. Vui lòng thử lại.';
-        document.getElementById('pinInput').value = '';
+    // ── Firebase Auth ─────────────────────────────────────────────
+    async function signIn() {
+      const email    = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const btn      = document.getElementById('loginBtn');
+      const errEl    = document.getElementById('loginError');
+
+      if (!email || !password) {
+        errEl.textContent = 'Vui lòng nhập email và mật khẩu.';
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Đang đăng nhập…';
+      errEl.textContent = '';
+
+      try {
+        await firebase.auth().signInWithEmailAndPassword(email, password);
+        // onAuthStateChanged below will reveal the app
+      } catch (err) {
+        errEl.textContent = 'Email hoặc mật khẩu không đúng.';
+        btn.disabled = false;
+        btn.textContent = 'Đăng nhập';
+        document.getElementById('loginPassword').value = '';
       }
     }
 
-    document.getElementById('pinInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter') verifyPin();
+    // Allow Enter key on either field
+    ['loginEmail','loginPassword'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', e => {
+        if (e.key === 'Enter') signIn();
+      });
     });
 
     function logout() {
-      sessionStorage.removeItem('adminAuth');
       if (unsubscribeAll) unsubscribeAll();
       stopGps();
-      location.reload();
+      firebase.auth().signOut();
     }
+
+    // ── Auth state — single source of truth ───────────────────────
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById('loginModal').style.display = 'none';
+        document.getElementById('app').classList.add('visible');
+        startListening();
+      } else {
+        document.getElementById('loginModal').style.display = 'flex';
+        document.getElementById('app').classList.remove('visible');
+        if (unsubscribeAll) { unsubscribeAll(); unsubscribeAll = null; }
+        const btn = document.getElementById('loginBtn');
+        if (btn) { btn.disabled = false; btn.textContent = 'Đăng nhập'; }
+      }
+    });
 
     // ── Real-time booking listener ───────────────────────────────
     function startListening() {
@@ -836,12 +865,7 @@
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    // ── Startup ──────────────────────────────────────────────────
-    if (sessionStorage.getItem('adminAuth') === 'true') {
-      document.getElementById('pinModal').style.display = 'none';
-      document.getElementById('app').classList.add('visible');
-      startListening();
-    }
+    // Auth state is managed by firebase.auth().onAuthStateChanged() above
   </script>
 
 </body>

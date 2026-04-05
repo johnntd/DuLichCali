@@ -419,23 +419,25 @@ window.DLCRouteMatrix = async function(origin, destination) {
   if (!RouteMatrix) throw new Error('RouteMatrix not available');
   // Routes library TravelMode uses DRIVING (same as legacy maps TravelMode)
   const travelMode = (lib.TravelMode && lib.TravelMode.DRIVING) || 'DRIVING';
-  const rows = await RouteMatrix.computeRouteMatrix({
+  const result = await RouteMatrix.computeRouteMatrix({
     origins:      [origin],
     destinations: [destination],
     travelMode,
-    fields: ['distanceMeters', 'duration', 'status', 'originIndex', 'destinationIndex'],
+    fields: ['distanceMeters', 'condition', 'localizedValues', 'originIndex', 'destinationIndex'],
   });
-  const row = rows && rows[0];
-  if (!row || (row.status && row.status !== 'OK')) throw new Error('no-route');
-  if (!row.distanceMeters) throw new Error('no-distance');
-  const durRaw  = row.duration;
-  const durSec  = typeof durRaw === 'number'                 ? durRaw
-                : (durRaw && typeof durRaw === 'object' && 'seconds' in durRaw) ? Number(durRaw.seconds)
-                : typeof durRaw === 'string'                ? (parseFloat(durRaw) || 0)
-                : 0;
+  // Response shape: { matrix: { rows: [ { items: [ RouteMatrixElement ] } ] } }
+  const el = result && result.matrix && result.matrix.rows &&
+             result.matrix.rows[0] && result.matrix.rows[0].items &&
+             result.matrix.rows[0].items[0];
+  if (!el || el.condition !== 'ROUTE_EXISTS' || !el.distanceMeters) throw new Error('no-route');
+  // Parse localized duration string e.g. "14 mins" or "1 hr 5 mins"
+  const durStr = (el.localizedValues && el.localizedValues.duration) || '';
+  const hrM    = durStr.match(/(\d+)\s*hr/i);
+  const minM   = durStr.match(/(\d+)\s*min/i);
+  const durMins = (hrM ? parseInt(hrM[1]) * 60 : 0) + (minM ? parseInt(minM[1]) : 0);
   return {
-    distMiles: row.distanceMeters / 1609.34,
-    durMins:   durSec / 60,
+    distMiles: el.distanceMeters / 1609.34,
+    durMins,
   };
 };
 

@@ -99,14 +99,20 @@
           travelMode,
           fields: ['distanceMeters', 'condition', 'originIndex', 'destinationIndex', 'localizedValues'],
         });
-        console.log('RouteMatrix raw resp:', JSON.stringify(resp));
-        if (!resp || !resp.length) { showError('Route Matrix: empty response'); return; }
-        const el = resp[0];
-        console.log('resp[0] keys:', Object.keys(el).join(', '));
-        const distM = el.distanceMeters || el.distance_meters || (el.distance && el.distance.value);
-        const miles = distM ? (distM / 1609.34).toFixed(1) : '?';
-        document.getElementById('distance-result').innerHTML = `Distance: ${miles} mi | condition: ${el.condition} | full: ${JSON.stringify(el)}`;
-        console.log('Route Matrix success:', miles, 'mi | full:', JSON.stringify(el));
+        // Response shape: { matrix: { rows: [ { items: [ RouteMatrixElement ] } ] } }
+        const el = resp && resp.matrix && resp.matrix.rows &&
+                   resp.matrix.rows[0] && resp.matrix.rows[0].items && resp.matrix.rows[0].items[0];
+        if (!el || el.condition !== 'ROUTE_EXISTS' || !el.distanceMeters) {
+          showError('Route Matrix: no route returned (condition: ' + (el && el.condition) + ')'); return;
+        }
+        const miles   = (el.distanceMeters / 1609.34).toFixed(1);
+        const durStr  = (el.localizedValues && el.localizedValues.duration) || '';
+        const hrM     = durStr.match(/(\d+)\s*hr/i);
+        const minM    = durStr.match(/(\d+)\s*min/i);
+        const durMins = (hrM ? parseInt(hrM[1]) * 60 : 0) + (minM ? parseInt(minM[1]) : 0);
+        document.getElementById('distance-result').innerHTML =
+          `Distance: ${miles} mi &nbsp;|&nbsp; Duration: ${durMins} min`;
+        console.log('Route Matrix success:', miles, 'mi,', durMins, 'min');
       } catch (err) {
         showError('Route Matrix failed: ' + err.message);
       }

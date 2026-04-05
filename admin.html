@@ -458,6 +458,52 @@
     .status-blocked     { color: #e08a8a; }
     .status-deactivated { color: var(--muted); }
     .status-archived    { color: #6b7280; }
+    .status-pending     { color: #f5a623; }
+    .vc-badge { display:inline-flex; align-items:center; font-size:.62rem; font-weight:600;
+      padding:1px 6px; border-radius:3px; }
+    .vc-badge--reg   { color:#7ac87a; background:rgba(100,200,100,.1); border:1px solid rgba(100,200,100,.25); }
+    .vc-badge--unreg { color:var(--muted); background:var(--navy-700); border:1px solid var(--border); }
+
+    /* ── Provider status badge (inline, next to name) ──── */
+    .provider-status-badge {
+      display: inline-block; font-size: 0.58rem; font-weight: 700;
+      padding: 1px 5px; border-radius: 3px; margin-left: 0.4rem;
+      vertical-align: middle; text-transform: uppercase; letter-spacing: 0.04em;
+      background: var(--navy-700); border: 1px solid var(--border);
+    }
+
+    /* ── Small action buttons for driver/vendor cards ─── */
+    .btn-sm-outline {
+      height: 24px; padding: 0 0.55rem;
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 4px; color: var(--muted);
+      font-family: 'Jost', sans-serif; font-size: 0.62rem; font-weight: 600;
+      cursor: pointer; transition: all 0.18s;
+    }
+    .btn-sm-outline:hover { border-color: var(--text); color: var(--text); }
+    .btn-sm-gold {
+      height: 24px; padding: 0 0.55rem;
+      background: rgba(200,146,42,0.12); border: 1px solid rgba(200,146,42,0.4);
+      border-radius: 4px; color: var(--gold-lt);
+      font-family: 'Jost', sans-serif; font-size: 0.62rem; font-weight: 600;
+      cursor: pointer; transition: all 0.18s;
+    }
+    .btn-sm-gold:hover { background: rgba(200,146,42,0.22); }
+    .btn-sm-green {
+      height: 24px; padding: 0 0.55rem;
+      background: rgba(100,200,100,0.1); border: 1px solid rgba(100,200,100,0.35);
+      border-radius: 4px; color: #7ac87a;
+      font-family: 'Jost', sans-serif; font-size: 0.62rem; font-weight: 600;
+      cursor: pointer; transition: all 0.18s;
+    }
+    .btn-sm-warn {
+      height: 24px; padding: 0 0.55rem;
+      background: rgba(224,90,90,0.1); border: 1px solid rgba(224,90,90,0.35);
+      border-radius: 4px; color: #e08a8a;
+      font-family: 'Jost', sans-serif; font-size: 0.62rem; font-weight: 600;
+      cursor: pointer; transition: all 0.18s;
+    }
+    .hidden { display: none !important; }
 
     /* ── Driver management ───────────────────────────────── */
     .driver-mgmt-wrap {
@@ -504,13 +550,19 @@
     .driver-row {
       background: var(--navy-800); border: 1px solid var(--border);
       border-radius: 8px; padding: 0.85rem 1.1rem;
-      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+      display: flex; flex-direction: column; gap: 0.75rem;
       margin-bottom: 0.6rem;
     }
+    .driver-row__main { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
     .driver-row__info { flex: 1; min-width: 140px; }
     .driver-row__name { font-size: 0.88rem; color: var(--cream); font-weight: 600; }
     .driver-row__meta { font-size: 0.72rem; color: var(--muted); margin-top: 0.15rem; }
     .driver-row__actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .driver-row__login {
+      border-top: 1px solid var(--border);
+      padding-top: 0.75rem;
+      display: flex; flex-direction: column; gap: 0.5rem;
+    }
     .toggle-pill {
       display: inline-flex; align-items: center; gap: 0.35rem;
       height: 26px; padding: 0 0.65rem;
@@ -1127,138 +1179,234 @@
     }
 
     // ── Vendor Management ─────────────────────────────────────────
+    // Hardcoded fallback PINs (overridden by Firestore setupCode if admin has set one)
     const VENDOR_DEFAULT_CODES = {
-      'nha-bep-cua-emily': '2438',
-      'dung-nails':         '6718',
-      'beauty-nails-oc':   '6007',
-      'viet-hair-bayarea': '7522',
-      'cali-hair-oc':      '6007',
-      'pho-bac-bayarea':   '7522',
-      'com-tam-oc':        '6007'
+      'nha-bep-cua-emily':'2438','dung-nails':'6718','beauty-nails-oc':'6007',
+      'viet-hair-bayarea':'7522','cali-hair-oc':'6007','pho-bac-bayarea':'7522','com-tam-oc':'6007'
     };
 
+    // Known baseline vendors; dynamically-created vendors are Firestore-only
     const VENDOR_LIST = [
-      { id: 'nha-bep-cua-emily', name: 'Nhà Bếp Của Emily',  cat: 'Food',  region: 'Bay Area' },
-      { id: 'dung-nails',         name: 'Luxurious Nails & Spa', cat: 'Nails', region: 'Bay Area' },
-      { id: 'beauty-nails-oc',   name: 'Beauty Nails OC',     cat: 'Nails', region: 'OC'       },
-      { id: 'viet-hair-bayarea', name: 'Việt Hair Studio',    cat: 'Hair',  region: 'Bay Area' },
-      { id: 'cali-hair-oc',      name: 'Cali Hair & Beauty',  cat: 'Hair',  region: 'OC'       },
-      { id: 'pho-bac-bayarea',   name: 'Phở Bắc Bay Area',    cat: 'Food',  region: 'Bay Area' },
-      { id: 'com-tam-oc',        name: 'Cơm Tấm Dì Tám',      cat: 'Food',  region: 'OC'       },
+      { id:'nha-bep-cua-emily', name:'Nhà Bếp Của Emily',     cat:'Food',  region:'Bay Area' },
+      { id:'dung-nails',         name:'Luxurious Nails & Spa', cat:'Nails', region:'Bay Area' },
+      { id:'beauty-nails-oc',   name:'Beauty Nails OC',        cat:'Nails', region:'OC'       },
+      { id:'viet-hair-bayarea', name:'Việt Hair Studio',       cat:'Hair',  region:'Bay Area' },
+      { id:'cali-hair-oc',      name:'Cali Hair & Beauty',     cat:'Hair',  region:'OC'       },
+      { id:'pho-bac-bayarea',   name:'Phở Bắc Bay Area',       cat:'Food',  region:'Bay Area' },
+      { id:'com-tam-oc',        name:'Cơm Tấm Dì Tám',         cat:'Food',  region:'OC'       },
     ];
+
+    function genPin() { return String(Math.floor(1000 + Math.random() * 9000)); }
 
     async function loadVendorPanel() {
       const wrap = document.getElementById('vendorMgmtWrap');
       wrap.innerHTML = '<div style="font-size:0.8rem;color:var(--muted)">Đang tải…</div>';
-      // Fetch all vendor docs for current status
-      const statusMap = {};
-      try {
-        const snap = await db.collection('vendors').get();
-        snap.docs.forEach(doc => { statusMap[doc.id] = doc.data(); });
-      } catch(e) {}
 
-      wrap.innerHTML = VENDOR_LIST.map(v => {
-        const vdata = statusMap[v.id] || {};
-        const st = vdata.adminStatus || 'active';
-        const stLabel = { active:'Hoạt động', blocked:'Bị chặn', deactivated:'Tạm dừng', archived:'Lưu trữ' }[st] || st;
-        const stClass = 'status-' + st;
-        const note = vdata.adminNote ? `<span style="font-size:.68rem;color:var(--muted)"> — ${escHtml(vdata.adminNote)}</span>` : '';
-        const currentPin = vdata.setupCode || VENDOR_DEFAULT_CODES[v.id] || '—';
-        const pinSource = vdata.setupCode ? '' : ' <span style="color:var(--muted);font-size:.65rem">(mặc định)</span>';
-        const loginUrl = `https://www.dulichcali21.com/vendor-login.html?id=${v.id}`;
-        return `<div class="vendor-card" id="vc-${v.id}">
-          <div class="vendor-card__main">
-            <div class="vendor-card__info">
-              <div class="vendor-card__name">${escHtml(v.name)}</div>
-              <div class="vendor-card__meta">${v.cat} · ${v.region} · <span class="${stClass}">${stLabel}</span>${note}</div>
-            </div>
-            <div class="vendor-card__actions">
-              ${st !== 'active'      ? `<button class="btn-vend success" onclick="setVendorStatus('${v.id}','active','')">Mở lại</button>` : ''}
-              ${st !== 'blocked'     ? `<button class="btn-vend danger"  onclick="promptBlock('${v.id}')">Chặn</button>` : ''}
-              ${st !== 'deactivated' ? `<button class="btn-vend"         onclick="setVendorStatus('${v.id}','deactivated','')">Tạm dừng</button>` : ''}
-              ${st !== 'archived'    ? `<button class="btn-vend"         onclick="setVendorStatus('${v.id}','archived','')">Lưu trữ</button>` : ''}
-              <button class="btn-vend" onclick="toggleVendorLogin('${v.id}')">🔐 Login</button>
-            </div>
+      // Fetch Firestore vendor docs + registered email map in parallel
+      const [vendorSnap, vuSnap] = await Promise.all([
+        db.collection('vendors').get().catch(() => null),
+        db.collection('vendorUsers').get().catch(() => null)
+      ]);
+      const fv = {}; // vendorId → Firestore data
+      if (vendorSnap) vendorSnap.docs.forEach(doc => { fv[doc.id] = doc.data(); });
+      const emailMap = {}; // vendorId → registered email
+      if (vuSnap) vuSnap.docs.forEach(doc => {
+        const d = doc.data(); if (d.vendorId) emailMap[d.vendorId] = d.email || '(đã đăng ký)';
+      });
+
+      // Merge: VENDOR_LIST baseline + Firestore-only vendors
+      const knownIds = new Set(VENDOR_LIST.map(v => v.id));
+      const allVendors = [
+        ...VENDOR_LIST.map(v => ({
+          id:v.id, name:fv[v.id]?.name||v.name, cat:v.cat, region:v.region,
+          phone:fv[v.id]?.phone||'', isNew:false
+        })),
+        ...Object.entries(fv).filter(([id])=>!knownIds.has(id)).map(([id,d])=>({
+          id, name:d.name||id, cat:d.category||'—', region:d.region||'—', phone:d.phone||'', isNew:true
+        }))
+      ];
+
+      const createFormHtml = `<div class="driver-create-form" id="vcCreateForm" style="display:none">
+        <h3>Tạo Vendor Mới · Status bắt đầu là "Pending" — kích hoạt để vendor đăng ký</h3>
+        <div class="driver-form-row">
+          <div class="driver-form-field">
+            <label class="driver-form-label">Vendor ID (slug, không dấu)</label>
+            <input class="driver-form-input" id="newVendorId" placeholder="ten-cua-hang" maxlength="40">
           </div>
-          <div class="vendor-card__login" id="vcl-${v.id}" style="display:none">
-            <div class="vcl-row">
-              <span class="vcl-label">URL đăng nhập:</span>
-              <a class="vcl-url" href="${loginUrl}" target="_blank">${loginUrl}</a>
-              <button class="btn-vend" onclick="copyVendorUrl('${v.id}')">Copy</button>
-            </div>
-            <div class="vcl-row">
-              <span class="vcl-label">Mã PIN hiện tại:</span>
-              <code class="vcl-pin" id="vpin-display-${v.id}">${escHtml(currentPin)}</code>${pinSource}
-              <input class="vcl-pin-input" id="vpin-input-${v.id}" type="text" maxlength="6"
-                inputmode="numeric" placeholder="Mã mới">
-              <button class="btn-vend success" onclick="saveVendorPin('${v.id}')">Lưu PIN</button>
-              <span class="vcl-msg" id="vpin-msg-${v.id}"></span>
-            </div>
+          <div class="driver-form-field">
+            <label class="driver-form-label">Tên cửa hàng</label>
+            <input class="driver-form-input" id="newVendorName" placeholder="Nhà Bếp Của Lan">
           </div>
-        </div>`;
-      }).join('');
+          <div class="driver-form-field" style="max-width:110px">
+            <label class="driver-form-label">Danh mục</label>
+            <select class="driver-form-input" id="newVendorCat">
+              <option>Food</option><option>Nails</option><option>Hair</option>
+            </select>
+          </div>
+          <div class="driver-form-field" style="max-width:100px">
+            <label class="driver-form-label">Khu vực</label>
+            <select class="driver-form-input" id="newVendorRegion">
+              <option>Bay Area</option><option>OC</option><option>LA</option>
+            </select>
+          </div>
+          <div class="driver-form-field" style="max-width:130px">
+            <label class="driver-form-label">Điện thoại</label>
+            <input class="driver-form-input" id="newVendorPhone" placeholder="4081234567" inputmode="tel">
+          </div>
+          <div class="driver-form-field" style="max-width:120px">
+            <label class="driver-form-label">PIN đầu tiên
+              <button type="button" style="margin-left:4px;font-size:.55rem;color:var(--gold);background:none;border:none;cursor:pointer"
+                onclick="document.getElementById('newVendorPin').value=genPin()">🎲 Tạo</button>
+            </label>
+            <input class="driver-form-input" id="newVendorPin" placeholder="e.g. 1234" inputmode="numeric" maxlength="6">
+          </div>
+          <button class="btn-create-driver" id="btnCreateVendor" onclick="createVendorProfile()">Tạo Vendor</button>
+        </div>
+        <div class="driver-form-error" id="vendorFormError"></div>
+      </div>`;
+
+      const headerHtml = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+        <span style="font-size:.68rem;font-weight:700;color:var(--gold);letter-spacing:.1em;text-transform:uppercase">
+          Vendors · ${allVendors.length} providers
+        </span>
+        <button class="btn-vend" onclick="toggleVendorCreateForm()">+ Tạo Vendor Mới</button>
+      </div>`;
+
+      wrap.innerHTML = createFormHtml + headerHtml +
+        allVendors.map(v => _renderVendorCard(v, fv[v.id]||{}, emailMap[v.id])).join('');
+    }
+
+    function _renderVendorCard(v, vdata, registeredEmail) {
+      const st = vdata.adminStatus || 'active';
+      const stLabel = {active:'Hoạt động',pending:'Chờ duyệt',blocked:'Bị chặn',deactivated:'Tạm dừng',archived:'Lưu trữ'}[st]||st;
+      const stClass = 'status-' + st;
+      const note = vdata.adminNote ? ` — <span style="font-size:.65rem;color:var(--muted)">${escHtml(vdata.adminNote)}</span>` : '';
+      const currentPin = vdata.setupCode || VENDOR_DEFAULT_CODES[v.id] || '—';
+      const pinSrc = vdata.setupCode ? '' : ' <span style="font-size:.6rem;color:var(--muted)">(mặc định)</span>';
+      const loginUrl = `https://www.dulichcali21.com/vendor-login.html?id=${v.id}`;
+      const emailBadge = registeredEmail
+        ? `<span class="vc-badge vc-badge--reg" title="${escHtml(registeredEmail)}">✓ ${escHtml(registeredEmail)}</span>`
+        : `<span class="vc-badge vc-badge--unreg">○ Chưa đăng ký</span>`;
+      const newTag = v.isNew ? ` <span style="font-size:.58rem;color:var(--gold);border:1px solid var(--gold);padding:1px 4px;border-radius:3px">Firestore</span>` : '';
+
+      return `<div class="vendor-card" id="vc-${v.id}">
+        <div class="vendor-card__main">
+          <div class="vendor-card__info">
+            <div class="vendor-card__name">${escHtml(v.name)}${newTag}</div>
+            <div class="vendor-card__meta">${escHtml(v.cat)} · ${escHtml(v.region)} · <span class="${stClass}">${stLabel}</span>${note}</div>
+            <div class="vendor-card__meta">${v.phone?escHtml(v.phone)+' · ':''}${emailBadge}</div>
+          </div>
+          <div class="vendor-card__actions">
+            ${st!=='active'      ?`<button class="btn-vend success" onclick="setVendorStatus('${v.id}','active','')">Mở lại</button>`:''}
+            ${st!=='pending'     ?`<button class="btn-vend" style="color:#f5a623;border-color:rgba(245,166,35,.35)" onclick="setVendorStatus('${v.id}','pending','')">Pending</button>`:''}
+            ${st!=='blocked'     ?`<button class="btn-vend danger" onclick="promptBlock('${v.id}')">Chặn</button>`:''}
+            ${st!=='deactivated' ?`<button class="btn-vend" onclick="setVendorStatus('${v.id}','deactivated','')">Tạm dừng</button>`:''}
+            ${st!=='archived'    ?`<button class="btn-vend" onclick="setVendorStatus('${v.id}','archived','')">Lưu trữ</button>`:''}
+            <button class="btn-vend" onclick="toggleVendorLogin('${v.id}')">🔐 Login / PIN</button>
+          </div>
+        </div>
+        <div class="vendor-card__login" id="vcl-${v.id}" style="display:none">
+          <div class="vcl-row">
+            <span class="vcl-label">URL đăng nhập:</span>
+            <a class="vcl-url" href="${loginUrl}" target="_blank">${loginUrl}</a>
+            <button class="btn-vend" onclick="copyVendorUrl('${v.id}')">Copy</button>
+          </div>
+          <div class="vcl-row">
+            <span class="vcl-label">Mã PIN hiện tại:</span>
+            <code class="vcl-pin" id="vpin-display-${v.id}">${escHtml(currentPin)}</code>${pinSrc}
+            <input class="vcl-pin-input" id="vpin-input-${v.id}" type="text" maxlength="6" inputmode="numeric" placeholder="PIN mới">
+            <button class="btn-vend" style="font-size:.6rem;color:var(--muted)" onclick="document.getElementById('vpin-input-${v.id}').value=genPin()">🎲</button>
+            <button class="btn-vend success" onclick="saveVendorPin('${v.id}')">Lưu PIN</button>
+            <span class="vcl-msg" id="vpin-msg-${v.id}"></span>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    function toggleVendorCreateForm() {
+      const f = document.getElementById('vcCreateForm');
+      if (f) f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function createVendorProfile() {
+      const vid    = (document.getElementById('newVendorId').value.trim()).toLowerCase().replace(/\s+/g,'-');
+      const name   = document.getElementById('newVendorName').value.trim();
+      const cat    = document.getElementById('newVendorCat').value;
+      const region = document.getElementById('newVendorRegion').value;
+      const phone  = document.getElementById('newVendorPhone').value.trim();
+      const pin    = document.getElementById('newVendorPin').value.trim();
+      const errEl  = document.getElementById('vendorFormError');
+      const btn    = document.getElementById('btnCreateVendor');
+      errEl.textContent = ''; errEl.style.color = 'var(--danger)';
+      if (!vid||!name||!pin) { errEl.textContent='Vendor ID, tên và PIN là bắt buộc.'; return; }
+      if (!/^[a-z0-9-]+$/.test(vid)) { errEl.textContent='Vendor ID chỉ được dùng chữ thường, số, dấu gạch ngang.'; return; }
+      if (pin.length<3) { errEl.textContent='PIN phải có ít nhất 3 ký tự.'; return; }
+      btn.disabled=true; errEl.style.color='var(--muted)'; errEl.textContent='Đang tạo…';
+      try {
+        const existing = await db.collection('vendors').doc(vid).get();
+        if (existing.exists) {
+          errEl.style.color='var(--danger)';
+          errEl.textContent=`Vendor ID "${vid}" đã tồn tại. Dùng ID khác hoặc quản lý vendor bên dưới.`;
+          btn.disabled=false; return;
+        }
+        await db.collection('vendors').doc(vid).set({
+          name, category:cat, region, phone:phone||'', setupCode:pin,
+          adminStatus:'pending', createdAt:firebase.firestore.FieldValue.serverTimestamp(), createdBy:'admin'
+        });
+        ['newVendorId','newVendorName','newVendorPhone','newVendorPin'].forEach(id=>{
+          const el=document.getElementById(id); if(el) el.value='';
+        });
+        errEl.style.color='#7ac87a';
+        errEl.textContent=`✓ Đã tạo "${name}" (${vid}) với status "pending". Nhấn "Mở lại" để kích hoạt.`;
+        btn.disabled=false; loadVendorPanel();
+      } catch(e) { errEl.style.color='var(--danger)'; errEl.textContent='Lỗi: '+e.message; btn.disabled=false; }
     }
 
     function promptBlock(vendorId) {
       const reason = prompt('Lý do chặn vendor (để trống nếu không cần):') ?? null;
-      if (reason === null) return; // cancelled
+      if (reason === null) return;
       setVendorStatus(vendorId, 'blocked', reason);
     }
 
     async function setVendorStatus(vendorId, status, note) {
       try {
         await db.collection('vendors').doc(vendorId).set({
-          adminStatus: status,
-          adminNote:   note || '',
-          adminUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-        loadVendorPanel(); // refresh
-      } catch(e) {
-        alert('Lỗi: ' + e.message);
-      }
+          adminStatus:status, adminNote:note||'',
+          adminUpdatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge:true });
+        loadVendorPanel();
+      } catch(e) { alert('Lỗi: '+e.message); }
     }
 
     function toggleVendorLogin(vendorId) {
       const panel = document.getElementById('vcl-' + vendorId);
-      if (!panel) return;
-      panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+      if (panel) panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
     }
 
     function copyVendorUrl(vendorId) {
       const url = `https://www.dulichcali21.com/vendor-login.html?id=${vendorId}`;
       navigator.clipboard.writeText(url).then(() => {
         const btn = document.querySelector(`#vcl-${vendorId} .btn-vend`);
-        if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy'; }, 2000); }
-      }).catch(() => {});
+        if (btn) { const t=btn.textContent; btn.textContent='Copied!'; setTimeout(()=>{btn.textContent=t;},2000); }
+      }).catch(()=>{});
     }
 
     async function saveVendorPin(vendorId) {
-      const input = document.getElementById('vpin-input-' + vendorId);
-      const msgEl = document.getElementById('vpin-msg-' + vendorId);
-      const displayEl = document.getElementById('vpin-display-' + vendorId);
-      if (!input || !msgEl) return;
-      const pin = input.value.trim();
-      if (!pin || pin.length < 3) {
-        msgEl.style.color = 'var(--danger)';
-        msgEl.textContent = 'Mã PIN phải có ít nhất 3 ký tự.';
-        return;
-      }
-      msgEl.style.color = 'var(--muted)';
-      msgEl.textContent = 'Đang lưu…';
+      const input=document.getElementById('vpin-input-'+vendorId);
+      const msgEl=document.getElementById('vpin-msg-'+vendorId);
+      const displayEl=document.getElementById('vpin-display-'+vendorId);
+      if (!input||!msgEl) return;
+      const pin=input.value.trim();
+      if (!pin||pin.length<3) { msgEl.style.color='var(--danger)'; msgEl.textContent='PIN phải có ít nhất 3 ký tự.'; return; }
+      msgEl.style.color='var(--muted)'; msgEl.textContent='Đang lưu…';
       try {
         await db.collection('vendors').doc(vendorId).set({
-          setupCode: pin,
-          adminUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-        if (displayEl) displayEl.textContent = pin;
-        input.value = '';
-        msgEl.style.color = '#7ac87a';
-        msgEl.textContent = 'Đã lưu!';
-        setTimeout(() => { msgEl.textContent = ''; }, 3000);
-      } catch(e) {
-        msgEl.style.color = 'var(--danger)';
-        msgEl.textContent = 'Lỗi: ' + e.message;
-      }
+          setupCode:pin, adminUpdatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge:true });
+        if (displayEl) displayEl.textContent=pin;
+        input.value=''; msgEl.style.color='#7ac87a'; msgEl.textContent='Đã lưu!';
+        setTimeout(()=>{ msgEl.textContent=''; },3000);
+      } catch(e) { msgEl.style.color='var(--danger)'; msgEl.textContent='Lỗi: '+e.message; }
     }
 
     // ── Driver Panel ──────────────────────────────────────────────
@@ -1271,29 +1419,166 @@
           list.innerHTML = '<div style="font-size:0.8rem;color:var(--muted)">Chưa có tài xế nào. Tạo tài xế đầu tiên ở trên.</div>';
           return;
         }
-        list.innerHTML = snap.docs.map(doc => {
-          const d = doc.data();
-          const veh = d.vehicle ? [d.vehicle.make, d.vehicle.model, d.vehicle.year].filter(Boolean).join(' ') : '';
-          return `<div class="driver-row" id="dr-${doc.id}">
-            <div class="driver-row__info">
-              <div class="driver-row__name">${escHtml(d.fullName || '—')}</div>
-              <div class="driver-row__meta">${d.phone || '—'}${veh ? ' · ' + escHtml(veh) : ''} · ${(d.regions||[]).join(', ')||'No region'}</div>
-            </div>
-            <div class="driver-row__actions">
-              <button class="toggle-pill ${d.active ? 'on':'off'}" onclick="toggleDriver('${doc.id}','active',${!d.active})">
-                ${d.active ? '● Active' : '○ Inactive'}
-              </button>
-              <button class="toggle-pill ${d.rideServiceEnabled ? 'on':'off'}" onclick="toggleDriver('${doc.id}','rideServiceEnabled',${!d.rideServiceEnabled})">
-                ${d.rideServiceEnabled ? '● Ride On' : '○ Ride Off'}
-              </button>
-              <button class="btn-del-driver" onclick="deleteDriver('${doc.id}','${escHtml(d.fullName||'')}')">Xóa</button>
-            </div>
-          </div>`;
-        }).join('');
+        list.innerHTML = snap.docs.map(doc => _renderDriverRow(doc.id, doc.data())).join('');
       }).catch(e => {
         document.getElementById('driverList').innerHTML =
           '<div style="color:var(--danger);font-size:0.8rem">Lỗi tải: ' + escHtml(e.message) + '</div>';
       });
+    }
+
+    function _renderDriverRow(id, d) {
+      const veh = d.vehicle ? [d.vehicle.make, d.vehicle.model, d.vehicle.year].filter(Boolean).join(' ') : '';
+      const derivedEmail = d.phone ? 'd' + d.phone.replace(/\D/g,'') + '@dlc.app' : '—';
+      const st = d.adminStatus || 'active';
+      const stLabel = { active:'Active', blocked:'Blocked', deactivated:'Deactivated', archived:'Archived' }[st] || st;
+      const stClass = { active:'status-active', blocked:'status-blocked', deactivated:'status-deactivated', archived:'status-archived' }[st] || '';
+      const pin = d.setupCode || '—';
+
+      return `<div class="driver-row" id="dr-${id}">
+        <div class="driver-row__main">
+          <div class="driver-row__info">
+            <div class="driver-row__name">${escHtml(d.fullName || '—')}
+              <span class="provider-status-badge ${stClass}">${stLabel}</span>
+            </div>
+            <div class="driver-row__meta">${d.phone || '—'}${veh ? ' · '+escHtml(veh):''} · ${(d.regions||[]).join(', ')||'No region'}</div>
+            <div class="driver-row__meta" style="margin-top:0.2rem;font-size:0.68rem">${escHtml(derivedEmail)}</div>
+          </div>
+          <div class="driver-row__actions">
+            <button class="toggle-pill ${d.active?'on':'off'}" onclick="toggleDriver('${id}','active',${!d.active})">${d.active?'● Active':'○ Inactive'}</button>
+            <button class="toggle-pill ${d.rideServiceEnabled?'on':'off'}" onclick="toggleDriver('${id}','rideServiceEnabled',${!d.rideServiceEnabled})">${d.rideServiceEnabled?'● Ride On':'○ Ride Off'}</button>
+            <button class="btn-sm-outline" onclick="toggleDriverInfo('${id}')">PIN / Login</button>
+            <button class="btn-del-driver" onclick="deleteDriver('${id}','${escHtml(d.fullName||'')}')">Xóa</button>
+          </div>
+        </div>
+        <div class="driver-row__login hidden" id="dri-${id}">
+          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:0.4rem">
+            Đăng nhập: <strong style="color:var(--cream)">${escHtml(derivedEmail)}</strong>
+            &nbsp;·&nbsp; PIN hiện tại: <strong style="color:var(--gold)" id="dpin-${id}">${escHtml(pin)}</strong>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+            <input type="text" id="dpinInput-${id}" placeholder="PIN mới (4+ chữ số)" inputmode="numeric" maxlength="6"
+              style="width:120px;background:var(--navy-900);border:1px solid var(--border);border-radius:4px;padding:4px 8px;color:var(--cream);font-size:0.75rem">
+            <button class="btn-sm-gold" onclick="resetDriverPin('${id}','${d.phone||''}')">Đặt PIN</button>
+            <button class="btn-sm-outline" onclick="resetDriverPin('${id}','${d.phone||''}',true)">🎲 Ngẫu nhiên</button>
+          </div>
+          <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.5rem">
+            ${st !== 'active'       ? `<button class="btn-sm-green"  onclick="setDriverStatus('${id}','active')">Kích hoạt</button>` : ''}
+            ${st === 'active'       ? `<button class="btn-sm-warn"   onclick="promptBlockDriver('${id}')">Chặn</button>` : ''}
+            ${st !== 'deactivated'  ? `<button class="btn-sm-outline" onclick="setDriverStatus('${id}','deactivated')">Tạm dừng</button>` : ''}
+            ${st !== 'archived'     ? `<button class="btn-sm-outline" onclick="setDriverStatus('${id}','archived')">Lưu trữ</button>` : ''}
+          </div>
+          <div id="dpinMsg-${id}" style="font-size:0.72rem;margin-top:0.3rem"></div>
+        </div>
+      </div>`;
+    }
+
+    function toggleDriverInfo(id) {
+      const el = document.getElementById('dri-' + id);
+      if (el) el.classList.toggle('hidden');
+    }
+
+    async function setDriverStatus(driverId, status) {
+      await db.collection('drivers').doc(driverId).update({
+        adminStatus: status, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      loadDriverPanel();
+    }
+
+    function promptBlockDriver(driverId) {
+      const note = prompt('Lý do chặn tài xế này (tùy chọn):') ?? null;
+      if (note === null) return; // cancelled
+      db.collection('drivers').doc(driverId).update({
+        adminStatus: 'blocked',
+        blockNote: note || '',
+        blockedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => loadDriverPanel());
+    }
+
+    async function resetDriverPin(driverId, phone, random) {
+      const msgEl = document.getElementById('dpinMsg-' + driverId);
+      let pin;
+      if (random) {
+        pin = genPin();
+      } else {
+        const inp = document.getElementById('dpinInput-' + driverId);
+        pin = inp ? inp.value.trim() : '';
+      }
+      if (!pin || pin.length < 4) {
+        if (msgEl) { msgEl.style.color='var(--danger)'; msgEl.textContent='PIN phải có ít nhất 4 chữ số.'; }
+        return;
+      }
+      const digits = (phone||'').replace(/\D/g,'');
+      if (!digits) {
+        if (msgEl) { msgEl.style.color='var(--danger)'; msgEl.textContent='Không tìm thấy số điện thoại.'; }
+        return;
+      }
+      const derivedEmail = 'd' + digits + '@dlc.app';
+      const derivedPass  = pin.padEnd(6, '0');
+      if (msgEl) { msgEl.style.color='var(--muted)'; msgEl.textContent='Đang cập nhật…'; }
+
+      try {
+        // Look up Firebase Auth UID via sign-in (secondary call, won't affect admin session)
+        // We update the password via Admin REST — use signInWithEmailAndPassword on a secondary app
+        // Since we don't have a secondary app here, use Identity Toolkit REST update
+        // First, sign in to get idToken, then update password
+        const signInResp = await fetch(
+          `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`,
+          { method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ email: derivedEmail, password: derivedPass, returnSecureToken: true }) }
+        );
+        const signInData = await signInResp.json();
+
+        let success = false;
+        if (!signInData.error) {
+          // Same password, just update Firestore
+          success = true;
+        } else if (signInData.error.message === 'INVALID_LOGIN_CREDENTIALS' || signInData.error.message === 'EMAIL_NOT_FOUND') {
+          // Try old password patterns then create fresh
+          // We cannot change password without idToken — store new PIN in Firestore only
+          // Driver will use new PIN when we update the password via signUp (if account was deleted)
+          // For now: update Firestore setupCode and warn admin
+          if (msgEl) {
+            msgEl.style.color = '#f5a623';
+            msgEl.textContent = 'PIN Firestore đã lưu. Tài khoản Auth cần được tạo lại nếu tài xế không đăng nhập được.';
+          }
+          await db.collection('drivers').doc(driverId).update({
+            setupCode: pin, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          const pinEl = document.getElementById('dpin-' + driverId);
+          if (pinEl) pinEl.textContent = pin;
+          const inp = document.getElementById('dpinInput-' + driverId);
+          if (inp) inp.value = '';
+          return;
+        } else {
+          throw new Error(signInData.error.message);
+        }
+
+        if (success) {
+          // Get idToken and update password
+          const idToken = signInData.idToken;
+          const updateResp = await fetch(
+            `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${FIREBASE_API_KEY}`,
+            { method:'POST', headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({ idToken, password: derivedPass, returnSecureToken: true }) }
+          );
+          const updateData = await updateResp.json();
+          if (updateData.error) throw new Error(updateData.error.message);
+        }
+
+        await db.collection('drivers').doc(driverId).update({
+          setupCode: pin, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        const pinEl = document.getElementById('dpin-' + driverId);
+        if (pinEl) pinEl.textContent = pin;
+        const inp = document.getElementById('dpinInput-' + driverId);
+        if (inp) inp.value = '';
+        if (msgEl) { msgEl.style.color = '#7ac87a'; msgEl.textContent = '✓ PIN đã cập nhật thành công. Mật khẩu Auth đồng bộ.'; }
+
+      } catch(e) {
+        if (msgEl) { msgEl.style.color='var(--danger)'; msgEl.textContent='Lỗi: ' + e.message; }
+      }
     }
 
     async function toggleDriver(driverId, field, value) {
@@ -1356,6 +1641,7 @@
         });
         await db.collection('drivers').doc(uid).set({
           authUid: uid, fullName: name, phone: digits,
+          setupCode: pin, adminStatus: 'active',
           active: false, rideServiceEnabled: false, regions: [],
           vehicle: { make:'', model:'', year:'', color:'', seats:4, plate:'' },
           availability: {

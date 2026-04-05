@@ -282,3 +282,75 @@ No build step. No framework. All files are served as-is.
 - Phone: +1 (408) 916-3439
 - Email: dulichcali21@gmail.com
 - Site: www.dulichcali21.com
+
+---
+
+## Provider Admin & PIN-Gated Access Rules — NON-NEGOTIABLE
+
+### Overview
+
+DuLichCali uses a **two-tier provider system**: Vendors (food/nail/hair) and Drivers. Both require admin-issued PINs to register/authenticate. Admin has full control over all provider accounts.
+
+### Data Model
+
+| Collection | Field | Purpose |
+|---|---|---|
+| `vendors/{id}` | `setupCode` | PIN admin issues to vendor |
+| `vendors/{id}` | `adminStatus` | `active`, `pending`, `blocked`, `deactivated`, `archived` |
+| `vendorUsers/{uid}` | `vendorId`, `email` | Maps Firebase Auth UID → vendor + registered email |
+| `drivers/{id}` | `setupCode` | PIN admin issues to driver |
+| `drivers/{id}` | `adminStatus` | `active`, `blocked`, `deactivated`, `archived` |
+| `driverUsers/{uid}` | `driverId`, `phone` | Maps Firebase Auth UID → driver doc |
+
+### Vendor Auth Flow
+
+1. Admin creates vendor in Firestore (`adminStatus: 'pending'`) and issues a PIN (`setupCode`)
+2. Admin sets vendor to `active` before vendor can register
+3. Vendor visits `vendor-login.html?id={vendorId}`, enters email + password + PIN
+4. `vendor-login.html` checks Firestore `adminStatus` — if not `active`, blocks registration
+5. On first login: Firebase Auth account is created (email+password); `vendorUsers/{uid}` written
+6. On subsequent logins: Firebase Auth `signInWithEmailAndPassword`; `adminStatus` re-checked each time
+7. Session persists via Firebase Auth native persistence (no custom code needed)
+
+### Driver Auth Flow
+
+1. Admin creates driver in `admin.html` — Firebase Auth account is pre-created via REST API with derived credentials:
+   - Email: `d{10-digit-phone}@dlc.app`
+   - Password: `pin.padEnd(6,'0')` (PIN padded to 6 chars)
+2. Firestore: `drivers/{uid}` saved with `setupCode: pin`, `adminStatus: 'active'`
+3. Driver visits `driver-login.html`, enters phone + PIN only (no registration step)
+4. `driver-login.html` signs in with derived email+password, then fetches `drivers/{driverId}` to check `adminStatus`
+5. If `blocked`, `deactivated`, or `archived` → sign out immediately, show error
+6. Session persists via Firebase Auth native persistence
+
+### Admin PIN Reset
+
+- **Vendor PIN reset**: Admin updates `vendors/{id}.setupCode` in Firestore. Next vendor login attempt will use new PIN.
+- **Driver PIN reset**: Admin updates `drivers/{id}.setupCode` AND updates Firebase Auth password via Identity Toolkit REST (sign in with old credentials to get idToken, then update password). If old credentials don't work, Firestore-only update with warning.
+
+### Status Enforcement Rules
+
+| Status | Vendor can register? | Vendor can log in? | Driver can log in? |
+|---|---|---|---|
+| `active` | Yes | Yes | Yes |
+| `pending` | No (blocked at registration) | No | N/A |
+| `blocked` | No | No | No |
+| `deactivated` | No | No | No |
+| `archived` | No | No | No |
+
+### Critical Security Rules
+
+- Driver login MUST check `drivers/{driverId}.adminStatus` on EVERY login and auth state restore — not just `driverUsers`
+- Vendor login MUST check `vendors/{id}.adminStatus` before allowing registration (PIN check)
+- Admin never shares raw Firebase Auth credentials — only issues PINs through admin panel
+- `vendor-login.html` must support both VENDOR_REGISTRY (hardcoded) and Firestore-only vendors (dynamic)
+- `_tryShowScreen()` pattern in `vendor-login.html` prevents flash of wrong screen while async vendor config loads
+
+### Admin UI Requirements
+
+- Admin can create vendor profiles from admin panel (no hardcoding required)
+- Admin can view registered email per vendor (from `vendorUsers` collection)
+- Admin can set vendor/driver status (active/blocked/deactivated/archived)
+- Admin can generate random 4-digit PINs with 🎲 button
+- Admin can reset driver PIN and sync Firebase Auth password
+- Vendor and driver cards show onboarding status (registered email vs "Chưa đăng ký")

@@ -300,10 +300,10 @@
   // ── Resolve VENDOR_ID from URL ?id= param ─────────────────────────────────
   var _params   = new URLSearchParams(window.location.search);
   var VENDOR_ID = _params.get('id') || '';
-  var VENDOR_CFG = VENDOR_ID ? VENDOR_REGISTRY[VENDOR_ID] : null;
+  var VENDOR_CFG = VENDOR_ID ? (VENDOR_REGISTRY[VENDOR_ID] || null) : null;
   var SETUP_CODE = VENDOR_CFG ? VENDOR_CFG.setupCode : '';
 
-  // Show vendor name under brand header
+  // Show vendor name for registry vendors (sync, fast)
   if (VENDOR_CFG) {
     document.getElementById('vendorNameDisplay').textContent = VENDOR_CFG.name;
   }
@@ -321,25 +321,59 @@
   var db   = firebase.firestore();
   var auth = firebase.auth();
 
-  // ── Override SETUP_CODE from Firestore (admin-set PIN takes precedence) ───
-  if (VENDOR_ID && VENDOR_CFG) {
+  // ── Async vendor config from Firestore ────────────────────────────────────
+  // Loads PIN override + adminStatus. Also supports vendors created via admin
+  // panel that are NOT in the hardcoded VENDOR_REGISTRY (Firestore-only vendors).
+  var _vendorAdminStatus = VENDOR_CFG ? 'active' : null; // registry vendors default active
+  var _authReady   = false;
+  var _vcfgReady   = !VENDOR_ID || !!VENDOR_CFG; // true if no vendor needed OR already in registry
+  var _screenShown = false;
+
+  function _tryShowScreen() {
+    if (_screenShown || !_authReady || !_vcfgReady) return;
+    _screenShown = true;
+    document.getElementById('authChecking').classList.add('hidden');
+    if (!VENDOR_ID) {
+      showPicker();
+    } else if (VENDOR_CFG) {
+      showScreen('login');
+    } else {
+      // VENDOR_ID set but vendor not found anywhere — show picker
+      showPicker();
+    }
+  }
+
+  if (VENDOR_ID) {
     db.collection('vendors').doc(VENDOR_ID).get().then(function(doc) {
-      if (doc.exists && doc.data().setupCode) {
-        SETUP_CODE = doc.data().setupCode;
+      if (doc.exists) {
+        var data = doc.data();
+        if (data.setupCode) SETUP_CODE = data.setupCode;
+        _vendorAdminStatus = data.adminStatus || 'active';
+        // Support Firestore-only vendors (created from admin panel, not in VENDOR_REGISTRY)
+        if (!VENDOR_CFG && data.name) {
+          VENDOR_CFG = { name: data.name };
+          var el = document.getElementById('vendorNameDisplay');
+          if (el) el.textContent = data.name;
+        }
+      } else if (!VENDOR_CFG) {
+        _vendorAdminStatus = 'invalid'; // vendor not found anywhere
       }
-    }).catch(function() {}); // silently fall back to hardcoded VENDOR_REGISTRY value
+      _vcfgReady = true;
+      _tryShowScreen();
+    }).catch(function() {
+      _vcfgReady = true;
+      _tryShowScreen();
+    });
   }
 
   // ── Auth state check — redirect if already signed in ─────────────────────
   auth.onAuthStateChanged(function (user) {
     if (user) {
       if (!VENDOR_ID) {
-        // No vendor context — check which vendor this user manages
         db.collection('vendorUsers').doc(user.uid).get().then(function (doc) {
           if (doc.exists) {
             window.location.href = 'vendor-admin.html';
           } else {
-            // Authenticated but no vendor — need to pick vendor first
             auth.signOut().then(function () {
               document.getElementById('authChecking').classList.add('hidden');
               showPicker();
@@ -353,16 +387,13 @@
       }
       db.collection('vendorUsers').doc(user.uid).get().then(function (doc) {
         if (doc.exists && doc.data().vendorId === VENDOR_ID) {
-          // Fully linked — go to admin
           window.location.href = 'vendor-admin.html';
         } else if (!doc.exists) {
-          // Auth user exists but no vendor mapping — offer claim flow
           document.getElementById('authChecking').classList.add('hidden');
           var display = document.getElementById('claimEmailDisplay');
           if (display) display.textContent = user.email || '';
           showScreen('claim');
         } else {
-          // Mapped to a different vendor — sign out
           auth.signOut().then(function () {
             document.getElementById('authChecking').classList.add('hidden');
             document.getElementById('loginError').textContent =
@@ -375,32 +406,65 @@
         showScreen('login');
       });
     } else {
-      document.getElementById('authChecking').classList.add('hidden');
-      if (!VENDOR_ID || !VENDOR_CFG) {
-        showPicker();
-      } else {
-        showScreen('login');
-      }
+      // Unauthenticated — wait for vendor config to resolve too
+      _authReady = true;
+      _tryShowScreen();
     }
   });
 
   // ── Vendor picker (no ?id= param) ─────────────────────────────────────────
   function showPicker() {
+    showScreen('picker');
     var grid = document.getElementById('vendorGrid');
+    grid.innerHTML = '<div style="text-align:center;color:var(--muted);padding:1.5rem;font-size:.8rem">Đang tải…</div>';
+
+    // Load active vendors from Firestore; fall back to VENDOR_REGISTRY
+    db.collection('vendors').where('adminStatus', '==', 'active').get().then(function(snap) {
+      var items = [];
+      var seenIds = {};
+      // Firestore active vendors first
+      snap.docs.forEach(function(doc) {
+        var vid = doc.id;
+        var data = doc.data();
+        seenIds[vid] = true;
+        items.push({ id: vid, name: data.name || (VENDOR_REGISTRY[vid] && VENDOR_REGISTRY[vid].name) || vid });
+      });
+      // Registry vendors not in Firestore (treated as active by default)
+      Object.keys(VENDOR_REGISTRY).forEach(function(vid) {
+        if (!seenIds[vid]) items.push({ id: vid, name: VENDOR_REGISTRY[vid].name });
+      });
+      _renderPickerGrid(grid, items);
+    }).catch(function() {
+      // Firestore unavailable — fall back to registry
+      var items = Object.keys(VENDOR_REGISTRY).map(function(vid) {
+        return { id: vid, name: VENDOR_REGISTRY[vid].name };
+      });
+      _renderPickerGrid(grid, items);
+    });
+  }
+
+  function _renderPickerGrid(grid, items) {
+    if (!items.length) {
+      grid.innerHTML = '<div style="text-align:center;color:var(--muted);padding:1.5rem;font-size:.8rem">Chưa có cửa hàng nào đang hoạt động.</div>';
+      return;
+    }
     grid.innerHTML = '';
-    Object.keys(VENDOR_REGISTRY).forEach(function (vid) {
-      var cfg = VENDOR_REGISTRY[vid];
+    items.forEach(function(item) {
       var btn = document.createElement('button');
       btn.className = 'vendor-btn';
-      btn.innerHTML =
-        '<span class="vendor-btn__name">' + cfg.name + '</span>' +
-        '<span class="vendor-btn__id">' + vid + '</span>';
-      btn.onclick = function () {
-        window.location.href = 'vendor-login.html?id=' + vid;
-      };
+      var nameSpan = document.createElement('span');
+      nameSpan.className = 'vendor-btn__name';
+      nameSpan.textContent = item.name;
+      var idSpan = document.createElement('span');
+      idSpan.className = 'vendor-btn__id';
+      idSpan.textContent = item.id;
+      btn.appendChild(nameSpan);
+      btn.appendChild(idSpan);
+      btn.onclick = (function(vid) {
+        return function() { window.location.href = 'vendor-login.html?id=' + vid; };
+      })(item.id);
       grid.appendChild(btn);
     });
-    showScreen('picker');
   }
 
   // ── Screen switching ───────────────────────────────────────────────────────
@@ -488,7 +552,7 @@
     var btn    = document.getElementById('btnSetup');
     errEl.textContent = '';
 
-    if (!VENDOR_ID || !SETUP_CODE) {
+    if (!VENDOR_ID) {
       errEl.textContent = 'Lỗi: không xác định được cửa hàng.';
       return;
     }
@@ -496,8 +560,24 @@
       errEl.textContent = 'Vui lòng điền đầy đủ thông tin.';
       return;
     }
+    // Check admin-set vendor status before allowing registration
+    var _stMsgs = {
+      pending:     'Cửa hàng chưa được admin kích hoạt. Liên hệ Du Lịch Cali để được duyệt.',
+      blocked:     'Cửa hàng đã bị chặn. Liên hệ admin để được hỗ trợ.',
+      deactivated: 'Cửa hàng đang tạm dừng. Liên hệ admin.',
+      archived:    'Cửa hàng không còn hoạt động.',
+      invalid:     'Cửa hàng không tồn tại. Vui lòng kiểm tra lại URL đăng nhập.'
+    };
+    if (_vendorAdminStatus && _vendorAdminStatus !== 'active') {
+      errEl.textContent = _stMsgs[_vendorAdminStatus] || 'Cửa hàng không thể đăng ký lúc này.';
+      return;
+    }
+    if (!SETUP_CODE) {
+      errEl.textContent = 'Đang tải cấu hình cửa hàng... Vui lòng thử lại sau vài giây.';
+      return;
+    }
     if (code !== SETUP_CODE) {
-      errEl.textContent = 'Mã thiết lập không đúng. Nhập 4 số cuối số điện thoại đăng ký.';
+      errEl.textContent = 'Mã thiết lập không đúng. Nhập PIN do admin cấp.';
       return;
     }
     if (pass.length < 6) {
@@ -561,13 +641,17 @@
     var errEl = document.getElementById('claimError');
     var btn   = document.getElementById('btnClaim');
     errEl.textContent = '';
-    if (!VENDOR_ID || !SETUP_CODE) {
+    if (!VENDOR_ID) {
       errEl.textContent = 'Lỗi: không xác định được cửa hàng.';
       return;
     }
     if (!code) { errEl.textContent = 'Vui lòng nhập mã thiết lập.'; return; }
+    if (!SETUP_CODE) {
+      errEl.textContent = 'Đang tải cấu hình... Vui lòng thử lại sau vài giây.';
+      return;
+    }
     if (code !== SETUP_CODE) {
-      errEl.textContent = 'Mã thiết lập không đúng. Nhập 4 số cuối SĐT đăng ký.';
+      errEl.textContent = 'Mã thiết lập không đúng. Nhập PIN do admin cấp.';
       return;
     }
     var user = auth.currentUser;

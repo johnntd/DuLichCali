@@ -158,18 +158,40 @@
   var db   = firebase.firestore();
   var auth = firebase.auth();
 
-  // ── Auth state — redirect if already signed in as a driver ───────────────
+  // ── Auth state — redirect if already signed in as an active driver ──────
   auth.onAuthStateChanged(function (user) {
     if (user) {
       db.collection('driverUsers').doc(user.uid).get().then(function (doc) {
-        if (doc.exists) {
-          window.location.href = 'driver-admin.html';
-        } else {
-          // Signed in but not a driver account — sign out
+        if (!doc.exists) {
           auth.signOut().then(function () {
             document.getElementById('authChecking').classList.add('hidden');
           });
+          return;
         }
+        var driverId = doc.data().driverId || user.uid;
+        return db.collection('drivers').doc(driverId).get().then(function (dDoc) {
+          var errEl = document.getElementById('loginError');
+          if (!dDoc.exists || dDoc.data().deleted) {
+            auth.signOut();
+            document.getElementById('authChecking').classList.add('hidden');
+            if (errEl) errEl.textContent = 'Tài khoản tài xế không tồn tại. Liên hệ admin.';
+            return;
+          }
+          var st = dDoc.data().adminStatus;
+          if (st === 'blocked') {
+            auth.signOut();
+            document.getElementById('authChecking').classList.add('hidden');
+            if (errEl) errEl.textContent = 'Tài khoản bị chặn bởi admin. Liên hệ Du Lịch Cali để mở lại.';
+            return;
+          }
+          if (st === 'deactivated' || st === 'archived') {
+            auth.signOut();
+            document.getElementById('authChecking').classList.add('hidden');
+            if (errEl) errEl.textContent = 'Tài khoản đang tạm dừng hoạt động. Liên hệ admin.';
+            return;
+          }
+          window.location.href = 'driver-admin.html';
+        });
       }).catch(function () {
         document.getElementById('authChecking').classList.add('hidden');
       });
@@ -204,8 +226,31 @@
           auth.signOut();
           errEl.textContent = 'Tài khoản này chưa được đăng ký là tài xế.';
           btn.disabled = false;
+          return;
         }
-        // redirect handled by onAuthStateChanged
+        var driverId = doc.data().driverId || cred.user.uid;
+        return db.collection('drivers').doc(driverId).get().then(function (dDoc) {
+          if (!dDoc.exists || dDoc.data().deleted) {
+            auth.signOut();
+            errEl.textContent = 'Tài khoản tài xế đã bị xóa. Liên hệ admin.';
+            btn.disabled = false;
+            return;
+          }
+          var st = dDoc.data().adminStatus;
+          if (st === 'blocked') {
+            auth.signOut();
+            errEl.textContent = 'Tài khoản bị chặn bởi admin. Liên hệ Du Lịch Cali để mở lại.';
+            btn.disabled = false;
+            return;
+          }
+          if (st === 'deactivated' || st === 'archived') {
+            auth.signOut();
+            errEl.textContent = 'Tài khoản đang tạm dừng hoạt động. Liên hệ admin.';
+            btn.disabled = false;
+            return;
+          }
+          // Status OK — redirect handled by onAuthStateChanged
+        });
       });
     }).catch(function (err) {
       btn.disabled = false;

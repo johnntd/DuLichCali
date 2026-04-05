@@ -416,18 +416,22 @@ window.DLCRouteMatrix = async function(origin, destination) {
   if (typeof google === 'undefined' || !google.maps) throw new Error('Maps not loaded');
   const lib = await google.maps.importLibrary('routes');
   const RouteMatrix = lib.RouteMatrix;
-  const TravelMode  = lib.TravelMode;
   if (!RouteMatrix) throw new Error('RouteMatrix not available');
+  // Routes library TravelMode uses 'DRIVE', not 'DRIVING' (that's the legacy maps TravelMode)
+  const travelMode = (lib.TravelMode && lib.TravelMode.DRIVE) ? lib.TravelMode.DRIVE : 'DRIVE';
   const rows = await RouteMatrix.computeRouteMatrix({
     origins:      [{ waypoint: { address: origin      } }],
     destinations: [{ waypoint: { address: destination } }],
-    travelMode:   TravelMode.DRIVING,
+    travelMode,
   });
   const row = rows && rows[0];
-  if (!row || row.status !== 'OK') throw new Error('no-route');
-  const durSec  = typeof row.duration === 'number' ? row.duration
-                : (row.duration && 'seconds' in row.duration) ? Number(row.duration.seconds)
-                : parseInt(String(row.duration)) || 0;
+  if (!row || (row.status && row.status !== 'OK')) throw new Error('no-route');
+  if (!row.distanceMeters) throw new Error('no-distance');
+  const durRaw  = row.duration;
+  const durSec  = typeof durRaw === 'number'                 ? durRaw
+                : (durRaw && typeof durRaw === 'object' && 'seconds' in durRaw) ? Number(durRaw.seconds)
+                : typeof durRaw === 'string'                ? (parseFloat(durRaw) || 0)
+                : 0;
   return {
     distMiles: row.distanceMeters / 1609.34,
     durMins:   durSec / 60,

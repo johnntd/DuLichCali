@@ -196,7 +196,9 @@
     if (digits.length < 10) { errEl.textContent = 'Số điện thoại không hợp lệ.'; return; }
     btn.disabled = true;
     var email = phoneToEmail(phone);
-    auth.signInWithEmailAndPassword(email, pin).then(function (cred) {
+    // Pad PIN to 6 chars to match how the password was created (Firebase requires ≥6 chars)
+    var pass = pin.length < 6 ? pin + '000000'.slice(pin.length) : pin;
+    auth.signInWithEmailAndPassword(email, pass).then(function (cred) {
       return db.collection('driverUsers').doc(cred.user.uid).get().then(function (doc) {
         if (!doc.exists) {
           auth.signOut();

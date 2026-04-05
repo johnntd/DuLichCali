@@ -1231,12 +1231,14 @@
       btn.textContent = 'Đang tạo…';
 
       // Create Firebase Auth user via REST API (does NOT affect current admin session)
+      // Pad PIN to 6 chars so Firebase Auth password-length requirement is met
       const derivedEmail = 'd' + digits + '@dlc.app';
+      const derivedPass  = pin.padEnd(6, '0');
       try {
         const resp = await fetch(
           `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FIREBASE_API_KEY}`,
           { method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: derivedEmail, password: pin, returnSecureToken: true }) }
+            body: JSON.stringify({ email: derivedEmail, password: derivedPass, returnSecureToken: true }) }
         );
         const result = await resp.json();
         if (result.error) {

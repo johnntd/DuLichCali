@@ -234,6 +234,12 @@ function renderQuickEstimate() {
 
 // ── Gas Price (EIA API with sessionStorage cache) ─────────────
 async function fetchGasPrice() {
+  // EIA API requires a registered key from eia.gov/opendata (free).
+  // DEMO_KEY is rate-limited instantly in production — live fetch disabled.
+  // Static fallback (~CA average) is used; update EIA_KEY below to enable live prices.
+  const EIA_KEY = '';  // set to your free EIA API key to enable live CA gas prices
+  if (!EIA_KEY) return;  // skip fetch — static fallback in applyGasPrice default
+
   const CACHE_KEY = 'dlc_gas_price';
   const CACHE_TTL = 6 * 3600 * 1000; // 6 hours
 
@@ -244,15 +250,15 @@ async function fetchGasPrice() {
   }
 
   try {
-    // EIA series: California regular unleaded average (weekly)
     const url =
       'https://api.eia.gov/v2/petroleum/pri/gnd/data/' +
-      '?api_key=DEMO_KEY' +
+      '?api_key=' + EIA_KEY +
       '&frequency=weekly' +
       '&data[0]=value' +
       '&facets[series][]=EMM_EPMR_PTE_SCA_DPG' +
       '&sort[0][column]=period&sort[0][direction]=desc&length=1';
     const res  = await fetch(url);
+    if (!res.ok) return;
     const json = await res.json();
     const price = parseFloat(json?.response?.data?.[0]?.value);
     if (!isNaN(price) && price > 0) {

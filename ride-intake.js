@@ -336,6 +336,11 @@ window.RideIntake = (function () {
   function resetForm() {
     var f = document.getElementById('riForm');
     if (f) f.reset();
+    // PlaceAutocompleteElement (web component) is not reset by f.reset() — clear manually
+    ['ri_dropoff_addr','ri_pickup_addr','ri_from_addr','ri_to_addr'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el && el.tagName === 'GMP-PLACEAUTOCOMPLETE') el.value = '';
+    });
 
     setHide('riPickupFields',  _type !== 'pickup');
     setHide('riDropoffFields', _type !== 'dropoff');
@@ -345,22 +350,36 @@ window.RideIntake = (function () {
 
   // ── Google Places Autocomplete ────────────────────────────────────────────────
   function initAutocomplete() {
-    if (typeof google === 'undefined' || !google.maps || !google.maps.places) return;
+    if (typeof google === 'undefined' || !google.maps) return;
     var ids = { pickup: ['ri_dropoff_addr'], dropoff: ['ri_pickup_addr'], ride: ['ri_from_addr','ri_to_addr'] };
     (ids[_type] || []).forEach(function (id) {
       var input = document.getElementById(id);
       if (!input || _ac[id]) return;
-      var ac = new google.maps.places.Autocomplete(input, {
-        componentRestrictions: { country: 'us' },
-        fields: ['formatted_address'],
-      });
-      ac.addListener('place_changed', function () {
-        var p = ac.getPlace();
-        if (p && p.formatted_address) input.value = p.formatted_address;
-        scheduleDistance();
-      });
-      _ac[id] = ac;
+      google.maps.importLibrary('places').then(function(lib) {
+        var PlaceAutocompleteElement = lib.PlaceAutocompleteElement;
+        if (!PlaceAutocompleteElement) { _initAutocompleteLegacy(id, input); return; }
+        var pac = new PlaceAutocompleteElement({ componentRestrictions: { country: 'us' } });
+        pac.id          = id;
+        pac.className   = 'ri-input';
+        pac.placeholder = input.placeholder || '';
+        input.parentNode.replaceChild(pac, input);
+        pac.addEventListener('gmp-placeselect', function() { scheduleDistance(); });
+        _ac[id] = pac;
+      }).catch(function() { _initAutocompleteLegacy(id, input); });
     });
+  }
+
+  function _initAutocompleteLegacy(id, input) {
+    if (!google.maps.places || !google.maps.places.Autocomplete) return;
+    var ac = new google.maps.places.Autocomplete(input, {
+      componentRestrictions: { country: 'us' }, fields: ['formatted_address'],
+    });
+    ac.addListener('place_changed', function() {
+      var p = ac.getPlace();
+      if (p && p.formatted_address) input.value = p.formatted_address;
+      scheduleDistance();
+    });
+    _ac[id] = ac;
   }
 
   // ── Pricing ──────────────────────────────────────────────────────────────────

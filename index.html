@@ -45,14 +45,28 @@
 
   <!-- Google Maps: define initMap before loading the script -->
   <script>
-    window.initMap = function () {
+    window.initMap = async function () {
       // Initialize autocomplete on booking form address field
       const input = document.getElementById('address');
       if (input && typeof google !== 'undefined') {
-        const ac = new google.maps.places.Autocomplete(input);
-        ac.addListener('place_changed', () => {
-          if (typeof updateEstimate === 'function') updateEstimate();
-        });
+        try {
+          const { PlaceAutocompleteElement } = await google.maps.importLibrary("places");
+          const pac = new PlaceAutocompleteElement({ componentRestrictions: { country: 'us' } });
+          pac.id          = 'address';
+          pac.name        = 'address';
+          pac.className   = 'field-input';
+          pac.placeholder = input.placeholder;
+          input.parentNode.replaceChild(pac, input);
+          pac.addEventListener('gmp-placeselect', function() {
+            if (typeof updateEstimate === 'function') updateEstimate();
+          });
+        } catch (_) {
+          // Fallback to legacy class (still works while not discontinued)
+          const ac = new google.maps.places.Autocomplete(input);
+          ac.addListener('place_changed', function() {
+            if (typeof updateEstimate === 'function') updateEstimate();
+          });
+        }
       }
       // Silently request geolocation once Maps SDK is ready (enables reverse geocoding)
       if (window.DLCLocation) {
@@ -68,7 +82,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-  <link rel="stylesheet" href="style.css?v=20260404t">
+  <link rel="stylesheet" href="style.css?v=20260404u">
   <link rel="stylesheet" href="desktop.css">
 </head>
 <body>
@@ -1144,9 +1158,9 @@
 <script src="voice.js?v=20260406"></script>
 <script src="aiOrchestrator.js?v=20260406"></script>
 <script src="marketingEngine.js?v=20260406"></script>
-<script src="ride-intake.js?v=20260404a"></script>
+<script src="ride-intake.js?v=20260404b"></script>
 <script src="workflowEngine.js?v=20260403ai"></script>
 <script src="chat.js?v=20260404a"></script>
-<script src="script.js?v=20260407f" defer></script>
+<script src="script.js?v=20260404b" defer></script>
 </body>
 </html>

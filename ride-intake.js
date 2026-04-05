@@ -36,7 +36,8 @@ window.RideIntake = (function () {
   var _timer   = null;
   var _ac      = {};
   var _busy    = false;
-  var _driverVehicle = null; // { name, seats } loaded from Firestore active driver
+  var _driverVehicle = null; // { name, seats, driverId } loaded from Firestore active driver
+  var _driverCoords  = null; // { lat, lng } — driver's real-time GPS from Firestore
 
   // ── Step management ───────────────────────────────────────────────────────────
   function open(type) {
@@ -68,6 +69,10 @@ window.RideIntake = (function () {
       driverId:   driverId || '',
       driverName: (d && d.fullName) || ''
     };
+    // Capture driver's real-time GPS coords if available (updated by driver-admin.html)
+    if (d && d.driverLat != null && d.driverLng != null) {
+      _driverCoords = { lat: d.driverLat, lng: d.driverLng };
+    }
     var sub = document.getElementById('riPickerSub');
     if (sub) sub.textContent = 'Tài xế chuyên nghiệp · ' + _driverVehicle.name + ' ' + _driverVehicle.seats + ' chỗ';
     var box = document.getElementById('riVehicleBox');
@@ -356,20 +361,25 @@ window.RideIntake = (function () {
   // ── Pricing ──────────────────────────────────────────────────────────────────
   function gasPrice() { return window._gasCaliPrice || 4.80; }
 
-  function calcQuote(miles, minutes) {
+  function calcQuote(rideMiles, minutes, deadheadMiles) {
+    var dh         = deadheadMiles || 0;
+    var totalMiles = rideMiles + dh;
     var gas  = gasPrice();
     var u    = VAN.uber;
-    var uberRaw = u.base + u.bookingFee + (miles * u.perMile) + (minutes * u.perMin);
+    var uberRaw = u.base + u.bookingFee + (totalMiles * u.perMile) + (minutes * u.perMin);
     var uberEst = Math.max(uberRaw, u.minFare);
-    var fuel    = (miles / VAN.mpg) * gas;
-    var wear    = miles * VAN.wearPerMile;
+    var fuel    = (totalMiles / VAN.mpg) * gas;
+    var wear    = totalMiles * VAN.wearPerMile;
     var dlcRaw  = (uberEst + fuel + wear) * (1 - VAN.discount);
     var dlcPrice = Math.ceil(dlcRaw / 5) * 5;
     return {
-      miles: Math.round(miles), minutes: Math.round(minutes),
-      uberEstimate: Math.round(uberEst + fuel + wear),
-      dlcPrice: dlcPrice,
-      savings: Math.round(uberEst + fuel + wear) - dlcPrice,
+      miles:         Math.round(rideMiles),
+      deadheadMiles: Math.round(dh),
+      totalMiles:    Math.round(totalMiles),
+      minutes:       Math.round(minutes),
+      uberEstimate:  Math.round(uberEst + fuel + wear),
+      dlcPrice:      dlcPrice,
+      savings:       Math.round(uberEst + fuel + wear) - dlcPrice,
     };
   }
 
@@ -403,13 +413,35 @@ window.RideIntake = (function () {
     if (typeof google === 'undefined' || !google.maps) { showPriceHint(); return; }
     showPriceLoading();
 
-    // Use shared DLCRouteMatrix helper (Routes API — replaces deprecated DistanceMatrixService)
-    window.DLCRouteMatrix(pair.origin, pair.destination).then(function(result) {
-      _quote = calcQuote(result.distMiles, result.durMins);
-      showPrice(_quote);
-    }).catch(function() {
-      showPriceHint('Không tìm được tuyến đường.');
-    });
+    var ridePromise = window.DLCRouteMatrix(pair.origin, pair.destination);
+
+    if (_driverCoords) {
+      // Two-leg pricing: deadhead (driver → pickup) + ride (pickup → destination)
+      var driverOrigin = _driverCoords.lat + ',' + _driverCoords.lng;
+      var deadheadPromise = window.DLCRouteMatrix(driverOrigin, pair.origin);
+      Promise.all([ridePromise, deadheadPromise]).then(function(results) {
+        var ride     = results[0];
+        var deadhead = results[1];
+        _quote = calcQuote(ride.distMiles, ride.durMins, deadhead.distMiles);
+        showPrice(_quote);
+      }).catch(function() {
+        // Deadhead failed — fall back to ride-only price
+        ridePromise.then(function(ride) {
+          _quote = calcQuote(ride.distMiles, ride.durMins, 0);
+          showPrice(_quote);
+        }).catch(function() {
+          showPriceHint('Không tìm được tuyến đường.');
+        });
+      });
+    } else {
+      // No driver GPS yet — price on ride distance only
+      ridePromise.then(function(ride) {
+        _quote = calcQuote(ride.distMiles, ride.durMins, 0);
+        showPrice(_quote);
+      }).catch(function() {
+        showPriceHint('Không tìm được tuyến đường.');
+      });
+    }
   }
 
   // ── Price display ─────────────────────────────────────────────────────────────
@@ -433,7 +465,11 @@ window.RideIntake = (function () {
     setHide('riPriceLoading', true);
 
     setText('riPriceAmt',  '~$' + q.dlcPrice);
-    setText('riPriceSave', 'Tiết kiệm ~$' + q.savings + ' so với Uber');
+    var saveText = 'Tiết kiệm ~$' + q.savings + ' so với Uber';
+    if (q.deadheadMiles > 0) {
+      saveText += ' · Tài xế cách ' + q.deadheadMiles + ' mi';
+    }
+    setText('riPriceSave', saveText);
     setHide('riPriceBox', false);
 
     setText('riFooterAmt', '~$' + q.dlcPrice);

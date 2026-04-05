@@ -363,6 +363,20 @@
     </div>
   </div>
 
+  <!-- GPS Location section -->
+  <div class="section" id="gpsSection">
+    <div class="section-title">Vị Trí Hiện Tại</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem">
+      <div style="font-size:.8rem;color:var(--muted)" id="gpsStatusText">Chưa bật vị trí</div>
+      <button id="gpsDrvBtn" onclick="toggleDrvGps()"
+        style="flex-shrink:0;padding:.45rem .9rem;border-radius:8px;border:none;cursor:pointer;
+               font-family:var(--font-b);font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+               background:var(--gold);color:var(--navy-900);transition:background .2s">
+        Bật GPS
+      </button>
+    </div>
+  </div>
+
   <!-- Profile section -->
   <div class="section">
     <div class="section-title">Thông Tin Cá Nhân</div>
@@ -720,8 +734,73 @@
     });
   }
 
+  // ── GPS Location Sharing ──────────────────────────────────────────────────
+  // Driver's real-time GPS is saved to drivers/{id}.driverLat/driverLng
+  // so ride-intake.js can calculate deadhead distance for accurate pricing.
+  var _gpsWatchId = null;
+
+  function toggleDrvGps() {
+    if (_gpsWatchId !== null) {
+      stopDrvGps();
+    } else {
+      startDrvGps();
+    }
+  }
+
+  function startDrvGps() {
+    if (!navigator.geolocation) {
+      document.getElementById('gpsStatusText').textContent = 'Thiết bị không hỗ trợ GPS';
+      return;
+    }
+    document.getElementById('gpsDrvBtn').textContent = 'Dừng GPS';
+    document.getElementById('gpsDrvBtn').style.background = 'var(--danger, #f87171)';
+    document.getElementById('gpsDrvBtn').style.color = '#fff';
+    document.getElementById('gpsStatusText').textContent = 'Đang lấy vị trí...';
+
+    _gpsWatchId = navigator.geolocation.watchPosition(
+      function(pos) {
+        var lat = pos.coords.latitude;
+        var lng = pos.coords.longitude;
+        if (_driverId) {
+          db.collection('drivers').doc(_driverId).update({
+            driverLat:   lat,
+            driverLng:   lng,
+            driverLocAt: firebase.firestore.FieldValue.serverTimestamp()
+          }).catch(function() {});
+        }
+        document.getElementById('gpsStatusText').textContent =
+          'GPS đang phát · ' + lat.toFixed(4) + ', ' + lng.toFixed(4);
+      },
+      function(err) {
+        document.getElementById('gpsStatusText').textContent = 'Lỗi GPS: ' + err.message;
+        stopDrvGps();
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+    );
+  }
+
+  function stopDrvGps() {
+    if (_gpsWatchId !== null) {
+      navigator.geolocation.clearWatch(_gpsWatchId);
+      _gpsWatchId = null;
+    }
+    document.getElementById('gpsDrvBtn').textContent = 'Bật GPS';
+    document.getElementById('gpsDrvBtn').style.background = 'var(--gold)';
+    document.getElementById('gpsDrvBtn').style.color = 'var(--navy-900)';
+    document.getElementById('gpsStatusText').textContent = 'Vị trí đã tắt';
+    // Clear location from Firestore so stale coords aren't used
+    if (_driverId) {
+      db.collection('drivers').doc(_driverId).update({
+        driverLat: firebase.firestore.FieldValue.delete(),
+        driverLng: firebase.firestore.FieldValue.delete(),
+        driverLocAt: firebase.firestore.FieldValue.delete()
+      }).catch(function() {});
+    }
+  }
+
   // ── Sign out ──────────────────────────────────────────────────────────────
   function doSignOut() {
+    stopDrvGps();
     auth.signOut().then(function () { window.location.href = 'driver-login.html'; });
   }
 

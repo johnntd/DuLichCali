@@ -90,7 +90,9 @@
         const RouteMatrix = (lib && lib.RouteMatrix)
                          || (google.maps.routes && google.maps.routes.RouteMatrix);
         if (!RouteMatrix) { showError('RouteMatrix not available in this Maps build'); return; }
-        const travelMode = (lib.TravelMode && lib.TravelMode.DRIVE) ? lib.TravelMode.DRIVE : 'DRIVE';
+        const TM = lib.TravelMode || {};
+        console.log('TravelMode keys:', Object.keys(TM).join(', '));
+        const travelMode = TM.DRIVING || TM.DRIVE || 'DRIVING';
         const resp = await RouteMatrix.computeRouteMatrix({
           origins:      ['Santa Ana, CA'],
           destinations: ['Disneyland, Anaheim, CA'],

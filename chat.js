@@ -821,7 +821,9 @@
    */
   function findProductMatch(text) {
     const t = text.toLowerCase();
-    for (const vendor of VENDOR_CATALOG) {
+    const statusMap = window._vendorAdminStatus || {};
+    const activeVendors = VENDOR_CATALOG.filter(v => { const s = statusMap[v.id]; return !s || s === 'active'; });
+    for (const vendor of activeVendors) {
       if (vendor.products) {
         for (const product of vendor.products) {
           if (product.keywords.some(kw => t.includes(kw))) {
@@ -841,7 +843,10 @@
     // Fallback: search live window.MARKETPLACE for vendors/products not in VENDOR_CATALOG
     const catIds = new Set(VENDOR_CATALOG.map(v => v.id));
     const businesses = (window.MARKETPLACE && window.MARKETPLACE.businesses) || [];
-    for (const biz of businesses.filter(b => b.active !== false && !catIds.has(b.id))) {
+    for (const biz of businesses.filter(b => {
+      if (b.active === false || catIds.has(b.id)) return false;
+      const s2 = statusMap[b.id]; return !s2 || s2 === 'active';
+    })) {
       for (const p of (biz.products || [])) {
         if (p.active === false) continue;
         const terms = [
@@ -1116,7 +1121,12 @@
     lines += 'MARKETPLACE VENDORS — You are a full INTAKE AGENT for all of these. Take orders/bookings inline.\n\n';
 
     var businesses = (window.MARKETPLACE && window.MARKETPLACE.businesses) ? window.MARKETPLACE.businesses : [];
-    var active = businesses.filter(function (b) { return b.active !== false; });
+    var statusMap = window._vendorAdminStatus || {};
+    var active = businesses.filter(function (b) {
+      if (b.active === false) return false;
+      var s = statusMap[b.id];
+      return !s || s === 'active'; // blocked/deactivated/archived vendors excluded from AI
+    });
 
     var food  = active.filter(function (b) { return b.category === 'food';  });
     var nails = active.filter(function (b) { return b.category === 'nails'; });

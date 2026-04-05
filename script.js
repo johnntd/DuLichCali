@@ -1258,10 +1258,28 @@ const HomepagePersonalizer = (() => {
 })();
 
 // ── Featured vendor helpers ───────────────────────────────────
+// ── Vendor admin-status cache (populated from Firestore on load) ─────────────
+window._vendorAdminStatus = {}; // vendorId → 'active'|'blocked'|'deactivated'|'archived'
+
+async function loadVendorAdminStatuses() {
+  try {
+    const snap = await db.collection('vendors').get();
+    snap.docs.forEach(doc => {
+      const s = doc.data().adminStatus;
+      if (s) window._vendorAdminStatus[doc.id] = s;
+    });
+  } catch (_) { /* fail open — show all vendors if Firestore unreachable */ }
+}
+
+function _isVendorActive(vendorId) {
+  const s = window._vendorAdminStatus[vendorId];
+  return !s || s === 'active'; // undefined or 'active' = show
+}
+
 function getFeaturedVendors(regionId) {
   if (!window.MARKETPLACE) return [];
   return MARKETPLACE.businesses
-    .filter(b => b.active && b.homepageActive && b.featuredRegions?.includes(regionId))
+    .filter(b => b.active && b.homepageActive && b.featuredRegions?.includes(regionId) && _isVendorActive(b.id))
     .sort((a, b) => (a.featuredPriority || 99) - (b.featuredPriority || 99));
 }
 
@@ -1452,7 +1470,7 @@ function renderAllHomepageVendors() {
   var section   = document.getElementById('hpFeatured');
   if (!container || !window.MARKETPLACE) return;
   var vendors = MARKETPLACE.businesses
-    .filter(function(b) { return b.active && b.homepageActive; })
+    .filter(function(b) { return b.active && b.homepageActive && _isVendorActive(b.id); })
     .sort(function(a, b) { return (a.featuredPriority || 99) - (b.featuredPriority || 99); });
   if (!vendors.length) return;
   container.innerHTML = vendors.map(buildVendorCardHtml).join('');
@@ -1687,9 +1705,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Load vendor admin statuses first, then render (async, won't block long)
+  loadVendorAdminStatuses().then(function() { renderAllHomepageVendors(); });
+
   // Render data-driven UI
   renderTravelCarousel();
-  renderAllHomepageVendors();
   renderDestCards();
   renderDestList();
   renderTourChoiceGrid();

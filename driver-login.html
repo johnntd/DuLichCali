@@ -120,63 +120,30 @@
     <div class="login-brand__sub">Du Lịch Cali · Tài Xế</div>
   </div>
 
-  <!-- Login screen -->
+  <!-- Login screen — phone + PIN -->
   <div id="loginScreen" class="login-card screen">
-    <div class="login-card-title">Đăng Nhập</div>
+    <div class="login-card-title">Đăng Nhập Tài Xế</div>
+    <div class="setup-hint">Tài khoản do admin tạo. Nhập số điện thoại và mã PIN được cấp.</div>
     <div class="f-row">
-      <label class="f-label" for="loginEmail">Email</label>
-      <input class="f-input" type="email" id="loginEmail"
-        placeholder="email@example.com" autocomplete="email">
+      <label class="f-label" for="loginPhone">Số Điện Thoại</label>
+      <input class="f-input" type="tel" id="loginPhone"
+        placeholder="(408) 916-3439" autocomplete="tel" inputmode="tel">
     </div>
     <div class="f-row">
-      <label class="f-label" for="loginPassword">Mật khẩu</label>
-      <input class="f-input" type="password" id="loginPassword"
-        placeholder="••••••••" autocomplete="current-password">
+      <label class="f-label" for="loginPin">Mã PIN</label>
+      <input class="f-input" type="password" id="loginPin"
+        placeholder="PIN (4–6 số)" autocomplete="current-password" inputmode="numeric" maxlength="6">
     </div>
     <div class="error-msg" id="loginError"></div>
     <button class="btn-primary" id="btnLogin" onclick="doLogin()">Đăng Nhập</button>
-    <div class="divider"><span>chưa có tài khoản?</span></div>
-    <button class="btn-ghost" onclick="showScreen('setup')">Tạo tài khoản tài xế &#8594;</button>
-  </div>
-
-  <!-- First-time setup screen -->
-  <div id="setupScreen" class="login-card screen hidden">
-    <div class="login-card-title">Tạo Tài Khoản Tài Xế</div>
-    <div class="setup-hint">
-      Dùng để đăng ký tài xế mới.<br>
-      Bạn cần <strong>mã tài xế</strong> do admin cung cấp để tiếp tục.
-    </div>
-    <div class="f-row">
-      <label class="f-label" for="setupName">Họ và tên</label>
-      <input class="f-input" type="text" id="setupName"
-        placeholder="Nguyễn Văn A" autocomplete="name">
-    </div>
-    <div class="f-row">
-      <label class="f-label" for="setupEmail">Email</label>
-      <input class="f-input" type="email" id="setupEmail"
-        placeholder="email@example.com" autocomplete="email">
-    </div>
-    <div class="f-row">
-      <label class="f-label" for="setupPassword">Mật khẩu (tối thiểu 6 ký tự)</label>
-      <input class="f-input" type="password" id="setupPassword"
-        placeholder="••••••••" autocomplete="new-password">
-    </div>
-    <div class="f-row">
-      <label class="f-label" for="setupCode">Mã tài xế</label>
-      <input class="f-input" type="text" id="setupCode"
-        placeholder="Mã do admin cung cấp" autocomplete="off">
-    </div>
-    <div class="error-msg" id="setupError"></div>
-    <button class="btn-primary" id="btnSetup" onclick="doSetup()">Tạo Tài Khoản</button>
-    <button class="btn-ghost" onclick="showScreen('login')">&#8592; Quay lại đăng nhập</button>
   </div>
 </div>
 
 <script>
-  // ── Config ────────────────────────────────────────────────────────────────
-  // DRIVER_SETUP_CODE: shared secret given to all new drivers by admin.
-  // Change this to rotate access — old accounts remain valid.
-  var DRIVER_SETUP_CODE = 'dlcdriver2025';
+  // ── Driver login — phone + PIN ─────────────────────────────────────────────
+  // Admin creates driver accounts via admin.html.
+  // Derived email: d{digits}@dlc.app  /  PIN is the Firebase Auth password.
+  // This way login is phone+PIN UX while Firebase Auth handles actual auth.
 
   // ── Firebase ──────────────────────────────────────────────────────────────
   var firebaseConfig = {
@@ -211,24 +178,25 @@
     }
   });
 
-  // ── Screen switching ──────────────────────────────────────────────────────
-  function showScreen(name) {
-    document.getElementById('loginScreen').classList.toggle('hidden', name !== 'login');
-    document.getElementById('setupScreen').classList.toggle('hidden', name !== 'setup');
-    document.getElementById('loginError').textContent = '';
-    document.getElementById('setupError').textContent = '';
+  // ── Derive Firebase email from phone digits ────────────────────────────────
+  function phoneToEmail(phone) {
+    var digits = phone.replace(/\D/g, '');
+    return 'd' + digits + '@dlc.app';
   }
 
-  // ── Login ─────────────────────────────────────────────────────────────────
+  // ── Login — phone + PIN ────────────────────────────────────────────────────
   function doLogin() {
-    var email = document.getElementById('loginEmail').value.trim();
-    var pass  = document.getElementById('loginPassword').value;
+    var phone = document.getElementById('loginPhone').value.trim();
+    var pin   = document.getElementById('loginPin').value.trim();
     var errEl = document.getElementById('loginError');
     var btn   = document.getElementById('btnLogin');
     errEl.textContent = '';
-    if (!email || !pass) { errEl.textContent = 'Vui lòng điền đầy đủ email và mật khẩu.'; return; }
+    if (!phone || !pin) { errEl.textContent = 'Vui lòng nhập số điện thoại và mã PIN.'; return; }
+    var digits = phone.replace(/\D/g, '');
+    if (digits.length < 10) { errEl.textContent = 'Số điện thoại không hợp lệ.'; return; }
     btn.disabled = true;
-    auth.signInWithEmailAndPassword(email, pass).then(function (cred) {
+    var email = phoneToEmail(phone);
+    auth.signInWithEmailAndPassword(email, pin).then(function (cred) {
       return db.collection('driverUsers').doc(cred.user.uid).get().then(function (doc) {
         if (!doc.exists) {
           auth.signOut();
@@ -240,42 +208,24 @@
     }).catch(function (err) {
       btn.disabled = false;
       var msgs = {
-        'auth/user-not-found':     'Email không tồn tại.',
-        'auth/wrong-password':     'Mật khẩu không đúng.',
-        'auth/invalid-email':      'Email không hợp lệ.',
-        'auth/invalid-credential': 'Email hoặc mật khẩu không đúng.',
+        'auth/user-not-found':     'Số điện thoại chưa được đăng ký. Liên hệ admin.',
+        'auth/wrong-password':     'Mã PIN không đúng.',
+        'auth/invalid-credential': 'Số điện thoại hoặc PIN không đúng.',
         'auth/too-many-requests':  'Quá nhiều lần thử. Vui lòng thử lại sau.'
       };
       errEl.textContent = msgs[err.code] || ('Lỗi: ' + err.message);
     });
   }
 
-  // ── First-time driver setup ───────────────────────────────────────────────
+  // ── Legacy placeholder (no longer used — admin creates accounts) ──────────
   function doSetup() {
-    var name  = document.getElementById('setupName').value.trim();
-    var email = document.getElementById('setupEmail').value.trim();
-    var pass  = document.getElementById('setupPassword').value;
-    var code  = document.getElementById('setupCode').value.trim();
     var errEl = document.getElementById('setupError');
+    if (errEl) errEl.textContent = 'Tài khoản tài xế do admin tạo. Liên hệ admin để được cấp số điện thoại và PIN.';
     var btn   = document.getElementById('btnSetup');
-    errEl.textContent = '';
-
-    if (!name || !email || !pass || !code) {
-      errEl.textContent = 'Vui lòng điền đầy đủ thông tin.'; return;
-    }
-    if (code !== DRIVER_SETUP_CODE) {
-      errEl.textContent = 'Mã tài xế không đúng.'; return;
-    }
-    if (pass.length < 6) {
-      errEl.textContent = 'Mật khẩu phải có ít nhất 6 ký tự.'; return;
-    }
-
-    btn.disabled = true;
     var newUid;
+    var name = '', email = '', pass = '';
     auth.createUserWithEmailAndPassword(email, pass).then(function (cred) {
       newUid = cred.user.uid;
-      // Mapping doc: driverUsers/{uid} → { driverId }
-      // driverId = uid (simplest — one-to-one, no slug collision)
       return db.collection('driverUsers').doc(newUid).set({
         driverId:  newUid,
         email:     email,
@@ -330,9 +280,7 @@
 
   // ── Enter key ─────────────────────────────────────────────────────────────
   document.addEventListener('keydown', function (e) {
-    if (e.key !== 'Enter') return;
-    var onSetup = !document.getElementById('setupScreen').classList.contains('hidden');
-    if (onSetup) doSetup(); else doLogin();
+    if (e.key === 'Enter') doLogin();
   });
 </script>
 </body>

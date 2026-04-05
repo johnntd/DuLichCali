@@ -431,7 +431,19 @@
     auth.signInWithEmailAndPassword(email, pass).then(function (cred) {
       return db.collection('vendorUsers').doc(cred.user.uid).get().then(function (doc) {
         if (doc.exists && doc.data().vendorId === VENDOR_ID) {
-          window.location.href = 'vendor-admin.html';
+          // Check admin status before allowing entry
+          return db.collection('vendors').doc(VENDOR_ID).get().then(function (vdoc) {
+            var st = vdoc.exists ? vdoc.data().adminStatus : null;
+            if (st === 'blocked' || st === 'deactivated' || st === 'archived') {
+              return auth.signOut().then(function () {
+                btn.disabled = false;
+                errEl.textContent = st === 'blocked'
+                  ? 'Cửa hàng này đã bị khóa. Liên hệ admin để mở lại.'
+                  : 'Cửa hàng này đang tạm ngừng hoạt động.';
+              });
+            }
+            window.location.href = 'vendor-admin.html';
+          });
         } else if (!doc.exists) {
           // Existing Auth account, no vendor mapping — offer claim flow
           var display = document.getElementById('claimEmailDisplay');

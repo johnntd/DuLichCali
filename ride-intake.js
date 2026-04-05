@@ -473,14 +473,30 @@ window.RideIntake = (function () {
       return;
     }
     var db = firebase.firestore();
+    var ts = firebase.firestore.FieldValue.serverTimestamp();
     db.collection('bookings').doc(bookingId).set(data)
       .then(function () {
+        // Admin notification
         return db.collection('vendors').doc('admin-dlc').collection('notifications').add({
-          type: 'new_booking',
-          title: '🚐 Đặt Xe Mới — ' + svcLabel(),
-          message: buildAdminMsg(data),
-          bookingId: bookingId, read: false,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          type: 'new_booking', title: '🚐 Đặt Xe Mới — ' + svcLabel(),
+          message: buildAdminMsg(data), bookingId: bookingId, read: false, createdAt: ts,
+        });
+      })
+      .then(function () {
+        // Driver notification — active drivers will see this in their dashboard
+        return db.collection('rideNotifications').add({
+          bookingId:    bookingId,
+          serviceType:  data.serviceType,
+          serviceLabel: svcLabel(),
+          passengers:   data.passengers || 1,
+          customerName: data.customerName || '',
+          estimatedPrice: data.estimatedPrice || null,
+          estimatedMiles: data.estimatedMiles || null,
+          airport:      data.airport || null,
+          arrivalDate:  data.arrivalDate || data.departureDate || null,
+          arrivalTime:  data.arrivalTime || data.departureTime || null,
+          status:       'new',
+          createdAt:    ts,
         });
       })
       .then(function () { onSuccess(bookingId); })

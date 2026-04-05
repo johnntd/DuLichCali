@@ -738,6 +738,25 @@
   // Driver's real-time GPS is saved to drivers/{id}.driverLat/driverLng
   // so ride-intake.js can calculate deadhead distance for accurate pricing.
   var _gpsWatchId = null;
+  var _gpsAutoRegionSet = false;  // only auto-detect region once per GPS session
+
+  function _detectRegionFromGps(lat, lng) {
+    if (_gpsAutoRegionSet) return;
+    var regions = { bayarea: { latMin: 36.8, latMax: 38.5, lngMin: -123.0, lngMax: -121.5 },
+                    oc:      { latMin: 32.5, latMax: 34.8, lngMin: -118.6, lngMax: -116.0 } };
+    var detected = null;
+    Object.keys(regions).forEach(function(id) {
+      var b = regions[id];
+      if (lat >= b.latMin && lat <= b.latMax && lng >= b.lngMin && lng <= b.lngMax) detected = id;
+    });
+    if (!detected) return;
+    if (_state.regions.indexOf(detected) === -1) {
+      _state.regions = [detected];
+      renderRegions();
+      showToast('Khu vực tự động: ' + (detected === 'bayarea' ? 'Bay Area' : 'Orange County'));
+    }
+    _gpsAutoRegionSet = true;
+  }
 
   function toggleDrvGps() {
     if (_gpsWatchId !== null) {
@@ -768,6 +787,7 @@
             driverLocAt: firebase.firestore.FieldValue.serverTimestamp()
           }).catch(function() {});
         }
+        _detectRegionFromGps(lat, lng);
         document.getElementById('gpsStatusText').textContent =
           'GPS đang phát · ' + lat.toFixed(4) + ', ' + lng.toFixed(4);
       },
@@ -783,6 +803,7 @@
     if (_gpsWatchId !== null) {
       navigator.geolocation.clearWatch(_gpsWatchId);
       _gpsWatchId = null;
+      _gpsAutoRegionSet = false;
     }
     document.getElementById('gpsDrvBtn').textContent = 'Bật GPS';
     document.getElementById('gpsDrvBtn').style.background = 'var(--gold)';

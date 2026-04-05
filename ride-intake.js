@@ -303,8 +303,13 @@ window.RideIntake = (function () {
       sorted = near.filter(function (a) { return !!AIRPORTS[a.code]; });
       hasLoc = true;
     } else {
-      // Default order (NorCal first, then SoCal)
-      sorted = ['SJC','SFO','OAK','SMF','LAX','SNA','BUR','LGB','ONT','SAN','PSP'].map(function (code) {
+      // Region-aware fallback: prioritize current region's airports first
+      var regionFirst = (window.DLCRegion && DLCRegion.current && DLCRegion.current.airports)
+        ? DLCRegion.current.airports.slice()
+        : ['SNA','LAX','LGB','ONT','BUR','SAN'];
+      var allCodes = ['SJC','SFO','OAK','SMF','LAX','SNA','BUR','LGB','ONT','SAN','PSP'];
+      var remaining = allCodes.filter(function(c) { return regionFirst.indexOf(c) === -1; });
+      sorted = regionFirst.concat(remaining).map(function (code) {
         return { code: code, km: null };
       });
     }

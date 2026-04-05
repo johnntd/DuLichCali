@@ -1216,14 +1216,36 @@
   //  Enriched system prompt with current estimates + form state
   // ══════════════════════════════════════════════════════════════
 
+  // Scope definitions per agent mode — strict domain boundaries
+  const AGENT_SCOPES = {
+    airport: {
+      canDo:    'airport pickup, airport dropoff, private point-to-point rides, ride logistics, vehicle options, transfer pricing',
+      cannotDo: 'food ordering, nail salon appointments, hair salon appointments, multi-day tours, sightseeing packages',
+      redirect: 'For food orders or salon appointments, please use the Marketplace tab. For tours, use the Tour & Travel tab.',
+    },
+    tour: {
+      canDo:    'multi-day tours, California destinations, hotel/lodging info, tour pricing, sightseeing itineraries',
+      cannotDo: 'food ordering, nail/hair appointments, airport pickups, private ride bookings',
+      redirect: 'For airport rides, use the Airport & Transportation tab. For food/salons, use the Marketplace tab.',
+    },
+    marketplace: {
+      canDo:    'food vendors, food ordering, restaurant reservations, nail salon appointments, hair salon appointments, product pricing',
+      cannotDo: 'airport pickups, private rides, multi-day tours, destination travel packages',
+      redirect: 'For airport rides or tours, please use the Airport or Tour tabs from the main menu.',
+    },
+  };
+
   function buildSystemPrompt() {
+    const mode = state.agentMode;  // null | 'airport' | 'tour' | 'marketplace'
     const staticCtx  = typeof buildAIContext === 'function' ? buildAIContext() : '';
     const regionCtx  = window.DLCRegion ? DLCRegion.buildAIRegionContext() : '';
-    const vendorCtx  = buildVendorContextForAI();
 
-    // Build live pricing snapshot for Claude
+    // Only inject vendor/marketplace data for marketplace mode (or no-mode general)
+    const vendorCtx = (mode === 'airport' || mode === 'tour') ? '' : buildVendorContextForAI();
+
+    // Build live pricing snapshot — only for airport/tour/general (not marketplace)
     let pricingSnapshot = '';
-    if (typeof DLCPricing !== 'undefined') {
+    if (mode !== 'marketplace' && typeof DLCPricing !== 'undefined') {
       const form   = DLCPricing.getCurrentFormState();
       const gas    = DLCPricing.getFuelPrice();
       const pax    = form.passengers || 2;
@@ -1266,12 +1288,28 @@ ORDER TRACKING:
 - Statuses: pending (chờ xác nhận), confirmed (đã xác nhận), enroute (đang trên đường), completed (hoàn thành), cancelled (đã hủy)`;
     }
 
+    // Scope enforcement block — strict domain boundaries per mode
+    let scopeBlock = '';
+    if (mode && AGENT_SCOPES[mode]) {
+      const sc = AGENT_SCOPES[mode];
+      // For airport mode, include region-specific airport list in scope hint
+      const airportList = (mode === 'airport' && window.DLCRegion && DLCRegion.current && DLCRegion.current.airports)
+        ? ' (' + DLCRegion.current.airports.join(', ') + ')'
+        : '';
+      scopeBlock = `\nAGENT SCOPE — YOU ARE THE ${mode.toUpperCase()} ASSISTANT ONLY:
+- YOU CAN HELP WITH: ${sc.canDo}${mode === 'airport' ? airportList : ''}
+- YOU MUST NOT OFFER: ${sc.cannotDo}
+- If the customer asks for something outside your scope, politely redirect: "${sc.redirect}"
+- Do NOT attempt to take orders, appointments, or bookings for out-of-scope services.
+- Do NOT provide pricing, vendor names, or scheduling for out-of-scope services.\n`;
+    }
+
     const modeHints = {
-      airport:     'CURRENT SESSION: Customer opened the Airport & Transportation assistant. Prioritize airport pickup/dropoff info, luxury rides, vehicle options, and transfer pricing.',
-      tour:        'CURRENT SESSION: Customer opened the Tour & Travel assistant. Prioritize destinations, multi-day tours, hotel suggestions, and travel pricing.',
-      marketplace: 'CURRENT SESSION: Customer opened the Marketplace assistant. Prioritize food vendors, ordering info, nail/hair salons, and product pricing.',
+      airport:     'CURRENT SESSION: Customer opened the Airport & Transportation assistant. Focus on airport pickup/dropoff, private rides, vehicle options, and transfer pricing.',
+      tour:        'CURRENT SESSION: Customer opened the Tour & Travel assistant. Focus on destinations, multi-day tours, hotel suggestions, and travel pricing.',
+      marketplace: 'CURRENT SESSION: Customer opened the Marketplace assistant. Focus on food vendors, ordering, nail/hair salons, and product pricing.',
     };
-    const modeHint = state.agentMode ? modeHints[state.agentMode] + '\n\n' : '';
+    const modeHint = mode ? modeHints[mode] + '\n\n' : '';
 
     // Inject customer location context if available
     const locationCtx = (window.DLCLocation && DLCLocation.getContext())
@@ -1280,7 +1318,7 @@ ORDER TRACKING:
         'and skip asking for pickup city if the customer says "here" or "current location".\n\n'
       : '';
 
-    return `${modeHint}${locationCtx}You are the AI assistant for Du Lịch Cali — a Vietnamese-American travel, transportation, and marketplace service in California.
+    return `${modeHint}${scopeBlock}${locationCtx}You are the AI assistant for Du Lịch Cali — a Vietnamese-American travel, transportation, and marketplace service in California.
 
 YOUR ROLE:
 1. Answer questions about DLC services, pricing, and vendors directly.

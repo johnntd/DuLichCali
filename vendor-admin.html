@@ -1840,7 +1840,13 @@
       vendorRef.get().then(function (vdoc) {
         var vdata = vdoc.exists ? vdoc.data() : {};
         var bizName = vdata.businessName || vdata.name || VENDOR_ID;
-        var cat = vdata.category || vdata.vendorType || '';
+        // Fallback category map for vendors whose Firestore doc lacks a category field
+        var VENDOR_CATEGORY_MAP = {
+          'nha-bep-cua-emily': 'food', 'pho-bac-bayarea': 'food', 'com-tam-oc': 'food',
+          'luxurious-nails': 'nails', 'beauty-nails-oc': 'nails',
+          'viet-hair-bayarea': 'hair', 'cali-hair-oc': 'hair'
+        };
+        var cat = vdata.category || vdata.vendorType || VENDOR_CATEGORY_MAP[VENDOR_ID] || 'food';
         // Update top bar
         var bn = document.getElementById('barVendorName');
         var bi = document.getElementById('barVendorId');
@@ -1851,6 +1857,9 @@
         var pubUrl = '/' + catPath + '/?id=' + VENDOR_ID;
         var pl = document.getElementById('publicPageLink');
         if (pl) { pl.href = pubUrl; pl.textContent = pubUrl; }
+        // Hide food-specific daily capacity widget for non-food vendors
+        var capCard = document.getElementById('dailyCapCard');
+        if (capCard) capCard.style.display = (cat === 'food' || cat === 'foodvendor') ? '' : 'none';
         // Show app
         document.getElementById('authLoading').classList.add('hidden');
         document.getElementById('app').classList.add('visible');

@@ -3401,6 +3401,39 @@ select.field-input {
 }
 .ri-textarea { resize: none; min-height: 66px; line-height: 1.5; }
 
+/* PlaceAutocompleteElement (new Google Maps Places API) */
+.ri-pac-el {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  border-radius: 10px;
+  overflow: hidden;
+  --gmp-font-family: var(--font-b, 'Jost', sans-serif);
+  --gmp-font-size: .9rem;
+  --gmp-color-surface: rgba(255,255,255,.05);
+  --gmp-color-on-surface: #f0e6d3;
+  --gmp-color-primary: #c9a84c;
+  --gmp-border-radius: 10px;
+}
+.ri-pac-el::part(input) {
+  background: rgba(255,255,255,.05);
+  border: 1.5px solid rgba(255,255,255,.1);
+  border-radius: 10px;
+  padding: .68rem .85rem;
+  font: 400 .9rem var(--font-b, 'Jost', sans-serif);
+  color: #f0e6d3;
+  min-height: 44px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.ri-pac-el::part(input):focus {
+  outline: none;
+  border-color: #c9a84c;
+  box-shadow: 0 0 0 3px rgba(201,168,76,.12);
+  background: rgba(255,255,255,.08);
+}
+
 /* Location badge */
 .ri-loc-badge {
   display: flex;

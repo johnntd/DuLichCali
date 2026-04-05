@@ -83,26 +83,30 @@
       }
     }
 
-    // Test Distance Matrix
-    function testDistanceMatrix() {
+    // Test Route Matrix (replaces deprecated DistanceMatrixService)
+    async function testRouteMatrix() {
       try {
-        const service = new google.maps.DistanceMatrixService();
-        service.getDistanceMatrix({
-          origins: ['Santa Ana, CA'],
-          destinations: ['Disneyland, Anaheim, CA'],
-          travelMode: 'DRIVING'
-        }, (response, status) => {
-          if (status === 'OK' && response.rows[0].elements[0].status === 'OK') {
-            const distance = response.rows[0].elements[0].distance.text;
-            const duration = response.rows[0].elements[0].duration.text;
-            document.getElementById('distance-result').innerHTML = `Distance: ${distance}<br>Duration: ${duration}`;
-            console.log('Distance Matrix success:', distance, duration);
-          } else {
-            showError('Distance Matrix failed: ' + status);
-          }
+        const lib = await google.maps.importLibrary('routes');
+        const RouteMatrix = (lib && lib.RouteMatrix)
+                         || (google.maps.routes && google.maps.routes.RouteMatrix);
+        if (!RouteMatrix) { showError('RouteMatrix not available in this Maps build'); return; }
+        const resp = await new RouteMatrix().computeRouteMatrix({
+          origins:      [{ waypoint: { address: 'Santa Ana, CA' } }],
+          destinations: [{ waypoint: { address: 'Disneyland, Anaheim, CA' } }],
+          travelMode:   'DRIVE',
         });
+        if (!resp || !resp.length || !resp[0].distanceMeters) { showError('Route Matrix: no route returned'); return; }
+        const el       = resp[0];
+        const miles    = (el.distanceMeters / 1609.34).toFixed(1);
+        const durSec   = typeof el.duration === 'number' ? el.duration
+                       : (el.duration && 'seconds' in el.duration) ? Number(el.duration.seconds)
+                       : parseInt(String(el.duration)) || 0;
+        const durMins  = Math.round(durSec / 60);
+        document.getElementById('distance-result').innerHTML =
+          `Distance: ${miles} mi &nbsp;|&nbsp; Duration: ${durMins} min`;
+        console.log('Route Matrix success:', miles, 'mi,', durMins, 'min');
       } catch (err) {
-        showError('Distance Matrix initialization failed: ' + err.message);
+        showError('Route Matrix failed: ' + err.message);
       }
     }
 
@@ -119,7 +123,7 @@
       if (window.google && window.google.maps) {
         initMap();
         initAutocomplete();
-        testDistanceMatrix();
+        testRouteMatrix();
       } else {
         showError('Google Maps API failed to load. Check API key or network.');
       }

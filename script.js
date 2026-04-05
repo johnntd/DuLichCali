@@ -397,6 +397,39 @@ function selectServiceAndBook(svc) {
   setTimeout(() => selectService(svc), 60);
 }
 
+// ── Shared Route Matrix Helper ────────────────────────────────────────────────
+// Single source of truth for all distance calculations across the app.
+// Uses the Routes API (computeRouteMatrix) — replaces deprecated DistanceMatrixService.
+//
+// Usage: const { distMiles, durMins } = await DLCRouteMatrix(origin, destination);
+//   origin / destination: any string Google Maps can geocode (address, airport name, etc.)
+//
+// Example — airport proximity:
+//   const { distMiles } = await DLCRouteMatrix(userLocation, 'San Jose Mineta Airport, CA');
+//
+// Example — private ride estimate:
+//   const { distMiles, durMins } = await DLCRouteMatrix('SJC Airport', '2534 Clarebank Way, San Jose');
+//
+window.DLCRouteMatrix = async function(origin, destination) {
+  if (typeof google === 'undefined' || !google.maps) throw new Error('Maps not loaded');
+  const lib = await google.maps.importLibrary('routes');
+  const RouteMatrix = (lib && lib.RouteMatrix)
+                   || (google.maps.routes && google.maps.routes.RouteMatrix);
+  if (!RouteMatrix) throw new Error('RouteMatrix not available');
+  const resp = await new RouteMatrix().computeRouteMatrix({
+    origins:      [{ waypoint: { address: origin      } }],
+    destinations: [{ waypoint: { address: destination } }],
+    travelMode:   'DRIVE',
+  });
+  if (!resp || !resp.length || !resp[0].distanceMeters) throw new Error('no-route');
+  const el      = resp[0];
+  const distMiles = el.distanceMeters / 1609.34;
+  const durSec    = typeof el.duration === 'number'              ? el.duration
+                  : (el.duration && 'seconds' in el.duration)   ? Number(el.duration.seconds)
+                  : parseInt(String(el.duration)) || 0;
+  return { distMiles, durMins: durSec / 60 };
+};
+
 // ── Estimate Calculator ───────────────────────────────────────
 // Math delegated to DLCPricing (pricing.js) — single source of truth.
 const CALIFORNIA_AVG_FUEL_PRICE = 5.00; // kept as fallback constant
@@ -433,14 +466,8 @@ function updateEstimate() {
 
   if (typeof google === 'undefined') return;
 
-  new google.maps.DistanceMatrixService().getDistanceMatrix(
-    { origins: [origin], destinations: [destination], travelMode: google.maps.TravelMode.DRIVING },
-    (resp, status) => {
-      if (status !== 'OK') { estEl.textContent = '$0'; return; }
-      const element = resp.rows[0]?.elements[0];
-      if (!element || element.status !== 'OK') { estEl.textContent = '$0'; return; }
-
-      const miles = element.distance.value / 1609.34;
+  window.DLCRouteMatrix(origin, destination).then(({ distMiles }) => {
+      const miles = distMiles;
       lastCalculatedMiles = miles;
 
       // Delegate math to shared pricing engine
@@ -507,8 +534,9 @@ function updateEstimate() {
           lodgingCard.style.display = 'none';
         }
       }
-    }
-  );
+  }).catch(() => {
+    estEl.textContent = '$0';
+  });
 }
 
 function getTourOrigin(serviceType) {

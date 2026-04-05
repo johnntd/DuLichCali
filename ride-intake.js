@@ -401,40 +401,13 @@ window.RideIntake = (function () {
     if (typeof google === 'undefined' || !google.maps) { showPriceHint(); return; }
     showPriceLoading();
 
-    // ── Try new Routes API first; fall back to DistanceMatrixService ──
-    function legacyDistance() {
-      new google.maps.DistanceMatrixService().getDistanceMatrix(
-        { origins: [pair.origin], destinations: [pair.destination], travelMode: google.maps.TravelMode.DRIVING },
-        function (resp, status) {
-          if (status !== 'OK') { showPriceHint('Không tìm được tuyến đường.'); return; }
-          var el = resp.rows[0] && resp.rows[0].elements[0];
-          if (!el || el.status !== 'OK') { showPriceHint('Không tìm được tuyến đường.'); return; }
-          _quote = calcQuote(el.distance.value / 1609.34, el.duration.value / 60);
-          showPrice(_quote);
-        }
-      );
-    }
-
-    google.maps.importLibrary('routes').then(function (lib) {
-      // RouteMatrix may be a direct export OR under the global google.maps.routes namespace
-      var RouteMatrix = (lib && lib.RouteMatrix)
-                     || (google.maps.routes && google.maps.routes.RouteMatrix);
-      if (!RouteMatrix) { legacyDistance(); return; }
-      new RouteMatrix().computeRouteMatrix({
-        origins:      [{ waypoint: { address: pair.origin } }],
-        destinations: [{ waypoint: { address: pair.destination } }],
-        travelMode:   'DRIVE',
-      }).then(function (resp) {
-        if (!resp || !resp.length || !resp[0].distanceMeters) throw new Error('no-route');
-        var el        = resp[0];
-        var distMiles = el.distanceMeters / 1609.34;
-        var durSec    = typeof el.duration === 'number'            ? el.duration
-                      : (el.duration && 'seconds' in el.duration) ? Number(el.duration.seconds)
-                      : parseInt(String(el.duration));
-        _quote = calcQuote(distMiles, durSec / 60);
-        showPrice(_quote);
-      }).catch(legacyDistance);
-    }).catch(legacyDistance);
+    // Use shared DLCRouteMatrix helper (Routes API — replaces deprecated DistanceMatrixService)
+    window.DLCRouteMatrix(pair.origin, pair.destination).then(function(result) {
+      _quote = calcQuote(result.distMiles, result.durMins);
+      showPrice(_quote);
+    }).catch(function() {
+      showPriceHint('Không tìm được tuyến đường.');
+    });
   }
 
   // ── Price display ─────────────────────────────────────────────────────────────

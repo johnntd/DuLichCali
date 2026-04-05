@@ -95,18 +95,14 @@
           origins:      ['Santa Ana, CA'],
           destinations: ['Disneyland, Anaheim, CA'],
           travelMode,
-          fields: ['distanceMeters', 'travelDuration', 'staticDuration', 'condition', 'originIndex', 'destinationIndex'],
+          fields: ['distanceMeters', 'condition', 'originIndex', 'destinationIndex', 'localizedValues'],
         });
         if (!resp || !resp.length || !resp[0].distanceMeters) { showError('Route Matrix: no route returned'); return; }
-        const el       = resp[0];
-        const miles    = (el.distanceMeters / 1609.34).toFixed(1);
-        const durSec   = typeof el.duration === 'number' ? el.duration
-                       : (el.duration && 'seconds' in el.duration) ? Number(el.duration.seconds)
-                       : parseInt(String(el.duration)) || 0;
-        const durMins  = Math.round(durSec / 60);
-        document.getElementById('distance-result').innerHTML =
-          `Distance: ${miles} mi &nbsp;|&nbsp; Duration: ${durMins} min`;
-        console.log('Route Matrix success:', miles, 'mi,', durMins, 'min');
+        const el    = resp[0];
+        const miles = (el.distanceMeters / 1609.34).toFixed(1);
+        console.log('Route Matrix full element:', JSON.stringify(el));
+        document.getElementById('distance-result').innerHTML = `Distance: ${miles} mi`;
+        console.log('Route Matrix success:', miles, 'mi | full:', JSON.stringify(el));
       } catch (err) {
         showError('Route Matrix failed: ' + err.message);
       }

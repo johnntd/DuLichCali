@@ -139,9 +139,17 @@
       '  Step 3: Preferred date and time?',
       '  Step 4: Customer name?',
       '  Step 5: Customer phone number?',
-      'Once you have service + date/time + name + phone — read the details back as a plain sentence (no bold, no bullets), then end your reply with exactly: [ESCALATE:appointment]',
-      'Do NOT include [ESCALATE:appointment] until all four required pieces are collected.',
+      'Once you have ALL FIVE pieces — write the confirmation in ONE plain sentence (no bold, no bullets, no label-colon pairs like "Service: X"), then on the next line append BOTH markers:',
+      'GOOD: "You\'re all set — Gel Nails with Tracy on Thursday April 10th at 5 PM for John Nguyen (408-439-7522). Sending to the salon now."',
+      'BAD: "**Service:** Gel Nails\\n**Staff:** Tracy" — NEVER format this way.',
+      'After the sentence, append on a new line:',
+      '[BOOKING:{"service":"Gel Nails","staff":"Tracy","date":"2026-04-10","time":"17:00","name":"John Nguyen","phone":"408-439-7522"}]',
+      '[ESCALATE:appointment]',
+      'Replace the example values with the actual appointment values. Use ISO date (YYYY-MM-DD) and 24-hour time (HH:MM). If staff is "any available" use "Any".',
+      'Do NOT include either marker until all five pieces are collected. Do NOT add text after the markers.',
       'If unsure or customer wants immediate help: suggest calling ' + phone + ' directly.',
+      '',
+      'FAREWELL: If customer says goodbye, bye, thanks, or signals end of chat — reply with exactly 1 warm sentence (e.g., "Thank you for reaching out — have a wonderful day!"). Do NOT re-introduce yourself.',
     ].join('\n');
   }
 
@@ -153,6 +161,20 @@
 
   function _stripMarker(reply) {
     return reply.replace(/\s*\[ESCALATE:[^\]]+\]/gi, '').trim();
+  }
+
+  function _parseBookingMarker(reply) {
+    try {
+      var m = reply.match(/\[BOOKING:(\{[^}]+\})\]/);
+      if (!m) return null;
+      return JSON.parse(m[1]);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function _stripBookingMarker(reply) {
+    return reply.replace(/\s*\[BOOKING:\{[^}]+\}\]/gi, '').trim();
   }
 
   // ── Fallback (no API key) ─────────────────────────────────────────────────────
@@ -259,9 +281,11 @@
       return res.json();
     })
     .then(function (data) {
-      var raw          = (data.content && data.content[0] && data.content[0].text) || '';
+      var raw            = (data.content && data.content[0] && data.content[0].text) || '';
       var escalationType = _parseEscalationType(raw);
-      var clean        = _stripMarker(raw);
+      var bookingData    = _parseBookingMarker(raw);
+      if (bookingData) biz._bookingDraft = bookingData;
+      var clean          = _stripMarker(_stripBookingMarker(raw));
       biz._aiHistory.push({ role: 'assistant', content: clean });
       _saveHistory(biz);
       return { text: clean, escalationType: escalationType };
@@ -333,7 +357,7 @@
             if (result.escalationType) {
               var esc = window.EscalationEngine;
               if (esc && typeof esc.create === 'function') {
-                esc.create(biz, messagesEl, result.escalationType);
+                esc.create(biz, messagesEl, result.escalationType, biz._bookingDraft || null);
               }
             }
           })

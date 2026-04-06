@@ -1802,7 +1802,7 @@
       return reply.replace(/\s*\[ESCALATE:[^\]]+\]/gi, '').trim();
     },
 
-    create: function (biz, messagesEl, escalationType) {
+    create: function (biz, messagesEl, escalationType, bookingData) {
       var db = window.dlcDb;
       if (!db) {
         console.warn('[escalation] No Firestore db — escalation skipped');
@@ -1821,13 +1821,14 @@
       var phone     = biz.phone || biz.phoneDisplay || '';
 
       db.collection('escalations').doc(escId).set({
-        vendorId:       biz.id || biz.slug || '',
-        vendorName:     biz.name || '',
-        escalationType: escalationType,
-        summary:        summary,
-        status:         'pending_vendor_response',
-        createdAt:      firebase.firestore.FieldValue.serverTimestamp(),
-        vendorMessage:  null
+        vendorId:        biz.id || biz.slug || '',
+        vendorName:      biz.name || '',
+        escalationType:  escalationType,
+        summary:         summary,
+        status:          'pending_vendor_response',
+        createdAt:       firebase.firestore.FieldValue.serverTimestamp(),
+        vendorMessage:   null,
+        appointmentData: bookingData || null
       }).then(function () {
         var unsub;
         var timerHandle = setTimeout(function () {

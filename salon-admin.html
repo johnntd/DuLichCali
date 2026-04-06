@@ -334,6 +334,28 @@
     .appt-card__date { font-size: .72rem; color: var(--gold-lt); }
     .appt-card__meta { font-size: .72rem; color: var(--muted); }
 
+    /* ── Booking calendar ── */
+    .sa-date-group { margin-bottom: 1.25rem; }
+    .sa-date-label {
+      font-size: .65rem; font-weight: 700; color: var(--gold);
+      text-transform: uppercase; letter-spacing: .08em;
+      padding: .3rem 0; border-bottom: 1px solid var(--border-g);
+      margin-bottom: .5rem;
+    }
+    .sa-appt-card {
+      display: flex; gap: .75rem; align-items: flex-start;
+      background: var(--navy-800); border: 1px solid var(--border);
+      border-radius: var(--r); padding: .6rem .9rem; margin-bottom: .4rem;
+    }
+    .sa-appt-time {
+      font-size: .78rem; font-weight: 700; color: var(--gold-lt);
+      min-width: 4.5rem; flex-shrink: 0; padding-top: .05rem;
+    }
+    .sa-appt-body { flex: 1; min-width: 0; }
+    .sa-appt-name { font-size: .83rem; font-weight: 600; color: var(--cream); }
+    .sa-appt-svc  { font-size: .72rem; color: var(--muted); margin-top: .1rem; }
+    .sa-appt-ph   { font-size: .68rem; color: var(--muted); opacity: .75; margin-top: .1rem; }
+
     /* ── Settings form ── */
     .settings-grid { display: flex; flex-direction: column; gap: .85rem; max-width: 480px; }
 
@@ -498,10 +520,11 @@
           <div id="escList"></div>
         </div>
 
-        <div class="sa-section-header">
-          <div class="sa-section-title">Lịch Hẹn</div>
+        <!-- Confirmed bookings calendar -->
+        <div class="sa-section-header" style="margin-top:.5rem">
+          <div class="sa-section-title">Lịch Đã Xác Nhận</div>
         </div>
-        <div id="apptList"><div class="sa-empty">Đang tải…</div></div>
+        <div id="bookingsList"><div class="sa-empty">Đang tải…</div></div>
       </div>
 
       <!-- ── Settings tab ── -->
@@ -679,6 +702,7 @@
   var unsubSvcs      = null;
   var unsubStaff     = null;
   var unsubAppts     = null;
+  var unsubBookings  = null;
   var currentCatFilter   = 'all';
   var allServiceDocs     = [];   // [{id, data}] — full snapshot for filtering
   var currentStaffData   = [];   // [{id, name, data}] — for service modal checkboxes + availability
@@ -748,6 +772,7 @@
         subscribeServices();
         subscribeStaff();
         subscribeEscalations();
+        subscribeBookings();
         loadHoursGrid(vdata.hoursSchedule);
       }).catch(function() {
         document.getElementById('authLoading').classList.add('hidden');
@@ -762,10 +787,11 @@
   });
 
   function logout() {
-    if (unsubSvcs)  unsubSvcs();
-    if (unsubStaff) unsubStaff();
-    if (unsubAppts) unsubAppts();
-    if (_unsubEsc)  _unsubEsc();
+    if (unsubSvcs)      unsubSvcs();
+    if (unsubStaff)     unsubStaff();
+    if (unsubAppts)     unsubAppts();
+    if (_unsubEsc)      _unsubEsc();
+    if (unsubBookings)  unsubBookings();
     auth.signOut().then(function(){ window.location.href = 'vendor-login.html?id=' + (VENDOR_ID||''); });
   }
 
@@ -1426,12 +1452,126 @@
   function respondEscalation(escId, status, message) {
     var update = { status: status };
     if (message && message.trim()) update.vendorMessage = message.trim();
-    db.collection('escalations').doc(escId).update(update)
-      .then(function () {
-        var labels = { vendor_confirmed: '✓ Đã xác nhận!', vendor_declined: 'Đã từ chối.', vendor_replied: '✓ Đã gửi phản hồi!' };
-        showToast(labels[status] || 'Đã cập nhật.');
-      })
-      .catch(function (err) { showToast('Lỗi: ' + err.message); });
+
+    if (status === 'vendor_confirmed') {
+      // Read escalation first to get appointmentData, then write booking record + update status
+      db.collection('escalations').doc(escId).get().then(function (doc) {
+        var escData = doc.exists ? doc.data() : {};
+        var appt = escData.appointmentData;
+        var ts   = firebase.firestore.FieldValue.serverTimestamp;
+
+        if (appt && appt.date && appt.service) {
+          var apptRef = vendorRef.collection('appointments').doc();
+          apptRef.set({
+            escId:         escId,
+            service:       appt.service  || '',
+            staff:         appt.staff    || '',
+            date:          appt.date     || '',
+            time:          appt.time     || '',
+            customerName:  appt.name     || '',
+            customerPhone: appt.phone    || '',
+            status:        'confirmed',
+            confirmedAt:   ts(),
+            createdAt:     ts()
+          }).catch(function (e) { console.warn('[appt] write failed:', e.message); });
+        }
+
+        return db.collection('escalations').doc(escId).update(update);
+      }).then(function () {
+        showToast('✓ Đã xác nhận! Lịch hẹn đã được lưu.');
+      }).catch(function (err) { showToast('Lỗi: ' + err.message); });
+    } else {
+      db.collection('escalations').doc(escId).update(update)
+        .then(function () {
+          var labels = { vendor_declined: 'Đã từ chối.', vendor_replied: '✓ Đã gửi phản hồi!' };
+          showToast(labels[status] || 'Đã cập nhật.');
+        })
+        .catch(function (err) { showToast('Lỗi: ' + err.message); });
+    }
+  }
+
+  // ── Confirmed Appointment Calendar ───────────────────────────────────────────
+  function subscribeBookings() {
+    if (!VENDOR_ID || !vendorRef) return;
+    if (unsubBookings) unsubBookings();
+    unsubBookings = vendorRef.collection('appointments')
+      .where('status', '==', 'confirmed')
+      .limit(200)
+      .onSnapshot(function (snap) {
+        var items = snap.docs.map(function (d) {
+          return Object.assign({ id: d.id }, d.data());
+        });
+        // Sort by date then time client-side
+        items.sort(function (a, b) {
+          var da = (a.date || '') + 'T' + (a.time || '');
+          var db2 = (b.date || '') + 'T' + (b.time || '');
+          return da < db2 ? -1 : da > db2 ? 1 : 0;
+        });
+        renderBookings(items);
+      }, function (err) {
+        console.warn('[bookings] listener error:', err.message);
+      });
+  }
+
+  function _fmtDate(dateStr) {
+    if (!dateStr) return 'Không xác định';
+    try {
+      var p = dateStr.split('-');
+      var d = new Date(+p[0], +p[1] - 1, +p[2]);
+      var today = new Date(); today.setHours(0,0,0,0);
+      var diff  = Math.round((d - today) / 86400000);
+      var base  = d.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' });
+      if (diff === 0) return 'HÔM NAY — ' + base;
+      if (diff === 1) return 'NGÀY MAI — ' + base;
+      if (diff < 0)   return 'Đã qua — ' + base;
+      return base;
+    } catch (e) { return dateStr; }
+  }
+
+  function _fmtTime(timeStr) {
+    if (!timeStr) return '';
+    try {
+      var p = timeStr.split(':');
+      var h = +p[0], m = p[1] || '00';
+      return (h % 12 || 12) + ':' + m + ' ' + (h >= 12 ? 'PM' : 'AM');
+    } catch (e) { return timeStr; }
+  }
+
+  function renderBookings(items) {
+    var el = document.getElementById('bookingsList');
+    if (!el) return;
+    if (!items.length) {
+      el.innerHTML = '<div class="sa-empty">Chưa có lịch hẹn đã xác nhận.</div>';
+      return;
+    }
+
+    // Group by date
+    var byDate = {};
+    var dateOrder = [];
+    items.forEach(function (b) {
+      var d = b.date || 'unknown';
+      if (!byDate[d]) { byDate[d] = []; dateOrder.push(d); }
+      byDate[d].push(b);
+    });
+
+    el.innerHTML = dateOrder.map(function (date) {
+      var appts = byDate[date].map(function (b) {
+        var staffLabel = b.staff && b.staff !== 'Any' ? ' · <span style="color:var(--gold-lt)">' + esc(b.staff) + '</span>' : '';
+        return '<div class="sa-appt-card">' +
+          '<div class="sa-appt-time">' + esc(_fmtTime(b.time)) + '</div>' +
+          '<div class="sa-appt-body">' +
+            '<div class="sa-appt-name">' + esc(b.customerName || 'Khách') + '</div>' +
+            '<div class="sa-appt-svc">' + esc(b.service || '') + staffLabel + '</div>' +
+            (b.customerPhone ? '<div class="sa-appt-ph">' + esc(b.customerPhone) + '</div>' : '') +
+          '</div>' +
+        '</div>';
+      }).join('');
+
+      return '<div class="sa-date-group">' +
+        '<div class="sa-date-label">' + esc(_fmtDate(date)) + '</div>' +
+        appts +
+      '</div>';
+    }).join('');
   }
 
   // ── Settings ──────────────────────────────────────────────────────────────────

@@ -1828,7 +1828,8 @@
         status:          'pending_vendor_response',
         createdAt:       firebase.firestore.FieldValue.serverTimestamp(),
         vendorMessage:   null,
-        appointmentData: bookingData || null
+        appointmentData: bookingData || null,
+        lang:            (biz._bookingState && biz._bookingState.lang) || 'en'
       }).then(function () {
         var unsub;
         var timerHandle = setTimeout(function () {

@@ -114,7 +114,7 @@
 
     var receptionistName = (biz.aiReceptionist && biz.aiReceptionist.name) || 'Lily';
     var salonName = biz.name || 'Luxurious Nails & Spa';
-    var phone     = biz.phoneDisplay || biz.phone || '408-859-6718';
+    var phone     = biz.phoneDisplay || biz.phone || '';
     var address   = biz.address || 'Bay Area, California';
 
     // Services block
@@ -263,8 +263,9 @@
       '     not "Please provide your preferred date.").',
       '  D. When ALL required fields are collected (service, date, time, name, phone):',
       '     Write ONE plain sentence confirmation. Then on new lines:',
-      '     [BOOKING:{"service":"<comma-separated if multiple>","staff":"<name or Any>","date":"YYYY-MM-DD","time":"HH:MM","name":"<name>","phone":"<phone>"}]',
+      '     [BOOKING:{"services":["Service1","Service2"],"staff":"<name or Any>","date":"YYYY-MM-DD","time":"HH:MM","name":"<name>","phone":"<phone>","lang":"<en|es|vi>"}]',
       '     [ESCALATE:appointment]',
+      '     FAREWELL EXCEPTION: If intent = farewell — output ONLY the farewell sentence + STATE marker. NEVER output [BOOKING:...] or [ESCALATE:...] regardless of booking progress.',
       '     Convert relative dates to ISO using today (' + isoDate + ') as reference.',
       '     "tomorrow" → ' + (function() { var d = new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); })(),
       '     "next Monday" → calculate from today.',
@@ -293,7 +294,7 @@
 
   // ── Fallback (no API key) ─────────────────────────────────────────────────────
   function _fallback(biz, text) {
-    var phone = biz.phoneDisplay || biz.phone || '408-859-6718';
+    var phone = biz.phoneDisplay || biz.phone || '';
     var name  = biz.name || 'Luxurious Nails & Spa';
     var t     = text.toLowerCase();
     var lang  = _detectLang(text);
@@ -422,6 +423,11 @@
 
       // 3. Parse ESCALATE marker
       var escalationType = _parseEscalationType(raw);
+
+      // 3b. Farewell guard — never escalate on goodbye/thanks/done
+      if (stateUpdate && stateUpdate.intent === 'farewell') {
+        escalationType = null;
+      }
 
       // 4. Reset state after booking is sent to vendor
       if (escalationType === 'appointment') {

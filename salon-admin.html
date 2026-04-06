@@ -520,9 +520,9 @@
           <div id="escList"></div>
         </div>
 
-        <!-- Confirmed bookings calendar -->
+        <!-- All bookings calendar -->
         <div class="sa-section-header" style="margin-top:.5rem">
-          <div class="sa-section-title">Lịch Đã Xác Nhận</div>
+          <div class="sa-section-title">Tất Cả Lịch Hẹn</div>
         </div>
         <div id="bookingsList"><div class="sa-empty">Đang tải…</div></div>
       </div>
@@ -1457,24 +1457,27 @@
       // Read escalation first to get appointmentData, then write booking record + update status
       db.collection('escalations').doc(escId).get().then(function (doc) {
         var escData = doc.exists ? doc.data() : {};
-        var appt = escData.appointmentData;
+        var appt = escData.appointmentData || {};
         var ts   = firebase.firestore.FieldValue.serverTimestamp;
 
-        if (appt && appt.date && appt.service) {
-          var apptRef = vendorRef.collection('appointments').doc();
-          apptRef.set({
-            escId:         escId,
-            service:       appt.service  || '',
-            staff:         appt.staff    || '',
-            date:          appt.date     || '',
-            time:          appt.time     || '',
-            customerName:  appt.name     || '',
-            customerPhone: appt.phone    || '',
-            status:        'confirmed',
-            confirmedAt:   ts(),
-            createdAt:     ts()
-          }).catch(function (e) { console.warn('[appt] write failed:', e.message); });
-        }
+        // Normalize services — support both new "services" array and old "service" string
+        var svcs = appt.services || (appt.service ? [appt.service] : []);
+
+        var apptRef = vendorRef.collection('appointments').doc();
+        apptRef.set({
+          escId:            escId,
+          selectedServices: svcs,
+          service:          svcs.join(', '),   // legacy compat for renderBookings
+          staff:            appt.staff    || 'Any',
+          date:             appt.date     || '',
+          time:             appt.time     || '',
+          customerName:     appt.name     || 'Khách',
+          customerPhone:    appt.phone    || '',
+          lang:             appt.lang || escData.lang || 'en',
+          status:           'confirmed',
+          confirmedAt:      ts(),
+          createdAt:        ts()
+        }).catch(function (e) { console.warn('[appt] write failed:', e.message); });
 
         return db.collection('escalations').doc(escId).update(update);
       }).then(function () {
@@ -1494,23 +1497,28 @@
   function subscribeBookings() {
     if (!VENDOR_ID || !vendorRef) return;
     if (unsubBookings) unsubBookings();
-    unsubBookings = vendorRef.collection('appointments')
-      .where('status', '==', 'confirmed')
-      .limit(200)
-      .onSnapshot(function (snap) {
+
+    function _startListener(query) {
+      return query.onSnapshot(function (snap) {
         var items = snap.docs.map(function (d) {
           return Object.assign({ id: d.id }, d.data());
         });
-        // Sort by date then time client-side
+        // Sort by date+time ascending (upcoming first), then past
         items.sort(function (a, b) {
-          var da = (a.date || '') + 'T' + (a.time || '');
-          var db2 = (b.date || '') + 'T' + (b.time || '');
+          var da = (a.date || '') + 'T' + (a.time || '00:00');
+          var db2 = (b.date || '') + 'T' + (b.time || '00:00');
           return da < db2 ? -1 : da > db2 ? 1 : 0;
         });
         renderBookings(items);
       }, function (err) {
         console.warn('[bookings] listener error:', err.message);
       });
+    }
+
+    // Try with orderBy first; Firestore auto-creates index for simple subcollection queries
+    unsubBookings = _startListener(
+      vendorRef.collection('appointments').limit(300)
+    );
   }
 
   function _fmtDate(dateStr) {
@@ -1541,7 +1549,7 @@
     var el = document.getElementById('bookingsList');
     if (!el) return;
     if (!items.length) {
-      el.innerHTML = '<div class="sa-empty">Chưa có lịch hẹn đã xác nhận.</div>';
+      el.innerHTML = '<div class="sa-empty">Chưa có lịch hẹn nào.</div>';
       return;
     }
 
@@ -1554,15 +1562,40 @@
       byDate[d].push(b);
     });
 
+    var statusLabels = {
+      confirmed: '<span style="font-size:.72rem;color:var(--success);white-space:nowrap">&#9679; Đã xác nhận</span>',
+      completed: '<span style="font-size:.72rem;color:#60a5fa;white-space:nowrap">&#9679; Hoàn thành</span>',
+      canceled:  '<span style="font-size:.72rem;color:var(--muted);white-space:nowrap">&#9679; Đã hủy</span>',
+      no_show:   '<span style="font-size:.72rem;color:var(--danger);white-space:nowrap">&#9679; Vắng mặt</span>'
+    };
+
     el.innerHTML = dateOrder.map(function (date) {
       var appts = byDate[date].map(function (b) {
-        var staffLabel = b.staff && b.staff !== 'Any' ? ' · <span style="color:var(--gold-lt)">' + esc(b.staff) + '</span>' : '';
+        // Normalize service display — support both selectedServices array and service string
+        var svcArr = b.selectedServices || b.services || (b.service ? [b.service] : []);
+        var svcLabel = Array.isArray(svcArr) ? svcArr.join(', ') : (svcArr || '');
+        var staffLabel = b.staff && b.staff !== 'Any' ? ' &middot; <span style="color:var(--gold-lt)">' + esc(b.staff) + '</span>' : '';
+        var statusBadge = statusLabels[b.status] || '';
+
+        var actions = '';
+        if (b.status === 'confirmed') {
+          actions = '<div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem">' +
+            '<button class="btn btn--sm" style="background:var(--success);color:#000;font-size:.7rem;padding:3px 8px" onclick="updateBookingStatus(\'' + b.id + '\',\'completed\')">&#10003; Hoàn thành</button>' +
+            '<button class="btn btn--sm" style="background:transparent;border:1px solid var(--danger);color:var(--danger);font-size:.7rem;padding:3px 8px" onclick="updateBookingStatus(\'' + b.id + '\',\'no_show\')">Vắng mặt</button>' +
+            '<button class="btn btn--sm" style="background:transparent;border:1px solid var(--muted);color:var(--muted);font-size:.7rem;padding:3px 8px" onclick="updateBookingStatus(\'' + b.id + '\',\'canceled\')">Hủy</button>' +
+          '</div>';
+        }
+
         return '<div class="sa-appt-card">' +
           '<div class="sa-appt-time">' + esc(_fmtTime(b.time)) + '</div>' +
           '<div class="sa-appt-body">' +
-            '<div class="sa-appt-name">' + esc(b.customerName || 'Khách') + '</div>' +
-            '<div class="sa-appt-svc">' + esc(b.service || '') + staffLabel + '</div>' +
+            '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem">' +
+              '<div class="sa-appt-name">' + esc(b.customerName || 'Khách') + '</div>' +
+              statusBadge +
+            '</div>' +
+            '<div class="sa-appt-svc">' + esc(svcLabel) + staffLabel + '</div>' +
             (b.customerPhone ? '<div class="sa-appt-ph">' + esc(b.customerPhone) + '</div>' : '') +
+            actions +
           '</div>' +
         '</div>';
       }).join('');
@@ -1572,6 +1605,16 @@
         appts +
       '</div>';
     }).join('');
+  }
+
+  function updateBookingStatus(apptId, newStatus) {
+    vendorRef.collection('appointments').doc(apptId).update({
+      status:    newStatus,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function () {
+      var labels = { completed: 'Đã hoàn thành!', no_show: 'Đã đánh dấu vắng mặt.', canceled: 'Đã hủy lịch.' };
+      showToast(labels[newStatus] || 'Đã cập nhật.');
+    }).catch(function (err) { showToast('Lỗi: ' + err.message); });
   }
 
   // ── Settings ──────────────────────────────────────────────────────────────────

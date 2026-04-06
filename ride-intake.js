@@ -344,16 +344,19 @@ window.RideIntake = (function () {
   }
 
   // ── Google Places Autocomplete ────────────────────────────────────────────────
+  // Always use legacy google.maps.places.Autocomplete — attaches to the existing
+  // <input> without replacing it, so .value, CSS, and mobile keyboard all work
+  // correctly (same approach as the food order intake form).
+
   function _scrollInputIntoView(el) {
     if (!el) return;
-    // Scroll the .ri-scrollbody container (not the window) so the input is visible
-    // above the keyboard. We find the nearest scrollable ancestor.
+    // Manually scroll .ri-scrollbody so input stays visible above mobile keyboard.
+    // Cannot rely on browser's native scrollIntoView inside position:fixed panels.
     var scrollParent = el.closest ? el.closest('.ri-scrollbody') : null;
     if (!scrollParent) return;
     var elRect = el.getBoundingClientRect();
     var pRect  = scrollParent.getBoundingClientRect();
-    // Aim to place the element ~40px below the top of the scroll container
-    var target = scrollParent.scrollTop + (elRect.top - pRect.top) - 40;
+    var target = scrollParent.scrollTop + (elRect.top - pRect.top) - 60;
     scrollParent.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
   }
 
@@ -362,21 +365,8 @@ window.RideIntake = (function () {
     var ids = { pickup: ['ri_dropoff_addr'], dropoff: ['ri_pickup_addr'], ride: ['ri_from_addr','ri_to_addr'] };
     (ids[_type] || []).forEach(function (id) {
       var input = document.getElementById(id);
-      if (!input || _ac[id]) return;
-      google.maps.importLibrary('places').then(function(lib) {
-        var PlaceAutocompleteElement = lib.PlaceAutocompleteElement;
-        if (!PlaceAutocompleteElement) { _initAutocompleteLegacy(id, input); return; }
-        var pac = new PlaceAutocompleteElement({ componentRestrictions: { country: 'us' } });
-        pac.id          = id;
-        pac.className   = 'ri-input';
-        pac.placeholder = input.placeholder || '';
-        input.parentNode.replaceChild(pac, input);
-        pac.addEventListener('gmp-placeselect', function() { scheduleDistance(); });
-        pac.addEventListener('focus', function() {
-          setTimeout(function() { _scrollInputIntoView(pac); }, 350);
-        });
-        _ac[id] = pac;
-      }).catch(function() { _initAutocompleteLegacy(id, input); });
+      if (!input || input.tagName !== 'INPUT' || _ac[id]) return;
+      _initAutocompleteLegacy(id, input);
     });
   }
 
@@ -391,7 +381,7 @@ window.RideIntake = (function () {
       scheduleDistance();
     });
     input.addEventListener('focus', function() {
-      setTimeout(function() { _scrollInputIntoView(input); }, 350);
+      setTimeout(function() { _scrollInputIntoView(input); }, 400);
     });
     _ac[id] = ac;
   }

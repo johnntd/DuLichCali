@@ -3415,33 +3415,7 @@ gmp-placeautocomplete.field-input::part(input):focus {
   appearance: none;
 }
 .ri-input::placeholder { color: rgba(255,255,255,.38); }
-/* PlaceAutocompleteElement (gmp-placeautocomplete) — ride-intake address fields */
-gmp-placeautocomplete.ri-input {
-  display: block; width: 100%; min-height: 44px;
-  --gmp-font-family: var(--font-b, 'Jost', sans-serif);
-  --gmp-font-size: .9rem;
-  --gmp-color-primary: #c9a84c;
-  --gmp-border-radius: 10px;
-  /* NOTE: Do NOT set --gmp-color-surface or --gmp-color-on-surface here.
-     Those cascade into the shadow DOM and make typed text invisible in browsers
-     where ::part(input) is not supported (e.g. iOS Safari < 15).
-     Visual styling is handled exclusively via ::part(input) below. */
-}
-gmp-placeautocomplete.ri-input::part(input) {
-  width: 100%; min-height: 44px;
-  background: rgba(255,255,255,.11);
-  border: 1.5px solid rgba(255,255,255,.2);
-  border-radius: 10px;
-  padding: .68rem .85rem;
-  font: 400 .9rem var(--font-b, 'Jost', sans-serif);
-  color: #f0e6d3;
-  -webkit-appearance: none; appearance: none; box-sizing: border-box;
-}
-gmp-placeautocomplete.ri-input::part(input):focus {
-  outline: none; border-color: #c9a84c;
-  box-shadow: 0 0 0 3px rgba(201,168,76,.15);
-  background: rgba(255,255,255,.15);
-}
+/* gmp-placeautocomplete rules removed — address inputs use legacy Autocomplete now */
 .ri-input:focus, .ri-select:focus {
   outline: none;
   border-color: #c9a84c;

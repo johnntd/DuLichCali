@@ -287,10 +287,15 @@
     var phone     = biz.phoneDisplay || biz.phone || '';
     var address   = biz.address || 'Bay Area, California';
 
-    // Services block — show durationMins (number) for accurate duration, fall back to duration string
+    // Services block — prefer active Firestore services; fall back to full static catalog so
+    // Claude always has service/price/duration knowledge even before vendor activates services.
     var services = biz.services || [];
     var shown = services.filter(function (s) { return s.active !== false; });
-    if (shown.length === 0) shown = services.slice(0, 30);
+    if (shown.length === 0) {
+      // No active services yet — use full static catalog (AI knowledge only, not shown publicly)
+      var staticSvcs = biz._staticServices || [];
+      shown = staticSvcs.slice(0, 40); // cap at 40 to stay within prompt size
+    }
     var servicesBlock = shown.length > 0
       ? shown.map(function (s) {
           var line = '• ' + s.name;
@@ -318,20 +323,36 @@
       hoursBlock = 'Mon–Fri 9:30 am–7:30 pm\nSat 9:30 am–7:00 pm\nSun 10:00 am–6:00 pm\n(TODAY is ' + todayName + ')';
     }
 
+    // Short-key map for schedule lookup — handles both storage formats:
+    //   services-data.js / Firestore vendor-admin: { mon:{active,start,end}, tue:... }
+    //   future normalized format:                  { monday:{open,close}, tuesday:... }
+    var _shortKey = { monday:'mon', tuesday:'tue', wednesday:'wed', thursday:'thu', friday:'fri', saturday:'sat', sunday:'sun' };
+
+    function _schedDay(schedule, longDay) {
+      if (!schedule) return null;
+      var s = schedule[longDay] || schedule[_shortKey[longDay]];
+      if (!s) return null;
+      // Normalize field names: start→open, end→close, active flag
+      var open  = s.open  || s.start;
+      var close = s.close || s.end;
+      var off   = s.active === false || !open;
+      return off ? null : { open: open, close: close };
+    }
+
     // Staff block
     var activeStaff = (biz.staff || []).filter(function (m) { return m.active !== false; });
     var staffBlock;
     if (activeStaff.length > 0) {
       staffBlock = activeStaff.map(function (m) {
-        var header = '• ' + m.name + (m.title ? ' (' + m.title + ')' : '');
+        var header = '• ' + m.name + (m.role ? ' (' + m.role + ')' : (m.title ? ' (' + m.title + ')' : ''));
         var lines  = [header];
         if (m.schedule) {
           daysOrder.forEach(function (d) {
-            var s = m.schedule[d];
-            var label = d.charAt(0).toUpperCase() + d.slice(1);
+            var hrs    = _schedDay(m.schedule, d);
+            var label  = d.charAt(0).toUpperCase() + d.slice(1);
             var marker = (d === todayName) ? ' ← TODAY' : '';
-            if (!s || !s.open) lines.push('    ' + label + ': OFF' + marker);
-            else lines.push('    ' + label + ': ' + s.open + ' – ' + s.close + marker);
+            if (!hrs) lines.push('    ' + label + ': OFF' + marker);
+            else lines.push('    ' + label + ': ' + hrs.open + ' – ' + hrs.close + marker);
           });
         }
         if (m.specialties) {
@@ -492,12 +513,42 @@
       return '¡Gracias por contactar a ' + name + '! Para asistencia inmediata llame al ' + phone + '.';
     }
 
-    // English
-    if (/hour|open|close|schedule/.test(t))  return 'We are open Mon–Fri 9:30am–7:30pm, Sat 9:30am–7pm, Sun 10am–6pm. Call ' + phone + ' to confirm availability.';
+    // English — staff availability: look up actual schedule before falling back to generic
+    if (/staff|technician|working|available|when|today|schedule|helen|tracy/i.test(t)) {
+      var today      = new Date();
+      var todayDow   = DAYS[today.getDay()]; // 'sunday','monday', etc.
+      var shortMap   = { sunday:'sun', monday:'mon', tuesday:'tue', wednesday:'wed', thursday:'thu', friday:'fri', saturday:'sat' };
+      var shortDow   = shortMap[todayDow];
+      var staffList  = (biz.staff || []).filter(function (m) { return m.active !== false; });
+      var namedMember = null;
+      staffList.forEach(function (m) {
+        if (t.indexOf(m.name.toLowerCase()) >= 0) namedMember = m;
+      });
+      if (namedMember) {
+        var sch = namedMember.schedule || {};
+        var day = sch[todayDow] || sch[shortDow];
+        var openT  = day && (day.open  || day.start);
+        var closeT = day && (day.close || day.end);
+        var isOff  = !day || day.active === false || !openT;
+        if (isOff) {
+          return namedMember.name + ' is not working today. Call ' + phone + ' for their next available day or to be matched with another technician.';
+        }
+        return namedMember.name + ' is working today from ' + openT + ' to ' + closeT + '. Would you like to book an appointment?';
+      }
+      if (staffList.length > 0) {
+        var todayNames = staffList.filter(function (m) {
+          var sch = m.schedule || {};
+          var day = sch[todayDow] || sch[shortDow];
+          return day && day.active !== false && (day.open || day.start);
+        }).map(function (m) { return m.name; });
+        if (todayNames.length > 0) return 'Working today: ' + todayNames.join(' and ') + '. Call ' + phone + ' or use the booking form to schedule!';
+      }
+      return 'Our technicians are experienced professionals. Call ' + phone + ' or use the booking form above to schedule your appointment.';
+    }
+    if (/hour|open|close/.test(t))           return 'We are open Mon–Fri 9:30am–7:30pm, Sat 9:30am–7pm, Sun 10am–6pm. Call ' + phone + ' to confirm.';
     if (/walk.?in/.test(t))                  return 'Walk-ins welcome based on availability! Call ' + phone + ' to check wait times.';
     if (/price|cost|how much/.test(t))       return 'Prices vary by service. Call us at ' + phone + ' or ask about a specific service.';
-    if (/book|appoint|schedule|reserv/.test(t)) return 'To book an appointment, please call ' + phone + '. We\'ll find the perfect time!';
-    if (/staff|technician|helen|tracy/.test(t)) return 'Our technicians are experienced professionals. Call ' + phone + ' to be matched with the right person.';
+    if (/book|appoint|reserv/.test(t))       return 'Use the booking form above to select your services and request an appointment!';
     return 'Thank you for contacting ' + name + '! For immediate help please call ' + phone + '.';
   }
 

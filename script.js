@@ -1197,6 +1197,17 @@ async function checkRideServiceAvailability(regionId) {
 
     const isScheduledAvailable = doc => {
       const d = doc.data ? doc.data() : doc;
+      // ── Compliance gate: driver must be fully approved ────────────────────
+      if (d.complianceStatus !== 'approved') return false;
+      // ── Admin status gate: only 'active' drivers can take rides ──────────
+      if (d.adminStatus && d.adminStatus !== 'active') return false;
+      // ── Real-time expiration check (belt-and-suspenders) ─────────────────
+      // Mirror expiry fields (licExpiry, regExpiry, insExpiry) are set by admin
+      // when approving documents. Automatically excludes expired-since-approval drivers.
+      if (d.licExpiry && d.licExpiry < todayStr) return false;
+      if (d.regExpiry && d.regExpiry < todayStr) return false;
+      if (d.insExpiry && d.insExpiry < todayStr) return false;
+      // ── Schedule / region checks ──────────────────────────────────────────
       if (!(d.regions || []).includes(regionId)) return false;
       if ((d.availability?.blackoutDates || []).includes(todayStr)) return false;
       const sched = d.availability?.weeklySchedule?.[day];

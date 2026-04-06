@@ -47,6 +47,13 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
 
+    // Driver compliance documents — auth only (contains sensitive license/insurance/registration info).
+    // Drivers write their own submissions; admin writes review decisions.
+    // NOT publicly readable — compliance data is internal.
+    match /driver_compliance/{driverId} {
+      allow read, write: if request.auth != null;
+    }
+
     // Ride booking notifications for active drivers — public create (ride form is unauthenticated),
     // auth read (drivers read their notifications after signing in to driver-admin).
     match /rideNotifications/{notifId} {

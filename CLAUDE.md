@@ -354,3 +354,108 @@ DuLichCali uses a **two-tier provider system**: Vendors (food/nail/hair) and Dri
 - Admin can generate random 4-digit PINs with 🎲 button
 - Admin can reset driver PIN and sync Firebase Auth password
 - Vendor and driver cards show onboarding status (registered email vs "Chưa đăng ký")
+
+---
+
+## Driver Compliance & Approval Rules — NON-NEGOTIABLE
+
+Drivers must pass compliance review before they can appear as available for rides. This system is permanent and must not be weakened.
+
+### Required Compliance Documents
+
+Every driver must submit three document groups before admin can approve them:
+
+| Document | Required Fields | Key Expiry Field |
+|---|---|---|
+| **Driver License** | Legal name, license number, expiration date, front image URL | `license.expirationDate` |
+| **Vehicle Registration** | License plate, VIN, expiration date, document URL | `registration.expirationDate` |
+| **Insurance** | Insurer name, policy number, named insured, expiration date, card URL | `insurance.expirationDate` |
+
+### Per-Document Statuses
+
+`not_submitted` → `pending` → `approved` | `rejected`
+
+Driver fills in → Admin reviews → Admin approves or rejects with reason.
+If rejected, driver sees the reason and must update and resubmit.
+
+### Overall Compliance Status
+
+| Status | Meaning |
+|---|---|
+| `pending_documents` | Not all docs submitted yet |
+| `pending_review` | All submitted, waiting for admin decision |
+| `approved` | All docs approved by admin and not expired |
+| `rejected` | At least one doc rejected by admin |
+| `expired` | At least one approved doc has passed its expiration date |
+
+### Enforcement Rules — NEVER violate
+
+- **Only `approved` drivers appear in availability** — `checkRideServiceAvailability()` in `script.js` and `checkRides()` in `landing-nav.js` both filter `complianceStatus === 'approved'`
+- **Real-time expiry check** — `licExpiry`, `regExpiry`, `insExpiry` mirror fields on `drivers/{id}` are checked against today's date in availability queries; expired docs automatically exclude the driver
+- **`adminStatus` enforced** — `active` only; blocked/deactivated/archived drivers are also excluded
+- **Admin is the only authority** — drivers cannot approve themselves; only admin.html approval functions update compliance status
+- **Non-compliant drivers cannot receive ride notifications** — they do not appear in `_availableDrivers`
+
+### Data Model
+
+**Firestore collections:**
+
+```
+drivers/{driverId}
+  complianceStatus: 'pending_documents'|'pending_review'|'approved'|'rejected'|'expired'
+  licExpiry:  YYYY-MM-DD   ← mirror from license.expirationDate (set on admin approval)
+  regExpiry:  YYYY-MM-DD   ← mirror from registration.expirationDate
+  insExpiry:  YYYY-MM-DD   ← mirror from insurance.expirationDate
+
+driver_compliance/{driverId}
+  license:      { status, legalName, number, expirationDate, fileFrontUrl, fileBackUrl,
+                  rejectionReason, reviewedAt, reviewedBy,
+                  verificationSource, verificationStatus, verificationReference, verificationCheckedAt }
+  registration: { status, plate, vin, expirationDate, fileUrl, rejectionReason, reviewedAt, reviewedBy }
+  insurance:    { status, insurer, policyNumber, namedInsured, expirationDate, fileUrl, rejectionReason, reviewedAt, reviewedBy }
+  overallStatus, complianceNotes, lastReviewAt, lastReviewBy, nextRequiredAction, expirationWarning
+```
+
+### Shared Utility
+
+`driver-compliance.js` — loaded by both `driver-admin.html` and `admin.html`.
+Provides: `computeOverall()`, `computeExpirationWarning()`, `daysUntil()`, labels, CSS classes.
+**Both pages must load this file before their own scripts.**
+
+### Expiration Warning Thresholds
+
+| Warning | Threshold |
+|---|---|
+| `expiring_soon_30` | ≤ 30 days until earliest approved-doc expiry |
+| `expiring_soon_14` | ≤ 14 days |
+| `expiring_soon_7`  | ≤ 7 days |
+
+### Future Verification Integration Hooks
+
+The compliance data model includes future-ready fields on `license`:
+- `verificationSource` — e.g. `'aamva'`, `'checkr'`
+- `verificationStatus` — e.g. `'verified'`, `'failed'`
+- `verificationReference` — external job/reference ID
+- `verificationCheckedAt` — timestamp of last verification check
+
+Do NOT fake real-time DMV or insurance verification. Plug real verification results into these fields when an authorized integration is set up. The core workflow (driver submits → admin approves) must remain the gate regardless of verification source.
+
+### Admin Actions Available
+
+From `admin.html` driver row → Pháp Lý (compliance panel):
+- **Duyệt** (Approve) individual document
+- **Từ Chối** (Reject) individual document with required reason
+- **Duyệt Tất Cả Đang Chờ** (Approve All Pending)
+- **Yêu Cầu Cập Nhật** (Request Update) — sets status back to `pending_documents`
+- Internal notes field (not shown to driver)
+
+### New Driver Onboarding Flow
+
+1. Admin creates driver in `admin.html` → `complianceStatus: 'pending_documents'` set automatically
+2. Driver logs into `driver-admin.html` → taps "Tài Liệu" tab
+3. Driver fills in all three document sections (forms + Google Drive links)
+4. Driver clicks "Nộp Tài Liệu Để Duyệt" → status becomes `pending_review`
+5. Admin reviews in `admin.html` → approves/rejects each doc
+6. When all approved → `complianceStatus: 'approved'` → driver appears in availability
+
+All future driver onboarding must follow this flow. Do not skip compliance review.

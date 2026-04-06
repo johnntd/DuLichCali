@@ -12,6 +12,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="/driver-compliance.js"></script>
 
   <style>
     :root {
@@ -318,6 +319,64 @@
       color: var(--success); font-size: .65rem; font-weight: 700;
       letter-spacing: .08em; text-transform: uppercase; border-radius: 999px;
     }
+
+    /* ── Compliance documents tab ─────────────────────────────────────────── */
+    .comp-banner {
+      border-radius: 10px; padding: .85rem 1rem; margin-bottom: 1rem;
+      display: flex; align-items: flex-start; gap: .75rem;
+    }
+    .comp-banner.comp-ok      { background: rgba(74,222,128,.08); border: 1px solid rgba(74,222,128,.25); }
+    .comp-banner.comp-pending { background: rgba(245,166,35,.08); border: 1px solid rgba(245,166,35,.25); }
+    .comp-banner.comp-missing { background: rgba(255,255,255,.04); border: 1px solid var(--border); }
+    .comp-banner.comp-rejected{ background: rgba(248,113,113,.08); border: 1px solid rgba(248,113,113,.3); }
+    .comp-banner.comp-expired { background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.4); }
+    .comp-banner__icon { font-size: 1.5rem; flex-shrink: 0; line-height: 1.2; }
+    .comp-banner__title { font-size: .82rem; font-weight: 700; color: var(--cream); }
+    .comp-banner__sub { font-size: .7rem; color: var(--muted); margin-top: .2rem; line-height: 1.5; }
+    .doc-section {
+      background: var(--navy-800); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1rem 1.1rem; margin-bottom: .85rem;
+    }
+    .doc-section__head {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: .9rem;
+    }
+    .doc-section__title {
+      font-size: .6rem; font-weight: 700; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--gold);
+    }
+    .doc-badge {
+      display: inline-block; padding: .15rem .55rem; border-radius: 999px;
+      font-size: .6rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    }
+    .doc-badge.comp-ok       { background: rgba(74,222,128,.12); color: #4ade80; border: 1px solid rgba(74,222,128,.3); }
+    .doc-badge.comp-pending  { background: rgba(245,166,35,.12); color: var(--gold); border: 1px solid rgba(245,166,35,.3); }
+    .doc-badge.comp-missing  { background: rgba(255,255,255,.06); color: var(--muted); border: 1px solid var(--border); }
+    .doc-badge.comp-rejected { background: rgba(248,113,113,.12); color: var(--danger); border: 1px solid rgba(248,113,113,.3); }
+    .doc-badge.comp-expired  { background: rgba(248,113,113,.15); color: var(--danger); border: 1px solid rgba(248,113,113,.4); }
+    .doc-rejection-note {
+      font-size: .72rem; color: var(--danger); margin-top: .5rem; margin-bottom: .5rem;
+      padding: .4rem .7rem; background: rgba(248,113,113,.07);
+      border-radius: 6px; border-left: 2px solid var(--danger);
+    }
+    .doc-approved-note {
+      font-size: .7rem; color: var(--muted); margin-top: .5rem;
+      padding: .35rem .7rem; background: rgba(74,222,128,.06);
+      border-radius: 6px; border-left: 2px solid rgba(74,222,128,.4);
+    }
+    .comp-hint {
+      font-size: .73rem; color: var(--muted); line-height: 1.6; margin-bottom: 1rem;
+    }
+    .comp-hint strong { color: var(--text); }
+    .btn-comp-submit {
+      width: 100%; height: 52px; margin-top: .25rem;
+      background: var(--gold); color: var(--navy-900);
+      font-family: var(--font-b); font-size: .83rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      border: none; border-radius: var(--r); cursor: pointer; transition: background .2s;
+    }
+    .btn-comp-submit:hover { background: var(--gold-lt); }
+    .btn-comp-submit:disabled { opacity: .45; cursor: not-allowed; }
+    .comp-msg { font-size: .76rem; min-height: 1.3em; margin-bottom: .4rem; }
   </style>
   <link rel="stylesheet" href="/desktop.css">
 </head>
@@ -339,6 +398,7 @@
   <!-- Tab bar -->
   <div class="drv-tabs">
     <button class="drv-tab active" onclick="drvTab('profile')">Hồ Sơ</button>
+    <button class="drv-tab" onclick="drvTab('docs')">Tài Liệu <span class="drv-tab-badge hidden" id="docsBadge"></span></button>
     <button class="drv-tab" onclick="drvTab('rides')">Chuyến Mới <span class="drv-tab-badge hidden" id="rideBadge">0</span></button>
   </div>
 
@@ -465,6 +525,121 @@
   <button class="btn-save" id="btnSave" onclick="doSave()">Lưu Thay Đổi</button>
 
   </div><!-- /panelProfile -->
+
+  <!-- Documents panel -->
+  <div id="panelDocs" class="drv-panel">
+
+    <div id="compStatusBanner" class="comp-banner comp-missing">
+      <div class="comp-banner__icon" id="compBannerIcon">📋</div>
+      <div>
+        <div class="comp-banner__title" id="compBannerTitle">Đang tải hồ sơ…</div>
+        <div class="comp-banner__sub" id="compBannerSub"></div>
+      </div>
+    </div>
+
+    <div class="comp-hint">
+      Nộp đầy đủ tài liệu để admin xét duyệt. Khi được duyệt, bạn sẽ xuất hiện trong danh sách tài xế khả dụng và có thể nhận chuyến.<br>
+      <strong>Cách tải tài liệu:</strong> Chụp ảnh → tải lên Google Drive → bật <em>Chia sẻ liên kết</em> (Anyone with link) → dán liên kết vào đây.
+    </div>
+
+    <!-- Driver License -->
+    <div class="doc-section">
+      <div class="doc-section__head">
+        <div class="doc-section__title">Bằng Lái Xe</div>
+        <span class="doc-badge comp-missing" id="lic-badge">Chưa Nộp</span>
+      </div>
+      <div id="lic-rejection" class="doc-rejection-note" style="display:none"></div>
+      <div id="lic-approved"  class="doc-approved-note"  style="display:none">✓ Đã duyệt — liên hệ admin nếu cần cập nhật.</div>
+      <div class="f-grid" style="margin-bottom:.65rem">
+        <div class="f-row">
+          <label class="f-label" for="lic-name">Tên trên bằng lái</label>
+          <input class="f-input" type="text" id="lic-name" placeholder="Nguyễn Văn A">
+        </div>
+        <div class="f-row">
+          <label class="f-label" for="lic-number">Số bằng lái</label>
+          <input class="f-input" type="text" id="lic-number" placeholder="C1234567">
+        </div>
+      </div>
+      <div class="f-row">
+        <label class="f-label" for="lic-expiry">Ngày hết hạn</label>
+        <input class="f-input" type="date" id="lic-expiry">
+      </div>
+      <div class="f-row">
+        <label class="f-label" for="lic-front-url">Liên kết ảnh mặt trước bằng lái</label>
+        <input class="f-input" type="url" id="lic-front-url" placeholder="https://drive.google.com/file/d/...">
+      </div>
+      <div class="f-row" style="margin-bottom:0">
+        <label class="f-label" for="lic-back-url">Liên kết ảnh mặt sau (tùy chọn)</label>
+        <input class="f-input" type="url" id="lic-back-url" placeholder="https://drive.google.com/file/d/... (nếu có)">
+      </div>
+    </div>
+
+    <!-- Vehicle Registration -->
+    <div class="doc-section">
+      <div class="doc-section__head">
+        <div class="doc-section__title">Đăng Ký Xe</div>
+        <span class="doc-badge comp-missing" id="reg-badge">Chưa Nộp</span>
+      </div>
+      <div id="reg-rejection" class="doc-rejection-note" style="display:none"></div>
+      <div id="reg-approved"  class="doc-approved-note"  style="display:none">✓ Đã duyệt — liên hệ admin nếu cần cập nhật.</div>
+      <div class="f-grid" style="margin-bottom:.65rem">
+        <div class="f-row">
+          <label class="f-label" for="reg-plate">Biển số xe</label>
+          <input class="f-input" type="text" id="reg-plate" placeholder="7ABC123">
+        </div>
+        <div class="f-row">
+          <label class="f-label" for="reg-vin">Số VIN</label>
+          <input class="f-input" type="text" id="reg-vin" placeholder="1HGBH41JXMN109186">
+        </div>
+      </div>
+      <div class="f-row">
+        <label class="f-label" for="reg-expiry">Ngày hết hạn đăng ký</label>
+        <input class="f-input" type="date" id="reg-expiry">
+      </div>
+      <div class="f-row" style="margin-bottom:0">
+        <label class="f-label" for="reg-url">Liên kết ảnh giấy đăng ký xe</label>
+        <input class="f-input" type="url" id="reg-url" placeholder="https://drive.google.com/file/d/...">
+      </div>
+    </div>
+
+    <!-- Insurance -->
+    <div class="doc-section">
+      <div class="doc-section__head">
+        <div class="doc-section__title">Bảo Hiểm Xe</div>
+        <span class="doc-badge comp-missing" id="ins-badge">Chưa Nộp</span>
+      </div>
+      <div id="ins-rejection" class="doc-rejection-note" style="display:none"></div>
+      <div id="ins-approved"  class="doc-approved-note"  style="display:none">✓ Đã duyệt — liên hệ admin nếu cần cập nhật.</div>
+      <div class="f-grid" style="margin-bottom:.65rem">
+        <div class="f-row">
+          <label class="f-label" for="ins-company">Công ty bảo hiểm</label>
+          <input class="f-input" type="text" id="ins-company" placeholder="State Farm, Allstate…">
+        </div>
+        <div class="f-row">
+          <label class="f-label" for="ins-policy">Số hợp đồng (Policy #)</label>
+          <input class="f-input" type="text" id="ins-policy" placeholder="ABC-123456">
+        </div>
+      </div>
+      <div class="f-grid" style="margin-bottom:.65rem">
+        <div class="f-row">
+          <label class="f-label" for="ins-insured">Tên trên hợp đồng bảo hiểm</label>
+          <input class="f-input" type="text" id="ins-insured" placeholder="Nguyễn Văn A">
+        </div>
+        <div class="f-row">
+          <label class="f-label" for="ins-expiry">Ngày hết hạn bảo hiểm</label>
+          <input class="f-input" type="date" id="ins-expiry">
+        </div>
+      </div>
+      <div class="f-row" style="margin-bottom:0">
+        <label class="f-label" for="ins-url">Liên kết thẻ bảo hiểm (insurance card)</label>
+        <input class="f-input" type="url" id="ins-url" placeholder="https://drive.google.com/file/d/...">
+      </div>
+    </div>
+
+    <div class="comp-msg" id="compDocsMsg"></div>
+    <button class="btn-comp-submit" id="btnSubmitDocs" onclick="submitComplianceDocs()">Nộp Tài Liệu Để Duyệt</button>
+
+  </div><!-- /panelDocs -->
 
   <!-- Rides panel -->
   <div id="panelRides" class="drv-panel">
@@ -838,12 +1013,15 @@
 
   // ── Tab switching ─────────────────────────────────────────────────────────
   function drvTab(tab) {
+    var tabs = ['profile', 'docs', 'rides'];
     document.querySelectorAll('.drv-tab').forEach(function(btn, i) {
-      btn.classList.toggle('active', ['profile','rides'][i] === tab);
+      btn.classList.toggle('active', tabs[i] === tab);
     });
     document.getElementById('panelProfile').classList.toggle('active', tab === 'profile');
-    document.getElementById('panelRides').classList.toggle('active',  tab === 'rides');
+    document.getElementById('panelDocs').classList.toggle('active',    tab === 'docs');
+    document.getElementById('panelRides').classList.toggle('active',   tab === 'rides');
     if (tab === 'rides' && _unsubRideNotifs === null) listenRideNotifs();
+    if (tab === 'docs') loadComplianceDocs();
   }
 
   // ── Real-time ride notifications listener ─────────────────────────────────
@@ -935,6 +1113,210 @@
   function skipRide(notifId) {
     var card = document.getElementById('rn-' + notifId);
     if (card) card.style.opacity = '.35';
+  }
+
+  // ── Driver Compliance Docs ────────────────────────────────────────────────
+  // Drivers submit document metadata + Google Drive links for admin review.
+  // Status lifecycle: not_submitted → pending → approved|rejected
+  // Admin approves/rejects in admin.html; compliance enforced in availability queries.
+
+  var _compData = null; // Cached compliance doc data for this session
+
+  function loadComplianceDocs() {
+    if (!_driverId) return;
+    db.collection('driver_compliance').doc(_driverId).get().then(function(doc) {
+      _compData = doc.exists ? doc.data() : DLCCompliance.blankDoc(_driverId);
+      renderComplianceDocs(_compData);
+    }).catch(function() {
+      _compData = DLCCompliance.blankDoc(_driverId);
+      renderComplianceDocs(_compData);
+    });
+  }
+
+  function renderComplianceDocs(comp) {
+    var overall = DLCCompliance.computeOverall(comp);
+    var cls     = DLCCompliance.overallClass(overall);
+
+    var banner = document.getElementById('compStatusBanner');
+    banner.className = 'comp-banner ' + cls;
+
+    var icons = { approved:'✅', pending_review:'⏳', pending_documents:'📋',
+                  rejected:'❌', expired:'⚠️' };
+    document.getElementById('compBannerIcon').textContent = icons[overall] || '📋';
+    document.getElementById('compBannerTitle').textContent = DLCCompliance.overallLabel(overall);
+
+    var subs = {
+      approved:          'Hồ sơ đã được duyệt. Bạn có thể nhận chuyến xe.',
+      pending_review:    'Đã nộp đầy đủ. Admin đang xem xét — thường trong 1–2 ngày làm việc.',
+      pending_documents: 'Vui lòng điền đầy đủ thông tin và nộp tài liệu bên dưới.',
+      rejected:          'Một số tài liệu bị từ chối. Đọc lý do bên dưới, cập nhật và nộp lại.',
+      expired:           'Một số tài liệu đã hết hạn. Cập nhật ngày hết hạn mới và nộp lại.'
+    };
+    document.getElementById('compBannerSub').textContent = subs[overall] || '';
+
+    // Show docs badge if action needed
+    var docsBadge = document.getElementById('docsBadge');
+    if (docsBadge) {
+      var needAction = overall === 'pending_documents' || overall === 'rejected' || overall === 'expired';
+      docsBadge.textContent = '!';
+      docsBadge.classList.toggle('hidden', !needAction);
+    }
+
+    var lic = comp.license      || {};
+    var reg = comp.registration || {};
+    var ins = comp.insurance    || {};
+
+    // Populate fields
+    _setVal('lic-name',      lic.legalName      || '');
+    _setVal('lic-number',    lic.number          || '');
+    _setVal('lic-expiry',    lic.expirationDate  || '');
+    _setVal('lic-front-url', lic.fileFrontUrl    || '');
+    _setVal('lic-back-url',  lic.fileBackUrl     || '');
+
+    _setVal('reg-plate',  reg.plate          || '');
+    _setVal('reg-vin',    reg.vin            || '');
+    _setVal('reg-expiry', reg.expirationDate || '');
+    _setVal('reg-url',    reg.fileUrl        || '');
+
+    _setVal('ins-company', ins.insurer        || '');
+    _setVal('ins-policy',  ins.policyNumber   || '');
+    _setVal('ins-insured', ins.namedInsured   || '');
+    _setVal('ins-expiry',  ins.expirationDate || '');
+    _setVal('ins-url',     ins.fileUrl        || '');
+
+    // Status badges
+    _setDocBadge('lic-badge', lic.status || 'not_submitted');
+    _setDocBadge('reg-badge', reg.status || 'not_submitted');
+    _setDocBadge('ins-badge', ins.status || 'not_submitted');
+
+    // Rejection / approved notes and field locking
+    _setRejNote('lic-rejection', 'lic-approved', lic.status, lic.rejectionReason);
+    _setRejNote('reg-rejection', 'reg-approved', reg.status, reg.rejectionReason);
+    _setRejNote('ins-rejection', 'ins-approved', ins.status, ins.rejectionReason);
+
+    var licLocked = lic.status === 'approved';
+    var regLocked = reg.status === 'approved';
+    var insLocked = ins.status === 'approved';
+    ['lic-name','lic-number','lic-expiry','lic-front-url','lic-back-url'].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.disabled = licLocked;
+    });
+    ['reg-plate','reg-vin','reg-expiry','reg-url'].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.disabled = regLocked;
+    });
+    ['ins-company','ins-policy','ins-insured','ins-expiry','ins-url'].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.disabled = insLocked;
+    });
+  }
+
+  function _setVal(id, val) {
+    var el = document.getElementById(id);
+    if (el) el.value = val;
+  }
+
+  function _setDocBadge(id, status) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = DLCCompliance.docLabel(status);
+    el.className = 'doc-badge ' + DLCCompliance.docClass(status);
+  }
+
+  function _setRejNote(rejId, approvedId, status, reason) {
+    var rejEl  = document.getElementById(rejId);
+    var appEl  = document.getElementById(approvedId);
+    if (rejEl)  rejEl.style.display  = (status === 'rejected' && reason) ? 'block' : 'none';
+    if (rejEl && status === 'rejected' && reason)  rejEl.textContent = '⚠ Lý do từ chối: ' + reason;
+    if (appEl)  appEl.style.display  = (status === 'approved') ? 'block' : 'none';
+  }
+
+  function submitComplianceDocs() {
+    if (!_driverId) return;
+    var btn   = document.getElementById('btnSubmitDocs');
+    var msgEl = document.getElementById('compDocsMsg');
+    btn.disabled = true;
+    msgEl.style.color = 'var(--muted)';
+    msgEl.textContent = 'Đang lưu…';
+
+    var ts   = firebase.firestore.FieldValue.serverTimestamp();
+    var comp = _compData ? JSON.parse(JSON.stringify(_compData)) : DLCCompliance.blankDoc(_driverId);
+
+    // Read form values
+    var licName   = document.getElementById('lic-name').value.trim();
+    var licNum    = document.getElementById('lic-number').value.trim();
+    var licExp    = document.getElementById('lic-expiry').value;
+    var licFront  = document.getElementById('lic-front-url').value.trim();
+    var licBack   = document.getElementById('lic-back-url').value.trim();
+
+    var regPlate  = document.getElementById('reg-plate').value.trim();
+    var regVin    = document.getElementById('reg-vin').value.trim();
+    var regExp    = document.getElementById('reg-expiry').value;
+    var regUrl    = document.getElementById('reg-url').value.trim();
+
+    var insComp   = document.getElementById('ins-company').value.trim();
+    var insPol    = document.getElementById('ins-policy').value.trim();
+    var insIns    = document.getElementById('ins-insured').value.trim();
+    var insExp    = document.getElementById('ins-expiry').value;
+    var insUrl    = document.getElementById('ins-url').value.trim();
+
+    // Compute new per-doc status — never downgrade approved docs
+    function calcStatus(existing, hasMin) {
+      if (existing === 'approved') return 'approved';
+      return hasMin ? 'pending' : 'not_submitted';
+    }
+
+    var newLicStatus = calcStatus(comp.license.status,      licName && licNum && licExp);
+    var newRegStatus = calcStatus(comp.registration.status, regPlate && regExp);
+    var newInsStatus = calcStatus(comp.insurance.status,    insComp && insPol && insExp);
+
+    // Only update fields on non-approved docs
+    if (comp.license.status !== 'approved') {
+      Object.assign(comp.license, {
+        legalName: licName, number: licNum, expirationDate: licExp,
+        fileFrontUrl: licFront, fileBackUrl: licBack, status: newLicStatus
+      });
+    }
+    if (comp.registration.status !== 'approved') {
+      Object.assign(comp.registration, {
+        plate: regPlate, vin: regVin, expirationDate: regExp,
+        fileUrl: regUrl, status: newRegStatus
+      });
+    }
+    if (comp.insurance.status !== 'approved') {
+      Object.assign(comp.insurance, {
+        insurer: insComp, policyNumber: insPol, namedInsured: insIns,
+        expirationDate: insExp, fileUrl: insUrl, status: newInsStatus
+      });
+    }
+
+    comp.driverId       = _driverId;
+    comp.overallStatus  = DLCCompliance.computeOverall(comp);
+    comp.expirationWarning = DLCCompliance.computeExpirationWarning(comp);
+    comp.updatedAt      = ts;
+
+    if (comp.overallStatus === 'pending_review') {
+      comp.nextRequiredAction = 'Admin review required.';
+    } else if (comp.overallStatus === 'pending_documents') {
+      comp.nextRequiredAction = 'Driver must complete and submit all required documents.';
+    }
+
+    var batch = db.batch();
+    batch.set(db.collection('driver_compliance').doc(_driverId), comp, { merge: true });
+    // Mirror complianceStatus to drivers/{id} for availability queries
+    batch.update(db.collection('drivers').doc(_driverId), {
+      complianceStatus: comp.overallStatus,
+      updatedAt: ts
+    });
+
+    batch.commit().then(function() {
+      _compData = comp;
+      btn.disabled = false;
+      msgEl.style.color = '#4ade80';
+      msgEl.textContent = '✓ Đã nộp tài liệu. Admin sẽ xem xét và thông báo sớm.';
+      renderComplianceDocs(comp);
+    }).catch(function(e) {
+      btn.disabled = false;
+      msgEl.style.color = 'var(--danger)';
+      msgEl.textContent = 'Lỗi: ' + e.message;
+    });
   }
 
   // ── Build schedule rows on first load ─────────────────────────────────────

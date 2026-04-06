@@ -187,6 +187,15 @@
 
         var avail = snap.docs.filter(function (doc) {
           var d = doc.data();
+          // Compliance gate — must be fully approved
+          if (d.complianceStatus !== 'approved') return false;
+          // Admin status gate
+          if (d.adminStatus && d.adminStatus !== 'active') return false;
+          // Real-time expiration enforcement (mirrors set by admin on approval)
+          if (d.licExpiry && d.licExpiry < todayStr) return false;
+          if (d.regExpiry && d.regExpiry < todayStr) return false;
+          if (d.insExpiry && d.insExpiry < todayStr) return false;
+          // Schedule / region checks
           if (regionId && !(d.regions || []).includes(regionId)) return false;
           if (((d.availability || {}).blackoutDates || []).includes(todayStr)) return false;
           var sched = ((d.availability || {}).weeklySchedule || {})[day];

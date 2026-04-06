@@ -13,6 +13,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="/driver-compliance.js"></script>
 
   <style>
     :root {
@@ -580,6 +581,50 @@
       cursor: pointer; transition: all 0.18s;
     }
     .btn-del-driver:hover { background: rgba(224,90,90,0.35); color: #fff; border-color: #e05a5a; }
+
+    /* ── Compliance review styles ─── */
+    .comp-badge { display: inline-block; padding: .1rem .45rem; border-radius: 999px; font-size: .58rem; font-weight: 700; letter-spacing: .06em; margin-left: .4rem; vertical-align: middle; }
+    .comp-badge.comp-ok       { background: rgba(74,222,128,.12); color: #4ade80; border: 1px solid rgba(74,222,128,.3); }
+    .comp-badge.comp-pending  { background: rgba(245,166,35,.12); color: var(--gold); border: 1px solid rgba(245,166,35,.3); }
+    .comp-badge.comp-missing  { background: rgba(255,255,255,.06); color: var(--muted); border: 1px solid var(--border); }
+    .comp-badge.comp-rejected { background: rgba(224,90,90,.12); color: var(--danger); border: 1px solid rgba(224,90,90,.3); }
+    .comp-badge.comp-expired  { background: rgba(224,90,90,.18); color: var(--danger); border: 1px solid rgba(224,90,90,.45); }
+    .driver-row__compliance {
+      border-top: 1px solid var(--border); padding-top: .85rem; margin-top: .5rem;
+    }
+    .comp-doc-row {
+      display: flex; align-items: flex-start; gap: .7rem; flex-wrap: wrap;
+      padding: .6rem .8rem; border-radius: 8px;
+      background: rgba(255,255,255,.025); border: 1px solid var(--border);
+      margin-bottom: .45rem;
+    }
+    .comp-doc-info { flex: 1; min-width: 160px; }
+    .comp-doc-label { font-size: .58rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); margin-bottom: .2rem; }
+    .comp-doc-meta  { font-size: .73rem; color: var(--cream); }
+    .comp-doc-sub   { font-size: .66rem; color: var(--muted); margin-top: .08rem; }
+    .comp-doc-warn  { font-size: .65rem; color: #fb923c; margin-top: .1rem; }
+    .comp-doc-expired { font-size: .65rem; color: var(--danger); margin-top: .1rem; font-weight: 700; }
+    .comp-doc-reject-reason { font-size: .67rem; color: var(--danger); margin-top: .25rem; padding: .3rem .5rem; background: rgba(224,90,90,.07); border-radius: 4px; border-left: 2px solid var(--danger); }
+    .comp-doc-actions { display: flex; gap: .35rem; align-items: flex-start; flex-wrap: wrap; flex-shrink: 0; }
+    .btn-comp-approve { height: 26px; padding: 0 .65rem; background: rgba(74,222,128,.1); border: 1px solid rgba(74,222,128,.3); border-radius: 4px; color: #4ade80; font-size: .65rem; font-weight: 700; cursor: pointer; transition: all .15s; white-space: nowrap; }
+    .btn-comp-approve:hover { background: rgba(74,222,128,.22); }
+    .btn-comp-reject { height: 26px; padding: 0 .65rem; background: rgba(224,90,90,.1); border: 1px solid rgba(224,90,90,.3); border-radius: 4px; color: var(--danger); font-size: .65rem; font-weight: 700; cursor: pointer; transition: all .15s; white-space: nowrap; }
+    .btn-comp-reject:hover { background: rgba(224,90,90,.22); }
+    .btn-comp-view { height: 26px; padding: 0 .6rem; background: transparent; border: 1px solid var(--border); border-radius: 4px; color: var(--muted); font-size: .65rem; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; transition: all .15s; white-space: nowrap; }
+    .btn-comp-view:hover { border-color: var(--text); color: var(--text); }
+    .comp-review-footer { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .7rem; padding-top: .6rem; border-top: 1px solid var(--border); }
+    .btn-approve-all { padding: 0 .85rem; height: 30px; background: rgba(74,222,128,.1); border: 1px solid rgba(74,222,128,.3); border-radius: 5px; color: #4ade80; font-size: .7rem; font-weight: 700; cursor: pointer; transition: all .18s; }
+    .btn-approve-all:hover { background: rgba(74,222,128,.22); }
+    .btn-req-update { padding: 0 .85rem; height: 30px; background: rgba(245,166,35,.08); border: 1px solid rgba(245,166,35,.3); border-radius: 5px; color: var(--gold); font-size: .7rem; font-weight: 700; cursor: pointer; transition: all .18s; }
+    .btn-req-update:hover { background: rgba(245,166,35,.18); }
+    .comp-notes-input { width: 100%; background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 5px; color: var(--cream); font-family: 'Jost',sans-serif; font-size: .73rem; padding: .45rem .7rem; resize: vertical; min-height: 46px; outline: none; transition: border-color .2s; margin-top: .3rem; }
+    .comp-notes-input:focus { border-color: var(--gold); }
+    .comp-loading { font-size: .76rem; color: var(--muted); padding: .4rem 0; }
+    .doc-badge { display: inline-block; padding: .1rem .45rem; border-radius: 999px; font-size: .6rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+    .doc-badge.comp-ok       { background: rgba(74,222,128,.12); color: #4ade80; border: 1px solid rgba(74,222,128,.3); }
+    .doc-badge.comp-pending  { background: rgba(245,166,35,.12); color: var(--gold); border: 1px solid rgba(245,166,35,.3); }
+    .doc-badge.comp-missing  { background: rgba(255,255,255,.06); color: var(--muted); border: 1px solid var(--border); }
+    .doc-badge.comp-rejected { background: rgba(224,90,90,.12); color: var(--danger); border: 1px solid rgba(224,90,90,.3); }
 
     /* Mobile responsive */
     @media (max-width: 640px) {
@@ -1438,19 +1483,35 @@
       const stClass = { active:'status-active', blocked:'status-blocked', deactivated:'status-deactivated', archived:'status-archived' }[st] || '';
       const pin = d.setupCode || '—';
 
+      // Compliance status badge
+      const cs = d.complianceStatus || 'pending_documents';
+      const csLabel = DLCCompliance.overallLabel(cs);
+      const csClass = DLCCompliance.overallClass(cs);
+
+      // Expiry warning from mirror fields
+      const today = DLCCompliance.todayStr();
+      const expWarn = [
+        d.licExpiry && d.licExpiry < today ? '⚠ Bằng lái hết hạn' : (d.licExpiry && DLCCompliance.daysUntil(d.licExpiry) <= 30 ? '⚡ Bằng lái sắp hết hạn' : ''),
+        d.regExpiry && d.regExpiry < today ? '⚠ Đăng ký hết hạn'  : (d.regExpiry && DLCCompliance.daysUntil(d.regExpiry) <= 30 ? '⚡ Đăng ký sắp hết hạn' : ''),
+        d.insExpiry && d.insExpiry < today ? '⚠ Bảo hiểm hết hạn' : (d.insExpiry && DLCCompliance.daysUntil(d.insExpiry) <= 30 ? '⚡ Bảo hiểm sắp hết hạn' : ''),
+      ].filter(Boolean).join(' · ');
+
       return `<div class="driver-row" id="dr-${id}">
         <div class="driver-row__main">
           <div class="driver-row__info">
             <div class="driver-row__name">${escHtml(d.fullName || '—')}
               <span class="provider-status-badge ${stClass}">${stLabel}</span>
+              <span class="comp-badge ${csClass}">${csLabel}</span>
             </div>
             <div class="driver-row__meta">${d.phone || '—'}${veh ? ' · '+escHtml(veh):''} · ${(d.regions||[]).join(', ')||'No region'}</div>
             <div class="driver-row__meta" style="margin-top:0.2rem;font-size:0.68rem">${escHtml(derivedEmail)}</div>
+            ${expWarn ? `<div class="driver-row__meta" style="color:#fb923c;margin-top:0.15rem;font-size:0.68rem">${escHtml(expWarn)}</div>` : ''}
           </div>
           <div class="driver-row__actions">
             <button class="toggle-pill ${d.active?'on':'off'}" onclick="toggleDriver('${id}','active',${!d.active})">${d.active?'● Active':'○ Inactive'}</button>
             <button class="toggle-pill ${d.rideServiceEnabled?'on':'off'}" onclick="toggleDriver('${id}','rideServiceEnabled',${!d.rideServiceEnabled})">${d.rideServiceEnabled?'● Ride On':'○ Ride Off'}</button>
             <button class="btn-sm-outline" onclick="toggleDriverInfo('${id}')">PIN / Login</button>
+            <button class="btn-sm-outline" onclick="toggleDriverCompliance('${id}')">Pháp Lý</button>
             <button class="btn-del-driver" onclick="deleteDriver('${id}','${escHtml(d.fullName||'')}')">Xóa</button>
           </div>
         </div>
@@ -1472,6 +1533,9 @@
             ${st !== 'archived'     ? `<button class="btn-sm-outline" onclick="setDriverStatus('${id}','archived')">Lưu trữ</button>` : ''}
           </div>
           <div id="dpinMsg-${id}" style="font-size:0.72rem;margin-top:0.3rem"></div>
+        </div>
+        <div class="driver-row__compliance hidden" id="drc-${id}">
+          <div id="drc-content-${id}" class="comp-loading">Đang tải hồ sơ pháp lý…</div>
         </div>
       </div>`;
     }
@@ -1629,9 +1693,10 @@
         } catch(e) {}
       }
 
-      // 3. Hard delete Firestore docs
+      // 3. Hard delete Firestore docs (driver, user mapping, and compliance doc)
       await db.collection('drivers').doc(driverId).delete().catch(()=>{});
       await db.collection('driverUsers').doc(driverId).delete().catch(()=>{});
+      await db.collection('driver_compliance').doc(driverId).delete().catch(()=>{});
 
       const note = authDeleted ? '' : '\n(Tài khoản Auth chưa xóa được — liên hệ Firebase Console nếu cần.)';
       alert(`Đã xóa tài xế "${name}".${note}`);
@@ -1687,6 +1752,7 @@
           authUid: uid, authEmail: email, fullName: name, phone: digits,
           setupCode: pin, adminStatus: 'active',
           active: false, rideServiceEnabled: false, regions: [],
+          complianceStatus: 'pending_documents', // must submit docs before appearing in availability
           vehicle: { make:'', model:'', year:'', color:'', seats:4, plate:'' },
           availability: {
             timezone: 'America/Los_Angeles',
@@ -1702,6 +1768,8 @@
           },
           createdAt: ts, updatedAt: ts
         });
+        // Initialize blank compliance doc — driver must fill in before admin can review
+        await db.collection('driver_compliance').doc(uid).set(DLCCompliance.blankDoc(uid));
 
         document.getElementById('newDriverName').value = '';
         document.getElementById('newDriverPhone').value = '';
@@ -1716,6 +1784,235 @@
         errEl.textContent = 'Lỗi: ' + e.message;
         btn.disabled = false; btn.textContent = 'Tạo Tài Xế';
       }
+    }
+
+    // ── Driver Compliance Review ──────────────────────────────────────────────
+    // Admin-side compliance review. Drivers submit documents in driver-admin.html.
+    // Admin approves/rejects here. Decisions mirror to drivers/{id}.complianceStatus
+    // which is enforced in all availability queries.
+
+    function toggleDriverCompliance(id) {
+      var el = document.getElementById('drc-' + id);
+      if (!el) return;
+      var isHidden = el.classList.contains('hidden');
+      el.classList.toggle('hidden', !isHidden);
+      if (isHidden) _loadComplianceAdmin(id);
+    }
+
+    async function _loadComplianceAdmin(driverId) {
+      var container = document.getElementById('drc-content-' + driverId);
+      if (!container) return;
+      container.innerHTML = '<div class="comp-loading">Đang tải hồ sơ pháp lý…</div>';
+      try {
+        var doc = await db.collection('driver_compliance').doc(driverId).get();
+        var comp = doc.exists ? doc.data() : DLCCompliance.blankDoc(driverId);
+        _renderComplianceAdmin(driverId, comp);
+      } catch(e) {
+        container.innerHTML = '<div style="color:var(--danger);font-size:0.75rem">Lỗi: ' + escHtml(e.message) + '</div>';
+      }
+    }
+
+    function _renderComplianceAdmin(driverId, comp) {
+      var container = document.getElementById('drc-content-' + driverId);
+      if (!container) return;
+
+      var lic = comp.license      || {};
+      var reg = comp.registration || {};
+      var ins = comp.insurance    || {};
+
+      function docRow(key, label, doc, meta, fileUrl) {
+        var status = doc.status || 'not_submitted';
+        var cls    = DLCCompliance.docClass(status);
+        var lbl    = DLCCompliance.docLabel(status);
+        var exp    = doc.expirationDate || '';
+        var days   = DLCCompliance.daysUntil(exp);
+
+        var expiryHtml = '';
+        if (exp) {
+          var dStr = DLCCompliance.formatDays(days);
+          if (days !== null && days < 0) {
+            expiryHtml = '<div class="comp-doc-expired">⚠ HẾT HẠN: ' + escHtml(exp) + ' (' + dStr + ')</div>';
+          } else if (days !== null && days <= 30) {
+            expiryHtml = '<div class="comp-doc-warn">⚡ Sắp hết hạn: ' + escHtml(exp) + ' (' + dStr + ')</div>';
+          } else {
+            expiryHtml = '<div class="comp-doc-sub">Hết hạn: ' + escHtml(exp) + (days !== null ? ' (' + dStr + ')' : '') + '</div>';
+          }
+        }
+
+        var rejNote = (status === 'rejected' && doc.rejectionReason)
+          ? '<div class="comp-doc-reject-reason">Lý do: ' + escHtml(doc.rejectionReason) + '</div>' : '';
+
+        // Future verification hook display
+        var verifyHtml = doc.verificationStatus
+          ? '<div class="comp-doc-sub" style="color:#60a5fa;margin-top:.1rem">Xác thực: ' + escHtml(doc.verificationStatus) + (doc.verificationSource ? ' (' + escHtml(doc.verificationSource) + ')' : '') + '</div>' : '';
+
+        var viewBtn = fileUrl
+          ? '<a class="btn-comp-view" href="' + escHtml(fileUrl) + '" target="_blank" rel="noopener noreferrer">Xem ↗</a>' : '';
+        var approveBtn = status !== 'approved'
+          ? '<button class="btn-comp-approve" onclick="approveCompDoc(\'' + driverId + '\',\'' + key + '\')">Duyệt</button>' : '';
+        var rejectBtn = status !== 'rejected'
+          ? '<button class="btn-comp-reject" onclick="rejectCompDoc(\'' + driverId + '\',\'' + key + '\')">Từ Chối</button>' : '';
+
+        return '<div class="comp-doc-row">' +
+          '<div class="comp-doc-info">' +
+            '<div class="comp-doc-label">' + escHtml(label) + ' <span class="doc-badge ' + cls + '">' + lbl + '</span></div>' +
+            '<div class="comp-doc-meta">' + escHtml(meta || '—') + '</div>' +
+            expiryHtml + rejNote + verifyHtml +
+          '</div>' +
+          '<div class="comp-doc-actions">' + viewBtn + approveBtn + rejectBtn + '</div>' +
+        '</div>';
+      }
+
+      var licMeta = [lic.legalName, lic.number].filter(Boolean).join(' · ') || '—';
+      var regMeta = [reg.plate, reg.vin ? 'VIN: ' + reg.vin : ''].filter(Boolean).join(' · ') || '—';
+      var insMeta = [ins.insurer, ins.policyNumber ? 'Policy: ' + ins.policyNumber : '', ins.namedInsured].filter(Boolean).join(' · ') || '—';
+
+      var lastReview = comp.lastReviewAt
+        ? ('Duyệt gần nhất: ' + (comp.lastReviewBy ? escHtml(comp.lastReviewBy) + ' — ' : '') +
+           (() => { try { return new Date(comp.lastReviewAt.toDate ? comp.lastReviewAt.toDate() : comp.lastReviewAt).toLocaleDateString('vi-VN'); } catch(_) { return ''; } })())
+        : 'Chưa có lần duyệt nào';
+
+      var hasPending  = [lic.status, reg.status, ins.status].some(function(s) { return s === 'pending'; });
+      var approveAll  = hasPending
+        ? '<button class="btn-approve-all" onclick="approveAllCompDocs(\'' + driverId + '\')">✓ Duyệt Tất Cả Đang Chờ</button>' : '';
+      var reqUpdate   = '<button class="btn-req-update" onclick="requestCompUpdate(\'' + driverId + '\')">Yêu Cầu Cập Nhật</button>';
+
+      container.innerHTML =
+        '<div style="font-size:.65rem;color:var(--muted);margin-bottom:.65rem">' + lastReview + '</div>' +
+        docRow('license',      'Bằng Lái Xe',  lic, licMeta, lic.fileFrontUrl || lic.fileBackUrl) +
+        docRow('registration', 'Đăng Ký Xe',   reg, regMeta, reg.fileUrl) +
+        docRow('insurance',    'Bảo Hiểm Xe',  ins, insMeta, ins.fileUrl) +
+        '<div style="margin-top:.55rem">' +
+          '<label style="font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.3rem">Ghi Chú Nội Bộ</label>' +
+          '<textarea class="comp-notes-input" id="comp-notes-' + driverId + '" placeholder="Ghi chú admin (không hiển thị với tài xế)…">' + escHtml(comp.complianceNotes || '') + '</textarea>' +
+        '</div>' +
+        '<div class="comp-review-footer">' + approveAll + reqUpdate + '</div>';
+    }
+
+    async function _applyCompUpdate(driverId, docTypeUpdates) {
+      var ts      = firebase.firestore.FieldValue.serverTimestamp();
+      var compRef = db.collection('driver_compliance').doc(driverId);
+      var snap    = await compRef.get();
+      var comp    = snap.exists ? snap.data() : DLCCompliance.blankDoc(driverId);
+
+      // Apply per-doc updates
+      Object.keys(docTypeUpdates).forEach(function(key) {
+        comp[key] = Object.assign(comp[key] || {}, docTypeUpdates[key], {
+          reviewedAt: ts, reviewedBy: 'admin'
+        });
+      });
+
+      // Admin notes
+      var notesEl = document.getElementById('comp-notes-' + driverId);
+      if (notesEl) comp.complianceNotes = notesEl.value.trim();
+
+      // Recompute overall + expiration
+      var overall = DLCCompliance.computeOverall(comp);
+      var warning = DLCCompliance.computeExpirationWarning(comp);
+      comp.overallStatus     = overall;
+      comp.expirationWarning = warning;
+      comp.lastReviewAt      = ts;
+      comp.lastReviewBy      = 'admin';
+      comp.nextRequiredAction = overall === 'approved'
+        ? 'Monitor expiration dates.' : overall === 'pending_review'
+        ? 'Admin review required.' : 'Driver must complete and submit all required documents.';
+
+      // Build driver doc mirrors (complianceStatus + expiry dates for real-time enforcement)
+      var driverMirror = { complianceStatus: overall, updatedAt: ts };
+      if (comp.license      && comp.license.expirationDate)      driverMirror.licExpiry = comp.license.expirationDate;
+      if (comp.registration && comp.registration.expirationDate) driverMirror.regExpiry = comp.registration.expirationDate;
+      if (comp.insurance    && comp.insurance.expirationDate)    driverMirror.insExpiry = comp.insurance.expirationDate;
+
+      var batch = db.batch();
+      batch.set(compRef, comp, { merge: true });
+      batch.update(db.collection('drivers').doc(driverId), driverMirror);
+      await batch.commit();
+      return comp;
+    }
+
+    async function approveCompDoc(driverId, docType) {
+      try {
+        var comp = await _applyCompUpdate(driverId, { [docType]: { status: 'approved', rejectionReason: '' } });
+        _renderComplianceAdmin(driverId, comp);
+        loadDriverPanel(); // Refresh badge in driver list
+      } catch(e) { alert('Lỗi: ' + e.message); }
+    }
+
+    async function rejectCompDoc(driverId, docType) {
+      var reason = prompt('Lý do từ chối (bắt buộc):');
+      if (!reason || !reason.trim()) return;
+      try {
+        var comp = await _applyCompUpdate(driverId, { [docType]: { status: 'rejected', rejectionReason: reason.trim() } });
+        _renderComplianceAdmin(driverId, comp);
+        loadDriverPanel();
+      } catch(e) { alert('Lỗi: ' + e.message); }
+    }
+
+    async function approveAllCompDocs(driverId) {
+      if (!confirm('Duyệt tất cả tài liệu đang ở trạng thái "Chờ Duyệt"?')) return;
+      var ts      = firebase.firestore.FieldValue.serverTimestamp();
+      var compRef = db.collection('driver_compliance').doc(driverId);
+      var snap    = await compRef.get();
+      var comp    = snap.exists ? snap.data() : DLCCompliance.blankDoc(driverId);
+
+      DLCCompliance.DOC_KEYS.forEach(function(k) {
+        if ((comp[k] || {}).status === 'pending') {
+          comp[k].status = 'approved';
+          comp[k].rejectionReason = '';
+          comp[k].reviewedAt = ts;
+          comp[k].reviewedBy = 'admin';
+        }
+      });
+
+      var notesEl = document.getElementById('comp-notes-' + driverId);
+      if (notesEl) comp.complianceNotes = notesEl.value.trim();
+
+      var overall = DLCCompliance.computeOverall(comp);
+      var warning = DLCCompliance.computeExpirationWarning(comp);
+      comp.overallStatus     = overall;
+      comp.expirationWarning = warning;
+      comp.lastReviewAt      = ts;
+      comp.lastReviewBy      = 'admin';
+      comp.nextRequiredAction = overall === 'approved' ? 'Monitor expiration dates.' : 'Some documents still need attention.';
+
+      var driverMirror = { complianceStatus: overall, updatedAt: ts };
+      if (comp.license      && comp.license.expirationDate)      driverMirror.licExpiry = comp.license.expirationDate;
+      if (comp.registration && comp.registration.expirationDate) driverMirror.regExpiry = comp.registration.expirationDate;
+      if (comp.insurance    && comp.insurance.expirationDate)    driverMirror.insExpiry = comp.insurance.expirationDate;
+
+      try {
+        var batch = db.batch();
+        batch.set(compRef, comp, { merge: true });
+        batch.update(db.collection('drivers').doc(driverId), driverMirror);
+        await batch.commit();
+        _renderComplianceAdmin(driverId, comp);
+        loadDriverPanel();
+      } catch(e) { alert('Lỗi: ' + e.message); }
+    }
+
+    async function requestCompUpdate(driverId) {
+      var note = prompt('Thông báo cho tài xế (tùy chọn — sẽ lưu vào ghi chú nội bộ):');
+      if (note === null) return; // cancelled
+      var ts      = firebase.firestore.FieldValue.serverTimestamp();
+      var notesEl = document.getElementById('comp-notes-' + driverId);
+      var existing = notesEl ? notesEl.value.trim() : '';
+      var combined = existing + (note ? '\n[Yêu cầu cập nhật ' + new Date().toLocaleDateString('vi-VN') + ': ' + note + ']' : '');
+      try {
+        var batch = db.batch();
+        batch.set(db.collection('driver_compliance').doc(driverId), {
+          overallStatus: 'pending_documents',
+          complianceNotes: combined,
+          nextRequiredAction: note || 'Admin requests updated compliance documents.',
+          lastReviewAt: ts, lastReviewBy: 'admin', updatedAt: ts
+        }, { merge: true });
+        batch.update(db.collection('drivers').doc(driverId), {
+          complianceStatus: 'pending_documents', updatedAt: ts
+        });
+        await batch.commit();
+        loadDriverPanel();
+        // Refresh panel content
+        await _loadComplianceAdmin(driverId);
+      } catch(e) { alert('Lỗi: ' + e.message); }
     }
 
     // ── Auth state is managed by firebase.auth().onAuthStateChanged() above ──

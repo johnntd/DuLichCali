@@ -1,35 +1,123 @@
-// Lily Receptionist — dedicated AI receptionist for Luxurious Nails & Spa
+// Lily Receptionist v2.0 — Intelligent AI receptionist for Luxurious Nails & Spa
 // Voice-ready: LilyReceptionist.handleMessage(biz, text, apiKey) → Promise<{text, escalationType}>
-// Language: English + Spanish (auto-detect, session-persistent)
-// Live data: reads from biz.services, biz.staff, biz.hours populated by Firestore
+// Languages: English + Spanish + Vietnamese (Claude-detected, not just regex)
+// Features: intent classification, entity extraction, booking state machine, multi-service
 (function () {
   'use strict';
 
-  var MODEL      = 'claude-sonnet-4-6';
-  var MAX_TOKENS = 600;
+  var MODEL       = 'claude-sonnet-4-6';
+  var MAX_TOKENS  = 900;   // increased: response + STATE marker JSON
   var HISTORY_CAP = 20;
-  var API_URL    = 'https://api.anthropic.com/v1/messages';
-  var DAYS       = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  var API_URL     = 'https://api.anthropic.com/v1/messages';
+  var DAYS        = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
 
-  // ── Language detection ────────────────────────────────────────────────────────
+  // ── Language detection (fast client-side hint — Claude overrides via STATE) ──
   function _detectLang(text) {
-    var esPattern = /\b(hola|cuánto|cuanto|cómo|como esta|qué|que servicios|cuando|cuándo|tiene|tengo|quisiera|quiero|gracias|buenos|buenas|precio|precios|horario|cita|disponible|está|hay|puedo|podría|podria|hablan|español|servicios|técnico|manicure en|pedicure en|uñas)\b/i;
-    return esPattern.test(text) ? 'es' : 'en';
+    // Vietnamese: tonal diacritics OR common Vietnamese words
+    if (/[ắặầấậẻẽẹềếệỉịọốồổỗộởờớợụừứựỳỵăơưđ]/.test(text) ||
+        /\b(mình|tôi|bạn|muốn|đặt lịch|làm móng|tiệm|dịch vụ|hôm nay|ngày mai|bao nhiêu|cảm ơn|xin chào|được không|cho tôi|cho mình|nhé|nha|vậy|ơi|thứ|tuần|lịch hẹn)\b/i.test(text)) {
+      return 'vi';
+    }
+    if (/\b(hola|cuánto|cuanto|cómo|qué|cuando|tiene|tengo|quisiera|quiero|gracias|buenos|precio|cita|disponible|puedo|podría|servicios|uñas)\b/i.test(text)) {
+      return 'es';
+    }
+    return 'en';
   }
 
-  // ── System prompt builder (pure — no DOM access) ──────────────────────────────
-  function _buildPrompt(biz, lang) {
-    var today    = new Date();
-    var todayIdx = today.getDay();
+  // ── Booking state machine ─────────────────────────────────────────────────────
+  function _emptyState() {
+    return { intent: null, services: [], staff: null, date: null, time: null, name: null, phone: null, lang: null };
+  }
+
+  function _saveBookingState(biz) {
+    try { sessionStorage.setItem('lily_s_' + biz.id, JSON.stringify(biz._bookingState)); } catch (e) {}
+  }
+
+  function _restoreBookingState(biz) {
+    if (biz._bookingState) return;
+    try {
+      var raw = sessionStorage.getItem('lily_s_' + biz.id);
+      if (raw) { biz._bookingState = JSON.parse(raw); return; }
+    } catch (e) {}
+    biz._bookingState = _emptyState();
+  }
+
+  // Merge Claude's extracted STATE into current booking state
+  function _mergeState(biz, update) {
+    if (!biz._bookingState) biz._bookingState = _emptyState();
+    // Take all fields from Claude's STATE (Claude is responsible for carrying forward known values)
+    Object.keys(update).forEach(function (k) {
+      biz._bookingState[k] = update[k];
+    });
+  }
+
+  // Build human-readable booking state context for the system prompt
+  function _buildBookingStateContext(biz) {
+    var s = biz._bookingState || {};
+    var hasData = (s.services && s.services.length) || s.staff || s.date || s.time || s.name || s.phone;
+    if (!hasData) return '';
+    var lines = ['=== CURRENT BOOKING STATE (already collected — do NOT ask for these again) ==='];
+    lines.push('Services: ' + ((s.services && s.services.length) ? s.services.join(', ') : 'not yet specified'));
+    lines.push('Staff: '    + (s.staff || 'not yet specified'));
+    lines.push('Date: '     + (s.date  || 'not yet specified'));
+    lines.push('Time: '     + (s.time  || 'not yet specified'));
+    lines.push('Customer name: '  + (s.name  || 'not yet specified'));
+    lines.push('Customer phone: ' + (s.phone || 'not yet specified'));
+    return lines.join('\n');
+  }
+
+  // ── Marker parsing ────────────────────────────────────────────────────────────
+  function _parseEscalationType(reply) {
+    var m = reply.match(/\[ESCALATE:(order|appointment|reservation|question)\]/i);
+    return m ? m[1].toLowerCase() : null;
+  }
+
+  function _parseBookingMarker(reply) {
+    try {
+      var m = reply.match(/\[BOOKING:(\{[^}]+\})\]/);
+      if (!m) return null;
+      return JSON.parse(m[1]);
+    } catch (e) { return null; }
+  }
+
+  // STATE marker contains arrays: find "[STATE:{" then first "}]" after it
+  function _parseStateMarker(reply) {
+    try {
+      var idx = reply.lastIndexOf('[STATE:{');
+      if (idx < 0) return null;
+      var end = reply.indexOf('}]', idx + 8);
+      if (end < 0) return null;
+      return JSON.parse(reply.slice(idx + 7, end + 1));
+    } catch (e) { return null; }
+  }
+
+  // Strip all machine markers from displayed text
+  function _stripAllMarkers(reply) {
+    // Strip STATE (must go first — it contains }] which could confuse other strips)
+    var idx = reply.lastIndexOf('[STATE:{');
+    if (idx >= 0) {
+      var end = reply.indexOf('}]', idx + 8);
+      if (end >= 0) reply = reply.slice(0, idx) + reply.slice(end + 2);
+    }
+    reply = reply.replace(/\s*\[BOOKING:\{[^}]+\}\]/gi, '');
+    reply = reply.replace(/\s*\[ESCALATE:[^\]]+\]/gi, '');
+    return reply.trim();
+  }
+
+  // ── System prompt builder ─────────────────────────────────────────────────────
+  function _buildPrompt(biz, langHint) {
+    var today     = new Date();
+    var todayIdx  = today.getDay();
     var todayName = DAYS[todayIdx];
-    var dateStr  = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+    var dateStr   = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    var isoDate   = today.toISOString().slice(0, 10);
 
     var receptionistName = (biz.aiReceptionist && biz.aiReceptionist.name) || 'Lily';
     var salonName = biz.name || 'Luxurious Nails & Spa';
     var phone     = biz.phoneDisplay || biz.phone || '408-859-6718';
     var address   = biz.address || 'Bay Area, California';
 
-    // Services block — prefer active services from live Firestore data
+    // Services block
     var services = biz.services || [];
     var shown = services.filter(function (s) { return s.active !== false; });
     if (shown.length === 0) shown = services.slice(0, 30);
@@ -43,7 +131,7 @@
         }).join('\n')
       : '(Service list not yet loaded — tell customer to call ' + phone + ' for menu.)';
 
-    // Hours block — from live biz.hours
+    // Hours block
     var daysOrder = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
     var hoursBlock;
     if (biz.hours) {
@@ -58,9 +146,9 @@
       hoursBlock = 'Mon–Fri 9:30 am–7:30 pm\nSat 9:30 am–7:00 pm\nSun 10:00 am–6:00 pm\n(TODAY is ' + todayName + ')';
     }
 
-    // Staff block — from live biz.staff
-    var staffBlock;
+    // Staff block
     var activeStaff = (biz.staff || []).filter(function (m) { return m.active !== false; });
+    var staffBlock;
     if (activeStaff.length > 0) {
       staffBlock = activeStaff.map(function (m) {
         var header = '• ' + m.name + (m.title ? ' (' + m.title + ')' : '');
@@ -70,11 +158,8 @@
             var s = m.schedule[d];
             var label = d.charAt(0).toUpperCase() + d.slice(1);
             var marker = (d === todayName) ? ' ← TODAY' : '';
-            if (!s || !s.open) {
-              lines.push('    ' + label + ': OFF' + marker);
-            } else {
-              lines.push('    ' + label + ': ' + s.open + ' – ' + s.close + marker);
-            }
+            if (!s || !s.open) lines.push('    ' + label + ': OFF' + marker);
+            else lines.push('    ' + label + ': ' + s.open + ' – ' + s.close + marker);
           });
         }
         if (m.specialties) {
@@ -87,26 +172,32 @@
       staffBlock = '(Staff data not yet loaded — tell customer to call ' + phone + ' for scheduling.)';
     }
 
-    // Inject selected staff context for pronoun resolution
+    // Active context for pronoun resolution
     var selectedStaffCtx = '';
     if (biz._selectedStaff) {
-      selectedStaffCtx = '\n=== ACTIVE CONTEXT ===\nThe customer has been discussing: ' + biz._selectedStaff.name + '. When they use pronouns like "her", "him", "she", "he", "they", or phrases like "the technician", this refers to ' + biz._selectedStaff.name + '. Use this name directly in your response — do not ask again who they mean.';
+      selectedStaffCtx = '\n=== ACTIVE CONTEXT ===\nCustomer has been referring to: ' + biz._selectedStaff.name + '. Pronouns "her/him/she/he/the technician" mean ' + biz._selectedStaff.name + '. Use this name directly.';
     }
 
-    var langInstruction = lang === 'es'
-      ? 'CRITICAL: The customer is speaking Spanish. You MUST reply entirely in Spanish. Be warm and professional.'
-      : 'Reply in English. Be warm, concise, and professional.';
+    // Booking state context (only shown when data has been collected)
+    var bookingStateCtx = _buildBookingStateContext(biz);
 
     return [
       'You are ' + receptionistName + ', the professional AI receptionist for ' + salonName + '.',
-      'Today is ' + dateStr + '.',
+      'Today is ' + dateStr + ' (ISO date: ' + isoDate + ').',
       '',
-      'CRITICAL FORMAT RULE: Write in plain conversational text ONLY. Never use markdown.',
-      'No asterisks (**bold**), no pound signs (#), no dashes as bullets, no colons at line starts.',
-      'Even for appointment confirmations, write as a sentence — not a formatted list.',
-      'BAD: "**Service:** Gel Nails" — GOOD: "Service is Gel Nails with Tracy on Thursday April 9th at 9 AM."',
+      '=== FORMAT RULE — CRITICAL ===',
+      'Write in plain conversational text ONLY. No markdown whatsoever.',
+      'No **, no ##, no bullet dashes, no "Label: Value" pairs.',
+      'WRONG: "**Service:** Gel Nails\\n**Staff:** Tracy"',
+      'RIGHT: "I have you down for Gel Nails with Tracy on Friday at 2 PM."',
       '',
-      langInstruction,
+      '=== LANGUAGE ===',
+      'Detect the customer language from their message and respond ENTIRELY in that same language.',
+      'English (en): default. American customers at a Bay Area salon.',
+      'Spanish (es): customer uses Spanish words — "¿Cuánto cuesta?", "quiero", "hola", "cita".',
+      'Vietnamese (vi): customer uses Vietnamese — "mình", "tôi", "muốn", "đặt lịch", "làm móng",',
+      '  "ngày mai", "giá", "cảm ơn", or characters with tonal marks (ắ ặ ầ ề ộ ở ứ ừ đ ă ơ ư).',
+      'Never mix languages. Match the customer completely.',
       '',
       '=== SALON INFO ===',
       'Name: ' + salonName,
@@ -116,75 +207,88 @@
       '=== HOURS (live) ===',
       hoursBlock,
       '',
-      '=== SERVICES & PRICING (live from Firestore) ===',
+      '=== SERVICES & PRICING (live) ===',
       servicesBlock,
       '',
-      '=== NAIL TECHNICIANS (live from Firestore) ===',
-      'IMPORTANT: These schedules are RECURRING WEEKLY PATTERNS — the same every week.',
-      'When a customer asks about "next week", "this Friday", or any future date, look up the matching day name. It applies to any week, not just the current one.',
+      '=== STAFF SCHEDULES (recurring weekly — same every week) ===',
+      'For "next week" or any future date: look up the matching day-of-week below. The schedule repeats weekly.',
       staffBlock,
       selectedStaffCtx,
       '',
+      bookingStateCtx,
+      '',
       '=== NAIL KNOWLEDGE ===',
-      'Common nail terms: gel, acrylic, dip powder, regular polish, manicure, pedicure, nail art, fill, removal.',
-      'Gel/acrylic fills typically every 2-3 weeks. Removal takes extra time — mention it when asked.',
-      'Allergy/sensitivity? Recommend calling ' + phone + ' to discuss options.',
+      'Terms: gel, acrylic, dip powder, regular polish, manicure, pedicure, nail art, fill, removal.',
+      'Fills typically every 2–3 weeks. Removal takes extra time — mention it when relevant.',
       '',
       '=== YOUR RULES ===',
-      '1. You are a professional receptionist — answer naturally like a real person, not a chatbot.',
-      '1b. NEVER re-introduce yourself mid-conversation. If conversation history exists, continue it directly. Do not say "Hi! I\'m Lily..." again. Just answer the question.',
-      '2. Use ONLY the information above. Do NOT invent prices, hours, or staff schedules.',
-      '3. If data shows "(not yet loaded)" — tell customer to call ' + phone + ' for that info.',
-      '4. Keep responses to 2-4 sentences. No bullet lists unless listing services was explicitly requested.',
-      '5. PLAIN TEXT ALWAYS — see format rule at top. Applies to every message including booking confirmations.',
-      '6. Walk-ins: "Walk-ins are welcome based on availability — calling ahead is recommended."',
-      '7. For services/prices not in the list: "Prices vary — please call ' + phone + ' for an exact quote."',
-      '8. Pronouns: "her/him/she/he/they/the technician" always refer to the last technician mentioned in the conversation. See ACTIVE CONTEXT above if set — use that technician without asking again.',
+      '1. Answer naturally — you are a real receptionist, not a scripted bot.',
+      '2. Never re-introduce yourself mid-conversation. No "Hi, I\'m Lily" after the first message.',
+      '3. Use ONLY the data above. Never invent prices, hours, or staff availability.',
+      '4. Responses: 1–3 sentences for simple questions. Plain text always.',
+      '5. Walk-ins: "Walk-ins welcome based on availability — we recommend calling ahead."',
+      '6. Unknown prices: "Prices vary — please call ' + phone + ' for an exact quote."',
+      '7. Pronouns her/him/she/he → most recently named technician. See ACTIVE CONTEXT above.',
+      '8. Farewell (goodbye/bye/thanks/done) → 1 warm sentence only. Do NOT re-introduce yourself.',
       '',
-      '=== APPOINTMENT BOOKING FLOW ===',
-      'When a customer wants to book/schedule an appointment, collect info ONE piece at a time:',
-      '  Step 1: Which service? (skip if already mentioned in conversation)',
-      '  Step 2: Preferred technician? (skip if already mentioned — "any available" is fine)',
-      '  Step 3: Preferred date and time?',
-      '  Step 4: Customer name?',
-      '  Step 5: Customer phone number?',
-      'SKIP any step the customer already answered. Start with the FIRST missing piece.',
-      'Once you have ALL FIVE pieces — write the confirmation in ONE plain sentence (no bold, no bullets, no label-colon pairs like "Service: X"), then on the next line append BOTH markers:',
-      'GOOD: "You\'re all set — Gel Nails with Tracy on Thursday April 10th at 5 PM for John Nguyen (408-439-7522). Sending to the salon now."',
-      'BAD: "**Service:** Gel Nails\\n**Staff:** Tracy" — NEVER format this way.',
-      'After the sentence, append on a new line:',
-      '[BOOKING:{"service":"Gel Nails","staff":"Tracy","date":"2026-04-10","time":"17:00","name":"John Nguyen","phone":"408-439-7522"}]',
-      '[ESCALATE:appointment]',
-      'Replace the example values with the actual appointment values. Use ISO date (YYYY-MM-DD) and 24-hour time (HH:MM). If staff is "any available" use "Any".',
-      'Do NOT include either marker until all five pieces are collected. Do NOT add text after the markers.',
-      'If unsure or customer wants immediate help: suggest calling ' + phone + ' directly.',
+      '=== INTENT CLASSIFICATION ===',
+      'Classify each message as one of:',
+      '  booking_request     — customer wants to make an appointment',
+      '  service_question    — asking about what services are available',
+      '  price_question      — asking about pricing',
+      '  staff_availability  — asking about when a specific technician works',
+      '  hours_location      — asking about hours or address',
+      '  farewell            — goodbye, thanks, done',
+      '  general             — anything else',
       '',
-      'FAREWELL: If customer says goodbye, bye, thanks, or signals end of chat — reply with exactly 1 warm sentence (e.g., "Thank you for reaching out — have a wonderful day!"). Do NOT re-introduce yourself.',
+      '=== ENTITY EXTRACTION ===',
+      'From each message, extract:',
+      '  services  — ALL services mentioned. Support MULTIPLE in one message.',
+      '              "gel and pedicure" → ["Gel Nails","Pedicure"]',
+      '              "mani pedi" → ["Manicure","Pedicure"]',
+      '              "làm móng tay" → ["Manicure"]',
+      '  staff     — technician name, or null if none mentioned',
+      '  date      — as stated ("tomorrow", "next Monday", "April 10") or null',
+      '  time      — convert to 24h if clear ("2pm" → "14:00", "2:30 chiều" → "14:30") or null',
+      '  lang      — "en", "es", or "vi" based on THIS message',
+      '',
+      '=== BOOKING FLOW ===',
+      'When intent = booking_request:',
+      '  A. Use entities from current message PLUS any already in CURRENT BOOKING STATE above.',
+      '     Do NOT ask for fields already collected.',
+      '  B. Identify the first MISSING required field in this order:',
+      '     service(s) → date → time → customer name → customer phone',
+      '     Staff is optional — "any available" is fine if customer does not specify.',
+      '  C. Ask for exactly ONE missing field at a time. Be natural ("What day works for you?"',
+      '     not "Please provide your preferred date.").',
+      '  D. When ALL required fields are collected (service, date, time, name, phone):',
+      '     Write ONE plain sentence confirmation. Then on new lines:',
+      '     [BOOKING:{"service":"<comma-separated if multiple>","staff":"<name or Any>","date":"YYYY-MM-DD","time":"HH:MM","name":"<name>","phone":"<phone>"}]',
+      '     [ESCALATE:appointment]',
+      '     Convert relative dates to ISO using today (' + isoDate + ') as reference.',
+      '     "tomorrow" → ' + (function() { var d = new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); })(),
+      '     "next Monday" → calculate from today.',
+      '',
+      '=== STATE MARKER — REQUIRED ON EVERY REPLY ===',
+      'Append this at the very end of EVERY reply (after all text and any other markers):',
+      '[STATE:{"intent":"<intent>","services":[<array>],"staff":<null or "Name">,"date":<null or "date">,"time":<null or "HH:MM">,"name":<null or "Name">,"phone":<null or "phone">,"lang":"<en|es|vi>"}]',
+      '',
+      'STATE rules:',
+      '  - Merge with CURRENT BOOKING STATE above — carry forward non-null fields.',
+      '  - services: always an array. Empty [] if none mentioned.',
+      '  - All non-array fields: null (JSON null, no quotes) if unknown.',
+      '  - lang: detected language of THIS customer message.',
+      '',
+      'STATE examples:',
+      '"Gel manicure and pedicure tomorrow with Tracy":',
+      '[STATE:{"intent":"booking_request","services":["Gel Manicure","Pedicure"],"staff":"Tracy","date":"tomorrow","time":null,"name":null,"phone":null,"lang":"en"}]',
+      '',
+      '"Mình muốn đặt lịch làm móng gel ngày mai lúc 2 giờ":',
+      '[STATE:{"intent":"booking_request","services":["Gel Nails"],"staff":null,"date":"tomorrow","time":"14:00","name":null,"phone":null,"lang":"vi"}]',
+      '',
+      '"¿Cuánto cuesta gel manicure?":',
+      '[STATE:{"intent":"price_question","services":["Gel Manicure"],"staff":null,"date":null,"time":null,"name":null,"phone":null,"lang":"es"}]',
     ].join('\n');
-  }
-
-  // ── Escalation marker parsing ─────────────────────────────────────────────────
-  function _parseEscalationType(reply) {
-    var m = reply.match(/\[ESCALATE:(order|appointment|reservation|question)\]/i);
-    return m ? m[1].toLowerCase() : null;
-  }
-
-  function _stripMarker(reply) {
-    return reply.replace(/\s*\[ESCALATE:[^\]]+\]/gi, '').trim();
-  }
-
-  function _parseBookingMarker(reply) {
-    try {
-      var m = reply.match(/\[BOOKING:(\{[^}]+\})\]/);
-      if (!m) return null;
-      return JSON.parse(m[1]);
-    } catch (e) {
-      return null;
-    }
-  }
-
-  function _stripBookingMarker(reply) {
-    return reply.replace(/\s*\[BOOKING:\{[^}]+\}\]/gi, '').trim();
   }
 
   // ── Fallback (no API key) ─────────────────────────────────────────────────────
@@ -192,37 +296,38 @@
     var phone = biz.phoneDisplay || biz.phone || '408-859-6718';
     var name  = biz.name || 'Luxurious Nails & Spa';
     var t     = text.toLowerCase();
+    var lang  = _detectLang(text);
 
-    if (/hour|open|close|time|schedule|horas|horario|abre|cierra/i.test(t)) {
-      var todayName2 = DAYS[new Date().getDay()];
-      var todayHours = biz.hours && biz.hours[todayName2];
-      if (todayHours && todayHours.open) {
-        return 'Today we are open ' + todayHours.open + ' – ' + todayHours.close + '. Mon–Fri 9:30am–7:30pm, Sat 9:30am–7pm, Sun 10am–6pm. Call us at ' + phone + ' to confirm same-day availability.';
-      }
-      return 'We are open Mon–Fri 9:30am–7:30pm, Sat 9:30am–7:00pm, Sun 10:00am–6:00pm. Call ' + phone + ' for same-day availability.';
+    if (lang === 'vi') {
+      if (/giờ|mở|đóng|lịch làm việc/.test(t)) return 'Chúng tôi mở cửa Thứ 2–6: 9:30–19:30, Thứ 7: 9:30–19:00, Chủ nhật: 10:00–18:00. Gọi ' + phone + ' để đặt lịch nhé!';
+      if (/giá|bao nhiêu|chi phí/.test(t))      return 'Giá dịch vụ tuỳ loại. Vui lòng gọi ' + phone + ' để biết giá chính xác nhé!';
+      if (/đặt|lịch|hẹn|book/.test(t))           return 'Để đặt lịch, bạn gọi ' + phone + ' nhé. Chúng tôi sẽ sắp xếp thời gian phù hợp cho bạn!';
+      return 'Cảm ơn bạn đã liên hệ ' + name + '! Vui lòng gọi ' + phone + ' để được hỗ trợ ngay.';
     }
-    if (/walk.?in|sin cita|sin reserva/i.test(t)) {
-      return 'Walk-ins are welcome based on current availability! We recommend calling ' + phone + ' to check wait times before you come in.';
+
+    if (lang === 'es') {
+      if (/hora|horario|abre|cierra/.test(t)) return 'Nuestro horario: Lun–Vie 9:30am–7:30pm, Sáb 9:30am–7pm, Dom 10am–6pm. Llame al ' + phone + '.';
+      if (/precio|costo|cuánto/.test(t))      return 'Los precios varían según el servicio. Llame al ' + phone + ' para un presupuesto exacto.';
+      if (/cita|reserva|agendar/.test(t))     return 'Para agendar una cita llame al ' + phone + '. ¡Le encontraremos el horario perfecto!';
+      return '¡Gracias por contactar a ' + name + '! Para asistencia inmediata llame al ' + phone + '.';
     }
-    if (/price|cost|how much|precio|costo|cuánto|cuanto/i.test(t)) {
-      return 'Our prices vary by service. For an exact quote, please call us at ' + phone + ' or ask about a specific service and I can look it up for you.';
-    }
-    if (/book|appoint|schedule|reserv|cita|reservar/i.test(t)) {
-      return 'To book an appointment, please call us at ' + phone + '. We will find the perfect time and technician for you!';
-    }
-    if (/staff|technician|helen|tracy|who|quién|quien|técnico|nail tech/i.test(t)) {
-      return 'Our nail technicians are experienced professionals. Call us at ' + phone + ' and we can match you with the best technician for your service.';
-    }
-    return 'Thank you for contacting ' + name + '! For immediate assistance please call ' + phone + '. We are happy to help with services, pricing, and scheduling.';
+
+    // English
+    if (/hour|open|close|schedule/.test(t))  return 'We are open Mon–Fri 9:30am–7:30pm, Sat 9:30am–7pm, Sun 10am–6pm. Call ' + phone + ' to confirm availability.';
+    if (/walk.?in/.test(t))                  return 'Walk-ins welcome based on availability! Call ' + phone + ' to check wait times.';
+    if (/price|cost|how much/.test(t))       return 'Prices vary by service. Call us at ' + phone + ' or ask about a specific service.';
+    if (/book|appoint|schedule|reserv/.test(t)) return 'To book an appointment, please call ' + phone + '. We\'ll find the perfect time!';
+    if (/staff|technician|helen|tracy/.test(t)) return 'Our technicians are experienced professionals. Call ' + phone + ' to be matched with the right person.';
+    return 'Thank you for contacting ' + name + '! For immediate help please call ' + phone + '.';
   }
 
-  // ── History persistence (sessionStorage — survives biz re-renders) ───────────
+  // ── History persistence ───────────────────────────────────────────────────────
   function _saveHistory(biz) {
     try { sessionStorage.setItem('lily_h_' + biz.id, JSON.stringify(biz._aiHistory)); } catch (e) {}
   }
 
   function _restoreHistory(biz) {
-    if (biz._aiHistory && biz._aiHistory.length > 0) return; // already have in-memory history
+    if (biz._aiHistory && biz._aiHistory.length > 0) return;
     try {
       var raw = sessionStorage.getItem('lily_h_' + biz.id);
       if (raw) biz._aiHistory = JSON.parse(raw);
@@ -231,12 +336,19 @@
 
   // ── Core message handler (voice-ready — no DOM access) ───────────────────────
   function _handleMessage(biz, text, apiKey) {
-    // Restore history from sessionStorage in case biz object was recreated
     _restoreHistory(biz);
+    _restoreBookingState(biz);
+
     if (!biz._aiHistory) biz._aiHistory = [];
     biz._aiHistory.push({ role: 'user', content: text });
     if (biz._aiHistory.length > HISTORY_CAP) {
       biz._aiHistory = biz._aiHistory.slice(-HISTORY_CAP);
+    }
+
+    // Client-side language hint — Claude confirms/overrides via STATE
+    var detectedLang = _detectLang(text);
+    if (detectedLang !== 'en' && biz._bookingState && !biz._bookingState.lang) {
+      biz._bookingState.lang = detectedLang;
     }
 
     // Track named staff for pronoun resolution
@@ -246,12 +358,8 @@
       }
     });
 
-    // Language detection — persist for session
-    var detected = _detectLang(text);
-    if (detected === 'es') biz._lilyLang = 'es';
-    var lang = biz._lilyLang || 'en';
+    var lang = (biz._bookingState && biz._bookingState.lang) || detectedLang || 'en';
 
-    // No API key — use rule-based fallback
     if (!apiKey) {
       return new Promise(function (resolve) {
         setTimeout(function () {
@@ -268,16 +376,16 @@
     return fetch(API_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
+        'Content-Type':     'application/json',
+        'x-api-key':        apiKey,
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: MODEL,
+        model:      MODEL,
         max_tokens: MAX_TOKENS,
-        system: systemPrompt,
-        messages: biz._aiHistory.map(function (m) {
+        system:     systemPrompt,
+        messages:   biz._aiHistory.map(function (m) {
           return { role: m.role, content: m.content };
         })
       })
@@ -291,18 +399,47 @@
       return res.json();
     })
     .then(function (data) {
-      var raw            = (data.content && data.content[0] && data.content[0].text) || '';
-      var escalationType = _parseEscalationType(raw);
-      var bookingData    = _parseBookingMarker(raw);
+      var raw = (data.content && data.content[0] && data.content[0].text) || '';
+
+      // 1. Parse and merge STATE marker
+      var stateUpdate = _parseStateMarker(raw);
+      if (stateUpdate) {
+        _mergeState(biz, stateUpdate);
+        // Sync selected staff from STATE
+        if (stateUpdate.staff && biz.staff) {
+          biz.staff.forEach(function (m) {
+            if (m.active !== false && m.name.toLowerCase() === stateUpdate.staff.toLowerCase()) {
+              biz._selectedStaff = m;
+            }
+          });
+        }
+        _saveBookingState(biz);
+      }
+
+      // 2. Parse BOOKING marker
+      var bookingData = _parseBookingMarker(raw);
       if (bookingData) biz._bookingDraft = bookingData;
-      var clean          = _stripMarker(_stripBookingMarker(raw));
+
+      // 3. Parse ESCALATE marker
+      var escalationType = _parseEscalationType(raw);
+
+      // 4. Reset state after booking is sent to vendor
+      if (escalationType === 'appointment') {
+        biz._bookingState = _emptyState();
+        _saveBookingState(biz);
+      }
+
+      // 5. Strip all markers from displayed text
+      var clean = _stripAllMarkers(raw);
+
       biz._aiHistory.push({ role: 'assistant', content: clean });
       _saveHistory(biz);
+
       return { text: clean, escalationType: escalationType };
     });
   }
 
-  // ── DOM helpers (used only in init) ──────────────────────────────────────────
+  // ── DOM helpers ───────────────────────────────────────────────────────────────
   function _appendMessage(messagesEl, text, who) {
     var div    = document.createElement('div');
     div.className = 'mp-ai__msg mp-ai__msg--' + who;
@@ -352,7 +489,6 @@
       function send(text) {
         if (!text) return;
         _appendMessage(messagesEl, text, 'user');
-
         var typingId = 'lily_t_' + Date.now();
         _showTyping(messagesEl, typingId);
 
@@ -363,7 +499,6 @@
           .then(function (result) {
             _hideTyping(typingId);
             _appendMessage(messagesEl, result.text, 'bot');
-
             if (result.escalationType) {
               var esc = window.EscalationEngine;
               if (esc && typeof esc.create === 'function') {

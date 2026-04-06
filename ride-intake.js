@@ -411,6 +411,35 @@ window.RideIntake = (function () {
     };
   }
 
+  // ── Route distance (self-contained — no dependency on script.js) ─────────────
+  // Uses Google Maps Routes API (same implementation as window.DLCRouteMatrix in script.js).
+  // Returns Promise<{distMiles, durMins}> or rejects on failure.
+  function _routeMatrix(origin, destination) {
+    return google.maps.importLibrary('routes').then(function (lib) {
+      var RouteMatrix = lib.RouteMatrix;
+      if (!RouteMatrix) return Promise.reject(new Error('RouteMatrix not available'));
+      var travelMode = (lib.TravelMode && lib.TravelMode.DRIVING) || 'DRIVING';
+      return RouteMatrix.computeRouteMatrix({
+        origins:      [origin],
+        destinations: [destination],
+        travelMode:   travelMode,
+        fields: ['distanceMeters', 'condition', 'localizedValues', 'originIndex', 'destinationIndex'],
+      });
+    }).then(function (result) {
+      var el = result && result.matrix && result.matrix.rows &&
+               result.matrix.rows[0] && result.matrix.rows[0].items &&
+               result.matrix.rows[0].items[0];
+      if (!el || el.condition !== 'ROUTE_EXISTS' || !el.distanceMeters) {
+        return Promise.reject(new Error('no-route'));
+      }
+      var durStr = (el.localizedValues && el.localizedValues.duration) || '';
+      var hrM    = durStr.match(/(\d+)\s*hr/i);
+      var minM   = durStr.match(/(\d+)\s*min/i);
+      var durMins = (hrM ? parseInt(hrM[1]) * 60 : 0) + (minM ? parseInt(minM[1]) : 0);
+      return { distMiles: el.distanceMeters / 1609.34, durMins: durMins };
+    });
+  }
+
   // ── Distance fetch ────────────────────────────────────────────────────────────
   function scheduleDistance() {
     clearTimeout(_timer);
@@ -441,12 +470,12 @@ window.RideIntake = (function () {
     if (typeof google === 'undefined' || !google.maps) { showPriceHint(); return; }
     showPriceLoading();
 
-    var ridePromise = window.DLCRouteMatrix(pair.origin, pair.destination);
+    var ridePromise = _routeMatrix(pair.origin, pair.destination);
 
     if (_driverCoords) {
       // Two-leg pricing: deadhead (driver → pickup) + ride (pickup → destination)
       var driverOrigin = _driverCoords.lat + ',' + _driverCoords.lng;
-      var deadheadPromise = window.DLCRouteMatrix(driverOrigin, pair.origin);
+      var deadheadPromise = _routeMatrix(driverOrigin, pair.origin);
       Promise.all([ridePromise, deadheadPromise]).then(function(results) {
         var ride     = results[0];
         var deadhead = results[1];

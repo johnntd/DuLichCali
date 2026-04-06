@@ -27,8 +27,11 @@
         appId:             '1:623460884698:web:a08bd435c453a7b4db05e3'
       };
       if (!firebase.apps.length) { firebase.initializeApp(cfg); }
-      firebase.auth().signInAnonymously().catch(function () {});
       window.dlcDb = firebase.firestore();
+      // Only sign in anonymously when no existing session — prevents overwriting vendor/driver auth
+      firebase.auth().onAuthStateChanged(function(u) {
+        if (!u) firebase.auth().signInAnonymously().catch(function() {});
+      });
     })();
   </script>
 </head>

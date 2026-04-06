@@ -26,7 +26,9 @@
       messagingSenderId: '623460884698',
       appId:             '1:623460884698:web:a08bd435c453a7b4db05e3'
     });
-    firebase.auth().signInAnonymously().catch(console.error);
+    firebase.auth().onAuthStateChanged(function(u) {
+      if (!u) firebase.auth().signInAnonymously().catch(function() {});
+    });
   </script>
 
   <!-- Google Maps (for address autocomplete in ride form) -->

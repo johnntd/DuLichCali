@@ -424,7 +424,7 @@
     <button class="mobile-tab-btn" onclick="switchTab('staff')">Nhân Viên</button>
     <button class="mobile-tab-btn" onclick="switchTab('availability')">Hôm Nay</button>
     <button class="mobile-tab-btn" onclick="switchTab('hours')">Giờ Mở</button>
-    <button class="mobile-tab-btn" onclick="switchTab('appointments')">Lịch Hẹn</button>
+    <button class="mobile-tab-btn" onclick="switchTab('appointments')">Lịch Hẹn <span id="escMobileBadge" style="display:none;background:#e8a800;color:#000;border-radius:99px;padding:1px 6px;font-size:.65rem;font-weight:700"></span></button>
     <button class="mobile-tab-btn" onclick="switchTab('settings')">Cài Đặt</button>
   </div>
 
@@ -437,7 +437,7 @@
       <button class="va-nav-btn"        id="nav-staff"         onclick="switchTab('staff')">Nhân Viên</button>
       <button class="va-nav-btn"        id="nav-availability"  onclick="switchTab('availability')">Hôm Nay</button>
       <button class="va-nav-btn"        id="nav-hours"         onclick="switchTab('hours')">Giờ Mở Cửa</button>
-      <button class="va-nav-btn"        id="nav-appointments"  onclick="switchTab('appointments')">Lịch Hẹn</button>
+      <button class="va-nav-btn"        id="nav-appointments"  onclick="switchTab('appointments')">Lịch Hẹn <span id="escNavBadge" style="display:none;background:#e8a800;color:#000;border-radius:99px;padding:1px 7px;font-size:.68rem;font-weight:700;margin-left:4px;vertical-align:middle"></span></button>
       <button class="va-nav-btn"        id="nav-settings"      onclick="switchTab('settings')">Cài Đặt</button>
     </nav>
 
@@ -489,6 +489,15 @@
 
       <!-- ── Appointments tab ── -->
       <div class="tab-panel" id="panel-appointments">
+        <!-- AI Escalation requests (booking requests from Lily receptionist) -->
+        <div id="escSection" style="display:none;margin-bottom:1.2rem">
+          <div class="sa-section-header" style="margin-bottom:.5rem">
+            <div class="sa-section-title" style="color:#e8a800">&#128172; Khách Nhắn Qua AI</div>
+            <span id="escBadge" style="background:#e8a800;color:#000;border-radius:99px;padding:2px 9px;font-size:.75rem;font-weight:700;display:none"></span>
+          </div>
+          <div id="escList"></div>
+        </div>
+
         <div class="sa-section-header">
           <div class="sa-section-title">Lịch Hẹn</div>
         </div>
@@ -738,6 +747,7 @@
         seedIfNeeded(staticData);
         subscribeServices();
         subscribeStaff();
+        subscribeEscalations();
         loadHoursGrid(vdata.hoursSchedule);
       }).catch(function() {
         document.getElementById('authLoading').classList.add('hidden');
@@ -745,6 +755,7 @@
         seedIfNeeded(staticData);
         subscribeServices();
         subscribeStaff();
+        subscribeEscalations();
         loadHoursGrid(null);
       });
     }).catch(function() { window.location.href = 'vendor-login.html'; });
@@ -754,6 +765,7 @@
     if (unsubSvcs)  unsubSvcs();
     if (unsubStaff) unsubStaff();
     if (unsubAppts) unsubAppts();
+    if (_unsubEsc)  _unsubEsc();
     auth.signOut().then(function(){ window.location.href = 'vendor-login.html?id=' + (VENDOR_ID||''); });
   }
 
@@ -1328,6 +1340,98 @@
       unsubAppts = db.collection('bookings').where('vendorId','==',VENDOR_ID)
         .limit(40).onSnapshot(handleAppts);
     });
+  }
+
+  // ── AI Escalations (booking requests from Lily receptionist) ─────────────────
+  var _unsubEsc = null;
+
+  function subscribeEscalations() {
+    if (_unsubEsc || !VENDOR_ID) return;
+    var ref = db.collection('escalations')
+      .where('vendorId', '==', VENDOR_ID)
+      .limit(50);
+    _unsubEsc = ref.onSnapshot(function (snap) {
+      var items = [];
+      snap.forEach(function (d) {
+        var data = d.data();
+        if (data.status === 'pending_vendor_response') {
+          items.push(Object.assign({ id: d.id }, data));
+        }
+      });
+      items.sort(function (a, b) {
+        var ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+        var tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+        return tb - ta;
+      });
+      renderEscalations(items);
+    }, function (err) {
+      console.warn('[esc] listener error:', err.message);
+    });
+  }
+
+  function renderEscalations(items) {
+    var section = document.getElementById('escSection');
+    var list    = document.getElementById('escList');
+    var badge   = document.getElementById('escBadge');
+    var navBadge = document.getElementById('escNavBadge');
+    var mobBadge = document.getElementById('escMobileBadge');
+    if (!section || !list) return;
+
+    var count = items.length;
+    [navBadge, mobBadge].forEach(function (b) {
+      if (!b) return;
+      b.textContent  = count;
+      b.style.display = count > 0 ? 'inline-block' : 'none';
+    });
+
+    if (count === 0) {
+      section.style.display = 'none';
+      return;
+    }
+    section.style.display = 'block';
+    badge.textContent     = count;
+    badge.style.display   = 'inline-block';
+
+    var typeLabels = { appointment: '&#128197; Đặt Lịch', order: '&#128722; Đơn hàng', reservation: '&#128203; Đặt chỗ', question: '&#128172; Câu hỏi' };
+    list.innerHTML = items.map(function (item) {
+      var timeStr = '';
+      if (item.createdAt && item.createdAt.toDate) {
+        var d = item.createdAt.toDate();
+        timeStr = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
+      }
+      var typeLabel  = typeLabels[item.escalationType] || '&#128172; Yêu cầu';
+      var escId      = item.id;
+      var replyId    = 'esc_r_' + escId;
+      var summaryHtml = item.summary
+        ? '<div style="font-size:.78rem;color:var(--muted);margin:.3rem 0 .6rem;white-space:pre-line;line-height:1.45">' + esc(item.summary) + '</div>'
+        : '';
+      return '<div class="appt-card" style="border-left:3px solid #e8a800;margin-bottom:.75rem">' +
+        '<div class="appt-card__header">' +
+          '<span class="appt-card__name">' + typeLabel + '</span>' +
+          '<span class="appt-card__date">' + timeStr + '</span>' +
+        '</div>' +
+        summaryHtml +
+        '<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem">' +
+          '<button class="btn btn--primary btn--sm" onclick="respondEscalation(\'' + escId + '\',\'vendor_confirmed\',null)">&#10003; Xác nhận</button>' +
+          '<button class="btn btn--sm" style="background:transparent;border:1px solid var(--danger);color:var(--danger)" onclick="respondEscalation(\'' + escId + '\',\'vendor_declined\',null)">&#10007; Từ chối</button>' +
+        '</div>' +
+        '<div style="display:flex;gap:.4rem;margin-top:.4rem">' +
+          '<input id="' + replyId + '" type="text" class="sa-input" placeholder="Nhắn lại cho khách…" style="flex:1;height:36px;padding:0 10px">' +
+          '<button class="btn btn--sm" style="background:var(--gold);color:#000;font-weight:600" onclick="respondEscalation(\'' + escId + '\',\'vendor_replied\',document.getElementById(\'' + replyId + '\').value)">Gửi</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function respondEscalation(escId, status, message) {
+    var update = { status: status };
+    if (message && message.trim()) update.vendorMessage = message.trim();
+    db.collection('escalations').doc(escId).update(update)
+      .then(function () {
+        var labels = { vendor_confirmed: '✓ Đã xác nhận!', vendor_declined: 'Đã từ chối.', vendor_replied: '✓ Đã gửi phản hồi!' };
+        showToast(labels[status] || 'Đã cập nhật.');
+      })
+      .catch(function (err) { showToast('Lỗi: ' + err.message); });
   }
 
   // ── Settings ──────────────────────────────────────────────────────────────────

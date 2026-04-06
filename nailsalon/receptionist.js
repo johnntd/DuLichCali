@@ -1,7 +1,9 @@
-// Lily Receptionist v2.0 — Intelligent AI receptionist for Luxurious Nails & Spa
+// Lily Receptionist v2.1 — Smart booking AI for Luxurious Nails & Spa
 // Voice-ready: LilyReceptionist.handleMessage(biz, text, apiKey) → Promise<{text, escalationType}>
 // Languages: English + Spanish + Vietnamese (Claude-detected, not just regex)
-// Features: intent classification, entity extraction, booking state machine, multi-service
+// Features: intent classification, entity extraction, booking state machine,
+//           multi-service selection, duration aggregation, availability checking,
+//           smart alternatives (next slot / different staff suggestion)
 (function () {
   'use strict';
 
@@ -66,6 +68,197 @@
     return lines.join('\n');
   }
 
+  // ── Duration helpers ──────────────────────────────────────────────────────────
+
+  // Sum durationMins for all requested service names against biz.services catalog
+  function _calcTotalDuration(biz, serviceNames) {
+    if (!serviceNames || !serviceNames.length) return 60;
+    var catalog = biz.services || [];
+    var total = 0;
+    serviceNames.forEach(function (name) {
+      var found = null;
+      for (var i = 0; i < catalog.length; i++) {
+        if (catalog[i].name && catalog[i].name.toLowerCase() === name.toLowerCase()) {
+          found = catalog[i];
+          break;
+        }
+      }
+      total += (found && found.durationMins) ? found.durationMins : 60;
+    });
+    return total || 60;
+  }
+
+  // ── Nail Availability Checker ─────────────────────────────────────────────────
+  // Checks vendor/appointments Firestore subcollection for conflicts BEFORE escalating.
+  // Only blocks named-staff conflicts and out-of-hours requests.
+  // 'Any' staff requests pass through (salon assigns dynamically).
+  var NailAvailabilityChecker = (function () {
+    var SLOT_STEP       = 30;  // minute increment for alternative suggestions
+    var DEFAULT_DUR     = 60;  // fallback if service not found
+
+    function _toMins(t) {
+      if (!t || typeof t !== 'string') return 0;
+      var p = t.split(':');
+      return parseInt(p[0] || '0', 10) * 60 + parseInt(p[1] || '0', 10);
+    }
+
+    function _fromMins(m) {
+      var h = Math.floor(m / 60), min = m % 60;
+      return (h < 10 ? '0' : '') + h + ':' + (min < 10 ? '0' : '') + min;
+    }
+
+    function _dayName(dateStr) {
+      // 'YYYY-MM-DD' → 'monday'
+      var d = new Date(dateStr + 'T12:00:00');
+      return DAYS[d.getDay()];
+    }
+
+    // biz.hours uses lowercase full day names: { monday: { open:'09:30', close:'19:30' } }
+    function _salonHours(biz, dayName) {
+      if (!biz || !biz.hours) return null;
+      var h = biz.hours[dayName];
+      if (!h || !h.open || h.open === 'Closed' || !h.close) return null;
+      return { open: h.open, close: h.close };
+    }
+
+    function _overlaps(aStart, aEnd, bStart, bEnd) {
+      return aStart < bEnd && aEnd > bStart;
+    }
+
+    // Walk forward from reqStart in SLOT_STEP increments; return first non-conflicting slot for named staff
+    function _findNextSlot(existing, staffKey, reqStart, totalMins, openMins, closeMins) {
+      var try_ = reqStart + SLOT_STEP;
+      while (try_ + totalMins <= closeMins) {
+        var tryEnd = try_ + totalMins;
+        var blocked = existing.some(function (appt) {
+          var apptStaff = (appt.staff || '').toLowerCase();
+          if (apptStaff !== staffKey && apptStaff !== 'any') return false;
+          var aStart = _toMins(appt.time || '00:00');
+          var aDur   = appt.totalDurationMins || appt.durationMins || DEFAULT_DUR;
+          return _overlaps(try_, tryEnd, aStart, aStart + aDur);
+        });
+        if (!blocked) return _fromMins(try_);
+        try_ += SLOT_STEP;
+      }
+      return null; // no slot found today
+    }
+
+    // Build a natural language conflict / hours message
+    function _buildMsg(biz, key, data) {
+      var lang  = (biz._bookingState && biz._bookingState.lang) || 'en';
+      var phone = biz.phoneDisplay || biz.phone || '';
+
+      if (key === 'closed') {
+        var d = data.day.charAt(0).toUpperCase() + data.day.slice(1);
+        if (lang === 'vi') return 'Rất tiếc, tiệm không mở cửa vào ' + d + '. Bạn muốn chọn ngày khác không?';
+        if (lang === 'es') return 'Lo sentimos, el salón está cerrado los ' + d + 's. ¿Le gustaría elegir otro día?';
+        return 'Sorry, the salon is closed on ' + d + 's. Would you like to pick a different day?';
+      }
+
+      if (key === 'too_late') {
+        var dur = data.totalMins + ' min';
+        if (lang === 'vi') return 'Dịch vụ này cần ' + dur + ' và sẽ kết thúc sau giờ đóng cửa lúc ' + data.close + '. Thời gian bắt đầu muộn nhất là ' + data.latest + '. Bạn có muốn đặt vào lúc đó không?';
+        if (lang === 'es') return 'Este servicio toma ' + dur + ' y terminaría después del cierre (' + data.close + '). La última hora disponible es ' + data.latest + '. ¿Le gustaría ese horario?';
+        return 'This service takes ' + dur + ' and would run past closing time (' + data.close + '). The latest start available is ' + data.latest + '. Would you like that time instead?';
+      }
+
+      if (key === 'conflict') {
+        var staffNote = data.staff && data.staff.toLowerCase() !== 'any' ? ' with ' + data.staff : '';
+        if (data.nextSlot) {
+          if (lang === 'vi') return 'Rất tiếc, khung giờ ' + data.time + staffNote + ' đã có lịch. Thời gian trống gần nhất là ' + data.nextSlot + '. Bạn có muốn đặt vào khung giờ đó không?';
+          if (lang === 'es') return 'Lo sentimos, el horario de las ' + data.time + staffNote + ' ya está reservado. El próximo disponible es ' + data.nextSlot + '. ¿Le gustaría ese horario?';
+          return 'Sorry, ' + data.time + staffNote + ' is already booked. The next available time is ' + data.nextSlot + '. Would you like that instead?';
+        } else {
+          if (lang === 'vi') return 'Rất tiếc, không còn khung giờ trống hôm đó' + (staffNote ? ' cho ' + data.staff : '') + '. Vui lòng gọi ' + phone + ' hoặc chọn ngày khác.';
+          if (lang === 'es') return 'Lo sentimos, no quedan horarios disponibles ese día' + (staffNote ? ' con ' + data.staff : '') + '. Llame al ' + phone + ' o elija otra fecha.';
+          return 'Sorry, there are no more available slots that day' + (staffNote ? ' with ' + data.staff : '') + '. Please call ' + phone + ' or choose a different date.';
+        }
+      }
+
+      return '';
+    }
+
+    function check(biz, draft) {
+      var db = window.dlcDb;
+
+      // No Firestore, or no date/time in draft — pass through
+      if (!db || !draft || !draft.date || !draft.time) {
+        return Promise.resolve({ valid: true });
+      }
+
+      var totalMins    = draft.totalDurationMins || DEFAULT_DUR;
+      var reqStartMins = _toMins(draft.time);
+      var reqEndMins   = reqStartMins + totalMins;
+      var dayName      = _dayName(draft.date);
+      var hours        = _salonHours(biz, dayName);
+
+      // 1. Salon closed that day — only block if hours are explicitly configured
+      if (biz.hours && hours === null) {
+        return Promise.resolve({ valid: false, message: _buildMsg(biz, 'closed', { day: dayName }) });
+      }
+
+      // 2. Runs past closing time — only check if hours configured
+      if (hours) {
+        var closeMins = _toMins(hours.close);
+        var openMins  = _toMins(hours.open);
+        if (reqEndMins > closeMins) {
+          var latest = closeMins - totalMins;
+          if (latest < openMins) {
+            return Promise.resolve({ valid: false, message: _buildMsg(biz, 'closed', { day: dayName }) });
+          }
+          return Promise.resolve({ valid: false, message: _buildMsg(biz, 'too_late', {
+            totalMins: totalMins,
+            close:     hours.close,
+            latest:    _fromMins(latest)
+          })});
+        }
+      }
+
+      // 3. Named-staff conflict check against confirmed appointments in Firestore
+      var requestedStaff = (draft.staff || 'any').toLowerCase();
+      if (requestedStaff === 'any') {
+        // 'Any' staff → salon assigns dynamically; cannot reliably determine capacity here
+        return Promise.resolve({ valid: true });
+      }
+
+      return db.collection('vendors').doc(biz.id)
+        .collection('appointments')
+        .where('date', '==', draft.date)
+        .where('status', '==', 'confirmed')
+        .get()
+        .then(function (snap) {
+          var existing = snap.docs.map(function (d) { return d.data(); });
+
+          var hasConflict = existing.some(function (appt) {
+            var apptStaff = (appt.staff || '').toLowerCase();
+            if (apptStaff !== requestedStaff && apptStaff !== 'any') return false;
+            var aStart = _toMins(appt.time || '00:00');
+            var aDur   = appt.totalDurationMins || appt.durationMins || DEFAULT_DUR;
+            return _overlaps(reqStartMins, reqEndMins, aStart, aStart + aDur);
+          });
+
+          if (!hasConflict) return { valid: true };
+
+          var openMins  = hours ? _toMins(hours.open)  : _toMins('09:00');
+          var closeMins = hours ? _toMins(hours.close) : _toMins('19:00');
+          var nextSlot  = _findNextSlot(existing, requestedStaff, reqStartMins, totalMins, openMins, closeMins);
+
+          return { valid: false, message: _buildMsg(biz, 'conflict', {
+            time:     draft.time,
+            staff:    draft.staff,
+            nextSlot: nextSlot
+          })};
+        })
+        .catch(function (err) {
+          // On query error, allow the booking rather than blocking the user
+          console.warn('[NailAvailabilityChecker] query error — allowing booking through:', err && err.message);
+          return { valid: true };
+        });
+    }
+
+    return { check: check };
+  })();
+
   // ── Marker parsing ────────────────────────────────────────────────────────────
   function _parseEscalationType(reply) {
     var m = reply.match(/\[ESCALATE:(order|appointment|reservation|question)\]/i);
@@ -117,15 +310,17 @@
     var phone     = biz.phoneDisplay || biz.phone || '';
     var address   = biz.address || 'Bay Area, California';
 
-    // Services block
+    // Services block — show durationMins (number) for accurate duration, fall back to duration string
     var services = biz.services || [];
     var shown = services.filter(function (s) { return s.active !== false; });
     if (shown.length === 0) shown = services.slice(0, 30);
     var servicesBlock = shown.length > 0
       ? shown.map(function (s) {
           var line = '• ' + s.name;
-          if (s.price)    line += ' — $' + s.price;
-          if (s.duration) line += ' (' + s.duration + ' min)';
+          if (s.price) line += ' — $' + s.price;
+          // Use durationMins (integer) if available, otherwise duration string
+          if (s.durationMins) line += ' (' + s.durationMins + ' min)';
+          else if (s.duration) line += ' (' + s.duration + ')';
           if (s.description) line += ': ' + s.description;
           return line;
         }).join('\n')
@@ -261,8 +456,15 @@
       '     Staff is optional — "any available" is fine if customer does not specify.',
       '  C. Ask for exactly ONE missing field at a time. Be natural ("What day works for you?"',
       '     not "Please provide your preferred date.").',
-      '  D. When ALL required fields are collected (service, date, time, name, phone):',
-      '     Write ONE plain sentence confirmation. Then on new lines:',
+      '  D. MULTIPLE SERVICES: Customers may book more than one service in a single appointment.',
+      '     "Gel manicure and pedicure" → services: ["Gel Manicure","Pedicure"].',
+      '     The total appointment duration = sum of all selected services.',
+      '     When confirming multi-service bookings, mention the total time naturally:',
+      '     "That will take about 2 hours total — you\'re all set!"',
+      '  E. When ALL required fields are collected (service, date, time, name, phone):',
+      '     Write ONE plain sentence confirmation mentioning service(s), time, and staff.',
+      '     Mention total duration if multiple services are booked.',
+      '     Then on new lines:',
       '     [BOOKING:{"services":["Service1","Service2"],"staff":"<name or Any>","date":"YYYY-MM-DD","time":"HH:MM","name":"<name>","phone":"<phone>","lang":"<en|es|vi>"}]',
       '     [ESCALATE:appointment]',
       '     FAREWELL EXCEPTION: If intent = farewell — output ONLY the farewell sentence + STATE marker. NEVER output [BOOKING:...] or [ESCALATE:...] regardless of booking progress.',
@@ -505,7 +707,37 @@
           .then(function (result) {
             _hideTyping(typingId);
             _appendMessage(messagesEl, result.text, 'bot');
-            if (result.escalationType) {
+
+            if (result.escalationType === 'appointment' && biz._bookingDraft) {
+              // Enrich draft with computed total duration before availability check
+              var draft = biz._bookingDraft;
+              draft.totalDurationMins = _calcTotalDuration(biz, draft.services || []);
+
+              NailAvailabilityChecker.check(biz, draft)
+                .then(function (avail) {
+                  if (avail.valid) {
+                    var esc = window.EscalationEngine;
+                    if (esc && typeof esc.create === 'function') {
+                      esc.create(biz, messagesEl, result.escalationType, draft);
+                    }
+                  } else {
+                    // Slot unavailable — surface conflict message, reset state so customer can rebook
+                    _appendMessage(messagesEl, avail.message, 'bot');
+                    biz._bookingState = _emptyState();
+                    _saveBookingState(biz);
+                    biz._bookingDraft = null;
+                  }
+                })
+                .catch(function () {
+                  // Availability check error — don't block the booking
+                  var esc = window.EscalationEngine;
+                  if (esc && typeof esc.create === 'function') {
+                    esc.create(biz, messagesEl, result.escalationType, draft);
+                  }
+                });
+
+            } else if (result.escalationType) {
+              // Non-appointment escalation (question, etc.) — forward directly
               var esc = window.EscalationEngine;
               if (esc && typeof esc.create === 'function') {
                 esc.create(biz, messagesEl, result.escalationType, biz._bookingDraft || null);

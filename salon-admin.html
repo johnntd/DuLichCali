@@ -1465,18 +1465,19 @@
 
         var apptRef = vendorRef.collection('appointments').doc();
         apptRef.set({
-          escId:            escId,
-          selectedServices: svcs,
-          service:          svcs.join(', '),   // legacy compat for renderBookings
-          staff:            appt.staff    || 'Any',
-          date:             appt.date     || '',
-          time:             appt.time     || '',
-          customerName:     appt.name     || 'Khách',
-          customerPhone:    appt.phone    || '',
-          lang:             appt.lang || escData.lang || 'en',
-          status:           'confirmed',
-          confirmedAt:      ts(),
-          createdAt:        ts()
+          escId:              escId,
+          selectedServices:   svcs,
+          service:            svcs.join(', '),   // legacy compat for renderBookings
+          totalDurationMins:  appt.totalDurationMins || null,
+          staff:              appt.staff    || 'Any',
+          date:               appt.date     || '',
+          time:               appt.time     || '',
+          customerName:       appt.name     || 'Khách',
+          customerPhone:      appt.phone    || '',
+          lang:               appt.lang || escData.lang || 'en',
+          status:             'confirmed',
+          confirmedAt:        ts(),
+          createdAt:          ts()
         }).catch(function (e) { console.warn('[appt] write failed:', e.message); });
 
         return db.collection('escalations').doc(escId).update(update);

@@ -886,7 +886,10 @@
     }
 
     if (biz.aiReceptionist && biz.aiReceptionist.enabled) {
-      Receptionist.init(biz, 'aiWidget_' + biz.id);
+      var _R = (window.LilyReceptionist && biz.id === 'luxurious-nails')
+        ? window.LilyReceptionist
+        : Receptionist;
+      _R.init(biz, 'aiWidget_' + biz.id);
     }
 
     _initVendorNav(biz);
@@ -3009,6 +3012,9 @@
 
   // Also expose Receptionist at top level for external use
   window.Receptionist = Receptionist;
+
+  // Expose EscalationEngine for external receptionist modules (e.g. LilyReceptionist)
+  window.EscalationEngine = EscalationEngine;
 
 })();
 

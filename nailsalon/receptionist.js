@@ -123,6 +123,7 @@
       '',
       '=== YOUR RULES ===',
       '1. You are a professional receptionist — answer naturally like a real person, not a chatbot.',
+      '1b. NEVER re-introduce yourself mid-conversation. If conversation history exists, continue it directly. Do not say "Hi! I\'m Lily..." again. Just answer the question.',
       '2. Use ONLY the information above. Do NOT invent prices, hours, or staff schedules.',
       '3. If data shows "(not yet loaded)" — tell customer to call ' + phone + ' for that info.',
       '4. Keep responses to 2-4 sentences. No bullet lists unless listing services was explicitly requested.',
@@ -183,9 +184,23 @@
     return 'Thank you for contacting ' + name + '! For immediate assistance please call ' + phone + '. We are happy to help with services, pricing, and scheduling.';
   }
 
+  // ── History persistence (sessionStorage — survives biz re-renders) ───────────
+  function _saveHistory(biz) {
+    try { sessionStorage.setItem('lily_h_' + biz.id, JSON.stringify(biz._aiHistory)); } catch (e) {}
+  }
+
+  function _restoreHistory(biz) {
+    if (biz._aiHistory && biz._aiHistory.length > 0) return; // already have in-memory history
+    try {
+      var raw = sessionStorage.getItem('lily_h_' + biz.id);
+      if (raw) biz._aiHistory = JSON.parse(raw);
+    } catch (e) {}
+  }
+
   // ── Core message handler (voice-ready — no DOM access) ───────────────────────
   function _handleMessage(biz, text, apiKey) {
-    // Initialize history
+    // Restore history from sessionStorage in case biz object was recreated
+    _restoreHistory(biz);
     if (!biz._aiHistory) biz._aiHistory = [];
     biz._aiHistory.push({ role: 'user', content: text });
     if (biz._aiHistory.length > HISTORY_CAP) {
@@ -210,6 +225,7 @@
         setTimeout(function () {
           var reply = _fallback(biz, text);
           biz._aiHistory.push({ role: 'assistant', content: reply });
+          _saveHistory(biz);
           resolve({ text: reply, escalationType: null });
         }, 600);
       });
@@ -247,6 +263,7 @@
       var escalationType = _parseEscalationType(raw);
       var clean        = _stripMarker(raw);
       biz._aiHistory.push({ role: 'assistant', content: clean });
+      _saveHistory(biz);
       return { text: clean, escalationType: escalationType };
     });
   }
@@ -325,6 +342,7 @@
             console.warn('[LilyReceptionist] API error, using fallback:', err.message || err);
             var fallbackText = _fallback(biz, text);
             biz._aiHistory.push({ role: 'assistant', content: fallbackText });
+            _saveHistory(biz);
             _appendMessage(messagesEl, fallbackText, 'bot');
           });
       }

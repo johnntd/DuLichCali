@@ -726,6 +726,207 @@
     '</div>';
   }
 
+  // ── Nail multi-service booking form ──────────────────────────────────────────
+
+  function renderNailBookingSection(biz) {
+    // Prefer active Firestore services; fall back to full static catalog
+    var catalog = (biz.services && biz.services.length > 0)
+      ? biz.services
+      : (biz._staticServices || []);
+    if (!catalog.length) return '';
+
+    // Group by category, preserving insertion order
+    var cats = {}, catOrder = [];
+    catalog.forEach(function (s) {
+      var cat = s.category || 'other';
+      if (!cats[cat]) { cats[cat] = []; catOrder.push(cat); }
+      cats[cat].push(s);
+    });
+
+    var catLabels = {
+      manicure: 'Manicure', pedicure: 'Pedicure', gel: 'Gel & Shellac',
+      acrylic: 'Acrylic & Extensions', nailart: 'Nail Art',
+      spa: 'Spa Treatments', addon: 'Add-ons & Extras', other: 'Other'
+    };
+
+    var svcHtml = catOrder.map(function (cat) {
+      var label = catLabels[cat] || (cat.charAt(0).toUpperCase() + cat.slice(1));
+      var items = cats[cat].map(function (s) {
+        var meta = [];
+        if (s.durationMins) meta.push(s.durationMins + ' min');
+        if (s.price)        meta.push('$' + s.price);
+        return '<label class="nb-svc-card">' +
+          '<input type="checkbox" class="nb-svc-chk" name="services" value="' + escAttr(s.name) + '" data-mins="' + (s.durationMins || 60) + '">' +
+          '<span class="nb-svc-name">' + escHtml(s.name) + '</span>' +
+          (meta.length ? '<span class="nb-svc-meta">' + escHtml(meta.join(' · ')) + '</span>' : '') +
+        '</label>';
+      }).join('');
+      return '<div class="nb-cat">' +
+        '<div class="nb-cat-label">' + escHtml(label) + '</div>' +
+        '<div class="nb-svc-grid">' + items + '</div>' +
+      '</div>';
+    }).join('');
+
+    var activeStaff = (biz.staff || []).filter(function (m) { return m.active !== false; });
+    var staffOpts = '<option value="Any">Bất kỳ (salon sắp xếp)</option>' +
+      activeStaff.map(function (m) {
+        return '<option value="' + escAttr(m.name) + '">' + escHtml(m.name) + (m.role ? ' — ' + escHtml(m.role) : '') + '</option>';
+      }).join('');
+
+    var today = new Date().toISOString().slice(0, 10);
+
+    return '<div class="mp-section" id="nailBookSection_' + biz.id + '">' +
+      '<div class="mp-section-hdr"><h2 class="mp-section-title">Đặt Lịch Ngay</h2></div>' +
+      '<div class="mp-panel-form">' +
+        '<form id="nailBookForm_' + biz.id + '">' +
+          '<p class="nb-instruction">Chọn một hoặc nhiều dịch vụ:</p>' +
+          '<div id="nbServices_' + biz.id + '">' + svcHtml + '</div>' +
+          '<div class="nb-duration-row" id="nbDurRow_' + biz.id + '" style="display:none">' +
+            '<span>Tổng thời gian: </span>' +
+            '<strong id="nbDurVal_' + biz.id + '">0</strong>' +
+            '<span> phút</span>' +
+          '</div>' +
+          '<div class="mp-form-row">' +
+            '<label class="mp-label">Kỹ thuật viên</label>' +
+            '<select class="mp-input" id="nbStaff_' + biz.id + '">' + staffOpts + '</select>' +
+          '</div>' +
+          '<div class="mp-form-row-duo">' +
+            '<div class="mp-form-row">' +
+              '<label class="mp-label">Ngày hẹn</label>' +
+              '<input class="mp-input" type="date" id="nbDate_' + biz.id + '" min="' + today + '" required>' +
+            '</div>' +
+            '<div class="mp-form-row">' +
+              '<label class="mp-label">Giờ hẹn</label>' +
+              '<input class="mp-input" type="time" id="nbTime_' + biz.id + '" required>' +
+            '</div>' +
+          '</div>' +
+          '<div class="mp-form-row-duo">' +
+            '<div class="mp-form-row">' +
+              '<label class="mp-label">Họ & Tên</label>' +
+              '<input class="mp-input" type="text" id="nbName_' + biz.id + '" placeholder="Nguyễn Văn A" required>' +
+            '</div>' +
+            '<div class="mp-form-row">' +
+              '<label class="mp-label">Số điện thoại</label>' +
+              '<input class="mp-input" type="tel" id="nbPhone_' + biz.id + '" placeholder="(408) 555-0000" required>' +
+            '</div>' +
+          '</div>' +
+          '<div class="mp-form-row">' +
+            '<label class="mp-label">Ghi chú (tùy chọn)</label>' +
+            '<textarea class="mp-input" id="nbNotes_' + biz.id + '" rows="2" placeholder="Yêu cầu đặc biệt..."></textarea>' +
+          '</div>' +
+          '<div class="nb-avail-msg" id="nbMsg_' + biz.id + '" style="display:none"></div>' +
+          '<button type="submit" class="mp-btn mp-btn--primary mp-btn--full" id="nbSubmit_' + biz.id + '">' + calendarIcon + ' Gửi Đặt Lịch</button>' +
+          '<div class="mp-form-success" id="nbSuccess_' + biz.id + '">' +
+            checkIcon +
+            '<p>Đặt lịch thành công!</p>' +
+            '<p style="margin-top:.5rem;font-size:.8rem;color:var(--muted)">Chúng tôi sẽ liên hệ xác nhận sớm nhất.</p>' +
+          '</div>' +
+        '</form>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function initNailBookingForm(biz) {
+    var form       = document.getElementById('nailBookForm_' + biz.id);
+    var durRow     = document.getElementById('nbDurRow_' + biz.id);
+    var durVal     = document.getElementById('nbDurVal_' + biz.id);
+    var msgEl      = document.getElementById('nbMsg_' + biz.id);
+    var successDiv = document.getElementById('nbSuccess_' + biz.id);
+    var submitBtn  = document.getElementById('nbSubmit_' + biz.id);
+    if (!form) return;
+
+    function showMsg(text, isError) {
+      if (!msgEl) return;
+      msgEl.textContent = text;
+      msgEl.className = 'nb-avail-msg' + (isError === false ? ' nb-avail-msg--ok' : '');
+      msgEl.style.display = text ? 'block' : 'none';
+    }
+
+    // Live duration sum as services are checked/unchecked
+    function updateDuration() {
+      var total = 0;
+      form.querySelectorAll('.nb-svc-chk:checked').forEach(function (chk) {
+        total += parseInt(chk.getAttribute('data-mins') || '60', 10);
+      });
+      if (total > 0 && durVal) {
+        durVal.textContent = total;
+        if (durRow) durRow.style.display = 'flex';
+      } else {
+        if (durRow) durRow.style.display = 'none';
+      }
+    }
+    form.querySelectorAll('.nb-svc-chk').forEach(function (chk) {
+      chk.addEventListener('change', updateDuration);
+    });
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      var selectedServices = [];
+      var totalMins = 0;
+      form.querySelectorAll('.nb-svc-chk:checked').forEach(function (chk) {
+        selectedServices.push(chk.value);
+        totalMins += parseInt(chk.getAttribute('data-mins') || '60', 10);
+      });
+
+      if (!selectedServices.length) { showMsg('Vui lòng chọn ít nhất một dịch vụ.', true); return; }
+
+      var staff    = (document.getElementById('nbStaff_' + biz.id) || {}).value || 'Any';
+      var date     = (document.getElementById('nbDate_' + biz.id) || {}).value || '';
+      var time     = (document.getElementById('nbTime_' + biz.id) || {}).value || '';
+      var name     = ((document.getElementById('nbName_' + biz.id) || {}).value || '').trim();
+      var phone    = ((document.getElementById('nbPhone_' + biz.id) || {}).value || '').trim();
+      var notesEl  = document.getElementById('nbNotes_' + biz.id);
+      var notes    = notesEl ? notesEl.value.trim() : '';
+
+      if (!date || !time || !name || !phone) { showMsg('Vui lòng điền đầy đủ thông tin.', true); return; }
+
+      showMsg('', true);
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Đang gửi...'; }
+
+      var db = window.dlcDb;
+      if (!db) {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = calendarIcon + ' Gửi Đặt Lịch'; }
+        showMsg('Vui lòng gọi trực tiếp: ' + (biz.phoneDisplay || biz.phone || ''), true);
+        return;
+      }
+
+      var escId = 'esc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+      var durLabel = totalMins >= 60
+        ? Math.floor(totalMins / 60) + 'h' + (totalMins % 60 ? (totalMins % 60) + 'm' : '')
+        : totalMins + ' min';
+
+      db.collection('escalations').doc(escId).set({
+        vendorId:        biz.id || '',
+        vendorName:      biz.name || '',
+        escalationType:  'appointment',
+        source:          'booking_form',
+        appointmentData: {
+          services:          selectedServices,
+          totalDurationMins: totalMins,
+          staff:             staff,
+          date:              date,
+          time:              time,
+          name:              name,
+          phone:             phone,
+          notes:             notes,
+          lang:              'en'
+        },
+        summary:        name + ' — ' + selectedServices.join(', ') + ' (' + durLabel + ') on ' + date + ' at ' + time + ' with ' + staff,
+        status:         'pending_vendor_response',
+        vendorMessage:  null,
+        lang:           'en',
+        createdAt:      firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function () {
+        if (form) form.style.display = 'none';
+        if (successDiv) successDiv.classList.add('show');
+      }).catch(function () {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = calendarIcon + ' Gửi Đặt Lịch'; }
+        showMsg('Có lỗi xảy ra. Vui lòng gọi: ' + (biz.phoneDisplay || biz.phone || ''), true);
+      });
+    });
+  }
+
   // ── Salon Vendor Detail Page ──────────────────────────────────────────────────
 
   function renderSalonVendorDetail(biz) {
@@ -863,6 +1064,8 @@
   }
 
   function _renderSalonDetailContent(biz, backUrl) {
+    var isNails = biz.category === 'nails';
+
     var html =
       renderSalonBar(biz) +
       '<main class="mp-main">' +
@@ -874,7 +1077,9 @@
             renderHoursSection(biz) +
           '</div>' +
           '<div class="mp-detail-col mp-detail-col--right">' +
-            (biz.bookingEnabled ? renderBookingSection(biz) : '') +
+            (isNails
+              ? renderNailBookingSection(biz)
+              : (biz.bookingEnabled ? renderBookingSection(biz) : '')) +
             renderAiSection(biz) +
           '</div>' +
         '</div>' +
@@ -885,7 +1090,9 @@
 
     _container.innerHTML = html;
 
-    if (biz.bookingEnabled) {
+    if (isNails) {
+      initNailBookingForm(biz);
+    } else if (biz.bookingEnabled) {
       initBookingForm(biz);
     }
 

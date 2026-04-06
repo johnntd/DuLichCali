@@ -181,45 +181,22 @@
     function check(biz, draft) {
       var db = window.dlcDb;
 
-      // No Firestore, or no date/time in draft — pass through
+      // No Firestore, or incomplete draft — pass through
       if (!db || !draft || !draft.date || !draft.time) {
+        return Promise.resolve({ valid: true });
+      }
+
+      // Only check named-staff conflicts in confirmed appointments.
+      // Hours/closed-day validation is handled by Claude in the system prompt.
+      // 'Any' staff → salon assigns dynamically; skip.
+      var requestedStaff = (draft.staff || 'any').toLowerCase();
+      if (requestedStaff === 'any') {
         return Promise.resolve({ valid: true });
       }
 
       var totalMins    = draft.totalDurationMins || DEFAULT_DUR;
       var reqStartMins = _toMins(draft.time);
       var reqEndMins   = reqStartMins + totalMins;
-      var dayName      = _dayName(draft.date);
-      var hours        = _salonHours(biz, dayName);
-
-      // 1. Salon closed that day — only block if hours are explicitly configured
-      if (biz.hours && hours === null) {
-        return Promise.resolve({ valid: false, message: _buildMsg(biz, 'closed', { day: dayName }) });
-      }
-
-      // 2. Runs past closing time — only check if hours configured
-      if (hours) {
-        var closeMins = _toMins(hours.close);
-        var openMins  = _toMins(hours.open);
-        if (reqEndMins > closeMins) {
-          var latest = closeMins - totalMins;
-          if (latest < openMins) {
-            return Promise.resolve({ valid: false, message: _buildMsg(biz, 'closed', { day: dayName }) });
-          }
-          return Promise.resolve({ valid: false, message: _buildMsg(biz, 'too_late', {
-            totalMins: totalMins,
-            close:     hours.close,
-            latest:    _fromMins(latest)
-          })});
-        }
-      }
-
-      // 3. Named-staff conflict check against confirmed appointments in Firestore
-      var requestedStaff = (draft.staff || 'any').toLowerCase();
-      if (requestedStaff === 'any') {
-        // 'Any' staff → salon assigns dynamically; cannot reliably determine capacity here
-        return Promise.resolve({ valid: true });
-      }
 
       return db.collection('vendors').doc(biz.id)
         .collection('appointments')
@@ -239,9 +216,9 @@
 
           if (!hasConflict) return { valid: true };
 
-          var openMins  = hours ? _toMins(hours.open)  : _toMins('09:00');
-          var closeMins = hours ? _toMins(hours.close) : _toMins('19:00');
-          var nextSlot  = _findNextSlot(existing, requestedStaff, reqStartMins, totalMins, openMins, closeMins);
+          // Find next available slot (walk forward in 30-min steps within default hours)
+          var nextSlot = _findNextSlot(existing, requestedStaff, reqStartMins, totalMins,
+            _toMins('09:00'), _toMins('19:30'));
 
           return { valid: false, message: _buildMsg(biz, 'conflict', {
             time:     draft.time,
@@ -250,8 +227,8 @@
           })};
         })
         .catch(function (err) {
-          // On query error, allow the booking rather than blocking the user
-          console.warn('[NailAvailabilityChecker] query error — allowing booking through:', err && err.message);
+          // Fail-open: never block a booking due to a Firestore query error
+          console.warn('[NailAvailabilityChecker] query error — allowing booking:', err && err.message);
           return { valid: true };
         });
     }

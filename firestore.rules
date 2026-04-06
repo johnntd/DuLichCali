@@ -8,7 +8,18 @@ service cloud.firestore {
       allow read:  if true;
       allow write: if request.auth != null;
     }
-    // Vendor subcollections (menuItems, bookings, notifications) — auth only.
+    // Staff and services are public-facing data (customers need to see schedules
+    // and service menus without authenticating). Explicit rules here take precedence
+    // over the catch-all subcollection rule below.
+    match /vendors/{vendorId}/staff/{doc} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /vendors/{vendorId}/services/{doc} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    // Other vendor subcollections (menuItems, bookings, notifications) — auth only.
     match /vendors/{vendorId}/{sub=**} {
       allow read, write: if request.auth != null;
     }

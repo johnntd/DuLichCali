@@ -28,7 +28,7 @@
 
   // ── Booking state machine ─────────────────────────────────────────────────────
   function _emptyState() {
-    return { intent: null, services: [], staff: null, date: null, time: null, name: null, phone: null, lang: null, pendingAction: null };
+    return { intent: null, services: [], staff: null, date: null, time: null, name: null, phone: null, lang: null, pendingAction: null, existingBookingId: null };
   }
 
   function _saveBookingState(biz) {
@@ -66,6 +66,7 @@
     lines.push('Customer name: '  + (s.name  || 'not yet specified'));
     lines.push('Customer phone: ' + (s.phone || 'not yet specified'));
     lines.push('Pending action: ' + (s.pendingAction || 'none'));
+    if (s.existingBookingId) lines.push('Existing booking ID (reschedule): ' + s.existingBookingId);
     return lines.join('\n');
   }
 
@@ -169,7 +170,8 @@
 
     // Build a natural language conflict / hours message
     function _buildMsg(biz, key, data) {
-      var lang  = (biz._bookingState && biz._bookingState.lang) || 'en';
+      // data.lang wins (needed after booking state reset); biz._bookingState.lang as secondary
+      var lang  = (data && data.lang) || (biz._bookingState && biz._bookingState.lang) || 'en';
       var phone = biz.phoneDisplay || biz.phone || '';
 
       if (key === 'closed') {
@@ -199,6 +201,15 @@
         }
       }
 
+      if (key === 'customer_conflict') {
+        var existSvcs  = Array.isArray(data.services) && data.services.length ? data.services.join(' + ') : 'an appointment';
+        var existStaff = data.staff && data.staff.toLowerCase() !== 'any' ? ' with ' + data.staff : '';
+        var existTime  = data.time || 'another time';
+        if (lang === 'vi') return 'Bạn đã có lịch hẹn ' + existSvcs + existStaff + ' lúc ' + existTime + ' hôm đó rồi. Bạn muốn thay lịch đó, giữ nguyên, hay chọn giờ khác?';
+        if (lang === 'es') return 'Ya tiene una cita de ' + existSvcs + existStaff + ' a las ' + existTime + ' ese día. ¿Desea reemplazarla, conservarla o elegir otra hora?';
+        return 'You already have ' + existSvcs + existStaff + ' at ' + existTime + ' that day. Would you like to replace it, keep it, or pick a different time?';
+      }
+
       return '';
     }
 
@@ -210,11 +221,12 @@
         return Promise.resolve({ valid: true });
       }
 
-      // Only check named-staff conflicts in confirmed appointments.
-      // Hours/closed-day validation is handled by Claude in the system prompt.
-      // 'Any' staff → salon assigns dynamically; skip.
       var requestedStaff = (draft.staff || 'any').toLowerCase();
-      if (requestedStaff === 'any') {
+      var checkStaff     = requestedStaff !== 'any'; // named-staff conflict check
+      var checkCustomer  = !!(draft.name || draft.phone); // customer duplicate check
+
+      // Nothing to check — anonymous 'any' booking with no identity info
+      if (!checkStaff && !checkCustomer) {
         return Promise.resolve({ valid: true });
       }
 
@@ -222,20 +234,18 @@
       var reqStartMins = _toMins(draft.time);
       var reqEndMins   = reqStartMins + totalMins;
 
-      // ── Full-block closing-time check ─────────────────────────────────────────
-      // Reject if the appointment end time runs past salon closing.
-      // Uses actual biz.hours for the requested date; falls back to 19:30.
+      // ── Closing-time check ────────────────────────────────────────────────────
       var closeMins = _salonCloseMins(biz, draft.date);
       if (closeMins === -1) {
-        // Salon is closed that day entirely
-        return Promise.resolve({ valid: false, message: _buildMsg(biz, 'closed', { day: _dayName(draft.date) }) });
+        return Promise.resolve({ valid: false, message: _buildMsg(biz, 'closed', { day: _dayName(draft.date), lang: draft.lang }) });
       }
       if (reqEndMins > closeMins) {
         var latest = closeMins - totalMins;
         return Promise.resolve({ valid: false, message: _buildMsg(biz, 'too_late', {
           totalMins: totalMins,
           close:     _fromMins(closeMins),
-          latest:    latest > 0 ? _fromMins(latest) : 'N/A'
+          latest:    latest > 0 ? _fromMins(latest) : 'N/A',
+          lang:      draft.lang
         })});
       }
 
@@ -247,25 +257,66 @@
         .then(function (snap) {
           var existing = snap.docs.map(function (d) { return d.data(); });
 
-          var hasConflict = existing.some(function (appt) {
-            var apptStaff = (appt.staff || '').toLowerCase();
-            if (apptStaff !== requestedStaff && apptStaff !== 'any') return false;
-            var aStart = _toMins(appt.time || '00:00');
-            var aDur   = appt.totalDurationMins || appt.durationMins || DEFAULT_DUR;
-            return _overlaps(reqStartMins, reqEndMins, aStart, aStart + aDur);
-          });
+          // ── Staff conflict check (named staff only) ─────────────────────────
+          if (checkStaff) {
+            var hasConflict = existing.some(function (appt) {
+              var apptStaff = (appt.staff || '').toLowerCase();
+              if (apptStaff !== requestedStaff && apptStaff !== 'any') return false;
+              var aStart = _toMins(appt.time || '00:00');
+              var aDur   = appt.totalDurationMins || appt.durationMins || DEFAULT_DUR;
+              return _overlaps(reqStartMins, reqEndMins, aStart, aStart + aDur);
+            });
 
-          if (!hasConflict) return { valid: true };
+            if (hasConflict) {
+              var nextSlot = _findNextSlot(existing, requestedStaff, reqStartMins, totalMins,
+                _toMins('09:00'), closeMins);
+              return { valid: false, message: _buildMsg(biz, 'conflict', {
+                time:     draft.time,
+                staff:    draft.staff,
+                nextSlot: nextSlot,
+                lang:     draft.lang
+              })};
+            }
+          }
 
-          // Find next available slot (walk forward in 30-min steps within actual salon hours)
-          var nextSlot = _findNextSlot(existing, requestedStaff, reqStartMins, totalMins,
-            _toMins('09:00'), closeMins);
+          // ── Customer conflict check (same person, overlapping time) ─────────
+          // Catches duplicate/overlapping bookings for the same customer.
+          // Matches by name OR phone — either field is enough to identify the person.
+          // Different-time bookings for the same customer are allowed (intentional).
+          if (checkCustomer) {
+            var draftName  = (draft.name  || '').toLowerCase().trim();
+            var draftPhone = (draft.phone || '').replace(/\D/g, '');
+            var custConflict = null;
 
-          return { valid: false, message: _buildMsg(biz, 'conflict', {
-            time:     draft.time,
-            staff:    draft.staff,
-            nextSlot: nextSlot
-          })};
+            for (var i = 0; i < existing.length; i++) {
+              var appt = existing[i];
+              var apptName  = (appt.customerName  || '').toLowerCase().trim();
+              var apptPhone = (appt.customerPhone || '').replace(/\D/g, '');
+              // Partial name match: handles "Jane" vs "Jane Smith"
+              var nameMatch  = draftName  && apptName  && (apptName === draftName || apptName.indexOf(draftName) >= 0 || draftName.indexOf(apptName) >= 0);
+              // Phone match: require ≥7 digits to avoid false positives on short inputs
+              var phoneMatch = draftPhone.length >= 7 && apptPhone && apptPhone === draftPhone;
+              if (!nameMatch && !phoneMatch) continue;
+              // Only flag actual time overlap — not just same day
+              var aStart = _toMins(appt.time || '00:00');
+              var aDur   = appt.totalDurationMins || appt.durationMins || DEFAULT_DUR;
+              if (_overlaps(reqStartMins, reqEndMins, aStart, aStart + aDur)) {
+                custConflict = appt;
+                break;
+              }
+            }
+
+            if (custConflict) {
+              return { valid: false, message: _buildMsg(biz, 'customer_conflict', {
+                services: custConflict.selectedServices,
+                staff:    custConflict.staff,
+                time:     custConflict.time,
+                lang:     draft.lang
+              })};
+            }
+          }
+
+          return { valid: true };
         })
         .catch(function (err) {
           // Fail-open: never block a booking due to a Firestore query error
@@ -687,33 +738,50 @@
       '  F. After asking "Would you like to book an appointment?" — set pendingAction: "booking_offer" in STATE.',
       '     Keep staff and date in STATE so they persist for the follow-up "yes" turn.',
       '',
+      '=== MODIFY / RESCHEDULE DETECTION ===',
+      'When customer says: "reschedule", "change my appointment", "move my appointment", "I need to change",',
+      '  "can I change my booking", "dời lịch", "thay đổi lịch", "đổi lịch", "cambiar mi cita", "reagendar":',
+      '  → Set pendingAction: "modify_booking" in STATE.',
+      '  → Carry over existing services, staff, name, phone from CURRENT BOOKING STATE (do NOT ask again).',
+      '  → Ask ONLY for the new date and/or time if not already provided.',
+      '  → When new date + time are confirmed, emit [BOOKING:...] + [ESCALATE:appointment] as normal.',
+      '  → The booking will be flagged as a reschedule on the vendor side.',
+      '',
+      'When customer has a booking conflict (e.g. already booked same time) and says "replace it" or "yes, change":',
+      '  → Treat as modify_booking. Keep services, staff, name, phone. Ask for preferred new time.',
+      '  → If they say "keep it" or "different time" → acknowledge and ask for their preferred new time instead.',
+      '',
       '=== STATE MARKER — REQUIRED ON EVERY REPLY ===',
       'Append this at the very end of EVERY reply (after all text and any other markers):',
-      '[STATE:{"intent":"<intent>","services":[<array>],"staff":<null or "Name">,"date":<null or "YYYY-MM-DD or today">,"time":<null or "HH:MM">,"name":<null or "Name">,"phone":<null or "phone">,"lang":"<en|es|vi>","pendingAction":<null or "booking_offer">}]',
+      '[STATE:{"intent":"<intent>","services":[<array>],"staff":<null or "Name">,"date":<null or "YYYY-MM-DD or today">,"time":<null or "HH:MM">,"name":<null or "Name">,"phone":<null or "phone">,"lang":"<en|es|vi>","pendingAction":<null or "booking_offer" or "modify_booking">,"existingBookingId":<null or "id">}]',
       '',
       'STATE rules:',
       '  - Merge with CURRENT BOOKING STATE above — carry forward non-null fields.',
       '  - services: always an array. Empty [] if none mentioned.',
       '  - All non-array fields: null (JSON null, no quotes) if unknown.',
       '  - lang: detected language of THIS customer message.',
-      '  - pendingAction: set to "booking_offer" when you just asked "Would you like to book?"; null otherwise.',
+      '  - pendingAction: "booking_offer" after asking "Would you like to book?"; "modify_booking" when rescheduling; null otherwise.',
+      '  - existingBookingId: null unless an existing booking ID was provided or found; carry forward once set.',
       '  - Clear pendingAction to null once the customer answers affirmatively and booking flow resumes.',
       '',
       'STATE examples:',
       '"Is Tracy working today?" → AI answers yes + asks "Would you like to book?":',
-      '[STATE:{"intent":"staff_availability","services":[],"staff":"Tracy","date":"' + isoDate + '","time":null,"name":null,"phone":null,"lang":"en","pendingAction":"booking_offer"}]',
+      '[STATE:{"intent":"staff_availability","services":[],"staff":"Tracy","date":"' + isoDate + '","time":null,"name":null,"phone":null,"lang":"en","pendingAction":"booking_offer","existingBookingId":null}]',
       '',
       '"Yes" (after booking_offer with Tracy):',
-      '[STATE:{"intent":"booking_request","services":[],"staff":"Tracy","date":"' + isoDate + '","time":null,"name":null,"phone":null,"lang":"en","pendingAction":null}]',
+      '[STATE:{"intent":"booking_request","services":[],"staff":"Tracy","date":"' + isoDate + '","time":null,"name":null,"phone":null,"lang":"en","pendingAction":null,"existingBookingId":null}]',
+      '',
+      '"I need to reschedule my appointment" (customer already has services/name/phone in STATE):',
+      '[STATE:{"intent":"booking_request","services":["Gel Manicure"],"staff":"Tracy","date":null,"time":null,"name":"Jane","phone":"4085551234","lang":"en","pendingAction":"modify_booking","existingBookingId":null}]',
       '',
       '"Gel manicure and pedicure tomorrow with Tracy":',
-      '[STATE:{"intent":"booking_request","services":["Gel Manicure","Pedicure"],"staff":"Tracy","date":"' + tomorrowIso + '","time":null,"name":null,"phone":null,"lang":"en","pendingAction":null}]',
+      '[STATE:{"intent":"booking_request","services":["Gel Manicure","Pedicure"],"staff":"Tracy","date":"' + tomorrowIso + '","time":null,"name":null,"phone":null,"lang":"en","pendingAction":null,"existingBookingId":null}]',
       '',
       '"Mình muốn đặt lịch làm móng gel ngày mai lúc 2 giờ":',
-      '[STATE:{"intent":"booking_request","services":["Gel Nails"],"staff":null,"date":"' + tomorrowIso + '","time":"14:00","name":null,"phone":null,"lang":"vi","pendingAction":null}]',
+      '[STATE:{"intent":"booking_request","services":["Gel Nails"],"staff":null,"date":"' + tomorrowIso + '","time":"14:00","name":null,"phone":null,"lang":"vi","pendingAction":null,"existingBookingId":null}]',
       '',
       '"¿Cuánto cuesta gel manicure?":',
-      '[STATE:{"intent":"price_question","services":["Gel Manicure"],"staff":null,"date":null,"time":null,"name":null,"phone":null,"lang":"es","pendingAction":null}]',
+      '[STATE:{"intent":"price_question","services":["Gel Manicure"],"staff":null,"date":null,"time":null,"name":null,"phone":null,"lang":"es","pendingAction":null,"existingBookingId":null}]',
     ].join('\n');
   }
 
@@ -981,9 +1049,13 @@
         _saveBookingState(biz);
       }
 
-      // 2. Parse BOOKING marker
+      // 2. Parse BOOKING marker; attach modify metadata from STATE before state gets reset in step 4
       var bookingData = _parseBookingMarker(raw);
-      if (bookingData) biz._bookingDraft = bookingData;
+      if (bookingData) {
+        if (stateUpdate && stateUpdate.existingBookingId) bookingData.existingBookingId = stateUpdate.existingBookingId;
+        if (stateUpdate && (stateUpdate.existingBookingId || stateUpdate.pendingAction === 'modify_booking')) bookingData.isModify = true;
+        biz._bookingDraft = bookingData;
+      }
 
       // 3. Parse ESCALATE marker
       var escalationType = _parseEscalationType(raw);

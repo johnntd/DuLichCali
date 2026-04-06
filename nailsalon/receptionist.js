@@ -648,30 +648,43 @@
 
     var systemPrompt = _buildPrompt(biz, lang);
 
-    return fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type':     'application/json',
-        'x-api-key':        apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model:      MODEL,
-        max_tokens: MAX_TOKENS,
-        system:     systemPrompt,
-        messages:   biz._aiHistory.map(function (m) {
-          return { role: m.role, content: m.content };
-        })
+    var _requestBody = JSON.stringify({
+      model:      MODEL,
+      max_tokens: MAX_TOKENS,
+      system:     systemPrompt,
+      messages:   biz._aiHistory.map(function (m) {
+        return { role: m.role, content: m.content };
       })
-    })
-    .then(function (res) {
-      if (!res.ok) {
-        return res.text().then(function (body) {
-          throw new Error('API ' + res.status + ': ' + body.slice(0, 120));
+    });
+
+    var _requestHeaders = {
+      'Content-Type':     'application/json',
+      'x-api-key':        apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    };
+
+    // Retry once on transient network errors (ERR_NETWORK_CHANGED, ERR_INTERNET_DISCONNECTED, etc.)
+    // API errors (4xx/5xx) are not retried — they have structured error bodies worth surfacing.
+    function _doFetch() {
+      return fetch(API_URL, { method: 'POST', headers: _requestHeaders, body: _requestBody })
+        .then(function (res) {
+          if (!res.ok) {
+            return res.text().then(function (body) {
+              var e = new Error('API ' + res.status + ': ' + body.slice(0, 120));
+              e.isApiError = true;
+              throw e;
+            });
+          }
+          return res.json();
         });
-      }
-      return res.json();
+    }
+
+    return _doFetch().catch(function (err) {
+      // Don't retry structured API errors — only network-level failures
+      if (err.isApiError) throw err;
+      // Wait 1.2 s then try once more
+      return new Promise(function (res) { setTimeout(res, 1200); }).then(_doFetch);
     })
     .then(function (data) {
       var raw = (data.content && data.content[0] && data.content[0].text) || '';

@@ -308,15 +308,29 @@
         }).join('\n')
       : '(Service list not yet loaded — tell customer to call ' + phone + ' for menu.)';
 
-    // Hours block
+    // Hours block — biz.hours comes from _hoursScheduleToHours() which produces
+    // { Mon:'9:30 AM – 7:30 PM', Tue:'9:30 AM – 7:30 PM', ... } (3-letter cap keys, string values).
+    // Also handle {monday:{open,close}} and {mon:{open,close}} object formats.
     var daysOrder = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+    var _hoursKey3 = { monday:'Mon', tuesday:'Tue', wednesday:'Wed', thursday:'Thu', friday:'Fri', saturday:'Sat', sunday:'Sun' };
     var hoursBlock;
     if (biz.hours) {
       hoursBlock = daysOrder.map(function (d) {
-        var h = biz.hours[d];
-        var label = d.charAt(0).toUpperCase() + d.slice(1);
+        // Try all known key formats
+        var h = biz.hours[d]                 // 'monday' (full lowercase)
+             || biz.hours[_hoursKey3[d]]     // 'Mon' (3-letter cap — from _hoursScheduleToHours)
+             || biz.hours[d.slice(0,3)];     // 'mon' (3-letter lower)
+        var label  = d.charAt(0).toUpperCase() + d.slice(1);
         var marker = (d === todayName) ? ' ← TODAY' : '';
-        if (!h || !h.open) return label + ': Closed' + marker;
+        if (!h) return label + ': Closed' + marker;
+        // h is a string ('9:30 AM – 7:30 PM' or 'Closed') from _hoursScheduleToHours
+        if (typeof h === 'string') {
+          return h === 'Closed'
+            ? label + ': Closed' + marker
+            : label + ': ' + h + marker;
+        }
+        // h is an object {open, close}
+        if (!h.open) return label + ': Closed' + marker;
         return label + ': ' + h.open + ' – ' + h.close + marker;
       }).join('\n');
     } else {

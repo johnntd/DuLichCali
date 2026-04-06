@@ -87,6 +87,12 @@
       staffBlock = '(Staff data not yet loaded — tell customer to call ' + phone + ' for scheduling.)';
     }
 
+    // Inject selected staff context for pronoun resolution
+    var selectedStaffCtx = '';
+    if (biz._selectedStaff) {
+      selectedStaffCtx = '\n=== ACTIVE CONTEXT ===\nThe customer has been discussing: ' + biz._selectedStaff.name + '. When they use pronouns like "her", "him", "she", "he", "they", or phrases like "the technician", this refers to ' + biz._selectedStaff.name + '. Use this name directly in your response — do not ask again who they mean.';
+    }
+
     var langInstruction = lang === 'es'
       ? 'CRITICAL: The customer is speaking Spanish. You MUST reply entirely in Spanish. Be warm and professional.'
       : 'Reply in English. Be warm, concise, and professional.';
@@ -114,7 +120,10 @@
       servicesBlock,
       '',
       '=== NAIL TECHNICIANS (live from Firestore) ===',
+      'IMPORTANT: These schedules are RECURRING WEEKLY PATTERNS — the same every week.',
+      'When a customer asks about "next week", "this Friday", or any future date, look up the matching day name. It applies to any week, not just the current one.',
       staffBlock,
+      selectedStaffCtx,
       '',
       '=== NAIL KNOWLEDGE ===',
       'Common nail terms: gel, acrylic, dip powder, regular polish, manicure, pedicure, nail art, fill, removal.',
@@ -130,15 +139,16 @@
       '5. PLAIN TEXT ALWAYS — see format rule at top. Applies to every message including booking confirmations.',
       '6. Walk-ins: "Walk-ins are welcome based on availability — calling ahead is recommended."',
       '7. For services/prices not in the list: "Prices vary — please call ' + phone + ' for an exact quote."',
-      '8. Pronoun resolution: if customer says "she/her/him" after naming a technician, use the named technician.',
+      '8. Pronouns: "her/him/she/he/they/the technician" always refer to the last technician mentioned in the conversation. See ACTIVE CONTEXT above if set — use that technician without asking again.',
       '',
       '=== APPOINTMENT BOOKING FLOW ===',
       'When a customer wants to book/schedule an appointment, collect info ONE piece at a time:',
-      '  Step 1: Which service?',
-      '  Step 2: Preferred technician? (optional — "any available" is fine)',
+      '  Step 1: Which service? (skip if already mentioned in conversation)',
+      '  Step 2: Preferred technician? (skip if already mentioned — "any available" is fine)',
       '  Step 3: Preferred date and time?',
       '  Step 4: Customer name?',
       '  Step 5: Customer phone number?',
+      'SKIP any step the customer already answered. Start with the FIRST missing piece.',
       'Once you have ALL FIVE pieces — write the confirmation in ONE plain sentence (no bold, no bullets, no label-colon pairs like "Service: X"), then on the next line append BOTH markers:',
       'GOOD: "You\'re all set — Gel Nails with Tracy on Thursday April 10th at 5 PM for John Nguyen (408-439-7522). Sending to the salon now."',
       'BAD: "**Service:** Gel Nails\\n**Staff:** Tracy" — NEVER format this way.',

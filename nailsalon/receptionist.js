@@ -1,4 +1,4 @@
-// Lily Receptionist v2.1 — Smart booking AI for Luxurious Nails & Spa
+// Lily Receptionist v3.0 — Stateful, time-aware AI receptionist for Luxurious Nails & Spa
 // Voice-ready: LilyReceptionist.handleMessage(biz, text, apiKey) → Promise<{text, escalationType}>
 // Languages: English + Spanish + Vietnamese (Claude-detected, not just regex)
 // Features: intent classification, entity extraction, booking state machine,
@@ -28,7 +28,7 @@
 
   // ── Booking state machine ─────────────────────────────────────────────────────
   function _emptyState() {
-    return { intent: null, services: [], staff: null, date: null, time: null, name: null, phone: null, lang: null };
+    return { intent: null, services: [], staff: null, date: null, time: null, name: null, phone: null, lang: null, pendingAction: null };
   }
 
   function _saveBookingState(biz) {
@@ -56,7 +56,7 @@
   // Build human-readable booking state context for the system prompt
   function _buildBookingStateContext(biz) {
     var s = biz._bookingState || {};
-    var hasData = (s.services && s.services.length) || s.staff || s.date || s.time || s.name || s.phone;
+    var hasData = (s.services && s.services.length) || s.staff || s.date || s.time || s.name || s.phone || s.pendingAction;
     if (!hasData) return '';
     var lines = ['=== CURRENT BOOKING STATE (already collected — do NOT ask for these again) ==='];
     lines.push('Services: ' + ((s.services && s.services.length) ? s.services.join(', ') : 'not yet specified'));
@@ -65,6 +65,7 @@
     lines.push('Time: '     + (s.time  || 'not yet specified'));
     lines.push('Customer name: '  + (s.name  || 'not yet specified'));
     lines.push('Customer phone: ' + (s.phone || 'not yet specified'));
+    lines.push('Pending action: ' + (s.pendingAction || 'none'));
     return lines.join('\n');
   }
 
@@ -274,6 +275,35 @@
     return reply.trim();
   }
 
+  // ── Time helpers ──────────────────────────────────────────────────────────────
+
+  // Parse "9:30 AM" or "9:30" (24h) → minutes since midnight
+  function _parseTMins(t) {
+    if (!t || typeof t !== 'string') return null;
+    t = t.trim();
+    var m12 = t.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/i);
+    if (m12) {
+      var h = +m12[1], mn = +(m12[2] || 0), ap = m12[3].toUpperCase();
+      if (ap === 'PM' && h !== 12) h += 12;
+      if (ap === 'AM' && h === 12) h = 0;
+      return h * 60 + mn;
+    }
+    var m24 = t.match(/^(\d{1,2}):(\d{2})$/);
+    if (m24) return +m24[1] * 60 + +m24[2];
+    return null;
+  }
+
+  // Parse "9:30 AM – 7:30 PM" → { openMins, closeMins, openStr, closeStr }
+  function _parseHoursRange(str) {
+    if (!str || str === 'Closed') return null;
+    var parts = str.split(/\s*[–-]\s*/);
+    if (parts.length !== 2) return null;
+    var om = _parseTMins(parts[0].trim());
+    var cm = _parseTMins(parts[1].trim());
+    if (om === null || cm === null) return null;
+    return { openMins: om, closeMins: cm, openStr: parts[0].trim(), closeStr: parts[1].trim() };
+  }
+
   // ── System prompt builder ─────────────────────────────────────────────────────
   function _buildPrompt(biz, langHint) {
     var today     = new Date();
@@ -281,6 +311,10 @@
     var todayName = DAYS[todayIdx];
     var dateStr   = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
     var isoDate   = today.toISOString().slice(0, 10);
+
+    // Current local time — injected so Claude can answer "open now?" correctly
+    var nowMins  = today.getHours() * 60 + today.getMinutes();
+    var nowStr   = today.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
     var receptionistName = (biz.aiReceptionist && biz.aiReceptionist.name) || 'Lily';
     var salonName = biz.name || 'Luxurious Nails & Spa';
@@ -357,6 +391,28 @@
       }).join('\n');
     }
 
+    // Pre-compute today's real-time open/closed status so Claude doesn't have to reason about it
+    // Extract today's hours string from the hoursBlock we already built
+    var _todayHoursStr = null;
+    hoursBlock.split('\n').forEach(function (line) {
+      if (line.indexOf('← TODAY') >= 0) {
+        var colon = line.indexOf(':');
+        if (colon >= 0) _todayHoursStr = line.slice(colon + 1).replace('← TODAY', '').trim();
+      }
+    });
+    var _todayRange   = _parseHoursRange(_todayHoursStr);
+    var _isOpenNow    = _todayRange && nowMins >= _todayRange.openMins && nowMins < _todayRange.closeMins;
+    var _todayStatus;
+    if (!_todayHoursStr || _todayHoursStr === 'Closed') {
+      _todayStatus = 'CLOSED (not open today)';
+    } else if (_isOpenNow) {
+      _todayStatus = 'OPEN NOW — closes at ' + (_todayRange ? _todayRange.closeStr : '?');
+    } else if (_todayRange && nowMins < _todayRange.openMins) {
+      _todayStatus = 'CLOSED NOW — opens today at ' + _todayRange.openStr;
+    } else {
+      _todayStatus = 'CLOSED NOW — already past closing time (' + (_todayRange ? _todayRange.closeStr : '?') + ')';
+    }
+
     // Short-key map for schedule lookup — handles both storage formats:
     //   services-data.js / Firestore vendor-admin: { mon:{active,start,end}, tue:... }
     //   future normalized format:                  { monday:{open,close}, tuesday:... }
@@ -408,6 +464,9 @@
     // Booking state context (only shown when data has been collected)
     var bookingStateCtx = _buildBookingStateContext(biz);
 
+    var tomorrowIso = (function() { var d = new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); })();
+    var pendingActionStr = (biz._bookingState && biz._bookingState.pendingAction) || 'none';
+
     return [
       'You are ' + receptionistName + ', the professional AI receptionist for ' + salonName + '.',
       'Today is ' + dateStr + ' (ISO date: ' + isoDate + ').',
@@ -431,12 +490,20 @@
       'Phone: ' + phone,
       'Address: ' + address,
       '',
-      '=== HOURS (live — for booking availability only) ===',
-      'CRITICAL: Use the day-of-week schedule ONLY to determine if the salon is open on a given day.',
-      'NEVER use the current clock time to decide if the salon is "closed right now."',
-      'If a day is listed below (not "Closed"), the salon is OPEN on that day and appointments CAN be booked.',
-      'Customers book appointments in ADVANCE — it does not matter what time it is right now.',
+      '=== REAL-TIME CLOCK ===',
+      'Current local time: ' + nowStr,
+      'Today\'s salon status: ' + _todayStatus,
+      '',
+      '=== HOURS (weekly schedule — live from vendor admin) ===',
       hoursBlock,
+      '',
+      '=== OPEN/CLOSED RULES (TWO SEPARATE CASES) ===',
+      'CASE 1 — Customer asks "is the salon open now?" / "are you open right now?" / "are you still open?":',
+      '  → Answer using REAL-TIME CLOCK above. The status is already computed for you.',
+      '  → Examples: "We\'re closed right now — we open today at 9:00 AM." or "Yes, we\'re open until 7:00 PM!"',
+      'CASE 2 — Customer books a FUTURE appointment on a specific day:',
+      '  → Ignore current clock time. Check only if that day-of-week is listed as open in HOURS above.',
+      '  → Do NOT apply industry assumptions (e.g., "nail salons close Mondays"). This salon\'s schedule is authoritative.',
       '',
       '=== SERVICES & PRICING (live) ===',
       servicesBlock,
@@ -448,6 +515,23 @@
       '',
       bookingStateCtx,
       '',
+      '=== FOLLOW-UP / PENDING ACTION — CRITICAL ===',
+      'PENDING ACTION right now: ' + pendingActionStr,
+      '',
+      'When PENDING ACTION = booking_offer:',
+      '  AFFIRMATIVE replies (yes / yeah / sure / okay / sounds good / sí / claro / por favor / dạ / vâng / được / ừ / ok):',
+      '    → Intent = booking_request. Continue the booking with the staff/date already in CURRENT BOOKING STATE.',
+      '    → Do NOT reset. Do NOT give generic contact info. Ask for the next missing field.',
+      '    → Next missing field order: service(s) → date → time → customer name → customer phone.',
+      '    → Example: staff=Tracy, date=today → ask "What service would you like with Tracy?" or "What time today works for you?"',
+      '  NEGATIVE replies (no / not now / maybe later / no thanks / không / chưa / no gracias):',
+      '    → Acknowledge: "No problem! Let me know if there\'s anything else I can help with."',
+      '    → Set pendingAction: null in STATE.',
+      '',
+      'When PENDING ACTION = none AND message is just "yes/no/sure" with no other content:',
+      '  → If conversation history shows AI just asked a question, answer relative to that question.',
+      '  → Otherwise ask: "What can I help you with today?"',
+      '',
       '=== NAIL KNOWLEDGE ===',
       'Terms: gel, acrylic, dip powder, regular polish, manicure, pedicure, nail art, fill, removal.',
       'Fills typically every 2–3 weeks. Removal takes extra time — mention it when relevant.',
@@ -455,13 +539,7 @@
       '=== YOUR RULES ===',
       '1. Answer naturally — you are a real receptionist, not a scripted bot.',
       '2. Never re-introduce yourself mid-conversation. No "Hi, I\'m Lily" after the first message.',
-      '3. Use ONLY the HOURS and STAFF data above. Never invent or assume hours.',
-      '3a. OPEN/CLOSED rule: A day is open if it appears in HOURS as anything other than "Closed".',
-      '    The salon is NEVER "closed today" just because the current clock time is past closing hour.',
-      '    Customers book in ADVANCE. Only block a date if that day-of-week is literally listed as "Closed".',
-      '3b. Do NOT apply general industry knowledge (e.g., "many nail salons close on Mondays").',
-      '    This salon\'s specific schedule in HOURS above is the ONLY source of truth. If Monday shows',
-      '    an opening time, Monday is open — regardless of common industry practices.',
+      '3. Use ONLY the data above (HOURS, STAFF, REAL-TIME CLOCK). Never invent or assume.',
       '4. Responses: 1–3 sentences for simple questions. Plain text always.',
       '5. Walk-ins: "Walk-ins welcome based on availability — we recommend calling ahead."',
       '6. Unknown prices: "Prices vary — please call ' + phone + ' for an exact quote."',
@@ -470,13 +548,13 @@
       '',
       '=== INTENT CLASSIFICATION ===',
       'Classify each message as one of:',
-      '  booking_request     — customer wants to make an appointment',
-      '  service_question    — asking about what services are available',
-      '  price_question      — asking about pricing',
-      '  staff_availability  — asking about when a specific technician works',
-      '  hours_location      — asking about hours or address',
-      '  farewell            — goodbye, thanks, done',
-      '  general             — anything else',
+      '  booking_request         — customer wants to make an appointment (including affirmative follow-ups to booking_offer)',
+      '  service_question        — asking about what services are available',
+      '  price_question          — asking about pricing',
+      '  staff_availability      — asking about when a specific technician works',
+      '  hours_location          — asking about hours, current open status, or address',
+      '  farewell                — goodbye, thanks, done',
+      '  general                 — anything else',
       '',
       '=== ENTITY EXTRACTION ===',
       'From each message, extract:',
@@ -484,7 +562,7 @@
       '              "gel and pedicure" → ["Gel Nails","Pedicure"]',
       '              "mani pedi" → ["Manicure","Pedicure"]',
       '              "làm móng tay" → ["Manicure"]',
-      '  staff     — technician name, or null if none mentioned',
+      '  staff     — technician name, or null if none mentioned (inherit from STATE if booking_request)',
       '  date      — as stated ("tomorrow", "next Monday", "April 10") or null',
       '  time      — convert to 24h if clear ("2pm" → "14:00", "2:30 chiều" → "14:30") or null',
       '  lang      — "en", "es", or "vi" based on THIS message',
@@ -511,38 +589,136 @@
       '     [ESCALATE:appointment]',
       '     FAREWELL EXCEPTION: If intent = farewell — output ONLY the farewell sentence + STATE marker. NEVER output [BOOKING:...] or [ESCALATE:...] regardless of booking progress.',
       '     Convert relative dates to ISO using today (' + isoDate + ') as reference.',
-      '     "tomorrow" → ' + (function() { var d = new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); })(),
+      '     "tomorrow" → ' + tomorrowIso,
       '     "next Monday" → calculate from today.',
+      '  F. After asking "Would you like to book an appointment?" — set pendingAction: "booking_offer" in STATE.',
+      '     Keep staff and date in STATE so they persist for the follow-up "yes" turn.',
       '',
       '=== STATE MARKER — REQUIRED ON EVERY REPLY ===',
       'Append this at the very end of EVERY reply (after all text and any other markers):',
-      '[STATE:{"intent":"<intent>","services":[<array>],"staff":<null or "Name">,"date":<null or "date">,"time":<null or "HH:MM">,"name":<null or "Name">,"phone":<null or "phone">,"lang":"<en|es|vi>"}]',
+      '[STATE:{"intent":"<intent>","services":[<array>],"staff":<null or "Name">,"date":<null or "YYYY-MM-DD or today">,"time":<null or "HH:MM">,"name":<null or "Name">,"phone":<null or "phone">,"lang":"<en|es|vi>","pendingAction":<null or "booking_offer">}]',
       '',
       'STATE rules:',
       '  - Merge with CURRENT BOOKING STATE above — carry forward non-null fields.',
       '  - services: always an array. Empty [] if none mentioned.',
       '  - All non-array fields: null (JSON null, no quotes) if unknown.',
       '  - lang: detected language of THIS customer message.',
+      '  - pendingAction: set to "booking_offer" when you just asked "Would you like to book?"; null otherwise.',
+      '  - Clear pendingAction to null once the customer answers affirmatively and booking flow resumes.',
       '',
       'STATE examples:',
+      '"Is Tracy working today?" → AI answers yes + asks "Would you like to book?":',
+      '[STATE:{"intent":"staff_availability","services":[],"staff":"Tracy","date":"' + isoDate + '","time":null,"name":null,"phone":null,"lang":"en","pendingAction":"booking_offer"}]',
+      '',
+      '"Yes" (after booking_offer with Tracy):',
+      '[STATE:{"intent":"booking_request","services":[],"staff":"Tracy","date":"' + isoDate + '","time":null,"name":null,"phone":null,"lang":"en","pendingAction":null}]',
+      '',
       '"Gel manicure and pedicure tomorrow with Tracy":',
-      '[STATE:{"intent":"booking_request","services":["Gel Manicure","Pedicure"],"staff":"Tracy","date":"tomorrow","time":null,"name":null,"phone":null,"lang":"en"}]',
+      '[STATE:{"intent":"booking_request","services":["Gel Manicure","Pedicure"],"staff":"Tracy","date":"' + tomorrowIso + '","time":null,"name":null,"phone":null,"lang":"en","pendingAction":null}]',
       '',
       '"Mình muốn đặt lịch làm móng gel ngày mai lúc 2 giờ":',
-      '[STATE:{"intent":"booking_request","services":["Gel Nails"],"staff":null,"date":"tomorrow","time":"14:00","name":null,"phone":null,"lang":"vi"}]',
+      '[STATE:{"intent":"booking_request","services":["Gel Nails"],"staff":null,"date":"' + tomorrowIso + '","time":"14:00","name":null,"phone":null,"lang":"vi","pendingAction":null}]',
       '',
       '"¿Cuánto cuesta gel manicure?":',
-      '[STATE:{"intent":"price_question","services":["Gel Manicure"],"staff":null,"date":null,"time":null,"name":null,"phone":null,"lang":"es"}]',
+      '[STATE:{"intent":"price_question","services":["Gel Manicure"],"staff":null,"date":null,"time":null,"name":null,"phone":null,"lang":"es","pendingAction":null}]',
     ].join('\n');
   }
 
-  // ── Fallback (no API key) ─────────────────────────────────────────────────────
+  // ── Fallback (no API key / network error) ────────────────────────────────────
+  // Must handle: yes/no follow-ups, open-now questions, staff queries, bookings.
+  // Uses biz._aiHistory to understand context (last AI message = pending question).
   function _fallback(biz, text) {
     var phone = biz.phoneDisplay || biz.phone || '';
     var name  = biz.name || 'Luxurious Nails & Spa';
-    var t     = text.toLowerCase();
+    var t     = text.toLowerCase().trim();
     var lang  = _detectLang(text);
 
+    // ── Check last AI message for pending booking offer ───────────────────────
+    var lastAiMsg = '';
+    if (biz._aiHistory) {
+      for (var i = biz._aiHistory.length - 1; i >= 0; i--) {
+        if (biz._aiHistory[i].role === 'assistant') {
+          lastAiMsg = (biz._aiHistory[i].content || '').toLowerCase();
+          break;
+        }
+      }
+    }
+    var pendingBookingOffer = /would you like to book|want to book|shall i book|book an appointment|đặt lịch không|muốn đặt không|¿quieres reservar|¿te gustaría reservar/.test(lastAiMsg);
+
+    // ── Affirmative detection (all 3 languages) ───────────────────────────────
+    var isAffirmative = /^(yes|yeah|yep|yup|sure|ok|okay|sounds good|great|perfect|definitely|please|go ahead|absolutely|of course|why not|let'?s do it)$/i.test(t)
+      || /^(s[ií]|claro|por supuesto|dale|perfecto|bueno|de acuerdo|va bien|está bien)$/i.test(t)
+      || /^(dạ|vâng|ừ|được|ok|oke|tốt|có|muốn|đặt đi)$/i.test(t);
+
+    // ── Negative detection ────────────────────────────────────────────────────
+    var isNegative = /^(no|nope|not now|maybe later|no thanks|never mind|cancel|nah)$/i.test(t)
+      || /^(no gracias|ahora no|tal vez después|no por ahora)$/i.test(t)
+      || /^(không|chưa|thôi|không cần|để sau)$/i.test(t);
+
+    // ── Pending booking offer + affirmative → continue booking ────────────────
+    if (pendingBookingOffer && isAffirmative) {
+      var pendingStaff = biz._bookingState && biz._bookingState.staff;
+      var pendingDate  = biz._bookingState && biz._bookingState.date;
+      if (lang === 'vi') {
+        return pendingStaff
+          ? 'Tuyệt! Bạn muốn làm dịch vụ gì với ' + pendingStaff + '?'
+          : 'Tuyệt! Bạn muốn đặt dịch vụ gì hôm nay?';
+      }
+      if (lang === 'es') {
+        return pendingStaff
+          ? '¡Perfecto! ¿Qué servicio le gustaría reservar con ' + pendingStaff + '?'
+          : '¡Perfecto! ¿Qué servicio le gustaría reservar?';
+      }
+      return pendingStaff
+        ? 'Great! What service would you like to book with ' + pendingStaff + '?'
+        : 'Great! What service would you like to book today?';
+    }
+
+    // ── Pending booking offer + negative → graceful exit ─────────────────────
+    if (pendingBookingOffer && isNegative) {
+      if (lang === 'vi') return 'Không sao! Nếu cần gì thêm, cứ nhắn nhé.';
+      if (lang === 'es') return '¡Sin problema! Avísenos si necesita algo más.';
+      return 'No problem! Let me know if there\'s anything else I can help with.';
+    }
+
+    // ── Lone affirmative with no booking context → gentle redirect ────────────
+    if (isAffirmative) {
+      if (lang === 'vi') return 'Bạn muốn đặt lịch hay hỏi về dịch vụ nào ạ?';
+      if (lang === 'es') return '¿En qué le puedo ayudar? ¿Desea reservar una cita o tiene alguna pregunta?';
+      return 'Of course! What can I help you with — would you like to book an appointment or do you have a question?';
+    }
+
+    // ── Real-time open/closed ─────────────────────────────────────────────────
+    if (/open.?now|open.?right.?now|still open|open.?today|closed.?now|currently open|are you open/i.test(t)
+      || /abierto.?ahora|están abiertos|abren|siguen abiertos/i.test(t)
+      || /mở.?cửa.?chưa|đang mở|còn mở|giờ.?này.?mở/i.test(t)) {
+      var _now = new Date();
+      var _nowMins = _now.getHours() * 60 + _now.getMinutes();
+      var _nowStr  = _now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      // Use generic fallback hours for open/now check
+      var _dayIdx  = _now.getDay(); // 0=Sun
+      var _defOpen = [600, 570, 570, 570, 570, 570, 570]; // Sun=10am, Mon-Sat=9:30am
+      var _defClose= [1020,1140,1140,1140,1140,1140,1080]; // Sun=5pm, Mon-Fri=7pm, Sat=6pm
+      var _opens   = _defOpen[_dayIdx], _closes = _defClose[_dayIdx];
+      var _openStr = (_opens >= 720 ? (_opens-720)/60 : _opens/60);
+      // Build readable time strings
+      function _mToStr(m) { var h=Math.floor(m/60),mn=m%60,ap=h<12?'AM':'PM'; h=h%12||12; return h+(mn?':'+('0'+mn).slice(-2):'')+' '+ap; }
+      if (lang === 'vi') {
+        if (_nowMins < _opens) return 'Tiệm chưa mở cửa. Hôm nay mở lúc ' + _mToStr(_opens) + '. Bạn cần gì cứ nhắn nhé!';
+        if (_nowMins >= _closes) return 'Tiệm đã đóng cửa rồi. Ngày mai chúng tôi sẽ mở lúc ' + _mToStr(_opens) + ' nhé!';
+        return 'Dạ tiệm đang mở cửa! Đóng cửa lúc ' + _mToStr(_closes) + ' hôm nay. Bạn cần đặt lịch không?';
+      }
+      if (lang === 'es') {
+        if (_nowMins < _opens) return 'Aún estamos cerrados. Abrimos hoy a las ' + _mToStr(_opens) + '.';
+        if (_nowMins >= _closes) return 'Ya cerramos por hoy. Mañana abrimos a las ' + _mToStr(_opens) + '.';
+        return '¡Sí, estamos abiertos! Cerramos a las ' + _mToStr(_closes) + ' hoy. ¿Le gustaría reservar?';
+      }
+      if (_nowMins < _opens) return 'We\'re closed right now — we open today at ' + _mToStr(_opens) + '.';
+      if (_nowMins >= _closes) return 'We\'re closed for today. We\'ll be back tomorrow at ' + _mToStr(_opens) + '.';
+      return 'Yes, we\'re open right now until ' + _mToStr(_closes) + ' today! Would you like to book an appointment?';
+    }
+
+    // ── Vietnamese handlers ───────────────────────────────────────────────────
     if (lang === 'vi') {
       if (/giờ|mở|đóng|lịch làm việc/.test(t)) return 'Chúng tôi mở cửa Thứ 2–6: 9:30–19:30, Thứ 7: 9:30–19:00, Chủ nhật: 10:00–18:00. Gọi ' + phone + ' để đặt lịch nhé!';
       if (/giá|bao nhiêu|chi phí/.test(t))      return 'Giá dịch vụ tuỳ loại. Vui lòng gọi ' + phone + ' để biết giá chính xác nhé!';
@@ -550,6 +726,7 @@
       return 'Cảm ơn bạn đã liên hệ ' + name + '! Vui lòng gọi ' + phone + ' để được hỗ trợ ngay.';
     }
 
+    // ── Spanish handlers ──────────────────────────────────────────────────────
     if (lang === 'es') {
       if (/hora|horario|abre|cierra/.test(t)) return 'Nuestro horario: Lun–Vie 9:30am–7:30pm, Sáb 9:30am–7pm, Dom 10am–6pm. Llame al ' + phone + '.';
       if (/precio|costo|cuánto/.test(t))      return 'Los precios varían según el servicio. Llame al ' + phone + ' para un presupuesto exacto.';
@@ -557,42 +734,38 @@
       return '¡Gracias por contactar a ' + name + '! Para asistencia inmediata llame al ' + phone + '.';
     }
 
-    // English — staff availability: look up actual schedule before falling back to generic
+    // ── English: staff availability ───────────────────────────────────────────
     if (/staff|technician|working|available|when|today|schedule|helen|tracy/i.test(t)) {
-      var today      = new Date();
-      var todayDow   = DAYS[today.getDay()]; // 'sunday','monday', etc.
-      var shortMap   = { sunday:'sun', monday:'mon', tuesday:'tue', wednesday:'wed', thursday:'thu', friday:'fri', saturday:'sat' };
-      var shortDow   = shortMap[todayDow];
-      var staffList  = (biz.staff || []).filter(function (m) { return m.active !== false; });
-      var namedMember = null;
-      staffList.forEach(function (m) {
-        if (t.indexOf(m.name.toLowerCase()) >= 0) namedMember = m;
-      });
-      if (namedMember) {
-        var sch = namedMember.schedule || {};
-        var day = sch[todayDow] || sch[shortDow];
-        var openT  = day && (day.open  || day.start);
-        var closeT = day && (day.close || day.end);
-        var isOff  = !day || day.active === false || !openT;
-        if (isOff) {
-          return namedMember.name + ' is not working today. Call ' + phone + ' for their next available day or to be matched with another technician.';
+      var _fbnow   = new Date();
+      var _fbDow   = DAYS[_fbnow.getDay()];
+      var _fbShort = { sunday:'sun', monday:'mon', tuesday:'tue', wednesday:'wed', thursday:'thu', friday:'fri', saturday:'sat' };
+      var _fbSsDow = _fbShort[_fbDow];
+      var _staffList = (biz.staff || []).filter(function (m) { return m.active !== false; });
+      var _named = null;
+      _staffList.forEach(function (m) { if (t.indexOf(m.name.toLowerCase()) >= 0) _named = m; });
+      if (_named) {
+        var _sch = _named.schedule || {};
+        var _sd  = _sch[_fbDow] || _sch[_fbSsDow];
+        var _ot  = _sd && (_sd.open  || _sd.start);
+        var _ct  = _sd && (_sd.close || _sd.end);
+        if (!_sd || _sd.active === false || !_ot) {
+          return _named.name + ' is not working today. Call ' + phone + ' for their next available day.';
         }
-        return namedMember.name + ' is working today from ' + openT + ' to ' + closeT + '. Would you like to book an appointment?';
+        return _named.name + ' is working today from ' + _ot + ' to ' + _ct + '. Would you like to book an appointment?';
       }
-      if (staffList.length > 0) {
-        var todayNames = staffList.filter(function (m) {
-          var sch = m.schedule || {};
-          var day = sch[todayDow] || sch[shortDow];
-          return day && day.active !== false && (day.open || day.start);
-        }).map(function (m) { return m.name; });
-        if (todayNames.length > 0) return 'Working today: ' + todayNames.join(' and ') + '. Call ' + phone + ' or use the booking form to schedule!';
-      }
-      return 'Our technicians are experienced professionals. Call ' + phone + ' or use the booking form above to schedule your appointment.';
+      var _todayStaff = _staffList.filter(function (m) {
+        var _s = (m.schedule || {}); var _d = _s[_fbDow] || _s[_fbSsDow];
+        return _d && _d.active !== false && (_d.open || _d.start);
+      }).map(function (m) { return m.name; });
+      if (_todayStaff.length > 0) return 'Working today: ' + _todayStaff.join(' and ') + '. Use the booking form or call ' + phone + '!';
+      return 'Our technicians are experienced professionals. Use the booking form above or call ' + phone + '.';
     }
-    if (/hour|open|close/.test(t))           return 'We are open Mon–Fri 9:30am–7:30pm, Sat 9:30am–7pm, Sun 10am–6pm. Call ' + phone + ' to confirm.';
-    if (/walk.?in/.test(t))                  return 'Walk-ins welcome based on availability! Call ' + phone + ' to check wait times.';
-    if (/price|cost|how much/.test(t))       return 'Prices vary by service. Call us at ' + phone + ' or ask about a specific service.';
-    if (/book|appoint|reserv/.test(t))       return 'Use the booking form above to select your services and request an appointment!';
+
+    // ── English: generic handlers ─────────────────────────────────────────────
+    if (/hour|open|close/.test(t)) return 'We\'re open Mon–Fri 9:30am–7:30pm, Sat 9:30am–7pm, Sun 10am–6pm. Call ' + phone + ' to confirm current hours.';
+    if (/walk.?in/.test(t))        return 'Walk-ins welcome based on availability! Call ' + phone + ' to check wait times.';
+    if (/price|cost|how much/.test(t)) return 'Prices vary by service. Call us at ' + phone + ' or ask about a specific service.';
+    if (/book|appoint|reserv/.test(t)) return 'Use the booking form above to select your services and request an appointment!';
     return 'Thank you for contacting ' + name + '! For immediate help please call ' + phone + '.';
   }
 

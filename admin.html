@@ -1508,7 +1508,8 @@
         if (msgEl) { msgEl.style.color='var(--danger)'; msgEl.textContent='PIN phải có ít nhất 4 chữ số.'; }
         return;
       }
-      const digits = (phone||'').replace(/\D/g,'');
+      let digits = (phone||'').replace(/\D/g,'');
+      if (digits.length === 11 && digits.charAt(0) === '1') digits = digits.slice(1);
       if (!digits) {
         if (msgEl) { msgEl.style.color='var(--danger)'; msgEl.textContent='Không tìm thấy số điện thoại.'; }
         return;
@@ -1605,7 +1606,9 @@
       errEl.textContent = '';
 
       if (!name || !phone || !pin) { errEl.textContent = 'Vui lòng điền đầy đủ thông tin.'; return; }
-      const digits = phone.replace(/\D/g, '');
+      let digits = phone.replace(/\D/g, '');
+      // Normalize: strip leading country code 1 for US numbers (11→10 digits)
+      if (digits.length === 11 && digits.charAt(0) === '1') digits = digits.slice(1);
       if (digits.length < 10) { errEl.textContent = 'Số điện thoại phải có ít nhất 10 chữ số.'; return; }
       if (pin.length < 4)  { errEl.textContent = 'Mã PIN phải có ít nhất 4 ký tự.'; return; }
 

@@ -780,9 +780,13 @@
 
       if (vendorDoc.exists) {
         var vd = vendorDoc.data();
-        if (vd.description)              merged.description = vd.description;
-        if (vd.heroImage)                merged.heroImage   = vd.heroImage;
-        if (vd.active === false)         merged.active      = false;
+        if (vd.businessName)             merged.name        = vd.businessName;
+        if (vd.phoneDisplay)             merged.phoneDisplay = vd.phoneDisplay;
+        if (vd.phone)                    merged.phone        = vd.phone;
+        if (vd.address)                  merged.address      = vd.address;
+        if (vd.description)              merged.description  = vd.description;
+        if (vd.heroImage)                merged.heroImage    = vd.heroImage;
+        if (vd.active === false)         merged.active       = false;
         // Map hoursSchedule (vendor-admin format) → biz.hours (display format)
         // This ensures hours saved in vendor-admin appear on public page + AI
         if (vd.hoursSchedule) {
@@ -930,6 +934,10 @@
 
       if (vendorDoc.exists) {
         var vd = vendorDoc.data();
+        if (vd.businessName)             merged.name                 = vd.businessName;
+        if (vd.phoneDisplay)             merged.phoneDisplay         = vd.phoneDisplay;
+        if (vd.phone)                    merged.phone                = vd.phone;
+        if (vd.address)                  merged.address              = vd.address;
         if (vd.description)              merged.description          = vd.description;
         if (vd.heroImage)                merged.heroImage            = vd.heroImage;
         if (vd.heroImagePositionX != null) merged.heroImagePositionX = vd.heroImagePositionX;

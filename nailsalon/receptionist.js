@@ -860,8 +860,12 @@
       'anthropic-dangerous-direct-browser-access': 'true'
     };
 
-    // Retry once on transient network errors (ERR_NETWORK_CHANGED, ERR_INTERNET_DISCONNECTED, etc.)
-    // API errors (4xx/5xx) are not retried — they have structured error bodies worth surfacing.
+    // Retry up to 3 times on transient network errors (ERR_NETWORK_CHANGED, ERR_INTERNET_DISCONNECTED).
+    // API errors (4xx/5xx) are never retried — they have structured error bodies.
+    // Note: Chrome always logs ERR_NETWORK_CHANGED in DevTools before our handler runs —
+    // that console entry is from the browser network layer and cannot be suppressed by JS.
+    var RETRY_DELAYS = [800, 1500, 2500]; // ms between attempts
+
     function _doFetch() {
       return fetch(API_URL, { method: 'POST', headers: _requestHeaders, body: _requestBody })
         .then(function (res) {
@@ -876,12 +880,17 @@
         });
     }
 
-    return _doFetch().catch(function (err) {
-      // Don't retry structured API errors — only network-level failures
-      if (err.isApiError) throw err;
-      // Wait 1.2 s then try once more
-      return new Promise(function (res) { setTimeout(res, 1200); }).then(_doFetch);
-    })
+    function _fetchWithRetry(attempt) {
+      return _doFetch().catch(function (err) {
+        if (err.isApiError) throw err;          // structured API error — don't retry
+        if (attempt >= RETRY_DELAYS.length) throw err; // exhausted retries
+        var delay = RETRY_DELAYS[attempt];
+        return new Promise(function (res) { setTimeout(res, delay); })
+          .then(function () { return _fetchWithRetry(attempt + 1); });
+      });
+    }
+
+    return _fetchWithRetry(0)
     .then(function (data) {
       var raw = (data.content && data.content[0] && data.content[0].text) || '';
 

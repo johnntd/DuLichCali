@@ -60,16 +60,9 @@
       region: 'Bay Area',
       city: 'San Jose',
       address: 'San Jose, CA',
-      phone: '4088596718',
-      phoneDisplay: '408-859-6718',
-      hosts: [
-        {
-          name: 'Dung Pham',
-          phone: '4088596718',
-          display: '408-859-6718',
-          role: 'Owner & Nail Tech'
-        }
-      ],
+      phone: '',
+      phoneDisplay: '',
+      hosts: [],
       staff: [
         {
           name: 'Helen',
@@ -212,7 +205,7 @@
           'Hi! I\'m Lily, your AI receptionist at Luxurious Nails & Spa. I can help with services, pricing, availability, and booking.\n\nTambién hablo español · Tôi cũng nói tiếng Việt',
         quickReplies: ['Services & Pricing', 'Book an Appointment', "Who's available today?", '¿Servicios y precios?', 'Bảng giá'],
         systemExtra:
-          'You are Lily, premium nail salon AI receptionist for Luxurious Nails & Spa in San Jose Bay Area. Owner: Dung Pham 408-859-6718. Always warm, professional, and direct. You are fluent in English, Spanish, and Vietnamese — respond in the customer\'s language. Only quote services and prices from the SERVICES section above. For anything not listed, say "please call for current pricing." You also serve as a voice receptionist — keep responses natural and concise.'
+          'You are Lily, premium nail salon AI receptionist for Luxurious Nails & Spa in San Jose Bay Area. Always warm, professional, and direct. You are fluent in English, Spanish, and Vietnamese — respond in the customer\'s language. Only quote services and prices from the SERVICES section above. For anything not listed, say "please call for current pricing." You also serve as a voice receptionist — keep responses natural and concise.'
       }
     },
 

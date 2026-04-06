@@ -774,6 +774,10 @@
       var merged = {};
       for (var k in biz) { if (Object.prototype.hasOwnProperty.call(biz, k)) merged[k] = biz[k]; }
 
+      // Save full static service catalog as AI knowledge base.
+      // Used when Firestore has no active services configured yet — AI still knows service types/durations.
+      merged._staticServices = biz.services ? biz.services.slice() : [];
+
       if (vendorDoc.exists) {
         var vd = vendorDoc.data();
         if (vd.description)              merged.description = vd.description;
@@ -2193,6 +2197,9 @@
 
       var _activeSvcs  = (biz.services || []).filter(function (s) { return s.active !== false; });
       var _activeStaff = (biz.staff   || []).filter(function (m) { return m.active !== false; });
+      // When no live Firestore services are configured yet, use the full static catalog for
+      // category-awareness so the AI can confirm "yes we do gel / acrylic / etc."
+      var _catalogSvcs = _activeSvcs.length ? _activeSvcs : (biz._staticServices || []);
 
       // ── Language detection: 'en' | 'es' | 'vi' ──────────────────────────────
       function _detectLang(str) {
@@ -2255,7 +2262,7 @@
       function _matchSvc(str) {
         if (!str) return null;
         var sl = str.toLowerCase();
-        // 1. Direct active service name match
+        // 1. Direct active service name match (live services only)
         var exactSvc = null;
         for (var si = 0; si < _activeSvcs.length; si++) {
           var sn = _activeSvcs[si].name.toLowerCase();
@@ -2265,10 +2272,10 @@
           }
         }
         if (exactSvc) return { type:'exact', svc:exactSvc };
-        // 2. Category match
+        // 2. Category match — use catalog (live services if any, static catalog otherwise)
         var catEntry = _catFromText(str);
         if (catEntry) {
-          var catSvcs = _activeSvcs.filter(function (sv) { return sv.category === catEntry.cat; });
+          var catSvcs = _catalogSvcs.filter(function (sv) { return sv.category === catEntry.cat; });
           if (catSvcs.length) return { type:'category', svcs:catSvcs, catLabel:catEntry.label };
           return { type:'category-empty', catLabel:catEntry.label };
         }
@@ -2573,15 +2580,17 @@
       if (/service|what.*(?:do|offer|have)|nail.*(?:type|option|style)|menu/i.test(text) ||
           /d[ịi]ch\s+v[ụu]|c[óo]\s+nh[ữu]ng|danh\s+s[áa]ch/i.test(text) ||
           /servicios|que\s+ofrecen|que\s+tienen|tipos?\s+de\s+(servicio|u[nñ]as)/i.test(text)) {
-        if (_activeSvcs.length) {
+        var _displaySvcs = _activeSvcs.length ? _activeSvcs : _catalogSvcs;
+        if (_displaySvcs.length) {
           var byCat = {};
-          _activeSvcs.forEach(function (s) { var c = s.category||'other'; if (!byCat[c]) byCat[c]=[]; byCat[c].push(s); });
-          var catLbls = { manicure:'Manicure', pedicure:'Pedicure', acrylic:'Acrylic', gel:'Gel / Extensions', dip:'Dip Powder', nailart:'Nail Art', addon:'Add-ons / Care' };
+          _displaySvcs.forEach(function (s) { var c = s.category||'other'; if (!byCat[c]) byCat[c]=[]; byCat[c].push(s); });
+          var catLbls = { manicure:'Manicure', pedicure:'Pedicure', acrylic:'Acrylic', gel:'Gel / Extensions', dip:'Dip Powder', nailart:'Nail Art', addon:'Add-ons / Care', cut:'Cut & Style', color:'Color', treatment:'Treatment', styling:'Styling', highlights:'Highlights', keratin:'Keratin' };
           var svcList = '';
-          Object.keys(byCat).forEach(function (c) { svcList += '\n' + (catLbls[c]||c) + ':\n'; byCat[c].forEach(function (s) { svcList += '  • ' + s.name + (s.price?' — '+s.price:'') + '\n'; }); });
-          if (lang==='es') return 'Servicios de ' + biz.name + ':' + svcList + '\nLlame para reservar: ' + biz.phoneDisplay;
-          if (lang==='vi') return 'Dịch vụ của ' + biz.name + ':' + svcList + '\nĐặt lịch: ' + biz.phoneDisplay;
-          return biz.name + ' services:' + svcList + '\nBook: ' + biz.phoneDisplay;
+          Object.keys(byCat).forEach(function (c) { svcList += '\n' + (catLbls[c]||c) + ':\n'; byCat[c].slice(0,5).forEach(function (s) { svcList += '  • ' + s.name + (s.price?' — '+s.price:'') + (s.duration?' ('+s.duration+')':'') + '\n'; }); });
+          var pricingNote = _activeSvcs.length ? '' : ('\nPricing not listed — call for rates: ' + biz.phoneDisplay);
+          if (lang==='es') return 'Servicios de ' + biz.name + ':' + svcList + pricingNote + '\nReserve: ' + biz.phoneDisplay;
+          if (lang==='vi') return 'Dịch vụ của ' + biz.name + ':' + svcList + pricingNote + '\nĐặt lịch: ' + biz.phoneDisplay;
+          return biz.name + ' services:' + svcList + pricingNote + '\nBook: ' + biz.phoneDisplay;
         }
         if (lang==='es') return 'Contáctenos para información sobre servicios disponibles: ' + biz.phoneDisplay;
         if (lang==='vi') return 'Vui lòng liên hệ để biết thêm về dịch vụ: ' + biz.phoneDisplay;
@@ -2707,6 +2716,8 @@
       } else if (biz.bookingType === 'appointment' || biz.availabilityType === 'appointment') {
         // ── APPOINTMENT INTAKE AGENT (nail/hair salons, any future appointment vendor) ──
         var activeServices = (biz.services || []).filter(function (s) { return s.active !== false; });
+        // When no live services are configured yet, use the full static catalog as knowledge base
+        var catalogServices = activeServices.length ? activeServices : (biz._staticServices || []);
         var servicesBlock = '';
         if (activeServices.length) {
           servicesBlock = 'SERVICES & PRICING:\n';
@@ -2715,6 +2726,29 @@
             if (s.duration) servicesBlock += ' (' + s.duration + ')';
             if (s.desc)     servicesBlock += ' — ' + s.desc;
             servicesBlock += '\n';
+          });
+          servicesBlock += '\n';
+        } else if (catalogServices.length) {
+          // No live pricing yet — build service type catalog from static data
+          var catGroups = {};
+          var catOrder = ['manicure','pedicure','gel','acrylic','dip','nailart','addon','cut','color','treatment','styling','highlights','keratin'];
+          var catNames = { manicure:'Manicure', pedicure:'Pedicure', gel:'Gel / Extensions', acrylic:'Acrylic', dip:'Dip Powder', nailart:'Nail Art', addon:'Add-ons / Care', cut:'Cut & Style', color:'Color', treatment:'Treatment', styling:'Styling', highlights:'Highlights', keratin:'Keratin' };
+          catalogServices.forEach(function (s) {
+            var c = s.category || 'other';
+            if (!catGroups[c]) catGroups[c] = [];
+            catGroups[c].push(s);
+          });
+          servicesBlock = 'SERVICE CATALOG (call for current pricing — ' + biz.phoneDisplay + '):\n';
+          catOrder.forEach(function (c) {
+            if (catGroups[c] && catGroups[c].length) {
+              servicesBlock += '\n' + (catNames[c] || c) + ':\n';
+              catGroups[c].slice(0, 6).forEach(function (s) {
+                servicesBlock += '- ' + s.name;
+                if (s.duration) servicesBlock += ' (' + s.duration + ')';
+                if (s.desc) servicesBlock += ' — ' + s.desc;
+                servicesBlock += '\n';
+              });
+            }
           });
           servicesBlock += '\n';
         } else {

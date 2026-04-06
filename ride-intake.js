@@ -345,8 +345,16 @@ window.RideIntake = (function () {
 
   // ── Google Places Autocomplete ────────────────────────────────────────────────
   function _scrollInputIntoView(el) {
-    if (!el || !el.scrollIntoView) return;
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!el) return;
+    // Scroll the .ri-scrollbody container (not the window) so the input is visible
+    // above the keyboard. We find the nearest scrollable ancestor.
+    var scrollParent = el.closest ? el.closest('.ri-scrollbody') : null;
+    if (!scrollParent) return;
+    var elRect = el.getBoundingClientRect();
+    var pRect  = scrollParent.getBoundingClientRect();
+    // Aim to place the element ~40px below the top of the scroll container
+    var target = scrollParent.scrollTop + (elRect.top - pRect.top) - 40;
+    scrollParent.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
   }
 
   function initAutocomplete() {

@@ -3420,10 +3420,12 @@ gmp-placeautocomplete.ri-input {
   display: block; width: 100%; min-height: 44px;
   --gmp-font-family: var(--font-b, 'Jost', sans-serif);
   --gmp-font-size: .9rem;
-  --gmp-color-surface: rgba(255,255,255,.11);
-  --gmp-color-on-surface: #f0e6d3;
   --gmp-color-primary: #c9a84c;
   --gmp-border-radius: 10px;
+  /* NOTE: Do NOT set --gmp-color-surface or --gmp-color-on-surface here.
+     Those cascade into the shadow DOM and make typed text invisible in browsers
+     where ::part(input) is not supported (e.g. iOS Safari < 15).
+     Visual styling is handled exclusively via ::part(input) below. */
 }
 gmp-placeautocomplete.ri-input::part(input) {
   width: 100%; min-height: 44px;

@@ -374,6 +374,12 @@
       text-transform: uppercase; letter-spacing: .06em; margin-bottom: .85rem;
     }
 
+    /* ── NEW badge pulse animation ── */
+    @keyframes dlcPulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: .55; }
+    }
+
     /* ── Toast ── */
     #toast {
       position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
@@ -653,6 +659,12 @@
 <!-- Toast -->
 <div id="toast"></div>
 
+<!-- New booking notification banner (hidden until a new unseen booking arrives) -->
+<div id="newBookingBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#e8a800;color:#000;padding:10px 48px 10px 48px;font-size:.85rem;font-weight:600;box-shadow:0 2px 12px rgba(0,0,0,.35);cursor:pointer;text-align:center" onclick="gotoNewBookings()">
+  🔔 <span id="newBookingBannerText">Có lịch hẹn mới từ AI!</span>
+  <button onclick="event.stopPropagation();dismissNewBookingBanner()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:1.3rem;cursor:pointer;color:#000;line-height:1;padding:0 6px">×</button>
+</div>
+
 <script>
   // ── Firebase config ──────────────────────────────────────────────────────────
   var firebaseConfig = {
@@ -719,6 +731,77 @@
     t.textContent = msg; t.classList.add('show');
     setTimeout(function(){ t.classList.remove('show'); }, 2800);
   }
+
+  // ── New booking notification system ─────────────────────────────────────────
+
+  // Play a gentle 3-note chime using Web Audio API (no external file needed)
+  function _playNotifChime() {
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var notes = [523.25, 659.25, 783.99]; // C5, E5, G5 — major triad
+      notes.forEach(function (freq, i) {
+        var osc  = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        var t = ctx.currentTime + i * 0.22;
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(0.28, t + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.75);
+        osc.start(t);
+        osc.stop(t + 0.75);
+      });
+      // Close context after chime finishes to free resources
+      setTimeout(function () { try { ctx.close(); } catch (e) {} }, 2000);
+    } catch (e) {}
+  }
+
+  // Track which escalation IDs the vendor has already seen (persisted per vendor in localStorage)
+  var _seenEscIds = {};
+  function _loadSeenEscIds() {
+    try {
+      var raw = localStorage.getItem('dlc_seen_esc_' + (VENDOR_ID || ''));
+      if (raw) _seenEscIds = JSON.parse(raw);
+    } catch (e) { _seenEscIds = {}; }
+  }
+  function _markEscSeen(id) {
+    _seenEscIds[id] = true;
+    try { localStorage.setItem('dlc_seen_esc_' + (VENDOR_ID || ''), JSON.stringify(_seenEscIds)); } catch (e) {}
+  }
+  function _isEscNew(id) { return !_seenEscIds[id]; }
+
+  // Show the sticky banner at the top for new incoming bookings
+  function _showNewBookingBanner(count) {
+    var banner = document.getElementById('newBookingBanner');
+    var text   = document.getElementById('newBookingBannerText');
+    if (!banner) return;
+    text.textContent = count === 1
+      ? 'Có 1 lịch hẹn mới từ AI — nhấn để xem'
+      : 'Có ' + count + ' lịch hẹn mới từ AI — nhấn để xem';
+    banner.style.display = 'block';
+    // Nudge the app content down so the banner doesn't cover it
+    var app = document.getElementById('app');
+    if (app) app.style.paddingTop = '42px';
+  }
+
+  function dismissNewBookingBanner() {
+    var banner = document.getElementById('newBookingBanner');
+    if (banner) banner.style.display = 'none';
+    var app = document.getElementById('app');
+    if (app) app.style.paddingTop = '';
+  }
+
+  // Jump to the Appointments tab and scroll to the escalation list
+  function gotoNewBookings() {
+    dismissNewBookingBanner();
+    switchTab('appointments');
+    setTimeout(function () {
+      var el = document.getElementById('escSection');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
+  }
   function timeToMins(t) {
     if (!t) return 0;
     var p = t.split(':');
@@ -769,6 +852,7 @@
         document.getElementById('app').classList.add('visible');
 
         seedIfNeeded(staticData);
+        _loadSeenEscIds(); // must run before subscribeEscalations so we know which IDs are already seen
         subscribeServices();
         subscribeStaff();
         subscribeEscalations();
@@ -1396,9 +1480,9 @@
   }
 
   function renderEscalations(items) {
-    var section = document.getElementById('escSection');
-    var list    = document.getElementById('escList');
-    var badge   = document.getElementById('escBadge');
+    var section  = document.getElementById('escSection');
+    var list     = document.getElementById('escList');
+    var badge    = document.getElementById('escBadge');
     var navBadge = document.getElementById('escNavBadge');
     var mobBadge = document.getElementById('escMobileBadge');
     if (!section || !list) return;
@@ -1406,7 +1490,7 @@
     var count = items.length;
     [navBadge, mobBadge].forEach(function (b) {
       if (!b) return;
-      b.textContent  = count;
+      b.textContent   = count;
       b.style.display = count > 0 ? 'inline-block' : 'none';
     });
 
@@ -1418,32 +1502,49 @@
     badge.textContent     = count;
     badge.style.display   = 'inline-block';
 
+    // ── Detect genuinely new (unseen) escalations and notify ─────────────────
+    var newItems = items.filter(function (item) { return _isEscNew(item.id); });
+    if (newItems.length > 0) {
+      _playNotifChime();
+      _showNewBookingBanner(newItems.length);
+    }
+
     var typeLabels = { appointment: '&#128197; Đặt Lịch', order: '&#128722; Đơn hàng', reservation: '&#128203; Đặt chỗ', question: '&#128172; Câu hỏi' };
     list.innerHTML = items.map(function (item) {
+      var isNew  = _isEscNew(item.id);
       var timeStr = '';
       if (item.createdAt && item.createdAt.toDate) {
         var d = item.createdAt.toDate();
         timeStr = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
       }
-      var typeLabel  = typeLabels[item.escalationType] || '&#128172; Yêu cầu';
-      var escId      = item.id;
-      var replyId    = 'esc_r_' + escId;
+      var typeLabel   = typeLabels[item.escalationType] || '&#128172; Yêu cầu';
+      var escId       = item.id;
+      var replyId     = 'esc_r_' + escId;
       var summaryHtml = item.summary
         ? '<div style="font-size:.78rem;color:var(--muted);margin:.3rem 0 .6rem;white-space:pre-line;line-height:1.45">' + esc(item.summary) + '</div>'
         : '';
-      return '<div class="appt-card" style="border-left:3px solid #e8a800;margin-bottom:.75rem">' +
+      var newBadge = isNew
+        ? '<span style="background:#ef4444;color:#fff;border-radius:99px;padding:1px 8px;font-size:.68rem;font-weight:700;margin-left:6px;vertical-align:middle;animation:dlcPulse 1.2s ease infinite">MỚI</span>'
+        : '';
+      var markReadBtn = isNew
+        ? '<button class="btn btn--sm" style="background:transparent;border:1px solid var(--muted);color:var(--muted);font-size:.68rem;padding:2px 7px" onclick="_markEscSeen(\'' + escId + '\');this.closest(\'.esc-card\').style.borderLeftColor=\'var(--border)\';this.parentNode.removeChild(this)">&#10003; Đã đọc</button>'
+        : '';
+      var cardBorder = isNew ? '3px solid #e8a800' : '3px solid var(--border)';
+      var cardBg     = isNew ? 'background:rgba(232,168,0,.06)' : '';
+      return '<div class="appt-card esc-card" style="border-left:' + cardBorder + ';margin-bottom:.75rem;' + cardBg + '">' +
         '<div class="appt-card__header">' +
-          '<span class="appt-card__name">' + typeLabel + '</span>' +
+          '<span class="appt-card__name">' + typeLabel + newBadge + '</span>' +
           '<span class="appt-card__date">' + timeStr + '</span>' +
         '</div>' +
         summaryHtml +
         '<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem">' +
-          '<button class="btn btn--primary btn--sm" onclick="respondEscalation(\'' + escId + '\',\'vendor_confirmed\',null)">&#10003; Xác nhận</button>' +
-          '<button class="btn btn--sm" style="background:transparent;border:1px solid var(--danger);color:var(--danger)" onclick="respondEscalation(\'' + escId + '\',\'vendor_declined\',null)">&#10007; Từ chối</button>' +
+          '<button class="btn btn--primary btn--sm" onclick="_markEscSeen(\'' + escId + '\');respondEscalation(\'' + escId + '\',\'vendor_confirmed\',null)">&#10003; Xác nhận &amp; Lưu Lịch</button>' +
+          '<button class="btn btn--sm" style="background:transparent;border:1px solid var(--danger);color:var(--danger)" onclick="_markEscSeen(\'' + escId + '\');respondEscalation(\'' + escId + '\',\'vendor_declined\',null)">&#10007; Từ chối</button>' +
+          markReadBtn +
         '</div>' +
         '<div style="display:flex;gap:.4rem;margin-top:.4rem">' +
           '<input id="' + replyId + '" type="text" class="sa-input" placeholder="Nhắn lại cho khách…" style="flex:1;height:36px;padding:0 10px">' +
-          '<button class="btn btn--sm" style="background:var(--gold);color:#000;font-weight:600" onclick="respondEscalation(\'' + escId + '\',\'vendor_replied\',document.getElementById(\'' + replyId + '\').value)">Gửi</button>' +
+          '<button class="btn btn--sm" style="background:var(--gold);color:#000;font-weight:600" onclick="_markEscSeen(\'' + escId + '\');respondEscalation(\'' + escId + '\',\'vendor_replied\',document.getElementById(\'' + replyId + '\').value)">Gửi</button>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -1563,6 +1664,9 @@
       byDate[d].push(b);
     });
 
+    // Mark bookings confirmed within the last 5 minutes as "just confirmed"
+    var _fiveMinAgo = Date.now() - 5 * 60 * 1000;
+
     var statusLabels = {
       confirmed: '<span style="font-size:.72rem;color:var(--success);white-space:nowrap">&#9679; Đã xác nhận</span>',
       completed: '<span style="font-size:.72rem;color:#60a5fa;white-space:nowrap">&#9679; Hoàn thành</span>',
@@ -1573,10 +1677,19 @@
     el.innerHTML = dateOrder.map(function (date) {
       var appts = byDate[date].map(function (b) {
         // Normalize service display — support both selectedServices array and service string
-        var svcArr = b.selectedServices || b.services || (b.service ? [b.service] : []);
+        var svcArr   = b.selectedServices || b.services || (b.service ? [b.service] : []);
         var svcLabel = Array.isArray(svcArr) ? svcArr.join(', ') : (svcArr || '');
         var staffLabel = b.staff && b.staff !== 'Any' ? ' &middot; <span style="color:var(--gold-lt)">' + esc(b.staff) + '</span>' : '';
+        var durLabel = b.totalDurationMins ? ' &middot; ' + b.totalDurationMins + ' phút' : '';
         var statusBadge = statusLabels[b.status] || '';
+
+        // Highlight bookings confirmed in the last 5 minutes
+        var confirmedMs = b.confirmedAt && b.confirmedAt.toMillis ? b.confirmedAt.toMillis() : 0;
+        var isJustConfirmed = b.status === 'confirmed' && confirmedMs > _fiveMinAgo;
+        var newConfBadge = isJustConfirmed
+          ? ' <span style="background:#22c55e;color:#fff;border-radius:99px;padding:1px 7px;font-size:.65rem;font-weight:700;animation:dlcPulse 1.2s ease infinite">✓ VỪA XÁC NHẬN</span>'
+          : '';
+        var cardStyle = isJustConfirmed ? 'border-left:3px solid #22c55e;background:rgba(34,197,94,.06)' : '';
 
         var actions = '';
         if (b.status === 'confirmed') {
@@ -1587,14 +1700,14 @@
           '</div>';
         }
 
-        return '<div class="sa-appt-card">' +
+        return '<div class="sa-appt-card" style="' + cardStyle + '">' +
           '<div class="sa-appt-time">' + esc(_fmtTime(b.time)) + '</div>' +
           '<div class="sa-appt-body">' +
             '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem">' +
-              '<div class="sa-appt-name">' + esc(b.customerName || 'Khách') + '</div>' +
+              '<div class="sa-appt-name">' + esc(b.customerName || 'Khách') + newConfBadge + '</div>' +
               statusBadge +
             '</div>' +
-            '<div class="sa-appt-svc">' + esc(svcLabel) + staffLabel + '</div>' +
+            '<div class="sa-appt-svc">' + esc(svcLabel) + staffLabel + durLabel + '</div>' +
             (b.customerPhone ? '<div class="sa-appt-ph">' + esc(b.customerPhone) + '</div>' : '') +
             actions +
           '</div>' +

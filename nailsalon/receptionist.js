@@ -114,12 +114,35 @@
       return DAYS[d.getDay()];
     }
 
-    // biz.hours uses lowercase full day names: { monday: { open:'09:30', close:'19:30' } }
-    function _salonHours(biz, dayName) {
-      if (!biz || !biz.hours) return null;
-      var h = biz.hours[dayName];
-      if (!h || !h.open || h.open === 'Closed' || !h.close) return null;
-      return { open: h.open, close: h.close };
+    // Get salon close time (minutes) for a given ISO date string.
+    // Handles all biz.hours formats: { Mon:'9:30 AM – 7:30 PM' }, { monday:{open,close} }, { mon:{start,end} }
+    var _k3 = { monday:'Mon', tuesday:'Tue', wednesday:'Wed', thursday:'Thu', friday:'Fri', saturday:'Sat', sunday:'Sun' };
+    function _salonCloseMins(biz, dateStr) {
+      var DEFAULT_CLOSE = 19 * 60 + 30; // 7:30 PM
+      if (!biz || !biz.hours || !dateStr) return DEFAULT_CLOSE;
+      var dayName = _dayName(dateStr); // 'monday' etc.
+      var h = biz.hours[dayName] || biz.hours[_k3[dayName]] || biz.hours[dayName.slice(0,3)];
+      if (!h) return DEFAULT_CLOSE;
+      // String format: "9:30 AM – 7:30 PM" or "Closed"
+      if (typeof h === 'string') {
+        if (h === 'Closed') return -1; // signals closed
+        var parts = h.split(/\s*[–-]\s*/);
+        if (parts.length < 2) return DEFAULT_CLOSE;
+        var cs = parts[1].trim();
+        var m12 = cs.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/i);
+        if (m12) {
+          var ch = +m12[1], cm = +(m12[2]||0), ap = m12[3].toUpperCase();
+          if (ap === 'PM' && ch !== 12) ch += 12;
+          if (ap === 'AM' && ch === 12) ch = 0;
+          return ch * 60 + cm;
+        }
+        return DEFAULT_CLOSE;
+      }
+      // Object format: { close:'19:30' } or { end:'19:30' }
+      var closeStr = h.close || h.end;
+      if (!closeStr) return DEFAULT_CLOSE;
+      var p = closeStr.split(':');
+      return parseInt(p[0]||'19',10) * 60 + parseInt(p[1]||'30',10);
     }
 
     function _overlaps(aStart, aEnd, bStart, bEnd) {
@@ -199,6 +222,23 @@
       var reqStartMins = _toMins(draft.time);
       var reqEndMins   = reqStartMins + totalMins;
 
+      // ── Full-block closing-time check ─────────────────────────────────────────
+      // Reject if the appointment end time runs past salon closing.
+      // Uses actual biz.hours for the requested date; falls back to 19:30.
+      var closeMins = _salonCloseMins(biz, draft.date);
+      if (closeMins === -1) {
+        // Salon is closed that day entirely
+        return Promise.resolve({ valid: false, message: _buildMsg(biz, 'closed', { day: _dayName(draft.date) }) });
+      }
+      if (reqEndMins > closeMins) {
+        var latest = closeMins - totalMins;
+        return Promise.resolve({ valid: false, message: _buildMsg(biz, 'too_late', {
+          totalMins: totalMins,
+          close:     _fromMins(closeMins),
+          latest:    latest > 0 ? _fromMins(latest) : 'N/A'
+        })});
+      }
+
       return db.collection('vendors').doc(biz.id)
         .collection('appointments')
         .where('date', '==', draft.date)
@@ -217,9 +257,9 @@
 
           if (!hasConflict) return { valid: true };
 
-          // Find next available slot (walk forward in 30-min steps within default hours)
+          // Find next available slot (walk forward in 30-min steps within actual salon hours)
           var nextSlot = _findNextSlot(existing, requestedStaff, reqStartMins, totalMins,
-            _toMins('09:00'), _toMins('19:30'));
+            _toMins('09:00'), closeMins);
 
           return { valid: false, message: _buildMsg(biz, 'conflict', {
             time:     draft.time,
@@ -557,6 +597,34 @@
       'Terms: gel, acrylic, dip powder, regular polish, manicure, pedicure, nail art, fill, removal.',
       'Fills typically every 2–3 weeks. Removal takes extra time — mention it when relevant.',
       '',
+      '=== SERVICE DISAMBIGUATION RULES ===',
+      'Before mapping customer input to a specific service, check for ambiguity:',
+      '',
+      'AMBIGUOUS — always clarify with ONE brief question:',
+      '  "gel"           → could be Gel Manicure, Gel Pedicure, or Gel Polish (add-on)',
+      '                    Ask: "Sure! Do you mean a gel manicure, gel pedicure, or gel polish as an add-on?"',
+      '  "gel and manicure" → could be Gel Manicure (one service) OR Gel Polish + Classic Manicure (two)',
+      '                    Ask: "Just to confirm — do you mean a gel manicure (gel applied on nails with shaping), or gel polish added on top of a classic manicure?"',
+      '  "acrylic"       → could be Acrylic Full Set or Acrylic Fill',
+      '                    Ask: "Is that a new acrylic full set, or a fill on existing acrylics?"',
+      '  "fill" / "fills" → could be Acrylic Fill or Gel Fill',
+      '                    Ask: "Are those acrylic fills or gel fills?"',
+      '  "nails" alone   → too vague; ask what type',
+      '',
+      'CLEAR — map directly without asking:',
+      '  "gel manicure", "gel nails", "gel mani"   → Gel Manicure',
+      '  "gel pedicure", "gel pedi"                 → Gel Pedicure',
+      '  "manicure", "mani", "classic manicure"     → Manicure',
+      '  "pedicure", "pedi"                         → Pedicure',
+      '  "mani pedi", "manicure and pedicure"        → Manicure + Pedicure',
+      '  "acrylic full set", "new set", "full set"  → Acrylic Full Set',
+      '  "acrylic fill", "fill-in"                  → Acrylic Fill',
+      '  "dip", "dip powder", "dip nails"           → Dip Powder Nails',
+      '  "nail art", "design"                        → Nail Art Design',
+      '  "removal"                                   → Nail Removal',
+      '',
+      'When in doubt, ask — one short clarifying question is better than booking the wrong service.',
+      '',
       '=== YOUR RULES ===',
       '1. Answer naturally — you are a real receptionist, not a scripted bot.',
       '2. Never re-introduce yourself mid-conversation. No "Hi, I\'m Lily" after the first message.',
@@ -603,8 +671,12 @@
       '     When confirming multi-service bookings, mention the total time naturally:',
       '     "That will take about 2 hours total — you\'re all set!"',
       '  E. When ALL required fields are collected (service, date, time, name, phone):',
-      '     Write ONE plain sentence confirmation mentioning service(s), time, and staff.',
-      '     Mention total duration if multiple services are booked.',
+      '     Write ONE warm, premium-receptionist confirmation. Use phrasing like:',
+      '       "Perfect, [Name]! Your [service] with [staff] is all set for [date] at [time]. We\'re so excited to see you — your appointment is confirmed and locked in!"',
+      '       "Wonderful! I\'ve got [Name] booked for [services] with [staff] on [date] at [time] ([total] total). Your spot is reserved — we look forward to seeing you!"',
+      '       "All done! [Name]\'s [service] appointment with [staff] is confirmed for [date] at [time]. See you then!"',
+      '     For multi-service, always mention total duration naturally.',
+      '     For Vietnamese: warm, slightly formal. For Spanish: warm, friendly.',
       '     Then on new lines:',
       '     [BOOKING:{"services":["Service1","Service2"],"staff":"<name or Any>","date":"YYYY-MM-DD","time":"HH:MM","name":"<name>","phone":"<phone>","lang":"<en|es|vi>"}]',
       '     [ESCALATE:appointment]',

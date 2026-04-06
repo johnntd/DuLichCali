@@ -308,13 +308,26 @@
         }).join('\n')
       : '(Service list not yet loaded — tell customer to call ' + phone + ' for menu.)';
 
-    // Hours block — biz.hours comes from _hoursScheduleToHours() which produces
-    // { Mon:'9:30 AM – 7:30 PM', Tue:'9:30 AM – 7:30 PM', ... } (3-letter cap keys, string values).
-    // Also handle {monday:{open,close}} and {mon:{open,close}} object formats.
+    // Hours block — biz.hours can come in several formats:
+    //   { Mon:'9:30 AM – 7:30 PM', ... }  — from _hoursScheduleToHours() (Firestore vendor-admin, 3-letter cap keys)
+    //   { monday:{open,close}, ... }        — normalized full-name object format
+    //   { 'Thứ 2–6':'9:00 AM – 7:00 PM' }  — static Vietnamese grouped keys (NOT day-by-day parseable)
+    // If no per-day English keys are found, fall back to generic text so AI never sees all days as "Closed".
     var daysOrder = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
     var _hoursKey3 = { monday:'Mon', tuesday:'Tue', wednesday:'Wed', thursday:'Thu', friday:'Fri', saturday:'Sat', sunday:'Sun' };
     var hoursBlock;
+
+    // Detect whether biz.hours has any recognizable per-day English keys
+    var _hasPerDayHours = false;
     if (biz.hours) {
+      daysOrder.forEach(function (d) {
+        if (biz.hours[d] !== undefined || biz.hours[_hoursKey3[d]] !== undefined || biz.hours[d.slice(0,3)] !== undefined) {
+          _hasPerDayHours = true;
+        }
+      });
+    }
+
+    if (biz.hours && _hasPerDayHours) {
       hoursBlock = daysOrder.map(function (d) {
         // Try all known key formats
         var h = biz.hours[d]                 // 'monday' (full lowercase)
@@ -334,7 +347,14 @@
         return label + ': ' + h.open + ' – ' + h.close + marker;
       }).join('\n');
     } else {
-      hoursBlock = 'Mon–Fri 9:30 am–7:30 pm\nSat 9:30 am–7:00 pm\nSun 10:00 am–6:00 pm\n(TODAY is ' + todayName + ')';
+      // biz.hours is absent or uses non-parseable keys (e.g. Vietnamese grouped format).
+      // Use safe generic hours — Firestore vendor-admin hours will override these once loaded.
+      var _todayCap = todayName.charAt(0).toUpperCase() + todayName.slice(1);
+      var _genericDays = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+      var _genericHrs  = ['9:00 AM – 7:00 PM','9:00 AM – 7:00 PM','9:00 AM – 7:00 PM','9:00 AM – 7:00 PM','9:00 AM – 7:00 PM','9:00 AM – 6:00 PM','10:00 AM – 5:00 PM'];
+      hoursBlock = _genericDays.map(function (label, i) {
+        return label + ': ' + _genericHrs[i] + (label === _todayCap ? ' ← TODAY' : '');
+      }).join('\n');
     }
 
     // Short-key map for schedule lookup — handles both storage formats:
@@ -435,10 +455,13 @@
       '=== YOUR RULES ===',
       '1. Answer naturally — you are a real receptionist, not a scripted bot.',
       '2. Never re-introduce yourself mid-conversation. No "Hi, I\'m Lily" after the first message.',
-      '3. Use ONLY the data above. Never invent prices, hours, or staff availability.',
+      '3. Use ONLY the HOURS and STAFF data above. Never invent or assume hours.',
       '3a. OPEN/CLOSED rule: A day is open if it appears in HOURS as anything other than "Closed".',
       '    The salon is NEVER "closed today" just because the current clock time is past closing hour.',
       '    Customers book in ADVANCE. Only block a date if that day-of-week is literally listed as "Closed".',
+      '3b. Do NOT apply general industry knowledge (e.g., "many nail salons close on Mondays").',
+      '    This salon\'s specific schedule in HOURS above is the ONLY source of truth. If Monday shows',
+      '    an opening time, Monday is open — regardless of common industry practices.',
       '4. Responses: 1–3 sentences for simple questions. Plain text always.',
       '5. Walk-ins: "Walk-ins welcome based on availability — we recommend calling ahead."',
       '6. Unknown prices: "Prices vary — please call ' + phone + ' for an exact quote."',

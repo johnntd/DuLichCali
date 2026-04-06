@@ -391,6 +391,27 @@
       }).join('\n');
     }
 
+    // Safety net: if ALL 7 recognised days are 'Closed', this is almost certainly a vendor
+    // misconfiguration (e.g. all "Đóng" boxes were checked when saving). Override with generic
+    // defaults so the AI never tells customers the salon is permanently closed.
+    if (_hasPerDayHours) {
+      var _closedCount = 0;
+      daysOrder.forEach(function (d) {
+        var _h = biz.hours[d] || biz.hours[_hoursKey3[d]] || biz.hours[d.slice(0,3)];
+        if (!_h || _h === 'Closed' || (typeof _h === 'object' && !_h.open)) _closedCount++;
+      });
+      if (_closedCount >= 7) {
+        console.warn('[LilyReceptionist] All days in hoursSchedule are Closed — vendor admin misconfiguration. Using safe defaults.');
+        _hasPerDayHours = false;
+        var _tc = todayName.charAt(0).toUpperCase() + todayName.slice(1);
+        var _gd = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+        var _gh = ['9:00 AM – 7:00 PM','9:00 AM – 7:00 PM','9:00 AM – 7:00 PM','9:00 AM – 7:00 PM','9:00 AM – 7:00 PM','9:00 AM – 6:00 PM','10:00 AM – 5:00 PM'];
+        hoursBlock = _gd.map(function (label, i) {
+          return label + ': ' + _gh[i] + (label === _tc ? ' ← TODAY' : '');
+        }).join('\n');
+      }
+    }
+
     // Pre-compute today's real-time open/closed status so Claude doesn't have to reason about it
     // Extract today's hours string from the hoursBlock we already built
     var _todayHoursStr = null;
@@ -689,9 +710,11 @@
     }
 
     // ── Real-time open/closed ─────────────────────────────────────────────────
-    if (/open.?now|open.?right.?now|still open|open.?today|closed.?now|currently open|are you open/i.test(t)
-      || /abierto.?ahora|están abiertos|abren|siguen abiertos/i.test(t)
-      || /mở.?cửa.?chưa|đang mở|còn mở|giờ.?này.?mở/i.test(t)) {
+    // Catches: "is it open now", "are you open", "when will you open", "what time do you open",
+    //          "still open", "is the store open", "when do you open"
+    if (/open.?now|open.?right.?now|still open|open.?today|closed.?now|currently open|are you open|is it open|is the.{0,10}open|when.{0,10}open|what time.{0,10}open/i.test(t)
+      || /abierto.?ahora|están abiertos|cuándo abren|a qué hora abren|siguen abiertos/i.test(t)
+      || /mở.?cửa.?chưa|đang mở|còn mở|giờ.?này.?mở|mấy giờ mở|khi nào mở/i.test(t)) {
       var _now = new Date();
       var _nowMins = _now.getHours() * 60 + _now.getMinutes();
       var _nowStr  = _now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });

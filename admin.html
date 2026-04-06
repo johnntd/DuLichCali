@@ -770,6 +770,10 @@
               <label class="driver-form-label">Số điện thoại</label>
               <input class="driver-form-input" type="tel" id="newDriverPhone" placeholder="(408) 916-3439">
             </div>
+            <div class="driver-form-field">
+              <label class="driver-form-label">Email đăng nhập</label>
+              <input class="driver-form-input" type="email" id="newDriverEmail" placeholder="driver@email.com" autocomplete="off">
+            </div>
             <div class="driver-form-field" style="max-width:120px">
               <label class="driver-form-label">Mã PIN (4–6 số)</label>
               <input class="driver-form-input" type="text" id="newDriverPin"
@@ -1428,7 +1432,7 @@
 
     function _renderDriverRow(id, d) {
       const veh = d.vehicle ? [d.vehicle.make, d.vehicle.model, d.vehicle.year].filter(Boolean).join(' ') : '';
-      const derivedEmail = d.phone ? 'd' + d.phone.replace(/\D/g,'') + '@dlc.app' : '—';
+      const derivedEmail = d.authEmail || (d.phone ? 'd' + d.phone.replace(/\D/g,'').slice(-10) + '@dlc.app' : '—');
       const st = d.adminStatus || 'active';
       const stLabel = { active:'Active', blocked:'Blocked', deactivated:'Deactivated', archived:'Archived' }[st] || st;
       const stClass = { active:'status-active', blocked:'status-blocked', deactivated:'status-deactivated', archived:'status-archived' }[st] || '';
@@ -1458,8 +1462,8 @@
           <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
             <input type="text" id="dpinInput-${id}" placeholder="PIN mới (4+ chữ số)" inputmode="numeric" maxlength="6"
               style="width:120px;background:var(--navy-900);border:1px solid var(--border);border-radius:4px;padding:4px 8px;color:var(--cream);font-size:0.75rem">
-            <button class="btn-sm-gold" onclick="resetDriverPin('${id}','${d.phone||''}')">Đặt PIN</button>
-            <button class="btn-sm-outline" onclick="resetDriverPin('${id}','${d.phone||''}',true)">🎲 Ngẫu nhiên</button>
+            <button class="btn-sm-gold" onclick="resetDriverPin('${id}','${escHtml(d.authEmail||'')}')">Đặt PIN</button>
+            <button class="btn-sm-outline" onclick="resetDriverPin('${id}','${escHtml(d.authEmail||'')}',true)">🎲 Ngẫu nhiên</button>
           </div>
           <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.5rem">
             ${st !== 'active'       ? `<button class="btn-sm-green"  onclick="setDriverStatus('${id}','active')">Kích hoạt</button>` : ''}
@@ -1508,13 +1512,12 @@
         if (msgEl) { msgEl.style.color='var(--danger)'; msgEl.textContent='PIN phải có ít nhất 4 chữ số.'; }
         return;
       }
-      let digits = (phone||'').replace(/\D/g,'');
-      if (digits.length === 11 && digits.charAt(0) === '1') digits = digits.slice(1);
-      if (!digits) {
-        if (msgEl) { msgEl.style.color='var(--danger)'; msgEl.textContent='Không tìm thấy số điện thoại.'; }
+      // 'phone' param is now the driver's real authEmail
+      const derivedEmail = (phone||'').trim();
+      if (!derivedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(derivedEmail)) {
+        if (msgEl) { msgEl.style.color='var(--danger)'; msgEl.textContent='Không tìm thấy email tài xế.'; }
         return;
       }
-      const derivedEmail = 'd' + digits + '@dlc.app';
       const derivedPass  = pin.padEnd(6, '0');
       if (msgEl) { msgEl.style.color='var(--muted)'; msgEl.textContent='Đang cập nhật…'; }
 
@@ -1600,15 +1603,15 @@
     async function createDriver() {
       const name  = document.getElementById('newDriverName').value.trim();
       const phone = document.getElementById('newDriverPhone').value.trim();
+      const email = document.getElementById('newDriverEmail').value.trim().toLowerCase();
       const pin   = document.getElementById('newDriverPin').value.trim();
       const errEl = document.getElementById('driverFormError');
       const btn   = document.getElementById('btnCreateDriver');
       errEl.textContent = '';
 
-      if (!name || !phone || !pin) { errEl.textContent = 'Vui lòng điền đầy đủ thông tin.'; return; }
-      let digits = phone.replace(/\D/g, '');
-      // Normalize: strip leading country code 1 for US numbers (11→10 digits)
-      if (digits.length === 11 && digits.charAt(0) === '1') digits = digits.slice(1);
+      if (!name || !phone || !email || !pin) { errEl.textContent = 'Vui lòng điền đầy đủ thông tin.'; return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent = 'Email không hợp lệ.'; return; }
+      const digits = phone.replace(/\D/g, '');
       if (digits.length < 10) { errEl.textContent = 'Số điện thoại phải có ít nhất 10 chữ số.'; return; }
       if (pin.length < 4)  { errEl.textContent = 'Mã PIN phải có ít nhất 4 ký tự.'; return; }
 
@@ -1616,8 +1619,8 @@
       btn.textContent = 'Đang tạo…';
 
       // Create Firebase Auth user via REST API (does NOT affect current admin session)
-      // Pad PIN to 6 chars so Firebase Auth password-length requirement is met
-      const derivedEmail = 'd' + digits + '@dlc.app';
+      // Driver logs in with their real email + PIN (padded to 6 chars for Firebase min length)
+      const derivedEmail = email;
       const derivedPass  = pin.padEnd(6, '0');
       try {
         const resp = await fetch(
@@ -1643,7 +1646,7 @@
           createdAt: ts, createdBy: 'admin'
         });
         await db.collection('drivers').doc(uid).set({
-          authUid: uid, fullName: name, phone: digits,
+          authUid: uid, authEmail: email, fullName: name, phone: digits,
           setupCode: pin, adminStatus: 'active',
           active: false, rideServiceEnabled: false, regions: [],
           vehicle: { make:'', model:'', year:'', color:'', seats:4, plate:'' },
@@ -1664,6 +1667,7 @@
 
         document.getElementById('newDriverName').value = '';
         document.getElementById('newDriverPhone').value = '';
+        document.getElementById('newDriverEmail').value = '';
         document.getElementById('newDriverPin').value = '';
         errEl.style.color = '#7ac87a';
         errEl.textContent = `✓ Tạo tài xế thành công! Phone: ${phone} · PIN: ${pin}`;

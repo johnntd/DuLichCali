@@ -1816,8 +1816,8 @@
       }).join('\n');
 
       var escId     = 'esc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
-      var pendingId = EscalationEngine._showPending(messagesEl);
-      var hostName  = (biz.aiReceptionist && biz.aiReceptionist.hostName) || biz.name || 'Nhà hàng';
+      var hostName  = (biz.aiReceptionist && biz.aiReceptionist.hostName) || biz.name || 'Cửa hàng';
+      var pendingId = EscalationEngine._showPending(messagesEl, hostName);
       var phone     = biz.phone || biz.phoneDisplay || '';
 
       db.collection('escalations').doc(escId).set({
@@ -1876,9 +1876,10 @@
       });
     },
 
-    _showPending: function (messagesEl) {
-      var id  = 'esc_p_' + Date.now();
-      var div = document.createElement('div');
+    _showPending: function (messagesEl, hostName) {
+      var id    = 'esc_p_' + Date.now();
+      var label = hostName ? 'Đang chờ xác nhận từ ' + hostName + '\u2026' : 'Đang chờ xác nhận\u2026';
+      var div   = document.createElement('div');
       div.className = 'mp-ai__msg mp-ai__msg--bot';
       div.id        = id;
       div.innerHTML =
@@ -1886,7 +1887,7 @@
           '<span class="mp-ai__pending-dot"></span>' +
           '<span class="mp-ai__pending-dot"></span>' +
           '<span class="mp-ai__pending-dot"></span>' +
-          '&nbsp;Đang chờ xác nhận từ nhà hàng\u2026' +
+          '&nbsp;' + label +
         '</div>';
       messagesEl.appendChild(div);
       messagesEl.scrollTop = messagesEl.scrollHeight;

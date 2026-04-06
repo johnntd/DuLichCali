@@ -573,13 +573,13 @@
     .toggle-pill.on  { background: rgba(100,200,100,0.12); border-color: rgba(100,200,100,0.35); color: #7ac87a; }
     .toggle-pill.off { background: transparent; color: var(--muted); }
     .btn-del-driver {
-      height: 26px; padding: 0 0.65rem;
-      background: transparent; border: 1px solid rgba(224,90,90,0.3);
-      border-radius: 4px; color: #e08a8a;
-      font-family: 'Jost', sans-serif; font-size: 0.65rem; font-weight: 600;
+      height: 30px; padding: 0 0.9rem;
+      background: rgba(224,90,90,0.15); border: 1px solid rgba(224,90,90,0.5);
+      border-radius: 4px; color: #f08080;
+      font-family: 'Jost', sans-serif; font-size: 0.72rem; font-weight: 700;
       cursor: pointer; transition: all 0.18s;
     }
-    .btn-del-driver:hover { background: rgba(224,90,90,0.1); }
+    .btn-del-driver:hover { background: rgba(224,90,90,0.35); color: #fff; border-color: #e05a5a; }
 
     /* Mobile responsive */
     @media (max-width: 640px) {
@@ -1594,9 +1594,47 @@
     }
 
     async function deleteDriver(driverId, name) {
-      if (!confirm(`Xóa tài xế "${name}"? Không thể hoàn tác.`)) return;
-      await db.collection('drivers').doc(driverId).update({ active: false, deleted: true });
+      if (!confirm(`Xóa tài xế "${name}"?\n\nHành động này sẽ xóa hoàn toàn tài khoản. Không thể hoàn tác.`)) return;
+
+      // 1. Fetch driver doc to get auth credentials for Firebase Auth deletion
+      let authEmail = '', setupCode = '';
+      try {
+        const dDoc = await db.collection('drivers').doc(driverId).get();
+        if (dDoc.exists) {
+          authEmail  = dDoc.data().authEmail  || '';
+          setupCode  = dDoc.data().setupCode  || '';
+        }
+      } catch(e) {}
+
+      // 2. Attempt to delete Firebase Auth account (sign in → delete)
+      let authDeleted = false;
+      if (authEmail && setupCode) {
+        try {
+          const pass = setupCode.padEnd(6, '0');
+          const signInResp = await fetch(
+            `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`,
+            { method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: authEmail, password: pass, returnSecureToken: true }) }
+          );
+          const signInData = await signInResp.json();
+          if (signInData.idToken) {
+            const delResp = await fetch(
+              `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${FIREBASE_API_KEY}`,
+              { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken: signInData.idToken }) }
+            );
+            const delData = await delResp.json();
+            if (!delData.error) authDeleted = true;
+          }
+        } catch(e) {}
+      }
+
+      // 3. Hard delete Firestore docs
+      await db.collection('drivers').doc(driverId).delete().catch(()=>{});
       await db.collection('driverUsers').doc(driverId).delete().catch(()=>{});
+
+      const note = authDeleted ? '' : '\n(Tài khoản Auth chưa xóa được — liên hệ Firebase Console nếu cần.)';
+      alert(`Đã xóa tài xế "${name}".${note}`);
       loadDriverPanel();
     }
 

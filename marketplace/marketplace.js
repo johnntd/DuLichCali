@@ -1542,7 +1542,8 @@
 
     var firstVariants = (firstProduct && firstProduct.variants) ? firstProduct.variants : [];
     var variantOpts = firstVariants.map(function (v) {
-      return '<option value="' + escAttr(v.id) + '">' + escHtml(v.labelEn) + '</option>';
+      var priceAttr = (v.price != null && v.price > 0) ? ' data-price="' + v.price + '"' : '';
+      return '<option value="' + escAttr(v.id) + '" data-img="' + escAttr(v.imageUrl || '') + '"' + priceAttr + '>' + escHtml(v.labelEn) + '</option>';
     }).join('');
     // Hide variant row initially if first product has no variants
     var variantRowStyle = firstVariants.length === 0 ? ' style="display:none"' : '';
@@ -1693,7 +1694,7 @@
     function updateSubtotal() {
       if (!qtyInput || !subtotalDiv || !subtotalAmt) return;
       var qty    = parseInt(qtyInput.value, 10) || 0;
-      var price  = parseFloat(qtyInput.getAttribute('data-price')) || 0.75;
+      var price  = parseFloat(qtyInput.getAttribute('data-price')) || 0;
       var minQty = parseInt(qtyInput.getAttribute('data-min'), 10) || 30;
       if (qty > 0) {
         subtotalAmt.textContent = '$' + (qty * price).toFixed(2);

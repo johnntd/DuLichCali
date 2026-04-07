@@ -308,10 +308,12 @@
             }
           }
 
-          // ── Customer conflict check (same person, overlapping time) ─────────
-          // Catches duplicate/overlapping bookings for the same customer.
-          // Matches by name OR phone — either field is enough to identify the person.
-          // Different-time bookings for the same customer are allowed (intentional).
+          // ── Customer conflict check (same person, same day) ──────────────
+          // Flags ANY confirmed or pending appointment for the same customer on
+          // the same day — not just overlapping times. Avoids double-booking even
+          // when totalDurationMins is missing (which would produce a wrong fallback)
+          // or when the new booking starts exactly as the old one ends (boundary gap).
+          // The customer_conflict message lets the customer choose: replace / keep / reschedule.
           if (checkCustomer) {
             var draftName  = (draft.name  || '').toLowerCase().trim();
             var draftPhone = (draft.phone || '').replace(/\D/g, '');
@@ -326,13 +328,10 @@
               // Phone match: require ≥7 digits to avoid false positives on short inputs
               var phoneMatch = draftPhone.length >= 7 && apptPhone && apptPhone === draftPhone;
               if (!nameMatch && !phoneMatch) continue;
-              // Only flag actual time overlap — not just same day
-              var aStart = _toMins(appt.time || '00:00');
-              var aDur   = appt.totalDurationMins || appt.durationMins || DEFAULT_DUR;
-              if (_overlaps(reqStartMins, reqEndMins, aStart, aStart + aDur)) {
-                custConflict = appt;
-                break;
-              }
+              // Same customer on the same day — always flag regardless of time overlap.
+              // Duration data may be missing/wrong; better to ask than to silently double-book.
+              custConflict = appt;
+              break;
             }
 
             if (custConflict) {

@@ -2,12 +2,27 @@ import React from "react";
 import { Composition } from "remotion";
 import { FoodPromo } from "./FoodPromo/FoodPromo";
 import { FoodPromoSchema } from "./FoodPromo/schema";
+import { SalonPromo } from "./SalonPromo/SalonPromo";
 
 // Total frames: 450 @ 30fps = 15 seconds
 // Dimensions: 1080×1920 (vertical 9:16 mobile)
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      <Composition
+        id="SalonPromo"
+        component={SalonPromo}
+        durationInFrames={450}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          salonName:    "Luxurious Nails & Spa",
+          salonTagline: "Premium Nail Art · Bay Area",
+          accentColor:  "#f472b6",
+          phone:        "(408) 555-0123",
+        }}
+      />
       <Composition
         id="FoodPromo"
         component={FoodPromo}

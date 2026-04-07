@@ -577,6 +577,21 @@
         '</div>'
       : '';
 
+    var chipsHtml = '<div class="ns-hero__chips">' +
+      '<span class="ns-hero__chip">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M12 2l2.09 6.26L20 9.27l-4.91 4.79 1.18 6.88L12 17.77l-6.27 3.17 1.18-6.88L2 9.27l5.91-1.01z"/></svg>' +
+        ' 5\u2605 Google Reviews' +
+      '</span>' +
+      '<span class="ns-hero__chip">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' +
+        ' S\u1ea3n ph\u1ea9m an to\xe0n' +
+      '</span>' +
+      '<span class="ns-hero__chip">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
+        ' \u0110\u1eb7t l\u1ecbch nhanh' +
+      '</span>' +
+    '</div>';
+
     return '<div class="ns-hero' + (hasAddr ? ' ns-hero--has-address' : '') + '">' +
       '<div class="ns-hero__bg" style="' + heroBg + '"></div>' +
       '<div class="ns-hero__overlay"></div>' +
@@ -584,6 +599,7 @@
         '<div class="ns-hero__region">' + escHtml(biz.region) + ' \xb7 ' + escHtml(biz.city) + '</div>' +
         '<h1 class="ns-hero__name">' + escHtml(biz.name) + '</h1>' +
         '<p class="ns-hero__tagline">' + escHtml(biz.tagline) + '</p>' +
+        chipsHtml +
         '<div class="ns-hero__ctas">' +
           '<button class="ns-btn-book" type="button" ' +
             'onclick="document.getElementById(\'nailBookSection_' + biz.id + '\').scrollIntoView({behavior:\'smooth\'})">' +
@@ -598,10 +614,10 @@
 
   function renderNailsFeatured(biz) {
     var feats = [
-      { key: 'manicure', label: 'Manicure',      sub: 'Ch\u0103m s\xf3c m\xf3ng tay',    img: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&auto=format&fit=crop&q=80' },
-      { key: 'pedicure', label: 'Pedicure',      sub: 'Ch\u0103m s\xf3c m\xf3ng ch\xe2n',   img: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=400&auto=format&fit=crop&q=80' },
-      { key: 'acrylic',  label: 'Acrylic & Gel', sub: 'M\xf3ng \u0111\u1eafp cao c\u1ea5p',     img: 'https://images.unsplash.com/photo-1632345031435-8727f592d8db?w=400&auto=format&fit=crop&q=80' },
-      { key: 'nailart',  label: 'Nail Art',       sub: 'Ngh\u1ec7 thu\u1eadt trang tr\xed', img: 'https://images.unsplash.com/photo-1636018492665-21ce4ac4e0f1?w=400&auto=format&fit=crop&q=80' }
+      { key: 'manicure', label: 'Manicure',      cat: 'Nail Care',        meta: 'T\u1eeb $18',  img: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=80' },
+      { key: 'pedicure', label: 'Pedicure',       cat: 'Foot Care',        meta: 'T\u1eeb $30',  img: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=600&auto=format&fit=crop&q=80' },
+      { key: 'acrylic',  label: 'Acrylic & Gel',  cat: 'Extensions',       meta: 'T\u1eeb $45',  img: 'https://images.unsplash.com/photo-1632345031435-8727f592d8db?w=600&auto=format&fit=crop&q=80' },
+      { key: 'nailart',  label: 'Nail Art',        cat: 'Design & Art',     meta: 'T\u1eeb $25',  img: 'https://images.unsplash.com/photo-1636018492665-21ce4ac4e0f1?w=600&auto=format&fit=crop&q=80' }
     ];
     var cardsHtml = feats.map(function (f) {
       return '<div class="ns-feat-card" role="button" tabindex="0" ' +
@@ -609,17 +625,39 @@
         'onkeydown="if(event.key===\'Enter\'||event.key===\' \')this.click()" ' +
         'aria-label="' + escAttr(f.label) + '">' +
         '<img class="ns-feat-card__img" src="' + escAttr(f.img) + '" alt="" loading="lazy" aria-hidden="true">' +
-        '<div class="ns-feat-card__body">' +
+        '<div class="ns-feat-card__overlay"></div>' +
+        '<div class="ns-feat-card__content">' +
+          '<div class="ns-feat-card__cat">' + escHtml(f.cat) + '</div>' +
           '<div class="ns-feat-card__name">' + escHtml(f.label) + '</div>' +
-          '<div class="ns-feat-card__sub">' + escHtml(f.sub) + '</div>' +
+          '<div class="ns-feat-card__meta">' + escHtml(f.meta) + '</div>' +
         '</div>' +
       '</div>';
     }).join('');
 
     return '<section class="ns-featured">' +
-      '<h2 class="ns-section-heading">D\u1ecbch V\u1ee5 C\u1ee7a Ch\xfang T\xf4i</h2>' +
-      '<p class="ns-section-sub">Chuy\xean nghi\u1ec7p \xb7 T\u1ec9 m\u1ec9 \xb7 An to\xe0n</p>' +
-      '<div class="ns-feat-scroll">' + cardsHtml + '</div>' +
+      '<div class="ns-section-heading-wrap">' +
+        '<h2 class="ns-section-heading">D\u1ecbch V\u1ee5 C\u1ee7a Ch\xfang T\xf4i</h2>' +
+        '<p class="ns-section-sub">Nh\u1ea5n v\xe0o \u0111\u1ec3 \u0111\u1eb7t l\u1ecbch ngay</p>' +
+      '</div>' +
+      '<div class="ns-feat-grid">' + cardsHtml + '</div>' +
+    '</section>';
+  }
+
+  function renderNailsPromoSlot(biz) {
+    return '<section class="ns-promo-slot">' +
+      '<div class="ns-promo-slot__card">' +
+        '<img class="ns-promo-slot__bg" src="/images/nails-2.jpg" ' +
+          'onerror="this.src=\'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=800&auto=format&fit=crop&q=80\'" ' +
+          'alt="" loading="lazy" aria-hidden="true">' +
+        '<div class="ns-promo-slot__overlay"></div>' +
+        '<div class="ns-promo-slot__content">' +
+          '<div class="ns-promo-slot__badge">Salon Tour</div>' +
+          '<button class="ns-promo-slot__play" type="button" aria-label="Play salon tour video">' +
+            '<svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><polygon points="5 3 19 12 5 21 5 3"/></svg>' +
+          '</button>' +
+          '<p class="ns-promo-slot__caption">Kh\xe1m ph\xe1 kh\xf4ng gian sang tr\u1ecdng c\u1ee7a ch\xfang t\xf4i</p>' +
+        '</div>' +
+      '</div>' +
     '</section>';
   }
 
@@ -759,11 +797,16 @@
   }
 
   function renderNailsTrust(biz) {
-    var checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    var icons = [
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.09 6.26L20 9.27l-4.91 4.79 1.18 6.88L12 17.77l-6.27 3.17 1.18-6.88L2 9.27l5.91-1.01z"/></svg>',
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+    ];
     var features = biz.features || [];
-    var featHtml = features.map(function (f) {
+    var featHtml = features.map(function (f, i) {
       return '<div class="ns-feature-item">' +
-        '<span class="ns-feature-icon">' + checkSvg + '</span>' +
+        '<span class="ns-feature-icon">' + icons[i % icons.length] + '</span>' +
         escHtml(f) +
       '</div>';
     }).join('');
@@ -795,22 +838,32 @@
     '</section>';
   }
 
-  function renderNailsGallery() {
-    var imgs = [
-      'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=300&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1636018492665-21ce4ac4e0f1?w=300&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1632345031435-8727f592d8db?w=300&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=300&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=300&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=300&auto=format&fit=crop&q=80'
+  function renderNailsInspiration() {
+    var localFallback = [
+      { src: '/images/nails-1.jpg',  fb: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=500&auto=format&fit=crop&q=80' },
+      { src: '/images/nails-2.jpg',  fb: 'https://images.unsplash.com/photo-1636018492665-21ce4ac4e0f1?w=500&auto=format&fit=crop&q=80' },
+      { src: '/images/nails-3.jpg',  fb: 'https://images.unsplash.com/photo-1632345031435-8727f592d8db?w=500&auto=format&fit=crop&q=80' }
     ];
-    var imgsHtml = imgs.map(function (src) {
+    var unsplash = [
+      'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=500&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=500&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&auto=format&fit=crop&q=80'
+    ];
+    var localHtml = localFallback.map(function (item) {
+      return '<img class="ns-gallery__img" src="' + item.src + '" ' +
+        'onerror="this.src=\'' + item.fb + '\'" ' +
+        'alt="" loading="lazy" aria-hidden="true">';
+    }).join('');
+    var unsplashHtml = unsplash.map(function (src) {
       return '<img class="ns-gallery__img" src="' + src + '" alt="" loading="lazy" aria-hidden="true">';
     }).join('');
 
     return '<section class="ns-gallery">' +
-      '<div class="ns-gallery__label">H\xecnh \u1ea2nh</div>' +
-      '<div class="ns-gallery__scroll">' + imgsHtml + '</div>' +
+      '<div class="ns-gallery__header">' +
+        '<h2 class="ns-section-heading">C\u1ea3m H\u1ee9ng Nail</h2>' +
+        '<p class="ns-section-sub">H\xecnh \u1ea3nh th\u1ef1c t\u1ebf t\u1eeb salon</p>' +
+      '</div>' +
+      '<div class="ns-gallery__scroll">' + localHtml + unsplashHtml + '</div>' +
     '</section>';
   }
 
@@ -1356,11 +1409,13 @@
 
     if (isNails) {
       // Premium nails redesign — stacked full-width sections
+      // Order: Hero → InfoStrip → Promo → Featured → Booking → Trust → AI → Inspiration Gallery
       html =
         renderSalonBar(biz) +
         '<main class="mp-main mp-main--nails">' +
           renderNailsHero(biz) +
           renderInfoStrip(biz) +
+          renderNailsPromoSlot(biz) +
           renderNailsFeatured(biz) +
           '<div class="ns-divider"></div>' +
           renderNailsBookingSection(biz) +
@@ -1368,7 +1423,7 @@
           renderNailsTrust(biz) +
           '<div class="ns-divider"></div>' +
           '<div class="ns-ai-section">' + renderAiSection(biz) + '</div>' +
-          renderNailsGallery() +
+          renderNailsInspiration() +
           '<div class="mp-spacer"></div>' +
         '</main>' +
         renderInterpPanel(biz) +

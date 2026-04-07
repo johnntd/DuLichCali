@@ -333,8 +333,20 @@
               var aStart = _toMins(appt.time || '00:00');
               var aDur   = appt.totalDurationMins || appt.durationMins || DEFAULT_DUR;
               if (aStart < reqEnd && (aStart + aDur) >= reqStart) {
-                custConflict = appt;
-                break;
+                // Check vendor-defined parallel rules before flagging as conflict.
+                // e.g. manicure + pedicure at the same time with different staff = OK.
+                var existSvcs = appt.selectedServices || (appt.service ? [appt.service] : []);
+                var parallelOk = _isParallelAllowed(
+                  biz._parallelServices || [],
+                  existSvcs,
+                  draft.services || [],
+                  appt.staff,
+                  draft.staff
+                );
+                if (!parallelOk) {
+                  custConflict = appt;
+                  break;
+                }
               }
             }
 
@@ -355,6 +367,31 @@
           console.warn('[NailAvailabilityChecker] query error — allowing booking:', err && err.message);
           return { valid: true };
         });
+    }
+
+    // Returns true if biz has a parallel-service rule that covers this combination.
+    // Example rule ['Manicure','Pedicure']: Helen does Manicure while Tracy does Pedicure
+    // at the same time for the same customer → allowed, not a conflict.
+    // Staff must be different; same staff can't do two services simultaneously.
+    function _isParallelAllowed(parallelRules, existingSvcs, newSvcs, existingStaff, newStaff) {
+      if (!parallelRules || !parallelRules.length) return false;
+      var es = (existingStaff || '').toLowerCase().trim();
+      var ns = (newStaff     || '').toLowerCase().trim();
+      if (es && ns && es !== 'any' && ns !== 'any' && es === ns) return false; // same staff
+      var eList = (existingSvcs || []).map(function(s) { return (s || '').toLowerCase().trim(); });
+      var nList = (newSvcs     || []).map(function(s) { return (s || '').toLowerCase().trim(); });
+      if (!eList.length || !nList.length) return false;
+      for (var r = 0; r < parallelRules.length; r++) {
+        var rule = parallelRules[r];
+        if (!Array.isArray(rule) || rule.length < 2) continue;
+        var a = (rule[0] || '').toLowerCase().trim();
+        var b = (rule[1] || '').toLowerCase().trim();
+        if (!a || !b) continue;
+        // Bidirectional: existing=a+new=b OR existing=b+new=a
+        if (eList.indexOf(a) >= 0 && nList.indexOf(b) >= 0) return true;
+        if (eList.indexOf(b) >= 0 && nList.indexOf(a) >= 0) return true;
+      }
+      return false;
     }
 
     return { check: check };
@@ -1133,12 +1170,17 @@
       if (!input || !sendBtn || !messagesEl) return;
 
       // Load API key from vendor's Firestore doc so all devices work without manual setup
-      biz._firestoreApiKey = null;
+      biz._firestoreApiKey    = null;
+      biz._parallelServices   = [];
       try {
         if (window.dlcDb && biz.id) {
           window.dlcDb.collection('vendors').doc(biz.id).get()
             .then(function(doc) {
-              if (doc.exists && doc.data().aiKey) biz._firestoreApiKey = doc.data().aiKey;
+              if (doc.exists) {
+                var d = doc.data();
+                if (d.aiKey)           biz._firestoreApiKey  = d.aiKey;
+                if (d.parallelServices) biz._parallelServices = d.parallelServices;
+              }
             })
             .catch(function() {});
         }

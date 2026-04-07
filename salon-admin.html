@@ -560,6 +560,12 @@
               <label>Claude AI Key <span style="font-size:.7rem;color:var(--muted);font-weight:400">(sk-ant-… — bắt buộc để AI hoạt động)</span></label>
               <input class="sa-input" id="settingAiKey" type="password" placeholder="sk-ant-…" autocomplete="off" style="font-family:monospace;letter-spacing:.04em">
             </div>
+            <div class="sa-field" style="margin-top:1.2rem">
+              <label>Dịch Vụ Song Song <span style="font-size:.7rem;color:var(--muted);font-weight:400">— cho phép khách đặt 2 dịch vụ cùng lúc với 2 nhân viên khác nhau</span></label>
+              <div id="parallelRulesList" style="margin:.4rem 0 .6rem"></div>
+              <button type="button" onclick="addParallelRule()" style="font-size:.75rem;padding:.3rem .75rem;background:var(--navy-700);border:1px solid var(--border);border-radius:6px;color:var(--cream);cursor:pointer">+ Thêm Cặp Dịch Vụ</button>
+              <datalist id="serviceNameList"></datalist>
+            </div>
             <div>
               <button class="btn btn--primary" onclick="saveSettings()">Lưu Cài Đặt</button>
               <span class="sa-msg" id="settingsMsg"></span>
@@ -720,7 +726,8 @@
   var unsubAppts     = null;
   var unsubBookings  = null;
   var currentCatFilter   = 'all';
-  var allServiceDocs     = [];   // [{id, data}] — full snapshot for filtering
+  var allServiceDocs       = [];   // [{id, data}] — full snapshot for filtering
+  var vendorParallelServices = []; // [[svcA, svcB], ...] — parallel booking rules
   var currentStaffData   = [];   // [{id, name, data}] — for service modal checkboxes + availability
   var SERVICE_CATS       = [];   // [{key, label}] — loaded from static data
   var CATALOG_VERSION    = 2;    // Bump this to force a full catalog reset on next login
@@ -905,6 +912,8 @@
         document.getElementById('settingAddress').value = vdata.address       || (staticData && staticData.address)      || '';
         document.getElementById('settingDesc').value    = vdata.description   || (staticData && staticData.description)  || '';
         document.getElementById('settingAiKey').value   = vdata.aiKey || '';
+        vendorParallelServices = vdata.parallelServices || [];
+        renderParallelRules();
 
         document.getElementById('authLoading').classList.add('hidden');
         document.getElementById('app').classList.add('visible');
@@ -1090,10 +1099,12 @@
     unsubSvcs = servicesRef.orderBy('sortOrder').onSnapshot(function(snap) {
       allServiceDocs = snap.docs.map(function(d){ return { id: d.id, data: d.data() }; });
       reRenderServices();
+      _updateServiceDatalist();
     }, function() {
       unsubSvcs = servicesRef.onSnapshot(function(snap) {
         allServiceDocs = snap.docs.map(function(d){ return { id: d.id, data: d.data() }; });
         reRenderServices();
+        _updateServiceDatalist();
       });
     });
   }
@@ -1790,13 +1801,74 @@
   }
 
   // ── Settings ──────────────────────────────────────────────────────────────────
+  // ── Parallel Service Rules ───────────────────────────────────────────────────
+  function _syncParallelFromDom() {
+    vendorParallelServices = [];
+    document.querySelectorAll('.parallel-rule-row').forEach(function(row) {
+      var inputs = row.querySelectorAll('input');
+      var a = inputs[0] ? inputs[0].value.trim() : '';
+      var b = inputs[1] ? inputs[1].value.trim() : '';
+      if (a && b) vendorParallelServices.push([a, b]);
+    });
+  }
+
+  function renderParallelRules() {
+    var container = document.getElementById('parallelRulesList');
+    if (!container) return;
+    if (!vendorParallelServices.length) {
+      container.innerHTML = '<div style="font-size:.75rem;color:var(--muted);padding:.2rem 0">Chưa có quy tắc nào.</div>';
+    } else {
+      container.innerHTML = '';
+      vendorParallelServices.forEach(function(pair, idx) {
+        var row = document.createElement('div');
+        row.className = 'parallel-rule-row';
+        row.style.cssText = 'display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem';
+        var aVal = (pair[0] || '').replace(/"/g, '&quot;');
+        var bVal = (pair[1] || '').replace(/"/g, '&quot;');
+        row.innerHTML =
+          '<input class="sa-input" style="flex:1;font-size:.8rem;padding:.35rem .6rem" list="serviceNameList" placeholder="Dịch vụ 1" value="' + aVal + '">' +
+          '<span style="color:var(--muted);font-size:.8rem;flex-shrink:0">+</span>' +
+          '<input class="sa-input" style="flex:1;font-size:.8rem;padding:.35rem .6rem" list="serviceNameList" placeholder="Dịch vụ 2" value="' + bVal + '">' +
+          '<button type="button" onclick="removeParallelRule(' + idx + ')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:1rem;padding:0 .2rem;flex-shrink:0" title="Xóa">✕</button>';
+        container.appendChild(row);
+      });
+    }
+    _updateServiceDatalist();
+  }
+
+  function _updateServiceDatalist() {
+    var dl = document.getElementById('serviceNameList');
+    if (!dl) return;
+    dl.innerHTML = '';
+    allServiceDocs.forEach(function(d) {
+      var name = d.data.nameEn || d.data.name || '';
+      if (name) { var opt = document.createElement('option'); opt.value = name; dl.appendChild(opt); }
+    });
+  }
+
+  function addParallelRule() {
+    _syncParallelFromDom();
+    vendorParallelServices.push(['', '']);
+    renderParallelRules();
+    var rows = document.querySelectorAll('.parallel-rule-row');
+    if (rows.length) { var inp = rows[rows.length - 1].querySelector('input'); if (inp) inp.focus(); }
+  }
+
+  function removeParallelRule(idx) {
+    _syncParallelFromDom();
+    vendorParallelServices.splice(idx, 1);
+    renderParallelRules();
+  }
+
   function saveSettings() {
+    _syncParallelFromDom();
     var data = {
-      businessName: document.getElementById('settingName').value.trim(),
-      phoneDisplay: document.getElementById('settingPhone').value.trim(),
-      address:      document.getElementById('settingAddress').value.trim(),
-      description:  document.getElementById('settingDesc').value.trim(),
-      updatedAt:    firebase.firestore.FieldValue.serverTimestamp()
+      businessName:     document.getElementById('settingName').value.trim(),
+      phoneDisplay:     document.getElementById('settingPhone').value.trim(),
+      address:          document.getElementById('settingAddress').value.trim(),
+      description:      document.getElementById('settingDesc').value.trim(),
+      parallelServices: vendorParallelServices,
+      updatedAt:        firebase.firestore.FieldValue.serverTimestamp()
     };
     var aiKey = document.getElementById('settingAiKey').value.trim();
     if (aiKey) data.aiKey = aiKey;

@@ -684,9 +684,10 @@
   }
 
   function renderNailsPromoSlot(biz) {
-    // Background: img tag with object-fit:cover (CSS Pass 3 sets object-fit on .ns-promo-slot__bg)
-    // Play button scrolls to booking section — video hook ready for /videos/salon-promo.mp4 (Remotion)
-    var playOnclick = 'document.getElementById(\'nailBookSection_' + biz.id + '\').scrollIntoView({behavior:\'smooth\'})';
+    // Ambient Ken Burns image — no fake play button.
+    // When /videos/salon-promo.mp4 (Remotion SalonPromo) is ready, replace <img> with:
+    //   <video class="ns-promo-slot__video" autoplay muted loop playsinline src="/videos/salon-promo.mp4"></video>
+    var ctaOnclick = 'document.getElementById(\'nailBookSection_' + biz.id + '\').scrollIntoView({behavior:\'smooth\'})';
     return '<section class="ns-promo-slot">' +
       '<div class="ns-promo-slot__card">' +
         '<img class="ns-promo-slot__bg" src="/images/nails-2.jpg" ' +
@@ -695,13 +696,11 @@
         '<div class="ns-promo-slot__overlay"></div>' +
         '<div class="ns-promo-slot__badge">Salon Showcase</div>' +
         '<div class="ns-promo-slot__content">' +
-          '<button class="ns-promo-slot__play" type="button" ' +
-            'aria-label="Xem showcase salon \u2014 \u0111\u1eb7t l\u1ecbch ngay" ' +
-            'onclick="' + playOnclick + '">' +
-            '<svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><polygon points="5 3 19 12 5 21 5 3"/></svg>' +
+          '<p class="ns-promo-slot__headline">Kh\xf4ng gian sang tr\u1ecdng</p>' +
+          '<p class="ns-promo-slot__tagline">Premium tools \xb7 Safe products \xb7 Expert team</p>' +
+          '<button class="ns-promo-slot__cta" type="button" onclick="' + ctaOnclick + '">' +
+            '\u0110\u1eb7t L\u1ecbch Ngay \u2192' +
           '</button>' +
-          '<p class="ns-promo-slot__label">Kh\xf4ng gian sang tr\u1ecdng</p>' +
-          '<p class="ns-promo-slot__sub">Premium tools \xb7 Safe products \xb7 Expert team</p>' +
         '</div>' +
       '</div>' +
     '</section>';

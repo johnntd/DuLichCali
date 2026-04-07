@@ -221,12 +221,18 @@
 .ns-hero__address a { color: rgba(255, 255, 255, 0.65); text-decoration: none; }
 .ns-hero__address a:hover { color: var(--ns-pink-lt); }
 
-/* ── Promo / Video Slot ────────────────────────────────────────────────────── */
-/* Placeholder for Remotion-rendered salon promo video.
-   When /videos/salon-promo.mp4 exists (from remotion-promo SalonPromo composition),
-   replace the .ns-promo-slot__card inner content with:
+/* ── Promo / Salon Showcase Slot ──────────────────────────────────────────── */
+/* Ambient salon image with Ken Burns motion. No fake play button.
+   When a real video exists at /videos/salon-promo.mp4 (Remotion SalonPromo),
+   replace <img class="ns-promo-slot__bg"> with:
    <video class="ns-promo-slot__video" autoplay muted loop playsinline src="/videos/salon-promo.mp4">
+   and remove the ns-promo-slot__bg img.
 */
+@keyframes ns-promo-kb {
+  from { transform: scale(1.0) translate(0, 0); }
+  to   { transform: scale(1.1) translate(-2%, -1%); }
+}
+
 .ns-promo-slot {
   padding: 0 1.25rem 1.75rem;
   background: var(--ns-dark);
@@ -236,7 +242,6 @@
   border-radius: var(--ns-radius-lg);
   overflow: hidden;
   aspect-ratio: 16 / 7;
-  cursor: pointer;
   background: var(--ns-surface);
   border: 1px solid var(--ns-border);
 }
@@ -247,10 +252,9 @@
   height: 100%;
   object-fit: cover;
   object-position: center 35%;
-  opacity: 0.55;
-  transition: opacity 400ms;
+  opacity: 0.6;
+  animation: ns-promo-kb 12s ease-in-out infinite alternate;
 }
-.ns-promo-slot__card:hover .ns-promo-slot__bg { opacity: 0.72; }
 .ns-promo-slot__video {
   position: absolute;
   inset: 0;
@@ -261,7 +265,7 @@
 .ns-promo-slot__overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(24, 13, 26, 0.65), rgba(124, 58, 237, 0.2));
+  background: linear-gradient(135deg, rgba(24, 13, 26, 0.62), rgba(124, 58, 237, 0.18));
 }
 .ns-promo-slot__content {
   position: absolute;
@@ -270,33 +274,34 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.65rem;
+  gap: 0.5rem;
 }
-.ns-promo-slot__play {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: rgba(236, 72, 153, 0.2);
-  border: 2px solid rgba(236, 72, 153, 0.5);
-  display: flex;
+/* CTA replaces the play button — honest, actionable */
+.ns-promo-slot__cta {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(8px);
-  transition: background 200ms, transform 200ms, box-shadow 200ms;
+  gap: 0.35rem;
+  padding: 0.68rem 1.6rem;
+  margin-top: 0.5rem;
+  background: var(--ns-pink);
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  font: 600 0.85rem / 1 var(--font-b);
+  cursor: pointer;
+  transition: background 200ms, transform 150ms, box-shadow 200ms;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 18px rgba(236, 72, 153, 0.42);
 }
-.ns-promo-slot__card:hover .ns-promo-slot__play {
-  background: rgba(236, 72, 153, 0.4);
-  transform: scale(1.1);
-  box-shadow: 0 0 30px rgba(236, 72, 153, 0.4);
+.ns-promo-slot__cta:hover { background: var(--ns-pink-dk); transform: translateY(-2px); box-shadow: 0 8px 26px rgba(236, 72, 153, 0.55);
 }
-.ns-promo-slot__play svg { width: 20px; height: 20px; color: #fff; fill: #fff; margin-left: 3px; }
-.ns-promo-slot__label {
+.ns-promo-slot__headline {
   font: 400 1.05rem / 1.2 var(--font-d);
   color: #fff;
   text-align: center;
   letter-spacing: 0.01em;
 }
-.ns-promo-slot__sub {
+.ns-promo-slot__tagline {
   font: 400 0.72rem / 1 var(--font-b);
   color: rgba(255, 255, 255, 0.55);
 }
@@ -329,11 +334,13 @@
 }
 
 .ns-feat-card {
+  /* No explicit height/aspect-ratio — the image defines card height intrinsically.
+     This avoids the grid+absolute-child sizing bug where browsers resolve grid track
+     heights before propagating them to position:absolute descendants. */
   position: relative;
   border-radius: var(--ns-radius);
   overflow: hidden;
   cursor: pointer;
-  aspect-ratio: 3 / 4;
   background: var(--ns-surface);
   border: 1px solid var(--ns-border);
   transition: transform 250ms, box-shadow 250ms;
@@ -341,11 +348,13 @@
 .ns-feat-card:hover { transform: translateY(-4px); box-shadow: 0 16px 44px rgba(236, 72, 153, 0.3); }
 
 .ns-feat-card__img {
-  position: absolute;
-  inset: 0;
+  /* Image is in normal flow — its aspect-ratio defines the card's height.
+     Overlay and content use position:absolute against the card (position:relative). */
+  display: block;
   width: 100%;
-  height: 100%;
+  aspect-ratio: 3 / 4;
   object-fit: cover;
+  min-height: 180px; /* fallback for browsers without aspect-ratio support */
   transition: transform 500ms ease;
 }
 .ns-feat-card:hover .ns-feat-card__img { transform: scale(1.07); }

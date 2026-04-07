@@ -234,19 +234,24 @@
       var reqStartMins = _toMins(draft.time);
       var reqEndMins   = reqStartMins + totalMins;
 
-      // ── Closing-time check ────────────────────────────────────────────────────
-      var closeMins = _salonCloseMins(biz, draft.date);
-      if (closeMins === -1) {
-        return Promise.resolve({ valid: false, message: _buildMsg(biz, 'closed', { day: _dayName(draft.date), lang: draft.lang }) });
-      }
-      if (reqEndMins > closeMins) {
-        var latest = closeMins - totalMins;
-        return Promise.resolve({ valid: false, message: _buildMsg(biz, 'too_late', {
-          totalMins: totalMins,
-          close:     _fromMins(closeMins),
-          latest:    latest > 0 ? _fromMins(latest) : 'N/A',
-          lang:      draft.lang
-        })});
+      // ── Closing-time check — named staff only (mirrors pre-v3.1 behaviour) ──
+      // 'Any' staff bookings skip this: Claude handles open/closed via the prompt,
+      // and the old code intentionally bypassed this check for 'any' requests.
+      var closeMins = null;
+      if (checkStaff) {
+        closeMins = _salonCloseMins(biz, draft.date);
+        if (closeMins === -1) {
+          return Promise.resolve({ valid: false, message: _buildMsg(biz, 'closed', { day: _dayName(draft.date), lang: draft.lang }) });
+        }
+        if (reqEndMins > closeMins) {
+          var latest = closeMins - totalMins;
+          return Promise.resolve({ valid: false, message: _buildMsg(biz, 'too_late', {
+            totalMins: totalMins,
+            close:     _fromMins(closeMins),
+            latest:    latest > 0 ? _fromMins(latest) : 'N/A',
+            lang:      draft.lang
+          })});
+        }
       }
 
       return db.collection('vendors').doc(biz.id)

@@ -566,9 +566,11 @@
   window.nsScrollToBooking = nsScrollToBooking;
 
   function renderNailsHero(biz) {
-    var heroBg = biz.heroImage
-      ? 'background-image:url(' + escAttr(biz.heroImage) + ');background-size:cover;background-position:center 30%;'
-      : 'background:' + (biz.heroGradient || 'linear-gradient(135deg,#831843,#4c1d95)') + ';';
+    // Use local owned asset for hero; multi-layer bg so gradient shows if image fails
+    var HERO_IMG = '/images/nails-1.jpg';
+    var heroBg = 'background-image:url(' + HERO_IMG + '),' +
+      (biz.heroGradient || 'linear-gradient(135deg,#831843,#4c1d95)') + ';' +
+      'background-size:cover;background-position:center 25%;';
     var hasAddr = !!(biz.address || biz.phone);
     var addrHtml = hasAddr
       ? '<div class="ns-hero__address">' +
@@ -580,25 +582,27 @@
     var chipsHtml = '<div class="ns-hero__chips">' +
       '<span class="ns-hero__chip">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M12 2l2.09 6.26L20 9.27l-4.91 4.79 1.18 6.88L12 17.77l-6.27 3.17 1.18-6.88L2 9.27l5.91-1.01z"/></svg>' +
-        ' 5\u2605 Google Reviews' +
+        ' 10+ N\u0103m Kinh Nghi\u1ec7m' +
       '</span>' +
       '<span class="ns-hero__chip">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' +
-        ' S\u1ea3n ph\u1ea9m an to\xe0n' +
+        ' S\u1ea3n Ph\u1ea9m An To\xe0n' +
       '</span>' +
       '<span class="ns-hero__chip">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
-        ' \u0110\u1eb7t l\u1ecbch nhanh' +
+        ' Walk-in Welcome' +
       '</span>' +
     '</div>';
+
+    var arrowRightIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
 
     return '<div class="ns-hero' + (hasAddr ? ' ns-hero--has-address' : '') + '">' +
       '<div class="ns-hero__bg" style="' + heroBg + '"></div>' +
       '<div class="ns-hero__overlay"></div>' +
       '<div class="ns-hero__content">' +
-        '<div class="ns-hero__region">' + escHtml(biz.region) + ' \xb7 ' + escHtml(biz.city) + '</div>' +
+        '<div class="ns-hero__region">' + escHtml(biz.region || 'Bay Area') + ' \xb7 ' + escHtml(biz.city || 'San Jose') + '</div>' +
         '<h1 class="ns-hero__name">' + escHtml(biz.name) + '</h1>' +
-        '<p class="ns-hero__tagline">' + escHtml(biz.tagline) + '</p>' +
+        '<p class="ns-hero__tagline">' + escHtml(biz.tagline || 'Premium nail care \xb7 Luxurious spa treatments') + '</p>' +
         chipsHtml +
         '<div class="ns-hero__ctas">' +
           '<button class="ns-btn-book" type="button" ' +
@@ -606,6 +610,10 @@
             calendarIcon + ' \u0110\u1eb7t L\u1ecbch Ngay' +
           '</button>' +
           (biz.phone ? '<a href="tel:' + biz.phone + '" class="ns-btn-call">' + phoneIcon + ' G\u1ecdi ngay</a>' : '') +
+          '<button class="ns-btn-services" type="button" ' +
+            'onclick="document.getElementById(\'ns-feat-' + biz.id + '\').scrollIntoView({behavior:\'smooth\'})">' +
+            arrowRightIcon + ' Xem D\u1ecbch V\u1ee5' +
+          '</button>' +
         '</div>' +
       '</div>' +
       addrHtml +
@@ -613,49 +621,87 @@
   }
 
   function renderNailsFeatured(biz) {
+    // 6 premium services — portrait grid, 2×3 on mobile, 3×2 on tablet+
+    var FALLBACK = 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&auto=format&fit=crop&q=60';
     var feats = [
-      { key: 'manicure', label: 'Manicure',      cat: 'Nail Care',        meta: 'T\u1eeb $18',  img: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=80' },
-      { key: 'pedicure', label: 'Pedicure',       cat: 'Foot Care',        meta: 'T\u1eeb $30',  img: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=600&auto=format&fit=crop&q=80' },
-      { key: 'acrylic',  label: 'Acrylic & Gel',  cat: 'Extensions',       meta: 'T\u1eeb $45',  img: 'https://images.unsplash.com/photo-1632345031435-8727f592d8db?w=600&auto=format&fit=crop&q=80' },
-      { key: 'nailart',  label: 'Nail Art',        cat: 'Design & Art',     meta: 'T\u1eeb $25',  img: 'https://images.unsplash.com/photo-1636018492665-21ce4ac4e0f1?w=600&auto=format&fit=crop&q=80' }
+      {
+        key: 'manicure', label: 'Classic Manicure', cat: 'Nail Care',
+        dur: '45 min', price: 'T\u1eeb $18', benefit: 'Shaped, buffed & perfectly polished',
+        img: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=82'
+      },
+      {
+        key: 'gel', label: 'Gel Manicure', cat: 'Long-Lasting',
+        dur: '60 min', price: 'T\u1eeb $38', benefit: 'Chip-free up to 3 weeks',
+        img: 'https://images.unsplash.com/photo-1604902396830-aca29e19b067?w=600&auto=format&fit=crop&q=82'
+      },
+      {
+        key: 'pedicure', label: 'Pedicure', cat: 'Foot Care',
+        dur: '50 min', price: 'T\u1eeb $30', benefit: 'Soak, exfoliate & refresh',
+        img: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=600&auto=format&fit=crop&q=82'
+      },
+      {
+        key: 'acrylic', label: 'Acrylic Extensions', cat: 'Extensions',
+        dur: '75 min', price: 'T\u1eeb $45', benefit: 'Sculpted for strength & shape',
+        img: 'https://images.unsplash.com/photo-1632345031435-8727f592d8db?w=600&auto=format&fit=crop&q=82'
+      },
+      {
+        key: 'nailart', label: 'Nail Art', cat: 'Design & Art',
+        dur: '90 min', price: 'T\u1eeb $25', benefit: 'Bespoke hand-painted designs',
+        img: 'https://images.unsplash.com/photo-1636018492665-21ce4ac4e0f1?w=600&auto=format&fit=crop&q=82'
+      },
+      {
+        key: 'spa', label: 'Spa Package', cat: 'Luxury Spa',
+        dur: '90 min', price: 'T\u1eeb $65', benefit: 'Mani + pedi + hot stone ritual',
+        img: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&auto=format&fit=crop&q=82'
+      }
     ];
     var cardsHtml = feats.map(function (f) {
       return '<div class="ns-feat-card" role="button" tabindex="0" ' +
         'onclick="window.nsScrollToBooking(\'' + escAttr(biz.id) + '\',\'' + f.key + '\')" ' +
         'onkeydown="if(event.key===\'Enter\'||event.key===\' \')this.click()" ' +
-        'aria-label="' + escAttr(f.label) + '">' +
-        '<img class="ns-feat-card__img" src="' + escAttr(f.img) + '" alt="" loading="lazy" aria-hidden="true">' +
+        'aria-label="' + escAttr(f.label) + ' — ' + escAttr(f.price) + '">' +
+        '<img class="ns-feat-card__img" src="' + escAttr(f.img) + '" ' +
+          'onerror="this.onerror=null;this.src=\'' + FALLBACK + '\'" ' +
+          'alt="" loading="lazy" aria-hidden="true">' +
         '<div class="ns-feat-card__overlay"></div>' +
         '<div class="ns-feat-card__content">' +
           '<div class="ns-feat-card__cat">' + escHtml(f.cat) + '</div>' +
           '<div class="ns-feat-card__name">' + escHtml(f.label) + '</div>' +
-          '<div class="ns-feat-card__meta">' + escHtml(f.meta) + '</div>' +
+          '<div class="ns-feat-card__meta">' + escHtml(f.dur) + ' \xb7 ' + escHtml(f.price) + '</div>' +
+          '<div class="ns-feat-card__benefit">' + escHtml(f.benefit) + '</div>' +
+          '<span class="ns-feat-card__book" aria-hidden="true">Book \u2192</span>' +
         '</div>' +
       '</div>';
     }).join('');
 
-    return '<section class="ns-featured">' +
+    return '<section class="ns-featured" id="ns-feat-' + biz.id + '">' +
       '<div class="ns-section-heading-wrap">' +
         '<h2 class="ns-section-heading">D\u1ecbch V\u1ee5 C\u1ee7a Ch\xfang T\xf4i</h2>' +
-        '<p class="ns-section-sub">Nh\u1ea5n v\xe0o \u0111\u1ec3 \u0111\u1eb7t l\u1ecbch ngay</p>' +
+        '<p class="ns-section-sub">Ch\u1ecdn d\u1ecbch v\u1ee5 \u2014 h\u1eb9n l\u1ecbch ch\xed trong 30 gi\xe2y</p>' +
       '</div>' +
       '<div class="ns-feat-grid">' + cardsHtml + '</div>' +
     '</section>';
   }
 
   function renderNailsPromoSlot(biz) {
+    // Background: img tag with object-fit:cover (CSS Pass 3 sets object-fit on .ns-promo-slot__bg)
+    // Play button scrolls to booking section — video hook ready for /videos/salon-promo.mp4 (Remotion)
+    var playOnclick = 'document.getElementById(\'nailBookSection_' + biz.id + '\').scrollIntoView({behavior:\'smooth\'})';
     return '<section class="ns-promo-slot">' +
       '<div class="ns-promo-slot__card">' +
         '<img class="ns-promo-slot__bg" src="/images/nails-2.jpg" ' +
-          'onerror="this.src=\'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=800&auto=format&fit=crop&q=80\'" ' +
+          'onerror="this.onerror=null;this.src=\'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=900&auto=format&fit=crop&q=80\'" ' +
           'alt="" loading="lazy" aria-hidden="true">' +
         '<div class="ns-promo-slot__overlay"></div>' +
+        '<div class="ns-promo-slot__badge">Salon Showcase</div>' +
         '<div class="ns-promo-slot__content">' +
-          '<div class="ns-promo-slot__badge">Salon Tour</div>' +
-          '<button class="ns-promo-slot__play" type="button" aria-label="Play salon tour video">' +
+          '<button class="ns-promo-slot__play" type="button" ' +
+            'aria-label="Xem showcase salon \u2014 \u0111\u1eb7t l\u1ecbch ngay" ' +
+            'onclick="' + playOnclick + '">' +
             '<svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><polygon points="5 3 19 12 5 21 5 3"/></svg>' +
           '</button>' +
-          '<p class="ns-promo-slot__caption">Kh\xe1m ph\xe1 kh\xf4ng gian sang tr\u1ecdng c\u1ee7a ch\xfang t\xf4i</p>' +
+          '<p class="ns-promo-slot__label">Kh\xf4ng gian sang tr\u1ecdng</p>' +
+          '<p class="ns-promo-slot__sub">Premium tools \xb7 Safe products \xb7 Expert team</p>' +
         '</div>' +
       '</div>' +
     '</section>';

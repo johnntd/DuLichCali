@@ -810,8 +810,58 @@
 }
 .ns-book-svc-item:hover .ns-book-svc-item__arrow { transform: translateX(3px); }
 
-/* Selected service badge (top of form step) */
-.ns-selected-svc-badge { padding: 0 0 0.9rem; }
+/* Multi-selected state */
+.ns-book-svc-item--selected {
+  background: rgba(236, 72, 153, 0.14);
+  border-color: var(--ns-pink);
+}
+.ns-book-svc-item--selected .ns-book-svc-item__arrow {
+  color: var(--ns-pink);
+}
+.ns-book-svc-item--selected .ns-book-svc-item__arrow::before {
+  content: '\2713';
+}
+/* Sticky multi-select confirm bar (bottom of service list view) */
+.ns-svc-select-bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  padding: .85rem 1.25rem .95rem;
+  background: rgba(24, 13, 26, 0.97);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--ns-border);
+  z-index: 10;
+}
+.ns-svc-select-bar__info { flex: 1; min-width: 0; }
+.ns-svc-select-bar__count {
+  font: 600 .84rem/1.2 var(--font-b);
+  color: #fff;
+}
+.ns-svc-select-bar__dur {
+  font: 400 .7rem/1.4 var(--font-b);
+  color: var(--ns-muted);
+}
+.ns-svc-select-bar__cta {
+  flex-shrink: 0;
+  background: var(--ns-pink);
+  color: #fff;
+  border: none;
+  border-radius: 99px;
+  font: 600 .84rem/1 var(--font-b);
+  padding: .62em 1.4em;
+  cursor: pointer;
+  white-space: nowrap;
+  touch-action: manipulation;
+  transition: background 150ms;
+}
+.ns-svc-select-bar__cta:hover,
+.ns-svc-select-bar__cta:focus-visible { background: var(--ns-pink-dk); outline: none; }
+
+/* Selected service badge (top of form step) — stacks for multi-select */
+.ns-selected-svc-badge { padding: 0 0 0.9rem; display: flex; flex-direction: column; gap: .4rem; }
 .ns-svc-badge {
   display: inline-flex;
   align-items: center;

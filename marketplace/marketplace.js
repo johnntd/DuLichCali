@@ -586,63 +586,124 @@
     if (formView) formView.style.display = 'none';
     svcView.style.display = '';
 
+    _nsUpdateSelectionUI(bizId);
+
     var section = document.getElementById('nailBookSection_' + bizId);
     if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
   window.nsShowServiceList = nsShowServiceList;
 
-  // Step 2 → Step 3: user picked a specific service — pre-check it and show form
+  // Step 2 → toggle selection: tap adds/removes service, sticky bar lets user confirm
   function nsSelectService(bizId, serviceName, durationMins, catKey) {
-    var catView  = document.getElementById('nbCatView_'     + bizId);
-    var svcView  = document.getElementById('nbSvcView_'     + bizId);
-    var formView = document.getElementById('nbFormView_'    + bizId);
-    var badgeEl  = document.getElementById('nbSelectedSvc_' + bizId);
-    var svcDiv   = document.getElementById('nbServices_'    + bizId);
-    if (!formView || !svcDiv) return;
+    window._nbSelections = window._nbSelections || {};
+    if (!window._nbSelections[bizId]) window._nbSelections[bizId] = [];
 
     window._nbState = window._nbState || {};
     if (!window._nbState[bizId]) window._nbState[bizId] = {};
     window._nbState[bizId].cat = catKey || (window._nbState[bizId] && window._nbState[bizId].cat);
 
-    // Uncheck all hidden checkboxes, then check the selected service
-    var allChks = svcDiv.querySelectorAll('.nb-svc-chk');
-    for (var i = 0; i < allChks.length; i++) { allChks[i].checked = false; }
-    for (var j = 0; j < allChks.length; j++) {
-      if (allChks[j].value === serviceName) {
-        allChks[j].checked = true;
-        // Fire change event so initNailBookingForm's duration listener updates nbDurRow
-        var evt = document.createEvent('Event');
-        evt.initEvent('change', true, true);
-        allChks[j].dispatchEvent(evt);
-        break;
+    // Toggle: remove if already selected, add if not
+    var sels = window._nbSelections[bizId];
+    var idx = -1;
+    for (var i = 0; i < sels.length; i++) {
+      if (sels[i].name === serviceName) { idx = i; break; }
+    }
+    if (idx >= 0) {
+      sels.splice(idx, 1);
+    } else {
+      sels.push({ name: serviceName, durationMins: durationMins || 60, catKey: catKey });
+    }
+
+    _nsUpdateSelectionUI(bizId);
+  }
+  window.nsSelectService = nsSelectService;
+
+  // Update item highlights + sticky confirm bar based on current selections
+  function _nsUpdateSelectionUI(bizId) {
+    var sels = (window._nbSelections && window._nbSelections[bizId]) || [];
+    var svcLists = document.getElementById('nbSvcLists_' + bizId);
+    if (svcLists) {
+      var items = svcLists.querySelectorAll('.ns-book-svc-item');
+      for (var i = 0; i < items.length; i++) {
+        var svcName = items[i].getAttribute('data-svc-name');
+        var isSelected = false;
+        for (var j = 0; j < sels.length; j++) {
+          if (sels[j].name === svcName) { isSelected = true; break; }
+        }
+        items[i].classList.toggle('ns-book-svc-item--selected', isSelected);
+      }
+    }
+    var bar = document.getElementById('nbSelectBar_' + bizId);
+    if (bar) {
+      if (sels.length > 0) {
+        var totalMins = 0;
+        for (var m = 0; m < sels.length; m++) { totalMins += (sels[m].durationMins || 0); }
+        var countEl = document.getElementById('nbSelectCount_' + bizId);
+        var durEl   = document.getElementById('nbSelectDur_'   + bizId);
+        if (countEl) countEl.textContent = sels.length + ' d\u1ecbch v\u1ee5';
+        if (durEl)   durEl.textContent   = totalMins + ' ph\xfat';
+        bar.style.display = 'flex';
+      } else {
+        bar.style.display = 'none';
+      }
+    }
+  }
+
+  // Confirm selection: sync checkboxes, build badge, show booking form
+  function nsConfirmSelection(bizId) {
+    var sels = (window._nbSelections && window._nbSelections[bizId]) || [];
+    if (!sels.length) return;
+
+    var svcDiv  = document.getElementById('nbServices_'    + bizId);
+    var badgeEl = document.getElementById('nbSelectedSvc_' + bizId);
+    var catView  = document.getElementById('nbCatView_'    + bizId);
+    var svcView  = document.getElementById('nbSvcView_'    + bizId);
+    var formView = document.getElementById('nbFormView_'   + bizId);
+
+    // Sync hidden checkboxes to selection state
+    if (svcDiv) {
+      var allChks = svcDiv.querySelectorAll('.nb-svc-chk');
+      for (var i = 0; i < allChks.length; i++) { allChks[i].checked = false; }
+      for (var i = 0; i < allChks.length; i++) {
+        for (var j = 0; j < sels.length; j++) {
+          if (allChks[i].value === sels[j].name) {
+            allChks[i].checked = true;
+            var evt = document.createEvent('Event');
+            evt.initEvent('change', true, true);
+            allChks[i].dispatchEvent(evt);
+            break;
+          }
+        }
       }
     }
 
-    // Selected-service badge at top of form view
+    // Build badge showing all selected services + change button
     if (badgeEl) {
-      badgeEl.innerHTML =
-        '<div class="ns-svc-badge">' +
-          '<span class="ns-svc-badge__name">' + escHtml(serviceName) + '</span>' +
-          (durationMins ? '<span class="ns-svc-badge__meta">' + durationMins + ' min</span>' : '') +
-          '<button type="button" class="ns-svc-badge__change" ' +
-            'onclick="window.nsBackToSvcList(\'' + escAttr(bizId) + '\')">' +
-            '\u0110\u1ed5i' +
-          '</button>' +
+      badgeEl.innerHTML = sels.map(function (sel) {
+        return '<div class="ns-svc-badge">' +
+          '<span class="ns-svc-badge__name">' + escHtml(sel.name) + '</span>' +
+          (sel.durationMins ? '<span class="ns-svc-badge__meta">' + sel.durationMins + ' min</span>' : '') +
         '</div>';
+      }).join('') +
+      '<button type="button" class="ns-svc-badge__change" ' +
+        'onclick="window.nsBackToSvcList(\'' + escAttr(bizId) + '\')">' +
+        '\u0110\u1ed5i d\u1ecbch v\u1ee5' +
+      '</button>';
       badgeEl.style.display = '';
     }
 
     if (catView)  catView.style.display  = 'none';
     if (svcView)  svcView.style.display  = 'none';
-    formView.style.display = '';
+    if (formView) formView.style.display = '';
 
     var section = document.getElementById('nailBookSection_' + bizId);
     if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
-  window.nsSelectService = nsSelectService;
+  window.nsConfirmSelection = nsConfirmSelection;
 
-  // Any view → Step 1: back to category grid
+  // Any view → Step 1: back to category grid — clears selections
   function nsBackToCats(bizId) {
+    if (window._nbSelections) window._nbSelections[bizId] = [];
     var catView  = document.getElementById('nbCatView_'  + bizId);
     var svcView  = document.getElementById('nbSvcView_'  + bizId);
     var formView = document.getElementById('nbFormView_' + bizId);
@@ -1057,6 +1118,7 @@
           meta.push(typeof s.price === 'number' ? '$' + s.price : s.price);
         }
         return '<div class="ns-book-svc-item" role="button" tabindex="0" ' +
+          'data-svc-name="' + escAttr(s.name) + '" ' +
           'onclick="window.nsSelectService(\'' + escAttr(biz.id) + '\',\'' + escAttr(s.name) + '\',' + (s.durationMins || 60) + ',\'' + escAttr(c.key) + '\')" ' +
           'onkeydown="if(event.key===\'Enter\'||event.key===\' \')this.click()" ' +
           'aria-label="' + escAttr(s.name) + (meta.length ? ' \u2014 ' + escAttr(meta.join(' \xb7 ')) : '') + '">' +
@@ -1174,6 +1236,16 @@
           '<h3 class="ns-book-cat-heading" id="nbSvcViewTitle_' + biz.id + '"></h3>' +
         '</div>' +
         '<div id="nbSvcLists_' + biz.id + '">' + svcListsHtml + '</div>' +
+        '<div class="ns-svc-select-bar" id="nbSelectBar_' + biz.id + '" style="display:none">' +
+          '<div class="ns-svc-select-bar__info">' +
+            '<div class="ns-svc-select-bar__count" id="nbSelectCount_' + biz.id + '"></div>' +
+            '<div class="ns-svc-select-bar__dur" id="nbSelectDur_' + biz.id + '"></div>' +
+          '</div>' +
+          '<button class="ns-svc-select-bar__cta" type="button" ' +
+            'onclick="window.nsConfirmSelection(\'' + escAttr(biz.id) + '\')">' +
+            '\u0110\u1eb7t L\u1ecbch \u2192' +
+          '</button>' +
+        '</div>' +
       '</div>' +
 
       // ── VIEW 3: Booking form ─────────────────────────────────────────────────

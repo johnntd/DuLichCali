@@ -634,109 +634,126 @@
   white-space: nowrap;
 }
 
-/* Featured popular-services carousel */
-.ns-book-featured-wrap { padding: 0 0 1.5rem; }
-.ns-book-featured-label {
-  font: 600 0.62rem / 1 var(--font-b);
-  color: var(--ns-pink);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  margin-bottom: 0.65rem;
-}
-.ns-book-featured {
-  display: flex;
-  gap: 0.65rem;
-  overflow-x: auto;
-  padding-bottom: 0.35rem;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-.ns-book-featured::-webkit-scrollbar { display: none; }
-.ns-book-feat-card {
-  flex: 0 0 128px;
+/* ── Category hero carousel — mirrors main page .hc fade-slide pattern ────── */
+.ns-cat-hc {
   position: relative;
+  height: 54vh;
+  min-height: 268px;
+  max-height: 430px;
   border-radius: var(--ns-radius);
   overflow: hidden;
-  cursor: pointer;
-  scroll-snap-align: start;
-  background: var(--ns-surface);
-  border: 1px solid var(--ns-border);
-  transition: transform 200ms, box-shadow 200ms;
+  margin-bottom: 1.25rem;
+  user-select: none;
+  touch-action: pan-y;
 }
-.ns-book-feat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(236, 72, 153, 0.22);
+.ns-cat-hc__slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .55s ease;
 }
-.ns-book-feat-card__img {
-  display: block;
+.ns-cat-hc__slide--active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.ns-cat-hc__bg {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  aspect-ratio: 1 / 1;
+  height: 100%;
   object-fit: cover;
+  object-position: center;
 }
-.ns-book-feat-card__body { padding: 0.48rem 0.58rem 0.58rem; }
-.ns-book-feat-card__name {
-  font: 500 0.74rem / 1.25 var(--font-b);
+.ns-cat-hc__slide--active .ns-cat-hc__bg {
+  animation: nsCatKb 8s ease-out both;
+}
+@keyframes nsCatKb {
+  from { transform: scale(1.07); }
+  to   { transform: scale(1);    }
+}
+.ns-cat-hc__gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top,
+    rgba(10, 3, 20, .84) 0%,
+    rgba(10, 3, 20, .28) 52%,
+    transparent 100%);
+  pointer-events: none;
+}
+.ns-cat-hc__body {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 1.1rem 1.25rem 1.4rem;
+}
+.ns-cat-hc__chip {
+  display: inline-block;
+  background: var(--ns-pink);
   color: #fff;
-  margin-bottom: 0.16rem;
+  font: 500 .66rem/.95 var(--font-b);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: .22em .7em;
+  border-radius: 99px;
+  margin-bottom: .45rem;
+}
+.ns-cat-hc__title {
+  font: 400 2rem/1.08 var(--font-d);
+  font-style: italic;
+  color: #fff;
+  margin: 0 0 .28rem;
+}
+.ns-cat-hc__sub {
+  font: 300 .78rem/1.3 var(--font-b);
+  color: rgba(255, 255, 255, .72);
+  margin: 0 0 .85rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.ns-book-feat-card__meta {
-  font: 400 0.63rem / 1 var(--font-b);
-  color: var(--ns-muted);
-}
-
-/* Category hero card grid */
-.ns-book-cats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.65rem;
-  padding: 0 0 1.75rem;
-}
-.ns-book-cat-card {
-  position: relative;
-  border-radius: var(--ns-radius);
-  overflow: hidden;
-  cursor: pointer;
-  background: var(--ns-surface);
-  border: 1px solid var(--ns-border);
-  transition: transform 250ms, box-shadow 250ms;
-}
-.ns-book-cat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(236, 72, 153, 0.22);
-}
-.ns-book-cat-card__img {
-  display: block;
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-  transition: transform 400ms ease;
-}
-.ns-book-cat-card:hover .ns-book-cat-card__img { transform: scale(1.04); }
-.ns-book-cat-card__overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, transparent 20%, rgba(15, 8, 22, 0.8));
-  pointer-events: none;
-}
-.ns-book-cat-card__body {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 0.58rem 0.75rem 0.68rem;
-}
-.ns-book-cat-card__label {
-  font: 600 0.84rem / 1.2 var(--font-b);
+.ns-cat-hc__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: .35em;
+  background: rgba(255, 255, 255, .12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255, 255, 255, .38);
   color: #fff;
-  margin-bottom: 0.1rem;
+  border-radius: 99px;
+  font: 500 .82rem/1 var(--font-b);
+  padding: .56em 1.3em;
+  cursor: pointer;
+  letter-spacing: .02em;
+  transition: background 180ms, border-color 180ms;
 }
-.ns-book-cat-card__count {
-  font: 400 0.63rem / 1 var(--font-b);
-  color: rgba(255, 255, 255, 0.6);
+.ns-cat-hc__cta:hover,
+.ns-cat-hc__cta:focus-visible {
+  background: rgba(255, 255, 255, .24);
+  border-color: rgba(255, 255, 255, .6);
+  outline: none;
+}
+.ns-cat-hc__dots {
+  position: absolute;
+  bottom: .65rem;
+  right: 1rem;
+  display: flex;
+  gap: .32rem;
+  align-items: center;
+  z-index: 5;
+}
+.ns-cat-hc__dot {
+  height: 5px;
+  width: 5px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, .38);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: width .3s ease, background .3s ease;
+}
+.ns-cat-hc__dot--active {
+  width: 18px;
+  background: #fff;
 }
 
 /* Service item list (step 2) */
@@ -832,11 +849,10 @@
 
 /* Motion safety */
 @media (prefers-reduced-motion: reduce) {
-  .ns-book-cat-card:hover,
-  .ns-book-cat-card:hover .ns-book-cat-card__img,
-  .ns-book-feat-card:hover,
+  .ns-cat-hc__bg,
+  .ns-cat-hc__cta,
   .ns-book-svc-item:hover,
-  .ns-book-svc-item:hover .ns-book-svc-item__arrow { transform: none !important; transition: none !important; }
+  .ns-book-svc-item:hover .ns-book-svc-item__arrow { transform: none !important; transition: none !important; animation: none !important; }
 }
 
 /* Input overrides for nails */
@@ -1120,9 +1136,9 @@
 
   /* Booking */
   .ns-booking-section { padding: 2.5rem 2.5rem; }
-  /* Category grid: 3 columns on tablet */
-  .ns-book-cats-grid { grid-template-columns: repeat(3, 1fr); }
-  .ns-book-feat-card { flex: 0 0 148px; }
+  /* Category hero carousel: taller on tablet */
+  .ns-cat-hc { height: 56vh; min-height: 300px; }
+  .ns-cat-hc__title { font-size: 2.2rem; }
 
   /* Trust */
   .ns-trust { padding: 2.5rem 2.5rem; }
@@ -1155,9 +1171,9 @@
 
   /* Booking */
   .ns-booking-section { max-width: 1280px; margin-left: auto; margin-right: auto; padding-left: 3rem; padding-right: 3rem; }
-  /* Category grid: 4 columns on desktop */
-  .ns-book-cats-grid { grid-template-columns: repeat(4, 1fr); }
-  .ns-book-feat-card { flex: 0 0 168px; }
+  /* Category hero carousel: refined proportions on desktop */
+  .ns-cat-hc { height: 50vh; max-height: 500px; }
+  .ns-cat-hc__title { font-size: 2.6rem; }
 
   /* Trust */
   .ns-trust { max-width: 1280px; margin-left: auto; margin-right: auto; padding-left: 3rem; padding-right: 3rem; }

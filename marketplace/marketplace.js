@@ -661,6 +661,41 @@
   }
   window.nsBackToSvcList = nsBackToSvcList;
 
+  // ── Category hero carousel: slide navigation ──────────────────────────────
+  // _nsCatHcGoto — activate slide idx, sync dot indicators.
+  // Called by dot buttons (onclick) and touch-swipe handler.
+  function _nsCatHcGoto(bizId, idx) {
+    var hcEl = document.getElementById('nsCatHc_' + bizId);
+    if (!hcEl) return;
+    var slides = hcEl.querySelectorAll('.ns-cat-hc__slide');
+    var dots   = hcEl.querySelectorAll('.ns-cat-hc__dot');
+    slides.forEach(function (s, i) { s.classList.toggle('ns-cat-hc__slide--active', i === idx); });
+    dots.forEach(function   (d, i) { d.classList.toggle('ns-cat-hc__dot--active',   i === idx); });
+  }
+  window._nsCatHcGoto = _nsCatHcGoto;
+
+  // _initNsCatHc — attach touch-swipe event listeners after DOM insertion.
+  // Called from the renderSalonVendorDetail post-render block.
+  function _initNsCatHc(bizId) {
+    var hcEl = document.getElementById('nsCatHc_' + bizId);
+    if (!hcEl) return;
+    var slides  = hcEl.querySelectorAll('.ns-cat-hc__slide');
+    var n       = slides.length;
+    if (n < 2) return;
+    var current = 0, startX = 0;
+    hcEl.addEventListener('touchstart', function (e) {
+      startX = e.changedTouches[0].clientX;
+    }, { passive: true });
+    hcEl.addEventListener('touchend', function (e) {
+      var dx = e.changedTouches[0].clientX - startX;
+      if (Math.abs(dx) < 44) return;
+      current = dx < 0
+        ? Math.min(current + 1, n - 1)
+        : Math.max(current - 1, 0);
+      _nsCatHcGoto(bizId, current);
+    }, { passive: true });
+  }
+
   function renderNailsHero(biz) {
     // Use local owned asset for hero; multi-layer bg so gradient shows if image fails
     var HERO_IMG = '/images/nails-1.jpg';
@@ -982,16 +1017,71 @@
       }).join('');
     var today = new Date().toISOString().slice(0, 10);
 
+    // ── Category hero carousel — VIEW 1 discovery (mirrors main page .hc pattern) ──
+    // Ordered: categories with featured:true services first, then remaining.
+    // Each slide: category bg image + gradient overlay + name + count + CTA.
+    // Touch-swipe and dot nav wired in _initNsCatHc() after DOM insertion.
+    var _featCatOrder = (function () {
+      var src = firestoreSvcs.length > 0 ? firestoreSvcs : staticSvcs;
+      var seen = {}, keys = [];
+      src.filter(function (s) { return s.featured === true; }).forEach(function (s) {
+        if (s.category && !seen[s.category]) { seen[s.category] = true; keys.push(s.category); }
+      });
+      return keys;
+    }());
+    var _sortedCats = allCats.slice().sort(function (a, b) {
+      var ai = _featCatOrder.indexOf(a.key), bi = _featCatOrder.indexOf(b.key);
+      if (ai < 0 && bi < 0) return 0;
+      if (ai < 0) return 1;
+      if (bi < 0) return -1;
+      return ai - bi;
+    });
+    var _catSlides = _sortedCats.filter(function (c) { return _svcsFor(c.key).length > 0; });
+    var catSlidesHtml = _catSlides.map(function (c, i) {
+      var img      = catImages[c.key] || FALLBACK;
+      var count    = _svcsFor(c.key).length;
+      var previews = _svcsFor(c.key).slice(0, 3).map(function (s) { return s.name; }).join(' \xb7 ');
+      return '<div class="ns-cat-hc__slide' + (i === 0 ? ' ns-cat-hc__slide--active' : '') + '" ' +
+        'data-cat="' + escAttr(c.key) + '" data-idx="' + i + '">' +
+        '<img class="ns-cat-hc__bg" src="' + escAttr(img) + '" ' +
+          'onerror="this.onerror=null;this.src=\'' + FALLBACK + '\'" ' +
+          'alt="" ' + (i === 0 ? '' : 'loading="lazy" ') + 'aria-hidden="true">' +
+        '<div class="ns-cat-hc__gradient"></div>' +
+        '<div class="ns-cat-hc__body">' +
+          '<span class="ns-cat-hc__chip">' + count + ' d\u1ecbch v\u1ee5</span>' +
+          '<h3 class="ns-cat-hc__title">' + escHtml(c.label) + '</h3>' +
+          '<p class="ns-cat-hc__sub">' + escHtml(previews) + '</p>' +
+          '<button class="ns-cat-hc__cta" type="button" ' +
+            'onclick="window.nsShowServiceList(\'' + escAttr(biz.id) + '\',\'' + escAttr(c.key) + '\')">' +
+            'Xem D\u1ecbch V\u1ee5 \u2192' +
+          '</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    var catDotsHtml = _catSlides.length > 1
+      ? _catSlides.map(function (c, i) {
+          return '<span class="ns-cat-hc__dot' + (i === 0 ? ' ns-cat-hc__dot--active' : '') + '" ' +
+            'data-dot="' + i + '" role="button" tabindex="0" aria-label="' + escAttr(c.label) + '" ' +
+            'onclick="window._nsCatHcGoto(\'' + escAttr(biz.id) + '\',' + i + ')" ' +
+            'onkeydown="if(event.key===\'Enter\')window._nsCatHcGoto(\'' + escAttr(biz.id) + '\',' + i + ')"></span>';
+        }).join('')
+      : '';
+    var catHeroHtml = catSlidesHtml
+      ? '<div class="ns-cat-hc" id="nsCatHc_' + biz.id + '">' +
+          catSlidesHtml +
+          (catDotsHtml ? '<div class="ns-cat-hc__dots">' + catDotsHtml + '</div>' : '') +
+        '</div>'
+      : '';
+
     return '<section class="ns-booking-section" id="nailBookSection_' + biz.id + '">' +
 
-      // ── VIEW 1: Category grid + featured carousel ────────────────────────────
+      // ── VIEW 1: Category hero carousel ───────────────────────────────────────
       '<div class="ns-book-step" id="nbCatView_' + biz.id + '">' +
         '<div class="ns-section-heading-wrap">' +
           '<h2 class="ns-section-heading">\u0110\u1eb7t L\u1ecbch Ngay</h2>' +
           '<p class="ns-section-sub">Ch\u1ecdn d\u1ecbch v\u1ee5 v\xe0 th\u1eddi gian ph\xf9 h\u1ee3p</p>' +
         '</div>' +
-        featuredHtml +
-        '<div class="ns-book-cats-grid">' + catCardsHtml + '</div>' +
+        catHeroHtml +
       '</div>' +
 
       // ── VIEW 2: Service list for selected category ───────────────────────────
@@ -1808,6 +1898,7 @@
 
     if (isNails) {
       initNailBookingForm(biz);
+      _initNsCatHc(biz.id);
     } else if (biz.bookingEnabled) {
       initBookingForm(biz);
     }

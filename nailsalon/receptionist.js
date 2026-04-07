@@ -928,6 +928,26 @@
     ].join('\n');
   }
 
+  // ── Pending-confirmation messages (shown after avail check passes, before vendor confirms) ──
+  // These replace Claude's premature "confirmed" text.
+  // Status: AVAILABLE_NOT_CONFIRMED → shown to customer while waiting for vendor.
+  function _buildPendingConfirmMsg(biz, draft) {
+    var lang  = (draft && draft.lang) || (biz._bookingState && biz._bookingState.lang) || 'en';
+    var salon = biz.name || 'the salon';
+    if (lang === 'vi') return 'Yêu cầu của bạn đã được gửi đến ' + salon + ' và đang chờ xác nhận. Chúng tôi sẽ nhắn tin cho bạn ngay khi lịch được xác nhận.';
+    if (lang === 'es') return 'Su solicitud fue enviada a ' + salon + ' y está pendiente de confirmación. Le avisaremos por mensaje de texto en cuanto sea confirmada.';
+    return 'Your request has been sent to ' + salon + ' and is pending confirmation. We\'ll text you as soon as the salon confirms.';
+  }
+
+  // Shown at 60-second mark if vendor has not yet confirmed (status still PENDING_VENDOR_CONFIRMATION).
+  function _buildTextBackMsg(biz, draft) {
+    var lang  = (draft && draft.lang) || 'en';
+    var phone = draft && draft.phone ? draft.phone : null;
+    if (lang === 'vi') return 'Chưa nhận được xác nhận ngay lúc này. Chúng tôi sẽ gửi tin nhắn' + (phone ? ' đến ' + phone : '') + ' khi tiệm xác nhận lịch hẹn của bạn.';
+    if (lang === 'es') return 'Aún no tenemos confirmación inmediata. Le enviaremos un mensaje' + (phone ? ' a ' + phone : '') + ' en cuanto el salón confirme su cita.';
+    return 'No confirmation yet. We\'ll text you' + (phone ? ' at ' + phone : '') + ' once the salon confirms your appointment.';
+  }
+
   // ── Fallback (no API key / network error) ────────────────────────────────────
   // Must handle: yes/no follow-ups, open-now questions, staff queries, bookings.
   // Uses biz._aiHistory to understand context (last AI message = pending question).
@@ -1282,16 +1302,46 @@
               NailAvailabilityChecker.check(biz, draft)
                 .then(function (avail) {
                   if (avail.valid) {
-                    // Available — show confirmation, finalise state, escalate.
-                    _appendMessage(messagesEl, result.text, 'bot');
-                    // Finalise: booking is confirmed — now safe to clear state and draft.
+                    // Slot passes all checks — but vendor has NOT confirmed yet.
+                    // Status: AVAILABLE_NOT_CONFIRMED.
+                    // Replace Claude's premature "confirmed" text with a pending message.
+                    if (biz._aiHistory && biz._aiHistory.length &&
+                        biz._aiHistory[biz._aiHistory.length - 1].role === 'assistant') {
+                      biz._aiHistory.pop();
+                    }
+                    var pendingConfirmMsg = _buildPendingConfirmMsg(biz, draft);
+                    biz._aiHistory.push({ role: 'assistant', content: pendingConfirmMsg });
+                    _saveHistory(biz);
+                    _appendMessage(messagesEl, pendingConfirmMsg, 'bot');
+
+                    // Finalise booking state — request is submitted, slot is held.
                     biz._bookingState = _emptyState();
                     _saveBookingState(biz);
+
+                    // Capture draft values needed for callbacks before nulling the draft
+                    var draftLang  = draft.lang;
+                    var draftPhone = draft.phone;
                     biz._bookingDraft = null;
+
+                    // Escalate: EscalationEngine writes to Firestore + shows spinner +
+                    // fires onSnapshot when vendor confirms/declines (up to 20 min).
                     var esc = window.EscalationEngine;
                     if (esc && typeof esc.create === 'function') {
                       esc.create(biz, messagesEl, result.escalationType, draft);
                     }
+
+                    // 60-second text-back gate.
+                    // If vendor has not confirmed by then, tell customer to expect a text.
+                    // Guard: skip if EscalationEngine already placed a confirmed bubble.
+                    setTimeout(function () {
+                      var confirmed = messagesEl.querySelector('.mp-ai__bubble--vendor-confirmed');
+                      if (!confirmed) {
+                        var tbMsg = _buildTextBackMsg(biz, { lang: draftLang, phone: draftPhone });
+                        _appendMessage(messagesEl, tbMsg, 'bot');
+                        biz._aiHistory.push({ role: 'assistant', content: tbMsg });
+                        _saveHistory(biz);
+                      }
+                    }, 60000);
                   } else {
                     // Not available — suppress Claude's premature "confirmed" message.
                     // Replace it in history with the rejection so Claude knows what was

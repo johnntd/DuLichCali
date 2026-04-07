@@ -144,27 +144,34 @@
       return aStart < bEnd && aEnd > bStart;
     }
 
-    // Returns true if named staff is scheduled to work on dateStr (YYYY-MM-DD),
-    // false if explicitly off, null if schedule data is unavailable (can't validate).
-    // Safe policy: staff member found with schedule → missing day = off (false).
-    //              staff member not found / no biz.staff → unknown (null = pass through).
+    // Returns {open: mins, close: mins} if named staff is scheduled to work on dateStr
+    // AND has valid shift hours. Returns null in ALL other cases.
+    // Safe policy (per system rules): null = NOT AVAILABLE — missing/unclear data blocks booking.
+    //   • staff not in biz.staff        → null → block
+    //   • staff has no schedule         → null → block
+    //   • day absent from schedule      → null → block
+    //   • day explicitly off            → null → block
+    //   • no open/start time on record  → null → block
     var _staffShortKey = { monday:'mon', tuesday:'tue', wednesday:'wed', thursday:'thu', friday:'fri', saturday:'sat', sunday:'sun' };
-    function _staffWorksOnDate(biz, staffName, dateStr) {
+    function _getStaffShift(biz, staffName, dateStr) {
       if (!biz || !biz.staff || !biz.staff.length || !staffName || !dateStr) return null;
       var keyLower = staffName.toLowerCase().trim();
       var member = null;
       for (var i = 0; i < biz.staff.length; i++) {
-        if ((biz.staff[i].name || '').toLowerCase().trim() === keyLower) { member = biz.staff[i]; break; }
+        var nm = (biz.staff[i].name || '').toLowerCase().trim();
+        // Partial-match: handles "Tracy" matching "Tracy Nguyen" and vice-versa
+        if (nm === keyLower || nm.indexOf(keyLower) >= 0 || keyLower.indexOf(nm) >= 0) {
+          member = biz.staff[i]; break;
+        }
       }
-      if (!member) return null; // staff not found — can't validate
-      if (!member.schedule) return false; // found but no schedule → treat as unavailable
+      if (!member || !member.schedule) return null;
       var dayName = _dayName(dateStr);
       var sched = member.schedule[dayName] || member.schedule[_staffShortKey[dayName]];
-      if (!sched) return false; // day absent → off
-      if (sched.active === false) return false;
-      var open = sched.open || sched.start;
-      if (!open) return false; // no hours → off
-      return true;
+      if (!sched || sched.active === false) return null;
+      var openStr  = sched.open  || sched.start;
+      var closeStr = sched.close || sched.end;
+      if (!openStr) return null;
+      return { open: _toMins(openStr), close: closeStr ? _toMins(closeStr) : (19 * 60 + 30) };
     }
 
     // Walk forward from reqStart in SLOT_STEP increments; return first non-conflicting slot for named staff
@@ -226,6 +233,15 @@
         return sn + ' is not working on ' + day + '. Would you like to pick a different day or a different technician?';
       }
 
+      if (key === 'outside_shift') {
+        var sn2    = data.staff || 'That technician';
+        var hours  = data.open + ' – ' + data.close;
+        var latStr = data.latest ? (' ' + (lang === 'vi' ? 'Giờ bắt đầu muộn nhất là ' + data.latest + '.' : lang === 'es' ? 'La última hora disponible es ' + data.latest + '.' : 'The latest start is ' + data.latest + '.')) : '';
+        if (lang === 'vi') return sn2 + ' làm từ ' + data.open + ' đến ' + data.close + '.' + latStr + ' Bạn muốn chọn giờ khác không?';
+        if (lang === 'es') return sn2 + ' trabaja de ' + data.open + ' a ' + data.close + '.' + latStr + ' ¿Le gustaría elegir otro horario?';
+        return sn2 + ' works ' + hours + '.' + latStr + ' Would you like to choose a different time?';
+      }
+
       if (key === 'customer_conflict') {
         var existSvcs  = Array.isArray(data.services) && data.services.length ? data.services.join(' + ') : 'an appointment';
         var existStaff = data.staff && data.staff.toLowerCase() !== 'any' ? ' with ' + data.staff : '';
@@ -279,17 +295,29 @@
         }
       }
 
-      // ── Staff working-day check (hard gate, no Firestore needed) ──────────────
-      // Must run BEFORE Firestore queries: if staff is off that day, reject immediately.
-      // null = unknown (data not loaded) → pass through (fail-open).
-      // false = confirmed off → reject.
+      // ── isWorkingDay AND isWithinShift (hard gates, no Firestore needed) ────────
+      // _getStaffShift returns {open,close} mins when staff works, null otherwise.
+      // null covers: off that day, no schedule data, staff not found — all block.
+      // Both gates must pass before Firestore conflict queries run.
       if (checkStaff) {
-        var worksOnDate = _staffWorksOnDate(biz, draft.staff, draft.date);
-        if (worksOnDate === false) {
+        var shift = _getStaffShift(biz, draft.staff, draft.date);
+        if (shift === null) {
+          // isWorkingDay failed (off that day, or missing schedule data)
           return Promise.resolve({ valid: false, message: _buildMsg(biz, 'staff_not_working', {
             staff: draft.staff,
             day:   _dayName(draft.date),
             lang:  draft.lang
+          })});
+        }
+        // isWithinShift: booking must start at or after shift open, end at or before shift close
+        if (reqStartMins < shift.open || reqEndMins > shift.close) {
+          var shiftLatest = shift.close - totalMins;
+          return Promise.resolve({ valid: false, message: _buildMsg(biz, 'outside_shift', {
+            staff:  draft.staff,
+            open:   _fromMins(shift.open),
+            close:  _fromMins(shift.close),
+            latest: shiftLatest > shift.open ? _fromMins(shiftLatest) : null,
+            lang:   draft.lang
           })});
         }
       }

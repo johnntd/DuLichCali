@@ -1,4 +1,4 @@
-// Lily Receptionist v3.3 — Stateful, time-aware AI receptionist for Luxurious Nails & Spa
+// Lily Receptionist v3.4 — Stateful, time-aware AI receptionist for Luxurious Nails & Spa
 // Voice-ready: LilyReceptionist.handleMessage(biz, text, apiKey) → Promise<{text, escalationType}>
 // Languages: English + Spanish + Vietnamese (Claude-detected, not just regex)
 // Features: intent classification, entity extraction, booking state machine,
@@ -174,7 +174,8 @@
       return { open: _toMins(openStr), close: closeStr ? _toMins(closeStr) : (19 * 60 + 30) };
     }
 
-    // Walk forward from reqStart in SLOT_STEP increments; return first non-conflicting slot for named staff
+    // Walk forward from reqStart in SLOT_STEP increments; return first non-conflicting slot for named staff.
+    // Kept for backward-compat (tests + outside callers); conflict check now uses _findAlternativeSlots.
     function _findNextSlot(existing, staffKey, reqStart, totalMins, openMins, closeMins) {
       var try_ = reqStart + SLOT_STEP;
       while (try_ + totalMins <= closeMins) {
@@ -190,6 +191,45 @@
         try_ += SLOT_STEP;
       }
       return null; // no slot found today
+    }
+
+    // Find up to maxSlots free alternatives nearest to reqStart, searching BOTH directions.
+    // Returns array of HH:MM strings sorted by proximity (closest first).
+    // For equal distance, later time wins (customer asked for X, X+30 feels closer than X-30).
+    function _findAlternativeSlots(existing, staffKey, reqStart, totalMins, openMins, closeMins, maxSlots) {
+      maxSlots = maxSlots || 3;
+      var MAX_STEPS = 16; // search up to 8 hours in each direction (16 × 30 min)
+
+      function _isFree(t) {
+        var tEnd = t + totalMins;
+        if (t < openMins || tEnd > closeMins) return false;
+        return !existing.some(function (appt) {
+          var as_ = (appt.staff || '').toLowerCase();
+          if (as_ !== staffKey && as_ !== 'any') return false;
+          var aS = _toMins(appt.time || '00:00');
+          var aD = appt.totalDurationMins || appt.durationMins || DEFAULT_DUR;
+          return _overlaps(t, tEnd, aS, aS + aD);
+        });
+      }
+
+      // Collect candidates from both directions, interleaved by step distance
+      var seen  = {};
+      var found = [];
+      for (var i = 1; i <= MAX_STEPS && found.length < maxSlots * 2; i++) {
+        var later   = reqStart + i * SLOT_STEP;
+        var earlier = reqStart - i * SLOT_STEP;
+        if (!seen[later]   && _isFree(later))   { seen[later]   = true; found.push(later); }
+        if (!seen[earlier] && _isFree(earlier)) { seen[earlier] = true; found.push(earlier); }
+      }
+
+      // Sort: primary = absolute distance from reqStart; secondary = prefer later (same distance)
+      found.sort(function (a, b) {
+        var da = Math.abs(a - reqStart), db = Math.abs(b - reqStart);
+        if (da !== db) return da - db;
+        return b - a; // later wins on tie
+      });
+
+      return found.slice(0, maxSlots).map(_fromMins);
     }
 
     // Build a natural language conflict / hours message
@@ -214,10 +254,18 @@
 
       if (key === 'conflict') {
         var staffNote = data.staff && data.staff.toLowerCase() !== 'any' ? ' with ' + data.staff : '';
-        if (data.nextSlot) {
-          if (lang === 'vi') return 'Rất tiếc, khung giờ ' + data.time + staffNote + ' đã có lịch. Thời gian trống gần nhất là ' + data.nextSlot + '. Bạn có muốn đặt vào khung giờ đó không?';
-          if (lang === 'es') return 'Lo sentimos, el horario de las ' + data.time + staffNote + ' ya está reservado. El próximo disponible es ' + data.nextSlot + '. ¿Le gustaría ese horario?';
-          return 'Sorry, ' + data.time + staffNote + ' is already booked. The next available time is ' + data.nextSlot + '. Would you like that instead?';
+        // Prefer altSlots array (multi-slot); fall back to nextSlot (legacy single-slot)
+        var alts = data.altSlots && data.altSlots.length ? data.altSlots : (data.nextSlot ? [data.nextSlot] : []);
+        if (alts.length === 1) {
+          if (lang === 'vi') return 'Rất tiếc, khung giờ ' + data.time + staffNote + ' đã có lịch. Thời gian trống gần nhất là ' + alts[0] + '. Bạn có muốn đặt vào khung giờ đó không?';
+          if (lang === 'es') return 'Lo sentimos, el horario de las ' + data.time + staffNote + ' ya está reservado. El horario más cercano disponible es ' + alts[0] + '. ¿Le gustaría ese?';
+          return 'Sorry, ' + data.time + staffNote + ' is already booked. The closest available time is ' + alts[0] + '. Would you like that instead?';
+        } else if (alts.length >= 2) {
+          var last = alts[alts.length - 1];
+          var rest = alts.slice(0, alts.length - 1);
+          if (lang === 'vi') return 'Rất tiếc, khung giờ ' + data.time + staffNote + ' đã có lịch. Các khung giờ trống gần nhất là ' + rest.join(', ') + ' và ' + last + '. Bạn muốn chọn khung giờ nào?';
+          if (lang === 'es') return 'Lo sentimos, el horario de las ' + data.time + staffNote + ' ya está reservado. Los horarios más cercanos disponibles son ' + rest.join(', ') + ' y ' + last + '. ¿Cuál prefiere?';
+          return 'Sorry, ' + data.time + staffNote + ' is already booked. The closest available times are ' + rest.join(', ') + ' and ' + last + '. Which would you prefer?';
         } else {
           if (lang === 'vi') return 'Rất tiếc, không còn khung giờ trống hôm đó' + (staffNote ? ' cho ' + data.staff : '') + '. Vui lòng gọi ' + phone + ' hoặc chọn ngày khác.';
           if (lang === 'es') return 'Lo sentimos, no quedan horarios disponibles ese día' + (staffNote ? ' con ' + data.staff : '') + '. Llame al ' + phone + ' o elija otra fecha.';
@@ -376,12 +424,12 @@
               // shift is guaranteed non-null here (null exits above).
               var _slotOpen  = shift ? Math.max(_toMins('09:00'), shift.open)  : _toMins('09:00');
               var _slotClose = shift ? Math.min(closeMins, shift.close) : closeMins;
-              var nextSlot = _findNextSlot(existing, requestedStaff, reqStartMins, totalMins,
-                _slotOpen, _slotClose);
+              var altSlots = _findAlternativeSlots(existing, requestedStaff, reqStartMins, totalMins,
+                _slotOpen, _slotClose, 3);
               return { valid: false, message: _buildMsg(biz, 'conflict', {
                 time:     draft.time,
                 staff:    draft.staff,
-                nextSlot: nextSlot,
+                altSlots: altSlots,
                 lang:     draft.lang
               })};
             }

@@ -696,6 +696,41 @@
     }, { passive: true });
   }
 
+  // ── Featured hero carousel: slide navigation + touch-swipe + auto-advance ──
+  function _nsFeatHcGoto(bizId, idx) {
+    var hcEl = document.getElementById('nsFeatHc_' + bizId);
+    if (!hcEl) return;
+    var slides = hcEl.querySelectorAll('.ns-feat-hc__slide');
+    var dots   = hcEl.querySelectorAll('.ns-feat-hc__dot');
+    slides.forEach(function (s, i) { s.classList.toggle('ns-feat-hc__slide--active', i === idx); });
+    dots.forEach(function   (d, i) { d.classList.toggle('ns-feat-hc__dot--active',   i === idx); });
+  }
+  window._nsFeatHcGoto = _nsFeatHcGoto;
+
+  function _initNsFeatHc(bizId) {
+    var hcEl = document.getElementById('nsFeatHc_' + bizId);
+    if (!hcEl) return;
+    var slides  = hcEl.querySelectorAll('.ns-feat-hc__slide');
+    var n       = slides.length;
+    if (n < 2) return;
+    var current = 0, startX = 0;
+    hcEl.addEventListener('touchstart', function (e) {
+      startX = e.changedTouches[0].clientX;
+    }, { passive: true });
+    hcEl.addEventListener('touchend', function (e) {
+      var dx = e.changedTouches[0].clientX - startX;
+      if (Math.abs(dx) < 44) return;
+      current = dx < 0 ? Math.min(current + 1, n - 1) : Math.max(current - 1, 0);
+      _nsFeatHcGoto(bizId, current);
+    }, { passive: true });
+    // Auto-advance every 5 seconds
+    setInterval(function () {
+      current = (current + 1) % n;
+      _nsFeatHcGoto(bizId, current);
+    }, 5000);
+  }
+  window._initNsFeatHc = _initNsFeatHc;
+
   function renderNailsHero(biz) {
     // Use local owned asset for hero; multi-layer bg so gradient shows if image fails
     var HERO_IMG = '/images/nails-1.jpg';
@@ -752,65 +787,117 @@
   }
 
   function renderNailsFeatured(biz) {
-    // 6 premium services — portrait grid, 2×3 on mobile, 3×2 on tablet+
+    // Flowing hero carousel — full-bleed slides, touch-swipe, dot nav.
+    // Mirrors the main page .hc pattern. Each slide = featured service/category.
+    // Tapping CTA → nsScrollToBooking → jumps to booking section, opens category.
+    var CAT_LABELS = {
+      manicure: 'Manicure', pedicure: 'Pedicure', gel: 'Gel & Shellac',
+      acrylic: 'Acrylic & Extensions', nailart: 'Nail Art', dip: 'Dip Powder',
+      spa: 'Spa Treatments', addon: 'Add-ons', other: 'D\u1ecbch V\u1ee5'
+    };
+    var CAT_IMAGES = {
+      manicure: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=900&auto=format&fit=crop&q=82',
+      pedicure: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=900&auto=format&fit=crop&q=82',
+      acrylic:  'https://images.unsplash.com/photo-1632345031435-8727f592d8db?w=900&auto=format&fit=crop&q=82',
+      gel:      'https://images.unsplash.com/photo-1604902396830-aca29e19b067?w=900&auto=format&fit=crop&q=82',
+      nailart:  'https://images.unsplash.com/photo-1636018492665-21ce4ac4e0f1?w=900&auto=format&fit=crop&q=82',
+      dip:      'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=900&auto=format&fit=crop&q=82',
+      addon:    'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=900&auto=format&fit=crop&q=82',
+      spa:      'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=900&auto=format&fit=crop&q=82',
+      other:    'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=900&auto=format&fit=crop&q=82'
+    };
     var FALLBACK = 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&auto=format&fit=crop&q=60';
-    var feats = [
-      {
-        key: 'manicure', label: 'Classic Manicure', cat: 'Nail Care',
-        dur: '45 min', price: 'T\u1eeb $18', benefit: 'Shaped, buffed & perfectly polished',
-        img: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=82'
-      },
-      {
-        key: 'gel', label: 'Gel Manicure', cat: 'Long-Lasting',
-        dur: '60 min', price: 'T\u1eeb $38', benefit: 'Chip-free up to 3 weeks',
-        img: 'https://images.unsplash.com/photo-1604902396830-aca29e19b067?w=600&auto=format&fit=crop&q=82'
-      },
-      {
-        key: 'pedicure', label: 'Pedicure', cat: 'Foot Care',
-        dur: '50 min', price: 'T\u1eeb $30', benefit: 'Soak, exfoliate & refresh',
-        img: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=600&auto=format&fit=crop&q=82'
-      },
-      {
-        key: 'acrylic', label: 'Acrylic Extensions', cat: 'Extensions',
-        dur: '75 min', price: 'T\u1eeb $45', benefit: 'Sculpted for strength & shape',
-        img: 'https://images.unsplash.com/photo-1632345031435-8727f592d8db?w=600&auto=format&fit=crop&q=82'
-      },
-      {
-        key: 'nailart', label: 'Nail Art', cat: 'Design & Art',
-        dur: '90 min', price: 'T\u1eeb $25', benefit: 'Bespoke hand-painted designs',
-        img: 'https://images.unsplash.com/photo-1636018492665-21ce4ac4e0f1?w=600&auto=format&fit=crop&q=82'
-      },
-      {
-        key: 'spa', label: 'Spa Package', cat: 'Luxury Spa',
-        dur: '90 min', price: 'T\u1eeb $65', benefit: 'Mani + pedi + hot stone ritual',
-        img: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&auto=format&fit=crop&q=82'
+
+    // Live data: same selection algorithm as booking section _featItems
+    var liveSvcs = biz._staticServices || biz.services || [];
+    var featSvcs = (function () {
+      if (!liveSvcs.length) return null;
+      var flagged = liveSvcs.filter(function (s) { return s.featured === true; });
+      if (flagged.length >= 3) return flagged.slice(0, 6);
+      var seenCat = {}, picks = [];
+      liveSvcs.forEach(function (s) {
+        if (picks.length >= 6) return;
+        var cat = s.category || 'other';
+        if (!seenCat[cat] && s.imageUrl) { seenCat[cat] = true; picks.push(s); }
+      });
+      if (picks.length < 3) {
+        seenCat = {}; picks = [];
+        liveSvcs.forEach(function (s) {
+          if (picks.length >= 6) return;
+          var cat = s.category || 'other';
+          if (!seenCat[cat]) { seenCat[cat] = true; picks.push(s); }
+        });
       }
-    ];
-    var cardsHtml = feats.map(function (f) {
-      return '<div class="ns-feat-card" role="button" tabindex="0" ' +
-        'onclick="window.nsScrollToBooking(\'' + escAttr(biz.id) + '\',\'' + f.key + '\')" ' +
-        'onkeydown="if(event.key===\'Enter\'||event.key===\' \')this.click()" ' +
-        'aria-label="' + escAttr(f.label) + ' — ' + escAttr(f.price) + '">' +
-        '<img class="ns-feat-card__img" src="' + escAttr(f.img) + '" ' +
+      return picks.length ? picks : null;
+    }());
+
+    var slides;
+    if (featSvcs) {
+      slides = featSvcs.map(function (s) {
+        var cat = s.category || 'other';
+        var imgSrc = s.imageUrl || CAT_IMAGES[cat] || FALLBACK;
+        var durText = s.durationMins ? s.durationMins + ' min' : (s.duration || '');
+        var priceText = (s.price != null && s.price !== '')
+          ? (typeof s.price === 'number' ? 'T\u1eeb $' + s.price : String(s.price))
+          : (s.priceFrom ? 'T\u1eeb $' + s.priceFrom : '');
+        var metaParts = [durText, priceText].filter(Boolean);
+        return { catKey: cat, label: s.name, catLabel: CAT_LABELS[cat] || cat,
+                 img: imgSrc, meta: metaParts.join(' \xb7 '), desc: s.desc || '' };
+      });
+    } else {
+      // Static fallback — same 6 services, now as carousel slides
+      slides = [
+        { catKey: 'manicure', label: 'Classic Manicure', catLabel: 'Manicure',
+          img: CAT_IMAGES.manicure, meta: '45 min \xb7 T\u1eeb $18', desc: 'Shaped, buffed & perfectly polished' },
+        { catKey: 'gel', label: 'Gel Manicure', catLabel: 'Gel & Shellac',
+          img: CAT_IMAGES.gel, meta: '60 min \xb7 T\u1eeb $38', desc: 'Chip-free up to 3 weeks' },
+        { catKey: 'pedicure', label: 'Pedicure', catLabel: 'Foot Care',
+          img: CAT_IMAGES.pedicure, meta: '50 min \xb7 T\u1eeb $30', desc: 'Soak, exfoliate & refresh' },
+        { catKey: 'acrylic', label: 'Acrylic Extensions', catLabel: 'Extensions',
+          img: CAT_IMAGES.acrylic, meta: '75 min \xb7 T\u1eeb $45', desc: 'Sculpted for strength & shape' },
+        { catKey: 'nailart', label: 'Nail Art', catLabel: 'Design & Art',
+          img: CAT_IMAGES.nailart, meta: '90 min \xb7 T\u1eeb $25', desc: 'Bespoke hand-painted designs' },
+        { catKey: 'spa', label: 'Spa Package', catLabel: 'Luxury Spa',
+          img: CAT_IMAGES.spa, meta: '90 min \xb7 T\u1eeb $65', desc: 'Mani + pedi + hot stone ritual' }
+      ];
+    }
+
+    if (!slides.length) return '';
+
+    var slidesHtml = slides.map(function (s, i) {
+      return '<div class="ns-feat-hc__slide' + (i === 0 ? ' ns-feat-hc__slide--active' : '') + '">' +
+        '<img class="ns-feat-hc__bg" src="' + escAttr(s.img) + '" ' +
           'onerror="this.onerror=null;this.src=\'' + FALLBACK + '\'" ' +
-          'alt="" loading="lazy" aria-hidden="true">' +
-        '<div class="ns-feat-card__overlay"></div>' +
-        '<div class="ns-feat-card__content">' +
-          '<div class="ns-feat-card__cat">' + escHtml(f.cat) + '</div>' +
-          '<div class="ns-feat-card__name">' + escHtml(f.label) + '</div>' +
-          '<div class="ns-feat-card__meta">' + escHtml(f.dur) + ' \xb7 ' + escHtml(f.price) + '</div>' +
-          '<div class="ns-feat-card__benefit">' + escHtml(f.benefit) + '</div>' +
-          '<span class="ns-feat-card__book" aria-hidden="true">Book \u2192</span>' +
+          'alt="" ' + (i === 0 ? '' : 'loading="lazy" ') + 'aria-hidden="true">' +
+        '<div class="ns-feat-hc__gradient"></div>' +
+        '<div class="ns-feat-hc__body">' +
+          '<span class="ns-feat-hc__chip">' + escHtml(s.catLabel) + '</span>' +
+          '<h3 class="ns-feat-hc__title">' + escHtml(s.label) + '</h3>' +
+          (s.meta ? '<p class="ns-feat-hc__meta">' + escHtml(s.meta) + '</p>' : '') +
+          (s.desc ? '<p class="ns-feat-hc__desc">' + escHtml(s.desc) + '</p>' : '') +
+          '<button class="ns-feat-hc__cta" type="button" ' +
+            'onclick="window.nsScrollToBooking(\'' + escAttr(biz.id) + '\',\'' + escAttr(s.catKey) + '\')">' +
+            '\u0110\u1eb7t L\u1ecbch \u2192' +
+          '</button>' +
         '</div>' +
       '</div>';
     }).join('');
 
+    var dotsHtml = slides.length > 1
+      ? slides.map(function (s, i) {
+          return '<span class="ns-feat-hc__dot' + (i === 0 ? ' ns-feat-hc__dot--active' : '') + '" ' +
+            'data-dot="' + i + '" role="button" tabindex="0" ' +
+            'aria-label="' + escAttr(s.label) + '" ' +
+            'onclick="window._nsFeatHcGoto(\'' + escAttr(biz.id) + '\',' + i + ')" ' +
+            'onkeydown="if(event.key===\'Enter\')window._nsFeatHcGoto(\'' + escAttr(biz.id) + '\',' + i + ')"></span>';
+        }).join('')
+      : '';
+
     return '<section class="ns-featured" id="ns-feat-' + biz.id + '">' +
-      '<div class="ns-section-heading-wrap">' +
-        '<h2 class="ns-section-heading">D\u1ecbch V\u1ee5 C\u1ee7a Ch\xfang T\xf4i</h2>' +
-        '<p class="ns-section-sub">Ch\u1ecdn d\u1ecbch v\u1ee5 \u2014 h\u1eb9n l\u1ecbch ch\xed trong 30 gi\xe2y</p>' +
+      '<div class="ns-feat-hc" id="nsFeatHc_' + biz.id + '">' +
+        slidesHtml +
+        (dotsHtml ? '<div class="ns-feat-hc__dots">' + dotsHtml + '</div>' : '') +
       '</div>' +
-      '<div class="ns-feat-grid">' + cardsHtml + '</div>' +
     '</section>';
   }
 
@@ -1899,6 +1986,7 @@
     if (isNails) {
       initNailBookingForm(biz);
       _initNsCatHc(biz.id);
+      _initNsFeatHc(biz.id);
     } else if (biz.bookingEnabled) {
       initBookingForm(biz);
     }

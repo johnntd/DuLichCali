@@ -323,117 +323,131 @@
 /* ── Featured Services — Portrait Grid ────────────────────────────────────── */
 /* Pass 2: 2×2 portrait cards on mobile, 4-col on tablet+ */
 .ns-featured {
-  padding: 2rem 1.25rem;
+  padding: 0;
   background: var(--ns-dark);
 }
 
-.ns-feat-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-}
-
-.ns-feat-card {
-  /* No explicit height/aspect-ratio — the image defines card height intrinsically.
-     This avoids the grid+absolute-child sizing bug where browsers resolve grid track
-     heights before propagating them to position:absolute descendants. */
+/* ── Featured Hero Carousel (flowing hero-panel, mirrors main .hc pattern) ── */
+.ns-feat-hc {
   position: relative;
-  border-radius: var(--ns-radius);
+  height: 72vh;
+  min-height: 340px;
+  max-height: 600px;
   overflow: hidden;
-  cursor: pointer;
-  background: var(--ns-surface);
-  border: 1px solid var(--ns-border);
-  transition: transform 250ms, box-shadow 250ms;
+  user-select: none;
+  touch-action: pan-y;
 }
-.ns-feat-card:hover { transform: translateY(-4px); box-shadow: 0 16px 44px rgba(236, 72, 153, 0.3); }
-
-.ns-feat-card__img {
-  /* Image is in normal flow — its aspect-ratio defines the card's height.
-     Overlay and content use position:absolute against the card (position:relative). */
-  display: block;
-  width: 100%;
-  aspect-ratio: 3 / 4;
-  object-fit: cover;
-  min-height: 180px; /* fallback for browsers without aspect-ratio support */
-  transition: transform 500ms ease;
-}
-.ns-feat-card:hover .ns-feat-card__img { transform: scale(1.07); }
-
-.ns-feat-card__overlay {
+.ns-feat-hc__slide {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(24, 13, 26, 0.96) 0%,
-    rgba(24, 13, 26, 0.45) 50%,
-    rgba(24, 13, 26, 0.05) 100%
-  );
-  transition: background 250ms;
-}
-.ns-feat-card:hover .ns-feat-card__overlay {
-  background: linear-gradient(
-    to top,
-    rgba(24, 13, 26, 0.98) 0%,
-    rgba(24, 13, 26, 0.55) 55%,
-    rgba(24, 13, 26, 0.08) 100%
-  );
-}
-
-.ns-feat-card__content {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 1rem 0.9rem 1rem;
-}
-
-.ns-feat-card__cat {
-  display: block;
-  font: 600 0.58rem / 1 var(--font-b);
-  color: var(--ns-pink-lt);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  margin-bottom: 0.3rem;
-}
-
-.ns-feat-card__name {
-  font: 400 1.05rem / 1.2 var(--font-d);
-  color: #fff;
-  margin: 0 0 0.28rem;
-}
-
-.ns-feat-card__meta {
-  font: 400 0.68rem / 1.4 var(--font-b);
-  color: rgba(255, 255, 255, 0.58);
-}
-.ns-feat-card__benefit {
-  font: 300 0.6rem / 1.4 var(--font-b);
-  color: rgba(255, 255, 255, 0.38);
-  margin-top: 0.15rem;
-  font-style: italic;
-}
-.ns-feat-card__book {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.22rem;
-  margin-top: 0.6rem;
-  padding: 0.3rem 0.75rem;
-  background: var(--ns-pink);
-  border-radius: 50px;
-  font: 600 0.6rem / 1 var(--font-b);
-  color: #fff;
-  letter-spacing: 0.05em;
   opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 230ms, transform 230ms;
-  border: none;
-  cursor: pointer;
+  pointer-events: none;
+  transition: opacity .65s ease;
+}
+.ns-feat-hc__slide--active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.ns-feat-hc__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+}
+.ns-feat-hc__slide--active .ns-feat-hc__bg {
+  animation: nsFeatKb 9s ease-out both;
+}
+@keyframes nsFeatKb {
+  from { transform: scale(1.08); }
+  to   { transform: scale(1);    }
+}
+.ns-feat-hc__gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top,
+    rgba(10, 3, 20, .92) 0%,
+    rgba(10, 3, 20, .38) 50%,
+    rgba(10, 3, 20, .10) 100%);
   pointer-events: none;
 }
-.ns-feat-card:hover .ns-feat-card__book,
-.ns-feat-card:focus-within .ns-feat-card__book { opacity: 1; transform: translateY(0); pointer-events: auto; }
-/* Touch devices: always visible */
-@media (hover: none) { .ns-feat-card__book { opacity: 1; transform: none; pointer-events: auto; } }
+.ns-feat-hc__body {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 1.4rem 1.25rem 1.75rem;
+}
+.ns-feat-hc__chip {
+  display: inline-block;
+  background: var(--ns-pink);
+  color: #fff;
+  font: 600 .62rem/.95 var(--font-b);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: .24em .8em;
+  border-radius: 99px;
+  margin-bottom: .5rem;
+}
+.ns-feat-hc__title {
+  font: 400 2.4rem/1.05 var(--font-d);
+  font-style: italic;
+  color: #fff;
+  margin: 0 0 .3rem;
+}
+.ns-feat-hc__meta {
+  font: 500 .82rem/1.3 var(--font-b);
+  color: rgba(255, 255, 255, .82);
+  margin: 0 0 .2rem;
+}
+.ns-feat-hc__desc {
+  font: 300 .75rem/1.4 var(--font-b);
+  color: rgba(255, 255, 255, .55);
+  font-style: italic;
+  margin: 0 0 .85rem;
+}
+.ns-feat-hc__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: .35em;
+  background: var(--ns-pink);
+  color: #fff;
+  border: none;
+  border-radius: 99px;
+  font: 600 .9rem/1 var(--font-b);
+  padding: .64em 1.6em;
+  cursor: pointer;
+  letter-spacing: .02em;
+  transition: background 180ms, transform 180ms;
+  touch-action: manipulation;
+}
+.ns-feat-hc__cta:hover,
+.ns-feat-hc__cta:focus-visible {
+  background: var(--ns-pink-dk);
+  transform: translateY(-2px);
+  outline: none;
+}
+.ns-feat-hc__dots {
+  position: absolute;
+  bottom: .7rem;
+  right: 1rem;
+  display: flex;
+  gap: .32rem;
+  align-items: center;
+  z-index: 5;
+}
+.ns-feat-hc__dot {
+  height: 5px;
+  width: 5px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, .38);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: width .3s ease, background .3s ease;
+}
+.ns-feat-hc__dot--active {
+  width: 18px;
+  background: #fff;
+}
 
 /* ── Booking Section ───────────────────────────────────────────────────────── */
 .ns-booking-section {
@@ -1130,9 +1144,11 @@
   /* Promo slot */
   .ns-promo-slot { padding-left: 2.5rem; padding-right: 2.5rem; }
 
-  /* Featured: 3-column grid on tablet (6 cards = 2 balanced rows) */
-  .ns-featured { padding: 2.5rem 2.5rem; }
-  .ns-feat-grid { grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  /* Featured hero carousel: tablet */
+  .ns-featured { padding: 0; }
+  .ns-feat-hc { height: 68vh; min-height: 320px; }
+  .ns-feat-hc__title { font-size: 2.8rem; }
+  .ns-feat-hc__body { padding: 1.6rem 2.5rem 2rem; }
 
   /* Booking */
   .ns-booking-section { padding: 2.5rem 2.5rem; }
@@ -1165,9 +1181,11 @@
   /* Promo slot */
   .ns-promo-slot { max-width: 1280px; margin: 0 auto; padding-left: 3rem; padding-right: 3rem; }
 
-  /* Featured */
-  .ns-featured { max-width: 1280px; margin-left: auto; margin-right: auto; padding-left: 3rem; padding-right: 3rem; }
-  .ns-feat-grid { gap: 1.25rem; }
+  /* Featured hero carousel: desktop (edge-to-edge, no max-width cap) */
+  .ns-featured { max-width: none; margin-left: 0; margin-right: 0; padding: 0; }
+  .ns-feat-hc { height: 65vh; max-height: 640px; }
+  .ns-feat-hc__title { font-size: 3.2rem; }
+  .ns-feat-hc__body { padding: 2rem 3rem 2.5rem; }
 
   /* Booking */
   .ns-booking-section { max-width: 1280px; margin-left: auto; margin-right: auto; padding-left: 3rem; padding-right: 3rem; }
@@ -1186,8 +1204,7 @@
   .ns-gallery__scroll { padding-left: 3rem; padding-right: 3rem; }
   .ns-gallery__img { flex-basis: 280px; height: 280px; }
 
-  /* Featured: 3-column stays on desktop (large editorial cards) */
-  .ns-feat-grid { grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+  /* Featured hero: no grid needed on desktop */
 
   /* Re-show info strip on desktop with nails dark theme */
   .mp-main--nails .mp-info-strip {
@@ -1213,6 +1230,6 @@
   .ns-hero__chip:nth-child(1),
   .ns-hero__chip:nth-child(2),
   .ns-hero__chip:nth-child(3) { animation: none; opacity: 1; transform: none; }
-  .ns-feat-card__img { transition: none; }
-  .ns-feat-card { transition: none; }
+  .ns-feat-hc__bg { animation: none; }
+  .ns-feat-hc__slide { transition: none; }
 }

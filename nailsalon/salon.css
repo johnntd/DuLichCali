@@ -323,131 +323,111 @@
 /* ── Featured Services — Portrait Grid ────────────────────────────────────── */
 /* Pass 2: 2×2 portrait cards on mobile, 4-col on tablet+ */
 .ns-featured {
-  padding: 0;
+  padding: 1.5rem 0 1.75rem;
   background: var(--ns-dark);
 }
+.ns-featured .ns-section-heading-wrap {
+  padding: 0 1.25rem;
+  margin-bottom: 1rem;
+}
 
-/* ── Featured Hero Carousel (flowing hero-panel, mirrors main .hc pattern) ── */
-.ns-feat-hc {
-  position: relative;
-  height: 72vh;
-  min-height: 340px;
-  max-height: 600px;
+/* ── Flow Panel — horizontal scroll-snap row (mirrors main page .hp-vendor-row) */
+.ns-flow-row {
+  display: flex;
+  gap: .7rem;
+  padding: 0 1.25rem .25rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.ns-flow-row::-webkit-scrollbar { display: none; }
+
+/* Flow card — portrait, ~76% viewport wide so next card peeks through */
+.ns-flow-card {
+  flex: 0 0 calc(76% - .5rem);
+  max-width: 300px;
+  border-radius: var(--ns-radius);
   overflow: hidden;
-  user-select: none;
-  touch-action: pan-y;
+  position: relative;
+  scroll-snap-align: start;
+  cursor: pointer;
+  height: 360px;
+  background: var(--ns-surface);
+  border: 1px solid var(--ns-border);
+  transition: transform 200ms, box-shadow 200ms;
+  touch-action: manipulation;
 }
-.ns-feat-hc__slide {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .65s ease;
-}
-.ns-feat-hc__slide--active {
-  opacity: 1;
-  pointer-events: auto;
-}
-.ns-feat-hc__bg {
+.ns-flow-card:active { transform: scale(0.97); }
+
+.ns-flow-card__bg {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 30%;
+  object-position: center;
+  transition: transform 400ms ease;
 }
-.ns-feat-hc__slide--active .ns-feat-hc__bg {
-  animation: nsFeatKb 9s ease-out both;
-}
-@keyframes nsFeatKb {
-  from { transform: scale(1.08); }
-  to   { transform: scale(1);    }
-}
-.ns-feat-hc__gradient {
+.ns-flow-card:hover .ns-flow-card__bg { transform: scale(1.04); }
+
+.ns-flow-card__gradient {
   position: absolute;
   inset: 0;
   background: linear-gradient(to top,
-    rgba(10, 3, 20, .92) 0%,
-    rgba(10, 3, 20, .38) 50%,
-    rgba(10, 3, 20, .10) 100%);
-  pointer-events: none;
+    rgba(10, 3, 20, .96) 0%,
+    rgba(10, 3, 20, .42) 52%,
+    rgba(10, 3, 20, .06) 100%);
 }
-.ns-feat-hc__body {
+.ns-flow-card__content {
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  padding: 1.4rem 1.25rem 1.75rem;
+  padding: 1rem 1rem 1.15rem;
 }
-.ns-feat-hc__chip {
+.ns-flow-card__chip {
   display: inline-block;
   background: var(--ns-pink);
   color: #fff;
-  font: 600 .62rem/.95 var(--font-b);
+  font: 600 .58rem/.95 var(--font-b);
   letter-spacing: .1em;
   text-transform: uppercase;
-  padding: .24em .8em;
+  padding: .22em .72em;
   border-radius: 99px;
-  margin-bottom: .5rem;
+  margin-bottom: .42rem;
 }
-.ns-feat-hc__title {
-  font: 400 2.4rem/1.05 var(--font-d);
+.ns-flow-card__name {
+  font: 400 1.2rem/1.15 var(--font-d);
   font-style: italic;
   color: #fff;
-  margin: 0 0 .3rem;
+  margin: 0 0 .22rem;
 }
-.ns-feat-hc__meta {
-  font: 500 .82rem/1.3 var(--font-b);
-  color: rgba(255, 255, 255, .82);
-  margin: 0 0 .2rem;
+.ns-flow-card__meta {
+  font: 500 .7rem/1.3 var(--font-b);
+  color: rgba(255, 255, 255, .75);
+  margin: 0 0 .18rem;
 }
-.ns-feat-hc__desc {
-  font: 300 .75rem/1.4 var(--font-b);
-  color: rgba(255, 255, 255, .55);
+.ns-flow-card__desc {
+  font: 300 .65rem/1.35 var(--font-b);
+  color: rgba(255, 255, 255, .48);
   font-style: italic;
-  margin: 0 0 .85rem;
+  margin: 0 0 .7rem;
 }
-.ns-feat-hc__cta {
+.ns-flow-card__cta {
   display: inline-flex;
   align-items: center;
-  gap: .35em;
+  gap: .3em;
   background: var(--ns-pink);
   color: #fff;
   border: none;
   border-radius: 99px;
-  font: 600 .9rem/1 var(--font-b);
-  padding: .64em 1.6em;
+  font: 600 .75rem/1 var(--font-b);
+  padding: .52em 1.2em;
   cursor: pointer;
-  letter-spacing: .02em;
-  transition: background 180ms, transform 180ms;
   touch-action: manipulation;
+  transition: background 150ms;
 }
-.ns-feat-hc__cta:hover,
-.ns-feat-hc__cta:focus-visible {
-  background: var(--ns-pink-dk);
-  transform: translateY(-2px);
-  outline: none;
-}
-.ns-feat-hc__dots {
-  position: absolute;
-  bottom: .7rem;
-  right: 1rem;
-  display: flex;
-  gap: .32rem;
-  align-items: center;
-  z-index: 5;
-}
-.ns-feat-hc__dot {
-  height: 5px;
-  width: 5px;
-  border-radius: 99px;
-  background: rgba(255, 255, 255, .38);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: width .3s ease, background .3s ease;
-}
-.ns-feat-hc__dot--active {
-  width: 18px;
-  background: #fff;
-}
+.ns-flow-card__cta:hover,
+.ns-flow-card__cta:focus-visible { background: var(--ns-pink-dk); outline: none; }
 
 /* ── Booking Section ───────────────────────────────────────────────────────── */
 .ns-booking-section {
@@ -1144,11 +1124,12 @@
   /* Promo slot */
   .ns-promo-slot { padding-left: 2.5rem; padding-right: 2.5rem; }
 
-  /* Featured hero carousel: tablet */
-  .ns-featured { padding: 0; }
-  .ns-feat-hc { height: 68vh; min-height: 320px; }
-  .ns-feat-hc__title { font-size: 2.8rem; }
-  .ns-feat-hc__body { padding: 1.6rem 2.5rem 2rem; }
+  /* Featured flow row: tablet — cards 46% wide so 2+ cards visible */
+  .ns-featured { padding: 2rem 0 2rem; }
+  .ns-featured .ns-section-heading-wrap { padding: 0 2.5rem; }
+  .ns-flow-row { padding: 0 2.5rem .25rem; }
+  .ns-flow-card { flex: 0 0 calc(46% - .5rem); max-width: 320px; height: 380px; }
+  .ns-flow-card__name { font-size: 1.3rem; }
 
   /* Booking */
   .ns-booking-section { padding: 2.5rem 2.5rem; }
@@ -1181,11 +1162,12 @@
   /* Promo slot */
   .ns-promo-slot { max-width: 1280px; margin: 0 auto; padding-left: 3rem; padding-right: 3rem; }
 
-  /* Featured hero carousel: desktop (edge-to-edge, no max-width cap) */
-  .ns-featured { max-width: none; margin-left: 0; margin-right: 0; padding: 0; }
-  .ns-feat-hc { height: 65vh; max-height: 640px; }
-  .ns-feat-hc__title { font-size: 3.2rem; }
-  .ns-feat-hc__body { padding: 2rem 3rem 2.5rem; }
+  /* Featured flow row: desktop — 3 cards visible at once */
+  .ns-featured { max-width: 1280px; margin-left: auto; margin-right: auto; padding: 2.5rem 0 2.5rem; }
+  .ns-featured .ns-section-heading-wrap { padding: 0 3rem; }
+  .ns-flow-row { padding: 0 3rem .25rem; }
+  .ns-flow-card { flex: 0 0 calc(32% - .5rem); max-width: 380px; height: 400px; }
+  .ns-flow-card__name { font-size: 1.4rem; }
 
   /* Booking */
   .ns-booking-section { max-width: 1280px; margin-left: auto; margin-right: auto; padding-left: 3rem; padding-right: 3rem; }
@@ -1230,6 +1212,6 @@
   .ns-hero__chip:nth-child(1),
   .ns-hero__chip:nth-child(2),
   .ns-hero__chip:nth-child(3) { animation: none; opacity: 1; transform: none; }
-  .ns-feat-hc__bg { animation: none; }
-  .ns-feat-hc__slide { transition: none; }
+  .ns-flow-card__bg { transition: none; }
+  .ns-flow-card { transition: none; }
 }

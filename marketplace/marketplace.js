@@ -787,53 +787,52 @@
   }
 
   function renderNailsFeatured(biz) {
-    // Flowing hero carousel — full-bleed slides, touch-swipe, dot nav.
-    // Mirrors the main page .hc pattern. Each slide = featured service/category.
-    // Tapping CTA → nsScrollToBooking → jumps to booking section, opens category.
+    // Horizontal scroll-snap flow panel — mirrors main page .hp-vendor-row pattern.
+    // ~76% wide portrait cards on mobile; swipe to reveal next card.
+    // Each card = featured service. Tapping CTA → nsScrollToBooking → opens category.
     var CAT_LABELS = {
       manicure: 'Manicure', pedicure: 'Pedicure', gel: 'Gel & Shellac',
       acrylic: 'Acrylic & Extensions', nailart: 'Nail Art', dip: 'Dip Powder',
       spa: 'Spa Treatments', addon: 'Add-ons', other: 'D\u1ecbch V\u1ee5'
     };
     var CAT_IMAGES = {
-      manicure: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=900&auto=format&fit=crop&q=82',
-      pedicure: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=900&auto=format&fit=crop&q=82',
-      acrylic:  'https://images.unsplash.com/photo-1632345031435-8727f592d8db?w=900&auto=format&fit=crop&q=82',
-      gel:      'https://images.unsplash.com/photo-1604902396830-aca29e19b067?w=900&auto=format&fit=crop&q=82',
-      nailart:  'https://images.unsplash.com/photo-1636018492665-21ce4ac4e0f1?w=900&auto=format&fit=crop&q=82',
-      dip:      'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=900&auto=format&fit=crop&q=82',
-      addon:    'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=900&auto=format&fit=crop&q=82',
-      spa:      'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=900&auto=format&fit=crop&q=82',
-      other:    'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=900&auto=format&fit=crop&q=82'
+      manicure: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=82',
+      pedicure: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=600&auto=format&fit=crop&q=82',
+      acrylic:  'https://images.unsplash.com/photo-1632345031435-8727f592d8db?w=600&auto=format&fit=crop&q=82',
+      gel:      'https://images.unsplash.com/photo-1604902396830-aca29e19b067?w=600&auto=format&fit=crop&q=82',
+      nailart:  'https://images.unsplash.com/photo-1636018492665-21ce4ac4e0f1?w=600&auto=format&fit=crop&q=82',
+      dip:      'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=82',
+      addon:    'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&auto=format&fit=crop&q=82',
+      spa:      'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&auto=format&fit=crop&q=82',
+      other:    'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=82'
     };
     var FALLBACK = 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&auto=format&fit=crop&q=60';
 
-    // Live data: same selection algorithm as booking section _featItems
+    // Live data: featured:true first, then one-per-category, then first 6
     var liveSvcs = biz._staticServices || biz.services || [];
-    var featSvcs = (function () {
-      if (!liveSvcs.length) return null;
+    var cards;
+    if (liveSvcs.length) {
       var flagged = liveSvcs.filter(function (s) { return s.featured === true; });
-      if (flagged.length >= 3) return flagged.slice(0, 6);
-      var seenCat = {}, picks = [];
-      liveSvcs.forEach(function (s) {
-        if (picks.length >= 6) return;
-        var cat = s.category || 'other';
-        if (!seenCat[cat] && s.imageUrl) { seenCat[cat] = true; picks.push(s); }
-      });
-      if (picks.length < 3) {
-        seenCat = {}; picks = [];
+      if (flagged.length >= 3) {
+        cards = flagged.slice(0, 6);
+      } else {
+        var seenCat = {}, picks = [];
         liveSvcs.forEach(function (s) {
           if (picks.length >= 6) return;
           var cat = s.category || 'other';
-          if (!seenCat[cat]) { seenCat[cat] = true; picks.push(s); }
+          if (!seenCat[cat] && s.imageUrl) { seenCat[cat] = true; picks.push(s); }
         });
+        if (picks.length < 3) {
+          seenCat = {}; picks = [];
+          liveSvcs.forEach(function (s) {
+            if (picks.length >= 6) return;
+            var cat = s.category || 'other';
+            if (!seenCat[cat]) { seenCat[cat] = true; picks.push(s); }
+          });
+        }
+        cards = picks.length ? picks : liveSvcs.slice(0, 6);
       }
-      return picks.length ? picks : null;
-    }());
-
-    var slides;
-    if (featSvcs) {
-      slides = featSvcs.map(function (s) {
+      cards = cards.map(function (s) {
         var cat = s.category || 'other';
         var imgSrc = s.imageUrl || CAT_IMAGES[cat] || FALLBACK;
         var durText = s.durationMins ? s.durationMins + ' min' : (s.duration || '');
@@ -845,8 +844,8 @@
                  img: imgSrc, meta: metaParts.join(' \xb7 '), desc: s.desc || '' };
       });
     } else {
-      // Static fallback — same 6 services, now as carousel slides
-      slides = [
+      // Static fallback
+      cards = [
         { catKey: 'manicure', label: 'Classic Manicure', catLabel: 'Manicure',
           img: CAT_IMAGES.manicure, meta: '45 min \xb7 T\u1eeb $18', desc: 'Shaped, buffed & perfectly polished' },
         { catKey: 'gel', label: 'Gel Manicure', catLabel: 'Gel & Shellac',
@@ -862,42 +861,36 @@
       ];
     }
 
-    if (!slides.length) return '';
+    if (!cards.length) return '';
 
-    var slidesHtml = slides.map(function (s, i) {
-      return '<div class="ns-feat-hc__slide' + (i === 0 ? ' ns-feat-hc__slide--active' : '') + '">' +
-        '<img class="ns-feat-hc__bg" src="' + escAttr(s.img) + '" ' +
+    var cardsHtml = cards.map(function (c, i) {
+      return '<div class="ns-flow-card" role="button" tabindex="0" ' +
+        'onclick="window.nsScrollToBooking(\'' + escAttr(biz.id) + '\',\'' + escAttr(c.catKey) + '\')" ' +
+        'onkeydown="if(event.key===\'Enter\'||event.key===\' \')this.click()" ' +
+        'aria-label="' + escAttr(c.label) + '">' +
+        '<img class="ns-flow-card__bg" src="' + escAttr(c.img) + '" ' +
           'onerror="this.onerror=null;this.src=\'' + FALLBACK + '\'" ' +
           'alt="" ' + (i === 0 ? '' : 'loading="lazy" ') + 'aria-hidden="true">' +
-        '<div class="ns-feat-hc__gradient"></div>' +
-        '<div class="ns-feat-hc__body">' +
-          '<span class="ns-feat-hc__chip">' + escHtml(s.catLabel) + '</span>' +
-          '<h3 class="ns-feat-hc__title">' + escHtml(s.label) + '</h3>' +
-          (s.meta ? '<p class="ns-feat-hc__meta">' + escHtml(s.meta) + '</p>' : '') +
-          (s.desc ? '<p class="ns-feat-hc__desc">' + escHtml(s.desc) + '</p>' : '') +
-          '<button class="ns-feat-hc__cta" type="button" ' +
-            'onclick="window.nsScrollToBooking(\'' + escAttr(biz.id) + '\',\'' + escAttr(s.catKey) + '\')">' +
+        '<div class="ns-flow-card__gradient"></div>' +
+        '<div class="ns-flow-card__content">' +
+          '<span class="ns-flow-card__chip">' + escHtml(c.catLabel) + '</span>' +
+          '<div class="ns-flow-card__name">' + escHtml(c.label) + '</div>' +
+          (c.meta ? '<div class="ns-flow-card__meta">' + escHtml(c.meta) + '</div>' : '') +
+          (c.desc ? '<div class="ns-flow-card__desc">' + escHtml(c.desc) + '</div>' : '') +
+          '<button class="ns-flow-card__cta" type="button" ' +
+            'onclick="event.stopPropagation();window.nsScrollToBooking(\'' + escAttr(biz.id) + '\',\'' + escAttr(c.catKey) + '\')">' +
             '\u0110\u1eb7t L\u1ecbch \u2192' +
           '</button>' +
         '</div>' +
       '</div>';
     }).join('');
 
-    var dotsHtml = slides.length > 1
-      ? slides.map(function (s, i) {
-          return '<span class="ns-feat-hc__dot' + (i === 0 ? ' ns-feat-hc__dot--active' : '') + '" ' +
-            'data-dot="' + i + '" role="button" tabindex="0" ' +
-            'aria-label="' + escAttr(s.label) + '" ' +
-            'onclick="window._nsFeatHcGoto(\'' + escAttr(biz.id) + '\',' + i + ')" ' +
-            'onkeydown="if(event.key===\'Enter\')window._nsFeatHcGoto(\'' + escAttr(biz.id) + '\',' + i + ')"></span>';
-        }).join('')
-      : '';
-
     return '<section class="ns-featured" id="ns-feat-' + biz.id + '">' +
-      '<div class="ns-feat-hc" id="nsFeatHc_' + biz.id + '">' +
-        slidesHtml +
-        (dotsHtml ? '<div class="ns-feat-hc__dots">' + dotsHtml + '</div>' : '') +
+      '<div class="ns-section-heading-wrap">' +
+        '<h2 class="ns-section-heading">D\u1ecbch V\u1ee5 C\u1ee7a Ch\xfang T\xf4i</h2>' +
+        '<p class="ns-section-sub">Ch\u1ecdn d\u1ecbch v\u1ee5 \u2014 h\u1eb9n l\u1ecbch ch\xed trong 30 gi\xe2y</p>' +
       '</div>' +
+      '<div class="ns-flow-row">' + cardsHtml + '</div>' +
     '</section>';
   }
 

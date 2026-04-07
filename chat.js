@@ -1407,28 +1407,15 @@ BEHAVIOR GUIDELINES:
 - Be warm, helpful, and professional — like a knowledgeable local friend`;
   }
 
+  // ── API call via shared engine (fetch + retry in ai-engine.js) ──────────────
   async function callClaude(history) {
     if (!CLAUDE_KEY) throw new Error('no-key');
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'x-api-key':     CLAUDE_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({
-        model:      CLAUDE_MODEL,
-        max_tokens: MAX_TOKENS,
-        system:     buildSystemPrompt(),
-        messages:   history.slice(-20),
-      }),
+    const data = await AIEngine.fetchWithRetry(CLAUDE_KEY, {
+      model:      CLAUDE_MODEL,
+      max_tokens: MAX_TOKENS,
+      system:     buildSystemPrompt(),
+      messages:   history.slice(-20),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || `HTTP ${res.status}`);
-    }
-    const data = await res.json();
     return data.content[0].text;
   }
 

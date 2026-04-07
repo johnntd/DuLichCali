@@ -308,12 +308,13 @@
             }
           }
 
-          // ── Customer conflict check (same person, same day) ──────────────
-          // Flags ANY confirmed or pending appointment for the same customer on
-          // the same day — not just overlapping times. Avoids double-booking even
-          // when totalDurationMins is missing (which would produce a wrong fallback)
-          // or when the new booking starts exactly as the old one ends (boundary gap).
-          // The customer_conflict message lets the customer choose: replace / keep / reschedule.
+          // ── Customer conflict check (same person, overlapping time) ─────────
+          // Catches duplicate/overlapping bookings for the same customer.
+          // Matches by name OR phone — either field is enough to identify the person.
+          // Different-time bookings for the same customer are allowed (e.g. manicure at
+          // 10 AM with Tracy, pedicure at 2 PM with Helen — both legitimate).
+          // Uses >= on the right boundary so back-to-back bookings are caught even when
+          // totalDurationMins is missing (60-min fallback: 9:30+60=10:30 → aEnd>=reqStart).
           if (checkCustomer) {
             var draftName  = (draft.name  || '').toLowerCase().trim();
             var draftPhone = (draft.phone || '').replace(/\D/g, '');
@@ -328,10 +329,13 @@
               // Phone match: require ≥7 digits to avoid false positives on short inputs
               var phoneMatch = draftPhone.length >= 7 && apptPhone && apptPhone === draftPhone;
               if (!nameMatch && !phoneMatch) continue;
-              // Same customer on the same day — always flag regardless of time overlap.
-              // Duration data may be missing/wrong; better to ask than to silently double-book.
-              custConflict = appt;
-              break;
+              // Overlap: use >= on right boundary to catch exact back-to-back same-customer
+              var aStart = _toMins(appt.time || '00:00');
+              var aDur   = appt.totalDurationMins || appt.durationMins || DEFAULT_DUR;
+              if (aStart < reqEnd && (aStart + aDur) >= reqStart) {
+                custConflict = appt;
+                break;
+              }
             }
 
             if (custConflict) {

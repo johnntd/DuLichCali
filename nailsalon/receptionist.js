@@ -919,7 +919,19 @@
         if (!_sd || _sd.active === false || !_ot) {
           return _named.name + ' is not working today. Call ' + phone + ' for their next available day.';
         }
-        return _named.name + ' is working today from ' + _ot + ' to ' + _ct + '. Would you like to book an appointment?';
+        // Time-aware: compare NOW against the actual shift window
+        function _parseShiftMins(s) { var p=String(s||'').split(':'); return parseInt(p[0],10)*60+(parseInt(p[1],10)||0); }
+        function _fmtShift(s) { var p=String(s||'').split(':'),h=parseInt(p[0],10),m=parseInt(p[1],10)||0,ap=h<12?'AM':'PM'; return (h%12||12)+(m?':'+('0'+m).slice(-2):'')+' '+ap; }
+        var _fbCurMins = _fbnow.getHours() * 60 + _fbnow.getMinutes();
+        var _fbStart   = _parseShiftMins(_ot);
+        var _fbEnd     = _parseShiftMins(_ct);
+        if (_fbEnd > 0 && _fbCurMins >= _fbEnd) {
+          return _named.name + '\'s shift ended at ' + _fmtShift(_ct) + ' today, and the salon is closed now. We reopen tomorrow at 9:00 AM.';
+        }
+        if (_fbStart > 0 && _fbCurMins < _fbStart) {
+          return _named.name + ' starts at ' + _fmtShift(_ot) + ' today and is not here yet. Would you like to book an appointment for later?';
+        }
+        return _named.name + ' is working right now until ' + _fmtShift(_ct) + '. Would you like to book an appointment?';
       }
       var _todayStaff = _staffList.filter(function (m) {
         var _s = (m.schedule || {}); var _d = _s[_fbDow] || _s[_fbSsDow];

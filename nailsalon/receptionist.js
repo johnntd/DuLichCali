@@ -248,13 +248,43 @@
         }
       }
 
-      return db.collection('vendors').doc(biz.id)
+      // Run both queries in parallel:
+      // 1. Confirmed appointments in the vendor's appointments subcollection
+      // 2. Pending escalations not yet confirmed by the vendor
+      //    (escalations store appointmentData.date separately — filter client-side)
+      var apptQuery = db.collection('vendors').doc(biz.id)
         .collection('appointments')
         .where('date', '==', draft.date)
         .where('status', '==', 'confirmed')
-        .get()
-        .then(function (snap) {
-          var existing = snap.docs.map(function (d) { return d.data(); });
+        .get();
+
+      var escQuery = db.collection('escalations')
+        .where('vendorId', '==', biz.id)
+        .where('status', '==', 'pending_vendor_response')
+        .get();
+
+      return Promise.all([apptQuery, escQuery])
+        .then(function (results) {
+          var apptSnap = results[0];
+          var escSnap  = results[1];
+
+          // Confirmed appointments
+          var existing = apptSnap.docs.map(function (d) { return d.data(); });
+
+          // Pending escalations — normalize to same shape as appointment docs
+          escSnap.docs.forEach(function (d) {
+            var esc  = d.data();
+            var appt = esc.appointmentData;
+            if (!appt || appt.date !== draft.date) return; // different date — skip
+            existing.push({
+              customerName:      appt.name     || '',
+              customerPhone:     appt.phone    || '',
+              staff:             appt.staff    || 'any',
+              time:              appt.time     || '00:00',
+              totalDurationMins: appt.totalDurationMins || DEFAULT_DUR,
+              selectedServices:  appt.services || []
+            });
+          });
 
           // ── Staff conflict check (named staff only) ─────────────────────────
           if (checkStaff) {

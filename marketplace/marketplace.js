@@ -1245,6 +1245,37 @@
       chk.addEventListener('change', updateDuration);
     });
 
+    // ── Helper: verify at least one active staff member works on this date/time ───
+    // Used for "Any" staff requests. Named staff uses NailAvailabilityChecker.check() directly.
+    function _anyStaffOnDuty(biz, dateStr, timeStr, durationMins) {
+      var DAYS = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+      var DAY3 = { sunday:'sun', monday:'mon', tuesday:'tue', wednesday:'wed', thursday:'thu', friday:'fri', saturday:'sat' };
+      function _m(t) {
+        if (!t || typeof t !== 'string') return 0;
+        var p = t.split(':');
+        return parseInt(p[0] || '0', 10) * 60 + parseInt(p[1] || '0', 10);
+      }
+      var d = new Date(dateStr + 'T12:00:00');
+      var day = DAYS[d.getDay()];
+      var reqStart = _m(timeStr);
+      var reqEnd   = reqStart + (durationMins || 60);
+      var activeStaff = (biz.staff || []).filter(function (m) { return m.active !== false; });
+      if (!activeStaff.length) return false;
+      return activeStaff.some(function (m) {
+        var sch   = m.schedule || {};
+        var shift = sch[day] || sch[DAY3[day]];
+        if (!shift) return false;
+        if (shift.active === false || shift.closed === true) return false;
+        // If shift has no time bounds, treat the day as open
+        var openT  = shift.open  || shift.start;
+        var closeT = shift.close || shift.end;
+        if (!openT && !closeT) return true;
+        var shiftOpen  = _m(openT  || '09:00');
+        var shiftClose = _m(closeT || '19:30');
+        return reqStart >= shiftOpen && reqEnd <= shiftClose;
+      });
+    }
+
     form.addEventListener('submit', function (e) {
       e.preventDefault();
 
@@ -1268,7 +1299,7 @@
       if (!date || !time || !name || !phone) { showMsg('Vui lòng điền đầy đủ thông tin.', true); return; }
 
       showMsg('', true);
-      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Đang gửi...'; }
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Đang kiểm tra...'; }
 
       var db = window.dlcDb;
       if (!db) {
@@ -1277,39 +1308,85 @@
         return;
       }
 
-      var escId = 'esc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+      var escId    = 'esc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
       var durLabel = totalMins >= 60
         ? Math.floor(totalMins / 60) + 'h' + (totalMins % 60 ? (totalMins % 60) + 'm' : '')
         : totalMins + ' min';
+      var isAny    = !staff || staff.toLowerCase() === 'any';
 
-      db.collection('escalations').doc(escId).set({
-        vendorId:        biz.id || '',
-        vendorName:      biz.name || '',
-        escalationType:  'appointment',
-        source:          'booking_form',
-        appointmentData: {
-          services:          selectedServices,
-          totalDurationMins: totalMins,
-          staff:             staff,
-          date:              date,
-          time:              time,
-          name:              name,
-          phone:             phone,
-          notes:             notes,
-          lang:              'en'
-        },
-        summary:        name + ' — ' + selectedServices.join(', ') + ' (' + durLabel + ') on ' + date + ' at ' + time + ' with ' + staff,
-        status:         'pending_vendor_response',
-        vendorMessage:  null,
-        lang:           'en',
-        createdAt:      firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function () {
-        if (form) form.style.display = 'none';
-        if (successDiv) successDiv.classList.add('show');
-      }).catch(function () {
+      // ── Shared validation — same logic as AI booking flow ───────────────────────
+      function _doWrite() {
+        if (submitBtn) submitBtn.textContent = 'Đang gửi...';
+        db.collection('escalations').doc(escId).set({
+          vendorId:        biz.id || '',
+          vendorName:      biz.name || '',
+          escalationType:  'appointment',
+          source:          'booking_form',
+          appointmentData: {
+            services:          selectedServices,
+            totalDurationMins: totalMins,
+            staff:             staff,
+            date:              date,
+            time:              time,
+            name:              name,
+            phone:             phone,
+            notes:             notes,
+            lang:              'en'
+          },
+          summary:        name + ' — ' + selectedServices.join(', ') + ' (' + durLabel + ') on ' + date + ' at ' + time + ' with ' + staff,
+          status:         'pending_vendor_response',
+          vendorMessage:  null,
+          lang:           'en',
+          createdAt:      firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function () {
+          if (form) form.style.display = 'none';
+          if (successDiv) successDiv.classList.add('show');
+        }).catch(function () {
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = calendarIcon + ' Gửi Đặt Lịch'; }
+          showMsg('Có lỗi xảy ra. Vui lòng gọi: ' + (biz.phoneDisplay || biz.phone || ''), true);
+        });
+      }
+
+      function _blockWith(msg) {
         if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = calendarIcon + ' Gửi Đặt Lịch'; }
-        showMsg('Có lỗi xảy ra. Vui lòng gọi: ' + (biz.phoneDisplay || biz.phone || ''), true);
-      });
+        showMsg(msg || 'Thời gian này không còn trống. Vui lòng chọn thời gian khác.', true);
+      }
+
+      var checker = window.NailAvailabilityChecker;
+      if (!checker) {
+        // Checker not ready (receptionist.js not loaded) — fail-open, same as AI Firestore error
+        _doWrite();
+        return;
+      }
+
+      var draft = {
+        services:          selectedServices,
+        staff:             staff,
+        date:              date,
+        time:              time,
+        totalDurationMins: totalMins,
+        name:              name,
+        phone:             phone
+      };
+
+      checker.check(biz, draft)
+        .then(function (avail) {
+          if (!avail.valid) {
+            _blockWith(avail.message);
+            return;
+          }
+          // For "Any" staff: additionally verify at least one tech works that day/time.
+          // Named staff conflicts are fully handled by NailAvailabilityChecker.check() above.
+          if (isAny && !_anyStaffOnDuty(biz, date, time, totalMins)) {
+            _blockWith('No technicians are available at that time. Please choose a different date or time.');
+            return;
+          }
+          _doWrite();
+        })
+        .catch(function () {
+          // Fail-open: never block a valid customer due to a Firestore query error
+          _doWrite();
+        });
     });
   }
 

@@ -524,6 +524,9 @@
     return { check: check };
   })();
 
+  // Expose for manual booking form — shares the same validation path as the AI flow
+  window.NailAvailabilityChecker = NailAvailabilityChecker;
+
   // ── Marker parsing ────────────────────────────────────────────────────────────
   function _parseEscalationType(reply) {
     var m = reply.match(/\[ESCALATE:(order|appointment|reservation|question)\]/i);

@@ -724,9 +724,11 @@
       spa: 'Spa Treatments', addon: 'Add-ons', other: 'D\u1ecbch V\u1ee5'
     };
 
-    // Build category tabs (skip if only 1 category)
+    // Build category tabs — only for categories that have actual service items in the catalog.
+    // biz.serviceCategories may list all 7 categories but Firestore may only have some active.
+    // Showing a tab with no backing service group causes nsShowCat to blank the panel.
     var tabCats = (biz.serviceCategories && biz.serviceCategories.length)
-      ? biz.serviceCategories
+      ? biz.serviceCategories.filter(function (c) { return !!catMap[c.key]; })
       : catOrder.map(function (k) { return { key: k, label: catLabels[k] || k }; });
 
     var tabsHtml = '';

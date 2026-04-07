@@ -1407,15 +1407,10 @@ BEHAVIOR GUIDELINES:
 - Be warm, helpful, and professional — like a knowledgeable local friend`;
   }
 
-  // ── API call via shared engine (fetch + retry in ai-engine.js) ──────────────
+  // ── API call via unified dispatcher (model + tokens from AIEngine.SERVICE_CONFIG.travel) ──
   async function callClaude(history) {
     if (!CLAUDE_KEY) throw new Error('no-key');
-    const data = await AIEngine.fetchWithRetry(CLAUDE_KEY, {
-      model:      CLAUDE_MODEL,
-      max_tokens: MAX_TOKENS,
-      system:     buildSystemPrompt(),
-      messages:   history.slice(-20),
-    });
+    const data = await AIEngine.call('travel', CLAUDE_KEY, buildSystemPrompt(), history.slice(-20));
     return data.content[0].text;
   }
 

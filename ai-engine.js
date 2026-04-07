@@ -120,10 +120,44 @@
     return y + '-' + m + '-' + day;
   }
 
+  // ── Service Configuration ─────────────────────────────────────────────────────
+  // Central registry: one place to change model or token limits per service type.
+  // Adding a new AI feature? Add an entry here — do not hardcode model strings elsewhere.
+  var SERVICE_CONFIG = {
+    travel:      { model: 'claude-haiku-4-5-20251001', maxTokens: 900 }, // chat.js — airport/tour/general
+    food:        { model: 'claude-haiku-4-5-20251001', maxTokens: 384 }, // marketplace.js — food order intake
+    appointment: { model: 'claude-haiku-4-5-20251001', maxTokens: 384 }, // marketplace.js — hair/salon booking
+    nails:       { model: 'claude-sonnet-4-6',         maxTokens: 900 }, // receptionist.js — nail salon (stateful)
+    translation: { model: 'claude-haiku-4-5-20251001', maxTokens: 512 }  // marketplace.js — in-app translator
+  };
+  var _DEFAULT_CFG = { model: 'claude-haiku-4-5-20251001', maxTokens: 600 };
+
+  // ── Unified AI Dispatcher ─────────────────────────────────────────────────────
+  // Single entry point for ALL AI calls in the app.
+  // Routes through fetchWithRetry using model + maxTokens from SERVICE_CONFIG.
+  // System prompt is optional (pass null to omit).
+  // Returns the raw API JSON — callers read data.content[0].text as before.
+  //
+  // All service types map to the same underlying Claude API; behavior differs only
+  // through the system prompt, data injected, and context passed by each caller.
+  //
+  // Callers:
+  //   chat.js          → AIEngine.call('travel', ...)
+  //   marketplace.js   → AIEngine.call('food' | 'appointment' | 'translation', ...)
+  //   receptionist.js  → AIEngine.call('nails', ...)
+  function call(serviceType, apiKey, systemPrompt, messages) {
+    var cfg  = SERVICE_CONFIG[serviceType] || _DEFAULT_CFG;
+    var body = { model: cfg.model, max_tokens: cfg.maxTokens, messages: messages };
+    if (systemPrompt) body.system = systemPrompt;
+    return fetchWithRetry(apiKey, body);
+  }
+
   // ── Public API ────────────────────────────────────────────────────────────────
   window.AIEngine = {
     detectLang:     detectLang,
-    fetchWithRetry: fetchWithRetry,
+    fetchWithRetry: fetchWithRetry,   // kept for backward compatibility; prefer AIEngine.call()
+    call:           call,             // unified dispatcher — call(serviceType, apiKey, systemPrompt, messages)
+    SERVICE_CONFIG: SERVICE_CONFIG,   // read-only reference to per-service model/token config
     saveHistory:    saveHistory,
     restoreHistory: restoreHistory,
     localISODate:   localISODate

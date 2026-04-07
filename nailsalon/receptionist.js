@@ -1249,15 +1249,12 @@
 
     var systemPrompt = _buildPrompt(biz, lang);
 
-    // ── API call via shared engine (fetch + 3-attempt retry lives in ai-engine.js) ──
-    return AIEngine.fetchWithRetry(apiKey, {
-      model:      MODEL,
-      max_tokens: MAX_TOKENS,
-      system:     systemPrompt,
-      messages:   biz._aiHistory.map(function (m) {
+    // ── API call via unified dispatcher (model + tokens from AIEngine.SERVICE_CONFIG.nails) ──
+    return AIEngine.call('nails', apiKey, systemPrompt,
+      biz._aiHistory.map(function (m) {
         return { role: m.role, content: m.content };
       })
-    })
+    )
     .then(function (data) {
       var raw = (data.content && data.content[0] && data.content[0].text) || '';
 

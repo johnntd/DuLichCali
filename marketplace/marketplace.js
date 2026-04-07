@@ -315,25 +315,12 @@
           if (!apiKey) { _interpFallback(from, to, text, outputEl); return; }
 
           var labels = { en: 'English', vi: 'Vietnamese', es: 'Spanish' };
-          fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: {
-              'x-api-key': apiKey,
-              'anthropic-version': '2023-06-01',
-              'content-type': 'application/json',
-              'anthropic-dangerous-direct-browser-access': 'true'
-            },
-            body: JSON.stringify({
-              model: 'claude-haiku-4-5-20251001',
-              max_tokens: 512,
-              messages: [{
-                role: 'user',
-                content: 'Translate from ' + labels[from] + ' to ' + labels[to] +
-                  '. Return only the translated text, no explanation:\n\n' + text
-              }]
-            })
-          })
-          .then(function (r) { return r.json(); })
+          // ── via unified dispatcher (model + retry from AIEngine.SERVICE_CONFIG.translation) ──
+          AIEngine.call('translation', apiKey, null, [{
+            role: 'user',
+            content: 'Translate from ' + labels[from] + ' to ' + labels[to] +
+              '. Return only the translated text, no explanation:\n\n' + text
+          }])
           .then(function (d) {
             outputEl.textContent =
               (d.content && d.content[0] && d.content[0].text) || 'Translation error.';
@@ -3822,13 +3809,11 @@
       // Use full conversation history (already includes current user message)
       var messages = (biz._aiHistory || []).slice(-20);
 
-      // ── API call via shared engine (fetch + retry lives in ai-engine.js) ──────
-      return AIEngine.fetchWithRetry(apiKey, {
-        model:      'claude-haiku-4-5-20251001',
-        max_tokens: 384,
-        system:     systemPrompt,
-        messages:   messages
-      }).then(function (data) {
+      // ── API call via unified dispatcher (model + tokens from AIEngine.SERVICE_CONFIG) ──
+      // 'food' → food order intake; 'appointment' → hair/nail salon booking
+      var svcType = biz.vendorType === 'foodvendor' ? 'food' : 'appointment';
+      return AIEngine.call(svcType, apiKey, systemPrompt, messages)
+      .then(function (data) {
         return data.content && data.content[0] && data.content[0].text
           ? data.content[0].text
           : 'Xin lỗi, tôi không thể trả lời ngay lúc này.';

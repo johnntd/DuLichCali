@@ -1,4 +1,4 @@
-// Lily Receptionist v3.1 — Stateful, time-aware AI receptionist for Luxurious Nails & Spa
+// Lily Receptionist v3.2 — Stateful, time-aware AI receptionist for Luxurious Nails & Spa
 // Voice-ready: LilyReceptionist.handleMessage(biz, text, apiKey) → Promise<{text, escalationType}>
 // Languages: English + Spanish + Vietnamese (Claude-detected, not just regex)
 // Features: intent classification, entity extraction, booking state machine,
@@ -1316,6 +1316,62 @@
         _handleMessage(biz, text, apiKey)
           .then(function (result) {
             _hideTyping(typingId);
+
+            // ── Early slot validation (fires before contact-detail collection) ──────
+            // Problem: the full check only runs on [ESCALATE:appointment], which Claude
+            // emits only after collecting name+phone. Old flow: asked for contact info
+            // and THEN told the customer the slot was already taken — wrong UX.
+            //
+            // Fix: as soon as Claude's STATE has all 4 scheduling fields
+            // (named staff + services + date + time) but before [ESCALATE:appointment]
+            // is emitted, validate the slot RIGHT NOW with a partial draft.
+            //
+            //   AVAILABLE   → show Claude's message (e.g. "What's your name?")
+            //   UNAVAILABLE → replace Claude's message with the conflict/suggestion;
+            //                 preserve booking state so customer only needs a new slot
+            var _ecs = biz._bookingState;
+            var _earlyCheckReady = (
+              _ecs &&
+              _ecs.intent   === 'booking_request' &&
+              _ecs.staff    && _ecs.staff.toLowerCase() !== 'any' &&
+              _ecs.services && _ecs.services.length > 0 &&
+              _ecs.date     &&
+              _ecs.time     &&
+              !result.escalationType  // [BOOKING+ESCALATE] not yet emitted
+            );
+
+            if (_earlyCheckReady) {
+              var _ed = {
+                staff:             _ecs.staff,
+                services:          _ecs.services,
+                date:              _ecs.date,
+                time:              _ecs.time,
+                lang:              _ecs.lang || 'en',
+                totalDurationMins: _calcTotalDuration(biz, _ecs.services || [])
+              };
+              NailAvailabilityChecker.check(biz, _ed)
+                .then(function (avail) {
+                  if (avail.valid) {
+                    // Slot is free — show Claude's response ("What's your name?")
+                    _appendMessage(messagesEl, result.text, 'bot');
+                  } else {
+                    // Slot is taken — replace Claude's response with conflict notice
+                    if (biz._aiHistory.length &&
+                        biz._aiHistory[biz._aiHistory.length - 1].role === 'assistant') {
+                      biz._aiHistory.pop();
+                    }
+                    biz._aiHistory.push({ role: 'assistant', content: avail.message });
+                    _saveHistory(biz);
+                    _appendMessage(messagesEl, avail.message, 'bot');
+                    // State preserved: customer only needs a different time/date/staff
+                  }
+                })
+                .catch(function () {
+                  // Fail-open: show Claude's response on any Firestore error
+                  _appendMessage(messagesEl, result.text, 'bot');
+                });
+              return; // early check is async — skip the branches below for this turn
+            }
 
             if (result.escalationType === 'appointment' && biz._bookingDraft) {
               // VALIDATE FIRST — do NOT show Claude's text until availability is confirmed.

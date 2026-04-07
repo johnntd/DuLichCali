@@ -99,10 +99,10 @@
       var today = new Date();
       var t = text.toLowerCase();
 
-      if (/hôm nay|today/.test(t)) return today.toISOString().slice(0,10);
+      if (/hôm nay|today/.test(t)) return AIEngine.localISODate(today);
       if (/ngày mai|tomorrow/.test(t)) {
         var tm = new Date(today); tm.setDate(tm.getDate() + 1);
-        return tm.toISOString().slice(0,10);
+        return AIEngine.localISODate(tm);
       }
 
       var DOW_VI = ['chủ nhật','thứ hai','thứ ba','thứ tư','thứ năm','thứ sáu','thứ bảy'];
@@ -115,19 +115,19 @@
           var diff = i - dd.getDay();
           if (diff <= 0) diff += 7;
           dd.setDate(dd.getDate() + diff);
-          return dd.toISOString().slice(0,10);
+          return AIEngine.localISODate(dd);
         }
       }
 
-      // M/D
+      // M/D — parse at local noon to avoid UTC-midnight off-by-one
       var m = text.match(/^(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?$/);
       if (m) {
         var yr = m[3] ? (m[3].length === 2 ? 2000 + parseInt(m[3]) : parseInt(m[3])) : today.getFullYear();
-        var d2 = new Date(yr + '-' + pad(m[1]) + '-' + pad(m[2]));
-        if (!isNaN(d2)) return d2.toISOString().slice(0,10);
+        var d2 = new Date(yr + '-' + pad(m[1]) + '-' + pad(m[2]) + 'T12:00:00');
+        if (!isNaN(d2)) return AIEngine.localISODate(d2);
       }
 
-      // "April 10"
+      // "April 10" — parse at local noon to avoid UTC-midnight off-by-one
       var MONTHS = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12,
         january:1,february:2,march:3,april:4,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
       var m2 = text.match(/([a-zA-Z]+)\s+(\d{1,2})/i) || text.match(/(\d{1,2})\s+([a-zA-Z]+)/i);
@@ -137,8 +137,8 @@
         var mo = MONTHS[word] || MONTHS[word2];
         var dy = MONTHS[word] ? num : (MONTHS[word2] ? num2 : null);
         if (mo && dy) {
-          var d3 = new Date(today.getFullYear() + '-' + pad(mo) + '-' + pad(dy));
-          if (!isNaN(d3)) return d3.toISOString().slice(0,10);
+          var d3 = new Date(today.getFullYear() + '-' + pad(mo) + '-' + pad(dy) + 'T12:00:00');
+          if (!isNaN(d3)) return AIEngine.localISODate(d3);
         }
       }
       return null;

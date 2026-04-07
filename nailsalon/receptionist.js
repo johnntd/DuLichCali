@@ -400,7 +400,7 @@
     var todayIdx  = today.getDay();
     var todayName = DAYS[todayIdx];
     var dateStr   = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-    var isoDate   = today.toISOString().slice(0, 10);
+    var isoDate   = AIEngine.localISODate(today);
 
     // Current local time — injected so Claude can answer "open now?" correctly
     var nowMins  = today.getHours() * 60 + today.getMinutes();
@@ -575,7 +575,7 @@
     // Booking state context (only shown when data has been collected)
     var bookingStateCtx = _buildBookingStateContext(biz);
 
-    var tomorrowIso = (function() { var d = new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); })();
+    var tomorrowIso = (function() { var d = new Date(); d.setDate(d.getDate()+1); return AIEngine.localISODate(d); })();
     var pendingActionStr = (biz._bookingState && biz._bookingState.pendingAction) || 'none';
 
     return [

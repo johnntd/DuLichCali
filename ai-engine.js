@@ -110,12 +110,23 @@
     } catch (e) { return null; }
   }
 
+  // ── Local ISO Date ────────────────────────────────────────────────────────────
+  // toISOString() always returns UTC, which is off by one day for Pacific-time users
+  // after ~5 PM (UTC-7). This helper uses local time components instead.
+  function localISODate(d) {
+    var y   = d.getFullYear();
+    var m   = ('0' + (d.getMonth() + 1)).slice(-2);
+    var day = ('0' + d.getDate()).slice(-2);
+    return y + '-' + m + '-' + day;
+  }
+
   // ── Public API ────────────────────────────────────────────────────────────────
   window.AIEngine = {
     detectLang:     detectLang,
     fetchWithRetry: fetchWithRetry,
     saveHistory:    saveHistory,
-    restoreHistory: restoreHistory
+    restoreHistory: restoreHistory,
+    localISODate:   localISODate
   };
 
 })();

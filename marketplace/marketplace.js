@@ -551,19 +551,128 @@
   }
   window.nsShowCat = nsShowCat;
 
-  // Scroll to booking section and optionally activate a category tab
+  // Scroll to booking section then open the service list for that category (step 2)
   function nsScrollToBooking(bizId, cat) {
     var el = document.getElementById('nailBookSection_' + bizId);
     if (!el) return;
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     if (cat) {
       setTimeout(function () {
-        var tab = el.querySelector('.ns-tab[data-cat="' + cat + '"]');
-        if (tab) tab.click();
-      }, 450);
+        if (window.nsShowServiceList) window.nsShowServiceList(bizId, cat);
+      }, 400);
     }
   }
   window.nsScrollToBooking = nsScrollToBooking;
+
+  // ── 3-step booking navigation ─────────────────────────────────────────────────
+  // Step 1: category grid + featured carousel  (id: nbCatView_X)
+  // Step 2: service list for selected category (id: nbSvcView_X)
+  // Step 3: booking form with pre-selected service (id: nbFormView_X)
+
+  // Step 1 → Step 2: show service list for a category
+  function nsShowServiceList(bizId, catKey) {
+    var catView  = document.getElementById('nbCatView_'      + bizId);
+    var svcView  = document.getElementById('nbSvcView_'      + bizId);
+    var formView = document.getElementById('nbFormView_'     + bizId);
+    var titleEl  = document.getElementById('nbSvcViewTitle_' + bizId);
+    var listsEl  = document.getElementById('nbSvcLists_'     + bizId);
+    if (!svcView || !listsEl) return;
+
+    // Show the matching service-list group, hide all others
+    var groups = listsEl.querySelectorAll('.ns-svc-list-group');
+    var activeGroup = null;
+    for (var i = 0; i < groups.length; i++) {
+      var match = groups[i].getAttribute('data-cat') === catKey;
+      groups[i].style.display = match ? '' : 'none';
+      if (match) activeGroup = groups[i];
+    }
+    if (titleEl) {
+      titleEl.textContent = activeGroup ? (activeGroup.getAttribute('data-label') || catKey) : catKey;
+    }
+
+    // Remember current category so back-from-form works correctly
+    window._nbState = window._nbState || {};
+    if (!window._nbState[bizId]) window._nbState[bizId] = {};
+    window._nbState[bizId].cat = catKey;
+
+    if (catView)  catView.style.display  = 'none';
+    if (formView) formView.style.display = 'none';
+    svcView.style.display = '';
+
+    var section = document.getElementById('nailBookSection_' + bizId);
+    if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  window.nsShowServiceList = nsShowServiceList;
+
+  // Step 2 → Step 3: user picked a specific service — pre-check it and show form
+  function nsSelectService(bizId, serviceName, durationMins, catKey) {
+    var catView  = document.getElementById('nbCatView_'     + bizId);
+    var svcView  = document.getElementById('nbSvcView_'     + bizId);
+    var formView = document.getElementById('nbFormView_'    + bizId);
+    var badgeEl  = document.getElementById('nbSelectedSvc_' + bizId);
+    var svcDiv   = document.getElementById('nbServices_'    + bizId);
+    if (!formView || !svcDiv) return;
+
+    window._nbState = window._nbState || {};
+    if (!window._nbState[bizId]) window._nbState[bizId] = {};
+    window._nbState[bizId].cat = catKey || (window._nbState[bizId] && window._nbState[bizId].cat);
+
+    // Uncheck all hidden checkboxes, then check the selected service
+    var allChks = svcDiv.querySelectorAll('.nb-svc-chk');
+    for (var i = 0; i < allChks.length; i++) { allChks[i].checked = false; }
+    for (var j = 0; j < allChks.length; j++) {
+      if (allChks[j].value === serviceName) {
+        allChks[j].checked = true;
+        // Fire change event so initNailBookingForm's duration listener updates nbDurRow
+        var evt = document.createEvent('Event');
+        evt.initEvent('change', true, true);
+        allChks[j].dispatchEvent(evt);
+        break;
+      }
+    }
+
+    // Selected-service badge at top of form view
+    if (badgeEl) {
+      badgeEl.innerHTML =
+        '<div class="ns-svc-badge">' +
+          '<span class="ns-svc-badge__name">' + escHtml(serviceName) + '</span>' +
+          (durationMins ? '<span class="ns-svc-badge__meta">' + durationMins + ' min</span>' : '') +
+          '<button type="button" class="ns-svc-badge__change" ' +
+            'onclick="window.nsBackToSvcList(\'' + escAttr(bizId) + '\')">' +
+            '\u0110\u1ed5i' +
+          '</button>' +
+        '</div>';
+      badgeEl.style.display = '';
+    }
+
+    if (catView)  catView.style.display  = 'none';
+    if (svcView)  svcView.style.display  = 'none';
+    formView.style.display = '';
+
+    var section = document.getElementById('nailBookSection_' + bizId);
+    if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  window.nsSelectService = nsSelectService;
+
+  // Any view → Step 1: back to category grid
+  function nsBackToCats(bizId) {
+    var catView  = document.getElementById('nbCatView_'  + bizId);
+    var svcView  = document.getElementById('nbSvcView_'  + bizId);
+    var formView = document.getElementById('nbFormView_' + bizId);
+    if (svcView)  svcView.style.display  = 'none';
+    if (formView) formView.style.display = 'none';
+    if (catView)  catView.style.display  = '';
+    var section = document.getElementById('nailBookSection_' + bizId);
+    if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  window.nsBackToCats = nsBackToCats;
+
+  // Step 3 → Step 2: back to service list for current category
+  function nsBackToSvcList(bizId) {
+    var state = (window._nbState && window._nbState[bizId]) || {};
+    nsShowServiceList(bizId, state.cat || 'manicure');
+  }
+  window.nsBackToSvcList = nsBackToSvcList;
 
   function renderNailsHero(biz) {
     // Use local owned asset for hero; multi-layer bg so gradient shows if image fails
@@ -707,71 +816,153 @@
   }
 
   function renderNailsBookingSection(biz) {
-    var catalog = (biz.services && biz.services.length > 0) ? biz.services : (biz._staticServices || []);
-    if (!catalog.length) return '';
+    // ── Service catalog ────────────────────────────────────────────────────────
+    // _staticServices: set after Firestore loads (all 59 static services)
+    // biz.services:    Firestore-active if Firestore ran; full static if it didn't
+    var staticSvcs    = biz._staticServices || biz.services || [];
+    var firestoreSvcs = (biz._staticServices && biz.services && biz.services.length > 0)
+      ? biz.services : [];
 
-    // Group services by category preserving order
-    var catMap = {}, catOrder = [];
-    catalog.forEach(function (s) {
-      var cat = s.category || 'other';
-      if (!catMap[cat]) { catMap[cat] = []; catOrder.push(cat); }
-      catMap[cat].push(s);
-    });
+    if (!staticSvcs.length && !firestoreSvcs.length) return '';
 
     var catLabels = {
       manicure: 'Manicure', pedicure: 'Pedicure', gel: 'Gel & Shellac',
       acrylic: 'Acrylic & Extensions', nailart: 'Nail Art', dip: 'Dip Powder',
-      spa: 'Spa Treatments', addon: 'Add-ons', other: 'D\u1ecbch V\u1ee5'
+      spa: 'Spa Treatments', addon: 'Add-ons / Care', other: 'D\u1ecbch V\u1ee5'
     };
 
-    // Build category tabs — only for categories that have actual service items in the catalog.
-    // biz.serviceCategories may list all 7 categories but Firestore may only have some active.
-    // Showing a tab with no backing service group causes nsShowCat to blank the panel.
-    var tabCats = (biz.serviceCategories && biz.serviceCategories.length)
-      ? biz.serviceCategories.filter(function (c) { return !!catMap[c.key]; })
-      : catOrder.map(function (k) { return { key: k, label: catLabels[k] || k }; });
+    // Per-category maps: Firestore-active first, static as fallback
+    var firestoreCatMap = {}, staticCatMap = {};
+    firestoreSvcs.forEach(function (s) {
+      var cat = s.category || 'other';
+      if (!firestoreCatMap[cat]) firestoreCatMap[cat] = [];
+      firestoreCatMap[cat].push(s);
+    });
+    staticSvcs.forEach(function (s) {
+      var cat = s.category || 'other';
+      if (!staticCatMap[cat]) staticCatMap[cat] = [];
+      staticCatMap[cat].push(s);
+    });
 
-    var tabsHtml = '';
-    if (tabCats.length > 1) {
-      tabsHtml = '<div class="ns-tabs">' +
-        '<button class="ns-tab active" type="button" data-cat="all" ' +
-          'onclick="window.nsShowCat(this,\'all\',\'' + escAttr(biz.id) + '\')">' +
-          'T\u1ea5t C\u1ea3</button>' +
-        tabCats.map(function (c) {
-          return '<button class="ns-tab" type="button" data-cat="' + escAttr(c.key) + '" ' +
-            'onclick="window.nsShowCat(this,\'' + escAttr(c.key) + '\',\'' + escAttr(biz.id) + '\')">' +
-            escHtml(c.label) + '</button>';
-        }).join('') +
-      '</div>';
+    // Best services for a category: Firestore-active (has prices) → static fallback
+    function _svcsFor(catKey) {
+      return (firestoreCatMap[catKey] && firestoreCatMap[catKey].length)
+        ? firestoreCatMap[catKey]
+        : (staticCatMap[catKey] || []);
     }
 
-    // Build service cards grouped by category
-    var svcHtml = catOrder.map(function (cat) {
-      var label = catLabels[cat] || (cat.charAt(0).toUpperCase() + cat.slice(1));
-      var items = catMap[cat].map(function (s) {
+    // Show all defined categories that have services (static ensures all 7 always populated)
+    var allCats = (biz.serviceCategories && biz.serviceCategories.length)
+      ? biz.serviceCategories.filter(function (c) { return _svcsFor(c.key).length > 0; })
+      : Object.keys(staticCatMap).map(function (k) { return { key: k, label: catLabels[k] || k }; });
+
+    if (!allCats.length) return '';
+
+    // ── Category images (same art direction as ns-feat-card) ──────────────────
+    var catImages = {
+      manicure: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=82',
+      pedicure: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=600&auto=format&fit=crop&q=82',
+      acrylic:  'https://images.unsplash.com/photo-1632345031435-8727f592d8db?w=600&auto=format&fit=crop&q=82',
+      gel:      'https://images.unsplash.com/photo-1604902396830-aca29e19b067?w=600&auto=format&fit=crop&q=82',
+      nailart:  'https://images.unsplash.com/photo-1636018492665-21ce4ac4e0f1?w=600&auto=format&fit=crop&q=82',
+      dip:      'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=82',
+      addon:    'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&auto=format&fit=crop&q=82',
+      spa:      'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&auto=format&fit=crop&q=82',
+      other:    'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=82'
+    };
+    var FALLBACK = 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&auto=format&fit=crop&q=60';
+
+    // ── VIEW 1a: Featured showcase carousel (popular services) ────────────────
+    var featItems = [
+      { catKey: 'manicure', name: 'Classic Manicure',       dur: '45 min',  price: 'T\u1eeb $18', img: catImages.manicure },
+      { catKey: 'gel',      name: 'Gel Manicure',            dur: '60 min',  price: 'T\u1eeb $38', img: catImages.gel },
+      { catKey: 'pedicure', name: 'Spa Pedicure',            dur: '75 min',  price: 'T\u1eeb $30', img: catImages.pedicure },
+      { catKey: 'acrylic',  name: 'Acrylic Full Set',        dur: '75 min',  price: 'T\u1eeb $45', img: catImages.acrylic },
+      { catKey: 'nailart',  name: 'Nail Art',                dur: '+20 min', price: 'T\u1eeb $25', img: catImages.nailart },
+      { catKey: 'dip',      name: 'Dip Powder Natural Nails',dur: '60 min',  price: 'T\u1eeb $35', img: catImages.dip }
+    ];
+    var featCardsHtml = featItems
+      .filter(function (f) { return _svcsFor(f.catKey).length > 0; })
+      .map(function (f) {
+        return '<div class="ns-book-feat-card" role="button" tabindex="0" ' +
+          'onclick="window.nsShowServiceList(\'' + escAttr(biz.id) + '\',\'' + escAttr(f.catKey) + '\')" ' +
+          'onkeydown="if(event.key===\'Enter\'||event.key===\' \')this.click()" ' +
+          'aria-label="' + escAttr(f.name) + '">' +
+          '<img class="ns-book-feat-card__img" src="' + escAttr(f.img) + '" ' +
+            'onerror="this.onerror=null;this.src=\'' + FALLBACK + '\'" alt="" loading="lazy" aria-hidden="true">' +
+          '<div class="ns-book-feat-card__body">' +
+            '<div class="ns-book-feat-card__name">' + escHtml(f.name) + '</div>' +
+            '<div class="ns-book-feat-card__meta">' + escHtml(f.dur) + ' \xb7 ' + escHtml(f.price) + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    var featuredHtml = featCardsHtml
+      ? '<div class="ns-book-featured-wrap">' +
+          '<div class="ns-book-featured-label">Ph\u1ed5 Bi\u1ebfn Nh\u1ea5t</div>' +
+          '<div class="ns-book-featured">' + featCardsHtml + '</div>' +
+        '</div>'
+      : '';
+
+    // ── VIEW 1b: Category hero card grid ──────────────────────────────────────
+    var catCardsHtml = allCats.map(function (c) {
+      var img   = catImages[c.key] || FALLBACK;
+      var count = _svcsFor(c.key).length;
+      return '<div class="ns-book-cat-card" role="button" tabindex="0" ' +
+        'onclick="window.nsShowServiceList(\'' + escAttr(biz.id) + '\',\'' + escAttr(c.key) + '\')" ' +
+        'onkeydown="if(event.key===\'Enter\'||event.key===\' \')this.click()" ' +
+        'aria-label="' + escAttr(c.label) + '">' +
+        '<img class="ns-book-cat-card__img" src="' + escAttr(img) + '" ' +
+          'onerror="this.onerror=null;this.src=\'' + FALLBACK + '\'" alt="" loading="lazy" aria-hidden="true">' +
+        '<div class="ns-book-cat-card__overlay"></div>' +
+        '<div class="ns-book-cat-card__body">' +
+          '<div class="ns-book-cat-card__label">' + escHtml(c.label) + '</div>' +
+          '<div class="ns-book-cat-card__count">' + count + ' d\u1ecbch v\u1ee5</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    // ── VIEW 2: Pre-rendered service lists (all hidden — nsShowServiceList reveals one) ─
+    var svcListsHtml = allCats.map(function (c) {
+      var svcs = _svcsFor(c.key);
+      if (!svcs.length) return '';
+      var itemsHtml = svcs.map(function (s) {
         var meta = [];
         if (s.durationMins) meta.push(s.durationMins + ' min');
         if (s.price != null && s.price !== '') {
           meta.push(typeof s.price === 'number' ? '$' + s.price : s.price);
         }
-        var imgHtml = s.imageUrl
-          ? '<img class="ns-svc-card__img" src="' + escAttr(s.imageUrl) + '" alt="" loading="lazy" aria-hidden="true">'
-          : '';
-        return '<label class="ns-svc-card nb-svc-card">' +
-          '<input type="checkbox" class="nb-svc-chk" name="services" ' +
-            'value="' + escAttr(s.name) + '" data-mins="' + (s.durationMins || 60) + '">' +
-          imgHtml +
-          '<div class="ns-svc-card__info">' +
-            '<div class="ns-svc-card__name nb-svc-name">' + escHtml(s.name) + '</div>' +
-            (meta.length ? '<div class="ns-svc-card__meta nb-svc-meta">' + escHtml(meta.join(' \xb7 ')) + '</div>' : '') +
+        return '<div class="ns-book-svc-item" role="button" tabindex="0" ' +
+          'onclick="window.nsSelectService(\'' + escAttr(biz.id) + '\',\'' + escAttr(s.name) + '\',' + (s.durationMins || 60) + ',\'' + escAttr(c.key) + '\')" ' +
+          'onkeydown="if(event.key===\'Enter\'||event.key===\' \')this.click()" ' +
+          'aria-label="' + escAttr(s.name) + (meta.length ? ' \u2014 ' + escAttr(meta.join(' \xb7 ')) : '') + '">' +
+          (s.imageUrl ? '<img class="ns-book-svc-item__img" src="' + escAttr(s.imageUrl) + '" alt="" loading="lazy" aria-hidden="true">' : '') +
+          '<div class="ns-book-svc-item__info">' +
+            '<div class="ns-book-svc-item__name">' + escHtml(s.name) + '</div>' +
+            (meta.length ? '<div class="ns-book-svc-item__meta">' + escHtml(meta.join(' \xb7 ')) + '</div>' : '') +
+            (s.desc ? '<div class="ns-book-svc-item__desc">' + escHtml(s.desc) + '</div>' : '') +
           '</div>' +
-          '<div class="ns-svc-card__check" aria-hidden="true"></div>' +
-        '</label>';
+          '<div class="ns-book-svc-item__arrow" aria-hidden="true">\u2192</div>' +
+        '</div>';
       }).join('');
-      return '<div class="nb-cat" data-cat="' + escAttr(cat) + '">' +
-        '<div class="nb-cat-label">' + escHtml(label) + '</div>' +
-        '<div class="nb-svc-grid">' + items + '</div>' +
+      return '<div class="ns-svc-list-group" id="nbSvcGroup_' + escAttr(biz.id) + '_' + escAttr(c.key) + '" ' +
+        'data-cat="' + escAttr(c.key) + '" data-label="' + escAttr(c.label) + '" style="display:none">' +
+        '<div class="ns-book-svc-list">' + itemsHtml + '</div>' +
       '</div>';
+    }).join('');
+
+    // ── VIEW 3: Hidden checkboxes for initNailBookingForm ─────────────────────
+    // One checkbox per service name — nsSelectService checks the right one programmatically.
+    // Using all static services ensures every possible service name is covered.
+    var chkboxSeen = {}, allChkboxSvcs = [];
+    staticSvcs.forEach(function (s) {
+      if (s.name && !chkboxSeen[s.name]) { chkboxSeen[s.name] = true; allChkboxSvcs.push(s); }
+    });
+    firestoreSvcs.forEach(function (s) {
+      if (s.name && !chkboxSeen[s.name]) { chkboxSeen[s.name] = true; allChkboxSvcs.push(s); }
+    });
+    var checkboxesHtml = allChkboxSvcs.map(function (s) {
+      return '<input type="checkbox" class="nb-svc-chk" name="services" ' +
+        'value="' + escAttr(s.name) + '" data-mins="' + (s.durationMins || 60) + '">';
     }).join('');
 
     var activeStaff = (biz.staff || []).filter(function (m) { return m.active !== false; });
@@ -782,64 +973,91 @@
     var today = new Date().toISOString().slice(0, 10);
 
     return '<section class="ns-booking-section" id="nailBookSection_' + biz.id + '">' +
-      '<div class="ns-section-heading-wrap">' +
-        '<h2 class="ns-section-heading">\u0110\u1eb7t L\u1ecbch Ngay</h2>' +
-        '<p class="ns-section-sub">Ch\u1ecdn d\u1ecbch v\u1ee5 v\xe0 th\u1eddi gian ph\xf9 h\u1ee3p v\u1edbi b\u1ea1n</p>' +
-      '</div>' +
-      tabsHtml +
-      '<div class="ns-book-panel">' +
-        '<div class="ns-book-panel__header">' +
-          '<div class="ns-book-panel__sub">Ch\u1ecdn m\u1ed9t ho\u1eb7c nhi\u1ec1u d\u1ecbch v\u1ee5, sau \u0111\xf3 \u0111i\u1ec1n th\xf4ng tin h\u1eb9n.</div>' +
+
+      // ── VIEW 1: Category grid + featured carousel ────────────────────────────
+      '<div class="ns-book-step" id="nbCatView_' + biz.id + '">' +
+        '<div class="ns-section-heading-wrap">' +
+          '<h2 class="ns-section-heading">\u0110\u1eb7t L\u1ecbch Ngay</h2>' +
+          '<p class="ns-section-sub">Ch\u1ecdn d\u1ecbch v\u1ee5 v\xe0 th\u1eddi gian ph\xf9 h\u1ee3p</p>' +
         '</div>' +
-        '<div class="ns-book-panel__body">' +
-          '<form id="nailBookForm_' + biz.id + '">' +
-            '<div id="nbServices_' + biz.id + '">' + svcHtml + '</div>' +
-            '<div class="ns-dur-badge" id="nbDurRow_' + biz.id + '" style="display:none">' +
-              clockIcon + ' <span>T\u1ed5ng th\u1eddi gian: </span>' +
-              '<strong id="nbDurVal_' + biz.id + '">0</strong><span> ph\xfat</span>' +
-            '</div>' +
-            '<div class="mp-form-row">' +
-              '<label class="mp-label" for="nbStaff_' + biz.id + '">K\u1ef9 thu\u1eadt vi\xean</label>' +
-              '<select class="mp-input" id="nbStaff_' + biz.id + '">' + staffOpts + '</select>' +
-            '</div>' +
-            '<div class="mp-form-row-duo">' +
-              '<div class="mp-form-row">' +
-                '<label class="mp-label" for="nbDate_' + biz.id + '">Ng\xe0y h\u1eb9n</label>' +
-                '<input class="mp-input" type="date" id="nbDate_' + biz.id + '" min="' + today + '" required>' +
+        featuredHtml +
+        '<div class="ns-book-cats-grid">' + catCardsHtml + '</div>' +
+      '</div>' +
+
+      // ── VIEW 2: Service list for selected category ───────────────────────────
+      '<div class="ns-book-step" id="nbSvcView_' + biz.id + '" style="display:none">' +
+        '<div class="ns-book-step-header">' +
+          '<button class="ns-book-back-btn" type="button" ' +
+            'onclick="window.nsBackToCats(\'' + escAttr(biz.id) + '\')">' +
+            '\u2190 Danh M\u1ee5c' +
+          '</button>' +
+          '<h3 class="ns-book-cat-heading" id="nbSvcViewTitle_' + biz.id + '"></h3>' +
+        '</div>' +
+        '<div id="nbSvcLists_' + biz.id + '">' + svcListsHtml + '</div>' +
+      '</div>' +
+
+      // ── VIEW 3: Booking form ─────────────────────────────────────────────────
+      '<div class="ns-book-step" id="nbFormView_' + biz.id + '" style="display:none">' +
+        '<div class="ns-book-step-header">' +
+          '<button class="ns-book-back-btn" type="button" ' +
+            'onclick="window.nsBackToSvcList(\'' + escAttr(biz.id) + '\')">' +
+            '\u2190 \u0110\u1ed5i D\u1ecbch V\u1ee5' +
+          '</button>' +
+          '<h3 class="ns-book-cat-heading">Th\xf4ng Tin H\u1eb9n</h3>' +
+        '</div>' +
+        '<div class="ns-selected-svc-badge" id="nbSelectedSvc_' + biz.id + '" style="display:none"></div>' +
+        '<div class="ns-book-panel">' +
+          '<div class="ns-book-panel__body">' +
+            '<form id="nailBookForm_' + biz.id + '">' +
+              '<div id="nbServices_' + biz.id + '" style="display:none">' + checkboxesHtml + '</div>' +
+              '<div class="ns-dur-badge" id="nbDurRow_' + biz.id + '" style="display:none">' +
+                clockIcon + ' <span>T\u1ed5ng th\u1eddi gian: </span>' +
+                '<strong id="nbDurVal_' + biz.id + '">0</strong><span> ph\xfat</span>' +
               '</div>' +
               '<div class="mp-form-row">' +
-                '<label class="mp-label" for="nbTime_' + biz.id + '">Gi\u1edd h\u1eb9n</label>' +
-                '<input class="mp-input" type="time" id="nbTime_' + biz.id + '" required>' +
+                '<label class="mp-label" for="nbStaff_' + biz.id + '">K\u1ef9 thu\u1eadt vi\xean</label>' +
+                '<select class="mp-input" id="nbStaff_' + biz.id + '">' + staffOpts + '</select>' +
               '</div>' +
-            '</div>' +
-            '<div class="mp-form-row-duo">' +
+              '<div class="mp-form-row-duo">' +
+                '<div class="mp-form-row">' +
+                  '<label class="mp-label" for="nbDate_' + biz.id + '">Ng\xe0y h\u1eb9n</label>' +
+                  '<input class="mp-input" type="date" id="nbDate_' + biz.id + '" min="' + today + '" required>' +
+                '</div>' +
+                '<div class="mp-form-row">' +
+                  '<label class="mp-label" for="nbTime_' + biz.id + '">Gi\u1edd h\u1eb9n</label>' +
+                  '<input class="mp-input" type="time" id="nbTime_' + biz.id + '" required>' +
+                '</div>' +
+              '</div>' +
+              '<div class="mp-form-row-duo">' +
+                '<div class="mp-form-row">' +
+                  '<label class="mp-label" for="nbName_' + biz.id + '">H\u1ecd &amp; T\xean</label>' +
+                  '<input class="mp-input" type="text" id="nbName_' + biz.id + '" placeholder="Nguy\u1ec5n V\u0103n A" required>' +
+                '</div>' +
+                '<div class="mp-form-row">' +
+                  '<label class="mp-label" for="nbPhone_' + biz.id + '">S\u1ed1 \u0111i\u1ec7n tho\u1ea1i</label>' +
+                  '<input class="mp-input" type="tel" id="nbPhone_' + biz.id + '" placeholder="(408) 555-0000" required>' +
+                '</div>' +
+              '</div>' +
               '<div class="mp-form-row">' +
-                '<label class="mp-label" for="nbName_' + biz.id + '">H\u1ecd & T\xean</label>' +
-                '<input class="mp-input" type="text" id="nbName_' + biz.id + '" placeholder="Nguy\u1ec5n V\u0103n A" required>' +
+                '<label class="mp-label" for="nbNotes_' + biz.id + '">Ghi ch\xfa (t\xf9y ch\u1ecdn)</label>' +
+                '<textarea class="mp-input" id="nbNotes_' + biz.id + '" rows="2" placeholder="Y\xeau c\u1ea7u \u0111\u1eb7c bi\u1ec7t..."></textarea>' +
               '</div>' +
-              '<div class="mp-form-row">' +
-                '<label class="mp-label" for="nbPhone_' + biz.id + '">S\u1ed1 \u0111i\u1ec7n tho\u1ea1i</label>' +
-                '<input class="mp-input" type="tel" id="nbPhone_' + biz.id + '" placeholder="(408) 555-0000" required>' +
+              '<div class="nb-avail-msg" id="nbMsg_' + biz.id + '" style="display:none"></div>' +
+              '<button type="submit" class="mp-btn mp-btn--primary mp-btn--full" id="nbSubmit_' + biz.id + '">' +
+                calendarIcon + ' G\u1eedi \u0110\u1eb7t L\u1ecbch' +
+              '</button>' +
+              '<div class="mp-form-success" id="nbSuccess_' + biz.id + '">' +
+                checkIcon +
+                '<p>\u0110\u1eb7t l\u1ecbch th\xe0nh c\xf4ng!</p>' +
+                '<p style="margin-top:.5rem;font-size:.8rem;">' +
+                  'Ch\xfang t\xf4i s\u1ebd li\xean h\u1ec7 x\xe1c nh\u1eadn s\u1edbm nh\u1ea5t.' +
+                '</p>' +
               '</div>' +
-            '</div>' +
-            '<div class="mp-form-row">' +
-              '<label class="mp-label" for="nbNotes_' + biz.id + '">Ghi ch\xfa (t\xf9y ch\u1ecdn)</label>' +
-              '<textarea class="mp-input" id="nbNotes_' + biz.id + '" rows="2" placeholder="Y\xeau c\u1ea7u \u0111\u1eb7c bi\u1ec7t..."></textarea>' +
-            '</div>' +
-            '<div class="nb-avail-msg" id="nbMsg_' + biz.id + '" style="display:none"></div>' +
-            '<button type="submit" class="mp-btn mp-btn--primary mp-btn--full" id="nbSubmit_' + biz.id + '">' +
-              calendarIcon + ' G\u1eedi \u0110\u1eb7t L\u1ecbch' +
-            '</button>' +
-            '<div class="mp-form-success" id="nbSuccess_' + biz.id + '">' +
-              checkIcon +
-              '<p>\u0110\u1eb7t l\u1ecbch th\xe0nh c\xf4ng!</p>' +
-              '<p style="margin-top:.5rem;font-size:.8rem;">' +
-                'Ch\xfang t\xf4i s\u1ebd li\xean h\u1ec7 x\xe1c nh\u1eadn s\u1edbm nh\u1ea5t.' +
-              '</p>' +
-            '</div>' +
-          '</form>' +
+            '</form>' +
+          '</div>' +
         '</div>' +
       '</div>' +
+
     '</section>';
   }
 

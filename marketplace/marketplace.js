@@ -1122,7 +1122,7 @@
           'onclick="window.nsSelectService(\'' + escAttr(biz.id) + '\',\'' + escAttr(s.name) + '\',' + (s.durationMins || 60) + ',\'' + escAttr(c.key) + '\')" ' +
           'onkeydown="if(event.key===\'Enter\'||event.key===\' \')this.click()" ' +
           'aria-label="' + escAttr(s.name) + (meta.length ? ' \u2014 ' + escAttr(meta.join(' \xb7 ')) : '') + '">' +
-          (s.imageUrl ? '<img class="ns-book-svc-item__img" src="' + escAttr(s.imageUrl) + '" alt="" loading="lazy" aria-hidden="true">' : '') +
+          '<img class="ns-book-svc-item__img" src="' + escAttr(s.imageUrl || catImages[c.key] || FALLBACK) + '" alt="" loading="lazy" aria-hidden="true" onerror="this.onerror=null;this.src=\'' + FALLBACK + '\'">' +
           '<div class="ns-book-svc-item__info">' +
             '<div class="ns-book-svc-item__name">' + escHtml(s.name) + '</div>' +
             (meta.length ? '<div class="ns-book-svc-item__meta">' + escHtml(meta.join(' \xb7 ')) + '</div>' : '') +

@@ -247,12 +247,12 @@
         { key: 'nailart',  label: 'Nail Art' }
       ],
       services: [
-        { name: 'Manicure',        category: 'manicure', durationMins: 40, price: '$18+', duration: '40 phút',      desc: 'Chăm sóc và làm đẹp móng tay' },
-        { name: 'Pedicure',        category: 'pedicure', durationMins: 55, price: '$28+', duration: '55 phút',      desc: 'Chăm sóc và làm đẹp móng chân' },
-        { name: 'Gel Color',       category: 'gel',      durationMins: 55, price: '$30+', duration: '55 phút',      desc: 'Sơn gel bền và đẹp' },
-        { name: 'Full Set Acrylic',category: 'acrylic',  durationMins: 70, price: '$40+', duration: '70 phút',      desc: 'Bộ móng acrylic đầy đủ' },
-        { name: 'Ombre Nails',     category: 'acrylic',  durationMins: 90, price: '$55+', duration: '90 phút',      desc: 'Móng gradient màu sắc hiện đại' },
-        { name: 'Nail Art Design', category: 'nailart',  durationMins: 60, price: '$8+',  duration: 'Tùy thiết kế', desc: 'Nghệ thuật trang trí móng' }
+        { name: 'Manicure',        category: 'manicure', durationMins: 40, price: '$18+', duration: '40 phút',      desc: 'Chăm sóc và làm đẹp móng tay',      imageUrl: _IM_MANI },
+        { name: 'Pedicure',        category: 'pedicure', durationMins: 55, price: '$28+', duration: '55 phút',      desc: 'Chăm sóc và làm đẹp móng chân',    imageUrl: _IM_PEDI },
+        { name: 'Gel Color',       category: 'gel',      durationMins: 55, price: '$30+', duration: '55 phút',      desc: 'Sơn gel bền và đẹp',                imageUrl: _IM_GEL  },
+        { name: 'Full Set Acrylic',category: 'acrylic',  durationMins: 70, price: '$40+', duration: '70 phút',      desc: 'Bộ móng acrylic đầy đủ',            imageUrl: _IM_ACRY },
+        { name: 'Ombre Nails',     category: 'acrylic',  durationMins: 90, price: '$55+', duration: '90 phút',      desc: 'Móng gradient màu sắc hiện đại',    imageUrl: _IM_ACRY },
+        { name: 'Nail Art Design', category: 'nailart',  durationMins: 60, price: '$8+',  duration: 'Tùy thiết kế', desc: 'Nghệ thuật trang trí móng',         imageUrl: _IM_ART  }
       ],
       hours: {
         'Thứ 2–6':  '9:30 AM – 7:30 PM',

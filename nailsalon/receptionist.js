@@ -1,4 +1,4 @@
-// Lily Receptionist v3.4 — Stateful, time-aware AI receptionist for Luxurious Nails & Spa
+// Lily Receptionist v3.5 — Stateful, time-aware AI receptionist for Luxurious Nails & Spa
 // Voice-ready: LilyReceptionist.handleMessage(biz, text, apiKey) → Promise<{text, escalationType}>
 // Languages: English + Spanish + Vietnamese (Claude-detected, not just regex)
 // Features: intent classification, entity extraction, booking state machine,
@@ -1444,21 +1444,34 @@
                       // name/phone. Show Claude's collection question directly.
                       _appendMessage(messagesEl, result.text, 'bot');
                     } else {
-                      // First confirmation for this slot: replace Claude's speculative text
-                      // ("What's your name?") with an explicit availability confirmation so
-                      // the customer knows the time is actually free before sharing details.
+                      // New slot verified free. Replace Claude's speculative history entry.
                       if (biz._aiHistory.length &&
                           biz._aiHistory[biz._aiHistory.length - 1].role === 'assistant') {
                         biz._aiHistory.pop();
                       }
-                      var _availMsg = _buildAvailConfirmMsg(biz, _ed);
-                      biz._aiHistory.push({ role: 'assistant', content: _availMsg });
-                      // pendingAction=booking_offer tells Claude to ask for name after "yes"
-                      biz._bookingState.pendingAction = 'booking_offer';
-                      _saveBookingState(biz);
-                      _saveHistory(biz);
-                      biz._offeredSlot = _slotKey;
-                      _appendMessage(messagesEl, _availMsg, 'bot');
+                      if (_ecs.name && _ecs.phone) {
+                        // Contact info already on file — no need to ask "Would you like to book?".
+                        // Show Claude's confirmed text directly (e.g. "Of course! 10 AM for John.
+                        // Does that look correct?"). Slot is verified free; update offeredSlot so
+                        // the next "yes" passes through to the booking creation check.
+                        biz._aiHistory.push({ role: 'assistant', content: result.text });
+                        biz._bookingState.pendingAction = 'booking_offer';
+                        _saveBookingState(biz);
+                        _saveHistory(biz);
+                        biz._offeredSlot = _slotKey;
+                        _appendMessage(messagesEl, result.text, 'bot');
+                      } else {
+                        // Contact info unknown — show explicit availability confirmation
+                        // before asking for name/phone. Prevents speculative contact collection.
+                        var _availMsg = _buildAvailConfirmMsg(biz, _ed);
+                        biz._aiHistory.push({ role: 'assistant', content: _availMsg });
+                        // pendingAction=booking_offer tells Claude to ask for name after "yes"
+                        biz._bookingState.pendingAction = 'booking_offer';
+                        _saveBookingState(biz);
+                        _saveHistory(biz);
+                        biz._offeredSlot = _slotKey;
+                        _appendMessage(messagesEl, _availMsg, 'bot');
+                      }
                     }
                   } else {
                     // Slot is taken — replace Claude's response with conflict notice
@@ -1478,6 +1491,26 @@
                   _appendMessage(messagesEl, result.text, 'bot');
                 });
               return; // early check is async — skip the branches below for this turn
+            }
+
+            // Safety net: Claude sometimes emits [ESCALATE:appointment] without
+            // [BOOKING:{...}] (all info is in STATE but the BOOKING marker is missing).
+            // Without a bookingDraft the full check can't run, and the else branch would
+            // show Claude's unvalidated text + create a bad null-data escalation.
+            // Build a synthetic draft from the current booking state so the check can proceed.
+            if (result.escalationType === 'appointment' && !biz._bookingDraft) {
+              var _ss = biz._bookingState;
+              if (_ss && _ss.staff && _ss.date && _ss.time && _ss.services && _ss.services.length) {
+                biz._bookingDraft = {
+                  staff:    _ss.staff,
+                  services: _ss.services,
+                  date:     _ss.date,
+                  time:     _ss.time,
+                  name:     _ss.name  || null,
+                  phone:    _ss.phone || null,
+                  lang:     _ss.lang  || 'en'
+                };
+              }
             }
 
             if (result.escalationType === 'appointment' && biz._bookingDraft) {

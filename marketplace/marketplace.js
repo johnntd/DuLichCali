@@ -529,6 +529,290 @@
     '</div>';
   }
 
+  // ── Nail Salon Premium Rendering ──────────────────────────────────────────────
+  // These functions render the premium redesign for .mp-main--nails pages.
+  // They do NOT affect hair or food vendor pages.
+
+  // Category tab toggle — exposed globally for inline onclick handlers
+  function nsShowCat(btn, cat, bizId) {
+    var tabs = btn.closest ? btn.closest('.ns-tabs') : null;
+    if (tabs) {
+      var allTabs = tabs.querySelectorAll('.ns-tab');
+      for (var i = 0; i < allTabs.length; i++) { allTabs[i].classList.remove('active'); }
+    }
+    btn.classList.add('active');
+    var container = document.getElementById('nbServices_' + bizId);
+    if (!container) return;
+    var catDivs = container.querySelectorAll('.nb-cat[data-cat]');
+    for (var j = 0; j < catDivs.length; j++) {
+      catDivs[j].style.display = (cat === 'all' || catDivs[j].getAttribute('data-cat') === cat) ? '' : 'none';
+    }
+  }
+  window.nsShowCat = nsShowCat;
+
+  // Scroll to booking section and optionally activate a category tab
+  function nsScrollToBooking(bizId, cat) {
+    var el = document.getElementById('nailBookSection_' + bizId);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (cat) {
+      setTimeout(function () {
+        var tab = el.querySelector('.ns-tab[data-cat="' + cat + '"]');
+        if (tab) tab.click();
+      }, 450);
+    }
+  }
+  window.nsScrollToBooking = nsScrollToBooking;
+
+  function renderNailsHero(biz) {
+    var heroBg = biz.heroImage
+      ? 'background-image:url(' + escAttr(biz.heroImage) + ');background-size:cover;background-position:center 30%;'
+      : 'background:' + (biz.heroGradient || 'linear-gradient(135deg,#831843,#4c1d95)') + ';';
+    var hasAddr = !!(biz.address || biz.phone);
+    var addrHtml = hasAddr
+      ? '<div class="ns-hero__address">' +
+          (biz.address ? '<span class="ns-hero__address-item">' + mapPinIcon + escHtml(biz.address) + '</span>' : '') +
+          (biz.phone ? '<span class="ns-hero__address-item">' + phoneIcon + '<a href="tel:' + biz.phone + '">' + escHtml(biz.phoneDisplay || biz.phone) + '</a></span>' : '') +
+        '</div>'
+      : '';
+
+    return '<div class="ns-hero' + (hasAddr ? ' ns-hero--has-address' : '') + '">' +
+      '<div class="ns-hero__bg" style="' + heroBg + '"></div>' +
+      '<div class="ns-hero__overlay"></div>' +
+      '<div class="ns-hero__content">' +
+        '<div class="ns-hero__region">' + escHtml(biz.region) + ' \xb7 ' + escHtml(biz.city) + '</div>' +
+        '<h1 class="ns-hero__name">' + escHtml(biz.name) + '</h1>' +
+        '<p class="ns-hero__tagline">' + escHtml(biz.tagline) + '</p>' +
+        '<div class="ns-hero__ctas">' +
+          '<button class="ns-btn-book" type="button" ' +
+            'onclick="document.getElementById(\'nailBookSection_' + biz.id + '\').scrollIntoView({behavior:\'smooth\'})">' +
+            calendarIcon + ' \u0110\u1eb7t L\u1ecbch Ngay' +
+          '</button>' +
+          (biz.phone ? '<a href="tel:' + biz.phone + '" class="ns-btn-call">' + phoneIcon + ' G\u1ecdi ngay</a>' : '') +
+        '</div>' +
+      '</div>' +
+      addrHtml +
+    '</div>';
+  }
+
+  function renderNailsFeatured(biz) {
+    var feats = [
+      { key: 'manicure', label: 'Manicure',      sub: 'Ch\u0103m s\xf3c m\xf3ng tay',    img: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&auto=format&fit=crop&q=80' },
+      { key: 'pedicure', label: 'Pedicure',      sub: 'Ch\u0103m s\xf3c m\xf3ng ch\xe2n',   img: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=400&auto=format&fit=crop&q=80' },
+      { key: 'acrylic',  label: 'Acrylic & Gel', sub: 'M\xf3ng \u0111\u1eafp cao c\u1ea5p',     img: 'https://images.unsplash.com/photo-1632345031435-8727f592d8db?w=400&auto=format&fit=crop&q=80' },
+      { key: 'nailart',  label: 'Nail Art',       sub: 'Ngh\u1ec7 thu\u1eadt trang tr\xed', img: 'https://images.unsplash.com/photo-1636018492665-21ce4ac4e0f1?w=400&auto=format&fit=crop&q=80' }
+    ];
+    var cardsHtml = feats.map(function (f) {
+      return '<div class="ns-feat-card" role="button" tabindex="0" ' +
+        'onclick="window.nsScrollToBooking(\'' + escAttr(biz.id) + '\',\'' + f.key + '\')" ' +
+        'onkeydown="if(event.key===\'Enter\'||event.key===\' \')this.click()" ' +
+        'aria-label="' + escAttr(f.label) + '">' +
+        '<img class="ns-feat-card__img" src="' + escAttr(f.img) + '" alt="" loading="lazy" aria-hidden="true">' +
+        '<div class="ns-feat-card__body">' +
+          '<div class="ns-feat-card__name">' + escHtml(f.label) + '</div>' +
+          '<div class="ns-feat-card__sub">' + escHtml(f.sub) + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    return '<section class="ns-featured">' +
+      '<h2 class="ns-section-heading">D\u1ecbch V\u1ee5 C\u1ee7a Ch\xfang T\xf4i</h2>' +
+      '<p class="ns-section-sub">Chuy\xean nghi\u1ec7p \xb7 T\u1ec9 m\u1ec9 \xb7 An to\xe0n</p>' +
+      '<div class="ns-feat-scroll">' + cardsHtml + '</div>' +
+    '</section>';
+  }
+
+  function renderNailsBookingSection(biz) {
+    var catalog = (biz.services && biz.services.length > 0) ? biz.services : (biz._staticServices || []);
+    if (!catalog.length) return '';
+
+    // Group services by category preserving order
+    var catMap = {}, catOrder = [];
+    catalog.forEach(function (s) {
+      var cat = s.category || 'other';
+      if (!catMap[cat]) { catMap[cat] = []; catOrder.push(cat); }
+      catMap[cat].push(s);
+    });
+
+    var catLabels = {
+      manicure: 'Manicure', pedicure: 'Pedicure', gel: 'Gel & Shellac',
+      acrylic: 'Acrylic & Extensions', nailart: 'Nail Art', dip: 'Dip Powder',
+      spa: 'Spa Treatments', addon: 'Add-ons', other: 'D\u1ecbch V\u1ee5'
+    };
+
+    // Build category tabs (skip if only 1 category)
+    var tabCats = (biz.serviceCategories && biz.serviceCategories.length)
+      ? biz.serviceCategories
+      : catOrder.map(function (k) { return { key: k, label: catLabels[k] || k }; });
+
+    var tabsHtml = '';
+    if (tabCats.length > 1) {
+      tabsHtml = '<div class="ns-tabs">' +
+        '<button class="ns-tab active" type="button" data-cat="all" ' +
+          'onclick="window.nsShowCat(this,\'all\',\'' + escAttr(biz.id) + '\')">' +
+          'T\u1ea5t C\u1ea3</button>' +
+        tabCats.map(function (c) {
+          return '<button class="ns-tab" type="button" data-cat="' + escAttr(c.key) + '" ' +
+            'onclick="window.nsShowCat(this,\'' + escAttr(c.key) + '\',\'' + escAttr(biz.id) + '\')">' +
+            escHtml(c.label) + '</button>';
+        }).join('') +
+      '</div>';
+    }
+
+    // Build service cards grouped by category
+    var svcHtml = catOrder.map(function (cat) {
+      var label = catLabels[cat] || (cat.charAt(0).toUpperCase() + cat.slice(1));
+      var items = catMap[cat].map(function (s) {
+        var meta = [];
+        if (s.durationMins) meta.push(s.durationMins + ' min');
+        if (s.price != null && s.price !== '') {
+          meta.push(typeof s.price === 'number' ? '$' + s.price : s.price);
+        }
+        var imgHtml = s.imageUrl
+          ? '<img class="ns-svc-card__img" src="' + escAttr(s.imageUrl) + '" alt="" loading="lazy" aria-hidden="true">'
+          : '';
+        return '<label class="ns-svc-card nb-svc-card">' +
+          '<input type="checkbox" class="nb-svc-chk" name="services" ' +
+            'value="' + escAttr(s.name) + '" data-mins="' + (s.durationMins || 60) + '">' +
+          imgHtml +
+          '<div class="ns-svc-card__info">' +
+            '<div class="ns-svc-card__name nb-svc-name">' + escHtml(s.name) + '</div>' +
+            (meta.length ? '<div class="ns-svc-card__meta nb-svc-meta">' + escHtml(meta.join(' \xb7 ')) + '</div>' : '') +
+          '</div>' +
+          '<div class="ns-svc-card__check" aria-hidden="true"></div>' +
+        '</label>';
+      }).join('');
+      return '<div class="nb-cat" data-cat="' + escAttr(cat) + '">' +
+        '<div class="nb-cat-label">' + escHtml(label) + '</div>' +
+        '<div class="nb-svc-grid">' + items + '</div>' +
+      '</div>';
+    }).join('');
+
+    var activeStaff = (biz.staff || []).filter(function (m) { return m.active !== false; });
+    var staffOpts = '<option value="Any">B\u1ea5t k\u1ef3 (salon s\u1eafp x\u1ebfp)</option>' +
+      activeStaff.map(function (m) {
+        return '<option value="' + escAttr(m.name) + '">' + escHtml(m.name) + (m.role ? ' \u2014 ' + escHtml(m.role) : '') + '</option>';
+      }).join('');
+    var today = new Date().toISOString().slice(0, 10);
+
+    return '<section class="ns-booking-section" id="nailBookSection_' + biz.id + '">' +
+      '<div class="ns-section-heading-wrap">' +
+        '<h2 class="ns-section-heading">\u0110\u1eb7t L\u1ecbch Ngay</h2>' +
+        '<p class="ns-section-sub">Ch\u1ecdn d\u1ecbch v\u1ee5 v\xe0 th\u1eddi gian ph\xf9 h\u1ee3p v\u1edbi b\u1ea1n</p>' +
+      '</div>' +
+      tabsHtml +
+      '<div class="ns-book-panel">' +
+        '<div class="ns-book-panel__header">' +
+          '<div class="ns-book-panel__sub">Ch\u1ecdn m\u1ed9t ho\u1eb7c nhi\u1ec1u d\u1ecbch v\u1ee5, sau \u0111\xf3 \u0111i\u1ec1n th\xf4ng tin h\u1eb9n.</div>' +
+        '</div>' +
+        '<div class="ns-book-panel__body">' +
+          '<form id="nailBookForm_' + biz.id + '">' +
+            '<div id="nbServices_' + biz.id + '">' + svcHtml + '</div>' +
+            '<div class="ns-dur-badge" id="nbDurRow_' + biz.id + '" style="display:none">' +
+              clockIcon + ' <span>T\u1ed5ng th\u1eddi gian: </span>' +
+              '<strong id="nbDurVal_' + biz.id + '">0</strong><span> ph\xfat</span>' +
+            '</div>' +
+            '<div class="mp-form-row">' +
+              '<label class="mp-label" for="nbStaff_' + biz.id + '">K\u1ef9 thu\u1eadt vi\xean</label>' +
+              '<select class="mp-input" id="nbStaff_' + biz.id + '">' + staffOpts + '</select>' +
+            '</div>' +
+            '<div class="mp-form-row-duo">' +
+              '<div class="mp-form-row">' +
+                '<label class="mp-label" for="nbDate_' + biz.id + '">Ng\xe0y h\u1eb9n</label>' +
+                '<input class="mp-input" type="date" id="nbDate_' + biz.id + '" min="' + today + '" required>' +
+              '</div>' +
+              '<div class="mp-form-row">' +
+                '<label class="mp-label" for="nbTime_' + biz.id + '">Gi\u1edd h\u1eb9n</label>' +
+                '<input class="mp-input" type="time" id="nbTime_' + biz.id + '" required>' +
+              '</div>' +
+            '</div>' +
+            '<div class="mp-form-row-duo">' +
+              '<div class="mp-form-row">' +
+                '<label class="mp-label" for="nbName_' + biz.id + '">H\u1ecd & T\xean</label>' +
+                '<input class="mp-input" type="text" id="nbName_' + biz.id + '" placeholder="Nguy\u1ec5n V\u0103n A" required>' +
+              '</div>' +
+              '<div class="mp-form-row">' +
+                '<label class="mp-label" for="nbPhone_' + biz.id + '">S\u1ed1 \u0111i\u1ec7n tho\u1ea1i</label>' +
+                '<input class="mp-input" type="tel" id="nbPhone_' + biz.id + '" placeholder="(408) 555-0000" required>' +
+              '</div>' +
+            '</div>' +
+            '<div class="mp-form-row">' +
+              '<label class="mp-label" for="nbNotes_' + biz.id + '">Ghi ch\xfa (t\xf9y ch\u1ecdn)</label>' +
+              '<textarea class="mp-input" id="nbNotes_' + biz.id + '" rows="2" placeholder="Y\xeau c\u1ea7u \u0111\u1eb7c bi\u1ec7t..."></textarea>' +
+            '</div>' +
+            '<div class="nb-avail-msg" id="nbMsg_' + biz.id + '" style="display:none"></div>' +
+            '<button type="submit" class="mp-btn mp-btn--primary mp-btn--full" id="nbSubmit_' + biz.id + '">' +
+              calendarIcon + ' G\u1eedi \u0110\u1eb7t L\u1ecbch' +
+            '</button>' +
+            '<div class="mp-form-success" id="nbSuccess_' + biz.id + '">' +
+              checkIcon +
+              '<p>\u0110\u1eb7t l\u1ecbch th\xe0nh c\xf4ng!</p>' +
+              '<p style="margin-top:.5rem;font-size:.8rem;">' +
+                'Ch\xfang t\xf4i s\u1ebd li\xean h\u1ec7 x\xe1c nh\u1eadn s\u1edbm nh\u1ea5t.' +
+              '</p>' +
+            '</div>' +
+          '</form>' +
+        '</div>' +
+      '</div>' +
+    '</section>';
+  }
+
+  function renderNailsTrust(biz) {
+    var checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    var features = biz.features || [];
+    var featHtml = features.map(function (f) {
+      return '<div class="ns-feature-item">' +
+        '<span class="ns-feature-icon">' + checkSvg + '</span>' +
+        escHtml(f) +
+      '</div>';
+    }).join('');
+
+    var hoursHtml = '';
+    if (biz.hours) {
+      var rowsHtml = Object.keys(biz.hours).map(function (day) {
+        return '<div class="ns-hours__row">' +
+          '<span class="ns-hours__day">' + escHtml(day) + '</span>' +
+          '<span>' + escHtml(biz.hours[day]) + '</span>' +
+        '</div>';
+      }).join('');
+      hoursHtml = '<div class="ns-hours">' +
+        '<div class="ns-hours__header">Gi\u1edd M\u1edf C\u1eeda</div>' +
+        rowsHtml +
+      '</div>';
+    }
+
+    return '<section class="ns-trust">' +
+      '<h2 class="ns-section-heading">T\u1ea1i Sao Ch\u1ecdn Ch\xfang T\xf4i</h2>' +
+      '<p class="ns-section-sub">H\u01a1n 10 n\u0103m ch\u0103m s\xf3c s\u1eafc \u0111\u1eb9p t\u1ea1i Bay Area</p>' +
+      '<div class="ns-stats">' +
+        '<div class="ns-stat"><span class="ns-stat__num">10+</span><span class="ns-stat__label">N\u0103m kinh nghi\u1ec7m</span></div>' +
+        '<div class="ns-stat"><span class="ns-stat__num">5\u2605</span><span class="ns-stat__label">\u0110\xe1nh gi\xe1 kh\xe1ch</span></div>' +
+        '<div class="ns-stat"><span class="ns-stat__num">100%</span><span class="ns-stat__label">S\u1ea3n ph\u1ea9m an to\xe0n</span></div>' +
+      '</div>' +
+      (featHtml ? '<div class="ns-features">' + featHtml + '</div>' : '') +
+      hoursHtml +
+    '</section>';
+  }
+
+  function renderNailsGallery() {
+    var imgs = [
+      'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=300&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1636018492665-21ce4ac4e0f1?w=300&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1632345031435-8727f592d8db?w=300&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=300&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=300&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=300&auto=format&fit=crop&q=80'
+    ];
+    var imgsHtml = imgs.map(function (src) {
+      return '<img class="ns-gallery__img" src="' + src + '" alt="" loading="lazy" aria-hidden="true">';
+    }).join('');
+
+    return '<section class="ns-gallery">' +
+      '<div class="ns-gallery__label">H\xecnh \u1ea2nh</div>' +
+      '<div class="ns-gallery__scroll">' + imgsHtml + '</div>' +
+    '</section>';
+  }
+
   function renderInfoStrip(biz) {
     return '<div class="mp-info-strip">' +
       '<div class="mp-info-strip__item">' + mapPinIcon + escHtml(biz.address) + '</div>' +
@@ -686,7 +970,9 @@
       '</div>' +
       '<div class="mp-ai" id="aiWidget_' + biz.id + '">' +
         '<div class="mp-ai__header">' +
-          '<div class="mp-ai__avatar">🤖</div>' +
+          (biz.category === 'nails'
+          ? '<div class="mp-ai__avatar ns-ai-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2z"/></svg></div>'
+          : '<div class="mp-ai__avatar">\ud83e\udd16</div>') +
           '<div class="mp-ai__info">' +
             '<strong>' + escHtml(ai.name) + '</strong>' +
             '<div class="mp-ai__status"><span class="mp-ai__dot"></span>Online · Sẵn sàng hỗ trợ</div>' +
@@ -1065,28 +1351,49 @@
 
   function _renderSalonDetailContent(biz, backUrl) {
     var isNails = biz.category === 'nails';
+    var html;
 
-    var html =
-      renderSalonBar(biz) +
-      '<main class="mp-main">' +
-        renderDetailHero(biz) +
-        renderInfoStrip(biz) +
-        '<div class="mp-detail-body">' +
-          '<div class="mp-detail-col mp-detail-col--left">' +
-            renderServicesSection(biz) +
-            renderHoursSection(biz) +
+    if (isNails) {
+      // Premium nails redesign — stacked full-width sections
+      html =
+        renderSalonBar(biz) +
+        '<main class="mp-main mp-main--nails">' +
+          renderNailsHero(biz) +
+          renderInfoStrip(biz) +
+          renderNailsFeatured(biz) +
+          '<div class="ns-divider"></div>' +
+          renderNailsBookingSection(biz) +
+          '<div class="ns-divider"></div>' +
+          renderNailsTrust(biz) +
+          '<div class="ns-divider"></div>' +
+          '<div class="ns-ai-section">' + renderAiSection(biz) + '</div>' +
+          renderNailsGallery() +
+          '<div class="mp-spacer"></div>' +
+        '</main>' +
+        renderInterpPanel(biz) +
+        renderVendorBottomNav(biz);
+    } else {
+      // Standard hair/other salon 2-column layout
+      html =
+        renderSalonBar(biz) +
+        '<main class="mp-main">' +
+          renderDetailHero(biz) +
+          renderInfoStrip(biz) +
+          '<div class="mp-detail-body">' +
+            '<div class="mp-detail-col mp-detail-col--left">' +
+              renderServicesSection(biz) +
+              renderHoursSection(biz) +
+            '</div>' +
+            '<div class="mp-detail-col mp-detail-col--right">' +
+              (biz.bookingEnabled ? renderBookingSection(biz) : '') +
+              renderAiSection(biz) +
+            '</div>' +
           '</div>' +
-          '<div class="mp-detail-col mp-detail-col--right">' +
-            (isNails
-              ? renderNailBookingSection(biz)
-              : (biz.bookingEnabled ? renderBookingSection(biz) : '')) +
-            renderAiSection(biz) +
-          '</div>' +
-        '</div>' +
-        '<div class="mp-spacer"></div>' +
-      '</main>' +
-      renderInterpPanel(biz) +
-      renderVendorBottomNav(biz);
+          '<div class="mp-spacer"></div>' +
+        '</main>' +
+        renderInterpPanel(biz) +
+        renderVendorBottomNav(biz);
+    }
 
     _container.innerHTML = html;
 
@@ -1104,6 +1411,14 @@
     }
 
     _initVendorNav(biz);
+
+    // For nails: override the generic scrollBook (targets bookingSection_) with nails-specific target
+    if (isNails && window._vnav) {
+      window._vnav.scrollBook = function () {
+        var el = document.getElementById('nailBookSection_' + biz.id);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+    }
   }
 
   // ── Food Vendor Detail Page ────────────────────────────────────────────────────

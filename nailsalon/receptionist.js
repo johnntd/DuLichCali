@@ -1180,11 +1180,10 @@
         escalationType = null;
       }
 
-      // 4. Reset state after booking is sent to vendor
-      if (escalationType === 'appointment') {
-        biz._bookingState = _emptyState();
-        _saveBookingState(biz);
-      }
+      // 4. State is intentionally NOT reset here.
+      //    send() manages state after the availability check outcome is known:
+      //      confirmed  → reset state (booking finalised)
+      //      rejected   → preserve state (customer only needs to fix the invalid slot)
 
       // 5. Strip all markers from displayed text
       var clean = _stripAllMarkers(raw);
@@ -1283,24 +1282,31 @@
               NailAvailabilityChecker.check(biz, draft)
                 .then(function (avail) {
                   if (avail.valid) {
-                    // Available — now safe to show Claude's confirmation and escalate
+                    // Available — show confirmation, finalise state, escalate.
                     _appendMessage(messagesEl, result.text, 'bot');
+                    // Finalise: booking is confirmed — now safe to clear state and draft.
+                    biz._bookingState = _emptyState();
+                    _saveBookingState(biz);
+                    biz._bookingDraft = null;
                     var esc = window.EscalationEngine;
                     if (esc && typeof esc.create === 'function') {
                       esc.create(biz, messagesEl, result.escalationType, draft);
                     }
                   } else {
-                    // Not available — suppress Claude's "confirmed" message entirely.
-                    // Remove it from history so Claude does not think the booking succeeded.
+                    // Not available — suppress Claude's premature "confirmed" message.
+                    // Replace it in history with the rejection so Claude knows what was
+                    // told to the customer and can answer follow-ups naturally:
+                    //   "when does Tracy work?", "what about 3 PM?", "who else is free?"
                     if (biz._aiHistory && biz._aiHistory.length &&
                         biz._aiHistory[biz._aiHistory.length - 1].role === 'assistant') {
                       biz._aiHistory.pop();
-                      _saveHistory(biz);
                     }
+                    biz._aiHistory.push({ role: 'assistant', content: avail.message });
+                    _saveHistory(biz);
                     _appendMessage(messagesEl, avail.message, 'bot');
-                    biz._bookingState = _emptyState();
-                    _saveBookingState(biz);
-                    biz._bookingDraft = null;
+                    // Do NOT clear _bookingState or _bookingDraft.
+                    // Rejection ≠ cancellation: staff, service, name, phone are still valid.
+                    // Customer should only need to supply a new date/time or staff member.
                   }
                 })
                 .catch(function () {

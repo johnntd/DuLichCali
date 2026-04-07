@@ -1,5 +1,63 @@
 # Du Lịch Cali — Claude Code Instructions
 
+## RULE #1 — MOBILE-FIRST DEVELOPMENT (HIGHEST PRIORITY — OVERRIDES ALL ELSE)
+
+Mobile is the PRIMARY platform for this application.
+
+All features, bug fixes, AI behavior, booking logic, and UI interactions MUST be:
+
+1. Implemented for mobile FIRST
+2. Verified on mobile FIRST
+3. Considered correct ONLY if mobile works correctly
+
+Desktop is SECONDARY and must mirror mobile behavior.
+
+### Enforcement
+
+- Never fix desktop while mobile is incorrect
+- Never assume mobile and desktop use the same code path — always verify
+- Always inspect which script/version mobile loads BEFORE making changes
+- All logic (AI, booking, schedule, notifications) must be correct on mobile first
+- After mobile is correct, align desktop to use the SAME logic path
+- Do NOT maintain separate logic branches for mobile vs desktop unless explicitly required
+
+### AI Consistency Requirement
+
+AI behavior must be identical across mobile and desktop.
+
+Example:
+
+User asks: "is Helen there"
+
+Correct interpretation: "is Helen there RIGHT NOW"
+
+The response must use real-time clock + staff schedule + open/closed state, and return the SAME correct answer on both mobile and desktop.
+
+### Verification Requirement
+
+Every change MUST be verified:
+
+1. Mobile test (REQUIRED)
+2. Desktop test (SECONDARY)
+3. Proof both behave identically
+
+A fix is NOT complete unless mobile works correctly and desktop matches mobile.
+
+### Anti-Regression Rule
+
+- Fix improves desktop but breaks mobile → INVALID FIX
+- Fix works on desktop but not mobile → INCOMPLETE FIX
+
+### Debugging Requirement
+
+When debugging AI or booking behavior, always identify:
+
+- Which script version each platform loads
+- Which execution path each platform takes (Claude API vs fallback)
+- Whether the platforms are using the same code path
+
+---
+
 ## HOSTING ARCHITECTURE — NON-NEGOTIABLE
 
 | Role | Platform | Detail |

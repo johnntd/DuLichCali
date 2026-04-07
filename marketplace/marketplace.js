@@ -2423,16 +2423,8 @@
       // category-awareness so the AI can confirm "yes we do gel / acrylic / etc."
       var _catalogSvcs = _activeSvcs.length ? _activeSvcs : (biz._staticServices || []);
 
-      // ── Language detection: 'en' | 'es' | 'vi' ──────────────────────────────
-      function _detectLang(str) {
-        // Vietnamese: precomposed tone-marked vowels unique to Vietnamese (U+1EA0–U+1EF9) or ơ ư đ
-        if (/[\u1EA0-\u1EF9]|[ơưđĐ]/i.test(str)) return 'vi';
-        // Spanish: inverted punctuation, ñ, or high-frequency Spanish words
-        if (/[¿¡ñÑ]/.test(str) ||
-            /(?:^|\s)(quién|quien|cómo|como|cuánto|cuanto|cuándo|cuando|dónde|donde|hacen|puedo|puede|pueden|están|esta\s|ofrecen|tienen|reservar|disponible|mañana|manana|trabajan|trabaja|servicios|precios|acrílico|acrilico|pedicura|manicura|uñas|cuáles|cuales|aceptan|horario)(?:\s|$|[?!,.])/i.test(str)) return 'es';
-        return 'en';
-      }
-      var lang = _detectLang(text);
+      // ── Language detection — shared AIEngine (single source of truth for the app) ──
+      var lang = AIEngine.detectLang(text);
 
       // ── Staff schedule helpers ────────────────────────────────────────────────
       function _staffWorkingToday(staffList) {
@@ -3093,23 +3085,12 @@
       // Use full conversation history (already includes current user message)
       var messages = (biz._aiHistory || []).slice(-20);
 
-      return fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 384,
-          system: systemPrompt,
-          messages: messages
-        })
-      }).then(function (res) {
-        if (!res.ok) throw new Error('API error ' + res.status);
-        return res.json();
+      // ── API call via shared engine (fetch + retry lives in ai-engine.js) ──────
+      return AIEngine.fetchWithRetry(apiKey, {
+        model:      'claude-haiku-4-5-20251001',
+        max_tokens: 384,
+        system:     systemPrompt,
+        messages:   messages
       }).then(function (data) {
         return data.content && data.content[0] && data.content[0].text
           ? data.content[0].text

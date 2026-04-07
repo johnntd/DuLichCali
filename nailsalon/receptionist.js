@@ -1,30 +1,24 @@
-// Lily Receptionist v3.0 — Stateful, time-aware AI receptionist for Luxurious Nails & Spa
+// Lily Receptionist v3.1 — Stateful, time-aware AI receptionist for Luxurious Nails & Spa
 // Voice-ready: LilyReceptionist.handleMessage(biz, text, apiKey) → Promise<{text, escalationType}>
 // Languages: English + Spanish + Vietnamese (Claude-detected, not just regex)
 // Features: intent classification, entity extraction, booking state machine,
 //           multi-service selection, duration aggregation, availability checking,
 //           smart alternatives (next slot / different staff suggestion)
+//
+// Depends on: ai-engine.js (AIEngine.detectLang, AIEngine.fetchWithRetry,
+//             AIEngine.saveHistory, AIEngine.restoreHistory)
 (function () {
   'use strict';
 
   var MODEL       = 'claude-sonnet-4-6';
   var MAX_TOKENS  = 900;   // increased: response + STATE marker JSON
   var HISTORY_CAP = 20;
-  var API_URL     = 'https://api.anthropic.com/v1/messages';
   var DAYS        = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
 
-  // ── Language detection (fast client-side hint — Claude overrides via STATE) ──
-  function _detectLang(text) {
-    // Vietnamese: tonal diacritics OR common Vietnamese words
-    if (/[ắặầấậẻẽẹềếệỉịọốồổỗộởờớợụừứựỳỵăơưđ]/.test(text) ||
-        /\b(mình|tôi|bạn|muốn|đặt lịch|làm móng|tiệm|dịch vụ|hôm nay|ngày mai|bao nhiêu|cảm ơn|xin chào|được không|cho tôi|cho mình|nhé|nha|vậy|ơi|thứ|tuần|lịch hẹn)\b/i.test(text)) {
-      return 'vi';
-    }
-    if (/\b(hola|cuánto|cuanto|cómo|qué|cuando|tiene|tengo|quisiera|quiero|gracias|buenos|precio|cita|disponible|puedo|podría|servicios|uñas)\b/i.test(text)) {
-      return 'es';
-    }
-    return 'en';
-  }
+  // ── Language detection — delegates to shared AIEngine ────────────────────────
+  // AIEngine.detectLang is the single implementation for the entire app.
+  // _detectLang() kept as a thin local alias so call sites inside this file are unchanged.
+  function _detectLang(text) { return AIEngine.detectLang(text); }
 
   // ── Booking state machine ─────────────────────────────────────────────────────
   function _emptyState() {
@@ -949,17 +943,15 @@
     return 'Thank you for contacting ' + name + '! For immediate help please call ' + phone + '.';
   }
 
-  // ── History persistence ───────────────────────────────────────────────────────
+  // ── History persistence — delegates to shared AIEngine ───────────────────────
   function _saveHistory(biz) {
-    try { sessionStorage.setItem('lily_h_' + biz.id, JSON.stringify(biz._aiHistory)); } catch (e) {}
+    AIEngine.saveHistory('lily_h_' + biz.id, biz._aiHistory);
   }
 
   function _restoreHistory(biz) {
     if (biz._aiHistory && biz._aiHistory.length > 0) return;
-    try {
-      var raw = sessionStorage.getItem('lily_h_' + biz.id);
-      if (raw) biz._aiHistory = JSON.parse(raw);
-    } catch (e) {}
+    var saved = AIEngine.restoreHistory('lily_h_' + biz.id);
+    if (saved) biz._aiHistory = saved;
   }
 
   // ── Core message handler (voice-ready — no DOM access) ───────────────────────
@@ -1001,53 +993,15 @@
 
     var systemPrompt = _buildPrompt(biz, lang);
 
-    var _requestBody = JSON.stringify({
+    // ── API call via shared engine (fetch + 3-attempt retry lives in ai-engine.js) ──
+    return AIEngine.fetchWithRetry(apiKey, {
       model:      MODEL,
       max_tokens: MAX_TOKENS,
       system:     systemPrompt,
       messages:   biz._aiHistory.map(function (m) {
         return { role: m.role, content: m.content };
       })
-    });
-
-    var _requestHeaders = {
-      'Content-Type':     'application/json',
-      'x-api-key':        apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    };
-
-    // Retry up to 3 times on transient network errors (ERR_NETWORK_CHANGED, ERR_INTERNET_DISCONNECTED).
-    // API errors (4xx/5xx) are never retried — they have structured error bodies.
-    // Note: Chrome always logs ERR_NETWORK_CHANGED in DevTools before our handler runs —
-    // that console entry is from the browser network layer and cannot be suppressed by JS.
-    var RETRY_DELAYS = [800, 1500, 2500]; // ms between attempts
-
-    function _doFetch() {
-      return fetch(API_URL, { method: 'POST', headers: _requestHeaders, body: _requestBody })
-        .then(function (res) {
-          if (!res.ok) {
-            return res.text().then(function (body) {
-              var e = new Error('API ' + res.status + ': ' + body.slice(0, 120));
-              e.isApiError = true;
-              throw e;
-            });
-          }
-          return res.json();
-        });
-    }
-
-    function _fetchWithRetry(attempt) {
-      return _doFetch().catch(function (err) {
-        if (err.isApiError) throw err;          // structured API error — don't retry
-        if (attempt >= RETRY_DELAYS.length) throw err; // exhausted retries
-        var delay = RETRY_DELAYS[attempt];
-        return new Promise(function (res) { setTimeout(res, delay); })
-          .then(function () { return _fetchWithRetry(attempt + 1); });
-      });
-    }
-
-    return _fetchWithRetry(0)
+    })
     .then(function (data) {
       var raw = (data.content && data.content[0] && data.content[0].text) || '';
 

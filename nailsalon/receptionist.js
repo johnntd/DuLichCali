@@ -371,8 +371,13 @@
             });
 
             if (hasConflict) {
+              // Use staff shift bounds (not salon close time) so the suggested next slot
+              // is always within the technician's actual working hours.
+              // shift is guaranteed non-null here (null exits above).
+              var _slotOpen  = shift ? Math.max(_toMins('09:00'), shift.open)  : _toMins('09:00');
+              var _slotClose = shift ? Math.min(closeMins, shift.close) : closeMins;
               var nextSlot = _findNextSlot(existing, requestedStaff, reqStartMins, totalMins,
-                _toMins('09:00'), closeMins);
+                _slotOpen, _slotClose);
               return { valid: false, message: _buildMsg(biz, 'conflict', {
                 time:     draft.time,
                 staff:    draft.staff,

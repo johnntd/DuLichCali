@@ -144,6 +144,29 @@
       return aStart < bEnd && aEnd > bStart;
     }
 
+    // Returns true if named staff is scheduled to work on dateStr (YYYY-MM-DD),
+    // false if explicitly off, null if schedule data is unavailable (can't validate).
+    // Safe policy: staff member found with schedule → missing day = off (false).
+    //              staff member not found / no biz.staff → unknown (null = pass through).
+    var _staffShortKey = { monday:'mon', tuesday:'tue', wednesday:'wed', thursday:'thu', friday:'fri', saturday:'sat', sunday:'sun' };
+    function _staffWorksOnDate(biz, staffName, dateStr) {
+      if (!biz || !biz.staff || !biz.staff.length || !staffName || !dateStr) return null;
+      var keyLower = staffName.toLowerCase().trim();
+      var member = null;
+      for (var i = 0; i < biz.staff.length; i++) {
+        if ((biz.staff[i].name || '').toLowerCase().trim() === keyLower) { member = biz.staff[i]; break; }
+      }
+      if (!member) return null; // staff not found — can't validate
+      if (!member.schedule) return false; // found but no schedule → treat as unavailable
+      var dayName = _dayName(dateStr);
+      var sched = member.schedule[dayName] || member.schedule[_staffShortKey[dayName]];
+      if (!sched) return false; // day absent → off
+      if (sched.active === false) return false;
+      var open = sched.open || sched.start;
+      if (!open) return false; // no hours → off
+      return true;
+    }
+
     // Walk forward from reqStart in SLOT_STEP increments; return first non-conflicting slot for named staff
     function _findNextSlot(existing, staffKey, reqStart, totalMins, openMins, closeMins) {
       var try_ = reqStart + SLOT_STEP;
@@ -195,6 +218,14 @@
         }
       }
 
+      if (key === 'staff_not_working') {
+        var sn  = data.staff || 'That technician';
+        var day = data.day.charAt(0).toUpperCase() + data.day.slice(1);
+        if (lang === 'vi') return sn + ' không làm việc vào ' + day + '. Bạn muốn chọn ngày khác hoặc nhân viên khác không?';
+        if (lang === 'es') return sn + ' no trabaja el ' + day + '. ¿Le gustaría elegir otro día u otro técnico?';
+        return sn + ' is not working on ' + day + '. Would you like to pick a different day or a different technician?';
+      }
+
       if (key === 'customer_conflict') {
         var existSvcs  = Array.isArray(data.services) && data.services.length ? data.services.join(' + ') : 'an appointment';
         var existStaff = data.staff && data.staff.toLowerCase() !== 'any' ? ' with ' + data.staff : '';
@@ -244,6 +275,21 @@
             close:     _fromMins(closeMins),
             latest:    latest > 0 ? _fromMins(latest) : 'N/A',
             lang:      draft.lang
+          })});
+        }
+      }
+
+      // ── Staff working-day check (hard gate, no Firestore needed) ──────────────
+      // Must run BEFORE Firestore queries: if staff is off that day, reject immediately.
+      // null = unknown (data not loaded) → pass through (fail-open).
+      // false = confirmed off → reject.
+      if (checkStaff) {
+        var worksOnDate = _staffWorksOnDate(biz, draft.staff, draft.date);
+        if (worksOnDate === false) {
+          return Promise.resolve({ valid: false, message: _buildMsg(biz, 'staff_not_working', {
+            staff: draft.staff,
+            day:   _dayName(draft.date),
+            lang:  draft.lang
           })});
         }
       }
@@ -332,7 +378,7 @@
               // Overlap: use >= on right boundary to catch exact back-to-back same-customer
               var aStart = _toMins(appt.time || '00:00');
               var aDur   = appt.totalDurationMins || appt.durationMins || DEFAULT_DUR;
-              if (aStart < reqEnd && (aStart + aDur) >= reqStart) {
+              if (aStart < reqEndMins && (aStart + aDur) >= reqStartMins) {
                 // Check vendor-defined parallel rules before flagging as conflict.
                 // e.g. manicure + pedicure at the same time with different staff = OK.
                 var existSvcs = appt.selectedServices || (appt.service ? [appt.service] : []);

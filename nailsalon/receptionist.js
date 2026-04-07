@@ -1,4 +1,4 @@
-// Lily Receptionist v3.2 — Stateful, time-aware AI receptionist for Luxurious Nails & Spa
+// Lily Receptionist v3.3 — Stateful, time-aware AI receptionist for Luxurious Nails & Spa
 // Voice-ready: LilyReceptionist.handleMessage(biz, text, apiKey) → Promise<{text, escalationType}>
 // Languages: English + Spanish + Vietnamese (Claude-detected, not just regex)
 // Features: intent classification, entity extraction, booking state machine,
@@ -855,12 +855,22 @@
       '  time      — convert to 24h if clear ("2pm" → "14:00", "2:30 chiều" → "14:30") or null',
       '  lang      — "en", "es", or "vi" based on THIS message',
       '',
+      '=== AVAILABILITY — CRITICAL RULE ===',
+      'You have staff SCHEDULE data (when technicians work) but NOT real-time booking data.',
+      'You cannot know which specific time slots are already taken.',
+      'NEVER say: "Helen has a slot at 10" / "I can fit you in at 11" / "10 AM is open" / "That time is available".',
+      'These claims are false — you cannot verify them.',
+      'CORRECT: Ask what time the customer prefers; the system checks it automatically.',
+      '  "Tracy works until 7 PM today. What time works for you?"',
+      '  "What time would you like? I\'ll check that it\'s open."',
+      'If the customer asks "what times are available?" — give ONLY shift hours, never specific open slots.',
+      '',
       '=== BOOKING FLOW ===',
       'When intent = booking_request:',
       '  A. Use entities from current message PLUS any already in CURRENT BOOKING STATE above.',
       '     Do NOT ask for fields already collected.',
       '  B. Identify the first MISSING required field in this order:',
-      '     service(s) → date → time → customer name → customer phone',
+      '     service(s) → date → time → [system validates slot] → customer name → customer phone',
       '     Staff is optional — "any available" is fine if customer does not specify.',
       '  C. Ask for exactly ONE missing field at a time. Be natural ("What day works for you?"',
       '     not "Please provide your preferred date.").',
@@ -942,6 +952,32 @@
     if (lang === 'vi') return 'Yêu cầu của bạn đã được gửi đến ' + salon + ' và đang chờ xác nhận. Chúng tôi sẽ nhắn tin cho bạn ngay khi lịch được xác nhận.';
     if (lang === 'es') return 'Su solicitud fue enviada a ' + salon + ' y está pendiente de confirmación. Le avisaremos por mensaje de texto en cuanto sea confirmada.';
     return 'Your request has been sent to ' + salon + ' and is pending confirmation. We\'ll text you as soon as the salon confirms.';
+  }
+
+  // Shown when early availability check passes and slot has NOT yet been offered to customer.
+  // Replaces Claude's speculative "What's your name?" with an explicit availability confirm.
+  // Status: SLOT_CONFIRMED_AVAILABLE — customer must accept before contact details are collected.
+  function _buildAvailConfirmMsg(biz, draft) {
+    var lang  = (draft && draft.lang) || 'en';
+    var staff = draft.staff || 'Your technician';
+    var t24   = draft.time || '';
+    // HH:MM (24h) → friendly 12h display
+    var timeDisplay = (function () {
+      var p = t24.split(':');
+      if (p.length < 2) return t24;
+      var h = parseInt(p[0], 10), m = parseInt(p[1], 10) || 0;
+      var ap = h < 12 ? 'AM' : 'PM';
+      h = h % 12 || 12;
+      return h + (m ? ':' + ('0' + m).slice(-2) : '') + ' ' + ap;
+    })();
+    var svcs = (draft.services && draft.services.length > 0) ? draft.services.join(' + ') : null;
+    if (lang === 'vi') {
+      return staff + ' trống lúc ' + timeDisplay + (svcs ? ' — dịch vụ ' + svcs : '') + '. Bạn có muốn đặt lịch không?';
+    }
+    if (lang === 'es') {
+      return staff + ' está disponible a las ' + timeDisplay + (svcs ? ' para ' + svcs : '') + '. ¿Le gustaría hacer la reserva?';
+    }
+    return staff + ' is available at ' + timeDisplay + (svcs ? ' for ' + svcs : '') + '. Would you like to book that?';
   }
 
   // Shown at 60-second mark if vendor has not yet confirmed (status still PENDING_VENDOR_CONFIRMATION).
@@ -1349,11 +1385,33 @@
                 lang:              _ecs.lang || 'en',
                 totalDurationMins: _calcTotalDuration(biz, _ecs.services || [])
               };
+              // Track which slot was offered so we show the confirmation ONCE then pass
+              // through to normal contact-collection on subsequent turns.
+              var _slotKey = _ecs.staff + '|' + _ecs.date + '|' + _ecs.time;
               NailAvailabilityChecker.check(biz, _ed)
                 .then(function (avail) {
                   if (avail.valid) {
-                    // Slot is free — show Claude's response ("What's your name?")
-                    _appendMessage(messagesEl, result.text, 'bot');
+                    if (biz._offeredSlot === _slotKey) {
+                      // Slot already confirmed on a prior turn — customer is now giving
+                      // name/phone. Show Claude's collection question directly.
+                      _appendMessage(messagesEl, result.text, 'bot');
+                    } else {
+                      // First confirmation for this slot: replace Claude's speculative text
+                      // ("What's your name?") with an explicit availability confirmation so
+                      // the customer knows the time is actually free before sharing details.
+                      if (biz._aiHistory.length &&
+                          biz._aiHistory[biz._aiHistory.length - 1].role === 'assistant') {
+                        biz._aiHistory.pop();
+                      }
+                      var _availMsg = _buildAvailConfirmMsg(biz, _ed);
+                      biz._aiHistory.push({ role: 'assistant', content: _availMsg });
+                      // pendingAction=booking_offer tells Claude to ask for name after "yes"
+                      biz._bookingState.pendingAction = 'booking_offer';
+                      _saveBookingState(biz);
+                      _saveHistory(biz);
+                      biz._offeredSlot = _slotKey;
+                      _appendMessage(messagesEl, _availMsg, 'bot');
+                    }
                   } else {
                     // Slot is taken — replace Claude's response with conflict notice
                     if (biz._aiHistory.length &&
@@ -1362,6 +1420,7 @@
                     }
                     biz._aiHistory.push({ role: 'assistant', content: avail.message });
                     _saveHistory(biz);
+                    biz._offeredSlot = null; // slot changed — clear pending offer
                     _appendMessage(messagesEl, avail.message, 'bot');
                     // State preserved: customer only needs a different time/date/staff
                   }
@@ -1397,6 +1456,7 @@
                     // Finalise booking state — request is submitted, slot is held.
                     biz._bookingState = _emptyState();
                     _saveBookingState(biz);
+                    biz._offeredSlot = null; // booking submitted — clear slot offer
 
                     // Capture draft values needed for callbacks before nulling the draft
                     var draftLang  = draft.lang;
@@ -1440,6 +1500,7 @@
                     }
                     biz._aiHistory.push({ role: 'assistant', content: avail.message });
                     _saveHistory(biz);
+                    biz._offeredSlot = null; // slot conflict at final check — clear offer
                     _appendMessage(messagesEl, avail.message, 'bot');
                     // Do NOT clear _bookingState or _bookingDraft.
                     // Rejection ≠ cancellation: staff, service, name, phone are still valid.

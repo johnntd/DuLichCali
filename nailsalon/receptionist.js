@@ -1281,6 +1281,25 @@
 
       function send(text) {
         if (!text) return;
+
+        // Guard: block re-submission while escalation write is in flight.
+        // Race window: esc.create() starts an async Firestore write (~100-500ms
+        // to commit). A second submission in that window queries before the doc
+        // is visible → conflict check passes → double booking.
+        // This flag is set before esc.create() and cleared after 5s (well past
+        // commit latency). After 5s the doc IS queryable so any re-try will hit
+        // the conflict check and be rejected correctly.
+        if (biz._submissionInFlight) {
+          var guardLang = (biz._bookingState && biz._bookingState.lang) || 'en';
+          var guardMsg = guardLang === 'vi'
+            ? 'Yêu cầu của bạn đã được gửi và đang chờ xác nhận. Xin vui lòng chờ.'
+            : guardLang === 'es'
+              ? 'Su solicitud ya fue enviada y está pendiente de confirmación. Por favor espere.'
+              : 'Your request has already been sent and is pending confirmation. Please wait a moment.';
+          _appendMessage(messagesEl, guardMsg, 'bot');
+          return;
+        }
+
         _appendMessage(messagesEl, text, 'user');
         var typingId = 'lily_t_' + Date.now();
         _showTyping(messagesEl, typingId);
@@ -1322,6 +1341,13 @@
                     var draftLang  = draft.lang;
                     var draftPhone = draft.phone;
                     biz._bookingDraft = null;
+
+                    // Set in-flight guard BEFORE the async Firestore write.
+                    // Cleared after 5s — safely past Firestore commit latency.
+                    // Prevents double booking from rapid re-submission during the
+                    // ~100-500ms window before the escalation doc becomes queryable.
+                    biz._submissionInFlight = true;
+                    setTimeout(function () { biz._submissionInFlight = false; }, 5000);
 
                     // Escalate: EscalationEngine writes to Firestore + shows spinner +
                     // fires onSnapshot when vendor confirms/declines (up to 20 min).

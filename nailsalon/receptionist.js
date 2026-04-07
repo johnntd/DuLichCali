@@ -1273,22 +1273,30 @@
         _handleMessage(biz, text, apiKey)
           .then(function (result) {
             _hideTyping(typingId);
-            _appendMessage(messagesEl, result.text, 'bot');
 
             if (result.escalationType === 'appointment' && biz._bookingDraft) {
-              // Enrich draft with computed total duration before availability check
+              // VALIDATE FIRST — do NOT show Claude's text until availability is confirmed.
+              // Correct flow: validate → if available show confirmation; if not show rejection.
               var draft = biz._bookingDraft;
               draft.totalDurationMins = _calcTotalDuration(biz, draft.services || []);
 
               NailAvailabilityChecker.check(biz, draft)
                 .then(function (avail) {
                   if (avail.valid) {
+                    // Available — now safe to show Claude's confirmation and escalate
+                    _appendMessage(messagesEl, result.text, 'bot');
                     var esc = window.EscalationEngine;
                     if (esc && typeof esc.create === 'function') {
                       esc.create(biz, messagesEl, result.escalationType, draft);
                     }
                   } else {
-                    // Slot unavailable — surface conflict message, reset state so customer can rebook
+                    // Not available — suppress Claude's "confirmed" message entirely.
+                    // Remove it from history so Claude does not think the booking succeeded.
+                    if (biz._aiHistory && biz._aiHistory.length &&
+                        biz._aiHistory[biz._aiHistory.length - 1].role === 'assistant') {
+                      biz._aiHistory.pop();
+                      _saveHistory(biz);
+                    }
                     _appendMessage(messagesEl, avail.message, 'bot');
                     biz._bookingState = _emptyState();
                     _saveBookingState(biz);
@@ -1296,18 +1304,22 @@
                   }
                 })
                 .catch(function () {
-                  // Availability check error — don't block the booking
+                  // Availability check error — fail-open: show text and escalate
+                  _appendMessage(messagesEl, result.text, 'bot');
                   var esc = window.EscalationEngine;
                   if (esc && typeof esc.create === 'function') {
                     esc.create(biz, messagesEl, result.escalationType, draft);
                   }
                 });
 
-            } else if (result.escalationType) {
-              // Non-appointment escalation (question, etc.) — forward directly
-              var esc = window.EscalationEngine;
-              if (esc && typeof esc.create === 'function') {
-                esc.create(biz, messagesEl, result.escalationType, biz._bookingDraft || null);
+            } else {
+              // Non-appointment response — show immediately, no availability gate needed
+              _appendMessage(messagesEl, result.text, 'bot');
+              if (result.escalationType) {
+                var esc = window.EscalationEngine;
+                if (esc && typeof esc.create === 'function') {
+                  esc.create(biz, messagesEl, result.escalationType, biz._bookingDraft || null);
+                }
               }
             }
           })

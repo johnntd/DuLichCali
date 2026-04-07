@@ -872,27 +872,50 @@
     };
     var FALLBACK = 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&auto=format&fit=crop&q=60';
 
-    // ── VIEW 1a: Featured showcase carousel (popular services) ────────────────
-    var featItems = [
-      { catKey: 'manicure', name: 'Classic Manicure',       dur: '45 min',  price: 'T\u1eeb $18', img: catImages.manicure },
-      { catKey: 'gel',      name: 'Gel Manicure',            dur: '60 min',  price: 'T\u1eeb $38', img: catImages.gel },
-      { catKey: 'pedicure', name: 'Spa Pedicure',            dur: '75 min',  price: 'T\u1eeb $30', img: catImages.pedicure },
-      { catKey: 'acrylic',  name: 'Acrylic Full Set',        dur: '75 min',  price: 'T\u1eeb $45', img: catImages.acrylic },
-      { catKey: 'nailart',  name: 'Nail Art',                dur: '+20 min', price: 'T\u1eeb $25', img: catImages.nailart },
-      { catKey: 'dip',      name: 'Dip Powder Natural Nails',dur: '60 min',  price: 'T\u1eeb $35', img: catImages.dip }
-    ];
-    var featCardsHtml = featItems
-      .filter(function (f) { return _svcsFor(f.catKey).length > 0; })
-      .map(function (f) {
+    // ── VIEW 1a: Featured showcase carousel — live from vendor service data ─────
+    // Priority: featured:true flags → one-per-category with imageUrl → one-per-category → first 6
+    // Falls back to static services only when Firestore has no active services.
+    var _showcaseSrc = firestoreSvcs.length > 0 ? firestoreSvcs : staticSvcs;
+    var _featItems = (function () {
+      var flagged = _showcaseSrc.filter(function (s) { return s.featured === true; });
+      if (flagged.length >= 3) return flagged.slice(0, 6);
+      // one per category, prefer those with an image
+      var seenCat = {}, picks = [];
+      _showcaseSrc.forEach(function (s) {
+        if (picks.length >= 6) return;
+        var cat = s.category || 'other';
+        if (!seenCat[cat] && s.imageUrl) { seenCat[cat] = true; picks.push(s); }
+      });
+      if (picks.length < 3) {
+        seenCat = {}; picks = [];
+        _showcaseSrc.forEach(function (s) {
+          if (picks.length >= 6) return;
+          var cat = s.category || 'other';
+          if (!seenCat[cat]) { seenCat[cat] = true; picks.push(s); }
+        });
+      }
+      if (!picks.length) picks = _showcaseSrc.slice(0, 6);
+      return picks;
+    }());
+    var featCardsHtml = _featItems
+      .filter(function (s) { return _svcsFor(s.category || 'other').length > 0; })
+      .map(function (s) {
+        var cat       = s.category || 'other';
+        var imgSrc    = s.imageUrl || catImages[cat] || FALLBACK;
+        var durText   = s.durationMins ? s.durationMins + ' min' : (s.duration || '');
+        var priceText = (s.price != null && s.price !== '')
+          ? (typeof s.price === 'number' ? 'T\u1eeb $' + s.price : String(s.price))
+          : (s.priceFrom ? 'T\u1eeb $' + s.priceFrom : '');
+        var metaParts = [durText, priceText].filter(Boolean);
         return '<div class="ns-book-feat-card" role="button" tabindex="0" ' +
-          'onclick="window.nsShowServiceList(\'' + escAttr(biz.id) + '\',\'' + escAttr(f.catKey) + '\')" ' +
+          'onclick="window.nsShowServiceList(\'' + escAttr(biz.id) + '\',\'' + escAttr(cat) + '\')" ' +
           'onkeydown="if(event.key===\'Enter\'||event.key===\' \')this.click()" ' +
-          'aria-label="' + escAttr(f.name) + '">' +
-          '<img class="ns-book-feat-card__img" src="' + escAttr(f.img) + '" ' +
+          'aria-label="' + escAttr(s.name) + '">' +
+          '<img class="ns-book-feat-card__img" src="' + escAttr(imgSrc) + '" ' +
             'onerror="this.onerror=null;this.src=\'' + FALLBACK + '\'" alt="" loading="lazy" aria-hidden="true">' +
           '<div class="ns-book-feat-card__body">' +
-            '<div class="ns-book-feat-card__name">' + escHtml(f.name) + '</div>' +
-            '<div class="ns-book-feat-card__meta">' + escHtml(f.dur) + ' \xb7 ' + escHtml(f.price) + '</div>' +
+            '<div class="ns-book-feat-card__name">' + escHtml(s.name) + '</div>' +
+            (metaParts.length ? '<div class="ns-book-feat-card__meta">' + escHtml(metaParts.join(' \xb7 ')) + '</div>' : '') +
           '</div>' +
         '</div>';
       }).join('');
@@ -1704,7 +1727,8 @@
               imageUrl:      s.imageUrl      || '',
               assignedStaff: s.assignedStaff || [],
               active:        true,
-              sortOrder:     s.sortOrder     || 0
+              sortOrder:     s.sortOrder     || 0,
+              featured:      s.featured === true
             });
           });
           svcs.sort(function (a, b) { return a.sortOrder - b.sortOrder; });

@@ -556,6 +556,10 @@
               <label>Mô Tả Ngắn</label>
               <textarea class="sa-input" id="settingDesc" rows="3" placeholder="Giới thiệu về tiệm…"></textarea>
             </div>
+            <div class="sa-field">
+              <label>Claude AI Key <span style="font-size:.7rem;color:var(--muted);font-weight:400">(sk-ant-… — bắt buộc để AI hoạt động)</span></label>
+              <input class="sa-input" id="settingAiKey" type="password" placeholder="sk-ant-…" autocomplete="off" style="font-family:monospace;letter-spacing:.04em">
+            </div>
             <div>
               <button class="btn btn--primary" onclick="saveSettings()">Lưu Cài Đặt</button>
               <span class="sa-msg" id="settingsMsg"></span>
@@ -900,6 +904,7 @@
         document.getElementById('settingPhone').value   = vdata.phoneDisplay  || (staticData && staticData.phoneDisplay) || '';
         document.getElementById('settingAddress').value = vdata.address       || (staticData && staticData.address)      || '';
         document.getElementById('settingDesc').value    = vdata.description   || (staticData && staticData.description)  || '';
+        document.getElementById('settingAiKey').value   = vdata.aiKey || '';
 
         document.getElementById('authLoading').classList.add('hidden');
         document.getElementById('app').classList.add('visible');
@@ -1793,6 +1798,8 @@
       description:  document.getElementById('settingDesc').value.trim(),
       updatedAt:    firebase.firestore.FieldValue.serverTimestamp()
     };
+    var aiKey = document.getElementById('settingAiKey').value.trim();
+    if (aiKey) data.aiKey = aiKey;
     vendorRef.set(data, { merge: true })
       .then(function() {
         document.getElementById('barName').textContent = data.businessName || VENDOR_ID;

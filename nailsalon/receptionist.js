@@ -1133,6 +1133,18 @@
 
       if (!input || !sendBtn || !messagesEl) return;
 
+      // Load API key from vendor's Firestore doc so all devices work without manual setup
+      biz._firestoreApiKey = null;
+      try {
+        if (window.dlcDb && biz.id) {
+          window.dlcDb.collection('vendors').doc(biz.id).get()
+            .then(function(doc) {
+              if (doc.exists && doc.data().aiKey) biz._firestoreApiKey = doc.data().aiKey;
+            })
+            .catch(function() {});
+        }
+      } catch(e) {}
+
       function send(text) {
         if (!text) return;
         _appendMessage(messagesEl, text, 'user');
@@ -1141,6 +1153,7 @@
 
         var apiKey = null;
         try { apiKey = localStorage.getItem('dlc_claude_key'); } catch (e) {}
+        if (!apiKey) apiKey = biz._firestoreApiKey || null;
 
         _handleMessage(biz, text, apiKey)
           .then(function (result) {

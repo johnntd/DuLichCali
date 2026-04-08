@@ -1354,15 +1354,16 @@
           <span class="vcl-label" style="margin-bottom:.2rem">Tài khoản &amp; Vai trò:</span>
           ${vendorUsers.map(u => `
             <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.35rem">
-              <span style="font-size:.65rem;min-width:170px;color:var(--muted)">${escHtml(u.email)}</span>
+              <span style="font-size:.65rem;min-width:170px;color:var(--muted)">${u.email ? escHtml(u.email) : '<em style="opacity:.5">không có email</em>'}</span>
               <select class="vcl-role-select" id="vrole-${escHtml(u.uid)}" onchange="toggleStaffNameInput('vstaff-${escHtml(u.uid)}',this.value)">
                 <option value="owner" ${u.role==='owner'?'selected':''}>Owner</option>
                 <option value="staff" ${u.role!=='owner'?'selected':''}>Staff</option>
               </select>
               <input class="vcl-pin-input" id="vstaff-${escHtml(u.uid)}" type="text" maxlength="40"
-                placeholder="Tên (Manager/Staff)" value="${escHtml(u.staffName)}"
-                style="width:150px${u.role==='owner'?';display:none':''}">
+                placeholder="Tên nhân viên" value="${escHtml(u.staffName)}"
+                style="width:140px${u.role==='owner'?';display:none':''}">
               <button class="btn-vend success" onclick="saveVendorUserRole('${escHtml(u.uid)}','${escHtml(v.id)}')">Lưu</button>
+              <button class="btn-vend danger" onclick="deleteVendorUser('${escHtml(u.uid)}','${escHtml(u.email)}','${escHtml(v.id)}')">Xóa</button>
               <span class="vcl-msg" id="vrole-msg-${escHtml(u.uid)}"></span>
             </div>
           `).join('')}
@@ -1532,6 +1533,15 @@
       if (!el) return;
       el.style.display = role === 'staff' ? '' : 'none';
       if (role !== 'staff') el.value = '';
+    }
+
+    async function deleteVendorUser(uid, email, vendorId) {
+      const label = email || uid;
+      if (!confirm(`Xóa tài khoản "${label}"?\nHành động này không thể hoàn tác.`)) return;
+      try {
+        await db.collection('vendorUsers').doc(uid).delete();
+        loadVendorPanel();
+      } catch(e) { alert('Lỗi: ' + e.message); }
     }
 
     async function createStaffLogin(vendorId) {

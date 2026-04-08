@@ -11,33 +11,53 @@ Real failure found → Add case → Run harness → Fix code → Re-run → Conf
 ## Run the harness
 
 ```bash
+npm run test:receptionist
+# or directly:
 node tests/runner.js
 ```
 
-No build step. No npm install. Requires Node.js ≥ 14.
+No build step. No npm install for dependencies. Requires Node.js ≥ 14.
 
 ---
 
-## What it tests
+## What it tests — and confidence levels
 
-### Layer 1 — Prompt Integrity (17 checks)
-Static analysis of `nailsalon/receptionist.js` source to verify that every known bug fix is still in place. If a fix was accidentally removed (e.g. by a refactor or revert), the relevant test fails immediately.
+Each test layer has a **type** label shown in the runner output. These labels tell you how much confidence each layer actually provides.
+
+### Layer 1 — Prompt Integrity · `static-source-check` · **MEDIUM confidence**
+Greps `nailsalon/receptionist.js` for strings that should only exist when a specific fix is in place. Confirms the instruction text is present. **Does NOT prove Claude follows the instruction.** Claude's actual behavior requires live API testing.
 
 Examples:
-- `"Do NOT inherit prior staff"` — CASE-001 guard
-- `"Set time: null (new time needed)"` — CASE-003 replace-it fix
-- `"BOOKING STATUS: CONFIRMED"` — CASE-009 post-booking clarity
+- `"Do NOT inherit prior staff"` — RX-001 guard
+- `"Set time: null (new time needed)"` — RX-003 replace-it fix
+- `"BOOKING STATUS: CONFIRMED"` — RX-009 post-booking clarity
 
-### Layer 2 — State Parser (13 checks)
-Pure-function tests for the `[STATE:{...}]`, `[BOOKING:{...}]`, and `[ESCALATE:type]` parsing code. These are the decoding layer between Claude's text output and the JS state machine.
+### Layer 2 — State Parser · `mirrored-unit-logic` · **MEDIUM-HIGH confidence**
+Tests `tests/lib/state-parser.js` — a manual duplication of `_parseStateMarker`, `_parseEscalationType`, `_mergeState` from receptionist.js. **Sync risk:** if the production parsing logic changes, this library must be updated manually. Does NOT test the production functions directly.
 
-### Layer 3 — Availability Logic (19 checks)
-Unit tests for the slot-conflict algorithm with mock booking data. No Firebase, no network.
+### Layer 3 — Availability Logic · `mirrored-unit-logic | fixture-behavioral` · **HIGH confidence (algorithm); MEDIUM (production coupling)**
+Tests `tests/lib/avail-logic.js` — a duplication of `NailAvailabilityChecker` with pre-loaded fixture data instead of Firestore. Directly exercises the isModify exclusion paths that caused the RX-003 and RX-006 loop bugs. **Does NOT test real Firestore queries or the production `NailAvailabilityChecker`.** Sync risk same as Layer 2.
 
-Covers: free slot, staff conflict, customer conflict, staff not working, outside shift, isModify exclusion, "any" staff bypass, cancelled booking passthrough, alternative slot suggestions.
+### Layer 4 — Case Library · `structural | static-source-check` · **MEDIUM confidence**
+Validates case file schema (required fields, valid status values, RX-NNN ID format). For `verified_in_runner` cases, checks fix string presence in source (same confidence as Layer 1).
 
-### Layer 4 — Case Library (20 checks)
-Validates structure of all `cases/*.json` files and confirms each fixed case has its fix string present in source.
+---
+
+## What this harness guarantees — and does not guarantee
+
+| Claim | Guaranteed? |
+|-------|-------------|
+| Fix instruction text is present in receptionist.js | ✅ Layer 1 |
+| STATE/BOOKING/ESCALATE parsing is correct | ✅ Layer 2 |
+| Availability algorithm handles conflict cases | ✅ Layer 3 |
+| Case files are properly structured | ✅ Layer 4 |
+| Claude follows the prompt instructions | ❌ Requires live API test |
+| End-to-end booking flow is correct | ❌ Requires live integration test |
+| Firestore behavior matches fixture expectations | ❌ Requires live integration test |
+| Correct behavior on real customer input variation | ❌ Requires live API test |
+| Regression-free after Claude model updates | ❌ Requires live API test |
+
+**A fully-passing harness reduces regression risk but does not prove production correctness.**
 
 ---
 
@@ -65,6 +85,21 @@ tests/
 
 ---
 
+## Case status model
+
+Cases move through a defined progression — never skip steps:
+
+| Status | Meaning |
+|--------|---------|
+| `known_bug` | Documented failure. No fix applied yet. |
+| `expected_fixed` | Code change made. No automated verification added yet. |
+| `verified_in_runner` | Runner has a test for the fix (static/unit level). |
+| `verified_live` | Manually confirmed correct behavior in production. |
+
+`verified_in_runner` is NOT `verified_live`. See the confidence table above.
+
+---
+
 ## How to add a new case when a bug is found
 
 1. **Reproduce the failure** — note the exact conversation that triggered it.
@@ -80,11 +115,11 @@ cp tests/cases/001-staff-switch-helen-to-tracy.json tests/cases/011-your-new-bug
 
 ```json
 {
-  "id": "CASE-011",
-  "date": "2026-04-XX",
+  "id": "RX-011",
+  "fix_date": null,
   "category": "booking_create",
+  "status": "known_bug",
   "title": "Short description of the bug",
-  "fixed": false,
   "failing_behavior": "What the AI did wrong (exact quote if possible)",
   "root_cause": "Technical explanation of why it happened",
   "conversation": [
@@ -105,12 +140,14 @@ node tests/runner.js
 
 5. **Fix the code** in `nailsalon/receptionist.js`.
 
-6. **Add a `verify_fix_string`** to your case — a string that will be present in source ONLY when the fix is applied:
+6. **Add a `verify_fix_string`** and set `"fix_date"` to today. Update `"status"` to `"expected_fixed"`:
 ```json
+"fix_date": "2026-04-XX",
+"status": "expected_fixed",
 "verify_fix_string": "some unique string from your fix"
 ```
 
-7. **Set `"fixed": true`** and run the harness again. All tests must pass.
+7. **Set `"status": "verified_in_runner"`** and run the harness again. All tests must pass.
 
 8. **Bump the version string** in `nailsalon/index.html` per the JS cache-bust rule.
 

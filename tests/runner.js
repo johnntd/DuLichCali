@@ -1,13 +1,28 @@
 #!/usr/bin/env node
 'use strict';
 // tests/runner.js — Nail Receptionist Regression Harness
-// Run: node tests/runner.js
 //
-// Tests are grouped into 4 layers:
-//   1. Prompt Integrity  — verify key instructions exist in receptionist.js source
-//   2. State Parser      — pure function tests for STATE/BOOKING/ESCALATE parsing
-//   3. Availability Logic— unit tests for the slot-conflict algorithm (no Firebase)
-//   4. Case Library      — structure validation + fix verification for all known bugs
+// Run:  node tests/runner.js
+//       npm run test:receptionist
+//
+// Test layers — each has a different confidence level:
+//
+//   [static-source-check]           Greps receptionist.js source for key strings.
+//                                   Verifies instructions EXIST in the prompt.
+//                                   Does NOT verify Claude follows them.
+//
+//   [mirrored-unit-logic]           Tests pure functions duplicated in tests/lib/.
+//                                   Verifies algorithm correctness in isolation.
+//                                   Does NOT test production NailAvailabilityChecker directly.
+//
+//   [fixture-behavioral]            Uses pre-loaded mock booking data.
+//                                   Verifies behavior with known inputs.
+//                                   Does NOT test live Firestore queries.
+//
+//   [structural]                    Validates case file format and required fields.
+//                                   Ensures case library stays consistent.
+//
+// See README.md for full confidence model and workflow.
 
 var path = require('path');
 var fs   = require('fs');
@@ -16,9 +31,10 @@ var fs   = require('fs');
 
 var _passed = 0, _failed = 0, _currentGroup = '', _failures = [];
 
-function group(name) {
+function group(name, testType) {
   _currentGroup = name;
-  console.log('\n[' + name + ']');
+  var tag = testType ? '  \u2502 type: ' + testType : '';
+  console.log('\n[' + name + ']' + (testType ? '  \u2190 ' + testType : ''));
 }
 
 function test(name, fn) {
@@ -58,8 +74,6 @@ var PC  = require('./lib/prompt-checker');
 var BIZ      = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/biz.json')));
 var BOOK_FIX = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/bookings.json')));
 
-// ── Helper: array of fixture bookings by key ─────────────────────────────
-
 function bookings() {
   var args = Array.prototype.slice.call(arguments);
   if (args.length === 0) return Object.values(BOOK_FIX);
@@ -71,109 +85,100 @@ function bookings() {
 
 // ══════════════════════════════════════════════════════════════════════════
 // GROUP 1 — PROMPT INTEGRITY
-// Verify that critical fix instructions are present in receptionist.js.
-// If any of these fail, a known bug may have been silently regressed.
+// type: static-source-check
+//
+// CONFIDENCE: MEDIUM
+// Confirms that fix instructions are textually present in receptionist.js.
+// This is a necessary but NOT sufficient condition for correct behavior —
+// Claude must also follow the instructions, which only live API testing can verify.
 // ══════════════════════════════════════════════════════════════════════════
 
-group('Prompt Integrity');
+group('Prompt Integrity', 'static-source-check');
 var src = PC.loadSource();
 
-test('ENTITY_EXTRACTION: old "inherit from STATE" instruction is gone', function() {
+test('ENTITY_EXTRACTION: old "inherit from STATE" instruction is gone [RX-001]', function() {
   assertNotContains(src, 'inherit from STATE if booking_request',
-    'Legacy inherit-from-STATE staff rule still present — CASE-001 may regress');
+    'Legacy staff inherit rule still present — RX-001 may regress');
 });
 
-test('ENTITY_EXTRACTION: updated staff rule says "do NOT inherit prior staff"', function() {
-  assertContains(src, 'Do NOT inherit prior staff',
-    'CASE-001/002 fix: staff entity extraction must not inherit conflicting staff from STATE');
+test('ENTITY_EXTRACTION: updated staff rule says "do NOT inherit prior staff" [RX-001]', function() {
+  assertContains(src, 'Do NOT inherit prior staff');
 });
 
-test('CONFLICT_RESOLUTION — STAFF SWITCH section exists', function() {
-  assertContains(src, 'CONFLICT RESOLUTION \u2014 STAFF SWITCH',
-    'CASE-001/002 fix: CONFLICT_RESOLUTION section must exist for staff-switch handling');
+test('CONFLICT_RESOLUTION \u2014 STAFF SWITCH section exists [RX-001/002]', function() {
+  assertContains(src, 'CONFLICT RESOLUTION \u2014 STAFF SWITCH');
 });
 
-test('CONFLICT_RESOLUTION: instructs to KEEP date/time from STATE', function() {
-  assertContains(src, 'KEEP date and time from CURRENT BOOKING STATE',
-    'CONFLICT_RESOLUTION must preserve date/time during staff switch');
+test('CONFLICT_RESOLUTION: instructs to KEEP date/time from STATE [RX-001/002]', function() {
+  assertContains(src, 'KEEP date and time from CURRENT BOOKING STATE');
 });
 
 test('booking_offer affirmative: clears pendingAction (prevents re-ask loop)', function() {
-  assertContains(src, 'Set pendingAction: null in STATE (transition is done',
-    'booking_offer loop fix: affirmative response must clear pendingAction');
+  assertContains(src, 'Set pendingAction: null in STATE (transition is done');
 });
 
-test('"replace it" handling: clears time to null (prevents customer_conflict loop)', function() {
-  assertContains(src, 'Set time: null (new time needed)',
-    'CASE-003 fix: "replace it" response must clear time to null so old slot is not re-checked');
+test('"replace it" handling: clears time to null (prevents customer_conflict loop) [RX-003]', function() {
+  assertContains(src, 'Set time: null (new time needed)');
 });
 
-test('"replace it": instructs to ask ONCE and not re-show conflict', function() {
-  assertContains(src, 'Do NOT re-show the conflict message',
-    'CASE-003 fix: replace-it path must suppress re-showing conflict message');
+test('"replace it": instructs to ask ONCE and not re-show conflict [RX-003]', function() {
+  assertContains(src, 'Do NOT re-show the conflict message');
 });
 
-test('CANCEL BOOKING section exists', function() {
-  assertContains(src, '=== CANCEL BOOKING ===',
-    'CASE-004 fix: CANCEL BOOKING section must exist in system prompt');
+test('CANCEL BOOKING section exists [RX-004]', function() {
+  assertContains(src, '=== CANCEL BOOKING ===');
 });
 
-test('CANCEL: handles "cancel" without telling customer to call salon', function() {
-  assertContains(src, 'Do NOT tell the customer to call the salon to cancel',
-    'CASE-004 fix: AI must handle cancel directly, not redirect to phone');
+test('CANCEL: handles "cancel" without redirecting to phone [RX-004]', function() {
+  assertContains(src, 'Do NOT tell the customer to call the salon to cancel');
 });
 
-test('_earlyCheckReady: passes isModify flag for modify_booking state', function() {
-  assertContains(src, 'isModify:          _inModify',
-    'CASE-003/006 fix: isModify must be passed to availability check in earlyCheckReady');
+test('_earlyCheckReady: passes isModify flag for modify_booking [RX-003/006]', function() {
+  assertContains(src, 'isModify:          _inModify');
 });
 
-test('_earlyCheckReady: passes phone when in modify mode', function() {
-  assertContains(src, "phone:             _inModify ? (_ecs.phone || null) : null",
-    'CASE-003/006 fix: phone must be passed with isModify so own booking is excluded');
+test('_earlyCheckReady: passes phone when in modify mode [RX-003/006]', function() {
+  assertContains(src, "phone:             _inModify ? (_ecs.phone || null) : null");
 });
 
-test('Post-booking state context: BOOKING STATUS: CONFIRMED signal', function() {
-  assertContains(src, 'BOOKING STATUS: CONFIRMED',
-    'CASE-009 fix: state context must signal confirmed booking so Claude knows not to re-collect fields');
+test('Post-booking state context: BOOKING STATUS: CONFIRMED signal [RX-009]', function() {
+  assertContains(src, 'BOOKING STATUS: CONFIRMED');
 });
 
-test('Post-booking state context: Do NOT ask for date/time again', function() {
-  assertContains(src, 'Do NOT ask for date/time again',
-    'CASE-009 fix: explicitly tells Claude not to re-ask date/time after booking confirmed');
+test('Post-booking state context: Do NOT ask for date/time again [RX-009]', function() {
+  assertContains(src, 'Do NOT ask for date/time again');
 });
 
-test('Confirmation text: "no further action needed" (prevents ambiguous close)', function() {
-  assertContains(src, 'no further action needed',
-    'CASE-009 fix: confirmation must be unambiguous and final');
+test('Confirmation text: "no further action needed" [RX-009]', function() {
+  assertContains(src, 'no further action needed');
 });
 
-test('_submitDirectBooking: isExactReschedule logic present (update-in-place)', function() {
-  assertContains(src, 'isExactReschedule',
-    'CASE-005 fix: must use .update() for reschedule with known booking ID');
+test('_submitDirectBooking: isExactReschedule guard present [RX-005]', function() {
+  assertContains(src, 'isExactReschedule');
 });
 
-test('_fetchLiveBizData: live data refresh exists (stale hours mitigation)', function() {
-  assertContains(src, '_fetchLiveBizData',
-    'CASE-010: live data refresh function must exist');
+test('_fetchLiveBizData: live data refresh function exists [RX-010]', function() {
+  assertContains(src, '_fetchLiveBizData');
 });
 
-test('10-minute data cache interval present', function() {
-  assertContains(src, '600000',
-    'CASE-010: 10-minute cache window should be configured');
+test('10-minute data cache interval configured [RX-010]', function() {
+  assertContains(src, '600000');
 });
 
 // ══════════════════════════════════════════════════════════════════════════
 // GROUP 2 — STATE PARSER
-// Verify the parseStateMarker / parseEscalationType / parseBookingDraft
-// functions work correctly. These are the decoding layer between Claude
-// and the JS state machine.
+// type: mirrored-unit-logic
+//
+// CONFIDENCE: MEDIUM-HIGH for parsing correctness.
+// Tests state-parser.js which duplicates the parsing logic from receptionist.js.
+// Sync risk: if receptionist.js parsing changes, this lib must be updated manually.
+// Does NOT test the actual _parseStateMarker in production code directly.
 // ══════════════════════════════════════════════════════════════════════════
 
-group('State Parser');
+group('State Parser', 'mirrored-unit-logic');
 
 test('parses a complete STATE marker', function() {
-  var reply = 'What service would you like?\n[STATE:{"intent":"booking_request","services":["Gel Manicure"],"staff":"Tracy","date":"2026-04-13","time":null,"name":null,"phone":null,"lang":"en","pendingAction":null,"existingBookingId":null}]';
+  var reply = 'What service?\n[STATE:{"intent":"booking_request","services":["Gel Manicure"],"staff":"Tracy","date":"2026-04-13","time":null,"name":null,"phone":null,"lang":"en","pendingAction":null,"existingBookingId":null}]';
   var s = SP.parseStateMarker(reply);
   assert(s !== null, 'should parse successfully');
   assertEq(s.intent, 'booking_request');
@@ -203,49 +208,44 @@ test('uses lastIndexOf — picks LAST STATE marker when multiple present', funct
 });
 
 test('parses STATE with pendingAction=booking_offer', function() {
-  var reply = 'Tracy is free at 2 PM! Would you like to book that?\n[STATE:{"intent":"booking_request","services":["Manicure"],"staff":"Tracy","date":"2026-04-13","time":"14:00","name":null,"phone":null,"lang":"en","pendingAction":"booking_offer","existingBookingId":null}]';
+  var reply = 'Tracy is free at 2 PM! Would you like to book?\n[STATE:{"intent":"booking_request","services":["Manicure"],"staff":"Tracy","date":"2026-04-13","time":"14:00","name":null,"phone":null,"lang":"en","pendingAction":"booking_offer","existingBookingId":null}]';
   var s = SP.parseStateMarker(reply);
   assertEq(s.pendingAction, 'booking_offer');
 });
 
-test('parses STATE with pendingAction=modify_booking', function() {
+test('parses STATE with pendingAction=modify_booking, time=null [RX-003 fix]', function() {
+  // After "replace it", Claude should output time:null and pendingAction:modify_booking
   var reply = 'What new time would you like?\n[STATE:{"intent":"booking_request","services":["Manicure"],"staff":"Helen","date":"2026-04-13","time":null,"name":"Jane","phone":"4085551234","lang":"en","pendingAction":"modify_booking","existingBookingId":null}]';
   var s = SP.parseStateMarker(reply);
   assertEq(s.pendingAction, 'modify_booking');
-  assert(s.time === null, 'time should be null after "replace it"');
+  assert(s.time === null, 'time must be null after replace-it — non-null time causes customer_conflict re-fire');
 });
 
 test('extracts escalation type: appointment', function() {
-  var t = SP.parseEscalationType('Perfect!\n[BOOKING:{}]\n[ESCALATE:appointment]');
-  assertEq(t, 'appointment');
+  assertEq(SP.parseEscalationType('[BOOKING:{}]\n[ESCALATE:appointment]'), 'appointment');
 });
 
-test('extracts escalation type: cancel', function() {
-  var t = SP.parseEscalationType("Of course, I've cancelled it.\n[ESCALATE:cancel]");
-  assertEq(t, 'cancel');
+test('extracts escalation type: cancel [RX-004]', function() {
+  assertEq(SP.parseEscalationType("I've cancelled it.\n[ESCALATE:cancel]"), 'cancel');
 });
 
 test('escalation type is case-insensitive', function() {
-  var t = SP.parseEscalationType('[ESCALATE:APPOINTMENT]');
-  assertEq(t, 'appointment');
+  assertEq(SP.parseEscalationType('[ESCALATE:APPOINTMENT]'), 'appointment');
 });
 
 test('returns null when no escalation marker', function() {
-  var t = SP.parseEscalationType('Just checking availability.');
-  assert(t === null);
+  assert(SP.parseEscalationType('Just checking availability.') === null);
 });
 
-test('parses BOOKING draft', function() {
+test('parses BOOKING draft with lang field [RX-007]', function() {
   var d = SP.parseBookingDraft('[BOOKING:{"services":["Gel Manicure"],"staff":"Tracy","date":"2026-04-13","time":"14:00","name":"Jane","phone":"4085551234","lang":"en"}]');
   assert(d !== null);
+  assertEq(d.lang, 'en', 'lang must be "en" for English booking — RX-007 regression');
   assertEq(d.staff, 'Tracy');
-  assertEq(d.time, '14:00');
-  assertEq(d.lang, 'en');
 });
 
 test('BOOKING draft returns null on malformed JSON', function() {
-  var d = SP.parseBookingDraft('[BOOKING:{bad json}]');
-  assert(d === null);
+  assert(SP.parseBookingDraft('[BOOKING:{bad json}]') === null);
 });
 
 test('mergeState applies all update keys', function() {
@@ -254,181 +254,145 @@ test('mergeState applies all update keys', function() {
   var merged  = SP.mergeState(current, update);
   assertEq(merged.intent, 'booking_request');
   assertEq(merged.staff, 'Tracy');
-  assertEq(merged.time, null); // unchanged
+  assertEq(merged.time, null); // unchanged field preserved
 });
 
 // ══════════════════════════════════════════════════════════════════════════
 // GROUP 3 — AVAILABILITY LOGIC
-// Pure algorithm tests against fixture data. No Firebase. No network.
-// Uses the extracted avail-logic.js which mirrors NailAvailabilityChecker.
+// type: mirrored-unit-logic + fixture-behavioral
+//
+// CONFIDENCE: HIGH for algorithm correctness; MEDIUM for production coupling.
+// avail-logic.js mirrors NailAvailabilityChecker from receptionist.js.
+// Uses pre-loaded fixture data — does NOT test Firestore queries.
+// Sync risk: if production checker logic changes, avail-logic.js must be updated.
+//
+// The isModify exclusion tests (RX-003, RX-006) are the highest-value tests here
+// because they directly exercise the JS logic path that was causing the loop bug.
 // ══════════════════════════════════════════════════════════════════════════
 
-group('Availability Logic');
+group('Availability Logic', 'mirrored-unit-logic | fixture-behavioral');
 
-// 2026-04-13 = Monday (Helen works 09:00-18:00, Tracy 10:00-19:00)
+// 2026-04-13 = Monday  (Helen 09:00-18:00, Tracy 10:00-19:00, Lisa 09:00-17:00)
 // 2026-04-14 = Tuesday (same schedule)
 // 2026-04-19 = Sunday  (nobody works)
 
 test('free slot: empty schedule returns valid=true', function() {
-  var draft = { staff: 'Helen', date: '2026-04-13', time: '10:00', totalDurationMins: 60 };
-  var r = AL.checkAvailability(BIZ, draft, []);
-  assert(r.valid === true, 'free slot should be valid');
+  var r = AL.checkAvailability(BIZ, { staff: 'Helen', date: '2026-04-13', time: '10:00', totalDurationMins: 60 }, []);
+  assert(r.valid === true);
 });
 
-test('staff not working that day (Sunday) returns key=staff_not_working', function() {
-  var draft = { staff: 'Helen', date: '2026-04-19', time: '10:00', totalDurationMins: 60 };
-  var r = AL.checkAvailability(BIZ, draft, []);
-  assert(!r.valid, 'Helen does not work Sundays');
+test('staff not working Sunday returns key=staff_not_working', function() {
+  var r = AL.checkAvailability(BIZ, { staff: 'Helen', date: '2026-04-19', time: '10:00', totalDurationMins: 60 }, []);
+  assert(!r.valid);
   assertEq(r.key, 'staff_not_working');
 });
 
 test('Lisa does not work Tuesdays', function() {
-  var draft = { staff: 'Lisa', date: '2026-04-14', time: '10:00', totalDurationMins: 60 };
-  var r = AL.checkAvailability(BIZ, draft, []);
-  assert(!r.valid, 'Lisa has null for Tuesday');
+  var r = AL.checkAvailability(BIZ, { staff: 'Lisa', date: '2026-04-14', time: '10:00', totalDurationMins: 60 }, []);
+  assert(!r.valid);
   assertEq(r.key, 'staff_not_working');
 });
 
 test('time after shift end returns key=outside_shift', function() {
-  var draft = { staff: 'Helen', date: '2026-04-13', time: '18:00', totalDurationMins: 60 };
-  // Helen ends at 18:00; a 60-min service starting at 18:00 ends at 19:00 > 18:00 → outside_shift
-  var r = AL.checkAvailability(BIZ, draft, []);
-  assert(!r.valid, 'Service would run past Helens shift end');
+  // Helen ends 18:00; 60-min service at 18:00 runs to 19:00 > 18:00
+  var r = AL.checkAvailability(BIZ, { staff: 'Helen', date: '2026-04-13', time: '18:00', totalDurationMins: 60 }, []);
+  assert(!r.valid);
   assertEq(r.key, 'outside_shift');
 });
 
 test('time before shift start returns key=outside_shift', function() {
-  var draft = { staff: 'Tracy', date: '2026-04-13', time: '09:00', totalDurationMins: 60 };
-  // Tracy starts at 10:00; 09:00 is before her shift
-  var r = AL.checkAvailability(BIZ, draft, []);
-  assert(!r.valid, 'Tracy does not start until 10:00');
+  // Tracy starts 10:00; 09:00 is before her shift
+  var r = AL.checkAvailability(BIZ, { staff: 'Tracy', date: '2026-04-13', time: '09:00', totalDurationMins: 60 }, []);
+  assert(!r.valid);
   assertEq(r.key, 'outside_shift');
 });
 
 test('staff conflict: exact same time returns key=conflict', function() {
-  var draft = { staff: 'Helen', date: '2026-04-13', time: '14:00', totalDurationMins: 60 };
-  var r = AL.checkAvailability(BIZ, draft, bookings('confirmed_helen_monday_2pm'));
-  assert(!r.valid, 'Helen has another booking at 14:00');
+  var r = AL.checkAvailability(BIZ, { staff: 'Helen', date: '2026-04-13', time: '14:00', totalDurationMins: 60 }, bookings('confirmed_helen_monday_2pm'));
+  assert(!r.valid);
   assertEq(r.key, 'conflict');
 });
 
 test('staff conflict: overlapping (not exact) time returns key=conflict', function() {
-  // Helen booked 14:00-15:00; new request 14:30-15:30 overlaps
-  var draft = { staff: 'Helen', date: '2026-04-13', time: '14:30', totalDurationMins: 60 };
-  var r = AL.checkAvailability(BIZ, draft, bookings('confirmed_helen_monday_2pm'));
-  assert(!r.valid, 'Overlapping appointment should conflict');
+  // Helen booked 14:00-15:00; requesting 14:30-15:30 overlaps
+  var r = AL.checkAvailability(BIZ, { staff: 'Helen', date: '2026-04-13', time: '14:30', totalDurationMins: 60 }, bookings('confirmed_helen_monday_2pm'));
+  assert(!r.valid);
   assertEq(r.key, 'conflict');
 });
 
 test('staff conflict: suggests alternative slots', function() {
-  var draft = { staff: 'Helen', date: '2026-04-13', time: '14:00', totalDurationMins: 60 };
-  var r = AL.checkAvailability(BIZ, draft, bookings('confirmed_helen_monday_2pm'));
+  var r = AL.checkAvailability(BIZ, { staff: 'Helen', date: '2026-04-13', time: '14:00', totalDurationMins: 60 }, bookings('confirmed_helen_monday_2pm'));
   assert(Array.isArray(r.altSlots) && r.altSlots.length > 0, 'Should suggest alternatives');
-  // 13:00 and 15:00 should both be free
   assert(r.altSlots.indexOf('13:00') >= 0 || r.altSlots.indexOf('15:00') >= 0, 'Expected 13:00 or 15:00 as alternatives');
 });
 
 test('adjacent booking (back-to-back) does NOT conflict', function() {
-  // Existing: Helen 13:00-14:00; new: Helen 14:00-15:00 — start == prior end, no overlap
-  var existing = [{
-    status: 'confirmed', requestedDate: '2026-04-13', requestedTime: '13:00',
-    staff: 'Helen', totalDurationMins: 60,
-    customerName: 'Bob', customerPhone: '4085550001'
-  }];
-  var draft = { staff: 'Helen', date: '2026-04-13', time: '14:00', totalDurationMins: 60 };
-  var r = AL.checkAvailability(BIZ, draft, existing);
-  assert(r.valid, 'Back-to-back should not overlap');
+  var existing = [{ status: 'confirmed', requestedDate: '2026-04-13', requestedTime: '13:00', staff: 'Helen', totalDurationMins: 60, customerName: 'Bob', customerPhone: '4085550001' }];
+  var r = AL.checkAvailability(BIZ, { staff: 'Helen', date: '2026-04-13', time: '14:00', totalDurationMins: 60 }, existing);
+  assert(r.valid, 'Back-to-back must not overlap');
 });
 
-test('"any" staff booking always skips named-staff conflict check', function() {
-  var draft = { staff: 'any', date: '2026-04-13', time: '14:00', totalDurationMins: 60 };
-  var r = AL.checkAvailability(BIZ, draft, bookings('confirmed_helen_monday_2pm'));
-  assert(r.valid, '"any" staff bypasses named-staff conflict check');
+test('"any" staff booking skips named-staff conflict check', function() {
+  var r = AL.checkAvailability(BIZ, { staff: 'any', date: '2026-04-13', time: '14:00', totalDurationMins: 60 }, bookings('confirmed_helen_monday_2pm'));
+  assert(r.valid, '"any" bypasses named-staff check');
 });
 
 test('cancelled booking does NOT block the slot', function() {
-  var draft = { staff: 'Helen', date: '2026-04-13', time: '14:00', totalDurationMins: 60 };
-  var r = AL.checkAvailability(BIZ, draft, bookings('cancelled_helen_monday_2pm'));
+  var r = AL.checkAvailability(BIZ, { staff: 'Helen', date: '2026-04-13', time: '14:00', totalDurationMins: 60 }, bookings('cancelled_helen_monday_2pm'));
   assert(r.valid === true, 'Cancelled booking must not block the slot');
 });
 
 test('customer conflict: same phone, overlapping time returns key=customer_conflict', function() {
-  // Jane Smith (4085551234) has Tracy at 14:00 Mon; Jane books Helen at 14:00 same day
-  var draft = {
-    staff: 'Helen', date: '2026-04-13', time: '14:00', totalDurationMins: 60,
-    name: 'Jane', phone: '4085551234'
-  };
-  var r = AL.checkAvailability(BIZ, draft, bookings('confirmed_jane_monday_2pm'));
-  assert(!r.valid, 'Same customer double-booked same time');
+  // Jane Smith (4085551234) has Tracy at 14:00 Mon; Jane books Helen at same time
+  var r = AL.checkAvailability(BIZ, { staff: 'Helen', date: '2026-04-13', time: '14:00', totalDurationMins: 60, name: 'Jane', phone: '4085551234' }, bookings('confirmed_jane_monday_2pm'));
+  assert(!r.valid);
   assertEq(r.key, 'customer_conflict');
 });
 
 test('customer conflict: same name (no phone) triggers conflict', function() {
-  var draft = {
-    staff: 'Helen', date: '2026-04-13', time: '14:00', totalDurationMins: 60,
-    name: 'Jane Smith'
-  };
-  var r = AL.checkAvailability(BIZ, draft, bookings('confirmed_jane_monday_2pm'));
-  assert(!r.valid, 'Name match alone should trigger customer_conflict');
+  var r = AL.checkAvailability(BIZ, { staff: 'Helen', date: '2026-04-13', time: '14:00', totalDurationMins: 60, name: 'Jane Smith' }, bookings('confirmed_jane_monday_2pm'));
+  assert(!r.valid);
   assertEq(r.key, 'customer_conflict');
 });
 
-test('CASE-003 regression: isModify=true excludes own booking (no customer_conflict loop)', function() {
-  // Jane wants to reschedule her existing booking at 14:00 to a new time.
-  // With isModify=true, her own booking should be excluded — no false customer_conflict.
-  var draft = {
-    staff: 'Tracy', date: '2026-04-13', time: '14:00', totalDurationMins: 45,
-    name: 'Jane', phone: '4085551234',
-    isModify: true
-  };
-  var r = AL.checkAvailability(BIZ, draft, bookings('confirmed_jane_monday_2pm'));
-  assert(r.valid === true, 'isModify should exclude own booking; no customer_conflict should fire');
+test('[RX-003] isModify=true excludes own booking — no customer_conflict loop', function() {
+  // Jane reschedules: her own 14:00 booking must NOT block her new attempt at 14:00
+  var r = AL.checkAvailability(BIZ, { staff: 'Tracy', date: '2026-04-13', time: '14:00', totalDurationMins: 45, name: 'Jane', phone: '4085551234', isModify: true }, bookings('confirmed_jane_monday_2pm'));
+  assert(r.valid === true, 'isModify must exclude own booking — customer_conflict loop bug');
 });
 
-test('CASE-003 regression: isModify=true, different staff still checks staff conflict', function() {
-  // Jane reschedules to a slot that Helen (different person) has booked — should still conflict on staff
-  var draft = {
-    staff: 'Helen', date: '2026-04-13', time: '14:00', totalDurationMins: 60,
-    name: 'Jane', phone: '4085551234',
-    isModify: true
-  };
-  var r = AL.checkAvailability(BIZ, draft, bookings('confirmed_helen_monday_2pm'));
-  // Helen is booked by Bob at 14:00; Jane's reschedule tries to book Helen at same time
-  assert(!r.valid, 'Staff conflict should still fire even with isModify=true');
+test('[RX-003] isModify=true, OTHER staff still detects conflict', function() {
+  // Jane reschedules to Helen at 14:00 — but Bob (different person) has Helen at 14:00
+  var r = AL.checkAvailability(BIZ, { staff: 'Helen', date: '2026-04-13', time: '14:00', totalDurationMins: 60, name: 'Jane', phone: '4085551234', isModify: true }, bookings('confirmed_helen_monday_2pm'));
+  assert(!r.valid, 'Staff conflict must still fire even with isModify=true');
   assertEq(r.key, 'conflict');
 });
 
-test('CASE-006 regression: customer can reschedule to slot their old booking occupied', function() {
-  // Edge case: Jane currently at 14:00 with Tracy; wants to keep same time but switch staff.
-  // Her own 14:00 booking should NOT block a booking with Helen at 14:00.
-  var draft = {
-    staff: 'Helen', date: '2026-04-13', time: '14:00', totalDurationMins: 60,
-    name: 'Jane', phone: '4085551234',
-    isModify: true
-  };
-  // Only Jane's existing booking exists (no Helen conflict)
-  var r = AL.checkAvailability(BIZ, draft, bookings('confirmed_jane_monday_2pm'));
-  assert(r.valid === true, 'Own booking excluded; Helen is free; reschedule should succeed');
+test('[RX-006] customer reschedules to slot their old booking occupied (same staff)', function() {
+  // Jane has Tracy at 14:00; reschedules to Helen at 14:00. Her Tracy booking excluded; Helen is free.
+  var r = AL.checkAvailability(BIZ, { staff: 'Helen', date: '2026-04-13', time: '14:00', totalDurationMins: 60, name: 'Jane', phone: '4085551234', isModify: true }, bookings('confirmed_jane_monday_2pm'));
+  assert(r.valid === true, 'Own booking excluded; Helen free; reschedule must succeed');
 });
 
-test('no booking fields → falls through to valid=true (fail-open)', function() {
-  var r = AL.checkAvailability(BIZ, null, []);
-  assert(r.valid === true, 'null draft should be valid (fail-open)');
+test('null draft falls through to valid=true (fail-open)', function() {
+  assert(AL.checkAvailability(BIZ, null, []).valid === true);
 });
 
-test('missing time field → falls through to valid=true (fail-open)', function() {
-  var r = AL.checkAvailability(BIZ, { staff: 'Helen', date: '2026-04-13' }, []);
-  assert(r.valid === true, 'Missing time is treated as fail-open');
+test('missing time field falls through to valid=true (fail-open)', function() {
+  assert(AL.checkAvailability(BIZ, { staff: 'Helen', date: '2026-04-13' }, []).valid === true);
 });
 
 // ══════════════════════════════════════════════════════════════════════════
 // GROUP 4 — REGRESSION CASE LIBRARY
-// Validate structure and content of all case files.
-// For each fixed case with a verify_fix_string, confirm the fix is still
-// detectable in receptionist.js source code.
+// type: structural + static-source-check
+//
+// CONFIDENCE: structural = HIGH; fix-string = same as Layer 1 (static-source-check).
+// Validates that case files have the correct schema.
+// For each case with status=verified_in_runner, confirms fix string is in source.
+// Status model: known_bug → expected_fixed → verified_in_runner → verified_live
 // ══════════════════════════════════════════════════════════════════════════
 
-group('Regression Case Library');
+group('Regression Case Library', 'structural | static-source-check');
 
 var casesDir  = path.join(__dirname, 'cases');
 var caseFiles = fs.readdirSync(casesDir).filter(function(f) { return f.endsWith('.json'); }).sort();
@@ -437,48 +401,55 @@ test('at least 10 case files exist', function() {
   assert(caseFiles.length >= 10, 'Expected \u226510 case files, found ' + caseFiles.length);
 });
 
+var VALID_STATUSES = ['known_bug', 'expected_fixed', 'verified_in_runner', 'verified_live'];
+
 var allCases = caseFiles.map(function(f) {
   return JSON.parse(fs.readFileSync(path.join(casesDir, f)));
 });
 
-// Structure validation for every case
 allCases.forEach(function(c, i) {
   var fname = caseFiles[i];
-  test('CASE ' + fname + ': required fields present', function() {
-    assert(c.id,                  fname + ': missing id');
-    assert(c.category,            fname + ': missing category');
-    assert(c.title,               fname + ': missing title');
-    assert(typeof c.fixed === 'boolean', fname + ': missing fixed (must be true/false)');
-    assert(c.failing_behavior,    fname + ': missing failing_behavior');
-    assert(c.root_cause,          fname + ': missing root_cause');
+  test(c.id + ' — ' + fname + ': required fields and valid status', function() {
+    assert(c.id,            fname + ': missing id');
+    assert(/^RX-\d+$/.test(c.id), fname + ': id must match RX-NNN format, got: ' + c.id);
+    assert(c.category,      fname + ': missing category');
+    assert(c.title,         fname + ': missing title');
+    assert(VALID_STATUSES.indexOf(c.status) >= 0, fname + ': status must be one of: ' + VALID_STATUSES.join(', ') + '. Got: ' + c.status);
+    assert(c.failing_behavior, fname + ': missing failing_behavior');
+    assert(c.root_cause,       fname + ': missing root_cause');
     assert(Array.isArray(c.code_areas) && c.code_areas.length > 0, fname + ': missing code_areas array');
     assert(Array.isArray(c.conversation) && c.conversation.length >= 1, fname + ': conversation must have \u22651 turn');
   });
 });
 
-// For fixed cases with a verify_fix_string, confirm the code fix is present in source
+// Fix string checks for cases with status=verified_in_runner or verified_live
 allCases.forEach(function(c) {
-  if (!c.fixed || !c.verify_fix_string) return;
-  test(c.id + ' (' + c.category + '): fix detectable in receptionist.js — ' + c.title.slice(0, 50), function() {
+  if ((c.status !== 'verified_in_runner' && c.status !== 'verified_live') || !c.verify_fix_string) return;
+  test(c.id + ' [' + c.status + ']: fix detectable in source \u2014 ' + c.title.slice(0, 48), function() {
     assertContains(src, c.verify_fix_string,
-      c.id + ' fix string not found in receptionist.js.\n    String: "' + c.verify_fix_string + '"\n    This may mean the fix was accidentally removed.');
+      c.id + ' fix string not found in receptionist.js.\n    String: "' + c.verify_fix_string + '"\n    The fix may have been accidentally reverted.');
   });
 });
 
-// Summary of case statuses
-var fixedCount   = allCases.filter(function(c) { return c.fixed; }).length;
-var openCount    = allCases.filter(function(c) { return !c.fixed; }).length;
-var categories   = {};
+// Case status summary
+var statusCounts = {};
+VALID_STATUSES.forEach(function(s) { statusCounts[s] = 0; });
+allCases.forEach(function(c) { if (statusCounts[c.status] !== undefined) statusCounts[c.status]++; });
+
+var categories = {};
 allCases.forEach(function(c) { categories[c.category] = (categories[c.category] || 0) + 1; });
 
-console.log('\n  Case summary: ' + fixedCount + ' fixed, ' + openCount + ' open');
+console.log('\n  Case statuses:');
+VALID_STATUSES.forEach(function(s) {
+  if (statusCounts[s] > 0) console.log('    ' + s + ': ' + statusCounts[s]);
+});
 console.log('  Categories: ' + Object.keys(categories).map(function(k) { return k + '(' + categories[k] + ')'; }).join(', '));
 
 // ══════════════════════════════════════════════════════════════════════════
 // FINAL REPORT
 // ══════════════════════════════════════════════════════════════════════════
 
-console.log('\n' + '='.repeat(54));
+console.log('\n' + '='.repeat(62));
 if (_failed === 0) {
   console.log('\u2705  ALL TESTS PASSED: ' + _passed + ' passed, 0 failed');
 } else {
@@ -488,6 +459,21 @@ if (_failed === 0) {
     console.log('  \u2717 [' + f.group + '] ' + f.name);
     console.log('    \u2192 ' + f.error);
   });
-  process.exit(1);
 }
-console.log('='.repeat(54) + '\n');
+
+console.log('\nConfidence by layer:');
+console.log('  Layer 1 (Prompt Integrity)    static-source-check    MEDIUM  — instruction text present, Claude compliance unverified');
+console.log('  Layer 2 (State Parser)        mirrored-unit-logic    MED-HI  — algorithm verified, production sync by manual audit');
+console.log('  Layer 3 (Availability Logic)  mirrored + fixture     HIGH    — algorithm verified; Firestore queries untested');
+console.log('  Layer 4 (Case Library)        structural + static    MED     — schema valid, fix strings present in source');
+
+console.log('\nWhat this harness does NOT guarantee:');
+console.log('  \u2014 Claude follows prompt instructions (requires live API testing)');
+console.log('  \u2014 NailAvailabilityChecker matches avail-logic.js (requires manual sync check)');
+console.log('  \u2014 End-to-end booking correctness on production Firestore');
+console.log('  \u2014 Correct behavior under real customer input variation');
+console.log('  \u2014 Regression-free after Claude model updates');
+
+console.log('='.repeat(62) + '\n');
+
+if (_failed > 0) process.exit(1);

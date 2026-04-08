@@ -1,38 +1,38 @@
 {
-  "id": "CASE-004",
-  "date": "2026-04-08",
+  "id": "RX-004",
+  "fix_date": "2026-04-08",
   "category": "booking_cancel",
+  "status": "verified_in_runner",
+  "_status_note": "verified_in_runner = CANCEL BOOKING section presence confirmed in source. The full cancel path (STATE restore + _parseEscalationType + Firestore update) requires live API testing to verify end-to-end.",
+
   "title": "Cancel booking: AI refuses direct cancellation after booking confirmed",
-  "fixed": true,
-  "fixed_date": "2026-04-08",
 
   "failing_behavior": "After booking was confirmed via _submitDirectBooking, when customer said 'cancel my appointment', the AI responded 'I'm not able to cancel appointments directly. Please call the salon.' The booking was never cancelled in Firestore.",
 
-  "root_cause": "Three missing pieces: (1) _submitDirectBooking cleared biz._bookingState before running, and didn't restore name/phone — so Claude's next turn had empty STATE and couldn't identify the customer. (2) There was no CANCEL BOOKING section in the system prompt. (3) _parseEscalationType didn't include 'cancel'. All three had to be present for cancel to work.",
+  "root_cause": "Three missing pieces: (1) _submitDirectBooking cleared biz._bookingState and didn't restore name/phone — Claude had empty STATE. (2) No CANCEL BOOKING section in system prompt. (3) _parseEscalationType didn't include 'cancel'. All three had to be present simultaneously for cancel to work.",
 
   "conversation": [
-    { "role": "user",      "content": "I'd like to cancel my appointment" }
+    { "role": "user", "content": "I'd like to cancel my appointment" }
   ],
 
-  "precondition": "biz._bookingState = {services: ['Manicure'], staff: 'Helen', name: 'Jane Smith', phone: '4085551234', lang: 'en'}. biz._lastBookingId = 'DLC-TEST99'. This state is set by _submitDirectBooking after a prior booking.",
+  "precondition": "biz._bookingState = {services:['Manicure'], staff:'Helen', name:'Jane Smith', phone:'4085551234', lang:'en'}. biz._lastBookingId = 'DLC-TEST99'. This state is set by _submitDirectBooking after a prior booking.",
 
   "expected_state": {
     "intent": "cancel_booking"
   },
 
   "expected_escalation": "cancel",
-
   "expected_contain": ["cancelled", "cancel"],
   "expected_no_contain": ["not able to cancel", "call the salon", "I cannot cancel"],
 
   "verify_fix_string": "=== CANCEL BOOKING ===",
 
   "code_areas": [
-    "nailsalon/receptionist.js:_submitDirectBooking (STATE restore block)",
+    "nailsalon/receptionist.js:_submitDirectBooking (STATE restore block — five invariants)",
     "nailsalon/receptionist.js:_buildPrompt:CANCEL_BOOKING section",
     "nailsalon/receptionist.js:_parseEscalationType (cancel added)",
     "nailsalon/receptionist.js:send() (cancel escalation handler)"
   ],
 
-  "notes": "The cancel flow requires all three pieces to be in place simultaneously. Breaking any one of them silently disables cancel. The invariant memory file (booking_cancel_modify_flow.md) documents the five invariants that must stay intact."
+  "notes": "The cancel flow requires all three pieces simultaneously. Breaking any one disables cancel. Invariants documented in tests/memory/booking_cancel_modify_flow.md."
 }

@@ -1,29 +1,23 @@
 {
-  "id": "CASE-008",
-  "date": "2026-04-08",
+  "id": "RX-008",
+  "fix_date": "2026-04-08",
   "category": "confirmation_quality",
+  "status": "verified_in_runner",
+  "_status_note": "verified_in_runner = _buildBookingPacketHtml presence confirmed in source. Actual packet content (does it include time and price?) requires live/snapshot testing to verify fully.",
+
   "title": "Confirmation summary must include time and price — no vague 'booking received' message",
-  "fixed": true,
-  "fixed_date": "2026-04-08",
 
-  "failing_behavior": "Early versions of the booking confirmation showed only 'Your appointment request has been sent. The salon will confirm shortly.' — no time, no price, no booking reference. Customers were left unsure what was booked.",
+  "failing_behavior": "Early flow showed only 'Your appointment request has been sent. The salon will confirm shortly.' — no time, no price, no reference ID. Customer had no confirmation of what was booked.",
 
-  "root_cause": "The original EscalationEngine.create() flow wrote to an 'escalations' collection and showed a 'pending vendor confirmation' message. Switched to _submitDirectBooking which generates a full booking packet (service, staff, date, time, price, reference ID, calendar links) and shows it instantly.",
+  "root_cause": "Original EscalationEngine.create() wrote to 'escalations' and showed a pending-confirmation message. Replaced by _submitDirectBooking which generates a full booking packet (service, staff, date, time, price, ref ID, calendar links) immediately.",
 
   "conversation": [
-    { "role": "user",      "content": "4085551234" }
+    { "role": "user", "content": "4085551234" }
   ],
 
-  "precondition": "biz._bookingDraft = {services:['Gel Manicure'], staff:'Tracy', date:'2026-04-13', time:'14:00', name:'Sarah', phone:'4085559876', lang:'en'}. Slot is available. [ESCALATE:appointment] has been emitted.",
+  "precondition": "biz._bookingDraft = {services:['Gel Manicure'], staff:'Tracy', date:'2026-04-13', time:'14:00', name:'Sarah', phone:'4085559876', lang:'en'}. Slot available. [ESCALATE:appointment] emitted.",
 
-  "expected_confirmation_contains": [
-    "Gel Manicure",
-    "Tracy",
-    "14:00",
-    "confirmed",
-    "DLC-"
-  ],
-
+  "expected_confirmation_contains": ["Gel Manicure", "Tracy", "14:00", "confirmed", "DLC-"],
   "expected_packet_fields": ["service", "staff", "date", "time", "price", "ref"],
 
   "verify_fix_string": "_buildBookingPacketHtml",
@@ -34,5 +28,5 @@
     "nailsalon/receptionist.js:_buildConfirmedNatural"
   ],
 
-  "notes": "_buildBookingPacketHtml renders a card with service/staff/date/time/price/location/phone/ref and calendar buttons. _buildConfirmedNatural provides the text message above the card. Both are shown to the customer immediately after booking — no vendor confirmation wait."
+  "notes": "_buildBookingPacketHtml renders service/staff/date/time/price/location/phone/ref + calendar buttons. _buildConfirmedNatural provides the text message above. Both shown immediately on booking confirm — no vendor wait."
 }

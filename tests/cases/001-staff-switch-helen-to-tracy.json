@@ -1,10 +1,11 @@
 {
-  "id": "CASE-001",
-  "date": "2026-04-08",
+  "id": "RX-001",
+  "fix_date": "2026-04-08",
   "category": "alternate_staff",
+  "status": "verified_in_runner",
+  "_status_note": "verified_in_runner = fix instruction is present in source (static check) AND mirrored unit logic passes. Does NOT prove Claude follows the instruction at runtime.",
+
   "title": "Staff switch: Helen unavailable → user explicitly asks for Tracy",
-  "fixed": true,
-  "fixed_date": "2026-04-08",
 
   "failing_behavior": "After showing Helen's conflict message, when user said 'how about Tracy?', the AI repeated the Helen conflict message instead of checking Tracy's availability.",
 

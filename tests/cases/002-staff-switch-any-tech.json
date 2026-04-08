@@ -1,14 +1,15 @@
 {
-  "id": "CASE-002",
-  "date": "2026-04-08",
+  "id": "RX-002",
+  "fix_date": "2026-04-08",
   "category": "alternate_staff",
+  "status": "verified_in_runner",
+  "_status_note": "verified_in_runner = fix instruction is present in source (static check) AND mirrored unit logic passes. Does NOT prove Claude follows the instruction at runtime.",
+
   "title": "Staff switch: Helen unavailable → user asks for any available tech",
-  "fixed": true,
-  "fixed_date": "2026-04-08",
 
   "failing_behavior": "After showing Helen's conflict message, when user said 'any other tech?', the AI repeated the Helen conflict message instead of offering other available technicians.",
 
-  "root_cause": "Same root cause as CASE-001. Additionally, the CONFLICT_RESOLUTION section was missing, so Claude had no instruction to handle vague staff-switch phrases. 'other tech'/'anyone' should map to staff:null which bypasses named-staff conflict check.",
+  "root_cause": "Same root cause as RX-001. Additionally, the CONFLICT_RESOLUTION section was missing, so Claude had no instruction to handle vague staff-switch phrases. 'other tech'/'anyone' should map to staff:null which bypasses named-staff conflict check.",
 
   "conversation": [
     { "role": "user",      "content": "I want a manicure with Helen at 2pm tomorrow" },
@@ -26,12 +27,12 @@
 
   "expected_no_contain": ["Sorry, 2:00 PM with Helen", "Helen is already booked"],
 
-  "verify_fix_string": "CONFLICT RESOLUTION — STAFF SWITCH",
+  "verify_fix_string": "CONFLICT RESOLUTION \u2014 STAFF SWITCH",
 
   "code_areas": [
     "nailsalon/receptionist.js:_buildPrompt:ENTITY_EXTRACTION (staff rule)",
     "nailsalon/receptionist.js:_buildPrompt:CONFLICT_RESOLUTION"
   ],
 
-  "notes": "When staff:null is set, _earlyCheckReady fires with checkStaff=false, skipping named-staff conflict check. 'any available' passes through. Fixed in same version as CASE-001."
+  "notes": "When staff:null is set, _earlyCheckReady fires with checkStaff=false, skipping named-staff conflict check. Fixed in same version as RX-001."
 }

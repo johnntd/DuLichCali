@@ -1,23 +1,23 @@
 {
-  "id": "CASE-009",
-  "date": "2026-04-08",
+  "id": "RX-009",
+  "fix_date": "2026-04-08",
   "category": "conversation_closing",
+  "status": "verified_in_runner",
+  "_status_note": "verified_in_runner = 'BOOKING STATUS: CONFIRMED' signal confirmed in source. Whether Claude actually uses this signal to give a confident 'yes' answer requires live API testing.",
+
   "title": "Booking close: 'is it done?' should get clear confirmation, not restart flow",
-  "fixed": true,
-  "fixed_date": "2026-04-08",
 
-  "failing_behavior": "After the booking packet was shown, when customer asked 'is it done?' or 'was it confirmed?', the AI either (a) re-entered booking collection flow asking for service/date/time again, or (b) gave an ambiguous answer like 'I believe so — you may want to call to confirm.' This happened because _buildBookingStateContext showed Date:not yet specified and Time:not yet specified after booking, making Claude think the booking was incomplete.",
+  "failing_behavior": "After the booking packet was shown, when customer asked 'is it done?' or 'was it confirmed?', the AI either (a) re-entered booking collection flow asking for service/date/time again, or (b) gave an ambiguous answer. _buildBookingStateContext showed Date/Time as 'not yet specified' after booking, making Claude think the booking was incomplete.",
 
-  "root_cause": "After _submitDirectBooking, biz._bookingState has services/staff/name/phone but date=null and time=null (cleared at line ~2171). _buildBookingStateContext showed these as 'not yet specified', which Claude interpreted as a booking still in progress. Two fixes: (1) Add BOOKING STATUS: CONFIRMED to state context when biz._lastBookingId is set. (2) Strengthen confirmation text to say 'no further action needed'.",
+  "root_cause": "After _submitDirectBooking, biz._bookingState has services/staff/name/phone but date=null, time=null (cleared before _submitDirectBooking ran). _buildBookingStateContext showed these as 'not yet specified' — Claude interpreted this as an in-progress incomplete booking. Two fixes: (1) BOOKING STATUS: CONFIRMED in state context. (2) Confirmation text says 'no further action needed'.",
 
   "conversation": [
     { "role": "user", "content": "is it confirmed?" }
   ],
 
-  "precondition": "biz._lastBookingId='DLC-TEST99'. biz._bookingState={services:['Gel Manicure'], staff:'Tracy', name:'Sarah', phone:'4085559876', date:null, time:null, pendingAction:null}. AI history includes prior confirmation sentence.",
+  "precondition": "biz._lastBookingId='DLC-TEST99'. biz._bookingState={services:['Gel Manicure'], staff:'Tracy', name:'Sarah', phone:'4085559876', date:null, time:null, pendingAction:null}.",
 
   "expected_state_context_contains": "BOOKING STATUS: CONFIRMED",
-
   "expected_no_contain": ["What service would you like", "What date works", "I'm not sure", "call to confirm", "cannot confirm"],
 
   "verify_fix_string": "BOOKING STATUS: CONFIRMED",

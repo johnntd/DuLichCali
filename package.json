@@ -1,0 +1,11 @@
+{
+  "name": "dulichcali",
+  "private": true,
+  "description": "Du Lich Cali — static hosting project. No build step.",
+  "scripts": {
+    "test:receptionist": "node tests/runner.js"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}

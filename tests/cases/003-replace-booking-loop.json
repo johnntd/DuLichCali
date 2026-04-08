@@ -1,10 +1,11 @@
 {
-  "id": "CASE-003",
-  "date": "2026-04-08",
+  "id": "RX-003",
+  "fix_date": "2026-04-08",
   "category": "booking_replace",
+  "status": "verified_in_runner",
+  "_status_note": "verified_in_runner = fix instruction is present in source (static check) AND mirrored availability logic confirms isModify exclusion. The prompt instruction part (Claude clearing time:null) is static-check only.",
+
   "title": "Replace booking loop: user says 'replace it' but AI asks again",
-  "fixed": true,
-  "fixed_date": "2026-04-08",
 
   "failing_behavior": "After showing 'You already have a Manicure at 2 PM that day. Would you like to replace it, keep it, or pick a different time?', when user said 'replace it', the AI showed the exact same conflict question again instead of asking for a new time.",
 

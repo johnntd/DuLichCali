@@ -1582,9 +1582,31 @@
         );
         const result = await resp.json();
         if (result.error) {
-          const msg = result.error.message === 'EMAIL_EXISTS'
-            ? 'Email này đã có tài khoản.' : 'Lỗi tạo tài khoản: ' + result.error.message;
-          msgEl.style.color = 'var(--danger)'; msgEl.textContent = msg; return;
+          if (result.error.message === 'EMAIL_EXISTS') {
+            // Account already exists — find their UID via vendorUsers email lookup and assign them to this vendor
+            msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Tài khoản đã tồn tại — đang gán vai trò…';
+            const existingSnap = await db.collection('vendorUsers').where('email', '==', email).limit(1).get();
+            let uid;
+            if (!existingSnap.empty) {
+              uid = existingSnap.docs[0].id;
+            } else {
+              // Auth account exists but no vendorUsers doc yet — can't get UID from client without password
+              msgEl.style.color = 'var(--danger)';
+              msgEl.textContent = 'Tài khoản tồn tại nhưng chưa đăng ký hệ thống. Hãy để họ đăng nhập qua vendor-login.html trước.';
+              return;
+            }
+            await db.collection('vendorUsers').doc(uid).set({
+              vendorId, email, role,
+              staffName: (role === 'staff' || role === 'manager') ? staffName : '',
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+            emailEl.value = ''; if (nameEl) nameEl.value = '';
+            msgEl.style.color = '#7ac87a'; msgEl.textContent = '✓ Đã gán!';
+            if (pwBox) { pwBox.textContent = 'Tài khoản đã có — dùng mật khẩu hiện tại để đăng nhập salon-admin.html'; pwBox.style.display = 'block'; }
+            setTimeout(() => { loadVendorPanel(); }, 2000);
+            return;
+          }
+          msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Lỗi tạo tài khoản: ' + result.error.message; return;
         }
 
         const uid = result.localId;
@@ -1600,7 +1622,7 @@
 
         // Show the temp password once — admin shares this with the new user
         if (pwBox) {
-          const label = role === 'staff' ? staffName : email;
+          const label = (role === 'staff' || role === 'manager') ? staffName : email;
           pwBox.textContent = `Mật khẩu tạm: ${tempPass}  —  Chia sẻ với ${label} để đăng nhập lần đầu tại salon-admin.html`;
           pwBox.style.display = 'block';
         }

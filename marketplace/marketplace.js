@@ -3059,6 +3059,8 @@
             EscalationEngine._appendVendorMsg(messagesEl,
               confirmMsgs[escLang] || confirmMsgs.en,
               'confirmed');
+            // Show booking packet card with calendar links
+            EscalationEngine._appendConfirmedPacket(messagesEl, data);
           } else if (status === 'vendor_declined') {
             var declineMsgs = {
               vi: hostName + ' xin lỗi, không thể thực hiện.' + vmsg + ' Vui lòng liên hệ ' + phone + '.',
@@ -3117,6 +3119,101 @@
       var bubble = document.createElement('div');
       bubble.className = 'mp-ai__bubble mp-ai__bubble--vendor mp-ai__bubble--vendor-' + (type || 'replied');
       bubble.textContent = text;
+      div.appendChild(bubble);
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    },
+
+    // Build and append booking packet card (calendar links) after vendor_confirmed
+    _appendConfirmedPacket: function (messagesEl, escData) {
+      var appt = escData.appointmentData || {};
+      var lang = escData.lang || 'en';
+      var date = appt.date || appt.requestedDate || '';
+      var time = appt.time || appt.requestedTime || '09:00';
+      if (!date || !time) return;
+
+      var svcs    = appt.services || (appt.service ? [appt.service] : []);
+      var svcStr  = svcs.join(' + ') || '—';
+      var staff   = appt.staff   || '';
+      var durMins = appt.totalDurationMins || 60;
+      var vendor  = escData.vendorName || 'Du Lịch Cali';
+
+      // ── Calendar URL helpers ────────────────────────────────────────────────
+      function pN(n) { return ('0' + n).slice(-2); }
+      function fmtIcs(d, t) { return d.replace(/-/g,'') + 'T' + t.replace(':','') + '00'; }
+      var endD = new Date(date + 'T' + time + ':00');
+      endD.setTime(endD.getTime() + durMins * 60000);
+      var endDate = endD.getFullYear() + '-' + pN(endD.getMonth()+1) + '-' + pN(endD.getDate());
+      var endTime = pN(endD.getHours()) + ':' + pN(endD.getMinutes());
+      var desc = ['Services: ' + svcStr,
+        staff && staff.toLowerCase() !== 'any' ? 'Technician: ' + staff : null
+      ].filter(Boolean).join('\n');
+      var gcalUrl = 'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+        '&text='     + encodeURIComponent(vendor + ' — ' + svcStr) +
+        '&dates='    + fmtIcs(date, time) + '/' + fmtIcs(endDate, endTime) +
+        '&details='  + encodeURIComponent(desc) +
+        '&location=' + encodeURIComponent(vendor + ', Bay Area, CA');
+      var icsLines = [
+        'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//DuLichCali//EN',
+        'BEGIN:VEVENT',
+        'DTSTART:' + fmtIcs(date, time),
+        'DTEND:'   + fmtIcs(endDate, endTime),
+        'SUMMARY:' + (vendor + ' — ' + svcStr),
+        'LOCATION:' + vendor,
+        'END:VEVENT','END:VCALENDAR'
+      ];
+      var icsUrl = 'data:text/calendar;charset=utf8,' + encodeURIComponent(icsLines.join('\r\n'));
+
+      // ── Date / time display ─────────────────────────────────────────────────
+      var dateStr = '';
+      try {
+        var dd = new Date(date + 'T12:00:00');
+        var MONS = { vi:['tháng 1','tháng 2','tháng 3','tháng 4','tháng 5','tháng 6','tháng 7','tháng 8','tháng 9','tháng 10','tháng 11','tháng 12'], en:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] };
+        var DOWS = { vi:['CN','T2','T3','T4','T5','T6','T7'], en:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] };
+        var ml = MONS[lang] || MONS.en, dl = DOWS[lang] || DOWS.en;
+        dateStr = lang === 'vi' ? dl[dd.getDay()] + ', ' + dd.getDate() + ' ' + ml[dd.getMonth()] : dl[dd.getDay()] + ', ' + ml[dd.getMonth()] + ' ' + dd.getDate();
+      } catch(e) { dateStr = date; }
+      var tp  = time.split(':'), th = parseInt(tp[0]), tm2 = parseInt(tp[1]||0);
+      var timeStr = (th%12||12) + ':' + (tm2<10?'0':'') + tm2 + (th<12?' AM':' PM');
+
+      var L = {
+        vi:{ header:'✅ Lịch Hẹn Đã Xác Nhận', svc:'Dịch vụ', staff:'Kỹ thuật viên', date:'Ngày', time:'Giờ', foot:'Nếu có thay đổi, chúng tôi sẽ nhắn tin cho bạn.', gcal:'📅 Google Calendar', ics:'⬇ Lưu vào Calendar' },
+        en:{ header:'✅ Appointment Confirmed', svc:'Service', staff:'Technician', date:'Date', time:'Time', foot:"If anything changes, we'll text you.", gcal:'📅 Google Calendar', ics:'⬇ Save to Calendar' },
+        es:{ header:'✅ Cita Confirmada', svc:'Servicio', staff:'Técnica', date:'Fecha', time:'Hora', foot:'Si algo cambia, te avisaremos por mensaje.', gcal:'📅 Google Calendar', ics:'⬇ Guardar en Calendario' }
+      };
+      var lbl = L[lang] || L.en;
+      var S = 'style=';
+
+      var rows = [
+        [lbl.svc, svcStr],
+        staff && staff.toLowerCase() !== 'any' ? [lbl.staff, staff] : null,
+        dateStr ? [lbl.date, dateStr] : null,
+        timeStr ? [lbl.time, timeStr] : null
+      ].filter(Boolean);
+
+      var rowHtml = rows.map(function(r) {
+        return '<div ' + S + '"display:flex;justify-content:space-between;gap:.5rem;padding:.34rem 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.8rem">' +
+          '<span ' + S + '"color:#718096;white-space:nowrap;flex-shrink:0">' + r[0] + '</span>' +
+          '<span ' + S + '"color:#f0e6d3;text-align:right;font-weight:500">' + r[1] + '</span>' +
+          '</div>';
+      }).join('');
+
+      var html =
+        '<div ' + S + '"background:linear-gradient(135deg,rgba(8,18,40,.96),rgba(14,25,52,.96));border:1px solid rgba(200,146,42,.35);border-radius:12px;padding:1rem 1.1rem;max-width:340px">' +
+          '<div ' + S + '"font-size:.88rem;font-weight:700;color:#e8b84b;margin-bottom:.75rem;letter-spacing:.02em">' + lbl.header + '</div>' +
+          rowHtml +
+          '<div ' + S + '"margin-top:.7rem;font-size:.76rem;color:#718096;font-style:italic">' + lbl.foot + '</div>' +
+          '<div ' + S + '"display:flex;gap:.5rem;margin-top:.85rem">' +
+            '<a href="' + gcalUrl + '" target="_blank" rel="noopener" ' + S + '"flex:1;display:block;text-align:center;padding:.48rem .4rem;border-radius:6px;background:rgba(200,146,42,.18);border:1px solid rgba(200,146,42,.4);color:#e8b84b;font-size:.72rem;font-weight:700;text-decoration:none;letter-spacing:.03em">' + lbl.gcal + '</a>' +
+            '<a href="' + icsUrl + '" download="appointment.ics" ' + S + '"flex:1;display:block;text-align:center;padding:.48rem .4rem;border-radius:6px;background:rgba(200,146,42,.08);border:1px solid rgba(200,146,42,.28);color:#e8b84b;font-size:.72rem;font-weight:700;text-decoration:none;letter-spacing:.03em">' + lbl.ics + '</a>' +
+          '</div>' +
+        '</div>';
+
+      var div = document.createElement('div');
+      div.className = 'mp-ai__msg mp-ai__msg--bot';
+      var bubble = document.createElement('div');
+      bubble.className = 'mp-ai__bubble mp-ai__bubble--packet';
+      bubble.innerHTML = html;
       div.appendChild(bubble);
       messagesEl.appendChild(div);
       messagesEl.scrollTop = messagesEl.scrollHeight;

@@ -434,6 +434,56 @@
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
+    /* ── Expandable booking card ── */
+    .sa-appt-card { cursor: pointer; }
+    .sa-appt-card.is-expanded { border-color: rgba(255,255,255,.28); }
+    .sa-appt-summary { display: contents; }
+    .sa-appt-chevron {
+      font-size: .6rem; color: var(--muted); flex-shrink: 0;
+      transition: transform .2s; display: inline-block; margin-left: .3rem;
+    }
+    .sa-appt-card.is-expanded .sa-appt-chevron { transform: rotate(180deg); }
+    .sa-appt-detail {
+      display: none;
+      border-top: 1px solid var(--border);
+      margin-top: .6rem; padding-top: .6rem;
+    }
+    .sa-appt-card.is-expanded .sa-appt-detail { display: block; }
+    .sa-detail-row {
+      display: flex; gap: .4rem; align-items: baseline;
+      font-size: .7rem; color: var(--muted); margin-bottom: .25rem;
+    }
+    .sa-detail-label { font-weight: 700; color: var(--muted); text-transform: uppercase; font-size: .58rem; letter-spacing: .04em; flex-shrink: 0; }
+    .sa-detail-val { color: var(--text); }
+    .sa-detail-val a { color: var(--text); text-decoration: none; }
+    .sa-detail-val a:hover { text-decoration: underline; }
+    .sa-img-count-badge {
+      display: inline-flex; align-items: center; gap: .2rem;
+      background: rgba(255,255,255,.07); border: 1px solid var(--border);
+      border-radius: 4px; padding: 1px 5px;
+      font-size: .6rem; font-weight: 700; color: var(--muted); cursor: pointer;
+    }
+    .sa-hist-list { margin-top: .35rem; }
+    .sa-hist-entry {
+      font-size: .65rem; color: var(--muted);
+      padding: .2rem 0; border-bottom: 1px solid rgba(255,255,255,.05);
+      display: flex; gap: .4rem; align-items: baseline;
+    }
+    .sa-hist-entry:last-child { border-bottom: none; }
+    .sa-hist-action { font-weight: 700; color: var(--text); }
+    .sa-cancel-reason {
+      font-size: .68rem; color: var(--danger); margin-top: .2rem;
+      padding: .2rem .4rem; background: rgba(248,113,113,.06);
+      border-radius: 4px; border-left: 2px solid var(--danger);
+    }
+
+    /* ── Cancel modal specifics ── */
+    .sa-cancel-modal-warn {
+      background: rgba(248,113,113,.08); border: 1px solid rgba(248,113,113,.22);
+      border-radius: 6px; padding: .6rem .8rem; margin-bottom: 1rem;
+      font-size: .78rem; color: var(--danger); line-height: 1.5;
+    }
+
     /* ── Staff filter bar ── */
     .sa-staff-bar {
       display: flex; gap: .4rem; flex-wrap: wrap;
@@ -829,6 +879,50 @@
 <!-- Toast -->
 <div id="toast"></div>
 
+<!-- Cancel booking modal -->
+<div class="sa-modal-backdrop hidden" id="cancelModal">
+  <div class="sa-modal">
+    <h3 style="color:var(--danger)">Hủy Lịch Hẹn</h3>
+    <input type="hidden" id="cancelBookingId">
+    <input type="hidden" id="cancelBookingPhone">
+    <input type="hidden" id="cancelBookingName">
+    <input type="hidden" id="cancelBookingSvc">
+    <input type="hidden" id="cancelBookingDate">
+    <input type="hidden" id="cancelBookingTime">
+    <div class="sa-cancel-modal-warn" id="cancelModalDesc">Bạn đang hủy lịch hẹn này.</div>
+    <div class="sa-field">
+      <label>Lý do hủy *</label>
+      <select class="sa-select" id="cancelReasonSelect" onchange="cancelReasonChanged()">
+        <option value="">-- Chọn lý do --</option>
+        <option value="Khách yêu cầu hủy">Khách yêu cầu hủy</option>
+        <option value="Không có nhân viên phù hợp">Không có nhân viên phù hợp</option>
+        <option value="Tiệm có sự cố">Tiệm có sự cố</option>
+        <option value="Khách không liên lạc được">Khách không liên lạc được</option>
+        <option value="Khác">Khác (ghi rõ bên dưới)</option>
+      </select>
+    </div>
+    <div class="sa-field" id="cancelReasonOtherField" style="display:none">
+      <label>Ghi rõ lý do</label>
+      <input class="sa-input" id="cancelReasonOther" placeholder="Nhập lý do cụ thể…" oninput="_updateCancelSmsPreview()">
+    </div>
+    <div class="sa-field">
+      <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">
+        <input type="checkbox" id="cancelNotifyCheck" style="width:15px;height:15px;cursor:pointer" onchange="_updateCancelSmsPreview()">
+        Nhắn tin cho khách khi hủy
+      </label>
+    </div>
+    <div id="cancelSmsPreview" style="display:none" class="sa-field">
+      <label>Nội dung tin nhắn (có thể chỉnh sửa)</label>
+      <textarea class="sa-input" id="cancelSmsText" rows="5" style="resize:vertical;font-size:.78rem;line-height:1.5"></textarea>
+      <div style="font-size:.65rem;color:var(--muted);margin-top:.3rem">Nhấn "Xác nhận hủy" sẽ mở ứng dụng nhắn tin trên điện thoại.</div>
+    </div>
+    <div class="sa-modal-actions">
+      <button class="btn btn--outline btn--sm" onclick="closeCancelModal()">Không hủy</button>
+      <button class="btn btn--sm" style="background:var(--danger);color:#fff;font-weight:700;padding:.45rem 1rem" onclick="_submitCancelBooking()">Xác nhận hủy</button>
+    </div>
+  </div>
+</div>
+
 <!-- Image lightbox -->
 <div id="saImgLightbox" class="hidden" onclick="closeSaImgLightbox()">
   <img id="saImgLightboxImg" src="" alt="Reference image">
@@ -903,6 +997,10 @@
   var vendorRef      = null;
   var servicesRef    = null;
   var staffRef       = null;
+  // Role: 'owner'|'manager'|'staff' — read from vendorUsers doc, default 'owner'
+  var _userRole  = 'owner';
+  var _userEmail = '';
+  var _vendorPhone = '';
   var unsubSvcs      = null;
   var unsubStaff     = null;
   var unsubAppts     = null;
@@ -1064,6 +1162,9 @@
 
       VENDOR_ID  = doc.data().vendorId;
       VENDOR_CAT = VENDOR_CATEGORY_MAP[VENDOR_ID] || 'nails';
+      // Role: owner/manager can cancel; staff cannot. Default to 'owner' if not set.
+      _userRole  = doc.data().role || 'owner';
+      _userEmail = user.email || '';
 
       if (VENDOR_CAT === 'food') { window.location.href = 'vendor-admin.html'; return; }
 
@@ -1090,8 +1191,9 @@
         var pl = document.getElementById('publicLink');
         pl.href = pubUrl; pl.textContent = pubUrl;
 
+        _vendorPhone = vdata.phoneDisplay || (staticData && staticData.phoneDisplay) || '';
         document.getElementById('settingName').value    = vdata.businessName || (staticData && staticData.name)        || '';
-        document.getElementById('settingPhone').value   = vdata.phoneDisplay  || (staticData && staticData.phoneDisplay) || '';
+        document.getElementById('settingPhone').value   = _vendorPhone;
         document.getElementById('settingAddress').value = vdata.address       || (staticData && staticData.address)      || '';
         document.getElementById('settingDesc').value    = vdata.description   || (staticData && staticData.description)  || '';
         document.getElementById('settingAiKey').value   = vdata.aiKey || '';
@@ -2087,21 +2189,16 @@
   }
 
   function renderBookings(items) {
-    // Keep full list for re-filter when staff chip changes
     _saAllItems = items;
-
-    // Update staff filter bar (uses full list, not filtered)
     _renderStaffFilterBar(items);
 
     var el = document.getElementById('bookingsList');
     if (!el) return;
 
-    // Apply staff filter
     var filtered = _saStaffFilter === 'all'
       ? items
       : items.filter(function(b) { return b.staff === _saStaffFilter; });
 
-    // Render next appointment (uses filtered list)
     _renderNextAppt(filtered);
 
     if (!filtered.length) {
@@ -2111,7 +2208,6 @@
       return;
     }
 
-    // Group by date
     var byDate = {};
     var dateOrder = [];
     filtered.forEach(function(b) {
@@ -2132,8 +2228,12 @@
       rescheduled: '<span class="sa-st sa-st--canceled">&#8635; Dời lịch</span>'
     };
 
+    // canCancel: owner and manager only; staff role cannot cancel
+    var canCancel = (_userRole !== 'staff');
+
     el.innerHTML = dateOrder.map(function(date) {
-      var appts = byDate[date].map(function(b) {
+      var appts = byDate[date].map(function(b, idx) {
+        var cardId  = (date + '-' + idx).replace(/[^a-zA-Z0-9]/g, '-');
         var id      = b.id;
         var status  = b.status || 'confirmed';
         var svcArr  = b.selectedServices || b.services || (b.service ? [b.service] : [b.serviceType || '']);
@@ -2144,76 +2244,105 @@
         var phone   = b.customerPhone || b.phone || '';
         var notes   = b.notes || b.specialRequest || '';
         var imgs    = b.referenceImages || b.images || [];
+        var hist    = Array.isArray(b.history) ? b.history : [];
+        var cancelReason = b.cancellationReason || '';
+        var bookingId = b.bookingId || b.id || '';
 
-        // "Just confirmed" pulse
         var createdMs = (b.createdAt && b.createdAt.toMillis) ? b.createdAt.toMillis() : 0;
         var isNew = status === 'confirmed' && createdMs > _fiveMinAgo;
 
-        // Card modifier class
         var cardCls = 'sa-appt-card';
-        if (isNew) cardCls += ' is-new';
+        if (isNew)          cardCls += ' is-new';
         else if (status === 'in_progress') cardCls += ' is-inprogress';
         else if (status === 'completed' || status === 'canceled' || status === 'no_show') cardCls += ' is-done';
 
         var statusBadge = statusMap[status] || '';
-        var newBadge = isNew ? ' <span style="background:#22c55e;color:#fff;border-radius:99px;padding:1px 6px;font-size:.58rem;font-weight:700;animation:dlcPulse 1.2s ease infinite">MỚI</span>' : '';
+        var newBadge = isNew
+          ? ' <span style="background:#22c55e;color:#fff;border-radius:99px;padding:1px 6px;font-size:.58rem;font-weight:700;animation:dlcPulse 1.2s ease infinite">MỚI</span>'
+          : '';
 
-        // Staff badge
+        // Collapsed summary meta
         var staffBadge = staff ? '<span class="sa-staff-badge">' + esc(staff) + '</span>' : '';
+        var durSpan    = dur   ? '<span>' + dur + ' ph&#250;t</span>' : '';
+        var priceSpan  = price ? '<span class="sa-appt-price">&#36;' + esc(String(price)) + '</span>' : '';
+        var imgBadge   = imgs.length
+          ? ' <span class="sa-img-count-badge">&#128247; ' + imgs.length + '</span>'
+          : '';
+        var notesDot = notes ? ' <span style="color:var(--gold-lt);font-size:.6rem" title="Có ghi chú">&#9679;</span>' : '';
 
-        // Duration
-        var durHtml = dur ? '<span>' + dur + ' ph&#250;t</span>' : '';
-
-        // Price
-        var priceHtml = price ? '<span class="sa-appt-price">&#36;' + esc(String(price)) + '</span>' : '';
-
-        // Phone (clickable tel: link)
-        var phoneHtml = phone
-          ? '<span class="sa-appt-ph"><a href="tel:' + esc(phone) + '">&#128222; ' + esc(phone) + '</a></span>'
+        // ── Expanded detail section ─────────────────────────────────────────────
+        // Full image grid
+        var imgDetail = imgs.length
+          ? '<div class="sa-ref-imgs" style="margin-bottom:.5rem">' + _refImgsHtml(imgs, 'sa-ref-img') + '</div>'
           : '';
 
-        // Notes
-        var notesHtml = notes ? '<div class="sa-appt-notes">' + esc(notes) + '</div>' : '';
+        // Detail rows
+        var details = '';
+        if (svcArr.length)  details += '<div class="sa-detail-row"><span class="sa-detail-label">Dịch vụ</span><span class="sa-detail-val">' + esc(svcLbl) + '</span></div>';
+        if (staff)          details += '<div class="sa-detail-row"><span class="sa-detail-label">Nhân viên</span><span class="sa-detail-val">' + esc(staff) + '</span></div>';
+        if (dur)            details += '<div class="sa-detail-row"><span class="sa-detail-label">Thời gian</span><span class="sa-detail-val">' + dur + ' phút</span></div>';
+        if (price)          details += '<div class="sa-detail-row"><span class="sa-detail-label">Giá dự kiến</span><span class="sa-detail-val sa-appt-price">&#36;' + esc(String(price)) + '</span></div>';
+        if (phone)          details += '<div class="sa-detail-row"><span class="sa-detail-label">Điện thoại</span><span class="sa-detail-val"><a href="tel:' + esc(phone) + '">&#128222; ' + esc(phone) + '</a></span></div>';
+        if (notes)          details += '<div class="sa-detail-row"><span class="sa-detail-label">Ghi chú</span><span class="sa-detail-val" style="color:var(--gold-lt)">' + esc(notes) + '</span></div>';
+        if (bookingId)      details += '<div class="sa-detail-row"><span class="sa-detail-label">Mã lịch</span><span class="sa-detail-val" style="font-size:.62rem;opacity:.6">' + esc(bookingId) + '</span></div>';
+        if (cancelReason)   details += '<div class="sa-cancel-reason">Lý do hủy: ' + esc(cancelReason) + '</div>';
 
-        // Reference images
-        var imgHtml = imgs.length
-          ? '<div class="sa-ref-imgs">' + _refImgsHtml(imgs, 'sa-ref-img') + '</div>'
-          : '';
-
-        // Action buttons per status
-        var actions = '';
-        var idQ = JSON.stringify(id);
-        if (status === 'confirmed') {
-          actions =
-            '<button class="sa-act sa-act--start"  onclick="updateBookingStatus(' + idQ + ',\'in_progress\')">&#9654; Bắt đầu</button>' +
-            '<button class="sa-act sa-act--done"   onclick="updateBookingStatus(' + idQ + ',\'completed\')">&#10003; Xong</button>' +
-            '<button class="sa-act sa-act--noshow" onclick="updateBookingStatus(' + idQ + ',\'no_show\')">Vắng mặt</button>' +
-            '<button class="sa-act sa-act--cancel" onclick="updateBookingStatus(' + idQ + ',\'canceled\')">Hủy</button>' +
-            (phone ? '<a class="sa-act sa-act--call" href="tel:' + esc(phone) + '">&#128222; Gọi</a>' : '');
-        } else if (status === 'in_progress') {
-          actions =
-            '<button class="sa-act sa-act--done"   onclick="updateBookingStatus(' + idQ + ',\'completed\')">&#10003; Hoàn thành</button>' +
-            '<button class="sa-act sa-act--noshow" onclick="updateBookingStatus(' + idQ + ',\'no_show\')">Vắng mặt</button>' +
-            (phone ? '<a class="sa-act sa-act--call" href="tel:' + esc(phone) + '">&#128222; Gọi</a>' : '');
+        // History entries
+        var histHtml = '';
+        if (hist.length) {
+          var entries = hist.slice().reverse().map(function(h) {
+            var label = { in_progress:'Bắt đầu', completed:'Hoàn thành', canceled:'Đã hủy', no_show:'Vắng mặt' }[h.action] || h.action;
+            var ts = h.at ? new Date(h.at).toLocaleString('vi-VN') : '';
+            return '<div class="sa-hist-entry"><span class="sa-hist-action">' + esc(label) + '</span><span>' + esc(h.by||'') + '</span><span style="opacity:.55">' + esc(ts) + '</span></div>';
+          }).join('');
+          histHtml = '<div class="sa-detail-row" style="margin-top:.3rem"><span class="sa-detail-label">Lịch sử</span></div><div class="sa-hist-list">' + entries + '</div>';
         }
 
-        return '<div class="' + cardCls + '">' +
+        // Action buttons (go in expanded detail)
+        var idQ  = JSON.stringify(id);
+        var nameQ = JSON.stringify(b.customerName || '');
+        var phoneQ = JSON.stringify(phone);
+        var svcQ   = JSON.stringify(svcLbl);
+        var dateQ  = JSON.stringify(b.requestedDate || b.date || '');
+        var timeQ  = JSON.stringify(b.requestedTime || b.time || '');
+
+        var actions = '';
+        if (status === 'confirmed') {
+          actions =
+            '<button class="sa-act sa-act--start"  onclick="event.stopPropagation();updateBookingStatus(' + idQ + ',\'in_progress\')">&#9654; Bắt đầu</button>' +
+            '<button class="sa-act sa-act--done"   onclick="event.stopPropagation();updateBookingStatus(' + idQ + ',\'completed\')">&#10003; Xong</button>' +
+            '<button class="sa-act sa-act--noshow" onclick="event.stopPropagation();updateBookingStatus(' + idQ + ',\'no_show\')">Vắng mặt</button>' +
+            (phone ? '<a class="sa-act sa-act--call" href="tel:' + esc(phone) + '" onclick="event.stopPropagation()">&#128222; Gọi</a>' : '') +
+            (canCancel ? '<button class="sa-act sa-act--cancel" style="border-color:rgba(248,113,113,.4);color:var(--danger)" onclick="event.stopPropagation();openCancelModal(' + idQ + ',' + nameQ + ',' + phoneQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')">&#10005; Hủy</button>' : '');
+        } else if (status === 'in_progress') {
+          actions =
+            '<button class="sa-act sa-act--done"   onclick="event.stopPropagation();updateBookingStatus(' + idQ + ',\'completed\')">&#10003; Hoàn thành</button>' +
+            '<button class="sa-act sa-act--noshow" onclick="event.stopPropagation();updateBookingStatus(' + idQ + ',\'no_show\')">Vắng mặt</button>' +
+            (phone ? '<a class="sa-act sa-act--call" href="tel:' + esc(phone) + '" onclick="event.stopPropagation()">&#128222; Gọi</a>' : '') +
+            (canCancel ? '<button class="sa-act sa-act--cancel" style="border-color:rgba(248,113,113,.4);color:var(--danger)" onclick="event.stopPropagation();openCancelModal(' + idQ + ',' + nameQ + ',' + phoneQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')">&#10005; Hủy</button>' : '');
+        }
+
+        var expandedDetail =
+          '<div class="sa-appt-detail" onclick="event.stopPropagation()">' +
+            imgDetail +
+            details +
+            histHtml +
+            (actions ? '<div class="sa-appt-actions" style="margin-top:.6rem">' + actions + '</div>' : '') +
+          '</div>';
+
+        return '<div class="' + cardCls + '" id="sa-card-' + cardId + '" onclick="toggleCard(' + JSON.stringify(cardId) + ')">' +
           '<div class="sa-appt-time-col">' +
             '<div class="sa-appt-time">' + esc(_fmtTime(b.requestedTime || b.time)) + '</div>' +
             (dur ? '<div class="sa-appt-dur">' + dur + 'p</div>' : '') +
           '</div>' +
           '<div class="sa-appt-body">' +
             '<div class="sa-appt-row1">' +
-              '<div class="sa-appt-name">' + esc(b.customerName || 'Khách') + newBadge + '</div>' +
-              statusBadge +
+              '<div class="sa-appt-name">' + esc(b.customerName || 'Khách') + newBadge + imgBadge + notesDot + '</div>' +
+              '<div style="display:flex;align-items:center;gap:.3rem">' + statusBadge + '<span class="sa-appt-chevron">&#9660;</span></div>' +
             '</div>' +
             '<div class="sa-appt-svc">' + esc(svcLbl) + '</div>' +
-            '<div class="sa-appt-meta">' +
-              staffBadge + durHtml + priceHtml + phoneHtml +
-            '</div>' +
-            notesHtml +
-            imgHtml +
-            (actions ? '<div class="sa-appt-actions">' + actions + '</div>' : '') +
+            '<div class="sa-appt-meta">' + staffBadge + durSpan + priceSpan + '</div>' +
+            expandedDetail +
           '</div>' +
         '</div>';
       }).join('');
@@ -2225,10 +2354,110 @@
     }).join('');
   }
 
+  // ── Expandable card toggle ─────────────────────────────────────────────────────
+  function toggleCard(cardId) {
+    var card = document.getElementById('sa-card-' + cardId);
+    if (card) card.classList.toggle('is-expanded');
+  }
+
+  // ── Cancel booking flow ────────────────────────────────────────────────────────
+  function openCancelModal(bookingId, name, phone, svcLbl, date, time) {
+    document.getElementById('cancelBookingId').value    = bookingId || '';
+    document.getElementById('cancelBookingPhone').value = phone  || '';
+    document.getElementById('cancelBookingName').value  = name   || '';
+    document.getElementById('cancelBookingSvc').value   = svcLbl || '';
+    document.getElementById('cancelBookingDate').value  = date   || '';
+    document.getElementById('cancelBookingTime').value  = time   || '';
+    document.getElementById('cancelReasonSelect').value = '';
+    document.getElementById('cancelReasonOtherField').style.display = 'none';
+    document.getElementById('cancelNotifyCheck').checked = false;
+    document.getElementById('cancelSmsPreview').style.display = 'none';
+    document.getElementById('cancelSmsText').value = '';
+    // Describe which booking is being canceled
+    var desc = name ? name : 'khách';
+    if (svcLbl) desc += ' — ' + svcLbl;
+    if (date)   desc += ' ngày ' + date;
+    if (time)   desc += ' lúc ' + _fmtTime(time);
+    document.getElementById('cancelModalDesc').textContent = 'Hủy lịch: ' + desc;
+    document.getElementById('cancelModal').classList.remove('hidden');
+  }
+
+  function closeCancelModal() {
+    document.getElementById('cancelModal').classList.add('hidden');
+  }
+
+  function cancelReasonChanged() {
+    var sel = document.getElementById('cancelReasonSelect').value;
+    document.getElementById('cancelReasonOtherField').style.display = sel === 'Khác' ? 'block' : 'none';
+    _updateCancelSmsPreview();
+  }
+
+  function _updateCancelSmsPreview() {
+    var name   = document.getElementById('cancelBookingName').value;
+    var svc    = document.getElementById('cancelBookingSvc').value;
+    var date   = document.getElementById('cancelBookingDate').value;
+    var time   = document.getElementById('cancelBookingTime').value;
+    var sel    = document.getElementById('cancelReasonSelect').value;
+    var other  = document.getElementById('cancelReasonOther').value.trim();
+    var reason = sel === 'Khác' ? (other || '') : sel;
+    var show   = document.getElementById('cancelNotifyCheck').checked;
+
+    document.getElementById('cancelSmsPreview').style.display = show ? 'block' : 'none';
+    if (!show) return;
+
+    var msg = 'Xin chào' + (name ? ' ' + name : '');
+    msg += ', lịch hẹn của bạn';
+    if (svc)  msg += ' (' + svc + ')';
+    if (date) msg += ' ngày ' + date;
+    if (time) msg += ' lúc ' + _fmtTime(time);
+    msg += ' đã được hủy';
+    if (reason) msg += '. Lý do: ' + reason;
+    msg += '. Vui lòng liên hệ ' + (_vendorPhone || 'tiệm chúng tôi') + ' để đặt lại lịch. Xin lỗi vì sự bất tiện!';
+    document.getElementById('cancelSmsText').value = msg;
+  }
+
+  function _submitCancelBooking() {
+    var bookingId = document.getElementById('cancelBookingId').value;
+    var phone     = document.getElementById('cancelBookingPhone').value;
+    var sel       = document.getElementById('cancelReasonSelect').value;
+    var other     = document.getElementById('cancelReasonOther').value.trim();
+    var reason    = sel === 'Khác' ? (other || 'Khác') : sel;
+    var notify    = document.getElementById('cancelNotifyCheck').checked;
+    var smsText   = document.getElementById('cancelSmsText').value.trim();
+
+    if (!reason) { showToast('Vui lòng chọn lý do hủy.'); return; }
+    if (!bookingId || !vendorRef) { showToast('Lỗi: không tìm thấy lịch hẹn.'); return; }
+
+    var fv = firebase.firestore.FieldValue;
+    vendorRef.collection('bookings').doc(bookingId).update({
+      status:             'canceled',
+      cancellationReason: reason,
+      cancelledBy:        _userEmail || 'admin',
+      cancelledAt:        fv.serverTimestamp(),
+      updatedAt:          fv.serverTimestamp(),
+      history:            fv.arrayUnion({
+        action: 'canceled', reason: reason,
+        by: _userEmail || 'admin', at: new Date().toISOString()
+      })
+    }).then(function() {
+      showToast('Đã hủy lịch hẹn.');
+      closeCancelModal();
+      if (notify && phone && smsText) {
+        var clean = phone.replace(/\D/g, '');
+        if (clean.length === 10) clean = '+1' + clean;
+        else if (clean.length === 11 && clean[0] === '1') clean = '+' + clean;
+        window.open('sms:' + clean + '?body=' + encodeURIComponent(smsText), '_blank');
+      }
+    }).catch(function(err) { showToast('Lỗi: ' + err.message); });
+  }
+
   function updateBookingStatus(apptId, newStatus) {
+    var fv = firebase.firestore.FieldValue;
+    var historyEntry = { action: newStatus, by: _userEmail || 'staff', at: new Date().toISOString() };
     vendorRef.collection('bookings').doc(apptId).update({
       status:    newStatus,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      updatedAt: fv.serverTimestamp(),
+      history:   fv.arrayUnion(historyEntry)
     }).then(function () {
       var labels = {
         in_progress: 'Đang thực hiện dịch vụ!',

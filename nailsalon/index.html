@@ -11,13 +11,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,300;0,6..96,400;1,6..96,300;1,6..96,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../marketplace/marketplace.css?v=20260406c">
   <link rel="stylesheet" href="../desktop.css">
-  <link rel="stylesheet" href="/nailsalon/salon.css?v=20260414a">
+  <link rel="stylesheet" href="/nailsalon/salon.css?v=20260407b">
   <!-- v=20260414a: skill chips CSS -->
 
   <!-- Firebase: required for live staff/services/hours data in Salon AI -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
   <script>
     (function () {
       var cfg = {
@@ -29,7 +30,8 @@
         appId:             '1:623460884698:web:a08bd435c453a7b4db05e3'
       };
       if (!firebase.apps.length) { firebase.initializeApp(cfg); }
-      window.dlcDb = firebase.firestore();
+      window.dlcDb      = firebase.firestore();
+      window.dlcStorage = firebase.storage();
       // Only sign in anonymously when no existing session — prevents overwriting vendor/driver auth
       firebase.auth().onAuthStateChanged(function(u) {
         if (!u) firebase.auth().signInAnonymously().catch(function() {});
@@ -42,7 +44,7 @@
 <script src="/ai-engine.js?v=20260412i"></script>
 <script src="../marketplace/services-data.js?v=20260414a"></script>
 <script src="../marketplace/marketplace.js?v=20260414b"></script>
-<script src="/nailsalon/receptionist.js?v=20260407a"></script>
+<script src="/nailsalon/receptionist.js?v=20260407b"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     Marketplace.init('nails');

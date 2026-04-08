@@ -1589,8 +1589,12 @@
         source:        'lily_receptionist',
         createdAt:     fv.serverTimestamp(),
       };
-      vendorBookingsRef.add(bookingDoc)
+      // Use .doc(orderId).set() so the doc ID equals orderId — needed for image uploads
+      vendorBookingsRef.doc(orderId).set(bookingDoc)
         .catch(function(e) { console.warn('[booking] Firestore write failed:', e.message); });
+
+      // Show image upload widget after packet
+      _showRefImageWidget(messagesEl, vendorId, orderId, vendorBookingsRef, lang);
 
       var notifLines = [
         '💅 LỊCH HẸN MỚI — ' + orderId,
@@ -1615,6 +1619,118 @@
         createdAt:     fv.serverTimestamp(),
       }).catch(function(e) { console.warn('[notif] Firestore write failed:', e.message); });
     }
+  }
+
+  // ── Reference image upload widget ────────────────────────────────────────────
+  // Shown after booking confirmation. Lets customer attach 1-5 reference photos.
+  // Uploads to Firebase Storage → saves URLs to booking doc's referenceImages field.
+
+  function _showRefImageWidget(messagesEl, vendorId, orderId, vendorBookingsRef, lang) {
+    var widgetId  = 'ref-img-' + orderId;
+    var inputId   = widgetId + '-input';
+    var previewId = widgetId + '-previews';
+    var statusId  = widgetId + '-status';
+    var btnId     = widgetId + '-btn';
+    var skipId    = widgetId + '-skip';
+
+    var labels = {
+      vi: { title: '📷 Ảnh tham khảo (tùy chọn)', sub: 'Thêm ảnh để thợ biết kiểu bạn muốn', btn: 'Chọn ảnh', skip: 'Bỏ qua' },
+      en: { title: '📷 Reference photos (optional)', sub: 'Add photos so your technician knows the style you want', btn: 'Choose photos', skip: 'Skip' },
+      es: { title: '📷 Fotos de referencia (opcional)', sub: 'Agrega fotos para que tu técnica sepa el estilo', btn: 'Elegir fotos', skip: 'Omitir' }
+    };
+    var L = labels[lang] || labels['en'];
+
+    var html =
+      '<div class="ns-img-upload" id="' + widgetId + '">' +
+        '<div class="ns-img-upload__title">' + L.title + '</div>' +
+        '<div class="ns-img-upload__sub">' + L.sub + '</div>' +
+        '<input type="file" accept="image/*" multiple id="' + inputId + '" style="display:none">' +
+        '<div class="ns-img-upload__row">' +
+          '<button class="ns-img-upload__btn" id="' + btnId + '">' + L.btn + '</button>' +
+          '<button class="ns-img-upload__skip" id="' + skipId + '">' + L.skip + '</button>' +
+        '</div>' +
+        '<div class="ns-img-upload__previews" id="' + previewId + '"></div>' +
+        '<div class="ns-img-upload__status" id="' + statusId + '"></div>' +
+      '</div>';
+
+    _appendHtmlMessage(messagesEl, html);
+
+    // Attach all event listeners after DOM is ready (onclick attrs can't reach IIFE scope)
+    setTimeout(function() {
+      var input = document.getElementById(inputId);
+      var btn   = document.getElementById(btnId);
+      var skip  = document.getElementById(skipId);
+      if (btn && input) btn.addEventListener('click', function() { input.click(); });
+      if (skip) skip.addEventListener('click', function() {
+        var el = document.getElementById(widgetId);
+        if (el) el.style.display = 'none';
+      });
+      if (input) input.addEventListener('change', function() {
+        _uploadRefImages(input.files, vendorId, orderId, vendorBookingsRef, previewId, statusId, lang);
+      });
+    }, 150);
+  }
+
+  function _uploadRefImages(files, vendorId, orderId, vendorBookingsRef, previewId, statusId, lang) {
+    if (!files || !files.length) return;
+    var storage = window.dlcStorage;
+    var db      = window.dlcDb;
+    if (!storage || !db) { console.warn('[img-upload] storage not ready'); return; }
+
+    var statusEl  = document.getElementById(statusId);
+    var previewEl = document.getElementById(previewId);
+    if (statusEl) statusEl.textContent = lang === 'vi' ? 'Đang tải ảnh…' : lang === 'es' ? 'Subiendo…' : 'Uploading…';
+
+    var selected = Array.from(files).slice(0, 5);
+    var uploadedUrls = [];
+    var done = 0;
+
+    selected.forEach(function(file, i) {
+      // Show local preview immediately
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        if (!previewEl) return;
+        var img = document.createElement('img');
+        img.src = e.target.result;
+        img.className = 'ns-img-upload__preview ns-img-upload__preview--loading';
+        img.dataset.idx = i;
+        previewEl.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+
+      // Upload to Firebase Storage
+      var ext  = file.name.split('.').pop() || 'jpg';
+      var path = 'vendors/' + vendorId + '/bookings/' + orderId + '/ref_' + i + '_' + Date.now() + '.' + ext;
+      var ref  = storage.ref(path);
+
+      ref.put(file).then(function() {
+        return ref.getDownloadURL();
+      }).then(function(url) {
+        uploadedUrls.push(url);
+        // Mark preview as done
+        var img = previewEl ? previewEl.querySelector('[data-idx="' + i + '"]') : null;
+        if (img) img.classList.remove('ns-img-upload__preview--loading');
+        done++;
+        if (done === selected.length) {
+          // Save all URLs to booking doc
+          vendorBookingsRef.doc(orderId).update({
+            referenceImages: firebase.firestore.FieldValue.arrayUnion.apply(null, uploadedUrls)
+          }).then(function() {
+            if (statusEl) {
+              statusEl.textContent = lang === 'vi' ? '✓ Đã lưu ' + done + ' ảnh tham khảo' : lang === 'es' ? '✓ ' + done + ' foto(s) guardada(s)' : '✓ ' + done + ' photo(s) saved';
+              statusEl.style.color = '#4ade80';
+            }
+          }).catch(function(e) {
+            console.warn('[img-upload] Firestore update failed:', e.message);
+            if (statusEl) { statusEl.textContent = '⚠ Could not save to booking.'; statusEl.style.color = '#f87171'; }
+          });
+        }
+      }).catch(function(e) {
+        console.warn('[img-upload] Storage upload failed:', e.message);
+        done++;
+        if (statusEl) { statusEl.textContent = '⚠ Upload failed. Check storage permissions.'; statusEl.style.color = '#f87171'; }
+      });
+    });
   }
 
   function _showTyping(messagesEl, id) {

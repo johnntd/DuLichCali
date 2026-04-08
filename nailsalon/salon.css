@@ -1265,3 +1265,43 @@
   .ns-flow-card__bg { transition: none; }
   .ns-flow-card { transition: none; }
 }
+
+/* ── Reference image upload widget (post-booking) ───────────────────────────── */
+.ns-img-upload {
+  background: rgba(236, 72, 153, 0.06);
+  border: 1px solid rgba(236, 72, 153, 0.22);
+  border-radius: 12px;
+  padding: .9rem 1rem;
+}
+.ns-img-upload__title {
+  font-size: .85rem; font-weight: 600; color: #fff; margin-bottom: .2rem;
+}
+.ns-img-upload__sub {
+  font-size: .72rem; color: rgba(255,255,255,.6); margin-bottom: .7rem; line-height: 1.4;
+}
+.ns-img-upload__row {
+  display: flex; gap: .5rem; align-items: center; margin-bottom: .55rem;
+}
+.ns-img-upload__btn {
+  background: rgba(236,72,153,.18); border: 1px solid rgba(236,72,153,.4);
+  color: #f9a8d4; border-radius: 8px; padding: .4rem .85rem;
+  font-size: .78rem; font-weight: 600; cursor: pointer;
+  font-family: var(--font-b); transition: background .15s;
+}
+.ns-img-upload__btn:hover { background: rgba(236,72,153,.28); }
+.ns-img-upload__skip {
+  background: transparent; border: none; color: rgba(255,255,255,.4);
+  font-size: .72rem; cursor: pointer; font-family: var(--font-b); padding: .3rem .4rem;
+}
+.ns-img-upload__skip:hover { color: rgba(255,255,255,.65); }
+.ns-img-upload__previews {
+  display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: .3rem;
+}
+.ns-img-upload__preview {
+  width: 68px; height: 68px; border-radius: 7px; object-fit: cover;
+  border: 1px solid rgba(236,72,153,.3); transition: opacity .2s;
+}
+.ns-img-upload__preview--loading { opacity: .55; }
+.ns-img-upload__status {
+  font-size: .7rem; color: rgba(255,255,255,.55); min-height: 1rem;
+}

@@ -1571,15 +1571,15 @@
       if ((role === 'staff' || role === 'manager') && !staffName) {
         msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Nhập tên (dùng để lọc lịch hẹn).'; return;
       }
-      if (!pin || pin.length < 4) {
-        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Nhập PIN (tối thiểu 4 ký tự).'; return;
+      if (!pin || pin.length < 6) {
+        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'PIN phải có ít nhất 6 ký tự.'; return;
       }
 
       msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Đang tạo…';
       if (pwBox) pwBox.style.display = 'none';
 
-      // PIN is the password — padded to 6 chars minimum (Firebase Auth requirement)
-      const tempPass = pin.padEnd(6, '0');
+      // PIN is the password — used verbatim (6-char minimum enforced above)
+      const tempPass = pin;
 
       try {
         const resp = await fetch(

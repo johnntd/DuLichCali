@@ -366,13 +366,22 @@
     });
   }
 
+  // ── Helper: redirect to correct admin page based on vendor category ─────────
+  function _redirectToVendorAdmin(vendorId) {
+    if (!vendorId) { window.location.href = 'vendor-admin.html'; return; }
+    db.collection('vendors').doc(vendorId).get().then(function(vdoc) {
+      var cat = vdoc.exists ? vdoc.data().category : null;
+      window.location.href = (cat === 'nails' || cat === 'hair') ? 'salon-admin.html' : 'vendor-admin.html';
+    }).catch(function() { window.location.href = 'vendor-admin.html'; });
+  }
+
   // ── Auth state check — redirect if already signed in ─────────────────────
   auth.onAuthStateChanged(function (user) {
     if (user) {
       if (!VENDOR_ID) {
         db.collection('vendorUsers').doc(user.uid).get().then(function (doc) {
           if (doc.exists) {
-            window.location.href = 'vendor-admin.html';
+            _redirectToVendorAdmin(doc.data().vendorId);
           } else {
             auth.signOut().then(function () {
               document.getElementById('authChecking').classList.add('hidden');
@@ -387,7 +396,7 @@
       }
       db.collection('vendorUsers').doc(user.uid).get().then(function (doc) {
         if (doc.exists && doc.data().vendorId === VENDOR_ID) {
-          window.location.href = 'vendor-admin.html';
+          _redirectToVendorAdmin(VENDOR_ID);
         } else if (!doc.exists) {
           document.getElementById('authChecking').classList.add('hidden');
           var display = document.getElementById('claimEmailDisplay');
@@ -515,7 +524,8 @@
                   : 'Cửa hàng này đang tạm ngừng hoạt động.';
               });
             }
-            window.location.href = 'vendor-admin.html';
+            var cat = vdoc.exists ? vdoc.data().category : null;
+            window.location.href = (cat === 'nails' || cat === 'hair') ? 'salon-admin.html' : 'vendor-admin.html';
           });
         } else if (!doc.exists) {
           // Existing Auth account, no vendor mapping — offer claim flow
@@ -598,17 +608,17 @@
     auth.createUserWithEmailAndPassword(email, pass).then(function (cred) {
       return writeMapping(cred.user.uid);
     }).then(function () {
-      window.location.href = 'vendor-admin.html';
+      _redirectToVendorAdmin(VENDOR_ID);
     }).catch(function (err) {
       // If account already exists, sign in and complete vendor link
       if (err.code === 'auth/email-already-in-use') {
         auth.signInWithEmailAndPassword(email, pass).then(function (cred) {
           return db.collection('vendorUsers').doc(cred.user.uid).get().then(function (doc) {
             if (doc.exists && doc.data().vendorId === VENDOR_ID) {
-              window.location.href = 'vendor-admin.html';
+              _redirectToVendorAdmin(VENDOR_ID);
             } else if (!doc.exists) {
               return writeMapping(cred.user.uid).then(function () {
-                window.location.href = 'vendor-admin.html';
+                _redirectToVendorAdmin(VENDOR_ID);
               });
             } else {
               auth.signOut();
@@ -662,7 +672,7 @@
       email:     user.email || '',
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }).then(function () {
-      window.location.href = 'vendor-admin.html';
+      _redirectToVendorAdmin(VENDOR_ID);
     }).catch(function (err) {
       btn.disabled = false;
       errEl.textContent = 'Lỗi: ' + err.message;

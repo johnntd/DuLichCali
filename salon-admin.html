@@ -2090,8 +2090,28 @@
         // Normalize services — support both new "services" array and old "service" string
         var svcs = appt.services || (appt.service ? [appt.service] : []);
 
+        var bookingsRef = vendorRef.collection('bookings');
+
+        // If this is a reschedule, cancel the old booking first
+        if (appt.existingBookingId) {
+          bookingsRef.doc(appt.existingBookingId).delete()
+            .catch(function(e) { console.warn('[reschedule] old booking delete failed:', e.message); });
+        } else if (appt.isModify && (appt.phone || appt.customerPhone)) {
+          var oldPhone = appt.phone || appt.customerPhone;
+          bookingsRef.where('customerPhone', '==', oldPhone)
+            .where('status', '==', 'confirmed')
+            .get()
+            .then(function(snap) {
+              snap.docs.forEach(function(d) {
+                d.ref.update({ status: 'rescheduled' })
+                  .catch(function(e) { console.warn('[reschedule] status update failed:', e.message); });
+              });
+            })
+            .catch(function(e) { console.warn('[reschedule] lookup failed:', e.message); });
+        }
+
         // Write to 'bookings' subcollection — the same path subscribeBookings() reads from
-        var apptRef = vendorRef.collection('bookings').doc();
+        var apptRef = bookingsRef.doc();
         apptRef.set({
           escId:              escId,
           vendorId:           VENDOR_ID,
@@ -2108,6 +2128,7 @@
           customerPhone:      appt.phone || appt.customerPhone || '',
           lang:               appt.lang  || escData.lang || 'en',
           status:             'confirmed',
+          isReschedule:       appt.isModify ? true : false,
           source:             'lily_receptionist_confirmed',
           confirmedAt:        ts(),
           createdAt:          ts()

@@ -667,6 +667,21 @@
     .pm-summary-val--balance { font-size: .94rem; }
     .pm-no-price { font-size: .73rem; color: var(--muted); background: rgba(248,113,113,.06); border: 1px solid rgba(248,113,113,.25); border-radius: 6px; padding: .5rem .75rem; margin-bottom: .85rem; display: flex; justify-content: space-between; align-items: center; gap: .5rem; flex-wrap: wrap; }
     .pm-no-price-btn { font-size: .68rem; font-weight: 700; color: var(--gold-lt); background: rgba(245,166,35,.1); border: 1px solid rgba(245,166,35,.35); border-radius: 4px; padding: 3px 9px; cursor: pointer; white-space: nowrap; }
+    /* ── Payment settings (Settings tab) ── */
+    .ps-method-row { display: flex; align-items: flex-start; gap: .75rem; padding: .6rem 0; border-bottom: 1px solid var(--border); }
+    .ps-method-row:last-child { border-bottom: none; }
+    .ps-method-toggle { flex-shrink: 0; margin-top: .1rem; }
+    .ps-method-body { flex: 1; min-width: 0; }
+    .ps-method-name { font-size: .82rem; font-weight: 700; color: var(--cream); }
+    .ps-method-desc { font-size: .68rem; color: var(--muted); margin-top: .1rem; }
+    .ps-method-fields { margin-top: .45rem; display: none; }
+    .ps-method-fields.visible { display: block; }
+    .ps-field-row { display: flex; align-items: center; gap: .4rem; margin-top: .3rem; }
+    .ps-field-label { font-size: .65rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; min-width: 80px; }
+    .ps-method-badge { display: inline-block; font-size: .58rem; font-weight: 700; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; letter-spacing: .04em; vertical-align: middle; margin-left: .35rem; }
+    .ps-badge--soon { background: rgba(96,165,250,.1); border: 1px solid rgba(96,165,250,.3); color: #60a5fa; }
+    .ps-badge--beta { background: rgba(251,191,36,.1); border: 1px solid rgba(251,191,36,.3); color: #fbbf24; }
+
     /* Tip suggestion buttons */
     .pm-tip-btns { display: flex; gap: .4rem; margin-top: .3rem; margin-bottom: .65rem; }
     .pm-tip-btn { flex: 1; font-size: .68rem; font-weight: 700; padding: .32rem .2rem; border-radius: 5px; border: 1px solid var(--border); background: rgba(255,255,255,.04); color: var(--muted); cursor: pointer; text-align: center; line-height: 1.35; transition: background .15s, color .15s, border-color .15s; }
@@ -969,6 +984,83 @@
               <button class="btn btn--primary" onclick="saveSettings()">Lưu Cài Đặt</button>
               <span class="sa-msg" id="settingsMsg"></span>
             </div>
+          </div>
+        </div>
+
+        <!-- Payment methods configuration — owner only -->
+        <div class="sa-card" id="payMethodsCard" style="display:none;margin-top:1.2rem">
+          <div style="font-weight:600;margin-bottom:.2rem;font-size:.85rem">Phương Thức Thanh Toán</div>
+          <div style="font-size:.7rem;color:var(--muted);margin-bottom:1rem">Bật các phương thức thanh toán mà tiệm hỗ trợ. Chỉ các phương thức đã bật mới xuất hiện trong màn hình thu tiền.</div>
+
+          <!-- Cash -->
+          <div class="ps-method-row">
+            <input type="checkbox" id="pmCfgCash" class="ps-method-toggle" onchange="_pmCfgToggle('cash')">
+            <div class="ps-method-body">
+              <div class="ps-method-name">Tiền mặt (Cash)</div>
+              <div class="ps-method-desc">Khách thanh toán trực tiếp bằng tiền mặt tại tiệm.</div>
+            </div>
+          </div>
+
+          <!-- Card (manual) -->
+          <div class="ps-method-row">
+            <input type="checkbox" id="pmCfgCard" class="ps-method-toggle" onchange="_pmCfgToggle('card')">
+            <div class="ps-method-body">
+              <div class="ps-method-name">Thẻ tín dụng / thẻ ghi nợ (Card)</div>
+              <div class="ps-method-desc">Thanh toán qua máy đọc thẻ hoặc thiết bị ngoài. Ghi nhận thủ công.</div>
+            </div>
+          </div>
+
+          <!-- Zelle -->
+          <div class="ps-method-row">
+            <input type="checkbox" id="pmCfgZelle" class="ps-method-toggle" onchange="_pmCfgToggle('zelle')">
+            <div class="ps-method-body">
+              <div class="ps-method-name">Zelle</div>
+              <div class="ps-method-desc">Khách chuyển khoản qua Zelle. Nhập số điện thoại / email Zelle của tiệm.</div>
+              <div class="ps-method-fields" id="pmCfgZelleFields">
+                <div class="ps-field-row">
+                  <span class="ps-field-label">Zelle ID</span>
+                  <input class="sa-input" id="pmCfgZelleId" type="text" placeholder="Số điện thoại hoặc email Zelle" style="flex:1;font-size:.78rem;padding:.3rem .5rem">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Venmo -->
+          <div class="ps-method-row">
+            <input type="checkbox" id="pmCfgVenmo" class="ps-method-toggle" onchange="_pmCfgToggle('venmo')">
+            <div class="ps-method-body">
+              <div class="ps-method-name">Venmo</div>
+              <div class="ps-method-desc">Khách thanh toán qua Venmo. Nhập @handle của tiệm.</div>
+              <div class="ps-method-fields" id="pmCfgVenmoFields">
+                <div class="ps-field-row">
+                  <span class="ps-field-label">@Handle</span>
+                  <input class="sa-input" id="pmCfgVenmoHandle" type="text" placeholder="@tên-tiệm" style="flex:1;font-size:.78rem;padding:.3rem .5rem">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tap to Pay — future -->
+          <div class="ps-method-row">
+            <input type="checkbox" id="pmCfgTap" class="ps-method-toggle" onchange="_pmCfgToggle('tapToPay')" disabled>
+            <div class="ps-method-body">
+              <div class="ps-method-name">Tap to Pay (iPhone) <span class="ps-method-badge ps-badge--soon">Sắp có</span></div>
+              <div class="ps-method-desc">iPhone nhận thanh toán không tiếp xúc (contactless). Cần tích hợp Stripe / Square Mobile SDK.</div>
+            </div>
+          </div>
+
+          <!-- Card reader — future -->
+          <div class="ps-method-row">
+            <input type="checkbox" id="pmCfgReader" class="ps-method-toggle" onchange="_pmCfgToggle('reader')" disabled>
+            <div class="ps-method-body">
+              <div class="ps-method-name">Máy đọc thẻ (Card Reader / iPad) <span class="ps-method-badge ps-badge--soon">Sắp có</span></div>
+              <div class="ps-method-desc">Kết nối máy đọc thẻ vật lý qua Stripe Terminal hoặc Square Reader.</div>
+            </div>
+          </div>
+
+          <div style="margin-top:1rem">
+            <button class="btn btn--primary" onclick="savePaymentConfig()" style="font-size:.78rem">Lưu Phương Thức</button>
+            <span class="sa-msg" id="payMethodsMsg"></span>
           </div>
         </div>
 
@@ -1405,6 +1497,20 @@
   var _bookingCache      = {};   // bookingId → booking object — for manual edit modal prefill
   var SERVICE_CATS       = [];   // [{key, label}] — loaded from static data
   var CATALOG_VERSION    = 2;    // Bump this to force a full catalog reset on next login
+  // Payment config: loaded from vendors/{id}.paymentConfig on login.
+  // Defines which methods are enabled and any provider-specific handles.
+  // Phase A: cash/card/zelle/venmo toggles + Zelle ID / Venmo handle.
+  // Phase B: tapToPay, reader (disabled until SDK integration).
+  var _vendorPayConfig   = {
+    methods: {
+      cash:      { enabled: true  },
+      card:      { enabled: true  },
+      zelle:     { enabled: false, zelleId: '' },
+      venmo:     { enabled: false, venmoHandle: '' },
+      tapToPay:  { enabled: false },
+      reader:    { enabled: false }
+    }
+  };
   var _catalogSeeding    = false;
 
   // ── Utility ─────────────────────────────────────────────────────────────────
@@ -1613,12 +1719,17 @@
         subscribeEscalations();
         subscribeNotifications(); // vendor subcollection notifications (Lily Receptionist bookings)
         subscribeBookings();
-        // Owner: show staff permissions panel in Settings
+        // Owner: show staff permissions + payment settings panels
         if (_userRole === 'owner') {
           var spc = document.getElementById('staffPermsCard');
           if (spc) spc.style.display = '';
           loadStaffAccounts();
+          var pmc = document.getElementById('payMethodsCard');
+          if (pmc) pmc.style.display = '';
         }
+
+        // Load payment config into module var + settings UI
+        _loadPaymentConfig(vdata.paymentConfig || {});
         // Show "New Booking" button for permitted roles
         var _nbBtn = document.getElementById('btnNewBooking');
         if (_nbBtn && (_userRole === 'owner' || _userRole === 'manager' || !!_userPerms.canConfirm)) {
@@ -2836,7 +2947,15 @@
     document.getElementById('pmStatus').value = b.paymentStatus || 'unpaid';
     document.getElementById('pmAmount').value  = b.amountPaid != null ? b.amountPaid : '';
     document.getElementById('pmTip').value     = b.tipAmount   != null ? b.tipAmount   : '';
-    document.getElementById('pmMethod').value  = b.paymentMethod || 'cash';
+    // Populate method options from vendor config, then restore saved value
+    var pmMethodEl = document.getElementById('pmMethod');
+    pmMethodEl.innerHTML = _buildMethodOptions();
+    var savedMethod = b.paymentMethod || 'cash';
+    if (pmMethodEl.querySelector('option[value="' + savedMethod + '"]')) {
+      pmMethodEl.value = savedMethod;
+    } else {
+      pmMethodEl.value = 'other';
+    }
     document.getElementById('pmNote').value    = b.paymentNote  || '';
     document.getElementById('pmMsg').style.display = 'none';
     var btn = document.getElementById('pmSaveBtn');
@@ -2882,12 +3001,13 @@
 
     var fv = firebase.firestore.FieldValue;
     var update = {
-      paymentStatus: payStatus,
-      amountPaid:    amount,
-      tipAmount:     tip,
-      paymentMethod: method || null,
-      paymentNote:   note   || null,
-      updatedAt:     fv.serverTimestamp(),
+      paymentStatus:  payStatus,
+      amountPaid:     amount,
+      tipAmount:      tip,
+      paymentMethod:  method || null,
+      paymentNote:    note   || null,
+      transactionRef: null,
+      updatedAt:      fv.serverTimestamp(),
       history:       fv.arrayUnion({
         action:        'payment_recorded',
         paymentStatus: payStatus,
@@ -4116,6 +4236,94 @@
     }
 
     resultsEl.innerHTML = html;
+  }
+
+  // ── Payment configuration ─────────────────────────────────────────────────────
+  // Phase A: enable/disable methods + store provider handles in vendors/{id}.paymentConfig.
+  // Phase B (future): tapToPay + reader will hook SDK flows here.
+
+  var _PM_CFG_DEFS = [
+    { key: 'cash',     checkId: 'pmCfgCash',   fieldsId: null,              enabled: true  },
+    { key: 'card',     checkId: 'pmCfgCard',   fieldsId: null,              enabled: true  },
+    { key: 'zelle',    checkId: 'pmCfgZelle',  fieldsId: 'pmCfgZelleFields', enabled: false },
+    { key: 'venmo',    checkId: 'pmCfgVenmo',  fieldsId: 'pmCfgVenmoFields', enabled: false },
+    { key: 'tapToPay', checkId: 'pmCfgTap',    fieldsId: null,              enabled: false },
+    { key: 'reader',   checkId: 'pmCfgReader', fieldsId: null,              enabled: false }
+  ];
+
+  // Merge Firestore paymentConfig into module var and populate settings UI.
+  function _loadPaymentConfig(cfg) {
+    var methods = (cfg && cfg.methods) || {};
+    _PM_CFG_DEFS.forEach(function(def) {
+      var stored = methods[def.key] || {};
+      var enabled = stored.enabled !== undefined ? stored.enabled : def.enabled;
+      _vendorPayConfig.methods[def.key] = Object.assign({}, _vendorPayConfig.methods[def.key], stored, { enabled: enabled });
+
+      var chk = document.getElementById(def.checkId);
+      if (chk) chk.checked = enabled;
+      if (def.fieldsId) {
+        var fEl = document.getElementById(def.fieldsId);
+        if (fEl) fEl.classList.toggle('visible', enabled);
+      }
+    });
+    // Populate Zelle ID / Venmo handle fields if present
+    var zelleIdEl = document.getElementById('pmCfgZelleId');
+    if (zelleIdEl) zelleIdEl.value = (_vendorPayConfig.methods.zelle || {}).zelleId || '';
+    var venmoEl = document.getElementById('pmCfgVenmoHandle');
+    if (venmoEl) venmoEl.value = (_vendorPayConfig.methods.venmo || {}).venmoHandle || '';
+  }
+
+  // Toggle optional fields visibility when vendor checks/unchecks a method.
+  function _pmCfgToggle(key) {
+    var def = _PM_CFG_DEFS.filter(function(d) { return d.key === key; })[0];
+    if (!def || !def.fieldsId) return;
+    var chk = document.getElementById(def.checkId);
+    var fEl = document.getElementById(def.fieldsId);
+    if (fEl && chk) fEl.classList.toggle('visible', chk.checked);
+  }
+
+  // Save paymentConfig to Firestore and update module var.
+  function savePaymentConfig() {
+    var methods = {};
+    _PM_CFG_DEFS.forEach(function(def) {
+      var chk = document.getElementById(def.checkId);
+      var enabled = chk ? chk.checked : false;
+      methods[def.key] = { enabled: enabled };
+    });
+    // Capture handle fields
+    var zelleId = (document.getElementById('pmCfgZelleId') || {}).value || '';
+    var venmoHandle = (document.getElementById('pmCfgVenmoHandle') || {}).value || '';
+    if (zelleId)     methods.zelle.zelleId     = zelleId.trim();
+    if (venmoHandle) methods.venmo.venmoHandle = venmoHandle.trim();
+
+    if (!vendorRef) return;
+    var msg = document.getElementById('payMethodsMsg');
+    vendorRef.set({ paymentConfig: { methods: methods }, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true })
+      .then(function() {
+        // Update module var
+        _vendorPayConfig.methods = Object.assign(_vendorPayConfig.methods, methods);
+        if (msg) { msg.style.color = 'var(--success)'; msg.textContent = ' ✓ Đã lưu.'; setTimeout(function(){ msg.textContent=''; }, 3000); }
+      })
+      .catch(function(e) {
+        if (msg) { msg.style.color = 'var(--danger)'; msg.textContent = ' Lỗi: ' + e.message; }
+      });
+  }
+
+  // Returns <option> elements for enabled payment methods.
+  // Used to populate pmMethod select when payment modal opens.
+  function _buildMethodOptions() {
+    var labels = { cash: 'Tiền mặt (Cash)', card: 'Thẻ (Card)', zelle: 'Zelle', venmo: 'Venmo', tapToPay: 'Tap to Pay', reader: 'Máy đọc thẻ', other: 'Khác (Other)' };
+    var enabled = [];
+    _PM_CFG_DEFS.forEach(function(def) {
+      if (_vendorPayConfig.methods[def.key] && _vendorPayConfig.methods[def.key].enabled) {
+        enabled.push(def.key);
+      }
+    });
+    // Always include 'other' as a catch-all
+    enabled.push('other');
+    return enabled.map(function(k) {
+      return '<option value="' + k + '">' + (labels[k] || k) + '</option>';
+    }).join('');
   }
 
   function saveSettings() {

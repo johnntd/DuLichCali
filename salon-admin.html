@@ -1201,8 +1201,8 @@
     var sel = selected || [];
     return SKILL_OPTIONS.map(function (skill) {
       var isChecked = sel.indexOf(skill) !== -1;
-      return '<label class="skill-chip' + (isChecked ? ' checked' : '') + '" onclick="this.classList.toggle(\'checked\')">' +
-        '<input type="checkbox" value="' + skill + '"' + (isChecked ? ' checked' : '') + '>' +
+      return '<label class="skill-chip' + (isChecked ? ' checked' : '') + '">' +
+        '<input type="checkbox" value="' + skill + '"' + (isChecked ? ' checked' : '') + ' onchange="this.parentElement.classList.toggle(\'checked\',this.checked)">' +
         skill +
       '</label>';
     }).join('');

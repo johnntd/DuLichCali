@@ -58,6 +58,69 @@
     return id;
   }
 
+  // ── Multilingual strings for confirmation UI ────────────────────────────────
+  var CONFIRM_STRINGS = {
+    vi: {
+      cancelled:     'Đã hủy. Bạn cần tôi giúp gì khác không?',
+      corrUpdated:   '✅ Đã cập nhật — ',
+      corrContinue:  'Đã cập nhật. Vui lòng tiếp tục: ',
+      reShowQ:       '\n\nBạn có muốn xác nhận không?\nGõ "có" để đặt hoặc "không" để chỉnh sửa.',
+      confirmReady:  '\n\n✅ Thông tin đầy đủ! Bạn có muốn xác nhận không?',
+      confirmOrEdit: 'Bạn muốn xác nhận hay chỉnh sửa?',
+      chipOk:        '✅ Xác nhận đặt chỗ',   chipOkVal: 'xác nhận',
+      chipEdit:      '✏️ Chỉnh sửa thông tin', chipEditVal: 'không',
+      priceFrom:     'Giá từ: ',
+    },
+    en: {
+      cancelled:     'Cancelled. How else can I help you?',
+      corrUpdated:   '✅ Updated — ',
+      corrContinue:  'Updated. Let\'s continue: ',
+      reShowQ:       '\n\nWould you like to confirm? Type "yes" to book or "no" to edit.',
+      confirmReady:  '\n\n✅ All set! Would you like to confirm your booking?',
+      confirmOrEdit: 'Would you like to confirm or make changes?',
+      chipOk:        '✅ Confirm booking',  chipOkVal: 'yes',
+      chipEdit:      '✏️ Edit details',     chipEditVal: 'no',
+      priceFrom:     'Est. starting from: ',
+    },
+    es: {
+      cancelled:     'Cancelado. ¿En qué más puedo ayudarte?',
+      corrUpdated:   '✅ Actualizado — ',
+      corrContinue:  'Actualizado. Continuemos: ',
+      reShowQ:       '\n\n¿Deseas confirmar? Escribe "sí" para reservar o "no" para editar.',
+      confirmReady:  '\n\n✅ ¡Listo! ¿Deseas confirmar la reserva?',
+      confirmOrEdit: '¿Confirmas o quieres hacer cambios?',
+      chipOk:        '✅ Confirmar reserva', chipOkVal: 'sí',
+      chipEdit:      '✏️ Editar detalles',   chipEditVal: 'no',
+      priceFrom:     'Desde aproximadamente: ',
+    },
+  };
+
+  // Helper: get a string in the current draft language (default vi)
+  function S(key) {
+    var lang = (draft && draft.lang) || 'vi';
+    var tbl = CONFIRM_STRINGS[lang] || CONFIRM_STRINGS.vi;
+    return tbl[key] !== undefined ? tbl[key] : (CONFIRM_STRINGS.vi[key] || '');
+  }
+
+  // ── Starting-price lookup for nail / hair services ──────────────────────────
+  var NAIL_PRICE_FROM = {
+    'Manicure':    '$18+',
+    'Pedicure':    '$28+',
+    'Mani + Pedi': '$48+',
+    'Gel Nails':   '$30+',
+    'Acrylic':     '$40+',
+    'Full Set':    '$40+',
+    'Dip Powder':  '$45+',
+  };
+  var HAIR_PRICE_FROM = {
+    'Cắt tóc':              '$18+',
+    'Nhuộm tóc':            '$60+',
+    'Uốn / Duỗi':           '$80+',
+    'Keratin Treatment':    '$150+',
+    'Balayage / Highlights':'$80+',
+    'Toner / Toning':       '$40+',
+  };
+
   // ── Field Extractors ───────────────────────────────────────────────────────
 
   var X = {
@@ -1089,6 +1152,7 @@
         },
       ],
       summary: function(f) {
+        var priceEst = f.serviceType ? NAIL_PRICE_FROM[f.serviceType] : null;
         return [
           '📋 Tóm tắt lịch hẹn nail:',
           '• Dịch vụ:   ' + (f.serviceType||''),
@@ -1098,6 +1162,8 @@
           '• Tên:       ' + (f.customerName||''),
           '• SĐT:       ' + fmtPhone(f.customerPhone),
           f.notes     ? '• Yêu cầu:   ' + f.notes : null,
+          '',
+          priceEst    ? '💰 ' + S('priceFrom') + priceEst : null,
         ].filter(function(v) { return v !== null; }).join('\n');
       },
     },
@@ -1159,6 +1225,7 @@
         },
       ],
       summary: function(f) {
+        var priceEst = f.serviceType ? HAIR_PRICE_FROM[f.serviceType] : null;
         return [
           '📋 Tóm tắt lịch hẹn tóc:',
           '• Dịch vụ:   ' + (f.serviceType||''),
@@ -1168,6 +1235,8 @@
           '• Tên:       ' + (f.customerName||''),
           '• SĐT:       ' + fmtPhone(f.customerPhone),
           f.notes     ? '• Yêu cầu:   ' + f.notes : null,
+          '',
+          priceEst    ? '💰 ' + S('priceFrom') + priceEst : null,
         ].filter(function(v) { return v !== null; }).join('\n');
       },
     },
@@ -1467,7 +1536,7 @@
 
   // ── Start Workflow ─────────────────────────────────────────────────────────
 
-  function startWorkflow(intent, seedText) {
+  function startWorkflow(intent, seedText, lang) {
     var wf = WORKFLOWS[intent];
     if (!wf) return false;
 
@@ -1477,6 +1546,7 @@
       collectedFields: {},
       awaitingField:   null,
       awaitingConfirm: false,
+      lang:            lang || 'vi',
       createdAt:       Date.now(),
       updatedAt:       Date.now(),
     };
@@ -1499,7 +1569,7 @@
     // Cancel
     if (/^(hủy|cancel|quit|thoát|dừng|thôi|stop)\b/i.test((userText||'').trim())) {
       clearDraft(); draft = null;
-      return 'Đã hủy. Bạn cần tôi giúp gì khác không?';
+      return S('cancelled');
     }
 
     var wf = WORKFLOWS[draft.intent];
@@ -1514,7 +1584,7 @@
         Object.assign(draft.collectedFields, corr);
         draft.awaitingField = null;    // re-evaluate which field to ask next
         var corrKeys = Object.keys(corr);
-        var corrAck = '✅ Đã cập nhật — ' + corrKeys.map(function(k) {
+        var corrAck = S('corrUpdated') + corrKeys.map(function(k) {
           return fmtFieldLabel(k) + ': ' + fmtFieldVal(k, corr[k]);
         }).join(', ') + '.';
         saveDraft(draft);
@@ -1540,16 +1610,15 @@
           // All fields still complete — re-show summary
           draft.awaitingConfirm = true;
           saveDraft(draft);
-          return wf.summary(draft.collectedFields) +
-            '\n\nBạn có muốn xác nhận không?\nGõ "có" để đặt hoặc "không" để chỉnh sửa.';
+          return wf.summary(draft.collectedFields) + S('reShowQ');
         }
         draft.awaitingField = next2.key;
         saveDraft(draft);
-        return 'Đã cập nhật. Vui lòng tiếp tục: ' + (getQ(next2)||'');
+        return S('corrContinue') + (getQ(next2)||'');
       } else {
-        return { type:'message', text:'Bạn muốn xác nhận hay chỉnh sửa?', chips:[
-          { label:'✅ Xác nhận đặt chỗ',     value:'xác nhận' },
-          { label:'✏️ Chỉnh sửa thông tin',  value:'không' },
+        return { type:'message', text: S('confirmOrEdit'), chips:[
+          { label: S('chipOk'),   value: S('chipOkVal') },
+          { label: S('chipEdit'), value: S('chipEditVal') },
         ]};
       }
     }
@@ -1621,12 +1690,12 @@
     delete draft._correctionAck;
     saveDraft(draft);
     var summaryText = (ackFinal ? ackFinal + '\n\n' : '') +
-      wf.summary(draft.collectedFields) + '\n\n✅ Thông tin đầy đủ! Bạn có muốn xác nhận không?';
+      wf.summary(draft.collectedFields) + S('confirmReady');
     return { type:'message',
       text: summaryText,
       chips: [
-        { label:'✅ Xác nhận đặt chỗ',     value:'xác nhận' },
-        { label:'✏️ Chỉnh sửa thông tin',  value:'không' },
+        { label: S('chipOk'),   value: S('chipOkVal') },
+        { label: S('chipEdit'), value: S('chipEditVal') },
       ],
     };
   }

@@ -1590,20 +1590,22 @@ BEHAVIOR GUIDELINES:
       const result = WF.process(text);
       if (result && typeof result === 'object' && result.type === 'finalize') {
         try {
+          const wfDraft  = WF.getDraft();
+          const wfLang   = (wfDraft && wfDraft.lang) || 'vi';
           const res = await WF.finalize();
           const orderId = res.id || res;
           const token   = res.token || null;
-          let url = `thankyou.html?id=${encodeURIComponent(orderId)}&lang=vi`;
+          let url = `thankyou.html?id=${encodeURIComponent(orderId)}&lang=${encodeURIComponent(wfLang)}`;
           if (token) url += `&t=${encodeURIComponent(token)}`;
           setTimeout(() => { window.location.href = url; }, 2200);
+          const successTexts = {
+            vi: ['✅ Đặt chỗ thành công!', `Mã đơn: **${orderId}**`, '', 'Đang chuyển đến trang xác nhận...'],
+            en: ['✅ Booking confirmed!',   `Order ID: **${orderId}**`, '', 'Redirecting to confirmation page...'],
+            es: ['✅ ¡Reserva confirmada!', `N.° de pedido: **${orderId}**`, '', 'Redirigiendo a la página de confirmación...'],
+          };
           return {
             type: 'message',
-            text: [
-              '✅ Đặt chỗ thành công!',
-              `Mã đơn: **${orderId}**`,
-              '',
-              'Đang chuyển đến trang xác nhận...',
-            ].join('\n'),
+            text: (successTexts[wfLang] || successTexts.vi).join('\n'),
             chips: null,
             hotels: null,
           };
@@ -1644,7 +1646,8 @@ BEHAVIOR GUIDELINES:
 
       if (routedIntent === 'airport_transfer' && WF) {
         const wfKey = airportDirection(text);
-        if (WF.startWorkflow(wfKey, text)) {
+        const _initLang0 = (window.AIEngine && AIEngine.detectLang) ? AIEngine.detectLang(text) : 'vi';
+        if (WF.startWorkflow(wfKey, text, _initLang0)) {
           const r = WF.process(text);
           if (r && typeof r === 'object' && r.type === 'message') return r;
           if (typeof r === 'string') return r;
@@ -1653,7 +1656,8 @@ BEHAVIOR GUIDELINES:
 
       if (routedIntent && ROUTER_TO_WORKFLOW[routedIntent] && WF) {
         const wfKey = ROUTER_TO_WORKFLOW[routedIntent];
-        if (WF.startWorkflow(wfKey, text)) {
+        const _initLang1 = (window.AIEngine && AIEngine.detectLang) ? AIEngine.detectLang(text) : 'vi';
+        if (WF.startWorkflow(wfKey, text, _initLang1)) {
           const r = WF.process(text);
           if (r && typeof r === 'object' && r.type === 'message') return r;
           if (typeof r === 'string') return r;
@@ -1665,7 +1669,8 @@ BEHAVIOR GUIDELINES:
     if (WF && !WF.isActive()) {
       const wfIntent = WF.detectIntent(text);
       if (wfIntent) {
-        WF.startWorkflow(wfIntent, text);
+        const _initLang2 = (window.AIEngine && AIEngine.detectLang) ? AIEngine.detectLang(text) : 'vi';
+        WF.startWorkflow(wfIntent, text, _initLang2);
         const result = WF.process(text);
         if (result && typeof result === 'object' && result.type === 'message') return result;
         if (typeof result === 'string') return result;

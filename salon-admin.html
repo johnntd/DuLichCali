@@ -2081,19 +2081,69 @@
     if (message && message.trim()) update.vendorMessage = message.trim();
 
     if (status === 'vendor_confirmed') {
-      // Read escalation first to get appointmentData, then write booking record + update status
       db.collection('escalations').doc(escId).get().then(function (doc) {
         var escData = doc.exists ? doc.data() : {};
-        var appt = escData.appointmentData || {};
-        var ts   = firebase.firestore.FieldValue.serverTimestamp;
-
-        // Normalize services — support both new "services" array and old "service" string
-        var svcs = appt.services || (appt.service ? [appt.service] : []);
-
+        var appt    = escData.appointmentData || {};
+        var ts      = firebase.firestore.FieldValue.serverTimestamp;
+        var svcs    = appt.services || (appt.service ? [appt.service] : []);
         var bookingsRef = vendorRef.collection('bookings');
 
-        // Build booking data once — used in all paths below
-        var bookingData = {
+        // ── RESCHEDULE: update the existing booking in place ─────────────────────
+        // Never create a second record — just patch the changed fields on the original.
+        // This keeps booking history clean: one record per customer appointment.
+        if (appt.isModify || appt.existingBookingId) {
+          var rescheduleUpdate = {
+            requestedDate:    appt.date || appt.requestedDate || '',
+            requestedTime:    appt.time || appt.requestedTime || '',
+            date:             appt.date || appt.requestedDate || '',
+            time:             appt.time || appt.requestedTime || '',
+            staff:            appt.staff || 'Any',
+            selectedServices: svcs,
+            service:          svcs.join(', '),
+            serviceType:      svcs[0] || '',
+            totalDurationMins: appt.totalDurationMins || null,
+            status:           'confirmed',
+            isReschedule:     true,
+            rescheduledAt:    ts()
+          };
+
+          if (appt.existingBookingId) {
+            // Best case: exact document ID known — direct update
+            return bookingsRef.doc(appt.existingBookingId).update(rescheduleUpdate)
+              .then(function () {
+                return db.collection('escalations').doc(escId).update(update);
+              });
+          }
+
+          // Fallback: look up most recent confirmed booking by phone, update it
+          var oldPhone = appt.phone || appt.customerPhone;
+          if (oldPhone) {
+            return bookingsRef.where('customerPhone', '==', oldPhone).get()
+              .then(function (snap) {
+                var confirmed = snap.docs.filter(function (d) {
+                  var s = d.data().status || '';
+                  return s === 'confirmed' || s === 'in_progress';
+                });
+                // Sort newest-first and pick the most recent
+                confirmed.sort(function (a, b) {
+                  var ta = a.data().createdAt, tb = b.data().createdAt;
+                  if (ta && ta.toMillis && tb && tb.toMillis) {
+                    return tb.toMillis() - ta.toMillis();
+                  }
+                  return 0;
+                });
+                if (confirmed.length > 0) {
+                  return confirmed[0].ref.update(rescheduleUpdate);
+                }
+                // No existing booking found — fall through and create a new one below
+              }).then(function () {
+                return db.collection('escalations').doc(escId).update(update);
+              });
+          }
+        }
+
+        // ── NEW BOOKING: create a fresh record ───────────────────────────────────
+        return bookingsRef.doc().set({
           escId:             escId,
           vendorId:          VENDOR_ID,
           selectedServices:  svcs,
@@ -2109,48 +2159,11 @@
           customerPhone:     appt.phone || appt.customerPhone || '',
           lang:              appt.lang  || escData.lang || 'en',
           status:            'confirmed',
-          isReschedule:      appt.isModify ? true : false,
+          isReschedule:      false,
           source:            'lily_receptionist_confirmed',
           confirmedAt:       ts(),
           createdAt:         ts()
-        };
-
-        if (appt.existingBookingId) {
-          // Known old booking ID — atomic batch: delete old + write new simultaneously
-          var batch = db.batch();
-          batch.set(bookingsRef.doc(), bookingData);
-          batch.delete(bookingsRef.doc(appt.existingBookingId));
-          return batch.commit().then(function () {
-            return db.collection('escalations').doc(escId).update(update);
-          });
-        }
-
-        if (appt.isModify) {
-          // No known ID — query all confirmed bookings for this phone then atomically
-          // delete them + write new in one batch commit.
-          // Safe to delete all confirmed records because snap is fetched BEFORE batch.set()
-          // runs, so the new booking (not yet in Firestore) cannot appear in snap.docs.
-          var oldPhone = appt.phone || appt.customerPhone;
-          if (oldPhone) {
-            return bookingsRef.where('customerPhone', '==', oldPhone).get()
-              .then(function (snap) {
-                var batch = db.batch();
-                batch.set(bookingsRef.doc(), bookingData);   // write new booking
-                snap.docs.forEach(function (d) {
-                  var dStat = (d.data().status || '');
-                  if (dStat === 'confirmed' || dStat === 'in_progress') {
-                    batch.delete(d.ref);                     // delete old booking(s)
-                  }
-                });
-                return batch.commit();
-              }).then(function () {
-                return db.collection('escalations').doc(escId).update(update);
-              });
-          }
-        }
-
-        // Normal booking — no reschedule
-        return bookingsRef.doc().set(bookingData).then(function () {
+        }).then(function () {
           return db.collection('escalations').doc(escId).update(update);
         });
       }).then(function () {

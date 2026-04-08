@@ -1135,8 +1135,8 @@
   var vendorRef      = null;
   var servicesRef    = null;
   var staffRef       = null;
-  // Role: 'owner'|'staff' — read from vendorUsers doc, default 'owner'
-  // Owner: always full access. Staff: permissions set by owner in Settings tab.
+  // Role: 'owner'|'manager'|'staff' — read from vendorUsers doc, default 'owner'
+  // Owner: always full access. Manager/Staff: permissions set by owner in Settings tab.
   var _userRole      = 'owner';
   var _userStaffName = ''; // staff name — used to pre-filter calendar view
   // Granular permissions for staff (owner always has all). Defaults = most restrictive.
@@ -2966,9 +2966,9 @@
     if (!listEl || !VENDOR_ID) return;
     db.collection('vendorUsers').where('vendorId', '==', VENDOR_ID).get()
       .then(function(snap) {
-        var staff = snap.docs.filter(function(d) { return d.data().role !== 'owner'; });
+        var staff = snap.docs.filter(function(d) { return d.data().role === 'manager' || d.data().role === 'staff'; });
         if (!staff.length) {
-          listEl.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">Chưa có tài khoản staff nào. Tạo tài khoản trong trang Admin.</div>';
+          listEl.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">Chưa có tài khoản manager/staff nào. Tạo tài khoản trong trang Admin.</div>';
           return;
         }
         listEl.innerHTML = staff.map(function(d) {

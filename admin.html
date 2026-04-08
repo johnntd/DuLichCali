@@ -1356,12 +1356,13 @@
             <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.35rem">
               <span style="font-size:.65rem;min-width:170px;color:var(--muted)">${u.email ? escHtml(u.email) : '<em style="opacity:.5">không có email</em>'}</span>
               <select class="vcl-role-select" id="vrole-${escHtml(u.uid)}" onchange="toggleStaffNameInput('vstaff-${escHtml(u.uid)}',this.value)">
-                <option value="owner" ${u.role==='owner'?'selected':''}>Owner</option>
-                <option value="staff" ${u.role!=='owner'?'selected':''}>Staff</option>
+                <option value="owner"   ${u.role==='owner'  ?'selected':''}>Owner</option>
+                <option value="manager" ${u.role==='manager'?'selected':''}>Manager</option>
+                <option value="staff"   ${u.role==='staff'  ?'selected':''}>Staff</option>
               </select>
               <input class="vcl-pin-input" id="vstaff-${escHtml(u.uid)}" type="text" maxlength="40"
                 placeholder="Tên nhân viên" value="${escHtml(u.staffName)}"
-                style="width:140px${u.role==='owner'?';display:none':''}">
+                style="width:140px${u.role==='owner'||!u.role?';display:none':''}">
               <button class="btn-vend success" onclick="saveVendorUserRole('${escHtml(u.uid)}','${escHtml(v.id)}')">Lưu</button>
               <button class="btn-vend danger" onclick="deleteVendorUser('${escHtml(u.uid)}','${escHtml(u.email)}','${escHtml(v.id)}')">Xóa</button>
               <span class="vcl-msg" id="vrole-msg-${escHtml(u.uid)}"></span>
@@ -1408,6 +1409,7 @@
               <select class="vcl-role-select" id="vstf-role-${v.id}"
                 onchange="toggleStaffNameInput('vstf-name-${v.id}',this.value)">
                 <option value="owner">Owner</option>
+                <option value="manager">Manager</option>
                 <option value="staff">Staff</option>
               </select>
               <input class="vcl-pin-input" id="vstf-name-${v.id}" type="text"
@@ -1514,13 +1516,13 @@
       if (!roleEl || !msgEl) return;
       const role      = roleEl.value;
       const staffName = nameEl ? nameEl.value.trim() : '';
-      if (role === 'staff' && !staffName) {
+      if ((role === 'staff' || role === 'manager') && !staffName) {
         msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Nhập tên nhân viên.'; return;
       }
       msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Đang lưu…';
       try {
         await db.collection('vendorUsers').doc(uid).set(
-          { role, staffName: role === 'staff' ? staffName : '', adminUpdatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+          { role, staffName: (role === 'staff' || role === 'manager') ? staffName : '', adminUpdatedAt: firebase.firestore.FieldValue.serverTimestamp() },
           { merge: true }
         );
         msgEl.style.color = '#7ac87a'; msgEl.textContent = 'Đã lưu!';
@@ -1531,8 +1533,9 @@
     function toggleStaffNameInput(inputId, role) {
       const el = document.getElementById(inputId);
       if (!el) return;
-      el.style.display = role === 'staff' ? '' : 'none';
-      if (role !== 'staff') el.value = '';
+      const needsName = role === 'staff' || role === 'manager';
+      el.style.display = needsName ? '' : 'none';
+      if (!needsName) el.value = '';
     }
 
     async function deleteVendorUser(uid, email, vendorId) {
@@ -1559,8 +1562,8 @@
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Email không hợp lệ.'; return;
       }
-      if (role === 'staff' && !staffName) {
-        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Nhập tên nhân viên (dùng để lọc lịch hẹn).'; return;
+      if ((role === 'staff' || role === 'manager') && !staffName) {
+        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Nhập tên (dùng để lọc lịch hẹn).'; return;
       }
 
       msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Đang tạo…';
@@ -1587,7 +1590,7 @@
         const uid = result.localId;
         await db.collection('vendorUsers').doc(uid).set({
           vendorId, email, role,
-          staffName: role === 'staff' ? staffName : '',
+          staffName: (role === 'staff' || role === 'manager') ? staffName : '',
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 

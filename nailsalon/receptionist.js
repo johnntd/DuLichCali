@@ -1808,12 +1808,15 @@
       if (!input || !sendBtn || !messagesEl) return;
 
       // Load live vendor data from Firestore: apiKey, parallelServices, hours, staff, services.
-      // Runs in parallel at AI init — guarantees AI always reflects latest vendor-admin changes
-      // even if marketplace.js preload failed or vendor updated data after page load.
+      // Extracted into _fetchLiveBizData() so it can be called at init AND as a TTL refresh
+      // from send() to pick up admin changes in long-lived page sessions.
       biz._firestoreApiKey    = null;
       biz._parallelServices   = [];
-      try {
-        if (window.dlcDb && biz.id) {
+      biz._dataFetchedAt      = 0;
+
+      function _fetchLiveBizData() {
+        try {
+          if (!window.dlcDb || !biz.id) return;
           var _vref = window.dlcDb.collection('vendors').doc(biz.id);
           Promise.all([
             _vref.get(),
@@ -1895,9 +1898,13 @@
               biz.services = _svcs;
             }
             // svcSnap empty → keep existing biz.services; prompt falls back to biz._staticServices
+
+            biz._dataFetchedAt = Date.now();
           }).catch(function() {});
-        }
-      } catch(e) {}
+        } catch(e) {}
+      }
+
+      _fetchLiveBizData();
 
       function send(text) {
         if (!text) return;
@@ -1918,6 +1925,14 @@
               : 'Your request has already been sent and is pending confirmation. Please wait a moment.';
           _appendMessage(messagesEl, guardMsg, 'bot');
           return;
+        }
+
+        // TTL refresh: if biz data is older than 10 minutes, re-fetch in background.
+        // Reset timestamp immediately to prevent a second send() from triggering a concurrent refresh.
+        // Fire-and-forget — current message uses cached data; the next message sees fresh data.
+        if (biz._dataFetchedAt && (Date.now() - biz._dataFetchedAt > 600000)) {
+          biz._dataFetchedAt = Date.now();
+          _fetchLiveBizData();
         }
 
         _appendMessage(messagesEl, text, 'user');

@@ -2414,6 +2414,7 @@
             '<button class="sa-act sa-act--start"  onclick="updateBookingStatus(' + idQ + ',\'in_progress\')">&#9654; B\u1eaft \u0111\u1ea7u</button>' +
             '<button class="sa-act sa-act--done"   onclick="updateBookingStatus(' + idQ + ',\'completed\')">&#10003; Xong</button>' +
             '<button class="sa-act sa-act--noshow" onclick="updateBookingStatus(' + idQ + ',\'no_show\')">V\u1eafng</button>' +
+            (phone ? '<button class="sa-act sa-act--call" onclick="confirmSms(' + phoneQ + ',' + nameQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')">&#128172; X\u00e1c nh\u1eadn</button>' : '') +
             (canManage ? '<button class="sa-act sa-act--cancel" style="border-color:rgba(248,113,113,.4);color:var(--danger)" onclick="openCancelModal(' + idQ + ',' + nameQ + ',' + phoneQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')">&#10005; H\u1ee7y</button>' : '') +
             (canManage ? '<button class="sa-act sa-act--cancel" onclick="deleteBooking(' + idQ + ',' + nameQ + ')">&#128465; X\u00f3a</button>' : '');
         } else if (status === 'in_progress') {
@@ -2570,6 +2571,19 @@
       };
       showToast(labels[newStatus] || 'Đã cập nhật.');
     }).catch(function (err) { showToast('Lỗi: ' + err.message); });
+  }
+
+  function confirmSms(phone, name, svcLbl, date, time) {
+    if (!phone) return;
+    var clean = phone.replace(/\D/g, '');
+    if (clean.length === 10) clean = '1' + clean;
+    var greeting = 'Xin chào' + (name ? ' ' + name : '');
+    var apptLine = '';
+    if (svcLbl) apptLine += svcLbl;
+    if (date)   apptLine += (apptLine ? ' vào ngày ' : 'Ngày ') + date;
+    if (time)   apptLine += ' lúc ' + _fmtTime(time);
+    var msg = greeting + ', tiệm xác nhận lịch hẹn của bạn' + (apptLine ? ': ' + apptLine : '') + '. Hẹn gặp bạn! 💅';
+    window.open('sms:+' + clean + '?body=' + encodeURIComponent(msg), '_blank');
   }
 
   function textCustomer(phone, name) {

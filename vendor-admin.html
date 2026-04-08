@@ -3199,6 +3199,29 @@
     return greeting + 'Lịch hẹn ' + svcs + dateStr + timeStr + staffStr + ' đã được xác nhận. Cảm ơn bạn! - ' + vendorName;
   }
 
+  // SMS template: ask customer to send a clearer reference photo
+  function buildApptSmsNeedPhoto(appt) {
+    var vendorName = (typeof SEED_VENDOR !== 'undefined' && SEED_VENDOR.businessName)
+      ? SEED_VENDOR.businessName : 'Du Lịch Cali';
+    var greeting = appt.name ? 'Xin chào ' + appt.name + '! ' : '';
+    return greeting + 'Bạn có thể gửi ảnh tham khảo rõ hơn không? Ảnh hiện tại chưa rõ nét để thực hiện đúng yêu cầu. Cảm ơn! - ' + vendorName;
+  }
+
+  // SMS template: propose a time change
+  function buildApptSmsReschedule(appt) {
+    var vendorName = (typeof SEED_VENDOR !== 'undefined' && SEED_VENDOR.businessName)
+      ? SEED_VENDOR.businessName : 'Du Lịch Cali';
+    var greeting = appt.name ? 'Xin chào ' + appt.name + '! ' : '';
+    var svcs = (appt.services || []).join(', ') || 'dịch vụ';
+    var timeStr = appt.time ? ' lúc ' + appt.time : '';
+    var dateStr = '';
+    if (appt.date && /^\d{4}-\d{2}-\d{2}$/.test(appt.date)) {
+      var d = new Date(appt.date + 'T12:00:00');
+      dateStr = ' ngày ' + d.getDate() + '/' + (d.getMonth() + 1);
+    }
+    return greeting + 'Rất tiếc, ' + svcs + dateStr + timeStr + ' chưa thể xếp lịch. Bạn có thể chọn giờ khác không? - ' + vendorName;
+  }
+
   // Confirm from the popup notification (uses _currentPopupNotif)
   function confirmFromPopup() {
     if (!_currentPopupNotif || !_currentPopupNotif.bookingId) return;
@@ -3605,6 +3628,13 @@
         var durHtml = appt.totalDurationMins
           ? ' <span style="color:var(--muted);font-size:.75rem">(' + appt.totalDurationMins + ' phút)</span>'
           : '';
+        // Status badge
+        var statusColors = { vendor_confirmed:'#4ade80', vendor_declined:'#f87171', vendor_replied:'#60a5fa', pending_vendor_response:'#e8a800' };
+        var statusLabels = { vendor_confirmed:'Đã xác nhận', vendor_declined:'Đã từ chối', vendor_replied:'Đã phản hồi', pending_vendor_response:'Chờ xác nhận' };
+        var itemStatus = item.status || 'pending_vendor_response';
+        var statusBadge = '<span style="font-size:.68rem;font-weight:600;padding:.1rem .45rem;border-radius:10px;background:' +
+          (statusColors[itemStatus] || '#888') + '22;color:' + (statusColors[itemStatus] || '#aaa') + ';border:1px solid ' +
+          (statusColors[itemStatus] || '#888') + '44">' + (statusLabels[itemStatus] || itemStatus) + '</span>';
         var dateHtml = appt.date && appt.time
           ? '<div style="margin-top:.3rem;font-size:.78rem">' +
               '&#128197; ' + esc(appt.date) + ' &nbsp;&#9202; ' + esc(appt.time) +
@@ -3615,18 +3645,29 @@
           : '';
         var customerHtml = '<div style="margin-top:.3rem;font-size:.78rem">' +
           '&#128100; ' + esc(appt.name) +
-          (appt.phone ? ' &nbsp;&#128222; ' + esc(appt.phone) : '') +
+          (appt.phone ? ' &nbsp;&#128222; <a href="tel:' + esc(appt.phone) + '" style="color:var(--cream);text-decoration:none">' + esc(appt.phone) + '</a>' : '') +
           '</div>';
         var notesHtml = appt.notes
           ? '<div style="margin-top:.3rem;font-size:.76rem;color:var(--muted)">&#128203; ' + esc(appt.notes) + '</div>'
           : '';
         var photoHtml = appt.inspirationPhotoUrl
-          ? '<div style="margin-top:.4rem"><a href="' + esc(appt.inspirationPhotoUrl) + '" target="_blank" ' +
-              'style="font-size:.76rem;color:var(--gold);text-decoration:none">&#128247; Xem ảnh tham khảo</a></div>'
+          ? '<div style="margin-top:.5rem">' +
+              '<div style="font-size:.72rem;color:var(--muted);margin-bottom:.3rem">&#128247; Ảnh tham khảo:</div>' +
+              '<a href="' + esc(appt.inspirationPhotoUrl) + '" target="_blank" style="display:inline-block">' +
+                '<img src="' + esc(appt.inspirationPhotoUrl) + '" alt="Ảnh tham khảo" ' +
+                  'style="max-width:100%;max-height:140px;border-radius:6px;border:1px solid var(--border-g);object-fit:cover;display:block" ' +
+                  'onerror="this.style.display=\'none\';this.nextSibling.style.display=\'inline\'">' +
+                '<span style="display:none;font-size:.76rem;color:var(--gold)">&#128247; Xem ảnh tham khảo (link)</span>' +
+              '</a>' +
+            '</div>'
           : '';
         detailHtml = '<div style="background:rgba(0,0,0,.18);border-radius:8px;padding:.5rem .7rem;margin:.4rem 0 .6rem">' +
-          (svcsHtml ? '<div>' + svcsHtml + durHtml + '</div>' : '') +
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.4rem">' +
+            (svcsHtml ? '<div>' + svcsHtml + durHtml + '</div>' : '<div></div>') +
+            statusBadge +
+          '</div>' +
           dateHtml + customerHtml + notesHtml + photoHtml +
+          (item.vendorMessage ? '<div style="margin-top:.35rem;font-size:.74rem;color:#93c5fd;border-top:1px solid var(--border-g);padding-top:.3rem">&#128172; ' + esc(item.vendorMessage) + '</div>' : '') +
           '</div>';
       } else {
         // fallback: show summary for non-appointment types
@@ -3635,14 +3676,23 @@
           : '';
       }
 
-      // ── Contact buttons (call / SMS confirm) ──
+      // ── Contact buttons (call / SMS templates) ──
       var contactHtml = '';
       if (appt.phone) {
-        var smsBody = buildApptSmsConfirm(appt);
-        contactHtml = '<button class="btn btn--ghost btn--sm" onclick="OrderMessaging.call(\'' + esc(appt.phone) + '\')">' +
+        var smsConfirm    = buildApptSmsConfirm(appt);
+        var smsNeedPhoto  = buildApptSmsNeedPhoto(appt);
+        var smsReschedule = buildApptSmsReschedule(appt);
+        contactHtml =
+          '<button class="btn btn--ghost btn--sm" onclick="OrderMessaging.call(\'' + esc(appt.phone) + '\')">' +
             '&#128222; Gọi</button>' +
-          '<button class="btn btn--ghost btn--sm" onclick="OrderMessaging.text(\'' + esc(appt.phone) + '\',\'' + esc(smsBody) + '\')">' +
-            '&#128172; Nhắn SMS</button>';
+          '<button class="btn btn--ghost btn--sm" title="Gửi SMS xác nhận lịch hẹn" onclick="OrderMessaging.text(\'' + esc(appt.phone) + '\',\'' + esc(smsConfirm) + '\')">' +
+            '&#10003; SMS Xác nhận</button>' +
+          (appt.inspirationPhotoUrl
+            ? '<button class="btn btn--ghost btn--sm" title="Yêu cầu ảnh rõ hơn" onclick="OrderMessaging.text(\'' + esc(appt.phone) + '\',\'' + esc(smsNeedPhoto) + '\')">' +
+                '&#128247; SMS Ảnh</button>'
+            : '') +
+          '<button class="btn btn--ghost btn--sm" title="Đề xuất đổi giờ" onclick="OrderMessaging.text(\'' + esc(appt.phone) + '\',\'' + esc(smsReschedule) + '\')">' +
+            '&#128337; SMS Đổi giờ</button>';
       }
 
       var replyInputId = 'esc_reply_' + escId;

@@ -1936,6 +1936,7 @@
       .limit(40);
     function handleAppts(snap) {
       var el = document.getElementById('apptList');
+      if (!el) return; // element removed; bookings now handled by subscribeBookings()
       if (snap.empty) {
         el.innerHTML = '<div class="sa-empty">Chưa có lịch hẹn nào.</div>';
         return;
@@ -2405,7 +2406,7 @@
     }
 
     var startBtn = (apptId && _userRole !== 'staff')
-      ? '<button class="sa-act sa-act--start" onclick="updateBookingStatus(\'' + apptId + '\',\'in_progress\')">&#9654; B\u1eaft \u0111\u1ea7u</button>'
+      ? '<button class="sa-act sa-act--start" onclick=\'updateBookingStatus(' + JSON.stringify(apptId) + ',"in_progress")\'>&#9654; B\u1eaft \u0111\u1ea7u</button>'
       : '';
     var textLink = phone
       ? '<a class="sa-act sa-act--call" href="sms:' + esc(phone) + '">&#128241; Text</a>'
@@ -2539,7 +2540,10 @@
 
         // ── Prominent phone ─────────────────────────────────────────────────
         var phoneRow = phone
-          ? '<div class="sa-phone-row"><a class="sa-phone-link" href="tel:' + esc(phone) + '">&#128222; ' + esc(phone) + '</a></div>'
+          ? '<div class="sa-phone-row">' +
+              '<a class="sa-phone-link" href="tel:' + esc(phone) + '">&#128222; ' + esc(phone) + '</a>' +
+              '<a class="sa-act sa-act--call" href="sms:' + esc(phone) + '" style="margin-left:.6rem;font-size:.68rem;text-decoration:none">&#128172; Text</a>' +
+            '</div>'
           : '';
 
         // ── Detail section (hidden until toggled) ───────────────────────────
@@ -2561,7 +2565,7 @@
           det += '<div class="sa-det-section"><div class="sa-det-label">\u0110i\u1ec7n tho\u1ea1i</div>' +
             '<div class="sa-det-val" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.1rem">' +
               '<a class="sa-act sa-act--call" href="tel:' + esc(phone) + '">&#128222; G\u1ecdi</a>' +
-              '<button class="sa-act sa-act--call" onclick="textCustomer(' + JSON.stringify(phone) + ',' + JSON.stringify(b.customerName || '') + ')">&#128172; Nh\u1eafn tin</button>' +
+              '<a class="sa-act sa-act--call" href="sms:' + esc(phone) + '">&#128172; Text</a>' +
             '</div></div>';
         }
 
@@ -2603,23 +2607,24 @@
         var dateQ  = JSON.stringify(b.requestedDate || b.date || '');
         var timeQ  = JSON.stringify(b.requestedTime || b.time || '');
 
+        // Use single-quoted onclick attrs so JSON.stringify double-quotes don't break the HTML attribute
         var actions = '';
         if (status === 'confirmed') {
           actions =
-            '<button class="sa-act sa-act--start"  onclick="updateBookingStatus(' + idQ + ',\'in_progress\')">&#9654; B\u1eaft \u0111\u1ea7u</button>' +
-            '<button class="sa-act sa-act--done"   onclick="updateBookingStatus(' + idQ + ',\'completed\')">&#10003; Xong</button>' +
-            '<button class="sa-act sa-act--noshow" onclick="updateBookingStatus(' + idQ + ',\'no_show\')">V\u1eafng</button>' +
-            (phone ? '<button class="sa-act sa-act--call" onclick="confirmSms(' + phoneQ + ',' + nameQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')">&#128172; X\u00e1c nh\u1eadn</button>' : '') +
-            (canManage ? '<button class="sa-act sa-act--cancel" style="border-color:rgba(248,113,113,.4);color:var(--danger)" onclick="openCancelModal(' + idQ + ',' + nameQ + ',' + phoneQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')">&#10005; H\u1ee7y</button>' : '') +
-            (canManage ? '<button class="sa-act sa-act--cancel" onclick="deleteBooking(' + idQ + ',' + nameQ + ')">&#128465; X\u00f3a</button>' : '');
+            '<button class="sa-act sa-act--start"  onclick=\'updateBookingStatus(' + idQ + ',"in_progress")\'>&#9654; B\u1eaft \u0111\u1ea7u</button>' +
+            '<button class="sa-act sa-act--done"   onclick=\'updateBookingStatus(' + idQ + ',"completed")\'>&#10003; Xong</button>' +
+            '<button class="sa-act sa-act--noshow" onclick=\'updateBookingStatus(' + idQ + ',"no_show")\'>V\u1eafng</button>' +
+            (phone ? '<button class="sa-act sa-act--call" onclick=\'confirmSms(' + phoneQ + ',' + nameQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')\'>&#128172; X\u00e1c nh\u1eadn</button>' : '') +
+            (canManage ? '<button class="sa-act sa-act--cancel" style="border-color:rgba(248,113,113,.4);color:var(--danger)" onclick=\'openCancelModal(' + idQ + ',' + nameQ + ',' + phoneQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')\'>&#10005; H\u1ee7y</button>' : '') +
+            (canManage ? '<button class="sa-act sa-act--cancel" onclick=\'deleteBooking(' + idQ + ',' + nameQ + ')\'>&#128465; X\u00f3a</button>' : '');
         } else if (status === 'in_progress') {
           actions =
-            '<button class="sa-act sa-act--done"   onclick="updateBookingStatus(' + idQ + ',\'completed\')">&#10003; Ho\u00e0n th\u00e0nh</button>' +
-            '<button class="sa-act sa-act--noshow" onclick="updateBookingStatus(' + idQ + ',\'no_show\')">V\u1eafng</button>' +
-            (canManage ? '<button class="sa-act sa-act--cancel" style="border-color:rgba(248,113,113,.4);color:var(--danger)" onclick="openCancelModal(' + idQ + ',' + nameQ + ',' + phoneQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')">&#10005; H\u1ee7y</button>' : '') +
-            (canManage ? '<button class="sa-act sa-act--cancel" onclick="deleteBooking(' + idQ + ',' + nameQ + ')">&#128465; X\u00f3a</button>' : '');
+            '<button class="sa-act sa-act--done"   onclick=\'updateBookingStatus(' + idQ + ',"completed")\'>&#10003; Ho\u00e0n th\u00e0nh</button>' +
+            '<button class="sa-act sa-act--noshow" onclick=\'updateBookingStatus(' + idQ + ',"no_show")\'>V\u1eafng</button>' +
+            (canManage ? '<button class="sa-act sa-act--cancel" style="border-color:rgba(248,113,113,.4);color:var(--danger)" onclick=\'openCancelModal(' + idQ + ',' + nameQ + ',' + phoneQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')\'>&#10005; H\u1ee7y</button>' : '') +
+            (canManage ? '<button class="sa-act sa-act--cancel" onclick=\'deleteBooking(' + idQ + ',' + nameQ + ')\'>&#128465; X\u00f3a</button>' : '');
         } else {
-          actions = (canManage ? '<button class="sa-act sa-act--cancel" onclick="deleteBooking(' + idQ + ',' + nameQ + ')">&#128465; X\u00f3a</button>' : '');
+          actions = (canManage ? '<button class="sa-act sa-act--cancel" onclick=\'deleteBooking(' + idQ + ',' + nameQ + ')\'>&#128465; X\u00f3a</button>' : '');
         }
 
         return '<div class="' + cardCls + '">' +

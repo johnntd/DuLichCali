@@ -881,7 +881,7 @@
       '3. Use ONLY the data above (HOURS, STAFF, REAL-TIME CLOCK). Never invent or assume.',
       '4. Responses: 1–3 sentences for simple questions. Plain text always.',
       '5. Walk-ins: "Walk-ins welcome based on availability — we recommend calling ahead."',
-      '6. Unknown prices: "Prices vary — please call ' + phone + ' for an exact quote."',
+      '6. Prices: The SERVICE MENU above has live prices. Always mention the price when answering a price question or discussing a specific service. If price is unknown: "Prices vary — please call ' + phone + ' for an exact quote."',
       '7. Pronouns her/him/she/he → most recently named technician. See ACTIVE CONTEXT above.',
       '8. Farewell (goodbye/bye/thanks/done) → 1 warm sentence only. Do NOT re-introduce yourself.',
       '',
@@ -931,11 +931,11 @@
       '     When confirming multi-service bookings, mention the total time naturally:',
       '     "That will take about 2 hours total — you\'re all set!"',
       '  E. When ALL required fields are collected (service, date, time, name, phone):',
-      '     Write ONE warm, premium-receptionist confirmation. Use phrasing like:',
-      '       "Perfect, [Name]! Your [service] with [staff] is all set for [date] at [time]. We\'re so excited to see you — your appointment is confirmed and locked in!"',
-      '       "Wonderful! I\'ve got [Name] booked for [services] with [staff] on [date] at [time] ([total] total). Your spot is reserved — we look forward to seeing you!"',
-      '       "All done! [Name]\'s [service] appointment with [staff] is confirmed for [date] at [time]. See you then!"',
-      '     For multi-service, always mention total duration naturally.',
+      '     Write ONE warm, premium-receptionist confirmation. Always include the price estimate from the SERVICE MENU. Use phrasing like:',
+      '       "Perfect, [Name]! Your [service] with [staff] is all set for [date] at [time] — starting from [price]. We\'re so excited to see you!"',
+      '       "Wonderful! I\'ve got [Name] booked for [services] with [staff] on [date] at [time] ([total] total, starting from [price]). Your spot is reserved!"',
+      '       "All done! [Name]\'s [service] appointment with [staff] is confirmed for [date] at [time]. Estimated starting price: [price]. See you then!"',
+      '     For multi-service, always mention total duration and combined price estimate naturally.',
       '     For Vietnamese: warm, slightly formal. For Spanish: warm, friendly.',
       '     Then on new lines:',
       '     [BOOKING:{"services":["Service1","Service2"],"staff":"<name or Any>","date":"YYYY-MM-DD","time":"HH:MM","name":"<name>","phone":"<phone>","lang":"<en|es|vi>"}]',
@@ -1022,13 +1022,18 @@
       return h + (m ? ':' + ('0' + m).slice(-2) : '') + ' ' + ap;
     })();
     var svcs = (draft.services && draft.services.length > 0) ? draft.services.join(' + ') : null;
+
+    // Price estimate — look up each service from live vendor data
+    var prices = (draft.services || []).map(function(sn) { return _priceForService(biz, sn); }).filter(Boolean);
+    var priceHint = prices.length ? ' (' + prices.join(' + ') + ')' : '';
+
     if (lang === 'vi') {
-      return staff + ' trống lúc ' + timeDisplay + (svcs ? ' — dịch vụ ' + svcs : '') + '. Bạn có muốn đặt lịch không?';
+      return staff + ' trống lúc ' + timeDisplay + (svcs ? ' — dịch vụ ' + svcs + priceHint : '') + '. Bạn có muốn đặt lịch không?';
     }
     if (lang === 'es') {
-      return staff + ' está disponible a las ' + timeDisplay + (svcs ? ' para ' + svcs : '') + '. ¿Le gustaría hacer la reserva?';
+      return staff + ' está disponible a las ' + timeDisplay + (svcs ? ' para ' + svcs + priceHint : '') + '. ¿Le gustaría hacer la reserva?';
     }
-    return staff + ' is available at ' + timeDisplay + (svcs ? ' for ' + svcs : '') + '. Would you like to book that?';
+    return staff + ' is available at ' + timeDisplay + (svcs ? ' for ' + svcs + priceHint : '') + '. Would you like to book that?';
   }
 
   // Shown at 60-second mark if vendor has not yet confirmed (status still PENDING_VENDOR_CONFIRMATION).

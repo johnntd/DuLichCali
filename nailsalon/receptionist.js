@@ -61,6 +61,10 @@
     lines.push('Customer phone: ' + (s.phone || 'not yet specified'));
     lines.push('Pending action: ' + (s.pendingAction || 'none'));
     if (s.existingBookingId) lines.push('Existing booking ID (reschedule): ' + s.existingBookingId);
+    // Post-booking signal: date/time are null after confirmation — do NOT treat as incomplete
+    if (biz._lastBookingId && s.name && s.phone && !s.date && !s.time) {
+      lines.push('BOOKING STATUS: CONFIRMED (ref: ' + biz._lastBookingId + '). Appointment is fully booked. Do NOT ask for date/time again.');
+    }
     return lines.join('\n');
   }
 
@@ -851,7 +855,8 @@
       '',
       'When PENDING ACTION = booking_offer:',
       '  AFFIRMATIVE replies (yes / yeah / sure / okay / sounds good / sí / claro / por favor / dạ / vâng / được / ừ / ok):',
-      '    → Intent = booking_request. Continue the booking with the staff/date already in CURRENT BOOKING STATE.',
+      '    → Intent = booking_request. Set pendingAction: null in STATE (transition is done — do NOT keep booking_offer).',
+      '    → Continue the booking with the staff/date already in CURRENT BOOKING STATE.',
       '    → Do NOT reset. Do NOT give generic contact info. Ask for the next missing field.',
       '    → Next missing field order: service(s) → date → time → customer name → customer phone.',
       '    → Example: staff=Tracy, date=today → ask "What service would you like with Tracy?" or "What time today works for you?"',
@@ -978,9 +983,12 @@
       '  → IMPORTANT: Keep pendingAction: "modify_booking" in the STATE marker even on the final [BOOKING:...] turn.',
       '  → Do NOT clear pendingAction to null for reschedules — this flag is required to update the existing record.',
       '',
-      'When customer has a booking conflict (e.g. already booked same time) and says "replace it" or "yes, change":',
-      '  → Treat as modify_booking. Keep services, staff, name, phone. Ask for preferred new time.',
-      '  → If they say "keep it" or "different time" → acknowledge and ask for their preferred new time instead.',
+      'When customer has a booking conflict (e.g. already booked same time) and says "replace it", "replace", "yes, change", "change it":',
+      '  → Set pendingAction: "modify_booking" in STATE.',
+      '  → Keep services, staff, name, phone. Set time: null (new time needed). Keep date unless customer says different day.',
+      '  → Ask ONCE for their preferred new time. Do NOT re-show the conflict message.',
+      '  → If they say "keep it" → acknowledge booking stands, set pendingAction: null.',
+      '  → If they say "different time" or "other time" → same as "replace it": set time: null, ask for new time.',
       '',
       '=== CANCEL BOOKING ===',
       'When customer says: "cancel my appointment", "cancel it", "I want to cancel", "please cancel",',
@@ -1479,9 +1487,9 @@
       var ap = h < 12 ? 'AM' : 'PM'; h = h % 12 || 12;
       return h + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
     })();
-    var textBack = lang === 'vi' ? 'Nếu có thay đổi, chúng tôi sẽ nhắn tin cho bạn.'
-                 : lang === 'es' ? 'Si algo cambia, te avisaremos por mensaje.'
-                 : "If anything changes, we'll text you.";
+    var textBack = lang === 'vi' ? 'Lịch hẹn đã được xác nhận hoàn tất — không cần xác nhận thêm. Nếu có thay đổi, chúng tôi sẽ nhắn tin cho bạn.'
+                 : lang === 'es' ? 'Tu reserva está confirmada y lista — no se necesita ninguna otra acción. Si algo cambia, te avisaremos.'
+                 : "You're all set — no further action needed. We'll text you if anything changes.";
     if (lang === 'vi') {
       return 'Lịch hẹn ' + svcStr + (draft.staff ? ' với ' + draft.staff : '') +
              (timeStr ? ' lúc ' + timeStr : '') + ' đã được xác nhận. ' + textBack;
@@ -1490,8 +1498,8 @@
       return 'Tu cita de ' + svcStr + (draft.staff ? ' con ' + draft.staff : '') +
              (timeStr ? ' a las ' + timeStr : '') + ' ha sido confirmada. ' + textBack;
     }
-    return 'Your appointment for ' + svcStr + (draft.staff ? ' with ' + draft.staff : '') +
-           (timeStr ? ' at ' + timeStr : '') + ' is confirmed. ' + textBack;
+    return 'Your ' + svcStr + (draft.staff ? ' with ' + draft.staff : '') +
+           (timeStr ? ' at ' + timeStr : '') + ' is confirmed and booked. ' + textBack;
   }
 
   // ── _buildBookingPacketHtml — card rendered in chat after confirmation ────────
@@ -2059,13 +2067,19 @@
             );
 
             if (_earlyCheckReady) {
+              // When rescheduling: pass isModify+phone so the customer's own existing
+              // booking is excluded from conflict checks (prevents customer_conflict loop
+              // after user says "replace it" and old time is still in STATE).
+              var _inModify = _ecs.pendingAction === 'modify_booking';
               var _ed = {
                 staff:             _ecs.staff,
                 services:          _ecs.services,
                 date:              _ecs.date,
                 time:              _ecs.time,
                 lang:              _ecs.lang || 'en',
-                totalDurationMins: _calcTotalDuration(biz, _ecs.services || [])
+                totalDurationMins: _calcTotalDuration(biz, _ecs.services || []),
+                isModify:          _inModify,
+                phone:             _inModify ? (_ecs.phone || null) : null
               };
               // Track which slot was offered so we show the confirmation ONCE then pass
               // through to normal contact-collection on subsequent turns.

@@ -2228,12 +2228,10 @@
       rescheduled: '<span class="sa-st sa-st--canceled">&#8635; Dời lịch</span>'
     };
 
-    // canCancel: owner and manager only; staff role cannot cancel
-    var canCancel = (_userRole !== 'staff');
+    var canManage = (_userRole !== 'staff');
 
     el.innerHTML = dateOrder.map(function(date) {
-      var appts = byDate[date].map(function(b, idx) {
-        var cardId  = (date + '-' + idx).replace(/[^a-zA-Z0-9]/g, '-');
+      var appts = byDate[date].map(function(b) {
         var id      = b.id;
         var status  = b.status || 'confirmed';
         var svcArr  = b.selectedServices || b.services || (b.service ? [b.service] : [b.serviceType || '']);
@@ -2244,63 +2242,37 @@
         var phone   = b.customerPhone || b.phone || '';
         var notes   = b.notes || b.specialRequest || '';
         var imgs    = b.referenceImages || b.images || [];
-        var hist    = Array.isArray(b.history) ? b.history : [];
         var cancelReason = b.cancellationReason || '';
-        var bookingId = b.bookingId || b.id || '';
 
         var createdMs = (b.createdAt && b.createdAt.toMillis) ? b.createdAt.toMillis() : 0;
         var isNew = status === 'confirmed' && createdMs > _fiveMinAgo;
 
         var cardCls = 'sa-appt-card';
-        if (isNew)          cardCls += ' is-new';
+        if (isNew) cardCls += ' is-new';
         else if (status === 'in_progress') cardCls += ' is-inprogress';
-        else if (status === 'completed' || status === 'canceled' || status === 'no_show') cardCls += ' is-done';
+        else if (status === 'completed' || status === 'canceled' || status === 'cancelled' || status === 'no_show') cardCls += ' is-done';
 
         var statusBadge = statusMap[status] || '';
         var newBadge = isNew
           ? ' <span style="background:#22c55e;color:#fff;border-radius:99px;padding:1px 6px;font-size:.58rem;font-weight:700;animation:dlcPulse 1.2s ease infinite">MỚI</span>'
           : '';
 
-        // Collapsed summary meta
-        var staffBadge = staff ? '<span class="sa-staff-badge">' + esc(staff) + '</span>' : '';
-        var durSpan    = dur   ? '<span>' + dur + ' ph&#250;t</span>' : '';
-        var priceSpan  = price ? '<span class="sa-appt-price">&#36;' + esc(String(price)) + '</span>' : '';
-        var imgBadge   = imgs.length
-          ? ' <span class="sa-img-count-badge">&#128247; ' + imgs.length + '</span>'
+        var staffBadge  = staff ? '<span class="sa-staff-badge">' + esc(staff) + '</span>' : '';
+        var durHtml     = dur   ? '<span>' + dur + ' ph&#250;t</span>' : '';
+        var priceHtml   = price ? '<span class="sa-appt-price">&#36;' + esc(String(price)) + '</span>' : '';
+        var phoneHtml   = phone
+          ? '<span class="sa-appt-ph"><a href="tel:' + esc(phone) + '">&#128222; ' + esc(phone) + '</a></span>'
           : '';
-        var notesDot = notes ? ' <span style="color:var(--gold-lt);font-size:.6rem" title="Có ghi chú">&#9679;</span>' : '';
-
-        // ── Expanded detail section ─────────────────────────────────────────────
-        // Full image grid
-        var imgDetail = imgs.length
-          ? '<div class="sa-ref-imgs" style="margin-bottom:.5rem">' + _refImgsHtml(imgs, 'sa-ref-img') + '</div>'
+        var notesHtml   = notes ? '<div class="sa-appt-notes">' + esc(notes) + '</div>' : '';
+        var imgHtml     = imgs.length
+          ? '<div class="sa-ref-imgs">' + _refImgsHtml(imgs, 'sa-ref-img') + '</div>'
+          : '';
+        var cancelReasonHtml = cancelReason
+          ? '<div class="sa-cancel-reason">Lý do hủy: ' + esc(cancelReason) + '</div>'
           : '';
 
-        // Detail rows
-        var details = '';
-        if (svcArr.length)  details += '<div class="sa-detail-row"><span class="sa-detail-label">Dịch vụ</span><span class="sa-detail-val">' + esc(svcLbl) + '</span></div>';
-        if (staff)          details += '<div class="sa-detail-row"><span class="sa-detail-label">Nhân viên</span><span class="sa-detail-val">' + esc(staff) + '</span></div>';
-        if (dur)            details += '<div class="sa-detail-row"><span class="sa-detail-label">Thời gian</span><span class="sa-detail-val">' + dur + ' phút</span></div>';
-        if (price)          details += '<div class="sa-detail-row"><span class="sa-detail-label">Giá dự kiến</span><span class="sa-detail-val sa-appt-price">&#36;' + esc(String(price)) + '</span></div>';
-        if (phone)          details += '<div class="sa-detail-row"><span class="sa-detail-label">Điện thoại</span><span class="sa-detail-val"><a href="tel:' + esc(phone) + '">&#128222; ' + esc(phone) + '</a></span></div>';
-        if (notes)          details += '<div class="sa-detail-row"><span class="sa-detail-label">Ghi chú</span><span class="sa-detail-val" style="color:var(--gold-lt)">' + esc(notes) + '</span></div>';
-        if (bookingId)      details += '<div class="sa-detail-row"><span class="sa-detail-label">Mã lịch</span><span class="sa-detail-val" style="font-size:.62rem;opacity:.6">' + esc(bookingId) + '</span></div>';
-        if (cancelReason)   details += '<div class="sa-cancel-reason">Lý do hủy: ' + esc(cancelReason) + '</div>';
-
-        // History entries
-        var histHtml = '';
-        if (hist.length) {
-          var entries = hist.slice().reverse().map(function(h) {
-            var label = { in_progress:'Bắt đầu', completed:'Hoàn thành', canceled:'Đã hủy', no_show:'Vắng mặt' }[h.action] || h.action;
-            var ts = h.at ? new Date(h.at).toLocaleString('vi-VN') : '';
-            return '<div class="sa-hist-entry"><span class="sa-hist-action">' + esc(label) + '</span><span>' + esc(h.by||'') + '</span><span style="opacity:.55">' + esc(ts) + '</span></div>';
-          }).join('');
-          histHtml = '<div class="sa-detail-row" style="margin-top:.3rem"><span class="sa-detail-label">Lịch sử</span></div><div class="sa-hist-list">' + entries + '</div>';
-        }
-
-        // Action buttons (go in expanded detail)
-        var idQ  = JSON.stringify(id);
-        var nameQ = JSON.stringify(b.customerName || '');
+        var idQ    = JSON.stringify(id);
+        var nameQ  = JSON.stringify(b.customerName || '');
         var phoneQ = JSON.stringify(phone);
         var svcQ   = JSON.stringify(svcLbl);
         var dateQ  = JSON.stringify(b.requestedDate || b.date || '');
@@ -2309,40 +2281,44 @@
         var actions = '';
         if (status === 'confirmed') {
           actions =
-            '<button class="sa-act sa-act--start"  onclick="event.stopPropagation();updateBookingStatus(' + idQ + ',\'in_progress\')">&#9654; Bắt đầu</button>' +
-            '<button class="sa-act sa-act--done"   onclick="event.stopPropagation();updateBookingStatus(' + idQ + ',\'completed\')">&#10003; Xong</button>' +
-            '<button class="sa-act sa-act--noshow" onclick="event.stopPropagation();updateBookingStatus(' + idQ + ',\'no_show\')">Vắng mặt</button>' +
-            (phone ? '<a class="sa-act sa-act--call" href="tel:' + esc(phone) + '" onclick="event.stopPropagation()">&#128222; Gọi</a>' : '') +
-            (canCancel ? '<button class="sa-act sa-act--cancel" style="border-color:rgba(248,113,113,.4);color:var(--danger)" onclick="event.stopPropagation();openCancelModal(' + idQ + ',' + nameQ + ',' + phoneQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')">&#10005; Hủy</button>' : '');
+            '<button class="sa-act sa-act--start"  onclick="updateBookingStatus(' + idQ + ',\'in_progress\')">&#9654; Bắt đầu</button>' +
+            '<button class="sa-act sa-act--done"   onclick="updateBookingStatus(' + idQ + ',\'completed\')">&#10003; Xong</button>' +
+            '<button class="sa-act sa-act--noshow" onclick="updateBookingStatus(' + idQ + ',\'no_show\')">Vắng mặt</button>' +
+            (phone ? '<a class="sa-act sa-act--call" href="tel:' + esc(phone) + '">&#128222; Gọi</a>' : '') +
+            (phone ? '<button class="sa-act sa-act--call" onclick="textCustomer(' + phoneQ + ',' + nameQ + ')">&#128172; Nhắn tin</button>' : '') +
+            (canManage ? '<button class="sa-act sa-act--cancel" style="border-color:rgba(248,113,113,.4);color:var(--danger)" onclick="openCancelModal(' + idQ + ',' + nameQ + ',' + phoneQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')">&#10005; Hủy</button>' : '') +
+            (canManage ? '<button class="sa-act sa-act--cancel" onclick="deleteBooking(' + idQ + ',' + nameQ + ')">&#128465; Xóa</button>' : '');
         } else if (status === 'in_progress') {
           actions =
-            '<button class="sa-act sa-act--done"   onclick="event.stopPropagation();updateBookingStatus(' + idQ + ',\'completed\')">&#10003; Hoàn thành</button>' +
-            '<button class="sa-act sa-act--noshow" onclick="event.stopPropagation();updateBookingStatus(' + idQ + ',\'no_show\')">Vắng mặt</button>' +
-            (phone ? '<a class="sa-act sa-act--call" href="tel:' + esc(phone) + '" onclick="event.stopPropagation()">&#128222; Gọi</a>' : '') +
-            (canCancel ? '<button class="sa-act sa-act--cancel" style="border-color:rgba(248,113,113,.4);color:var(--danger)" onclick="event.stopPropagation();openCancelModal(' + idQ + ',' + nameQ + ',' + phoneQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')">&#10005; Hủy</button>' : '');
+            '<button class="sa-act sa-act--done"   onclick="updateBookingStatus(' + idQ + ',\'completed\')">&#10003; Hoàn thành</button>' +
+            '<button class="sa-act sa-act--noshow" onclick="updateBookingStatus(' + idQ + ',\'no_show\')">Vắng mặt</button>' +
+            (phone ? '<a class="sa-act sa-act--call" href="tel:' + esc(phone) + '">&#128222; Gọi</a>' : '') +
+            (phone ? '<button class="sa-act sa-act--call" onclick="textCustomer(' + phoneQ + ',' + nameQ + ')">&#128172; Nhắn tin</button>' : '') +
+            (canManage ? '<button class="sa-act sa-act--cancel" style="border-color:rgba(248,113,113,.4);color:var(--danger)" onclick="openCancelModal(' + idQ + ',' + nameQ + ',' + phoneQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')">&#10005; Hủy</button>' : '') +
+            (canManage ? '<button class="sa-act sa-act--cancel" onclick="deleteBooking(' + idQ + ',' + nameQ + ')">&#128465; Xóa</button>' : '');
+        } else {
+          // completed / canceled / no_show — text + delete only
+          actions =
+            (phone ? '<button class="sa-act sa-act--call" onclick="textCustomer(' + phoneQ + ',' + nameQ + ')">&#128172; Nhắn tin</button>' : '') +
+            (canManage ? '<button class="sa-act sa-act--cancel" onclick="deleteBooking(' + idQ + ',' + nameQ + ')">&#128465; Xóa</button>' : '');
         }
 
-        var expandedDetail =
-          '<div class="sa-appt-detail" onclick="event.stopPropagation()">' +
-            imgDetail +
-            details +
-            histHtml +
-            (actions ? '<div class="sa-appt-actions" style="margin-top:.6rem">' + actions + '</div>' : '') +
-          '</div>';
-
-        return '<div class="' + cardCls + '" id="sa-card-' + cardId + '" onclick="toggleCard(' + JSON.stringify(cardId) + ')">' +
+        return '<div class="' + cardCls + '">' +
           '<div class="sa-appt-time-col">' +
             '<div class="sa-appt-time">' + esc(_fmtTime(b.requestedTime || b.time)) + '</div>' +
             (dur ? '<div class="sa-appt-dur">' + dur + 'p</div>' : '') +
           '</div>' +
           '<div class="sa-appt-body">' +
             '<div class="sa-appt-row1">' +
-              '<div class="sa-appt-name">' + esc(b.customerName || 'Khách') + newBadge + imgBadge + notesDot + '</div>' +
-              '<div style="display:flex;align-items:center;gap:.3rem">' + statusBadge + '<span class="sa-appt-chevron">&#9660;</span></div>' +
+              '<div class="sa-appt-name">' + esc(b.customerName || 'Khách') + newBadge + '</div>' +
+              statusBadge +
             '</div>' +
             '<div class="sa-appt-svc">' + esc(svcLbl) + '</div>' +
-            '<div class="sa-appt-meta">' + staffBadge + durSpan + priceSpan + '</div>' +
-            expandedDetail +
+            '<div class="sa-appt-meta">' + staffBadge + durHtml + priceHtml + phoneHtml + '</div>' +
+            notesHtml +
+            cancelReasonHtml +
+            imgHtml +
+            (actions ? '<div class="sa-appt-actions">' + actions + '</div>' : '') +
           '</div>' +
         '</div>';
       }).join('');
@@ -2352,12 +2328,6 @@
         appts +
       '</div>';
     }).join('');
-  }
-
-  // ── Expandable card toggle ─────────────────────────────────────────────────────
-  function toggleCard(cardId) {
-    var card = document.getElementById('sa-card-' + cardId);
-    if (card) card.classList.toggle('is-expanded');
   }
 
   // ── Cancel booking flow ────────────────────────────────────────────────────────
@@ -2468,6 +2438,21 @@
       };
       showToast(labels[newStatus] || 'Đã cập nhật.');
     }).catch(function (err) { showToast('Lỗi: ' + err.message); });
+  }
+
+  function textCustomer(phone, name) {
+    if (!phone) return;
+    var clean = phone.replace(/\D/g, '');
+    if (clean.length === 10) clean = '1' + clean;
+    var msg = 'Xin chào' + (name ? ' ' + name : '') + ', đây là tiệm nail. ';
+    window.open('sms:+' + clean + '?body=' + encodeURIComponent(msg), '_blank');
+  }
+
+  function deleteBooking(bookingId, name) {
+    if (!confirm('Xóa lịch hẹn của ' + (name || 'khách này') + '?\nThao tác này không thể hoàn tác.')) return;
+    vendorRef.collection('bookings').doc(bookingId).delete()
+      .then(function() { showToast('Đã xóa lịch hẹn.'); })
+      .catch(function(err) { showToast('Lỗi: ' + err.message); });
   }
 
   // ── Settings ──────────────────────────────────────────────────────────────────

@@ -1815,26 +1815,60 @@
 
       if (!input || !sendBtn || !messagesEl) return;
 
-      // Load live vendor data from Firestore: apiKey, parallelServices, hours, staff, services.
-      // Extracted into _fetchLiveBizData() so it can be called at init AND as a TTL refresh
-      // from send() to pick up admin changes in long-lived page sessions.
+      // Live vendor data strategy:
+      //   Staff     → onSnapshot listener: fires on page load AND on every admin change (true live sync)
+      //   Vendor doc → one-time server get: apiKey, parallelServices, hoursSchedule
+      //   Services   → one-time server get: active service catalog
+      // _dataPromise resolves when all three are ready; _handleMessage awaits it before building prompt.
       biz._firestoreApiKey    = null;
       biz._parallelServices   = [];
       biz._dataFetchedAt      = 0;
       biz._dataPromise        = null;
+      biz._staffUnsub         = null;  // unsubscribe fn for the staff onSnapshot listener
 
       function _fetchLiveBizData() {
         try {
           if (!window.dlcDb || !biz.id) return;
           var _vref = window.dlcDb.collection('vendors').doc(biz.id);
+
+          // ── Staff: live onSnapshot ─────────────────────────────────────────────────
+          // Fires immediately on subscription (page load) AND whenever admin saves a
+          // staff change — biz.staff is always current without requiring a page refresh.
+          if (biz._staffUnsub) { biz._staffUnsub(); biz._staffUnsub = null; }
+          var _staffReady = new Promise(function(resolve) {
+            biz._staffUnsub = _vref.collection('staff').onSnapshot(function(snap) {
+              if (!snap.empty) {
+                var _staffArr = [];
+                snap.forEach(function(sdoc) {
+                  var s = sdoc.data();
+                  _staffArr.push({
+                    id:               sdoc.id,
+                    name:             s.name             || '',
+                    role:             s.role             || 'Nail Tech',
+                    specialties:      s.specialties      || [],
+                    assignedServices: s.assignedServices || [],
+                    schedule:         s.schedule         || {},
+                    active:           s.active !== false,
+                    sortOrder:        s.sortOrder        || 0
+                  });
+                });
+                _staffArr.sort(function(a, b) { return a.sortOrder - b.sortOrder; });
+                biz.staff = _staffArr;
+              }
+              resolve(); // resolve on first callback so _dataPromise knows staff is ready
+              // subsequent onSnapshot callbacks keep updating biz.staff for live accuracy
+            }, function() { resolve(); }); // resolve on error too — keep existing biz.staff
+          });
+
+          // ── Vendor doc + services: one-time server reads ───────────────────────────
           biz._dataPromise = Promise.all([
             _vref.get({ source: 'server' }),
-            _vref.collection('staff').get({ source: 'server' }),
-            _vref.collection('services').where('active', '==', true).get({ source: 'server' })
+            _vref.collection('services').where('active', '==', true).get({ source: 'server' }),
+            _staffReady
           ]).then(function(results) {
-            var vdoc      = results[0];
-            var staffSnap = results[1];
-            var svcSnap   = results[2];
+            var vdoc    = results[0];
+            var svcSnap = results[1];
+            // results[2] is undefined — staff handled by onSnapshot above
 
             // ── Vendor doc: apiKey, parallelServices, hoursSchedule ─────────────────
             if (vdoc.exists) {
@@ -1860,27 +1894,6 @@
                 if (Object.keys(_mappedHours).length) biz.hours = _mappedHours;
               }
             }
-
-            // ── Staff: replace with live Firestore subcollection data ────────────────
-            if (!staffSnap.empty) {
-              var _staffArr = [];
-              staffSnap.forEach(function(sdoc) {
-                var s = sdoc.data();
-                _staffArr.push({
-                  id:               sdoc.id,
-                  name:             s.name             || '',
-                  role:             s.role             || 'Nail Tech',
-                  specialties:      s.specialties      || [],
-                  assignedServices: s.assignedServices || [],
-                  schedule:         s.schedule         || {},
-                  active:           s.active !== false,
-                  sortOrder:        s.sortOrder        || 0
-                });
-              });
-              _staffArr.sort(function(a, b) { return a.sortOrder - b.sortOrder; });
-              biz.staff = _staffArr;
-            }
-            // staffSnap empty → keep biz.staff from marketplace.js preload or static fallback
 
             // ── Services: replace with live active services from Firestore ───────────
             if (!svcSnap.empty) {

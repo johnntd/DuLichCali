@@ -2092,6 +2092,13 @@
 
         var bookingsRef = vendorRef.collection('bookings');
 
+        // Pre-generate the new booking doc ID so the deletion filter can exclude it.
+        // Race condition guard: deletion query is async — by the time its .then() fires,
+        // the new booking may already be in Firestore. Without this exclusion the new
+        // booking would be deleted along with the old one (same phone + date + status).
+        var apptRef    = bookingsRef.doc();
+        var newDocId   = apptRef.id;
+
         // If this is a reschedule, delete the old booking record
         if (appt.existingBookingId) {
           bookingsRef.doc(appt.existingBookingId).delete()
@@ -2101,11 +2108,11 @@
           var newDate  = appt.date  || appt.requestedDate || '';
           if (oldPhone) {
             // Single-field query only — no composite index required.
-            // Filter client-side by date + status so we only remove the
-            // booking being rescheduled, not unrelated future appointments.
+            // Filter client-side; skip newDocId to avoid deleting the booking we just wrote.
             bookingsRef.where('customerPhone', '==', oldPhone).get()
               .then(function(snap) {
                 snap.docs.forEach(function(d) {
+                  if (d.id === newDocId) return; // never delete the booking we just created
                   var dd     = d.data();
                   var dDate  = dd.requestedDate || dd.date || '';
                   var dStat  = dd.status || '';
@@ -2120,7 +2127,6 @@
         }
 
         // Write to 'bookings' subcollection — the same path subscribeBookings() reads from
-        var apptRef = bookingsRef.doc();
         apptRef.set({
           escId:              escId,
           vendorId:           VENDOR_ID,

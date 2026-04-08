@@ -708,6 +708,21 @@
     /* QR button in payment modal */
     #pmQrBtn .btn { border-color:var(--gold-dim);color:var(--gold-lt) }
     #pmQrBtn .btn:not([disabled]):hover { background:var(--gold-dim) }
+    /* Staff earnings summary card */
+    .se-period-btn { font-size:.68rem;padding:.22rem .58rem;border:1px solid var(--border);border-radius:99px;background:transparent;color:var(--muted);cursor:pointer;transition:all .15s }
+    .se-period-btn.active { border-color:var(--gold);color:var(--gold);background:var(--gold-dim) }
+    .se-period-btn:hover:not(.active) { border-color:rgba(255,255,255,.2);color:var(--text) }
+    .se-table { width:100%;border-collapse:collapse;font-size:.75rem }
+    .se-table thead tr { border-bottom:1px solid var(--border) }
+    .se-table th { text-align:left;font-size:.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:.28rem .35rem .28rem 0 }
+    .se-table th:not(:first-child) { text-align:right }
+    .se-table td { padding:.42rem .35rem .42rem 0;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text);vertical-align:middle }
+    .se-table td:not(:first-child) { text-align:right }
+    .se-table tbody tr:last-child td { border-bottom:none }
+    .se-table tfoot td { border-top:1px solid var(--border);font-weight:700;color:var(--cream);padding-top:.4rem }
+    .se-table tfoot td:not(:first-child) { text-align:right }
+    /* Commission field in staff modal */
+    .sa-comm-row { display:flex;align-items:center;gap:.5rem;margin-top:.3rem }
 
     /* Tip suggestion buttons */
     .pm-tip-btns { display: flex; gap: .4rem; margin-top: .3rem; margin-bottom: .65rem; }
@@ -900,6 +915,20 @@
           <button class="btn btn--primary btn--sm" onclick="openStaffModal(null)">+ Thêm Nhân Viên</button>
         </div>
         <div id="staffList"><div class="sa-empty">Đang tải…</div></div>
+
+        <!-- Staff earnings summary — shown for owner only -->
+        <div class="sa-card" id="staffEarningsCard" style="display:none;margin-top:1.2rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:.9rem">
+            <div style="font-weight:700;font-size:.88rem;color:var(--cream)">Thu Nhập Nhân Viên</div>
+            <div style="display:flex;gap:.35rem">
+              <button class="se-period-btn active" id="sePeriodToday" onclick="setEarningsPeriod('today')">Hôm nay</button>
+              <button class="se-period-btn"        id="sePeriodWeek"  onclick="setEarningsPeriod('week')">Tuần này</button>
+              <button class="se-period-btn"        id="sePeriodMonth" onclick="setEarningsPeriod('month')">Tháng này</button>
+            </div>
+          </div>
+          <div id="staffEarningsBody"><div class="sa-empty" style="font-size:.78rem">Chưa có dữ liệu.</div></div>
+          <div style="font-size:.62rem;color:var(--muted);margin-top:.7rem;opacity:.7">Hoa hồng tính trên tiền dịch vụ đã thu thực tế. Tip tính riêng. Lịch hẹn hủy/vắng không tính.</div>
+        </div>
       </div>
 
       <!-- ── Availability tab ── -->
@@ -1225,6 +1254,14 @@
     <div class="sa-field">
       <label>Lịch Làm Việc</label>
       <div class="schedule-editor" id="schedEditor"></div>
+    </div>
+
+    <div class="sa-field">
+      <label>Hoa Hồng Dịch Vụ (%)</label>
+      <div class="sa-comm-row">
+        <input class="sa-input" id="staffCommission" type="number" min="0" max="100" step="1" placeholder="0" style="width:72px">
+        <span style="font-size:.68rem;color:var(--muted)">% trên tiền dịch vụ đã thu · Tip tính riêng · 0 = chưa cài đặt</span>
+      </div>
     </div>
 
     <div class="sa-modal-actions">
@@ -1792,13 +1829,15 @@
         subscribeEscalations();
         subscribeNotifications(); // vendor subcollection notifications (Lily Receptionist bookings)
         subscribeBookings();
-        // Owner: show staff permissions + payment settings panels
+        // Owner: show staff permissions + payment settings + earnings panels
         if (_userRole === 'owner') {
           var spc = document.getElementById('staffPermsCard');
           if (spc) spc.style.display = '';
           loadStaffAccounts();
           var pmc = document.getElementById('payMethodsCard');
           if (pmc) pmc.style.display = '';
+          var sec = document.getElementById('staffEarningsCard');
+          if (sec) sec.style.display = '';
         }
 
         // Load payment config into module var + settings UI
@@ -2184,7 +2223,8 @@
             ' <span class="status-badge status-badge--' + (s.active !== false ? 'active' : 'inactive') + '">' +
             (s.active !== false ? 'Active' : 'Off') + '</span>' +
           '</div>' +
-          '<div class="sa-item__meta">' + esc(s.role || '—') + (specs ? ' · ' + esc(specs) : '') + '</div>' +
+          '<div class="sa-item__meta">' + esc(s.role || '—') + (specs ? ' · ' + esc(specs) : '') +
+            (s.commissionPct ? ' · HH ' + s.commissionPct + '%' : '') + '</div>' +
           '<div class="sched-pills">' + pills + '</div>' +
         '</div>' +
         '<div class="sa-item__actions">' +
@@ -2236,10 +2276,11 @@
 
     if (!id) {
       document.getElementById('staffModalTitle').textContent = 'Thêm Nhân Viên';
-      document.getElementById('staffDocId').value = '';
-      document.getElementById('staffName').value  = '';
-      document.getElementById('staffRole').value  = '';
-      document.getElementById('staffLevel').value = '';
+      document.getElementById('staffDocId').value    = '';
+      document.getElementById('staffName').value     = '';
+      document.getElementById('staffRole').value     = '';
+      document.getElementById('staffLevel').value    = '';
+      document.getElementById('staffCommission').value = '';
       document.getElementById('staffSkillsGrid').innerHTML = buildSkillsGrid([]);
       document.getElementById('schedEditor').innerHTML = buildSchedEditor(null);
       return;
@@ -2248,10 +2289,11 @@
       if (!doc.exists) return;
       var d = doc.data();
       document.getElementById('staffModalTitle').textContent = 'Chỉnh Sửa Nhân Viên';
-      document.getElementById('staffDocId').value = id;
-      document.getElementById('staffName').value  = d.name || '';
-      document.getElementById('staffRole').value  = d.role || '';
-      document.getElementById('staffLevel').value = d.level || '';
+      document.getElementById('staffDocId').value    = id;
+      document.getElementById('staffName').value     = d.name || '';
+      document.getElementById('staffRole').value     = d.role || '';
+      document.getElementById('staffLevel').value    = d.level || '';
+      document.getElementById('staffCommission').value = d.commissionPct != null ? d.commissionPct : '';
       document.getElementById('staffSkillsGrid').innerHTML = buildSkillsGrid(d.specialties || []);
       document.getElementById('schedEditor').innerHTML = buildSchedEditor(d.schedule);
     });
@@ -2272,13 +2314,15 @@
     var checkedChips = document.getElementById('staffSkillsGrid').querySelectorAll('input[type="checkbox"]:checked');
     var specialties = [];
     checkedChips.forEach(function(chk) { specialties.push(chk.value); });
+    var commRaw = parseFloat(document.getElementById('staffCommission').value);
     var data = {
-      name:        name,
-      role:        document.getElementById('staffRole').value,
-      level:       document.getElementById('staffLevel').value,
-      specialties: specialties,
-      schedule:    sched,
-      updatedAt:   firebase.firestore.FieldValue.serverTimestamp()
+      name:          name,
+      role:          document.getElementById('staffRole').value,
+      level:         document.getElementById('staffLevel').value,
+      specialties:   specialties,
+      schedule:      sched,
+      commissionPct: isNaN(commRaw) ? 0 : Math.max(0, Math.min(100, commRaw)),
+      updatedAt:     firebase.firestore.FieldValue.serverTimestamp()
     };
     var docId = document.getElementById('staffDocId').value;
     var prom = docId
@@ -2352,6 +2396,7 @@
     if (tab === 'dashboard')     renderDashboard();
     if (tab === 'appointments')  subscribeAppointments();
     if (tab === 'availability')  renderAvailability();
+    if (tab === 'staff')         renderStaffEarnings();
   }
 
   // ── Hours ─────────────────────────────────────────────────────────────────────
@@ -2963,8 +3008,20 @@
     if (b.tipAmount)       parts.push('Tip: $' + Number(b.tipAmount).toFixed(2));
     if (b.paymentMethod)   parts.push(esc(b.paymentMethod));
     if (b.paymentNote)     parts.push(esc(b.paymentNote));
-    return '<div class="sa-det-section"><div class="sa-det-label">Thanh to\u00e1n</div>' +
+    var html = '<div class="sa-det-section"><div class="sa-det-label">Thanh to\u00e1n</div>' +
       '<div class="sa-det-val">' + parts.join(' &middot; ') + '</div></div>';
+    // Staff earnings line — shown when staff has a commission rate and booking has payment data
+    var earning = _computeStaffEarning(b);
+    if (earning && earning.commissionPct > 0) {
+      var ep = [earning.commissionPct + '%'];
+      ep.push('Hoa h\u1ed3ng: $' + earning.commission.toFixed(2));
+      if (earning.tip > 0) ep.push('Tip: $' + earning.tip.toFixed(2));
+      ep.push('<strong>T\u1ed5ng: $' + earning.total.toFixed(2) + '</strong>');
+      html += '<div class="sa-det-section"><div class="sa-det-label">Thu nh\u1eadp \u00b7 ' +
+        esc(earning.staffName) + '</div><div class="sa-det-val" style="color:var(--success)">' +
+        ep.join(' &middot; ') + '</div></div>';
+    }
+    return html;
   }
 
   function openPaymentModal(bookingId) {
@@ -4531,6 +4588,142 @@
     return ready.map(function(k) {
       return '<option value="' + k + '">' + (labels[k] || k) + '</option>';
     }).join('');
+  }
+
+  // ── Staff commissions + earnings ──────────────────────────────────────────────
+  // Compute per-booking earnings for an assigned staff member.
+  // Rules:
+  //   - Cancelled / no_show / rescheduled bookings → null (no earnings)
+  //   - Commission is on netPaid (amountPaid - refundAmount) — only collected money
+  //   - Tip goes 100% to staff (industry standard); tracked separately
+  //   - If no commission rate configured (commissionPct = 0), commission = $0 but tip still counted
+  //   - If no payment recorded (netPaid = 0 and tip = 0) → null (nothing earned yet)
+
+  function _computeStaffEarning(b) {
+    var noEarn = ['canceled', 'cancelled', 'no_show', 'rescheduled'];
+    if (noEarn.indexOf(b.status || '') >= 0) return null;
+
+    var staffName = (b.staff || '').trim();
+    if (!staffName || staffName.toLowerCase() === 'any') return null;
+
+    // Look up commission rate from the real-time staff list
+    var staffEntry = null;
+    for (var i = 0; i < currentStaffData.length; i++) {
+      if (currentStaffData[i].name.toLowerCase() === staffName.toLowerCase()) {
+        staffEntry = currentStaffData[i]; break;
+      }
+    }
+    var commissionPct = (staffEntry && staffEntry.data.commissionPct != null)
+      ? Number(staffEntry.data.commissionPct) : 0;
+
+    var paid     = Number(b.amountPaid)   || 0;
+    var refunded = Number(b.refundAmount) || 0;
+    var tip      = Number(b.tipAmount)    || 0;
+    var netPaid  = Math.max(0, paid - refunded); // service amount actually received
+
+    if (netPaid <= 0 && tip <= 0) return null; // nothing paid yet
+
+    var commission = netPaid * commissionPct / 100;
+    return {
+      staffName:     staffEntry ? staffEntry.name : staffName,
+      commissionPct: commissionPct,
+      serviceAmount: netPaid,
+      commission:    commission,
+      tip:           tip,
+      total:         commission + tip
+    };
+  }
+
+  // Earnings period state
+  var _earningsPeriod = 'today'; // 'today' | 'week' | 'month'
+
+  function setEarningsPeriod(period) {
+    _earningsPeriod = period;
+    ['today','week','month'].forEach(function(p) {
+      var key = p === 'today' ? 'Today' : p === 'week' ? 'Week' : 'Month';
+      var btn = document.getElementById('sePeriod' + key);
+      if (btn) btn.classList.toggle('active', p === period);
+    });
+    renderStaffEarnings();
+  }
+
+  function renderStaffEarnings() {
+    var body = document.getElementById('staffEarningsBody');
+    if (!body) return;
+
+    // Build date range for filter
+    var now      = new Date();
+    var todayIso = now.toISOString().slice(0, 10);
+    var fromIso;
+    if (_earningsPeriod === 'today') {
+      fromIso = todayIso;
+    } else if (_earningsPeriod === 'week') {
+      var wStart = new Date(now);
+      wStart.setDate(wStart.getDate() - wStart.getDay()); // Sunday = start of week
+      fromIso = wStart.toISOString().slice(0, 10);
+    } else { // month
+      fromIso = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-01';
+    }
+
+    // Exclude terminal non-earning statuses
+    var noEarn = ['canceled', 'cancelled', 'no_show', 'rescheduled'];
+    var relevant = (_saAllItems || []).filter(function(b) {
+      var d = b.requestedDate || b.date || '';
+      return d >= fromIso && d <= todayIso && noEarn.indexOf(b.status || '') < 0;
+    });
+
+    if (!relevant.length) {
+      body.innerHTML = '<div class="sa-empty" style="font-size:.78rem">Không có dữ liệu trong khoảng thời gian này.</div>';
+      return;
+    }
+
+    // Aggregate per staff
+    var byStaff = {};
+    relevant.forEach(function(b) {
+      var sn = (b.staff || '').trim();
+      if (!sn || sn.toLowerCase() === 'any') return;
+      if (!byStaff[sn]) byStaff[sn] = { name: sn, count: 0, paidCount: 0, pct: 0, commission: 0, tip: 0, total: 0 };
+      byStaff[sn].count++;
+      var e = _computeStaffEarning(b);
+      if (e) {
+        byStaff[sn].pct        = e.commissionPct; // last seen pct (from real-time staff data)
+        byStaff[sn].paidCount++;
+        byStaff[sn].commission += e.commission;
+        byStaff[sn].tip        += e.tip;
+        byStaff[sn].total      += e.total;
+      }
+    });
+
+    var rows = Object.values(byStaff).sort(function(a, b) { return b.total - a.total; });
+    if (!rows.length) {
+      body.innerHTML = '<div class="sa-empty" style="font-size:.78rem">Không có nhân viên nào được ghi nhận trong khoảng này.</div>';
+      return;
+    }
+
+    // Totals footer
+    var totComm = 0, totTip = 0, totTotal = 0, totCount = 0;
+    rows.forEach(function(r){ totComm += r.commission; totTip += r.tip; totTotal += r.total; totCount += r.count; });
+
+    body.innerHTML = '<table class="se-table"><thead><tr>' +
+      '<th>Nhân viên</th><th>HH%</th><th>Lịch hẹn</th><th>Hoa hồng</th><th>Tip</th><th>Tổng thu</th>' +
+      '</tr></thead><tbody>' +
+      rows.map(function(r) {
+        return '<tr>' +
+          '<td style="color:var(--cream);font-weight:700">' + esc(r.name) + '</td>' +
+          '<td style="color:var(--muted)">' + (r.pct > 0 ? r.pct + '%' : '—') + '</td>' +
+          '<td>' + r.count + (r.paidCount < r.count ? '<span style="color:var(--muted);font-size:.65rem"> (' + r.paidCount + ' đã thu)</span>' : '') + '</td>' +
+          '<td style="color:var(--success)">$' + r.commission.toFixed(2) + '</td>' +
+          '<td style="color:#fbbf24">$' + r.tip.toFixed(2) + '</td>' +
+          '<td style="color:var(--cream);font-weight:700">$' + r.total.toFixed(2) + '</td>' +
+          '</tr>';
+      }).join('') +
+      '</tbody><tfoot><tr>' +
+      '<td colspan="2" style="color:var(--muted);font-size:.68rem">Tổng (' + totCount + ' lịch)</td>' +
+      '<td></td>' +
+      '<td style="color:var(--success)">$' + totComm.toFixed(2) + '</td>' +
+      '<td style="color:#fbbf24">$' + totTip.toFixed(2) + '</td>' +
+      '<td style="color:var(--cream)">$' + totTotal.toFixed(2) + '</td>' +
+      '</tr></tfoot></table>';
   }
 
   // ── QR payment display ─────────────────────────────────────────────────────────

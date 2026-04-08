@@ -3008,7 +3008,8 @@
 
       var escId     = 'esc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
       var hostName  = (biz.aiReceptionist && biz.aiReceptionist.hostName) || biz.name || 'Cửa hàng';
-      var pendingId = EscalationEngine._showPending(messagesEl, hostName);
+      var escLang   = (biz._bookingState && biz._bookingState.lang) || 'en';
+      var pendingId = EscalationEngine._showPending(messagesEl, hostName, escLang);
       var phone     = biz.phone || biz.phoneDisplay || '';
 
       db.collection('escalations').doc(escId).set({
@@ -3028,9 +3029,13 @@
           EscalationEngine._removePending(messagesEl, pendingId);
           db.collection('escalations').doc(escId)
             .update({ status: 'vendor_timeout' }).catch(function () {});
+          var timeoutMsgs = {
+            vi: 'Rất tiếc, ' + hostName + ' chưa phản hồi kịp lúc. Vui lòng liên hệ trực tiếp qua số ' + phone + '.',
+            en: 'Sorry, ' + hostName + ' has not responded in time. Please contact them directly at ' + phone + '.',
+            es: 'Lo sentimos, ' + hostName + ' no respondió a tiempo. Por favor contáctalos directamente al ' + phone + '.',
+          };
           EscalationEngine._appendVendorMsg(messagesEl,
-            'Rất tiếc, ' + hostName + ' chưa phản hồi kịp lúc. ' +
-            'Vui lòng liên hệ trực tiếp qua số ' + phone + '.',
+            timeoutMsgs[escLang] || timeoutMsgs.en,
             'timeout');
         }, EscalationEngine.TIMEOUT_MS);
 
@@ -3046,13 +3051,22 @@
 
           var vmsg = data.vendorMessage ? ' — ' + data.vendorMessage : '';
           if (status === 'vendor_confirmed') {
+            var confirmMsgs = {
+              vi: '✓ ' + hostName + ' đã xác nhận!' + vmsg,
+              en: '✓ ' + hostName + ' confirmed your appointment!' + vmsg,
+              es: '✓ ' + hostName + ' confirmó tu cita.' + vmsg,
+            };
             EscalationEngine._appendVendorMsg(messagesEl,
-              '✓ ' + hostName + ' đã xác nhận!' + vmsg,
+              confirmMsgs[escLang] || confirmMsgs.en,
               'confirmed');
           } else if (status === 'vendor_declined') {
+            var declineMsgs = {
+              vi: hostName + ' xin lỗi, không thể thực hiện.' + vmsg + ' Vui lòng liên hệ ' + phone + '.',
+              en: hostName + ' is sorry, but cannot accommodate your request.' + vmsg + ' Please contact them at ' + phone + '.',
+              es: hostName + ' lamenta no poder atenderte.' + vmsg + ' Por favor contacta al ' + phone + '.',
+            };
             EscalationEngine._appendVendorMsg(messagesEl,
-              hostName + ' xin lỗi, không thể thực hiện.' + vmsg +
-              ' Vui lòng liên hệ ' + phone + '.',
+              declineMsgs[escLang] || declineMsgs.en,
               'declined');
           } else if (status === 'vendor_replied') {
             EscalationEngine._appendVendorMsg(messagesEl,
@@ -3069,9 +3083,14 @@
       });
     },
 
-    _showPending: function (messagesEl, hostName) {
-      var id    = 'esc_p_' + Date.now();
-      var label = hostName ? 'Đang chờ xác nhận từ ' + hostName + '\u2026' : 'Đang chờ xác nhận\u2026';
+    _showPending: function (messagesEl, hostName, lang) {
+      var id     = 'esc_p_' + Date.now();
+      var labels = {
+        vi: hostName ? 'Đang chờ xác nhận từ ' + hostName + '\u2026' : 'Đang chờ xác nhận\u2026',
+        en: hostName ? 'Waiting for confirmation from ' + hostName + '\u2026' : 'Waiting for confirmation\u2026',
+        es: hostName ? 'Esperando confirmación de ' + hostName + '\u2026' : 'Esperando confirmación\u2026',
+      };
+      var label  = labels[lang] || labels.en;
       var div   = document.createElement('div');
       div.className = 'mp-ai__msg mp-ai__msg--bot';
       div.id        = id;

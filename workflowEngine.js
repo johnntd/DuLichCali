@@ -1996,6 +1996,8 @@
     var f  = draft.collectedFields;
     var orderId = genId();
     var trackingToken = null;
+    var finalPriceEst = null;  // set for nail/hair — returned to caller
+    var finalApptInfo = null;  // set for nail/hair — returned to caller
 
     if (draft.intent === 'food_order') {
       var item     = typeof f.item === 'object' ? f.item : {};
@@ -2095,6 +2097,8 @@
       var isNail    = draft.intent === 'nail_appointment';
       var svcEmoji  = isNail ? '💅' : '✂️';
       var svcLabel2 = isNail ? 'Nail' : 'Tóc';
+      finalPriceEst = f.serviceType ? (isNail ? NAIL_PRICE_FROM[f.serviceType] : HAIR_PRICE_FROM[f.serviceType]) : null;
+      finalApptInfo = { service: f.serviceType || null, date: f.requestedDate || null, time: f.requestedTime || null };
 
       var apptMsgLines = [
         svcEmoji + ' LỊCH HẸN ' + svcLabel2.toUpperCase() + ' — ' + orderId,
@@ -2112,7 +2116,8 @@
         region:f.region||'',
         requestedDate:f.requestedDate||'', requestedTime:f.requestedTime||'',
         name:f.customerName||'', phone:f.customerPhone||'',
-        notes:f.notes||'', status:'pending', source:'ai_chat',
+        notes:f.notes||'', status:'confirmed', source:'ai_chat',
+        priceEst: finalPriceEst || null,
         createdAt:fv.serverTimestamp(),
       });
       await db.collection('vendors').doc('admin-dlc').collection('notifications').add({
@@ -2220,7 +2225,7 @@
     }
 
     clearDraft(); draft = null;
-    return { id: orderId, token: trackingToken || null };
+    return { id: orderId, token: trackingToken || null, priceEst: finalPriceEst, appt: finalApptInfo };
   }
 
   function cancel() { clearDraft(); draft = null; }

@@ -1264,6 +1264,9 @@
       var raw = (data.content && data.content[0] && data.content[0].text) || '';
 
       // 1. Parse and merge STATE marker
+      // Capture pendingAction BEFORE merge — Claude clears it to null on the
+      // final booking turn, so we need the prior value to detect reschedules.
+      var _prevPendingAction = biz._bookingState && biz._bookingState.pendingAction;
       var stateUpdate = _parseStateMarker(raw);
       if (stateUpdate) {
         _mergeState(biz, stateUpdate);
@@ -1282,7 +1285,8 @@
       var bookingData = _parseBookingMarker(raw);
       if (bookingData) {
         if (stateUpdate && stateUpdate.existingBookingId) bookingData.existingBookingId = stateUpdate.existingBookingId;
-        if (stateUpdate && (stateUpdate.existingBookingId || stateUpdate.pendingAction === 'modify_booking')) bookingData.isModify = true;
+        // isModify: check current STATE OR prior turn's pendingAction (Claude clears to null on final booking turn)
+        if (_prevPendingAction === 'modify_booking' || (stateUpdate && (stateUpdate.existingBookingId || stateUpdate.pendingAction === 'modify_booking'))) bookingData.isModify = true;
         biz._bookingDraft = bookingData;
       }
 

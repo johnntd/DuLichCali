@@ -1546,6 +1546,28 @@
 
     // Write to Firestore (non-blocking — customer sees confirmation immediately)
     if (db && fv) {
+      var vendorBookingsRef = db.collection('vendors').doc(vendorId).collection('bookings');
+
+      // ── Cancel / remove old booking when this is a reschedule ─────────────────
+      if (draft.existingBookingId) {
+        // Exact booking ID known — delete it outright
+        vendorBookingsRef.doc(draft.existingBookingId).delete()
+          .catch(function(e) { console.warn('[reschedule] old booking delete failed:', e.message); });
+      } else if (draft.isModify && draft.phone) {
+        // No specific ID — find all confirmed bookings for this phone and mark rescheduled
+        vendorBookingsRef
+          .where('customerPhone', '==', draft.phone)
+          .where('status', '==', 'confirmed')
+          .get()
+          .then(function(snap) {
+            snap.docs.forEach(function(d) {
+              d.ref.update({ status: 'rescheduled', rescheduledAt: fv.serverTimestamp() })
+                .catch(function(e) { console.warn('[reschedule] status update failed:', e.message); });
+            });
+          })
+          .catch(function(e) { console.warn('[reschedule] lookup failed:', e.message); });
+      }
+
       // Use requestedDate/requestedTime to match vendor-admin schema (orderBy('requestedDate'))
       var bookingDoc = {
         bookingId:     orderId,
@@ -1563,10 +1585,11 @@
         phone:         draft.phone || '', // alias for backward compat
         lang:          lang,
         status:        'confirmed',
+        isReschedule:  draft.isModify ? true : false,
         source:        'lily_receptionist',
         createdAt:     fv.serverTimestamp(),
       };
-      db.collection('vendors').doc(vendorId).collection('bookings').add(bookingDoc)
+      vendorBookingsRef.add(bookingDoc)
         .catch(function(e) { console.warn('[booking] Firestore write failed:', e.message); });
 
       var notifLines = [

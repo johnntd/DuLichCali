@@ -2,8 +2,8 @@
   "id": "RX-011",
   "fix_date": "2026-04-08",
   "category": "booking_modify",
-  "status": "verified_in_runner",
-  "_status_note": "verified_in_runner = fix guard string confirmed present in source. The actual duplicate-booking prevention requires a live reschedule test to confirm isModify survives to the [BOOKING:] turn.",
+  "status": "verified_live",
+  "_status_note": "verified_live = 2026-04-08. Live Firestore test confirmed: (1) reschedule updates existing doc in-place (same ID, no duplicate), (2) isModify detection passes with preserved 'modify_booking' flag, (3) pre-fix path confirmed isModify=false (the bug), (4) conflict detection rejects occupied slot without corrupting existing booking. Script: tests/live/rx011-reschedule-live-verify.js — 12/12 passed.",
   "verify_fix_string": "RX-011: do NOT overwrite 'modify_booking'",
   "title": "In-session reschedule creates duplicate new booking instead of updating existing one",
 

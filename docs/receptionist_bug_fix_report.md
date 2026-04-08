@@ -158,6 +158,19 @@ Generated from `tests/cases/*.json`. Run `npm run test:receptionist` to verify a
 
 ---
 
+### RX-011 — In-session reschedule creates duplicate booking
+- **Category:** booking_modify
+- **Status:** verified_live
+- **Filed:** 2026-04-08 · **Fixed:** 2026-04-08
+- **Failing behavior:** Customer books appointment A, then says "change it to Wednesday 3pm" in the same session. A NEW booking doc was created instead of updating the original. Old booking remained `confirmed`. Vendor saw two confirmed bookings for the same customer.
+- **Root cause:** `_earlyCheckReady` block had a branch for when name+phone are already in STATE (added in RX-003 fix). That branch set `biz._bookingState.pendingAction = 'booking_offer'`, overwriting `'modify_booking'`. On the `[BOOKING:]` turn, all three `isModify` conditions failed: `stateUpdate.pendingAction` was `null` (Claude cleared `booking_offer` per PENDING ACTION rule), `_prevPendingAction` was `'booking_offer'` not `'modify_booking'`, `existingBookingId` was `null`. `isModify = false` → `_genBookingId()` → new doc created.
+- **Fix:** Added `if (!_inModify)` guard in both branches of `_earlyCheckReady` before setting `pendingAction = 'booking_offer'`. Reschedules preserve `'modify_booking'` so the flag survives to the `[BOOKING:]` turn.
+- **Runner check:** `verify_fix_string: "RX-011: do NOT overwrite 'modify_booking'"`
+- **Live verification:** `tests/live/rx011-reschedule-live-verify.js` — 12/12 passed. Confirmed: same doc ID preserved after reschedule, no duplicate created, conflict detection intact, pre-fix path confirmed `isModify=false` (the bug).
+- **Code:** `_earlyCheckReady` block in `send()` — both `if (_ecs.name && _ecs.phone)` and `else` branches
+
+---
+
 ## What the runner verifies vs does not verify
 
 | Claim | Verified? | How |

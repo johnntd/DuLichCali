@@ -321,12 +321,37 @@
   var db   = firebase.firestore();
   var auth = firebase.auth();
 
-  // ── Async vendor config from Firestore ────────────────────────────────────
-  // Loads PIN override + adminStatus. Also supports vendors created via admin
-  // panel that are NOT in the hardcoded VENDOR_REGISTRY (Firestore-only vendors).
-  var _vendorAdminStatus = VENDOR_CFG ? 'active' : null; // registry vendors default active
+  // ── getVendorById: Firestore-primary vendor config lookup ─────────────────
+  // Firestore is the source of truth. VENDOR_REGISTRY is fallback only.
+  // cb receives: { name, setupCode, category, adminStatus } or null
+  function getVendorById(vendorId, cb) {
+    if (!vendorId) { cb(null); return; }
+    db.collection('vendors').doc(vendorId).get().then(function(doc) {
+      if (doc.exists) {
+        var d = doc.data();
+        var fallback = VENDOR_REGISTRY[vendorId] || {};
+        cb({
+          name:        d.name || d.businessName || fallback.name || vendorId,
+          setupCode:   d.setupCode || fallback.setupCode || '',
+          category:    d.category || d.vendorType || '',
+          adminStatus: d.adminStatus || 'active'
+        });
+      } else {
+        // Not in Firestore: fall back to VENDOR_REGISTRY
+        var reg = VENDOR_REGISTRY[vendorId];
+        cb(reg ? { name: reg.name, setupCode: reg.setupCode, category: '', adminStatus: 'active' } : null);
+      }
+    }).catch(function() {
+      // Network error: fall back to VENDOR_REGISTRY
+      var reg = VENDOR_REGISTRY[vendorId];
+      cb(reg ? { name: reg.name, setupCode: reg.setupCode, category: '', adminStatus: 'active' } : null);
+    });
+  }
+
+  // Always wait for Firestore when a vendor ID is present (Firestore-primary)
+  var _vendorAdminStatus = null;
   var _authReady   = false;
-  var _vcfgReady   = !VENDOR_ID || !!VENDOR_CFG; // true if no vendor needed OR already in registry
+  var _vcfgReady   = !VENDOR_ID; // true only if no vendor ID; otherwise wait for Firestore
   var _screenShown = false;
 
   function _tryShowScreen() {
@@ -344,23 +369,19 @@
   }
 
   if (VENDOR_ID) {
-    db.collection('vendors').doc(VENDOR_ID).get().then(function(doc) {
-      if (doc.exists) {
-        var data = doc.data();
-        if (data.setupCode) SETUP_CODE = data.setupCode;
-        _vendorAdminStatus = data.adminStatus || 'active';
-        // Support Firestore-only vendors (created from admin panel, not in VENDOR_REGISTRY)
-        if (!VENDOR_CFG && data.name) {
-          VENDOR_CFG = { name: data.name };
+    getVendorById(VENDOR_ID, function(cfg) {
+      if (cfg) {
+        SETUP_CODE         = cfg.setupCode || SETUP_CODE;
+        _vendorAdminStatus = cfg.adminStatus;
+        // Support Firestore-only vendors (not in VENDOR_REGISTRY)
+        if (!VENDOR_CFG) {
+          VENDOR_CFG = { name: cfg.name };
           var el = document.getElementById('vendorNameDisplay');
-          if (el) el.textContent = data.name;
+          if (el) el.textContent = cfg.name;
         }
-      } else if (!VENDOR_CFG) {
-        _vendorAdminStatus = 'invalid'; // vendor not found anywhere
+      } else {
+        _vendorAdminStatus = VENDOR_CFG ? 'active' : 'invalid';
       }
-      _vcfgReady = true;
-      _tryShowScreen();
-    }).catch(function() {
       _vcfgReady = true;
       _tryShowScreen();
     });

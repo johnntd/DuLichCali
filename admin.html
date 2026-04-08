@@ -442,6 +442,12 @@
       text-align: center; letter-spacing: 0.12em; outline: none;
     }
     .vcl-pin-input:focus { border-color: var(--gold); }
+    .vcl-role-select {
+      height: 28px; padding: 0 .4rem;
+      background: var(--navy-700); border: 1px solid var(--border);
+      border-radius: 4px; color: var(--cream); font-size: 0.72rem; outline: none; cursor: pointer;
+    }
+    .vcl-role-select:focus { border-color: var(--gold); }
     .vcl-msg { font-size: 0.7rem; }
     .btn-vend {
       height: 30px; padding: 0 0.75rem;
@@ -1258,9 +1264,12 @@
       ]);
       const fv = {}; // vendorId → Firestore data
       if (vendorSnap) vendorSnap.docs.forEach(doc => { fv[doc.id] = doc.data(); });
-      const emailMap = {}; // vendorId → registered email
+      const vendorUsersMap = {}; // vendorId → [{uid, email, role, staffName}]
       if (vuSnap) vuSnap.docs.forEach(doc => {
-        const d = doc.data(); if (d.vendorId) emailMap[d.vendorId] = d.email || '(đã đăng ký)';
+        const d = doc.data();
+        if (!d.vendorId) return;
+        if (!vendorUsersMap[d.vendorId]) vendorUsersMap[d.vendorId] = [];
+        vendorUsersMap[d.vendorId].push({ uid: doc.id, email: d.email || '', role: d.role || 'owner', staffName: d.staffName || '' });
       });
 
       // Merge: VENDOR_LIST baseline + Firestore-only vendors
@@ -1322,10 +1331,10 @@
       </div>`;
 
       wrap.innerHTML = createFormHtml + headerHtml +
-        allVendors.map(v => _renderVendorCard(v, fv[v.id]||{}, emailMap[v.id])).join('');
+        allVendors.map(v => _renderVendorCard(v, fv[v.id]||{}, vendorUsersMap[v.id]||[])).join('');
     }
 
-    function _renderVendorCard(v, vdata, registeredEmail) {
+    function _renderVendorCard(v, vdata, vendorUsers) {
       const st = vdata.adminStatus || 'active';
       const stLabel = {active:'Hoạt động',pending:'Chờ duyệt',blocked:'Bị chặn',deactivated:'Tạm dừng',archived:'Lưu trữ'}[st]||st;
       const stClass = 'status-' + st;
@@ -1333,10 +1342,31 @@
       const currentPin = vdata.setupCode || VENDOR_DEFAULT_CODES[v.id] || '—';
       const pinSrc = vdata.setupCode ? '' : ' <span style="font-size:.6rem;color:var(--muted)">(mặc định)</span>';
       const loginUrl = `https://www.dulichcali21.com/vendor-login.html?id=${v.id}`;
-      const emailBadge = registeredEmail
-        ? `<span class="vc-badge vc-badge--reg" title="${escHtml(registeredEmail)}">✓ ${escHtml(registeredEmail)}</span>`
+      const primaryUser = vendorUsers.find(u => u.role === 'owner') || vendorUsers[0];
+      const emailBadge = primaryUser
+        ? `<span class="vc-badge vc-badge--reg" title="${escHtml(primaryUser.email)}">✓ ${escHtml(primaryUser.email)}</span>`
         : `<span class="vc-badge vc-badge--unreg">○ Chưa đăng ký</span>`;
       const newTag = v.isNew ? ` <span style="font-size:.58rem;color:var(--gold);border:1px solid var(--gold);padding:1px 4px;border-radius:3px">Firestore</span>` : '';
+
+      // Build user-roles rows (only if there are registered users)
+      const usersHtml = vendorUsers.length ? `
+        <div class="vcl-row" style="flex-direction:column;align-items:flex-start;gap:.4rem">
+          <span class="vcl-label" style="margin-bottom:.2rem">Tài khoản &amp; Vai trò:</span>
+          ${vendorUsers.map(u => `
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.35rem">
+              <span style="font-size:.65rem;min-width:170px;color:var(--muted)">${escHtml(u.email)}</span>
+              <select class="vcl-role-select" id="vrole-${escHtml(u.uid)}">
+                <option value="owner" ${u.role==='owner'?'selected':''}>Owner</option>
+                <option value="manager" ${u.role==='manager'?'selected':''}>Manager</option>
+                <option value="staff" ${u.role==='staff'?'selected':''}>Staff</option>
+              </select>
+              <input class="vcl-pin-input" id="vstaff-${escHtml(u.uid)}" type="text" maxlength="40"
+                placeholder="Tên nhân viên (nếu Staff)" value="${escHtml(u.staffName)}" style="width:150px">
+              <button class="btn-vend success" onclick="saveVendorUserRole('${escHtml(u.uid)}','${escHtml(v.id)}')">Lưu</button>
+              <span class="vcl-msg" id="vrole-msg-${escHtml(u.uid)}"></span>
+            </div>
+          `).join('')}
+        </div>` : '';
 
       return `<div class="vendor-card" id="vc-${v.id}">
         <div class="vendor-card__main">
@@ -1368,6 +1398,7 @@
             <button class="btn-vend success" onclick="saveVendorPin('${v.id}')">Lưu PIN</button>
             <span class="vcl-msg" id="vpin-msg-${v.id}"></span>
           </div>
+          ${usersHtml}
         </div>
       </div>`;
     }
@@ -1456,6 +1487,27 @@
         input.value=''; msgEl.style.color='#7ac87a'; msgEl.textContent='Đã lưu!';
         setTimeout(()=>{ msgEl.textContent=''; },3000);
       } catch(e) { msgEl.style.color='var(--danger)'; msgEl.textContent='Lỗi: '+e.message; }
+    }
+
+    async function saveVendorUserRole(uid, vendorId) {
+      const roleEl  = document.getElementById('vrole-' + uid);
+      const nameEl  = document.getElementById('vstaff-' + uid);
+      const msgEl   = document.getElementById('vrole-msg-' + uid);
+      if (!roleEl || !msgEl) return;
+      const role      = roleEl.value;
+      const staffName = nameEl ? nameEl.value.trim() : '';
+      if (role === 'staff' && !staffName) {
+        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Nhập tên nhân viên.'; return;
+      }
+      msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Đang lưu…';
+      try {
+        await db.collection('vendorUsers').doc(uid).set(
+          { role, staffName: role === 'staff' ? staffName : '', adminUpdatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+          { merge: true }
+        );
+        msgEl.style.color = '#7ac87a'; msgEl.textContent = 'Đã lưu!';
+        setTimeout(() => { msgEl.textContent = ''; }, 3000);
+      } catch(e) { msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Lỗi: ' + e.message; }
     }
 
     // ── Driver Panel ──────────────────────────────────────────────

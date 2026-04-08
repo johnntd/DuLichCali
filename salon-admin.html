@@ -1129,8 +1129,9 @@
   var servicesRef    = null;
   var staffRef       = null;
   // Role: 'owner'|'manager'|'staff' — read from vendorUsers doc, default 'owner'
-  var _userRole     = 'owner';
-  var _userEmail    = '';
+  var _userRole      = 'owner';
+  var _userStaffName = ''; // staff's own name — used to pre-filter calendar view
+  var _userEmail     = '';
   var _vendorPhone  = '';
   var _currentIsOpen = true; // mirrors vendors/{id}.isOpen
   var unsubSvcs      = null;
@@ -1296,11 +1297,12 @@
     db.collection('vendorUsers').doc(user.uid).get().then(function(doc) {
       if (!doc.exists) { auth.signOut().then(function(){ window.location.href = 'vendor-login.html'; }); return; }
 
-      VENDOR_ID  = doc.data().vendorId;
-      VENDOR_CAT = VENDOR_CATEGORY_MAP[VENDOR_ID] || 'nails';
+      VENDOR_ID       = doc.data().vendorId;
+      VENDOR_CAT      = VENDOR_CATEGORY_MAP[VENDOR_ID] || 'nails';
       // Role: owner/manager can cancel; staff cannot. Default to 'owner' if not set.
-      _userRole  = doc.data().role || 'owner';
-      _userEmail = user.email || '';
+      _userRole       = doc.data().role || 'owner';
+      _userStaffName  = doc.data().staffName || '';
+      _userEmail      = user.email || '';
 
       if (VENDOR_CAT === 'food') { window.location.href = 'vendor-admin.html'; return; }
 
@@ -1342,6 +1344,8 @@
 
         seedIfNeeded(staticData);
         _loadSeenEscIds(); // must run before subscribeEscalations so we know which IDs are already seen
+        // Staff role: pre-filter calendar to their own name so they only see their schedule
+        if (_userRole === 'staff' && _userStaffName) { _saStaffFilter = _userStaffName; }
         subscribeServices();
         subscribeStaff();
         subscribeEscalations();
@@ -2292,8 +2296,10 @@
     });
     if (!names.length) { bar.style.display = 'none'; return; }
     bar.style.display = 'flex';
-    var chips = '<span class="sa-staff-bar__label">Nhân viên:</span>' +
+    // Staff role: hide "Tất cả" chip — they should only see their own schedule
+    var allChip = _userRole === 'staff' ? '' :
       '<button class="sa-staff-chip' + (_saStaffFilter === 'all' ? ' active' : '') + '" onclick="saSetStaffFilter(\'all\')">Tất cả</button>';
+    var chips = '<span class="sa-staff-bar__label">Nhân viên:</span>' + allChip;
     names.forEach(function(n) {
       var active = _saStaffFilter === n ? ' active' : '';
       chips += '<button class="sa-staff-chip' + active + '" onclick="saSetStaffFilter(' + JSON.stringify(n) + ')">' + esc(n) + '</button>';

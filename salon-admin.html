@@ -656,6 +656,7 @@
     .pm-row { display: flex; gap: .5rem; }
     .pm-group { margin-bottom: .65rem; }
     .pm-label { display: block; font-size: .65rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .28rem; }
+    .pm-balance { font-size: .73rem; font-weight: 700; text-align: right; margin: -.3rem 0 .5rem; padding: .35rem .5rem; border-radius: 4px; background: rgba(255,255,255,.04); }
 
     /* Status inline badges */
     .sa-st { font-size: .58rem; font-weight: 700; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
@@ -1142,13 +1143,14 @@
     <div class="pm-row">
       <div class="pm-group" style="flex:1">
         <label class="pm-label">Số tiền thu ($)</label>
-        <input class="sa-input" id="pmAmount" type="number" min="0" step="0.01" placeholder="0.00" style="width:100%">
+        <input class="sa-input" id="pmAmount" type="number" min="0" step="0.01" placeholder="0.00" style="width:100%" oninput="_updatePmBalance()">
       </div>
       <div class="pm-group" style="flex:1">
         <label class="pm-label">Tip ($)</label>
         <input class="sa-input" id="pmTip" type="number" min="0" step="0.01" placeholder="0.00" style="width:100%">
       </div>
     </div>
+    <div id="pmBalance" class="pm-balance" style="display:none"></div>
     <div class="pm-group">
       <label class="pm-label">Phương thức</label>
       <select class="sa-input" id="pmMethod" style="width:100%;height:38px;padding:0 8px">
@@ -2518,8 +2520,62 @@
 
   // ── Payment status tracking ───────────────────────────────────────────────────
   // Fields: paymentStatus ('unpaid'|'partial'|'paid'), amountPaid, tipAmount,
-  //         paymentMethod, paymentNote, paidAt.
+  //         paymentMethod, paymentNote, paidAt, balanceDue.
   // Field names are intentionally generic so food orders and rides can reuse them.
+
+  // Parse a price string to a number. Handles "$45", "$45 + $20" (sum), "$45-$65" (first).
+  function _parsePrice(str) {
+    if (!str) return 0;
+    var s = String(str).trim();
+    if (s.indexOf('+') >= 0) {
+      var nums = s.match(/[\d.]+/g) || [];
+      return nums.reduce(function(acc, n) { return acc + parseFloat(n); }, 0);
+    }
+    var m = s.match(/[\d.]+/);
+    return m ? parseFloat(m[0]) : 0;
+  }
+
+  // Derive balance components from a booking object.
+  // Returns { total, paid, tip, balance } — balance is null when total is unknown.
+  function _computeBalance(b) {
+    var total = _parsePrice(b.priceEst || b.price || '');
+    var paid  = Number(b.amountPaid) || 0;
+    var tip   = Number(b.tipAmount)  || 0;
+    return {
+      total:   total,
+      paid:    paid,
+      tip:     tip,
+      balance: total > 0 ? Math.max(0, total - paid) : null
+    };
+  }
+
+  // Live balance preview inside the payment modal. Called on amount input change.
+  function _updatePmBalance() {
+    var modal   = document.getElementById('paymentModal');
+    var total   = parseFloat(modal.dataset.priceTotal) || 0;
+    var amount  = parseFloat(document.getElementById('pmAmount').value) || 0;
+    var balDiv  = document.getElementById('pmBalance');
+    var sel     = document.getElementById('pmStatus');
+    if (total > 0) {
+      var bal = Math.max(0, total - amount);
+      balDiv.style.display = 'block';
+      if (amount <= 0) {
+        balDiv.textContent = 'Tổng: $' + total.toFixed(2) + ' · Chưa thu';
+        balDiv.style.color = 'var(--muted)';
+        if (sel) sel.value = 'unpaid';
+      } else if (bal <= 0) {
+        balDiv.textContent = 'Tổng: $' + total.toFixed(2) + ' · ✓ Đã thanh toán đủ';
+        balDiv.style.color = 'var(--success)';
+        if (sel) sel.value = 'paid';
+      } else {
+        balDiv.textContent = 'Tổng: $' + total.toFixed(2) + ' · Đã thu: $' + amount.toFixed(2) + ' · Còn lại: $' + bal.toFixed(2);
+        balDiv.style.color = '#fbbf24';
+        if (sel) sel.value = 'partial';
+      }
+    } else {
+      balDiv.style.display = 'none';
+    }
+  }
 
   function _payBadgeHtml(b) {
     var s  = b.status || 'confirmed';
@@ -2531,6 +2587,10 @@
       return '<span class="sa-pay-badge sa-pay-badge--paid">&#10003; \u0110\u00e3 thu' + esc(amt) + '</span>';
     }
     if (ps === 'partial') {
+      var bal = _computeBalance(b);
+      if (bal.balance !== null) {
+        return '<span class="sa-pay-badge sa-pay-badge--partial">&#9651; C\u00f2n l\u1ea1i $' + bal.balance.toFixed(0) + '</span>';
+      }
       var pAmt = b.amountPaid ? ' $' + Number(b.amountPaid).toFixed(0) : '';
       return '<span class="sa-pay-badge sa-pay-badge--partial">&#9651; M\u1ed9t ph\u1ea7n' + esc(pAmt) + '</span>';
     }
@@ -2546,11 +2606,15 @@
     if (ps === 'unpaid' && s !== 'completed') return ''; // don't show "unpaid" row on pending bookings
     var psLabel = { paid: '\u0110\u00e3 thanh to\u00e1n', partial: 'M\u1ed9t ph\u1ea7n', unpaid: 'Ch\u01b0a thanh to\u00e1n' }[ps] || ps;
     var psColor = ps === 'paid' ? 'var(--success)' : ps === 'partial' ? '#fbbf24' : 'var(--danger)';
+    var bal     = _computeBalance(b);
     var parts   = ['<span style="color:' + psColor + ';font-weight:700">' + psLabel + '</span>'];
-    if (b.amountPaid)     parts.push('\u0110\u00e3 thu: $' + Number(b.amountPaid).toFixed(2));
-    if (b.tipAmount)      parts.push('Tip: $' + Number(b.tipAmount).toFixed(2));
-    if (b.paymentMethod)  parts.push(esc(b.paymentMethod));
-    if (b.paymentNote)    parts.push(esc(b.paymentNote));
+    if (bal.total > 0)            parts.push('T\u1ed5ng: $' + bal.total.toFixed(2));
+    if (b.amountPaid)             parts.push('\u0110\u00e3 thu: $' + Number(b.amountPaid).toFixed(2));
+    if (bal.balance !== null && bal.balance > 0)
+      parts.push('<span style="color:#fbbf24;font-weight:700">C\u00f2n l\u1ea1i: $' + bal.balance.toFixed(2) + '</span>');
+    if (b.tipAmount)              parts.push('Tip: $' + Number(b.tipAmount).toFixed(2));
+    if (b.paymentMethod)          parts.push(esc(b.paymentMethod));
+    if (b.paymentNote)            parts.push(esc(b.paymentNote));
     return '<div class="sa-det-section"><div class="sa-det-label">Thanh to\u00e1n</div>' +
       '<div class="sa-det-val">' + parts.join(' &middot; ') + '</div></div>';
   }
@@ -2560,9 +2624,11 @@
     document.getElementById('pmBookingId').value = bookingId;
     var svcArr = b.selectedServices || b.services || (b.serviceType ? [b.serviceType] : []);
     var svcLbl = Array.isArray(svcArr) ? svcArr.filter(Boolean).join(', ') : '';
-    var priceEst = b.priceEst || '';
+    var priceEst   = b.priceEst || b.price || '';
+    var priceTotal = _parsePrice(priceEst);
     document.getElementById('pmHeader').textContent =
-      (b.customerName || 'Khách') + (svcLbl ? ' · ' + svcLbl : '') + (priceEst ? ' · Ước tính: ' + priceEst : '');
+      (b.customerName || 'Khách') + (svcLbl ? ' · ' + svcLbl : '') + (priceEst ? ' · $' + (priceTotal > 0 ? priceTotal.toFixed(0) : priceEst) : '');
+    document.getElementById('paymentModal').dataset.priceTotal = priceTotal;
     document.getElementById('pmStatus').value = b.paymentStatus || 'paid';
     document.getElementById('pmAmount').value = b.amountPaid != null ? b.amountPaid : '';
     document.getElementById('pmTip').value    = b.tipAmount   != null ? b.tipAmount   : '';
@@ -2571,6 +2637,7 @@
     document.getElementById('pmMsg').style.display = 'none';
     var btn = document.getElementById('pmSaveBtn');
     if (btn) btn.disabled = false;
+    _updatePmBalance();
     document.getElementById('paymentModal').classList.remove('hidden');
   }
 
@@ -2586,12 +2653,22 @@
   }
 
   function savePayment() {
-    var bookingId = document.getElementById('pmBookingId').value;
-    var payStatus = document.getElementById('pmStatus').value;
-    var amount    = parseFloat(document.getElementById('pmAmount').value) || 0;
-    var tip       = parseFloat(document.getElementById('pmTip').value)    || 0;
-    var method    = document.getElementById('pmMethod').value;
-    var note      = document.getElementById('pmNote').value.trim();
+    var bookingId  = document.getElementById('pmBookingId').value;
+    var amount     = parseFloat(document.getElementById('pmAmount').value) || 0;
+    var tip        = parseFloat(document.getElementById('pmTip').value)    || 0;
+    var method     = document.getElementById('pmMethod').value;
+    var note       = document.getElementById('pmNote').value.trim();
+
+    // Auto-derive paymentStatus from amounts when total is known; fall back to manual select
+    var priceTotal = parseFloat(document.getElementById('paymentModal').dataset.priceTotal) || 0;
+    var payStatus;
+    var balanceDue = null;
+    if (priceTotal > 0) {
+      balanceDue = Math.max(0, priceTotal - amount);
+      payStatus  = amount <= 0 ? 'unpaid' : balanceDue <= 0 ? 'paid' : 'partial';
+    } else {
+      payStatus = document.getElementById('pmStatus').value;
+    }
 
     if (!bookingId || !vendorRef) { _pmMsg('Lỗi: không tìm thấy lịch hẹn.', true); return; }
 
@@ -2617,6 +2694,7 @@
         at:            new Date().toISOString()
       })
     };
+    if (balanceDue !== null) update.balanceDue = balanceDue;
     // Set paidAt timestamp only when transitioning to 'paid' and not already set
     var cached = _bookingCache[bookingId] || {};
     if (payStatus === 'paid' && !cached.paidAt) {

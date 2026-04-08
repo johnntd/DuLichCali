@@ -549,7 +549,7 @@
 
   // ── Marker parsing ────────────────────────────────────────────────────────────
   function _parseEscalationType(reply) {
-    var m = reply.match(/\[ESCALATE:(order|appointment|reservation|question)\]/i);
+    var m = reply.match(/\[ESCALATE:(order|appointment|reservation|question|cancel)\]/i);
     return m ? m[1].toLowerCase() : null;
   }
 
@@ -912,6 +912,7 @@
       '  price_question          — asking about pricing',
       '  staff_availability      — asking about when a specific technician works',
       '  hours_location          — asking about hours, current open status, or address',
+      '  cancel_booking          — customer wants to cancel an existing appointment',
       '  farewell                — goodbye, thanks, done',
       '  general                 — anything else',
       '',
@@ -980,6 +981,17 @@
       'When customer has a booking conflict (e.g. already booked same time) and says "replace it" or "yes, change":',
       '  → Treat as modify_booking. Keep services, staff, name, phone. Ask for preferred new time.',
       '  → If they say "keep it" or "different time" → acknowledge and ask for their preferred new time instead.',
+      '',
+      '=== CANCEL BOOKING ===',
+      'When customer says: "cancel my appointment", "cancel it", "I want to cancel", "please cancel",',
+      '  "hủy lịch", "hủy hẹn", "cancelar mi cita", "quiero cancelar":',
+      '  → If name AND phone are already in CURRENT BOOKING STATE:',
+      '     Confirm warmly (e.g. "Of course — I\'ve cancelled your appointment. Sorry to see you go!"),',
+      '     then emit [ESCALATE:cancel] on a new line. Do NOT emit [BOOKING:...] for cancellations.',
+      '  → If name/phone are NOT in CURRENT BOOKING STATE:',
+      '     Ask: "Of course! Can you confirm your name and phone number so I can locate your booking?"',
+      '     Once confirmed, emit [ESCALATE:cancel].',
+      '  → Do NOT tell the customer to call the salon to cancel — handle it directly.',
       '',
       '=== STATE MARKER — REQUIRED ON EVERY REPLY ===',
       'Append this at the very end of EVERY reply (after all text and any other markers):',
@@ -1587,6 +1599,20 @@
     var packetHtml = _buildBookingPacketHtml(biz, draft, orderId, lang);
     _appendHtmlMessage(messagesEl, packetHtml);
 
+    // ── Post-booking context: restore name/phone/services for follow-up cancel/modify ──
+    // biz._bookingState was cleared before _submitDirectBooking was called.
+    // Restore the fields Claude needs to handle "cancel my appointment" or
+    // "change my appointment" without re-collecting all details.
+    // Do NOT set existingBookingId in STATE — that would cause any new booking
+    // on this session to be treated as a reschedule. Use biz._lastBookingId instead.
+    biz._lastBookingId         = orderId;
+    biz._bookingState.services = svcs;
+    biz._bookingState.staff    = draft.staff || null;
+    biz._bookingState.name     = draft.name  || null;
+    biz._bookingState.phone    = draft.phone || null;
+    biz._bookingState.lang     = lang;
+    _saveBookingState(biz);
+
     // Write to Firestore (non-blocking — customer sees confirmation immediately)
     if (db && fv) {
       var vendorBookingsRef = db.collection('vendors').doc(vendorId).collection('bookings');
@@ -2178,6 +2204,40 @@
                     esc.create(biz, messagesEl, result.escalationType, draft);
                   }
                 });
+
+            } else if (result.escalationType === 'cancel') {
+              // Customer is cancelling their confirmed booking.
+              // Show Claude's confirmation text, then mark booking cancelled in Firestore.
+              _appendMessage(messagesEl, result.text, 'bot');
+              var _cDb  = window.dlcDb;
+              var _cVid = biz.id || biz.slug || 'unknown';
+              if (_cDb) {
+                var _cFv    = firebase && firebase.firestore ? firebase.firestore.FieldValue : null;
+                var _cId    = biz._lastBookingId;                             // set by _submitDirectBooking
+                var _cPhone = biz._bookingState && biz._bookingState.phone;
+                if (_cId) {
+                  // Exact ID known — fastest path
+                  _cDb.collection('vendors').doc(_cVid).collection('bookings').doc(_cId)
+                    .update({ status: 'cancelled', cancelledAt: _cFv ? _cFv.serverTimestamp() : new Date() })
+                    .catch(function (e) { console.warn('[cancel] update failed:', e.message); });
+                } else if (_cPhone) {
+                  // Fall back to phone lookup
+                  _cDb.collection('vendors').doc(_cVid).collection('bookings')
+                    .where('customerPhone', '==', _cPhone)
+                    .where('status', '==', 'confirmed')
+                    .get()
+                    .then(function (snap) {
+                      snap.docs.forEach(function (d) {
+                        d.ref.update({ status: 'cancelled', cancelledAt: _cFv ? _cFv.serverTimestamp() : new Date() })
+                          .catch(function () {});
+                      });
+                    })
+                    .catch(function (e) { console.warn('[cancel] lookup failed:', e.message); });
+                }
+              }
+              biz._lastBookingId = null;
+              biz._bookingState  = _emptyState();
+              _saveBookingState(biz);
 
             } else {
               // Non-appointment response — show immediately, no availability gate needed

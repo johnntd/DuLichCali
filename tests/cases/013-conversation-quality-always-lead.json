@@ -1,0 +1,29 @@
+{
+  "id": "RX-013",
+  "fix_date": "2026-04-08",
+  "category": "conversation_closing",
+  "status": "verified_in_runner",
+  "verify_fix_string": "RESPONSE QUALITY — ALWAYS LEAD",
+  "title": "AI ends turns passively — statement with no next step or question",
+
+  "failing_behavior": "After answering a question (hours, price, staff availability, conflict), AI ends the turn with a bare statement and no follow-up. Customer is left waiting for the AI to do something. Conversation stalls.",
+
+  "root_cause": "No explicit prompt instruction required the AI to close every turn with a question or forward-leading offer. Claude defaulted to informational responses without driving toward the next booking step.",
+
+  "conversation": [
+    { "role": "user",      "content": "What are your hours?" },
+    { "role": "assistant", "content": "We're open Monday through Saturday, 9 AM to 7:30 PM. We're closed on Sundays." },
+    { "role": "user",      "content": "Does Helen work Tuesdays?" },
+    { "role": "assistant", "content": "Yes, Helen works Tuesdays from 9 AM to 6 PM." }
+  ],
+
+  "expected_behavior": "After answering hours: 'We're open Mon–Sat, 9 AM–7:30 PM. Would you like to book an appointment?' After answering staff availability: 'Yes, Helen works Tuesdays 9 AM–6 PM. Would you like to schedule something with her?'",
+
+  "observed_behavior": "AI gives accurate information but ends passively. No question, no next step. Customer must re-initiate every time.",
+
+  "code_areas": [
+    "nailsalon/receptionist.js: _buildPrompt() — RESPONSE QUALITY — ALWAYS LEAD section after YOUR RULES"
+  ],
+
+  "notes": "Fix is purely prompt-level. Applies to all non-booking turns: hours, price, service info, staff availability. Booking turns already have structured flow (booking_offer, etc.) and are not affected. The 'NEVER end with a bare statement' rule and the required-patterns list are the key additions."
+}

@@ -260,20 +260,32 @@
         var staffNote = data.staff && data.staff.toLowerCase() !== 'any' ? ' with ' + data.staff : '';
         // Prefer altSlots array (multi-slot); fall back to nextSlot (legacy single-slot)
         var alts = data.altSlots && data.altSlots.length ? data.altSlots : (data.nextSlot ? [data.nextSlot] : []);
+
+        // RX-012: build alternative-staff suffix when other technicians are free at the same time
+        var staffSuffix = '';
+        if (data.altStaff && data.altStaff.length > 0) {
+          var _as = data.altStaff;
+          var _nameStr = _as.length === 1 ? _as[0]
+            : _as.slice(0, -1).join(', ') + (_as.length > 2 ? ',' : '') + ' or ' + _as[_as.length - 1];
+          if (lang === 'vi')   staffSuffix = ' ' + _nameStr + ' thì đang trống vào giờ đó.';
+          else if (lang === 'es') staffSuffix = ' Sin embargo, ' + _nameStr + ' ' + (_as.length > 1 ? 'están disponibles' : 'está disponible') + ' a esa hora.';
+          else staffSuffix = ' However, ' + _nameStr + ' ' + (_as.length === 1 ? 'is' : 'are') + ' available at that time.';
+        }
+
         if (alts.length === 1) {
-          if (lang === 'vi') return 'Rất tiếc, khung giờ ' + data.time + staffNote + ' đã có lịch. Thời gian trống gần nhất là ' + alts[0] + '. Bạn có muốn đặt vào khung giờ đó không?';
-          if (lang === 'es') return 'Lo sentimos, el horario de las ' + data.time + staffNote + ' ya está reservado. El horario más cercano disponible es ' + alts[0] + '. ¿Le gustaría ese?';
-          return 'Sorry, ' + data.time + staffNote + ' is already booked. The closest available time is ' + alts[0] + '. Would you like that instead?';
+          if (lang === 'vi') return 'Rất tiếc, khung giờ ' + data.time + staffNote + ' đã có lịch. Thời gian trống gần nhất là ' + alts[0] + '.' + staffSuffix + ' Bạn muốn chọn giờ nào?';
+          if (lang === 'es') return 'Lo sentimos, el horario de las ' + data.time + staffNote + ' ya está reservado. El horario más cercano disponible es ' + alts[0] + '.' + staffSuffix + ' ¿Cuál prefiere?';
+          return 'Sorry, ' + data.time + staffNote + ' is already booked. The closest available time is ' + alts[0] + '.' + staffSuffix + ' Which would you prefer?';
         } else if (alts.length >= 2) {
           var last = alts[alts.length - 1];
           var rest = alts.slice(0, alts.length - 1);
-          if (lang === 'vi') return 'Rất tiếc, khung giờ ' + data.time + staffNote + ' đã có lịch. Các khung giờ trống gần nhất là ' + rest.join(', ') + ' và ' + last + '. Bạn muốn chọn khung giờ nào?';
-          if (lang === 'es') return 'Lo sentimos, el horario de las ' + data.time + staffNote + ' ya está reservado. Los horarios más cercanos disponibles son ' + rest.join(', ') + ' y ' + last + '. ¿Cuál prefiere?';
-          return 'Sorry, ' + data.time + staffNote + ' is already booked. The closest available times are ' + rest.join(', ') + ' and ' + last + '. Which would you prefer?';
+          if (lang === 'vi') return 'Rất tiếc, khung giờ ' + data.time + staffNote + ' đã có lịch. Các khung giờ trống gần nhất là ' + rest.join(', ') + ' và ' + last + '.' + staffSuffix + ' Bạn muốn chọn giờ nào?';
+          if (lang === 'es') return 'Lo sentimos, el horario de las ' + data.time + staffNote + ' ya está reservado. Los horarios más cercanos disponibles son ' + rest.join(', ') + ' y ' + last + '.' + staffSuffix + ' ¿Cuál prefiere?';
+          return 'Sorry, ' + data.time + staffNote + ' is already booked. The closest available times are ' + rest.join(', ') + ' and ' + last + '.' + staffSuffix + ' Which would you prefer?';
         } else {
-          if (lang === 'vi') return 'Rất tiếc, không còn khung giờ trống hôm đó' + (staffNote ? ' cho ' + data.staff : '') + '. Vui lòng gọi ' + phone + ' hoặc chọn ngày khác.';
-          if (lang === 'es') return 'Lo sentimos, no quedan horarios disponibles ese día' + (staffNote ? ' con ' + data.staff : '') + '. Llame al ' + phone + ' o elija otra fecha.';
-          return 'Sorry, there are no more available slots that day' + (staffNote ? ' with ' + data.staff : '') + '. Please call ' + phone + ' or choose a different date.';
+          if (lang === 'vi') return 'Rất tiếc, không còn khung giờ trống hôm đó' + (staffNote ? ' cho ' + data.staff : '') + '.' + staffSuffix + (staffSuffix ? '' : ' Vui lòng gọi ' + phone + ' hoặc chọn ngày khác.');
+          if (lang === 'es') return 'Lo sentimos, no quedan horarios disponibles ese día' + (staffNote ? ' con ' + data.staff : '') + '.' + staffSuffix + (staffSuffix ? '' : ' Llame al ' + phone + ' o elija otra fecha.');
+          return 'Sorry, there are no more available slots that day' + (staffNote ? ' with ' + data.staff : '') + '.' + staffSuffix + (staffSuffix ? '' : ' Please call ' + phone + ' or choose a different date.');
         }
       }
 
@@ -450,10 +462,32 @@
               var _slotClose = shift ? Math.min(closeMins, shift.close) : closeMins;
               var altSlots = _findAlternativeSlots(existing, requestedStaff, reqStartMins, totalMins,
                 _slotOpen, _slotClose, 3);
+
+              // RX-012: find other staff who ARE available at the exact same time.
+              // Uses already-loaded `existing` bookings — no extra Firestore queries.
+              var altStaff = [];
+              (biz.staff || []).forEach(function (m) {
+                if (m.active === false) return;
+                var mName = (m.name || '').trim();
+                if (!mName || mName.toLowerCase() === requestedStaff) return;
+                var mShift = _getStaffShift(biz, mName, draft.date);
+                if (!mShift) return; // not working that day
+                if (reqStartMins < mShift.open || reqEndMins > mShift.close) return; // outside their shift
+                var busy = existing.some(function (appt) {
+                  var as = (appt.staff || '').toLowerCase().trim();
+                  if (as !== mName.toLowerCase() && as !== 'any') return false;
+                  var aS = _toMins(appt.time || '00:00');
+                  var aD = appt.totalDurationMins || appt.durationMins || DEFAULT_DUR;
+                  return _overlaps(reqStartMins, reqEndMins, aS, aS + aD);
+                });
+                if (!busy) altStaff.push(mName);
+              });
+
               return { valid: false, message: _buildMsg(biz, 'conflict', {
                 time:     draft.time,
                 staff:    draft.staff,
                 altSlots: altSlots,
+                altStaff: altStaff,
                 lang:     draft.lang
               })};
             }
@@ -909,6 +943,24 @@
       '6. Prices: The SERVICE MENU above has live prices. Always mention the price when answering a price question or discussing a specific service. If price is unknown: "Prices vary — please call ' + phone + ' for an exact quote."',
       '7. Pronouns her/him/she/he → most recently named technician. See ACTIVE CONTEXT above.',
       '8. Farewell (goodbye/bye/thanks/done) → 1 warm sentence only. Do NOT re-introduce yourself.',
+      '',
+      '=== RESPONSE QUALITY — ALWAYS LEAD ===',
+      '// RX-013: AI must never end a turn passively. Every response must move the conversation forward.',
+      'After answering any question or showing a conflict/availability result, you MUST end with a clear next step.',
+      'NEVER end with just a statement. Always close with a specific question or offer.',
+      '',
+      'Required patterns:',
+      '  After conflict / alt slots  → "Which time works for you?" or "Would you like one of these, or prefer [name]?"',
+      '  After alt staff suggestion  → "Would you like to book with [name] at [time]?"',
+      '  After hours/location answer → "Would you like to book an appointment?"',
+      '  After price answer          → "Would you like to schedule [service]?"',
+      '  After service question      → "Which service would you like to book?"',
+      '  After general info          → One sentence of info + "Anything I can help you with?"',
+      '',
+      'NEVER end a response with:',
+      '  — A bare statement with no question ("Helen is available on Tuesday.")',
+      '  — "Let me know if you need anything" (too vague — be specific)',
+      '  — "Feel free to ask" (passive — always lead)',
       '',
       '=== INTENT CLASSIFICATION ===',
       'Classify each message as one of:',

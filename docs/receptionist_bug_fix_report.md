@@ -171,6 +171,34 @@ Generated from `tests/cases/*.json`. Run `npm run test:receptionist` to verify a
 
 ---
 
+### RX-012 — Conflict message never mentions other available technicians
+- **Category:** conflict_handling
+- **Status:** verified_in_runner
+- **Filed:** 2026-04-08 · **Fixed:** 2026-04-08
+- **Failing behavior:** Customer asks for Helen at 2pm. Helen is booked. AI says "Helen is booked — closest times are 1pm, 3pm." Never mentions that Tracy or Lisa are free at 2pm. Customer misses the option of same-time, different-technician.
+- **Root cause:** `NailAvailabilityChecker.check()` computed `altSlots` (alternative times for the same staff) but never computed `altStaff` (other staff free at the requested time). `_buildMsg` for `'conflict'` only surfaced `altSlots`.
+- **Fix:** Added `altStaff` computation inside the `hasConflict` block in `check()`. Iterates `biz.staff`, skips the conflicted staff and inactive members, checks each member's shift for the date, checks existing bookings for overlap. Zero extra Firestore queries (reuses already-loaded `existing` array). `_buildMsg` appended `staffSuffix` to all three conflict message branches (en/es/vi). `tests/lib/avail-logic.js` updated to mirror the production logic.
+- **Runner checks:**
+  - Layer 1: `verify_fix_string: "RX-012: find other staff who ARE available"`
+  - Layer 3: "conflict result includes altStaff — Tracy and/or Lisa available when Helen booked at 14:00" + "altStaff excludes conflicted staff" + "altStaff empty when all busy"
+- **Code:** `NailAvailabilityChecker.check()` hasConflict block + `_buildMsg` conflict key + `tests/lib/avail-logic.js`
+- **Confidence gap:** Runner confirms altStaff is computed and included. Whether Claude surfaces it naturally in conversation requires live API testing.
+
+---
+
+### RX-013 — AI ends turns passively — no next step or leading question
+- **Category:** conversation_closing
+- **Status:** verified_in_runner
+- **Filed:** 2026-04-08 · **Fixed:** 2026-04-08
+- **Failing behavior:** After answering hours, price, staff availability, or conflict result, AI ends with a bare statement. No question, no offer. Customer must re-initiate. Conversation stalls.
+- **Root cause:** No prompt instruction required every response to close with a forward-leading question or offer. Claude defaulted to informational completeness over conversational momentum.
+- **Fix:** Added `=== RESPONSE QUALITY — ALWAYS LEAD ===` section to `_buildPrompt` (after `YOUR RULES`). Specifies required closing patterns per intent (conflict → "Which time works?", hours → "Would you like to book?", etc.) and explicitly lists forbidden passive endings ("Let me know if you need anything", "Feel free to ask", bare statements).
+- **Runner check:** `verify_fix_string: "RESPONSE QUALITY — ALWAYS LEAD"`
+- **Code:** `_buildPrompt()` — new section between `YOUR RULES` and `INTENT CLASSIFICATION`
+- **Confidence gap:** Prompt-level fix. Claude following it requires live API testing against multiple intent types.
+
+---
+
 ## What the runner verifies vs does not verify
 
 | Claim | Verified? | How |

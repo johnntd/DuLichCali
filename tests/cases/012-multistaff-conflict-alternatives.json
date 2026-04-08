@@ -1,0 +1,29 @@
+{
+  "id": "RX-012",
+  "fix_date": "2026-04-08",
+  "category": "conflict_handling",
+  "status": "verified_in_runner",
+  "verify_fix_string": "RX-012: find other staff who ARE available",
+  "title": "Conflict message shows only alt slots for same staff — never mentions other available technicians",
+
+  "failing_behavior": "Customer requests Helen at 2pm. Helen is booked. AI says 'Helen is booked at 2pm. Closest available times: 1pm, 3pm.' It never mentions that Tracy or Lisa are free at 2pm. Customer may not realize they can get the same slot with another technician.",
+
+  "root_cause": "NailAvailabilityChecker.check() computed altSlots (alternative times for the SAME staff) but never computed altStaff (other staff free at the SAME time). _buildMsg for 'conflict' only used altSlots. No code path produced or surfaced alternative staff names.",
+
+  "conversation": [
+    { "role": "user",      "content": "I'd like a gel manicure with Helen at 2pm on Monday" },
+    { "role": "assistant", "content": "Sorry, Helen is already booked at 2 PM. The closest available times with Helen are 1 PM, 3 PM, or 3:30 PM. Which would you prefer?" }
+  ],
+
+  "expected_behavior": "AI should also mention that Tracy (and/or Lisa) is available at 2 PM. Example: 'Sorry, Helen is already booked at 2 PM. However, Tracy and Lisa are available at that time. Or I can check Helen at 1 PM or 3 PM. What would you prefer?'",
+
+  "observed_behavior": "AI only offers alternative times with Helen. Never suggests switching to a different technician who is free at the customer's preferred time. Customer misses the option entirely.",
+
+  "code_areas": [
+    "nailsalon/receptionist.js: NailAvailabilityChecker.check() — hasConflict block, must compute altStaff from biz.staff",
+    "nailsalon/receptionist.js: _buildMsg() — 'conflict' key, must append staffSuffix with altStaff names",
+    "tests/lib/avail-logic.js: checkAvailability() — conflict block, must mirror altStaff computation"
+  ],
+
+  "notes": "altStaff computation reuses the already-loaded `existing` bookings array — no extra Firestore queries needed. The check is O(S) where S = number of staff members. The fix is purely additive: it does not change altSlots behavior, only appends additional information to the conflict message."
+}

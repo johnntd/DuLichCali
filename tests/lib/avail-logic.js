@@ -171,11 +171,33 @@ function checkAvailability(biz, draft, existingBookings) {
       var openM   = sh ? sh.open  : toMins('09:00');
       var closeM  = sh ? sh.close : toMins('19:30');
       var altSlots = findAlternativeSlots(existing, requestedStaff, reqStartMins, totalMins, openM, closeM);
+
+      // RX-012: find other staff who ARE available at the exact same time.
+      // Mirrors the altStaff computation in NailAvailabilityChecker.check().
+      var altStaff = [];
+      (biz.staff || []).forEach(function(m) {
+        if (m.active === false) return;
+        var mName = (m.name || '').trim();
+        if (!mName || mName.toLowerCase() === requestedStaff) return;
+        var mShift = getStaffShift(biz, mName, draft.date);
+        if (!mShift) return;
+        if (reqStartMins < mShift.open || reqEndMins > mShift.close) return;
+        var busy = existing.some(function(appt) {
+          var as = (appt.staff || '').toLowerCase().trim();
+          if (as !== mName.toLowerCase() && as !== 'any') return false;
+          var aS = toMins(appt.requestedTime || appt.time || '00:00');
+          var aD = appt.totalDurationMins || appt.durationMins || DEFAULT_DUR;
+          return overlaps(aS, aS + aD, reqStartMins, reqEndMins);
+        });
+        if (!busy) altStaff.push(mName);
+      });
+
       return {
         valid: false, key: 'conflict',
-        staff: draft.staff, time: draft.time, altSlots,
+        staff: draft.staff, time: draft.time, altSlots: altSlots, altStaff: altStaff,
         message: (draft.staff || 'That technician') + ' at ' + draft.time + ' is already booked.'
           + (altSlots.length ? ' Alternatives: ' + altSlots.join(', ') : '')
+          + (altStaff.length ? ' Available staff: ' + altStaff.join(', ') : '')
       };
     }
   }

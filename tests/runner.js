@@ -165,6 +165,22 @@ test('10-minute data cache interval configured [RX-010]', function() {
   assertContains(src, '600000');
 });
 
+test('RX-011: _earlyCheckReady does NOT overwrite modify_booking pendingAction [RX-011]', function() {
+  assertContains(src, "RX-011: do NOT overwrite 'modify_booking'");
+});
+
+test('RX-012: altStaff computation present in availability checker [RX-012]', function() {
+  assertContains(src, 'RX-012: find other staff who ARE available');
+});
+
+test('RX-013: RESPONSE QUALITY — ALWAYS LEAD section exists [RX-013]', function() {
+  assertContains(src, 'RESPONSE QUALITY \u2014 ALWAYS LEAD');
+});
+
+test('RX-013: NEVER end with bare statement rule present [RX-013]', function() {
+  assertContains(src, 'NEVER end a response with');
+});
+
 // ══════════════════════════════════════════════════════════════════════════
 // GROUP 2 — STATE PARSER
 // type: mirrored-unit-logic
@@ -380,6 +396,35 @@ test('null draft falls through to valid=true (fail-open)', function() {
 
 test('missing time field falls through to valid=true (fail-open)', function() {
   assert(AL.checkAvailability(BIZ, { staff: 'Helen', date: '2026-04-13' }, []).valid === true);
+});
+
+test('[RX-012] conflict result includes altStaff — Tracy and/or Lisa available when Helen booked at 14:00', function() {
+  // Helen is booked at 14:00 Mon. Tracy (works 10:00-19:00) and Lisa (works 09:00-17:00) should be free.
+  var r = AL.checkAvailability(BIZ, { staff: 'Helen', date: '2026-04-13', time: '14:00', totalDurationMins: 60 }, bookings('confirmed_helen_monday_2pm'));
+  assert(!r.valid, 'Should be conflict');
+  assertEq(r.key, 'conflict');
+  assert(Array.isArray(r.altStaff), 'altStaff must be an array');
+  assert(r.altStaff.length >= 1, 'At least one alt staff expected (Tracy or Lisa)');
+  assert(r.altStaff.indexOf('Tracy') >= 0 || r.altStaff.indexOf('Lisa') >= 0,
+    'Expected Tracy or Lisa in altStaff, got: ' + r.altStaff.join(', '));
+});
+
+test('[RX-012] altStaff excludes the conflicted staff and inactive members', function() {
+  var r = AL.checkAvailability(BIZ, { staff: 'Helen', date: '2026-04-13', time: '14:00', totalDurationMins: 60 }, bookings('confirmed_helen_monday_2pm'));
+  assert(r.altStaff.indexOf('Helen') < 0, 'Helen must NOT appear in altStaff');
+});
+
+test('[RX-012] altStaff is empty when all other staff are also busy', function() {
+  // Book Tracy and Lisa at 14:00 too — now no one is free
+  var allBooked = [
+    BOOK_FIX['confirmed_helen_monday_2pm'],
+    { status: 'confirmed', requestedDate: '2026-04-13', requestedTime: '14:00', staff: 'Tracy', totalDurationMins: 60, customerName: 'Other1', customerPhone: '9990001111' },
+    { status: 'confirmed', requestedDate: '2026-04-13', requestedTime: '14:00', staff: 'Lisa',  totalDurationMins: 60, customerName: 'Other2', customerPhone: '9990002222' }
+  ];
+  var r = AL.checkAvailability(BIZ, { staff: 'Helen', date: '2026-04-13', time: '14:00', totalDurationMins: 60 }, allBooked);
+  assert(!r.valid);
+  assertEq(r.key, 'conflict');
+  assertEq(r.altStaff.length, 0, 'altStaff must be empty when all staff are busy');
 });
 
 // ══════════════════════════════════════════════════════════════════════════

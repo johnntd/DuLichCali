@@ -2090,22 +2090,28 @@
         // Normalize services — support both new "services" array and old "service" string
         var svcs = appt.services || (appt.service ? [appt.service] : []);
 
-        var apptRef = vendorRef.collection('appointments').doc();
+        // Write to 'bookings' subcollection — the same path subscribeBookings() reads from
+        var apptRef = vendorRef.collection('bookings').doc();
         apptRef.set({
           escId:              escId,
+          vendorId:           VENDOR_ID,
           selectedServices:   svcs,
-          service:            svcs.join(', '),   // legacy compat for renderBookings
+          service:            svcs.join(', '),
+          serviceType:        svcs[0] || '',
           totalDurationMins:  appt.totalDurationMins || null,
-          staff:              appt.staff    || 'Any',
-          date:               appt.date     || '',
-          time:               appt.time     || '',
-          customerName:       appt.name     || 'Khách',
-          customerPhone:      appt.phone    || '',
-          lang:               appt.lang || escData.lang || 'en',
+          staff:              appt.staff || 'Any',
+          requestedDate:      appt.date  || appt.requestedDate || '',
+          requestedTime:      appt.time  || appt.requestedTime || '',
+          date:               appt.date  || appt.requestedDate || '',
+          time:               appt.time  || appt.requestedTime || '',
+          customerName:       appt.name  || appt.customerName  || 'Kh\u00e1ch',
+          customerPhone:      appt.phone || appt.customerPhone || '',
+          lang:               appt.lang  || escData.lang || 'en',
           status:             'confirmed',
+          source:             'lily_receptionist_confirmed',
           confirmedAt:        ts(),
           createdAt:          ts()
-        }).catch(function (e) { console.warn('[appt] write failed:', e.message); });
+        }).catch(function (e) { console.warn('[booking] write failed:', e.message); });
 
         return db.collection('escalations').doc(escId).update(update);
       }).then(function () {

@@ -324,6 +324,21 @@
     .sa-msg { font-size: .72rem; margin-top: .5rem; }
     .sa-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
 
+    /* ── Skill chips ── */
+    .skill-chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .25rem; }
+    .skill-chip {
+      display: inline-flex; align-items: center; gap: .3rem;
+      padding: .3rem .65rem; border-radius: 20px; font-size: .75rem;
+      border: 1px solid var(--border); background: var(--navy-900);
+      color: var(--muted); cursor: pointer; user-select: none;
+      transition: background .15s, border-color .15s, color .15s;
+    }
+    .skill-chip input[type="checkbox"] { display: none; }
+    .skill-chip.checked {
+      background: rgba(212,175,55,.15); border-color: var(--gold);
+      color: var(--gold);
+    }
+
     /* ── Appointment card ── */
     .appt-card {
       background: var(--navy-800); border: 1px solid var(--border);
@@ -643,14 +658,36 @@
       <input class="sa-input" id="staffName" placeholder="Tên nhân viên…">
     </div>
 
-    <div class="sa-field">
-      <label>Vai Trò</label>
-      <input class="sa-input" id="staffRole" placeholder="Senior Nail Tech, Nail Tech…">
+    <div class="sa-row2">
+      <div class="sa-field">
+        <label>Vai Trò</label>
+        <select class="sa-select" id="staffRole">
+          <option value="">— Chọn vai trò —</option>
+          <option value="Nail Technician">Nail Technician</option>
+          <option value="Senior Nail Technician">Senior Nail Technician</option>
+          <option value="Lead Technician">Lead Technician</option>
+          <option value="Specialist">Specialist</option>
+          <option value="Nail Artist">Nail Artist</option>
+          <option value="Stylist">Stylist</option>
+          <option value="Manager">Manager</option>
+        </select>
+      </div>
+      <div class="sa-field">
+        <label>Cấp Độ</label>
+        <select class="sa-select" id="staffLevel">
+          <option value="">— Cấp độ —</option>
+          <option value="Junior">Junior</option>
+          <option value="Mid">Mid</option>
+          <option value="Senior">Senior</option>
+          <option value="Expert">Expert</option>
+          <option value="Master">Master</option>
+        </select>
+      </div>
     </div>
 
     <div class="sa-field">
-      <label>Chuyên Môn (cách nhau bởi dấu phẩy)</label>
-      <input class="sa-input" id="staffSpecialties" placeholder="Gel Nails, Acrylic, Nail Art">
+      <label>Chuyên Môn</label>
+      <div class="skill-chips" id="staffSkillsGrid"></div>
     </div>
 
     <div class="sa-field">
@@ -697,6 +734,22 @@
   };
 
   // ── Day metadata ─────────────────────────────────────────────────────────────
+  var SKILL_OPTIONS = [
+    'Manicure', 'Pedicure', 'Gel Nails', 'Acrylic', 'Ombre / Dip Powder',
+    'Nail Art', 'Nail Repair', 'Eyelash Extensions', 'Waxing'
+  ];
+
+  function buildSkillsGrid(selected) {
+    var sel = selected || [];
+    return SKILL_OPTIONS.map(function (skill) {
+      var isChecked = sel.indexOf(skill) !== -1;
+      return '<label class="skill-chip' + (isChecked ? ' checked' : '') + '" onclick="this.classList.toggle(\'checked\')">' +
+        '<input type="checkbox" value="' + skill + '"' + (isChecked ? ' checked' : '') + '>' +
+        skill +
+      '</label>';
+    }).join('');
+  }
+
   var DAYS = [
     { key:'mon', label:'Thứ 2', short:'T2' },
     { key:'tue', label:'Thứ 3', short:'T3' },
@@ -1330,7 +1383,10 @@
     if (!id) {
       document.getElementById('staffModalTitle').textContent = 'Thêm Nhân Viên';
       document.getElementById('staffDocId').value = '';
-      ['staffName','staffRole','staffSpecialties'].forEach(function(f){ document.getElementById(f).value = ''; });
+      document.getElementById('staffName').value  = '';
+      document.getElementById('staffRole').value  = '';
+      document.getElementById('staffLevel').value = '';
+      document.getElementById('staffSkillsGrid').innerHTML = buildSkillsGrid([]);
       document.getElementById('schedEditor').innerHTML = buildSchedEditor(null);
       return;
     }
@@ -1338,11 +1394,12 @@
       if (!doc.exists) return;
       var d = doc.data();
       document.getElementById('staffModalTitle').textContent = 'Chỉnh Sửa Nhân Viên';
-      document.getElementById('staffDocId').value       = id;
-      document.getElementById('staffName').value        = d.name || '';
-      document.getElementById('staffRole').value        = d.role || '';
-      document.getElementById('staffSpecialties').value = (d.specialties||[]).join(', ');
-      document.getElementById('schedEditor').innerHTML  = buildSchedEditor(d.schedule);
+      document.getElementById('staffDocId').value = id;
+      document.getElementById('staffName').value  = d.name || '';
+      document.getElementById('staffRole').value  = d.role || '';
+      document.getElementById('staffLevel').value = d.level || '';
+      document.getElementById('staffSkillsGrid').innerHTML = buildSkillsGrid(d.specialties || []);
+      document.getElementById('schedEditor').innerHTML = buildSchedEditor(d.schedule);
     });
   }
   function closeStaffModal() { document.getElementById('staffModal').classList.add('hidden'); }
@@ -1358,10 +1415,14 @@
         end:    document.getElementById('sschd-' + day.key + '-end').value   || '18:00'
       };
     });
+    var checkedChips = document.getElementById('staffSkillsGrid').querySelectorAll('input[type="checkbox"]:checked');
+    var specialties = [];
+    checkedChips.forEach(function(chk) { specialties.push(chk.value); });
     var data = {
       name:        name,
-      role:        document.getElementById('staffRole').value.trim(),
-      specialties: document.getElementById('staffSpecialties').value.split(',').map(function(s){ return s.trim(); }).filter(Boolean),
+      role:        document.getElementById('staffRole').value,
+      level:       document.getElementById('staffLevel').value,
+      specialties: specialties,
       schedule:    sched,
       updatedAt:   firebase.firestore.FieldValue.serverTimestamp()
     };

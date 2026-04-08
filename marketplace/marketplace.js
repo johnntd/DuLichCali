@@ -1294,6 +1294,10 @@
                 '<label class="mp-label" for="nbNotes_' + biz.id + '">Ghi ch\xfa (t\xf9y ch\u1ecdn)</label>' +
                 '<textarea class="mp-input" id="nbNotes_' + biz.id + '" rows="2" placeholder="Y\xeau c\u1ea7u \u0111\u1eb7c bi\u1ec7t..."></textarea>' +
               '</div>' +
+              '<div class="mp-form-row">' +
+                '<label class="mp-label" for="nbPhotoUrl_' + biz.id + '">\u1ea2nh tham kh\u1ea3o (t\xf9y ch\u1ecdn)</label>' +
+                '<input class="mp-input" type="url" id="nbPhotoUrl_' + biz.id + '" placeholder="https://... (link \u1ea3nh m\u1eabu nail b\u1ea1n mu\u1ed1n)">' +
+              '</div>' +
               '<div class="nb-avail-msg" id="nbMsg_' + biz.id + '" style="display:none"></div>' +
               '<button type="submit" class="mp-btn mp-btn--primary mp-btn--full" id="nbSubmit_' + biz.id + '">' +
                 calendarIcon + ' G\u1eedi \u0110\u1eb7t L\u1ecbch' +
@@ -1764,8 +1768,10 @@
       var time     = (document.getElementById('nbTime_' + biz.id) || {}).value || '';
       var name     = ((document.getElementById('nbName_' + biz.id) || {}).value || '').trim();
       var phone    = ((document.getElementById('nbPhone_' + biz.id) || {}).value || '').trim();
-      var notesEl  = document.getElementById('nbNotes_' + biz.id);
-      var notes    = notesEl ? notesEl.value.trim() : '';
+      var notesEl    = document.getElementById('nbNotes_' + biz.id);
+      var notes      = notesEl ? notesEl.value.trim() : '';
+      var photoUrlEl = document.getElementById('nbPhotoUrl_' + biz.id);
+      var photoUrl   = photoUrlEl ? photoUrlEl.value.trim() : '';
 
       if (!date || !time || !name || !phone) { showMsg('Vui lòng điền đầy đủ thông tin.', true); return; }
 
@@ -1794,15 +1800,16 @@
           escalationType:  'appointment',
           source:          'booking_form',
           appointmentData: {
-            services:          selectedServices,
-            totalDurationMins: totalMins,
-            staff:             staff,
-            date:              date,
-            time:              time,
-            name:              name,
-            phone:             phone,
-            notes:             notes,
-            lang:              'en'
+            services:             selectedServices,
+            totalDurationMins:    totalMins,
+            staff:                staff,
+            date:                 date,
+            time:                 time,
+            name:                 name,
+            phone:                phone,
+            notes:                notes,
+            inspirationPhotoUrl:  photoUrl || null,
+            lang:                 'en'
           },
           summary:        name + ' — ' + selectedServices.join(', ') + ' (' + durLabel + ') on ' + date + ' at ' + time + ' with ' + staff,
           status:         'pending_vendor_response',

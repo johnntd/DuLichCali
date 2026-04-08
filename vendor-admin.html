@@ -3183,6 +3183,22 @@
     return greeting + 'Đơn hàng ' + qty + date + ' đã được xác nhận. Cảm ơn bạn! - ' + vendorName;
   }
 
+  // Build a prefilled SMS for an appointment escalation
+  function buildApptSmsConfirm(appt) {
+    var vendorName = (typeof SEED_VENDOR !== 'undefined' && SEED_VENDOR.businessName)
+      ? SEED_VENDOR.businessName : 'Du Lịch Cali';
+    var greeting = appt.name ? 'Xin chào ' + appt.name + '! ' : '';
+    var svcs = (appt.services || []).join(', ') || 'dịch vụ đã đặt';
+    var dateStr = '';
+    if (appt.date && /^\d{4}-\d{2}-\d{2}$/.test(appt.date)) {
+      var d = new Date(appt.date + 'T12:00:00');
+      dateStr = ' ngày ' + d.getDate() + '/' + (d.getMonth() + 1);
+    }
+    var timeStr = appt.time ? ' lúc ' + appt.time : '';
+    var staffStr = (appt.staff && appt.staff.toLowerCase() !== 'any') ? ' với ' + appt.staff : '';
+    return greeting + 'Lịch hẹn ' + svcs + dateStr + timeStr + staffStr + ' đã được xác nhận. Cảm ơn bạn! - ' + vendorName;
+  }
+
   // Confirm from the popup notification (uses _currentPopupNotif)
   function confirmFromPopup() {
     if (!_currentPopupNotif || !_currentPopupNotif.bookingId) return;
@@ -3577,27 +3593,75 @@
         timeStr = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
       }
       var typeLabel = typeLabels[item.escalationType] || item.escalationType || 'Yêu cầu';
-      var summaryHtml = item.summary
-        ? '<div style="font-size:.78rem;color:var(--text-muted);margin:.3rem 0 .6rem;white-space:pre-line;line-height:1.45">' + esc(item.summary) + '</div>'
-        : '';
       var escId = item.id;
+      var appt  = item.appointmentData || {};
+
+      // ── Structured appointment detail ──
+      var detailHtml = '';
+      if (item.escalationType === 'appointment' && appt.name) {
+        var svcsHtml = (appt.services || []).length
+          ? '<strong>' + esc((appt.services || []).join(', ')) + '</strong>'
+          : '';
+        var durHtml = appt.totalDurationMins
+          ? ' <span style="color:var(--muted);font-size:.75rem">(' + appt.totalDurationMins + ' phút)</span>'
+          : '';
+        var dateHtml = appt.date && appt.time
+          ? '<div style="margin-top:.3rem;font-size:.78rem">' +
+              '&#128197; ' + esc(appt.date) + ' &nbsp;&#9202; ' + esc(appt.time) +
+              (appt.staff && appt.staff.toLowerCase() !== 'any'
+                ? ' &nbsp;&#128101; ' + esc(appt.staff)
+                : '') +
+            '</div>'
+          : '';
+        var customerHtml = '<div style="margin-top:.3rem;font-size:.78rem">' +
+          '&#128100; ' + esc(appt.name) +
+          (appt.phone ? ' &nbsp;&#128222; ' + esc(appt.phone) : '') +
+          '</div>';
+        var notesHtml = appt.notes
+          ? '<div style="margin-top:.3rem;font-size:.76rem;color:var(--muted)">&#128203; ' + esc(appt.notes) + '</div>'
+          : '';
+        var photoHtml = appt.inspirationPhotoUrl
+          ? '<div style="margin-top:.4rem"><a href="' + esc(appt.inspirationPhotoUrl) + '" target="_blank" ' +
+              'style="font-size:.76rem;color:var(--gold);text-decoration:none">&#128247; Xem ảnh tham khảo</a></div>'
+          : '';
+        detailHtml = '<div style="background:rgba(0,0,0,.18);border-radius:8px;padding:.5rem .7rem;margin:.4rem 0 .6rem">' +
+          (svcsHtml ? '<div>' + svcsHtml + durHtml + '</div>' : '') +
+          dateHtml + customerHtml + notesHtml + photoHtml +
+          '</div>';
+      } else {
+        // fallback: show summary for non-appointment types
+        detailHtml = item.summary
+          ? '<div style="font-size:.78rem;color:var(--muted);margin:.3rem 0 .6rem;white-space:pre-line;line-height:1.45">' + esc(item.summary) + '</div>'
+          : '';
+      }
+
+      // ── Contact buttons (call / SMS confirm) ──
+      var contactHtml = '';
+      if (appt.phone) {
+        var smsBody = buildApptSmsConfirm(appt);
+        contactHtml = '<button class="btn btn--ghost btn--sm" onclick="OrderMessaging.call(\'' + esc(appt.phone) + '\')">' +
+            '&#128222; Gọi</button>' +
+          '<button class="btn btn--ghost btn--sm" onclick="OrderMessaging.text(\'' + esc(appt.phone) + '\',\'' + esc(smsBody) + '\')">' +
+            '&#128172; Nhắn SMS</button>';
+      }
 
       var replyInputId = 'esc_reply_' + escId;
       return '<div class="notif-card" style="border-left:3px solid #e8a800">' +
         '<div class="notif-card__top">' +
           '<div class="notif-card__title-wrap">' +
             '<div class="notif-card__dot"></div>' +
-            '<div class="notif-card__type-icon">&#128172;</div>' +
+            '<div class="notif-card__type-icon">&#128197;</div>' +
             '<div class="notif-card__title">' + typeLabel + '</div>' +
           '</div>' +
           '<div class="notif-card__time">' + timeStr + '</div>' +
         '</div>' +
-        summaryHtml +
+        detailHtml +
         '<div class="notif-card__actions" style="flex-wrap:wrap;gap:.4rem">' +
           '<button class="btn btn--ok btn--sm" onclick="respondEscalation(\'' + escId + '\',\'vendor_confirmed\',null)">' +
             '&#10003; Xác nhận</button>' +
           '<button class="btn btn--ghost btn--sm" style="border-color:#e05252;color:#e05252" onclick="respondEscalation(\'' + escId + '\',\'vendor_declined\',null)">' +
             '&#10007; Từ chối</button>' +
+          contactHtml +
         '</div>' +
         '<div style="display:flex;gap:.4rem;margin-top:.4rem">' +
           '<input id="' + replyInputId + '" type="text" placeholder="Nhắn tin tới khách…" ' +

@@ -891,6 +891,13 @@
             </div>
           </div>
         </div>
+
+        <!-- Staff account permissions — owner only -->
+        <div class="sa-card" id="staffPermsCard" style="display:none;margin-top:1.2rem">
+          <div style="font-weight:600;margin-bottom:.2rem;font-size:.85rem">Phân Quyền Nhân Viên</div>
+          <div style="font-size:.7rem;color:var(--muted);margin-bottom:1rem">Chọn những gì mỗi nhân viên được phép làm khi đăng nhập vào hệ thống</div>
+          <div id="staffPermsList"><div style="font-size:.8rem;color:var(--muted)">Đang tải…</div></div>
+        </div>
       </div>
 
     </main>
@@ -1131,6 +1138,8 @@
   // Role: 'owner'|'staff' — read from vendorUsers doc, default 'owner'
   var _userRole      = 'owner';
   var _userStaffName = ''; // staff's own name — used to pre-filter calendar view
+  // Granular permissions for staff (owner always has all). Defaults = most restrictive.
+  var _userPerms     = { viewAll: false, contactCustomer: false, canCancel: false, canConfirm: false };
   var _userEmail     = '';
   var _vendorPhone  = '';
   var _currentIsOpen = true; // mirrors vendors/{id}.isOpen
@@ -1302,6 +1311,7 @@
       // Role: owner has full access; staff sees only their own bookings. Default to 'owner' if not set.
       _userRole       = doc.data().role || 'owner';
       _userStaffName  = doc.data().staffName || '';
+      _userPerms      = Object.assign({ viewAll: false, contactCustomer: false, canCancel: false, canConfirm: false }, doc.data().permissions || {});
       _userEmail      = user.email || '';
 
       if (VENDOR_CAT === 'food') { window.location.href = 'vendor-admin.html'; return; }
@@ -1344,13 +1354,19 @@
 
         seedIfNeeded(staticData);
         _loadSeenEscIds(); // must run before subscribeEscalations so we know which IDs are already seen
-        // Staff role: pre-filter calendar to their own name so they only see their schedule
-        if (_userRole === 'staff' && _userStaffName) { _saStaffFilter = _userStaffName; }
+        // Staff without viewAll: pre-filter calendar to their own name
+        if (_userRole === 'staff' && _userStaffName && !_userPerms.viewAll) { _saStaffFilter = _userStaffName; }
         subscribeServices();
         subscribeStaff();
         subscribeEscalations();
         subscribeNotifications(); // vendor subcollection notifications (Lily Receptionist bookings)
         subscribeBookings();
+        // Owner: show staff permissions panel in Settings
+        if (_userRole !== 'staff') {
+          var spc = document.getElementById('staffPermsCard');
+          if (spc) spc.style.display = '';
+          loadStaffAccounts();
+        }
         loadHoursGrid(vdata.hoursSchedule);
       }).catch(function() {
         document.getElementById('authLoading').classList.add('hidden');
@@ -2067,11 +2083,13 @@
           '<span class="appt-card__date">' + timeStr + '</span>' +
         '</div>' +
         summaryHtml +
-        '<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem">' +
-          '<button class="btn btn--primary btn--sm" onclick="_markEscSeen(\'' + escId + '\');respondEscalation(\'' + escId + '\',\'vendor_confirmed\',null)">&#10003; Xác nhận &amp; Lưu Lịch</button>' +
-          '<button class="btn btn--sm" style="background:transparent;border:1px solid var(--danger);color:var(--danger)" onclick="_markEscSeen(\'' + escId + '\');respondEscalation(\'' + escId + '\',\'vendor_declined\',null)">&#10007; Từ chối</button>' +
-          markReadBtn +
-        '</div>' +
+        ((_userRole !== 'staff' || _userPerms.canConfirm) ?
+          '<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem">' +
+            '<button class="btn btn--primary btn--sm" onclick="_markEscSeen(\'' + escId + '\');respondEscalation(\'' + escId + '\',\'vendor_confirmed\',null)">&#10003; Xác nhận &amp; Lưu Lịch</button>' +
+            '<button class="btn btn--sm" style="background:transparent;border:1px solid var(--danger);color:var(--danger)" onclick="_markEscSeen(\'' + escId + '\');respondEscalation(\'' + escId + '\',\'vendor_declined\',null)">&#10007; Từ chối</button>' +
+            markReadBtn +
+          '</div>'
+        : '<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem">' + markReadBtn + '</div>') +
         '<div style="display:flex;gap:.4rem;margin-top:.4rem">' +
           '<input id="' + replyId + '" type="text" class="sa-input" placeholder="Nhắn lại cho khách…" style="flex:1;height:36px;padding:0 10px">' +
           '<button class="btn btn--sm" style="background:var(--gold);color:#000;font-weight:600" onclick="_markEscSeen(\'' + escId + '\');respondEscalation(\'' + escId + '\',\'vendor_replied\',document.getElementById(\'' + replyId + '\').value)">Gửi</button>' +
@@ -2296,8 +2314,8 @@
     });
     if (!names.length) { bar.style.display = 'none'; return; }
     bar.style.display = 'flex';
-    // Staff role: hide "Tất cả" chip — they should only see their own schedule
-    var allChip = _userRole === 'staff' ? '' :
+    // Staff without viewAll: hide "Tất cả" chip
+    var allChip = (_userRole === 'staff' && !_userPerms.viewAll) ? '' :
       '<button class="sa-staff-chip' + (_saStaffFilter === 'all' ? ' active' : '') + '" onclick="saSetStaffFilter(\'all\')">Tất cả</button>';
     var chips = '<span class="sa-staff-bar__label">Nhân viên:</span>' + allChip;
     names.forEach(function(n) {
@@ -2549,7 +2567,9 @@
       rescheduled: '<span class="sa-st sa-st--canceled">&#8635; D\u1eddi l\u1ecbch</span>'
     };
 
-    var canManage = (_userRole !== 'staff');
+    var canManage  = _userRole !== 'staff' || !!_userPerms.canCancel;
+    var canContact = _userRole !== 'staff' || !!_userPerms.contactCustomer;
+    var canConfirm = _userRole !== 'staff' || !!_userPerms.canConfirm;
 
     el.innerHTML = dateOrder.map(function(date) {
       var appts = byDate[date].map(function(b) {
@@ -2616,7 +2636,7 @@
         var badgeRow = badges ? '<div class="sa-badge-row">' + badges + '</div>' : '';
 
         // ── Prominent phone ─────────────────────────────────────────────────
-        var phoneRow = phone
+        var phoneRow = (phone && canContact)
           ? '<div class="sa-phone-row">' +
               '<a class="sa-phone-link" href="tel:' + esc(phone) + '">&#128222; ' + esc(phone) + '</a>' +
               '<a class="sa-act sa-act--call" href="sms:' + esc(phone) + '" style="margin-left:.6rem;font-size:.68rem;text-decoration:none">&#128172; Text</a>' +
@@ -2638,7 +2658,7 @@
         }
 
         // Phone with action buttons in detail
-        if (phone) {
+        if (phone && canContact) {
           det += '<div class="sa-det-section"><div class="sa-det-label">\u0110i\u1ec7n tho\u1ea1i</div>' +
             '<div class="sa-det-val" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.1rem">' +
               '<a class="sa-act sa-act--call" href="tel:' + esc(phone) + '">&#128222; G\u1ecdi</a>' +
@@ -2691,7 +2711,7 @@
             '<button class="sa-act sa-act--start"  onclick=\'updateBookingStatus(' + idQ + ',"in_progress")\'>&#9654; B\u1eaft \u0111\u1ea7u</button>' +
             '<button class="sa-act sa-act--done"   onclick=\'updateBookingStatus(' + idQ + ',"completed")\'>&#10003; Xong</button>' +
             '<button class="sa-act sa-act--noshow" onclick=\'updateBookingStatus(' + idQ + ',"no_show")\'>V\u1eafng</button>' +
-            (phone ? '<button class="sa-act sa-act--call" onclick=\'confirmSms(' + phoneQ + ',' + nameQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')\'>&#128172; X\u00e1c nh\u1eadn</button>' : '') +
+            (phone && canContact ? '<button class="sa-act sa-act--call" onclick=\'confirmSms(' + phoneQ + ',' + nameQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')\'>&#128172; X\u00e1c nh\u1eadn</button>' : '') +
             (canManage ? '<button class="sa-act sa-act--cancel" style="border-color:rgba(248,113,113,.4);color:var(--danger)" onclick=\'openCancelModal(' + idQ + ',' + nameQ + ',' + phoneQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')\'>&#10005; H\u1ee7y</button>' : '') +
             (canManage ? '<button class="sa-act sa-act--cancel" onclick=\'deleteBooking(' + idQ + ',' + nameQ + ')\'>&#128465; X\u00f3a</button>' : '');
         } else if (status === 'in_progress') {
@@ -2936,6 +2956,65 @@
     _syncParallelFromDom();
     vendorParallelServices.splice(idx, 1);
     renderParallelRules();
+  }
+
+  // ── Staff account permissions (owner manages from Settings tab) ───────────────
+  function loadStaffAccounts() {
+    var listEl = document.getElementById('staffPermsList');
+    if (!listEl || !VENDOR_ID) return;
+    db.collection('vendorUsers').where('vendorId', '==', VENDOR_ID).get()
+      .then(function(snap) {
+        var staff = snap.docs.filter(function(d) { return d.data().role === 'staff'; });
+        if (!staff.length) {
+          listEl.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">Chưa có tài khoản nhân viên nào. Tạo tài khoản nhân viên trong trang Admin.</div>';
+          return;
+        }
+        listEl.innerHTML = staff.map(function(d) {
+          var uid  = d.id;
+          var data = d.data();
+          var p    = data.permissions || {};
+          var name = data.staffName || data.email || uid;
+          function chk(key, label) {
+            return '<label style="display:flex;align-items:center;gap:.4rem;font-size:.75rem;cursor:pointer;padding:.15rem 0">' +
+              '<input type="checkbox" id="sp-' + key + '-' + uid + '"' + (p[key] ? ' checked' : '') + ' style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer">' +
+              label + '</label>';
+          }
+          return '<div style="border:1px solid var(--border);border-radius:8px;padding:.8rem 1rem;margin-bottom:.75rem">' +
+            '<div style="font-weight:600;font-size:.8rem;margin-bottom:.5rem">' + esc(name) +
+              '<span style="font-size:.65rem;color:var(--muted);margin-left:.5rem">' + esc(data.email || '') + '</span></div>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.1rem .5rem;margin-bottom:.6rem">' +
+              chk('viewAll',         'Xem lịch hẹn tất cả nhân viên') +
+              chk('contactCustomer', 'Xem & liên hệ số điện thoại khách') +
+              chk('canCancel',       'Hủy hoặc xóa lịch hẹn') +
+              chk('canConfirm',      'Xác nhận / từ chối từ AI Inbox') +
+            '</div>' +
+            '<button class="btn btn--sm btn--outline" onclick="saveStaffPerms(\'' + uid + '\')">Lưu quyền</button>' +
+            '<span class="sa-msg" id="sp-msg-' + uid + '" style="margin-left:.5rem;font-size:.7rem"></span>' +
+          '</div>';
+        }).join('');
+      })
+      .catch(function(e) {
+        if (listEl) listEl.innerHTML = '<div style="color:var(--danger);font-size:.78rem">Lỗi: ' + esc(e.message) + '</div>';
+      });
+  }
+
+  function saveStaffPerms(uid) {
+    var keys = ['viewAll', 'contactCustomer', 'canCancel', 'canConfirm'];
+    var perms = {};
+    keys.forEach(function(k) {
+      var el = document.getElementById('sp-' + k + '-' + uid);
+      perms[k] = el ? el.checked : false;
+    });
+    var msgEl = document.getElementById('sp-msg-' + uid);
+    if (msgEl) { msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Đang lưu…'; }
+    db.collection('vendorUsers').doc(uid).set(
+      { permissions: perms, adminUpdatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+      { merge: true }
+    ).then(function() {
+      if (msgEl) { msgEl.style.color = '#7ac87a'; msgEl.textContent = '✓ Đã lưu!'; setTimeout(function(){ msgEl.textContent=''; }, 3000); }
+    }).catch(function(e) {
+      if (msgEl) { msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Lỗi: ' + e.message; }
+    });
   }
 
   function saveSettings() {

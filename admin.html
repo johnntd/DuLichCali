@@ -1269,7 +1269,7 @@
         const d = doc.data();
         if (!d.vendorId) return;
         if (!vendorUsersMap[d.vendorId]) vendorUsersMap[d.vendorId] = [];
-        vendorUsersMap[d.vendorId].push({ uid: doc.id, email: d.email || '', role: d.role || 'owner', staffName: d.staffName || '' });
+        vendorUsersMap[d.vendorId].push({ uid: doc.id, email: d.email || '', role: d.role || 'owner', staffName: d.staffName || '', pin: d.pin || '' });
       });
 
       // Merge: VENDOR_LIST baseline + Firestore-only vendors
@@ -1353,7 +1353,7 @@
         <div class="vcl-row" style="flex-direction:column;align-items:flex-start;gap:.4rem">
           <span class="vcl-label" style="margin-bottom:.2rem">Tài khoản &amp; Vai trò:</span>
           ${vendorUsers.map(u => `
-            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.35rem">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.35rem;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.04)">
               <span style="font-size:.65rem;min-width:170px;color:var(--muted)">${u.email ? escHtml(u.email) : '<em style="opacity:.5">không có email</em>'}</span>
               <select class="vcl-role-select" id="vrole-${escHtml(u.uid)}" onchange="toggleStaffNameInput('vstaff-${escHtml(u.uid)}',this.value)">
                 <option value="owner"   ${u.role==='owner'  ?'selected':''}>Owner</option>
@@ -1362,10 +1362,16 @@
               </select>
               <input class="vcl-pin-input" id="vstaff-${escHtml(u.uid)}" type="text" maxlength="40"
                 placeholder="Tên nhân viên" value="${escHtml(u.staffName)}"
-                style="width:140px${u.role==='owner'||!u.role?';display:none':''}">
+                style="width:130px${u.role==='owner'||!u.role?';display:none':''}">
               <button class="btn-vend success" onclick="saveVendorUserRole('${escHtml(u.uid)}','${escHtml(v.id)}')">Lưu</button>
               <button class="btn-vend danger" onclick="deleteVendorUser('${escHtml(u.uid)}','${escHtml(u.email)}','${escHtml(v.id)}')">Xóa</button>
               <span class="vcl-msg" id="vrole-msg-${escHtml(u.uid)}"></span>
+              <span style="font-size:.6rem;color:var(--muted);margin-left:.2rem">PIN:</span>
+              <code id="vpindisp-${escHtml(u.uid)}" style="font-family:monospace;background:var(--navy-700);padding:2px 8px;border-radius:4px;font-size:.8rem;letter-spacing:.12em;color:var(--cream)">${u.pin ? escHtml(u.pin) : '——'}</code>
+              <input class="vcl-pin-input" id="vpinnew-${escHtml(u.uid)}" type="text" maxlength="6" inputmode="numeric" placeholder="PIN mới" style="width:76px">
+              <button class="btn-vend" style="font-size:.6rem;color:var(--muted)" onclick="document.getElementById('vpinnew-${escHtml(u.uid)}').value=String(Math.floor(100000+Math.random()*900000))">🎲</button>
+              <button class="btn-vend" style="color:var(--gold);border-color:rgba(212,175,55,.35)" onclick="changeStaffPin('${escHtml(u.uid)}','${escHtml(u.email)}','${escHtml(v.id)}')">Đổi PIN</button>
+              <span class="vcl-msg" id="vpin-msg-${escHtml(u.uid)}"></span>
             </div>
           `).join('')}
         </div>` : '';
@@ -1391,14 +1397,6 @@
             <span class="vcl-label">URL đăng nhập:</span>
             <a class="vcl-url" href="${loginUrl}" target="_blank">${loginUrl}</a>
             <button class="btn-vend" onclick="copyVendorUrl('${v.id}')">Copy</button>
-          </div>
-          <div class="vcl-row">
-            <span class="vcl-label">Mã PIN hiện tại:</span>
-            <code class="vcl-pin" id="vpin-display-${v.id}">${escHtml(currentPin)}</code>${pinSrc}
-            <input class="vcl-pin-input" id="vpin-input-${v.id}" type="text" maxlength="6" inputmode="numeric" placeholder="PIN mới">
-            <button class="btn-vend" style="font-size:.6rem;color:var(--muted)" onclick="document.getElementById('vpin-input-${v.id}').value=genPin()">🎲</button>
-            <button class="btn-vend success" onclick="saveVendorPin('${v.id}')">Lưu PIN</button>
-            <span class="vcl-msg" id="vpin-msg-${v.id}"></span>
           </div>
           ${usersHtml}
           <div class="vcl-row" style="flex-direction:column;align-items:flex-start;gap:.4rem">
@@ -1542,6 +1540,54 @@
       if (!needsName) el.value = '';
     }
 
+    async function changeStaffPin(uid, email, vendorId) {
+      const newPin = (document.getElementById('vpinnew-' + uid) || {}).value?.trim();
+      const msgEl  = document.getElementById('vpin-msg-' + uid);
+      if (!newPin || newPin.length < 6) {
+        if (msgEl) { msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'PIN phải có ít nhất 6 ký tự.'; }
+        return;
+      }
+      if (msgEl) { msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Đang cập nhật…'; }
+      try {
+        // Get old PIN from Firestore so we can sign in as the user to update Auth password
+        const vuDoc = await db.collection('vendorUsers').doc(uid).get();
+        const oldPin = vuDoc.exists ? vuDoc.data().pin : null;
+        let authUpdated = false;
+        if (oldPin && email) {
+          const signInResp = await fetch(
+            `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`,
+            { method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, password: oldPin, returnSecureToken: true }) }
+          );
+          const signInResult = await signInResp.json();
+          if (!signInResult.error) {
+            const updateResp = await fetch(
+              `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${FIREBASE_API_KEY}`,
+              { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken: signInResult.idToken, password: newPin, returnSecureToken: true }) }
+            );
+            const updateResult = await updateResp.json();
+            authUpdated = !updateResult.error;
+          }
+        }
+        // Always update Firestore PIN
+        await db.collection('vendorUsers').doc(uid).set(
+          { pin: newPin, pinUpdatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+          { merge: true }
+        );
+        const dispEl = document.getElementById('vpindisp-' + uid);
+        if (dispEl) dispEl.textContent = newPin;
+        const inpEl = document.getElementById('vpinnew-' + uid);
+        if (inpEl) inpEl.value = '';
+        if (msgEl) {
+          msgEl.style.color = authUpdated ? '#7ac87a' : '#f5a623';
+          msgEl.textContent  = authUpdated ? `✓ PIN mới: ${newPin}` : `Firestore đã lưu — Auth cần đổi thủ công (PIN cũ không khớp).`;
+        }
+      } catch(e) {
+        if (msgEl) { msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Lỗi: ' + e.message; }
+      }
+    }
+
     async function deleteVendorUser(uid, email, vendorId) {
       const label = email || uid;
       if (!confirm(`Xóa tài khoản "${label}"?\nHành động này không thể hoàn tác.`)) return;
@@ -1618,7 +1664,7 @@
 
         const uid = result.localId;
         await db.collection('vendorUsers').doc(uid).set({
-          vendorId, email, role,
+          vendorId, email, role, pin,
           staffName: (role === 'staff' || role === 'manager') ? staffName : '',
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });

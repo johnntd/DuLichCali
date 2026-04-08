@@ -58,6 +58,40 @@ When debugging AI or booking behavior, always identify:
 
 ---
 
+## JS VERSION STRINGS — MANDATORY CACHE BUSTING RULE
+
+Every time a JS file is modified and deployed, its `?v=...` query string in every HTML file that loads it **MUST be bumped**. Failure to do this causes browsers to serve the cached old version indefinitely, silently regressing features.
+
+### Rule
+
+**When you edit a `.js` file, find every `<script src="...filename.js?v=...">` tag across all HTML files and increment the version string.**
+
+### How to find all HTML files loading a given JS file
+
+```bash
+grep -rn "filename.js" /path/to/project --include="*.html"
+```
+
+### Version string format
+
+Use `YYYYMMDD` + letter suffix: `v=20260408a`, `v=20260408b`, etc. Increment the letter for multiple changes on the same day.
+
+### Affected JS files and their HTML consumers
+
+| JS file | HTML files that load it |
+|---------|------------------------|
+| `marketplace/marketplace.js` | `nailsalon/index.html`, `foods/index.html`, `hairsalon/index.html` |
+| `marketplace/services-data.js` | `nailsalon/index.html`, `foods/index.html`, `hairsalon/index.html` |
+| `nailsalon/receptionist.js` | `nailsalon/index.html` |
+| `hairsalon/receptionist.js` | `hairsalon/index.html` |
+| `ai-engine.js` | All marketplace pages |
+
+### Failure condition
+
+Changing a JS file without bumping the version string → browsers serve cached old version → features silently regress → users report bugs that "worked before." This is a hard failure.
+
+---
+
 ## HOSTING ARCHITECTURE — NON-NEGOTIABLE
 
 | Role | Platform | Detail |

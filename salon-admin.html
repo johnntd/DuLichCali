@@ -1135,10 +1135,11 @@
   var vendorRef      = null;
   var servicesRef    = null;
   var staffRef       = null;
-  // Role: 'owner'|'staff' — read from vendorUsers doc, default 'owner'
+  // Role: 'owner'|'manager'|'staff' — read from vendorUsers doc, default 'owner'
+  // Owner: always full access. Manager/Staff: permissions set by owner in Settings tab.
   var _userRole      = 'owner';
-  var _userStaffName = ''; // staff's own name — used to pre-filter calendar view
-  // Granular permissions for staff (owner always has all). Defaults = most restrictive.
+  var _userStaffName = ''; // staff/manager name — used to pre-filter calendar view
+  // Granular permissions for manager/staff (owner always has all). Defaults = most restrictive.
   var _userPerms     = { viewAll: false, contactCustomer: false, canCancel: false, canConfirm: false };
   var _userEmail     = '';
   var _vendorPhone  = '';
@@ -1308,7 +1309,7 @@
 
       VENDOR_ID       = doc.data().vendorId;
       VENDOR_CAT      = VENDOR_CATEGORY_MAP[VENDOR_ID] || 'nails';
-      // Role: owner has full access; staff sees only their own bookings. Default to 'owner' if not set.
+      // Role: owner=full access; manager/staff=permissions-controlled. Default to 'owner' if not set.
       _userRole       = doc.data().role || 'owner';
       _userStaffName  = doc.data().staffName || '';
       _userPerms      = Object.assign({ viewAll: false, contactCustomer: false, canCancel: false, canConfirm: false }, doc.data().permissions || {});
@@ -1354,15 +1355,15 @@
 
         seedIfNeeded(staticData);
         _loadSeenEscIds(); // must run before subscribeEscalations so we know which IDs are already seen
-        // Staff without viewAll: pre-filter calendar to their own name
-        if (_userRole === 'staff' && _userStaffName && !_userPerms.viewAll) { _saStaffFilter = _userStaffName; }
+        // Non-owner without viewAll: pre-filter calendar to their own name
+        if (_userRole !== 'owner' && _userStaffName && !_userPerms.viewAll) { _saStaffFilter = _userStaffName; }
         subscribeServices();
         subscribeStaff();
         subscribeEscalations();
         subscribeNotifications(); // vendor subcollection notifications (Lily Receptionist bookings)
         subscribeBookings();
         // Owner: show staff permissions panel in Settings
-        if (_userRole !== 'staff') {
+        if (_userRole === 'owner') {
           var spc = document.getElementById('staffPermsCard');
           if (spc) spc.style.display = '';
           loadStaffAccounts();
@@ -1397,11 +1398,11 @@
     if (!btn) return;
     btn.className   = 'btn-open-toggle ' + (open ? 'is-open' : 'is-closed');
     btn.textContent = open ? '● Mở' : '○ Đóng';
-    btn.disabled    = (_userRole === 'staff'); // staff sees indicator only
+    btn.disabled    = (_userRole !== 'owner'); // only owner can toggle open/close
   }
 
   function toggleIsOpen() {
-    if (_userRole === 'staff') return;
+    if (_userRole !== 'owner') return;
     if (!vendorRef) return;
     var newVal = !_currentIsOpen;
     _setOpenToggleUI(newVal); // optimistic UI update
@@ -2083,7 +2084,7 @@
           '<span class="appt-card__date">' + timeStr + '</span>' +
         '</div>' +
         summaryHtml +
-        ((_userRole !== 'staff' || _userPerms.canConfirm) ?
+        ((_userRole === 'owner' || _userPerms.canConfirm) ?
           '<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem">' +
             '<button class="btn btn--primary btn--sm" onclick="_markEscSeen(\'' + escId + '\');respondEscalation(\'' + escId + '\',\'vendor_confirmed\',null)">&#10003; Xác nhận &amp; Lưu Lịch</button>' +
             '<button class="btn btn--sm" style="background:transparent;border:1px solid var(--danger);color:var(--danger)" onclick="_markEscSeen(\'' + escId + '\');respondEscalation(\'' + escId + '\',\'vendor_declined\',null)">&#10007; Từ chối</button>' +
@@ -2314,8 +2315,8 @@
     });
     if (!names.length) { bar.style.display = 'none'; return; }
     bar.style.display = 'flex';
-    // Staff without viewAll: hide "Tất cả" chip
-    var allChip = (_userRole === 'staff' && !_userPerms.viewAll) ? '' :
+    // Non-owner without viewAll: hide "Tất cả" chip
+    var allChip = (_userRole !== 'owner' && !_userPerms.viewAll) ? '' :
       '<button class="sa-staff-chip' + (_saStaffFilter === 'all' ? ' active' : '') + '" onclick="saSetStaffFilter(\'all\')">Tất cả</button>';
     var chips = '<span class="sa-staff-bar__label">Nhân viên:</span>' + allChip;
     names.forEach(function(n) {
@@ -2500,7 +2501,7 @@
       countdown = _fmtDate(d);
     }
 
-    var startBtn = (apptId && _userRole !== 'staff')
+    var startBtn = (apptId && _userRole === 'owner')
       ? '<button class="sa-act sa-act--start" onclick=\'updateBookingStatus(' + JSON.stringify(apptId) + ',"in_progress")\'>&#9654; B\u1eaft \u0111\u1ea7u</button>'
       : '';
     var textLink = phone
@@ -2567,9 +2568,10 @@
       rescheduled: '<span class="sa-st sa-st--canceled">&#8635; D\u1eddi l\u1ecbch</span>'
     };
 
-    var canManage  = _userRole !== 'staff' || !!_userPerms.canCancel;
-    var canContact = _userRole !== 'staff' || !!_userPerms.contactCustomer;
-    var canConfirm = _userRole !== 'staff' || !!_userPerms.canConfirm;
+    var isOwner    = _userRole === 'owner';
+    var canManage  = isOwner || !!_userPerms.canCancel;
+    var canContact = isOwner || !!_userPerms.contactCustomer;
+    var canConfirm = isOwner || !!_userPerms.canConfirm;
 
     el.innerHTML = dateOrder.map(function(date) {
       var appts = byDate[date].map(function(b) {
@@ -2964,9 +2966,9 @@
     if (!listEl || !VENDOR_ID) return;
     db.collection('vendorUsers').where('vendorId', '==', VENDOR_ID).get()
       .then(function(snap) {
-        var staff = snap.docs.filter(function(d) { return d.data().role === 'staff'; });
+        var staff = snap.docs.filter(function(d) { return d.data().role === 'staff' || d.data().role === 'manager'; });
         if (!staff.length) {
-          listEl.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">Chưa có tài khoản nhân viên nào. Tạo tài khoản nhân viên trong trang Admin.</div>';
+          listEl.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">Chưa có tài khoản manager/staff nào. Tạo tài khoản trong trang Admin.</div>';
           return;
         }
         listEl.innerHTML = staff.map(function(d) {
@@ -2981,7 +2983,8 @@
           }
           return '<div style="border:1px solid var(--border);border-radius:8px;padding:.8rem 1rem;margin-bottom:.75rem">' +
             '<div style="font-weight:600;font-size:.8rem;margin-bottom:.5rem">' + esc(name) +
-              '<span style="font-size:.65rem;color:var(--muted);margin-left:.5rem">' + esc(data.email || '') + '</span></div>' +
+              '<span style="font-size:.62rem;color:var(--gold);margin-left:.4rem;text-transform:uppercase;letter-spacing:.05em">' + esc(data.role || 'staff') + '</span>' +
+              '<span style="font-size:.65rem;color:var(--muted);margin-left:.4rem">' + esc(data.email || '') + '</span></div>' +
             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.1rem .5rem;margin-bottom:.6rem">' +
               chk('viewAll',         'Xem lịch hẹn tất cả nhân viên') +
               chk('contactCustomer', 'Xem & liên hệ số điện thoại khách') +

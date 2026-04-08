@@ -2092,64 +2092,68 @@
 
         var bookingsRef = vendorRef.collection('bookings');
 
-        // Pre-generate the new booking doc ID so the deletion filter can exclude it.
-        // Race condition guard: deletion query is async — by the time its .then() fires,
-        // the new booking may already be in Firestore. Without this exclusion the new
-        // booking would be deleted along with the old one (same phone + date + status).
-        var apptRef    = bookingsRef.doc();
-        var newDocId   = apptRef.id;
+        // Build booking data once — used in all paths below
+        var bookingData = {
+          escId:             escId,
+          vendorId:          VENDOR_ID,
+          selectedServices:  svcs,
+          service:           svcs.join(', '),
+          serviceType:       svcs[0] || '',
+          totalDurationMins: appt.totalDurationMins || null,
+          staff:             appt.staff || 'Any',
+          requestedDate:     appt.date  || appt.requestedDate || '',
+          requestedTime:     appt.time  || appt.requestedTime || '',
+          date:              appt.date  || appt.requestedDate || '',
+          time:              appt.time  || appt.requestedTime || '',
+          customerName:      appt.name  || appt.customerName  || 'Kh\u00e1ch',
+          customerPhone:     appt.phone || appt.customerPhone || '',
+          lang:              appt.lang  || escData.lang || 'en',
+          status:            'confirmed',
+          isReschedule:      appt.isModify ? true : false,
+          source:            'lily_receptionist_confirmed',
+          confirmedAt:       ts(),
+          createdAt:         ts()
+        };
 
-        // If this is a reschedule, delete the old booking record
         if (appt.existingBookingId) {
-          bookingsRef.doc(appt.existingBookingId).delete()
-            .catch(function(e) { console.warn('[reschedule] delete failed:', e.message); });
-        } else if (appt.isModify) {
+          // Known old booking ID — atomic batch: delete old + write new simultaneously
+          var batch = db.batch();
+          batch.set(bookingsRef.doc(), bookingData);
+          batch.delete(bookingsRef.doc(appt.existingBookingId));
+          return batch.commit().then(function () {
+            return db.collection('escalations').doc(escId).update(update);
+          });
+        }
+
+        if (appt.isModify) {
+          // No known ID — query matching old confirmed bookings on same date, then
+          // atomically delete them + write new in one batch commit (no race condition).
           var oldPhone = appt.phone || appt.customerPhone;
           var newDate  = appt.date  || appt.requestedDate || '';
           if (oldPhone) {
-            // Single-field query only — no composite index required.
-            // Filter client-side; skip newDocId to avoid deleting the booking we just wrote.
-            bookingsRef.where('customerPhone', '==', oldPhone).get()
-              .then(function(snap) {
-                snap.docs.forEach(function(d) {
-                  if (d.id === newDocId) return; // never delete the booking we just created
-                  var dd     = d.data();
-                  var dDate  = dd.requestedDate || dd.date || '';
-                  var dStat  = dd.status || '';
+            return bookingsRef.where('customerPhone', '==', oldPhone).get()
+              .then(function (snap) {
+                var batch = db.batch();
+                batch.set(bookingsRef.doc(), bookingData);   // write new booking
+                snap.docs.forEach(function (d) {
+                  var dd    = d.data();
+                  var dDate = dd.requestedDate || dd.date || '';
+                  var dStat = dd.status || '';
                   if (dDate === newDate && (dStat === 'confirmed' || dStat === 'in_progress')) {
-                    d.ref.delete()
-                      .catch(function(e) { console.warn('[reschedule] delete failed:', e.message); });
+                    batch.delete(d.ref);                     // delete old booking
                   }
                 });
-              })
-              .catch(function(e) { console.warn('[reschedule] lookup failed:', e.message); });
+                return batch.commit();
+              }).then(function () {
+                return db.collection('escalations').doc(escId).update(update);
+              });
           }
         }
 
-        // Write to 'bookings' subcollection — the same path subscribeBookings() reads from
-        apptRef.set({
-          escId:              escId,
-          vendorId:           VENDOR_ID,
-          selectedServices:   svcs,
-          service:            svcs.join(', '),
-          serviceType:        svcs[0] || '',
-          totalDurationMins:  appt.totalDurationMins || null,
-          staff:              appt.staff || 'Any',
-          requestedDate:      appt.date  || appt.requestedDate || '',
-          requestedTime:      appt.time  || appt.requestedTime || '',
-          date:               appt.date  || appt.requestedDate || '',
-          time:               appt.time  || appt.requestedTime || '',
-          customerName:       appt.name  || appt.customerName  || 'Kh\u00e1ch',
-          customerPhone:      appt.phone || appt.customerPhone || '',
-          lang:               appt.lang  || escData.lang || 'en',
-          status:             'confirmed',
-          isReschedule:       appt.isModify ? true : false,
-          source:             'lily_receptionist_confirmed',
-          confirmedAt:        ts(),
-          createdAt:          ts()
-        }).catch(function (e) { console.warn('[booking] write failed:', e.message); });
-
-        return db.collection('escalations').doc(escId).update(update);
+        // Normal booking — no reschedule
+        return bookingsRef.doc().set(bookingData).then(function () {
+          return db.collection('escalations').doc(escId).update(update);
+        });
       }).then(function () {
         showToast('✓ Đã xác nhận! Lịch hẹn đã được lưu.');
       }).catch(function (err) { showToast('Lỗi: ' + err.message); });

@@ -76,6 +76,20 @@
     }
     .btn-logout:hover { border-color: var(--text); color: var(--text); }
 
+    /* ── isOpen toggle ── */
+    .btn-open-toggle {
+      background: transparent; border: 1px solid; border-radius: 99px;
+      font-family: var(--font-b); font-size: .7rem; font-weight: 700;
+      padding: .28rem .75rem; cursor: pointer; letter-spacing: .03em;
+      transition: background .2s, border-color .2s, color .2s;
+    }
+    .btn-open-toggle.is-open {
+      border-color: rgba(74,222,128,.5); color: #4ade80;
+      background: rgba(74,222,128,.08);
+    }
+    .btn-open-toggle.is-closed { border-color: var(--border); color: var(--muted); }
+    .btn-open-toggle:disabled  { opacity: .45; cursor: default; }
+
     /* ── Public page strip ── */
     .va-link-strip {
       background: var(--navy-800);
@@ -667,7 +681,10 @@
       <div class="va-bar__name" id="barName">Salon Dashboard</div>
       <div class="va-bar__label" id="barId">…</div>
     </div>
-    <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+    <div style="display:flex;align-items:center;gap:.5rem">
+      <button class="btn-open-toggle is-closed" id="openToggle" onclick="toggleIsOpen()">○ Đóng</button>
+      <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+    </div>
   </div>
 
   <!-- Public page strip -->
@@ -1046,9 +1063,10 @@
   var servicesRef    = null;
   var staffRef       = null;
   // Role: 'owner'|'manager'|'staff' — read from vendorUsers doc, default 'owner'
-  var _userRole  = 'owner';
-  var _userEmail = '';
-  var _vendorPhone = '';
+  var _userRole     = 'owner';
+  var _userEmail    = '';
+  var _vendorPhone  = '';
+  var _currentIsOpen = true; // mirrors vendors/{id}.isOpen
   var unsubSvcs      = null;
   var unsubStaff     = null;
   var unsubAppts     = null;
@@ -1236,6 +1254,7 @@
 
         document.getElementById('barName').textContent = bizName;
         document.getElementById('barId').textContent   = VENDOR_ID;
+        _setOpenToggleUI(vdata.isOpen !== false); // default open if field absent
         var pl = document.getElementById('publicLink');
         pl.href = pubUrl; pl.textContent = pubUrl;
 
@@ -1279,6 +1298,28 @@
     if (_unsubEsc)      _unsubEsc();
     if (unsubBookings)  unsubBookings();
     auth.signOut().then(function(){ window.location.href = 'vendor-login.html?id=' + (VENDOR_ID||''); });
+  }
+
+  // ── isOpen toggle ─────────────────────────────────────────────────────────────
+  function _setOpenToggleUI(open) {
+    _currentIsOpen = open;
+    var btn = document.getElementById('openToggle');
+    if (!btn) return;
+    btn.className   = 'btn-open-toggle ' + (open ? 'is-open' : 'is-closed');
+    btn.textContent = open ? '● Mở' : '○ Đóng';
+    btn.disabled    = (_userRole === 'staff'); // staff sees indicator only
+  }
+
+  function toggleIsOpen() {
+    if (_userRole === 'staff') return;
+    if (!vendorRef) return;
+    var newVal = !_currentIsOpen;
+    _setOpenToggleUI(newVal); // optimistic UI update
+    vendorRef.update({ isOpen: newVal })
+      .catch(function(err) {
+        _setOpenToggleUI(!newVal); // revert on failure
+        showToast('Lỗi: ' + err.message);
+      });
   }
 
   // ── Seed from services-data.js on first load ─────────────────────────────────

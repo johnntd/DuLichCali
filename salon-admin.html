@@ -1150,6 +1150,11 @@
       <label class="mb-label">Ghi chú</label>
       <textarea class="sa-input" id="mbNotes" rows="2" placeholder="Ghi chú / yêu cầu đặc biệt…" style="width:100%;resize:vertical"></textarea>
     </div>
+    <div class="mb-group">
+      <label class="mb-label">Ảnh tham khảo (URL, mỗi dòng một ảnh)</label>
+      <textarea class="sa-input" id="mbPhotos" rows="2" placeholder="https://drive.google.com/…&#10;https://…" style="width:100%;resize:vertical;font-size:.72rem;font-family:monospace"></textarea>
+    </div>
+    <div id="mbAvailStatus" style="display:none;font-size:.73rem;padding:.45rem .65rem;border-radius:5px;margin-bottom:.5rem"></div>
     <div id="mbMsg" style="display:none;font-size:.75rem;margin:.2rem 0"></div>
     <div class="sa-modal-actions">
       <button class="btn btn--outline btn--sm" onclick="closeManualBookModal()">Hủy bỏ</button>
@@ -2453,6 +2458,55 @@
     return _userRole === 'owner' || _userRole === 'manager' || !!_userPerms.canConfirm;
   }
 
+  // ── Availability check for manual booking ────────────────────────────────────
+  // Queries Firestore for the selected date/staff/time and returns a conflict object
+  // or null if the slot is free. Mirrors the logic in NailAvailabilityChecker.
+  // Fail-open: if Firestore query fails, returns null so booking is not blocked.
+  async function _checkManualAvail(date, time, staff, excludeId, totalMins) {
+    if (!date || !time || !staff || staff === 'Any' || !vendorRef) return null;
+    totalMins = totalMins || 60;
+    var spl  = time.split(':');
+    var sMin = parseInt(spl[0] || 0, 10) * 60 + parseInt(spl[1] || 0, 10);
+    var eMin = sMin + totalMins;
+    try {
+      var snap = await vendorRef.collection('bookings')
+        .where('requestedDate', '==', date)
+        .where('status', 'in', ['confirmed', 'in_progress'])
+        .get();
+      var conflict = null;
+      snap.docs.some(function(doc) {
+        if (doc.id === excludeId) return false;           // skip self when editing
+        var b     = doc.data();
+        var bStaff = (b.staff || '').toLowerCase().trim();
+        if (bStaff !== staff.toLowerCase().trim() && bStaff !== 'any') return false;
+        var bT   = b.requestedTime || b.time || '00:00';
+        var bSpl = bT.split(':');
+        var bS   = parseInt(bSpl[0] || 0, 10) * 60 + parseInt(bSpl[1] || 0, 10);
+        var bD   = b.totalDurationMins || b.durationMins || 60;
+        var bE   = bS + bD;
+        if (sMin < bE && eMin > bS) {
+          conflict = { name: b.customerName || b.name || 'Khách khác', time: bT };
+          return true;
+        }
+        return false;
+      });
+      return conflict;
+    } catch(e) {
+      console.warn('[ManualBook] Avail check error (fail-open):', e.message);
+      return null;
+    }
+  }
+
+  function _mbShowAvail(ok, msg) {
+    var el = document.getElementById('mbAvailStatus');
+    if (!el) return;
+    el.style.display  = msg ? 'block' : 'none';
+    el.style.background = ok ? 'rgba(74,222,128,.08)' : 'rgba(248,113,113,.08)';
+    el.style.border   = '1px solid ' + (ok ? 'rgba(74,222,128,.25)' : 'rgba(248,113,113,.25)');
+    el.style.color    = ok ? 'var(--success)' : 'var(--danger)';
+    el.textContent    = msg || '';
+  }
+
   function openManualBookModal(bookingId, prefill) {
     if (!_canManualBook()) { showToast('Không có quyền thực hiện hành động này.'); return; }
     var b = prefill || (bookingId ? (_bookingCache[bookingId] || {}) : {});
@@ -2463,6 +2517,10 @@
     document.getElementById('mbDate').value  = b.requestedDate || b.date  || '';
     document.getElementById('mbTime').value  = b.requestedTime || b.time  || '';
     document.getElementById('mbNotes').value = b.notes || b.specialRequest || '';
+    // Populate photo URLs (one per line) when editing an existing booking
+    var existingPhotos = b.referenceImages || b.images || [];
+    document.getElementById('mbPhotos').value = existingPhotos.join('\n');
+    _mbShowAvail(true, '');  // clear any prior avail status
     document.getElementById('mbMsg').style.display = 'none';
     var btn = document.getElementById('mbSaveBtn');
     if (btn) btn.disabled = false;
@@ -2516,6 +2574,9 @@
     var time   = document.getElementById('mbTime').value;
     var notes  = document.getElementById('mbNotes').value.trim();
     var staff  = document.getElementById('mbStaff').value || 'Any';
+    // Parse photo URLs — one per line, trim whitespace, drop empty lines
+    var photos = (document.getElementById('mbPhotos').value || '')
+      .split('\n').map(function(u){return u.trim();}).filter(Boolean);
     var svcs   = [];
     document.querySelectorAll('#mbSvcList input[type=checkbox]:checked').forEach(function(cb) { svcs.push(cb.value); });
 
@@ -2525,16 +2586,40 @@
     if (!date)        { _mbMsg('Chọn ngày.', true); return; }
     if (!time)        { _mbMsg('Chọn giờ.', true); return; }
 
-    // Sum duration from selected service docs
-    var totalMins = 0;
+    // Compute total duration + price estimate from selected services
+    var totalMins = 0, priceEst = '';
     svcs.forEach(function(svcName) {
       var svcDoc = allServiceDocs.find(function(d) { return (d.data.name || d.id) === svcName; });
-      if (svcDoc && svcDoc.data.durationMins) totalMins += svcDoc.data.durationMins;
+      if (svcDoc) {
+        if (svcDoc.data.durationMins) totalMins += svcDoc.data.durationMins;
+        if (svcDoc.data.price) {
+          var p = String(svcDoc.data.price).trim();
+          if (p && !p.startsWith('$') && !p.startsWith('~')) p = '$' + p;
+          priceEst = priceEst ? priceEst + ' + ' + p : p;
+        }
+      }
     });
 
-    _mbMsg('Đang lưu…', false);
+    _mbShowAvail(true, '');
+    _mbMsg('Đang kiểm tra lịch…', false);
     var btn = document.getElementById('mbSaveBtn');
     if (btn) btn.disabled = true;
+
+    // ── Availability check ──────────────────────────────────────────────────
+    // Prevents double-booking against AI bookings and other manual bookings.
+    // Uses same overlap logic as NailAvailabilityChecker. Fail-open on error.
+    var conflict = await _checkManualAvail(date, time, staff, bookingId, totalMins || 60);
+    if (conflict) {
+      var cMsg = staff + ' đã có lịch' + (conflict.name ? ' với ' + conflict.name : '') +
+                 ' lúc ' + conflict.time + '. Vui lòng chọn giờ hoặc nhân viên khác.';
+      _mbShowAvail(false, '⚠ ' + cMsg);
+      _mbMsg('', false);
+      if (btn) btn.disabled = false;
+      return;
+    }
+    _mbShowAvail(true, '✓ Giờ trống — có thể đặt lịch');
+
+    _mbMsg('Đang lưu…', false);
 
     var ts   = firebase.firestore.FieldValue.serverTimestamp;
     var data = {
@@ -2543,6 +2628,7 @@
       service:           svcs.join(', '),
       serviceType:       svcs[0] || '',
       totalDurationMins: totalMins || null,
+      durationMins:      totalMins || null,
       staff:             staff,
       requestedDate:     date,
       requestedTime:     time,
@@ -2551,21 +2637,23 @@
       customerName:      name,
       customerPhone:     phone,
       notes:             notes,
+      priceEst:          priceEst || null,
+      referenceImages:   photos,
       status:            'confirmed',
       source:            'manual_vendor',
-      isReschedule:      false,
       updatedAt:         ts()
     };
 
     try {
       if (bookingId) {
-        // Edit: update existing booking in place — same doc ID, no delete+create
+        // Edit: update existing booking in place — same doc ID, no duplicate created
         await vendorRef.collection('bookings').doc(bookingId).update(data);
         showToast('✓ Đã cập nhật lịch hẹn.');
       } else {
-        // New booking: written to vendors/{id}/bookings — same path AI reads/writes
-        data.createdAt   = ts();
-        data.confirmedAt = ts();
+        // New booking: written to vendors/{id}/bookings — same Firestore path as AI
+        data.createdAt    = ts();
+        data.confirmedAt  = ts();
+        data.isReschedule = false;
         await vendorRef.collection('bookings').doc().set(data);
         showToast('✓ Đã tạo lịch hẹn mới!');
       }

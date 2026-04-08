@@ -1208,6 +1208,15 @@ gmp-placeautocomplete.field-input::part(input):focus {
 
 .wiz-step { padding: 1rem; }
 .wiz-header { margin-bottom: 1.5rem; }
+.wiz-cancel-link {
+  display: inline-block;
+  font-size: .75rem;
+  color: var(--muted);
+  text-decoration: none;
+  margin-bottom: .6rem;
+  transition: color .15s;
+}
+.wiz-cancel-link:hover { color: var(--cream); }
 .wiz-header h2 { font-family: var(--font-d); font-size: 1.55rem; font-weight: 400; color: var(--cream); margin-bottom: .2rem; }
 .wiz-header p { font-size: .82rem; color: var(--muted); }
 

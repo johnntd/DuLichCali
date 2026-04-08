@@ -1592,51 +1592,73 @@ BEHAVIOR GUIDELINES:
         try {
           const wfDraft  = WF.getDraft();
           const wfLang   = (wfDraft && wfDraft.lang) || 'vi';
-          const wfFields = (wfDraft && wfDraft.collectedFields) || {};
-          const wfIntent = (wfDraft && wfDraft.intent) || '';
           const res = await WF.finalize();
           const orderId  = res.id || res;
           const token    = res.token || null;
           const priceEst = res.priceEst || null;
           const apptInfo = res.appt || null;
+
+          // Build thankyou URL with booking details for packet + calendar
           let url = `thankyou.html?id=${encodeURIComponent(orderId)}&lang=${encodeURIComponent(wfLang)}`;
           if (token) url += `&t=${encodeURIComponent(token)}`;
-          setTimeout(() => { window.location.href = url; }, 2200);
-
-          // Build appointment detail block for nail/hair confirmations
-          var apptLines = [];
           if (apptInfo) {
-            var _fmtDate = function(iso) {
-              if (!iso) return '';
-              try {
-                var d = new Date(iso + 'T12:00:00');
-                var DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-                var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-                return DOW[d.getDay()] + ', ' + MON[d.getMonth()] + ' ' + d.getDate();
-              } catch(e) { return iso; }
-            };
-            var _fmtTime = function(hhmm) {
-              if (!hhmm) return '';
-              try {
-                var p = hhmm.split(':'), h = parseInt(p[0]), m = parseInt(p[1]||0);
-                var ap = h < 12 ? 'AM' : 'PM'; h = h % 12 || 12;
-                return h + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
-              } catch(e) { return hhmm; }
-            };
-            var svcLbl  = wfLang === 'vi' ? 'Dịch vụ'  : wfLang === 'es' ? 'Servicio'      : 'Service';
-            var dateLbl = wfLang === 'vi' ? 'Ngày giờ' : wfLang === 'es' ? 'Fecha y hora'  : 'Date & time';
-            var priceLbl= wfLang === 'vi' ? 'Giá từ'   : wfLang === 'es' ? 'Precio desde'  : 'Est. from';
-            if (apptInfo.service) apptLines.push('• ' + svcLbl + ': ' + apptInfo.service);
-            var dtStr = [_fmtDate(apptInfo.date), _fmtTime(apptInfo.time)].filter(Boolean).join(' · ');
-            if (dtStr) apptLines.push('• ' + dateLbl + ': ' + dtStr);
-            if (priceEst) apptLines.push('• ' + priceLbl + ': ' + priceEst);
+            if (apptInfo.service) url += `&svc=${encodeURIComponent(apptInfo.service)}`;
+            if (apptInfo.date)    url += `&dt=${encodeURIComponent(apptInfo.date)}`;
+            if (apptInfo.time)    url += `&tm=${encodeURIComponent(apptInfo.time)}`;
+            if (priceEst)         url += `&pe=${encodeURIComponent(priceEst)}`;
+            if (apptInfo.region)  url += `&rg=${encodeURIComponent(apptInfo.region)}`;
           }
-          var apptBlock = apptLines.length ? '\n' + apptLines.join('\n') : '';
+          setTimeout(() => { window.location.href = url; }, 2800);
+
+          // Build natural-language confirmation sentence
+          var _fmtApptDate = function(iso) {
+            if (!iso) return '';
+            try {
+              var d = new Date(iso + 'T12:00:00');
+              var DOW = { vi:['CN','T2','T3','T4','T5','T6','T7'], en:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], es:['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'] };
+              var MON = { vi:['tháng 1','tháng 2','tháng 3','tháng 4','tháng 5','tháng 6','tháng 7','tháng 8','tháng 9','tháng 10','tháng 11','tháng 12'], en:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], es:['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'] };
+              var dl = (DOW[wfLang] || DOW.en), ml = (MON[wfLang] || MON.en);
+              return wfLang === 'vi'
+                ? dl[d.getDay()] + ', ' + d.getDate() + ' ' + ml[d.getMonth()]
+                : dl[d.getDay()] + ', ' + ml[d.getMonth()] + ' ' + d.getDate();
+            } catch(e) { return iso; }
+          };
+          var _fmtApptTime = function(hhmm) {
+            if (!hhmm) return '';
+            try {
+              var p = hhmm.split(':'), h = parseInt(p[0]), m = parseInt(p[1]||0);
+              var ap = h < 12 ? 'AM' : 'PM'; h = h % 12 || 12;
+              return h + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
+            } catch(e) { return hhmm; }
+          };
+
+          var confirmSentence = '';
+          if (apptInfo && apptInfo.service) {
+            var dtJoiner = wfLang === 'vi' ? ' lúc ' : wfLang === 'es' ? ' a las ' : ' at ';
+            var dtStr = [_fmtApptDate(apptInfo.date), _fmtApptTime(apptInfo.time)].filter(Boolean).join(dtJoiner);
+            var priceNote = priceEst
+              ? (wfLang === 'vi' ? ' Giá từ ' + priceEst + '.' : wfLang === 'es' ? ' Precio estimado: ' + priceEst + '.' : ' Starting price: ' + priceEst + '.')
+              : '';
+            var textBack = wfLang === 'vi' ? 'Nếu có thay đổi, chúng tôi sẽ nhắn tin cho bạn.'
+                         : wfLang === 'es' ? 'Si algo cambia, te avisaremos por mensaje.'
+                         : "If anything changes, we'll text you.";
+            if (wfLang === 'vi') {
+              confirmSentence = 'Lịch hẹn ' + apptInfo.service + (dtStr ? ' vào ' + dtStr : '') + ' đã được xác nhận.' + priceNote + ' ' + textBack;
+            } else if (wfLang === 'es') {
+              confirmSentence = 'Tu cita de ' + apptInfo.service + (dtStr ? ' el ' + dtStr : '') + ' está confirmada.' + priceNote + ' ' + textBack;
+            } else {
+              confirmSentence = 'Your ' + apptInfo.service + ' appointment' + (dtStr ? ' on ' + _fmtApptDate(apptInfo.date) + ' at ' + _fmtApptTime(apptInfo.time) : '') + ' is confirmed.' + priceNote + ' ' + textBack;
+            }
+          }
+
+          var pktPrompt = wfLang === 'vi' ? 'Xem thông tin đặt chỗ và lưu vào lịch →'
+                        : wfLang === 'es' ? 'Ver detalles y agregar al calendario →'
+                        : 'See full booking details & add to calendar →';
 
           const successTexts = {
-            vi: ['✅ Đặt lịch thành công!' + apptBlock, `Mã đơn: **${orderId}**`, '', 'Đang chuyển đến trang xác nhận...'],
-            en: ['✅ Appointment confirmed!' + apptBlock, `Order ID: **${orderId}**`, '', 'Redirecting to confirmation page...'],
-            es: ['✅ ¡Cita confirmada!' + apptBlock,     `N.° de pedido: **${orderId}**`, '', 'Redirigiendo a la página de confirmación...'],
+            vi: ['✅ Đặt lịch thành công!', confirmSentence || `Mã đơn: **${orderId}**`, '', pktPrompt],
+            en: ['✅ Appointment confirmed!', confirmSentence || `Order ID: **${orderId}**`, '', pktPrompt],
+            es: ['✅ ¡Cita confirmada!', confirmSentence || `N.° de pedido: **${orderId}**`, '', pktPrompt],
           };
           return {
             type: 'message',

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cảm Ơn — Du Lịch Cali</title>
+  <title>Xác Nhận Đặt Chỗ — Du Lịch Cali</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,7 +38,6 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Decorative background */
     body::before {
       content: '';
       position: fixed;
@@ -54,7 +53,7 @@
       background: var(--navy-800);
       border: 1px solid var(--border-g);
       border-radius: 12px;
-      padding: 3rem 2.5rem 2.5rem;
+      padding: 2.5rem 2rem 2rem;
       max-width: 520px;
       width: 100%;
       text-align: center;
@@ -67,21 +66,21 @@
       justify-content: center;
       width: 64px;
       height: 64px;
-      background: var(--gold-dim, rgba(200,146,42,0.15));
+      background: rgba(200,146,42,0.15);
       border: 1px solid var(--border-g);
       border-radius: 50%;
       font-size: 1.6rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.25rem;
       color: var(--gold-lt);
     }
 
     h1 {
       font-family: 'Bodoni Moda', Georgia, serif;
-      font-size: 2.6rem;
+      font-size: 2.4rem;
       font-weight: 400;
       color: var(--cream);
       letter-spacing: 0.01em;
-      margin-bottom: 0.8rem;
+      margin-bottom: 0.6rem;
       line-height: 1.1;
     }
 
@@ -89,67 +88,110 @@
       font-size: 0.9rem;
       color: var(--text);
       line-height: 1.65;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
     }
 
+    /* ── Booking packet ──────────────────────────────────────────────── */
+    #bookingPacket {
+      display: none;
+      text-align: left;
+      background: rgba(200,146,42,0.05);
+      border: 1px solid var(--border-g);
+      border-radius: 10px;
+      padding: 1.15rem 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .bp-header {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--gold-lt);
+      margin-bottom: 0.8rem;
+      letter-spacing: 0.03em;
+    }
+
+    .bp-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.75rem;
+      padding: 0.38rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.83rem;
+    }
+    .bp-row:last-child { border-bottom: none; }
+
+    .bp-label {
+      color: var(--muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .bp-value {
+      color: var(--cream);
+      text-align: right;
+      font-weight: 500;
+    }
+
+    .bp-footer {
+      margin-top: 0.85rem;
+      font-size: 0.77rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* ── Calendar buttons ────────────────────────────────────────────── */
+    #calendarSection {
+      display: none;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .cal-btn {
+      flex: 1;
+      display: block;
+      text-align: center;
+      padding: 0.6rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .cal-btn--gcal {
+      background: rgba(200,146,42,0.18);
+      border: 1px solid rgba(200,146,42,0.45);
+      color: var(--gold-lt);
+    }
+    .cal-btn--gcal:hover { background: rgba(200,146,42,0.32); color: var(--cream); }
+
+    .cal-btn--ics {
+      background: rgba(200,146,42,0.07);
+      border: 1px solid var(--border-g);
+      color: var(--gold-lt);
+    }
+    .cal-btn--ics:hover { background: rgba(200,146,42,0.18); color: var(--cream); }
+
+    /* ── Divider ─────────────────────────────────────────────────────── */
     .divider {
       width: 40px;
       height: 1px;
       background: var(--border-g);
-      margin: 0 auto 1.75rem;
+      margin: 0 auto 1.5rem;
     }
 
     .contact-block {
       font-size: 0.83rem;
       color: var(--muted);
       line-height: 2;
-      margin-bottom: 2rem;
+      margin-bottom: 1.75rem;
     }
-
-    .contact-block strong {
-      color: var(--cream);
-      font-weight: 500;
-    }
-
-    .contact-block a {
-      color: var(--gold-lt);
-      text-decoration: none;
-    }
-
+    .contact-block strong { color: var(--cream); font-weight: 500; }
+    .contact-block a { color: var(--gold-lt); text-decoration: none; }
     .contact-block a:hover { color: var(--cream); }
-
-    .btn-home {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      height: 48px;
-      padding: 0 2rem;
-      background: var(--gold);
-      color: var(--navy-900);
-      font-family: 'Jost', sans-serif;
-      font-size: 0.8rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      text-decoration: none;
-      border-radius: 4px;
-      transition: background 0.2s, box-shadow 0.2s;
-    }
-
-    .btn-home:hover {
-      background: #e8b84b;
-      box-shadow: 0 6px 20px rgba(200,146,42,0.35);
-    }
-
-    .brand-foot {
-      margin-top: 2.5rem;
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1rem;
-      color: var(--muted);
-      letter-spacing: 0.1em;
-    }
-
-    #trackingSection { display: none; margin-bottom: 0.5rem; }
 
     .booking-id-badge {
       display: inline-block;
@@ -165,7 +207,7 @@
     }
 
     .btn-track {
-      display: inline-flex;
+      display: flex;
       align-items: center;
       justify-content: center;
       height: 48px;
@@ -184,9 +226,40 @@
       transition: background 0.2s, color 0.2s;
       margin-bottom: 0.75rem;
     }
-    .btn-track:hover {
+    .btn-track:hover { background: var(--gold); color: var(--navy-900); }
+
+    .btn-home {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 48px;
+      padding: 0 2rem;
       background: var(--gold);
       color: var(--navy-900);
+      font-family: 'Jost', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .btn-home:hover { background: #e8b84b; box-shadow: 0 6px 20px rgba(200,146,42,0.35); }
+
+    .brand-foot {
+      margin-top: 2rem;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+
+    #trackingSection { display: none; margin-bottom: 0.5rem; }
+
+    @media (min-width: 480px) {
+      .card { padding: 3rem 2.5rem 2.5rem; }
+      h1 { font-size: 2.6rem; }
     }
   </style>
   <link rel="stylesheet" href="/desktop.css">
@@ -195,14 +268,22 @@
 
   <div class="card">
     <div class="check-icon">✓</div>
+    <h1 id="title">Cảm Ơn!</h1>
+    <p class="subtitle" id="message"></p>
 
-    <h1 id="title">Cảm Ơn Quý Khách!</h1>
+    <!-- Full booking packet (shown when appointment details are in URL) -->
+    <div id="bookingPacket">
+      <div class="bp-header" id="bpHeader"></div>
+      <div id="bpRows"></div>
+      <div class="bp-footer" id="bpFooter"></div>
+      <!-- Calendar buttons -->
+      <div id="calendarSection" style="display:flex">
+        <a id="bpGcalBtn" href="#" target="_blank" rel="noopener" class="cal-btn cal-btn--gcal"></a>
+        <a id="bpIcsBtn" href="#" class="cal-btn cal-btn--ics"></a>
+      </div>
+    </div>
 
-    <p class="subtitle" id="message">
-      Chúng tôi đã nhận được yêu cầu đặt dịch vụ của quý khách.<br>
-      Nhân viên sẽ liên hệ trong thời gian sớm nhất để xác nhận.
-    </p>
-
+    <!-- Tracking section (shown for rides with tracking token) -->
     <div id="trackingSection">
       <div class="booking-id-badge" id="bookingIdBadge"></div><br>
       <a id="trackBtn" href="#" class="btn-track"></a>
@@ -210,53 +291,258 @@
 
     <div class="divider"></div>
 
-    <div class="contact-block" id="contact">
-      Mọi thắc mắc xin liên hệ:<br>
-      <strong>Du Lịch Cali</strong> · <a href="tel:4089163439">+1 (408) 916-3439</a><br>
-      <a href="mailto:dulichcali21@gmail.com">dulichcali21@gmail.com</a>
-    </div>
-
+    <div class="contact-block" id="contact"></div>
     <a href="index.html" class="btn-home" id="homeBtn">Trở Về Trang Chủ</a>
-
     <div class="brand-foot">✦ Du Lịch Cali</div>
   </div>
 
   <script>
-    const t = {
-      en: {
-        title: 'Thank You!',
-        message: 'We have received your service request.<br>Our staff will contact you shortly to confirm your booking.',
-        contact: 'For questions, please contact:<br><strong>Du Lịch Cali</strong> · <a href="tel:4089163439">+1 (408) 916-3439</a><br><a href="mailto:dulichcali21@gmail.com">dulichcali21@gmail.com</a>',
-        homeBtn: 'Return to Homepage'
-      },
+  (function () {
+    var _p = new URLSearchParams(window.location.search);
+    var lang = _p.get('lang') || 'vi';
+    if (lang !== 'vi' && lang !== 'en' && lang !== 'es') lang = 'vi';
+
+    // ── Translation table ──────────────────────────────────────────────
+    var T = {
       vi: {
-        title: 'Cảm Ơn Quý Khách!',
-        message: 'Chúng tôi đã nhận được yêu cầu đặt dịch vụ của quý khách.<br>Nhân viên sẽ liên hệ trong thời gian sớm nhất để xác nhận.',
-        contact: 'Mọi thắc mắc xin liên hệ:<br><strong>Du Lịch Cali</strong> · <a href="tel:4089163439">+1 (408) 916-3439</a><br><a href="mailto:dulichcali21@gmail.com">dulichcali21@gmail.com</a>',
-        homeBtn: 'Trở Về Trang Chủ'
-      }
+        title:      'Cảm Ơn!',
+        msgAppt:    'Lịch hẹn của quý khách đã được xác nhận thành công.',
+        msgGeneric: 'Chúng tôi đã nhận được yêu cầu của quý khách.<br>Nhân viên sẽ liên hệ trong thời gian sớm nhất.',
+        contact:    'Mọi thắc mắc xin liên hệ:<br><strong>Du Lịch Cali</strong> · <a href="tel:4089163439">+1 (408) 916-3439</a><br><a href="mailto:dulichcali21@gmail.com">dulichcali21@gmail.com</a>',
+        homeBtn:    'Trở Về Trang Chủ',
+        trackLbl:   'Mã đặt chỗ',
+        trackBtn:   'Theo Dõi Chuyến Đi',
+        pktHeader:  '✅ Lịch Hẹn Đã Xác Nhận',
+        svc:        'Dịch vụ',
+        staff:      'Kỹ thuật viên',
+        date:       'Ngày',
+        time:       'Giờ',
+        price:      'Giá từ',
+        loc:        'Khu vực',
+        ref:        'Mã đặt chỗ',
+        foot:       'Nếu có thay đổi, chúng tôi sẽ nhắn tin cho bạn.',
+        gcal:       '📅 Google Calendar',
+        ics:        '⬇ Lưu vào Calendar',
+        duration:   'Thời gian',
+      },
+      en: {
+        title:      'Thank You!',
+        msgAppt:    'Your appointment has been confirmed.',
+        msgGeneric: 'We have received your request.<br>Our team will contact you shortly to confirm.',
+        contact:    'For questions, please contact:<br><strong>Du Lịch Cali</strong> · <a href="tel:4089163439">+1 (408) 916-3439</a><br><a href="mailto:dulichcali21@gmail.com">dulichcali21@gmail.com</a>',
+        homeBtn:    'Return to Homepage',
+        trackLbl:   'Booking',
+        trackBtn:   'Track Your Ride',
+        pktHeader:  '✅ Appointment Confirmed',
+        svc:        'Service',
+        staff:      'Technician',
+        date:       'Date',
+        time:       'Time',
+        price:      'Est. from',
+        loc:        'Region',
+        ref:        'Booking ID',
+        foot:       "If anything changes, we'll text you.",
+        gcal:       '📅 Google Calendar',
+        ics:        '⬇ Save to Calendar',
+        duration:   'Duration',
+      },
+      es: {
+        title:      '¡Gracias!',
+        msgAppt:    'Tu cita ha sido confirmada.',
+        msgGeneric: 'Hemos recibido tu solicitud.<br>Nuestro equipo se pondrá en contacto contigo pronto.',
+        contact:    'Para preguntas, contáctanos:<br><strong>Du Lịch Cali</strong> · <a href="tel:4089163439">+1 (408) 916-3439</a><br><a href="mailto:dulichcali21@gmail.com">dulichcali21@gmail.com</a>',
+        homeBtn:    'Volver al Inicio',
+        trackLbl:   'Reserva',
+        trackBtn:   'Rastrear tu Viaje',
+        pktHeader:  '✅ Cita Confirmada',
+        svc:        'Servicio',
+        staff:      'Técnica',
+        date:       'Fecha',
+        time:       'Hora',
+        price:      'Precio desde',
+        loc:        'Región',
+        ref:        'N.° de cita',
+        foot:       'Si algo cambia, te avisaremos por mensaje.',
+        gcal:       '📅 Google Calendar',
+        ics:        '⬇ Guardar en Calendario',
+        duration:   'Duración',
+      },
     };
+    var lbl = T[lang] || T.vi;
 
-    const _params = new URLSearchParams(window.location.search);
-    const lang = _params.get('lang') || 'vi';
-    const l = t[lang] || t.vi;
+    // ── Apply static labels ────────────────────────────────────────────
+    document.getElementById('title').textContent   = lbl.title;
+    document.getElementById('contact').innerHTML   = lbl.contact;
+    document.getElementById('homeBtn').textContent = lbl.homeBtn;
 
-    document.getElementById('title').textContent = l.title;
-    document.getElementById('message').innerHTML  = l.message;
-    document.getElementById('contact').innerHTML  = l.contact;
-    document.getElementById('homeBtn').textContent = l.homeBtn;
-
-    // Show booking ID + tracking link if present in URL
-    const bookingId  = _params.get('id');
-    const trackToken = _params.get('t');
+    // ── Tracking link (rides) ──────────────────────────────────────────
+    var bookingId  = _p.get('id');
+    var trackToken = _p.get('t');
     if (bookingId && trackToken) {
       document.getElementById('trackingSection').style.display = 'block';
-      document.getElementById('bookingIdBadge').textContent =
-        lang === 'en' ? `Booking: ${bookingId}` : `Mã đặt chỗ: ${bookingId}`;
-      const trackBtn = document.getElementById('trackBtn');
-      trackBtn.href  = `tracking.html?id=${encodeURIComponent(bookingId)}&t=${encodeURIComponent(trackToken)}&lang=${lang}`;
-      trackBtn.textContent = lang === 'en' ? 'Track Your Ride' : 'Theo Dõi Chuyến Đi';
+      document.getElementById('bookingIdBadge').textContent = lbl.trackLbl + ': ' + bookingId;
+      var tb = document.getElementById('trackBtn');
+      tb.href = 'tracking.html?id=' + encodeURIComponent(bookingId) + '&t=' + encodeURIComponent(trackToken) + '&lang=' + lang;
+      tb.textContent = lbl.trackBtn;
     }
+
+    // ── Appointment booking packet ─────────────────────────────────────
+    var svc   = _p.get('svc');
+    var dt    = _p.get('dt');
+    var tm    = _p.get('tm');
+    var pe    = _p.get('pe');
+    var rg    = _p.get('rg');
+    var staff = _p.get('staff');
+    var dur   = _p.get('dur');   // duration in minutes (optional)
+
+    var hasAppt = svc || dt || tm;
+    document.getElementById('message').innerHTML = hasAppt ? lbl.msgAppt : lbl.msgGeneric;
+
+    if (hasAppt) {
+      // Format date
+      var dateStr = '';
+      if (dt) {
+        try {
+          var d = new Date(dt + 'T12:00:00');
+          var DOWS = {
+            vi: ['CN','T2','T3','T4','T5','T6','T7'],
+            en: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+            es: ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],
+          };
+          var MONS = {
+            vi: ['tháng 1','tháng 2','tháng 3','tháng 4','tháng 5','tháng 6','tháng 7','tháng 8','tháng 9','tháng 10','tháng 11','tháng 12'],
+            en: ['January','February','March','April','May','June','July','August','September','October','November','December'],
+            es: ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'],
+          };
+          var dl = DOWS[lang] || DOWS.en;
+          var ml = MONS[lang] || MONS.en;
+          dateStr = lang === 'vi'
+            ? dl[d.getDay()] + ', ' + d.getDate() + ' ' + ml[d.getMonth()]
+            : dl[d.getDay()] + ', ' + ml[d.getMonth()] + ' ' + d.getDate();
+        } catch (e) { dateStr = dt; }
+      }
+
+      // Format time (HH:MM → 12h)
+      var timeStr = '';
+      if (tm) {
+        try {
+          var parts = tm.split(':');
+          var h = parseInt(parts[0]), m = parseInt(parts[1] || 0);
+          var ap = h < 12 ? 'AM' : 'PM';
+          h = h % 12 || 12;
+          timeStr = h + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
+        } catch (e) { timeStr = tm; }
+      }
+
+      // Format duration
+      var durStr = '';
+      if (dur) {
+        var durMins = parseInt(dur, 10);
+        if (!isNaN(durMins) && durMins > 0) {
+          if (durMins < 60) {
+            durStr = durMins + (lang === 'vi' ? ' phút' : lang === 'es' ? ' min' : ' min');
+          } else {
+            var h2 = Math.floor(durMins / 60), m2 = durMins % 60;
+            durStr = h2 + (lang === 'vi' ? ' giờ' : lang === 'es' ? ' h' : ' hr') +
+                     (m2 ? ' ' + m2 + (lang === 'vi' ? ' phút' : ' min') : '');
+          }
+        }
+      }
+
+      // Build packet rows
+      var rows = [];
+      if (svc)    rows.push([lbl.svc,   svc]);
+      if (staff)  rows.push([lbl.staff, staff]);
+      if (dateStr)rows.push([lbl.date,  dateStr]);
+      if (timeStr)rows.push([lbl.time,  timeStr]);
+      if (durStr) rows.push([lbl.duration, durStr]);
+      if (pe)     rows.push([lbl.price, pe]);
+      if (rg)     rows.push([lbl.loc,   rg]);
+      if (bookingId && !trackToken) rows.push([lbl.ref, bookingId]);
+
+      var rowsHtml = rows.map(function (r) {
+        return '<div class="bp-row"><span class="bp-label">' + r[0] + '</span><span class="bp-value">' + r[1] + '</span></div>';
+      }).join('');
+
+      // Populate packet
+      document.getElementById('bpHeader').textContent   = lbl.pktHeader;
+      document.getElementById('bpRows').innerHTML        = rowsHtml;
+      document.getElementById('bpFooter').textContent   = lbl.foot;
+      document.getElementById('bookingPacket').style.display = 'block';
+
+      // ── Calendar generation ──────────────────────────────────────────
+      if (dt && tm) {
+        var calTitle  = 'Du Lịch Cali — ' + (svc || 'Appointment');
+        var calLoc    = rg ? rg + ', California' : 'Bay Area, California';
+        var calDesc   = [
+          staff ? (lang === 'vi' ? 'Kỹ thuật viên: ' : lang === 'es' ? 'Técnica: ' : 'Technician: ') + staff : null,
+          pe    ? (lang === 'vi' ? 'Giá từ: '        : lang === 'es' ? 'Precio: '  : 'Est.: ') + pe : null,
+          rg    ? (lang === 'vi' ? 'Khu vực: '       : lang === 'es' ? 'Región: '  : 'Region: ') + rg : null,
+          bookingId ? (lang === 'vi' ? 'Mã: ' : 'ID: ') + bookingId : null,
+          'Du Lịch Cali · +1 (408) 916-3439',
+        ].filter(Boolean).join('\n');
+
+        // Duration: use URL param or default 60 min
+        var durationMs = (parseInt(dur, 10) || 60) * 60000;
+
+        function padN(n) { return ('0' + n).slice(-2); }
+        function fmtIcs(date, time) {
+          // 'YYYY-MM-DD', 'HH:MM' → 'YYYYMMDDTHHMMSS'
+          return date.replace(/-/g, '') + 'T' + time.replace(':', '') + '00';
+        }
+
+        var startStr = fmtIcs(dt, tm);
+        var endD     = new Date(dt + 'T' + tm + ':00');
+        endD.setTime(endD.getTime() + durationMs);
+        var endStr   = fmtIcs(
+          endD.getFullYear() + '-' + padN(endD.getMonth() + 1) + '-' + padN(endD.getDate()),
+          padN(endD.getHours()) + ':' + padN(endD.getMinutes())
+        );
+
+        // Google Calendar URL
+        var gcalUrl = 'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+          '&text='     + encodeURIComponent(calTitle) +
+          '&dates='    + startStr + '/' + endStr +
+          '&details='  + encodeURIComponent(calDesc) +
+          '&location=' + encodeURIComponent(calLoc);
+
+        // ICS file (data URI — works on Apple Calendar, Outlook, generic)
+        var uid = 'dlc-' + Date.now() + '@dulichcali21.com';
+        var now = new Date();
+        var nowStr = now.getUTCFullYear() + padN(now.getUTCMonth()+1) + padN(now.getUTCDate()) +
+                     'T' + padN(now.getUTCHours()) + padN(now.getUTCMinutes()) + padN(now.getUTCSeconds()) + 'Z';
+        var icsLines = [
+          'BEGIN:VCALENDAR',
+          'VERSION:2.0',
+          'PRODID:-//Du Lich Cali//Booking//EN',
+          'CALSCALE:GREGORIAN',
+          'METHOD:PUBLISH',
+          'BEGIN:VEVENT',
+          'UID:'     + uid,
+          'DTSTAMP:' + nowStr,
+          'DTSTART;TZID=America/Los_Angeles:' + startStr,
+          'DTEND;TZID=America/Los_Angeles:'   + endStr,
+          'SUMMARY:' + calTitle.replace(/[,;]/g, '\\$&'),
+          'LOCATION:' + calLoc.replace(/[,;]/g, '\\$&'),
+          'DESCRIPTION:' + calDesc.replace(/\n/g, '\\n').replace(/[,;]/g, '\\$&'),
+          'STATUS:CONFIRMED',
+          'END:VEVENT',
+          'END:VCALENDAR',
+        ];
+        var icsUrl = 'data:text/calendar;charset=utf8,' + encodeURIComponent(icsLines.join('\r\n'));
+
+        // Populate calendar buttons
+        var gcalBtn = document.getElementById('bpGcalBtn');
+        var icsBtn  = document.getElementById('bpIcsBtn');
+        gcalBtn.href = gcalUrl;
+        gcalBtn.textContent = lbl.gcal;
+        icsBtn.href = icsUrl;
+        icsBtn.setAttribute('download', 'appointment.ics');
+        icsBtn.textContent = lbl.ics;
+        document.getElementById('calendarSection').style.display = 'flex';
+      }
+    }
+  })();
   </script>
 </body>
 </html>

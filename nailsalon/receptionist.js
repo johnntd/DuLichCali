@@ -1316,6 +1316,269 @@
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }
 
+  function _appendHtmlMessage(messagesEl, htmlContent) {
+    var div = document.createElement('div');
+    div.className = 'mp-ai__msg mp-ai__msg--bot';
+    var bubble = document.createElement('div');
+    bubble.className = 'mp-ai__bubble mp-ai__bubble--packet';
+    bubble.innerHTML = htmlContent;
+    div.appendChild(bubble);
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  // ── Calendar helpers ─────────────────────────────────────────────────────────
+
+  function _padN(n) { return ('0' + n).slice(-2); }
+
+  function _fmtIcsLocal(date, time) {
+    // 'YYYY-MM-DD', 'HH:MM' → 'YYYYMMDDTHHMMSS' (local wall-clock)
+    return date.replace(/-/g, '') + 'T' + time.replace(':', '') + '00';
+  }
+
+  function _buildGCalUrl(ev) {
+    var endD = new Date(ev.date + 'T' + ev.time + ':00');
+    endD.setTime(endD.getTime() + (ev.durationMins || 60) * 60000);
+    var endDate = endD.getFullYear() + '-' + _padN(endD.getMonth()+1) + '-' + _padN(endD.getDate());
+    var endTime = _padN(endD.getHours()) + ':' + _padN(endD.getMinutes());
+    return 'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+      '&text='     + encodeURIComponent(ev.title) +
+      '&dates='    + _fmtIcsLocal(ev.date, ev.time) + '/' + _fmtIcsLocal(endDate, endTime) +
+      '&details='  + encodeURIComponent(ev.description || '') +
+      '&location=' + encodeURIComponent(ev.location || '');
+  }
+
+  function _buildIcsUrl(ev) {
+    var endD = new Date(ev.date + 'T' + ev.time + ':00');
+    endD.setTime(endD.getTime() + (ev.durationMins || 60) * 60000);
+    var endDate = endD.getFullYear() + '-' + _padN(endD.getMonth()+1) + '-' + _padN(endD.getDate());
+    var endTime = _padN(endD.getHours()) + ':' + _padN(endD.getMinutes());
+    var now = new Date();
+    var nowStr = now.getUTCFullYear() + _padN(now.getUTCMonth()+1) + _padN(now.getUTCDate()) +
+      'T' + _padN(now.getUTCHours()) + _padN(now.getUTCMinutes()) + _padN(now.getUTCSeconds()) + 'Z';
+    var lines = [
+      'BEGIN:VCALENDAR', 'VERSION:2.0',
+      'PRODID:-//Du Lich Cali//Booking//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+      'BEGIN:VEVENT',
+      'UID:dlc-' + Date.now() + '@dulichcali21.com',
+      'DTSTAMP:' + nowStr,
+      'DTSTART;TZID=America/Los_Angeles:' + _fmtIcsLocal(ev.date, ev.time),
+      'DTEND;TZID=America/Los_Angeles:'   + _fmtIcsLocal(endDate, endTime),
+      'SUMMARY:'     + (ev.title       || '').replace(/[,;]/g, '\\$&'),
+      'LOCATION:'    + (ev.location    || '').replace(/[,;]/g, '\\$&'),
+      'DESCRIPTION:' + (ev.description || '').replace(/\n/g, '\\n').replace(/[,;]/g, '\\$&'),
+      'STATUS:CONFIRMED', 'END:VEVENT', 'END:VCALENDAR',
+    ];
+    return 'data:text/calendar;charset=utf8,' + encodeURIComponent(lines.join('\r\n'));
+  }
+
+  // ── genId — compact unique booking reference ──────────────────────────────────
+
+  function _genBookingId() {
+    return 'DLC-' + Date.now().toString(36).toUpperCase().slice(-5) +
+           Math.random().toString(36).slice(2, 4).toUpperCase();
+  }
+
+  // ── _priceForService — look up price from biz.services data ─────────────────
+
+  function _priceForService(biz, serviceName) {
+    var svcs = biz.services || [];
+    for (var i = 0; i < svcs.length; i++) {
+      var s = svcs[i];
+      if (s.name && s.name.toLowerCase() === (serviceName || '').toLowerCase()) {
+        return s.price ? '$' + s.price + '+' : null;
+      }
+    }
+    return null;
+  }
+
+  // ── _buildConfirmedNatural — natural-language sentence ───────────────────────
+
+  function _buildConfirmedNatural(biz, draft, lang) {
+    var svcs = Array.isArray(draft.services) ? draft.services : [];
+    var svcStr = svcs.join(' + ') || 'appointment';
+    var timeStr = (function () {
+      if (!draft.time) return '';
+      var p = draft.time.split(':'), h = parseInt(p[0]), m = parseInt(p[1] || 0);
+      var ap = h < 12 ? 'AM' : 'PM'; h = h % 12 || 12;
+      return h + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
+    })();
+    var textBack = lang === 'vi' ? 'Nếu có thay đổi, chúng tôi sẽ nhắn tin cho bạn.'
+                 : lang === 'es' ? 'Si algo cambia, te avisaremos por mensaje.'
+                 : "If anything changes, we'll text you.";
+    if (lang === 'vi') {
+      return 'Lịch hẹn ' + svcStr + (draft.staff ? ' với ' + draft.staff : '') +
+             (timeStr ? ' lúc ' + timeStr : '') + ' đã được xác nhận. ' + textBack;
+    }
+    if (lang === 'es') {
+      return 'Tu cita de ' + svcStr + (draft.staff ? ' con ' + draft.staff : '') +
+             (timeStr ? ' a las ' + timeStr : '') + ' ha sido confirmada. ' + textBack;
+    }
+    return 'Your appointment for ' + svcStr + (draft.staff ? ' with ' + draft.staff : '') +
+           (timeStr ? ' at ' + timeStr : '') + ' is confirmed. ' + textBack;
+  }
+
+  // ── _buildBookingPacketHtml — card rendered in chat after confirmation ────────
+
+  function _buildBookingPacketHtml(biz, draft, orderId, lang) {
+    var svcs = Array.isArray(draft.services) ? draft.services : [];
+    var svcStr = svcs.join(' + ') || '—';
+
+    // Price: sum from biz.services data
+    var prices = svcs.map(function(sn) { return _priceForService(biz, sn); }).filter(Boolean);
+    var priceStr = prices.length ? prices.join(' + ') : null;
+
+    // Date
+    var dateStr = '';
+    if (draft.date) {
+      try {
+        var d = new Date(draft.date + 'T12:00:00');
+        var DOWS = { vi:['CN','T2','T3','T4','T5','T6','T7'], en:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], es:['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'] };
+        var MONS = { vi:['tháng 1','tháng 2','tháng 3','tháng 4','tháng 5','tháng 6','tháng 7','tháng 8','tháng 9','tháng 10','tháng 11','tháng 12'], en:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], es:['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'] };
+        var dl = DOWS[lang] || DOWS.en, ml = MONS[lang] || MONS.en;
+        dateStr = lang === 'vi' ? dl[d.getDay()] + ', ' + d.getDate() + ' ' + ml[d.getMonth()] : dl[d.getDay()] + ', ' + ml[d.getMonth()] + ' ' + d.getDate();
+      } catch(e) { dateStr = draft.date; }
+    }
+
+    // Time
+    var timeStr = '';
+    if (draft.time) {
+      var tp = draft.time.split(':'), th = parseInt(tp[0]), tm2 = parseInt(tp[1] || 0);
+      var tap = th < 12 ? 'AM' : 'PM'; th = th % 12 || 12;
+      timeStr = th + ':' + (tm2 < 10 ? '0' : '') + tm2 + ' ' + tap;
+    }
+
+    // Labels (all three languages)
+    var L = {
+      vi: { header:'✅ Lịch Hẹn Đã Xác Nhận', svc:'Dịch vụ', staff:'Kỹ thuật viên', date:'Ngày', time:'Giờ', price:'Giá từ', loc:'Địa điểm', phone:'Điện thoại', ref:'Mã đặt chỗ', foot:'Nếu có thay đổi, chúng tôi sẽ nhắn tin cho bạn.', gcal:'📅 Google Calendar', ics:'⬇ Lưu vào Calendar' },
+      en: { header:'✅ Appointment Confirmed', svc:'Service', staff:'Technician', date:'Date', time:'Time', price:'Est. from', loc:'Location', phone:'Phone', ref:'Booking ID', foot:"If anything changes, we'll text you.", gcal:'📅 Google Calendar', ics:'⬇ Save to Calendar' },
+      es: { header:'✅ Cita Confirmada', svc:'Servicio', staff:'Técnica', date:'Fecha', time:'Hora', price:'Precio desde', loc:'Ubicación', phone:'Teléfono', ref:'N.° de cita', foot:'Si algo cambia, te avisaremos por mensaje.', gcal:'📅 Google Calendar', ics:'⬇ Guardar en Calendario' },
+    };
+    var lbl = L[lang] || L.en;
+
+    // Resolve location
+    var locStr = biz.address || biz.shortAddress || null;
+
+    // Build calendar event
+    var calEvent = {
+      title: (biz.name || 'Du Lịch Cali') + ' — ' + svcStr,
+      date:  draft.date || '',
+      time:  draft.time || '09:00',
+      durationMins: draft.totalDurationMins || 60,
+      location: locStr || (biz.name || '') + ', Bay Area, CA',
+      description: [
+        draft.staff ? ('Technician: ' + draft.staff) : null,
+        'Services: ' + svcStr,
+        priceStr    ? ('Est.: ' + priceStr) : null,
+        draft.name  ? ('Customer: ' + draft.name) : null,
+        'Booking ID: ' + orderId,
+        'Contact: ' + (biz.phoneDisplay || biz.phone || '+1 (408) 916-3439'),
+      ].filter(Boolean).join('\n'),
+    };
+    var gcalUrl = (draft.date && draft.time) ? _buildGCalUrl(calEvent) : null;
+    var icsUrl  = (draft.date && draft.time) ? _buildIcsUrl(calEvent) : null;
+
+    // Build rows
+    var rows = [
+      [lbl.svc, svcStr],
+      draft.staff ? [lbl.staff, draft.staff] : null,
+      dateStr     ? [lbl.date,  dateStr]     : null,
+      timeStr     ? [lbl.time,  timeStr]     : null,
+      priceStr    ? [lbl.price, priceStr]    : null,
+      locStr      ? [lbl.loc,   locStr]      : null,
+      (biz.phoneDisplay || biz.phone) ? [lbl.phone, biz.phoneDisplay || biz.phone] : null,
+      [lbl.ref, orderId],
+    ].filter(Boolean);
+
+    var S = 'style=';
+    var rowHtml = rows.map(function(r) {
+      return '<div ' + S + '"display:flex;justify-content:space-between;gap:.5rem;padding:.34rem 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.8rem">' +
+        '<span ' + S + '"color:#718096;white-space:nowrap;flex-shrink:0">' + r[0] + '</span>' +
+        '<span ' + S + '"color:#f0e6d3;text-align:right;font-weight:500">' + r[1] + '</span>' +
+      '</div>';
+    }).join('');
+
+    var calHtml = (gcalUrl && icsUrl) ?
+      '<div ' + S + '"display:flex;gap:.5rem;margin-top:.85rem">' +
+        '<a href="' + gcalUrl + '" target="_blank" rel="noopener" ' + S + '"flex:1;display:block;text-align:center;padding:.48rem .4rem;border-radius:6px;background:rgba(200,146,42,.18);border:1px solid rgba(200,146,42,.4);color:#e8b84b;font-size:.72rem;font-weight:700;text-decoration:none;letter-spacing:.03em">' + lbl.gcal + '</a>' +
+        '<a href="' + icsUrl + '" download="appointment.ics" ' + S + '"flex:1;display:block;text-align:center;padding:.48rem .4rem;border-radius:6px;background:rgba(200,146,42,.08);border:1px solid rgba(200,146,42,.28);color:#e8b84b;font-size:.72rem;font-weight:700;text-decoration:none;letter-spacing:.03em">' + lbl.ics + '</a>' +
+      '</div>' : '';
+
+    return '<div ' + S + '"background:linear-gradient(135deg,rgba(8,18,40,.96),rgba(14,25,52,.96));border:1px solid rgba(200,146,42,.35);border-radius:12px;padding:1rem 1.1rem;max-width:340px">' +
+      '<div ' + S + '"font-size:.88rem;font-weight:700;color:#e8b84b;margin-bottom:.75rem;letter-spacing:.02em">' + lbl.header + '</div>' +
+      rowHtml +
+      '<div ' + S + '"margin-top:.7rem;font-size:.76rem;color:#718096;font-style:italic">' + lbl.foot + '</div>' +
+      calHtml +
+    '</div>';
+  }
+
+  // ── _submitDirectBooking — writes 'confirmed' to Firestore, shows packet ─────
+
+  function _submitDirectBooking(biz, draft, messagesEl) {
+    var lang   = draft.lang || 'en';
+    var svcs   = Array.isArray(draft.services) ? draft.services : [];
+    var svcStr = svcs.join(' + ');
+    var orderId = _genBookingId();
+    var vendorId = biz.id || biz.slug || 'unknown';
+    var db = window.dlcDb;
+    var fv = db && firebase && firebase.firestore ? firebase.firestore.FieldValue : null;
+
+    // Natural-language confirmation
+    var confirmMsg = _buildConfirmedNatural(biz, draft, lang);
+    biz._aiHistory = biz._aiHistory || [];
+    biz._aiHistory.push({ role: 'assistant', content: confirmMsg });
+    _saveHistory(biz);
+    _appendMessage(messagesEl, confirmMsg, 'bot');
+
+    // Booking packet card with calendar buttons
+    var packetHtml = _buildBookingPacketHtml(biz, draft, orderId, lang);
+    _appendHtmlMessage(messagesEl, packetHtml);
+
+    // Write to Firestore (non-blocking — customer sees confirmation immediately)
+    if (db && fv) {
+      var bookingDoc = {
+        bookingId:    orderId,
+        type:         'nail_appointment',
+        vendorId:     vendorId,
+        services:     svcs,
+        staff:        draft.staff || null,
+        date:         draft.date  || '',
+        time:         draft.time  || '',
+        durationMins: draft.totalDurationMins || 60,
+        name:         draft.name  || '',
+        phone:        draft.phone || '',
+        lang:         lang,
+        status:       'confirmed',
+        source:       'lily_receptionist',
+        createdAt:    fv.serverTimestamp(),
+      };
+      db.collection('vendors').doc(vendorId).collection('bookings').add(bookingDoc)
+        .catch(function(e) { console.warn('[booking] Firestore write failed:', e.message); });
+
+      var notifLines = [
+        '💅 LỊCH HẸN MỚI — ' + orderId,
+        '💆 Dịch vụ: ' + svcStr,
+        draft.staff ? '👩 Kỹ thuật viên: ' + draft.staff : null,
+        '📅 ' + (draft.date || '') + ' lúc ' + (draft.time || ''),
+        '👤 ' + (draft.name || '') + ' · ' + (draft.phone || ''),
+      ].filter(Boolean).join('\n');
+      db.collection('vendors').doc(vendorId).collection('notifications').add({
+        type:          'new_appointment',
+        title:         '💅 Lịch hẹn — ' + (draft.name || ''),
+        message:       notifLines,
+        bookingId:     orderId,
+        customerName:  draft.name  || '',
+        customerPhone: draft.phone || '',
+        services:      svcs,
+        staff:         draft.staff || null,
+        date:          draft.date  || '',
+        time:          draft.time  || '',
+        read:          false,
+        createdAt:     fv.serverTimestamp(),
+      }).catch(function(e) { console.warn('[notif] Firestore write failed:', e.message); });
+    }
+  }
+
   function _showTyping(messagesEl, id) {
     var div = document.createElement('div');
     div.id  = id;
@@ -1522,54 +1785,28 @@
               NailAvailabilityChecker.check(biz, draft)
                 .then(function (avail) {
                   if (avail.valid) {
-                    // Slot passes all checks — but vendor has NOT confirmed yet.
-                    // Status: AVAILABLE_NOT_CONFIRMED.
-                    // Replace Claude's premature "confirmed" text with a pending message.
+                    // Slot is available — book immediately, no pending state.
+                    // Remove Claude's speculative text from history.
                     if (biz._aiHistory && biz._aiHistory.length &&
                         biz._aiHistory[biz._aiHistory.length - 1].role === 'assistant') {
                       biz._aiHistory.pop();
                     }
-                    var pendingConfirmMsg = _buildPendingConfirmMsg(biz, draft);
-                    biz._aiHistory.push({ role: 'assistant', content: pendingConfirmMsg });
-                    _saveHistory(biz);
-                    _appendMessage(messagesEl, pendingConfirmMsg, 'bot');
 
-                    // Finalise booking state — request is submitted, slot is held.
+                    // Capture the draft before clearing state
+                    var confirmedDraft = draft;
+
+                    // Clear booking state — appointment is now booked.
                     biz._bookingState = _emptyState();
                     _saveBookingState(biz);
-                    biz._offeredSlot = null; // booking submitted — clear slot offer
-
-                    // Capture draft values needed for callbacks before nulling the draft
-                    var draftLang  = draft.lang;
-                    var draftPhone = draft.phone;
+                    biz._offeredSlot = null;
                     biz._bookingDraft = null;
 
-                    // Set in-flight guard BEFORE the async Firestore write.
-                    // Cleared after 5s — safely past Firestore commit latency.
-                    // Prevents double booking from rapid re-submission during the
-                    // ~100-500ms window before the escalation doc becomes queryable.
+                    // In-flight guard prevents double-submission during Firestore commit window.
                     biz._submissionInFlight = true;
                     setTimeout(function () { biz._submissionInFlight = false; }, 5000);
 
-                    // Escalate: EscalationEngine writes to Firestore + shows spinner +
-                    // fires onSnapshot when vendor confirms/declines (up to 20 min).
-                    var esc = window.EscalationEngine;
-                    if (esc && typeof esc.create === 'function') {
-                      esc.create(biz, messagesEl, result.escalationType, draft);
-                    }
-
-                    // 60-second text-back gate.
-                    // If vendor has not confirmed by then, tell customer to expect a text.
-                    // Guard: skip if EscalationEngine already placed a confirmed bubble.
-                    setTimeout(function () {
-                      var confirmed = messagesEl.querySelector('.mp-ai__bubble--vendor-confirmed');
-                      if (!confirmed) {
-                        var tbMsg = _buildTextBackMsg(biz, { lang: draftLang, phone: draftPhone });
-                        _appendMessage(messagesEl, tbMsg, 'bot');
-                        biz._aiHistory.push({ role: 'assistant', content: tbMsg });
-                        _saveHistory(biz);
-                      }
-                    }, 60000);
+                    // Show natural-language confirmation + booking packet with calendar.
+                    _submitDirectBooking(biz, confirmedDraft, messagesEl);
                   } else {
                     // Not available — suppress Claude's premature "confirmed" message.
                     // Replace it in history with the rejection so Claude knows what was

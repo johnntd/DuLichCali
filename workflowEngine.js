@@ -2098,7 +2098,7 @@
       var svcEmoji  = isNail ? '💅' : '✂️';
       var svcLabel2 = isNail ? 'Nail' : 'Tóc';
       finalPriceEst = f.serviceType ? (isNail ? NAIL_PRICE_FROM[f.serviceType] : HAIR_PRICE_FROM[f.serviceType]) : null;
-      finalApptInfo = { service: f.serviceType || null, date: f.requestedDate || null, time: f.requestedTime || null };
+      finalApptInfo = { service: f.serviceType || null, date: f.requestedDate || null, time: f.requestedTime || null, region: f.region || null };
 
       var apptMsgLines = [
         svcEmoji + ' LỊCH HẸN ' + svcLabel2.toUpperCase() + ' — ' + orderId,

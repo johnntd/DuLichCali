@@ -977,6 +977,7 @@
         subscribeServices();
         subscribeStaff();
         subscribeEscalations();
+        subscribeNotifications(); // vendor subcollection notifications (Lily Receptionist bookings)
         subscribeBookings();
         loadHoursGrid(vdata.hoursSchedule);
       }).catch(function() {
@@ -986,6 +987,7 @@
         subscribeServices();
         subscribeStaff();
         subscribeEscalations();
+        subscribeNotifications();
         loadHoursGrid(null);
       });
     }).catch(function() { window.location.href = 'vendor-login.html'; });
@@ -1736,10 +1738,10 @@
         var items = snap.docs.map(function (d) {
           return Object.assign({ id: d.id }, d.data());
         });
-        // Sort by date+time ascending (upcoming first), then past
+        // Sort by requestedDate + requestedTime ascending
         items.sort(function (a, b) {
-          var da = (a.date || '') + 'T' + (a.time || '00:00');
-          var db2 = (b.date || '') + 'T' + (b.time || '00:00');
+          var da = (a.requestedDate || a.date || '') + 'T' + (a.requestedTime || a.time || '00:00');
+          var db2 = (b.requestedDate || b.date || '') + 'T' + (b.requestedTime || b.time || '00:00');
           return da < db2 ? -1 : da > db2 ? 1 : 0;
         });
         renderBookings(items);
@@ -1748,10 +1750,48 @@
       });
     }
 
-    // Try with orderBy first; Firestore auto-creates index for simple subcollection queries
+    // Read from vendor's bookings subcollection (written by receptionist.js + workflowEngine)
     unsubBookings = _startListener(
-      vendorRef.collection('appointments').limit(300)
+      vendorRef.collection('bookings').orderBy('requestedDate').limit(300)
     );
+    // Fallback if orderBy index missing
+    if (!unsubBookings) {
+      unsubBookings = _startListener(vendorRef.collection('bookings').limit(300));
+    }
+  }
+
+  // ── Real-time notifications listener (fires chime + banner) ───────────────
+  var _unsubNotifs = null;
+  var _knownNotifIds = {};
+  var _initialNotifLoad = false;
+
+  function subscribeNotifications() {
+    if (!vendorRef) return;
+    if (_unsubNotifs) _unsubNotifs();
+    _knownNotifIds    = {};
+    _initialNotifLoad = false;
+
+    _unsubNotifs = vendorRef.collection('notifications')
+      .orderBy('createdAt', 'desc').limit(50)
+      .onSnapshot(function(snap) {
+        var newOnes = [];
+        snap.docChanges().forEach(function(change) {
+          if (change.type === 'added') {
+            var id = change.doc.id;
+            if (_initialNotifLoad && !_knownNotifIds[id]) {
+              newOnes.push(change.doc.data());
+            }
+            _knownNotifIds[id] = true;
+          }
+        });
+        _initialNotifLoad = true;
+        if (newOnes.length > 0) {
+          _playNotifChime();
+          _showNewBookingBanner(newOnes.length);
+        }
+      }, function(err) {
+        console.warn('[notifs] listener error:', err.message);
+      });
   }
 
   function _fmtDate(dateStr) {
@@ -1786,11 +1826,11 @@
       return;
     }
 
-    // Group by date
+    // Group by date — support both field-name conventions
     var byDate = {};
     var dateOrder = [];
     items.forEach(function (b) {
-      var d = b.date || 'unknown';
+      var d = b.requestedDate || b.date || 'unknown';
       if (!byDate[d]) { byDate[d] = []; dateOrder.push(d); }
       byDate[d].push(b);
     });
@@ -1807,11 +1847,11 @@
 
     el.innerHTML = dateOrder.map(function (date) {
       var appts = byDate[date].map(function (b) {
-        // Normalize service display — support both selectedServices array and service string
-        var svcArr   = b.selectedServices || b.services || (b.service ? [b.service] : []);
-        var svcLabel = Array.isArray(svcArr) ? svcArr.join(', ') : (svcArr || '');
-        var staffLabel = b.staff && b.staff !== 'Any' ? ' &middot; <span style="color:var(--gold-lt)">' + esc(b.staff) + '</span>' : '';
-        var durLabel = b.totalDurationMins ? ' &middot; ' + b.totalDurationMins + ' phút' : '';
+        // Normalize service display — support all field-name conventions
+        var svcArr   = b.selectedServices || b.services || (b.service ? [b.service] : [b.serviceType || '']);
+        var svcLabel = Array.isArray(svcArr) ? svcArr.filter(Boolean).join(', ') : (svcArr || '');
+        var staffLabel = b.staff && b.staff.toLowerCase() !== 'any' ? ' &middot; <span style="color:var(--gold-lt)">' + esc(b.staff) + '</span>' : '';
+        var durLabel = (b.durationMins || b.totalDurationMins) ? ' &middot; ' + (b.durationMins || b.totalDurationMins) + ' phút' : '';
         var statusBadge = statusLabels[b.status] || '';
 
         // Highlight bookings confirmed in the last 5 minutes
@@ -1832,7 +1872,7 @@
         }
 
         return '<div class="sa-appt-card" style="' + cardStyle + '">' +
-          '<div class="sa-appt-time">' + esc(_fmtTime(b.time)) + '</div>' +
+          '<div class="sa-appt-time">' + esc(_fmtTime(b.requestedTime || b.time)) + '</div>' +
           '<div class="sa-appt-body">' +
             '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem">' +
               '<div class="sa-appt-name">' + esc(b.customerName || 'Khách') + newConfBadge + '</div>' +
@@ -1853,11 +1893,11 @@
   }
 
   function updateBookingStatus(apptId, newStatus) {
-    vendorRef.collection('appointments').doc(apptId).update({
+    vendorRef.collection('bookings').doc(apptId).update({
       status:    newStatus,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }).then(function () {
-      var labels = { completed: 'Đã hoàn thành!', no_show: 'Đã đánh dấu vắng mặt.', canceled: 'Đã hủy lịch.' };
+      var labels = { completed: 'Đã hoàn thành!', no_show: 'Đã đánh dấu vắng mặt.', canceled: 'Đã hủy lịch.', cancelled: 'Đã hủy lịch.' };
       showToast(labels[newStatus] || 'Đã cập nhật.');
     }).catch(function (err) { showToast('Lỗi: ' + err.message); });
   }

@@ -2100,6 +2100,10 @@
       finalPriceEst = f.serviceType ? (isNail ? NAIL_PRICE_FROM[f.serviceType] : HAIR_PRICE_FROM[f.serviceType]) : null;
       finalApptInfo = { service: f.serviceType || null, date: f.requestedDate || null, time: f.requestedTime || null, region: f.region || null };
 
+      // Resolve vendor ID: nail always 'luxurious-nails'; hair by region
+      var apptVendorId = isNail ? 'luxurious-nails'
+        : (/oc|orange/i.test(f.region||'') ? 'cali-hair-oc' : 'viet-hair-bayarea');
+
       var apptMsgLines = [
         svcEmoji + ' LỊCH HẸN ' + svcLabel2.toUpperCase() + ' — ' + orderId,
         '',
@@ -2111,16 +2115,7 @@
       ];
       var apptMsg = apptMsgLines.filter(function(v){return v!==null;}).join('\n');
 
-      await db.collection('bookings').doc(orderId).set({
-        bookingId:orderId, type:draft.intent, serviceType:f.serviceType||'',
-        region:f.region||'',
-        requestedDate:f.requestedDate||'', requestedTime:f.requestedTime||'',
-        name:f.customerName||'', phone:f.customerPhone||'',
-        notes:f.notes||'', status:'confirmed', source:'ai_chat',
-        priceEst: finalPriceEst || null,
-        createdAt:fv.serverTimestamp(),
-      });
-      await db.collection('vendors').doc('admin-dlc').collection('notifications').add({
+      var apptNotifDoc = {
         type:'new_appointment',
         title: svcEmoji + ' Lịch hẹn ' + svcLabel2 + ' — ' + (f.customerName||''),
         message: apptMsg,
@@ -2128,7 +2123,27 @@
         serviceType:f.serviceType||'', region:f.region||'',
         requestedDate:f.requestedDate||'', requestedTime:f.requestedTime||'',
         read:false, createdAt:fv.serverTimestamp(),
-      });
+      };
+      var apptBookingDoc = {
+        bookingId:orderId, type:draft.intent, vendorId:apptVendorId,
+        serviceType:f.serviceType||'', services:[f.serviceType||''],
+        region:f.region||'',
+        requestedDate:f.requestedDate||'', requestedTime:f.requestedTime||'',
+        customerName:f.customerName||'', customerPhone:f.customerPhone||'',
+        name:f.customerName||'', phone:f.customerPhone||'',
+        notes:f.notes||'', status:'confirmed', source:'ai_chat',
+        priceEst: finalPriceEst || null,
+        createdAt:fv.serverTimestamp(),
+      };
+      await db.collection('bookings').doc(orderId).set(apptBookingDoc);
+      // Also write to vendor's own subcollection so vendor-admin can see it
+      db.collection('vendors').doc(apptVendorId).collection('bookings').doc(orderId).set(apptBookingDoc)
+        .catch(function(e){ console.warn('[vendor-booking] write failed:', e.message); });
+      // Notify vendor directly so their popup fires
+      db.collection('vendors').doc(apptVendorId).collection('notifications').add(apptNotifDoc)
+        .catch(function(e){ console.warn('[vendor-notif] write failed:', e.message); });
+      // Also notify admin
+      await db.collection('vendors').doc('admin-dlc').collection('notifications').add(apptNotifDoc);
 
     } else if (draft.intent === 'tour_request') {
       var dest   = typeof f.destination === 'object' ? f.destination : { id:'', name:String(f.destination||'') };

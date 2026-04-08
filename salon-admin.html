@@ -16,6 +16,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <!-- Static salon data -->
   <script src="marketplace/services-data.js?v=20260405c"></script>
+  <!-- QR code generation — client-side, no API key, no data sent externally -->
+  <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
 
   <style>
     :root {
@@ -699,6 +701,13 @@
     .ps-provider-btn.active { border-color:var(--gold);color:var(--gold);background:rgba(203,163,87,.08) }
     .ps-provider-btn:hover:not(.active) { border-color:rgba(255,255,255,.25);color:var(--text) }
     .ps-guided-note { font-size:.64rem;color:var(--muted);margin-top:.5rem;font-style:italic;opacity:.8 }
+    /* QR payment overlay */
+    .qr-pay-overlay { background:rgba(7,20,36,.82);backdrop-filter:blur(6px) }
+    .qr-canvas-wrap { display:inline-block;background:#ffffff;padding:12px;border-radius:10px;margin-bottom:.8rem;line-height:0 }
+    .qr-canvas-wrap img, .qr-canvas-wrap canvas { display:block }
+    /* QR button in payment modal */
+    #pmQrBtn .btn { border-color:var(--gold-dim);color:var(--gold-lt) }
+    #pmQrBtn .btn:not([disabled]):hover { background:var(--gold-dim) }
 
     /* Tip suggestion buttons */
     .pm-tip-btns { display: flex; gap: .4rem; margin-top: .3rem; margin-bottom: .65rem; }
@@ -1373,13 +1382,17 @@
     <div id="pmTipBtns" class="pm-tip-btns" style="display:none"></div>
     <div class="pm-group">
       <label class="pm-label">Phương thức</label>
-      <select class="sa-input" id="pmMethod" style="width:100%;height:38px;padding:0 8px">
+      <select class="sa-input" id="pmMethod" style="width:100%;height:38px;padding:0 8px" onchange="_onPmMethodChange()">
         <option value="cash">Tiền mặt (Cash)</option>
         <option value="card">Thẻ (Card)</option>
         <option value="zelle">Zelle</option>
         <option value="venmo">Venmo</option>
         <option value="other">Khác (Other)</option>
       </select>
+    </div>
+    <!-- QR action button — visible only when a QR-capable method is selected -->
+    <div id="pmQrBtn" style="display:none;margin:-.1rem 0 .7rem">
+      <button id="pmQrBtnEl" class="btn btn--outline btn--sm" onclick="showQrPayment()" style="width:100%;font-size:.78rem;letter-spacing:.02em">Hiện mã QR cho khách</button>
     </div>
     <div class="pm-group">
       <label class="pm-label">Ghi chú (tuỳ chọn)</label>
@@ -1389,6 +1402,24 @@
     <div class="sa-modal-actions">
       <button class="btn btn--outline btn--sm" onclick="closePaymentModal()">Hủy bỏ</button>
       <button class="btn btn--sm sa-act--pay" id="pmSaveBtn" onclick="savePayment()" style="font-size:.78rem;font-weight:700;padding:.45rem 1.1rem">Lưu thanh toán</button>
+    </div>
+  </div>
+</div>
+
+<!-- QR payment display overlay -->
+<div class="sa-modal-backdrop hidden qr-pay-overlay" id="qrPayModal">
+  <div class="sa-modal" style="max-width:320px;text-align:center;padding:1.4rem 1.2rem">
+    <div id="qrPayTitle" style="font-size:.88rem;font-weight:700;color:var(--gold-lt);margin-bottom:.15rem"></div>
+    <div id="qrPayBizName" style="font-size:.68rem;color:var(--muted);margin-bottom:.85rem"></div>
+    <div id="qrPayAmount" style="font-size:1.55rem;font-weight:700;color:var(--cream);margin-bottom:.85rem;letter-spacing:-.01em"></div>
+    <div class="qr-canvas-wrap">
+      <div id="qrPayCanvas"></div>
+    </div>
+    <div id="qrPayId" style="font-size:.72rem;color:var(--muted);margin:.35rem 0 .2rem"></div>
+    <div style="font-size:.62rem;color:var(--muted);margin-bottom:1rem;opacity:.65">Quét bằng camera điện thoại để thanh toán</div>
+    <div style="display:flex;flex-direction:column;gap:.45rem">
+      <button class="btn btn--primary btn--sm" onclick="confirmQrPayment()" style="font-size:.8rem;font-weight:700;padding:.5rem 1rem">&#10003; Khách đã chuyển — Xác nhận</button>
+      <button class="btn btn--outline btn--sm" onclick="closeQrPayment()" style="font-size:.76rem">Quay lại</button>
     </div>
   </div>
 </div>
@@ -3003,6 +3034,7 @@
     var btn = document.getElementById('pmSaveBtn');
     if (btn) btn.disabled = false;
     _updatePmBalance();
+    _onPmMethodChange();
     document.getElementById('paymentModal').classList.remove('hidden');
   }
 
@@ -4499,6 +4531,133 @@
     return ready.map(function(k) {
       return '<option value="' + k + '">' + (labels[k] || k) + '</option>';
     }).join('');
+  }
+
+  // ── QR payment display ─────────────────────────────────────────────────────────
+  // Vendor selects Zelle/Venmo → "Hiện mã QR" button appears → overlay opens →
+  // customer scans QR → vendor taps "Xác nhận" → overlay closes, amount pre-filled →
+  // vendor reviews and saves via normal savePayment() flow.
+
+  var _QR_METHOD_META = {
+    zelle: { label: 'Zelle', idField: 'zelleId',     idPrefix: 'Zelle: '  },
+    venmo: { label: 'Venmo', idField: 'venmoHandle', idPrefix: 'Venmo: @' }
+  };
+
+  // Build the text/URL to encode in the QR code.
+  // Zelle: tel: or mailto: so camera apps surface the identifier cleanly.
+  // Venmo: venmo.com URL — opens Venmo app on scan.
+  // Returns null if required identifier is missing (prevents broken QR display).
+  function _buildQrPayload(method) {
+    var m = _vendorPayConfig.methods[method] || {};
+    if (method === 'zelle') {
+      var id = (m.zelleId || '').trim();
+      if (!id) return null;
+      if (id.indexOf('@') >= 0) return 'mailto:' + id;
+      var digits = id.replace(/\D/g, '');
+      if (digits.length >= 10) return 'tel:+1' + digits.slice(-10);
+      return id; // fallback: plain text
+    }
+    if (method === 'venmo') {
+      var handle = (m.venmoHandle || '').trim().replace(/^@/, '');
+      if (!handle) return null;
+      return 'https://venmo.com/u/' + encodeURIComponent(handle);
+    }
+    return null;
+  }
+
+  // Show/hide/update the QR action button when vendor changes method select.
+  function _onPmMethodChange() {
+    var method = (document.getElementById('pmMethod') || {}).value || '';
+    var wrap   = document.getElementById('pmQrBtn');
+    var btn    = document.getElementById('pmQrBtnEl');
+    if (!wrap || !btn) return;
+    var meta = _QR_METHOD_META[method];
+    if (!meta) { wrap.style.display = 'none'; return; }
+    wrap.style.display = '';
+    var ready = _isMethodReady(method);
+    btn.disabled      = !ready;
+    btn.style.opacity = ready ? '' : '.45';
+    btn.textContent   = ready
+      ? 'Hiện mã QR — ' + meta.label
+      : meta.label + ': chưa cài đặt — vào Cài đặt để thêm';
+  }
+
+  // Open the QR payment overlay for the currently selected QR method.
+  function showQrPayment() {
+    var method = (document.getElementById('pmMethod') || {}).value || '';
+    var meta   = _QR_METHOD_META[method];
+    if (!meta) return;
+
+    var payload = _buildQrPayload(method);
+    var modal   = document.getElementById('paymentModal');
+    var m       = _vendorPayConfig.methods[method] || {};
+
+    // Amount: total-due (price + tip) when price is known; typed amount otherwise
+    var priceTotal = parseFloat((modal || {}).dataset.priceTotal || '0') || 0;
+    var amountVal  = parseFloat((document.getElementById('pmAmount') || {}).value || '0') || 0;
+    var tip        = parseFloat((document.getElementById('pmTip')    || {}).value || '0') || 0;
+    var displayAmt = priceTotal > 0 ? priceTotal + tip : (amountVal > 0 ? amountVal + tip : 0);
+
+    // Business name
+    var bizName = ((document.getElementById('settingName') || {}).value || '').trim() || 'Tiệm';
+
+    // Human-readable identifier line
+    var idDisplay = method === 'zelle'
+      ? 'Zelle: ' + (m.zelleId || '').trim()
+      : 'Venmo: @' + (m.venmoHandle || '').trim().replace(/^@/, '');
+
+    // Populate overlay fields
+    document.getElementById('qrPayTitle').textContent   = 'Thanh toán qua ' + meta.label;
+    document.getElementById('qrPayBizName').textContent = bizName;
+    document.getElementById('qrPayAmount').textContent  = displayAmt > 0 ? '$' + displayAmt.toFixed(2) : '';
+    document.getElementById('qrPayId').textContent      = idDisplay;
+
+    // Generate QR code into container
+    var qrContainer = document.getElementById('qrPayCanvas');
+    qrContainer.innerHTML = '';
+    if (!payload) {
+      qrContainer.innerHTML = '<div style="font-size:.72rem;color:#f87171;padding:.75rem 0">Chưa cài đặt ID thanh toán.<br>Vào Cài đặt → Phương Thức Thanh Toán.</div>';
+    } else if (typeof QRCode !== 'undefined') {
+      try {
+        new QRCode(qrContainer, {
+          text:         payload,
+          width:        210,
+          height:       210,
+          colorDark:    '#0d2f50',
+          colorLight:   '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      } catch (e) {
+        qrContainer.innerHTML = '<div style="font-size:.7rem;color:var(--muted);padding:.75rem 0">Không tạo được mã QR.</div>';
+      }
+    } else {
+      // Library not yet loaded (rare — it's in <head>)
+      qrContainer.innerHTML = '<div style="font-size:.7rem;color:var(--muted);padding:.75rem 0">Đang tải thư viện QR…</div>';
+    }
+
+    document.getElementById('qrPayModal').classList.remove('hidden');
+  }
+
+  // Close QR overlay — return to payment modal.
+  function closeQrPayment() {
+    var qrModal = document.getElementById('qrPayModal');
+    if (qrModal) qrModal.classList.add('hidden');
+  }
+
+  // Vendor confirms customer has paid via QR.
+  // Pre-fills amount with the balance due (if not already entered), closes overlay.
+  // Vendor then reviews and saves via the standard "Lưu thanh toán" button.
+  function confirmQrPayment() {
+    var modal      = document.getElementById('paymentModal');
+    var priceTotal = parseFloat((modal || {}).dataset.priceTotal || '0') || 0;
+    var amountEl   = document.getElementById('pmAmount');
+    var amount     = parseFloat((amountEl || {}).value || '0') || 0;
+    if (amountEl && priceTotal > 0 && amount <= 0) {
+      amountEl.value = priceTotal.toFixed(2);
+      _updatePmBalance();
+    }
+    closeQrPayment();
+    if (amountEl) setTimeout(function(){ amountEl.focus(); }, 100);
   }
 
   function saveSettings() {

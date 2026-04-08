@@ -645,6 +645,7 @@
     .sa-act--cancel { background: transparent; border: 1px solid var(--border); color: var(--muted); }
     .sa-act--call   { background: transparent; border: 1px solid var(--border); color: var(--muted); text-decoration: none; display: inline-flex; align-items: center; gap: .2rem; }
     .sa-act--pay    { background: rgba(245,166,35,.1); border: 1px solid rgba(245,166,35,.35); color: var(--gold-lt); }
+    .sa-act--refund { background: rgba(248,113,113,.08); border: 1px solid rgba(248,113,113,.35); color: var(--danger); }
 
     /* ── Payment status badges ── */
     .sa-pay-badge { display: inline-flex; align-items: center; font-size: .55rem; font-weight: 700; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
@@ -1122,6 +1123,47 @@
     <div class="sa-modal-actions">
       <button class="btn btn--outline btn--sm" onclick="closeCancelModal()">Không hủy</button>
       <button class="btn btn--sm" style="background:var(--danger);color:#fff;font-weight:700;padding:.45rem 1rem" onclick="_submitCancelBooking()">Xác nhận hủy</button>
+    </div>
+  </div>
+</div>
+
+<!-- Refund modal -->
+<div class="sa-modal-backdrop hidden" id="refundModal">
+  <div class="sa-modal">
+    <h3 style="color:var(--danger);margin-bottom:.25rem">&#8617; Hoàn Tiền</h3>
+    <div id="rfHeader" style="font-size:.78rem;color:var(--muted);margin-bottom:1rem"></div>
+    <input type="hidden" id="rfBookingId">
+    <div class="pm-group">
+      <label class="pm-label">Số tiền hoàn ($) *</label>
+      <input class="sa-input" id="rfAmount" type="number" min="0" step="0.01" placeholder="0.00" style="width:100%">
+    </div>
+    <div class="pm-group">
+      <label class="pm-label">Lý do hoàn tiền *</label>
+      <input class="sa-input" id="rfReason" type="text" placeholder="Ví dụ: Khách không hài lòng, lỗi kỹ thuật viên…" style="width:100%">
+    </div>
+    <div id="rfMsg" style="display:none;font-size:.75rem;margin:.2rem 0"></div>
+    <div class="sa-modal-actions">
+      <button class="btn btn--outline btn--sm" onclick="closeRefundModal()">Hủy bỏ</button>
+      <button class="btn btn--sm sa-act--refund" id="rfSaveBtn" onclick="saveRefund()" style="font-size:.78rem;font-weight:700;padding:.45rem 1.1rem">Xác nhận hoàn tiền</button>
+    </div>
+  </div>
+</div>
+
+<!-- Set price modal (AI pricing assist) -->
+<div class="sa-modal-backdrop hidden" id="setPriceModal">
+  <div class="sa-modal">
+    <h3 style="color:var(--gold-lt);margin-bottom:.25rem">Đặt Giá Dịch Vụ</h3>
+    <div id="spHeader" style="font-size:.78rem;color:var(--muted);margin-bottom:.4rem"></div>
+    <div id="spSuggest" style="display:none;font-size:.72rem;color:#fbbf24;margin-bottom:.8rem;padding:.35rem .5rem;border-radius:4px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2)"></div>
+    <input type="hidden" id="spBookingId">
+    <div class="pm-group">
+      <label class="pm-label">Giá ước tính</label>
+      <input class="sa-input" id="spPrice" type="text" placeholder="Ví dụ: 45 hoặc $35–$55" style="width:100%">
+    </div>
+    <div id="spMsg" style="display:none;font-size:.75rem;margin:.2rem 0"></div>
+    <div class="sa-modal-actions">
+      <button class="btn btn--outline btn--sm" onclick="closeSetPriceModal()">Hủy bỏ</button>
+      <button class="btn btn--sm sa-act--pay" onclick="saveSetPrice()" style="font-size:.78rem;font-weight:700;padding:.45rem 1.1rem">Lưu giá</button>
     </div>
   </div>
 </div>
@@ -2536,16 +2578,20 @@
   }
 
   // Derive balance components from a booking object.
-  // Returns { total, paid, tip, balance } — balance is null when total is unknown.
+  // Returns { total, paid, refunded, netPaid, tip, balance } — balance is null when total is unknown.
   function _computeBalance(b) {
-    var total = _parsePrice(b.priceEst || b.price || '');
-    var paid  = Number(b.amountPaid) || 0;
-    var tip   = Number(b.tipAmount)  || 0;
+    var total    = _parsePrice(b.priceEst || b.price || '');
+    var paid     = Number(b.amountPaid)    || 0;
+    var refunded = Number(b.refundAmount)  || 0;
+    var netPaid  = Math.max(0, paid - refunded);
+    var tip      = Number(b.tipAmount)     || 0;
     return {
-      total:   total,
-      paid:    paid,
-      tip:     tip,
-      balance: total > 0 ? Math.max(0, total - paid) : null
+      total:    total,
+      paid:     paid,
+      refunded: refunded,
+      netPaid:  netPaid,
+      tip:      tip,
+      balance:  total > 0 ? Math.max(0, total - netPaid) : null
     };
   }
 
@@ -2577,6 +2623,38 @@
     }
   }
 
+  // ── AI pricing guide (local lookup — no external API) ────────────────────────
+  // Ordered most-specific → least-specific. First match wins.
+  var _PRICE_GUIDE = [
+    { keys: ['full set acrylic','acrylic full set','full acrylic'],  lo: 50, hi: 80 },
+    { keys: ['acrylic fill','fill acrylic','acrylic refill'],         lo: 30, hi: 50 },
+    { keys: ['gel manicure','gel mani'],                              lo: 35, hi: 55 },
+    { keys: ['gel pedicure','gel pedi'],                              lo: 50, hi: 70 },
+    { keys: ['dip powder','dip mani','sns'],                          lo: 45, hi: 65 },
+    { keys: ['nail art','nail design'],                               lo: 60, hi: 100 },
+    { keys: ['chrome powder','chrome nail'],                          lo: 10, hi: 20 },
+    { keys: ['ombre gel','ombre nail'],                               lo: 15, hi: 25 },
+    { keys: ['manicure','mani'],                                      lo: 25, hi: 40 },
+    { keys: ['pedicure','pedi'],                                      lo: 35, hi: 55 },
+    { keys: ['eyebrow','brow wax'],                                   lo: 12, hi: 20 },
+    { keys: ['wax'],                                                  lo: 10, hi: 30 },
+  ];
+
+  // Returns a suggested price range string like "$35–$55" or null if no match.
+  function _suggestPrice(svcArr) {
+    if (!svcArr || !svcArr.length) return null;
+    var text = svcArr.join(' ').toLowerCase();
+    for (var i = 0; i < _PRICE_GUIDE.length; i++) {
+      var entry = _PRICE_GUIDE[i];
+      for (var j = 0; j < entry.keys.length; j++) {
+        if (text.indexOf(entry.keys[j]) >= 0) {
+          return '$' + entry.lo + '\u2013$' + entry.hi;
+        }
+      }
+    }
+    return null;
+  }
+
   function _payBadgeHtml(b) {
     var s  = b.status || 'confirmed';
     // No payment badge for terminal non-service states
@@ -2602,19 +2680,24 @@
   function _payDetHtml(b) {
     var s  = b.status || 'confirmed';
     if (['canceled','cancelled','no_show','rescheduled'].indexOf(s) >= 0) return '';
-    var ps = b.paymentStatus || 'unpaid';
-    if (ps === 'unpaid' && s !== 'completed') return ''; // don't show "unpaid" row on pending bookings
+    var ps  = b.paymentStatus || 'unpaid';
+    var bal = _computeBalance(b);
+    // Show payment section when: total is known OR any payment/refund data exists
+    var hasData = bal.total > 0 || ps !== 'unpaid' || bal.paid > 0 || bal.refunded > 0;
+    if (!hasData) return '';
     var psLabel = { paid: '\u0110\u00e3 thanh to\u00e1n', partial: 'M\u1ed9t ph\u1ea7n', unpaid: 'Ch\u01b0a thanh to\u00e1n' }[ps] || ps;
     var psColor = ps === 'paid' ? 'var(--success)' : ps === 'partial' ? '#fbbf24' : 'var(--danger)';
-    var bal     = _computeBalance(b);
     var parts   = ['<span style="color:' + psColor + ';font-weight:700">' + psLabel + '</span>'];
-    if (bal.total > 0)            parts.push('T\u1ed5ng: $' + bal.total.toFixed(2));
-    if (b.amountPaid)             parts.push('\u0110\u00e3 thu: $' + Number(b.amountPaid).toFixed(2));
+    if (bal.total > 0)     parts.push('T\u1ed5ng: $' + bal.total.toFixed(2));
+    if (bal.paid > 0)      parts.push('\u0110\u00e3 thu: $' + bal.paid.toFixed(2));
+    if (bal.refunded > 0)
+      parts.push('<span style="color:var(--danger)">Ho\u00e0n ti\u1ec1n: \u2212$' + bal.refunded.toFixed(2) +
+        (b.refundReason ? ' (' + esc(b.refundReason) + ')' : '') + '</span>');
     if (bal.balance !== null && bal.balance > 0)
       parts.push('<span style="color:#fbbf24;font-weight:700">C\u00f2n l\u1ea1i: $' + bal.balance.toFixed(2) + '</span>');
-    if (b.tipAmount)              parts.push('Tip: $' + Number(b.tipAmount).toFixed(2));
-    if (b.paymentMethod)          parts.push(esc(b.paymentMethod));
-    if (b.paymentNote)            parts.push(esc(b.paymentNote));
+    if (b.tipAmount)       parts.push('Tip: $' + Number(b.tipAmount).toFixed(2));
+    if (b.paymentMethod)   parts.push(esc(b.paymentMethod));
+    if (b.paymentNote)     parts.push(esc(b.paymentNote));
     return '<div class="sa-det-section"><div class="sa-det-label">Thanh to\u00e1n</div>' +
       '<div class="sa-det-val">' + parts.join(' &middot; ') + '</div></div>';
   }
@@ -2710,6 +2793,146 @@
         _pmMsg('Lỗi: ' + err.message, true);
         if (btn) btn.disabled = false;
       });
+  }
+
+  // ── Refund flow ───────────────────────────────────────────────────────────────
+
+  function openRefundModal(bookingId) {
+    var b = _bookingCache[bookingId] || {};
+    var paid = Number(b.amountPaid) || 0;
+    var refunded = Number(b.refundAmount) || 0;
+    var maxRefund = Math.max(0, paid - refunded);
+    document.getElementById('rfBookingId').value = bookingId;
+    var svcArr = b.selectedServices || b.services || (b.serviceType ? [b.serviceType] : []);
+    var svcLbl = Array.isArray(svcArr) ? svcArr.filter(Boolean).join(', ') : '';
+    document.getElementById('rfHeader').textContent =
+      (b.customerName || 'Khách') + (svcLbl ? ' · ' + svcLbl : '') +
+      ' · Đã thu: $' + paid.toFixed(2) + (refunded > 0 ? ' · Đã hoàn: $' + refunded.toFixed(2) : '') +
+      ' · Tối đa hoàn: $' + maxRefund.toFixed(2);
+    document.getElementById('rfAmount').value  = '';
+    document.getElementById('rfAmount').max    = maxRefund;
+    document.getElementById('rfReason').value  = '';
+    document.getElementById('rfMsg').style.display = 'none';
+    var btn = document.getElementById('rfSaveBtn');
+    if (btn) btn.disabled = false;
+    document.getElementById('refundModal').classList.remove('hidden');
+  }
+
+  function closeRefundModal() {
+    document.getElementById('refundModal').classList.add('hidden');
+  }
+
+  function _rfMsg(msg, isError) {
+    var el = document.getElementById('rfMsg');
+    el.style.display = msg ? 'block' : 'none';
+    el.style.color   = isError ? 'var(--danger)' : 'var(--muted)';
+    el.textContent   = msg;
+  }
+
+  function saveRefund() {
+    var bookingId    = document.getElementById('rfBookingId').value;
+    var refundAmount = parseFloat(document.getElementById('rfAmount').value) || 0;
+    var reason       = document.getElementById('rfReason').value.trim();
+
+    if (!bookingId || !vendorRef) { _rfMsg('Lỗi: không tìm thấy lịch hẹn.', true); return; }
+    if (refundAmount <= 0)        { _rfMsg('Nhập số tiền hoàn hợp lệ.', true); return; }
+    if (!reason)                  { _rfMsg('Lý do hoàn tiền là bắt buộc.', true); return; }
+
+    var cached   = _bookingCache[bookingId] || {};
+    var amtPaid  = Number(cached.amountPaid)   || 0;
+    var prevRef  = Number(cached.refundAmount) || 0;
+    var maxRef   = Math.max(0, amtPaid - prevRef);
+    if (refundAmount > maxRef) { _rfMsg('Số tiền hoàn vượt quá số tiền đã thu ($' + maxRef.toFixed(2) + ').', true); return; }
+
+    var totalRefunded = prevRef + refundAmount;
+    var refundStatus  = totalRefunded >= amtPaid ? 'full' : 'partial';
+    var priceTotal    = _parsePrice(cached.priceEst || cached.price || '');
+    var netPaid       = Math.max(0, amtPaid - totalRefunded);
+    var balanceDue    = priceTotal > 0 ? Math.max(0, priceTotal - netPaid) : null;
+    var payStatus     = netPaid <= 0 ? 'unpaid' : (priceTotal > 0 && netPaid >= priceTotal ? 'paid' : 'partial');
+
+    var btn = document.getElementById('rfSaveBtn');
+    if (btn) btn.disabled = true;
+    _rfMsg('Đang lưu…', false);
+
+    var fv = firebase.firestore.FieldValue;
+    var update = {
+      refundAmount:  totalRefunded,
+      refundReason:  reason,
+      refundStatus:  refundStatus,
+      refundAt:      fv.serverTimestamp(),
+      paymentStatus: payStatus,
+      updatedAt:     fv.serverTimestamp(),
+      history:       fv.arrayUnion({
+        action:        'refund_issued',
+        refundAmount:  refundAmount,
+        totalRefunded: totalRefunded,
+        refundStatus:  refundStatus,
+        reason:        reason,
+        by:            _userEmail || 'staff',
+        at:            new Date().toISOString()
+      })
+    };
+    if (balanceDue !== null) update.balanceDue = balanceDue;
+
+    vendorRef.collection('bookings').doc(bookingId).update(update)
+      .then(function() {
+        showToast('✓ Đã ghi nhận hoàn tiền $' + refundAmount.toFixed(2) + '.');
+        closeRefundModal();
+      })
+      .catch(function(err) {
+        _rfMsg('Lỗi: ' + err.message, true);
+        if (btn) btn.disabled = false;
+      });
+  }
+
+  // ── Set price / AI pricing assist ────────────────────────────────────────────
+
+  function openSetPriceModal(bookingId, suggestedRange) {
+    var b = _bookingCache[bookingId] || {};
+    document.getElementById('spBookingId').value = bookingId;
+    var svcArr = b.selectedServices || b.services || (b.serviceType ? [b.serviceType] : []);
+    var svcLbl = Array.isArray(svcArr) ? svcArr.filter(Boolean).join(', ') : '';
+    document.getElementById('spHeader').textContent = (b.customerName || 'Khách') + (svcLbl ? ' · ' + svcLbl : '');
+    var sugDiv = document.getElementById('spSuggest');
+    if (suggestedRange) {
+      sugDiv.style.display = 'block';
+      sugDiv.textContent   = '💡 Giá thị trường ước tính: ' + suggestedRange + ' (Bay Area nail salon)';
+      document.getElementById('spPrice').value = suggestedRange.replace(/\$/g, '').split('–')[0].trim();
+    } else {
+      sugDiv.style.display = 'none';
+      document.getElementById('spPrice').value = b.priceEst || b.price || '';
+    }
+    document.getElementById('spMsg').style.display = 'none';
+    document.getElementById('setPriceModal').classList.remove('hidden');
+  }
+
+  function closeSetPriceModal() {
+    document.getElementById('setPriceModal').classList.add('hidden');
+  }
+
+  function _spMsg(msg, isError) {
+    var el = document.getElementById('spMsg');
+    el.style.display = msg ? 'block' : 'none';
+    el.style.color   = isError ? 'var(--danger)' : 'var(--muted)';
+    el.textContent   = msg;
+  }
+
+  function saveSetPrice() {
+    var bookingId = document.getElementById('spBookingId').value;
+    var priceRaw  = document.getElementById('spPrice').value.trim();
+    if (!bookingId || !vendorRef) { _spMsg('Lỗi: không tìm thấy lịch hẹn.', true); return; }
+    if (!priceRaw) { _spMsg('Nhập giá trước khi lưu.', true); return; }
+    _spMsg('Đang lưu…', false);
+    vendorRef.collection('bookings').doc(bookingId).update({
+      priceEst:  priceRaw,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function() {
+      showToast('✓ Đã lưu giá dịch vụ.');
+      closeSetPriceModal();
+    }).catch(function(err) {
+      _spMsg('Lỗi: ' + err.message, true);
+    });
   }
 
   // ── Availability check for manual booking ────────────────────────────────────
@@ -3234,6 +3457,15 @@
         }
         if (price) {
           det += '<div class="sa-det-section"><div class="sa-det-label">Gi\u00e1 \u01b0\u1edbc t\u00ednh</div><div class="sa-det-val sa-appt-price">' + esc(String(price)) + '</div></div>';
+        } else if (canBook && ['canceled','cancelled','no_show','rescheduled'].indexOf(status) < 0) {
+          var suggest = _suggestPrice(svcArr);
+          var suggestSpan = suggest
+            ? ' &middot; <span style="color:#fbbf24;font-size:.68rem">&#128161; G\u1ee3i \u00fd: ' + esc(suggest) + '</span>'
+            : '';
+          det += '<div class="sa-det-section"><div class="sa-det-label">Gi\u00e1 \u01b0\u1edbc t\u00ednh</div><div class="sa-det-val">' +
+            '<span style="color:var(--muted)">Ch\u01b0a c\u00f3 gi\u00e1</span>' + suggestSpan +
+            ' <button class="sa-act" style="font-size:.62rem;padding:2px 7px;margin-left:.3rem" onclick=\'openSetPriceModal(' + idQ + ',' + JSON.stringify(suggest || '') + ')\'>+ \u0110\u1eb7t gi\u00e1</button>' +
+            '</div></div>';
         }
 
         // Payment status detail
@@ -3292,10 +3524,15 @@
         var payBtn  = (['canceled','cancelled','no_show','rescheduled'].indexOf(status) < 0)
           ? '<button class="sa-act sa-act--pay" onclick=\'openPaymentModal(' + idQ + ')\'>&#36; Thu ti\u1ec1n</button>'
           : '';
+        // Refund button — shown when amountPaid > refundAmount (there is money to refund)
+        var _netCollected = (Number(b.amountPaid) || 0) - (Number(b.refundAmount) || 0);
+        var refundBtn = (canManage && _netCollected > 0 && ['canceled','cancelled','no_show','rescheduled'].indexOf(status) < 0)
+          ? '<button class="sa-act sa-act--refund" onclick=\'openRefundModal(' + idQ + ')\'>&#8617; Ho\u00e0n ti\u1ec1n</button>'
+          : '';
         var actions = '';
         if (status === 'confirmed') {
           actions =
-            editBtn + payBtn +
+            editBtn + payBtn + refundBtn +
             '<button class="sa-act sa-act--start"  onclick=\'updateBookingStatus(' + idQ + ',"in_progress")\'>&#9654; B\u1eaft \u0111\u1ea7u</button>' +
             '<button class="sa-act sa-act--done"   onclick=\'updateBookingStatus(' + idQ + ',"completed")\'>&#10003; Xong</button>' +
             '<button class="sa-act sa-act--noshow" onclick=\'updateBookingStatus(' + idQ + ',"no_show")\'>V\u1eafng</button>' +
@@ -3304,14 +3541,14 @@
             (canManage ? '<button class="sa-act sa-act--cancel" onclick=\'deleteBooking(' + idQ + ',' + nameQ + ')\'>&#128465; X\u00f3a</button>' : '');
         } else if (status === 'in_progress') {
           actions =
-            editBtn + payBtn +
+            editBtn + payBtn + refundBtn +
             '<button class="sa-act sa-act--done"   onclick=\'updateBookingStatus(' + idQ + ',"completed")\'>&#10003; Ho\u00e0n th\u00e0nh</button>' +
             '<button class="sa-act sa-act--noshow" onclick=\'updateBookingStatus(' + idQ + ',"no_show")\'>V\u1eafng</button>' +
             (canManage ? '<button class="sa-act sa-act--cancel" style="border-color:rgba(248,113,113,.4);color:var(--danger)" onclick=\'openCancelModal(' + idQ + ',' + nameQ + ',' + phoneQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')\'>&#10005; H\u1ee7y</button>' : '') +
             (canManage ? '<button class="sa-act sa-act--cancel" onclick=\'deleteBooking(' + idQ + ',' + nameQ + ')\'>&#128465; X\u00f3a</button>' : '');
         } else {
           // completed and other terminal states — still allow payment correction
-          actions = payBtn + (canManage ? '<button class="sa-act sa-act--cancel" onclick=\'deleteBooking(' + idQ + ',' + nameQ + ')\'>&#128465; X\u00f3a</button>' : '');
+          actions = payBtn + refundBtn + (canManage ? '<button class="sa-act sa-act--cancel" onclick=\'deleteBooking(' + idQ + ',' + nameQ + ')\'>&#128465; X\u00f3a</button>' : '');
         }
 
         return '<div class="' + cardCls + '">' +

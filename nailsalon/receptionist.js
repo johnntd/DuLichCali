@@ -1261,6 +1261,13 @@
 
     var lang = (biz._bookingState && biz._bookingState.lang) || detectedLang || 'en';
 
+    // Await the in-flight fresh Firestore read before building the prompt.
+    // On the first message after page load this waits for _fetchLiveBizData() to finish
+    // (typically ~200-500ms) so biz.staff/hours/services reflect the latest admin changes.
+    // On subsequent messages biz._dataPromise is null → Promise.resolve() → zero added latency.
+    var _ready = biz._dataPromise || Promise.resolve();
+    return _ready.then(function() {
+
     if (!apiKey) {
       return new Promise(function (resolve) {
         setTimeout(function () {
@@ -1337,6 +1344,7 @@
 
       return { text: clean, escalationType: escalationType };
     });
+    }); // end _ready.then — guarantees first-message prompt uses fresh Firestore data
   }
 
   // ── DOM helpers ───────────────────────────────────────────────────────────────
@@ -1813,15 +1821,16 @@
       biz._firestoreApiKey    = null;
       biz._parallelServices   = [];
       biz._dataFetchedAt      = 0;
+      biz._dataPromise        = null;
 
       function _fetchLiveBizData() {
         try {
           if (!window.dlcDb || !biz.id) return;
           var _vref = window.dlcDb.collection('vendors').doc(biz.id);
-          Promise.all([
-            _vref.get(),
-            _vref.collection('staff').get(),
-            _vref.collection('services').where('active', '==', true).get()
+          biz._dataPromise = Promise.all([
+            _vref.get({ source: 'server' }),
+            _vref.collection('staff').get({ source: 'server' }),
+            _vref.collection('services').where('active', '==', true).get({ source: 'server' })
           ]).then(function(results) {
             var vdoc      = results[0];
             var staffSnap = results[1];
@@ -1900,8 +1909,13 @@
             // svcSnap empty → keep existing biz.services; prompt falls back to biz._staticServices
 
             biz._dataFetchedAt = Date.now();
-          }).catch(function() {});
-        } catch(e) {}
+            biz._dataPromise   = null;
+          }).catch(function() {
+            biz._dataPromise   = null;
+          });
+        } catch(e) {
+          biz._dataPromise = null;
+        }
       }
 
       _fetchLiveBizData();
@@ -1927,9 +1941,9 @@
           return;
         }
 
-        // TTL refresh: if biz data is older than 10 minutes, re-fetch in background.
-        // Reset timestamp immediately to prevent a second send() from triggering a concurrent refresh.
-        // Fire-and-forget — current message uses cached data; the next message sees fresh data.
+        // TTL refresh: if biz data is older than 10 minutes, re-fetch with fresh server data.
+        // Reset timestamp immediately to prevent concurrent refreshes.
+        // _handleMessage() will await biz._dataPromise so the refreshed data lands before the prompt.
         if (biz._dataFetchedAt && (Date.now() - biz._dataFetchedAt > 600000)) {
           biz._dataFetchedAt = Date.now();
           _fetchLiveBizData();

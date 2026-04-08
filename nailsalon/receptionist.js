@@ -1948,7 +1948,8 @@
               NailAvailabilityChecker.check(biz, draft)
                 .then(function (avail) {
                   if (avail.valid) {
-                    // Slot is available — book immediately, no pending state.
+                    // Slot is available — escalate to vendor inbox for confirmation.
+                    // Vendor must confirm via salon-admin before booking is finalised.
                     // Remove Claude's speculative text from history.
                     if (biz._aiHistory && biz._aiHistory.length &&
                         biz._aiHistory[biz._aiHistory.length - 1].role === 'assistant') {
@@ -1958,7 +1959,7 @@
                     // Capture the draft before clearing state
                     var confirmedDraft = draft;
 
-                    // Clear booking state — appointment is now booked.
+                    // Clear booking state — request is now pending vendor confirmation.
                     biz._bookingState = _emptyState();
                     _saveBookingState(biz);
                     biz._offeredSlot = null;
@@ -1968,8 +1969,12 @@
                     biz._submissionInFlight = true;
                     setTimeout(function () { biz._submissionInFlight = false; }, 5000);
 
-                    // Show natural-language confirmation + booking packet with calendar.
-                    _submitDirectBooking(biz, confirmedDraft, messagesEl);
+                    // Send to vendor inbox — customer sees "waiting for confirmation" +
+                    // calendar card after vendor confirms (EscalationEngine handles both).
+                    var esc = window.EscalationEngine;
+                    if (esc && typeof esc.create === 'function') {
+                      esc.create(biz, messagesEl, 'appointment', confirmedDraft);
+                    }
                   } else {
                     // Not available — suppress Claude's premature "confirmed" message.
                     // Replace it in history with the rejection so Claude knows what was

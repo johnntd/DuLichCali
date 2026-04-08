@@ -1583,10 +1583,18 @@
     var lang   = draft.lang || 'en';
     var svcs   = Array.isArray(draft.services) ? draft.services : [];
     var svcStr = svcs.join(' + ');
-    var orderId = _genBookingId();
     var vendorId = biz.id || biz.slug || 'unknown';
     var db = window.dlcDb;
     var fv = db && firebase && firebase.firestore ? firebase.firestore.FieldValue : null;
+
+    // ── Booking ID strategy ────────────────────────────────────────────────────────
+    // RESCHEDULE with exact ID → reuse existing doc ID (update in place, same record).
+    // RESCHEDULE without ID    → generate new ID (old bookings marked 'rescheduled').
+    // NEW booking              → generate new ID.
+    // ⚠️ INVARIANT: do NOT change isExactReschedule logic — it controls whether we
+    //   update in-place (reschedule) or create a new doc (new booking).
+    var isExactReschedule = !!(draft.isModify && draft.existingBookingId);
+    var finalBookingId    = isExactReschedule ? draft.existingBookingId : _genBookingId();
 
     // Natural-language confirmation
     var confirmMsg = _buildConfirmedNatural(biz, draft, lang);
@@ -1596,16 +1604,15 @@
     _appendMessage(messagesEl, confirmMsg, 'bot');
 
     // Booking packet card with calendar buttons
-    var packetHtml = _buildBookingPacketHtml(biz, draft, orderId, lang);
+    var packetHtml = _buildBookingPacketHtml(biz, draft, finalBookingId, lang);
     _appendHtmlMessage(messagesEl, packetHtml);
 
     // ── Post-booking context: restore name/phone/services for follow-up cancel/modify ──
+    // ⚠️ INVARIANT: this block MUST remain. Removing it breaks cancel/modify after booking.
     // biz._bookingState was cleared before _submitDirectBooking was called.
-    // Restore the fields Claude needs to handle "cancel my appointment" or
-    // "change my appointment" without re-collecting all details.
-    // Do NOT set existingBookingId in STATE — that would cause any new booking
-    // on this session to be treated as a reschedule. Use biz._lastBookingId instead.
-    biz._lastBookingId         = orderId;
+    // Do NOT set existingBookingId in STATE — it would tag any new booking as a reschedule.
+    // Use biz._lastBookingId for direct cancel/modify lookup instead.
+    biz._lastBookingId         = finalBookingId;
     biz._bookingState.services = svcs;
     biz._bookingState.staff    = draft.staff || null;
     biz._bookingState.name     = draft.name  || null;
@@ -1616,71 +1623,88 @@
     // Write to Firestore (non-blocking — customer sees confirmation immediately)
     if (db && fv) {
       var vendorBookingsRef = db.collection('vendors').doc(vendorId).collection('bookings');
+      var svcPrices = svcs.map(function(sn) { return _priceForService(biz, sn); }).filter(Boolean);
 
-      // ── Cancel / remove old booking when this is a reschedule ─────────────────
-      if (draft.existingBookingId) {
-        // Exact booking ID known — delete it outright
-        vendorBookingsRef.doc(draft.existingBookingId).delete()
-          .catch(function(e) { console.warn('[reschedule] old booking delete failed:', e.message); });
-      } else if (draft.isModify && draft.phone) {
-        // No specific ID — find all confirmed bookings for this phone and mark rescheduled
-        vendorBookingsRef
-          .where('customerPhone', '==', draft.phone)
-          .where('status', '==', 'confirmed')
-          .get()
-          .then(function(snap) {
-            snap.docs.forEach(function(d) {
-              d.ref.update({ status: 'rescheduled', rescheduledAt: fv.serverTimestamp() })
-                .catch(function(e) { console.warn('[reschedule] status update failed:', e.message); });
-            });
-          })
-          .catch(function(e) { console.warn('[reschedule] lookup failed:', e.message); });
+      if (isExactReschedule) {
+        // ── UPDATE EXISTING BOOKING IN PLACE ──────────────────────────────────────
+        // Same Firestore doc ID — preserves booking history (createdAt, customerName/Phone).
+        // Only mutable fields (time, staff, services) are overwritten.
+        // ⚠️ INVARIANT: use .update() NOT .delete()+.set() — must preserve booking history.
+        vendorBookingsRef.doc(finalBookingId).update({
+          services:         svcs,
+          selectedServices: svcs,
+          serviceType:      svcStr,
+          staff:            draft.staff || null,
+          requestedDate:    draft.date  || '',
+          requestedTime:    draft.time  || '',
+          durationMins:     draft.totalDurationMins || 60,
+          priceEst:         svcPrices.join(' + '),
+          status:           'confirmed',
+          isReschedule:     true,
+          rescheduledAt:    fv.serverTimestamp(),
+        }).catch(function(e) { console.warn('[reschedule] in-place update failed:', e.message); });
+      } else {
+        // ── FALLBACK RESCHEDULE (no exact ID) ────────────────────────────────────
+        // Mark all confirmed bookings for this phone as rescheduled, then create new doc.
+        if (draft.isModify && draft.phone) {
+          vendorBookingsRef
+            .where('customerPhone', '==', draft.phone)
+            .where('status', '==', 'confirmed')
+            .get()
+            .then(function(snap) {
+              snap.docs.forEach(function(d) {
+                d.ref.update({ status: 'rescheduled', rescheduledAt: fv.serverTimestamp() })
+                  .catch(function(e) { console.warn('[reschedule] mark-rescheduled failed:', e.message); });
+              });
+            })
+            .catch(function(e) { console.warn('[reschedule] lookup failed:', e.message); });
+        }
+
+        // ── CREATE NEW BOOKING DOC ────────────────────────────────────────────────
+        // Use requestedDate/requestedTime to match vendor-admin schema (orderBy('requestedDate'))
+        var bookingDoc = {
+          bookingId:        finalBookingId,
+          type:             'nail_appointment',
+          vendorId:         vendorId,
+          services:         svcs,
+          selectedServices: svcs,          // explicit alias for vendor-admin multi-service rendering
+          serviceType:      svcStr,        // single string alias for backward compat
+          staff:            draft.staff || null,
+          requestedDate:    draft.date  || '',
+          requestedTime:    draft.time  || '',
+          durationMins:     draft.totalDurationMins || 60,
+          priceEst:         svcPrices.join(' + '),
+          customerName:     draft.name  || '',
+          customerPhone:    draft.phone || '',
+          name:             draft.name  || '', // alias for backward compat
+          phone:            draft.phone || '', // alias for backward compat
+          notes:            draft.notes || '',
+          lang:             lang,
+          status:           'confirmed',
+          isReschedule:     draft.isModify ? true : false,
+          source:           'lily_receptionist',
+          createdAt:        fv.serverTimestamp(),
+        };
+        vendorBookingsRef.doc(finalBookingId).set(bookingDoc)
+          .catch(function(e) { console.warn('[booking] Firestore write failed:', e.message); });
       }
 
-      // Use requestedDate/requestedTime to match vendor-admin schema (orderBy('requestedDate'))
-      var svcPrices = svcs.map(function(sn) { return _priceForService(biz, sn); }).filter(Boolean);
-      var bookingDoc = {
-        bookingId:      orderId,
-        type:           'nail_appointment',
-        vendorId:       vendorId,
-        services:       svcs,
-        selectedServices: svcs,          // explicit alias for vendor-admin multi-service rendering
-        serviceType:    svcStr,          // single string alias for backward compat
-        staff:          draft.staff || null,
-        requestedDate:  draft.date  || '',
-        requestedTime:  draft.time  || '',
-        durationMins:   draft.totalDurationMins || 60,
-        priceEst:       svcPrices.join(' + '),  // e.g. "$35+ + $30+"
-        customerName:   draft.name  || '',
-        customerPhone:  draft.phone || '',
-        name:           draft.name  || '', // alias for backward compat
-        phone:          draft.phone || '', // alias for backward compat
-        notes:          draft.notes || '',
-        lang:           lang,
-        status:         'confirmed',
-        isReschedule:   draft.isModify ? true : false,
-        source:         'lily_receptionist',
-        createdAt:      fv.serverTimestamp(),
-      };
-      // Use .doc(orderId).set() so the doc ID equals orderId — needed for image uploads
-      vendorBookingsRef.doc(orderId).set(bookingDoc)
-        .catch(function(e) { console.warn('[booking] Firestore write failed:', e.message); });
-
       // Show image upload widget after packet
-      _showRefImageWidget(messagesEl, vendorId, orderId, vendorBookingsRef, lang);
+      _showRefImageWidget(messagesEl, vendorId, finalBookingId, vendorBookingsRef, lang);
 
+      var notifTitle = isExactReschedule ? '🔄 Đổi lịch hẹn — ' : '💅 Lịch hẹn — ';
       var notifLines = [
-        '💅 LỊCH HẸN MỚI — ' + orderId,
+        (isExactReschedule ? '🔄 ĐỔI LỊCH — ' : '💅 LỊCH HẸN MỚI — ') + finalBookingId,
         '💆 Dịch vụ: ' + svcStr,
         draft.staff ? '👩 Kỹ thuật viên: ' + draft.staff : null,
         '📅 ' + (draft.date || '') + ' lúc ' + (draft.time || ''),
         '👤 ' + (draft.name || '') + ' · ' + (draft.phone || ''),
       ].filter(Boolean).join('\n');
       db.collection('vendors').doc(vendorId).collection('notifications').add({
-        type:          'new_appointment',
-        title:         '💅 Lịch hẹn — ' + (draft.name || ''),
+        type:          isExactReschedule ? 'appointment_rescheduled' : 'new_appointment',
+        title:         notifTitle + (draft.name || ''),
         message:       notifLines,
-        bookingId:     orderId,
+        bookingId:     finalBookingId,
         customerName:  draft.name  || '',
         customerPhone: draft.phone || '',
         services:      svcs,

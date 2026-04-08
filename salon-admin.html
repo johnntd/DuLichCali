@@ -667,6 +667,11 @@
     .pm-summary-val--balance { font-size: .94rem; }
     .pm-no-price { font-size: .73rem; color: var(--muted); background: rgba(248,113,113,.06); border: 1px solid rgba(248,113,113,.25); border-radius: 6px; padding: .5rem .75rem; margin-bottom: .85rem; display: flex; justify-content: space-between; align-items: center; gap: .5rem; flex-wrap: wrap; }
     .pm-no-price-btn { font-size: .68rem; font-weight: 700; color: var(--gold-lt); background: rgba(245,166,35,.1); border: 1px solid rgba(245,166,35,.35); border-radius: 4px; padding: 3px 9px; cursor: pointer; white-space: nowrap; }
+    /* Tip suggestion buttons */
+    .pm-tip-btns { display: flex; gap: .4rem; margin-top: .3rem; margin-bottom: .65rem; }
+    .pm-tip-btn { flex: 1; font-size: .68rem; font-weight: 700; padding: .32rem .2rem; border-radius: 5px; border: 1px solid var(--border); background: rgba(255,255,255,.04); color: var(--muted); cursor: pointer; text-align: center; line-height: 1.35; transition: background .15s, color .15s, border-color .15s; }
+    .pm-tip-btn:hover { border-color: rgba(245,166,35,.5); color: var(--gold-lt); background: rgba(245,166,35,.08); }
+    .pm-tip-btn--active { border-color: rgba(245,166,35,.7); color: var(--gold-lt); background: rgba(245,166,35,.12); }
 
     /* Status inline badges */
     .sa-st { font-size: .58rem; font-weight: 700; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
@@ -1189,7 +1194,15 @@
         <span class="pm-summary-label">Tổng giá dịch vụ</span>
         <span id="pmSumTotal" class="pm-summary-val"></span>
       </div>
-      <div class="pm-summary-row">
+      <div class="pm-summary-row" id="pmSumTipRow" style="display:none">
+        <span class="pm-summary-label" style="color:#fbbf24">Tip</span>
+        <span id="pmSumTip" class="pm-summary-val" style="color:#fbbf24"></span>
+      </div>
+      <div class="pm-summary-row pm-summary-row--balance" id="pmSumGrandRow" style="display:none">
+        <span class="pm-summary-label" style="color:var(--cream);font-weight:700;font-size:.68rem">Tổng phải thu</span>
+        <span id="pmSumGrand" class="pm-summary-val pm-summary-val--balance" style="color:var(--cream)"></span>
+      </div>
+      <div class="pm-summary-row" id="pmSumPaidRow">
         <span class="pm-summary-label">Số tiền thu</span>
         <span id="pmSumPaid" class="pm-summary-val pm-summary-val--paid"></span>
       </div>
@@ -1221,9 +1234,11 @@
       </div>
       <div class="pm-group" style="flex:1">
         <label class="pm-label">Tip ($)</label>
-        <input class="sa-input" id="pmTip" type="number" min="0" step="0.01" placeholder="0.00" style="width:100%">
+        <input class="sa-input" id="pmTip" type="number" min="0" step="0.01" placeholder="0.00" style="width:100%" oninput="_updatePmBalance()">
       </div>
     </div>
+    <!-- Tip suggestion buttons (rendered by openPaymentModal when price is known) -->
+    <div id="pmTipBtns" class="pm-tip-btns" style="display:none"></div>
     <div class="pm-group">
       <label class="pm-label">Phương thức</label>
       <select class="sa-input" id="pmMethod" style="width:100%;height:38px;padding:0 8px">
@@ -2626,18 +2641,44 @@
     };
   }
 
-  // Updates the summary block live as vendor types. Called by pmAmount oninput.
+  // Updates the summary block live as vendor types. Called by pmAmount + pmTip oninput.
   function _updatePmBalance() {
     var modal  = document.getElementById('paymentModal');
     var total  = parseFloat(modal.dataset.priceTotal) || 0;
     var amount = parseFloat(document.getElementById('pmAmount').value) || 0;
+    var tip    = parseFloat(document.getElementById('pmTip').value)    || 0;
     var sel    = document.getElementById('pmStatus');
+
+    // ── Tip rows ───────────────────────────────────────────────────────────────
+    var tipRowEl   = document.getElementById('pmSumTipRow');
+    var tipEl      = document.getElementById('pmSumTip');
+    var grandRowEl = document.getElementById('pmSumGrandRow');
+    var grandEl    = document.getElementById('pmSumGrand');
+    if (tip > 0 && total > 0) {
+      if (tipEl)      tipEl.textContent  = '$' + tip.toFixed(2);
+      if (tipRowEl)   tipRowEl.style.display   = 'flex';
+      if (grandEl)    grandEl.textContent = '$' + (total + tip).toFixed(2);
+      if (grandRowEl) grandRowEl.style.display = 'flex';
+    } else {
+      if (tipRowEl)   tipRowEl.style.display   = 'none';
+      if (grandRowEl) grandRowEl.style.display = 'none';
+    }
+
+    // ── Active tip button highlight ────────────────────────────────────────────
+    [15, 20, 25].forEach(function(pct) {
+      var btn = document.getElementById('pmTipBtn' + pct);
+      if (!btn) return;
+      var expected = total > 0 ? Math.round(total * pct) / 100 : -1;
+      btn.classList.toggle('pm-tip-btn--active', total > 0 && Math.abs(tip - expected) < 0.015);
+    });
+
+    // ── Paid + remaining rows ──────────────────────────────────────────────────
     var paidEl = document.getElementById('pmSumPaid');
     var balEl  = document.getElementById('pmSumBalance');
-
-    if (paidEl) paidEl.textContent = amount > 0 ? '$' + amount.toFixed(2) : '$0.00';
+    if (paidEl) paidEl.textContent = '$' + amount.toFixed(2);
 
     if (total > 0) {
+      // Remaining = service balance only (matches stored balanceDue)
       var bal = Math.max(0, total - amount);
       if (balEl) {
         if (bal <= 0) {
@@ -2648,11 +2689,19 @@
           balEl.style.color = amount > 0 ? '#fbbf24' : 'var(--cream)';
         }
       }
-      // Auto-derive status select
       if (sel) sel.value = amount <= 0 ? 'unpaid' : bal <= 0 ? 'paid' : 'partial';
     } else {
       if (balEl) { balEl.textContent = '\u2014'; balEl.style.color = 'var(--muted)'; }
     }
+  }
+
+  // Apply a percentage tip. Called by tip suggestion buttons.
+  function _pickTip(pct) {
+    var total = parseFloat(document.getElementById('paymentModal').dataset.priceTotal) || 0;
+    if (total <= 0) return;
+    var tip = Math.round(total * pct) / 100;
+    document.getElementById('pmTip').value = tip.toFixed(2);
+    _updatePmBalance();
   }
 
   // ── AI pricing guide (local lookup — no external API) ────────────────────────
@@ -2765,6 +2814,22 @@
           closePaymentModal();
           openSetPriceModal(_bid, _suggestPrice(_svc) || '');
         };
+      }
+    }
+
+    // Render tip suggestion buttons when price is known; hide otherwise
+    var tipBtnsEl = document.getElementById('pmTipBtns');
+    if (tipBtnsEl) {
+      if (priceTotal > 0) {
+        tipBtnsEl.style.display = 'flex';
+        tipBtnsEl.innerHTML = [15, 20, 25].map(function(pct) {
+          var tipAmt = Math.round(priceTotal * pct) / 100;
+          return '<button class="pm-tip-btn" id="pmTipBtn' + pct + '" onclick="_pickTip(' + pct + ')">' +
+            pct + '%<br><span style="font-weight:400;opacity:.8">$' + tipAmt.toFixed(2) + '</span></button>';
+        }).join('');
+      } else {
+        tipBtnsEl.style.display = 'none';
+        tipBtnsEl.innerHTML = '';
       }
     }
 

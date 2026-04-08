@@ -1406,14 +1406,11 @@
       if (!doc.exists) { auth.signOut().then(function(){ window.location.href = 'vendor-login.html'; }); return; }
 
       VENDOR_ID       = doc.data().vendorId;
-      VENDOR_CAT      = VENDOR_CATEGORY_MAP[VENDOR_ID] || 'nails';
       // Role: owner=full access; staff=permissions-controlled. Default to 'owner' if not set.
       _userRole       = doc.data().role || 'owner';
       _userStaffName  = doc.data().staffName || '';
       _userPerms      = Object.assign({ viewAll: false, contactCustomer: false, canCancel: false, canConfirm: false }, doc.data().permissions || {});
       _userEmail      = user.email || '';
-
-      if (VENDOR_CAT === 'food') { window.location.href = 'vendor-admin.html'; return; }
 
       vendorRef   = db.collection('vendors').doc(VENDOR_ID);
       servicesRef = vendorRef.collection('services');
@@ -1429,6 +1426,9 @@
 
       vendorRef.get().then(function(vdoc) {
         var vdata   = vdoc.exists ? vdoc.data() : {};
+        // Firestore-first category; VENDOR_CATEGORY_MAP is fallback only
+        VENDOR_CAT = vdata.category || vdata.vendorType || VENDOR_CATEGORY_MAP[VENDOR_ID] || 'nails';
+        if (VENDOR_CAT === 'food') { window.location.href = 'vendor-admin.html'; return; }
         var bizName = vdata.businessName || (staticData && staticData.name) || VENDOR_ID;
         var catSlug = VENDOR_CAT === 'hair' ? 'hairsalon' : 'nailsalon';
         var pubUrl  = '/' + catSlug + '/?id=' + VENDOR_ID;

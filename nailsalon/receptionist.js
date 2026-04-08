@@ -375,9 +375,8 @@
       // 2. Pending escalations not yet confirmed by the vendor
       //    (escalations store appointmentData.date separately — filter client-side)
       var apptQuery = db.collection('vendors').doc(biz.id)
-        .collection('appointments')
-        .where('date', '==', draft.date)
-        .where('status', '==', 'confirmed')
+        .collection('bookings')
+        .where('requestedDate', '==', draft.date)
         .get();
 
       var escQuery = db.collection('escalations')
@@ -390,8 +389,29 @@
           var apptSnap = results[0];
           var escSnap  = results[1];
 
-          // Confirmed appointments
-          var existing = apptSnap.docs.map(function (d) { return d.data(); });
+          // Confirmed bookings — normalize field names (requestedTime/time, durationMins/totalDurationMins)
+          var existing = apptSnap.docs
+            .filter(function (d) { var s = d.data().status || ''; return s === 'confirmed' || s === 'in_progress'; })
+            .map(function (d) {
+              var dd = d.data();
+              return {
+                customerName:      dd.customerName  || dd.name  || '',
+                customerPhone:     dd.customerPhone || dd.phone || '',
+                staff:             dd.staff || 'any',
+                time:              dd.requestedTime  || dd.time  || '00:00',
+                totalDurationMins: dd.totalDurationMins || dd.durationMins || DEFAULT_DUR,
+                selectedServices:  dd.selectedServices || dd.services || (dd.service ? [dd.service] : [])
+              };
+            });
+
+          // Reschedule: exclude the customer's own existing booking so it doesn't
+          // block their new slot (the old booking will be updated in place on confirm).
+          if (draft.isModify && draft.phone) {
+            var _ownPhone = draft.phone.replace(/\D/g, '');
+            existing = existing.filter(function (e) {
+              return (e.customerPhone || '').replace(/\D/g, '') !== _ownPhone;
+            });
+          }
 
           // Pending escalations — normalize to same shape as appointment docs
           escSnap.docs.forEach(function (d) {
@@ -442,7 +462,7 @@
           // 10 AM with Tracy, pedicure at 2 PM with Helen — both legitimate).
           // Uses >= on the right boundary so back-to-back bookings are caught even when
           // totalDurationMins is missing (60-min fallback: 9:30+60=10:30 → aEnd>=reqStart).
-          if (checkCustomer) {
+          if (checkCustomer && !draft.isModify) {
             var draftName  = (draft.name  || '').toLowerCase().trim();
             var draftPhone = (draft.phone || '').replace(/\D/g, '');
             var custConflict = null;
@@ -954,7 +974,8 @@
       '  → Carry over existing services, staff, name, phone from CURRENT BOOKING STATE (do NOT ask again).',
       '  → Ask ONLY for the new date and/or time if not already provided.',
       '  → When new date + time are confirmed, emit [BOOKING:...] + [ESCALATE:appointment] as normal.',
-      '  → The booking will be flagged as a reschedule on the vendor side.',
+      '  → IMPORTANT: Keep pendingAction: "modify_booking" in the STATE marker even on the final [BOOKING:...] turn.',
+      '  → Do NOT clear pendingAction to null for reschedules — this flag is required to update the existing record.',
       '',
       'When customer has a booking conflict (e.g. already booked same time) and says "replace it" or "yes, change":',
       '  → Treat as modify_booking. Keep services, staff, name, phone. Ask for preferred new time.',
@@ -969,9 +990,8 @@
       '  - services: always an array. Empty [] if none mentioned.',
       '  - All non-array fields: null (JSON null, no quotes) if unknown.',
       '  - lang: detected language of THIS customer message.',
-      '  - pendingAction: "booking_offer" after asking "Would you like to book?"; "modify_booking" when rescheduling; null otherwise.',
+      '  - pendingAction: "booking_offer" after asking "Would you like to book?"; "modify_booking" during any reschedule — keep it set THROUGH the [BOOKING:...] turn, do NOT clear to null; null for all other cases.',
       '  - existingBookingId: null unless an existing booking ID was provided or found; carry forward once set.',
-      '  - Clear pendingAction to null once the customer answers affirmatively and booking flow resumes.',
       '',
       'STATE examples:',
       '"Is Tracy working today?" → AI answers yes + asks "Would you like to book?":',
@@ -1285,8 +1305,14 @@
       var bookingData = _parseBookingMarker(raw);
       if (bookingData) {
         if (stateUpdate && stateUpdate.existingBookingId) bookingData.existingBookingId = stateUpdate.existingBookingId;
-        // isModify: check current STATE OR prior turn's pendingAction (Claude clears to null on final booking turn)
-        if (_prevPendingAction === 'modify_booking' || (stateUpdate && (stateUpdate.existingBookingId || stateUpdate.pendingAction === 'modify_booking'))) bookingData.isModify = true;
+        // isModify: current STATE has pendingAction:'modify_booking' (primary, now kept through final BOOKING turn)
+        // OR prior turn had it (fallback for older conversations)
+        // OR existingBookingId is set in STATE
+        if (
+          (stateUpdate && stateUpdate.pendingAction === 'modify_booking') ||
+          _prevPendingAction === 'modify_booking' ||
+          (stateUpdate && stateUpdate.existingBookingId)
+        ) bookingData.isModify = true;
         biz._bookingDraft = bookingData;
       }
 

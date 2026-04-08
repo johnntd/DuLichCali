@@ -1413,7 +1413,11 @@
                 <option value="staff">Staff</option>
               </select>
               <input class="vcl-pin-input" id="vstf-name-${v.id}" type="text"
-                placeholder="Tên nhân viên" style="width:130px;display:none" maxlength="40">
+                placeholder="Tên nhân viên" style="width:120px;display:none" maxlength="40">
+              <input class="vcl-pin-input" id="vstf-pin-${v.id}" type="text"
+                placeholder="PIN mật khẩu" inputmode="numeric" maxlength="6" style="width:90px">
+              <button class="btn-vend" style="font-size:.6rem;color:var(--muted)"
+                onclick="document.getElementById('vstf-pin-${v.id}').value=genPin()">🎲</button>
               <button class="btn-vend success" onclick="createStaffLogin('${v.id}')">Tạo tài khoản</button>
               <span class="vcl-msg" id="vstf-msg-${v.id}"></span>
             </div>
@@ -1555,9 +1559,11 @@
       const pwBox   = document.getElementById('vstf-pw-'    + vendorId);
       if (!emailEl || !msgEl) return;
 
+      const pinEl     = document.getElementById('vstf-pin-' + vendorId);
       const email     = emailEl.value.trim().toLowerCase();
       const role      = roleEl ? roleEl.value : 'staff';
       const staffName = (nameEl ? nameEl.value.trim() : '');
+      const pin       = pinEl ? pinEl.value.trim() : '';
 
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Email không hợp lệ.'; return;
@@ -1565,14 +1571,15 @@
       if ((role === 'staff' || role === 'manager') && !staffName) {
         msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Nhập tên (dùng để lọc lịch hẹn).'; return;
       }
+      if (!pin || pin.length < 4) {
+        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Nhập PIN (tối thiểu 4 ký tự).'; return;
+      }
 
       msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Đang tạo…';
       if (pwBox) pwBox.style.display = 'none';
 
-      // Generate a random 8-char temp password (no ambiguous chars)
-      const chars = 'ABCDEFGHJKMNPQRSTWXYZabcdefghjkmnpqrstwxyz23456789';
-      let tempPass = '';
-      for (let i = 0; i < 8; i++) tempPass += chars[Math.floor(Math.random() * chars.length)];
+      // PIN is the password — padded to 6 chars minimum (Firebase Auth requirement)
+      const tempPass = pin.padEnd(6, '0');
 
       try {
         const resp = await fetch(
@@ -1618,12 +1625,13 @@
 
         emailEl.value = '';
         if (nameEl) nameEl.value = '';
+        if (pinEl)  pinEl.value  = '';
         msgEl.style.color = '#7ac87a'; msgEl.textContent = '✓ Đã tạo!';
 
-        // Show the temp password once — admin shares this with the new user
+        // Show PIN — admin shares with new user
         if (pwBox) {
           const label = (role === 'staff' || role === 'manager') ? staffName : email;
-          pwBox.textContent = `Mật khẩu tạm: ${tempPass}  —  Chia sẻ với ${label} để đăng nhập lần đầu tại salon-admin.html`;
+          pwBox.textContent = `PIN đăng nhập: ${pin}  —  Chia sẻ với ${label} để đăng nhập tại salon-admin.html`;
           pwBox.style.display = 'block';
         }
 

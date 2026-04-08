@@ -484,6 +484,20 @@
       font-size: .78rem; color: var(--danger); line-height: 1.5;
     }
 
+    /* ── Operational scan badges ── */
+    .sa-badge-row { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .32rem; }
+    .sa-badge {
+      display: inline-flex; align-items: center; gap: .18rem;
+      font-size: .58rem; font-weight: 700; letter-spacing: .02em;
+      padding: 2px 6px; border-radius: 3px; white-space: nowrap;
+      line-height: 1.4;
+    }
+    .sa-badge--photo    { background: rgba(56,189,248,.12);  border: 1px solid rgba(56,189,248,.32);  color: #38bdf8; }
+    .sa-badge--note     { background: rgba(251,191,36,.10);  border: 1px solid rgba(251,191,36,.32);  color: #fbbf24; }
+    .sa-badge--multi    { background: rgba(167,139,250,.12); border: 1px solid rgba(167,139,250,.32); color: #a78bfa; }
+    .sa-badge--reschedule { background: rgba(251,146,60,.12); border: 1px solid rgba(251,146,60,.32); color: #fb923c; }
+    .sa-badge--unassigned { background: rgba(248,113,113,.10); border: 1px solid rgba(248,113,113,.32); color: #f87171; }
+
     /* ── Booking detail expand ── */
     .sa-phone-row { margin-top: .4rem; }
     .sa-phone-link {
@@ -2313,8 +2327,20 @@
         var staffBadge = staff ? '<span class="sa-staff-badge">' + esc(staff) + '</span>' : '';
         var durSpan    = dur   ? '<span>' + dur + 'p</span>' : '';
         var priceSpan  = price ? '<span class="sa-appt-price">' + esc(String(price)) + '</span>' : '';
-        var imgInd     = imgs.length ? ' <span class="sa-ind">&#128247; ' + imgs.length + '</span>' : '';
-        var noteInd    = notes ? ' <span class="sa-ind">&#128203;</span>' : '';
+
+        // ── Operational scan badges ─────────────────────────────────────────
+        var badges = '';
+        if (imgs.length)
+          badges += '<span class="sa-badge sa-badge--photo">&#128247; \u1ea2nh m\u1eabu ' + imgs.length + '</span>';
+        if (notes)
+          badges += '<span class="sa-badge sa-badge--note">&#128203; Ghi ch\u00fa</span>';
+        if (svcArr.length > 1)
+          badges += '<span class="sa-badge sa-badge--multi">+ ' + svcArr.length + ' d\u1ecbch v\u1ee5</span>';
+        if (b.isReschedule)
+          badges += '<span class="sa-badge sa-badge--reschedule">&#8635; \u0110\u1ed5i l\u1ecbch</span>';
+        if (!staff && status === 'confirmed')
+          badges += '<span class="sa-badge sa-badge--unassigned">&#9888; Ch\u01b0a ph\u00e2n c\u00f4ng</span>';
+        var badgeRow = badges ? '<div class="sa-badge-row">' + badges + '</div>' : '';
 
         // ── Prominent phone ─────────────────────────────────────────────────
         var phoneRow = phone
@@ -2411,7 +2437,8 @@
               statusBadge +
             '</div>' +
             '<div class="sa-appt-svc">' + esc(svcLbl || '') + '</div>' +
-            '<div class="sa-appt-meta">' + staffBadge + durSpan + priceSpan + imgInd + noteInd + '</div>' +
+            '<div class="sa-appt-meta">' + staffBadge + durSpan + priceSpan + '</div>' +
+            badgeRow +
             phoneRow +
             detToggle +
             detHtml +

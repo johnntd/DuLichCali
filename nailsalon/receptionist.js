@@ -1977,7 +1977,40 @@
                     // calendar card after vendor confirms (EscalationEngine handles both).
                     var esc = window.EscalationEngine;
                     if (esc && typeof esc.create === 'function') {
-                      esc.create(biz, messagesEl, 'appointment', confirmedDraft);
+                      if (confirmedDraft.isModify && confirmedDraft.phone && window.dlcDb) {
+                        // Reschedule: look up the existing booking by phone to get its exact
+                        // Firestore document ID. Storing existingBookingId in the escalation
+                        // lets respondEscalation delete the old booking by exact ID (not by
+                        // the fragile phone+date filter that caused the delete/write race).
+                        var _rDb  = window.dlcDb;
+                        var _rVid = biz.id || biz.slug || 'unknown';
+                        _rDb.collection('vendors').doc(_rVid).collection('bookings')
+                          .where('customerPhone', '==', confirmedDraft.phone)
+                          .get()
+                          .then(function (snap) {
+                            var confirmed = snap.docs.filter(function (d) {
+                              var s = d.data().status || '';
+                              return s === 'confirmed' || s === 'in_progress';
+                            });
+                            if (confirmed.length > 0) {
+                              // Most recently created confirmed booking = the one being rescheduled
+                              confirmed.sort(function (a, b) {
+                                var ta = a.data().createdAt, tb = b.data().createdAt;
+                                if (ta && ta.toMillis && tb && tb.toMillis) {
+                                  return tb.toMillis() - ta.toMillis();
+                                }
+                                return 0;
+                              });
+                              confirmedDraft.existingBookingId = confirmed[0].id;
+                            }
+                          })
+                          .catch(function () {}) // permission denied or offline — fallback handles it
+                          .then(function () {
+                            esc.create(biz, messagesEl, 'appointment', confirmedDraft);
+                          });
+                      } else {
+                        esc.create(biz, messagesEl, 'appointment', confirmedDraft);
+                      }
                     }
                   } else {
                     // Not available — suppress Claude's premature "confirmed" message.

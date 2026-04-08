@@ -2126,21 +2126,20 @@
         }
 
         if (appt.isModify) {
-          // No known ID — query matching old confirmed bookings on same date, then
-          // atomically delete them + write new in one batch commit (no race condition).
+          // No known ID — query all confirmed bookings for this phone then atomically
+          // delete them + write new in one batch commit.
+          // Safe to delete all confirmed records because snap is fetched BEFORE batch.set()
+          // runs, so the new booking (not yet in Firestore) cannot appear in snap.docs.
           var oldPhone = appt.phone || appt.customerPhone;
-          var newDate  = appt.date  || appt.requestedDate || '';
           if (oldPhone) {
             return bookingsRef.where('customerPhone', '==', oldPhone).get()
               .then(function (snap) {
                 var batch = db.batch();
                 batch.set(bookingsRef.doc(), bookingData);   // write new booking
                 snap.docs.forEach(function (d) {
-                  var dd    = d.data();
-                  var dDate = dd.requestedDate || dd.date || '';
-                  var dStat = dd.status || '';
-                  if (dDate === newDate && (dStat === 'confirmed' || dStat === 'in_progress')) {
-                    batch.delete(d.ref);                     // delete old booking
+                  var dStat = (d.data().status || '');
+                  if (dStat === 'confirmed' || dStat === 'in_progress') {
+                    batch.delete(d.ref);                     // delete old booking(s)
                   }
                 });
                 return batch.commit();

@@ -912,7 +912,8 @@
       <div class="tab-panel" id="panel-staff">
         <div class="sa-section-header">
           <div class="sa-section-title">Nhân Viên</div>
-          <button class="btn btn--primary btn--sm" onclick="openStaffModal(null)">+ Thêm Nhân Viên</button>
+          <!-- Owner only — revealed by owner init block -->
+          <button class="btn btn--primary btn--sm" id="btnAddStaff" style="display:none" onclick="openStaffModal(null)">+ Thêm Nhân Viên</button>
         </div>
         <div id="staffList"><div class="sa-empty">Đang tải…</div></div>
 
@@ -1829,7 +1830,7 @@
         subscribeEscalations();
         subscribeNotifications(); // vendor subcollection notifications (Lily Receptionist bookings)
         subscribeBookings();
-        // Owner: show staff permissions + payment settings + earnings panels
+        // Owner: show staff management controls + payment settings + earnings panels
         if (_userRole === 'owner') {
           var spc = document.getElementById('staffPermsCard');
           if (spc) spc.style.display = '';
@@ -1838,6 +1839,8 @@
           if (pmc) pmc.style.display = '';
           var sec = document.getElementById('staffEarningsCard');
           if (sec) sec.style.display = '';
+          var bab = document.getElementById('btnAddStaff');
+          if (bab) bab.style.display = '';
         }
 
         // Load payment config into module var + settings UI
@@ -2207,6 +2210,7 @@
       el.innerHTML = '<div class="sa-empty">Chưa có nhân viên nào. Nhấn "+ Thêm Nhân Viên" để bắt đầu.</div>';
       return;
     }
+    var isOwner = _userRole === 'owner'; // only owners may edit staff records
     el.innerHTML = snap.docs.map(function(d) {
       var s    = d.data();
       var sched = s.schedule || {};
@@ -2217,6 +2221,14 @@
         return '<span class="sched-pill sched-pill--' + (on?'on':'off') + '" title="' +
           (on ? (ds.start+' – '+ds.end) : 'Nghỉ') + '">' + day.short + '</span>';
       }).join('');
+      // Edit/Delete/Toggle controls are owner-only
+      var ownerActions = isOwner
+        ? '<button class="toggle-pill ' + (s.active !== false ? 'on' : 'off') + '" ' +
+            'onclick="toggleStaff(\'' + d.id + '\',' + (s.active === false) + ')">' +
+            (s.active !== false ? '● On' : '○ Off') + '</button>' +
+          '<button class="btn btn--outline btn--sm" onclick="openStaffModal(\'' + d.id + '\')">Edit</button>' +
+          '<button class="btn btn--danger btn--sm" onclick="deleteStaff(\'' + d.id + '\')">Xóa</button>'
+        : '';
       return '<div class="sa-item' + (s.active === false ? ' inactive-dim' : '') + '">' +
         '<div class="sa-item__info">' +
           '<div class="sa-item__name">' + esc(s.name) +
@@ -2227,21 +2239,17 @@
             (s.commissionPct ? ' · HH ' + s.commissionPct + '%' : '') + '</div>' +
           '<div class="sched-pills">' + pills + '</div>' +
         '</div>' +
-        '<div class="sa-item__actions">' +
-          '<button class="toggle-pill ' + (s.active !== false ? 'on' : 'off') + '" ' +
-            'onclick="toggleStaff(\'' + d.id + '\',' + (s.active === false) + ')">' +
-            (s.active !== false ? '● On' : '○ Off') + '</button>' +
-          '<button class="btn btn--outline btn--sm" onclick="openStaffModal(\'' + d.id + '\')">Edit</button>' +
-          '<button class="btn btn--danger btn--sm" onclick="deleteStaff(\'' + d.id + '\')">Xóa</button>' +
-        '</div>' +
+        '<div class="sa-item__actions">' + ownerActions + '</div>' +
       '</div>';
     }).join('');
   }
 
   function toggleStaff(id, newActive) {
+    if (_userRole !== 'owner') { showToast('Chỉ chủ tiệm có quyền thay đổi trạng thái nhân viên.'); return; }
     staffRef.doc(id).update({ active: newActive, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
   }
   function deleteStaff(id) {
+    if (_userRole !== 'owner') { showToast('Chỉ chủ tiệm có quyền xóa nhân viên.'); return; }
     if (!confirm('Xóa nhân viên này?')) return;
     staffRef.doc(id).delete().then(function(){ showToast('Đã xóa nhân viên.'); });
   }
@@ -2271,6 +2279,7 @@
   }
 
   function openStaffModal(id) {
+    if (_userRole !== 'owner') { showToast('Chỉ chủ tiệm có quyền quản lý nhân viên.'); return; }
     document.getElementById('staffModal').classList.remove('hidden');
     document.getElementById('staffMsg').textContent = '';
 
@@ -2301,6 +2310,7 @@
   function closeStaffModal() { document.getElementById('staffModal').classList.add('hidden'); }
 
   function saveStaff() {
+    if (_userRole !== 'owner') { showToast('Chỉ chủ tiệm có quyền lưu nhân viên.'); return; }
     var name = document.getElementById('staffName').value.trim();
     if (!name) { document.getElementById('staffMsg').textContent = 'Vui lòng nhập tên nhân viên.'; return; }
     var sched = {};

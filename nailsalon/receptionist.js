@@ -2103,7 +2103,10 @@
                         // Does that look correct?"). Slot is verified free; update offeredSlot so
                         // the next "yes" passes through to the booking creation check.
                         biz._aiHistory.push({ role: 'assistant', content: result.text });
-                        biz._bookingState.pendingAction = 'booking_offer';
+                        // RX-011: do NOT overwrite 'modify_booking' — isModify detection in
+                        // handleMessage() depends on this flag surviving to the [BOOKING:] turn.
+                        // Only switch to 'booking_offer' for brand-new bookings.
+                        if (!_inModify) biz._bookingState.pendingAction = 'booking_offer';
                         _saveBookingState(biz);
                         _saveHistory(biz);
                         biz._offeredSlot = _slotKey;
@@ -2113,8 +2116,9 @@
                         // before asking for name/phone. Prevents speculative contact collection.
                         var _availMsg = _buildAvailConfirmMsg(biz, _ed);
                         biz._aiHistory.push({ role: 'assistant', content: _availMsg });
-                        // pendingAction=booking_offer tells Claude to ask for name after "yes"
-                        biz._bookingState.pendingAction = 'booking_offer';
+                        // RX-011: same guard — preserve 'modify_booking' for reschedules so
+                        // the isModify flag survives to the [BOOKING:] turn.
+                        if (!_inModify) biz._bookingState.pendingAction = 'booking_offer';
                         _saveBookingState(biz);
                         _saveHistory(biz);
                         biz._offeredSlot = _slotKey;

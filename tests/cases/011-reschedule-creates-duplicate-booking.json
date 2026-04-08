@@ -1,0 +1,36 @@
+{
+  "id": "RX-011",
+  "fix_date": "2026-04-08",
+  "category": "booking_modify",
+  "status": "verified_in_runner",
+  "_status_note": "verified_in_runner = fix guard string confirmed present in source. The actual duplicate-booking prevention requires a live reschedule test to confirm isModify survives to the [BOOKING:] turn.",
+  "verify_fix_string": "RX-011: do NOT overwrite 'modify_booking'",
+  "title": "In-session reschedule creates duplicate new booking instead of updating existing one",
+
+  "failing_behavior": "Customer books appointment A in session (name/phone in STATE), then says 'change my appointment to 3pm Wednesday'. AI correctly checks availability and confirms the new slot. Customer says 'yes'. A NEW booking is created (new ID) instead of updating the existing booking. Old booking remains as 'confirmed' in Firestore. Double-booking results.",
+
+  "root_cause": "_earlyCheckReady block in send() has a branch for when name/phone are already in STATE (common during in-session reschedule). This branch sets biz._bookingState.pendingAction = 'booking_offer', OVERWRITING the existing 'modify_booking' value. On the next turn, _prevPendingAction = 'booking_offer' (not 'modify_booking'). Claude also sees pendingAction=booking_offer in the system prompt and follows PENDING ACTION instructions: sets pendingAction=null in STATE on the [BOOKING:] turn. All three isModify conditions in handleMessage() fail: (1) stateUpdate.pendingAction !== 'modify_booking', (2) _prevPendingAction === 'booking_offer' not 'modify_booking', (3) existingBookingId is null. bookingData.isModify = false. _submitDirectBooking creates a new booking ID via _genBookingId() instead of reusing the existing doc.",
+
+  "conversation": [
+    { "role": "user",      "content": "I'd like to book a gel manicure with Tracy for Monday at 2pm" },
+    { "role": "assistant", "content": "Tracy is available at 2 PM for Gel Manicure ($35). Would you like to book that?" },
+    { "role": "user",      "content": "Yes. John, 408-555-1234" },
+    { "role": "assistant", "content": "Your Gel Manicure with Tracy on Monday April 13 at 2 PM is confirmed and booked." },
+    { "role": "user",      "content": "Actually can I change it to Wednesday at 3pm instead?" },
+    { "role": "assistant", "content": "Tracy is available at 3 PM on Wednesday for Gel Manicure. Would you like to update your booking?" },
+    { "role": "user",      "content": "Yes please" },
+    { "role": "assistant", "content": "Your Gel Manicure with Tracy on Wednesday April 15 at 3 PM is confirmed." }
+  ],
+
+  "expected_behavior": "On the second booking submission (the reschedule), _submitDirectBooking should call .update() on the ORIGINAL booking doc ID (isExactReschedule = true). The old booking at Monday 2 PM should be marked 'rescheduled' or updated in-place. NO new booking document should be created.",
+
+  "observed_behavior": "A SECOND booking document is created with a new DLC-XXXX ID. The original Monday 2 PM booking remains in Firestore with status 'confirmed'. Vendor sees two confirmed bookings for the same customer.",
+
+  "code_areas": [
+    "nailsalon/receptionist.js: _earlyCheckReady block in send() — if (_ecs.name && _ecs.phone) branch sets pendingAction='booking_offer'",
+    "nailsalon/receptionist.js: handleMessage() — isModify detection conditions (stateUpdate.pendingAction, _prevPendingAction, existingBookingId)",
+    "nailsalon/receptionist.js: _submitDirectBooking — isExactReschedule guard"
+  ],
+
+  "notes": "The _earlyCheckReady block was added/modified in the RX-003/006 fix session to handle the case where contact info is already known (skip re-asking 'Would you like to book?'). That fix correctly sets pendingAction='booking_offer' for NEW bookings. But for RESCHEDULES (_inModify=true), it must NOT overwrite 'modify_booking' — the isModify detection chain depends on this flag surviving to the [BOOKING:] turn. Fix: only set pendingAction='booking_offer' when !_inModify. Same guard needed in the else branch (no name/phone) for completeness."
+}

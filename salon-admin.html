@@ -1128,7 +1128,7 @@
   var vendorRef      = null;
   var servicesRef    = null;
   var staffRef       = null;
-  // Role: 'owner'|'manager'|'staff' — read from vendorUsers doc, default 'owner'
+  // Role: 'owner'|'staff' — read from vendorUsers doc, default 'owner'
   var _userRole      = 'owner';
   var _userStaffName = ''; // staff's own name — used to pre-filter calendar view
   var _userEmail     = '';
@@ -1299,7 +1299,7 @@
 
       VENDOR_ID       = doc.data().vendorId;
       VENDOR_CAT      = VENDOR_CATEGORY_MAP[VENDOR_ID] || 'nails';
-      // Role: owner/manager can cancel; staff cannot. Default to 'owner' if not set.
+      // Role: owner has full access; staff sees only their own bookings. Default to 'owner' if not set.
       _userRole       = doc.data().role || 'owner';
       _userStaffName  = doc.data().staffName || '';
       _userEmail      = user.email || '';

@@ -1355,9 +1355,8 @@
           ${vendorUsers.map(u => `
             <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.35rem">
               <span style="font-size:.65rem;min-width:170px;color:var(--muted)">${escHtml(u.email)}</span>
-              <select class="vcl-role-select" id="vrole-${escHtml(u.uid)}">
+              <select class="vcl-role-select" id="vrole-${escHtml(u.uid)}" onchange="toggleStaffNameInput('vstaff-${escHtml(u.uid)}',this.value)">
                 <option value="owner" ${u.role==='owner'?'selected':''}>Owner</option>
-                <option value="manager" ${u.role==='manager'?'selected':''}>Manager</option>
                 <option value="staff" ${u.role==='staff'?'selected':''}>Staff</option>
               </select>
               <input class="vcl-pin-input" id="vstaff-${escHtml(u.uid)}" type="text" maxlength="40"
@@ -1400,12 +1399,17 @@
           </div>
           ${usersHtml}
           <div class="vcl-row" style="flex-direction:column;align-items:flex-start;gap:.4rem">
-            <span class="vcl-label">Thêm tài khoản nhân viên:</span>
+            <span class="vcl-label">Thêm tài khoản:</span>
             <div style="display:flex;flex-wrap:wrap;gap:.35rem;align-items:center">
               <input class="vcl-pin-input" id="vstf-email-${v.id}" type="email"
-                placeholder="Email nhân viên" style="width:180px">
+                placeholder="Email" style="width:180px">
+              <select class="vcl-role-select" id="vstf-role-${v.id}"
+                onchange="toggleStaffNameInput('vstf-name-${v.id}',this.value)">
+                <option value="owner">Owner</option>
+                <option value="staff">Staff</option>
+              </select>
               <input class="vcl-pin-input" id="vstf-name-${v.id}" type="text"
-                placeholder="Tên nhân viên" style="width:130px" maxlength="40">
+                placeholder="Tên nhân viên" style="width:130px;display:none" maxlength="40">
               <button class="btn-vend success" onclick="createStaffLogin('${v.id}')">Tạo tài khoản</button>
               <span class="vcl-msg" id="vstf-msg-${v.id}"></span>
             </div>
@@ -1522,20 +1526,29 @@
       } catch(e) { msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Lỗi: ' + e.message; }
     }
 
+    function toggleStaffNameInput(inputId, role) {
+      const el = document.getElementById(inputId);
+      if (!el) return;
+      el.style.display = role === 'staff' ? '' : 'none';
+      if (role !== 'staff') el.value = '';
+    }
+
     async function createStaffLogin(vendorId) {
       const emailEl = document.getElementById('vstf-email-' + vendorId);
+      const roleEl  = document.getElementById('vstf-role-'  + vendorId);
       const nameEl  = document.getElementById('vstf-name-'  + vendorId);
       const msgEl   = document.getElementById('vstf-msg-'   + vendorId);
       const pwBox   = document.getElementById('vstf-pw-'    + vendorId);
-      if (!emailEl || !nameEl || !msgEl) return;
+      if (!emailEl || !msgEl) return;
 
       const email     = emailEl.value.trim().toLowerCase();
-      const staffName = nameEl.value.trim();
+      const role      = roleEl ? roleEl.value : 'staff';
+      const staffName = (nameEl ? nameEl.value.trim() : '');
 
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Email không hợp lệ.'; return;
       }
-      if (!staffName) {
+      if (role === 'staff' && !staffName) {
         msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Nhập tên nhân viên.'; return;
       }
 
@@ -1562,20 +1575,23 @@
 
         const uid = result.localId;
         await db.collection('vendorUsers').doc(uid).set({
-          vendorId, email, role: 'staff', staffName,
+          vendorId, email, role,
+          staffName: role === 'staff' ? staffName : '',
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        emailEl.value = ''; nameEl.value = '';
+        emailEl.value = '';
+        if (nameEl) nameEl.value = '';
         msgEl.style.color = '#7ac87a'; msgEl.textContent = '✓ Đã tạo!';
 
-        // Show the temp password once — admin shares this with the staff member
+        // Show the temp password once — admin shares this with the new user
         if (pwBox) {
-          pwBox.textContent = `Mật khẩu tạm: ${tempPass}  —  Chia sẻ với ${staffName} để đăng nhập lần đầu tại salon-admin.html`;
+          const label = role === 'staff' ? staffName : email;
+          pwBox.textContent = `Mật khẩu tạm: ${tempPass}  —  Chia sẻ với ${label} để đăng nhập lần đầu tại salon-admin.html`;
           pwBox.style.display = 'block';
         }
 
-        // Reload panel after 3s so new user appears in the list
+        // Reload panel after 3s so new account appears in the list
         setTimeout(() => { loadVendorPanel(); }, 3000);
       } catch(e) {
         msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Lỗi: ' + e.message;

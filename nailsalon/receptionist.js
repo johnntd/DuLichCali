@@ -1574,25 +1574,29 @@
       }
 
       // Use requestedDate/requestedTime to match vendor-admin schema (orderBy('requestedDate'))
+      var svcPrices = svcs.map(function(sn) { return _priceForService(biz, sn); }).filter(Boolean);
       var bookingDoc = {
-        bookingId:     orderId,
-        type:          'nail_appointment',
-        vendorId:      vendorId,
-        services:      svcs,
-        serviceType:   svcStr,           // single string alias used by vendor-admin renderOrders
-        staff:         draft.staff || null,
-        requestedDate: draft.date  || '',
-        requestedTime: draft.time  || '',
-        durationMins:  draft.totalDurationMins || 60,
-        customerName:  draft.name  || '',
-        customerPhone: draft.phone || '',
-        name:          draft.name  || '', // alias for backward compat
-        phone:         draft.phone || '', // alias for backward compat
-        lang:          lang,
-        status:        'confirmed',
-        isReschedule:  draft.isModify ? true : false,
-        source:        'lily_receptionist',
-        createdAt:     fv.serverTimestamp(),
+        bookingId:      orderId,
+        type:           'nail_appointment',
+        vendorId:       vendorId,
+        services:       svcs,
+        selectedServices: svcs,          // explicit alias for vendor-admin multi-service rendering
+        serviceType:    svcStr,          // single string alias for backward compat
+        staff:          draft.staff || null,
+        requestedDate:  draft.date  || '',
+        requestedTime:  draft.time  || '',
+        durationMins:   draft.totalDurationMins || 60,
+        priceEst:       svcPrices.join(' + '),  // e.g. "$35+ + $30+"
+        customerName:   draft.name  || '',
+        customerPhone:  draft.phone || '',
+        name:           draft.name  || '', // alias for backward compat
+        phone:          draft.phone || '', // alias for backward compat
+        notes:          draft.notes || '',
+        lang:           lang,
+        status:         'confirmed',
+        isReschedule:   draft.isModify ? true : false,
+        source:         'lily_receptionist',
+        createdAt:      fv.serverTimestamp(),
       };
       // Use .doc(orderId).set() so the doc ID equals orderId — needed for image uploads
       vendorBookingsRef.doc(orderId).set(bookingDoc)

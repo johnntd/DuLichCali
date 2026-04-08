@@ -1399,6 +1399,18 @@
             <span class="vcl-msg" id="vpin-msg-${v.id}"></span>
           </div>
           ${usersHtml}
+          <div class="vcl-row" style="flex-direction:column;align-items:flex-start;gap:.4rem">
+            <span class="vcl-label">Thêm tài khoản nhân viên:</span>
+            <div style="display:flex;flex-wrap:wrap;gap:.35rem;align-items:center">
+              <input class="vcl-pin-input" id="vstf-email-${v.id}" type="email"
+                placeholder="Email nhân viên" style="width:180px">
+              <input class="vcl-pin-input" id="vstf-name-${v.id}" type="text"
+                placeholder="Tên nhân viên" style="width:130px" maxlength="40">
+              <button class="btn-vend success" onclick="createStaffLogin('${v.id}')">Tạo tài khoản</button>
+              <span class="vcl-msg" id="vstf-msg-${v.id}"></span>
+            </div>
+            <div id="vstf-pw-${v.id}" style="display:none;font-size:.68rem;color:#7ac87a;background:rgba(122,200,122,.08);padding:6px 10px;border-radius:6px;border:1px solid rgba(122,200,122,.3);word-break:break-all"></div>
+          </div>
         </div>
       </div>`;
     }
@@ -1508,6 +1520,66 @@
         msgEl.style.color = '#7ac87a'; msgEl.textContent = 'Đã lưu!';
         setTimeout(() => { msgEl.textContent = ''; }, 3000);
       } catch(e) { msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Lỗi: ' + e.message; }
+    }
+
+    async function createStaffLogin(vendorId) {
+      const emailEl = document.getElementById('vstf-email-' + vendorId);
+      const nameEl  = document.getElementById('vstf-name-'  + vendorId);
+      const msgEl   = document.getElementById('vstf-msg-'   + vendorId);
+      const pwBox   = document.getElementById('vstf-pw-'    + vendorId);
+      if (!emailEl || !nameEl || !msgEl) return;
+
+      const email     = emailEl.value.trim().toLowerCase();
+      const staffName = nameEl.value.trim();
+
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Email không hợp lệ.'; return;
+      }
+      if (!staffName) {
+        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Nhập tên nhân viên.'; return;
+      }
+
+      msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Đang tạo…';
+      if (pwBox) pwBox.style.display = 'none';
+
+      // Generate a random 8-char temp password (no ambiguous chars)
+      const chars = 'ABCDEFGHJKMNPQRSTWXYZabcdefghjkmnpqrstwxyz23456789';
+      let tempPass = '';
+      for (let i = 0; i < 8; i++) tempPass += chars[Math.floor(Math.random() * chars.length)];
+
+      try {
+        const resp = await fetch(
+          `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FIREBASE_API_KEY}`,
+          { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password: tempPass, returnSecureToken: true }) }
+        );
+        const result = await resp.json();
+        if (result.error) {
+          const msg = result.error.message === 'EMAIL_EXISTS'
+            ? 'Email này đã có tài khoản.' : 'Lỗi tạo tài khoản: ' + result.error.message;
+          msgEl.style.color = 'var(--danger)'; msgEl.textContent = msg; return;
+        }
+
+        const uid = result.localId;
+        await db.collection('vendorUsers').doc(uid).set({
+          vendorId, email, role: 'staff', staffName,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        emailEl.value = ''; nameEl.value = '';
+        msgEl.style.color = '#7ac87a'; msgEl.textContent = '✓ Đã tạo!';
+
+        // Show the temp password once — admin shares this with the staff member
+        if (pwBox) {
+          pwBox.textContent = `Mật khẩu tạm: ${tempPass}  —  Chia sẻ với ${staffName} để đăng nhập lần đầu tại salon-admin.html`;
+          pwBox.style.display = 'block';
+        }
+
+        // Reload panel after 3s so new user appears in the list
+        setTimeout(() => { loadVendorPanel(); }, 3000);
+      } catch(e) {
+        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Lỗi: ' + e.message;
+      }
     }
 
     // ── Driver Panel ──────────────────────────────────────────────

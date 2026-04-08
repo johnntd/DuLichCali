@@ -1807,20 +1807,95 @@
 
       if (!input || !sendBtn || !messagesEl) return;
 
-      // Load API key from vendor's Firestore doc so all devices work without manual setup
+      // Load live vendor data from Firestore: apiKey, parallelServices, hours, staff, services.
+      // Runs in parallel at AI init — guarantees AI always reflects latest vendor-admin changes
+      // even if marketplace.js preload failed or vendor updated data after page load.
       biz._firestoreApiKey    = null;
       biz._parallelServices   = [];
       try {
         if (window.dlcDb && biz.id) {
-          window.dlcDb.collection('vendors').doc(biz.id).get()
-            .then(function(doc) {
-              if (doc.exists) {
-                var d = doc.data();
-                if (d.aiKey)           biz._firestoreApiKey  = d.aiKey;
-                if (d.parallelServices) biz._parallelServices = d.parallelServices;
+          var _vref = window.dlcDb.collection('vendors').doc(biz.id);
+          Promise.all([
+            _vref.get(),
+            _vref.collection('staff').get(),
+            _vref.collection('services').where('active', '==', true).get()
+          ]).then(function(results) {
+            var vdoc      = results[0];
+            var staffSnap = results[1];
+            var svcSnap   = results[2];
+
+            // ── Vendor doc: apiKey, parallelServices, hoursSchedule ─────────────────
+            if (vdoc.exists) {
+              var d = vdoc.data();
+              if (d.aiKey)            biz._firestoreApiKey  = d.aiKey;
+              if (d.parallelServices) biz._parallelServices = d.parallelServices;
+              // Convert hoursSchedule → biz.hours display format used by prompt + availability
+              if (d.hoursSchedule) {
+                var _hs = d.hoursSchedule;
+                var _hkeys   = ['mon','tue','wed','thu','fri','sat','sun'];
+                var _hlabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+                var _fmtT = function(t) {
+                  if (!t) return '';
+                  var p = t.split(':'), hh = +p[0], mm = +p[1];
+                  var ap = hh < 12 ? 'AM' : 'PM'; hh = hh % 12 || 12;
+                  return hh + (mm ? ':' + (mm < 10 ? '0' : '') + mm : '') + ' ' + ap;
+                };
+                var _mappedHours = {};
+                _hkeys.forEach(function(k, i) {
+                  var day = _hs[k];
+                  if (day) _mappedHours[_hlabels[i]] = day.closed ? 'Closed' : (_fmtT(day.open) + ' – ' + _fmtT(day.close));
+                });
+                if (Object.keys(_mappedHours).length) biz.hours = _mappedHours;
               }
-            })
-            .catch(function() {});
+            }
+
+            // ── Staff: replace with live Firestore subcollection data ────────────────
+            if (!staffSnap.empty) {
+              var _staffArr = [];
+              staffSnap.forEach(function(sdoc) {
+                var s = sdoc.data();
+                _staffArr.push({
+                  id:               sdoc.id,
+                  name:             s.name             || '',
+                  role:             s.role             || 'Nail Tech',
+                  specialties:      s.specialties      || [],
+                  assignedServices: s.assignedServices || [],
+                  schedule:         s.schedule         || {},
+                  active:           s.active !== false,
+                  sortOrder:        s.sortOrder        || 0
+                });
+              });
+              _staffArr.sort(function(a, b) { return a.sortOrder - b.sortOrder; });
+              biz.staff = _staffArr;
+            }
+            // staffSnap empty → keep biz.staff from marketplace.js preload or static fallback
+
+            // ── Services: replace with live active services from Firestore ───────────
+            if (!svcSnap.empty) {
+              var _svcs = [];
+              svcSnap.forEach(function(sdoc) {
+                var s = sdoc.data();
+                _svcs.push({
+                  id:            sdoc.id,
+                  name:          s.name          || '',
+                  category:      s.category      || '',
+                  price:         s.price         || '',
+                  priceFrom:     s.priceFrom     || 0,
+                  duration:      s.duration      || '',
+                  durationMins:  s.durationMins  || 0,
+                  desc:          s.desc          || '',
+                  description:   s.desc          || '',
+                  imageUrl:      s.imageUrl      || '',
+                  assignedStaff: s.assignedStaff || [],
+                  active:        true,
+                  sortOrder:     s.sortOrder     || 0
+                });
+              });
+              _svcs.sort(function(a, b) { return a.sortOrder - b.sortOrder; });
+              biz.services = _svcs;
+            }
+            // svcSnap empty → keep existing biz.services; prompt falls back to biz._staticServices
+          }).catch(function() {});
         }
       } catch(e) {}
 

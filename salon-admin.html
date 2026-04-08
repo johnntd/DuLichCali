@@ -716,6 +716,14 @@
       border-radius: var(--r); padding: .7rem .85rem; margin-bottom: .5rem;
     }
     .cqv-booking-card:last-child { margin-bottom: 0; }
+
+    /* ── Manual Booking Modal ── */
+    .mb-group { margin-bottom: .65rem; }
+    .mb-label { display: block; font-size: .65rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .28rem; }
+    .mb-row   { display: flex; gap: .5rem; }
+    .mb-svc-list { max-height: 150px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; padding: .35rem .6rem; display: flex; flex-direction: column; gap: .2rem; background: rgba(255,255,255,.02); }
+    .mb-svc-item { display: flex; align-items: center; gap: .4rem; font-size: .78rem; cursor: pointer; padding: .12rem 0; }
+    .mb-svc-item input { width: 15px; height: 15px; flex-shrink: 0; cursor: pointer; accent-color: var(--gold); }
   </style>
 </head>
 <body>
@@ -857,6 +865,7 @@
         <!-- All bookings calendar -->
         <div class="sa-section-header" style="margin-top:.25rem">
           <div class="sa-section-title">Tất Cả Lịch Hẹn</div>
+          <button class="btn btn--primary btn--sm" id="btnNewBooking" style="display:none" onclick="openManualBookModal('',null)">+ Đặt lịch</button>
         </div>
         <div id="bookingsList"><div class="sa-empty">Đang tải…</div></div>
       </div>
@@ -1104,6 +1113,51 @@
   </div>
 </div>
 
+<!-- Manual booking modal -->
+<div class="sa-modal-backdrop hidden" id="manualBookModal">
+  <div class="sa-modal" style="max-height:90vh;overflow-y:auto">
+    <h3 id="mbTitle" style="color:var(--cream);margin-bottom:1rem">Đặt Lịch Mới</h3>
+    <input type="hidden" id="mbBookingId">
+    <div class="mb-group">
+      <label class="mb-label">Tên khách *</label>
+      <input class="sa-input" id="mbName" type="text" placeholder="Tên khách hàng" style="width:100%">
+    </div>
+    <div class="mb-group">
+      <label class="mb-label">Số điện thoại *</label>
+      <input class="sa-input" id="mbPhone" type="tel" inputmode="tel" placeholder="Số điện thoại" style="width:100%">
+    </div>
+    <div class="mb-row">
+      <div class="mb-group" style="flex:1">
+        <label class="mb-label">Ngày *</label>
+        <input class="sa-input" id="mbDate" type="date" style="width:100%">
+      </div>
+      <div class="mb-group" style="flex:1">
+        <label class="mb-label">Giờ *</label>
+        <input class="sa-input" id="mbTime" type="time" style="width:100%">
+      </div>
+    </div>
+    <div class="mb-group">
+      <label class="mb-label">Nhân viên</label>
+      <select class="sa-input" id="mbStaff" style="width:100%;height:38px;padding:0 8px">
+        <option value="Any">Bất kỳ</option>
+      </select>
+    </div>
+    <div class="mb-group">
+      <label class="mb-label">Dịch vụ *</label>
+      <div id="mbSvcList" class="mb-svc-list"><div style="font-size:.72rem;color:var(--muted)">Đang tải…</div></div>
+    </div>
+    <div class="mb-group">
+      <label class="mb-label">Ghi chú</label>
+      <textarea class="sa-input" id="mbNotes" rows="2" placeholder="Ghi chú / yêu cầu đặc biệt…" style="width:100%;resize:vertical"></textarea>
+    </div>
+    <div id="mbMsg" style="display:none;font-size:.75rem;margin:.2rem 0"></div>
+    <div class="sa-modal-actions">
+      <button class="btn btn--outline btn--sm" onclick="closeManualBookModal()">Hủy bỏ</button>
+      <button class="btn btn--primary btn--sm" id="mbSaveBtn" onclick="saveManualBooking()">Lưu lịch hẹn</button>
+    </div>
+  </div>
+</div>
+
 <!-- Image lightbox -->
 <div id="saImgLightbox" class="hidden" onclick="closeSaImgLightbox()">
   <img id="saImgLightboxImg" src="" alt="Reference image">
@@ -1195,6 +1249,7 @@
   var allServiceDocs       = [];   // [{id, data}] — full snapshot for filtering
   var vendorParallelServices = []; // [[svcA, svcB], ...] — parallel booking rules
   var currentStaffData   = [];   // [{id, name, data}] — for service modal checkboxes + availability
+  var _bookingCache      = {};   // bookingId → booking object — for manual edit modal prefill
   var SERVICE_CATS       = [];   // [{key, label}] — loaded from static data
   var CATALOG_VERSION    = 2;    // Bump this to force a full catalog reset on next login
   var _catalogSeeding    = false;
@@ -1410,6 +1465,11 @@
           var spc = document.getElementById('staffPermsCard');
           if (spc) spc.style.display = '';
           loadStaffAccounts();
+        }
+        // Show "New Booking" button for permitted roles
+        var _nbBtn = document.getElementById('btnNewBooking');
+        if (_nbBtn && (_userRole === 'owner' || _userRole === 'manager' || !!_userPerms.canConfirm)) {
+          _nbBtn.style.display = '';
         }
         loadHoursGrid(vdata.hoursSchedule);
       }).catch(function() {
@@ -2387,6 +2447,135 @@
     if (lb) lb.classList.add('hidden');
   }
 
+  // ── Manual Book / Edit ──────────────────────────────────────────────────────────
+
+  function _canManualBook() {
+    return _userRole === 'owner' || _userRole === 'manager' || !!_userPerms.canConfirm;
+  }
+
+  function openManualBookModal(bookingId, prefill) {
+    if (!_canManualBook()) { showToast('Không có quyền thực hiện hành động này.'); return; }
+    var b = prefill || (bookingId ? (_bookingCache[bookingId] || {}) : {});
+    document.getElementById('mbBookingId').value = bookingId || '';
+    document.getElementById('mbTitle').textContent = bookingId ? 'Sửa Lịch Hẹn' : 'Đặt Lịch Mới';
+    document.getElementById('mbName').value  = b.customerName || b.name  || '';
+    document.getElementById('mbPhone').value = b.customerPhone || b.phone || '';
+    document.getElementById('mbDate').value  = b.requestedDate || b.date  || '';
+    document.getElementById('mbTime').value  = b.requestedTime || b.time  || '';
+    document.getElementById('mbNotes').value = b.notes || b.specialRequest || '';
+    document.getElementById('mbMsg').style.display = 'none';
+    var btn = document.getElementById('mbSaveBtn');
+    if (btn) btn.disabled = false;
+    _mbPopulateStaff(b.staff);
+    _mbPopulateServices(b.selectedServices || b.services || []);
+    document.getElementById('manualBookModal').classList.remove('hidden');
+  }
+
+  function closeManualBookModal() {
+    document.getElementById('manualBookModal').classList.add('hidden');
+  }
+
+  function _mbPopulateStaff(selected) {
+    var sel = document.getElementById('mbStaff');
+    sel.innerHTML = '<option value="Any">Bất kỳ</option>';
+    currentStaffData.forEach(function(s) {
+      var opt = document.createElement('option');
+      opt.value = s.name; opt.textContent = s.name;
+      if (s.name === selected) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  function _mbPopulateServices(selected) {
+    var list = document.getElementById('mbSvcList');
+    var sel  = Array.isArray(selected) ? selected : [];
+    if (!allServiceDocs.length) {
+      list.innerHTML = '<div style="font-size:.72rem;color:var(--muted)">Chưa có dịch vụ. Thêm từ tab Dịch Vụ trước.</div>';
+      return;
+    }
+    list.innerHTML = allServiceDocs.map(function(d) {
+      var name    = d.data.name || d.id;
+      var checked = sel.indexOf(name) > -1 ? ' checked' : '';
+      var dur     = d.data.durationMins ? ' <span style="opacity:.5;font-size:.65rem">(' + d.data.durationMins + 'p)</span>' : '';
+      return '<label class="mb-svc-item"><input type="checkbox" value="' + esc(name) + '"' + checked + '> ' + esc(name) + dur + '</label>';
+    }).join('');
+  }
+
+  function _mbMsg(msg, isError) {
+    var el = document.getElementById('mbMsg');
+    el.style.display = msg ? 'block' : 'none';
+    el.style.color   = isError ? 'var(--danger)' : 'var(--muted)';
+    el.textContent   = msg;
+  }
+
+  async function saveManualBooking() {
+    var bookingId = document.getElementById('mbBookingId').value.trim();
+    var name   = document.getElementById('mbName').value.trim();
+    var phone  = document.getElementById('mbPhone').value.replace(/\D/g, '');
+    var date   = document.getElementById('mbDate').value;
+    var time   = document.getElementById('mbTime').value;
+    var notes  = document.getElementById('mbNotes').value.trim();
+    var staff  = document.getElementById('mbStaff').value || 'Any';
+    var svcs   = [];
+    document.querySelectorAll('#mbSvcList input[type=checkbox]:checked').forEach(function(cb) { svcs.push(cb.value); });
+
+    if (!name)        { _mbMsg('Nhập tên khách.', true); return; }
+    if (!phone)       { _mbMsg('Nhập số điện thoại.', true); return; }
+    if (!svcs.length) { _mbMsg('Chọn ít nhất 1 dịch vụ.', true); return; }
+    if (!date)        { _mbMsg('Chọn ngày.', true); return; }
+    if (!time)        { _mbMsg('Chọn giờ.', true); return; }
+
+    // Sum duration from selected service docs
+    var totalMins = 0;
+    svcs.forEach(function(svcName) {
+      var svcDoc = allServiceDocs.find(function(d) { return (d.data.name || d.id) === svcName; });
+      if (svcDoc && svcDoc.data.durationMins) totalMins += svcDoc.data.durationMins;
+    });
+
+    _mbMsg('Đang lưu…', false);
+    var btn = document.getElementById('mbSaveBtn');
+    if (btn) btn.disabled = true;
+
+    var ts   = firebase.firestore.FieldValue.serverTimestamp;
+    var data = {
+      vendorId:          VENDOR_ID,
+      selectedServices:  svcs,
+      service:           svcs.join(', '),
+      serviceType:       svcs[0] || '',
+      totalDurationMins: totalMins || null,
+      staff:             staff,
+      requestedDate:     date,
+      requestedTime:     time,
+      date:              date,
+      time:              time,
+      customerName:      name,
+      customerPhone:     phone,
+      notes:             notes,
+      status:            'confirmed',
+      source:            'manual_vendor',
+      isReschedule:      false,
+      updatedAt:         ts()
+    };
+
+    try {
+      if (bookingId) {
+        // Edit: update existing booking in place — same doc ID, no delete+create
+        await vendorRef.collection('bookings').doc(bookingId).update(data);
+        showToast('✓ Đã cập nhật lịch hẹn.');
+      } else {
+        // New booking: written to vendors/{id}/bookings — same path AI reads/writes
+        data.createdAt   = ts();
+        data.confirmedAt = ts();
+        await vendorRef.collection('bookings').doc().set(data);
+        showToast('✓ Đã tạo lịch hẹn mới!');
+      }
+      closeManualBookModal();
+    } catch(e) {
+      _mbMsg('Lỗi: ' + e.message, true);
+      if (btn) btn.disabled = false;
+    }
+  }
+
   // ── Build reference image thumbnails HTML ──────────────────────────────────────
   function _refImgsHtml(imgs, cls) {
     if (!imgs || !imgs.length) return '';
@@ -2615,10 +2804,12 @@
     var canManage  = isOwner || !!_userPerms.canCancel;
     var canContact = isOwner || !!_userPerms.contactCustomer;
     var canConfirm = isOwner || !!_userPerms.canConfirm;
+    var canBook    = isOwner || _userRole === 'manager' || !!_userPerms.canConfirm;
 
     el.innerHTML = dateOrder.map(function(date) {
       var appts = byDate[date].map(function(b) {
         var id     = b.id;
+        _bookingCache[id] = b; // cache for edit modal
         var detId  = 'det-' + (id || '').replace(/[^a-zA-Z0-9]/g, '-');
         var status = b.status || 'confirmed';
 
@@ -2750,9 +2941,11 @@
         var timeQ  = JSON.stringify(b.requestedTime || b.time || '');
 
         // Use single-quoted onclick attrs so JSON.stringify double-quotes don't break the HTML attribute
+        var editBtn = canBook ? '<button class="sa-act" style="color:var(--gold-lt);border-color:var(--border-g)" onclick=\'openManualBookModal(' + idQ + ',null)\'>&#9998; S\u1eeda</button>' : '';
         var actions = '';
         if (status === 'confirmed') {
           actions =
+            editBtn +
             '<button class="sa-act sa-act--start"  onclick=\'updateBookingStatus(' + idQ + ',"in_progress")\'>&#9654; B\u1eaft \u0111\u1ea7u</button>' +
             '<button class="sa-act sa-act--done"   onclick=\'updateBookingStatus(' + idQ + ',"completed")\'>&#10003; Xong</button>' +
             '<button class="sa-act sa-act--noshow" onclick=\'updateBookingStatus(' + idQ + ',"no_show")\'>V\u1eafng</button>' +
@@ -2761,6 +2954,7 @@
             (canManage ? '<button class="sa-act sa-act--cancel" onclick=\'deleteBooking(' + idQ + ',' + nameQ + ')\'>&#128465; X\u00f3a</button>' : '');
         } else if (status === 'in_progress') {
           actions =
+            editBtn +
             '<button class="sa-act sa-act--done"   onclick=\'updateBookingStatus(' + idQ + ',"completed")\'>&#10003; Ho\u00e0n th\u00e0nh</button>' +
             '<button class="sa-act sa-act--noshow" onclick=\'updateBookingStatus(' + idQ + ',"no_show")\'>V\u1eafng</button>' +
             (canManage ? '<button class="sa-act sa-act--cancel" style="border-color:rgba(248,113,113,.4);color:var(--danger)" onclick=\'openCancelModal(' + idQ + ',' + nameQ + ',' + phoneQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')\'>&#10005; H\u1ee7y</button>' : '') +
@@ -3143,8 +3337,13 @@
     });
     var topSvcs = Object.keys(svcCount).sort(function(a, b) { return svcCount[b] - svcCount[a]; }).slice(0, 4);
 
+    var nameQ  = JSON.stringify(custName);
+    var phoneQ = JSON.stringify(custPhone);
     var html = '<div class="cqv-summary">' +
-      '<div class="cqv-name">' + esc(custName) + '</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;flex-wrap:wrap">' +
+        '<div class="cqv-name">' + esc(custName) + '</div>' +
+        (_canManualBook() ? '<button class="btn btn--primary btn--sm" style="font-size:.68rem;padding:.25rem .7rem;flex-shrink:0" onclick=\'openManualBookModal("",{name:' + nameQ + ',phone:' + phoneQ + '})\'>+ Đặt lịch</button>' : '') +
+      '</div>' +
       (custPhone ? '<div class="cqv-meta"><a class="sa-phone-link" href="tel:' + esc(custPhone) + '">&#128222; ' + esc(custPhone) + '</a>' +
         '<a class="sa-act sa-act--call" href="sms:' + esc(custPhone) + '" style="margin-left:.5rem;font-size:.68rem;text-decoration:none">&#128172; Text</a></div>' : '') +
       '<div class="cqv-meta" style="margin-top:.3rem">' +
@@ -3175,10 +3374,16 @@
       var dur     = b.totalDurationMins || b.durationMins;
       var badge   = statusMap[status] || '';
       var isResc  = b.isReschedule ? '<span class="sa-badge sa-badge--reschedule" style="font-size:.6rem">↻ Đổi lịch</span>' : '';
+      // Cache for edit modal and build Edit button
+      if (b._id) _bookingCache[b._id] = b;
+      var bIdQ   = JSON.stringify(b._id || '');
+      var editBtn = (b._id && _canManualBook() && (status === 'confirmed' || status === 'in_progress'))
+        ? '<button style="font-size:.62rem;padding:.18rem .5rem;border-radius:4px;border:1px solid var(--border-g);background:transparent;color:var(--gold-lt);cursor:pointer;margin-left:.3rem" onclick=\'openManualBookModal(' + bIdQ + ',null)\'>&#9998; Sửa</button>'
+        : '';
       return '<div class="cqv-booking-card">' +
         '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.2rem">' +
           '<div>' +
-            '<div style="font-weight:600;font-size:.82rem">' + esc(_fmtDate(date)) + (time ? ' · ' + esc(_fmtTime(time)) : '') + '</div>' +
+            '<div style="font-weight:600;font-size:.82rem">' + esc(_fmtDate(date)) + (time ? ' · ' + esc(_fmtTime(time)) : '') + editBtn + '</div>' +
             '<div style="font-size:.75rem;color:var(--muted);margin-top:.1rem">' +
               (staff ? '<span class="sa-staff-badge" style="font-size:.65rem">' + esc(staff) + '</span> ' : '') +
               (dur ? '<span style="font-size:.68rem;opacity:.7">' + dur + 'p</span>' : '') +
@@ -3187,8 +3392,8 @@
           '<div style="display:flex;gap:.3rem;align-items:center;flex-wrap:wrap">' + badge + isResc + '</div>' +
         '</div>' +
         (svcs.length ? '<div style="font-size:.75rem;margin-top:.35rem;color:var(--cream)">' + esc(svcs.join(' · ')) + '</div>' : '') +
-        (notes ? '<div style="font-size:.68rem;color:var(--muted);margin-top:.25rem;font-style:italic">📝 ' + esc(notes.slice(0, 80)) + (notes.length > 80 ? '…' : '') + '</div>' : '') +
-        (imgs.length ? '<div style="font-size:.68rem;color:var(--muted);margin-top:.2rem">📷 ' + imgs.length + ' ảnh tham khảo</div>' : '') +
+        (notes ? '<div style="font-size:.68rem;color:var(--muted);margin-top:.25rem;font-style:italic">&#128221; ' + esc(notes.slice(0, 80)) + (notes.length > 80 ? '…' : '') + '</div>' : '') +
+        (imgs.length ? '<div style="margin-top:.4rem">' + _refImgsHtml(imgs, 'sa-ref-img') + '</div>' : '') +
       '</div>';
     }
 

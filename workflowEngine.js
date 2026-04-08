@@ -27,10 +27,14 @@
     if (!iso) return '—';
     try {
       var d = new Date(iso + 'T12:00:00');
-      var DOW = ['CN','T2','T3','T4','T5','T6','T7'];
-      var MON = ['tháng 1','tháng 2','tháng 3','tháng 4','tháng 5','tháng 6',
-                 'tháng 7','tháng 8','tháng 9','tháng 10','tháng 11','tháng 12'];
-      return DOW[d.getDay()] + ', ' + d.getDate() + ' ' + MON[d.getMonth()];
+      var lang = (draft && draft.lang) || 'vi';
+      var cs = CONFIRM_STRINGS[lang] || CONFIRM_STRINGS.vi;
+      var DOW = cs.dateDows;
+      var MON = cs.dateMonths;
+      if (lang === 'vi') {
+        return DOW[d.getDay()] + ', ' + d.getDate() + ' ' + MON[d.getMonth()];
+      }
+      return DOW[d.getDay()] + ', ' + MON[d.getMonth()] + ' ' + d.getDate();
     } catch (e) { return iso; }
   }
 
@@ -58,7 +62,7 @@
     return id;
   }
 
-  // ── Multilingual strings for confirmation UI ────────────────────────────────
+  // ── Multilingual strings for confirmation UI, summaries, and questions ────────
   var CONFIRM_STRINGS = {
     vi: {
       cancelled:     'Đã hủy. Bạn cần tôi giúp gì khác không?',
@@ -70,6 +74,109 @@
       chipOk:        '✅ Xác nhận đặt chỗ',   chipOkVal: 'xác nhận',
       chipEdit:      '✏️ Chỉnh sửa thông tin', chipEditVal: 'không',
       priceFrom:     'Giá từ: ',
+
+      dateDows:   ['CN','T2','T3','T4','T5','T6','T7'],
+      dateMonths: ['tháng 1','tháng 2','tháng 3','tháng 4','tháng 5','tháng 6',
+                   'tháng 7','tháng 8','tháng 9','tháng 10','tháng 11','tháng 12'],
+
+      fld_passengers:'Số người', fld_requestedDate:'Ngày',
+      fld_arrivalTime:'Giờ đến', fld_departureTime:'Giờ đi',
+      fld_requestedTime:'Giờ hẹn', fld_airport:'Sân bay',
+      fld_airline:'Hãng bay', fld_customerName:'Tên',
+      fld_customerPhone:'Điện thoại', fld_dropoffAddress:'Địa chỉ đến',
+      fld_pickupAddress:'Điểm đón', fld_address:'Địa chỉ giao',
+      fld_quantity:'Số lượng', fld_serviceType:'Dịch vụ',
+      fld_days:'Số ngày', fld_destination:'Điểm đến',
+      fld_fulfillment:'Hình thức nhận', fld_variant:'Loại', fld_lodging:'Chỗ ở',
+
+      hdFood:'📋 Tóm tắt đơn hàng:', hdPickup:'📋 Tóm tắt đặt đón sân bay:',
+      hdDropoff:'📋 Tóm tắt đặt ra sân bay:', hdRide:'📋 Tóm tắt đặt xe riêng cao cấp:',
+      hdNail:'📋 Tóm tắt lịch hẹn nail:', hdHair:'📋 Tóm tắt lịch hẹn tóc:',
+      hdTour:'📋 Tóm tắt yêu cầu tour:',
+
+      sfRestaurant:'• Nhà hàng:  ', sfDish:'• Món:       ', sfQty:'• Số lượng:  ',
+      sfVariant:'• Loại:      ', sfFulfillment:'• Nhận hàng: ',
+      sfDelivery:'Giao hàng tận nơi', sfPickupSelf:'Tự đến lấy',
+      sfAddress:'• Địa chỉ:   ', sfDate:'• Ngày:      ', sfTime:'• Giờ:       ',
+      sfName:'• Tên:       ', sfPhone:'• SĐT:       ', sfNotes:'• Ghi chú:   ',
+      sfAirport:'• Sân bay:      ', sfTerminal:'• Terminal:     ',
+      sfFlight:'• Chuyến bay:   ', sfArrivalDate:'• Ngày đến:     ',
+      sfArrivalTime:'• Giờ hạ cánh:  ', sfPassengers:'• Hành khách:   ',
+      sfPassengersUnit:' người', sfLuggage:'• Hành lý:      ',
+      sfLuggageCarryOn:'Xách tay (không ký gửi)', sfLuggageChecked:' kiện',
+      sfDropoffAddr:'• Điểm đến:     ', sfPickupAddr:'• Điểm đón:     ',
+      sfDepDate:'• Ngày bay:     ', sfDepTime:'• Giờ cất cánh: ',
+      sfService:'• Dịch vụ:   ', sfRegion:'• Khu vực:   ',
+      sfDest:'• Điểm đến:  ', sfDays:'• Số ngày:   ', sfDaysUnit:' ngày',
+      sfFrom:'• Xuất phát: ', sfLodging:'• Chỗ ở:     ',
+      sfHotel:'  Khách sạn: ', sfArea:'  Khu vực:   ',
+      sfBudget:'  Ngân sách: ', sfBooking:'  Đặt phòng: ',
+      sfPickupFrom:'• Điểm đón:   ', sfDropoffTo:'• Điểm đến:   ',
+      sfLodgeHotel:'Khách sạn', sfLodgeAirbnb:'Airbnb', sfLodgeNone:'Tự túc',
+      sfAreaStrip:'The Strip', sfAreaDT:'Downtown', sfAreaOff:'Off Strip',
+      sfAreaCC:'City Center', sfAreaBeach:'Near Beach', sfAreaAirport:'Near Airport',
+      sfBudgBudget:'Tiết kiệm', sfBudgMid:'Tầm trung', sfBudgPrem:'Cao cấp',
+      sfModeVendor:'Du Lịch Cali hỗ trợ đặt', sfModeSelf:'Tự đặt',
+
+      priceTotal:'💰 Tổng: $', priceEst:'💰 Ước tính: ',
+      priceTransport:'💰 Ước tính transport: ', priceCompare:'💰 So sánh giá (',
+      priceUber:'   Uber/Lyft ước tính: ~$', priceDLC:'   DuLịchCali (-20%):  ~$',
+      priceSave:'  ← tiết kiệm ~$', priceApprox:'   ⚠️ Giá sơ bộ — đội sẽ xác nhận sau khi đặt.',
+      driverWait:'⏱ Tài xế chờ tại cửa Arrivals/Baggage Claim.',
+
+      qFoodItem:'Bạn muốn đặt món gì?\n(VD: Chả Giò, Chuối Đậu Nấu Ốc)',
+      qFoodQtyPre:'Bạn muốn đặt bao nhiêu ', qFoodQtyPost:'?', qFoodQtyMin:'Tối thiểu: ',
+      qFoodFulfillment:'Bạn muốn tự đến lấy (pickup) hay giao hàng tận nơi (delivery)?',
+      qFoodDate:'Bạn muốn nhận vào ngày nào?\n(VD: thứ Bảy, 15/4, "ngày mai")',
+      qFoodTime:'Mấy giờ bạn muốn lấy/nhận?\n(VD: 2pm, 14:00)',
+      qName:'Tên của bạn là gì?', qPhone:'Số điện thoại liên lạc?',
+      qAddress:'Địa chỉ giao hàng của bạn?',
+      qNotes:'Có yêu cầu đặc biệt nào không? (Gõ "không" nếu không có)',
+      qNotesShort:'Yêu cầu đặc biệt?\n(Gõ "không" nếu không có)',
+
+      qAirportPickup:'✈️ Bạn đến sân bay nào?',
+      qAirportNear:'\n(Gần bạn nhất: ', qAirportList:'\n(LAX · SNA · ONT · BUR · SFO · SJC · OAK...)',
+      qAirportDropoff:'✈️ Bạn cần đưa tới sân bay nào?',
+      qAirline:'Hãng bay và số hiệu chuyến? (VD: United 714)\nGõ "bỏ qua" nếu chưa có.',
+      qAirlineShort:'Hãng bay và số hiệu chuyến? (Gõ "bỏ qua" nếu chưa có)',
+      qArrivalDate:'Ngày đến? (VD: 15/4, thứ Sáu)',
+      qArrivalTime:'Giờ máy bay hạ cánh? (VD: 2:30 PM, 14:30)',
+      qPassengers:'Có bao nhiêu hành khách?',
+      qTerminal:'Cổng/Terminal bạn đến? (VD: Terminal 4, TBIT)\nGõ "không biết" nếu chưa rõ.',
+      qTerminalDrop:'Cổng/Terminal cần đến? (VD: Terminal 2, TBIT)\nGõ "không biết" nếu chưa rõ.',
+      qLuggage:'Có bao nhiêu kiện hành lý ký gửi? (Gõ "0" nếu chỉ xách tay)',
+      qDropoffAddr:'Địa chỉ điểm đến sau sân bay?',
+      qDropoffAddrHint:'\n(thành phố hoặc địa chỉ cụ thể)',
+      qPickupAddr:'Địa chỉ đón bạn (điểm xuất phát)?',
+      qCurrentLoc:'\n(Vị trí hiện tại: ', qCurrentLocUse:' — gõ "đây" để dùng)',
+      qNameLead:'Tên hành khách chính?',
+
+      qRidePickup:'📍 Địa chỉ đón bạn?',
+      qRidePickupEx:'\n(Thành phố hoặc địa chỉ cụ thể — VD: San Jose, 1234 Main St, Orange County...)',
+      qRideDropoff:'🏁 Điểm đến của bạn?\n(Thành phố hoặc địa chỉ cụ thể)',
+      qRideDate:'Ngày đi? (VD: 15/4, thứ Sáu, ngày mai)',
+      qRideTime:'Mấy giờ xuất phát? (VD: 9:00 AM, 14:30)',
+      qNameSelf:'Tên của bạn?',
+
+      qNailService:'Bạn muốn làm dịch vụ gì?\n1. Manicure (móng tay)\n2. Pedicure (móng chân)\n3. Gel Nails\n4. Acrylic\n5. Full Set\n(hoặc Mani+Pedi, Dip Powder...)',
+      qHairService:'Bạn muốn làm gì?\n1. Cắt tóc\n2. Nhuộm tóc\n3. Uốn / Duỗi\n4. Keratin Treatment\n5. Balayage / Highlights',
+      qRegion:'Bạn ở khu vực nào tại California?',
+      qApptDate:'Ngày nào bạn muốn hẹn?', qApptTime:'Giờ nào? (VD: 10am, 2:30pm)',
+      qNailNotes:'Màu sắc, kiểu nail, hoặc yêu cầu đặc biệt?\n(Gõ "không" nếu không có)',
+      qHairNotes:'Kiểu tóc, màu muốn nhuộm, hoặc yêu cầu đặc biệt?\n(Gõ "không" nếu không có)',
+
+      qTourDest:'🗺️ Bạn muốn đi đâu?\n(Las Vegas · Yosemite · San Francisco · Napa · Big Sur · Grand Canyon...)',
+      qTourDate:'Ngày khởi hành dự kiến?', qTourDays:'Chuyến đi bao nhiêu ngày?',
+      qTourPassengers:'Nhóm bạn có bao nhiêu người?',
+      qTourFrom:'Điểm xuất phát của bạn ở đâu?\n(thành phố hoặc địa chỉ)',
+      qTourLodging:'Bạn có cần hỗ trợ chỗ ở không?',
+      qTourAreaVegas:'Bạn muốn ở khu vực nào tại Las Vegas?',
+      qTourAreaSF:'Bạn muốn ở khu vực nào tại San Francisco?',
+      qTourArea:'Bạn muốn ở khu vực nào?',
+      qTourBudget:'Ngân sách khách sạn mỗi đêm?',
+      qTourBooking:'Bạn muốn tự đặt khách sạn, hay nhờ Du Lịch Cali hỗ trợ đặt giúp?',
+      qTourContact:'Tên liên lạc chính?',
+      hotelIntro:'Đây là các khách sạn phù hợp với yêu cầu của bạn:\n\n',
     },
     en: {
       cancelled:     'Cancelled. How else can I help you?',
@@ -81,6 +188,109 @@
       chipOk:        '✅ Confirm booking',  chipOkVal: 'yes',
       chipEdit:      '✏️ Edit details',     chipEditVal: 'no',
       priceFrom:     'Est. starting from: ',
+
+      dateDows:   ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+      dateMonths: ['January','February','March','April','May','June',
+                   'July','August','September','October','November','December'],
+
+      fld_passengers:'Passengers', fld_requestedDate:'Date',
+      fld_arrivalTime:'Arrival time', fld_departureTime:'Departure time',
+      fld_requestedTime:'Time', fld_airport:'Airport',
+      fld_airline:'Flight', fld_customerName:'Name',
+      fld_customerPhone:'Phone', fld_dropoffAddress:'Drop-off address',
+      fld_pickupAddress:'Pickup address', fld_address:'Delivery address',
+      fld_quantity:'Quantity', fld_serviceType:'Service',
+      fld_days:'Days', fld_destination:'Destination',
+      fld_fulfillment:'Fulfillment', fld_variant:'Variant', fld_lodging:'Lodging',
+
+      hdFood:'📋 Order summary:', hdPickup:'📋 Airport pickup summary:',
+      hdDropoff:'📋 Airport drop-off summary:', hdRide:'📋 Private ride summary:',
+      hdNail:'📋 Nail appointment summary:', hdHair:'📋 Hair appointment summary:',
+      hdTour:'📋 Tour request summary:',
+
+      sfRestaurant:'• Restaurant:  ', sfDish:'• Item:        ', sfQty:'• Quantity:    ',
+      sfVariant:'• Variant:     ', sfFulfillment:'• Fulfillment: ',
+      sfDelivery:'Delivery', sfPickupSelf:'Pickup',
+      sfAddress:'• Address:     ', sfDate:'• Date:        ', sfTime:'• Time:        ',
+      sfName:'• Name:        ', sfPhone:'• Phone:       ', sfNotes:'• Notes:       ',
+      sfAirport:'• Airport:      ', sfTerminal:'• Terminal:     ',
+      sfFlight:'• Flight:       ', sfArrivalDate:'• Arrival date: ',
+      sfArrivalTime:'• Landing time: ', sfPassengers:'• Passengers:   ',
+      sfPassengersUnit:' people', sfLuggage:'• Luggage:      ',
+      sfLuggageCarryOn:'Carry-on only', sfLuggageChecked:' checked bags',
+      sfDropoffAddr:'• Drop-off:     ', sfPickupAddr:'• Pickup from:  ',
+      sfDepDate:'• Flight date:  ', sfDepTime:'• Departure:    ',
+      sfService:'• Service:     ', sfRegion:'• Region:      ',
+      sfDest:'• Destination: ', sfDays:'• Days:        ', sfDaysUnit:' days',
+      sfFrom:'• Departing:   ', sfLodging:'• Lodging:     ',
+      sfHotel:'  Hotel:       ', sfArea:'  Area:        ',
+      sfBudget:'  Budget:      ', sfBooking:'  Booking:     ',
+      sfPickupFrom:'• Pickup:      ', sfDropoffTo:'• Drop-off:    ',
+      sfLodgeHotel:'Hotel', sfLodgeAirbnb:'Airbnb', sfLodgeNone:'Self-arranged',
+      sfAreaStrip:'The Strip', sfAreaDT:'Downtown', sfAreaOff:'Off Strip',
+      sfAreaCC:'City Center', sfAreaBeach:'Near Beach', sfAreaAirport:'Near Airport',
+      sfBudgBudget:'Budget', sfBudgMid:'Mid-range', sfBudgPrem:'Premium',
+      sfModeVendor:'Du Lịch Cali will book', sfModeSelf:'Self-booking',
+
+      priceTotal:'💰 Total: $', priceEst:'💰 Estimate: ',
+      priceTransport:'💰 Est. transport: ', priceCompare:'💰 Price comparison (',
+      priceUber:'   Uber/Lyft est.: ~$', priceDLC:'   DuLịchCali (-20%): ~$',
+      priceSave:'  ← save ~$', priceApprox:'   ⚠️ Rough estimate — team will confirm after booking.',
+      driverWait:'⏱ Driver waits at Arrivals/Baggage Claim.',
+
+      qFoodItem:'What would you like to order?\n(e.g., Egg Rolls, Chuối Đậu Nấu Ốc)',
+      qFoodQtyPre:'How many ', qFoodQtyPost:' would you like?', qFoodQtyMin:'Minimum: ',
+      qFoodFulfillment:'Pickup or delivery?',
+      qFoodDate:'What date would you like to pick up or receive?\n(e.g., Saturday, 4/15, "tomorrow")',
+      qFoodTime:'What time? (e.g., 2pm, 2:30 PM)',
+      qName:'What is your name?', qPhone:'Contact phone number?',
+      qAddress:'Your delivery address?',
+      qNotes:'Any special requests? (Type "none" if no)',
+      qNotesShort:'Special requests?\n(Type "none" if none)',
+
+      qAirportPickup:'✈️ Which airport are you arriving at?',
+      qAirportNear:'\n(Nearest to you: ', qAirportList:'\n(LAX · SNA · ONT · BUR · SFO · SJC · OAK...)',
+      qAirportDropoff:'✈️ Which airport do you need to go to?',
+      qAirline:'Airline and flight number? (e.g., United 714)\nType "skip" if not available yet.',
+      qAirlineShort:'Airline and flight number? (Type "skip" if not available)',
+      qArrivalDate:'Arrival date? (e.g., 4/15, Friday)',
+      qArrivalTime:'Estimated landing time? (e.g., 2:30 PM, 14:30)',
+      qPassengers:'How many passengers?',
+      qTerminal:'Gate/Terminal? (e.g., Terminal 4, TBIT)\nType "unknown" if not sure.',
+      qTerminalDrop:'Gate/Terminal to go to? (e.g., Terminal 2, TBIT)\nType "unknown" if not sure.',
+      qLuggage:'How many checked bags? (Type "0" for carry-on only)',
+      qDropoffAddr:'Drop-off address after the airport?',
+      qDropoffAddrHint:'\n(city or specific address)',
+      qPickupAddr:'Your pickup address (starting point)?',
+      qCurrentLoc:'\n(Current location: ', qCurrentLocUse:' — type "here" to use)',
+      qNameLead:'Lead passenger name?',
+
+      qRidePickup:'📍 Your pickup address?',
+      qRidePickupEx:'\n(City or specific address — e.g., San Jose, 1234 Main St, Orange County...)',
+      qRideDropoff:'🏁 Your destination?\n(City or specific address)',
+      qRideDate:'Departure date? (e.g., 4/15, Friday, tomorrow)',
+      qRideTime:'Departure time? (e.g., 9:00 AM, 2:30 PM)',
+      qNameSelf:'Your name?',
+
+      qNailService:'What service would you like?\n1. Manicure\n2. Pedicure\n3. Gel Nails\n4. Acrylic\n5. Full Set\n(or Mani+Pedi, Dip Powder...)',
+      qHairService:'What service would you like?\n1. Haircut\n2. Hair Color\n3. Perm / Straighten\n4. Keratin Treatment\n5. Balayage / Highlights',
+      qRegion:'Which California region are you in?',
+      qApptDate:'Which date would you like?', qApptTime:'What time? (e.g., 10am, 2:30pm)',
+      qNailNotes:'Nail color, design, or special requests?\n(Type "none" if none)',
+      qHairNotes:'Style, color preferences, or special requests?\n(Type "none" if none)',
+
+      qTourDest:'🗺️ Where would you like to go?\n(Las Vegas · Yosemite · San Francisco · Napa · Big Sur · Grand Canyon...)',
+      qTourDate:'Expected departure date?', qTourDays:'How many days is the trip?',
+      qTourPassengers:'How many people in your group?',
+      qTourFrom:'Where are you departing from?\n(city or address)',
+      qTourLodging:'Do you need lodging assistance?',
+      qTourAreaVegas:'Which area of Las Vegas would you prefer?',
+      qTourAreaSF:'Which area of San Francisco would you prefer?',
+      qTourArea:'Which area would you like to stay in?',
+      qTourBudget:'Hotel budget per night?',
+      qTourBooking:'Would you like to book hotels yourself, or have Du Lịch Cali handle it?',
+      qTourContact:'Primary contact name?',
+      hotelIntro:'Here are hotels matching your preferences:\n\n',
     },
     es: {
       cancelled:     'Cancelado. ¿En qué más puedo ayudarte?',
@@ -92,6 +302,109 @@
       chipOk:        '✅ Confirmar reserva', chipOkVal: 'sí',
       chipEdit:      '✏️ Editar detalles',   chipEditVal: 'no',
       priceFrom:     'Desde aproximadamente: ',
+
+      dateDows:   ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],
+      dateMonths: ['enero','febrero','marzo','abril','mayo','junio',
+                   'julio','agosto','septiembre','octubre','noviembre','diciembre'],
+
+      fld_passengers:'Pasajeros', fld_requestedDate:'Fecha',
+      fld_arrivalTime:'Hora de llegada', fld_departureTime:'Hora de salida',
+      fld_requestedTime:'Hora', fld_airport:'Aeropuerto',
+      fld_airline:'Vuelo', fld_customerName:'Nombre',
+      fld_customerPhone:'Teléfono', fld_dropoffAddress:'Dirección de destino',
+      fld_pickupAddress:'Dirección de recogida', fld_address:'Dirección de entrega',
+      fld_quantity:'Cantidad', fld_serviceType:'Servicio',
+      fld_days:'Días', fld_destination:'Destino',
+      fld_fulfillment:'Entrega', fld_variant:'Variante', fld_lodging:'Alojamiento',
+
+      hdFood:'📋 Resumen del pedido:', hdPickup:'📋 Resumen — recogida en aeropuerto:',
+      hdDropoff:'📋 Resumen — traslado al aeropuerto:', hdRide:'📋 Resumen — viaje privado:',
+      hdNail:'📋 Resumen — cita de uñas:', hdHair:'📋 Resumen — cita de peluquería:',
+      hdTour:'📋 Resumen — solicitud de tour:',
+
+      sfRestaurant:'• Restaurante: ', sfDish:'• Plato:       ', sfQty:'• Cantidad:    ',
+      sfVariant:'• Variante:    ', sfFulfillment:'• Entrega:     ',
+      sfDelivery:'A domicilio', sfPickupSelf:'Recogida en tienda',
+      sfAddress:'• Dirección:   ', sfDate:'• Fecha:       ', sfTime:'• Hora:        ',
+      sfName:'• Nombre:      ', sfPhone:'• Teléfono:    ', sfNotes:'• Notas:       ',
+      sfAirport:'• Aeropuerto:    ', sfTerminal:'• Terminal:      ',
+      sfFlight:'• Vuelo:         ', sfArrivalDate:'• Fecha llegada: ',
+      sfArrivalTime:'• Hora aterrizaje:', sfPassengers:'• Pasajeros:     ',
+      sfPassengersUnit:' personas', sfLuggage:'• Equipaje:      ',
+      sfLuggageCarryOn:'Solo equipaje de mano', sfLuggageChecked:' maletas',
+      sfDropoffAddr:'• Destino:       ', sfPickupAddr:'• Recogida en:   ',
+      sfDepDate:'• Fecha vuelo:   ', sfDepTime:'• Hora salida:   ',
+      sfService:'• Servicio:    ', sfRegion:'• Región:      ',
+      sfDest:'• Destino:     ', sfDays:'• Días:        ', sfDaysUnit:' días',
+      sfFrom:'• Salida desde:', sfLodging:'• Alojamiento: ',
+      sfHotel:'  Hotel:       ', sfArea:'  Zona:        ',
+      sfBudget:'  Presupuesto: ', sfBooking:'  Reserva:     ',
+      sfPickupFrom:'• Recogida:    ', sfDropoffTo:'• Destino:     ',
+      sfLodgeHotel:'Hotel', sfLodgeAirbnb:'Airbnb', sfLodgeNone:'Por cuenta propia',
+      sfAreaStrip:'The Strip', sfAreaDT:'Downtown', sfAreaOff:'Off Strip',
+      sfAreaCC:'City Center', sfAreaBeach:'Cerca de la playa', sfAreaAirport:'Cerca del aeropuerto',
+      sfBudgBudget:'Económico', sfBudgMid:'Precio medio', sfBudgPrem:'Premium',
+      sfModeVendor:'Du Lịch Cali gestionará la reserva', sfModeSelf:'Reserva propia',
+
+      priceTotal:'💰 Total: $', priceEst:'💰 Estimado: ',
+      priceTransport:'💰 Est. transporte: ', priceCompare:'💰 Comparación de precios (',
+      priceUber:'   Uber/Lyft est.: ~$', priceDLC:'   DuLịchCali (-20%): ~$',
+      priceSave:'  ← ahorras ~$', priceApprox:'   ⚠️ Precio aproximado — el equipo confirmará tras la reserva.',
+      driverWait:'⏱ El conductor espera en Llegadas/Recogida de equipaje.',
+
+      qFoodItem:'¿Qué deseas pedir?\n(ej: Chả Giò, Chuối Đậu Nấu Ốc)',
+      qFoodQtyPre:'¿Cuántas ', qFoodQtyPost:' deseas?', qFoodQtyMin:'Mínimo: ',
+      qFoodFulfillment:'¿Recoger en tienda o entrega a domicilio?',
+      qFoodDate:'¿Qué fecha deseas recoger o recibir?\n(ej: sábado, 15/4, "mañana")',
+      qFoodTime:'¿A qué hora? (ej: 2pm, 14:00)',
+      qName:'¿Cuál es tu nombre?', qPhone:'¿Número de teléfono de contacto?',
+      qAddress:'¿Tu dirección de entrega?',
+      qNotes:'¿Alguna solicitud especial? (Escribe "no" si no hay)',
+      qNotesShort:'¿Solicitudes especiales?\n(Escribe "no" si no hay)',
+
+      qAirportPickup:'✈️ ¿En qué aeropuerto llegas?',
+      qAirportNear:'\n(El más cercano a ti: ', qAirportList:'\n(LAX · SNA · ONT · BUR · SFO · SJC · OAK...)',
+      qAirportDropoff:'✈️ ¿A qué aeropuerto necesitas ir?',
+      qAirline:'¿Aerolínea y número de vuelo? (ej: United 714)\nEscribe "omitir" si aún no lo tienes.',
+      qAirlineShort:'¿Aerolínea y número de vuelo? (Escribe "omitir" si aún no lo tienes)',
+      qArrivalDate:'¿Fecha de llegada? (ej: 15/4, viernes)',
+      qArrivalTime:'¿Hora de aterrizaje? (ej: 2:30 PM, 14:30)',
+      qPassengers:'¿Cuántos pasajeros?',
+      qTerminal:'¿Terminal? (ej: Terminal 4, TBIT)\nEscribe "no sé" si no estás seguro.',
+      qTerminalDrop:'¿Terminal al que vas? (ej: Terminal 2, TBIT)\nEscribe "no sé" si no estás seguro.',
+      qLuggage:'¿Cuántas maletas facturadas? (Escribe "0" si solo llevas equipaje de mano)',
+      qDropoffAddr:'¿Dirección de destino tras el aeropuerto?',
+      qDropoffAddrHint:'\n(ciudad o dirección específica)',
+      qPickupAddr:'¿Tu dirección de recogida (punto de salida)?',
+      qCurrentLoc:'\n(Ubicación actual: ', qCurrentLocUse:' — escribe "aquí" para usarla)',
+      qNameLead:'¿Nombre del pasajero principal?',
+
+      qRidePickup:'📍 ¿Tu dirección de recogida?',
+      qRidePickupEx:'\n(Ciudad o dirección — ej: San Jose, 1234 Main St, Orange County...)',
+      qRideDropoff:'🏁 ¿Tu destino?\n(Ciudad o dirección específica)',
+      qRideDate:'¿Fecha de salida? (ej: 15/4, viernes, mañana)',
+      qRideTime:'¿Hora de salida? (ej: 9:00 AM, 2:30 PM)',
+      qNameSelf:'¿Tu nombre?',
+
+      qNailService:'¿Qué servicio deseas?\n1. Manicure\n2. Pedicure\n3. Gel Nails\n4. Acrylic\n5. Full Set\n(o Mani+Pedi, Dip Powder...)',
+      qHairService:'¿Qué servicio deseas?\n1. Corte de cabello\n2. Tinte\n3. Permanente / Alisado\n4. Tratamiento de Keratina\n5. Balayage / Reflejos',
+      qRegion:'¿En qué región de California te encuentras?',
+      qApptDate:'¿Qué fecha deseas?', qApptTime:'¿A qué hora? (ej: 10am, 2:30pm)',
+      qNailNotes:'¿Color de uñas, diseño o solicitudes especiales?\n(Escribe "no" si no hay)',
+      qHairNotes:'¿Estilo, color o solicitudes especiales?\n(Escribe "no" si no hay)',
+
+      qTourDest:'🗺️ ¿A dónde deseas ir?\n(Las Vegas · Yosemite · San Francisco · Napa · Big Sur · Grand Canyon...)',
+      qTourDate:'¿Fecha de salida prevista?', qTourDays:'¿Cuántos días dura el viaje?',
+      qTourPassengers:'¿Cuántas personas hay en tu grupo?',
+      qTourFrom:'¿Desde dónde sales?\n(ciudad o dirección)',
+      qTourLodging:'¿Necesitas ayuda con el alojamiento?',
+      qTourAreaVegas:'¿Qué zona de Las Vegas prefieres?',
+      qTourAreaSF:'¿Qué zona de San Francisco prefieres?',
+      qTourArea:'¿Qué zona prefieres?',
+      qTourBudget:'¿Presupuesto de hotel por noche?',
+      qTourBooking:'¿Deseas reservar el hotel tú mismo o prefieres que Du Lịch Cali lo gestione?',
+      qTourContact:'¿Nombre del contacto principal?',
+      hotelIntro:'Aquí hay hoteles que coinciden con tus preferencias:\n\n',
     },
   };
 
@@ -483,31 +796,9 @@
            .test(text);
   }
 
-  // ── Field label map (for correction acknowledgements) ─────────────────────
-  var FIELD_LABELS = {
-    passengers:     'Số người',
-    requestedDate:  'Ngày',
-    arrivalTime:    'Giờ đến',
-    departureTime:  'Giờ đi',
-    requestedTime:  'Giờ hẹn',
-    airport:        'Sân bay',
-    airline:        'Hãng bay',
-    customerName:   'Tên',
-    customerPhone:  'Điện thoại',
-    dropoffAddress: 'Địa chỉ đến',
-    pickupAddress:  'Điểm đón',
-    address:        'Địa chỉ giao',
-    quantity:       'Số lượng',
-    serviceType:    'Dịch vụ',
-    days:           'Số ngày',
-    destination:    'Điểm đến',
-    fulfillment:    'Hình thức nhận',
-    variant:        'Loại',
-    lodging:        'Chỗ ở',
-  };
-
+  // ── Field label map (for correction acknowledgements) — uses S() for i18n ──
   function fmtFieldLabel(key) {
-    return FIELD_LABELS[key] || key;
+    return S('fld_' + key) || key;
   }
 
   function fmtFieldVal(key, val) {
@@ -669,7 +960,7 @@
       fields: [
         {
           key: 'item',
-          question: function() { return 'Bạn muốn đặt món gì?\n(VD: Chả Giò, Chuối Đậu Nấu Ốc)'; },
+          question: function() { return S('qFoodItem'); },
           extract: function(t) { return X.foodItem(t); },
           optional: false,
         },
@@ -677,14 +968,16 @@
           key: 'quantity',
           question: function(f) {
             var item = f.item || {};
-            return 'Bạn muốn đặt bao nhiêu ' + (item.unit||'cái') + '?' +
-              (item.minOrder ? ' (Tối thiểu: ' + item.minOrder + ' ' + item.unit + ')' : '');
+            var lang = (draft && draft.lang) || 'vi';
+            var unitLabel = (lang !== 'vi' && item.unitEn) ? item.unitEn : (item.unit||'cái');
+            return S('qFoodQtyPre') + unitLabel + S('qFoodQtyPost') +
+              (item.minOrder ? ' (' + S('qFoodQtyMin') + item.minOrder + ' ' + unitLabel + ')' : '');
           },
           extract: function(t) { return X.quantity(t); },
           optional: false,
           validate: function(v, f) {
             var min = (f.item||{}).minOrder || 1;
-            if (v < min) return '❗ Đơn tối thiểu là ' + min + ' ' + ((f.item||{}).unit||'cái') + '. Bạn muốn đặt ' + min + ' không?';
+            if (v < min) return '❗ ' + S('qFoodQtyMin') + min + ' ' + ((f.item||{}).unit||'cái') + '.';
             return null;
           },
         },
@@ -701,68 +994,69 @@
         },
         {
           key: 'fulfillment',
-          question: function() { return 'Bạn muốn tự đến lấy (pickup) hay giao hàng tận nơi (delivery)?'; },
+          question: function() { return S('qFoodFulfillment'); },
           extract: function(t) { return X.fulfillment(t); },
           optional: false,
         },
         {
           key: 'requestedDate',
-          question: function() { return 'Bạn muốn nhận vào ngày nào?\n(VD: thứ Bảy, 15/4, "ngày mai")'; },
+          question: function() { return S('qFoodDate'); },
           extract: function(t) { return X.date(t); },
           optional: false,
         },
         {
           key: 'requestedTime',
-          question: function() { return 'Mấy giờ bạn muốn lấy/nhận?\n(VD: 2pm, 14:00)'; },
+          question: function() { return S('qFoodTime'); },
           extract: function(t) { return X.time(t); },
           optional: false,
         },
         {
           key: 'customerName',
-          question: function() { return 'Tên của bạn là gì?'; },
+          question: function() { return S('qName'); },
           extract: function(t) { return X.name(t); },
           optional: false,
         },
         {
           key: 'customerPhone',
-          question: function() { return 'Số điện thoại liên lạc?'; },
+          question: function() { return S('qPhone'); },
           extract: function(t) { return X.phone(t); },
           optional: false,
         },
         {
           key: 'address',
-          question: function() { return 'Địa chỉ giao hàng của bạn?'; },
+          question: function() { return S('qAddress'); },
           extract: function(t) { return X.address(t); },
           optional: false,
           showIf: function(f) { return f.fulfillment === 'delivery'; },
         },
         {
           key: 'notes',
-          question: function() { return 'Có yêu cầu đặc biệt nào không? (Gõ "không" nếu không có)'; },
+          question: function() { return S('qNotes'); },
           extract: function(t) { return /^(không|no|none|n\/a|skip|-)$/i.test(t.trim()) ? '' : t.trim(); },
           optional: true,
         },
       ],
       summary: function(f) {
         var item = f.item || {};
-        // Use variant price if available, else base price
         var unitPrice = item.price || 0;
         var sub = (unitPrice * (f.quantity||0)).toFixed(2);
+        var lang = (draft && draft.lang) || 'vi';
+        var unitLabel = (lang !== 'vi' && item.unitEn) ? item.unitEn : (item.unit||'cái');
         var lines = [
-          '📋 Tóm tắt đơn hàng:',
-          item.vendorName ? '• Nhà hàng:  ' + item.vendorName : null,
-          '• Món:       ' + (item.name||''),
-          '• Số lượng:  ' + f.quantity + ' ' + (item.unit||'cái'),
-          f.variant ? '• Loại:      ' + f.variant : null,
-          '• Nhận hàng: ' + (f.fulfillment==='delivery' ? 'Giao hàng tận nơi' : 'Tự đến lấy'),
-          f.address  ? '• Địa chỉ:   ' + f.address : null,
-          '• Ngày:      ' + fmtDate(f.requestedDate),
-          '• Giờ:       ' + fmtTime(f.requestedTime),
-          '• Tên:       ' + (f.customerName||''),
-          '• SĐT:       ' + fmtPhone(f.customerPhone),
-          f.notes    ? '• Ghi chú:   ' + f.notes : null,
+          S('hdFood'),
+          item.vendorName ? S('sfRestaurant') + item.vendorName : null,
+          S('sfDish') + (item.name||''),
+          S('sfQty') + f.quantity + ' ' + unitLabel,
+          f.variant ? S('sfVariant') + f.variant : null,
+          S('sfFulfillment') + (f.fulfillment==='delivery' ? S('sfDelivery') : S('sfPickupSelf')),
+          f.address  ? S('sfAddress') + f.address : null,
+          S('sfDate') + fmtDate(f.requestedDate),
+          S('sfTime') + fmtTime(f.requestedTime),
+          S('sfName') + (f.customerName||''),
+          S('sfPhone') + fmtPhone(f.customerPhone),
+          f.notes    ? S('sfNotes') + f.notes : null,
           '',
-          unitPrice > 0 ? '💰 Tổng: $' + sub + ' (' + f.quantity + ' × $' + unitPrice + '/' + (item.unit||'cái') + ')' : null,
+          unitPrice > 0 ? S('priceTotal') + sub + ' (' + f.quantity + ' × $' + unitPrice + '/' + unitLabel + ')' : null,
         ];
         return lines.filter(function(v) { return v !== null; }).join('\n');
       },
@@ -779,18 +1073,18 @@
             var hint = '';
             if (window.DLCLocation && DLCLocation.state && DLCLocation.state.lat) {
               var near = DLCLocation.nearestAirports(2).map(function(a) { return a.code; }).join(', ');
-              hint = '\n(Gần bạn nhất: ' + near + ')';
+              hint = S('qAirportNear') + near + ')';
             }
-            return '✈️ Bạn đến sân bay nào?' + hint + '\n(LAX · SNA · ONT · BUR · SFO · SJC · OAK...)';
+            return S('qAirportPickup') + hint + S('qAirportList');
           },
           extract: function(t) { return X.airport(t); },
           optional: false,
         },
         {
           key: 'airline',
-          question: function() { return 'Hãng bay và số hiệu chuyến? (VD: United 714)\nGõ "bỏ qua" nếu chưa có.'; },
+          question: function() { return S('qAirline'); },
           extract: function(t) {
-            if (/bỏ qua|skip|chưa|không biết/i.test(t)) return '';
+            if (/bỏ qua|skip|chưa|không biết|omitir/i.test(t)) return '';
             var m = t.match(/[A-Z]{2,3}\s*\d{2,4}/i);
             return m ? m[0].trim() : (t.trim().length >= 2 ? t.trim().slice(0,40) : null);
           },
@@ -798,31 +1092,31 @@
         },
         {
           key: 'requestedDate',
-          question: function() { return 'Ngày đến? (VD: 15/4, thứ Sáu)'; },
+          question: function() { return S('qArrivalDate'); },
           extract: function(t) { return X.date(t); },
           optional: false,
         },
         {
           key: 'arrivalTime',
-          question: function() { return 'Giờ máy bay hạ cánh? (VD: 2:30 PM, 14:30)'; },
+          question: function() { return S('qArrivalTime'); },
           extract: function(t) { return X.time(t); },
           optional: false,
         },
         {
           key: 'passengers',
-          question: function() { return 'Có bao nhiêu hành khách?'; },
+          question: function() { return S('qPassengers'); },
           extract: function(t) { return X.passengers(t) || X.quantity(t); },
           optional: false,
         },
         {
           key: 'terminal',
-          question: function() { return 'Cổng/Terminal bạn đến? (VD: Terminal 4, TBIT)\nGõ "không biết" nếu chưa rõ.'; },
+          question: function() { return S('qTerminal'); },
           extract: function(t) { return X.terminal(t); },
           optional: true,
         },
         {
           key: 'luggageCount',
-          question: function() { return 'Có bao nhiêu kiện hành lý ký gửi? (Gõ "0" nếu chỉ xách tay)'; },
+          question: function() { return S('qLuggage'); },
           extract: function(t) { return X.luggage(t); },
           optional: true,
         },
@@ -831,12 +1125,12 @@
           question: function() {
             var hint = '';
             if (window.DLCLocation && DLCLocation.pickupHint()) {
-              hint = '\n(Vị trí hiện tại: ' + DLCLocation.pickupHint() + ' — gõ "đây" để dùng)';
+              hint = S('qCurrentLoc') + DLCLocation.pickupHint() + S('qCurrentLocUse');
             }
-            return 'Địa chỉ điểm đến sau sân bay?' + hint + '\n(thành phố hoặc địa chỉ cụ thể)';
+            return S('qDropoffAddr') + hint + S('qDropoffAddrHint');
           },
           extract: function(t) {
-            if (/\bđây\b|\bhere\b|chỗ tôi|vị trí.*tôi|current.?loc/i.test(t)) {
+            if (/\bđây\b|\bhere\b|aquí|chỗ tôi|vị trí.*tôi|current.?loc/i.test(t)) {
               var loc = window.DLCLocation && DLCLocation.pickupHint();
               if (loc) return loc;
             }
@@ -846,42 +1140,42 @@
         },
         {
           key: 'customerName',
-          question: function() { return 'Tên hành khách chính?'; },
+          question: function() { return S('qNameLead'); },
           extract: function(t) { return X.name(t); },
           optional: false,
         },
         {
           key: 'customerPhone',
-          question: function() { return 'Số điện thoại liên lạc?'; },
+          question: function() { return S('qPhone'); },
           extract: function(t) { return X.phone(t); },
           optional: false,
         },
         {
           key: 'notes',
-          question: function() { return 'Yêu cầu đặc biệt?\n(Gõ "không" nếu không có)'; },
-          extract: function(t) { return /^(không|no|none|n\/a|skip|-)$/i.test(t.trim()) ? '' : t.trim(); },
+          question: function() { return S('qNotesShort'); },
+          extract: function(t) { return /^(không|no|none|n\/a|skip|-|no hay)$/i.test(t.trim()) ? '' : t.trim(); },
           optional: true,
         },
       ],
       summary: function(f) {
         var est = estimateTransfer(f.passengers, f.airport);
         var lines = [
-          '📋 Tóm tắt đặt đón sân bay:',
-          '• Sân bay:      ' + (f.airport||''),
-          f.terminal      ? '• Terminal:     ' + f.terminal : null,
-          f.airline       ? '• Chuyến bay:   ' + f.airline : null,
-          '• Ngày đến:     ' + fmtDate(f.requestedDate),
-          '• Giờ hạ cánh:  ' + fmtTime(f.arrivalTime),
-          '• Hành khách:   ' + (f.passengers||'') + ' người',
+          S('hdPickup'),
+          S('sfAirport') + (f.airport||''),
+          f.terminal      ? S('sfTerminal') + f.terminal : null,
+          f.airline       ? S('sfFlight') + f.airline : null,
+          S('sfArrivalDate') + fmtDate(f.requestedDate),
+          S('sfArrivalTime') + fmtTime(f.arrivalTime),
+          S('sfPassengers') + (f.passengers||'') + S('sfPassengersUnit'),
           f.luggageCount !== undefined && f.luggageCount !== null
-            ? '• Hành lý:      ' + (f.luggageCount === 0 ? 'Xách tay (không ký gửi)' : f.luggageCount + ' kiện') : null,
-          '• Điểm đến:     ' + (f.dropoffAddress||''),
-          '• Tên:          ' + (f.customerName||''),
-          '• SĐT:          ' + fmtPhone(f.customerPhone),
-          f.notes         ? '• Ghi chú:      ' + f.notes : null,
+            ? S('sfLuggage') + (f.luggageCount === 0 ? S('sfLuggageCarryOn') : f.luggageCount + S('sfLuggageChecked')) : null,
+          S('sfDropoffAddr') + (f.dropoffAddress||''),
+          S('sfName') + (f.customerName||''),
+          S('sfPhone') + fmtPhone(f.customerPhone),
+          f.notes         ? S('sfNotes') + f.notes : null,
           '',
-          est             ? '💰 Ước tính: ' + est : null,
-          '⏱ Tài xế chờ tại cửa Arrivals/Baggage Claim.',
+          est             ? S('priceEst') + est : null,
+          S('driverWait'),
         ];
         return lines.filter(function(v) { return v !== null; }).join('\n');
       },
@@ -898,18 +1192,18 @@
             var hint = '';
             if (window.DLCLocation && DLCLocation.state && DLCLocation.state.lat) {
               var near = DLCLocation.nearestAirports(2).map(function(a) { return a.code; }).join(', ');
-              hint = '\n(Gần bạn nhất: ' + near + ')';
+              hint = S('qAirportNear') + near + ')';
             }
-            return '✈️ Bạn cần đưa tới sân bay nào?' + hint + '\n(LAX · SNA · ONT · BUR · SFO · SJC · OAK...)';
+            return S('qAirportDropoff') + hint + S('qAirportList');
           },
           extract: function(t) { return X.airport(t); },
           optional: false,
         },
         {
           key: 'airline',
-          question: function() { return 'Hãng bay và số hiệu chuyến? (Gõ "bỏ qua" nếu chưa có)'; },
+          question: function() { return S('qAirlineShort'); },
           extract: function(t) {
-            if (/bỏ qua|skip|chưa|không biết/i.test(t)) return '';
+            if (/bỏ qua|skip|chưa|không biết|omitir/i.test(t)) return '';
             var m = t.match(/[A-Z]{2,3}\s*\d{2,4}/i);
             return m ? m[0].trim() : (t.trim().length >= 2 ? t.trim().slice(0,40) : null);
           },
@@ -917,13 +1211,13 @@
         },
         {
           key: 'requestedDate',
-          question: function() { return 'Ngày bay? (VD: 20/4, thứ Hai)'; },
+          question: function() { return S('qRideDate'); },
           extract: function(t) { return X.date(t); },
           optional: false,
         },
         {
           key: 'departureTime',
-          question: function() { return 'Giờ máy bay cất cánh? (VD: 6:00 AM)'; },
+          question: function() { return S('qRideTime'); },
           extract: function(t) { return X.time(t); },
           optional: false,
         },
@@ -932,12 +1226,12 @@
           question: function() {
             var hint = '';
             if (window.DLCLocation && DLCLocation.pickupHint()) {
-              hint = '\n(Vị trí hiện tại: ' + DLCLocation.pickupHint() + ' — gõ "đây" để dùng)';
+              hint = S('qCurrentLoc') + DLCLocation.pickupHint() + S('qCurrentLocUse');
             }
-            return 'Địa chỉ đón bạn (điểm xuất phát)?' + hint;
+            return S('qPickupAddr') + hint;
           },
           extract: function(t) {
-            if (/\bđây\b|\bhere\b|chỗ tôi|vị trí.*tôi|current.?loc/i.test(t)) {
+            if (/\bđây\b|\bhere\b|aquí|chỗ tôi|vị trí.*tôi|current.?loc/i.test(t)) {
               var loc = window.DLCLocation && DLCLocation.pickupHint();
               if (loc) return loc;
             }
@@ -947,59 +1241,59 @@
         },
         {
           key: 'passengers',
-          question: function() { return 'Có bao nhiêu hành khách?'; },
+          question: function() { return S('qPassengers'); },
           extract: function(t) { return X.passengers(t) || X.quantity(t); },
           optional: false,
         },
         {
           key: 'terminal',
-          question: function() { return 'Cổng/Terminal cần đến? (VD: Terminal 2, TBIT)\nGõ "không biết" nếu chưa rõ.'; },
+          question: function() { return S('qTerminalDrop'); },
           extract: function(t) { return X.terminal(t); },
           optional: true,
         },
         {
           key: 'luggageCount',
-          question: function() { return 'Có bao nhiêu kiện hành lý ký gửi? (Gõ "0" nếu chỉ xách tay)'; },
+          question: function() { return S('qLuggage'); },
           extract: function(t) { return X.luggage(t); },
           optional: true,
         },
         {
           key: 'customerName',
-          question: function() { return 'Tên hành khách chính?'; },
+          question: function() { return S('qNameLead'); },
           extract: function(t) { return X.name(t); },
           optional: false,
         },
         {
           key: 'customerPhone',
-          question: function() { return 'Số điện thoại liên lạc?'; },
+          question: function() { return S('qPhone'); },
           extract: function(t) { return X.phone(t); },
           optional: false,
         },
         {
           key: 'notes',
-          question: function() { return 'Yêu cầu đặc biệt?\n(Gõ "không" nếu không có)'; },
-          extract: function(t) { return /^(không|no|none|n\/a|skip|-)$/i.test(t.trim()) ? '' : t.trim(); },
+          question: function() { return S('qNotesShort'); },
+          extract: function(t) { return /^(không|no|none|n\/a|skip|-|no hay)$/i.test(t.trim()) ? '' : t.trim(); },
           optional: true,
         },
       ],
       summary: function(f) {
         var est = estimateTransfer(f.passengers, f.airport);
         var lines = [
-          '📋 Tóm tắt đặt ra sân bay:',
-          '• Sân bay:      ' + (f.airport||''),
-          f.terminal      ? '• Terminal:     ' + f.terminal : null,
-          f.airline       ? '• Chuyến bay:   ' + f.airline : null,
-          '• Ngày bay:     ' + fmtDate(f.requestedDate),
-          '• Giờ cất cánh: ' + fmtTime(f.departureTime),
-          '• Điểm đón:     ' + (f.pickupAddress||''),
-          '• Hành khách:   ' + (f.passengers||'') + ' người',
+          S('hdDropoff'),
+          S('sfAirport') + (f.airport||''),
+          f.terminal      ? S('sfTerminal') + f.terminal : null,
+          f.airline       ? S('sfFlight') + f.airline : null,
+          S('sfDepDate') + fmtDate(f.requestedDate),
+          S('sfDepTime') + fmtTime(f.departureTime),
+          S('sfPickupAddr') + (f.pickupAddress||''),
+          S('sfPassengers') + (f.passengers||'') + S('sfPassengersUnit'),
           f.luggageCount !== undefined && f.luggageCount !== null
-            ? '• Hành lý:      ' + (f.luggageCount === 0 ? 'Xách tay (không ký gửi)' : f.luggageCount + ' kiện') : null,
-          '• Tên:          ' + (f.customerName||''),
-          '• SĐT:          ' + fmtPhone(f.customerPhone),
-          f.notes         ? '• Ghi chú:      ' + f.notes : null,
+            ? S('sfLuggage') + (f.luggageCount === 0 ? S('sfLuggageCarryOn') : f.luggageCount + S('sfLuggageChecked')) : null,
+          S('sfName') + (f.customerName||''),
+          S('sfPhone') + fmtPhone(f.customerPhone),
+          f.notes         ? S('sfNotes') + f.notes : null,
           '',
-          est             ? '💰 Ước tính: ' + est : null,
+          est             ? S('priceEst') + est : null,
         ];
         return lines.filter(function(v) { return v !== null; }).join('\n');
       },
@@ -1015,12 +1309,12 @@
           question: function() {
             var hint = '';
             if (window.DLCLocation && DLCLocation.pickupHint()) {
-              hint = '\n(Vị trí hiện tại: ' + DLCLocation.pickupHint() + ' — gõ "đây" để dùng)';
+              hint = S('qCurrentLoc') + DLCLocation.pickupHint() + S('qCurrentLocUse');
             }
-            return '📍 Địa chỉ đón bạn?' + hint + '\n(Thành phố hoặc địa chỉ cụ thể — VD: San Jose, 1234 Main St, Orange County...)';
+            return S('qRidePickup') + hint + S('qRidePickupEx');
           },
           extract: function(t) {
-            if (/\bđây\b|\bhere\b|chỗ tôi|vị trí.*tôi|current.?loc/i.test(t)) {
+            if (/\bđây\b|\bhere\b|aquí|chỗ tôi|vị trí.*tôi|current.?loc/i.test(t)) {
               var loc = window.DLCLocation && DLCLocation.pickupHint();
               if (loc) return loc;
             }
@@ -1030,66 +1324,66 @@
         },
         {
           key: 'dropoffAddress',
-          question: function() { return '🏁 Điểm đến của bạn?\n(Thành phố hoặc địa chỉ cụ thể)'; },
+          question: function() { return S('qRideDropoff'); },
           extract: function(t) { return X.address(t) || (t.trim().length >= 3 ? t.trim() : null); },
           optional: false,
         },
         {
           key: 'requestedDate',
-          question: function() { return 'Ngày đi? (VD: 15/4, thứ Sáu, ngày mai)'; },
+          question: function() { return S('qRideDate'); },
           extract: function(t) { return X.date(t); },
           optional: false,
         },
         {
           key: 'requestedTime',
-          question: function() { return 'Mấy giờ xuất phát? (VD: 9:00 AM, 14:30)'; },
+          question: function() { return S('qRideTime'); },
           extract: function(t) { return X.time(t); },
           optional: false,
         },
         {
           key: 'passengers',
-          question: function() { return 'Có bao nhiêu hành khách?'; },
+          question: function() { return S('qPassengers'); },
           extract: function(t) { return X.passengers(t) || X.quantity(t); },
           optional: false,
         },
         {
           key: 'customerName',
-          question: function() { return 'Tên của bạn?'; },
+          question: function() { return S('qNameSelf'); },
           extract: function(t) { return X.name(t); },
           optional: false,
         },
         {
           key: 'customerPhone',
-          question: function() { return 'Số điện thoại liên lạc?'; },
+          question: function() { return S('qPhone'); },
           extract: function(t) { return X.phone(t); },
           optional: false,
         },
         {
           key: 'notes',
-          question: function() { return 'Yêu cầu đặc biệt?\n(Gõ "không" nếu không có)'; },
-          extract: function(t) { return /^(không|no|none|n\/a|skip|-)$/i.test(t.trim()) ? '' : t.trim(); },
+          question: function() { return S('qNotesShort'); },
+          extract: function(t) { return /^(không|no|none|n\/a|skip|-|no hay)$/i.test(t.trim()) ? '' : t.trim(); },
           optional: true,
         },
       ],
       summary: function(f) {
         var est = estimateRide(f.passengers, f.pickupAddress, f.dropoffAddress);
         var lines = [
-          '📋 Tóm tắt đặt xe riêng cao cấp:',
-          '• Điểm đón:   ' + (f.pickupAddress || ''),
-          '• Điểm đến:   ' + (f.dropoffAddress || ''),
-          '• Ngày:       ' + fmtDate(f.requestedDate),
-          '• Giờ:        ' + fmtTime(f.requestedTime),
-          '• Hành khách: ' + (f.passengers || '') + ' người',
-          '• Tên:        ' + (f.customerName || ''),
-          '• SĐT:        ' + fmtPhone(f.customerPhone),
-          f.notes ? '• Ghi chú:    ' + f.notes : null,
+          S('hdRide'),
+          S('sfPickupFrom') + (f.pickupAddress || ''),
+          S('sfDropoffTo') + (f.dropoffAddress || ''),
+          S('sfDate') + fmtDate(f.requestedDate),
+          S('sfTime') + fmtTime(f.requestedTime),
+          S('sfPassengers') + (f.passengers || '') + S('sfPassengersUnit'),
+          S('sfName') + (f.customerName || ''),
+          S('sfPhone') + fmtPhone(f.customerPhone),
+          f.notes ? S('sfNotes') + f.notes : null,
           '',
         ];
         if (est) {
-          lines.push('💰 So sánh giá (' + est.vehicle + '):');
-          lines.push('   Uber/Lyft ước tính: ~$' + est.uberEst);
-          lines.push('   DuLịchCali (-20%):  ~$' + est.ourPrice + '  ← tiết kiệm ~$' + est.savings);
-          if (est.approx) lines.push('   ⚠️ Giá sơ bộ — đội sẽ xác nhận sau khi đặt.');
+          lines.push(S('priceCompare') + est.vehicle + '):');
+          lines.push(S('priceUber') + est.uberEst);
+          lines.push(S('priceDLC') + est.ourPrice + S('priceSave') + est.savings);
+          if (est.approx) lines.push(S('priceApprox'));
         }
         return lines.filter(function(v) { return v !== null; }).join('\n');
       },
@@ -1102,15 +1396,13 @@
       fields: [
         {
           key: 'serviceType',
-          question: function() {
-            return 'Bạn muốn làm dịch vụ gì?\n1. Manicure (móng tay)\n2. Pedicure (móng chân)\n3. Gel Nails\n4. Acrylic\n5. Full Set\n(hoặc Mani+Pedi, Dip Powder...)';
-          },
+          question: function() { return S('qNailService'); },
           extract: function(t) { return X.nailService(t); },
           optional: false,
         },
         {
           key: 'region',
-          question: function() { return 'Bạn ở khu vực nào tại California?'; },
+          question: function() { return S('qRegion'); },
           extract: function(t) { return X.region(t); },
           optional: true,
           chips: function() {
@@ -1122,46 +1414,46 @@
         },
         {
           key: 'requestedDate',
-          question: function() { return 'Ngày nào bạn muốn hẹn?'; },
+          question: function() { return S('qApptDate'); },
           extract: function(t) { return X.date(t); },
           optional: false,
         },
         {
           key: 'requestedTime',
-          question: function() { return 'Giờ nào? (VD: 10am, 2:30pm)'; },
+          question: function() { return S('qApptTime'); },
           extract: function(t) { return X.time(t); },
           optional: false,
         },
         {
           key: 'customerName',
-          question: function() { return 'Tên của bạn?'; },
+          question: function() { return S('qNameSelf'); },
           extract: function(t) { return X.name(t); },
           optional: false,
         },
         {
           key: 'customerPhone',
-          question: function() { return 'Số điện thoại liên lạc?'; },
+          question: function() { return S('qPhone'); },
           extract: function(t) { return X.phone(t); },
           optional: false,
         },
         {
           key: 'notes',
-          question: function() { return 'Màu sắc, kiểu nail, hoặc yêu cầu đặc biệt?\n(Gõ "không" nếu không có)'; },
-          extract: function(t) { return /^(không|no|none|n\/a|skip|-)$/i.test(t.trim()) ? '' : t.trim(); },
+          question: function() { return S('qNailNotes'); },
+          extract: function(t) { return /^(không|no|none|n\/a|skip|-|no hay)$/i.test(t.trim()) ? '' : t.trim(); },
           optional: true,
         },
       ],
       summary: function(f) {
         var priceEst = f.serviceType ? NAIL_PRICE_FROM[f.serviceType] : null;
         return [
-          '📋 Tóm tắt lịch hẹn nail:',
-          '• Dịch vụ:   ' + (f.serviceType||''),
-          f.region    ? '• Khu vực:   ' + f.region : null,
-          '• Ngày:      ' + fmtDate(f.requestedDate),
-          '• Giờ:       ' + fmtTime(f.requestedTime),
-          '• Tên:       ' + (f.customerName||''),
-          '• SĐT:       ' + fmtPhone(f.customerPhone),
-          f.notes     ? '• Yêu cầu:   ' + f.notes : null,
+          S('hdNail'),
+          S('sfService') + (f.serviceType||''),
+          f.region    ? S('sfRegion') + f.region : null,
+          S('sfDate') + fmtDate(f.requestedDate),
+          S('sfTime') + fmtTime(f.requestedTime),
+          S('sfName') + (f.customerName||''),
+          S('sfPhone') + fmtPhone(f.customerPhone),
+          f.notes     ? S('sfNotes') + f.notes : null,
           '',
           priceEst    ? '💰 ' + S('priceFrom') + priceEst : null,
         ].filter(function(v) { return v !== null; }).join('\n');
@@ -1175,15 +1467,13 @@
       fields: [
         {
           key: 'serviceType',
-          question: function() {
-            return 'Bạn muốn làm gì?\n1. Cắt tóc\n2. Nhuộm tóc\n3. Uốn / Duỗi\n4. Keratin Treatment\n5. Balayage / Highlights';
-          },
+          question: function() { return S('qHairService'); },
           extract: function(t) { return X.hairService(t); },
           optional: false,
         },
         {
           key: 'region',
-          question: function() { return 'Bạn ở khu vực nào tại California?'; },
+          question: function() { return S('qRegion'); },
           extract: function(t) { return X.region(t); },
           optional: true,
           chips: function() {
@@ -1195,46 +1485,46 @@
         },
         {
           key: 'requestedDate',
-          question: function() { return 'Ngày nào bạn muốn hẹn?'; },
+          question: function() { return S('qApptDate'); },
           extract: function(t) { return X.date(t); },
           optional: false,
         },
         {
           key: 'requestedTime',
-          question: function() { return 'Giờ nào? (VD: 10am, 2:30pm)'; },
+          question: function() { return S('qApptTime'); },
           extract: function(t) { return X.time(t); },
           optional: false,
         },
         {
           key: 'customerName',
-          question: function() { return 'Tên của bạn?'; },
+          question: function() { return S('qNameSelf'); },
           extract: function(t) { return X.name(t); },
           optional: false,
         },
         {
           key: 'customerPhone',
-          question: function() { return 'Số điện thoại liên lạc?'; },
+          question: function() { return S('qPhone'); },
           extract: function(t) { return X.phone(t); },
           optional: false,
         },
         {
           key: 'notes',
-          question: function() { return 'Kiểu tóc, màu muốn nhuộm, hoặc yêu cầu đặc biệt?\n(Gõ "không" nếu không có)'; },
-          extract: function(t) { return /^(không|no|none|n\/a|skip|-)$/i.test(t.trim()) ? '' : t.trim(); },
+          question: function() { return S('qHairNotes'); },
+          extract: function(t) { return /^(không|no|none|n\/a|skip|-|no hay)$/i.test(t.trim()) ? '' : t.trim(); },
           optional: true,
         },
       ],
       summary: function(f) {
         var priceEst = f.serviceType ? HAIR_PRICE_FROM[f.serviceType] : null;
         return [
-          '📋 Tóm tắt lịch hẹn tóc:',
-          '• Dịch vụ:   ' + (f.serviceType||''),
-          f.region    ? '• Khu vực:   ' + f.region : null,
-          '• Ngày:      ' + fmtDate(f.requestedDate),
-          '• Giờ:       ' + fmtTime(f.requestedTime),
-          '• Tên:       ' + (f.customerName||''),
-          '• SĐT:       ' + fmtPhone(f.customerPhone),
-          f.notes     ? '• Yêu cầu:   ' + f.notes : null,
+          S('hdHair'),
+          S('sfService') + (f.serviceType||''),
+          f.region    ? S('sfRegion') + f.region : null,
+          S('sfDate') + fmtDate(f.requestedDate),
+          S('sfTime') + fmtTime(f.requestedTime),
+          S('sfName') + (f.customerName||''),
+          S('sfPhone') + fmtPhone(f.customerPhone),
+          f.notes     ? S('sfNotes') + f.notes : null,
           '',
           priceEst    ? '💰 ' + S('priceFrom') + priceEst : null,
         ].filter(function(v) { return v !== null; }).join('\n');
@@ -1248,41 +1538,37 @@
       fields: [
         {
           key: 'destination',
-          question: function() {
-            return '🗺️ Bạn muốn đi đâu?\n(Las Vegas · Yosemite · San Francisco · Napa · Big Sur · Grand Canyon...)';
-          },
+          question: function() { return S('qTourDest'); },
           extract: function(t) { return X.destination(t); },
           optional: false,
         },
         {
           key: 'requestedDate',
-          question: function() { return 'Ngày khởi hành dự kiến?'; },
+          question: function() { return S('qTourDate'); },
           extract: function(t) { return X.date(t); },
           optional: false,
         },
         {
           key: 'days',
-          question: function() { return 'Chuyến đi bao nhiêu ngày?'; },
+          question: function() { return S('qTourDays'); },
           extract: function(t) { return X.days(t); },
           optional: false,
         },
         {
           key: 'passengers',
-          question: function() { return 'Nhóm bạn có bao nhiêu người?'; },
+          question: function() { return S('qTourPassengers'); },
           extract: function(t) { return X.passengers(t) || X.quantity(t); },
           optional: false,
         },
         {
           key: 'startingPoint',
-          question: function() { return 'Điểm xuất phát của bạn ở đâu?\n(thành phố hoặc địa chỉ)'; },
+          question: function() { return S('qTourFrom'); },
           extract: function(t) { return t.trim().length >= 2 ? t.trim() : null; },
           optional: false,
         },
         {
           key: 'lodging',
-          question: function() {
-            return 'Bạn có cần hỗ trợ chỗ ở không?';
-          },
+          question: function() { return S('qTourLodging'); },
           extract: function(t) { return X.lodging(t); },
           optional: true,
           chips: function() {
@@ -1297,9 +1583,9 @@
           key: 'hotelArea',
           question: function(f) {
             var dest = typeof f.destination === 'object' ? f.destination.id : '';
-            if (dest === 'lasvegas') return 'Bạn muốn ở khu vực nào tại Las Vegas?';
-            if (dest === 'sanfrancisco') return 'Bạn muốn ở khu vực nào tại San Francisco?';
-            return 'Bạn muốn ở khu vực nào?';
+            if (dest === 'lasvegas') return S('qTourAreaVegas');
+            if (dest === 'sanfrancisco') return S('qTourAreaSF');
+            return S('qTourArea');
           },
           extract: function(t) { return X.hotelArea(t); },
           optional: function(f) {
@@ -1326,7 +1612,7 @@
         },
         {
           key: 'hotelBudget',
-          question: function() { return 'Ngân sách khách sạn mỗi đêm?'; },
+          question: function() { return S('qTourBudget'); },
           extract: function(t) { return X.hotelBudget(t); },
           optional: function(f) { return f.lodging !== 'hotel'; },
           showIf: function(f) { return f.lodging === 'hotel'; },
@@ -1341,9 +1627,7 @@
         },
         {
           key: 'bookingMode',
-          question: function() {
-            return 'Bạn muốn tự đặt khách sạn, hay nhờ Du Lịch Cali hỗ trợ đặt giúp?';
-          },
+          question: function() { return S('qTourBooking'); },
           extract: function(t) { return X.bookingMode(t); },
           optional: function(f) { return f.lodging !== 'hotel'; },
           showIf: function(f) { return f.lodging === 'hotel'; },
@@ -1367,20 +1651,20 @@
         },
         {
           key: 'customerName',
-          question: function() { return 'Tên liên lạc chính?'; },
+          question: function() { return S('qTourContact'); },
           extract: function(t) { return X.name(t); },
           optional: false,
         },
         {
           key: 'customerPhone',
-          question: function() { return 'Số điện thoại liên lạc?'; },
+          question: function() { return S('qPhone'); },
           extract: function(t) { return X.phone(t); },
           optional: false,
         },
         {
           key: 'notes',
-          question: function() { return 'Yêu cầu đặc biệt?\n(Gõ "không" nếu không có)'; },
-          extract: function(t) { return /^(không|no|none|n\/a|skip|-)$/i.test(t.trim()) ? '' : t.trim(); },
+          question: function() { return S('qNotesShort'); },
+          extract: function(t) { return /^(không|no|none|n\/a|skip|-|no hay)$/i.test(t.trim()) ? '' : t.trim(); },
           optional: true,
         },
       ],
@@ -1388,27 +1672,30 @@
         var dest = typeof f.destination === 'object' ? f.destination.name : (f.destination||'');
         var destId = typeof f.destination === 'object' ? f.destination.id : '';
         var est = estimateTour(f.passengers, f.days, destId);
-        var lodgeLabel = { hotel:'Khách sạn', airbnb:'Airbnb', none:'Tự túc' }[f.lodging] || (f.lodging||'');
-        var areaLabel  = { strip:'The Strip', downtown:'Downtown', off_strip:'Off Strip', city_center:'City Center', beach:'Near Beach', airport:'Near Airport' }[f.hotelArea] || (f.hotelArea||'');
-        var budgLabel  = { budget:'Tiết kiệm', midrange:'Tầm trung', premium:'Cao cấp' }[f.hotelBudget] || (f.hotelBudget||'');
-        var modeLabel  = f.bookingMode === 'vendor' ? 'Du Lịch Cali hỗ trợ đặt' : f.bookingMode === 'self' ? 'Tự đặt' : '';
+        var lodgeLabelMap = { hotel: S('sfLodgeHotel'), airbnb: S('sfLodgeAirbnb'), none: S('sfLodgeNone') };
+        var areaLabelMap  = { strip: S('sfAreaStrip'), downtown: S('sfAreaDT'), off_strip: S('sfAreaOff'), city_center: S('sfAreaCC'), beach: S('sfAreaBeach'), airport: S('sfAreaAirport') };
+        var budgLabelMap  = { budget: S('sfBudgBudget'), midrange: S('sfBudgMid'), premium: S('sfBudgPrem') };
+        var lodgeLabel = lodgeLabelMap[f.lodging] || (f.lodging||'');
+        var areaLabel  = areaLabelMap[f.hotelArea] || (f.hotelArea||'');
+        var budgLabel  = budgLabelMap[f.hotelBudget] || (f.hotelBudget||'');
+        var modeLabel  = f.bookingMode === 'vendor' ? S('sfModeVendor') : (f.bookingMode === 'self' ? S('sfModeSelf') : '');
         var lines = [
-          '📋 Tóm tắt yêu cầu tour:',
-          '• Điểm đến:  ' + dest,
-          '• Ngày đi:   ' + fmtDate(f.requestedDate),
-          '• Số ngày:   ' + (f.days||'') + ' ngày',
-          '• Số người:  ' + (f.passengers||'') + ' người',
-          '• Xuất phát: ' + (f.startingPoint||''),
-          lodgeLabel                      ? '• Chỗ ở:     ' + lodgeLabel  : null,
-          f.chosenHotel                   ? '  Khách sạn: ' + f.chosenHotel : null,
-          areaLabel && !f.chosenHotel     ? '  Khu vực:   ' + areaLabel   : null,
-          budgLabel && !f.chosenHotel     ? '  Ngân sách: ' + budgLabel   : null,
-          modeLabel                       ? '  Đặt phòng: ' + modeLabel   : null,
-          '• Tên:       ' + (f.customerName||''),
-          '• SĐT:       ' + fmtPhone(f.customerPhone),
-          f.notes ? '• Ghi chú:   ' + f.notes : null,
+          S('hdTour'),
+          S('sfDest') + dest,
+          S('sfDate') + fmtDate(f.requestedDate),
+          S('sfDays') + (f.days||'') + S('sfDaysUnit'),
+          S('sfPassengers') + (f.passengers||'') + S('sfPassengersUnit'),
+          S('sfFrom') + (f.startingPoint||''),
+          lodgeLabel                      ? S('sfLodging') + lodgeLabel  : null,
+          f.chosenHotel                   ? S('sfHotel') + f.chosenHotel : null,
+          areaLabel && !f.chosenHotel     ? S('sfArea') + areaLabel      : null,
+          budgLabel && !f.chosenHotel     ? S('sfBudget') + budgLabel    : null,
+          modeLabel                       ? S('sfBooking') + modeLabel   : null,
+          S('sfName') + (f.customerName||''),
+          S('sfPhone') + fmtPhone(f.customerPhone),
+          f.notes ? S('sfNotes') + f.notes : null,
           '',
-          est ? '💰 Ước tính transport: ' + est : null,
+          est ? S('priceTransport') + est : null,
         ];
         return lines.filter(function(v) { return v !== null; }).join('\n');
       },
@@ -1675,9 +1962,7 @@
         if (sugg.length) fieldHotels = sugg;
       }
       if ((fieldChips && fieldChips.length) || fieldHotels) {
-        var richText = fieldHotels
-          ? 'Đây là các khách sạn phù hợp với yêu cầu của bạn:\n\n' + q
-          : q;
+        var richText = fieldHotels ? S('hotelIntro') + q : q;
         return { type:'message', text:richText, chips:fieldChips||null, hotels:fieldHotels||null };
       }
       return q;

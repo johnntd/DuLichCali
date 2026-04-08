@@ -632,6 +632,74 @@
       text-align: center; padding: 2.5rem 1rem;
       color: var(--muted); font-size: .82rem; line-height: 1.6;
     }
+    .st--no_show { color: #a78bfa; }
+
+    /* ── Staff filter chips ───────────────────────────────────────── */
+    .staff-filter-bar {
+      display: flex; gap: .3rem; flex-wrap: wrap;
+      padding: .42rem 0 .6rem; min-height: 38px;
+    }
+    .staff-chip {
+      height: 26px; padding: 0 .6rem; border-radius: 20px;
+      font-size: .68rem; font-weight: 600; letter-spacing: .03em; cursor: pointer;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04); color: var(--muted);
+      font-family: var(--font-b); transition: all .15s;
+    }
+    .staff-chip.active {
+      background: var(--gold-dim); border-color: var(--border-g); color: var(--gold);
+    }
+    .staff-chip:hover:not(.active) { background: rgba(255,255,255,.08); color: var(--text); }
+
+    /* ── Next appointment banner ──────────────────────────────────── */
+    .next-appt {
+      background: linear-gradient(135deg,rgba(200,146,42,.12),rgba(200,146,42,.05));
+      border: 1px solid rgba(200,146,42,.38); border-radius: 10px;
+      padding: .62rem .9rem; margin-bottom: .8rem;
+    }
+    .next-appt__lbl {
+      font-size: .56rem; font-weight: 800; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--gold); margin-bottom: .2rem;
+    }
+    .next-appt__row { display: flex; align-items: baseline; gap: .4rem; flex-wrap: wrap; }
+    .next-appt__time { font-size: 1.15rem; font-family: var(--font-d); color: var(--cream); }
+    .next-appt__name { font-size: .82rem; color: var(--text); font-weight: 500; }
+    .next-appt__svc  { font-size: .7rem; color: var(--muted); margin-top: .1rem; }
+
+    /* ── Appointment booking card ─────────────────────────────────── */
+    .va-appt-card {
+      background: var(--navy-800); border: 1px solid var(--border);
+      border-radius: 10px; padding: .75rem .9rem; margin-bottom: .5rem;
+    }
+    .va-appt-card__hdr {
+      display: flex; justify-content: space-between;
+      align-items: flex-start; gap: .4rem; margin-bottom: .26rem;
+    }
+    .va-appt-card__time {
+      font-size: .8rem; font-weight: 700; color: var(--cream); font-family: var(--font-d);
+    }
+    .va-appt-card__staff {
+      font-size: .62rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+      background: rgba(200,146,42,.12); border: 1px solid rgba(200,146,42,.28);
+      color: var(--gold); border-radius: 20px; padding: .1rem .42rem; flex-shrink: 0;
+    }
+    .va-appt-card__svc {
+      font-size: .84rem; font-weight: 600; color: var(--text); margin-bottom: .1rem;
+    }
+    .va-appt-card__sub {
+      font-size: .7rem; color: var(--muted); margin-bottom: .22rem;
+    }
+    .va-appt-card__customer { font-size: .76rem; color: var(--cream); font-weight: 500; }
+    .va-appt-card__notes {
+      font-size: .68rem; color: var(--muted); font-style: italic; margin-top: .18rem;
+    }
+    .va-appt-card__imgs { display: flex; gap: .3rem; flex-wrap: wrap; margin-top: .4rem; }
+    .va-appt-img {
+      width: 54px; height: 54px; object-fit: cover;
+      border-radius: 6px; border: 1px solid var(--border); cursor: pointer;
+      transition: border-color .15s;
+    }
+    .va-appt-img:hover { border-color: var(--gold); }
 
     /* ── View toggle (cal / list) ───────────────────────────────────── */
     .va-view-toggle { display: flex; gap: .25rem; }
@@ -1270,6 +1338,10 @@
             <button class="va-view-btn" id="btnListView" onclick="setOrderView('list')" title="Danh sách">&#9776;</button>
           </div>
         </div>
+      </div>
+      <!-- Staff filter chips — populated by JS after staff list loads -->
+      <div class="staff-filter-bar" id="staffFilterBar">
+        <button class="staff-chip active" onclick="setStaffFilter('all')">Tất cả</button>
       </div>
       <div class="va-loading-state" id="ordersLoading">
         <div class="va-spinner"></div>
@@ -2656,8 +2728,10 @@
   var _calYear    = new Date().getFullYear();
   var _calMonth   = new Date().getMonth();  // 0-indexed
   var _calSelDate = null;
-  var unsubOrders = null;
-  var allOrders   = [];
+  var unsubOrders  = null;
+  var allOrders    = [];
+  var _staffFilter = 'all';
+  var _allStaff    = [];
 
   function switchTab(tab) {
     _activeTab = tab;
@@ -3241,9 +3315,180 @@
     }
   }
 
+  // ── Staff filter ──────────────────────────────────────────────────────────
+  function loadStaffList() {
+    if (!vendorRef) return;
+    vendorRef.collection('staff').get().then(function(snap) {
+      var names = [];
+      snap.forEach(function(d) {
+        var n = (d.data().name || d.id || '').trim();
+        if (n && n.toLowerCase() !== 'any') names.push(n);
+      });
+      _allStaff = names;
+      _renderStaffFilterBar();
+    }).catch(function(){});
+  }
+
+  function _renderStaffFilterBar() {
+    var bar = document.getElementById('staffFilterBar');
+    if (!bar) return;
+    var html = '<button class="staff-chip' + (_staffFilter === 'all' ? ' active' : '') +
+      '" onclick="setStaffFilter(\'all\')">Tất cả</button>';
+    _allStaff.forEach(function(name) {
+      var active = _staffFilter === name ? ' active' : '';
+      html += '<button class="staff-chip' + active + '" onclick="setStaffFilter(' +
+        JSON.stringify(name) + ')">' + esc(name) + '</button>';
+    });
+    bar.innerHTML = html;
+  }
+
+  function setStaffFilter(name) {
+    _staffFilter = name;
+    _renderStaffFilterBar();
+    if (document.getElementById('ordersLoading').style.display === 'none') {
+      if (_orderView === 'list') renderOrders();
+      else if (_calSelDate) renderCalDetail(_calSelDate);
+    }
+  }
+
+  // ── Time helpers ──────────────────────────────────────────────────────────
+  function _fmtTime12(t) {
+    if (!t) return '';
+    var parts = String(t).split(':');
+    var h = parseInt(parts[0]); var m = parseInt(parts[1] || 0);
+    var ap = h < 12 ? 'AM' : 'PM'; h = h % 12 || 12;
+    return h + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
+  }
+
+  // ── Next appointment logic ─────────────────────────────────────────────────
+  function _getNextAppt(orders) {
+    var now = new Date();
+    var todayStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+    var nowMins  = now.getHours() * 60 + now.getMinutes();
+    var dead = ['cancelled','completed','no_show'];
+    var candidates = orders.filter(function(o) {
+      if (dead.indexOf(o.status) >= 0) return false;
+      if (!o.requestedDate) return false;
+      if (o.requestedDate < todayStr) return false;
+      if (o.requestedDate === todayStr && o.requestedTime) {
+        var p = o.requestedTime.split(':');
+        var oMins = parseInt(p[0]) * 60 + parseInt(p[1] || 0);
+        if (oMins < nowMins - 30) return false;
+      }
+      return true;
+    });
+    candidates.sort(function(a, b) {
+      if (a.requestedDate !== b.requestedDate) return a.requestedDate < b.requestedDate ? -1 : 1;
+      return (a.requestedTime || '') < (b.requestedTime || '') ? -1 : 1;
+    });
+    return candidates[0] || null;
+  }
+
+  function _renderNextApptBanner(o) {
+    var base = '<div class="next-appt"><div class="next-appt__lbl">&#9200; Lịch Hẹn Tiếp Theo</div>';
+    if (!o) return base + '<div style="font-size:.74rem;color:var(--muted);font-style:italic">Không có lịch hẹn sắp tới.</div></div>';
+    var svcs = (Array.isArray(o.services) && o.services.length ? o.services : [o.serviceType || o.variant || o.itemName || '']).filter(Boolean).join(' + ');
+    var staff = (o.staff && o.staff.toLowerCase() !== 'any') ? o.staff : '';
+    var timeStr = _fmtTime12(o.requestedTime);
+    return base +
+      '<div class="next-appt__row">' +
+      (timeStr ? '<span class="next-appt__time">' + esc(timeStr) + '</span>' : '') +
+      '<span class="next-appt__name">' + esc(o.customerName || o.name || '—') + '</span>' +
+      (staff ? '<span style="font-size:.7rem;color:var(--gold)">· ' + esc(staff) + '</span>' : '') +
+      '</div>' +
+      (svcs ? '<div class="next-appt__svc">' + esc(svcs) + '</div>' : '') +
+    '</div>';
+  }
+
+  // ── Appointment card renderer ──────────────────────────────────────────────
+  function _buildApptSms(o) {
+    var vendorName = (typeof SEED_VENDOR !== 'undefined' && SEED_VENDOR.businessName)
+      ? SEED_VENDOR.businessName : 'Du Lịch Cali';
+    var name = o.customerName || o.name || '';
+    var greeting = name ? 'Xin chào ' + name + '! ' : '';
+    var svcs = (Array.isArray(o.services) && o.services.length ? o.services : [o.serviceType || '']).filter(Boolean).join(', ') || 'dịch vụ đã đặt';
+    var dateStr = '';
+    if (o.requestedDate && /^\d{4}-\d{2}-\d{2}$/.test(o.requestedDate)) {
+      var d = new Date(o.requestedDate + 'T12:00:00');
+      dateStr = ' ngày ' + d.getDate() + '/' + (d.getMonth() + 1);
+    }
+    var timeStr = o.requestedTime ? ' lúc ' + _fmtTime12(o.requestedTime) : '';
+    var staffStr = (o.staff && o.staff.toLowerCase() !== 'any') ? ' với ' + o.staff : '';
+    return greeting + 'Lịch hẹn ' + svcs + dateStr + timeStr + staffStr + ' đã được xác nhận. Cảm ơn! - ' + vendorName;
+  }
+
+  function _renderApptCard(o) {
+    var stLbls = { pending:'Chờ xác nhận', confirmed:'Đã xác nhận', preparing:'Đang phục vụ',
+      completed:'Hoàn thành', cancelled:'Đã huỷ', no_show:'Không đến' };
+    var stCls  = 'st--' + (o.status || 'pending');
+    var stLbl  = stLbls[o.status] || o.status || '';
+    var svcs   = (Array.isArray(o.services) && o.services.length ? o.services : [o.serviceType || '']).filter(Boolean);
+    var svcStr = svcs.join(' + ') || o.variant || o.itemName || '—';
+    var staff  = (o.staff && o.staff.toLowerCase() !== 'any') ? o.staff : '';
+    var timeStr  = _fmtTime12(o.requestedTime);
+    var dur      = o.durationMins ? o.durationMins + ' min' : '';
+    var price    = o.priceEst || (o.subtotal != null ? '$' + Number(o.subtotal).toFixed(2) : '');
+    var subStr   = [dur, price].filter(Boolean).join(' · ');
+    var notes    = o.notes || '';
+    var name     = o.customerName || o.name || '—';
+    var phone    = o.customerPhone || o.phone || '';
+    var imgs     = [];
+    if (Array.isArray(o.referenceImages) && o.referenceImages.length) imgs = o.referenceImages;
+    else if (o.referenceImageUrl) imgs = [o.referenceImageUrl];
+    else if (o.inspirationPhotoUrl) imgs = [o.inspirationPhotoUrl];
+    var smsBody  = _buildApptSms(o);
+
+    var html = '<div class="va-appt-card">' +
+      '<div class="va-appt-card__hdr">' +
+        '<div>' +
+          (timeStr ? '<div class="va-appt-card__time">' + esc(timeStr) + '</div>' : '') +
+          '<span class="' + stCls + '" style="font-size:.65rem;font-weight:700">' + esc(stLbl) + '</span>' +
+        '</div>' +
+        (staff ? '<span class="va-appt-card__staff">' + esc(staff) + '</span>' : '') +
+      '</div>' +
+      '<div class="va-appt-card__svc">' + esc(svcStr) + '</div>' +
+      (subStr ? '<div class="va-appt-card__sub">' + esc(subStr) + '</div>' : '') +
+      '<div class="va-appt-card__customer">' + esc(name) + (phone ? ' · ' + esc(phone) : '') + '</div>' +
+      (notes ? '<div class="va-appt-card__notes">' + esc(notes) + '</div>' : '');
+
+    if (imgs.length) {
+      html += '<div class="va-appt-card__imgs">';
+      imgs.forEach(function(url) {
+        html += '<img class="va-appt-img" src="' + esc(url) + '" alt="Ref" onclick="window.open(' + JSON.stringify(url) + ',\'_blank\')">';
+      });
+      html += '</div>';
+    }
+
+    if (phone) {
+      html += '<div class="va-order-card__contact">' +
+        '<a href="tel:' + esc(phone) + '" class="btn btn--ghost btn--call btn--sm">&#128222; Gọi</a>' +
+        '<a href="sms:' + esc(phone) + '?body=' + encodeURIComponent(smsBody) + '" class="btn btn--ghost btn--text btn--sm">&#128172; Nhắn</a>' +
+      '</div>';
+    }
+
+    html += '<div class="va-order-card__actions">' +
+      (o.status === 'pending'
+        ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'confirmed\')">&#10003; Xác nhận</button>'
+        : '') +
+      (o.status === 'confirmed'
+        ? '<button class="btn btn--ghost btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'preparing\')" style="border-color:rgba(251,146,60,.35);color:var(--sunset)">&#9654; Bắt đầu</button>' +
+          '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'completed\')">&#10003; Hoàn thành</button>'
+        : '') +
+      (o.status === 'preparing'
+        ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'completed\')">&#10003; Hoàn thành</button>'
+        : '') +
+      (o.status !== 'cancelled' && o.status !== 'completed' && o.status !== 'no_show'
+        ? '<button class="btn btn--ghost btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'no_show\')" style="border-color:rgba(167,139,250,.3);color:#a78bfa">Vắng</button>' +
+          '<button class="btn btn--danger btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'cancelled\')">&#10005; Huỷ</button>'
+        : '') +
+    '</div></div>';
+    return html;
+  }
+
   // ── Orders real-time listener (bookings collection) ───────────────────────
   function subscribeOrders() {
     if (unsubOrders) unsubOrders();
+    loadStaffList(); // populate staff filter chips
     var bookingsRef = vendorRef.collection('bookings');
     document.getElementById('ordersLoading').style.display = 'flex';
     document.getElementById('calView').style.display  = 'none';
@@ -3377,7 +3622,10 @@
 
   function renderCalDetail(dateStr) {
     var maxCap    = parseInt(document.getElementById('capInput').value, 10) || 300;
-    var dayOrders = allOrders.filter(function (o) { return o.requestedDate === dateStr; });
+    var base = allOrders.filter(function (o) { return o.requestedDate === dateStr; });
+    var dayOrders = _staffFilter === 'all' ? base : base.filter(function(o) {
+      return (o.staff || '').toLowerCase() === _staffFilter.toLowerCase();
+    });
     var d         = new Date(dateStr + 'T12:00:00');
     var days      = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
     var dateLabel = days[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
@@ -3417,24 +3665,34 @@
     if (!list) return;
     var maxCap = parseInt(document.getElementById('capInput').value, 10) || 300;
 
-    if (allOrders.length === 0) {
-      list.innerHTML = '<div class="va-orders-empty">Chưa có đơn hàng nào.<br>Đơn hàng từ trang công khai sẽ xuất hiện ở đây.</div>';
+    // Apply staff filter
+    var orders = _staffFilter === 'all' ? allOrders : allOrders.filter(function(o) {
+      return (o.staff || '').toLowerCase() === _staffFilter.toLowerCase();
+    });
+
+    if (orders.length === 0) {
+      list.innerHTML = (allOrders.length === 0
+        ? '<div class="va-orders-empty">Chưa có đơn hàng nào.<br>Đơn hàng từ trang công khai sẽ xuất hiện ở đây.</div>'
+        : '<div class="va-orders-empty">Không có lịch hẹn nào cho nhân viên này.</div>');
       return;
     }
 
+    // Next appointment banner
+    var nextAppt = _getNextAppt(orders);
+    var html = _renderNextApptBanner(nextAppt);
+
     var groups = {};
-    allOrders.forEach(function (o) {
+    orders.forEach(function (o) {
       var k = o.requestedDate || '(no date)';
       if (!groups[k]) groups[k] = [];
       groups[k].push(o);
     });
 
     var dateKeys = Object.keys(groups).sort();
-    var html = '';
 
     dateKeys.forEach(function (k) {
-      var orders   = groups[k];
-      var booked   = orders.reduce(function (s, o) {
+      var grp     = groups[k];
+      var booked  = grp.reduce(function (s, o) {
         return o.status !== 'cancelled' ? s + (Number(o.quantity) || 0) : s;
       }, 0);
       var remaining = Math.max(0, maxCap - booked);
@@ -3456,9 +3714,11 @@
           '<div class="va-date-group__cap ' + capCls + '">' + esc(capTxt) + '</div>' +
         '</div>';
 
-      // Sort: pending first, then confirmed/preparing, then completed/cancelled
-      var statusOrder = { pending:0, confirmed:1, preparing:2, completed:3, cancelled:4 };
-      orders.slice().sort(function(a, b) {
+      // Sort: by time (asc), then pending first within same time
+      var statusOrder = { pending:0, confirmed:1, preparing:2, completed:3, cancelled:4, no_show:5 };
+      grp.slice().sort(function(a, b) {
+        var ta = a.requestedTime || '00:00', tb = b.requestedTime || '00:00';
+        if (ta !== tb) return ta < tb ? -1 : 1;
         return (statusOrder[a.status] || 9) - (statusOrder[b.status] || 9);
       }).forEach(function (o) {
         html += _renderOrderCard(o);
@@ -3471,8 +3731,14 @@
 
   // Shared order card renderer (used by renderOrders and renderCalDetail)
   function _renderOrderCard(o) {
+    // Appointment bookings: nail or hair — use new staff-centric card
+    if (o.type === 'nail_appointment' || o.type === 'hair_appointment') {
+      return _renderApptCard(o);
+    }
+    // Food orders: existing card (unchanged for backward compat)
     var stCls = 'st--' + (o.status || 'pending');
-    var stLbl = { pending:'Chờ xác nhận', confirmed:'Đã xác nhận', preparing:'Đang chuẩn bị', completed:'Hoàn thành', cancelled:'Đã huỷ' }[o.status] || o.status;
+    var stLbl = { pending:'Chờ xác nhận', confirmed:'Đã xác nhận', preparing:'Đang chuẩn bị',
+      completed:'Hoàn thành', cancelled:'Đã huỷ', no_show:'Không đến' }[o.status] || o.status;
     var smsBody = buildSmsMessage(o);
     var html = '<div class="va-order-card">' +
       '<div class="va-order-card__top">' +
@@ -3482,11 +3748,10 @@
       '<div class="va-order-card__meta">' +
         esc(o.quantity) + ' · ' + esc(o.variant || o.itemName || '') +
         ' · <span class="' + stCls + '">' + esc(stLbl) + '</span>' +
-        (o.requestedTime ? '<br>' + esc(o.requestedTime) : '') +
+        (o.requestedTime ? '<br>' + esc(_fmtTime12(o.requestedTime)) : '') +
         (o.notes ? '<br><em style="opacity:.75">' + esc(o.notes) + '</em>' : '') +
       '</div>';
 
-    // Contact actions (call + text)
     if (o.customerPhone) {
       html += '<div class="va-order-card__contact">' +
         '<a href="tel:' + esc(o.customerPhone) + '" class="btn btn--ghost btn--call btn--sm">&#128222; Gọi</a>' +
@@ -3494,19 +3759,18 @@
       '</div>';
     }
 
-    // Status actions
     html += '<div class="va-order-card__actions">' +
       (o.status === 'pending'
         ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'confirmed\')">&#10003; Xác nhận</button>'
         : '') +
       (o.status === 'confirmed'
-        ? '<button class="btn btn--ghost btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'preparing\')" style="border-color:rgba(251,146,60,.35);color:var(--sunset)">&#9203; Đang chuẩn bị</button>'
-          + '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'completed\')">&#10003; Hoàn thành</button>'
+        ? '<button class="btn btn--ghost btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'preparing\')" style="border-color:rgba(251,146,60,.35);color:var(--sunset)">&#9203; Đang chuẩn bị</button>' +
+          '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'completed\')">&#10003; Hoàn thành</button>'
         : '') +
       (o.status === 'preparing'
         ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'completed\')">&#10003; Hoàn thành</button>'
         : '') +
-      (o.status !== 'cancelled' && o.status !== 'completed'
+      (o.status !== 'cancelled' && o.status !== 'completed' && o.status !== 'no_show'
         ? '<button class="btn btn--danger btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'cancelled\')">&#10005; Huỷ</button>'
         : '') +
     '</div></div>';
@@ -3518,7 +3782,10 @@
       status:    newStatus,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }).then(function () {
-      var msgs = { confirmed:'Đã xác nhận!', preparing:'Đang chuẩn bị!', completed:'Hoàn thành!', cancelled:'Đã huỷ đơn.' };
+      var msgs = {
+        confirmed:'Đã xác nhận!', preparing:'Đã bắt đầu!',
+        completed:'Hoàn thành!', cancelled:'Đã huỷ đơn.', no_show:'Đã đánh dấu vắng.'
+      };
       showToast(msgs[newStatus] || 'Đã cập nhật.', 'success');
     }).catch(function (err) {
       showToast('Lỗi: ' + err.message, 'error');

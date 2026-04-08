@@ -826,8 +826,9 @@
       console.warn('[chime] Audio unlock failed:', e.message || e);
     });
   }
-  document.addEventListener('click',   _unlockAudio);
-  document.addEventListener('keydown', _unlockAudio);
+  document.addEventListener('click',      _unlockAudio);
+  document.addEventListener('keydown',   _unlockAudio);
+  document.addEventListener('touchstart', _unlockAudio, { passive: true });
 
   // Play a gentle 3-note chime using Web Audio API (no external file needed).
   // Handles suspended context: resume() first, then play in the resolved promise.
@@ -1762,35 +1763,40 @@
 
   // ── Real-time notifications listener (fires chime + banner) ───────────────
   var _unsubNotifs = null;
-  var _knownNotifIds = {};
-  var _initialNotifLoad = false;
 
   function subscribeNotifications() {
     if (!vendorRef) return;
     if (_unsubNotifs) _unsubNotifs();
-    _knownNotifIds    = {};
-    _initialNotifLoad = false;
 
+    // Only fire chime for notifications created AFTER this page was opened.
+    // Using a JS Date (not serverTimestamp) so Firestore evaluates it server-side.
+    var _sessionStart = new Date();
+
+    function _onSnap(snap) {
+      var count = 0;
+      snap.docChanges().forEach(function(change) {
+        if (change.type === 'added') count++;
+      });
+      if (count > 0) {
+        _playNotifChime();
+        _showNewBookingBanner(count);
+      }
+    }
+
+    function _onErr(err) {
+      console.warn('[notifs] listener error:', err.message);
+    }
+
+    // Try with where+orderBy first; fall back to plain where if index missing
     _unsubNotifs = vendorRef.collection('notifications')
-      .orderBy('createdAt', 'desc').limit(50)
-      .onSnapshot(function(snap) {
-        var newOnes = [];
-        snap.docChanges().forEach(function(change) {
-          if (change.type === 'added') {
-            var id = change.doc.id;
-            if (_initialNotifLoad && !_knownNotifIds[id]) {
-              newOnes.push(change.doc.data());
-            }
-            _knownNotifIds[id] = true;
-          }
-        });
-        _initialNotifLoad = true;
-        if (newOnes.length > 0) {
-          _playNotifChime();
-          _showNewBookingBanner(newOnes.length);
-        }
-      }, function(err) {
-        console.warn('[notifs] listener error:', err.message);
+      .where('createdAt', '>=', _sessionStart)
+      .orderBy('createdAt', 'desc')
+      .onSnapshot(_onSnap, function(err) {
+        console.warn('[notifs] ordered listener failed, trying unordered:', err.message);
+        if (_unsubNotifs) _unsubNotifs();
+        _unsubNotifs = vendorRef.collection('notifications')
+          .where('createdAt', '>=', _sessionStart)
+          .onSnapshot(_onSnap, _onErr);
       });
   }
 

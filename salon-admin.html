@@ -653,6 +653,37 @@
     .sa-st--canceled    { color: var(--muted); }
     .sa-st--no_show     { color: var(--danger); }
 
+    /* ── Dashboard tab ── */
+    .db-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: .65rem;
+      margin-bottom: 1.25rem;
+    }
+    .db-stat {
+      background: var(--navy-800); border: 1px solid var(--border);
+      border-radius: var(--r); padding: .85rem 1rem; text-align: center;
+    }
+    .db-stat--alert { border-color: rgba(248,113,113,.4); background: rgba(248,113,113,.05); }
+    .db-stat__num {
+      font-family: var(--font-d); font-size: 2rem; font-weight: 400;
+      color: var(--cream); line-height: 1;
+    }
+    .db-stat--alert .db-stat__num { color: var(--danger); }
+    .db-stat__lbl {
+      font-size: .58rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .06em; margin-top: .35rem;
+    }
+    .db-next-label {
+      font-size: .65rem; font-weight: 700; color: var(--gold);
+      text-transform: uppercase; letter-spacing: .08em;
+      padding: .3rem 0; border-bottom: 1px solid var(--border-g);
+      margin-bottom: .6rem;
+    }
+    @media (max-width: 400px) {
+      .db-stat { padding: .65rem .4rem; }
+      .db-stat__num { font-size: 1.5rem; }
+      .db-stat__lbl { font-size: .52rem; }
+    }
+
     /* ── Image lightbox ── */
     #saImgLightbox {
       position: fixed; inset: 0; z-index: 500;
@@ -695,7 +726,8 @@
 
   <!-- Mobile tabs -->
   <div class="mobile-tabs">
-    <button class="mobile-tab-btn active" onclick="switchTab('services')">Dịch Vụ</button>
+    <button class="mobile-tab-btn active" onclick="switchTab('dashboard')">Tổng Quan</button>
+    <button class="mobile-tab-btn" onclick="switchTab('services')">Dịch Vụ</button>
     <button class="mobile-tab-btn" onclick="switchTab('staff')">Nhân Viên</button>
     <button class="mobile-tab-btn" onclick="switchTab('availability')">Hôm Nay</button>
     <button class="mobile-tab-btn" onclick="switchTab('hours')">Giờ Mở</button>
@@ -708,7 +740,8 @@
 
     <!-- Sidebar nav -->
     <nav class="va-sidebar">
-      <button class="va-nav-btn active" id="nav-services"      onclick="switchTab('services')">Dịch Vụ</button>
+      <button class="va-nav-btn active" id="nav-dashboard"     onclick="switchTab('dashboard')">Tổng Quan</button>
+      <button class="va-nav-btn"        id="nav-services"      onclick="switchTab('services')">Dịch Vụ</button>
       <button class="va-nav-btn"        id="nav-staff"         onclick="switchTab('staff')">Nhân Viên</button>
       <button class="va-nav-btn"        id="nav-availability"  onclick="switchTab('availability')">Hôm Nay</button>
       <button class="va-nav-btn"        id="nav-hours"         onclick="switchTab('hours')">Giờ Mở Cửa</button>
@@ -719,8 +752,32 @@
     <!-- Main -->
     <main class="va-main">
 
+      <!-- ── Dashboard tab ── -->
+      <div class="tab-panel active" id="panel-dashboard">
+        <div class="sa-section-header">
+          <div class="sa-section-title">Tổng Quan</div>
+          <button class="btn btn--outline btn--sm" onclick="renderDashboard()">Làm Mới</button>
+        </div>
+        <div class="db-stats">
+          <div class="db-stat">
+            <div class="db-stat__num" id="dbTodayCount">—</div>
+            <div class="db-stat__lbl">Hôm Nay</div>
+          </div>
+          <div class="db-stat">
+            <div class="db-stat__num" id="dbUpcomingCount">—</div>
+            <div class="db-stat__lbl">Sắp Tới</div>
+          </div>
+          <div class="db-stat" id="dbEscStat">
+            <div class="db-stat__num" id="dbEscCount">—</div>
+            <div class="db-stat__lbl">Tin Nhắn AI</div>
+          </div>
+        </div>
+        <div class="db-next-label">Lịch Hẹn Tiếp Theo</div>
+        <div id="dashNextAppt"><div class="sa-empty" style="padding:1rem 0">Đang tải…</div></div>
+      </div>
+
       <!-- ── Services tab ── -->
-      <div class="tab-panel active" id="panel-services">
+      <div class="tab-panel" id="panel-services">
         <div class="sa-section-header">
           <div class="sa-section-title">Dịch Vụ</div>
           <button class="btn btn--primary btn--sm" onclick="openServiceModal(null)">+ Thêm Dịch Vụ</button>
@@ -1807,7 +1864,7 @@
   }
 
   // ── Tab navigation ───────────────────────────────────────────────────────────
-  var TABS = ['services','staff','availability','hours','appointments','settings'];
+  var TABS = ['dashboard','services','staff','availability','hours','appointments','settings'];
   function switchTab(tab) {
     TABS.forEach(function(t) {
       var panel = document.getElementById('panel-' + t);
@@ -1818,6 +1875,7 @@
     document.querySelectorAll('.mobile-tab-btn').forEach(function(btn, i) {
       btn.classList.toggle('active', TABS[i] === tab);
     });
+    if (tab === 'dashboard')     renderDashboard();
     if (tab === 'appointments')  subscribeAppointments();
     if (tab === 'availability')  renderAvailability();
   }
@@ -1941,6 +1999,8 @@
     if (!section || !list) return;
 
     var count = items.length;
+    _escCount = count;
+    renderDashboard();
     [navBadge, mobBadge].forEach(function (b) {
       if (!b) return;
       b.textContent   = count;
@@ -2146,6 +2206,7 @@
   // ── Staff filter + Next Appointment state ─────────────────────────────────────
   var _saStaffFilter = 'all';  // 'all' or staff name
   var _saAllItems    = [];     // full unfiltered booking list (kept for re-filter)
+  var _escCount      = 0;      // current escalation count (for dashboard)
 
   function _renderStaffFilterBar(items) {
     var bar = document.getElementById('saStaffBar');
@@ -2277,8 +2338,101 @@
     '</div>';
   }
 
+  // ── Dashboard ─────────────────────────────────────────────────────────────────
+  function renderDashboard() {
+    var now = new Date();
+    var todayIso = now.getFullYear() + '-' +
+      ('0' + (now.getMonth() + 1)).slice(-2) + '-' +
+      ('0' + now.getDate()).slice(-2);
+
+    // Today's count (all statuses)
+    var todayCount = _saAllItems.filter(function(b) {
+      return (b.requestedDate || b.date || '') === todayIso;
+    }).length;
+
+    // Upcoming: confirmed or in_progress from today onwards
+    var upcomingCount = _saAllItems.filter(function(b) {
+      var d = b.requestedDate || b.date || '';
+      var s = b.status || 'confirmed';
+      return d >= todayIso && (s === 'confirmed' || s === 'in_progress');
+    }).length;
+
+    var elToday    = document.getElementById('dbTodayCount');
+    var elUpcoming = document.getElementById('dbUpcomingCount');
+    var elEsc      = document.getElementById('dbEscCount');
+    var elEscStat  = document.getElementById('dbEscStat');
+    if (elToday)    elToday.textContent    = todayCount;
+    if (elUpcoming) elUpcoming.textContent = upcomingCount;
+    if (elEsc)      elEsc.textContent      = _escCount;
+    if (elEscStat)  elEscStat.classList.toggle('db-stat--alert', _escCount > 0);
+
+    // Next appointment block
+    var appt = _getNextAppt(_saAllItems);
+    var dashNext = document.getElementById('dashNextAppt');
+    if (!dashNext) return;
+
+    if (!appt) {
+      dashNext.innerHTML = '<div class="sa-empty" style="padding:1rem 0">Kh\u00f4ng c\u00f3 l\u1ecbch h\u1eb9n s\u1eafp t\u1edbi.</div>';
+      return;
+    }
+
+    var timeStr  = _fmtTime(appt.requestedTime || appt.time);
+    var rawSvcs  = appt.selectedServices || appt.services;
+    var svcArr;
+    if (Array.isArray(rawSvcs) && rawSvcs.length) { svcArr = rawSvcs; }
+    else if (appt.serviceType) { svcArr = [appt.serviceType]; }
+    else if (appt.service)     { svcArr = [appt.service]; }
+    else                        { svcArr = []; }
+    svcArr = svcArr.filter(Boolean);
+    var svcLbl = svcArr.join(' \u00b7 ');
+
+    var staff  = appt.staff && appt.staff.toLowerCase() !== 'any' ? appt.staff : null;
+    var phone  = appt.customerPhone || appt.phone || '';
+    var name   = appt.customerName || 'Kh\u00e1ch';
+    var apptId = appt.id;
+
+    // Countdown
+    var d = appt.requestedDate || appt.date || '';
+    var countdown = '';
+    if (d === todayIso && (appt.requestedTime || appt.time)) {
+      var tp = (appt.requestedTime || appt.time).split(':');
+      var apptMins = parseInt(tp[0]||0,10)*60 + parseInt(tp[1]||0,10);
+      var nowMins  = now.getHours()*60 + now.getMinutes();
+      var diff = apptMins - nowMins;
+      if (diff > 0) countdown = 'c\u00f2n ' + (diff >= 60 ? Math.floor(diff/60) + ' gi\u1edd ' + (diff%60 ? diff%60+'p' : '') : diff + ' ph\u00fat');
+    } else if (d > todayIso) {
+      countdown = _fmtDate(d);
+    }
+
+    var startBtn = (apptId && _userRole !== 'staff')
+      ? '<button class="sa-act sa-act--start" onclick="updateBookingStatus(\'' + apptId + '\',\'in_progress\')">&#9654; B\u1eaft \u0111\u1ea7u</button>'
+      : '';
+    var textLink = phone
+      ? '<a class="sa-act sa-act--call" href="sms:' + esc(phone) + '">&#128241; Text</a>'
+      : '';
+
+    dashNext.innerHTML = '<div class="sa-next-appt">' +
+      '<div class="sa-next-appt__left">' +
+        '<div class="sa-next-appt__tag">Ti\u1ebfp theo</div>' +
+        '<div class="sa-next-appt__time">' + esc(timeStr) + '</div>' +
+        (countdown ? '<div class="sa-next-appt__countdown">' + esc(countdown) + '</div>' : '') +
+      '</div>' +
+      '<div class="sa-next-appt__body">' +
+        '<div class="sa-next-appt__name">' + esc(name) + '</div>' +
+        '<div class="sa-next-appt__svc">' + esc(svcLbl) + '</div>' +
+        '<div class="sa-next-appt__meta" style="margin-top:.15rem">' +
+          (staff ? '<span class="sa-staff-badge">' + esc(staff) + '</span>' : '') +
+        '</div>' +
+        '<div class="sa-appt-actions" style="margin-top:.5rem">' +
+          startBtn + textLink +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
   function renderBookings(items) {
     _saAllItems = items;
+    renderDashboard();
     _renderStaffFilterBar(items);
 
     var el = document.getElementById('bookingsList');

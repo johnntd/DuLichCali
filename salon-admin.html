@@ -693,6 +693,29 @@
     }
     #saImgLightbox.hidden { display: none; }
     #saImgLightbox img { max-width: 100%; max-height: 90vh; border-radius: 8px; object-fit: contain; }
+
+    /* ── Customer Quick-View ── */
+    .cqv-summary {
+      background: rgba(245,166,35,.06); border: 1px solid var(--border-g);
+      border-radius: var(--r); padding: .9rem 1rem; margin-bottom: 1rem;
+    }
+    .cqv-name { font-size: 1rem; font-weight: 700; color: var(--cream); margin-bottom: .3rem; }
+    .cqv-meta { font-size: .75rem; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+    .cqv-pill {
+      display: inline-block; background: var(--navy-700); border: 1px solid var(--border);
+      border-radius: 99px; padding: 2px 8px; font-size: .65rem; color: var(--muted);
+    }
+    .cqv-pill--up { border-color: rgba(34,197,94,.4); color: #86efac; }
+    .cqv-pill--svc { border-color: var(--border-g); color: var(--gold-lt); max-width: 100%; }
+    .cqv-group-label {
+      font-size: .62rem; font-weight: 700; color: var(--gold);
+      text-transform: uppercase; letter-spacing: .1em; margin-bottom: .4rem;
+    }
+    .cqv-booking-card {
+      background: var(--navy-700); border: 1px solid var(--border);
+      border-radius: var(--r); padding: .7rem .85rem; margin-bottom: .5rem;
+    }
+    .cqv-booking-card:last-child { margin-bottom: 0; }
   </style>
 </head>
 <body>
@@ -733,6 +756,7 @@
     <button class="mobile-tab-btn" onclick="switchTab('hours')">Giờ Mở</button>
     <button class="mobile-tab-btn" onclick="switchTab('appointments')">Lịch Hẹn</button>
     <button class="mobile-tab-btn" onclick="switchTab('inbox')">AI Inbox <span id="escMobileBadge" style="display:none;background:#e8a800;color:#000;border-radius:99px;padding:1px 6px;font-size:.65rem;font-weight:700"></span></button>
+    <button class="mobile-tab-btn" onclick="switchTab('customers')">Khách Hàng</button>
     <button class="mobile-tab-btn" onclick="switchTab('settings')">Cài Đặt</button>
   </div>
 
@@ -748,6 +772,7 @@
       <button class="va-nav-btn"        id="nav-hours"         onclick="switchTab('hours')">Giờ Mở Cửa</button>
       <button class="va-nav-btn"        id="nav-appointments"  onclick="switchTab('appointments')">Lịch Hẹn</button>
       <button class="va-nav-btn"        id="nav-inbox"         onclick="switchTab('inbox')">AI Inbox <span id="escNavBadge" style="display:none;background:#e8a800;color:#000;border-radius:99px;padding:1px 7px;font-size:.68rem;font-weight:700;margin-left:4px;vertical-align:middle"></span></button>
+      <button class="va-nav-btn"        id="nav-customers"     onclick="switchTab('customers')">Khách Hàng</button>
       <button class="va-nav-btn"        id="nav-settings"      onclick="switchTab('settings')">Cài Đặt</button>
     </nav>
 
@@ -850,6 +875,24 @@
           Không có tin nhắn mới. AI Lily sẽ gửi yêu cầu khi khách cần xác nhận.
         </div>
         <div id="inboxList"></div>
+      </div>
+
+      <!-- ── Customer Quick-View tab ── -->
+      <div class="tab-panel" id="panel-customers">
+        <div class="sa-section-header">
+          <div class="sa-section-title">Khách Hàng</div>
+        </div>
+        <div class="sa-card sa-card--gold" style="margin-bottom:1rem">
+          <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+            <input class="sa-input" id="cqvSearch" type="text" inputmode="tel"
+              placeholder="Số điện thoại hoặc tên khách…"
+              style="flex:1;min-width:180px;height:38px"
+              onkeydown="if(event.key==='Enter')searchCustomer()">
+            <button class="btn btn--primary" style="height:38px;padding:0 1.2rem" onclick="searchCustomer()">Tìm</button>
+            <button class="btn btn--outline btn--sm" style="height:38px" onclick="clearCustomerSearch()">Xóa</button>
+          </div>
+        </div>
+        <div id="cqvResults"></div>
       </div>
 
       <!-- ── Settings tab ── -->
@@ -1898,7 +1941,7 @@
   }
 
   // ── Tab navigation ───────────────────────────────────────────────────────────
-  var TABS = ['dashboard','services','staff','availability','hours','appointments','inbox','settings'];
+  var TABS = ['dashboard','services','staff','availability','hours','appointments','inbox','customers','settings'];
   function switchTab(tab) {
     TABS.forEach(function(t) {
       var panel = document.getElementById('panel-' + t);
@@ -3018,6 +3061,147 @@
     }).catch(function(e) {
       if (msgEl) { msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Lỗi: ' + e.message; }
     });
+  }
+
+  // ── Customer Quick-View ───────────────────────────────────────────────────────
+  function searchCustomer() {
+    var raw = (document.getElementById('cqvSearch').value || '').trim();
+    if (!raw) return;
+    var resultsEl = document.getElementById('cqvResults');
+    resultsEl.innerHTML = '<div class="sa-empty">Đang tìm…</div>';
+
+    // Detect phone vs name: 7+ digit characters → treat as phone
+    var digits = raw.replace(/\D/g, '');
+    var isPhone = digits.length >= 7;
+
+    var query;
+    if (isPhone) {
+      query = vendorRef.collection('bookings').where('customerPhone', '==', digits);
+    } else {
+      // Name prefix search
+      var end = raw.slice(0, -1) + String.fromCharCode(raw.charCodeAt(raw.length - 1) + 1);
+      query = vendorRef.collection('bookings')
+        .where('customerName', '>=', raw)
+        .where('customerName', '<', end)
+        .limit(50);
+    }
+
+    query.get().then(function(snap) {
+      if (snap.empty) {
+        // Phone: also try with leading digits variants (e.g. +1 prefix stripped)
+        if (isPhone && digits.length === 11 && digits.charAt(0) === '1') {
+          var alt = digits.slice(1);
+          return vendorRef.collection('bookings').where('customerPhone', '==', alt).get()
+            .then(function(s2) { _renderCqvResults(s2.docs, raw); });
+        }
+        _renderCqvResults([], raw);
+        return;
+      }
+      _renderCqvResults(snap.docs, raw);
+    }).catch(function(e) {
+      resultsEl.innerHTML = '<div class="sa-empty" style="color:var(--danger)">Lỗi: ' + esc(e.message) + '</div>';
+    });
+  }
+
+  function clearCustomerSearch() {
+    var el = document.getElementById('cqvSearch');
+    if (el) el.value = '';
+    var r = document.getElementById('cqvResults');
+    if (r) r.innerHTML = '';
+  }
+
+  function _renderCqvResults(docs, query) {
+    var resultsEl = document.getElementById('cqvResults');
+    if (!docs.length) {
+      resultsEl.innerHTML = '<div class="sa-empty" style="padding:2rem 0">Không tìm thấy khách hàng nào với "<strong>' + esc(query) + '</strong>".</div>';
+      return;
+    }
+
+    // Sort newest first
+    var bookings = docs.map(function(d) { return Object.assign({ _id: d.id }, d.data()); });
+    bookings.sort(function(a, b) {
+      var da = a.requestedDate || a.date || '';
+      var db2 = b.requestedDate || b.date || '';
+      return da > db2 ? -1 : da < db2 ? 1 : 0;
+    });
+
+    // Customer summary from most recent booking
+    var first     = bookings[0];
+    var custName  = first.customerName || first.name || 'Khách';
+    var custPhone = first.customerPhone || first.phone || '';
+    var now       = new Date();
+    var todayIso  = now.toISOString().slice(0, 10);
+
+    var upcoming = bookings.filter(function(b) { return (b.requestedDate || b.date || '') >= todayIso && b.status !== 'canceled' && b.status !== 'cancelled'; });
+    var past     = bookings.filter(function(b) { return (b.requestedDate || b.date || '') < todayIso || b.status === 'completed' || b.status === 'no_show'; });
+
+    // Most booked services
+    var svcCount = {};
+    bookings.forEach(function(b) {
+      var svcs = b.selectedServices || b.services || (b.service ? [b.service] : []);
+      svcs.forEach(function(s) { if (s) svcCount[s] = (svcCount[s] || 0) + 1; });
+    });
+    var topSvcs = Object.keys(svcCount).sort(function(a, b) { return svcCount[b] - svcCount[a]; }).slice(0, 4);
+
+    var html = '<div class="cqv-summary">' +
+      '<div class="cqv-name">' + esc(custName) + '</div>' +
+      (custPhone ? '<div class="cqv-meta"><a class="sa-phone-link" href="tel:' + esc(custPhone) + '">&#128222; ' + esc(custPhone) + '</a>' +
+        '<a class="sa-act sa-act--call" href="sms:' + esc(custPhone) + '" style="margin-left:.5rem;font-size:.68rem;text-decoration:none">&#128172; Text</a></div>' : '') +
+      '<div class="cqv-meta" style="margin-top:.3rem">' +
+        '<span class="cqv-pill">' + bookings.length + ' lần đặt lịch</span>' +
+        (upcoming.length ? '<span class="cqv-pill cqv-pill--up">' + upcoming.length + ' sắp tới</span>' : '') +
+        (topSvcs.length ? '<span class="cqv-pill cqv-pill--svc">' + esc(topSvcs.join(' · ')) + '</span>' : '') +
+      '</div>' +
+    '</div>';
+
+    var statusMap = {
+      confirmed:   '<span class="sa-st sa-st--confirmed">● Xác nhận</span>',
+      in_progress: '<span class="sa-st sa-st--in_progress">● Đang làm</span>',
+      completed:   '<span class="sa-st sa-st--completed">✓ Xong</span>',
+      canceled:    '<span class="sa-st sa-st--canceled">✕ Hủy</span>',
+      cancelled:   '<span class="sa-st sa-st--canceled">✕ Hủy</span>',
+      no_show:     '<span class="sa-st sa-st--no_show">⚠ Vắng mặt</span>',
+      rescheduled: '<span class="sa-st sa-st--canceled">↻ Dời lịch</span>'
+    };
+
+    function _bookingCard(b) {
+      var date    = b.requestedDate || b.date || '';
+      var time    = b.requestedTime || b.time || '';
+      var staff   = b.staff && b.staff.toLowerCase() !== 'any' ? b.staff : null;
+      var svcs    = b.selectedServices || b.services || (b.service ? [b.service] : []);
+      var status  = b.status || 'confirmed';
+      var notes   = b.notes || b.specialRequest || '';
+      var imgs    = b.referenceImages || b.images || [];
+      var dur     = b.totalDurationMins || b.durationMins;
+      var badge   = statusMap[status] || '';
+      var isResc  = b.isReschedule ? '<span class="sa-badge sa-badge--reschedule" style="font-size:.6rem">↻ Đổi lịch</span>' : '';
+      return '<div class="cqv-booking-card">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.2rem">' +
+          '<div>' +
+            '<div style="font-weight:600;font-size:.82rem">' + esc(_fmtDate(date)) + (time ? ' · ' + esc(_fmtTime(time)) : '') + '</div>' +
+            '<div style="font-size:.75rem;color:var(--muted);margin-top:.1rem">' +
+              (staff ? '<span class="sa-staff-badge" style="font-size:.65rem">' + esc(staff) + '</span> ' : '') +
+              (dur ? '<span style="font-size:.68rem;opacity:.7">' + dur + 'p</span>' : '') +
+            '</div>' +
+          '</div>' +
+          '<div style="display:flex;gap:.3rem;align-items:center;flex-wrap:wrap">' + badge + isResc + '</div>' +
+        '</div>' +
+        (svcs.length ? '<div style="font-size:.75rem;margin-top:.35rem;color:var(--cream)">' + esc(svcs.join(' · ')) + '</div>' : '') +
+        (notes ? '<div style="font-size:.68rem;color:var(--muted);margin-top:.25rem;font-style:italic">📝 ' + esc(notes.slice(0, 80)) + (notes.length > 80 ? '…' : '') + '</div>' : '') +
+        (imgs.length ? '<div style="font-size:.68rem;color:var(--muted);margin-top:.2rem">📷 ' + imgs.length + ' ảnh tham khảo</div>' : '') +
+      '</div>';
+    }
+
+    if (upcoming.length) {
+      html += '<div class="cqv-group-label">Sắp tới</div>';
+      html += upcoming.map(_bookingCard).join('');
+    }
+    if (past.length) {
+      html += '<div class="cqv-group-label" style="margin-top:.75rem">Lịch sử</div>';
+      html += past.map(_bookingCard).join('');
+    }
+
+    resultsEl.innerHTML = html;
   }
 
   function saveSettings() {

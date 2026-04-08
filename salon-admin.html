@@ -644,6 +644,18 @@
     .sa-act--noshow { background: transparent; border: 1px solid rgba(248,113,113,.3); color: var(--danger); }
     .sa-act--cancel { background: transparent; border: 1px solid var(--border); color: var(--muted); }
     .sa-act--call   { background: transparent; border: 1px solid var(--border); color: var(--muted); text-decoration: none; display: inline-flex; align-items: center; gap: .2rem; }
+    .sa-act--pay    { background: rgba(245,166,35,.1); border: 1px solid rgba(245,166,35,.35); color: var(--gold-lt); }
+
+    /* ── Payment status badges ── */
+    .sa-pay-badge { display: inline-flex; align-items: center; font-size: .55rem; font-weight: 700; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+    .sa-pay-badge--paid    { color: var(--success); border: 1px solid rgba(74,222,128,.35); background: rgba(74,222,128,.08); }
+    .sa-pay-badge--partial { color: #fbbf24; border: 1px solid rgba(251,191,36,.35); background: rgba(251,191,36,.06); }
+    .sa-pay-badge--unpaid  { color: var(--danger); border: 1px solid rgba(248,113,113,.3); background: transparent; }
+
+    /* ── Payment modal ── */
+    .pm-row { display: flex; gap: .5rem; }
+    .pm-group { margin-bottom: .65rem; }
+    .pm-label { display: block; font-size: .65rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .28rem; }
 
     /* Status inline badges */
     .sa-st { font-size: .58rem; font-weight: 700; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
@@ -1109,6 +1121,52 @@
     <div class="sa-modal-actions">
       <button class="btn btn--outline btn--sm" onclick="closeCancelModal()">Không hủy</button>
       <button class="btn btn--sm" style="background:var(--danger);color:#fff;font-weight:700;padding:.45rem 1rem" onclick="_submitCancelBooking()">Xác nhận hủy</button>
+    </div>
+  </div>
+</div>
+
+<!-- Payment modal -->
+<div class="sa-modal-backdrop hidden" id="paymentModal">
+  <div class="sa-modal">
+    <h3 style="color:var(--gold-lt);margin-bottom:.25rem">Thu Tiền</h3>
+    <div id="pmHeader" style="font-size:.78rem;color:var(--muted);margin-bottom:1rem"></div>
+    <input type="hidden" id="pmBookingId">
+    <div class="pm-group">
+      <label class="pm-label">Trạng thái thanh toán *</label>
+      <select class="sa-input" id="pmStatus" style="width:100%;height:38px;padding:0 8px">
+        <option value="paid">Đã thanh toán đủ (Paid in Full)</option>
+        <option value="partial">Thanh toán một phần (Partial)</option>
+        <option value="unpaid">Chưa thanh toán (Unpaid)</option>
+      </select>
+    </div>
+    <div class="pm-row">
+      <div class="pm-group" style="flex:1">
+        <label class="pm-label">Số tiền thu ($)</label>
+        <input class="sa-input" id="pmAmount" type="number" min="0" step="0.01" placeholder="0.00" style="width:100%">
+      </div>
+      <div class="pm-group" style="flex:1">
+        <label class="pm-label">Tip ($)</label>
+        <input class="sa-input" id="pmTip" type="number" min="0" step="0.01" placeholder="0.00" style="width:100%">
+      </div>
+    </div>
+    <div class="pm-group">
+      <label class="pm-label">Phương thức</label>
+      <select class="sa-input" id="pmMethod" style="width:100%;height:38px;padding:0 8px">
+        <option value="cash">Tiền mặt (Cash)</option>
+        <option value="card">Thẻ (Card)</option>
+        <option value="zelle">Zelle</option>
+        <option value="venmo">Venmo</option>
+        <option value="other">Khác (Other)</option>
+      </select>
+    </div>
+    <div class="pm-group">
+      <label class="pm-label">Ghi chú (tuỳ chọn)</label>
+      <input class="sa-input" id="pmNote" type="text" placeholder="Ghi chú thêm…" style="width:100%">
+    </div>
+    <div id="pmMsg" style="display:none;font-size:.75rem;margin:.2rem 0"></div>
+    <div class="sa-modal-actions">
+      <button class="btn btn--outline btn--sm" onclick="closePaymentModal()">Hủy bỏ</button>
+      <button class="btn btn--sm sa-act--pay" id="pmSaveBtn" onclick="savePayment()" style="font-size:.78rem;font-weight:700;padding:.45rem 1.1rem">Lưu thanh toán</button>
     </div>
   </div>
 </div>
@@ -2458,6 +2516,124 @@
     return _userRole === 'owner' || _userRole === 'manager' || !!_userPerms.canConfirm;
   }
 
+  // ── Payment status tracking ───────────────────────────────────────────────────
+  // Fields: paymentStatus ('unpaid'|'partial'|'paid'), amountPaid, tipAmount,
+  //         paymentMethod, paymentNote, paidAt.
+  // Field names are intentionally generic so food orders and rides can reuse them.
+
+  function _payBadgeHtml(b) {
+    var s  = b.status || 'confirmed';
+    // No payment badge for terminal non-service states
+    if (['canceled','cancelled','no_show','rescheduled'].indexOf(s) >= 0) return '';
+    var ps = b.paymentStatus || 'unpaid';
+    if (ps === 'paid') {
+      var amt = b.amountPaid ? ' $' + Number(b.amountPaid).toFixed(0) : '';
+      return '<span class="sa-pay-badge sa-pay-badge--paid">&#10003; \u0110\u00e3 thu' + esc(amt) + '</span>';
+    }
+    if (ps === 'partial') {
+      var pAmt = b.amountPaid ? ' $' + Number(b.amountPaid).toFixed(0) : '';
+      return '<span class="sa-pay-badge sa-pay-badge--partial">&#9651; M\u1ed9t ph\u1ea7n' + esc(pAmt) + '</span>';
+    }
+    // unpaid — only show warning badge when service is completed (not while still pending)
+    if (s === 'completed') return '<span class="sa-pay-badge sa-pay-badge--unpaid">Ch\u01b0a thu</span>';
+    return '';
+  }
+
+  function _payDetHtml(b) {
+    var s  = b.status || 'confirmed';
+    if (['canceled','cancelled','no_show','rescheduled'].indexOf(s) >= 0) return '';
+    var ps = b.paymentStatus || 'unpaid';
+    if (ps === 'unpaid' && s !== 'completed') return ''; // don't show "unpaid" row on pending bookings
+    var psLabel = { paid: '\u0110\u00e3 thanh to\u00e1n', partial: 'M\u1ed9t ph\u1ea7n', unpaid: 'Ch\u01b0a thanh to\u00e1n' }[ps] || ps;
+    var psColor = ps === 'paid' ? 'var(--success)' : ps === 'partial' ? '#fbbf24' : 'var(--danger)';
+    var parts   = ['<span style="color:' + psColor + ';font-weight:700">' + psLabel + '</span>'];
+    if (b.amountPaid)     parts.push('\u0110\u00e3 thu: $' + Number(b.amountPaid).toFixed(2));
+    if (b.tipAmount)      parts.push('Tip: $' + Number(b.tipAmount).toFixed(2));
+    if (b.paymentMethod)  parts.push(esc(b.paymentMethod));
+    if (b.paymentNote)    parts.push(esc(b.paymentNote));
+    return '<div class="sa-det-section"><div class="sa-det-label">Thanh to\u00e1n</div>' +
+      '<div class="sa-det-val">' + parts.join(' &middot; ') + '</div></div>';
+  }
+
+  function openPaymentModal(bookingId) {
+    var b = _bookingCache[bookingId] || {};
+    document.getElementById('pmBookingId').value = bookingId;
+    var svcArr = b.selectedServices || b.services || (b.serviceType ? [b.serviceType] : []);
+    var svcLbl = Array.isArray(svcArr) ? svcArr.filter(Boolean).join(', ') : '';
+    var priceEst = b.priceEst || '';
+    document.getElementById('pmHeader').textContent =
+      (b.customerName || 'Khách') + (svcLbl ? ' · ' + svcLbl : '') + (priceEst ? ' · Ước tính: ' + priceEst : '');
+    document.getElementById('pmStatus').value = b.paymentStatus || 'paid';
+    document.getElementById('pmAmount').value = b.amountPaid != null ? b.amountPaid : '';
+    document.getElementById('pmTip').value    = b.tipAmount   != null ? b.tipAmount   : '';
+    document.getElementById('pmMethod').value = b.paymentMethod || 'cash';
+    document.getElementById('pmNote').value   = b.paymentNote  || '';
+    document.getElementById('pmMsg').style.display = 'none';
+    var btn = document.getElementById('pmSaveBtn');
+    if (btn) btn.disabled = false;
+    document.getElementById('paymentModal').classList.remove('hidden');
+  }
+
+  function closePaymentModal() {
+    document.getElementById('paymentModal').classList.add('hidden');
+  }
+
+  function _pmMsg(msg, isError) {
+    var el = document.getElementById('pmMsg');
+    el.style.display = msg ? 'block' : 'none';
+    el.style.color   = isError ? 'var(--danger)' : 'var(--muted)';
+    el.textContent   = msg;
+  }
+
+  function savePayment() {
+    var bookingId = document.getElementById('pmBookingId').value;
+    var payStatus = document.getElementById('pmStatus').value;
+    var amount    = parseFloat(document.getElementById('pmAmount').value) || 0;
+    var tip       = parseFloat(document.getElementById('pmTip').value)    || 0;
+    var method    = document.getElementById('pmMethod').value;
+    var note      = document.getElementById('pmNote').value.trim();
+
+    if (!bookingId || !vendorRef) { _pmMsg('Lỗi: không tìm thấy lịch hẹn.', true); return; }
+
+    var btn = document.getElementById('pmSaveBtn');
+    if (btn) btn.disabled = true;
+    _pmMsg('Đang lưu…', false);
+
+    var fv = firebase.firestore.FieldValue;
+    var update = {
+      paymentStatus: payStatus,
+      amountPaid:    amount,
+      tipAmount:     tip,
+      paymentMethod: method || null,
+      paymentNote:   note   || null,
+      updatedAt:     fv.serverTimestamp(),
+      history:       fv.arrayUnion({
+        action:        'payment_recorded',
+        paymentStatus: payStatus,
+        amountPaid:    amount,
+        tipAmount:     tip,
+        method:        method || null,
+        by:            _userEmail || 'staff',
+        at:            new Date().toISOString()
+      })
+    };
+    // Set paidAt timestamp only when transitioning to 'paid' and not already set
+    var cached = _bookingCache[bookingId] || {};
+    if (payStatus === 'paid' && !cached.paidAt) {
+      update.paidAt = fv.serverTimestamp();
+    }
+
+    vendorRef.collection('bookings').doc(bookingId).update(update)
+      .then(function() {
+        showToast('✓ Đã ghi nhận thanh toán.');
+        closePaymentModal();
+      })
+      .catch(function(err) {
+        _pmMsg('Lỗi: ' + err.message, true);
+        if (btn) btn.disabled = false;
+      });
+  }
+
   // ── Availability check for manual booking ────────────────────────────────────
   // Queries Firestore for the selected date/staff/time and returns a conflict object
   // or null if the slot is free. Mirrors the logic in NailAvailabilityChecker.
@@ -2944,6 +3120,7 @@
         var staffBadge = staff ? '<span class="sa-staff-badge">' + esc(staff) + '</span>' : '';
         var durSpan    = dur   ? '<span>' + dur + 'p</span>' : '';
         var priceSpan  = price ? '<span class="sa-appt-price">' + esc(String(price)) + '</span>' : '';
+        var payBadge   = _payBadgeHtml(b);
 
         // ── Operational scan badges ─────────────────────────────────────────
         var badges = '';
@@ -2980,6 +3157,9 @@
         if (price) {
           det += '<div class="sa-det-section"><div class="sa-det-label">Gi\u00e1 \u01b0\u1edbc t\u00ednh</div><div class="sa-det-val sa-appt-price">' + esc(String(price)) + '</div></div>';
         }
+
+        // Payment status detail
+        det += _payDetHtml(b);
 
         // Phone with action buttons in detail
         if (phone && canContact) {
@@ -3030,10 +3210,14 @@
 
         // Use single-quoted onclick attrs so JSON.stringify double-quotes don't break the HTML attribute
         var editBtn = canBook ? '<button class="sa-act" style="color:var(--gold-lt);border-color:var(--border-g)" onclick=\'openManualBookModal(' + idQ + ',null)\'>&#9998; S\u1eeda</button>' : '';
+        // Payment button — shown for all active/completed bookings (not canceled/no_show)
+        var payBtn  = (['canceled','cancelled','no_show','rescheduled'].indexOf(status) < 0)
+          ? '<button class="sa-act sa-act--pay" onclick=\'openPaymentModal(' + idQ + ')\'>&#36; Thu ti\u1ec1n</button>'
+          : '';
         var actions = '';
         if (status === 'confirmed') {
           actions =
-            editBtn +
+            editBtn + payBtn +
             '<button class="sa-act sa-act--start"  onclick=\'updateBookingStatus(' + idQ + ',"in_progress")\'>&#9654; B\u1eaft \u0111\u1ea7u</button>' +
             '<button class="sa-act sa-act--done"   onclick=\'updateBookingStatus(' + idQ + ',"completed")\'>&#10003; Xong</button>' +
             '<button class="sa-act sa-act--noshow" onclick=\'updateBookingStatus(' + idQ + ',"no_show")\'>V\u1eafng</button>' +
@@ -3042,13 +3226,14 @@
             (canManage ? '<button class="sa-act sa-act--cancel" onclick=\'deleteBooking(' + idQ + ',' + nameQ + ')\'>&#128465; X\u00f3a</button>' : '');
         } else if (status === 'in_progress') {
           actions =
-            editBtn +
+            editBtn + payBtn +
             '<button class="sa-act sa-act--done"   onclick=\'updateBookingStatus(' + idQ + ',"completed")\'>&#10003; Ho\u00e0n th\u00e0nh</button>' +
             '<button class="sa-act sa-act--noshow" onclick=\'updateBookingStatus(' + idQ + ',"no_show")\'>V\u1eafng</button>' +
             (canManage ? '<button class="sa-act sa-act--cancel" style="border-color:rgba(248,113,113,.4);color:var(--danger)" onclick=\'openCancelModal(' + idQ + ',' + nameQ + ',' + phoneQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')\'>&#10005; H\u1ee7y</button>' : '') +
             (canManage ? '<button class="sa-act sa-act--cancel" onclick=\'deleteBooking(' + idQ + ',' + nameQ + ')\'>&#128465; X\u00f3a</button>' : '');
         } else {
-          actions = (canManage ? '<button class="sa-act sa-act--cancel" onclick=\'deleteBooking(' + idQ + ',' + nameQ + ')\'>&#128465; X\u00f3a</button>' : '');
+          // completed and other terminal states — still allow payment correction
+          actions = payBtn + (canManage ? '<button class="sa-act sa-act--cancel" onclick=\'deleteBooking(' + idQ + ',' + nameQ + ')\'>&#128465; X\u00f3a</button>' : '');
         }
 
         return '<div class="' + cardCls + '">' +
@@ -3062,7 +3247,7 @@
               statusBadge +
             '</div>' +
             '<div class="sa-appt-svc">' + esc(svcLbl || '') + '</div>' +
-            '<div class="sa-appt-meta">' + staffBadge + durSpan + priceSpan + '</div>' +
+            '<div class="sa-appt-meta">' + staffBadge + durSpan + priceSpan + (payBadge ? ' ' + payBadge : '') + '</div>' +
             badgeRow +
             phoneRow +
             detToggle +

@@ -1248,6 +1248,16 @@
     </div>
 
     <div class="sa-field">
+      <label>Loại Hợp Đồng</label>
+      <select class="sa-select" id="staffEmploymentType">
+        <option value="">— Chọn loại —</option>
+        <option value="full_time">Toàn thời gian</option>
+        <option value="part_time">Bán thời gian</option>
+        <option value="contract">Hợp đồng</option>
+      </select>
+    </div>
+
+    <div class="sa-field">
       <label>Chuyên Môn</label>
       <div class="skill-chips" id="staffSkillsGrid"></div>
     </div>
@@ -2236,7 +2246,8 @@
             (s.active !== false ? 'Active' : 'Off') + '</span>' +
           '</div>' +
           '<div class="sa-item__meta">' + esc(s.role || '—') + (specs ? ' · ' + esc(specs) : '') +
-            (s.commissionPct ? ' · HH ' + s.commissionPct + '%' : '') + '</div>' +
+            (s.commissionPct ? ' · HH ' + s.commissionPct + '%' : '') +
+            (s.employmentType === 'full_time' ? ' · Toàn TG' : s.employmentType === 'part_time' ? ' · Bán TG' : s.employmentType === 'contract' ? ' · Hợp đồng' : '') + '</div>' +
           '<div class="sched-pills">' + pills + '</div>' +
         '</div>' +
         '<div class="sa-item__actions">' + ownerActions + '</div>' +
@@ -2287,10 +2298,11 @@
       document.getElementById('staffModalTitle').textContent = 'Thêm Nhân Viên';
       document.getElementById('staffDocId').value    = '';
       document.getElementById('staffName').value     = '';
-      document.getElementById('staffRole').value     = '';
-      document.getElementById('staffLevel').value    = '';
-      document.getElementById('staffCommission').value = '';
-      document.getElementById('staffSkillsGrid').innerHTML = buildSkillsGrid([]);
+      document.getElementById('staffRole').value           = '';
+      document.getElementById('staffLevel').value           = '';
+      document.getElementById('staffEmploymentType').value  = '';
+      document.getElementById('staffCommission').value      = '';
+      document.getElementById('staffSkillsGrid').innerHTML  = buildSkillsGrid([]);
       document.getElementById('schedEditor').innerHTML = buildSchedEditor(null);
       return;
     }
@@ -2300,9 +2312,10 @@
       document.getElementById('staffModalTitle').textContent = 'Chỉnh Sửa Nhân Viên';
       document.getElementById('staffDocId').value    = id;
       document.getElementById('staffName').value     = d.name || '';
-      document.getElementById('staffRole').value     = d.role || '';
-      document.getElementById('staffLevel').value    = d.level || '';
-      document.getElementById('staffCommission').value = d.commissionPct != null ? d.commissionPct : '';
+      document.getElementById('staffRole').value          = d.role || '';
+      document.getElementById('staffLevel').value         = d.level || '';
+      document.getElementById('staffEmploymentType').value = d.employmentType || '';
+      document.getElementById('staffCommission').value    = d.commissionPct != null ? d.commissionPct : '';
       document.getElementById('staffSkillsGrid').innerHTML = buildSkillsGrid(d.specialties || []);
       document.getElementById('schedEditor').innerHTML = buildSchedEditor(d.schedule);
     });
@@ -2327,9 +2340,10 @@
     var commRaw = parseFloat(document.getElementById('staffCommission').value);
     var data = {
       name:          name,
-      role:          document.getElementById('staffRole').value,
-      level:         document.getElementById('staffLevel').value,
-      specialties:   specialties,
+      role:           document.getElementById('staffRole').value,
+      level:          document.getElementById('staffLevel').value,
+      employmentType: document.getElementById('staffEmploymentType').value,
+      specialties:    specialties,
       schedule:      sched,
       commissionPct: isNaN(commRaw) ? 0 : Math.max(0, Math.min(100, commRaw)),
       updatedAt:     firebase.firestore.FieldValue.serverTimestamp()
@@ -4675,32 +4689,42 @@
       fromIso = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-01';
     }
 
-    // Exclude terminal non-earning statuses
-    var noEarn = ['canceled', 'cancelled', 'no_show', 'rescheduled'];
-    var relevant = (_saAllItems || []).filter(function(b) {
+    // Exclude rescheduled (moved, not a failure); keep no_show and cancelled for rate calculation
+    var noCount  = ['rescheduled']; // exclude from all aggregation
+    var noEarn   = ['canceled', 'cancelled', 'no_show', 'rescheduled']; // exclude from earnings
+    var noShow   = ['no_show'];
+    var cancelled = ['canceled', 'cancelled'];
+
+    // allPeriod: every booking in range (excluding rescheduled) — used for completion rate denominator
+    var allPeriod = (_saAllItems || []).filter(function(b) {
       var d = b.requestedDate || b.date || '';
-      return d >= fromIso && d <= todayIso && noEarn.indexOf(b.status || '') < 0;
+      return d >= fromIso && d <= todayIso && noCount.indexOf(b.status || '') < 0;
     });
 
-    if (!relevant.length) {
+    if (!allPeriod.length) {
       body.innerHTML = '<div class="sa-empty" style="font-size:.78rem">Không có dữ liệu trong khoảng thời gian này.</div>';
       return;
     }
 
     // Aggregate per staff
     var byStaff = {};
-    relevant.forEach(function(b) {
+    allPeriod.forEach(function(b) {
       var sn = (b.staff || '').trim();
       if (!sn || sn.toLowerCase() === 'any') return;
-      if (!byStaff[sn]) byStaff[sn] = { name: sn, count: 0, paidCount: 0, pct: 0, commission: 0, tip: 0, total: 0 };
+      var st = b.status || 'confirmed';
+      if (!byStaff[sn]) byStaff[sn] = { name: sn, count: 0, paidCount: 0, completedCount: 0, noShowCount: 0, pct: 0, commission: 0, tip: 0, total: 0 };
       byStaff[sn].count++;
-      var e = _computeStaffEarning(b);
-      if (e) {
-        byStaff[sn].pct        = e.commissionPct; // last seen pct (from real-time staff data)
-        byStaff[sn].paidCount++;
-        byStaff[sn].commission += e.commission;
-        byStaff[sn].tip        += e.tip;
-        byStaff[sn].total      += e.total;
+      if (noShow.indexOf(st) >= 0)    byStaff[sn].noShowCount++;
+      if (st === 'completed')         byStaff[sn].completedCount++;
+      if (noEarn.indexOf(st) < 0) {
+        var e = _computeStaffEarning(b);
+        if (e) {
+          byStaff[sn].pct        = e.commissionPct;
+          byStaff[sn].paidCount++;
+          byStaff[sn].commission += e.commission;
+          byStaff[sn].tip        += e.tip;
+          byStaff[sn].total      += e.total;
+        }
       }
     });
 
@@ -4711,17 +4735,27 @@
     }
 
     // Totals footer
-    var totComm = 0, totTip = 0, totTotal = 0, totCount = 0;
-    rows.forEach(function(r){ totComm += r.commission; totTip += r.tip; totTotal += r.total; totCount += r.count; });
+    var totComm = 0, totTip = 0, totTotal = 0, totCount = 0, totNoShow = 0;
+    rows.forEach(function(r){ totComm += r.commission; totTip += r.tip; totTotal += r.total; totCount += r.count; totNoShow += r.noShowCount; });
 
     body.innerHTML = '<table class="se-table"><thead><tr>' +
-      '<th>Nhân viên</th><th>HH%</th><th>Lịch hẹn</th><th>Hoa hồng</th><th>Tip</th><th>Tổng thu</th>' +
+      '<th>Nhân viên</th><th>HH%</th><th>Lịch hẹn</th><th>Hoàn thành</th><th>Không đến</th><th>Hoa hồng</th><th>Tip</th><th>Tổng thu</th>' +
       '</tr></thead><tbody>' +
       rows.map(function(r) {
+        // Completion rate: completed / (completed + noShow) for past bookings that reached a terminal state
+        var terminal = r.completedCount + r.noShowCount;
+        var rateHtml = terminal > 0
+          ? (Math.round(r.completedCount / terminal * 100) + '%')
+          : '<span style="color:var(--muted)">—</span>';
+        var noShowHtml = r.noShowCount > 0
+          ? '<span style="color:var(--danger)">' + r.noShowCount + '</span>'
+          : '0';
         return '<tr>' +
           '<td style="color:var(--cream);font-weight:700">' + esc(r.name) + '</td>' +
           '<td style="color:var(--muted)">' + (r.pct > 0 ? r.pct + '%' : '—') + '</td>' +
           '<td>' + r.count + (r.paidCount < r.count ? '<span style="color:var(--muted);font-size:.65rem"> (' + r.paidCount + ' đã thu)</span>' : '') + '</td>' +
+          '<td style="color:var(--success)">' + rateHtml + '</td>' +
+          '<td>' + noShowHtml + '</td>' +
           '<td style="color:var(--success)">$' + r.commission.toFixed(2) + '</td>' +
           '<td style="color:#fbbf24">$' + r.tip.toFixed(2) + '</td>' +
           '<td style="color:var(--cream);font-weight:700">$' + r.total.toFixed(2) + '</td>' +
@@ -4729,7 +4763,8 @@
       }).join('') +
       '</tbody><tfoot><tr>' +
       '<td colspan="2" style="color:var(--muted);font-size:.68rem">Tổng (' + totCount + ' lịch)</td>' +
-      '<td></td>' +
+      '<td></td><td></td>' +
+      '<td style="color:' + (totNoShow > 0 ? 'var(--danger)' : 'var(--muted)') + '">' + (totNoShow > 0 ? totNoShow : '0') + '</td>' +
       '<td style="color:var(--success)">$' + totComm.toFixed(2) + '</td>' +
       '<td style="color:#fbbf24">$' + totTip.toFixed(2) + '</td>' +
       '<td style="color:var(--cream)">$' + totTotal.toFixed(2) + '</td>' +

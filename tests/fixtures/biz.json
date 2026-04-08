@@ -1,0 +1,77 @@
+{
+  "_comment": "Mock vendor data for unit tests. Staff schedule format: {open:'HH:MM', close:'HH:MM'} or null for off days.",
+  "_dates": "2026-04-13=Monday, 2026-04-14=Tuesday, 2026-04-18=Saturday, 2026-04-19=Sunday",
+
+  "id": "luxurious-nails-test",
+  "slug": "luxurious-nails-test",
+  "name": "Luxurious Nails (Test Fixture)",
+  "phone": "(408) 916-3439",
+  "address": "123 Test Ave, San Jose, CA 95110",
+
+  "hours": {
+    "monday":    { "open": "09:00", "close": "19:30" },
+    "tuesday":   { "open": "09:00", "close": "19:30" },
+    "wednesday": { "open": "09:00", "close": "19:30" },
+    "thursday":  { "open": "09:00", "close": "19:30" },
+    "friday":    { "open": "09:00", "close": "19:30" },
+    "saturday":  { "open": "09:00", "close": "18:00" },
+    "sunday":    null
+  },
+
+  "services": [
+    { "name": "Gel Manicure",    "price": "45",  "durationMins": 60 },
+    { "name": "Manicure",        "price": "25",  "durationMins": 45 },
+    { "name": "Pedicure",        "price": "35",  "durationMins": 60 },
+    { "name": "Gel Pedicure",    "price": "55",  "durationMins": 75 },
+    { "name": "Acrylic Full Set","price": "60",  "durationMins": 90 },
+    { "name": "Acrylic Fill",    "price": "35",  "durationMins": 60 },
+    { "name": "Dip Powder Nails","price": "50",  "durationMins": 75 },
+    { "name": "Nail Art Design", "price": "15",  "durationMins": 30 },
+    { "name": "Nail Removal",    "price": "15",  "durationMins": 30 }
+  ],
+
+  "staff": [
+    {
+      "name": "Helen",
+      "role": "Nail Tech",
+      "active": true,
+      "schedule": {
+        "monday":    { "open": "09:00", "close": "18:00" },
+        "tuesday":   { "open": "09:00", "close": "18:00" },
+        "wednesday": { "open": "09:00", "close": "18:00" },
+        "thursday":  { "open": "09:00", "close": "18:00" },
+        "friday":    { "open": "09:00", "close": "18:00" },
+        "saturday":  { "open": "09:00", "close": "17:00" },
+        "sunday":    null
+      }
+    },
+    {
+      "name": "Tracy",
+      "role": "Nail Tech",
+      "active": true,
+      "schedule": {
+        "monday":    { "open": "10:00", "close": "19:00" },
+        "tuesday":   { "open": "10:00", "close": "19:00" },
+        "wednesday": { "open": "10:00", "close": "19:00" },
+        "thursday":  { "open": "10:00", "close": "19:00" },
+        "friday":    { "open": "10:00", "close": "19:00" },
+        "saturday":  { "open": "10:00", "close": "18:00" },
+        "sunday":    null
+      }
+    },
+    {
+      "name": "Lisa",
+      "role": "Nail Tech",
+      "active": true,
+      "schedule": {
+        "monday":    { "open": "09:00", "close": "17:00" },
+        "tuesday":   null,
+        "wednesday": { "open": "09:00", "close": "17:00" },
+        "thursday":  { "open": "09:00", "close": "17:00" },
+        "friday":    { "open": "09:00", "close": "17:00" },
+        "saturday":  { "open": "09:00", "close": "16:00" },
+        "sunday":    null
+      }
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "id": "CASE-008",
+  "date": "2026-04-08",
+  "category": "confirmation_quality",
+  "title": "Confirmation summary must include time and price — no vague 'booking received' message",
+  "fixed": true,
+  "fixed_date": "2026-04-08",
+
+  "failing_behavior": "Early versions of the booking confirmation showed only 'Your appointment request has been sent. The salon will confirm shortly.' — no time, no price, no booking reference. Customers were left unsure what was booked.",
+
+  "root_cause": "The original EscalationEngine.create() flow wrote to an 'escalations' collection and showed a 'pending vendor confirmation' message. Switched to _submitDirectBooking which generates a full booking packet (service, staff, date, time, price, reference ID, calendar links) and shows it instantly.",
+
+  "conversation": [
+    { "role": "user",      "content": "4085551234" }
+  ],
+
+  "precondition": "biz._bookingDraft = {services:['Gel Manicure'], staff:'Tracy', date:'2026-04-13', time:'14:00', name:'Sarah', phone:'4085559876', lang:'en'}. Slot is available. [ESCALATE:appointment] has been emitted.",
+
+  "expected_confirmation_contains": [
+    "Gel Manicure",
+    "Tracy",
+    "14:00",
+    "confirmed",
+    "DLC-"
+  ],
+
+  "expected_packet_fields": ["service", "staff", "date", "time", "price", "ref"],
+
+  "verify_fix_string": "_buildBookingPacketHtml",
+
+  "code_areas": [
+    "nailsalon/receptionist.js:_submitDirectBooking",
+    "nailsalon/receptionist.js:_buildBookingPacketHtml",
+    "nailsalon/receptionist.js:_buildConfirmedNatural"
+  ],
+
+  "notes": "_buildBookingPacketHtml renders a card with service/staff/date/time/price/location/phone/ref and calendar buttons. _buildConfirmedNatural provides the text message above the card. Both are shown to the customer immediately after booking — no vendor confirmation wait."
+}

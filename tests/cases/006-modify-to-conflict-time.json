@@ -1,0 +1,44 @@
+{
+  "id": "CASE-006",
+  "date": "2026-04-08",
+  "category": "conflict_handling",
+  "title": "Modify booking: reschedule to conflicting time — show alternatives, don't overwrite",
+  "fixed": true,
+  "fixed_date": "2026-04-08",
+
+  "failing_behavior": "When customer tried to reschedule to a time already taken by another client, the system either (a) wrote the booking over the existing one causing double-booking, or (b) failed silently without informing the customer.",
+
+  "root_cause": "The availability check path in _submitDirectBooking (via NailAvailabilityChecker.check()) correctly rejected the slot and showed avail.message. But earlier, the _earlyCheckReady block didn't pass isModify, so customer_conflict could fire even for a reschedule onto an otherwise empty slot (the customer's own booking counted as a conflict).",
+
+  "conversation": [
+    { "role": "user",      "content": "Can I reschedule my appointment to 10am instead?" },
+    { "role": "assistant", "content": "Let me check 10 AM for Helen...\n[STATE:{\"intent\":\"booking_request\",\"services\":[\"Gel Manicure\"],\"staff\":\"Helen\",\"date\":\"2026-04-14\",\"time\":\"10:00\",\"name\":\"Jane\",\"phone\":\"4085551234\",\"lang\":\"en\",\"pendingAction\":\"modify_booking\",\"existingBookingId\":null}]" }
+  ],
+
+  "precondition": "Another customer (Bob Chen) already has Helen booked at 10:00 AM on 2026-04-14.",
+
+  "expected_behavior": "avail.valid=false with key='conflict'. Alternatives suggested (e.g. 09:00, 10:30). Old booking NOT overwritten. Message shown to customer with alternatives.",
+
+  "avail_test": {
+    "draft": {
+      "staff": "Helen",
+      "date": "2026-04-14",
+      "time": "10:00",
+      "totalDurationMins": 60,
+      "isModify": true,
+      "phone": "4085551234"
+    },
+    "existing_fixture_keys": ["confirmed_helen_monday_2pm"],
+    "expected_result": { "valid": true },
+    "_note": "Helen at 10am on Tuesday (2026-04-14) has no conflict in fixtures — only 14:00 conflict exists. If Bob is at 10am, add that fixture."
+  },
+
+  "verify_fix_string": "isModify:          _inModify",
+
+  "code_areas": [
+    "nailsalon/receptionist.js:_earlyCheckReady (isModify in _ed)",
+    "nailsalon/receptionist.js:NailAvailabilityChecker.check (isModify excludes own booking)"
+  ],
+
+  "notes": "The isModify flag in _earlyCheckReady ensures the customer's existing booking is excluded from conflict detection so they don't get a false 'you already have a booking' when trying to move to a different time."
+}

@@ -1,0 +1,41 @@
+{
+  "id": "CASE-007",
+  "date": "2026-04-08",
+  "category": "language_consistency",
+  "title": "Language consistency: English booking conversation must produce English confirmation",
+  "fixed": true,
+  "fixed_date": "2026-04-08",
+
+  "failing_behavior": "When an English-speaking customer booked an appointment, the final confirmation message was sometimes in Vietnamese ('Lịch hẹn...đã được xác nhận'). This happened because biz._bookingState was cleared before _submitDirectBooking ran, causing lang to fall back from null to the default 'en' — but early builds used biz._bookingState.lang after the clear, which was undefined/null, causing a Vietnamese fallback.",
+
+  "root_cause": "The EscalationEngine.create() path (old flow) read biz._bookingState.lang AFTER the state was cleared at line ~2171. State was cleared → lang=null → fell back to biz default language which was sometimes 'vi'. Fixed by switching to _submitDirectBooking which reads draft.lang (captured before clear).",
+
+  "conversation": [
+    { "role": "user",      "content": "I'd like a gel manicure with Tracy on Monday at 2pm" },
+    { "role": "assistant", "content": "What's your name?\n[STATE:{\"intent\":\"booking_request\",\"services\":[\"Gel Manicure\"],\"staff\":\"Tracy\",\"date\":\"2026-04-13\",\"time\":\"14:00\",\"name\":null,\"phone\":null,\"lang\":\"en\",\"pendingAction\":null,\"existingBookingId\":null}]" },
+    { "role": "user",      "content": "My name is Sarah" },
+    { "role": "assistant", "content": "Thanks Sarah! What's your phone number?\n[STATE:{\"intent\":\"booking_request\",\"services\":[\"Gel Manicure\"],\"staff\":\"Tracy\",\"date\":\"2026-04-13\",\"time\":\"14:00\",\"name\":\"Sarah\",\"phone\":null,\"lang\":\"en\",\"pendingAction\":null,\"existingBookingId\":null}]" },
+    { "role": "user",      "content": "4085559876" },
+    { "role": "assistant", "content": "Perfect! Your Gel Manicure with Tracy on Monday at 2 PM is confirmed!\n[BOOKING:{\"services\":[\"Gel Manicure\"],\"staff\":\"Tracy\",\"date\":\"2026-04-13\",\"time\":\"14:00\",\"name\":\"Sarah\",\"phone\":\"4085559876\",\"lang\":\"en\"}]\n[ESCALATE:appointment]\n[STATE:{\"intent\":\"booking_request\",\"services\":[\"Gel Manicure\"],\"staff\":\"Tracy\",\"date\":\"2026-04-13\",\"time\":\"14:00\",\"name\":\"Sarah\",\"phone\":\"4085559876\",\"lang\":\"en\",\"pendingAction\":null,\"existingBookingId\":null}]" }
+  ],
+
+  "expected_booking_draft": {
+    "lang": "en",
+    "name": "Sarah",
+    "phone": "4085559876",
+    "staff": "Tracy",
+    "services": ["Gel Manicure"]
+  },
+
+  "expected_confirmation_language": "en",
+  "expected_no_contain": ["Lịch hẹn", "đã được xác nhận", "Cảm ơn"],
+
+  "verify_fix_string": "draft.lang",
+
+  "code_areas": [
+    "nailsalon/receptionist.js:_submitDirectBooking (uses draft.lang, not biz._bookingState.lang)",
+    "nailsalon/receptionist.js:_buildConfirmedNatural (lang parameter)"
+  ],
+
+  "notes": "_submitDirectBooking captures lang from draft before state is cleared. _buildConfirmedNatural(biz, draft, lang) uses this draft.lang for all confirmation text. State clearing order does not affect confirmation language."
+}

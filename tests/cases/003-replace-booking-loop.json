@@ -1,0 +1,37 @@
+{
+  "id": "CASE-003",
+  "date": "2026-04-08",
+  "category": "booking_replace",
+  "title": "Replace booking loop: user says 'replace it' but AI asks again",
+  "fixed": true,
+  "fixed_date": "2026-04-08",
+
+  "failing_behavior": "After showing 'You already have a Manicure at 2 PM that day. Would you like to replace it, keep it, or pick a different time?', when user said 'replace it', the AI showed the exact same conflict question again instead of asking for a new time.",
+
+  "root_cause": "Two issues combined: (1) System prompt said 'keep services, staff, name, phone' but didn't say to clear time:null. Claude kept time='14:00' in STATE. (2) _earlyCheckReady did not pass isModify:true when pendingAction=modify_booking, so the customer's own booking was NOT excluded from conflict checks. The same customer_conflict fired again.",
+
+  "conversation": [
+    { "role": "user",      "content": "I want a manicure at 2pm tomorrow, name is Jane, phone 4085551234" },
+    { "role": "assistant", "content": "You already have a Manicure at 2:00 PM that day. Would you like to replace it, keep it, or pick a different time?\n[STATE:{\"intent\":\"booking_request\",\"services\":[\"Manicure\"],\"staff\":null,\"date\":\"2026-04-14\",\"time\":\"14:00\",\"name\":\"Jane\",\"phone\":\"4085551234\",\"lang\":\"en\",\"pendingAction\":null,\"existingBookingId\":null}]" },
+    { "role": "user",      "content": "replace it" }
+  ],
+
+  "expected_state": {
+    "intent": "booking_request",
+    "pendingAction": "modify_booking",
+    "time": null,
+    "name": "Jane",
+    "phone": "4085551234"
+  },
+
+  "expected_no_contain": ["Would you like to replace it", "already have a Manicure"],
+
+  "verify_fix_string": "Set time: null (new time needed)",
+
+  "code_areas": [
+    "nailsalon/receptionist.js:_buildPrompt:MODIFY_RESCHEDULE (replace-it branch)",
+    "nailsalon/receptionist.js:_earlyCheckReady (isModify in _ed)"
+  ],
+
+  "notes": "Two-part fix: (1) System prompt explicitly tells Claude to set time:null when 'replace it'. (2) JS code passes isModify:true to availability check when pendingAction=modify_booking, excluding customer's own booking. Fixed in v=20260408n."
+}

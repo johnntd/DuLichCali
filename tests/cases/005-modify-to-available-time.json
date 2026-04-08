@@ -1,0 +1,31 @@
+{
+  "id": "CASE-005",
+  "date": "2026-04-08",
+  "category": "booking_modify",
+  "title": "Modify booking: reschedule to available new time — must update in place",
+  "fixed": true,
+  "fixed_date": "2026-04-08",
+
+  "failing_behavior": "When customer rescheduled, the old booking was DELETED and a new booking was CREATED with a different ID. This lost booking history, broke admin's booking view, and issued a different confirmation ID than the customer expected.",
+
+  "root_cause": "Prior _submitDirectBooking implementation always called .delete(oldDoc).then(.set(newDoc)) regardless of whether an exact existingBookingId was available. The isExactReschedule guard was missing.",
+
+  "conversation": [
+    { "role": "user",      "content": "I need to change my appointment to 3pm instead of 2pm" },
+    { "role": "assistant", "content": "Sure! I'll move your Manicure with Tracy to 3:00 PM. Just to confirm — your name is Jane and number is 4085551234?\n[STATE:{\"intent\":\"booking_request\",\"services\":[\"Manicure\"],\"staff\":\"Tracy\",\"date\":\"2026-04-14\",\"time\":\"15:00\",\"name\":\"Jane\",\"phone\":\"4085551234\",\"lang\":\"en\",\"pendingAction\":\"modify_booking\",\"existingBookingId\":null}]" },
+    { "role": "user",      "content": "yes" }
+  ],
+
+  "precondition": "biz._bookingState has name=Jane, phone=4085551234, staff=Tracy from prior booking. pendingAction=modify_booking triggers isModify=true in draft.",
+
+  "expected_behavior": "If existingBookingId is set: Firestore .update() called on same doc. If not: old bookings marked 'rescheduled', new doc created. In NO case should delete+set be used on a known booking ID.",
+
+  "verify_fix_string": "isExactReschedule",
+
+  "code_areas": [
+    "nailsalon/receptionist.js:_submitDirectBooking (isExactReschedule logic)",
+    "nailsalon/receptionist.js:_submitDirectBooking (.update() vs .delete()+.set())"
+  ],
+
+  "notes": "isExactReschedule = !!(draft.isModify && draft.existingBookingId). When true, uses .update() to preserve booking history. The invariant comment in code says: INVARIANT: use .update() NOT .delete()+.set()"
+}

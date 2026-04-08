@@ -1,0 +1,79 @@
+{
+  "_comment": "Mock booking documents for availability logic tests. Mirrors the Firestore schema in vendorBookingsRef.",
+
+  "confirmed_helen_monday_2pm": {
+    "bookingId": "DLC-TEST001",
+    "type": "nail_appointment",
+    "vendorId": "luxurious-nails-test",
+    "services": ["Gel Manicure"],
+    "selectedServices": ["Gel Manicure"],
+    "serviceType": "Gel Manicure",
+    "staff": "Helen",
+    "requestedDate": "2026-04-13",
+    "requestedTime": "14:00",
+    "durationMins": 60,
+    "totalDurationMins": 60,
+    "priceEst": "$45+",
+    "customerName": "Bob Chen",
+    "customerPhone": "4085550001",
+    "status": "confirmed",
+    "lang": "en"
+  },
+
+  "confirmed_tracy_monday_10am": {
+    "bookingId": "DLC-TEST002",
+    "type": "nail_appointment",
+    "vendorId": "luxurious-nails-test",
+    "services": ["Manicure"],
+    "selectedServices": ["Manicure"],
+    "serviceType": "Manicure",
+    "staff": "Tracy",
+    "requestedDate": "2026-04-13",
+    "requestedTime": "10:00",
+    "durationMins": 45,
+    "totalDurationMins": 45,
+    "priceEst": "$25+",
+    "customerName": "Alice Park",
+    "customerPhone": "4085550002",
+    "status": "confirmed",
+    "lang": "en"
+  },
+
+  "confirmed_jane_monday_2pm": {
+    "bookingId": "DLC-TEST003",
+    "type": "nail_appointment",
+    "vendorId": "luxurious-nails-test",
+    "services": ["Manicure"],
+    "selectedServices": ["Manicure"],
+    "serviceType": "Manicure",
+    "staff": "Tracy",
+    "requestedDate": "2026-04-13",
+    "requestedTime": "14:00",
+    "durationMins": 45,
+    "totalDurationMins": 45,
+    "priceEst": "$25+",
+    "customerName": "Jane Smith",
+    "customerPhone": "4085551234",
+    "status": "confirmed",
+    "lang": "en"
+  },
+
+  "cancelled_helen_monday_2pm": {
+    "bookingId": "DLC-TEST004",
+    "type": "nail_appointment",
+    "vendorId": "luxurious-nails-test",
+    "services": ["Pedicure"],
+    "selectedServices": ["Pedicure"],
+    "serviceType": "Pedicure",
+    "staff": "Helen",
+    "requestedDate": "2026-04-13",
+    "requestedTime": "14:00",
+    "durationMins": 60,
+    "totalDurationMins": 60,
+    "priceEst": "$35+",
+    "customerName": "Carol White",
+    "customerPhone": "4085550005",
+    "status": "cancelled",
+    "lang": "en"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "id": "CASE-009",
+  "date": "2026-04-08",
+  "category": "conversation_closing",
+  "title": "Booking close: 'is it done?' should get clear confirmation, not restart flow",
+  "fixed": true,
+  "fixed_date": "2026-04-08",
+
+  "failing_behavior": "After the booking packet was shown, when customer asked 'is it done?' or 'was it confirmed?', the AI either (a) re-entered booking collection flow asking for service/date/time again, or (b) gave an ambiguous answer like 'I believe so — you may want to call to confirm.' This happened because _buildBookingStateContext showed Date:not yet specified and Time:not yet specified after booking, making Claude think the booking was incomplete.",
+
+  "root_cause": "After _submitDirectBooking, biz._bookingState has services/staff/name/phone but date=null and time=null (cleared at line ~2171). _buildBookingStateContext showed these as 'not yet specified', which Claude interpreted as a booking still in progress. Two fixes: (1) Add BOOKING STATUS: CONFIRMED to state context when biz._lastBookingId is set. (2) Strengthen confirmation text to say 'no further action needed'.",
+
+  "conversation": [
+    { "role": "user", "content": "is it confirmed?" }
+  ],
+
+  "precondition": "biz._lastBookingId='DLC-TEST99'. biz._bookingState={services:['Gel Manicure'], staff:'Tracy', name:'Sarah', phone:'4085559876', date:null, time:null, pendingAction:null}. AI history includes prior confirmation sentence.",
+
+  "expected_state_context_contains": "BOOKING STATUS: CONFIRMED",
+
+  "expected_no_contain": ["What service would you like", "What date works", "I'm not sure", "call to confirm", "cannot confirm"],
+
+  "verify_fix_string": "BOOKING STATUS: CONFIRMED",
+
+  "code_areas": [
+    "nailsalon/receptionist.js:_buildBookingStateContext (BOOKING STATUS: CONFIRMED signal)",
+    "nailsalon/receptionist.js:_buildConfirmedNatural (no further action needed)"
+  ],
+
+  "notes": "biz._lastBookingId is checked in _buildBookingStateContext: if lastBookingId is set AND name/phone present AND date/time null, append BOOKING STATUS: CONFIRMED. This tells Claude the booking is done, not incomplete."
+}

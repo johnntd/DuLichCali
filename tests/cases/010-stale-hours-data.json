@@ -1,0 +1,31 @@
+{
+  "id": "CASE-010",
+  "date": "2026-04-08",
+  "category": "stale_data",
+  "title": "Stale hours: admin changes staff schedule but AI still answers with old hours",
+  "fixed": true,
+  "fixed_date": "2026-04-08",
+
+  "failing_behavior": "When vendor admin changed Helen's Tuesday hours from 10:00-18:00 to OFF (not working), the AI continued to say 'Helen works Tuesday from 10 AM to 6 PM' for up to 10 minutes (the Firestore data fetch cache interval). Customers could book Helen on a day she wasn't working.",
+
+  "root_cause": "biz._dataFetchedAt caches the Firestore fetch for 600,000ms (10 minutes). If admin updates schedule mid-window, AI uses stale data. The 10-minute window is intentional for performance but can cause stale answers in the short term. There is no push notification from admin → receptionist to invalidate the cache.",
+
+  "conversation": [
+    { "role": "user", "content": "Is Helen working next Tuesday?" }
+  ],
+
+  "expected_behavior": "When biz._dataFetchedAt is older than 600,000ms, _fetchLiveBizData() is called and the schedule is refreshed before answering. Within the 10-min window, the old schedule is used (known limitation).",
+
+  "known_limitation": "10-minute stale window is acceptable for now. Admin-triggered immediate refresh (via Firestore onSnapshot or push notification) would eliminate this but is not implemented.",
+
+  "verify_fix_string": "_fetchLiveBizData",
+
+  "code_areas": [
+    "nailsalon/receptionist.js: biz._dataFetchedAt cache check (line ~2021-2024)",
+    "nailsalon/receptionist.js: _fetchLiveBizData() — re-fetches staff/services/hours"
+  ],
+
+  "mitigation": "The 10-min auto-refresh is in place. For immediate updates, vendor should wait up to 10 minutes or reload the customer chat page. A future enhancement could use Firestore onSnapshot for real-time schedule changes.",
+
+  "notes": "This is a partial fix. The cache behavior is correct but the window means up to 10 min of stale data is expected. Document this limitation clearly in the vendor admin UI."
+}

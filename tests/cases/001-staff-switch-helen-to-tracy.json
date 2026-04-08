@@ -1,0 +1,37 @@
+{
+  "id": "CASE-001",
+  "date": "2026-04-08",
+  "category": "alternate_staff",
+  "title": "Staff switch: Helen unavailable → user explicitly asks for Tracy",
+  "fixed": true,
+  "fixed_date": "2026-04-08",
+
+  "failing_behavior": "After showing Helen's conflict message, when user said 'how about Tracy?', the AI repeated the Helen conflict message instead of checking Tracy's availability.",
+
+  "root_cause": "ENTITY_EXTRACTION staff rule said 'inherit from STATE if booking_request'. When user said 'how about Tracy?' the AI kept staff=Helen from CURRENT BOOKING STATE instead of overriding with Tracy from the current message.",
+
+  "conversation": [
+    { "role": "user",      "content": "I'd like a gel manicure with Helen at 2pm tomorrow" },
+    { "role": "assistant", "content": "Sorry, 2:00 PM with Helen is already booked. Closest available: 2:30 PM or 3:00 PM. Would you like one of those?\n[STATE:{\"intent\":\"booking_request\",\"services\":[\"Gel Manicure\"],\"staff\":\"Helen\",\"date\":\"2026-04-14\",\"time\":\"14:00\",\"name\":null,\"phone\":null,\"lang\":\"en\",\"pendingAction\":null,\"existingBookingId\":null}]" },
+    { "role": "user",      "content": "how about Tracy?" }
+  ],
+
+  "expected_state": {
+    "staff": "Tracy",
+    "intent": "booking_request",
+    "services": ["Gel Manicure"],
+    "date": "2026-04-14",
+    "time": "14:00"
+  },
+
+  "expected_no_contain": ["Helen is already booked", "Sorry, 2:00 PM with Helen"],
+
+  "verify_fix_string": "Do NOT inherit prior staff",
+
+  "code_areas": [
+    "nailsalon/receptionist.js:_buildPrompt:ENTITY_EXTRACTION (staff rule)",
+    "nailsalon/receptionist.js:_buildPrompt:CONFLICT_RESOLUTION"
+  ],
+
+  "notes": "Fixed by replacing 'inherit from STATE if booking_request' with explicit override rule in ENTITY_EXTRACTION, and adding CONFLICT_RESOLUTION section. Version bumped to v=20260408m."
+}

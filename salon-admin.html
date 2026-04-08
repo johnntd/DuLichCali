@@ -731,7 +731,8 @@
     <button class="mobile-tab-btn" onclick="switchTab('staff')">Nhân Viên</button>
     <button class="mobile-tab-btn" onclick="switchTab('availability')">Hôm Nay</button>
     <button class="mobile-tab-btn" onclick="switchTab('hours')">Giờ Mở</button>
-    <button class="mobile-tab-btn" onclick="switchTab('appointments')">Lịch Hẹn <span id="escMobileBadge" style="display:none;background:#e8a800;color:#000;border-radius:99px;padding:1px 6px;font-size:.65rem;font-weight:700"></span></button>
+    <button class="mobile-tab-btn" onclick="switchTab('appointments')">Lịch Hẹn</button>
+    <button class="mobile-tab-btn" onclick="switchTab('inbox')">AI Inbox <span id="escMobileBadge" style="display:none;background:#e8a800;color:#000;border-radius:99px;padding:1px 6px;font-size:.65rem;font-weight:700"></span></button>
     <button class="mobile-tab-btn" onclick="switchTab('settings')">Cài Đặt</button>
   </div>
 
@@ -745,7 +746,8 @@
       <button class="va-nav-btn"        id="nav-staff"         onclick="switchTab('staff')">Nhân Viên</button>
       <button class="va-nav-btn"        id="nav-availability"  onclick="switchTab('availability')">Hôm Nay</button>
       <button class="va-nav-btn"        id="nav-hours"         onclick="switchTab('hours')">Giờ Mở Cửa</button>
-      <button class="va-nav-btn"        id="nav-appointments"  onclick="switchTab('appointments')">Lịch Hẹn <span id="escNavBadge" style="display:none;background:#e8a800;color:#000;border-radius:99px;padding:1px 7px;font-size:.68rem;font-weight:700;margin-left:4px;vertical-align:middle"></span></button>
+      <button class="va-nav-btn"        id="nav-appointments"  onclick="switchTab('appointments')">Lịch Hẹn</button>
+      <button class="va-nav-btn"        id="nav-inbox"         onclick="switchTab('inbox')">AI Inbox <span id="escNavBadge" style="display:none;background:#e8a800;color:#000;border-radius:99px;padding:1px 7px;font-size:.68rem;font-weight:700;margin-left:4px;vertical-align:middle"></span></button>
       <button class="va-nav-btn"        id="nav-settings"      onclick="switchTab('settings')">Cài Đặt</button>
     </nav>
 
@@ -821,15 +823,6 @@
 
       <!-- ── Appointments tab ── -->
       <div class="tab-panel" id="panel-appointments">
-        <!-- AI Escalation requests (booking requests from Lily receptionist) -->
-        <div id="escSection" style="display:none;margin-bottom:1.2rem">
-          <div class="sa-section-header" style="margin-bottom:.5rem">
-            <div class="sa-section-title" style="color:#e8a800">&#128172; Khách Nhắn Qua AI</div>
-            <span id="escBadge" style="background:#e8a800;color:#000;border-radius:99px;padding:2px 9px;font-size:.75rem;font-weight:700;display:none"></span>
-          </div>
-          <div id="escList"></div>
-        </div>
-
         <!-- Staff filter bar -->
         <div class="sa-staff-bar" id="saStaffBar" style="display:none"></div>
 
@@ -841,6 +834,22 @@
           <div class="sa-section-title">Tất Cả Lịch Hẹn</div>
         </div>
         <div id="bookingsList"><div class="sa-empty">Đang tải…</div></div>
+      </div>
+
+      <!-- ── AI Inbox tab ── -->
+      <div class="tab-panel" id="panel-inbox">
+        <div class="sa-section-header">
+          <div>
+            <div class="sa-section-title" style="color:#e8a800">&#128172; AI Inbox</div>
+            <div style="font-size:.68rem;color:var(--muted);margin-top:.15rem">Tin nhắn &amp; yêu cầu từ khách qua AI Lily</div>
+          </div>
+          <button class="btn btn--outline btn--sm" onclick="markAllInboxRead()">&#10003; Đánh dấu tất cả</button>
+        </div>
+        <div id="inboxEmpty" class="sa-empty" style="display:none;padding:2rem 1rem">
+          <div style="font-size:1.5rem;margin-bottom:.5rem">&#128172;</div>
+          Không có tin nhắn mới. AI Lily sẽ gửi yêu cầu khi khách cần xác nhận.
+        </div>
+        <div id="inboxList"></div>
       </div>
 
       <!-- ── Settings tab ── -->
@@ -1239,6 +1248,10 @@
     try { localStorage.setItem('dlc_seen_esc_' + (VENDOR_ID || ''), JSON.stringify(_seenEscIds)); } catch (e) {}
   }
   function _isEscNew(id) { return !_seenEscIds[id]; }
+  function markAllInboxRead() {
+    _currentEscItems.forEach(function(item) { _markEscSeen(item.id); });
+    renderEscalations(_currentEscItems); // re-render with all marked as seen
+  }
 
   // Show the sticky banner at the top for new incoming bookings
   function _showNewBookingBanner(count) {
@@ -1264,9 +1277,9 @@
   // Jump to the Appointments tab and scroll to the escalation list
   function gotoNewBookings() {
     dismissNewBookingBanner();
-    switchTab('appointments');
+    switchTab('inbox');
     setTimeout(function () {
-      var el = document.getElementById('escSection');
+      var el = document.getElementById('inboxList');
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 150);
   }
@@ -1864,7 +1877,7 @@
   }
 
   // ── Tab navigation ───────────────────────────────────────────────────────────
-  var TABS = ['dashboard','services','staff','availability','hours','appointments','settings'];
+  var TABS = ['dashboard','services','staff','availability','hours','appointments','inbox','settings'];
   function switchTab(tab) {
     TABS.forEach(function(t) {
       var panel = document.getElementById('panel-' + t);
@@ -1992,15 +2005,15 @@
   }
 
   function renderEscalations(items) {
-    var section  = document.getElementById('escSection');
-    var list     = document.getElementById('escList');
-    var badge    = document.getElementById('escBadge');
+    var list     = document.getElementById('inboxList');
+    var empty    = document.getElementById('inboxEmpty');
     var navBadge = document.getElementById('escNavBadge');
     var mobBadge = document.getElementById('escMobileBadge');
-    if (!section || !list) return;
+    if (!list) return;
 
     var count = items.length;
     _escCount = count;
+    _currentEscItems = items;
     renderDashboard();
     [navBadge, mobBadge].forEach(function (b) {
       if (!b) return;
@@ -2009,12 +2022,11 @@
     });
 
     if (count === 0) {
-      section.style.display = 'none';
+      list.innerHTML = '';
+      if (empty) empty.style.display = 'block';
       return;
     }
-    section.style.display = 'block';
-    badge.textContent     = count;
-    badge.style.display   = 'inline-block';
+    if (empty) empty.style.display = 'none';
 
     // ── Detect genuinely new (unseen) escalations and notify ─────────────────
     var newItems = items.filter(function (item) { return _isEscNew(item.id); });
@@ -2023,7 +2035,7 @@
       _showNewBookingBanner(newItems.length);
     }
 
-    var typeLabels = { appointment: '&#128197; Đặt Lịch', order: '&#128722; Đơn hàng', reservation: '&#128203; Đặt chỗ', question: '&#128172; Câu hỏi' };
+    var typeLabels = { appointment: '&#128197; \u0110\u1eb7t L\u1ecbch', order: '&#128722; \u0110\u01a1n h\u00e0ng', reservation: '&#128203; \u0110\u1eb7t ch\u1ed7', question: '&#128172; C\u00e2u h\u1ecfi' };
     list.innerHTML = items.map(function (item) {
       var isNew  = _isEscNew(item.id);
       var timeStr = '';
@@ -2207,7 +2219,8 @@
   // ── Staff filter + Next Appointment state ─────────────────────────────────────
   var _saStaffFilter = 'all';  // 'all' or staff name
   var _saAllItems    = [];     // full unfiltered booking list (kept for re-filter)
-  var _escCount      = 0;      // current escalation count (for dashboard)
+  var _escCount        = 0;    // current escalation count (for dashboard)
+  var _currentEscItems = [];  // current escalation items (for markAllInboxRead)
 
   function _renderStaffFilterBar(items) {
     var bar = document.getElementById('saStaffBar');

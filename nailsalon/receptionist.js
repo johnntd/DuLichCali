@@ -1382,11 +1382,21 @@
   // ── _priceForService — look up price from biz.services data ─────────────────
 
   function _priceForService(biz, serviceName) {
+    // Price comes exclusively from live vendor Firestore data (biz.services).
+    // Claude's system prompt is built from the same source, so service names match.
+    var key = (serviceName || '').trim().toLowerCase();
     var svcs = biz.services || [];
     for (var i = 0; i < svcs.length; i++) {
       var s = svcs[i];
-      if (s.name && s.name.toLowerCase() === (serviceName || '').toLowerCase()) {
-        return s.price ? '$' + s.price + '+' : null;
+      if (!s.name) continue;
+      if (s.name.trim().toLowerCase() === key) {
+        if (s.price == null || s.price === '') return null;
+        // Normalize: ensure exactly one $ prefix and + suffix regardless of how vendor stored it
+        // (e.g. 20, "20", "20+", "$20", "$20+" all → "$20+")
+        var p = String(s.price).trim();
+        if (!p.startsWith('$')) p = '$' + p;
+        if (!p.endsWith('+')) p = p + '+';
+        return p;
       }
     }
     return null;
@@ -1536,21 +1546,25 @@
 
     // Write to Firestore (non-blocking — customer sees confirmation immediately)
     if (db && fv) {
+      // Use requestedDate/requestedTime to match vendor-admin schema (orderBy('requestedDate'))
       var bookingDoc = {
-        bookingId:    orderId,
-        type:         'nail_appointment',
-        vendorId:     vendorId,
-        services:     svcs,
-        staff:        draft.staff || null,
-        date:         draft.date  || '',
-        time:         draft.time  || '',
-        durationMins: draft.totalDurationMins || 60,
-        name:         draft.name  || '',
-        phone:        draft.phone || '',
-        lang:         lang,
-        status:       'confirmed',
-        source:       'lily_receptionist',
-        createdAt:    fv.serverTimestamp(),
+        bookingId:     orderId,
+        type:          'nail_appointment',
+        vendorId:      vendorId,
+        services:      svcs,
+        serviceType:   svcStr,           // single string alias used by vendor-admin renderOrders
+        staff:         draft.staff || null,
+        requestedDate: draft.date  || '',
+        requestedTime: draft.time  || '',
+        durationMins:  draft.totalDurationMins || 60,
+        customerName:  draft.name  || '',
+        customerPhone: draft.phone || '',
+        name:          draft.name  || '', // alias for backward compat
+        phone:         draft.phone || '', // alias for backward compat
+        lang:          lang,
+        status:        'confirmed',
+        source:        'lily_receptionist',
+        createdAt:     fv.serverTimestamp(),
       };
       db.collection('vendors').doc(vendorId).collection('bookings').add(bookingDoc)
         .catch(function(e) { console.warn('[booking] Firestore write failed:', e.message); });
@@ -1570,9 +1584,10 @@
         customerName:  draft.name  || '',
         customerPhone: draft.phone || '',
         services:      svcs,
+        serviceType:   svcStr,
         staff:         draft.staff || null,
-        date:          draft.date  || '',
-        time:          draft.time  || '',
+        requestedDate: draft.date  || '',
+        requestedTime: draft.time  || '',
         read:          false,
         createdAt:     fv.serverTimestamp(),
       }).catch(function(e) { console.warn('[notif] Firestore write failed:', e.message); });

@@ -3602,14 +3602,14 @@
         summaryHtml +
         ((_userRole === 'owner' || _userPerms.canConfirm) ?
           '<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem">' +
-            '<button class="btn btn--primary btn--sm" onclick="_markEscSeen(\'' + escId + '\');respondEscalation(\'' + escId + '\',\'vendor_confirmed\',null)">&#10003; Xác nhận &amp; Lưu Lịch</button>' +
-            '<button class="btn btn--sm" style="background:transparent;border:1px solid var(--danger);color:var(--danger)" onclick="_markEscSeen(\'' + escId + '\');respondEscalation(\'' + escId + '\',\'vendor_declined\',null)">&#10007; Từ chối</button>' +
+            '<button class="btn btn--primary btn--sm" onclick="_markEscSeen(\'' + escId + '\');respondEscalation(\'' + escId + '\',\'vendor_confirmed\',null)">' + ((_LABELS[_dlcLang]||_LABELS.vi).esc_confirm) + '</button>' +
+            '<button class="btn btn--sm" style="background:transparent;border:1px solid var(--danger);color:var(--danger)" onclick="_markEscSeen(\'' + escId + '\');respondEscalation(\'' + escId + '\',\'vendor_declined\',null)">' + ((_LABELS[_dlcLang]||_LABELS.vi).esc_decline) + '</button>' +
             markReadBtn +
           '</div>'
         : '<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem">' + markReadBtn + '</div>') +
         '<div style="display:flex;gap:.4rem;margin-top:.4rem">' +
-          '<input id="' + replyId + '" type="text" class="sa-input" placeholder="Nhắn lại cho khách…" style="flex:1;height:36px;padding:0 10px">' +
-          '<button class="btn btn--sm" style="background:var(--gold);color:#000;font-weight:600" onclick="_markEscSeen(\'' + escId + '\');respondEscalation(\'' + escId + '\',\'vendor_replied\',document.getElementById(\'' + replyId + '\').value)">Gửi</button>' +
+          '<input id="' + replyId + '" type="text" class="sa-input" placeholder="' + esc((_LABELS[_dlcLang]||_LABELS.vi).esc_reply_ph) + '" style="flex:1;height:36px;padding:0 10px">' +
+          '<button class="btn btn--sm" style="background:var(--gold);color:#000;font-weight:600" onclick="_markEscSeen(\'' + escId + '\');respondEscalation(\'' + escId + '\',\'vendor_replied\',document.getElementById(\'' + replyId + '\').value)">' + ((_LABELS[_dlcLang]||_LABELS.vi).esc_send) + '</button>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -3832,9 +3832,10 @@
     if (!names.length) { bar.style.display = 'none'; return; }
     bar.style.display = 'flex';
     // Non-owner without viewAll: hide "Tất cả" chip
+    var _lb = _LABELS[_dlcLang] || _LABELS.vi;
     var allChip = (_userRole !== 'owner' && !_userPerms.viewAll) ? '' :
-      '<button class="sa-staff-chip' + (_saStaffFilter === 'all' ? ' active' : '') + '" onclick="saSetStaffFilter(\'all\')">Tất cả</button>';
-    var chips = '<span class="sa-staff-bar__label">Nhân viên:</span>' + allChip;
+      '<button class="sa-staff-chip' + (_saStaffFilter === 'all' ? ' active' : '') + '" onclick="saSetStaffFilter(\'all\')">' + _lb.cat_all + '</button>';
+    var chips = '<span class="sa-staff-bar__label">' + _lb.filter_staff_label + '</span>' + allChip;
     names.forEach(function(n) {
       var active = _saStaffFilter === n ? ' active' : '';
       chips += '<button class="sa-staff-chip' + active + '" onclick="saSetStaffFilter(' + JSON.stringify(n) + ')">' + esc(n) + '</button>';
@@ -4445,8 +4446,8 @@
     var svcLbl = Array.isArray(svcArr) ? svcArr.filter(Boolean).join(', ') : '';
     document.getElementById('rfHeader').textContent =
       (b.customerName || 'Khách') + (svcLbl ? ' · ' + svcLbl : '') +
-      ' · Đã thu: $' + paid.toFixed(2) + (refunded > 0 ? ' · Đã hoàn: $' + refunded.toFixed(2) : '') +
-      ' · Tối đa hoàn: $' + maxRefund.toFixed(2);
+      ' · ' + ((_LABELS[_dlcLang]||_LABELS.vi).refund_collected) + paid.toFixed(2) + (refunded > 0 ? ' · ' + ((_LABELS[_dlcLang]||_LABELS.vi).refund_refunded) + refunded.toFixed(2) : '') +
+      ' · ' + ((_LABELS[_dlcLang]||_LABELS.vi).refund_max) + maxRefund.toFixed(2);
     document.getElementById('rfAmount').value  = '';
     document.getElementById('rfAmount').max    = maxRefund;
     document.getElementById('rfReason').value  = '';
@@ -5634,12 +5635,12 @@
               '<span style="font-size:.62rem;color:var(--gold);margin-left:.4rem;text-transform:uppercase;letter-spacing:.05em">' + esc(data.role || 'staff') + '</span>' +
               '<span style="font-size:.65rem;color:var(--muted);margin-left:.4rem">' + esc(data.email || '') + '</span></div>' +
             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.1rem .5rem;margin-bottom:.6rem">' +
-              chk('viewAll',         'Xem lịch hẹn tất cả nhân viên') +
-              chk('contactCustomer', 'Xem & liên hệ số điện thoại khách') +
-              chk('canCancel',       'Hủy hoặc xóa lịch hẹn') +
-              chk('canConfirm',      'Xác nhận / từ chối từ AI Inbox') +
+              chk('viewAll',         (_LABELS[_dlcLang]||_LABELS.vi).perm_view_all) +
+              chk('contactCustomer', (_LABELS[_dlcLang]||_LABELS.vi).perm_contact) +
+              chk('canCancel',       (_LABELS[_dlcLang]||_LABELS.vi).perm_cancel) +
+              chk('canConfirm',      (_LABELS[_dlcLang]||_LABELS.vi).perm_confirm) +
             '</div>' +
-            '<button class="btn btn--sm btn--outline" onclick="saveStaffPerms(\'' + uid + '\')">Lưu quyền</button>' +
+            '<button class="btn btn--sm btn--outline" onclick="saveStaffPerms(\'' + uid + '\')">' + ((_LABELS[_dlcLang]||_LABELS.vi).btn_save_perms) + '</button>' +
             '<span class="sa-msg" id="sp-msg-' + uid + '" style="margin-left:.5rem;font-size:.7rem"></span>' +
           '</div>';
         }).join('');
@@ -6886,6 +6887,19 @@
       pm_reader_step1:'Chọn nhà cung cấp thiết bị:',
       pm_reader_step2:'Kết nối máy đọc thẻ với iPad qua Bluetooth hoặc cổng Lightning / USB-C.',
       pm_reader_step3:'Hệ thống tự động nhận diện thiết bị và kích hoạt phương thức trong màn hình thu tiền.',
+      // ── ESC inbox action buttons ─────────────────────────────────────────────
+      esc_confirm:'✓ Xác nhận & Lưu Lịch', esc_decline:'✗ Từ chối',
+      esc_reply_ph:'Nhắn lại cho khách…', esc_send:'Gửi',
+      // ── Staff filter bar ─────────────────────────────────────────────────────
+      filter_staff_label:'Nhân viên:',
+      // ── Refund modal header labels ───────────────────────────────────────────
+      refund_collected:'Đã thu: $', refund_refunded:'Đã hoàn: $', refund_max:'Tối đa hoàn: $',
+      // ── Staff permissions labels ─────────────────────────────────────────────
+      perm_view_all:'Xem lịch hẹn tất cả nhân viên',
+      perm_contact:'Xem & liên hệ số điện thoại khách',
+      perm_cancel:'Hủy hoặc xóa lịch hẹn',
+      perm_confirm:'Xác nhận / từ chối từ AI Inbox',
+      btn_save_perms:'Lưu quyền',
     },
     en: {
       // ── Navigation ──────────────────────────────────────────────────────────
@@ -7092,6 +7106,19 @@
       pm_reader_step1:'Select your device provider:',
       pm_reader_step2:'Connect the card reader to iPad via Bluetooth or Lightning / USB-C port.',
       pm_reader_step3:'The system will automatically detect the device and activate the payment method.',
+      // ── ESC inbox action buttons ─────────────────────────────────────────────
+      esc_confirm:'✓ Confirm & Save Booking', esc_decline:'✗ Decline',
+      esc_reply_ph:'Reply to customer…', esc_send:'Send',
+      // ── Staff filter bar ─────────────────────────────────────────────────────
+      filter_staff_label:'Staff:',
+      // ── Refund modal header labels ───────────────────────────────────────────
+      refund_collected:'Collected: $', refund_refunded:'Refunded: $', refund_max:'Max refund: $',
+      // ── Staff permissions labels ─────────────────────────────────────────────
+      perm_view_all:'View all staff appointments',
+      perm_contact:'View & contact customer phone',
+      perm_cancel:'Cancel or delete appointments',
+      perm_confirm:'Confirm / decline from AI Inbox',
+      btn_save_perms:'Save permissions',
     },
     es: {
       // ── Navigation ──────────────────────────────────────────────────────────
@@ -7298,6 +7325,19 @@
       pm_reader_step1:'Selecciona tu proveedor de dispositivo:',
       pm_reader_step2:'Conecta el lector al iPad por Bluetooth o puerto Lightning / USB-C.',
       pm_reader_step3:'El sistema detectará automáticamente el dispositivo y activará el método de pago.',
+      // ── ESC inbox action buttons ─────────────────────────────────────────────
+      esc_confirm:'✓ Confirmar & Guardar Cita', esc_decline:'✗ Rechazar',
+      esc_reply_ph:'Responder al cliente…', esc_send:'Enviar',
+      // ── Staff filter bar ─────────────────────────────────────────────────────
+      filter_staff_label:'Personal:',
+      // ── Refund modal header labels ───────────────────────────────────────────
+      refund_collected:'Cobrado: $', refund_refunded:'Reembolsado: $', refund_max:'Máx. reembolso: $',
+      // ── Staff permissions labels ─────────────────────────────────────────────
+      perm_view_all:'Ver citas de todo el personal',
+      perm_contact:'Ver & contactar teléfono del cliente',
+      perm_cancel:'Cancelar o eliminar citas',
+      perm_confirm:'Confirmar / rechazar desde AI Inbox',
+      btn_save_perms:'Guardar permisos',
     }
   };
 

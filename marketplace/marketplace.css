@@ -1052,6 +1052,56 @@ select.mp-input option {
   50%       { box-shadow: 0 0 0 8px rgba(220,38,38,0); }
 }
 
+/* ── AI Widget header back button (shown only in full-screen mode) ──────── */
+.mp-ai__header-back {
+  display: none;
+  width: 40px; height: 40px;
+  border: none; background: none;
+  color: var(--muted); flex-shrink: 0;
+  align-items: center; justify-content: center;
+  border-radius: 50%;
+  transition: background .15s, color .15s;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  margin-left: -.25rem;
+}
+.mp-ai__header-back:hover { background: rgba(255,255,255,.08); color: var(--cream); }
+.mp-ai__header-back svg { width: 20px; height: 20px; pointer-events: none; }
+
+/* ── AI Widget: Full-Screen Mode (mobile only) ───────────────────────────── */
+@media (max-width: 767px) {
+  body.mp-ai-open { overflow: hidden; }
+
+  body.mp-ai-open .mp-vnav,
+  body.mp-ai-open .mp-bar { display: none !important; }
+
+  .mp-ai--fs {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 100dvh; height: 100vh;
+    z-index: 200;
+    border-radius: 0;
+    border: none;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mp-ai--fs .mp-ai__header-back { display: flex; }
+
+  .mp-ai--fs .mp-ai__header {
+    padding-top: calc(.85rem + env(safe-area-inset-top, 0px));
+  }
+
+  .mp-ai--fs .mp-ai__messages {
+    flex: 1;
+    height: auto;
+  }
+
+  .mp-ai--fs .mp-ai__input-bar {
+    padding-bottom: calc(.7rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 .mp-ai__mic-lang {
   height: 28px;
   padding: 0 .45rem;

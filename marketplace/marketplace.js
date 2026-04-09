@@ -261,7 +261,10 @@
       },
       focusAi: function () {
         var el = document.getElementById('aiWidget_' + biz.id);
-        if (el) {
+        if (!el) return;
+        if (window.innerWidth < 768 && el._fsOpen) {
+          el._fsOpen();
+        } else {
           el.scrollIntoView({ behavior: 'smooth', block: 'start' });
           setTimeout(function () {
             var inp = el.querySelector('input[type="text"],textarea,.mp-ai__input');
@@ -1548,9 +1551,10 @@
       '</div>' +
       '<div class="mp-ai" id="aiWidget_' + biz.id + '">' +
         '<div class="mp-ai__header">' +
-          (biz.category === 'nails'
-          ? '<div class="mp-ai__avatar ns-ai-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2z"/></svg></div>'
-          : '<div class="mp-ai__avatar">\ud83e\udd16</div>') +
+          '<button type="button" class="mp-ai__header-back" aria-label="Close chat">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>' +
+          '</button>' +
+          '<div class="mp-ai__avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>' +
           '<div class="mp-ai__info">' +
             '<strong>' + escHtml(ai.name) + '</strong>' +
             '<div class="mp-ai__status"><span class="mp-ai__dot"></span>Online · Sẵn sàng hỗ trợ</div>' +
@@ -3388,6 +3392,50 @@
 
       // Voice input
       if (window.DLCVoiceInput) window.DLCVoiceInput.attach(biz, container, input);
+
+      // ── Full-screen mode (mobile only) ───────────────────────────────────
+      (function _initFullScreen() {
+        var backBtn = container.querySelector('.mp-ai__header-back');
+
+        function _fsUpdateVH() {
+          var vv = window.visualViewport;
+          if (!vv || !container.classList.contains('mp-ai--fs')) return;
+          container.style.height = vv.height + 'px';
+          container.style.top    = vv.offsetTop + 'px';
+        }
+
+        function _fsOpen() {
+          if (window.innerWidth >= 768) return;
+          container.classList.add('mp-ai--fs');
+          document.body.classList.add('mp-ai-open');
+          _fsUpdateVH();
+          setTimeout(function () {
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+          }, 50);
+        }
+
+        function _fsClose() {
+          container.classList.remove('mp-ai--fs');
+          document.body.classList.remove('mp-ai-open');
+          container.style.height = '';
+          container.style.top    = '';
+        }
+
+        // Open on input focus
+        input.addEventListener('focus', _fsOpen);
+
+        // Close on back button
+        if (backBtn) backBtn.addEventListener('click', _fsClose);
+
+        // Handle iOS keyboard resize
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener('resize', _fsUpdateVH);
+          window.visualViewport.addEventListener('scroll', _fsUpdateVH);
+        }
+
+        // Expose so focusAi can trigger it
+        container._fsOpen = _fsOpen;
+      }());
     },
 
     _sendMessage: function (biz, text, messagesEl) {

@@ -4010,12 +4010,15 @@
       if (grandRowEl) grandRowEl.style.display = 'none';
     }
 
-    // ── Active tip button highlight (based on base service price for tip %) ───
+    // ── Active tip button highlight (based on effective total incl. add-ons) ──
     [15, 20, 25].forEach(function(pct) {
       var btn = document.getElementById('pmTipBtn' + pct);
       if (!btn) return;
-      var expected = baseTotal > 0 ? Math.round(baseTotal * pct) / 100 : -1;
-      btn.classList.toggle('pm-tip-btn--active', baseTotal > 0 && Math.abs(tip - expected) < 0.015);
+      var expected = total > 0 ? Math.round(total * pct) / 100 : -1;
+      btn.classList.toggle('pm-tip-btn--active', total > 0 && Math.abs(tip - expected) < 0.015);
+      // Also update the dollar amount label on each button
+      var sub = btn.querySelector('span');
+      if (sub && total > 0) sub.textContent = '$' + (Math.round(total * pct) / 100).toFixed(2);
     });
 
     // ── Paid + remaining rows ──────────────────────────────────────────────────
@@ -4043,7 +4046,7 @@
 
   // Apply a percentage tip. Called by tip suggestion buttons.
   function _pickTip(pct) {
-    var total = parseFloat(document.getElementById('paymentModal').dataset.priceTotal) || 0;
+    var total = _pmEffectiveTotal();
     if (total <= 0) return;
     var tip = Math.round(total * pct) / 100;
     document.getElementById('pmTip').value = tip.toFixed(2);

@@ -2425,7 +2425,7 @@
     <div class="pm-row">
       <div class="pm-group" style="flex:1">
         <label class="pm-label" data-i18n="pay_collected">Tổng tiền thu ($)</label>
-        <input class="sa-input" id="pmAmount" type="number" min="0" step="0.01" placeholder="0.00" style="width:100%" oninput="_updatePmBalance()">
+        <input class="sa-input" id="pmAmount" type="number" min="0" step="0.01" placeholder="0.00" style="width:100%" oninput="_updatePmBalance(true)">
       </div>
       <div class="pm-group" style="flex:1">
         <label class="pm-label" data-i18n="pay_tip">Tip ($)</label>
@@ -4176,12 +4176,14 @@
   // ─────────────────────────────────────────────────────────────────────────────
 
   // Auto-fill Amount Collected when the status dropdown is changed explicitly.
+  // Live recalculation while 'paid' is handled inside _updatePmBalance().
   function _onPmStatusChange() {
     var status   = document.getElementById('pmStatus').value;
     var subtotal = _pmEffectiveTotal(); // base + add-ons + adj
     var tax      = subtotal > 0 && VENDOR_TAX_RATE > 0
                      ? Math.round(subtotal * VENDOR_TAX_RATE * 100) / 100 : 0;
-    var grand    = subtotal + tax; // grand total excl. tip (tip is voluntary)
+    var tip      = parseFloat((document.getElementById('pmTip') || {}).value) || 0;
+    var grand    = subtotal + tax + tip; // full payable amount including tip
     var amtEl    = document.getElementById('pmAmount');
     if (!amtEl) return;
     if (status === 'paid' && grand > 0) {
@@ -4194,7 +4196,9 @@
     // 'partial': leave amount editable — no auto-fill
   }
 
-  function _updatePmBalance() {
+  // skipAutoFill=true when called from pmAmount oninput (manual edit — don't overwrite).
+  // All other callers (tip, add-on, adj, status change, open) pass false/undefined.
+  function _updatePmBalance(skipAutoFill) {
     var modal     = document.getElementById('paymentModal');
     var baseTotal = parseFloat(modal.dataset.priceTotal) || 0;
     var addOnAmt  = _pmAddOnTotal();
@@ -4205,6 +4209,21 @@
     var amount    = parseFloat(document.getElementById('pmAmount').value) || 0;
     var tip       = parseFloat(document.getElementById('pmTip').value)    || 0;
     var sel       = document.getElementById('pmStatus');
+
+    // ── Auto-fill Amount Collected for Paid in Full and Unpaid ────────────────
+    // Runs when tip, add-ons, adj, or status changes — NOT when owner manually edits amount.
+    if (!skipAutoFill && sel && total > 0) {
+      var amtEl        = document.getElementById('pmAmount');
+      var grandWithTip = total + tax + tip; // full payable amount (service + add-ons + adj + tax + tip)
+      if (sel.value === 'paid') {
+        if (amtEl) amtEl.value = grandWithTip.toFixed(2);
+        amount = grandWithTip; // update local var so balance calculation is correct
+      } else if (sel.value === 'unpaid') {
+        if (amtEl) amtEl.value = '0';
+        amount = 0;
+      }
+      // 'partial': no auto-fill
+    }
 
     // ── Add-on row ─────────────────────────────────────────────────────────────
     var addOnRowEl = document.getElementById('pmSumAddOnRow');

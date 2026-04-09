@@ -3421,7 +3421,11 @@
           container.style.top    = '';
         }
 
-        // Open on input focus
+        // Open on any tap/click inside the widget (not just input focus)
+        container.addEventListener('click', function (e) {
+          if (backBtn && backBtn.contains(e.target)) return; // back button closes, not opens
+          _fsOpen();
+        });
         input.addEventListener('focus', _fsOpen);
 
         // Close on back button

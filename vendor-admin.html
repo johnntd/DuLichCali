@@ -1611,7 +1611,7 @@
 
     <div class="f-row">
       <label class="f-label" for="fNameVi"><span data-i18n="fld_name_vi">Vietnamese name</span> <small style="font-weight:400;opacity:.6" data-i18n="fld_name_vi_optional">(optional)</small></label>
-      <input class="f-input" type="text" id="fNameVi" placeholder="Chả Giò…">
+      <input class="f-input" type="text" id="fNameVi" placeholder="e.g. Chả Giò…" data-i18n-placeholder="ph_name_vi_example">
     </div>
 
     <div class="f-row">
@@ -1673,13 +1673,13 @@
         </div>
         <div class="focal-sliders">
           <div class="focal-slider-row">
-            <span class="focal-lbl">← Ngang →</span>
+            <span class="focal-lbl" data-i18n="focal_horiz">← Horiz →</span>
             <input type="range" id="fImagePosX" min="0" max="100" value="50"
                    class="focal-range" oninput="updateFocalPreview()">
             <span class="focal-pct" id="focalValX">50%</span>
           </div>
           <div class="focal-slider-row">
-            <span class="focal-lbl">↑ Dọc ↓</span>
+            <span class="focal-lbl" data-i18n="focal_vert">↑ Vert ↓</span>
             <input type="range" id="fImagePosY" min="0" max="100" value="50"
                    class="focal-range" oninput="updateFocalPreview()">
             <span class="focal-pct" id="focalValY">50%</span>
@@ -2094,10 +2094,10 @@
       var loading = document.getElementById('loadingState');
       if (loading && loading.style.display !== 'none') {
         showLoadError(
-          'Không thể tải dữ liệu.<br>' +
-          'Nếu lỗi này lặp lại, vào <strong>Firebase Console → Firestore → Rules</strong> ' +
-          'và thêm quyền cho collection <code>vendors</code>.<br><br>' +
-          'Ví dụ rule:<br>' +
+          _vlb('err_load_timeout', 'Unable to load data.') + '<br>' +
+          'If this repeats, go to <strong>Firebase Console → Firestore → Rules</strong> ' +
+          'and add permission for collection <code>vendors</code>.<br><br>' +
+          'Example rule:<br>' +
           '<code>match /vendors/{doc=**} { allow read, write: if request.auth != null; }</code>'
         );
       }
@@ -2134,7 +2134,7 @@
       var batch = db.batch();
       toDelete.forEach(function(ref) { batch.delete(ref); });
       batch.commit().then(function() {
-        showToast(toDelete.length + ' món ăn của Emily đã được xóa khỏi tài khoản này.', 'info');
+        showToast(_vlb('toast_emily_cleaned', '{n} items removed from this account.').replace('{n}', toDelete.length), 'info');
       });
     });
   }
@@ -2154,7 +2154,7 @@
           console.log('[seed] vendor doc created');
         }).catch(function (err) {
           console.error('[seed] vendor set failed:', err);
-          showToast('Lỗi tạo dữ liệu: ' + (err.code || err.message), 'error');
+          showToast(_vlb('err_create_data', 'Data error: ') + (err.code || err.message), 'error');
         });
       }
     }).catch(function (err) {
@@ -2195,7 +2195,7 @@
           console.log('[seed] canonical item added:', template.name, '(', template.canonicalId, ')');
         }).catch(function (err) {
           console.error('[seed] item add failed:', template.canonicalId, err);
-          showToast('Lỗi tạo món: ' + (err.code || err.message), 'error');
+          showToast(_vlb('err_create_item', 'Item error: ') + (err.code || err.message), 'error');
         });
       });
     }).catch(function (err) {
@@ -2214,9 +2214,9 @@
         console.warn('[snapshot] orderBy failed:', err.code, err.message);
         if (err.code === 'permission-denied') {
           showLoadError(
-            '<strong>Lỗi quyền truy cập Firestore (permission-denied).</strong><br>' +
-            'Vào Firebase Console → Firestore Database → Rules<br>' +
-            'Thêm rule sau rồi bấm Publish:<br><br>' +
+            '<strong>' + _vlb('err_firestore_perm', 'Firestore permission error (permission-denied).') + '</strong><br>' +
+            'Firebase Console → Firestore Database → Rules<br>' +
+            'Add rule and click Publish:<br><br>' +
             '<code>match /vendors/{doc=**} {<br>' +
             '&nbsp;&nbsp;allow read, write: if request.auth != null;<br>' +
             '}</code>'
@@ -2228,12 +2228,11 @@
           console.error('[snapshot] fallback failed:', err2.code, err2.message);
           if (err2.code === 'permission-denied') {
             showLoadError(
-              '<strong>Lỗi quyền truy cập Firestore (permission-denied).</strong><br>' +
-              'Vào Firebase Console → Firestore Database → Rules<br>' +
-              'Thêm rule cho collection <code>vendors</code>.'
+              '<strong>' + _vlb('err_firestore_perm', 'Firestore permission error (permission-denied).') + '</strong><br>' +
+              'Firebase Console → Firestore Database → Rules → add rule for <code>vendors</code>.'
             );
           } else {
-            showLoadError('Không tải được dữ liệu: ' + (err2.code || err2.message));
+            showLoadError(_vlb('err_load_data', 'Failed to load data: ') + (err2.code || err2.message));
           }
         });
       }
@@ -2289,7 +2288,7 @@
       list.innerHTML =
         '<div class="va-empty">' +
           '<div class="va-empty__icon">🍽</div>' +
-          '<div class="va-empty__text">Chưa có món nào.<br>Nhấn <strong>+</strong> để thêm.</div>' +
+          '<div class="va-empty__text">' + _vlb('menu_empty', 'No items yet.<br>Tap <strong>+</strong> to add.') + '</div>' +
         '</div>';
       return;
     }
@@ -2315,7 +2314,7 @@
             '<div class="va-item-card__meta">' +
               (inactive ? '<span class="va-tag va-tag--off">Inactive</span>' : '') +
               (item.featured ? '<span class="va-tag va-tag--star">Featured</span>' : '') +
-              (item.videoUrl ? '<span class="va-tag va-tag--video">🎥 Video</span>' : item.videoStatus === 'generating' ? '<span class="va-tag" style="color:#a78bfa;border-color:#a78bfa">⏳ Đang tạo video...</span>' : '') +
+              (item.videoUrl ? '<span class="va-tag va-tag--video">🎥 Video</span>' : item.videoStatus === 'generating' ? '<span class="va-tag" style="color:#a78bfa;border-color:#a78bfa">⏳ ' + _vlb('btn_generating', 'Generating…') + '</span>' : '') +
               (!item.image ? '<span class="va-tag va-tag--off" title="No photo — upload in Edit">📷 No photo</span>' : '') +
               (hasInstrs ? '<span class="va-tag va-tag--info">📋 Instrs</span>' : '') +
               (item.minimumOrderQty ? '<span class="va-tag">Min ' + item.minimumOrderQty + '</span>' : '') +
@@ -2525,7 +2524,7 @@
     b64reader.onload = function (ev) {
       var base64 = ev.target.result.split(',')[1]; // strip data:image/...;base64,
       fill.style.width = '60%';
-      label.textContent = 'Đang xử lý...';
+      label.textContent = _vlb('img_processing', 'Processing…');
 
       var fn = firebase.functions().httpsCallable('uploadVendorImage');
       fn({ vendorId: VENDOR_ID, base64: base64, fileName: fileName, mimeType: file.type })
@@ -2540,15 +2539,15 @@
             _setSaveBlocked(false);
             showToast(_vlb('toast_img_uploaded','Image uploaded!'), 'success');
           } else {
-            uploadFail('Lỗi upload: ' + ((result.data && result.data.error) || 'Không rõ'));
+            uploadFail(_vlb('err_upload_short', 'Upload error') + ': ' + ((result.data && result.data.error) || _vlb('err_unknown', 'Unknown error.')));
           }
         })
         .catch(function (err) {
-          uploadFail('Lỗi upload: ' + (err.message || String(err)));
+          uploadFail(_vlb('err_upload_short', 'Upload error') + ': ' + (err.message || String(err)));
         });
     };
     b64reader.onerror = function () {
-      uploadFail('Không đọc được file ảnh.');
+      uploadFail(_vlb('err_read_file', 'Could not read file.'));
     };
     b64reader.readAsDataURL(file);
   }
@@ -2653,11 +2652,11 @@
   function generateVideoAuto() {
     var editId = document.getElementById('fEditId').value;
     if (!editId) {
-      showToast('Lưu sản phẩm trước khi tạo video.', 'error');
+      showToast(_vlb('err_save_first', 'Save item before generating video.'), 'error');
       return;
     }
     if (!VENDOR_ID) {
-      showToast('Lỗi: VENDOR_ID chưa sẵn sàng.', 'error');
+      showToast(_vlb('err_vendor_id', 'Error: Vendor ID not ready.'), 'error');
       return;
     }
 
@@ -2677,8 +2676,8 @@
       status.textContent = msg;
     }
 
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang tạo...'; }
-    setStatus('Đang khởi tạo — video sẽ sẵn sàng trong ~60 giây...', 'info');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ ' + _vlb('btn_generating', 'Generating…'); }
+    setStatus(_vlb('video_init', 'Initializing — video ready in ~60 seconds…'), 'info');
 
     // Call the Firebase Cloud Function
     var fn = firebase.functions().httpsCallable('generateItemVideo');
@@ -2688,18 +2687,18 @@
         if (data && data.ok && data.videoUrl) {
           document.getElementById('fVideoUrl').value = data.videoUrl;
           updateVideoPreview();
-          setStatus('✓ Video đã tạo xong! Nhấn Lưu lại để cập nhật.', 'success');
+          setStatus('✓ ' + _vlb('video_done_status', 'Video created! Press Save to update.'), 'success');
           showToast(_vlb('toast_video_done','Video created!'), 'success');
         } else {
-          var msg = (data && data.error) || 'Lỗi không xác định.';
+          var msg = (data && data.error) || _vlb('err_unknown', 'Unknown error.');
           setStatus('✗ ' + msg, 'error');
-          showToast('Lỗi tạo video: ' + msg, 'error');
+          showToast(_vlb('err_video', 'Video error: ') + msg, 'error');
         }
       })
       .catch(function (err) {
-        var msg = err.message || 'Lỗi kết nối.';
+        var msg = err.message || _vlb('err_network', 'Connection error.');
         setStatus('✗ ' + msg, 'error');
-        showToast('Lỗi: ' + msg, 'error');
+        showToast(_vlb('err_prefix', 'Error: ') + msg, 'error');
       })
       .finally(function () {
         if (btn) { btn.disabled = false; btn.textContent = '▶ Generate Video'; }
@@ -2711,12 +2710,12 @@
     var name   = document.getElementById('fName').value.trim();
     var minQty = parseInt(document.getElementById('fMinQty').value, 10);
 
-    if (!name) { showToast('Vui lòng nhập tên món.', 'error'); return; }
-    if (isNaN(minQty) || minQty < 1) { showToast('Số lượng tối thiểu phải ≥ 1.', 'error'); return; }
+    if (!name) { showToast(_vlb('err_name_required', 'Please enter an item name.'), 'error'); return; }
+    if (isNaN(minQty) || minQty < 1) { showToast(_vlb('err_min_qty', 'Minimum quantity must be ≥ 1.'), 'error'); return; }
 
     // Guard: block save if any upload is still in progress
     if (_uploadsInProgress > 0) {
-      showToast('Ảnh đang tải lên — vui lòng đợi trước khi lưu.', 'error');
+      showToast(_vlb('err_upload_wait', 'Image uploading — please wait before saving.'), 'error');
       return;
     }
 
@@ -2737,7 +2736,7 @@
         // Derive base price from the cheapest variant so Firestore always has a numeric price.
         price = variantsWithPrice.reduce(function(mn, v) { return Math.min(mn, v.price); }, Infinity);
       } else {
-        showToast('Nhập giá sản phẩm hoặc thêm giá cho từng loại.', 'error');
+        showToast(_vlb('err_price_required', 'Enter a base price or add variant prices.'), 'error');
         return;
       }
     }
@@ -2790,7 +2789,7 @@
       saveBtn.disabled = false;
     }).catch(function (err) {
       console.error('[saveItem] Firestore write failed:', err);
-      showToast('Lỗi lưu: ' + (err.message || err.code || 'unknown'), 'error');
+      showToast(_vlb('err_save', 'Save error: ') + (err.message || err.code || 'unknown'), 'error');
       saveBtn.disabled = false;
     });
   }
@@ -2801,9 +2800,9 @@
       active:    active,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }).then(function () {
-      showToast(active ? 'Đã kích hoạt!' : 'Đã ẩn món.', 'success');
+      showToast(active ? _vlb('toast_activated', 'Item activated!') : _vlb('toast_hidden', 'Item hidden.'), 'success');
     }).catch(function (err) {
-      showToast('Lỗi: ' + err.message, 'error');
+      showToast(_vlb('err_prefix', 'Error: ') + err.message, 'error');
     });
   }
 
@@ -2877,7 +2876,7 @@
 
   function saveCapacity() {
     var val = parseInt(document.getElementById('capInput').value, 10);
-    if (isNaN(val) || val < 1) { showToast('Số lượng không hợp lệ.', 'error'); return; }
+    if (isNaN(val) || val < 1) { showToast(_vlb('err_invalid_qty', 'Invalid quantity.'), 'error'); return; }
     vendorRef.update({
       defaultDailyCapacity: val,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2885,13 +2884,13 @@
       var status = document.getElementById('capStatus');
       status.textContent = _vlb('capacity_saved', '✓ Saved: {n} / day').replace('{n}', val);
       setTimeout(function () { status.textContent = ''; }, 3000);
-      showToast('Cập nhật sản lượng: ' + val + ' cuốn/ngày', 'success');
+      showToast(_vlb('toast_capacity', '✓ Updated: {n} / day').replace('{n}', val), 'success');
       if (_activeTab === 'orders') {
         if (_orderView === 'cal') renderCalendar();
         else renderOrders();
       }
     }).catch(function (err) {
-      showToast('Lỗi: ' + err.message, 'error');
+      showToast(_vlb('err_prefix', 'Error: ') + err.message, 'error');
     });
   }
 
@@ -2920,7 +2919,7 @@
 
     // Validate phone: must be E.164 if provided
     if (phone && !/^\+1[0-9]{10}$/.test(phone)) {
-      status.textContent = '✕ Số điện thoại phải là +1XXXXXXXXXX';
+      status.textContent = '✕ ' + _vlb('err_phone_format', 'Phone must be +1XXXXXXXXXX');
       status.style.color = '#f87171';
       return;
     }
@@ -2983,10 +2982,10 @@
   function handleHeroImageUpload(input) {
     var file = input.files[0];
     if (!file) return;
-    if (!VENDOR_ID) { showToast('Thiếu vendorId.', 'error'); return; }
+    if (!VENDOR_ID) { showToast(_vlb('err_missing_vendor_id', 'Missing vendor ID.'), 'error'); return; }
 
     var status = document.getElementById('heroUploadStatus');
-    status.textContent = 'Đang tải lên...';
+    status.textContent = _vlb('uploading', 'Uploading…');
     status.style.color = 'var(--text-muted)';
 
     var previewReader = new FileReader();
@@ -3005,20 +3004,20 @@
           if (result.data && result.data.ok && result.data.url) {
             _heroImageUrl = result.data.url;
             _setHeroPreview(result.data.url);
-            status.textContent = '✓ Đã tải lên — nhấn Lưu để áp dụng';
+            status.textContent = '✓ ' + _vlb('hero_uploaded', 'Uploaded — press Save to apply');
             status.style.color = 'var(--gold)';
           } else {
-            throw new Error((result.data && result.data.error) || 'Lỗi không rõ');
+            throw new Error((result.data && result.data.error) || _vlb('err_unknown', 'Unknown error.'));
           }
         })
         .catch(function (err) {
-          status.textContent = '✕ ' + (err.message || 'Lỗi upload');
+          status.textContent = '✕ ' + (err.message || _vlb('err_upload_short', 'Upload error'));
           status.style.color = '#f87171';
-          showToast('Lỗi upload ảnh nền: ' + (err.message || String(err)), 'error');
+          showToast(_vlb('err_hero_upload', 'Hero image upload error: ') + (err.message || String(err)), 'error');
         });
     };
     b64reader.onerror = function () {
-      status.textContent = '✕ Không đọc được file';
+      status.textContent = '✕ ' + _vlb('err_read_file', 'Could not read file');
       status.style.color = '#f87171';
     };
     b64reader.readAsDataURL(file);
@@ -3026,7 +3025,7 @@
 
   function saveHeroImage() {
     var saveStatus = document.getElementById('heroSaveStatus');
-    if (!_heroImageUrl) { showToast('Chưa chọn ảnh nền.', 'error'); return; }
+    if (!_heroImageUrl) { showToast(_vlb('err_no_hero', 'No hero image selected.'), 'error'); return; }
     var x = parseInt(document.getElementById('heroImgX').value, 10);
     var y = parseInt(document.getElementById('heroImgY').value, 10);
     vendorRef.update({
@@ -3035,7 +3034,7 @@
       heroImagePositionY: y,
       updatedAt:          firebase.firestore.FieldValue.serverTimestamp()
     }).then(function () {
-      saveStatus.textContent = '✓ Đã lưu';
+      saveStatus.textContent = _vlb('saved', '✓ Saved');
       saveStatus.style.color = 'var(--gold)';
       document.getElementById('heroUploadStatus').textContent = '';
       setTimeout(function () { saveStatus.textContent = ''; }, 3000);
@@ -3075,10 +3074,10 @@
     if (!btn || !panel) return;
 
     btn.disabled    = true;
-    btn.textContent = '⏳ Đang tạo...';
+    btn.textContent = '⏳ ' + _vlb('btn_generating', 'Generating…');
 
     // Show progress card
-    panel.innerHTML = renderAIProgressCard('Đang phân tích sản phẩm...');
+    panel.innerHTML = renderAIProgressCard(_vlb('ai_analyzing', 'Analyzing product…'));
     panel.style.display = 'block';
 
     var vendorObj = {
@@ -3093,11 +3092,11 @@
     try {
       // Stage 1: check engine loaded
       if (!window.DLCMarketing) {
-        throw Object.assign(new Error('marketingEngine.js chưa tải'), { vendorMessage: 'Trang chưa sẵn sàng. Vui lòng tải lại (F5).' });
+        throw Object.assign(new Error('marketingEngine.js not loaded'), { vendorMessage: _vlb('err_ai_not_ready', 'Page not ready. Please reload (F5).') });
       }
 
       // Stage 2: show progress
-      panel.innerHTML = renderAIProgressCard('Đang tạo nội dung marketing...');
+      panel.innerHTML = renderAIProgressCard(_vlb('ai_generating', 'Generating marketing content…'));
 
       var result = await DLCMarketing.enhance(item, vendorObj, { region: vendorObj.region });
 
@@ -3119,7 +3118,7 @@
       var userMsg = err.vendorMessage || getVendorFriendlyError(err);
       panel.innerHTML     = renderAIErrorCard(userMsg, err.debugCode);
       panel.style.display = 'block';
-      btn.textContent     = '✨ Thử lại';
+      btn.textContent     = '✨ ' + _vlb('btn_retry', 'Try Again');
       btn.disabled        = false;
     }
   }
@@ -3133,25 +3132,25 @@
 
   function renderAIErrorCard(msg, debugCode) {
     var hint = debugCode === 'UNAUTHENTICATED'
-      ? ' Vui lòng đăng xuất và đăng nhập lại.'
+      ? ' ' + _vlb('err_relogin', 'Please log out and log in again.')
       : debugCode === 'RATE_LIMIT'
-      ? ' Thử lại sau 30 giây.'
+      ? ' ' + _vlb('err_rate_limit', 'Try again in 30 seconds.')
       : '';
     return '<div style="padding:.65rem .75rem;background:rgba(239,68,68,.08);border-radius:8px;border:1px solid rgba(239,68,68,.25)">' +
-      '<div style="font-size:.78rem;color:#f87171;margin-bottom:.2rem;font-weight:600">Không thể tạo nội dung</div>' +
+      '<div style="font-size:.78rem;color:#f87171;margin-bottom:.2rem;font-weight:600">' + _vlb('ai_error_title', 'Unable to generate content') + '</div>' +
       '<div style="font-size:.75rem;color:var(--text-muted)">' + esc(msg) + esc(hint) + '</div>' +
       '</div>';
   }
 
   function getVendorFriendlyError(err) {
     var msg = (err.message || '').toLowerCase();
-    if (/no-.*-key|no key|chưa tải/.test(msg))     return 'Dịch vụ AI chưa sẵn sàng. Vui lòng tải lại trang.';
-    if (/rate.?limit|429/.test(msg))                return 'AI đang bận. Vui lòng thử lại sau 30 giây.';
-    if (/timeout|etimedout/.test(msg))              return 'AI mất quá nhiều thời gian. Vui lòng thử lại.';
-    if (/network|enotfound|fetch/.test(msg))        return 'Lỗi kết nối mạng. Kiểm tra internet và thử lại.';
-    if (/auth|unauthorized|401/.test(msg))          return 'Lỗi xác thực. Vui lòng đăng nhập lại.';
-    if (/all providers failed/.test(msg))           return 'AI tạm thời không khả dụng. Vui lòng thử lại sau.';
-    return 'Đã có lỗi xảy ra. Vui lòng thử lại.';
+    if (/no-.*-key|no key|not loaded/.test(msg))    return _vlb('err_ai_not_ready', 'AI service not ready. Please reload.');
+    if (/rate.?limit|429/.test(msg))                return _vlb('err_ai_busy', 'AI is busy. Try again in 30 seconds.');
+    if (/timeout|etimedout/.test(msg))              return _vlb('err_ai_timeout', 'AI took too long. Please try again.');
+    if (/network|enotfound|fetch/.test(msg))        return _vlb('err_ai_network', 'Network error. Check internet and try again.');
+    if (/auth|unauthorized|401/.test(msg))          return _vlb('err_ai_auth', 'Auth error. Please log in again.');
+    if (/all providers failed/.test(msg))           return _vlb('err_ai_unavailable', 'AI temporarily unavailable. Try again later.');
+    return _vlb('err_ai_generic', 'An error occurred. Please try again.');
   }
 
   function renderAIReviewPanel(itemId, result) {
@@ -3188,23 +3187,23 @@
       titleEn = (f.title && f.title.en) || '';
     }
     if (titleVi) {
-      html += aiFieldRow(itemId, 'Tên món', titleVi, titleEn, 'name');
+      html += aiFieldRow(itemId, _vlb('ai_fld_name', 'Item Name'), titleVi, titleEn, 'name');
     }
 
     // Description
     var descVi = (f.description && f.description.vi) || '';
-    if (descVi) html += aiFieldRow(itemId, 'Mô tả (VI)', descVi, '', 'description');
+    if (descVi) html += aiFieldRow(itemId, _vlb('ai_fld_desc_vi', 'Description (VI)'), descVi, '', 'description');
 
     // Description EN
     var descEn = (f.description && f.description.en) || '';
-    if (descEn) html += aiFieldRow(itemId, 'Mô tả (EN)', descEn, '', 'descriptionEn');
+    if (descEn) html += aiFieldRow(itemId, _vlb('ai_fld_desc_en', 'Description (EN)'), descEn, '', 'descriptionEn');
 
     // Ad copy
     var adVi = (f.adCopy && f.adCopy.vi) || '';
-    if (adVi) html += aiFieldRow(itemId, 'Quảng cáo (VI)', adVi, '', 'adCopyVi');
+    if (adVi) html += aiFieldRow(itemId, _vlb('ai_fld_ad_vi', 'Ad Copy (VI)'), adVi, '', 'adCopyVi');
 
     var adEn = (f.adCopy && f.adCopy.en) || '';
-    if (adEn) html += aiFieldRow(itemId, 'Quảng cáo (EN)', adEn, '', 'adCopyEn');
+    if (adEn) html += aiFieldRow(itemId, _vlb('ai_fld_ad_en', 'Ad Copy (EN)'), adEn, '', 'adCopyEn');
 
     // Promo text
     var promoVi = (f.promoText && f.promoText.vi) || '';
@@ -3212,7 +3211,7 @@
 
     // Short description
     var shortVi = (f.shortDescription && f.shortDescription.vi) || '';
-    if (shortVi) html += aiFieldRow(itemId, 'Mô tả ngắn', shortVi, '', 'shortDescription');
+    if (shortVi) html += aiFieldRow(itemId, _vlb('ai_fld_short', 'Short Description'), shortVi, '', 'shortDescription');
 
     // Tags
     var tags = (f.tags && f.tags.values) || [];
@@ -3220,7 +3219,7 @@
       html += '<div class="ai-field-row">';
       html += '<div><div class="ai-field-label">Tags</div>';
       html += '<div class="ai-tags">' + tags.map(function(t){ return '<span class="ai-tag">' + esc(t) + '</span>'; }).join('') + '</div></div>';
-      html += '<button class="ai-field-apply" onclick="applyAISuggestion(\'' + esc(itemId) + '\',\'tags\',' + JSON.stringify(tags) + ')">✓ Áp dụng</button>';
+      html += '<button class="ai-field-apply" onclick="applyAISuggestion(\'' + esc(itemId) + '\',\'tags\',' + JSON.stringify(tags) + ')">✓ ' + _vlb('btn_apply', 'Apply') + '</button>';
       html += '</div>';
     }
 
@@ -3232,7 +3231,7 @@
       html += '<details style="margin-top:.5rem">';
       html += '<summary style="font-size:.65rem;color:#a78bfa;cursor:pointer;list-style:none">🎬 Video Script ▾</summary>';
       if (rProps && rProps.accentColor) {
-        html += '<div style="margin-top:.35rem;font-size:.72rem">Màu accent: <span style="color:' + esc(rProps.accentColor) + '">' + esc(rProps.accentColor) + ' ■</span></div>';
+        html += '<div style="margin-top:.35rem;font-size:.72rem">' + _vlb('ai_accent_color', 'Accent color') + ': <span style="color:' + esc(rProps.accentColor) + '">' + esc(rProps.accentColor) + ' ■</span></div>';
       }
       if (rCmd) {
         html += '<div class="ai-render-box" style="margin-top:.35rem">' + esc(rCmd) + '</div>';
@@ -3246,7 +3245,7 @@
     }
 
     // Apply All button
-    html += '<div class="ai-apply-all-row"><button class="btn--ai-apply-all" onclick="applyAllAISuggestions(\'' + esc(itemId) + '\')">✓ Áp dụng tất cả</button></div>';
+    html += '<div class="ai-apply-all-row"><button class="btn--ai-apply-all" onclick="applyAllAISuggestions(\'' + esc(itemId) + '\')">✓ ' + _vlb('btn_apply_all', 'Apply All') + '</button></div>';
 
     return html;
   }
@@ -3260,7 +3259,7 @@
     html += '<div class="ai-field-value">' + esc(primary);
     if (secondary) html += ' <em>· ' + esc(secondary) + '</em>';
     html += '</div></div>';
-    html += '<button class="ai-field-apply" id="aiApply-' + esc(itemId) + '-' + esc(field) + '" onclick="applyAISuggestion(\'' + esc(itemId) + '\',\'' + esc(field) + '\',' + applyVal + ')">✓ Áp dụng</button>';
+    html += '<button class="ai-field-apply" id="aiApply-' + esc(itemId) + '-' + esc(field) + '" onclick="applyAISuggestion(\'' + esc(itemId) + '\',\'' + esc(field) + '\',' + applyVal + ')">✓ ' + _vlb('btn_apply', 'Apply') + '</button>';
     html += '</div>';
     return html;
   }
@@ -3290,9 +3289,9 @@
     try {
       if (btn) { btn.disabled = true; btn.textContent = '…'; }
       await menuRef.doc(itemId).update(update);
-      if (btn) { btn.classList.add('applied'); btn.textContent = '✓ Đã lưu'; btn.disabled = false; }
+      if (btn) { btn.classList.add('applied'); btn.textContent = '✓ ' + _vlb('applied', 'Applied'); btn.disabled = false; }
     } catch (err) {
-      if (btn) { btn.textContent = '✕ Lỗi'; btn.disabled = false; }
+      if (btn) { btn.textContent = '✕ ' + _vlb('error_short', 'Error'); btn.disabled = false; }
       console.error('applyAISuggestion:', err);
     }
   }
@@ -3325,18 +3324,18 @@
     if (!Object.keys(update).length) return;
 
     var applyBtn = document.querySelector('#aiPanel-' + itemId + ' .btn--ai-apply-all');
-    if (applyBtn) { applyBtn.disabled = true; applyBtn.textContent = '⏳ Đang lưu...'; }
+    if (applyBtn) { applyBtn.disabled = true; applyBtn.textContent = '⏳ ' + _vlb('btn_saving', 'Saving…'); }
 
     try {
       await menuRef.doc(itemId).update(update);
-      if (applyBtn) { applyBtn.textContent = '✓ Đã áp dụng ' + Object.keys(update).length + ' trường'; }
+      if (applyBtn) { applyBtn.textContent = '✓ ' + _vlb('applied_n', 'Applied {n} fields').replace('{n}', Object.keys(update).length); }
       // Mark individual apply buttons as done
       Object.keys(update).forEach(function(f) {
         var btn = document.getElementById('aiApply-' + itemId + '-' + f);
-        if (btn) { btn.classList.add('applied'); btn.textContent = '✓ Đã lưu'; }
+        if (btn) { btn.classList.add('applied'); btn.textContent = '✓ ' + _vlb('applied', 'Applied'); }
       });
     } catch (err) {
-      if (applyBtn) { applyBtn.textContent = '✕ Lỗi'; applyBtn.disabled = false; }
+      if (applyBtn) { applyBtn.textContent = '✕ ' + _vlb('error_short', 'Error'); applyBtn.disabled = false; }
       console.error('applyAllAISuggestions:', err);
     }
   }
@@ -3415,7 +3414,7 @@
     var actions = document.getElementById('popupActions');
     if (actions) {
       var btn = actions.querySelector('.np-action-confirm');
-      if (btn) { btn.textContent = '✓ Đã xác nhận!'; btn.disabled = true; }
+      if (btn) { btn.textContent = '✓ ' + _vlb('toast_esc_confirmed', 'Confirmed!'); btn.disabled = true; }
     }
   }
 
@@ -3437,7 +3436,7 @@
     var bar = document.getElementById('staffFilterBar');
     if (!bar) return;
     var html = '<button class="staff-chip' + (_staffFilter === 'all' ? ' active' : '') +
-      '" onclick="setStaffFilter(\'all\')">Tất cả</button>';
+      '" onclick="setStaffFilter(\'all\')">' + _vlb('staff_filter_all', 'All') + '</button>';
     _allStaff.forEach(function(name) {
       var active = _staffFilter === name ? ' active' : '';
       html += '<button class="staff-chip' + active + '" onclick="setStaffFilter(' +
@@ -3489,8 +3488,8 @@
   }
 
   function _renderNextApptBanner(o) {
-    var base = '<div class="next-appt"><div class="next-appt__lbl">&#9200; Lịch Hẹn Tiếp Theo</div>';
-    if (!o) return base + '<div style="font-size:.74rem;color:var(--muted);font-style:italic">Không có lịch hẹn sắp tới.</div></div>';
+    var base = '<div class="next-appt"><div class="next-appt__lbl">&#9200; ' + _vlb('next_appt_title', 'Next Appointment') + '</div>';
+    if (!o) return base + '<div style="font-size:.74rem;color:var(--muted);font-style:italic">' + _vlb('next_appt_none', 'No upcoming appointments.') + '</div></div>';
     var svcs = (Array.isArray(o.services) && o.services.length ? o.services : [o.serviceType || o.variant || o.itemName || '']).filter(Boolean).join(' + ');
     var staff = (o.staff && o.staff.toLowerCase() !== 'any') ? o.staff : '';
     var timeStr = _fmtTime12(o.requestedTime);
@@ -3565,8 +3564,8 @@
 
     if (phone) {
       html += '<div class="va-order-card__contact">' +
-        '<a href="tel:' + esc(phone) + '" class="btn btn--ghost btn--call btn--sm">&#128222; Gọi</a>' +
-        '<a href="sms:' + esc(phone) + '?body=' + encodeURIComponent(smsBody) + '" class="btn btn--ghost btn--text btn--sm">&#128172; Nhắn</a>' +
+        '<a href="tel:' + esc(phone) + '" class="btn btn--ghost btn--call btn--sm">&#128222; ' + _vlb('btn_call', 'Call') + '</a>' +
+        '<a href="sms:' + esc(phone) + '?body=' + encodeURIComponent(smsBody) + '" class="btn btn--ghost btn--text btn--sm">&#128172; ' + _vlb('btn_text', 'Text') + '</a>' +
       '</div>';
     }
 
@@ -3604,7 +3603,7 @@
       // Update counts
       var active = allOrders.filter(function (o) { return o.status !== 'cancelled'; });
       document.getElementById('ordersCount').textContent = active.length ? ' (' + active.length + ')' : '';
-      document.getElementById('ordersTotal').textContent = allOrders.length + ' đơn';
+      document.getElementById('ordersTotal').textContent = _vlb('orders_count', '{n} orders').replace('{n}', allOrders.length);
       // Hide loading, show active view
       document.getElementById('ordersLoading').style.display = 'none';
       document.getElementById('calView').style.display  = _orderView === 'cal'  ? '' : 'none';
@@ -3614,7 +3613,7 @@
     }
     function handleOrderErr(err2) {
       document.getElementById('ordersLoading').innerHTML =
-        '<div style="color:var(--danger);padding:1rem;font-size:.8rem">Lỗi tải đơn hàng: ' + esc(err2.code || err2.message) + '</div>';
+        '<div style="color:var(--danger);padding:1rem;font-size:.8rem">' + _vlb('err_load_orders', 'Failed to load orders: ') + esc(err2.code || err2.message) + '</div>';
     }
 
     unsubOrders = bookingsRef.orderBy('requestedDate').onSnapshot(handleOrderSnap, function () {
@@ -3731,7 +3730,7 @@
       return (o.staff || '').toLowerCase() === _staffFilter.toLowerCase();
     });
     var d         = new Date(dateStr + 'T12:00:00');
-    var days      = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+    var days      = _vlb('day_names_long', 'Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday').split(',');
     var dateLabel = days[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
 
     var booked    = dayOrders.reduce(function (s, o) {
@@ -3740,8 +3739,8 @@
     var remaining = Math.max(0, maxCap - booked);
     var capCls = remaining <= 0 ? 'cap-full' : (remaining < 60 ? 'cap-low' : '');
     var capTxt = remaining <= 0
-      ? 'Hết chỗ · ' + booked + '/' + maxCap
-      : booked + '/' + maxCap + ' · còn ' + remaining;
+      ? _vlb('cap_full', 'Full · {b}/{m}').replace('{b}', booked).replace('{m}', maxCap)
+      : booked + '/' + maxCap + ' · ' + _vlb('cap_left', '{n} left').replace('{n}', remaining);
 
     var html = '<div class="cal-detail__hdr">' +
       '<div class="cal-detail__date">' + esc(dateLabel) + '</div>' +
@@ -3749,7 +3748,7 @@
       '</div><div class="cal-detail__body">';
 
     if (dayOrders.length === 0) {
-      html += '<div class="cal-detail__empty">Không có đơn hàng ngày này.</div>';
+      html += '<div class="cal-detail__empty">' + _vlb('cal_empty_day', 'No orders for this day.') + '</div>';
     } else {
       // Sort: pending first
       var statusOrder = { pending:0, confirmed:1, preparing:2, completed:3, cancelled:4 };
@@ -3776,8 +3775,8 @@
 
     if (orders.length === 0) {
       list.innerHTML = (allOrders.length === 0
-        ? '<div class="va-orders-empty">Chưa có đơn hàng nào.<br>Đơn hàng từ trang công khai sẽ xuất hiện ở đây.</div>'
-        : '<div class="va-orders-empty">Không có lịch hẹn nào cho nhân viên này.</div>');
+        ? '<div class="va-orders-empty">' + _vlb('orders_empty', 'No orders yet.<br>Orders from the public page will appear here.') + '</div>'
+        : '<div class="va-orders-empty">' + _vlb('orders_empty_staff', 'No appointments for this staff member.') + '</div>');
       return;
     }
 
@@ -3802,13 +3801,13 @@
       var remaining = Math.max(0, maxCap - booked);
       var capCls = remaining <= 0 ? 'cap-full' : (remaining < 60 ? 'cap-low' : '');
       var capTxt = remaining <= 0
-        ? 'Hết chỗ (' + booked + '/' + maxCap + ')'
-        : booked + '/' + maxCap + ' · còn ' + remaining;
+        ? _vlb('cap_full_paren', 'Full ({b}/{m})').replace('{b}', booked).replace('{m}', maxCap)
+        : booked + '/' + maxCap + ' · ' + _vlb('cap_left', '{n} left').replace('{n}', remaining);
 
       var dateLabel = k;
       if (/^\d{4}-\d{2}-\d{2}$/.test(k)) {
         var d = new Date(k + 'T12:00:00');
-        var dayNames = ['CN','T2','T3','T4','T5','T6','T7'];
+        var dayNames = _vlb('day_names', 'Sun,Mon,Tue,Wed,Thu,Fri,Sat').split(',');
         dateLabel = dayNames[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear().toString().slice(-2);
       }
 
@@ -3858,8 +3857,8 @@
 
     if (o.customerPhone) {
       html += '<div class="va-order-card__contact">' +
-        '<a href="tel:' + esc(o.customerPhone) + '" class="btn btn--ghost btn--call btn--sm">&#128222; Gọi</a>' +
-        '<a href="sms:' + esc(o.customerPhone) + '?body=' + encodeURIComponent(smsBody) + '" class="btn btn--ghost btn--text btn--sm">&#128172; Nhắn</a>' +
+        '<a href="tel:' + esc(o.customerPhone) + '" class="btn btn--ghost btn--call btn--sm">&#128222; ' + _vlb('btn_call', 'Call') + '</a>' +
+        '<a href="sms:' + esc(o.customerPhone) + '?body=' + encodeURIComponent(smsBody) + '" class="btn btn--ghost btn--text btn--sm">&#128172; ' + _vlb('btn_text', 'Text') + '</a>' +
       '</div>';
     }
 
@@ -3984,7 +3983,7 @@
     badge.textContent     = items.length;
     badge.style.display   = 'inline-block';
 
-    var typeLabels = { order: '&#128722; Đơn hàng', appointment: '&#128197; Hẹn', reservation: '&#128203; Đặt chỗ', question: '&#128172; Câu hỏi' };
+    var typeLabels = { order: '&#128722; ' + _vlb('esc_type_order', 'Order'), appointment: '&#128197; ' + _vlb('esc_type_appt', 'Appointment'), reservation: '&#128203; ' + _vlb('esc_type_res', 'Reservation'), question: '&#128172; ' + _vlb('esc_type_q', 'Question') };
 
     list.innerHTML = items.map(function (item) {
       var timeStr = '';
@@ -3992,7 +3991,7 @@
         var d = item.createdAt.toDate();
         timeStr = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
       }
-      var typeLabel = typeLabels[item.escalationType] || item.escalationType || 'Yêu cầu';
+      var typeLabel = typeLabels[item.escalationType] || item.escalationType || _vlb('esc_type_request', 'Request');
       var escId = item.id;
       var appt  = item.appointmentData || {};
 
@@ -4003,11 +4002,11 @@
           ? '<strong>' + esc((appt.services || []).join(', ')) + '</strong>'
           : '';
         var durHtml = appt.totalDurationMins
-          ? ' <span style="color:var(--muted);font-size:.75rem">(' + appt.totalDurationMins + ' phút)</span>'
+          ? ' <span style="color:var(--muted);font-size:.75rem">(' + appt.totalDurationMins + ' ' + _vlb('min', 'min') + ')</span>'
           : '';
         // Status badge
         var statusColors = { vendor_confirmed:'#4ade80', vendor_declined:'#f87171', vendor_replied:'#60a5fa', pending_vendor_response:'#e8a800' };
-        var statusLabels = { vendor_confirmed:'Đã xác nhận', vendor_declined:'Đã từ chối', vendor_replied:'Đã phản hồi', pending_vendor_response:'Chờ xác nhận' };
+        var statusLabels = { vendor_confirmed:_vlb('appt_confirmed','Confirmed'), vendor_declined:_vlb('appt_declined','Declined'), vendor_replied:_vlb('appt_replied','Replied'), pending_vendor_response:_vlb('appt_pending','Pending') };
         var itemStatus = item.status || 'pending_vendor_response';
         var statusBadge = '<span style="font-size:.68rem;font-weight:600;padding:.1rem .45rem;border-radius:10px;background:' +
           (statusColors[itemStatus] || '#888') + '22;color:' + (statusColors[itemStatus] || '#aaa') + ';border:1px solid ' +
@@ -4029,12 +4028,12 @@
           : '';
         var photoHtml = appt.inspirationPhotoUrl
           ? '<div style="margin-top:.5rem">' +
-              '<div style="font-size:.72rem;color:var(--muted);margin-bottom:.3rem">&#128247; Ảnh tham khảo:</div>' +
+              '<div style="font-size:.72rem;color:var(--muted);margin-bottom:.3rem">&#128247; ' + _vlb('ref_photo', 'Reference photo:') + '</div>' +
               '<a href="' + esc(appt.inspirationPhotoUrl) + '" target="_blank" style="display:inline-block">' +
-                '<img src="' + esc(appt.inspirationPhotoUrl) + '" alt="Ảnh tham khảo" ' +
+                '<img src="' + esc(appt.inspirationPhotoUrl) + '" alt="Reference photo" ' +
                   'style="max-width:100%;max-height:140px;border-radius:6px;border:1px solid var(--border-g);object-fit:cover;display:block" ' +
                   'onerror="this.style.display=\'none\';this.nextSibling.style.display=\'inline\'">' +
-                '<span style="display:none;font-size:.76rem;color:var(--gold)">&#128247; Xem ảnh tham khảo (link)</span>' +
+                '<span style="display:none;font-size:.76rem;color:var(--gold)">&#128247; ' + _vlb('ref_photo_link', 'View reference photo (link)') + '</span>' +
               '</a>' +
             '</div>'
           : '';
@@ -4061,15 +4060,15 @@
         var smsReschedule = buildApptSmsReschedule(appt);
         contactHtml =
           '<button class="btn btn--ghost btn--sm" onclick="OrderMessaging.call(\'' + esc(appt.phone) + '\')">' +
-            '&#128222; Gọi</button>' +
-          '<button class="btn btn--ghost btn--sm" title="Gửi SMS xác nhận lịch hẹn" onclick="OrderMessaging.text(\'' + esc(appt.phone) + '\',\'' + esc(smsConfirm) + '\')">' +
-            '&#10003; SMS Xác nhận</button>' +
+            '&#128222; ' + _vlb('btn_call', 'Call') + '</button>' +
+          '<button class="btn btn--ghost btn--sm" title="' + _vlb('sms_confirm_title', 'Send confirmation SMS') + '" onclick="OrderMessaging.text(\'' + esc(appt.phone) + '\',\'' + esc(smsConfirm) + '\')">' +
+            '&#10003; ' + _vlb('btn_sms_confirm', 'SMS Confirm') + '</button>' +
           (appt.inspirationPhotoUrl
-            ? '<button class="btn btn--ghost btn--sm" title="Yêu cầu ảnh rõ hơn" onclick="OrderMessaging.text(\'' + esc(appt.phone) + '\',\'' + esc(smsNeedPhoto) + '\')">' +
-                '&#128247; SMS Ảnh</button>'
+            ? '<button class="btn btn--ghost btn--sm" title="' + _vlb('sms_photo_title', 'Request clearer photo') + '" onclick="OrderMessaging.text(\'' + esc(appt.phone) + '\',\'' + esc(smsNeedPhoto) + '\')">' +
+                '&#128247; ' + _vlb('btn_sms_photo', 'SMS Photo') + '</button>'
             : '') +
-          '<button class="btn btn--ghost btn--sm" title="Đề xuất đổi giờ" onclick="OrderMessaging.text(\'' + esc(appt.phone) + '\',\'' + esc(smsReschedule) + '\')">' +
-            '&#128337; SMS Đổi giờ</button>';
+          '<button class="btn btn--ghost btn--sm" title="' + _vlb('sms_reschedule_title', 'Suggest new time') + '" onclick="OrderMessaging.text(\'' + esc(appt.phone) + '\',\'' + esc(smsReschedule) + '\')">' +
+            '&#128337; ' + _vlb('btn_sms_reschedule', 'SMS Reschedule') + '</button>';
       }
 
       var replyInputId = 'esc_reply_' + escId;
@@ -4085,16 +4084,16 @@
         detailHtml +
         '<div class="notif-card__actions" style="flex-wrap:wrap;gap:.4rem">' +
           '<button class="btn btn--ok btn--sm" onclick="respondEscalation(\'' + escId + '\',\'vendor_confirmed\',null)">' +
-            '&#10003; Xác nhận</button>' +
+            '&#10003; ' + _vlb('btn_confirm', 'Confirm') + '</button>' +
           '<button class="btn btn--ghost btn--sm" style="border-color:#e05252;color:#e05252" onclick="respondEscalation(\'' + escId + '\',\'vendor_declined\',null)">' +
-            '&#10007; Từ chối</button>' +
+            '&#10007; ' + _vlb('btn_decline', 'Decline') + '</button>' +
           contactHtml +
         '</div>' +
         '<div style="display:flex;gap:.4rem;margin-top:.4rem">' +
-          '<input id="' + replyInputId + '" type="text" placeholder="Nhắn tin tới khách…" ' +
+          '<input id="' + replyInputId + '" type="text" placeholder="' + _vlb('reply_placeholder', 'Message to customer…') + '" ' +
             'style="flex:1;height:36px;padding:0 10px;background:var(--navy-900);border:1px solid var(--border-g);border-radius:8px;color:var(--text);font-size:.82rem;font-family:var(--font-b)">' +
           '<button class="btn btn--gold btn--sm" onclick="respondEscalation(\'' + escId + '\',\'vendor_replied\',document.getElementById(\'' + replyInputId + '\').value)">' +
-            '&#128172; Gửi</button>' +
+            '&#128172; ' + _vlb('btn_send', 'Send') + '</button>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -4105,8 +4104,8 @@
     if (message && message.trim()) update.vendorMessage = message.trim();
     db.collection('escalations').doc(escId).update(update)
       .then(function () {
-        var labels = { vendor_confirmed: 'Đã xác nhận!', vendor_declined: 'Đã từ chối.', vendor_replied: 'Đã gửi phản hồi!' };
-        showToast(labels[status] || 'Đã cập nhật.', 'success');
+        var labels = { vendor_confirmed: _vlb('toast_esc_confirmed', 'Confirmed!'), vendor_declined: _vlb('toast_esc_declined', 'Declined.'), vendor_replied: _vlb('toast_esc_replied', 'Reply sent!') };
+        showToast(labels[status] || _vlb('toast_updated', 'Updated.'), 'success');
       })
       .catch(function (err) { showToast('Lỗi: ' + err.message, 'error'); });
   }
@@ -4121,7 +4120,7 @@
     list.style.display    = 'block';
 
     if (allNotifs.length === 0) {
-      list.innerHTML = '<div class="notif-empty">Chưa có thông báo nào.<br>Đơn hàng mới sẽ xuất hiện ở đây.</div>';
+      list.innerHTML = '<div class="notif-empty">' + _vlb('notifs_empty', 'No notifications yet.<br>New orders will appear here.') + '</div>';
       return;
     }
 
@@ -4139,7 +4138,7 @@
       var dateLabel = '';
       if (n.requestedDate && /^\d{4}-\d{2}-\d{2}$/.test(n.requestedDate)) {
         var d2 = new Date(n.requestedDate + 'T12:00:00');
-        var dayNames = ['CN','T2','T3','T4','T5','T6','T7'];
+        var dayNames = _vlb('day_names', 'Sun,Mon,Tue,Wed,Thu,Fri,Sat').split(',');
         dateLabel = dayNames[d2.getDay()] + ' ' + d2.getDate() + '/' + (d2.getMonth() + 1);
       }
       html += '<div class="' + cls + '" onclick="markNotifRead(\'' + n.id + '\')">' +
@@ -4147,7 +4146,7 @@
           '<div class="notif-card__title-wrap">' +
             (isUnread ? '<div class="notif-card__dot"></div>' : '') +
             '<div class="notif-card__type-icon">' + typeIcon + '</div>' +
-            '<div class="notif-card__title">' + esc(n.title || 'Thông báo') + '</div>' +
+            '<div class="notif-card__title">' + esc(n.title || _vlb('notif_fallback_title', 'Notification')) + '</div>' +
           '</div>' +
           '<div class="notif-card__time">' + esc(timeStr) + '</div>' +
         '</div>' +
@@ -4157,18 +4156,18 @@
 
       if (n.bookingId && !n.acknowledged) {
         html += '<button class="btn btn--ok btn--sm" onclick="event.stopPropagation();confirmFromNotif(\'' + esc(n.id) + '\',\'' + esc(n.bookingId) + '\')">' +
-          '&#10003; Xác nhận</button>';
+          '&#10003; ' + _vlb('btn_confirm', 'Confirm') + '</button>';
       }
       if (n.customerPhone) {
-        html += '<a href="tel:' + esc(n.customerPhone) + '" class="btn btn--ghost btn--call btn--sm" onclick="event.stopPropagation()">&#128222; Gọi</a>';
+        html += '<a href="tel:' + esc(n.customerPhone) + '" class="btn btn--ghost btn--call btn--sm" onclick="event.stopPropagation()">&#128222; ' + _vlb('btn_call', 'Call') + '</a>';
         var notifSms = buildSmsMessage(n);
-        html += '<a href="sms:' + esc(n.customerPhone) + '?body=' + encodeURIComponent(notifSms) + '" class="btn btn--ghost btn--text btn--sm" onclick="event.stopPropagation()">&#128172; Nhắn</a>';
+        html += '<a href="sms:' + esc(n.customerPhone) + '?body=' + encodeURIComponent(notifSms) + '" class="btn btn--ghost btn--text btn--sm" onclick="event.stopPropagation()">&#128172; ' + _vlb('btn_text', 'Text') + '</a>';
       }
       // Google Maps link: prefer pickup address, fall back to airport name
       var mapsAddr = (n.pickupAddress && n.pickupAddress.trim()) || '';
       if (!mapsAddr && n.airport) mapsAddr = n.airport + ' Airport California';
       if (mapsAddr) {
-        html += '<a href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(mapsAddr) + '" target="_blank" rel="noopener" class="btn btn--ghost btn--sm" onclick="event.stopPropagation()">&#128205; Bản đồ</a>';
+        html += '<a href="https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(mapsAddr) + '" target="_blank" rel="noopener" class="btn btn--ghost btn--sm" onclick="event.stopPropagation()">&#128205; ' + _vlb('btn_map', 'Map') + '</a>';
       }
 
       html += '</div></div>';
@@ -4232,20 +4231,20 @@
     _currentPopupNotif = notif;
     var isQuestion = notif.type === 'buyer_question';
     document.getElementById('popupIcon').innerHTML = isQuestion ? '&#128172;' : '&#128276;';
-    document.getElementById('popupTitle').textContent = notif.title   || (isQuestion ? 'Câu hỏi từ khách!' : 'Đơn hàng mới!');
+    document.getElementById('popupTitle').textContent = notif.title   || (isQuestion ? _vlb('popup_question', 'Customer Question!') : _vlb('popup_new_order', 'New Order!'));
     document.getElementById('popupMsg').textContent   = notif.message || '';
 
     // Build quick-action buttons
     var actionsHtml = '';
     if (notif.bookingId && !notif.acknowledged) {
-      actionsHtml += '<button class="np-action-btn np-action-confirm" onclick="confirmFromPopup()">&#10003; Xác nhận</button>';
+      actionsHtml += '<button class="np-action-btn np-action-confirm" onclick="confirmFromPopup()">&#10003; ' + _vlb('btn_confirm', 'Confirm') + '</button>';
     }
     if (notif.customerPhone) {
-      actionsHtml += '<a href="tel:' + esc(notif.customerPhone) + '" class="np-action-btn" onclick="dismissPopup()">&#128222; Gọi</a>';
+      actionsHtml += '<a href="tel:' + esc(notif.customerPhone) + '" class="np-action-btn" onclick="dismissPopup()">&#128222; ' + _vlb('btn_call', 'Call') + '</a>';
       var smsBody = buildSmsMessage(notif);
-      actionsHtml += '<a href="sms:' + esc(notif.customerPhone) + '?body=' + encodeURIComponent(smsBody) + '" class="np-action-btn" onclick="dismissPopup()">&#128172; Nhắn</a>';
+      actionsHtml += '<a href="sms:' + esc(notif.customerPhone) + '?body=' + encodeURIComponent(smsBody) + '" class="np-action-btn" onclick="dismissPopup()">&#128172; ' + _vlb('btn_text', 'Text') + '</a>';
     }
-    actionsHtml += '<button class="np-action-btn" onclick="openNotifTab()">Xem chi tiết</button>';
+    actionsHtml += '<button class="np-action-btn" onclick="openNotifTab()">' + _vlb('btn_view_detail', 'View details') + '</button>';
     document.getElementById('popupActions').innerHTML = actionsHtml;
 
     clearTimeout(_popupTimer);
@@ -4310,17 +4309,17 @@
     row.dataset.varIdx = String(idx);
     row.innerHTML =
       '<input type="text" class="var-row__label f-input" ' +
-        'placeholder="Tên loại (VD: Raw, Fresh)" value="' + esc(label) + '" ' +
+        'placeholder="' + _vlb('var_label_placeholder', 'e.g. Raw, Fresh') + '" value="' + esc(label) + '" ' +
         'aria-label="Variant label">' +
       '<input type="number" class="var-row__price" ' +
-        'placeholder="Giá $" min="0" step="0.01" value="' + esc(priceVal) + '" ' +
+        'placeholder="' + _vlb('var_price_placeholder', 'Price $') + '" min="0" step="0.01" value="' + esc(priceVal) + '" ' +
         'aria-label="Variant price">' +
-      '<label class="var-row__img-wrap" title="Ảnh riêng cho loại này — click để upload">' +
+      '<label class="var-row__img-wrap" title="' + _vlb('var_img_title', 'Photo for this type — click to upload') + '">' +
         '<img class="var-row__thumb' + hasImg + '" ' +
           'src="' + esc(imageUrl || '') + '" alt="">' +
         '<span class="var-row__img-icon' + iconHidden + '">' +
           '<svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>' +
-          '<small>Ảnh</small>' +
+          '<small>' + _vlb('var_img_label', 'Photo') + '</small>' +
         '</span>' +
         '<span class="var-row__img-prog" id="varProg_' + idx + '"></span>' +
         '<input type="file" class="var-row__file" accept="image/*" ' +
@@ -4328,7 +4327,7 @@
       '</label>' +
       '<input type="hidden" class="var-img-url" value="' + esc(imageUrl || '') + '">' +
       '<button type="button" class="var-row__remove" ' +
-        'onclick="removeVariantRow(this)" title="Xóa loại">×</button>';
+        'onclick="removeVariantRow(this)" title="' + _vlb('btn_remove_variant', 'Remove') + '">×</button>';
 
     // Wire file input change after DOM insertion (avoids inline handler escaping issues)
     builder.appendChild(row);
@@ -4365,13 +4364,13 @@
     previewReader.readAsDataURL(file);
 
     if (!VENDOR_ID) {
-      showToast('Không thể upload ảnh loại — thiếu vendorId.', 'error');
+      showToast(_vlb('err_missing_vendor_id', 'Missing vendor ID.'), 'error');
       return;
     }
 
     _uploadsInProgress++;
     _setSaveBlocked(true);
-    if (progEl) { progEl.classList.add('active'); progEl.textContent = 'Đang tải...'; }
+    if (progEl) { progEl.classList.add('active'); progEl.textContent = _vlb('loading', 'Loading…'); }
 
     var ext      = (file.name.split('.').pop() || 'jpg').toLowerCase();
     var fileName = 'v' + idx + '_' + Date.now() + '.' + ext;
@@ -4391,9 +4390,9 @@
             _uploadsInProgress = Math.max(0, _uploadsInProgress - 1);
             delete _varUploadTasks[idx];
             _setSaveBlocked(false);
-            showToast('Ảnh loại đã tải lên!', 'success');
+            showToast(_vlb('toast_variant_uploaded', 'Variant image uploaded!'), 'success');
           } else {
-            throw new Error((result.data && result.data.error) || 'Lỗi không rõ');
+            throw new Error((result.data && result.data.error) || _vlb('err_unknown', 'Unknown error.'));
           }
         })
         .catch(function (err) {
@@ -4401,7 +4400,7 @@
           delete _varUploadTasks[idx];
           _setSaveBlocked(false);
           if (progEl) progEl.classList.remove('active');
-          showToast('Lỗi upload ảnh loại: ' + (err.message || String(err)), 'error');
+          showToast(_vlb('err_variant_upload', 'Variant image upload error: ') + (err.message || String(err)), 'error');
         });
     };
     b64reader.onerror = function () {
@@ -4409,7 +4408,7 @@
       delete _varUploadTasks[idx];
       _setSaveBlocked(false);
       if (progEl) progEl.classList.remove('active');
-      showToast('Không đọc được file ảnh loại.', 'error');
+      showToast(_vlb('err_read_file', 'Could not read file.'), 'error');
     };
     b64reader.readAsDataURL(file);
   }
@@ -4502,6 +4501,87 @@
       toast_updated:'Updated.', toast_img_uploaded:'Image uploaded!', toast_video_done:'Video created!',
       toast_hero_saved:'Hero image saved!', toast_no_unread:'No unread notifications.',
       toast_marked_read:'Marked {n} read.',
+      toast_activated:'Item activated!', toast_hidden:'Item hidden.',
+      toast_capacity:'✓ Updated: {n} / day',
+      toast_emily_cleaned:'{n} items removed from this account.',
+      toast_variant_uploaded:'Variant image uploaded!',
+      toast_esc_confirmed:'Confirmed!', toast_esc_declined:'Declined.', toast_esc_replied:'Reply sent!',
+      // Errors
+      err_prefix:'Error: ', err_save:'Save error: ', err_load_data:'Failed to load data: ',
+      err_load_orders:'Failed to load orders: ', err_create_data:'Data error: ', err_create_item:'Item error: ',
+      err_name_required:'Please enter an item name.', err_min_qty:'Minimum quantity must be ≥ 1.',
+      err_upload_wait:'Image uploading — please wait before saving.',
+      err_price_required:'Enter a base price or add variant prices.',
+      err_invalid_qty:'Invalid quantity.', err_phone_format:'Phone must be +1XXXXXXXXXX',
+      err_missing_vendor_id:'Missing vendor ID.', err_no_hero:'No hero image selected.',
+      err_read_file:'Could not read file.', err_unknown:'Unknown error.',
+      err_network:'Connection error.', err_vendor_id:'Error: Vendor ID not ready.',
+      err_save_first:'Save item before generating video.',
+      err_upload_short:'Upload error', err_hero_upload:'Hero image upload error: ',
+      err_variant_upload:'Variant image upload error: ',
+      err_firestore_perm:'Firestore permission error (permission-denied).',
+      // AI errors
+      err_relogin:'Please log out and log in again.', err_rate_limit:'Try again in 30 seconds.',
+      err_ai_not_ready:'AI service not ready. Please reload.',
+      err_ai_busy:'AI is busy. Try again in 30 seconds.',
+      err_ai_timeout:'AI took too long. Please try again.',
+      err_ai_network:'Network error. Check internet and try again.',
+      err_ai_auth:'Auth error. Please log in again.',
+      err_ai_unavailable:'AI temporarily unavailable. Try again later.',
+      err_ai_generic:'An error occurred. Please try again.',
+      ai_error_title:'Unable to generate content',
+      // Status/progress
+      img_processing:'Processing…', btn_generating:'Generating…',
+      video_init:'Initializing — video ready in ~60 seconds…',
+      video_done_status:'Video created! Press Save to update.',
+      err_video:'Video error: ', hero_uploaded:'Uploaded — press Save to apply',
+      ai_analyzing:'Analyzing product…', ai_generating:'Generating marketing content…',
+      btn_saving:'Saving…', applied:'Applied', applied_n:'Applied {n} fields', error_short:'Error',
+      // Appt card
+      appt_confirmed:'Confirmed', appt_declined:'Declined', appt_replied:'Replied', appt_pending:'Pending',
+      min:'min', ref_photo:'Reference photo:', ref_photo_link:'View reference photo (link)',
+      // Buttons
+      btn_call:'Call', btn_text:'Text', btn_send:'Send', btn_map:'Map',
+      btn_decline:'Decline', btn_view_detail:'View details',
+      btn_sms_confirm:'SMS Confirm', btn_sms_photo:'SMS Photo', btn_sms_reschedule:'SMS Reschedule',
+      btn_remove_variant:'Remove',
+      // SMS button tooltips
+      sms_confirm_title:'Send confirmation SMS',
+      sms_photo_title:'Request clearer photo',
+      sms_reschedule_title:'Suggest new time',
+      // Notifications
+      notifs_empty:'No notifications yet.<br>New orders will appear here.',
+      notif_fallback_title:'Notification', popup_question:'Customer Question!',
+      reply_placeholder:'Message to customer…',
+      // Date/time
+      day_names:'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
+      // Misc
+      orders_count:'{n} orders', ph_name_vi_example:'e.g. Chả Giò…',
+      var_label_placeholder:'e.g. Raw, Fresh', var_price_placeholder:'Price $',
+      var_img_label:'Photo', var_img_title:'Photo for this type — click to upload',
+      // Focal sliders
+      focal_horiz:'← Horiz →', focal_vert:'↑ Vert ↓',
+      // Menu / orders empty states
+      menu_empty:'No items yet.<br>Tap <strong>+</strong> to add.',
+      orders_empty:'No orders yet.<br>Orders from the public page will appear here.',
+      orders_empty_staff:'No appointments for this staff member.',
+      cal_empty_day:'No orders for this day.',
+      // Next appointment
+      next_appt_title:'Next Appointment', next_appt_none:'No upcoming appointments.',
+      // Capacity
+      cap_full:'Full · {b}/{m}', cap_full_paren:'Full ({b}/{m})', cap_left:'{n} left',
+      // Load error
+      err_load_timeout:'Unable to load data.',
+      // Day names (long form for calendar)
+      day_names_long:'Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday',
+      // Escalation type labels
+      esc_type_order:'Order', esc_type_appt:'Appointment', esc_type_res:'Reservation',
+      esc_type_q:'Question', esc_type_request:'Request',
+      // AI review panel
+      ai_fld_name:'Item Name', ai_fld_desc_vi:'Description (VI)', ai_fld_desc_en:'Description (EN)',
+      ai_fld_ad_vi:'Ad Copy (VI)', ai_fld_ad_en:'Ad Copy (EN)', ai_fld_short:'Short Description',
+      ai_accent_color:'Accent color',
+      btn_apply:'Apply', btn_apply_all:'Apply All',
     },
     vi: {
       logout:'Đăng xuất', bell_title:'Thông báo',
@@ -4553,6 +4633,87 @@
       toast_updated:'Đã cập nhật.', toast_img_uploaded:'Tải ảnh thành công!', toast_video_done:'Video đã tạo xong!',
       toast_hero_saved:'Đã lưu ảnh nền!', toast_no_unread:'Không có thông báo chưa đọc.',
       toast_marked_read:'Đã đánh dấu đọc {n} thông báo.',
+      toast_activated:'Đã kích hoạt!', toast_hidden:'Đã ẩn món.',
+      toast_capacity:'✓ Đã cập nhật: {n} / ngày',
+      toast_emily_cleaned:'{n} món đã được xóa khỏi tài khoản này.',
+      toast_variant_uploaded:'Ảnh loại đã tải lên!',
+      toast_esc_confirmed:'Đã xác nhận!', toast_esc_declined:'Đã từ chối.', toast_esc_replied:'Đã gửi phản hồi!',
+      // Lỗi
+      err_prefix:'Lỗi: ', err_save:'Lỗi lưu: ', err_load_data:'Không tải được dữ liệu: ',
+      err_load_orders:'Lỗi tải đơn hàng: ', err_create_data:'Lỗi tạo dữ liệu: ', err_create_item:'Lỗi tạo món: ',
+      err_name_required:'Vui lòng nhập tên món.', err_min_qty:'Số lượng tối thiểu phải ≥ 1.',
+      err_upload_wait:'Ảnh đang tải lên — vui lòng đợi trước khi lưu.',
+      err_price_required:'Nhập giá sản phẩm hoặc thêm giá cho từng loại.',
+      err_invalid_qty:'Số lượng không hợp lệ.', err_phone_format:'Số điện thoại phải là +1XXXXXXXXXX',
+      err_missing_vendor_id:'Thiếu vendorId.', err_no_hero:'Chưa chọn ảnh nền.',
+      err_read_file:'Không đọc được file.', err_unknown:'Lỗi không xác định.',
+      err_network:'Lỗi kết nối.', err_vendor_id:'Lỗi: VENDOR_ID chưa sẵn sàng.',
+      err_save_first:'Lưu sản phẩm trước khi tạo video.',
+      err_upload_short:'Lỗi upload', err_hero_upload:'Lỗi upload ảnh nền: ',
+      err_variant_upload:'Lỗi upload ảnh loại: ',
+      err_firestore_perm:'Lỗi quyền truy cập Firestore (permission-denied).',
+      // Lỗi AI
+      err_relogin:'Vui lòng đăng xuất và đăng nhập lại.', err_rate_limit:'Thử lại sau 30 giây.',
+      err_ai_not_ready:'Dịch vụ AI chưa sẵn sàng. Vui lòng tải lại.',
+      err_ai_busy:'AI đang bận. Vui lòng thử lại sau 30 giây.',
+      err_ai_timeout:'AI mất quá nhiều thời gian. Vui lòng thử lại.',
+      err_ai_network:'Lỗi kết nối mạng. Kiểm tra internet và thử lại.',
+      err_ai_auth:'Lỗi xác thực. Vui lòng đăng nhập lại.',
+      err_ai_unavailable:'AI tạm thời không khả dụng. Vui lòng thử lại sau.',
+      err_ai_generic:'Đã có lỗi xảy ra. Vui lòng thử lại.',
+      ai_error_title:'Không thể tạo nội dung',
+      // Trạng thái / tiến trình
+      img_processing:'Đang xử lý…', btn_generating:'Đang tạo…',
+      video_init:'Đang khởi tạo — video sẵn sàng trong ~60 giây…',
+      video_done_status:'Video đã tạo xong! Nhấn Lưu lại để cập nhật.',
+      err_video:'Lỗi tạo video: ', hero_uploaded:'Đã tải lên — nhấn Lưu để áp dụng',
+      ai_analyzing:'Đang phân tích sản phẩm…', ai_generating:'Đang tạo nội dung marketing…',
+      btn_saving:'Đang lưu…', applied:'Đã lưu', applied_n:'Đã áp dụng {n} trường', error_short:'Lỗi',
+      // Thẻ lịch hẹn
+      appt_confirmed:'Đã xác nhận', appt_declined:'Đã từ chối', appt_replied:'Đã phản hồi', appt_pending:'Chờ xác nhận',
+      min:'phút', ref_photo:'Ảnh tham khảo:', ref_photo_link:'Xem ảnh tham khảo (link)',
+      // Nút
+      btn_call:'Gọi', btn_text:'Nhắn', btn_send:'Gửi', btn_map:'Bản đồ',
+      btn_decline:'Từ chối', btn_view_detail:'Xem chi tiết',
+      btn_sms_confirm:'SMS Xác nhận', btn_sms_photo:'SMS Ảnh', btn_sms_reschedule:'SMS Đổi giờ',
+      btn_remove_variant:'Xóa',
+      // Tooltip nút SMS
+      sms_confirm_title:'Gửi SMS xác nhận lịch hẹn',
+      sms_photo_title:'Yêu cầu ảnh rõ hơn',
+      sms_reschedule_title:'Đề xuất đổi giờ',
+      // Thông báo
+      notifs_empty:'Chưa có thông báo nào.<br>Đơn hàng mới sẽ xuất hiện ở đây.',
+      notif_fallback_title:'Thông báo', popup_question:'Câu hỏi từ khách!',
+      reply_placeholder:'Nhắn tin tới khách…',
+      // Ngày
+      day_names:'CN,T2,T3,T4,T5,T6,T7',
+      // Khác
+      orders_count:'{n} đơn', ph_name_vi_example:'VD: Chả Giò…',
+      var_label_placeholder:'Tên loại (VD: Raw, Fresh)', var_price_placeholder:'Giá $',
+      var_img_label:'Ảnh', var_img_title:'Ảnh riêng cho loại này — click để upload',
+      // Thanh tiêu điểm
+      focal_horiz:'← Ngang →', focal_vert:'↑ Dọc ↓',
+      // Trạng thái trống
+      menu_empty:'Chưa có món nào.<br>Nhấn <strong>+</strong> để thêm.',
+      orders_empty:'Chưa có đơn hàng nào.<br>Đơn hàng từ trang công khai sẽ xuất hiện ở đây.',
+      orders_empty_staff:'Không có lịch hẹn nào cho nhân viên này.',
+      cal_empty_day:'Không có đơn hàng ngày này.',
+      // Lịch hẹn tiếp theo
+      next_appt_title:'Lịch Hẹn Tiếp Theo', next_appt_none:'Không có lịch hẹn sắp tới.',
+      // Sản lượng
+      cap_full:'Hết chỗ · {b}/{m}', cap_full_paren:'Hết chỗ ({b}/{m})', cap_left:'còn {n}',
+      // Lỗi tải
+      err_load_timeout:'Không thể tải dữ liệu.',
+      // Tên ngày (đầy đủ cho lịch)
+      day_names_long:'Chủ Nhật,Thứ Hai,Thứ Ba,Thứ Tư,Thứ Năm,Thứ Sáu,Thứ Bảy',
+      // Nhãn loại yêu cầu
+      esc_type_order:'Đơn hàng', esc_type_appt:'Hẹn', esc_type_res:'Đặt chỗ',
+      esc_type_q:'Câu hỏi', esc_type_request:'Yêu cầu',
+      // Bảng AI
+      ai_fld_name:'Tên món', ai_fld_desc_vi:'Mô tả (VI)', ai_fld_desc_en:'Mô tả (EN)',
+      ai_fld_ad_vi:'Quảng cáo (VI)', ai_fld_ad_en:'Quảng cáo (EN)', ai_fld_short:'Mô tả ngắn',
+      ai_accent_color:'Màu accent',
+      btn_apply:'Áp dụng', btn_apply_all:'Áp dụng tất cả',
     },
     es: {
       logout:'Cerrar sesión', bell_title:'Notificaciones',
@@ -4604,6 +4765,87 @@
       toast_updated:'Actualizado.', toast_img_uploaded:'¡Imagen subida!', toast_video_done:'¡Video creado!',
       toast_hero_saved:'¡Imagen guardada!', toast_no_unread:'Sin notificaciones sin leer.',
       toast_marked_read:'{n} notificaciones leídas.',
+      toast_activated:'¡Artículo activado!', toast_hidden:'Artículo oculto.',
+      toast_capacity:'✓ Actualizado: {n} / día',
+      toast_emily_cleaned:'{n} artículos eliminados de esta cuenta.',
+      toast_variant_uploaded:'¡Imagen de variante subida!',
+      toast_esc_confirmed:'¡Confirmado!', toast_esc_declined:'Rechazado.', toast_esc_replied:'¡Respuesta enviada!',
+      // Errores
+      err_prefix:'Error: ', err_save:'Error al guardar: ', err_load_data:'Error al cargar datos: ',
+      err_load_orders:'Error al cargar pedidos: ', err_create_data:'Error de datos: ', err_create_item:'Error de artículo: ',
+      err_name_required:'Por favor ingrese un nombre.', err_min_qty:'La cantidad mínima debe ser ≥ 1.',
+      err_upload_wait:'Imagen subiendo — espere antes de guardar.',
+      err_price_required:'Ingrese un precio base o agregue precios por variante.',
+      err_invalid_qty:'Cantidad inválida.', err_phone_format:'El teléfono debe ser +1XXXXXXXXXX',
+      err_missing_vendor_id:'Falta el ID del vendedor.', err_no_hero:'No hay imagen seleccionada.',
+      err_read_file:'No se pudo leer el archivo.', err_unknown:'Error desconocido.',
+      err_network:'Error de conexión.', err_vendor_id:'Error: ID de vendedor no listo.',
+      err_save_first:'Guarde el artículo antes de generar el video.',
+      err_upload_short:'Error de subida', err_hero_upload:'Error al subir imagen principal: ',
+      err_variant_upload:'Error al subir imagen de variante: ',
+      err_firestore_perm:'Error de permisos de Firestore (permission-denied).',
+      // Errores AI
+      err_relogin:'Por favor cierre sesión e inicie sesión nuevamente.', err_rate_limit:'Intente de nuevo en 30 segundos.',
+      err_ai_not_ready:'Servicio AI no listo. Por favor recargue.',
+      err_ai_busy:'AI ocupado. Intente en 30 segundos.',
+      err_ai_timeout:'AI tardó demasiado. Intente de nuevo.',
+      err_ai_network:'Error de red. Verifique internet e intente de nuevo.',
+      err_ai_auth:'Error de autenticación. Inicie sesión de nuevo.',
+      err_ai_unavailable:'AI temporalmente no disponible. Intente después.',
+      err_ai_generic:'Ocurrió un error. Intente de nuevo.',
+      ai_error_title:'No se pudo generar contenido',
+      // Estado / progreso
+      img_processing:'Procesando…', btn_generating:'Generando…',
+      video_init:'Inicializando — video listo en ~60 segundos…',
+      video_done_status:'¡Video creado! Presione Guardar para actualizar.',
+      err_video:'Error de video: ', hero_uploaded:'Subido — presione Guardar para aplicar',
+      ai_analyzing:'Analizando producto…', ai_generating:'Generando contenido de marketing…',
+      btn_saving:'Guardando…', applied:'Aplicado', applied_n:'Aplicado {n} campos', error_short:'Error',
+      // Tarjeta de cita
+      appt_confirmed:'Confirmado', appt_declined:'Rechazado', appt_replied:'Respondido', appt_pending:'Pendiente',
+      min:'min', ref_photo:'Foto de referencia:', ref_photo_link:'Ver foto de referencia (enlace)',
+      // Botones
+      btn_call:'Llamar', btn_text:'Mensaje', btn_send:'Enviar', btn_map:'Mapa',
+      btn_decline:'Rechazar', btn_view_detail:'Ver detalles',
+      btn_sms_confirm:'SMS Confirmar', btn_sms_photo:'SMS Foto', btn_sms_reschedule:'SMS Reprogramar',
+      btn_remove_variant:'Eliminar',
+      // Tooltips de SMS
+      sms_confirm_title:'Enviar SMS de confirmación',
+      sms_photo_title:'Solicitar foto más clara',
+      sms_reschedule_title:'Sugerir nuevo horario',
+      // Notificaciones
+      notifs_empty:'Sin notificaciones aún.<br>Los nuevos pedidos aparecerán aquí.',
+      notif_fallback_title:'Notificación', popup_question:'¡Pregunta del cliente!',
+      reply_placeholder:'Mensaje al cliente…',
+      // Días
+      day_names:'Dom,Lun,Mar,Mié,Jue,Vie,Sáb',
+      // Misc
+      orders_count:'{n} pedidos', ph_name_vi_example:'ej. Chả Giò…',
+      var_label_placeholder:'ej. Crudo, Fresco', var_price_placeholder:'Precio $',
+      var_img_label:'Foto', var_img_title:'Foto para este tipo — click para subir',
+      // Controles de posición
+      focal_horiz:'← Horiz →', focal_vert:'↑ Vert ↓',
+      // Estados vacíos
+      menu_empty:'Sin artículos aún.<br>Toca <strong>+</strong> para agregar.',
+      orders_empty:'Sin pedidos aún.<br>Los pedidos de la página pública aparecerán aquí.',
+      orders_empty_staff:'Sin citas para este miembro del equipo.',
+      cal_empty_day:'Sin pedidos para este día.',
+      // Próxima cita
+      next_appt_title:'Próxima Cita', next_appt_none:'Sin citas próximas.',
+      // Capacidad
+      cap_full:'Completo · {b}/{m}', cap_full_paren:'Completo ({b}/{m})', cap_left:'{n} restantes',
+      // Error de carga
+      err_load_timeout:'No se pudo cargar los datos.',
+      // Nombres de días (forma larga para calendario)
+      day_names_long:'Domingo,Lunes,Martes,Miércoles,Jueves,Viernes,Sábado',
+      // Etiquetas de tipo de solicitud
+      esc_type_order:'Pedido', esc_type_appt:'Cita', esc_type_res:'Reserva',
+      esc_type_q:'Pregunta', esc_type_request:'Solicitud',
+      // Panel AI
+      ai_fld_name:'Nombre', ai_fld_desc_vi:'Descripción (VI)', ai_fld_desc_en:'Descripción (EN)',
+      ai_fld_ad_vi:'Anuncio (VI)', ai_fld_ad_en:'Anuncio (EN)', ai_fld_short:'Descripción corta',
+      ai_accent_color:'Color de acento',
+      btn_apply:'Aplicar', btn_apply_all:'Aplicar todo',
     }
   };
 

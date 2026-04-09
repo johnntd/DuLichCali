@@ -706,7 +706,8 @@
     // would have no service name: suppress escalation so Claude re-collects.
     if (escalationType === 'appointment') {
       var draft = biz._bookingDraft;
-      var svcs  = (draft && draft.services) || [];
+      var svcs  = (draft && draft.services) ||
+                  (biz._bookingState && biz._bookingState.services) || [];
       if (!svcs.length) {
         console.warn('[QV] ESCALATE:appointment with empty services — suppressing escalation');
         result.suppressEscalate = true;

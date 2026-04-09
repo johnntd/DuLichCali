@@ -3941,11 +3941,11 @@
   function _pmBuildAddOnDropdown() {
     var sel = document.getElementById('pmAddOnSelect');
     if (!sel) return;
-    // Filter active add-on services from vendor's service list
+    // All active services from vendor's service list
     var addOns = (allServiceDocs || []).filter(function(d) {
-      return d.data.category === 'addon' && d.data.active;
+      return d.data.active;
     });
-    sel.innerHTML = '<option value="">— Chọn add-on —</option>';
+    sel.innerHTML = '<option value="">— Chọn dịch vụ —</option>';
     if (addOns.length) {
       addOns.forEach(function(d) {
         var price = _parsePrice(d.data.price || '') || (d.data.priceFrom || 0);

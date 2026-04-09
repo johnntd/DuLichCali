@@ -23,6 +23,47 @@
   var _categoryId = null;
   var _container = null;
 
+  // ── Language system ─────────────────────────────────────────────────────────
+  // Default: English. Reads localStorage.dlc_lang; falls back to 'en'.
+  var _MP_VALID_LANGS = { en: 1, vi: 1, es: 1 };
+  var _currentLang = (function () {
+    var l; try { l = localStorage.getItem('dlc_lang'); } catch(e) {}
+    return _MP_VALID_LANGS[l] ? l : 'en';
+  }());
+  var _lastSalonBiz  = null;
+  var _lastSalonBack = null;
+
+  // Inline translator: _t(english, vietnamese, spanish) → correct string for _currentLang
+  function _t(en, vi, es) {
+    if (_currentLang === 'vi') return vi !== undefined ? vi : en;
+    if (_currentLang === 'es') return es !== undefined ? es : en;
+    return en;
+  }
+
+  // Set language, persist to localStorage, update all [data-t]/[data-tp] elements in place
+  function _mpSetLang(l) {
+    _currentLang = _MP_VALID_LANGS[l] ? l : 'en';
+    try { localStorage.setItem('dlc_lang', _currentLang); } catch(e) {}
+    [].forEach.call(document.querySelectorAll('[data-t]'), function (el) {
+      var k = el.getAttribute('data-t');
+      var rows = k.split('|');
+      var obj = {};
+      rows.forEach(function(r) { var p = r.split(':'); obj[p[0]] = p.slice(1).join(':'); });
+      el.textContent = obj[_currentLang] || obj.en || '';
+    });
+    [].forEach.call(document.querySelectorAll('[data-tp]'), function (el) {
+      var k = el.getAttribute('data-tp');
+      var rows = k.split('|');
+      var obj = {};
+      rows.forEach(function(r) { var p = r.split(':'); obj[p[0]] = p.slice(1).join(':'); });
+      el.placeholder = obj[_currentLang] || obj.en || '';
+    });
+    [].forEach.call(document.querySelectorAll('.mp-bar__lang-btn'), function (btn) {
+      btn.classList.toggle('mp-bar__lang-btn--active', btn.getAttribute('data-lang') === _currentLang);
+    });
+  }
+  window._mpSetLang = _mpSetLang;
+
   // ── Capacity Engine ────────────────────────────────────────────────────────────
   // Queries Firestore to determine how many slots remain on a given date.
 
@@ -150,10 +191,15 @@
 
   // Clean vendor-owned top bar for salon pages — only vendor name, no global contact
   function renderSalonBar(biz) {
+    var langs = ['en','vi','es'];
+    var langBtns = langs.map(function(l) {
+      return '<button type="button" class="mp-bar__lang-btn' + (_currentLang === l ? ' mp-bar__lang-btn--active' : '') +
+        '" data-lang="' + l + '" onclick="window._mpSetLang(\'' + l + '\')">' + l.toUpperCase() + '</button>';
+    }).join('');
     return '<div class="mp-bar mp-bar--vendor">' +
       '<button type="button" class="mp-bar__back mp-bar__back--icon" onclick="history.back()" aria-label="Back">' + arrowLeftIcon + '</button>' +
       '<span class="mp-bar__title">' + escHtml(biz.name) + '</span>' +
-      '<div class="mp-bar__spacer"></div>' +
+      '<div class="mp-bar__lang-toggle">' + langBtns + '</div>' +
     '</div>';
   }
 
@@ -194,7 +240,7 @@
 
   function renderVendorBottomNav(biz) {
     var homeIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><polyline points="9 21 9 12 15 12 15 21"/></svg>';
-    var sparkIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2z"/></svg>';
+    var sparkIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>';
     var globeIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>';
 
     return '<nav class="mp-vnav" aria-label="Quick actions">' +
@@ -813,11 +859,11 @@
     var chipsHtml = '<div class="ns-hero__chips">' +
       '<span class="ns-hero__chip">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M12 2l2.09 6.26L20 9.27l-4.91 4.79 1.18 6.88L12 17.77l-6.27 3.17 1.18-6.88L2 9.27l5.91-1.01z"/></svg>' +
-        ' 10+ N\u0103m Kinh Nghi\u1ec7m' +
+        ' <span data-t="en:10+ Years Experience|vi:10+ Năm Kinh Nghiệm|es:10+ Años de Experiencia">' + _t('10+ Years Experience','10+ N\u0103m Kinh Nghi\u1ec7m','10+ A\xf1os de Experiencia') + '</span>' +
       '</span>' +
       '<span class="ns-hero__chip">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' +
-        ' S\u1ea3n Ph\u1ea9m An To\xe0n' +
+        ' <span data-t="en:Safe Products|vi:Sản Phẩm An Toàn|es:Productos Seguros">' + _t('Safe Products','S\u1ea3n Ph\u1ea9m An To\xe0n','Productos Seguros') + '</span>' +
       '</span>' +
       '<span class="ns-hero__chip">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
@@ -838,12 +884,12 @@
         '<div class="ns-hero__ctas">' +
           '<button class="ns-btn-book" type="button" ' +
             'onclick="document.getElementById(\'nailBookSection_' + biz.id + '\').scrollIntoView({behavior:\'smooth\'})">' +
-            calendarIcon + ' \u0110\u1eb7t L\u1ecbch Ngay' +
+            calendarIcon + ' <span data-t="en:Book Now|vi:Đặt Lịch Ngay|es:Reservar">' + _t('Book Now','\u0110\u1eb7t L\u1ecbch Ngay','Reservar') + '</span>' +
           '</button>' +
-          (biz.phone ? '<a href="tel:' + biz.phone + '" class="ns-btn-call">' + phoneIcon + ' G\u1ecdi ngay</a>' : '') +
+          (biz.phone ? '<a href="tel:' + biz.phone + '" class="ns-btn-call">' + phoneIcon + ' <span data-t="en:Call Now|vi:Gọi ngay|es:Llamar">' + _t('Call Now','G\u1ecdi ngay','Llamar') + '</span></a>' : '') +
           '<button class="ns-btn-services" type="button" ' +
             'onclick="document.getElementById(\'ns-feat-' + biz.id + '\').scrollIntoView({behavior:\'smooth\'})">' +
-            arrowRightIcon + ' Xem D\u1ecbch V\u1ee5' +
+            arrowRightIcon + ' <span data-t="en:View Services|vi:Xem Dịch Vụ|es:Ver Servicios">' + _t('View Services','Xem D\u1ecbch V\u1ee5','Ver Servicios') + '</span>' +
           '</button>' +
         '</div>' +
       '</div>' +
@@ -902,8 +948,8 @@
         var imgSrc = s.imageUrl || CAT_IMAGES[cat] || FALLBACK;
         var durText = s.durationMins ? s.durationMins + ' min' : (s.duration || '');
         var priceText = (s.price != null && s.price !== '')
-          ? (typeof s.price === 'number' ? 'T\u1eeb $' + s.price : String(s.price))
-          : (s.priceFrom ? 'T\u1eeb $' + s.priceFrom : '');
+          ? (typeof s.price === 'number' ? _t('From $','T\u1eeb $','Desde $') + s.price : String(s.price))
+          : (s.priceFrom ? _t('From $','T\u1eeb $','Desde $') + s.priceFrom : '');
         var metaParts = [durText, priceText].filter(Boolean);
         return { catKey: cat, label: s.name, catLabel: CAT_LABELS[cat] || cat,
                  img: imgSrc, meta: metaParts.join(' \xb7 '), desc: s.desc || '' };
@@ -912,17 +958,17 @@
       // Static fallback
       cards = [
         { catKey: 'manicure', label: 'Classic Manicure', catLabel: 'Manicure',
-          img: CAT_IMAGES.manicure, meta: '45 min \xb7 T\u1eeb $18', desc: 'Shaped, buffed & perfectly polished' },
+          img: CAT_IMAGES.manicure, meta: '45 min \xb7 ' + _t('From $','T\u1eeb $','Desde $') + '18', desc: 'Shaped, buffed & perfectly polished' },
         { catKey: 'gel', label: 'Gel Manicure', catLabel: 'Gel & Shellac',
-          img: CAT_IMAGES.gel, meta: '60 min \xb7 T\u1eeb $38', desc: 'Chip-free up to 3 weeks' },
+          img: CAT_IMAGES.gel, meta: '60 min \xb7 ' + _t('From $','T\u1eeb $','Desde $') + '38', desc: 'Chip-free up to 3 weeks' },
         { catKey: 'pedicure', label: 'Pedicure', catLabel: 'Foot Care',
-          img: CAT_IMAGES.pedicure, meta: '50 min \xb7 T\u1eeb $30', desc: 'Soak, exfoliate & refresh' },
+          img: CAT_IMAGES.pedicure, meta: '50 min \xb7 ' + _t('From $','T\u1eeb $','Desde $') + '30', desc: 'Soak, exfoliate & refresh' },
         { catKey: 'acrylic', label: 'Acrylic Extensions', catLabel: 'Extensions',
-          img: CAT_IMAGES.acrylic, meta: '75 min \xb7 T\u1eeb $45', desc: 'Sculpted for strength & shape' },
+          img: CAT_IMAGES.acrylic, meta: '75 min \xb7 ' + _t('From $','T\u1eeb $','Desde $') + '45', desc: 'Sculpted for strength & shape' },
         { catKey: 'nailart', label: 'Nail Art', catLabel: 'Design & Art',
-          img: CAT_IMAGES.nailart, meta: '90 min \xb7 T\u1eeb $25', desc: 'Bespoke hand-painted designs' },
+          img: CAT_IMAGES.nailart, meta: '90 min \xb7 ' + _t('From $','T\u1eeb $','Desde $') + '25', desc: 'Bespoke hand-painted designs' },
         { catKey: 'spa', label: 'Spa Package', catLabel: 'Luxury Spa',
-          img: CAT_IMAGES.spa, meta: '90 min \xb7 T\u1eeb $65', desc: 'Mani + pedi + hot stone ritual' }
+          img: CAT_IMAGES.spa, meta: '90 min \xb7 ' + _t('From $','T\u1eeb $','Desde $') + '65', desc: 'Mani + pedi + hot stone ritual' }
       ];
     }
 
@@ -944,7 +990,7 @@
           (c.desc ? '<div class="ns-flow-card__desc">' + escHtml(c.desc) + '</div>' : '') +
           '<button class="ns-flow-card__cta" type="button" ' +
             'onclick="event.stopPropagation();window.nsScrollToBooking(\'' + escAttr(biz.id) + '\',\'' + escAttr(c.catKey) + '\')">' +
-            '\u0110\u1eb7t L\u1ecbch \u2192' +
+            _t('Book \u2192','\u0110\u1eb7t L\u1ecbch \u2192','Reservar \u2192') +
           '</button>' +
         '</div>' +
       '</div>';
@@ -952,8 +998,8 @@
 
     return '<section class="ns-featured" id="ns-feat-' + biz.id + '">' +
       '<div class="ns-section-heading-wrap">' +
-        '<h2 class="ns-section-heading">D\u1ecbch V\u1ee5 C\u1ee7a Ch\xfang T\xf4i</h2>' +
-        '<p class="ns-section-sub">Ch\u1ecdn d\u1ecbch v\u1ee5 \u2014 h\u1eb9n l\u1ecbch ch\xed trong 30 gi\xe2y</p>' +
+        '<h2 class="ns-section-heading" data-t="en:Our Services|vi:Dịch Vụ Của Chúng Tôi|es:Nuestros Servicios">' + _t('Our Services','D\u1ecbch V\u1ee5 C\u1ee7a Ch\xfang T\xf4i','Nuestros Servicios') + '</h2>' +
+        '<p class="ns-section-sub" data-t="en:Choose a service — book in 30 seconds|vi:Chọn dịch vụ — hẹn lịch chỉ trong 30 giây|es:Elige un servicio — reserva en 30 segundos">' + _t('Choose a service \u2014 book in 30 seconds','Ch\u1ecdn d\u1ecbch v\u1ee5 \u2014 h\u1eb9n l\u1ecbch ch\xed trong 30 gi\xe2y','Elige un servicio \u2014 reserva en 30 segundos') + '</p>' +
       '</div>' +
       '<div class="ns-flow-row">' + cardsHtml + '</div>' +
     '</section>';
@@ -972,10 +1018,10 @@
         '<div class="ns-promo-slot__overlay"></div>' +
         '<div class="ns-promo-slot__badge">Salon Showcase</div>' +
         '<div class="ns-promo-slot__content">' +
-          '<p class="ns-promo-slot__headline">Kh\xf4ng gian sang tr\u1ecdng</p>' +
+          '<p class="ns-promo-slot__headline"><span data-t="en:Luxurious Space|vi:Không gian sang trọng|es:Espacio de lujo">' + _t('Luxurious Space','Kh\xf4ng gian sang tr\u1ecdng','Espacio de lujo') + '</span></p>' +
           '<p class="ns-promo-slot__tagline">Premium tools \xb7 Safe products \xb7 Expert team</p>' +
           '<button class="ns-promo-slot__cta" type="button" onclick="' + ctaOnclick + '">' +
-            '\u0110\u1eb7t L\u1ecbch Ngay \u2192' +
+            '<span data-t="en:Book Now →|vi:Đặt Lịch Ngay →|es:Reservar →">' + _t('Book Now \u2192','\u0110\u1eb7t L\u1ecbch Ngay \u2192','Reservar \u2192') + '</span>' +
           '</button>' +
         '</div>' +
       '</div>' +
@@ -995,7 +1041,7 @@
     var catLabels = {
       manicure: 'Manicure', pedicure: 'Pedicure', gel: 'Gel & Shellac',
       acrylic: 'Acrylic & Extensions', nailart: 'Nail Art', dip: 'Dip Powder',
-      spa: 'Spa Treatments', addon: 'Add-ons / Care', other: 'D\u1ecbch V\u1ee5'
+      spa: 'Spa Treatments', addon: 'Add-ons / Care', other: _t('Services','D\u1ecbch V\u1ee5','Servicios')
     };
 
     // Per-category maps: Firestore-active first, static as fallback
@@ -1071,8 +1117,8 @@
         var imgSrc    = s.imageUrl || catImages[cat] || FALLBACK;
         var durText   = s.durationMins ? s.durationMins + ' min' : (s.duration || '');
         var priceText = (s.price != null && s.price !== '')
-          ? (typeof s.price === 'number' ? 'T\u1eeb $' + s.price : String(s.price))
-          : (s.priceFrom ? 'T\u1eeb $' + s.priceFrom : '');
+          ? (typeof s.price === 'number' ? _t('From $','T\u1eeb $','Desde $') + s.price : String(s.price))
+          : (s.priceFrom ? _t('From $','T\u1eeb $','Desde $') + s.priceFrom : '');
         var metaParts = [durText, priceText].filter(Boolean);
         return '<div class="ns-book-feat-card" role="button" tabindex="0" ' +
           'onclick="window.nsShowServiceList(\'' + escAttr(biz.id) + '\',\'' + escAttr(cat) + '\')" ' +
@@ -1088,7 +1134,7 @@
       }).join('');
     var featuredHtml = featCardsHtml
       ? '<div class="ns-book-featured-wrap">' +
-          '<div class="ns-book-featured-label">Ph\u1ed5 Bi\u1ebfn Nh\u1ea5t</div>' +
+          '<div class="ns-book-featured-label" data-t="en:Most Popular|vi:Phổ Biến Nhất|es:Más Popular">' + _t('Most Popular','Ph\u1ed5 Bi\u1ebfn Nh\u1ea5t','M\xe1s Popular') + '</div>' +
           '<div class="ns-book-featured">' + featCardsHtml + '</div>' +
         '</div>'
       : '';
@@ -1106,7 +1152,7 @@
         '<div class="ns-book-cat-card__overlay"></div>' +
         '<div class="ns-book-cat-card__body">' +
           '<div class="ns-book-cat-card__label">' + escHtml(c.label) + '</div>' +
-          '<div class="ns-book-cat-card__count">' + count + ' d\u1ecbch v\u1ee5</div>' +
+          '<div class="ns-book-cat-card__count">' + count + ' <span data-t="en:services|vi:dịch vụ|es:servicios">' + _t('services','d\u1ecbch v\u1ee5','servicios') + '</span></div>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -1157,7 +1203,7 @@
     }).join('');
 
     var activeStaff = (biz.staff || []).filter(function (m) { return m.active !== false; });
-    var staffOpts = '<option value="Any">B\u1ea5t k\u1ef3 (salon s\u1eafp x\u1ebfp)</option>' +
+    var staffOpts = '<option value="Any">' + _t('Any (salon assigns)','B\u1ea5t k\u1ef3 (salon s\u1eafp x\u1ebfp)','Cualquiera (el sal\xf3n asigna)') + '</option>' +
       activeStaff.map(function (m) {
         return '<option value="' + escAttr(m.name) + '">' + escHtml(m.name) + (m.role ? ' \u2014 ' + escHtml(m.role) : '') + '</option>';
       }).join('');
@@ -1194,12 +1240,12 @@
           'alt="" ' + (i === 0 ? '' : 'loading="lazy" ') + 'aria-hidden="true">' +
         '<div class="ns-cat-hc__gradient"></div>' +
         '<div class="ns-cat-hc__body">' +
-          '<span class="ns-cat-hc__chip">' + count + ' d\u1ecbch v\u1ee5</span>' +
+          '<span class="ns-cat-hc__chip">' + count + ' <span data-t="en:services|vi:dịch vụ|es:servicios">' + _t('services','d\u1ecbch v\u1ee5','servicios') + '</span></span>' +
           '<h3 class="ns-cat-hc__title">' + escHtml(c.label) + '</h3>' +
           '<p class="ns-cat-hc__sub">' + escHtml(previews) + '</p>' +
           '<button class="ns-cat-hc__cta" type="button" ' +
             'onclick="window.nsShowServiceList(\'' + escAttr(biz.id) + '\',\'' + escAttr(c.key) + '\')">' +
-            'Xem D\u1ecbch V\u1ee5 \u2192' +
+            _t('View Services \u2192','Xem D\u1ecbch V\u1ee5 \u2192','Ver Servicios \u2192') +
           '</button>' +
         '</div>' +
       '</div>';
@@ -1224,8 +1270,8 @@
       // ── VIEW 1: Category hero carousel ───────────────────────────────────────
       '<div class="ns-book-step" id="nbCatView_' + biz.id + '">' +
         '<div class="ns-section-heading-wrap">' +
-          '<h2 class="ns-section-heading">\u0110\u1eb7t L\u1ecbch Ngay</h2>' +
-          '<p class="ns-section-sub">Ch\u1ecdn d\u1ecbch v\u1ee5 v\xe0 th\u1eddi gian ph\xf9 h\u1ee3p</p>' +
+          '<h2 class="ns-section-heading" data-t="en:Book Now|vi:Đặt Lịch Ngay|es:Reservar">' + _t('Book Now','\u0110\u1eb7t L\u1ecbch Ngay','Reservar') + '</h2>' +
+          '<p class="ns-section-sub" data-t="en:Select a service and time that works for you|vi:Chọn dịch vụ và thời gian phù hợp|es:Seleccione un servicio y hora conveniente">' + _t('Select a service and time that works for you','Ch\u1ecdn d\u1ecbch v\u1ee5 v\xe0 th\u1eddi gian ph\xf9 h\u1ee3p','Seleccione un servicio y hora conveniente') + '</p>' +
         '</div>' +
         catHeroHtml +
       '</div>' +
@@ -1235,7 +1281,7 @@
         '<div class="ns-book-step-header">' +
           '<button class="ns-book-back-btn" type="button" ' +
             'onclick="window.nsBackToCats(\'' + escAttr(biz.id) + '\')">' +
-            '\u2190 Danh M\u1ee5c' +
+            _t('\u2190 Categories','\u2190 Danh M\u1ee5c','\u2190 Categor\xedas') +
           '</button>' +
           '<h3 class="ns-book-cat-heading" id="nbSvcViewTitle_' + biz.id + '"></h3>' +
         '</div>' +
@@ -1247,7 +1293,7 @@
           '</div>' +
           '<button class="ns-svc-select-bar__cta" type="button" ' +
             'onclick="window.nsConfirmSelection(\'' + escAttr(biz.id) + '\')">' +
-            '\u0110\u1eb7t L\u1ecbch \u2192' +
+            _t('Book \u2192','\u0110\u1eb7t L\u1ecbch \u2192','Reservar \u2192') +
           '</button>' +
         '</div>' +
       '</div>' +
@@ -1257,9 +1303,9 @@
         '<div class="ns-book-step-header">' +
           '<button class="ns-book-back-btn" type="button" ' +
             'onclick="window.nsBackToSvcList(\'' + escAttr(biz.id) + '\')">' +
-            '\u2190 \u0110\u1ed5i D\u1ecbch V\u1ee5' +
+            _t('\u2190 Change Service','\u2190 \u0110\u1ed5i D\u1ecbch V\u1ee5','\u2190 Cambiar Servicio') +
           '</button>' +
-          '<h3 class="ns-book-cat-heading">Th\xf4ng Tin H\u1eb9n</h3>' +
+          '<h3 class="ns-book-cat-heading" data-t="en:Appointment Details|vi:Thông Tin Hẹn|es:Detalles de la Cita">' + _t('Appointment Details','Th\xf4ng Tin H\u1eb9n','Detalles de la Cita') + '</h3>' +
         '</div>' +
         '<div class="ns-selected-svc-badge" id="nbSelectedSvc_' + biz.id + '" style="display:none"></div>' +
         '<div class="ns-book-panel">' +
@@ -1267,51 +1313,49 @@
             '<form id="nailBookForm_' + biz.id + '">' +
               '<div id="nbServices_' + biz.id + '" style="display:none">' + checkboxesHtml + '</div>' +
               '<div class="ns-dur-badge" id="nbDurRow_' + biz.id + '" style="display:none">' +
-                clockIcon + ' <span>T\u1ed5ng th\u1eddi gian: </span>' +
-                '<strong id="nbDurVal_' + biz.id + '">0</strong><span> ph\xfat</span>' +
+                clockIcon + ' <span data-t="en:Total time:|vi:Tổng thời gian:|es:Tiempo total:">' + _t('Total time:','T\u1ed5ng th\u1eddi gian:','Tiempo total:') + ' </span>' +
+                '<strong id="nbDurVal_' + biz.id + '">0</strong><span data-t="en: min|vi: phút|es: min">' + _t(' min',' ph\xfat',' min') + '</span>' +
               '</div>' +
               '<div class="mp-form-row">' +
-                '<label class="mp-label" for="nbStaff_' + biz.id + '">K\u1ef9 thu\u1eadt vi\xean</label>' +
+                '<label class="mp-label" for="nbStaff_' + biz.id + '" data-t="en:Technician|vi:Kỹ thuật viên|es:Técnico/a">' + _t('Technician','K\u1ef9 thu\u1eadt vi\xean','T\xe9cnico/a') + '</label>' +
                 '<select class="mp-input" id="nbStaff_' + biz.id + '">' + staffOpts + '</select>' +
               '</div>' +
               '<div class="mp-form-row-duo">' +
                 '<div class="mp-form-row">' +
-                  '<label class="mp-label" for="nbDate_' + biz.id + '">Ng\xe0y h\u1eb9n</label>' +
+                  '<label class="mp-label" for="nbDate_' + biz.id + '" data-t="en:Date|vi:Ngày hẹn|es:Fecha">' + _t('Date','Ng\xe0y h\u1eb9n','Fecha') + '</label>' +
                   '<input class="mp-input" type="date" id="nbDate_' + biz.id + '" min="' + today + '" required>' +
                 '</div>' +
                 '<div class="mp-form-row">' +
-                  '<label class="mp-label" for="nbTime_' + biz.id + '">Gi\u1edd h\u1eb9n</label>' +
+                  '<label class="mp-label" for="nbTime_' + biz.id + '" data-t="en:Time|vi:Giờ hẹn|es:Hora">' + _t('Time','Gi\u1edd h\u1eb9n','Hora') + '</label>' +
                   '<input class="mp-input" type="time" id="nbTime_' + biz.id + '" required>' +
                 '</div>' +
               '</div>' +
               '<div class="mp-form-row-duo">' +
                 '<div class="mp-form-row">' +
-                  '<label class="mp-label" for="nbName_' + biz.id + '">H\u1ecd &amp; T\xean</label>' +
-                  '<input class="mp-input" type="text" id="nbName_' + biz.id + '" placeholder="Nguy\u1ec5n V\u0103n A" required>' +
+                  '<label class="mp-label" for="nbName_' + biz.id + '" data-t="en:Full Name|vi:Họ & Tên|es:Nombre Completo">' + _t('Full Name','H\u1ecd &amp; T\xean','Nombre Completo') + '</label>' +
+                  '<input class="mp-input" type="text" id="nbName_' + biz.id + '" data-tp="en:Your Name|vi:Nguyễn Văn A|es:Su Nombre" placeholder="' + _t('Your Name','Nguy\u1ec5n V\u0103n A','Su Nombre') + '" required>' +
                 '</div>' +
                 '<div class="mp-form-row">' +
-                  '<label class="mp-label" for="nbPhone_' + biz.id + '">S\u1ed1 \u0111i\u1ec7n tho\u1ea1i</label>' +
+                  '<label class="mp-label" for="nbPhone_' + biz.id + '" data-t="en:Phone Number|vi:Số điện thoại|es:Número de Teléfono">' + _t('Phone Number','S\u1ed1 \u0111i\u1ec7n tho\u1ea1i','N\xfamero de Tel\xe9fono') + '</label>' +
                   '<input class="mp-input" type="tel" id="nbPhone_' + biz.id + '" placeholder="(408) 555-0000" required>' +
                 '</div>' +
               '</div>' +
               '<div class="mp-form-row">' +
-                '<label class="mp-label" for="nbNotes_' + biz.id + '">Ghi ch\xfa (t\xf9y ch\u1ecdn)</label>' +
-                '<textarea class="mp-input" id="nbNotes_' + biz.id + '" rows="2" placeholder="Y\xeau c\u1ea7u \u0111\u1eb7c bi\u1ec7t..."></textarea>' +
+                '<label class="mp-label" for="nbNotes_' + biz.id + '" data-t="en:Notes (optional)|vi:Ghi chú (tùy chọn)|es:Notas (opcional)">' + _t('Notes (optional)','Ghi ch\xfa (t\xf9y ch\u1ecdn)','Notas (opcional)') + '</label>' +
+                '<textarea class="mp-input" id="nbNotes_' + biz.id + '" rows="2" data-tp="en:Special requests...|vi:Yêu cầu đặc biệt...|es:Solicitudes especiales..." placeholder="' + _t('Special requests...','Y\xeau c\u1ea7u \u0111\u1eb7c bi\u1ec7t...','Solicitudes especiales...') + '"></textarea>' +
               '</div>' +
               '<div class="mp-form-row">' +
-                '<label class="mp-label" for="nbPhotoUrl_' + biz.id + '">\u1ea2nh tham kh\u1ea3o (t\xf9y ch\u1ecdn)</label>' +
-                '<input class="mp-input" type="url" id="nbPhotoUrl_' + biz.id + '" placeholder="https://... (link \u1ea3nh m\u1eabu nail b\u1ea1n mu\u1ed1n)">' +
+                '<label class="mp-label" for="nbPhotoUrl_' + biz.id + '" data-t="en:Reference photo (optional)|vi:Ảnh tham khảo (tùy chọn)|es:Foto de referencia (opcional)">' + _t('Reference photo (optional)','\u1ea2nh tham kh\u1ea3o (t\xf9y ch\u1ecdn)','Foto de referencia (opcional)') + '</label>' +
+                '<input class="mp-input" type="url" id="nbPhotoUrl_' + biz.id + '" data-tp="en:https://... (link to nail style you want)|vi:https://... (link ảnh mẫu nail bạn muốn)|es:https://... (enlace a estilo que desea)" placeholder="' + _t('https://... (link to nail style you want)','https://... (link \u1ea3nh m\u1eabu nail b\u1ea1n mu\u1ed1n)','https://... (enlace a estilo que desea)') + '">' +
               '</div>' +
               '<div class="nb-avail-msg" id="nbMsg_' + biz.id + '" style="display:none"></div>' +
               '<button type="submit" class="mp-btn mp-btn--primary mp-btn--full" id="nbSubmit_' + biz.id + '">' +
-                calendarIcon + ' G\u1eedi \u0110\u1eb7t L\u1ecbch' +
+                calendarIcon + ' <span data-t="en:Submit Booking|vi:Gửi Đặt Lịch|es:Enviar Reserva">' + _t('Submit Booking','G\u1eedi \u0110\u1eb7t L\u1ecbch','Enviar Reserva') + '</span>' +
               '</button>' +
               '<div class="mp-form-success" id="nbSuccess_' + biz.id + '">' +
                 checkIcon +
-                '<p>\u0110\u1eb7t l\u1ecbch th\xe0nh c\xf4ng!</p>' +
-                '<p style="margin-top:.5rem;font-size:.8rem;">' +
-                  'Ch\xfang t\xf4i s\u1ebd li\xean h\u1ec7 x\xe1c nh\u1eadn s\u1edbm nh\u1ea5t.' +
-                '</p>' +
+                '<p data-t="en:Booking Submitted!|vi:Đặt lịch thành công!|es:¡Reserva Enviada!">' + _t('Booking Submitted!','\u0110\u1eb7t l\u1ecbch th\xe0nh c\xf4ng!','\xa1Reserva Enviada!') + '</p>' +
+                '<p style="margin-top:.5rem;font-size:.8rem;" data-t="en:We\'ll contact you to confirm soon.|vi:Chúng tôi sẽ liên hệ xác nhận sớm nhất.|es:Le contactaremos para confirmar pronto.">' + _t("We'll contact you to confirm soon.",'Ch\xfang t\xf4i s\u1ebd li\xean h\u1ec7 x\xe1c nh\u1eadn s\u1edbm nh\u1ea5t.','Le contactaremos para confirmar pronto.') + '</p>' +
               '</div>' +
             '</form>' +
           '</div>' +
@@ -1345,18 +1389,18 @@
         '</div>';
       }).join('');
       hoursHtml = '<div class="ns-hours">' +
-        '<div class="ns-hours__header">Gi\u1edd M\u1edf C\u1eeda</div>' +
+        '<div class="ns-hours__header" data-t="en:Hours|vi:Giờ Mở Cửa|es:Horario">' + _t('Hours','Gi\u1edd M\u1edf C\u1eeda','Horario') + '</div>' +
         rowsHtml +
       '</div>';
     }
 
     return '<section class="ns-trust">' +
-      '<h2 class="ns-section-heading">T\u1ea1i Sao Ch\u1ecdn Ch\xfang T\xf4i</h2>' +
-      '<p class="ns-section-sub">H\u01a1n 10 n\u0103m ch\u0103m s\xf3c s\u1eafc \u0111\u1eb9p t\u1ea1i Bay Area</p>' +
+      '<h2 class="ns-section-heading" data-t="en:Why Choose Us|vi:Tại Sao Chọn Chúng Tôi|es:Por Qué Elegirnos">' + _t('Why Choose Us','T\u1ea1i Sao Ch\u1ecdn Ch\xfang T\xf4i','Por Qu\xe9 Elegirnos') + '</h2>' +
+      '<p class="ns-section-sub" data-t="en:Over 10 years of beauty care in Bay Area|vi:Hơn 10 năm chăm sóc sắc đẹp tại Bay Area|es:Más de 10 años cuidando tu belleza en Bay Area">' + _t('Over 10 years of beauty care in Bay Area','H\u01a1n 10 n\u0103m ch\u0103m s\xf3c s\u1eafc \u0111\u1eb9p t\u1ea1i Bay Area','M\xe1s de 10 a\xf1os cuidando tu belleza en Bay Area') + '</p>' +
       '<div class="ns-stats">' +
-        '<div class="ns-stat"><span class="ns-stat__num">10+</span><span class="ns-stat__label">N\u0103m kinh nghi\u1ec7m</span></div>' +
-        '<div class="ns-stat"><span class="ns-stat__num">5\u2605</span><span class="ns-stat__label">\u0110\xe1nh gi\xe1 kh\xe1ch</span></div>' +
-        '<div class="ns-stat"><span class="ns-stat__num">100%</span><span class="ns-stat__label">S\u1ea3n ph\u1ea9m an to\xe0n</span></div>' +
+        '<div class="ns-stat"><span class="ns-stat__num">10+</span><span class="ns-stat__label" data-t="en:Years Experience|vi:Năm kinh nghiệm|es:Años de Experiencia">' + _t('Years Experience','N\u0103m kinh nghi\u1ec7m','A\xf1os de Experiencia') + '</span></div>' +
+        '<div class="ns-stat"><span class="ns-stat__num">5\u2605</span><span class="ns-stat__label" data-t="en:Customer Rating|vi:Đánh giá khách|es:Calificación">' + _t('Customer Rating','\u0110\xe1nh gi\xe1 kh\xe1ch','Calificaci\xf3n') + '</span></div>' +
+        '<div class="ns-stat"><span class="ns-stat__num">100%</span><span class="ns-stat__label" data-t="en:Safe Products|vi:Sản phẩm an toàn|es:Productos Seguros">' + _t('Safe Products','S\u1ea3n ph\u1ea9m an to\xe0n','Productos Seguros') + '</span></div>' +
       '</div>' +
       (featHtml ? '<div class="ns-features">' + featHtml + '</div>' : '') +
       hoursHtml +
@@ -1385,8 +1429,8 @@
 
     return '<section class="ns-gallery">' +
       '<div class="ns-gallery__header">' +
-        '<h2 class="ns-section-heading">C\u1ea3m H\u1ee9ng Nail</h2>' +
-        '<p class="ns-section-sub">H\xecnh \u1ea3nh th\u1ef1c t\u1ebf t\u1eeb salon</p>' +
+        '<h2 class="ns-section-heading" data-t="en:Nail Inspiration|vi:Cảm Hứng Nail|es:Inspiración de Uñas">' + _t('Nail Inspiration','C\u1ea3m H\u1ee9ng Nail','Inspiraci\xf3n de U\xf1as') + '</h2>' +
+        '<p class="ns-section-sub" data-t="en:Real photos from our salon|vi:Hình ảnh thực tế từ salon|es:Fotos reales de nuestro salón">' + _t('Real photos from our salon','H\xecnh \u1ea3nh th\u1ef1c t\u1ebf t\u1eeb salon','Fotos reales de nuestro sal\xf3n') + '</p>' +
       '</div>' +
       '<div class="ns-gallery__scroll">' + localHtml + unsplashHtml + '</div>' +
     '</section>';
@@ -1547,7 +1591,7 @@
 
     return '<div class="mp-section">' +
       '<div class="mp-section-hdr">' +
-        '<h2 class="mp-section-title">Trợ Lý AI</h2>' +
+        '<h2 class="mp-section-title" data-t="en:AI Assistant|vi:Trợ Lý AI|es:Asistente AI">' + _t('AI Assistant','Tr\u1ee3 L\u1ef3 AI','Asistente AI') + '</h2>' +
       '</div>' +
       '<div class="mp-ai" id="aiWidget_' + biz.id + '">' +
         '<div class="mp-ai__header">' +
@@ -1557,14 +1601,14 @@
           '<div class="mp-ai__avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>' +
           '<div class="mp-ai__info">' +
             '<strong>' + escHtml(ai.name) + '</strong>' +
-            '<div class="mp-ai__status"><span class="mp-ai__dot"></span>Online · Sẵn sàng hỗ trợ</div>' +
+            '<div class="mp-ai__status"><span class="mp-ai__dot"></span>Online · <span data-t="en:Ready to help|vi:Sẵn sàng hỗ trợ|es:Lista para ayudar">' + _t('Ready to help','S\u1eb5n s\xe0ng h\u1ed7 tr\u1ee3','Lista para ayudar') + '</span></div>' +
           '</div>' +
         '</div>' +
         '<div class="mp-ai__chips">' + chipsHtml + '</div>' +
         '<div class="mp-ai__messages" id="aiMessages_' + biz.id + '">' + initial + '</div>' +
         '<div class="mp-ai__input-bar">' +
-          '<input class="mp-ai__input" type="text" id="aiInput_' + biz.id + '" placeholder="Nhập câu hỏi..." autocomplete="off">' +
-          '<button class="mp-ai__mic-lang" type="button" title="Ngôn ngữ giọng nói" style="display:none">VI</button>' +
+          '<input class="mp-ai__input" type="text" id="aiInput_' + biz.id + '" data-tp="en:Ask a question...|vi:Nhập câu hỏi...|es:Hacer una pregunta..." placeholder="' + _t('Ask a question...','Nh\u1eadp c\xe2u h\u1ecfi...','Hacer una pregunta...') + '" autocomplete="off">' +
+          '<button class="mp-ai__mic-lang" type="button" title="Voice language" style="display:none">VI</button>' +
           '<button class="mp-ai__mic" type="button" title="Nói chuyện với AI" style="display:none">' + micIcon + '</button>' +
           '<button class="mp-ai__send" type="button" id="aiSend_' + biz.id + '">' + sendIcon + '</button>' +
         '</div>' +
@@ -2015,6 +2059,8 @@
   }
 
   function _renderSalonDetailContent(biz, backUrl) {
+    _lastSalonBiz  = biz;
+    _lastSalonBack = backUrl;
     var isNails = biz.category === 'nails';
     var html;
 

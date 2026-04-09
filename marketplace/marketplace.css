@@ -178,6 +178,37 @@ button {
   min-width: 36px;
 }
 
+/* Language toggle — EN / VI / ES pills in vendor salon top bar */
+.mp-bar__lang-toggle {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.mp-bar__lang-btn {
+  background: none;
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 4px;
+  color: rgba(255,255,255,.55);
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  padding: 2px 6px;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+  -webkit-tap-highlight-color: transparent;
+  line-height: 1.4;
+}
+.mp-bar__lang-btn--active {
+  background: rgba(255,255,255,.18);
+  border-color: rgba(255,255,255,.55);
+  color: #fff;
+}
+.mp-bar__lang-btn:not(.mp-bar__lang-btn--active):hover {
+  background: rgba(255,255,255,.1);
+  color: rgba(255,255,255,.8);
+}
+
 /* ── Hero ──────────────────────────────────────────────────────────────────── */
 
 .mp-hero {

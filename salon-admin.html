@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" data-theme="default">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -809,14 +809,225 @@
     .mb-svc-list { max-height: 150px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; padding: .35rem .6rem; display: flex; flex-direction: column; gap: .2rem; background: rgba(255,255,255,.02); }
     .mb-svc-item { display: flex; align-items: center; gap: .4rem; font-size: .78rem; cursor: pointer; padding: .12rem 0; }
     .mb-svc-item input { width: 15px; height: 15px; flex-shrink: 0; cursor: pointer; accent-color: var(--gold); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       BUSINESS CONTROL CENTER — v2 Design System
+       iPad-first · Touch-optimised · 3-Theme · i18n
+    ═══════════════════════════════════════════════════════════════ */
+
+    /* ── Theme: Metallic (dark steel + silver) ── */
+    [data-theme="metallic"] {
+      --navy-900: #0c0e14;
+      --navy-800: #14171f;
+      --navy-700: #1e2230;
+      --gold:     #94a3b8;
+      --gold-lt:  #cbd5e1;
+      --gold-dim: rgba(148,163,184,.13);
+      --cream:    #f1f5f9;
+      --text:     #94a3b8;
+      --muted:    #52637a;
+      --border:   rgba(255,255,255,.09);
+      --border-g: rgba(148,163,184,.28);
+      --danger:   #f87171;
+      --success:  #4ade80;
+      --r:        10px;
+    }
+    [data-theme="metallic"] .va-bar,
+    [data-theme="metallic"] .va-link-strip,
+    [data-theme="metallic"] .ctrl-bar { background: #14171f; }
+    [data-theme="metallic"] .va-sidebar { background: #0c0e14; }
+    [data-theme="metallic"] .btn--primary { background: #475569; color: #f1f5f9; }
+    [data-theme="metallic"] .va-nav-btn.active { border-left-color: #94a3b8; }
+    [data-theme="metallic"] #app { background: #0c0e14; }
+
+    /* ── Theme: Neon / AI Purple ── */
+    [data-theme="neon"] {
+      --navy-900: #08060f;
+      --navy-800: #10102a;
+      --navy-700: #181838;
+      --gold:     #a78bfa;
+      --gold-lt:  #c4b5fd;
+      --gold-dim: rgba(167,139,250,.14);
+      --cream:    #eef2ff;
+      --text:     #a5b4fc;
+      --muted:    #6366a0;
+      --border:   rgba(167,139,250,.14);
+      --border-g: rgba(167,139,250,.4);
+      --danger:   #f87171;
+      --success:  #4ade80;
+      --r:        12px;
+    }
+    [data-theme="neon"] .va-bar,
+    [data-theme="neon"] .va-link-strip,
+    [data-theme="neon"] .ctrl-bar { background: #10102a; }
+    [data-theme="neon"] .va-sidebar { background: #08060f; border-right-color: rgba(167,139,250,.18); }
+    [data-theme="neon"] .btn--primary { background: #7c3aed; color: #fff; }
+    [data-theme="neon"] .va-nav-btn.active { background: rgba(167,139,250,.1); border-left-color: #a78bfa; color: #c4b5fd; }
+    [data-theme="neon"] .auth-spinner { border-top-color: #a78bfa; }
+    [data-theme="neon"] #app { background: #08060f; }
+
+    /* ── Control bar (theme + language strip) ── */
+    .ctrl-bar {
+      background: var(--navy-800);
+      border-bottom: 1px solid var(--border);
+      padding: .32rem 1.25rem;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: .6rem; flex-shrink: 0; flex-wrap: wrap;
+    }
+    .ctrl-group { display: flex; align-items: center; gap: .28rem; }
+    .ctrl-label {
+      font-size: .56rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .07em; margin-right: .18rem;
+    }
+    .ctrl-btn {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 5px; color: var(--muted);
+      font-family: var(--font-b); font-size: .62rem; font-weight: 700;
+      padding: .2rem .52rem; cursor: pointer; min-height: 26px;
+      transition: border-color .18s, color .18s, background .18s;
+    }
+    .ctrl-btn:hover:not(.active) { border-color: rgba(255,255,255,.22); color: var(--text); }
+    .ctrl-btn.active { border-color: var(--gold); color: var(--gold-lt); background: var(--gold-dim); }
+
+    /* ── Sidebar v2 — wider, touch-friendly, with icons ── */
+    .va-sidebar {
+      width: 210px;
+      padding: .75rem 0;
+      display: flex; flex-direction: column;
+    }
+    .va-nav-btn {
+      min-height: 48px;
+      display: flex; align-items: center; gap: .6rem;
+      padding: 0 1.15rem;
+      font-size: .75rem;
+    }
+    .va-nav-icon {
+      width: 18px; height: 18px; flex-shrink: 0; opacity: .7;
+      transition: opacity .15s;
+    }
+    .va-nav-btn:hover .va-nav-icon,
+    .va-nav-btn.active .va-nav-icon { opacity: 1; }
+    .va-nav-sep {
+      border: none; border-top: 1px solid var(--border);
+      margin: .45rem .85rem; opacity: .6;
+    }
+    .va-nav-group-lbl {
+      font-size: .48rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .12em;
+      padding: .5rem 1.15rem .1rem; opacity: .55;
+    }
+    /* Sidebar footer (theme + lang controls) */
+    .va-sidebar-footer {
+      margin-top: auto; padding: .75rem 1.15rem;
+      border-top: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: .55rem;
+    }
+    .va-sidebar-footer .ctrl-group { flex-wrap: wrap; gap: .22rem; }
+    .va-sidebar-footer .ctrl-label { font-size: .5rem; }
+    .va-sidebar-footer .ctrl-btn { min-height: 30px; font-size: .6rem; }
+
+    /* ── iPad viewport improvements ── */
+    @media (min-width: 768px) {
+      .va-bar { height: 56px; padding: 0 1.5rem; }
+      .va-bar__name { font-size: 1.05rem; }
+      .va-sidebar { width: 230px; }
+      .va-main { padding: 1.75rem 2rem; }
+
+      /* Touch-friendly buttons */
+      .btn { min-height: 40px; display: inline-flex; align-items: center; justify-content: center; }
+      .btn--sm { min-height: 36px; }
+      .btn--primary { padding: .55rem 1.25rem; font-size: .82rem; }
+      .btn-logout { min-height: 36px; padding: .35rem .9rem; }
+      .btn-open-toggle { min-height: 36px; padding: .3rem .9rem; }
+
+      /* Booking action buttons */
+      .sa-act { min-height: 36px; padding: .36rem .78rem; font-size: .68rem;
+        display: inline-flex; align-items: center; }
+
+      /* Larger booking cards on tablet */
+      .sa-appt-card { padding: .85rem 1.1rem; }
+      .sa-appt-name { font-size: .9rem; }
+      .sa-appt-time { font-size: .88rem; }
+
+      /* Dashboard stats on tablet */
+      .db-stats { grid-template-columns: repeat(3, 1fr); gap: 1.1rem; margin-bottom: 1.5rem; }
+      .db-stat { padding: 1.15rem 1.2rem; }
+      .db-stat__num { font-size: 2.4rem; }
+      .db-stat__lbl { font-size: .62rem; }
+
+      /* Staff/service items */
+      .sa-item { padding: 1rem 1.1rem; }
+      .sa-item__img, .sa-item__img-ph { width: 62px; height: 62px; }
+      .sa-item__name { font-size: .92rem; }
+
+      /* Category tabs and chips */
+      .cat-tab, .sa-staff-chip { min-height: 34px; padding: .3rem .85rem; font-size: .66rem; }
+      .skill-chip { min-height: 34px; padding: .32rem .75rem; }
+    }
+
+    /* ── Wide desktop improvements ── */
+    @media (min-width: 1200px) {
+      .va-sidebar { width: 240px; }
+      .va-main { padding: 2rem 2.5rem; }
+    }
+
+    /* ── Mobile: proper fixed bottom nav with icons ── */
+    @media (max-width: 767px) {
+      .mobile-tabs {
+        position: fixed; bottom: 0; left: 0; right: 0;
+        z-index: 100;
+        background: var(--navy-800);
+        border-top: 1px solid var(--border);
+        border-bottom: none;
+        display: flex;
+        overflow-x: auto; -webkit-overflow-scrolling: touch;
+        -ms-overflow-style: none; scrollbar-width: none;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+        box-shadow: 0 -4px 20px rgba(0,0,0,.35);
+      }
+      .mobile-tabs::-webkit-scrollbar { display: none; }
+      .mobile-tab-btn {
+        flex: 0 0 auto; min-width: 68px;
+        padding: .5rem .35rem .4rem;
+        min-height: 56px;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: .18rem;
+        border-top: 2px solid transparent; border-bottom: none;
+        border-left: none; border-right: none;
+        font-size: .52rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .03em;
+        transition: color .15s, border-color .15s, background .15s;
+      }
+      .mobile-tab-btn.active {
+        border-top-color: var(--gold);
+        color: var(--gold-lt);
+        background: rgba(245,166,35,.05);
+      }
+      .mob-tab-icon { font-size: 1.05rem; line-height: 1; }
+      .va-main { padding: 1rem 1rem 5.5rem; }
+      /* Inline ctrl bar mobile version */
+      .ctrl-bar { padding: .28rem .85rem; }
+      .ctrl-label { display: none; }
+    }
+
+    /* ── Loading screen enhancement ── */
+    #authLoading {
+      background: linear-gradient(160deg, var(--navy-900) 0%, var(--navy-800) 100%);
+    }
+    .auth-brand {
+      font-family: var(--font-d); font-size: 1.1rem; color: var(--cream);
+      letter-spacing: .04em; opacity: .8; margin-bottom: .25rem;
+    }
+    .auth-sub { font-size: .72rem; color: var(--muted); }
   </style>
 </head>
 <body>
 
 <!-- Auth loading -->
 <div id="authLoading">
+  <div class="auth-brand">Du Lịch Cali</div>
   <div class="auth-spinner"></div>
-  <div style="font-size:.78rem;color:var(--muted)">Đang xác thực…</div>
+  <div class="auth-sub">Đang xác thực…</div>
 </div>
 
 <!-- App -->
@@ -840,17 +1051,60 @@
     <a class="va-link-strip__url" id="publicLink" href="#" target="_blank">/nailsalon/?id=…</a>
   </div>
 
-  <!-- Mobile tabs -->
+  <!-- Control bar: Theme + Language -->
+  <div class="ctrl-bar">
+    <div class="ctrl-group">
+      <span class="ctrl-label">Theme</span>
+      <button class="ctrl-btn ctrl-theme-btn active" data-theme="default" onclick="dlcSetTheme('default')" title="Default">Default</button>
+      <button class="ctrl-btn ctrl-theme-btn" data-theme="metallic" onclick="dlcSetTheme('metallic')" title="Metallic">Metallic</button>
+      <button class="ctrl-btn ctrl-theme-btn" data-theme="neon" onclick="dlcSetTheme('neon')" title="AI Neon">AI Neon</button>
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">Lang</span>
+      <button class="ctrl-btn ctrl-lang-btn active" data-lang="vi" onclick="dlcSetLang('vi')">VI</button>
+      <button class="ctrl-btn ctrl-lang-btn" data-lang="en" onclick="dlcSetLang('en')">EN</button>
+      <button class="ctrl-btn ctrl-lang-btn" data-lang="es" onclick="dlcSetLang('es')">ES</button>
+    </div>
+  </div>
+
+  <!-- Mobile tabs (bottom nav) — order must match TABS array: dashboard,services,staff,availability,hours,appointments,inbox,customers,settings -->
   <div class="mobile-tabs">
-    <button class="mobile-tab-btn active" onclick="switchTab('dashboard')">Tổng Quan</button>
-    <button class="mobile-tab-btn" onclick="switchTab('services')">Dịch Vụ</button>
-    <button class="mobile-tab-btn" onclick="switchTab('staff')">Nhân Viên</button>
-    <button class="mobile-tab-btn" onclick="switchTab('availability')">Hôm Nay</button>
-    <button class="mobile-tab-btn" onclick="switchTab('hours')">Giờ Mở</button>
-    <button class="mobile-tab-btn" onclick="switchTab('appointments')">Lịch Hẹn</button>
-    <button class="mobile-tab-btn" onclick="switchTab('inbox')">AI Inbox <span id="escMobileBadge" style="display:none;background:#e8a800;color:#000;border-radius:99px;padding:1px 6px;font-size:.65rem;font-weight:700"></span></button>
-    <button class="mobile-tab-btn" onclick="switchTab('customers')">Khách Hàng</button>
-    <button class="mobile-tab-btn" onclick="switchTab('settings')">Cài Đặt</button>
+    <button class="mobile-tab-btn active" onclick="switchTab('dashboard')">
+      <span class="mob-tab-icon">&#9783;</span>
+      <span class="mob-tab-lbl">Tổng Quan</span>
+    </button>
+    <button class="mobile-tab-btn" onclick="switchTab('services')">
+      <span class="mob-tab-icon">&#9998;</span>
+      <span class="mob-tab-lbl">Dịch Vụ</span>
+    </button>
+    <button class="mobile-tab-btn" onclick="switchTab('staff')">
+      <span class="mob-tab-icon">&#128100;</span>
+      <span class="mob-tab-lbl">Nhân Viên</span>
+    </button>
+    <button class="mobile-tab-btn" onclick="switchTab('availability')">
+      <span class="mob-tab-icon">&#128336;</span>
+      <span class="mob-tab-lbl">Hôm Nay</span>
+    </button>
+    <button class="mobile-tab-btn" onclick="switchTab('hours')">
+      <span class="mob-tab-icon">&#9202;</span>
+      <span class="mob-tab-lbl">Giờ Mở</span>
+    </button>
+    <button class="mobile-tab-btn" onclick="switchTab('appointments')">
+      <span class="mob-tab-icon">&#128197;</span>
+      <span class="mob-tab-lbl">Lịch Hẹn</span>
+    </button>
+    <button class="mobile-tab-btn" onclick="switchTab('inbox')">
+      <span class="mob-tab-icon">&#128172;</span>
+      <span class="mob-tab-lbl">AI Inbox <span id="escMobileBadge" style="display:none;background:#e8a800;color:#000;border-radius:99px;padding:1px 5px;font-size:.6rem;font-weight:700;vertical-align:middle"></span></span>
+    </button>
+    <button class="mobile-tab-btn" onclick="switchTab('customers')">
+      <span class="mob-tab-icon">&#128101;</span>
+      <span class="mob-tab-lbl">Khách Hàng</span>
+    </button>
+    <button class="mobile-tab-btn" onclick="switchTab('settings')">
+      <span class="mob-tab-icon">&#9881;</span>
+      <span class="mob-tab-lbl">Cài Đặt</span>
+    </button>
   </div>
 
   <!-- Body -->
@@ -858,15 +1112,65 @@
 
     <!-- Sidebar nav -->
     <nav class="va-sidebar">
-      <button class="va-nav-btn active" id="nav-dashboard"     onclick="switchTab('dashboard')">Tổng Quan</button>
-      <button class="va-nav-btn"        id="nav-services"      onclick="switchTab('services')">Dịch Vụ</button>
-      <button class="va-nav-btn"        id="nav-staff"         onclick="switchTab('staff')">Nhân Viên</button>
-      <button class="va-nav-btn"        id="nav-availability"  onclick="switchTab('availability')">Hôm Nay</button>
-      <button class="va-nav-btn"        id="nav-hours"         onclick="switchTab('hours')">Giờ Mở Cửa</button>
-      <button class="va-nav-btn"        id="nav-appointments"  onclick="switchTab('appointments')">Lịch Hẹn</button>
-      <button class="va-nav-btn"        id="nav-inbox"         onclick="switchTab('inbox')">AI Inbox <span id="escNavBadge" style="display:none;background:#e8a800;color:#000;border-radius:99px;padding:1px 7px;font-size:.68rem;font-weight:700;margin-left:4px;vertical-align:middle"></span></button>
-      <button class="va-nav-btn"        id="nav-customers"     onclick="switchTab('customers')">Khách Hàng</button>
-      <button class="va-nav-btn"        id="nav-settings"      onclick="switchTab('settings')">Cài Đặt</button>
+      <!-- Operations group -->
+      <div class="va-nav-group-lbl">Vận Hành</div>
+      <button class="va-nav-btn active" id="nav-dashboard" onclick="switchTab('dashboard')">
+        <svg class="va-nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 10a8 8 0 1116 0A8 8 0 012 10zm8-5a1 1 0 000 2h.01a1 1 0 000-2H10zM9 9a1 1 0 012 0v5a1 1 0 01-2 0V9z"/></svg>
+        <span class="va-nav-lbl">Tổng Quan</span>
+      </button>
+      <button class="va-nav-btn" id="nav-appointments" onclick="switchTab('appointments')">
+        <svg class="va-nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+        <span class="va-nav-lbl">Lịch Hẹn</span>
+      </button>
+      <button class="va-nav-btn" id="nav-availability" onclick="switchTab('availability')">
+        <svg class="va-nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
+        <span class="va-nav-lbl">Hôm Nay</span>
+      </button>
+      <button class="va-nav-btn" id="nav-inbox" onclick="switchTab('inbox')">
+        <svg class="va-nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/><path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/></svg>
+        <span class="va-nav-lbl">AI Inbox <span id="escNavBadge" style="display:none;background:#e8a800;color:#000;border-radius:99px;padding:1px 7px;font-size:.65rem;font-weight:700;margin-left:4px;vertical-align:middle"></span></span>
+      </button>
+      <button class="va-nav-btn" id="nav-customers" onclick="switchTab('customers')">
+        <svg class="va-nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 12.094A5.973 5.973 0 004 15v1H1v-1a3 3 0 013.75-2.906z"/></svg>
+        <span class="va-nav-lbl">Khách Hàng</span>
+      </button>
+
+      <hr class="va-nav-sep">
+
+      <!-- Configuration group -->
+      <div class="va-nav-group-lbl">Quản Lý</div>
+      <button class="va-nav-btn" id="nav-services" onclick="switchTab('services')">
+        <svg class="va-nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>
+        <span class="va-nav-lbl">Dịch Vụ</span>
+      </button>
+      <button class="va-nav-btn" id="nav-staff" onclick="switchTab('staff')">
+        <svg class="va-nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
+        <span class="va-nav-lbl">Nhân Viên</span>
+      </button>
+      <button class="va-nav-btn" id="nav-hours" onclick="switchTab('hours')">
+        <svg class="va-nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
+        <span class="va-nav-lbl">Giờ Mở Cửa</span>
+      </button>
+      <button class="va-nav-btn" id="nav-settings" onclick="switchTab('settings')">
+        <svg class="va-nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
+        <span class="va-nav-lbl">Cài Đặt</span>
+      </button>
+
+      <!-- Sidebar footer: theme + language -->
+      <div class="va-sidebar-footer">
+        <div class="ctrl-group">
+          <span class="ctrl-label">Theme</span>
+          <button class="ctrl-btn ctrl-theme-btn active" data-theme="default" onclick="dlcSetTheme('default')">Default</button>
+          <button class="ctrl-btn ctrl-theme-btn" data-theme="metallic" onclick="dlcSetTheme('metallic')">Metal</button>
+          <button class="ctrl-btn ctrl-theme-btn" data-theme="neon" onclick="dlcSetTheme('neon')">Neon</button>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">Lang</span>
+          <button class="ctrl-btn ctrl-lang-btn active" data-lang="vi" onclick="dlcSetLang('vi')">VI</button>
+          <button class="ctrl-btn ctrl-lang-btn" data-lang="en" onclick="dlcSetLang('en')">EN</button>
+          <button class="ctrl-btn ctrl-lang-btn" data-lang="es" onclick="dlcSetLang('es')">ES</button>
+        </div>
+      </div>
     </nav>
 
     <!-- Main -->
@@ -5114,6 +5418,120 @@
         msg.style.color = 'var(--danger)'; msg.textContent = ' Lỗi: ' + e.message;
       });
   }
+
+  // ── Business Control Center — Theme & Language System ────────────────────────
+
+  var _dlcTheme = localStorage.getItem('dlc_theme') || 'default';
+  var _dlcLang  = localStorage.getItem('dlc_lang')  || 'vi';
+
+  function dlcSetTheme(t) {
+    _dlcTheme = t;
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('dlc_theme', t);
+    document.querySelectorAll('.ctrl-theme-btn').forEach(function(b) {
+      b.classList.toggle('active', b.dataset.theme === t);
+    });
+  }
+
+  function dlcSetLang(l) {
+    _dlcLang = l;
+    localStorage.setItem('dlc_lang', l);
+    document.querySelectorAll('.ctrl-lang-btn').forEach(function(b) {
+      b.classList.toggle('active', b.dataset.lang === l);
+    });
+    _applyLang(l);
+  }
+
+  var _LABELS = {
+    vi: {
+      dashboard:'Tổng Quan', services:'Dịch Vụ', staff:'Nhân Viên',
+      availability:'Hôm Nay', hours:'Giờ Mở Cửa', appointments:'Lịch Hẹn',
+      inbox:'AI Inbox', customers:'Khách Hàng', settings:'Cài Đặt',
+      logout:'Đăng xuất', openLbl:'● Mở', closedLbl:'○ Đóng',
+      today:'Hôm Nay', upcoming:'Sắp Tới', aiMsg:'Tin Nhắn AI'
+    },
+    en: {
+      dashboard:'Dashboard', services:'Services', staff:'Staff',
+      availability:'Today', hours:'Hours', appointments:'Appointments',
+      inbox:'AI Inbox', customers:'Customers', settings:'Settings',
+      logout:'Sign out', openLbl:'● Open', closedLbl:'○ Closed',
+      today:'Today', upcoming:'Upcoming', aiMsg:'AI Messages'
+    },
+    es: {
+      dashboard:'Panel', services:'Servicios', staff:'Personal',
+      availability:'Hoy', hours:'Horario', appointments:'Citas',
+      inbox:'AI Inbox', customers:'Clientes', settings:'Ajustes',
+      logout:'Cerrar sesión', openLbl:'● Abierto', closedLbl:'○ Cerrado',
+      today:'Hoy', upcoming:'Próximas', aiMsg:'Mensajes AI'
+    }
+  };
+
+  function _applyLang(l) {
+    var lb = _LABELS[l] || _LABELS.vi;
+    // Sidebar nav labels
+    var navMap = {
+      'nav-dashboard':    lb.dashboard,
+      'nav-services':     lb.services,
+      'nav-staff':        lb.staff,
+      'nav-availability': lb.availability,
+      'nav-hours':        lb.hours,
+      'nav-appointments': lb.appointments,
+      'nav-customers':    lb.customers,
+      'nav-settings':     lb.settings
+    };
+    Object.keys(navMap).forEach(function(id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var lbl = el.querySelector('.va-nav-lbl');
+      if (lbl) {
+        var badge = lbl.querySelector('span');
+        lbl.textContent = navMap[id];
+        if (badge) lbl.appendChild(badge);
+      }
+    });
+    // AI Inbox nav — preserve badge span
+    var inboxNav = document.getElementById('nav-inbox');
+    if (inboxNav) {
+      var lbl = inboxNav.querySelector('.va-nav-lbl');
+      if (lbl) {
+        var badge = document.getElementById('escNavBadge');
+        lbl.textContent = lb.inbox;
+        if (badge) lbl.appendChild(badge);
+      }
+    }
+    // Mobile tab labels
+    var mobMap = [lb.dashboard, lb.services, lb.staff, lb.availability, lb.hours, lb.appointments, lb.inbox, lb.customers, lb.settings];
+    document.querySelectorAll('.mob-tab-lbl').forEach(function(el, i) {
+      if (mobMap[i] === undefined) return;
+      if (i === 6) {
+        var badge = document.getElementById('escMobileBadge');
+        el.textContent = lb.inbox;
+        if (badge) el.appendChild(badge);
+      } else {
+        el.textContent = mobMap[i];
+      }
+    });
+    // Open/close toggle
+    var ot = document.getElementById('openToggle');
+    if (ot) {
+      var isOpen = ot.classList.contains('is-open');
+      ot.textContent = isOpen ? lb.openLbl : lb.closedLbl;
+    }
+    // Logout button
+    var logoutBtn = document.querySelector('.btn-logout');
+    if (logoutBtn) logoutBtn.textContent = lb.logout;
+    // html lang
+    document.documentElement.lang = l;
+  }
+
+  // Apply saved preferences
+  dlcSetTheme(_dlcTheme);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { dlcSetLang(_dlcLang); });
+  } else {
+    dlcSetLang(_dlcLang);
+  }
+
 </script>
 </body>
 </html>

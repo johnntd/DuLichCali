@@ -1536,7 +1536,9 @@
       return '<button class="mp-ai__chip" type="button">' + escHtml(chip) + '</button>';
     }).join('');
 
+    var _botAvatar = '<div class="mp-ai__msg__avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>';
     var initial = '<div class="mp-ai__msg mp-ai__msg--bot">' +
+      _botAvatar +
       '<div class="mp-ai__bubble">' + escHtml(ai.welcomeMessage) + '</div>' +
     '</div>';
 
@@ -3096,10 +3098,11 @@
         es: hostName ? 'Esperando confirmación de ' + hostName + '\u2026' : 'Esperando confirmación\u2026',
       };
       var label  = labels[lang] || labels.en;
+      var _bav  = '<div class="mp-ai__msg__avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>';
       var div   = document.createElement('div');
       div.className = 'mp-ai__msg mp-ai__msg--bot';
       div.id        = id;
-      div.innerHTML =
+      div.innerHTML = _bav +
         '<div class="mp-ai__bubble mp-ai__bubble--pending">' +
           '<span class="mp-ai__pending-dot"></span>' +
           '<span class="mp-ai__pending-dot"></span>' +
@@ -3119,6 +3122,7 @@
     _appendVendorMsg: function (messagesEl, text, type) {
       var div    = document.createElement('div');
       div.className = 'mp-ai__msg mp-ai__msg--bot';
+      div.innerHTML = '<div class="mp-ai__msg__avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>';
       var bubble = document.createElement('div');
       bubble.className = 'mp-ai__bubble mp-ai__bubble--vendor mp-ai__bubble--vendor-' + (type || 'replied');
       bubble.textContent = text;
@@ -3214,6 +3218,7 @@
 
       var div = document.createElement('div');
       div.className = 'mp-ai__msg mp-ai__msg--bot';
+      div.innerHTML = '<div class="mp-ai__msg__avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>';
       var bubble = document.createElement('div');
       bubble.className = 'mp-ai__bubble mp-ai__bubble--packet';
       bubble.innerHTML = html;
@@ -4347,9 +4352,10 @@
     },
 
     _appendMessage: function (container, text, type) {
+      var _av = type === 'bot' ? '<div class="mp-ai__msg__avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>' : '';
       var div = document.createElement('div');
       div.className = 'mp-ai__msg mp-ai__msg--' + type;
-      div.innerHTML = '<div class="mp-ai__bubble">' + escHtml(text) + '</div>';
+      div.innerHTML = _av + '<div class="mp-ai__bubble">' + escHtml(text) + '</div>';
       container.appendChild(div);
       container.scrollTop = container.scrollHeight;
     },
@@ -4358,7 +4364,7 @@
       var div = document.createElement('div');
       div.className = 'mp-ai__msg mp-ai__msg--bot mp-ai__msg--typing';
       div.id = id;
-      div.innerHTML = '<div class="mp-ai__bubble">•••</div>';
+      div.innerHTML = '<div class="mp-ai__msg__avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div><div class="mp-ai__bubble"><span class="mp-ai__typing-dot"></span><span class="mp-ai__typing-dot"></span><span class="mp-ai__typing-dot"></span></div>';
       container.appendChild(div);
       container.scrollTop = container.scrollHeight;
     },

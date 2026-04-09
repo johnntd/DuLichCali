@@ -47,6 +47,17 @@
 
   function _mergeState(biz, update) {
     if (!biz._bookingState) biz._bookingState = _emptyState();
+    // RX-021: when a fresh booking_request (pendingAction=null) arrives with a NEW time that
+    // differs from the last confirmed time, clear the post-booking CONFIRMED signal context.
+    // This prevents the CONFIRMED signal from persisting into subsequent turns of a new booking
+    // flow, which would keep confusing Claude into treating the new request as a reschedule.
+    if (update && update.intent === 'booking_request' &&
+        update.pendingAction !== 'modify_booking' &&
+        update.time && biz._lastConfirmedTime && update.time !== biz._lastConfirmedTime) {
+      biz._lastBookingId     = null;
+      biz._lastConfirmedTime = null;
+      biz._lastConfirmedDate = null;
+    }
     Object.keys(update).forEach(function (k) {
       var val = update[k];
       // null is always valid — it means "clear this field"
@@ -127,9 +138,20 @@
     lines.push('Customer phone: ' + (s.phone || 'not yet specified'));
     lines.push('Pending action: ' + (s.pendingAction || 'none'));
     if (s.existingBookingId) lines.push('Existing booking ID (reschedule): ' + s.existingBookingId);
-    // Post-booking signal: date/time are null after confirmation — do NOT treat as incomplete
+    // Post-booking signal: date/time are null after confirmation — do NOT treat as incomplete.
+    // RX-021: include the confirmed date/time so Claude knows exactly what was booked and
+    // does NOT inherit that time for a new booking request.
     if (biz._lastBookingId && s.name && s.phone && !s.date && !s.time) {
-      lines.push('BOOKING STATUS: CONFIRMED (ref: ' + biz._lastBookingId + '). Appointment is fully booked. Do NOT ask for date/time again.');
+      var _cfmSlot = [biz._lastConfirmedDate, biz._lastConfirmedTime ? 'at ' + biz._lastConfirmedTime : ''].filter(Boolean).join(' ');
+      lines.push(
+        'BOOKING STATUS: CONFIRMED (ref: ' + biz._lastBookingId + '). ' +
+        'The previous appointment' + (_cfmSlot ? ' (' + _cfmSlot + ')' : '') + ' is complete. ' +
+        'If the customer now makes a NEW booking request with a different date or time, ' +
+        'treat it as a fresh booking_request (intent=booking_request, pendingAction=null) — ' +
+        'use the date/time THEY explicitly provide, do NOT reuse the confirmed slot ' + (_cfmSlot ? '(' + _cfmSlot + ')' : '') + '. ' +
+        'Only set pendingAction=modify_booking if the customer explicitly says to change, reschedule, or cancel THIS booking. ' +
+        'Name + phone are already on file. Do NOT ask for date/time again unless the customer is requesting a NEW booking.'
+      );
     }
     return lines.join('\n');
   }
@@ -1512,6 +1534,11 @@
 
     var systemPrompt = _buildPrompt(biz, lang);
 
+    // RX-021: capture pendingAction BEFORE the API call so the early check (in send()) and
+    // the isModify guard (below) can distinguish modify_booking set THIS turn vs a prior turn.
+    // Stored on biz so it survives into the async send() callback.
+    biz._prevPendingAction = (biz._bookingState && biz._bookingState.pendingAction) || null;
+
     // ── API call via unified dispatcher (model + tokens from AIEngine.SERVICE_CONFIG.nails) ──
     // Phase 5: pass intent so the router can prefer OpenAI for booking-critical turns.
     // Booking intents (booking_request, modify_booking, booking_offer) → OpenAI when key set.
@@ -1552,11 +1579,28 @@
         // isModify: current STATE has pendingAction:'modify_booking' (primary, now kept through final BOOKING turn)
         // OR prior turn had it (fallback for older conversations)
         // OR existingBookingId is set in STATE
-        if (
-          (stateUpdate && stateUpdate.pendingAction === 'modify_booking') ||
-          _prevPendingAction === 'modify_booking' ||
-          (stateUpdate && stateUpdate.existingBookingId)
-        ) bookingData.isModify = true;
+        var _isModFromState = !!(stateUpdate && stateUpdate.pendingAction === 'modify_booking');
+        var _isModFromPrev  = (_prevPendingAction === 'modify_booking');
+        var _isModFromId    = !!(stateUpdate && stateUpdate.existingBookingId);
+        if (_isModFromState || _isModFromPrev || _isModFromId) {
+          bookingData.isModify = true;
+          // RX-021: stale-time contamination guard.
+          // If modify_booking came ONLY from this turn's STATE (not from a prior turn,
+          // not from an explicit existingBookingId, not from a cross-session lookup),
+          // AND the booking time exactly matches the last confirmed time — Claude is reusing
+          // the previously confirmed slot rather than the time the user just requested.
+          // Clear isModify so the availability check runs without the reschedule bypass,
+          // which would catch the stale slot as a staff conflict.
+          if (_isModFromState && !_isModFromPrev && !_isModFromId && !biz._xsLookupDone) {
+            if (biz._lastConfirmedTime && bookingData.time &&
+                bookingData.time === biz._lastConfirmedTime) {
+              bookingData.isModify = false;
+              console.warn('[RX-021] Stale confirmed-time reuse detected (booking=' +
+                bookingData.time + ' == lastConfirmed=' + biz._lastConfirmedTime +
+                ') — clearing isModify to force full availability check');
+            }
+          }
+        }
         biz._bookingDraft = bookingData;
       }
 
@@ -1944,12 +1988,17 @@
     // biz._bookingState was cleared before _submitDirectBooking was called.
     // Do NOT set existingBookingId in STATE — it would tag any new booking as a reschedule.
     // Use biz._lastBookingId for direct cancel/modify lookup instead.
-    biz._lastBookingId         = finalBookingId;
-    biz._bookingState.services = svcs;
-    biz._bookingState.staff    = draft.staff || null;
-    biz._bookingState.name     = draft.name  || null;
-    biz._bookingState.phone    = draft.phone || null;
-    biz._bookingState.lang     = lang;
+    biz._lastBookingId          = finalBookingId;
+    // RX-021: track the confirmed date/time so stale-time contamination can be detected.
+    // When a new booking request arrives with a different time, these are used to recognize
+    // that Claude is reusing the old confirmed slot rather than honoring the new request.
+    biz._lastConfirmedDate      = draft.date || null;
+    biz._lastConfirmedTime      = draft.time || null;
+    biz._bookingState.services  = svcs;
+    biz._bookingState.staff     = draft.staff || null;
+    biz._bookingState.name      = draft.name  || null;
+    biz._bookingState.phone     = draft.phone || null;
+    biz._bookingState.lang      = lang;
     _saveBookingState(biz);
 
     // Write to Firestore (non-blocking — customer sees confirmation immediately)
@@ -2385,6 +2434,15 @@
               // booking is excluded from conflict checks (prevents customer_conflict loop
               // after user says "replace it" and old time is still in STATE).
               var _inModify = _ecs.pendingAction === 'modify_booking';
+              // RX-021: stale-time guard for early check.
+              // If modify_booking is set THIS turn (biz._prevPendingAction was null before),
+              // and the requested time matches the last confirmed time (stale reuse),
+              // and no cross-session lookup was done — treat as a new booking, not reschedule.
+              if (_inModify && !biz._prevPendingAction && !biz._xsLookupDone) {
+                if (_ecs.time && biz._lastConfirmedTime && _ecs.time === biz._lastConfirmedTime) {
+                  _inModify = false; // force full availability check — don't use reschedule bypass
+                }
+              }
               var _ed = {
                 staff:             _ecs.staff,
                 services:          _ecs.services,

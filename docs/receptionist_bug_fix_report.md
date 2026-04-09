@@ -290,6 +290,20 @@ Generated from `tests/cases/*.json`. Run `npm run test:receptionist` to verify a
 
 ---
 
+### RX-021 — Stale booking state contamination — new booking request inherits previous confirmed time
+- **Category:** stale_data
+- **Status:** verified_in_runner
+- **Filed:** 2026-04-09 · **Fixed:** 2026-04-09
+- **Failing behavior:** After a booking completes (e.g., Pedicure/Helen/4:15 PM), the customer starts a new turn and says "book me at 3PM with Helen." The AI immediately books Pedicure/Helen/4:15 PM instead of 3:00 PM. The system reuses stale name/phone from the prior booking and never asks for contact info. The wrong time is written to Firestore.
+- **Root cause:** Three compounding issues: (1) `_submitDirectBooking` restores name/phone/services/staff to `biz._bookingState` after booking (required invariant for cancel/modify). (2) `_buildBookingStateContext` emits `BOOKING STATUS: CONFIRMED` while `_lastBookingId && !s.date && !s.time` — indefinitely after any booking. (3) When Claude sees CONFIRMED signal on the next turn, it sets `pendingAction=modify_booking`. With `isModify=true`, the ESCALATE path assigns `existingBookingId = biz._lastBookingId` and calls `_submitDirectBooking` directly, skipping contact-info collection and inheriting the stale 4:15 PM time from the prior ESCALATE STATE.
+- **Fix (five-part):** (1) `_submitDirectBooking` stores `biz._lastConfirmedDate`/`biz._lastConfirmedTime`. (2) CONFIRMED signal now includes the confirmed slot and explicitly instructs Claude not to reuse it for new requests. (3) `biz._prevPendingAction` captured before the Claude API call for async callback access. (4) isModify detection gains a stale-time guard: when `modify_booking` came only from this turn's STATE (not prior turn, no `existingBookingId`, no cross-session lookup) AND `bookingData.time === biz._lastConfirmedTime`, `isModify` is cleared. Same guard in early-check path. (5) `_mergeState` clears `_lastBookingId`/`_lastConfirmedTime`/`_lastConfirmedDate` when a fresh `booking_request` with a different time arrives.
+- **Guard safety:** Multi-turn reschedule (`_isModFromPrev=true`) bypasses guard. Cross-session reschedule (`_xsLookupDone=true`) bypasses guard. One-turn reschedule to a different time (times differ) bypasses guard. Only the exact stale pattern (same time, only this-turn STATE signal, no prior context) is cleared.
+- **Runner checks:** 5 checks — `biz._lastConfirmedTime`, `biz._lastConfirmedDate`, `biz._lastBookingId     = null`, `do NOT reuse the confirmed slot`, `_isModFromState && !_isModFromPrev && !_isModFromId && !biz._xsLookupDone`
+- **Code:** `nailsalon/receptionist.js` → `_submitDirectBooking`, `_buildBookingStateContext`, `_handleMessage` (isModify block + prevPendingAction), `send()` early-check, `_mergeState`
+- **Confidence gap:** Runner verifies all five guard strings present. Live testing needed to confirm a same-session reschedule immediately after a confirmation correctly routes as `modify_booking` without being incorrectly blocked by the stale-time guard.
+
+---
+
 ## What the runner verifies vs does not verify
 
 | Claim | Verified? | How |

@@ -284,6 +284,31 @@ test('RX-020: customer conflict check uses _overlaps() (no back-to-back false po
     'RX-020: customer conflict check must use _overlaps() — inline >= caused back-to-back loop');
 });
 
+test('RX-021: _lastConfirmedTime stored in _submitDirectBooking for stale-time detection [RX-021]', function() {
+  assertContains(src, 'biz._lastConfirmedTime',
+    'RX-021: _lastConfirmedTime must be set in _submitDirectBooking for stale-time detection');
+});
+
+test('RX-021: _lastConfirmedDate stored in _submitDirectBooking [RX-021]', function() {
+  assertContains(src, 'biz._lastConfirmedDate',
+    'RX-021: _lastConfirmedDate must be tracked alongside _lastConfirmedTime');
+});
+
+test('RX-021: _mergeState clears _lastBookingId on fresh booking_request with different time [RX-021]', function() {
+  assertContains(src, 'biz._lastBookingId     = null',
+    'RX-021: _mergeState must clear _lastBookingId when fresh booking_request arrives with different time');
+});
+
+test('RX-021: CONFIRMED signal includes instruction not to reuse confirmed slot [RX-021]', function() {
+  assertContains(src, 'do NOT reuse the confirmed slot',
+    'RX-021: CONFIRMED signal must explicitly warn Claude not to inherit stale confirmed slot time');
+});
+
+test('RX-021: isModify guard checks _lastConfirmedTime for stale-time reuse [RX-021]', function() {
+  assertContains(src, '_isModFromState && !_isModFromPrev && !_isModFromId && !biz._xsLookupDone',
+    'RX-021: isModify detection must guard against stale confirmed-time causing modify_booking misfire');
+});
+
 // ══════════════════════════════════════════════════════════════════════════
 // GROUP 2 — STATE PARSER
 // type: mirrored-unit-logic

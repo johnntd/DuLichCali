@@ -1,0 +1,57 @@
+{
+  "id": "RX-021",
+  "fix_date": "2026-04-09",
+  "category": "stale_data",
+  "status": "verified_in_runner",
+  "title": "Stale booking state contamination — new booking request inherits previous confirmed time",
+  "failing_behavior": "After a booking completes (e.g., Pedicure/Helen/4:15 PM), the customer starts a fresh session or conversation turn and says 'I like to book a pedicure today at 3PM with Helen.' The AI immediately books Pedicure/Helen/4:15 PM instead of 3:00 PM. The system never asks for contact info — it reuses stale name/phone from the previous booking — and writes the wrong time to Firestore.",
+  "root_cause": "Chain of three compounding issues: (1) _submitDirectBooking restores name/phone/services/staff to biz._bookingState after booking completes (required invariant for cancel/modify). (2) _buildBookingStateContext emits 'BOOKING STATUS: CONFIRMED' when _lastBookingId && s.name && s.phone && !s.date && !s.time — this signal was present indefinitely after booking. (3) When Claude receives a new booking request after seeing CONFIRMED signal, it sets pendingAction=modify_booking. The isModify=true flag causes the ESCALATE path to set existingBookingId = biz._lastBookingId and call _submitDirectBooking directly, skipping contact-info collection and using the stale 4:15 PM time from the prior ESCALATE STATE rather than the freshly requested 3:00 PM.",
+  "fix_summary": "Five-part fix: (1) _submitDirectBooking stores biz._lastConfirmedDate and biz._lastConfirmedTime after each confirmed booking. (2) CONFIRMED signal now includes the confirmed slot time and an explicit instruction not to reuse it for new requests. (3) biz._prevPendingAction captured before the Claude API call so it is accessible in the async send() callback. (4) isModify detection in _handleMessage gains a stale-time guard: when modify_booking came from this turn's STATE only (not prior turn, not existingBookingId in STATE, not a cross-session lookup) AND the booking time matches _lastConfirmedTime, isModify is cleared. (5) Same guard applied in the early-check path (_inModify in send()). (6) _mergeState clears _lastBookingId/_lastConfirmedTime/_lastConfirmedDate when a fresh booking_request with a different time arrives.",
+  "conversation": [
+    {
+      "role": "system",
+      "content": "[Prior booking already completed in same session: Pedicure/Helen/2026-04-09/16:15, biz._lastBookingId='abc123', biz._lastConfirmedTime='16:15', biz._bookingState.name='JD', biz._bookingState.phone='4084397522']"
+    },
+    {
+      "role": "user",
+      "content": "I like to book a pedicure today at 3PM with Helen. My phone is 4084397522 and I am JD"
+    },
+    {
+      "role": "assistant",
+      "content": "I'd love to book that for you! Let me check Helen's availability at 3:00 PM today.\n[STATE:{\"intent\":\"booking_request\",\"services\":[\"Pedicure\"],\"staff\":\"Helen\",\"date\":\"2026-04-09\",\"time\":\"15:00\",\"name\":\"JD\",\"phone\":\"4084397522\",\"lang\":\"en\",\"pendingAction\":\"booking_offer\",\"existingBookingId\":null}]",
+      "notes": "EXPECTED: AI treats this as fresh booking_request, not a modification. Proposes 3:00 PM, not 4:15 PM. pendingAction=booking_offer (not modify_booking). existingBookingId=null."
+    },
+    {
+      "role": "user",
+      "content": "yes please"
+    },
+    {
+      "role": "assistant",
+      "content": "Your Pedicure with Helen at 3:00 PM is confirmed and booked. We look forward to seeing you!\n[STATE:{\"intent\":\"booking_request\",\"services\":[\"Pedicure\"],\"staff\":\"Helen\",\"date\":\"2026-04-09\",\"time\":\"15:00\",\"name\":\"JD\",\"phone\":\"4084397522\",\"lang\":\"en\",\"pendingAction\":null,\"existingBookingId\":null}]\n[BOOKING:{\"services\":[\"Pedicure\"],\"staff\":\"Helen\",\"date\":\"2026-04-09\",\"time\":\"15:00\",\"name\":\"JD\",\"phone\":\"4084397522\"}]\n[ESCALATE:appointment]"
+    }
+  ],
+  "stale_time_guard_behavior": {
+    "scenario": "After Pedicure/Helen/16:15 is confirmed, user requests Pedicure/Helen/15:00",
+    "without_fix": "isModify=true → _submitDirectBooking called with time=16:15 → wrong booking created at 4:15 PM",
+    "with_fix_step1": "_mergeState: new booking_request with time=15:00 ≠ _lastConfirmedTime=16:15 → _lastBookingId cleared → CONFIRMED signal no longer fires",
+    "with_fix_step2": "Even if CONFIRMED signal fires (same-turn race): isModify guard detects _isModFromState=true && !_isModFromPrev && !_isModFromId && !_xsLookupDone AND time=15:00 ≠ 16:15 → guard does NOT trigger (different times) → fresh booking proceeds normally",
+    "same_time_edge_case": "If user says 'book me at 4:15 PM again' → time=16:15 === _lastConfirmedTime → guard triggers → isModify cleared → system treats as new booking, runs full availability check",
+    "legitimate_reschedule_protection": "Multi-turn reschedule: _isModFromPrev=true → guard bypassed. Cross-session reschedule: _xsLookupDone=true → guard bypassed. One-turn reschedule to new time: times differ → guard bypassed."
+  },
+  "verify_fix_strings": [
+    "biz._lastConfirmedTime",
+    "biz._lastConfirmedDate",
+    "biz._lastBookingId     = null",
+    "do NOT reuse the confirmed slot",
+    "_isModFromState && !_isModFromPrev && !_isModFromId && !biz._xsLookupDone"
+  ],
+  "code_areas": [
+    "nailsalon/receptionist.js:_submitDirectBooking() — stores _lastConfirmedDate/_lastConfirmedTime",
+    "nailsalon/receptionist.js:_buildBookingStateContext() — CONFIRMED signal includes slot, anti-stale instructions",
+    "nailsalon/receptionist.js:_handleMessage() — biz._prevPendingAction capture + isModify three-variable guard",
+    "nailsalon/receptionist.js:send() early-check — _inModify stale-time guard",
+    "nailsalon/receptionist.js:_mergeState() — clears _lastBookingId when fresh time arrives"
+  ],
+  "notes": "The fix is deliberately conservative: it only clears isModify when ALL of these are true: (a) modify_booking signal came only from this turn's STATE (not prior turn context, not explicit existingBookingId), (b) no cross-session lookup was done, (c) the booking time matches the last confirmed time. This prevents false negatives on legitimate reschedules while catching the exact stale-time contamination pattern.",
+  "confidence_gap": "Runner verifies: all five guard strings present in source. Live testing required to confirm that a same-session reschedule immediately after a confirmation (user says 'actually change it to 5PM') still routes correctly as a modify_booking and does not incorrectly trigger the stale-time guard."
+}

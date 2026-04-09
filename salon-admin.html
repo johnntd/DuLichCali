@@ -574,42 +574,98 @@
     .sa-staff-chip.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold-lt); }
 
     /* ── Next appointment section ── */
-    .sa-next-appt {
+    /* ── Next Appointment two-column assignment card ── */
+    .na-card {
       background: rgba(245,166,35,.06); border: 1px solid var(--border-g);
-      border-radius: var(--r); padding: 1rem 1.2rem; margin-bottom: 1.1rem;
-      display: flex; gap: 1rem; align-items: flex-start;
+      border-radius: var(--r); margin-bottom: 1.1rem; overflow: hidden;
     }
-    .sa-next-appt__left { flex-shrink: 0; text-align: center; min-width: 4rem; }
-    .sa-next-appt__tag {
-      font-size: .58rem; font-weight: 700; color: var(--gold);
-      text-transform: uppercase; letter-spacing: .1em; margin-bottom: .2rem;
+    .na-card__body {
+      display: grid; grid-template-columns: 1fr auto; align-items: stretch;
     }
-    .sa-next-appt__time {
-      font-size: 1.55rem; font-weight: 700; color: var(--gold-lt);
-      font-family: var(--font-d); line-height: 1;
+    .na-left {
+      padding: .9rem 1.1rem; min-width: 0;
     }
-    .sa-next-appt__countdown {
+    .na-left__tag {
+      font-size: .56rem; font-weight: 700; color: var(--gold);
+      text-transform: uppercase; letter-spacing: .1em; margin-bottom: .25rem;
+    }
+    .na-left__time {
+      font-size: 1.75rem; font-weight: 700; color: var(--gold-lt);
+      font-family: var(--font-d); line-height: 1; margin-bottom: .18rem;
+    }
+    .na-left__countdown {
+      font-size: .65rem; color: var(--success); font-weight: 600;
+      margin-bottom: .55rem; letter-spacing: .02em;
+    }
+    .na-left__name {
+      font-size: 1rem; font-weight: 700; color: var(--cream); margin-bottom: .1rem;
+    }
+    .na-left__svc {
+      font-size: .78rem; color: var(--text); margin-bottom: .18rem;
+    }
+    .na-left__meta {
+      font-size: .67rem; color: var(--muted); display: flex; flex-wrap: wrap;
+      gap: .35rem; align-items: center; margin-top: .08rem;
+    }
+    .na-left__meta-dot { opacity: .4; }
+    .na-left__imgs { display: flex; gap: .3rem; flex-wrap: wrap; margin-top: .5rem; }
+    .na-left__img {
+      width: 52px; height: 52px; border-radius: 5px; object-fit: cover;
+      cursor: pointer; border: 1px solid rgba(255,255,255,.15); transition: opacity .15s;
+    }
+    .na-left__img:hover { opacity: .82; }
+    /* right — tech panel */
+    .na-right {
+      padding: .9rem 1rem; min-width: 130px; max-width: 165px;
+      background: rgba(255,255,255,.03); border-left: 1px solid rgba(255,255,255,.07);
+      display: flex; flex-direction: column; gap: .18rem;
+    }
+    .na-right__tag {
+      font-size: .54rem; font-weight: 700; color: var(--gold);
+      text-transform: uppercase; letter-spacing: .1em; margin-bottom: .22rem;
+      opacity: .8;
+    }
+    .na-right__name {
+      font-size: .96rem; font-weight: 700; color: var(--cream); line-height: 1.2;
+    }
+    .na-right__role {
+      font-size: .65rem; color: var(--gold); font-weight: 600;
+      text-transform: uppercase; letter-spacing: .05em; margin-top: .1rem;
+    }
+    .na-right__specs {
+      font-size: .68rem; color: var(--text); margin-top: .25rem; line-height: 1.4;
+    }
+    .na-right__shift {
       font-size: .62rem; color: var(--muted); margin-top: .28rem;
     }
-    .sa-next-appt__body { flex: 1; min-width: 0; }
-    .sa-next-appt__name { font-size: .95rem; font-weight: 600; color: var(--cream); }
-    .sa-next-appt__svc { font-size: .78rem; color: var(--text); margin-top: .12rem; }
-    .sa-next-appt__meta { font-size: .7rem; color: var(--muted); margin-top: .12rem; display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
-    .sa-next-appt__imgs { display: flex; gap: .3rem; flex-wrap: wrap; margin-top: .5rem; }
-    .sa-next-appt__img {
-      width: 54px; height: 54px; border-radius: 5px; object-fit: cover;
-      cursor: pointer; border: 1px solid rgba(255,255,255,.15);
-      transition: opacity .15s;
+    .na-right__status {
+      font-size: .62rem; font-weight: 600; margin-top: auto; padding-top: .5rem;
     }
-    .sa-next-appt__img:hover { opacity: .82; }
-    .sa-next-appt__tech {
-      font-size: .7rem; color: var(--gold); font-weight: 600;
-      margin-top: .22rem; display: flex; align-items: center; gap: .28rem;
+    .na-right__status--active { color: var(--success); }
+    .na-right__status--off    { color: var(--muted); }
+    .na-right__none {
+      font-size: .74rem; color: var(--muted); font-style: italic; margin-top: .2rem;
     }
-    .sa-next-appt__tech-icon { opacity: .65; font-style: normal; }
-    .sa-next-appt__dur {
-      font-size: .62rem; color: var(--muted); margin-top: .1rem;
+    /* action row */
+    .na-actions {
+      display: flex; gap: .38rem; padding: .62rem 1rem;
+      border-top: 1px solid rgba(255,255,255,.07);
+      background: rgba(0,0,0,.1); flex-wrap: wrap;
     }
+    .na-btn {
+      font-family: var(--font-b); font-size: .73rem; font-weight: 700;
+      padding: .46rem .7rem; min-height: 38px; border-radius: 6px;
+      cursor: pointer; border: none; transition: opacity .15s, background .15s;
+      flex: 1; min-width: 48px; text-align: center; white-space: nowrap;
+    }
+    .na-btn:hover { opacity: .82; }
+    .na-btn--done   { background: rgba(74,222,128,.15); border: 1px solid rgba(74,222,128,.38); color: var(--success); }
+    .na-btn--cancel { background: transparent; border: 1px solid rgba(248,113,113,.35); color: var(--danger); }
+    .na-btn--pay    { background: rgba(245,166,35,.13); border: 1px solid rgba(245,166,35,.38); color: var(--gold-lt); }
+    .na-btn--comm   { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    /* legacy alias — keeps any stale reference from crashing */
+    .sa-next-appt__img { width:54px;height:54px;border-radius:5px;object-fit:cover;cursor:pointer;border:1px solid rgba(255,255,255,.15);transition:opacity .15s; }
+    .sa-next-appt__img:hover { opacity:.82; }
 
     /* ── Cashier quick-action card ── */
     .db-cashier-btn {
@@ -1346,7 +1402,7 @@
       [data-theme="pink"] .db-stat__num { font-size: 3.6rem; }
       [data-theme="pink"] .db-stat__lbl { font-size: .74rem; margin-top: .6rem; letter-spacing: .09em; }
       [data-theme="pink"] .sa-section-title { font-size: 1.85rem; }
-      [data-theme="pink"] .sa-next-appt__time { font-size: 2.1rem; }
+      [data-theme="pink"] .na-left__time { font-size: 2.1rem; }
     }
 
     /* ── Mobile AI bottom sheet ── */
@@ -1453,12 +1509,12 @@
       .sa-appt-dur  { font-size: .67rem; }
 
       /* Next appointment card */
-      .sa-next-appt { padding: 1.2rem 1.4rem; }
-      .sa-next-appt__time { font-size: 1.9rem; }
-      .sa-next-appt__name { font-size: 1.05rem; }
-      .sa-next-appt__svc  { font-size: .84rem; }
-      .sa-next-appt__meta { font-size: .74rem; }
-      .sa-next-appt__tag  { font-size: .62rem; }
+      .na-left { padding: 1.1rem 1.3rem; }
+      .na-right { padding: 1.1rem 1.15rem; min-width: 160px; }
+      .na-left__time { font-size: 2rem; }
+      .na-left__name { font-size: 1.08rem; }
+      .na-left__svc  { font-size: .82rem; }
+      .na-btn { font-size: .78rem; min-height: 44px; }
 
       /* Dashboard stats on tablet */
       .db-stats { grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-bottom: 1.75rem; }
@@ -2602,6 +2658,18 @@
     <div style="display:flex;flex-direction:column;gap:.45rem">
       <button class="btn btn--primary btn--sm" onclick="confirmQrPayment()" style="font-size:.8rem;font-weight:700;padding:.5rem 1rem" data-i18n="btn_confirm_qr">&#10003; Khách đã chuyển — Xác nhận</button>
       <button class="btn btn--outline btn--sm" onclick="closeQrPayment()" style="font-size:.76rem" data-i18n="btn_back_qr">Quay lại</button>
+    </div>
+  </div>
+</div>
+
+<!-- Quick confirm modal — used by Next Appointment card actions -->
+<div class="sa-modal-backdrop hidden" id="naQuickConfirm" onclick="_naConfirmDismiss()">
+  <div class="sa-modal" style="max-width:310px;text-align:center;padding:1.3rem 1.2rem" onclick="event.stopPropagation()">
+    <div id="naConfirmTitle" style="font-size:.96rem;font-weight:700;color:var(--cream);margin-bottom:.35rem"></div>
+    <div id="naConfirmBody" style="font-size:.78rem;color:var(--muted);margin-bottom:1.1rem;line-height:1.5"></div>
+    <div class="sa-modal-actions" style="justify-content:center;gap:.6rem">
+      <button class="btn btn--outline btn--sm" onclick="_naConfirmDismiss()" data-i18n="btn_cancel">Hủy</button>
+      <button id="naConfirmOk" class="btn btn--sm btn--primary" onclick="_naConfirmExecute()" style="min-width:100px"></button>
     </div>
   </div>
 </div>
@@ -5558,67 +5626,211 @@
     return upcoming[0];
   }
 
+  // ── Next Appointment card — quick confirm helpers ─────────────────────────────
+  var _naConfirmCallback = null;
+
+  function _naConfirm(title, body, okLabel, cb) {
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
+    document.getElementById('naConfirmTitle').textContent = title;
+    document.getElementById('naConfirmBody').textContent  = body;
+    var okBtn = document.getElementById('naConfirmOk');
+    if (okBtn) okBtn.textContent = okLabel;
+    _naConfirmCallback = cb;
+    document.getElementById('naQuickConfirm').classList.remove('hidden');
+  }
+  function _naConfirmDismiss() {
+    document.getElementById('naQuickConfirm').classList.add('hidden');
+    _naConfirmCallback = null;
+  }
+  function _naConfirmExecute() {
+    var cb = _naConfirmCallback;
+    _naConfirmDismiss();
+    if (cb) cb();
+  }
+
+  // Action launchers — called from onclick in generated card HTML
+  function _naDone(apptId, name) {
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
+    _naConfirm(
+      lb.na_confirm_done_title || 'Complete Appointment?',
+      (name || lb.cust_fallback) + ' — ' + (lb.na_confirm_done_body || 'Mark as finished?'),
+      lb.na_confirm_done_ok || '✓ Complete',
+      function() { updateBookingStatus(apptId, 'completed'); }
+    );
+  }
+  function _naText(phone, name, svcLbl, date, time) {
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
+    _naConfirm(
+      lb.na_confirm_text_title || 'Send Confirmation Text?',
+      (name || lb.cust_fallback) + (svcLbl ? ' · ' + svcLbl : ''),
+      lb.na_confirm_text_ok || '✉ Send Text',
+      function() { confirmSms(phone, name, svcLbl, date, time); }
+    );
+  }
+  function _naCall(phone, name) {
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
+    var clean = (phone || '').replace(/\D/g,'');
+    if (clean.length === 10) clean = '1' + clean;
+    _naConfirm(
+      lb.na_confirm_call_title || 'Call Customer?',
+      (name || lb.cust_fallback) + ' · ' + (phone || ''),
+      lb.na_confirm_call_ok || '📞 Call',
+      function() { window.open('tel:+' + clean, '_self'); }
+    );
+  }
+
+  // Build the two-column assignment card HTML (shared by both render paths)
+  function _buildNaCard(appt, lb, opts) {
+    opts = opts || {};
+    var apptId   = appt.id;
+    var timeStr  = _fmtTime(appt.requestedTime || appt.time);
+    var rawSvcs  = appt.selectedServices || appt.services;
+    var svcArr;
+    if (Array.isArray(rawSvcs) && rawSvcs.length) { svcArr = rawSvcs; }
+    else if (appt.serviceType) { svcArr = [appt.serviceType]; }
+    else if (appt.service)     { svcArr = [appt.service]; }
+    else                        { svcArr = []; }
+    svcArr = svcArr.filter(Boolean);
+    var svcLbl   = svcArr.join(' · ');
+    var staff    = appt.staff && appt.staff.toLowerCase() !== 'any' ? appt.staff : null;
+    var name     = appt.customerName || lb.cust_fallback || 'Customer';
+    var phone    = appt.customerPhone || appt.phone || '';
+    var dur      = appt.durationMins || appt.totalDurationMins;
+    var date     = appt.requestedDate || appt.date || '';
+    var time     = appt.requestedTime || appt.time || '';
+    var status   = appt.status || 'confirmed';
+
+    // Countdown
+    var countdown = '';
+    var now = new Date();
+    var todayIso = now.getFullYear() + '-' + ('0'+(now.getMonth()+1)).slice(-2) + '-' + ('0'+now.getDate()).slice(-2);
+    if (date === todayIso && time) {
+      var p = time.split(':');
+      var apptMins = parseInt(p[0]||0,10)*60 + parseInt(p[1]||0,10);
+      var nowMins  = now.getHours()*60 + now.getMinutes();
+      var diff = apptMins - nowMins;
+      if (diff > 0) {
+        countdown = lb.countdown_in + ' ' + (diff >= 60
+          ? Math.floor(diff/60) + lb.countdown_hr + (diff%60 ? ' ' + diff%60 + lb.countdown_min : '')
+          : diff + lb.countdown_min);
+      }
+    } else if (date > todayIso) {
+      countdown = _fmtDate(date);
+    }
+
+    // Reference images
+    var imgs = appt.referenceImages || appt.images || [];
+    var imgHtml = imgs.length
+      ? '<div class="na-left__imgs">' + _refImgsHtml(imgs, 'na-left__img') + '</div>'
+      : '';
+
+    // LEFT column
+    var metaParts = [];
+    if (dur) metaParts.push(dur + ' ' + esc(lb.dur_min || 'min'));
+    if (phone) metaParts.push('&#128241; ' + esc(phone));
+    var leftHtml =
+      '<div class="na-left">' +
+        '<div class="na-left__tag">' + esc(lb.na_lbl_customer || 'APPOINTMENT') + '</div>' +
+        '<div class="na-left__time">' + esc(timeStr) + '</div>' +
+        (countdown ? '<div class="na-left__countdown">' + esc(countdown) + '</div>' : '') +
+        '<div class="na-left__name">' + esc(name) + '</div>' +
+        '<div class="na-left__svc">' + esc(svcLbl || '—') + '</div>' +
+        (metaParts.length ? '<div class="na-left__meta">' + metaParts.join('<span class="na-left__meta-dot"> · </span>') + '</div>' : '') +
+        imgHtml +
+      '</div>';
+
+    // RIGHT column — staff lookup
+    var staffInfo = null;
+    if (staff) {
+      for (var i = 0; i < currentStaffData.length; i++) {
+        if (currentStaffData[i].name.toLowerCase() === staff.toLowerCase()) {
+          staffInfo = currentStaffData[i].data; break;
+        }
+      }
+    }
+    var rightHtml;
+    if (staff) {
+      var role  = staffInfo ? (staffInfo.role || '') : '';
+      var specs = staffInfo ? (staffInfo.specialties || []) : [];
+      // Show up to 3 specialties
+      var specsStr = specs.slice(0, 3).join(' · ');
+      // Today's shift from schedule
+      var todayKey = DAY_JS_TO_KEY[now.getDay()];
+      var todaySched = staffInfo && staffInfo.schedule ? staffInfo.schedule[todayKey] : null;
+      var shiftStr = '';
+      if (todaySched && todaySched.active && todaySched.start && todaySched.end) {
+        shiftStr = (lb.na_shift_today || 'Today:') + ' ' + _fmtTime(todaySched.start) + '–' + _fmtTime(todaySched.end);
+      }
+      var isActive = !staffInfo || staffInfo.active !== false;
+      rightHtml =
+        '<div class="na-right">' +
+          '<div class="na-right__tag">' + esc(lb.na_lbl_tech || 'TECHNICIAN') + '</div>' +
+          '<div class="na-right__name">' + esc(staff) + '</div>' +
+          (role ? '<div class="na-right__role">' + esc(role) + '</div>' : '') +
+          (specsStr ? '<div class="na-right__specs">' + esc(specsStr) + '</div>' : '') +
+          (shiftStr ? '<div class="na-right__shift">' + esc(shiftStr) + '</div>' : '') +
+          '<div class="na-right__status ' + (isActive ? 'na-right__status--active' : 'na-right__status--off') + '">' +
+            esc(isActive ? (lb.na_working || '● Working') : (lb.na_off || '○ Off')) +
+          '</div>' +
+        '</div>';
+    } else {
+      rightHtml =
+        '<div class="na-right">' +
+          '<div class="na-right__tag">' + esc(lb.na_lbl_tech || 'TECHNICIAN') + '</div>' +
+          '<div class="na-right__none">' + esc(lb.na_unassigned || 'Unassigned') + '</div>' +
+        '</div>';
+    }
+
+    // ACTION ROW
+    var isCanceled = ['canceled','cancelled','no_show'].indexOf(status) >= 0;
+    var payStatus  = appt.paymentStatus || 'unpaid';
+    var needsPay   = !isCanceled && payStatus !== 'paid';
+    var canManage  = opts.canManage !== false && (_userRole === 'owner' || _userRole === 'manager');
+
+    var idQ    = JSON.stringify(apptId);
+    var nameQ  = JSON.stringify(name);
+    var phoneQ = JSON.stringify(phone);
+    var svcQ   = JSON.stringify(svcLbl);
+    var dateQ  = JSON.stringify(date);
+    var timeQ  = JSON.stringify(time);
+
+    var actions = '';
+    // Done — available for in-progress or confirmed, not already completed/canceled
+    if (!isCanceled && status !== 'completed' && apptId && canManage) {
+      actions += '<button class="na-btn na-btn--done" onclick=\'_naDone(' + idQ + ',' + nameQ + ')\'>&#10003; ' + esc(lb.na_act_done || 'Done') + '</button>';
+    }
+    // Cancel — canManage only
+    if (!isCanceled && apptId && canManage) {
+      actions += '<button class="na-btn na-btn--cancel" onclick=\'openCancelModal(' + idQ + ',' + nameQ + ',' + phoneQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')\'>&#10005; ' + esc(lb.na_act_cancel || 'Cancel') + '</button>';
+    }
+    // Collect $
+    if (needsPay && apptId) {
+      actions += '<button class="na-btn na-btn--pay" onclick=\'openPaymentModal(' + idQ + ')\'>&#36; ' + esc(lb.na_act_pay || 'Collect $') + '</button>';
+    }
+    // Text
+    if (phone) {
+      actions += '<button class="na-btn na-btn--comm" onclick=\'_naText(' + phoneQ + ',' + nameQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')\'>&#128172; ' + esc(lb.na_act_text || 'Text') + '</button>';
+    }
+    // Call
+    if (phone) {
+      actions += '<button class="na-btn na-btn--comm" onclick=\'_naCall(' + phoneQ + ',' + nameQ + ')\'>&#128222; ' + esc(lb.na_act_call || 'Call') + '</button>';
+    }
+
+    return '<div class="na-card">' +
+      '<div class="na-card__body">' + leftHtml + rightHtml + '</div>' +
+      (actions ? '<div class="na-actions">' + actions + '</div>' : '') +
+    '</div>';
+  }
+
   // ── Render "Next Appointment" banner ──────────────────────────────────────────
   function _renderNextAppt(items) {
     var el = document.getElementById('saNextAppt');
     if (!el) return;
     var appt = _getNextAppt(items);
     if (!appt) { el.style.display = 'none'; return; }
-
-    var lb      = _LABELS[_dlcLang] || _LABELS.vi;
-    var timeStr = _fmtTime(appt.requestedTime || appt.time);
-    var svcArr  = appt.selectedServices || appt.services || [appt.serviceType || ''];
-    var svcLbl  = Array.isArray(svcArr) ? svcArr.filter(Boolean).join(', ') : (svcArr || '');
-    var staff   = appt.staff && appt.staff.toLowerCase() !== 'any' ? appt.staff : null;
-    var dur     = appt.durationMins || appt.totalDurationMins;
-
-    // Countdown
-    var countdown = '';
-    var d = appt.requestedDate || appt.date || '';
-    var now = new Date();
-    var todayIso = now.getFullYear() + '-' + ('0'+(now.getMonth()+1)).slice(-2) + '-' + ('0'+now.getDate()).slice(-2);
-    if (d === todayIso && (appt.requestedTime || appt.time)) {
-      var p = (appt.requestedTime || appt.time).split(':');
-      var apptMins = parseInt(p[0]||0,10)*60 + parseInt(p[1]||0,10);
-      var nowMins  = now.getHours()*60 + now.getMinutes();
-      var diff     = apptMins - nowMins;
-      if (diff > 0) {
-        countdown = lb.countdown_in + ' ' + (diff >= 60
-          ? Math.floor(diff/60) + lb.countdown_hr + (diff%60 ? ' ' + diff%60 + lb.countdown_min : '')
-          : diff + lb.countdown_min);
-      }
-    } else if (d > todayIso) {
-      countdown = _fmtDate(d);
-    }
-
-    var imgs = appt.referenceImages || appt.images || [];
-    var imgHtml = imgs.length ? '<div class="sa-next-appt__imgs">' + _refImgsHtml(imgs, 'sa-next-appt__img') + '</div>' : '';
-
-    var apptId = appt.id;
-    var payStatus = appt.paymentStatus || 'unpaid';
-    var needsPay = ['canceled','cancelled','no_show'].indexOf(appt.status || '') < 0 && payStatus !== 'paid';
-    var collectBtn = (needsPay && apptId)
-      ? '<button class="sa-act sa-act--pay" onclick=\'openPaymentModal(' + JSON.stringify(apptId) + ')\' style="font-size:.68rem">&#36; ' + esc((lb.act_pay || '$ Collect').replace('$ ', '')) + '</button>'
-      : '';
-    var textBtn = appt.customerPhone
-      ? '<a class="sa-act sa-act--call" href="sms:' + esc(appt.customerPhone) + '" style="font-size:.68rem">&#128241; Text</a>'
-      : '';
-
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
     el.style.display = 'block';
-    el.innerHTML = '<div class="sa-next-appt">' +
-      '<div class="sa-next-appt__left">' +
-        '<div class="sa-next-appt__tag">' + esc(lb.next_appt_tag || 'Next') + '</div>' +
-        '<div class="sa-next-appt__time">' + esc(timeStr) + '</div>' +
-        (countdown ? '<div class="sa-next-appt__countdown">' + esc(countdown) + '</div>' : '') +
-      '</div>' +
-      '<div class="sa-next-appt__body">' +
-        '<div class="sa-next-appt__name">' + esc(appt.customerName || lb.cust_fallback || 'Customer') + '</div>' +
-        '<div class="sa-next-appt__svc">' + esc(svcLbl) + '</div>' +
-        (staff ? '<div class="sa-next-appt__tech"><em class="sa-next-appt__tech-icon">&#9998;</em>' + esc(staff) + (dur ? ' &middot; ' + dur + ' ' + esc(lb.dur_min || 'min') : '') + '</div>' : (dur ? '<div class="sa-next-appt__dur">' + dur + ' ' + esc(lb.dur_min || 'min') + '</div>' : '')) +
-        ((collectBtn || textBtn) ? '<div class="sa-appt-actions" style="margin-top:.45rem;gap:.35rem">' + (collectBtn || '') + (textBtn || '') + '</div>' : '') +
-        imgHtml +
-      '</div>' +
-    '</div>';
+    el.innerHTML = _buildNaCard(appt, lb, { canManage: true });
   }
 
   // ── Dashboard ─────────────────────────────────────────────────────────────────
@@ -5665,68 +5877,7 @@
       return;
     }
 
-    var timeStr  = _fmtTime(appt.requestedTime || appt.time);
-    var rawSvcs  = appt.selectedServices || appt.services;
-    var svcArr;
-    if (Array.isArray(rawSvcs) && rawSvcs.length) { svcArr = rawSvcs; }
-    else if (appt.serviceType) { svcArr = [appt.serviceType]; }
-    else if (appt.service)     { svcArr = [appt.service]; }
-    else                        { svcArr = []; }
-    svcArr = svcArr.filter(Boolean);
-    var svcLbl = svcArr.join(' \u00b7 ');
-
-    var staff  = appt.staff && appt.staff.toLowerCase() !== 'any' ? appt.staff : null;
-    var phone  = appt.customerPhone || appt.phone || '';
-    var name   = appt.customerName || lb.cust_fallback || 'Customer';
-    var dur    = appt.durationMins || appt.totalDurationMins;
-    var apptId = appt.id;
-
-    // Countdown
-    var d = appt.requestedDate || appt.date || '';
-    var countdown = '';
-    if (d === todayIso && (appt.requestedTime || appt.time)) {
-      var tp = (appt.requestedTime || appt.time).split(':');
-      var apptMins = parseInt(tp[0]||0,10)*60 + parseInt(tp[1]||0,10);
-      var nowMins  = now.getHours()*60 + now.getMinutes();
-      var diff = apptMins - nowMins;
-      if (diff > 0) {
-        countdown = lb.countdown_in + ' ' + (diff >= 60
-          ? Math.floor(diff/60) + lb.countdown_hr + (diff%60 ? ' ' + diff%60 + lb.countdown_min : '')
-          : diff + lb.countdown_min);
-      }
-    } else if (d > todayIso) {
-      countdown = _fmtDate(d);
-    }
-
-    var startBtn = (apptId && (_userRole === 'owner' || _userRole === 'manager'))
-      ? '<button class="sa-act sa-act--start" onclick=\'updateBookingStatus(' + JSON.stringify(apptId) + ',"in_progress")\'>&#9654; ' + esc((lb.act_start || '▶ Start').replace('▶ ', '')) + '</button>'
-      : '';
-    var textLink = phone
-      ? '<a class="sa-act sa-act--call" href="sms:' + esc(phone) + '" style="font-size:.68rem">&#128241; Text</a>'
-      : '';
-    var payStatus = appt.paymentStatus || 'unpaid';
-    var needsPay = ['canceled','cancelled','no_show'].indexOf(appt.status || '') < 0 && payStatus !== 'paid';
-    var collectBtn = (needsPay && apptId)
-      ? '<button class="sa-act sa-act--pay" onclick=\'openPaymentModal(' + JSON.stringify(apptId) + ')\' style="font-size:.68rem">&#36; ' + esc((lb.act_pay || '$ Collect').replace('$ ', '')) + '</button>'
-      : '';
-
-    dashNext.innerHTML = '<div class="sa-next-appt">' +
-      '<div class="sa-next-appt__left">' +
-        '<div class="sa-next-appt__tag">' + esc(lb.next_appt_tag || 'Next') + '</div>' +
-        '<div class="sa-next-appt__time">' + esc(timeStr) + '</div>' +
-        (countdown ? '<div class="sa-next-appt__countdown">' + esc(countdown) + '</div>' : '') +
-      '</div>' +
-      '<div class="sa-next-appt__body">' +
-        '<div class="sa-next-appt__name">' + esc(name) + '</div>' +
-        '<div class="sa-next-appt__svc">' + esc(svcLbl) + '</div>' +
-        (staff
-          ? '<div class="sa-next-appt__tech"><em class="sa-next-appt__tech-icon">&#9998;</em>' + esc(staff) + (dur ? ' &middot; ' + dur + ' ' + esc(lb.dur_min || 'min') : '') + '</div>'
-          : (dur ? '<div class="sa-next-appt__dur">' + dur + ' ' + esc(lb.dur_min || 'min') + '</div>' : '')) +
-        '<div class="sa-appt-actions" style="margin-top:.5rem;gap:.35rem">' +
-          startBtn + textLink + collectBtn +
-        '</div>' +
-      '</div>' +
-    '</div>';
+    dashNext.innerHTML = _buildNaCard(appt, lb, { canManage: true });
 
     _updateCashierBadge();
   }
@@ -7502,6 +7653,15 @@
       next_appt_tag:'Tiếp theo', next_appt_empty:'Không có lịch hẹn sắp tới.',
       countdown_in:'còn', countdown_hr:' giờ', countdown_min:' phút',
       dur_min:'phút', cust_fallback:'Khách',
+      na_lbl_customer:'LỊCH HẸN', na_lbl_tech:'KỸ THUẬT VIÊN',
+      na_shift_today:'Hôm nay:', na_unassigned:'Chưa phân công',
+      na_working:'● Đang làm', na_off:'○ Nghỉ',
+      na_phone:'Điện thoại', na_dur:'thời gian',
+      na_confirm_done_title:'Xác nhận hoàn thành?', na_confirm_done_body:'Đánh dấu lịch hẹn này đã xong?',
+      na_confirm_done_ok:'✓ Xong', na_confirm_text_title:'Nhắn tin xác nhận?',
+      na_confirm_text_ok:'✉ Gửi', na_confirm_call_title:'Gọi cho khách?',
+      na_confirm_call_ok:'📞 Gọi',
+      na_act_done:'Xong', na_act_cancel:'Hủy', na_act_pay:'Thu $', na_act_text:'Nhắn', na_act_call:'Gọi',
       // ── Cashier ───────────────────────────────────────────────────────────────
       cashier_title:'Thu Tiền Nhanh', cashier_subtitle:'Booking chưa thu tiền',
       cashier_empty:'Không có booking chưa thu tiền.',
@@ -7764,6 +7924,15 @@
       next_appt_tag:'Next', next_appt_empty:'No upcoming appointments.',
       countdown_in:'in', countdown_hr:'h', countdown_min:'m',
       dur_min:'min', cust_fallback:'Customer',
+      na_lbl_customer:'APPOINTMENT', na_lbl_tech:'TECHNICIAN',
+      na_shift_today:'Today:', na_unassigned:'Unassigned',
+      na_working:'● Working', na_off:'○ Off today',
+      na_phone:'Phone', na_dur:'duration',
+      na_confirm_done_title:'Complete Appointment?', na_confirm_done_body:'Mark this appointment as finished?',
+      na_confirm_done_ok:'✓ Yes, Complete', na_confirm_text_title:'Send Confirmation Text?',
+      na_confirm_text_ok:'✉ Send Text', na_confirm_call_title:'Call Customer?',
+      na_confirm_call_ok:'📞 Call',
+      na_act_done:'Done', na_act_cancel:'Cancel', na_act_pay:'Collect $', na_act_text:'Text', na_act_call:'Call',
       // ── Cashier ───────────────────────────────────────────────────────────────
       cashier_title:'Cashier', cashier_subtitle:'Unpaid bookings',
       cashier_empty:'No unpaid bookings.',
@@ -8025,6 +8194,15 @@
       next_appt_tag:'Próxima', next_appt_empty:'Sin citas próximas.',
       countdown_in:'en', countdown_hr:'h', countdown_min:'m',
       dur_min:'min', cust_fallback:'Cliente',
+      na_lbl_customer:'CITA', na_lbl_tech:'TÉCNICO',
+      na_shift_today:'Hoy:', na_unassigned:'Sin asignar',
+      na_working:'● Trabajando', na_off:'○ Libre hoy',
+      na_phone:'Teléfono', na_dur:'duración',
+      na_confirm_done_title:'¿Completar cita?', na_confirm_done_body:'¿Marcar esta cita como finalizada?',
+      na_confirm_done_ok:'✓ Sí, Completar', na_confirm_text_title:'¿Enviar texto de confirmación?',
+      na_confirm_text_ok:'✉ Enviar', na_confirm_call_title:'¿Llamar al cliente?',
+      na_confirm_call_ok:'📞 Llamar',
+      na_act_done:'Lista', na_act_cancel:'Cancelar', na_act_pay:'Cobrar $', na_act_text:'Texto', na_act_call:'Llamar',
       // ── Cashier ───────────────────────────────────────────────────────────────
       cashier_title:'Caja', cashier_subtitle:'Citas sin cobrar',
       cashier_empty:'Sin citas pendientes de cobro.',

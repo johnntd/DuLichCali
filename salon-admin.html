@@ -2346,6 +2346,10 @@
         <span class="pm-summary-label" style="color:var(--gold-lt)">Add-ons</span>
         <span id="pmSumAddOn" class="pm-summary-val" style="color:var(--gold-lt)"></span>
       </div>
+      <div class="pm-summary-row" id="pmSumAdjRow" style="display:none">
+        <span class="pm-summary-label" id="pmSumAdjLbl" style="color:#fb923c">Adjustment</span>
+        <span id="pmSumAdj" class="pm-summary-val" style="color:#fb923c"></span>
+      </div>
       <div class="pm-summary-row" id="pmSumTaxRow" style="display:none">
         <span class="pm-summary-label" style="color:#94a3b8" id="pmSumTaxLbl">Tax</span>
         <span id="pmSumTax" class="pm-summary-val" style="color:var(--muted)"></span>
@@ -2386,11 +2390,33 @@
         <button class="btn btn--outline btn--sm" type="button" onclick="_pmAddAddon()" style="flex-shrink:0;height:38px;padding:0 .85rem;white-space:nowrap" data-i18n="btn_add_addon">+ Thêm</button>
       </div>
       <div id="pmAddOnList" style="margin-top:.35rem;display:flex;flex-direction:column;gap:.22rem"></div>
+      <!-- Shown when selected add-on has no price in catalog -->
+      <div id="pmAddOnPricePrompt" style="display:none;background:rgba(251,146,60,.09);border:1px solid rgba(251,146,60,.38);border-radius:6px;padding:.5rem .65rem;margin-top:.45rem">
+        <div id="pmAddOnPricePromptLbl" style="font-size:.74rem;color:#fb923c;margin-bottom:.35rem"></div>
+        <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">
+          <input id="pmAddOnPriceInput" class="sa-input" type="number" min="0" step="0.01" placeholder="Price ($)" style="width:120px;height:34px;font-size:.8rem">
+          <button class="btn btn--sm" type="button" onclick="_pmConfirmAddOnBookingOnly()" style="height:34px;font-size:.74rem;white-space:nowrap">This booking</button>
+          <button id="pmAddOnSaveCatalogBtn" class="btn btn--sm btn--outline" type="button" onclick="_pmConfirmAddOnSaveCatalog()" style="height:34px;font-size:.74rem;white-space:nowrap;display:none">Save to catalog</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Booking-level price adjustment — owner/manager only -->
+    <div class="pm-group" id="pmAdjSection" style="display:none">
+      <label class="pm-label">Price Adjustment <span style="font-size:.68rem;color:var(--muted)">(this booking only)</span></label>
+      <div style="display:flex;gap:.45rem;align-items:center">
+        <select id="pmAdjType" class="sa-input" style="width:115px;height:36px;padding:0 .4rem;font-size:.78rem" onchange="_updatePmBalance()">
+          <option value="discount">Discount (−)</option>
+          <option value="charge">Surcharge (+)</option>
+        </select>
+        <input id="pmAdjAmt" class="sa-input" type="number" min="0" step="0.01" placeholder="0.00" style="flex:1;height:36px" oninput="_updatePmBalance()">
+      </div>
+      <div style="font-size:.67rem;color:var(--muted);margin-top:.2rem">Adjusts this booking only — catalog prices unchanged.</div>
     </div>
 
     <div class="pm-group">
       <label class="pm-label" data-i18n="pay_pay_status_lbl">Trạng thái thanh toán</label>
-      <select class="sa-input" id="pmStatus" style="width:100%;height:38px;padding:0 8px">
+      <select class="sa-input" id="pmStatus" onchange="_onPmStatusChange()" style="width:100%;height:38px;padding:0 8px">
         <option value="paid" data-i18n="pay_opt_paid">Đã thanh toán đủ (Paid in Full)</option>
         <option value="partial" data-i18n="pay_opt_partial">Thanh toán một phần (Partial)</option>
         <option value="unpaid" data-i18n="pay_opt_unpaid">Chưa thanh toán (Unpaid)</option>
@@ -3905,15 +3931,27 @@
   // Updates the summary block live as vendor types. Called by pmAmount + pmTip oninput.
   // ── Add-on management for payment modal ──────────────────────────────────────
   var _pmAddOns = []; // [{name, price}] — add-ons selected in current modal session
+  var _pmPendingAddOnName      = ''; // for missing-price prompt
+  var _pmPendingAddOnServiceId = null; // Firestore service doc ID (null for fallback items)
 
   function _pmAddOnTotal() {
     return _pmAddOns.reduce(function(s, a) { return s + a.price; }, 0);
   }
 
-  // Effective total = base service price + add-ons
+  // Read the signed booking-level price adjustment from the UI.
+  // Returns a negative value for discounts and positive for surcharges.
+  function _pmReadAdj() {
+    var typeEl = document.getElementById('pmAdjType');
+    var amtEl  = document.getElementById('pmAdjAmt');
+    if (!typeEl || !amtEl) return 0;
+    var amt = parseFloat(amtEl.value) || 0;
+    return typeEl.value === 'charge' ? amt : -amt;
+  }
+
+  // Effective total = base service price + add-ons + booking-level adjustment
   function _pmEffectiveTotal() {
     var base = parseFloat((document.getElementById('paymentModal') || {}).dataset.priceTotal || '0') || 0;
-    return base + _pmAddOnTotal();
+    return base + _pmAddOnTotal() + _pmReadAdj();
   }
 
   function _pmRenderAddOns() {
@@ -3935,16 +3973,70 @@
     var opt   = sel.options[sel.selectedIndex];
     var price = parseFloat(opt.dataset.price || '0') || 0;
     var name  = opt.textContent.replace(/\s*\(.*\)$/, '').trim();
+    var sid   = opt.value; // Firestore service doc ID, or 'fallback_N'
+
+    if (price <= 0) {
+      // Price not set in catalog — prompt owner/staff to enter one.
+      _pmPendingAddOnName      = name;
+      _pmPendingAddOnServiceId = sid.indexOf('fallback_') === 0 ? null : sid;
+      var promptEl = document.getElementById('pmAddOnPricePrompt');
+      var lbl      = document.getElementById('pmAddOnPricePromptLbl');
+      var catBtn   = document.getElementById('pmAddOnSaveCatalogBtn');
+      if (lbl) lbl.textContent = '\u26a0 "' + name + '" has no price set. Enter a price:';
+      // Only owners can save a missing price back to the catalog.
+      if (catBtn) catBtn.style.display = (_userRole === 'owner' && _pmPendingAddOnServiceId) ? 'inline-flex' : 'none';
+      if (promptEl) {
+        promptEl.style.display = 'block';
+        var inp = document.getElementById('pmAddOnPriceInput');
+        if (inp) { inp.value = ''; setTimeout(function() { inp.focus(); }, 50); }
+      }
+      return; // Wait for price input before adding.
+    }
+
+    _pmDoAddAddon(name, price);
+  }
+
+  // Internal: finish adding the add-on once its price is known.
+  function _pmDoAddAddon(name, price) {
+    var sel = document.getElementById('pmAddOnSelect');
     _pmAddOns.push({ name: name, price: price });
-    sel.value = '';
+    if (sel) sel.value = '';
     _pmRenderAddOns();
-    // Update summary row for add-on total
     var addOnRowEl = document.getElementById('pmSumAddOnRow');
     var addOnEl    = document.getElementById('pmSumAddOn');
     var addOnTotal = _pmAddOnTotal();
     if (addOnRowEl) addOnRowEl.style.display = addOnTotal > 0 ? 'flex' : 'none';
     if (addOnEl)    addOnEl.textContent = '+$' + addOnTotal.toFixed(2);
     _updatePmBalance();
+  }
+
+  // Add for this booking only — does not update catalog.
+  function _pmConfirmAddOnBookingOnly() {
+    var price = parseFloat((document.getElementById('pmAddOnPriceInput') || {}).value) || 0;
+    if (price <= 0) { var inp = document.getElementById('pmAddOnPriceInput'); if (inp) inp.focus(); return; }
+    var promptEl = document.getElementById('pmAddOnPricePrompt');
+    if (promptEl) promptEl.style.display = 'none';
+    _pmDoAddAddon(_pmPendingAddOnName, price);
+    _pmPendingAddOnName = ''; _pmPendingAddOnServiceId = null;
+  }
+
+  // Owner-only: add for this booking AND persist price to the service catalog.
+  function _pmConfirmAddOnSaveCatalog() {
+    if (_userRole !== 'owner') return; // Role guard
+    var price = parseFloat((document.getElementById('pmAddOnPriceInput') || {}).value) || 0;
+    if (price <= 0) { var inp = document.getElementById('pmAddOnPriceInput'); if (inp) inp.focus(); return; }
+    var sid  = _pmPendingAddOnServiceId;
+    var name = _pmPendingAddOnName;
+    var promptEl = document.getElementById('pmAddOnPricePrompt');
+    if (promptEl) promptEl.style.display = 'none';
+    _pmDoAddAddon(name, price);
+    // Persist price to vendor service catalog
+    if (sid && vendorRef) {
+      vendorRef.collection('services').doc(sid).update({ price: '$' + price.toFixed(2) })
+        .then(function() { showToast('\u2713 Saved price for "' + name + '" to catalog.'); })
+        .catch(function(e) { console.warn('[pmCatalog] save failed:', e.message); });
+    }
+    _pmPendingAddOnName = ''; _pmPendingAddOnServiceId = null;
   }
 
   function _pmRemoveAddon(idx) {
@@ -4083,11 +4175,31 @@
   }
   // ─────────────────────────────────────────────────────────────────────────────
 
+  // Auto-fill Amount Collected when the status dropdown is changed explicitly.
+  function _onPmStatusChange() {
+    var status   = document.getElementById('pmStatus').value;
+    var subtotal = _pmEffectiveTotal(); // base + add-ons + adj
+    var tax      = subtotal > 0 && VENDOR_TAX_RATE > 0
+                     ? Math.round(subtotal * VENDOR_TAX_RATE * 100) / 100 : 0;
+    var grand    = subtotal + tax; // grand total excl. tip (tip is voluntary)
+    var amtEl    = document.getElementById('pmAmount');
+    if (!amtEl) return;
+    if (status === 'paid' && grand > 0) {
+      amtEl.value = grand.toFixed(2);
+      _updatePmBalance();
+    } else if (status === 'unpaid') {
+      amtEl.value = '0';
+      _updatePmBalance();
+    }
+    // 'partial': leave amount editable — no auto-fill
+  }
+
   function _updatePmBalance() {
     var modal     = document.getElementById('paymentModal');
     var baseTotal = parseFloat(modal.dataset.priceTotal) || 0;
     var addOnAmt  = _pmAddOnTotal();
-    var total     = baseTotal + addOnAmt;           // effective subtotal (base + add-ons)
+    var adj       = _pmReadAdj();                        // signed booking-level adjustment
+    var total     = baseTotal + addOnAmt + adj;          // effective total (base + add-ons + adj)
     var tax       = total > 0 && VENDOR_TAX_RATE > 0
                       ? Math.round(total * VENDOR_TAX_RATE * 100) / 100 : 0;
     var amount    = parseFloat(document.getElementById('pmAmount').value) || 0;
@@ -4099,6 +4211,20 @@
     var addOnEl    = document.getElementById('pmSumAddOn');
     if (addOnRowEl) addOnRowEl.style.display = addOnAmt > 0 ? 'flex' : 'none';
     if (addOnEl && addOnAmt > 0) addOnEl.textContent = '+$' + addOnAmt.toFixed(2);
+
+    // ── Adjustment row (booking-level discount or surcharge) ───────────────────
+    var adjRowEl  = document.getElementById('pmSumAdjRow');
+    var adjEl     = document.getElementById('pmSumAdj');
+    var adjLblEl  = document.getElementById('pmSumAdjLbl');
+    if (adjRowEl) {
+      if (adj !== 0) {
+        adjRowEl.style.display = 'flex';
+        if (adjEl)    adjEl.textContent  = adj < 0 ? '\u2212$' + Math.abs(adj).toFixed(2) : '+$' + adj.toFixed(2);
+        if (adjLblEl) adjLblEl.textContent = adj < 0 ? 'Discount' : 'Surcharge';
+      } else {
+        adjRowEl.style.display = 'none';
+      }
+    }
 
     // Update base total label
     var sumTotalEl = document.getElementById('pmSumTotal');
@@ -4276,11 +4402,27 @@
       (b.customerName || 'Khách') + (svcLbl ? ' \u00b7 ' + svcLbl : '');
     document.getElementById('paymentModal').dataset.priceTotal = priceTotal;
 
-    // Reset add-ons for this modal session
+    // Reset add-ons and pending price-prompt state for this modal session
     _pmAddOns = [];
+    _pmPendingAddOnName = ''; _pmPendingAddOnServiceId = null;
     _pmRenderAddOns();
     var _addOnRowEl = document.getElementById('pmSumAddOnRow');
     if (_addOnRowEl) _addOnRowEl.style.display = 'none';
+    // Hide price prompt from any previous session
+    var _pricePromptEl = document.getElementById('pmAddOnPricePrompt');
+    if (_pricePromptEl) _pricePromptEl.style.display = 'none';
+    // Hide adj summary row
+    var _adjRowEl = document.getElementById('pmSumAdjRow');
+    if (_adjRowEl) _adjRowEl.style.display = 'none';
+
+    // Booking-level price adjustment — owner/manager only; restore saved value if any
+    var adjSec    = document.getElementById('pmAdjSection');
+    var adjTypeEl = document.getElementById('pmAdjType');
+    var adjAmtEl  = document.getElementById('pmAdjAmt');
+    var canAdj    = (_userRole === 'owner' || _userRole === 'manager');
+    if (adjSec) adjSec.style.display = canAdj ? 'block' : 'none';
+    if (adjTypeEl) adjTypeEl.value = (b.priceAdjustment && b.priceAdjustment.type) || 'discount';
+    if (adjAmtEl)  adjAmtEl.value  = (b.priceAdjustment && b.priceAdjustment.amount > 0) ? b.priceAdjustment.amount : '';
 
     // Show summary block (price known) or no-price warning
     var summaryEl  = document.getElementById('pmSummary');
@@ -4364,11 +4506,14 @@
     var note       = document.getElementById('pmNote').value.trim();
 
     // Auto-derive paymentStatus from amounts when total is known; fall back to manual select
-    var priceTotal = parseFloat(document.getElementById('paymentModal').dataset.priceTotal) || 0;
-    var addOnAmt   = _pmAddOnTotal();
-    var effectiveTotal = priceTotal + addOnAmt;   // base + add-ons
-    var taxAmt     = effectiveTotal > 0 && VENDOR_TAX_RATE > 0
-                       ? Math.round(effectiveTotal * VENDOR_TAX_RATE * 100) / 100 : 0;
+    var priceTotal     = parseFloat(document.getElementById('paymentModal').dataset.priceTotal) || 0;
+    var addOnAmt       = _pmAddOnTotal();
+    var adj            = _pmReadAdj();                          // signed booking-level adjustment
+    var adjTypeEl      = document.getElementById('pmAdjType');
+    var adjAmtEl       = document.getElementById('pmAdjAmt');
+    var effectiveTotal = priceTotal + addOnAmt + adj;           // base + add-ons + adj
+    var taxAmt         = effectiveTotal > 0 && VENDOR_TAX_RATE > 0
+                           ? Math.round(effectiveTotal * VENDOR_TAX_RATE * 100) / 100 : 0;
     var payStatus;
     var balanceDue = null;
     if (effectiveTotal > 0) {
@@ -4409,6 +4554,17 @@
     if (balanceDue !== null) update.balanceDue = balanceDue;
     update.taxRate   = VENDOR_TAX_RATE;
     update.taxAmount = taxAmt;
+    // Persist booking-level price adjustment (discount or surcharge) — does NOT change catalog
+    var adjAmt = parseFloat((adjAmtEl || {}).value) || 0;
+    if (adjAmt > 0) {
+      update.priceAdjustment = {
+        type:   (adjTypeEl || {}).value || 'discount',
+        amount: adjAmt,
+        signed: adj  // signed value for quick lookup (negative = discount)
+      };
+    } else {
+      update.priceAdjustment = null;
+    }
     // Persist add-ons if any were selected
     if (_pmAddOns.length > 0) {
       update.selectedAddOns = _pmAddOns.map(function(a) { return { name: a.name, price: a.price }; });

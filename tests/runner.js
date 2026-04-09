@@ -279,6 +279,11 @@ test('RX-019: AIEngine call() has safe Claude fallback after provider failure [R
     'Phase 5: provider failures must fall back to Claude');
 });
 
+test('RX-020: customer conflict check uses _overlaps() (no back-to-back false positive) [RX-020]', function() {
+  assertContains(src, '_overlaps(reqStartMins, reqEndMins, aStart, aStart + aDur)',
+    'RX-020: customer conflict check must use _overlaps() — inline >= caused back-to-back loop');
+});
+
 // ══════════════════════════════════════════════════════════════════════════
 // GROUP 2 — STATE PARSER
 // type: mirrored-unit-logic

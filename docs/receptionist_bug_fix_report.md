@@ -277,6 +277,19 @@ Generated from `tests/cases/*.json`. Run `npm run test:receptionist` to verify a
 
 ---
 
+### RX-020 — Customer conflict check back-to-back false positive traps booking in loop
+- **Category:** conflict_resolution
+- **Status:** verified_in_runner
+- **Filed:** 2026-04-09 · **Fixed:** 2026-04-09
+- **Failing behavior:** After the customer has an existing appointment at 3:15 PM (ends 4:15 PM), the system correctly detects a conflict at 3:00 PM and asks "replace it, keep it, or pick a different time?" User chooses "different time." AI correctly resolves that 4:15 PM is the next available slot and proposes it. System re-fires the `customer_conflict` message — because the inline overlap condition used `>=` on the right boundary (`aEnd >= reqStart`), and the existing appointment ends exactly at 4:15 PM (`aEnd === reqStart = 975`). Every attempt to book at 4:15 PM re-triggers the same false conflict. User is permanently trapped in the loop.
+- **Root cause:** The customer conflict overlap check (line ~586) used an inline condition `aStart < reqEndMins && (aStart + aDur) >= reqStartMins` instead of `_overlaps()`. `_overlaps(aStart, aEnd, bStart, bEnd)` is defined as `aStart < bEnd && aEnd > bStart` — strict `>` on the right boundary, correctly allowing back-to-back (aEnd === reqStart). The staff conflict check has always used `_overlaps()`. The customer conflict check had a divergent inline condition with `>=`. The comment claimed this was intentional ("to catch exact back-to-back") but it was wrong — back-to-back appointments are legitimate for a customer.
+- **Fix:** Replaced inline `(aStart + aDur) >= reqStartMins` with `_overlaps(reqStartMins, reqEndMins, aStart, aStart + aDur)` in the customer conflict loop body. No other changes. Comment updated. Back-to-back is now allowed; genuine overlaps (aEnd > reqStart) are still caught.
+- **Runner check:** `assertContains(src, '_overlaps(reqStartMins, reqEndMins, aStart, aStart + aDur)')`
+- **Code:** `nailsalon/receptionist.js` → `NailAvailabilityChecker.check()` customer conflict check
+- **Confidence gap:** Runner verifies the fix string is present. Live testing needed to confirm 4:15 PM booking completes in production with real Firestore appointment data.
+
+---
+
 ## What the runner verifies vs does not verify
 
 | Claim | Verified? | How |

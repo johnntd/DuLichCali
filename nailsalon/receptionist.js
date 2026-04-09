@@ -564,8 +564,10 @@
           // Matches by name OR phone — either field is enough to identify the person.
           // Different-time bookings for the same customer are allowed (e.g. manicure at
           // 10 AM with Tracy, pedicure at 2 PM with Helen — both legitimate).
-          // Uses >= on the right boundary so back-to-back bookings are caught even when
-          // totalDurationMins is missing (60-min fallback: 9:30+60=10:30 → aEnd>=reqStart).
+          // Uses _overlaps() (strict >) so back-to-back appointments are NOT flagged:
+          // a customer can finish one service and start another immediately after.
+          // RX-020: was using >= which caused false positives for exactly-back-to-back slots
+          // (e.g. existing ends 16:15, new starts 16:15 → was incorrectly blocked).
           if (checkCustomer && !draft.isModify) {
             var draftName  = (draft.name  || '').toLowerCase().trim();
             var draftPhone = (draft.phone || '').replace(/\D/g, '');
@@ -580,10 +582,11 @@
               // Phone match: require ≥7 digits to avoid false positives on short inputs
               var phoneMatch = draftPhone.length >= 7 && apptPhone && apptPhone === draftPhone;
               if (!nameMatch && !phoneMatch) continue;
-              // Overlap: use >= on right boundary to catch exact back-to-back same-customer
               var aStart = _toMins(appt.time || '00:00');
               var aDur   = appt.totalDurationMins || appt.durationMins || DEFAULT_DUR;
-              if (aStart < reqEndMins && (aStart + aDur) >= reqStartMins) {
+              // Use _overlaps() (strict >) — consistent with staff conflict check.
+              // Back-to-back (aEnd === reqStart) is allowed for customers.
+              if (_overlaps(reqStartMins, reqEndMins, aStart, aStart + aDur)) {
                 // Check vendor-defined parallel rules before flagging as conflict.
                 // e.g. manicure + pedicure at the same time with different staff = OK.
                 var existSvcs = appt.selectedServices || (appt.service ? [appt.service] : []);

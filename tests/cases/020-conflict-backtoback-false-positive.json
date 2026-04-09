@@ -1,0 +1,33 @@
+{
+  "id": "RX-020",
+  "fix_date": "2026-04-09",
+  "category": "conflict_resolution",
+  "status": "verified_in_runner",
+  "title": "Customer conflict back-to-back false positive — booking trapped in loop after 'different time'",
+  "failing_behavior": "Customer has existing appointment at 3:15 PM (ends 4:15 PM). After conflict detection, user chooses 'different time' and AI correctly proposes 4:15 PM (next slot after existing ends). System re-fires customer_conflict because the existing appointment ends exactly at 4:15 PM (aEnd==reqStart). With >= boundary the check evaluates as true → conflict message shown again. User is permanently trapped: every new time proposed at exactly 4:15 PM causes the same false-positive loop.",
+  "root_cause": "NailAvailabilityChecker customer conflict overlap check (line 586) used an inline condition `aStart < reqEndMins && (aStart + aDur) >= reqStartMins` instead of the shared `_overlaps()` helper. `_overlaps()` uses strict `>` on the right boundary (aEnd > reqStart), allowing back-to-back appointments (aEnd === reqStart). The inline `>=` caused back-to-back to be falsely flagged. The staff conflict check correctly uses `_overlaps()`. The customer conflict check did not — inconsistency introduced the regression.",
+  "fix_summary": "Replaced inline `>= reqStartMins` overlap condition in the customer conflict check with `_overlaps(reqStartMins, reqEndMins, aStart, aStart + aDur)`. This is the same helper used by the staff conflict check, `_findAlternativeSlots`, and the free-staff finder. Back-to-back (aEnd === reqStart) is now correctly allowed for customers. Genuine overlaps (aEnd > reqStart) are still caught. Comment updated to explain why _overlaps() is the right choice.",
+  "conversation": [
+    { "role": "user", "content": "I like to book a pedicure with John today at 3PM. My phone is 4084397522 and I am JD" },
+    { "role": "assistant", "content": "John specializes in gel services only. Helen, Tracy, or Loan can do your pedicure — which would you prefer?\n[STATE:{\"intent\":\"booking_request\",\"services\":[\"Pedicure\"],\"staff\":null,\"date\":\"2026-04-09\",\"time\":\"15:00\",\"name\":\"JD\",\"phone\":\"4084397522\",\"lang\":\"en\",\"pendingAction\":null,\"existingBookingId\":null}]" },
+    { "role": "user", "content": "Helen then" },
+    { "role": "assistant", "content": "You already have Eyelash Extensions with Loan Nguyen at 15:15 that day. Would you like to replace it, keep it, or pick a different time?\n[STATE:{\"intent\":\"booking_request\",\"services\":[\"Pedicure\"],\"staff\":\"Helen\",\"date\":\"2026-04-09\",\"time\":\"15:00\",\"name\":\"JD\",\"phone\":\"4084397522\",\"lang\":\"en\",\"pendingAction\":null,\"existingBookingId\":null}]" },
+    { "role": "user", "content": "different time please" },
+    { "role": "assistant", "content": "Of course! What time would you like instead?\n[STATE:{\"intent\":\"booking_request\",\"services\":[\"Pedicure\"],\"staff\":\"Helen\",\"date\":\"2026-04-09\",\"time\":null,\"name\":\"JD\",\"phone\":\"4084397522\",\"lang\":\"en\",\"pendingAction\":null,\"existingBookingId\":null}]" },
+    { "role": "user", "content": "put me in the next one after my appointment with Loan" },
+    { "role": "assistant", "content": "Your appointment with Loan is at 3:15 PM. A pedicure takes 60 minutes, so the next slot would be around 4:15 PM. Shall I book your pedicure with Helen at 4:15 PM today?\n[STATE:{\"intent\":\"booking_request\",\"services\":[\"Pedicure\"],\"staff\":\"Helen\",\"date\":\"2026-04-09\",\"time\":\"16:15\",\"name\":\"JD\",\"phone\":\"4084397522\",\"lang\":\"en\",\"pendingAction\":\"booking_offer\",\"existingBookingId\":null}]" },
+    { "role": "user", "content": "yes that is perfect" },
+    { "role": "assistant", "content": "Your Pedicure with Helen at 4:15 PM is confirmed and booked. We look forward to seeing you! Feel free to reach out if you need to make any changes or book anything else.\n[STATE:{\"intent\":\"booking_request\",\"services\":[\"Pedicure\"],\"staff\":\"Helen\",\"date\":\"2026-04-09\",\"time\":\"16:15\",\"name\":\"JD\",\"phone\":\"4084397522\",\"lang\":\"en\",\"pendingAction\":null,\"existingBookingId\":null}]\n[BOOKING:{\"services\":[\"Pedicure\"],\"staff\":\"Helen\",\"date\":\"2026-04-09\",\"time\":\"16:15\",\"name\":\"JD\",\"phone\":\"4084397522\"}]\n[ESCALATE:appointment]" }
+  ],
+  "conflict_resolution_behavior": {
+    "turn_3_original_conflict": "3:00 PM for Helen overlaps existing Loan appointment at 3:15 PM → correctly flagged",
+    "turn_5_proposal_4_15": "4:15 PM early check: existing ends exactly at 4:15 PM → back-to-back → with _overlaps (strict >) → valid → not flagged",
+    "turn_6_confirmation": "ESCALATE fires with time=16:15 → availability check at 16:15 → _overlaps returns false for aEnd=975, reqStart=975 → valid → booking proceeds"
+  },
+  "verify_fix_string": "_overlaps(reqStartMins, reqEndMins, aStart, aStart + aDur)",
+  "code_areas": [
+    "nailsalon/receptionist.js:NailAvailabilityChecker.check():customer-conflict-loop (line ~586)"
+  ],
+  "notes": "_overlaps() is defined at line 213: `return aStart < bEnd && aEnd > bStart`. Strict > on right boundary = back-to-back allowed. The staff conflict check has always used _overlaps() correctly. The customer conflict check had a divergent inline condition with >= that was documented as intentional but was in fact wrong — it prevented customers from booking the first available slot immediately after an existing appointment ends.",
+  "confidence_gap": "Runner verifies: _overlaps call present in customer-conflict section. Live testing required to confirm that the 4:15 PM booking completes correctly in production with real Firestore data (existing appointment duration must be confirmed as 60 min in the real appointment record)."
+}

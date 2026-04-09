@@ -61,12 +61,45 @@ function switchScreen(screenId) {
     tab.classList.toggle('nav-tab--active', active);
     tab.setAttribute('aria-selected', active ? 'true' : 'false');
   });
-  // Scroll active screen to top
-  const el = document.getElementById(screenId);
-  if (el) el.scrollTop = 0;
+
+  // ── Mobile full-screen chat: toggle body.chat-open ──────────
+  // On mobile (<768px) the chat opens as a true full-screen overlay.
+  // This hides the app-bar, bottom-nav and site-footer so the
+  // chat fills the whole screen (including the space they occupied).
+  if (window.innerWidth < 768) {
+    document.body.classList.toggle('chat-open', screenId === 'screenChat');
+    // Initialise the CSS custom property that tracks visual viewport height
+    // (updated by _onChatViewportResize when the iOS keyboard opens)
+    if (screenId === 'screenChat') _updateChatVH();
+  }
+
+  // Scroll active screen to top (chat manages its own scroll — skip)
+  if (screenId !== 'screenChat') {
+    const el = document.getElementById(screenId);
+    if (el) el.scrollTop = 0;
+  }
   // Keep back button state accurate after screen change
   _updateBackBtn();
 }
+
+// ── iOS keyboard: keep chat-screen sized to the visual viewport ──
+// On iOS Safari, when the keyboard opens the visual viewport shrinks but
+// position:fixed elements don't automatically adjust. Setting the height of
+// .chat-screen to visualViewport.height keeps the input bar above the keyboard.
+function _updateChatVH() {
+  const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  const chatScreen = document.querySelector('.chat-screen');
+  if (chatScreen) chatScreen.style.height = h + 'px';
+}
+
+(function _initChatViewport() {
+  if (!window.visualViewport) return;
+  function onResize() {
+    if (document.body.classList.contains('chat-open')) _updateChatVH();
+  }
+  window.visualViewport.addEventListener('resize', onResize);
+  window.visualViewport.addEventListener('scroll', onResize);
+}());
 
 // ── Global Back Navigation System ───────────────────────────
 // Evaluates current app state and returns the appropriate back

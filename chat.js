@@ -1826,8 +1826,9 @@ BEHAVIOR GUIDELINES:
     const lastIdx = state.history.length - 1;
     state.msgsEl.innerHTML = state.history.map((m, idx) => {
       const isLast = idx === lastIdx;
+      const aiAvatar = '<div class="cmsg__avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>';
       let html = `<div class="cmsg cmsg--${m.role}">` +
-        (m.role === 'assistant' ? '<div class="cmsg__avatar">✦</div>' : '') +
+        (m.role === 'assistant' ? aiAvatar : '') +
         `<div class="cmsg__bubble">${escapeHtml(m.content || '').replace(/\n/g, '<br>')}</div>` +
         `</div>`;
 
@@ -1855,7 +1856,7 @@ BEHAVIOR GUIDELINES:
     if (state.loading) {
       const dots = document.createElement('div');
       dots.className = 'cmsg cmsg--assistant cmsg--typing';
-      dots.innerHTML = '<div class="cmsg__avatar">✦</div><div class="cmsg__bubble"><span></span><span></span><span></span></div>';
+      dots.innerHTML = '<div class="cmsg__avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div><div class="cmsg__bubble"><span></span><span></span><span></span></div>';
       state.msgsEl.appendChild(dots);
     }
     state.msgsEl.scrollTop = state.msgsEl.scrollHeight;

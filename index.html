@@ -82,7 +82,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-  <link rel="stylesheet" href="style.css?v=20260404u">
+  <link rel="stylesheet" href="style.css?v=20260409a">
   <link rel="stylesheet" href="desktop.css">
 </head>
 <body>
@@ -612,12 +612,22 @@
 
         <!-- Chat header -->
         <div class="chat-header">
-          <div class="chat-header__avatar">✦</div>
+          <!-- Back button: visible only when chat is full-screen on mobile -->
+          <button class="chat-header__back" id="chatBackBtn" onclick="switchScreen('screenHome')" aria-label="Back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 12H5M12 5l-7 7 7 7"/>
+            </svg>
+          </button>
+          <div class="chat-header__avatar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            </svg>
+          </div>
           <div class="chat-header__info">
-            <strong>Trợ Lý Du Lịch</strong>
+            <strong>Du Lịch Cali AI</strong>
             <span class="chat-status">
               <span class="chat-status__dot"></span>
-              Du Lịch Cali AI
+              Trợ lý đặt dịch vụ · Online
             </span>
           </div>
         </div>
@@ -697,13 +707,15 @@
 
     <button class="nav-tab nav-tab--center" id="tabChat"
       data-screen="screenChat" role="tab" aria-selected="false" aria-controls="screenChat"
-      onclick="switchScreen('screenChat')">
+      onclick="switchScreen('screenChat')" aria-label="Chat với AI">
       <div class="nav-center-btn" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <!-- Chat bubble with sparkle — clearly "AI Chat" -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+          <path d="M8 10h.01M12 10h.01M16 10h.01" stroke-width="2.5"/>
         </svg>
       </div>
-      <span>AI</span>
+      <span>Chat AI</span>
     </button>
 
     <button class="nav-tab nav-tab--book" id="tabBook"
@@ -1155,7 +1167,7 @@
 <script src="ai-engine.js?v=20260412j"></script>
 <script src="ride-intake.js?v=20260406a"></script>
 <script src="workflowEngine.js?v=20260407a"></script>
-<script src="chat.js?v=20260414d"></script>
-<script src="script.js?v=20260404e" defer></script>
+<script src="chat.js?v=20260409a"></script>
+<script src="script.js?v=20260409a" defer></script>
 </body>
 </html>

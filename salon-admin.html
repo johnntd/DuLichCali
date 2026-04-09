@@ -3101,7 +3101,7 @@
         '<div class="sa-item__info">' +
           '<div class="sa-item__name">' + esc(s.name) + catHtml +
             ' <span class="status-badge status-badge--' + (s.active !== false ? 'active' : 'inactive') + '">' +
-            (s.active !== false ? 'Active' : 'Off') + '</span>' +
+            (s.active !== false ? lb.svc_active : lb.svc_inactive) + '</span>' +
           '</div>' +
           '<div class="sa-item__meta">' +
             esc(s.price || '') +
@@ -3113,9 +3113,9 @@
         '<div class="sa-item__actions">' +
           '<button class="toggle-pill ' + (s.active !== false ? 'on' : 'off') + '" ' +
             'onclick="toggleService(\'' + id + '\',' + (s.active === false) + ')">' +
-            (s.active !== false ? '● On' : '○ Off') + '</button>' +
-          '<button class="btn btn--outline btn--sm" onclick="openServiceModal(\'' + id + '\')">Edit</button>' +
-          '<button class="btn btn--danger btn--sm" onclick="deleteService(\'' + id + '\')">Xóa</button>' +
+            (s.active !== false ? lb.svc_on : lb.svc_off) + '</button>' +
+          '<button class="btn btn--outline btn--sm" onclick="openServiceModal(\'' + id + '\')">' + lb.btn_edit + '</button>' +
+          '<button class="btn btn--danger btn--sm" onclick="deleteService(\'' + id + '\')">' + lb.btn_delete + '</button>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -3501,8 +3501,8 @@
             '<span class="appt-card__date">'  + esc(dt) + (tm ? ' · ' + esc(tm) : '') + '</span>' +
           '</div>' +
           '<div class="appt-card__meta">' +
-            (a.service ? 'Dịch vụ: ' + esc(a.service) + ' · ' : '') +
-            (a.staff   ? 'Nhân viên: ' + esc(a.staff) + ' · '  : '') +
+            (a.service ? ((_LABELS[_dlcLang]||_LABELS.vi).lbl_service_prefix) + esc(a.service) + ' · ' : '') +
+            (a.staff   ? ((_LABELS[_dlcLang]||_LABELS.vi).lbl_staff_prefix) + esc(a.staff) + ' · '  : '') +
             (a.phone   ? esc(a.phone) : '') +
           '</div>' +
         '</div>';
@@ -3965,7 +3965,7 @@
     var addOns = (allServiceDocs || []).filter(function(d) {
       return d.data.active;
     });
-    sel.innerHTML = '<option value="">— Chọn dịch vụ —</option>';
+    sel.innerHTML = '<option value="">' + esc((_LABELS[_dlcLang]||_LABELS.vi).addon_select_ph) + '</option>';
     if (addOns.length) {
       addOns.forEach(function(d) {
         var price = _parsePrice(d.data.price || '') || (d.data.priceFrom || 0);
@@ -6383,18 +6383,19 @@
     if (!body) return;
     var insights = _buildAiInsights();
     var now = new Date();
-    if (ts) ts.textContent = 'Cập nhật ' + now.toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit'});
+    var _lb = _LABELS[_dlcLang] || _LABELS.vi;
+    if (ts) ts.textContent = (_lb.ai_refresh || '⟳') + ' ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     _setAiBadge(insights.length);
     if (!insights.length) {
-      body.innerHTML = '<div class="ai-panel-clear"><div class="ai-panel-clear-icon">&#10003;</div>Mọi thứ đang ổn.<br>Không có cảnh báo hay gợi ý nào lúc này.</div>';
+      body.innerHTML = '<div class="ai-panel-clear"><div class="ai-panel-clear-icon">&#10003;</div>' + esc(_lb.ai_panel_clear) + '</div>';
       return;
     }
     var groups = [
-      { key:'high',   label:'Cảnh Báo Quan Trọng' },
-      { key:'medium', label:'Cần Chú Ý' },
-      { key:'upsell', label:'Cơ Hội Doanh Thu' },
-      { key:'low',    label:'Gợi Ý' },
-      { key:'info',   label:'Thông Tin' }
+      { key:'high',   label:_lb.ai_grp_high },
+      { key:'medium', label:_lb.ai_grp_medium },
+      { key:'upsell', label:_lb.ai_grp_upsell },
+      { key:'low',    label:_lb.ai_grp_low },
+      { key:'info',   label:_lb.ai_grp_info }
     ];
     var html = '';
     groups.forEach(function(g) {
@@ -6900,6 +6901,17 @@
       perm_cancel:'Hủy hoặc xóa lịch hẹn',
       perm_confirm:'Xác nhận / từ chối từ AI Inbox',
       btn_save_perms:'Lưu quyền',
+      // ── Service card UI ──────────────────────────────────────────────────────
+      svc_on:'● Bật', svc_off:'○ Tắt', svc_active:'Hoạt động', svc_inactive:'Tắt',
+      svc_del_confirm:'Xóa dịch vụ này?',
+      // ── AI panel group labels ─────────────────────────────────────────────────
+      ai_grp_high:'Cảnh Báo Quan Trọng', ai_grp_medium:'Cần Chú Ý',
+      ai_grp_upsell:'Cơ Hội Doanh Thu', ai_grp_low:'Gợi Ý', ai_grp_info:'Thông Tin',
+      ai_panel_clear:'Mọi thứ đang ổn. Không có cảnh báo hay gợi ý nào lúc này.',
+      // ── Appointment meta labels ───────────────────────────────────────────────
+      lbl_service_prefix:'Dịch vụ: ', lbl_staff_prefix:'Nhân viên: ',
+      // ── Add-on dropdown ───────────────────────────────────────────────────────
+      addon_select_ph:'— Chọn dịch vụ —',
     },
     en: {
       // ── Navigation ──────────────────────────────────────────────────────────
@@ -7119,6 +7131,17 @@
       perm_cancel:'Cancel or delete appointments',
       perm_confirm:'Confirm / decline from AI Inbox',
       btn_save_perms:'Save permissions',
+      // ── Service card UI ──────────────────────────────────────────────────────
+      svc_on:'● On', svc_off:'○ Off', svc_active:'Active', svc_inactive:'Off',
+      svc_del_confirm:'Delete this service?',
+      // ── AI panel group labels ─────────────────────────────────────────────────
+      ai_grp_high:'Critical Alerts', ai_grp_medium:'Needs Attention',
+      ai_grp_upsell:'Revenue Opportunities', ai_grp_low:'Suggestions', ai_grp_info:'Info',
+      ai_panel_clear:'All clear. No alerts or suggestions right now.',
+      // ── Appointment meta labels ───────────────────────────────────────────────
+      lbl_service_prefix:'Service: ', lbl_staff_prefix:'Staff: ',
+      // ── Add-on dropdown ───────────────────────────────────────────────────────
+      addon_select_ph:'— Select service —',
     },
     es: {
       // ── Navigation ──────────────────────────────────────────────────────────
@@ -7338,6 +7361,17 @@
       perm_cancel:'Cancelar o eliminar citas',
       perm_confirm:'Confirmar / rechazar desde AI Inbox',
       btn_save_perms:'Guardar permisos',
+      // ── Service card UI ──────────────────────────────────────────────────────
+      svc_on:'● Activo', svc_off:'○ Inactivo', svc_active:'Activo', svc_inactive:'Inactivo',
+      svc_del_confirm:'¿Eliminar este servicio?',
+      // ── AI panel group labels ─────────────────────────────────────────────────
+      ai_grp_high:'Alertas Críticas', ai_grp_medium:'Necesita Atención',
+      ai_grp_upsell:'Oportunidades de Ingresos', ai_grp_low:'Sugerencias', ai_grp_info:'Información',
+      ai_panel_clear:'Todo en orden. Sin alertas ni sugerencias por ahora.',
+      // ── Appointment meta labels ───────────────────────────────────────────────
+      lbl_service_prefix:'Servicio: ', lbl_staff_prefix:'Personal: ',
+      // ── Add-on dropdown ───────────────────────────────────────────────────────
+      addon_select_ph:'— Seleccionar servicio —',
     }
   };
 

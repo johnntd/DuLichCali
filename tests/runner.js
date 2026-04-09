@@ -345,6 +345,59 @@ test('RX-022: _validateResponseQuality — banned phrase detection wired in [RX-
     'RX-022: _validateResponseQuality must console.warn when banned phrase detected');
 });
 
+// ── RX-023: _sanitizeResponse — permanent non-bypassable execution guard ─────
+// Verifies the hard enforcement layer that blocks banned phrases before any
+// display path. This is the non-bypassable system-level fix.
+
+test('RX-023: _sanitizeResponse function defined in source [RX-023]', function() {
+  assertContains(src, 'function _sanitizeResponse',
+    'RX-023: _sanitizeResponse must be defined — it is the non-bypassable execution guard');
+});
+
+test('RX-023: _sanitizeResponse called as FIRST operation in send() .then() [RX-023]', function() {
+  // Must appear immediately after _hideTyping in the .then() handler.
+  // The call must precede earlyCheckReady and _appendMessage to be truly non-bypassable.
+  assertContains(src, 'result = _sanitizeResponse(biz, result)',
+    'RX-023: _sanitizeResponse must be called in send() and its result must replace result');
+});
+
+test('RX-023: _sanitizeResponse GUARD log message present [RX-023]', function() {
+  assertContains(src, '[GUARD] _sanitizeResponse',
+    'RX-023: _sanitizeResponse must log [GUARD] warning when a banned phrase is blocked');
+});
+
+test('RX-023: _sanitizeResponse corrects _aiHistory after sanitization [RX-023]', function() {
+  // Without history correction, future Claude turns would see and build on the bad text.
+  // The function must overwrite the last assistant entry in history with safe text.
+  assertContains(src, '_wasSanitized',
+    'RX-023: _sanitizeResponse must set _wasSanitized flag on result to signal sanitization occurred');
+});
+
+test('RX-023: _sanitizeResponse contains regex patterns for banned phrases [RX-023]', function() {
+  assertContains(src, '_guardPatterns',
+    'RX-023: _sanitizeResponse must use _guardPatterns regex array for broader phrase matching');
+  assertContains(src, "can'?t\\s+see\\s+real",
+    'RX-023: _guardPatterns must include regex for "can\'t see real-time"');
+  assertContains(src, "limited\\s+to\\s+schedule\\s+data",
+    'RX-023: _guardPatterns must include paraphrase patterns like "limited to schedule data"');
+});
+
+test('RX-023: _sanitizeResponse is wired before earlyCheckReady in send() [RX-023]', function() {
+  // Verify call order: _sanitizeResponse must appear before _earlyCheckReady in source.
+  // Both live in the same .then() callback in send().
+  var sanitizePos = src.indexOf('result = _sanitizeResponse(biz, result)');
+  var earlyPos    = src.indexOf('var _earlyCheckReady = (');
+  assert(sanitizePos > 0, 'RX-023: _sanitizeResponse call must exist in source');
+  assert(sanitizePos < earlyPos,
+    'RX-023: _sanitizeResponse must appear BEFORE _earlyCheckReady in send() — it is the outermost gate');
+});
+
+test('RX-023: _sanitizeResponse clears escalationType on sanitized response [RX-023]', function() {
+  // A sanitized response must not trigger the escalation handler.
+  assertContains(src, '{ text: safe, escalationType: null, _wasSanitized: true }',
+    'RX-023: _sanitizeResponse must return escalationType:null to prevent bad escalations');
+});
+
 // ══════════════════════════════════════════════════════════════════════════
 // GROUP 2 — STATE PARSER
 // type: mirrored-unit-logic

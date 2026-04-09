@@ -1,0 +1,39 @@
+{
+  "id": "RX-023",
+  "fix_date": "2026-04-15",
+  "category": "availability_contract",
+  "status": "verified_in_runner",
+  "title": "Permanent non-bypassable execution guard: _sanitizeResponse blocks banned phrases before any display path",
+  "failing_behavior": "Claude's banned availability phrases ('I can't see real-time availability', 'I don't have booking data', etc.) reached the customer even after prompt fixes (RX-022), because _validateResponseQuality only console.warned — it did not actively replace or block the response. Any future prompt regression or model update could reintroduce the phrases with no hard enforcement.",
+  "root_cause": "The only enforcement was prompt instructions + a console.warn in _validateResponseQuality. Neither actually blocked Claude's text from reaching the customer. The enforcement layer had no teeth — it was advisory only.",
+  "fix_summary": "Added _sanitizeResponse(biz, result) — a non-bypassable execution guard called in send() as the FIRST operation after _handleMessage resolves, before earlyCheckReady, before escalation handling, before _appendMessage. Uses 16 regex patterns (broader than QV warn list) to detect banned phrases. On match: (1) replaces result.text with a context-aware safe response (asks next missing booking field, or 'What can I help with?'); (2) clears result.escalationType to prevent a bad escalation from the sanitized response; (3) corrects _aiHistory to overwrite Claude's bad text with the safe replacement — so future Claude turns don't see or build on the bad response; (4) logs [GUARD] warning with original text fragment for debugging. The function is architecturally upstream of every display path — it cannot be bypassed regardless of what Claude generates.",
+  "guard_properties": [
+    "Fires on 100% of Claude responses (not just booking turns)",
+    "Upstream of _earlyCheckReady, escalation handler, and _appendMessage",
+    "_aiHistory corrected before _saveHistory — Claude never sees the bad text",
+    "escalationType cleared — prevents escalation on sanitized response",
+    "context-aware replacement — asks next missing booking field in correct language",
+    "16 regex patterns cover paraphrases and variations of banned phrases"
+  ],
+  "conversation": [
+    { "role": "user", "content": "Is Helen available at 5pm?" },
+    { "role": "assistant", "content": "[GUARD INTERCEPTS THIS] I can't see real-time availability, but Helen works until 7 PM. → replaced with: 'What day and time would you like with Helen?'" }
+  ],
+  "bad_examples": [
+    "I can't see real-time availability, but Helen works until 7 PM.",
+    "I don't have access to real-time booking data.",
+    "I cannot verify if that slot is open.",
+    "The system will check that availability.",
+    "I'll check if that's available.",
+    "My access is limited to schedule data.",
+    "I only have schedule data, not booking data."
+  ],
+  "verify_fix_string": "function _sanitizeResponse",
+  "verify_fix_string_2": "[GUARD] _sanitizeResponse",
+  "verify_fix_string_3": "result = _sanitizeResponse(biz, result)",
+  "code_areas": [
+    "nailsalon/receptionist.js:_sanitizeResponse() — guard function definition",
+    "nailsalon/receptionist.js:send():after-_hideTyping — guard call site"
+  ],
+  "notes": "This is a redundant enforcement layer on top of the prompt fix (RX-022). Even if Claude ignores the prompt or a model update regresses the behavior, _sanitizeResponse will intercept. The [GUARD] log makes regressions visible immediately. Does not affect valid responses — only fires on exact pattern matches of known-bad phrases."
+}

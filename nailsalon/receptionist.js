@@ -778,6 +778,110 @@
     return result;
   }
 
+  // ── Response sanitizer — NON-BYPASSABLE EXECUTION GUARD ──────────────────────
+  // Called in send() as the FIRST operation after _handleMessage resolves.
+  // Runs on 100% of Claude responses before earlyCheckReady, before escalation
+  // handling, before _appendMessage — nothing can display until this passes.
+  //
+  // If Claude's response contains any banned availability phrase:
+  //   1. The phrase NEVER reaches the customer (text is replaced)
+  //   2. _aiHistory is corrected with the safe replacement (Claude doesn't see
+  //      the bad text in future turns either)
+  //   3. escalationType is cleared (no escalation on a sanitized response)
+  //   4. [GUARD] warning is logged to console for monitoring
+  //
+  // Safe replacement is context-aware: asks for the next missing booking field
+  // if in a booking flow, otherwise gives a neutral "how can I help?" prompt.
+  //
+  // RX-023: permanent non-bypassable availability contract enforcement
+  function _sanitizeResponse(biz, result) {
+    var text = result.text || '';
+
+    // Regex patterns — broader than the QV warn list to cover paraphrases
+    var _guardPatterns = [
+      /i\s+can'?t\s+see\s+real.?time/i,
+      /i\s+cannot\s+see\s+real.?time/i,
+      /don'?t\s+have\s+(access\s+to\s+)?real.?time/i,
+      /do\s+not\s+have\s+(access\s+to\s+)?real.?time/i,
+      /no\s+access\s+to\s+(real.?time|booking|calendar)/i,
+      /cannot\s+verify\s+(if\s+)?that\s+slot/i,
+      /can'?t\s+verify\s+(if\s+)?that\s+slot/i,
+      /i\s+don'?t\s+have\s+(booking|calendar)\s+data/i,
+      /i\s+do\s+not\s+have\s+(booking|calendar)\s+data/i,
+      /the\s+system\s+will\s+check\s+(that|it|availability)/i,
+      /i'?ll\s+check\s+if\s+that'?s\s+(open|available)/i,
+      /let\s+me\s+verify\s+(if\s+)?that'?s\s+(open|available)/i,
+      /cannot\s+access\s+(the\s+)?(booking|calendar|real.?time)/i,
+      /my\s+(data\s+)?access\s+(is\s+)?limited/i,
+      /limited\s+to\s+schedule\s+data/i,
+      /only\s+have\s+schedule\s+data/i
+    ];
+
+    var triggered = null;
+    _guardPatterns.some(function(rx) {
+      if (rx.test(text)) { triggered = rx.toString(); return true; }
+      return false;
+    });
+    if (!triggered) return result; // clean — pass through unchanged
+
+    // Banned phrase detected — build safe, context-aware replacement
+    var bs   = biz._bookingState;
+    var lang = (bs && bs.lang) || 'en';
+    var safe;
+
+    if (bs && (bs.intent === 'booking_request' || bs.pendingAction)) {
+      // In booking flow — ask for the next uncollected field
+      if (!bs.services || bs.services.length === 0) {
+        safe = lang === 'vi' ? 'Bạn muốn làm dịch vụ gì hôm nay?' :
+               lang === 'es' ? '¿Qué servicio le gustaría reservar?' :
+               'What service would you like to book?';
+      } else if (!bs.date) {
+        safe = lang === 'vi' ? 'Bạn muốn đặt lịch ngày nào?' :
+               lang === 'es' ? '¿Qué día prefiere?' :
+               'What day works for you?';
+      } else if (!bs.time) {
+        safe = lang === 'vi' ? 'Bạn muốn đặt vào lúc mấy giờ?' :
+               lang === 'es' ? '¿A qué hora le gustaría?' :
+               'What time would you prefer?';
+      } else if (!bs.name) {
+        safe = lang === 'vi' ? 'Cho tôi biết tên bạn nhé!' :
+               lang === 'es' ? '¿Me puede dar su nombre?' :
+               'Could I get your name?';
+      } else if (!bs.phone) {
+        safe = lang === 'vi' ? 'Và số điện thoại của bạn?' :
+               lang === 'es' ? '¿Y su número de teléfono?' :
+               'And your phone number?';
+      } else {
+        safe = lang === 'vi' ? 'Để tôi xác nhận cho bạn nhé!' :
+               lang === 'es' ? '¡Un momento, por favor!' :
+               'Let me get that confirmed for you!';
+      }
+    } else if (bs && bs.intent === 'staff_availability' && bs.staff) {
+      safe = lang === 'vi' ? 'Bạn muốn đặt lịch ngày và giờ nào với ' + bs.staff + '?' :
+             lang === 'es' ? '¿Qué día y hora prefiere con ' + bs.staff + '?' :
+             'What day and time would you like with ' + bs.staff + '?';
+    } else {
+      safe = lang === 'vi' ? 'Tôi có thể giúp gì cho bạn hôm nay?' :
+             lang === 'es' ? '¿En qué le puedo ayudar hoy?' :
+             'What can I help you with today?';
+    }
+
+    console.warn('[GUARD] _sanitizeResponse: banned phrase blocked before display.',
+      'Pattern:', triggered,
+      '| First 120 chars of original:', text.slice(0, 120),
+      '| Replaced with:', safe);
+
+    // Correct _aiHistory: overwrite Claude's bad text with the safe replacement
+    // so future Claude turns don't see or build on the bad response.
+    if (biz._aiHistory && biz._aiHistory.length &&
+        biz._aiHistory[biz._aiHistory.length - 1].role === 'assistant') {
+      biz._aiHistory[biz._aiHistory.length - 1].content = safe;
+      _saveHistory(biz);
+    }
+
+    return { text: safe, escalationType: null, _wasSanitized: true };
+  }
+
   // ── Marker parsing ────────────────────────────────────────────────────────────
   function _parseEscalationType(reply) {
     var m = reply.match(/\[ESCALATE:(order|appointment|reservation|question|cancel)\]/i);
@@ -2468,6 +2572,16 @@
         _handleMessage(biz, text, apiKey)
           .then(function (result) {
             _hideTyping(typingId);
+
+            // ── HARD EXECUTION GUARD — runs before EVERYTHING else ────────────────
+            // _sanitizeResponse intercepts 100% of Claude responses.
+            // Any banned availability phrase (data-access claims, premature confirmations)
+            // is REPLACED with a safe, context-aware response before any further processing.
+            // Claude's bad text never reaches _appendMessage, earlyCheckReady, or
+            // the escalation handler. _aiHistory is also corrected so Claude never
+            // sees the bad text in future turns.
+            // This cannot be bypassed — it is the outermost gate on every response.
+            result = _sanitizeResponse(biz, result);
 
             // ── Early slot validation (fires before contact-detail collection) ──────
             // Problem: the full check only runs on [ESCALATE:appointment], which Claude

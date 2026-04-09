@@ -1010,6 +1010,166 @@
       .ctrl-label { display: none; }
     }
 
+    /* ═══════════════════════════════════════════════════════════════
+       AI ASSISTANT PANEL — Operational Copilot
+    ═══════════════════════════════════════════════════════════════ */
+
+    /* ── Trigger button in sidebar ── */
+    .va-ai-trigger {
+      display: flex; align-items: center; gap: .55rem;
+      width: calc(100% - 2.3rem); margin: .65rem 1.15rem .2rem;
+      min-height: 46px; padding: 0 .9rem;
+      background: linear-gradient(135deg, rgba(167,139,250,.1), rgba(96,165,250,.06));
+      border: 1px solid rgba(167,139,250,.28);
+      border-radius: 8px; cursor: pointer;
+      font-family: var(--font-b); font-size: .73rem; font-weight: 700;
+      color: #c4b5fd; letter-spacing: .02em; text-align: left;
+      transition: background .18s, border-color .18s;
+      position: relative;
+    }
+    .va-ai-trigger:hover {
+      background: linear-gradient(135deg, rgba(167,139,250,.18), rgba(96,165,250,.1));
+      border-color: rgba(167,139,250,.5);
+    }
+    .va-ai-trigger .ai-trigger-icon { font-size: .95rem; flex-shrink: 0; }
+    .va-ai-trigger .ai-trigger-lbl  { flex: 1; }
+    .ai-count-badge {
+      background: #e8a800; color: #000;
+      font-size: .56rem; font-weight: 700;
+      border-radius: 99px; padding: 1px 6px;
+      min-width: 18px; text-align: center; flex-shrink: 0;
+    }
+
+    /* ── Backdrop ── */
+    .ai-panel-backdrop {
+      position: fixed; inset: 0; z-index: 150;
+      background: rgba(0,0,0,.42);
+      display: none; animation: aiFadeIn .2s ease;
+    }
+    .ai-panel-backdrop.open { display: block; }
+    @keyframes aiFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* ── Drawer panel ── */
+    .ai-panel {
+      position: fixed; top: 0; right: 0; bottom: 0;
+      z-index: 151;
+      width: min(360px, 94vw);
+      background: var(--navy-800);
+      border-left: 1px solid rgba(167,139,250,.25);
+      display: flex; flex-direction: column;
+      transform: translateX(100%);
+      transition: transform .28s cubic-bezier(.4,0,.2,1);
+      overflow: hidden;
+    }
+    .ai-panel.open { transform: translateX(0); }
+
+    /* ── Panel header ── */
+    .ai-panel-header {
+      padding: 1rem 1.25rem .9rem;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(167,139,250,.07), rgba(96,165,250,.03));
+      flex-shrink: 0;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem;
+    }
+    .ai-panel-title {
+      font-family: var(--font-d); font-size: 1rem; color: var(--cream);
+      display: flex; align-items: center; gap: .35rem;
+    }
+    .ai-panel-title-spark { font-size: .9rem; color: #a78bfa; }
+    .ai-panel-subtitle { font-size: .63rem; color: var(--muted); margin-top: .1rem; }
+    .ai-panel-close {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 6px; color: var(--muted);
+      padding: 0; cursor: pointer; font-size: .85rem;
+      min-height: 34px; min-width: 34px;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color .15s, color .15s; flex-shrink: 0;
+    }
+    .ai-panel-close:hover { border-color: var(--text); color: var(--text); }
+
+    /* ── Refresh strip ── */
+    .ai-panel-topbar {
+      padding: .45rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+      flex-shrink: 0;
+    }
+    .ai-panel-ts { font-size: .6rem; color: var(--muted); }
+    .ai-panel-refresh {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 5px; color: var(--muted);
+      font-family: var(--font-b); font-size: .6rem; font-weight: 700;
+      padding: .2rem .55rem; cursor: pointer; min-height: 28px;
+      transition: border-color .15s, color .15s;
+    }
+    .ai-panel-refresh:hover { border-color: rgba(167,139,250,.5); color: #c4b5fd; }
+
+    /* ── Scrollable body ── */
+    .ai-panel-body {
+      flex: 1; overflow-y: auto;
+      padding: .7rem .95rem;
+      display: flex; flex-direction: column; gap: .45rem;
+    }
+    .ai-panel-body::-webkit-scrollbar { width: 3px; }
+    .ai-panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* ── Section label ── */
+    .ai-sec-lbl {
+      font-size: .52rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .12em;
+      padding: .25rem 0 .05rem; margin-top: .2rem;
+    }
+
+    /* ── Insight card ── */
+    .ai-card {
+      background: var(--navy-700);
+      border: 1px solid var(--border);
+      border-left-width: 3px;
+      border-radius: 8px;
+      padding: .65rem .8rem;
+    }
+    .ai-card--high   { border-left-color: #f87171; background: rgba(248,113,113,.04); }
+    .ai-card--medium { border-left-color: #fbbf24; background: rgba(251,191,36,.03); }
+    .ai-card--low    { border-left-color: #4ade80; background: rgba(74,222,128,.03); }
+    .ai-card--info   { border-left-color: #60a5fa; background: rgba(96,165,250,.03); }
+    .ai-card--upsell { border-left-color: #a78bfa; background: rgba(167,139,250,.04); }
+    .ai-card-row { display: flex; align-items: flex-start; gap: .55rem; }
+    .ai-card-icon { font-size: .9rem; flex-shrink: 0; line-height: 1.3; }
+    .ai-card-body { flex: 1; min-width: 0; }
+    .ai-card-title { font-size: .78rem; font-weight: 700; color: var(--cream); line-height: 1.35; }
+    .ai-card-desc  { font-size: .68rem; color: var(--muted); line-height: 1.45; margin-top: .12rem; }
+    .ai-card-act {
+      display: inline-flex; align-items: center;
+      margin-top: .38rem;
+      font-family: var(--font-b); font-size: .62rem; font-weight: 700;
+      padding: .22rem .55rem; border-radius: 4px; cursor: pointer; min-height: 28px;
+      border: 1px solid rgba(167,139,250,.35); color: #c4b5fd;
+      background: rgba(167,139,250,.08);
+      transition: border-color .15s, background .15s;
+    }
+    .ai-card-act:hover { border-color: rgba(167,139,250,.6); background: rgba(167,139,250,.14); }
+
+    /* ── Empty / all-clear state ── */
+    .ai-panel-clear {
+      text-align: center; padding: 2.5rem 1rem;
+      color: var(--muted); font-size: .8rem; line-height: 1.65;
+    }
+    .ai-panel-clear-icon { font-size: 2rem; margin-bottom: .6rem; opacity: .55; }
+
+    /* ── Mobile: bottom sheet ── */
+    @media (max-width: 767px) {
+      .va-ai-trigger { width: calc(100% - 1.7rem); margin: .5rem .85rem .15rem; }
+      .ai-panel {
+        top: auto; right: 0; left: 0; bottom: 0;
+        width: 100%; max-height: 78vh;
+        border-left: none;
+        border-top: 1px solid rgba(167,139,250,.3);
+        border-radius: 16px 16px 0 0;
+        transform: translateY(100%);
+      }
+      .ai-panel.open { transform: translateY(0); }
+    }
+
     /* ── Loading screen enhancement ── */
     #authLoading {
       background: linear-gradient(160deg, var(--navy-900) 0%, var(--navy-800) 100%);
@@ -1154,6 +1314,13 @@
       <button class="va-nav-btn" id="nav-settings" onclick="switchTab('settings')">
         <svg class="va-nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
         <span class="va-nav-lbl">Cài Đặt</span>
+      </button>
+
+      <!-- AI Copilot trigger -->
+      <button class="va-ai-trigger" onclick="openAiPanel()">
+        <span class="ai-trigger-icon">&#10022;</span>
+        <span class="ai-trigger-lbl">AI Copilot</span>
+        <span class="ai-count-badge" id="aiCountBadge" style="display:none">0</span>
       </button>
 
       <!-- Sidebar footer: theme + language -->
@@ -4151,6 +4318,8 @@
     if (elUpcoming) elUpcoming.textContent = upcomingCount;
     if (elEsc)      elEsc.textContent      = _escCount;
     if (elEscStat)  elEscStat.classList.toggle('db-stat--alert', _escCount > 0);
+    // Refresh AI panel badge (and panel body if open)
+    if (typeof _refreshAiPanelIfOpen === 'function') _refreshAiPanelIfOpen();
 
     // Next appointment block
     var appt = _getNextAppt(_saAllItems);
@@ -5419,6 +5588,298 @@
       });
   }
 
+  // ── AI ASSISTANT PANEL — Operational Copilot ────────────────────────────────
+
+  var _aiPanelOpen = false;
+
+  function openAiPanel() {
+    _aiPanelOpen = true;
+    document.getElementById('aiPanel').classList.add('open');
+    document.getElementById('aiPanelBackdrop').classList.add('open');
+    refreshAiPanel();
+  }
+
+  function closeAiPanel() {
+    _aiPanelOpen = false;
+    document.getElementById('aiPanel').classList.remove('open');
+    document.getElementById('aiPanelBackdrop').classList.remove('open');
+  }
+
+  function refreshAiPanel() {
+    var body = document.getElementById('aiPanelBody');
+    var ts   = document.getElementById('aiPanelTs');
+    if (!body) return;
+    var insights = _buildAiInsights();
+    var now = new Date();
+    if (ts) ts.textContent = 'Cập nhật ' + now.toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit'});
+    _setAiBadge(insights.length);
+    if (!insights.length) {
+      body.innerHTML = '<div class="ai-panel-clear"><div class="ai-panel-clear-icon">&#10003;</div>Mọi thứ đang ổn.<br>Không có cảnh báo hay gợi ý nào lúc này.</div>';
+      return;
+    }
+    var groups = [
+      { key:'high',   label:'Cảnh Báo Quan Trọng' },
+      { key:'medium', label:'Cần Chú Ý' },
+      { key:'upsell', label:'Cơ Hội Doanh Thu' },
+      { key:'low',    label:'Gợi Ý' },
+      { key:'info',   label:'Thông Tin' }
+    ];
+    var html = '';
+    groups.forEach(function(g) {
+      var items = insights.filter(function(i){ return i.severity === g.key; });
+      if (!items.length) return;
+      html += '<div class="ai-sec-lbl">' + esc(g.label) + '</div>';
+      items.forEach(function(ins){ html += _renderAiCard(ins); });
+    });
+    body.innerHTML = html;
+  }
+
+  function _setAiBadge(n) {
+    var badge = document.getElementById('aiCountBadge');
+    if (!badge) return;
+    badge.textContent = n;
+    badge.style.display = n > 0 ? 'inline-flex' : 'none';
+  }
+
+  function _refreshAiPanelIfOpen() {
+    if (_aiPanelOpen) { refreshAiPanel(); return; }
+    // Update badge even when panel is closed
+    var insights = _buildAiInsights();
+    _setAiBadge(insights.length);
+  }
+
+  function _renderAiCard(ins) {
+    var actHtml = ins.action
+      ? '<button class="ai-card-act" onclick="' + ins.action + '">' + esc(ins.actionLabel || 'Xem') + '</button>'
+      : '';
+    return '<div class="ai-card ai-card--' + ins.severity + '">' +
+      '<div class="ai-card-row">' +
+        '<div class="ai-card-icon">' + ins.icon + '</div>' +
+        '<div class="ai-card-body">' +
+          '<div class="ai-card-title">' + esc(ins.title) + '</div>' +
+          '<div class="ai-card-desc">' + ins.desc + '</div>' +
+          (actHtml ? '<div>' + actHtml + '</div>' : '') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function _buildAiInsights() {
+    var insights = [];
+    var now      = new Date();
+    var todayIso = now.getFullYear() + '-' + ('0'+(now.getMonth()+1)).slice(-2) + '-' + ('0'+now.getDate()).slice(-2);
+    var nowMins  = now.getHours() * 60 + now.getMinutes();
+    var dayKeys  = ['sun','mon','tue','wed','thu','fri','sat'];
+    var todayKey = dayKeys[now.getDay()];
+    var items    = _saAllItems || [];
+
+    function tM(t) { if (!t) return 0; var p=t.split(':'); return parseInt(p[0]||0,10)*60+parseInt(p[1]||0,10); }
+    function fM(m) { var h=Math.floor(m/60),mn=m%60; return (h>12?h-12:h||12)+':'+(mn<10?'0':'')+mn+(h<12?' SA':' CH'); }
+
+    var todayItems = items.filter(function(b){ return (b.requestedDate||b.date||'')===todayIso; });
+    var activeToday = todayItems.filter(function(b){
+      var s=b.status||'confirmed'; return s!=='canceled'&&s!=='cancelled'&&s!=='no_show'&&s!=='rescheduled';
+    });
+
+    // Build per-staff booking index for today
+    var byStaff = {};
+    activeToday.forEach(function(b){
+      var sn=(b.staff||'').toLowerCase();
+      if(!sn||sn==='any') return;
+      if(!byStaff[sn]) byStaff[sn]=[];
+      byStaff[sn].push(b);
+    });
+
+    // ── 1. AI Inbox unread ──────────────────────────────────────────────────
+    if (_escCount > 0) {
+      insights.push({
+        severity:'high', icon:'&#128172;',
+        title: _escCount + ' yêu cầu mới trong AI Inbox',
+        desc:  'Khách đang chờ phản hồi. Kiểm tra và xử lý ngay để không mất khách.',
+        action:"closeAiPanel();switchTab('inbox')", actionLabel:'Mở AI Inbox'
+      });
+    }
+
+    // ── 2. Unpaid / partial bookings today ──────────────────────────────────
+    var unpaidToday = activeToday.filter(function(b){ return (b.paymentStatus||'unpaid')!=='paid'; });
+    if (unpaidToday.length) {
+      var partial = unpaidToday.filter(function(b){ return b.paymentStatus==='partial'; }).length;
+      var unpaid  = unpaidToday.length - partial;
+      var desc2 = [];
+      if (unpaid)  desc2.push(unpaid  + ' chưa thanh toán');
+      if (partial) desc2.push(partial + ' thanh toán một phần');
+      insights.push({
+        severity:'high', icon:'&#128184;',
+        title: unpaidToday.length + ' lịch hẹn hôm nay chưa thu tiền',
+        desc:  desc2.join(' · ') + '. Thu tiền trước khi khách rời tiệm.',
+        action:"closeAiPanel();switchTab('appointments')", actionLabel:'Xem Lịch Hẹn'
+      });
+    }
+
+    // ── 3. Overlap conflicts today ──────────────────────────────────────────
+    var overlapMsgs = [];
+    Object.keys(byStaff).forEach(function(sn) {
+      var bks = byStaff[sn].slice().sort(function(a,b2){ return tM(a.requestedTime||a.time)-tM(b2.requestedTime||b2.time); });
+      for (var i=0;i<bks.length-1;i++) {
+        var aEnd   = tM(bks[i].requestedTime||bks[i].time) + (bks[i].totalDurationMins||bks[i].durationMins||60);
+        var bStart = tM(bks[i+1].requestedTime||bks[i+1].time);
+        if (aEnd > bStart) overlapMsgs.push(esc(bks[i].staff||sn) + ' (' + fM(bStart) + ')');
+      }
+    });
+    if (overlapMsgs.length) {
+      insights.push({
+        severity:'high', icon:'&#9888;',
+        title: 'Xung đột lịch hẹn hôm nay',
+        desc:  overlapMsgs.slice(0,3).join(' · ') + '. Kiểm tra và điều chỉnh ngay.',
+        action:"closeAiPanel();switchTab('appointments')", actionLabel:'Xem Lịch Hẹn'
+      });
+    }
+
+    // ── 4. Completed but unpaid ─────────────────────────────────────────────
+    var completedUnpaid = items.filter(function(b){ return b.status==='completed' && (b.paymentStatus||'unpaid')!=='paid'; });
+    if (completedUnpaid.length) {
+      insights.push({
+        severity:'medium', icon:'&#10003;',
+        title: completedUnpaid.length + ' lịch đã hoàn thành nhưng chưa thu tiền',
+        desc:  'Ghi nhận thanh toán để hoàn thiện hồ sơ và hoa hồng nhân viên.',
+        action:"closeAiPanel();switchTab('appointments')", actionLabel:'Xem Lịch Hẹn'
+      });
+    }
+
+    // ── 5. Unassigned bookings today ────────────────────────────────────────
+    var unassigned = activeToday.filter(function(b){ return !b.staff || b.staff.toLowerCase()==='any'; });
+    if (unassigned.length) {
+      insights.push({
+        severity:'medium', icon:'&#128100;',
+        title: unassigned.length + ' lịch hôm nay chưa có nhân viên',
+        desc:  'Phân công nhân viên sớm để đảm bảo dịch vụ đúng giờ.',
+        action:"closeAiPanel();switchTab('appointments')", actionLabel:'Phân Công'
+      });
+    }
+
+    // ── 6. Staff assigned but not on shift today ────────────────────────────
+    if (currentStaffData && currentStaffData.length) {
+      var workingNames = {};
+      currentStaffData.forEach(function(item){
+        var ds = item.data.schedule && item.data.schedule[todayKey];
+        if (ds && ds.active) workingNames[(item.data.name||'').toLowerCase()] = true;
+      });
+      var mismatch = [];
+      activeToday.forEach(function(b){
+        var sn = (b.staff||'').toLowerCase();
+        if (!sn||sn==='any') return;
+        if (!workingNames[sn] && mismatch.indexOf(b.staff) === -1) mismatch.push(b.staff);
+      });
+      if (mismatch.length) {
+        insights.push({
+          severity:'medium', icon:'&#128197;',
+          title: 'Lịch phân công nhân viên đang nghỉ',
+          desc:  mismatch.slice(0,3).join(', ') + ' không có ca hôm nay nhưng có lịch được giao.',
+          action:"closeAiPanel();switchTab('appointments')", actionLabel:'Xem Lịch Hẹn'
+        });
+      }
+    }
+
+    // ── 7. Missing service price ────────────────────────────────────────────
+    var noPrice = (allServiceDocs||[]).filter(function(d){
+      var p = d.data.price || d.data.priceEst || '';
+      if (!p) return true;
+      return !parseFloat(String(p).replace(/[^0-9.]/g,''));
+    });
+    if (noPrice.length) {
+      insights.push({
+        severity:'medium', icon:'&#9888;',
+        title: noPrice.length + ' dịch vụ chưa có giá',
+        desc:  'Thiếu giá ảnh hưởng đến thanh toán và tính hoa hồng nhân viên.',
+        action:"closeAiPanel();switchTab('services')", actionLabel:'Cập Nhật Giá'
+      });
+    }
+
+    // ── 8. Upsell: upcoming single-service basic bookings ───────────────────
+    var basicKw = ['manicure', 'pedicure', 'nail', 'móng', 'cắt móng', 'basic'];
+    var upsellOpts = ['Nail Art', 'Gel Màu', 'Đắp Bột'];
+    var upsellCandidates = activeToday.filter(function(b){
+      var bMin = tM(b.requestedTime||b.time);
+      if (bMin < nowMins) return false;
+      var svcs = (b.selectedServices||b.services||[b.serviceType||b.service||'']).filter(Boolean);
+      if (svcs.length !== 1) return false;
+      var sn = (svcs[0]||'').toLowerCase();
+      return basicKw.some(function(k){ return sn.indexOf(k)>=0; });
+    });
+    if (upsellCandidates.length) {
+      var ex = upsellCandidates[0];
+      var exName = esc(ex.customerName||ex.name||'Khách');
+      var exSvc  = esc((ex.selectedServices||ex.services||[ex.serviceType||ex.service||''])[0]||'');
+      insights.push({
+        severity:'upsell', icon:'&#10024;',
+        title: 'Cơ hội tăng doanh thu — ' + exName,
+        desc:  exName + ' đặt <strong>' + exSvc + '</strong>. Gợi ý thêm <strong>' +
+               upsellOpts.slice(0,2).join('</strong> hoặc <strong>') + '</strong> để tăng giá trị đơn.' +
+               (upsellCandidates.length>1 ? ' (+' + (upsellCandidates.length-1) + ' khách khác)' : ''),
+        action: null
+      });
+    }
+
+    // ── 9. Idle staff on shift right now ────────────────────────────────────
+    if (currentStaffData && currentStaffData.length) {
+      var idleStaff = [];
+      currentStaffData.forEach(function(item){
+        var s = item.data;
+        if (!s.active) return;
+        var ds = s.schedule && s.schedule[todayKey];
+        if (!ds||!ds.active||!ds.start||!ds.end) return;
+        if (nowMins < tM(ds.start) || nowMins >= tM(ds.end)) return;
+        var upcoming = (byStaff[(s.name||'').toLowerCase()]||[]).filter(function(b){
+          var bMin = tM(b.requestedTime||b.time);
+          return bMin >= nowMins && bMin <= nowMins + 90;
+        });
+        if (!upcoming.length) idleStaff.push(s.name);
+      });
+      if (idleStaff.length) {
+        insights.push({
+          severity:'info', icon:'&#128336;',
+          title: idleStaff.join(', ') + ' đang trống lịch',
+          desc:  'Không có lịch hẹn trong 90 phút tới. Có thể nhận thêm khách.',
+          action:"closeAiPanel();switchTab('appointments')", actionLabel:'+ Đặt Lịch'
+        });
+      }
+    }
+
+    // ── 10. Rebooking suggestions (21–90 days since last visit) ─────────────
+    var custLast = {};
+    items.forEach(function(b){
+      var s = b.status||'confirmed';
+      if (s==='canceled'||s==='cancelled'||s==='rescheduled') return;
+      var ph = b.customerPhone||b.phone||'';
+      if (!ph) return;
+      var d = b.requestedDate||b.date||'';
+      if (!custLast[ph] || d > custLast[ph].date) {
+        custLast[ph] = { date:d, name:b.customerName||b.name||'Khách', svc:(b.selectedServices||b.services||[b.serviceType||''])[0]||'' };
+      }
+    });
+    var rebookList = [];
+    var nowDate = new Date(todayIso);
+    Object.keys(custLast).forEach(function(ph){
+      var info = custLast[ph];
+      if (!info.date||info.date>=todayIso) return;
+      var days = Math.floor((nowDate - new Date(info.date)) / 86400000);
+      if (days>=21 && days<=90) rebookList.push({ name:info.name, days:days, svc:info.svc });
+    });
+    if (rebookList.length) {
+      rebookList.sort(function(a,b){ return a.days-b.days; });
+      var r = rebookList[0];
+      insights.push({
+        severity:'low', icon:'&#128259;',
+        title: rebookList.length + ' khách có thể cần đặt lịch lại',
+        desc:  esc(r.name) + ' lần cuối đến ' + r.days + ' ngày trước' + (r.svc?' ('+esc(r.svc)+')':'') +
+               '. Liên hệ để đặt lịch mới.' + (rebookList.length>1?' (+' + (rebookList.length-1) + ' khách khác)':''),
+        action:"closeAiPanel();switchTab('customers')", actionLabel:'Xem Khách Hàng'
+      });
+    }
+
+    return insights;
+  }
+
   // ── Business Control Center — Theme & Language System ────────────────────────
 
   var _dlcTheme = localStorage.getItem('dlc_theme') || 'default';
@@ -5533,5 +5994,31 @@
   }
 
 </script>
+
+<!-- ── AI Copilot Panel ── -->
+<div class="ai-panel-backdrop" id="aiPanelBackdrop" onclick="closeAiPanel()"></div>
+<div class="ai-panel" id="aiPanel" role="complementary" aria-label="AI Copilot">
+  <div class="ai-panel-header">
+    <div>
+      <div class="ai-panel-title">
+        <span class="ai-panel-title-spark">&#10022;</span>
+        AI Copilot
+      </div>
+      <div class="ai-panel-subtitle">Thông tin vận hành thông minh · Dữ liệu thực tế</div>
+    </div>
+    <button class="ai-panel-close" onclick="closeAiPanel()" aria-label="Đóng">&#10005;</button>
+  </div>
+  <div class="ai-panel-topbar">
+    <div class="ai-panel-ts" id="aiPanelTs">Chưa cập nhật</div>
+    <button class="ai-panel-refresh" onclick="refreshAiPanel()">&#8635; Cập nhật</button>
+  </div>
+  <div class="ai-panel-body" id="aiPanelBody">
+    <div class="ai-panel-clear">
+      <div class="ai-panel-clear-icon">&#10022;</div>
+      Đang tải dữ liệu…
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

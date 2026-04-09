@@ -199,6 +199,84 @@ Generated from `tests/cases/*.json`. Run `npm run test:receptionist` to verify a
 
 ---
 
+### RX-014 — Cross-session cancel: AI can't cancel booking from a previous browser session
+- **Category:** booking_cancel
+- **Status:** verified_in_runner
+- **Filed:** 2026-04-08 · **Fixed:** 2026-04-08
+- **Failing behavior:** Customer booked in session A, closes browser, returns in session B, says "cancel my appointment". `biz._lastBookingId` and `biz._bookingState.phone` are both gone (sessionStorage cleared). Cancel handler silently did nothing. Additionally, cancel used `status==='confirmed'` only, missing `in_progress`; and cancelled ALL phone-matching bookings instead of just the most recent.
+- **Root cause:** Cancel flow depended entirely on same-session state. Prompt already asked for phone cross-session, but JS used raw `snap.docs.forEach` cancel logic (all matches, wrong status filter).
+- **Fix:** Cancel handler now queries `customerPhone` (primary) + `phone` legacy field (fallback). Filters for `confirmed|in_progress`. Sorts desc by `createdAt`, cancels ONLY `active[0]` (most recent). Named `_cancelByPhone` logic refactored into shared `_lookupActiveBookingByPhone()` utility (Phase 3).
+- **Runner check:** `verify_fix_string: "_lookupActiveBookingByPhone"` + `"|| s === 'in_progress'"`
+- **Code:** `nailsalon/receptionist.js` → cancel handler in `send()` ESCALATE:cancel block
+- **Confidence gap:** Runner confirms phone query path and in_progress filter. Firestore index on `customerPhone` required. Live testing needed to confirm correct booking is cancelled.
+
+---
+
+### RX-015 — Cross-session modify: services missing from rescheduled booking
+- **Category:** booking_modify
+- **Status:** verified_in_runner
+- **Filed:** 2026-04-08 · **Fixed:** 2026-04-08
+- **Failing behavior:** Customer books in session A, returns in session B, says "reschedule". State is empty. Prompt didn't distinguish same-session (carry state) from cross-session (ask for phone first). Claude asked for date/time without knowing what service to reschedule. Final booking had `services=[]` — empty appointment.
+- **Root cause:** Modify flow assumed session-persistent state. No lookup-by-phone path existed. Prompt had no cross-session instruction.
+- **Fix:** Three changes: (1) Prompt MODIFY section updated with SAME-SESSION vs CROSS-SESSION distinction. (2) New `_xsBookingLookup()`: queries Firestore by phone, finds most recent active booking, pre-populates `biz._bookingState.services/staff/name/existingBookingId`, injects "Found your appointment" message. (3) Trigger in `send()` else block: fires when `pendingAction=modify_booking AND phone newly set AND services=[]`.
+- **Runner checks:** `verify_fix_string: "_xsBookingLookup"` + `"CROSS-SESSION: If services/name/phone are NOT in CURRENT BOOKING STATE"`
+- **Code:** `nailsalon/receptionist.js` → `_xsBookingLookup()` + `_buildPrompt()` MODIFY section + `send()` else block
+- **Confidence gap:** Runner confirms function exists and prompt instruction present. Live testing required for: Firestore lookup timing, pre-populated state used in final booking, correct services in packet.
+
+---
+
+### RX-016 — State machine: malformed Claude STATE fields corrupt booking flow silently
+- **Category:** stale_data
+- **Status:** verified_in_runner
+- **Filed:** 2026-04-08 · **Fixed:** 2026-04-08
+- **Failing behavior:** Claude occasionally emitted malformed STATE fields: `"date":"April 15"` (not ISO), `"time":"2 PM"` (not HH:MM), `"services":"Gel Manicure"` (not array), `"lang":"en-US"` (not en/vi/es), `"pendingAction":"reschedule"` (unknown). `_mergeState()` accepted all values blindly, corrupting downstream booking logic.
+- **Root cause:** `_mergeState()` did `Object.keys(update).forEach(k => state[k] = update[k])` with zero validation.
+- **Fix:** Per-field validation in `_mergeState()`: date must be `YYYY-MM-DD` and not in the past; time must be `H:MM`/`HH:MM`; phone must have 7+ digits (stored as digits-only); services must be an array of non-empty strings; lang must be in `_VALID_LANGS` (`{en,vi,es}`); pendingAction must be in `_VALID_PENDING` (`{booking_offer,modify_booking}`); name must have ≥1 letter. Invalid fields: console.warn + skip. `null` always accepted (clears field). `tests/lib/state-parser.js` updated to mirror this logic.
+- **Runner checks:** Layer 1: `_VALID_LANGS`; Layer 2: 12 field-validation unit tests.
+- **Code:** `nailsalon/receptionist.js` → `_mergeState()` + `_VALID_LANGS` / `_VALID_PENDING` maps
+- **Confidence gap:** Runner fully verifies validation logic (mirrored unit tests). Live testing required to confirm Claude doesn't emit dates that pass format but are semantically wrong.
+
+---
+
+### RX-017 — Tool/lookup hardening: shared utility, ID shortcut, free-staff query (Phase 3)
+- **Category:** booking_modify
+- **Status:** verified_in_runner
+- **Filed:** 2026-04-08 · **Fixed:** 2026-04-08
+- **Failing behavior:** (1) Cancel handler and `_xsBookingLookup()` duplicated the `customerPhone → active bookings` Firestore lookup with no shared abstraction. (2) Modify submission always did an extra Firestore round-trip even when `_xsBookingLookup()` had already found the booking ID. (3) No reusable function for "which staff are free at this date/time?" — required ad-hoc loops.
+- **Root cause:** No shared phone→booking utility; modify submission lacked shortcut; no pure free-staff computation.
+- **Fix:** (1) `_lookupActiveBookingByPhone(db, vid, phone)`: queries `customerPhone` then `phone` fallback, returns `Promise<docs[]>` sorted desc by `createdAt`. Cancel handler and `_xsBookingLookup()` both use it. (2) Modify submission: checks `confirmedDraft.existingBookingId` (from STATE via `_xsBookingLookup`) then `biz._lastBookingId` before doing any Firestore lookup — skips round-trip when ID is already known. (3) `_findFreeStaff(biz, date, timeStr, durationMins, existing)`: pure function, no Firestore, reuses `_getStaffShift()` + `_overlaps()`, returns names of working conflict-free staff.
+- **Runner checks:** `verify_fix_string: "_lookupActiveBookingByPhone"` + `"_findFreeStaff"` + `"skip the Firestore round-trip"`
+- **Code:** `nailsalon/receptionist.js` → `_lookupActiveBookingByPhone()`, `_findFreeStaff()`, modify submission block, cancel handler
+- **Confidence gap:** Shared utility correctness requires live Firestore testing. `_findFreeStaff` is pure — fully testable with fixtures.
+
+---
+
+### RX-018 — Response quality validator: lang mismatch, incomplete booking, passive endings (Phase 4)
+- **Category:** stale_data
+- **Status:** verified_in_runner
+- **Filed:** 2026-04-08 · **Fixed:** 2026-04-08
+- **Failing behavior:** Three silent quality failures: (1) Claude replied in wrong language — no detection. (2) Claude fired `[ESCALATE:appointment]` with `services=[]` — booking proceeded with no service name. (3) Claude ended mid-booking turns with bare statements — no follow-up question.
+- **Root cause:** No JS-side quality check on Claude's response. All issues were prompt-only; if Claude deviated, there was no JS fallback.
+- **Fix:** `_validateResponseQuality(biz, clean, escalationType, lang)` called in `callClaude()` step 6. Three checks: (1) Language: `_detectLang(clean)` vs `lang` — `console.warn` on non-English mismatch (warn-only). (2) Booking completeness: on `ESCALATE:appointment`, if `services=[]` → `suppressEscalate=true` → caller sets `escalationType=null` (booking not attempted). (3) Passive ending: no `?` in mid-booking response → `console.warn` (warn-only).
+- **Runner check:** `verify_fix_string: "_validateResponseQuality"` + `"suppressEscalate"`
+- **Code:** `nailsalon/receptionist.js` → `_validateResponseQuality()` + `callClaude()` step 6
+- **Confidence gap:** Language detection depends on `AIEngine.detectLang()`. Suppress behavior requires live testing with Claude emitting `services=[]` escalation.
+
+---
+
+### RX-019 — Hybrid AI router: OpenAI for booking-critical, Gemini for informational (Phase 5)
+- **Category:** stale_data
+- **Status:** verified_in_runner
+- **Filed:** 2026-04-08 · **Fixed:** 2026-04-08
+- **Failing behavior:** All AI turns used Claude regardless of turn type. No way to route booking-critical turns to a more reliable structured model or route low-stakes informational turns to a faster/cheaper model.
+- **Root cause:** `AIEngine.call()` was a single Claude adapter with no routing. No OpenAI or Gemini adapters existed.
+- **Fix:** Extended `ai-engine.js` with three components: (1) `_callOpenAI()`: Bearer auth, system prompt as role:system, response normalised to `{content:[{text}]}`. (2) `_callGemini()`: Gemini 1.5 REST, `assistant→model` role, `system_instruction`, response normalised. (3) `_resolveProvider(intent, altKeys)`: `_HIGH_RISK_INTENTS` (`booking_request`, `modify_booking`, `booking_offer`) → OpenAI when key available; informational → Gemini; default → Claude. `call()` accepts `opts.intent`/`opts.altKeys`; reads `dlc_openai_key`/`dlc_gemini_key` from localStorage; falls back to Claude on provider failure. `receptionist.js` passes `{intent: _routeIntent}` to `AIEngine.call()`.
+- **Runner checks:** `verify_fix_string: "_callOpenAI"` + `"_HIGH_RISK_INTENTS"` (ai-engine.js); `"_routeIntent"` (receptionist.js)
+- **Code:** `ai-engine.js` → `_callOpenAI()`, `_callGemini()`, `_resolveProvider()`, updated `call()`. `nailsalon/receptionist.js` → `AIEngine.call()` opts param.
+- **Confidence gap:** Keys required in localStorage. Live testing needed to confirm all three providers emit valid STATE markers and parse correctly.
+
+---
+
 ## What the runner verifies vs does not verify
 
 | Claim | Verified? | How |

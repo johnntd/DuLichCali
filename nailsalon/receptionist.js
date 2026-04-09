@@ -1637,9 +1637,17 @@
   }
 
   // ── DOM helpers ───────────────────────────────────────────────────────────────
+  var _BOT_AVATAR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>';
+
   function _appendMessage(messagesEl, text, who) {
     var div    = document.createElement('div');
     div.className = 'mp-ai__msg mp-ai__msg--' + who;
+    if (who === 'bot') {
+      var av = document.createElement('div');
+      av.className = 'mp-ai__msg__avatar';
+      av.innerHTML = _BOT_AVATAR_SVG;
+      div.appendChild(av);
+    }
     var bubble = document.createElement('div');
     bubble.className = 'mp-ai__bubble';
     bubble.textContent = text;
@@ -1651,6 +1659,10 @@
   function _appendHtmlMessage(messagesEl, htmlContent) {
     var div = document.createElement('div');
     div.className = 'mp-ai__msg mp-ai__msg--bot';
+    var av = document.createElement('div');
+    av.className = 'mp-ai__msg__avatar';
+    av.innerHTML = _BOT_AVATAR_SVG;
+    div.appendChild(av);
     var bubble = document.createElement('div');
     bubble.className = 'mp-ai__bubble mp-ai__bubble--packet';
     bubble.innerHTML = htmlContent;
@@ -2227,7 +2239,9 @@
     var div = document.createElement('div');
     div.id  = id;
     div.className = 'mp-ai__msg mp-ai__msg--bot';
-    div.innerHTML = '<div class="mp-ai__bubble mp-ai__bubble--typing"><span></span><span></span><span></span></div>';
+    div.innerHTML =
+      '<div class="mp-ai__msg__avatar">' + _BOT_AVATAR_SVG + '</div>' +
+      '<div class="mp-ai__bubble mp-ai__bubble--typing"><span class="mp-ai__typing-dot"></span><span class="mp-ai__typing-dot"></span><span class="mp-ai__typing-dot"></span></div>';
     messagesEl.appendChild(div);
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }
@@ -2740,6 +2754,52 @@
 
       // Voice input
       if (window.DLCVoiceInput) window.DLCVoiceInput.attach(biz, container, input);
+
+      // ── Full-screen mode (mobile only) ──────────────────────────────────────
+      (function _initFullScreen() {
+        var backBtn = container.querySelector('.mp-ai__header-back');
+
+        function _fsUpdateVH() {
+          var vv = window.visualViewport;
+          if (!vv || !container.classList.contains('mp-ai--fs')) return;
+          container.style.height = vv.height + 'px';
+          container.style.top    = vv.offsetTop + 'px';
+        }
+
+        function _fsOpen() {
+          if (window.innerWidth >= 768) return;
+          container.classList.add('mp-ai--fs');
+          document.body.classList.add('mp-ai-open');
+          _fsUpdateVH();
+          setTimeout(function () { messagesEl.scrollTop = messagesEl.scrollHeight; }, 50);
+        }
+
+        function _fsClose() {
+          container.classList.remove('mp-ai--fs');
+          document.body.classList.remove('mp-ai-open');
+          container.style.height = '';
+          container.style.top    = '';
+        }
+
+        // Open on any tap inside the widget
+        container.addEventListener('click', function (e) {
+          if (backBtn && backBtn.contains(e.target)) return;
+          _fsOpen();
+        });
+        input.addEventListener('focus', _fsOpen);
+
+        // Close on back button
+        if (backBtn) backBtn.addEventListener('click', _fsClose);
+
+        // iOS keyboard resize
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener('resize', _fsUpdateVH);
+          window.visualViewport.addEventListener('scroll', _fsUpdateVH);
+        }
+
+        // Expose so focusAi() nav button can trigger it
+        container._fsOpen = _fsOpen;
+      }());
     }
   };
 

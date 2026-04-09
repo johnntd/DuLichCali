@@ -76,6 +76,29 @@ grep -rn "filename.js" /path/to/project --include="*.html"
 
 Use `YYYYMMDD` + letter suffix: `v=20260408a`, `v=20260408b`, etc. Increment the letter for multiple changes on the same day.
 
+### CRITICAL: Never reuse a version string
+
+Firebase Hosting sets `cache-control: immutable, max-age=31536000`. Once a browser caches a file at a given `?v=` string, it will NOT re-fetch for up to a year, even after a new deploy. **Reusing a version string that was previously deployed causes silent regression**: browsers serve the old cached content instead of the new code.
+
+**Before setting any new version string, verify it has never been used before:**
+```bash
+git log --all -p -- nailsalon/index.html | grep "filename.js"
+```
+
+**Always use a version string HIGHER than the highest previously deployed:**
+- Check the highest previously used string (e.g. `v=20260414b`)
+- Use the next letter on that date OR the next calendar date with `a` suffix
+- Current safe floor: `v=20260415a` (April 15, 2026) — do NOT use any version string before this date for `marketplace.css` or `marketplace.js`
+
+**Version string high-water marks (as of 2026-04-09):**
+| File | Last safe version | Next safe version |
+|------|-------------------|-------------------|
+| `marketplace/marketplace.js` | `v=20260415a` | `v=20260415b` |
+| `marketplace/marketplace.css` | `v=20260415a` | `v=20260415b` |
+| `nailsalon/receptionist.js` | `v=20260409c` | `v=20260415a` |
+| `marketplace/services-data.js` | `v=20260414a` | `v=20260415a` |
+| `ai-engine.js` | `v=20260412j` | `v=20260415a` |
+
 ### Affected JS files and their HTML consumers
 
 | JS file | HTML files that load it |

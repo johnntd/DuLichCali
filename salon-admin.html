@@ -3486,13 +3486,13 @@
         var bDur = b.totalDurationMins || b.durationMins || 60;
         var bEnd = bMin + bDur;
         var cName = b.customerName || b.name || 'Khách';
-        // Mark every 30-min slot that falls inside this booking's window
+        // Mark every 15-min slot that falls inside this booking's window
         for (var bh = 8; bh <= 21; bh++) {
-          for (var bm = 0; bm < 60; bm += 30) {
+          for (var bm = 0; bm < 60; bm += 15) {
             if (bh === 21 && bm > 0) break;
             var slotMin = bh * 60 + bm;
             if (slotMin >= bMin && slotMin < bEnd) {
-              var slotKey = (bh < 10 ? '0' : '') + bh + ':' + (bm === 0 ? '00' : '30');
+              var slotKey = (bh < 10 ? '0' : '') + bh + ':' + (bm < 10 ? '0' : '') + bm;
               if (!bookedAt[slotKey]) bookedAt[slotKey] = cName; // first booking wins label
             }
           }
@@ -3503,12 +3503,12 @@
     var current = sel.value; // preserve selection across refreshes
     var html = '<option value="">— Chọn giờ —</option>';
     for (var h = 8; h <= 21; h++) {
-      for (var m = 0; m < 60; m += 30) {
+      for (var m = 0; m < 60; m += 15) {
         if (h === 21 && m > 0) break;
-        var val    = (h < 10 ? '0' : '') + h + ':' + (m === 0 ? '00' : '30');
+        var val    = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
         var h12    = h % 12 || 12;
         var period = h < 12 ? 'SA' : 'CH';
-        var label  = h12 + ':' + (m === 0 ? '00' : '30') + ' ' + period;
+        var label  = h12 + ':' + (m < 10 ? '0' : '') + m + ' ' + period;
         var booked = bookedAt[val];
         html += '<option value="' + val + '"' +
           (booked ? ' disabled' : '') +

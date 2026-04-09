@@ -602,6 +602,47 @@
       transition: opacity .15s;
     }
     .sa-next-appt__img:hover { opacity: .82; }
+    .sa-next-appt__tech {
+      font-size: .7rem; color: var(--gold); font-weight: 600;
+      margin-top: .22rem; display: flex; align-items: center; gap: .28rem;
+    }
+    .sa-next-appt__tech-icon { opacity: .65; font-style: normal; }
+    .sa-next-appt__dur {
+      font-size: .62rem; color: var(--muted); margin-top: .1rem;
+    }
+
+    /* ── Cashier quick-action card ── */
+    .db-cashier-btn {
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(74,222,128,.06); border: 1px solid rgba(74,222,128,.22);
+      border-radius: var(--r); padding: .75rem 1rem; cursor: pointer;
+      margin-bottom: 1rem; transition: background .18s, border-color .18s;
+    }
+    .db-cashier-btn:hover { background: rgba(74,222,128,.1); border-color: rgba(74,222,128,.4); }
+    .db-cashier-btn__left { display: flex; align-items: center; gap: .55rem; }
+    .db-cashier-btn__icon { font-size: 1.1rem; line-height: 1; }
+    .db-cashier-btn__label { font-size: .82rem; font-weight: 700; color: var(--success); }
+    .db-cashier-btn__sub { font-size: .64rem; color: var(--muted); margin-top: .05rem; }
+    .db-cashier-btn__badge {
+      background: var(--danger); color: #fff; border-radius: 99px;
+      font-size: .6rem; font-weight: 700; padding: 1px 6px; min-width: 18px; text-align: center;
+      display: none;
+    }
+    .db-cashier-btn__badge.visible { display: inline-block; }
+
+    /* ── Cashier queue modal ── */
+    .cashier-queue-row {
+      display: grid; grid-template-columns: 4.5rem 1fr auto;
+      gap: .4rem .6rem; align-items: center;
+      padding: .6rem .75rem; border-radius: 6px;
+      background: rgba(255,255,255,.03); border: 1px solid var(--border);
+      margin-bottom: .38rem;
+    }
+    .cashier-queue-row:last-child { margin-bottom: 0; }
+    .cashier-queue__time { font-size: .8rem; font-weight: 700; color: var(--gold-lt); font-family: var(--font-d); }
+    .cashier-queue__info { min-width: 0; }
+    .cashier-queue__name { font-size: .82rem; font-weight: 600; color: var(--cream); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cashier-queue__meta { font-size: .68rem; color: var(--muted); margin-top: .08rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     /* ── Enhanced booking card ── */
     .sa-appt-card {
@@ -1852,6 +1893,18 @@
         </div>
         <div class="db-next-label" data-i18n="db_next_label">Lịch Hẹn Tiếp Theo</div>
         <div id="dashNextAppt"><div class="sa-empty" style="padding:1rem 0" data-i18n="empty_loading">Đang tải…</div></div>
+
+        <!-- Cashier quick-action -->
+        <div class="db-cashier-btn" onclick="openCashierModal()" role="button" tabindex="0">
+          <div class="db-cashier-btn__left">
+            <div class="db-cashier-btn__icon">$</div>
+            <div>
+              <div class="db-cashier-btn__label" data-i18n="cashier_title">Cashier</div>
+              <div class="db-cashier-btn__sub" data-i18n="cashier_subtitle">Collect payment</div>
+            </div>
+          </div>
+          <span class="db-cashier-btn__badge" id="cashierBadge"></span>
+        </div>
       </div>
 
       <!-- ── Services tab ── -->
@@ -2516,6 +2569,20 @@
   </div><!-- end #pmDonePanel -->
 
   </div><!-- end .sa-modal -->
+</div>
+
+<!-- Cashier queue modal -->
+<div class="sa-modal-backdrop hidden" id="cashierModal">
+  <div class="sa-modal" style="max-height:80vh;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.2rem;flex-shrink:0">
+      <h3 style="color:var(--success);font-size:.98rem" data-i18n="cashier_title">Cashier</h3>
+      <button class="btn btn--outline btn--sm" onclick="closeCashierModal()" style="font-size:.72rem" data-i18n="btn_cancel">Hủy bỏ</button>
+    </div>
+    <div id="cashierSubtitle" style="font-size:.72rem;color:var(--muted);margin-bottom:.8rem;flex-shrink:0"></div>
+    <div id="cashierQueue" style="overflow-y:auto;flex:1;padding-right:.1rem">
+      <div class="sa-empty" data-i18n="cashier_empty">No unpaid bookings.</div>
+    </div>
+  </div>
 </div>
 
 <!-- QR payment display overlay -->
@@ -3549,9 +3616,10 @@
     vendorRef.update({ hoursSchedule: schedule, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
       .then(function() {
         var msg = document.getElementById('hoursMsg');
-        msg.style.color = 'var(--success)'; msg.textContent = '✓ Đã lưu giờ mở cửa.';
+        var _lb = _LABELS[_dlcLang] || _LABELS.vi;
+        msg.style.color = 'var(--success)'; msg.textContent = _lb.hours_saved || '✓ Business hours saved.';
         setTimeout(function(){ msg.textContent=''; }, 3000);
-        showToast('Giờ mở cửa đã được lưu.');
+        showToast(_lb.hours_saved_toast || 'Business hours saved.');
       })
       .catch(function(e) {
         var msg = document.getElementById('hoursMsg');
@@ -4475,8 +4543,9 @@
     var priceTotal = _parsePrice(priceEst);
 
     document.getElementById('pmBookingId').value = bookingId;
+    var _pmLb = _LABELS[_dlcLang] || _LABELS.vi;
     document.getElementById('pmHeader').textContent =
-      (b.customerName || 'Khách') + (svcLbl ? ' \u00b7 ' + svcLbl : '');
+      (b.customerName || _pmLb.cust_fallback || 'Customer') + (svcLbl ? ' \u00b7 ' + svcLbl : '');
     document.getElementById('paymentModal').dataset.priceTotal = priceTotal;
 
     // Reset add-ons and pending price-prompt state for this modal session
@@ -4725,6 +4794,83 @@
     document.getElementById('paymentModal').classList.add('hidden');
   }
 
+  // ── Cashier queue ─────────────────────────────────────────────────────────────
+
+  function _updateCashierBadge() {
+    var badge = document.getElementById('cashierBadge');
+    if (!badge) return;
+    var count = _getCashierItems().length;
+    badge.textContent = count;
+    badge.classList.toggle('visible', count > 0);
+  }
+
+  function _getCashierItems() {
+    var todayIso = (function() {
+      var n = new Date();
+      return n.getFullYear() + '-' + ('0'+(n.getMonth()+1)).slice(-2) + '-' + ('0'+n.getDate()).slice(-2);
+    })();
+    return (_saAllItems || []).filter(function(b) {
+      var s = b.status || 'confirmed';
+      if (['canceled','cancelled','no_show'].indexOf(s) >= 0) return false;
+      var d = b.requestedDate || b.date || '';
+      if (d < todayIso) return false; // only today and future
+      var pay = b.paymentStatus || 'unpaid';
+      return pay !== 'paid';
+    }).sort(function(a, b2) {
+      var da = (a.requestedDate || a.date || '') + 'T' + (a.requestedTime || a.time || '00:00');
+      var db2 = (b2.requestedDate || b2.date || '') + 'T' + (b2.requestedTime || b2.time || '00:00');
+      return da < db2 ? -1 : da > db2 ? 1 : 0;
+    });
+  }
+
+  function openCashierModal() {
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
+    var items = _getCashierItems();
+    var subEl = document.getElementById('cashierSubtitle');
+    if (subEl) subEl.textContent = items.length + ' ' + (lb.cashier_subtitle || 'unpaid bookings');
+    _renderCashierQueue(items, lb);
+    document.getElementById('cashierModal').classList.remove('hidden');
+  }
+
+  function closeCashierModal() {
+    document.getElementById('cashierModal').classList.add('hidden');
+  }
+
+  function _renderCashierQueue(items, lb) {
+    var el = document.getElementById('cashierQueue');
+    if (!el) return;
+    if (!items.length) {
+      el.innerHTML = '<div class="sa-empty" style="padding:.75rem 0">' + esc(lb.cashier_empty || 'No unpaid bookings.') + '</div>';
+      return;
+    }
+    el.innerHTML = items.map(function(b) {
+      var id      = b.id;
+      var idQ     = JSON.stringify(id);
+      var timeStr = _fmtTime(b.requestedTime || b.time);
+      var svcArr  = b.selectedServices || b.services || [b.serviceType || b.service || ''];
+      var svcLbl  = (Array.isArray(svcArr) ? svcArr.filter(Boolean) : [svcArr]).join(', ');
+      var staff   = b.staff && b.staff.toLowerCase() !== 'any' ? b.staff : '';
+      var cName   = b.customerName || b.name || lb.cust_fallback || 'Customer';
+      var payBadge = _payBadgeHtml(b);
+      var metaParts = [];
+      if (staff) metaParts.push(esc(staff));
+      if (svcLbl) metaParts.push(esc(svcLbl));
+      return '<div class="cashier-queue-row">' +
+        '<div>' +
+          '<div class="cashier-queue__time">' + esc(timeStr) + '</div>' +
+          '<div style="margin-top:.12rem">' + payBadge + '</div>' +
+        '</div>' +
+        '<div class="cashier-queue__info">' +
+          '<div class="cashier-queue__name">' + esc(cName) + '</div>' +
+          '<div class="cashier-queue__meta">' + metaParts.join(' &middot; ') + '</div>' +
+        '</div>' +
+        '<div>' +
+          '<button class="btn btn--sm sa-act--pay" onclick=\'closeCashierModal();openPaymentModal(' + idQ + ')\' style="font-size:.7rem;white-space:nowrap;padding:.3rem .65rem">&#36; ' + esc((lb.act_pay || '$ Collect').replace('$ ', '')) + '</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
   function _pmMsg(msg, isError) {
     var el = document.getElementById('pmMsg');
     el.style.display = msg ? 'block' : 'none';
@@ -4844,8 +4990,9 @@
     document.getElementById('rfBookingId').value = bookingId;
     var svcArr = b.selectedServices || b.services || (b.serviceType ? [b.serviceType] : []);
     var svcLbl = Array.isArray(svcArr) ? svcArr.filter(Boolean).join(', ') : '';
+    var _rfLb = _LABELS[_dlcLang] || _LABELS.vi;
     document.getElementById('rfHeader').textContent =
-      (b.customerName || 'Khách') + (svcLbl ? ' · ' + svcLbl : '') +
+      (b.customerName || _rfLb.cust_fallback || 'Customer') + (svcLbl ? ' · ' + svcLbl : '') +
       ' · ' + ((_LABELS[_dlcLang]||_LABELS.vi).refund_collected) + paid.toFixed(2) + (refunded > 0 ? ' · ' + ((_LABELS[_dlcLang]||_LABELS.vi).refund_refunded) + refunded.toFixed(2) : '') +
       ' · ' + ((_LABELS[_dlcLang]||_LABELS.vi).refund_max) + maxRefund.toFixed(2);
     document.getElementById('rfAmount').value  = '';
@@ -4932,7 +5079,7 @@
     document.getElementById('spBookingId').value = bookingId;
     var svcArr = b.selectedServices || b.services || (b.serviceType ? [b.serviceType] : []);
     var svcLbl = Array.isArray(svcArr) ? svcArr.filter(Boolean).join(', ') : '';
-    document.getElementById('spHeader').textContent = (b.customerName || 'Khách') + (svcLbl ? ' · ' + svcLbl : '');
+    document.getElementById('spHeader').textContent = (b.customerName || (_LABELS[_dlcLang]||_LABELS.vi).cust_fallback || 'Customer') + (svcLbl ? ' · ' + svcLbl : '');
     var sugDiv = document.getElementById('spSuggest');
     if (suggestedRange) {
       sugDiv.style.display = 'block';
@@ -5132,7 +5279,8 @@
     }
 
     var current = sel.value; // preserve selection across refreshes
-    var html = '<option value="">— Chọn giờ —</option>';
+    var _mbLbT = _LABELS[_dlcLang] || _LABELS.vi;
+    var html = '<option value="">' + esc(_mbLbT.ph_mb_time || '— Select time —') + '</option>';
     for (var h = 8; h <= 21; h++) {
       for (var m = 0; m < 60; m += 15) {
         if (h === 21 && m > 0) break;
@@ -5306,11 +5454,12 @@
     var svcs   = [];
     document.querySelectorAll('#mbSvcList input[type=checkbox]:checked').forEach(function(cb) { svcs.push(cb.value); });
 
-    if (!name)        { _mbMsg('Nhập tên khách.', true); return; }
-    if (!phone)       { _mbMsg('Nhập số điện thoại.', true); return; }
-    if (!svcs.length) { _mbMsg('Chọn ít nhất 1 dịch vụ.', true); return; }
-    if (!date)        { _mbMsg('Chọn ngày.', true); return; }
-    if (!time)        { _mbMsg('Chọn giờ.', true); return; }
+    var _mbLb = _LABELS[_dlcLang] || _LABELS.vi;
+    if (!name)        { _mbMsg(_mbLb.mb_err_name || 'Enter customer name.', true); return; }
+    if (!phone)       { _mbMsg(_mbLb.mb_err_phone || 'Enter phone number.', true); return; }
+    if (!svcs.length) { _mbMsg(_mbLb.mb_err_svc || 'Select at least 1 service.', true); return; }
+    if (!date)        { _mbMsg(_mbLb.mb_err_date || 'Select a date.', true); return; }
+    if (!time)        { _mbMsg(_mbLb.mb_err_time || 'Select a time.', true); return; }
 
     // Compute duration for overlap check
     var totalMins = 0;
@@ -5320,7 +5469,7 @@
     });
 
     _mbShowAvail(true, '');
-    _mbMsg('Đang kiểm tra lịch…', false);
+    _mbMsg(_mbLb.mb_checking || 'Checking availability…', false);
     var btn = document.getElementById('mbSaveBtn');
     if (btn) btn.disabled = true;
 
@@ -5341,22 +5490,22 @@
 
       // Role check: only owner and manager may override
       if (_userRole === 'owner' || _userRole === 'manager') {
-        _mbShowAvail(false, '⚠ Lịch bị chiếm. Nhập PIN để đặt đè, hoặc chọn giờ khác.');
+        _mbShowAvail(false, _mbLb.mb_conflict_warn || '⚠ Time taken. Enter PIN to override or pick another time.');
         _mbMsg('', false);
         _mbShowOverrideSection(conflict, altSlots);
       } else {
         // Staff: no override path
-        var cMsg = (staff !== 'Any' ? staff : 'Nhân viên') +
-                   ' đã có lịch với ' + esc(conflict.name) +
-                   ' lúc ' + _fmtTime(conflict.time) + '.';
-        if (altSlots.length) cMsg += ' Giờ trống: ' + altSlots.join(', ');
+        var cMsg = (staff !== 'Any' ? staff : (_mbLb.mb_staff_any || 'Staff')) +
+                   (_mbLb.mb_booked_with || ' is booked with ') + esc(conflict.name) +
+                   (_mbLb.mb_at_time || ' at ') + _fmtTime(conflict.time) + '.';
+        if (altSlots.length) cMsg += ' ' + (_mbLb.mb_conflict_slots || 'Available: ') + altSlots.join(', ');
         _mbShowAvail(false, '⚠ ' + cMsg);
-        _mbMsg('Vui lòng chọn giờ hoặc nhân viên khác.', true);
+        _mbMsg(_mbLb.mb_conflict_tip || 'Please choose another time or staff member.', true);
       }
       return;
     }
 
-    _mbShowAvail(true, '✓ Giờ trống — có thể đặt lịch');
+    _mbShowAvail(true, _mbLb.mb_avail_ok || '✓ Available — ready to book');
     await _mbDoSave(false);
   }
 
@@ -5407,6 +5556,7 @@
     var appt = _getNextAppt(items);
     if (!appt) { el.style.display = 'none'; return; }
 
+    var lb      = _LABELS[_dlcLang] || _LABELS.vi;
     var timeStr = _fmtTime(appt.requestedTime || appt.time);
     var svcArr  = appt.selectedServices || appt.services || [appt.serviceType || ''];
     var svcLbl  = Array.isArray(svcArr) ? svcArr.filter(Boolean).join(', ') : (svcArr || '');
@@ -5423,7 +5573,11 @@
       var apptMins = parseInt(p[0]||0,10)*60 + parseInt(p[1]||0,10);
       var nowMins  = now.getHours()*60 + now.getMinutes();
       var diff     = apptMins - nowMins;
-      if (diff > 0) countdown = 'còn ' + (diff >= 60 ? Math.floor(diff/60) + ' giờ ' + (diff%60 ? diff%60+'p' : '') : diff + ' phút');
+      if (diff > 0) {
+        countdown = lb.countdown_in + ' ' + (diff >= 60
+          ? Math.floor(diff/60) + lb.countdown_hr + (diff%60 ? ' ' + diff%60 + lb.countdown_min : '')
+          : diff + lb.countdown_min);
+      }
     } else if (d > todayIso) {
       countdown = _fmtDate(d);
     }
@@ -5431,21 +5585,28 @@
     var imgs = appt.referenceImages || appt.images || [];
     var imgHtml = imgs.length ? '<div class="sa-next-appt__imgs">' + _refImgsHtml(imgs, 'sa-next-appt__img') + '</div>' : '';
 
+    var apptId = appt.id;
+    var payStatus = appt.paymentStatus || 'unpaid';
+    var needsPay = ['canceled','cancelled','no_show'].indexOf(appt.status || '') < 0 && payStatus !== 'paid';
+    var collectBtn = (needsPay && apptId)
+      ? '<button class="sa-act sa-act--pay" onclick=\'openPaymentModal(' + JSON.stringify(apptId) + ')\' style="font-size:.68rem">&#36; ' + esc((lb.act_pay || '$ Collect').replace('$ ', '')) + '</button>'
+      : '';
+    var textBtn = appt.customerPhone
+      ? '<a class="sa-act sa-act--call" href="sms:' + esc(appt.customerPhone) + '" style="font-size:.68rem">&#128241; Text</a>'
+      : '';
+
     el.style.display = 'block';
     el.innerHTML = '<div class="sa-next-appt">' +
       '<div class="sa-next-appt__left">' +
-        '<div class="sa-next-appt__tag">Tiếp theo</div>' +
+        '<div class="sa-next-appt__tag">' + esc(lb.next_appt_tag || 'Next') + '</div>' +
         '<div class="sa-next-appt__time">' + esc(timeStr) + '</div>' +
         (countdown ? '<div class="sa-next-appt__countdown">' + esc(countdown) + '</div>' : '') +
       '</div>' +
       '<div class="sa-next-appt__body">' +
-        '<div class="sa-next-appt__name">' + esc(appt.customerName || 'Khách') + '</div>' +
+        '<div class="sa-next-appt__name">' + esc(appt.customerName || lb.cust_fallback || 'Customer') + '</div>' +
         '<div class="sa-next-appt__svc">' + esc(svcLbl) + '</div>' +
-        '<div class="sa-next-appt__meta">' +
-          (staff ? '<span class="sa-staff-badge">' + esc(staff) + '</span>' : '') +
-          (dur   ? '<span>' + dur + ' ph&#250;t</span>' : '') +
-          (appt.customerPhone ? '<a class="sa-act sa-act--call" href="tel:' + esc(appt.customerPhone) + '">&#128222; ' + esc(appt.customerPhone) + '</a>' : '') +
-        '</div>' +
+        (staff ? '<div class="sa-next-appt__tech"><em class="sa-next-appt__tech-icon">&#9998;</em>' + esc(staff) + (dur ? ' &middot; ' + dur + ' ' + esc(lb.dur_min || 'min') : '') + '</div>' : (dur ? '<div class="sa-next-appt__dur">' + dur + ' ' + esc(lb.dur_min || 'min') + '</div>' : '')) +
+        ((collectBtn || textBtn) ? '<div class="sa-appt-actions" style="margin-top:.45rem;gap:.35rem">' + (collectBtn || '') + (textBtn || '') + '</div>' : '') +
         imgHtml +
       '</div>' +
     '</div>';
@@ -5486,8 +5647,12 @@
     var dashNext = document.getElementById('dashNextAppt');
     if (!dashNext) return;
 
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
+
     if (!appt) {
-      dashNext.innerHTML = '<div class="sa-empty" style="padding:1rem 0">Kh\u00f4ng c\u00f3 l\u1ecbch h\u1eb9n s\u1eafp t\u1edbi.</div>';
+      dashNext.innerHTML = '<div class="sa-empty" style="padding:1rem 0">' + esc(lb.next_appt_empty || 'No upcoming appointments.') + '</div>';
+      // Update cashier badge even when no next appt
+      _updateCashierBadge();
       return;
     }
 
@@ -5503,7 +5668,8 @@
 
     var staff  = appt.staff && appt.staff.toLowerCase() !== 'any' ? appt.staff : null;
     var phone  = appt.customerPhone || appt.phone || '';
-    var name   = appt.customerName || 'Kh\u00e1ch';
+    var name   = appt.customerName || lb.cust_fallback || 'Customer';
+    var dur    = appt.durationMins || appt.totalDurationMins;
     var apptId = appt.id;
 
     // Countdown
@@ -5514,35 +5680,46 @@
       var apptMins = parseInt(tp[0]||0,10)*60 + parseInt(tp[1]||0,10);
       var nowMins  = now.getHours()*60 + now.getMinutes();
       var diff = apptMins - nowMins;
-      if (diff > 0) countdown = 'c\u00f2n ' + (diff >= 60 ? Math.floor(diff/60) + ' gi\u1edd ' + (diff%60 ? diff%60+'p' : '') : diff + ' ph\u00fat');
+      if (diff > 0) {
+        countdown = lb.countdown_in + ' ' + (diff >= 60
+          ? Math.floor(diff/60) + lb.countdown_hr + (diff%60 ? ' ' + diff%60 + lb.countdown_min : '')
+          : diff + lb.countdown_min);
+      }
     } else if (d > todayIso) {
       countdown = _fmtDate(d);
     }
 
-    var startBtn = (apptId && _userRole === 'owner')
-      ? '<button class="sa-act sa-act--start" onclick=\'updateBookingStatus(' + JSON.stringify(apptId) + ',"in_progress")\'>&#9654; B\u1eaft \u0111\u1ea7u</button>'
+    var startBtn = (apptId && (_userRole === 'owner' || _userRole === 'manager'))
+      ? '<button class="sa-act sa-act--start" onclick=\'updateBookingStatus(' + JSON.stringify(apptId) + ',"in_progress")\'>&#9654; ' + esc((lb.act_start || '▶ Start').replace('▶ ', '')) + '</button>'
       : '';
     var textLink = phone
-      ? '<a class="sa-act sa-act--call" href="sms:' + esc(phone) + '">&#128241; Text</a>'
+      ? '<a class="sa-act sa-act--call" href="sms:' + esc(phone) + '" style="font-size:.68rem">&#128241; Text</a>'
+      : '';
+    var payStatus = appt.paymentStatus || 'unpaid';
+    var needsPay = ['canceled','cancelled','no_show'].indexOf(appt.status || '') < 0 && payStatus !== 'paid';
+    var collectBtn = (needsPay && apptId)
+      ? '<button class="sa-act sa-act--pay" onclick=\'openPaymentModal(' + JSON.stringify(apptId) + ')\' style="font-size:.68rem">&#36; ' + esc((lb.act_pay || '$ Collect').replace('$ ', '')) + '</button>'
       : '';
 
     dashNext.innerHTML = '<div class="sa-next-appt">' +
       '<div class="sa-next-appt__left">' +
-        '<div class="sa-next-appt__tag">Ti\u1ebfp theo</div>' +
+        '<div class="sa-next-appt__tag">' + esc(lb.next_appt_tag || 'Next') + '</div>' +
         '<div class="sa-next-appt__time">' + esc(timeStr) + '</div>' +
         (countdown ? '<div class="sa-next-appt__countdown">' + esc(countdown) + '</div>' : '') +
       '</div>' +
       '<div class="sa-next-appt__body">' +
         '<div class="sa-next-appt__name">' + esc(name) + '</div>' +
         '<div class="sa-next-appt__svc">' + esc(svcLbl) + '</div>' +
-        '<div class="sa-next-appt__meta" style="margin-top:.15rem">' +
-          (staff ? '<span class="sa-staff-badge">' + esc(staff) + '</span>' : '') +
-        '</div>' +
-        '<div class="sa-appt-actions" style="margin-top:.5rem">' +
-          startBtn + textLink +
+        (staff
+          ? '<div class="sa-next-appt__tech"><em class="sa-next-appt__tech-icon">&#9998;</em>' + esc(staff) + (dur ? ' &middot; ' + dur + ' ' + esc(lb.dur_min || 'min') : '') + '</div>'
+          : (dur ? '<div class="sa-next-appt__dur">' + dur + ' ' + esc(lb.dur_min || 'min') + '</div>' : '')) +
+        '<div class="sa-appt-actions" style="margin-top:.5rem;gap:.35rem">' +
+          startBtn + textLink + collectBtn +
         '</div>' +
       '</div>' +
     '</div>';
+
+    _updateCashierBadge();
   }
 
   function renderBookings(items) {
@@ -7312,6 +7489,23 @@
       lbl_service_prefix:'Dịch vụ: ', lbl_staff_prefix:'Nhân viên: ',
       // ── Add-on dropdown ───────────────────────────────────────────────────────
       addon_select_ph:'— Chọn dịch vụ —',
+      // ── Next appointment card ─────────────────────────────────────────────────
+      next_appt_tag:'Tiếp theo', next_appt_empty:'Không có lịch hẹn sắp tới.',
+      countdown_in:'còn', countdown_hr:' giờ', countdown_min:' phút',
+      dur_min:'phút', cust_fallback:'Khách',
+      // ── Cashier ───────────────────────────────────────────────────────────────
+      cashier_title:'Thu Tiền Nhanh', cashier_subtitle:'Booking chưa thu tiền',
+      cashier_empty:'Không có booking chưa thu tiền.',
+      // ── Hours save ────────────────────────────────────────────────────────────
+      hours_saved:'✓ Đã lưu giờ mở cửa.', hours_saved_toast:'Giờ mở cửa đã được lưu.',
+      // ── Manual booking validation ─────────────────────────────────────────────
+      mb_err_name:'Nhập tên khách.', mb_err_phone:'Nhập số điện thoại.',
+      mb_err_svc:'Chọn ít nhất 1 dịch vụ.', mb_err_date:'Chọn ngày.', mb_err_time:'Chọn giờ.',
+      mb_checking:'Đang kiểm tra lịch…',
+      mb_conflict_warn:'⚠ Lịch bị chiếm. Nhập PIN để đặt đè, hoặc chọn giờ khác.',
+      mb_conflict_tip:'Vui lòng chọn giờ hoặc nhân viên khác.',
+      mb_conflict_slots:'Giờ trống: ', mb_avail_ok:'✓ Giờ trống — có thể đặt lịch',
+      mb_booked_with:' đã có lịch với ', mb_at_time:' lúc ', mb_staff_any:'Nhân viên',
     },
     en: {
       // ── Navigation ──────────────────────────────────────────────────────────
@@ -7542,6 +7736,23 @@
       lbl_service_prefix:'Service: ', lbl_staff_prefix:'Staff: ',
       // ── Add-on dropdown ───────────────────────────────────────────────────────
       addon_select_ph:'— Select service —',
+      // ── Next appointment card ─────────────────────────────────────────────────
+      next_appt_tag:'Next', next_appt_empty:'No upcoming appointments.',
+      countdown_in:'in', countdown_hr:'h', countdown_min:'m',
+      dur_min:'min', cust_fallback:'Customer',
+      // ── Cashier ───────────────────────────────────────────────────────────────
+      cashier_title:'Cashier', cashier_subtitle:'Unpaid bookings',
+      cashier_empty:'No unpaid bookings.',
+      // ── Hours save ────────────────────────────────────────────────────────────
+      hours_saved:'✓ Business hours saved.', hours_saved_toast:'Business hours saved.',
+      // ── Manual booking validation ─────────────────────────────────────────────
+      mb_err_name:'Enter customer name.', mb_err_phone:'Enter phone number.',
+      mb_err_svc:'Select at least 1 service.', mb_err_date:'Select a date.', mb_err_time:'Select a time.',
+      mb_checking:'Checking availability…',
+      mb_conflict_warn:'⚠ Time taken. Enter PIN to override or pick another time.',
+      mb_conflict_tip:'Please choose another time or staff member.',
+      mb_conflict_slots:'Available: ', mb_avail_ok:'✓ Available — ready to book',
+      mb_booked_with:' is booked with ', mb_at_time:' at ', mb_staff_any:'Staff',
     },
     es: {
       // ── Navigation ──────────────────────────────────────────────────────────
@@ -7772,6 +7983,23 @@
       lbl_service_prefix:'Servicio: ', lbl_staff_prefix:'Personal: ',
       // ── Add-on dropdown ───────────────────────────────────────────────────────
       addon_select_ph:'— Seleccionar servicio —',
+      // ── Next appointment card ─────────────────────────────────────────────────
+      next_appt_tag:'Próxima', next_appt_empty:'Sin citas próximas.',
+      countdown_in:'en', countdown_hr:'h', countdown_min:'m',
+      dur_min:'min', cust_fallback:'Cliente',
+      // ── Cashier ───────────────────────────────────────────────────────────────
+      cashier_title:'Caja', cashier_subtitle:'Citas sin cobrar',
+      cashier_empty:'Sin citas pendientes de cobro.',
+      // ── Hours save ────────────────────────────────────────────────────────────
+      hours_saved:'✓ Horario guardado.', hours_saved_toast:'Horario guardado.',
+      // ── Manual booking validation ─────────────────────────────────────────────
+      mb_err_name:'Ingresa el nombre del cliente.', mb_err_phone:'Ingresa el número de teléfono.',
+      mb_err_svc:'Selecciona al menos 1 servicio.', mb_err_date:'Selecciona una fecha.', mb_err_time:'Selecciona una hora.',
+      mb_checking:'Verificando disponibilidad…',
+      mb_conflict_warn:'⚠ Horario ocupado. Ingresa PIN para sobreescribir o elige otro horario.',
+      mb_conflict_tip:'Por favor elige otro horario o personal.',
+      mb_conflict_slots:'Disponibles: ', mb_avail_ok:'✓ Disponible — listo para reservar',
+      mb_booked_with:' tiene cita con ', mb_at_time:' a las ', mb_staff_any:'Personal',
     }
   };
 

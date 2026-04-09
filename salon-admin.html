@@ -2607,16 +2607,31 @@
       <div id="pmReceiptAmount" style="font-size:1.1rem;color:var(--gold-lt);font-weight:700"></div>
     </div>
     <div style="font-size:.72rem;color:var(--muted);text-align:center;margin-bottom:.7rem" data-i18n="pm_receipt_prompt">Send receipt to customer?</div>
-    <div style="display:flex;flex-direction:column;gap:.38rem">
+    <div id="pmReceiptBtns" style="display:flex;flex-direction:column;gap:.38rem">
       <button class="btn btn--outline btn--sm" onclick="_pmSendReceipt('print')" style="font-size:.78rem;display:flex;align-items:center;gap:.5rem;justify-content:center">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
         <span data-i18n="btn_receipt_print">Print Receipt</span>
+      </button>
+      <button class="btn btn--outline btn--sm" onclick="_pmSendReceipt('email')" style="font-size:.78rem;display:flex;align-items:center;gap:.5rem;justify-content:center">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+        <span data-i18n="btn_receipt_email">Email Receipt</span>
       </button>
       <button class="btn btn--outline btn--sm" onclick="_pmSendReceipt('text')" style="font-size:.78rem;display:flex;align-items:center;gap:.5rem;justify-content:center">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
         <span data-i18n="btn_receipt_text">Text to Customer</span>
       </button>
       <button class="btn btn--outline btn--sm" onclick="_pmSendReceipt('skip')" style="font-size:.76rem;color:var(--muted)" data-i18n="btn_receipt_skip">No Receipt — Done</button>
+    </div>
+    <!-- Email prompt sub-panel (shown after tapping Email Receipt) -->
+    <div id="pmEmailPrompt" style="display:none;margin-top:.4rem">
+      <div style="font-size:.72rem;color:var(--muted);text-align:center;margin-bottom:.5rem" data-i18n="pm_email_prompt">Customer email address</div>
+      <input id="pmEmailInput" type="email" autocomplete="email" inputmode="email"
+        style="width:100%;box-sizing:border-box;background:var(--glass);border:1px solid var(--border);border-radius:.5rem;color:var(--cream);padding:.45rem .6rem;font-size:.82rem;margin-bottom:.4rem;outline:none"
+        placeholder="email@example.com">
+      <div style="display:flex;gap:.4rem">
+        <button class="btn btn--outline btn--sm" onclick="_pmEmailBack()" style="font-size:.76rem;flex:0 0 auto" data-i18n="btn_pm_back">← Back</button>
+        <button class="btn btn--primary btn--sm" onclick="_pmEmailSend()" style="font-size:.78rem;flex:1" data-i18n="btn_email_send">Send Receipt</button>
+      </div>
     </div>
   </div><!-- end #pmReceiptPanel -->
 
@@ -4796,6 +4811,11 @@
     var amount = parseFloat((document.getElementById('pmAmount') || {}).value) || 0;
     var el = document.getElementById('pmReceiptAmount');
     if (el) el.textContent = '$' + amount.toFixed(2) + (lb.pm_receipt_amt_suffix || ' collected');
+    // Always show button list and hide email prompt when entering receipt panel
+    var _bl = document.getElementById('pmReceiptBtns');
+    var _ep = document.getElementById('pmEmailPrompt');
+    if (_bl) _bl.style.display = '';
+    if (_ep) _ep.style.display = 'none';
     _pmShowPhase('pmReceiptPanel');
   }
 
@@ -4822,8 +4842,68 @@
         w.document.close();
       }
     }
+    if (type === 'email') {
+      // Show email prompt — pre-fill if email already on file for this booking
+      var bookingId = (document.getElementById('pmBookingId') || {}).value || '';
+      var b = _bookingCache[bookingId] || {};
+      var existingEmail = b.customerEmail || '';
+      var btnList    = document.getElementById('pmReceiptBtns');
+      var emailPrompt = document.getElementById('pmEmailPrompt');
+      var emailInput  = document.getElementById('pmEmailInput');
+      if (btnList)    btnList.style.display = 'none';
+      if (emailPrompt) emailPrompt.style.display = '';
+      if (emailInput) {
+        emailInput.value = existingEmail;
+        emailInput.style.borderColor = '';
+        if (!existingEmail) emailInput.focus();
+      }
+      return; // don't fall through to done panel
+    }
     var lb = _LABELS[_dlcLang] || _LABELS.vi;
     _pmShowDonePanel(type === 'skip' ? (lb.pm_done_all_done || 'All done!') : (lb.pm_done_receipt_sent || 'Receipt sent!'));
+  }
+
+  function _pmEmailBack() {
+    var btnList    = document.getElementById('pmReceiptBtns');
+    var emailPrompt = document.getElementById('pmEmailPrompt');
+    var emailInput  = document.getElementById('pmEmailInput');
+    if (emailInput) { emailInput.value = ''; emailInput.style.borderColor = ''; }
+    if (emailPrompt) emailPrompt.style.display = 'none';
+    if (btnList)    btnList.style.display = '';
+  }
+
+  function _pmEmailSend() {
+    var emailInput = document.getElementById('pmEmailInput');
+    var email = emailInput ? emailInput.value.trim() : '';
+    if (!email || email.indexOf('@') < 0) {
+      if (emailInput) { emailInput.style.borderColor = 'var(--danger, #ef4444)'; emailInput.focus(); }
+      return;
+    }
+    if (emailInput) emailInput.style.borderColor = '';
+    // Build receipt content (same data as print path)
+    var amount = parseFloat((document.getElementById('pmAmount') || {}).value) || 0;
+    var tip    = parseFloat((document.getElementById('pmTip') || {}).value) || 0;
+    var method = (document.getElementById('pmMethod') || {}).value || '';
+    var note   = (document.getElementById('pmNote') || {}).value || '';
+    var header = (document.getElementById('pmHeader') || {}).textContent || '';
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
+    var body = 'Payment Receipt\n' + header + '\n\n' +
+      'Amount: $' + amount.toFixed(2) + '\n' +
+      (tip > 0 ? 'Tip: $' + tip.toFixed(2) + '\n' : '') +
+      'Method: ' + method + '\n' +
+      (note ? 'Note: ' + note + '\n' : '') +
+      '\nThank you!';
+    // Save email to booking cache and Firestore (best-effort, non-blocking)
+    var bookingId = (document.getElementById('pmBookingId') || {}).value || '';
+    if (bookingId && _bookingCache[bookingId]) {
+      _bookingCache[bookingId].customerEmail = email;
+      try { vendorRef.collection('bookings').doc(bookingId).update({ customerEmail: email }); } catch(e) {}
+    }
+    // Open native email client pre-filled with receipt
+    window.open('mailto:' + encodeURIComponent(email) +
+      '?subject=' + encodeURIComponent('Payment Receipt') +
+      '&body=' + encodeURIComponent(body), '_blank');
+    _pmShowDonePanel(lb.pm_done_receipt_sent || 'Receipt sent!');
   }
 
   function _pmShowDonePanel(msg) {
@@ -7683,8 +7763,9 @@
       pm_cf_services:'Dịch vụ', pm_cf_tax:'Thuế', pm_cf_method:'Phương thức',
       pm_payment_saved:'Thanh toán thành công',
       pm_receipt_prompt:'Gửi biên lai cho khách?', pm_receipt_amt_suffix:' đã thu',
-      btn_receipt_print:'In biên lai', btn_receipt_text:'Nhắn tin cho khách',
+      btn_receipt_print:'In biên lai', btn_receipt_email:'Gửi Email', btn_receipt_text:'Nhắn tin cho khách',
       btn_receipt_skip:'Không cần biên lai',
+      pm_email_prompt:'Địa chỉ email khách hàng', btn_email_send:'Gửi biên lai',
       pm_closing:'Đang đóng…', pm_done_receipt_sent:'Đã gửi biên lai!', pm_done_all_done:'Xong!',
       pay_adj_title:'Điều chỉnh giá', pay_adj_booking_note:'(lần này thôi)',
       pay_adj_note:'Chỉ áp dụng lần này — giá danh mục không đổi.',
@@ -7953,8 +8034,9 @@
       pm_cf_services:'Services', pm_cf_tax:'Tax', pm_cf_method:'Method',
       pm_payment_saved:'Payment Complete',
       pm_receipt_prompt:'Send receipt to customer?', pm_receipt_amt_suffix:' collected',
-      btn_receipt_print:'Print Receipt', btn_receipt_text:'Text to Customer',
+      btn_receipt_print:'Print Receipt', btn_receipt_email:'Email Receipt', btn_receipt_text:'Text to Customer',
       btn_receipt_skip:'No Receipt — Done',
+      pm_email_prompt:'Customer email address', btn_email_send:'Send Receipt',
       pm_closing:'Closing…', pm_done_receipt_sent:'Receipt sent!', pm_done_all_done:'All done!',
       pay_adj_title:'Price Adjustment', pay_adj_booking_note:'(this booking only)',
       pay_adj_note:'This booking only — catalog prices unchanged.',
@@ -8223,8 +8305,9 @@
       pm_cf_services:'Servicios', pm_cf_tax:'Impuesto', pm_cf_method:'Método',
       pm_payment_saved:'Pago completado',
       pm_receipt_prompt:'¿Enviar recibo al cliente?', pm_receipt_amt_suffix:' cobrado',
-      btn_receipt_print:'Imprimir recibo', btn_receipt_text:'Enviar por texto',
+      btn_receipt_print:'Imprimir recibo', btn_receipt_email:'Enviar por email', btn_receipt_text:'Enviar por texto',
       btn_receipt_skip:'Sin recibo — Listo',
+      pm_email_prompt:'Email del cliente', btn_email_send:'Enviar recibo',
       pm_closing:'Cerrando…', pm_done_receipt_sent:'¡Recibo enviado!', pm_done_all_done:'¡Listo!',
       pay_adj_title:'Ajuste de precio', pay_adj_booking_note:'(esta cita)',
       pay_adj_note:'Solo esta cita — precios del catálogo sin cambios.',

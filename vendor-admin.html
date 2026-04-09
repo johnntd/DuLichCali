@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="default">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -1251,6 +1251,97 @@
     .ai-advanced-details summary::-webkit-details-marker { display: none; }
     .ai-advanced-details[open] .ai-adv-arrow { transform: rotate(180deg); }
     .ai-adv-arrow { transition: transform .2s; font-size: .7rem; color: var(--muted); }
+
+    /* ── Ctrl-bar (Theme + Language switcher) ───────────────────────────── */
+    .ctrl-bar {
+      background: var(--navy-800);
+      border-bottom: 1px solid var(--border);
+      padding: .32rem 1rem;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: .6rem; flex-shrink: 0; flex-wrap: wrap;
+    }
+    .ctrl-group { display: flex; align-items: center; gap: .28rem; }
+    .ctrl-label {
+      font-size: .56rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .07em; margin-right: .18rem;
+    }
+    .ctrl-btn {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 5px; color: var(--muted);
+      font-family: var(--font-b); font-size: .68rem; font-weight: 700;
+      padding: .24rem .58rem; cursor: pointer; min-height: 30px;
+      transition: border-color .18s, color .18s, background .18s;
+    }
+    .ctrl-btn:hover:not(.active) { border-color: rgba(255,255,255,.22); color: var(--text); }
+    .ctrl-btn.active { border-color: var(--gold); color: var(--gold-lt); background: var(--gold-dim); }
+
+    /* ── Beige theme ──────────────────────────────────────────────────── */
+    [data-theme="beige"] {
+      --navy-900: #F7F3ED; --navy-800: #FFFFFF; --navy-700: #EDE8E0;
+      --gold: #9e7c4a; --gold-lt: #b08d5c; --gold-dim: rgba(158,124,74,.12);
+      --cream: #2a1f10; --text: #3a2e22; --muted: #8a7a6a;
+      --border: rgba(0,0,0,.1); --border-g: rgba(158,124,74,.35);
+      --success: #16a34a; --danger: #dc2626;
+    }
+    [data-theme="beige"] html,
+    [data-theme="beige"] body { background: linear-gradient(150deg,#F0E8DC 0%,#F7F3ED 45%,#FAF7F2 100%); color: #3a2e22; }
+    [data-theme="beige"] .va-bar,
+    [data-theme="beige"] .ctrl-bar { background: #fff; border-color: rgba(0,0,0,.08); box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+    [data-theme="beige"] .va-cap-card,
+    [data-theme="beige"] .va-item-card { background: #fff; border-color: rgba(0,0,0,.09); }
+    [data-theme="beige"] .va-tabs { background: #fff; border-color: rgba(0,0,0,.08); }
+    [data-theme="beige"] .va-tab { color: #8a7a6a; }
+    [data-theme="beige"] .va-tab.active { color: #9e7c4a; border-color: #9e7c4a; }
+    [data-theme="beige"] .va-section-title { background: linear-gradient(90deg,#9e7c4a 0%,#2a1f10 60%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    [data-theme="beige"] .f-input,
+    [data-theme="beige"] .f-textarea,
+    [data-theme="beige"] .va-cap-input { background: #ede8e0; border-color: rgba(0,0,0,.12); color: #1c1410; }
+    [data-theme="beige"] .f-label { color: #5a4a38; }
+    [data-theme="beige"] .f-hint { color: #8a7a6a; }
+    [data-theme="beige"] .btn--primary { background: #9e7c4a; color: #faf7f2; }
+    [data-theme="beige"] .btn--primary:hover { background: #b08d5c; }
+    [data-theme="beige"] .btn--gold { background: #9e7c4a; color: #faf7f2; }
+    [data-theme="beige"] .btn--gold:hover { background: #b08d5c; }
+    [data-theme="beige"] .ctrl-btn:hover:not(.active) { border-color: rgba(0,0,0,.22); color: #3a2e22; }
+    [data-theme="beige"] #drawer { background: #f7f3ed; border-color: rgba(0,0,0,.1); }
+    [data-theme="beige"] .drawer-title { color: #2a1f10; }
+    [data-theme="beige"] .pin-card { background: #fff; }
+    [data-theme="beige"] .va-link-strip { background: #fff; border-color: rgba(0,0,0,.08); }
+    [data-theme="beige"] #notifPopup .np-inner { background: #fff; border-color: rgba(0,0,0,.1); }
+
+    /* ── Pink theme ───────────────────────────────────────────────────── */
+    [data-theme="pink"] {
+      --navy-900: #F4F0FA; --navy-800: #FFFFFF; --navy-700: #EDE6F6;
+      --gold: #C2146A; --gold-lt: #d4317c; --gold-dim: rgba(194,20,106,.1);
+      --cream: #2D1B45; --text: #3D2B55; --muted: #7A5E9A;
+      --border: rgba(0,0,0,.08); --border-g: rgba(194,20,106,.3);
+      --success: #16a34a; --danger: #dc2626;
+    }
+    [data-theme="pink"] html,
+    [data-theme="pink"] body { background: linear-gradient(150deg,#EEE6F6 0%,#F4F0FA 45%,#F9F5FC 100%); color: #3D2B55; }
+    [data-theme="pink"] .va-bar,
+    [data-theme="pink"] .ctrl-bar { background: #fff; border-color: rgba(0,0,0,.07); box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+    [data-theme="pink"] .va-cap-card,
+    [data-theme="pink"] .va-item-card { background: #fff; border-color: rgba(0,0,0,.07); }
+    [data-theme="pink"] .va-tabs { background: #fff; border-color: rgba(0,0,0,.07); }
+    [data-theme="pink"] .va-tab { color: #7A5E9A; }
+    [data-theme="pink"] .va-tab.active { color: #C2146A; border-color: #C2146A; }
+    [data-theme="pink"] .va-section-title { background: linear-gradient(90deg,#C2146A 0%,#2D1B45 60%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    [data-theme="pink"] .f-input,
+    [data-theme="pink"] .f-textarea,
+    [data-theme="pink"] .va-cap-input { background: #ede6f6; border-color: rgba(0,0,0,.1); color: #1c0f2e; }
+    [data-theme="pink"] .f-label { color: #5a3e7a; }
+    [data-theme="pink"] .f-hint { color: #7A5E9A; }
+    [data-theme="pink"] .btn--primary { background: #C2146A; color: #fff; }
+    [data-theme="pink"] .btn--primary:hover { background: #d4317c; }
+    [data-theme="pink"] .btn--gold { background: #C2146A; color: #fff; }
+    [data-theme="pink"] .btn--gold:hover { background: #d4317c; }
+    [data-theme="pink"] .ctrl-btn:hover:not(.active) { border-color: rgba(0,0,0,.2); color: #3D2B55; }
+    [data-theme="pink"] #drawer { background: #f4f0fa; border-color: rgba(0,0,0,.08); }
+    [data-theme="pink"] .drawer-title { color: #2D1B45; }
+    [data-theme="pink"] .pin-card { background: #fff; }
+    [data-theme="pink"] .va-link-strip { background: #fff; border-color: rgba(0,0,0,.07); }
+    [data-theme="pink"] #notifPopup .np-inner { background: #fff; border-color: rgba(0,0,0,.08); }
   </style>
   <link rel="stylesheet" href="/desktop.css">
 </head>
@@ -1272,12 +1363,28 @@
         <div class="va-bar__label" id="barVendorId">&#8230;</div>
       </div>
       <div style="display:flex;align-items:center;gap:.5rem">
-        <button class="btn-bell" id="bellBtn" onclick="switchTab('notifs')" title="Thông báo">
+        <button class="btn-bell" id="bellBtn" onclick="switchTab('notifs')" title="Notifications" data-i18n-title="bell_title">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
           <span id="bellCount" class="bell-count"></span>
         </button>
-        <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+        <button class="btn-logout" onclick="logout()" data-i18n="logout">Logout</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Control bar: Theme + Language -->
+  <div class="ctrl-bar">
+    <div class="ctrl-group">
+      <span class="ctrl-label">Theme</span>
+      <button class="ctrl-btn ctrl-theme-btn active" data-theme="default" onclick="dlcSetTheme('default')" title="Classic Dark">Classic</button>
+      <button class="ctrl-btn ctrl-theme-btn" data-theme="beige" onclick="dlcSetTheme('beige')" title="Cozy Beige">Beige</button>
+      <button class="ctrl-btn ctrl-theme-btn" data-theme="pink" onclick="dlcSetTheme('pink')" title="Beauty Pink">Pink</button>
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">Lang</span>
+      <button class="ctrl-btn ctrl-lang-btn" data-lang="vi" onclick="dlcSetLang('vi')">VI</button>
+      <button class="ctrl-btn ctrl-lang-btn active" data-lang="en" onclick="dlcSetLang('en')">EN</button>
+      <button class="ctrl-btn ctrl-lang-btn" data-lang="es" onclick="dlcSetLang('es')">ES</button>
     </div>
   </div>
 
@@ -1294,34 +1401,34 @@
 
     <!-- Daily capacity card (always visible) -->
     <div class="va-cap-card" id="dailyCapCard">
-      <div class="va-cap-card__title">Sản Lượng Hàng Ngày · Daily Capacity</div>
+      <div class="va-cap-card__title" data-i18n="cap_title">Daily Capacity</div>
       <div class="va-cap-card__row">
         <input type="number" class="va-cap-input" id="capInput"
           min="1" max="9999" step="1" placeholder="300">
-        <button class="btn btn--primary btn--sm" onclick="saveCapacity()">Lưu</button>
+        <button class="btn btn--primary btn--sm" onclick="saveCapacity()" data-i18n="btn_save">Save</button>
       </div>
-      <div class="va-cap-sub">Tổng số chả giò Loan có thể làm mỗi ngày</div>
+      <div class="va-cap-sub" data-i18n="cap_sub">Max items this vendor can produce per day</div>
       <div class="va-cap-status" id="capStatus"></div>
     </div>
 
     <!-- Tab bar -->
     <div class="va-tabs">
-      <button class="va-tab active" id="tabMenu" onclick="switchTab('menu')">Thực Đơn</button>
-      <button class="va-tab" id="tabOrders" onclick="switchTab('orders')">Đơn Hàng<span id="ordersCount"></span></button>
-      <button class="va-tab" id="tabNotifs" onclick="switchTab('notifs')">Thông Báo<span id="notifBadge" class="notif-badge"></span></button>
-      <button class="va-tab" id="tabSettings" onclick="switchTab('settings')">Cài Đặt</button>
+      <button class="va-tab active" id="tabMenu" onclick="switchTab('menu')" data-i18n="tab_menu">Menu</button>
+      <button class="va-tab" id="tabOrders" onclick="switchTab('orders')"><span class="va-tab-lbl" data-i18n="tab_orders">Orders</span><span id="ordersCount"></span></button>
+      <button class="va-tab" id="tabNotifs" onclick="switchTab('notifs')"><span class="va-tab-lbl" data-i18n="tab_notifs">Notifications</span><span id="notifBadge" class="notif-badge"></span></button>
+      <button class="va-tab" id="tabSettings" onclick="switchTab('settings')" data-i18n="tab_settings">Settings</button>
     </div>
 
     <!-- Menu tab -->
     <div id="menuTab">
       <div class="va-section-hdr">
-        <div class="va-section-title">Thực Đơn Hiện Tại</div>
+        <div class="va-section-title" data-i18n="menu_title">Current Menu</div>
         <span class="va-count" id="itemCount"></span>
       </div>
       <div id="itemsContainer">
         <div class="va-loading-state" id="loadingState">
           <div class="va-spinner"></div>
-          Đang tải...
+          <span data-i18n="loading">Loading…</span>
         </div>
         <div class="va-item-list" id="itemList" style="display:none"></div>
       </div>
@@ -1330,22 +1437,22 @@
     <!-- Orders tab -->
     <div id="ordersTab" style="display:none">
       <div class="va-section-hdr">
-        <div class="va-section-title">Đơn Hàng</div>
+        <div class="va-section-title" data-i18n="orders_title">Orders</div>
         <div style="display:flex;align-items:center;gap:.5rem">
           <span class="va-count" id="ordersTotal"></span>
           <div class="va-view-toggle">
-            <button class="va-view-btn active" id="btnCalView" onclick="setOrderView('cal')" title="Lịch">&#128197;</button>
-            <button class="va-view-btn" id="btnListView" onclick="setOrderView('list')" title="Danh sách">&#9776;</button>
+            <button class="va-view-btn active" id="btnCalView" onclick="setOrderView('cal')" title="Calendar">&#128197;</button>
+            <button class="va-view-btn" id="btnListView" onclick="setOrderView('list')" title="List">&#9776;</button>
           </div>
         </div>
       </div>
       <!-- Staff filter chips — populated by JS after staff list loads -->
       <div class="staff-filter-bar" id="staffFilterBar">
-        <button class="staff-chip active" onclick="setStaffFilter('all')">Tất cả</button>
+        <button class="staff-chip active" data-staff="all" onclick="setStaffFilter('all')" data-i18n="staff_filter_all">All</button>
       </div>
       <div class="va-loading-state" id="ordersLoading">
         <div class="va-spinner"></div>
-        Đang tải đơn hàng...
+        <span data-i18n="loading_orders">Loading orders…</span>
       </div>
       <!-- Calendar view -->
       <div id="calView" style="display:none">
@@ -1369,7 +1476,7 @@
       <!-- AI Escalations (pending customer requests) -->
       <div id="escalationsSection" style="display:none">
         <div class="va-section-hdr" style="margin-bottom:.4rem">
-          <div class="va-section-title" style="color:#e8a800">&#128172; Yêu Cầu AI Đang Chờ</div>
+          <div class="va-section-title" style="color:#e8a800" data-i18n="ai_pending">💬 Pending AI Requests</div>
           <span id="escalationsBadge" style="background:#e8a800;color:#000;border-radius:99px;padding:2px 9px;font-size:.75rem;font-weight:700;display:none"></span>
         </div>
         <div id="escalationsList"></div>
@@ -1377,12 +1484,12 @@
       </div>
 
       <div class="va-section-hdr">
-        <div class="va-section-title">Thông Báo</div>
-        <button class="btn btn--ghost btn--sm" onclick="markAllRead()">&#10003; Đọc tất cả</button>
+        <div class="va-section-title" data-i18n="notifs_title">Notifications</div>
+        <button class="btn btn--ghost btn--sm" onclick="markAllRead()" data-i18n="mark_all_read">✓ Mark all read</button>
       </div>
       <div class="va-loading-state" id="notifsLoading">
         <div class="va-spinner"></div>
-        Đang tải...
+        <span data-i18n="loading">Loading…</span>
       </div>
       <div id="notifsList" style="display:none"></div>
     </div>
@@ -1390,61 +1497,61 @@
     <!-- Settings tab -->
     <div id="settingsTab" style="display:none">
       <div class="va-section-hdr">
-        <div class="va-section-title">Cài Đặt</div>
+        <div class="va-section-title" data-i18n="settings_title">Settings</div>
       </div>
 
       <!-- SMS notification card -->
       <div class="va-cap-card">
-        <div class="va-cap-card__title">&#128242; Thông Báo SMS</div>
+        <div class="va-cap-card__title" data-i18n="sms_title">📱 SMS Notifications</div>
         <div class="f-toggle-row" style="margin-bottom:.9rem">
-          <span class="f-toggle-label">Nhận SMS khi có đơn hàng mới</span>
+          <span class="f-toggle-label" data-i18n="sms_toggle_label">Receive SMS for new orders</span>
           <div class="f-toggle" id="smsToggle" onclick="toggleSms()">
             <div class="f-toggle__knob"></div>
           </div>
         </div>
         <div style="margin-bottom:.65rem">
-          <label style="display:block;font-size:.75rem;color:var(--text-muted);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.08em">Số điện thoại nhận SMS</label>
+          <label style="display:block;font-size:.75rem;color:var(--text-muted);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.08em" data-i18n="sms_phone_label">SMS recipient phone number</label>
           <input type="tel" id="smsPhoneInput"
             placeholder="+14081234567"
             style="width:100%;box-sizing:border-box;height:44px;background:var(--navy-900);border:1px solid var(--border-g);border-radius:8px;color:var(--text);font-size:.95rem;padding:0 .75rem;font-family:var(--font-b)">
-          <div style="font-size:.72rem;color:var(--text-muted);margin-top:.3rem">Định dạng quốc tế: +1XXXXXXXXXX (Mỹ)</div>
+          <div style="font-size:.72rem;color:var(--text-muted);margin-top:.3rem" data-i18n="sms_phone_hint">International format: +1XXXXXXXXXX (US)</div>
         </div>
         <div class="va-cap-card__row">
-          <button class="btn btn--gold btn--sm" onclick="saveSmsSettings()">Lưu cài đặt SMS</button>
+          <button class="btn btn--gold btn--sm" onclick="saveSmsSettings()" data-i18n="btn_save_sms">Save SMS Settings</button>
           <span id="smsSaveStatus" style="font-size:.8rem;color:var(--text-muted)"></span>
         </div>
       </div>
 
       <!-- Vendor hero image card -->
       <div class="va-cap-card" style="margin-top:.9rem">
-        <div class="va-cap-card__title">&#128247; Ảnh Nền Cửa Hàng</div>
-        <p style="font-size:.78rem;color:var(--text-muted);margin:0 0 .75rem;line-height:1.5">Ảnh nền hiển thị ở đầu trang cửa hàng. Kích thước đề xuất: 1200×500px.</p>
+        <div class="va-cap-card__title" data-i18n="hero_title">📷 Store Hero Image</div>
+        <p style="font-size:.78rem;color:var(--text-muted);margin:0 0 .75rem;line-height:1.5" data-i18n="hero_desc">Hero image displayed at the top of your store page. Recommended size: 1200×500px.</p>
         <!-- Preview -->
         <div id="heroImgPreviewWrap" style="width:100%;height:140px;border-radius:8px;overflow:hidden;background:var(--navy-900);border:1px solid var(--border-g);margin-bottom:.75rem;position:relative;">
           <img id="heroImgPreview" src="" alt="Hero preview" style="width:100%;height:100%;object-fit:cover;display:none;">
-          <div id="heroImgPlaceholder" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:.8rem;">Chưa có ảnh nền</div>
+          <div id="heroImgPlaceholder" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:.8rem;" data-i18n="hero_no_image">No hero image yet</div>
         </div>
         <!-- Upload -->
         <label class="btn btn--ghost btn--sm" style="cursor:pointer;display:inline-block">
-          &#128444; Chọn Ảnh
+          <span data-i18n="hero_choose">🖼 Choose Image</span>
           <input type="file" accept="image/*" style="display:none" onchange="handleHeroImageUpload(this)">
         </label>
         <span id="heroUploadStatus" style="font-size:.78rem;color:var(--text-muted);margin-left:.5rem"></span>
         <!-- Focal point sliders -->
         <div style="margin-top:.75rem">
-          <label style="display:block;font-size:.75rem;color:var(--text-muted);margin-bottom:.25rem;text-transform:uppercase;letter-spacing:.08em">Vị trí ngang (trái ← → phải)</label>
+          <label style="display:block;font-size:.75rem;color:var(--text-muted);margin-bottom:.25rem;text-transform:uppercase;letter-spacing:.08em" data-i18n="hero_pos_x">Horizontal position (left ← → right)</label>
           <input type="range" id="heroImgX" min="0" max="100" value="50"
             style="width:100%;accent-color:var(--gold)"
             oninput="updateHeroPreviewPosition()">
         </div>
         <div style="margin-top:.45rem">
-          <label style="display:block;font-size:.75rem;color:var(--text-muted);margin-bottom:.25rem;text-transform:uppercase;letter-spacing:.08em">Vị trí dọc (trên ↑ ↓ dưới)</label>
+          <label style="display:block;font-size:.75rem;color:var(--text-muted);margin-bottom:.25rem;text-transform:uppercase;letter-spacing:.08em" data-i18n="hero_pos_y">Vertical position (top ↑ ↓ bottom)</label>
           <input type="range" id="heroImgY" min="0" max="100" value="50"
             style="width:100%;accent-color:var(--gold)"
             oninput="updateHeroPreviewPosition()">
         </div>
         <div class="va-cap-card__row" style="margin-top:.75rem">
-          <button class="btn btn--gold btn--sm" onclick="saveHeroImage()">Lưu ảnh nền</button>
+          <button class="btn btn--gold btn--sm" onclick="saveHeroImage()" data-i18n="btn_save_hero">Save Hero Image</button>
           <span id="heroSaveStatus" style="font-size:.8rem;color:var(--text-muted)"></span>
         </div>
       </div>
@@ -1452,16 +1559,16 @@
       <!-- AI / Marketing tools — collapsed by default, not part of normal workflow -->
       <details class="va-cap-card ai-advanced-details" style="margin-top:.9rem">
         <summary class="va-cap-card__title">
-          <span>✨ Công Cụ Marketing AI</span>
+          <span data-i18n="ai_tools_title">✨ AI Marketing Tools</span>
           <span class="ai-adv-arrow">▾</span>
         </summary>
         <div style="margin-top:.75rem">
           <div class="ai-provider-row" id="aiProviderChips">
             <!-- populated by renderAIProviderChips() -->
           </div>
-          <p style="font-size:.72rem;color:var(--muted);margin:.55rem 0 0;line-height:1.55">
-            Tính năng AI được vận hành bởi nền tảng Du Lịch Cali. Không cần cấu hình thêm.<br>
-            Dùng nút <strong style="color:var(--gold)">✨ AI Content</strong> trên từng món trong tab Thực Đơn để tạo nội dung marketing.
+          <p style="font-size:.72rem;color:var(--muted);margin:.55rem 0 0;line-height:1.55" data-i18n-html="ai_tools_desc">
+            AI features powered by Du Lịch Cali platform. No additional configuration needed.<br>
+            Use the <strong style="color:var(--gold)">✨ AI Content</strong> button on each item in the Menu tab to generate marketing content.
           </p>
         </div>
       </details>
@@ -1475,7 +1582,7 @@
   <div class="np-inner">
     <div class="np-icon" id="popupIcon">&#128276;</div>
     <div class="np-content">
-      <div class="np-title" id="popupTitle">Đơn hàng mới!</div>
+      <div class="np-title" id="popupTitle" data-i18n="popup_new_order">New Order!</div>
       <div class="np-msg" id="popupMsg"></div>
       <div class="np-actions" id="popupActions"></div>
     </div>
@@ -1492,48 +1599,48 @@
 <!-- Slide-up form drawer -->
 <div id="drawer">
   <div class="drawer-handle"></div>
-  <div class="drawer-title" id="drawerTitle">Thêm Món Mới</div>
+  <div class="drawer-title" id="drawerTitle" data-mode="add">Add New Item</div>
 
   <div class="drawer-form">
     <input type="hidden" id="fEditId">
 
     <div class="f-row">
-      <label class="f-label" for="fName">Tên món *</label>
-      <input class="f-input" type="text" id="fName" placeholder="Chả Giò, Bánh Mì...">
+      <label class="f-label" for="fName" data-i18n="fld_name">Item name *</label>
+      <input class="f-input" type="text" id="fName" placeholder="Spring Roll, Banh Mi…" data-i18n-placeholder="ph_name">
     </div>
 
     <div class="f-row">
-      <label class="f-label" for="fNameVi">Tên tiếng Việt <small style="font-weight:400;opacity:.6">(tùy chọn)</small></label>
-      <input class="f-input" type="text" id="fNameVi" placeholder="Chả Giò...">
+      <label class="f-label" for="fNameVi"><span data-i18n="fld_name_vi">Vietnamese name</span> <small style="font-weight:400;opacity:.6" data-i18n="fld_name_vi_optional">(optional)</small></label>
+      <input class="f-input" type="text" id="fNameVi" placeholder="Chả Giò…">
     </div>
 
     <div class="f-row">
-      <label class="f-label" for="fDesc">Mô tả</label>
+      <label class="f-label" for="fDesc" data-i18n="fld_desc">Description</label>
       <textarea class="f-textarea" id="fDesc"
-        placeholder="Nhân thịt heo, nấm, cà rốt — handmade mỗi ngày..."></textarea>
+        placeholder="Pork, mushroom, carrot — handmade daily…" data-i18n-placeholder="ph_desc"></textarea>
     </div>
 
     <div class="f-row-2">
       <div class="f-row">
-        <label class="f-label" for="fPrice">Giá cơ bản (USD) <small style="font-weight:400;opacity:.6">— để trống nếu dùng giá theo loại</small></label>
+        <label class="f-label" for="fPrice"><span data-i18n="fld_price">Base price (USD)</span> <small style="font-weight:400;opacity:.6" data-i18n="fld_price_note">— leave blank if using variant pricing</small></label>
         <input class="f-input" type="number" id="fPrice"
-          placeholder="0.75 — hoặc để trống nếu có variants" min="0" step="0.01">
+          placeholder="0.75" min="0" step="0.01">
       </div>
       <div class="f-row">
-        <label class="f-label" for="fUnit">Đơn vị</label>
+        <label class="f-label" for="fUnit" data-i18n="fld_unit">Unit</label>
         <input class="f-input" type="text" id="fUnit" placeholder="each">
       </div>
     </div>
 
     <div class="f-row">
-      <label class="f-label" for="fMinQty">Số lượng tối thiểu *</label>
+      <label class="f-label" for="fMinQty" data-i18n="fld_min_qty">Minimum quantity *</label>
       <input class="f-input" type="number" id="fMinQty"
         placeholder="30" min="1" step="1">
-      <span class="f-hint">Khách phải đặt ít nhất bao nhiêu cái?</span>
+      <span class="f-hint" data-i18n="fld_min_qty_hint">Minimum amount customer must order</span>
     </div>
 
     <div class="f-row">
-      <label class="f-label">Ảnh Mặc Định / Default Card Image <small style="font-weight:400;opacity:.6">— dùng trên trang danh mục &amp; làm ảnh dự phòng khi chưa chọn loại</small></label>
+      <label class="f-label"><span data-i18n="fld_img_label">Default Card Image</span> <small style="font-weight:400;opacity:.6" data-i18n="fld_img_note">— used in catalog and as fallback before variant is selected</small></label>
       <div class="img-upload-area" id="imgUploadArea" onclick="document.getElementById('fImageFile').click()">
         <img id="imgPreview" class="img-preview" style="display:none" alt="">
         <div class="img-placeholder" id="imgPlaceholder">
@@ -1541,20 +1648,20 @@
             <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
             <circle cx="12" cy="13" r="4"/>
           </svg>
-          <span>Nhấn để chọn ảnh<br><small style="font-size:.68rem;opacity:.7">Thư viện hoặc chụp ảnh mới</small></span>
+          <span><span data-i18n="img_tap_to_select">Tap to select image</span><br><small style="font-size:.68rem;opacity:.7" data-i18n="img_tap_sub">Library or take new photo</small></span>
         </div>
         <button type="button" class="img-change-btn" id="imgChangeBtn"
-          style="display:none" onclick="event.stopPropagation();document.getElementById('fImageFile').click()">
-          Đổi ảnh
+          style="display:none" onclick="event.stopPropagation();document.getElementById('fImageFile').click()" data-i18n="img_change">
+          Change Image
         </button>
         <div class="img-upload-overlay" id="imgOverlay">
           <div class="img-progress-track"><div class="img-progress-fill" id="imgFill"></div></div>
-          <span class="img-progress-label" id="imgLabel">Đang tải...</span>
+          <span class="img-progress-label" id="imgLabel" data-i18n="uploading">Uploading…</span>
         </div>
       </div>
       <input type="file" id="fImageFile" accept="image/*" style="display:none" onchange="handleImageUpload(this)">
       <input type="hidden" id="fImage">
-      <span class="f-hint">Ảnh 1/3 — ảnh mặc định cho thẻ sản phẩm. Ảnh theo loại (raw/fresh) upload ở phần Variants bên dưới (Ảnh 2/3 và 3/3).</span>
+      <span class="f-hint" data-i18n="img_hint">Photo 1/3 — default image for product card. Variant images upload in Variants below (Photos 2/3 and 3/3).</span>
     </div>
 
     <!-- Focal point editor — shown only after an image is loaded -->
@@ -1579,20 +1686,20 @@
           </div>
         </div>
       </div>
-      <span class="f-hint">Kéo để chọn vùng hiển thị chính — dùng hộp nhỏ bên trái để xem trước.</span>
+      <span class="f-hint" data-i18n="focal_hint">Drag to set the main crop area — use the small box on the left to preview.</span>
     </div>
 
     <div class="f-row">
-      <label class="f-label">Loại sản phẩm &amp; Giá <small style="font-weight:400;opacity:.6">(Variants)</small></label>
+      <label class="f-label"><span data-i18n="fld_variants_label">Product types &amp; Pricing</span> <small style="font-weight:400;opacity:.6" data-i18n="fld_variants_note">(Variants)</small></label>
       <div class="var-col-headers">
-        <span>Tên loại / Type</span>
-        <span>Giá / Price</span>
-        <span>Ảnh</span>
+        <span data-i18n="var_col_name">Name / Type</span>
+        <span data-i18n="var_col_price">Price</span>
+        <span data-i18n="var_col_img">Photo</span>
         <span></span>
       </div>
       <div class="var-builder" id="variantBuilder"></div>
-      <button type="button" class="var-add-btn" onclick="appendVariantRow('','','')">+ Thêm loại</button>
-      <span class="f-hint">Ảnh 2/3 và 3/3 — mỗi loại có giá &amp; ảnh riêng. VD: Raw $0.75 (ảnh chả giò sống) / Fresh $1.00 (ảnh chả giò chín). Khi khách chọn loại, ảnh tự động thay đổi trên trang công khai.</span>
+      <button type="button" class="var-add-btn" onclick="appendVariantRow('','','')" data-i18n="btn_add_variant">+ Add type</button>
+      <span class="f-hint" data-i18n="var_hint">Photos 2/3 and 3/3 — each variant has its own price &amp; image. Customer sees image change when selecting a variant.</span>
     </div>
 
     <div class="f-group" style="margin-top:1rem">
@@ -1636,7 +1743,7 @@
     </div>
 
     <div class="f-toggle-row">
-      <span class="f-toggle-label">Đang bán (Active)</span>
+      <span class="f-toggle-label" data-i18n="toggle_active">Active (For Sale)</span>
       <button type="button" class="f-toggle on" id="fActive"
         onclick="toggleBtn('fActive')">
         <div class="f-toggle__knob"></div>
@@ -1644,7 +1751,7 @@
     </div>
 
     <div class="f-toggle-row">
-      <span class="f-toggle-label">Nổi bật (Featured)</span>
+      <span class="f-toggle-label" data-i18n="toggle_featured">Featured</span>
       <button type="button" class="f-toggle" id="fFeatured"
         onclick="toggleBtn('fFeatured')">
         <div class="f-toggle__knob"></div>
@@ -1653,48 +1760,48 @@
 
     <!-- ── Buyer Instructions (collapsible) ────────────────────────────── -->
     <div class="f-section-hdr" id="instrHdr" onclick="toggleInstr()">
-      <span>📋 Hướng Dẫn Người Mua</span>
+      <span data-i18n="instr_title">📋 Buyer Instructions</span>
       <span class="f-section-chevron" id="instrChevron">▾</span>
     </div>
     <div id="instrFields" class="f-instr-fields" style="display:none">
 
       <div class="f-row">
-        <label class="f-label" for="fPrep">🍳 Cách Chế Biến / Nấu</label>
+        <label class="f-label" for="fPrep" data-i18n="fld_prep">🍳 Preparation / Cooking</label>
         <textarea class="f-textarea" id="fPrep" rows="3"
-          placeholder="Ví dụ: Chiên 350°F trong 8–10 phút, lật đều. Không cần rã đông..."></textarea>
+          placeholder="e.g. Fry at 350°F for 8–10 min, flip evenly. No need to thaw…" data-i18n-placeholder="ph_prep"></textarea>
       </div>
 
       <div class="f-row">
-        <label class="f-label" for="fReheat">♨️ Hâm Nóng</label>
+        <label class="f-label" for="fReheat" data-i18n="fld_reheat">♨️ Reheating</label>
         <textarea class="f-textarea" id="fReheat" rows="2"
-          placeholder="Ví dụ: Lò nướng 325°F 5 phút, hoặc air fryer 320°F 4 phút..."></textarea>
+          placeholder="e.g. Oven 325°F 5 min, or air fryer 320°F 4 min…" data-i18n-placeholder="ph_reheat"></textarea>
       </div>
 
       <div class="f-row">
-        <label class="f-label" for="fStorage">🧊 Bảo Quản</label>
+        <label class="f-label" for="fStorage" data-i18n="fld_storage">🧊 Storage</label>
         <textarea class="f-textarea" id="fStorage" rows="2"
-          placeholder="Ví dụ: Tủ lạnh 3 ngày, đông lạnh 2 tháng..."></textarea>
+          placeholder="e.g. Refrigerate 3 days, freeze 2 months…" data-i18n-placeholder="ph_storage"></textarea>
       </div>
 
       <div class="f-row">
-        <label class="f-label" for="fServing">🍽️ Ghi Chú Phục Vụ</label>
+        <label class="f-label" for="fServing" data-i18n="fld_serving">🍽️ Serving Notes</label>
         <textarea class="f-textarea" id="fServing" rows="2"
-          placeholder="Ví dụ: Dùng kèm tương ớt, ăn nóng tốt nhất..."></textarea>
+          placeholder="e.g. Serve with chili sauce, best eaten hot…" data-i18n-placeholder="ph_serving"></textarea>
       </div>
 
       <div class="f-row">
-        <label class="f-label" for="fAllergen">⚠️ Thành Phần / Dị Ứng</label>
+        <label class="f-label" for="fAllergen" data-i18n="fld_allergen">⚠️ Ingredients / Allergens</label>
         <textarea class="f-textarea" id="fAllergen" rows="2"
-          placeholder="Ví dụ: Thịt heo, nấm, cà rốt. Không gluten. Không đậu phộng..."></textarea>
+          placeholder="e.g. Pork, mushroom, carrot. No gluten. No peanuts…" data-i18n-placeholder="ph_allergen"></textarea>
       </div>
 
     </div>
     <!-- ─────────────────────────────────────────────────────────────────── -->
 
     <div class="drawer-actions">
-      <button class="btn btn--ghost" onclick="closeDrawer()">Huỷ</button>
-      <button class="btn btn--primary" id="saveBtn" onclick="saveItem()">
-        Lưu lại
+      <button class="btn btn--ghost" onclick="closeDrawer()" data-i18n="btn_cancel">Cancel</button>
+      <button class="btn btn--primary" id="saveBtn" onclick="saveItem()" data-i18n="btn_save_item">
+        Save
       </button>
     </div>
   </div>
@@ -2144,7 +2251,7 @@
         '<button onclick="location.reload()" ' +
           'style="background:var(--gold);color:var(--navy-900);border:none;border-radius:var(--r);' +
           'padding:.55rem 1.5rem;font-weight:700;cursor:pointer;font-size:.85rem">' +
-          'Thử lại' +
+          (_vlb('btn_retry','Try Again')) +
         '</button>' +
       '</div>';
     loading.style.display = 'flex';
@@ -2173,7 +2280,8 @@
       return (a.sortOrder || 0) - (b.sortOrder || 0);
     });
 
-    document.getElementById('itemCount').textContent = items.length + ' món';
+    var _icEl = document.getElementById('itemCount');
+    if (_icEl) { _icEl.dataset.count = items.length; _icEl.textContent = _vlb('items_count', '{n} items').replace('{n}', items.length); }
     loading.style.display = 'none';
     list.style.display = 'flex';
 
@@ -2236,7 +2344,8 @@
     if (itemId && allItems[itemId]) {
       var item = allItems[itemId];
       document.getElementById('fEditId').value    = itemId;
-      document.getElementById('drawerTitle').textContent = 'Chỉnh Sửa Món';
+      document.getElementById('drawerTitle').dataset.mode = 'edit';
+      document.getElementById('drawerTitle').textContent = _vlb('drawer_edit', 'Edit Item');
       document.getElementById('fName').value      = item.name || '';
       document.getElementById('fDesc').value      = item.description || '';
       document.getElementById('fPrice').value     = item.price != null ? item.price : '';
@@ -2296,7 +2405,8 @@
 
   function clearForm() {
     document.getElementById('fEditId').value       = '';
-    document.getElementById('drawerTitle').textContent = 'Thêm Món Mới';
+    document.getElementById('drawerTitle').dataset.mode = 'add';
+    document.getElementById('drawerTitle').textContent = _vlb('drawer_add', 'Add New Item');
     document.getElementById('fName').value         = '';
     document.getElementById('fDesc').value         = '';
     document.getElementById('fPrice').value        = '';
@@ -2366,7 +2476,7 @@
     if (blocked) {
       btn.disabled = true;
       btn.dataset.uploadBlocked = '1';
-      btn.title = 'Đang tải ảnh — vui lòng chờ...';
+      btn.title = _vlb('loading_img', 'Loading image, please wait…');
     } else {
       btn.dataset.uploadBlocked = '';
       btn.title = '';
@@ -2405,7 +2515,7 @@
 
     overlay.classList.add('active');
     fill.style.width = '30%';
-    label.textContent = 'Đang tải lên...';
+    label.textContent = _vlb('uploading', 'Uploading…');
 
     var ext      = (file.name.split('.').pop() || 'jpg').toLowerCase();
     var fileName = Date.now() + '.' + ext;
@@ -2428,7 +2538,7 @@
             _uploadsInProgress = Math.max(0, _uploadsInProgress - 1);
             _activeUploadTask = null;
             _setSaveBlocked(false);
-            showToast('Tải ảnh thành công!', 'success');
+            showToast(_vlb('toast_img_uploaded','Image uploaded!'), 'success');
           } else {
             uploadFail('Lỗi upload: ' + ((result.data && result.data.error) || 'Không rõ'));
           }
@@ -2579,7 +2689,7 @@
           document.getElementById('fVideoUrl').value = data.videoUrl;
           updateVideoPreview();
           setStatus('✓ Video đã tạo xong! Nhấn Lưu lại để cập nhật.', 'success');
-          showToast('Video đã tạo thành công!', 'success');
+          showToast(_vlb('toast_video_done','Video created!'), 'success');
         } else {
           var msg = (data && data.error) || 'Lỗi không xác định.';
           setStatus('✗ ' + msg, 'error');
@@ -2675,7 +2785,7 @@
         })();
 
     promise.then(function () {
-      showToast('Đã lưu thành công!', 'success');
+      showToast(_vlb('toast_saved','Saved successfully!'), 'success');
       closeDrawer();
       saveBtn.disabled = false;
     }).catch(function (err) {
@@ -2773,7 +2883,7 @@
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }).then(function () {
       var status = document.getElementById('capStatus');
-      status.textContent = '✓ Đã lưu: ' + val + ' cuốn/ngày';
+      status.textContent = _vlb('capacity_saved', '✓ Saved: {n} / day').replace('{n}', val);
       setTimeout(function () { status.textContent = ''; }, 3000);
       showToast('Cập nhật sản lượng: ' + val + ' cuốn/ngày', 'success');
       if (_activeTab === 'orders') {
@@ -2820,7 +2930,7 @@
       notificationPhone: phone,
       updatedAt:         firebase.firestore.FieldValue.serverTimestamp()
     }).then(function () {
-      status.textContent = '✓ Đã lưu';
+      status.textContent = _vlb('saved', '✓ Saved');
       status.style.color = 'var(--gold)';
       setTimeout(function () { status.textContent = ''; }, 3000);
     }).catch(function (err) {
@@ -2929,7 +3039,7 @@
       saveStatus.style.color = 'var(--gold)';
       document.getElementById('heroUploadStatus').textContent = '';
       setTimeout(function () { saveStatus.textContent = ''; }, 3000);
-      showToast('Đã lưu ảnh nền!', 'success');
+      showToast(_vlb('toast_hero_saved','Hero image saved!'), 'success');
     }).catch(function (err) {
       saveStatus.textContent = '✕ ' + err.message;
       saveStatus.style.color = '#f87171';
@@ -3412,8 +3522,8 @@
   }
 
   function _renderApptCard(o) {
-    var stLbls = { pending:'Chờ xác nhận', confirmed:'Đã xác nhận', preparing:'Đang phục vụ',
-      completed:'Hoàn thành', cancelled:'Đã huỷ', no_show:'Không đến' };
+    var stLbls = { pending:_vlb('st_pending','Pending'), confirmed:_vlb('st_confirmed','Confirmed'), preparing:_vlb('st_preparing','In Progress'),
+      completed:_vlb('st_completed','Completed'), cancelled:_vlb('st_cancelled','Cancelled'), no_show:_vlb('st_no_show','No Show') };
     var stCls  = 'st--' + (o.status || 'pending');
     var stLbl  = stLbls[o.status] || o.status || '';
     var svcs   = (Array.isArray(o.services) && o.services.length ? o.services : [o.serviceType || '']).filter(Boolean);
@@ -3462,18 +3572,18 @@
 
     html += '<div class="va-order-card__actions">' +
       (o.status === 'pending'
-        ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'confirmed\')">&#10003; Xác nhận</button>'
+        ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'confirmed\')">&#10003; ' + _vlb('btn_confirm','Confirm') + '</button>'
         : '') +
       (o.status === 'confirmed'
-        ? '<button class="btn btn--ghost btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'preparing\')" style="border-color:rgba(251,146,60,.35);color:var(--sunset)">&#9654; Bắt đầu</button>' +
-          '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'completed\')">&#10003; Hoàn thành</button>'
+        ? '<button class="btn btn--ghost btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'preparing\')" style="border-color:rgba(251,146,60,.35);color:var(--sunset)">&#9654; ' + _vlb('btn_start','Start') + '</button>' +
+          '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'completed\')">&#10003; ' + _vlb('btn_complete','Complete') + '</button>'
         : '') +
       (o.status === 'preparing'
-        ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'completed\')">&#10003; Hoàn thành</button>'
+        ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'completed\')">&#10003; ' + _vlb('btn_complete','Complete') + '</button>'
         : '') +
       (o.status !== 'cancelled' && o.status !== 'completed' && o.status !== 'no_show'
-        ? '<button class="btn btn--ghost btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'no_show\')" style="border-color:rgba(167,139,250,.3);color:#a78bfa">Vắng</button>' +
-          '<button class="btn btn--danger btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'cancelled\')">&#10005; Huỷ</button>'
+        ? '<button class="btn btn--ghost btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'no_show\')" style="border-color:rgba(167,139,250,.3);color:#a78bfa">' + _vlb('btn_no_show','No Show') + '</button>' +
+          '<button class="btn btn--danger btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'cancelled\')">&#10005; ' + _vlb('btn_cancel_order','Cancel') + '</button>'
         : '') +
     '</div></div>';
     return html;
@@ -3731,8 +3841,8 @@
     }
     // Food orders: existing card (unchanged for backward compat)
     var stCls = 'st--' + (o.status || 'pending');
-    var stLbl = { pending:'Chờ xác nhận', confirmed:'Đã xác nhận', preparing:'Đang chuẩn bị',
-      completed:'Hoàn thành', cancelled:'Đã huỷ', no_show:'Không đến' }[o.status] || o.status;
+    var stLbl = { pending:_vlb('st_pending','Pending'), confirmed:_vlb('st_confirmed','Confirmed'), preparing:_vlb('st_preparing','In Progress'),
+      completed:_vlb('st_completed','Completed'), cancelled:_vlb('st_cancelled','Cancelled'), no_show:_vlb('st_no_show','No Show') }[o.status] || o.status;
     var smsBody = buildSmsMessage(o);
     var html = '<div class="va-order-card">' +
       '<div class="va-order-card__top">' +
@@ -3755,17 +3865,17 @@
 
     html += '<div class="va-order-card__actions">' +
       (o.status === 'pending'
-        ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'confirmed\')">&#10003; Xác nhận</button>'
+        ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'confirmed\')">&#10003; ' + _vlb('btn_confirm','Confirm') + '</button>'
         : '') +
       (o.status === 'confirmed'
-        ? '<button class="btn btn--ghost btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'preparing\')" style="border-color:rgba(251,146,60,.35);color:var(--sunset)">&#9203; Đang chuẩn bị</button>' +
-          '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'completed\')">&#10003; Hoàn thành</button>'
+        ? '<button class="btn btn--ghost btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'preparing\')" style="border-color:rgba(251,146,60,.35);color:var(--sunset)">&#9203; ' + _vlb('btn_preparing','Preparing') + '</button>' +
+          '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'completed\')">&#10003; ' + _vlb('btn_complete','Complete') + '</button>'
         : '') +
       (o.status === 'preparing'
-        ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'completed\')">&#10003; Hoàn thành</button>'
+        ? '<button class="btn btn--ok btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'completed\')">&#10003; ' + _vlb('btn_complete','Complete') + '</button>'
         : '') +
       (o.status !== 'cancelled' && o.status !== 'completed' && o.status !== 'no_show'
-        ? '<button class="btn btn--danger btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'cancelled\')">&#10005; Huỷ</button>'
+        ? '<button class="btn btn--danger btn--sm" onclick="setOrderStatus(\'' + o.id + '\',\'cancelled\')">&#10005; ' + _vlb('btn_cancel_order','Cancel') + '</button>'
         : '') +
     '</div></div>';
     return html;
@@ -3777,10 +3887,10 @@
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }).then(function () {
       var msgs = {
-        confirmed:'Đã xác nhận!', preparing:'Đã bắt đầu!',
-        completed:'Hoàn thành!', cancelled:'Đã huỷ đơn.', no_show:'Đã đánh dấu vắng.'
+        confirmed:_vlb('toast_confirmed','Confirmed!'), preparing:_vlb('toast_preparing','Started!'),
+        completed:_vlb('toast_completed','Completed!'), cancelled:_vlb('toast_cancelled','Order cancelled.'), no_show:_vlb('toast_no_show','Marked no-show.')
       };
-      showToast(msgs[newStatus] || 'Đã cập nhật.', 'success');
+      showToast(msgs[newStatus] || _vlb('toast_updated','Updated.'), 'success');
     }).catch(function (err) {
       showToast('Lỗi: ' + err.message, 'error');
     });
@@ -4163,7 +4273,7 @@
 
   function markAllRead() {
     var unread = allNotifs.filter(function (n) { return !n.read; });
-    if (unread.length === 0) { showToast('Không có thông báo chưa đọc.', 'success'); return; }
+    if (unread.length === 0) { showToast(_vlb('toast_no_unread','No unread notifications.'), 'success'); return; }
     var batch = db.batch();
     unread.forEach(function (n) {
       batch.update(vendorRef.collection('notifications').doc(n.id), {
@@ -4172,7 +4282,7 @@
       });
     });
     batch.commit().then(function () {
-      showToast('Đã đánh dấu đọc ' + unread.length + ' thông báo.', 'success');
+      showToast(_vlb('toast_marked_read','Marked {n} read.').replace('{n}', unread.length), 'success');
     }).catch(function (err) {
       showToast('Lỗi: ' + err.message, 'error');
     });
@@ -4340,6 +4450,252 @@
     return result;
   }
 
+  // ── Vendor Admin Language & Theme System ──────────────────────────────────
+  var _VA_LABELS = {
+    en: {
+      logout:'Logout', bell_title:'Notifications',
+      tab_menu:'Menu', tab_orders:'Orders', tab_notifs:'Notifications', tab_settings:'Settings',
+      cap_title:'Daily Capacity', btn_save:'Save', cap_sub:'Max items this vendor can produce per day',
+      menu_title:'Current Menu', orders_title:'Orders', notifs_title:'Notifications', settings_title:'Settings',
+      loading:'Loading…', loading_orders:'Loading orders…',
+      mark_all_read:'✓ Mark all read', ai_pending:'💬 Pending AI Requests',
+      sms_title:'📱 SMS Notifications', sms_toggle_label:'Receive SMS for new orders',
+      sms_phone_label:'SMS recipient phone number', sms_phone_hint:'International format: +1XXXXXXXXXX (US)',
+      btn_save_sms:'Save SMS Settings',
+      hero_title:'📷 Store Hero Image',
+      hero_desc:'Hero image displayed at the top of your store page. Recommended size: 1200×500px.',
+      hero_no_image:'No hero image yet', hero_choose:'🖼 Choose Image',
+      hero_pos_x:'Horizontal position (left ← → right)', hero_pos_y:'Vertical position (top ↑ ↓ bottom)',
+      btn_save_hero:'Save Hero Image',
+      ai_tools_title:'✨ AI Marketing Tools',
+      ai_tools_desc:'AI features powered by Du Lịch Cali platform. No additional configuration needed. Use the <strong style="color:var(--gold)">✨ AI Content</strong> button on each item in the Menu tab.',
+      drawer_add:'Add New Item', drawer_edit:'Edit Item',
+      fld_name:'Item name *', fld_name_vi:'Vietnamese name', fld_name_vi_optional:'(optional)',
+      fld_desc:'Description', fld_price:'Base price (USD)', fld_price_note:'— leave blank if using variant pricing',
+      fld_unit:'Unit', fld_min_qty:'Minimum quantity *', fld_min_qty_hint:'Minimum amount customer must order',
+      fld_img_label:'Default Card Image', fld_img_note:'— used in catalog and as fallback before variant is selected',
+      img_tap_to_select:'Tap to select image', img_tap_sub:'Library or take new photo',
+      img_change:'Change Image', img_loading:'Uploading…', img_processing:'Processing…',
+      img_hint:'Photo 1/3 — default image for product card.',
+      focal_hint:'Drag to set the main crop area — use the small box on the left to preview.',
+      fld_variants_label:'Product types & Pricing', fld_variants_note:'(Variants)',
+      var_col_name:'Name / Type', var_col_price:'Price', var_col_img:'Photo',
+      btn_add_variant:'+ Add type', var_hint:'Photos 2/3 and 3/3 — each variant has its own price & image.',
+      toggle_active:'Active (For Sale)', toggle_featured:'Featured',
+      instr_title:'📋 Buyer Instructions',
+      fld_prep:'🍳 Preparation / Cooking', ph_prep:'e.g. Fry at 350°F for 8–10 min…',
+      fld_reheat:'♨️ Reheating', ph_reheat:'e.g. Oven 325°F 5 min…',
+      fld_storage:'🧊 Storage', ph_storage:'e.g. Refrigerate 3 days, freeze 2 months…',
+      fld_serving:'🍽️ Serving Notes', ph_serving:'e.g. Serve with chili sauce, best eaten hot…',
+      fld_allergen:'⚠️ Ingredients / Allergens', ph_allergen:'e.g. Pork, mushroom, carrot…',
+      btn_cancel:'Cancel', btn_save_item:'Save', popup_new_order:'New Order!', staff_filter_all:'All',
+      saved:'✓ Saved', capacity_saved:'✓ Saved: {n} / day',
+      loading_img:'Loading image, please wait…', uploading:'Uploading…',
+      st_pending:'Pending', st_confirmed:'Confirmed', st_preparing:'In Progress',
+      st_completed:'Completed', st_cancelled:'Cancelled', st_no_show:'No Show',
+      items_count:'{n} items',
+      btn_confirm:'Confirm', btn_start:'Start', btn_complete:'Complete',
+      btn_no_show:'No Show', btn_cancel_order:'Cancel', btn_preparing:'Preparing',
+      btn_retry:'Try Again',
+      toast_saved:'Saved successfully!', toast_confirmed:'Confirmed!', toast_preparing:'Started!',
+      toast_completed:'Completed!', toast_cancelled:'Order cancelled.', toast_no_show:'Marked no-show.',
+      toast_updated:'Updated.', toast_img_uploaded:'Image uploaded!', toast_video_done:'Video created!',
+      toast_hero_saved:'Hero image saved!', toast_no_unread:'No unread notifications.',
+      toast_marked_read:'Marked {n} read.',
+    },
+    vi: {
+      logout:'Đăng xuất', bell_title:'Thông báo',
+      tab_menu:'Thực Đơn', tab_orders:'Đơn Hàng', tab_notifs:'Thông Báo', tab_settings:'Cài Đặt',
+      cap_title:'Sản Lượng / Ngày', btn_save:'Lưu', cap_sub:'Số lượng tối đa vendor có thể sản xuất mỗi ngày',
+      menu_title:'Thực Đơn Hiện Tại', orders_title:'Đơn Hàng', notifs_title:'Thông Báo', settings_title:'Cài Đặt',
+      loading:'Đang tải…', loading_orders:'Đang tải đơn hàng…',
+      mark_all_read:'✓ Đánh dấu đã đọc tất', ai_pending:'💬 Yêu Cầu AI Chưa Xử Lý',
+      sms_title:'📱 Thông Báo SMS', sms_toggle_label:'Nhận SMS khi có đơn hàng mới',
+      sms_phone_label:'Số điện thoại nhận SMS', sms_phone_hint:'Định dạng quốc tế: +1XXXXXXXXXX (Mỹ)',
+      btn_save_sms:'Lưu Cài Đặt SMS',
+      hero_title:'📷 Ảnh Nền Cửa Hàng',
+      hero_desc:'Ảnh nền hiển thị ở đầu trang cửa hàng của bạn. Kích thước đề xuất: 1200×500px.',
+      hero_no_image:'Chưa có ảnh nền', hero_choose:'🖼 Chọn Ảnh',
+      hero_pos_x:'Vị trí ngang (trái ← → phải)', hero_pos_y:'Vị trí dọc (trên ↑ ↓ dưới)',
+      btn_save_hero:'Lưu Ảnh Nền',
+      ai_tools_title:'✨ Công Cụ AI Marketing',
+      ai_tools_desc:'Tính năng AI được cung cấp bởi nền tảng Du Lịch Cali. Không cần cấu hình thêm. Sử dụng nút <strong style="color:var(--gold)">✨ AI Content</strong> trên từng món trong tab Thực Đơn.',
+      drawer_add:'Thêm Món Mới', drawer_edit:'Sửa Món',
+      fld_name:'Tên món *', fld_name_vi:'Tên tiếng Việt', fld_name_vi_optional:'(tùy chọn)',
+      fld_desc:'Mô tả', fld_price:'Giá gốc (USD)', fld_price_note:'— để trống nếu dùng giá theo loại',
+      fld_unit:'Đơn vị', fld_min_qty:'Số lượng tối thiểu *', fld_min_qty_hint:'Số lượng tối thiểu khách phải đặt',
+      fld_img_label:'Ảnh Đại Diện Mặc Định', fld_img_note:'— dùng trong catalog và làm ảnh dự phòng trước khi chọn loại',
+      img_tap_to_select:'Nhấn để chọn ảnh', img_tap_sub:'Thư viện hoặc chụp ảnh mới',
+      img_change:'Đổi Ảnh', img_loading:'Đang tải lên…', img_processing:'Đang xử lý…',
+      img_hint:'Ảnh 1/3 — ảnh mặc định cho card sản phẩm.',
+      focal_hint:'Kéo để đặt vùng cắt chính — dùng ô nhỏ bên trái để xem trước.',
+      fld_variants_label:'Các loại & Giá', fld_variants_note:'(Phân loại)',
+      var_col_name:'Tên / Loại', var_col_price:'Giá', var_col_img:'Ảnh',
+      btn_add_variant:'+ Thêm loại', var_hint:'Ảnh 2/3 và 3/3 — mỗi loại có giá và ảnh riêng.',
+      toggle_active:'Đang bán', toggle_featured:'Nổi bật',
+      instr_title:'📋 Hướng Dẫn Người Mua',
+      fld_prep:'🍳 Chế biến / Nấu', ph_prep:'VD: Chiên 180°C trong 8–10 phút…',
+      fld_reheat:'♨️ Hâm nóng', ph_reheat:'VD: Lò 165°C 5 phút…',
+      fld_storage:'🧊 Bảo quản', ph_storage:'VD: Ngăn mát 3 ngày, đông lạnh 2 tháng…',
+      fld_serving:'🍽️ Cách dùng', ph_serving:'VD: Dùng kèm tương ớt, ăn nóng ngon hơn…',
+      fld_allergen:'⚠️ Thành phần / Dị ứng', ph_allergen:'VD: Thịt lợn, nấm, cà rốt…',
+      btn_cancel:'Huỷ', btn_save_item:'Lưu', popup_new_order:'Đơn Mới!', staff_filter_all:'Tất cả',
+      saved:'✓ Đã lưu', capacity_saved:'✓ Đã lưu: {n} / ngày',
+      loading_img:'Đang tải ảnh, vui lòng đợi…', uploading:'Đang tải lên…',
+      st_pending:'Chờ xác nhận', st_confirmed:'Đã xác nhận', st_preparing:'Đang phục vụ',
+      st_completed:'Hoàn thành', st_cancelled:'Đã huỷ', st_no_show:'Không đến',
+      items_count:'{n} món',
+      btn_confirm:'Xác nhận', btn_start:'Bắt đầu', btn_complete:'Hoàn thành',
+      btn_no_show:'Vắng', btn_cancel_order:'Huỷ', btn_preparing:'Đang chuẩn bị',
+      btn_retry:'Thử lại',
+      toast_saved:'Đã lưu thành công!', toast_confirmed:'Đã xác nhận!', toast_preparing:'Đã bắt đầu!',
+      toast_completed:'Hoàn thành!', toast_cancelled:'Đã huỷ đơn.', toast_no_show:'Đã đánh dấu vắng.',
+      toast_updated:'Đã cập nhật.', toast_img_uploaded:'Tải ảnh thành công!', toast_video_done:'Video đã tạo xong!',
+      toast_hero_saved:'Đã lưu ảnh nền!', toast_no_unread:'Không có thông báo chưa đọc.',
+      toast_marked_read:'Đã đánh dấu đọc {n} thông báo.',
+    },
+    es: {
+      logout:'Cerrar sesión', bell_title:'Notificaciones',
+      tab_menu:'Menú', tab_orders:'Pedidos', tab_notifs:'Notificaciones', tab_settings:'Configuración',
+      cap_title:'Capacidad Diaria', btn_save:'Guardar', cap_sub:'Máximo de artículos que el proveedor puede producir por día',
+      menu_title:'Menú Actual', orders_title:'Pedidos', notifs_title:'Notificaciones', settings_title:'Configuración',
+      loading:'Cargando…', loading_orders:'Cargando pedidos…',
+      mark_all_read:'✓ Marcar todo leído', ai_pending:'💬 Solicitudes AI Pendientes',
+      sms_title:'📱 Notificaciones SMS', sms_toggle_label:'Recibir SMS para nuevos pedidos',
+      sms_phone_label:'Número de teléfono para SMS', sms_phone_hint:'Formato internacional: +1XXXXXXXXXX (EE.UU.)',
+      btn_save_sms:'Guardar SMS',
+      hero_title:'📷 Imagen Principal',
+      hero_desc:'Imagen principal mostrada en la parte superior de tu página. Tamaño recomendado: 1200×500px.',
+      hero_no_image:'Sin imagen principal', hero_choose:'🖼 Elegir Imagen',
+      hero_pos_x:'Posición horizontal (izq ← → der)', hero_pos_y:'Posición vertical (arriba ↑ ↓ abajo)',
+      btn_save_hero:'Guardar Imagen',
+      ai_tools_title:'✨ Herramientas AI Marketing',
+      ai_tools_desc:'Funciones AI de la plataforma Du Lịch Cali. Sin configuración adicional. Use el botón <strong style="color:var(--gold)">✨ AI Content</strong> en cada artículo en la pestaña Menú.',
+      drawer_add:'Agregar Artículo', drawer_edit:'Editar Artículo',
+      fld_name:'Nombre del artículo *', fld_name_vi:'Nombre en vietnamita', fld_name_vi_optional:'(opcional)',
+      fld_desc:'Descripción', fld_price:'Precio base (USD)', fld_price_note:'— dejar en blanco si usa precios por variante',
+      fld_unit:'Unidad', fld_min_qty:'Cantidad mínima *', fld_min_qty_hint:'Cantidad mínima que el cliente debe pedir',
+      fld_img_label:'Imagen Principal', fld_img_note:'— usada en el catálogo y como respaldo antes de seleccionar variante',
+      img_tap_to_select:'Toca para seleccionar imagen', img_tap_sub:'Biblioteca o tomar nueva foto',
+      img_change:'Cambiar Imagen', img_loading:'Subiendo…', img_processing:'Procesando…',
+      img_hint:'Foto 1/3 — imagen predeterminada para la tarjeta de producto.',
+      focal_hint:'Arrastra para establecer el área de recorte — usa el cuadro pequeño a la izquierda para previsualizar.',
+      fld_variants_label:'Tipos y Precios', fld_variants_note:'(Variantes)',
+      var_col_name:'Nombre / Tipo', var_col_price:'Precio', var_col_img:'Foto',
+      btn_add_variant:'+ Agregar tipo', var_hint:'Fotos 2/3 y 3/3 — cada variante tiene su propio precio e imagen.',
+      toggle_active:'Activo (En venta)', toggle_featured:'Destacado',
+      instr_title:'📋 Instrucciones',
+      fld_prep:'🍳 Preparación', ph_prep:'Ej: Freír a 180°C por 8–10 min…',
+      fld_reheat:'♨️ Recalentar', ph_reheat:'Ej: Horno 165°C 5 min…',
+      fld_storage:'🧊 Almacenamiento', ph_storage:'Ej: Refrigerar 3 días, congelar 2 meses…',
+      fld_serving:'🍽️ Notas de servicio', ph_serving:'Ej: Servir con salsa picante, mejor caliente…',
+      fld_allergen:'⚠️ Ingredientes / Alérgenos', ph_allergen:'Ej: Cerdo, hongos, zanahoria…',
+      btn_cancel:'Cancelar', btn_save_item:'Guardar', popup_new_order:'¡Nuevo Pedido!', staff_filter_all:'Todos',
+      saved:'✓ Guardado', capacity_saved:'✓ Guardado: {n} / día',
+      loading_img:'Cargando imagen, por favor espere…', uploading:'Subiendo…',
+      st_pending:'Pendiente', st_confirmed:'Confirmado', st_preparing:'En progreso',
+      st_completed:'Completado', st_cancelled:'Cancelado', st_no_show:'No asistió',
+      items_count:'{n} artículos',
+      btn_confirm:'Confirmar', btn_start:'Iniciar', btn_complete:'Completar',
+      btn_no_show:'No asistió', btn_cancel_order:'Cancelar', btn_preparing:'Preparando',
+      btn_retry:'Reintentar',
+      toast_saved:'¡Guardado con éxito!', toast_confirmed:'¡Confirmado!', toast_preparing:'¡Iniciado!',
+      toast_completed:'¡Completado!', toast_cancelled:'Pedido cancelado.', toast_no_show:'Marcado como no asistido.',
+      toast_updated:'Actualizado.', toast_img_uploaded:'¡Imagen subida!', toast_video_done:'¡Video creado!',
+      toast_hero_saved:'¡Imagen guardada!', toast_no_unread:'Sin notificaciones sin leer.',
+      toast_marked_read:'{n} notificaciones leídas.',
+    }
+  };
+
+  var _vaLang  = localStorage.getItem('dlc_lang')  || 'en';
+  var _vaTheme = localStorage.getItem('dlc_theme') || 'default';
+
+  function _vlb(key, fallback) {
+    var lb = _VA_LABELS[_vaLang] || _VA_LABELS.en;
+    return lb[key] !== undefined ? lb[key] : (fallback !== undefined ? fallback : key);
+  }
+
+  function dlcSetTheme(t) {
+    _vaTheme = t;
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('dlc_theme', t);
+    document.querySelectorAll('.ctrl-theme-btn').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.theme === t);
+    });
+  }
+
+  function dlcSetLang(l) {
+    _vaLang = l;
+    localStorage.setItem('dlc_lang', l);
+    document.querySelectorAll('.ctrl-lang-btn').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.lang === l);
+    });
+    _vaApplyLang(l);
+  }
+
+  function _vaApplyLang(l) {
+    var lb = _VA_LABELS[l] || _VA_LABELS.en;
+    // Apply data-i18n (textContent)
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      var key = el.getAttribute('data-i18n');
+      if (lb[key] !== undefined) el.textContent = lb[key];
+    });
+    // Apply data-i18n-html (innerHTML — safe, values are trusted strings from _VA_LABELS)
+    document.querySelectorAll('[data-i18n-html]').forEach(function (el) {
+      var key = el.getAttribute('data-i18n-html');
+      if (lb[key] !== undefined) el.innerHTML = lb[key];
+    });
+    // Apply data-i18n-placeholder
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+      var key = el.getAttribute('data-i18n-placeholder');
+      if (lb[key] !== undefined) el.placeholder = lb[key];
+    });
+    // Apply data-i18n-title
+    document.querySelectorAll('[data-i18n-title]').forEach(function (el) {
+      var key = el.getAttribute('data-i18n-title');
+      if (lb[key] !== undefined) el.title = lb[key];
+    });
+    // Restore tab label spans (tabs have badge spans — textContent updates only the .va-tab-lbl spans)
+    document.querySelectorAll('.va-tab-lbl[data-i18n]').forEach(function (el) {
+      var key = el.getAttribute('data-i18n');
+      if (lb[key] !== undefined) el.textContent = lb[key];
+    });
+    // Restore staff filter "All" button (data-staff="all")
+    var staffAll = document.querySelector('[data-staff="all"]');
+    if (staffAll) {
+      var staffLbl = staffAll.querySelector('.va-tab-lbl');
+      if (staffLbl) staffLbl.textContent = lb.staff_filter_all || 'All';
+      else staffAll.textContent = lb.staff_filter_all || 'All';
+    }
+    // Restore item count (data-count attribute holds the raw count)
+    var itemCountEl = document.getElementById('itemCount');
+    if (itemCountEl) {
+      var n = itemCountEl.getAttribute('data-count');
+      if (n !== null) itemCountEl.textContent = (lb.items_count || '{n} items').replace('{n}', n);
+    }
+    // Restore drawer title (data-mode="add"|"edit")
+    var drawerTitleEl = document.getElementById('drawerTitle');
+    if (drawerTitleEl) {
+      var mode = drawerTitleEl.getAttribute('data-mode') || 'add';
+      drawerTitleEl.textContent = mode === 'edit' ? (lb.drawer_edit || 'Edit Item') : (lb.drawer_add || 'Add New Item');
+    }
+    // Restore popup title
+    var popupTitleEl = document.getElementById('popupTitle');
+    if (popupTitleEl && popupTitleEl.getAttribute('data-i18n') === 'popup_new_order') {
+      popupTitleEl.textContent = lb.popup_new_order || 'New Order!';
+    }
+  }
+
+  // ── Init theme + lang ──────────────────────────────────────────────────────
+  (function () {
+    var t = localStorage.getItem('dlc_theme') || 'default';
+    // Normalize legacy values from terminal
+    if (t === 'metallic') t = 'beige';
+    if (t === 'neon')     t = 'pink';
+    dlcSetTheme(t);
+    dlcSetLang(_vaLang);
+  }());
+
   // ── Confirm booking from notification ─────────────────────────────────────
   function confirmFromNotif(notifId, bookingId) {
     vendorRef.collection('bookings').doc(bookingId).update({
@@ -4352,7 +4708,7 @@
         readAt:       firebase.firestore.FieldValue.serverTimestamp()
       });
     }).then(function () {
-      showToast('Đã xác nhận đơn hàng!', 'success');
+      showToast(_vlb('toast_confirmed','Confirmed!'), 'success');
     }).catch(function (err) {
       showToast('Lỗi: ' + err.message, 'error');
     });

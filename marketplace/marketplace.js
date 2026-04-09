@@ -14,6 +14,7 @@
   var clockIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
   var calendarIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
   var sendIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
+  var micIcon  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0014 0"/><line x1="12" y1="21" x2="12" y2="17"/><line x1="8" y1="21" x2="16" y2="21"/></svg>';
   var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
   var starIcon = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
 
@@ -1557,6 +1558,8 @@
         '<div class="mp-ai__messages" id="aiMessages_' + biz.id + '">' + initial + '</div>' +
         '<div class="mp-ai__input-bar">' +
           '<input class="mp-ai__input" type="text" id="aiInput_' + biz.id + '" placeholder="Nhập câu hỏi..." autocomplete="off">' +
+          '<button class="mp-ai__mic-lang" type="button" title="Ngôn ngữ giọng nói" style="display:none">VI</button>' +
+          '<button class="mp-ai__mic" type="button" title="Nói chuyện với AI" style="display:none">' + micIcon + '</button>' +
           '<button class="mp-ai__send" type="button" id="aiSend_' + biz.id + '">' + sendIcon + '</button>' +
         '</div>' +
       '</div>' +
@@ -3220,6 +3223,102 @@
     }
   };
 
+  // ── Voice Input Module ────────────────────────────────────────────────────────
+  // Attaches multilingual mic button to AI input bar.
+  // Requires Web Speech API; silently does nothing if not available.
+  window.DLCVoiceInput = (function () {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var _LANGS  = ['vi-VN', 'en-US', 'es-US'];
+    var _LABELS = ['VI', 'EN', 'ES'];
+    var _PH     = ['Đang nghe…', 'Listening…', 'Escuchando…'];
+    var _BLOCKED = ['Mic bị chặn · Cho phép trong cài đặt',
+                    'Mic blocked · Allow in settings',
+                    'Micrófono bloqueado · Permite en ajustes'];
+
+    function _langIdx(biz) {
+      var l = (biz && biz._bookingState && biz._bookingState.lang) || 'vi';
+      if (l === 'en') return 1;
+      if (l === 'es') return 2;
+      return 0;
+    }
+
+    function attach(biz, container, input) {
+      if (!SR) return; // unsupported — buttons stay hidden
+      var micBtn  = container.querySelector('.mp-ai__mic');
+      var langBtn = container.querySelector('.mp-ai__mic-lang');
+      if (!micBtn || !langBtn) return;
+
+      // Show buttons
+      micBtn.style.display  = '';
+      langBtn.style.display = '';
+
+      var _idx = _langIdx(biz);
+      langBtn.textContent = _LABELS[_idx];
+
+      var _rec       = null;
+      var _listening = false;
+
+      function _stop() {
+        _listening = false;
+        micBtn.classList.remove('mp-ai__mic--listening');
+        input.disabled    = false;
+        input.placeholder = 'Nhập câu hỏi...';
+        if (_rec) { try { _rec.stop(); } catch (e) {} _rec = null; }
+      }
+
+      function _start() {
+        if (_listening) { _stop(); return; }
+        try {
+          _rec = new SR();
+          _rec.lang             = _LANGS[_idx];
+          _rec.interimResults   = true;
+          _rec.maxAlternatives  = 1;
+          _rec.continuous       = false;
+
+          _rec.onstart = function () {
+            _listening = true;
+            micBtn.classList.add('mp-ai__mic--listening');
+            input.disabled    = true;
+            input.placeholder = _PH[_idx];
+          };
+
+          _rec.onresult = function (e) {
+            var t = '';
+            for (var i = e.resultIndex; i < e.results.length; i++) {
+              t += e.results[i][0].transcript;
+            }
+            input.value = t;
+          };
+
+          _rec.onend = function () {
+            _stop();
+            if (input.value.trim()) input.focus();
+          };
+
+          _rec.onerror = function (e) {
+            _stop();
+            if (e.error === 'not-allowed' || e.error === 'permission-denied') {
+              input.placeholder = _BLOCKED[_idx];
+              setTimeout(function () { input.placeholder = 'Nhập câu hỏi...'; }, 3500);
+            }
+          };
+
+          _rec.start();
+        } catch (err) { _stop(); }
+      }
+
+      micBtn.addEventListener('click', _start);
+
+      langBtn.addEventListener('click', function () {
+        _idx = (_idx + 1) % _LANGS.length;
+        langBtn.textContent = _LABELS[_idx];
+        if (_listening) _stop();
+      });
+    }
+
+    return { attach: attach };
+  })();
+
   var Receptionist = {
 
     init: function (biz, containerId) {
@@ -3281,6 +3380,9 @@
           }
         }
       } catch(e) { console.warn('[DLC] handoff context error:', e); }
+
+      // Voice input
+      if (window.DLCVoiceInput) window.DLCVoiceInput.attach(biz, container, input);
     },
 
     _sendMessage: function (biz, text, messagesEl) {

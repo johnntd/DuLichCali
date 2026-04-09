@@ -2386,6 +2386,9 @@
           send(chip.textContent.trim());
         });
       });
+
+      // Voice input
+      if (window.DLCVoiceInput) window.DLCVoiceInput.attach(biz, container, input);
     }
   };
 

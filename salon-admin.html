@@ -2333,8 +2333,11 @@
 <!-- Payment modal -->
 <div class="sa-modal-backdrop hidden" id="paymentModal">
   <div class="sa-modal">
-    <h3 style="color:var(--gold-lt);margin-bottom:.25rem" data-i18n="pay_modal_title">Thu Tiền</h3>
+    <h3 id="pmModalTitle" style="color:var(--gold-lt);margin-bottom:.25rem" data-i18n="pay_modal_title">Thu Tiền</h3>
     <div id="pmHeader" style="font-size:.78rem;color:var(--muted);margin-bottom:.6rem"></div>
+
+  <!-- ═══ PHASE 1: Form ═══ -->
+  <div id="pmFormContent">
 
     <!-- Price summary — shown when priceEst is known -->
     <div id="pmSummary" class="pm-summary" style="display:none">
@@ -2455,9 +2458,64 @@
     <div id="pmMsg" style="display:none;font-size:.75rem;margin:.2rem 0"></div>
     <div class="sa-modal-actions">
       <button class="btn btn--outline btn--sm" onclick="closePaymentModal()" data-i18n="btn_cancel">Hủy bỏ</button>
-      <button class="btn btn--sm sa-act--pay" id="pmSaveBtn" onclick="savePayment()" style="font-size:.78rem;font-weight:700;padding:.45rem 1.1rem" data-i18n="btn_save_payment">Lưu thanh toán</button>
+      <button class="btn btn--sm sa-act--pay" id="pmSaveBtn" onclick="_pmSaveOrConfirm()" style="font-size:.78rem;font-weight:700;padding:.45rem 1.1rem" data-i18n="btn_save_payment">Lưu thanh toán</button>
     </div>
-  </div>
+  </div><!-- end #pmFormContent -->
+
+  <!-- ═══ PHASE 2: Customer Confirmation ═══ -->
+  <div id="pmConfirmPanel" style="display:none">
+    <div style="background:rgba(245,166,35,.07);border:1px solid var(--border-g);border-radius:8px;padding:.9rem 1rem;margin-bottom:.8rem">
+      <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.5rem">Order Summary</div>
+      <div id="pmCfSummary" style="font-size:.82rem;color:var(--cream);line-height:1.6"></div>
+    </div>
+    <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:.9rem 1rem;margin-bottom:.8rem">
+      <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.5rem">Payment</div>
+      <div id="pmCfMethodLine" style="font-size:.82rem;color:var(--cream)"></div>
+      <div id="pmCfAmountLine" style="font-size:1.35rem;font-weight:700;color:var(--gold-lt);margin-top:.15rem"></div>
+    </div>
+    <!-- Signature pad — card only -->
+    <div id="pmSigWrap" style="display:none;margin-bottom:.8rem">
+      <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.35rem">Customer Signature <span style="color:var(--muted);font-style:italic">(optional)</span></div>
+      <div style="position:relative;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:rgba(255,255,255,.03)">
+        <canvas id="pmSigCanvas" width="320" height="90" style="display:block;width:100%;height:90px;touch-action:none;cursor:crosshair"></canvas>
+        <button type="button" onclick="_pmSigClear()" style="position:absolute;top:4px;right:6px;background:transparent;border:none;color:var(--muted);font-size:.65rem;cursor:pointer;padding:2px 4px">Clear</button>
+      </div>
+    </div>
+    <div class="sa-modal-actions">
+      <button class="btn btn--outline btn--sm" onclick="_pmBackToForm()">← Back</button>
+      <button class="btn btn--sm sa-act--pay" onclick="_pmConfirmPayment()" style="font-size:.78rem;font-weight:700;padding:.45rem 1.1rem">Confirm &amp; Save</button>
+    </div>
+  </div><!-- end #pmConfirmPanel -->
+
+  <!-- ═══ PHASE 3: Receipt Options ═══ -->
+  <div id="pmReceiptPanel" style="display:none">
+    <div style="text-align:center;padding:.5rem 0 .9rem">
+      <div style="font-size:1.3rem;color:var(--success);margin-bottom:.3rem">✓</div>
+      <div style="font-size:.88rem;color:var(--cream);font-weight:600;margin-bottom:.15rem">Payment Saved</div>
+      <div id="pmReceiptAmount" style="font-size:1.1rem;color:var(--gold-lt);font-weight:700"></div>
+    </div>
+    <div style="font-size:.72rem;color:var(--muted);text-align:center;margin-bottom:.7rem">Send receipt to customer?</div>
+    <div style="display:flex;flex-direction:column;gap:.38rem">
+      <button class="btn btn--outline btn--sm" onclick="_pmSendReceipt('print')" style="font-size:.78rem;display:flex;align-items:center;gap:.5rem;justify-content:center">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print Receipt
+      </button>
+      <button class="btn btn--outline btn--sm" onclick="_pmSendReceipt('text')" style="font-size:.78rem;display:flex;align-items:center;gap:.5rem;justify-content:center">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Text to Customer
+      </button>
+      <button class="btn btn--outline btn--sm" onclick="_pmSendReceipt('skip')" style="font-size:.76rem;color:var(--muted)">No Receipt — Done</button>
+    </div>
+  </div><!-- end #pmReceiptPanel -->
+
+  <!-- ═══ PHASE 4: Done ═══ -->
+  <div id="pmDonePanel" style="display:none;text-align:center;padding:1.2rem 0">
+    <div style="font-size:2rem;margin-bottom:.4rem">✓</div>
+    <div id="pmDoneMsg" style="font-size:.9rem;color:var(--cream);font-weight:600;margin-bottom:.25rem"></div>
+    <div style="font-size:.72rem;color:var(--muted)">Closing…</div>
+  </div><!-- end #pmDonePanel -->
+
+  </div><!-- end .sa-modal -->
 </div>
 
 <!-- QR payment display overlay -->
@@ -4505,10 +4563,165 @@
     if (btn) btn.disabled = false;
     _updatePmBalance();
     _onPmMethodChange();
+    _pmAfterSave = null;
+    _pmShowPhase('pmFormContent');
     document.getElementById('paymentModal').classList.remove('hidden');
   }
 
+  // ── Checkout phase routing ────────────────────────────────────────────────────
+  var _pmAfterSave = null;
+
+  function _pmShowPhase(phase) {
+    var phases = ['pmFormContent', 'pmConfirmPanel', 'pmReceiptPanel', 'pmDonePanel'];
+    phases.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = (id === phase) ? '' : 'none';
+    });
+    // Header visibility: hide h3 title on done panel only
+    var title = document.getElementById('pmModalTitle');
+    if (title) title.style.display = (phase === 'pmDonePanel') ? 'none' : '';
+    var hdr = document.getElementById('pmHeader');
+    if (hdr) hdr.style.display = (phase === 'pmDonePanel') ? 'none' : '';
+  }
+
+  // Called by Save button — routes based on payment method
+  function _pmSaveOrConfirm() {
+    var method = (document.getElementById('pmMethod') || {}).value || 'cash';
+    if (method === 'cash') {
+      // Cash: save immediately, then go to receipt
+      _pmAfterSave = _pmShowReceiptPanel;
+      savePayment();
+    } else {
+      // Card / Zelle / Venmo / Other: show confirmation step
+      _pmShowConfirmPanel();
+    }
+  }
+
+  function _pmShowConfirmPanel() {
+    var method   = (document.getElementById('pmMethod') || {}).value || '';
+    var amount   = parseFloat((document.getElementById('pmAmount') || {}).value) || 0;
+    var tip      = parseFloat((document.getElementById('pmTip') || {}).value) || 0;
+    var grand    = amount; // amount already reflects grand total when auto-filled
+
+    // Build summary from price table
+    var summaryEl = document.getElementById('pmCfSummary');
+    if (summaryEl) {
+      var lines = [];
+      var modal = document.getElementById('paymentModal');
+      var priceTotal = parseFloat((modal || {}).dataset.priceTotal || '0') || 0;
+      var effective  = priceTotal + _pmAddOnTotal() + _pmReadAdj();
+      var taxRate    = VENDOR_TAX_RATE || 0;
+      var tax        = effective > 0 && taxRate > 0 ? Math.round(effective * taxRate * 100) / 100 : 0;
+      if (effective > 0) {
+        lines.push('Services: $' + effective.toFixed(2));
+        if (tax > 0) lines.push('Tax: $' + tax.toFixed(2));
+        if (tip > 0) lines.push('Tip: $' + tip.toFixed(2));
+      }
+      summaryEl.innerHTML = lines.length ? lines.join('<br>') : '—';
+    }
+
+    var methodLabels = { cash:'Cash', card:'Card', zelle:'Zelle', venmo:'Venmo', other:'Other' };
+    var methodEl = document.getElementById('pmCfMethodLine');
+    if (methodEl) methodEl.textContent = 'Method: ' + (methodLabels[method] || method);
+
+    var amtEl = document.getElementById('pmCfAmountLine');
+    if (amtEl) amtEl.textContent = '$' + grand.toFixed(2);
+
+    // Show signature pad only for card
+    var sigWrap = document.getElementById('pmSigWrap');
+    if (sigWrap) {
+      sigWrap.style.display = (method === 'card') ? '' : 'none';
+      if (method === 'card') _pmSigInit();
+    }
+
+    _pmShowPhase('pmConfirmPanel');
+  }
+
+  function _pmConfirmPayment() {
+    _pmAfterSave = _pmShowReceiptPanel;
+    savePayment();
+  }
+
+  function _pmBackToForm() {
+    _pmAfterSave = null;
+    _pmShowPhase('pmFormContent');
+  }
+
+  function _pmShowReceiptPanel() {
+    var amount = parseFloat((document.getElementById('pmAmount') || {}).value) || 0;
+    var el = document.getElementById('pmReceiptAmount');
+    if (el) el.textContent = '$' + amount.toFixed(2) + ' collected';
+    _pmShowPhase('pmReceiptPanel');
+  }
+
+  function _pmSendReceipt(type) {
+    if (type === 'print') {
+      // Build minimal print window with booking details
+      var modal  = document.getElementById('paymentModal');
+      var amount = parseFloat((document.getElementById('pmAmount') || {}).value) || 0;
+      var tip    = parseFloat((document.getElementById('pmTip') || {}).value) || 0;
+      var method = (document.getElementById('pmMethod') || {}).value || '';
+      var note   = (document.getElementById('pmNote') || {}).value || '';
+      var header = (document.getElementById('pmHeader') || {}).textContent || '';
+      var w = window.open('', '_blank', 'width=360,height=500');
+      if (w) {
+        w.document.write('<html><body style="font-family:sans-serif;padding:24px;font-size:13px">' +
+          '<h2 style="margin:0 0 4px">Payment Receipt</h2>' +
+          '<div style="color:#555;margin-bottom:16px">' + header + '</div>' +
+          '<div>Amount: <strong>$' + amount.toFixed(2) + '</strong></div>' +
+          (tip > 0 ? '<div>Tip: <strong>$' + tip.toFixed(2) + '</strong></div>' : '') +
+          '<div>Method: ' + method + '</div>' +
+          (note ? '<div>Note: ' + note + '</div>' : '') +
+          '<script>window.onload=function(){window.print();window.close();}<\/script>' +
+          '</body></html>');
+        w.document.close();
+      }
+    }
+    _pmShowDonePanel(type === 'skip' ? 'All done!' : 'Receipt sent!');
+  }
+
+  function _pmShowDonePanel(msg) {
+    var el = document.getElementById('pmDoneMsg');
+    if (el) el.textContent = msg || 'Done!';
+    _pmShowPhase('pmDonePanel');
+    setTimeout(function() { closePaymentModal(); }, 2800);
+  }
+
+  // ── Signature pad ─────────────────────────────────────────────────────────────
+  var _pmSigDrawing = false;
+  function _pmSigInit() {
+    var canvas = document.getElementById('pmSigCanvas');
+    if (!canvas || canvas._pmInited) return;
+    canvas._pmInited = true;
+    var ctx = canvas.getContext('2d');
+    ctx.strokeStyle = '#f5a623';
+    ctx.lineWidth   = 2;
+    ctx.lineCap     = 'round';
+    function pos(e) {
+      var r = canvas.getBoundingClientRect();
+      var src = e.touches ? e.touches[0] : e;
+      return { x: (src.clientX - r.left) * (canvas.width / r.width),
+               y: (src.clientY - r.top)  * (canvas.height / r.height) };
+    }
+    canvas.addEventListener('mousedown',  function(e){ _pmSigDrawing=true; ctx.beginPath(); var p=pos(e); ctx.moveTo(p.x,p.y); });
+    canvas.addEventListener('mousemove',  function(e){ if(!_pmSigDrawing) return; var p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); });
+    canvas.addEventListener('mouseup',    function(){ _pmSigDrawing=false; });
+    canvas.addEventListener('mouseleave', function(){ _pmSigDrawing=false; });
+    canvas.addEventListener('touchstart', function(e){ e.preventDefault(); _pmSigDrawing=true; ctx.beginPath(); var p=pos(e); ctx.moveTo(p.x,p.y); }, {passive:false});
+    canvas.addEventListener('touchmove',  function(e){ e.preventDefault(); if(!_pmSigDrawing) return; var p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); }, {passive:false});
+    canvas.addEventListener('touchend',   function(){ _pmSigDrawing=false; });
+  }
+  function _pmSigClear() {
+    var canvas = document.getElementById('pmSigCanvas');
+    if (canvas) canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+  }
+
   function closePaymentModal() {
+    _pmAfterSave = null;
+    _pmSigDrawing = false;
+    var canvas = document.getElementById('pmSigCanvas');
+    if (canvas) { canvas._pmInited = false; canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height); }
+    _pmShowPhase('pmFormContent');
     document.getElementById('paymentModal').classList.add('hidden');
   }
 
@@ -4603,11 +4816,21 @@
     vendorRef.collection('bookings').doc(bookingId).update(update)
       .then(function() {
         showToast('✓ Đã ghi nhận thanh toán.');
-        closePaymentModal();
+        if (_pmAfterSave) {
+          var cb = _pmAfterSave;
+          _pmAfterSave = null;
+          if (btn) btn.disabled = false;
+          cb();
+        } else {
+          closePaymentModal();
+        }
       })
       .catch(function(err) {
+        _pmAfterSave = null;
         _pmMsg('Lỗi: ' + err.message, true);
         if (btn) btn.disabled = false;
+        // Return to form on error so user can retry
+        _pmShowPhase('pmFormContent');
       });
   }
 

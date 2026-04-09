@@ -4485,7 +4485,9 @@
       }
     }
 
-    document.getElementById('pmStatus').value = b.paymentStatus || 'unpaid';
+    // Default to 'paid' for first-time collection so amount auto-fills to grand total.
+    // Restore saved status (including 'unpaid'/'partial') when re-opening a prior payment.
+    document.getElementById('pmStatus').value = b.paymentStatus || 'paid';
     document.getElementById('pmAmount').value  = b.amountPaid != null ? b.amountPaid : '';
     document.getElementById('pmTip').value     = b.tipAmount   != null ? b.tipAmount   : '';
     // Populate method options from vendor config, then restore saved value

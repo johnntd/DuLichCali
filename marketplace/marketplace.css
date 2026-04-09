@@ -823,12 +823,12 @@ select.mp-input option {
 }
 
 .mp-ai__messages {
-  height: 240px;
+  height: 280px;
   overflow-y: auto;
   padding: .85rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: .65rem;
+  gap: .85rem;
   background: var(--navy-900);
 }
 
@@ -849,10 +849,10 @@ select.mp-input option {
 }
 
 .mp-ai__bubble {
-  padding: .55rem .85rem;
-  border-radius: 12px;
-  font-size: .84rem;
-  line-height: 1.5;
+  padding: .75rem 1rem;
+  border-radius: 18px;
+  font-size: .96rem;
+  line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -934,14 +934,15 @@ select.mp-input option {
 
 .mp-ai__input {
   flex: 1;
-  height: 40px;
-  padding: 0 12px;
+  height: 48px;
+  padding: 0 14px;
   background: rgba(255,255,255,.06);
   border: 1px solid rgba(255,255,255,.12);
-  border-radius: 20px;
+  border-radius: 24px;
   color: var(--cream);
   font-family: var(--font-b);
-  font-size: .85rem;
+  font-size: 1rem;
+  touch-action: manipulation;
 }
 
 .mp-ai__input:focus {
@@ -954,8 +955,8 @@ select.mp-input option {
 }
 
 .mp-ai__send {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   background: var(--gold);
   border: none;
   border-radius: 50%;
@@ -965,6 +966,8 @@ select.mp-input option {
   color: var(--navy-900);
   flex-shrink: 0;
   transition: background .2s;
+  touch-action: manipulation;
+  cursor: pointer;
 }
 
 .mp-ai__send:hover {
@@ -972,15 +975,15 @@ select.mp-input option {
 }
 
 .mp-ai__send svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
 }
 
 /* ── Voice Mic Button ──────────────────────────────────────────────────────── */
 
 .mp-ai__mic {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   background: rgba(255,255,255,.05);
   border: 1px solid rgba(255,255,255,.12);
   border-radius: 50%;
@@ -991,6 +994,7 @@ select.mp-input option {
   justify-content: center;
   flex-shrink: 0;
   transition: background .2s, border-color .2s, color .2s;
+  touch-action: manipulation;
 }
 
 .mp-ai__mic:hover {

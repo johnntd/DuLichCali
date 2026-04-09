@@ -1741,11 +1741,15 @@ gmp-placeautocomplete.field-input::part(input):focus {
 
   body.chat-open #screenChat {
     position: fixed;
-    inset: 0;
-    z-index: 200;
-    /* dvh updates when iOS keyboard opens; vh is the fallback */
+    top: 0;       /* JS overrides top when visualViewport scrolls */
+    left: 0;
+    right: 0;
+    /* height is set by _updateChatVH() to visualViewport.height —
+       this keeps the input bar flush against the top of the iOS keyboard.
+       dvh/vh here is just the initial value before JS kicks in. */
     height: 100dvh;
     height: 100vh;
+    z-index: 200;
     opacity: 1;
     pointer-events: auto;
   }
@@ -1762,11 +1766,11 @@ gmp-placeautocomplete.field-input::part(input):focus {
     padding: 0 1rem;
   }
 
-  /* Keyboard-safe: JS (_updateChatVH) sets .chat-screen height to
-     window.visualViewport.height in pixels when the iOS keyboard opens.
-     100% fills the fixed parent by default. */
+  /* .chat-screen fills #screenChat which JS resizes to visualViewport.height */
   body.chat-open .chat-screen {
     height: 100%;
+    /* Messages scroll within the available space; input bar stays at bottom */
+    overflow: hidden;
   }
 }
 

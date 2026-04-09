@@ -63,14 +63,17 @@ function switchScreen(screenId) {
   });
 
   // ── Mobile full-screen chat: toggle body.chat-open ──────────
-  // On mobile (<768px) the chat opens as a true full-screen overlay.
-  // This hides the app-bar, bottom-nav and site-footer so the
-  // chat fills the whole screen (including the space they occupied).
   if (window.innerWidth < 768) {
-    document.body.classList.toggle('chat-open', screenId === 'screenChat');
-    // Initialise the CSS custom property that tracks visual viewport height
-    // (updated by _onChatViewportResize when the iOS keyboard opens)
-    if (screenId === 'screenChat') _updateChatVH();
+    const enteringChat = screenId === 'screenChat';
+    document.body.classList.toggle('chat-open', enteringChat);
+    if (enteringChat) {
+      // Size #screenChat to current visual viewport (before keyboard opens)
+      _updateChatVH();
+    } else {
+      // Restore inline styles when leaving chat so normal layout is intact
+      const chatEl = document.getElementById('screenChat');
+      if (chatEl) { chatEl.style.height = ''; chatEl.style.top = ''; }
+    }
   }
 
   // Scroll active screen to top (chat manages its own scroll — skip)
@@ -82,23 +85,31 @@ function switchScreen(screenId) {
   _updateBackBtn();
 }
 
-// ── iOS keyboard: keep chat-screen sized to the visual viewport ──
-// On iOS Safari, when the keyboard opens the visual viewport shrinks but
-// position:fixed elements don't automatically adjust. Setting the height of
-// .chat-screen to visualViewport.height keeps the input bar above the keyboard.
+// ── iOS keyboard: resize #screenChat to the visual viewport ─────
+// The problem on iOS Safari: when the keyboard opens, position:fixed
+// elements still span the FULL physical screen (keyboard overlaps them).
+// visualViewport.height gives the real visible height above the keyboard.
+// Resizing #screenChat to that height makes the flex column fit exactly:
+//   chat-header + messages (flex:1) + input-bar = visualViewport.height
+// → input bar is flush against the top of the keyboard.
 function _updateChatVH() {
-  const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-  const chatScreen = document.querySelector('.chat-screen');
-  if (chatScreen) chatScreen.style.height = h + 'px';
+  const vv  = window.visualViewport;
+  const h   = vv ? vv.height   : window.innerHeight;
+  const top = vv ? vv.offsetTop : 0;
+  const chatEl = document.getElementById('screenChat');
+  if (chatEl) {
+    chatEl.style.height = h + 'px';
+    chatEl.style.top    = top + 'px';
+  }
 }
 
 (function _initChatViewport() {
   if (!window.visualViewport) return;
-  function onResize() {
+  function onVVChange() {
     if (document.body.classList.contains('chat-open')) _updateChatVH();
   }
-  window.visualViewport.addEventListener('resize', onResize);
-  window.visualViewport.addEventListener('scroll', onResize);
+  window.visualViewport.addEventListener('resize', onVVChange);
+  window.visualViewport.addEventListener('scroll', onVVChange);
 }());
 
 // ── Global Back Navigation System ───────────────────────────

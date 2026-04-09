@@ -2,7 +2,7 @@
   "id": "RX-021",
   "fix_date": "2026-04-09",
   "category": "stale_data",
-  "status": "verified_in_runner",
+  "status": "verified_live",
   "title": "Stale booking state contamination — new booking request inherits previous confirmed time",
   "failing_behavior": "After a booking completes (e.g., Pedicure/Helen/4:15 PM), the customer starts a fresh session or conversation turn and says 'I like to book a pedicure today at 3PM with Helen.' The AI immediately books Pedicure/Helen/4:15 PM instead of 3:00 PM. The system never asks for contact info — it reuses stale name/phone from the previous booking — and writes the wrong time to Firestore.",
   "root_cause": "Chain of three compounding issues: (1) _submitDirectBooking restores name/phone/services/staff to biz._bookingState after booking completes (required invariant for cancel/modify). (2) _buildBookingStateContext emits 'BOOKING STATUS: CONFIRMED' when _lastBookingId && s.name && s.phone && !s.date && !s.time — this signal was present indefinitely after booking. (3) When Claude receives a new booking request after seeing CONFIRMED signal, it sets pendingAction=modify_booking. The isModify=true flag causes the ESCALATE path to set existingBookingId = biz._lastBookingId and call _submitDirectBooking directly, skipping contact-info collection and using the stale 4:15 PM time from the prior ESCALATE STATE rather than the freshly requested 3:00 PM.",

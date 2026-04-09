@@ -1745,19 +1745,24 @@
       var ap = h < 12 ? 'AM' : 'PM'; h = h % 12 || 12;
       return h + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
     })();
-    var textBack = lang === 'vi' ? 'Chúng tôi rất mong được gặp bạn! Nếu cần thay đổi hoặc đặt thêm dịch vụ, cứ nhắn cho mình nhé.'
-                 : lang === 'es' ? '¡Con gusto la esperamos! Si necesita cambiar algo o reservar otro servicio, no dude en escribirnos.'
-                 : 'We look forward to seeing you! Feel free to reach out if you need to make any changes or book anything else.';
     if (lang === 'vi') {
       return 'Lịch hẹn ' + svcStr + (draft.staff ? ' với ' + draft.staff : '') +
-             (timeStr ? ' lúc ' + timeStr : '') + ' đã được xác nhận. ' + textBack;
+             (timeStr ? ' lúc ' + timeStr : '') + ' đã được xác nhận.';
     }
     if (lang === 'es') {
       return 'Tu cita de ' + svcStr + (draft.staff ? ' con ' + draft.staff : '') +
-             (timeStr ? ' a las ' + timeStr : '') + ' ha sido confirmada. ' + textBack;
+             (timeStr ? ' a las ' + timeStr : '') + ' ha sido confirmada.';
     }
     return 'Your ' + svcStr + (draft.staff ? ' with ' + draft.staff : '') +
-           (timeStr ? ' at ' + timeStr : '') + ' is confirmed and booked. ' + textBack;
+           (timeStr ? ' at ' + timeStr : '') + ' is confirmed and booked.';
+  }
+
+  // ── _buildClosingNatural — warm closing shown AFTER confirmation card + photo widget ──
+
+  function _buildClosingNatural(lang) {
+    if (lang === 'vi') return 'Chúng tôi rất mong được gặp bạn! Nếu cần thay đổi hoặc đặt thêm dịch vụ, cứ nhắn cho mình nhé.';
+    if (lang === 'es') return '¡Con gusto la esperamos! Si necesita cambiar algo o reservar otro servicio, no dude en escribirnos.';
+    return 'We look forward to seeing you! Feel free to reach out if you need to make any changes or book anything else.';
   }
 
   // ── _buildBookingPacketHtml — card rendered in chat after confirmation ────────
@@ -1972,11 +1977,14 @@
     var isExactReschedule = !!(draft.isModify && draft.existingBookingId);
     var finalBookingId    = isExactReschedule ? draft.existingBookingId : _genBookingId();
 
-    // Natural-language confirmation
+    // Natural-language confirmation (factual sentence only — closing appended after photo widget)
     var confirmMsg = _buildConfirmedNatural(biz, draft, lang);
+    var closingMsg = _buildClosingNatural(lang);
     biz._aiHistory = biz._aiHistory || [];
-    biz._aiHistory.push({ role: 'assistant', content: confirmMsg });
+    // History stores the full message (factual + closing) as a single assistant turn
+    biz._aiHistory.push({ role: 'assistant', content: confirmMsg + ' ' + closingMsg });
     _saveHistory(biz);
+    // Show only the factual sentence now — closing will appear AFTER card + photo widget
     _appendMessage(messagesEl, confirmMsg, 'bot');
 
     // Booking packet card with calendar buttons
@@ -2097,6 +2105,10 @@
         createdAt:     fv.serverTimestamp(),
       }).catch(function(e) { console.warn('[notif] Firestore write failed:', e.message); });
     }
+
+    // Warm closing always appears as the last visible element — after card + photo widget.
+    // Outside the if(db) block so it fires whether or not Firestore is available.
+    _appendMessage(messagesEl, closingMsg, 'bot');
   }
 
   // ── Reference image upload widget ────────────────────────────────────────────

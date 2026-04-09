@@ -2451,23 +2451,23 @@
         <div id="pmAddOnPricePromptLbl" style="font-size:.74rem;color:#fb923c;margin-bottom:.35rem"></div>
         <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">
           <input id="pmAddOnPriceInput" class="sa-input" type="number" min="0" step="0.01" placeholder="Price ($)" style="width:120px;height:34px;font-size:.8rem">
-          <button class="btn btn--sm" type="button" onclick="_pmConfirmAddOnBookingOnly()" style="height:34px;font-size:.74rem;white-space:nowrap">This booking</button>
-          <button id="pmAddOnSaveCatalogBtn" class="btn btn--sm btn--outline" type="button" onclick="_pmConfirmAddOnSaveCatalog()" style="height:34px;font-size:.74rem;white-space:nowrap;display:none">Save to catalog</button>
+          <button class="btn btn--sm" type="button" onclick="_pmConfirmAddOnBookingOnly()" style="height:34px;font-size:.74rem;white-space:nowrap" data-i18n="pay_addon_this_booking">This booking</button>
+          <button id="pmAddOnSaveCatalogBtn" class="btn btn--sm btn--outline" type="button" onclick="_pmConfirmAddOnSaveCatalog()" style="height:34px;font-size:.74rem;white-space:nowrap;display:none" data-i18n="pay_addon_save_catalog">Save to catalog</button>
         </div>
       </div>
     </div>
 
     <!-- Booking-level price adjustment — owner/manager only -->
     <div class="pm-group" id="pmAdjSection" style="display:none">
-      <label class="pm-label">Price Adjustment <span style="font-size:.68rem;color:var(--muted)">(this booking only)</span></label>
+      <label class="pm-label"><span data-i18n="pay_adj_title">Price Adjustment</span> <span style="font-size:.68rem;color:var(--muted)" data-i18n="pay_adj_booking_note">(this booking only)</span></label>
       <div style="display:flex;gap:.45rem;align-items:center">
         <select id="pmAdjType" class="sa-input" style="width:115px;height:36px;padding:0 .4rem;font-size:.78rem" onchange="_updatePmBalance()">
-          <option value="discount">Discount (−)</option>
-          <option value="charge">Surcharge (+)</option>
+          <option value="discount" data-i18n="pay_adj_discount">Discount (−)</option>
+          <option value="charge" data-i18n="pay_adj_surcharge">Surcharge (+)</option>
         </select>
         <input id="pmAdjAmt" class="sa-input" type="number" min="0" step="0.01" placeholder="0.00" style="flex:1;height:36px" oninput="_updatePmBalance()">
       </div>
-      <div style="font-size:.67rem;color:var(--muted);margin-top:.2rem">Adjusts this booking only — catalog prices unchanged.</div>
+      <div style="font-size:.67rem;color:var(--muted);margin-top:.2rem" data-i18n="pay_adj_note">Adjusts this booking only — catalog prices unchanged.</div>
     </div>
 
     <div class="pm-group">
@@ -2518,25 +2518,28 @@
   <!-- ═══ PHASE 2: Customer Confirmation ═══ -->
   <div id="pmConfirmPanel" style="display:none">
     <div style="background:rgba(245,166,35,.07);border:1px solid var(--border-g);border-radius:8px;padding:.9rem 1rem;margin-bottom:.8rem">
-      <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.5rem">Order Summary</div>
+      <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.5rem" data-i18n="pm_order_summary">Order Summary</div>
       <div id="pmCfSummary" style="font-size:.82rem;color:var(--cream);line-height:1.6"></div>
     </div>
     <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:.9rem 1rem;margin-bottom:.8rem">
-      <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.5rem">Payment</div>
+      <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.5rem" data-i18n="pm_payment_section">Payment</div>
       <div id="pmCfMethodLine" style="font-size:.82rem;color:var(--cream)"></div>
       <div id="pmCfAmountLine" style="font-size:1.35rem;font-weight:700;color:var(--gold-lt);margin-top:.15rem"></div>
     </div>
     <!-- Signature pad — card only -->
     <div id="pmSigWrap" style="display:none;margin-bottom:.8rem">
-      <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.35rem">Customer Signature <span style="color:var(--muted);font-style:italic">(optional)</span></div>
+      <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.35rem">
+        <span data-i18n="pm_sig_label">Customer Signature</span>
+        <span style="font-style:italic;opacity:.7" data-i18n="pm_sig_optional"> (optional)</span>
+      </div>
       <div style="position:relative;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:rgba(255,255,255,.03)">
         <canvas id="pmSigCanvas" width="320" height="90" style="display:block;width:100%;height:90px;touch-action:none;cursor:crosshair"></canvas>
-        <button type="button" onclick="_pmSigClear()" style="position:absolute;top:4px;right:6px;background:transparent;border:none;color:var(--muted);font-size:.65rem;cursor:pointer;padding:2px 4px">Clear</button>
+        <button type="button" onclick="_pmSigClear()" style="position:absolute;top:4px;right:6px;background:transparent;border:none;color:var(--muted);font-size:.65rem;cursor:pointer;padding:2px 4px" data-i18n="pm_sig_clear">Clear</button>
       </div>
     </div>
     <div class="sa-modal-actions">
-      <button class="btn btn--outline btn--sm" onclick="_pmBackToForm()">← Back</button>
-      <button class="btn btn--sm sa-act--pay" onclick="_pmConfirmPayment()" style="font-size:.78rem;font-weight:700;padding:.45rem 1.1rem">Confirm &amp; Save</button>
+      <button class="btn btn--outline btn--sm" onclick="_pmBackToForm()" data-i18n="btn_pm_back">← Back</button>
+      <button class="btn btn--sm sa-act--pay" onclick="_pmConfirmPayment()" style="font-size:.78rem;font-weight:700;padding:.45rem 1.1rem" data-i18n="btn_confirm_pay">Confirm &amp; Complete</button>
     </div>
   </div><!-- end #pmConfirmPanel -->
 
@@ -2544,20 +2547,20 @@
   <div id="pmReceiptPanel" style="display:none">
     <div style="text-align:center;padding:.5rem 0 .9rem">
       <div style="font-size:1.3rem;color:var(--success);margin-bottom:.3rem">✓</div>
-      <div style="font-size:.88rem;color:var(--cream);font-weight:600;margin-bottom:.15rem">Payment Saved</div>
+      <div style="font-size:.88rem;color:var(--cream);font-weight:600;margin-bottom:.15rem" data-i18n="pm_payment_saved">Payment Saved</div>
       <div id="pmReceiptAmount" style="font-size:1.1rem;color:var(--gold-lt);font-weight:700"></div>
     </div>
-    <div style="font-size:.72rem;color:var(--muted);text-align:center;margin-bottom:.7rem">Send receipt to customer?</div>
+    <div style="font-size:.72rem;color:var(--muted);text-align:center;margin-bottom:.7rem" data-i18n="pm_receipt_prompt">Send receipt to customer?</div>
     <div style="display:flex;flex-direction:column;gap:.38rem">
       <button class="btn btn--outline btn--sm" onclick="_pmSendReceipt('print')" style="font-size:.78rem;display:flex;align-items:center;gap:.5rem;justify-content:center">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-        Print Receipt
+        <span data-i18n="btn_receipt_print">Print Receipt</span>
       </button>
       <button class="btn btn--outline btn--sm" onclick="_pmSendReceipt('text')" style="font-size:.78rem;display:flex;align-items:center;gap:.5rem;justify-content:center">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-        Text to Customer
+        <span data-i18n="btn_receipt_text">Text to Customer</span>
       </button>
-      <button class="btn btn--outline btn--sm" onclick="_pmSendReceipt('skip')" style="font-size:.76rem;color:var(--muted)">No Receipt — Done</button>
+      <button class="btn btn--outline btn--sm" onclick="_pmSendReceipt('skip')" style="font-size:.76rem;color:var(--muted)" data-i18n="btn_receipt_skip">No Receipt — Done</button>
     </div>
   </div><!-- end #pmReceiptPanel -->
 
@@ -2565,7 +2568,7 @@
   <div id="pmDonePanel" style="display:none;text-align:center;padding:1.2rem 0">
     <div style="font-size:2rem;margin-bottom:.4rem">✓</div>
     <div id="pmDoneMsg" style="font-size:.9rem;color:var(--cream);font-weight:600;margin-bottom:.25rem"></div>
-    <div style="font-size:.72rem;color:var(--muted)">Closing…</div>
+    <div style="font-size:.72rem;color:var(--muted)" data-i18n="pm_closing">Closing…</div>
   </div><!-- end #pmDonePanel -->
 
   </div><!-- end .sa-modal -->
@@ -4612,9 +4615,9 @@
       }
     }
 
-    // Default to 'paid' for first-time collection so amount auto-fills to grand total.
-    // Restore saved status (including 'unpaid'/'partial') when re-opening a prior payment.
-    document.getElementById('pmStatus').value = b.paymentStatus || 'paid';
+    // Default to 'unpaid' for fresh bookings — staff must explicitly choose status.
+    // Restore saved status (including 'paid'/'partial') when re-opening a prior payment.
+    document.getElementById('pmStatus').value = b.paymentStatus || 'unpaid';
     document.getElementById('pmAmount').value  = b.amountPaid != null ? b.amountPaid : '';
     document.getElementById('pmTip').value     = b.tipAmount   != null ? b.tipAmount   : '';
     // Populate method options from vendor config, then restore saved value
@@ -4681,17 +4684,21 @@
       var effective  = priceTotal + _pmAddOnTotal() + _pmReadAdj();
       var taxRate    = VENDOR_TAX_RATE || 0;
       var tax        = effective > 0 && taxRate > 0 ? Math.round(effective * taxRate * 100) / 100 : 0;
+      var lb3 = _LABELS[_dlcLang] || _LABELS.vi;
       if (effective > 0) {
-        lines.push('Services: $' + effective.toFixed(2));
-        if (tax > 0) lines.push('Tax: $' + tax.toFixed(2));
+        lines.push((lb3.pm_cf_services || 'Services') + ': $' + effective.toFixed(2));
+        if (tax > 0) lines.push((lb3.pm_cf_tax || 'Tax') + ': $' + tax.toFixed(2));
         if (tip > 0) lines.push('Tip: $' + tip.toFixed(2));
       }
       summaryEl.innerHTML = lines.length ? lines.join('<br>') : '—';
     }
 
-    var methodLabels = { cash:'Cash', card:'Card', zelle:'Zelle', venmo:'Venmo', other:'Other' };
+    var lb2 = _LABELS[_dlcLang] || _LABELS.vi;
+    var methodLabels = { cash: lb2.pay_method_cash || 'Cash', card: lb2.pay_method_card || 'Card',
+      zelle: lb2.pay_method_zelle || 'Zelle', venmo: lb2.pay_method_venmo || 'Venmo',
+      other: lb2.pay_method_other || 'Other' };
     var methodEl = document.getElementById('pmCfMethodLine');
-    if (methodEl) methodEl.textContent = 'Method: ' + (methodLabels[method] || method);
+    if (methodEl) methodEl.textContent = (lb2.pm_cf_method || 'Method') + ': ' + (methodLabels[method] || method);
 
     var amtEl = document.getElementById('pmCfAmountLine');
     if (amtEl) amtEl.textContent = '$' + grand.toFixed(2);
@@ -4717,9 +4724,10 @@
   }
 
   function _pmShowReceiptPanel() {
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
     var amount = parseFloat((document.getElementById('pmAmount') || {}).value) || 0;
     var el = document.getElementById('pmReceiptAmount');
-    if (el) el.textContent = '$' + amount.toFixed(2) + ' collected';
+    if (el) el.textContent = '$' + amount.toFixed(2) + (lb.pm_receipt_amt_suffix || ' collected');
     _pmShowPhase('pmReceiptPanel');
   }
 
@@ -4746,7 +4754,8 @@
         w.document.close();
       }
     }
-    _pmShowDonePanel(type === 'skip' ? 'All done!' : 'Receipt sent!');
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
+    _pmShowDonePanel(type === 'skip' ? (lb.pm_done_all_done || 'All done!') : (lb.pm_done_receipt_sent || 'Receipt sent!'));
   }
 
   function _pmShowDonePanel(msg) {
@@ -7506,6 +7515,21 @@
       mb_conflict_tip:'Vui lòng chọn giờ hoặc nhân viên khác.',
       mb_conflict_slots:'Giờ trống: ', mb_avail_ok:'✓ Giờ trống — có thể đặt lịch',
       mb_booked_with:' đã có lịch với ', mb_at_time:' lúc ', mb_staff_any:'Nhân viên',
+      // ── Payment modal — checkout flow ─────────────────────────────────────────
+      btn_save_payment:'Hoàn Tất Thanh Toán',
+      pm_order_summary:'Tóm tắt đơn hàng', pm_payment_section:'Thanh toán',
+      pm_sig_label:'Chữ ký khách', pm_sig_optional:'(tuỳ chọn)', pm_sig_clear:'Xóa',
+      btn_pm_back:'← Quay lại', btn_confirm_pay:'Xác nhận & Hoàn tất',
+      pm_cf_services:'Dịch vụ', pm_cf_tax:'Thuế', pm_cf_method:'Phương thức',
+      pm_payment_saved:'Thanh toán thành công',
+      pm_receipt_prompt:'Gửi biên lai cho khách?', pm_receipt_amt_suffix:' đã thu',
+      btn_receipt_print:'In biên lai', btn_receipt_text:'Nhắn tin cho khách',
+      btn_receipt_skip:'Không cần biên lai',
+      pm_closing:'Đang đóng…', pm_done_receipt_sent:'Đã gửi biên lai!', pm_done_all_done:'Xong!',
+      pay_adj_title:'Điều chỉnh giá', pay_adj_booking_note:'(lần này thôi)',
+      pay_adj_note:'Chỉ áp dụng lần này — giá danh mục không đổi.',
+      pay_adj_discount:'Giảm giá (−)', pay_adj_surcharge:'Phụ phí (+)',
+      pay_addon_this_booking:'Lần này', pay_addon_save_catalog:'Lưu vào danh mục',
     },
     en: {
       // ── Navigation ──────────────────────────────────────────────────────────
@@ -7520,7 +7544,7 @@
       btn_save:'Save', btn_cancel:'Cancel', btn_delete:'Delete', btn_edit:'Edit',
       btn_search:'Search', btn_clear:'Clear', btn_new_booking:'+ New Booking',
       btn_mark_all:'✓ Mark All Read', btn_save_settings:'Save Settings',
-      btn_save_method:'Save Methods', btn_save_payment:'Save Payment',
+      btn_save_method:'Save Methods', btn_save_payment:'Complete Payment',
       btn_confirm_cancel:'Confirm Cancel', btn_no_cancel:'Keep Booking',
       btn_confirm_refund:'Confirm Refund', btn_save_price:'Save Price',
       btn_add_addon:'+ Add', btn_confirm_qr:'✓ Customer Paid — Confirm',
@@ -7753,6 +7777,20 @@
       mb_conflict_tip:'Please choose another time or staff member.',
       mb_conflict_slots:'Available: ', mb_avail_ok:'✓ Available — ready to book',
       mb_booked_with:' is booked with ', mb_at_time:' at ', mb_staff_any:'Staff',
+      // ── Payment modal — checkout flow ─────────────────────────────────────────
+      pm_order_summary:'Order Summary', pm_payment_section:'Payment',
+      pm_sig_label:'Customer Signature', pm_sig_optional:'(optional)', pm_sig_clear:'Clear',
+      btn_pm_back:'← Back', btn_confirm_pay:'Confirm & Complete',
+      pm_cf_services:'Services', pm_cf_tax:'Tax', pm_cf_method:'Method',
+      pm_payment_saved:'Payment Complete',
+      pm_receipt_prompt:'Send receipt to customer?', pm_receipt_amt_suffix:' collected',
+      btn_receipt_print:'Print Receipt', btn_receipt_text:'Text to Customer',
+      btn_receipt_skip:'No Receipt — Done',
+      pm_closing:'Closing…', pm_done_receipt_sent:'Receipt sent!', pm_done_all_done:'All done!',
+      pay_adj_title:'Price Adjustment', pay_adj_booking_note:'(this booking only)',
+      pay_adj_note:'This booking only — catalog prices unchanged.',
+      pay_adj_discount:'Discount (−)', pay_adj_surcharge:'Surcharge (+)',
+      pay_addon_this_booking:'This booking', pay_addon_save_catalog:'Save to catalog',
     },
     es: {
       // ── Navigation ──────────────────────────────────────────────────────────
@@ -7767,7 +7805,7 @@
       btn_save:'Guardar', btn_cancel:'Cancelar', btn_delete:'Eliminar', btn_edit:'Editar',
       btn_search:'Buscar', btn_clear:'Borrar', btn_new_booking:'+ Nueva Cita',
       btn_mark_all:'✓ Marcar Todo', btn_save_settings:'Guardar Ajustes',
-      btn_save_method:'Guardar Métodos', btn_save_payment:'Guardar Pago',
+      btn_save_method:'Guardar Métodos', btn_save_payment:'Completar Pago',
       btn_confirm_cancel:'Confirmar Cancelación', btn_no_cancel:'Mantener Cita',
       btn_confirm_refund:'Confirmar Reembolso', btn_save_price:'Guardar Precio',
       btn_add_addon:'+ Agregar', btn_confirm_qr:'✓ Cliente Pagó — Confirmar',
@@ -8000,6 +8038,20 @@
       mb_conflict_tip:'Por favor elige otro horario o personal.',
       mb_conflict_slots:'Disponibles: ', mb_avail_ok:'✓ Disponible — listo para reservar',
       mb_booked_with:' tiene cita con ', mb_at_time:' a las ', mb_staff_any:'Personal',
+      // ── Payment modal — checkout flow ─────────────────────────────────────────
+      pm_order_summary:'Resumen del pedido', pm_payment_section:'Pago',
+      pm_sig_label:'Firma del cliente', pm_sig_optional:'(opcional)', pm_sig_clear:'Borrar',
+      btn_pm_back:'← Volver', btn_confirm_pay:'Confirmar & Completar',
+      pm_cf_services:'Servicios', pm_cf_tax:'Impuesto', pm_cf_method:'Método',
+      pm_payment_saved:'Pago completado',
+      pm_receipt_prompt:'¿Enviar recibo al cliente?', pm_receipt_amt_suffix:' cobrado',
+      btn_receipt_print:'Imprimir recibo', btn_receipt_text:'Enviar por texto',
+      btn_receipt_skip:'Sin recibo — Listo',
+      pm_closing:'Cerrando…', pm_done_receipt_sent:'¡Recibo enviado!', pm_done_all_done:'¡Listo!',
+      pay_adj_title:'Ajuste de precio', pay_adj_booking_note:'(esta cita)',
+      pay_adj_note:'Solo esta cita — precios del catálogo sin cambios.',
+      pay_adj_discount:'Descuento (−)', pay_adj_surcharge:'Cargo adicional (+)',
+      pay_addon_this_booking:'Esta cita', pay_addon_save_catalog:'Guardar en catálogo',
     }
   };
 

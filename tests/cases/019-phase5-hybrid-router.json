@@ -1,0 +1,31 @@
+{
+  "id": "RX-019",
+  "fix_date": "2026-04-08",
+  "category": "stale_data",
+  "status": "verified_in_runner",
+  "title": "Phase 5: Hybrid AI router — OpenAI for booking-critical, Gemini for informational, Claude fallback",
+  "failing_behavior": "All AI turns in the nail salon went to Claude regardless of turn type. Booking-critical turns (collect name/phone, confirm slot, reschedule) and low-stakes informational turns (price question, staff availability check) used the same model. No way to route high-risk booking actions to a more reliable/structured model without changing a global setting.",
+  "root_cause": "AIEngine.call() had no routing logic — always used Claude. No adapters for OpenAI or Gemini existed. No intent-based routing was implemented.",
+  "fix_summary": "Extended ai-engine.js with three changes: (1) _callOpenAI() adapter: Bearer auth, prepends system prompt as role:system, normalises response to {content:[{text}]} Claude format. (2) _callGemini() adapter: Gemini 1.5 REST API, converts assistant→model role, system_instruction field, normalises response to Claude format. (3) _resolveProvider(intent, altKeys): maps booking intents (booking_request, modify_booking, booking_offer) to OpenAI; informational intents to Gemini; Claude as default. call() accepts 5th param opts={intent, altKeys}; reads dlc_openai_key/dlc_gemini_key from localStorage if altKeys not supplied; falls back to Claude on provider failure. receptionist.js updated to pass {intent: _routeIntent} to AIEngine.call().",
+  "conversation": [
+    { "role": "user", "content": "How much does a gel manicure cost?" },
+    { "role": "assistant", "content": "A Gel Manicure is $45. Would you like to book one?\n[STATE:{\"intent\":\"price_question\",\"services\":[\"Gel Manicure\"],\"staff\":null,\"date\":null,\"time\":null,\"name\":null,\"phone\":null,\"lang\":\"en\",\"pendingAction\":null,\"existingBookingId\":null}]" },
+    { "role": "user", "content": "Yes, book me with Tracy tomorrow at 2 PM" },
+    { "role": "assistant", "content": "Of course! And your name?\n[STATE:{\"intent\":\"booking_request\",\"services\":[\"Gel Manicure\"],\"staff\":\"Tracy\",\"date\":\"2026-04-09\",\"time\":\"14:00\",\"name\":null,\"phone\":null,\"lang\":\"en\",\"pendingAction\":null,\"existingBookingId\":null}]" }
+  ],
+  "routing_behavior": {
+    "turn_1_price_question": "intent=price_question → informational → Gemini (if key set) or Claude fallback",
+    "turn_2_booking_request": "intent=booking_request → high-risk → OpenAI (if key set) or Claude fallback"
+  },
+  "verify_fix_string": "_callOpenAI",
+  "verify_fix_string_2": "_HIGH_RISK_INTENTS",
+  "code_areas": [
+    "ai-engine.js:_callOpenAI()",
+    "ai-engine.js:_callGemini()",
+    "ai-engine.js:_resolveProvider()",
+    "ai-engine.js:call():opts-routing",
+    "nailsalon/receptionist.js:callClaude():_routeIntent"
+  ],
+  "notes": "Keys required: dlc_openai_key (localStorage) for OpenAI routing, dlc_gemini_key for Gemini. If neither key is set, all turns use Claude (no behavioral change for existing deployments). All non-Claude adapters normalise response to {content:[{text}]} so all downstream receptionist.js parsing (data.content[0].text) is unchanged. Claude is always the safe fallback on provider failure — the booking flow continues rather than failing.",
+  "confidence_gap": "Runner verifies: adapter functions present, routing map present, normalisation comment, fallback comment, _routeIntent passed from receptionist. Live testing required to: (1) confirm OpenAI returns correct structured STATE markers, (2) confirm Gemini returns correct format, (3) verify fallback triggers correctly on 401/429 errors."
+}

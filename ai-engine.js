@@ -96,6 +96,107 @@
     });
   }
 
+  // ── Provider Adapters — Phase 5 Hybrid Router ────────────────────────────────
+  // Normalise every provider response to Claude format: { content: [{ text }] }
+  // so all downstream code (receptionist.js data.content[0].text) is unchanged.
+  //
+  // Intents classified as HIGH_RISK (booking-changing actions) prefer OpenAI when
+  // a key is available.  INFORMATIONAL intents prefer Gemini.  Both fall back to
+  // Claude if the preferred provider key is absent or the request fails.
+
+  // Intents that change a booking — route to OpenAI when available.
+  var _HIGH_RISK_INTENTS = { booking_request: 1, modify_booking: 1, booking_offer: 1 };
+
+  // ── Claude adapter (existing) — returns native Claude JSON unchanged ──────────
+  function _callClaude(apiKey, model, maxTokens, systemPrompt, messages) {
+    var body = { model: model, max_tokens: maxTokens, messages: messages };
+    if (systemPrompt) body.system = systemPrompt;
+    return fetchWithRetry(apiKey, body);
+  }
+
+  // ── OpenAI adapter — normalises to { content: [{ text }] } ──────────────────
+  // Uses gpt-4o-mini by default (fast, inexpensive, handles structured output).
+  // System prompt → prepended as role:'system' message (standard OpenAI convention).
+  var _OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
+
+  function _callOpenAI(apiKey, model, maxTokens, systemPrompt, messages) {
+    var oaiMessages = systemPrompt
+      ? [{ role: 'system', content: systemPrompt }].concat(messages)
+      : messages.slice();
+    return fetch(_OPENAI_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+      body:    JSON.stringify({ model: model, max_tokens: maxTokens, messages: oaiMessages })
+    }).then(function (res) {
+      if (!res.ok) {
+        return res.text().then(function (t) {
+          var e = new Error('OpenAI ' + res.status + ': ' + t.slice(0, 120));
+          e.isApiError = true; throw e;
+        });
+      }
+      return res.json();
+    }).then(function (data) {
+      var text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+      if (!text) throw new Error('OpenAI: empty response');
+      return { content: [{ text: text }] }; // normalised to Claude format
+    });
+  }
+
+  // ── Gemini adapter — normalises to { content: [{ text }] } ──────────────────
+  // Converts Claude-style messages [{role,content}] to Gemini contents format.
+  // 'assistant' maps to Gemini role 'model'.
+  // System prompt → system_instruction.parts[0].text (Gemini 1.5+).
+  var _GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/';
+
+  function _callGemini(apiKey, model, maxTokens, systemPrompt, messages) {
+    var contents = messages.map(function (m) {
+      return { role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] };
+    });
+    var body = {
+      contents: contents,
+      generationConfig: { maxOutputTokens: maxTokens }
+    };
+    if (systemPrompt) body.system_instruction = { parts: [{ text: systemPrompt }] };
+    return fetch(_GEMINI_BASE + model + ':generateContent?key=' + apiKey, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(body)
+    }).then(function (res) {
+      if (!res.ok) {
+        return res.text().then(function (t) {
+          var e = new Error('Gemini ' + res.status + ': ' + t.slice(0, 120));
+          e.isApiError = true; throw e;
+        });
+      }
+      return res.json();
+    }).then(function (data) {
+      var text = data.candidates && data.candidates[0] &&
+                 data.candidates[0].content && data.candidates[0].content.parts &&
+                 data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+      if (!text) throw new Error('Gemini: empty response');
+      return { content: [{ text: text }] }; // normalised to Claude format
+    });
+  }
+
+  // ── Intent-based provider router ────────────────────────────────────────────
+  // opts.intent: the current booking intent from biz._bookingState.intent
+  // opts.altKeys: { openai: '...', gemini: '...' } — optional provider API keys
+  // Keys are also read from localStorage (dlc_openai_key, dlc_gemini_key) as fallback.
+  // Safe fallback: if preferred provider fails, retries with Claude.
+  function _resolveProvider(intent, altKeys) {
+    if (!altKeys) altKeys = {};
+    // Read from localStorage if not supplied by caller
+    if (!altKeys.openai) {
+      try { altKeys.openai = localStorage.getItem('dlc_openai_key') || null; } catch (e) {}
+    }
+    if (!altKeys.gemini) {
+      try { altKeys.gemini = localStorage.getItem('dlc_gemini_key') || null; } catch (e) {}
+    }
+    if (intent && _HIGH_RISK_INTENTS[intent] && altKeys.openai) return { provider: 'openai', keys: altKeys };
+    if (intent && !_HIGH_RISK_INTENTS[intent] && altKeys.gemini) return { provider: 'gemini', keys: altKeys };
+    return { provider: 'claude', keys: altKeys };
+  }
+
   // ── Conversation History Persistence ─────────────────────────────────────────
   // Shared sessionStorage helpers for all adapters.
   // Adapters pass their own storage key (e.g. 'lily_h_nails', 'mp_h_hair-oc').
@@ -122,34 +223,55 @@
 
   // ── Service Configuration ─────────────────────────────────────────────────────
   // Central registry: one place to change model or token limits per service type.
-  // Adding a new AI feature? Add an entry here — do not hardcode model strings elsewhere.
+  // Phase 5: added openaiModel and geminiModel per-service overrides (optional).
+  // If a provider key is not available, _resolveProvider falls back to Claude.
   var SERVICE_CONFIG = {
-    travel:      { model: 'claude-haiku-4-5-20251001', maxTokens: 900 }, // chat.js — airport/tour/general
-    food:        { model: 'claude-haiku-4-5-20251001', maxTokens: 384 }, // marketplace.js — food order intake
-    appointment: { model: 'claude-haiku-4-5-20251001', maxTokens: 384 }, // marketplace.js — hair/salon booking
-    nails:       { model: 'claude-sonnet-4-6',         maxTokens: 900 }, // receptionist.js — nail salon (stateful)
-    translation: { model: 'claude-haiku-4-5-20251001', maxTokens: 512 }  // marketplace.js — in-app translator
+    travel:      { model: 'claude-haiku-4-5-20251001', maxTokens: 900, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-1.5-flash' }, // chat.js
+    food:        { model: 'claude-haiku-4-5-20251001', maxTokens: 384, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-1.5-flash' }, // marketplace.js
+    appointment: { model: 'claude-haiku-4-5-20251001', maxTokens: 384, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-1.5-flash' }, // marketplace.js
+    nails:       { model: 'claude-sonnet-4-6',         maxTokens: 900, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-1.5-flash' }, // receptionist.js
+    translation: { model: 'claude-haiku-4-5-20251001', maxTokens: 512, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-1.5-flash' }  // marketplace.js
   };
-  var _DEFAULT_CFG = { model: 'claude-haiku-4-5-20251001', maxTokens: 600 };
+  var _DEFAULT_CFG = { model: 'claude-haiku-4-5-20251001', maxTokens: 600, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-1.5-flash' };
 
-  // ── Unified AI Dispatcher ─────────────────────────────────────────────────────
+  // ── Unified AI Dispatcher — Phase 5: Hybrid Router ───────────────────────────
   // Single entry point for ALL AI calls in the app.
-  // Routes through fetchWithRetry using model + maxTokens from SERVICE_CONFIG.
-  // System prompt is optional (pass null to omit).
-  // Returns the raw API JSON — callers read data.content[0].text as before.
+  // Routes by intent: booking-critical → OpenAI (if key supplied), informational → Gemini,
+  // default → Claude. All adapters normalise to { content: [{ text }] }.
   //
-  // All service types map to the same underlying Claude API; behavior differs only
-  // through the system prompt, data injected, and context passed by each caller.
+  // opts (optional 5th param): { intent: string, altKeys: { openai, gemini } }
+  //   intent:  booking state intent — used for routing decisions
+  //   altKeys: provider API keys — supplemented from localStorage if absent
+  //
+  // Backward compat: callers that omit opts get Claude (no routing change).
   //
   // Callers:
   //   chat.js          → AIEngine.call('travel', ...)
   //   marketplace.js   → AIEngine.call('food' | 'appointment' | 'translation', ...)
-  //   receptionist.js  → AIEngine.call('nails', ...)
-  function call(serviceType, apiKey, systemPrompt, messages) {
-    var cfg  = SERVICE_CONFIG[serviceType] || _DEFAULT_CFG;
-    var body = { model: cfg.model, max_tokens: cfg.maxTokens, messages: messages };
-    if (systemPrompt) body.system = systemPrompt;
-    return fetchWithRetry(apiKey, body);
+  //   receptionist.js  → AIEngine.call('nails', ..., { intent })
+  function call(serviceType, apiKey, systemPrompt, messages, opts) {
+    var cfg    = SERVICE_CONFIG[serviceType] || _DEFAULT_CFG;
+    opts       = opts || {};
+    var route  = _resolveProvider(opts.intent || null, opts.altKeys || null);
+    var provider = route.provider;
+    var keys     = route.keys;
+
+    if (provider === 'openai' && keys.openai) {
+      return _callOpenAI(keys.openai, cfg.openaiModel || 'gpt-4o-mini', cfg.maxTokens, systemPrompt, messages)
+        .catch(function (e) {
+          console.warn('[AIEngine] OpenAI failed (' + e.message + '), falling back to Claude');
+          return _callClaude(apiKey, cfg.model, cfg.maxTokens, systemPrompt, messages);
+        });
+    }
+    if (provider === 'gemini' && keys.gemini) {
+      return _callGemini(keys.gemini, cfg.geminiModel || 'gemini-1.5-flash', cfg.maxTokens, systemPrompt, messages)
+        .catch(function (e) {
+          console.warn('[AIEngine] Gemini failed (' + e.message + '), falling back to Claude');
+          return _callClaude(apiKey, cfg.model, cfg.maxTokens, systemPrompt, messages);
+        });
+    }
+    // Default: Claude (no opts, no provider key, or forced fallback)
+    return _callClaude(apiKey, cfg.model, cfg.maxTokens, systemPrompt, messages);
   }
 
   // ── Public API ────────────────────────────────────────────────────────────────

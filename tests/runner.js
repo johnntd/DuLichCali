@@ -73,6 +73,7 @@ var PC  = require('./lib/prompt-checker');
 
 var BIZ      = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/biz.json')));
 var BOOK_FIX = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/bookings.json')));
+var aiSrc    = fs.readFileSync(path.join(__dirname, '../ai-engine.js'), 'utf8');
 
 function bookings() {
   var args = Array.prototype.slice.call(arguments);
@@ -229,6 +230,53 @@ test('RX-017: _findFreeStaff function exists [RX-017]', function() {
 test('RX-017: modify submission skips Firestore when ID already known [RX-017]', function() {
   assertContains(src, 'skip the Firestore round-trip',
     'Phase 3: modify submission must short-circuit when existingBookingId already known');
+});
+
+test('RX-018: _validateResponseQuality function exists [RX-018]', function() {
+  assertContains(src, '_validateResponseQuality',
+    'Phase 4: response quality validator must exist');
+});
+
+test('RX-018: response quality validator gates ESCALATE:appointment on empty services [RX-018]', function() {
+  assertContains(src, 'suppressEscalate',
+    'Phase 4: validator must suppress escalation when services are missing');
+});
+
+test('RX-018: response quality validator wired into callClaude pipeline [RX-018]', function() {
+  assertContains(src, 'Phase 4 — response quality validation',
+    'Phase 4: _validateResponseQuality must be called in callClaude response pipeline');
+});
+
+test('RX-019: receptionist passes intent to AIEngine.call [RX-019]', function() {
+  assertContains(src, '_routeIntent',
+    'Phase 5: receptionist must pass _routeIntent to AIEngine.call opts');
+});
+
+// ── Phase 5 checks run against ai-engine.js source ──────────────────────────
+
+test('RX-019: AIEngine has _callOpenAI adapter [RX-019]', function() {
+  assertContains(aiSrc, '_callOpenAI',
+    'Phase 5: OpenAI adapter must exist in ai-engine.js');
+});
+
+test('RX-019: AIEngine has _callGemini adapter [RX-019]', function() {
+  assertContains(aiSrc, '_callGemini',
+    'Phase 5: Gemini adapter must exist in ai-engine.js');
+});
+
+test('RX-019: AIEngine has _HIGH_RISK_INTENTS routing map [RX-019]', function() {
+  assertContains(aiSrc, '_HIGH_RISK_INTENTS',
+    'Phase 5: intent-based routing map must exist in ai-engine.js');
+});
+
+test('RX-019: AIEngine normalises OpenAI response to Claude format [RX-019]', function() {
+  assertContains(aiSrc, 'normalised to Claude format',
+    'Phase 5: both non-Claude adapters must normalise response format');
+});
+
+test('RX-019: AIEngine call() has safe Claude fallback after provider failure [RX-019]', function() {
+  assertContains(aiSrc, 'falling back to Claude',
+    'Phase 5: provider failures must fall back to Claude');
 });
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -590,9 +638,11 @@ allCases.forEach(function(c, i) {
 // Fix string checks for cases with status=verified_in_runner or verified_live
 allCases.forEach(function(c) {
   if ((c.status !== 'verified_in_runner' && c.status !== 'verified_live') || !c.verify_fix_string) return;
+  // Search both receptionist.js and ai-engine.js — Phase 5 fixes span both files
+  var combinedSrc = src + '\n' + aiSrc;
   test(c.id + ' [' + c.status + ']: fix detectable in source \u2014 ' + c.title.slice(0, 48), function() {
-    assertContains(src, c.verify_fix_string,
-      c.id + ' fix string not found in receptionist.js.\n    String: "' + c.verify_fix_string + '"\n    The fix may have been accidentally reverted.');
+    assertContains(combinedSrc, c.verify_fix_string,
+      c.id + ' fix string not found in receptionist.js or ai-engine.js.\n    String: "' + c.verify_fix_string + '"\n    The fix may have been accidentally reverted.');
   });
 });
 

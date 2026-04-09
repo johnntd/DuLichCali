@@ -681,6 +681,51 @@
     return free;
   }
 
+  // ── _validateResponseQuality — Phase 4 response validator ───────────────────
+  // Three quality checks on each Claude turn before it is shown to the customer.
+  // Non-blocking by design: language and passive-ending issues warn to console only.
+  // Only active intervention: suppress ESCALATE:appointment when services=[].
+  //
+  // Returns { suppressEscalate: bool }
+  //   suppressEscalate=true → caller sets escalationType=null (no booking attempt)
+  //
+  // RX-018: response quality enforcement — Phase 4
+  function _validateResponseQuality(biz, clean, escalationType, lang) {
+    var result = { suppressEscalate: false };
+
+    // 1. Language consistency — Claude's visible text vs expected lang in STATE
+    var respLang = _detectLang(clean);
+    if (respLang && lang && respLang !== lang && lang !== 'en') {
+      // Only warn when both sides are non-English to avoid false positives from
+      // mixed-language inputs (e.g. en name embedded in a vi reply).
+      console.warn('[QV] lang mismatch: expected=' + lang + ' detected=' + respLang);
+    }
+
+    // 2. BOOKING draft completeness — only gates ESCALATE:appointment
+    // If Claude fires [ESCALATE:appointment] but services=[], the booking packet
+    // would have no service name: suppress escalation so Claude re-collects.
+    if (escalationType === 'appointment') {
+      var draft = biz._bookingDraft;
+      var svcs  = (draft && draft.services) || [];
+      if (!svcs.length) {
+        console.warn('[QV] ESCALATE:appointment with empty services — suppressing escalation');
+        result.suppressEscalate = true;
+      }
+    }
+
+    // 3. Passive ending detection — mid-booking turns only (no active block, warn only)
+    // A mid-booking response with no `?` may leave the customer unsure what to do next.
+    if (!result.suppressEscalate && escalationType !== 'appointment' && escalationType !== 'cancel') {
+      var _bs = biz._bookingState;
+      var midBooking = _bs && (_bs.intent === 'booking_request' || !!_bs.pendingAction);
+      if (midBooking && clean.indexOf('?') < 0 && clean.trim().length > 20) {
+        console.warn('[QV] passive ending: no ? in mid-booking response — consider prompt adjustment');
+      }
+    }
+
+    return result;
+  }
+
   // ── Marker parsing ────────────────────────────────────────────────────────────
   function _parseEscalationType(reply) {
     var m = reply.match(/\[ESCALATE:(order|appointment|reservation|question|cancel)\]/i);
@@ -1464,10 +1509,16 @@
     var systemPrompt = _buildPrompt(biz, lang);
 
     // ── API call via unified dispatcher (model + tokens from AIEngine.SERVICE_CONFIG.nails) ──
+    // Phase 5: pass intent so the router can prefer OpenAI for booking-critical turns.
+    // Booking intents (booking_request, modify_booking, booking_offer) → OpenAI when key set.
+    // Informational intents (price_question, staff_availability, etc.) → Gemini when key set.
+    // Safe fallback: Claude is always used if preferred provider key is absent or request fails.
+    var _routeIntent = (biz._bookingState && biz._bookingState.intent) || null;
     return AIEngine.call('nails', apiKey, systemPrompt,
       biz._aiHistory.map(function (m) {
         return { role: m.role, content: m.content };
-      })
+      }),
+      { intent: _routeIntent }
     )
     .then(function (data) {
       var raw = (data.content && data.content[0] && data.content[0].text) || '';
@@ -1520,6 +1571,14 @@
 
       // 5. Strip all markers from displayed text
       var clean = _stripAllMarkers(raw);
+
+      // 6. Phase 4 — response quality validation
+      // Checks: lang consistency (warn), booking draft completeness (suppress escalation
+      // when services=[]), passive ending (warn). See _validateResponseQuality for details.
+      var _qv = _validateResponseQuality(biz, clean, escalationType, lang);
+      if (_qv.suppressEscalate) {
+        escalationType = null; // drop the escalation — Claude will be asked again
+      }
 
       biz._aiHistory.push({ role: 'assistant', content: clean });
       _saveHistory(biz);

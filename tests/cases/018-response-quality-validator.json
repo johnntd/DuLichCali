@@ -1,0 +1,27 @@
+{
+  "id": "RX-018",
+  "fix_date": "2026-04-08",
+  "category": "stale_data",
+  "status": "verified_in_runner",
+  "title": "Phase 4: Response quality validator — lang consistency, booking completeness, passive endings",
+  "failing_behavior": "Three silent failure modes: (1) Claude occasionally responds in the wrong language (en when state.lang='vi'), showing to customer without any correction. (2) Claude fires [ESCALATE:appointment] with an empty services array — booking proceeds silently with no service name in the packet. (3) Claude ends mid-booking turns passively ('Your appointment is being processed.') with no question, leaving the customer unsure what to do next.",
+  "root_cause": "No JS-side quality check on Claude's response before it was accepted. All three issues were prompt-only — if Claude deviated, the JS layer had no fallback.",
+  "fix_summary": "Added _validateResponseQuality(biz, clean, escalationType, lang) called in callClaude() after marker parsing and text stripping, before returning to send(). Three checks: (1) Language consistency: _detectLang(clean) vs lang — console.warn on mismatch (non-English vs non-English only, to avoid false positives). (2) BOOKING completeness: on ESCALATE:appointment, if biz._bookingDraft.services is empty → set suppressEscalate=true → caller sets escalationType=null, booking is not attempted. Claude will need to re-collect services. (3) Passive ending: no '?' in mid-booking (intent=booking_request or pendingAction set) response → console.warn only (no active block — too risky to auto-append).",
+  "conversation": [
+    { "role": "user", "content": "I want to book a nail appointment" },
+    { "role": "assistant", "content": "Sure! Claude fires ESCALATE:appointment with missing services — should be suppressed.\n[BOOKING:{\"services\":[],\"staff\":null,\"date\":\"2026-04-15\",\"time\":\"14:00\",\"name\":null,\"phone\":null,\"lang\":\"en\"}]\n[ESCALATE:appointment]\n[STATE:{\"intent\":\"booking_request\",\"services\":[],\"staff\":null,\"date\":\"2026-04-15\",\"time\":\"14:00\",\"name\":null,\"phone\":null,\"lang\":\"en\",\"pendingAction\":null,\"existingBookingId\":null}]" }
+  ],
+  "examples": [
+    { "check": "lang_consistency", "issue": "lang=vi but Claude replies in English", "action": "console.warn only — too risky to auto-correct mid-conversation" },
+    { "check": "booking_completeness", "issue": "ESCALATE:appointment with services=[]", "action": "suppressEscalate=true — escalationType set to null, booking not attempted" },
+    { "check": "passive_ending", "issue": "No '?' in mid-booking response", "action": "console.warn only — passive endings are common in valid flows (e.g. 'Checking availability...')" }
+  ],
+  "verify_fix_string": "_validateResponseQuality",
+  "verify_fix_string_2": "suppressEscalate",
+  "code_areas": [
+    "nailsalon/receptionist.js:_validateResponseQuality()",
+    "nailsalon/receptionist.js:callClaude():step-6-quality-validation"
+  ],
+  "notes": "Language check only fires for non-English vs non-English mismatch to avoid false positives (English names/service names appear in Vietnamese replies). Passive ending detection is warn-only: many valid responses are statement-only (e.g. after a successful booking). Only booking completeness has an active gate. suppressEscalate=true does NOT show an error message to the user — the text Claude wrote is still displayed; the booking escalation is simply not triggered, so the booking flow resets to collecting missing info.",
+  "confidence_gap": "Static checks confirm function exists and is wired into the pipeline. Language detection accuracy depends on AIEngine.detectLang(). Suppress behavior requires live testing with Claude emitting a broken ESCALATE (services=[])."
+}

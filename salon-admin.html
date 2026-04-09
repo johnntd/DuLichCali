@@ -1517,6 +1517,17 @@
     </div>
     <div id="mbAvailStatus" style="display:none;font-size:.73rem;padding:.45rem .65rem;border-radius:5px;margin-bottom:.5rem"></div>
     <div id="mbMsg" style="display:none;font-size:.75rem;margin:.2rem 0"></div>
+    <!-- Override section: shown only on conflict when role = owner or manager -->
+    <div id="mbOverrideSection" style="display:none;margin-top:.6rem;padding:.7rem .85rem;border-radius:7px;background:rgba(248,113,113,.09);border:1px solid rgba(248,113,113,.3)">
+      <div style="font-size:.72rem;font-weight:700;color:var(--danger);margin-bottom:.32rem">⚠ Lịch đã bị chiếm — Đặt đè lịch (Chủ tiệm / Quản lý)</div>
+      <div id="mbOverrideInfo" style="font-size:.72rem;color:var(--muted);margin-bottom:.5rem;line-height:1.5"></div>
+      <div style="font-size:.68rem;color:var(--muted);margin-bottom:.4rem">Nhập mã PIN để xác nhận đặt đè:</div>
+      <div style="display:flex;gap:.5rem">
+        <input class="sa-input" id="mbOverridePin" type="password" inputmode="numeric" maxlength="6" placeholder="Mã PIN" style="flex:1;font-size:.88rem;letter-spacing:.15em" onkeydown="if(event.key==='Enter')_mbConfirmOverride()">
+        <button class="btn btn--danger btn--sm" onclick="_mbConfirmOverride()">Xác nhận đặt đè</button>
+      </div>
+      <div id="mbOverridePinMsg" style="font-size:.7rem;color:var(--danger);margin-top:.32rem;display:none"></div>
+    </div>
     <div class="sa-modal-actions">
       <button class="btn btn--outline btn--sm" onclick="closeManualBookModal()">Hủy bỏ</button>
       <button class="btn btn--primary btn--sm" id="mbSaveBtn" onclick="saveManualBooking()">Lưu lịch hẹn</button>
@@ -3407,6 +3418,7 @@
   }
 
   function closeManualBookModal() {
+    _mbHideOverrideSection();
     document.getElementById('manualBookModal').classList.add('hidden');
   }
 
@@ -3443,10 +3455,12 @@
     el.textContent   = msg;
   }
 
+  // ── Manual booking state ─────────────────────────────────────────────────────
+  var _mbConflict = null; // stores conflict info while override section is visible
+
   // Refresh the time-slot <select> based on the selected date + staff.
-  // Slots occupied by existing bookings (for that staff on that date) are
-  // shown as disabled with the booked customer's name so the vendor can see
-  // at a glance what's taken. Uses in-memory _saAllItems — no Firestore query.
+  // Duration-aware: a booking at 10:00 for 90 min blocks 10:00, 10:30, 11:00.
+  // Uses in-memory _saAllItems — no Firestore query.
   function _mbRefreshTimeSlots() {
     var sel    = document.getElementById('mbTime');
     if (!sel) return;
@@ -3454,18 +3468,35 @@
     var staff  = (document.getElementById('mbStaff') || {}).value || 'Any';
     var bookId = (document.getElementById('mbBookingId') || {}).value || '';
 
-    // Build lookup: time → customer name for booked slots on this date + staff
-    var bookedAt = {};
+    // Build lookup: slotKey → customer name, duration-aware.
+    // A slot is blocked if it falls within [bStart, bStart+bDuration).
+    var bookedAt = {}; // { 'HH:MM': 'CustomerName' }
     if (date && staff && staff !== 'Any') {
       var skip = ['canceled', 'cancelled', 'rescheduled'];
       (_saAllItems || []).forEach(function(b) {
-        if (b.id === bookId) return;                     // don't block own slot when editing
-        if ((b.requestedDate || b.date || '') !== date)  return;
-        if (skip.indexOf(b.status || '') >= 0)           return;
+        if (b.id === bookId) return;                      // skip self when editing
+        if ((b.requestedDate || b.date || '') !== date)   return;
+        if (skip.indexOf(b.status || '') >= 0)            return;
         var bStaff = (b.staff || '').toLowerCase().trim();
-        if (bStaff !== staff.toLowerCase().trim())       return;
-        var t = b.requestedTime || b.time || '';
-        if (t) bookedAt[t] = b.customerName || b.name || 'Khách';
+        if (bStaff !== staff.toLowerCase().trim())        return;
+        var bT   = b.requestedTime || b.time || '';
+        if (!bT) return;
+        var bTpl = bT.split(':');
+        var bMin = parseInt(bTpl[0] || 0, 10) * 60 + parseInt(bTpl[1] || 0, 10);
+        var bDur = b.totalDurationMins || b.durationMins || 60;
+        var bEnd = bMin + bDur;
+        var cName = b.customerName || b.name || 'Khách';
+        // Mark every 30-min slot that falls inside this booking's window
+        for (var bh = 8; bh <= 21; bh++) {
+          for (var bm = 0; bm < 60; bm += 30) {
+            if (bh === 21 && bm > 0) break;
+            var slotMin = bh * 60 + bm;
+            if (slotMin >= bMin && slotMin < bEnd) {
+              var slotKey = (bh < 10 ? '0' : '') + bh + ':' + (bm === 0 ? '00' : '30');
+              if (!bookedAt[slotKey]) bookedAt[slotKey] = cName; // first booking wins label
+            }
+          }
+        }
       });
     }
 
@@ -3473,7 +3504,7 @@
     var html = '<option value="">— Chọn giờ —</option>';
     for (var h = 8; h <= 21; h++) {
       for (var m = 0; m < 60; m += 30) {
-        if (h === 21 && m > 0) break;                    // last slot is 21:00
+        if (h === 21 && m > 0) break;
         var val    = (h < 10 ? '0' : '') + h + ':' + (m === 0 ? '00' : '30');
         var h12    = h % 12 || 12;
         var period = h < 12 ? 'SA' : 'CH';
@@ -3487,11 +3518,76 @@
       }
     }
     sel.innerHTML = html;
-    // Restore previously chosen slot if it's still available
+    // Restore previously chosen slot if it is still available
     if (current && !bookedAt[current]) sel.value = current;
   }
 
-  async function saveManualBooking() {
+  function _mbShowOverrideSection(conflict, altSlots) {
+    _mbConflict = conflict;
+    var info = document.getElementById('mbOverrideInfo');
+    var sec  = document.getElementById('mbOverrideSection');
+    if (!info || !sec) return;
+    var staffName = (document.getElementById('mbStaff') || {}).value || 'Nhân viên';
+    var msg = staffName + ' đã có lịch với <strong>' + esc(conflict.name) + '</strong> lúc ' + _fmtTime(conflict.time) + '.';
+    if (altSlots && altSlots.length) {
+      msg += '<br>Giờ trống gần nhất: <strong>' + altSlots.join(', ') + '</strong>';
+    }
+    info.innerHTML = msg;
+    var pinMsg = document.getElementById('mbOverridePinMsg');
+    if (pinMsg) { pinMsg.style.display = 'none'; pinMsg.textContent = ''; }
+    var pinIn = document.getElementById('mbOverridePin');
+    if (pinIn) pinIn.value = '';
+    sec.style.display = 'block';
+  }
+
+  function _mbHideOverrideSection() {
+    _mbConflict = null;
+    var sec = document.getElementById('mbOverrideSection');
+    if (sec) sec.style.display = 'none';
+    var pinMsg = document.getElementById('mbOverridePinMsg');
+    if (pinMsg) { pinMsg.style.display = 'none'; pinMsg.textContent = ''; }
+    var pinIn = document.getElementById('mbOverridePin');
+    if (pinIn) pinIn.value = '';
+  }
+
+  // PIN confirmation for double-book override. Fetches setupCode from Firestore
+  // and compares — no stored client secret.
+  async function _mbConfirmOverride() {
+    var pinIn  = document.getElementById('mbOverridePin');
+    var pinMsg = document.getElementById('mbOverridePinMsg');
+    var pin    = (pinIn ? pinIn.value.trim() : '');
+    if (!pin) {
+      if (pinMsg) { pinMsg.textContent = 'Vui lòng nhập mã PIN.'; pinMsg.style.display = 'block'; }
+      return;
+    }
+    if (pinMsg) { pinMsg.textContent = 'Đang kiểm tra mã PIN…'; pinMsg.style.display = 'block'; pinMsg.style.color = 'var(--muted)'; }
+    try {
+      var vdoc = await vendorRef.get();
+      var setupCode = vdoc.exists ? (vdoc.data().setupCode || '') : '';
+      if (!setupCode) {
+        pinMsg.textContent = 'Mã PIN chưa được cài đặt. Liên hệ admin.';
+        pinMsg.style.color = 'var(--danger)';
+        return;
+      }
+      if (pin !== String(setupCode)) {
+        pinMsg.textContent = 'Mã PIN không đúng. Thử lại.';
+        pinMsg.style.color = 'var(--danger)';
+        if (pinIn) { pinIn.value = ''; pinIn.focus(); }
+        return;
+      }
+      // PIN correct — proceed with override save
+      pinMsg.style.display = 'none';
+      _mbHideOverrideSection();
+      await _mbDoSave(true);
+    } catch(e) {
+      if (pinMsg) { pinMsg.textContent = 'Lỗi xác thực: ' + e.message; pinMsg.style.color = 'var(--danger)'; pinMsg.style.display = 'block'; }
+    }
+  }
+
+  // ── Shared save logic ─────────────────────────────────────────────────────────
+  // isOverride = true: save was approved via PIN after conflict; adds override flags.
+  // Called by saveManualBooking() (normal path) and _mbConfirmOverride() (override path).
+  async function _mbDoSave(isOverride) {
     var bookingId = document.getElementById('mbBookingId').value.trim();
     var name   = document.getElementById('mbName').value.trim();
     var phone  = document.getElementById('mbPhone').value.replace(/\D/g, '');
@@ -3499,19 +3595,11 @@
     var time   = document.getElementById('mbTime').value;
     var notes  = document.getElementById('mbNotes').value.trim();
     var staff  = document.getElementById('mbStaff').value || 'Any';
-    // Parse photo URLs — one per line, trim whitespace, drop empty lines
     var photos = (document.getElementById('mbPhotos').value || '')
-      .split('\n').map(function(u){return u.trim();}).filter(Boolean);
-    var svcs   = [];
+      .split('\n').map(function(u){ return u.trim(); }).filter(Boolean);
+    var svcs = [];
     document.querySelectorAll('#mbSvcList input[type=checkbox]:checked').forEach(function(cb) { svcs.push(cb.value); });
 
-    if (!name)        { _mbMsg('Nhập tên khách.', true); return; }
-    if (!phone)       { _mbMsg('Nhập số điện thoại.', true); return; }
-    if (!svcs.length) { _mbMsg('Chọn ít nhất 1 dịch vụ.', true); return; }
-    if (!date)        { _mbMsg('Chọn ngày.', true); return; }
-    if (!time)        { _mbMsg('Chọn giờ.', true); return; }
-
-    // Compute total duration + price estimate from selected services
     var totalMins = 0, priceEst = '';
     svcs.forEach(function(svcName) {
       var svcDoc = allServiceDocs.find(function(d) { return (d.data.name || d.id) === svcName; });
@@ -3525,28 +3613,11 @@
       }
     });
 
-    _mbShowAvail(true, '');
-    _mbMsg('Đang kiểm tra lịch…', false);
+    _mbMsg('Đang lưu…', false);
     var btn = document.getElementById('mbSaveBtn');
     if (btn) btn.disabled = true;
 
-    // ── Availability check ──────────────────────────────────────────────────
-    // Prevents double-booking against AI bookings and other manual bookings.
-    // Uses same overlap logic as NailAvailabilityChecker. Fail-open on error.
-    var conflict = await _checkManualAvail(date, time, staff, bookingId, totalMins || 60);
-    if (conflict) {
-      var cMsg = staff + ' đã có lịch' + (conflict.name ? ' với ' + conflict.name : '') +
-                 ' lúc ' + conflict.time + '. Vui lòng chọn giờ hoặc nhân viên khác.';
-      _mbShowAvail(false, '⚠ ' + cMsg);
-      _mbMsg('', false);
-      if (btn) btn.disabled = false;
-      return;
-    }
-    _mbShowAvail(true, '✓ Giờ trống — có thể đặt lịch');
-
-    _mbMsg('Đang lưu…', false);
-
-    var ts   = firebase.firestore.FieldValue.serverTimestamp;
+    var ts = firebase.firestore.FieldValue.serverTimestamp;
     var data = {
       vendorId:          VENDOR_ID,
       selectedServices:  svcs,
@@ -3569,24 +3640,93 @@
       updatedAt:         ts()
     };
 
+    if (isOverride) {
+      data.doubleBooked    = true;
+      data.overrideByRole  = _userRole;
+      data.overrideAt      = ts();
+    }
+
     try {
       if (bookingId) {
-        // Edit: update existing booking in place — same doc ID, no duplicate created
         await vendorRef.collection('bookings').doc(bookingId).update(data);
-        showToast('✓ Đã cập nhật lịch hẹn.');
+        showToast(isOverride ? '⚠ Đã đặt đè lịch hẹn.' : '✓ Đã cập nhật lịch hẹn.');
       } else {
-        // New booking: written to vendors/{id}/bookings — same Firestore path as AI
         data.createdAt    = ts();
         data.confirmedAt  = ts();
         data.isReschedule = false;
         await vendorRef.collection('bookings').doc().set(data);
-        showToast('✓ Đã tạo lịch hẹn mới!');
+        showToast(isOverride ? '⚠ Đã tạo lịch đè.' : '✓ Đã tạo lịch hẹn mới!');
       }
       closeManualBookModal();
     } catch(e) {
       _mbMsg('Lỗi: ' + e.message, true);
       if (btn) btn.disabled = false;
     }
+  }
+
+  async function saveManualBooking() {
+    _mbHideOverrideSection();
+    var bookingId = document.getElementById('mbBookingId').value.trim();
+    var name   = document.getElementById('mbName').value.trim();
+    var phone  = document.getElementById('mbPhone').value.replace(/\D/g, '');
+    var date   = document.getElementById('mbDate').value;
+    var time   = document.getElementById('mbTime').value;
+    var staff  = document.getElementById('mbStaff').value || 'Any';
+    var svcs   = [];
+    document.querySelectorAll('#mbSvcList input[type=checkbox]:checked').forEach(function(cb) { svcs.push(cb.value); });
+
+    if (!name)        { _mbMsg('Nhập tên khách.', true); return; }
+    if (!phone)       { _mbMsg('Nhập số điện thoại.', true); return; }
+    if (!svcs.length) { _mbMsg('Chọn ít nhất 1 dịch vụ.', true); return; }
+    if (!date)        { _mbMsg('Chọn ngày.', true); return; }
+    if (!time)        { _mbMsg('Chọn giờ.', true); return; }
+
+    // Compute duration for overlap check
+    var totalMins = 0;
+    svcs.forEach(function(svcName) {
+      var svcDoc = allServiceDocs.find(function(d) { return (d.data.name || d.id) === svcName; });
+      if (svcDoc && svcDoc.data.durationMins) totalMins += svcDoc.data.durationMins;
+    });
+
+    _mbShowAvail(true, '');
+    _mbMsg('Đang kiểm tra lịch…', false);
+    var btn = document.getElementById('mbSaveBtn');
+    if (btn) btn.disabled = true;
+
+    // ── Availability check (Firestore — authoritative hard check) ────────────
+    var conflict = await _checkManualAvail(date, time, staff, bookingId, totalMins || 60);
+    if (btn) btn.disabled = false;
+
+    if (conflict) {
+      // Find up to 3 nearest available slots from the current dropdown
+      var altSlots = [];
+      var timeSel = document.getElementById('mbTime');
+      if (timeSel) {
+        for (var i = 0; i < timeSel.options.length && altSlots.length < 3; i++) {
+          var opt = timeSel.options[i];
+          if (!opt.disabled && opt.value) altSlots.push(_fmtTime(opt.value));
+        }
+      }
+
+      // Role check: only owner and manager may override
+      if (_userRole === 'owner' || _userRole === 'manager') {
+        _mbShowAvail(false, '⚠ Lịch bị chiếm. Nhập PIN để đặt đè, hoặc chọn giờ khác.');
+        _mbMsg('', false);
+        _mbShowOverrideSection(conflict, altSlots);
+      } else {
+        // Staff: no override path
+        var cMsg = (staff !== 'Any' ? staff : 'Nhân viên') +
+                   ' đã có lịch với ' + esc(conflict.name) +
+                   ' lúc ' + _fmtTime(conflict.time) + '.';
+        if (altSlots.length) cMsg += ' Giờ trống: ' + altSlots.join(', ');
+        _mbShowAvail(false, '⚠ ' + cMsg);
+        _mbMsg('Vui lòng chọn giờ hoặc nhân viên khác.', true);
+      }
+      return;
+    }
+
+    _mbShowAvail(true, '✓ Giờ trống — có thể đặt lịch');
+    await _mbDoSave(false);
   }
 
   // ── Build reference image thumbnails HTML ──────────────────────────────────────

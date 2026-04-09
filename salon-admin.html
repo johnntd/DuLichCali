@@ -730,6 +730,21 @@
     /* Commission field in staff modal */
     .sa-comm-row { display:flex;align-items:center;gap:.5rem;margin-top:.3rem }
 
+    /* ── Add-on items in payment modal ── */
+    .pm-addon-item {
+      display: flex; align-items: center; gap: .45rem;
+      background: rgba(255,255,255,.04); border: 1px solid var(--border);
+      border-radius: 5px; padding: .32rem .55rem;
+    }
+    .pm-addon-item__name  { flex: 1; font-size: .76rem; font-weight: 600; color: var(--text); }
+    .pm-addon-item__price { font-size: .76rem; font-weight: 700; color: var(--success); min-width: 3.2rem; text-align: right; }
+    .pm-addon-item__rm {
+      background: none; border: none; cursor: pointer; color: var(--muted);
+      font-size: 1rem; padding: 0 .15rem; line-height: 1; flex-shrink: 0;
+      transition: color .15s;
+    }
+    .pm-addon-item__rm:hover { color: var(--danger); }
+
     /* Tip suggestion buttons */
     .pm-tip-btns { display: flex; gap: .4rem; margin-top: .3rem; margin-bottom: .65rem; }
     .pm-tip-btn { flex: 1; font-size: .68rem; font-weight: 700; padding: .32rem .2rem; border-radius: 5px; border: 1px solid var(--border); background: rgba(255,255,255,.04); color: var(--muted); cursor: pointer; text-align: center; line-height: 1.35; transition: background .15s, color .15s, border-color .15s; }
@@ -2326,6 +2341,10 @@
         <span class="pm-summary-label">Tổng giá dịch vụ</span>
         <span id="pmSumTotal" class="pm-summary-val"></span>
       </div>
+      <div class="pm-summary-row" id="pmSumAddOnRow" style="display:none">
+        <span class="pm-summary-label" style="color:var(--gold-lt)">Add-ons</span>
+        <span id="pmSumAddOn" class="pm-summary-val" style="color:var(--gold-lt)"></span>
+      </div>
       <div class="pm-summary-row" id="pmSumTipRow" style="display:none">
         <span class="pm-summary-label" style="color:#fbbf24">Tip</span>
         <span id="pmSumTip" class="pm-summary-val" style="color:#fbbf24"></span>
@@ -2351,6 +2370,19 @@
     </div>
 
     <input type="hidden" id="pmBookingId">
+
+    <!-- Add-on services — shown only when base price is known -->
+    <div class="pm-group" id="pmAddOnSection" style="display:none">
+      <label class="pm-label">Dịch Vụ Thêm (Add-ons)</label>
+      <div style="display:flex;gap:.45rem;align-items:center">
+        <select class="sa-input" id="pmAddOnSelect" style="flex:1;height:38px;padding:0 .5rem">
+          <option value="">— Chọn add-on —</option>
+        </select>
+        <button class="btn btn--outline btn--sm" type="button" onclick="_pmAddAddon()" style="flex-shrink:0;height:38px;padding:0 .85rem;white-space:nowrap">+ Thêm</button>
+      </div>
+      <div id="pmAddOnList" style="margin-top:.35rem;display:flex;flex-direction:column;gap:.22rem"></div>
+    </div>
+
     <div class="pm-group">
       <label class="pm-label">Trạng thái thanh toán</label>
       <select class="sa-input" id="pmStatus" style="width:100%;height:38px;padding:0 8px">
@@ -3851,21 +3883,126 @@
   }
 
   // Updates the summary block live as vendor types. Called by pmAmount + pmTip oninput.
+  // ── Add-on management for payment modal ──────────────────────────────────────
+  var _pmAddOns = []; // [{name, price}] — add-ons selected in current modal session
+
+  function _pmAddOnTotal() {
+    return _pmAddOns.reduce(function(s, a) { return s + a.price; }, 0);
+  }
+
+  // Effective total = base service price + add-ons
+  function _pmEffectiveTotal() {
+    var base = parseFloat((document.getElementById('paymentModal') || {}).dataset.priceTotal || '0') || 0;
+    return base + _pmAddOnTotal();
+  }
+
+  function _pmRenderAddOns() {
+    var listEl = document.getElementById('pmAddOnList');
+    if (!listEl) return;
+    if (!_pmAddOns.length) { listEl.innerHTML = ''; return; }
+    listEl.innerHTML = _pmAddOns.map(function(a, i) {
+      return '<div class="pm-addon-item">' +
+        '<span class="pm-addon-item__name">' + esc(a.name) + '</span>' +
+        '<span class="pm-addon-item__price">+$' + a.price.toFixed(2) + '</span>' +
+        '<button class="pm-addon-item__rm" type="button" onclick="_pmRemoveAddon(' + i + ')" title="Xóa">&times;</button>' +
+        '</div>';
+    }).join('');
+  }
+
+  function _pmAddAddon() {
+    var sel = document.getElementById('pmAddOnSelect');
+    if (!sel || !sel.value) return;
+    var opt   = sel.options[sel.selectedIndex];
+    var price = parseFloat(opt.dataset.price || '0') || 0;
+    var name  = opt.textContent.replace(/\s*\(.*\)$/, '').trim();
+    _pmAddOns.push({ name: name, price: price });
+    sel.value = '';
+    _pmRenderAddOns();
+    // Update summary row for add-on total
+    var addOnRowEl = document.getElementById('pmSumAddOnRow');
+    var addOnEl    = document.getElementById('pmSumAddOn');
+    var addOnTotal = _pmAddOnTotal();
+    if (addOnRowEl) addOnRowEl.style.display = addOnTotal > 0 ? 'flex' : 'none';
+    if (addOnEl)    addOnEl.textContent = '+$' + addOnTotal.toFixed(2);
+    _updatePmBalance();
+  }
+
+  function _pmRemoveAddon(idx) {
+    _pmAddOns.splice(idx, 1);
+    _pmRenderAddOns();
+    var addOnRowEl = document.getElementById('pmSumAddOnRow');
+    var addOnEl    = document.getElementById('pmSumAddOn');
+    var addOnTotal = _pmAddOnTotal();
+    if (addOnRowEl) addOnRowEl.style.display = addOnTotal > 0 ? 'flex' : 'none';
+    if (addOnEl)    addOnEl.textContent = '+$' + addOnTotal.toFixed(2);
+    _updatePmBalance();
+  }
+
+  function _pmBuildAddOnDropdown() {
+    var sel = document.getElementById('pmAddOnSelect');
+    if (!sel) return;
+    // Filter active add-on services from vendor's service list
+    var addOns = (allServiceDocs || []).filter(function(d) {
+      return d.data.category === 'addon' && d.data.active;
+    });
+    sel.innerHTML = '<option value="">— Chọn add-on —</option>';
+    if (addOns.length) {
+      addOns.forEach(function(d) {
+        var price = _parsePrice(d.data.price || '') || (d.data.priceFrom || 0);
+        var opt   = document.createElement('option');
+        opt.value = d.id;
+        opt.textContent = d.data.name + (price > 0 ? ' ($' + price.toFixed(2) + ')' : '');
+        opt.dataset.price = price;
+        sel.appendChild(opt);
+      });
+    } else {
+      // Fallback: static curated list when vendor has no active add-ons configured
+      var _fallback = [
+        { name: 'Nail Art',           price: 10 },
+        { name: 'Gel Removal',        price: 10 },
+        { name: 'French Tip',         price: 5  },
+        { name: 'Paraffin Treatment', price: 15 },
+        { name: 'Nail Repair',        price: 5  },
+        { name: 'Extra Design',       price: 8  }
+      ];
+      _fallback.forEach(function(a, i) {
+        var opt = document.createElement('option');
+        opt.value = 'fallback_' + i;
+        opt.textContent = a.name + ' ($' + a.price.toFixed(2) + ')';
+        opt.dataset.price = a.price;
+        sel.appendChild(opt);
+      });
+    }
+  }
+  // ─────────────────────────────────────────────────────────────────────────────
+
   function _updatePmBalance() {
-    var modal  = document.getElementById('paymentModal');
-    var total  = parseFloat(modal.dataset.priceTotal) || 0;
-    var amount = parseFloat(document.getElementById('pmAmount').value) || 0;
-    var tip    = parseFloat(document.getElementById('pmTip').value)    || 0;
-    var sel    = document.getElementById('pmStatus');
+    var modal     = document.getElementById('paymentModal');
+    var baseTotal = parseFloat(modal.dataset.priceTotal) || 0;
+    var addOnAmt  = _pmAddOnTotal();
+    var total     = baseTotal + addOnAmt;           // effective total including add-ons
+    var amount    = parseFloat(document.getElementById('pmAmount').value) || 0;
+    var tip       = parseFloat(document.getElementById('pmTip').value)    || 0;
+    var sel       = document.getElementById('pmStatus');
+
+    // ── Add-on row ─────────────────────────────────────────────────────────────
+    var addOnRowEl = document.getElementById('pmSumAddOnRow');
+    var addOnEl    = document.getElementById('pmSumAddOn');
+    if (addOnRowEl) addOnRowEl.style.display = addOnAmt > 0 ? 'flex' : 'none';
+    if (addOnEl && addOnAmt > 0) addOnEl.textContent = '+$' + addOnAmt.toFixed(2);
+
+    // Update base total label to clarify it is base only when add-ons are present
+    var sumTotalEl = document.getElementById('pmSumTotal');
+    if (sumTotalEl && baseTotal > 0) sumTotalEl.textContent = '$' + baseTotal.toFixed(2);
 
     // ── Tip rows ───────────────────────────────────────────────────────────────
     var tipRowEl   = document.getElementById('pmSumTipRow');
     var tipEl      = document.getElementById('pmSumTip');
     var grandRowEl = document.getElementById('pmSumGrandRow');
     var grandEl    = document.getElementById('pmSumGrand');
-    if (tip > 0 && total > 0) {
-      if (tipEl)      tipEl.textContent  = '$' + tip.toFixed(2);
-      if (tipRowEl)   tipRowEl.style.display   = 'flex';
+    if ((tip > 0 || addOnAmt > 0) && total > 0) {
+      if (tipEl)      tipEl.textContent  = tip > 0 ? '$' + tip.toFixed(2) : '$0.00';
+      if (tipRowEl)   tipRowEl.style.display   = tip > 0 ? 'flex' : 'none';
       if (grandEl)    grandEl.textContent = '$' + (total + tip).toFixed(2);
       if (grandRowEl) grandRowEl.style.display = 'flex';
     } else {
@@ -3873,12 +4010,12 @@
       if (grandRowEl) grandRowEl.style.display = 'none';
     }
 
-    // ── Active tip button highlight ────────────────────────────────────────────
+    // ── Active tip button highlight (based on base service price for tip %) ───
     [15, 20, 25].forEach(function(pct) {
       var btn = document.getElementById('pmTipBtn' + pct);
       if (!btn) return;
-      var expected = total > 0 ? Math.round(total * pct) / 100 : -1;
-      btn.classList.toggle('pm-tip-btn--active', total > 0 && Math.abs(tip - expected) < 0.015);
+      var expected = baseTotal > 0 ? Math.round(baseTotal * pct) / 100 : -1;
+      btn.classList.toggle('pm-tip-btn--active', baseTotal > 0 && Math.abs(tip - expected) < 0.015);
     });
 
     // ── Paid + remaining rows ──────────────────────────────────────────────────
@@ -3887,7 +4024,7 @@
     if (paidEl) paidEl.textContent = '$' + amount.toFixed(2);
 
     if (total > 0) {
-      // Remaining = service balance only (matches stored balanceDue)
+      // Balance = effective service total (base + add-ons) minus amount paid; tip is voluntary
       var bal = Math.max(0, total - amount);
       if (balEl) {
         if (bal <= 0) {
@@ -4016,17 +4153,27 @@
       (b.customerName || 'Khách') + (svcLbl ? ' \u00b7 ' + svcLbl : '');
     document.getElementById('paymentModal').dataset.priceTotal = priceTotal;
 
+    // Reset add-ons for this modal session
+    _pmAddOns = [];
+    _pmRenderAddOns();
+    var _addOnRowEl = document.getElementById('pmSumAddOnRow');
+    if (_addOnRowEl) _addOnRowEl.style.display = 'none';
+
     // Show summary block (price known) or no-price warning
     var summaryEl  = document.getElementById('pmSummary');
     var noPriceEl  = document.getElementById('pmNoPrice');
     var noPriceBtn = document.getElementById('pmNoPriceLink');
+    var addOnSec   = document.getElementById('pmAddOnSection');
     if (priceTotal > 0) {
       document.getElementById('pmSumTotal').textContent = '$' + priceTotal.toFixed(2);
       summaryEl.style.display = 'block';
       noPriceEl.style.display = 'none';
+      _pmBuildAddOnDropdown();
+      if (addOnSec) addOnSec.style.display = 'block';
     } else {
       summaryEl.style.display = 'none';
       noPriceEl.style.display = 'flex';
+      if (addOnSec) addOnSec.style.display = 'none';
       // Wire "Đặt giá" link — closes payment modal and opens set-price modal
       if (noPriceBtn) {
         var _bid = bookingId;
@@ -4095,9 +4242,14 @@
 
     // Auto-derive paymentStatus from amounts when total is known; fall back to manual select
     var priceTotal = parseFloat(document.getElementById('paymentModal').dataset.priceTotal) || 0;
+    var addOnAmt   = _pmAddOnTotal();
+    var effectiveTotal = priceTotal + addOnAmt;   // base + add-ons (tip is excluded from balance)
     var payStatus;
     var balanceDue = null;
-    if (priceTotal > 0) {
+    if (effectiveTotal > 0) {
+      balanceDue = Math.max(0, effectiveTotal - amount);
+      payStatus  = amount <= 0 ? 'unpaid' : balanceDue <= 0 ? 'paid' : 'partial';
+    } else if (priceTotal > 0) {
       balanceDue = Math.max(0, priceTotal - amount);
       payStatus  = amount <= 0 ? 'unpaid' : balanceDue <= 0 ? 'paid' : 'partial';
     } else {
@@ -4130,6 +4282,14 @@
       })
     };
     if (balanceDue !== null) update.balanceDue = balanceDue;
+    // Persist add-ons if any were selected
+    if (_pmAddOns.length > 0) {
+      update.selectedAddOns = _pmAddOns.map(function(a) { return { name: a.name, price: a.price }; });
+      update.addOnTotal      = addOnAmt;
+    } else {
+      update.selectedAddOns = [];
+      update.addOnTotal      = 0;
+    }
     // Set paidAt timestamp only when transitioning to 'paid' and not already set
     var cached = _bookingCache[bookingId] || {};
     if (payStatus === 'paid' && !cached.paidAt) {
@@ -5967,11 +6127,12 @@
     var modal   = document.getElementById('paymentModal');
     var m       = _vendorPayConfig.methods[method] || {};
 
-    // Amount: total-due (price + tip) when price is known; typed amount otherwise
-    var priceTotal = parseFloat((modal || {}).dataset.priceTotal || '0') || 0;
-    var amountVal  = parseFloat((document.getElementById('pmAmount') || {}).value || '0') || 0;
-    var tip        = parseFloat((document.getElementById('pmTip')    || {}).value || '0') || 0;
-    var displayAmt = priceTotal > 0 ? priceTotal + tip : (amountVal > 0 ? amountVal + tip : 0);
+    // Amount: total-due (base + add-ons + tip) when price is known; typed amount otherwise
+    var priceTotal  = parseFloat((modal || {}).dataset.priceTotal || '0') || 0;
+    var amountVal   = parseFloat((document.getElementById('pmAmount') || {}).value || '0') || 0;
+    var tip         = parseFloat((document.getElementById('pmTip')    || {}).value || '0') || 0;
+    var effectivePT = priceTotal + _pmAddOnTotal();
+    var displayAmt  = effectivePT > 0 ? effectivePT + tip : (amountVal > 0 ? amountVal + tip : 0);
 
     // Business name
     var bizName = ((document.getElementById('settingName') || {}).value || '').trim() || 'Tiệm';
@@ -6025,10 +6186,11 @@
   function confirmQrPayment() {
     var modal      = document.getElementById('paymentModal');
     var priceTotal = parseFloat((modal || {}).dataset.priceTotal || '0') || 0;
+    var effective  = priceTotal + _pmAddOnTotal();
     var amountEl   = document.getElementById('pmAmount');
     var amount     = parseFloat((amountEl || {}).value || '0') || 0;
-    if (amountEl && priceTotal > 0 && amount <= 0) {
-      amountEl.value = priceTotal.toFixed(2);
+    if (amountEl && effective > 0 && amount <= 0) {
+      amountEl.value = effective.toFixed(2);
       _updatePmBalance();
     }
     closeQrPayment();

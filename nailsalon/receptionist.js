@@ -1698,9 +1698,9 @@
       var ap = h < 12 ? 'AM' : 'PM'; h = h % 12 || 12;
       return h + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
     })();
-    var textBack = lang === 'vi' ? 'Lịch hẹn đã được xác nhận hoàn tất — không cần xác nhận thêm. Nếu có thay đổi, chúng tôi sẽ nhắn tin cho bạn.'
-                 : lang === 'es' ? 'Tu reserva está confirmada y lista — no se necesita ninguna otra acción. Si algo cambia, te avisaremos.'
-                 : "You're all set — no further action needed. We'll text you if anything changes.";
+    var textBack = lang === 'vi' ? 'Chúng tôi rất mong được gặp bạn! Nếu cần thay đổi hoặc đặt thêm dịch vụ, cứ nhắn cho mình nhé.'
+                 : lang === 'es' ? '¡Con gusto la esperamos! Si necesita cambiar algo o reservar otro servicio, no dude en escribirnos.'
+                 : 'We look forward to seeing you! Feel free to reach out if you need to make any changes or book anything else.';
     if (lang === 'vi') {
       return 'Lịch hẹn ' + svcStr + (draft.staff ? ' với ' + draft.staff : '') +
              (timeStr ? ' lúc ' + timeStr : '') + ' đã được xác nhận. ' + textBack;

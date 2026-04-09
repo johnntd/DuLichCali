@@ -150,8 +150,8 @@ test('Post-booking state context: Do NOT ask for date/time again [RX-009]', func
   assertContains(src, 'Do NOT ask for date/time again');
 });
 
-test('Confirmation text: "no further action needed" [RX-009]', function() {
-  assertContains(src, 'no further action needed');
+test('Confirmation text: warm closing present [RX-009]', function() {
+  assertContains(src, 'look forward to seeing you');
 });
 
 test('_submitDirectBooking: isExactReschedule guard present [RX-005]', function() {

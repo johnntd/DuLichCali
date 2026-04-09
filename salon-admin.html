@@ -815,56 +815,267 @@
        iPad-first · Touch-optimised · 3-Theme · i18n
     ═══════════════════════════════════════════════════════════════ */
 
-    /* ── Theme: Metallic (dark steel + silver) ── */
-    [data-theme="metallic"] {
-      --navy-900: #0c0e14;
-      --navy-800: #14171f;
-      --navy-700: #1e2230;
-      --gold:     #94a3b8;
-      --gold-lt:  #cbd5e1;
-      --gold-dim: rgba(148,163,184,.13);
-      --cream:    #f1f5f9;
-      --text:     #94a3b8;
-      --muted:    #52637a;
-      --border:   rgba(255,255,255,.09);
-      --border-g: rgba(148,163,184,.28);
-      --danger:   #f87171;
-      --success:  #4ade80;
+    /* ══════════════════════════════════════════════════════════════
+       THEME: COZY BEIGE
+       Warm ivory · champagne · spa luxury · light mode
+    ══════════════════════════════════════════════════════════════ */
+    [data-theme="beige"] {
+      --navy-900: #f5f0e8;
+      --navy-800: #faf7f2;
+      --navy-700: #ece6d8;
+      --gold:     #9e7c4a;
+      --gold-lt:  #c4956a;
+      --gold-dim: rgba(158,124,74,.11);
+      --cream:    #1c1410;
+      --text:     #3a2e26;
+      --muted:    #8a7a6e;
+      --border:   rgba(0,0,0,.09);
+      --border-g: rgba(158,124,74,.3);
+      --danger:   #b83232;
+      --success:  #2d7a3a;
       --r:        10px;
     }
-    [data-theme="metallic"] .va-bar,
-    [data-theme="metallic"] .va-link-strip,
-    [data-theme="metallic"] .ctrl-bar { background: #14171f; }
-    [data-theme="metallic"] .va-sidebar { background: #0c0e14; }
-    [data-theme="metallic"] .btn--primary { background: #475569; color: #f1f5f9; }
-    [data-theme="metallic"] .va-nav-btn.active { border-left-color: #94a3b8; }
-    [data-theme="metallic"] #app { background: #0c0e14; }
+    /* Page & structural */
+    [data-theme="beige"] html,
+    [data-theme="beige"] body      { background: #f5f0e8; color: #3a2e26; }
+    [data-theme="beige"] #app      { background: #f5f0e8; }
+    [data-theme="beige"] #authLoading {
+      background: linear-gradient(160deg, #f5f0e8 0%, #faf7f2 100%);
+    }
+    /* Top bar & strips */
+    [data-theme="beige"] .va-bar,
+    [data-theme="beige"] .va-link-strip,
+    [data-theme="beige"] .ctrl-bar { background: #faf7f2; border-color: rgba(0,0,0,.09); }
+    /* Sidebar — slightly warmer than page */
+    [data-theme="beige"] .va-sidebar {
+      background: #eee7d8;
+      border-right-color: rgba(158,124,74,.18);
+    }
+    [data-theme="beige"] .va-nav-btn:hover  { background: rgba(0,0,0,.04); color: #3a2e26; }
+    [data-theme="beige"] .va-nav-btn.active {
+      background: rgba(158,124,74,.13);
+      color: #9e7c4a;
+      border-left-color: #9e7c4a;
+    }
+    [data-theme="beige"] .va-nav-btn.active .va-nav-icon { opacity: 1; }
+    [data-theme="beige"] .va-nav-sep { border-top-color: rgba(0,0,0,.1); }
+    [data-theme="beige"] .va-sidebar-footer { border-top-color: rgba(0,0,0,.1); }
+    /* Mobile bottom nav */
+    [data-theme="beige"] .mobile-tabs {
+      background: #faf7f2;
+      border-top-color: rgba(0,0,0,.09);
+      box-shadow: 0 -2px 14px rgba(0,0,0,.08);
+    }
+    [data-theme="beige"] .mobile-tab-btn.active {
+      border-top-color: #9e7c4a;
+      color: #9e7c4a;
+      background: rgba(158,124,74,.07);
+    }
+    /* Ctrl buttons hover */
+    [data-theme="beige"] .ctrl-btn:hover:not(.active) {
+      border-color: rgba(0,0,0,.22); color: #3a2e26;
+    }
+    /* Primary action button */
+    [data-theme="beige"] .btn--primary { background: #9e7c4a; color: #faf7f2; }
+    [data-theme="beige"] .btn--primary:hover { background: #b08d5c; }
+    /* Inputs */
+    [data-theme="beige"] .sa-input,
+    [data-theme="beige"] .sa-select,
+    [data-theme="beige"] .hours-input { background: #ece6d8; color: #1c1410; }
+    /* Skill chip checked */
+    [data-theme="beige"] .skill-chip.checked {
+      background: rgba(158,124,74,.12); border-color: #9e7c4a; color: #9e7c4a;
+    }
+    /* Service list */
+    [data-theme="beige"] .mb-svc-list { background: rgba(0,0,0,.025); }
+    /* Open/closed toggle */
+    [data-theme="beige"] .btn-open-toggle.is-open {
+      color: #2d7a3a; border-color: rgba(45,122,58,.45); background: rgba(45,122,58,.07);
+    }
+    /* Status */
+    [data-theme="beige"] .sa-st--in_progress { color: #1d4ed8; }
+    /* Appointment time accent */
+    [data-theme="beige"] .sa-appt-time { color: #9e7c4a; }
+    /* Tip buttons */
+    [data-theme="beige"] .pm-tip-btn { background: rgba(0,0,0,.03); }
+    [data-theme="beige"] .pm-tip-btn:hover       { border-color: rgba(158,124,74,.5);  color: #9e7c4a; background: rgba(158,124,74,.07); }
+    [data-theme="beige"] .pm-tip-btn--active      { border-color: rgba(158,124,74,.7);  color: #9e7c4a; background: rgba(158,124,74,.12); }
+    /* Period / provider pill hovers */
+    [data-theme="beige"] .se-period-btn:hover:not(.active),
+    [data-theme="beige"] .ps-provider-btn:hover:not(.active) {
+      border-color: rgba(0,0,0,.2); color: #3a2e26;
+    }
+    /* SE table rows */
+    [data-theme="beige"] .se-table td { border-bottom-color: rgba(0,0,0,.05); }
+    /* CQV pills */
+    [data-theme="beige"] .cqv-pill--up  { color: #2d7a3a; border-color: rgba(45,122,58,.4); }
+    [data-theme="beige"] .cqv-pill--svc { color: #9e7c4a; }
+    /* Auth spinner */
+    [data-theme="beige"] .auth-spinner { border-top-color: #9e7c4a; }
+    /* AI Copilot trigger */
+    [data-theme="beige"] .va-ai-trigger {
+      background: linear-gradient(135deg, rgba(158,124,74,.09), rgba(196,149,100,.05));
+      border-color: rgba(158,124,74,.3);
+      color: #9e7c4a;
+    }
+    [data-theme="beige"] .va-ai-trigger:hover {
+      background: linear-gradient(135deg, rgba(158,124,74,.16), rgba(196,149,100,.1));
+      border-color: rgba(158,124,74,.52);
+    }
+    [data-theme="beige"] .ai-count-badge { background: #9e7c4a; color: #faf7f2; }
+    /* AI panel */
+    [data-theme="beige"] .ai-panel {
+      background: #faf7f2;
+      border-left-color: rgba(158,124,74,.22);
+    }
+    [data-theme="beige"] .ai-panel-header {
+      background: linear-gradient(135deg, rgba(158,124,74,.07), rgba(196,149,100,.03));
+      border-bottom-color: rgba(0,0,0,.08);
+    }
+    [data-theme="beige"] .ai-panel-title-spark { color: #9e7c4a; }
+    [data-theme="beige"] .ai-card { background: #ece6d8; }
+    [data-theme="beige"] .ai-card-act {
+      border-color: rgba(158,124,74,.35); color: #9e7c4a;
+      background: rgba(158,124,74,.08);
+    }
+    [data-theme="beige"] .ai-card-act:hover {
+      border-color: rgba(158,124,74,.62); background: rgba(158,124,74,.16);
+    }
+    [data-theme="beige"] .ai-panel-refresh:hover { border-color: rgba(158,124,74,.5); color: #9e7c4a; }
+    @media (max-width: 767px) {
+      [data-theme="beige"] .ai-panel { border-top-color: rgba(158,124,74,.28); }
+    }
 
-    /* ── Theme: Neon / AI Purple ── */
-    [data-theme="neon"] {
-      --navy-900: #08060f;
-      --navy-800: #10102a;
-      --navy-700: #181838;
-      --gold:     #a78bfa;
-      --gold-lt:  #c4b5fd;
-      --gold-dim: rgba(167,139,250,.14);
-      --cream:    #eef2ff;
-      --text:     #a5b4fc;
-      --muted:    #6366a0;
-      --border:   rgba(167,139,250,.14);
-      --border-g: rgba(167,139,250,.4);
-      --danger:   #f87171;
-      --success:  #4ade80;
+    /* ══════════════════════════════════════════════════════════════
+       THEME: BEAUTY PINK
+       Blush · rose · modern beauty-tech · light mode
+    ══════════════════════════════════════════════════════════════ */
+    [data-theme="pink"] {
+      --navy-900: #fef0f5;
+      --navy-800: #ffffff;
+      --navy-700: #fde4ef;
+      --gold:     #c2477c;
+      --gold-lt:  #e0608e;
+      --gold-dim: rgba(194,71,124,.1);
+      --cream:    #1a0d14;
+      --text:     #301824;
+      --muted:    #8a5568;
+      --border:   rgba(0,0,0,.08);
+      --border-g: rgba(194,71,124,.26);
+      --danger:   #b83232;
+      --success:  #2d7a3a;
       --r:        12px;
     }
-    [data-theme="neon"] .va-bar,
-    [data-theme="neon"] .va-link-strip,
-    [data-theme="neon"] .ctrl-bar { background: #10102a; }
-    [data-theme="neon"] .va-sidebar { background: #08060f; border-right-color: rgba(167,139,250,.18); }
-    [data-theme="neon"] .btn--primary { background: #7c3aed; color: #fff; }
-    [data-theme="neon"] .va-nav-btn.active { background: rgba(167,139,250,.1); border-left-color: #a78bfa; color: #c4b5fd; }
-    [data-theme="neon"] .auth-spinner { border-top-color: #a78bfa; }
-    [data-theme="neon"] #app { background: #08060f; }
+    /* Page & structural */
+    [data-theme="pink"] html,
+    [data-theme="pink"] body      { background: #fef0f5; color: #301824; }
+    [data-theme="pink"] #app      { background: #fef0f5; }
+    [data-theme="pink"] #authLoading {
+      background: linear-gradient(160deg, #fef0f5 0%, #fff5f8 100%);
+    }
+    /* Top bar & strips */
+    [data-theme="pink"] .va-bar,
+    [data-theme="pink"] .va-link-strip,
+    [data-theme="pink"] .ctrl-bar { background: #ffffff; border-color: rgba(0,0,0,.08); }
+    /* Sidebar */
+    [data-theme="pink"] .va-sidebar {
+      background: #fde4ef;
+      border-right-color: rgba(194,71,124,.14);
+    }
+    [data-theme="pink"] .va-nav-btn:hover  { background: rgba(194,71,124,.06); color: #301824; }
+    [data-theme="pink"] .va-nav-btn.active {
+      background: rgba(194,71,124,.11);
+      color: #c2477c;
+      border-left-color: #c2477c;
+    }
+    [data-theme="pink"] .va-nav-btn.active .va-nav-icon { opacity: 1; }
+    [data-theme="pink"] .va-nav-sep { border-top-color: rgba(0,0,0,.09); }
+    [data-theme="pink"] .va-sidebar-footer { border-top-color: rgba(0,0,0,.09); }
+    /* Mobile bottom nav */
+    [data-theme="pink"] .mobile-tabs {
+      background: #ffffff;
+      border-top-color: rgba(0,0,0,.08);
+      box-shadow: 0 -2px 16px rgba(194,71,124,.1);
+    }
+    [data-theme="pink"] .mobile-tab-btn.active {
+      border-top-color: #c2477c;
+      color: #c2477c;
+      background: rgba(194,71,124,.06);
+    }
+    /* Ctrl buttons hover */
+    [data-theme="pink"] .ctrl-btn:hover:not(.active) {
+      border-color: rgba(0,0,0,.2); color: #301824;
+    }
+    /* Primary action button */
+    [data-theme="pink"] .btn--primary { background: #c2477c; color: #fff; }
+    [data-theme="pink"] .btn--primary:hover { background: #d4558a; }
+    /* Inputs */
+    [data-theme="pink"] .sa-input,
+    [data-theme="pink"] .sa-select,
+    [data-theme="pink"] .hours-input { background: #fde4ef; color: #1a0d14; }
+    /* Skill chip checked */
+    [data-theme="pink"] .skill-chip.checked {
+      background: rgba(194,71,124,.1); border-color: #c2477c; color: #c2477c;
+    }
+    /* Service list */
+    [data-theme="pink"] .mb-svc-list { background: rgba(0,0,0,.02); }
+    /* Open/closed toggle */
+    [data-theme="pink"] .btn-open-toggle.is-open {
+      color: #2d7a3a; border-color: rgba(45,122,58,.45); background: rgba(45,122,58,.07);
+    }
+    /* Status */
+    [data-theme="pink"] .sa-st--in_progress { color: #1d4ed8; }
+    /* Appointment time accent */
+    [data-theme="pink"] .sa-appt-time { color: #c2477c; }
+    /* Tip buttons */
+    [data-theme="pink"] .pm-tip-btn { background: rgba(0,0,0,.02); }
+    [data-theme="pink"] .pm-tip-btn:hover       { border-color: rgba(194,71,124,.5);  color: #c2477c; background: rgba(194,71,124,.07); }
+    [data-theme="pink"] .pm-tip-btn--active      { border-color: rgba(194,71,124,.7);  color: #c2477c; background: rgba(194,71,124,.12); }
+    /* Period / provider pill hovers */
+    [data-theme="pink"] .se-period-btn:hover:not(.active),
+    [data-theme="pink"] .ps-provider-btn:hover:not(.active) {
+      border-color: rgba(0,0,0,.2); color: #301824;
+    }
+    /* SE table rows */
+    [data-theme="pink"] .se-table td { border-bottom-color: rgba(0,0,0,.05); }
+    /* CQV pills */
+    [data-theme="pink"] .cqv-pill--up  { color: #2d7a3a; border-color: rgba(45,122,58,.4); }
+    [data-theme="pink"] .cqv-pill--svc { color: #c2477c; }
+    /* Auth spinner */
+    [data-theme="pink"] .auth-spinner { border-top-color: #c2477c; }
+    /* AI Copilot trigger */
+    [data-theme="pink"] .va-ai-trigger {
+      background: linear-gradient(135deg, rgba(194,71,124,.1), rgba(224,96,142,.05));
+      border-color: rgba(194,71,124,.3);
+      color: #c2477c;
+    }
+    [data-theme="pink"] .va-ai-trigger:hover {
+      background: linear-gradient(135deg, rgba(194,71,124,.17), rgba(224,96,142,.1));
+      border-color: rgba(194,71,124,.54);
+    }
+    [data-theme="pink"] .ai-count-badge { background: #c2477c; color: #fff; }
+    /* AI panel */
+    [data-theme="pink"] .ai-panel {
+      background: #ffffff;
+      border-left-color: rgba(194,71,124,.18);
+    }
+    [data-theme="pink"] .ai-panel-header {
+      background: linear-gradient(135deg, rgba(194,71,124,.07), rgba(224,96,142,.03));
+      border-bottom-color: rgba(0,0,0,.07);
+    }
+    [data-theme="pink"] .ai-panel-title-spark { color: #c2477c; }
+    [data-theme="pink"] .ai-card { background: #fde4ef; }
+    [data-theme="pink"] .ai-card-act {
+      border-color: rgba(194,71,124,.35); color: #c2477c;
+      background: rgba(194,71,124,.08);
+    }
+    [data-theme="pink"] .ai-card-act:hover {
+      border-color: rgba(194,71,124,.62); background: rgba(194,71,124,.15);
+    }
+    [data-theme="pink"] .ai-panel-refresh:hover { border-color: rgba(194,71,124,.5); color: #c2477c; }
+    @media (max-width: 767px) {
+      [data-theme="pink"] .ai-panel { border-top-color: rgba(194,71,124,.28); }
+    }
 
     /* ── Control bar (theme + language strip) ── */
     .ctrl-bar {
@@ -1215,9 +1426,9 @@
   <div class="ctrl-bar">
     <div class="ctrl-group">
       <span class="ctrl-label">Theme</span>
-      <button class="ctrl-btn ctrl-theme-btn active" data-theme="default" onclick="dlcSetTheme('default')" title="Default">Default</button>
-      <button class="ctrl-btn ctrl-theme-btn" data-theme="metallic" onclick="dlcSetTheme('metallic')" title="Metallic">Metallic</button>
-      <button class="ctrl-btn ctrl-theme-btn" data-theme="neon" onclick="dlcSetTheme('neon')" title="AI Neon">AI Neon</button>
+      <button class="ctrl-btn ctrl-theme-btn active" data-theme="default" onclick="dlcSetTheme('default')" title="Classic Dark">Classic</button>
+      <button class="ctrl-btn ctrl-theme-btn" data-theme="beige" onclick="dlcSetTheme('beige')" title="Cozy Beige">Beige</button>
+      <button class="ctrl-btn ctrl-theme-btn" data-theme="pink" onclick="dlcSetTheme('pink')" title="Beauty Pink">Pink</button>
     </div>
     <div class="ctrl-group">
       <span class="ctrl-label">Lang</span>
@@ -1327,9 +1538,9 @@
       <div class="va-sidebar-footer">
         <div class="ctrl-group">
           <span class="ctrl-label">Theme</span>
-          <button class="ctrl-btn ctrl-theme-btn active" data-theme="default" onclick="dlcSetTheme('default')">Default</button>
-          <button class="ctrl-btn ctrl-theme-btn" data-theme="metallic" onclick="dlcSetTheme('metallic')">Metal</button>
-          <button class="ctrl-btn ctrl-theme-btn" data-theme="neon" onclick="dlcSetTheme('neon')">Neon</button>
+          <button class="ctrl-btn ctrl-theme-btn active" data-theme="default" onclick="dlcSetTheme('default')">Classic</button>
+          <button class="ctrl-btn ctrl-theme-btn" data-theme="beige" onclick="dlcSetTheme('beige')">Beige</button>
+          <button class="ctrl-btn ctrl-theme-btn" data-theme="pink" onclick="dlcSetTheme('pink')">Pink</button>
         </div>
         <div class="ctrl-group">
           <span class="ctrl-label">Lang</span>
@@ -5882,6 +6093,12 @@
 
   // ── Business Control Center — Theme & Language System ────────────────────────
 
+  // Migrate old theme names (metallic→beige, neon→pink) on first load after redesign
+  (function(){
+    var _t = localStorage.getItem('dlc_theme');
+    if (_t === 'metallic') { localStorage.setItem('dlc_theme', 'beige'); }
+    else if (_t === 'neon') { localStorage.setItem('dlc_theme', 'pink'); }
+  })();
   var _dlcTheme = localStorage.getItem('dlc_theme') || 'default';
   var _dlcLang  = localStorage.getItem('dlc_lang')  || 'vi';
 

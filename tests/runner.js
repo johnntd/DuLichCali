@@ -309,6 +309,42 @@ test('RX-021: isModify guard checks _lastConfirmedTime for stale-time reuse [RX-
     'RX-021: isModify detection must guard against stale confirmed-time causing modify_booking misfire');
 });
 
+test('RX-022: AVAILABILITY CRITICAL RULE — BANNED PHRASES list present in prompt [RX-022]', function() {
+  assertContains(src, "BANNED PHRASES — never say these to a customer",
+    'RX-022: banned phrases rule must be present in _buildPrompt() AVAILABILITY section');
+});
+
+test('RX-022: AVAILABILITY CRITICAL RULE — no longer leaks "NOT real-time booking data" to Claude [RX-022]', function() {
+  // The old prompt told Claude it lacked real-time data — Claude echoed this to customers.
+  // Verify the leaked-fact phrasing is gone.
+  var oldLeakedFact = 'You have staff SCHEDULE data (when technicians work) but NOT real-time booking data.';
+  assert(src.indexOf(oldLeakedFact) < 0,
+    'RX-022: old availability phrasing that told Claude it lacked real-time data must be removed — it caused Claude to say "I can\'t see real-time availability" to customers');
+});
+
+test('RX-022: Step E — does NOT instruct Claude to write premature confirmation text [RX-022]', function() {
+  // Old Step E said "Write ONE warm, premium-receptionist confirmation" before availability check.
+  assertContains(src, "DO NOT write a confirmation or claim the booking is confirmed",
+    'RX-022: Step E must NOT instruct Claude to write premature confirmation text before availability check');
+});
+
+test('RX-022: Step E — old permissive confirmation instruction removed from prompt [RX-022]', function() {
+  // The old Step E said "Write ONE warm, premium-receptionist confirmation" — must be gone.
+  // The NEW Step E may reference these phrases in a NEVER/BANNED context, which is correct.
+  assert(src.indexOf("Write ONE warm, premium-receptionist confirmation") < 0,
+    'RX-022: old step E confirmation instruction ("Write ONE warm, premium-receptionist confirmation") must be removed from prompt');
+  // Verify the new forbidding instruction is present
+  assertContains(src, 'NEVER say "Your spot is reserved"',
+    'RX-022: NEVER rule forbidding premature confirmation phrases must be present in step E');
+});
+
+test('RX-022: _validateResponseQuality — banned phrase detection wired in [RX-022]', function() {
+  assertContains(src, "_bannedPhrases",
+    'RX-022: _validateResponseQuality must contain banned phrase detection array');
+  assertContains(src, "BANNED PHRASE detected in Claude response",
+    'RX-022: _validateResponseQuality must console.warn when banned phrase detected');
+});
+
 // ══════════════════════════════════════════════════════════════════════════
 // GROUP 2 — STATE PARSER
 // type: mirrored-unit-logic

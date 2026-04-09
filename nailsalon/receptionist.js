@@ -749,6 +749,32 @@
       }
     }
 
+    // 4. Banned phrase detection — Claude leaking availability data-access limitations
+    // These phrases indicate the prompt contract is being violated: Claude is telling
+    // the customer it cannot check availability, when the system does so automatically.
+    var _bannedPhrases = [
+      "can't see real-time",
+      "cannot see real-time",
+      "don't have access to real-time",
+      "do not have access to real-time",
+      "don't have real-time booking",
+      "do not have real-time booking",
+      "cannot verify if that slot",
+      "can't verify if that slot",
+      "i'll check if that",
+      "let me verify",
+      "the system will check",
+      "i don't have booking data",
+      "i do not have booking data",
+      "no access to booking"
+    ];
+    var _cleanLower = clean.toLowerCase();
+    _bannedPhrases.forEach(function(phrase) {
+      if (_cleanLower.indexOf(phrase) >= 0) {
+        console.warn('[QV] BANNED PHRASE detected in Claude response: "' + phrase + '" — prompt contract violation. Review _buildPrompt availability section.');
+      }
+    });
+
     return result;
   }
 
@@ -1152,13 +1178,21 @@
       '  lang      — "en", "es", or "vi" based on THIS message',
       '',
       '=== AVAILABILITY — CRITICAL RULE ===',
-      'You have staff SCHEDULE data (when technicians work) but NOT real-time booking data.',
-      'You cannot know which specific time slots are already taken.',
-      'NEVER say: "Helen has a slot at 10" / "I can fit you in at 11" / "10 AM is open" / "That time is available".',
-      'These claims are false — you cannot verify them.',
-      'CORRECT: Ask what time the customer prefers; the system checks it automatically.',
+      'The SYSTEM validates real-time slot availability automatically — you do not need to and cannot do it yourself.',
+      'Your job: collect service, staff preference, date, and time from the customer. The system checks the slot silently.',
+      '',
+      'BANNED PHRASES — never say these to a customer:',
+      '  "I can\'t see real-time availability"',
+      '  "I don\'t have access to real-time booking data"',
+      '  "I cannot verify if that slot is open"',
+      '  "I\'ll check if that\'s available" / "the system will check" / "let me verify"',
+      '  "that time is available" / "Helen has a slot at 10" / "I can fit you in at 11"',
+      'The first three claim you lack access (leaks internals). The last two claim availability you cannot confirm.',
+      'Both are wrong. Collect the fields; the system does the rest.',
+      '',
+      'CORRECT: Ask what time the customer prefers without commenting on your data access.',
       '  "Tracy works until 7 PM today. What time works for you?"',
-      '  "What time would you like? I\'ll check that it\'s open."',
+      '  "What day and time would you like?"',
       'If the customer asks "what times are available?" — give ONLY shift hours, never specific open slots.',
       '',
       '=== BOOKING FLOW ===',
@@ -1176,12 +1210,15 @@
       '     When confirming multi-service bookings, mention the total time naturally:',
       '     "That will take about 2 hours total — you\'re all set!"',
       '  E. When ALL required fields are collected (service, date, time, name, phone):',
-      '     Write ONE warm, premium-receptionist confirmation. Always include the price estimate from the SERVICE MENU. Use phrasing like:',
-      '       "Perfect, [Name]! Your [service] with [staff] is all set for [date] at [time] — starting from [price]. We\'re so excited to see you!"',
-      '       "Wonderful! I\'ve got [Name] booked for [services] with [staff] on [date] at [time] ([total] total, starting from [price]). Your spot is reserved!"',
-      '       "All done! [Name]\'s [service] appointment with [staff] is confirmed for [date] at [time]. Estimated starting price: [price]. See you then!"',
-      '     For multi-service, always mention total duration and combined price estimate naturally.',
-      '     For Vietnamese: warm, slightly formal. For Spanish: warm, friendly.',
+      '     DO NOT write a confirmation or claim the booking is confirmed — the system validates availability first.',
+      '     Write only a brief, warm transitional phrase — one short sentence — then immediately emit the markers.',
+      '     Use phrasing like:',
+      '       "Let me get that booked for you!"',
+      '       "Got it — checking your spot now!"',
+      '       "Perfect — one moment!"',
+      '       "¡Un momento!" (Spanish) / "Để tôi xác nhận cho bạn nhé!" (Vietnamese)',
+      '     NEVER say "Your spot is reserved", "confirmed", "all set", "booked" — the booking is not final yet.',
+      '     The system will confirm or redirect after checking availability.',
       '     Then on new lines:',
       '     [BOOKING:{"services":["Service1","Service2"],"staff":"<name or Any>","date":"YYYY-MM-DD","time":"HH:MM","name":"<name>","phone":"<phone>","lang":"<en|es|vi>"}]',
       '     [ESCALATE:appointment]',

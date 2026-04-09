@@ -1,0 +1,36 @@
+{
+  "id": "RX-022",
+  "fix_date": "2026-04-15",
+  "category": "availability_contract",
+  "status": "verified_in_runner",
+  "title": "Availability contract: AI must never say it cannot check real-time bookings; must not write premature confirmation",
+  "failing_behavior": "Two related regressions: (1) Claude tells customers 'I can't see real-time availability' or 'I don't have access to real-time booking data' — leaking internal system limitations. This comes from the AVAILABILITY CRITICAL RULE prompt section which accurately stated Claude lacks real-time data, but Claude paraphrased this truth to customers. (2) Claude writes premature confirmation text ('Your spot is reserved!', 'All done! Your appointment is confirmed!') in Step E before the JS availability check has run. The JS layer (_earlyCheckReady + [ESCALATE:appointment] handler) suppresses/replaces Claude's premature text, but the prompt-to-Claude contract was broken.",
+  "root_cause": "Prompt contract violations in _buildPrompt():\n  (1) AVAILABILITY CRITICAL RULE (old line 1155): 'You have staff SCHEDULE data but NOT real-time booking data.' — Claude echoed this internal fact to customers.\n  (2) BOOKING FLOW Step E: 'Write ONE warm, premium-receptionist confirmation... Your spot is reserved!' — instructed Claude to confirm before availability was validated.",
+  "fix_summary": "Three-layer fix:\n  (1) Rewrote AVAILABILITY CRITICAL RULE: removed statement about lacking real-time data. Added explicit BANNED PHRASES list ('I can't see real-time availability', 'I don't have access to real-time booking data', etc.) that Claude must never say. Replaced framing: 'The SYSTEM validates availability automatically — your job is to collect the fields.'\n  (2) Rewrote Step E: removed premature confirmation instruction. Claude now writes only a brief transitional phrase ('Let me get that booked for you!') then immediately emits [BOOKING:...][ESCALATE:appointment]. Never says 'Your spot is reserved' or 'confirmed' — that comes only after the availability check passes.\n  (3) Added banned phrase detection to _validateResponseQuality() — console.warn when any banned phrase is detected in Claude's response, enabling monitoring for prompt regression.",
+  "conversation": [
+    { "role": "user", "content": "Is Helen available at 5pm on Friday?" },
+    { "role": "assistant", "content": "[CORRECT] Helen works until 7 PM on Fridays. What service would you like to book?\n[STATE:{\"intent\":\"staff_availability\",\"services\":[],\"staff\":\"Helen\",\"date\":\"2026-04-17\",\"time\":\"17:00\",\"name\":null,\"phone\":null,\"lang\":\"en\",\"pendingAction\":null,\"existingBookingId\":null}]" },
+    { "role": "user", "content": "Gel manicure at 5pm, name is Anna, phone 4085551234" },
+    { "role": "assistant", "content": "[CORRECT] Let me get that booked for you!\n[BOOKING:{\"services\":[\"Gel Manicure\"],\"staff\":\"Helen\",\"date\":\"2026-04-17\",\"time\":\"17:00\",\"name\":\"Anna\",\"phone\":\"4085551234\",\"lang\":\"en\"}]\n[ESCALATE:appointment]\n[STATE:{\"intent\":\"booking_request\",\"services\":[\"Gel Manicure\"],\"staff\":\"Helen\",\"date\":\"2026-04-17\",\"time\":\"17:00\",\"name\":\"Anna\",\"phone\":\"4085551234\",\"lang\":\"en\",\"pendingAction\":null,\"existingBookingId\":null}]" }
+  ],
+  "bad_examples": [
+    { "label": "BANNED — leaks data access", "text": "I can't see real-time availability, but Helen works until 7 PM on Fridays." },
+    { "label": "BANNED — leaks data access", "text": "I don't have access to real-time booking data, but you can book at 5 PM if she's free." },
+    { "label": "BANNED — premature confirmation", "text": "Perfect, Anna! Your Gel Manicure with Helen is all set for Friday at 5 PM. Your spot is reserved!" },
+    { "label": "BANNED — premature confirmation", "text": "All done! Anna's appointment with Helen is confirmed for Friday at 5 PM." }
+  ],
+  "good_examples": [
+    { "label": "CORRECT — no data-access claim", "text": "Helen works until 7 PM on Fridays. What time works for you?" },
+    { "label": "CORRECT — transitional only at step E", "text": "Let me get that booked for you!" },
+    { "label": "CORRECT — transitional only at step E", "text": "Got it — checking your spot now!" }
+  ],
+  "verify_fix_string": "BANNED PHRASES — never say these to a customer",
+  "verify_fix_string_2": "DO NOT write a confirmation or claim the booking is confirmed",
+  "verify_fix_string_3": "_bannedPhrases",
+  "code_areas": [
+    "nailsalon/receptionist.js:_buildPrompt():AVAILABILITY-CRITICAL-RULE",
+    "nailsalon/receptionist.js:_buildPrompt():BOOKING-FLOW-step-E",
+    "nailsalon/receptionist.js:_validateResponseQuality():banned-phrase-check"
+  ],
+  "notes": "The JS availability guard layers (_earlyCheckReady + [ESCALATE:appointment] handler) remain unchanged and work correctly as the enforcement backstop. This fix addresses the root cause: the prompt contract was giving Claude wrong instructions. With correct instructions, Claude should no longer generate these banned phrases or premature confirmations in the first place. The _validateResponseQuality banned-phrase check provides a monitoring signal (console.warn) if the prompt contract is ever violated again — it does not actively block or replace Claude's response."
+}

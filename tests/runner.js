@@ -181,6 +181,56 @@ test('RX-013: NEVER end with bare statement rule present [RX-013]', function() {
   assertContains(src, 'NEVER end a response with');
 });
 
+test('RX-014: cancel handler includes in_progress status [RX-014]', function() {
+  assertContains(src, "|| s === 'in_progress'",
+    'Cancel handler must include in_progress status — cross-session cancel fails otherwise');
+});
+
+test('RX-014: cancel handler uses shared lookup (most-recent-only) [RX-014]', function() {
+  assertContains(src, '_lookupActiveBookingByPhone',
+    'Cancel handler must use shared lookup utility — cancels most recent booking only');
+});
+
+test('RX-015: _xsBookingLookup function exists [RX-015]', function() {
+  assertContains(src, '_xsBookingLookup',
+    'Cross-session modify lookup function is required');
+});
+
+test('RX-015: CROSS-SESSION prompt instruction exists in MODIFY section [RX-015]', function() {
+  assertContains(src, 'CROSS-SESSION: If services/name/phone are NOT in CURRENT BOOKING STATE',
+    'Prompt must instruct Claude to ask for phone in cross-session reschedule');
+});
+
+test('RX-015: SAME-SESSION prompt instruction exists in MODIFY section [RX-015]', function() {
+  assertContains(src, 'SAME-SESSION: If services AND name AND phone ARE already in CURRENT BOOKING STATE',
+    'Prompt must document same-session vs cross-session distinction');
+});
+
+test('RX-016: _mergeState has field validation comment [RX-016]', function() {
+  assertContains(src, 'RX-016: field-level validation rejects malformed values',
+    'mergeState must have field validation for RX-016');
+});
+
+test('RX-016: date validation rejects non-ISO format [RX-016]', function() {
+  assertContains(src, '_VALID_LANGS',
+    'mergeState must have lang validation map');
+});
+
+test('RX-017: _lookupActiveBookingByPhone shared utility exists [RX-017]', function() {
+  assertContains(src, '_lookupActiveBookingByPhone',
+    'Phase 3: shared phone-to-booking lookup utility must exist');
+});
+
+test('RX-017: _findFreeStaff function exists [RX-017]', function() {
+  assertContains(src, '_findFreeStaff',
+    'Phase 3: proactive free-staff query function must exist');
+});
+
+test('RX-017: modify submission skips Firestore when ID already known [RX-017]', function() {
+  assertContains(src, 'skip the Firestore round-trip',
+    'Phase 3: modify submission must short-circuit when existingBookingId already known');
+});
+
 // ══════════════════════════════════════════════════════════════════════════
 // GROUP 2 — STATE PARSER
 // type: mirrored-unit-logic
@@ -271,6 +321,76 @@ test('mergeState applies all update keys', function() {
   assertEq(merged.intent, 'booking_request');
   assertEq(merged.staff, 'Tracy');
   assertEq(merged.time, null); // unchanged field preserved
+});
+
+// ── RX-016: field validation in mergeState ────────────────────────────────
+test('[RX-016] mergeState: rejects invalid date format (not YYYY-MM-DD)', function() {
+  var m = SP.mergeState({ date: null }, { date: 'April 15' }, '2026-04-08');
+  assert(m.date === null, 'invalid date format must be rejected — was: ' + m.date);
+});
+
+test('[RX-016] mergeState: rejects past date', function() {
+  var m = SP.mergeState({ date: null }, { date: '2025-01-01' }, '2026-04-08');
+  assert(m.date === null, 'past date must be rejected');
+});
+
+test('[RX-016] mergeState: accepts valid future date', function() {
+  var m = SP.mergeState({ date: null }, { date: '2026-04-20' }, '2026-04-08');
+  assertEq(m.date, '2026-04-20');
+});
+
+test('[RX-016] mergeState: rejects invalid time format (not H:MM or HH:MM)', function() {
+  var m = SP.mergeState({ time: null }, { time: '2 PM' }, '2026-04-08');
+  assert(m.time === null, 'invalid time must be rejected — was: ' + m.time);
+});
+
+test('[RX-016] mergeState: accepts valid time', function() {
+  var m = SP.mergeState({ time: null }, { time: '14:00' }, '2026-04-08');
+  assertEq(m.time, '14:00');
+});
+
+test('[RX-016] mergeState: rejects phone with fewer than 7 digits', function() {
+  var m = SP.mergeState({ phone: null }, { phone: '408' }, '2026-04-08');
+  assert(m.phone === null, 'short phone must be rejected');
+});
+
+test('[RX-016] mergeState: strips non-digits from phone', function() {
+  var m = SP.mergeState({ phone: null }, { phone: '(408) 555-1234' }, '2026-04-08');
+  assertEq(m.phone, '4085551234', 'phone must be stored as digits only');
+});
+
+test('[RX-016] mergeState: rejects non-array services', function() {
+  var m = SP.mergeState({ services: [] }, { services: 'Gel Manicure' }, '2026-04-08');
+  assert(Array.isArray(m.services) && m.services.length === 0, 'string services must be rejected');
+});
+
+test('[RX-016] mergeState: filters empty strings from services array', function() {
+  var m = SP.mergeState({ services: [] }, { services: ['Gel Manicure', '', '  '] }, '2026-04-08');
+  assertEq(m.services.length, 1);
+  assertEq(m.services[0], 'Gel Manicure');
+});
+
+test('[RX-016] mergeState: rejects unknown lang', function() {
+  var m = SP.mergeState({ lang: 'en' }, { lang: 'zh' }, '2026-04-08');
+  assertEq(m.lang, 'en', 'unknown lang must be rejected — prior value preserved');
+});
+
+test('[RX-016] mergeState: accepts valid lang values', function() {
+  ['en', 'vi', 'es'].forEach(function(l) {
+    var m = SP.mergeState({ lang: 'en' }, { lang: l }, '2026-04-08');
+    assertEq(m.lang, l);
+  });
+});
+
+test('[RX-016] mergeState: rejects unknown pendingAction', function() {
+  var m = SP.mergeState({ pendingAction: null }, { pendingAction: 'reschedule' }, '2026-04-08');
+  assert(m.pendingAction === null, 'unknown pendingAction must be rejected');
+});
+
+test('[RX-016] mergeState: null value always clears a field', function() {
+  var m = SP.mergeState({ date: '2026-04-20', phone: '4085551234' }, { date: null }, '2026-04-08');
+  assert(m.date === null, 'null must clear the field');
+  assertEq(m.phone, '4085551234', 'other fields must be unchanged');
 });
 
 // ══════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,34 @@
+{
+  "id": "RX-014",
+  "fix_date": "2026-04-08",
+  "category": "booking_cancel",
+  "status": "verified_in_runner",
+  "title": "Cross-session cancel: customer returns in new browser session",
+  "failing_behavior": "Customer booked in a previous session, returns, says 'cancel my appointment'. biz._lastBookingId and biz._bookingState.phone are empty (sessionStorage gone). Cancel handler falls through with no action. Customer is silently not cancelled or told to call the salon.",
+  "root_cause": "Cancel handler (send() cancel branch) required either biz._lastBookingId OR biz._bookingState.phone. In a new session both are empty. Even if Claude asks for phone and customer provides it, the Firestore query had two additional bugs: (1) only searched 'confirmed' status (not 'in_progress'), (2) cancelled ALL matching docs instead of only the most recent booking.",
+  "fix_summary": "Three changes: (1) Updated prompt MODIFY section to document cross-session handling. (2) Fixed cancel Firestore query: include in_progress status, take only most recent booking (sort by createdAt desc), also query legacy 'phone' field as fallback. (3) Existing prompt 'ask for name/phone if not in STATE' rule already handles the 2-turn cross-session ask — no prompt change needed for cancel.",
+  "conversation": [
+    { "role": "user", "content": "Hi, I need to cancel my appointment" },
+    { "role": "assistant", "content": "Of course! Could you confirm your name and phone number so I can locate your booking?\n[STATE:{\"intent\":\"cancel_booking\",\"services\":[],\"staff\":null,\"date\":null,\"time\":null,\"name\":null,\"phone\":null,\"lang\":\"en\",\"pendingAction\":null,\"existingBookingId\":null}]" },
+    { "role": "user", "content": "Jane Smith, 408-555-1234" },
+    { "role": "assistant", "content": "Of course, Jane — I've cancelled your appointment. Sorry we won't see you this time!\n[STATE:{\"intent\":\"cancel_booking\",\"services\":[],\"staff\":null,\"date\":null,\"time\":null,\"name\":\"Jane Smith\",\"phone\":\"4085551234\",\"lang\":\"en\",\"pendingAction\":null,\"existingBookingId\":null}]\n[ESCALATE:cancel]" }
+  ],
+  "expected_state_after_cancel": {
+    "name": "Jane Smith",
+    "phone": "4085551234"
+  },
+  "expected_firestore_action": "cancel most recent confirmed or in_progress booking for customerPhone='4085551234'",
+  "expected_no_contain": [
+    "call the salon",
+    "call us",
+    "contact us to cancel"
+  ],
+  "verify_fix_string": "|| s === 'in_progress'",
+  "verify_fix_string_2": "_cancelByPhone",
+  "code_areas": [
+    "nailsalon/receptionist.js:send():cancel-handler",
+    "nailsalon/receptionist.js:_buildPrompt():CANCEL-BOOKING"
+  ],
+  "notes": "The 2-turn ask flow (Claude asks for phone, customer gives phone + escalate) was already partially working because _mergeState() populates biz._bookingState.phone before the cancel handler reads it. The real bugs were in the Firestore query: wrong status filter and cancelling all matches instead of most recent.",
+  "confidence_gap": "Runner verifies fix strings in source. Live testing required to confirm: (1) Claude asks for phone correctly in new session, (2) [ESCALATE:cancel] fires after phone is collected, (3) Firestore cancel hits the correct booking doc."
+}

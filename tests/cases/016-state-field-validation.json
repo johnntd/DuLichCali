@@ -1,0 +1,30 @@
+{
+  "id": "RX-016",
+  "fix_date": "2026-04-08",
+  "category": "stale_data",
+  "status": "verified_in_runner",
+  "title": "State machine: malformed Claude STATE fields corrupt booking flow silently",
+  "failing_behavior": "Claude occasionally emits malformed STATE markers: wrong date format ('April 15' instead of '2026-04-15'), non-array services ('Gel Manicure' string instead of ['Gel Manicure']), invalid time ('2 PM' instead of '14:00'), or unknown pendingAction. _mergeState() accepted all values blindly via Object.keys() copy. Result: corrupted booking state that appears valid but breaks availability check, price lookup, or date display silently.",
+  "root_cause": "_mergeState() used Object.keys(update).forEach(k => state[k] = update[k]) with zero validation. Any malformed field from Claude's STATE JSON was accepted and stored, corrupting downstream logic that assumed clean formats.",
+  "fix_summary": "Added per-field validation in _mergeState(): date must be YYYY-MM-DD and within valid range; time must be HH:MM or H:MM; phone must have 7+ digits (stored as digits only); services must be an array of non-empty strings; lang must be en/vi/es; pendingAction must be booking_offer/modify_booking/null; name must be a non-empty string with at least one letter. Invalid fields are console.warn'd and dropped (not applied) — the prior valid value or null is preserved. Valid fields merge normally.",
+  "conversation": [
+    { "role": "user", "content": "I want gel manicure tomorrow at 2 PM" },
+    { "role": "assistant", "content": "Sure! Claude emits bad STATE: [STATE:{\"intent\":\"booking_request\",\"services\":\"Gel Manicure\",\"date\":\"April 15\",\"time\":\"2 PM\",\"phone\":\"408\",\"lang\":\"en-US\",\"pendingAction\":\"reschedule\",\"existingBookingId\":null}] — all invalid fields should be rejected by _mergeState validation." }
+  ],
+  "examples": [
+    { "field": "date", "bad": "April 15", "good": "2026-04-15", "action": "rejected" },
+    { "field": "date", "bad": "2025-01-01", "good": null, "action": "rejected (past date)" },
+    { "field": "time", "bad": "2 PM", "good": "14:00", "action": "rejected" },
+    { "field": "phone", "bad": "408", "good": "4085551234", "action": "rejected (too short)" },
+    { "field": "services", "bad": "Gel Manicure", "good": ["Gel Manicure"], "action": "rejected (non-array)" },
+    { "field": "lang", "bad": "en-US", "good": "en", "action": "rejected" },
+    { "field": "pendingAction", "bad": "reschedule", "good": "modify_booking", "action": "rejected" }
+  ],
+  "verify_fix_string": "RX-016: field-level validation rejects malformed values",
+  "verify_fix_string_2": "_VALID_LANGS",
+  "code_areas": [
+    "nailsalon/receptionist.js:_mergeState()"
+  ],
+  "notes": "phone field: stored as digits-only string after validation. This ensures consistent Firestore queries (customerPhone='4085551234' not '408-555-1234'). Name validation allows Unicode characters for Vietnamese names. Past-date rejection: dates before today are rejected — if Claude sends a past date, the field stays null and Claude is asked for date again.",
+  "confidence_gap": "Runner verifies validation strings present in source. Unit-level tests in Group 2 (state-parser.js) mirror the parsing logic but not the validation. Adding validation tests to avail-logic or state-parser would increase confidence. Live API testing required to confirm Claude doesn't emit dates that pass validation but are semantically wrong."
+}

@@ -1,0 +1,35 @@
+{
+  "id": "RX-015",
+  "fix_date": "2026-04-08",
+  "category": "booking_modify",
+  "status": "verified_in_runner",
+  "title": "Cross-session modify: customer returns in new session to reschedule",
+  "failing_behavior": "Customer booked Gel Manicure with Tracy in a previous session. Returns in new browser session, says 'I need to reschedule'. State is empty: services=[], staff=null, name=null, phone=null. Old prompt said 'carry over services from STATE' — but state is empty so nothing carried. Claude asks for date/time without knowing what services to reschedule. Final booking ends up with services=[] — empty appointment. Confirmation packet shows no service name.",
+  "root_cause": "The modify flow assumed services/staff/name/phone were always in sessionStorage from the same session. Cross-session case: sessionStorage is gone. Prompt didn't instruct Claude to ask for phone first. No JS code existed to look up the existing booking by phone and pre-populate state.",
+  "fix_summary": "Three changes: (1) Updated prompt MODIFY section: SAME-SESSION path (carry from state) vs CROSS-SESSION path (ask for phone first). (2) Added _xsBookingLookup() function: queries Firestore by phone, finds most recent active booking, pre-populates biz._bookingState.services/staff/name/existingBookingId. (3) Added trigger in send() else block: fires when pendingAction=modify_booking AND phone newly populated AND services=[]. Result: state is pre-populated, Claude's NEXT turn sees services/staff and asks only for new date/time.",
+  "conversation": [
+    { "role": "user", "content": "I need to reschedule my appointment" },
+    { "role": "assistant", "content": "Of course! Could you give me your phone number so I can look up your appointment?\n[STATE:{\"intent\":\"booking_request\",\"services\":[],\"staff\":null,\"date\":null,\"time\":null,\"name\":null,\"phone\":null,\"lang\":\"en\",\"pendingAction\":\"modify_booking\",\"existingBookingId\":null}]" },
+    { "role": "user", "content": "408-555-1234" },
+    { "role": "assistant", "content": "Got it! Let me look that up.\n[STATE:{\"intent\":\"booking_request\",\"services\":[],\"staff\":null,\"date\":null,\"time\":null,\"name\":null,\"phone\":\"4085551234\",\"lang\":\"en\",\"pendingAction\":\"modify_booking\",\"existingBookingId\":null}]" },
+    { "role": "system_inject", "content": "Found your appointment: Gel Manicure with Tracy on 2026-04-15 at 14:00. What new date and time would you like?" },
+    { "role": "user", "content": "Next Thursday at 11 AM" },
+    { "role": "assistant", "content": "Let me check if Tracy is free on Thursday the 23rd at 11 AM...\n[BOOKING:{\"services\":[\"Gel Manicure\"],\"staff\":\"Tracy\",\"date\":\"2026-04-23\",\"time\":\"11:00\",\"name\":\"Jane Smith\",\"phone\":\"4085551234\",\"lang\":\"en\"}]\n[ESCALATE:appointment]\n[STATE:{\"intent\":\"booking_request\",\"services\":[\"Gel Manicure\"],\"staff\":\"Tracy\",\"date\":\"2026-04-23\",\"time\":\"11:00\",\"name\":\"Jane Smith\",\"phone\":\"4085551234\",\"lang\":\"en\",\"pendingAction\":\"modify_booking\",\"existingBookingId\":null}]" }
+  ],
+  "expected_state_after_lookup": {
+    "services": ["Gel Manicure"],
+    "staff": "Tracy",
+    "name": "Jane Smith",
+    "pendingAction": "modify_booking"
+  },
+  "expected_firestore_action": "update existing booking doc or create new + mark old as rescheduled",
+  "verify_fix_string": "_xsBookingLookup",
+  "verify_fix_string_2": "CROSS-SESSION: If services/name/phone are NOT in CURRENT BOOKING STATE",
+  "code_areas": [
+    "nailsalon/receptionist.js:_xsBookingLookup()",
+    "nailsalon/receptionist.js:send():else-block:cross-session-trigger",
+    "nailsalon/receptionist.js:_buildPrompt():MODIFY_RESCHEDULE_DETECTION"
+  ],
+  "notes": "The 'system_inject' in the conversation above represents the _xsBookingLookup() output injected into the chat by JS (not Claude). After injection, biz._bookingState has services/staff/name pre-populated, so Claude's next response sees them in the CURRENT BOOKING STATE context and proceeds correctly.",
+  "confidence_gap": "Runner verifies: (1) _xsBookingLookup function exists in source, (2) CROSS-SESSION prompt instruction present. Live testing required to confirm: (3) Firestore lookup fires at correct moment, (4) pre-populated state is used in final booking, (5) modify flow produces correct booking with correct services."
+}

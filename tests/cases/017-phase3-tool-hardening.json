@@ -1,0 +1,33 @@
+{
+  "id": "RX-017",
+  "fix_date": "2026-04-08",
+  "category": "booking_modify",
+  "status": "verified_in_runner",
+  "title": "Phase 3: Tool/lookup hardening — shared utility, ID shortcut, free-staff query",
+  "failing_behavior": "Three related weaknesses: (1) Cancel handler and _xsBookingLookup duplicated Firestore phone-lookup logic with no shared abstraction, risking drift. (2) Modify submission always did a Firestore round-trip even when _xsBookingLookup already found the booking ID — wasted latency on cross-session reschedule. (3) No function to query which staff are free at a given date/time, so proactive staff suggestions required extra ad-hoc logic.",
+  "root_cause": "No shared phone→booking lookup utility; modify submission lacked shortcut to use already-known booking ID; no reusable free-staff computation function.",
+  "fix_summary": "Three changes: (1) Added _lookupActiveBookingByPhone(db, vid, phone) shared utility: queries customerPhone first, falls back to legacy phone field, returns Promise<docs[]> sorted desc by createdAt. Cancel handler and _xsBookingLookup both refactored to use it. (2) Modify submission block: checks confirmedDraft.existingBookingId first (set by _xsBookingLookup via STATE), then biz._lastBookingId (set by prior same-session booking), skips Firestore round-trip if either is set; falls back to _lookupActiveBookingByPhone only when ID is truly unknown. (3) Added _findFreeStaff(biz, date, timeStr, durationMins, existing): pure function using biz.staff schedule config + already-loaded bookings array; returns names of staff working at the requested time with no conflict.",
+  "conversation": [
+    { "role": "user", "content": "I want to reschedule my gel manicure appointment" },
+    { "role": "assistant", "content": "Of course! Let me pull up your booking. Could you give me your phone number?\n[STATE:{\"intent\":\"booking_request\",\"services\":[],\"staff\":null,\"date\":null,\"time\":null,\"name\":null,\"phone\":null,\"lang\":\"en\",\"pendingAction\":\"modify_booking\",\"existingBookingId\":null}]" },
+    { "role": "user", "content": "408-555-1234" },
+    { "role": "assistant", "content": "Got it, looking up your appointment now.\n[STATE:{\"intent\":\"booking_request\",\"services\":[],\"staff\":null,\"date\":null,\"time\":null,\"name\":null,\"phone\":\"4085551234\",\"lang\":\"en\",\"pendingAction\":\"modify_booking\",\"existingBookingId\":null}]" },
+    { "role": "system_inject", "content": "Found your appointment: Gel Manicure with Tracy on 2026-04-15 at 14:00. What new date and time would you like?" },
+    { "role": "user", "content": "Next Thursday at 11 AM" },
+    { "role": "assistant", "content": "Checking Tracy for Thursday the 23rd at 11 AM — looks good!\n[BOOKING:{\"services\":[\"Gel Manicure\"],\"staff\":\"Tracy\",\"date\":\"2026-04-23\",\"time\":\"11:00\",\"name\":\"Jane Smith\",\"phone\":\"4085551234\",\"lang\":\"en\"}]\n[ESCALATE:appointment]\n[STATE:{\"intent\":\"booking_request\",\"services\":[\"Gel Manicure\"],\"staff\":\"Tracy\",\"date\":\"2026-04-23\",\"time\":\"11:00\",\"name\":\"Jane Smith\",\"phone\":\"4085551234\",\"lang\":\"en\",\"pendingAction\":\"modify_booking\",\"existingBookingId\":\"booking-abc123\"}]" }
+  ],
+  "key_behaviors": {
+    "shortcut": "On the final BOOKING turn, confirmedDraft.existingBookingId='booking-abc123' (from STATE), so modify submission skips Firestore lookup and calls _submitDirectBooking directly",
+    "shared_util": "_lookupActiveBookingByPhone used by both cancel handler and _xsBookingLookup",
+    "free_staff": "_findFreeStaff returns names of non-busy working staff for a given date/time (no Firestore queries)"
+  },
+  "verify_fix_string": "_lookupActiveBookingByPhone",
+  "verify_fix_string_2": "_findFreeStaff",
+  "code_areas": [
+    "nailsalon/receptionist.js:_lookupActiveBookingByPhone()",
+    "nailsalon/receptionist.js:_findFreeStaff()",
+    "nailsalon/receptionist.js:modify-submission-block:_lastBookingId-shortcut"
+  ],
+  "notes": "_findFreeStaff is a pure function — no Firestore queries. It reuses _getStaffShift(), _toMins(), _overlaps() already present in the checker. The 'existing' param is the already-loaded bookings array from a Firestore date query, keeping the function dependency-free. Intended use: inject into prompt context when staff=null/any so Claude can name specific free techs.",
+  "confidence_gap": "Runner verifies static presence of all three new functions. _lookupActiveBookingByPhone and the shortcut logic require live Firestore testing to confirm correctness. _findFreeStaff is pure but requires fixture-level tests with mock biz.staff data to verify conflict detection."
+}

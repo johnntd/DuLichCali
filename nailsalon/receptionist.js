@@ -38,12 +38,78 @@
     biz._bookingState = _emptyState();
   }
 
-  // Merge Claude's extracted STATE into current booking state
+  // Merge Claude's extracted STATE into current booking state.
+  // RX-016: field-level validation rejects malformed values from Claude's STATE marker
+  // so that bad JSON (wrong date format, non-array services, etc.) cannot corrupt the
+  // booking state machine. Invalid fields are dropped and logged; valid ones merge normally.
+  var _VALID_LANGS = { en: 1, vi: 1, es: 1 };
+  var _VALID_PENDING = { booking_offer: 1, modify_booking: 1 };
+
   function _mergeState(biz, update) {
     if (!biz._bookingState) biz._bookingState = _emptyState();
-    // Take all fields from Claude's STATE (Claude is responsible for carrying forward known values)
     Object.keys(update).forEach(function (k) {
-      biz._bookingState[k] = update[k];
+      var val = update[k];
+      // null is always valid — it means "clear this field"
+      if (val === null) { biz._bookingState[k] = null; return; }
+
+      // Per-field validation (RX-016)
+      if (k === 'date') {
+        // Must be YYYY-MM-DD and not in the past
+        if (typeof val !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+          console.warn('[mergeState] rejected invalid date:', val); return;
+        }
+        // Reject dates more than 1 year in the future (likely hallucination)
+        var parsed = new Date(val + 'T00:00:00');
+        var now = new Date(); now.setHours(0,0,0,0);
+        var cutoff = new Date(now); cutoff.setFullYear(cutoff.getFullYear() + 1);
+        if (parsed < now || parsed > cutoff) {
+          console.warn('[mergeState] rejected out-of-range date:', val); return;
+        }
+        biz._bookingState[k] = val; return;
+      }
+      if (k === 'time') {
+        if (typeof val !== 'string' || !/^\d{1,2}:\d{2}$/.test(val)) {
+          console.warn('[mergeState] rejected invalid time:', val); return;
+        }
+        biz._bookingState[k] = val; return;
+      }
+      if (k === 'phone') {
+        var digits = String(val).replace(/\D/g, '');
+        if (digits.length < 7) {
+          console.warn('[mergeState] rejected invalid phone:', val); return;
+        }
+        biz._bookingState[k] = digits; return; // store digits only for consistent lookup
+      }
+      if (k === 'services') {
+        if (!Array.isArray(val)) {
+          console.warn('[mergeState] rejected non-array services:', val); return;
+        }
+        // All elements must be non-empty strings
+        var clean = val.filter(function(s) { return typeof s === 'string' && s.trim().length > 0; });
+        biz._bookingState[k] = clean; return;
+      }
+      if (k === 'lang') {
+        if (!_VALID_LANGS[val]) {
+          console.warn('[mergeState] rejected unknown lang:', val); return;
+        }
+        biz._bookingState[k] = val; return;
+      }
+      if (k === 'pendingAction') {
+        // Only recognised pendingAction values (or null already handled above)
+        if (!_VALID_PENDING[val]) {
+          console.warn('[mergeState] rejected unknown pendingAction:', val); return;
+        }
+        biz._bookingState[k] = val; return;
+      }
+      if (k === 'name') {
+        // Must be a non-empty string with at least 1 letter
+        if (typeof val !== 'string' || val.trim().length < 1 || !/[a-zA-ZÀ-ỹ]/.test(val)) {
+          console.warn('[mergeState] rejected invalid name:', val); return;
+        }
+        biz._bookingState[k] = val.trim(); return;
+      }
+      // All other fields (intent, staff, existingBookingId) — accept as-is
+      biz._bookingState[k] = val;
     });
   }
 
@@ -585,6 +651,36 @@
   // Expose for manual booking form — shares the same validation path as the AI flow
   window.NailAvailabilityChecker = NailAvailabilityChecker;
 
+  // ── _findFreeStaff — proactive staff availability query (Phase 3) ────────────
+  // Returns array of staff names who are working on `date` at `timeStr` for
+  // `durationMins` minutes and have no conflicting booking in `existing`.
+  // `existing`: array of {staff, time, totalDurationMins} (same shape as checker).
+  // Pure computation — no Firestore queries; uses biz.staff + schedule config.
+  function _findFreeStaff(biz, date, timeStr, durationMins, existing) {
+    if (!biz || !biz.staff || !date || !timeStr) return [];
+    existing = existing || [];
+    var reqStart = _toMins(timeStr);
+    var reqEnd   = reqStart + (durationMins || DEFAULT_DUR);
+    var free = [];
+    (biz.staff || []).forEach(function (m) {
+      if (m.active === false) return;
+      var mName = (m.name || '').trim();
+      if (!mName) return;
+      var shift = _getStaffShift(biz, mName, date);
+      if (!shift) return; // not working that day
+      if (reqStart < shift.open || reqEnd > shift.close) return; // outside shift
+      var busy = existing.some(function (appt) {
+        var as = (appt.staff || '').toLowerCase().trim();
+        if (as !== mName.toLowerCase() && as !== 'any') return false;
+        var aS = _toMins(appt.time || '00:00');
+        var aD = appt.totalDurationMins || appt.durationMins || DEFAULT_DUR;
+        return _overlaps(reqStart, reqEnd, aS, aS + aD);
+      });
+      if (!busy) free.push(mName);
+    });
+    return free;
+  }
+
   // ── Marker parsing ────────────────────────────────────────────────────────────
   function _parseEscalationType(reply) {
     var m = reply.match(/\[ESCALATE:(order|appointment|reservation|question|cancel)\]/i);
@@ -1029,8 +1125,11 @@
       'When customer says: "reschedule", "change my appointment", "move my appointment", "I need to change",',
       '  "can I change my booking", "dời lịch", "thay đổi lịch", "đổi lịch", "cambiar mi cita", "reagendar":',
       '  → Set pendingAction: "modify_booking" in STATE.',
-      '  → Carry over existing services, staff, name, phone from CURRENT BOOKING STATE (do NOT ask again).',
-      '  → Ask ONLY for the new date and/or time if not already provided.',
+      '  → SAME-SESSION: If services AND name AND phone ARE already in CURRENT BOOKING STATE:',
+      '     Carry them over. Ask ONLY for the new date and/or time. Do NOT re-ask for service/name/phone.',
+      '  → CROSS-SESSION: If services/name/phone are NOT in CURRENT BOOKING STATE (new browser session):',
+      '     Ask: "Of course! Could you give me your phone number so I can look up your appointment?"',
+      '     Do NOT ask for date/time yet. Do NOT guess services. The system will find the booking once phone is known.',
       '  → When new date + time are confirmed, emit [BOOKING:...] + [ESCALATE:appointment] as normal.',
       '  → IMPORTANT: Keep pendingAction: "modify_booking" in the STATE marker even on the final [BOOKING:...] turn.',
       '  → Do NOT clear pendingAction to null for reschedules — this flag is required to update the existing record.',
@@ -1648,6 +1747,105 @@
     '</div>';
   }
 
+  // ── Cross-session booking lookup messages (RX-014/015) ───────────────────────
+  function _buildFoundBookingMsg(biz, booking, lang) {
+    var svcs  = (booking.services && booking.services.length)
+      ? booking.services.join(' + ')
+      : (booking.serviceType || 'your appointment');
+    var staffSfx  = booking.staff ? ' with ' + booking.staff    : '';
+    var staffSfxV = booking.staff ? ' với '  + booking.staff    : '';
+    var staffSfxE = booking.staff ? ' con '  + booking.staff    : '';
+    var d = booking.requestedDate || '';
+    var t = booking.requestedTime || '';
+    var tSfx  = t ? ' at '    + t : '';
+    var tSfxV = t ? ' lúc '   + t : '';
+    var tSfxE = t ? ' a las ' + t : '';
+    if (lang === 'vi') return 'Tìm thấy lịch hẹn của bạn: ' + svcs + staffSfxV + (d ? ' vào ngày ' + d : '') + tSfxV + '. Bạn muốn đổi sang ngày giờ nào?';
+    if (lang === 'es') return 'Encontré tu cita: ' + svcs + staffSfxE + (d ? ' el ' + d : '') + tSfxE + '. ¿A qué nueva fecha y hora quieres reagendarla?';
+    return 'Found your appointment: ' + svcs + staffSfx + (d ? ' on ' + d : '') + tSfx + '. What new date and time would you like?';
+  }
+
+  function _buildNoBookingFoundMsg(lang, phone) {
+    if (lang === 'vi') return 'Tôi không tìm thấy lịch hẹn nào với số điện thoại ' + phone + '. Bạn có muốn đặt lịch mới không?';
+    if (lang === 'es') return 'No encontré ninguna cita con el número ' + phone + '. ¿Le gustaría hacer una nueva reserva?';
+    return 'I couldn\'t find any upcoming appointment for ' + phone + '. Would you like to make a new booking instead?';
+  }
+
+  // ── _lookupActiveBookingByPhone — shared Firestore lookup utility (Phase 3) ──
+  // Queries customerPhone (primary) then legacy 'phone' field (fallback).
+  // Returns Promise<Array<QueryDocumentSnapshot>> of confirmed/in_progress docs,
+  // sorted most-recent-first by createdAt. Callers decide what action to take.
+  function _lookupActiveBookingByPhone(db, vid, phone) {
+    var _actv = ['confirmed', 'in_progress'];
+    var _sortDesc = function (docs) {
+      return docs.slice().sort(function (a, b) {
+        var ta = a.data().createdAt, tb = b.data().createdAt;
+        return (ta && ta.toMillis && tb && tb.toMillis) ? tb.toMillis() - ta.toMillis() : 0;
+      });
+    };
+    return db.collection('vendors').doc(vid).collection('bookings')
+      .where('customerPhone', '==', phone)
+      .get()
+      .then(function (snap) {
+        var active = snap.docs.filter(function (d) { return _actv.indexOf(d.data().status) >= 0; });
+        if (active.length) return _sortDesc(active);
+        // Fallback: legacy 'phone' field (bookings before customerPhone standardisation)
+        return db.collection('vendors').doc(vid).collection('bookings')
+          .where('phone', '==', phone)
+          .get()
+          .then(function (s2) {
+            return _sortDesc(s2.docs.filter(function (d) { return _actv.indexOf(d.data().status) >= 0; }));
+          });
+      });
+  }
+
+  // ── Cross-session modify: look up booking by phone and pre-populate STATE (RX-015) ──
+  // When a customer returns in a new browser session and wants to reschedule,
+  // sessionStorage is gone so services/staff/name are empty.  This function
+  // queries Firestore by phone, finds the most recent active booking, pre-populates
+  // biz._bookingState, and injects a "found your booking" message into the chat.
+  // The NEXT customer turn will see the populated state and proceed with date/time.
+  function _xsBookingLookup(biz, phone, messagesEl, lang) {
+    var db  = window.dlcDb;
+    var vid = biz.id || biz.slug || '';
+    if (!db || !vid) return;
+    _lookupActiveBookingByPhone(db, vid, phone)
+      .then(function (active) {
+        if (!active || !active.length) {
+          // No active booking found — inform customer and cancel the modify flow
+          var noMsg = _buildNoBookingFoundMsg(lang, phone);
+          biz._aiHistory = biz._aiHistory || [];
+          biz._aiHistory.push({ role: 'assistant', content: noMsg });
+          _saveHistory(biz);
+          _appendMessage(messagesEl, noMsg, 'bot');
+          biz._bookingState.pendingAction = null;
+          _saveBookingState(biz);
+          return;
+        }
+        // active is already sorted desc by createdAt
+        var bookingDoc = active[0];
+        var booking    = bookingDoc.data();
+        var bookingId  = bookingDoc.id;
+        // Pre-populate booking state with found booking details so the modify flow
+        // carries real service/staff/name into the new booking record.
+        var foundSvcs = booking.services && booking.services.length
+          ? booking.services
+          : (booking.serviceType ? [booking.serviceType] : []);
+        biz._bookingState.services          = foundSvcs;
+        biz._bookingState.staff             = booking.staff || null;
+        biz._bookingState.name              = booking.customerName || booking.name || null;
+        biz._bookingState.existingBookingId = bookingId;
+        biz._lastBookingId                  = bookingId;
+        _saveBookingState(biz);
+        // Inject "found your booking" message into chat + AI history
+        var foundMsg = _buildFoundBookingMsg(biz, booking, lang);
+        biz._aiHistory.push({ role: 'assistant', content: foundMsg });
+        _saveHistory(biz);
+        _appendMessage(messagesEl, foundMsg, 'bot');
+      })
+      .catch(function (e) { console.warn('[xsLookup] Firestore error:', e.message); });
+  }
+
   // ── _submitDirectBooking — writes 'confirmed' to Firestore, shows packet ─────
 
   function _submitDirectBooking(biz, draft, messagesEl) {
@@ -1946,6 +2144,7 @@
       biz._dataFetchedAt      = 0;
       biz._dataPromise        = null;
       biz._staffUnsub         = null;  // unsubscribe fn for the staff onSnapshot listener
+      biz._xsLookupDone       = false; // RX-015: cross-session modify lookup guard (one lookup per modify flow)
 
       function _fetchLiveBizData() {
         try {
@@ -2239,6 +2438,7 @@
 
                     // Clear booking state — request is now pending vendor confirmation.
                     biz._bookingState = _emptyState();
+                    biz._xsLookupDone = false; // reset: allow lookup for a future modify flow
                     _saveBookingState(biz);
                     biz._offeredSlot = null;
                     biz._bookingDraft = null;
@@ -2254,32 +2454,30 @@
                     // Firestore document ID — lets _submitDirectBooking delete the old
                     // booking by exact ID (not the fragile phone+date filter).
                     if (confirmedDraft.isModify && confirmedDraft.phone && window.dlcDb) {
-                      var _rDb  = window.dlcDb;
-                      var _rVid = biz.id || biz.slug || 'unknown';
-                      _rDb.collection('vendors').doc(_rVid).collection('bookings')
-                        .where('customerPhone', '==', confirmedDraft.phone)
-                        .get()
-                        .then(function (snap) {
-                          var confirmed = snap.docs.filter(function (d) {
-                            var s = d.data().status || '';
-                            return s === 'confirmed' || s === 'in_progress';
+                      // Phase 3: use existingBookingId already known from _xsBookingLookup
+                      // (set in biz._bookingState and carried into STATE/BOOKING marker),
+                      // or fall back to biz._lastBookingId (set by same-session _submitDirectBooking).
+                      // Either avoids an extra Firestore round-trip before submit.
+                      if (!confirmedDraft.existingBookingId && biz._lastBookingId) {
+                        confirmedDraft.existingBookingId = biz._lastBookingId;
+                      }
+                      if (confirmedDraft.existingBookingId) {
+                        // Booking ID already known — skip the Firestore round-trip
+                        _submitDirectBooking(biz, confirmedDraft, messagesEl);
+                      } else {
+                        // ID unknown — look up by phone using shared utility
+                        var _rVid = biz.id || biz.slug || 'unknown';
+                        _lookupActiveBookingByPhone(window.dlcDb, _rVid, confirmedDraft.phone)
+                          .then(function (active) {
+                            if (active.length) {
+                              confirmedDraft.existingBookingId = active[0].id;
+                            }
+                          })
+                          .catch(function () {}) // offline or permission denied — submit without ID
+                          .then(function () {
+                            _submitDirectBooking(biz, confirmedDraft, messagesEl);
                           });
-                          if (confirmed.length > 0) {
-                            // Most recently created confirmed booking = the one being rescheduled
-                            confirmed.sort(function (a, b) {
-                              var ta = a.data().createdAt, tb = b.data().createdAt;
-                              if (ta && ta.toMillis && tb && tb.toMillis) {
-                                return tb.toMillis() - ta.toMillis();
-                              }
-                              return 0;
-                            });
-                            confirmedDraft.existingBookingId = confirmed[0].id;
-                          }
-                        })
-                        .catch(function () {}) // permission denied or offline — _submitDirectBooking handles gracefully
-                        .then(function () {
-                          _submitDirectBooking(biz, confirmedDraft, messagesEl);
-                        });
+                      }
                     } else {
                       _submitDirectBooking(biz, confirmedDraft, messagesEl);
                     }
@@ -2321,32 +2519,52 @@
                 var _cId    = biz._lastBookingId;                             // set by _submitDirectBooking
                 var _cPhone = biz._bookingState && biz._bookingState.phone;
                 if (_cId) {
-                  // Exact ID known — fastest path
+                  // Exact ID known — fastest path (same-session cancel)
                   _cDb.collection('vendors').doc(_cVid).collection('bookings').doc(_cId)
                     .update({ status: 'cancelled', cancelledAt: _cFv ? _cFv.serverTimestamp() : new Date() })
                     .catch(function (e) { console.warn('[cancel] update failed:', e.message); });
                 } else if (_cPhone) {
-                  // Fall back to phone lookup
-                  _cDb.collection('vendors').doc(_cVid).collection('bookings')
-                    .where('customerPhone', '==', _cPhone)
-                    .where('status', '==', 'confirmed')
-                    .get()
-                    .then(function (snap) {
-                      snap.docs.forEach(function (d) {
-                        d.ref.update({ status: 'cancelled', cancelledAt: _cFv ? _cFv.serverTimestamp() : new Date() })
-                          .catch(function () {});
-                      });
+                  // RX-014: cross-session cancel — query by phone, include in_progress,
+                  // cancel only the most recent booking (not all matching bookings).
+                  // Uses shared _lookupActiveBookingByPhone (also handles legacy 'phone' field).
+                  _lookupActiveBookingByPhone(_cDb, _cVid, _cPhone)
+                    .then(function (active) {
+                      if (!active.length) return;
+                      // active[0] is the most recent — cancel only that one
+                      active[0].ref.update({ status: 'cancelled', cancelledAt: _cFv ? _cFv.serverTimestamp() : new Date() })
+                        .catch(function (e) { console.warn('[cancel] update failed:', e.message); });
                     })
                     .catch(function (e) { console.warn('[cancel] lookup failed:', e.message); });
                 }
               }
-              biz._lastBookingId = null;
-              biz._bookingState  = _emptyState();
+              biz._lastBookingId  = null;
+              biz._xsLookupDone   = false; // reset for next modify flow
+              biz._bookingState   = _emptyState();
               _saveBookingState(biz);
 
             } else {
               // Non-appointment response — show immediately, no availability gate needed
               _appendMessage(messagesEl, result.text, 'bot');
+
+              // ── Cross-session modify lookup (RX-015) ────────────────────────────
+              // Trigger: customer provided phone for a cross-session reschedule
+              // (services empty + pendingAction=modify_booking + phone just populated).
+              // Look up their most recent booking in Firestore, pre-populate state,
+              // and inject a "Found your appointment" message so the next turn can
+              // proceed with new date/time without re-asking for service/name.
+              var _xst = biz._bookingState;
+              if (_xst &&
+                  _xst.pendingAction === 'modify_booking' &&
+                  _xst.phone && _xst.phone.length >= 7 &&
+                  (!_xst.services || _xst.services.length === 0) &&
+                  !_xst.date &&
+                  !result.escalationType &&
+                  !biz._xsLookupDone &&
+                  window.dlcDb) {
+                biz._xsLookupDone = true;
+                _xsBookingLookup(biz, _xst.phone, messagesEl, _xst.lang || 'en');
+              }
+
               if (result.escalationType) {
                 var esc = window.EscalationEngine;
                 if (esc && typeof esc.create === 'function') {

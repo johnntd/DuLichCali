@@ -1688,7 +1688,7 @@
     </div>
     <div style="display:flex;align-items:center;gap:.5rem">
       <button class="btn-open-toggle is-closed" id="openToggle" onclick="toggleIsOpen()">○ Đóng</button>
-      <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+      <button class="btn-logout" onclick="logout()" data-i18n="logout">Đăng xuất</button>
     </div>
   </div>
 
@@ -1760,7 +1760,7 @@
     <!-- Sidebar nav -->
     <nav class="va-sidebar">
       <!-- Operations group -->
-      <div class="va-nav-group-lbl">Vận Hành</div>
+      <div class="va-nav-group-lbl" data-i18n="nav_ops">Vận Hành</div>
       <button class="va-nav-btn active" id="nav-dashboard" onclick="switchTab('dashboard')">
         <svg class="va-nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 10a8 8 0 1116 0A8 8 0 012 10zm8-5a1 1 0 000 2h.01a1 1 0 000-2H10zM9 9a1 1 0 012 0v5a1 1 0 01-2 0V9z"/></svg>
         <span class="va-nav-lbl">Tổng Quan</span>
@@ -1785,7 +1785,7 @@
       <hr class="va-nav-sep">
 
       <!-- Configuration group -->
-      <div class="va-nav-group-lbl">Quản Lý</div>
+      <div class="va-nav-group-lbl" data-i18n="nav_manage">Quản Lý</div>
       <button class="va-nav-btn" id="nav-services" onclick="switchTab('services')">
         <svg class="va-nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>
         <span class="va-nav-lbl">Dịch Vụ</span>
@@ -1833,78 +1833,78 @@
       <!-- ── Dashboard tab ── -->
       <div class="tab-panel active" id="panel-dashboard">
         <div class="sa-section-header">
-          <div class="sa-section-title">Tổng Quan</div>
-          <button class="btn btn--outline btn--sm" onclick="renderDashboard()">Làm Mới</button>
+          <div class="sa-section-title" data-i18n="dash_title">Tổng Quan</div>
+          <button class="btn btn--outline btn--sm" onclick="renderDashboard()" data-i18n="btn_refresh">Làm Mới</button>
         </div>
         <div class="db-stats">
           <div class="db-stat">
             <div class="db-stat__num" id="dbTodayCount">—</div>
-            <div class="db-stat__lbl">Hôm Nay</div>
+            <div class="db-stat__lbl" data-i18n="db_stat_today">Hôm Nay</div>
           </div>
           <div class="db-stat">
             <div class="db-stat__num" id="dbUpcomingCount">—</div>
-            <div class="db-stat__lbl">Sắp Tới</div>
+            <div class="db-stat__lbl" data-i18n="db_stat_upcoming">Sắp Tới</div>
           </div>
           <div class="db-stat" id="dbEscStat">
             <div class="db-stat__num" id="dbEscCount">—</div>
-            <div class="db-stat__lbl">Tin Nhắn AI</div>
+            <div class="db-stat__lbl" data-i18n="db_stat_ai">Tin Nhắn AI</div>
           </div>
         </div>
-        <div class="db-next-label">Lịch Hẹn Tiếp Theo</div>
-        <div id="dashNextAppt"><div class="sa-empty" style="padding:1rem 0">Đang tải…</div></div>
+        <div class="db-next-label" data-i18n="db_next_label">Lịch Hẹn Tiếp Theo</div>
+        <div id="dashNextAppt"><div class="sa-empty" style="padding:1rem 0" data-i18n="empty_loading">Đang tải…</div></div>
       </div>
 
       <!-- ── Services tab ── -->
       <div class="tab-panel" id="panel-services">
         <div class="sa-section-header">
-          <div class="sa-section-title">Dịch Vụ</div>
-          <button class="btn btn--primary btn--sm" onclick="openServiceModal(null)">+ Thêm Dịch Vụ</button>
+          <div class="sa-section-title" data-i18n="svc_title">Dịch Vụ</div>
+          <button class="btn btn--primary btn--sm" onclick="openServiceModal(null)" data-i18n="btn_add_svc">+ Thêm Dịch Vụ</button>
         </div>
         <div class="cat-tabs" id="catTabs">
-          <button class="cat-tab active" data-cat="all" onclick="filterCat('all',this)">Tất cả</button>
+          <button class="cat-tab active" data-cat="all" onclick="filterCat('all',this)" data-i18n="cat_all">Tất cả</button>
         </div>
-        <div id="servicesList"><div class="sa-empty">Đang tải…</div></div>
+        <div id="servicesList"><div class="sa-empty" data-i18n="empty_loading">Đang tải…</div></div>
       </div>
 
       <!-- ── Staff tab ── -->
       <div class="tab-panel" id="panel-staff">
         <div class="sa-section-header">
-          <div class="sa-section-title">Nhân Viên</div>
+          <div class="sa-section-title" data-i18n="staff_title">Nhân Viên</div>
           <!-- Owner only — revealed by owner init block -->
-          <button class="btn btn--primary btn--sm" id="btnAddStaff" style="display:none" onclick="openStaffModal(null)">+ Thêm Nhân Viên</button>
+          <button class="btn btn--primary btn--sm" id="btnAddStaff" style="display:none" onclick="openStaffModal(null)" data-i18n="btn_add_staff">+ Thêm Nhân Viên</button>
         </div>
-        <div id="staffList"><div class="sa-empty">Đang tải…</div></div>
+        <div id="staffList"><div class="sa-empty" data-i18n="empty_loading">Đang tải…</div></div>
 
         <!-- Staff earnings summary — shown for owner only -->
         <div class="sa-card" id="staffEarningsCard" style="display:none;margin-top:1.2rem">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:.9rem">
-            <div style="font-weight:700;font-size:.88rem;color:var(--cream)">Thu Nhập Nhân Viên</div>
+            <div style="font-weight:700;font-size:.88rem;color:var(--cream)" data-i18n="staff_earnings">Thu Nhập Nhân Viên</div>
             <div style="display:flex;gap:.35rem">
-              <button class="se-period-btn active" id="sePeriodToday" onclick="setEarningsPeriod('today')">Hôm nay</button>
-              <button class="se-period-btn"        id="sePeriodWeek"  onclick="setEarningsPeriod('week')">Tuần này</button>
-              <button class="se-period-btn"        id="sePeriodMonth" onclick="setEarningsPeriod('month')">Tháng này</button>
+              <button class="se-period-btn active" id="sePeriodToday" onclick="setEarningsPeriod('today')" data-i18n="earn_today">Hôm nay</button>
+              <button class="se-period-btn"        id="sePeriodWeek"  onclick="setEarningsPeriod('week')" data-i18n="earn_week">Tuần này</button>
+              <button class="se-period-btn"        id="sePeriodMonth" onclick="setEarningsPeriod('month')" data-i18n="earn_month">Tháng này</button>
             </div>
           </div>
-          <div id="staffEarningsBody"><div class="sa-empty" style="font-size:.78rem">Chưa có dữ liệu.</div></div>
-          <div style="font-size:.62rem;color:var(--muted);margin-top:.7rem;opacity:.7">Hoa hồng tính trên tiền dịch vụ đã thu thực tế. Tip tính riêng. Lịch hẹn hủy/vắng không tính.</div>
+          <div id="staffEarningsBody"><div class="sa-empty" style="font-size:.78rem" data-i18n="earn_empty">Chưa có dữ liệu.</div></div>
+          <div style="font-size:.62rem;color:var(--muted);margin-top:.7rem;opacity:.7" data-i18n="earn_note">Hoa hồng tính trên tiền dịch vụ đã thu thực tế. Tip tính riêng. Lịch hẹn hủy/vắng không tính.</div>
         </div>
       </div>
 
       <!-- ── Availability tab ── -->
       <div class="tab-panel" id="panel-availability">
         <div class="sa-section-header">
-          <div class="sa-section-title">Hôm Nay</div>
-          <button class="btn btn--outline btn--sm" onclick="renderAvailability()">Làm Mới</button>
+          <div class="sa-section-title" data-i18n="avail_title">Hôm Nay</div>
+          <button class="btn btn--outline btn--sm" onclick="renderAvailability()" data-i18n="btn_refresh">Làm Mới</button>
         </div>
         <div class="today-heading" id="todayHeading"></div>
-        <div class="avail-grid" id="availList"><div class="sa-empty">Đang tải…</div></div>
+        <div class="avail-grid" id="availList"><div class="sa-empty" data-i18n="empty_loading">Đang tải…</div></div>
       </div>
 
       <!-- ── Hours tab ── -->
       <div class="tab-panel" id="panel-hours">
         <div class="sa-section-header">
-          <div class="sa-section-title">Giờ Mở Cửa</div>
-          <button class="btn btn--primary btn--sm" onclick="saveHours()">Lưu</button>
+          <div class="sa-section-title" data-i18n="hours_title">Giờ Mở Cửa</div>
+          <button class="btn btn--primary btn--sm" onclick="saveHours()" data-i18n="btn_hours_save">Lưu</button>
         </div>
         <div class="sa-card sa-card--gold">
           <div class="hours-grid" id="hoursGrid"></div>
@@ -1922,10 +1922,10 @@
 
         <!-- All bookings calendar -->
         <div class="sa-section-header" style="margin-top:.25rem">
-          <div class="sa-section-title">Tất Cả Lịch Hẹn</div>
-          <button class="btn btn--primary btn--sm" id="btnNewBooking" style="display:none" onclick="openManualBookModal('',null)">+ Đặt lịch</button>
+          <div class="sa-section-title" data-i18n="appt_all_title">Tất Cả Lịch Hẹn</div>
+          <button class="btn btn--primary btn--sm" id="btnNewBooking" style="display:none" onclick="openManualBookModal('',null)" data-i18n="btn_new_booking">+ Đặt lịch</button>
         </div>
-        <div id="bookingsList"><div class="sa-empty">Đang tải…</div></div>
+        <div id="bookingsList"><div class="sa-empty" data-i18n="empty_loading">Đang tải…</div></div>
       </div>
 
       <!-- ── AI Inbox tab ── -->
@@ -1933,13 +1933,13 @@
         <div class="sa-section-header">
           <div>
             <div class="sa-section-title" style="color:#e8a800">&#128172; AI Inbox</div>
-            <div style="font-size:.68rem;color:var(--muted);margin-top:.15rem">Tin nhắn &amp; yêu cầu từ khách qua AI Lily</div>
+            <div style="font-size:.68rem;color:var(--muted);margin-top:.15rem" data-i18n="inbox_subtitle">Tin nhắn &amp; yêu cầu từ khách qua AI Lily</div>
           </div>
-          <button class="btn btn--outline btn--sm" onclick="markAllInboxRead()">&#10003; Đánh dấu tất cả</button>
+          <button class="btn btn--outline btn--sm" onclick="markAllInboxRead()" data-i18n="btn_mark_all">&#10003; Đánh dấu tất cả</button>
         </div>
         <div id="inboxEmpty" class="sa-empty" style="display:none;padding:2rem 1rem">
           <div style="font-size:1.5rem;margin-bottom:.5rem">&#128172;</div>
-          Không có tin nhắn mới. AI Lily sẽ gửi yêu cầu khi khách cần xác nhận.
+          <span data-i18n="empty_ai_inbox">Không có tin nhắn mới. AI Lily sẽ gửi yêu cầu khi khách cần xác nhận.</span>
         </div>
         <div id="inboxList"></div>
       </div>
@@ -1947,16 +1947,17 @@
       <!-- ── Customer Quick-View tab ── -->
       <div class="tab-panel" id="panel-customers">
         <div class="sa-section-header">
-          <div class="sa-section-title">Khách Hàng</div>
+          <div class="sa-section-title" data-i18n="cust_title_label">Khách Hàng</div>
         </div>
         <div class="sa-card sa-card--gold" style="margin-bottom:1rem">
           <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
             <input class="sa-input" id="cqvSearch" type="text" inputmode="tel"
               placeholder="Số điện thoại hoặc tên khách…"
+              data-i18n-placeholder="ph_cust_search"
               style="flex:1;min-width:180px;height:38px"
               onkeydown="if(event.key==='Enter')searchCustomer()">
-            <button class="btn btn--primary" style="height:38px;padding:0 1.2rem" onclick="searchCustomer()">Tìm</button>
-            <button class="btn btn--outline btn--sm" style="height:38px" onclick="clearCustomerSearch()">Xóa</button>
+            <button class="btn btn--primary" style="height:38px;padding:0 1.2rem" onclick="searchCustomer()" data-i18n="btn_search">Tìm</button>
+            <button class="btn btn--outline btn--sm" style="height:38px" onclick="clearCustomerSearch()" data-i18n="btn_clear">Xóa</button>
           </div>
         </div>
         <div id="cqvResults"></div>
@@ -1965,38 +1966,38 @@
       <!-- ── Settings tab ── -->
       <div class="tab-panel" id="panel-settings">
         <div class="sa-section-header">
-          <div class="sa-section-title">Cài Đặt</div>
+          <div class="sa-section-title" data-i18n="settings_title_label">Cài Đặt</div>
         </div>
         <div class="sa-card sa-card--gold">
           <div class="settings-grid">
             <div class="sa-field">
-              <label>Tên Tiệm</label>
-              <input class="sa-input" id="settingName" placeholder="Tên tiệm…">
+              <label data-i18n="lbl_shop_name">Tên Tiệm</label>
+              <input class="sa-input" id="settingName" placeholder="Tên tiệm…" data-i18n-placeholder="ph_shop_name">
             </div>
             <div class="sa-field">
-              <label>Số Điện Thoại</label>
-              <input class="sa-input" id="settingPhone" placeholder="408-…" inputmode="tel">
+              <label data-i18n="lbl_phone">Số Điện Thoại</label>
+              <input class="sa-input" id="settingPhone" placeholder="408-…" inputmode="tel" data-i18n-placeholder="ph_phone">
             </div>
             <div class="sa-field">
-              <label>Địa Chỉ</label>
-              <input class="sa-input" id="settingAddress" placeholder="123 Main St, San Jose, CA">
+              <label data-i18n="lbl_address">Địa Chỉ</label>
+              <input class="sa-input" id="settingAddress" placeholder="123 Main St, San Jose, CA" data-i18n-placeholder="ph_address">
             </div>
             <div class="sa-field">
-              <label>Mô Tả Ngắn</label>
-              <textarea class="sa-input" id="settingDesc" rows="3" placeholder="Giới thiệu về tiệm…"></textarea>
+              <label data-i18n="lbl_desc">Mô Tả Ngắn</label>
+              <textarea class="sa-input" id="settingDesc" rows="3" placeholder="Giới thiệu về tiệm…" data-i18n-placeholder="ph_desc"></textarea>
             </div>
             <div class="sa-field">
-              <label>Claude AI Key <span style="font-size:.7rem;color:var(--muted);font-weight:400">(sk-ant-… — bắt buộc để AI hoạt động)</span></label>
+              <label>Claude AI Key <span style="font-size:.7rem;color:var(--muted);font-weight:400" data-i18n="lbl_ai_key_note">(sk-ant-… — bắt buộc để AI hoạt động)</span></label>
               <input class="sa-input" id="settingAiKey" type="password" placeholder="sk-ant-…" autocomplete="off" style="font-family:monospace;letter-spacing:.04em">
             </div>
             <div class="sa-field" style="margin-top:1.2rem">
-              <label>Dịch Vụ Song Song <span style="font-size:.7rem;color:var(--muted);font-weight:400">— cho phép khách đặt 2 dịch vụ cùng lúc với 2 nhân viên khác nhau</span></label>
+              <label data-i18n="lbl_parallel_svc">Dịch Vụ Song Song <span style="font-size:.7rem;color:var(--muted);font-weight:400" data-i18n="lbl_parallel_note">— cho phép khách đặt 2 dịch vụ cùng lúc với 2 nhân viên khác nhau</span></label>
               <div id="parallelRulesList" style="margin:.4rem 0 .6rem"></div>
-              <button type="button" onclick="addParallelRule()" style="font-size:.75rem;padding:.3rem .75rem;background:var(--navy-700);border:1px solid var(--border);border-radius:6px;color:var(--cream);cursor:pointer">+ Thêm Cặp Dịch Vụ</button>
+              <button type="button" onclick="addParallelRule()" style="font-size:.75rem;padding:.3rem .75rem;background:var(--navy-700);border:1px solid var(--border);border-radius:6px;color:var(--cream);cursor:pointer" data-i18n="btn_add_parallel">+ Thêm Cặp Dịch Vụ</button>
               <datalist id="serviceNameList"></datalist>
             </div>
             <div>
-              <button class="btn btn--primary" onclick="saveSettings()">Lưu Cài Đặt</button>
+              <button class="btn btn--primary" onclick="saveSettings()" data-i18n="btn_save_settings">Lưu Cài Đặt</button>
               <span class="sa-msg" id="settingsMsg"></span>
             </div>
           </div>
@@ -2004,15 +2005,15 @@
 
         <!-- Payment methods configuration — owner only -->
         <div class="sa-card" id="payMethodsCard" style="display:none;margin-top:1.2rem">
-          <div style="font-weight:600;margin-bottom:.2rem;font-size:.85rem">Phương Thức Thanh Toán</div>
-          <div style="font-size:.7rem;color:var(--muted);margin-bottom:1rem">Bật các phương thức mà tiệm muốn nhận. Chỉ phương thức đã <strong style="color:var(--cream)">sẵn sàng</strong> mới xuất hiện trong màn hình thu tiền.</div>
+          <div style="font-weight:600;margin-bottom:.2rem;font-size:.85rem" data-i18n="lbl_pay_methods">Phương Thức Thanh Toán</div>
+          <div style="font-size:.7rem;color:var(--muted);margin-bottom:1rem" data-i18n-html="lbl_pay_methods_desc">Bật các phương thức mà tiệm muốn nhận. Chỉ phương thức đã <strong style="color:var(--cream)">sẵn sàng</strong> mới xuất hiện trong màn hình thu tiền.</div>
 
           <!-- Cash -->
           <div class="ps-method-row">
             <input type="checkbox" id="pmCfgCash" class="ps-method-toggle" onchange="_pmCfgToggle('cash')">
             <div class="ps-method-body">
-              <div class="ps-method-name">Tiền mặt (Cash) <span class="ps-status ps-status--none" id="psBadge_cash"></span></div>
-              <div class="ps-method-desc">Khách thanh toán trực tiếp bằng tiền mặt tại tiệm.</div>
+              <div class="ps-method-name"><span data-i18n="pm_cash_name">Tiền mặt (Cash)</span> <span class="ps-status ps-status--none" id="psBadge_cash"></span></div>
+              <div class="ps-method-desc" data-i18n="pm_cash_desc">Khách thanh toán trực tiếp bằng tiền mặt tại tiệm.</div>
             </div>
           </div>
 
@@ -2020,8 +2021,8 @@
           <div class="ps-method-row">
             <input type="checkbox" id="pmCfgCard" class="ps-method-toggle" onchange="_pmCfgToggle('card')">
             <div class="ps-method-body">
-              <div class="ps-method-name">Thẻ tín dụng / ghi nợ (Card) <span class="ps-status ps-status--none" id="psBadge_card"></span></div>
-              <div class="ps-method-desc">Thanh toán qua máy đọc thẻ hoặc thiết bị ngoài. Ghi nhận thủ công.</div>
+              <div class="ps-method-name"><span data-i18n="pm_card_name">Thẻ tín dụng / ghi nợ (Card)</span> <span class="ps-status ps-status--none" id="psBadge_card"></span></div>
+              <div class="ps-method-desc" data-i18n="pm_card_desc">Thanh toán qua máy đọc thẻ hoặc thiết bị ngoài. Ghi nhận thủ công.</div>
             </div>
           </div>
 
@@ -2029,12 +2030,12 @@
           <div class="ps-method-row">
             <input type="checkbox" id="pmCfgZelle" class="ps-method-toggle" onchange="_pmCfgToggle('zelle')">
             <div class="ps-method-body">
-              <div class="ps-method-name">Zelle <span class="ps-status ps-status--none" id="psBadge_zelle"></span></div>
-              <div class="ps-method-desc">Khách chuyển khoản qua Zelle. Nhập số điện thoại hoặc email Zelle của tiệm.</div>
+              <div class="ps-method-name"><span data-i18n="pm_zelle_name">Zelle</span> <span class="ps-status ps-status--none" id="psBadge_zelle"></span></div>
+              <div class="ps-method-desc" data-i18n="pm_zelle_desc">Khách chuyển khoản qua Zelle. Nhập số điện thoại hoặc email Zelle của tiệm.</div>
               <div class="ps-method-fields" id="pmCfgZelleFields">
                 <div class="ps-field-row">
                   <span class="ps-field-label">Zelle ID</span>
-                  <input class="sa-input" id="pmCfgZelleId" type="text" placeholder="Số điện thoại hoặc email Zelle" style="flex:1;font-size:.78rem;padding:.3rem .5rem" oninput="_onQrIdentifierInput('zelle')">
+                  <input class="sa-input" id="pmCfgZelleId" type="text" placeholder="Số điện thoại hoặc email Zelle" data-i18n-placeholder="ph_zelle_id" style="flex:1;font-size:.78rem;padding:.3rem .5rem" oninput="_onQrIdentifierInput('zelle')">
                 </div>
               </div>
             </div>
@@ -2044,12 +2045,12 @@
           <div class="ps-method-row">
             <input type="checkbox" id="pmCfgVenmo" class="ps-method-toggle" onchange="_pmCfgToggle('venmo')">
             <div class="ps-method-body">
-              <div class="ps-method-name">Venmo <span class="ps-status ps-status--none" id="psBadge_venmo"></span></div>
-              <div class="ps-method-desc">Khách thanh toán qua Venmo. Nhập @handle của tiệm.</div>
+              <div class="ps-method-name"><span data-i18n="pm_venmo_name">Venmo</span> <span class="ps-status ps-status--none" id="psBadge_venmo"></span></div>
+              <div class="ps-method-desc" data-i18n="pm_venmo_desc">Khách thanh toán qua Venmo. Nhập @handle của tiệm.</div>
               <div class="ps-method-fields" id="pmCfgVenmoFields">
                 <div class="ps-field-row">
                   <span class="ps-field-label">@Handle</span>
-                  <input class="sa-input" id="pmCfgVenmoHandle" type="text" placeholder="@tên-tiệm" style="flex:1;font-size:.78rem;padding:.3rem .5rem" oninput="_onQrIdentifierInput('venmo')">
+                  <input class="sa-input" id="pmCfgVenmoHandle" type="text" placeholder="@tên-tiệm" data-i18n-placeholder="ph_venmo_handle" style="flex:1;font-size:.78rem;padding:.3rem .5rem" oninput="_onQrIdentifierInput('venmo')">
                 </div>
               </div>
             </div>
@@ -2059,18 +2060,18 @@
           <div class="ps-method-row">
             <input type="checkbox" id="pmCfgTap" class="ps-method-toggle" onchange="_pmCfgToggle('tapToPay')">
             <div class="ps-method-body">
-              <div class="ps-method-name">Tap to Pay (iPhone) <span class="ps-method-badge ps-badge--beta">Beta</span> <span class="ps-status ps-status--none" id="psBadge_tapToPay"></span></div>
-              <div class="ps-method-desc">iPhone nhận thanh toán không tiếp xúc. Chọn nhà cung cấp bên dưới để bắt đầu cài đặt.</div>
+              <div class="ps-method-name"><span data-i18n="pm_tap_name">Tap to Pay (iPhone)</span> <span class="ps-method-badge ps-badge--beta">Beta</span> <span class="ps-status ps-status--none" id="psBadge_tapToPay"></span></div>
+              <div class="ps-method-desc" data-i18n="pm_tap_desc">iPhone nhận thanh toán không tiếp xúc. Chọn nhà cung cấp bên dưới để bắt đầu cài đặt.</div>
               <div class="ps-guided-panel" id="pmCfgTapPanel">
-                <div class="ps-guided-title">Cài đặt Tap to Pay</div>
-                <div class="ps-guided-step"><div class="ps-step-num">1</div><div>Chọn nhà cung cấp thanh toán cho tiệm:</div></div>
+                <div class="ps-guided-title" data-i18n="pm_tap_setup_title">Cài đặt Tap to Pay</div>
+                <div class="ps-guided-step"><div class="ps-step-num">1</div><div data-i18n="pm_tap_step1">Chọn nhà cung cấp thanh toán cho tiệm:</div></div>
                 <div class="ps-provider-row">
                   <button class="ps-provider-btn" id="tapProvStripe" onclick="_selectProvider('tapToPay','stripe')">Stripe</button>
                   <button class="ps-provider-btn" id="tapProvSquare" onclick="_selectProvider('tapToPay','square')">Square</button>
                 </div>
-                <div class="ps-guided-step"><div class="ps-step-num">2</div><div>Cài ứng dụng nhận thanh toán trên iPhone của nhân viên và đăng nhập tài khoản provider.</div></div>
-                <div class="ps-guided-step"><div class="ps-step-num">3</div><div>Hệ thống tự động kích hoạt phương thức này trong màn hình thu tiền sau khi kết nối.</div></div>
-                <div class="ps-guided-note">⚙ Tính năng đang hoàn thiện. Lưu cài đặt để đăng ký — hệ thống sẽ thông báo khi sẵn sàng kết nối.</div>
+                <div class="ps-guided-step"><div class="ps-step-num">2</div><div data-i18n="pm_tap_step2">Cài ứng dụng nhận thanh toán trên iPhone của nhân viên và đăng nhập tài khoản provider.</div></div>
+                <div class="ps-guided-step"><div class="ps-step-num">3</div><div data-i18n="pm_tap_step3">Hệ thống tự động kích hoạt phương thức này trong màn hình thu tiền sau khi kết nối.</div></div>
+                <div class="ps-guided-note" data-i18n="settings_coming_soon">⚙ Tính năng đang hoàn thiện. Lưu cài đặt để đăng ký — hệ thống sẽ thông báo khi sẵn sàng kết nối.</div>
               </div>
             </div>
           </div>
@@ -2079,33 +2080,33 @@
           <div class="ps-method-row">
             <input type="checkbox" id="pmCfgReader" class="ps-method-toggle" onchange="_pmCfgToggle('reader')">
             <div class="ps-method-body">
-              <div class="ps-method-name">Máy đọc thẻ (Card Reader) <span class="ps-method-badge ps-badge--beta">Beta</span> <span class="ps-status ps-status--none" id="psBadge_reader"></span></div>
-              <div class="ps-method-desc">Kết nối máy đọc thẻ vật lý với iPad. Chọn nhà cung cấp để bắt đầu cài đặt.</div>
+              <div class="ps-method-name"><span data-i18n="pm_reader_name">Máy đọc thẻ (Card Reader)</span> <span class="ps-method-badge ps-badge--beta">Beta</span> <span class="ps-status ps-status--none" id="psBadge_reader"></span></div>
+              <div class="ps-method-desc" data-i18n="pm_reader_desc">Kết nối máy đọc thẻ vật lý với iPad. Chọn nhà cung cấp để bắt đầu cài đặt.</div>
               <div class="ps-guided-panel" id="pmCfgRdrPanel">
-                <div class="ps-guided-title">Cài đặt Máy Đọc Thẻ</div>
-                <div class="ps-guided-step"><div class="ps-step-num">1</div><div>Chọn nhà cung cấp thiết bị:</div></div>
+                <div class="ps-guided-title" data-i18n="pm_reader_setup_title">Cài đặt Máy Đọc Thẻ</div>
+                <div class="ps-guided-step"><div class="ps-step-num">1</div><div data-i18n="pm_reader_step1">Chọn nhà cung cấp thiết bị:</div></div>
                 <div class="ps-provider-row">
                   <button class="ps-provider-btn" id="rdrProvStripe" onclick="_selectProvider('reader','stripe')">Stripe Terminal</button>
                   <button class="ps-provider-btn" id="rdrProvSquare" onclick="_selectProvider('reader','square')">Square Reader</button>
                 </div>
-                <div class="ps-guided-step"><div class="ps-step-num">2</div><div>Kết nối máy đọc thẻ với iPad qua Bluetooth hoặc cổng Lightning / USB-C.</div></div>
-                <div class="ps-guided-step"><div class="ps-step-num">3</div><div>Hệ thống tự động nhận diện thiết bị và kích hoạt phương thức trong màn hình thu tiền.</div></div>
-                <div class="ps-guided-note">⚙ Tính năng đang hoàn thiện. Lưu cài đặt để đăng ký — hệ thống sẽ thông báo khi sẵn sàng kết nối.</div>
+                <div class="ps-guided-step"><div class="ps-step-num">2</div><div data-i18n="pm_reader_step2">Kết nối máy đọc thẻ với iPad qua Bluetooth hoặc cổng Lightning / USB-C.</div></div>
+                <div class="ps-guided-step"><div class="ps-step-num">3</div><div data-i18n="pm_reader_step3">Hệ thống tự động nhận diện thiết bị và kích hoạt phương thức trong màn hình thu tiền.</div></div>
+                <div class="ps-guided-note" data-i18n="settings_coming_soon">⚙ Tính năng đang hoàn thiện. Lưu cài đặt để đăng ký — hệ thống sẽ thông báo khi sẵn sàng kết nối.</div>
               </div>
             </div>
           </div>
 
           <div style="margin-top:1rem">
-            <button class="btn btn--primary" onclick="savePaymentConfig()" style="font-size:.78rem">Lưu Phương Thức</button>
+            <button class="btn btn--primary" onclick="savePaymentConfig()" style="font-size:.78rem" data-i18n="btn_save_method">Lưu Phương Thức</button>
             <span class="sa-msg" id="payMethodsMsg"></span>
           </div>
         </div>
 
         <!-- Staff account permissions — owner only -->
         <div class="sa-card" id="staffPermsCard" style="display:none;margin-top:1.2rem">
-          <div style="font-weight:600;margin-bottom:.2rem;font-size:.85rem">Phân Quyền Nhân Viên</div>
-          <div style="font-size:.7rem;color:var(--muted);margin-bottom:1rem">Chọn những gì mỗi nhân viên được phép làm khi đăng nhập vào hệ thống</div>
-          <div id="staffPermsList"><div style="font-size:.8rem;color:var(--muted)">Đang tải…</div></div>
+          <div style="font-weight:600;margin-bottom:.2rem;font-size:.85rem" data-i18n="lbl_staff_perms">Phân Quyền Nhân Viên</div>
+          <div style="font-size:.7rem;color:var(--muted);margin-bottom:1rem" data-i18n="lbl_staff_perms_desc">Chọn những gì mỗi nhân viên được phép làm khi đăng nhập vào hệ thống</div>
+          <div id="staffPermsList"><div style="font-size:.8rem;color:var(--muted)" data-i18n="empty_perms">Đang tải…</div></div>
         </div>
       </div>
 
@@ -2116,52 +2117,52 @@
 <!-- ── Service modal ── -->
 <div class="sa-modal-backdrop hidden" id="serviceModal">
   <div class="sa-modal">
-    <h3 id="serviceModalTitle">Thêm Dịch Vụ</h3>
+    <h3 id="serviceModalTitle" data-i18n="modal_add_svc">Thêm Dịch Vụ</h3>
     <input type="hidden" id="serviceDocId">
 
     <div class="sa-field">
-      <label>Tên Dịch Vụ *</label>
-      <input class="sa-input" id="svcName" placeholder="Gel Nails, Manicure…">
+      <label data-i18n="lbl_svc_name">Tên Dịch Vụ *</label>
+      <input class="sa-input" id="svcName" placeholder="Gel Nails, Manicure…" data-i18n-placeholder="ph_svc_name">
     </div>
 
     <div class="sa-field">
-      <label>Danh Mục</label>
+      <label data-i18n="lbl_category">Danh Mục</label>
       <select class="sa-select" id="svcCategory">
-        <option value="">— Chọn danh mục —</option>
+        <option value="" data-i18n="cat_select">— Chọn danh mục —</option>
       </select>
     </div>
 
     <div class="sa-row2">
       <div class="sa-field">
-        <label>Giá</label>
-        <input class="sa-input" id="svcPrice" placeholder="$35+">
+        <label data-i18n="lbl_price">Giá</label>
+        <input class="sa-input" id="svcPrice" placeholder="$35+" data-i18n-placeholder="ph_price">
       </div>
       <div class="sa-field">
-        <label>Thời Gian</label>
-        <input class="sa-input" id="svcDuration" placeholder="60 phút">
+        <label data-i18n="lbl_duration">Thời Gian</label>
+        <input class="sa-input" id="svcDuration" placeholder="60 phút" data-i18n-placeholder="ph_duration">
       </div>
     </div>
 
     <div class="sa-field">
-      <label>Mô Tả</label>
-      <textarea class="sa-input" id="svcDesc" rows="2" placeholder="Mô tả dịch vụ…"></textarea>
+      <label data-i18n="lbl_description">Mô Tả</label>
+      <textarea class="sa-input" id="svcDesc" rows="2" placeholder="Mô tả dịch vụ…" data-i18n-placeholder="ph_description"></textarea>
     </div>
 
     <div class="sa-field">
-      <label>Ảnh URL (Unsplash hoặc link ảnh)</label>
-      <input class="sa-input" id="svcImageUrl" placeholder="https://images.unsplash.com/…">
+      <label data-i18n="lbl_image">Ảnh URL (Unsplash hoặc link ảnh)</label>
+      <input class="sa-input" id="svcImageUrl" placeholder="https://images.unsplash.com/…" data-i18n-placeholder="ph_image_url">
     </div>
 
     <div class="sa-field">
-      <label>Nhân Viên Thực Hiện</label>
+      <label data-i18n="lbl_staff_assigned">Nhân Viên Thực Hiện</label>
       <div id="svcStaffChecks" class="staff-checks">
-        <span style="color:var(--muted);font-size:.72rem">Chưa có nhân viên</span>
+        <span style="color:var(--muted);font-size:.72rem" data-i18n="empty_staff_svc">Chưa có nhân viên</span>
       </div>
     </div>
 
     <div class="sa-modal-actions">
-      <button class="btn btn--outline btn--sm" onclick="closeServiceModal()">Hủy</button>
-      <button class="btn btn--primary btn--sm" onclick="saveService()">Lưu</button>
+      <button class="btn btn--outline btn--sm" onclick="closeServiceModal()" data-i18n="btn_cancel">Hủy</button>
+      <button class="btn btn--primary btn--sm" onclick="saveService()" data-i18n="btn_save">Lưu</button>
     </div>
     <div class="sa-msg" id="svcMsg"></div>
   </div>
@@ -2170,19 +2171,19 @@
 <!-- ── Staff modal ── -->
 <div class="sa-modal-backdrop hidden" id="staffModal">
   <div class="sa-modal">
-    <h3 id="staffModalTitle">Thêm Nhân Viên</h3>
+    <h3 id="staffModalTitle" data-i18n="modal_add_staff">Thêm Nhân Viên</h3>
     <input type="hidden" id="staffDocId">
 
     <div class="sa-field">
-      <label>Tên *</label>
-      <input class="sa-input" id="staffName" placeholder="Tên nhân viên…">
+      <label data-i18n="lbl_name">Tên *</label>
+      <input class="sa-input" id="staffName" placeholder="Tên nhân viên…" data-i18n-placeholder="ph_mb_name">
     </div>
 
     <div class="sa-row2">
       <div class="sa-field">
-        <label>Vai Trò</label>
+        <label data-i18n="lbl_role">Vai Trò</label>
         <select class="sa-select" id="staffRole">
-          <option value="">— Chọn vai trò —</option>
+          <option value="" data-i18n="role_select">— Chọn vai trò —</option>
           <option value="Nail Technician">Nail Technician</option>
           <option value="Senior Nail Technician">Senior Nail Technician</option>
           <option value="Lead Technician">Lead Technician</option>
@@ -2193,9 +2194,9 @@
         </select>
       </div>
       <div class="sa-field">
-        <label>Cấp Độ</label>
+        <label data-i18n="lbl_level">Cấp Độ</label>
         <select class="sa-select" id="staffLevel">
-          <option value="">— Cấp độ —</option>
+          <option value="" data-i18n="level_select">— Cấp độ —</option>
           <option value="Junior">Junior</option>
           <option value="Mid">Mid</option>
           <option value="Senior">Senior</option>
@@ -2206,36 +2207,36 @@
     </div>
 
     <div class="sa-field">
-      <label>Loại Hợp Đồng</label>
+      <label data-i18n="lbl_employment">Loại Hợp Đồng</label>
       <select class="sa-select" id="staffEmploymentType">
-        <option value="">— Chọn loại —</option>
-        <option value="full_time">Toàn thời gian</option>
-        <option value="part_time">Bán thời gian</option>
-        <option value="contract">Hợp đồng</option>
+        <option value="" data-i18n="emp_select">— Chọn loại —</option>
+        <option value="full_time" data-i18n="emp_full">Toàn thời gian</option>
+        <option value="part_time" data-i18n="emp_part">Bán thời gian</option>
+        <option value="contract" data-i18n="emp_contract">Hợp đồng</option>
       </select>
     </div>
 
     <div class="sa-field">
-      <label>Chuyên Môn</label>
+      <label data-i18n="lbl_skills">Chuyên Môn</label>
       <div class="skill-chips" id="staffSkillsGrid"></div>
     </div>
 
     <div class="sa-field">
-      <label>Lịch Làm Việc</label>
+      <label data-i18n="lbl_schedule">Lịch Làm Việc</label>
       <div class="schedule-editor" id="schedEditor"></div>
     </div>
 
     <div class="sa-field">
-      <label>Hoa Hồng Dịch Vụ (%)</label>
+      <label data-i18n="lbl_commission_pct">Hoa Hồng Dịch Vụ (%)</label>
       <div class="sa-comm-row">
-        <input class="sa-input" id="staffCommission" type="number" min="0" max="100" step="1" placeholder="0" style="width:72px">
-        <span style="font-size:.68rem;color:var(--muted)">% trên tiền dịch vụ đã thu · Tip tính riêng · 0 = chưa cài đặt</span>
+        <input class="sa-input" id="staffCommission" type="number" min="0" max="100" step="1" placeholder="0" data-i18n-placeholder="ph_commission" style="width:72px">
+        <span style="font-size:.68rem;color:var(--muted)" data-i18n="lbl_commission_note">% trên tiền dịch vụ đã thu · Tip tính riêng · 0 = chưa cài đặt</span>
       </div>
     </div>
 
     <div class="sa-modal-actions">
-      <button class="btn btn--outline btn--sm" onclick="closeStaffModal()">Hủy</button>
-      <button class="btn btn--primary btn--sm" onclick="saveStaff()">Lưu</button>
+      <button class="btn btn--outline btn--sm" onclick="closeStaffModal()" data-i18n="btn_cancel">Hủy</button>
+      <button class="btn btn--primary btn--sm" onclick="saveStaff()" data-i18n="btn_save">Lưu</button>
     </div>
     <div class="sa-msg" id="staffMsg"></div>
   </div>
@@ -2247,43 +2248,43 @@
 <!-- Cancel booking modal -->
 <div class="sa-modal-backdrop hidden" id="cancelModal">
   <div class="sa-modal">
-    <h3 style="color:var(--danger)">Hủy Lịch Hẹn</h3>
+    <h3 style="color:var(--danger)" data-i18n="modal_cancel_appt">Hủy Lịch Hẹn</h3>
     <input type="hidden" id="cancelBookingId">
     <input type="hidden" id="cancelBookingPhone">
     <input type="hidden" id="cancelBookingName">
     <input type="hidden" id="cancelBookingSvc">
     <input type="hidden" id="cancelBookingDate">
     <input type="hidden" id="cancelBookingTime">
-    <div class="sa-cancel-modal-warn" id="cancelModalDesc">Bạn đang hủy lịch hẹn này.</div>
+    <div class="sa-cancel-modal-warn" id="cancelModalDesc" data-i18n="cancel_warn_text">Bạn đang hủy lịch hẹn này.</div>
     <div class="sa-field">
-      <label>Lý do hủy *</label>
+      <label data-i18n="lbl_cancel_reason">Lý do hủy *</label>
       <select class="sa-select" id="cancelReasonSelect" onchange="cancelReasonChanged()">
-        <option value="">-- Chọn lý do --</option>
-        <option value="Khách yêu cầu hủy">Khách yêu cầu hủy</option>
-        <option value="Không có nhân viên phù hợp">Không có nhân viên phù hợp</option>
-        <option value="Tiệm có sự cố">Tiệm có sự cố</option>
-        <option value="Khách không liên lạc được">Khách không liên lạc được</option>
-        <option value="Khác">Khác (ghi rõ bên dưới)</option>
+        <option value="" data-i18n="cancel_r_select">-- Chọn lý do --</option>
+        <option value="Khách yêu cầu hủy" data-i18n="cancel_r_cust">Khách yêu cầu hủy</option>
+        <option value="Không có nhân viên phù hợp" data-i18n="cancel_r_nostaff">Không có nhân viên phù hợp</option>
+        <option value="Tiệm có sự cố" data-i18n="cancel_r_shop">Tiệm có sự cố</option>
+        <option value="Khách không liên lạc được" data-i18n="cancel_r_nocontact">Khách không liên lạc được</option>
+        <option value="Khác" data-i18n="cancel_r_other">Khác (ghi rõ bên dưới)</option>
       </select>
     </div>
     <div class="sa-field" id="cancelReasonOtherField" style="display:none">
-      <label>Ghi rõ lý do</label>
-      <input class="sa-input" id="cancelReasonOther" placeholder="Nhập lý do cụ thể…" oninput="_updateCancelSmsPreview()">
+      <label data-i18n="lbl_cancel_detail">Ghi rõ lý do</label>
+      <input class="sa-input" id="cancelReasonOther" placeholder="Nhập lý do cụ thể…" data-i18n-placeholder="ph_cancel_detail" oninput="_updateCancelSmsPreview()">
     </div>
     <div class="sa-field">
       <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">
         <input type="checkbox" id="cancelNotifyCheck" style="width:15px;height:15px;cursor:pointer" onchange="_updateCancelSmsPreview()">
-        Nhắn tin cho khách khi hủy
+        <span data-i18n="lbl_notify_sms">Nhắn tin cho khách khi hủy</span>
       </label>
     </div>
     <div id="cancelSmsPreview" style="display:none" class="sa-field">
-      <label>Nội dung tin nhắn (có thể chỉnh sửa)</label>
+      <label data-i18n="lbl_sms_body">Nội dung tin nhắn (có thể chỉnh sửa)</label>
       <textarea class="sa-input" id="cancelSmsText" rows="5" style="resize:vertical;font-size:.78rem;line-height:1.5"></textarea>
-      <div style="font-size:.65rem;color:var(--muted);margin-top:.3rem">Nhấn "Xác nhận hủy" sẽ mở ứng dụng nhắn tin trên điện thoại.</div>
+      <div style="font-size:.65rem;color:var(--muted);margin-top:.3rem" data-i18n="lbl_sms_note">Nhấn "Xác nhận hủy" sẽ mở ứng dụng nhắn tin trên điện thoại.</div>
     </div>
     <div class="sa-modal-actions">
-      <button class="btn btn--outline btn--sm" onclick="closeCancelModal()">Không hủy</button>
-      <button class="btn btn--sm" style="background:var(--danger);color:#fff;font-weight:700;padding:.45rem 1rem" onclick="_submitCancelBooking()">Xác nhận hủy</button>
+      <button class="btn btn--outline btn--sm" onclick="closeCancelModal()" data-i18n="btn_no_cancel">Không hủy</button>
+      <button class="btn btn--sm" style="background:var(--danger);color:#fff;font-weight:700;padding:.45rem 1rem" onclick="_submitCancelBooking()" data-i18n="btn_confirm_cancel">Xác nhận hủy</button>
     </div>
   </div>
 </div>
@@ -2291,21 +2292,21 @@
 <!-- Refund modal -->
 <div class="sa-modal-backdrop hidden" id="refundModal">
   <div class="sa-modal">
-    <h3 style="color:var(--danger);margin-bottom:.25rem">&#8617; Hoàn Tiền</h3>
+    <h3 style="color:var(--danger);margin-bottom:.25rem" data-i18n="modal_refund">↩ Hoàn Tiền</h3>
     <div id="rfHeader" style="font-size:.78rem;color:var(--muted);margin-bottom:1rem"></div>
     <input type="hidden" id="rfBookingId">
     <div class="pm-group">
-      <label class="pm-label">Số tiền hoàn ($) *</label>
+      <label class="pm-label" data-i18n="lbl_refund_amount">Số tiền hoàn ($) *</label>
       <input class="sa-input" id="rfAmount" type="number" min="0" step="0.01" placeholder="0.00" style="width:100%">
     </div>
     <div class="pm-group">
-      <label class="pm-label">Lý do hoàn tiền *</label>
-      <input class="sa-input" id="rfReason" type="text" placeholder="Ví dụ: Khách không hài lòng, lỗi kỹ thuật viên…" style="width:100%">
+      <label class="pm-label" data-i18n="lbl_refund_reason">Lý do hoàn tiền *</label>
+      <input class="sa-input" id="rfReason" type="text" placeholder="Ví dụ: Khách không hài lòng, lỗi kỹ thuật viên…" data-i18n-placeholder="ph_refund_reason" style="width:100%">
     </div>
     <div id="rfMsg" style="display:none;font-size:.75rem;margin:.2rem 0"></div>
     <div class="sa-modal-actions">
-      <button class="btn btn--outline btn--sm" onclick="closeRefundModal()">Hủy bỏ</button>
-      <button class="btn btn--sm sa-act--refund" id="rfSaveBtn" onclick="saveRefund()" style="font-size:.78rem;font-weight:700;padding:.45rem 1.1rem">Xác nhận hoàn tiền</button>
+      <button class="btn btn--outline btn--sm" onclick="closeRefundModal()" data-i18n="btn_cancel">Hủy bỏ</button>
+      <button class="btn btn--sm sa-act--refund" id="rfSaveBtn" onclick="saveRefund()" style="font-size:.78rem;font-weight:700;padding:.45rem 1.1rem" data-i18n="btn_confirm_refund">Xác nhận hoàn tiền</button>
     </div>
   </div>
 </div>
@@ -2313,18 +2314,18 @@
 <!-- Set price modal (AI pricing assist) -->
 <div class="sa-modal-backdrop hidden" id="setPriceModal">
   <div class="sa-modal">
-    <h3 style="color:var(--gold-lt);margin-bottom:.25rem">Đặt Giá Dịch Vụ</h3>
+    <h3 style="color:var(--gold-lt);margin-bottom:.25rem" data-i18n="modal_set_price">Đặt Giá Dịch Vụ</h3>
     <div id="spHeader" style="font-size:.78rem;color:var(--muted);margin-bottom:.4rem"></div>
     <div id="spSuggest" style="display:none;font-size:.72rem;color:#fbbf24;margin-bottom:.8rem;padding:.35rem .5rem;border-radius:4px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2)"></div>
     <input type="hidden" id="spBookingId">
     <div class="pm-group">
-      <label class="pm-label">Giá ước tính</label>
-      <input class="sa-input" id="spPrice" type="text" placeholder="Ví dụ: 45 hoặc $35–$55" style="width:100%">
+      <label class="pm-label" data-i18n="lbl_est_price">Giá ước tính</label>
+      <input class="sa-input" id="spPrice" type="text" placeholder="Ví dụ: 45 hoặc $35–$55" data-i18n-placeholder="ph_est_price" style="width:100%">
     </div>
     <div id="spMsg" style="display:none;font-size:.75rem;margin:.2rem 0"></div>
     <div class="sa-modal-actions">
-      <button class="btn btn--outline btn--sm" onclick="closeSetPriceModal()">Hủy bỏ</button>
-      <button class="btn btn--sm sa-act--pay" onclick="saveSetPrice()" style="font-size:.78rem;font-weight:700;padding:.45rem 1.1rem">Lưu giá</button>
+      <button class="btn btn--outline btn--sm" onclick="closeSetPriceModal()" data-i18n="btn_cancel">Hủy bỏ</button>
+      <button class="btn btn--sm sa-act--pay" onclick="saveSetPrice()" style="font-size:.78rem;font-weight:700;padding:.45rem 1.1rem" data-i18n="btn_save_price">Lưu giá</button>
     </div>
   </div>
 </div>
@@ -2332,13 +2333,13 @@
 <!-- Payment modal -->
 <div class="sa-modal-backdrop hidden" id="paymentModal">
   <div class="sa-modal">
-    <h3 style="color:var(--gold-lt);margin-bottom:.25rem">Thu Tiền</h3>
+    <h3 style="color:var(--gold-lt);margin-bottom:.25rem" data-i18n="pay_modal_title">Thu Tiền</h3>
     <div id="pmHeader" style="font-size:.78rem;color:var(--muted);margin-bottom:.6rem"></div>
 
     <!-- Price summary — shown when priceEst is known -->
     <div id="pmSummary" class="pm-summary" style="display:none">
       <div class="pm-summary-row">
-        <span class="pm-summary-label">Tổng giá dịch vụ</span>
+        <span class="pm-summary-label" data-i18n="pay_total">Tổng giá dịch vụ</span>
         <span id="pmSumTotal" class="pm-summary-val"></span>
       </div>
       <div class="pm-summary-row" id="pmSumAddOnRow" style="display:none">
@@ -2350,85 +2351,85 @@
         <span id="pmSumTax" class="pm-summary-val" style="color:var(--muted)"></span>
       </div>
       <div class="pm-summary-row" id="pmSumTipRow" style="display:none">
-        <span class="pm-summary-label" style="color:#fbbf24">Tip</span>
+        <span class="pm-summary-label" style="color:#fbbf24" data-i18n="pay_tip">Tip</span>
         <span id="pmSumTip" class="pm-summary-val" style="color:#fbbf24"></span>
       </div>
       <div class="pm-summary-row pm-summary-row--balance" id="pmSumGrandRow" style="display:none">
-        <span class="pm-summary-label" style="color:var(--cream);font-weight:700;font-size:.68rem">Tổng phải thu</span>
+        <span class="pm-summary-label" style="color:var(--cream);font-weight:700;font-size:.68rem" data-i18n="pay_grand">Tổng phải thu</span>
         <span id="pmSumGrand" class="pm-summary-val pm-summary-val--balance" style="color:var(--cream)"></span>
       </div>
       <div class="pm-summary-row" id="pmSumPaidRow">
-        <span class="pm-summary-label">Số tiền thu</span>
+        <span class="pm-summary-label" data-i18n="pay_collected">Số tiền thu</span>
         <span id="pmSumPaid" class="pm-summary-val pm-summary-val--paid"></span>
       </div>
       <div class="pm-summary-row pm-summary-row--balance">
-        <span class="pm-summary-label" style="color:var(--text)">Còn lại</span>
+        <span class="pm-summary-label" style="color:var(--text)" data-i18n="pay_balance">Còn lại</span>
         <span id="pmSumBalance" class="pm-summary-val pm-summary-val--balance"></span>
       </div>
     </div>
 
     <!-- No-price warning — shown when booking has no price set -->
     <div id="pmNoPrice" class="pm-no-price" style="display:none">
-      <span>&#9888; Chưa có giá dịch vụ — không tính được số dư.</span>
-      <button id="pmNoPriceLink" class="pm-no-price-btn">Đặt giá ngay &#8594;</button>
+      <span data-i18n="pay_no_price">⚠ Chưa có giá dịch vụ — không tính được số dư.</span>
+      <button id="pmNoPriceLink" class="pm-no-price-btn" data-i18n="pay_set_price_btn">Đặt giá ngay →</button>
     </div>
 
     <input type="hidden" id="pmBookingId">
 
     <!-- Add-on services — shown only when base price is known -->
     <div class="pm-group" id="pmAddOnSection" style="display:none">
-      <label class="pm-label">Dịch Vụ Thêm (Add-ons)</label>
+      <label class="pm-label" data-i18n="pay_addons_lbl">Dịch Vụ Thêm (Add-ons)</label>
       <div style="display:flex;gap:.45rem;align-items:center">
         <select class="sa-input" id="pmAddOnSelect" style="flex:1;height:38px;padding:0 .5rem">
-          <option value="">— Chọn add-on —</option>
+          <option value="" data-i18n="pay_addons_ph">— Chọn add-on —</option>
         </select>
-        <button class="btn btn--outline btn--sm" type="button" onclick="_pmAddAddon()" style="flex-shrink:0;height:38px;padding:0 .85rem;white-space:nowrap">+ Thêm</button>
+        <button class="btn btn--outline btn--sm" type="button" onclick="_pmAddAddon()" style="flex-shrink:0;height:38px;padding:0 .85rem;white-space:nowrap" data-i18n="btn_add_addon">+ Thêm</button>
       </div>
       <div id="pmAddOnList" style="margin-top:.35rem;display:flex;flex-direction:column;gap:.22rem"></div>
     </div>
 
     <div class="pm-group">
-      <label class="pm-label">Trạng thái thanh toán</label>
+      <label class="pm-label" data-i18n="pay_pay_status_lbl">Trạng thái thanh toán</label>
       <select class="sa-input" id="pmStatus" style="width:100%;height:38px;padding:0 8px">
-        <option value="paid">Đã thanh toán đủ (Paid in Full)</option>
-        <option value="partial">Thanh toán một phần (Partial)</option>
-        <option value="unpaid">Chưa thanh toán (Unpaid)</option>
+        <option value="paid" data-i18n="pay_opt_paid">Đã thanh toán đủ (Paid in Full)</option>
+        <option value="partial" data-i18n="pay_opt_partial">Thanh toán một phần (Partial)</option>
+        <option value="unpaid" data-i18n="pay_opt_unpaid">Chưa thanh toán (Unpaid)</option>
       </select>
     </div>
     <div class="pm-row">
       <div class="pm-group" style="flex:1">
-        <label class="pm-label">Tổng tiền thu ($)</label>
+        <label class="pm-label" data-i18n="pay_collected">Tổng tiền thu ($)</label>
         <input class="sa-input" id="pmAmount" type="number" min="0" step="0.01" placeholder="0.00" style="width:100%" oninput="_updatePmBalance()">
       </div>
       <div class="pm-group" style="flex:1">
-        <label class="pm-label">Tip ($)</label>
+        <label class="pm-label" data-i18n="pay_tip">Tip ($)</label>
         <input class="sa-input" id="pmTip" type="number" min="0" step="0.01" placeholder="0.00" style="width:100%" oninput="_updatePmBalance()">
       </div>
     </div>
     <!-- Tip suggestion buttons (rendered by openPaymentModal when price is known) -->
     <div id="pmTipBtns" class="pm-tip-btns" style="display:none"></div>
     <div class="pm-group">
-      <label class="pm-label">Phương thức</label>
+      <label class="pm-label" data-i18n="pay_method_lbl">Phương thức</label>
       <select class="sa-input" id="pmMethod" style="width:100%;height:38px;padding:0 8px" onchange="_onPmMethodChange()">
-        <option value="cash">Tiền mặt (Cash)</option>
-        <option value="card">Thẻ (Card)</option>
-        <option value="zelle">Zelle</option>
-        <option value="venmo">Venmo</option>
-        <option value="other">Khác (Other)</option>
+        <option value="cash" data-i18n="pay_method_cash">Tiền mặt (Cash)</option>
+        <option value="card" data-i18n="pay_method_card">Thẻ (Card)</option>
+        <option value="zelle" data-i18n="pay_method_zelle">Zelle</option>
+        <option value="venmo" data-i18n="pay_method_venmo">Venmo</option>
+        <option value="other" data-i18n="pay_method_other">Khác (Other)</option>
       </select>
     </div>
     <!-- QR action button — visible only when a QR-capable method is selected -->
     <div id="pmQrBtn" style="display:none;margin:-.1rem 0 .7rem">
-      <button id="pmQrBtnEl" class="btn btn--outline btn--sm" onclick="showQrPayment()" style="width:100%;font-size:.78rem;letter-spacing:.02em">Hiện mã QR cho khách</button>
+      <button id="pmQrBtnEl" class="btn btn--outline btn--sm" onclick="showQrPayment()" style="width:100%;font-size:.78rem;letter-spacing:.02em" data-i18n="btn_show_qr">Hiện mã QR cho khách</button>
     </div>
     <div class="pm-group">
-      <label class="pm-label">Ghi chú (tuỳ chọn)</label>
-      <input class="sa-input" id="pmNote" type="text" placeholder="Ghi chú thêm…" style="width:100%">
+      <label class="pm-label" data-i18n="pay_note_lbl">Ghi chú (tuỳ chọn)</label>
+      <input class="sa-input" id="pmNote" type="text" placeholder="Ghi chú thêm…" data-i18n-placeholder="pay_note_ph" style="width:100%">
     </div>
     <div id="pmMsg" style="display:none;font-size:.75rem;margin:.2rem 0"></div>
     <div class="sa-modal-actions">
-      <button class="btn btn--outline btn--sm" onclick="closePaymentModal()">Hủy bỏ</button>
-      <button class="btn btn--sm sa-act--pay" id="pmSaveBtn" onclick="savePayment()" style="font-size:.78rem;font-weight:700;padding:.45rem 1.1rem">Lưu thanh toán</button>
+      <button class="btn btn--outline btn--sm" onclick="closePaymentModal()" data-i18n="btn_cancel">Hủy bỏ</button>
+      <button class="btn btn--sm sa-act--pay" id="pmSaveBtn" onclick="savePayment()" style="font-size:.78rem;font-weight:700;padding:.45rem 1.1rem" data-i18n="btn_save_payment">Lưu thanh toán</button>
     </div>
   </div>
 </div>
@@ -2443,10 +2444,10 @@
       <div id="qrPayCanvas"></div>
     </div>
     <div id="qrPayId" style="font-size:.72rem;color:var(--muted);margin:.35rem 0 .2rem"></div>
-    <div style="font-size:.62rem;color:var(--muted);margin-bottom:1rem;opacity:.65">Quét bằng camera điện thoại để thanh toán</div>
+    <div style="font-size:.62rem;color:var(--muted);margin-bottom:1rem;opacity:.65" data-i18n="qr_scan_note">Quét bằng camera điện thoại để thanh toán</div>
     <div style="display:flex;flex-direction:column;gap:.45rem">
-      <button class="btn btn--primary btn--sm" onclick="confirmQrPayment()" style="font-size:.8rem;font-weight:700;padding:.5rem 1rem">&#10003; Khách đã chuyển — Xác nhận</button>
-      <button class="btn btn--outline btn--sm" onclick="closeQrPayment()" style="font-size:.76rem">Quay lại</button>
+      <button class="btn btn--primary btn--sm" onclick="confirmQrPayment()" style="font-size:.8rem;font-weight:700;padding:.5rem 1rem" data-i18n="btn_confirm_qr">&#10003; Khách đã chuyển — Xác nhận</button>
+      <button class="btn btn--outline btn--sm" onclick="closeQrPayment()" style="font-size:.76rem" data-i18n="btn_back_qr">Quay lại</button>
     </div>
   </div>
 </div>
@@ -2454,62 +2455,62 @@
 <!-- Manual booking modal -->
 <div class="sa-modal-backdrop hidden" id="manualBookModal">
   <div class="sa-modal" style="max-height:90vh;overflow-y:auto">
-    <h3 id="mbTitle" style="color:var(--cream);margin-bottom:1rem">Đặt Lịch Mới</h3>
+    <h3 id="mbTitle" style="color:var(--cream);margin-bottom:1rem" data-i18n="modal_new_booking">Đặt Lịch Mới</h3>
     <input type="hidden" id="mbBookingId">
     <div class="mb-group">
-      <label class="mb-label">Tên khách *</label>
-      <input class="sa-input" id="mbName" type="text" placeholder="Tên khách hàng" style="width:100%">
+      <label class="mb-label" data-i18n="lbl_cust_name">Tên khách *</label>
+      <input class="sa-input" id="mbName" type="text" placeholder="Tên khách hàng" data-i18n-placeholder="ph_mb_name" style="width:100%">
     </div>
     <div class="mb-group">
-      <label class="mb-label">Số điện thoại *</label>
-      <input class="sa-input" id="mbPhone" type="tel" inputmode="tel" placeholder="Số điện thoại" style="width:100%">
+      <label class="mb-label" data-i18n="lbl_cust_phone">Số điện thoại *</label>
+      <input class="sa-input" id="mbPhone" type="tel" inputmode="tel" placeholder="Số điện thoại" data-i18n-placeholder="ph_mb_phone" style="width:100%">
     </div>
     <div class="mb-row">
       <div class="mb-group" style="flex:1">
-        <label class="mb-label">Ngày *</label>
+        <label class="mb-label" data-i18n="lbl_date">Ngày *</label>
         <input class="sa-input" id="mbDate" type="date" style="width:100%;color-scheme:dark" onchange="_mbRefreshTimeSlots()">
       </div>
       <div class="mb-group" style="flex:1">
-        <label class="mb-label">Giờ *</label>
+        <label class="mb-label" data-i18n="lbl_time">Giờ *</label>
         <select class="sa-input" id="mbTime" style="width:100%;height:38px;padding:0 .5rem">
-          <option value="">— Chọn giờ —</option>
+          <option value="" data-i18n="ph_mb_time">— Chọn giờ —</option>
         </select>
       </div>
     </div>
     <div class="mb-group">
-      <label class="mb-label">Nhân viên</label>
+      <label class="mb-label" data-i18n="lbl_mb_staff">Nhân viên</label>
       <select class="sa-input" id="mbStaff" style="width:100%;height:38px;padding:0 8px" onchange="_mbRefreshTimeSlots()">
-        <option value="Any">Bất kỳ</option>
+        <option value="Any" data-i18n="ph_mb_any">Bất kỳ</option>
       </select>
     </div>
     <div class="mb-group">
-      <label class="mb-label">Dịch vụ *</label>
-      <div id="mbSvcList" class="mb-svc-list"><div style="font-size:.72rem;color:var(--muted)">Đang tải…</div></div>
+      <label class="mb-label" data-i18n="lbl_mb_svc">Dịch vụ *</label>
+      <div id="mbSvcList" class="mb-svc-list"><div style="font-size:.72rem;color:var(--muted)" data-i18n="empty_loading">Đang tải…</div></div>
     </div>
     <div class="mb-group">
-      <label class="mb-label">Ghi chú</label>
-      <textarea class="sa-input" id="mbNotes" rows="2" placeholder="Ghi chú / yêu cầu đặc biệt…" style="width:100%;resize:vertical"></textarea>
+      <label class="mb-label" data-i18n="lbl_mb_notes">Ghi chú</label>
+      <textarea class="sa-input" id="mbNotes" rows="2" placeholder="Ghi chú / yêu cầu đặc biệt…" data-i18n-placeholder="ph_mb_notes" style="width:100%;resize:vertical"></textarea>
     </div>
     <div class="mb-group">
-      <label class="mb-label">Ảnh tham khảo (URL, mỗi dòng một ảnh)</label>
-      <textarea class="sa-input" id="mbPhotos" rows="2" placeholder="https://drive.google.com/…&#10;https://…" style="width:100%;resize:vertical;font-size:.72rem;font-family:monospace"></textarea>
+      <label class="mb-label" data-i18n="lbl_mb_photos">Ảnh tham khảo (URL, mỗi dòng một ảnh)</label>
+      <textarea class="sa-input" id="mbPhotos" rows="2" placeholder="https://drive.google.com/…&#10;https://…" data-i18n-placeholder="ph_booking_notes" style="width:100%;resize:vertical;font-size:.72rem;font-family:monospace"></textarea>
     </div>
     <div id="mbAvailStatus" style="display:none;font-size:.73rem;padding:.45rem .65rem;border-radius:5px;margin-bottom:.5rem"></div>
     <div id="mbMsg" style="display:none;font-size:.75rem;margin:.2rem 0"></div>
     <!-- Override section: shown only on conflict when role = owner or manager -->
     <div id="mbOverrideSection" style="display:none;margin-top:.6rem;padding:.7rem .85rem;border-radius:7px;background:rgba(248,113,113,.09);border:1px solid rgba(248,113,113,.3)">
-      <div style="font-size:.72rem;font-weight:700;color:var(--danger);margin-bottom:.32rem">⚠ Lịch đã bị chiếm — Đặt đè lịch (Chủ tiệm / Quản lý)</div>
+      <div style="font-size:.72rem;font-weight:700;color:var(--danger);margin-bottom:.32rem" data-i18n="override_title">⚠ Lịch đã bị chiếm — Đặt đè lịch (Chủ tiệm / Quản lý)</div>
       <div id="mbOverrideInfo" style="font-size:.72rem;color:var(--muted);margin-bottom:.5rem;line-height:1.5"></div>
-      <div style="font-size:.68rem;color:var(--muted);margin-bottom:.4rem">Nhập mã PIN để xác nhận đặt đè:</div>
+      <div style="font-size:.68rem;color:var(--muted);margin-bottom:.4rem" data-i18n="override_pin_label">Nhập mã PIN để xác nhận đặt đè:</div>
       <div style="display:flex;gap:.5rem">
-        <input class="sa-input" id="mbOverridePin" type="password" inputmode="numeric" maxlength="6" placeholder="Mã PIN" style="flex:1;font-size:.88rem;letter-spacing:.15em" onkeydown="if(event.key==='Enter')_mbConfirmOverride()">
-        <button class="btn btn--danger btn--sm" onclick="_mbConfirmOverride()">Xác nhận đặt đè</button>
+        <input class="sa-input" id="mbOverridePin" type="password" inputmode="numeric" maxlength="6" placeholder="Mã PIN" data-i18n-placeholder="ph_override_pin" style="flex:1;font-size:.88rem;letter-spacing:.15em" onkeydown="if(event.key==='Enter')_mbConfirmOverride()">
+        <button class="btn btn--danger btn--sm" onclick="_mbConfirmOverride()" data-i18n="btn_confirm_override">Xác nhận đặt đè</button>
       </div>
       <div id="mbOverridePinMsg" style="font-size:.7rem;color:var(--danger);margin-top:.32rem;display:none"></div>
     </div>
     <div class="sa-modal-actions">
-      <button class="btn btn--outline btn--sm" onclick="closeManualBookModal()">Hủy bỏ</button>
-      <button class="btn btn--primary btn--sm" id="mbSaveBtn" onclick="saveManualBooking()">Lưu lịch hẹn</button>
+      <button class="btn btn--outline btn--sm" onclick="closeManualBookModal()" data-i18n="btn_cancel">Hủy bỏ</button>
+      <button class="btn btn--primary btn--sm" id="mbSaveBtn" onclick="saveManualBooking()" data-i18n="btn_save">Lưu lịch hẹn</button>
     </div>
   </div>
 </div>
@@ -3025,19 +3026,21 @@
 
   // ── Category tabs ────────────────────────────────────────────────────────────
   function buildCatTabs() {
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
     var container = document.getElementById('catTabs');
     var extra = SERVICE_CATS.map(function(c) {
       return '<button class="cat-tab" data-cat="' + esc(c.key) + '" onclick="filterCat(\'' + esc(c.key) + '\',this)">' + esc(c.label) + '</button>';
     }).join('');
-    container.innerHTML = '<button class="cat-tab active" data-cat="all" onclick="filterCat(\'all\',this)">Tất cả</button>' + extra;
+    container.innerHTML = '<button class="cat-tab active" data-cat="all" onclick="filterCat(\'all\',this)">' + esc(lb.cat_all) + '</button>' + extra;
   }
 
   function populateCategorySelect() {
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
     var sel = document.getElementById('svcCategory');
     var opts = SERVICE_CATS.map(function(c) {
       return '<option value="' + esc(c.key) + '">' + esc(c.label) + '</option>';
     }).join('');
-    sel.innerHTML = '<option value="">— Chọn danh mục —</option>' + opts;
+    sel.innerHTML = '<option value="">' + esc(lb.cat_select) + '</option>' + opts;
   }
 
   function filterCat(cat, btn) {
@@ -3076,9 +3079,10 @@
       ? allServiceDocs
       : allServiceDocs.filter(function(d){ return d.data.category === currentCatFilter; });
 
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
     if (!filtered.length) {
       el.innerHTML = '<div class="sa-empty">' +
-        (allServiceDocs.length ? 'Không có dịch vụ nào trong danh mục này.' : 'Chưa có dịch vụ nào. Nhấn "+ Thêm Dịch Vụ" để bắt đầu.') +
+        (allServiceDocs.length ? esc(lb.empty_svc_cat) : esc(lb.empty_svc_none)) +
         '</div>';
       return;
     }
@@ -3129,16 +3133,17 @@
     document.getElementById('serviceModal').classList.remove('hidden');
     document.getElementById('svcMsg').textContent = '';
 
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
     // Build staff checkboxes from current snapshot
     var staffHtml = currentStaffData.length
       ? currentStaffData.map(function(s) {
           return '<label class="staff-check"><input type="checkbox" value="' + esc(s.name) + '"> ' + esc(s.name) + '</label>';
         }).join('')
-      : '<span style="color:var(--muted);font-size:.72rem">Chưa có nhân viên</span>';
+      : '<span style="color:var(--muted);font-size:.72rem">' + esc(lb.empty_staff_svc) + '</span>';
     document.getElementById('svcStaffChecks').innerHTML = staffHtml;
 
     if (!id) {
-      document.getElementById('serviceModalTitle').textContent = 'Thêm Dịch Vụ';
+      document.getElementById('serviceModalTitle').textContent = lb.modal_add_svc;
       document.getElementById('serviceDocId').value = '';
       ['svcName','svcPrice','svcDuration','svcDesc','svcImageUrl'].forEach(function(f){ document.getElementById(f).value = ''; });
       document.getElementById('svcCategory').value = '';
@@ -3148,7 +3153,7 @@
     servicesRef.doc(id).get().then(function(doc) {
       if (!doc.exists) return;
       var d = doc.data();
-      document.getElementById('serviceModalTitle').textContent = 'Chỉnh Sửa Dịch Vụ';
+      document.getElementById('serviceModalTitle').textContent = lb.modal_edit_svc;
       document.getElementById('serviceDocId').value   = id;
       document.getElementById('svcName').value        = d.name     || '';
       document.getElementById('svcCategory').value    = d.category || '';
@@ -3210,9 +3215,10 @@
   }
 
   function renderStaff(snap) {
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
     var el = document.getElementById('staffList');
     if (snap.empty) {
-      el.innerHTML = '<div class="sa-empty">Chưa có nhân viên nào. Nhấn "+ Thêm Nhân Viên" để bắt đầu.</div>';
+      el.innerHTML = '<div class="sa-empty">' + esc(lb.empty_staff_none) + '</div>';
       return;
     }
     var isOwner = _userRole === 'owner'; // only owners may edit staff records
@@ -3242,7 +3248,7 @@
           '</div>' +
           '<div class="sa-item__meta">' + esc(s.role || '—') + (specs ? ' · ' + esc(specs) : '') +
             (s.commissionPct ? ' · HH ' + s.commissionPct + '%' : '') +
-            (s.employmentType === 'full_time' ? ' · Toàn TG' : s.employmentType === 'part_time' ? ' · Bán TG' : s.employmentType === 'contract' ? ' · Hợp đồng' : '') + '</div>' +
+            (s.employmentType === 'full_time' ? ' · ' + lb.emp_full : s.employmentType === 'part_time' ? ' · ' + lb.emp_part : s.employmentType === 'contract' ? ' · ' + lb.emp_contract : '') + '</div>' +
           '<div class="sched-pills">' + pills + '</div>' +
         '</div>' +
         '<div class="sa-item__actions">' + ownerActions + '</div>' +
@@ -3286,11 +3292,12 @@
 
   function openStaffModal(id) {
     if (_userRole !== 'owner') { showToast('Chỉ chủ tiệm có quyền quản lý nhân viên.'); return; }
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
     document.getElementById('staffModal').classList.remove('hidden');
     document.getElementById('staffMsg').textContent = '';
 
     if (!id) {
-      document.getElementById('staffModalTitle').textContent = 'Thêm Nhân Viên';
+      document.getElementById('staffModalTitle').textContent = lb.modal_add_staff;
       document.getElementById('staffDocId').value    = '';
       document.getElementById('staffName').value     = '';
       document.getElementById('staffRole').value           = '';
@@ -3304,7 +3311,7 @@
     staffRef.doc(id).get().then(function(doc) {
       if (!doc.exists) return;
       var d = doc.data();
-      document.getElementById('staffModalTitle').textContent = 'Chỉnh Sửa Nhân Viên';
+      document.getElementById('staffModalTitle').textContent = lb.modal_edit_staff;
       document.getElementById('staffDocId').value    = id;
       document.getElementById('staffName').value     = d.name || '';
       document.getElementById('staffRole').value          = d.role || '';
@@ -3353,11 +3360,12 @@
 
   // ── Availability ─────────────────────────────────────────────────────────────
   function renderAvailability() {
+    var lb   = _LABELS[_dlcLang] || _LABELS.vi;
     var el   = document.getElementById('availList');
     var head = document.getElementById('todayHeading');
 
     var dayKeys  = ['sun','mon','tue','wed','thu','fri','sat'];
-    var dayLabels= ['Chủ Nhật','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7'];
+    var dayLabels= [lb.day_sun, lb.day_mon, lb.day_tue, lb.day_wed, lb.day_thu, lb.day_fri, lb.day_sat];
     var now      = new Date();
     var todayKey = dayKeys[now.getDay()];
     var todayLbl = dayLabels[now.getDay()];
@@ -3367,7 +3375,7 @@
     head.textContent = todayLbl + ' — ' + timeStr;
 
     if (!currentStaffData.length) {
-      el.innerHTML = '<div class="sa-empty">Đang tải dữ liệu nhân viên…</div>';
+      el.innerHTML = '<div class="sa-empty">' + esc(lb.avail_loading) + '</div>';
       return;
     }
 
@@ -3384,10 +3392,10 @@
         nowWorking = nowMins >= startM && nowMins < endM;
       }
       var badge = nowWorking
-        ? '<span class="avail-badge avail-badge--now">Đang làm</span>'
+        ? '<span class="avail-badge avail-badge--now">' + esc(lb.avail_now) + '</span>'
         : working
-          ? '<span class="avail-badge avail-badge--today">Hôm nay</span>'
-          : '<span class="avail-badge avail-badge--off">Nghỉ</span>';
+          ? '<span class="avail-badge avail-badge--today">' + esc(lb.avail_today) + '</span>'
+          : '<span class="avail-badge avail-badge--off">' + esc(lb.avail_off) + '</span>';
       html += '<div class="avail-card' + (nowWorking ? ' avail-now' : '') + '">' +
         '<div class="avail-name">' + esc(s.name) + badge + '</div>' +
         (s.role ? '<div class="avail-role">' + esc(s.role) + '</div>' : '') +
@@ -3397,7 +3405,7 @@
       '</div>';
     });
 
-    el.innerHTML = html || '<div class="sa-empty">Không có nhân viên hoạt động nào được tìm thấy.</div>';
+    el.innerHTML = html || '<div class="sa-empty">' + esc(lb.avail_empty) + '</div>';
   }
 
   // ── Tab navigation ───────────────────────────────────────────────────────────
@@ -3420,17 +3428,21 @@
 
   // ── Hours ─────────────────────────────────────────────────────────────────────
   function loadHoursGrid(hoursSchedule) {
+    var lb   = _LABELS[_dlcLang] || _LABELS.vi;
     var h    = hoursSchedule || DEFAULT_HOURS;
     var grid = document.getElementById('hoursGrid');
+    // Build localized day labels map for the DAYS array order (mon-sun)
+    var dayLabelMap = { mon: lb.day_mon, tue: lb.day_tue, wed: lb.day_wed, thu: lb.day_thu, fri: lb.day_fri, sat: lb.day_sat, sun: lb.day_sun };
     grid.innerHTML = DAYS.map(function(d) {
       var day = h[d.key] || DEFAULT_HOURS[d.key];
       var isClosed = day.closed || false;
+      var localLabel = dayLabelMap[d.key] || d.label;
       return '<div class="hours-row" id="hrow-' + d.key + '">' +
-        '<span class="hours-row__day">' + d.label + '</span>' +
+        '<span class="hours-row__day">' + localLabel + '</span>' +
         '<input class="hours-input" id="hopen-'  + d.key + '" type="time" value="' + (day.open  ||'09:00') + '"' + (isClosed?' disabled':'') + '>' +
         '<span style="font-size:.72rem;color:var(--muted)">–</span>' +
         '<input class="hours-input" id="hclose-' + d.key + '" type="time" value="' + (day.close ||'18:00') + '"' + (isClosed?' disabled':'') + '>' +
-        '<label class="hours-row__closed"><input type="checkbox" id="hclosed-' + d.key + '"' + (isClosed?' checked':'') + ' onchange="toggleDayClosed(\'' + d.key + '\')"> Đóng</label>' +
+        '<label class="hours-row__closed"><input type="checkbox" id="hclosed-' + d.key + '"' + (isClosed?' checked':'') + ' onchange="toggleDayClosed(\'' + d.key + '\')"> ' + esc(lb.hrs_closed) + '</label>' +
       '</div>';
     }).join('');
   }
@@ -4191,28 +4203,30 @@
   }
 
   function _payBadgeHtml(b) {
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
     var s  = b.status || 'confirmed';
     // No payment badge for terminal non-service states
     if (['canceled','cancelled','no_show','rescheduled'].indexOf(s) >= 0) return '';
     var ps = b.paymentStatus || 'unpaid';
     if (ps === 'paid') {
       var amt = b.amountPaid ? ' $' + Number(b.amountPaid).toFixed(0) : '';
-      return '<span class="sa-pay-badge sa-pay-badge--paid">&#10003; \u0110\u00e3 thu' + esc(amt) + '</span>';
+      return '<span class="sa-pay-badge sa-pay-badge--paid">&#10003; ' + esc(lb.pay_badge_paid) + esc(amt) + '</span>';
     }
     if (ps === 'partial') {
       var bal = _computeBalance(b);
       if (bal.balance !== null) {
-        return '<span class="sa-pay-badge sa-pay-badge--partial">&#9651; C\u00f2n l\u1ea1i $' + bal.balance.toFixed(0) + '</span>';
+        return '<span class="sa-pay-badge sa-pay-badge--partial">&#9651; ' + esc(lb.pay_badge_partial) + bal.balance.toFixed(0) + '</span>';
       }
       var pAmt = b.amountPaid ? ' $' + Number(b.amountPaid).toFixed(0) : '';
-      return '<span class="sa-pay-badge sa-pay-badge--partial">&#9651; M\u1ed9t ph\u1ea7n' + esc(pAmt) + '</span>';
+      return '<span class="sa-pay-badge sa-pay-badge--partial">&#9651; ' + esc(lb.pay_badge_partial_partial) + esc(pAmt) + '</span>';
     }
     // unpaid — only show warning badge when service is completed (not while still pending)
-    if (s === 'completed') return '<span class="sa-pay-badge sa-pay-badge--unpaid">Ch\u01b0a thu</span>';
+    if (s === 'completed') return '<span class="sa-pay-badge sa-pay-badge--unpaid">' + esc(lb.pay_badge_unpaid) + '</span>';
     return '';
   }
 
   function _payDetHtml(b) {
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
     var s  = b.status || 'confirmed';
     if (['canceled','cancelled','no_show','rescheduled'].indexOf(s) >= 0) return '';
     var ps  = b.paymentStatus || 'unpaid';
@@ -4220,29 +4234,29 @@
     // Show payment section when: total is known OR any payment/refund data exists
     var hasData = bal.total > 0 || ps !== 'unpaid' || bal.paid > 0 || bal.refunded > 0;
     if (!hasData) return '';
-    var psLabel = { paid: '\u0110\u00e3 thanh to\u00e1n', partial: 'M\u1ed9t ph\u1ea7n', unpaid: 'Ch\u01b0a thanh to\u00e1n' }[ps] || ps;
+    var psLabel = { paid: lb.pay_status_paid, partial: lb.pay_status_partial, unpaid: lb.pay_status_unpaid }[ps] || ps;
     var psColor = ps === 'paid' ? 'var(--success)' : ps === 'partial' ? '#fbbf24' : 'var(--danger)';
-    var parts   = ['<span style="color:' + psColor + ';font-weight:700">' + psLabel + '</span>'];
-    if (bal.total > 0)     parts.push('T\u1ed5ng: $' + bal.total.toFixed(2));
-    if (bal.paid > 0)      parts.push('\u0110\u00e3 thu: $' + bal.paid.toFixed(2));
+    var parts   = ['<span style="color:' + psColor + ';font-weight:700">' + esc(psLabel) + '</span>'];
+    if (bal.total > 0)     parts.push(esc(lb.pay_total) + ': $' + bal.total.toFixed(2));
+    if (bal.paid > 0)      parts.push(esc(lb.pay_collected) + ': $' + bal.paid.toFixed(2));
     if (bal.refunded > 0)
-      parts.push('<span style="color:var(--danger)">Ho\u00e0n ti\u1ec1n: \u2212$' + bal.refunded.toFixed(2) +
+      parts.push('<span style="color:var(--danger)">' + esc(lb.modal_refund).replace('↩ ', '') + ': \u2212$' + bal.refunded.toFixed(2) +
         (b.refundReason ? ' (' + esc(b.refundReason) + ')' : '') + '</span>');
     if (bal.balance !== null && bal.balance > 0)
-      parts.push('<span style="color:#fbbf24;font-weight:700">C\u00f2n l\u1ea1i: $' + bal.balance.toFixed(2) + '</span>');
-    if (b.tipAmount)       parts.push('Tip: $' + Number(b.tipAmount).toFixed(2));
+      parts.push('<span style="color:#fbbf24;font-weight:700">' + esc(lb.pay_balance) + ': $' + bal.balance.toFixed(2) + '</span>');
+    if (b.tipAmount)       parts.push(esc(lb.pay_tip) + ': $' + Number(b.tipAmount).toFixed(2));
     if (b.paymentMethod)   parts.push(esc(b.paymentMethod));
     if (b.paymentNote)     parts.push(esc(b.paymentNote));
-    var html = '<div class="sa-det-section"><div class="sa-det-label">Thanh to\u00e1n</div>' +
+    var html = '<div class="sa-det-section"><div class="sa-det-label">' + esc(lb.det_payment) + '</div>' +
       '<div class="sa-det-val">' + parts.join(' &middot; ') + '</div></div>';
     // Staff earnings line — shown when staff has a commission rate and booking has payment data
     var earning = _computeStaffEarning(b);
     if (earning && earning.commissionPct > 0) {
       var ep = [earning.commissionPct + '%'];
-      ep.push('Hoa h\u1ed3ng: $' + earning.commission.toFixed(2));
-      if (earning.tip > 0) ep.push('Tip: $' + earning.tip.toFixed(2));
-      ep.push('<strong>T\u1ed5ng: $' + earning.total.toFixed(2) + '</strong>');
-      html += '<div class="sa-det-section"><div class="sa-det-label">Thu nh\u1eadp \u00b7 ' +
+      ep.push(esc(lb.pay_commission) + ': $' + earning.commission.toFixed(2));
+      if (earning.tip > 0) ep.push(esc(lb.pay_tip) + ': $' + earning.tip.toFixed(2));
+      ep.push('<strong>' + esc(lb.pay_total.replace('giá dịch vụ','')) + ': $' + earning.total.toFixed(2) + '</strong>');
+      html += '<div class="sa-det-section"><div class="sa-det-label">' + esc(lb.det_earning) + ' · ' +
         esc(earning.staffName) + '</div><div class="sa-det-val" style="color:var(--success)">' +
         ep.join(' &middot; ') + '</div></div>';
     }
@@ -4611,8 +4625,9 @@
   function openManualBookModal(bookingId, prefill) {
     if (!_canManualBook()) { showToast('Không có quyền thực hiện hành động này.'); return; }
     var b = prefill || (bookingId ? (_bookingCache[bookingId] || {}) : {});
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
     document.getElementById('mbBookingId').value = bookingId || '';
-    document.getElementById('mbTitle').textContent = bookingId ? 'Sửa Lịch Hẹn' : 'Đặt Lịch Mới';
+    document.getElementById('mbTitle').textContent = bookingId ? lb.modal_edit_booking : lb.modal_new_booking;
     document.getElementById('mbName').value  = b.customerName || b.name  || '';
     document.getElementById('mbPhone').value = b.customerPhone || b.phone || '';
     document.getElementById('mbDate').value  = b.requestedDate || b.date  || '';
@@ -5143,10 +5158,11 @@
 
     _renderNextAppt(filtered);
 
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
     if (!filtered.length) {
       el.innerHTML = _saStaffFilter !== 'all'
-        ? '<div class="sa-empty">Kh\u00f4ng c\u00f3 l\u1ecbch h\u1eb9n n\u00e0o cho ' + esc(_saStaffFilter) + '.</div>'
-        : '<div class="sa-empty">Ch\u01b0a c\u00f3 l\u1ecbch h\u1eb9n n\u00e0o.</div>';
+        ? '<div class="sa-empty">' + esc(lb.empty_appt_staff) + esc(_saStaffFilter) + '.</div>'
+        : '<div class="sa-empty">' + esc(lb.empty_appt_none) + '</div>';
       return;
     }
 
@@ -5160,14 +5176,15 @@
 
     var _fiveMinAgo = Date.now() - 5 * 60 * 1000;
 
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
     var statusMap = {
-      confirmed:   '<span class="sa-st sa-st--confirmed">&#9679; X\u00e1c nh\u1eadn</span>',
-      in_progress: '<span class="sa-st sa-st--in_progress">&#9679; \u0110ang l\u00e0m</span>',
-      completed:   '<span class="sa-st sa-st--completed">&#10003; Xong</span>',
-      canceled:    '<span class="sa-st sa-st--canceled">&#10005; \u0110\u00e3 h\u1ee7y</span>',
-      cancelled:   '<span class="sa-st sa-st--canceled">&#10005; \u0110\u00e3 h\u1ee7y</span>',
-      no_show:     '<span class="sa-st sa-st--no_show">&#9888; V\u1eafng m\u1eb7t</span>',
-      rescheduled: '<span class="sa-st sa-st--canceled">&#8635; D\u1eddi l\u1ecbch</span>'
+      confirmed:   '<span class="sa-st sa-st--confirmed">&#9679; ' + esc(lb.st_confirmed) + '</span>',
+      in_progress: '<span class="sa-st sa-st--in_progress">&#9679; ' + esc(lb.st_in_progress) + '</span>',
+      completed:   '<span class="sa-st sa-st--completed">&#10003; ' + esc(lb.st_completed) + '</span>',
+      canceled:    '<span class="sa-st sa-st--canceled">&#10005; ' + esc(lb.st_canceled) + '</span>',
+      cancelled:   '<span class="sa-st sa-st--canceled">&#10005; ' + esc(lb.st_canceled) + '</span>',
+      no_show:     '<span class="sa-st sa-st--no_show">&#9888; ' + esc(lb.st_no_show) + '</span>',
+      rescheduled: '<span class="sa-st sa-st--canceled">&#8635; ' + esc(lb.st_rescheduled) + '</span>'
     };
 
     var isOwner    = _userRole === 'owner';
@@ -5219,7 +5236,7 @@
 
         var statusBadge = statusMap[status] || '';
         var newBadge = isNew
-          ? ' <span style="background:#22c55e;color:#fff;border-radius:99px;padding:1px 6px;font-size:.58rem;font-weight:700;animation:dlcPulse 1.2s ease infinite">M\u1edaI</span>'
+          ? ' <span style="background:#22c55e;color:#fff;border-radius:99px;padding:1px 6px;font-size:.58rem;font-weight:700;animation:dlcPulse 1.2s ease infinite">' + esc(lb.badge_new) + '</span>'
           : '';
 
         // ── Compact summary row ─────────────────────────────────────────────
@@ -5231,15 +5248,15 @@
         // ── Operational scan badges ─────────────────────────────────────────
         var badges = '';
         if (imgs.length)
-          badges += '<span class="sa-badge sa-badge--photo">&#128247; \u1ea2nh m\u1eabu ' + imgs.length + '</span>';
+          badges += '<span class="sa-badge sa-badge--photo">&#128247; ' + esc(lb.badge_photos) + ' ' + imgs.length + '</span>';
         if (notes)
-          badges += '<span class="sa-badge sa-badge--note">&#128203; Ghi ch\u00fa</span>';
+          badges += '<span class="sa-badge sa-badge--note">&#128203; ' + esc(lb.badge_notes) + '</span>';
         if (svcArr.length > 1)
-          badges += '<span class="sa-badge sa-badge--multi">+ ' + svcArr.length + ' d\u1ecbch v\u1ee5</span>';
+          badges += '<span class="sa-badge sa-badge--multi">+ ' + svcArr.length + esc(lb.badge_more_svc) + '</span>';
         if (b.isReschedule)
-          badges += '<span class="sa-badge sa-badge--reschedule">&#8635; \u0110\u1ed5i l\u1ecbch</span>';
+          badges += '<span class="sa-badge sa-badge--reschedule">' + esc(lb.badge_rescheduled) + '</span>';
         if (!staff && status === 'confirmed')
-          badges += '<span class="sa-badge sa-badge--unassigned">&#9888; Ch\u01b0a ph\u00e2n c\u00f4ng</span>';
+          badges += '<span class="sa-badge sa-badge--unassigned">' + esc(lb.badge_unassigned) + '</span>';
         var badgeRow = badges ? '<div class="sa-badge-row">' + badges + '</div>' : '';
 
         // ── Prominent phone ─────────────────────────────────────────────────
@@ -5258,18 +5275,18 @@
           var svcItems = svcArr.map(function(s) {
             return '<div class="sa-det-svc">&#8226; ' + esc(s) + '</div>';
           }).join('');
-          det += '<div class="sa-det-section"><div class="sa-det-label">D\u1ecbch v\u1ee5</div><div class="sa-det-svc-list">' + svcItems + '</div></div>';
+          det += '<div class="sa-det-section"><div class="sa-det-label">' + esc(lb.det_services) + '</div><div class="sa-det-svc-list">' + svcItems + '</div></div>';
         }
         if (price) {
-          det += '<div class="sa-det-section"><div class="sa-det-label">Gi\u00e1 \u01b0\u1edbc t\u00ednh</div><div class="sa-det-val sa-appt-price">' + esc(String(price)) + '</div></div>';
+          det += '<div class="sa-det-section"><div class="sa-det-label">' + esc(lb.det_price) + '</div><div class="sa-det-val sa-appt-price">' + esc(String(price)) + '</div></div>';
         } else if (canBook && ['canceled','cancelled','no_show','rescheduled'].indexOf(status) < 0) {
           var suggest = _suggestPrice(svcArr);
           var suggestSpan = suggest
-            ? ' &middot; <span style="color:#fbbf24;font-size:.68rem">&#128161; G\u1ee3i \u00fd: ' + esc(suggest) + '</span>'
+            ? ' &middot; <span style="color:#fbbf24;font-size:.68rem">&#128161; ' + esc(suggest) + '</span>'
             : '';
-          det += '<div class="sa-det-section"><div class="sa-det-label">Gi\u00e1 \u01b0\u1edbc t\u00ednh</div><div class="sa-det-val">' +
-            '<span style="color:var(--muted)">Ch\u01b0a c\u00f3 gi\u00e1</span>' + suggestSpan +
-            ' <button class="sa-act" style="font-size:.62rem;padding:2px 7px;margin-left:.3rem" onclick=\'openSetPriceModal(' + idQ + ',' + JSON.stringify(suggest || '') + ')\'>+ \u0110\u1eb7t gi\u00e1</button>' +
+          det += '<div class="sa-det-section"><div class="sa-det-label">' + esc(lb.det_price) + '</div><div class="sa-det-val">' +
+            '<span style="color:var(--muted)">' + esc(lb.det_no_price) + '</span>' + suggestSpan +
+            ' <button class="sa-act" style="font-size:.62rem;padding:2px 7px;margin-left:.3rem" onclick=\'openSetPriceModal(' + idQ + ',' + JSON.stringify(suggest || '') + ')\'>' + esc(lb.det_set_price) + '</button>' +
             '</div></div>';
         }
 
@@ -5278,41 +5295,41 @@
 
         // Phone with action buttons in detail
         if (phone && canContact) {
-          det += '<div class="sa-det-section"><div class="sa-det-label">\u0110i\u1ec7n tho\u1ea1i</div>' +
+          det += '<div class="sa-det-section"><div class="sa-det-label">' + esc(lb.det_phone) + '</div>' +
             '<div class="sa-det-val" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.1rem">' +
-              '<a class="sa-act sa-act--call" href="tel:' + esc(phone) + '">&#128222; G\u1ecdi</a>' +
+              '<a class="sa-act sa-act--call" href="tel:' + esc(phone) + '">&#128222; ' + esc(lb.act_confirm_sms).replace('✉ ', '') + '</a>' +
               '<a class="sa-act sa-act--call" href="sms:' + esc(phone) + '">&#128172; Text</a>' +
             '</div></div>';
         }
 
         // Notes / special requests
         if (notes) {
-          det += '<div class="sa-det-section"><div class="sa-det-label">Ghi ch\u00fa / Y\u00eau c\u1ea7u</div><div class="sa-det-val sa-det-notes">' + esc(notes) + '</div></div>';
+          det += '<div class="sa-det-section"><div class="sa-det-label">' + esc(lb.det_notes) + '</div><div class="sa-det-val sa-det-notes">' + esc(notes) + '</div></div>';
         }
 
         // Cancel reason
         if (cancelReason) {
-          det += '<div class="sa-det-section"><div class="sa-det-label">L\u00fd do h\u1ee7y</div><div class="sa-det-val" style="color:var(--danger)">' + esc(cancelReason) + '</div></div>';
+          det += '<div class="sa-det-section"><div class="sa-det-label">' + esc(lb.det_cancel_reason) + '</div><div class="sa-det-val" style="color:var(--danger)">' + esc(cancelReason) + '</div></div>';
         }
 
         // Reference / inspiration photos
         if (imgs.length) {
-          det += '<div class="sa-det-section"><div class="sa-det-label">\u1ea2nh tham kh\u1ea3o (' + imgs.length + ')</div>' +
+          det += '<div class="sa-det-section"><div class="sa-det-label">' + esc(lb.det_photos) + ' (' + imgs.length + ')</div>' +
             '<div class="sa-ref-imgs" style="margin-top:.3rem">' + _refImgsHtml(imgs, 'sa-ref-img') + '</div></div>';
         }
 
         // Timestamps + source + booking ID
         var infoStr = '';
         if (createdAt) infoStr += new Date(createdAt).toLocaleString('vi-VN');
-        if (source)    infoStr += (infoStr ? ' \u00b7 ' : '') + source;
-        if (bookingId) infoStr += (infoStr ? ' \u00b7 ' : '') + 'M\u00e3: ' + bookingId;
+        if (source)    infoStr += (infoStr ? ' · ' : '') + source;
+        if (bookingId) infoStr += (infoStr ? ' · ' : '') + 'ID: ' + bookingId;
         if (infoStr) {
-          det += '<div class="sa-det-section"><div class="sa-det-label">Th\u00f4ng tin</div><div class="sa-det-val" style="font-size:.62rem;opacity:.6">' + esc(infoStr) + '</div></div>';
+          det += '<div class="sa-det-section"><div class="sa-det-label">' + esc(lb.det_info) + '</div><div class="sa-det-val" style="font-size:.62rem;opacity:.6">' + esc(infoStr) + '</div></div>';
         }
 
         var detHtml    = det ? '<div class="sa-det" id="' + detId + '">' + det + '</div>' : '';
         var detToggle  = det
-          ? '<button class="sa-det-toggle" id="sa-det-btn-' + detId + '" onclick="toggleDet(\'' + detId + '\')">&#9660; Chi ti\u1ebft</button>'
+          ? '<button class="sa-det-toggle" id="sa-det-btn-' + detId + '" onclick="toggleDet(\'' + detId + '\')">&#9660; ' + esc(lb.det_toggle) + '</button>'
           : '';
 
         // ── Action buttons (always visible) ────────────────────────────────
@@ -5324,36 +5341,36 @@
         var timeQ  = JSON.stringify(b.requestedTime || b.time || '');
 
         // Use single-quoted onclick attrs so JSON.stringify double-quotes don't break the HTML attribute
-        var editBtn = canBook ? '<button class="sa-act" style="color:var(--gold-lt);border-color:var(--border-g)" onclick=\'openManualBookModal(' + idQ + ',null)\'>&#9998; S\u1eeda</button>' : '';
+        var editBtn = canBook ? '<button class="sa-act" style="color:var(--gold-lt);border-color:var(--border-g)" onclick=\'openManualBookModal(' + idQ + ',null)\'>&#9998; ' + esc(lb.btn_edit) + '</button>' : '';
         // Payment button — shown for all active/completed bookings (not canceled/no_show)
         var payBtn  = (['canceled','cancelled','no_show','rescheduled'].indexOf(status) < 0)
-          ? '<button class="sa-act sa-act--pay" onclick=\'openPaymentModal(' + idQ + ')\'>&#36; Thu ti\u1ec1n</button>'
+          ? '<button class="sa-act sa-act--pay" onclick=\'openPaymentModal(' + idQ + ')\'>&#36; ' + esc(lb.act_pay).replace('$ ', '') + '</button>'
           : '';
         // Refund button — shown when amountPaid > refundAmount (there is money to refund)
         var _netCollected = (Number(b.amountPaid) || 0) - (Number(b.refundAmount) || 0);
         var refundBtn = (canManage && _netCollected > 0 && ['canceled','cancelled','no_show','rescheduled'].indexOf(status) < 0)
-          ? '<button class="sa-act sa-act--refund" onclick=\'openRefundModal(' + idQ + ')\'>&#8617; Ho\u00e0n ti\u1ec1n</button>'
+          ? '<button class="sa-act sa-act--refund" onclick=\'openRefundModal(' + idQ + ')\'>&#8617; ' + esc(lb.act_refund).replace('↩ ', '') + '</button>'
           : '';
         var actions = '';
         if (status === 'confirmed') {
           actions =
             editBtn + payBtn + refundBtn +
-            '<button class="sa-act sa-act--start"  onclick=\'updateBookingStatus(' + idQ + ',"in_progress")\'>&#9654; B\u1eaft \u0111\u1ea7u</button>' +
-            '<button class="sa-act sa-act--done"   onclick=\'updateBookingStatus(' + idQ + ',"completed")\'>&#10003; Xong</button>' +
-            '<button class="sa-act sa-act--noshow" onclick=\'updateBookingStatus(' + idQ + ',"no_show")\'>V\u1eafng</button>' +
-            (phone && canContact ? '<button class="sa-act sa-act--call" onclick=\'confirmSms(' + phoneQ + ',' + nameQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')\'>&#128172; X\u00e1c nh\u1eadn</button>' : '') +
-            (canManage ? '<button class="sa-act sa-act--cancel" style="border-color:rgba(248,113,113,.4);color:var(--danger)" onclick=\'openCancelModal(' + idQ + ',' + nameQ + ',' + phoneQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')\'>&#10005; H\u1ee7y</button>' : '') +
-            (canManage ? '<button class="sa-act sa-act--cancel" onclick=\'deleteBooking(' + idQ + ',' + nameQ + ')\'>&#128465; X\u00f3a</button>' : '');
+            '<button class="sa-act sa-act--start"  onclick=\'updateBookingStatus(' + idQ + ',"in_progress")\'>&#9654; ' + esc(lb.act_start).replace('▶ ', '') + '</button>' +
+            '<button class="sa-act sa-act--done"   onclick=\'updateBookingStatus(' + idQ + ',"completed")\'>&#10003; ' + esc(lb.act_done).replace('✓ ', '') + '</button>' +
+            '<button class="sa-act sa-act--noshow" onclick=\'updateBookingStatus(' + idQ + ',"no_show")\'>' + esc(lb.act_noshow) + '</button>' +
+            (phone && canContact ? '<button class="sa-act sa-act--call" onclick=\'confirmSms(' + phoneQ + ',' + nameQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')\'>&#128172; ' + esc(lb.act_confirm_sms).replace('✉ ', '') + '</button>' : '') +
+            (canManage ? '<button class="sa-act sa-act--cancel" style="border-color:rgba(248,113,113,.4);color:var(--danger)" onclick=\'openCancelModal(' + idQ + ',' + nameQ + ',' + phoneQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')\'>&#10005; ' + esc(lb.btn_cancel) + '</button>' : '') +
+            (canManage ? '<button class="sa-act sa-act--cancel" onclick=\'deleteBooking(' + idQ + ',' + nameQ + ')\'>&#128465; ' + esc(lb.btn_delete) + '</button>' : '');
         } else if (status === 'in_progress') {
           actions =
             editBtn + payBtn + refundBtn +
-            '<button class="sa-act sa-act--done"   onclick=\'updateBookingStatus(' + idQ + ',"completed")\'>&#10003; Ho\u00e0n th\u00e0nh</button>' +
-            '<button class="sa-act sa-act--noshow" onclick=\'updateBookingStatus(' + idQ + ',"no_show")\'>V\u1eafng</button>' +
-            (canManage ? '<button class="sa-act sa-act--cancel" style="border-color:rgba(248,113,113,.4);color:var(--danger)" onclick=\'openCancelModal(' + idQ + ',' + nameQ + ',' + phoneQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')\'>&#10005; H\u1ee7y</button>' : '') +
-            (canManage ? '<button class="sa-act sa-act--cancel" onclick=\'deleteBooking(' + idQ + ',' + nameQ + ')\'>&#128465; X\u00f3a</button>' : '');
+            '<button class="sa-act sa-act--done"   onclick=\'updateBookingStatus(' + idQ + ',"completed")\'>&#10003; ' + esc(lb.act_complete).replace('✓ ', '') + '</button>' +
+            '<button class="sa-act sa-act--noshow" onclick=\'updateBookingStatus(' + idQ + ',"no_show")\'>' + esc(lb.act_noshow) + '</button>' +
+            (canManage ? '<button class="sa-act sa-act--cancel" style="border-color:rgba(248,113,113,.4);color:var(--danger)" onclick=\'openCancelModal(' + idQ + ',' + nameQ + ',' + phoneQ + ',' + svcQ + ',' + dateQ + ',' + timeQ + ')\'>&#10005; ' + esc(lb.btn_cancel) + '</button>' : '') +
+            (canManage ? '<button class="sa-act sa-act--cancel" onclick=\'deleteBooking(' + idQ + ',' + nameQ + ')\'>&#128465; ' + esc(lb.btn_delete) + '</button>' : '');
         } else {
           // completed and other terminal states — still allow payment correction
-          actions = payBtn + refundBtn + (canManage ? '<button class="sa-act sa-act--cancel" onclick=\'deleteBooking(' + idQ + ',' + nameQ + ')\'>&#128465; X\u00f3a</button>' : '');
+          actions = payBtn + refundBtn + (canManage ? '<button class="sa-act sa-act--cancel" onclick=\'deleteBooking(' + idQ + ',' + nameQ + ')\'>&#128465; ' + esc(lb.btn_delete) + '</button>' : '');
         }
 
         return '<div class="' + cardCls + '">' +
@@ -5385,11 +5402,12 @@
   }
 
   function toggleDet(detId) {
+    var lb  = _LABELS[_dlcLang] || _LABELS.vi;
     var det = document.getElementById(detId);
     var btn = document.getElementById('sa-det-btn-' + detId);
     if (!det) return;
     var open = det.classList.toggle('open');
-    if (btn) btn.innerHTML = (open ? '&#9650;' : '&#9660;') + ' Chi ti\u1ebft';
+    if (btn) btn.innerHTML = (open ? '&#9650;' : '&#9660;') + ' ' + esc(lb.det_toggle);
   }
 
   // ── Cancel booking flow ────────────────────────────────────────────────────────
@@ -5698,9 +5716,10 @@
   }
 
   function _renderCqvResults(docs, query) {
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
     var resultsEl = document.getElementById('cqvResults');
     if (!docs.length) {
-      resultsEl.innerHTML = '<div class="sa-empty" style="padding:2rem 0">Không tìm thấy khách hàng nào với "<strong>' + esc(query) + '</strong>".</div>';
+      resultsEl.innerHTML = '<div class="sa-empty" style="padding:2rem 0">' + esc(lb.cust_no_results) + ' "<strong>' + esc(query) + '</strong>".</div>';
       return;
     }
 
@@ -5740,20 +5759,20 @@
       (custPhone ? '<div class="cqv-meta"><a class="sa-phone-link" href="tel:' + esc(custPhone) + '">&#128222; ' + esc(custPhone) + '</a>' +
         '<a class="sa-act sa-act--call" href="sms:' + esc(custPhone) + '" style="margin-left:.5rem;font-size:.68rem;text-decoration:none">&#128172; Text</a></div>' : '') +
       '<div class="cqv-meta" style="margin-top:.3rem">' +
-        '<span class="cqv-pill">' + bookings.length + ' lần đặt lịch</span>' +
-        (upcoming.length ? '<span class="cqv-pill cqv-pill--up">' + upcoming.length + ' sắp tới</span>' : '') +
+        '<span class="cqv-pill">' + bookings.length + ' ' + esc(lb.cust_booked_times) + '</span>' +
+        (upcoming.length ? '<span class="cqv-pill cqv-pill--up">' + upcoming.length + ' ' + esc(lb.cust_upcoming_lbl) + '</span>' : '') +
         (topSvcs.length ? '<span class="cqv-pill cqv-pill--svc">' + esc(topSvcs.join(' · ')) + '</span>' : '') +
       '</div>' +
     '</div>';
 
     var statusMap = {
-      confirmed:   '<span class="sa-st sa-st--confirmed">● Xác nhận</span>',
-      in_progress: '<span class="sa-st sa-st--in_progress">● Đang làm</span>',
-      completed:   '<span class="sa-st sa-st--completed">✓ Xong</span>',
-      canceled:    '<span class="sa-st sa-st--canceled">✕ Hủy</span>',
-      cancelled:   '<span class="sa-st sa-st--canceled">✕ Hủy</span>',
-      no_show:     '<span class="sa-st sa-st--no_show">⚠ Vắng mặt</span>',
-      rescheduled: '<span class="sa-st sa-st--canceled">↻ Dời lịch</span>'
+      confirmed:   '<span class="sa-st sa-st--confirmed">● ' + esc(lb.st_confirmed) + '</span>',
+      in_progress: '<span class="sa-st sa-st--in_progress">● ' + esc(lb.st_in_progress) + '</span>',
+      completed:   '<span class="sa-st sa-st--completed">✓ ' + esc(lb.st_completed) + '</span>',
+      canceled:    '<span class="sa-st sa-st--canceled">✕ ' + esc(lb.st_canceled) + '</span>',
+      cancelled:   '<span class="sa-st sa-st--canceled">✕ ' + esc(lb.st_canceled) + '</span>',
+      no_show:     '<span class="sa-st sa-st--no_show">⚠ ' + esc(lb.st_no_show) + '</span>',
+      rescheduled: '<span class="sa-st sa-st--canceled">↻ ' + esc(lb.st_rescheduled) + '</span>'
     };
 
     function _bookingCard(b) {
@@ -5766,7 +5785,7 @@
       var imgs    = b.referenceImages || b.images || [];
       var dur     = b.totalDurationMins || b.durationMins;
       var badge   = statusMap[status] || '';
-      var isResc  = b.isReschedule ? '<span class="sa-badge sa-badge--reschedule" style="font-size:.6rem">↻ Đổi lịch</span>' : '';
+      var isResc  = b.isReschedule ? '<span class="sa-badge sa-badge--reschedule" style="font-size:.6rem">' + esc(lb.badge_rescheduled) + '</span>' : '';
       // Cache for edit modal and build Edit button
       if (b._id) _bookingCache[b._id] = b;
       var bIdQ   = JSON.stringify(b._id || '');
@@ -5791,11 +5810,11 @@
     }
 
     if (upcoming.length) {
-      html += '<div class="cqv-group-label">Sắp tới</div>';
+      html += '<div class="cqv-group-label">' + esc(lb.cust_upcoming_section) + '</div>';
       html += upcoming.map(_bookingCard).join('');
     }
     if (past.length) {
-      html += '<div class="cqv-group-label" style="margin-top:.75rem">Lịch sử</div>';
+      html += '<div class="cqv-group-label" style="margin-top:.75rem">' + esc(lb.cust_history_lbl) + '</div>';
       html += past.map(_bookingCard).join('');
     }
 
@@ -6081,6 +6100,7 @@
   }
 
   function renderStaffEarnings() {
+    var lb   = _LABELS[_dlcLang] || _LABELS.vi;
     var body = document.getElementById('staffEarningsBody');
     if (!body) return;
 
@@ -6111,7 +6131,7 @@
     });
 
     if (!allPeriod.length) {
-      body.innerHTML = '<div class="sa-empty" style="font-size:.78rem">Không có dữ liệu trong khoảng thời gian này.</div>';
+      body.innerHTML = '<div class="sa-empty" style="font-size:.78rem">' + esc(lb.earn_empty) + '</div>';
       return;
     }
 
@@ -6139,7 +6159,7 @@
 
     var rows = Object.values(byStaff).sort(function(a, b) { return b.total - a.total; });
     if (!rows.length) {
-      body.innerHTML = '<div class="sa-empty" style="font-size:.78rem">Không có nhân viên nào được ghi nhận trong khoảng này.</div>';
+      body.innerHTML = '<div class="sa-empty" style="font-size:.78rem">' + esc(lb.earn_empty) + '</div>';
       return;
     }
 
@@ -6148,7 +6168,7 @@
     rows.forEach(function(r){ totComm += r.commission; totTip += r.tip; totTotal += r.total; totCount += r.count; totNoShow += r.noShowCount; });
 
     body.innerHTML = '<table class="se-table"><thead><tr>' +
-      '<th>Nhân viên</th><th>HH%</th><th>Lịch hẹn</th><th>Hoàn thành</th><th>Không đến</th><th>Hoa hồng</th><th>Tip</th><th>Tổng thu</th>' +
+      '<th>' + esc(lb.earn_col_staff) + '</th><th>' + esc(lb.earn_col_pct) + '</th><th>' + esc(lb.earn_col_appt) + '</th><th>' + esc(lb.earn_col_done) + '</th><th>' + esc(lb.earn_col_noshow) + '</th><th>' + esc(lb.earn_col_comm) + '</th><th>' + esc(lb.earn_col_tip) + '</th><th>' + esc(lb.earn_col_total) + '</th>' +
       '</tr></thead><tbody>' +
       rows.map(function(r) {
         // Completion rate: completed / (completed + noShow) for past bookings that reached a terminal state
@@ -6171,7 +6191,7 @@
           '</tr>';
       }).join('') +
       '</tbody><tfoot><tr>' +
-      '<td colspan="2" style="color:var(--muted);font-size:.68rem">Tổng (' + totCount + ' lịch)</td>' +
+      '<td colspan="2" style="color:var(--muted);font-size:.68rem">' + esc(lb.earn_col_total) + ' (' + totCount + ')</td>' +
       '<td></td><td></td>' +
       '<td style="color:' + (totNoShow > 0 ? 'var(--danger)' : 'var(--muted)') + '">' + (totNoShow > 0 ? totNoShow : '0') + '</td>' +
       '<td style="color:var(--success)">$' + totComm.toFixed(2) + '</td>' +
@@ -6662,31 +6682,628 @@
 
   var _LABELS = {
     vi: {
+      // ── Navigation ──────────────────────────────────────────────────────────
       dashboard:'Tổng Quan', services:'Dịch Vụ', staff:'Nhân Viên',
       availability:'Hôm Nay', hours:'Giờ Mở Cửa', appointments:'Lịch Hẹn',
       inbox:'AI Inbox', customers:'Khách Hàng', settings:'Cài Đặt',
       logout:'Đăng xuất', openLbl:'● Mở', closedLbl:'○ Đóng',
-      today:'Hôm Nay', upcoming:'Sắp Tới', aiMsg:'Tin Nhắn AI'
+      today:'Hôm Nay', upcoming:'Sắp Tới', aiMsg:'Tin Nhắn AI',
+      nav_ops:'Vận Hành', nav_manage:'Quản Lý',
+      // ── Buttons ─────────────────────────────────────────────────────────────
+      btn_refresh:'Làm Mới', btn_add_svc:'+ Thêm Dịch Vụ', btn_add_staff:'+ Thêm Nhân Viên',
+      btn_save:'Lưu', btn_cancel:'Hủy', btn_delete:'Xóa', btn_edit:'Sửa',
+      btn_search:'Tìm', btn_clear:'Xóa', btn_new_booking:'+ Đặt lịch',
+      btn_mark_all:'✓ Đánh dấu tất cả', btn_save_settings:'Lưu Cài Đặt',
+      btn_save_method:'Lưu Phương Thức', btn_save_payment:'Lưu thanh toán',
+      btn_confirm_cancel:'Xác nhận hủy', btn_no_cancel:'Không hủy',
+      btn_confirm_refund:'Xác nhận hoàn tiền', btn_save_price:'Lưu giá',
+      btn_add_addon:'+ Thêm', btn_confirm_qr:'✓ Khách đã chuyển — Xác nhận',
+      btn_back_qr:'Quay lại', btn_confirm_override:'Xác nhận đặt đè',
+      btn_hours_save:'Lưu', btn_add_parallel:'+ Thêm Cặp Dịch Vụ',
+      btn_show_qr:'Hiện mã QR cho khách',
+      // ── Section titles ───────────────────────────────────────────────────────
+      dash_title:'Tổng Quan', svc_title:'Dịch Vụ', staff_title:'Nhân Viên',
+      avail_title:'Hôm Nay', hours_title:'Giờ Mở Cửa', appt_title:'Lịch Hẹn',
+      cust_title_label:'Khách Hàng', settings_title_label:'Cài Đặt',
+      appt_all_title:'Tất Cả Lịch Hẹn',
+      // ── Dashboard ───────────────────────────────────────────────────────────
+      db_stat_today:'Hôm Nay', db_stat_upcoming:'Sắp Tới', db_stat_ai:'Tin Nhắn AI',
+      db_stat_loading:'Đang tải…', db_next_label:'Lịch Hẹn Tiếp Theo',
+      // ── Staff earnings ───────────────────────────────────────────────────────
+      staff_earnings:'Thu Nhập Nhân Viên',
+      earn_today:'Hôm nay', earn_week:'Tuần này', earn_month:'Tháng này',
+      earn_empty:'Chưa có dữ liệu.',
+      earn_note:'Hoa hồng tính trên tiền dịch vụ đã thu thực tế. Tip tính riêng. Lịch hẹn hủy/vắng không tính.',
+      earn_col_staff:'Nhân viên', earn_col_pct:'HH%', earn_col_appt:'Lịch hẹn',
+      earn_col_done:'Hoàn thành', earn_col_noshow:'Không đến',
+      earn_col_comm:'Hoa hồng', earn_col_tip:'Tip', earn_col_total:'Tổng thu',
+      // ── Status badges ────────────────────────────────────────────────────────
+      st_confirmed:'Xác nhận', st_in_progress:'Đang làm', st_completed:'Xong',
+      st_canceled:'Đã hủy', st_no_show:'Vắng mặt', st_rescheduled:'Dời lịch',
+      // ── Payment ──────────────────────────────────────────────────────────────
+      pay_status_paid:'Đã thanh toán', pay_status_partial:'Một phần',
+      pay_status_unpaid:'Chưa thanh toán',
+      pay_no_price:'⚠ Chưa có giá dịch vụ — không tính được số dư.',
+      pay_set_price_btn:'Đặt giá ngay →',
+      pay_addons_lbl:'Dịch Vụ Thêm (Add-ons)',
+      pay_addons_ph:'— Chọn add-on —',
+      pay_pay_status_lbl:'Trạng thái thanh toán',
+      pay_total:'Tổng giá dịch vụ', pay_collected:'Số tiền thu', pay_balance:'Còn lại',
+      pay_grand:'Tổng phải thu',
+      pay_refund_lbl:'Số tiền hoàn ($) *', pay_commission:'Hoa hồng', pay_tip:'Tip',
+      pay_method_cash:'Tiền mặt (Cash)', pay_method_card:'Thẻ (Card)',
+      pay_method_zelle:'Zelle', pay_method_venmo:'Venmo', pay_method_other:'Khác (Other)',
+      pay_method_lbl:'Phương thức',
+      pay_badge_paid:'Đã thu', pay_badge_partial:'Còn lại $', pay_badge_partial_partial:'Một phần',
+      pay_badge_unpaid:'Chưa thu',
+      pay_opt_paid:'Đã thanh toán đủ (Paid in Full)',
+      pay_opt_partial:'Thanh toán một phần (Partial)',
+      pay_opt_unpaid:'Chưa thanh toán (Unpaid)',
+      pay_note_lbl:'Ghi chú (tuỳ chọn)',
+      pay_note_ph:'Ghi chú thêm…',
+      pay_modal_title:'Thu Tiền',
+      // ── QR payment ───────────────────────────────────────────────────────────
+      qr_scan_note:'Quét bằng camera điện thoại để thanh toán',
+      qr_title_prefix:'Thanh toán qua ',
+      // ── Availability badges ──────────────────────────────────────────────────
+      avail_now:'Đang làm', avail_today:'Hôm nay', avail_off:'Nghỉ',
+      avail_loading:'Đang tải dữ liệu nhân viên…',
+      avail_empty:'Không có nhân viên hoạt động nào được tìm thấy.',
+      // ── Day names ────────────────────────────────────────────────────────────
+      day_mon:'Thứ 2', day_tue:'Thứ 3', day_wed:'Thứ 4', day_thu:'Thứ 5',
+      day_fri:'Thứ 6', day_sat:'Thứ 7', day_sun:'CN',
+      // ── Hours ────────────────────────────────────────────────────────────────
+      hrs_closed:'Đóng',
+      // ── Form labels ──────────────────────────────────────────────────────────
+      lbl_svc_name:'Tên Dịch Vụ *', lbl_category:'Danh Mục', lbl_price:'Giá',
+      lbl_duration:'Thời Gian', lbl_description:'Mô Tả',
+      lbl_image:'Ảnh URL (Unsplash hoặc link ảnh)', lbl_staff_assigned:'Nhân Viên Thực Hiện',
+      lbl_name:'Tên *', lbl_role:'Vai Trò', lbl_level:'Cấp Độ',
+      lbl_employment:'Loại Hợp Đồng', lbl_skills:'Chuyên Môn', lbl_schedule:'Lịch Làm Việc',
+      lbl_commission_pct:'Hoa Hồng Dịch Vụ (%)',
+      lbl_commission_note:'% trên tiền dịch vụ đã thu · Tip tính riêng · 0 = chưa cài đặt',
+      lbl_cancel_reason:'Lý do hủy *', lbl_cancel_detail:'Ghi rõ lý do',
+      lbl_notify_sms:'Nhắn tin cho khách khi hủy', lbl_sms_body:'Nội dung tin nhắn (có thể chỉnh sửa)',
+      lbl_sms_note:'Nhấn "Xác nhận hủy" sẽ mở ứng dụng nhắn tin trên điện thoại.',
+      lbl_refund_amount:'Số tiền hoàn ($) *', lbl_refund_reason:'Lý do hoàn tiền *',
+      lbl_est_price:'Giá ước tính',
+      lbl_shop_name:'Tên Tiệm', lbl_phone:'Số Điện Thoại', lbl_address:'Địa Chỉ',
+      lbl_desc:'Mô Tả Ngắn',
+      lbl_ai_key:'Claude AI Key',
+      lbl_ai_key_note:'(sk-ant-… — bắt buộc để AI hoạt động)',
+      lbl_parallel_svc:'Dịch Vụ Song Song',
+      lbl_parallel_note:'— cho phép khách đặt 2 dịch vụ cùng lúc với 2 nhân viên khác nhau',
+      lbl_pay_methods:'Phương Thức Thanh Toán',
+      lbl_pay_methods_desc:'Bật các phương thức mà tiệm muốn nhận. Chỉ phương thức đã <strong style="color:var(--cream)">sẵn sàng</strong> mới xuất hiện trong màn hình thu tiền.',
+      lbl_staff_perms:'Phân Quyền Nhân Viên',
+      lbl_staff_perms_desc:'Chọn những gì mỗi nhân viên được phép làm khi đăng nhập vào hệ thống',
+      lbl_notes:'Ghi chú', lbl_date:'Ngày *', lbl_time:'Giờ *',
+      lbl_cust_name:'Tên khách *', lbl_cust_phone:'Số điện thoại *',
+      lbl_mb_staff:'Nhân viên', lbl_mb_svc:'Dịch vụ *',
+      lbl_mb_notes:'Ghi chú', lbl_mb_photos:'Ảnh tham khảo (URL, mỗi dòng một ảnh)',
+      // ── Placeholders ─────────────────────────────────────────────────────────
+      ph_svc_name:'Gel Nails, Manicure…', ph_price:'$35+', ph_duration:'60 phút',
+      ph_description:'Mô tả dịch vụ…', ph_image_url:'https://images.unsplash.com/…',
+      ph_shop_name:'Tên tiệm…', ph_phone:'408-…', ph_address:'123 Main St, San Jose, CA',
+      ph_desc:'Giới thiệu về tiệm…', ph_cancel_detail:'Nhập lý do cụ thể…',
+      ph_notes:'Ghi chú / yêu cầu đặc biệt…',
+      ph_booking_notes:'https://drive.google.com/…',
+      ph_cust_search:'Số điện thoại hoặc tên khách…',
+      ph_zelle_id:'Số điện thoại hoặc email Zelle',
+      ph_venmo_handle:'@tên-tiệm',
+      ph_refund_reason:'Ví dụ: Khách không hài lòng, lỗi kỹ thuật viên…',
+      ph_est_price:'Ví dụ: 45 hoặc $35–$55',
+      ph_mb_name:'Tên khách hàng', ph_mb_phone:'Số điện thoại',
+      ph_mb_notes:'Ghi chú / yêu cầu đặc biệt…',
+      ph_mb_any:'Bất kỳ', ph_mb_time:'— Chọn giờ —',
+      ph_override_pin:'Mã PIN', ph_commission:'0',
+      // ── Modal titles ─────────────────────────────────────────────────────────
+      modal_add_svc:'Thêm Dịch Vụ', modal_edit_svc:'Chỉnh Sửa Dịch Vụ',
+      modal_add_staff:'Thêm Nhân Viên', modal_edit_staff:'Chỉnh Sửa Nhân Viên',
+      modal_new_booking:'Đặt Lịch Mới', modal_edit_booking:'Sửa Lịch Hẹn',
+      modal_cancel_appt:'Hủy Lịch Hẹn',
+      modal_refund:'↩ Hoàn Tiền',
+      modal_set_price:'Đặt Giá Dịch Vụ',
+      // ── Cancel reasons ───────────────────────────────────────────────────────
+      cancel_r_select:'-- Chọn lý do --',
+      cancel_r_cust:'Khách yêu cầu hủy',
+      cancel_r_nostaff:'Không có nhân viên phù hợp',
+      cancel_r_shop:'Tiệm có sự cố',
+      cancel_r_nocontact:'Khách không liên lạc được',
+      cancel_r_other:'Khác (ghi rõ bên dưới)',
+      cancel_warn_text:'Bạn đang hủy lịch hẹn này.',
+      // ── Employment type ──────────────────────────────────────────────────────
+      emp_select:'— Chọn loại —',
+      emp_full:'Toàn thời gian', emp_part:'Bán thời gian', emp_contract:'Hợp đồng',
+      // ── Role / Level selects ─────────────────────────────────────────────────
+      role_select:'— Chọn vai trò —', level_select:'— Cấp độ —',
+      cat_select:'— Chọn danh mục —',
+      // ── Category tab ─────────────────────────────────────────────────────────
+      cat_all:'Tất cả',
+      // ── Empty states ─────────────────────────────────────────────────────────
+      empty_svc_cat:'Không có dịch vụ nào trong danh mục này.',
+      empty_svc_none:'Chưa có dịch vụ nào. Nhấn "+ Thêm Dịch Vụ" để bắt đầu.',
+      empty_staff_none:'Chưa có nhân viên nào. Nhấn "+ Thêm Nhân Viên" để bắt đầu.',
+      empty_staff_svc:'Chưa có nhân viên',
+      empty_earnings:'Chưa có dữ liệu.',
+      empty_loading:'Đang tải…',
+      empty_ai_inbox:'Không có tin nhắn mới. AI Lily sẽ gửi yêu cầu khi khách cần xác nhận.',
+      empty_appt_staff:'Không có lịch hẹn nào cho ',
+      empty_appt_none:'Chưa có lịch hẹn nào.',
+      empty_avail_staff:'Đang tải dữ liệu nhân viên…',
+      empty_perms:'Đang tải…',
+      empty_cust_no_results:'Không tìm thấy khách hàng nào.',
+      // ── AI Copilot panel ─────────────────────────────────────────────────────
+      ai_subtitle:'Thông tin vận hành thông minh · Dữ liệu thực tế',
+      ai_not_updated:'Chưa cập nhật',
+      ai_refresh:'⟳ Cập nhật',
+      ai_loading:'Đang tải dữ liệu…',
+      ai_panel_close:'Đóng',
+      // ── Settings ─────────────────────────────────────────────────────────────
+      settings_coming_soon:'⚙ Tính năng đang hoàn thiện. Lưu cài đặt để đăng ký — hệ thống sẽ thông báo khi sẵn sàng kết nối.',
+      // ── Inbox ────────────────────────────────────────────────────────────────
+      inbox_subtitle:'Tin nhắn & yêu cầu từ khách qua AI Lily',
+      // ── Override section ─────────────────────────────────────────────────────
+      override_title:'⚠ Lịch đã bị chiếm — Đặt đè lịch (Chủ tiệm / Quản lý)',
+      override_pin_label:'Nhập mã PIN để xác nhận đặt đè:',
+      // ── Appointment card detail labels ───────────────────────────────────────
+      det_services:'Dịch vụ', det_price:'Giá ước tính', det_payment:'Thanh toán',
+      det_phone:'Điện thoại', det_notes:'Ghi chú / Yêu cầu', det_cancel_reason:'Lý do hủy',
+      det_photos:'Ảnh tham khảo', det_info:'Thông tin',
+      det_earning:'Thu nhập', det_toggle:'Chi tiết',
+      det_no_price:'Chưa có giá', det_set_price:'+ Đặt giá',
+      // ── Appointment action buttons ────────────────────────────────────────────
+      act_start:'▶ Bắt đầu', act_done:'✓ Xong', act_complete:'✓ Hoàn thành',
+      act_noshow:'Vắng', act_confirm_sms:'✉ Xác nhận', act_cancel:'✕ Hủy',
+      act_delete:'🗑 Xóa', act_pay:'$ Thu tiền', act_refund:'↩ Hoàn tiền',
+      act_edit:'✎ Sửa',
+      // ── Badge labels ─────────────────────────────────────────────────────────
+      badge_new:'MỚI', badge_photos:'Ảnh mẫu', badge_notes:'Ghi chú',
+      badge_more_svc:' dịch vụ', badge_rescheduled:'↻ Đổi lịch', badge_unassigned:'⚠ Chưa phân công',
+      // ── Customer quick view ───────────────────────────────────────────────────
+      cust_booked_times:'lần đặt lịch', cust_upcoming_lbl:'sắp tới',
+      cust_upcoming_section:'Sắp tới', cust_history_lbl:'Lịch sử',
+      cust_no_results:'Không tìm thấy khách hàng nào',
+      cust_book_btn:'+ Đặt lịch',
+      // ── Payment methods (settings) ────────────────────────────────────────────
+      pm_cash_name:'Tiền mặt (Cash)',
+      pm_cash_desc:'Khách thanh toán trực tiếp bằng tiền mặt tại tiệm.',
+      pm_card_name:'Thẻ tín dụng / ghi nợ (Card)',
+      pm_card_desc:'Thanh toán qua máy đọc thẻ hoặc thiết bị ngoài. Ghi nhận thủ công.',
+      pm_zelle_name:'Zelle',
+      pm_zelle_desc:'Khách chuyển khoản qua Zelle. Nhập số điện thoại hoặc email Zelle của tiệm.',
+      pm_venmo_name:'Venmo',
+      pm_venmo_desc:'Khách thanh toán qua Venmo. Nhập @handle của tiệm.',
+      pm_tap_name:'Tap to Pay (iPhone)',
+      pm_tap_desc:'iPhone nhận thanh toán không tiếp xúc. Chọn nhà cung cấp bên dưới để bắt đầu cài đặt.',
+      pm_tap_setup_title:'Cài đặt Tap to Pay',
+      pm_tap_step1:'Chọn nhà cung cấp thanh toán cho tiệm:',
+      pm_tap_step2:'Cài ứng dụng nhận thanh toán trên iPhone của nhân viên và đăng nhập tài khoản provider.',
+      pm_tap_step3:'Hệ thống tự động kích hoạt phương thức này trong màn hình thu tiền sau khi kết nối.',
+      pm_reader_name:'Máy đọc thẻ (Card Reader)',
+      pm_reader_desc:'Kết nối máy đọc thẻ vật lý với iPad. Chọn nhà cung cấp để bắt đầu cài đặt.',
+      pm_reader_setup_title:'Cài đặt Máy Đọc Thẻ',
+      pm_reader_step1:'Chọn nhà cung cấp thiết bị:',
+      pm_reader_step2:'Kết nối máy đọc thẻ với iPad qua Bluetooth hoặc cổng Lightning / USB-C.',
+      pm_reader_step3:'Hệ thống tự động nhận diện thiết bị và kích hoạt phương thức trong màn hình thu tiền.',
     },
     en: {
+      // ── Navigation ──────────────────────────────────────────────────────────
       dashboard:'Dashboard', services:'Services', staff:'Staff',
       availability:'Today', hours:'Hours', appointments:'Appointments',
       inbox:'AI Inbox', customers:'Customers', settings:'Settings',
       logout:'Sign out', openLbl:'● Open', closedLbl:'○ Closed',
-      today:'Today', upcoming:'Upcoming', aiMsg:'AI Messages'
+      today:'Today', upcoming:'Upcoming', aiMsg:'AI Messages',
+      nav_ops:'Operations', nav_manage:'Management',
+      // ── Buttons ─────────────────────────────────────────────────────────────
+      btn_refresh:'Refresh', btn_add_svc:'+ Add Service', btn_add_staff:'+ Add Staff',
+      btn_save:'Save', btn_cancel:'Cancel', btn_delete:'Delete', btn_edit:'Edit',
+      btn_search:'Search', btn_clear:'Clear', btn_new_booking:'+ New Booking',
+      btn_mark_all:'✓ Mark All Read', btn_save_settings:'Save Settings',
+      btn_save_method:'Save Methods', btn_save_payment:'Save Payment',
+      btn_confirm_cancel:'Confirm Cancel', btn_no_cancel:'Keep Booking',
+      btn_confirm_refund:'Confirm Refund', btn_save_price:'Save Price',
+      btn_add_addon:'+ Add', btn_confirm_qr:'✓ Customer Paid — Confirm',
+      btn_back_qr:'Go Back', btn_confirm_override:'Confirm Override',
+      btn_hours_save:'Save', btn_add_parallel:'+ Add Service Pair',
+      btn_show_qr:'Show QR for customer',
+      // ── Section titles ───────────────────────────────────────────────────────
+      dash_title:'Dashboard', svc_title:'Services', staff_title:'Staff',
+      avail_title:'Today', hours_title:'Business Hours', appt_title:'Appointments',
+      cust_title_label:'Customers', settings_title_label:'Settings',
+      appt_all_title:'All Appointments',
+      // ── Dashboard ───────────────────────────────────────────────────────────
+      db_stat_today:'Today', db_stat_upcoming:'Upcoming', db_stat_ai:'AI Messages',
+      db_stat_loading:'Loading…', db_next_label:'Next Appointment',
+      // ── Staff earnings ───────────────────────────────────────────────────────
+      staff_earnings:'Staff Earnings',
+      earn_today:'Today', earn_week:'This Week', earn_month:'This Month',
+      earn_empty:'No data yet.',
+      earn_note:'Commission based on actual collected service amount. Tip counted separately. Canceled/no-show bookings excluded.',
+      earn_col_staff:'Staff', earn_col_pct:'Comm%', earn_col_appt:'Appointments',
+      earn_col_done:'Completed', earn_col_noshow:'No Show',
+      earn_col_comm:'Commission', earn_col_tip:'Tip', earn_col_total:'Total',
+      // ── Status badges ────────────────────────────────────────────────────────
+      st_confirmed:'Confirmed', st_in_progress:'In Progress', st_completed:'Done',
+      st_canceled:'Canceled', st_no_show:'No Show', st_rescheduled:'Rescheduled',
+      // ── Payment ──────────────────────────────────────────────────────────────
+      pay_status_paid:'Paid', pay_status_partial:'Partial',
+      pay_status_unpaid:'Unpaid',
+      pay_no_price:'⚠ No service price set — cannot compute balance.',
+      pay_set_price_btn:'Set price →',
+      pay_addons_lbl:'Add-on Services',
+      pay_addons_ph:'— Select add-on —',
+      pay_pay_status_lbl:'Payment status',
+      pay_total:'Service total', pay_collected:'Amount collected', pay_balance:'Balance',
+      pay_grand:'Grand total',
+      pay_refund_lbl:'Refund amount ($) *', pay_commission:'Commission', pay_tip:'Tip',
+      pay_method_cash:'Cash', pay_method_card:'Card',
+      pay_method_zelle:'Zelle', pay_method_venmo:'Venmo', pay_method_other:'Other',
+      pay_method_lbl:'Method',
+      pay_badge_paid:'Paid', pay_badge_partial:'Balance $', pay_badge_partial_partial:'Partial',
+      pay_badge_unpaid:'Unpaid',
+      pay_opt_paid:'Paid in Full',
+      pay_opt_partial:'Partial Payment',
+      pay_opt_unpaid:'Unpaid',
+      pay_note_lbl:'Notes (optional)',
+      pay_note_ph:'Additional notes…',
+      pay_modal_title:'Collect Payment',
+      // ── QR payment ───────────────────────────────────────────────────────────
+      qr_scan_note:'Scan with your phone camera to pay',
+      qr_title_prefix:'Payment via ',
+      // ── Availability badges ──────────────────────────────────────────────────
+      avail_now:'Working Now', avail_today:'Working Today', avail_off:'Day Off',
+      avail_loading:'Loading staff data…',
+      avail_empty:'No active staff found.',
+      // ── Day names ────────────────────────────────────────────────────────────
+      day_mon:'Mon', day_tue:'Tue', day_wed:'Wed', day_thu:'Thu',
+      day_fri:'Fri', day_sat:'Sat', day_sun:'Sun',
+      // ── Hours ────────────────────────────────────────────────────────────────
+      hrs_closed:'Closed',
+      // ── Form labels ──────────────────────────────────────────────────────────
+      lbl_svc_name:'Service Name *', lbl_category:'Category', lbl_price:'Price',
+      lbl_duration:'Duration', lbl_description:'Description',
+      lbl_image:'Image URL (Unsplash or photo link)', lbl_staff_assigned:'Assigned Staff',
+      lbl_name:'Name *', lbl_role:'Role', lbl_level:'Level',
+      lbl_employment:'Employment Type', lbl_skills:'Specialties', lbl_schedule:'Work Schedule',
+      lbl_commission_pct:'Service Commission (%)',
+      lbl_commission_note:'% of collected service amount · Tip separate · 0 = not configured',
+      lbl_cancel_reason:'Cancel reason *', lbl_cancel_detail:'Specify reason',
+      lbl_notify_sms:'Notify customer by text', lbl_sms_body:'Message body (editable)',
+      lbl_sms_note:'Clicking "Confirm Cancel" will open your SMS app.',
+      lbl_refund_amount:'Refund amount ($) *', lbl_refund_reason:'Refund reason *',
+      lbl_est_price:'Estimated price',
+      lbl_shop_name:'Shop Name', lbl_phone:'Phone Number', lbl_address:'Address',
+      lbl_desc:'Short Description',
+      lbl_ai_key:'Claude AI Key',
+      lbl_ai_key_note:'(sk-ant-… — required for AI to work)',
+      lbl_parallel_svc:'Parallel Services',
+      lbl_parallel_note:'— allow customers to book 2 services simultaneously with 2 different staff',
+      lbl_pay_methods:'Payment Methods',
+      lbl_pay_methods_desc:'Enable the payment methods your shop accepts. Only <strong style="color:var(--cream)">ready</strong> methods appear in the payment screen.',
+      lbl_staff_perms:'Staff Permissions',
+      lbl_staff_perms_desc:'Choose what each staff member is allowed to do when logged in',
+      lbl_notes:'Notes', lbl_date:'Date *', lbl_time:'Time *',
+      lbl_cust_name:'Customer name *', lbl_cust_phone:'Phone number *',
+      lbl_mb_staff:'Staff', lbl_mb_svc:'Service *',
+      lbl_mb_notes:'Notes', lbl_mb_photos:'Reference photos (URL, one per line)',
+      // ── Placeholders ─────────────────────────────────────────────────────────
+      ph_svc_name:'Gel Nails, Manicure…', ph_price:'$35+', ph_duration:'60 min',
+      ph_description:'Service description…', ph_image_url:'https://images.unsplash.com/…',
+      ph_shop_name:'Shop name…', ph_phone:'408-…', ph_address:'123 Main St, San Jose, CA',
+      ph_desc:'About the shop…', ph_cancel_detail:'Enter specific reason…',
+      ph_notes:'Notes / special requests…',
+      ph_booking_notes:'https://drive.google.com/…',
+      ph_cust_search:'Phone number or customer name…',
+      ph_zelle_id:'Phone number or Zelle email',
+      ph_venmo_handle:'@shop-name',
+      ph_refund_reason:'e.g. Customer dissatisfied, technician error…',
+      ph_est_price:'e.g. 45 or $35–$55',
+      ph_mb_name:'Customer name', ph_mb_phone:'Phone number',
+      ph_mb_notes:'Notes / special requests…',
+      ph_mb_any:'Any', ph_mb_time:'— Select time —',
+      ph_override_pin:'PIN Code', ph_commission:'0',
+      // ── Modal titles ─────────────────────────────────────────────────────────
+      modal_add_svc:'Add Service', modal_edit_svc:'Edit Service',
+      modal_add_staff:'Add Staff', modal_edit_staff:'Edit Staff',
+      modal_new_booking:'New Booking', modal_edit_booking:'Edit Booking',
+      modal_cancel_appt:'Cancel Appointment',
+      modal_refund:'↩ Refund',
+      modal_set_price:'Set Service Price',
+      // ── Cancel reasons ───────────────────────────────────────────────────────
+      cancel_r_select:'-- Select reason --',
+      cancel_r_cust:'Customer requested cancellation',
+      cancel_r_nostaff:'No available staff',
+      cancel_r_shop:'Shop emergency',
+      cancel_r_nocontact:'Could not reach customer',
+      cancel_r_other:'Other (specify below)',
+      cancel_warn_text:'You are canceling this appointment.',
+      // ── Employment type ──────────────────────────────────────────────────────
+      emp_select:'— Select type —',
+      emp_full:'Full-time', emp_part:'Part-time', emp_contract:'Contract',
+      // ── Role / Level selects ─────────────────────────────────────────────────
+      role_select:'— Select role —', level_select:'— Level —',
+      cat_select:'— Select category —',
+      // ── Category tab ─────────────────────────────────────────────────────────
+      cat_all:'All',
+      // ── Empty states ─────────────────────────────────────────────────────────
+      empty_svc_cat:'No services in this category.',
+      empty_svc_none:'No services yet. Click "+ Add Service" to get started.',
+      empty_staff_none:'No staff yet. Click "+ Add Staff" to get started.',
+      empty_staff_svc:'No staff yet',
+      empty_earnings:'No data yet.',
+      empty_loading:'Loading…',
+      empty_ai_inbox:'No new messages. AI Lily will send requests when customers need confirmation.',
+      empty_appt_staff:'No appointments for ',
+      empty_appt_none:'No appointments yet.',
+      empty_avail_staff:'Loading staff data…',
+      empty_perms:'Loading…',
+      empty_cust_no_results:'No customers found.',
+      // ── AI Copilot panel ─────────────────────────────────────────────────────
+      ai_subtitle:'Smart operational insights · Live data',
+      ai_not_updated:'Not updated',
+      ai_refresh:'⟳ Refresh',
+      ai_loading:'Loading data…',
+      ai_panel_close:'Close',
+      // ── Settings ─────────────────────────────────────────────────────────────
+      settings_coming_soon:'⚙ Feature in progress. Save settings to register — system will notify you when ready to connect.',
+      // ── Inbox ────────────────────────────────────────────────────────────────
+      inbox_subtitle:'Messages & requests from customers via AI Lily',
+      // ── Override section ─────────────────────────────────────────────────────
+      override_title:'⚠ Time slot taken — Override booking (Owner / Manager)',
+      override_pin_label:'Enter PIN to confirm override:',
+      // ── Appointment card detail labels ───────────────────────────────────────
+      det_services:'Services', det_price:'Estimated price', det_payment:'Payment',
+      det_phone:'Phone', det_notes:'Notes / Requests', det_cancel_reason:'Cancel reason',
+      det_photos:'Reference photos', det_info:'Info',
+      det_earning:'Earnings', det_toggle:'Details',
+      det_no_price:'No price set', det_set_price:'+ Set price',
+      // ── Appointment action buttons ────────────────────────────────────────────
+      act_start:'▶ Start', act_done:'✓ Done', act_complete:'✓ Complete',
+      act_noshow:'No Show', act_confirm_sms:'✉ Confirm', act_cancel:'✕ Cancel',
+      act_delete:'🗑 Delete', act_pay:'$ Collect', act_refund:'↩ Refund',
+      act_edit:'✎ Edit',
+      // ── Badge labels ─────────────────────────────────────────────────────────
+      badge_new:'NEW', badge_photos:'Photos', badge_notes:'Notes',
+      badge_more_svc:' services', badge_rescheduled:'↻ Rescheduled', badge_unassigned:'⚠ Unassigned',
+      // ── Customer quick view ───────────────────────────────────────────────────
+      cust_booked_times:'bookings', cust_upcoming_lbl:'upcoming',
+      cust_upcoming_section:'Upcoming', cust_history_lbl:'History',
+      cust_no_results:'No customers found',
+      cust_book_btn:'+ Book',
+      // ── Payment methods (settings) ────────────────────────────────────────────
+      pm_cash_name:'Cash',
+      pm_cash_desc:'Customer pays directly in cash at the shop.',
+      pm_card_name:'Credit / Debit Card',
+      pm_card_desc:'Payment via card reader or external device. Recorded manually.',
+      pm_zelle_name:'Zelle',
+      pm_zelle_desc:'Customer transfers via Zelle. Enter your shop\'s phone number or Zelle email.',
+      pm_venmo_name:'Venmo',
+      pm_venmo_desc:'Customer pays via Venmo. Enter your shop\'s @handle.',
+      pm_tap_name:'Tap to Pay (iPhone)',
+      pm_tap_desc:'iPhone accepts contactless payments. Select provider below to start setup.',
+      pm_tap_setup_title:'Tap to Pay Setup',
+      pm_tap_step1:'Select your payment provider:',
+      pm_tap_step2:'Install the payment app on staff iPhones and sign in with the provider account.',
+      pm_tap_step3:'The system will automatically activate this method in the payment screen once connected.',
+      pm_reader_name:'Card Reader',
+      pm_reader_desc:'Connect a physical card reader to iPad. Select provider to begin setup.',
+      pm_reader_setup_title:'Card Reader Setup',
+      pm_reader_step1:'Select your device provider:',
+      pm_reader_step2:'Connect the card reader to iPad via Bluetooth or Lightning / USB-C port.',
+      pm_reader_step3:'The system will automatically detect the device and activate the payment method.',
     },
     es: {
+      // ── Navigation ──────────────────────────────────────────────────────────
       dashboard:'Panel', services:'Servicios', staff:'Personal',
       availability:'Hoy', hours:'Horario', appointments:'Citas',
       inbox:'AI Inbox', customers:'Clientes', settings:'Ajustes',
       logout:'Cerrar sesión', openLbl:'● Abierto', closedLbl:'○ Cerrado',
-      today:'Hoy', upcoming:'Próximas', aiMsg:'Mensajes AI'
+      today:'Hoy', upcoming:'Próximas', aiMsg:'Mensajes AI',
+      nav_ops:'Operaciones', nav_manage:'Gestión',
+      // ── Buttons ─────────────────────────────────────────────────────────────
+      btn_refresh:'Actualizar', btn_add_svc:'+ Agregar Servicio', btn_add_staff:'+ Agregar Personal',
+      btn_save:'Guardar', btn_cancel:'Cancelar', btn_delete:'Eliminar', btn_edit:'Editar',
+      btn_search:'Buscar', btn_clear:'Borrar', btn_new_booking:'+ Nueva Cita',
+      btn_mark_all:'✓ Marcar Todo', btn_save_settings:'Guardar Ajustes',
+      btn_save_method:'Guardar Métodos', btn_save_payment:'Guardar Pago',
+      btn_confirm_cancel:'Confirmar Cancelación', btn_no_cancel:'Mantener Cita',
+      btn_confirm_refund:'Confirmar Reembolso', btn_save_price:'Guardar Precio',
+      btn_add_addon:'+ Agregar', btn_confirm_qr:'✓ Cliente Pagó — Confirmar',
+      btn_back_qr:'Volver', btn_confirm_override:'Confirmar Sobreescritura',
+      btn_hours_save:'Guardar', btn_add_parallel:'+ Agregar Par de Servicios',
+      btn_show_qr:'Mostrar QR al cliente',
+      // ── Section titles ───────────────────────────────────────────────────────
+      dash_title:'Panel', svc_title:'Servicios', staff_title:'Personal',
+      avail_title:'Hoy', hours_title:'Horario', appt_title:'Citas',
+      cust_title_label:'Clientes', settings_title_label:'Ajustes',
+      appt_all_title:'Todas las Citas',
+      // ── Dashboard ───────────────────────────────────────────────────────────
+      db_stat_today:'Hoy', db_stat_upcoming:'Próximas', db_stat_ai:'Mensajes AI',
+      db_stat_loading:'Cargando…', db_next_label:'Próxima Cita',
+      // ── Staff earnings ───────────────────────────────────────────────────────
+      staff_earnings:'Ganancias del Personal',
+      earn_today:'Hoy', earn_week:'Esta Semana', earn_month:'Este Mes',
+      earn_empty:'Sin datos aún.',
+      earn_note:'Comisión basada en el monto cobrado. Propina por separado. Cancelaciones/ausencias excluidas.',
+      earn_col_staff:'Personal', earn_col_pct:'Com%', earn_col_appt:'Citas',
+      earn_col_done:'Completadas', earn_col_noshow:'No Asistió',
+      earn_col_comm:'Comisión', earn_col_tip:'Propina', earn_col_total:'Total',
+      // ── Status badges ────────────────────────────────────────────────────────
+      st_confirmed:'Confirmada', st_in_progress:'En Proceso', st_completed:'Lista',
+      st_canceled:'Cancelada', st_no_show:'No Asistió', st_rescheduled:'Reprogramada',
+      // ── Payment ──────────────────────────────────────────────────────────────
+      pay_status_paid:'Pagado', pay_status_partial:'Parcial',
+      pay_status_unpaid:'No Pagado',
+      pay_no_price:'⚠ Sin precio — no se puede calcular el saldo.',
+      pay_set_price_btn:'Establecer precio →',
+      pay_addons_lbl:'Servicios Adicionales',
+      pay_addons_ph:'— Seleccionar adicional —',
+      pay_pay_status_lbl:'Estado de pago',
+      pay_total:'Total servicio', pay_collected:'Monto cobrado', pay_balance:'Saldo',
+      pay_grand:'Total a cobrar',
+      pay_refund_lbl:'Monto a reembolsar ($) *', pay_commission:'Comisión', pay_tip:'Propina',
+      pay_method_cash:'Efectivo', pay_method_card:'Tarjeta',
+      pay_method_zelle:'Zelle', pay_method_venmo:'Venmo', pay_method_other:'Otro',
+      pay_method_lbl:'Método',
+      pay_badge_paid:'Pagado', pay_badge_partial:'Saldo $', pay_badge_partial_partial:'Parcial',
+      pay_badge_unpaid:'No Pagado',
+      pay_opt_paid:'Pago Completo',
+      pay_opt_partial:'Pago Parcial',
+      pay_opt_unpaid:'No Pagado',
+      pay_note_lbl:'Notas (opcional)',
+      pay_note_ph:'Notas adicionales…',
+      pay_modal_title:'Cobrar Pago',
+      // ── QR payment ───────────────────────────────────────────────────────────
+      qr_scan_note:'Escanea con la cámara del teléfono para pagar',
+      qr_title_prefix:'Pago vía ',
+      // ── Availability badges ──────────────────────────────────────────────────
+      avail_now:'Trabajando Ahora', avail_today:'Trabaja Hoy', avail_off:'Día Libre',
+      avail_loading:'Cargando datos del personal…',
+      avail_empty:'No se encontró personal activo.',
+      // ── Day names ────────────────────────────────────────────────────────────
+      day_mon:'Lun', day_tue:'Mar', day_wed:'Mié', day_thu:'Jue',
+      day_fri:'Vie', day_sat:'Sáb', day_sun:'Dom',
+      // ── Hours ────────────────────────────────────────────────────────────────
+      hrs_closed:'Cerrado',
+      // ── Form labels ──────────────────────────────────────────────────────────
+      lbl_svc_name:'Nombre del Servicio *', lbl_category:'Categoría', lbl_price:'Precio',
+      lbl_duration:'Duración', lbl_description:'Descripción',
+      lbl_image:'URL de imagen (Unsplash o enlace)', lbl_staff_assigned:'Personal Asignado',
+      lbl_name:'Nombre *', lbl_role:'Rol', lbl_level:'Nivel',
+      lbl_employment:'Tipo de Contrato', lbl_skills:'Especialidades', lbl_schedule:'Horario de Trabajo',
+      lbl_commission_pct:'Comisión de Servicio (%)',
+      lbl_commission_note:'% del monto cobrado · Propina por separado · 0 = no configurado',
+      lbl_cancel_reason:'Razón de cancelación *', lbl_cancel_detail:'Especificar razón',
+      lbl_notify_sms:'Notificar al cliente por texto', lbl_sms_body:'Mensaje (editable)',
+      lbl_sms_note:'Al hacer clic en "Confirmar Cancelación" se abrirá tu app de mensajes.',
+      lbl_refund_amount:'Monto a reembolsar ($) *', lbl_refund_reason:'Razón del reembolso *',
+      lbl_est_price:'Precio estimado',
+      lbl_shop_name:'Nombre del Negocio', lbl_phone:'Teléfono', lbl_address:'Dirección',
+      lbl_desc:'Descripción Corta',
+      lbl_ai_key:'Claude AI Key',
+      lbl_ai_key_note:'(sk-ant-… — requerido para que funcione la IA)',
+      lbl_parallel_svc:'Servicios Paralelos',
+      lbl_parallel_note:'— permite reservar 2 servicios a la vez con 2 empleados distintos',
+      lbl_pay_methods:'Métodos de Pago',
+      lbl_pay_methods_desc:'Activa los métodos que acepta tu negocio. Solo los métodos <strong style="color:var(--cream)">listos</strong> aparecen en la pantalla de cobro.',
+      lbl_staff_perms:'Permisos del Personal',
+      lbl_staff_perms_desc:'Elige qué puede hacer cada empleado al iniciar sesión',
+      lbl_notes:'Notas', lbl_date:'Fecha *', lbl_time:'Hora *',
+      lbl_cust_name:'Nombre del cliente *', lbl_cust_phone:'Número de teléfono *',
+      lbl_mb_staff:'Personal', lbl_mb_svc:'Servicio *',
+      lbl_mb_notes:'Notas', lbl_mb_photos:'Fotos de referencia (URL, una por línea)',
+      // ── Placeholders ─────────────────────────────────────────────────────────
+      ph_svc_name:'Gel Nails, Manicure…', ph_price:'$35+', ph_duration:'60 min',
+      ph_description:'Descripción del servicio…', ph_image_url:'https://images.unsplash.com/…',
+      ph_shop_name:'Nombre del negocio…', ph_phone:'408-…', ph_address:'123 Main St, San Jose, CA',
+      ph_desc:'Acerca del negocio…', ph_cancel_detail:'Ingresa razón específica…',
+      ph_notes:'Notas / solicitudes especiales…',
+      ph_booking_notes:'https://drive.google.com/…',
+      ph_cust_search:'Teléfono o nombre del cliente…',
+      ph_zelle_id:'Teléfono o email de Zelle',
+      ph_venmo_handle:'@nombre-negocio',
+      ph_refund_reason:'Ej: Cliente insatisfecho, error del técnico…',
+      ph_est_price:'Ej: 45 o $35–$55',
+      ph_mb_name:'Nombre del cliente', ph_mb_phone:'Número de teléfono',
+      ph_mb_notes:'Notas / solicitudes especiales…',
+      ph_mb_any:'Cualquiera', ph_mb_time:'— Seleccionar hora —',
+      ph_override_pin:'Código PIN', ph_commission:'0',
+      // ── Modal titles ─────────────────────────────────────────────────────────
+      modal_add_svc:'Agregar Servicio', modal_edit_svc:'Editar Servicio',
+      modal_add_staff:'Agregar Personal', modal_edit_staff:'Editar Personal',
+      modal_new_booking:'Nueva Cita', modal_edit_booking:'Editar Cita',
+      modal_cancel_appt:'Cancelar Cita',
+      modal_refund:'↩ Reembolso',
+      modal_set_price:'Establecer Precio',
+      // ── Cancel reasons ───────────────────────────────────────────────────────
+      cancel_r_select:'-- Seleccionar razón --',
+      cancel_r_cust:'Cliente solicitó cancelación',
+      cancel_r_nostaff:'Sin personal disponible',
+      cancel_r_shop:'Emergencia del negocio',
+      cancel_r_nocontact:'No se pudo contactar al cliente',
+      cancel_r_other:'Otro (especificar abajo)',
+      cancel_warn_text:'Estás cancelando esta cita.',
+      // ── Employment type ──────────────────────────────────────────────────────
+      emp_select:'— Seleccionar tipo —',
+      emp_full:'Tiempo completo', emp_part:'Tiempo parcial', emp_contract:'Contrato',
+      // ── Role / Level selects ─────────────────────────────────────────────────
+      role_select:'— Seleccionar rol —', level_select:'— Nivel —',
+      cat_select:'— Seleccionar categoría —',
+      // ── Category tab ─────────────────────────────────────────────────────────
+      cat_all:'Todos',
+      // ── Empty states ─────────────────────────────────────────────────────────
+      empty_svc_cat:'No hay servicios en esta categoría.',
+      empty_svc_none:'Sin servicios aún. Haz clic en "+ Agregar Servicio" para comenzar.',
+      empty_staff_none:'Sin personal aún. Haz clic en "+ Agregar Personal" para comenzar.',
+      empty_staff_svc:'Sin personal aún',
+      empty_earnings:'Sin datos aún.',
+      empty_loading:'Cargando…',
+      empty_ai_inbox:'Sin mensajes nuevos. AI Lily enviará solicitudes cuando los clientes necesiten confirmación.',
+      empty_appt_staff:'Sin citas para ',
+      empty_appt_none:'Sin citas aún.',
+      empty_avail_staff:'Cargando datos del personal…',
+      empty_perms:'Cargando…',
+      empty_cust_no_results:'No se encontraron clientes.',
+      // ── AI Copilot panel ─────────────────────────────────────────────────────
+      ai_subtitle:'Información operativa inteligente · Datos en tiempo real',
+      ai_not_updated:'Sin actualizar',
+      ai_refresh:'⟳ Actualizar',
+      ai_loading:'Cargando datos…',
+      ai_panel_close:'Cerrar',
+      // ── Settings ─────────────────────────────────────────────────────────────
+      settings_coming_soon:'⚙ Función en desarrollo. Guarda los ajustes para registrarte — el sistema te notificará cuando esté listo para conectar.',
+      // ── Inbox ────────────────────────────────────────────────────────────────
+      inbox_subtitle:'Mensajes y solicitudes de clientes vía AI Lily',
+      // ── Override section ─────────────────────────────────────────────────────
+      override_title:'⚠ Horario ocupado — Sobreescribir cita (Dueño / Gerente)',
+      override_pin_label:'Ingresa PIN para confirmar la sobreescritura:',
+      // ── Appointment card detail labels ───────────────────────────────────────
+      det_services:'Servicios', det_price:'Precio estimado', det_payment:'Pago',
+      det_phone:'Teléfono', det_notes:'Notas / Solicitudes', det_cancel_reason:'Razón de cancelación',
+      det_photos:'Fotos de referencia', det_info:'Información',
+      det_earning:'Ganancias', det_toggle:'Detalles',
+      det_no_price:'Sin precio', det_set_price:'+ Establecer precio',
+      // ── Appointment action buttons ────────────────────────────────────────────
+      act_start:'▶ Iniciar', act_done:'✓ Lista', act_complete:'✓ Completar',
+      act_noshow:'No Asistió', act_confirm_sms:'✉ Confirmar', act_cancel:'✕ Cancelar',
+      act_delete:'🗑 Eliminar', act_pay:'$ Cobrar', act_refund:'↩ Reembolsar',
+      act_edit:'✎ Editar',
+      // ── Badge labels ─────────────────────────────────────────────────────────
+      badge_new:'NUEVA', badge_photos:'Fotos', badge_notes:'Notas',
+      badge_more_svc:' servicios', badge_rescheduled:'↻ Reprogramada', badge_unassigned:'⚠ Sin Asignar',
+      // ── Customer quick view ───────────────────────────────────────────────────
+      cust_booked_times:'citas', cust_upcoming_lbl:'próximas',
+      cust_upcoming_section:'Próximas', cust_history_lbl:'Historial',
+      cust_no_results:'No se encontraron clientes',
+      cust_book_btn:'+ Reservar',
+      // ── Payment methods (settings) ────────────────────────────────────────────
+      pm_cash_name:'Efectivo',
+      pm_cash_desc:'El cliente paga directamente en efectivo en el negocio.',
+      pm_card_name:'Tarjeta de crédito / débito',
+      pm_card_desc:'Pago via terminal o dispositivo externo. Registro manual.',
+      pm_zelle_name:'Zelle',
+      pm_zelle_desc:'El cliente transfiere por Zelle. Ingresa el teléfono o email Zelle del negocio.',
+      pm_venmo_name:'Venmo',
+      pm_venmo_desc:'El cliente paga por Venmo. Ingresa el @handle del negocio.',
+      pm_tap_name:'Tap to Pay (iPhone)',
+      pm_tap_desc:'iPhone acepta pagos sin contacto. Selecciona un proveedor para comenzar la configuración.',
+      pm_tap_setup_title:'Configuración Tap to Pay',
+      pm_tap_step1:'Selecciona tu proveedor de pagos:',
+      pm_tap_step2:'Instala la app de cobros en los iPhone del personal e inicia sesión con la cuenta del proveedor.',
+      pm_tap_step3:'El sistema activará automáticamente este método en la pantalla de cobro al conectarse.',
+      pm_reader_name:'Lector de Tarjetas',
+      pm_reader_desc:'Conecta un lector de tarjetas físico al iPad. Selecciona proveedor para comenzar.',
+      pm_reader_setup_title:'Configuración Lector de Tarjetas',
+      pm_reader_step1:'Selecciona tu proveedor de dispositivo:',
+      pm_reader_step2:'Conecta el lector al iPad por Bluetooth o puerto Lightning / USB-C.',
+      pm_reader_step3:'El sistema detectará automáticamente el dispositivo y activará el método de pago.',
     }
   };
 
   function _applyLang(l) {
     var lb = _LABELS[l] || _LABELS.vi;
-    // Sidebar nav labels
+    // ── Sidebar nav labels ──────────────────────────────────────────────────────
     var navMap = {
       'nav-dashboard':    lb.dashboard,
       'nav-services':     lb.services,
@@ -6740,6 +7357,42 @@
     if (logoutBtn) logoutBtn.textContent = lb.logout;
     // html lang
     document.documentElement.lang = l;
+
+    // ── Generic data-i18n text content ─────────────────────────────────────────
+    document.querySelectorAll('[data-i18n]').forEach(function(el) {
+      var key = el.getAttribute('data-i18n');
+      var val = lb[key];
+      if (val !== undefined) el.textContent = val;
+    });
+    // ── Generic data-i18n-html (innerHTML — for strings with HTML tags) ─────────
+    document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
+      var key = el.getAttribute('data-i18n-html');
+      var val = lb[key];
+      if (val !== undefined) el.innerHTML = val;
+    });
+    // ── Generic data-i18n-placeholder ──────────────────────────────────────────
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
+      var key = el.getAttribute('data-i18n-placeholder');
+      var val = lb[key];
+      if (val !== undefined) el.placeholder = val;
+    });
+    // ── Generic data-i18n-aria ─────────────────────────────────────────────────
+    document.querySelectorAll('[data-i18n-aria]').forEach(function(el) {
+      var key = el.getAttribute('data-i18n-aria');
+      var val = lb[key];
+      if (val !== undefined) el.setAttribute('aria-label', val);
+    });
+
+    // ── AI panel specific elements ─────────────────────────────────────────────
+    var aiSub = document.getElementById('aiPanelSubtitle');
+    if (aiSub) aiSub.textContent = lb.ai_subtitle;
+    var aiTs = document.getElementById('aiPanelTs');
+    if (aiTs && (aiTs.textContent === 'Chưa cập nhật' || aiTs.textContent === 'Not updated' || aiTs.textContent === 'Sin actualizar'))
+      aiTs.textContent = lb.ai_not_updated;
+    var aiRefreshBtn = document.querySelector('.ai-panel-refresh');
+    if (aiRefreshBtn) aiRefreshBtn.innerHTML = '&#8635; ' + (l === 'vi' ? 'Cập nhật' : l === 'es' ? 'Actualizar' : 'Refresh');
+    var aiPanelClose = document.querySelector('.ai-panel-close');
+    if (aiPanelClose) aiPanelClose.setAttribute('aria-label', lb.ai_panel_close);
   }
 
   // Apply saved preferences
@@ -6761,18 +7414,18 @@
         <span class="ai-panel-title-spark">&#10022;</span>
         AI Copilot
       </div>
-      <div class="ai-panel-subtitle">Thông tin vận hành thông minh · Dữ liệu thực tế</div>
+      <div class="ai-panel-subtitle" id="aiPanelSubtitle" data-i18n="ai_subtitle">Thông tin vận hành thông minh · Dữ liệu thực tế</div>
     </div>
-    <button class="ai-panel-close" onclick="closeAiPanel()" aria-label="Đóng">&#10005;</button>
+    <button class="ai-panel-close" onclick="closeAiPanel()" aria-label="Đóng" data-i18n-aria="ai_panel_close">&#10005;</button>
   </div>
   <div class="ai-panel-topbar">
-    <div class="ai-panel-ts" id="aiPanelTs">Chưa cập nhật</div>
+    <div class="ai-panel-ts" id="aiPanelTs" data-i18n="ai_not_updated">Chưa cập nhật</div>
     <button class="ai-panel-refresh" onclick="refreshAiPanel()">&#8635; Cập nhật</button>
   </div>
   <div class="ai-panel-body" id="aiPanelBody">
     <div class="ai-panel-clear">
       <div class="ai-panel-clear-icon">&#10022;</div>
-      Đang tải dữ liệu…
+      <span data-i18n="ai_loading">Đang tải dữ liệu…</span>
     </div>
   </div>
 </div>

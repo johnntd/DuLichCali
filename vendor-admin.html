@@ -1996,6 +1996,7 @@
   var _initialNotifLoad = false;
   var _popupTimer       = null;
   var _currentPopupNotif = null;   // holds the notif object for quick-action buttons
+  var _escalationItems   = [];     // cached escalations for language re-render
   // Image upload tracking — prevents saving before upload completes
   var _activeUploadTask  = null;   // main item image upload task
   var _varUploadTasks    = {};     // per-variant upload tasks keyed by row index
@@ -3891,7 +3892,7 @@
       };
       showToast(msgs[newStatus] || _vlb('toast_updated','Updated.'), 'success');
     }).catch(function (err) {
-      showToast('Lỗi: ' + err.message, 'error');
+      showToast(_vlb('err_prefix', 'Error: ') + err.message, 'error');
     });
   }
 
@@ -3962,6 +3963,7 @@
         var tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
         return tb - ta;
       });
+      _escalationItems = items;
       renderEscalations(items);
     }, function (err) {
       console.warn('[escalations] listener error:', err.code || err.message);
@@ -4107,7 +4109,7 @@
         var labels = { vendor_confirmed: _vlb('toast_esc_confirmed', 'Confirmed!'), vendor_declined: _vlb('toast_esc_declined', 'Declined.'), vendor_replied: _vlb('toast_esc_replied', 'Reply sent!') };
         showToast(labels[status] || _vlb('toast_updated', 'Updated.'), 'success');
       })
-      .catch(function (err) { showToast('Lỗi: ' + err.message, 'error'); });
+      .catch(function (err) { showToast(_vlb('err_prefix', 'Error: ') + err.message, 'error'); });
   }
 
   // ── Render notification list ───────────────────────────────────────────────
@@ -4283,7 +4285,7 @@
     batch.commit().then(function () {
       showToast(_vlb('toast_marked_read','Marked {n} read.').replace('{n}', unread.length), 'success');
     }).catch(function (err) {
-      showToast('Lỗi: ' + err.message, 'error');
+      showToast(_vlb('err_prefix', 'Error: ') + err.message, 'error');
     });
   }
 
@@ -4469,6 +4471,7 @@
       ai_tools_title:'✨ AI Marketing Tools',
       ai_tools_desc:'AI features powered by Du Lịch Cali platform. No additional configuration needed. Use the <strong style="color:var(--gold)">✨ AI Content</strong> button on each item in the Menu tab.',
       drawer_add:'Add New Item', drawer_edit:'Edit Item',
+      ph_name:'Spring Roll, Banh Mi…', ph_desc:'Pork, mushroom, carrot — handmade daily…',
       fld_name:'Item name *', fld_name_vi:'Vietnamese name', fld_name_vi_optional:'(optional)',
       fld_desc:'Description', fld_price:'Base price (USD)', fld_price_note:'— leave blank if using variant pricing',
       fld_unit:'Unit', fld_min_qty:'Minimum quantity *', fld_min_qty_hint:'Minimum amount customer must order',
@@ -4601,6 +4604,7 @@
       ai_tools_title:'✨ Công Cụ AI Marketing',
       ai_tools_desc:'Tính năng AI được cung cấp bởi nền tảng Du Lịch Cali. Không cần cấu hình thêm. Sử dụng nút <strong style="color:var(--gold)">✨ AI Content</strong> trên từng món trong tab Thực Đơn.',
       drawer_add:'Thêm Món Mới', drawer_edit:'Sửa Món',
+      ph_name:'VD: Chả Giò, Bún Chả…', ph_desc:'VD: Thịt heo, nấm, cà rốt — tươi mỗi ngày…',
       fld_name:'Tên món *', fld_name_vi:'Tên tiếng Việt', fld_name_vi_optional:'(tùy chọn)',
       fld_desc:'Mô tả', fld_price:'Giá gốc (USD)', fld_price_note:'— để trống nếu dùng giá theo loại',
       fld_unit:'Đơn vị', fld_min_qty:'Số lượng tối thiểu *', fld_min_qty_hint:'Số lượng tối thiểu khách phải đặt',
@@ -4733,6 +4737,7 @@
       ai_tools_title:'✨ Herramientas AI Marketing',
       ai_tools_desc:'Funciones AI de la plataforma Du Lịch Cali. Sin configuración adicional. Use el botón <strong style="color:var(--gold)">✨ AI Content</strong> en cada artículo en la pestaña Menú.',
       drawer_add:'Agregar Artículo', drawer_edit:'Editar Artículo',
+      ph_name:'ej. Spring Roll, Banh Mi…', ph_desc:'ej. Cerdo, champiñones, zanahoria — fresco cada día…',
       fld_name:'Nombre del artículo *', fld_name_vi:'Nombre en vietnamita', fld_name_vi_optional:'(opcional)',
       fld_desc:'Descripción', fld_price:'Precio base (USD)', fld_price_note:'— dejar en blanco si usa precios por variante',
       fld_unit:'Unidad', fld_min_qty:'Cantidad mínima *', fld_min_qty_hint:'Cantidad mínima que el cliente debe pedir',
@@ -4873,6 +4878,16 @@
       b.classList.toggle('active', b.dataset.lang === l);
     });
     _vaApplyLang(l);
+    // Re-render dynamic content so already-loaded cards switch language
+    if (typeof allItems !== 'undefined' && Object.keys(allItems).length > 0) renderItems();
+    if (typeof _renderStaffFilterBar === 'function') _renderStaffFilterBar();
+    if (_activeTab === 'orders') {
+      if (_orderView === 'cal') renderCalendar(); else renderOrders();
+    }
+    if (_activeTab === 'notifs') {
+      renderNotifications();
+      if (_escalationItems && _escalationItems.length) renderEscalations(_escalationItems);
+    }
   }
 
   function _vaApplyLang(l) {
@@ -4952,7 +4967,7 @@
     }).then(function () {
       showToast(_vlb('toast_confirmed','Confirmed!'), 'success');
     }).catch(function (err) {
-      showToast('Lỗi: ' + err.message, 'error');
+      showToast(_vlb('err_prefix', 'Error: ') + err.message, 'error');
     });
   }
 </script>

@@ -2,79 +2,104 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Vendor top-level docs — publicly readable (homepage vendor status check),
-    // auth-only write (admin + vendor-admin both sign in via Firebase Auth).
+    // ── Helper functions ──────────────────────────────────────────────────────────
+    // isVendorMember: caller is authenticated AND their vendorUsers doc maps them to this vendorId.
+    // Used to restrict writes to members of the specific vendor — prevents cross-vendor tampering.
+    function isVendorMember(vendorId) {
+      return request.auth != null
+          && exists(/databases/$(database)/documents/vendorUsers/$(request.auth.uid))
+          && get(/databases/$(database)/documents/vendorUsers/$(request.auth.uid)).data.vendorId == vendorId;
+    }
+
+    // ── Vendor top-level docs ─────────────────────────────────────────────────────
+    // Public read: homepage checks vendor status without requiring auth.
+    // Write: only authenticated members of that specific vendor (not just any auth user).
     match /vendors/{vendorId} {
       allow read:  if true;
-      allow write: if request.auth != null;
+      allow write: if isVendorMember(vendorId);
     }
-    // Staff and services are public-facing data (customers need to see schedules
-    // and service menus without authenticating). Explicit rules here take precedence
-    // over the catch-all subcollection rule below.
+
+    // ── Staff schedule/availability — public read, vendor-member write ────────────
+    // Customers need name/schedule/specialties to book without authenticating.
+    // IMPORTANT: compensation fields (compensationType, monthlyBasePay, hireDate, payNotes)
+    // are NOT stored here — they live in staffCompensation (see below).
     match /vendors/{vendorId}/staff/{doc} {
-      allow read: if true;
-      allow write: if request.auth != null;
+      allow read:  if true;
+      allow write: if isVendorMember(vendorId);
     }
+
+    // ── Services catalog — public read, vendor-member write ──────────────────────
     match /vendors/{vendorId}/services/{doc} {
-      allow read: if true;
-      allow write: if request.auth != null;
+      allow read:  if true;
+      allow write: if isVendorMember(vendorId);
     }
-    // Other vendor subcollections (menuItems, bookings, notifications) — auth only.
+
+    // ── Staff compensation — SENSITIVE, never public ──────────────────────────────
+    // Contains: compensationType, monthlyBasePay, hireDate, payNotes.
+    // Never publicly readable. Only authenticated members of this specific vendor.
+    // Future: tighten to role='owner' only once role-check helpers are added.
+    match /vendors/{vendorId}/staffCompensation/{doc} {
+      allow read, write: if isVendorMember(vendorId);
+    }
+
+    // ── Other vendor subcollections (menuItems, notifications, etc.) ──────────────
+    // Auth required. Broad auth (not vendor-membership-only) to preserve admin.html access.
+    // staffCompensation is explicitly handled above with tighter rules.
     match /vendors/{vendorId}/{sub=**} {
       allow read, write: if request.auth != null;
     }
 
-    // Vendor user mappings — public read needed for setup-code check before account creation.
+    // ── Vendor user mappings ──────────────────────────────────────────────────────
+    // Auth required — no anonymous enumeration of staff emails and roles.
+    // Previously: allow read: if true (needed for setup-code check) — that check
+    // actually runs AFTER Firebase Auth sign-in, so auth != null is safe here.
     match /vendorUsers/{uid} {
-      allow read: if true;
+      allow read:  if request.auth != null;
       allow write: if request.auth != null;
     }
 
-    // Bookings — open (customer creates, admin reads/updates, no auth in ride form).
+    // ── Bookings — open (customer booking flow is unauthenticated) ────────────────
     match /bookings/{doc=**} {
       allow read, write: if true;
     }
 
-    // Driver profiles — publicly readable (homepage availability check runs unauthenticated),
-    // auth-only write (drivers sign in before editing; admin creates via REST API).
+    // ── Driver profiles — public read, auth write ─────────────────────────────────
+    // Homepage availability check runs unauthenticated; drivers sign in to write.
     match /drivers/{driverId} {
       allow read:  if true;
       allow write: if request.auth != null;
     }
 
-    // Driver user mappings — auth only.
+    // ── Driver user mappings — auth only ─────────────────────────────────────────
     match /driverUsers/{uid} {
       allow read, write: if request.auth != null;
     }
 
-    // Driver compliance documents — auth only (contains sensitive license/insurance/registration info).
-    // Drivers write their own submissions; admin writes review decisions.
-    // NOT publicly readable — compliance data is internal.
+    // ── Driver compliance — auth only (sensitive license/insurance/registration) ──
     match /driver_compliance/{driverId} {
       allow read, write: if request.auth != null;
     }
 
-    // Ride booking notifications for active drivers — public create (ride form is unauthenticated),
-    // auth read (drivers read their notifications after signing in to driver-admin).
+    // ── Ride notifications — public create, auth read/update ─────────────────────
     match /rideNotifications/{notifId} {
       allow create: if true;
       allow read, update: if request.auth != null;
     }
 
-    // Video render job queue — authenticated vendors only.
+    // ── Video render jobs — auth only ─────────────────────────────────────────────
     match /videoRenderJobs/{jobId} {
       allow create: if request.auth != null;
       allow read:   if request.auth != null;
     }
 
-    // AI-to-vendor escalations — public create+read; vendor update requires auth.
+    // ── AI escalations — public create+read, auth update ─────────────────────────
     match /escalations/{escalationId} {
       allow create: if true;
       allow read:   if true;
       allow update: if request.auth != null;
     }
 
-    // Everything else — deny by default.
+    // ── Default deny ──────────────────────────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;
     }

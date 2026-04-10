@@ -49,21 +49,21 @@
   // ── State labels ──────────────────────────────────────────────────────────
   var LABEL = {
     en: {
-      idle:       'Tap microphone to speak',
+      idle:       'Ready \u2014 speak anytime',
       listening:  'Listening\u2026',
       processing: 'Processing\u2026',
       speaking:   'Speaking\u2026',
       error:      'Tap to try again'
     },
     vi: {
-      idle:       'Nh\u1ea5n micro \u0111\u1ec3 n\u00f3i',
+      idle:       'S\u1eb5n s\xe0ng \u2014 h\xe3y n\xf3i',
       listening:  '\u0110ang nghe\u2026',
       processing: '\u0110ang x\u1eed l\u00fd\u2026',
       speaking:   '\u0110ang n\u00f3i\u2026',
       error:      'Th\u1eed l\u1ea1i'
     },
     es: {
-      idle:       'Toca el micr\u00f3fono para hablar',
+      idle:       'Listo \u2014 habla cuando quieras',
       listening:  'Escuchando\u2026',
       processing: 'Procesando\u2026',
       speaking:   'Hablando\u2026',
@@ -260,9 +260,22 @@
     if (_state === 'listening') _setState('idle');
   }
 
+  // ── Hands-free auto-restart ────────────────────────────────────────────────
+  // Called after every TTS completion. Waits a natural conversational pause,
+  // then restarts the microphone so the user can reply without tapping.
+  // Guards: only fires if overlay is still open and state is still idle.
+  function _autoRestartListening() {
+    setTimeout(function () {
+      if (!_biz || !_overlay) return;    // overlay was closed
+      if (_state !== 'idle') return;     // something else already started
+      if (!hasSR) return;
+      _startListening();
+    }, 700);
+  }
+
   function _startListening() {
-    // Mic tap: toggle listening / stop speaking
-    if (_state === 'speaking') { _stopSpeaking(); return; }
+    // Mic tap while speaking → interrupt AI and start listening immediately
+    if (_state === 'speaking') { _stopSpeaking(); _startListening(); return; }
     if (_state === 'listening') { _stopRec(); return; }
     if (_state === 'processing') return;
 
@@ -288,7 +301,7 @@
       _rec.onresult = function (e) {
         var transcript = (e.results[0] && e.results[0][0].transcript || '').trim();
         _rec = null;
-        if (!transcript) { _setState('idle'); return; }
+        if (!transcript) { _setState('idle'); _autoRestartListening(); return; }
         _setTranscript(transcript);
         _processTranscript(transcript);
       };
@@ -299,7 +312,7 @@
           _handlePermissionDenied();
           return;
         }
-        if (e.error === 'no-speech') { _setState('idle'); return; }
+        if (e.error === 'no-speech') { _setState('idle'); _autoRestartListening(); return; }
         _setState('error');
       };
 
@@ -417,12 +430,14 @@
       clearInterval(_keepalive);
       _keepalive = null;
       if (_state === 'speaking') _setState('idle');
+      _autoRestartListening();
     };
     utter.onerror = function () {
       clearTimeout(_ttsStartGuard);
       clearInterval(_keepalive);
       _keepalive = null;
       if (_state === 'speaking') _setState('idle');
+      _autoRestartListening();
     };
 
     // iOS Safari bug: speechSynthesis stops speaking after ~14 s.
@@ -493,6 +508,7 @@
         _currentSource = null;
         if (_state === 'speaking') _setState('idle');
         onDone(true);
+        _autoRestartListening();
       };
       src.start();
     })
@@ -602,6 +618,7 @@
         _currentSource = null;
         if (_state === 'speaking') _setState('idle');
         onDone(true);
+        _autoRestartListening();
       };
 
       src.start();
@@ -716,7 +733,7 @@
               src.buffer = decoded;
               src.connect(_wCtx.destination);
               _currentSource = src;
-              src.onended = function () { _currentSource = null; _setState('idle'); };
+              src.onended = function () { _currentSource = null; _setState('idle'); _autoRestartListening(); };
               src.start();
             },
             function () { _speakReply(welcome); } // decode failed → normal pipeline

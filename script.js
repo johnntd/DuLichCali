@@ -1239,26 +1239,29 @@ async function checkRideServiceAvailability(regionId) {
     // Store ALL active drivers for vehicle display (regardless of schedule/region)
     window._activeDrivers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
+    console.log('[RideAvail] query returned', snap.size, 'driver(s). regionId:', regionId, 'day:', day, 'nowMins:', nowMins);
+
     const isScheduledAvailable = doc => {
       const d = doc.data ? doc.data() : doc;
+      const name = d.fullName || doc.id;
       // ── Compliance gate: driver must be fully approved ────────────────────
-      if (d.complianceStatus !== 'approved') return false;
+      if (d.complianceStatus !== 'approved') { console.log('[RideAvail]', name, '→ BLOCKED complianceStatus:', d.complianceStatus); return false; }
       // ── Admin status gate: only 'active' drivers can take rides ──────────
-      if (d.adminStatus && d.adminStatus !== 'active') return false;
+      if (d.adminStatus && d.adminStatus !== 'active') { console.log('[RideAvail]', name, '→ BLOCKED adminStatus:', d.adminStatus); return false; }
       // ── Real-time expiration check (belt-and-suspenders) ─────────────────
-      // Mirror expiry fields (licExpiry, regExpiry, insExpiry) are set by admin
-      // when approving documents. Automatically excludes expired-since-approval drivers.
-      if (d.licExpiry && d.licExpiry < todayStr) return false;
-      if (d.regExpiry && d.regExpiry < todayStr) return false;
-      if (d.insExpiry && d.insExpiry < todayStr) return false;
+      if (d.licExpiry && d.licExpiry < todayStr) { console.log('[RideAvail]', name, '→ BLOCKED licExpiry:', d.licExpiry); return false; }
+      if (d.regExpiry && d.regExpiry < todayStr) { console.log('[RideAvail]', name, '→ BLOCKED regExpiry:', d.regExpiry); return false; }
+      if (d.insExpiry && d.insExpiry < todayStr) { console.log('[RideAvail]', name, '→ BLOCKED insExpiry:', d.insExpiry); return false; }
       // ── Schedule / region checks ──────────────────────────────────────────
-      if (!(d.regions || []).includes(regionId)) return false;
-      if ((d.availability?.blackoutDates || []).includes(todayStr)) return false;
+      if (!(d.regions || []).includes(regionId)) { console.log('[RideAvail]', name, '→ BLOCKED regions:', d.regions, 'vs regionId:', regionId); return false; }
+      if ((d.availability?.blackoutDates || []).includes(todayStr)) { console.log('[RideAvail]', name, '→ BLOCKED blackout:', todayStr); return false; }
       const sched = d.availability?.weeklySchedule?.[day];
-      if (!sched?.enabled) return false;
+      if (!sched?.enabled) { console.log('[RideAvail]', name, '→ BLOCKED schedule day', day, 'not enabled:', sched); return false; }
       const [sh, sm] = (sched.start || '00:00').split(':').map(Number);
       const [eh, em] = (sched.end   || '23:59').split(':').map(Number);
-      return nowMins >= sh * 60 + sm && nowMins <= eh * 60 + em;
+      const inWindow = nowMins >= sh * 60 + sm && nowMins <= eh * 60 + em;
+      console.log('[RideAvail]', name, '→', inWindow ? 'AVAILABLE ✓' : 'BLOCKED outside hours ' + sched.start + '–' + sched.end + ' nowMins=' + nowMins);
+      return inWindow;
     };
 
     const hasAvailable = snap.docs.some(isScheduledAvailable);

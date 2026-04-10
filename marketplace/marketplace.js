@@ -1027,7 +1027,14 @@
       '<div class="ns-hero__content">' +
         '<div class="ns-hero__region">' + escHtml(biz.region || 'Bay Area') + ' \xb7 ' + escHtml(biz.city || 'San Jose') + '</div>' +
         '<h1 class="ns-hero__name">' + escHtml(biz.name) + '</h1>' +
-        '<p class="ns-hero__tagline">' + escHtml(biz.tagline || 'Premium nail care \xb7 Luxurious spa treatments') + '</p>' +
+        (function () {
+          var t18 = biz.taglineI18n;
+          if (t18) {
+            var enT = t18.en || '', viT = t18.vi || '', esT = t18.es || '';
+            return '<p class="ns-hero__tagline" data-t="en:' + enT + '|vi:' + viT + '|es:' + esT + '">' + escHtml(_t(enT, viT, esT)) + '</p>';
+          }
+          return '<p class="ns-hero__tagline">' + escHtml(biz.tagline || _t('Premium nail care \xb7 Luxury spa', 'Nail cao c\u1ea5p & spa sang tr\u1ecdng', 'Cuidado de u\xf1as premium & spa')) + '</p>';
+        }()) +
         chipsHtml +
         '<div class="ns-hero__ctas">' +
           '<button class="ns-btn-book" type="button" ' +

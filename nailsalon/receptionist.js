@@ -1103,6 +1103,17 @@
       return off ? null : { open: open, close: close };
     }
 
+    // Parallel services block — live from vendor settings (biz._parallelServices)
+    var parallelRules = (biz._parallelServices || []).filter(function(p) { return p.a && p.b; });
+    var parallelBlock;
+    if (parallelRules.length > 0) {
+      parallelBlock = 'Yes — this salon supports PARALLEL BOOKINGS: two customers can be served simultaneously by different technicians.\n'
+        + 'Configured simultaneous pairs:\n'
+        + parallelRules.map(function(p) { return '• ' + p.a + ' + ' + p.b; }).join('\n');
+    } else {
+      parallelBlock = null; // omit section entirely when no rules configured
+    }
+
     // Staff block
     var activeStaff = (biz.staff || []).filter(function (m) { return m.active !== false; });
     var staffBlock;
@@ -1182,6 +1193,20 @@
       '=== SERVICES & PRICING (live) ===',
       servicesBlock,
       '',
+    ].concat(parallelBlock ? [
+      '=== PARALLEL / SIMULTANEOUS BOOKINGS (live from vendor settings) ===',
+      parallelBlock,
+      'When customer asks "do you offer parallel services?", "can two people book at the same time?",',
+      '"can we come together?", "simultaneous booking", "book together", or similar:',
+      '  → Answer YES and list the available pairs above.',
+      '  → Explain: each person needs their own separate booking, each with a different technician.',
+      '  → Offer to start one of the bookings now.',
+      'When customer asks about a specific combination (e.g. "manicure and pedicure at the same time"):',
+      '  → Check the configured pairs above. If the combination is listed → confirm it is allowed.',
+      '  → If the combination is NOT listed → say only that pair is not in the simultaneous booking options.',
+      '  → Do NOT invent combinations. Only confirm what is configured above.',
+      '',
+    ] : []).concat([
       '=== STAFF SCHEDULES (recurring weekly — same every week) ===',
       'For "next week" or any future date: look up the matching day-of-week below. The schedule repeats weekly.',
       staffBlock,
@@ -2480,8 +2505,14 @@
             // ── Vendor doc: apiKey, parallelServices, hoursSchedule ─────────────────
             if (vdoc.exists) {
               var d = vdoc.data();
-              if (d.aiKey)            biz._firestoreApiKey  = d.aiKey;
-              if (d.parallelServices) biz._parallelServices = d.parallelServices;
+              if (d.aiKey) biz._firestoreApiKey = d.aiKey;
+              // Normalize parallelServices: accept both old [[a,b],...] and new [{a,b},...] formats
+              if (d.parallelServices && d.parallelServices.length) {
+                biz._parallelServices = d.parallelServices.map(function(p) {
+                  if (Array.isArray(p)) return { a: p[0] || '', b: p[1] || '' };
+                  return { a: p.a || '', b: p.b || '' };
+                }).filter(function(p) { return p.a && p.b; });
+              }
               // Convert hoursSchedule → biz.hours display format used by prompt + availability
               if (d.hoursSchedule) {
                 var _hs = d.hoursSchedule;

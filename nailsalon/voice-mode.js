@@ -104,11 +104,12 @@
       .trim();
   }
 
-  // Trim to the first complete sentence within ~240 chars.
-  // Reduces Gemini TTS processing time for long AI replies.
-  // The full reply is always visible in the chat bubble.
+  // Trim long replies to a natural sentence boundary.
+  // OpenAI TTS handles full replies quickly, so MAX is set generously.
+  // Gemini TTS is slower — the trim mainly helps that fallback path.
+  // The full reply is always visible in the chat bubble regardless.
   function _truncateForTts(text) {
-    var MAX = 240;
+    var MAX = 600;
     if (text.length <= MAX) return text;
     var dot = text.lastIndexOf('. ', MAX);
     return text.substring(0, dot > MAX * 0.4 ? dot + 1 : MAX).trim();

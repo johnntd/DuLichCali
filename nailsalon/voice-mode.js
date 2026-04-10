@@ -356,11 +356,13 @@
     if (pick) utter.voice = pick;
 
     utter.onend = function () {
+      clearTimeout(_ttsStartGuard);
       clearInterval(_keepalive);
       _keepalive = null;
       if (_state === 'speaking') _setState('idle');
     };
     utter.onerror = function () {
+      clearTimeout(_ttsStartGuard);
       clearInterval(_keepalive);
       _keepalive = null;
       // Text is still visible — don't dead-end user, just return to idle
@@ -369,7 +371,9 @@
 
     // iOS Safari bug: speechSynthesis stops speaking after ~14 s.
     // pause()/resume() cycle every 10 s keeps it alive.
+    var _ttsStartGuard = null;
     utter.onstart = function () {
+      clearTimeout(_ttsStartGuard);
       _keepalive = setInterval(function () {
         if (window.speechSynthesis.speaking) {
           window.speechSynthesis.pause();
@@ -381,9 +385,19 @@
       }, 10000);
     };
 
+    // Safety: if TTS never fires onstart within 2 s (silently blocked by browser),
+    // reset to idle so the mic is still usable.
+    _ttsStartGuard = setTimeout(function () {
+      if (_state === 'speaking' && !window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        _setState('idle');
+      }
+    }, 2000);
+
     try {
       window.speechSynthesis.speak(utter);
     } catch (_) {
+      clearTimeout(_ttsStartGuard);
       _setState('idle');
     }
   }
@@ -434,13 +448,13 @@
 
     document.documentElement.classList.add('dlc-vm-active');
 
-    // Speak welcome message on open so the customer knows voice is active
-    // and knows to speak. Uses the same welcomeMessage as the text chat.
+    // Speak welcome message synchronously — must stay inside the user-gesture
+    // chain from the voice-mode button click. iOS Safari blocks speechSynthesis
+    // outside a gesture; setTimeout would break the chain and silence TTS.
+    // Once this first speak() succeeds it also unlocks speechSynthesis for
+    // subsequent async AI responses in this session.
     var welcome = (biz.aiReceptionist && biz.aiReceptionist.welcomeMessage) || '';
-    if (welcome) {
-      // Short delay so the overlay animation completes before speech starts
-      setTimeout(function () { _speakReply(welcome); }, 400);
-    }
+    if (welcome) _speakReply(welcome);
   }
 
   function close() {

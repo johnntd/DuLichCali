@@ -1971,16 +1971,38 @@
             body: JSON.stringify({ email: derivedEmail, password: derivedPass, returnSecureToken: true }) }
         );
         const result = await resp.json();
+        let uid = result.localId;
+
         if (result.error) {
           if (result.error.message === 'EMAIL_EXISTS') {
-            errEl.textContent = 'Số điện thoại này đã có tài khoản tài xế.';
+            // Email already exists in Firebase Auth — try to sign in with same PIN
+            // to recover an orphaned Auth account (created but Firestore doc was never saved).
+            errEl.textContent = 'Email đã tồn tại — đang kiểm tra…';
+            const signInResp = await fetch(
+              `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`,
+              { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: derivedEmail, password: derivedPass, returnSecureToken: true }) }
+            );
+            const signInResult = await signInResp.json();
+            if (signInResult.error || !signInResult.localId) {
+              errEl.textContent = 'Email này đã được dùng cho tài khoản khác. Vui lòng dùng email khác hoặc đặt lại mật khẩu.';
+              btn.disabled = false; btn.textContent = 'Tạo Tài Xế'; return;
+            }
+            uid = signInResult.localId;
+            // Check if Firestore driver doc already exists for this UID
+            const existingDoc = await db.collection('drivers').doc(uid).get();
+            if (existingDoc.exists) {
+              errEl.textContent = 'Tài xế với email này đã tồn tại trong hệ thống.';
+              btn.disabled = false; btn.textContent = 'Tạo Tài Xế'; return;
+            }
+            // Orphaned Auth account found — proceed to create Firestore docs
+            errEl.style.color = '#7ac87a';
+            errEl.textContent = 'Khôi phục tài khoản Auth cũ — đang tạo hồ sơ…';
           } else {
             errEl.textContent = 'Lỗi tạo tài khoản: ' + result.error.message;
+            btn.disabled = false; btn.textContent = 'Tạo Tài Xế'; return;
           }
-          btn.disabled = false; btn.textContent = 'Tạo Tài Xế'; return;
         }
-
-        const uid = result.localId;
         const ts = firebase.firestore.FieldValue.serverTimestamp();
 
         await db.collection('driverUsers').doc(uid).set({

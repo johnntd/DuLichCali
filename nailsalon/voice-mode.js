@@ -32,6 +32,18 @@
   // BCP-47 tags for Web Speech API
   var LANG_TAG = { en: 'en-US', vi: 'vi-VN', es: 'es-US' };
 
+  // Cache browser voice list once — getVoices() returns [] on first call in many browsers
+  // (voices load asynchronously). Using a stale empty list means no voice is pinned and
+  // the browser picks a random default, causing the voice to change between sessions.
+  (function () {
+    if (!window.speechSynthesis) return;
+    function _loadVoices() {
+      try { var v = window.speechSynthesis.getVoices(); if (v && v.length) _voices = v; } catch (_) {}
+    }
+    _loadVoices();
+    try { window.speechSynthesis.addEventListener('voiceschanged', _loadVoices); } catch (_) {}
+  })();
+
   // ── Module state ──────────────────────────────────────────────────────────
   var _biz           = null;
   var _msgsEl        = null;    // .mp-ai__messages container
@@ -45,6 +57,7 @@
   var _audioCtx      = null;    // Web Audio API context (OpenAI/Gemini PCM playback)
   var _currentSource = null;    // AudioBufferSourceNode currently playing
   var _welcomeBuffer = null;    // Pre-fetched MP3 ArrayBuffer for welcome message
+  var _voices        = [];      // Cached voice list — populated once on voiceschanged
 
   // ── State labels ──────────────────────────────────────────────────────────
   var LABEL = {
@@ -418,8 +431,9 @@
     utter.rate  = 0.92;
     utter.pitch = 1.0;
 
-    var voices = [];
-    try { voices = window.speechSynthesis.getVoices(); } catch (_) {}
+    // Use cached voice list; fall back to live getVoices() only if cache is still empty
+    var voices = _voices.length ? _voices : [];
+    if (!voices.length) { try { voices = window.speechSynthesis.getVoices() || []; } catch (_) {} }
     var pick = _pickVoice(voices, LANG_TAG[_lang] || 'en-US');
     if (pick) utter.voice = pick;
 
@@ -725,6 +739,10 @@
           var _wCtx = _audioCtx;
           var _wBuf = _welcomeBuffer;
           _welcomeBuffer = null;
+          // Re-prefetch immediately so the NEXT open also gets instant OpenAI nova audio.
+          // Without this, the 2nd+ open falls into the live TTS chain which may land on
+          // Gemini or browser TTS — a different-sounding voice.
+          setTimeout(function () { _prefetchWelcome(biz); }, 1500);
           _setState('speaking');
           _wCtx.decodeAudioData(_wBuf,
             function (decoded) {

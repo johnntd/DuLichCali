@@ -2615,3 +2615,243 @@ select.mp-input option {
   .mp-unavail__bd,
   .mp-unavail__sheet { display: none !important; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   VOICE MODE OVERLAY  (dlc-vm)
+   Fullscreen voice receptionist UI.
+   Loaded only for pages that include voice-mode.js (nailsalon Phase 1).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Voice Mode button in chat header ─────────────────────────────────────── */
+.mp-ai__voice-btn {
+  display: none; /* hidden until fullscreen + voice-ready */
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: rgba(255,255,255,.12);
+  border-radius: 50%;
+  color: #fff;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: background .2s;
+}
+.mp-ai__voice-btn:hover { background: rgba(255,255,255,.22); }
+.mp-ai__voice-btn svg { width: 18px; height: 18px; display: block; }
+
+/* Show only when: chat is fullscreen AND voice mode is available AND mobile */
+.mp-ai--fs.mp-ai--voice-ready .mp-ai__voice-btn { display: flex; }
+@media (min-width: 768px) {
+  .mp-ai__voice-btn { display: none !important; }
+}
+
+/* ── Voice overlay backdrop ───────────────────────────────────────────────── */
+.dlc-vm {
+  position: fixed;
+  inset: 0;
+  z-index: 600; /* above chat fullscreen overlay (z-index: 200) */
+  background: linear-gradient(160deg, #081624 0%, #0d2f50 45%, #102844 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .28s ease;
+}
+.dlc-vm.dlc-vm--open {
+  opacity: 1;
+  pointer-events: all;
+}
+/* Prevent body scroll while voice overlay is open */
+html.dlc-vm-active,
+html.dlc-vm-active body { overflow: hidden !important; }
+
+/* ── Inner card ───────────────────────────────────────────────────────────── */
+.dlc-vm__inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 380px;
+  padding: 5rem 2rem 2.5rem;
+  gap: .9rem;
+}
+
+/* ── Close button ─────────────────────────────────────────────────────────── */
+.dlc-vm__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: rgba(255,255,255,.1);
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .2s;
+}
+.dlc-vm__close:hover { background: rgba(255,255,255,.2); }
+
+/* ── Vendor name ──────────────────────────────────────────────────────────── */
+.dlc-vm__name {
+  color: var(--gold, #d4af37);
+  font-family: var(--font-d, 'Bodoni Moda', serif);
+  font-size: 1.05rem;
+  font-style: italic;
+  letter-spacing: .04em;
+  text-align: center;
+  min-height: 1.4em;
+}
+
+/* ── State label ──────────────────────────────────────────────────────────── */
+.dlc-vm__state-label {
+  color: rgba(255,255,255,.65);
+  font-size: .82rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  min-height: 1.2em;
+  text-align: center;
+}
+
+/* ── Customer transcript ──────────────────────────────────────────────────── */
+.dlc-vm__transcript {
+  color: rgba(255,255,255,.5);
+  font-size: .88rem;
+  font-style: italic;
+  text-align: center;
+  min-height: 1.6em;
+  padding: 0 .5rem;
+  word-break: break-word;
+}
+
+/* ── Microphone button ────────────────────────────────────────────────────── */
+.dlc-vm__mic {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.15);
+  background: rgba(255,255,255,.07);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: .75rem 0;
+  transition: background .2s, border-color .2s, transform .12s;
+  box-shadow: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.dlc-vm__mic:active:not(:disabled) { transform: scale(.91); }
+.dlc-vm__mic:disabled { opacity: .4; cursor: not-allowed; }
+.dlc-vm__mic-svg { width: 38px; height: 38px; display: block; }
+
+/* Listening — red pulse */
+.dlc-vm[data-state="listening"] .dlc-vm__mic {
+  background: rgba(200,40,40,.25);
+  border-color: rgba(220,60,60,.5);
+  animation: dlcVmPulse 1.1s ease-in-out infinite;
+}
+@keyframes dlcVmPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220,60,60,.45); }
+  50%       { box-shadow: 0 0 0 22px rgba(220,60,60,0); }
+}
+
+/* Processing — subtle spin on the mic icon */
+.dlc-vm[data-state="processing"] .dlc-vm__mic {
+  background: rgba(255,255,255,.04);
+  border-color: rgba(255,255,255,.1);
+}
+.dlc-vm[data-state="processing"] .dlc-vm__mic-svg {
+  animation: dlcVmSpin 1s linear infinite;
+}
+@keyframes dlcVmSpin { to { transform: rotate(360deg); } }
+
+/* Speaking — gold pulse */
+.dlc-vm[data-state="speaking"] .dlc-vm__mic {
+  background: rgba(212,175,55,.12);
+  border-color: rgba(212,175,55,.4);
+  animation: dlcVmSpeak 1.4s ease-in-out infinite;
+}
+@keyframes dlcVmSpeak {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,.55); }
+  55%       { box-shadow: 0 0 0 26px rgba(212,175,55,0); }
+}
+
+/* Error — amber tint */
+.dlc-vm[data-state="error"] .dlc-vm__mic {
+  background: rgba(251,146,60,.15);
+  border-color: rgba(251,146,60,.35);
+}
+
+/* ── AI response text ─────────────────────────────────────────────────────── */
+.dlc-vm__response {
+  color: rgba(255,255,255,.88);
+  font-size: .94rem;
+  line-height: 1.65;
+  text-align: center;
+  min-height: 3em;
+  max-height: 9rem;
+  overflow-y: auto;
+  padding: 0 .5rem;
+  word-break: break-word;
+}
+
+/* ── Action buttons ───────────────────────────────────────────────────────── */
+.dlc-vm__actions {
+  display: flex;
+  gap: .75rem;
+  margin-top: .25rem;
+}
+.dlc-vm__text-btn {
+  border: 1px solid rgba(255,255,255,.22);
+  background: transparent;
+  color: rgba(255,255,255,.65);
+  padding: .45rem 1.3rem;
+  border-radius: 2rem;
+  font-size: .78rem;
+  cursor: pointer;
+  transition: border-color .18s, color .18s;
+  font-family: inherit;
+}
+.dlc-vm__text-btn:hover { border-color: rgba(255,255,255,.45); color: #fff; }
+
+/* ── Language selector ────────────────────────────────────────────────────── */
+.dlc-vm__langs {
+  display: flex;
+  gap: .45rem;
+  margin-top: .15rem;
+}
+.dlc-vm__lang {
+  border: 1px solid rgba(255,255,255,.18);
+  background: transparent;
+  color: rgba(255,255,255,.4);
+  padding: .3rem .75rem;
+  border-radius: 1.5rem;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .07em;
+  cursor: pointer;
+  transition: border-color .15s, color .15s, background .15s;
+  font-family: inherit;
+}
+.dlc-vm__lang.dlc-vm__lang--active {
+  border-color: var(--gold, #d4af37);
+  color: var(--gold, #d4af37);
+  background: rgba(212,175,55,.1);
+}
+.dlc-vm__lang:not(.dlc-vm__lang--active):hover {
+  border-color: rgba(255,255,255,.35);
+  color: rgba(255,255,255,.7);
+}
+
+/* ── Desktop: voice mode is mobile-only ───────────────────────────────────── */
+@media (min-width: 768px) {
+  .dlc-vm { display: none !important; }
+}

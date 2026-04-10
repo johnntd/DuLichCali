@@ -1825,6 +1825,7 @@
             '<strong>' + escHtml(ai.name) + '</strong>' +
             '<div class="mp-ai__status"><span class="mp-ai__dot"></span>Online · <span data-t="en:Ready to help|vi:Sẵn sàng hỗ trợ|es:Lista para ayudar">' + _t('Ready to help','S\u1eb5n s\xe0ng h\u1ed7 tr\u1ee3','Lista para ayudar') + '</span></div>' +
           '</div>' +
+          '<button type="button" class="mp-ai__voice-btn" aria-label="Voice mode">' + micIcon + '</button>' +
         '</div>' +
         '<div class="mp-ai__chips">' + chipsHtml + '</div>' +
         '<div class="mp-ai__messages" id="aiMessages_' + biz.id + '">' + initial + '</div>' +
@@ -3826,8 +3827,22 @@
         }
       } catch(e) { console.warn('[DLC] handoff context error:', e); }
 
-      // Voice input
+      // Voice input (STT-to-text-field, existing)
       if (window.DLCVoiceInput) window.DLCVoiceInput.attach(biz, container, input);
+
+      // Voice Mode overlay — fullscreen voice UX (nailsalon loads voice-mode.js)
+      var voiceBtn = container.querySelector('.mp-ai__voice-btn');
+      if (voiceBtn) {
+        if (window.DLCVoiceMode) {
+          container.classList.add('mp-ai--voice-ready');
+          voiceBtn.addEventListener('click', function (e) {
+            e.stopPropagation(); // prevent fullscreen chat toggle
+            window.DLCVoiceMode.open(biz, messagesEl);
+          });
+        } else {
+          voiceBtn.style.display = 'none';
+        }
+      }
 
       // ── Full-screen mode (mobile only) ───────────────────────────────────
       (function _initFullScreen() {
@@ -3951,6 +3966,12 @@
         if (biz._aiHistory.length > 20) biz._aiHistory = biz._aiHistory.slice(-20);
         Receptionist._removeTyping(messagesEl, typingId);
         if (cleanReply) Receptionist._appendMessage(messagesEl, cleanReply, 'bot');
+
+        // Voice Mode hook — notify VoiceMode when a bot reply is ready for TTS.
+        // Set by voice-mode.js; cleared immediately after first call.
+        if (cleanReply && typeof Receptionist._onBotMessage === 'function') {
+          Receptionist._onBotMessage(cleanReply);
+        }
 
         // If escalation requested, forward to vendor via Firestore
         if (escalationType) {

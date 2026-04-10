@@ -37,11 +37,19 @@
 <body>
 <div id="mpApp" class="mp-app"></div>
 <script src="/ai-engine.js?v=20260412j"></script>
+<script src="/regions.js?v=20260406"></script>
 <script src="../marketplace/services-data.js?v=20260403e"></script>
-<script src="../marketplace/marketplace.js?v=20260417g"></script>
+<script src="../marketplace/marketplace.js?v=20260417h"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    Marketplace.init('food');
+    var _inited = false;
+    function _onRegion(region) {
+      try { sessionStorage.setItem('dlc_region', region.id); } catch (_) {}
+      if (!_inited) { _inited = true; Marketplace.init('food'); }
+      else { Marketplace.refreshGrid(); }
+    }
+    if (window.DLCRegion) { DLCRegion.init(_onRegion); }
+    else { Marketplace.init('food'); }
   });
 </script>
 </body>

@@ -42,13 +42,21 @@
 <body>
 <div id="mpApp" class="mp-app"></div>
 <script src="/ai-engine.js?v=20260412j"></script>
+<script src="/regions.js?v=20260406"></script>
 <script src="../marketplace/services-data.js?v=20260416i"></script>
-<script src="../marketplace/marketplace.js?v=20260417g"></script>
+<script src="../marketplace/marketplace.js?v=20260417h"></script>
 <script src="/nailsalon/receptionist.js?v=20260417s"></script>
 <script src="/nailsalon/voice-mode.js?v=20260417m"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    Marketplace.init('nails');
+    var _inited = false;
+    function _onRegion(region) {
+      try { sessionStorage.setItem('dlc_region', region.id); } catch (_) {}
+      if (!_inited) { _inited = true; Marketplace.init('nails'); }
+      else { Marketplace.refreshGrid(); }
+    }
+    if (window.DLCRegion) { DLCRegion.init(_onRegion); }
+    else { Marketplace.init('nails'); }
   });
 </script>
 </body>

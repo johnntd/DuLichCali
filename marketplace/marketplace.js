@@ -4928,8 +4928,36 @@
 
   // ── Public API ─────────────────────────────────────────────────────────────────
 
+  // ── Public: region-aware grid refresh ─────────────────────────────────────────
+  // Called by marketplace pages when DLCRegion.init() resolves a new/updated
+  // region asynchronously (GPS or IP fallback). Updates only the vendor card
+  // grid — no full page re-render. Fail-open: if filtered list is empty (no
+  // vendors in region), keeps the existing cards rather than showing a blank grid.
+  function refreshGrid() {
+    var grid = _container && _container.querySelector('.mp-grid');
+    if (!grid || !_categoryId) return;
+    var region   = _getRegionName();
+    var bizList  = MARKETPLACE.getBusinesses(_categoryId, region);
+    if (!bizList.length) return; // fail-open — no vendors in region yet
+    var newHtml = bizList.map(function(b) { return renderBizCard(b); }).join('');
+    // Skip if nothing changed
+    if (grid.innerHTML === newHtml) return;
+    grid.style.transition = 'opacity 0.2s';
+    grid.style.opacity    = '0';
+    setTimeout(function() {
+      grid.innerHTML = newHtml;
+      grid.querySelectorAll('.mp-biz-card').forEach(function(card) {
+        card.addEventListener('click', function() {
+          window.location.href = '?id=' + card.getAttribute('data-id');
+        });
+      });
+      grid.style.opacity = '1';
+    }, 200);
+  }
+
   window.Marketplace = {
     init: init,
+    refreshGrid: refreshGrid,
     renderDirectory: renderDirectory,
     renderDetail: renderDetail,
     Receptionist: Receptionist

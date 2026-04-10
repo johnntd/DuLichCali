@@ -5975,6 +5975,10 @@
     // Refresh AI panel badge (and panel body if open)
     if (typeof _refreshAiPanelIfOpen === 'function') _refreshAiPanelIfOpen();
 
+    // Keep staff earnings panel live when staff tab is visible (onSnapshot fires renderDashboard)
+    var _staffPanel = document.getElementById('panel-staff');
+    if (_staffPanel && _staffPanel.classList.contains('active')) renderStaffEarnings();
+
     // Next appointment block
     var appt = _getNextAppt(_saAllItems);
     var dashNext = document.getElementById('dashNextAppt');
@@ -6954,16 +6958,17 @@
     var body = document.getElementById('staffEarningsBody');
     if (!body) return;
 
-    // Build date range for filter
+    // Build date range for filter — use LOCAL date components (toISOString() returns UTC, which can
+    // be a different calendar day when the local timezone offset puts midnight in a different UTC day)
     var now      = new Date();
-    var todayIso = now.toISOString().slice(0, 10);
+    var todayIso = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
     var fromIso;
     if (_earningsPeriod === 'today') {
       fromIso = todayIso;
     } else if (_earningsPeriod === 'week') {
       var wStart = new Date(now);
       wStart.setDate(wStart.getDate() - wStart.getDay()); // Sunday = start of week
-      fromIso = wStart.toISOString().slice(0, 10);
+      fromIso = wStart.getFullYear() + '-' + String(wStart.getMonth() + 1).padStart(2, '0') + '-' + String(wStart.getDate()).padStart(2, '0');
     } else { // month
       fromIso = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-01';
     }

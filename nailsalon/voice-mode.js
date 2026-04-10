@@ -433,6 +433,14 @@
     });
 
     document.documentElement.classList.add('dlc-vm-active');
+
+    // Speak welcome message on open so the customer knows voice is active
+    // and knows to speak. Uses the same welcomeMessage as the text chat.
+    var welcome = (biz.aiReceptionist && biz.aiReceptionist.welcomeMessage) || '';
+    if (welcome) {
+      // Short delay so the overlay animation completes before speech starts
+      setTimeout(function () { _speakReply(welcome); }, 400);
+    }
   }
 
   function close() {

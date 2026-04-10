@@ -2964,12 +2964,13 @@
 
         function _fsOpen() {
           // Guard: already open, closing in progress, or desktop — do nothing.
-          // The already-open guard also prevents input focus from overwriting _fsSavedY.
           if (_isClosing || window.innerWidth >= 768 || container.classList.contains('mp-ai--fs')) return;
           _fsSavedY = window.scrollY || window.pageYOffset || 0;
-          document.body.style.position = 'fixed';
-          document.body.style.top      = '-' + _fsSavedY + 'px';
-          document.body.style.width    = '100%';
+          // Do NOT manipulate body.style.position/top. body position:fixed causes:
+          //   1. visualViewport.resize to misbehave on iOS (keyboard resize doesn't fire)
+          //   2. iOS hit-testing for position:fixed elements to use wrong coordinates
+          //   3. vv.offsetTop to equal savedY, which (when used as container.top) pushes widget off-screen
+          // Just add overflow:hidden via class and let the fixed overlay cover the page.
           document.body.classList.add('mp-ai-open');
           container.classList.add('mp-ai--fs');
           _fsUpdateVH();
@@ -2978,12 +2979,9 @@
 
         function _fsClose() {
           _isClosing = true;
-          input.blur(); // dismiss keyboard before body layout restores
+          input.blur();
           container.classList.remove('mp-ai--fs');
           document.body.classList.remove('mp-ai-open');
-          document.body.style.position = '';
-          document.body.style.top      = '';
-          document.body.style.width    = '';
           window.scrollTo(0, _fsSavedY);
           container.style.height = '';
           container.style.top    = '';

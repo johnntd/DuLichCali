@@ -2947,9 +2947,7 @@
 
       // ── Full-screen mode (mobile only) ──────────────────────────────────────
       (function _initFullScreen() {
-        var backBtn     = container.querySelector('.mp-ai__header-back');
-        var closeBarBtn = container.querySelector('.mp-ai__fs-close-btn');
-        var _fsSavedY   = 0;
+        var _fsSavedY = 0;
 
         function _fsUpdateVH() {
           var vv = window.visualViewport;
@@ -2984,19 +2982,15 @@
           container.style.top    = '';
         }
 
-        // Open on any tap inside the widget — skip close controls
+        // Event delegation — closest() works regardless of whether e.target is
+        // the button, its SVG icon, or an inner <path>. No element ref needed.
         container.addEventListener('click', function (e) {
-          if (backBtn     && backBtn.contains(e.target))     return;
-          if (closeBarBtn && closeBarBtn.contains(e.target)) return;
+          var ct = e.target.closest ? e.target.closest.bind(e.target) : function () { return null; };
+          if (ct('.mp-ai__fs-close-bar'))  { _fsClose(); return; }
+          if (ct('.mp-ai__header-back'))   { _fsClose(); return; }
           _fsOpen();
         });
         input.addEventListener('focus', _fsOpen);
-
-        // Close on header back button (top-left)
-        if (backBtn) backBtn.addEventListener('click', _fsClose);
-
-        // Close on bottom close bar (primary exit on iPhone)
-        if (closeBarBtn) closeBarBtn.addEventListener('click', _fsClose);
 
         // iOS keyboard resize
         if (window.visualViewport) {

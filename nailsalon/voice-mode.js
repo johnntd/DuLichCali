@@ -109,15 +109,12 @@
     el.setAttribute('aria-modal', 'true');
     el.setAttribute('aria-label', 'Voice mode');
 
-    // Microphone SVG (reuse same path as existing micIcon in marketplace.js)
-    var micSVG =
-      '<svg class="dlc-vm__mic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-      'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-        '<rect x="9" y="2" width="6" height="11" rx="3"/>' +
-        '<path d="M5 10a7 7 0 0014 0"/>' +
-        '<line x1="12" y1="21" x2="12" y2="17"/>' +
-        '<line x1="8" y1="21" x2="16" y2="21"/>' +
-      '</svg>';
+    // Waveform bars — AI voice assistant aesthetic (ChatGPT-style).
+    // Five spans animate via CSS: static in idle, oscillate while listening/speaking.
+    var waveHTML =
+      '<div class="dlc-vm__wave" aria-hidden="true">' +
+        '<span></span><span></span><span></span><span></span><span></span>' +
+      '</div>';
 
     var closeSVG =
       '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" ' +
@@ -135,7 +132,7 @@
         '<div class="dlc-vm__state-label" aria-live="polite" aria-atomic="true"></div>' +
         '<div class="dlc-vm__transcript" aria-live="polite"></div>' +
         '<button class="dlc-vm__mic" type="button" aria-label="Speak">' +
-          micSVG +
+          waveHTML +
         '</button>' +
         '<div class="dlc-vm__response" aria-live="polite"></div>' +
         '<div class="dlc-vm__actions">' +

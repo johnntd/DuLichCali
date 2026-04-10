@@ -15,6 +15,8 @@
   var calendarIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
   var sendIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
   var micIcon  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0014 0"/><line x1="12" y1="21" x2="12" y2="17"/><line x1="8" y1="21" x2="16" y2="21"/></svg>';
+  // AI voice mode entry icon — waveform bars (ChatGPT-style), not a plain mic
+  var voiceModeIcon = '<svg viewBox="0 0 20 14" fill="currentColor" aria-hidden="true"><rect x="0" y="5" width="3" height="4" rx="1.5"/><rect x="4.25" y="2.5" width="3" height="9" rx="1.5"/><rect x="8.5" y="0" width="3" height="14" rx="1.5"/><rect x="12.75" y="2.5" width="3" height="9" rx="1.5"/><rect x="17" y="5" width="3" height="4" rx="1.5"/></svg>';
   var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
   var starIcon = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
 
@@ -1825,7 +1827,7 @@
             '<strong>' + escHtml(ai.name) + '</strong>' +
             '<div class="mp-ai__status"><span class="mp-ai__dot"></span>Online · <span data-t="en:Ready to help|vi:Sẵn sàng hỗ trợ|es:Lista para ayudar">' + _t('Ready to help','S\u1eb5n s\xe0ng h\u1ed7 tr\u1ee3','Lista para ayudar') + '</span></div>' +
           '</div>' +
-          '<button type="button" class="mp-ai__voice-btn" aria-label="Voice mode">' + micIcon + '</button>' +
+          '<button type="button" class="mp-ai__voice-btn" aria-label="Voice mode">' + voiceModeIcon + '</button>' +
         '</div>' +
         '<div class="mp-ai__chips">' + chipsHtml + '</div>' +
         '<div class="mp-ai__messages" id="aiMessages_' + biz.id + '">' + initial + '</div>' +

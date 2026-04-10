@@ -2639,7 +2639,7 @@ select.mp-input option {
   transition: background .2s;
 }
 .mp-ai__voice-btn:hover { background: rgba(255,255,255,.22); }
-.mp-ai__voice-btn svg { width: 18px; height: 18px; display: block; }
+.mp-ai__voice-btn svg { width: 22px; height: 15px; display: block; }
 
 /* Show only when: chat is fullscreen AND voice mode is available AND mobile */
 .mp-ai--fs.mp-ai--voice-ready .mp-ai__voice-btn { display: flex; }
@@ -2731,7 +2731,7 @@ html.dlc-vm-active body { overflow: hidden !important; }
   word-break: break-word;
 }
 
-/* ── Microphone button ────────────────────────────────────────────────────── */
+/* ── AI voice button — waveform circle ────────────────────────────────────── */
 .dlc-vm__mic {
   width: 90px;
   height: 90px;
@@ -2750,9 +2750,31 @@ html.dlc-vm-active body { overflow: hidden !important; }
 }
 .dlc-vm__mic:active:not(:disabled) { transform: scale(.91); }
 .dlc-vm__mic:disabled { opacity: .4; cursor: not-allowed; }
-.dlc-vm__mic-svg { width: 38px; height: 38px; display: block; }
 
-/* Listening — red pulse */
+/* Waveform bars — five spans, animated by state */
+.dlc-vm__wave {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 36px;
+  pointer-events: none;
+}
+.dlc-vm__wave span {
+  display: block;
+  width: 5px;
+  border-radius: 3px;
+  background: currentColor;
+  flex-shrink: 0;
+  transition: height .2s ease, opacity .2s;
+}
+/* Idle: symmetric mountain shape */
+.dlc-vm__wave span:nth-child(1),
+.dlc-vm__wave span:nth-child(5) { height: 8px; }
+.dlc-vm__wave span:nth-child(2),
+.dlc-vm__wave span:nth-child(4) { height: 18px; }
+.dlc-vm__wave span:nth-child(3) { height: 28px; }
+
+/* Listening — red pulse + bars oscillate */
 .dlc-vm[data-state="listening"] .dlc-vm__mic {
   background: rgba(200,40,40,.25);
   border-color: rgba(220,60,60,.5);
@@ -2762,18 +2784,20 @@ html.dlc-vm-active body { overflow: hidden !important; }
   0%, 100% { box-shadow: 0 0 0 0 rgba(220,60,60,.45); }
   50%       { box-shadow: 0 0 0 22px rgba(220,60,60,0); }
 }
+.dlc-vm[data-state="listening"] .dlc-vm__wave span:nth-child(1) { animation: dlcBar .90s ease-in-out 0.00s infinite; }
+.dlc-vm[data-state="listening"] .dlc-vm__wave span:nth-child(2) { animation: dlcBar .80s ease-in-out 0.13s infinite; }
+.dlc-vm[data-state="listening"] .dlc-vm__wave span:nth-child(3) { animation: dlcBar .70s ease-in-out 0.06s infinite; }
+.dlc-vm[data-state="listening"] .dlc-vm__wave span:nth-child(4) { animation: dlcBar .80s ease-in-out 0.19s infinite; }
+.dlc-vm[data-state="listening"] .dlc-vm__wave span:nth-child(5) { animation: dlcBar .90s ease-in-out 0.09s infinite; }
 
-/* Processing — subtle spin on the mic icon */
+/* Processing — bars flatten, slightly dim; button is quiet */
 .dlc-vm[data-state="processing"] .dlc-vm__mic {
   background: rgba(255,255,255,.04);
   border-color: rgba(255,255,255,.1);
 }
-.dlc-vm[data-state="processing"] .dlc-vm__mic-svg {
-  animation: dlcVmSpin 1s linear infinite;
-}
-@keyframes dlcVmSpin { to { transform: rotate(360deg); } }
+.dlc-vm[data-state="processing"] .dlc-vm__wave span { height: 6px !important; opacity: .45; }
 
-/* Speaking — gold pulse */
+/* Speaking — gold pulse + faster bar animation */
 .dlc-vm[data-state="speaking"] .dlc-vm__mic {
   background: rgba(212,175,55,.12);
   border-color: rgba(212,175,55,.4);
@@ -2782,6 +2806,19 @@ html.dlc-vm-active body { overflow: hidden !important; }
 @keyframes dlcVmSpeak {
   0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,.55); }
   55%       { box-shadow: 0 0 0 26px rgba(212,175,55,0); }
+}
+.dlc-vm[data-state="speaking"] .dlc-vm__wave span:nth-child(1) { animation: dlcBar .55s ease-in-out 0.00s infinite; }
+.dlc-vm[data-state="speaking"] .dlc-vm__wave span:nth-child(2) { animation: dlcBar .45s ease-in-out 0.08s infinite; }
+.dlc-vm[data-state="speaking"] .dlc-vm__wave span:nth-child(3) { animation: dlcBar .38s ease-in-out 0.03s infinite; }
+.dlc-vm[data-state="speaking"] .dlc-vm__wave span:nth-child(4) { animation: dlcBar .45s ease-in-out 0.12s infinite; }
+.dlc-vm[data-state="speaking"] .dlc-vm__wave span:nth-child(5) { animation: dlcBar .55s ease-in-out 0.06s infinite; }
+
+@keyframes dlcBar {
+  0%, 100% { height: 4px; }
+  50%       { height: 32px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dlc-vm__wave span { animation: none !important; }
 }
 
 /* Error — amber tint */

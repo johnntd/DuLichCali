@@ -1228,7 +1228,7 @@ async function checkRideServiceAvailability(regionId) {
   try {
     // Query all active drivers regardless of rideServiceEnabled — we need vehicle data for display
     const snap = await db.collection('drivers')
-      .where('active', '==', true)
+      .where('adminStatus', '==', 'active')
       .get();
 
     const now      = new Date();
@@ -1875,8 +1875,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Load vendor admin statuses first, then render (async, won't block long)
-  loadVendorAdminStatuses().then(function() { renderAllHomepageVendors(); });
+  // Load vendor admin statuses first, then render with region filter when known
+  loadVendorAdminStatuses().then(function() {
+    var regionId = window.DLCRegion && window.DLCRegion.current && window.DLCRegion.current.id;
+    if (regionId) { renderFeaturedVendors(regionId); } else { renderAllHomepageVendors(); }
+  });
 
   // Render data-driven UI
   renderTravelCarousel();

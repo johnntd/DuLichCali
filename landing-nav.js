@@ -179,7 +179,7 @@
       renderRidesReady(el, null);
       return;
     }
-    firebase.firestore().collection('drivers').where('active', '==', true).get()
+    firebase.firestore().collection('drivers').where('adminStatus', '==', 'active').get()
       .then(function (snap) {
         var now = new Date(), day = now.getDay(), nowMins = now.getHours() * 60 + now.getMinutes();
         var todayStr = now.toISOString().split('T')[0];

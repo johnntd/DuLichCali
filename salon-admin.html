@@ -2335,11 +2335,41 @@
       <div class="schedule-editor" id="schedEditor"></div>
     </div>
 
+    <!-- ── Compensation Agreement (owner-only) ── -->
     <div class="sa-field">
-      <label data-i18n="lbl_commission_pct">Hoa Hồng Dịch Vụ (%)</label>
-      <div class="sa-comm-row">
-        <input class="sa-input" id="staffCommission" type="number" min="0" max="100" step="1" placeholder="0" data-i18n-placeholder="ph_commission" style="width:72px">
-        <span style="font-size:.68rem;color:var(--muted)" data-i18n="lbl_commission_note">% trên tiền dịch vụ đã thu · Tip tính riêng · 0 = chưa cài đặt</span>
+      <label data-i18n="lbl_comp_type">Mô Hình Trả Lương</label>
+      <select class="sa-select" id="staffCompType" onchange="_onCompTypeChange()">
+        <option value="commission" data-i18n="comp_commission">Chia % Dịch Vụ (Commission)</option>
+        <option value="salary" data-i18n="comp_salary">Lương Cố Định Hàng Tháng</option>
+        <option value="hybrid" data-i18n="comp_hybrid">Lương Cố Định + Hoa Hồng</option>
+      </select>
+    </div>
+    <div id="staffBasePaySection" style="display:none">
+      <div class="sa-field">
+        <label data-i18n="lbl_base_pay">Lương Cố Định / Tháng ($)</label>
+        <div class="sa-comm-row">
+          <input class="sa-input" id="staffBasePay" type="number" min="0" step="10" placeholder="0" style="width:120px">
+          <span style="font-size:.68rem;color:var(--muted)" data-i18n="lbl_base_pay_note">Số tiền đồng ý trả hàng tháng cho nhân viên</span>
+        </div>
+      </div>
+    </div>
+    <div id="staffCommSection">
+      <div class="sa-field">
+        <label data-i18n="lbl_commission_pct">Hoa Hồng Dịch Vụ (%)</label>
+        <div class="sa-comm-row">
+          <input class="sa-input" id="staffCommission" type="number" min="0" max="100" step="1" placeholder="0" data-i18n-placeholder="ph_commission" style="width:72px">
+          <span style="font-size:.68rem;color:var(--muted)" data-i18n="lbl_commission_note">% trên tiền dịch vụ đã thu · Tip tính riêng · 0 = chưa cài đặt</span>
+        </div>
+      </div>
+    </div>
+    <div class="sa-row2">
+      <div class="sa-field">
+        <label data-i18n="lbl_hire_date">Ngày Bắt Đầu Làm</label>
+        <input class="sa-input" id="staffHireDate" type="date" style="width:100%">
+      </div>
+      <div class="sa-field">
+        <label data-i18n="lbl_pay_notes">Ghi Chú Thỏa Thuận</label>
+        <input class="sa-input" id="staffPayNotes" type="text" placeholder="Ghi chú nội bộ…" data-i18n-placeholder="ph_pay_notes">
       </div>
     </div>
 
@@ -3496,7 +3526,9 @@
             (s.active !== false ? 'Active' : 'Off') + '</span>' +
           '</div>' +
           '<div class="sa-item__meta">' + esc(s.role || '—') + (specs ? ' · ' + esc(specs) : '') +
-            (s.commissionPct ? ' · HH ' + s.commissionPct + '%' : '') +
+            (s.compensationType === 'salary' ? ' · ' + (s.monthlyBasePay ? '$' + Number(s.monthlyBasePay).toLocaleString() + '/tháng' : lb.comp_salary) :
+             s.compensationType === 'hybrid' ? ' · $' + (Number(s.monthlyBasePay)||0).toLocaleString() + '/tháng + ' + (s.commissionPct||0) + '%' :
+             s.commissionPct ? ' · HH ' + s.commissionPct + '%' : '') +
             (s.employmentType === 'full_time' ? ' · ' + lb.emp_full : s.employmentType === 'part_time' ? ' · ' + lb.emp_part : s.employmentType === 'contract' ? ' · ' + lb.emp_contract : '') + '</div>' +
           '<div class="sched-pills">' + pills + '</div>' +
         '</div>' +
@@ -3553,6 +3585,11 @@
       document.getElementById('staffLevel').value           = '';
       document.getElementById('staffEmploymentType').value  = '';
       document.getElementById('staffCommission').value      = '';
+      document.getElementById('staffCompType').value        = 'commission';
+      document.getElementById('staffBasePay').value         = '';
+      document.getElementById('staffHireDate').value        = '';
+      document.getElementById('staffPayNotes').value        = '';
+      _onCompTypeChange();
       document.getElementById('staffSkillsGrid').innerHTML  = buildSkillsGrid([]);
       document.getElementById('schedEditor').innerHTML = buildSchedEditor(null);
       return;
@@ -3567,11 +3604,25 @@
       document.getElementById('staffLevel').value         = d.level || '';
       document.getElementById('staffEmploymentType').value = d.employmentType || '';
       document.getElementById('staffCommission').value    = d.commissionPct != null ? d.commissionPct : '';
+      document.getElementById('staffCompType').value       = d.compensationType || 'commission';
+      document.getElementById('staffBasePay').value        = d.monthlyBasePay != null && d.monthlyBasePay > 0 ? d.monthlyBasePay : '';
+      document.getElementById('staffHireDate').value       = d.hireDate || '';
+      document.getElementById('staffPayNotes').value       = d.payNotes || '';
+      _onCompTypeChange();
       document.getElementById('staffSkillsGrid').innerHTML = buildSkillsGrid(d.specialties || []);
       document.getElementById('schedEditor').innerHTML = buildSchedEditor(d.schedule);
     });
   }
   function closeStaffModal() { document.getElementById('staffModal').classList.add('hidden'); }
+
+  // Show/hide base pay vs commission fields based on selected compensation type
+  function _onCompTypeChange() {
+    var v = (document.getElementById('staffCompType') || {}).value || 'commission';
+    var baseSection = document.getElementById('staffBasePaySection');
+    var commSection = document.getElementById('staffCommSection');
+    if (baseSection) baseSection.style.display = (v === 'salary' || v === 'hybrid') ? '' : 'none';
+    if (commSection) commSection.style.display = (v === 'salary') ? 'none' : '';
+  }
 
   function saveStaff() {
     if (_userRole !== 'owner') { showToast('Chỉ chủ tiệm có quyền lưu nhân viên.'); return; }
@@ -3588,16 +3639,27 @@
     var checkedChips = document.getElementById('staffSkillsGrid').querySelectorAll('input[type="checkbox"]:checked');
     var specialties = [];
     checkedChips.forEach(function(chk) { specialties.push(chk.value); });
-    var commRaw = parseFloat(document.getElementById('staffCommission').value);
+    var commRaw   = parseFloat(document.getElementById('staffCommission').value);
+    var compType  = document.getElementById('staffCompType').value  || 'commission';
+    var basePayRaw = parseFloat(document.getElementById('staffBasePay').value);
+    var hireDate  = document.getElementById('staffHireDate').value  || '';
+    var payNotes  = document.getElementById('staffPayNotes').value.trim();
+    // Salary-only staff have no per-booking commission
+    var commPct   = compType === 'salary' ? 0 : (isNaN(commRaw) ? 0 : Math.max(0, Math.min(100, commRaw)));
+    var basePay   = (compType === 'salary' || compType === 'hybrid') ? (isNaN(basePayRaw) ? 0 : Math.max(0, basePayRaw)) : 0;
     var data = {
-      name:          name,
-      role:           document.getElementById('staffRole').value,
-      level:          document.getElementById('staffLevel').value,
-      employmentType: document.getElementById('staffEmploymentType').value,
-      specialties:    specialties,
-      schedule:      sched,
-      commissionPct: isNaN(commRaw) ? 0 : Math.max(0, Math.min(100, commRaw)),
-      updatedAt:     firebase.firestore.FieldValue.serverTimestamp()
+      name:             name,
+      role:              document.getElementById('staffRole').value,
+      level:             document.getElementById('staffLevel').value,
+      employmentType:    document.getElementById('staffEmploymentType').value,
+      specialties:       specialties,
+      schedule:          sched,
+      commissionPct:     commPct,
+      compensationType:  compType,
+      monthlyBasePay:    basePay,
+      hireDate:          hireDate,
+      payNotes:          payNotes,
+      updatedAt:         firebase.firestore.FieldValue.serverTimestamp()
     };
     var docId = document.getElementById('staffDocId').value;
     var prom = docId
@@ -7672,6 +7734,16 @@
       // ── Employment type ──────────────────────────────────────────────────────
       emp_select:'— Chọn loại —',
       emp_full:'Toàn thời gian', emp_part:'Bán thời gian', emp_contract:'Hợp đồng',
+      // ── Compensation model ────────────────────────────────────────────────────
+      lbl_comp_type:'Mô Hình Trả Lương',
+      comp_commission:'Chia % Dịch Vụ (Commission)',
+      comp_salary:'Lương Cố Định Hàng Tháng',
+      comp_hybrid:'Lương Cố Định + Hoa Hồng',
+      lbl_base_pay:'Lương Cố Định / Tháng ($)',
+      lbl_base_pay_note:'Số tiền đồng ý trả hàng tháng',
+      lbl_hire_date:'Ngày Bắt Đầu Làm',
+      lbl_pay_notes:'Ghi Chú Thỏa Thuận',
+      ph_pay_notes:'Ghi chú nội bộ về thỏa thuận lương…',
       // ── Role / Level selects ─────────────────────────────────────────────────
       role_select:'— Chọn vai trò —', level_select:'— Cấp độ —',
       cat_select:'— Chọn danh mục —',
@@ -7945,6 +8017,16 @@
       // ── Employment type ──────────────────────────────────────────────────────
       emp_select:'— Select type —',
       emp_full:'Full-time', emp_part:'Part-time', emp_contract:'Contract',
+      // ── Compensation model ────────────────────────────────────────────────────
+      lbl_comp_type:'Compensation Model',
+      comp_commission:'Revenue Split / Commission',
+      comp_salary:'Fixed Monthly Salary',
+      comp_hybrid:'Fixed Base + Commission',
+      lbl_base_pay:'Monthly Base Pay ($)',
+      lbl_base_pay_note:'Agreed monthly amount to pay staff',
+      lbl_hire_date:'Start Date',
+      lbl_pay_notes:'Pay Agreement Notes',
+      ph_pay_notes:'Internal notes on pay agreement…',
       // ── Role / Level selects ─────────────────────────────────────────────────
       role_select:'— Select role —', level_select:'— Level —',
       cat_select:'— Select category —',
@@ -8217,6 +8299,16 @@
       // ── Employment type ──────────────────────────────────────────────────────
       emp_select:'— Seleccionar tipo —',
       emp_full:'Tiempo completo', emp_part:'Tiempo parcial', emp_contract:'Contrato',
+      // ── Compensation model ────────────────────────────────────────────────────
+      lbl_comp_type:'Modelo de Compensación',
+      comp_commission:'Porcentaje de Servicio (Comisión)',
+      comp_salary:'Salario Fijo Mensual',
+      comp_hybrid:'Base Fija + Comisión',
+      lbl_base_pay:'Salario Base Mensual ($)',
+      lbl_base_pay_note:'Monto mensual acordado con el empleado',
+      lbl_hire_date:'Fecha de Inicio',
+      lbl_pay_notes:'Notas del Acuerdo Salarial',
+      ph_pay_notes:'Notas internas sobre el acuerdo…',
       // ── Role / Level selects ─────────────────────────────────────────────────
       role_select:'— Seleccionar rol —', level_select:'— Nivel —',
       cat_select:'— Seleccionar categoría —',

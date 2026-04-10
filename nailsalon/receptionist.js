@@ -2342,6 +2342,7 @@
       shopName:      (biz.aiReceptionist && biz.aiReceptionist.name) || biz.businessName || biz.name || '',
       shopPhone:     biz.phone     || biz.businessPhone    || '',
       shopAddress:   biz.address   || biz.businessAddress  || '',
+      shopUrl:       'https://www.dulichcali21.com/nailsalon?id=' + (biz.id || 'luxurious-nails'),
       status:        'pending',
     };
     if (fv) emailDoc.createdAt = fv.serverTimestamp();

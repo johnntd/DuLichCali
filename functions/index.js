@@ -409,6 +409,7 @@ function buildConfirmationEmailBody(data) {
     shopName      = 'Luxurious Nails',
     shopPhone     = '',
     shopAddress   = '',
+    shopUrl       = 'https://www.dulichcali21.com',
   } = data;
 
   // ── Format date ───────────────────────────────────────────────────────────
@@ -455,7 +456,7 @@ function buildConfirmationEmailBody(data) {
     'We look forward to seeing you!',
     '',
     `— ${shop}`,
-    'www.dulichcali21.com',
+    shopUrl,
   ].filter(l => l !== null).join('\n');
 
   // ── HTML ──────────────────────────────────────────────────────────────────
@@ -508,7 +509,7 @@ function buildConfirmationEmailBody(data) {
 
   <!-- Footer -->
   <div style="background:#f0ebe3;padding:14px 32px;text-align:center;">
-    <p style="color:#9a8a7a;font-size:12px;margin:0;">— ${shop} &nbsp;·&nbsp; www.dulichcali21.com</p>
+    <p style="color:#9a8a7a;font-size:12px;margin:0;">— ${shop} &nbsp;·&nbsp; <a href="${shopUrl}" style="color:#9a8a7a;">${shopUrl.replace('https://','')}</a></p>
   </div>
 </div>
 </body></html>`;

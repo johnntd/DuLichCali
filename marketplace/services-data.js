@@ -105,6 +105,14 @@
         'Thợ lành nghề, tỉ mỉ từng chi tiết',
         'Nhận walk-in và đặt lịch trước'
       ],
+      featuresI18n: [
+        { en: 'Over 10 years of experience in Bay Area',  vi: 'H\u01a1n 10 n\u0103m kinh nghi\u1ec7m t\u1ea1i Bay Area',       es: 'M\xe1s de 10 a\xf1os de experiencia en Bay Area'   },
+        { en: 'Safe, non-toxic products',                 vi: 'S\u1ea3n ph\u1ea9m an to\xe0n, kh\xf4ng \u0111\u1ed9c h\u1ea1i', es: 'Productos seguros y no t\xf3xicos'               },
+        { en: 'Luxurious, comfortable environment',       vi: 'Kh\xf4ng gian sang tr\u1ecdng, tho\u1ea3i m\xe1i',            es: 'Ambiente lujoso y c\xf3modo'                    },
+        { en: 'Skilled technicians, meticulous care',     vi: 'Th\u1ee3 l\xe0nh ngh\u1ec1, t\u1ec9 m\u1ec9 t\u1eebng chi ti\u1ebft', es: 'T\xe9cnicos h\xe1biles, cuidado meticuloso'  },
+        { en: 'Walk-ins and appointments welcome',        vi: 'Nh\u1eadn walk-in v\xe0 \u0111\u1eb7t l\u1ecbch tr\u01b0\u1edbc', es: 'Se aceptan clientes sin cita'                   }
+      ],
+      trustSubtitleI18n: { en: 'Over 10 years of beauty care in Bay Area', vi: 'H\u01a1n 10 n\u0103m ch\u0103m s\xf3c s\u1eafc \u0111\u1eb9p t\u1ea1i Bay Area', es: 'M\xe1s de 10 a\xf1os cuidando tu belleza en Bay Area' },
       description:
         'Tiệm nail sang trọng hơn 10 năm kinh nghiệm tại Bay Area. Sản phẩm an toàn, đội ngũ lành nghề, không gian cao cấp và thoải mái.',
       heroImage: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=80',

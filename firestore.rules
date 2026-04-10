@@ -42,6 +42,13 @@ service cloud.firestore {
       allow read, write: if isVendorMember(vendorId);
     }
 
+    // ── Payroll periods — SENSITIVE, vendor-member only ───────────────────────────
+    // Contains monthly payout records: totalOwed, amountPaidOut, payrollStatus per staff.
+    // Never publicly readable. Vendor-member write (owner manages payouts).
+    match /vendors/{vendorId}/payrollPeriods/{doc} {
+      allow read, write: if isVendorMember(vendorId);
+    }
+
     // ── Other vendor subcollections (menuItems, notifications, etc.) ──────────────
     // Auth required. Broad auth (not vendor-membership-only) to preserve admin.html access.
     // staffCompensation is explicitly handled above with tighter rules.

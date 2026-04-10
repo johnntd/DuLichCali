@@ -824,6 +824,15 @@
     .se-table tbody tr:last-child td { border-bottom:none }
     .se-table tfoot td { border-top:1px solid var(--border);font-weight:700;color:var(--cream);padding-top:.4rem }
     .se-table tfoot td:not(:first-child) { text-align:right }
+    /* Payroll status badges */
+    .pr-badge { display:inline-block;padding:.12rem .45rem;border-radius:99px;font-size:.6rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase }
+    .pr-badge--unpaid  { background:rgba(239,68,68,.15);color:#f87171 }
+    .pr-badge--partial { background:rgba(251,146,60,.15);color:#fb923c }
+    .pr-badge--paid    { background:rgba(34,197,94,.15);color:#4ade80 }
+    .pr-month-nav { display:flex;align-items:center;gap:.4rem }
+    .pr-month-nav button { font-size:.7rem;padding:.18rem .5rem;border:1px solid var(--border);border-radius:99px;background:transparent;color:var(--muted);cursor:pointer;transition:all .15s }
+    .pr-month-nav button:hover { border-color:rgba(255,255,255,.2);color:var(--text) }
+    .pr-month-label { font-size:.72rem;color:var(--cream);min-width:5rem;text-align:center }
     /* Commission field in staff modal */
     .sa-comm-row { display:flex;align-items:center;gap:.5rem;margin-top:.3rem }
 
@@ -1997,6 +2006,20 @@
           <div id="staffEarningsBody"><div class="sa-empty" style="font-size:.78rem" data-i18n="earn_empty">Chưa có dữ liệu.</div></div>
           <div style="font-size:.62rem;color:var(--muted);margin-top:.7rem;opacity:.7" data-i18n="earn_note">Hoa hồng tính trên tiền dịch vụ đã thu thực tế. Tip tính riêng. Lịch hẹn hủy/vắng không tính.</div>
         </div>
+
+        <!-- Monthly payroll view — owner only -->
+        <div class="sa-card" id="payrollCard" style="display:none;margin-top:1.2rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:.9rem">
+            <div style="font-weight:700;font-size:.88rem;color:var(--cream)" data-i18n="payroll_title">Bảng Lương Tháng</div>
+            <div class="pr-month-nav">
+              <button onclick="shiftPayrollMonth(-1)">&#8249;</button>
+              <div class="pr-month-label" id="payrollPeriodLabel">—</div>
+              <button onclick="shiftPayrollMonth(1)">&#8250;</button>
+            </div>
+          </div>
+          <div id="payrollBody"><div class="sa-empty" style="font-size:.78rem" data-i18n="earn_empty">Chưa có dữ liệu.</div></div>
+          <div style="font-size:.62rem;color:var(--muted);margin-top:.7rem;opacity:.7" data-i18n="payroll_note">Tổng lương = Lương CB + Hoa hồng + Tip. Chỉ chủ tiệm mới thấy mục này.</div>
+        </div>
       </div>
 
       <!-- ── Availability tab ── -->
@@ -2731,6 +2754,30 @@
   </div>
 </div>
 
+<!-- Payroll pay modal — owner records a payout for one staff member -->
+<div class="sa-modal-backdrop" id="payrollPayModal" style="display:none;align-items:center;justify-content:center" onclick="closePayrollPayModal()">
+  <div class="sa-modal" style="max-width:340px" onclick="event.stopPropagation()">
+    <h3 style="color:var(--cream);margin-bottom:1rem;font-size:.95rem" data-i18n="pr_modal_title">Trả Lương Nhân Viên</h3>
+    <div style="font-size:.88rem;font-weight:700;color:var(--cream);margin-bottom:.8rem" id="prPayModalName"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem .8rem;font-size:.75rem;margin-bottom:.9rem">
+      <span style="color:var(--muted)" data-i18n="pr_modal_owed">Tổng lương</span>
+      <span style="color:var(--cream);font-weight:700" id="prPayModalOwed">—</span>
+      <span style="color:var(--muted)" data-i18n="pr_modal_prev">Đã trả trước</span>
+      <span style="color:var(--success)" id="prPayModalPrev">—</span>
+      <span style="color:var(--muted)" data-i18n="pr_modal_rem">Còn lại</span>
+      <span style="color:var(--danger);font-weight:700" id="prPayModalRem">—</span>
+    </div>
+    <div class="sa-form-group" style="margin-bottom:1rem">
+      <label class="sa-label" data-i18n="pr_modal_amt">Số tiền trả lần này ($)</label>
+      <input class="sa-input" id="prPayModalAmt" type="number" min="0.01" step="0.01" placeholder="0.00">
+    </div>
+    <div class="sa-modal-actions">
+      <button class="btn btn--outline btn--sm" onclick="closePayrollPayModal()" data-i18n="btn_cancel">Hủy</button>
+      <button class="btn btn--primary btn--sm" onclick="confirmPayrollPay()" data-i18n="pr_btn_pay">Trả lương</button>
+    </div>
+  </div>
+</div>
+
 <!-- Manual booking modal -->
 <div class="sa-modal-backdrop hidden" id="manualBookModal">
   <div class="sa-modal" style="max-height:90vh;overflow-y:auto">
@@ -2889,6 +2936,10 @@
   var vendorParallelServices = []; // [[svcA, svcB], ...] — parallel booking rules
   var currentStaffData   = [];   // [{id, name, data}] — for service modal checkboxes + availability
   var currentStaffCompData = {}; // staffDocId → {compensationType, monthlyBasePay, hireDate, payNotes}
+  var payrollRef       = null;  // vendors/{id}/payrollPeriods — set on login, owner only
+  var unsubPayroll     = null;  // Firestore listener for current payroll period
+  var _payrollMonth    = '';    // 'YYYY-MM' — currently viewed payroll month
+  var _payrollData     = null;  // payrollPeriods doc data for current month
   var _bookingCache      = {};   // bookingId → booking object — for manual edit modal prefill
   var SERVICE_CATS       = [];   // [{key, label}] — loaded from static data
   var CATALOG_VERSION    = 2;    // Bump this to force a full catalog reset on next login
@@ -3072,6 +3123,7 @@
       servicesRef = vendorRef.collection('services');
       staffRef    = vendorRef.collection('staff');
       staffCompRef = vendorRef.collection('staffCompensation');
+      payrollRef   = vendorRef.collection('payrollPeriods');
 
       var staticData = (window.MARKETPLACE && window.MARKETPLACE.getBusiness)
         ? window.MARKETPLACE.getBusiness(VENDOR_ID) : null;
@@ -3128,6 +3180,11 @@
           if (pmc) pmc.style.display = '';
           var sec = document.getElementById('staffEarningsCard');
           if (sec) sec.style.display = '';
+          var prc = document.getElementById('payrollCard');
+          if (prc) prc.style.display = '';
+          if (!_payrollMonth) _payrollMonth = _payrollMonthDefault();
+          updatePayrollPeriodLabel();
+          subscribePayrollPeriod();
           var bab = document.getElementById('btnAddStaff');
           if (bab) bab.style.display = '';
         }
@@ -3804,7 +3861,7 @@
     if (tab === 'dashboard')     renderDashboard();
     if (tab === 'appointments')  subscribeAppointments();
     if (tab === 'availability')  renderAvailability();
-    if (tab === 'staff')         renderStaffEarnings();
+    if (tab === 'staff')       { renderStaffEarnings(); renderPayroll(); }
   }
 
   // ── Hours ─────────────────────────────────────────────────────────────────────
@@ -7268,6 +7325,207 @@
       '</tr></tfoot></table>';
   }
 
+  // ── Payroll Phase 3 — Monthly Payroll View + Payout Tracking ─────────────────
+  function _payrollMonthDefault() {
+    var now = new Date();
+    return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  }
+
+  function updatePayrollPeriodLabel() {
+    var el = document.getElementById('payrollPeriodLabel');
+    if (!el || !_payrollMonth) return;
+    var parts = _payrollMonth.split('-');
+    var d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
+    var locale = _dlcLang === 'en' ? 'en-US' : _dlcLang === 'es' ? 'es-US' : 'vi-VN';
+    el.textContent = d.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+  }
+
+  function shiftPayrollMonth(delta) {
+    var parts = _payrollMonth.split('-');
+    var d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1 + delta, 1);
+    _payrollMonth = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    updatePayrollPeriodLabel();
+    subscribePayrollPeriod();
+  }
+
+  function subscribePayrollPeriod() {
+    if (unsubPayroll) { unsubPayroll(); unsubPayroll = null; }
+    if (!payrollRef || !_payrollMonth) return;
+    var docRef = payrollRef.doc(_payrollMonth);
+    unsubPayroll = docRef.onSnapshot(function(snap) {
+      _payrollData = snap.exists ? snap.data() : null;
+      renderPayroll();
+    }, function() {
+      _payrollData = null;
+      renderPayroll();
+    });
+  }
+
+  function renderPayroll() {
+    var lb   = _LABELS[_dlcLang] || _LABELS.vi;
+    var body = document.getElementById('payrollBody');
+    if (!body) return;
+    if (!_payrollMonth) return;
+
+    var parts = _payrollMonth.split('-');
+    var year  = parseInt(parts[0]);
+    var month = parseInt(parts[1]) - 1; // 0-indexed for Date
+    var periodStart = new Date(year, month, 1);
+    var periodEnd   = new Date(year, month + 1, 1);
+
+    // Aggregate bookings for this period, per staff
+    var byStaff = {};
+    _saAllItems.forEach(function(b) {
+      if (!b.staffId) return;
+      var status = (b.status || '').toLowerCase();
+      if (status === 'canceled' || status === 'no_show') return;
+      var dt;
+      if (b.apptAt && b.apptAt.toDate) dt = b.apptAt.toDate();
+      else if (b.date) dt = new Date(b.date + 'T00:00:00');
+      else return;
+      if (dt < periodStart || dt >= periodEnd) return;
+      if (!byStaff[b.staffId]) byStaff[b.staffId] = { commission: 0, tip: 0 };
+      var earning = _computeStaffEarning(b);
+      byStaff[b.staffId].commission += earning.commission || 0;
+      byStaff[b.staffId].tip        += earning.tip        || 0;
+    });
+
+    if (currentStaffData.length === 0) {
+      body.innerHTML = '<div class="sa-empty" style="font-size:.78rem">' + esc(lb.earn_empty) + '</div>';
+      return;
+    }
+
+    var payouts = (_payrollData && _payrollData.payouts) ? _payrollData.payouts : {};
+    var rows = currentStaffData.map(function(entry) {
+      var comp     = currentStaffCompData[entry.id] || {};
+      var staffDoc = entry.data || {};
+      var compType = comp.compensationType != null ? comp.compensationType : (staffDoc.compensationType || 'commission');
+      var basePay  = (compType === 'salary' || compType === 'hybrid')
+        ? Number(comp.monthlyBasePay != null ? comp.monthlyBasePay : (staffDoc.monthlyBasePay || 0)) : 0;
+      var earned   = byStaff[entry.id] || { commission: 0, tip: 0 };
+      var totalOwed = basePay + earned.commission + earned.tip;
+      var payout    = payouts[entry.id] || {};
+      var amtPaid   = Number(payout.amountPaidOut || 0);
+      var remaining = Math.max(0, totalOwed - amtPaid);
+      var status    = payout.payrollStatus
+        || (amtPaid >= totalOwed - 0.005 && totalOwed > 0 ? 'paid' : amtPaid > 0 ? 'partial' : 'unpaid');
+      return { id: entry.id, name: entry.name, compType: compType, basePay: basePay,
+               commission: earned.commission, tip: earned.tip, totalOwed: totalOwed,
+               amtPaid: amtPaid, remaining: remaining, status: status };
+    });
+
+    var typeLabel = {
+      commission: esc(lb.earn_col_comm),
+      salary:     esc(lb.earn_type_salary),
+      hybrid:     esc(lb.earn_type_hybrid)
+    };
+    var statusBadge = function(s) {
+      var cls = s === 'paid' ? 'pr-badge--paid' : s === 'partial' ? 'pr-badge--partial' : 'pr-badge--unpaid';
+      var lbl = s === 'paid' ? esc(lb.pr_status_paid) : s === 'partial' ? esc(lb.pr_status_partial) : esc(lb.pr_status_unpaid);
+      return '<span class="pr-badge ' + cls + '">' + lbl + '</span>';
+    };
+
+    var tOwed = 0, tPaid = 0, tRem = 0;
+    rows.forEach(function(r) { tOwed += r.totalOwed; tPaid += r.amtPaid; tRem += r.remaining; });
+
+    body.innerHTML = '<div style="overflow-x:auto"><table class="se-table"><thead><tr>' +
+      '<th>' + esc(lb.earn_col_staff) + '</th>' +
+      '<th>' + esc(lb.pr_col_type) + '</th>' +
+      '<th>' + esc(lb.earn_col_base) + '</th>' +
+      '<th>' + esc(lb.earn_col_comm) + '</th>' +
+      '<th>' + esc(lb.earn_col_tip) + '</th>' +
+      '<th>' + esc(lb.pr_col_total_owed) + '</th>' +
+      '<th>' + esc(lb.pr_col_paid) + '</th>' +
+      '<th>' + esc(lb.pr_col_remaining) + '</th>' +
+      '<th>' + esc(lb.pr_col_status) + '</th>' +
+      '<th></th>' +
+      '</tr></thead><tbody>' +
+      rows.map(function(r) {
+        var actionsHtml = '';
+        if (r.status !== 'paid') {
+          var safeName = r.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+          actionsHtml = '<button class="btn btn--sm btn--outline" ' +
+            'style="font-size:.6rem;padding:.15rem .4rem;white-space:nowrap" ' +
+            'onclick="openPayrollPayModal(\'' + r.id + '\',\'' + safeName + '\',' + r.totalOwed.toFixed(2) + ',' + r.amtPaid.toFixed(2) + ')">' +
+            esc(lb.pr_btn_pay) + '</button>';
+        }
+        return '<tr>' +
+          '<td style="color:var(--cream);font-weight:700;white-space:nowrap">' + esc(r.name) + '</td>' +
+          '<td style="color:var(--muted);font-size:.68rem">' + (typeLabel[r.compType] || esc(r.compType)) + '</td>' +
+          '<td style="color:#a78bfa">' + (r.basePay > 0 ? '$' + r.basePay.toFixed(2) : '—') + '</td>' +
+          '<td style="color:var(--success)">$' + r.commission.toFixed(2) + '</td>' +
+          '<td style="color:#fbbf24">$' + r.tip.toFixed(2) + '</td>' +
+          '<td style="color:var(--cream);font-weight:700">$' + r.totalOwed.toFixed(2) + '</td>' +
+          '<td style="color:var(--success)">$' + r.amtPaid.toFixed(2) + '</td>' +
+          '<td style="color:' + (r.remaining > 0.004 ? 'var(--danger)' : 'var(--muted)') + '">' +
+            (r.remaining > 0.004 ? '$' + r.remaining.toFixed(2) : '—') + '</td>' +
+          '<td>' + statusBadge(r.status) + '</td>' +
+          '<td>' + actionsHtml + '</td>' +
+          '</tr>';
+      }).join('') +
+      '</tbody><tfoot><tr>' +
+      '<td colspan="5" style="color:var(--muted);font-size:.68rem">' + esc(lb.pr_col_total_owed) + '</td>' +
+      '<td style="color:var(--cream)">$' + tOwed.toFixed(2) + '</td>' +
+      '<td style="color:var(--success)">$' + tPaid.toFixed(2) + '</td>' +
+      '<td style="color:' + (tRem > 0.004 ? 'var(--danger)' : 'var(--muted)') + '">' +
+        (tRem > 0.004 ? '$' + tRem.toFixed(2) : '—') + '</td>' +
+      '<td colspan="2"></td>' +
+      '</tr></tfoot></table></div>';
+  }
+
+  // Pay modal state
+  var _prModalStaffId   = '';
+  var _prModalTotalOwed = 0;
+  var _prModalPrevPaid  = 0;
+
+  function openPayrollPayModal(staffId, staffName, totalOwed, prevPaid) {
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
+    _prModalStaffId   = staffId;
+    _prModalTotalOwed = totalOwed;
+    _prModalPrevPaid  = prevPaid;
+    var remaining = Math.max(0, totalOwed - prevPaid);
+    var mo = document.getElementById('payrollPayModal');
+    if (!mo) return;
+    var nameEl = document.getElementById('prPayModalName');
+    var owedEl = document.getElementById('prPayModalOwed');
+    var prevEl = document.getElementById('prPayModalPrev');
+    var remEl  = document.getElementById('prPayModalRem');
+    var inp    = document.getElementById('prPayModalAmt');
+    if (nameEl) nameEl.textContent = staffName;
+    if (owedEl) owedEl.textContent = '$' + Number(totalOwed).toFixed(2);
+    if (prevEl) prevEl.textContent = prevPaid > 0 ? '$' + Number(prevPaid).toFixed(2) : '—';
+    if (remEl)  remEl.textContent  = '$' + remaining.toFixed(2);
+    if (inp)    inp.value = remaining.toFixed(2);
+    mo.style.display = 'flex';
+  }
+
+  function closePayrollPayModal() {
+    var mo = document.getElementById('payrollPayModal');
+    if (mo) mo.style.display = 'none';
+  }
+
+  function confirmPayrollPay() {
+    var lb  = _LABELS[_dlcLang] || _LABELS.vi;
+    var inp = document.getElementById('prPayModalAmt');
+    if (!inp || !payrollRef || !_payrollMonth || !_prModalStaffId) return;
+    var amt = parseFloat(inp.value) || 0;
+    if (amt <= 0) { showToast(lb.pr_err_amount || 'Invalid amount'); return; }
+    var newTotal = _prModalPrevPaid + amt;
+    var status   = newTotal >= _prModalTotalOwed - 0.005 ? 'paid' : 'partial';
+    var docRef   = payrollRef.doc(_payrollMonth);
+    var upd      = {};
+    upd['payouts.' + _prModalStaffId + '.amountPaidOut'] = newTotal;
+    upd['payouts.' + _prModalStaffId + '.payrollStatus'] = status;
+    upd['payouts.' + _prModalStaffId + '.updatedAt']     = firebase.firestore.FieldValue.serverTimestamp();
+    docRef.set({ period: _payrollMonth }, { merge: true })
+      .then(function() { return docRef.update(upd); })
+      .then(function() {
+        closePayrollPayModal();
+        showToast(lb.pr_toast_saved || 'Saved');
+      })
+      .catch(function(e) { showToast((lb.pr_err_save || 'Error') + ': ' + e.message); });
+  }
+
   // ── QR payment display ─────────────────────────────────────────────────────────
   // Vendor selects Zelle/Venmo → "Hiện mã QR" button appears → overlay opens →
   // customer scans QR → vendor taps "Xác nhận" → overlay closes, amount pre-filled →
@@ -7788,6 +8046,17 @@
       earn_col_done:'Hoàn thành', earn_col_noshow:'Không đến',
       earn_col_comm:'Hoa hồng', earn_col_tip:'Tip', earn_col_total:'Tổng thu',
       earn_col_base:'Lương CB', earn_type_salary:'Lương', earn_type_hybrid:'Kết Hợp',
+      // ── Payroll ──────────────────────────────────────────────────────────────
+      payroll_title:'Bảng Lương Tháng',
+      payroll_note:'Tổng lương = Lương CB + Hoa hồng + Tip. Chỉ chủ tiệm mới thấy mục này.',
+      pr_col_type:'Loại', pr_col_total_owed:'Tổng Lương', pr_col_paid:'Đã Trả',
+      pr_col_remaining:'Còn Lại', pr_col_status:'TT',
+      pr_status_paid:'Đã trả', pr_status_partial:'Một phần', pr_status_unpaid:'Chưa trả',
+      pr_btn_pay:'Trả lương',
+      pr_toast_saved:'Đã lưu thanh toán lương.',
+      pr_err_amount:'Số tiền không hợp lệ.', pr_err_save:'Lỗi lưu',
+      pr_modal_title:'Trả Lương Nhân Viên', pr_modal_owed:'Tổng lương',
+      pr_modal_prev:'Đã trả trước', pr_modal_rem:'Còn lại', pr_modal_amt:'Số tiền trả lần này ($)',
       // ── Status badges ────────────────────────────────────────────────────────
       st_confirmed:'Xác nhận', st_in_progress:'Đang làm', st_completed:'Xong',
       st_canceled:'Đã hủy', st_no_show:'Vắng mặt', st_rescheduled:'Dời lịch',
@@ -8085,6 +8354,17 @@
       earn_col_done:'Completed', earn_col_noshow:'No Show',
       earn_col_comm:'Commission', earn_col_tip:'Tip', earn_col_total:'Total',
       earn_col_base:'Base Pay', earn_type_salary:'Salary', earn_type_hybrid:'Hybrid',
+      // ── Payroll ──────────────────────────────────────────────────────────────
+      payroll_title:'Monthly Payroll',
+      payroll_note:'Total pay = Base + Commission + Tips. Owner-only view.',
+      pr_col_type:'Type', pr_col_total_owed:'Total Owed', pr_col_paid:'Paid',
+      pr_col_remaining:'Remaining', pr_col_status:'Status',
+      pr_status_paid:'Paid', pr_status_partial:'Partial', pr_status_unpaid:'Unpaid',
+      pr_btn_pay:'Pay',
+      pr_toast_saved:'Payroll payment saved.',
+      pr_err_amount:'Invalid amount.', pr_err_save:'Save error',
+      pr_modal_title:'Pay Staff Member', pr_modal_owed:'Total owed',
+      pr_modal_prev:'Previously paid', pr_modal_rem:'Remaining', pr_modal_amt:'Amount to pay ($)',
       // ── Status badges ────────────────────────────────────────────────────────
       st_confirmed:'Confirmed', st_in_progress:'In Progress', st_completed:'Done',
       st_canceled:'Canceled', st_no_show:'No Show', st_rescheduled:'Rescheduled',
@@ -8381,6 +8661,17 @@
       earn_col_done:'Completadas', earn_col_noshow:'No Asistió',
       earn_col_comm:'Comisión', earn_col_tip:'Propina', earn_col_total:'Total',
       earn_col_base:'Sueldo Base', earn_type_salary:'Salario', earn_type_hybrid:'Híbrido',
+      // ── Payroll ──────────────────────────────────────────────────────────────
+      payroll_title:'Nómina Mensual',
+      payroll_note:'Total = Sueldo Base + Comisión + Propinas. Solo visible para el dueño.',
+      pr_col_type:'Tipo', pr_col_total_owed:'Total a Pagar', pr_col_paid:'Pagado',
+      pr_col_remaining:'Restante', pr_col_status:'Estado',
+      pr_status_paid:'Pagado', pr_status_partial:'Parcial', pr_status_unpaid:'Sin pagar',
+      pr_btn_pay:'Pagar',
+      pr_toast_saved:'Pago de nómina guardado.',
+      pr_err_amount:'Monto inválido.', pr_err_save:'Error al guardar',
+      pr_modal_title:'Pagar al Personal', pr_modal_owed:'Total a pagar',
+      pr_modal_prev:'Pagado anteriormente', pr_modal_rem:'Restante', pr_modal_amt:'Monto a pagar ($)',
       // ── Status badges ────────────────────────────────────────────────────────
       st_confirmed:'Confirmada', st_in_progress:'En Proceso', st_completed:'Lista',
       st_canceled:'Cancelada', st_no_show:'No Asistió', st_rescheduled:'Reprogramada',

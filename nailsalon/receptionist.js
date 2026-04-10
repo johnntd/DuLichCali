@@ -2947,17 +2947,14 @@
 
       // ── Full-screen mode (mobile only) ──────────────────────────────────────
       (function _initFullScreen() {
-        var _fsSavedY  = 0;
-        var _isClosing = false;
+        var _fsSavedY    = 0;
+        var _isClosing   = false;
+        var _origParent  = null;
+        var _origNextSib = null;
 
         function _fsUpdateVH() {
           var vv = window.visualViewport;
           if (!vv || !container.classList.contains('mp-ai--fs')) return;
-          // Cover the FULL layout viewport (top:0 to window.innerHeight) so the navy
-          // background extends behind the keyboard — no page content can bleed through.
-          // padding-bottom = keyboard height pushes flex content (input bar, close bar)
-          // up above the keyboard. box-sizing:border-box (global) makes padding subtract
-          // from content area, not add to total height.
           var fullH = window.innerHeight;
           var kbH   = Math.max(0, fullH - vv.height - (vv.offsetTop || 0));
           container.style.top           = '0px';
@@ -2966,17 +2963,21 @@
         }
 
         function _fsOpen() {
-          // Guard: already open, closing in progress, or desktop — do nothing.
           if (_isClosing || window.innerWidth >= 768 || container.classList.contains('mp-ai--fs')) return;
           _fsSavedY = window.scrollY || window.pageYOffset || 0;
-          // Do NOT manipulate body.style.position/top. body position:fixed causes:
-          //   1. visualViewport.resize to misbehave on iOS (keyboard resize doesn't fire)
-          //   2. iOS hit-testing for position:fixed elements to use wrong coordinates
-          //   3. vv.offsetTop to equal savedY, which (when used as container.top) pushes widget off-screen
-          // Lock scroll on BOTH html and body — iOS Safari ignores overflow:hidden on body alone.
+
+          // Move container to <body> so position:fixed is unambiguously viewport-relative.
+          // When the widget lives inside #mpApp, any ancestor stacking context (transforms,
+          // backdrop-filter, isolation) can make position:fixed position relative to that
+          // ancestor instead of the viewport, causing page content to bleed through.
+          // Moving to body eliminates that entire class of problem.
+          _origParent  = container.parentNode;
+          _origNextSib = container.nextSibling;
+          container.classList.add('mp-ai--fs');
+          document.body.appendChild(container);
+
           document.documentElement.classList.add('mp-ai-open-root');
           document.body.classList.add('mp-ai-open');
-          container.classList.add('mp-ai--fs');
           _fsUpdateVH();
           setTimeout(function () { messagesEl.scrollTop = messagesEl.scrollHeight; }, 50);
         }
@@ -2987,6 +2988,14 @@
           container.classList.remove('mp-ai--fs');
           document.documentElement.classList.remove('mp-ai-open-root');
           document.body.classList.remove('mp-ai-open');
+
+          // Restore container to its original position in the page
+          if (_origParent) {
+            _origParent.insertBefore(container, _origNextSib);
+            _origParent  = null;
+            _origNextSib = null;
+          }
+
           window.scrollTo(0, _fsSavedY);
           container.style.height        = '';
           container.style.top           = '';
@@ -2994,8 +3003,6 @@
           setTimeout(function () { _isClosing = false; }, 400);
         }
 
-        // Event delegation — closest() works regardless of whether e.target is
-        // the button, its SVG icon, or an inner <path>. No element ref needed.
         container.addEventListener('click', function (e) {
           var ct = e.target.closest ? e.target.closest.bind(e.target) : function () { return null; };
           if (ct('.mp-ai__fs-close-bar'))  { _fsClose(); return; }
@@ -3004,13 +3011,11 @@
         });
         input.addEventListener('focus', _fsOpen);
 
-        // iOS keyboard resize
         if (window.visualViewport) {
           window.visualViewport.addEventListener('resize', _fsUpdateVH);
           window.visualViewport.addEventListener('scroll', _fsUpdateVH);
         }
 
-        // Expose so focusAi() nav button can trigger it
         container._fsOpen = _fsOpen;
       }());
     }

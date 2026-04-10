@@ -451,13 +451,15 @@
               'gemini-2.5-flash-preview-tts:generateContent?key=' +
               encodeURIComponent(key);
 
+    // Voice per language: Aoede (breezy) for VI/ES, Sulafat (warm) for EN
+    var voiceName = _lang === 'en' ? 'Sulafat' : 'Aoede';
     var payload = {
       contents: [{ parts: [{ text: text }] }],
       generationConfig: {
         responseModalities: ['AUDIO'],
         speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Aoede' }
+            prebuiltVoiceConfig: { voiceName: voiceName }
           }
         }
       }
@@ -539,17 +541,13 @@
     try { if (hasTTS) window.speechSynthesis.cancel(); } catch (_) {}
     _setState('speaking');
 
-    if (_lang === 'vi') {
-      // Vietnamese: try Gemini TTS for higher quality; fall back to browser TTS
-      _speakViaGemini(spoken, function (success) {
-        if (!success && _state === 'speaking') {
-          _speakViaBrowser(spoken);
-        }
-      });
-    } else {
-      // English (en-US exact match) and Spanish — browser TTS with _pickVoice
-      _speakViaBrowser(spoken);
-    }
+    // All languages: try Gemini TTS first (best quality); fall back to browser TTS
+    // if no key is configured or the API call fails.
+    _speakViaGemini(spoken, function (success) {
+      if (!success && _state === 'speaking') {
+        _speakViaBrowser(spoken);
+      }
+    });
   }
 
   // ── Error / fallback states ───────────────────────────────────────────────

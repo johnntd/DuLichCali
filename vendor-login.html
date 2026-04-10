@@ -622,6 +622,7 @@
       return db.collection('vendorUsers').doc(uid).set({
         vendorId:  VENDOR_ID,
         email:     email,
+        role:      'owner',   // first registrant for a vendor is always the owner
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
     }
@@ -691,6 +692,7 @@
     db.collection('vendorUsers').doc(user.uid).set({
       vendorId:  VENDOR_ID,
       email:     user.email || '',
+      role:      'owner',   // claim uses owner setup code — claimer is always owner
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }).then(function () {
       _redirectToVendorAdmin(VENDOR_ID);

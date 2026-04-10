@@ -5142,11 +5142,11 @@
   function _pmSaveOrConfirm() {
     var method = (document.getElementById('pmMethod') || {}).value || 'cash';
     if (method === 'cash') {
-      // Cash: save immediately, then go to receipt
-      _pmAfterSave = _pmShowReceiptPanel;
+      // Cash: save and close immediately — no receipt step needed for cash
+      _pmAfterSave = null;
       savePayment();
     } else {
-      // Card / Zelle / Venmo / Other: show confirmation step
+      // Card / Zelle / Venmo / Other: show confirmation step, then receipt panel
       _pmShowConfirmPanel();
     }
   }

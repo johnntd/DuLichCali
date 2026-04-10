@@ -235,6 +235,26 @@
     '</nav>';
   }
 
+  // ── Region helper ──────────────────────────────────────────────────────────────
+  // Returns the display-name region string ('Bay Area' or 'Orange County') that
+  // matches the biz.region field used in services-data.js, so vendor card lists can
+  // be filtered consistently. Returns null when region is unknown (fail-open: show all).
+  // Reads DLCRegion.current first (main-site pages where regions.js is loaded),
+  // then falls back to sessionStorage (set by regions.js on any prior page visit).
+  function _getRegionName() {
+    try {
+      if (window.DLCRegion && window.DLCRegion.current) {
+        var id = window.DLCRegion.current.id;
+        if (id === 'bayarea') return 'Bay Area';
+        if (id === 'oc')      return 'Orange County';
+      }
+      var saved = sessionStorage.getItem('dlc_region');
+      if (saved === 'bayarea') return 'Bay Area';
+      if (saved === 'oc')      return 'Orange County';
+    } catch (_) {}
+    return null; // unknown — caller should fail-open
+  }
+
   // ── Nav Availability Check ─────────────────────────────────────────────────────
   // Synchronous (reads sessionStorage). Fail-open: if no cached data → navigate.
   function _navAvailCheck(serviceType, onAvailable) {
@@ -546,7 +566,11 @@
       return;
     }
 
-    var bizList = MARKETPLACE.getBusinesses(categoryId);
+    // Filter vendor cards to the current user region. getBusinesses() already
+    // supports an optional region parameter (services-data.js:723). _getRegionName()
+    // returns null when region is unknown, which causes getBusinesses to show all
+    // vendors (fail-open — never leave the directory empty due to missing region).
+    var bizList = MARKETPLACE.getBusinesses(categoryId, _getRegionName());
 
     var cardsHtml = bizList.map(function (biz) {
       return renderBizCard(biz);

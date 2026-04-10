@@ -239,25 +239,26 @@
   // Only used for nails/hair vendor detail pages. No links to main site.
 
   function renderVendorBottomNav(biz) {
-    var homeIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><polyline points="9 21 9 12 15 12 15 21"/></svg>';
+    var homeIco  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><polyline points="9 21 9 12 15 12 15 21"/></svg>';
     var sparkIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>';
-    var globeIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>';
+    var planeIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
+    var gridIco  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>';
 
-    return '<nav class="mp-vnav" aria-label="Quick actions">' +
-      '<button type="button" class="mp-vnav__tab" onclick="window._vnav.scrollTop()" aria-label="Scroll to top">' +
+    return '<nav class="mp-vnav" aria-label="Main navigation">' +
+      '<button type="button" class="mp-vnav__tab mp-vnav__tab--home" onclick="window._vnav.scrollTop()" aria-label="Luxurious Nails home">' +
         homeIco + '<span>Home</span>' +
       '</button>' +
-      '<button type="button" class="mp-vnav__tab" onclick="window._vnav.scrollBook()" aria-label="Book appointment">' +
-        calendarIcon + '<span>Book</span>' +
+      '<button type="button" class="mp-vnav__tab" onclick="window._vnav.goAirport()" aria-label="Airport & Rides services">' +
+        planeIco + '<span>Airport</span>' +
       '</button>' +
       '<button type="button" class="mp-vnav__tab mp-vnav__tab--ai" onclick="window._vnav.focusAi()" aria-label="Chat with AI receptionist">' +
         '<div class="mp-vnav__ai-ring">' + sparkIco + '</div>' +
-        '<span>AI</span>' +
+        '<span>AI Chat</span>' +
       '</button>' +
-      '<button type="button" class="mp-vnav__tab" onclick="window._vnav.toggleInterp()" aria-label="Live interpreter">' +
-        globeIco + '<span>Interpret</span>' +
+      '<button type="button" class="mp-vnav__tab" onclick="window._vnav.goLocalServices()" aria-label="Local food and services">' +
+        gridIco + '<span>Local</span>' +
       '</button>' +
-      '<a href="tel:' + (biz.phone || '') + '" class="mp-vnav__tab mp-vnav__tab--call" aria-label="Call shop">' +
+      '<a href="tel:' + (biz.phone || '') + '" class="mp-vnav__tab mp-vnav__tab--call" aria-label="Call salon">' +
         phoneIcon + '<span>Call</span>' +
       '</a>' +
     '</nav>';
@@ -318,8 +319,14 @@
           }, 420);
         }
       },
+      goAirport: function () {
+        window.location.href = '/airport?from=nailsalon';
+      },
+      goLocalServices: function () {
+        window.location.href = '/marketplace/?from=nailsalon';
+      },
       toggleInterp: function () {
-        window._interp.toggle();
+        if (window._interp) window._interp.toggle();
       }
     };
 
@@ -2133,6 +2140,12 @@
         var el = document.getElementById('nailBookSection_' + biz.id);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       };
+    }
+
+    // Nails-active class — :has() fallback for older iOS Safari (<15.4)
+    if (isNails) {
+      var vnav = _container.querySelector('.mp-vnav');
+      if (vnav) vnav.classList.add('mp-vnav--nails-active');
     }
   }
 

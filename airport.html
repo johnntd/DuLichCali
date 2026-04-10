@@ -286,7 +286,7 @@
     <div id="lpVendorGrid"></div>
   </section>
 
-  <a href="/" class="lp-back">← Trở về Du Lịch Cali</a>
+  <a href="/" class="lp-back" id="lpBackLink">← Trở về Du Lịch Cali</a>
 
   <div id="lpNav"></div>
 
@@ -702,6 +702,16 @@
     }
 
     document.addEventListener('DOMContentLoaded', init);
+  })();
+</script>
+<script>
+  // If navigated from the Luxurious Nails page, update back link to return there.
+  (function () {
+    var from = new URLSearchParams(window.location.search).get('from');
+    if (from === 'nailsalon') {
+      var lk = document.getElementById('lpBackLink');
+      if (lk) { lk.href = '/nailsalon/'; lk.textContent = '\u2190 Luxurious Nails'; }
+    }
   })();
 </script>
 </body>

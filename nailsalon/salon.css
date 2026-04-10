@@ -1319,3 +1319,15 @@ body:has(.mp-main--nails) {
 .ns-img-upload__status {
   font-size: .7rem; color: rgba(255,255,255,.55); min-height: 1rem;
 }
+
+/* ── Bottom nav — nails-page active state ─────────────────────────────────── */
+/* Home tab glows pink when on the nails page — always active since this nav
+   only renders in the nails vendor page context. */
+.mp-app:has(.mp-main--nails) .mp-vnav .mp-vnav__tab--home {
+  color: var(--ns-pink);
+}
+/* Fallback for browsers without :has() support — JS adds .mp-vnav--nails-active */
+.mp-vnav--nails-active .mp-vnav__tab--home {
+  color: #EC4899;
+}
+

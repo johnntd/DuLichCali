@@ -409,7 +409,7 @@
 
   <!-- App Bar -->
   <header class="hub-bar">
-    <a href="/" class="hub-bar__back" aria-label="Quay lại trang chủ">
+    <a href="/" class="hub-bar__back" id="mktBackLink" aria-label="Quay lại trang chủ">
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
         <polyline points="15 18 9 12 15 6"/>
       </svg>
@@ -828,6 +828,14 @@ document.addEventListener('DOMContentLoaded', function () {
     setTimeout(function () { mktCta(deepCat); }, 120);
   }
 });
+// If navigated from the Luxurious Nails page, update back link to return there.
+(function () {
+  var from = new URLSearchParams(window.location.search).get('from');
+  if (from === 'nailsalon') {
+    var lk = document.getElementById('mktBackLink');
+    if (lk) { lk.href = '/nailsalon/'; lk.setAttribute('aria-label', 'Back to Luxurious Nails'); }
+  }
+})();
 </script>
 </body>
 </html>

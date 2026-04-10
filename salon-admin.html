@@ -8,7 +8,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400&family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -21,22 +21,25 @@
 
   <style>
     :root {
-      --navy-900: #0d2f50;
-      --navy-800: #123b62;
-      --navy-700: #194a78;
-      --gold:     #f5a623;
-      --gold-lt:  #ffc857;
-      --gold-dim: rgba(245,166,35,.14);
-      --cream:    #fff8ee;
-      --text:     #c8e4f8;
-      --muted:    #6ab0d4;
-      --border:   rgba(255,255,255,.12);
-      --border-g: rgba(245,166,35,.35);
+      --navy-900: #020617;
+      --navy-800: #0a1628;
+      --navy-700: #122036;
+      --gold:     #f59e0b;
+      --gold-lt:  #fbbf24;
+      --gold-dim: rgba(245,158,11,.12);
+      --cream:    #f1f5f9;
+      --text:     #94a3b8;
+      --muted:    #475569;
+      --border:   rgba(148,163,184,.1);
+      --border-g: rgba(245,158,11,.28);
       --danger:   #f87171;
       --success:  #4ade80;
-      --font-d: 'Bodoni Moda', Georgia, serif;
-      --font-b: 'Jost', system-ui, sans-serif;
-      --r: 8px;
+      --cyan:     #22d3ee;
+      --cyan-dim: rgba(34,211,238,.08);
+      --font-d:   'Jost', system-ui, sans-serif;
+      --font-b:   'Jost', system-ui, sans-serif;
+      --font-mono:'Fira Code', 'Courier New', monospace;
+      --r: 10px;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; font-family: var(--font-b); background: var(--navy-900); color: var(--text); -webkit-font-smoothing: antialiased; overscroll-behavior: none; }
@@ -1795,6 +1798,181 @@
       letter-spacing: .04em; opacity: .8; margin-bottom: .25rem;
     }
     .auth-sub { font-size: .72rem; color: var(--muted); }
+
+    /* ── AI-Centric Visual Enhancements ─────────────────────────────────────── */
+
+    /* Ambient background: deep space with subtle glow blooms */
+    html, body {
+      background: var(--navy-900);
+      background-image:
+        radial-gradient(ellipse 70% 40% at 15% 0%, rgba(34,211,238,.04) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 30% at 85% 100%, rgba(99,102,241,.03) 0%, transparent 55%);
+      background-attachment: fixed;
+    }
+
+    /* Auth loading: ambient cyan bloom */
+    #authLoading {
+      background: var(--navy-900);
+      background-image: radial-gradient(ellipse 60% 40% at 50% 30%, rgba(34,211,238,.07) 0%, transparent 70%);
+    }
+    .auth-spinner {
+      border-color: rgba(34,211,238,.18);
+      border-top-color: var(--cyan);
+    }
+
+    /* Top bar: command center */
+    .va-bar {
+      background: rgba(10,22,40,.97);
+      border-bottom: 1px solid rgba(34,211,238,.12);
+      box-shadow: 0 1px 0 rgba(34,211,238,.05), 0 4px 32px rgba(0,0,0,.5);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .va-bar__name { font-weight: 600; letter-spacing: .01em; font-size: 1rem; }
+
+    /* Link strip */
+    .va-link-strip {
+      background: rgba(10,22,40,.7);
+      border-bottom: 1px solid rgba(148,163,184,.06);
+    }
+
+    /* Sidebar */
+    .va-sidebar {
+      background: rgba(10,22,40,.65);
+      border-right: 1px solid rgba(148,163,184,.07);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    /* Sidebar active: cyan = AI, not gold */
+    .va-nav-btn.active {
+      background: var(--cyan-dim);
+      color: var(--cyan);
+      border-left: 3px solid var(--cyan);
+    }
+    .va-nav-btn:hover { background: rgba(255,255,255,.04); }
+
+    /* Cards */
+    .sa-card {
+      background: rgba(10,22,40,.6);
+      border-color: rgba(148,163,184,.1);
+      border-radius: 12px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .sa-card:hover {
+      border-color: rgba(148,163,184,.2);
+      box-shadow: 0 4px 24px rgba(0,0,0,.4);
+    }
+    .sa-card--gold {
+      border-color: rgba(245,158,11,.22);
+      box-shadow: 0 0 24px rgba(245,158,11,.04);
+    }
+
+    /* Service/staff item rows */
+    .sa-item {
+      background: rgba(10,22,40,.6);
+      border-color: rgba(148,163,184,.1);
+      border-radius: 10px;
+    }
+
+    /* Appointment cards */
+    .sa-appt-card {
+      background: rgba(10,22,40,.6);
+      border-color: rgba(148,163,184,.1);
+      border-radius: 10px;
+    }
+    .sa-appt-card:hover { border-color: rgba(148,163,184,.22); }
+
+    /* Next appointment highlight */
+    .na-card {
+      border-color: rgba(245,158,11,.18);
+      box-shadow: 0 0 32px rgba(245,158,11,.04);
+      border-radius: 12px;
+    }
+
+    /* Availability cards */
+    .avail-card { background: rgba(10,22,40,.6); border-radius: 10px; }
+
+    /* Modal: glass morphism */
+    .sa-modal-backdrop {
+      background: rgba(2,6,23,.75);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    .sa-modal {
+      background: rgba(10,22,40,.95);
+      border: 1px solid rgba(148,163,184,.14);
+      border-radius: 16px;
+      box-shadow: 0 32px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(34,211,238,.05);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+    }
+
+    /* Inputs: focus ring cyan */
+    .sa-input:focus, .sa-select:focus, .hours-input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(34,211,238,.08);
+    }
+    .sa-input, .sa-select, .hours-input {
+      background: rgba(2,6,23,.5);
+    }
+
+    /* Primary button: gold gradient */
+    .btn--primary {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      box-shadow: 0 2px 12px rgba(245,158,11,.22);
+    }
+    .btn--primary:hover { box-shadow: 0 4px 20px rgba(245,158,11,.35); opacity: 1; }
+
+    /* Toast */
+    #toast {
+      background: rgba(10,22,40,.96);
+      border: 1px solid rgba(148,163,184,.18);
+      box-shadow: 0 8px 32px rgba(0,0,0,.5);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    /* Monospace for all data values */
+    .sa-appt-time, .cashier-queue__time, .na-left__time,
+    .sa-appt-dur, .sa-appt-price, .pm-summary-val {
+      font-family: var(--font-mono);
+    }
+
+    /* Category tabs: cyan active */
+    .cat-tab.active {
+      background: var(--cyan-dim);
+      border-color: rgba(34,211,238,.3);
+      color: var(--cyan);
+    }
+    .sa-staff-chip.active {
+      background: var(--cyan-dim);
+      border-color: rgba(34,211,238,.3);
+      color: var(--cyan);
+    }
+
+    /* Mobile tab active: cyan */
+    .mobile-tab-btn.active {
+      color: var(--cyan);
+      border-bottom-color: var(--cyan);
+    }
+
+    /* Section titles */
+    .sa-section-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      letter-spacing: -.01em;
+    }
+
+    /* Cashier quick-action */
+    .db-cashier-btn { border-radius: 10px; }
+
+    /* Skill chips checked */
+    .skill-chip.checked {
+      background: var(--cyan-dim);
+      border-color: rgba(34,211,238,.3);
+      color: var(--cyan);
+    }
+
   </style>
 </head>
 <body>

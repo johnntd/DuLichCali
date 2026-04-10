@@ -2868,6 +2868,7 @@
   var vendorRef      = null;
   var servicesRef    = null;
   var staffRef       = null;
+  var staffCompRef   = null;   // vendors/{id}/staffCompensation — sensitive, auth-only
   // Role: 'owner'|'manager'|'staff' — read from vendorUsers doc, default 'owner'
   // Owner: always full access. Manager/Staff: permissions set by owner in Settings tab.
   var _userRole      = 'owner';
@@ -2880,12 +2881,14 @@
   var _currentIsOpen = true; // mirrors vendors/{id}.isOpen
   var unsubSvcs      = null;
   var unsubStaff     = null;
+  var unsubStaffComp = null;   // listener for vendors/{id}/staffCompensation
   var unsubAppts     = null;
   var unsubBookings  = null;
   var currentCatFilter   = 'all';
   var allServiceDocs       = [];   // [{id, data}] — full snapshot for filtering
   var vendorParallelServices = []; // [[svcA, svcB], ...] — parallel booking rules
   var currentStaffData   = [];   // [{id, name, data}] — for service modal checkboxes + availability
+  var currentStaffCompData = {}; // staffDocId → {compensationType, monthlyBasePay, hireDate, payNotes}
   var _bookingCache      = {};   // bookingId → booking object — for manual edit modal prefill
   var SERVICE_CATS       = [];   // [{key, label}] — loaded from static data
   var CATALOG_VERSION    = 2;    // Bump this to force a full catalog reset on next login
@@ -3068,6 +3071,7 @@
       vendorRef   = db.collection('vendors').doc(VENDOR_ID);
       servicesRef = vendorRef.collection('services');
       staffRef    = vendorRef.collection('staff');
+      staffCompRef = vendorRef.collection('staffCompensation');
 
       var staticData = (window.MARKETPLACE && window.MARKETPLACE.getBusiness)
         ? window.MARKETPLACE.getBusiness(VENDOR_ID) : null;
@@ -3491,18 +3495,44 @@
         renderStaff(snap);
       });
     });
+    subscribeStaffComp();
+  }
+
+  // Subscribe to the protected staffCompensation subcollection.
+  // Only accessible by authenticated vendor members (enforced by Firestore rules).
+  // Builds currentStaffCompData: staffDocId → {compensationType, monthlyBasePay, hireDate, payNotes}
+  function subscribeStaffComp() {
+    if (unsubStaffComp) unsubStaffComp();
+    if (!staffCompRef) return;
+    unsubStaffComp = staffCompRef.onSnapshot(function(snap) {
+      currentStaffCompData = {};
+      snap.forEach(function(d) { currentStaffCompData[d.id] = d.data(); });
+      // Re-render staff list and earnings so compensation fields refresh live
+      renderStaff(null);
+    }, function() {
+      // Non-fatal: rules may deny if user is not vendor member (e.g. manager-only login)
+      // Leave currentStaffCompData empty — UI falls back to legacy fields in staff doc
+    });
   }
 
   function renderStaff(snap) {
     var lb = _LABELS[_dlcLang] || _LABELS.vi;
     var el = document.getElementById('staffList');
-    if (snap.empty) {
+    if (!el) return;
+
+    // snap may be null when called after staffCompensation updates (use cached data)
+    var items = snap
+      ? snap.docs.map(function(d) { return { id: d.id, s: d.data() }; })
+      : currentStaffData.map(function(d) { return { id: d.id, s: d.data }; });
+
+    if (!items.length) {
       el.innerHTML = '<div class="sa-empty">' + esc(lb.empty_staff_none) + '</div>';
       return;
     }
     var isOwner = _userRole === 'owner'; // only owners may edit staff records
-    el.innerHTML = snap.docs.map(function(d) {
-      var s    = d.data();
+    el.innerHTML = items.map(function(item) {
+      var s     = item.s;
+      var docId = item.id;
       var sched = s.schedule || {};
       var specs = (s.specialties || []).join(', ');
       var pills = DAYS.map(function(day) {
@@ -3511,13 +3541,24 @@
         return '<span class="sched-pill sched-pill--' + (on?'on':'off') + '" title="' +
           (on ? (ds.start+' – '+ds.end) : esc(lb.avail_off)) + '">' + day.short + '</span>';
       }).join('');
+      // Read compensation from protected subcollection; fall back to staff doc for migration safety
+      var comp     = currentStaffCompData[docId] || {};
+      var compType = comp.compensationType != null ? comp.compensationType : (s.compensationType || 'commission');
+      var basePay  = comp.monthlyBasePay   != null ? comp.monthlyBasePay   : (s.monthlyBasePay  || 0);
+      // commissionPct stays in the public staff doc (non-sensitive operational field)
+      var commPct  = s.commissionPct || 0;
+      var compMeta = compType === 'salary'
+        ? ' · ' + (basePay ? '$' + Number(basePay).toLocaleString() + lb.unit_mo : lb.comp_salary)
+        : compType === 'hybrid'
+          ? ' · $' + Number(basePay).toLocaleString() + lb.unit_mo + ' + ' + commPct + '%'
+          : commPct ? ' · ' + lb.unit_comm + ' ' + commPct + '%' : '';
       // Edit/Delete/Toggle controls are owner-only
       var ownerActions = isOwner
         ? '<button class="toggle-pill ' + (s.active !== false ? 'on' : 'off') + '" ' +
-            'onclick="toggleStaff(\'' + d.id + '\',' + (s.active === false) + ')">' +
+            'onclick="toggleStaff(\'' + docId + '\',' + (s.active === false) + ')">' +
             (s.active !== false ? lb.toggle_on : lb.toggle_off) + '</button>' +
-          '<button class="btn btn--outline btn--sm" onclick="openStaffModal(\'' + d.id + '\')">' + esc(lb.btn_edit) + '</button>' +
-          '<button class="btn btn--danger btn--sm" onclick="deleteStaff(\'' + d.id + '\')">' + esc(lb.btn_delete) + '</button>'
+          '<button class="btn btn--outline btn--sm" onclick="openStaffModal(\'' + docId + '\')">' + esc(lb.btn_edit) + '</button>' +
+          '<button class="btn btn--danger btn--sm" onclick="deleteStaff(\'' + docId + '\')">' + esc(lb.btn_delete) + '</button>'
         : '';
       return '<div class="sa-item' + (s.active === false ? ' inactive-dim' : '') + '">' +
         '<div class="sa-item__info">' +
@@ -3526,9 +3567,7 @@
             (s.active !== false ? lb.status_active : lb.status_off) + '</span>' +
           '</div>' +
           '<div class="sa-item__meta">' + esc(s.role || '—') + (specs ? ' · ' + esc(specs) : '') +
-            (s.compensationType === 'salary' ? ' · ' + (s.monthlyBasePay ? '$' + Number(s.monthlyBasePay).toLocaleString() + lb.unit_mo : lb.comp_salary) :
-             s.compensationType === 'hybrid' ? ' · $' + (Number(s.monthlyBasePay)||0).toLocaleString() + lb.unit_mo + ' + ' + (s.commissionPct||0) + '%' :
-             s.commissionPct ? ' · ' + lb.unit_comm + ' ' + s.commissionPct + '%' : '') +
+            compMeta +
             (s.employmentType === 'full_time' ? ' · ' + lb.emp_full : s.employmentType === 'part_time' ? ' · ' + lb.emp_part : s.employmentType === 'contract' ? ' · ' + lb.emp_contract : '') + '</div>' +
           '<div class="sched-pills">' + pills + '</div>' +
         '</div>' +
@@ -3546,7 +3585,11 @@
     var lb = _LABELS[_dlcLang] || _LABELS.vi;
     if (_userRole !== 'owner') { showToast(lb.toast_owner_delete_staff); return; }
     if (!confirm(lb.confirm_delete_staff)) return;
-    staffRef.doc(id).delete().then(function(){ showToast(lb.toast_staff_deleted); });
+    // Delete both the public staff doc and the protected compensation doc together
+    Promise.all([
+      staffRef.doc(id).delete(),
+      staffCompRef ? staffCompRef.doc(id).delete().catch(function(){}) : Promise.resolve()
+    ]).then(function(){ showToast(lb.toast_staff_deleted); });
   }
 
   // Build per-day schedule editor HTML
@@ -3598,7 +3641,14 @@
     }
     staffRef.doc(id).get().then(function(doc) {
       if (!doc.exists) return;
-      var d = doc.data();
+      var d    = doc.data();
+      // Compensation: prefer the protected staffCompensation collection; fall back to
+      // staff doc fields for accounts saved before the collection split (migration safety).
+      var comp = currentStaffCompData[id] || {};
+      var compType = comp.compensationType != null ? comp.compensationType : (d.compensationType || 'commission');
+      var basePay  = comp.monthlyBasePay   != null ? comp.monthlyBasePay   : (d.monthlyBasePay  || '');
+      var hireDate = comp.hireDate         != null ? comp.hireDate         : (d.hireDate        || '');
+      var payNotes = comp.payNotes         != null ? comp.payNotes         : (d.payNotes        || '');
       document.getElementById('staffModalTitle').textContent = lb.modal_edit_staff;
       document.getElementById('staffDocId').value    = id;
       document.getElementById('staffName').value     = d.name || '';
@@ -3606,10 +3656,10 @@
       document.getElementById('staffLevel').value         = d.level || '';
       document.getElementById('staffEmploymentType').value = d.employmentType || '';
       document.getElementById('staffCommission').value    = d.commissionPct != null ? d.commissionPct : '';
-      document.getElementById('staffCompType').value       = d.compensationType || 'commission';
-      document.getElementById('staffBasePay').value        = d.monthlyBasePay != null && d.monthlyBasePay > 0 ? d.monthlyBasePay : '';
-      document.getElementById('staffHireDate').value       = d.hireDate || '';
-      document.getElementById('staffPayNotes').value       = d.payNotes || '';
+      document.getElementById('staffCompType').value       = compType;
+      document.getElementById('staffBasePay').value        = basePay > 0 ? basePay : '';
+      document.getElementById('staffHireDate').value       = hireDate;
+      document.getElementById('staffPayNotes').value       = payNotes;
       _onCompTypeChange();
       document.getElementById('staffSkillsGrid').innerHTML = buildSkillsGrid(d.specialties || []);
       document.getElementById('schedEditor').innerHTML = buildSchedEditor(d.schedule);
@@ -3650,14 +3700,19 @@
     // Salary-only staff have no per-booking commission
     var commPct   = compType === 'salary' ? 0 : (isNaN(commRaw) ? 0 : Math.max(0, Math.min(100, commRaw)));
     var basePay   = (compType === 'salary' || compType === 'hybrid') ? (isNaN(basePayRaw) ? 0 : Math.max(0, basePayRaw)) : 0;
-    var data = {
+    // Public staff data — schedule, skills, role. No compensation fields here.
+    var staffData = {
       name:             name,
       role:              document.getElementById('staffRole').value,
       level:             document.getElementById('staffLevel').value,
       employmentType:    document.getElementById('staffEmploymentType').value,
       specialties:       specialties,
       schedule:          sched,
-      commissionPct:     commPct,
+      commissionPct:     commPct,   // kept in staff doc (non-sensitive operational field)
+      updatedAt:         firebase.firestore.FieldValue.serverTimestamp()
+    };
+    // Sensitive compensation data — stored in protected staffCompensation collection only.
+    var compData = {
       compensationType:  compType,
       monthlyBasePay:    basePay,
       hireDate:          hireDate,
@@ -3665,11 +3720,23 @@
       updatedAt:         firebase.firestore.FieldValue.serverTimestamp()
     };
     var docId = document.getElementById('staffDocId').value;
-    var prom = docId
-      ? staffRef.doc(docId).update(data)
-      : staffRef.add(Object.assign({ active: true, sortOrder: Date.now(), createdAt: firebase.firestore.FieldValue.serverTimestamp() }, data));
-    prom.then(function(){ closeStaffModal(); showToast(lb.toast_staff_saved); })
-        .catch(function(e){ document.getElementById('staffMsg').textContent = lb.msg_error + e.message; });
+    var staffProm, compProm;
+    if (docId) {
+      staffProm = staffRef.doc(docId).update(staffData);
+      compProm  = staffCompRef.doc(docId).set(compData, { merge: true });
+    } else {
+      staffProm = staffRef.add(Object.assign(
+        { active: true, sortOrder: Date.now(), createdAt: firebase.firestore.FieldValue.serverTimestamp() },
+        staffData
+      )).then(function(ref) {
+        // Use the same doc ID for the compensation record
+        return staffCompRef.doc(ref.id).set(compData);
+      });
+      compProm = Promise.resolve(); // handled inside staffProm chain above
+    }
+    Promise.all([staffProm, compProm])
+      .then(function(){ closeStaffModal(); showToast(lb.toast_staff_saved); })
+      .catch(function(e){ document.getElementById('staffMsg').textContent = lb.msg_error + e.message; });
   }
 
   // ── Availability ─────────────────────────────────────────────────────────────
@@ -6989,12 +7056,15 @@
         staffEntry = currentStaffData[i]; break;
       }
     }
-    var compensationType = (staffEntry && staffEntry.data.compensationType) || 'commission';
-    var monthlyBasePay   = Number((staffEntry && staffEntry.data.monthlyBasePay) || 0);
+    // Read compensation from protected collection; fall back to staff doc for migration safety
+    var comp = (staffEntry && currentStaffCompData[staffEntry.id]) || {};
+    var staffData = (staffEntry && staffEntry.data) || {};
+    var compensationType = comp.compensationType != null ? comp.compensationType : (staffData.compensationType || 'commission');
+    var monthlyBasePay   = comp.monthlyBasePay   != null ? Number(comp.monthlyBasePay) : Number(staffData.monthlyBasePay || 0);
 
     // Salary staff earn no per-booking commission (base pay is handled in month view separately)
     var commissionPct = (compensationType === 'salary') ? 0
-      : ((staffEntry && staffEntry.data.commissionPct != null) ? Number(staffEntry.data.commissionPct) : 0);
+      : (staffData.commissionPct != null ? Number(staffData.commissionPct) : 0);
 
     var paid     = Number(b.amountPaid)   || 0;
     var refunded = Number(b.refundAmount) || 0;
@@ -7073,15 +7143,18 @@
       if (!sn || sn.toLowerCase() === 'any') return;
       var st = b.status || 'confirmed';
       if (!byStaff[sn]) {
-        // Look up comp type once when staff is first encountered in this period
+        // Look up staff entry and compensation once when staff is first encountered in this period
         var _se = null;
         for (var i = 0; i < currentStaffData.length; i++) {
           if (currentStaffData[i].name.toLowerCase() === sn.toLowerCase()) { _se = currentStaffData[i]; break; }
         }
+        // Compensation: prefer protected staffCompensation collection; fall back to staff doc
+        var _comp = (_se && currentStaffCompData[_se.id]) || {};
+        var _sd   = (_se && _se.data) || {};
         byStaff[sn] = {
           name: sn,
-          compensationType: (_se && _se.data.compensationType) || 'commission',
-          monthlyBasePay:   Number((_se && _se.data.monthlyBasePay) || 0),
+          compensationType: _comp.compensationType != null ? _comp.compensationType : (_sd.compensationType || 'commission'),
+          monthlyBasePay:   _comp.monthlyBasePay   != null ? Number(_comp.monthlyBasePay) : Number(_sd.monthlyBasePay || 0),
           count: 0, paidCount: 0, completedCount: 0, noShowCount: 0,
           pct: 0, commission: 0, tip: 0, total: 0
         };

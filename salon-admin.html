@@ -4704,11 +4704,16 @@
     if (b.paymentNote)     parts.push(esc(b.paymentNote));
     var html = '<div class="sa-det-section"><div class="sa-det-label">' + esc(lb.det_payment) + '</div>' +
       '<div class="sa-det-val">' + parts.join(' &middot; ') + '</div></div>';
-    // Staff earnings line — shown when staff has a commission rate and booking has payment data
+    // Staff earnings line — shown when booking has payment data and earning is trackable
     var earning = _computeStaffEarning(b);
-    if (earning && earning.commissionPct > 0) {
-      var ep = [earning.commissionPct + '%'];
-      ep.push(esc(lb.pay_commission) + ': $' + earning.commission.toFixed(2));
+    if (earning && (earning.commissionPct > 0 || earning.tip > 0)) {
+      var ep = [];
+      if (earning.compensationType === 'salary') {
+        ep.push('<span style="color:var(--muted);font-size:.7rem">' + esc(lb.earn_type_salary) + '</span>');
+      } else {
+        ep.push(earning.commissionPct + '%');
+        ep.push(esc(lb.pay_commission) + ': $' + earning.commission.toFixed(2));
+      }
       if (earning.tip > 0) ep.push(esc(lb.pay_tip) + ': $' + earning.tip.toFixed(2));
       ep.push('<strong>' + esc(lb.pay_total.replace('giá dịch vụ','')) + ': $' + earning.total.toFixed(2) + '</strong>');
       html += '<div class="sa-det-section"><div class="sa-det-label">' + esc(lb.det_earning) + ' · ' +
@@ -6977,15 +6982,19 @@
     var staffName = (b.staff || '').trim();
     if (!staffName || staffName.toLowerCase() === 'any') return null;
 
-    // Look up commission rate from the real-time staff list
+    // Look up staff data from the real-time staff list
     var staffEntry = null;
     for (var i = 0; i < currentStaffData.length; i++) {
       if (currentStaffData[i].name.toLowerCase() === staffName.toLowerCase()) {
         staffEntry = currentStaffData[i]; break;
       }
     }
-    var commissionPct = (staffEntry && staffEntry.data.commissionPct != null)
-      ? Number(staffEntry.data.commissionPct) : 0;
+    var compensationType = (staffEntry && staffEntry.data.compensationType) || 'commission';
+    var monthlyBasePay   = Number((staffEntry && staffEntry.data.monthlyBasePay) || 0);
+
+    // Salary staff earn no per-booking commission (base pay is handled in month view separately)
+    var commissionPct = (compensationType === 'salary') ? 0
+      : ((staffEntry && staffEntry.data.commissionPct != null) ? Number(staffEntry.data.commissionPct) : 0);
 
     var paid     = Number(b.amountPaid)   || 0;
     var refunded = Number(b.refundAmount) || 0;
@@ -6996,12 +7005,14 @@
 
     var commission = netPaid * commissionPct / 100;
     return {
-      staffName:     staffEntry ? staffEntry.name : staffName,
-      commissionPct: commissionPct,
-      serviceAmount: netPaid,
-      commission:    commission,
-      tip:           tip,
-      total:         commission + tip
+      staffName:        staffEntry ? staffEntry.name : staffName,
+      compensationType: compensationType,
+      monthlyBasePay:   monthlyBasePay,
+      commissionPct:    commissionPct,
+      serviceAmount:    netPaid,
+      commission:       commission,
+      tip:              tip,
+      total:            commission + tip  // base pay added at month-view level
     };
   }
 
@@ -7061,7 +7072,20 @@
       var sn = (b.staff || '').trim();
       if (!sn || sn.toLowerCase() === 'any') return;
       var st = b.status || 'confirmed';
-      if (!byStaff[sn]) byStaff[sn] = { name: sn, count: 0, paidCount: 0, completedCount: 0, noShowCount: 0, pct: 0, commission: 0, tip: 0, total: 0 };
+      if (!byStaff[sn]) {
+        // Look up comp type once when staff is first encountered in this period
+        var _se = null;
+        for (var i = 0; i < currentStaffData.length; i++) {
+          if (currentStaffData[i].name.toLowerCase() === sn.toLowerCase()) { _se = currentStaffData[i]; break; }
+        }
+        byStaff[sn] = {
+          name: sn,
+          compensationType: (_se && _se.data.compensationType) || 'commission',
+          monthlyBasePay:   Number((_se && _se.data.monthlyBasePay) || 0),
+          count: 0, paidCount: 0, completedCount: 0, noShowCount: 0,
+          pct: 0, commission: 0, tip: 0, total: 0
+        };
+      }
       byStaff[sn].count++;
       if (noShow.indexOf(st) >= 0)    byStaff[sn].noShowCount++;
       if (st === 'completed')         byStaff[sn].completedCount++;
@@ -7083,12 +7107,25 @@
       return;
     }
 
+    // Month view: add monthly base pay to salary/hybrid staff totals
+    var showBaseCol = (_earningsPeriod === 'month');
+    var totBase = 0;
+    rows.forEach(function(r) {
+      r.basePay = (showBaseCol && (r.compensationType === 'salary' || r.compensationType === 'hybrid'))
+        ? r.monthlyBasePay : 0;
+      r.total  += r.basePay;
+      totBase  += r.basePay;
+    });
+    if (showBaseCol && totBase > 0) rows.sort(function(a, b) { return b.total - a.total; });
+
     // Totals footer
     var totComm = 0, totTip = 0, totTotal = 0, totCount = 0, totNoShow = 0;
     rows.forEach(function(r){ totComm += r.commission; totTip += r.tip; totTotal += r.total; totCount += r.count; totNoShow += r.noShowCount; });
 
     body.innerHTML = '<table class="se-table"><thead><tr>' +
-      '<th>' + esc(lb.earn_col_staff) + '</th><th>' + esc(lb.earn_col_pct) + '</th><th>' + esc(lb.earn_col_appt) + '</th><th>' + esc(lb.earn_col_done) + '</th><th>' + esc(lb.earn_col_noshow) + '</th><th>' + esc(lb.earn_col_comm) + '</th><th>' + esc(lb.earn_col_tip) + '</th><th>' + esc(lb.earn_col_total) + '</th>' +
+      '<th>' + esc(lb.earn_col_staff) + '</th><th>' + esc(lb.earn_col_pct) + '</th><th>' + esc(lb.earn_col_appt) + '</th><th>' + esc(lb.earn_col_done) + '</th><th>' + esc(lb.earn_col_noshow) + '</th>' +
+      (showBaseCol ? '<th>' + esc(lb.earn_col_base) + '</th>' : '') +
+      '<th>' + esc(lb.earn_col_comm) + '</th><th>' + esc(lb.earn_col_tip) + '</th><th>' + esc(lb.earn_col_total) + '</th>' +
       '</tr></thead><tbody>' +
       rows.map(function(r) {
         // Completion rate: completed / (completed + noShow) for past bookings that reached a terminal state
@@ -7099,13 +7136,28 @@
         var noShowHtml = r.noShowCount > 0
           ? '<span style="color:var(--danger)">' + r.noShowCount + '</span>'
           : '0';
+        // "%" cell: shows comp type for salary/hybrid, commission pct for commission
+        var pctCell = r.compensationType === 'salary'
+          ? '<span style="font-size:.62rem;color:var(--muted)">' + esc(lb.earn_type_salary) + '</span>'
+          : r.compensationType === 'hybrid'
+            ? (r.pct > 0 ? r.pct + '%' : '') + '<span style="font-size:.58rem;color:var(--muted)"> ' + esc(lb.earn_type_hybrid) + '</span>'
+            : (r.pct > 0 ? r.pct + '%' : '—');
+        // Commission cell: salary shows "—" (earns no per-booking commission)
+        var commCell = r.compensationType === 'salary'
+          ? '<span style="color:var(--muted)">—</span>'
+          : '$' + r.commission.toFixed(2);
+        // Base pay cell (month view only)
+        var baseCell = showBaseCol
+          ? '<td style="color:#a78bfa">' + (r.basePay > 0 ? '$' + r.basePay.toFixed(2) : '<span style="color:var(--muted)">—</span>') + '</td>'
+          : '';
         return '<tr>' +
           '<td style="color:var(--cream);font-weight:700">' + esc(r.name) + '</td>' +
-          '<td style="color:var(--muted)">' + (r.pct > 0 ? r.pct + '%' : '—') + '</td>' +
+          '<td style="color:var(--muted)">' + pctCell + '</td>' +
           '<td>' + r.count + (r.paidCount < r.count ? '<span style="color:var(--muted);font-size:.65rem"> (' + r.paidCount + ' ' + esc(lb.earn_paid_abbr) + ')</span>' : '') + '</td>' +
           '<td style="color:var(--success)">' + rateHtml + '</td>' +
           '<td>' + noShowHtml + '</td>' +
-          '<td style="color:var(--success)">$' + r.commission.toFixed(2) + '</td>' +
+          baseCell +
+          '<td style="color:var(--success)">' + commCell + '</td>' +
           '<td style="color:#fbbf24">$' + r.tip.toFixed(2) + '</td>' +
           '<td style="color:var(--cream);font-weight:700">$' + r.total.toFixed(2) + '</td>' +
           '</tr>';
@@ -7114,6 +7166,7 @@
       '<td colspan="2" style="color:var(--muted);font-size:.68rem">' + esc(lb.earn_col_total) + ' (' + totCount + ')</td>' +
       '<td></td><td></td>' +
       '<td style="color:' + (totNoShow > 0 ? 'var(--danger)' : 'var(--muted)') + '">' + (totNoShow > 0 ? totNoShow : '0') + '</td>' +
+      (showBaseCol ? '<td style="color:#a78bfa">' + (totBase > 0 ? '$' + totBase.toFixed(2) : '—') + '</td>' : '') +
       '<td style="color:var(--success)">$' + totComm.toFixed(2) + '</td>' +
       '<td style="color:#fbbf24">$' + totTip.toFixed(2) + '</td>' +
       '<td style="color:var(--cream)">$' + totTotal.toFixed(2) + '</td>' +
@@ -7638,6 +7691,7 @@
       earn_col_staff:'Nhân viên', earn_col_pct:'HH%', earn_col_appt:'Lịch hẹn',
       earn_col_done:'Hoàn thành', earn_col_noshow:'Không đến',
       earn_col_comm:'Hoa hồng', earn_col_tip:'Tip', earn_col_total:'Tổng thu',
+      earn_col_base:'Lương CB', earn_type_salary:'Lương', earn_type_hybrid:'Kết Hợp',
       // ── Status badges ────────────────────────────────────────────────────────
       st_confirmed:'Xác nhận', st_in_progress:'Đang làm', st_completed:'Xong',
       st_canceled:'Đã hủy', st_no_show:'Vắng mặt', st_rescheduled:'Dời lịch',
@@ -7933,6 +7987,7 @@
       earn_col_staff:'Staff', earn_col_pct:'Comm%', earn_col_appt:'Appointments',
       earn_col_done:'Completed', earn_col_noshow:'No Show',
       earn_col_comm:'Commission', earn_col_tip:'Tip', earn_col_total:'Total',
+      earn_col_base:'Base Pay', earn_type_salary:'Salary', earn_type_hybrid:'Hybrid',
       // ── Status badges ────────────────────────────────────────────────────────
       st_confirmed:'Confirmed', st_in_progress:'In Progress', st_completed:'Done',
       st_canceled:'Canceled', st_no_show:'No Show', st_rescheduled:'Rescheduled',
@@ -8227,6 +8282,7 @@
       earn_col_staff:'Personal', earn_col_pct:'Com%', earn_col_appt:'Citas',
       earn_col_done:'Completadas', earn_col_noshow:'No Asistió',
       earn_col_comm:'Comisión', earn_col_tip:'Propina', earn_col_total:'Total',
+      earn_col_base:'Sueldo Base', earn_type_salary:'Salario', earn_type_hybrid:'Híbrido',
       // ── Status badges ────────────────────────────────────────────────────────
       st_confirmed:'Confirmada', st_in_progress:'En Proceso', st_completed:'Lista',
       st_canceled:'Cancelada', st_no_show:'No Asistió', st_rescheduled:'Reprogramada',

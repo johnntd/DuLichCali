@@ -1140,6 +1140,8 @@ select.mp-input option {
     border: none;
     display: flex;
     flex-direction: column;
+    /* Solid background prevents ALL bleed-through regardless of child coverage */
+    background: var(--navy-900);
     /* Contain overscroll so it never bleeds to the locked page behind */
     overscroll-behavior: contain;
   }

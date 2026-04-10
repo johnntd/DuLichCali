@@ -2947,7 +2947,9 @@
 
       // ── Full-screen mode (mobile only) ──────────────────────────────────────
       (function _initFullScreen() {
-        var backBtn = container.querySelector('.mp-ai__header-back');
+        var backBtn     = container.querySelector('.mp-ai__header-back');
+        var closeBarBtn = container.querySelector('.mp-ai__fs-close-btn');
+        var _fsSavedY   = 0;
 
         function _fsUpdateVH() {
           var vv = window.visualViewport;
@@ -2958,8 +2960,14 @@
 
         function _fsOpen() {
           if (window.innerWidth >= 768) return;
-          container.classList.add('mp-ai--fs');
+          // iOS Safari: position:fixed on body is the only reliable scroll lock.
+          // overflow:hidden alone does NOT prevent background touch-scroll on iOS.
+          _fsSavedY = window.scrollY || window.pageYOffset || 0;
+          document.body.style.position = 'fixed';
+          document.body.style.top      = '-' + _fsSavedY + 'px';
+          document.body.style.width    = '100%';
           document.body.classList.add('mp-ai-open');
+          container.classList.add('mp-ai--fs');
           _fsUpdateVH();
           setTimeout(function () { messagesEl.scrollTop = messagesEl.scrollHeight; }, 50);
         }
@@ -2967,19 +2975,28 @@
         function _fsClose() {
           container.classList.remove('mp-ai--fs');
           document.body.classList.remove('mp-ai-open');
+          // Restore body BEFORE scrollTo — iOS requires this order.
+          document.body.style.position = '';
+          document.body.style.top      = '';
+          document.body.style.width    = '';
+          window.scrollTo(0, _fsSavedY);
           container.style.height = '';
           container.style.top    = '';
         }
 
-        // Open on any tap inside the widget
+        // Open on any tap inside the widget — skip close controls
         container.addEventListener('click', function (e) {
-          if (backBtn && backBtn.contains(e.target)) return;
+          if (backBtn     && backBtn.contains(e.target))     return;
+          if (closeBarBtn && closeBarBtn.contains(e.target)) return;
           _fsOpen();
         });
         input.addEventListener('focus', _fsOpen);
 
-        // Close on back button
+        // Close on header back button (top-left)
         if (backBtn) backBtn.addEventListener('click', _fsClose);
+
+        // Close on bottom close bar (primary exit on iPhone)
+        if (closeBarBtn) closeBarBtn.addEventListener('click', _fsClose);
 
         // iOS keyboard resize
         if (window.visualViewport) {

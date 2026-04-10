@@ -2192,7 +2192,7 @@
             <!-- ── Why Choose Us ─────────────────────────────────── -->
             <div class="sa-field" style="padding-top:1.1rem;border-top:1px solid var(--border);margin-bottom:.4rem">
               <label style="color:var(--gold)">Why Choose Us</label>
-              <p style="font-size:.72rem;color:var(--muted);margin:.18rem 0 0">Type in any language — AI will auto-translate to English, Vietnamese &amp; Spanish when you save.</p>
+              <p style="font-size:.72rem;color:var(--muted);margin:.18rem 0 0">Nhập tiếng Việt. Bản dịch tiếng Anh và tiếng Tây Ban Nha sẽ được giữ nguyên từ nội dung gốc — khách hàng thấy đúng ngôn ngữ theo lựa chọn của họ.</p>
             </div>
 
             <!-- Subtitle (single input) -->
@@ -2218,10 +2218,6 @@
 
             <div style="display:flex;align-items:center;gap:.7rem;flex-wrap:wrap">
               <button class="btn btn--primary" onclick="saveSettings()" data-i18n="btn_save_settings">Lưu Cài Đặt</button>
-              <button class="btn" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;display:flex;align-items:center;gap:.35rem;font-size:.78rem;padding:.48rem .9rem;border-radius:6px;cursor:pointer" onclick="translateAndSaveTrust()" id="btnTranslateSave">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-                AI Translate &amp; Save
-              </button>
               <span class="sa-msg" id="settingsMsg"></span>
             </div>
           </div>
@@ -3309,14 +3305,15 @@
         VENDOR_TAX_RATE = _taxRateForZip(_addr);
         document.getElementById('settingDesc').value    = vdata.description   || (staticData && staticData.description)  || '';
         document.getElementById('settingAiKey').value   = vdata.aiKey || '';
-        // Load Why Choose Us fields into editor (show primary language in single input)
+        // Load Why Choose Us fields into editor (show VI in single input)
         var tSub = vdata.trustSubtitleI18n || {};
         var _tSubText = tSub.vi || tSub.en || tSub.es || '';
         var sv = function(id,val){ var el=document.getElementById(id); if(el) el.value=val||''; };
         sv('trustSubText', _tSubText);
-        _lastLoadedSubI18n = tSub;
-        _lastLoadedStats = vdata.stats || null;
-        _lastLoadedFeats = vdata.featuresI18n || null;
+        // Always preserve full i18n — fall back to static defaults so EN/ES translations are never lost
+        _lastLoadedSubI18n = (tSub.en || tSub.vi || tSub.es) ? tSub : null;
+        _lastLoadedStats = vdata.stats || _TRUST_STATS_DEF;
+        _lastLoadedFeats = vdata.featuresI18n || _TRUST_FEATS_DEF;
         renderTrustEditors(vdata.stats || null, vdata.featuresI18n || null);
         // Normalize: old format [[a,b],...] → new [{a,b},...] objects (Firestore nested-array fix)
         vendorParallelServices = (vdata.parallelServices || []).map(function(p) {
@@ -8637,37 +8634,36 @@
 
   // Collect trust data from single inputs; preserve existing i18n if primary text unchanged
   function _collectTrustData(existingStats, existingFeats) {
+    // VI = vendor input; EN/ES = preserve existing translations (static defaults keep EN/ES correct)
     var g = function(id) { return ((document.getElementById(id)||{}).value||'').trim(); };
     var trustStats = [];
     for (var i = 0; i < 3; i++) {
       var num = g('tStat'+i+'Num');
-      var text = g('tStat'+i+'Text');
-      var old = (existingStats && existingStats[i]) || {};
-      var primaryMatch = text === (old.vi || old.en || '');
+      var viText = g('tStat'+i+'Text');
+      var old = (existingStats && existingStats[i]) || _TRUST_STATS_DEF[i] || {};
       trustStats.push({
-        num: num,
-        en: primaryMatch && old.en ? old.en : text,
-        vi: primaryMatch && old.vi ? old.vi : text,
-        es: primaryMatch && old.es ? old.es : text
+        num:  num,
+        vi:   viText,
+        en:   old.en  || viText,
+        es:   old.es  || viText
       });
     }
     var trustFeats = [];
     for (var j = 0; j < 5; j++) {
       var ft = g('tFeat'+j+'Text');
       if (!ft) continue;
-      var oldf = (existingFeats && existingFeats[j]) || {};
-      var fMatch = ft === (oldf.vi || oldf.en || '');
+      var oldf = (existingFeats && existingFeats[j]) || _TRUST_FEATS_DEF[j] || {};
       trustFeats.push({
-        en: fMatch && oldf.en ? oldf.en : ft,
-        vi: fMatch && oldf.vi ? oldf.vi : ft,
-        es: fMatch && oldf.es ? oldf.es : ft
+        vi: ft,
+        en: oldf.en || ft,
+        es: oldf.es || ft
       });
     }
     var subText = g('trustSubText');
     return { subText: subText, trustStats: trustStats, trustFeats: trustFeats };
   }
 
-  // Last loaded trust data for change-detection
+  // Last loaded trust data (initialized with static defaults so EN/ES are never lost)
   var _lastLoadedStats = null;
   var _lastLoadedFeats = null;
   var _lastLoadedSubI18n = null;
@@ -8677,10 +8673,12 @@
     var td = _collectTrustData(_lastLoadedStats, _lastLoadedFeats);
     var subText = td.subText;
     var oldSub = _lastLoadedSubI18n || {};
-    var subPrimary = oldSub.vi || oldSub.en || '';
-    var trustSubtitleI18n = (subText === subPrimary && (oldSub.en || oldSub.vi || oldSub.es))
-      ? oldSub
-      : { en: subText, vi: subText, es: subText };
+    // VI = vendor text; EN/ES preserved from existing i18n (or copied if none exists yet)
+    var trustSubtitleI18n = {
+      vi: subText,
+      en: oldSub.en || subText,
+      es: oldSub.es || subText
+    };
 
     var data = {
       businessName:       document.getElementById('settingName').value.trim(),
@@ -8707,125 +8705,6 @@
       })
       .catch(function(e) {
         var msg = document.getElementById('settingsMsg');
-        msg.style.color = 'var(--danger)'; msg.textContent = ' L\u1ed7i: ' + e.message;
-      });
-  }
-
-  // ── AI Translate & Save ─────────────────────────────────────────────────────────────────────────
-  function translateAndSaveTrust() {
-    var aiKey = (document.getElementById('settingAiKey').value || '').trim();
-    var btn = document.getElementById('btnTranslateSave');
-    var msg = document.getElementById('settingsMsg');
-
-    var g = function(id) { return ((document.getElementById(id)||{}).value||'').trim(); };
-    var subText = g('trustSubText');
-    var statItems = [];
-    for (var i = 0; i < 3; i++) statItems.push({ num: g('tStat'+i+'Num'), text: g('tStat'+i+'Text') });
-    var featItems = [];
-    for (var j = 0; j < 5; j++) { var ft = g('tFeat'+j+'Text'); featItems.push(ft); }
-
-    // No AI key → save with same text for all 3 languages
-    if (!aiKey) {
-      _applyTrustTranslations(
-        { en: subText, vi: subText, es: subText },
-        statItems.map(function(s){ return { num: s.num, en: s.text, vi: s.text, es: s.text }; }),
-        featItems.filter(Boolean).map(function(f){ return { en: f, vi: f, es: f }; })
-      );
-      return;
-    }
-
-    var lines = ['Subtitle: ' + subText];
-    statItems.forEach(function(s, i){ lines.push('Stat'+(i+1)+' label: ' + s.text); });
-    featItems.forEach(function(f, i){ if(f) lines.push('Feature'+(i+1)+': ' + f); });
-
-    var prompt = 'You are a multilingual translator for a nail salon. ' +
-      'Translate each of the following items into English (en), Vietnamese (vi), and Spanish (es). ' +
-      'Keep translations short, natural, and professional. ' +
-      'Return ONLY a JSON object with this exact structure — no markdown, no explanation:\n' +
-      '{\n' +
-      '  "subtitle": {"en":"...","vi":"...","es":"..."},\n' +
-      '  "stats": [{"en":"...","vi":"...","es":"..."},{"en":"...","vi":"...","es":"..."},{"en":"...","vi":"...","es":"..."}],\n' +
-      '  "features": [{"en":"...","vi":"...","es":"..."},...]\n' +
-      '}\n\n' +
-      'Items to translate:\n' + lines.join('\n');
-
-    if (btn) { btn.disabled = true; btn.textContent = '\u23f3 Translating…'; }
-    msg.style.color = 'var(--muted)'; msg.textContent = '';
-
-    fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': aiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-calls': 'true',
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 800,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(res) {
-      var raw = (res.content && res.content[0] && res.content[0].text) || '';
-      var parsed;
-      try { parsed = JSON.parse(raw); } catch(e) {
-        var m = raw.match(/\{[\s\S]*\}/);
-        if (m) parsed = JSON.parse(m[0]);
-      }
-      if (!parsed) throw new Error('Invalid AI response');
-
-      var trustStats = statItems.map(function(s, i){
-        var t = (parsed.stats && parsed.stats[i]) || {};
-        return { num: s.num, en: t.en || s.text, vi: t.vi || s.text, es: t.es || s.text };
-      });
-      var trustFeats = [];
-      (parsed.features || []).forEach(function(f, i){ if (f && (f.en || f.vi)) trustFeats[i] = f; });
-      featItems.forEach(function(f, i){
-        if (f && !trustFeats[i]) trustFeats[i] = { en: f, vi: f, es: f };
-      });
-      trustFeats = trustFeats.filter(Boolean);
-
-      _applyTrustTranslations(parsed.subtitle || { en: subText, vi: subText, es: subText }, trustStats, trustFeats);
-    })
-    .catch(function(e) {
-      if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg> AI Translate &amp; Save'; }
-      msg.style.color = 'var(--danger)'; msg.textContent = ' AI error: ' + e.message;
-    });
-  }
-
-  function _applyTrustTranslations(subI18n, trustStats, trustFeats) {
-    var btn = document.getElementById('btnTranslateSave');
-    var msg = document.getElementById('settingsMsg');
-    _syncParallelFromDom();
-
-    var data = {
-      businessName:       document.getElementById('settingName').value.trim(),
-      phoneDisplay:       document.getElementById('settingPhone').value.trim(),
-      address:            document.getElementById('settingAddress').value.trim(),
-      description:        document.getElementById('settingDesc').value.trim(),
-      parallelServices:   vendorParallelServices,
-      trustSubtitleI18n:  subI18n,
-      stats:              trustStats,
-      featuresI18n:       trustFeats,
-      updatedAt:          firebase.firestore.FieldValue.serverTimestamp()
-    };
-    var aiKey = document.getElementById('settingAiKey').value.trim();
-    if (aiKey) data.aiKey = aiKey;
-
-    vendorRef.set(data, { merge: true })
-      .then(function() {
-        _lastLoadedStats = trustStats;
-        _lastLoadedFeats = trustFeats;
-        _lastLoadedSubI18n = subI18n;
-        document.getElementById('barName').textContent = data.businessName || VENDOR_ID;
-        if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg> AI Translate &amp; Save'; }
-        msg.style.color = 'var(--success)'; msg.textContent = ' \u2713 Translated & saved!';
-        setTimeout(function(){ msg.textContent=''; }, 4000);
-      })
-      .catch(function(e) {
-        if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg> AI Translate &amp; Save'; }
         msg.style.color = 'var(--danger)'; msg.textContent = ' L\u1ed7i: ' + e.message;
       });
   }

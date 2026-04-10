@@ -19,7 +19,7 @@
  */
 
 const { onDocumentCreated } = require('firebase-functions/v2/firestore');
-const { onCall }            = require('firebase-functions/v2/https');
+const { onCall, onRequest } = require('firebase-functions/v2/https');
 const { defineSecret }      = require('firebase-functions/params');
 const admin                 = require('firebase-admin');
 const twilio                = require('twilio');
@@ -42,7 +42,10 @@ const GEMINI_API_KEY  = defineSecret('GEMINI_API_KEY');
 const CLAUDE_API_KEY  = defineSecret('CLAUDE_API_KEY');
 
 // Email provider secret (Resend — https://resend.com)
-const RESEND_API_KEY  = defineSecret('RESEND_API_KEY');
+const RESEND_API_KEY      = defineSecret('RESEND_API_KEY');
+// Shared token added to inbound webhook URL as ?token=VALUE so random POSTs are rejected.
+// Set once:  firebase functions:secrets:set RESEND_WEBHOOK_SECRET
+const RESEND_WEBHOOK_SECRET = defineSecret('RESEND_WEBHOOK_SECRET');
 
 // ── Firebase Admin ────────────────────────────────────────────────────────────
 if (!admin.apps.length) admin.initializeApp();
@@ -515,6 +518,241 @@ function buildConfirmationEmailBody(data) {
 </body></html>`;
 
   return { textBody, htmlBody };
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  INBOUND EMAIL HANDLER
+//
+//  Resend forwards inbound email to this HTTPS endpoint whenever a customer
+//  replies to appointments@dulichcali21.com.
+//
+//  Setup (one-time):
+//    1. Resend dashboard → Inbound → Add webhook URL:
+//       https://us-central1-dulichcali-booking-calendar.cloudfunctions.net/onInboundEmail?token=SECRET
+//    2. firebase functions:secrets:set RESEND_WEBHOOK_SECRET  (set to same SECRET)
+//    3. firebase deploy --only functions
+//
+//  Security:
+//    - ?token=SECRET query param rejects random POSTs (shared secret in Resend config)
+//    - BookingId extracted from subject must match a real Firestore booking (no guessing)
+//    - from email is stored in the audit record for traceability
+//
+//  Customer commands (first word of email body, case-insensitive):
+//    CONFIRM     → sets booking status = 'confirmed_by_customer'
+//    CANCEL      → sets booking status = 'cancelled_by_customer'
+//    RESCHEDULE  → sets booking status = 'reschedule_requested', stores their note
+//    anything else → sends a help reply with the three commands
+// ══════════════════════════════════════════════════════════════════════════════
+
+exports.onInboundEmail = onRequest(
+  {
+    region:         'us-central1',
+    secrets:        [RESEND_API_KEY, RESEND_WEBHOOK_SECRET],
+    timeoutSeconds: 30,
+  },
+  async (req, res) => {
+    // Only handle POST
+    if (req.method !== 'POST') {
+      res.status(405).send('Method Not Allowed');
+      return;
+    }
+
+    const log = (msg, ...args) => console.log(`[inbound-email] ${msg}`, ...args);
+
+    // ── Auth: shared secret in query param ────────────────────────────────────
+    const secret = RESEND_WEBHOOK_SECRET.value();
+    if (secret && req.query.token !== secret) {
+      log('rejected — invalid token');
+      res.status(401).send('Unauthorized');
+      return;
+    }
+
+    // ── Parse Resend inbound payload ──────────────────────────────────────────
+    const body    = req.body || {};
+    const from    = (body.from    || '').trim();
+    const subject = (body.subject || '').trim();
+    const rawText = (body.text    || body.plain || '').trim();
+
+    log(`from="${from}" subject="${subject}"`);
+
+    // ── Extract booking ID from subject ───────────────────────────────────────
+    // Confirmation email subject format:  Booking Confirmed — ShopName [BID-XXXX]
+    // Customer reply subject format:      Re: Booking Confirmed — ShopName [BID-XXXX]
+    // We capture the last [...] group.
+    const bidMatch = subject.match(/\[([^\]]+)\]\s*$/);
+    const bookingId = bidMatch ? bidMatch[1].trim() : null;
+
+    if (!bookingId) {
+      log('no booking ID in subject — ignoring');
+      res.status(200).send('ok');
+      return;
+    }
+
+    // ── Detect customer action from first line of body ────────────────────────
+    const firstWord = rawText.split(/[\n\r\s]/)[0].toUpperCase();
+    let action;
+    if (/^CONFIRM/i.test(firstWord))    action = 'confirm';
+    else if (/^CANCEL/i.test(firstWord)) action = 'cancel';
+    else if (/^RESCHEDULE/i.test(firstWord)) action = 'reschedule';
+    else action = 'help';
+
+    log(`bookingId="${bookingId}" action="${action}"`);
+
+    // ── Find booking via collection group query ───────────────────────────────
+    // Bookings are stored at  vendors/{vendorId}/bookings/{bookingId}
+    // The 'bookingId' field mirrors the document ID for querying.
+    let bookingRef, booking, vendorId;
+    try {
+      const snap = await db.collectionGroup('bookings')
+        .where('bookingId', '==', bookingId)
+        .limit(1)
+        .get();
+
+      if (snap.empty) {
+        log(`booking "${bookingId}" not found — ignoring`);
+        res.status(200).send('ok');
+        return;
+      }
+
+      bookingRef = snap.docs[0].ref;
+      booking    = snap.docs[0].data();
+      // Path: vendors/{vendorId}/bookings/{bookingId}
+      vendorId   = bookingRef.parent.parent.id;
+    } catch (err) {
+      log('Firestore lookup failed:', err.message);
+      res.status(500).send('lookup error');
+      return;
+    }
+
+    // ── Write inbound email audit record ──────────────────────────────────────
+    await db.collection('vendors').doc(vendorId)
+      .collection('inboundEmails').add({
+        from,
+        subject,
+        bodyPreview:  rawText.slice(0, 500),
+        bookingId,
+        action,
+        receivedAt:   admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+    // ── Apply action to booking ───────────────────────────────────────────────
+    const now = admin.firestore.FieldValue.serverTimestamp();
+
+    if (action === 'confirm') {
+      await bookingRef.update({
+        status:              'confirmed_by_customer',
+        customerConfirmedAt: now,
+        customerEmail:       from,
+      });
+
+    } else if (action === 'cancel') {
+      await bookingRef.update({
+        status:          'cancelled_by_customer',
+        cancelledAt:     now,
+        cancelledBy:     'customer_email',
+        customerEmail:   from,
+      });
+
+    } else if (action === 'reschedule') {
+      await bookingRef.update({
+        status:                   'reschedule_requested',
+        rescheduleRequestedAt:    now,
+        rescheduleNote:           rawText.slice(0, 500),
+        customerEmail:            from,
+      });
+    }
+    // action === 'help' → no booking update, just send the help reply below
+
+    // ── Send reply email ──────────────────────────────────────────────────────
+    const apiKey = RESEND_API_KEY.value();
+    if (apiKey && from) {
+      try {
+        await _sendInboundReply(apiKey, from, booking, action, rawText);
+        log(`reply sent to ${from} for action=${action}`);
+      } catch (err) {
+        log('reply email failed:', err.message);
+        // Non-fatal — booking was already updated
+      }
+    }
+
+    log(`done: booking="${bookingId}" action="${action}" vendor="${vendorId}"`);
+    res.status(200).send('ok');
+  }
+);
+
+// ── Inbound reply email builder ───────────────────────────────────────────────
+async function _sendInboundReply(apiKey, toEmail, booking, action, originalText) {
+  const shopName  = booking.shopName  || 'Du Lịch Cali Services';
+  const bookingId = booking.bookingId || '';
+  const shopUrl   = booking.shopUrl   || 'https://www.dulichcali21.com';
+
+  // Format date + time for the reply
+  let dateStr = booking.requestedDate || '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const d = new Date(dateStr + 'T12:00:00');
+    const DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    dateStr = `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`;
+  }
+  let timeStr = booking.requestedTime || '';
+  if (/^\d{1,2}:\d{2}$/.test(timeStr)) {
+    const [h, m] = timeStr.split(':').map(Number);
+    timeStr = `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
+  }
+  const apptStr = [dateStr, timeStr].filter(Boolean).join(' at ');
+
+  const SUBJECTS = {
+    confirm:    `Confirmed — ${shopName} [${bookingId}]`,
+    cancel:     `Cancelled — ${shopName} [${bookingId}]`,
+    reschedule: `Reschedule Request Received — ${shopName} [${bookingId}]`,
+    help:       `How to manage your appointment — ${shopName} [${bookingId}]`,
+  };
+
+  const TEXTS = {
+    confirm: [
+      `Your appointment${apptStr ? ' on ' + apptStr : ''} is confirmed. ✓`,
+      `We look forward to seeing you!`,
+      ``,
+      `— ${shopName}`,
+      shopUrl,
+    ].join('\n'),
+
+    cancel: [
+      `Your appointment${apptStr ? ' on ' + apptStr : ''} has been cancelled.`,
+      `We hope to see you again soon. To make a new booking, visit us online or chat with our AI receptionist.`,
+      ``,
+      `— ${shopName}`,
+      shopUrl,
+    ].join('\n'),
+
+    reschedule: [
+      `We received your reschedule request.`,
+      `A team member will contact you shortly to arrange a new time that works for you.`,
+      ``,
+      `Original appointment: ${apptStr || bookingId}`,
+      ``,
+      `— ${shopName}`,
+      shopUrl,
+    ].join('\n'),
+
+    help: [
+      `To manage your appointment, reply to this email with one of these commands:`,
+      ``,
+      `  CONFIRM     — to confirm you'll be there`,
+      `  CANCEL      — to cancel your appointment`,
+      `  RESCHEDULE  — to request a new date or time (add any details after the word)`,
+      ``,
+      `— ${shopName}`,
+      shopUrl,
+    ].join('\n'),
+  };
+
+  await _resendSend(apiKey, {
+    from:    `${shopName} <appointments@dulichcali21.com>`,
+    to:      [toEmail],
+    subject: SUBJECTS[action] || SUBJECTS.help,
+    text:    TEXTS[action]    || TEXTS.help,
+  });
 }
 
 // ══════════════════════════════════════════════════════════════════════════════

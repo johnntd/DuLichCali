@@ -205,20 +205,14 @@
   }
 
   function renderFooter() {
+    // Matches the .lp-legal-footer format used on all landing pages.
     return '<footer class="mp-footer">' +
-      '<button class="mp-footer__back-btn" onclick="history.back()" aria-label="Quay lại trang trước">' +
-        arrowLeftIcon + 'Quay lại' +
-      '</button>' +
-      '<div class="mp-footer__brand">Du Lịch Cali Services</div>' +
-      '<div class="mp-footer__legal">' +
-        '<a href="/privacy">Privacy Policy</a>' +
-        '<span class="mp-footer__legal-sep" aria-hidden="true">\xb7</span>' +
-        '<a href="/terms">Terms of Service</a>' +
-        '<span class="mp-footer__legal-sep" aria-hidden="true">\xb7</span>' +
-        '\xa9 ' + new Date().getFullYear() + ' JDNETWORKS AI SERVICES LLC' +
-      '</div>' +
-      '<div class="mp-footer__sub">DulichCali21 is operated by JDNETWORKS AI SERVICES LLC \xb7 dulichcali21.com \xb7 (714) 227-6007</div>' +
-      '</footer>';
+      '<a href="/privacy">Privacy Policy</a>' +
+      '<span class="mp-footer__legal-sep" aria-hidden="true">\xb7</span>' +
+      '<a href="/terms">Terms of Service</a>' +
+      '<span class="mp-footer__legal-sep" aria-hidden="true">\xb7</span>' +
+      '\xa9 ' + new Date().getFullYear() + ' JDNETWORKS AI SERVICES LLC' +
+    '</footer>';
   }
 
   // Mobile-only persistent bottom utility nav for standalone submenu pages.
@@ -2208,6 +2202,7 @@
       '<a href="tel:' + phone + '" class="mp-vv__primary-cta">' +
         phoneIcon + 'Call to Book Now' +
       '</a>' +
+      renderFooter() +
       '<div class="mp-spacer"></div>' +
     '</div>';
   }
@@ -2245,6 +2240,7 @@
           '</div>' +
         '</button>' +
       '</div>' +
+      renderFooter() +
       '<div class="mp-spacer"></div>' +
     '</div>';
   }
@@ -2276,6 +2272,7 @@
           renderNailsInspiration() +
           '<div class="ns-divider"></div>' +
           renderNailsTrust(biz) +
+          renderFooter() +
           '<div class="mp-spacer"></div>' +
         '</main>';
       _initNailsHomeView(biz);
@@ -2452,6 +2449,7 @@
             renderNailsInspiration() +
             '<div class="ns-divider"></div>' +
             renderNailsTrust(biz) +
+            renderFooter() +
             '<div class="mp-spacer"></div>' +
           '</main>' +
         '</div>' +

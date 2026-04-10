@@ -737,7 +737,7 @@
       }).join('') +
       '<button type="button" class="ns-svc-badge__change" ' +
         'onclick="window.nsBackToSvcList(\'' + escAttr(bizId) + '\')">' +
-        '\u0110\u1ed5i d\u1ecbch v\u1ee5' +
+        _t('Change service', '\u0110\u1ed5i d\u1ecbch v\u1ee5', 'Cambiar servicio') +
       '</button>';
       badgeEl.style.display = '';
     }
@@ -867,7 +867,7 @@
       '</span>' +
       '<span class="ns-hero__chip">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
-        ' Walk-in Welcome' +
+        ' <span data-t="en:Walk-in Welcome|vi:Nhận khách vãng lai|es:Sin cita previa">' + _t('Walk-in Welcome','Nh\u1eadn kh\xe1ch v\u00e3ng lai','Sin cita previa') + '</span>' +
       '</span>' +
     '</div>';
 
@@ -883,7 +883,7 @@
         chipsHtml +
         '<div class="ns-hero__ctas">' +
           '<button class="ns-btn-book" type="button" ' +
-            'onclick="document.getElementById(\'nailBookSection_' + biz.id + '\').scrollIntoView({behavior:\'smooth\'})">' +
+            'onclick="(function(){var w=document.getElementById(\'aiWidget_' + biz.id + '\');if(w){w.scrollIntoView({behavior:\'smooth\',block:\'start\'});var inp=document.getElementById(\'aiInput_' + biz.id + '\');if(inp){setTimeout(function(){inp.focus();inp.setAttribute(\'placeholder\',inp.dataset.tp?inp.dataset.tp.split(\'|\')[0].replace(/^en:/,\'\'):inp.getAttribute(\'placeholder\'));},450);}}})()">' +
             calendarIcon + ' <span data-t="en:Book Now|vi:Đặt Lịch Ngay|es:Reservar">' + _t('Book Now','\u0110\u1eb7t L\u1ecbch Ngay','Reservar') + '</span>' +
           '</button>' +
           (biz.phone ? '<a href="tel:' + biz.phone + '" class="ns-btn-call">' + phoneIcon + ' <span data-t="en:Call Now|vi:Gọi ngay|es:Llamar">' + _t('Call Now','G\u1ecdi ngay','Llamar') + '</span></a>' : '') +
@@ -904,7 +904,7 @@
     var CAT_LABELS = {
       manicure: 'Manicure', pedicure: 'Pedicure', gel: 'Gel & Shellac',
       acrylic: 'Acrylic & Extensions', nailart: 'Nail Art', dip: 'Dip Powder',
-      spa: 'Spa Treatments', addon: 'Add-ons', other: 'D\u1ecbch V\u1ee5'
+      spa: 'Spa Treatments', addon: 'Add-ons', other: _t('Services', 'D\u1ecbch V\u1ee5', 'Servicios')
     };
     var CAT_IMAGES = {
       manicure: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=82',
@@ -2066,21 +2066,21 @@
 
     if (isNails) {
       // Premium nails redesign — stacked full-width sections
-      // Order: Hero → InfoStrip → Promo → Featured → Booking → Trust → AI → Inspiration Gallery
+      // Mobile hierarchy: Screen 1 (Hero+CTAs) → Screen 2 (Services) → Screen 3 (Booking) → AI → Gallery → Trust
       html =
         renderSalonBar(biz) +
         '<main class="mp-main mp-main--nails">' +
           renderNailsHero(biz) +
           renderInfoStrip(biz) +
-          renderNailsPromoSlot(biz) +
           renderNailsFeatured(biz) +
           '<div class="ns-divider"></div>' +
           renderNailsBookingSection(biz) +
           '<div class="ns-divider"></div>' +
-          renderNailsTrust(biz) +
-          '<div class="ns-divider"></div>' +
           '<div class="ns-ai-section">' + renderAiSection(biz) + '</div>' +
+          '<div class="ns-divider"></div>' +
           renderNailsInspiration() +
+          '<div class="ns-divider"></div>' +
+          renderNailsTrust(biz) +
           '<div class="mp-spacer"></div>' +
         '</main>' +
         renderInterpPanel(biz) +

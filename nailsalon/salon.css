@@ -20,6 +20,15 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ── iOS overscroll bleed fix ─────────────────────────────────────────────── */
+/* The marketplace body/html defaults to --navy-900 (#0d2f50). On iOS, that
+   navy flashes at the top/bottom during momentum scroll on the nails page.
+   Override with the nails dark background when the nails page is mounted. */
+html:has(.mp-main--nails),
+body:has(.mp-main--nails) {
+  background: #180d1a;
+}
+
 /* ── Design Tokens ────────────────────────────────────────────────────────── */
 .mp-main--nails {
   --ns-pink:      #EC4899;
@@ -63,6 +72,11 @@
   overflow: hidden;
   display: flex;
   align-items: flex-end;
+  /* iOS Safari: force GPU compositing layer so overflow:hidden clips the
+     animated .ns-hero__bg correctly and prevents scroll bleed-through */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  isolation: isolate;
 }
 .ns-hero__bg {
   position: absolute;

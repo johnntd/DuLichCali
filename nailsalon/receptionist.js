@@ -2954,23 +2954,22 @@
           var vv = window.visualViewport;
           if (!vv || !container.classList.contains('mp-ai--fs')) return;
           container.style.height = vv.height + 'px';
-          container.style.top    = vv.offsetTop + 'px';
-        }
-
-        // iOS scroll lock via touchmove prevention instead of body position:fixed.
-        // body position:fixed breaks visualViewport.resize on iOS — the keyboard-open
-        // event never fires, so _fsUpdateVH never adjusts the height, and the input
-        // stays hidden behind the keyboard. touchmove prevention avoids this entirely.
-        function _preventBgScroll(e) {
-          if (messagesEl && messagesEl.contains(e.target)) return; // allow messages scroll
-          e.preventDefault();
+          // NEVER use vv.offsetTop here. When body is position:fixed with top:-savedY,
+          // iOS reports vv.offsetTop === savedY (the simulated scroll offset). Setting
+          // container.style.top = savedY + 'px' pushes this fixed widget off-screen by
+          // the scroll distance — the widget disappears and cannot be interacted with.
+          // position:fixed elements are viewport-anchored; top:0 is always correct.
+          container.style.top = '0px';
         }
 
         function _fsOpen() {
           // Guard: already open, closing in progress, or desktop — do nothing.
+          // The already-open guard also prevents input focus from overwriting _fsSavedY.
           if (_isClosing || window.innerWidth >= 768 || container.classList.contains('mp-ai--fs')) return;
           _fsSavedY = window.scrollY || window.pageYOffset || 0;
-          document.addEventListener('touchmove', _preventBgScroll, { passive: false });
+          document.body.style.position = 'fixed';
+          document.body.style.top      = '-' + _fsSavedY + 'px';
+          document.body.style.width    = '100%';
           document.body.classList.add('mp-ai-open');
           container.classList.add('mp-ai--fs');
           _fsUpdateVH();
@@ -2979,10 +2978,12 @@
 
         function _fsClose() {
           _isClosing = true;
-          input.blur(); // dismiss keyboard before layout changes
-          document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
+          input.blur(); // dismiss keyboard before body layout restores
           container.classList.remove('mp-ai--fs');
           document.body.classList.remove('mp-ai-open');
+          document.body.style.position = '';
+          document.body.style.top      = '';
+          document.body.style.width    = '';
           window.scrollTo(0, _fsSavedY);
           container.style.height = '';
           container.style.top    = '';

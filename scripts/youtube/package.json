@@ -1,0 +1,17 @@
+{
+  "name": "dulichcali-youtube-uploader",
+  "version": "1.0.0",
+  "private": true,
+  "description": "YouTube Data API v3 upload script for Du Lich Cali promo clips",
+  "main": "upload.js",
+  "scripts": {
+    "dry-run": "node upload.js --dry-run",
+    "upload": "node upload.js"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "dependencies": {
+    "googleapis": "^144.0.0"
+  }
+}

@@ -3,3 +3,8 @@
 .claude/worktrees/
 node_modules/
 remotion-promo/node_modules/
+
+# YouTube upload tool — credentials (NEVER commit these)
+scripts/youtube/client_secret*.json
+scripts/youtube/token.json
+scripts/youtube/.env

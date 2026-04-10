@@ -1,0 +1,7 @@
+# OAuth credentials — NEVER commit
+client_secret*.json
+token.json
+.env
+
+# Dependencies
+node_modules/

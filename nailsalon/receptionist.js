@@ -2953,13 +2953,13 @@
         function _fsUpdateVH() {
           var vv = window.visualViewport;
           if (!vv || !container.classList.contains('mp-ai--fs')) return;
+          // Use vv.offsetTop so the widget tracks the visual viewport, not the layout
+          // viewport. When the keyboard opens, iOS may scroll the visual viewport within
+          // the layout viewport (vv.offsetTop > 0). A fixed element at top:0 would then
+          // be above the visible area. Setting top = vv.offsetTop anchors the widget to
+          // the visual viewport top regardless of any internal iOS viewport scroll.
+          container.style.top    = vv.offsetTop + 'px';
           container.style.height = vv.height + 'px';
-          // NEVER use vv.offsetTop here. When body is position:fixed with top:-savedY,
-          // iOS reports vv.offsetTop === savedY (the simulated scroll offset). Setting
-          // container.style.top = savedY + 'px' pushes this fixed widget off-screen by
-          // the scroll distance — the widget disappears and cannot be interacted with.
-          // position:fixed elements are viewport-anchored; top:0 is always correct.
-          container.style.top = '0px';
         }
 
         function _fsOpen() {

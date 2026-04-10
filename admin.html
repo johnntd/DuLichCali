@@ -587,6 +587,14 @@
       cursor: pointer; transition: all 0.18s;
     }
     .btn-del-driver:hover { background: rgba(224,90,90,0.35); color: #fff; border-color: #e05a5a; }
+    .btn-sm-test {
+      height: 30px; padding: 0 0.9rem;
+      background: rgba(250,180,0,0.12); border: 1px dashed rgba(250,180,0,0.6);
+      border-radius: 4px; color: #fabb00;
+      font-family: 'Jost', sans-serif; font-size: 0.72rem; font-weight: 700;
+      cursor: pointer; transition: all 0.18s;
+    }
+    .btn-sm-test:hover { background: rgba(250,180,0,0.25); border-color: #fabb00; }
 
     /* ── Compliance review styles ─── */
     .comp-badge { display: inline-block; padding: .1rem .45rem; border-radius: 999px; font-size: .58rem; font-weight: 700; letter-spacing: .06em; margin-left: .4rem; vertical-align: middle; }
@@ -1742,6 +1750,7 @@
             <button class="toggle-pill ${d.rideServiceEnabled?'on':'off'}" onclick="toggleDriver('${id}','rideServiceEnabled',${!d.rideServiceEnabled})">${d.rideServiceEnabled?'● Ride On':'○ Ride Off'}</button>
             <button class="btn-sm-outline" onclick="toggleDriverInfo('${id}')">PIN / Login</button>
             <button class="btn-sm-outline" onclick="toggleDriverCompliance('${id}')">Pháp Lý</button>
+            ${cs !== 'approved' ? `<button class="btn-sm-test" onclick="testApproveDriver('${id}')">⚡ Test Approve</button>` : ''}
             <button class="btn-del-driver" onclick="deleteDriver('${id}','${escHtml(d.fullName||'')}')">Xóa</button>
           </div>
         </div>
@@ -2158,6 +2167,46 @@
       batch.update(db.collection('drivers').doc(driverId), driverMirror);
       await batch.commit();
       return comp;
+    }
+
+    // ── Test Approve — bypasses document submission for testing ─────────────
+    async function testApproveDriver(driverId) {
+      if (!confirm('⚡ TEST APPROVE\n\nSets complianceStatus → approved and fills placeholder expiry dates (2 years). Use only for testing — not for real drivers.\n\nProceed?')) return;
+      var ts       = firebase.firestore.FieldValue.serverTimestamp();
+      var twoYears = new Date(); twoYears.setFullYear(twoYears.getFullYear() + 2);
+      var expiry   = twoYears.toISOString().split('T')[0]; // YYYY-MM-DD
+
+      var compRef  = db.collection('driver_compliance').doc(driverId);
+      var drvRef   = db.collection('drivers').doc(driverId);
+      var snap     = await compRef.get();
+      var comp     = snap.exists ? snap.data() : DLCCompliance.blankDoc(driverId);
+
+      // Mark all three docs approved with placeholder data
+      var testFields = { status: 'approved', rejectionReason: '', reviewedAt: ts, reviewedBy: 'admin-test', expirationDate: expiry };
+      comp.license      = Object.assign({}, comp.license,      testFields, { legalName: comp.license?.legalName || 'TEST', number: comp.license?.number || 'TEST-000' });
+      comp.registration = Object.assign({}, comp.registration, testFields, { plate: comp.registration?.plate || 'TEST', vin: comp.registration?.vin || 'TEST-VIN' });
+      comp.insurance    = Object.assign({}, comp.insurance,    testFields, { insurer: comp.insurance?.insurer || 'TEST Insurance', policyNumber: comp.insurance?.policyNumber || 'TEST-POL' });
+      comp.overallStatus     = 'approved';
+      comp.expirationWarning = null;
+      comp.lastReviewAt      = ts;
+      comp.lastReviewBy      = 'admin-test';
+      comp.nextRequiredAction = 'TEST APPROVAL — replace with real documents before production use.';
+
+      // Driver doc mirror + ensure regions are set
+      var drvSnap  = await drvRef.get();
+      var drvData  = drvSnap.exists ? drvSnap.data() : {};
+      var regions  = (drvData.regions && drvData.regions.length) ? drvData.regions : ['bayarea', 'oc'];
+      var drvPatch = { complianceStatus: 'approved', licExpiry: expiry, regExpiry: expiry, insExpiry: expiry, regions: regions, updatedAt: ts };
+
+      try {
+        var batch = db.batch();
+        batch.set(compRef, comp, { merge: true });
+        batch.update(drvRef, drvPatch);
+        await batch.commit();
+        alert('✓ Test approved! Driver can now appear in ride availability.\n\nRegions set to: ' + regions.join(', '));
+        loadDriverPanel();
+        loadDriversRealtime();
+      } catch(e) { alert('Lỗi: ' + e.message); }
     }
 
     async function approveCompDoc(driverId, docType) {

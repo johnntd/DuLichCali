@@ -3509,21 +3509,21 @@
         var ds = sched[day.key];
         var on = ds && ds.active;
         return '<span class="sched-pill sched-pill--' + (on?'on':'off') + '" title="' +
-          (on ? (ds.start+' – '+ds.end) : 'Nghỉ') + '">' + day.short + '</span>';
+          (on ? (ds.start+' – '+ds.end) : esc(lb.avail_off)) + '">' + day.short + '</span>';
       }).join('');
       // Edit/Delete/Toggle controls are owner-only
       var ownerActions = isOwner
         ? '<button class="toggle-pill ' + (s.active !== false ? 'on' : 'off') + '" ' +
             'onclick="toggleStaff(\'' + d.id + '\',' + (s.active === false) + ')">' +
-            (s.active !== false ? '● On' : '○ Off') + '</button>' +
-          '<button class="btn btn--outline btn--sm" onclick="openStaffModal(\'' + d.id + '\')">Edit</button>' +
-          '<button class="btn btn--danger btn--sm" onclick="deleteStaff(\'' + d.id + '\')">Xóa</button>'
+            (s.active !== false ? lb.toggle_on : lb.toggle_off) + '</button>' +
+          '<button class="btn btn--outline btn--sm" onclick="openStaffModal(\'' + d.id + '\')">' + esc(lb.btn_edit) + '</button>' +
+          '<button class="btn btn--danger btn--sm" onclick="deleteStaff(\'' + d.id + '\')">' + esc(lb.btn_delete) + '</button>'
         : '';
       return '<div class="sa-item' + (s.active === false ? ' inactive-dim' : '') + '">' +
         '<div class="sa-item__info">' +
           '<div class="sa-item__name">' + esc(s.name) +
             ' <span class="status-badge status-badge--' + (s.active !== false ? 'active' : 'inactive') + '">' +
-            (s.active !== false ? 'Active' : 'Off') + '</span>' +
+            (s.active !== false ? lb.status_active : lb.status_off) + '</span>' +
           '</div>' +
           '<div class="sa-item__meta">' + esc(s.role || '—') + (specs ? ' · ' + esc(specs) : '') +
             (s.compensationType === 'salary' ? ' · ' + (s.monthlyBasePay ? '$' + Number(s.monthlyBasePay).toLocaleString() + lb.unit_mo : lb.comp_salary) :
@@ -3538,13 +3538,15 @@
   }
 
   function toggleStaff(id, newActive) {
-    if (_userRole !== 'owner') { showToast('Chỉ chủ tiệm có quyền thay đổi trạng thái nhân viên.'); return; }
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
+    if (_userRole !== 'owner') { showToast(lb.toast_owner_toggle); return; }
     staffRef.doc(id).update({ active: newActive, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
   }
   function deleteStaff(id) {
-    if (_userRole !== 'owner') { showToast('Chỉ chủ tiệm có quyền xóa nhân viên.'); return; }
-    if (!confirm('Xóa nhân viên này?')) return;
-    staffRef.doc(id).delete().then(function(){ showToast('Đã xóa nhân viên.'); });
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
+    if (_userRole !== 'owner') { showToast(lb.toast_owner_delete_staff); return; }
+    if (!confirm(lb.confirm_delete_staff)) return;
+    staffRef.doc(id).delete().then(function(){ showToast(lb.toast_staff_deleted); });
   }
 
   // Build per-day schedule editor HTML
@@ -3572,8 +3574,8 @@
   }
 
   function openStaffModal(id) {
-    if (_userRole !== 'owner') { showToast('Chỉ chủ tiệm có quyền quản lý nhân viên.'); return; }
     var lb = _LABELS[_dlcLang] || _LABELS.vi;
+    if (_userRole !== 'owner') { showToast(lb.toast_owner_staff); return; }
     document.getElementById('staffModal').classList.remove('hidden');
     document.getElementById('staffMsg').textContent = '';
 
@@ -3625,9 +3627,10 @@
   }
 
   function saveStaff() {
-    if (_userRole !== 'owner') { showToast('Chỉ chủ tiệm có quyền lưu nhân viên.'); return; }
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
+    if (_userRole !== 'owner') { showToast(lb.toast_owner_save_staff); return; }
     var name = document.getElementById('staffName').value.trim();
-    if (!name) { document.getElementById('staffMsg').textContent = 'Vui lòng nhập tên nhân viên.'; return; }
+    if (!name) { document.getElementById('staffMsg').textContent = lb.msg_staff_name_req; return; }
     var sched = {};
     DAYS.forEach(function(day) {
       sched[day.key] = {
@@ -3665,8 +3668,8 @@
     var prom = docId
       ? staffRef.doc(docId).update(data)
       : staffRef.add(Object.assign({ active: true, sortOrder: Date.now(), createdAt: firebase.firestore.FieldValue.serverTimestamp() }, data));
-    prom.then(function(){ closeStaffModal(); showToast('Đã lưu nhân viên.'); })
-        .catch(function(e){ document.getElementById('staffMsg').textContent = 'Lỗi: ' + e.message; });
+    prom.then(function(){ closeStaffModal(); showToast(lb.toast_staff_saved); })
+        .catch(function(e){ document.getElementById('staffMsg').textContent = lb.msg_error + e.message; });
   }
 
   // ── Availability ─────────────────────────────────────────────────────────────
@@ -3681,7 +3684,7 @@
     var todayKey = dayKeys[now.getDay()];
     var todayLbl = dayLabels[now.getDay()];
     var nowMins  = now.getHours() * 60 + now.getMinutes();
-    var timeStr  = now.toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit'});
+    var timeStr  = now.toLocaleTimeString(lb.locale_code || 'en-US', {hour:'2-digit',minute:'2-digit'});
 
     head.textContent = todayLbl + ' — ' + timeStr;
 
@@ -7099,7 +7102,7 @@
         return '<tr>' +
           '<td style="color:var(--cream);font-weight:700">' + esc(r.name) + '</td>' +
           '<td style="color:var(--muted)">' + (r.pct > 0 ? r.pct + '%' : '—') + '</td>' +
-          '<td>' + r.count + (r.paidCount < r.count ? '<span style="color:var(--muted);font-size:.65rem"> (' + r.paidCount + ' đã thu)</span>' : '') + '</td>' +
+          '<td>' + r.count + (r.paidCount < r.count ? '<span style="color:var(--muted);font-size:.65rem"> (' + r.paidCount + ' ' + esc(lb.earn_paid_abbr) + ')</span>' : '') + '</td>' +
           '<td style="color:var(--success)">' + rateHtml + '</td>' +
           '<td>' + noShowHtml + '</td>' +
           '<td style="color:var(--success)">$' + r.commission.toFixed(2) + '</td>' +
@@ -7667,6 +7670,17 @@
       // ── Availability badges ──────────────────────────────────────────────────
       avail_now:'Đang làm', avail_today:'Hôm nay', avail_off:'Nghỉ',
       avail_loading:'Đang tải dữ liệu nhân viên…',
+      // ── Staff list / actions ─────────────────────────────────────────────────
+      status_active:'Hoạt Động', status_off:'Nghỉ',
+      toggle_on:'● Bật', toggle_off:'○ Tắt',
+      toast_owner_toggle:'Chỉ chủ tiệm có quyền thay đổi trạng thái nhân viên.',
+      toast_owner_delete_staff:'Chỉ chủ tiệm có quyền xóa nhân viên.',
+      toast_owner_staff:'Chỉ chủ tiệm có quyền quản lý nhân viên.',
+      toast_owner_save_staff:'Chỉ chủ tiệm có quyền lưu nhân viên.',
+      confirm_delete_staff:'Xóa nhân viên này?',
+      toast_staff_deleted:'Đã xóa nhân viên.', toast_staff_saved:'Đã lưu nhân viên.',
+      msg_staff_name_req:'Vui lòng nhập tên nhân viên.', msg_error:'Lỗi: ',
+      earn_paid_abbr:'đã thu', locale_code:'vi-VN',
       avail_empty:'Không có nhân viên hoạt động nào được tìm thấy.',
       // ── Day names ────────────────────────────────────────────────────────────
       day_mon:'Thứ 2', day_tue:'Thứ 3', day_wed:'Thứ 4', day_thu:'Thứ 5',
@@ -7951,6 +7965,17 @@
       // ── Availability badges ──────────────────────────────────────────────────
       avail_now:'Working Now', avail_today:'Working Today', avail_off:'Day Off',
       avail_loading:'Loading staff data…',
+      // ── Staff list / actions ─────────────────────────────────────────────────
+      status_active:'Active', status_off:'Off',
+      toggle_on:'● On', toggle_off:'○ Off',
+      toast_owner_toggle:'Only the owner can change staff status.',
+      toast_owner_delete_staff:'Only the owner can delete staff.',
+      toast_owner_staff:'Only the owner can manage staff.',
+      toast_owner_save_staff:'Only the owner can save staff.',
+      confirm_delete_staff:'Delete this staff member?',
+      toast_staff_deleted:'Staff member deleted.', toast_staff_saved:'Staff saved.',
+      msg_staff_name_req:'Please enter a staff name.', msg_error:'Error: ',
+      earn_paid_abbr:'collected', locale_code:'en-US',
       avail_empty:'No active staff found.',
       // ── Day names ────────────────────────────────────────────────────────────
       day_mon:'Mon', day_tue:'Tue', day_wed:'Wed', day_thu:'Thu',
@@ -8234,6 +8259,17 @@
       // ── Availability badges ──────────────────────────────────────────────────
       avail_now:'Trabajando Ahora', avail_today:'Trabaja Hoy', avail_off:'Día Libre',
       avail_loading:'Cargando datos del personal…',
+      // ── Staff list / actions ─────────────────────────────────────────────────
+      status_active:'Activo', status_off:'Inactivo',
+      toggle_on:'● Activo', toggle_off:'○ Inactivo',
+      toast_owner_toggle:'Solo el propietario puede cambiar el estado del personal.',
+      toast_owner_delete_staff:'Solo el propietario puede eliminar personal.',
+      toast_owner_staff:'Solo el propietario puede gestionar el personal.',
+      toast_owner_save_staff:'Solo el propietario puede guardar personal.',
+      confirm_delete_staff:'¿Eliminar este empleado?',
+      toast_staff_deleted:'Empleado eliminado.', toast_staff_saved:'Personal guardado.',
+      msg_staff_name_req:'Por favor ingrese un nombre de empleado.', msg_error:'Error: ',
+      earn_paid_abbr:'cobrado', locale_code:'es-US',
       avail_empty:'No se encontró personal activo.',
       // ── Day names ────────────────────────────────────────────────────────────
       day_mon:'Lun', day_tue:'Mar', day_wed:'Mié', day_thu:'Jue',

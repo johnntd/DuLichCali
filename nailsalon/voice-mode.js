@@ -245,39 +245,45 @@
   }
 
   // ── Transcript → Receptionist brain ──────────────────────────────────────
-  // This is the ONLY integration point with the receptionist system.
-  // We go through the exact same _sendMessage() path as typed chat.
+  // Routes through the correct send function for the current vendor:
+  //   nailsalon (LilyReceptionist): biz._voiceSend — the local send() inside
+  //     LilyReceptionist.init with the full specialized AI brain, availability
+  //     checks, state machine, and booking logic. Exposed by receptionist.js.
+  //   other vendors: window.Marketplace.Receptionist._sendMessage (generic path).
+  // MutationObserver detects the bot reply regardless of which path fires.
   function _processTranscript(text) {
     if (!_biz || !_msgsEl) { _setState('idle'); return; }
     _setState('processing');
 
-    // Register one-shot hook. marketplace.js will call this after appending
-    // the bot bubble. The hook is cleared immediately after first fire.
-    var R = window.Marketplace && window.Marketplace.Receptionist;
-    if (R) {
-      R._onBotMessage = function (replyText) {
-        R._onBotMessage = null;
-        _setResponse(replyText);
-        _speakReply(replyText);
-      };
-    } else {
-      // Fallback: MutationObserver watches for a new bot bubble
-      _watchForBotBubble(function (text) {
-        _setResponse(text);
-        _speakReply(text);
-      });
-    }
+    // Always use MutationObserver for bot reply detection — reliable across
+    // both LilyReceptionist (which has many _appendMessage call sites) and
+    // the generic Receptionist._sendMessage path.
+    _watchForBotBubble(function (replyText) {
+      _setResponse(replyText);
+      _speakReply(replyText);
+    });
 
-    // Feed into existing receptionist — identical to pressing Send
+    // Call the correct send function for this vendor
     try {
-      window.Marketplace.Receptionist._sendMessage(_biz, text, _msgsEl);
+      if (typeof _biz._voiceSend === 'function') {
+        // nailsalon: use LilyReceptionist's local send() — full specialized brain
+        _biz._voiceSend(text);
+      } else {
+        // other vendors: generic Marketplace receptionist
+        window.Marketplace.Receptionist._sendMessage(_biz, text, _msgsEl);
+      }
     } catch (err) {
-      if (R) R._onBotMessage = null;
       _setState('error');
     }
   }
 
-  // MutationObserver fallback: fires when a non-typing bot bubble is added
+  // MutationObserver: fires on the first real bot reply added to the chat.
+  // Must skip typing indicators from both receptionist sources:
+  //   marketplace.js _appendTyping: outer div has class mp-ai__msg--typing
+  //   receptionist.js _showTyping:  outer div has mp-ai__msg--bot only;
+  //                                 inner bubble has mp-ai__bubble--typing
+  // Selector .mp-ai__bubble:not(.mp-ai__bubble--typing) + non-empty text
+  // handles both cases correctly.
   function _watchForBotBubble(cb) {
     if (!_msgsEl) return;
     var obs = new MutationObserver(function (mutations) {
@@ -287,11 +293,13 @@
           var node = nodes[j];
           if (node.nodeType !== 1) continue;
           if (!node.classList.contains('mp-ai__msg--bot')) continue;
+          // Skip marketplace.js typing indicator (has outer --typing class)
           if (node.classList.contains('mp-ai__msg--typing')) continue;
-          var bubble = node.querySelector('.mp-ai__bubble');
-          if (bubble) {
+          // Skip receptionist.js typing indicator (inner bubble has --typing class)
+          var bubble = node.querySelector('.mp-ai__bubble:not(.mp-ai__bubble--typing)');
+          if (bubble && bubble.textContent.trim()) {
             obs.disconnect();
-            cb(bubble.textContent || '');
+            cb(bubble.textContent.trim());
             return;
           }
         }

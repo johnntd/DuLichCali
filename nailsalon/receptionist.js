@@ -2920,6 +2920,10 @@
           });
       }
 
+      // Expose send() so voice-mode.js calls the correct specialized brain,
+      // not the generic Marketplace.Receptionist._sendMessage path.
+      biz._voiceSend = send;
+
       sendBtn.addEventListener('click', function () {
         var text = input.value.trim();
         if (!text) return;
@@ -2942,8 +2946,24 @@
         });
       });
 
-      // Voice input
+      // Voice input (STT-to-text-field)
       if (window.DLCVoiceInput) window.DLCVoiceInput.attach(biz, container, input);
+
+      // Voice Mode overlay — wire the button added by renderAiSection.
+      // Receptionist.init (marketplace.js) is NOT called for LilyReceptionist,
+      // so the wiring must live here instead.
+      var _vmBtn = container.querySelector('.mp-ai__voice-btn');
+      if (_vmBtn) {
+        if (window.DLCVoiceMode) {
+          container.classList.add('mp-ai--voice-ready');
+          _vmBtn.addEventListener('click', function (e) {
+            e.stopPropagation(); // prevent chat fullscreen toggle
+            window.DLCVoiceMode.open(biz, messagesEl);
+          });
+        } else {
+          _vmBtn.style.display = 'none';
+        }
+      }
 
       // ── Full-screen mode (mobile only) ──────────────────────────────────────
       (function _initFullScreen() {

@@ -337,18 +337,17 @@ body:has(.mp-main--nails) {
 /* ── Featured Services — Portrait Grid ────────────────────────────────────── */
 /* Pass 2: 2×2 portrait cards on mobile, 4-col on tablet+ */
 .ns-featured {
-  padding: 1.5rem 0 1.75rem;
+  padding: 2rem 0 2rem;
   background: var(--ns-dark);
 }
 .ns-featured .ns-section-heading-wrap {
   padding: 0 1.25rem;
-  margin-bottom: 1rem;
 }
 
 /* ── Flow Panel — horizontal scroll-snap row (mirrors main page .hp-vendor-row) */
 .ns-flow-row {
   display: flex;
-  gap: .7rem;
+  gap: .75rem;
   padding: 0 1.25rem .25rem;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
@@ -1139,7 +1138,7 @@ body:has(.mp-main--nails) {
 /* ── Inspiration Gallery ─────────────────────────────────────────────────── */
 /* Pass 2: much larger images + local nail photos */
 .ns-gallery {
-  padding: 2rem 0 2.5rem;
+  padding: 2rem 0 2rem;
   background: var(--ns-dark);
 }
 .ns-gallery__header {
@@ -1147,7 +1146,7 @@ body:has(.mp-main--nails) {
 }
 .ns-gallery__scroll {
   display: flex;
-  gap: 0.625rem;
+  gap: .75rem;
   overflow-x: auto;
   padding: 0 1.25rem;
   scrollbar-width: none;
@@ -1247,7 +1246,7 @@ body:has(.mp-main--nails) {
 
   /* Gallery */
   .ns-gallery__header { max-width: 1280px; margin: 0 auto; padding-left: 3rem; padding-right: 3rem; }
-  .ns-gallery__scroll { padding-left: 3rem; padding-right: 3rem; }
+  .ns-gallery__scroll { max-width: 1280px; margin-left: auto; margin-right: auto; padding-left: 3rem; padding-right: 3rem; }
   .ns-gallery__img { flex-basis: 280px; height: 280px; }
 
   /* Featured hero: no grid needed on desktop */

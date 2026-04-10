@@ -2031,6 +2031,7 @@
                 <button onclick="shiftPayrollMonth(1)">&#8250;</button>
               </div>
               <button class="btn btn--sm btn--outline" onclick="exportPayrollCSV()" style="font-size:.62rem;padding:.15rem .45rem" data-i18n="pr_btn_export">CSV</button>
+              <button class="btn btn--sm btn--outline" onclick="exportPayrollLedger()" style="font-size:.62rem;padding:.15rem .45rem" data-i18n="pr_btn_export_ledger">Sổ Cái</button>
             </div>
           </div>
           <!-- Period notes (accounting notes for this month) -->
@@ -2049,6 +2050,8 @@
               style="font-size:.6rem;padding:.12rem .4rem;border-color:#fb923c;color:#fb923c;margin-left:auto;flex-shrink:0"
               data-i18n="pr_btn_reopen">Mở lại</button>
           </div>
+          <!-- Period summary — populated by renderPayroll() -->
+          <div id="payrollSummary" style="margin-bottom:.7rem"></div>
           <!-- Table -->
           <div id="payrollBody"><div class="sa-empty" style="font-size:.78rem" data-i18n="earn_empty">Chưa có dữ liệu.</div></div>
           <!-- Footer: note + finalize button -->
@@ -7529,6 +7532,33 @@
     var tOwed = 0, tPaid = 0, tRem = 0;
     rows.forEach(function(r) { tOwed += r.totalOwed; tPaid += r.amtPaid; tRem += r.remaining; });
 
+    // ── Period summary card ───────────────────────────────────────────────────
+    var sumEl = document.getElementById('payrollSummary');
+    if (sumEl && rows.length > 0) {
+      var remColor = tRem > 0.004 ? 'var(--danger)' : 'var(--success)';
+      sumEl.innerHTML =
+        '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;margin-bottom:.2rem">' +
+          '<div style="background:rgba(255,255,255,.04);border-radius:6px;padding:.45rem .55rem">' +
+            '<div style="font-size:.55rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.18rem">' + esc(lb.pr_summary_owed) + '</div>' +
+            '<div style="font-size:.88rem;font-weight:700;color:var(--cream)">$' + tOwed.toFixed(2) + '</div>' +
+          '</div>' +
+          '<div style="background:rgba(255,255,255,.04);border-radius:6px;padding:.45rem .55rem">' +
+            '<div style="font-size:.55rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.18rem">' + esc(lb.pr_summary_paid) + '</div>' +
+            '<div style="font-size:.88rem;font-weight:700;color:var(--success)">$' + tPaid.toFixed(2) + '</div>' +
+          '</div>' +
+          '<div style="background:rgba(255,255,255,.04);border-radius:6px;padding:.45rem .55rem">' +
+            '<div style="font-size:.55rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.18rem">' + esc(lb.pr_summary_remaining) + '</div>' +
+            '<div style="font-size:.88rem;font-weight:700;color:' + remColor + '">$' + tRem.toFixed(2) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="font-size:.6rem;color:var(--muted);opacity:.65;margin-bottom:.5rem">' +
+          esc(rows.length) + ' ' + esc(lb.pr_summary_staff) +
+          (isFinalized ? ' · <span style="color:#fb923c">' + esc(lb.pr_finalized_label) + '</span>' : '') +
+        '</div>';
+    } else if (sumEl) {
+      sumEl.innerHTML = '';
+    }
+
     body.innerHTML = '<div style="overflow-x:auto"><table class="se-table"><thead><tr>' +
       '<th>' + esc(lb.earn_col_staff) + '</th>' +
       '<th>' + esc(lb.pr_col_type) + '</th>' +
@@ -7807,36 +7837,34 @@
     .catch(function(e) { showToast((lb.pr_err_save || 'Error') + ': ' + e.message); });
   }
 
-  function exportPayrollCSV() {
-    var lb = _LABELS[_dlcLang] || _LABELS.vi;
-    if (!_payrollMonth || currentStaffData.length === 0) {
-      showToast(lb.earn_empty || 'No data'); return;
-    }
-    var parts = _payrollMonth.split('-');
-    var year  = parseInt(parts[0]);
-    var month = parseInt(parts[1]) - 1;
-    var periodStart = new Date(year, month, 1);
-    var periodEnd   = new Date(year, month + 1, 1);
-
-    // Re-aggregate (same logic as renderPayroll — clean separation)
+  // ── Shared: aggregate bookings for a payroll month ────────────────────────────
+  // Returns { staffId: { commission, tip } } for the given month string 'YYYY-MM'
+  function _aggregatePayrollMonth(monthStr) {
+    var parts = monthStr.split('-');
+    var start = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
+    var end   = new Date(parseInt(parts[0]), parseInt(parts[1]), 1);
     var byStaff = {};
     _saAllItems.forEach(function(b) {
       if (!b.staffId) return;
-      var status = (b.status || '').toLowerCase();
-      if (status === 'canceled' || status === 'no_show') return;
+      var st = (b.status || '').toLowerCase();
+      if (st === 'canceled' || st === 'no_show') return;
       var dt;
       if (b.apptAt && b.apptAt.toDate) dt = b.apptAt.toDate();
       else if (b.date) dt = new Date(b.date + 'T00:00:00');
       else return;
-      if (dt < periodStart || dt >= periodEnd) return;
+      if (dt < start || dt >= end) return;
       if (!byStaff[b.staffId]) byStaff[b.staffId] = { commission: 0, tip: 0 };
-      var earning = _computeStaffEarning(b);
-      byStaff[b.staffId].commission += earning.commission || 0;
-      byStaff[b.staffId].tip        += earning.tip        || 0;
+      var e = _computeStaffEarning(b);
+      byStaff[b.staffId].commission += e.commission || 0;
+      byStaff[b.staffId].tip        += e.tip        || 0;
     });
+    return byStaff;
+  }
 
+  // ── Shared: build per-staff payroll rows from current data ────────────────────
+  function _buildPayrollRows(byStaff) {
     var payouts = (_payrollData && _payrollData.payouts) ? _payrollData.payouts : {};
-    var rows    = currentStaffData.map(function(entry) {
+    return currentStaffData.map(function(entry) {
       var comp     = currentStaffCompData[entry.id] || {};
       var staffDoc = entry.data || {};
       var compType = comp.compensationType != null ? comp.compensationType : (staffDoc.compensationType || 'commission');
@@ -7849,45 +7877,165 @@
       var remaining = Math.max(0, totalOwed - amtPaid);
       var status    = payout.payrollStatus
         || (amtPaid >= totalOwed - 0.005 && totalOwed > 0 ? 'paid' : amtPaid > 0 ? 'partial' : 'unpaid');
-      return [
-        _payrollMonth,
-        entry.name,
-        compType,
-        basePay.toFixed(2),
-        earned.commission.toFixed(2),
-        earned.tip.toFixed(2),
-        totalOwed.toFixed(2),
-        amtPaid.toFixed(2),
-        remaining.toFixed(2),
-        status,
-        payout.payMethod  || '',
-        payout.classificationNote || '',
-        (payout.notes || '').replace(/"/g, '""')
-      ];
+      var ledger    = Array.isArray(payout.ledger) ? payout.ledger : [];
+      return {
+        id: entry.id, name: entry.name, compType: compType, basePay: basePay,
+        commission: earned.commission, tip: earned.tip, totalOwed: totalOwed,
+        amtPaid: amtPaid, remaining: remaining, status: status,
+        classNote: payout.classificationNote || '',
+        payNotes:  payout.notes || '',
+        ledger:    ledger,
+        payout:    payout
+      };
     });
+  }
 
-    var header = ['Period','Staff Name','Comp Type','Base Pay','Commission','Tips',
-                  'Total Owed','Amount Paid','Remaining','Status','Pay Method','Tax Class','Notes'];
-    var csvLines = [header.join(',')]
-      .concat(rows.map(function(r) {
-        return r.map(function(v) {
-          return (String(v).indexOf(',') >= 0 || String(v).indexOf('"') >= 0 || String(v).indexOf('\n') >= 0)
-            ? '"' + String(v) + '"' : String(v);
-        }).join(',');
-      }));
-    if (_payrollData && _payrollData.periodNotes) {
-      csvLines.push('');
-      csvLines.push('"Period Notes","' + String(_payrollData.periodNotes).replace(/"/g,'""') + '"');
-    }
+  // ── CSV helper: quote a cell value if it contains special chars ───────────────
+  function _csvCell(v) {
+    var s = String(v == null ? '' : v);
+    return (s.indexOf(',') >= 0 || s.indexOf('"') >= 0 || s.indexOf('\n') >= 0)
+      ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+
+  function _triggerCSVDownload(csvLines, filename) {
     var blob = new Blob([csvLines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
     var url  = URL.createObjectURL(blob);
     var a    = document.createElement('a');
     a.href   = url;
-    a.download = 'payroll-' + _payrollMonth + '.csv';
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  }
+
+  // ── Export 1: Per-staff payroll summary CSV (ledger-aware) ───────────────────
+  function exportPayrollCSV() {
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
+    if (!_payrollMonth || currentStaffData.length === 0) {
+      showToast(lb.earn_empty || 'No data'); return;
+    }
+    var byStaff = _aggregatePayrollMonth(_payrollMonth);
+    var rows    = _buildPayrollRows(byStaff);
+    var isFinalized = (_payrollData && _payrollData.status === 'finalized');
+    var periodStatus = isFinalized ? 'finalized' : 'open';
+
+    var header = [
+      'Period','Staff Name','Comp Type','Classification',
+      'Base Pay','Commission','Tips','Total Owed','Total Paid','Remaining',
+      'Payroll Status','Period Status',
+      'Payout Count','First Payout','Last Payout','Methods Used','Notes'
+    ];
+
+    var staffRows = rows.map(function(r) {
+      var ledger     = r.ledger;
+      var payCount   = ledger.length;
+      var firstPay   = payCount > 0 ? (ledger[0].paidAt || '').slice(0, 10) : '';
+      var lastPay    = payCount > 0 ? (ledger[payCount - 1].paidAt || '').slice(0, 10) : '';
+      var methods    = payCount > 0
+        ? ledger.reduce(function(acc, e) {
+            if (e.payMethod && acc.indexOf(e.payMethod) < 0) acc.push(e.payMethod);
+            return acc;
+          }, []).join('|')
+        : (r.payout.payMethod || '');
+      return [
+        _payrollMonth, r.name, r.compType, r.classNote,
+        r.basePay.toFixed(2), r.commission.toFixed(2), r.tip.toFixed(2),
+        r.totalOwed.toFixed(2), r.amtPaid.toFixed(2), r.remaining.toFixed(2),
+        r.status, periodStatus,
+        payCount, firstPay, lastPay, methods,
+        r.payNotes
+      ].map(_csvCell).join(',');
+    });
+
+    // Totals for summary block
+    var tOwed = rows.reduce(function(a,r) { return a + r.totalOwed; }, 0);
+    var tPaid = rows.reduce(function(a,r) { return a + r.amtPaid; }, 0);
+    var tRem  = rows.reduce(function(a,r) { return a + r.remaining; }, 0);
+
+    var lines = [header.join(',')]
+      .concat(staffRows)
+      .concat([
+        '',
+        'PERIOD SUMMARY',
+        ['Period', _payrollMonth].map(_csvCell).join(','),
+        ['Period Status', periodStatus].map(_csvCell).join(','),
+        ['Staff Count', rows.length].map(_csvCell).join(','),
+        ['Total Payroll Owed', '$' + tOwed.toFixed(2)].map(_csvCell).join(','),
+        ['Total Paid Out',     '$' + tPaid.toFixed(2)].map(_csvCell).join(','),
+        ['Remaining Liability','$' + tRem.toFixed(2)].map(_csvCell).join(','),
+        _payrollData && _payrollData.periodNotes
+          ? ['Period Notes', _payrollData.periodNotes].map(_csvCell).join(',') : '',
+        '',
+        _csvCell(lb.pr_csv_disclaimer || 'For bookkeeping reference only. Not a tax filing document.')
+      ].filter(function(l) { return l !== ''; }));
+
+    _triggerCSVDownload(lines, 'payroll-summary-' + _payrollMonth + '.csv');
+  }
+
+  // ── Export 2: Payout ledger detail CSV (one row per payout event) ────────────
+  function exportPayrollLedger() {
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
+    if (!_payrollMonth || currentStaffData.length === 0) {
+      showToast(lb.earn_empty || 'No data'); return;
+    }
+    var payouts = (_payrollData && _payrollData.payouts) ? _payrollData.payouts : {};
+    var isFinalized = (_payrollData && _payrollData.status === 'finalized');
+    var periodStatus = isFinalized ? 'finalized' : 'open';
+
+    var header = [
+      'Period','Staff Name','Entry #','Amount','Payout Date',
+      'Pay Method','Classification','Notes','Recorded By','Running Total','Period Status'
+    ];
+    var entryRows = [];
+    currentStaffData.forEach(function(entry) {
+      var payout = payouts[entry.id] || {};
+      var ledger = Array.isArray(payout.ledger) ? payout.ledger : [];
+      if (ledger.length === 0) {
+        // Staff has amountPaidOut but no ledger (pre-Phase-5 record)
+        if (Number(payout.amountPaidOut || 0) > 0) {
+          entryRows.push([
+            _payrollMonth, entry.name, '1',
+            Number(payout.amountPaidOut || 0).toFixed(2),
+            (payout.paidAt instanceof Object && payout.paidAt.toDate
+              ? payout.paidAt.toDate().toISOString().slice(0, 10)
+              : String(payout.paidAt || '').slice(0, 10)),
+            payout.payMethod || '', payout.classificationNote || '',
+            payout.notes || '', '', Number(payout.amountPaidOut || 0).toFixed(2),
+            periodStatus + ' (pre-ledger)'
+          ].map(_csvCell).join(','));
+        }
+      } else {
+        ledger.forEach(function(e, i) {
+          var dateStr = String(e.paidAt || '').slice(0, 10);
+          entryRows.push([
+            _payrollMonth, entry.name, i + 1,
+            Number(e.amount || 0).toFixed(2),
+            dateStr,
+            e.payMethod || '', e.classificationNote || '',
+            e.notes || '', e.recordedBy || '',
+            Number(e.runningTotal || 0).toFixed(2),
+            periodStatus
+          ].map(_csvCell).join(','));
+        });
+      }
+    });
+
+    if (entryRows.length === 0) {
+      showToast(lb.pr_ledger_empty || 'No payout entries recorded yet.');
+      return;
+    }
+
+    var lines = [header.join(',')]
+      .concat(entryRows)
+      .concat([
+        '',
+        ['Period', _payrollMonth, 'Period Status', periodStatus].map(_csvCell).join(','),
+        '',
+        _csvCell(lb.pr_csv_disclaimer || 'For bookkeeping reference only. Not a tax filing document.')
+      ]);
+
+    _triggerCSVDownload(lines, 'payroll-ledger-' + _payrollMonth + '.csv');
   }
 
   // ── QR payment display ─────────────────────────────────────────────────────────
@@ -8435,6 +8583,11 @@
       pr_hist_title:'Lịch Sử Thanh Toán', pr_hist_period:'Kỳ lương',
       pr_hist_empty:'Chưa có lịch sử thanh toán.', pr_hist_cumulative:'Lũy kế',
       pr_hist_total:'Tổng đã trả', pr_hist_preledger:'có thanh toán trước khi có sổ cái',
+      pr_summary_owed:'Tổng Lương', pr_summary_paid:'Đã Trả', pr_summary_remaining:'Còn Nợ',
+      pr_summary_staff:'nhân viên',
+      pr_btn_export_ledger:'Sổ Cái CSV',
+      pr_csv_disclaimer:'Chỉ dùng để tham khảo kế toán. Không phải tài liệu khai thuế.',
+      pr_ledger_empty:'Chưa có sự kiện thanh toán nào được ghi lại.',
       // ── Status badges ────────────────────────────────────────────────────────
       st_confirmed:'Xác nhận', st_in_progress:'Đang làm', st_completed:'Xong',
       st_canceled:'Đã hủy', st_no_show:'Vắng mặt', st_rescheduled:'Dời lịch',
@@ -8757,6 +8910,11 @@
       pr_hist_title:'Payout History', pr_hist_period:'Period',
       pr_hist_empty:'No payout history recorded.', pr_hist_cumulative:'Running total',
       pr_hist_total:'Total paid', pr_hist_preledger:'includes pre-ledger payments',
+      pr_summary_owed:'Total Owed', pr_summary_paid:'Paid Out', pr_summary_remaining:'Remaining',
+      pr_summary_staff:'staff',
+      pr_btn_export_ledger:'Ledger CSV',
+      pr_csv_disclaimer:'For bookkeeping reference only. Not a tax filing document.',
+      pr_ledger_empty:'No payout entries recorded yet.',
       // ── Status badges ────────────────────────────────────────────────────────
       st_confirmed:'Confirmed', st_in_progress:'In Progress', st_completed:'Done',
       st_canceled:'Canceled', st_no_show:'No Show', st_rescheduled:'Rescheduled',
@@ -9078,6 +9236,11 @@
       pr_hist_title:'Historial de Pagos', pr_hist_period:'Período',
       pr_hist_empty:'Sin historial de pagos registrado.', pr_hist_cumulative:'Total acumulado',
       pr_hist_total:'Total pagado', pr_hist_preledger:'incluye pagos anteriores al libro',
+      pr_summary_owed:'Total a Pagar', pr_summary_paid:'Pagado', pr_summary_remaining:'Restante',
+      pr_summary_staff:'empleados',
+      pr_btn_export_ledger:'CSV Libro',
+      pr_csv_disclaimer:'Solo para referencia contable. No es un documento de declaración fiscal.',
+      pr_ledger_empty:'Aún no hay eventos de pago registrados.',
       // ── Status badges ────────────────────────────────────────────────────────
       st_confirmed:'Confirmada', st_in_progress:'En Proceso', st_completed:'Lista',
       st_canceled:'Cancelada', st_no_show:'No Asistió', st_rescheduled:'Reprogramada',

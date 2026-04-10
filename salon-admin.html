@@ -3526,9 +3526,9 @@
             (s.active !== false ? 'Active' : 'Off') + '</span>' +
           '</div>' +
           '<div class="sa-item__meta">' + esc(s.role || '—') + (specs ? ' · ' + esc(specs) : '') +
-            (s.compensationType === 'salary' ? ' · ' + (s.monthlyBasePay ? '$' + Number(s.monthlyBasePay).toLocaleString() + '/tháng' : lb.comp_salary) :
-             s.compensationType === 'hybrid' ? ' · $' + (Number(s.monthlyBasePay)||0).toLocaleString() + '/tháng + ' + (s.commissionPct||0) + '%' :
-             s.commissionPct ? ' · HH ' + s.commissionPct + '%' : '') +
+            (s.compensationType === 'salary' ? ' · ' + (s.monthlyBasePay ? '$' + Number(s.monthlyBasePay).toLocaleString() + lb.unit_mo : lb.comp_salary) :
+             s.compensationType === 'hybrid' ? ' · $' + (Number(s.monthlyBasePay)||0).toLocaleString() + lb.unit_mo + ' + ' + (s.commissionPct||0) + '%' :
+             s.commissionPct ? ' · ' + lb.unit_comm + ' ' + s.commissionPct + '%' : '') +
             (s.employmentType === 'full_time' ? ' · ' + lb.emp_full : s.employmentType === 'part_time' ? ' · ' + lb.emp_part : s.employmentType === 'contract' ? ' · ' + lb.emp_contract : '') + '</div>' +
           '<div class="sched-pills">' + pills + '</div>' +
         '</div>' +
@@ -7739,6 +7739,7 @@
       comp_commission:'Chia % Dịch Vụ (Commission)',
       comp_salary:'Lương Cố Định Hàng Tháng',
       comp_hybrid:'Lương Cố Định + Hoa Hồng',
+      unit_mo:'/tháng', unit_comm:'HH',
       lbl_base_pay:'Lương Cố Định / Tháng ($)',
       lbl_base_pay_note:'Số tiền đồng ý trả hàng tháng',
       lbl_hire_date:'Ngày Bắt Đầu Làm',
@@ -8022,6 +8023,7 @@
       comp_commission:'Revenue Split / Commission',
       comp_salary:'Fixed Monthly Salary',
       comp_hybrid:'Fixed Base + Commission',
+      unit_mo:'/mo', unit_comm:'Comm',
       lbl_base_pay:'Monthly Base Pay ($)',
       lbl_base_pay_note:'Agreed monthly amount to pay staff',
       lbl_hire_date:'Start Date',
@@ -8304,6 +8306,7 @@
       comp_commission:'Porcentaje de Servicio (Comisión)',
       comp_salary:'Salario Fijo Mensual',
       comp_hybrid:'Base Fija + Comisión',
+      unit_mo:'/mes', unit_comm:'Com',
       lbl_base_pay:'Salario Base Mensual ($)',
       lbl_base_pay_note:'Monto mensual acordado con el empleado',
       lbl_hire_date:'Fecha de Inicio',

@@ -451,19 +451,10 @@
               'gemini-2.5-flash-preview-tts:generateContent?key=' +
               encodeURIComponent(key);
 
-    // Voice per language: Aoede (breezy) for VI/ES, Sulafat (warm) for EN
+    // Voice per language: Sulafat (warm) for EN, Aoede (breezy) for VI/ES
     var voiceName = _lang === 'en' ? 'Sulafat' : 'Aoede';
 
-    // System instruction locks Vietnamese to a consistent southern (Sài Gòn) accent.
-    // English/Spanish instructions keep delivery natural and steady.
-    var sysText = _lang === 'vi'
-      ? 'Luôn đọc bằng giọng miền Nam Việt Nam (giọng Sài Gòn). Giữ nguyên giọng đọc nhất quán, không thay đổi.'
-      : _lang === 'es'
-      ? 'Habla de forma natural y consistente en español.'
-      : 'Speak naturally and consistently in American English.';
-
     var payload = {
-      system_instruction: { parts: [{ text: sysText }] },
       contents: [{ parts: [{ text: text }] }],
       generationConfig: {
         responseModalities: ['AUDIO'],

@@ -2189,6 +2189,46 @@
               <button type="button" onclick="addParallelRule()" style="font-size:.75rem;padding:.3rem .75rem;background:var(--navy-700);border:1px solid var(--border);border-radius:6px;color:var(--cream);cursor:pointer" data-i18n="btn_add_parallel">+ Thêm Cặp Dịch Vụ</button>
               <datalist id="serviceNameList"></datalist>
             </div>
+            <!-- ── Why Choose Us ─────────────────────────────────── -->
+            <div class="sa-field" style="padding-top:1.1rem;border-top:1px solid var(--border);margin-bottom:.4rem">
+              <label style="color:var(--gold)">Why Choose Us</label>
+            </div>
+
+            <!-- Subtitle (EN / VI / ES) -->
+            <div class="sa-field">
+              <label>Subtitle</label>
+              <div style="display:grid;grid-template-columns:26px 1fr;gap:.3rem;align-items:center;margin-bottom:.28rem">
+                <span style="font-size:.62rem;font-weight:700;color:var(--gold-lt)">EN</span>
+                <input class="sa-input" style="padding:.38rem .65rem;box-sizing:border-box" id="trustSubEn" placeholder="Over 10 years of beauty care in Bay Area">
+              </div>
+              <div style="display:grid;grid-template-columns:26px 1fr;gap:.3rem;align-items:center;margin-bottom:.28rem">
+                <span style="font-size:.62rem;font-weight:700;color:var(--gold-lt)">VI</span>
+                <input class="sa-input" style="padding:.38rem .65rem;box-sizing:border-box" id="trustSubVi" placeholder="Hơn 10 năm chăm sóc sắc đẹp tại Bay Area">
+              </div>
+              <div style="display:grid;grid-template-columns:26px 1fr;gap:.3rem;align-items:center">
+                <span style="font-size:.62rem;font-weight:700;color:var(--gold-lt)">ES</span>
+                <input class="sa-input" style="padding:.38rem .65rem;box-sizing:border-box" id="trustSubEs" placeholder="Más de 10 años cuidando tu belleza en Bay Area">
+              </div>
+            </div>
+
+            <!-- Stats (3 rows: value + EN/VI/ES label) -->
+            <div class="sa-field">
+              <label>Statistics (3 items)</label>
+              <div style="display:grid;grid-template-columns:56px 1fr 1fr 1fr;gap:.28rem;align-items:center;margin-bottom:.22rem;font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">
+                <span style="text-align:center">Value</span><span>EN</span><span>VI</span><span>ES</span>
+              </div>
+              <div id="trustStatsEditor"></div>
+            </div>
+
+            <!-- Features (up to 5 bullet points, EN/VI/ES) -->
+            <div class="sa-field">
+              <label>Feature List (up to 5)</label>
+              <div style="display:grid;grid-template-columns:20px 1fr 1fr 1fr;gap:.28rem;align-items:center;margin-bottom:.22rem;font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">
+                <span></span><span>EN</span><span>VI</span><span>ES</span>
+              </div>
+              <div id="trustFeatsEditor"></div>
+            </div>
+
             <div>
               <button class="btn btn--primary" onclick="saveSettings()" data-i18n="btn_save_settings">Lưu Cài Đặt</button>
               <span class="sa-msg" id="settingsMsg"></span>
@@ -3278,6 +3318,11 @@
         VENDOR_TAX_RATE = _taxRateForZip(_addr);
         document.getElementById('settingDesc').value    = vdata.description   || (staticData && staticData.description)  || '';
         document.getElementById('settingAiKey').value   = vdata.aiKey || '';
+        // Load Why Choose Us fields into editor
+        var tSub = vdata.trustSubtitleI18n || {};
+        var sv = function(id,val){ var el=document.getElementById(id); if(el) el.value=val||''; };
+        sv('trustSubEn', tSub.en); sv('trustSubVi', tSub.vi); sv('trustSubEs', tSub.es);
+        renderTrustEditors(vdata.stats || null, vdata.featuresI18n || null);
         // Normalize: old format [[a,b],...] → new [{a,b},...] objects (Firestore nested-array fix)
         vendorParallelServices = (vdata.parallelServices || []).map(function(p) {
           if (Array.isArray(p)) return { a: p[0] || '', b: p[1] || '' };
@@ -8549,15 +8594,76 @@
     if (amountEl) setTimeout(function(){ amountEl.focus(); }, 100);
   }
 
+  // ── Why Choose Us editor helpers ────────────────────────────────────────────
+  var _TRUST_STATS_DEF = [
+    { num: '10+',  en: 'Years Experience', vi: 'N\u0103m kinh nghi\u1ec7m',  es: 'A\xf1os de Experiencia' },
+    { num: '5\u2605', en: 'Customer Rating',  vi: '\u0110\xe1nh gi\xe1 kh\xe1ch', es: 'Calificaci\xf3n'       },
+    { num: '100%', en: 'Safe Products',    vi: 'S\u1ea3n ph\u1ea9m an to\xe0n', es: 'Productos Seguros'  }
+  ];
+  var _TRUST_FEATS_DEF = [
+    { en: 'Over 10 years of experience in Bay Area',  vi: 'H\u01a1n 10 n\u0103m kinh nghi\u1ec7m t\u1ea1i Bay Area',       es: 'M\xe1s de 10 a\xf1os de experiencia en Bay Area'   },
+    { en: 'Safe, non-toxic products',                 vi: 'S\u1ea3n ph\u1ea9m an to\xe0n, kh\xf4ng \u0111\u1ed9c h\u1ea1i', es: 'Productos seguros y no t\xf3xicos'               },
+    { en: 'Luxurious, comfortable environment',       vi: 'Kh\xf4ng gian sang tr\u1ecdng, tho\u1ea3i m\xe1i',            es: 'Ambiente lujoso y c\xf3modo'                    },
+    { en: 'Skilled technicians, meticulous care',     vi: 'Th\u1ee3 l\xe0nh ngh\u1ec1, t\u1ec9 m\u1ec9 t\u1eebng chi ti\u1ebft', es: 'T\xe9cnicos h\xe1biles, cuidado meticuloso'  },
+    { en: 'Walk-ins and appointments welcome',        vi: 'Nh\u1eadn walk-in v\xe0 \u0111\u1eb7t l\u1ecbch tr\u01b0\u1edbc',  es: 'Se aceptan clientes sin cita'                  }
+  ];
+  function _saEsc(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+  var _saInpStyle = 'class="sa-input" style="padding:.35rem .55rem;box-sizing:border-box;font-size:.78rem;min-width:0"';
+  function renderTrustEditors(stats, feats) {
+    var se = document.getElementById('trustStatsEditor');
+    var fe = document.getElementById('trustFeatsEditor');
+    if (se) {
+      var sh = '';
+      for (var i = 0; i < 3; i++) {
+        var s = (stats && stats[i]) || _TRUST_STATS_DEF[i] || {};
+        sh += '<div style="display:grid;grid-template-columns:56px 1fr 1fr 1fr;gap:.28rem;align-items:center;margin-bottom:.28rem">' +
+          '<input ' + _saInpStyle + ' id="tStat'+i+'Num" value="'+_saEsc(s.num||'')+'" placeholder="#" style="text-align:center;font-weight:700;color:var(--gold);padding:.35rem .3rem;box-sizing:border-box;font-size:.82rem">' +
+          '<input ' + _saInpStyle + ' id="tStat'+i+'En"  value="'+_saEsc(s.en||'')+'"  placeholder="EN">' +
+          '<input ' + _saInpStyle + ' id="tStat'+i+'Vi"  value="'+_saEsc(s.vi||'')+'"  placeholder="VI">' +
+          '<input ' + _saInpStyle + ' id="tStat'+i+'Es"  value="'+_saEsc(s.es||'')+'"  placeholder="ES">' +
+        '</div>';
+      }
+      se.innerHTML = sh;
+    }
+    if (fe) {
+      var fh = '';
+      for (var j = 0; j < 5; j++) {
+        var f = (feats && feats[j]) || _TRUST_FEATS_DEF[j] || {};
+        fh += '<div style="display:grid;grid-template-columns:20px 1fr 1fr 1fr;gap:.28rem;align-items:center;margin-bottom:.28rem">' +
+          '<span style="font-size:.65rem;color:var(--muted);text-align:center;padding-top:2px">'+(j+1)+'</span>' +
+          '<input ' + _saInpStyle + ' id="tFeat'+j+'En" value="'+_saEsc(f.en||'')+'" placeholder="EN">' +
+          '<input ' + _saInpStyle + ' id="tFeat'+j+'Vi" value="'+_saEsc(f.vi||'')+'" placeholder="VI">' +
+          '<input ' + _saInpStyle + ' id="tFeat'+j+'Es" value="'+_saEsc(f.es||'')+'" placeholder="ES">' +
+        '</div>';
+      }
+      fe.innerHTML = fh;
+    }
+  }
+
   function saveSettings() {
     _syncParallelFromDom();
+    // ── Collect Why Choose Us data ──────────────────────────────────────────
+    var g = function(id) { return (document.getElementById(id)||{}).value||''; };
+    var tr = function(s) { return s.trim(); };
+    var trustStats = [];
+    for (var i = 0; i < 3; i++) {
+      trustStats.push({ num: tr(g('tStat'+i+'Num')), en: tr(g('tStat'+i+'En')), vi: tr(g('tStat'+i+'Vi')), es: tr(g('tStat'+i+'Es')) });
+    }
+    var trustFeats = [];
+    for (var j = 0; j < 5; j++) {
+      var fe = tr(g('tFeat'+j+'En')), fv = tr(g('tFeat'+j+'Vi')), fs = tr(g('tFeat'+j+'Es'));
+      if (fe || fv || fs) trustFeats.push({ en: fe, vi: fv, es: fs });
+    }
     var data = {
-      businessName:     document.getElementById('settingName').value.trim(),
-      phoneDisplay:     document.getElementById('settingPhone').value.trim(),
-      address:          document.getElementById('settingAddress').value.trim(),
-      description:      document.getElementById('settingDesc').value.trim(),
-      parallelServices: vendorParallelServices,
-      updatedAt:        firebase.firestore.FieldValue.serverTimestamp()
+      businessName:       document.getElementById('settingName').value.trim(),
+      phoneDisplay:       document.getElementById('settingPhone').value.trim(),
+      address:            document.getElementById('settingAddress').value.trim(),
+      description:        document.getElementById('settingDesc').value.trim(),
+      parallelServices:   vendorParallelServices,
+      trustSubtitleI18n:  { en: tr(g('trustSubEn')), vi: tr(g('trustSubVi')), es: tr(g('trustSubEs')) },
+      stats:              trustStats,
+      featuresI18n:       trustFeats,
+      updatedAt:          firebase.firestore.FieldValue.serverTimestamp()
     };
     var aiKey = document.getElementById('settingAiKey').value.trim();
     if (aiKey) data.aiKey = aiKey;

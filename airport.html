@@ -147,6 +147,45 @@
     }
     .lp-back:hover { color: var(--cream); }
 
+    /* ── Nails return chip (mobile only, shown when ?from=nailsalon) ── */
+    .nails-return-chip {
+      display: none;
+      position: fixed;
+      bottom: 88px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 200;
+      pointer-events: auto;
+    }
+    .nails-return-chip__link {
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+      padding: .55rem 1.15rem;
+      background: rgba(15, 8, 24, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(236, 72, 153, 0.55);
+      border-radius: 99px;
+      color: #EC4899;
+      font-family: var(--font-b, sans-serif);
+      font-size: .82rem;
+      font-weight: 500;
+      text-decoration: none;
+      white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(0,0,0,.45);
+      transition: background .18s, border-color .18s;
+    }
+    .nails-return-chip__link:hover,
+    .nails-return-chip__link:focus-visible {
+      background: rgba(236, 72, 153, 0.15);
+      border-color: rgba(236, 72, 153, 0.8);
+      outline: none;
+    }
+    @media (min-width: 768px) {
+      .nails-return-chip { display: none !important; }
+    }
+
     /* ── Desktop overrides ── */
     @media (min-width: 768px) {
       .lp-section { padding: 2rem 2rem .75rem; }
@@ -160,6 +199,10 @@
   </style>
 </head>
 <body>
+<!-- Nails return chip: visible on iPhone when navigated from /nailsalon (shown via JS) -->
+<div id="nailsReturnChip" class="nails-return-chip">
+  <a href="/nailsalon/" class="nails-return-chip__link">← Back to Luxurious Nails</a>
+</div>
 <div class="lp">
 
   <!-- App Bar -->
@@ -705,12 +748,15 @@
   })();
 </script>
 <script>
-  // If navigated from the Luxurious Nails page, update back link to return there.
+  // If navigated from the Luxurious Nails page: update back link + show bottom chip.
   (function () {
     var from = new URLSearchParams(window.location.search).get('from');
     if (from === 'nailsalon') {
       var lk = document.getElementById('lpBackLink');
       if (lk) { lk.href = '/nailsalon/'; lk.textContent = '\u2190 Luxurious Nails'; }
+      // Show thumb-friendly bottom return chip (primary mobile return path)
+      var chip = document.getElementById('nailsReturnChip');
+      if (chip) chip.style.display = 'block';
     }
   })();
 </script>

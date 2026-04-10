@@ -356,7 +356,12 @@
   function _initVendorNav(biz) {
     window._vnav = {
       scrollTop: function () {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // If already on nailsalon page → scroll to top; otherwise return to nailsalon
+        if (window.location.pathname.indexOf('/nailsalon') !== -1) {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          window.location.href = '/nailsalon/';
+        }
       },
       scrollBook: function () {
         var el = document.getElementById('bookingSection_' + biz.id);

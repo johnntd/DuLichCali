@@ -5142,8 +5142,8 @@
   function _pmSaveOrConfirm() {
     var method = (document.getElementById('pmMethod') || {}).value || 'cash';
     if (method === 'cash') {
-      // Cash: save and close immediately — no receipt step needed for cash
-      _pmAfterSave = null;
+      // Cash: save then show receipt options (customer may want print/email receipt)
+      _pmAfterSave = _pmShowReceiptPanel;
       savePayment();
     } else {
       // Card / Zelle / Venmo / Other: show confirmation step, then receipt panel
@@ -5205,6 +5205,8 @@
     _pmShowPhase('pmFormContent');
   }
 
+  var _pmReceiptTimeout = null;
+
   function _pmShowReceiptPanel() {
     var lb = _LABELS[_dlcLang] || _LABELS.vi;
     var amount = parseFloat((document.getElementById('pmAmount') || {}).value) || 0;
@@ -5216,6 +5218,13 @@
     if (_bl) _bl.style.display = '';
     if (_ep) _ep.style.display = 'none';
     _pmShowPhase('pmReceiptPanel');
+    // Auto-dismiss after 10 s if vendor doesn't tap a receipt option
+    clearTimeout(_pmReceiptTimeout);
+    _pmReceiptTimeout = setTimeout(function () {
+      if (document.getElementById('paymentModal').classList.contains('hidden')) return;
+      var skipLb = (_LABELS[_dlcLang] || _LABELS.vi).pm_done_all_done || 'All done!';
+      _pmShowDonePanel(skipLb);
+    }, 10000);
   }
 
   function _pmSendReceipt(type) {
@@ -5343,6 +5352,8 @@
 
   function closePaymentModal() {
     _pmAfterSave = null;
+    clearTimeout(_pmReceiptTimeout);
+    _pmReceiptTimeout = null;
     _pmSigDrawing = false;
     var canvas = document.getElementById('pmSigCanvas');
     if (canvas) { canvas._pmInited = false; canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height); }

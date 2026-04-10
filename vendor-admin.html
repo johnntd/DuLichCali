@@ -1342,6 +1342,48 @@
     [data-theme="pink"] .pin-card { background: #fff; }
     [data-theme="pink"] .va-link-strip { background: #fff; border-color: rgba(0,0,0,.07); }
     [data-theme="pink"] #notifPopup .np-inner { background: #fff; border-color: rgba(0,0,0,.08); }
+
+/* ── Business Profile / Trust editor ──────────────────────────────────── */
+.va-full-input {
+  width: 100%; box-sizing: border-box; height: 40px;
+  background: rgba(255,255,255,.05); border: 1px solid var(--border);
+  border-radius: var(--r); color: var(--cream);
+  font-family: var(--font-b); font-size: .88rem;
+  padding: 0 .75rem; outline: none; transition: border-color .2s;
+}
+.va-full-input:focus { border-color: var(--gold); }
+.va-i18n-group { margin-bottom: .75rem; }
+.va-i18n-group__hdr {
+  font-size: .62rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .1em; margin-bottom: .35rem;
+}
+.va-i18n-row { display: flex; gap: .4rem; align-items: center; margin-bottom: .3rem; }
+.va-i18n-badge {
+  width: 22px; flex-shrink: 0; font-size: .62rem; font-weight: 700;
+  color: var(--gold); text-transform: uppercase;
+}
+.va-i18n-row .va-full-input { height: 36px; font-size: .82rem; }
+.va-stat-num-input {
+  width: 52px; height: 36px; box-sizing: border-box;
+  background: rgba(255,255,255,.07); border: 1px solid var(--border);
+  border-radius: var(--r); color: var(--gold);
+  font-family: var(--font-b); font-size: .85rem; font-weight: 700;
+  padding: 0 .4rem; text-align: center; outline: none;
+  transition: border-color .2s; flex-shrink: 0;
+}
+.va-stat-num-input:focus { border-color: var(--gold); }
+.va-stat-lbl-input {
+  flex: 1; height: 36px;
+  background: rgba(255,255,255,.05); border: 1px solid var(--border);
+  border-radius: var(--r); color: var(--cream);
+  font-family: var(--font-b); font-size: .78rem;
+  padding: 0 .5rem; outline: none; transition: border-color .2s;
+  min-width: 0;
+}
+.va-stat-lbl-input:focus { border-color: var(--gold); }
+.va-grid-hdr {
+  font-size: .6rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em;
+}
   </style>
   <link rel="stylesheet" href="/desktop.css">
 </head>
@@ -1498,6 +1540,72 @@
     <div id="settingsTab" style="display:none">
       <div class="va-section-hdr">
         <div class="va-section-title" data-i18n="settings_title">Settings</div>
+      </div>
+
+      <!-- Business Profile card -->
+      <div class="va-cap-card" id="profileCard">
+        <div class="va-cap-card__title">🏪 Business Profile</div>
+
+        <!-- Address -->
+        <label class="va-cap-sub" style="display:block;margin-bottom:.25rem">Address</label>
+        <input type="text" id="profileAddress" class="va-full-input" placeholder="123 Main St, City, CA 95000" style="margin-bottom:.6rem">
+
+        <!-- Phone -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin-bottom:.75rem">
+          <div>
+            <label class="va-cap-sub" style="display:block;margin-bottom:.25rem">Phone (E.164)</label>
+            <input type="tel" id="profilePhone" class="va-full-input" placeholder="+14089312438">
+          </div>
+          <div>
+            <label class="va-cap-sub" style="display:block;margin-bottom:.25rem">Display</label>
+            <input type="text" id="profilePhoneDisplay" class="va-full-input" placeholder="408-931-2438">
+          </div>
+        </div>
+
+        <!-- Tagline i18n -->
+        <div class="va-i18n-group">
+          <div class="va-i18n-group__hdr">Tagline</div>
+          <div class="va-i18n-row"><span class="va-i18n-badge">EN</span><input type="text" id="profileTaglineEn" class="va-full-input" placeholder="Premium nail care &amp; luxury spa · Bay Area"></div>
+          <div class="va-i18n-row"><span class="va-i18n-badge">VI</span><input type="text" id="profileTaglineVi" class="va-full-input" placeholder="Nail cao cấp &amp; spa sang trọng · Bay Area"></div>
+          <div class="va-i18n-row"><span class="va-i18n-badge">ES</span><input type="text" id="profileTaglineEs" class="va-full-input" placeholder="Cuidado de uñas premium · Bay Area"></div>
+        </div>
+
+        <!-- Why Choose Us subtitle i18n -->
+        <div class="va-i18n-group">
+          <div class="va-i18n-group__hdr">Why Choose Us — Subtitle</div>
+          <div class="va-i18n-row"><span class="va-i18n-badge">EN</span><input type="text" id="profileTrustSubEn" class="va-full-input" placeholder="Over 10 years of beauty care in Bay Area"></div>
+          <div class="va-i18n-row"><span class="va-i18n-badge">VI</span><input type="text" id="profileTrustSubVi" class="va-full-input" placeholder="Hơn 10 năm chăm sóc sắc đẹp tại Bay Area"></div>
+          <div class="va-i18n-row"><span class="va-i18n-badge">ES</span><input type="text" id="profileTrustSubEs" class="va-full-input" placeholder="Más de 10 años cuidando tu belleza en Bay Area"></div>
+        </div>
+
+        <!-- Stats (3 rows: num + EN/VI/ES) -->
+        <div class="va-i18n-group">
+          <div class="va-i18n-group__hdr" style="margin-bottom:.4rem">Statistics (3 items)</div>
+          <div style="display:grid;grid-template-columns:52px 1fr 1fr 1fr;gap:.35rem;margin-bottom:.3rem">
+            <span class="va-grid-hdr" style="text-align:center">#</span>
+            <span class="va-grid-hdr">EN label</span>
+            <span class="va-grid-hdr">VI label</span>
+            <span class="va-grid-hdr">ES label</span>
+          </div>
+          <div id="profileStatsEditor"></div>
+        </div>
+
+        <!-- Features (5 rows: EN/VI/ES) -->
+        <div class="va-i18n-group">
+          <div class="va-i18n-group__hdr" style="margin-bottom:.4rem">Feature List (up to 5)</div>
+          <div style="display:grid;grid-template-columns:20px 1fr 1fr 1fr;gap:.3rem;margin-bottom:.3rem">
+            <span></span>
+            <span class="va-grid-hdr">EN</span>
+            <span class="va-grid-hdr">VI</span>
+            <span class="va-grid-hdr">ES</span>
+          </div>
+          <div id="profileFeatEditor"></div>
+        </div>
+
+        <div class="va-cap-card__row" style="margin-top:.4rem">
+          <button class="btn btn--gold btn--sm" onclick="saveProfile()">Save Profile</button>
+          <span id="profileSaveStatus" style="font-size:.8rem;color:var(--text-muted)"></span>
+        </div>
       </div>
 
       <!-- SMS notification card -->
@@ -2085,6 +2193,7 @@
     loadCapacity();
     loadSmsSettings();
     loadHeroImage();
+    loadProfile();
     purgeEmilyItemsIfNeeded();
     seedIfNeeded();
     subscribeMenuItems();
@@ -2893,6 +3002,106 @@
     }).catch(function (err) {
       showToast(_vlb('err_prefix', 'Error: ') + err.message, 'error');
     });
+  }
+
+  // ── Profile / Trust editor ────────────────────────────────────────────────
+  var _PROF_STATS_DEF = [
+    { num: '10+',  en: 'Years Experience', vi: 'N\u0103m kinh nghi\u1ec7m',  es: 'A\xf1os de Experiencia' },
+    { num: '5\u2605', en: 'Customer Rating',  vi: '\u0110\xe1nh gi\xe1 kh\xe1ch', es: 'Calificaci\xf3n'       },
+    { num: '100%', en: 'Safe Products',    vi: 'S\u1ea3n ph\u1ea9m an to\xe0n', es: 'Productos Seguros'  }
+  ];
+  var _PROF_FEATS_DEF = [
+    { en: 'Over 10 years of experience in Bay Area',  vi: 'H\u01a1n 10 n\u0103m kinh nghi\u1ec7m t\u1ea1i Bay Area',    es: 'M\xe1s de 10 a\xf1os de experiencia en Bay Area'   },
+    { en: 'Safe, non-toxic products',                 vi: 'S\u1ea3n ph\u1ea9m an to\xe0n, kh\xf4ng \u0111\u1ed9c h\u1ea1i', es: 'Productos seguros y no t\xf3xicos'               },
+    { en: 'Luxurious, comfortable environment',       vi: 'Kh\xf4ng gian sang tr\u1ecdng, tho\u1ea3i m\xe1i',           es: 'Ambiente lujoso y c\xf3modo'                    },
+    { en: 'Skilled technicians, meticulous care',     vi: 'Th\u1ee3 l\xe0nh ngh\u1ec1, t\u1ec9 m\u1ec9 t\u1eebng chi ti\u1ebft', es: 'T\xe9cnicos h\xe1biles, cuidado meticuloso' },
+    { en: 'Walk-ins and appointments welcome',        vi: 'Nh\u1eadn walk-in v\xe0 \u0111\u1eb7t l\u1ecbch tr\u01b0\u1edbc',  es: 'Se aceptan clientes sin cita'                  }
+  ];
+
+  function _profEsc(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+  function _renderStatsEditor(stats) {
+    var el = document.getElementById('profileStatsEditor');
+    if (!el) return;
+    var html = '';
+    for (var i = 0; i < 3; i++) {
+      var s = (stats && stats[i]) || _PROF_STATS_DEF[i] || {};
+      html += '<div style="display:grid;grid-template-columns:52px 1fr 1fr 1fr;gap:.35rem;margin-bottom:.3rem">' +
+        '<input type="text" class="va-stat-num-input" id="pStat'+i+'Num" value="'+_profEsc(s.num||'')+'" placeholder="#">' +
+        '<input type="text" class="va-stat-lbl-input" id="pStat'+i+'En"  value="'+_profEsc(s.en||'')+'"  placeholder="EN">' +
+        '<input type="text" class="va-stat-lbl-input" id="pStat'+i+'Vi"  value="'+_profEsc(s.vi||'')+'"  placeholder="VI">' +
+        '<input type="text" class="va-stat-lbl-input" id="pStat'+i+'Es"  value="'+_profEsc(s.es||'')+'"  placeholder="ES">' +
+      '</div>';
+    }
+    el.innerHTML = html;
+  }
+
+  function _renderFeatEditor(feats) {
+    var el = document.getElementById('profileFeatEditor');
+    if (!el) return;
+    var html = '';
+    for (var i = 0; i < 5; i++) {
+      var f = (feats && feats[i]) || _PROF_FEATS_DEF[i] || {};
+      html += '<div style="display:grid;grid-template-columns:20px 1fr 1fr 1fr;gap:.3rem;margin-bottom:.3rem">' +
+        '<span style="font-size:.65rem;color:var(--muted);text-align:center;padding-top:8px">'+(i+1)+'</span>' +
+        '<input type="text" class="va-full-input" style="height:34px;font-size:.78rem" id="pFeat'+i+'En" value="'+_profEsc(f.en||'')+'" placeholder="EN">' +
+        '<input type="text" class="va-full-input" style="height:34px;font-size:.78rem" id="pFeat'+i+'Vi" value="'+_profEsc(f.vi||'')+'" placeholder="VI">' +
+        '<input type="text" class="va-full-input" style="height:34px;font-size:.78rem" id="pFeat'+i+'Es" value="'+_profEsc(f.es||'')+'" placeholder="ES">' +
+      '</div>';
+    }
+    el.innerHTML = html;
+  }
+
+  function loadProfile() {
+    if (!vendorRef) return;
+    // Render editor rows with defaults immediately so the form is usable
+    _renderStatsEditor(null);
+    _renderFeatEditor(null);
+    vendorRef.get().then(function (doc) {
+      if (!doc.exists) return;
+      var d = doc.data();
+      var g = function(id) { return document.getElementById(id); };
+      var sv = function(id, val) { var el = g(id); if (el) el.value = val || ''; };
+      sv('profileAddress',      d.address       || '');
+      sv('profilePhone',        d.phone         || '');
+      sv('profilePhoneDisplay', d.phoneDisplay  || '');
+      var t = d.taglineI18n        || {};
+      var s = d.trustSubtitleI18n  || {};
+      sv('profileTaglineEn',   t.en || '');  sv('profileTaglineVi',   t.vi || '');  sv('profileTaglineEs',   t.es || '');
+      sv('profileTrustSubEn',  s.en || '');  sv('profileTrustSubVi',  s.vi || '');  sv('profileTrustSubEs',  s.es || '');
+      _renderStatsEditor(d.stats        || null);
+      _renderFeatEditor(d.featuresI18n  || null);
+    }).catch(function () {});
+  }
+
+  function saveProfile() {
+    if (!vendorRef) { showToast('Not connected', 'error'); return; }
+    var g = function(id) { return (document.getElementById(id)||{}).value||''; };
+    var tr = function(s) { return s.trim(); };
+    var data = {
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      address:        tr(g('profileAddress')),
+      phone:          tr(g('profilePhone')),
+      phoneDisplay:   tr(g('profilePhoneDisplay')),
+      taglineI18n:        { en: tr(g('profileTaglineEn')),  vi: tr(g('profileTaglineVi')),  es: tr(g('profileTaglineEs'))  },
+      trustSubtitleI18n:  { en: tr(g('profileTrustSubEn')), vi: tr(g('profileTrustSubVi')), es: tr(g('profileTrustSubEs')) }
+    };
+    var stats = [];
+    for (var i = 0; i < 3; i++) {
+      stats.push({ num: tr(g('pStat'+i+'Num')), en: tr(g('pStat'+i+'En')), vi: tr(g('pStat'+i+'Vi')), es: tr(g('pStat'+i+'Es')) });
+    }
+    data.stats = stats;
+    var feats = [];
+    for (var j = 0; j < 5; j++) {
+      var fe = tr(g('pFeat'+j+'En')), fv = tr(g('pFeat'+j+'Vi')), fs = tr(g('pFeat'+j+'Es'));
+      if (fe || fv || fs) feats.push({ en: fe, vi: fv, es: fs });
+    }
+    data.featuresI18n = feats;
+    var status = document.getElementById('profileSaveStatus');
+    vendorRef.update(data).then(function () {
+      if (status) { status.textContent = '✓ Saved'; status.style.color = 'var(--gold)'; setTimeout(function(){ status.textContent=''; }, 3000); }
+      showToast('✓ Profile updated', 'success');
+    }).catch(function (err) { showToast('Error: ' + err.message, 'error'); });
   }
 
   // ── SMS settings ──────────────────────────────────────────────────────────

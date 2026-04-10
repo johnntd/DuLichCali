@@ -1527,14 +1527,53 @@
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
     ];
-    var features = biz.features || [];
-    var featHtml = features.map(function (f, i) {
-      return '<div class="ns-feature-item">' +
-        '<span class="ns-feature-icon">' + icons[i % icons.length] + '</span>' +
-        escHtml(f) +
-      '</div>';
+
+    // ── Trust subtitle ──────────────────────────────────────────────────────
+    var trustSub, trustSubDataT;
+    var ts = biz.trustSubtitleI18n;
+    if (ts && (ts.en || ts.vi || ts.es)) {
+      trustSub      = _t(ts.en || '', ts.vi || '', ts.es || '');
+      trustSubDataT = 'en:' + (ts.en || '') + '|vi:' + (ts.vi || '') + '|es:' + (ts.es || '');
+    } else {
+      trustSub      = _t('Over 10 years of beauty care in Bay Area', 'H\u01a1n 10 n\u0103m ch\u0103m s\xf3c s\u1eafc \u0111\u1eb9p t\u1ea1i Bay Area', 'M\xe1s de 10 a\xf1os cuidando tu belleza en Bay Area');
+      trustSubDataT = 'en:Over 10 years of beauty care in Bay Area|vi:H\u01a1n 10 n\u0103m ch\u0103m s\xf3c s\u1eafc \u0111\u1eb9p t\u1ea1i Bay Area|es:M\xe1s de 10 a\xf1os cuidando tu belleza en Bay Area';
+    }
+
+    // ── Stats ───────────────────────────────────────────────────────────────
+    var statsArr = (biz.stats && biz.stats.length) ? biz.stats : [
+      { num: '10+',  en: 'Years Experience', vi: 'N\u0103m kinh nghi\u1ec7m',  es: 'A\xf1os de Experiencia' },
+      { num: '5\u2605', en: 'Customer Rating',  vi: '\u0110\xe1nh gi\xe1 kh\xe1ch', es: 'Calificaci\xf3n'       },
+      { num: '100%', en: 'Safe Products',    vi: 'S\u1ea3n ph\u1ea9m an to\xe0n', es: 'Productos Seguros'  }
+    ];
+    var statsHtml = statsArr.map(function (s) {
+      var lbl   = _t(s.en || '', s.vi || '', s.es || '');
+      var dataT = 'en:' + (s.en || '') + '|vi:' + (s.vi || '') + '|es:' + (s.es || '');
+      return '<div class="ns-stat"><span class="ns-stat__num">' + escHtml(s.num || '') + '</span>' +
+        '<span class="ns-stat__label" data-t="' + escAttr(dataT) + '">' + escHtml(lbl) + '</span></div>';
     }).join('');
 
+    // ── Features ────────────────────────────────────────────────────────────
+    var featHtml = '';
+    if (biz.featuresI18n && biz.featuresI18n.length) {
+      featHtml = biz.featuresI18n.map(function (f, i) {
+        var text  = _t(f.en || '', f.vi || '', f.es || '');
+        var dataT = 'en:' + (f.en || '') + '|vi:' + (f.vi || '') + '|es:' + (f.es || '');
+        return '<div class="ns-feature-item">' +
+          '<span class="ns-feature-icon">' + icons[i % icons.length] + '</span>' +
+          '<span data-t="' + escAttr(dataT) + '">' + escHtml(text) + '</span>' +
+        '</div>';
+      }).join('');
+    } else {
+      var features = biz.features || [];
+      featHtml = features.map(function (f, i) {
+        return '<div class="ns-feature-item">' +
+          '<span class="ns-feature-icon">' + icons[i % icons.length] + '</span>' +
+          escHtml(f) +
+        '</div>';
+      }).join('');
+    }
+
+    // ── Hours ───────────────────────────────────────────────────────────────
     var hoursHtml = '';
     if (biz.hours) {
       var rowsHtml = Object.keys(biz.hours).map(function (day) {
@@ -1551,12 +1590,8 @@
 
     return '<section class="ns-trust">' +
       '<h2 class="ns-section-heading" data-t="en:Why Choose Us|vi:Tại Sao Chọn Chúng Tôi|es:Por Qué Elegirnos">' + _t('Why Choose Us','T\u1ea1i Sao Ch\u1ecdn Ch\xfang T\xf4i','Por Qu\xe9 Elegirnos') + '</h2>' +
-      '<p class="ns-section-sub" data-t="en:Over 10 years of beauty care in Bay Area|vi:Hơn 10 năm chăm sóc sắc đẹp tại Bay Area|es:Más de 10 años cuidando tu belleza en Bay Area">' + _t('Over 10 years of beauty care in Bay Area','H\u01a1n 10 n\u0103m ch\u0103m s\xf3c s\u1eafc \u0111\u1eb9p t\u1ea1i Bay Area','M\xe1s de 10 a\xf1os cuidando tu belleza en Bay Area') + '</p>' +
-      '<div class="ns-stats">' +
-        '<div class="ns-stat"><span class="ns-stat__num">10+</span><span class="ns-stat__label" data-t="en:Years Experience|vi:Năm kinh nghiệm|es:Años de Experiencia">' + _t('Years Experience','N\u0103m kinh nghi\u1ec7m','A\xf1os de Experiencia') + '</span></div>' +
-        '<div class="ns-stat"><span class="ns-stat__num">5\u2605</span><span class="ns-stat__label" data-t="en:Customer Rating|vi:Đánh giá khách|es:Calificación">' + _t('Customer Rating','\u0110\xe1nh gi\xe1 kh\xe1ch','Calificaci\xf3n') + '</span></div>' +
-        '<div class="ns-stat"><span class="ns-stat__num">100%</span><span class="ns-stat__label" data-t="en:Safe Products|vi:Sản phẩm an toàn|es:Productos Seguros">' + _t('Safe Products','S\u1ea3n ph\u1ea9m an to\xe0n','Productos Seguros') + '</span></div>' +
-      '</div>' +
+      '<p class="ns-section-sub" data-t="' + escAttr(trustSubDataT) + '">' + escHtml(trustSub) + '</p>' +
+      '<div class="ns-stats">' + statsHtml + '</div>' +
       (featHtml ? '<div class="ns-features">' + featHtml + '</div>' : '') +
       hoursHtml +
     '</section>';
@@ -2137,6 +2172,10 @@
         if (vd.description)              merged.description  = vd.description;
         if (vd.heroImage)                merged.heroImage    = vd.heroImage;
         if (vd.active === false)         merged.active       = false;
+        if (vd.taglineI18n)                        merged.taglineI18n        = vd.taglineI18n;
+        if (vd.trustSubtitleI18n)                  merged.trustSubtitleI18n  = vd.trustSubtitleI18n;
+        if (vd.stats && vd.stats.length)           merged.stats              = vd.stats;
+        if (vd.featuresI18n && vd.featuresI18n.length) merged.featuresI18n  = vd.featuresI18n;
         // Map hoursSchedule (vendor-admin format) → biz.hours (display format)
         // This ensures hours saved in vendor-admin appear on public page + AI
         if (vd.hoursSchedule) {

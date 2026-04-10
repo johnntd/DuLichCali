@@ -14,6 +14,12 @@
  *   - speechSynthesis.speak() requires user-gesture priming on iOS
  *   - speechSynthesis silently stops after ~14 s on some iOS versions;
  *     guarded with a pause/resume keepalive timer.
+ *
+ * TTS strategy (language-specific):
+ *   English    → browser TTS, exact en-US voice (avoids en-GB on iOS/macOS)
+ *   Spanish    → browser TTS, es-US or closest es-* voice
+ *   Vietnamese → Gemini TTS (dlc_gemini_key in localStorage) with browser fallback
+ *                AudioContext created within open() user-gesture for iOS unlock.
  */
 (function () {
   'use strict';
@@ -27,14 +33,17 @@
   var LANG_TAG = { en: 'en-US', vi: 'vi-VN', es: 'es-US' };
 
   // ── Module state ──────────────────────────────────────────────────────────
-  var _biz        = null;
-  var _msgsEl     = null;    // .mp-ai__messages container
-  var _overlay    = null;
-  var _rec        = null;    // SpeechRecognition instance
-  var _state      = 'idle';  // idle | listening | processing | speaking | error
-  var _lang       = 'en';
-  var _iosPrimed  = false;   // TTS primed on iOS via silent utterance
-  var _keepalive  = null;    // iOS TTS keepalive timer
+  var _biz           = null;
+  var _msgsEl        = null;    // .mp-ai__messages container
+  var _overlay       = null;
+  var _rec           = null;    // SpeechRecognition instance
+  var _state         = 'idle';  // idle | listening | processing | speaking | error
+  var _lang          = 'en';
+  var _iosPrimed     = false;   // TTS primed on iOS via silent utterance
+  var _keepalive     = null;    // iOS TTS keepalive timer
+  var _ttsStartGuard = null;    // Safety timeout if browser TTS never fires onstart
+  var _audioCtx      = null;    // Web Audio API context (Gemini PCM playback)
+  var _currentSource = null;    // AudioBufferSourceNode currently playing (Gemini)
 
   // ── State labels ──────────────────────────────────────────────────────────
   var LABEL = {
@@ -164,6 +173,43 @@
       if (s && LANG_TAG[s]) return s;
     } catch (_) {}
     return 'en';
+  }
+
+  // ── Voice selection helper ─────────────────────────────────────────────────
+  // Exact BCP-47 match first (e.g. en-US), then same-primary fallback (en-GB, en-AU).
+  // Within each tier, non-local (online) voices are preferred for higher quality.
+  function _pickVoice(voices, targetTag) {
+    var tag     = targetTag.toLowerCase();   // 'en-us', 'vi-vn', 'es-us'
+    var primary = tag.split('-')[0];         // 'en', 'vi', 'es'
+
+    // Tier 1: exact match (e.g. en-US only — never en-GB)
+    var exact = voices.filter(function (v) {
+      return v.lang && v.lang.toLowerCase() === tag;
+    });
+    var pick = exact.find(function (v) { return !v.localService; }) || exact[0];
+    if (pick) return pick;
+
+    // Tier 2: same primary subtag (en-AU, en-CA…) — any accent better than nothing
+    var approx = voices.filter(function (v) {
+      return v.lang && v.lang.toLowerCase().startsWith(primary + '-');
+    });
+    pick = approx.find(function (v) { return !v.localService; }) || approx[0];
+    return pick || null;
+  }
+
+  // ── Web Audio API (for Gemini PCM output) ─────────────────────────────────
+  // Must be called from a user-gesture handler on the first use so iOS Safari
+  // grants the AudioContext permission.  Subsequent calls are no-ops once open.
+  function _ensureAudioCtx() {
+    try {
+      if (!_audioCtx || _audioCtx.state === 'closed') {
+        _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (_audioCtx.state === 'suspended') {
+        _audioCtx.resume().catch(function () {});
+      }
+    } catch (_) {}
+    return _audioCtx;
   }
 
   // ── iOS TTS primer ────────────────────────────────────────────────────────
@@ -312,48 +358,35 @@
 
   // ── Text-to-speech ────────────────────────────────────────────────────────
   function _stopSpeaking() {
+    clearTimeout(_ttsStartGuard);
+    _ttsStartGuard = null;
     clearInterval(_keepalive);
     _keepalive = null;
     if (hasTTS) { try { window.speechSynthesis.cancel(); } catch (_) {} }
+    // Stop any in-flight Gemini/AudioContext playback
+    if (_currentSource) {
+      try { _currentSource.stop(); } catch (_) {}
+      _currentSource = null;
+    }
     if (_state === 'speaking') _setState('idle');
   }
 
-  function _speakReply(text) {
-    if (!text || !hasTTS) { _setState('idle'); return; }
+  // Browser TTS path — used for English, Spanish, and Vietnamese fallback.
+  // Uses _pickVoice() for exact BCP-47 matching (prevents en-GB on en-US intent).
+  function _speakViaBrowser(spoken) {
+    if (!hasTTS) { _setState('idle'); return; }
 
-    // Strip AI state/booking markers and markdown before speaking
-    var spoken = text
-      .replace(/\[STATE:[^\]]*\]/g,   '')
-      .replace(/\[BOOKING:[^\]]*\]/g, '')
-      .replace(/\[ESCALATE:[^\]]*\]/g,'')
-      .replace(/#{1,6}\s?/g, '')
-      .replace(/\*{1,3}([^*]*)\*{1,3}/g, '$1')
-      .replace(/`([^`]*)`/g, '$1')
-      .replace(/\n{2,}/g, '. ')
-      .replace(/\n/g, ' ')
-      .replace(/\s{2,}/g, ' ')
-      .trim();
+    var utter   = new SpeechSynthesisUtterance(spoken);
+    utter.lang  = LANG_TAG[_lang] || 'en-US';
+    utter.rate  = 0.92;
+    utter.pitch = 1.0;
 
-    if (!spoken) { _setState('idle'); return; }
-
-    try { window.speechSynthesis.cancel(); } catch (_) {}
-    _setState('speaking');
-
-    var utter      = new SpeechSynthesisUtterance(spoken);
-    utter.lang     = LANG_TAG[_lang] || 'en-US';
-    utter.rate     = 0.92;
-    utter.pitch    = 1.0;
-
-    // Pick the best available voice for the target language
     var voices = [];
     try { voices = window.speechSynthesis.getVoices(); } catch (_) {}
-    var twoChar = (LANG_TAG[_lang] || 'en').split('-')[0];
-    var langVoices = voices.filter(function (v) {
-      return v.lang && v.lang.toLowerCase().startsWith(twoChar);
-    });
-    // Prefer online (non-local) voices for higher quality, fall back to any
-    var pick = langVoices.find(function (v) { return !v.localService; }) || langVoices[0];
+    var pick = _pickVoice(voices, LANG_TAG[_lang] || 'en-US');
     if (pick) utter.voice = pick;
+
+    clearTimeout(_ttsStartGuard);
 
     utter.onend = function () {
       clearTimeout(_ttsStartGuard);
@@ -365,13 +398,11 @@
       clearTimeout(_ttsStartGuard);
       clearInterval(_keepalive);
       _keepalive = null;
-      // Text is still visible — don't dead-end user, just return to idle
       if (_state === 'speaking') _setState('idle');
     };
 
     // iOS Safari bug: speechSynthesis stops speaking after ~14 s.
     // pause()/resume() cycle every 10 s keeps it alive.
-    var _ttsStartGuard = null;
     utter.onstart = function () {
       clearTimeout(_ttsStartGuard);
       _keepalive = setInterval(function () {
@@ -399,6 +430,124 @@
     } catch (_) {
       clearTimeout(_ttsStartGuard);
       _setState('idle');
+    }
+  }
+
+  // Gemini TTS path — Vietnamese primary.
+  // Requires dlc_gemini_key in localStorage.
+  // API returns Int16 PCM at 24 kHz (base64); decoded and played via AudioContext.
+  // Calls onDone(true) on success, onDone(false) on any failure so the caller
+  // can fall through to browser TTS.
+  function _speakViaGemini(text, onDone) {
+    var key = '';
+    try { key = localStorage.getItem('dlc_gemini_key') || ''; } catch (_) {}
+    if (!key) { onDone(false); return; }
+
+    var ctx = _ensureAudioCtx();
+    if (!ctx) { onDone(false); return; }
+
+    var url = 'https://generativelanguage.googleapis.com/v1beta/models/' +
+              'gemini-2.5-flash-preview-tts:generateContent?key=' +
+              encodeURIComponent(key);
+
+    var payload = {
+      contents: [{ parts: [{ text: text }] }],
+      generationConfig: {
+        responseModalities: ['AUDIO'],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: 'Aoede' }
+          }
+        }
+      }
+    };
+
+    fetch(url, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload)
+    })
+    .then(function (resp) {
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      return resp.json();
+    })
+    .then(function (data) {
+      // Navigate the response to the inline audio data
+      var part = data.candidates &&
+                 data.candidates[0] &&
+                 data.candidates[0].content &&
+                 data.candidates[0].content.parts &&
+                 data.candidates[0].content.parts[0];
+      if (!part || !part.inlineData || !part.inlineData.data) {
+        throw new Error('no audio data');
+      }
+
+      // Decode base64 → raw bytes
+      var raw   = atob(part.inlineData.data);
+      var bytes = new Uint8Array(raw.length);
+      for (var i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+
+      // Interpret as Int16 PCM signed little-endian → normalize to Float32
+      var int16   = new Int16Array(bytes.buffer);
+      var float32 = new Float32Array(int16.length);
+      for (var i = 0; i < int16.length; i++) float32[i] = int16[i] / 32768;
+
+      // Create AudioBuffer (mono, 24 kHz) and play
+      var buf = ctx.createBuffer(1, float32.length, 24000);
+      buf.copyToChannel(float32, 0);
+
+      var src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);
+      _currentSource = src;
+
+      src.onended = function () {
+        _currentSource = null;
+        if (_state === 'speaking') _setState('idle');
+        onDone(true);
+      };
+
+      src.start();
+    })
+    .catch(function () {
+      _currentSource = null;
+      onDone(false);
+    });
+  }
+
+  // TTS router — strips markers, then dispatches to the right engine.
+  function _speakReply(text) {
+    if (!text) { _setState('idle'); return; }
+
+    // Strip AI state/booking markers and markdown before speaking
+    var spoken = text
+      .replace(/\[STATE:[^\]]*\]/g,    '')
+      .replace(/\[BOOKING:[^\]]*\]/g,  '')
+      .replace(/\[ESCALATE:[^\]]*\]/g, '')
+      .replace(/#{1,6}\s?/g, '')
+      .replace(/\*{1,3}([^*]*)\*{1,3}/g, '$1')
+      .replace(/`([^`]*)`/g, '$1')
+      .replace(/\n{2,}/g, '. ')
+      .replace(/\n/g, ' ')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+
+    if (!spoken) { _setState('idle'); return; }
+
+    // Cancel any ongoing browser TTS (Gemini source stopped separately in _stopSpeaking)
+    try { if (hasTTS) window.speechSynthesis.cancel(); } catch (_) {}
+    _setState('speaking');
+
+    if (_lang === 'vi') {
+      // Vietnamese: try Gemini TTS for higher quality; fall back to browser TTS
+      _speakViaGemini(spoken, function (success) {
+        if (!success && _state === 'speaking') {
+          _speakViaBrowser(spoken);
+        }
+      });
+    } else {
+      // English (en-US exact match) and Spanish — browser TTS with _pickVoice
+      _speakViaBrowser(spoken);
     }
   }
 
@@ -447,6 +596,10 @@
     });
 
     document.documentElement.classList.add('dlc-vm-active');
+
+    // Create AudioContext within this user-gesture handler so iOS Safari
+    // grants the permission to play audio on subsequent async Gemini calls.
+    _ensureAudioCtx();
 
     // Speak welcome message synchronously — must stay inside the user-gesture
     // chain from the voice-mode button click. iOS Safari blocks speechSynthesis

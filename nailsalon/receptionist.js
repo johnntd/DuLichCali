@@ -2953,13 +2953,16 @@
         function _fsUpdateVH() {
           var vv = window.visualViewport;
           if (!vv || !container.classList.contains('mp-ai--fs')) return;
-          // Use vv.offsetTop so the widget tracks the visual viewport, not the layout
-          // viewport. When the keyboard opens, iOS may scroll the visual viewport within
-          // the layout viewport (vv.offsetTop > 0). A fixed element at top:0 would then
-          // be above the visible area. Setting top = vv.offsetTop anchors the widget to
-          // the visual viewport top regardless of any internal iOS viewport scroll.
-          container.style.top    = vv.offsetTop + 'px';
-          container.style.height = vv.height + 'px';
+          // Cover the FULL layout viewport (top:0 to window.innerHeight) so the navy
+          // background extends behind the keyboard — no page content can bleed through.
+          // padding-bottom = keyboard height pushes flex content (input bar, close bar)
+          // up above the keyboard. box-sizing:border-box (global) makes padding subtract
+          // from content area, not add to total height.
+          var fullH = window.innerHeight;
+          var kbH   = Math.max(0, fullH - vv.height - (vv.offsetTop || 0));
+          container.style.top           = '0px';
+          container.style.height        = fullH + 'px';
+          container.style.paddingBottom = kbH + 'px';
         }
 
         function _fsOpen() {
@@ -2985,8 +2988,9 @@
           document.documentElement.classList.remove('mp-ai-open-root');
           document.body.classList.remove('mp-ai-open');
           window.scrollTo(0, _fsSavedY);
-          container.style.height = '';
-          container.style.top    = '';
+          container.style.height        = '';
+          container.style.top           = '';
+          container.style.paddingBottom = '';
           setTimeout(function () { _isClosing = false; }, 400);
         }
 

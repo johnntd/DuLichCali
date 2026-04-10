@@ -1134,18 +1134,16 @@ select.mp-input option {
 
   .mp-ai--fs {
     position: fixed;
-    top: 0; left: 0; right: 0;
-    height: 100vh;   /* fallback: older iOS — JS _fsUpdateVH corrects for keyboard */
-    height: 100dvh;  /* modern iOS 15.4+: auto-shrinks when keyboard opens — no JS needed */
+    top: 0; left: 0; right: 0; bottom: 0;
     z-index: 200;
     border-radius: 0;
     border: none;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    /* Solid background prevents ALL bleed-through regardless of child coverage */
+    /* Solid background covers the full layout viewport including behind keyboard —
+       no page content can bleed through regardless of keyboard height or vv.offsetTop */
     background: var(--navy-900);
-    /* Contain overscroll so it never bleeds to the locked page behind */
     overscroll-behavior: contain;
   }
 

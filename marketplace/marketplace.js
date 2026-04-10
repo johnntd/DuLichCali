@@ -283,7 +283,7 @@
     var gridIco  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>';
 
     return '<nav class="mp-vnav" aria-label="Main navigation">' +
-      '<button type="button" class="mp-vnav__tab mp-vnav__tab--home" onclick="window._vnav.scrollTop()" aria-label="Luxurious Nails home">' +
+      '<button type="button" class="mp-vnav__tab mp-vnav__tab--home" onclick="window._vnav.scrollTop()" aria-label="' + (biz.name || 'Home') + '">' +
         homeIco + '<span>Home</span>' +
       '</button>' +
       '<button type="button" class="mp-vnav__tab" onclick="window._vnav.goAirport()" aria-label="Airport & Rides services">' +
@@ -357,13 +357,13 @@
   function _initVendorNav(biz) {
     window._vnav = {
       scrollTop: function () {
-        // If on nailsalon and already home view → scroll top; otherwise switch to home view.
-        if (_currentView !== 'home' && window.location.pathname.indexOf('/nailsalon') !== -1) {
+        // Vendor-aware home: switch to this vendor's home view, or scroll top if already there.
+        // No hardcoded vendor paths — _switchView(biz) is bound to whichever vendor
+        // initialized this nav, so the correct home is always restored.
+        if (_currentView !== 'home') {
           _switchView('home', biz);
-        } else if (window.location.pathname.indexOf('/nailsalon') !== -1) {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
-          window.location.href = '/nailsalon/';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }
       },
       scrollBook: function () {
@@ -473,14 +473,17 @@
           aiMsg: 'I\'m looking for local food and services in my area. What options do you have?'
         }
       };
+      // Derive the return-from tag from the first path segment of the current URL.
+      // e.g. /nailsalon/ → 'nailsalon', /foods/ → 'foods', /hairsalon/ → 'hairsalon'
+      var _fromTag = (window.location.pathname.replace(/^\/|\/$/g, '').split('/')[0]) || 'vendor';
       var PENDING_URLS = {
-        airport: '/airport?from=nailsalon',
-        local:   '/marketplace/?from=nailsalon'
+        airport: '/airport?from=' + _fromTag,
+        local:   '/marketplace/?from=' + _fromTag
       };
       return {
         open: function (serviceType) {
           _serviceType = serviceType || 'airport';
-          _pendingUrl = PENDING_URLS[_serviceType] || '/airport?from=nailsalon';
+          _pendingUrl = PENDING_URLS[_serviceType] || ('/airport?from=' + _fromTag);
           var lbl = LABELS[_serviceType] || LABELS.airport;
           if (titleEl) titleEl.textContent = lbl.title;
           if (subEl)   subEl.textContent   = lbl.sub;

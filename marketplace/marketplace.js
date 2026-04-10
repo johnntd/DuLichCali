@@ -1807,6 +1807,12 @@
         '</div>' +
         '<div class="mp-ai__chips">' + chipsHtml + '</div>' +
         '<div class="mp-ai__messages" id="aiMessages_' + biz.id + '">' + initial + '</div>' +
+        '<div class="mp-ai__fs-close-bar">' +
+          '<button type="button" class="mp-ai__fs-close-btn" aria-label="Return to salon">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>' +
+            'Return to Salon' +
+          '</button>' +
+        '</div>' +
         '<div class="mp-ai__input-bar">' +
           '<input class="mp-ai__input" type="text" id="aiInput_' + biz.id + '" data-tp="en:Ask a question...|vi:Nhập câu hỏi...|es:Hacer una pregunta..." placeholder="' + _t('Ask a question...','Nh\u1eadp c\xe2u h\u1ecfi...','Hacer una pregunta...') + '" autocomplete="off">' +
           '<button class="mp-ai__mic-lang" type="button" title="Voice language" style="display:none">VI</button>' +
@@ -3809,10 +3815,18 @@
           container.style.top    = vv.offsetTop + 'px';
         }
 
+        var _fsSavedY = 0;
+
         function _fsOpen() {
           if (window.innerWidth >= 768) return;
-          container.classList.add('mp-ai--fs');
+          // iOS Safari: position:fixed on body is the only reliable scroll lock.
+          // overflow:hidden alone does NOT prevent background touch-scroll on iOS.
+          _fsSavedY = window.scrollY || window.pageYOffset || 0;
+          document.body.style.position = 'fixed';
+          document.body.style.top      = '-' + _fsSavedY + 'px';
+          document.body.style.width    = '100%';
           document.body.classList.add('mp-ai-open');
+          container.classList.add('mp-ai--fs');
           _fsUpdateVH();
           setTimeout(function () {
             messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -3822,6 +3836,11 @@
         function _fsClose() {
           container.classList.remove('mp-ai--fs');
           document.body.classList.remove('mp-ai-open');
+          // Restore body BEFORE scrollTo — iOS requires this order.
+          document.body.style.position = '';
+          document.body.style.top      = '';
+          document.body.style.width    = '';
+          window.scrollTo(0, _fsSavedY);
           container.style.height = '';
           container.style.top    = '';
         }
@@ -3833,8 +3852,12 @@
         });
         input.addEventListener('focus', _fsOpen);
 
-        // Close on back button
+        // Close on top-left back button
         if (backBtn) backBtn.addEventListener('click', _fsClose);
+
+        // Close on bottom close bar (primary exit on iPhone)
+        var closeBarBtn = container.querySelector('.mp-ai__fs-close-btn');
+        if (closeBarBtn) closeBarBtn.addEventListener('click', _fsClose);
 
         // Handle iOS keyboard resize
         if (window.visualViewport) {

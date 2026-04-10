@@ -1099,8 +1099,33 @@ select.mp-input option {
 .mp-ai__header-back:hover { background: rgba(255,255,255,.08); color: var(--cream); }
 .mp-ai__header-back svg { width: 20px; height: 20px; pointer-events: none; }
 
+/* ── AI: bottom close bar (hidden until fullscreen) ─────────────────────── */
+.mp-ai__fs-close-bar {
+  display: none;
+}
+.mp-ai__fs-close-btn {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .55rem 1.35rem;
+  border-radius: 99px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  color: rgba(255,255,255,.7);
+  font-family: var(--font-b, sans-serif);
+  font-size: .82rem;
+  font-weight: 500;
+  cursor: pointer;
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .15s;
+}
+.mp-ai__fs-close-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+.mp-ai__fs-close-btn:active { background: rgba(255,255,255,.16); }
+
 /* ── AI Widget: Full-Screen Mode (mobile only) ───────────────────────────── */
 @media (max-width: 767px) {
+  /* Belt-and-suspenders overflow lock (position:fixed on body is the primary lock) */
   body.mp-ai-open { overflow: hidden; }
 
   body.mp-ai-open .mp-vnav,
@@ -1115,6 +1140,8 @@ select.mp-input option {
     border: none;
     display: flex;
     flex-direction: column;
+    /* Contain overscroll so it never bleeds to the locked page behind */
+    overscroll-behavior: contain;
   }
 
   .mp-ai--fs .mp-ai__header-back { display: flex; }
@@ -1126,6 +1153,20 @@ select.mp-input option {
   .mp-ai--fs .mp-ai__messages {
     flex: 1;
     height: auto;
+    /* Contain bounce so rubber-band doesn't expose the locked page */
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Show bottom close bar in fullscreen mode */
+  .mp-ai--fs .mp-ai__fs-close-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: .45rem .75rem .4rem;
+    background: var(--navy-800, #123b62);
+    border-top: 1px solid rgba(255,255,255,.07);
+    flex-shrink: 0;
   }
 
   .mp-ai--fs .mp-ai__input-bar {

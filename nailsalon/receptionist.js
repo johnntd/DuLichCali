@@ -2948,7 +2948,7 @@
       // ── Full-screen mode (mobile only) ──────────────────────────────────────
       (function _initFullScreen() {
         var _fsSavedY  = 0;
-        var _isClosing = false;  // Suppresses focus-triggered reopen during close transition
+        var _isClosing = false;
 
         function _fsUpdateVH() {
           var vv = window.visualViewport;
@@ -2957,14 +2957,20 @@
           container.style.top    = vv.offsetTop + 'px';
         }
 
+        // iOS scroll lock via touchmove prevention instead of body position:fixed.
+        // body position:fixed breaks visualViewport.resize on iOS — the keyboard-open
+        // event never fires, so _fsUpdateVH never adjusts the height, and the input
+        // stays hidden behind the keyboard. touchmove prevention avoids this entirely.
+        function _preventBgScroll(e) {
+          if (messagesEl && messagesEl.contains(e.target)) return; // allow messages scroll
+          e.preventDefault();
+        }
+
         function _fsOpen() {
-          if (_isClosing || window.innerWidth >= 768) return;
-          // iOS Safari: position:fixed on body is the only reliable scroll lock.
-          // overflow:hidden alone does NOT prevent background touch-scroll on iOS.
+          // Guard: already open, closing in progress, or desktop — do nothing.
+          if (_isClosing || window.innerWidth >= 768 || container.classList.contains('mp-ai--fs')) return;
           _fsSavedY = window.scrollY || window.pageYOffset || 0;
-          document.body.style.position = 'fixed';
-          document.body.style.top      = '-' + _fsSavedY + 'px';
-          document.body.style.width    = '100%';
+          document.addEventListener('touchmove', _preventBgScroll, { passive: false });
           document.body.classList.add('mp-ai-open');
           container.classList.add('mp-ai--fs');
           _fsUpdateVH();
@@ -2973,20 +2979,13 @@
 
         function _fsClose() {
           _isClosing = true;
-          // Blur input FIRST — dismisses keyboard cleanly and prevents
-          // iOS from firing a spurious focus event after body layout restores,
-          // which would immediately re-trigger _fsOpen().
-          input.blur();
+          input.blur(); // dismiss keyboard before layout changes
+          document.removeEventListener('touchmove', _preventBgScroll, { passive: false });
           container.classList.remove('mp-ai--fs');
           document.body.classList.remove('mp-ai-open');
-          // Restore body BEFORE scrollTo — iOS requires this order.
-          document.body.style.position = '';
-          document.body.style.top      = '';
-          document.body.style.width    = '';
           window.scrollTo(0, _fsSavedY);
           container.style.height = '';
           container.style.top    = '';
-          // Re-enable _fsOpen after layout has settled (iOS needs ~300ms)
           setTimeout(function () { _isClosing = false; }, 400);
         }
 

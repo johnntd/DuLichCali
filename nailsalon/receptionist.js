@@ -2947,7 +2947,8 @@
 
       // ── Full-screen mode (mobile only) ──────────────────────────────────────
       (function _initFullScreen() {
-        var _fsSavedY = 0;
+        var _fsSavedY  = 0;
+        var _isClosing = false;  // Suppresses focus-triggered reopen during close transition
 
         function _fsUpdateVH() {
           var vv = window.visualViewport;
@@ -2957,7 +2958,7 @@
         }
 
         function _fsOpen() {
-          if (window.innerWidth >= 768) return;
+          if (_isClosing || window.innerWidth >= 768) return;
           // iOS Safari: position:fixed on body is the only reliable scroll lock.
           // overflow:hidden alone does NOT prevent background touch-scroll on iOS.
           _fsSavedY = window.scrollY || window.pageYOffset || 0;
@@ -2971,6 +2972,11 @@
         }
 
         function _fsClose() {
+          _isClosing = true;
+          // Blur input FIRST — dismisses keyboard cleanly and prevents
+          // iOS from firing a spurious focus event after body layout restores,
+          // which would immediately re-trigger _fsOpen().
+          input.blur();
           container.classList.remove('mp-ai--fs');
           document.body.classList.remove('mp-ai-open');
           // Restore body BEFORE scrollTo — iOS requires this order.
@@ -2980,6 +2986,8 @@
           window.scrollTo(0, _fsSavedY);
           container.style.height = '';
           container.style.top    = '';
+          // Re-enable _fsOpen after layout has settled (iOS needs ~300ms)
+          setTimeout(function () { _isClosing = false; }, 400);
         }
 
         // Event delegation — closest() works regardless of whether e.target is

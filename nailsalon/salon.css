@@ -83,7 +83,23 @@ body:has(.mp-main--nails) {
   inset: 0;
   background-size: cover;
   background-position: center 25%;
-  animation: ns-hero-zoom 10s ease-out forwards;
+  /* No zoom animation — video provides motion; static fallback stays still */
+}
+
+/* Video hero — full-bleed, object-fit cover, GPU-composited for smooth playback */
+.ns-hero__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  /* Prevent iOS from going fullscreen on tap */
+  -webkit-playsinline: true;
+  /* Promote to own compositor layer — avoids jank on scroll */
+  will-change: transform;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 .ns-hero__overlay {
   position: absolute;
@@ -1270,6 +1286,8 @@ body:has(.mp-main--nails) {
 /* ── Accessibility: Reduced Motion ────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .ns-hero__bg { animation: none; transform: none; }
+  /* Pause video for users who prefer no motion — static poster frame shows instead */
+  .ns-hero__video { display: none; }
   .ns-hero__content { animation: none; }
   .ns-hero__chip,
   .ns-hero__chip:nth-child(1),

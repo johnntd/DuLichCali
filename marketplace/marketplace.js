@@ -1025,8 +1025,12 @@
   window._initNsFeatHc = _initNsFeatHc;
 
   function renderNailsHero(biz) {
-    // Use local owned asset for hero; multi-layer bg so gradient shows if image fails
-    var HERO_IMG = '/images/nails-1.jpg';
+    // Hero background: looping MP4 video with static image fallback via poster.
+    // The <video> is positioned absolute, object-fit:cover — same visual as background-image.
+    // poster="/images/nails-1.jpg" acts as the frame shown before playback and on error.
+    var HERO_VIDEO = '/images/nails-hero-loop.mp4';
+    var HERO_IMG   = '/images/nails-1.jpg';
+    // Fallback inline style used only when video element is hidden (onerror)
     var heroBg = 'background-image:url(' + HERO_IMG + '),' +
       (biz.heroGradient || 'linear-gradient(135deg,#831843,#4c1d95)') + ';' +
       'background-size:cover;background-position:center 25%;';
@@ -1056,7 +1060,14 @@
     var arrowRightIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
 
     return '<div class="ns-hero' + (hasAddr ? ' ns-hero--has-address' : '') + '">' +
-      '<div class="ns-hero__bg" style="' + heroBg + '"></div>' +
+      // Fallback bg-image on the wrapper — shown if video element is hidden via onerror
+      '<div class="ns-hero__bg" style="' + heroBg + '">' +
+        '<video class="ns-hero__video" autoplay muted loop playsinline ' +
+          'poster="' + HERO_IMG + '" ' +
+          'onerror="this.style.display=\'none\'">' +
+          '<source src="' + HERO_VIDEO + '" type="video/mp4">' +
+        '</video>' +
+      '</div>' +
       '<div class="ns-hero__overlay"></div>' +
       '<div class="ns-hero__content">' +
         '<div class="ns-hero__region">' + escHtml(biz.region || 'Bay Area') + ' \xb7 ' + escHtml(biz.city || 'San Jose') + '</div>' +

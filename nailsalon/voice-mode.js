@@ -439,8 +439,9 @@
   // Calls onDone(true) on success, onDone(false) on any failure so the caller
   // can fall through to browser TTS.
   function _speakViaGemini(text, onDone) {
-    var key = '';
-    try { key = localStorage.getItem('dlc_gemini_key') || ''; } catch (_) {}
+    // Key priority: Firestore vendor doc (geminiKey) → localStorage override
+    var key = (_biz && _biz._firestoreGeminiKey) || '';
+    if (!key) { try { key = localStorage.getItem('dlc_gemini_key') || ''; } catch (_) {} }
     if (!key) { onDone(false); return; }
 
     var ctx = _ensureAudioCtx();

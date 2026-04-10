@@ -2505,7 +2505,8 @@
             // ── Vendor doc: apiKey, parallelServices, hoursSchedule ─────────────────
             if (vdoc.exists) {
               var d = vdoc.data();
-              if (d.aiKey) biz._firestoreApiKey = d.aiKey;
+              if (d.aiKey)     biz._firestoreApiKey    = d.aiKey;
+              if (d.geminiKey) biz._firestoreGeminiKey = d.geminiKey;
               // Normalize parallelServices: accept both old [[a,b],...] and new [{a,b},...] formats
               if (d.parallelServices && d.parallelServices.length) {
                 biz._parallelServices = d.parallelServices.map(function(p) {

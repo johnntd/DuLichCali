@@ -209,7 +209,13 @@
         arrowLeftIcon + 'Quay lại' +
       '</button>' +
       '<div class="mp-footer__brand">Du Lịch Cali Services</div>' +
-      '<div class="mp-footer__sub">\xa9 ' + new Date().getFullYear() + ' JDNETWORKS AI SERVICES LLC. All rights reserved.</div>' +
+      '<div class="mp-footer__legal">' +
+        '<a href="/privacy">Privacy Policy</a>' +
+        '<span class="mp-footer__legal-sep" aria-hidden="true">\xb7</span>' +
+        '<a href="/terms">Terms of Service</a>' +
+        '<span class="mp-footer__legal-sep" aria-hidden="true">\xb7</span>' +
+        '\xa9 ' + new Date().getFullYear() + ' JDNETWORKS AI SERVICES LLC' +
+      '</div>' +
       '<div class="mp-footer__sub">DulichCali21 is operated by JDNETWORKS AI SERVICES LLC \xb7 dulichcali21.com \xb7 (714) 227-6007</div>' +
       '</footer>';
   }

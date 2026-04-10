@@ -154,6 +154,24 @@ button { cursor: pointer; font-family: var(--font-b); }
 .site-footer a:hover { color: var(--muted); }
 .site-footer__sep { color: rgba(255,255,255,0.15); }
 
+/* ── Legal Footer (landing pages, above fixed bottom nav) ────── */
+.lp-legal-footer {
+  text-align: center;
+  padding: .85rem 1.25rem 1rem;
+  font-size: .68rem;
+  font-weight: 400;
+  letter-spacing: .03em;
+  color: rgba(180,210,230,.4);
+  line-height: 1.8;
+}
+.lp-legal-footer a {
+  color: rgba(106,176,212,.5);
+  text-decoration: none;
+  transition: color .18s;
+}
+.lp-legal-footer a:hover { color: rgba(106,176,212,.82); }
+.lp-legal-footer__sep { color: rgba(255,255,255,.18); margin: 0 .45em; }
+
 /* ── Bottom Navigation ──────────────────────────────────────── */
 .bottom-nav {
   flex-shrink: 0;

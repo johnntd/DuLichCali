@@ -1261,6 +1261,20 @@ select.mp-input option {
   color: var(--muted);
 }
 
+.mp-footer__legal {
+  font-size: .68rem;
+  color: rgba(180,210,230,.4);
+  margin-bottom: .65rem;
+  line-height: 1.8;
+}
+.mp-footer__legal a {
+  color: rgba(106,176,212,.5);
+  text-decoration: none;
+  transition: color .18s;
+}
+.mp-footer__legal a:hover { color: rgba(106,176,212,.82); }
+.mp-footer__legal-sep { color: rgba(255,255,255,.18); margin: 0 .45em; }
+
 /* ── Mobile Bottom Utility Nav ──────────────────────────────────────────────── */
 /* Persistent back/home/marketplace bar — mobile only, hidden at 768px+ */
 

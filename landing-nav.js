@@ -757,7 +757,14 @@
       }
     });
     html += '</nav>';
-    wrap.innerHTML = html;
+    var footerHtml = '<div class="lp-legal-footer" role="contentinfo">' +
+      '<a href="/privacy">Privacy Policy</a>' +
+      '<span class="lp-legal-footer__sep" aria-hidden="true">\xb7</span>' +
+      '<a href="/terms">Terms of Service</a>' +
+      '<span class="lp-legal-footer__sep" aria-hidden="true">\xb7</span>' +
+      '\xa9 ' + new Date().getFullYear() + ' JDNETWORKS AI SERVICES LLC' +
+      '</div>';
+    wrap.innerHTML = footerHtml + html;
   }
 
   // ── Public API ────────────────────────────────────────────────────────────────

@@ -1438,7 +1438,7 @@
       '',
       '"¿Cuánto cuesta gel manicure?":',
       '[STATE:{"intent":"price_question","services":["Gel Manicure"],"staff":null,"date":null,"time":null,"name":null,"phone":null,"lang":"es","pendingAction":null,"existingBookingId":null}]',
-    ].join('\n');
+    ]).join('\n');
   }
 
   // ── Pending-confirmation messages (shown after avail check passes, before vendor confirms) ──

@@ -42,8 +42,9 @@
   var _iosPrimed     = false;   // TTS primed on iOS via silent utterance
   var _keepalive     = null;    // iOS TTS keepalive timer
   var _ttsStartGuard = null;    // Safety timeout if browser TTS never fires onstart
-  var _audioCtx      = null;    // Web Audio API context (Gemini PCM playback)
-  var _currentSource = null;    // AudioBufferSourceNode currently playing (Gemini)
+  var _audioCtx      = null;    // Web Audio API context (OpenAI/Gemini PCM playback)
+  var _currentSource = null;    // AudioBufferSourceNode currently playing
+  var _welcomeBuffer = null;    // Pre-fetched MP3 ArrayBuffer for welcome message
 
   // ── State labels ──────────────────────────────────────────────────────────
   var LABEL = {
@@ -456,7 +457,76 @@
     }
   }
 
-  // Gemini TTS path — Vietnamese primary.
+  // OpenAI TTS — primary engine for all languages.
+  // model: tts-1 (speed-optimised), voice: nova (warm female, multilingual).
+  // Roundtrip ~200–400 ms vs Gemini's 500–1500 ms.
+  // Requires openaiKey in Firestore vendor doc or localStorage 'dlc_openai_key'.
+  function _speakViaOpenAi(text, onDone) {
+    var key = (_biz && _biz._firestoreOpenAiKey) || '';
+    if (!key) { try { key = localStorage.getItem('dlc_openai_key') || ''; } catch (_) {} }
+    if (!key) { onDone(false); return; }
+
+    var ctx = _ensureAudioCtx();
+    if (!ctx) { onDone(false); return; }
+
+    fetch('https://api.openai.com/v1/audio/speech', {
+      method:  'POST',
+      headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ model: 'tts-1', input: text, voice: 'nova', response_format: 'mp3' })
+    })
+    .then(function (resp) {
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      return resp.arrayBuffer();
+    })
+    .then(function (buf) {
+      return new Promise(function (resolve, reject) {
+        ctx.decodeAudioData(buf, resolve, reject);
+      });
+    })
+    .then(function (decoded) {
+      if (_state !== 'speaking') return; // cancelled while waiting
+      var src = ctx.createBufferSource();
+      src.buffer = decoded;
+      src.connect(ctx.destination);
+      _currentSource = src;
+      src.onended = function () {
+        _currentSource = null;
+        if (_state === 'speaking') _setState('idle');
+        onDone(true);
+      };
+      src.start();
+    })
+    .catch(function () {
+      _currentSource = null;
+      onDone(false);
+    });
+  }
+
+  // Pre-fetch welcome message audio via OpenAI TTS while the user is still on
+  // the page (before they tap voice mode).  Stores raw MP3 ArrayBuffer so open()
+  // can decode + play it instantly with no perceptible delay.
+  // Called by receptionist.js after Firestore vendor data loads (keys available).
+  function _prefetchWelcome(biz) {
+    if (_welcomeBuffer) return; // already fetched
+    var key = (biz && biz._firestoreOpenAiKey) || '';
+    if (!key) { try { key = localStorage.getItem('dlc_openai_key') || ''; } catch (_) {} }
+    if (!key) return;
+
+    var welcome = (biz && biz.aiReceptionist && biz.aiReceptionist.welcomeMessage) || '';
+    var text = _cleanForTts(welcome);
+    if (!text) return;
+
+    fetch('https://api.openai.com/v1/audio/speech', {
+      method:  'POST',
+      headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ model: 'tts-1', input: text, voice: 'nova', response_format: 'mp3' })
+    })
+    .then(function (resp) { if (!resp.ok) throw new Error(); return resp.arrayBuffer(); })
+    .then(function (buf) { _welcomeBuffer = buf; })
+    .catch(function () {}); // silent fail — open() will fall back gracefully
+  }
+
+  // Gemini TTS path — fallback when OpenAI key is unavailable.
   // Requires dlc_gemini_key in localStorage.
   // API returns Int16 PCM at 24 kHz (base64); decoded and played via AudioContext.
   // Calls onDone(true) on success, onDone(false) on any failure so the caller
@@ -565,9 +635,12 @@
     try { if (hasTTS) window.speechSynthesis.cancel(); } catch (_) {}
     _setState('speaking');
 
-    _speakViaGemini(ttsText, function (success) {
-      if (!success && _state === 'speaking') {
-        _speakViaBrowser(ttsText);
+    // OpenAI TTS (~200-400ms) → Gemini TTS (~500-1500ms) → browser TTS (instant)
+    _speakViaOpenAi(ttsText, function (s1) {
+      if (!s1 && _state === 'speaking') {
+        _speakViaGemini(ttsText, function (s2) {
+          if (!s2 && _state === 'speaking') _speakViaBrowser(ttsText);
+        });
       }
     });
   }
@@ -622,14 +695,37 @@
     // grants the permission to play audio on subsequent async Gemini calls.
     _ensureAudioCtx();
 
-    // Welcome message: use instant browser TTS so voice mode feels immediate.
-    // Avoids a Gemini API roundtrip (1–3 s) before the first sound plays.
-    // _speakFast() runs synchronously inside the user-gesture chain, which also
-    // primes iOS Safari's speechSynthesis for subsequent async calls.
+    // Welcome message: play pre-fetched OpenAI audio instantly if available,
+    // otherwise fall through normal TTS pipeline.
+    // AudioContext is already created above (user-gesture), so decodeAudioData
+    // and BufferSource.start() work asynchronously without a new gesture.
     var welcome = (biz.aiReceptionist && biz.aiReceptionist.welcomeMessage) || '';
     if (welcome) {
       var w = _cleanForTts(welcome);
-      if (w) _speakFast(w);
+      if (w) {
+        if (_welcomeBuffer) {
+          // Pre-fetched — decode + play; near-instant, high quality
+          var _wCtx = _audioCtx;
+          var _wBuf = _welcomeBuffer;
+          _welcomeBuffer = null;
+          _setState('speaking');
+          _wCtx.decodeAudioData(_wBuf,
+            function (decoded) {
+              if (_state !== 'speaking') return;
+              var src = _wCtx.createBufferSource();
+              src.buffer = decoded;
+              src.connect(_wCtx.destination);
+              _currentSource = src;
+              src.onended = function () { _currentSource = null; _setState('idle'); };
+              src.start();
+            },
+            function () { _speakReply(welcome); } // decode failed → normal pipeline
+          );
+        } else {
+          // Pre-fetch not ready (slow network / no key) — use normal TTS pipeline
+          _speakReply(welcome);
+        }
+      }
     }
   }
 
@@ -679,9 +775,10 @@
 
   // ── Public API ────────────────────────────────────────────────────────────
   window.DLCVoiceMode = {
-    open:        open,
-    close:       close,
-    isSupported: function () { return hasSR && hasTTS; }
+    open:            open,
+    close:           close,
+    isSupported:     function () { return hasSR && hasTTS; },
+    prefetchWelcome: _prefetchWelcome
   };
 
 })();

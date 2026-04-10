@@ -2507,6 +2507,13 @@
               var d = vdoc.data();
               if (d.aiKey)     biz._firestoreApiKey    = d.aiKey;
               if (d.geminiKey) biz._firestoreGeminiKey = d.geminiKey;
+              if (d.openaiKey) biz._firestoreOpenAiKey = d.openaiKey;
+              // Pre-fetch welcome TTS audio in background so open() plays instantly
+              setTimeout(function () {
+                if (window.DLCVoiceMode && window.DLCVoiceMode.prefetchWelcome) {
+                  window.DLCVoiceMode.prefetchWelcome(biz);
+                }
+              }, 0);
               // Normalize parallelServices: accept both old [[a,b],...] and new [{a,b},...] formats
               if (d.parallelServices && d.parallelServices.length) {
                 biz._parallelServices = d.parallelServices.map(function(p) {

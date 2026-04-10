@@ -1275,6 +1275,136 @@ select.mp-input option {
 .mp-footer__legal a:hover { color: rgba(106,176,212,.82); }
 .mp-footer__legal-sep { color: rgba(255,255,255,.18); margin: 0 .45em; }
 
+/* ── In-App View Switcher (.mp-vv) ──────────────────────────────────────────── */
+/* Airport and Local views render inside #mp-view-content — no page reload.      */
+.mp-vv {
+  padding: 1.5rem 1.25rem 2rem;
+  min-height: calc(100vh - 120px);
+  box-sizing: border-box;
+}
+.mp-vv__header {
+  padding: 1.25rem 0 1.75rem;
+  text-align: center;
+}
+.mp-vv__title {
+  font-family: var(--font-d, 'Bodoni Moda', serif);
+  font-size: clamp(1.6rem, 5vw, 2rem);
+  font-weight: 400;
+  color: #fff;
+  margin: 0 0 .4rem;
+  letter-spacing: -.01em;
+}
+.mp-vv__sub {
+  font-size: .72rem;
+  color: rgba(255,255,255,.45);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.mp-vv__tiles {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+.mp-vv__tile {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 16px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .18s, border-color .18s;
+  text-align: left;
+  width: 100%;
+  color: inherit;
+}
+.mp-vv__tile:hover, .mp-vv__tile:active {
+  background: rgba(255,255,255,.12);
+  border-color: rgba(255,255,255,.2);
+}
+.mp-vv__tile--current {
+  border-color: var(--gold);
+  background: rgba(245,166,35,.08);
+}
+.mp-vv__tile-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.mp-vv__tile-icon svg { width: 22px; height: 22px; stroke: #fff; }
+.mp-vv__tile-icon--blue   { background: rgba(56,189,248,.22); }
+.mp-vv__tile-icon--sky    { background: rgba(125,211,252,.18); }
+.mp-vv__tile-icon--teal   { background: rgba(20,184,166,.2); }
+.mp-vv__tile-icon--amber  { background: rgba(245,158,11,.22); }
+.mp-vv__tile-icon--purple { background: rgba(192,132,252,.22); }
+.mp-vv__tile-icon--pink   { background: rgba(244,114,182,.22); }
+.mp-vv__tile-body {
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+}
+.mp-vv__tile-body strong {
+  font-size: .95rem;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.2;
+}
+.mp-vv__tile-body span {
+  font-size: .75rem;
+  color: rgba(255,255,255,.5);
+}
+.mp-vv__divider {
+  height: 1px;
+  background: rgba(255,255,255,.08);
+  margin: 1.5rem 0;
+}
+.mp-vv__info {
+  text-align: center;
+  font-size: .78rem;
+  color: rgba(255,255,255,.4);
+  line-height: 1.7;
+  margin-bottom: 1.25rem;
+}
+.mp-vv__primary-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .6rem;
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background: var(--gold);
+  color: #0d2f50;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  box-sizing: border-box;
+  transition: opacity .18s;
+}
+.mp-vv__primary-cta:active { opacity: .88; }
+.mp-vv__primary-cta svg { width: 18px; height: 18px; stroke: #0d2f50; flex-shrink: 0; }
+
+/* Active tab highlight when a view is switched */
+.mp-vnav__tab--view-active,
+.mp-vnav__tab--view-active span { color: var(--gold) !important; }
+.mp-vnav__tab--view-active svg { stroke: var(--gold) !important; }
+
+@media (min-width: 768px) {
+  .mp-vv { max-width: 600px; margin: 0 auto; padding: 2rem 2rem 3rem; }
+  .mp-vv__tiles { gap: 1rem; }
+}
+@media (min-width: 1200px) {
+  .mp-vv { max-width: 640px; }
+}
+
 /* ── Mobile Bottom Utility Nav ──────────────────────────────────────────────── */
 /* Persistent back/home/marketplace bar — mobile only, hidden at 768px+ */
 

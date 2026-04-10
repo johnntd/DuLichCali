@@ -32,6 +32,7 @@
   }());
   var _lastSalonBiz  = null;
   var _lastSalonBack = null;
+  var _currentView   = 'home'; // 'home' | 'airport' | 'local' — in-app view state
 
   // Inline translator: _t(english, vietnamese, spanish) → correct string for _currentLang
   function _t(en, vi, es) {
@@ -362,8 +363,10 @@
   function _initVendorNav(biz) {
     window._vnav = {
       scrollTop: function () {
-        // If already on nailsalon page → scroll to top; otherwise return to nailsalon
-        if (window.location.pathname.indexOf('/nailsalon') !== -1) {
+        // If on nailsalon and already home view → scroll top; otherwise switch to home view.
+        if (_currentView !== 'home' && window.location.pathname.indexOf('/nailsalon') !== -1) {
+          _switchView('home', biz);
+        } else if (window.location.pathname.indexOf('/nailsalon') !== -1) {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
           window.location.href = '/nailsalon/';
@@ -387,10 +390,12 @@
         }
       },
       goAirport: function () {
-        _navAvailCheck('airport', function () { window.location.href = '/airport?from=nailsalon'; });
+        // Switch to in-app airport view — no page reload.
+        _navAvailCheck('airport', function () { _switchView('airport', biz); });
       },
       goLocalServices: function () {
-        _navAvailCheck('local', function () { window.location.href = '/marketplace/?from=nailsalon'; });
+        // Switch to in-app local services view — no page reload.
+        _switchView('local', biz);
       },
       toggleInterp: function () {
         if (window._interp) window._interp.toggle();
@@ -2117,6 +2122,164 @@
     });
   }
 
+  // ── In-App View System ────────────────────────────────────────────────────────
+  // Switches the #mp-view-content area without a page reload.
+  // The salon bar, interpreter panel, and bottom nav stay persistent.
+
+  // Update the nav tab highlight to reflect the active view.
+  function _updateVnavActive(viewName) {
+    var vnav = document.querySelector('.mp-vnav');
+    if (!vnav) return;
+    var tabs = vnav.querySelectorAll('.mp-vnav__tab');
+    [].forEach.call(tabs, function (t) { t.classList.remove('mp-vnav__tab--view-active'); });
+    // Tab order: 0=Home, 1=Airport, 2=AI, 3=Local, 4=Call
+    var idx = { home: 0, airport: 1, local: 3 };
+    if (viewName in idx && tabs[idx[viewName]]) {
+      tabs[idx[viewName]].classList.add('mp-vnav__tab--view-active');
+    }
+  }
+
+  // Re-initialize all nails-specific event handlers after content is (re)rendered.
+  function _initNailsHomeView(biz) {
+    initNailBookingForm(biz);
+    _initNsCatHc(biz.id);
+    _initNsFeatHc(biz.id);
+    if (biz.aiReceptionist && biz.aiReceptionist.enabled) {
+      var _R = (window.LilyReceptionist && biz.id === 'luxurious-nails')
+        ? window.LilyReceptionist
+        : Receptionist;
+      _R.init(biz, 'aiWidget_' + biz.id);
+    }
+    if (window._vnav) {
+      window._vnav.scrollBook = function () {
+        var el = document.getElementById('nailBookSection_' + biz.id);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+    }
+    var vnav = _container.querySelector('.mp-vnav');
+    if (vnav) vnav.classList.add('mp-vnav--nails-active');
+  }
+
+  // Render the Airport in-app view — compact, service-first.
+  function _renderAirportView(biz) {
+    var planeIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
+    var carIco   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>';
+    var dropIco  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>';
+    var phone    = escHtml(biz.phone || '+14089163439');
+    return '<div class="mp-vv mp-vv--airport">' +
+      '<div class="mp-vv__header">' +
+        '<h2 class="mp-vv__title">Airport &amp; Rides</h2>' +
+        '<p class="mp-vv__sub">Bay Area &middot; Orange County, CA</p>' +
+      '</div>' +
+      '<div class="mp-vv__tiles">' +
+        '<a href="tel:' + phone + '" class="mp-vv__tile">' +
+          '<div class="mp-vv__tile-icon mp-vv__tile-icon--blue">' + planeIco + '</div>' +
+          '<div class="mp-vv__tile-body">' +
+            '<strong>Airport Pickup</strong>' +
+            '<span>SFO &middot; SJC &middot; OAK &middot; LAX &middot; SNA</span>' +
+          '</div>' +
+        '</a>' +
+        '<a href="tel:' + phone + '" class="mp-vv__tile">' +
+          '<div class="mp-vv__tile-icon mp-vv__tile-icon--sky">' + dropIco + '</div>' +
+          '<div class="mp-vv__tile-body">' +
+            '<strong>Airport Dropoff</strong>' +
+            '<span>Door-to-door &middot; on time</span>' +
+          '</div>' +
+        '</a>' +
+        '<a href="tel:' + phone + '" class="mp-vv__tile">' +
+          '<div class="mp-vv__tile-icon mp-vv__tile-icon--teal">' + carIco + '</div>' +
+          '<div class="mp-vv__tile-body">' +
+            '<strong>Private Ride</strong>' +
+            '<span>Local trips &amp; errands</span>' +
+          '</div>' +
+        '</a>' +
+      '</div>' +
+      '<div class="mp-vv__divider"></div>' +
+      '<div class="mp-vv__info">' +
+        '<p>Available 24/7 &middot; Licensed &amp; insured drivers</p>' +
+        '<p>Bay Area: SFO, SJC, OAK &middot; SoCal: LAX, SNA, LGB</p>' +
+      '</div>' +
+      '<a href="tel:' + phone + '" class="mp-vv__primary-cta">' +
+        phoneIcon + 'Call to Book Now' +
+      '</a>' +
+      '<div class="mp-spacer"></div>' +
+    '</div>';
+  }
+
+  // Render the Local Services in-app view — category tiles.
+  function _renderLocalView() {
+    var foodIco     = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>';
+    var scissorsIco = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>';
+    var nailIco     = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 017 7c0 4-3 7-7 13C9 16 5 13 5 9a7 7 0 017-7z"/></svg>';
+    return '<div class="mp-vv mp-vv--local">' +
+      '<div class="mp-vv__header">' +
+        '<h2 class="mp-vv__title">Local Services</h2>' +
+        '<p class="mp-vv__sub">Food &middot; Beauty &middot; Wellness</p>' +
+      '</div>' +
+      '<div class="mp-vv__tiles">' +
+        '<a href="/foods/" class="mp-vv__tile">' +
+          '<div class="mp-vv__tile-icon mp-vv__tile-icon--amber">' + foodIco + '</div>' +
+          '<div class="mp-vv__tile-body">' +
+            '<strong>Food &amp; Dining</strong>' +
+            '<span>Vietnamese cuisine &middot; Order now</span>' +
+          '</div>' +
+        '</a>' +
+        '<a href="/hairsalon/" class="mp-vv__tile">' +
+          '<div class="mp-vv__tile-icon mp-vv__tile-icon--purple">' + scissorsIco + '</div>' +
+          '<div class="mp-vv__tile-body">' +
+            '<strong>Hair Salon</strong>' +
+            '<span>Cuts &middot; Color &middot; Styling</span>' +
+          '</div>' +
+        '</a>' +
+        '<button type="button" onclick="window._vnav&&window._vnav.scrollTop()" class="mp-vv__tile mp-vv__tile--current">' +
+          '<div class="mp-vv__tile-icon mp-vv__tile-icon--pink">' + nailIco + '</div>' +
+          '<div class="mp-vv__tile-body">' +
+            '<strong>Nail Salon</strong>' +
+            '<span>Luxurious Nails &amp; Spa &middot; Here</span>' +
+          '</div>' +
+        '</button>' +
+      '</div>' +
+      '<div class="mp-spacer"></div>' +
+    '</div>';
+  }
+
+  // Switch the #mp-view-content area to a named view without a page reload.
+  function _switchView(viewName, biz) {
+    if (_currentView === viewName) {
+      if (viewName === 'home') window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    _currentView = viewName;
+    _updateVnavActive(viewName);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    var content = document.getElementById('mp-view-content');
+    if (!content) return;
+
+    if (viewName === 'home') {
+      content.innerHTML =
+        '<main class="mp-main mp-main--nails">' +
+          renderNailsHero(biz) +
+          renderInfoStrip(biz) +
+          renderNailsFeatured(biz) +
+          '<div class="ns-divider"></div>' +
+          renderNailsBookingSection(biz) +
+          '<div class="ns-divider"></div>' +
+          '<div class="ns-ai-section">' + renderAiSection(biz) + '</div>' +
+          '<div class="ns-divider"></div>' +
+          renderNailsInspiration() +
+          '<div class="ns-divider"></div>' +
+          renderNailsTrust(biz) +
+          '<div class="mp-spacer"></div>' +
+        '</main>';
+      _initNailsHomeView(biz);
+    } else if (viewName === 'airport') {
+      content.innerHTML = _renderAirportView(biz);
+    } else if (viewName === 'local') {
+      content.innerHTML = _renderLocalView();
+    }
+  }
+
   // ── Salon Vendor Detail Page ──────────────────────────────────────────────────
 
   function renderSalonVendorDetail(biz) {
@@ -2267,22 +2430,25 @@
     if (isNails) {
       // Premium nails redesign — stacked full-width sections
       // Mobile hierarchy: Screen 1 (Hero+CTAs) → Screen 2 (Services) → Screen 3 (Booking) → AI → Gallery → Trust
+      // #mp-view-content is the swappable area; salon bar + nav + interp panel stay persistent.
       html =
         renderSalonBar(biz) +
-        '<main class="mp-main mp-main--nails">' +
-          renderNailsHero(biz) +
-          renderInfoStrip(biz) +
-          renderNailsFeatured(biz) +
-          '<div class="ns-divider"></div>' +
-          renderNailsBookingSection(biz) +
-          '<div class="ns-divider"></div>' +
-          '<div class="ns-ai-section">' + renderAiSection(biz) + '</div>' +
-          '<div class="ns-divider"></div>' +
-          renderNailsInspiration() +
-          '<div class="ns-divider"></div>' +
-          renderNailsTrust(biz) +
-          '<div class="mp-spacer"></div>' +
-        '</main>' +
+        '<div id="mp-view-content">' +
+          '<main class="mp-main mp-main--nails">' +
+            renderNailsHero(biz) +
+            renderInfoStrip(biz) +
+            renderNailsFeatured(biz) +
+            '<div class="ns-divider"></div>' +
+            renderNailsBookingSection(biz) +
+            '<div class="ns-divider"></div>' +
+            '<div class="ns-ai-section">' + renderAiSection(biz) + '</div>' +
+            '<div class="ns-divider"></div>' +
+            renderNailsInspiration() +
+            '<div class="ns-divider"></div>' +
+            renderNailsTrust(biz) +
+            '<div class="mp-spacer"></div>' +
+          '</main>' +
+        '</div>' +
         renderInterpPanel(biz) +
         renderVendorBottomNav(biz);
     } else {
@@ -2309,36 +2475,23 @@
     }
 
     _container.innerHTML = html;
+    _currentView = 'home';
 
     if (isNails) {
-      initNailBookingForm(biz);
-      _initNsCatHc(biz.id);
-      _initNsFeatHc(biz.id);
-    } else if (biz.bookingEnabled) {
-      initBookingForm(biz);
-    }
-
-    if (biz.aiReceptionist && biz.aiReceptionist.enabled) {
-      var _R = (window.LilyReceptionist && biz.id === 'luxurious-nails')
-        ? window.LilyReceptionist
-        : Receptionist;
-      _R.init(biz, 'aiWidget_' + biz.id);
-    }
-
-    _initVendorNav(biz);
-
-    // For nails: override the generic scrollBook (targets bookingSection_) with nails-specific target
-    if (isNails && window._vnav) {
-      window._vnav.scrollBook = function () {
-        var el = document.getElementById('nailBookSection_' + biz.id);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      };
-    }
-
-    // Nails-active class — :has() fallback for older iOS Safari (<15.4)
-    if (isNails) {
-      var vnav = _container.querySelector('.mp-vnav');
-      if (vnav) vnav.classList.add('mp-vnav--nails-active');
+      _initVendorNav(biz);
+      _initNailsHomeView(biz);
+      _updateVnavActive('home');
+    } else {
+      if (biz.bookingEnabled) {
+        initBookingForm(biz);
+      }
+      if (biz.aiReceptionist && biz.aiReceptionist.enabled) {
+        var _R = (window.LilyReceptionist && biz.id === 'luxurious-nails')
+          ? window.LilyReceptionist
+          : Receptionist;
+        _R.init(biz, 'aiWidget_' + biz.id);
+      }
+      _initVendorNav(biz);
     }
   }
 

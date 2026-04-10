@@ -2295,6 +2295,66 @@
     // Warm closing always appears as the last visible element — after card + photo widget.
     // Outside the if(db) block so it fires whether or not Firestore is available.
     _appendMessage(messagesEl, closingMsg, 'bot');
+
+    // ── Optional email confirmation ────────────────────────────────────────────
+    // Booking is already confirmed and saved. This is purely additive — the customer
+    // can skip and it has zero effect on the booking. _emailState is cleared by the
+    // send() intercept once the customer responds (or on session end).
+    biz._emailState = {
+      bookingId: finalBookingId,
+      vendorId:  vendorId,
+      draft: {
+        name:     draft.name  || '',
+        services: svcs,
+        staff:    draft.staff || null,
+        date:     draft.date  || '',
+        time:     draft.time  || '',
+        lang:     lang,
+      },
+    };
+    var emailAskMsg = lang === 'vi'
+      ? 'Bạn có muốn nhận email xác nhận không? Hãy nhập địa chỉ email, hoặc nhập "bỏ qua".'
+      : lang === 'es'
+        ? '¿Desea recibir un email de confirmación? Escriba su correo o "omitir".'
+        : 'Would you like a confirmation email? Reply with your email address, or type "skip."';
+    _appendMessage(messagesEl, emailAskMsg, 'bot');
+  }
+
+  // ── Email queue writer ────────────────────────────────────────────────────────
+  // Called when customer provides a valid email after booking confirmation.
+  // Writes to vendors/{vendorId}/emailQueue → triggers Cloud Function → sends email.
+  // Completely non-blocking — booking is already saved regardless of email outcome.
+  // Also stamps customerEmail on the booking doc for Phase 2 inbound matching.
+  function _queueBookingEmail(biz, customerEmail, emailState) {
+    var db = window.dlcDb;
+    if (!db) return;
+    var fv = firebase && firebase.firestore ? firebase.firestore.FieldValue : null;
+    var emailDoc = {
+      bookingId:     emailState.bookingId,
+      vendorId:      emailState.vendorId,
+      customerEmail: customerEmail,
+      customerName:  emailState.draft.name     || '',
+      services:      emailState.draft.services || [],
+      staff:         emailState.draft.staff    || null,
+      requestedDate: emailState.draft.date     || '',
+      requestedTime: emailState.draft.time     || '',
+      lang:          emailState.draft.lang     || 'en',
+      shopName:      (biz.aiReceptionist && biz.aiReceptionist.name) || biz.businessName || biz.name || '',
+      shopPhone:     biz.phone     || biz.businessPhone    || '',
+      shopAddress:   biz.address   || biz.businessAddress  || '',
+      status:        'pending',
+    };
+    if (fv) emailDoc.createdAt = fv.serverTimestamp();
+    db.collection('vendors').doc(emailState.vendorId)
+      .collection('emailQueue').add(emailDoc)
+      .then(function () {
+        // Stamp customerEmail on the booking doc so Phase 2 inbound replies can match.
+        db.collection('vendors').doc(emailState.vendorId)
+          .collection('bookings').doc(emailState.bookingId)
+          .update({ customerEmail: customerEmail })
+          .catch(function () {});
+      })
+      .catch(function (e) { console.warn('[email] emailQueue write failed:', e.message); });
   }
 
   // ── Reference image upload widget ────────────────────────────────────────────
@@ -2598,6 +2658,37 @@
               : 'Your request has already been sent and is pending confirmation. Please wait a moment.';
           _appendMessage(messagesEl, guardMsg, 'bot');
           return;
+        }
+
+        // ── Email collection intercept ─────────────────────────────────────────
+        // After booking confirmation, _emailState is set and the next customer
+        // message is checked for an email address before reaching the AI brain.
+        // Covers: valid email → queue email, skip/no → silent dismiss, anything
+        // else → clear state and let AI handle normally.
+        if (biz._emailState) {
+          var emailIn = text.trim();
+          // Skip keyword: dismiss silently, don't pass to AI
+          if (/^(skip|no|nope|không|bỏ qua|omitir)$/i.test(emailIn)) {
+            biz._emailState = null;
+            return;
+          }
+          // Valid email address: queue confirmation + show feedback
+          if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailIn)) {
+            var capturedState = biz._emailState;
+            biz._emailState   = null;
+            _appendMessage(messagesEl, emailIn, 'user');
+            _queueBookingEmail(biz, emailIn, capturedState);
+            var eLang   = (biz._bookingState && biz._bookingState.lang) || 'en';
+            var sentAck = eLang === 'vi'
+              ? 'Đã ghi nhận! Chúng tôi sẽ gửi email xác nhận đến ' + emailIn + '.'
+              : eLang === 'es'
+                ? '¡Listo! Le enviaremos la confirmación a ' + emailIn + '.'
+                : 'Got it! Your confirmation is on its way to ' + emailIn + '.';
+            _appendMessage(messagesEl, sentAck, 'bot');
+            return;
+          }
+          // Anything else: clear email state and fall through to normal AI handling
+          biz._emailState = null;
         }
 
         // TTL refresh: if biz data is older than 10 minutes, re-fetch with fresh server data.

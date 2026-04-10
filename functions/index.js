@@ -41,6 +41,9 @@ const OPENAI_API_KEY  = defineSecret('OPENAI_API_KEY');
 const GEMINI_API_KEY  = defineSecret('GEMINI_API_KEY');
 const CLAUDE_API_KEY  = defineSecret('CLAUDE_API_KEY');
 
+// Email provider secret (Resend — https://resend.com)
+const RESEND_API_KEY  = defineSecret('RESEND_API_KEY');
+
 // ── Firebase Admin ────────────────────────────────────────────────────────────
 if (!admin.apps.length) admin.initializeApp();
 const db = admin.firestore();
@@ -280,6 +283,237 @@ function stripDiacritics(str) {
 // ── Utility: promise-based sleep ──────────────────────────────────────────────
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  BOOKING CONFIRMATION EMAIL
+//
+//  Trigger:  client writes to vendors/{vendorId}/emailQueue/{emailId}
+//            immediately after a successful booking + customer provides email.
+//  Provider: Resend (api.resend.com) — no new npm dep, uses native https.
+//  Secret:   RESEND_API_KEY in Google Cloud Secret Manager.
+//
+//  Setup checklist (one-time):
+//    1. Sign up at https://resend.com (3 000 emails/month free)
+//    2. Verify domain dulichcali21.com (or use onboarding@resend.dev for testing)
+//    3. firebase functions:secrets:set RESEND_API_KEY
+//    4. firebase deploy --only functions
+// ══════════════════════════════════════════════════════════════════════════════
+
+exports.onEmailQueue = onDocumentCreated(
+  {
+    document:       'vendors/{vendorId}/emailQueue/{emailId}',
+    region:         'us-central1',
+    secrets:        [RESEND_API_KEY],
+    timeoutSeconds: 30,
+    retry:          false,   // idempotency handled below
+  },
+  async (event) => {
+    const { vendorId, emailId } = event.params;
+    const queueRef = event.data.ref;
+    const log = (msg, ...args) =>
+      console.log(`[email][${vendorId}/${emailId}] ${msg}`, ...args);
+
+    log('triggered');
+
+    // ── Idempotency guard ─────────────────────────────────────────────────────
+    const current = (await queueRef.get()).data() || {};
+    if (current.emailSent === true || current.emailStatus === 'sent') {
+      log('already sent — skip');
+      return;
+    }
+
+    const data    = event.data.data();
+    const toEmail = data.customerEmail;
+
+    if (!toEmail) {
+      await queueRef.update({ emailStatus: 'skipped', emailSkipReason: 'no_customer_email' });
+      return;
+    }
+
+    const apiKey = RESEND_API_KEY.value();
+    if (!apiKey) {
+      log('RESEND_API_KEY not configured — skipping');
+      await queueRef.update({ emailStatus: 'skipped', emailSkipReason: 'missing_api_key' });
+      return;
+    }
+
+    // ── Build and send ────────────────────────────────────────────────────────
+    const shopName = data.shopName || 'Luxurious Nails';
+    const { textBody, htmlBody } = buildConfirmationEmailBody(data);
+
+    try {
+      await _resendSend(apiKey, {
+        from:     `${shopName} <appointments@dulichcali21.com>`,
+        reply_to: data.shopEmail || 'dulichcali21@gmail.com',
+        to:       [toEmail],
+        subject:  `Booking Confirmed — ${shopName} [${data.bookingId || ''}]`,
+        text:     textBody,
+        html:     htmlBody,
+      });
+      await queueRef.update({
+        emailSent:   true,
+        emailStatus: 'sent',
+        sentAt:      admin.firestore.FieldValue.serverTimestamp(),
+      });
+      log('sent →', toEmail);
+    } catch (err) {
+      log('send failed:', err.message);
+      await queueRef.update({ emailStatus: 'error', emailError: err.message.slice(0, 200) });
+    }
+  }
+);
+
+// ── Resend HTTP helper (native https — no extra npm dependency) ───────────────
+function _resendSend(apiKey, payload) {
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify(payload);
+    const req  = https.request(
+      {
+        hostname: 'api.resend.com',
+        path:     '/emails',
+        method:   'POST',
+        headers:  {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type':  'application/json',
+          'Content-Length': Buffer.byteLength(body),
+        },
+      },
+      (res) => {
+        let raw = '';
+        res.on('data', chunk => { raw += chunk; });
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(JSON.parse(raw));
+          } else {
+            reject(new Error(`Resend HTTP ${res.statusCode}: ${raw.slice(0, 300)}`));
+          }
+        });
+      }
+    );
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
+
+// ── Confirmation email builder ────────────────────────────────────────────────
+function buildConfirmationEmailBody(data) {
+  const {
+    customerName  = 'Customer',
+    bookingId     = '',
+    services      = [],
+    staff,
+    requestedDate = '',
+    requestedTime = '',
+    shopName      = 'Luxurious Nails',
+    shopPhone     = '',
+    shopAddress   = '',
+  } = data;
+
+  // ── Format date ───────────────────────────────────────────────────────────
+  let dateStr = requestedDate;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(requestedDate)) {
+    const d = new Date(requestedDate + 'T12:00:00');
+    const DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    dateStr = `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  }
+
+  // ── Format time ───────────────────────────────────────────────────────────
+  let timeStr = requestedTime;
+  if (/^\d{1,2}:\d{2}$/.test(requestedTime)) {
+    const [h, m] = requestedTime.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    timeStr = `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`;
+  }
+
+  const svcStr  = Array.isArray(services) ? services.join(', ') : (services || 'Appointment');
+  const techStr = staff || 'Next available technician';
+  const name    = customerName || 'Customer';
+  const shop    = shopName;
+
+  // ── Plain text ────────────────────────────────────────────────────────────
+  const textBody = [
+    `Hi ${name},`,
+    '',
+    'Your appointment is confirmed! Here are your details:',
+    '',
+    `  Booking ID:   ${bookingId}`,
+    `  Date:         ${dateStr}`,
+    `  Time:         ${timeStr}`,
+    `  Service:      ${svcStr}`,
+    `  Technician:   ${techStr}`,
+    shopAddress ? `  Location:     ${shopAddress}` : null,
+    shopPhone   ? `  Phone:        ${shopPhone}`   : null,
+    '',
+    'To manage your appointment, reply to this email with:',
+    '  CONFIRM    — to confirm you\'ll be there',
+    '  CANCEL     — to cancel your appointment',
+    '  RESCHEDULE — to request a different date or time',
+    '',
+    'We look forward to seeing you!',
+    '',
+    `— ${shop}`,
+    'www.dulichcali21.com',
+  ].filter(l => l !== null).join('\n');
+
+  // ── HTML ──────────────────────────────────────────────────────────────────
+  const row = (label, value) => value
+    ? `<tr style="border-bottom:1px solid #f0ebe3;">
+        <td style="padding:10px 0;color:#7a6a52;width:38%;font-size:14px;">${label}</td>
+        <td style="padding:10px 0;font-size:14px;">${value}</td>
+       </tr>`
+    : '';
+
+  const htmlBody = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Booking Confirmed</title></head>
+<body style="margin:0;padding:16px;background:#f8f5f1;font-family:Georgia,serif;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);">
+
+  <!-- Header -->
+  <div style="background:#0d2f50;padding:24px 32px;">
+    <h1 style="color:#c9a84c;font-size:20px;margin:0;font-family:Georgia,serif;font-weight:400;letter-spacing:.5px;">${shop}</h1>
+    <p style="color:#a8c4d8;font-size:13px;margin:6px 0 0;">Appointment Confirmation</p>
+  </div>
+
+  <!-- Body -->
+  <div style="padding:28px 32px;color:#2c2c2c;">
+    <p style="font-size:15px;margin:0 0 20px;">Hi <strong>${name}</strong>,<br>Your appointment is confirmed!</p>
+    <table style="width:100%;border-collapse:collapse;">
+      ${row('Booking ID', `<span style="font-family:monospace;font-weight:600;">${bookingId}</span>`)}
+      ${row('Date',        dateStr)}
+      ${row('Time',        timeStr)}
+      ${row('Service',     svcStr)}
+      ${row('Technician',  techStr)}
+      ${row('Location',    shopAddress)}
+      ${row('Phone',       shopPhone)}
+    </table>
+
+    <!-- Reply actions -->
+    <div style="margin:24px 0 0;padding:16px;background:#f8f5f1;border-radius:6px;border-left:3px solid #c9a84c;">
+      <p style="margin:0 0 8px;font-size:13px;color:#5a4a3a;font-weight:600;">Manage your appointment</p>
+      <p style="margin:0;font-size:13px;color:#5a4a3a;line-height:1.8;">
+        Reply to this email with:<br>
+        <strong>CONFIRM</strong> &nbsp;— to confirm you'll be there<br>
+        <strong>CANCEL</strong> &nbsp;&nbsp;— to cancel your appointment<br>
+        <strong>RESCHEDULE</strong> — to request a new date or time
+      </p>
+    </div>
+
+    <p style="font-size:14px;margin:20px 0 0;color:#5a4a3a;">We look forward to seeing you!</p>
+  </div>
+
+  <!-- Footer -->
+  <div style="background:#f0ebe3;padding:14px 32px;text-align:center;">
+    <p style="color:#9a8a7a;font-size:12px;margin:0;">— ${shop} &nbsp;·&nbsp; www.dulichcali21.com</p>
+  </div>
+</div>
+</body></html>`;
+
+  return { textBody, htmlBody };
 }
 
 // ══════════════════════════════════════════════════════════════════════════════

@@ -842,6 +842,9 @@
     /* Payout ledger entries */
     .pr-ledger-entry { padding:.42rem 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.72rem }
     .pr-ledger-entry:last-child { border-bottom:none }
+    /* Correction / stale-export notice */
+    .pr-correction-note { display:flex;align-items:center;gap:.35rem;font-size:.62rem;color:#fb923c;background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.22);border-radius:5px;padding:.3rem .55rem;margin-bottom:.4rem }
+    .pr-stale-note { color:#fbbf24;border-color:rgba(251,191,36,.22);background:rgba(251,191,36,.07) }
     /* Commission field in staff modal */
     .sa-comm-row { display:flex;align-items:center;gap:.5rem;margin-top:.3rem }
 
@@ -2809,6 +2812,9 @@
       <span style="color:var(--muted)" data-i18n="pr_modal_rem">Còn lại</span>
       <span style="color:var(--danger);font-weight:700" id="prPayModalRem">—</span>
     </div>
+    <div id="prPayModalCorrectionWarn" class="pr-correction-note" style="display:none;margin-bottom:.7rem">
+      <span data-i18n="pr_correction_modal_warn">⚠ Kỳ lương đã được mở lại sau khi đóng — đây là khoản thanh toán sửa đổi.</span>
+    </div>
     <div class="sa-form-group" style="margin-bottom:.7rem">
       <label class="sa-label" data-i18n="pr_modal_amt">Số tiền trả lần này ($)</label>
       <input class="sa-input" id="prPayModalAmt" type="number" min="0.01" step="0.01" placeholder="0.00">
@@ -2853,6 +2859,28 @@
     <div id="prHistPeriod" style="font-size:.65rem;color:var(--muted);margin-bottom:.8rem"></div>
     <div id="prHistBody" style="overflow-y:auto;flex:1;min-height:3rem"></div>
     <div id="prHistFooter" style="margin-top:.6rem;padding-top:.55rem;border-top:1px solid var(--border);font-size:.7rem;color:var(--muted)"></div>
+  </div>
+</div>
+
+<!-- Payroll reopen modal — owner must provide reason before reopening a finalized period -->
+<div class="sa-modal-backdrop" id="payrollReopenModal" style="display:none;align-items:center;justify-content:center" onclick="closeReopenModal()">
+  <div class="sa-modal" style="max-width:360px" onclick="event.stopPropagation()">
+    <h3 style="color:var(--cream);font-size:.92rem;margin-bottom:.5rem" data-i18n="pr_reopen_title">Mở Lại Kỳ Lương</h3>
+    <div id="prReopenPeriodLabel" style="font-size:.7rem;color:var(--muted);margin-bottom:.9rem"></div>
+    <div class="pr-correction-note" style="margin-bottom:.9rem">
+      <span data-i18n="pr_reopen_warn">Kỳ lương đã đóng. Mở lại sẽ được ghi vào nhật ký kiểm toán.</span>
+    </div>
+    <div class="sa-form-group" style="margin-bottom:1rem">
+      <label class="sa-label" data-i18n="pr_reopen_reason_lbl">Lý do mở lại <span style="color:var(--danger)">*</span></label>
+      <textarea class="sa-input" id="prReopenReason" rows="3" style="resize:vertical;min-height:3.5rem"
+        data-i18n-placeholder="pr_reopen_reason_ph" placeholder="Nhập lý do (bắt buộc)…"></textarea>
+    </div>
+    <div class="sa-modal-actions">
+      <button class="btn btn--outline btn--sm" onclick="closeReopenModal()" data-i18n="btn_cancel">Hủy</button>
+      <button class="btn btn--sm" onclick="confirmReopenPeriod()"
+        style="background:rgba(251,146,60,.18);border:1px solid rgba(251,146,60,.5);color:#fb923c"
+        data-i18n="pr_reopen_confirm_btn">Xác Nhận Mở Lại</button>
+    </div>
   </div>
 </div>
 
@@ -7446,7 +7474,19 @@
     if (!_payrollMonth) return;
 
     // ── Period status ─────────────────────────────────────────────────────────
-    var isFinalized = (_payrollData && _payrollData.status === 'finalized');
+    var isFinalized    = (_payrollData && _payrollData.status === 'finalized');
+    var correctionLog  = (_payrollData && Array.isArray(_payrollData.correctionLog)) ? _payrollData.correctionLog : [];
+    var hasCorrected   = correctionLog.some(function(e) { return e.action === 'reopened'; });
+    var lastExportedAt = (_payrollData && _payrollData.lastExportedAt) ? _payrollData.lastExportedAt : null;
+    // Stale export: if a correction happened after the last export
+    var isStaleExport  = false;
+    if (lastExportedAt && hasCorrected) {
+      var latestCorr = correctionLog.reduce(function(latest, e) {
+        return (e.action === 'reopened' && e.at > latest) ? e.at : latest;
+      }, '');
+      isStaleExport = latestCorr > lastExportedAt;
+    }
+
     var badgeEl     = document.getElementById('payrollStatusBadge');
     var bannerEl    = document.getElementById('payrollFinalizedBanner');
     var finalizeBtn = document.getElementById('btnFinalizePeriod');
@@ -7459,10 +7499,8 @@
     if (bannerEl)    bannerEl.style.display    = isFinalized ? 'flex' : 'none';
     if (finalizeBtn) finalizeBtn.style.display = isFinalized ? 'none' : '';
     if (notesEl) {
-      // Load period notes; disable editing when finalized
       notesEl.value    = (_payrollData && _payrollData.periodNotes) ? _payrollData.periodNotes : '';
       notesEl.disabled = isFinalized;
-      // Also show/hide save-notes button
       var saveNotesBtn = notesEl.nextElementSibling;
       if (saveNotesBtn) saveNotesBtn.style.display = isFinalized ? 'none' : '';
     }
@@ -7551,10 +7589,13 @@
             '<div style="font-size:.88rem;font-weight:700;color:' + remColor + '">$' + tRem.toFixed(2) + '</div>' +
           '</div>' +
         '</div>' +
-        '<div style="font-size:.6rem;color:var(--muted);opacity:.65;margin-bottom:.5rem">' +
+        '<div style="font-size:.6rem;color:var(--muted);opacity:.65;margin-bottom:.4rem">' +
           esc(rows.length) + ' ' + esc(lb.pr_summary_staff) +
           (isFinalized ? ' · <span style="color:#fb923c">' + esc(lb.pr_finalized_label) + '</span>' : '') +
-        '</div>';
+          (lastExportedAt ? ' · <span title="' + esc(lastExportedAt.slice(0,16).replace('T',' ')) + '">' + esc(lb.pr_last_exported || 'Exported') + ': ' + esc(lastExportedAt.slice(0,10)) + '</span>' : '') +
+        '</div>' +
+        (hasCorrected ? '<div class="pr-correction-note">' + esc(lb.pr_correction_note || '⚠ Đã sửa sau khi đóng — ' + correctionLog.filter(function(e){return e.action==='reopened';}).length + ' lần mở lại.') + '</div>' : '') +
+        (isStaleExport ? '<div class="pr-correction-note pr-stale-note">' + esc(lb.pr_stale_export_warn || '⚠ Dữ liệu đã thay đổi sau lần xuất CSV cuối — hãy xuất lại.') + '</div>' : '');
     } else if (sumEl) {
       sumEl.innerHTML = '';
     }
@@ -7664,10 +7705,16 @@
     if (inp)      inp.value          = remaining.toFixed(2);
     if (notesInp) notesInp.value     = '';
     if (classEl) {
-      // Restore saved classification note if present
       var payout = (_payrollData && _payrollData.payouts && _payrollData.payouts[staffId]) ? _payrollData.payouts[staffId] : {};
       classEl.value  = payout.classificationNote || '';
       if (methodEl) methodEl.value = payout.payMethod || 'cash';
+    }
+    // Correction-mode warning: show if period was previously finalized then reopened
+    var corrWarnEl = document.getElementById('prPayModalCorrectionWarn');
+    if (corrWarnEl) {
+      var clog = (_payrollData && Array.isArray(_payrollData.correctionLog)) ? _payrollData.correctionLog : [];
+      var wasReopened = clog.some(function(e) { return e.action === 'reopened'; });
+      corrWarnEl.style.display = wasReopened ? '' : 'none';
     }
     mo.style.display = 'flex';
   }
@@ -7802,27 +7849,65 @@
   function finalizePeriod() {
     var lb = _LABELS[_dlcLang] || _LABELS.vi;
     if (!payrollRef || !_payrollMonth) return;
-    var msg = (lb.pr_confirm_finalize || 'Đóng kỳ lương {m}? Sẽ không thể sửa thêm (có thể mở lại nếu cần).')
+    var msg = (lb.pr_confirm_finalize || 'Đóng kỳ lương {m}? Có thể mở lại nếu cần.')
       .replace('{m}', _payrollMonth);
     if (!confirm(msg)) return;
-    payrollRef.doc(_payrollMonth).set({
+    var logEntry = { action: 'finalized', at: new Date().toISOString(), by: _userEmail || '' };
+    var docRef   = payrollRef.doc(_payrollMonth);
+    docRef.set({
       period:      _payrollMonth,
       status:      'finalized',
       finalizedAt: firebase.firestore.FieldValue.serverTimestamp(),
       finalizedBy: _userEmail
     }, { merge: true })
+    .then(function() { return docRef.update({ correctionLog: firebase.firestore.FieldValue.arrayUnion(logEntry) }); })
     .then(function() { showToast(lb.pr_toast_finalized || 'Kỳ lương đã đóng.'); })
     .catch(function(e) { showToast((lb.pr_err_save || 'Error') + ': ' + e.message); });
   }
 
+  // reopenPeriod() now opens the reopen modal (reason required for audit trail)
   function reopenPeriod() {
-    var lb = _LABELS[_dlcLang] || _LABELS.vi;
+    var lb  = _LABELS[_dlcLang] || _LABELS.vi;
+    var mo  = document.getElementById('payrollReopenModal');
+    var lbl = document.getElementById('prReopenPeriodLabel');
+    var inp = document.getElementById('prReopenReason');
+    if (!mo || !payrollRef || !_payrollMonth) return;
+    if (lbl) lbl.textContent = (lb.pr_hist_period || 'Period') + ': ' + _payrollMonth;
+    if (inp) inp.value = '';
+    mo.style.display = 'flex';
+  }
+
+  function closeReopenModal() {
+    var mo = document.getElementById('payrollReopenModal');
+    if (mo) mo.style.display = 'none';
+  }
+
+  function confirmReopenPeriod() {
+    var lb     = _LABELS[_dlcLang] || _LABELS.vi;
+    var inp    = document.getElementById('prReopenReason');
+    var reason = inp ? inp.value.trim() : '';
+    if (!reason) {
+      showToast(lb.pr_reopen_reason_required || 'Vui lòng nhập lý do mở lại.');
+      if (inp) inp.focus();
+      return;
+    }
     if (!payrollRef || !_payrollMonth) return;
-    var msg = (lb.pr_confirm_reopen || 'Mở lại kỳ lương {m}?').replace('{m}', _payrollMonth);
-    if (!confirm(msg)) return;
+    var logEntry = {
+      action:   'reopened',
+      at:       new Date().toISOString(),
+      by:       _userEmail || '',
+      reason:   reason,
+      previousStatus: 'finalized'
+    };
     payrollRef.doc(_payrollMonth).set({ status: 'open' }, { merge: true })
-    .then(function() { showToast(lb.pr_toast_reopened || 'Kỳ lương đã mở lại.'); })
-    .catch(function(e) { showToast((lb.pr_err_save || 'Error') + ': ' + e.message); });
+      .then(function() {
+        return payrollRef.doc(_payrollMonth).update({ correctionLog: firebase.firestore.FieldValue.arrayUnion(logEntry) });
+      })
+      .then(function() {
+        closeReopenModal();
+        showToast(lb.pr_toast_reopened || 'Kỳ lương đã mở lại.');
+      })
+      .catch(function(e) { showToast((lb.pr_err_save || 'Error') + ': ' + e.message); });
   }
 
   function savePeriodNotes() {
@@ -7907,6 +7992,14 @@
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    // Record export timestamp so stale-export detection knows if data changed after last export
+    if (payrollRef && _payrollMonth) {
+      var docRef = payrollRef.doc(_payrollMonth);
+      var ts = new Date().toISOString();
+      docRef.set({ period: _payrollMonth }, { merge: true })
+        .then(function() { return docRef.update({ lastExportedAt: ts }); })
+        .catch(function(e) { console.warn('[Payroll] lastExportedAt write failed:', e); });
+    }
   }
 
   // ── Export 1: Per-staff payroll summary CSV (ledger-aware) ───────────────────
@@ -8588,6 +8681,16 @@
       pr_btn_export_ledger:'Sổ Cái CSV',
       pr_csv_disclaimer:'Chỉ dùng để tham khảo kế toán. Không phải tài liệu khai thuế.',
       pr_ledger_empty:'Chưa có sự kiện thanh toán nào được ghi lại.',
+      pr_reopen_title:'Mở Lại Kỳ Lương',
+      pr_reopen_warn:'Kỳ lương đã đóng. Mở lại sẽ được ghi vào nhật ký kiểm toán.',
+      pr_reopen_reason_lbl:'Lý do mở lại *',
+      pr_reopen_reason_ph:'Nhập lý do (bắt buộc)…',
+      pr_reopen_confirm_btn:'Xác Nhận Mở Lại',
+      pr_reopen_reason_required:'Vui lòng nhập lý do mở lại.',
+      pr_correction_note:'⚠ Đã sửa sau khi đóng — kỳ lương đã được mở lại.',
+      pr_correction_modal_warn:'⚠ Kỳ lương đã được mở lại sau khi đóng — đây là khoản thanh toán sửa đổi.',
+      pr_stale_export_warn:'⚠ Dữ liệu đã thay đổi sau lần xuất CSV cuối — hãy xuất lại.',
+      pr_last_exported:'Xuất lần cuối',
       // ── Status badges ────────────────────────────────────────────────────────
       st_confirmed:'Xác nhận', st_in_progress:'Đang làm', st_completed:'Xong',
       st_canceled:'Đã hủy', st_no_show:'Vắng mặt', st_rescheduled:'Dời lịch',
@@ -8915,6 +9018,16 @@
       pr_btn_export_ledger:'Ledger CSV',
       pr_csv_disclaimer:'For bookkeeping reference only. Not a tax filing document.',
       pr_ledger_empty:'No payout entries recorded yet.',
+      pr_reopen_title:'Reopen Payroll Period',
+      pr_reopen_warn:'This period is closed. Reopening will be logged in the audit trail.',
+      pr_reopen_reason_lbl:'Reason for reopening *',
+      pr_reopen_reason_ph:'Enter reason (required)…',
+      pr_reopen_confirm_btn:'Confirm Reopen',
+      pr_reopen_reason_required:'Please enter a reason for reopening.',
+      pr_correction_note:'⚠ Corrected after closing — this period was reopened.',
+      pr_correction_modal_warn:'⚠ This period was reopened after closing — this is a correction payment.',
+      pr_stale_export_warn:'⚠ Data changed since last CSV export — re-export recommended.',
+      pr_last_exported:'Last exported',
       // ── Status badges ────────────────────────────────────────────────────────
       st_confirmed:'Confirmed', st_in_progress:'In Progress', st_completed:'Done',
       st_canceled:'Canceled', st_no_show:'No Show', st_rescheduled:'Rescheduled',
@@ -9241,6 +9354,16 @@
       pr_btn_export_ledger:'CSV Libro',
       pr_csv_disclaimer:'Solo para referencia contable. No es un documento de declaración fiscal.',
       pr_ledger_empty:'Aún no hay eventos de pago registrados.',
+      pr_reopen_title:'Reabrir Período de Nómina',
+      pr_reopen_warn:'Este período está cerrado. La reapertura quedará registrada en la auditoría.',
+      pr_reopen_reason_lbl:'Motivo de reapertura *',
+      pr_reopen_reason_ph:'Ingrese motivo (obligatorio)…',
+      pr_reopen_confirm_btn:'Confirmar Reapertura',
+      pr_reopen_reason_required:'Por favor ingrese el motivo de la reapertura.',
+      pr_correction_note:'⚠ Corregido tras cierre — este período fue reabierto.',
+      pr_correction_modal_warn:'⚠ Este período fue reabierto tras cerrarse — este es un pago de corrección.',
+      pr_stale_export_warn:'⚠ Los datos cambiaron desde el último CSV exportado — se recomienda reexportar.',
+      pr_last_exported:'Última exportación',
       // ── Status badges ────────────────────────────────────────────────────────
       st_confirmed:'Confirmada', st_in_progress:'En Proceso', st_completed:'Lista',
       st_canceled:'Cancelada', st_no_show:'No Asistió', st_rescheduled:'Reprogramada',

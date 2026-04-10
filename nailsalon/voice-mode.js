@@ -74,6 +74,32 @@
     return (LABEL[_lang] || LABEL.en)[key] || '';
   }
 
+  // ── TTS text helpers ──────────────────────────────────────────────────────
+  // Strip AI state markers and markdown from text before speaking.
+  function _cleanForTts(text) {
+    return text
+      .replace(/\[STATE:[^\]]*\]/g,    '')
+      .replace(/\[BOOKING:[^\]]*\]/g,  '')
+      .replace(/\[ESCALATE:[^\]]*\]/g, '')
+      .replace(/#{1,6}\s?/g, '')
+      .replace(/\*{1,3}([^*]*)\*{1,3}/g, '$1')
+      .replace(/`([^`]*)`/g, '$1')
+      .replace(/\n{2,}/g, '. ')
+      .replace(/\n/g, ' ')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+  }
+
+  // Trim to the first complete sentence within ~240 chars.
+  // Reduces Gemini TTS processing time for long AI replies.
+  // The full reply is always visible in the chat bubble.
+  function _truncateForTts(text) {
+    var MAX = 240;
+    if (text.length <= MAX) return text;
+    var dot = text.lastIndexOf('. ', MAX);
+    return text.substring(0, dot > MAX * 0.4 ? dot + 1 : MAX).trim();
+  }
+
   // ── Build DOM ─────────────────────────────────────────────────────────────
   function _buildOverlay() {
     var el = document.createElement('div');
@@ -519,34 +545,32 @@
     });
   }
 
-  // TTS router — strips markers, then dispatches to the right engine.
+  // Instant browser TTS — used for the welcome message only.
+  // No Gemini roundtrip, no delay. Called synchronously inside the open()
+  // user-gesture so iOS Safari allows it.
+  function _speakFast(text) {
+    try { if (hasTTS) window.speechSynthesis.cancel(); } catch (_) {}
+    _setState('speaking');
+    _speakViaBrowser(text);
+  }
+
+  // TTS router — cleans text, truncates for speed, dispatches to Gemini
+  // (best quality) with browser TTS as fallback.
   function _speakReply(text) {
     if (!text) { _setState('idle'); return; }
-
-    // Strip AI state/booking markers and markdown before speaking
-    var spoken = text
-      .replace(/\[STATE:[^\]]*\]/g,    '')
-      .replace(/\[BOOKING:[^\]]*\]/g,  '')
-      .replace(/\[ESCALATE:[^\]]*\]/g, '')
-      .replace(/#{1,6}\s?/g, '')
-      .replace(/\*{1,3}([^*]*)\*{1,3}/g, '$1')
-      .replace(/`([^`]*)`/g, '$1')
-      .replace(/\n{2,}/g, '. ')
-      .replace(/\n/g, ' ')
-      .replace(/\s{2,}/g, ' ')
-      .trim();
-
+    var spoken = _cleanForTts(text);
     if (!spoken) { _setState('idle'); return; }
 
-    // Cancel any ongoing browser TTS (Gemini source stopped separately in _stopSpeaking)
+    // Trim to ~2 sentences before sending to Gemini — shorter text processes
+    // significantly faster without any perceptible quality loss.
+    var ttsText = _truncateForTts(spoken);
+
     try { if (hasTTS) window.speechSynthesis.cancel(); } catch (_) {}
     _setState('speaking');
 
-    // All languages: try Gemini TTS first (best quality); fall back to browser TTS
-    // if no key is configured or the API call fails.
-    _speakViaGemini(spoken, function (success) {
+    _speakViaGemini(ttsText, function (success) {
       if (!success && _state === 'speaking') {
-        _speakViaBrowser(spoken);
+        _speakViaBrowser(ttsText);
       }
     });
   }
@@ -601,13 +625,15 @@
     // grants the permission to play audio on subsequent async Gemini calls.
     _ensureAudioCtx();
 
-    // Speak welcome message synchronously — must stay inside the user-gesture
-    // chain from the voice-mode button click. iOS Safari blocks speechSynthesis
-    // outside a gesture; setTimeout would break the chain and silence TTS.
-    // Once this first speak() succeeds it also unlocks speechSynthesis for
-    // subsequent async AI responses in this session.
+    // Welcome message: use instant browser TTS so voice mode feels immediate.
+    // Avoids a Gemini API roundtrip (1–3 s) before the first sound plays.
+    // _speakFast() runs synchronously inside the user-gesture chain, which also
+    // primes iOS Safari's speechSynthesis for subsequent async calls.
     var welcome = (biz.aiReceptionist && biz.aiReceptionist.welcomeMessage) || '';
-    if (welcome) _speakReply(welcome);
+    if (welcome) {
+      var w = _cleanForTts(welcome);
+      if (w) _speakFast(w);
+    }
   }
 
   function close() {

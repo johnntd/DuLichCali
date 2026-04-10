@@ -845,6 +845,17 @@
     /* Correction / stale-export notice */
     .pr-correction-note { display:flex;align-items:center;gap:.35rem;font-size:.62rem;color:#fb923c;background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.22);border-radius:5px;padding:.3rem .55rem;margin-bottom:.4rem }
     .pr-stale-note { color:#fbbf24;border-color:rgba(251,191,36,.22);background:rgba(251,191,36,.07) }
+    /* ── AI Payroll Copilot (Phase 8) ────────────────────────────────────────── */
+    .pr-copilot { background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.22);border-radius:8px;padding:.65rem .75rem;font-size:.72rem }
+    .pr-copilot-hd { font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#a78bfa;margin-bottom:.4rem }
+    .pr-copilot-section { margin-top:.5rem;padding-top:.45rem;border-top:1px solid rgba(139,92,246,.12) }
+    .pr-copilot-section:first-of-type { margin-top:0;padding-top:0;border-top:none }
+    .pr-copilot-finding { display:flex;align-items:flex-start;gap:.35rem;padding:.25rem 0;border-bottom:1px solid rgba(255,255,255,.05);line-height:1.4 }
+    .pr-copilot-finding:last-child { border-bottom:none }
+    .pr-copilot-rec { display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.25rem 0;border-bottom:1px solid rgba(255,255,255,.05);line-height:1.4 }
+    .pr-copilot-rec:last-child { border-bottom:none }
+    .pr-ready-badge { display:inline-flex;align-items:center;gap:.2rem;font-size:.6rem;font-weight:700;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#4ade80;border-radius:4px;padding:.14rem .42rem;white-space:nowrap }
+    .pr-notready-badge { background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:#f87171 }
     /* Commission field in staff modal */
     .sa-comm-row { display:flex;align-items:center;gap:.5rem;margin-top:.3rem }
 
@@ -2035,6 +2046,9 @@
               </div>
               <button class="btn btn--sm btn--outline" onclick="exportPayrollCSV()" style="font-size:.62rem;padding:.15rem .45rem" data-i18n="pr_btn_export">CSV</button>
               <button class="btn btn--sm btn--outline" onclick="exportPayrollLedger()" style="font-size:.62rem;padding:.15rem .45rem" data-i18n="pr_btn_export_ledger">Sổ Cái</button>
+              <button class="btn btn--sm" onclick="runPayrollCopilot(true)"
+                style="font-size:.62rem;padding:.15rem .48rem;background:rgba(139,92,246,.18);border:1px solid rgba(139,92,246,.45);color:#a78bfa;font-weight:600"
+                data-i18n="cop_btn">AI ✦</button>
             </div>
           </div>
           <!-- Period notes (accounting notes for this month) -->
@@ -2055,6 +2069,8 @@
           </div>
           <!-- Period summary — populated by renderPayroll() -->
           <div id="payrollSummary" style="margin-bottom:.7rem"></div>
+          <!-- AI Copilot analysis — populated by runPayrollCopilot() -->
+          <div id="payrollCopilotOut" style="margin-bottom:.7rem"></div>
           <!-- Table -->
           <div id="payrollBody"><div class="sa-empty" style="font-size:.78rem" data-i18n="earn_empty">Chưa có dữ liệu.</div></div>
           <!-- Footer: note + finalize button -->
@@ -7530,6 +7546,7 @@
 
     if (currentStaffData.length === 0) {
       body.innerHTML = '<div class="sa-empty" style="font-size:.78rem">' + esc(lb.earn_empty) + '</div>';
+      runPayrollCopilot(false);
       return;
     }
 
@@ -7664,6 +7681,8 @@
         (tRem > 0.004 ? '$' + tRem.toFixed(2) : '—') + '</td>' +
       '<td colspan="2"></td>' +
       '</tr></tfoot></table></div>';
+    // Auto-refresh copilot whenever payroll data changes
+    runPayrollCopilot(false);
   }
 
   // Pay modal state — includes accounting snapshot fields
@@ -7973,6 +7992,235 @@
         payout:    payout
       };
     });
+  }
+
+  // ── AI Payroll Copilot — deterministic analysis from live in-memory data ────────
+  // Reads: _payrollData, _payrollMonth, currentStaffData, currentStaffCompData,
+  //        _saAllItems (via _aggregatePayrollMonth + _buildPayrollRows).
+  // Owner-only: panel is inside payrollCard which is hidden for non-owners.
+  // No external API calls — analysis is fully local and privacy-safe.
+  function runPayrollCopilot(forceScroll) {
+    var el = document.getElementById('payrollCopilotOut');
+    if (!el) return;
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
+
+    // Guard: need period + staff data loaded
+    if (!_payrollMonth || currentStaffData.length === 0) {
+      el.innerHTML = '';
+      return;
+    }
+
+    // ── Gather period meta ────────────────────────────────────────────────────
+    var isFinalized    = (_payrollData && _payrollData.status === 'finalized');
+    var correctionLog  = (_payrollData && Array.isArray(_payrollData.correctionLog)) ? _payrollData.correctionLog : [];
+    var reopenCount    = correctionLog.filter(function(e) { return e.action === 'reopened'; }).length;
+    var hasCorrected   = reopenCount > 0;
+    var lastExportedAt = (_payrollData && _payrollData.lastExportedAt) ? _payrollData.lastExportedAt : null;
+    var isStaleExport  = false;
+    if (lastExportedAt && hasCorrected) {
+      var latestCorr = correctionLog.reduce(function(acc, e) {
+        return (e.action === 'reopened' && e.at > acc) ? e.at : acc;
+      }, '');
+      isStaleExport = latestCorr > lastExportedAt;
+    }
+
+    // ── Aggregate per-staff rows (reuses shared helpers) ──────────────────────
+    var byStaff = _aggregatePayrollMonth(_payrollMonth);
+    var rows    = _buildPayrollRows(byStaff);
+    var tOwed = 0, tPaid = 0, tRem = 0;
+    rows.forEach(function(r) { tOwed += r.totalOwed; tPaid += r.amtPaid; tRem += r.remaining; });
+
+    // ── Detect findings ───────────────────────────────────────────────────────
+    var findings = [];
+    var unpaid   = rows.filter(function(r) { return r.status === 'unpaid'  && r.totalOwed > 0.005; });
+    var partial  = rows.filter(function(r) { return r.status === 'partial'; });
+    var overpaid = rows.filter(function(r) { return r.amtPaid > r.totalOwed + 0.005; });
+    var missingNotes = rows.filter(function(r) {
+      return r.ledger.some(function(e) { return e.amount > 0 && !e.notes && !e.classificationNote; });
+    });
+    var preLedger = rows.filter(function(r) { return r.amtPaid > 0.005 && r.ledger.length === 0; });
+
+    if (unpaid.length > 0) {
+      findings.push({ severity: 'warn', icon: '⚠',
+        text: (lb.cop_f_unpaid || '{n} staff unpaid: {names}. Outstanding: {amt}.')
+          .replace('{n}', unpaid.length)
+          .replace('{names}', unpaid.map(function(r) { return r.name; }).join(', '))
+          .replace('{amt}', '$' + tRem.toFixed(2)) });
+    }
+    if (partial.length > 0) {
+      findings.push({ severity: 'warn', icon: '⚠',
+        text: (lb.cop_f_partial || '{n} partially paid: {names}.')
+          .replace('{n}', partial.length)
+          .replace('{names}', partial.map(function(r) {
+            return r.name + ' ($' + r.remaining.toFixed(2) + ' ' + (lb.cop_remaining || 'remaining') + ')';
+          }).join(', ')) });
+    }
+    if (hasCorrected) {
+      findings.push({ severity: 'info', icon: '🔁',
+        text: (lb.cop_f_reopened || 'Period reopened {n} time(s) after closing.').replace('{n}', reopenCount) });
+    }
+    if (isStaleExport) {
+      findings.push({ severity: 'warn', icon: '📤',
+        text: (lb.cop_f_stale_export || 'Data changed since last export on {date}.')
+          .replace('{date}', lastExportedAt ? lastExportedAt.slice(0, 10) : '—') });
+    }
+    if (overpaid.length > 0) {
+      findings.push({ severity: 'error', icon: '⛔',
+        text: (lb.cop_f_overpaid || 'Overpayment detected: {names}. Review the ledger.')
+          .replace('{names}', overpaid.map(function(r) { return r.name; }).join(', ')) });
+    }
+    if (missingNotes.length > 0) {
+      findings.push({ severity: 'info', icon: 'ℹ',
+        text: (lb.cop_f_missing_notes || '{names}: payout entries missing notes or classification.')
+          .replace('{names}', missingNotes.map(function(r) { return r.name; }).join(', ')) });
+    }
+    if (preLedger.length > 0) {
+      findings.push({ severity: 'info', icon: 'ℹ',
+        text: (lb.cop_f_pre_ledger || '{names}: pre-ledger payments — no line-item detail.')
+          .replace('{names}', preLedger.map(function(r) { return r.name; }).join(', ')) });
+    }
+    if (tOwed < 0.005 && rows.length > 0) {
+      findings.push({ severity: 'info', icon: 'ℹ',
+        text: lb.cop_f_no_activity || 'No billable service activity recorded for this period.' });
+    }
+
+    // ── Readiness checks ──────────────────────────────────────────────────────
+    var allPaid         = rows.length > 0 && rows.every(function(r) { return r.status === 'paid' || r.totalOwed < 0.005; });
+    var readyToFinalize = allPaid && !isFinalized && overpaid.length === 0 && tOwed > 0.005;
+
+    // ── Recommendations ───────────────────────────────────────────────────────
+    var recs = [];
+    if (unpaid.length > 0 || partial.length > 0) {
+      var pending = unpaid.concat(partial);
+      recs.push({ priority: 'high', action: null,
+        text: (lb.cop_r_pay_pending || '{n} staff need payment: {names}. Use Pay buttons in the table.')
+          .replace('{n}', pending.length)
+          .replace('{names}', pending.map(function(r) { return r.name; }).join(', ')) });
+    }
+    if (isStaleExport) {
+      recs.push({ priority: 'high',
+        text: lb.cop_r_reexport || 'Re-export CSV — data changed since last export.',
+        action: { label: lb.pr_btn_export || 'Export CSV', fn: 'exportPayrollCSV()' } });
+    }
+    if (readyToFinalize && !isStaleExport) {
+      recs.push({ priority: 'medium',
+        text: lb.cop_r_ready_finalize || 'All staff paid — period is ready to close.',
+        action: { label: lb.pr_btn_finalize || 'Close Period', fn: 'finalizePeriod()' } });
+    }
+    if (!lastExportedAt && tPaid > 0.005 && !isFinalized) {
+      recs.push({ priority: 'medium',
+        text: lb.cop_r_export_first || 'Export a summary CSV before closing the period.',
+        action: { label: lb.pr_btn_export || 'Export CSV', fn: 'exportPayrollCSV()' } });
+    }
+    if (isFinalized && !lastExportedAt) {
+      recs.push({ priority: 'medium',
+        text: lb.cop_r_finalized_no_export || 'Period closed but not exported — export for your records.',
+        action: { label: lb.pr_btn_export || 'Export CSV', fn: 'exportPayrollCSV()' } });
+    }
+    if (isFinalized && lastExportedAt && !isStaleExport && overpaid.length === 0) {
+      recs.push({ priority: 'low', action: null,
+        text: lb.cop_r_finalized_exported || 'Period closed and exported — ready for accountant handoff.' });
+    }
+    if (recs.length === 0 && !isFinalized && tOwed > 0.005) {
+      recs.push({ priority: 'low', action: null,
+        text: lb.cop_r_on_track || 'Payroll in progress — no issues detected.' });
+    }
+
+    // ── Period label (human-readable) ─────────────────────────────────────────
+    var pParts = _payrollMonth.split('-');
+    var pDate  = new Date(parseInt(pParts[0]), parseInt(pParts[1]) - 1, 1);
+    var locale = _dlcLang === 'en' ? 'en-US' : _dlcLang === 'es' ? 'es-US' : 'vi-VN';
+    var periodLabel = pDate.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+
+    // ── Render output ─────────────────────────────────────────────────────────
+    var html = '<div class="pr-copilot">';
+
+    // Title row + readiness badge
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.5rem">'
+      + '<span class="pr-copilot-hd" style="margin-bottom:0">✦ ' + esc(lb.cop_title || 'AI Payroll Copilot') + '</span>';
+    if (readyToFinalize) {
+      html += '<span class="pr-ready-badge">✓ ' + esc(lb.cop_ready || 'Ready to Close') + '</span>';
+    } else if (isFinalized && !isStaleExport) {
+      html += '<span class="pr-ready-badge" style="background:rgba(251,146,60,.12);border-color:rgba(251,146,60,.3);color:#fb923c">⊙ ' + esc(lb.cop_finalized || 'Closed') + '</span>';
+    } else if (unpaid.length > 0 || partial.length > 0 || overpaid.length > 0) {
+      html += '<span class="pr-ready-badge pr-notready-badge">✗ ' + esc(lb.cop_not_ready || 'Not Ready') + '</span>';
+    }
+    html += '</div>';
+
+    // Summary section
+    html += '<div class="pr-copilot-section">'
+      + '<div class="pr-copilot-hd">' + esc(lb.cop_section_summary || 'SUMMARY') + '</div>'
+      + '<div style="display:grid;grid-template-columns:auto 1fr;gap:.14rem .55rem;font-size:.7rem">'
+      + '<span style="color:var(--muted)">' + esc(lb.pr_summary_owed || 'Total Owed') + '</span>'
+      + '<span style="color:var(--cream);font-weight:600">$' + tOwed.toFixed(2) + '</span>'
+      + '<span style="color:var(--muted)">' + esc(lb.pr_summary_paid || 'Paid Out') + '</span>'
+      + '<span style="color:var(--success)">$' + tPaid.toFixed(2) + '</span>'
+      + '<span style="color:var(--muted)">' + esc(lb.pr_summary_remaining || 'Remaining') + '</span>'
+      + '<span style="color:' + (tRem > 0.004 ? 'var(--danger)' : 'var(--success)') + ';font-weight:600">$' + tRem.toFixed(2) + '</span>'
+      + '<span style="color:var(--muted)">' + esc(lb.cop_staff_in_period || 'Staff') + '</span>'
+      + '<span style="color:var(--cream)">' + rows.length + ' (' + unpaid.length + ' ' + esc(lb.cop_label_unpaid || 'unpaid') + ', ' + partial.length + ' ' + esc(lb.cop_label_partial || 'partial') + ')</span>'
+      + '<span style="color:var(--muted)">' + esc(lb.cop_period_status || 'Status') + '</span>'
+      + '<span style="color:' + (isFinalized ? '#fb923c' : '#4ade80') + '">' + esc(isFinalized ? (lb.pr_finalized_label || 'CLOSED') : (lb.pr_open_label || 'OPEN')) + (hasCorrected ? ' (' + esc(lb.cop_label_corrected || 'corrected') + ' ×' + reopenCount + ')' : '') + '</span>'
+      + (lastExportedAt
+          ? '<span style="color:var(--muted)">' + esc(lb.pr_last_exported || 'Last exported') + '</span>'
+            + '<span style="color:var(--cream)">' + esc(lastExportedAt.slice(0, 10)) + (isStaleExport ? ' <span style="color:#fbbf24">⚠</span>' : '') + '</span>'
+          : '')
+      + '</div>'
+      + '</div>';
+
+    // Findings section
+    html += '<div class="pr-copilot-section">'
+      + '<div class="pr-copilot-hd">' + esc(lb.cop_section_findings || 'FINDINGS') + ' (' + findings.length + ')</div>';
+    if (findings.length === 0) {
+      html += '<div style="color:var(--success);font-size:.7rem">✓ ' + esc(lb.cop_no_findings || 'No issues detected.') + '</div>';
+    } else {
+      findings.forEach(function(f) {
+        var color = f.severity === 'error' ? 'var(--danger)' : f.severity === 'warn' ? '#fb923c' : 'var(--muted)';
+        html += '<div class="pr-copilot-finding" style="color:' + color + '">'
+          + '<span style="flex-shrink:0">' + f.icon + '</span><span>' + esc(f.text) + '</span></div>';
+      });
+    }
+    html += '</div>';
+
+    // Recommendations section
+    if (recs.length > 0) {
+      html += '<div class="pr-copilot-section">'
+        + '<div class="pr-copilot-hd">' + esc(lb.cop_section_recs || 'RECOMMENDATIONS') + '</div>';
+      recs.forEach(function(rec) {
+        var textColor = rec.priority === 'high' ? '#fb923c' : rec.priority === 'medium' ? 'var(--cream)' : 'var(--muted)';
+        var prefix    = rec.priority === 'high' ? '→ ' : rec.priority === 'medium' ? '· ' : '  ';
+        html += '<div class="pr-copilot-rec">'
+          + '<span style="flex:1;color:' + textColor + '">' + prefix + esc(rec.text) + '</span>';
+        if (rec.action) {
+          html += '<button class="btn btn--sm btn--outline" onclick="' + rec.action.fn + '" '
+            + 'style="font-size:.58rem;padding:.12rem .38rem;flex-shrink:0;white-space:nowrap">'
+            + esc(rec.action.label) + '</button>';
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    // Accountant handoff block — only when period is finalized
+    if (isFinalized) {
+      html += '<div class="pr-copilot-section">'
+        + '<div class="pr-copilot-hd">' + esc(lb.cop_section_handoff || 'ACCOUNTANT SUMMARY') + '</div>'
+        + '<div style="font-size:.68rem;color:var(--muted);line-height:1.7">'
+        + esc(lb.cop_handoff_period || 'Period:') + ' <strong style="color:var(--cream)">' + esc(periodLabel) + '</strong><br>'
+        + esc(lb.cop_handoff_owed || 'Total payroll:') + ' <strong style="color:var(--cream)">$' + tOwed.toFixed(2) + '</strong><br>'
+        + esc(lb.cop_handoff_paid || 'Paid out:') + ' <strong style="color:var(--success)">$' + tPaid.toFixed(2) + '</strong><br>'
+        + (tRem > 0.004 ? esc(lb.cop_handoff_remaining || 'Remaining:') + ' <strong style="color:var(--danger)">$' + tRem.toFixed(2) + '</strong><br>' : '')
+        + esc(lb.cop_handoff_staff || 'Staff count:') + ' <strong style="color:var(--cream)">' + rows.length + '</strong><br>'
+        + (hasCorrected ? esc((lb.cop_handoff_corrected || 'Corrections: reopened {n}×.').replace('{n}', reopenCount)) + '<br>' : '')
+        + (lastExportedAt
+            ? esc(lb.cop_handoff_exported || 'Last CSV export:') + ' <strong style="color:var(--cream)">' + esc(lastExportedAt.slice(0, 10)) + '</strong>'
+            : '<span style="color:#fb923c">' + esc(lb.cop_handoff_no_export || 'No CSV export on file.') + '</span>')
+        + '</div></div>';
+    }
+
+    html += '</div>'; // close .pr-copilot
+    el.innerHTML = html;
+    if (forceScroll) { el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
   }
 
   // ── CSV helper: quote a cell value if it contains special chars ───────────────
@@ -8691,6 +8939,35 @@
       pr_correction_modal_warn:'⚠ Kỳ lương đã được mở lại sau khi đóng — đây là khoản thanh toán sửa đổi.',
       pr_stale_export_warn:'⚠ Dữ liệu đã thay đổi sau lần xuất CSV cuối — hãy xuất lại.',
       pr_last_exported:'Xuất lần cuối',
+      // ── AI Payroll Copilot (Phase 8) ──────────────────────────────────────────
+      cop_btn:'AI ✦',
+      cop_title:'AI Copilot Kỳ Lương',
+      cop_ready:'Sẵn Sàng Đóng', cop_not_ready:'Chưa Sẵn Sàng', cop_finalized:'Đã Đóng',
+      cop_section_summary:'TÓM TẮT', cop_section_findings:'PHÁT HIỆN',
+      cop_section_recs:'ĐỀ XUẤT', cop_section_handoff:'BÁO CÁO KẾ TOÁN',
+      cop_staff_in_period:'Nhân viên', cop_period_status:'Trạng thái', cop_remaining:'còn lại',
+      cop_label_unpaid:'chưa trả', cop_label_partial:'một phần', cop_label_corrected:'đã sửa',
+      cop_no_findings:'Không phát hiện vấn đề.',
+      cop_f_unpaid:'{n} nhân viên chưa được trả lương: {names}. Tổng còn nợ: {amt}.',
+      cop_f_partial:'{n} nhân viên mới trả một phần: {names}.',
+      cop_f_reopened:'Kỳ lương đã được mở lại {n} lần sau khi đóng — có khoản sửa đổi.',
+      cop_f_stale_export:'Dữ liệu thay đổi sau lần xuất CSV ngày {date} — nên xuất lại.',
+      cop_f_overpaid:'Thanh toán vượt mức phát hiện ở: {names}. Kiểm tra lại sổ cái.',
+      cop_f_missing_notes:'{names}: có lần trả thiếu ghi chú hoặc phân loại thuế.',
+      cop_f_pre_ledger:'{names}: có thanh toán trước khi có sổ cái — không có chi tiết từng lần.',
+      cop_f_no_activity:'Không có hoạt động dịch vụ nào trong kỳ này.',
+      cop_r_pay_pending:'{n} nhân viên chưa thanh toán đầy đủ: {names}. Dùng nút Trả Lương trong bảng.',
+      cop_r_reexport:'Xuất lại CSV — dữ liệu đã thay đổi sau lần xuất cuối.',
+      cop_r_ready_finalize:'Tất cả nhân viên đã được trả — kỳ lương sẵn sàng đóng.',
+      cop_r_export_first:'Nên xuất CSV tóm tắt trước khi đóng kỳ lương.',
+      cop_r_finalized_exported:'Kỳ lương đã đóng và đã xuất — sẵn sàng giao kế toán.',
+      cop_r_finalized_no_export:'Kỳ lương đã đóng nhưng chưa xuất — xuất CSV để lưu hồ sơ.',
+      cop_r_on_track:'Kỳ lương đang trong quá trình — không phát hiện vấn đề.',
+      cop_handoff_period:'Kỳ lương:', cop_handoff_owed:'Tổng lương:',
+      cop_handoff_paid:'Đã trả:', cop_handoff_remaining:'Còn nợ:',
+      cop_handoff_staff:'Số nhân viên:',
+      cop_handoff_corrected:'Đã sửa đổi: mở lại {n} lần sau khi đóng.',
+      cop_handoff_exported:'Xuất CSV lần cuối:', cop_handoff_no_export:'Chưa xuất CSV.',
       // ── Status badges ────────────────────────────────────────────────────────
       st_confirmed:'Xác nhận', st_in_progress:'Đang làm', st_completed:'Xong',
       st_canceled:'Đã hủy', st_no_show:'Vắng mặt', st_rescheduled:'Dời lịch',
@@ -9028,6 +9305,35 @@
       pr_correction_modal_warn:'⚠ This period was reopened after closing — this is a correction payment.',
       pr_stale_export_warn:'⚠ Data changed since last CSV export — re-export recommended.',
       pr_last_exported:'Last exported',
+      // ── AI Payroll Copilot (Phase 8) ──────────────────────────────────────────
+      cop_btn:'AI ✦',
+      cop_title:'AI Payroll Copilot',
+      cop_ready:'Ready to Close', cop_not_ready:'Not Ready', cop_finalized:'Closed',
+      cop_section_summary:'SUMMARY', cop_section_findings:'FINDINGS',
+      cop_section_recs:'RECOMMENDATIONS', cop_section_handoff:'ACCOUNTANT SUMMARY',
+      cop_staff_in_period:'Staff', cop_period_status:'Status', cop_remaining:'remaining',
+      cop_label_unpaid:'unpaid', cop_label_partial:'partial', cop_label_corrected:'corrected',
+      cop_no_findings:'No issues detected.',
+      cop_f_unpaid:'{n} staff unpaid: {names}. Total outstanding: {amt}.',
+      cop_f_partial:'{n} staff partially paid: {names}.',
+      cop_f_reopened:'Period reopened {n} time(s) after closing — correction payment(s) recorded.',
+      cop_f_stale_export:'Data changed since last CSV export on {date} — re-export recommended.',
+      cop_f_overpaid:'Overpayment detected for: {names}. Review the payout ledger.',
+      cop_f_missing_notes:'{names}: payout entries missing notes or tax classification.',
+      cop_f_pre_ledger:'{names}: pre-ledger payments recorded — no line-item detail available.',
+      cop_f_no_activity:'No billable service activity recorded for this period.',
+      cop_r_pay_pending:'{n} staff need payment: {names}. Use the Pay buttons in the table.',
+      cop_r_reexport:'Re-export CSV — data changed since last export.',
+      cop_r_ready_finalize:'All staff paid — period is ready to close.',
+      cop_r_export_first:'Export a summary CSV before closing the period.',
+      cop_r_finalized_exported:'Period closed and exported — ready for accountant handoff.',
+      cop_r_finalized_no_export:'Period closed but not exported — export CSV for your records.',
+      cop_r_on_track:'Payroll in progress — no issues detected.',
+      cop_handoff_period:'Period:', cop_handoff_owed:'Total payroll:',
+      cop_handoff_paid:'Paid out:', cop_handoff_remaining:'Remaining:',
+      cop_handoff_staff:'Staff count:',
+      cop_handoff_corrected:'Corrections: reopened {n}× after closing.',
+      cop_handoff_exported:'Last CSV export:', cop_handoff_no_export:'No CSV export on file.',
       // ── Status badges ────────────────────────────────────────────────────────
       st_confirmed:'Confirmed', st_in_progress:'In Progress', st_completed:'Done',
       st_canceled:'Canceled', st_no_show:'No Show', st_rescheduled:'Rescheduled',
@@ -9364,6 +9670,35 @@
       pr_correction_modal_warn:'⚠ Este período fue reabierto tras cerrarse — este es un pago de corrección.',
       pr_stale_export_warn:'⚠ Los datos cambiaron desde el último CSV exportado — se recomienda reexportar.',
       pr_last_exported:'Última exportación',
+      // ── AI Payroll Copilot (Phase 8) ──────────────────────────────────────────
+      cop_btn:'AI ✦',
+      cop_title:'Copiloto IA de Nómina',
+      cop_ready:'Listo para Cerrar', cop_not_ready:'No Listo', cop_finalized:'Cerrado',
+      cop_section_summary:'RESUMEN', cop_section_findings:'HALLAZGOS',
+      cop_section_recs:'RECOMENDACIONES', cop_section_handoff:'RESUMEN PARA CONTADOR',
+      cop_staff_in_period:'Personal', cop_period_status:'Estado', cop_remaining:'pendiente',
+      cop_label_unpaid:'sin pago', cop_label_partial:'parcial', cop_label_corrected:'corregido',
+      cop_no_findings:'Sin problemas detectados.',
+      cop_f_unpaid:'{n} empleado(s) sin pago: {names}. Total pendiente: {amt}.',
+      cop_f_partial:'{n} empleado(s) con pago parcial: {names}.',
+      cop_f_reopened:'El período fue reabierto {n} vez/veces — hay pagos de corrección.',
+      cop_f_stale_export:'Datos cambiados desde el último CSV del {date} — reexportar recomendado.',
+      cop_f_overpaid:'Pago excesivo detectado para: {names}. Revise el libro de pagos.',
+      cop_f_missing_notes:'{names}: entradas de pago sin notas o clasificación fiscal.',
+      cop_f_pre_ledger:'{names}: pagos anteriores al libro — sin detalle disponible.',
+      cop_f_no_activity:'Sin actividad de servicio registrada para este período.',
+      cop_r_pay_pending:'{n} empleado(s) pendientes: {names}. Use los botones Pagar en la tabla.',
+      cop_r_reexport:'Reexportar CSV — datos cambiados desde el último export.',
+      cop_r_ready_finalize:'Todo el personal pagado — el período está listo para cerrar.',
+      cop_r_export_first:'Exporte un CSV resumen antes de cerrar el período.',
+      cop_r_finalized_exported:'Período cerrado y exportado — listo para el contador.',
+      cop_r_finalized_no_export:'Período cerrado sin exportar — exporte CSV para sus registros.',
+      cop_r_on_track:'Nómina en progreso — sin problemas detectados.',
+      cop_handoff_period:'Período:', cop_handoff_owed:'Total nómina:',
+      cop_handoff_paid:'Pagado:', cop_handoff_remaining:'Pendiente:',
+      cop_handoff_staff:'Nº empleados:',
+      cop_handoff_corrected:'Correcciones: reabierto {n}× tras cierre.',
+      cop_handoff_exported:'Último export CSV:', cop_handoff_no_export:'Sin export CSV registrado.',
       // ── Status badges ────────────────────────────────────────────────────────
       st_confirmed:'Confirmada', st_in_progress:'En Proceso', st_completed:'Lista',
       st_canceled:'Cancelada', st_no_show:'No Asistió', st_rescheduled:'Reprogramada',

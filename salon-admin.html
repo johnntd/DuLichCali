@@ -7035,12 +7035,19 @@
 
   // ── Staff commissions + earnings ──────────────────────────────────────────────
   // Compute per-booking earnings for an assigned staff member.
-  // Rules:
-  //   - Cancelled / no_show / rescheduled bookings → null (no earnings)
-  //   - Commission is on netPaid (amountPaid - refundAmount) — only collected money
-  //   - Tip goes 100% to staff (industry standard); tracked separately
-  //   - If no commission rate configured (commissionPct = 0), commission = $0 but tip still counted
-  //   - If no payment recorded (netPaid = 0 and tip = 0) → null (nothing earned yet)
+  //
+  // Rules applying to ALL compensation types:
+  //   - Cancelled / no_show / rescheduled → null (no earnings, not an error)
+  //   - Refunds deducted: commission basis = netPaid (amountPaid − refundAmount)
+  //   - Tip goes 100% to staff regardless of comp type; tracked separately
+  //   - If nothing collected (netPaid = 0 AND tip = 0) → null (booking not yet paid)
+  //
+  // Per compensation type:
+  //   commission  commission = netPaid × commissionPct%; total = commission + tip
+  //   salary      commissionPct forced to 0; total = tip only per booking
+  //               monthly base pay is NOT per-booking — added in month view by renderStaffEarnings
+  //   hybrid      commission = netPaid × commissionPct% (same as commission type)
+  //               monthly base pay added in month view only; not per-booking
 
   function _computeStaffEarning(b) {
     var noEarn = ['canceled', 'cancelled', 'no_show', 'rescheduled'];
@@ -7215,7 +7222,7 @@
           : r.compensationType === 'hybrid'
             ? (r.pct > 0 ? r.pct + '%' : '') + '<span style="font-size:.58rem;color:var(--muted)"> ' + esc(lb.earn_type_hybrid) + '</span>'
             : (r.pct > 0 ? r.pct + '%' : '—');
-        // Commission cell: salary shows "—" (earns no per-booking commission)
+        // Commission cell: salary shows "—" (no per-booking commission; base pay is monthly)
         var commCell = r.compensationType === 'salary'
           ? '<span style="color:var(--muted)">—</span>'
           : '$' + r.commission.toFixed(2);
@@ -7223,6 +7230,21 @@
         var baseCell = showBaseCol
           ? '<td style="color:#a78bfa">' + (r.basePay > 0 ? '$' + r.basePay.toFixed(2) : '<span style="color:var(--muted)">—</span>') + '</td>'
           : '';
+        // In Today/Week views, salary/hybrid staff get a subscript note in the Total cell
+        // clarifying that per-booking total excludes their monthly base pay.
+        var baseMoNote = '';
+        if (!showBaseCol && r.monthlyBasePay > 0) {
+          var moAmt = '$' + Number(r.monthlyBasePay).toLocaleString() + lb.unit_mo;
+          if (r.compensationType === 'salary') {
+            // Salary: total shown is tips only — note the fixed monthly base
+            baseMoNote = '<div style="font-size:.55rem;color:var(--muted);font-weight:400;line-height:1.3;margin-top:.15rem">' +
+              esc(lb.earn_base_note) + ': ' + moAmt + '</div>';
+          } else if (r.compensationType === 'hybrid') {
+            // Hybrid: total shown is commission + tips — note the additional monthly base
+            baseMoNote = '<div style="font-size:.55rem;color:var(--muted);font-weight:400;line-height:1.3;margin-top:.15rem">' +
+              '+ ' + moAmt + ' ' + esc(lb.earn_base_note) + '</div>';
+          }
+        }
         return '<tr>' +
           '<td style="color:var(--cream);font-weight:700">' + esc(r.name) + '</td>' +
           '<td style="color:var(--muted)">' + pctCell + '</td>' +
@@ -7232,7 +7254,7 @@
           baseCell +
           '<td style="color:var(--success)">' + commCell + '</td>' +
           '<td style="color:#fbbf24">$' + r.tip.toFixed(2) + '</td>' +
-          '<td style="color:var(--cream);font-weight:700">$' + r.total.toFixed(2) + '</td>' +
+          '<td style="color:var(--cream);font-weight:700">$' + r.total.toFixed(2) + baseMoNote + '</td>' +
           '</tr>';
       }).join('') +
       '</tbody><tfoot><tr>' +
@@ -7760,7 +7782,8 @@
       staff_earnings:'Thu Nhập Nhân Viên',
       earn_today:'Hôm nay', earn_week:'Tuần này', earn_month:'Tháng này',
       earn_empty:'Chưa có dữ liệu.',
-      earn_note:'Hoa hồng tính trên tiền dịch vụ đã thu thực tế. Tip tính riêng. Lịch hẹn hủy/vắng không tính.',
+      earn_note:'Hoa hồng tính trên tiền đã thu (trừ hoàn tiền). Tip tính riêng 100% cho nhân viên. Lịch hủy/vắng không tính. Lương cố định hiển thị trong cột Lương CB (chế độ Tháng).',
+      earn_base_note:'lương cố định',
       earn_col_staff:'Nhân viên', earn_col_pct:'HH%', earn_col_appt:'Lịch hẹn',
       earn_col_done:'Hoàn thành', earn_col_noshow:'Không đến',
       earn_col_comm:'Hoa hồng', earn_col_tip:'Tip', earn_col_total:'Tổng thu',
@@ -8056,7 +8079,8 @@
       staff_earnings:'Staff Earnings',
       earn_today:'Today', earn_week:'This Week', earn_month:'This Month',
       earn_empty:'No data yet.',
-      earn_note:'Commission based on actual collected service amount. Tip counted separately. Canceled/no-show bookings excluded.',
+      earn_note:'Commission on collected amount (net of refunds). Tips 100% to staff. Canceled/no-show excluded. Salary/hybrid base pay shown in Base Pay column (Month view only).',
+      earn_base_note:'base pay',
       earn_col_staff:'Staff', earn_col_pct:'Comm%', earn_col_appt:'Appointments',
       earn_col_done:'Completed', earn_col_noshow:'No Show',
       earn_col_comm:'Commission', earn_col_tip:'Tip', earn_col_total:'Total',
@@ -8351,7 +8375,8 @@
       staff_earnings:'Ganancias del Personal',
       earn_today:'Hoy', earn_week:'Esta Semana', earn_month:'Este Mes',
       earn_empty:'Sin datos aún.',
-      earn_note:'Comisión basada en el monto cobrado. Propina por separado. Cancelaciones/ausencias excluidas.',
+      earn_note:'Comisión sobre monto cobrado (neto de reembolsos). Propinas 100% al empleado. Cancelaciones/ausencias excluidas. Sueldo fijo en columna Sueldo Base (vista Mes).',
+      earn_base_note:'sueldo base',
       earn_col_staff:'Personal', earn_col_pct:'Com%', earn_col_appt:'Citas',
       earn_col_done:'Completadas', earn_col_noshow:'No Asistió',
       earn_col_comm:'Comisión', earn_col_tip:'Propina', earn_col_total:'Total',

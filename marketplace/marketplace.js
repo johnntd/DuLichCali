@@ -1028,7 +1028,7 @@
     // Hero background: looping MP4 video with static image fallback via poster.
     // The <video> is positioned absolute, object-fit:cover — same visual as background-image.
     // poster="/images/nails-1.jpg" acts as the frame shown before playback and on error.
-    var HERO_VIDEO = '/images/nails-hero-loop.mp4';
+    var HERO_VIDEO = '/images/nails-showcase-loop.mp4';
     var HERO_IMG   = '/images/nails-1.jpg';
     // Fallback inline style used only when video element is hidden (onerror)
     var heroBg = 'background-image:url(' + HERO_IMG + '),' +
@@ -1206,15 +1206,16 @@
   }
 
   function renderNailsPromoSlot(biz) {
-    // Ambient Ken Burns image — no fake play button.
-    // When /videos/salon-promo.mp4 (Remotion SalonPromo) is ready, replace <img> with:
-    //   <video class="ns-promo-slot__video" autoplay muted loop playsinline src="/videos/salon-promo.mp4"></video>
     var ctaOnclick = 'document.getElementById(\'nailBookSection_' + biz.id + '\').scrollIntoView({behavior:\'smooth\'})';
     return '<section class="ns-promo-slot">' +
       '<div class="ns-promo-slot__card">' +
-        '<img class="ns-promo-slot__bg" src="/images/nails-2.jpg" ' +
-          'onerror="this.onerror=null;this.src=\'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=900&auto=format&fit=crop&q=80\'" ' +
-          'alt="" loading="lazy" aria-hidden="true">' +
+        // Cinematic showcase loop — same photo-based video as hero, looks great here too.
+        // Fallback: onerror hides video → ns-promo-slot__card css background shows.
+        '<video class="ns-promo-slot__video" autoplay muted loop playsinline ' +
+          'poster="/images/nails-2.jpg" ' +
+          'onerror="this.style.display=\'none\'">' +
+          '<source src="/images/nails-showcase-loop.mp4" type="video/mp4">' +
+        '</video>' +
         '<div class="ns-promo-slot__overlay"></div>' +
         '<div class="ns-promo-slot__badge">Salon Showcase</div>' +
         '<div class="ns-promo-slot__content">' +

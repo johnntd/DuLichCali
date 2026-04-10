@@ -5,6 +5,7 @@ import { FoodPromoSchema } from "./FoodPromo/schema";
 import { SalonPromo } from "./SalonPromo/SalonPromo";
 import { SalonPromoProps } from "./SalonPromo/schema";
 import { NailsHeroLoop } from "./NailsHeroLoop/NailsHeroLoop";
+import { NailsShowcaseLoop } from "./NailsShowcaseLoop/NailsShowcaseLoop";
 
 // Total frames: 450 @ 30fps = 15 seconds
 // Dimensions: 1080×1920 (vertical 9:16 mobile)
@@ -74,6 +75,15 @@ export const RemotionRoot: React.FC = () => {
         fps={30}
         width={1080}
         height={1920}
+        defaultProps={{}}
+      />
+      <Composition
+        id="NailsShowcaseLoop"
+        component={NailsShowcaseLoop}
+        durationInFrames={150}
+        fps={30}
+        width={720}
+        height={1280}
         defaultProps={{}}
       />
     </>

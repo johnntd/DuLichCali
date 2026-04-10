@@ -1286,8 +1286,9 @@ body:has(.mp-main--nails) {
 /* ── Accessibility: Reduced Motion ────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .ns-hero__bg { animation: none; transform: none; }
-  /* Pause video for users who prefer no motion — static poster frame shows instead */
-  .ns-hero__video { display: none; }
+  /* Pause videos for users who prefer no motion — static poster frames show instead */
+  .ns-hero__video,
+  .ns-promo-slot__video { display: none; }
   .ns-hero__content { animation: none; }
   .ns-hero__chip,
   .ns-hero__chip:nth-child(1),

@@ -2932,26 +2932,10 @@ html.dlc-vm-active body { overflow: hidden !important; }
   transform: translateY(-1px);
 }
 
-/* ── AI Widget: animated shimmer border + premium header ─────────────────── */
-@keyframes mp-ai-shimmer {
-  0%   { background-position: 0% 50%;   }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%;   }
-}
-
+/* ── AI Widget: glowing border + premium header ──────────────────────────── */
 .mp-ai {
-  position: relative;
-  border: none;
-  padding: 1px; /* space for gradient ring */
-  border-radius: var(--r-lg);
-  background: linear-gradient(135deg,
-    rgba(245,166,35,.6) 0%,
-    rgba(255,255,255,.08) 35%,
-    rgba(245,166,35,.5) 65%,
-    rgba(255,255,255,.08) 100%
-  );
-  background-size: 300% 300%;
-  animation: mp-ai-shimmer 5s ease infinite;
+  border-color: rgba(245,166,35,.3);
+  box-shadow: 0 0 0 1px rgba(245,166,35,.12), 0 8px 32px rgba(0,0,0,.35);
 }
 
 .mp-ai__header {
@@ -3033,12 +3017,7 @@ html.dlc-vm-active body { overflow: hidden !important; }
   border-top: 1px solid rgba(255,255,255,.06);
 }
 
-/* ── AI ring: pulsing outer glow ─────────────────────────────────────────── */
-@keyframes mp-ai-ring-pulse {
-  0%, 100% { box-shadow: 0 4px 18px rgba(245,166,35,.45), 0 0 0 0 rgba(245,166,35,.0); }
-  50%       { box-shadow: 0 6px 28px rgba(245,166,35,.7), 0 0 0 6px rgba(245,166,35,.12); }
-}
-
+/* ── AI ring: stronger resting glow (no animation — preserves tap behavior) ── */
 .mp-vnav__ai-ring {
-  animation: mp-ai-ring-pulse 3s ease-in-out infinite;
+  box-shadow: 0 4px 22px rgba(245,166,35,.55);
 }

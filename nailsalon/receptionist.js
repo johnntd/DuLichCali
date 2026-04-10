@@ -2970,7 +2970,8 @@
           //   1. visualViewport.resize to misbehave on iOS (keyboard resize doesn't fire)
           //   2. iOS hit-testing for position:fixed elements to use wrong coordinates
           //   3. vv.offsetTop to equal savedY, which (when used as container.top) pushes widget off-screen
-          // Just add overflow:hidden via class and let the fixed overlay cover the page.
+          // Lock scroll on BOTH html and body — iOS Safari ignores overflow:hidden on body alone.
+          document.documentElement.classList.add('mp-ai-open-root');
           document.body.classList.add('mp-ai-open');
           container.classList.add('mp-ai--fs');
           _fsUpdateVH();
@@ -2981,6 +2982,7 @@
           _isClosing = true;
           input.blur();
           container.classList.remove('mp-ai--fs');
+          document.documentElement.classList.remove('mp-ai-open-root');
           document.body.classList.remove('mp-ai-open');
           window.scrollTo(0, _fsSavedY);
           container.style.height = '';

@@ -1125,7 +1125,8 @@ select.mp-input option {
 
 /* ── AI Widget: Full-Screen Mode (mobile only) ───────────────────────────── */
 @media (max-width: 767px) {
-  /* Belt-and-suspenders overflow lock (position:fixed on body is the primary lock) */
+  /* Scroll lock — html is required on iOS Safari; body alone is ignored */
+  html.mp-ai-open-root,
   body.mp-ai-open { overflow: hidden; }
 
   body.mp-ai-open .mp-vnav,
@@ -1134,7 +1135,8 @@ select.mp-input option {
   .mp-ai--fs {
     position: fixed;
     top: 0; left: 0; right: 0;
-    height: 100dvh; height: 100vh;
+    height: 100vh;   /* fallback: older iOS — JS _fsUpdateVH corrects for keyboard */
+    height: 100dvh;  /* modern iOS 15.4+: auto-shrinks when keyboard opens — no JS needed */
     z-index: 200;
     border-radius: 0;
     border: none;

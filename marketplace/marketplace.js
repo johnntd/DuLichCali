@@ -234,6 +234,43 @@
     '</nav>';
   }
 
+  // ── Nav Availability Check ─────────────────────────────────────────────────────
+  // Synchronous (reads sessionStorage). Fail-open: if no cached data → navigate.
+  function _navAvailCheck(serviceType, onAvailable) {
+    var ZONES = [
+      { latMin: 36.8, latMax: 38.5, lngMin: -123.0, lngMax: -121.5 }, // Bay Area
+      { latMin: 32.5, latMax: 34.8, lngMin: -118.6, lngMax: -116.0 }  // Orange County
+    ];
+    function inCoverage(lat, lng) {
+      return ZONES.some(function (z) {
+        return lat >= z.latMin && lat <= z.latMax && lng >= z.lngMin && lng <= z.lngMax;
+      });
+    }
+    // 1. Saved region preference → in coverage
+    try {
+      var savedRegion = sessionStorage.getItem('dlc_region');
+      if (savedRegion === 'bayarea' || savedRegion === 'oc') { onAvailable(); return; }
+    } catch (_) {}
+    // 2. Cached geolocation → check bounds
+    try {
+      var raw = sessionStorage.getItem('dlc_location');
+      if (raw) {
+        var p = JSON.parse(raw);
+        if (p && p.lat && p.lng && p.timestamp && (Date.now() - p.timestamp) < 3600000) {
+          if (inCoverage(p.lat, p.lng)) { onAvailable(); }
+          else { _showNavUnavail(serviceType); }
+          return;
+        }
+      }
+    } catch (_) {}
+    // 3. No cached data → fail-open (never block customer)
+    onAvailable();
+  }
+
+  function _showNavUnavail(serviceType) {
+    if (window._navAvail) window._navAvail.open(serviceType);
+  }
+
   // ── Vendor Bottom Nav (Salon pages) ───────────────────────────────────────────
   // 5-button persistent nav: Home · Book · AI (center) · Interpreter · Call
   // Only used for nails/hair vendor detail pages. No links to main site.
@@ -261,7 +298,26 @@
       '<a href="tel:' + (biz.phone || '') + '" class="mp-vnav__tab mp-vnav__tab--call" aria-label="Call salon">' +
         phoneIcon + '<span>Call</span>' +
       '</a>' +
-    '</nav>';
+    '</nav>' +
+    '<div id="navUnavailBackdrop" class="mp-unavail__bd" onclick="window._navAvail&&window._navAvail.close()"></div>' +
+    '<div id="navUnavailSheet" class="mp-unavail__sheet" role="dialog" aria-label="Service unavailable" aria-modal="true">' +
+      '<div class="mp-unavail__handle"></div>' +
+      '<div class="mp-unavail__icon">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="32" height="32"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0112 2a8 8 0 018 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>' +
+      '</div>' +
+      '<h3 id="navUnavailTitle" class="mp-unavail__title">Not Available Near You</h3>' +
+      '<p id="navUnavailSub" class="mp-unavail__sub">This service is currently available in the Bay Area and Orange County, CA. Change your region or ask our AI for help.</p>' +
+      '<div class="mp-unavail__regions">' +
+        '<button type="button" class="mp-unavail__region-btn" onclick="window._navAvail&&window._navAvail.selectRegion(\'bayarea\')">' +
+          '<strong>Bay Area</strong><span>SFO · SJC · OAK</span>' +
+        '</button>' +
+        '<button type="button" class="mp-unavail__region-btn" onclick="window._navAvail&&window._navAvail.selectRegion(\'oc\')">' +
+          '<strong>Orange County</strong><span>LAX · SNA · LGB</span>' +
+        '</button>' +
+      '</div>' +
+      '<button type="button" class="mp-unavail__ai-btn" onclick="window._navAvail&&window._navAvail.askAI()">Ask AI for Help</button>' +
+      '<button type="button" class="mp-unavail__dismiss" onclick="window._navAvail&&window._navAvail.close()">Dismiss</button>' +
+    '</div>';
   }
 
   function renderInterpPanel(biz) {
@@ -320,10 +376,10 @@
         }
       },
       goAirport: function () {
-        window.location.href = '/airport?from=nailsalon';
+        _navAvailCheck('airport', function () { window.location.href = '/airport?from=nailsalon'; });
       },
       goLocalServices: function () {
-        window.location.href = '/marketplace/?from=nailsalon';
+        _navAvailCheck('local', function () { window.location.href = '/marketplace/?from=nailsalon'; });
       },
       toggleInterp: function () {
         if (window._interp) window._interp.toggle();
@@ -386,6 +442,86 @@
         }
       };
     }());
+
+    // ── Nav unavailability sheet controller ────────────────────────────────────
+    window._navAvail = (function () {
+      var sheet    = document.getElementById('navUnavailSheet');
+      var backdrop = document.getElementById('navUnavailBackdrop');
+      var titleEl  = document.getElementById('navUnavailTitle');
+      var subEl    = document.getElementById('navUnavailSub');
+      var _pendingUrl = null;
+      var _serviceType = null;
+      var LABELS = {
+        airport: {
+          title: 'Airport & Rides Not Available',
+          sub:   'Our airport pickup and ride service covers Bay Area and Orange County, CA. Choose your region or ask AI for help.',
+          aiMsg: 'I need airport transportation. Can you tell me about your airport pickup and ride services?'
+        },
+        local: {
+          title: 'Local Services Not Available',
+          sub:   'Our local food and services marketplace covers Bay Area and Orange County, CA. Choose your region or ask AI for help.',
+          aiMsg: 'I\'m looking for local food and services in my area. What options do you have?'
+        }
+      };
+      var PENDING_URLS = {
+        airport: '/airport?from=nailsalon',
+        local:   '/marketplace/?from=nailsalon'
+      };
+      return {
+        open: function (serviceType) {
+          _serviceType = serviceType || 'airport';
+          _pendingUrl = PENDING_URLS[_serviceType] || '/airport?from=nailsalon';
+          var lbl = LABELS[_serviceType] || LABELS.airport;
+          if (titleEl) titleEl.textContent = lbl.title;
+          if (subEl)   subEl.textContent   = lbl.sub;
+          if (sheet)    sheet.classList.add('is-open');
+          if (backdrop) backdrop.classList.add('is-open');
+        },
+        close: function () {
+          if (sheet)    sheet.classList.remove('is-open');
+          if (backdrop) backdrop.classList.remove('is-open');
+        },
+        selectRegion: function (regionId) {
+          try { sessionStorage.setItem('dlc_region', regionId); } catch (_) {}
+          this.close();
+          if (_pendingUrl) window.location.href = _pendingUrl;
+        },
+        askAI: function () {
+          var lbl = LABELS[_serviceType] || LABELS.airport;
+          this.close();
+          // Scroll to AI widget and pre-fill (user must still send)
+          var aiEl = document.getElementById('aiWidget_' + biz.id);
+          if (aiEl) {
+            aiEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setTimeout(function () {
+              var inp = aiEl.querySelector('input[type="text"],textarea,.mp-ai__input');
+              if (inp) { inp.value = lbl.aiMsg; inp.focus(); }
+            }, 420);
+          }
+        }
+      };
+    }());
+
+    // ── Background geolocation warm-up ─────────────────────────────────────────
+    // Silently populate sessionStorage so future _navAvailCheck() calls are synchronous.
+    try {
+      var cached = sessionStorage.getItem('dlc_location');
+      var isFresh = false;
+      if (cached) {
+        try { var _cp = JSON.parse(cached); isFresh = !!(_cp && _cp.timestamp && (Date.now() - _cp.timestamp) < 3600000); } catch (_) {}
+      }
+      if (!isFresh && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (pos) {
+          try {
+            sessionStorage.setItem('dlc_location', JSON.stringify({
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              timestamp: Date.now()
+            }));
+          } catch (_) {}
+        }, function () {}, { timeout: 8000, maximumAge: 3600000 });
+      }
+    } catch (_) {}
   }
 
   // ── Directory ──────────────────────────────────────────────────────────────────

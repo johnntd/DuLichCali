@@ -2183,6 +2183,14 @@
               <label>Claude AI Key <span style="font-size:.7rem;color:var(--muted);font-weight:400" data-i18n="lbl_ai_key_note">(sk-ant-… — bắt buộc để AI hoạt động)</span></label>
               <input class="sa-input" id="settingAiKey" type="password" placeholder="sk-ant-…" autocomplete="off" style="font-family:monospace;letter-spacing:.04em">
             </div>
+            <div class="sa-field">
+              <label>Gemini AI Key <span style="font-size:.7rem;color:var(--muted);font-weight:400" data-i18n="lbl_gemini_key_note">(AIza… — Voice Mode tiếng Việt)</span></label>
+              <input class="sa-input" id="settingGeminiKey" type="password" placeholder="AIza…" autocomplete="off" style="font-family:monospace;letter-spacing:.04em">
+            </div>
+            <div class="sa-field">
+              <label>OpenAI Key <span style="font-size:.7rem;color:var(--muted);font-weight:400" data-i18n="lbl_openai_key_note">(sk-… — tùy chọn)</span></label>
+              <input class="sa-input" id="settingOpenAiKey" type="password" placeholder="sk-…" autocomplete="off" style="font-family:monospace;letter-spacing:.04em">
+            </div>
             <div class="sa-field" style="margin-top:1.2rem">
               <label data-i18n="lbl_parallel_svc">Dịch Vụ Song Song <span style="font-size:.7rem;color:var(--muted);font-weight:400" data-i18n="lbl_parallel_note">— cho phép khách đặt 2 dịch vụ cùng lúc với 2 nhân viên khác nhau</span></label>
               <div id="parallelRulesList" style="margin:.4rem 0 .6rem"></div>
@@ -3304,7 +3312,9 @@
         document.getElementById('settingAddress').value = _addr;
         VENDOR_TAX_RATE = _taxRateForZip(_addr);
         document.getElementById('settingDesc').value    = vdata.description   || (staticData && staticData.description)  || '';
-        document.getElementById('settingAiKey').value   = vdata.aiKey || '';
+        document.getElementById('settingAiKey').value      = vdata.aiKey      || '';
+        document.getElementById('settingGeminiKey').value  = vdata.geminiKey  || '';
+        document.getElementById('settingOpenAiKey').value  = vdata.openaiKey  || '';
         // Load Why Choose Us fields into editor (show VI in single input)
         var tSub = vdata.trustSubtitleI18n || {};
         var _tSubText = tSub.vi || tSub.en || tSub.es || '';
@@ -8691,8 +8701,12 @@
       featuresI18n:       td.trustFeats,
       updatedAt:          firebase.firestore.FieldValue.serverTimestamp()
     };
-    var aiKey = document.getElementById('settingAiKey').value.trim();
-    if (aiKey) data.aiKey = aiKey;
+    var aiKey     = document.getElementById('settingAiKey').value.trim();
+    var geminiKey = document.getElementById('settingGeminiKey').value.trim();
+    var openaiKey = document.getElementById('settingOpenAiKey').value.trim();
+    if (aiKey)     data.aiKey     = aiKey;
+    if (geminiKey) data.geminiKey = geminiKey;
+    if (openaiKey) data.openaiKey = openaiKey;
     vendorRef.set(data, { merge: true })
       .then(function() {
         _lastLoadedStats = td.trustStats;
@@ -9205,6 +9219,8 @@
       lbl_desc:'Mô Tả Ngắn',
       lbl_ai_key:'Claude AI Key',
       lbl_ai_key_note:'(sk-ant-… — bắt buộc để AI hoạt động)',
+      lbl_gemini_key_note:'(AIza… — Voice Mode tiếng Việt)',
+      lbl_openai_key_note:'(sk-… — tùy chọn)',
       lbl_parallel_svc:'Dịch Vụ Song Song',
       lbl_parallel_note:'— cho phép khách đặt 2 dịch vụ cùng lúc với 2 nhân viên khác nhau',
       parallel_empty:'Chưa có quy tắc nào.',
@@ -9572,6 +9588,8 @@
       lbl_desc:'Short Description',
       lbl_ai_key:'Claude AI Key',
       lbl_ai_key_note:'(sk-ant-… — required for AI to work)',
+      lbl_gemini_key_note:'(AIza… — Vietnamese Voice Mode)',
+      lbl_openai_key_note:'(sk-… — optional)',
       lbl_parallel_svc:'Parallel Services',
       lbl_parallel_note:'— allow customers to book 2 services simultaneously with 2 different staff',
       parallel_empty:'No rules defined yet.',
@@ -9938,6 +9956,8 @@
       lbl_desc:'Descripción Corta',
       lbl_ai_key:'Claude AI Key',
       lbl_ai_key_note:'(sk-ant-… — requerido para que funcione la IA)',
+      lbl_gemini_key_note:'(AIza… — Voice Mode en vietnamita)',
+      lbl_openai_key_note:'(sk-… — opcional)',
       lbl_parallel_svc:'Servicios Paralelos',
       lbl_parallel_note:'— permite reservar 2 servicios a la vez con 2 empleados distintos',
       parallel_empty:'Aún no hay reglas definidas.',

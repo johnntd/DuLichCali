@@ -839,6 +839,9 @@
     .pr-period-badge--finalized  { background:rgba(251,146,60,.12);color:#fb923c;border:1px solid rgba(251,146,60,.3) }
     /* Finalized banner */
     .pr-finalized-banner { background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.28);border-radius:6px;padding:.48rem .7rem;font-size:.72rem;color:#fb923c;display:flex;align-items:center;gap:.5rem;margin-bottom:.7rem }
+    /* Payout ledger entries */
+    .pr-ledger-entry { padding:.42rem 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.72rem }
+    .pr-ledger-entry:last-child { border-bottom:none }
     /* Commission field in staff modal */
     .sa-comm-row { display:flex;align-items:center;gap:.5rem;margin-top:.3rem }
 
@@ -2833,6 +2836,20 @@
       <button class="btn btn--outline btn--sm" onclick="closePayrollPayModal()" data-i18n="btn_cancel">Hủy</button>
       <button class="btn btn--primary btn--sm" onclick="confirmPayrollPay()" data-i18n="pr_btn_pay">Trả lương</button>
     </div>
+  </div>
+</div>
+
+<!-- Payroll history modal — owner views immutable payout ledger for one staff -->
+<div class="sa-modal-backdrop" id="payrollHistoryModal" style="display:none;align-items:center;justify-content:center" onclick="closePayrollHistoryModal()">
+  <div class="sa-modal" style="max-width:440px;max-height:82vh;display:flex;flex-direction:column" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+      <h3 style="color:var(--cream);font-size:.92rem;margin:0" data-i18n="pr_hist_title">Lịch Sử Thanh Toán</h3>
+      <button class="btn btn--outline btn--sm" onclick="closePayrollHistoryModal()" style="font-size:.65rem;padding:.15rem .45rem">✕</button>
+    </div>
+    <div id="prHistStaffName" style="font-size:.82rem;font-weight:700;color:var(--cream);margin-bottom:.18rem"></div>
+    <div id="prHistPeriod" style="font-size:.65rem;color:var(--muted);margin-bottom:.8rem"></div>
+    <div id="prHistBody" style="overflow-y:auto;flex:1;min-height:3rem"></div>
+    <div id="prHistFooter" style="margin-top:.6rem;padding-top:.55rem;border-top:1px solid var(--border);font-size:.7rem;color:var(--muted)"></div>
   </div>
 </div>
 
@@ -7491,10 +7508,11 @@
         || (amtPaid >= totalOwed - 0.005 && totalOwed > 0 ? 'paid' : amtPaid > 0 ? 'partial' : 'unpaid');
       var classNote = payout.classificationNote || '';
       var payNotes  = payout.notes || '';
+      var ledger    = Array.isArray(payout.ledger) ? payout.ledger : [];
       return { id: entry.id, name: entry.name, compType: compType, basePay: basePay,
                commission: earned.commission, tip: earned.tip, totalOwed: totalOwed,
                amtPaid: amtPaid, remaining: remaining, status: status,
-               classNote: classNote, payNotes: payNotes };
+               classNote: classNote, payNotes: payNotes, ledger: ledger };
     });
 
     var typeLabel = {
@@ -7524,11 +7542,11 @@
       '<th></th>' +
       '</tr></thead><tbody>' +
       rows.map(function(r) {
-        var actionsHtml = '';
         // Pay button: only when open + not fully paid
+        var payBtn = '';
         if (!isFinalized && r.status !== 'paid') {
           var safeName = r.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-          actionsHtml = '<button class="btn btn--sm btn--outline" ' +
+          payBtn = '<button class="btn btn--sm btn--outline" ' +
             'style="font-size:.6rem;padding:.15rem .4rem;white-space:nowrap" ' +
             'onclick="openPayrollPayModal(\'' + r.id + '\',\'' + safeName + '\',' +
               r.totalOwed.toFixed(2) + ',' + r.amtPaid.toFixed(2) + ',\'' +
@@ -7536,11 +7554,20 @@
               r.commission.toFixed(2) + ',' + r.tip.toFixed(2) + ')">' +
             esc(lb.pr_btn_pay) + '</button>';
         }
+        // History button: shown whenever ledger has entries
+        var histBtn = '';
+        if (r.ledger.length > 0) {
+          var safeNameH = r.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+          histBtn = '<button class="btn btn--sm btn--outline" ' +
+            'style="font-size:.6rem;padding:.15rem .4rem;white-space:nowrap;border-color:rgba(255,255,255,.18);color:var(--muted)" ' +
+            'onclick="openPayrollHistory(\'' + r.id + '\',\'' + safeNameH + '\')">' +
+            '&#9776; ' + r.ledger.length + '</button>';
+        }
         // Classification note pill
         var classPill = r.classNote
           ? '<span style="font-size:.55rem;color:var(--muted);background:rgba(255,255,255,.06);border-radius:3px;padding:.05rem .3rem;margin-left:.25rem">' + esc(r.classNote.toUpperCase()) + '</span>'
           : '';
-        // Per-payout notes
+        // Per-payout notes tooltip (last payout note)
         var notesTip = r.payNotes
           ? '<div style="font-size:.55rem;color:var(--muted);margin-top:.12rem;max-width:8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + esc(r.payNotes) + '">' + esc(r.payNotes) + '</div>'
           : '';
@@ -7555,7 +7582,7 @@
           '<td style="color:' + (r.remaining > 0.004 ? 'var(--danger)' : 'var(--muted)') + '">' +
             (r.remaining > 0.004 ? '$' + r.remaining.toFixed(2) : '—') + '</td>' +
           '<td>' + payStatusBadge(r.status) + '</td>' +
-          '<td>' + actionsHtml + '</td>' +
+          '<td><div style="display:flex;flex-direction:column;gap:.22rem">' + payBtn + histBtn + '</div></td>' +
           '</tr>';
       }).join('') +
       '</tbody><tfoot><tr>' +
@@ -7646,10 +7673,22 @@
     upd['payouts.' + sid + '.commission']     = _prModalComm;
     upd['payouts.' + sid + '.tips']           = _prModalTip;
     upd['payouts.' + sid + '.totalOwed']      = _prModalTotalOwed;
-    // Optional fields
+    // Optional fields (last-payout convenience copies — kept for backward compat)
     if (methodEl && methodEl.value) upd['payouts.' + sid + '.payMethod'] = methodEl.value;
     if (notesInp && notesInp.value.trim()) upd['payouts.' + sid + '.notes'] = notesInp.value.trim();
     if (classEl  && classEl.value)  upd['payouts.' + sid + '.classificationNote'] = classEl.value;
+    // Immutable ledger entry — appended via arrayUnion (never overwrites existing entries)
+    // Note: serverTimestamp() cannot be used inside arrayUnion nested objects; ISO string is accurate enough for audit display
+    var ledgerEntry = {
+      amount:             amt,
+      runningTotal:       newTotal,
+      paidAt:             new Date().toISOString(),
+      payMethod:          (methodEl && methodEl.value) || 'cash',
+      notes:              (notesInp && notesInp.value.trim()) || '',
+      classificationNote: (classEl && classEl.value) || '',
+      recordedBy:         _userEmail || ''
+    };
+    upd['payouts.' + sid + '.ledger'] = firebase.firestore.FieldValue.arrayUnion(ledgerEntry);
     docRef.set({ period: _payrollMonth }, { merge: true })
       .then(function() { return docRef.update(upd); })
       .then(function() {
@@ -7657,6 +7696,77 @@
         showToast(lb.pr_toast_saved || 'Saved');
       })
       .catch(function(e) { showToast((lb.pr_err_save || 'Error') + ': ' + e.message); });
+  }
+
+  function openPayrollHistory(staffId, staffName) {
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
+    var mo = document.getElementById('payrollHistoryModal');
+    if (!mo) return;
+    var payout = (_payrollData && _payrollData.payouts && _payrollData.payouts[staffId])
+      ? _payrollData.payouts[staffId] : {};
+    var ledger  = Array.isArray(payout.ledger) ? payout.ledger.slice().reverse() : []; // most recent first
+
+    var nameEl  = document.getElementById('prHistStaffName');
+    var perEl   = document.getElementById('prHistPeriod');
+    var bodyEl  = document.getElementById('prHistBody');
+    var footEl  = document.getElementById('prHistFooter');
+
+    if (nameEl) nameEl.textContent = staffName;
+    if (perEl)  perEl.textContent  = (lb.pr_hist_period || 'Period') + ': ' + _payrollMonth;
+
+    var methodLabel = {
+      cash:  lb.pay_method_cash  || 'Cash',
+      check: lb.pr_method_check  || 'Check',
+      zelle: 'Zelle', venmo: 'Venmo',
+      other: lb.pay_method_other || 'Other'
+    };
+    var locale = _dlcLang === 'en' ? 'en-US' : _dlcLang === 'es' ? 'es-US' : 'vi-VN';
+
+    if (bodyEl) {
+      if (ledger.length === 0) {
+        bodyEl.innerHTML = '<div class="sa-empty" style="font-size:.75rem">' + esc(lb.pr_hist_empty || 'No payout history recorded.') + '</div>';
+      } else {
+        bodyEl.innerHTML = ledger.map(function(e) {
+          var dateStr = '';
+          try { dateStr = new Date(e.paidAt).toLocaleString(locale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch(x) { dateStr = e.paidAt || ''; }
+          var mLabel = methodLabel[e.payMethod] || e.payMethod || '—';
+          return '<div class="pr-ledger-entry">' +
+            '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:.5rem">' +
+              '<span style="color:var(--success);font-weight:700;font-size:.8rem">+$' + Number(e.amount || 0).toFixed(2) + '</span>' +
+              '<span style="color:var(--muted);font-size:.62rem;white-space:nowrap">' + esc(dateStr) + '</span>' +
+            '</div>' +
+            '<div style="display:flex;align-items:center;gap:.6rem;margin-top:.18rem;font-size:.65rem;color:var(--muted)">' +
+              '<span>' + esc(mLabel) + '</span>' +
+              (e.classificationNote ? '<span style="background:rgba(255,255,255,.06);border-radius:3px;padding:.02rem .25rem">' + esc(e.classificationNote.toUpperCase()) + '</span>' : '') +
+              (e.recordedBy ? '<span style="margin-left:auto;opacity:.7">' + esc(e.recordedBy) + '</span>' : '') +
+            '</div>' +
+            (e.notes ? '<div style="font-size:.65rem;color:var(--muted);margin-top:.18rem;font-style:italic">' + esc(e.notes) + '</div>' : '') +
+            '<div style="font-size:.6rem;color:var(--muted);margin-top:.15rem;opacity:.65">' +
+              esc(lb.pr_hist_cumulative || 'Running total') + ': $' + Number(e.runningTotal || 0).toFixed(2) +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }
+    }
+
+    if (footEl) {
+      var ledgerSum = Array.isArray(payout.ledger)
+        ? payout.ledger.reduce(function(acc, e) { return acc + Number(e.amount || 0); }, 0) : 0;
+      var amtPaid = Number(payout.amountPaidOut || 0);
+      var footHtml = '<strong>' + esc(lb.pr_hist_total || 'Total paid') + ':</strong> $' + amtPaid.toFixed(2);
+      if (amtPaid > 0 && Math.abs(ledgerSum - amtPaid) > 0.005) {
+        // Pre-ledger payment exists (paid before Phase 5 shipped)
+        footHtml += ' <span style="font-size:.62rem;opacity:.65">(' + esc(lb.pr_hist_preledger || 'includes pre-ledger payments') + ')</span>';
+      }
+      footEl.innerHTML = footHtml;
+    }
+
+    mo.style.display = 'flex';
+  }
+
+  function closePayrollHistoryModal() {
+    var mo = document.getElementById('payrollHistoryModal');
+    if (mo) mo.style.display = 'none';
   }
 
   function finalizePeriod() {
@@ -8322,6 +8432,9 @@
       pr_confirm_reopen:'Mở lại kỳ lương {m}?',
       pr_toast_finalized:'Kỳ lương đã đóng.', pr_toast_reopened:'Kỳ lương đã mở lại.',
       pr_toast_notes_saved:'Đã lưu ghi chú kỳ lương.',
+      pr_hist_title:'Lịch Sử Thanh Toán', pr_hist_period:'Kỳ lương',
+      pr_hist_empty:'Chưa có lịch sử thanh toán.', pr_hist_cumulative:'Lũy kế',
+      pr_hist_total:'Tổng đã trả', pr_hist_preledger:'có thanh toán trước khi có sổ cái',
       // ── Status badges ────────────────────────────────────────────────────────
       st_confirmed:'Xác nhận', st_in_progress:'Đang làm', st_completed:'Xong',
       st_canceled:'Đã hủy', st_no_show:'Vắng mặt', st_rescheduled:'Dời lịch',
@@ -8641,6 +8754,9 @@
       pr_confirm_reopen:'Reopen payroll period {m}?',
       pr_toast_finalized:'Payroll period closed.', pr_toast_reopened:'Payroll period reopened.',
       pr_toast_notes_saved:'Period notes saved.',
+      pr_hist_title:'Payout History', pr_hist_period:'Period',
+      pr_hist_empty:'No payout history recorded.', pr_hist_cumulative:'Running total',
+      pr_hist_total:'Total paid', pr_hist_preledger:'includes pre-ledger payments',
       // ── Status badges ────────────────────────────────────────────────────────
       st_confirmed:'Confirmed', st_in_progress:'In Progress', st_completed:'Done',
       st_canceled:'Canceled', st_no_show:'No Show', st_rescheduled:'Rescheduled',
@@ -8959,6 +9075,9 @@
       pr_confirm_reopen:'¿Reabrir nómina {m}?',
       pr_toast_finalized:'Período de nómina cerrado.', pr_toast_reopened:'Período de nómina reabierto.',
       pr_toast_notes_saved:'Notas del período guardadas.',
+      pr_hist_title:'Historial de Pagos', pr_hist_period:'Período',
+      pr_hist_empty:'Sin historial de pagos registrado.', pr_hist_cumulative:'Total acumulado',
+      pr_hist_total:'Total pagado', pr_hist_preledger:'incluye pagos anteriores al libro',
       // ── Status badges ────────────────────────────────────────────────────────
       st_confirmed:'Confirmada', st_in_progress:'En Proceso', st_completed:'Lista',
       st_canceled:'Cancelada', st_no_show:'No Asistió', st_rescheduled:'Reprogramada',

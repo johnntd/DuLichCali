@@ -1140,11 +1140,7 @@ select.mp-input option {
     z-index: 200;
     border-radius: 0;
     border: none;
-    /* Override .mp-ai { overflow: hidden }. On iOS Safari, overflow:hidden on a position:fixed
-       element clips using LAYOUT coordinates (where the element lives in the DOM), NOT visual
-       coordinates. As the page scrolls behind the widget, the clip rect drifts and page content
-       bleeds through. No clip needed: border-radius is 0 and children handle their own overflow. */
-    overflow: visible;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     /* Solid background prevents ALL bleed-through regardless of child coverage */

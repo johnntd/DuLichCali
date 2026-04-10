@@ -3055,7 +3055,7 @@
   var unsubBookings  = null;
   var currentCatFilter   = 'all';
   var allServiceDocs       = [];   // [{id, data}] — full snapshot for filtering
-  var vendorParallelServices = []; // [[svcA, svcB], ...] — parallel booking rules
+  var vendorParallelServices = []; // [{a: svcNameA, b: svcNameB}, ...] — parallel booking rules (Firestore-safe objects)
   var currentStaffData   = [];   // [{id, name, data}] — for service modal checkboxes + availability
   var currentStaffCompData = {}; // staffDocId → {compensationType, monthlyBasePay, hireDate, payNotes}
   var payrollRef       = null;  // vendors/{id}/payrollPeriods — set on login, owner only
@@ -3278,7 +3278,11 @@
         VENDOR_TAX_RATE = _taxRateForZip(_addr);
         document.getElementById('settingDesc').value    = vdata.description   || (staticData && staticData.description)  || '';
         document.getElementById('settingAiKey').value   = vdata.aiKey || '';
-        vendorParallelServices = vdata.parallelServices || [];
+        // Normalize: old format [[a,b],...] → new [{a,b},...] objects (Firestore nested-array fix)
+        vendorParallelServices = (vdata.parallelServices || []).map(function(p) {
+          if (Array.isArray(p)) return { a: p[0] || '', b: p[1] || '' };
+          return { a: p.a || '', b: p.b || '' };
+        });
         renderParallelRules();
 
         document.getElementById('authLoading').classList.add('hidden');
@@ -6723,53 +6727,85 @@
   function _syncParallelFromDom() {
     vendorParallelServices = [];
     document.querySelectorAll('.parallel-rule-row').forEach(function(row) {
-      var inputs = row.querySelectorAll('input');
-      var a = inputs[0] ? inputs[0].value.trim() : '';
-      var b = inputs[1] ? inputs[1].value.trim() : '';
-      if (a && b) vendorParallelServices.push([a, b]);
+      var selects = row.querySelectorAll('select');
+      var a = selects[0] ? selects[0].value.trim() : '';
+      var b = selects[1] ? selects[1].value.trim() : '';
+      if (a && b) vendorParallelServices.push({ a: a, b: b });
     });
   }
 
   function renderParallelRules() {
+    var lb = _LABELS[_dlcLang] || _LABELS.vi;
     var container = document.getElementById('parallelRulesList');
     if (!container) return;
     if (!vendorParallelServices.length) {
-      container.innerHTML = '<div style="font-size:.75rem;color:var(--muted);padding:.2rem 0">Chưa có quy tắc nào.</div>';
-    } else {
-      container.innerHTML = '';
-      vendorParallelServices.forEach(function(pair, idx) {
-        var row = document.createElement('div');
-        row.className = 'parallel-rule-row';
-        row.style.cssText = 'display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem';
-        var aVal = (pair[0] || '').replace(/"/g, '&quot;');
-        var bVal = (pair[1] || '').replace(/"/g, '&quot;');
-        row.innerHTML =
-          '<input class="sa-input" style="flex:1;font-size:.8rem;padding:.35rem .6rem" list="serviceNameList" placeholder="Dịch vụ 1" value="' + aVal + '">' +
-          '<span style="color:var(--muted);font-size:.8rem;flex-shrink:0">+</span>' +
-          '<input class="sa-input" style="flex:1;font-size:.8rem;padding:.35rem .6rem" list="serviceNameList" placeholder="Dịch vụ 2" value="' + bVal + '">' +
-          '<button type="button" onclick="removeParallelRule(' + idx + ')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:1rem;padding:0 .2rem;flex-shrink:0" title="Xóa">✕</button>';
-        container.appendChild(row);
-      });
+      container.innerHTML = '<div style="font-size:.75rem;color:var(--muted);padding:.2rem 0">' + esc(lb.parallel_empty || 'Chưa có quy tắc nào.') + '</div>';
+      return;
     }
-    _updateServiceDatalist();
+    // Build select options: value = d.data.name (primary, matches booking storage), text = localized label
+    var optionsHtml = '<option value=""></option>';
+    allServiceDocs.forEach(function(d) {
+      var primaryName = d.data.name || d.id;
+      var displayName = (_dlcLang === 'en' && d.data.nameEn) ? d.data.nameEn
+                      : (_dlcLang === 'es' && d.data.nameEs) ? d.data.nameEs
+                      : primaryName;
+      optionsHtml += '<option value="' + esc(primaryName) + '">' + esc(displayName) + '</option>';
+    });
+    container.innerHTML = '';
+    vendorParallelServices.forEach(function(pair, idx) {
+      var aVal = pair.a || '';
+      var bVal = pair.b || '';
+      var row = document.createElement('div');
+      row.className = 'parallel-rule-row';
+      row.style.cssText = 'display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem';
+      // Build both selects with current options, then set selected value below
+      var selA = document.createElement('select');
+      selA.className = 'sa-input';
+      selA.style.cssText = 'flex:1;font-size:.8rem;padding:.35rem .6rem';
+      selA.innerHTML = optionsHtml;
+      selA.value = aVal;
+      var sep = document.createElement('span');
+      sep.style.cssText = 'color:var(--muted);font-size:.8rem;flex-shrink:0';
+      sep.textContent = '+';
+      var selB = document.createElement('select');
+      selB.className = 'sa-input';
+      selB.style.cssText = 'flex:1;font-size:.8rem;padding:.35rem .6rem';
+      selB.innerHTML = optionsHtml;
+      selB.value = bVal;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.onclick = (function(i) { return function() { removeParallelRule(i); }; })(idx);
+      btn.style.cssText = 'background:none;border:none;color:var(--danger);cursor:pointer;font-size:1rem;padding:0 .2rem;flex-shrink:0';
+      btn.title = lb.btn_remove || 'Xóa';
+      btn.textContent = '✕';
+      row.appendChild(selA);
+      row.appendChild(sep);
+      row.appendChild(selB);
+      row.appendChild(btn);
+      container.appendChild(row);
+    });
   }
 
   function _updateServiceDatalist() {
+    // Keep datalist populated for any future text inputs; also re-render parallel rules
+    // so select options refresh when allServiceDocs changes.
     var dl = document.getElementById('serviceNameList');
-    if (!dl) return;
-    dl.innerHTML = '';
-    allServiceDocs.forEach(function(d) {
-      var name = d.data.nameEn || d.data.name || '';
-      if (name) { var opt = document.createElement('option'); opt.value = name; dl.appendChild(opt); }
-    });
+    if (dl) {
+      dl.innerHTML = '';
+      allServiceDocs.forEach(function(d) {
+        var name = d.data.name || '';
+        if (name) { var opt = document.createElement('option'); opt.value = name; dl.appendChild(opt); }
+      });
+    }
+    renderParallelRules();
   }
 
   function addParallelRule() {
     _syncParallelFromDom();
-    vendorParallelServices.push(['', '']);
+    vendorParallelServices.push({ a: '', b: '' });
     renderParallelRules();
     var rows = document.querySelectorAll('.parallel-rule-row');
-    if (rows.length) { var inp = rows[rows.length - 1].querySelector('input'); if (inp) inp.focus(); }
+    if (rows.length) { var sel = rows[rows.length - 1].querySelector('select'); if (sel) sel.focus(); }
   }
 
   function removeParallelRule(idx) {
@@ -9036,6 +9072,7 @@
       lbl_ai_key_note:'(sk-ant-… — bắt buộc để AI hoạt động)',
       lbl_parallel_svc:'Dịch Vụ Song Song',
       lbl_parallel_note:'— cho phép khách đặt 2 dịch vụ cùng lúc với 2 nhân viên khác nhau',
+      parallel_empty:'Chưa có quy tắc nào.',
       lbl_pay_methods:'Phương Thức Thanh Toán',
       lbl_pay_methods_desc:'Bật các phương thức mà tiệm muốn nhận. Chỉ phương thức đã <strong style="color:var(--cream)">sẵn sàng</strong> mới xuất hiện trong màn hình thu tiền.',
       lbl_staff_perms:'Phân Quyền Nhân Viên',
@@ -9402,6 +9439,7 @@
       lbl_ai_key_note:'(sk-ant-… — required for AI to work)',
       lbl_parallel_svc:'Parallel Services',
       lbl_parallel_note:'— allow customers to book 2 services simultaneously with 2 different staff',
+      parallel_empty:'No rules defined yet.',
       lbl_pay_methods:'Payment Methods',
       lbl_pay_methods_desc:'Enable the payment methods your shop accepts. Only <strong style="color:var(--cream)">ready</strong> methods appear in the payment screen.',
       lbl_staff_perms:'Staff Permissions',
@@ -9767,6 +9805,7 @@
       lbl_ai_key_note:'(sk-ant-… — requerido para que funcione la IA)',
       lbl_parallel_svc:'Servicios Paralelos',
       lbl_parallel_note:'— permite reservar 2 servicios a la vez con 2 empleados distintos',
+      parallel_empty:'Aún no hay reglas definidas.',
       lbl_pay_methods:'Métodos de Pago',
       lbl_pay_methods_desc:'Activa los métodos que acepta tu negocio. Solo los métodos <strong style="color:var(--cream)">listos</strong> aparecen en la pantalla de cobro.',
       lbl_staff_perms:'Permisos del Personal',

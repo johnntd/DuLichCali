@@ -659,9 +659,17 @@
       if (!eList.length || !nList.length) return false;
       for (var r = 0; r < parallelRules.length; r++) {
         var rule = parallelRules[r];
-        if (!Array.isArray(rule) || rule.length < 2) continue;
-        var a = (rule[0] || '').toLowerCase().trim();
-        var b = (rule[1] || '').toLowerCase().trim();
+        var a, b;
+        // Accept both old array format [[svcA,svcB],...] and new object format [{a,b},...]
+        if (Array.isArray(rule) && rule.length >= 2) {
+          a = (rule[0] || '').toLowerCase().trim();
+          b = (rule[1] || '').toLowerCase().trim();
+        } else if (rule && typeof rule === 'object' && (rule.a || rule.b)) {
+          a = (rule.a || '').toLowerCase().trim();
+          b = (rule.b || '').toLowerCase().trim();
+        } else {
+          continue;
+        }
         if (!a || !b) continue;
         // Bidirectional: existing=a+new=b OR existing=b+new=a
         if (eList.indexOf(a) >= 0 && nList.indexOf(b) >= 0) return true;

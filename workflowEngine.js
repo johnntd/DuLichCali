@@ -875,9 +875,50 @@
 
   // Max service radius for airport and private-ride bookings (miles)
   var MAX_SERVICE_MILES = 120;
-  // Bay Area airports — standard vehicle is Toyota Sienna (7 seats)
-  // Parties >7 require a special larger vehicle arrangement
+  // Bay Area airports fallback (used when _activeDrivers not yet loaded)
   var BAY_AREA_AIRPORTS = { SFO: true, OAK: true, SJC: true, SMF: true };
+  // Airport code → DLC region ID (matches drivers[].regions array values)
+  var AIRPORT_REGION = {
+    SFO: 'bayarea', OAK: 'bayarea', SJC: 'bayarea', SMF: 'bayarea',
+    LAX: 'socal',   SNA: 'socal',   BUR: 'socal',   LGB: 'socal',   ONT: 'socal',
+    SAN: 'sandiego', PSP: 'palmsprings',
+  };
+
+  // Returns active+compliant drivers for the given region from window._activeDrivers
+  function _driversForRegion(regionId) {
+    if (!regionId) return [];
+    var pool = window._activeDrivers || [];
+    return pool.filter(function(d) {
+      return d.complianceStatus === 'approved' &&
+             (d.regions || []).indexOf(regionId) >= 0;
+    });
+  }
+
+  // Returns capacity warning string for a given airport + passenger count, or null if OK
+  function _capacityWarning(airport, pax) {
+    var paxN = parseInt(pax) || 0;
+    if (!paxN) return null;
+    var regionId  = AIRPORT_REGION[airport] || null;
+    var drivers   = _driversForRegion(regionId);
+    if (drivers.length > 0) {
+      // Real data: find max seats across region drivers
+      var maxSeats = 0;
+      drivers.forEach(function(d) {
+        var s = d.vehicle && d.vehicle.seats ? parseInt(d.vehicle.seats) : 0;
+        if (s > maxSeats) maxSeats = s;
+      });
+      if (paxN > maxSeats) {
+        return '\n⚠️ ' + paxN + ' passengers exceeds the largest available vehicle (' + maxSeats + ' seats) — team will arrange multiple vehicles.';
+      }
+      return null; // at least one driver can handle it
+    }
+    // Fallback when driver data not loaded yet: use regional heuristic
+    var fallbackMax = BAY_AREA_AIRPORTS[airport] ? 7 : 12;
+    if (paxN > fallbackMax) {
+      return '\n⚠️ ' + paxN + ' passengers — team will confirm vehicle availability before dispatch.';
+    }
+    return null;
+  }
   // Deadhead rate: driver drives empty to/from airport; charged at $0.80/mile (fuel + time)
   var DEADHEAD_PER_MILE = 0.80;
 
@@ -1253,16 +1294,7 @@
       ],
       summary: function(f) {
         var est = estimateTransfer(f.passengers, f.airport, f.dropoffAddress);
-        // Capacity check: use regional standard vehicle capacity
-        // Bay Area standard = Toyota Sienna (7 seats); elsewhere use estimated vehicle
-        var vSeats = (typeof DLCPricing !== 'undefined' && DLCPricing.VEHICLE_SEATS) ? DLCPricing.VEHICLE_SEATS : {};
-        var isBayArea = BAY_AREA_AIRPORTS[f.airport] || false;
-        var stdVehicle = isBayArea ? 'Toyota Sienna' : (est ? (est.match(/\(([^)]+)\)/)||[])[1] : null);
-        var maxSeats = isBayArea ? 7 : (stdVehicle ? (vSeats[stdVehicle] || 12) : 12);
-        var pax = parseInt(f.passengers) || 0;
-        var capWarn = (pax > maxSeats)
-          ? '\n⚠️ ' + pax + ' passengers exceeds standard ' + stdVehicle + ' capacity (' + maxSeats + ' seats) — team will arrange a larger vehicle.'
-          : null;
+        var capWarn = _capacityWarning(f.airport, f.passengers);
         var lines = [
           S('hdPickup'),
           S('sfAirport') + (f.airport||''),
@@ -1409,15 +1441,7 @@
       ],
       summary: function(f) {
         var est = estimateTransfer(f.passengers, f.airport, f.pickupAddress);
-        // Capacity check: use regional standard vehicle capacity
-        var vSeats = (typeof DLCPricing !== 'undefined' && DLCPricing.VEHICLE_SEATS) ? DLCPricing.VEHICLE_SEATS : {};
-        var isBayArea = BAY_AREA_AIRPORTS[f.airport] || false;
-        var stdVehicle = isBayArea ? 'Toyota Sienna' : (est ? (est.match(/\(([^)]+)\)/)||[])[1] : null);
-        var maxSeats = isBayArea ? 7 : (stdVehicle ? (vSeats[stdVehicle] || 12) : 12);
-        var pax = parseInt(f.passengers) || 0;
-        var capWarn = (pax > maxSeats)
-          ? '\n⚠️ ' + pax + ' passengers exceeds standard ' + stdVehicle + ' capacity (' + maxSeats + ' seats) — team will arrange a larger vehicle.'
-          : null;
+        var capWarn = _capacityWarning(f.airport, f.passengers);
         var lines = [
           S('hdDropoff'),
           S('sfAirport') + (f.airport||''),

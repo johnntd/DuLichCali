@@ -873,11 +873,44 @@
 
   // ── Rough estimate helpers ─────────────────────────────────────────────────
 
-  function estimateTransfer(passengers, airport) {
+  // Maps airport codes to their city name for use with estimateCityToCity
+  var AIRPORT_CITY = {
+    'lax': 'Los Angeles',   'sna': 'Orange County',  'lgb': 'Long Beach',
+    'ont': 'Ontario',       'bur': 'Burbank',         'sfo': 'San Francisco',
+    'oak': 'Oakland',       'sjc': 'San Jose',        'smf': 'Sacramento',
+    'san': 'San Diego',     'las': 'Las Vegas',       'pdx': 'Portland',
+    'sea': 'Seattle',       'phx': 'Phoenix',         'den': 'Denver',
+    'jfk': 'New York',      'ord': 'Chicago',         'dfw': 'Dallas',
+  };
+
+  // Extract just the city name from a full address for distance lookup
+  function _cityFromAddress(addr) {
+    if (!addr) return null;
+    // "123 Main St, San Jose, CA 95121" → "San Jose"
+    var m = addr.match(/,\s*([^,\d][^,]+?),?\s*(?:CA|California)?\s*\d{0,5}\s*$/i);
+    if (m) return m[1].trim();
+    // "San Jose, CA" or plain city name
+    var m2 = addr.match(/^([^,]+?)(?:,\s*[A-Z]{2})?$/i);
+    if (m2) return m2[1].trim();
+    return addr;
+  }
+
+  function estimateTransfer(passengers, airport, destAddress) {
     if (!passengers) return null;
-    if (typeof DLCPricing !== 'undefined' && DLCPricing.estimateTransfer) {
-      var r = DLCPricing.estimateTransfer({ airport: airport||'LAX', fromCity: 'Orange County', passengers: passengers, direction: 'pickup' });
-      return r ? '~$' + r.total + ' (' + r.vehicle + ')' : null;
+    if (typeof DLCPricing !== 'undefined') {
+      // If we have an actual destination address, use city-to-city routing for accuracy
+      if (destAddress && DLCPricing.estimateCityToCity) {
+        var airportCode = (airport || '').toLowerCase().trim();
+        var airportCity = AIRPORT_CITY[airportCode] || 'Los Angeles';
+        var destCity = _cityFromAddress(destAddress);
+        var r2 = DLCPricing.estimateCityToCity({ from: airportCity, to: destCity, passengers: passengers });
+        if (r2 && r2.total) return '~$' + r2.total + ' (' + r2.vehicle + ')';
+      }
+      // Fallback: OC-distance-based estimate (only accurate for SoCal trips)
+      if (DLCPricing.estimateTransfer) {
+        var r = DLCPricing.estimateTransfer({ airport: airport||'LAX', fromCity: 'Orange County', passengers: passengers, direction: 'pickup' });
+        if (r) return '~$' + r.total + ' (' + r.vehicle + ')';
+      }
     }
     var base = passengers <= 4 ? 65 : passengers <= 7 ? 85 : 110;
     return '~$' + base + '–$' + (base + 25) + ' (ước tính sơ bộ)';
@@ -1172,7 +1205,7 @@
         },
       ],
       summary: function(f) {
-        var est = estimateTransfer(f.passengers, f.airport);
+        var est = estimateTransfer(f.passengers, f.airport, f.dropoffAddress);
         // Capacity check: warn when party size exceeds vehicle seats
         var vSeats = (typeof DLCPricing !== 'undefined' && DLCPricing.VEHICLE_SEATS) ? DLCPricing.VEHICLE_SEATS : {};
         var estVehicle = est ? (est.match(/\(([^)]+)\)/)||[])[1] : null;
@@ -1312,7 +1345,7 @@
         },
       ],
       summary: function(f) {
-        var est = estimateTransfer(f.passengers, f.airport);
+        var est = estimateTransfer(f.passengers, f.airport, f.pickupAddress);
         // Capacity check: warn when party size exceeds vehicle seats
         var vSeats = (typeof DLCPricing !== 'undefined' && DLCPricing.VEHICLE_SEATS) ? DLCPricing.VEHICLE_SEATS : {};
         var estVehicle = est ? (est.match(/\(([^)]+)\)/)||[])[1] : null;

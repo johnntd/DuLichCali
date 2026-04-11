@@ -120,14 +120,14 @@
     <div class="login-brand__sub">Du Lịch Cali · Tài Xế</div>
   </div>
 
-  <!-- Login screen — email + PIN -->
+  <!-- Login screen — phone + PIN -->
   <div id="loginScreen" class="login-card screen">
     <div class="login-card-title">Đăng Nhập Tài Xế</div>
-    <div class="setup-hint">Tài khoản do admin tạo. Nhập email và mã PIN được cấp.</div>
+    <div class="setup-hint">Tài khoản do admin tạo. Nhập số điện thoại và mã PIN được cấp.</div>
     <div class="f-row">
-      <label class="f-label" for="loginEmail">Email</label>
-      <input class="f-input" type="email" id="loginEmail"
-        placeholder="driver@email.com" autocomplete="email" inputmode="email">
+      <label class="f-label" for="loginPhone">Số Điện Thoại</label>
+      <input class="f-input" type="tel" id="loginPhone"
+        placeholder="(408) 916-3439" autocomplete="tel" inputmode="tel">
     </div>
     <div class="f-row">
       <label class="f-label" for="loginPin">Mã PIN</label>
@@ -140,10 +140,10 @@
 </div>
 
 <script>
-  // ── Driver login — email + PIN ─────────────────────────────────────────────
-  // Admin creates driver accounts via admin.html with the driver's real email.
-  // Firebase Auth password = PIN padded to 6 chars (e.g. "1234" → "123400").
-  // Driver's phone number for customer display comes from their Firestore profile.
+  // ── Driver login — phone + PIN ─────────────────────────────────────────────
+  // Admin creates driver accounts via admin.html.
+  // Derived email: d{digits}@dlc.app  /  PIN is the Firebase Auth password.
+  // This way login is phone+PIN UX while Firebase Auth handles actual auth.
 
   // ── Firebase ──────────────────────────────────────────────────────────────
   var firebaseConfig = {
@@ -200,20 +200,17 @@
     }
   });
 
-  // ── Login — email + PIN ────────────────────────────────────────────────────
-  function doLogin() {
-    var email = document.getElementById('loginEmail').value.trim().toLowerCase();
-    var pin   = document.getElementById('loginPin').value.trim();
-    var errEl = document.getElementById('loginError');
-    var btn   = document.getElementById('btnLogin');
-    errEl.textContent = '';
-    if (!email || !pin) { errEl.textContent = 'Vui lòng nhập email và mã PIN.'; return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent = 'Email không hợp lệ.'; return; }
+  // ── Normalize phone → digits → try 10-digit then 11-digit variants ─────────
+  function normalizeDigits(phone) {
+    var d = phone.replace(/\D/g, '');
+    // Strip leading country code 1 for US numbers (11 digits → 10 digits)
+    if (d.length === 11 && d.charAt(0) === '1') d = d.slice(1);
+    return d;
+  }
 
-    btn.disabled = true;
-    var pass = pin.padEnd(6, '0');
-
-    auth.signInWithEmailAndPassword(email, pass).then(function (cred) {
+  // ── Attempt sign-in, then verify driver status ────────────────────────────
+  function _signInAndVerify(email, pass, errEl, btn) {
+    return auth.signInWithEmailAndPassword(email, pass).then(function (cred) {
       return db.collection('driverUsers').doc(cred.user.uid).get().then(function (doc) {
         if (!doc.exists) {
           auth.signOut();
@@ -242,16 +239,54 @@
             btn.disabled = false;
             return;
           }
-          // Status OK — onAuthStateChanged handles redirect
+          // Status OK — redirect handled by onAuthStateChanged
         });
       });
-    }).catch(function (err) {
+    });
+  }
+
+  // ── Login — phone + PIN ────────────────────────────────────────────────────
+  function doLogin() {
+    var phone = document.getElementById('loginPhone').value.trim();
+    var pin   = document.getElementById('loginPin').value.trim();
+    var errEl = document.getElementById('loginError');
+    var btn   = document.getElementById('btnLogin');
+    errEl.textContent = '';
+    if (!phone || !pin) { errEl.textContent = 'Vui lòng nhập số điện thoại và mã PIN.'; return; }
+
+    var allDigits = phone.replace(/\D/g, '');
+    if (allDigits.length < 10) { errEl.textContent = 'Số điện thoại không hợp lệ.'; return; }
+
+    btn.disabled = true;
+    // Pad PIN to 6 chars to match how the password was created (Firebase requires ≥6 chars)
+    var pass = pin.padEnd(6, '0');
+
+    // Primary: 10-digit normalized (strips leading country code 1)
+    var digits10 = normalizeDigits(phone);
+    var email10  = 'd' + digits10 + '@dlc.app';
+
+    // Fallback: raw digits (in case account was created with 11-digit format)
+    var email11  = allDigits !== digits10 ? 'd' + allDigits + '@dlc.app' : null;
+
+    _signInAndVerify(email10, pass, errEl, btn).catch(function (err) {
+      // If primary fails with bad credentials AND a fallback format exists, try it
+      if ((err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') && email11) {
+        return _signInAndVerify(email11, pass, errEl, btn).catch(function (err2) {
+          btn.disabled = false;
+          var msgs = {
+            'auth/user-not-found':     'Số điện thoại chưa được đăng ký. Liên hệ admin.',
+            'auth/wrong-password':     'Mã PIN không đúng.',
+            'auth/invalid-credential': 'Số điện thoại hoặc PIN không đúng. Kiểm tra lại.',
+            'auth/too-many-requests':  'Quá nhiều lần thử. Vui lòng thử lại sau.'
+          };
+          errEl.textContent = msgs[err2.code] || ('Lỗi: ' + err2.message);
+        });
+      }
       btn.disabled = false;
       var msgs = {
-        'auth/user-not-found':     'Email chưa được đăng ký. Liên hệ admin.',
+        'auth/user-not-found':     'Số điện thoại chưa được đăng ký. Liên hệ admin.',
         'auth/wrong-password':     'Mã PIN không đúng.',
-        'auth/invalid-credential': 'Email hoặc PIN không đúng.',
-        'auth/invalid-email':      'Địa chỉ email không hợp lệ.',
+        'auth/invalid-credential': 'Số điện thoại hoặc PIN không đúng. Kiểm tra lại.',
         'auth/too-many-requests':  'Quá nhiều lần thử. Vui lòng thử lại sau.'
       };
       errEl.textContent = msgs[err.code] || ('Lỗi: ' + err.message);

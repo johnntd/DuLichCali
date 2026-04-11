@@ -1597,23 +1597,26 @@
       }).catch(function() {});
   }
 
-  // Format ISO datetime string to human-readable Vietnamese format
-  // Input: "2026-04-11T18:45:00" or "2026-04-11 18:45" → "T7 11/04 · 6:45 CH"
-  function _fmtDatetime(str) {
-    if (!str) return '';
-    // Normalize space separator to T
+  // Parse datetime string → { date: "T7, 11/04/2026", time: "6:45 CH" }
+  // Input: "2026-04-11T18:45:00", "2026-04-11 18:45", or "2026-04-11"
+  function _parseDatetime(str) {
+    if (!str) return null;
     var s = str.replace(' ', 'T');
     var dt = new Date(s.length <= 10 ? s + 'T00:00:00' : s);
-    if (isNaN(dt.getTime())) return str; // fallback to raw
+    if (isNaN(dt.getTime())) return null;
     var days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
     var day  = days[dt.getDay()];
     var dd   = String(dt.getDate()).padStart(2, '0');
     var mm   = String(dt.getMonth() + 1).padStart(2, '0');
+    var yyyy = dt.getFullYear();
     var hh   = dt.getHours();
     var min  = String(dt.getMinutes()).padStart(2, '0');
     var ampm = hh >= 12 ? 'CH' : 'SA';
     var h12  = hh % 12 || 12;
-    return day + ' ' + dd + '/' + mm + ' · ' + h12 + ':' + min + ' ' + ampm;
+    return {
+      date: day + ', ' + dd + '/' + mm + '/' + yyyy,
+      time: s.length > 10 ? h12 + ':' + min + ' ' + ampm : ''
+    };
   }
 
   function renderActiveRide(d) {
@@ -1659,16 +1662,32 @@
       (d.arrivalDate   ? d.arrivalDate   + (d.arrivalTime   ? 'T' + d.arrivalTime   : '') : null) ||
       (d.departureDate ? d.departureDate + (d.departureTime ? 'T' + d.departureTime : '') : null) ||
       (d.rideDate      ? d.rideDate      + (d.rideTime      ? 'T' + d.rideTime      : '') : null) || '';
-    var whenStr = _fmtDatetime(rawWhen);
+    var when = _parseDatetime(rawWhen);
     var customerName  = d.name  || d.customerName  || '—';
     var customerPhone = d.phone || d.customerPhone || '';
 
-    // Build Google Maps navigation links
+    // Build Google Maps navigation link for an address
     function _mapsHref(addr) {
       if (!addr || addr === '—') return '';
-      // Short codes (≤5 chars) = airport code — append "Airport" for better Maps result
-      var q = addr.length <= 5 ? addr + ' Airport' : addr;
+      var q = addr.length <= 5 ? addr + ' Airport' : addr; // short code = airport
       return 'https://maps.google.com/?q=' + encodeURIComponent(q);
+    }
+    // Render an address row with a Maps navigation button
+    function _addrRow(icon, addr, highlight) {
+      if (!addr || addr === '—') return '';
+      var href = _mapsHref(addr);
+      var color = highlight ? 'var(--gold-lt)' : '#c8e4f8';
+      var btn = href
+        ? ' <a href="' + href + '" target="_blank" rel="noopener" ' +
+          'style="display:inline-flex;align-items:center;gap:.2rem;margin-left:.4rem;' +
+          'background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);' +
+          'color:#38bdf8;font-size:.65rem;font-weight:700;letter-spacing:.06em;' +
+          'padding:.15rem .45rem;border-radius:4px;text-decoration:none;vertical-align:middle">' +
+          '🗺 Chỉ đường</a>'
+        : '';
+      return '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:.25rem;margin-top:.45rem">' +
+        '<span style="font-size:.78rem;color:' + color + '">' + icon + ' ' + esc(addr) + '</span>' + btn +
+        '</div>';
     }
     var fromHref = _mapsHref(fromAddr);
     var toHref   = _mapsHref(toAddr);
@@ -1679,11 +1698,12 @@
         '<div style="background:rgba(255,255,255,.06);border-radius:10px;padding:.875rem 1rem;margin-bottom:.875rem">' +
           '<div style="font-size:.75rem;color:var(--muted);margin-bottom:.25rem">' + (svcLabel[d.serviceType] || d.serviceType || 'Chuyến Xe') + '</div>' +
           '<div style="font-weight:600;margin-bottom:.2rem">' + esc(customerName) + '</div>' +
-          (customerPhone ? '<div style="font-size:.8rem;color:var(--muted);margin-bottom:.3rem"><a href="tel:' + esc(customerPhone) + '" style="color:var(--gold-lt);text-decoration:none">📞 ' + esc(customerPhone) + '</a></div>' : '') +
-          (fromAddr ? '<div style="font-size:.78rem;margin-top:.4rem;color:#aaa">' + (fromHref ? '<a href="' + fromHref + '" target="_blank" rel="noopener" style="color:#aaa;text-decoration:none">📍 ' + esc(fromAddr) + ' 🗺</a>' : '📍 ' + esc(fromAddr)) + '</div>' : '') +
-          (toAddr && toAddr !== '—' ? '<div style="font-size:.78rem;margin-top:.15rem;color:#aaa">' + (toHref ? '<a href="' + toHref + '" target="_blank" rel="noopener" style="color:var(--gold-lt);text-decoration:none">🏁 ' + esc(toAddr) + ' 🗺</a>' : '🏁 ' + esc(toAddr)) + '</div>' : '') +
-          (whenStr ? '<div style="font-size:.78rem;margin-top:.3rem;color:#94a3b8">🕐 ' + esc(whenStr) + '</div>' : '') +
-          '<div style="margin-top:.5rem;font-size:.8rem;color:var(--gold)">' + price + '</div>' +
+          (customerPhone ? '<div style="font-size:.8rem;margin-bottom:.35rem"><a href="tel:' + esc(customerPhone) + '" style="color:var(--gold-lt);text-decoration:none">📞 ' + esc(customerPhone) + '</a></div>' : '') +
+          (when && when.date ? '<div style="font-size:.78rem;color:#94a3b8;margin-top:.35rem">📅 ' + esc(when.date) + '</div>' : '') +
+          (when && when.time ? '<div style="font-size:.82rem;font-weight:600;color:var(--cream);margin-top:.15rem">🕐 ' + esc(when.time) + '</div>' : '') +
+          _addrRow('📍', fromAddr, false) +
+          _addrRow('🏁', toAddr && toAddr !== '—' ? toAddr : '', true) +
+          '<div style="margin-top:.6rem;font-size:.85rem;font-weight:700;color:var(--gold)">' + price + '</div>' +
         '</div>' +
         '<div style="text-align:center;padding:.5rem 0 .875rem">' +
           '<div style="font-size:.72rem;color:var(--muted);margin-bottom:.3rem">Trạng thái</div>' +

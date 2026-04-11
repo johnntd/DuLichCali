@@ -101,7 +101,7 @@
       sfName:'• Tên:       ', sfPhone:'• SĐT:       ', sfNotes:'• Ghi chú:   ',
       sfAirport:'• Sân bay:      ', sfTerminal:'• Terminal:     ',
       sfFlight:'• Chuyến bay:   ', sfArrivalDate:'• Ngày đến:     ',
-      sfArrivalTime:'• Giờ hạ cánh:  ', sfPassengers:'• Hành khách:   ',
+      sfArrivalTime:'• Giờ đón:      ', sfPassengers:'• Hành khách:   ',
       sfPassengersUnit:' người', sfLuggage:'• Hành lý:      ',
       sfLuggageCarryOn:'Xách tay (không ký gửi)', sfLuggageChecked:' kiện',
       sfDropoffAddr:'• Điểm đến:     ', sfPickupAddr:'• Điểm đón:     ',
@@ -140,7 +140,7 @@
       qAirline:'Hãng bay và số hiệu chuyến? (VD: United 714)\nGõ "bỏ qua" nếu chưa có.',
       qAirlineShort:'Hãng bay và số hiệu chuyến? (Gõ "bỏ qua" nếu chưa có)',
       qArrivalDate:'Ngày đến? (VD: 15/4, thứ Sáu)',
-      qArrivalTime:'Giờ máy bay hạ cánh? (VD: 2:30 PM, 14:30)',
+      qArrivalTime:'Mấy giờ cần tài xế có mặt tại sân bay? (VD: 2:30 CH, 14:30)',
       qPassengers:'Có bao nhiêu hành khách?',
       qTerminal:'Cổng/Terminal bạn đến? (VD: Terminal 4, TBIT)\nGõ "không biết" nếu chưa rõ.',
       qTerminalDrop:'Cổng/Terminal cần đến? (VD: Terminal 2, TBIT)\nGõ "không biết" nếu chưa rõ.',
@@ -178,6 +178,10 @@
       qTourBooking:'Bạn muốn tự đặt khách sạn, hay nhờ Du Lịch Cali hỗ trợ đặt giúp?',
       qTourContact:'Tên liên lạc chính?',
       hotelIntro:'Đây là các khách sạn phù hợp với yêu cầu của bạn:\n\n',
+
+      errTimePast:      '❌ Giờ đó đã qua rồi. Vui lòng chọn giờ sau.',
+      errAptTimeTooSoon:'❌ Đặt đón sân bay cần trước ít nhất 2 giờ. Vui lòng chọn giờ sau.',
+      errRideTimeTooSoon:'❌ Đặt xe cần trước ít nhất 1 giờ. Vui lòng chọn giờ sau.',
     },
     en: {
       cancelled:     'Cancelled. How else can I help you?',
@@ -216,7 +220,7 @@
       sfName:'• Name:        ', sfPhone:'• Phone:       ', sfNotes:'• Notes:       ',
       sfAirport:'• Airport:      ', sfTerminal:'• Terminal:     ',
       sfFlight:'• Flight:       ', sfArrivalDate:'• Arrival date: ',
-      sfArrivalTime:'• Landing time: ', sfPassengers:'• Passengers:   ',
+      sfArrivalTime:'• Pickup time:  ', sfPassengers:'• Passengers:   ',
       sfPassengersUnit:' people', sfLuggage:'• Luggage:      ',
       sfLuggageCarryOn:'Carry-on only', sfLuggageChecked:' checked bags',
       sfDropoffAddr:'• Drop-off:     ', sfPickupAddr:'• Pickup from:  ',
@@ -255,7 +259,7 @@
       qAirline:'Airline and flight number? (e.g., United 714)\nType "skip" if not available yet.',
       qAirlineShort:'Airline and flight number? (Type "skip" if not available)',
       qArrivalDate:'Arrival date? (e.g., 4/15, Friday)',
-      qArrivalTime:'Estimated landing time? (e.g., 2:30 PM, 14:30)',
+      qArrivalTime:'What time do you need the driver at the airport? (e.g., 2:30 PM, 14:30)',
       qPassengers:'How many passengers?',
       qTerminal:'Gate/Terminal? (e.g., Terminal 4, TBIT)\nType "unknown" if not sure.',
       qTerminalDrop:'Gate/Terminal to go to? (e.g., Terminal 2, TBIT)\nType "unknown" if not sure.',
@@ -293,6 +297,10 @@
       qTourBooking:'Would you like to book hotels yourself, or have Du Lịch Cali handle it?',
       qTourContact:'Primary contact name?',
       hotelIntro:'Here are hotels matching your preferences:\n\n',
+
+      errTimePast:      '❌ That time has already passed. Please choose a later time.',
+      errAptTimeTooSoon:'❌ Airport pickups require at least 2 hours advance notice. Please choose a later time.',
+      errRideTimeTooSoon:'❌ Rides require at least 1 hour advance notice. Please choose a later time.',
     },
     es: {
       cancelled:     'Cancelado. ¿En qué más puedo ayudarte?',
@@ -331,7 +339,7 @@
       sfName:'• Nombre:      ', sfPhone:'• Teléfono:    ', sfNotes:'• Notas:       ',
       sfAirport:'• Aeropuerto:    ', sfTerminal:'• Terminal:      ',
       sfFlight:'• Vuelo:         ', sfArrivalDate:'• Fecha llegada: ',
-      sfArrivalTime:'• Hora aterrizaje:', sfPassengers:'• Pasajeros:     ',
+      sfArrivalTime:'• Hora de recogida:', sfPassengers:'• Pasajeros:     ',
       sfPassengersUnit:' personas', sfLuggage:'• Equipaje:      ',
       sfLuggageCarryOn:'Solo equipaje de mano', sfLuggageChecked:' maletas',
       sfDropoffAddr:'• Destino:       ', sfPickupAddr:'• Recogida en:   ',
@@ -370,7 +378,7 @@
       qAirline:'¿Aerolínea y número de vuelo? (ej: United 714)\nEscribe "omitir" si aún no lo tienes.',
       qAirlineShort:'¿Aerolínea y número de vuelo? (Escribe "omitir" si aún no lo tienes)',
       qArrivalDate:'¿Fecha de llegada? (ej: 15/4, viernes)',
-      qArrivalTime:'¿Hora de aterrizaje? (ej: 2:30 PM, 14:30)',
+      qArrivalTime:'¿A qué hora necesitas al conductor en el aeropuerto? (ej: 2:30 PM, 14:30)',
       qPassengers:'¿Cuántos pasajeros?',
       qTerminal:'¿Terminal? (ej: Terminal 4, TBIT)\nEscribe "no sé" si no estás seguro.',
       qTerminalDrop:'¿Terminal al que vas? (ej: Terminal 2, TBIT)\nEscribe "no sé" si no estás seguro.',
@@ -408,6 +416,10 @@
       qTourBooking:'¿Deseas reservar el hotel tú mismo o prefieres que Du Lịch Cali lo gestione?',
       qTourContact:'¿Nombre del contacto principal?',
       hotelIntro:'Aquí hay hoteles que coinciden con tus preferencias:\n\n',
+
+      errTimePast:      '❌ Esa hora ya pasó. Por favor elige una hora posterior.',
+      errAptTimeTooSoon:'❌ Los traslados al aeropuerto requieren al menos 2 horas de anticipación. Elige otra hora.',
+      errRideTimeTooSoon:'❌ Los viajes requieren al menos 1 hora de anticipación. Elige otra hora.',
     },
   };
 
@@ -1236,6 +1248,17 @@
           key: 'arrivalTime',
           question: function() { return S('qArrivalTime'); },
           extract: function(t) { return X.time(t); },
+          validate: function(val, f) {
+            if (!f.requestedDate) return null;
+            var today = new Date();
+            if (f.requestedDate !== AIEngine.localISODate(today)) return null;
+            var parts = val.split(':');
+            var bookMins = parseInt(parts[0]) * 60 + parseInt(parts[1] || 0);
+            var nowMins  = today.getHours() * 60 + today.getMinutes();
+            if (bookMins <= nowMins)          return S('errTimePast');
+            if (bookMins - nowMins < 120)     return S('errAptTimeTooSoon');
+            return null;
+          },
           optional: false,
         },
         {
@@ -1395,6 +1418,17 @@
           key: 'departureTime',
           question: function() { return S('qRideTime'); },
           extract: function(t) { return X.time(t); },
+          validate: function(val, f) {
+            if (!f.requestedDate) return null;
+            var today = new Date();
+            if (f.requestedDate !== AIEngine.localISODate(today)) return null;
+            var parts = val.split(':');
+            var bookMins = parseInt(parts[0]) * 60 + parseInt(parts[1] || 0);
+            var nowMins  = today.getHours() * 60 + today.getMinutes();
+            if (bookMins <= nowMins)          return S('errTimePast');
+            if (bookMins - nowMins < 120)     return S('errAptTimeTooSoon');
+            return null;
+          },
           optional: false,
         },
         {
@@ -1548,6 +1582,17 @@
           key: 'requestedTime',
           question: function() { return S('qRideTime'); },
           extract: function(t) { return X.time(t); },
+          validate: function(val, f) {
+            if (!f.requestedDate) return null;
+            var today = new Date();
+            if (f.requestedDate !== AIEngine.localISODate(today)) return null;
+            var parts = val.split(':');
+            var bookMins = parseInt(parts[0]) * 60 + parseInt(parts[1] || 0);
+            var nowMins  = today.getHours() * 60 + today.getMinutes();
+            if (bookMins <= nowMins)        return S('errTimePast');
+            if (bookMins - nowMins < 60)    return S('errRideTimeTooSoon');
+            return null;
+          },
           optional: false,
         },
         {

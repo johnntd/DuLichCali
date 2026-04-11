@@ -299,10 +299,20 @@ const DLCPricing = (() => {
       : FUEL_FALLBACK;
   }
 
+  // Vehicle seat capacities — used for capacity warnings
+  const VEHICLE_SEATS = {
+    'Tesla Model Y': 4,
+    'Toyota Sienna': 7,
+    'Mercedes Van':  12,
+  };
+
   function getVehicle(passengers, regionId) {
-    // Bay Area uses Toyota Sienna for all passenger counts
-    if (regionId === 'bayarea' || (typeof window !== 'undefined' && window.DLCRegion && window.DLCRegion.current.id === 'bayarea' && !regionId)) {
-      return 'Toyota Sienna';
+    var isBayArea = regionId === 'bayarea' ||
+      (typeof window !== 'undefined' && window.DLCRegion &&
+       window.DLCRegion.current && window.DLCRegion.current.id === 'bayarea' && !regionId);
+    if (isBayArea) {
+      // Sienna holds 7; larger groups need Mercedes Van
+      return passengers > 7 ? 'Mercedes Van' : 'Toyota Sienna';
     }
     return passengers <= 3 ? 'Tesla Model Y' : 'Mercedes Van';
   }
@@ -626,6 +636,7 @@ const DLCPricing = (() => {
     // Ride-hailing fare engine (used by ride-intake.js)
     quoteRide,
     RIDE_RATE_CARD,
+    VEHICLE_SEATS,
     // Higher-level estimates (used by AI chat)
     estimateTour,
     estimateTransfer,

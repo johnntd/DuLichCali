@@ -561,6 +561,8 @@
       if (clean.length < 2 || clean.length > 50) return null;
       if (/\d/.test(clean)) return null;
       if (clean.split(/\s+/).length > 6) return null;
+      // Exclude bare airport codes (all-caps 2-4 letters: SFO, LAX, etc.)
+      if (/^[A-Z]{2,4}$/.test(clean)) return null;
       return clean;
     },
 
@@ -761,7 +763,7 @@
       var t = text.trim().toLowerCase();
       if (/^(0|không có|none|no|xách tay|không)$/.test(t)) return 0;
       var m = text.match(/(\d+)\s*(?:kiện|bag|bags|suitcase|vali|piece|chiếc)/i);
-      if (!m) m = text.match(/^(\d+)$/);
+      // Do NOT match bare numbers — a user saying "12" likely means passengers, not luggage
       var n = m ? parseInt(m[1]) : NaN;
       return (isNaN(n) || n < 0 || n > 50) ? null : n;
     },
@@ -1085,8 +1087,14 @@
           question: function() { return S('qAirline'); },
           extract: function(t) {
             if (/bỏ qua|skip|chưa|không biết|omitir/i.test(t)) return '';
-            var m = t.match(/[A-Z]{2,3}\s*\d{2,4}/i);
-            return m ? m[0].trim() : (t.trim().length >= 2 ? t.trim().slice(0,40) : null);
+            // Require actual flight-number format (e.g. "United 714", "AA 2034")
+            var m = t.match(/\b([A-Z]{2,3})\s*(\d{2,4})\b/i);
+            if (m) return (m[1] + ' ' + m[2]).trim().toUpperCase();
+            // Accept airline name without number only if it contains a known carrier word
+            if (/\b(united|delta|american|southwest|alaska|jetblue|spirit|frontier|hawaiian|lufthansa|korean|vietnam|vietjet|bamboo|pacific)\b/i.test(t)) {
+              return t.trim().slice(0, 40);
+            }
+            return null;  // bare codes like "SFO" are not flight numbers
           },
           optional: true,
         },
@@ -1134,7 +1142,13 @@
               var loc = window.DLCLocation && DLCLocation.pickupHint();
               if (loc) return loc;
             }
-            return X.address(t) || (t.trim().length >= 3 ? t.trim() : null);
+            var _addr = X.address(t);
+            if (_addr) return _addr;
+            var _trimmed = t.trim();
+            // Exclude bare airport codes (3 uppercase letters) and short tokens
+            if (/^[A-Z]{2,4}$/.test(_trimmed)) return null;
+            if (_trimmed.length >= 5) return _trimmed;
+            return null;
           },
           optional: false,
         },
@@ -1159,6 +1173,14 @@
       ],
       summary: function(f) {
         var est = estimateTransfer(f.passengers, f.airport);
+        // Capacity check: warn when party size exceeds vehicle seats
+        var vSeats = (typeof DLCPricing !== 'undefined' && DLCPricing.VEHICLE_SEATS) ? DLCPricing.VEHICLE_SEATS : {};
+        var estVehicle = est ? (est.match(/\(([^)]+)\)/)||[])[1] : null;
+        var maxSeats = estVehicle ? (vSeats[estVehicle] || 12) : 12;
+        var pax = parseInt(f.passengers) || 0;
+        var capWarn = (pax > maxSeats)
+          ? '\n⚠️ ' + pax + ' passengers exceeds ' + estVehicle + ' capacity (' + maxSeats + ' seats) — team will arrange multiple vehicles or a larger vehicle.'
+          : null;
         var lines = [
           S('hdPickup'),
           S('sfAirport') + (f.airport||''),
@@ -1175,6 +1197,7 @@
           f.notes         ? S('sfNotes') + f.notes : null,
           '',
           est             ? S('priceEst') + est : null,
+          capWarn,
           S('driverWait'),
         ];
         return lines.filter(function(v) { return v !== null; }).join('\n');
@@ -1204,8 +1227,14 @@
           question: function() { return S('qAirlineShort'); },
           extract: function(t) {
             if (/bỏ qua|skip|chưa|không biết|omitir/i.test(t)) return '';
-            var m = t.match(/[A-Z]{2,3}\s*\d{2,4}/i);
-            return m ? m[0].trim() : (t.trim().length >= 2 ? t.trim().slice(0,40) : null);
+            // Require actual flight-number format (e.g. "United 714", "AA 2034")
+            var m = t.match(/\b([A-Z]{2,3})\s*(\d{2,4})\b/i);
+            if (m) return (m[1] + ' ' + m[2]).trim().toUpperCase();
+            // Accept airline name without number only if it contains a known carrier word
+            if (/\b(united|delta|american|southwest|alaska|jetblue|spirit|frontier|hawaiian|lufthansa|korean|vietnam|vietjet|bamboo|pacific)\b/i.test(t)) {
+              return t.trim().slice(0, 40);
+            }
+            return null;  // bare codes like "SFO" are not flight numbers
           },
           optional: true,
         },
@@ -1235,7 +1264,13 @@
               var loc = window.DLCLocation && DLCLocation.pickupHint();
               if (loc) return loc;
             }
-            return X.address(t) || (t.trim().length >= 3 ? t.trim() : null);
+            var _addr = X.address(t);
+            if (_addr) return _addr;
+            var _trimmed = t.trim();
+            // Exclude bare airport codes (3 uppercase letters) and short tokens
+            if (/^[A-Z]{2,4}$/.test(_trimmed)) return null;
+            if (_trimmed.length >= 5) return _trimmed;
+            return null;
           },
           optional: false,
         },
@@ -1278,6 +1313,14 @@
       ],
       summary: function(f) {
         var est = estimateTransfer(f.passengers, f.airport);
+        // Capacity check: warn when party size exceeds vehicle seats
+        var vSeats = (typeof DLCPricing !== 'undefined' && DLCPricing.VEHICLE_SEATS) ? DLCPricing.VEHICLE_SEATS : {};
+        var estVehicle = est ? (est.match(/\(([^)]+)\)/)||[])[1] : null;
+        var maxSeats = estVehicle ? (vSeats[estVehicle] || 12) : 12;
+        var pax = parseInt(f.passengers) || 0;
+        var capWarn = (pax > maxSeats)
+          ? '\n⚠️ ' + pax + ' passengers exceeds ' + estVehicle + ' capacity (' + maxSeats + ' seats) — team will arrange multiple vehicles or a larger vehicle.'
+          : null;
         var lines = [
           S('hdDropoff'),
           S('sfAirport') + (f.airport||''),
@@ -1294,6 +1337,7 @@
           f.notes         ? S('sfNotes') + f.notes : null,
           '',
           est             ? S('priceEst') + est : null,
+          capWarn,
         ];
         return lines.filter(function(v) { return v !== null; }).join('\n');
       },
@@ -1318,7 +1362,13 @@
               var loc = window.DLCLocation && DLCLocation.pickupHint();
               if (loc) return loc;
             }
-            return X.address(t) || (t.trim().length >= 3 ? t.trim() : null);
+            var _addr = X.address(t);
+            if (_addr) return _addr;
+            var _trimmed = t.trim();
+            // Exclude bare airport codes (3 uppercase letters) and short tokens
+            if (/^[A-Z]{2,4}$/.test(_trimmed)) return null;
+            if (_trimmed.length >= 5) return _trimmed;
+            return null;
           },
           optional: false,
         },
@@ -1941,8 +1991,13 @@
     }
 
     // ── Proactively extract any other bonus fields ─────────────────────────
-    var extras = extractAllFromText(userText, draft.intent);
-    Object.assign(draft.collectedFields, extras);
+    // Only run when user's message has 4+ words — avoids contaminating short
+    // single-field answers (e.g. "SFO", "12", "18:30") into unrelated fields.
+    var _wordCount = (userText || '').trim().split(/\s+/).length;
+    if (_wordCount >= 4) {
+      var extras = extractAllFromText(userText, draft.intent);
+      Object.assign(draft.collectedFields, extras);
+    }
 
     // ── Find next missing required field ──────────────────────────────────
     var nextFd = findNextField(draft.intent);

@@ -12,6 +12,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
   <script src="/driver-compliance.js"></script>
   <script src="/notifications.js?v=20260418d"></script>
 
@@ -314,6 +315,59 @@
       color: var(--muted); font-size: .82rem;
     }
     .ride-notif-empty .big { font-size: 2rem; margin-bottom: .5rem; }
+
+    /* ── Phase 13: Offer overlay ────────────────────────────── */
+    .offer-overlay {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(8,20,40,.88); backdrop-filter: blur(4px);
+      align-items: center; justify-content: center; padding: 1rem;
+    }
+    .offer-overlay.visible { display: flex; }
+    .offer-card {
+      background: var(--navy-800);
+      border: 1.5px solid var(--border-g);
+      border-radius: 12px;
+      padding: 1.5rem 1.25rem;
+      width: 100%; max-width: 400px;
+      box-shadow: 0 8px 40px rgba(0,0,0,.6);
+    }
+    .offer-card__badge {
+      display: inline-block; margin-bottom: .75rem;
+      background: rgba(245,166,35,.2); border: 1px solid var(--border-g);
+      color: var(--gold-lt); font-size: .65rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      padding: .2rem .65rem; border-radius: 999px;
+    }
+    .offer-card__title { font-size: 1.1rem; color: var(--cream); margin-bottom: 1rem; }
+    .offer-card__row { display: flex; gap: .75rem; margin-bottom: .55rem; flex-wrap: wrap; }
+    .offer-card__field { flex: 1; min-width: 120px; }
+    .offer-card__label { font-size: .62rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: .15rem; }
+    .offer-card__val { font-size: .82rem; color: var(--text); }
+    .offer-card__fare { font-size: 1.2rem; font-weight: 700; color: var(--gold-lt); }
+    .offer-card__timer {
+      text-align: center; margin: 1rem 0 .75rem;
+      font-size: 2rem; font-weight: 700;
+      color: var(--cream); line-height: 1;
+    }
+    .offer-card__timer.urgent { color: var(--danger); }
+    .offer-card__timer-label { font-size: .65rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-top: .2rem; }
+    .offer-card__actions { display: flex; gap: .65rem; margin-top: .75rem; }
+    .offer-btn-accept {
+      flex: 1; height: 48px; border: none; border-radius: 8px; cursor: pointer;
+      background: var(--gold); color: var(--navy-900);
+      font-family: var(--font-b); font-size: .82rem; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase;
+      transition: background .2s;
+    }
+    .offer-btn-accept:disabled { opacity: .5; cursor: default; }
+    .offer-btn-decline {
+      flex: 0 0 auto; height: 48px; padding: 0 1.1rem; border-radius: 8px; cursor: pointer;
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: var(--font-b); font-size: .78rem; font-weight: 600;
+      transition: border-color .2s, color .2s;
+    }
+    .offer-btn-decline:disabled { opacity: .5; cursor: default; }
     .notif-accepted-badge {
       display: inline-block; padding: .2rem .6rem;
       background: rgba(74,222,128,.12); border: 1px solid rgba(74,222,128,.3);
@@ -516,6 +570,50 @@
       <div class="top-bar__sub" id="driverEmail">Tài Xế</div>
     </div>
     <button class="btn-signout" onclick="doSignOut()">Đăng Xuất</button>
+  </div>
+
+  <!-- Phase 13: Ride offer overlay (shown when exclusive offer arrives) -->
+  <div class="offer-overlay" id="offerOverlay">
+    <div class="offer-card">
+      <div class="offer-card__badge">Lời Mời Chuyến Mới</div>
+      <div class="offer-card__title" id="offerTitle">Chuyến Xe Mới</div>
+      <div class="offer-card__row">
+        <div class="offer-card__field">
+          <div class="offer-card__label">Đón</div>
+          <div class="offer-card__val" id="offerFrom">—</div>
+        </div>
+        <div class="offer-card__field">
+          <div class="offer-card__label">Đến</div>
+          <div class="offer-card__val" id="offerTo">—</div>
+        </div>
+      </div>
+      <div class="offer-card__row">
+        <div class="offer-card__field">
+          <div class="offer-card__label">Thời Gian</div>
+          <div class="offer-card__val" id="offerTime">—</div>
+        </div>
+        <div class="offer-card__field">
+          <div class="offer-card__label">Giá Ước Tính</div>
+          <div class="offer-card__fare" id="offerFare">—</div>
+        </div>
+      </div>
+      <div class="offer-card__row">
+        <div class="offer-card__field">
+          <div class="offer-card__label">Khách</div>
+          <div class="offer-card__val" id="offerCustomer">—</div>
+        </div>
+        <div class="offer-card__field">
+          <div class="offer-card__label">Hành Khách</div>
+          <div class="offer-card__val" id="offerPax">—</div>
+        </div>
+      </div>
+      <div class="offer-card__timer" id="offerTimer">30</div>
+      <div class="offer-card__timer-label" style="text-align:center">giây để phản hồi</div>
+      <div class="offer-card__actions">
+        <button class="offer-btn-accept" id="offerAcceptBtn" onclick="doAcceptOffer()">Nhận Chuyến</button>
+        <button class="offer-btn-decline" id="offerDeclineBtn" onclick="doRejectOffer()">Từ Chối</button>
+      </div>
+    </div>
   </div>
 
   <!-- Tab bar -->
@@ -916,6 +1014,7 @@
       listenRideNotifs();
       listenDriverNotifications();
       _listenDriverActiveRide();
+      listenActiveOffer(); // Phase 13: exclusive offer listener
     }).catch(function () {
       document.getElementById('authChecking').classList.add('hidden');
       document.getElementById('mainContent').style.display = '';
@@ -1264,10 +1363,156 @@
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  // ── Phase 13: Exclusive offer flow ──────────────────────────────────────────
+  var _unsubOffer       = null;
+  var _offerTimer       = null;
+  var _offerBookingId   = null;
+  var _offerSecondsLeft = 30;
+
+  function listenActiveOffer() {
+    if (!_driverId) return;
+    if (_unsubOffer) { _unsubOffer(); _unsubOffer = null; }
+
+    _unsubOffer = db.collection('bookingOffers')
+      .where('driverId', '==', _driverId)
+      .where('status',   '==', 'pending')
+      .limit(1)
+      .onSnapshot(function(snap) {
+        if (snap.empty) {
+          _hideOfferOverlay();
+          return;
+        }
+        var offerDoc   = snap.docs[0];
+        var offer      = offerDoc.data();
+        var bookingId  = offer.bookingId;
+
+        // Already showing this offer — don't reset timer
+        if (_offerBookingId === bookingId) return;
+
+        // Fetch the booking doc to fill in route details
+        db.collection('bookings').doc(bookingId).get().then(function(bSnap) {
+          var bk = bSnap.exists ? bSnap.data() : {};
+          _showOfferOverlay(bookingId, offer, bk);
+        }).catch(function() {
+          _showOfferOverlay(bookingId, offer, {});
+        });
+      }, function() {});
+  }
+
+  function _showOfferOverlay(bookingId, offer, bk) {
+    _offerBookingId   = bookingId;
+    _offerSecondsLeft = 30;
+
+    var svcLabels = { pickup: '✈ Đón Sân Bay', dropoff: '✈ Ra Sân Bay', private_ride: '🚗 Xe Riêng' };
+    var title = svcLabels[bk.serviceType] || 'Chuyến Xe Mới';
+
+    var fromStr, toStr;
+    if (bk.serviceType === 'pickup') {
+      fromStr = (bk.airport || '') + (bk.terminal ? ' Terminal ' + bk.terminal : '');
+      toStr   = bk.address || '—';
+    } else if (bk.serviceType === 'dropoff') {
+      fromStr = bk.address || '—';
+      toStr   = (bk.airport || '') + (bk.terminal ? ' Terminal ' + bk.terminal : '');
+    } else {
+      fromStr = bk.pickupAddress  || '—';
+      toStr   = bk.dropoffAddress || '—';
+    }
+
+    document.getElementById('offerTitle').textContent    = title;
+    document.getElementById('offerFrom').textContent     = fromStr;
+    document.getElementById('offerTo').textContent       = toStr;
+    document.getElementById('offerTime').textContent     = bk.datetime || '—';
+    document.getElementById('offerFare').textContent     = bk.estimatedPrice ? '$' + Number(bk.estimatedPrice).toFixed(0) : '—';
+    document.getElementById('offerCustomer').textContent = bk.name || bk.customerName || '—';
+    document.getElementById('offerPax').textContent      = (bk.passengers || 1) + ' người';
+
+    var timerEl = document.getElementById('offerTimer');
+    timerEl.textContent = _offerSecondsLeft;
+    timerEl.classList.remove('urgent');
+
+    document.getElementById('offerAcceptBtn').disabled  = false;
+    document.getElementById('offerDeclineBtn').disabled = false;
+    document.getElementById('offerOverlay').classList.add('visible');
+
+    // Start countdown
+    if (_offerTimer) clearInterval(_offerTimer);
+    _offerTimer = setInterval(function() {
+      _offerSecondsLeft--;
+      var t = document.getElementById('offerTimer');
+      if (t) {
+        t.textContent = Math.max(0, _offerSecondsLeft);
+        if (_offerSecondsLeft <= 10) t.classList.add('urgent');
+      }
+      if (_offerSecondsLeft <= 0) {
+        clearInterval(_offerTimer);
+        _offerTimer = null;
+        // Auto-reject on timeout
+        doRejectOffer();
+      }
+    }, 1000);
+  }
+
+  function _hideOfferOverlay() {
+    if (_offerTimer) { clearInterval(_offerTimer); _offerTimer = null; }
+    _offerBookingId = null;
+    document.getElementById('offerOverlay').classList.remove('visible');
+  }
+
+  function doAcceptOffer() {
+    var bookingId = _offerBookingId;
+    if (!bookingId) return;
+    document.getElementById('offerAcceptBtn').disabled  = true;
+    document.getElementById('offerDeclineBtn').disabled = true;
+    document.getElementById('offerAcceptBtn').textContent = 'Đang xử lý…';
+    if (_offerTimer) { clearInterval(_offerTimer); _offerTimer = null; }
+
+    var fn = firebase.functions().httpsCallable('acceptOffer');
+    fn({ bookingId: bookingId }).then(function(result) {
+      if (result.data && result.data.ok) {
+        _hideOfferOverlay();
+        _activeRideId = bookingId;
+        _listenActiveRide();
+        showToast('✓ Đã nhận chuyến! Liên hệ khách ngay.', false);
+        drvTab('active');
+      } else {
+        var reason = (result.data && result.data.reason) || 'unknown';
+        _hideOfferOverlay();
+        showToast('Không thể nhận chuyến: ' + reason, true);
+      }
+    }).catch(function(e) {
+      _hideOfferOverlay();
+      showToast('Lỗi: ' + e.message, true);
+    });
+  }
+
+  function doRejectOffer() {
+    var bookingId = _offerBookingId;
+    if (!bookingId) return;
+    document.getElementById('offerAcceptBtn').disabled  = true;
+    document.getElementById('offerDeclineBtn').disabled = true;
+    if (_offerTimer) { clearInterval(_offerTimer); _offerTimer = null; }
+
+    var fn = firebase.functions().httpsCallable('rejectOffer');
+    fn({ bookingId: bookingId }).then(function() {
+      _hideOfferOverlay();
+    }).catch(function() {
+      _hideOfferOverlay();
+    });
+  }
+
   async function acceptRide(notifId, bookingId) {
     var btn = document.getElementById('btn-accept-' + notifId);
     if (btn) { btn.disabled = true; btn.textContent = 'Đang xử lý…'; }
     try {
+      // Phase 13: block broadcast-accept if booking is in automatic dispatch flow
+      if (bookingId) {
+        var bSnap = await db.collection('bookings').doc(bookingId).get();
+        if (bSnap.exists && ['dispatching','offered_to_driver'].indexOf(bSnap.data().status) >= 0) {
+          if (btn) { btn.disabled = false; btn.textContent = 'Nhận Chuyến'; }
+          showToast('Chuyến đang được điều phối tự động — chờ lời mời.', true);
+          return;
+        }
+      }
       var ts = firebase.firestore.FieldValue.serverTimestamp();
       // Mark notification accepted
       await db.collection('rideNotifications').doc(notifId).update({

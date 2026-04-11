@@ -1909,6 +1909,307 @@ exports.uploadVendorImage = onCall(
   }
 );
 
+// ── Phase 13: Automatic Driver Dispatch ──────────────────────────────────────
+//
+// Flow:
+//   1. workflowEngine.js writes dispatchQueue/{bookingId}_0 when a ride is created.
+//   2. onDispatchQueue fires, selects best eligible driver, creates bookingOffers/{bookingId}.
+//   3. driver-admin.html listens to bookingOffers; driver accepts/rejects via callables.
+//   4. acceptOffer (onCall): Firestore transaction — assigns driver to booking.
+//   5. rejectOffer (onCall): marks offer rejected, queues next dispatch attempt.
+//   6. expireRideOffers (scheduler, every 2 min): finds stale pending offers, triggers retry.
+//
+// Race-condition safety: acceptOffer uses a transaction that verifies
+//   bookingOffers.status === 'pending' AND bookingOffers.driverId === caller
+//   AND bookings.status === 'offered_to_driver' before committing.
+//
+// Idempotency: dispatchQueue docs use {bookingId}_{timestamp} IDs — each
+//   rejection/expiry creates a NEW doc, so onDocumentCreated fires exactly once per attempt.
+//   Max 5 attempts before falling back to awaiting_driver (manual admin).
+
+// ── Shared helper: query eligible drivers ─────────────────────────────────────
+async function _queryEligibleDrivers(serviceType, airport, skipDriverIds) {
+  const regionId = airport ? (AIRPORT_REGION_CF[airport.toUpperCase()] || null) : null;
+  const allSnap  = await db.collection('drivers')
+    .where('adminStatus',      '==', 'active')
+    .where('complianceStatus', '==', 'approved')
+    .get();
+  const skip = new Set(skipDriverIds || []);
+  return allSnap.docs
+    .filter(d => {
+      if (skip.has(d.id)) return false;
+      if (regionId) return (d.data().regions || []).includes(regionId);
+      return true; // private_ride: any region
+    })
+    .map(d => Object.assign({ id: d.id }, d.data()));
+}
+
+// ── onDispatchQueue ──────────────────────────────────────────────────────────
+// Triggered when a new dispatchQueue doc is created (booking creation or rejection retry).
+exports.onDispatchQueue = onDocumentCreated(
+  {
+    document:       'dispatchQueue/{queueId}',
+    region:         'us-central1',
+    timeoutSeconds: 60,
+    retry:          false,
+  },
+  async (event) => {
+    const { queueId } = event.params;
+    const queueRef    = event.data.ref;
+    const data        = event.data.data();
+    const log = (msg) => console.log(`[onDispatchQueue][${queueId}] ${msg}`);
+    log('triggered');
+
+    if (data.status === 'done') { log('already done — skip'); return; }
+
+    const bookingId    = data.bookingId;
+    const skipDriverIds= data.skipDriverIds || [];
+    if (!bookingId) { log('no bookingId'); await queueRef.update({ status: 'done', reason: 'no_booking_id' }); return; }
+
+    // Fetch booking
+    const bookingSnap = await db.collection('bookings').doc(bookingId).get();
+    if (!bookingSnap.exists) { log('booking not found'); await queueRef.update({ status: 'done', reason: 'booking_not_found' }); return; }
+    const booking = bookingSnap.data();
+
+    // Don't dispatch to already-assigned bookings
+    const TERMINAL = new Set(['assigned','driver_confirmed','on_the_way','arrived','in_progress','completed','cancelled']);
+    if (TERMINAL.has(booking.status)) {
+      log(`booking already in terminal state: ${booking.status}`);
+      await queueRef.update({ status: 'done', reason: 'already_terminal' });
+      return;
+    }
+
+    // Find eligible drivers
+    const eligible = await _queryEligibleDrivers(booking.serviceType, booking.airport, skipDriverIds);
+    log(`${eligible.length} eligible driver(s), skip=[${skipDriverIds}]`);
+
+    if (eligible.length === 0) {
+      await db.collection('bookings').doc(bookingId).update({
+        status: 'awaiting_driver',
+        dispatchNote: 'No eligible drivers available. Admin assignment required.',
+        statusUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      await queueRef.update({ status: 'done', reason: 'no_eligible_drivers' });
+      log('no eligible drivers — set awaiting_driver');
+      return;
+    }
+
+    // Select first driver (TODO: add GPS/last-active ranking in future phase)
+    const selected = eligible[0];
+    const expiresAt = new Date(Date.now() + 35 * 1000); // 35-second offer window
+
+    // Write or overwrite the offer doc for this booking
+    const offerRef = db.collection('bookingOffers').doc(bookingId);
+    await offerRef.set({
+      bookingId,
+      driverId:      selected.id,
+      driverName:    selected.fullName || selected.name || '',
+      status:        'pending',
+      skipDriverIds,
+      attempt:       data.attempt || 1,
+      createdAt:     admin.firestore.FieldValue.serverTimestamp(),
+      expiresAt:     admin.firestore.Timestamp.fromDate(expiresAt),
+      respondedAt:   null,
+    });
+
+    // Update booking to offered_to_driver
+    await db.collection('bookings').doc(bookingId).update({
+      status:               'offered_to_driver',
+      currentOfferDriverId: selected.id,
+      statusUpdatedAt:      admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    await queueRef.update({ status: 'processing', selectedDriverId: selected.id });
+    log(`offer sent to driver ${selected.id} — expires in 35s`);
+  }
+);
+
+// ── acceptOffer (HTTPS callable) ──────────────────────────────────────────────
+// Transactional: verifies offer still pending for this driver before assigning.
+exports.acceptOffer = onCall(
+  { region: 'us-central1' },
+  async (req) => {
+    if (!req.auth) return { ok: false, reason: 'unauthenticated' };
+    const uid       = req.auth.uid;
+    const bookingId = req.data && req.data.bookingId;
+    const log = (msg) => console.log(`[acceptOffer][${bookingId}] ${msg}`);
+    if (!bookingId) return { ok: false, reason: 'bookingId_required' };
+
+    // Resolve driverId from uid
+    const duSnap = await db.collection('driverUsers').doc(uid).get();
+    if (!duSnap.exists) return { ok: false, reason: 'driver_not_found' };
+    const driverId   = duSnap.data().driverId || uid;
+    const dSnap      = await db.collection('drivers').doc(driverId).get();
+    const dData      = dSnap.exists ? dSnap.data() : {};
+    const driverName = dData.fullName || dData.name || '';
+    const driverPhone= dData.phone || '';
+
+    const offerRef   = db.collection('bookingOffers').doc(bookingId);
+    const bookingRef = db.collection('bookings').doc(bookingId);
+
+    try {
+      await db.runTransaction(async (t) => {
+        const offerSnap   = await t.get(offerRef);
+        const bookingSnap = await t.get(bookingRef);
+
+        if (!offerSnap.exists)                          throw new Error('offer_not_found');
+        if (offerSnap.data().status !== 'pending')      throw new Error('offer_not_pending:' + offerSnap.data().status);
+        if (offerSnap.data().driverId !== driverId)     throw new Error('not_your_offer');
+        if (!bookingSnap.exists)                        throw new Error('booking_not_found');
+        const bst = bookingSnap.data().status;
+        if (bst !== 'offered_to_driver')                throw new Error('booking_wrong_state:' + bst);
+
+        const ts = admin.firestore.FieldValue.serverTimestamp();
+        t.update(offerRef,   { status: 'accepted', respondedAt: ts });
+        t.update(bookingRef, {
+          status:               'assigned',
+          driver:               { driverId, name: driverName, phone: driverPhone },
+          currentOfferDriverId: driverId,
+          statusUpdatedAt:      ts,
+          statusUpdatedBy:      'driver:' + driverId,
+          statusHistory:        admin.firestore.FieldValue.arrayUnion({
+            status: 'assigned', by: 'driver:' + driverId, at: new Date().toISOString(),
+          }),
+        });
+      });
+      log(`accepted by driver ${driverId}`);
+
+      // Queue driver-assigned email (non-blocking, idempotent via fixed doc ID)
+      const freshSnap = await bookingRef.get();
+      const fresh = freshSnap.data();
+      if (fresh && fresh.customerEmail) {
+        const VENDOR_ID = 'admin-dlc';
+        await db.collection('vendors').doc(VENDOR_ID).collection('emailQueue')
+          .doc(`${bookingId}_assigned`)
+          .set({
+            bookingId, eventType: 'assigned', bookingType: 'ride', status: 'pending',
+            createdAt:     admin.firestore.FieldValue.serverTimestamp(),
+            customerEmail: fresh.customerEmail,
+            customerName:  fresh.customerName || fresh.name || '',
+            serviceType:   fresh.serviceType  || '',
+            airport:       fresh.airport       || '',
+            terminal:      fresh.terminal      || '',
+            datetime:      fresh.datetime      || '',
+            address:       fresh.address       || '',
+            pickupAddress: fresh.pickupAddress  || '',
+            dropoffAddress:fresh.dropoffAddress || '',
+            trackingToken: fresh.trackingToken  || '',
+            driverName, driverPhone,
+            lang: fresh.lang || 'en',
+          }, { merge: false })
+          .catch(() => {}); // ignore ALREADY_EXISTS
+      }
+      return { ok: true };
+    } catch (e) {
+      log('failed: ' + e.message);
+      return { ok: false, reason: e.message };
+    }
+  }
+);
+
+// ── rejectOffer (HTTPS callable) ──────────────────────────────────────────────
+// Driver declines — triggers dispatch to next eligible driver.
+exports.rejectOffer = onCall(
+  { region: 'us-central1' },
+  async (req) => {
+    if (!req.auth) return { ok: false, reason: 'unauthenticated' };
+    const uid       = req.auth.uid;
+    const bookingId = req.data && req.data.bookingId;
+    const log = (msg) => console.log(`[rejectOffer][${bookingId}] ${msg}`);
+    if (!bookingId) return { ok: false, reason: 'bookingId_required' };
+
+    const duSnap = await db.collection('driverUsers').doc(uid).get();
+    if (!duSnap.exists) return { ok: false, reason: 'driver_not_found' };
+    const driverId = duSnap.data().driverId || uid;
+
+    const offerRef = db.collection('bookingOffers').doc(bookingId);
+    const offerSnap = await offerRef.get();
+    if (!offerSnap.exists)                         return { ok: false, reason: 'offer_not_found' };
+    if (offerSnap.data().status !== 'pending')     return { ok: false, reason: 'offer_not_pending' };
+    if (offerSnap.data().driverId !== driverId)    return { ok: false, reason: 'not_your_offer' };
+
+    const ts = admin.firestore.FieldValue.serverTimestamp();
+    await offerRef.update({ status: 'rejected', respondedAt: ts });
+
+    const skipDriverIds = [...(offerSnap.data().skipDriverIds || []), driverId];
+    const nextAttempt   = (offerSnap.data().attempt || 1) + 1;
+    const MAX_ATTEMPTS  = 5;
+
+    const bookingRef  = db.collection('bookings').doc(bookingId);
+    const bookingSnap = await bookingRef.get();
+
+    if (bookingSnap.exists && bookingSnap.data().status === 'offered_to_driver') {
+      if (nextAttempt > MAX_ATTEMPTS) {
+        await bookingRef.update({
+          status: 'awaiting_driver',
+          dispatchNote: 'Max dispatch attempts reached. Admin assignment required.',
+          statusUpdatedAt: ts,
+        });
+        log(`max attempts — awaiting_driver`);
+      } else {
+        await bookingRef.update({ status: 'dispatching', statusUpdatedAt: ts });
+        await db.collection('dispatchQueue').doc(`${bookingId}_${Date.now()}`).set({
+          bookingId, skipDriverIds, attempt: nextAttempt, status: 'pending', createdAt: ts,
+        });
+        log(`rejected — attempt ${nextAttempt} queued, skip=[${skipDriverIds}]`);
+      }
+    }
+
+    return { ok: true };
+  }
+);
+
+// ── expireRideOffers (scheduled every 2 minutes) ──────────────────────────────
+// Finds pending bookingOffers past their expiresAt and triggers next dispatch.
+exports.expireRideOffers = onSchedule(
+  { schedule: 'every 2 minutes', region: 'us-central1', timeoutSeconds: 60 },
+  async () => {
+    const log = (msg) => console.log('[expireRideOffers]', msg);
+    const now  = admin.firestore.Timestamp.now();
+    const snap = await db.collection('bookingOffers')
+      .where('status',    '==', 'pending')
+      .where('expiresAt', '<',  now)
+      .limit(20)
+      .get();
+    log(`found ${snap.size} stale offer(s)`);
+
+    const MAX_ATTEMPTS = 5;
+    for (const docSnap of snap.docs) {
+      const offer = docSnap.data();
+      const { bookingId, driverId, skipDriverIds: prevSkip = [], attempt = 1 } = offer;
+      const ts           = admin.firestore.FieldValue.serverTimestamp();
+      const skipDriverIds= [...prevSkip, driverId];
+      const nextAttempt  = attempt + 1;
+
+      await docSnap.ref.update({ status: 'expired', expiredAt: ts });
+
+      const bookingRef  = db.collection('bookings').doc(bookingId);
+      const bookingSnap = await bookingRef.get();
+      if (!bookingSnap.exists) continue;
+      const bst = bookingSnap.data().status;
+      if (bst !== 'offered_to_driver' && bst !== 'dispatching') {
+        log(`booking ${bookingId} is ${bst} — skip`);
+        continue;
+      }
+
+      if (nextAttempt > MAX_ATTEMPTS) {
+        await bookingRef.update({
+          status: 'awaiting_driver',
+          dispatchNote: 'Max dispatch attempts (offer expired). Admin assignment required.',
+          statusUpdatedAt: ts,
+        });
+        log(`${bookingId}: max attempts — awaiting_driver`);
+      } else {
+        await bookingRef.update({ status: 'dispatching', statusUpdatedAt: ts });
+        await db.collection('dispatchQueue').doc(`${bookingId}_${Date.now()}`).set({
+          bookingId, skipDriverIds, attempt: nextAttempt, status: 'pending', createdAt: ts,
+        });
+        log(`${bookingId}: expired, queued attempt ${nextAttempt}`);
+      }
+    }
+  }
+);
+
 // ── Phase 12: Pre-pickup ride reminders ───────────────────────────────────────
 //
 // Runs every 15 minutes.  For every active ride booking whose pickup time falls

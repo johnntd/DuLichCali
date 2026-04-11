@@ -2303,7 +2303,7 @@
       var eligDrivers   = _driversForRegion(ridRegionId);
       var eligIds       = eligDrivers.map(function(d){ return d.id || d.driverId || ''; }).filter(Boolean);
       var preAssigned   = eligDrivers.length === 1 ? eligDrivers[0] : null;
-      var airBookStatus = preAssigned ? 'assigned' : 'awaiting_driver';
+      var airBookStatus = 'dispatching'; // Phase 13: all rides go through offer/accept flow
 
       await db.collection('bookings').doc(orderId).set({
         bookingId:orderId, trackingToken,
@@ -2313,7 +2313,7 @@
         name:f.customerName||'', phone:f.customerPhone||'', customerEmail:f.customerEmail||'',
         notes:f.notes||'', source:'ai_chat',
         eligibleDriverIds: eligIds,
-        driver: preAssigned ? { driverId:preAssigned.id||'', name:preAssigned.fullName||preAssigned.name||'', phone:preAssigned.phone||'' } : null,
+        driver: null, // set when driver accepts offer (Phase 13)
         vehicleLat:null,vehicleLng:null,vehicleHeading:null,etaMinutes:null,
         createdAt:fv.serverTimestamp(),
       });
@@ -2352,10 +2352,15 @@
         customerPhone:    f.customerPhone||'',
         createdAt:        fv.serverTimestamp(),
       }).catch(function(e){ console.warn('[rideNotif] write failed:', e.message); });
+      // Phase 13: write dispatch queue doc to trigger automatic driver offer flow
+      db.collection('dispatchQueue').doc(orderId + '_0').set({
+        bookingId: orderId, skipDriverIds: [], attempt: 1, status: 'pending',
+        createdAt: fv.serverTimestamp(),
+      }).catch(function(e){ console.warn('[dispatchQueue] write failed:', e.message); });
       finalDispatchState = {
         status: airBookStatus,
         eligibleCount: eligIds.length,
-        preAssigned: preAssigned ? { name:preAssigned.fullName||preAssigned.name||'', phone:preAssigned.phone||'' } : null,
+        preAssigned: null, // Phase 13: no pre-assignment, all go through dispatch
       };
       // Phase 5A: queue confirmation email (non-blocking, no-op if no email)
       if (typeof DLCNotifications !== 'undefined') {
@@ -2367,7 +2372,7 @@
           datetime: datetime, address: addrField,
           passengers: f.passengers||1, trackingToken: trackingToken||'',
           status: airBookStatus,
-          driver: preAssigned ? { name: preAssigned.fullName||preAssigned.name||'' } : null,
+          driver: null,
         }, draft.lang || 'vi');
         // Phase 5B: in-app notifications (admin + customer)
         if (DLCNotifications.queueRideBookedNotification) {
@@ -2506,7 +2511,7 @@
       var prEligDrivers  = (window._activeDrivers || []).filter(function(d){ return d.complianceStatus === 'approved'; });
       var prEligIds      = prEligDrivers.map(function(d){ return d.id||''; }).filter(Boolean);
       var prPreAssigned  = prEligDrivers.length === 1 ? prEligDrivers[0] : null;
-      var prBookStatus   = prPreAssigned ? 'assigned' : 'awaiting_driver';
+      var prBookStatus   = 'dispatching'; // Phase 13: all rides go through offer/accept flow
 
       await db.collection('bookings').doc(orderId).set({
         bookingId:orderId, trackingToken,
@@ -2517,7 +2522,7 @@
         notes:f.notes||'', source:'ai_chat',
         estimatedPrice: rideEst ? rideEst.ourPrice : null,
         eligibleDriverIds: prEligIds,
-        driver: prPreAssigned ? { driverId:prPreAssigned.id||'', name:prPreAssigned.fullName||prPreAssigned.name||'', phone:prPreAssigned.phone||'' } : null,
+        driver: null, // set when driver accepts offer (Phase 13)
         vehicleLat:null, vehicleLng:null, vehicleHeading:null, etaMinutes:null,
         createdAt:fv.serverTimestamp(),
       });
@@ -2553,10 +2558,15 @@
         customerPhone:    f.customerPhone||'',
         createdAt:        fv.serverTimestamp(),
       }).catch(function(e){ console.warn('[rideNotif] write failed:', e.message); });
+      // Phase 13: write dispatch queue doc to trigger automatic driver offer flow
+      db.collection('dispatchQueue').doc(orderId + '_0').set({
+        bookingId: orderId, skipDriverIds: [], attempt: 1, status: 'pending',
+        createdAt: fv.serverTimestamp(),
+      }).catch(function(e){ console.warn('[dispatchQueue] write failed:', e.message); });
       finalDispatchState = {
         status: prBookStatus,
         eligibleCount: prEligIds.length,
-        preAssigned: prPreAssigned ? { name:prPreAssigned.fullName||prPreAssigned.name||'', phone:prPreAssigned.phone||'' } : null,
+        preAssigned: null, // Phase 13: no pre-assignment, all go through dispatch
       };
       // Phase 5A: queue confirmation email (non-blocking, no-op if no email)
       if (typeof DLCNotifications !== 'undefined') {
@@ -2569,7 +2579,7 @@
           estimatedPrice: rideEst ? rideEst.ourPrice : null,
           trackingToken: trackingToken||'',
           status: prBookStatus,
-          driver: prPreAssigned ? { name: prPreAssigned.fullName||prPreAssigned.name||'' } : null,
+          driver: null,
         }, draft.lang || 'vi');
         // Phase 5B: in-app notifications (admin + customer)
         if (DLCNotifications.queueRideBookedNotification) {

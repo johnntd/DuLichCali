@@ -198,7 +198,9 @@
       letter-spacing: 0.04em;
       text-transform: uppercase;
     }
-    .status-awaiting_driver { background: rgba(251,146,60,0.18); color: #fb923c; }
+    .status-awaiting_driver  { background: rgba(251,146,60,0.18); color: #fb923c; }
+    .status-dispatching      { background: rgba(130,90,220,0.18); color: #b08af0; }
+    .status-offered_to_driver{ background: rgba(80,170,230,0.18); color: #70bff0; }
     .status-pending     { background: rgba(82,104,120,0.2);  color: #7a9bb0; }
     .status-confirmed   { background: rgba(200,146,42,0.12); color: var(--gold-lt); }
     .status-assigned         { background: rgba(200,146,42,0.18); color: var(--gold-lt); }
@@ -1116,7 +1118,8 @@
         }) : data.datetime || id;
 
         const statusLabel = {
-          awaiting_driver: 'Chờ tài xế', pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận',
+          dispatching: 'Đang điều phối', offered_to_driver: 'Đã gửi lời mời',
+          awaiting_driver: 'Chờ tài xế (thủ công)', pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận',
           assigned: 'Có tài xế', driver_confirmed: 'Tài xế xác nhận',
           on_the_way: 'Trên đường', arrived: 'Đã đến', in_progress: 'Di chuyển',
           completed: 'Hoàn thành', cancelled: 'Đã hủy'
@@ -1153,7 +1156,8 @@
       document.getElementById('di-phone').textContent = data.phone || '—';
 
       const statusLabel = {
-        awaiting_driver: 'Chờ tài xế', pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận',
+        dispatching: 'Đang điều phối', offered_to_driver: 'Đã gửi lời mời',
+        awaiting_driver: 'Chờ tài xế (thủ công)', pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận',
         assigned: 'Có tài xế', driver_confirmed: 'Tài xế xác nhận',
         on_the_way: 'Trên đường đến', arrived: 'Đã đến điểm đón',
         in_progress: 'Đang di chuyển', completed: 'Hoàn thành', cancelled: 'Đã hủy'
@@ -1216,6 +1220,8 @@
     // Linear progression — each status has exactly one next state (or terminal)
     // Admin can also cancel from any non-terminal status
     const STATUS_FLOW = {
+      dispatching:       ['awaiting_driver'],
+      offered_to_driver: ['awaiting_driver'],
       awaiting_driver:  ['assigned'],
       pending:          ['confirmed'],
       confirmed:        ['assigned'],
@@ -1229,7 +1235,9 @@
     };
 
     const STATUS_BTN_LABELS = {
-      awaiting_driver:  'Đang tìm tài xế',
+      dispatching:       'Chuyển sang chờ thủ công',
+      offered_to_driver: 'Chuyển sang chờ thủ công',
+      awaiting_driver:  'Đang tìm tài xế (thủ công)',
       pending:          'Chờ xác nhận',
       confirmed:        'Xác nhận',
       assigned:         'Phân công tài xế',

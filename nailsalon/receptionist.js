@@ -969,6 +969,10 @@
     var nowMins  = today.getHours() * 60 + today.getMinutes();
     var nowStr   = today.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
+    // Time-of-day bucket for greeting rule (uses browser-local clock = customer's local time)
+    var _hour       = today.getHours();
+    var _timeOfDay  = _hour < 12 ? 'morning' : _hour < 18 ? 'afternoon' : 'evening';
+
     var receptionistName = (biz.aiReceptionist && biz.aiReceptionist.name) || 'Lily';
     var salonName = biz.name || 'Luxurious Nails & Spa';
     var phone     = biz.phoneDisplay || biz.phone || '';
@@ -1178,6 +1182,14 @@
       '=== REAL-TIME CLOCK ===',
       'Current local time: ' + nowStr,
       'Today\'s salon status: ' + _todayStatus,
+      '',
+      '=== GREETING RULE ===',
+      'Current time of day: ' + _timeOfDay + '.',
+      'When greeting, use time-appropriate salutation:',
+      '  morning (before 12:00 PM): "Good morning" / "Buenos días" / "Chào buổi sáng"',
+      '  afternoon (12:00–5:59 PM): "Good afternoon" / "Buenas tardes" / "Chào buổi chiều"',
+      '  evening (6:00 PM+): "Good evening" / "Buenas noches" / "Chào buổi tối"',
+      'NEVER use "Good day" — it does not reflect the actual time of day.',
       '',
       '=== HOURS (weekly schedule — live from vendor admin) ===',
       hoursBlock,
@@ -2884,14 +2896,19 @@
             // Slot taken → replace response with the real conflict message.
             //
             // Uses totalDurationMins: 0 → NailAvailabilityChecker falls back to DEFAULT_DUR (60min).
+            // Also covers booking_request + named staff + time + date + NO services:
+            // earlyCheckReady requires services.length > 0, so that gap is closed here.
             var _staffAvailWithTime = (
               _ecs &&
-              _ecs.intent === 'staff_availability' &&
               _ecs.staff  && _ecs.staff.toLowerCase() !== 'any' &&
               _ecs.date   &&
               _ecs.time   &&
               !result.escalationType &&
-              !_earlyCheckReady  // don't double-fire if already caught above
+              !_earlyCheckReady &&  // don't double-fire if already caught above
+              (
+                _ecs.intent === 'staff_availability' ||
+                (_ecs.intent === 'booking_request' && (!_ecs.services || _ecs.services.length === 0))
+              )
             );
             if (_staffAvailWithTime) {
               var _sad = {

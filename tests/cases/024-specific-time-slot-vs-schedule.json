@@ -1,0 +1,38 @@
+{
+  "id": "RX-024",
+  "fix_date": "2026-04-18",
+  "category": "availability_contract",
+  "status": "verified_in_runner",
+  "title": "Availability-first hardening: schedule ≠ slot, _staffAvailWithTime covers both intents, greeting uses real clock",
+  "failing_behavior": "Three related regressions:\n  (1) AI said 'Tracy is available from 9:00 AM today' (from shift start time in schedule data), then when booking was attempted at 9AM said 'Sorry, 9AM is already booked' — direct contradiction caused by treating schedule start time as proof of slot availability.\n  (2) _staffAvailWithTime only guarded staff_availability intent, leaving a gap: booking_request + named staff + time + date + no services bypassed all slot validation.\n  (3) AI greeted customers with 'Good day' at 9 PM — does not reflect actual time of day.",
+  "root_cause": "Three root causes:\n  (1) Prompt lacked an explicit rule forbidding schedule/start-time as proof of slot availability.\n  (2) _staffAvailWithTime condition only matched intent === 'staff_availability', missing the booking_request + no-services gap that earlyCheckReady also misses (earlyCheckReady requires services.length > 0).\n  (3) _buildPrompt() injected current time via nowStr but had no explicit greeting rule — Claude defaulted to 'Good day' as a generic greeting.",
+  "fix_summary": "Four-part fix in nailsalon/receptionist.js:\n  (1) Prompt: CRITICAL — SCHEDULE ≠ SLOT AVAILABILITY rule added. Explicitly forbids treating shift start time as proof of slot availability. 'When a customer asks about a SPECIFIC TIME, classify as booking_request and let the system validate the slot.'\n  (2) Prompt: intent classification updated — staff_availability = GENERAL schedule only (no specific time). 'If customer names a SPECIFIC TIME, classify as booking_request, NOT staff_availability.'\n  (3) Code: _staffAvailWithTime condition extended to cover both intents: staff_availability OR (booking_request AND services.length === 0). Closes the earlyCheckReady gap.\n  (4) Prompt: GREETING RULE section added using _timeOfDay variable (morning/afternoon/evening). Explicitly forbids 'Good day'.",
+  "conversation": [
+    { "role": "user", "content": "Is Tracy available at 9AM tomorrow?" },
+    { "role": "assistant", "content": "[CORRECT] Let me check that slot for you — what service were you thinking?\n[STATE:{\"intent\":\"booking_request\",\"services\":[],\"staff\":\"Tracy\",\"date\":\"2026-04-19\",\"time\":\"09:00\",\"name\":null,\"phone\":null,\"lang\":\"en\",\"pendingAction\":null,\"existingBookingId\":null}]" },
+    { "role": "user", "content": "Is Tracy working this Friday?" },
+    { "role": "assistant", "content": "[CORRECT] Yes, Tracy works Fridays from 9 AM to 7 PM! What time works for you?\n[STATE:{\"intent\":\"staff_availability\",\"services\":[],\"staff\":\"Tracy\",\"date\":\"2026-04-17\",\"time\":null,\"name\":null,\"phone\":null,\"lang\":\"en\",\"pendingAction\":\"booking_offer\",\"existingBookingId\":null}]" }
+  ],
+  "bad_examples": [
+    { "label": "BANNED — schedule as availability proof", "text": "Tracy starts at 9 AM today, so yes she's available at 9 AM!" },
+    { "label": "BANNED — schedule as availability proof", "text": "Tracy works from 9 AM, so you can book her at 9 AM." },
+    { "label": "BANNED — wrong greeting at evening", "text": "Good day! How can I help you today?" },
+    { "label": "BANNED — wrong classification for specific time", "text": "[STATE:{\"intent\":\"staff_availability\",\"time\":\"09:00\"}]" }
+  ],
+  "good_examples": [
+    { "label": "CORRECT — specific time classified as booking_request", "text": "[STATE:{\"intent\":\"booking_request\",\"time\":\"09:00\",\"staff\":\"Tracy\"}]" },
+    { "label": "CORRECT — general schedule = staff_availability, no time", "text": "[STATE:{\"intent\":\"staff_availability\",\"time\":null,\"staff\":\"Tracy\"}]" },
+    { "label": "CORRECT — morning greeting", "text": "Good morning! How can I help you today?" },
+    { "label": "CORRECT — evening greeting", "text": "Good evening! What can I do for you?" }
+  ],
+  "verify_fix_string": "CRITICAL — SCHEDULE ≠ SLOT AVAILABILITY:",
+  "verify_fix_string_2": "NEVER use \"Good day\" — it does not reflect the actual time of day.",
+  "verify_fix_string_3": "_ecs.intent === 'staff_availability' ||",
+  "code_areas": [
+    "nailsalon/receptionist.js:_buildPrompt():GREETING-RULE",
+    "nailsalon/receptionist.js:_buildPrompt():SCHEDULE-VS-SLOT-CRITICAL-RULE",
+    "nailsalon/receptionist.js:_buildPrompt():intent-classification-staff_availability",
+    "nailsalon/receptionist.js:send():_staffAvailWithTime-condition"
+  ],
+  "notes": "The _staffAvailWithTime guard now covers two paths: (1) staff_availability + time + named staff + date — the original fix. (2) booking_request + time + named staff + date + no services — the gap where earlyCheckReady misses (earlyCheckReady requires services.length > 0). Together with earlyCheckReady (booking_request + services + staff + date + time), all three paths that could produce schedule-vs-slot contradictions are now intercepted and validated against Firestore before Claude's response is shown."
+}

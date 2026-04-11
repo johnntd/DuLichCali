@@ -754,6 +754,80 @@ allCases.forEach(function(c, i) {
   });
 });
 
+// ══════════════════════════════════════════════════════════════════════════
+// GROUP 5 — AVAILABILITY-FIRST HARDENING (RX-024)
+// type: static-source-check
+// Verifies: _staffAvailWithTime covers both intents, greeting rule uses real
+// clock, SCHEDULE ≠ SLOT AVAILABILITY critical rule present in prompt.
+// ══════════════════════════════════════════════════════════════════════════
+
+test('RX-024: _staffAvailWithTime guard defined in source [RX-024]', function() {
+  assertContains(src, 'var _staffAvailWithTime = (',
+    'RX-024: _staffAvailWithTime guard must be defined — it is the safety net for schedule-vs-slot contradictions');
+});
+
+test('RX-024: _staffAvailWithTime covers staff_availability intent [RX-024]', function() {
+  assertContains(src, "_ecs.intent === 'staff_availability' ||",
+    'RX-024: _staffAvailWithTime must cover staff_availability intent');
+});
+
+test('RX-024: _staffAvailWithTime covers booking_request + no services gap [RX-024]', function() {
+  assertContains(src, "_ecs.intent === 'booking_request' && (!_ecs.services || _ecs.services.length === 0)",
+    'RX-024: _staffAvailWithTime must also fire for booking_request + no services — this is the earlyCheckReady gap');
+});
+
+test('RX-024: _staffAvailWithTime excluded when earlyCheckReady fires [RX-024]', function() {
+  assertContains(src, '!_earlyCheckReady &&  // don\'t double-fire if already caught above',
+    'RX-024: _staffAvailWithTime must NOT fire when _earlyCheckReady already handles the check');
+});
+
+test('RX-024: _staffAvailWithTime requires named staff (not "any") [RX-024]', function() {
+  assertContains(src, "_ecs.staff.toLowerCase() !== 'any'",
+    'RX-024: _staffAvailWithTime must not fire for "any" staff — slot check requires a named tech');
+});
+
+test('RX-024: _staffAvailWithTime requires time to be present [RX-024]', function() {
+  // Guard must require _ecs.time — without a specific time there is nothing to validate
+  var guardBlock = src.slice(src.indexOf('var _staffAvailWithTime = ('), src.indexOf(');', src.indexOf('var _staffAvailWithTime = (')));
+  assert(guardBlock.indexOf('_ecs.time') >= 0,
+    'RX-024: _staffAvailWithTime must require _ecs.time — no time means no specific slot to validate');
+});
+
+test('RX-024: _timeOfDay variable computed from real clock [RX-024]', function() {
+  assertContains(src, "var _timeOfDay  = _hour < 12 ? 'morning' : _hour < 18 ? 'afternoon' : 'evening'",
+    'RX-024: _timeOfDay must be computed from browser clock hours — morning/afternoon/evening buckets');
+});
+
+test('RX-024: GREETING RULE section present in prompt [RX-024]', function() {
+  assertContains(src, "'=== GREETING RULE ==='",
+    'RX-024: GREETING RULE section must be present in _buildPrompt()');
+});
+
+test('RX-024: Greeting rule forbids "Good day" [RX-024]', function() {
+  assertContains(src, 'NEVER use "Good day" — it does not reflect the actual time of day.',
+    'RX-024: prompt must explicitly forbid "Good day" greeting');
+});
+
+test('RX-024: Greeting rule injects _timeOfDay into prompt [RX-024]', function() {
+  assertContains(src, "'Current time of day: ' + _timeOfDay + '.'",
+    'RX-024: prompt must inject _timeOfDay value so Claude knows the correct greeting bucket');
+});
+
+test('RX-024: SCHEDULE ≠ SLOT AVAILABILITY critical rule in prompt [RX-024]', function() {
+  assertContains(src, 'CRITICAL — SCHEDULE ≠ SLOT AVAILABILITY:',
+    'RX-024: prompt must contain the SCHEDULE ≠ SLOT AVAILABILITY critical rule');
+});
+
+test('RX-024: Shift start ≠ slot open rule explicit in prompt [RX-024]', function() {
+  assertContains(src, 'A staff shift start time is NOT proof that a slot is open.',
+    'RX-024: prompt must state shift start time is NOT proof slot is open');
+});
+
+test('RX-024: Specific time → booking_request classification rule in prompt [RX-024]', function() {
+  assertContains(src, 'If the customer names a SPECIFIC TIME',
+    'RX-024: prompt must instruct Claude to classify specific-time questions as booking_request, not staff_availability');
+});
+
 // Fix string checks for cases with status=verified_in_runner or verified_live
 allCases.forEach(function(c) {
   if ((c.status !== 'verified_in_runner' && c.status !== 'verified_live') || !c.verify_fix_string) return;

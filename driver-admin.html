@@ -426,6 +426,7 @@
     <button class="drv-tab active" onclick="drvTab('profile')">Hồ Sơ</button>
     <button class="drv-tab" onclick="drvTab('docs')">Tài Liệu <span class="drv-tab-badge hidden" id="docsBadge"></span></button>
     <button class="drv-tab" onclick="drvTab('rides')">Chuyến Mới <span class="drv-tab-badge hidden" id="rideBadge">0</span></button>
+    <button class="drv-tab" onclick="drvTab('active')" id="tabActive" style="display:none">Chuyến Đang Chạy <span class="drv-tab-badge" id="activeBadge" style="background:#22c55e">!</span></button>
   </div>
 
   <!-- Profile panel -->
@@ -677,6 +678,11 @@
     </div>
   </div>
 
+  <!-- Active ride panel -->
+  <div id="panelActive" class="drv-panel">
+    <div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem">Chưa có chuyến đang chạy.</div>
+  </div>
+
 </div>
 
 <div id="saveToast">&#10003; Đã lưu</div>
@@ -700,6 +706,23 @@
   var _driverName = '';
   var _driverPhone = '';
   var _unsubRideNotifs = null;
+  var _unsubActiveRide  = null;
+  var _activeRideId     = null;
+  var _activeRideStatus = null;
+
+  // Trip-status progression for driver (what the driver can advance to)
+  var _TRIP_STATUS_NEXT = {
+    driver_confirmed: 'on_the_way',
+    on_the_way:       'arrived',
+    arrived:          'in_progress',
+    in_progress:      'completed',
+  };
+  var _TRIP_STATUS_LABEL = {
+    on_the_way:  'Bắt đầu di chuyển đến khách',
+    arrived:     'Đã đến điểm đón',
+    in_progress: 'Bắt đầu chuyến đi',
+    completed:   'Hoàn thành chuyến',
+  };
   var _state = {
     active: false,
     rideServiceEnabled: false,
@@ -781,6 +804,7 @@
       renderAll();
       listenRideNotifs();
       listenDriverNotifications();
+      _listenDriverActiveRide();
     }).catch(function () {
       document.getElementById('authChecking').classList.add('hidden');
       document.getElementById('mainContent').style.display = '';
@@ -1040,15 +1064,29 @@
 
   // ── Tab switching ─────────────────────────────────────────────────────────
   function drvTab(tab) {
-    var tabs = ['profile', 'docs', 'rides'];
+    // Update tab button active states (skip the dynamic 'active' tab button which is 4th)
+    var staticTabs = ['profile', 'docs', 'rides'];
     document.querySelectorAll('.drv-tab').forEach(function(btn, i) {
-      btn.classList.toggle('active', tabs[i] === tab);
+      if (i < staticTabs.length) {
+        btn.classList.toggle('active', staticTabs[i] === tab);
+      } else {
+        btn.classList.toggle('active', tab === 'active');
+      }
     });
     document.getElementById('panelProfile').classList.toggle('active', tab === 'profile');
     document.getElementById('panelDocs').classList.toggle('active',    tab === 'docs');
     document.getElementById('panelRides').classList.toggle('active',   tab === 'rides');
+    document.getElementById('panelActive').classList.toggle('active',  tab === 'active');
     if (tab === 'rides' && _unsubRideNotifs === null) listenRideNotifs();
     if (tab === 'docs') loadComplianceDocs();
+  }
+
+  // Show/hide the active ride tab based on whether driver has a live ride
+  function _syncActiveRideTab() {
+    var tabBtn = document.getElementById('tabActive');
+    if (!tabBtn) return;
+    var hasActive = !!_activeRideId && !['completed','cancelled'].includes(_activeRideStatus || '');
+    tabBtn.style.display = hasActive ? '' : 'none';
   }
 
   // ── Real-time ride notifications listener ─────────────────────────────────
@@ -1123,16 +1161,125 @@
         status: 'accepted', acceptedBy: _driverId,
         acceptedByName: _driverName, acceptedAt: ts
       });
-      // Assign driver on booking record
+      // Update booking: driver_confirmed + status history
       if (bookingId) {
         await db.collection('bookings').doc(bookingId).update({
-          status: 'assigned',
-          driver: { driverId: _driverId, name: _driverName, phone: _driverPhone }
+          status: 'driver_confirmed',
+          driver: { driverId: _driverId, name: _driverName, phone: _driverPhone },
+          statusUpdatedAt: ts,
+          statusUpdatedBy: 'driver:' + _driverId,
+          statusHistory: firebase.firestore.FieldValue.arrayUnion({
+            status: 'driver_confirmed',
+            by: 'driver:' + _driverId,
+            at: new Date().toISOString()
+          })
         });
+        _activeRideId = bookingId;
+        _listenActiveRide();
       }
       showToast('✓ Đã nhận chuyến! Liên hệ khách ngay.', false);
+      // Switch to active ride panel
+      drvTab('active');
     } catch(e) {
       if (btn) { btn.disabled = false; btn.textContent = 'Nhận Chuyến'; }
+      showToast('Lỗi: ' + e.message, true);
+    }
+  }
+
+  // ── Active ride real-time listener ───────────────────────────────────────
+  // Called after accepting a ride (bookingId already set)
+  function _listenActiveRide() {
+    if (!_activeRideId) return;
+    if (_unsubActiveRide) _unsubActiveRide();
+    _unsubActiveRide = db.collection('bookings').doc(_activeRideId)
+      .onSnapshot(function(doc) {
+        if (!doc.exists) return;
+        var d = doc.data();
+        _activeRideStatus = d.status;
+        renderActiveRide(d);
+        _syncActiveRideTab();
+      }, function() {});
+  }
+
+  // Called on login — finds any existing in-progress ride assigned to this driver
+  function _listenDriverActiveRide() {
+    if (!_driverId) return;
+    var ACTIVE_STATUSES = ['driver_confirmed', 'on_the_way', 'arrived', 'in_progress'];
+    db.collection('bookings')
+      .where('driver.driverId', '==', _driverId)
+      .where('status', 'in', ACTIVE_STATUSES)
+      .limit(1)
+      .get()
+      .then(function(snap) {
+        if (!snap.empty) {
+          var doc = snap.docs[0];
+          _activeRideId = doc.id;
+          _listenActiveRide();
+        }
+      }).catch(function() {});
+  }
+
+  function renderActiveRide(d) {
+    var panel = document.getElementById('panelActive');
+    if (!panel) return;
+    var status = d.status || 'driver_confirmed';
+    var nextStatus = _TRIP_STATUS_NEXT[status];
+    var label = _TRIP_STATUS_LABEL[nextStatus];
+    var statusNames = {
+      driver_confirmed: 'Đã xác nhận – chờ xuất phát',
+      on_the_way:  'Đang di chuyển đến khách',
+      arrived:     'Đã đến điểm đón',
+      in_progress: 'Đang trên đường',
+      completed:   'Chuyến hoàn thành',
+      cancelled:   'Chuyến đã bị hủy',
+    };
+
+    var isTerminal = status === 'completed' || status === 'cancelled';
+    var svcLabel = { airport_pickup: '✈ Đón Sân Bay', airport_dropoff: '✈ Ra Sân Bay', private_ride: '🚗 Xe Riêng' };
+    var price = d.estimatedPrice ? '$' + Number(d.estimatedPrice).toFixed(0) : '—';
+
+    panel.innerHTML =
+      '<div style="padding:1rem;max-width:480px;margin:auto">' +
+        '<h3 style="margin:0 0 .75rem;font-size:1rem;color:var(--gold-lt)">Chuyến Hiện Tại</h3>' +
+        '<div style="background:rgba(255,255,255,.06);border-radius:10px;padding:.875rem 1rem;margin-bottom:.875rem">' +
+          '<div style="font-size:.75rem;color:var(--muted);margin-bottom:.25rem">' + (svcLabel[d.serviceType] || d.serviceType || 'Chuyến Xe') + '</div>' +
+          '<div style="font-weight:600;margin-bottom:.2rem">' + esc(d.name || d.customerName || '—') + '</div>' +
+          '<div style="font-size:.8rem;color:var(--muted)">' + esc(d.phone || d.customerPhone || '') + '</div>' +
+          (d.pickupAddress ? '<div style="font-size:.78rem;margin-top:.4rem;color:#aaa">📍 ' + esc(d.pickupAddress) + '</div>' : '') +
+          (d.dropoffAddress ? '<div style="font-size:.78rem;margin-top:.15rem;color:#aaa">🏁 ' + esc(d.dropoffAddress) + '</div>' : '') +
+          '<div style="margin-top:.5rem;font-size:.8rem;color:var(--gold)">' + price + '</div>' +
+        '</div>' +
+        '<div style="text-align:center;padding:.5rem 0 .875rem">' +
+          '<div style="font-size:.72rem;color:var(--muted);margin-bottom:.3rem">Trạng thái</div>' +
+          '<div style="font-size:.9rem;font-weight:600">' + (statusNames[status] || status) + '</div>' +
+        '</div>' +
+        (isTerminal
+          ? '<div style="text-align:center;font-size:.8rem;color:var(--muted);padding:.5rem 0">' + (status === 'completed' ? '✓ Chuyến đi hoàn thành!' : '✗ Chuyến đã bị hủy.') + '</div>'
+          : (nextStatus
+              ? '<button onclick="advanceTripStatus()" style="width:100%;padding:.75rem;background:var(--gold);border:none;border-radius:8px;font-weight:700;font-size:.9rem;cursor:pointer;color:#0b0d10">' + label + '</button>'
+              : ''
+            )
+        ) +
+      '</div>';
+  }
+
+  async function advanceTripStatus() {
+    if (!_activeRideId || !_activeRideStatus) return;
+    var next = _TRIP_STATUS_NEXT[_activeRideStatus];
+    if (!next) return;
+    var ts = firebase.firestore.FieldValue.serverTimestamp();
+    try {
+      await db.collection('bookings').doc(_activeRideId).update({
+        status: next,
+        statusUpdatedAt: ts,
+        statusUpdatedBy: 'driver:' + _driverId,
+        statusHistory: firebase.firestore.FieldValue.arrayUnion({
+          status: next,
+          by: 'driver:' + _driverId,
+          at: new Date().toISOString()
+        })
+      });
+    } catch(e) {
       showToast('Lỗi: ' + e.message, true);
     }
   }

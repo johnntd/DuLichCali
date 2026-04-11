@@ -201,7 +201,8 @@
     .status-awaiting_driver { background: rgba(251,146,60,0.18); color: #fb923c; }
     .status-pending     { background: rgba(82,104,120,0.2);  color: #7a9bb0; }
     .status-confirmed   { background: rgba(200,146,42,0.12); color: var(--gold-lt); }
-    .status-assigned    { background: rgba(200,146,42,0.18); color: var(--gold-lt); }
+    .status-assigned         { background: rgba(200,146,42,0.18); color: var(--gold-lt); }
+    .status-driver_confirmed { background: rgba(130,200,100,0.18); color: #90d470; }
     .status-on_the_way  { background: rgba(100,160,220,0.15); color: #82b8e8; }
     .status-arrived     { background: rgba(100,200,140,0.15); color: #74c296; }
     .status-in_progress { background: rgba(100,180,240,0.2);  color: #6eb8f0; }
@@ -990,7 +991,8 @@
         }) : data.datetime || id;
 
         const statusLabel = {
-          awaiting_driver: 'Chờ tài xế', pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận', assigned: 'Có tài xế',
+          awaiting_driver: 'Chờ tài xế', pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận',
+          assigned: 'Có tài xế', driver_confirmed: 'Tài xế xác nhận',
           on_the_way: 'Trên đường', arrived: 'Đã đến', in_progress: 'Di chuyển',
           completed: 'Hoàn thành', cancelled: 'Đã hủy'
         }[data.status] || data.status;
@@ -1026,7 +1028,8 @@
       document.getElementById('di-phone').textContent = data.phone || '—';
 
       const statusLabel = {
-        awaiting_driver: 'Chờ tài xế', pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận', assigned: 'Có tài xế',
+        awaiting_driver: 'Chờ tài xế', pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận',
+        assigned: 'Có tài xế', driver_confirmed: 'Tài xế xác nhận',
         on_the_way: 'Trên đường đến', arrived: 'Đã đến điểm đón',
         in_progress: 'Đang di chuyển', completed: 'Hoàn thành', cancelled: 'Đã hủy'
       }[data.status] || data.status;
@@ -1085,46 +1088,84 @@
     }
 
     // ── Status action buttons ────────────────────────────────────
+    // Linear progression — each status has exactly one next state (or terminal)
+    // Admin can also cancel from any non-terminal status
     const STATUS_FLOW = {
-      awaiting_driver: ['assigned', 'confirmed'],
-      pending:         ['confirmed'],
-      confirmed:       ['assigned', 'pending'],
-      assigned:        ['on_the_way', 'confirmed'],
-      on_the_way:      ['arrived', 'assigned'],
-      arrived:         ['in_progress', 'on_the_way'],
-      in_progress:     ['completed', 'arrived'],
-      completed:       [],
+      awaiting_driver:  ['assigned'],
+      pending:          ['confirmed'],
+      confirmed:        ['assigned'],
+      assigned:         ['driver_confirmed'],
+      driver_confirmed: ['on_the_way'],
+      on_the_way:       ['arrived'],
+      arrived:          ['in_progress'],
+      in_progress:      ['completed'],
+      completed:        [],
+      cancelled:        [],
     };
 
     const STATUS_BTN_LABELS = {
-      awaiting_driver: 'Đang tìm tài xế',
-      pending:         'Chờ xác nhận',
-      confirmed:       'Xác nhận',
-      assigned:        'Đã phân công tài xế',
-      on_the_way:      'Bắt đầu di chuyển đến khách',
-      arrived:         'Đã đến điểm đón',
-      in_progress:     'Bắt đầu chuyến đi',
-      completed:       'Hoàn thành chuyến',
+      awaiting_driver:  'Đang tìm tài xế',
+      pending:          'Chờ xác nhận',
+      confirmed:        'Xác nhận',
+      assigned:         'Phân công tài xế',
+      driver_confirmed: 'Tài xế đã xác nhận',
+      on_the_way:       'Bắt đầu di chuyển đến khách',
+      arrived:          'Đã đến điểm đón',
+      in_progress:      'Bắt đầu chuyến đi',
+      completed:        'Hoàn thành chuyến',
     };
+
+    // Statuses that cannot be cancelled
+    const TERMINAL_STATUSES = ['completed', 'cancelled'];
 
     function renderStatusActions(currentStatus) {
       const container = document.getElementById('statusActions');
       const nextStates = STATUS_FLOW[currentStatus] || [];
-      if (nextStates.length === 0) {
+      if (currentStatus === 'completed') {
         container.innerHTML = '<span style="font-size:0.8rem;color:var(--muted)">Chuyến đã hoàn thành.</span>';
         return;
       }
-      container.innerHTML = nextStates.map((st, i) => {
-        const isNext = i === 0;
-        return `<button class="btn-status${isNext ? ' next' : ''}" onclick="updateStatus('${st}')">
-          ${STATUS_BTN_LABELS[st] || st}
-        </button>`;
-      }).join('');
+      if (currentStatus === 'cancelled') {
+        container.innerHTML = '<span style="font-size:0.8rem;color:#e08a8a">Chuyến đã bị hủy.</span>';
+        return;
+      }
+      const advanceBtn = nextStates.length > 0
+        ? `<button class="btn-status next" onclick="updateStatus('${nextStates[0]}')">${STATUS_BTN_LABELS[nextStates[0]] || nextStates[0]}</button>`
+        : '';
+      const cancelBtn = `<button class="btn-status" style="border-color:#e08a8a;color:#e08a8a" onclick="cancelBooking()">Hủy Chuyến</button>`;
+      container.innerHTML = advanceBtn + cancelBtn;
     }
 
     async function updateStatus(newStatus) {
       if (!selectedId) return;
-      await db.collection('bookings').doc(selectedId).update({ status: newStatus });
+      const ts = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('bookings').doc(selectedId).update({
+        status: newStatus,
+        statusUpdatedAt: ts,
+        statusUpdatedBy: 'admin',
+        statusHistory: firebase.firestore.FieldValue.arrayUnion({
+          status: newStatus,
+          by: 'admin',
+          at: new Date().toISOString()
+        })
+      });
+    }
+
+    async function cancelBooking() {
+      if (!selectedId) return;
+      const ok = confirm('Xác nhận hủy chuyến này?');
+      if (!ok) return;
+      const ts = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('bookings').doc(selectedId).update({
+        status: 'cancelled',
+        statusUpdatedAt: ts,
+        statusUpdatedBy: 'admin',
+        statusHistory: firebase.firestore.FieldValue.arrayUnion({
+          status: 'cancelled',
+          by: 'admin',
+          at: new Date().toISOString()
+        })
+      });
     }
 
     // ── Driver assignment ────────────────────────────────────────

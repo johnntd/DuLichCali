@@ -502,18 +502,22 @@
     let routeRequested = false;
 
     const STATUS_MESSAGES = {
-      pending:     'Đang chờ xác nhận đặt chỗ...',
-      confirmed:   'Đặt chỗ đã được xác nhận!',
-      assigned:    'Tài xế đã được phân công.',
-      on_the_way:  'Xe đang trên đường đến...',
-      arrived:     'Xe đã đến điểm đón!',
-      in_progress: 'Đang di chuyển đến điểm đến...',
-      completed:   'Chuyến đi hoàn thành!'
+      awaiting_driver:  'Đang tìm tài xế phù hợp...',
+      pending:          'Đang chờ xác nhận đặt chỗ...',
+      confirmed:        'Đặt chỗ đã được xác nhận!',
+      assigned:         'Tài xế đã được phân công.',
+      driver_confirmed: 'Tài xế đã xác nhận và sẵn sàng đón bạn!',
+      on_the_way:       'Xe đang trên đường đến...',
+      arrived:          'Xe đã đến điểm đón!',
+      in_progress:      'Đang di chuyển đến điểm đến...',
+      completed:        'Chuyến đi hoàn thành!',
+      cancelled:        'Chuyến đi đã bị hủy.',
     };
 
     // Status → active step count (1–5)
     const STATUS_STEP = {
-      pending: 0, confirmed: 1, assigned: 2,
+      pending: 0, awaiting_driver: 1, confirmed: 1,
+      assigned: 2, driver_confirmed: 2,
       on_the_way: 3, arrived: 3, in_progress: 4, completed: 5
     };
 

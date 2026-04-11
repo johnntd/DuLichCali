@@ -1597,6 +1597,25 @@
       }).catch(function() {});
   }
 
+  // Format ISO datetime string to human-readable Vietnamese format
+  // Input: "2026-04-11T18:45:00" or "2026-04-11 18:45" → "T7 11/04 · 6:45 CH"
+  function _fmtDatetime(str) {
+    if (!str) return '';
+    // Normalize space separator to T
+    var s = str.replace(' ', 'T');
+    var dt = new Date(s.length <= 10 ? s + 'T00:00:00' : s);
+    if (isNaN(dt.getTime())) return str; // fallback to raw
+    var days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+    var day  = days[dt.getDay()];
+    var dd   = String(dt.getDate()).padStart(2, '0');
+    var mm   = String(dt.getMonth() + 1).padStart(2, '0');
+    var hh   = dt.getHours();
+    var min  = String(dt.getMinutes()).padStart(2, '0');
+    var ampm = hh >= 12 ? 'CH' : 'SA';
+    var h12  = hh % 12 || 12;
+    return day + ' ' + dd + '/' + mm + ' · ' + h12 + ':' + min + ' ' + ampm;
+  }
+
   function renderActiveRide(d) {
     _activeRideData = d; // cache for notification use
     var panel = document.getElementById('panelActive');
@@ -1636,12 +1655,23 @@
       fromAddr = d.pickupAddress || '—';
       toAddr   = d.dropoffAddress || '—';
     }
-    var whenStr = d.datetime ||
-      (d.arrivalDate   ? d.arrivalDate   + (d.arrivalTime   ? ' ' + d.arrivalTime   : '') : null) ||
-      (d.departureDate ? d.departureDate + (d.departureTime ? ' ' + d.departureTime : '') : null) ||
-      (d.rideDate      ? d.rideDate      + (d.rideTime      ? ' ' + d.rideTime      : '') : null) || '';
+    var rawWhen = d.datetime ||
+      (d.arrivalDate   ? d.arrivalDate   + (d.arrivalTime   ? 'T' + d.arrivalTime   : '') : null) ||
+      (d.departureDate ? d.departureDate + (d.departureTime ? 'T' + d.departureTime : '') : null) ||
+      (d.rideDate      ? d.rideDate      + (d.rideTime      ? 'T' + d.rideTime      : '') : null) || '';
+    var whenStr = _fmtDatetime(rawWhen);
     var customerName  = d.name  || d.customerName  || '—';
     var customerPhone = d.phone || d.customerPhone || '';
+
+    // Build Google Maps navigation links
+    function _mapsHref(addr) {
+      if (!addr || addr === '—') return '';
+      // Short codes (≤5 chars) = airport code — append "Airport" for better Maps result
+      var q = addr.length <= 5 ? addr + ' Airport' : addr;
+      return 'https://maps.google.com/?q=' + encodeURIComponent(q);
+    }
+    var fromHref = _mapsHref(fromAddr);
+    var toHref   = _mapsHref(toAddr);
 
     panel.innerHTML =
       '<div style="padding:1rem;max-width:480px;margin:auto">' +
@@ -1650,8 +1680,8 @@
           '<div style="font-size:.75rem;color:var(--muted);margin-bottom:.25rem">' + (svcLabel[d.serviceType] || d.serviceType || 'Chuyến Xe') + '</div>' +
           '<div style="font-weight:600;margin-bottom:.2rem">' + esc(customerName) + '</div>' +
           (customerPhone ? '<div style="font-size:.8rem;color:var(--muted);margin-bottom:.3rem"><a href="tel:' + esc(customerPhone) + '" style="color:var(--gold-lt);text-decoration:none">📞 ' + esc(customerPhone) + '</a></div>' : '') +
-          (fromAddr ? '<div style="font-size:.78rem;margin-top:.4rem;color:#aaa">📍 ' + esc(fromAddr) + '</div>' : '') +
-          (toAddr && toAddr !== '—' ? '<div style="font-size:.78rem;margin-top:.15rem;color:#aaa">🏁 ' + esc(toAddr) + '</div>' : '') +
+          (fromAddr ? '<div style="font-size:.78rem;margin-top:.4rem;color:#aaa">' + (fromHref ? '<a href="' + fromHref + '" target="_blank" rel="noopener" style="color:#aaa;text-decoration:none">📍 ' + esc(fromAddr) + ' 🗺</a>' : '📍 ' + esc(fromAddr)) + '</div>' : '') +
+          (toAddr && toAddr !== '—' ? '<div style="font-size:.78rem;margin-top:.15rem;color:#aaa">' + (toHref ? '<a href="' + toHref + '" target="_blank" rel="noopener" style="color:var(--gold-lt);text-decoration:none">🏁 ' + esc(toAddr) + ' 🗺</a>' : '🏁 ' + esc(toAddr)) + '</div>' : '') +
           (whenStr ? '<div style="font-size:.78rem;margin-top:.3rem;color:#94a3b8">🕐 ' + esc(whenStr) + '</div>' : '') +
           '<div style="margin-top:.5rem;font-size:.8rem;color:var(--gold)">' + price + '</div>' +
         '</div>' +

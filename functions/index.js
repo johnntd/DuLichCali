@@ -1927,6 +1927,69 @@ exports.uploadVendorImage = onCall(
 //   rejection/expiry creates a NEW doc, so onDocumentCreated fires exactly once per attempt.
 //   Max 5 attempts before falling back to awaiting_driver (manual admin).
 
+// ── onRideBookingCreated — server-side dispatch trigger ───────────────────────
+// Fires the moment any booking document is created. If it's a ride booking in a
+// dispatchable state, creates the dispatchQueue doc here on the server — no
+// client-side auth or version issues can prevent it.
+//
+// This is the authoritative trigger. Client-side dispatchQueue writes in
+// workflowEngine.js / ride-intake.js are faster-path attempts but not required.
+// Uses doc.create() so if the client already wrote the doc, this is a no-op
+// (ALREADY_EXISTS) and onDispatchQueue still fires from the client's write.
+const RIDE_SERVICE_TYPES = new Set([
+  'pickup', 'dropoff', 'private_ride',         // workflowEngine / current ride-intake
+  'airport_pickup', 'airport_dropoff',          // legacy ride-intake (old cached clients)
+]);
+
+exports.onRideBookingCreated = onDocumentCreated(
+  {
+    document:       'bookings/{bookingId}',
+    region:         'us-central1',
+    timeoutSeconds: 30,
+    retry:          false,
+  },
+  async (event) => {
+    const bookingId = event.params.bookingId;
+    const booking   = event.data.data();
+    const log = (msg) => console.log(`[onRideBookingCreated][${bookingId}] ${msg}`);
+
+    // Skip non-ride bookings (nail, hair, food, etc.)
+    if (!RIDE_SERVICE_TYPES.has(booking.serviceType)) {
+      log(`skipped — not a ride (serviceType=${booking.serviceType})`);
+      return;
+    }
+
+    const TERMINAL = new Set(['assigned','driver_confirmed','on_the_way','arrived','in_progress','completed','cancelled']);
+    if (TERMINAL.has(booking.status)) {
+      log(`skipped — already terminal (status=${booking.status})`);
+      return;
+    }
+
+    log(`ride booking created — serviceType=${booking.serviceType} status=${booking.status} airport=${booking.airport||'—'}`);
+
+    const queueRef = db.collection('dispatchQueue').doc(bookingId + '_0');
+    try {
+      await queueRef.create({
+        bookingId,
+        skipDriverIds: [],
+        attempt:       1,
+        status:        'pending',
+        source:        'server_trigger',
+        createdAt:     admin.firestore.FieldValue.serverTimestamp(),
+      });
+      log(`dispatchQueue/${bookingId}_0 created by server trigger`);
+    } catch (e) {
+      // ALREADY_EXISTS means client wrote it first — fine, onDispatchQueue will fire from that write
+      if (e.code === 6 || (e.message && e.message.toLowerCase().includes('already'))) {
+        log(`dispatchQueue/${bookingId}_0 already exists (client wrote first) — OK`);
+      } else {
+        log(`ERROR: ${e.message}`);
+        throw e;
+      }
+    }
+  }
+);
+
 // ── Shared helper: query eligible drivers ─────────────────────────────────────
 // Logs each filter stage for debugging. Falls back to any active+approved driver
 // if region filtering yields 0 (prevents silent no-dispatch on region mismatch).

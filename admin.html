@@ -432,6 +432,94 @@
     .rating-date { font-size: .65rem; color: var(--muted); margin-top: .35rem; }
     .rating-none { font-size: .78rem; color: var(--muted); font-style: italic; }
 
+    /* ── Revenue dashboard ───────────────────────────────── */
+    .rev-panel {
+      flex: 1; overflow-y: auto; padding: 1.25rem;
+      display: flex; flex-direction: column; gap: 1.25rem;
+    }
+    .rev-period-bar {
+      display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;
+    }
+    .rev-period-btn {
+      height: 30px; padding: 0 0.85rem;
+      background: var(--navy-700); border: 1px solid var(--border);
+      border-radius: 4px; color: var(--muted);
+      font-family: 'Jost', sans-serif; font-size: 0.72rem;
+      font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+      cursor: pointer; transition: color 0.2s, border-color 0.2s, background 0.2s;
+    }
+    .rev-period-btn:hover { color: var(--text); border-color: var(--border-g); }
+    .rev-period-btn.active {
+      color: var(--gold-lt); border-color: var(--gold);
+      background: rgba(200,146,42,0.1);
+    }
+    .rev-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.65rem;
+    }
+    .rev-metric-card {
+      background: var(--navy-800);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.9rem 1rem;
+    }
+    .rev-metric-label {
+      font-size: 0.65rem; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+    .rev-metric-value {
+      font-size: 1.35rem; font-weight: 700;
+      color: var(--cream); line-height: 1.1;
+    }
+    .rev-metric-value.gold { color: var(--gold-lt); }
+    .rev-metric-sub {
+      font-size: 0.68rem; color: var(--muted); margin-top: 0.2rem;
+    }
+    .rev-section-title {
+      font-size: 0.7rem; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--muted);
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .rev-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    .rev-table th {
+      text-align: left; font-size: 0.65rem; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted);
+      padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--border);
+      font-weight: 600;
+    }
+    .rev-table td {
+      padding: 0.55rem 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.04);
+      color: var(--text); vertical-align: top;
+    }
+    .rev-table tr:last-child td { border-bottom: none; }
+    .rev-table tr:hover td { background: rgba(255,255,255,0.025); }
+    .rev-badge {
+      display: inline-block; padding: 1px 7px;
+      border-radius: 10px; font-size: 0.65rem; font-weight: 600;
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .rev-badge.completed { background: rgba(60,180,100,0.18); color: #5dd98a; }
+    .rev-badge.cancelled { background: rgba(224,90,90,0.18); color: var(--danger); }
+    .rev-badge.other { background: rgba(80,130,170,0.18); color: #7ab8d8; }
+    .rev-fare { color: var(--gold-lt); font-weight: 600; }
+    .rev-fare-null { color: var(--muted); font-style: italic; }
+    .rev-note {
+      font-size: 0.72rem; color: var(--muted); font-style: italic;
+      padding: 0.5rem 0.75rem;
+      background: var(--navy-700); border-radius: 6px;
+      border-left: 2px solid var(--border-g);
+    }
+    .rev-empty {
+      text-align: center; padding: 2rem 1rem;
+      font-size: 0.82rem; color: var(--muted);
+    }
+    .rev-loading {
+      font-size: 0.8rem; color: var(--muted); padding: 1rem 0;
+    }
+
     /* ── Vendor management ───────────────────────────────── */
     .vendor-mgmt-wrap {
       flex: 1; overflow-y: auto; padding: 1.25rem;
@@ -739,6 +827,7 @@
       <button class="admin-tab active" onclick="switchTab('bookings')">Đặt Chỗ</button>
       <button class="admin-tab" onclick="switchTab('vendors')">Vendors</button>
       <button class="admin-tab" onclick="switchTab('drivers')">Tài Xế</button>
+      <button class="admin-tab" onclick="switchTab('revenue')">Doanh Thu</button>
     </div>
 
     <!-- ── TAB: Bookings ─────────────────────────────────── -->
@@ -909,6 +998,13 @@
           </div>
         </div>
 
+      </div>
+    </div>
+
+    <!-- ── TAB: Revenue ──────────────────────────────────── -->
+    <div id="tabRevenue" class="tab-panel">
+      <div class="rev-panel" id="revPanel">
+        <div class="rev-loading">Đang tải dữ liệu doanh thu…</div>
       </div>
     </div>
 
@@ -1310,7 +1406,7 @@
     // ── Tab switching ────────────────────────────────────────────
     function switchTab(tab) {
       document.querySelectorAll('.admin-tab').forEach((btn, i) => {
-        const tabs = ['bookings','vendors','drivers'];
+        const tabs = ['bookings','vendors','drivers','revenue'];
         btn.classList.toggle('active', tabs[i] === tab);
       });
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -1318,6 +1414,7 @@
       if (panel) panel.classList.add('active');
       if (tab === 'vendors') loadVendorPanel();
       if (tab === 'drivers') loadDriverPanel();
+      if (tab === 'revenue') loadRevenueDashboard();
     }
 
     // ── Load dynamic driver buttons for booking assignment ───────
@@ -2554,6 +2651,227 @@
         });
     }
     var _notifSeeded = false;
+
+    // ── Revenue Dashboard ─────────────────────────────────────────
+    var _revPeriod = 'month';  // 'today' | 'week' | 'month' | 'all'
+    var _revBookings = [];     // raw ride bookings loaded from Firestore
+    var _revLoaded = false;
+
+    var _revServiceTypes = ['pickup', 'dropoff', 'private_ride'];
+
+    function _revServiceLabel(type) {
+      return { pickup: 'Đón sân bay', dropoff: 'Đưa sân bay', private_ride: 'Xe riêng' }[type] || type || '—';
+    }
+
+    function _revStatusLabel(status) {
+      return {
+        completed: 'Hoàn thành', cancelled: 'Đã hủy',
+        awaiting_driver: 'Chờ tài xế', pending: 'Chờ xác nhận',
+        confirmed: 'Đã xác nhận', assigned: 'Có tài xế',
+        driver_confirmed: 'TX xác nhận', on_the_way: 'Đang đến',
+        arrived: 'Đã đến', in_progress: 'Đang di chuyển'
+      }[status] || status || '—';
+    }
+
+    function _revStatusBadgeClass(status) {
+      if (status === 'completed') return 'completed';
+      if (status === 'cancelled') return 'cancelled';
+      return 'other';
+    }
+
+    // Returns a JS Date from a booking doc (prefers createdAt, falls back to datetime string)
+    function _revBookingTs(bk) {
+      if (bk.createdAt && bk.createdAt.toDate) return bk.createdAt.toDate();
+      if (bk.createdAt && typeof bk.createdAt === 'string') return new Date(bk.createdAt);
+      if (bk.datetime) return new Date(bk.datetime);
+      return null;
+    }
+
+    // Returns { start: Date, end: Date } for the current period, or null for 'all'
+    function _revPeriodBounds(period) {
+      var now = new Date();
+      var start, end;
+      if (period === 'today') {
+        start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        end   = new Date(start.getTime() + 86400000);
+      } else if (period === 'week') {
+        var day = now.getDay(); // 0=Sun
+        start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day);
+        end   = new Date(start.getTime() + 7 * 86400000);
+      } else if (period === 'month') {
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+        end   = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      } else {
+        return null; // 'all'
+      }
+      return { start: start, end: end };
+    }
+
+    // Filter booking array to the selected period
+    function _revFilterBookings(bookings, period) {
+      var bounds = _revPeriodBounds(period);
+      if (!bounds) return bookings;
+      return bookings.filter(function(bk) {
+        var ts = _revBookingTs(bk);
+        if (!ts || isNaN(ts.getTime())) return false;
+        return ts >= bounds.start && ts < bounds.end;
+      });
+    }
+
+    // Compute metrics from a filtered array
+    function _revMetrics(filtered) {
+      var completed = filtered.filter(function(b){ return b.status === 'completed'; });
+      var cancelled = filtered.filter(function(b){ return b.status === 'cancelled'; });
+      var withFare  = completed.filter(function(b){ return b.estimatedPrice != null && !isNaN(Number(b.estimatedPrice)); });
+      var gross     = withFare.reduce(function(s,b){ return s + Number(b.estimatedPrice); }, 0);
+      var avgFare   = withFare.length ? gross / withFare.length : null;
+
+      // Top driver by completed rides
+      var driverCounts = {};
+      completed.forEach(function(b) {
+        if (b.driverName) driverCounts[b.driverName] = (driverCounts[b.driverName] || 0) + 1;
+      });
+      var topDriver = null, topCount = 0;
+      Object.keys(driverCounts).forEach(function(name) {
+        if (driverCounts[name] > topCount) { topDriver = name; topCount = driverCounts[name]; }
+      });
+
+      return {
+        total: filtered.length,
+        completed: completed.length,
+        cancelled: cancelled.length,
+        gross: gross,
+        avgFare: avgFare,
+        fareCount: withFare.length,
+        missingFare: completed.length - withFare.length,
+        cancelRate: filtered.length ? Math.round(cancelled.length / filtered.length * 100) : 0,
+        topDriver: topDriver,
+        topDriverCount: topCount
+      };
+    }
+
+    function _revFmt(amount) {
+      if (amount == null || isNaN(amount)) return '—';
+      return '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+    function _revFmtFare(bk) {
+      if (bk.estimatedPrice == null || isNaN(Number(bk.estimatedPrice))) {
+        return '<span class="rev-fare-null">N/A</span>';
+      }
+      return '<span class="rev-fare">$' + escHtml(Number(bk.estimatedPrice).toFixed(0)) + '</span>';
+    }
+
+    function _revSetPeriod(period) {
+      _revPeriod = period;
+      renderRevenueDashboard();
+    }
+
+    function renderRevenueDashboard() {
+      var panel = document.getElementById('revPanel');
+      if (!panel) return;
+
+      var filtered = _revFilterBookings(_revBookings, _revPeriod);
+      var m = _revMetrics(filtered);
+
+      var periodLabels = { today: 'Hôm nay', week: 'Tuần này', month: 'Tháng này', all: 'Tất cả' };
+
+      // Period buttons
+      var periodBtns = ['today','week','month','all'].map(function(p) {
+        return '<button class="rev-period-btn' + (p === _revPeriod ? ' active' : '') + '" onclick="_revSetPeriod(\'' + p + '\')">' + periodLabels[p] + '</button>';
+      }).join('');
+
+      // Metric cards
+      var grossNote = m.missingFare > 0
+        ? '<div class="rev-metric-sub">Thiếu ' + m.missingFare + ' chuyến sân bay</div>'
+        : '';
+
+      var cards = [
+        { label: 'Doanh thu ước tính', value: _revFmt(m.gross), cls: 'gold', sub: grossNote },
+        { label: 'Tổng chuyến', value: m.total },
+        { label: 'Hoàn thành', value: m.completed },
+        { label: 'Đã hủy', value: m.cancelled + (m.total ? ' (' + m.cancelRate + '%)' : '') },
+        { label: 'Fare TB / chuyến', value: m.avgFare != null ? _revFmt(m.avgFare) : '—' },
+        { label: 'Tài xế nhiều nhất', value: m.topDriver || '—',
+          sub: m.topDriver ? '<div class="rev-metric-sub">' + m.topDriverCount + ' chuyến</div>' : '' }
+      ].map(function(c) {
+        return '<div class="rev-metric-card">'
+          + '<div class="rev-metric-label">' + c.label + '</div>'
+          + '<div class="rev-metric-value' + (c.cls ? ' ' + c.cls : '') + '">' + escHtml(String(c.value)) + '</div>'
+          + (c.sub || '')
+          + '</div>';
+      }).join('');
+
+      // Ride table rows
+      var rows = '';
+      if (filtered.length === 0) {
+        rows = '<tr><td colspan="6" class="rev-empty">Không có dữ liệu trong khoảng thời gian này</td></tr>';
+      } else {
+        // Sort newest first
+        var sorted = filtered.slice().sort(function(a,b) {
+          var ta = _revBookingTs(a), tb = _revBookingTs(b);
+          if (!ta && !tb) return 0;
+          if (!ta) return 1;
+          if (!tb) return -1;
+          return tb - ta;
+        });
+        sorted.forEach(function(bk) {
+          var ts = _revBookingTs(bk);
+          var dtStr = ts && !isNaN(ts) ? ts.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+          var badgeCls = _revStatusBadgeClass(bk.status);
+          rows += '<tr>'
+            + '<td>' + escHtml(dtStr) + '</td>'
+            + '<td>' + escHtml(_revServiceLabel(bk.serviceType)) + '</td>'
+            + '<td>' + escHtml(bk.name || '—') + '</td>'
+            + '<td>' + escHtml(bk.driverName || '—') + '</td>'
+            + '<td><span class="rev-badge ' + badgeCls + '">' + escHtml(_revStatusLabel(bk.status)) + '</span></td>'
+            + '<td>' + _revFmtFare(bk) + '</td>'
+            + '</tr>';
+        });
+      }
+
+      var noteHtml = '';
+      if (m.missingFare > 0) {
+        noteHtml = '<div class="rev-note">Chuyến sân bay (đón/đưa) không lưu giá ước tính — doanh thu ước tính chỉ tính từ chuyến xe riêng.</div>';
+      }
+
+      panel.innerHTML = ''
+        + '<div class="rev-period-bar">' + periodBtns + '</div>'
+        + '<div class="rev-metrics">' + cards + '</div>'
+        + (noteHtml ? noteHtml : '')
+        + '<div class="rev-section-title">Danh sách chuyến xe (' + filtered.length + ')</div>'
+        + '<div style="overflow-x:auto"><table class="rev-table">'
+        + '<thead><tr>'
+        + '<th>Thời gian</th><th>Loại dịch vụ</th><th>Khách hàng</th>'
+        + '<th>Tài xế</th><th>Trạng thái</th><th>Doanh thu</th>'
+        + '</tr></thead>'
+        + '<tbody>' + rows + '</tbody>'
+        + '</table></div>';
+    }
+
+    function loadRevenueDashboard() {
+      var panel = document.getElementById('revPanel');
+      if (!panel) return;
+
+      // If already loaded, just re-render
+      if (_revLoaded) { renderRevenueDashboard(); return; }
+
+      panel.innerHTML = '<div class="rev-loading">Đang tải dữ liệu doanh thu…</div>';
+
+      db.collection('bookings')
+        .where('serviceType', 'in', _revServiceTypes)
+        .orderBy('createdAt', 'desc')
+        .limit(500)
+        .get()
+        .then(function(snap) {
+          _revBookings = snap.docs.map(function(d) { return Object.assign({ _id: d.id }, d.data()); });
+          _revLoaded = true;
+          renderRevenueDashboard();
+        })
+        .catch(function(err) {
+          panel.innerHTML = '<div class="rev-loading" style="color:var(--danger)">Lỗi tải dữ liệu: ' + escHtml(err.message) + '</div>';
+        });
+    }
   </script>
 
 </body>

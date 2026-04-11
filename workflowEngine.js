@@ -2189,8 +2189,9 @@
     var f  = draft.collectedFields;
     var orderId = genId();
     var trackingToken = null;
-    var finalPriceEst = null;  // set for nail/hair — returned to caller
-    var finalApptInfo = null;  // set for nail/hair — returned to caller
+    var finalPriceEst     = null;  // set for nail/hair — returned to caller
+    var finalApptInfo     = null;  // set for nail/hair — returned to caller
+    var finalDispatchState = null; // set for ride intents — returned to caller
 
     if (draft.intent === 'food_order') {
       var item     = typeof f.item === 'object' ? f.item : {};
@@ -2264,14 +2265,23 @@
       ];
       var driverBrief = driverBriefLines.filter(function(v){return v!==null;}).join('\n');
 
+      // Phase 4: driver eligibility matching
+      var ridRegionId   = AIRPORT_REGION[f.airport] || null;
+      var eligDrivers   = _driversForRegion(ridRegionId);
+      var eligIds       = eligDrivers.map(function(d){ return d.id || d.driverId || ''; }).filter(Boolean);
+      var preAssigned   = eligDrivers.length === 1 ? eligDrivers[0] : null;
+      var airBookStatus = preAssigned ? 'assigned' : 'awaiting_driver';
+
       await db.collection('bookings').doc(orderId).set({
         bookingId:orderId, trackingToken,
-        status:'pending', serviceType:isPickup?'pickup':'dropoff', datetime,
+        status:airBookStatus, serviceType:isPickup?'pickup':'dropoff', datetime,
         airport:f.airport||'', airline:f.airline||'', terminal:f.terminal||'',
         address:addrField, passengers:f.passengers||1, luggageCount:f.luggageCount||0,
         name:f.customerName||'', phone:f.customerPhone||'',
         notes:f.notes||'', source:'ai_chat',
-        driver:null,vehicleLat:null,vehicleLng:null,vehicleHeading:null,etaMinutes:null,
+        eligibleDriverIds: eligIds,
+        driver: preAssigned ? { driverId:preAssigned.id||'', name:preAssigned.fullName||preAssigned.name||'', phone:preAssigned.phone||'' } : null,
+        vehicleLat:null,vehicleLng:null,vehicleHeading:null,etaMinutes:null,
         createdAt:fv.serverTimestamp(),
       });
       await db.collection('vendors').doc('admin-dlc').collection('notifications').add({
@@ -2283,8 +2293,26 @@
         airline:f.airline||'', passengers:f.passengers||1, luggageCount:f.luggageCount||0,
         pickupAddress:isPickup?'':addrField, dropoffAddress:isPickup?addrField:'',
         airportMapsLink:airportMapsLink||'', addrMapsLink:addrMapsLink||'',
+        eligibleDriverCount:eligIds.length, assignedDriverId:preAssigned?preAssigned.id:null,
         read:false, createdAt:fv.serverTimestamp(),
       });
+      // Phase 4: rideNotifications for driver dispatch (was missing from chat flow)
+      if (eligIds.length > 0) {
+        db.collection('rideNotifications').add({
+          bookingId:orderId, type:isPickup?'airport_pickup':'airport_dropoff',
+          eligibleDriverIds:eligIds,
+          assignedDriverId:preAssigned ? (preAssigned.id||'') : null,
+          status:'pending_acceptance',
+          airport:f.airport||'', datetime,
+          customerName:f.customerName||'', customerPhone:f.customerPhone||'',
+          createdAt:fv.serverTimestamp(),
+        }).catch(function(e){ console.warn('[rideNotif] write failed:', e.message); });
+      }
+      finalDispatchState = {
+        status: airBookStatus,
+        eligibleCount: eligIds.length,
+        preAssigned: preAssigned ? { name:preAssigned.fullName||preAssigned.name||'', phone:preAssigned.phone||'' } : null,
+      };
 
     } else if (draft.intent === 'nail_appointment' || draft.intent === 'hair_appointment') {
       var isNail    = draft.intent === 'nail_appointment';
@@ -2408,15 +2436,23 @@
       ];
       var rideBrief = rideBriefLines.filter(function(v){return v!==null;}).join('\n');
 
+      // Phase 4: driver eligibility matching for private rides (all compliant active drivers)
+      var prEligDrivers  = (window._activeDrivers || []).filter(function(d){ return d.complianceStatus === 'approved'; });
+      var prEligIds      = prEligDrivers.map(function(d){ return d.id||''; }).filter(Boolean);
+      var prPreAssigned  = prEligDrivers.length === 1 ? prEligDrivers[0] : null;
+      var prBookStatus   = prPreAssigned ? 'assigned' : 'awaiting_driver';
+
       await db.collection('bookings').doc(orderId).set({
         bookingId:orderId, trackingToken,
-        status:'pending', serviceType:'private_ride', datetime,
+        status:prBookStatus, serviceType:'private_ride', datetime,
         pickupAddress:f.pickupAddress||'', dropoffAddress:f.dropoffAddress||'',
         passengers:f.passengers||1,
         name:f.customerName||'', phone:f.customerPhone||'',
         notes:f.notes||'', source:'ai_chat',
         estimatedPrice: rideEst ? rideEst.ourPrice : null,
-        driver:null, vehicleLat:null, vehicleLng:null, vehicleHeading:null, etaMinutes:null,
+        eligibleDriverIds: prEligIds,
+        driver: prPreAssigned ? { driverId:prPreAssigned.id||'', name:prPreAssigned.fullName||prPreAssigned.name||'', phone:prPreAssigned.phone||'' } : null,
+        vehicleLat:null, vehicleLng:null, vehicleHeading:null, etaMinutes:null,
         createdAt:fv.serverTimestamp(),
       });
       await db.collection('vendors').doc('admin-dlc').collection('notifications').add({
@@ -2428,12 +2464,30 @@
         pickupAddress:f.pickupAddress||'', dropoffAddress:f.dropoffAddress||'',
         pickupMapsLink:pickupMapsLink||'', dropoffMapsLink:dropoffMapsLink||'',
         passengers:f.passengers||1, estimatedPrice:rideEst ? rideEst.ourPrice : null,
+        eligibleDriverCount:prEligIds.length, assignedDriverId:prPreAssigned?prPreAssigned.id:null,
         read:false, createdAt:fv.serverTimestamp(),
       });
+      // Phase 4: rideNotifications (was missing)
+      if (prEligIds.length > 0) {
+        db.collection('rideNotifications').add({
+          bookingId:orderId, type:'private_ride',
+          eligibleDriverIds:prEligIds,
+          assignedDriverId:prPreAssigned ? (prPreAssigned.id||'') : null,
+          status:'pending_acceptance',
+          pickupAddress:f.pickupAddress||'', dropoffAddress:f.dropoffAddress||'',
+          datetime, customerName:f.customerName||'', customerPhone:f.customerPhone||'',
+          createdAt:fv.serverTimestamp(),
+        }).catch(function(e){ console.warn('[rideNotif] write failed:', e.message); });
+      }
+      finalDispatchState = {
+        status: prBookStatus,
+        eligibleCount: prEligIds.length,
+        preAssigned: prPreAssigned ? { name:prPreAssigned.fullName||prPreAssigned.name||'', phone:prPreAssigned.phone||'' } : null,
+      };
     }
 
     clearDraft(); draft = null;
-    return { id: orderId, token: trackingToken || null, priceEst: finalPriceEst, appt: finalApptInfo };
+    return { id: orderId, token: trackingToken || null, priceEst: finalPriceEst, appt: finalApptInfo, dispatchState: finalDispatchState };
   }
 
   function cancel() { clearDraft(); draft = null; }

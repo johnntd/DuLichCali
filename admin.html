@@ -197,6 +197,7 @@
       letter-spacing: 0.04em;
       text-transform: uppercase;
     }
+    .status-awaiting_driver { background: rgba(251,146,60,0.18); color: #fb923c; }
     .status-pending     { background: rgba(82,104,120,0.2);  color: #7a9bb0; }
     .status-confirmed   { background: rgba(200,146,42,0.12); color: var(--gold-lt); }
     .status-assigned    { background: rgba(200,146,42,0.18); color: var(--gold-lt); }
@@ -962,7 +963,7 @@
         }) : data.datetime || id;
 
         const statusLabel = {
-          pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận', assigned: 'Có tài xế',
+          awaiting_driver: 'Chờ tài xế', pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận', assigned: 'Có tài xế',
           on_the_way: 'Trên đường', arrived: 'Đã đến', in_progress: 'Di chuyển',
           completed: 'Hoàn thành', cancelled: 'Đã hủy'
         }[data.status] || data.status;
@@ -998,7 +999,7 @@
       document.getElementById('di-phone').textContent = data.phone || '—';
 
       const statusLabel = {
-        pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận', assigned: 'Có tài xế',
+        awaiting_driver: 'Chờ tài xế', pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận', assigned: 'Có tài xế',
         on_the_way: 'Trên đường đến', arrived: 'Đã đến điểm đón',
         in_progress: 'Đang di chuyển', completed: 'Hoàn thành', cancelled: 'Đã hủy'
       }[data.status] || data.status;
@@ -1058,23 +1059,25 @@
 
     // ── Status action buttons ────────────────────────────────────
     const STATUS_FLOW = {
-      pending:     ['confirmed'],
-      confirmed:   ['assigned', 'pending'],
-      assigned:    ['on_the_way', 'confirmed'],
-      on_the_way:  ['arrived', 'assigned'],
-      arrived:     ['in_progress', 'on_the_way'],
-      in_progress: ['completed', 'arrived'],
-      completed:   [],
+      awaiting_driver: ['assigned', 'confirmed'],
+      pending:         ['confirmed'],
+      confirmed:       ['assigned', 'pending'],
+      assigned:        ['on_the_way', 'confirmed'],
+      on_the_way:      ['arrived', 'assigned'],
+      arrived:         ['in_progress', 'on_the_way'],
+      in_progress:     ['completed', 'arrived'],
+      completed:       [],
     };
 
     const STATUS_BTN_LABELS = {
-      pending:     'Chờ xác nhận',
-      confirmed:   'Xác nhận',
-      assigned:    'Đã phân công tài xế',
-      on_the_way:  'Bắt đầu di chuyển đến khách',
-      arrived:     'Đã đến điểm đón',
-      in_progress: 'Bắt đầu chuyến đi',
-      completed:   'Hoàn thành chuyến',
+      awaiting_driver: 'Đang tìm tài xế',
+      pending:         'Chờ xác nhận',
+      confirmed:       'Xác nhận',
+      assigned:        'Đã phân công tài xế',
+      on_the_way:      'Bắt đầu di chuyển đến khách',
+      arrived:         'Đã đến điểm đón',
+      in_progress:     'Bắt đầu chuyến đi',
+      completed:       'Hoàn thành chuyến',
     };
 
     function renderStatusActions(currentStatus) {

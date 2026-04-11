@@ -1593,14 +1593,20 @@ BEHAVIOR GUIDELINES:
           const wfDraft  = WF.getDraft();
           const wfLang   = (wfDraft && wfDraft.lang) || 'vi';
           const res = await WF.finalize();
-          const orderId  = res.id || res;
-          const token    = res.token || null;
-          const priceEst = res.priceEst || null;
-          const apptInfo = res.appt || null;
+          const orderId       = res.id || res;
+          const token         = res.token || null;
+          const priceEst      = res.priceEst || null;
+          const apptInfo      = res.appt || null;
+          const dispatchState = res.dispatchState || null;
 
           // Build thankyou URL with booking details for packet + calendar
           let url = `thankyou.html?id=${encodeURIComponent(orderId)}&lang=${encodeURIComponent(wfLang)}`;
           if (token) url += `&t=${encodeURIComponent(token)}`;
+          if (dispatchState) {
+            url += `&ds=${encodeURIComponent(dispatchState.status)}`;
+            if (dispatchState.preAssigned && dispatchState.preAssigned.name)
+              url += `&dn=${encodeURIComponent(dispatchState.preAssigned.name)}`;
+          }
           if (apptInfo) {
             if (apptInfo.service) url += `&svc=${encodeURIComponent(apptInfo.service)}`;
             if (apptInfo.date)    url += `&dt=${encodeURIComponent(apptInfo.date)}`;
@@ -1632,6 +1638,31 @@ BEHAVIOR GUIDELINES:
             } catch(e) { return hhmm; }
           };
 
+          // Build ride dispatch sentence
+          var rideIntent = wfDraft && (wfDraft.intent === 'airport_pickup' || wfDraft.intent === 'airport_dropoff' || wfDraft.intent === 'private_ride');
+          var rideSentence = '';
+          if (rideIntent && dispatchState) {
+            if (dispatchState.status === 'assigned' && dispatchState.preAssigned && dispatchState.preAssigned.name) {
+              rideSentence = wfLang === 'vi'
+                ? 'Tài xế **' + dispatchState.preAssigned.name + '** đã được phân công cho chuyến của bạn. Chúng tôi sẽ nhắn tin xác nhận giờ đón.'
+                : wfLang === 'es'
+                ? 'El conductor **' + dispatchState.preAssigned.name + '** ha sido asignado a tu viaje. Te enviaremos un mensaje de confirmación.'
+                : 'Driver **' + dispatchState.preAssigned.name + '** has been assigned to your trip. We\'ll text you to confirm pickup time.';
+            } else if (dispatchState.eligibleCount > 0) {
+              rideSentence = wfLang === 'vi'
+                ? 'Chúng tôi đang chọn tài xế phù hợp nhất cho bạn. Bạn sẽ nhận tin nhắn xác nhận trong vòng 30 phút.'
+                : wfLang === 'es'
+                ? 'Estamos asignando el mejor conductor para ti. Recibirás un mensaje de confirmación en 30 minutos.'
+                : 'We\'re matching you with the best available driver. You\'ll receive a confirmation text within 30 minutes.';
+            } else {
+              rideSentence = wfLang === 'vi'
+                ? 'Yêu cầu của bạn đã được ghi nhận. Đội ngũ sẽ liên hệ và xác nhận tài xế trong vòng 30 phút.'
+                : wfLang === 'es'
+                ? 'Tu solicitud ha sido registrada. El equipo se pondrá en contacto para confirmar un conductor en 30 minutos.'
+                : 'Your request has been received. Our team will contact you to confirm a driver within 30 minutes.';
+            }
+          }
+
           var confirmSentence = '';
           if (apptInfo && apptInfo.service) {
             var dtJoiner = wfLang === 'vi' ? ' lúc ' : wfLang === 'es' ? ' a las ' : ' at ';
@@ -1656,10 +1687,16 @@ BEHAVIOR GUIDELINES:
                         : 'See full booking details & add to calendar →';
 
           const successTexts = {
-            vi: ['✅ Đặt lịch thành công!', confirmSentence || `Mã đơn: **${orderId}**`, '', pktPrompt],
-            en: ['✅ Appointment confirmed!', confirmSentence || `Order ID: **${orderId}**`, '', pktPrompt],
-            es: ['✅ ¡Cita confirmada!', confirmSentence || `N.° de pedido: **${orderId}**`, '', pktPrompt],
+            vi: ['✅ Đặt xe thành công!', rideSentence || confirmSentence || `Mã đơn: **${orderId}**`, '', pktPrompt],
+            en: ['✅ Ride booked!', rideSentence || confirmSentence || `Order ID: **${orderId}**`, '', pktPrompt],
+            es: ['✅ ¡Viaje reservado!', rideSentence || confirmSentence || `N.° de pedido: **${orderId}**`, '', pktPrompt],
           };
+          // Override title for appointments (non-ride)
+          if (!rideIntent) {
+            successTexts.vi[0] = '✅ Đặt lịch thành công!';
+            successTexts.en[0] = '✅ Appointment confirmed!';
+            successTexts.es[0] = '✅ ¡Cita confirmada!';
+          }
           return {
             type: 'message',
             text: (successTexts[wfLang] || successTexts.vi).join('\n'),

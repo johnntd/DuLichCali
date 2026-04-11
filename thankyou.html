@@ -375,6 +375,31 @@
     document.getElementById('contact').innerHTML   = lbl.contact;
     document.getElementById('homeBtn').textContent = lbl.homeBtn;
 
+    // ── Dispatch state (rides) ──────────────────────────────────────────
+    var dispatchStatus = _p.get('ds');   // 'assigned' | 'awaiting_driver'
+    var driverName     = _p.get('dn');   // pre-assigned driver name (if any)
+    if (dispatchStatus) {
+      var dispatchMsgs = {
+        assigned: {
+          vi: driverName ? 'Tài xế <strong>' + driverName + '</strong> đã được phân công. Chúng tôi sẽ nhắn tin xác nhận giờ đón.' : 'Tài xế đã được phân công. Chúng tôi sẽ nhắn tin xác nhận sớm.',
+          en: driverName ? 'Driver <strong>' + driverName + '</strong> has been assigned to your trip. We\'ll text you to confirm pickup.' : 'A driver has been assigned. We\'ll text you to confirm soon.',
+          es: driverName ? 'El conductor <strong>' + driverName + '</strong> ha sido asignado. Te enviaremos un mensaje de confirmación.' : 'Un conductor ha sido asignado. Te avisaremos pronto.',
+        },
+        awaiting_driver: {
+          vi: 'Chúng tôi đang chọn tài xế phù hợp nhất cho bạn. Bạn sẽ nhận tin nhắn xác nhận trong vòng <strong>30 phút</strong>.',
+          en: 'We\'re matching you with the best available driver. You\'ll receive a confirmation text within <strong>30 minutes</strong>.',
+          es: 'Estamos asignando el mejor conductor. Recibirás confirmación en <strong>30 minutos</strong>.',
+        },
+      };
+      var msgMap = dispatchMsgs[dispatchStatus] || dispatchMsgs.awaiting_driver;
+      var msgHtml = (msgMap[lang] || msgMap.en);
+      var dispatchEl = document.createElement('div');
+      dispatchEl.style.cssText = 'margin:0.75rem 0;padding:0.75rem 1rem;background:rgba(200,146,42,0.1);border:1px solid rgba(200,146,42,0.25);border-radius:6px;font-size:0.85rem;line-height:1.5;color:#c8d8e4;';
+      dispatchEl.innerHTML = (dispatchStatus === 'assigned' ? '🚗 ' : '🔍 ') + msgHtml;
+      var msgEl = document.getElementById('message');
+      if (msgEl && msgEl.parentNode) msgEl.parentNode.insertBefore(dispatchEl, msgEl.nextSibling);
+    }
+
     // ── Tracking link (rides) ──────────────────────────────────────────
     var bookingId  = _p.get('id');
     var trackToken = _p.get('t');

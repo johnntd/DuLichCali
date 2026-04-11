@@ -770,7 +770,7 @@ window.RideIntake = (function () {
   function buildBookingData(bookingId) {
     var paxId = _type === 'pickup' ? 'ri_p_passengers' : _type === 'dropoff' ? 'ri_d_passengers' : 'ri_r_passengers';
     var base = {
-      bookingId: bookingId, status: 'pending',
+      bookingId: bookingId, status: 'awaiting_driver',
       vehicle: _driverVehicle ? _driverVehicle.name : (DLCPricing.RIDE_RATE_CARD && DLCPricing.RIDE_RATE_CARD.vehicleName) || 'Tesla Model Y',
       driverId: _driverVehicle ? _driverVehicle.driverId : null,
       serviceType: _type === 'ride' ? 'private_ride' : (_type === 'pickup' ? 'airport_pickup' : 'airport_dropoff'),

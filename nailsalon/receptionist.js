@@ -1174,6 +1174,26 @@
       '  "ngày mai", "giá", "cảm ơn", or characters with tonal marks (ắ ặ ầ ề ộ ở ứ ừ đ ă ơ ư).',
       'Never mix languages. Match the customer completely.',
       '',
+      '=== VIETNAMESE OUTPUT RULES (applies whenever lang = vi) ===',
+      'RULE V1 — No English fragments inside Vietnamese sentences.',
+      '  WRONG: "khung giờ 09:00 with Tracy đã có lịch"',
+      '  RIGHT: "lúc 9:00 sáng với chị Tracy đã có lịch rồi ạ"',
+      '  WRONG: "mình sẽ book cho bạn lúc 2pm với Helen"',
+      '  RIGHT: "mình sẽ đặt lịch cho bạn lúc 2 giờ chiều với chị Helen nhé"',
+      '  [BOOKING:...] and [STATE:...] markers are data — keep service names in English there.',
+      'RULE V2 — Staff names take Vietnamese respectful prefix in text: "chị Tracy", "cô Helen", "anh/chị [name]".',
+      '  Do NOT use a bare English name as subject: "Tracy có lịch" → "chị Tracy đã có lịch".',
+      'RULE V3 — Time expressions use Vietnamese phrasing:',
+      '  9:00 AM → "9 giờ sáng" or "lúc 9 giờ"   |   3:00 PM → "3 giờ chiều" or "lúc 3 giờ chiều"',
+      '  When you must write a numeric time (9:00), always add "sáng"/"chiều"/"tối" beside it.',
+      'RULE V4 — Service names in conversational text — use Vietnamese alongside English brand name:',
+      '  Pedicure → "pedicure (làm móng chân)"   |   Manicure → "manicure (làm móng tay)"',
+      '  Gel Manicure → "gel móng tay"            |   Gel Pedicure → "gel móng chân"',
+      '  Acrylic → "acrylic (đắp bột)"            |   Dip Powder → "bột nhúng"',
+      'RULE V5 — Connectors always in Vietnamese:',
+      '  "with" → "với"   |   "at [time]" → "lúc"/"vào lúc"   |   "on [date]" → "vào ngày"',
+      '  "available" → "còn trống"   |   "booked/taken" → "đã có lịch"   |   "confirmed" → "đã xác nhận"',
+      '',
       '=== SALON INFO ===',
       'Name: ' + salonName,
       'Phone: ' + phone,
@@ -1274,6 +1294,20 @@
       '  "nail art", "design"                        → Nail Art Design',
       '  "removal"                                   → Nail Removal',
       '',
+      'VIETNAMESE SHORTCUTS — infer and confirm (do not force full menu):',
+      '  "làm móng chân" / "móng chân" / "chân thôi" / "nails chân" → infer Pedicure.',
+      '    Confirm: "Bạn muốn làm pedicure (móng chân) đúng không ạ?"',
+      '  "làm móng tay" / "móng tay" / "tay thôi" / "nails tay" → infer Manicure.',
+      '    Confirm: "Bạn muốn làm manicure (móng tay) đúng không ạ?"',
+      '  "làm cả hai" / "tay lẫn chân" / "cả tay và chân" → infer Manicure + Pedicure.',
+      '    Confirm: "Bạn muốn làm cả manicure và pedicure đúng không ạ?"',
+      '  "gel chân" / "gel móng chân" → infer Gel Pedicure.',
+      '    Confirm: "Bạn muốn gel pedicure (móng chân) đúng không ạ?"',
+      '  "gel tay" / "gel móng tay" → infer Gel Manicure.',
+      '    Confirm: "Bạn muốn gel manicure (gel móng tay) đúng không ạ?"',
+      '  "đắp bột" / "đắp" → infer Acrylic Full Set. Confirm: "Đắp bột nguyên bộ hay fill đắp bột ạ?"',
+      '  After confirmation, proceed with the inferred service — do not show the full menu.',
+      '',
       'When in doubt, ask — one short clarifying question is better than booking the wrong service.',
       '',
       '=== YOUR RULES ===',
@@ -1285,6 +1319,19 @@
       '6. Prices: The SERVICE MENU above has live prices. Always mention the price when answering a price question or discussing a specific service. If price is unknown: "Prices vary — please call ' + phone + ' for an exact quote."',
       '7. Pronouns her/him/she/he → most recently named technician. See ACTIVE CONTEXT above.',
       '8. Farewell (goodbye/bye/thanks/done) → 1 warm sentence only. Do NOT re-introduce yourself.',
+      '9. ANTI-REPETITION — After the previous turn showed a slot conflict, do NOT repeat the same',
+      '   explanation. Acknowledge in ONE short phrase, then immediately offer 2–3 specific options.',
+      '   WRONG (repeat): "I\'m sorry, Tracy is fully booked at 3:00 PM. Here are the next available..."',
+      '   RIGHT (pivot): "3 giờ cũng kín rồi — mình có 10:30 sáng hoặc 2 giờ chiều trống, bạn chọn khung nào?"',
+      '   The pivot applies: same conflict type, same turn or the one right after. Move the conversation forward.',
+      '10. UNCLEAR INPUT — When input is garbled, speech-like, or partially heard (e.g. "năm K em",',
+      '   broken digits, incomplete words): ask ONE targeted clarification for the specific unclear part.',
+      '   WRONG: repeat the full question ("Can you give me your name and phone number?")',
+      '   RIGHT: "Mình chưa nghe rõ số điện thoại, bạn đọc lại giúp mình nhé?"',
+      '          "Mình chưa nghe rõ 3 số cuối, bạn đọc lại giúp mình nhé?"',
+      '   Never ask for information already confirmed in the current session.',
+      '11. NAME ACCEPTANCE — Single Vietnamese first names are complete names.',
+      '   "Thùy", "Lan", "Nam", "Hoa" — accept and record without asking for a last name.',
       '',
       '=== RESPONSE QUALITY — ALWAYS LEAD ===',
       '// RX-013: AI must never end a turn passively. Every response must move the conversation forward.',
@@ -1327,7 +1374,15 @@
       '              "làm móng tay" → ["Manicure"]',
       '  staff     — technician name mentioned in THIS message. If customer switches from a prior staff ("how about Tracy", "what about [name]", "try someone else") → use the NEW name. "other tech"/"any available"/"whoever is free" → null. Do NOT inherit prior staff from STATE if customer explicitly mentions a different person or asks for someone else.',
       '  date      — as stated ("tomorrow", "next Monday", "April 10") or null',
-      '  time      — convert to 24h if clear ("2pm" → "14:00", "2:30 chiều" → "14:30") or null',
+      '  time      — convert to 24h if clear ("2pm" → "14:00", "2:30 chiều" → "14:30") or null.',
+      '             Period as separator: "5.30", "05.30" → treat as "5:30" first, then apply AM/PM.',
+      '             Vietnamese time words: "5 rưỡi" → 5:30 | "kém mười" → subtract 10 min | "nửa" → :30.',
+      '             AMBIGUOUS TIME — hour 1–7 with no AM/PM context:',
+      '               Do NOT silently default. Ask once:',
+      '               (vi) "Bạn muốn [time] sáng (AM) hay [time] chiều (PM) ạ?"',
+      '               (en) "Did you mean [time] AM or [time] PM?"',
+      '             Exception: if earlier context clearly implies a session (morning/afternoon booking),',
+      '             use that context to infer — no need to ask again.',
       '  lang      — "en", "es", or "vi" based on THIS message',
       '',
       '=== AVAILABILITY — CRITICAL RULE ===',
@@ -1984,14 +2039,14 @@
     if (!biz._enableCashTipNote) return null;
     // Vendor-supplied custom text takes precedence
     if (biz._cashTipNoteText) return biz._cashTipNoteText;
-    // Premium default — warm, gracious, never pushy
+    // Premium default — warm, gracious, conversational, never pushy
     if (lang === 'vi') {
-      return 'Một lưu ý nhỏ — nếu tiện, nhiều khách quen của chúng tôi thích mang theo một ít tiền mặt để cảm ơn trực tiếp kỹ thuật viên. Đây là cách thể hiện sự trân trọng rất ý nghĩa, nhưng hoàn toàn tùy lòng bạn nhé.';
+      return 'Mẹo nhỏ: nhiều khách hay mang theo ít tiền mặt để cảm ơn trực tiếp kỹ thuật viên — hoàn toàn tùy bạn thôi nhé! 😊';
     }
     if (lang === 'es') {
-      return 'Una pequeña nota — si le es posible, muchos de nuestros clientes habituales prefieren traer un poco de efectivo para agradecer personalmente a su técnica. Es una forma muy especial de expresar su aprecio, aunque es completamente opcional.';
+      return 'Un pequeño detalle: muchos de nuestros clientes prefieren traer un poco de efectivo para agradecer personalmente a su técnica — es totalmente opcional.';
     }
-    return 'One thoughtful note — if it\u2019s convenient, many of our regular guests enjoy bringing a little cash to express their gratitude directly to their nail technician. It\u2019s a lovely personal touch, though entirely at your discretion.';
+    return 'Quick tip: many of our guests like to bring a little cash to thank their technician directly — totally optional, just a thoughtful touch!';
   }
 
   // ── _buildBookingPacketHtml — card rendered in chat after confirmation ────────

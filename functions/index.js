@@ -478,6 +478,17 @@ exports.onEmailQueue = onDocumentCreated(
       if (data.eventType === 'assigned') {
         ({ textBody, htmlBody } = buildDriverAssignedEmail(data));
         subject = `Driver Assigned — Du Lịch Cali [${data.bookingId || ''}]`;
+      } else if (typeof data.eventType === 'string' && data.eventType.startsWith('status_')) {
+        // Ride status-change emails (driver_confirmed / on_the_way / arrived / completed / cancelled)
+        const STATUS_SUBJECTS = {
+          status_driver_confirmed: `Driver Confirmed Your Ride`,
+          status_on_the_way:       `Your Driver Is On The Way`,
+          status_arrived:          `Your Driver Has Arrived`,
+          status_completed:        `Your Ride Is Complete`,
+          status_cancelled:        `Your Ride Has Been Cancelled`,
+        };
+        ({ textBody, htmlBody } = buildRideStatusEmail(data));
+        subject = `${STATUS_SUBJECTS[data.eventType] || 'Ride Update'} — Du Lịch Cali [${data.bookingId || ''}]`;
       } else {
         ({ textBody, htmlBody } = buildRideConfirmationEmail(data));
         subject = `Ride Confirmed — Du Lịch Cali [${data.bookingId || ''}]`;
@@ -739,6 +750,137 @@ function buildDriverAssignedEmail(data) {
     <p style="font-size:13px;margin:20px 0 0;color:#5a4a3a;">Your driver will contact you closer to the pickup time.</p>
     ${trackingToken ? `<p style="font-size:14px;margin:12px 0 0;"><a href="${trackUrl}" style="color:#0d6efd;">Track your ride →</a></p>` : ''}
     <p style="font-size:13px;margin:16px 0 0;color:#5a4a3a;">Questions? <a href="tel:4089163439" style="color:#0d2f50;">+1 (408) 916-3439</a></p>
+  </div>
+  <div style="background:#f0ebe3;padding:14px 32px;text-align:center;">
+    <p style="color:#9a8a7a;font-size:12px;margin:0;">— Du Lịch Cali &nbsp;·&nbsp; <a href="https://www.dulichcali21.com" style="color:#9a8a7a;">dulichcali21.com</a></p>
+  </div>
+</div>
+</body></html>`;
+
+  return { textBody, htmlBody };
+}
+
+// ── Ride status-change email builder ─────────────────────────────────────────
+// Handles: status_driver_confirmed, status_on_the_way, status_arrived,
+//          status_completed, status_cancelled
+// Produces concise single-purpose emails — not verbose confirmation style.
+function buildRideStatusEmail(data) {
+  const name          = data.customerName || 'Customer';
+  const bookingId     = data.bookingId    || '';
+  const eventType     = data.eventType    || '';
+  const driverName    = data.driverName   || 'your driver';
+  const driverPhone   = data.driverPhone  || '';
+  const trackingToken = data.trackingToken || '';
+
+  const trackUrl = trackingToken
+    ? `https://www.dulichcali21.com/tracking.html?id=${bookingId}&t=${trackingToken}`
+    : null;
+
+  // Per-status content
+  const STATUS_CONTENT = {
+    status_driver_confirmed: {
+      headline:  'Your driver confirmed your ride!',
+      body:      `${driverName} has confirmed your booking.` +
+                 (driverPhone ? ` You can reach them at ${driverPhone}.` : ''),
+      cta:       'Track Your Ride',
+      ctaUrl:    trackUrl || 'https://www.dulichcali21.com',
+      icon:      '✓',
+      accentBg:  '#f8fdf4',
+      accentBdr: '#c3e6cb',
+    },
+    status_on_the_way: {
+      headline:  'Your driver is on the way!',
+      body:      `${driverName} is heading to your pickup location now.` +
+                 (driverPhone ? ` Contact: ${driverPhone}.` : ''),
+      cta:       'Track Live',
+      ctaUrl:    trackUrl || 'https://www.dulichcali21.com',
+      icon:      '🚗',
+      accentBg:  '#f0f6ff',
+      accentBdr: '#b3d0f7',
+    },
+    status_arrived: {
+      headline:  'Your driver has arrived!',
+      body:      `${driverName} is at the pickup location. Please head out when ready.` +
+                 (driverPhone ? ` Contact: ${driverPhone}.` : ''),
+      cta:       'View Details',
+      ctaUrl:    trackUrl || 'https://www.dulichcali21.com',
+      icon:      '📍',
+      accentBg:  '#fff8f0',
+      accentBdr: '#ffd89b',
+    },
+    status_completed: {
+      headline:  'Your ride is complete — thank you!',
+      body:      'Thank you for riding with Du Lịch Cali. We hope you had a great experience. We look forward to serving you again!',
+      cta:       'Book Another Ride',
+      ctaUrl:    'https://www.dulichcali21.com',
+      icon:      '★',
+      accentBg:  '#f4fdf4',
+      accentBdr: '#a3d9a5',
+    },
+    status_cancelled: {
+      headline:  'Your ride has been cancelled.',
+      body:      'Your booking has been cancelled. If this was unexpected or you need to rebook, please contact us — we are happy to help.',
+      cta:       'Book a New Ride',
+      ctaUrl:    'https://www.dulichcali21.com',
+      icon:      '✕',
+      accentBg:  '#fff5f5',
+      accentBdr: '#f5c6cb',
+    },
+  };
+
+  const s = STATUS_CONTENT[eventType] || STATUS_CONTENT['status_driver_confirmed'];
+
+  // ── Plain text ──────────────────────────────────────────────────────────────
+  const textLines = [
+    `Hi ${name},`,
+    '',
+    s.headline,
+    '',
+    s.body,
+    '',
+    `Booking ID: ${bookingId}`,
+    '',
+    s.ctaUrl ? `${s.cta}: ${s.ctaUrl}` : null,
+    '',
+    'Questions? Call or text: +1 (408) 916-3439',
+    '— Du Lịch Cali · dulichcali21.com',
+  ].filter(l => l !== null).join('\n');
+
+  // ── HTML ────────────────────────────────────────────────────────────────────
+  const isCancelled = eventType === 'status_cancelled';
+  const headerLabel = {
+    status_driver_confirmed: 'Driver Confirmed',
+    status_on_the_way:       'Driver En Route',
+    status_arrived:          'Driver Arrived',
+    status_completed:        'Ride Complete',
+    status_cancelled:        'Ride Cancelled',
+  }[eventType] || 'Ride Update';
+
+  const htmlBody = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${headerLabel}</title></head>
+<body style="margin:0;padding:16px;background:#f0f4f8;font-family:Arial,sans-serif;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);">
+  <div style="background:${isCancelled ? '#5a1a1a' : '#0d2f50'};padding:24px 32px;">
+    <h1 style="color:#c9a84c;font-size:20px;margin:0;font-weight:400;letter-spacing:.5px;">Du Lịch Cali</h1>
+    <p style="color:${isCancelled ? '#e8a0a0' : '#a8c4d8'};font-size:13px;margin:6px 0 0;">${headerLabel}</p>
+  </div>
+  <div style="padding:28px 32px;color:#2c2c2c;">
+    <p style="font-size:15px;margin:0 0 20px;">Hi <strong>${name}</strong>,</p>
+    <div style="padding:20px;background:${s.accentBg};border-radius:8px;border:1px solid ${s.accentBdr};margin-bottom:20px;">
+      <p style="margin:0 0 6px;font-size:22px;">${s.icon}</p>
+      <p style="margin:0;font-size:16px;font-weight:600;color:#0d2f50;">${s.headline}</p>
+    </div>
+    <p style="font-size:14px;margin:0 0 16px;color:#3a3a3a;line-height:1.7;">${s.body}</p>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+      <tr>
+        <td style="padding:8px 0;color:#7a6a52;font-size:13px;width:38%;">Booking ID</td>
+        <td style="padding:8px 0;font-family:monospace;font-weight:600;font-size:13px;">${bookingId}</td>
+      </tr>
+    </table>
+    ${s.ctaUrl ? `<p style="margin:0 0 16px;"><a href="${s.ctaUrl}" style="display:inline-block;padding:10px 24px;background:#c9a84c;color:#fff;text-decoration:none;border-radius:5px;font-size:14px;font-weight:600;">${s.cta} →</a></p>` : ''}
+    <p style="font-size:13px;margin:0;color:#5a4a3a;">Questions? Call <a href="tel:4089163439" style="color:#0d2f50;">+1 (408) 916-3439</a></p>
   </div>
   <div style="background:#f0ebe3;padding:14px 32px;text-align:center;">
     <p style="color:#9a8a7a;font-size:12px;margin:0;">— Du Lịch Cali &nbsp;·&nbsp; <a href="https://www.dulichcali21.com" style="color:#9a8a7a;">dulichcali21.com</a></p>

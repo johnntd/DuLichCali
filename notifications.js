@@ -233,6 +233,7 @@ window.DLCNotifications = (function () {
     var driverName  = (bookingData.driver && bookingData.driver.name)  || 'tài xế';
     var driverPhone = (bookingData.driver && bookingData.driver.phone) || '';
     var custPhone   = bookingData.customerPhone || bookingData.phone   || '';
+    var custEmail   = bookingData.customerEmail || '';
     var custName    = bookingData.customerName  || bookingData.name    || '';
 
     var MSGS = {
@@ -264,16 +265,36 @@ window.DLCNotifications = (function () {
 
     var type = 'status_' + newStatus;
 
+    // ── In-app notifications ─────────────────────────────────────────────────
     // Customer in-app (all 5 statuses)
     if (custPhone) {
       _writeNotification(bookingId, type, 'customer', custPhone, m.title, m.msg);
     }
-
     // Admin in-app (completed + cancelled only)
     if (newStatus === 'completed' || newStatus === 'cancelled') {
       var adminTitle = newStatus === 'completed' ? '✓ Chuyến hoàn thành' : '✗ Chuyến đã hủy';
       var adminMsg   = 'Chuyến ' + bookingId.slice(0, 8) + (custName ? ' – ' + custName : '');
       _writeNotification(bookingId, type, 'admin', 'admin', adminTitle, adminMsg);
+    }
+
+    // ── Email notification ───────────────────────────────────────────────────
+    // Uses same emailQueue infrastructure as booking confirmation / driver assigned.
+    // Idempotent: doc ID = "{bookingId}_{type}" (e.g. "abc123_status_on_the_way").
+    // Cloud Function guard (emailSent:true) prevents re-send on retry.
+    if (custEmail) {
+      _queue(bookingId, type, {
+        customerEmail:  custEmail,
+        customerName:   custName,
+        serviceType:    bookingData.serviceType   || '',
+        airport:        bookingData.airport       || '',
+        address:        bookingData.address       || '',
+        pickupAddress:  bookingData.pickupAddress  || '',
+        dropoffAddress: bookingData.dropoffAddress || '',
+        datetime:       bookingData.datetime       || '',
+        trackingToken:  bookingData.trackingToken  || '',
+        driverName:     driverName,
+        driverPhone:    driverPhone,
+      });
     }
   }
 

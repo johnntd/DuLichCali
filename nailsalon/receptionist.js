@@ -1297,7 +1297,11 @@
       '  booking_request         — customer wants to make an appointment (including affirmative follow-ups to booking_offer)',
       '  service_question        — asking about what services are available',
       '  price_question          — asking about pricing',
-      '  staff_availability      — asking about when a specific technician works',
+      '  staff_availability      — asking about a technician\'s GENERAL schedule (no specific time):',
+      '                            "Is Tracy working today?", "When does Helen come in?", "Does Loan work Fridays?"',
+      '                            IMPORTANT: If the customer names a SPECIFIC TIME ("Is Tracy available at 9AM?",',
+      '                            "Is Helen free at 3?", "Can I book Loan at 10:15?"), that is a booking_request,',
+      '                            NOT staff_availability. Classify as booking_request and set time in STATE.',
       '  hours_location          — asking about hours, current open status, or address',
       '  cancel_booking          — customer wants to cancel an existing appointment',
       '  farewell                — goodbye, thanks, done',
@@ -1331,6 +1335,13 @@
       '  "Tracy works until 7 PM today. What time works for you?"',
       '  "What day and time would you like?"',
       'If the customer asks "what times are available?" — give ONLY shift hours, never specific open slots.',
+      '',
+      'CRITICAL — SCHEDULE ≠ SLOT AVAILABILITY:',
+      '  A staff shift start time is NOT proof that a slot is open.',
+      '  Example: Tracy starts at 9AM does NOT mean the 9AM slot is free.',
+      '  NEVER answer "Is Tracy available at 9AM?" with just her schedule/start time.',
+      '  When a customer asks about a SPECIFIC TIME, classify as booking_request and let',
+      '  the system validate the slot. Your role: collect the fields, not confirm availability.',
       '',
       '=== BOOKING FLOW ===',
       'When intent = booking_request:',
@@ -1421,8 +1432,11 @@
       '  - existingBookingId: null unless an existing booking ID was provided or found; carry forward once set.',
       '',
       'STATE examples:',
-      '"Is Tracy working today?" → AI answers yes + asks "Would you like to book?":',
+      '"Is Tracy working today?" → general schedule question, no specific time → staff_availability:',
       '[STATE:{"intent":"staff_availability","services":[],"staff":"Tracy","date":"' + isoDate + '","time":null,"name":null,"phone":null,"lang":"en","pendingAction":"booking_offer","existingBookingId":null}]',
+      '',
+      '"Is Tracy available at 9AM today?" / "Can I book Helen at 3?" → SPECIFIC TIME → booking_request (not staff_availability):',
+      '[STATE:{"intent":"booking_request","services":[],"staff":"Tracy","date":"' + isoDate + '","time":"09:00","name":null,"phone":null,"lang":"en","pendingAction":null,"existingBookingId":null}]',
       '',
       '"Yes" (after booking_offer with Tracy):',
       '[STATE:{"intent":"booking_request","services":[],"staff":"Tracy","date":"' + isoDate + '","time":null,"name":null,"phone":null,"lang":"en","pendingAction":null,"existingBookingId":null}]',
@@ -2855,6 +2869,62 @@
                   _appendMessage(messagesEl, result.text, 'bot');
                 });
               return; // early check is async — skip the branches below for this turn
+            }
+
+            // ── Specific-time staff_availability safeguard ──────────────────────────
+            // Problem: "Is Tracy available at 9AM?" may still be classified as
+            // staff_availability by Claude (not booking_request). Claude reads Tracy's
+            // shift start time (e.g. 9AM) and answers "Tracy is available from 9AM today"
+            // — without checking whether the 9AM slot is actually open in Firestore.
+            // This causes a contradiction: AI says "available", then booking check says "taken".
+            //
+            // Fix: if STATE has staff_availability + specific time + named staff + date,
+            // validate the slot NOW (same as earlyCheckReady) before showing the response.
+            // Slot free → show Claude's response (schedule-based answer happens to be correct).
+            // Slot taken → replace response with the real conflict message.
+            //
+            // Uses totalDurationMins: 0 → NailAvailabilityChecker falls back to DEFAULT_DUR (60min).
+            var _staffAvailWithTime = (
+              _ecs &&
+              _ecs.intent === 'staff_availability' &&
+              _ecs.staff  && _ecs.staff.toLowerCase() !== 'any' &&
+              _ecs.date   &&
+              _ecs.time   &&
+              !result.escalationType &&
+              !_earlyCheckReady  // don't double-fire if already caught above
+            );
+            if (_staffAvailWithTime) {
+              var _sad = {
+                staff:             _ecs.staff,
+                services:          [],
+                date:              _ecs.date,
+                time:              _ecs.time,
+                lang:              _ecs.lang || 'en',
+                totalDurationMins: 0,   // checker falls back to DEFAULT_DUR (60 min)
+                isModify:          false
+              };
+              NailAvailabilityChecker.check(biz, _sad)
+                .then(function(avail) {
+                  if (avail.valid) {
+                    // Slot is free — Claude's answer is safe to show
+                    _appendMessage(messagesEl, result.text, 'bot');
+                  } else {
+                    // Slot is taken — replace Claude's schedule-based answer with truth
+                    if (biz._aiHistory.length &&
+                        biz._aiHistory[biz._aiHistory.length - 1].role === 'assistant') {
+                      biz._aiHistory.pop();
+                    }
+                    biz._aiHistory.push({ role: 'assistant', content: avail.message });
+                    _saveHistory(biz);
+                    biz._offeredSlot = null;
+                    _appendMessage(messagesEl, avail.message, 'bot');
+                  }
+                })
+                .catch(function() {
+                  // Fail-open: show Claude's response on any Firestore error
+                  _appendMessage(messagesEl, result.text, 'bot');
+                });
+              return; // async — skip remaining sync branches for this turn
             }
 
             // Safety net: Claude sometimes emits [ESCALATE:appointment] without

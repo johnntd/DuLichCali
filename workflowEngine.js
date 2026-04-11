@@ -875,6 +875,9 @@
 
   // Max service radius for airport and private-ride bookings (miles)
   var MAX_SERVICE_MILES = 120;
+  // Bay Area airports — standard vehicle is Toyota Sienna (7 seats)
+  // Parties >7 require a special larger vehicle arrangement
+  var BAY_AREA_AIRPORTS = { SFO: true, OAK: true, SJC: true, SMF: true };
   // Deadhead rate: driver drives empty to/from airport; charged at $0.80/mile (fuel + time)
   var DEADHEAD_PER_MILE = 0.80;
 
@@ -1250,13 +1253,15 @@
       ],
       summary: function(f) {
         var est = estimateTransfer(f.passengers, f.airport, f.dropoffAddress);
-        // Capacity check: warn when party size exceeds vehicle seats
+        // Capacity check: use regional standard vehicle capacity
+        // Bay Area standard = Toyota Sienna (7 seats); elsewhere use estimated vehicle
         var vSeats = (typeof DLCPricing !== 'undefined' && DLCPricing.VEHICLE_SEATS) ? DLCPricing.VEHICLE_SEATS : {};
-        var estVehicle = est ? (est.match(/\(([^)]+)\)/)||[])[1] : null;
-        var maxSeats = estVehicle ? (vSeats[estVehicle] || 12) : 12;
+        var isBayArea = BAY_AREA_AIRPORTS[f.airport] || false;
+        var stdVehicle = isBayArea ? 'Toyota Sienna' : (est ? (est.match(/\(([^)]+)\)/)||[])[1] : null);
+        var maxSeats = isBayArea ? 7 : (stdVehicle ? (vSeats[stdVehicle] || 12) : 12);
         var pax = parseInt(f.passengers) || 0;
         var capWarn = (pax > maxSeats)
-          ? '\n⚠️ ' + pax + ' passengers exceeds ' + estVehicle + ' capacity (' + maxSeats + ' seats) — team will arrange multiple vehicles or a larger vehicle.'
+          ? '\n⚠️ ' + pax + ' passengers exceeds standard ' + stdVehicle + ' capacity (' + maxSeats + ' seats) — team will arrange a larger vehicle.'
           : null;
         var lines = [
           S('hdPickup'),
@@ -1404,13 +1409,14 @@
       ],
       summary: function(f) {
         var est = estimateTransfer(f.passengers, f.airport, f.pickupAddress);
-        // Capacity check: warn when party size exceeds vehicle seats
+        // Capacity check: use regional standard vehicle capacity
         var vSeats = (typeof DLCPricing !== 'undefined' && DLCPricing.VEHICLE_SEATS) ? DLCPricing.VEHICLE_SEATS : {};
-        var estVehicle = est ? (est.match(/\(([^)]+)\)/)||[])[1] : null;
-        var maxSeats = estVehicle ? (vSeats[estVehicle] || 12) : 12;
+        var isBayArea = BAY_AREA_AIRPORTS[f.airport] || false;
+        var stdVehicle = isBayArea ? 'Toyota Sienna' : (est ? (est.match(/\(([^)]+)\)/)||[])[1] : null);
+        var maxSeats = isBayArea ? 7 : (stdVehicle ? (vSeats[stdVehicle] || 12) : 12);
         var pax = parseInt(f.passengers) || 0;
         var capWarn = (pax > maxSeats)
-          ? '\n⚠️ ' + pax + ' passengers exceeds ' + estVehicle + ' capacity (' + maxSeats + ' seats) — team will arrange multiple vehicles or a larger vehicle.'
+          ? '\n⚠️ ' + pax + ' passengers exceeds standard ' + stdVehicle + ' capacity (' + maxSeats + ' seats) — team will arrange a larger vehicle.'
           : null;
         var lines = [
           S('hdDropoff'),
@@ -1897,6 +1903,7 @@
 
       if (merged[fd.key] !== undefined) continue;
       if (!fd.extract) continue;
+      if (fd.key === 'notes') continue; // notes is free-text; never populate via bonus extraction
       if (fd.showIf && !fd.showIf(merged)) continue;
 
       try {

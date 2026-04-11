@@ -873,6 +873,11 @@
 
   // ── Rough estimate helpers ─────────────────────────────────────────────────
 
+  // Max service radius for airport and private-ride bookings (miles)
+  var MAX_SERVICE_MILES = 120;
+  // Deadhead rate: driver drives empty to/from airport; charged at $0.80/mile (fuel + time)
+  var DEADHEAD_PER_MILE = 0.80;
+
   // Maps airport codes to their city name for use with estimateCityToCity
   var AIRPORT_CITY = {
     'lax': 'Los Angeles',   'sna': 'Orange County',  'lgb': 'Long Beach',
@@ -904,7 +909,17 @@
         var airportCity = AIRPORT_CITY[airportCode] || 'Los Angeles';
         var destCity = _cityFromAddress(destAddress);
         var r2 = DLCPricing.estimateCityToCity({ from: airportCity, to: destCity, passengers: passengers });
-        if (r2 && r2.total) return '~$' + r2.total + ' (' + r2.vehicle + ')';
+        if (r2 && r2.total) {
+          // Add 2-way deadhead: driver's empty drive from customer's area → airport (and back)
+          // Deadhead miles ≈ distance from customer's location to the airport
+          var deadheadMiles = 0;
+          if (window.DLCLocation && typeof DLCLocation.distanceToAirportMiles === 'function') {
+            deadheadMiles = DLCLocation.distanceToAirportMiles(airport) || 0;
+          }
+          var deadheadCost = Math.round(deadheadMiles * DEADHEAD_PER_MILE);
+          var total = r2.total + deadheadCost;
+          return '~$' + total + ' (' + r2.vehicle + ')';
+        }
       }
       // Fallback: OC-distance-based estimate (only accurate for SoCal trips)
       if (DLCPricing.estimateTransfer) {
@@ -925,25 +940,38 @@
     return null;
   }
 
-  // Returns Uber comparison pricing for a private ride (A→B, no airport)
-  function estimateRide(passengers, fromCity, toCity) {
+  // Returns pricing for a private ride (A→B), including 2-way deadhead cost
+  function estimateRide(passengers, fromAddr, toAddr) {
     var p = Math.max(1, passengers || 2);
     if (typeof DLCPricing !== 'undefined') {
-      // Try to look up distance using fromCity/toCity in pricing tables
-      var r = DLCPricing.estimateTransfer({ fromCity: fromCity || '', airport: toCity || '', passengers: p, direction: 'dropoff' });
+      // Use city-to-city routing for accuracy
+      var fromCity = _cityFromAddress(fromAddr) || fromAddr || '';
+      var toCity   = _cityFromAddress(toAddr)   || toAddr   || '';
+      var r = null;
+      if (DLCPricing.estimateCityToCity && fromCity && toCity) {
+        r = DLCPricing.estimateCityToCity({ from: fromCity, to: toCity, passengers: p });
+      }
+      if (!r) {
+        // Fallback to OC-distance-based lookup
+        var rf = DLCPricing.estimateTransfer({ fromCity: fromCity, airport: toCity, passengers: p, direction: 'dropoff' });
+        if (rf && rf.miles) r = { miles: rf.miles, total: rf.total, vehicle: rf.vehicle };
+      }
       if (r && r.miles) {
         var cmp = DLCPricing.transferCostWithComparison(r.miles, p);
+        // 2-way deadhead: driver returns empty after dropoff (≈ same distance as main trip)
+        var deadheadCost = Math.round(r.miles * DEADHEAD_PER_MILE);
         return {
-          ourPrice: cmp.ourPrice,
-          uberEst:  cmp.uberEstimate,
-          savings:  cmp.savings,
-          vehicle:  DLCPricing.getVehicle ? DLCPricing.getVehicle(p) : (p > 3 ? 'Mercedes Van' : 'Tesla Model Y'),
-          miles:    r.miles,
-          approx:   false,
+          ourPrice:     (cmp ? cmp.ourPrice : r.total) + deadheadCost,
+          uberEst:      cmp ? cmp.uberEstimate : Math.round((r.total || 0) / 0.8),
+          savings:      cmp ? (cmp.uberEstimate - ((cmp.ourPrice || 0) + deadheadCost)) : 0,
+          vehicle:      r.vehicle || (DLCPricing.getVehicle ? DLCPricing.getVehicle(p) : (p > 3 ? 'Mercedes Van' : 'Tesla Model Y')),
+          miles:        r.miles,
+          deadheadCost: deadheadCost,
+          approx:       false,
         };
       }
     }
-    // Fallback rough estimate based on passenger count
+    // Fallback rough estimate
     var isVan   = p > 3;
     var minFare = isVan ? 120 : 100;
     var uberEst = Math.round(minFare / 0.8);
@@ -952,6 +980,7 @@
       uberEst:  uberEst,
       savings:  uberEst - minFare,
       vehicle:  isVan ? 'Mercedes Van' : 'Tesla Model Y',
+      miles:    null,
       approx:   true,
     };
   }
@@ -1105,14 +1134,29 @@
         {
           key: 'airport',
           question: function() {
-            var hint = '';
-            if (window.DLCLocation && DLCLocation.state && DLCLocation.state.lat) {
-              var near = DLCLocation.nearestAirports(2).map(function(a) { return a.code; }).join(', ');
-              hint = S('qAirportNear') + near + ')';
+            if (window.DLCLocation && typeof DLCLocation.airportsWithinMiles === 'function') {
+              var nearby = DLCLocation.airportsWithinMiles(MAX_SERVICE_MILES);
+              if (nearby && nearby.length > 0) {
+                var list = nearby.map(function(a) { return a.code; }).join(' · ');
+                return S('qAirportPickup') + S('qAirportNear') + list + ')';
+              } else if (nearby !== null) {
+                // Location known but no airports within range
+                return S('qAirportPickup') + '\n⚠️ No airports within our 120-mile service area near your location. Please call (408) 916-3439.';
+              }
             }
-            return S('qAirportPickup') + hint + S('qAirportList');
+            return S('qAirportPickup') + S('qAirportList');
           },
-          extract: function(t) { return X.airport(t); },
+          extract: function(t) {
+            var code = X.airport(t);
+            if (!code) return null;
+            // Reject airports outside 120-mile service radius when location is known
+            if (window.DLCLocation && typeof DLCLocation.distanceToAirportMiles === 'function' &&
+                DLCLocation.state && DLCLocation.state.lat) {
+              var dist = DLCLocation.distanceToAirportMiles(code);
+              if (dist !== null && dist > MAX_SERVICE_MILES) return null;
+            }
+            return code;
+          },
           optional: false,
         },
         {
@@ -1245,14 +1289,28 @@
         {
           key: 'airport',
           question: function() {
-            var hint = '';
-            if (window.DLCLocation && DLCLocation.state && DLCLocation.state.lat) {
-              var near = DLCLocation.nearestAirports(2).map(function(a) { return a.code; }).join(', ');
-              hint = S('qAirportNear') + near + ')';
+            if (window.DLCLocation && typeof DLCLocation.airportsWithinMiles === 'function') {
+              var nearby = DLCLocation.airportsWithinMiles(MAX_SERVICE_MILES);
+              if (nearby && nearby.length > 0) {
+                var list = nearby.map(function(a) { return a.code; }).join(' · ');
+                return S('qAirportDropoff') + S('qAirportNear') + list + ')';
+              } else if (nearby !== null) {
+                return S('qAirportDropoff') + '\n⚠️ No airports within our 120-mile service area near your location. Please call (408) 916-3439.';
+              }
             }
-            return S('qAirportDropoff') + hint + S('qAirportList');
+            return S('qAirportDropoff') + S('qAirportList');
           },
-          extract: function(t) { return X.airport(t); },
+          extract: function(t) {
+            var code = X.airport(t);
+            if (!code) return null;
+            // Reject airports outside 120-mile service radius when location is known
+            if (window.DLCLocation && typeof DLCLocation.distanceToAirportMiles === 'function' &&
+                DLCLocation.state && DLCLocation.state.lat) {
+              var dist = DLCLocation.distanceToAirportMiles(code);
+              if (dist !== null && dist > MAX_SERVICE_MILES) return null;
+            }
+            return code;
+          },
           optional: false,
         },
         {
@@ -1450,6 +1508,10 @@
       ],
       summary: function(f) {
         var est = estimateRide(f.passengers, f.pickupAddress, f.dropoffAddress);
+        // 120-mile service range warning
+        var rangeWarn = (est && est.miles && est.miles > MAX_SERVICE_MILES)
+          ? '\n⚠️ This trip is ~' + est.miles + ' miles — our team will confirm availability and final pricing.'
+          : null;
         var lines = [
           S('hdRide'),
           S('sfPickupFrom') + (f.pickupAddress || ''),
@@ -1464,9 +1526,10 @@
         ];
         if (est) {
           lines.push(S('priceCompare') + est.vehicle + '):');
-          lines.push(S('priceUber') + est.uberEst);
-          lines.push(S('priceDLC') + est.ourPrice + S('priceSave') + est.savings);
+          lines.push(S('priceUber') + est.uberEst + ' (1-way, no deadhead)');
+          lines.push(S('priceDLC') + est.ourPrice + ' (incl. 2-way driver)' + (est.savings > 0 ? S('priceSave') + est.savings : ''));
           if (est.approx) lines.push(S('priceApprox'));
+          if (rangeWarn) lines.push(rangeWarn);
         }
         return lines.filter(function(v) { return v !== null; }).join('\n');
       },

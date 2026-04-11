@@ -170,6 +170,27 @@ window.DLCLocation = (function () {
     );
   }
 
+  // ── Public: one-way distance from customer to a specific airport (miles) ────
+  function distanceToAirportMiles(code) {
+    if (!state.lat || !code) return null;
+    var a = AIRPORTS[code.toUpperCase()];
+    if (!a) return null;
+    var km = haversineKm(state.lat, state.lng, a.lat, a.lng);
+    return Math.round(km / 1.60934);
+  }
+
+  // ── Public: airports within maxMiles of customer, sorted nearest first ───────
+  function airportsWithinMiles(maxMiles) {
+    if (!state.lat) return null; // no location available
+    var maxKm = maxMiles * 1.60934;
+    return Object.keys(AIRPORTS).map(function(code) {
+      var a  = AIRPORTS[code];
+      var km = haversineKm(state.lat, state.lng, a.lat, a.lng);
+      return { code: code, name: a.name, km: Math.round(km), miles: Math.round(km / 1.60934) };
+    }).filter(function(a) { return a.km <= maxKm; })
+      .sort(function(a, b) { return a.km - b.km; });
+  }
+
   // ── Public: nearest N airports sorted by distance ───────────────────────────
   function nearestAirports(n) {
     var count = n || 3;
@@ -233,15 +254,17 @@ window.DLCLocation = (function () {
 
   // ── Expose public API ────────────────────────────────────────────────────────
   return {
-    state:          state,
-    request:        request,
-    nearestAirports: nearestAirports,
-    nearestAirport: nearestAirport,
-    lookupLandmark: lookupLandmark,
-    getContext:     getContext,
-    pickupHint:     pickupHint,
-    AIRPORTS:       AIRPORTS,
-    LANDMARKS:      LANDMARKS,
+    state:                  state,
+    request:                request,
+    nearestAirports:        nearestAirports,
+    nearestAirport:         nearestAirport,
+    airportsWithinMiles:    airportsWithinMiles,
+    distanceToAirportMiles: distanceToAirportMiles,
+    lookupLandmark:         lookupLandmark,
+    getContext:             getContext,
+    pickupHint:             pickupHint,
+    AIRPORTS:               AIRPORTS,
+    LANDMARKS:              LANDMARKS,
   };
 
 }());

@@ -32,12 +32,59 @@ const DLCPricing = (() => {
     van:   { base: 2.50, perMile: 1.50, perMin: 0.40, bookingFee: 5.50, minFare: 15.00 },
   };
 
+  // ── Ride-Hailing Rate Card (Airport & Private Ride intake) ─────────────────
+  // UberXL-calibrated against real California market prices (2025-2026).
+  // Verification: 10 mi / 17 min → $3 + $2.50 + 10×$2.30 + 17×$0.30 = $33.60 ✓ (real UberXL: $25–35)
+  // This is the single source of truth — ride-intake.js delegates here.
+  const RIDE_RATE_CARD = {
+    vehicleName:  'Tesla Model Y',
+    vehicleSeats: 4,
+    base:         3.00,          // $ base fare per trip
+    perMile:      2.30,          // $ per mile (ride distance + deadhead)
+    perMin:       0.30,          // $ per minute (ride duration only)
+    bookingFee:   2.50,          // $ fixed booking fee
+    minFare:      25.00,         // $ minimum fare floor
+    discount:     UBER_DISCOUNT, // 0.20 — DLC charges 20% below Uber market rate
+  };
+
   /** Estimate what Uber would charge for the same trip */
   function estimateUberPrice(miles, vehicleType) {
     const rate = UBER_RATES[vehicleType] || UBER_RATES.sedan;
     const estMinutes = Math.round((miles / 35) * 60); // avg 35 mph
     const uberTotal = rate.base + (miles * rate.perMile) + (estMinutes * rate.perMin) + rate.bookingFee;
     return Math.max(uberTotal, rate.minFare);
+  }
+
+  /**
+   * Calculate a fare for the Airport & Private Ride flow.
+   * Uses real route data from Google Routes API (actual miles + duration).
+   * Single source of truth — eliminates the duplicate rate card in ride-intake.js.
+   *
+   * @param {number} miles       Ride distance in miles (pickup → destination)
+   * @param {number} durMins     Ride duration in minutes
+   * @param {object} [opts]
+   * @param {number} [opts.deadheadMiles]  Driver → pickup distance in miles (default 0)
+   * @returns {{ miles, minutes, deadheadMiles, totalMiles, uberEstimate, dlcPrice, savings }}
+   */
+  function quoteRide(miles, durMins, opts) {
+    const dh         = (opts && opts.deadheadMiles) || 0;
+    const totalMiles = miles + dh;
+    const r          = RIDE_RATE_CARD;
+    // Uber market rate: base + booking + distance component + time component
+    const uberRaw    = r.base + r.bookingFee + (totalMiles * r.perMile) + (durMins * r.perMin);
+    const uberEst    = Math.max(uberRaw, r.minFare);
+    // DLC price = Uber baseline × (1 − 20% discount), rounded up to nearest $5
+    const dlcRaw     = uberEst * (1 - r.discount);
+    const dlcPrice   = Math.ceil(dlcRaw / 5) * 5;
+    return {
+      miles:         Math.round(miles),
+      minutes:       Math.round(durMins),
+      deadheadMiles: Math.round(dh),
+      totalMiles:    Math.round(totalMiles),
+      uberEstimate:  Math.round(uberEst),
+      dlcPrice,
+      savings:       Math.round(uberEst) - dlcPrice,
+    };
   }
 
   // ── Approximate distances (one-way miles from Orange County) ─
@@ -576,6 +623,9 @@ const DLCPricing = (() => {
     transferCostWithComparison,
     tourCost,
     estimateUberPrice,
+    // Ride-hailing fare engine (used by ride-intake.js)
+    quoteRide,
+    RIDE_RATE_CARD,
     // Higher-level estimates (used by AI chat)
     estimateTour,
     estimateTransfer,

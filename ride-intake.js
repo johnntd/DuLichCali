@@ -5,15 +5,6 @@
 window.RideIntake = (function () {
   'use strict';
 
-  // ── Vehicle rate card (calibrated to real UberXL prices, −20% for DLC) ──────
-  // Uber XL actual: $25–35 for 10 mi / 17 min in Bay Area/SoCal
-  // base $3 + booking $2.50 + 10×$2.30 + 17×$0.30 ≈ $34 — matches real UberXL
-  var VAN = {
-    name: 'Tesla Model Y',
-    mpg: 999, wearPerMile: 0.08, discount: 0.20,
-    uber: { base: 3.00, perMile: 2.30, perMin: 0.30, bookingFee: 2.50, minFare: 25.00 },
-  };
-
   // ── Phase-1 i18n strings (fare card + confirmation screen) ──────────────────
   // Language read from ?lang= URL param; defaults to 'en'.
   // Only the new Phase-1 UI strings are here — pre-existing strings stay as-is.
@@ -137,7 +128,7 @@ window.RideIntake = (function () {
     // 2. Fallback: query Firestore directly (e.g. page loaded before availability check finished)
     if (typeof firebase === 'undefined' || !firebase.firestore) return;
     firebase.firestore().collection('drivers')
-      .where('active', '==', true)
+      .where('adminStatus', '==', 'active')
       .get()
       .then(function(snap) {
         if (snap.empty) { console.warn('[RideIntake] No active drivers found in Firestore'); return; }
@@ -433,30 +424,8 @@ window.RideIntake = (function () {
     _ac[id] = ac;
   }
 
-  // ── Pricing ──────────────────────────────────────────────────────────────────
-  function gasPrice() { return window._gasCaliPrice || 4.80; }
-
-  function calcQuote(rideMiles, minutes, deadheadMiles) {
-    var dh         = deadheadMiles || 0;
-    var totalMiles = rideMiles + dh;
-    var gas  = gasPrice();
-    var u    = VAN.uber;
-    var uberRaw = u.base + u.bookingFee + (totalMiles * u.perMile) + (minutes * u.perMin);
-    var uberEst = Math.max(uberRaw, u.minFare);
-    var fuel    = (totalMiles / VAN.mpg) * gas;
-    var wear    = totalMiles * VAN.wearPerMile;
-    var dlcRaw  = (uberEst + fuel + wear) * (1 - VAN.discount);
-    var dlcPrice = Math.ceil(dlcRaw / 5) * 5;
-    return {
-      miles:         Math.round(rideMiles),
-      deadheadMiles: Math.round(dh),
-      totalMiles:    Math.round(totalMiles),
-      minutes:       Math.round(minutes),
-      uberEstimate:  Math.round(uberEst + fuel + wear),
-      dlcPrice:      dlcPrice,
-      savings:       Math.round(uberEst + fuel + wear) - dlcPrice,
-    };
-  }
+  // ── Pricing — delegates to DLCPricing.quoteRide() (pricing.js) ───────────────
+  // Rate card lives in pricing.js RIDE_RATE_CARD; this file no longer owns the numbers.
 
   // ── Route distance (self-contained — no dependency on script.js) ─────────────
   // Uses Google Maps Routes API (same implementation as window.DLCRouteMatrix in script.js).
@@ -530,12 +499,12 @@ window.RideIntake = (function () {
       Promise.all([ridePromise, deadheadPromise]).then(function(results) {
         var ride     = results[0];
         var deadhead = results[1];
-        _quote = calcQuote(ride.distMiles, ride.durMins, deadhead.distMiles);
+        _quote = DLCPricing.quoteRide(ride.distMiles, ride.durMins, { deadheadMiles: deadhead.distMiles });
         showPrice(_quote);
       }).catch(function() {
         // Deadhead failed — fall back to ride-only price
         ridePromise.then(function(ride) {
-          _quote = calcQuote(ride.distMiles, ride.durMins, 0);
+          _quote = DLCPricing.quoteRide(ride.distMiles, ride.durMins);
           showPrice(_quote);
         }).catch(function() {
           showPriceHint('Không tìm được tuyến đường.');
@@ -544,7 +513,7 @@ window.RideIntake = (function () {
     } else {
       // No driver GPS yet — price on ride distance only
       ridePromise.then(function(ride) {
-        _quote = calcQuote(ride.distMiles, ride.durMins, 0);
+        _quote = DLCPricing.quoteRide(ride.distMiles, ride.durMins);
         showPrice(_quote);
       }).catch(function() {
         showPriceHint('Không tìm được tuyến đường.');
@@ -707,7 +676,7 @@ window.RideIntake = (function () {
     var paxId = _type === 'pickup' ? 'ri_p_passengers' : _type === 'dropoff' ? 'ri_d_passengers' : 'ri_r_passengers';
     var base = {
       bookingId: bookingId, status: 'pending',
-      vehicle: _driverVehicle ? _driverVehicle.name : VAN.name,
+      vehicle: _driverVehicle ? _driverVehicle.name : (DLCPricing.RIDE_RATE_CARD && DLCPricing.RIDE_RATE_CARD.vehicleName) || 'Tesla Model Y',
       driverId: _driverVehicle ? _driverVehicle.driverId : null,
       serviceType: _type === 'ride' ? 'private_ride' : (_type === 'pickup' ? 'airport_pickup' : 'airport_dropoff'),
       passengers:    parseInt(val(paxId) || '1', 10),

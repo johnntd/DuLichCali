@@ -379,6 +379,56 @@
     .btn-comp-submit:disabled { opacity: .45; cursor: not-allowed; }
     .comp-msg { font-size: .76rem; min-height: 1.3em; margin-bottom: .4rem; }
 
+    /* ── Earnings panel ─────────────────────────────────────── */
+    .earn-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .earn-header__note {
+      font-size: .65rem; color: var(--muted); letter-spacing: .04em; font-style: italic;
+    }
+    .earn-summary-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem;
+      margin-bottom: 1.25rem;
+    }
+    .earn-stat-card {
+      background: var(--navy-800); border: 1px solid var(--border);
+      border-radius: 12px; padding: .85rem .65rem; text-align: center;
+    }
+    .earn-stat-label {
+      font-size: .52rem; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: .4rem;
+    }
+    .earn-stat-total {
+      font-size: 1.3rem; font-weight: 700; color: var(--gold);
+      font-family: var(--font-b); line-height: 1.1; margin-bottom: .2rem;
+    }
+    .earn-stat-count { font-size: .6rem; color: var(--muted); }
+    .earn-trip-list { display: flex; flex-direction: column; gap: .5rem; }
+    .earn-trip-item {
+      display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+      background: var(--navy-800); border: 1px solid var(--border);
+      border-radius: 10px; padding: .75rem .9rem;
+    }
+    .earn-trip-main { flex: 1; min-width: 0; }
+    .earn-trip-type {
+      font-size: .55rem; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--gold); margin-bottom: .15rem;
+    }
+    .earn-trip-route {
+      font-size: .82rem; color: var(--cream); font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .earn-trip-date { font-size: .63rem; color: var(--muted); margin-top: .1rem; }
+    .earn-trip-fare { font-size: 1rem; font-weight: 700; color: var(--gold); flex-shrink: 0; }
+    .earn-section-title {
+      font-size: .6rem; font-weight: 700; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--gold); margin: .5rem 0 .75rem;
+    }
+    .earn-empty {
+      text-align: center; padding: 2rem 1rem; color: var(--muted); font-size: .82rem;
+    }
+
     /* ── In-app notification toasts ─────────────────────────── */
     #dlc-toast-container {
       position: fixed; bottom: 5rem; right: 1rem;
@@ -426,6 +476,7 @@
     <button class="drv-tab active" onclick="drvTab('profile')">Hồ Sơ</button>
     <button class="drv-tab" onclick="drvTab('docs')">Tài Liệu <span class="drv-tab-badge hidden" id="docsBadge"></span></button>
     <button class="drv-tab" onclick="drvTab('rides')">Chuyến Mới <span class="drv-tab-badge hidden" id="rideBadge">0</span></button>
+    <button class="drv-tab" onclick="drvTab('earnings')">Doanh Thu</button>
     <button class="drv-tab" onclick="drvTab('active')" id="tabActive" style="display:none">Chuyến Đang Chạy <span class="drv-tab-badge" id="activeBadge" style="background:#22c55e">!</span></button>
   </div>
 
@@ -678,6 +729,13 @@
     </div>
   </div>
 
+  <!-- Earnings panel -->
+  <div id="panelEarnings" class="drv-panel">
+    <div id="earningsBody" style="padding:.25rem 0">
+      <div style="text-align:center;padding:2rem;color:var(--muted);font-size:.82rem">Chạm tab để tải dữ liệu.</div>
+    </div>
+  </div>
+
   <!-- Active ride panel -->
   <div id="panelActive" class="drv-panel">
     <div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem">Chưa có chuyến đang chạy.</div>
@@ -705,11 +763,12 @@
   var _driverId = null;
   var _driverName = '';
   var _driverPhone = '';
-  var _unsubRideNotifs = null;
+  var _unsubRideNotifs  = null;
   var _unsubActiveRide  = null;
   var _activeRideId     = null;
   var _activeRideStatus = null;
   var _activeRideData   = null; // full booking data for notification use
+  var _earningsLoaded   = false;
 
   // Trip-status progression for driver (what the driver can advance to)
   var _TRIP_STATUS_NEXT = {
@@ -1065,8 +1124,8 @@
 
   // ── Tab switching ─────────────────────────────────────────────────────────
   function drvTab(tab) {
-    // Update tab button active states (skip the dynamic 'active' tab button which is 4th)
-    var staticTabs = ['profile', 'docs', 'rides'];
+    // Update tab button active states (skip the dynamic 'active' tab button which is 5th)
+    var staticTabs = ['profile', 'docs', 'rides', 'earnings'];
     document.querySelectorAll('.drv-tab').forEach(function(btn, i) {
       if (i < staticTabs.length) {
         btn.classList.toggle('active', staticTabs[i] === tab);
@@ -1074,12 +1133,14 @@
         btn.classList.toggle('active', tab === 'active');
       }
     });
-    document.getElementById('panelProfile').classList.toggle('active', tab === 'profile');
-    document.getElementById('panelDocs').classList.toggle('active',    tab === 'docs');
-    document.getElementById('panelRides').classList.toggle('active',   tab === 'rides');
-    document.getElementById('panelActive').classList.toggle('active',  tab === 'active');
+    document.getElementById('panelProfile').classList.toggle('active',  tab === 'profile');
+    document.getElementById('panelDocs').classList.toggle('active',     tab === 'docs');
+    document.getElementById('panelRides').classList.toggle('active',    tab === 'rides');
+    document.getElementById('panelEarnings').classList.toggle('active', tab === 'earnings');
+    document.getElementById('panelActive').classList.toggle('active',   tab === 'active');
     if (tab === 'rides' && _unsubRideNotifs === null) listenRideNotifs();
     if (tab === 'docs') loadComplianceDocs();
+    if (tab === 'earnings') loadEarnings();
   }
 
   // Show/hide the active ride tab based on whether driver has a live ride
@@ -1555,6 +1616,125 @@
       }, function(err) {
         console.warn('[DriverNotif] listener error:', err.message);
       });
+  }
+
+  // ── Driver Earnings Dashboard (Phase 9) ──────────────────────────────────
+  // Metric: estimatedPrice = customer-facing DLC fare (gross, pre-commission).
+  // No driver payout split is defined in the business logic; gross fare is shown
+  // and clearly labeled as such.
+
+  function _startOfToday() {
+    var d = new Date(); d.setHours(0, 0, 0, 0); return d;
+  }
+  function _startOfWeek() {
+    var d = new Date(); d.setHours(0, 0, 0, 0);
+    var day = d.getDay(); // 0=Sun
+    d.setDate(d.getDate() - (day === 0 ? 6 : day - 1)); // back to Monday
+    return d;
+  }
+  function _startOfMonth() {
+    var d = new Date(); d.setDate(1); d.setHours(0, 0, 0, 0); return d;
+  }
+
+  function loadEarnings() {
+    if (_earningsLoaded) return;
+    var body = document.getElementById('earningsBody');
+    if (!body || !_driverId) return;
+    body.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.82rem">Đang tải…</div>';
+
+    // Query all bookings assigned to this driver, filter completed client-side.
+    // Single-field query on driver.driverId avoids composite index requirements.
+    db.collection('bookings')
+      .where('driver.driverId', '==', _driverId)
+      .limit(500)
+      .get()
+      .then(function(snap) {
+        var rides = [];
+        snap.forEach(function(doc) {
+          var d = doc.data();
+          if (d.status === 'completed') rides.push(Object.assign({ _id: doc.id }, d));
+        });
+        // Sort newest first by createdAt
+        rides.sort(function(a, b) {
+          var ta = a.createdAt && a.createdAt.toDate ? a.createdAt.toDate().getTime()
+                 : a.createdAt && a.createdAt.seconds ? a.createdAt.seconds * 1000 : 0;
+          var tb = b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().getTime()
+                 : b.createdAt && b.createdAt.seconds ? b.createdAt.seconds * 1000 : 0;
+          return tb - ta;
+        });
+        renderEarnings(rides);
+        _earningsLoaded = true;
+      })
+      .catch(function(err) {
+        body.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--danger);font-size:.82rem">Lỗi: ' + esc(err.message) + '</div>';
+      });
+  }
+
+  function renderEarnings(rides) {
+    var body = document.getElementById('earningsBody');
+    if (!body) return;
+
+    var todayMs  = _startOfToday().getTime();
+    var weekMs   = _startOfWeek().getTime();
+    var monthMs  = _startOfMonth().getTime();
+
+    function rideMs(r) {
+      if (r.createdAt && r.createdAt.toDate)    return r.createdAt.toDate().getTime();
+      if (r.createdAt && r.createdAt.seconds)   return r.createdAt.seconds * 1000;
+      return 0;
+    }
+    function sumFare(list) {
+      return list.reduce(function(s, r) { return s + (Number(r.estimatedPrice) || 0); }, 0);
+    }
+
+    var todayRides = rides.filter(function(r) { return rideMs(r) >= todayMs; });
+    var weekRides  = rides.filter(function(r) { return rideMs(r) >= weekMs; });
+    var monthRides = rides.filter(function(r) { return rideMs(r) >= monthMs; });
+
+    var periods = [
+      { label: 'Hôm Nay',   list: todayRides },
+      { label: 'Tuần Này',  list: weekRides  },
+      { label: 'Tháng Này', list: monthRides },
+    ];
+
+    var statsHtml = periods.map(function(p) {
+      return '<div class="earn-stat-card">' +
+        '<div class="earn-stat-label">' + p.label + '</div>' +
+        '<div class="earn-stat-total">$' + sumFare(p.list).toFixed(0) + '</div>' +
+        '<div class="earn-stat-count">' + p.list.length + ' chuyến</div>' +
+      '</div>';
+    }).join('');
+
+    var svcMap = { airport_pickup: 'Đón SB', airport_dropoff: 'Ra SB', private_ride: 'Xe Riêng' };
+    var listHtml = '';
+    if (!rides.length) {
+      listHtml = '<div class="earn-empty">Chưa có chuyến hoàn thành nào.</div>';
+    } else {
+      listHtml = rides.slice(0, 50).map(function(r) {
+        var ms  = rideMs(r);
+        var dateStr = ms ? new Date(ms).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
+        var route = r.dropoffAddress || r.pickupAddress || r.airport || '—';
+        var fare  = r.estimatedPrice ? '$' + Number(r.estimatedPrice).toFixed(0) : '—';
+        var svc   = svcMap[r.serviceType] || (r.serviceType ? r.serviceType.replace(/_/g, ' ') : 'Chuyến Xe');
+        return '<div class="earn-trip-item">' +
+          '<div class="earn-trip-main">' +
+            '<div class="earn-trip-type">' + svc + '</div>' +
+            '<div class="earn-trip-route">' + esc(route) + '</div>' +
+            '<div class="earn-trip-date">' + dateStr + (r.customerName ? ' · ' + esc(r.customerName) : '') + '</div>' +
+          '</div>' +
+          '<div class="earn-trip-fare">' + fare + '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    body.innerHTML =
+      '<div class="earn-header">' +
+        '<div class="earn-header__note">Giá chuyến gộp (giá khách trả)</div>' +
+        '<button class="btn-sm" onclick="_earningsLoaded=false;loadEarnings()" style="font-size:.65rem;height:32px;padding:0 .7rem">Làm Mới</button>' +
+      '</div>' +
+      '<div class="earn-summary-grid">' + statsHtml + '</div>' +
+      '<div class="earn-section-title">Lịch Sử Chuyến Hoàn Thành</div>' +
+      '<div class="earn-trip-list">' + listHtml + '</div>';
   }
 </script>
 </body>

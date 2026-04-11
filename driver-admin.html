@@ -13,7 +13,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="/driver-compliance.js"></script>
-  <script src="/notifications.js?v=20260418b"></script>
+  <script src="/notifications.js?v=20260418c"></script>
 
   <style>
     :root {
@@ -709,6 +709,7 @@
   var _unsubActiveRide  = null;
   var _activeRideId     = null;
   var _activeRideStatus = null;
+  var _activeRideData   = null; // full booking data for notification use
 
   // Trip-status progression for driver (what the driver can advance to)
   var _TRIP_STATUS_NEXT = {
@@ -1163,9 +1164,10 @@
       });
       // Update booking: driver_confirmed + status history
       if (bookingId) {
+        var driverPayload = { driverId: _driverId, name: _driverName, phone: _driverPhone };
         await db.collection('bookings').doc(bookingId).update({
           status: 'driver_confirmed',
-          driver: { driverId: _driverId, name: _driverName, phone: _driverPhone },
+          driver: driverPayload,
           statusUpdatedAt: ts,
           statusUpdatedBy: 'driver:' + _driverId,
           statusHistory: firebase.firestore.FieldValue.arrayUnion({
@@ -1176,6 +1178,14 @@
         });
         _activeRideId = bookingId;
         _listenActiveRide();
+        // driver_confirmed notification — fetch booking for customer phone
+        if (typeof DLCNotifications !== 'undefined' && DLCNotifications.queueStatusChangeNotification) {
+          db.collection('bookings').doc(bookingId).get().then(function(snap) {
+            if (snap.exists) {
+              DLCNotifications.queueStatusChangeNotification(bookingId, 'driver_confirmed', snap.data(), 'vi');
+            }
+          }).catch(function() {});
+        }
       }
       showToast('✓ Đã nhận chuyến! Liên hệ khách ngay.', false);
       // Switch to active ride panel
@@ -1220,6 +1230,7 @@
   }
 
   function renderActiveRide(d) {
+    _activeRideData = d; // cache for notification use
     var panel = document.getElementById('panelActive');
     if (!panel) return;
     var status = d.status || 'driver_confirmed';
@@ -1279,6 +1290,10 @@
           at: new Date().toISOString()
         })
       });
+      // Status-change customer/admin notification (idempotent, fire-and-forget)
+      if (typeof DLCNotifications !== 'undefined' && DLCNotifications.queueStatusChangeNotification && _activeRideData) {
+        DLCNotifications.queueStatusChangeNotification(_activeRideId, next, _activeRideData, 'vi');
+      }
     } catch(e) {
       showToast('Lỗi: ' + e.message, true);
     }

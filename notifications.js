@@ -206,12 +206,84 @@ window.DLCNotifications = (function () {
     }
   }
 
+  // ── Public: in-app notifications for ride status transitions ────────────────
+  /**
+   * Fires customer (and optionally admin) in-app notifications when a ride
+   * status changes. Safe to call from any handler — idempotent per
+   * (bookingId × newStatus × targetType).
+   *
+   * Notified statuses: driver_confirmed, on_the_way, arrived, completed, cancelled
+   * All other statuses are silently ignored.
+   *
+   * Duplicate-prevention: doc ID = "{bookingId}_status_{newStatus}_{targetType}_{safeId}"
+   * Each status has a unique doc ID, so retrying the same transition is safe.
+   * The toast listener's _seen set prevents re-toasting an already-read doc.
+   *
+   * @param {string} bookingId   — Firestore booking document ID
+   * @param {string} newStatus   — the status just written (e.g. 'on_the_way')
+   * @param {object} bookingData — booking doc data (name/phone/driver fields)
+   * @param {string} [lang]      — 'vi' | 'en'  (unused now; reserved for future i18n)
+   */
+  function queueStatusChangeNotification(bookingId, newStatus, bookingData, lang) {
+    if (!bookingId || !newStatus || !bookingData) return;
+
+    var NOTIFIABLE = ['driver_confirmed', 'on_the_way', 'arrived', 'completed', 'cancelled'];
+    if (NOTIFIABLE.indexOf(newStatus) === -1) return;
+
+    var driverName  = (bookingData.driver && bookingData.driver.name)  || 'tài xế';
+    var driverPhone = (bookingData.driver && bookingData.driver.phone) || '';
+    var custPhone   = bookingData.customerPhone || bookingData.phone   || '';
+    var custName    = bookingData.customerName  || bookingData.name    || '';
+
+    var MSGS = {
+      driver_confirmed: {
+        title: 'Tài xế đã xác nhận',
+        msg:   'Tài xế ' + driverName + ' đã xác nhận chuyến đi của bạn.' +
+               (driverPhone ? ' Liên hệ: ' + driverPhone + '.' : '')
+      },
+      on_the_way: {
+        title: 'Xe đang trên đường đến',
+        msg:   'Tài xế ' + driverName + ' đang di chuyển đến điểm đón của bạn.'
+      },
+      arrived: {
+        title: 'Xe đã đến điểm đón!',
+        msg:   'Tài xế ' + driverName + ' đã đến. Vui lòng ra xe ngay.'
+      },
+      completed: {
+        title: 'Chuyến đi hoàn thành',
+        msg:   'Cảm ơn bạn đã đặt xe qua Du Lịch Cali! Chúc bạn một ngày tốt lành.'
+      },
+      cancelled: {
+        title: 'Chuyến đi đã bị hủy',
+        msg:   'Chuyến đi của bạn đã bị hủy. Liên hệ chúng tôi nếu cần hỗ trợ.'
+      },
+    };
+
+    var m = MSGS[newStatus];
+    if (!m) return;
+
+    var type = 'status_' + newStatus;
+
+    // Customer in-app (all 5 statuses)
+    if (custPhone) {
+      _writeNotification(bookingId, type, 'customer', custPhone, m.title, m.msg);
+    }
+
+    // Admin in-app (completed + cancelled only)
+    if (newStatus === 'completed' || newStatus === 'cancelled') {
+      var adminTitle = newStatus === 'completed' ? '✓ Chuyến hoàn thành' : '✗ Chuyến đã hủy';
+      var adminMsg   = 'Chuyến ' + bookingId.slice(0, 8) + (custName ? ' – ' + custName : '');
+      _writeNotification(bookingId, type, 'admin', 'admin', adminTitle, adminMsg);
+    }
+  }
+
   // ── Expose public API ────────────────────────────────────────────────────────
   return {
-    queueRideConfirmation:          queueRideConfirmation,
-    queueDriverAssigned:            queueDriverAssigned,
-    queueRideBookedNotification:    queueRideBookedNotification,
-    queueDriverAssignedNotification: queueDriverAssignedNotification,
+    queueRideConfirmation:            queueRideConfirmation,
+    queueDriverAssigned:              queueDriverAssigned,
+    queueRideBookedNotification:      queueRideBookedNotification,
+    queueDriverAssignedNotification:  queueDriverAssignedNotification,
+    queueStatusChangeNotification:    queueStatusChangeNotification,
   };
 
 }());

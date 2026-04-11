@@ -418,6 +418,16 @@
     </div>
   </div>
 
+  <!-- Cancelled overlay -->
+  <div id="cancelledOverlay" class="overlay overlay--hidden">
+    <div class="overlay-card">
+      <div class="overlay-icon" style="background:rgba(224,90,90,0.15);color:#e08a8a">✕</div>
+      <h2 style="color:#e08a8a">Chuyến đi đã bị hủy</h2>
+      <p>Chuyến đi này đã bị hủy. Nếu bạn cần hỗ trợ, vui lòng liên hệ chúng tôi qua điện thoại hoặc đặt chuyến mới bên dưới.</p>
+      <a href="index.html" class="btn-gold">Đặt chuyến mới</a>
+    </div>
+  </div>
+
   <!-- Navigation bar -->
   <nav class="track-nav">
     <div class="nav-brand">✦ Du Lịch Cali</div>
@@ -533,6 +543,10 @@
     function showCompleted() {
       hideLoading();
       document.getElementById('completedOverlay').classList.remove('overlay--hidden');
+    }
+    function showCancelled() {
+      hideLoading();
+      document.getElementById('cancelledOverlay').classList.remove('overlay--hidden');
     }
 
     function updateProgress(status) {
@@ -700,6 +714,7 @@
         hideLoading();
 
         if (data.status === 'completed') { showCompleted(); return; }
+        if (data.status === 'cancelled') { showCancelled(); return; }
 
         updateProgress(data.status);
         updateStatusMessage(data.status, data.etaMinutes);

@@ -14,7 +14,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="/driver-compliance.js"></script>
-  <script src="/notifications.js?v=20260418b"></script>
+  <script src="/notifications.js?v=20260418c"></script>
 
   <style>
     :root {
@@ -1149,6 +1149,14 @@
           at: new Date().toISOString()
         })
       });
+      // Status-change customer/admin notifications (idempotent, fire-and-forget)
+      try {
+        if (typeof DLCNotifications !== 'undefined' && DLCNotifications.queueStatusChangeNotification) {
+          DLCNotifications.queueStatusChangeNotification(
+            selectedId, newStatus, allBookings[selectedId] || {}, 'vi'
+          );
+        }
+      } catch(e) { console.warn('[updateStatus] notification error:', e.message); }
     }
 
     async function cancelBooking() {
@@ -1166,6 +1174,14 @@
           at: new Date().toISOString()
         })
       });
+      // Cancellation notification (idempotent, fire-and-forget)
+      try {
+        if (typeof DLCNotifications !== 'undefined' && DLCNotifications.queueStatusChangeNotification) {
+          DLCNotifications.queueStatusChangeNotification(
+            selectedId, 'cancelled', allBookings[selectedId] || {}, 'vi'
+          );
+        }
+      } catch(e) { console.warn('[cancelBooking] notification error:', e.message); }
     }
 
     // ── Driver assignment ────────────────────────────────────────

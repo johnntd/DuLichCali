@@ -5,9 +5,8 @@
 window.RideIntake = (function () {
   'use strict';
 
-  // ── Phase-1 i18n strings (fare card + confirmation screen) ──────────────────
+  // ── i18n strings (fare card, step navigation, review card, success screen) ────
   // Language read from ?lang= URL param; defaults to 'en'.
-  // Only the new Phase-1 UI strings are here — pre-existing strings stay as-is.
   var _RIDE_T = {
     en: {
       minSuffix:    'min',
@@ -20,6 +19,26 @@ window.RideIntake = (function () {
       pickupLbl:    'Pickup',
       dropoffLbl:   'Dropoff',
       priceEst:     function(p, s) { return '~$' + p + ' est · Save ~$' + s + ' vs Uber'; },
+      // Step navigation
+      stepPrefix:   function(n) { return 'Step ' + n + ' / 3  —  '; },
+      stepLabels:   {
+        pickup:  ['Destination & Flight', 'Trip Details', 'Your Info'],
+        dropoff: ['Pickup & Flight',      'Trip Details', 'Your Info'],
+        ride:    ['Route & Schedule',     'Trip Details', 'Your Info'],
+      },
+      nextBtn:      'Continue',
+      submitBtn:    'Confirm Booking',
+      // Booking review card (step 3 pre-submit summary)
+      reviewHeading:    'Your Ride Summary',
+      reviewRoute:      'Route',
+      reviewFare:       'Estimate',
+      reviewPassengers: 'Passengers',
+      reviewVehicle:    'Vehicle',
+      // Success screen
+      successTitle: 'Booking Confirmed!',
+      successSub:   'Your booking ID:',
+      successMsg:   'We\'ll confirm within <strong>30 minutes</strong>.<br>Urgent? Call <a href="tel:4089163439">(408) 916-3439</a>.',
+      closeBtn:     'Close',
     },
     vi: {
       minSuffix:    'phút',
@@ -32,6 +51,26 @@ window.RideIntake = (function () {
       pickupLbl:    'Điểm đón',
       dropoffLbl:   'Điểm đến',
       priceEst:     function(p, s) { return '~$' + p + ' ước tính · Tiết kiệm ~$' + s + ' so với Uber'; },
+      // Step navigation
+      stepPrefix:   function(n) { return 'Bước ' + n + ' / 3  —  '; },
+      stepLabels:   {
+        pickup:  ['Điểm Đến & Chuyến Bay', 'Chi Tiết', 'Liên Hệ'],
+        dropoff: ['Điểm Đón & Chuyến Bay', 'Chi Tiết', 'Liên Hệ'],
+        ride:    ['Lộ Trình & Lịch Đi',   'Chi Tiết', 'Liên Hệ'],
+      },
+      nextBtn:      'Tiếp theo',
+      submitBtn:    'Xác Nhận Đặt Xe',
+      // Booking review card (step 3 pre-submit summary)
+      reviewHeading:    'Tóm Tắt Đặt Xe',
+      reviewRoute:      'Tuyến đường',
+      reviewFare:       'Ước tính',
+      reviewPassengers: 'Hành khách',
+      reviewVehicle:    'Xe',
+      // Success screen
+      successTitle: 'Đặt Xe Thành Công!',
+      successSub:   'Mã đặt chỗ của bạn:',
+      successMsg:   'Chúng tôi sẽ xác nhận trong <strong>30 phút</strong>.<br>Cần gấp? Gọi <a href="tel:4089163439">(408) 916-3439</a>.',
+      closeBtn:     'Đóng',
     },
     es: {
       minSuffix:    'min',
@@ -44,6 +83,26 @@ window.RideIntake = (function () {
       pickupLbl:    'Recogida',
       dropoffLbl:   'Destino',
       priceEst:     function(p, s) { return '~$' + p + ' est · Ahorra ~$' + s + ' vs Uber'; },
+      // Step navigation
+      stepPrefix:   function(n) { return 'Paso ' + n + ' / 3  —  '; },
+      stepLabels:   {
+        pickup:  ['Destino & Vuelo', 'Detalles', 'Contacto'],
+        dropoff: ['Recogida & Vuelo','Detalles', 'Contacto'],
+        ride:    ['Ruta & Horario',  'Detalles', 'Contacto'],
+      },
+      nextBtn:      'Continuar',
+      submitBtn:    'Confirmar Reserva',
+      // Booking review card (step 3 pre-submit summary)
+      reviewHeading:    'Resumen del Viaje',
+      reviewRoute:      'Ruta',
+      reviewFare:       'Estimado',
+      reviewPassengers: 'Pasajeros',
+      reviewVehicle:    'Vehículo',
+      // Success screen
+      successTitle: '¡Reserva Confirmada!',
+      successSub:   'Tu ID de reserva:',
+      successMsg:   'Confirmaremos en <strong>30 minutos</strong>.<br>¿Urgente? Llama al <a href="tel:4089163439">(408) 916-3439</a>.',
+      closeBtn:     'Cerrar',
     },
   };
   var _lang = (new URLSearchParams(window.location.search).get('lang') || 'en');
@@ -211,11 +270,6 @@ window.RideIntake = (function () {
   }
 
   // ── Sub-step navigation (progressive disclosure) ──────────────────────────────
-  var STEP_LABELS = {
-    pickup:  ['Điểm Đến & Chuyến Bay', 'Chi Tiết', 'Liên Hệ'],
-    dropoff: ['Điểm Đón & Chuyến Bay', 'Chi Tiết', 'Liên Hệ'],
-    ride:    ['Lộ Trình & Lịch Đi',   'Chi Tiết', 'Liên Hệ'],
-  };
 
   function goSubStep(n) {
     _subStep = n;
@@ -227,20 +281,20 @@ window.RideIntake = (function () {
       if (el) el.hidden = (i !== n);
     }
 
-    // Step indicator
-    var labels = STEP_LABELS[_type] || ['', '', ''];
+    // Step indicator (language-aware)
+    var labels = (_T.stepLabels && _T.stepLabels[_type]) || ['', '', ''];
     var ind = document.getElementById('riStepInd');
-    if (ind) ind.textContent = 'Bước ' + n + ' / 3  —  ' + labels[n - 1];
+    if (ind) ind.textContent = _T.stepPrefix(n) + labels[n - 1];
 
-    // Footer button: Next on steps 1-2, Confirm on step 3
+    // Footer button: Next on steps 1-2, Confirm on step 3 (language-aware)
     var btn = document.getElementById('riSubmit');
     if (btn) {
       var arrowSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
       if (n === 3) {
-        btn.innerHTML = 'Xác Nhận Đặt Xe ' + arrowSvg;
+        btn.innerHTML = _T.submitBtn + ' ' + arrowSvg;
         btn.onclick = function () { RideIntake.submit(); };
       } else {
-        btn.innerHTML = 'Tiếp theo ' + arrowSvg;
+        btn.innerHTML = _T.nextBtn + ' ' + arrowSvg;
         btn.onclick = function () { RideIntake.nextSubStep(); };
       }
       btn.disabled = false;
@@ -257,12 +311,53 @@ window.RideIntake = (function () {
     }
     if (n !== 2) { showPriceHint(); }
 
+    // Step 3: show booking review card (pre-submit summary)
+    showReviewCard(n);
+
     // Scroll top
     var body = document.getElementById('riBody');
     if (body) body.scrollTop = 0;
 
     // Init autocomplete on step 1 (all types now have address fields on step 1)
     if (n === 1) setTimeout(initAutocomplete, 60);
+  }
+
+  // ── Booking review card (shown in step 3 so customer can verify before confirming) ─
+  function showReviewCard(n) {
+    var card = document.getElementById('riReviewCard');
+    if (!card) return;
+    if (n !== 3 || !_quote || !_lastOrigin || !_lastDest) { card.hidden = true; return; }
+
+    var fromLabel, toLabel;
+    if (_type === 'pickup') {
+      var ap = val('ri_p_airport');
+      fromLabel = ap ? (ap + ' Airport') : _lastOrigin;
+      toLabel   = val('ri_dropoff_addr') || _lastDest;
+    } else if (_type === 'dropoff') {
+      fromLabel = val('ri_pickup_addr') || _lastOrigin;
+      var ap2 = val('ri_d_airport');
+      toLabel = ap2 ? (ap2 + ' Airport') : _lastDest;
+    } else {
+      fromLabel = val('ri_from_addr') || _lastOrigin;
+      toLabel   = val('ri_to_addr')   || _lastDest;
+    }
+    var paxId = _type === 'pickup' ? 'ri_p_passengers' : _type === 'dropoff' ? 'ri_d_passengers' : 'ri_r_passengers';
+    var pax = val(paxId) || '—';
+    var vehicle = _driverVehicle ? _driverVehicle.name :
+                  (DLCPricing.RIDE_RATE_CARD && DLCPricing.RIDE_RATE_CARD.vehicleName) || 'Tesla Model Y';
+
+    card.innerHTML =
+      '<div class="ri-review__title">' + _T.reviewHeading + '</div>' +
+      '<div class="ri-review__row"><span class="ri-review__lbl">' + _T.reviewRoute + '</span>' +
+        '<span class="ri-review__val">' + fromLabel + ' → ' + toLabel + '</span></div>' +
+      '<div class="ri-review__row"><span class="ri-review__lbl">' + _T.reviewFare + '</span>' +
+        '<span class="ri-review__val ri-review__val--price">~$' + _quote.dlcPrice +
+        ' <span class="ri-review__save">(' + _T.savings(_quote.savings) + ')</span></span></div>' +
+      '<div class="ri-review__row"><span class="ri-review__lbl">' + _T.reviewPassengers + '</span>' +
+        '<span class="ri-review__val">' + pax + '</span></div>' +
+      '<div class="ri-review__row"><span class="ri-review__lbl">' + _T.reviewVehicle + '</span>' +
+        '<span class="ri-review__val">' + vehicle + '</span></div>';
+    card.hidden = false;
   }
 
   function nextSubStep() {
@@ -683,8 +778,11 @@ window.RideIntake = (function () {
       customerName:  val(_type === 'pickup' ? 'ri_p_name'  : _type === 'dropoff' ? 'ri_d_name'  : 'ri_r_name'),
       customerPhone: val(_type === 'pickup' ? 'ri_p_phone' : _type === 'dropoff' ? 'ri_d_phone' : 'ri_r_phone'),
       notes:         val(_type === 'pickup' ? 'ri_p_notes' : _type === 'dropoff' ? 'ri_d_notes' : 'ri_r_notes') || '',
-      estimatedPrice: _quote ? _quote.dlcPrice : null,
-      estimatedMiles: _quote ? _quote.miles    : null,
+      estimatedPrice:    _quote ? _quote.dlcPrice        : null,
+      estimatedMiles:    _quote ? _quote.miles           : null,
+      estimatedDuration: _quote ? _quote.minutes         : null,
+      routeLink:         (_lastOrigin && _lastDest) ? _mapsRoute(_lastOrigin, _lastDest) : null,
+      region:            (window.DLCRegion && window.DLCRegion.current) ? window.DLCRegion.current.id : null,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     };
     if (_type === 'pickup') {
@@ -730,7 +828,12 @@ window.RideIntake = (function () {
     setHide('riFooter',   true);
     setText('riSuccessId', bookingId);
     setHide('riBackBtn',   true);
-    setText('riTitle', 'Đặt Xe Thành Công!');
+    setText('riTitle', _T.successTitle);
+    // Update static success text nodes to current language
+    var subEl = document.querySelector('#riSuccess .ri-success__sub');
+    if (subEl) subEl.textContent = _T.successSub;
+    var msgEl = document.querySelector('#riSuccess .ri-success__msg');
+    if (msgEl) msgEl.innerHTML = _T.successMsg;
 
     // Build booking summary with route + GPS links
     var summaryEl = document.getElementById('riSuccessSummary');
@@ -773,7 +876,7 @@ window.RideIntake = (function () {
     if (footer) {
       footer.hidden = false;
       var btn = document.getElementById('riSubmit');
-      if (btn) { btn.textContent = 'Đóng'; btn.disabled = false; btn.onclick = close; }
+      if (btn) { btn.textContent = _T.closeBtn; btn.disabled = false; btn.onclick = close; }
     }
   }
 

@@ -2033,7 +2033,11 @@ BEHAVIOR GUIDELINES:
         food_order: 'marketplace', nail_appointment: 'marketplace', hair_appointment: 'marketplace',
       };
       state.agentMode = modeMap[intent] || null;
-      WF.startWorkflow(intent, '');
+      // Detect language from URL param or browser preference; default 'en' for US users
+      const _urlLang = new URLSearchParams(window.location.search).get('lang');
+      const _browsLang = navigator.language || '';
+      const _flowLang = _urlLang || (_browsLang.startsWith('vi') ? 'vi' : _browsLang.startsWith('es') ? 'es' : 'en');
+      WF.startWorkflow(intent, '', _flowLang);
       const result = WF.process('');
       if (typeof result === 'string' && result) pushMsg('assistant', result);
     },

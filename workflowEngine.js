@@ -1853,6 +1853,17 @@
     if (!draft) return null;
     draft.updatedAt = Date.now();
 
+    // Auto-detect language from user input and update draft.lang if different.
+    // Only on the first few turns (before many fields are collected) to avoid
+    // flipping language mid-flow. Relies on AIEngine.detectLang being available.
+    if (userText && Object.keys(draft.collectedFields).length <= 1 &&
+        window.AIEngine && typeof AIEngine.detectLang === 'function') {
+      var _detectedLang = AIEngine.detectLang(userText);
+      if (_detectedLang && _detectedLang !== draft.lang) {
+        draft.lang = _detectedLang;
+      }
+    }
+
     // Cancel
     if (/^(hủy|cancel|quit|thoát|dừng|thôi|stop)\b/i.test((userText||'').trim())) {
       clearDraft(); draft = null;

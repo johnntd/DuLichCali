@@ -3809,6 +3809,51 @@ gmp-placeautocomplete.field-input::part(input):focus {
 }
 .ri-success__map-btn:hover { background: rgba(56,189,248,.16); }
 
+/* Booking review card (step 3 pre-submit summary) */
+.ri-review-card {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: .75rem;
+  padding: .85rem 1rem;
+  margin: .75rem 1rem 0;
+}
+.ri-review__title {
+  font: 600 .7rem var(--font-b,'Jost',sans-serif);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.45);
+  margin-bottom: .55rem;
+}
+.ri-review__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: .5rem;
+  padding: .18rem 0;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.ri-review__row:last-child { border-bottom: none; }
+.ri-review__lbl {
+  font: 500 .78rem var(--font-b,'Jost',sans-serif);
+  color: rgba(255,255,255,.5);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.ri-review__val {
+  font: 500 .82rem var(--font-b,'Jost',sans-serif);
+  color: rgba(255,255,255,.9);
+  text-align: right;
+}
+.ri-review__val--price {
+  color: #fbbf24;
+  font-weight: 700;
+}
+.ri-review__save {
+  font-size: .72rem;
+  font-weight: 500;
+  color: rgba(251,191,36,.7);
+}
+
 /* Footer */
 .ri-footer {
   flex-shrink: 0;

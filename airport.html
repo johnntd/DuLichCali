@@ -39,7 +39,7 @@
   </script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ&libraries=places&callback=initMap&loading=async"></script>
 
-  <link rel="stylesheet" href="/style.css?v=20260417a">
+  <link rel="stylesheet" href="/style.css?v=20260418b">
   <link rel="stylesheet" href="/desktop.css">
 
   <style>
@@ -623,6 +623,9 @@
 
         </form>
 
+        <!-- Booking review card — shown in step 3, populated by ride-intake.js showReviewCard() -->
+        <div class="ri-review-card" id="riReviewCard" hidden></div>
+
         <!-- Live price estimate -->
         <div class="ri-price-box" id="riPriceBox" hidden>
           <span class="ri-fare-route" id="riRouteSummary"></span>
@@ -688,7 +691,7 @@
 <!-- Shared pricing engine — must load before ride-intake.js -->
 <script src="/pricing.js?v=20260418a"></script>
 <!-- Ride intake modal JS -->
-<script src="/ride-intake.js?v=20260418a"></script>
+<script src="/ride-intake.js?v=20260418b"></script>
 <script src="/marketplace/services-data.js"></script>
 <script src="/landing-nav.js?v=20260417b"></script>
 <script>

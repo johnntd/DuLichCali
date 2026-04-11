@@ -601,6 +601,7 @@
         <div class="offer-card__field">
           <div class="offer-card__label">Khách</div>
           <div class="offer-card__val" id="offerCustomer">—</div>
+          <div class="offer-card__val" id="offerPhone" style="font-size:.78rem;color:#94a3b8;margin-top:.15rem"></div>
         </div>
         <div class="offer-card__field">
           <div class="offer-card__label">Hành Khách</div>
@@ -921,6 +922,7 @@
 
   // Trip-status progression for driver (what the driver can advance to)
   var _TRIP_STATUS_NEXT = {
+    assigned:         'on_the_way',
     driver_confirmed: 'on_the_way',
     on_the_way:       'arrived',
     arrived:          'in_progress',
@@ -1432,6 +1434,7 @@
     document.getElementById('offerTime').textContent     = whenStr;
     document.getElementById('offerFare').textContent     = bk.estimatedPrice ? '$' + Number(bk.estimatedPrice).toFixed(0) : '—';
     document.getElementById('offerCustomer').textContent = bk.name || bk.customerName || '—';
+    document.getElementById('offerPhone').textContent    = bk.phone || bk.customerPhone || '';
     document.getElementById('offerPax').textContent      = (bk.passengers || 1) + ' người';
 
     var timerEl = document.getElementById('offerTimer');
@@ -1579,7 +1582,7 @@
   // Called on login — finds any existing in-progress ride assigned to this driver
   function _listenDriverActiveRide() {
     if (!_driverId) return;
-    var ACTIVE_STATUSES = ['driver_confirmed', 'on_the_way', 'arrived', 'in_progress'];
+    var ACTIVE_STATUSES = ['assigned', 'driver_confirmed', 'on_the_way', 'arrived', 'in_progress'];
     db.collection('bookings')
       .where('driver.driverId', '==', _driverId)
       .where('status', 'in', ACTIVE_STATUSES)
@@ -1602,6 +1605,7 @@
     var nextStatus = _TRIP_STATUS_NEXT[status];
     var label = _TRIP_STATUS_LABEL[nextStatus];
     var statusNames = {
+      assigned:         'Đã nhận chuyến – chuẩn bị xuất phát',
       driver_confirmed: 'Đã xác nhận – chờ xuất phát',
       on_the_way:  'Đang di chuyển đến khách',
       arrived:     'Đã đến điểm đón',
@@ -1611,18 +1615,44 @@
     };
 
     var isTerminal = status === 'completed' || status === 'cancelled';
-    var svcLabel = { airport_pickup: '✈ Đón Sân Bay', airport_dropoff: '✈ Ra Sân Bay', private_ride: '🚗 Xe Riêng' };
+    var svcLabel = {
+      pickup: '✈ Đón Sân Bay', airport_pickup: '✈ Đón Sân Bay',
+      dropoff: '✈ Ra Sân Bay', airport_dropoff: '✈ Ra Sân Bay',
+      private_ride: '🚗 Xe Riêng',
+    };
     var price = d.estimatedPrice ? '$' + Number(d.estimatedPrice).toFixed(0) : '—';
+
+    // Normalize address fields — AI bookings use address/datetime; ride-intake uses pickupAddress/dropoffAddress
+    var isPickup  = d.serviceType === 'pickup'  || d.serviceType === 'airport_pickup';
+    var isDropoff = d.serviceType === 'dropoff' || d.serviceType === 'airport_dropoff';
+    var fromAddr, toAddr;
+    if (isPickup) {
+      fromAddr = (d.airport || '') + (d.terminal ? ' Terminal ' + d.terminal : '');
+      toAddr   = d.dropoffAddress || d.address || '—';
+    } else if (isDropoff) {
+      fromAddr = d.pickupAddress || d.address || '—';
+      toAddr   = (d.airport || '') + (d.terminal ? ' Terminal ' + d.terminal : '');
+    } else {
+      fromAddr = d.pickupAddress || '—';
+      toAddr   = d.dropoffAddress || '—';
+    }
+    var whenStr = d.datetime ||
+      (d.arrivalDate   ? d.arrivalDate   + (d.arrivalTime   ? ' ' + d.arrivalTime   : '') : null) ||
+      (d.departureDate ? d.departureDate + (d.departureTime ? ' ' + d.departureTime : '') : null) ||
+      (d.rideDate      ? d.rideDate      + (d.rideTime      ? ' ' + d.rideTime      : '') : null) || '';
+    var customerName  = d.name  || d.customerName  || '—';
+    var customerPhone = d.phone || d.customerPhone || '';
 
     panel.innerHTML =
       '<div style="padding:1rem;max-width:480px;margin:auto">' +
         '<h3 style="margin:0 0 .75rem;font-size:1rem;color:var(--gold-lt)">Chuyến Hiện Tại</h3>' +
         '<div style="background:rgba(255,255,255,.06);border-radius:10px;padding:.875rem 1rem;margin-bottom:.875rem">' +
           '<div style="font-size:.75rem;color:var(--muted);margin-bottom:.25rem">' + (svcLabel[d.serviceType] || d.serviceType || 'Chuyến Xe') + '</div>' +
-          '<div style="font-weight:600;margin-bottom:.2rem">' + esc(d.name || d.customerName || '—') + '</div>' +
-          '<div style="font-size:.8rem;color:var(--muted)">' + esc(d.phone || d.customerPhone || '') + '</div>' +
-          (d.pickupAddress ? '<div style="font-size:.78rem;margin-top:.4rem;color:#aaa">📍 ' + esc(d.pickupAddress) + '</div>' : '') +
-          (d.dropoffAddress ? '<div style="font-size:.78rem;margin-top:.15rem;color:#aaa">🏁 ' + esc(d.dropoffAddress) + '</div>' : '') +
+          '<div style="font-weight:600;margin-bottom:.2rem">' + esc(customerName) + '</div>' +
+          (customerPhone ? '<div style="font-size:.8rem;color:var(--muted);margin-bottom:.3rem"><a href="tel:' + esc(customerPhone) + '" style="color:var(--gold-lt);text-decoration:none">📞 ' + esc(customerPhone) + '</a></div>' : '') +
+          (fromAddr ? '<div style="font-size:.78rem;margin-top:.4rem;color:#aaa">📍 ' + esc(fromAddr) + '</div>' : '') +
+          (toAddr && toAddr !== '—' ? '<div style="font-size:.78rem;margin-top:.15rem;color:#aaa">🏁 ' + esc(toAddr) + '</div>' : '') +
+          (whenStr ? '<div style="font-size:.78rem;margin-top:.3rem;color:#94a3b8">🕐 ' + esc(whenStr) + '</div>' : '') +
           '<div style="margin-top:.5rem;font-size:.8rem;color:var(--gold)">' + price + '</div>' +
         '</div>' +
         '<div style="text-align:center;padding:.5rem 0 .875rem">' +

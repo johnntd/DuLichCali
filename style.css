@@ -14,7 +14,7 @@
   --gold-dim: rgba(245,166,35,0.16);
   --cream:    #fff8ee;
   --text:     #c8e4f8;
-  --muted:    #6ab0d4;
+  --muted:    #8ec6e0;   /* lightened for WCAG AA on navy-900 */
   --border:   rgba(255,255,255,0.13);
   --border-g: rgba(245,166,35,0.38);
 
@@ -30,14 +30,67 @@
   --font-d: 'Bodoni Moda', Georgia, serif;
   --font-b: 'Jost', system-ui, sans-serif;
 
-  --r-sm: 4px;
-  --r-md: 8px;
-  --r-lg: 12px;
+  /* ── Border Radius ──────────────────────────────────────── */
+  --r-sm:     4px;
+  --r-md:     8px;
+  --r-lg:     12px;
+  --r-pill:   99px;
+  --r-circle: 50%;
 
+  /* ── Component Heights ──────────────────────────────────── */
   --app-bar-h:    56px;
   --bottom-nav-h: 64px;
 
-  --shadow-card: 0 8px 28px rgba(0,0,0,0.30);
+  /* ── Shadow Scale ────────────────────────────────────────── */
+  --shadow-card:  0 8px 28px rgba(0,0,0,.30);
+  --shadow-sm:    0 2px 8px rgba(0,0,0,.25);
+  --shadow-md:    0 4px 18px rgba(0,0,0,.35);
+  --shadow-lg:    0 8px 28px rgba(0,0,0,.45);
+  --shadow-gold:  0 6px 20px rgba(245,166,35,.45);
+  --shadow-coral: 0 8px 28px rgba(249,115,22,.45);
+
+  /* ── Spacing Scale ───────────────────────────────────────── */
+  --space-1: .5rem;    /* 8px  */
+  --space-2: .75rem;   /* 12px */
+  --space-3: 1.25rem;  /* 20px */
+  --space-4: 2rem;     /* 32px */
+  --space-5: 3rem;     /* 48px */
+  --space-6: 4rem;     /* 64px */
+
+  /* ── Z-Index Scale ───────────────────────────────────────── */
+  --z-base:     1;
+  --z-raise:   10;   /* progress bars, sticky elements */
+  --z-nav:     40;   /* app bar, bottom nav */
+  --z-float:   80;   /* global back button, FABs */
+  --z-modal:  200;   /* chat, modals, full-screen overlays */
+  --z-dropdown: 9200; /* Google Places autocomplete */
+
+  /* ── Animation Durations ─────────────────────────────────── */
+  --dur-instant: 0.15s;  /* micro: color / opacity toggle */
+  --dur-fast:    0.2s;   /* standard hover, state change */
+  --dur-base:    0.35s;  /* progress bars, dot transitions */
+  --dur-slow:    0.65s;  /* hero carousel, screen transitions */
+
+  /* ── Typography Scale ────────────────────────────────────── */
+  --text-xs:   .68rem;
+  --text-sm:   .82rem;
+  --text-base: .9rem;
+  --text-md:   1rem;
+  --text-lg:   1.15rem;
+  --text-xl:   1.35rem;
+  --text-2xl:  1.6rem;
+
+  /* ── Line-Height Scale ───────────────────────────────────── */
+  --leading-tight:   1.1;
+  --leading-snug:    1.3;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.65;
+
+  /* ── Status Colors ───────────────────────────────────────── */
+  --status-success: #4ade80;
+  --status-warning: #f59e0b;
+  --status-error:   #ef4444;
+  --status-info:    var(--sky);
 }
 
 /* ── Reset ──────────────────────────────────────────────────── */
@@ -70,16 +123,18 @@ button { cursor: pointer; font-family: var(--font-b); }
 /* App Bar */
 .app-bar {
   flex-shrink: 0;
-  height: var(--app-bar-h);
+  /* Expand to include iOS notch / Dynamic Island safe area */
+  height: calc(var(--app-bar-h) + env(safe-area-inset-top, 0px));
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  padding: 0 1rem;
+  /* Content sits 10px above bottom edge → visually centered in 56px content zone */
+  padding: env(safe-area-inset-top, 0px) 1rem 10px;
   background: rgba(13,47,80,.94);
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
   border-bottom: 1px solid var(--border-g);
-  z-index: 40;
+  z-index: var(--z-nav);
 }
 
 .app-bar__brand {
@@ -183,7 +238,7 @@ button { cursor: pointer; font-family: var(--font-b); }
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
   border-top: 1px solid var(--border-g);
-  z-index: 40;
+  z-index: var(--z-nav);
 }
 
 .nav-tab {
@@ -235,7 +290,7 @@ button { cursor: pointer; font-family: var(--font-b); }
   position: fixed;
   bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 10px);
   left: 12px;
-  z-index: 80;
+  z-index: var(--z-float);
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -247,13 +302,13 @@ button { cursor: pointer; font-family: var(--font-b); }
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 3px 14px rgba(0,0,0,.50);
+  box-shadow: var(--shadow-md);
   cursor: pointer;
-  transition: transform .15s, box-shadow .15s;
+  transition: transform var(--dur-instant), box-shadow var(--dur-instant);
   -webkit-tap-highlight-color: transparent;
 }
 .global-back svg { width: 20px; height: 20px; pointer-events: none; }
-.global-back:hover  { transform: scale(1.07); box-shadow: 0 5px 18px rgba(0,0,0,.55); }
+.global-back:hover  { transform: scale(1.07); box-shadow: var(--shadow-lg); }
 .global-back:active { transform: scale(0.93); }
 .global-back[hidden] { display: none; }
 
@@ -275,8 +330,14 @@ button { cursor: pointer; font-family: var(--font-b); }
   white-space: nowrap;
   text-decoration: none;
 }
-.btn--gold { background: var(--gold); color: var(--navy-900); }
-.btn--gold:hover { background: var(--gold-lt); color: var(--navy-900); box-shadow: 0 6px 20px rgba(245,166,35,.45); }
+/* Primary CTA — unified gradient across all surfaces */
+.btn--gold {
+  background: linear-gradient(105deg, var(--coral) 0%, var(--sunset) 50%, var(--gold-lt) 100%);
+  color: var(--navy-900);
+  box-shadow: 0 4px 16px rgba(249,115,22,.28);
+}
+.btn--gold:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: var(--shadow-coral); }
+.btn--gold:active { transform: scale(.97); transition: transform .08s ease; }
 .btn--ghost { background: rgba(255,255,255,.06); color: var(--cream); border: 1px solid rgba(255,255,255,.14); }
 .btn--ghost:hover { background: rgba(255,255,255,.1); color: var(--cream); }
 .btn--full { width: 100%; }
@@ -287,7 +348,8 @@ button { cursor: pointer; font-family: var(--font-b); }
   background: linear-gradient(105deg, var(--coral) 0%, var(--sunset) 50%, var(--gold-lt) 100%);
   box-shadow: 0 4px 18px rgba(249,115,22,.28);
 }
-.btn--submit:hover { box-shadow: 0 8px 28px rgba(249,115,22,.45); transform: translateY(-1px); }
+.btn--submit:hover { box-shadow: var(--shadow-coral); transform: translateY(-1px); }
+.btn--submit:active { transform: scale(.97); transition: transform .08s ease; }
 
 .link-btn {
   background: none; border: none;
@@ -574,20 +636,22 @@ gmp-placeautocomplete.field-input::part(input):focus {
 }
 .hc__dot:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 
-/* Progress bar */
+/* Progress bar — track slightly more visible across all slide accents */
 .hc__progress {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   height: 2px;
-  background: rgba(255,255,255,.1);
+  background: rgba(255,255,255,.18);
+  border-radius: var(--r-pill);
   z-index: 3;
 }
 .hc__progress-bar {
   height: 100%;
   width: 0%;
   background: var(--accent, var(--gold));
+  border-radius: var(--r-pill);
   transition: none;
 }
 
@@ -799,7 +863,7 @@ gmp-placeautocomplete.field-input::part(input):focus {
   transition: border-color .25s, transform .25s;
   -webkit-tap-highlight-color: transparent;
 }
-.dest-card:hover { border-color: var(--border-g); transform: translateY(-3px); }
+.dest-card:hover { border-color: var(--border-g); transform: translateY(-2px); box-shadow: var(--shadow-md); }
 
 .dest-card__img {
   height: 125px;
@@ -1199,7 +1263,7 @@ gmp-placeautocomplete.field-input::part(input):focus {
   background: var(--navy-900);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: var(--z-raise);
 }
 
 .wiz-progress__bar {
@@ -1375,7 +1439,7 @@ gmp-placeautocomplete.field-input::part(input):focus {
 .est-val { font-family: var(--font-d); font-size: 1.8rem; font-weight: 400; color: var(--cream); text-align: right; }
 .est-val--sm { font-size: 1.1rem; color: var(--text); }
 .est-val--strike { text-decoration: line-through; color: var(--muted); font-size: 1rem; }
-.est-val--savings { color: #22c55e; font-weight: 600; }
+.est-val--savings { color: var(--status-success); font-weight: 600; }
 .est-divider { height: 1px; background: var(--border); margin: .2rem 0; }
 .est-disclaimer {
   font-size: .72rem; color: var(--muted); line-height: 1.45;
@@ -1454,7 +1518,7 @@ gmp-placeautocomplete.field-input::part(input):focus {
 .chat-status { display: flex; align-items: center; gap: .4rem; font-size: .72rem; color: var(--muted); }
 .chat-status__dot {
   width: 7px; height: 7px;
-  background: #22c55e;
+  background: var(--status-success);
   border-radius: 50%;
   flex-shrink: 0;
   animation: pulse-dot 2.5s ease-in-out infinite;
@@ -1693,7 +1757,7 @@ gmp-placeautocomplete.field-input::part(input):focus {
 
 /* ── Google Places Autocomplete — Dark Override ─────────────── */
 .pac-container {
-  z-index: 9200 !important;
+  z-index: var(--z-dropdown) !important;
   background: var(--navy-700) !important;
   border: 1px solid var(--border-g) !important;
   border-radius: var(--r-md) !important;
@@ -1734,13 +1798,96 @@ gmp-placeautocomplete.field-input::part(input):focus {
 }
 
 /* ── Accessibility: Focus Visible ───────────────────────────── */
-:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+/* Unified: box-shadow ring everywhere (doesn't clip on rounded corners) */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(245,166,35,.45);
+}
 :focus:not(:focus-visible) { outline: none; }
-.field-input:focus-visible {
+.field-input:focus-visible,
+.mp-input:focus-visible,
+.chat-input:focus-visible {
   outline: none;
   border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(200,146,42,.2);
+  box-shadow: 0 0 0 3px rgba(245,166,35,.35);
 }
+
+/* ── Chat Empty State ─────────────────────────────────────── */
+/* Shows when no messages yet; hidden as soon as first .cmsg appears */
+.chat-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: .85rem;
+  padding: 3rem 1.5rem 2rem;
+  flex: 1;
+  min-height: 220px;
+  pointer-events: none; /* chips in chips-wrap above handle taps */
+}
+.chat-messages:has(.cmsg) .chat-empty-state { display: none; }
+
+.chat-empty-state__orb {
+  width: 68px; height: 68px;
+  border-radius: var(--r-circle);
+  background: radial-gradient(circle at 38% 38%, rgba(245,166,35,.22) 0%, var(--navy-800) 70%);
+  border: 1px solid var(--border-g);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.7rem;
+  color: var(--gold-lt);
+  box-shadow: 0 0 32px rgba(245,166,35,.14);
+}
+.chat-empty-state__title {
+  font-family: var(--font-d);
+  font-size: var(--text-2xl);
+  font-weight: 400;
+  color: var(--cream);
+  line-height: var(--leading-tight);
+}
+.chat-empty-state__sub {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  line-height: var(--leading-relaxed);
+  max-width: 260px;
+}
+
+/* ── Skeleton Shimmer — image loading state ──────────────── */
+@keyframes shimmer {
+  0%, 100% { opacity: .7; }
+  50%       { opacity: 1;  }
+}
+/* Apply .img-skeleton to containers while their background-image loads */
+.img-skeleton {
+  background: linear-gradient(90deg, var(--navy-800) 25%, var(--navy-700) 50%, var(--navy-800) 75%) !important;
+  background-size: 200% 100% !important;
+  animation: shimmer 1.5s ease-in-out infinite !important;
+}
+/* Default nav-navy background on image hero areas while image loads */
+.mp-biz-card__hero,
+.dest-card__img,
+.hp-vendor-card__img { background-color: var(--navy-800); }
+
+/* ── Form Error States ────────────────────────────────────── */
+.field-input.is-error,
+.mp-input.is-error {
+  border-color: var(--status-error);
+  box-shadow: 0 0 0 3px rgba(239,68,68,.18);
+}
+.field-error-msg {
+  color: var(--status-error);
+  font-size: var(--text-xs);
+  margin-top: .28rem;
+  line-height: var(--leading-normal);
+}
+
+/* ── Section Heading Convention ──────────────────────────── */
+/*
+ * Gradient headings (sky-lt → cream) = landmark SECTION titles only
+ *   (.section-title, .mp-section-title)
+ * Flat --cream headings = in-context: cards, modals, wizard steps
+ *   (.wiz-header h2, .dest-full-card__name, etc.)
+ */
 
 /* ── Full-Screen Chat on Mobile (iOS-safe) ──────────────────── */
 /*
@@ -1767,7 +1914,7 @@ gmp-placeautocomplete.field-input::part(input):focus {
        dvh/vh here is just the initial value before JS kicks in. */
     height: 100dvh;
     height: 100vh;
-    z-index: 200;
+    z-index: var(--z-modal);
     opacity: 1;
     pointer-events: auto;
   }
@@ -1831,10 +1978,7 @@ gmp-placeautocomplete.field-input::part(input):focus {
   .service-choice-grid { gap: 1rem; }
 }
 
-@media (min-width: 900px) {
-  /* No 500px cap — full-width at all desktop sizes */
-  body { background: #07213a; }
-}
+/* ── 900px rule removed: body background now set at 1200px with desktop layout ── */
 
 /* ══════════════════════════════════════════════════════════════
    DESTINATION VIDEO MODAL
@@ -1844,7 +1988,7 @@ gmp-placeautocomplete.field-input::part(input):focus {
 .dest-modal {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: var(--z-modal);
   display: flex;
   flex-direction: column;
   background: var(--navy-900);
@@ -2683,9 +2827,11 @@ gmp-placeautocomplete.field-input::part(input):focus {
 
   /* ── App Shell: full-width, no sidebar — base flex-column applies ── */
   .app-bar {
-    padding: 0 2.5rem;
+    /* Preserve safe-area-inset-top, widen horizontal padding */
+    padding: env(safe-area-inset-top, 0px) 2.5rem 10px;
   }
   .app-bar__brand { font-size: 1.3rem; }
+  body { background: #07213a; }
 
   /* Bottom nav: stays at bottom as horizontal bar, tabs centered */
   .bottom-nav { justify-content: center; }

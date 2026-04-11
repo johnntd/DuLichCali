@@ -11,7 +11,7 @@
   --gold-dim: rgba(245,166,35,0.16);
   --cream: #fff8ee;
   --text: #c8e4f8;
-  --muted: #6ab0d4;
+  --muted: #8ec6e0;   /* lightened for WCAG AA on navy-900 */
   --border: rgba(255,255,255,0.13);
   --border-g: rgba(245,166,35,0.38);
   --sky: #38bdf8;
@@ -45,6 +45,16 @@
 
   /* ── Card Token ──────────────────────────────────── */
   --card-r: 14px;     /* unified card border-radius */
+
+  /* ── Status Colors ───────────────────────────────── */
+  --status-success: #4ade80;
+  --status-warning: #f59e0b;
+  --status-error:   #ef4444;
+  --status-info:    var(--sky);
+
+  /* ── Shadow Scale ────────────────────────────────── */
+  --shadow-md:    0 4px 18px rgba(0,0,0,.35);
+  --shadow-coral: 0 8px 28px rgba(249,115,22,.45);
 }
 
 /* ── Base & Reset ──────────────────────────────────────────────────────────── */
@@ -309,6 +319,10 @@ button {
   filter: brightness(1.08);
   transform: translateY(-1px);
 }
+.mp-btn--primary:active {
+  transform: scale(.97);
+  transition: transform .08s ease;
+}
 
 .mp-btn--ghost {
   background: rgba(255,255,255,.07);
@@ -406,7 +420,8 @@ button {
 
 .mp-biz-card:hover {
   border-color: var(--border-g);
-  transform: translateY(-3px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 18px rgba(0,0,0,.35);
 }
 
 .mp-biz-card__hero {
@@ -688,7 +703,7 @@ button {
 
 .mp-input {
   width: 100%;
-  height: 46px;
+  height: 48px;   /* unified with main app .field-input */
   padding: 0 14px;
   background: rgba(255,255,255,.05);
   border: 1px solid rgba(255,255,255,.12);
@@ -808,7 +823,7 @@ select.mp-input option {
 .mp-ai__dot {
   width: 7px;
   height: 7px;
-  background: #22c55e;
+  background: var(--status-success);
   border-radius: 50%;
   animation: pulse-dot 2.5s ease-in-out infinite;
   flex-shrink: 0;

@@ -20,6 +20,7 @@
 
 const { onDocumentCreated } = require('firebase-functions/v2/firestore');
 const { onCall, onRequest } = require('firebase-functions/v2/https');
+const { onSchedule }        = require('firebase-functions/v2/scheduler');
 const { defineSecret }      = require('firebase-functions/params');
 const admin                 = require('firebase-admin');
 const twilio                = require('twilio');
@@ -489,6 +490,11 @@ exports.onEmailQueue = onDocumentCreated(
         };
         ({ textBody, htmlBody } = buildRideStatusEmail(data));
         subject = `${STATUS_SUBJECTS[data.eventType] || 'Ride Update'} — Du Lịch Cali [${data.bookingId || ''}]`;
+      } else if (data.eventType === 'reminder_30min' || data.eventType === 'reminder_2hr') {
+        // Pre-pickup reminder emails (scheduled by checkRideReminders)
+        const reminderLabel = data.eventType === 'reminder_2hr' ? '2-Hour' : '30-Minute';
+        ({ textBody, htmlBody } = buildRideReminderEmail(data, data.eventType));
+        subject = `Ride Reminder (${reminderLabel}) — Du Lịch Cali [${data.bookingId || ''}]`;
       } else {
         ({ textBody, htmlBody } = buildRideConfirmationEmail(data));
         subject = `Ride Confirmed — Du Lịch Cali [${data.bookingId || ''}]`;
@@ -884,6 +890,130 @@ function buildRideStatusEmail(data) {
   </div>
   <div style="background:#f0ebe3;padding:14px 32px;text-align:center;">
     <p style="color:#9a8a7a;font-size:12px;margin:0;">— Du Lịch Cali &nbsp;·&nbsp; <a href="https://www.dulichcali21.com" style="color:#9a8a7a;">dulichcali21.com</a></p>
+  </div>
+</div>
+</body></html>`;
+
+  return { textBody, htmlBody };
+}
+
+// ── Pre-pickup reminder email builder ─────────────────────────────────────────
+function buildRideReminderEmail(data, reminderType) {
+  const name          = data.customerName || 'Customer';
+  const bookingId     = data.bookingId    || '';
+  const serviceType   = data.serviceType  || '';
+  const isPickup      = serviceType === 'pickup';
+  const isDropoff     = serviceType === 'dropoff';
+  const trackingToken = data.trackingToken || '';
+  const driverName    = data.driverName   || null;
+  const driverPhone   = data.driverPhone  || '';
+  const passengers    = data.passengers   || 1;
+
+  const is2hr    = reminderType === 'reminder_2hr';
+  const minLabel = is2hr ? '2 hours' : '30 minutes';
+
+  // Format datetime (same logic as confirmation email)
+  let datetimeStr = data.datetime || '';
+  if (datetimeStr && datetimeStr.includes('T')) {
+    try {
+      const d = new Date(datetimeStr);
+      const DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const h = d.getHours(), m = d.getMinutes();
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const h12  = h % 12 || 12;
+      datetimeStr = `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()} · ${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+    } catch (_) {}
+  }
+
+  // Route info
+  let serviceLabel, pickupStr, dropoffStr;
+  if (isPickup) {
+    serviceLabel = `Airport Pickup — ${data.airport || ''}`;
+    pickupStr    = `${data.airport || 'Airport'}${data.terminal ? ` Terminal ${data.terminal}` : ''}`;
+    dropoffStr   = data.address || '';
+  } else if (isDropoff) {
+    serviceLabel = `Airport Drop-off — ${data.airport || ''}`;
+    pickupStr    = data.address || '';
+    dropoffStr   = `${data.airport || 'Airport'}${data.terminal ? ` Terminal ${data.terminal}` : ''}`;
+  } else {
+    serviceLabel = 'Private Ride';
+    pickupStr    = data.pickupAddress  || '';
+    dropoffStr   = data.dropoffAddress || '';
+  }
+
+  const trackUrl = trackingToken
+    ? `https://www.dulichcali21.com/tracking.html?id=${bookingId}&t=${trackingToken}`
+    : 'https://www.dulichcali21.com';
+
+  const mapsUrl = pickupStr
+    ? `https://maps.google.com/?q=${encodeURIComponent(pickupStr)}`
+    : null;
+
+  const driverLine = driverName
+    ? `Your driver ${driverName}${driverPhone ? ` (${driverPhone})` : ''} is assigned to your trip.`
+    : `We are finalizing your driver assignment and will confirm shortly.`;
+
+  // ── Plain text ──────────────────────────────────────────────────────────────
+  const textLines = [
+    `Hi ${name},`,
+    '',
+    `Your ride is coming up in ${minLabel}! Here are your details:`,
+    '',
+    `  Booking ID:  ${bookingId}`,
+    `  Service:     ${serviceLabel}`,
+    `  Pickup time: ${datetimeStr || '(see booking)'}`,
+    `  From:        ${pickupStr}`,
+    `  To:          ${dropoffStr}`,
+    passengers > 1 ? `  Passengers:  ${passengers}` : null,
+    '',
+    driverLine,
+    '',
+    `Track your ride: ${trackUrl}`,
+    mapsUrl ? `Pickup map:     ${mapsUrl}` : null,
+    '',
+    'Questions? Call or text: +1 (408) 916-3439',
+    '— Du Lịch Cali · dulichcali21.com',
+  ].filter(l => l !== null).join('\n');
+
+  // ── HTML ────────────────────────────────────────────────────────────────────
+  const row = (label, value) => value
+    ? `<tr style="border-bottom:1px solid #f0ebe3;">
+        <td style="padding:10px 0;color:#7a6a52;width:38%;font-size:14px;">${label}</td>
+        <td style="padding:10px 0;font-size:14px;">${value}</td>
+       </tr>` : '';
+
+  const htmlBody = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ride Reminder</title></head>
+<body style="margin:0;padding:16px;background:#f0f4f8;font-family:Arial,sans-serif;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);">
+  <div style="background:#0d2f50;padding:24px 32px;">
+    <h1 style="color:#c9a84c;font-size:20px;margin:0;font-weight:400;letter-spacing:.5px;">Du Lịch Cali</h1>
+    <p style="color:#a8c4d8;font-size:13px;margin:6px 0 0;">Ride Reminder &mdash; ${minLabel} away</p>
+  </div>
+  <div style="padding:28px 32px;color:#2c2c2c;">
+    <p style="font-size:15px;margin:0 0 20px;">Hi <strong>${name}</strong>,<br>Your ride is in <strong>${minLabel}</strong>. Please be ready at your pickup location!</p>
+    <table style="width:100%;border-collapse:collapse;">
+      ${row('Booking ID',   `<span style="font-family:monospace;font-weight:600;">${bookingId}</span>`)}
+      ${row('Service',      serviceLabel)}
+      ${row('Pickup Time',  datetimeStr || '(see booking)')}
+      ${row('Pickup From',  pickupStr)}
+      ${row('Dropoff To',   dropoffStr)}
+      ${row('Passengers',   passengers > 1 ? String(passengers) : null)}
+    </table>
+    <div style="margin:24px 0 0;padding:16px;background:#f0f6ff;border-radius:6px;border-left:3px solid #c9a84c;">
+      <p style="margin:0;font-size:13px;color:#2c2c2c;line-height:1.7;">${driverLine}</p>
+    </div>
+    <div style="margin:16px 0 0;">
+      <a href="${trackUrl}" style="display:inline-block;padding:10px 20px;background:#0d2f50;color:#c9a84c;text-decoration:none;border-radius:4px;font-size:13px;font-weight:600;margin-right:8px;">Track Ride</a>
+      ${mapsUrl ? `<a href="${mapsUrl}" style="display:inline-block;padding:10px 20px;background:#f0ebe3;color:#5a4030;text-decoration:none;border-radius:4px;font-size:13px;">View Pickup on Map</a>` : ''}
+    </div>
+    <p style="font-size:13px;margin:20px 0 0;color:#5a4a3a;">Questions? Call <a href="tel:4089163439" style="color:#0d2f50;">+1 (408) 916-3439</a></p>
+  </div>
+  <div style="background:#f0ebe3;padding:14px 32px;text-align:center;">
+    <p style="color:#9a8a7a;font-size:12px;margin:0;">— Du Lịch Cali &nbsp;&middot;&nbsp; <a href="https://www.dulichcali21.com" style="color:#9a8a7a;">dulichcali21.com</a></p>
   </div>
 </div>
 </body></html>`;
@@ -1776,5 +1906,159 @@ exports.uploadVendorImage = onCall(
       console.error('[uploadVendorImage] Error:', err);
       return { ok: false, error: err.message };
     }
+  }
+);
+
+// ── Phase 12: Pre-pickup ride reminders ───────────────────────────────────────
+//
+// Runs every 15 minutes.  For every active ride booking whose pickup time falls
+// inside a reminder window, writes one emailQueue doc (idempotent via .create())
+// and one in-app notification doc.
+//
+// Reminder windows:
+//   reminder_30min  — ride is 20–40 minutes away
+//   reminder_2hr    — ride is 110–130 minutes away
+//
+// Idempotency:
+//   emailQueue doc ID    = "{bookingId}_reminder_{type}"
+//   notification doc ID  = "{bookingId}_reminder_{type}_customer_{safePhone}"
+//   Admin SDK .create() throws ALREADY_EXISTS if the doc is already there — caught
+//   and silently skipped.  Even if a doc is re-created (e.g. after manual delete),
+//   the onEmailQueue guard (emailSent === true) prevents a duplicate email send.
+//
+// Datetime parsing:
+//   Stored as "YYYY-MM-DDTHH:mm:ss" in Pacific local time (no timezone suffix).
+//   We append a best-effort Pacific offset (PDT UTC-7 Mar–Oct, PST UTC-8 Nov–Feb)
+//   before calling new Date() so the comparison against server UTC is correct.
+//
+exports.checkRideReminders = onSchedule(
+  {
+    schedule:       'every 15 minutes',
+    region:         'us-central1',
+    timeoutSeconds: 60,
+  },
+  async () => {
+    const log = (msg) => console.log('[checkRideReminders]', msg);
+    const VENDOR_ID = 'admin-dlc';
+    const now = Date.now();
+
+    const RIDE_SERVICE_TYPES = ['pickup', 'dropoff', 'private_ride'];
+    const SKIP_STATUSES      = new Set(['cancelled', 'completed']);
+
+    // Two reminder windows: {type, minMs, maxMs} — ride must be within [min,max] ms away
+    const WINDOWS = [
+      { type: 'reminder_30min', minMs:  20 * 60 * 1000, maxMs:  40 * 60 * 1000 },
+      { type: 'reminder_2hr',   minMs: 110 * 60 * 1000, maxMs: 130 * 60 * 1000 },
+    ];
+
+    // Parse stored datetime string as Pacific Time.
+    // Month-based approximation: PDT (UTC-7) Mar–Oct, PST (UTC-8) Nov–Feb.
+    // Good enough for reminders — DST boundary edge cases off by ≤ 1h.
+    function parsePacificMs(dtStr) {
+      if (!dtStr || !dtStr.includes('T')) return null;
+      const m = dtStr.match(/^(\d{4})-(\d{2})-/);
+      const month  = m ? parseInt(m[2], 10) : 6;
+      const offset = (month >= 3 && month <= 10) ? '-07:00' : '-08:00';
+      const d = new Date(dtStr + offset);
+      return isNaN(d.getTime()) ? null : d.getTime();
+    }
+
+    // Query active ride bookings (no datetime range filter — filter in memory
+    // to avoid composite-index requirements and timezone complexity)
+    let snap;
+    try {
+      snap = await db.collection('bookings')
+        .where('serviceType', 'in', RIDE_SERVICE_TYPES)
+        .limit(300)
+        .get();
+    } catch (e) {
+      log('Firestore query failed: ' + e.message);
+      return;
+    }
+
+    log(`checking ${snap.size} ride bookings`);
+    let queued = 0;
+
+    for (const docSnap of snap.docs) {
+      const bk        = docSnap.data();
+      const bookingId = docSnap.id;
+
+      // Skip rides that are already done or cancelled
+      if (SKIP_STATUSES.has(bk.status)) continue;
+
+      // Parse pickup time in Pacific
+      const rideMs = parsePacificMs(bk.datetime);
+      if (!rideMs) continue;
+
+      const msUntil = rideMs - now;
+
+      for (const win of WINDOWS) {
+        if (msUntil < win.minMs || msUntil > win.maxMs) continue;
+
+        // ── Email reminder ──────────────────────────────────────────────────
+        if (bk.customerEmail) {
+          const emailDocId = `${bookingId}_${win.type}`;
+          const emailRef   = db.collection('vendors').doc(VENDOR_ID)
+            .collection('emailQueue').doc(emailDocId);
+
+          try {
+            await emailRef.create({
+              bookingId:      bookingId,
+              eventType:      win.type,
+              bookingType:    'ride',
+              status:         'pending',
+              createdAt:      admin.firestore.FieldValue.serverTimestamp(),
+              customerEmail:  bk.customerEmail,
+              customerName:   bk.customerName  || bk.name  || '',
+              serviceType:    bk.serviceType   || '',
+              airport:        bk.airport        || '',
+              terminal:       bk.terminal       || '',
+              datetime:       bk.datetime       || '',
+              address:        bk.address        || '',
+              pickupAddress:  bk.pickupAddress   || '',
+              dropoffAddress: bk.dropoffAddress  || '',
+              passengers:     bk.passengers      || 1,
+              trackingToken:  bk.trackingToken   || '',
+              driverName:     (bk.driver && bk.driver.name)  ? bk.driver.name  : (bk.driverName  || null),
+              driverPhone:    (bk.driver && bk.driver.phone) ? bk.driver.phone : '',
+              lang:           bk.lang            || 'en',
+            });
+            log(`queued email ${win.type} for ${bookingId} (${Math.round(msUntil/60000)} min away)`);
+            queued++;
+          } catch (e) {
+            // ALREADY_EXISTS (gRPC code 6) means reminder was already queued — skip silently
+            if (!e.message || !e.message.includes('ALREADY_EXISTS')) {
+              log(`emailRef.create failed for ${bookingId}: ${e.message}`);
+            }
+          }
+        }
+
+        // ── In-app notification ─────────────────────────────────────────────
+        if (bk.customerPhone) {
+          const safePhone  = String(bk.customerPhone).replace(/[^a-zA-Z0-9_-]/g, '');
+          const notifDocId = `${bookingId}_${win.type}_customer_${safePhone}`;
+          const notifRef   = db.collection('vendors').doc(VENDOR_ID)
+            .collection('notifications').doc(notifDocId);
+
+          const timeLabel = win.type === 'reminder_2hr' ? '2 hours' : '30 minutes';
+          try {
+            await notifRef.create({
+              type:       win.type,
+              targetType: 'customer',
+              targetId:   bk.customerPhone,
+              bookingId:  bookingId,
+              title:      'Upcoming Ride Reminder',
+              message:    `Your ride is in ${timeLabel}. Please be ready at your pickup location.`,
+              read:       false,
+              createdAt:  admin.firestore.FieldValue.serverTimestamp(),
+            });
+          } catch (e) {
+            // ALREADY_EXISTS expected on repeat runs — ignore
+          }
+        }
+      }
+    }
+
+    log(`done — ${queued} reminder(s) queued`);
   }
 );

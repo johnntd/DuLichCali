@@ -14,7 +14,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="/driver-compliance.js"></script>
-  <script src="/notifications.js?v=20260418a"></script>
+  <script src="/notifications.js?v=20260418b"></script>
 
   <style>
     :root {
@@ -651,10 +651,36 @@
     @media (prefers-reduced-motion: reduce) {
       * { animation: none !important; transition: none !important; }
     }
+
+    /* ── In-app notification toasts ─────────────────────────── */
+    #dlc-toast-container {
+      position: fixed; bottom: 1.25rem; right: 1.25rem;
+      display: flex; flex-direction: column; gap: .5rem;
+      z-index: 9999; pointer-events: none;
+    }
+    .dlc-toast {
+      background: #1e293b; color: #f1f5f9;
+      border-left: 4px solid #f59e0b;
+      border-radius: 8px; padding: .75rem 1rem;
+      max-width: 320px; min-width: 240px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.45);
+      pointer-events: auto; cursor: pointer;
+      animation: toastIn .25s ease;
+    }
+    .dlc-toast.driver { border-left-color: #38bdf8; }
+    .dlc-toast__title { font-weight: 700; font-size: .85rem; margin-bottom: .25rem; }
+    .dlc-toast__msg   { font-size: .78rem; color: #94a3b8; line-height: 1.4; }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
   </style>
   <link rel="stylesheet" href="/desktop.css">
 </head>
 <body>
+
+  <!-- In-app notification toast container -->
+  <div id="dlc-toast-container"></div>
 
   <!-- Login modal -->
   <div id="loginModal">
@@ -1243,7 +1269,7 @@
       renderDriverSelect(data);
     };
 
-    // Override assignDriver to use driverId
+    // Override assignDriver to use driverId + trigger all notifications
     async function assignDriver(btn) {
       if (!selectedId) return;
       document.querySelectorAll('.driver-btn').forEach(b => b.classList.remove('selected'));
@@ -1253,9 +1279,28 @@
         name:     btn.dataset.name,
         phone:    btn.dataset.phone
       };
-      await db.collection('bookings').doc(selectedId).update({ driver: driverPayload });
+      // Update booking with driver + set status to assigned
+      await db.collection('bookings').doc(selectedId).update({
+        driver: driverPayload, status: 'assigned',
+      });
       document.getElementById('driverStatus').textContent =
         `Tài xế: ${btn.dataset.name} · ${btn.dataset.phone}`;
+      // Notifications: email + in-app for driver and customer
+      try {
+        const bookingSnap = await db.collection('bookings').doc(selectedId).get();
+        const bData = bookingSnap.exists ? bookingSnap.data() : null;
+        if (bData && typeof DLCNotifications !== 'undefined') {
+          const bObj = Object.assign({ bookingId: selectedId }, bData);
+          // Email to customer (Phase 5A — only if email on file)
+          if (bData.customerEmail) {
+            DLCNotifications.queueDriverAssigned(bObj, driverPayload, 'en');
+          }
+          // In-app notifications: driver (required) + customer (Phase 5B)
+          if (DLCNotifications.queueDriverAssignedNotification) {
+            DLCNotifications.queueDriverAssignedNotification(bObj, driverPayload, 'en');
+          }
+        }
+      } catch (e) { console.warn('[assignDriver] notification failed:', e.message); }
     }
 
     // ── Vendor Management ─────────────────────────────────────────
@@ -2339,7 +2384,53 @@
     startListening = function() {
       _origStartListening();
       loadDriversRealtime();
+      listenAdminNotifications();
     };
+
+    // ── In-app notification toast system ────────────────────────────────────
+    var _toastContainer = null;
+    var _notifUnsubscribe = null;
+    var _shownNotifIds = new Set();
+
+    function showToast(title, message, cls) {
+      if (!_toastContainer) _toastContainer = document.getElementById('dlc-toast-container');
+      var el = document.createElement('div');
+      el.className = 'dlc-toast' + (cls ? ' ' + cls : '');
+      el.innerHTML = '<div class="dlc-toast__title">' + escHtml(title) + '</div>' +
+                     '<div class="dlc-toast__msg">'   + escHtml(message) + '</div>';
+      _toastContainer.appendChild(el);
+      el.addEventListener('click', function() { el.remove(); });
+      setTimeout(function() { if (el.parentNode) el.remove(); }, 6000);
+    }
+
+    function listenAdminNotifications() {
+      if (_notifUnsubscribe) return; // only start once
+      _notifUnsubscribe = db.collection('vendors').doc('admin-dlc').collection('notifications')
+        .where('targetType', '==', 'admin')
+        .where('read', '==', false)
+        .onSnapshot(function(snap) {
+          if (!_notifSeeded) {
+            // First snapshot: seed seen-set with existing unread docs — don't toast
+            snap.docs.forEach(function(doc) { _shownNotifIds.add(doc.id); });
+            _notifSeeded = true;
+            return;
+          }
+          // Subsequent updates: toast newly-added docs only
+          snap.docChanges().forEach(function(change) {
+            if (change.type !== 'added') return;
+            var docId = change.doc.id;
+            if (_shownNotifIds.has(docId)) return;
+            _shownNotifIds.add(docId);
+            var d = change.doc.data();
+            showToast(d.title || 'Thông báo', d.message || '');
+            // Mark as read after showing (best-effort)
+            change.doc.ref.update({ read: true }).catch(function(){});
+          });
+        }, function(err) {
+          console.warn('[AdminNotif] listener error:', err.message);
+        });
+    }
+    var _notifSeeded = false;
   </script>
 
 </body>

@@ -105,10 +105,113 @@ window.DLCNotifications = (function () {
     });
   }
 
+  // ── Internal: write one in-app notification doc ─────────────────────────────
+  /**
+   * Idempotent: doc ID = "{bookingId}_{type}_{targetType}_{targetId}"
+   * Writes to vendors/admin-dlc/notifications/{docId}
+   */
+  function _writeNotification(bookingId, type, targetType, targetId, title, message) {
+    if (typeof firebase === 'undefined') return;
+    var db    = firebase.firestore();
+    var safeId = String(targetId).replace(/[^a-zA-Z0-9_-]/g, '');
+    var docId = bookingId + '_' + type + '_' + targetType + '_' + safeId;
+    db.collection('vendors').doc(VENDOR_ID).collection('notifications').doc(docId)
+      .set({
+        type:       type,
+        targetType: targetType,
+        targetId:   targetId,
+        bookingId:  bookingId,
+        title:      title,
+        message:    message,
+        read:       false,
+        createdAt:  firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: false })
+      .then(function () {
+        console.log('[DLCNotifications] in-app', type, targetType, 'for', bookingId);
+      })
+      .catch(function (e) {
+        console.warn('[DLCNotifications] notification write failed:', e.message);
+      });
+  }
+
+  // ── Public: in-app notifications for new ride booking ───────────────────────
+  /**
+   * Writes admin + customer in-app notification docs.
+   * Call immediately after a ride booking is saved to Firestore.
+   * Separate from queueRideConfirmation (which writes to emailQueue).
+   *
+   * @param {object} booking  — must include bookingId, serviceType, customerName, customerPhone, datetime
+   * @param {string} lang     — 'vi' | 'en' | 'es'
+   */
+  function queueRideBookedNotification(booking, lang) {
+    if (!booking || !booking.bookingId) return;
+    var id   = booking.bookingId;
+    var svcMap = { airport_pickup: 'Airport Pickup', airport_dropoff: 'Airport Dropoff', private_ride: 'Private Ride' };
+    var svc  = svcMap[booking.serviceType] || booking.serviceType || 'Ride';
+    var name = booking.customerName || booking.name || '';
+    var pax  = booking.passengers   ? ' · ' + booking.passengers + ' pax' : '';
+    var when = booking.datetime || booking.requestedDate || '';
+
+    // Admin gets a notification for every new ride
+    _writeNotification(id, 'ride_confirmed', 'admin', 'admin',
+      'New Ride: ' + svc,
+      (name ? name + ' · ' : '') + when + pax
+    );
+
+    // Customer in-app (keyed by phone — customer may not have a logged-in session)
+    if (booking.customerPhone) {
+      _writeNotification(id, 'ride_confirmed', 'customer', booking.customerPhone,
+        'Booking Confirmed',
+        'Your ' + svc + ' booking has been received. We are finding you a driver.'
+      );
+    }
+  }
+
+  // ── Public: in-app notifications for driver assignment ──────────────────────
+  /**
+   * Writes driver + customer in-app notification docs.
+   * Call when a driver is assigned to a ride booking.
+   * Separate from queueDriverAssigned (which writes to emailQueue).
+   *
+   * @param {object} booking  — booking doc data (must include bookingId, serviceType)
+   * @param {object} driver   — { driverId, name, phone }
+   * @param {string} lang     — 'vi' | 'en' | 'es'
+   */
+  function queueDriverAssignedNotification(booking, driver, lang) {
+    if (!booking || !booking.bookingId) return;
+    var id          = booking.bookingId;
+    var driverId    = driver ? (driver.driverId || '') : '';
+    var driverName  = driver ? (driver.name || driver.fullName || 'Your driver') : 'Your driver';
+    var driverPhone = driver ? (driver.phone || '') : '';
+    var svcMap      = { airport_pickup: 'Airport Pickup', airport_dropoff: 'Airport Dropoff', private_ride: 'Private Ride' };
+    var svc         = svcMap[booking.serviceType] || booking.serviceType || 'Ride';
+    var name        = booking.customerName || booking.name || '';
+    var pax         = booking.passengers   ? ' · ' + booking.passengers + ' pax' : '';
+    var when        = booking.datetime || booking.requestedDate || '';
+
+    // Driver notification — REQUIRED: driver must know a ride was assigned
+    if (driverId) {
+      _writeNotification(id, 'ride_assigned', 'driver', driverId,
+        'Ride Assigned: ' + svc,
+        (name ? name + ' · ' : '') + when + pax
+      );
+    }
+
+    // Customer in-app — inform them their driver is confirmed
+    if (booking.customerPhone) {
+      _writeNotification(id, 'ride_assigned', 'customer', booking.customerPhone,
+        'Driver Assigned',
+        driverName + (driverPhone ? ' (' + driverPhone + ')' : '') + ' is your driver.'
+      );
+    }
+  }
+
   // ── Expose public API ────────────────────────────────────────────────────────
   return {
-    queueRideConfirmation: queueRideConfirmation,
-    queueDriverAssigned:   queueDriverAssigned,
+    queueRideConfirmation:          queueRideConfirmation,
+    queueDriverAssigned:            queueDriverAssigned,
+    queueRideBookedNotification:    queueRideBookedNotification,
+    queueDriverAssignedNotification: queueDriverAssignedNotification,
   };
 
 }());

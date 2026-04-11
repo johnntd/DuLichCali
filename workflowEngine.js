@@ -2357,7 +2357,7 @@
         eligibleCount: eligIds.length,
         preAssigned: preAssigned ? { name:preAssigned.fullName||preAssigned.name||'', phone:preAssigned.phone||'' } : null,
       };
-      // Phase 5: queue confirmation email (non-blocking, no-op if no email)
+      // Phase 5A: queue confirmation email (non-blocking, no-op if no email)
       if (typeof DLCNotifications !== 'undefined') {
         DLCNotifications.queueRideConfirmation({
           bookingId: orderId, customerEmail: f.customerEmail||'',
@@ -2369,6 +2369,15 @@
           status: airBookStatus,
           driver: preAssigned ? { name: preAssigned.fullName||preAssigned.name||'' } : null,
         }, draft.lang || 'vi');
+        // Phase 5B: in-app notifications (admin + customer)
+        if (DLCNotifications.queueRideBookedNotification) {
+          DLCNotifications.queueRideBookedNotification({
+            bookingId: orderId,
+            serviceType: isPickup ? 'airport_pickup' : 'airport_dropoff',
+            customerName: f.customerName||'', customerPhone: f.customerPhone||'',
+            datetime: datetime, passengers: f.passengers||1,
+          }, draft.lang || 'vi');
+        }
       }
 
     } else if (draft.intent === 'nail_appointment' || draft.intent === 'hair_appointment') {
@@ -2549,7 +2558,7 @@
         eligibleCount: prEligIds.length,
         preAssigned: prPreAssigned ? { name:prPreAssigned.fullName||prPreAssigned.name||'', phone:prPreAssigned.phone||'' } : null,
       };
-      // Phase 5: queue confirmation email (non-blocking, no-op if no email)
+      // Phase 5A: queue confirmation email (non-blocking, no-op if no email)
       if (typeof DLCNotifications !== 'undefined') {
         DLCNotifications.queueRideConfirmation({
           bookingId: orderId, customerEmail: f.customerEmail||'',
@@ -2562,6 +2571,14 @@
           status: prBookStatus,
           driver: prPreAssigned ? { name: prPreAssigned.fullName||prPreAssigned.name||'' } : null,
         }, draft.lang || 'vi');
+        // Phase 5B: in-app notifications (admin + customer)
+        if (DLCNotifications.queueRideBookedNotification) {
+          DLCNotifications.queueRideBookedNotification({
+            bookingId: orderId, serviceType: 'private_ride',
+            customerName: f.customerName||'', customerPhone: f.customerPhone||'',
+            datetime: datetime, passengers: f.passengers||1,
+          }, draft.lang || 'vi');
+        }
       }
     }
 

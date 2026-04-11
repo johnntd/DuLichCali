@@ -13,6 +13,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="/driver-compliance.js"></script>
+  <script src="/notifications.js?v=20260418b"></script>
 
   <style>
     :root {
@@ -377,10 +378,35 @@
     .btn-comp-submit:hover { background: var(--gold-lt); }
     .btn-comp-submit:disabled { opacity: .45; cursor: not-allowed; }
     .comp-msg { font-size: .76rem; min-height: 1.3em; margin-bottom: .4rem; }
+
+    /* ── In-app notification toasts ─────────────────────────── */
+    #dlc-toast-container {
+      position: fixed; bottom: 5rem; right: 1rem;
+      display: flex; flex-direction: column; gap: .5rem;
+      z-index: 9999; pointer-events: none;
+    }
+    .dlc-toast {
+      background: #1e293b; color: #f1f5f9;
+      border-left: 4px solid #38bdf8;
+      border-radius: 8px; padding: .75rem 1rem;
+      max-width: 300px; min-width: 220px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.55);
+      pointer-events: auto; cursor: pointer;
+      animation: toastIn .25s ease;
+    }
+    .dlc-toast__title { font-weight: 700; font-size: .85rem; margin-bottom: .25rem; }
+    .dlc-toast__msg   { font-size: .78rem; color: #94a3b8; line-height: 1.4; }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
   </style>
   <link rel="stylesheet" href="/desktop.css">
 </head>
 <body>
+
+  <!-- In-app notification toast container -->
+  <div id="dlc-toast-container"></div>
 
 <div id="authChecking"><div class="va-spinner"></div></div>
 
@@ -754,6 +780,7 @@
 
       renderAll();
       listenRideNotifs();
+      listenDriverNotifications();
     }).catch(function () {
       document.getElementById('authChecking').classList.add('hidden');
       document.getElementById('mainContent').style.display = '';
@@ -1321,6 +1348,52 @@
 
   // ── Build schedule rows on first load ─────────────────────────────────────
   renderSchedule();
+
+  // ── In-app driver notification system ─────────────────────────────────────
+  var _driverToastContainer = null;
+  var _driverNotifUnsub     = null;
+  var _driverNotifSeen      = new Set();
+  var _driverNotifSeeded    = false;
+
+  function showDriverToast(title, message) {
+    if (!_driverToastContainer) _driverToastContainer = document.getElementById('dlc-toast-container');
+    var el = document.createElement('div');
+    el.className = 'dlc-toast';
+    el.innerHTML = '<div class="dlc-toast__title">' + (title  || '').replace(/</g,'&lt;') + '</div>' +
+                   '<div class="dlc-toast__msg">'   + (message|| '').replace(/</g,'&lt;') + '</div>';
+    _driverToastContainer.appendChild(el);
+    el.addEventListener('click', function() { el.remove(); });
+    setTimeout(function() { if (el.parentNode) el.remove(); }, 6000);
+  }
+
+  function listenDriverNotifications() {
+    if (_driverNotifUnsub || !_driverId) return;
+    _driverNotifUnsub = db.collection('vendors').doc('admin-dlc').collection('notifications')
+      .where('targetType', '==', 'driver')
+      .where('targetId',   '==', _driverId)
+      .where('read',       '==', false)
+      .onSnapshot(function(snap) {
+        if (!_driverNotifSeeded) {
+          // First snapshot: seed seen-set with existing docs, don't toast
+          snap.docs.forEach(function(doc) { _driverNotifSeen.add(doc.id); });
+          _driverNotifSeeded = true;
+          return;
+        }
+        // Subsequent updates: toast newly-added docs
+        snap.docChanges().forEach(function(change) {
+          if (change.type !== 'added') return;
+          var docId = change.doc.id;
+          if (_driverNotifSeen.has(docId)) return;
+          _driverNotifSeen.add(docId);
+          var d = change.doc.data();
+          showDriverToast(d.title || 'Thông báo', d.message || '');
+          // Mark as read (best-effort)
+          change.doc.ref.update({ read: true }).catch(function(){});
+        });
+      }, function(err) {
+        console.warn('[DriverNotif] listener error:', err.message);
+      });
+  }
 </script>
 </body>
 </html>

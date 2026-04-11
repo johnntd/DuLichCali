@@ -380,13 +380,26 @@
     .comp-msg { font-size: .76rem; min-height: 1.3em; margin-bottom: .4rem; }
 
     /* ── Earnings panel ─────────────────────────────────────── */
-    .earn-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 1rem;
+    /* Notice banner */
+    .earn-notice {
+      display: flex; gap: .75rem; align-items: flex-start;
+      background: rgba(245,166,35,.07); border: 1px solid rgba(245,166,35,.3);
+      border-radius: 10px; padding: .85rem 1rem; margin-bottom: 1.25rem;
     }
-    .earn-header__note {
-      font-size: .65rem; color: var(--muted); letter-spacing: .04em; font-style: italic;
+    .earn-notice__icon {
+      font-size: 1rem; color: var(--gold); flex-shrink: 0; line-height: 1.4;
     }
+    .earn-notice__title {
+      font-size: .72rem; font-weight: 700; color: var(--gold-lt); margin-bottom: .28rem;
+    }
+    .earn-notice__body {
+      font-size: .68rem; color: var(--muted); line-height: 1.55;
+    }
+    /* Refresh row */
+    .earn-refresh-row {
+      display: flex; justify-content: flex-end; margin-bottom: .85rem;
+    }
+    /* Summary grid */
     .earn-summary-grid {
       display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem;
       margin-bottom: 1.25rem;
@@ -401,9 +414,17 @@
     }
     .earn-stat-total {
       font-size: 1.3rem; font-weight: 700; color: var(--gold);
-      font-family: var(--font-b); line-height: 1.1; margin-bottom: .2rem;
+      font-family: var(--font-b); line-height: 1.1; margin-bottom: .18rem;
+    }
+    .earn-stat-est {
+      font-size: .56rem; color: rgba(245,166,35,.55); letter-spacing: .04em; margin-bottom: .2rem;
     }
     .earn-stat-count { font-size: .6rem; color: var(--muted); }
+    /* Trip list */
+    .earn-section-title {
+      font-size: .6rem; font-weight: 700; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--gold); margin: .5rem 0 .75rem;
+    }
     .earn-trip-list { display: flex; flex-direction: column; gap: .5rem; }
     .earn-trip-item {
       display: flex; align-items: center; justify-content: space-between; gap: .75rem;
@@ -420,10 +441,10 @@
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .earn-trip-date { font-size: .63rem; color: var(--muted); margin-top: .1rem; }
-    .earn-trip-fare { font-size: 1rem; font-weight: 700; color: var(--gold); flex-shrink: 0; }
-    .earn-section-title {
-      font-size: .6rem; font-weight: 700; letter-spacing: .14em;
-      text-transform: uppercase; color: var(--gold); margin: .5rem 0 .75rem;
+    .earn-trip-fare-col { text-align: right; flex-shrink: 0; }
+    .earn-trip-fare { font-size: 1rem; font-weight: 700; color: var(--gold); }
+    .earn-trip-fare__sub {
+      font-size: .55rem; color: rgba(245,166,35,.5); letter-spacing: .03em; margin-top: .1rem;
     }
     .earn-empty {
       text-align: center; padding: 2rem 1rem; color: var(--muted); font-size: .82rem;
@@ -1701,39 +1722,57 @@
       return '<div class="earn-stat-card">' +
         '<div class="earn-stat-label">' + p.label + '</div>' +
         '<div class="earn-stat-total">$' + sumFare(p.list).toFixed(0) + '</div>' +
+        '<div class="earn-stat-est">ước tính</div>' +
         '<div class="earn-stat-count">' + p.list.length + ' chuyến</div>' +
       '</div>';
     }).join('');
 
-    var svcMap = { airport_pickup: 'Đón SB', airport_dropoff: 'Ra SB', private_ride: 'Xe Riêng' };
+    var svcMap = { airport_pickup: 'Đón Sân Bay', airport_dropoff: 'Ra Sân Bay', private_ride: 'Xe Riêng' };
     var listHtml = '';
     if (!rides.length) {
-      listHtml = '<div class="earn-empty">Chưa có chuyến hoàn thành nào.</div>';
+      listHtml = '<div class="earn-empty">Chưa có chuyến hoàn thành nào được ghi nhận.</div>';
     } else {
       listHtml = rides.slice(0, 50).map(function(r) {
         var ms  = rideMs(r);
         var dateStr = ms ? new Date(ms).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
         var route = r.dropoffAddress || r.pickupAddress || r.airport || '—';
-        var fare  = r.estimatedPrice ? '$' + Number(r.estimatedPrice).toFixed(0) : '—';
-        var svc   = svcMap[r.serviceType] || (r.serviceType ? r.serviceType.replace(/_/g, ' ') : 'Chuyến Xe');
+        var fareNum = r.estimatedPrice ? Number(r.estimatedPrice) : null;
+        var fareStr = fareNum !== null ? '$' + fareNum.toFixed(0) : '—';
+        var svc = svcMap[r.serviceType] || (r.serviceType ? r.serviceType.replace(/_/g, ' ') : 'Chuyến Xe');
+        var milesStr = r.estimatedMiles ? Number(r.estimatedMiles).toFixed(1) + ' mi' : '';
+        var dateLine = 'Đặt ngày ' + dateStr + (r.customerName ? ' · ' + esc(r.customerName) : '');
         return '<div class="earn-trip-item">' +
           '<div class="earn-trip-main">' +
-            '<div class="earn-trip-type">' + svc + '</div>' +
+            '<div class="earn-trip-type">' + svc + (milesStr ? ' · ' + milesStr : '') + '</div>' +
             '<div class="earn-trip-route">' + esc(route) + '</div>' +
-            '<div class="earn-trip-date">' + dateStr + (r.customerName ? ' · ' + esc(r.customerName) : '') + '</div>' +
+            '<div class="earn-trip-date">' + dateLine + '</div>' +
           '</div>' +
-          '<div class="earn-trip-fare">' + fare + '</div>' +
+          '<div class="earn-trip-fare-col">' +
+            '<div class="earn-trip-fare">' + fareStr + '</div>' +
+            (fareNum !== null ? '<div class="earn-trip-fare__sub">ước tính</div>' : '') +
+          '</div>' +
         '</div>';
       }).join('');
     }
 
+    var totalCount = rides.length;
+    var sectionTitle = 'Lịch Sử Chuyến Hoàn Thành' + (totalCount ? ' (' + totalCount + ')' : '');
+
     body.innerHTML =
-      '<div class="earn-header">' +
-        '<div class="earn-header__note">Giá chuyến gộp (giá khách trả)</div>' +
+      '<div class="earn-notice">' +
+        '<div class="earn-notice__icon">ℹ</div>' +
+        '<div>' +
+          '<div class="earn-notice__title">Giá ước tính — chưa phải thu nhập thực tế</div>' +
+          '<div class="earn-notice__body">Số tiền hiển thị là giá khách được báo khi đặt xe. ' +
+          'Đây chưa bao gồm điều chỉnh lộ trình hay phí dịch vụ. ' +
+          'Thanh toán thực tế do quản lý xác nhận riêng.</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="earn-refresh-row">' +
         '<button class="btn-sm" onclick="_earningsLoaded=false;loadEarnings()" style="font-size:.65rem;height:32px;padding:0 .7rem">Làm Mới</button>' +
       '</div>' +
       '<div class="earn-summary-grid">' + statsHtml + '</div>' +
-      '<div class="earn-section-title">Lịch Sử Chuyến Hoàn Thành</div>' +
+      '<div class="earn-section-title">' + sectionTitle + '</div>' +
       '<div class="earn-trip-list">' + listHtml + '</div>';
   }
 </script>

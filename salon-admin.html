@@ -2402,6 +2402,24 @@
               <div id="trustFeatsEditor"></div>
             </div>
 
+            <!-- Cash Discount % (Part 3 — Phase 5C) -->
+            <div class="sa-field">
+              <label style="font-size:.8rem;font-weight:600">Cash Discount (%)</label>
+              <div style="font-size:.72rem;color:var(--muted);margin-bottom:.35rem">When a customer pays cash, display and apply this discount to the service subtotal. Leave blank or 0 to disable. Example: <strong style="color:var(--cream)">3</strong> = 3% off for cash.</div>
+              <input class="sa-input" id="settingCashDiscountPct" type="number" min="0" max="30" step="0.5" placeholder="0" style="width:120px">
+            </div>
+
+            <!-- Cash Tip Note — AI booking confirmation (Part 1 — Phase 5C) -->
+            <div class="sa-field">
+              <label style="font-size:.8rem;font-weight:600">Cash Tip Note in Booking Confirmation</label>
+              <div style="font-size:.72rem;color:var(--muted);margin-bottom:.35rem">When enabled, a gracious optional note about cash gratuity is added at the end of every AI booking confirmation. Fully optional for customers.</div>
+              <label style="display:flex;align-items:center;gap:.5rem;font-size:.8rem;cursor:pointer;margin-bottom:.5rem">
+                <input type="checkbox" id="settingEnableCashTipNote" style="width:16px;height:16px">
+                Enable cash tip note
+              </label>
+              <input class="sa-input" id="settingCashTipNoteText" type="text" placeholder="Leave blank to use the default premium message…" style="width:100%">
+            </div>
+
             <div style="display:flex;align-items:center;gap:.7rem;flex-wrap:wrap">
               <button class="btn btn--primary" onclick="saveSettings()" data-i18n="btn_save_settings">Lưu Cài Đặt</button>
               <span class="sa-msg" id="settingsMsg"></span>
@@ -2796,6 +2814,11 @@
       <div class="pm-summary-row" id="pmSumAdjSubtotalRow" style="display:none">
         <span class="pm-summary-label" data-i18n="pay_adj_subtotal">Adj. Subtotal</span>
         <span id="pmSumAdjSubtotal" class="pm-summary-val"></span>
+      </div>
+      <!-- Cash discount row — shown only when vendor configures cashDiscountPercent and customer pays cash -->
+      <div class="pm-summary-row" id="pmSumCashDiscRow" style="display:none">
+        <span class="pm-summary-label" id="pmSumCashDiscLbl" style="color:#4ade80">Cash Discount</span>
+        <span id="pmSumCashDisc" class="pm-summary-val" style="color:#4ade80"></span>
       </div>
       <div class="pm-summary-row" id="pmSumTaxRow" style="display:none">
         <span class="pm-summary-label" style="color:#94a3b8" id="pmSumTaxLbl">Tax</span>
@@ -3259,7 +3282,8 @@
   var _userPerms     = { viewAll: false, contactCustomer: false, canCancel: false, canConfirm: false };
   var _userEmail     = '';
   var _vendorPhone  = '';
-  var VENDOR_TAX_RATE = 0; // Sales tax rate derived from vendor address zip; 0 = no tax row shown
+  var VENDOR_TAX_RATE       = 0; // Sales tax rate derived from vendor address zip; 0 = no tax row shown
+  var _vendorCashDiscountPct = 0; // Cash discount % (e.g. 3 = 3%); 0 = disabled. Set from vendor doc.
   var _currentIsOpen = true; // mirrors vendors/{id}.isOpen
   var unsubSvcs      = null;
   var unsubStaff     = null;
@@ -3488,11 +3512,19 @@
         document.getElementById('settingPhone').value   = _vendorPhone;
         var _addr = vdata.address || (staticData && staticData.address) || '';
         document.getElementById('settingAddress').value = _addr;
-        VENDOR_TAX_RATE = _taxRateForZip(_addr);
+        VENDOR_TAX_RATE          = _taxRateForZip(_addr);
+        _vendorCashDiscountPct   = parseFloat(vdata.cashDiscountPercent) || 0;
         document.getElementById('settingDesc').value    = vdata.description   || (staticData && staticData.description)  || '';
         document.getElementById('settingAiKey').value      = vdata.aiKey      || '';
         document.getElementById('settingGeminiKey').value  = vdata.geminiKey  || '';
         document.getElementById('settingOpenAiKey').value  = vdata.openaiKey  || '';
+        // Vendor tip note + cash discount settings (Part 1 & 3 — Phase 5C)
+        var cdEl  = document.getElementById('settingCashDiscountPct');
+        var ctnEl = document.getElementById('settingEnableCashTipNote');
+        var ctxEl = document.getElementById('settingCashTipNoteText');
+        if (cdEl)  cdEl.value   = _vendorCashDiscountPct || '';
+        if (ctnEl) ctnEl.checked = vdata.enableCashTipNote === true;
+        if (ctxEl) ctxEl.value  = vdata.cashTipNoteText || '';
         // Load Why Choose Us fields into editor (show VI in single input)
         var tSub = vdata.trustSubtitleI18n || {};
         var _tSubText = tSub.vi || tSub.en || tSub.es || '';
@@ -4968,12 +5000,21 @@
     var addOnAmt   = _pmAddOnTotal();
     var adj        = _pmReadAdj();                         // signed booking-level adjustment
     var subtotal   = baseTotal + addOnAmt;                 // Services + Add-ons
-    var adjSubtotal = subtotal + adj;                      // after discount/surcharge
-    var tax        = adjSubtotal > 0 && VENDOR_TAX_RATE > 0
-                       ? Math.round(adjSubtotal * VENDOR_TAX_RATE * 100) / 100 : 0;
+    var adjSubtotal = subtotal + adj;                      // after booking-level discount/surcharge
+
+    // ── Cash discount (Part 3 — Phase 5C) ──────────────────────────────────────
+    var method          = (document.getElementById('pmMethod') || {}).value || '';
+    var cashDiscAmt     = 0;
+    if (method === 'cash' && _vendorCashDiscountPct > 0 && adjSubtotal > 0) {
+      cashDiscAmt = Math.round(adjSubtotal * _vendorCashDiscountPct * 10) / 1000; // pct/100 × subtotal, 2dp
+    }
+    var discountedSubtotal = adjSubtotal - cashDiscAmt;
+
+    var tax        = discountedSubtotal > 0 && VENDOR_TAX_RATE > 0
+                       ? Math.round(discountedSubtotal * VENDOR_TAX_RATE * 100) / 100 : 0;
     var amount     = parseFloat(document.getElementById('pmAmount').value) || 0;
     var tip        = parseFloat(document.getElementById('pmTip').value)    || 0;
-    var totalBeforeTip = adjSubtotal + tax;
+    var totalBeforeTip = discountedSubtotal + tax;
     var finalTotal     = totalBeforeTip + tip;
     var sel        = document.getElementById('pmStatus');
 
@@ -5027,6 +5068,20 @@
     if (adjSubtotalRowEl) adjSubtotalRowEl.style.display = adj !== 0 ? 'flex' : 'none';
     if (adjSubtotalEl && adj !== 0) adjSubtotalEl.textContent = '$' + adjSubtotal.toFixed(2);
 
+    // ── Cash Discount row (Part 3 — Phase 5C) ─────────────────────────────────
+    var cashDiscRowEl  = document.getElementById('pmSumCashDiscRow');
+    var cashDiscEl     = document.getElementById('pmSumCashDisc');
+    var cashDiscLblEl  = document.getElementById('pmSumCashDiscLbl');
+    if (cashDiscRowEl) {
+      if (cashDiscAmt > 0) {
+        cashDiscRowEl.style.display = 'flex';
+        if (cashDiscEl)  cashDiscEl.textContent  = '\u2212$' + cashDiscAmt.toFixed(2);
+        if (cashDiscLblEl) cashDiscLblEl.textContent = 'Cash Discount (' + _vendorCashDiscountPct + '%)';
+      } else {
+        cashDiscRowEl.style.display = 'none';
+      }
+    }
+
     // ── Tax row ────────────────────────────────────────────────────────────────
     var taxRowEl = document.getElementById('pmSumTaxRow');
     var taxEl    = document.getElementById('pmSumTax');
@@ -5058,14 +5113,15 @@
       if (grandRowEl) grandRowEl.style.display = 'none';
     }
 
-    // ── Active tip button highlight (based on adjusted subtotal) ───────────────
+    // ── Active tip button highlight (based on discounted subtotal) ────────────
     [15, 20, 25].forEach(function(pct) {
       var btn = document.getElementById('pmTipBtn' + pct);
       if (!btn) return;
-      var expected = adjSubtotal > 0 ? Math.round(adjSubtotal * pct) / 100 : -1;
-      btn.classList.toggle('pm-tip-btn--active', adjSubtotal > 0 && Math.abs(tip - expected) < 0.015);
+      var tipBase = discountedSubtotal > 0 ? discountedSubtotal : adjSubtotal;
+      var expected = tipBase > 0 ? Math.round(tipBase * pct) / 100 : -1;
+      btn.classList.toggle('pm-tip-btn--active', tipBase > 0 && Math.abs(tip - expected) < 0.015);
       var sub = btn.querySelector('span');
-      if (sub && adjSubtotal > 0) sub.textContent = '$' + (Math.round(adjSubtotal * pct) / 100).toFixed(2);
+      if (sub && tipBase > 0) sub.textContent = '$' + (Math.round(tipBase * pct) / 100).toFixed(2);
     });
 
     // ── Paid + Remaining Due rows ──────────────────────────────────────────────
@@ -5074,7 +5130,7 @@
     var balEl  = document.getElementById('pmSumBalance');
     if (paidEl) paidEl.textContent = '$' + amount.toFixed(2);
 
-    if (adjSubtotal > 0) {
+    if (discountedSubtotal > 0 || adjSubtotal > 0) {
       var bal = Math.max(0, finalTotal - amount);
       if (balEl) {
         if (bal <= 0) {
@@ -5658,19 +5714,37 @@
     _pmMsg('Đang lưu…', false);
 
     var fv = firebase.firestore.FieldValue;
+    // Part 2: track tip separately by payment type (cash vs non-cash)
+    var cashTip    = (method === 'cash') ? tip : 0;
+    var nonCashTip = (method && method !== 'cash') ? tip : 0;
+    // Part 3: cash discount amount applied
+    var cashDiscAmt = (method === 'cash' && _vendorCashDiscountPct > 0)
+      ? (function() {
+          var base = parseFloat((document.getElementById('paymentModal') || {}).dataset.priceTotal || '0') || 0;
+          var eff  = base + _pmAddOnTotal() + _pmReadAdj();
+          return eff > 0 ? Math.round(eff * _vendorCashDiscountPct * 10) / 1000 : 0;
+        })()
+      : 0;
     var update = {
-      paymentStatus:  payStatus,
-      amountPaid:     amount,
-      tipAmount:      tip,
-      paymentMethod:  method || null,
-      paymentNote:    note   || null,
-      transactionRef: null,
-      updatedAt:      fv.serverTimestamp(),
-      history:       fv.arrayUnion({
+      paymentStatus:        payStatus,
+      amountPaid:           amount,
+      tipAmount:            tip,           // backward-compat: total tip regardless of method
+      cashTip:              cashTip,       // Part 2: tip paid in cash
+      nonCashTip:           nonCashTip,    // Part 2: tip paid by card/digital/other
+      paymentMethod:        method || null,
+      paymentNote:          note   || null,
+      transactionRef:       null,
+      cashDiscountPercent:  cashDiscAmt > 0 ? _vendorCashDiscountPct : 0,  // Part 3
+      cashDiscountAmount:   cashDiscAmt,                                     // Part 3
+      updatedAt:            fv.serverTimestamp(),
+      history:             fv.arrayUnion({
         action:        'payment_recorded',
         paymentStatus: payStatus,
         amountPaid:    amount,
         tipAmount:     tip,
+        cashTip:       cashTip,
+        nonCashTip:    nonCashTip,
+        cashDiscount:  cashDiscAmt,
         method:        method || null,
         by:            _userEmail || 'staff',
         at:            new Date().toISOString()
@@ -8690,14 +8764,18 @@
     var btn    = document.getElementById('pmQrBtnEl');
     if (!wrap || !btn) return;
     var meta = _QR_METHOD_META[method];
-    if (!meta) { wrap.style.display = 'none'; return; }
-    wrap.style.display = '';
-    var ready = _isMethodReady(method);
-    btn.disabled      = !ready;
-    btn.style.opacity = ready ? '' : '.45';
-    btn.textContent   = ready
-      ? 'Hiện mã QR — ' + meta.label
-      : meta.label + ': chưa cài đặt — vào Cài đặt để thêm';
+    if (!meta) { wrap.style.display = 'none'; }
+    else {
+      wrap.style.display = '';
+      var ready = _isMethodReady(method);
+      btn.disabled      = !ready;
+      btn.style.opacity = ready ? '' : '.45';
+      btn.textContent   = ready
+        ? 'Hiện mã QR — ' + meta.label
+        : meta.label + ': chưa cài đặt — vào Cài đặt để thêm';
+    }
+    // Refresh payment summary — cash discount row appears/disappears based on method
+    _updatePmBalance();
   }
 
   // Open the QR payment overlay for the currently selected QR method.
@@ -8896,6 +8974,15 @@
     if (aiKey)     data.aiKey     = aiKey;
     if (geminiKey) data.geminiKey = geminiKey;
     if (openaiKey) data.openaiKey = openaiKey;
+    // Cash discount + AI tip note settings (Part 1 & 3 — Phase 5C)
+    var cdPctEl = document.getElementById('settingCashDiscountPct');
+    var ctnEl   = document.getElementById('settingEnableCashTipNote');
+    var ctxEl   = document.getElementById('settingCashTipNoteText');
+    var cdPct   = cdPctEl ? (parseFloat(cdPctEl.value) || 0) : 0;
+    data.cashDiscountPercent  = cdPct;
+    data.enableCashTipNote    = ctnEl ? !!ctnEl.checked : false;
+    data.cashTipNoteText      = ctxEl ? ctxEl.value.trim() : '';
+    _vendorCashDiscountPct    = cdPct; // update in-memory so payment modal reflects immediately
     vendorRef.set(data, { merge: true })
       .then(function() {
         _lastLoadedStats = td.trustStats;

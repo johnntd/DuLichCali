@@ -1951,6 +1951,23 @@
     return 'We look forward to seeing you! Feel free to reach out if you need to make any changes or book anything else.';
   }
 
+  // ── _buildCashTipNote — optional vendor-controlled gratuity note (Part 1 — Phase 5C) ──
+  // Returns null when disabled; returns vendor custom text or a premium default message.
+
+  function _buildCashTipNote(biz, lang) {
+    if (!biz._enableCashTipNote) return null;
+    // Vendor-supplied custom text takes precedence
+    if (biz._cashTipNoteText) return biz._cashTipNoteText;
+    // Premium default — warm, gracious, never pushy
+    if (lang === 'vi') {
+      return 'Một lưu ý nhỏ — nếu tiện, nhiều khách quen của chúng tôi thích mang theo một ít tiền mặt để cảm ơn trực tiếp kỹ thuật viên. Đây là cách thể hiện sự trân trọng rất ý nghĩa, nhưng hoàn toàn tùy lòng bạn nhé.';
+    }
+    if (lang === 'es') {
+      return 'Una pequeña nota — si le es posible, muchos de nuestros clientes habituales prefieren traer un poco de efectivo para agradecer personalmente a su técnica. Es una forma muy especial de expresar su aprecio, aunque es completamente opcional.';
+    }
+    return 'One thoughtful note — if it\u2019s convenient, many of our regular guests enjoy bringing a little cash to express their gratitude directly to their nail technician. It\u2019s a lovely personal touch, though entirely at your discretion.';
+  }
+
   // ── _buildBookingPacketHtml — card rendered in chat after confirmation ────────
 
   function _buildBookingPacketHtml(biz, draft, orderId, lang) {
@@ -2296,6 +2313,10 @@
     // Outside the if(db) block so it fires whether or not Firestore is available.
     _appendMessage(messagesEl, closingMsg, 'bot');
 
+    // Optional cash tip note — shown only when vendor enables it (Part 1 — Phase 5C)
+    var tipNote = _buildCashTipNote(biz, lang);
+    if (tipNote) _appendMessage(messagesEl, tipNote, 'bot');
+
     // ── Optional email confirmation ────────────────────────────────────────────
     // Booking is already confirmed and saved. This is purely additive — the customer
     // can skip and it has zero effect on the booking. _emailState is cleared by the
@@ -2569,6 +2590,9 @@
               if (d.aiKey)     biz._firestoreApiKey    = d.aiKey;
               if (d.geminiKey) biz._firestoreGeminiKey = d.geminiKey;
               if (d.openaiKey) biz._firestoreOpenAiKey = d.openaiKey;
+              // Vendor-configurable cash tip note (Part 1 — Phase 5C)
+              biz._enableCashTipNote = d.enableCashTipNote === true;
+              biz._cashTipNoteText   = d.cashTipNoteText   || '';
               // Pre-fetch welcome TTS audio in background so open() plays instantly
               setTimeout(function () {
                 if (window.DLCVoiceMode && window.DLCVoiceMode.prefetchWelcome) {

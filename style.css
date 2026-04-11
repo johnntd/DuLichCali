@@ -3603,48 +3603,87 @@ gmp-placeautocomplete.field-input::part(input):focus {
   padding: 1rem 1.1rem;
   margin-top: .75rem;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: .75rem;
+  flex-direction: column;
+  gap: 0;
 }
 .ri-price-box[hidden] { display: none; }
-.ri-price-box__left { min-width: 0; }
+/* route summary: "35 mi · ~48 phút" */
+.ri-fare-route {
+  font: 500 .8rem var(--font-b, 'Jost', sans-serif);
+  color: rgba(255,255,255,.55);
+  margin-bottom: .55rem;
+  letter-spacing: .01em;
+}
+/* thin separator */
+.ri-fare-divider {
+  height: 1px;
+  background: rgba(255,255,255,.1);
+  margin: .45rem 0;
+}
+/* market / dlc rows */
+.ri-fare-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: .5rem;
+  padding: .12rem 0;
+}
+.ri-fare-row--market > span:first-child {
+  font: 400 .75rem var(--font-b, 'Jost', sans-serif);
+  color: rgba(255,255,255,.38);
+  text-decoration: line-through;
+}
+.ri-fare-row--market > span:last-child {
+  font: 400 .88rem var(--font-b, 'Jost', sans-serif);
+  color: rgba(255,255,255,.32);
+  text-decoration: line-through;
+}
+.ri-fare-row--dlc > span:first-child {
+  font: 600 .82rem var(--font-b, 'Jost', sans-serif);
+  color: rgba(255,255,255,.8);
+  display: flex; align-items: center; gap: .35rem;
+}
+.ri-fare-row--dlc > span:last-child {
+  font: 700 1.75rem var(--font-d, 'Bodoni Moda', serif);
+  color: #fff;
+  line-height: 1;
+}
+/* discount badge inside row */
 .ri-price-badge {
   display: inline-block;
   background: rgba(201,168,76,.22);
   border: 1px solid rgba(201,168,76,.45);
   color: #c9a84c;
-  border-radius: 6px;
-  font: 600 .7rem var(--font-b, 'Jost', sans-serif);
-  padding: .18rem .45rem;
+  border-radius: 5px;
+  font: 600 .68rem var(--font-b, 'Jost', sans-serif);
+  padding: .15rem .38rem;
   letter-spacing: .04em;
-  margin-bottom: .4rem;
-}
-.ri-price-box__label {
-  display: block;
-  font: 400 .72rem var(--font-b, 'Jost', sans-serif);
-  color: rgba(255,255,255,.55);
-  margin-bottom: .15rem;
-}
-.ri-price-box__value {
-  display: block;
-  font: 700 2rem var(--font-d, 'Bodoni Moda', serif);
-  color: #fff;
-  line-height: 1;
+  vertical-align: middle;
 }
 .ri-price-box__save {
-  display: block;
   font: 500 .75rem var(--font-b, 'Jost', sans-serif);
   color: #86efac;
-  margin-top: .3rem;
+  margin-top: .05rem;
 }
+/* vehicle info line */
 .ri-price-box__right {
   font: 400 .72rem var(--font-b, 'Jost', sans-serif);
-  color: rgba(255,255,255,.45);
-  text-align: right;
+  color: rgba(255,255,255,.38);
   line-height: 1.5;
-  flex-shrink: 0;
 }
+/* maps link */
+.ri-fare-maps {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font: 500 .74rem var(--font-b, 'Jost', sans-serif);
+  color: #7dd3fc;
+  text-decoration: none;
+  margin-top: .55rem;
+  cursor: pointer;
+}
+.ri-fare-maps:hover { color: #38bdf8; }
+.ri-fare-maps[hidden] { display: none; }
 .ri-price-hint {
   font: 400 .8rem var(--font-b, 'Jost', sans-serif);
   color: rgba(255,255,255,.55);
@@ -3724,6 +3763,51 @@ gmp-placeautocomplete.field-input::part(input):focus {
   line-height: 1.55; max-width: 280px; margin: 0;
 }
 .ri-success__msg a { color: #c9a84c; font-weight: 600; }
+/* booking summary card inside success screen */
+.ri-success__summary {
+  width: 100%;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  padding: .85rem 1rem;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+}
+.ri-success__summary[hidden] { display: none; }
+.ri-success__route-line {
+  font: 600 .88rem var(--font-b, 'Jost', sans-serif);
+  color: rgba(255,255,255,.85);
+  line-height: 1.4;
+}
+.ri-success__price-line {
+  font: 500 .78rem var(--font-b, 'Jost', sans-serif);
+  color: #86efac;
+}
+.ri-success__maps {
+  display: flex;
+  flex-direction: column;
+  gap: .38rem;
+  margin-top: .1rem;
+}
+.ri-success__map-btn {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  background: rgba(56,189,248,.08);
+  border: 1px solid rgba(56,189,248,.22);
+  border-radius: 8px;
+  padding: .5rem .7rem;
+  color: #7dd3fc;
+  font: 500 .78rem var(--font-b, 'Jost', sans-serif);
+  text-decoration: none;
+  transition: background .15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ri-success__map-btn:hover { background: rgba(56,189,248,.16); }
 
 /* Footer */
 .ri-footer {

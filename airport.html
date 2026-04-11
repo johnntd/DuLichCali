@@ -39,7 +39,7 @@
   </script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ&libraries=places&callback=initMap&loading=async"></script>
 
-  <link rel="stylesheet" href="/style.css?v=20260416j">
+  <link rel="stylesheet" href="/style.css?v=20260417a">
   <link rel="stylesheet" href="/desktop.css">
 
   <style>
@@ -625,13 +625,23 @@
 
         <!-- Live price estimate -->
         <div class="ri-price-box" id="riPriceBox" hidden>
-          <div class="ri-price-box__left">
-            <span class="ri-price-badge">−20% so với Uber</span>
-            <span class="ri-price-box__label">Ước tính giá chuyến đi</span>
-            <span class="ri-price-box__value" id="riPriceAmt">~$—</span>
-            <span class="ri-price-box__save" id="riPriceSave"></span>
+          <span class="ri-fare-route" id="riRouteSummary"></span>
+          <div class="ri-fare-divider"></div>
+          <div class="ri-fare-row ri-fare-row--market">
+            <span>Giá thị trường (UberXL)</span>
+            <span id="riMarketAmt">~$—</span>
           </div>
-          <div class="ri-price-box__right" id="riVehicleBox">Mercedes Van<br>12 chỗ<br>Chưa bao gồm tip</div>
+          <div class="ri-fare-row ri-fare-row--dlc">
+            <span>Giá DLC <span class="ri-price-badge">−20%</span></span>
+            <span id="riPriceAmt">~$—</span>
+          </div>
+          <div class="ri-fare-divider"></div>
+          <span class="ri-price-box__save" id="riPriceSave"></span>
+          <div class="ri-price-box__right" id="riVehicleBox">Tesla Model Y · 4 chỗ · Chưa bao gồm tip</div>
+          <a class="ri-fare-maps" id="riRouteLink" href="#" target="_blank" rel="noopener" hidden>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Xem tuyến đường trên Maps
+          </a>
         </div>
         <div class="ri-price-hint" id="riPriceHint">Nhập địa chỉ để xem giá ước tính</div>
         <div class="ri-price-loading" id="riPriceLoading" hidden>
@@ -649,6 +659,12 @@
       <h3 class="ri-success__title">Đặt Xe Thành Công!</h3>
       <p class="ri-success__sub">Mã đặt chỗ của bạn:</p>
       <div class="ri-success__id" id="riSuccessId">DLC-XXXXXX</div>
+      <!-- Booking summary — populated by ride-intake.js onSuccess() -->
+      <div class="ri-success__summary" id="riSuccessSummary" hidden>
+        <div class="ri-success__route-line" id="riSuccessRoute"></div>
+        <div class="ri-success__price-line" id="riSuccessPrice"></div>
+        <div class="ri-success__maps" id="riSuccessMaps"></div>
+      </div>
       <p class="ri-success__msg">Chúng tôi sẽ xác nhận trong <strong>30 phút</strong>.<br>Cần gấp? Gọi <a href="tel:4089163439">(408) 916-3439</a>.</p>
     </div>
 
@@ -670,7 +686,7 @@
 <!-- Location module (region detection for airport sorting) -->
 <script src="/location.js?v=20260404"></script>
 <!-- Ride intake modal JS -->
-<script src="/ride-intake.js?v=20260406a"></script>
+<script src="/ride-intake.js?v=20260417a"></script>
 <script src="/marketplace/services-data.js"></script>
 <script src="/landing-nav.js?v=20260417b"></script>
 <script>

@@ -38,6 +38,8 @@ window.RideIntake = (function () {
   var _busy    = false;
   var _driverVehicle = null; // { name, seats, driverId } loaded from Firestore active driver
   var _driverCoords  = null; // { lat, lng } — driver's real-time GPS from Firestore
+  var _lastOrigin    = null; // saved for GPS map links
+  var _lastDest      = null;
 
   // ── Step management ───────────────────────────────────────────────────────────
   function open(type) {
@@ -470,6 +472,10 @@ window.RideIntake = (function () {
     if (typeof google === 'undefined' || !google.maps) { showPriceHint(); return; }
     showPriceLoading();
 
+    // Save for Maps links in fare card and confirmation screen
+    _lastOrigin = pair.origin;
+    _lastDest   = pair.destination;
+
     var ridePromise = _routeMatrix(pair.origin, pair.destination);
 
     if (_driverCoords) {
@@ -501,6 +507,18 @@ window.RideIntake = (function () {
     }
   }
 
+  // ── Maps link helpers ─────────────────────────────────────────────────────────
+  function _mapsRoute(from, to) {
+    return 'https://www.google.com/maps/dir/?api=1' +
+      '&origin=' + encodeURIComponent(from) +
+      '&destination=' + encodeURIComponent(to) +
+      '&travelmode=driving';
+  }
+  function _mapsQ(addr) {
+    return 'https://maps.google.com/?q=' + encodeURIComponent(addr);
+  }
+  var _PIN_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+
   // ── Price display ─────────────────────────────────────────────────────────────
   function showPriceHint(msg) {
     setHide('riPriceLoading', true);
@@ -521,14 +539,30 @@ window.RideIntake = (function () {
     setHide('riPriceHint',    true);
     setHide('riPriceLoading', true);
 
-    setText('riPriceAmt',  '~$' + q.dlcPrice);
-    var saveText = 'Tiết kiệm ~$' + q.savings + ' so với Uber';
-    if (q.deadheadMiles > 0) {
-      saveText += ' · Tài xế cách ' + q.deadheadMiles + ' mi';
-    }
-    setText('riPriceSave', saveText);
-    setHide('riPriceBox', false);
+    // Route summary line: "35 mi · ~48 phút"
+    var routeEl = document.getElementById('riRouteSummary');
+    if (routeEl) routeEl.textContent = q.miles + ' mi · ~' + q.minutes + ' phút';
 
+    // Market rate (strikethrough)
+    var marketEl = document.getElementById('riMarketAmt');
+    if (marketEl) marketEl.textContent = '~$' + q.uberEstimate;
+
+    // DLC price
+    setText('riPriceAmt', '~$' + q.dlcPrice);
+
+    // Savings line
+    var saveText = 'Tiết kiệm ~$' + q.savings + ' so với Uber';
+    if (q.deadheadMiles > 0) saveText += ' · Tài xế cách ' + q.deadheadMiles + ' mi';
+    setText('riPriceSave', saveText);
+
+    // Maps route link
+    var linkEl = document.getElementById('riRouteLink');
+    if (linkEl && _lastOrigin && _lastDest) {
+      linkEl.href = _mapsRoute(_lastOrigin, _lastDest);
+      linkEl.hidden = false;
+    }
+
+    setHide('riPriceBox', false);
     setText('riFooterAmt', '~$' + q.dlcPrice);
     setHide('riFooterEst', false);
   }
@@ -603,11 +637,13 @@ window.RideIntake = (function () {
           customerName: data.customerName || '',
           estimatedPrice: data.estimatedPrice || null,
           estimatedMiles: data.estimatedMiles || null,
-          airport:      data.airport || null,
-          arrivalDate:  data.arrivalDate || data.departureDate || null,
-          arrivalTime:  data.arrivalTime || data.departureTime || null,
-          status:       'new',
-          createdAt:    ts,
+          airport:        data.airport || null,
+          arrivalDate:    data.arrivalDate || data.departureDate || null,
+          arrivalTime:    data.arrivalTime || data.departureTime || null,
+          pickupAddress:  data.pickupAddress  || null,
+          dropoffAddress: data.dropoffAddress || null,
+          status:         'new',
+          createdAt:      ts,
         });
       })
       .then(function () { onSuccess(bookingId); })
@@ -671,9 +707,45 @@ window.RideIntake = (function () {
     setHide('riFormWrap', true);
     setHide('riFooter',   true);
     setText('riSuccessId', bookingId);
-    setHide('riSuccess',   false);
     setHide('riBackBtn',   true);
     setText('riTitle', 'Đặt Xe Thành Công!');
+
+    // Build booking summary with route + GPS links
+    var summaryEl = document.getElementById('riSuccessSummary');
+    if (summaryEl && _lastOrigin && _lastDest) {
+      var fromLabel, toLabel;
+      if (_type === 'pickup') {
+        var ap = val('ri_p_airport');
+        fromLabel = ap ? (ap + ' Airport') : _lastOrigin;
+        toLabel   = val('ri_dropoff_addr') || _lastDest;
+      } else if (_type === 'dropoff') {
+        fromLabel = val('ri_pickup_addr') || _lastOrigin;
+        var ap2 = val('ri_d_airport');
+        toLabel = ap2 ? (ap2 + ' Airport') : _lastDest;
+      } else {
+        fromLabel = val('ri_from_addr') || _lastOrigin;
+        toLabel   = val('ri_to_addr')   || _lastDest;
+      }
+
+      var routeEl = document.getElementById('riSuccessRoute');
+      if (routeEl) routeEl.textContent = fromLabel + ' → ' + toLabel;
+
+      var priceEl = document.getElementById('riSuccessPrice');
+      if (priceEl && _quote) {
+        priceEl.textContent = '~$' + _quote.dlcPrice + ' ước tính · Tiết kiệm ~$' + _quote.savings + ' so với Uber';
+      }
+
+      var mapsEl = document.getElementById('riSuccessMaps');
+      if (mapsEl) {
+        mapsEl.innerHTML =
+          '<a class="ri-success__map-btn" href="' + _mapsRoute(_lastOrigin, _lastDest) + '" target="_blank" rel="noopener">' + _PIN_SVG + ' Xem tuyến đường</a>' +
+          '<a class="ri-success__map-btn" href="' + _mapsQ(_lastOrigin) + '" target="_blank" rel="noopener">' + _PIN_SVG + ' Điểm đón: ' + fromLabel + '</a>' +
+          '<a class="ri-success__map-btn" href="' + _mapsQ(_lastDest) + '" target="_blank" rel="noopener">' + _PIN_SVG + ' Điểm đến: ' + toLabel + '</a>';
+      }
+      summaryEl.hidden = false;
+    }
+
+    setHide('riSuccess', false);
     // Repurpose footer as close button
     var footer = document.getElementById('riFooter');
     if (footer) {

@@ -2329,18 +2329,29 @@
         eligibleDriverCount:eligIds.length, assignedDriverId:preAssigned?preAssigned.id:null,
         read:false, createdAt:fv.serverTimestamp(),
       });
-      // Phase 4: rideNotifications for driver dispatch (was missing from chat flow)
-      if (eligIds.length > 0) {
-        db.collection('rideNotifications').add({
-          bookingId:orderId, type:isPickup?'airport_pickup':'airport_dropoff',
-          eligibleDriverIds:eligIds,
-          assignedDriverId:preAssigned ? (preAssigned.id||'') : null,
-          status:'pending_acceptance',
-          airport:f.airport||'', datetime,
-          customerName:f.customerName||'', customerPhone:f.customerPhone||'',
-          createdAt:fv.serverTimestamp(),
-        }).catch(function(e){ console.warn('[rideNotif] write failed:', e.message); });
-      }
+      // Phase 4: rideNotifications for driver dispatch — always write (driver needs to see all rides)
+      db.collection('rideNotifications').add({
+        bookingId:        orderId,
+        serviceType:      isPickup ? 'airport_pickup' : 'airport_dropoff',
+        serviceLabel:     isPickup ? '✈ Đón Sân Bay' : '✈ Ra Sân Bay',
+        type:             isPickup ? 'airport_pickup' : 'airport_dropoff',
+        eligibleDriverIds:eligIds,
+        assignedDriverId: preAssigned ? (preAssigned.id||'') : null,
+        status:           'new',  // must be 'new' — matches driver-admin.html query
+        airport:          f.airport||'',
+        airline:          f.airline||'',
+        terminal:         f.terminal||'',
+        arrivalDate:      f.requestedDate||null,
+        arrivalTime:      isPickup ? (f.arrivalTime||null) : (f.departureTime||null),
+        pickupAddress:    isPickup ? null : addrField,
+        dropoffAddress:   isPickup ? addrField : null,
+        passengers:       f.passengers||1,
+        estimatedPrice:   null,
+        estimatedMiles:   null,
+        customerName:     f.customerName||'',
+        customerPhone:    f.customerPhone||'',
+        createdAt:        fv.serverTimestamp(),
+      }).catch(function(e){ console.warn('[rideNotif] write failed:', e.message); });
       finalDispatchState = {
         status: airBookStatus,
         eligibleCount: eligIds.length,
@@ -2513,18 +2524,26 @@
         eligibleDriverCount:prEligIds.length, assignedDriverId:prPreAssigned?prPreAssigned.id:null,
         read:false, createdAt:fv.serverTimestamp(),
       });
-      // Phase 4: rideNotifications (was missing)
-      if (prEligIds.length > 0) {
-        db.collection('rideNotifications').add({
-          bookingId:orderId, type:'private_ride',
-          eligibleDriverIds:prEligIds,
-          assignedDriverId:prPreAssigned ? (prPreAssigned.id||'') : null,
-          status:'pending_acceptance',
-          pickupAddress:f.pickupAddress||'', dropoffAddress:f.dropoffAddress||'',
-          datetime, customerName:f.customerName||'', customerPhone:f.customerPhone||'',
-          createdAt:fv.serverTimestamp(),
-        }).catch(function(e){ console.warn('[rideNotif] write failed:', e.message); });
-      }
+      // Phase 4: rideNotifications — always write so drivers see all rides
+      db.collection('rideNotifications').add({
+        bookingId:        orderId,
+        serviceType:      'private_ride',
+        serviceLabel:     '🚗 Xe Riêng',
+        type:             'private_ride',
+        eligibleDriverIds:prEligIds,
+        assignedDriverId: prPreAssigned ? (prPreAssigned.id||'') : null,
+        status:           'new',  // must be 'new' — matches driver-admin.html query
+        pickupAddress:    f.pickupAddress||'',
+        dropoffAddress:   f.dropoffAddress||'',
+        arrivalDate:      f.requestedDate||null,
+        arrivalTime:      f.requestedTime||null,
+        passengers:       f.passengers||1,
+        estimatedPrice:   rideEst ? rideEst.ourPrice : null,
+        estimatedMiles:   rideEst ? rideEst.miles : null,
+        customerName:     f.customerName||'',
+        customerPhone:    f.customerPhone||'',
+        createdAt:        fv.serverTimestamp(),
+      }).catch(function(e){ console.warn('[rideNotif] write failed:', e.message); });
       finalDispatchState = {
         status: prBookStatus,
         eligibleCount: prEligIds.length,

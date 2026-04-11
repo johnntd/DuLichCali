@@ -225,6 +225,134 @@ exports.onVendorNotification = onDocumentCreated(
   }
 );
 
+// ══════════════════════════════════════════════════════════════════════════════
+//  DRIVER RIDE ALERT — SMS to eligible drivers on new ride notification
+//
+//  Trigger:  client writes to rideNotifications/{notifId} with status='new'
+//  Behavior: fetches each eligibleDriverId → gets phone → sends Twilio SMS.
+//            Falls back to querying all active+compliant drivers when
+//            eligibleDriverIds is empty (e.g. no browser-loaded driver data).
+//  Idempotent: guards with driverSmsSent === true before sending.
+// ══════════════════════════════════════════════════════════════════════════════
+const AIRPORT_REGION_CF = {
+  SFO:'bayarea', OAK:'bayarea', SJC:'bayarea', SMF:'bayarea',
+  LAX:'socal', SNA:'socal', BUR:'socal', LGB:'socal', ONT:'socal',
+  SAN:'sandiego', PSP:'palmsprings',
+};
+
+exports.onRideNotification = onDocumentCreated(
+  {
+    document:       'rideNotifications/{notifId}',
+    region:         'us-central1',
+    secrets:        [TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER],
+    timeoutSeconds: 60,
+    retry:          false,
+  },
+  async (event) => {
+    const { notifId } = event.params;
+    const notifRef    = event.data.ref;
+    const log = (msg) => console.log(`[driver-sms][${notifId}] ${msg}`);
+
+    log('triggered');
+
+    // ── Idempotency ───────────────────────────────────────────────────────────
+    const current = (await notifRef.get()).data() || {};
+    if (current.driverSmsSent === true) { log('already sent — skip'); return; }
+
+    const data = event.data.data();
+    if (data.status !== 'new') { log('status is not new — skip'); return; }
+
+    // ── Resolve eligible driver IDs ───────────────────────────────────────────
+    let eligibleIds = (data.eligibleDriverIds || []).filter(Boolean);
+
+    if (eligibleIds.length === 0) {
+      // Client had no _activeDrivers loaded — query Firestore directly
+      log('eligibleDriverIds empty, querying Firestore for eligible drivers');
+      const airport   = (data.airport || '').toUpperCase();
+      const regionId  = AIRPORT_REGION_CF[airport] || null;
+      const allSnap   = await db.collection('drivers')
+        .where('adminStatus',       '==', 'active')
+        .where('complianceStatus',  '==', 'approved')
+        .get();
+      eligibleIds = allSnap.docs
+        .filter(d => {
+          if (!regionId) return true; // private ride: all regions
+          return (d.data().regions || []).includes(regionId);
+        })
+        .map(d => d.id);
+      log(`Firestore fallback found ${eligibleIds.length} eligible driver(s)`);
+    }
+
+    if (eligibleIds.length === 0) {
+      log('no eligible drivers — skip SMS');
+      await notifRef.update({
+        driverSmsSent:       false,
+        driverSmsStatus:     'skipped',
+        driverSmsSkipReason: 'no_eligible_drivers',
+      });
+      return;
+    }
+
+    // ── Validate Twilio credentials ───────────────────────────────────────────
+    const accountSid = TWILIO_ACCOUNT_SID.value();
+    const authToken  = TWILIO_AUTH_TOKEN.value();
+    const fromNumber = TWILIO_FROM_NUMBER.value();
+    if (!accountSid || !authToken || !fromNumber) {
+      log('missing Twilio secrets');
+      await notifRef.update({ driverSmsSent: false, driverSmsStatus: 'skipped', driverSmsSkipReason: 'missing_twilio_secrets' });
+      return;
+    }
+
+    // ── Build SMS body (GSM-7: no emoji, no diacritics) ──────────────────────
+    const SVC = { airport_pickup:'Don san bay', airport_dropoff:'Ra san bay', private_ride:'Xe rieng' };
+    const svcLabel  = SVC[data.serviceType || data.type] || 'Chuyen xe';
+    const airport   = data.airport ? ' [' + data.airport + ']' : '';
+    const pax       = data.passengers || 1;
+    const addr      = data.pickupAddress || data.dropoffAddress || '';
+    const addrLine  = addr ? '\n' + stripDiacritics(addr).slice(0, 50) : '';
+    const smsBody   = [
+      '[Du Lich Cali] Chuyen xe moi!',
+      svcLabel + airport + ' · ' + pax + ' nguoi' + addrLine,
+      'Nhan chuyen: dulichcali21.com/driver-admin',
+    ].join('\n');
+
+    // ── Send SMS to each eligible driver ──────────────────────────────────────
+    const client  = twilio(accountSid, authToken);
+    const sentTo  = [];
+    const failed  = [];
+
+    for (const driverId of eligibleIds) {
+      try {
+        const driverSnap = await db.collection('drivers').doc(driverId).get();
+        if (!driverSnap.exists) { log(`driver ${driverId} not found`); continue; }
+        const phone = driverSnap.data().phone;
+        if (!phone) { log(`driver ${driverId} has no phone`); continue; }
+
+        const msgParams = fromNumber.startsWith('MG')
+          ? { messagingServiceSid: fromNumber, to: phone, body: smsBody }
+          : { from: fromNumber,               to: phone, body: smsBody };
+
+        const msg = await client.messages.create(msgParams);
+        log(`sent to driver ${driverId} (${phone}) — sid=${msg.sid}`);
+        sentTo.push(driverId);
+      } catch (err) {
+        log(`failed for driver ${driverId}: ${err.message}`);
+        failed.push(driverId);
+      }
+    }
+
+    await notifRef.update({
+      driverSmsSent:   sentTo.length > 0,
+      driverSmsStatus: sentTo.length > 0 ? 'sent' : 'failed',
+      driverSmsSentTo: sentTo,
+      driverSmsSentAt: admin.firestore.FieldValue.serverTimestamp(),
+      ...(failed.length ? { driverSmsFailedTo: failed } : {}),
+    });
+
+    log(`done — sent to ${sentTo.length}, failed ${failed.length}`);
+  }
+);
+
 // ── SMS body builder ──────────────────────────────────────────────────────────
 // Keeps text in GSM-7 charset (no emoji, no Vietnamese diacritics in body)
 // to avoid UCS-2 encoding which halves per-segment character limits.

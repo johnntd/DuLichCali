@@ -570,6 +570,7 @@
                 <div class="ri-field ri-field--full">
                   <label class="ri-label" for="ri_from_addr">Điểm đón <span class="ri-req">*</span></label>
                   <input class="ri-input" type="text" id="ri_from_addr" placeholder="Địa chỉ, thành phố hoặc địa điểm" autocomplete="off" oninput="RideIntake.schedule()">
+                  <button type="button" id="riGeoBtn" onclick="RideIntake.useCurrentLocation()" style="display:inline-flex;align-items:center;gap:.3rem;background:none;border:1px solid rgba(255,255,255,.18);color:#94a3b8;padding:.3rem .6rem;border-radius:6px;font-size:.72rem;cursor:pointer;margin-top:.3rem;line-height:1">📍 Vị trí của tôi</button>
                 </div>
               </div>
               <div class="ri-row">
@@ -691,7 +692,7 @@
 <!-- Shared pricing engine — must load before ride-intake.js -->
 <script src="/pricing.js?v=20260418b"></script>
 <!-- Ride intake modal JS -->
-<script src="/ride-intake.js?v=20260418d"></script>
+<script src="/ride-intake.js?v=20260419a"></script>
 <script src="/marketplace/services-data.js"></script>
 <script src="/landing-nav.js?v=20260417b"></script>
 <script>

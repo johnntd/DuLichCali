@@ -925,6 +925,10 @@
   // Deadhead rate: driver drives empty to/from airport; charged at $0.80/mile (fuel + time)
   var DEADHEAD_PER_MILE = 0.80;
 
+  // Vague-address guard: single-word/phrase inputs that are not real addresses.
+  // Any extract() for pickup/dropoff that matches this returns null → re-ask.
+  var VAGUE_ADDR_RE = /^(home|my home|my house|house|my place|nhà|nhà tôi|nhà của tôi|mi casa|casa|work|my work|office|my office|there|chỗ đó|this place|chỗ này|destination|điểm đến|nơi đến)$/i;
+
   // Maps airport codes to their city name for use with estimateCityToCity
   var AIRPORT_CITY = {
     'lax': 'Los Angeles',   'sna': 'Orange County',  'lgb': 'Long Beach',
@@ -1271,6 +1275,8 @@
             var _trimmed = t.trim();
             // Exclude bare airport codes (3 uppercase letters) and short tokens
             if (/^[A-Z]{2,4}$/.test(_trimmed)) return null;
+            // Reject clearly vague terms — driver cannot navigate to these
+            if (VAGUE_ADDR_RE.test(_trimmed)) return null;
             if (_trimmed.length >= 5) return _trimmed;
             return null;
           },
@@ -1410,6 +1416,8 @@
             var _trimmed = t.trim();
             // Exclude bare airport codes (3 uppercase letters) and short tokens
             if (/^[A-Z]{2,4}$/.test(_trimmed)) return null;
+            // Reject clearly vague terms — driver cannot navigate to these
+            if (VAGUE_ADDR_RE.test(_trimmed)) return null;
             if (_trimmed.length >= 5) return _trimmed;
             return null;
           },
@@ -1511,6 +1519,8 @@
             var _trimmed = t.trim();
             // Exclude bare airport codes (3 uppercase letters) and short tokens
             if (/^[A-Z]{2,4}$/.test(_trimmed)) return null;
+            // Reject clearly vague terms — driver cannot navigate to these
+            if (VAGUE_ADDR_RE.test(_trimmed)) return null;
             if (_trimmed.length >= 5) return _trimmed;
             return null;
           },
@@ -1519,7 +1529,13 @@
         {
           key: 'dropoffAddress',
           question: function() { return S('qRideDropoff'); },
-          extract: function(t) { return X.address(t) || (t.trim().length >= 3 ? t.trim() : null); },
+          extract: function(t) {
+            var _addr = X.address(t);
+            if (_addr) return _addr;
+            var _trimmed = t.trim();
+            if (VAGUE_ADDR_RE.test(_trimmed)) return null;
+            return _trimmed.length >= 3 ? _trimmed : null;
+          },
           optional: false,
         },
         {
@@ -2305,12 +2321,30 @@
       var preAssigned   = eligDrivers.length === 1 ? eligDrivers[0] : null;
       var airBookStatus = 'dispatching'; // Phase 13: all rides go through offer/accept flow
 
+      // Compute estimated price for airport booking (parse number from estimate string)
+      var airEstStr = estimateTransfer(f.passengers||1, f.airport, addrField);
+      var airPriceMatch = typeof airEstStr === 'string' && airEstStr.match(/~?\$(\d+)/);
+      var airPrice = airPriceMatch ? parseInt(airPriceMatch[1], 10) : null;
+
       await db.collection('bookings').doc(orderId).set({
         bookingId:orderId, trackingToken,
         status:airBookStatus, serviceType:isPickup?'pickup':'dropoff', datetime,
         airport:f.airport||'', airline:f.airline||'', terminal:f.terminal||'',
-        address:addrField, passengers:f.passengers||1, luggageCount:f.luggageCount||0,
-        name:f.customerName||'', phone:f.customerPhone||'', customerEmail:f.customerEmail||'',
+        // Normalized address fields (ride-intake compatible names)
+        dropoffAddress: isPickup ? addrField : '',
+        pickupAddress:  isPickup ? '' : addrField,
+        address:addrField,  // keep for backwards compat
+        passengers:f.passengers||1, luggageCount:f.luggageCount||0,
+        // Normalized customer fields (ride-intake compatible names)
+        customerName:f.customerName||'', customerPhone:f.customerPhone||'',
+        name:f.customerName||'', phone:f.customerPhone||'',  // keep for backwards compat
+        customerEmail:f.customerEmail||'',
+        // Normalized date fields (ride-intake compatible split fields)
+        arrivalDate:   isPickup ? (f.requestedDate||'') : '',
+        arrivalTime:   isPickup ? (f.arrivalTime||'')   : '',
+        departureDate: isPickup ? '' : (f.requestedDate||''),
+        departureTime: isPickup ? '' : (f.departureTime||''),
+        estimatedPrice: airPrice,
         notes:f.notes||'', source:'ai_chat',
         eligibleDriverIds: eligIds,
         driver: null, // set when driver accepts offer (Phase 13)
@@ -2332,7 +2366,7 @@
       // Phase 4: rideNotifications for driver dispatch — always write (driver needs to see all rides)
       db.collection('rideNotifications').add({
         bookingId:        orderId,
-        serviceType:      isPickup ? 'airport_pickup' : 'airport_dropoff',
+        serviceType:      isPickup ? 'pickup' : 'dropoff',  // matches booking doc serviceType
         serviceLabel:     isPickup ? '✈ Đón Sân Bay' : '✈ Ra Sân Bay',
         type:             isPickup ? 'airport_pickup' : 'airport_dropoff',
         eligibleDriverIds:eligIds,
@@ -2517,10 +2551,17 @@
         bookingId:orderId, trackingToken,
         status:prBookStatus, serviceType:'private_ride', datetime,
         pickupAddress:f.pickupAddress||'', dropoffAddress:f.dropoffAddress||'',
+        // Normalized date fields (ride-intake compatible split fields)
+        rideDate: f.requestedDate||'',
+        rideTime: f.requestedTime||'',
         passengers:f.passengers||1,
-        name:f.customerName||'', phone:f.customerPhone||'', customerEmail:f.customerEmail||'',
+        // Normalized customer fields
+        customerName:f.customerName||'', customerPhone:f.customerPhone||'',
+        name:f.customerName||'', phone:f.customerPhone||'',  // keep for backwards compat
+        customerEmail:f.customerEmail||'',
         notes:f.notes||'', source:'ai_chat',
         estimatedPrice: rideEst ? rideEst.ourPrice : null,
+        estimatedMiles: rideEst ? rideEst.miles : null,
         eligibleDriverIds: prEligIds,
         driver: null, // set when driver accepts offer (Phase 13)
         vehicleLat:null, vehicleLng:null, vehicleHeading:null, etaMinutes:null,

@@ -796,23 +796,32 @@ window.RideIntake = (function () {
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     };
     if (_type === 'pickup') {
+      var aDate = val('ri_arrival_date'), aTime = val('ri_arrival_time');
       Object.assign(base, {
         airport: val('ri_p_airport'), airline: val('ri_p_flight') || '',
-        terminal: val('ri_p_terminal') || '', arrivalDate: val('ri_arrival_date'),
-        arrivalTime: val('ri_arrival_time'), dropoffAddress: val('ri_dropoff_addr'),
+        terminal: val('ri_p_terminal') || '', arrivalDate: aDate,
+        arrivalTime: aTime, dropoffAddress: val('ri_dropoff_addr'),
         luggageCount: parseInt(val('ri_p_luggage') || '0', 10),
+        // Normalized combined datetime field (workflowEngine compatible)
+        datetime: (aDate && aTime) ? aDate + 'T' + aTime + ':00' : (aDate || ''),
       });
     } else if (_type === 'dropoff') {
+      var dDate = val('ri_depart_date'), dTime = val('ri_depart_time');
       Object.assign(base, {
         pickupAddress: val('ri_pickup_addr'), airport: val('ri_d_airport'),
         airline: val('ri_d_flight') || '', terminal: val('ri_d_terminal') || '',
-        departureDate: val('ri_depart_date'), departureTime: val('ri_depart_time'),
+        departureDate: dDate, departureTime: dTime,
         luggageCount: parseInt(val('ri_d_luggage') || '0', 10),
+        // Normalized combined datetime field
+        datetime: (dDate && dTime) ? dDate + 'T' + dTime + ':00' : (dDate || ''),
       });
     } else {
+      var rDate = val('ri_ride_date'), rTime = val('ri_ride_time');
       Object.assign(base, {
         pickupAddress: val('ri_from_addr'), dropoffAddress: val('ri_to_addr'),
-        rideDate: val('ri_ride_date'), rideTime: val('ri_ride_time'),
+        rideDate: rDate, rideTime: rTime,
+        // Normalized combined datetime field
+        datetime: (rDate && rTime) ? rDate + 'T' + rTime + ':00' : (rDate || ''),
       });
     }
     return base;
@@ -913,15 +922,61 @@ window.RideIntake = (function () {
   }
 
   // ── Public API ────────────────────────────────────────────────────────────────
+  // ── Geolocation for private ride pickup ──────────────────────────────────
+  // Called by the "Use my location" button on the private-ride pickup field.
+  // Requests browser location, reverse-geocodes via Google Maps Geocoder, and
+  // fills ri_from_addr so the quote engine can calculate the route.
+  function useCurrentLocation() {
+    if (!navigator.geolocation) {
+      alert('Trình duyệt của bạn không hỗ trợ định vị.');
+      return;
+    }
+    var btn = document.getElementById('riGeoBtn');
+    if (btn) { btn.textContent = '⏳ Đang lấy vị trí...'; btn.disabled = true; }
+
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        var lat = pos.coords.latitude, lng = pos.coords.longitude;
+        var restoreBtn = function() {
+          if (btn) { btn.textContent = '📍 Vị trí của tôi'; btn.disabled = false; }
+        };
+        // Use Google Maps Geocoder if available; otherwise fall back to lat,lng string
+        if (window.google && google.maps && google.maps.Geocoder) {
+          new google.maps.Geocoder().geocode(
+            { location: { lat: lat, lng: lng } },
+            function(results, status) {
+              restoreBtn();
+              var addr = (status === 'OK' && results && results[0])
+                ? results[0].formatted_address
+                : lat.toFixed(5) + ', ' + lng.toFixed(5);
+              var input = document.getElementById('ri_from_addr');
+              if (input) { input.value = addr; scheduleDistance(); }
+            }
+          );
+        } else {
+          restoreBtn();
+          var input = document.getElementById('ri_from_addr');
+          if (input) { input.value = lat.toFixed(5) + ', ' + lng.toFixed(5); scheduleDistance(); }
+        }
+      },
+      function(err) {
+        if (btn) { btn.textContent = '📍 Vị trí của tôi'; btn.disabled = false; }
+        console.warn('[RideIntake] geolocation error:', err.message);
+      },
+      { timeout: 8000, maximumAge: 60000 }
+    );
+  }
+
   return {
-    open:         open,
-    close:        close,
-    goForm:       goForm,
-    backToPicker: backToPicker,
-    nextSubStep:  nextSubStep,
-    submit:       submit,
-    schedule:     scheduleDistance,
-    AIRPORTS:     AIRPORTS,
+    open:               open,
+    close:              close,
+    goForm:             goForm,
+    backToPicker:       backToPicker,
+    nextSubStep:        nextSubStep,
+    submit:             submit,
+    schedule:           scheduleDistance,
+    useCurrentLocation: useCurrentLocation,
+    AIRPORTS:           AIRPORTS,
   };
 
 }());

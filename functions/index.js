@@ -1928,20 +1928,65 @@ exports.uploadVendorImage = onCall(
 //   Max 5 attempts before falling back to awaiting_driver (manual admin).
 
 // ── Shared helper: query eligible drivers ─────────────────────────────────────
+// Logs each filter stage for debugging. Falls back to any active+approved driver
+// if region filtering yields 0 (prevents silent no-dispatch on region mismatch).
 async function _queryEligibleDrivers(serviceType, airport, skipDriverIds) {
-  const regionId = airport ? (AIRPORT_REGION_CF[airport.toUpperCase()] || null) : null;
-  const allSnap  = await db.collection('drivers')
-    .where('adminStatus',      '==', 'active')
-    .where('complianceStatus', '==', 'approved')
+  const regionId = airport ? (AIRPORT_REGION_CF[(airport || '').toUpperCase()] || null) : null;
+  const log = (msg) => console.log(`[_queryEligibleDrivers] ${msg}`);
+
+  log(`serviceType=${serviceType} airport=${airport} regionId=${regionId} skip=[${(skipDriverIds||[]).join(',')}]`);
+
+  // Step 1 — fetch ALL active drivers (broaden query; filter compliance in-memory for logging)
+  const allSnap = await db.collection('drivers')
+    .where('adminStatus', '==', 'active')
     .get();
+  log(`Stage 1 — adminStatus=active: ${allSnap.size} driver(s)`);
+
   const skip = new Set(skipDriverIds || []);
-  return allSnap.docs
-    .filter(d => {
-      if (skip.has(d.id)) return false;
-      if (regionId) return (d.data().regions || []).includes(regionId);
-      return true; // private_ride: any region
-    })
-    .map(d => Object.assign({ id: d.id }, d.data()));
+
+  // Step 2 — compliance filter
+  const afterCompliance = allSnap.docs.filter(d => {
+    const cs = d.data().complianceStatus;
+    const ok = cs === 'approved';
+    if (!ok) log(`  SKIP ${d.id} — complianceStatus=${cs}`);
+    return ok;
+  });
+  log(`Stage 2 — complianceStatus=approved: ${afterCompliance.length} driver(s)`);
+
+  // Step 3 — skip list
+  const afterSkip = afterCompliance.filter(d => {
+    if (skip.has(d.id)) { log(`  SKIP ${d.id} — in skipDriverIds`); return false; }
+    return true;
+  });
+  log(`Stage 3 — after skip list: ${afterSkip.length} driver(s)`);
+
+  if (afterSkip.length === 0) {
+    log('No active+approved drivers at all — cannot dispatch');
+    return [];
+  }
+
+  // Step 4 — region filter (airport rides only)
+  if (regionId) {
+    const afterRegion = afterSkip.filter(d => {
+      const regions = d.data().regions || [];
+      const ok = regions.includes(regionId);
+      log(`  Driver ${d.id} regions=${JSON.stringify(regions)} — ${ok ? 'PASS' : 'SKIP (region mismatch)'}`);
+      return ok;
+    });
+    log(`Stage 4 — region=${regionId}: ${afterRegion.length} driver(s)`);
+
+    if (afterRegion.length > 0) {
+      return afterRegion.map(d => Object.assign({ id: d.id }, d.data()));
+    }
+
+    // Fallback: region filter yielded 0 but active+approved drivers exist → dispatch anyway
+    log(`FALLBACK — region filter empty; dispatching to any active+approved driver (${afterSkip.length} available)`);
+    return afterSkip.map(d => Object.assign({ id: d.id }, d.data()));
+  }
+
+  // No region constraint (private_ride) — use all after skip
+  log(`Stage 4 — no region constraint (serviceType=${serviceType}): ${afterSkip.length} driver(s) eligible`);
+  return afterSkip.map(d => Object.assign({ id: d.id }, d.data()));
 }
 
 // ── onDispatchQueue ──────────────────────────────────────────────────────────
@@ -1980,8 +2025,9 @@ exports.onDispatchQueue = onDocumentCreated(
     }
 
     // Find eligible drivers
+    log(`booking.serviceType=${booking.serviceType} booking.airport=${booking.airport} skip=[${skipDriverIds}]`);
     const eligible = await _queryEligibleDrivers(booking.serviceType, booking.airport, skipDriverIds);
-    log(`${eligible.length} eligible driver(s), skip=[${skipDriverIds}]`);
+    log(`${eligible.length} eligible driver(s) after full filter`);
 
     if (eligible.length === 0) {
       await db.collection('bookings').doc(bookingId).update({

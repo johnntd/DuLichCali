@@ -106,6 +106,20 @@ service cloud.firestore {
       allow update: if request.auth != null;
     }
 
+    // ── Dispatch queue — anonymous (customer booking flow) can create; auth can read/update ──
+    // Customers are signed in anonymously when booking; anonymous auth satisfies request.auth != null.
+    // The Cloud Function (Admin SDK) reads/writes via server-side bypass — no rule needed for it.
+    match /dispatchQueue/{docId} {
+      allow create: if request.auth != null;
+      allow read, update: if request.auth != null;
+    }
+
+    // ── Booking offers — auth read (drivers poll for their offers) ────────────────
+    match /bookingOffers/{docId} {
+      allow read: if request.auth != null;
+      allow create, update: if false; // Cloud Function only (Admin SDK bypasses rules)
+    }
+
     // ── Default deny ──────────────────────────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

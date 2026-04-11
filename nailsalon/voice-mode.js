@@ -58,6 +58,7 @@
   var _currentSource = null;    // AudioBufferSourceNode currently playing
   var _welcomeBuffer = null;    // Pre-fetched MP3 ArrayBuffer for welcome message
   var _voices        = [];      // Cached voice list — populated once on voiceschanged
+  var _pendingSpoken = null;    // Pre-built spoken text for confirmation flows (set by receptionist)
 
   // ── State labels ──────────────────────────────────────────────────────────
   var LABEL = {
@@ -89,9 +90,27 @@
   }
 
   // ── TTS text helpers ──────────────────────────────────────────────────────
-  // Strip AI state markers and markdown from text before speaking.
+
+  // Convert 24-hour time strings to natural spoken form.
+  // "15:30" → "3:30 PM", "09:00" → "9:00 AM", "00:15" → "12:15 AM".
+  // Skips strings already followed by AM/PM so formatted display text is left untouched.
+  function _humanizeTimeStr(text) {
+    return text.replace(
+      /\b(0?\d|1\d|2[0-3]):([0-5]\d)\b(?!\s*[AaPp][Mm])/g,
+      function (_, hStr, mStr) {
+        var hr = parseInt(hStr, 10);
+        var mn = parseInt(mStr, 10);
+        var ap = hr < 12 ? 'AM' : 'PM';
+        hr = hr % 12 || 12;
+        return hr + ':' + (mn < 10 ? '0' : '') + mn + ' ' + ap;
+      }
+    );
+  }
+
+  // Strip AI state markers and markdown from text before speaking,
+  // then convert any remaining 24h time strings to natural speech form.
   function _cleanForTts(text) {
-    return text
+    var clean = text
       .replace(/\[STATE:[^\]]*\]/g,    '')
       .replace(/\[BOOKING:[^\]]*\]/g,  '')
       .replace(/\[ESCALATE:[^\]]*\]/g, '')
@@ -102,6 +121,7 @@
       .replace(/\n/g, ' ')
       .replace(/\s{2,}/g, ' ')
       .trim();
+    return _humanizeTimeStr(clean);
   }
 
   // Trim long replies to a natural sentence boundary.
@@ -381,6 +401,12 @@
   //                                 inner bubble has mp-ai__bubble--typing
   // Selector .mp-ai__bubble:not(.mp-ai__bubble--typing) + non-empty text
   // handles both cases correctly.
+  //
+  // _pendingSpoken override: when receptionist.js pre-builds a full spoken
+  // confirmation text (confirm + closing + tip note as one utterance), it calls
+  // DLCVoiceMode.setNextSpoken() before the first _appendMessage fires. The
+  // observer then uses that pre-built text instead of the raw bubble text,
+  // so the voice path speaks the complete intended confirmation content.
   function _watchForBotBubble(cb) {
     if (!_msgsEl) return;
     var obs = new MutationObserver(function (mutations) {
@@ -396,7 +422,11 @@
           var bubble = node.querySelector('.mp-ai__bubble:not(.mp-ai__bubble--typing)');
           if (bubble && bubble.textContent.trim()) {
             obs.disconnect();
-            cb(bubble.textContent.trim());
+            // Use pre-built spoken text if available (confirmation with closing + tip note);
+            // otherwise fall back to raw bubble text content.
+            var spoken = _pendingSpoken || bubble.textContent.trim();
+            _pendingSpoken = null;
+            cb(spoken);
             return;
           }
         }
@@ -814,7 +844,13 @@
     open:            open,
     close:           close,
     isSupported:     function () { return hasSR && hasTTS; },
-    prefetchWelcome: _prefetchWelcome
+    prefetchWelcome: _prefetchWelcome,
+    // Called by receptionist.js before the first confirmation bubble is appended.
+    // Sets a one-shot spoken override: the next _watchForBotBubble callback will
+    // speak this text instead of the raw first-bubble text content. This lets the
+    // voice path speak the full confirmation (factual + closing + tip note) as a
+    // single natural utterance rather than only the first of several bubbles.
+    setNextSpoken:   function (text) { _pendingSpoken = text || null; }
   };
 
 })();

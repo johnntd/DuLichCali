@@ -2209,6 +2209,21 @@
     // Natural-language confirmation (factual sentence only — closing appended after photo widget)
     var confirmMsg = _buildConfirmedNatural(biz, draft, lang);
     var closingMsg = _buildClosingNatural(lang);
+    // Build tip note here — needed both for the voice spoken hook below and for display after
+    // the closing message. Moving it up avoids computing it twice.
+    var tipNote    = _buildCashTipNote(biz, lang);
+
+    // Voice mode: pre-build the full spoken confirmation before the first bubble is appended.
+    // _watchForBotBubble fires on the FIRST bot bubble (confirmMsg) and disconnects immediately.
+    // closingMsg and tipNote arrive as separate subsequent bubbles that the observer never sees.
+    // setNextSpoken() feeds the complete spoken text as a one-shot override so voice speaks the
+    // full intended confirmation — confirm + closing + tip note — in a single natural utterance.
+    if (window.DLCVoiceMode && typeof window.DLCVoiceMode.setNextSpoken === 'function') {
+      var _vmSpoken = confirmMsg + ' ' + closingMsg;
+      if (tipNote) _vmSpoken += ' ' + tipNote;
+      window.DLCVoiceMode.setNextSpoken(_vmSpoken);
+    }
+
     biz._aiHistory = biz._aiHistory || [];
     // History stores the full message (factual + closing) as a single assistant turn
     biz._aiHistory.push({ role: 'assistant', content: confirmMsg + ' ' + closingMsg });
@@ -2340,7 +2355,7 @@
     _appendMessage(messagesEl, closingMsg, 'bot');
 
     // Optional cash tip note — shown only when vendor enables it (Part 1 — Phase 5C)
-    var tipNote = _buildCashTipNote(biz, lang);
+    // tipNote was already computed above (near confirmMsg) for the voice spoken hook.
     if (tipNote) _appendMessage(messagesEl, tipNote, 'bot');
 
     // ── Optional email confirmation ────────────────────────────────────────────

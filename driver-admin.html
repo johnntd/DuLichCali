@@ -450,6 +450,32 @@
       text-align: center; padding: 2rem 1rem; color: var(--muted); font-size: .82rem;
     }
 
+    /* ── Driver rating summary ──────────────────────────────── */
+    .earn-rating-card {
+      background: var(--navy-800); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1rem 1.1rem; margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 1rem;
+    }
+    .earn-rating-stars {
+      font-size: 1.1rem; color: var(--gold); letter-spacing: .1em; flex-shrink: 0;
+    }
+    .earn-rating-avg {
+      font-size: 1.5rem; font-weight: 700; color: var(--gold); line-height: 1;
+    }
+    .earn-rating-meta { font-size: .63rem; color: var(--muted); margin-top: .2rem; }
+    .earn-review-list { display: flex; flex-direction: column; gap: .5rem; margin-top: .75rem; }
+    .earn-review-item {
+      background: var(--navy-800); border: 1px solid var(--border);
+      border-radius: 10px; padding: .65rem .9rem;
+    }
+    .earn-review-stars { font-size: .75rem; color: var(--gold); margin-bottom: .2rem; }
+    .earn-review-text { font-size: .78rem; color: var(--cream); line-height: 1.5; }
+    .earn-review-date { font-size: .6rem; color: var(--muted); margin-top: .2rem; }
+    .earn-rating-section-title {
+      font-size: .6rem; font-weight: 700; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--gold); margin: 0 0 .6rem;
+    }
+
     /* ── In-app notification toasts ─────────────────────────── */
     #dlc-toast-container {
       position: fixed; bottom: 5rem; right: 1rem;
@@ -752,7 +778,10 @@
 
   <!-- Earnings panel -->
   <div id="panelEarnings" class="drv-panel">
-    <div id="earningsBody" style="padding:.25rem 0">
+    <!-- Ratings summary block (top) -->
+    <div id="earningsRatingsBlock" style="padding:.25rem 0 0"></div>
+    <!-- Trip earnings block (bottom) -->
+    <div id="earningsTripBlock" style="padding:0">
       <div style="text-align:center;padding:2rem;color:var(--muted);font-size:.82rem">Chạm tab để tải dữ liệu.</div>
     </div>
   </div>
@@ -790,6 +819,7 @@
   var _activeRideStatus = null;
   var _activeRideData   = null; // full booking data for notification use
   var _earningsLoaded   = false;
+  var _ratingsLoaded    = false;
 
   // Trip-status progression for driver (what the driver can advance to)
   var _TRIP_STATUS_NEXT = {
@@ -1659,9 +1689,10 @@
 
   function loadEarnings() {
     if (_earningsLoaded) return;
-    var body = document.getElementById('earningsBody');
-    if (!body || !_driverId) return;
-    body.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.82rem">Đang tải…</div>';
+    var tripBlock = document.getElementById('earningsTripBlock');
+    if (!tripBlock || !_driverId) return;
+    tripBlock.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.82rem">Đang tải…</div>';
+    loadDriverRatings();
 
     // Query all bookings assigned to this driver, filter completed client-side.
     // Single-field query on driver.driverId avoids composite index requirements.
@@ -1687,12 +1718,80 @@
         _earningsLoaded = true;
       })
       .catch(function(err) {
-        body.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--danger);font-size:.82rem">Lỗi: ' + esc(err.message) + '</div>';
+        tripBlock.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--danger);font-size:.82rem">Lỗi: ' + esc(err.message) + '</div>';
       });
   }
 
+  function loadDriverRatings() {
+    if (_ratingsLoaded) return;
+    if (!_driverId) return;
+    db.collection('rideRatings')
+      .where('driverId', '==', _driverId)
+      .limit(100)
+      .get()
+      .then(function(snap) {
+        var ratings = [];
+        snap.forEach(function(doc) { ratings.push(doc.data()); });
+        renderDriverRatings(ratings);
+        _ratingsLoaded = true;
+      })
+      .catch(function() {
+        // Silently ignore — ratings block stays empty
+      });
+  }
+
+  function renderDriverRatings(ratings) {
+    var block = document.getElementById('earningsRatingsBlock');
+    if (!block) return;
+    if (!ratings.length) { block.innerHTML = ''; return; }
+
+    var total = ratings.reduce(function(s, r) { return s + (Number(r.rating) || 0); }, 0);
+    var avg   = total / ratings.length;
+    var stars = function(n) {
+      var s = '';
+      for (var i = 1; i <= 5; i++) s += (i <= Math.round(n) ? '★' : '☆');
+      return s;
+    };
+
+    // Last 5 reviews with a note, newest first
+    var withNotes = ratings
+      .filter(function(r) { return r.note && r.note.trim(); })
+      .sort(function(a, b) {
+        var ta = a.submittedAt && a.submittedAt.toDate ? a.submittedAt.toDate().getTime() : 0;
+        var tb = b.submittedAt && b.submittedAt.toDate ? b.submittedAt.toDate().getTime() : 0;
+        return tb - ta;
+      })
+      .slice(0, 5);
+
+    var reviewsHtml = '';
+    if (withNotes.length) {
+      reviewsHtml = '<div class="earn-review-list">' +
+        withNotes.map(function(r) {
+          var ms  = r.submittedAt && r.submittedAt.toDate ? r.submittedAt.toDate().getTime() : 0;
+          var dStr = ms ? new Date(ms).toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
+          return '<div class="earn-review-item">' +
+            '<div class="earn-review-stars">' + stars(r.rating) + '</div>' +
+            '<div class="earn-review-text">' + esc(r.note) + '</div>' +
+            '<div class="earn-review-date">' + dStr + '</div>' +
+          '</div>';
+        }).join('') +
+      '</div>';
+    }
+
+    block.innerHTML =
+      '<div class="earn-rating-section-title">Đánh Giá Của Khách</div>' +
+      '<div class="earn-rating-card">' +
+        '<div>' +
+          '<div class="earn-rating-avg">' + avg.toFixed(1) + '</div>' +
+          '<div class="earn-rating-meta">' + ratings.length + ' đánh giá</div>' +
+        '</div>' +
+        '<div class="earn-rating-stars">' + stars(avg) + '</div>' +
+      '</div>' +
+      reviewsHtml;
+  }
+
   function renderEarnings(rides) {
-    var body = document.getElementById('earningsBody');
+    var body = document.getElementById('earningsTripBlock');
     if (!body) return;
 
     var todayMs  = _startOfToday().getTime();
@@ -1769,7 +1868,7 @@
         '</div>' +
       '</div>' +
       '<div class="earn-refresh-row">' +
-        '<button class="btn-sm" onclick="_earningsLoaded=false;loadEarnings()" style="font-size:.65rem;height:32px;padding:0 .7rem">Làm Mới</button>' +
+        '<button class="btn-sm" onclick="_earningsLoaded=false;_ratingsLoaded=false;loadEarnings()" style="font-size:.65rem;height:32px;padding:0 .7rem">Làm Mới</button>' +
       '</div>' +
       '<div class="earn-summary-grid">' + statsHtml + '</div>' +
       '<div class="earn-section-title">' + sectionTitle + '</div>' +

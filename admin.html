@@ -406,6 +406,32 @@
     .tab-panel { display: none; flex: 1; min-height: 0; overflow: hidden; }
     .tab-panel.active { display: flex; }
 
+    /* ── Ride rating (detail panel) ─────────────────────── */
+    .rating-section {
+      background: var(--navy-800);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+    }
+    .rating-section h3 {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+    .rating-stars-row { display: flex; align-items: center; gap: .5rem; margin-bottom: .4rem; }
+    .rating-stars { font-size: 1.1rem; color: var(--gold); letter-spacing: .05em; }
+    .rating-avg { font-size: .82rem; font-weight: 700; color: var(--cream); }
+    .rating-note {
+      font-size: .8rem; color: var(--text); line-height: 1.5;
+      background: var(--navy-700); border-radius: 6px;
+      padding: .5rem .75rem; margin-top: .35rem;
+      border-left: 2px solid var(--gold);
+    }
+    .rating-date { font-size: .65rem; color: var(--muted); margin-top: .35rem; }
+    .rating-none { font-size: .78rem; color: var(--muted); font-style: italic; }
+
     /* ── Vendor management ───────────────────────────────── */
     .vendor-mgmt-wrap {
       flex: 1; overflow-y: auto; padding: 1.25rem;
@@ -788,6 +814,9 @@
             <h3>Cập nhật trạng thái</h3>
             <div class="status-actions" id="statusActions"></div>
           </div>
+
+          <!-- Rating (shown for completed rides) -->
+          <div id="ratingSection" style="display:none"></div>
 
           <!-- Driver assignment (dynamic — loaded from Firestore drivers collection) -->
           <div class="detail-section">
@@ -1319,12 +1348,49 @@
       }).join('');
     }
 
-    // Override renderDetail to also refresh driver select
+    // Override renderDetail to also refresh driver select and load rating
     const _origRenderDetail = renderDetail;
     renderDetail = function(id, data) {
       _origRenderDetail(id, data);
       renderDriverSelect(data);
+      if (data.status === 'completed') {
+        loadRatingForBooking(id);
+      } else {
+        const rs = document.getElementById('ratingSection');
+        if (rs) { rs.innerHTML = ''; rs.style.display = 'none'; }
+      }
     };
+
+    function loadRatingForBooking(bookingId) {
+      const rs = document.getElementById('ratingSection');
+      if (!rs) return;
+      rs.style.display = 'block';
+      rs.innerHTML = '<div class="rating-section"><h3>Đánh Giá Từ Khách</h3><div class="rating-none">Đang tải…</div></div>';
+      db.collection('rideRatings').doc(bookingId).get()
+        .then(snap => {
+          if (!snap.exists) {
+            rs.innerHTML = '<div class="rating-section"><h3>Đánh Giá Từ Khách</h3><div class="rating-none">Chưa có đánh giá.</div></div>';
+            return;
+          }
+          const r = snap.data();
+          const stars = (n => { let s = ''; for (let i = 1; i <= 5; i++) s += (i <= n ? '★' : '☆'); return s; })(r.rating || 0);
+          const ms = r.submittedAt && r.submittedAt.toDate ? r.submittedAt.toDate().getTime() : 0;
+          const dStr = ms ? new Date(ms).toLocaleString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true }) : '—';
+          const noteHtml = r.note ? `<div class="rating-note">${escHtml(r.note)}</div>` : '';
+          rs.innerHTML = `<div class="rating-section">
+            <h3>Đánh Giá Từ Khách</h3>
+            <div class="rating-stars-row">
+              <span class="rating-stars">${stars}</span>
+              <span class="rating-avg">${r.rating}/5</span>
+            </div>
+            ${noteHtml}
+            <div class="rating-date">${dStr}</div>
+          </div>`;
+        })
+        .catch(() => {
+          rs.innerHTML = '<div class="rating-section"><h3>Đánh Giá Từ Khách</h3><div class="rating-none">Không thể tải.</div></div>';
+        });
+    }
 
     // Override assignDriver to use driverId + trigger all notifications
     async function assignDriver(btn) {

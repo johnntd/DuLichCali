@@ -331,6 +331,48 @@
     }
     .panel-footer a:hover { color: var(--text); }
 
+    /* ── Rating overlay ──────────────────────────── */
+    .star-row {
+      display: flex; justify-content: center; gap: .45rem;
+      margin: .9rem 0 .25rem;
+    }
+    .star {
+      font-size: 2rem; cursor: pointer;
+      color: var(--muted);
+      transition: color .12s;
+      user-select: none; -webkit-user-select: none;
+      line-height: 1;
+    }
+    .star.lit { color: var(--gold); }
+    .rate-note {
+      width: 100%; background: var(--navy-700);
+      border: 1px solid var(--border-g); border-radius: 6px;
+      color: var(--cream); font-family: 'Jost', sans-serif; font-size: .82rem;
+      padding: .65rem .8rem; margin-top: .8rem; resize: none; outline: none;
+      display: block;
+    }
+    .rate-note:focus { border-color: var(--gold); }
+    .rate-note::placeholder { color: var(--muted); }
+    .btn-submit-rate {
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; height: 44px; margin-top: .9rem;
+      background: var(--gold); color: var(--navy-900);
+      font-family: 'Jost', sans-serif; font-size: .78rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      border-radius: 4px; border: none; cursor: pointer;
+      transition: background .2s, opacity .2s;
+    }
+    .btn-submit-rate:disabled { opacity: .35; cursor: not-allowed; }
+    .btn-submit-rate:not(:disabled):hover { background: var(--gold-lt); }
+    .btn-skip-rate {
+      display: block; margin: .7rem auto 0;
+      background: none; border: none; cursor: pointer;
+      font-size: .72rem; color: var(--muted); text-decoration: underline;
+      font-family: 'Jost', sans-serif; padding: 0;
+    }
+    .btn-skip-rate:hover { color: var(--text); }
+    .rate-error { font-size: .72rem; color: #e08a8a; margin-top: .5rem; }
+
     /* ── Mobile adjustments ─────────────────────── */
     @media (max-height: 700px) {
       .track-panel { height: 260px; }
@@ -408,14 +450,35 @@
     </div>
   </div>
 
-  <!-- Completed overlay -->
+  <!-- Completed overlay (Phase 10: 2-state rating card) -->
   <div id="completedOverlay" class="overlay overlay--hidden">
-    <div class="overlay-card">
+
+    <!-- State 1: Rating form -->
+    <div id="ratingFormCard" class="overlay-card">
       <div class="overlay-icon">✓</div>
-      <h2>Chuyến đi hoàn thành!</h2>
-      <p>Cảm ơn quý khách đã tin dùng Du Lịch Cali.<br>Chúc quý khách một ngày tốt lành.</p>
-      <a href="index.html" class="btn-gold">Đặt chuyến mới</a>
+      <h2 id="rateHeading">Chuyến đi hoàn thành!</h2>
+      <p id="ratePrompt">Bạn có muốn đánh giá chuyến đi này không?</p>
+      <div class="star-row" id="starRow">
+        <span class="star" onclick="setStarRating(1)">★</span>
+        <span class="star" onclick="setStarRating(2)">★</span>
+        <span class="star" onclick="setStarRating(3)">★</span>
+        <span class="star" onclick="setStarRating(4)">★</span>
+        <span class="star" onclick="setStarRating(5)">★</span>
+      </div>
+      <textarea id="rateNote" class="rate-note" rows="2" maxlength="280"></textarea>
+      <button id="rateSubmitBtn" class="btn-submit-rate" disabled onclick="submitRating()"></button>
+      <button class="btn-skip-rate" id="rateSkipBtn" onclick="showRatingThanks(false)"></button>
+      <div id="rateError" class="rate-error" style="display:none"></div>
     </div>
+
+    <!-- State 2: Thank-you -->
+    <div id="ratingThanksCard" class="overlay-card" style="display:none">
+      <div class="overlay-icon">★</div>
+      <h2 id="thanksTitle"></h2>
+      <p id="thanksMsg"></p>
+      <a id="homeBtn" href="index.html" class="btn-gold"></a>
+    </div>
+
   </div>
 
   <!-- Cancelled overlay -->
@@ -507,9 +570,56 @@
     firebase.auth().signInAnonymously().catch(console.error);
     const db = firebase.firestore();
 
+    // ── Language ────────────────────────────────────────────────
+    const _lang = (new URLSearchParams(window.location.search).get('lang') || 'vi');
+    const _validLang = ['vi','en','es'].includes(_lang) ? _lang : 'vi';
+
+    // ── Rating i18n ─────────────────────────────────────────────
+    const RATING_T = {
+      vi: {
+        heading:     'Chuyến đi hoàn thành!',
+        prompt:      'Bạn có muốn đánh giá chuyến đi này không?',
+        placeholder: 'Nhận xét (không bắt buộc)...',
+        submit:      'GỬI ĐÁNH GIÁ',
+        skip:        'Bỏ qua',
+        thanksTitle: 'Cảm ơn bạn!',
+        thanksMsg:   'Đánh giá của bạn rất có ý nghĩa với chúng tôi.',
+        alreadyMsg:  'Bạn đã đánh giá chuyến đi này rồi.',
+        homeBtn:     'Đặt chuyến mới',
+        errorMsg:    'Không thể gửi. Vui lòng thử lại.'
+      },
+      en: {
+        heading:     'Trip Completed!',
+        prompt:      'How was your ride?',
+        placeholder: 'Leave a note (optional)...',
+        submit:      'SUBMIT RATING',
+        skip:        'Skip',
+        thanksTitle: 'Thank You!',
+        thanksMsg:   'Your feedback helps us improve.',
+        alreadyMsg:  'You have already rated this trip.',
+        homeBtn:     'Book a New Ride',
+        errorMsg:    'Could not submit. Please try again.'
+      },
+      es: {
+        heading:     '¡Viaje completado!',
+        prompt:      '¿Cómo estuvo tu viaje?',
+        placeholder: 'Deja un comentario (opcional)...',
+        submit:      'ENVIAR CALIFICACIÓN',
+        skip:        'Omitir',
+        thanksTitle: '¡Gracias!',
+        thanksMsg:   'Tu opinión nos ayuda a mejorar.',
+        alreadyMsg:  'Ya calificaste este viaje.',
+        homeBtn:     'Reservar otro viaje',
+        errorMsg:    'No se pudo enviar. Inténtalo de nuevo.'
+      }
+    };
+
     // ── State ────────────────────────────────────────────────────
-    let vehicleMarker = null;
-    let routeRequested = false;
+    let vehicleMarker    = null;
+    let routeRequested   = false;
+    let _selectedRating  = 0;
+    let _trackingBookingId  = null;
+    let _latestBookingData  = null;
 
     const STATUS_MESSAGES = {
       awaiting_driver:  'Đang tìm tài xế phù hợp...',
@@ -541,8 +651,73 @@
       document.getElementById('errorOverlay').classList.remove('overlay--hidden');
     }
     function showCompleted() {
+      showRatingOverlay();
+    }
+
+    // ── Rating functions ─────────────────────────────────────────
+    function _T(key) { return (RATING_T[_validLang] || RATING_T.vi)[key] || ''; }
+
+    function showRatingOverlay() {
       hideLoading();
+      const t = RATING_T[_validLang] || RATING_T.vi;
+      // Apply i18n to form card
+      document.getElementById('rateHeading').textContent   = t.heading;
+      document.getElementById('ratePrompt').textContent    = t.prompt;
+      document.getElementById('rateNote').placeholder      = t.placeholder;
+      document.getElementById('rateSubmitBtn').textContent = t.submit;
+      document.getElementById('rateSkipBtn').textContent   = t.skip;
+      // Apply i18n to thanks card
+      document.getElementById('thanksTitle').textContent   = t.thanksTitle;
+      document.getElementById('thanksMsg').textContent     = t.thanksMsg;
+      document.getElementById('homeBtn').textContent       = t.homeBtn;
+      // Show overlay
       document.getElementById('completedOverlay').classList.remove('overlay--hidden');
+      // Check if already rated
+      if (_trackingBookingId) {
+        db.collection('rideRatings').doc(_trackingBookingId).get().then(snap => {
+          if (snap.exists) showRatingThanks(false, true);
+        }).catch(() => {});
+      }
+    }
+
+    function setStarRating(n) {
+      _selectedRating = n;
+      document.querySelectorAll('#starRow .star').forEach((el, i) => {
+        el.classList.toggle('lit', i < n);
+      });
+      document.getElementById('rateSubmitBtn').disabled = false;
+    }
+
+    function submitRating() {
+      if (!_selectedRating || !_trackingBookingId) return;
+      const btn = document.getElementById('rateSubmitBtn');
+      btn.disabled = true;
+      const note = (document.getElementById('rateNote').value || '').trim().slice(0, 280);
+      const payload = {
+        rating:      _selectedRating,
+        note:        note,
+        driverId:    (_latestBookingData && _latestBookingData.driver && _latestBookingData.driver.driverId) || null,
+        region:      (_latestBookingData && _latestBookingData.region) || null,
+        bookingId:   _trackingBookingId,
+        submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      db.collection('rideRatings').doc(_trackingBookingId).set(payload)
+        .then(() => showRatingThanks(true))
+        .catch(() => {
+          btn.disabled = false;
+          const errEl = document.getElementById('rateError');
+          errEl.textContent = _T('errorMsg');
+          errEl.style.display = 'block';
+        });
+    }
+
+    function showRatingThanks(wasSubmitted, alreadyRated) {
+      const t = RATING_T[_validLang] || RATING_T.vi;
+      document.getElementById('thanksTitle').textContent = t.thanksTitle;
+      document.getElementById('thanksMsg').textContent   = alreadyRated ? t.alreadyMsg : t.thanksMsg;
+      document.getElementById('homeBtn').textContent     = t.homeBtn;
+      document.getElementById('ratingFormCard').style.display  = 'none';
+      document.getElementById('ratingThanksCard').style.display = '';
     }
     function showCancelled() {
       hideLoading();
@@ -710,6 +885,10 @@
 
         const data = doc.data();
         if (data.trackingToken !== token) { showError('Link theo dõi không hợp lệ.'); return; }
+
+        // Store for rating submission
+        _trackingBookingId = bookingId;
+        _latestBookingData = data;
 
         hideLoading();
 

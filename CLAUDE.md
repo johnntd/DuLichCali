@@ -210,6 +210,60 @@ A change that works on mobile but breaks desktop (or vice versa) is **not comple
 
 ---
 
+## MULTI-LANGUAGE — NON-NEGOTIABLE
+
+Du Lịch Cali serves Vietnamese, English, and Spanish-speaking customers. All customer-facing surfaces must work correctly in all three languages.
+
+### Supported Languages
+
+| Code | Language | Role |
+|------|----------|------|
+| `vi` | Vietnamese | Primary — default for customer AI and all internal tools |
+| `en` | English | Full support on all customer-facing flows |
+| `es` | Spanish | Full support on all customer-facing flows |
+
+### Surface Coverage
+
+| Surface | Multi-language? | Notes |
+|---------|----------------|-------|
+| AI chat + workflow engine | ✅ vi / en / es | Auto-detects from user input; switches mid-conversation |
+| Ride intake form | ✅ vi / en / es | Driven by `?lang=` URL param |
+| Thank-you / confirmation page | ✅ vi / en / es | `?lang=` passed forward from booking |
+| Email notifications | ✅ vi / en / es | `lang` param passed to all `DLCNotifications` functions |
+| Homepage + landing pages | ✅ vi / en / es | Customer-facing — text must support all 3 |
+| Marketplace pages (food/nail/hair) | ✅ vi / en / es | Customer-facing UI text must support all 3 |
+| `admin.html` | ❌ Vietnamese only | Internal ops tool — Vietnamese is correct and intentional |
+| `vendor-admin.html` | ❌ Vietnamese only | Internal ops tool |
+| `driver-admin.html` | ❌ Vietnamese only | Internal ops tool |
+| Login pages (driver/vendor) | ❌ Vietnamese only | Internal |
+
+### How Language Is Detected and Propagated
+
+1. **AI chat (primary path)**: `AIEngine.detectLang(text)` reads user input → returns `'vi'`, `'en'`, or `'es'` → stored as `draft.lang` in workflow state. Auto-updates if the user switches language mid-conversation.
+2. **URL param (forms and confirmation)**: `?lang=vi|en|es` — set when opening ride intake or launching `thankyou.html`. `ride-intake.js` reads it as `_lang`; `thankyou.html` reads the same param.
+3. **Default**: `'vi'` for all internal/admin UI. `'en'` for ride intake when no `?lang=` param is present.
+
+### Where to Add New Strings
+
+| Layer | File | Pattern |
+|-------|------|---------|
+| AI workflow (confirmations, questions, field labels) | `workflowEngine.js` → `CONFIRM_STRINGS` | Add key to all 3 tables (`vi`, `en`, `es`). Access via `S('key')` |
+| Ride intake form (step nav, fare card, success screen) | `ride-intake.js` → `_RIDE_T` | Add key to `vi`, `en`, `es` tables. Access via `_T.key` |
+| Email notifications | `notifications.js` | Use the `lang` param already passed to each function |
+
+### Hard Rules
+
+- **Every new customer-facing string must exist in vi + en + es in the same commit.** Never ship a string that only works in one language.
+- Never hardcode a UI string inline on a customer-facing page. Use `S('key')` or `_T.key`.
+- Never leave a language entry as an empty string or a copy of another language's text as a placeholder. Translate correctly or flag it explicitly.
+- **Admin, driver, and vendor internal pages are intentionally Vietnamese-only.** Do NOT add multi-language support to these tools. Operators speak Vietnamese — this is correct by design.
+
+### Failure Condition
+
+A new customer-facing string that exists only in one language is an incomplete implementation. Add all 3 entries before deploying.
+
+---
+
 ## Homepage 3-Panel Architecture — NON-NEGOTIABLE
 
 The homepage (`screenHome`) is permanently organized into **3 main service panels** plus a matching AI panel.

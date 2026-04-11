@@ -763,6 +763,16 @@ window.RideIntake = (function () {
           createdAt:      ts,
         });
       })
+      .then(function () {
+        // Phase 13: trigger automatic driver dispatch
+        return db.collection('dispatchQueue').doc(bookingId + '_0').set({
+          bookingId:     bookingId,
+          skipDriverIds: [],
+          attempt:       1,
+          status:        'pending',
+          createdAt:     firebase.firestore.FieldValue.serverTimestamp(),
+        });
+      })
       .then(function () { onSuccess(bookingId); })
       .catch(function (err) { console.error(err); onError(); });
   }
@@ -770,10 +780,10 @@ window.RideIntake = (function () {
   function buildBookingData(bookingId) {
     var paxId = _type === 'pickup' ? 'ri_p_passengers' : _type === 'dropoff' ? 'ri_d_passengers' : 'ri_r_passengers';
     var base = {
-      bookingId: bookingId, status: 'awaiting_driver',
+      bookingId: bookingId, status: 'dispatching',
       vehicle: _driverVehicle ? _driverVehicle.name : (DLCPricing.RIDE_RATE_CARD && DLCPricing.RIDE_RATE_CARD.vehicleName) || 'Tesla Model Y',
       driverId: _driverVehicle ? _driverVehicle.driverId : null,
-      serviceType: _type === 'ride' ? 'private_ride' : (_type === 'pickup' ? 'airport_pickup' : 'airport_dropoff'),
+      serviceType: _type === 'ride' ? 'private_ride' : (_type === 'pickup' ? 'pickup' : 'dropoff'),
       passengers:    parseInt(val(paxId) || '1', 10),
       customerName:  val(_type === 'pickup' ? 'ri_p_name'  : _type === 'dropoff' ? 'ri_d_name'  : 'ri_r_name'),
       customerPhone: val(_type === 'pickup' ? 'ri_p_phone' : _type === 'dropoff' ? 'ri_d_phone' : 'ri_r_phone'),

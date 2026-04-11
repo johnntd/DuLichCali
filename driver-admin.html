@@ -1409,19 +1409,27 @@
     var fromStr, toStr;
     if (bk.serviceType === 'pickup') {
       fromStr = (bk.airport || '') + (bk.terminal ? ' Terminal ' + bk.terminal : '');
-      toStr   = bk.address || '—';
+      // workflowEngine stores as 'address'; ride-intake stores as 'dropoffAddress'
+      toStr   = bk.address || bk.dropoffAddress || '—';
     } else if (bk.serviceType === 'dropoff') {
-      fromStr = bk.address || '—';
+      // workflowEngine stores as 'address'; ride-intake stores as 'pickupAddress'
+      fromStr = bk.address || bk.pickupAddress || '—';
       toStr   = (bk.airport || '') + (bk.terminal ? ' Terminal ' + bk.terminal : '');
     } else {
       fromStr = bk.pickupAddress  || '—';
       toStr   = bk.dropoffAddress || '—';
     }
 
+    // datetime: workflowEngine uses bk.datetime; ride-intake uses arrivalDate+arrivalTime or departureDate+departureTime
+    var whenStr = bk.datetime ||
+      (bk.arrivalDate   ? bk.arrivalDate   + (bk.arrivalTime   ? ' ' + bk.arrivalTime   : '') : null) ||
+      (bk.departureDate ? bk.departureDate + (bk.departureTime ? ' ' + bk.departureTime : '') : null) ||
+      (bk.rideDate      ? bk.rideDate      + (bk.rideTime      ? ' ' + bk.rideTime      : '') : null) || '—';
+
     document.getElementById('offerTitle').textContent    = title;
     document.getElementById('offerFrom').textContent     = fromStr;
     document.getElementById('offerTo').textContent       = toStr;
-    document.getElementById('offerTime').textContent     = bk.datetime || '—';
+    document.getElementById('offerTime').textContent     = whenStr;
     document.getElementById('offerFare').textContent     = bk.estimatedPrice ? '$' + Number(bk.estimatedPrice).toFixed(0) : '—';
     document.getElementById('offerCustomer').textContent = bk.name || bk.customerName || '—';
     document.getElementById('offerPax').textContent      = (bk.passengers || 1) + ' người';

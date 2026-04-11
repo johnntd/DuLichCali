@@ -486,8 +486,8 @@
   <!-- Top bar -->
   <div class="top-bar">
     <div>
-      <div class="top-bar__brand">Driver Portal</div>
-      <div class="top-bar__sub" id="driverEmail">Du Lịch Cali · Tài Xế</div>
+      <div class="top-bar__brand">Du Lịch Cali</div>
+      <div class="top-bar__sub" id="driverEmail">Tài Xế</div>
     </div>
     <button class="btn-signout" onclick="doSignOut()">Đăng Xuất</button>
   </div>
@@ -835,7 +835,7 @@
         return;
       }
       _driverId = doc.data().driverId || user.uid;
-      document.getElementById('driverEmail').textContent = user.email || '';
+      document.getElementById('driverEmail').textContent = (user.email || '') + ' · Tài Xế';
       loadDriver();
     }).catch(function () {
       window.location.href = 'driver-login.html';
@@ -855,7 +855,7 @@
       document.getElementById('fPhone').value = d.phone || '';
       _driverName  = d.fullName || '';
       _driverPhone = d.phone    || '';
-      document.getElementById('driverEmail').textContent = _driverName || (auth.currentUser && auth.currentUser.email) || '';
+      document.getElementById('driverEmail').textContent = (_driverName || (auth.currentUser && auth.currentUser.email) || '') + ' · Tài Xế';
 
       var v = d.vehicle || {};
       document.getElementById('fMake').value  = v.make  || '';
@@ -1208,7 +1208,7 @@
         '<div class="ride-notif-card__type">' + (svcLabel[d.serviceType] || d.serviceLabel || d.serviceType || 'Chuyến Xe') + '</div>' +
         '<div class="ride-notif-card__row">' +
           '<div class="ride-notif-card__field"><div class="ride-notif-card__label">Khách</div><div class="ride-notif-card__val">' + esc(d.customerName || '—') + '</div></div>' +
-          '<div class="ride-notif-card__field"><div class="ride-notif-card__label">Khách</div><div class="ride-notif-card__val">' + (d.passengers || 1) + ' người</div></div>' +
+          '<div class="ride-notif-card__field"><div class="ride-notif-card__label">Hành Khách</div><div class="ride-notif-card__val">' + (d.passengers || 1) + ' người</div></div>' +
           (d.airport ? '<div class="ride-notif-card__field"><div class="ride-notif-card__label">Sân Bay</div><div class="ride-notif-card__val">' + esc(d.airport) + '</div></div>' : '') +
           (dateInfo ? '<div class="ride-notif-card__field"><div class="ride-notif-card__label">Thời Gian</div><div class="ride-notif-card__val">' + esc(dateInfo) + '</div></div>' : '') +
         '</div>' +

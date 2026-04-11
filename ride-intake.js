@@ -14,6 +14,51 @@ window.RideIntake = (function () {
     uber: { base: 3.00, perMile: 2.30, perMin: 0.30, bookingFee: 2.50, minFare: 25.00 },
   };
 
+  // ── Phase-1 i18n strings (fare card + confirmation screen) ──────────────────
+  // Language read from ?lang= URL param; defaults to 'en'.
+  // Only the new Phase-1 UI strings are here — pre-existing strings stay as-is.
+  var _RIDE_T = {
+    en: {
+      minSuffix:    'min',
+      savings:      function(n) { return 'Save ~$' + n + ' vs Uber'; },
+      deadhead:     function(mi) { return ' · Driver ~' + mi + ' mi away'; },
+      marketLabel:  'Market rate (UberXL)',
+      dlcLabel:     'DLC price',
+      mapsLink:     'View route on Maps',
+      viewRoute:    'View route',
+      pickupLbl:    'Pickup',
+      dropoffLbl:   'Dropoff',
+      priceEst:     function(p, s) { return '~$' + p + ' est · Save ~$' + s + ' vs Uber'; },
+    },
+    vi: {
+      minSuffix:    'phút',
+      savings:      function(n) { return 'Tiết kiệm ~$' + n + ' so với Uber'; },
+      deadhead:     function(mi) { return ' · Tài xế cách ~' + mi + ' mi'; },
+      marketLabel:  'Giá thị trường (UberXL)',
+      dlcLabel:     'Giá DLC',
+      mapsLink:     'Xem tuyến đường trên Maps',
+      viewRoute:    'Xem tuyến đường',
+      pickupLbl:    'Điểm đón',
+      dropoffLbl:   'Điểm đến',
+      priceEst:     function(p, s) { return '~$' + p + ' ước tính · Tiết kiệm ~$' + s + ' so với Uber'; },
+    },
+    es: {
+      minSuffix:    'min',
+      savings:      function(n) { return 'Ahorra ~$' + n + ' vs Uber'; },
+      deadhead:     function(mi) { return ' · Conductor ~' + mi + ' mi'; },
+      marketLabel:  'Precio de mercado (UberXL)',
+      dlcLabel:     'Precio DLC',
+      mapsLink:     'Ver ruta en Maps',
+      viewRoute:    'Ver ruta',
+      pickupLbl:    'Recogida',
+      dropoffLbl:   'Destino',
+      priceEst:     function(p, s) { return '~$' + p + ' est · Ahorra ~$' + s + ' vs Uber'; },
+    },
+  };
+  var _lang = (new URLSearchParams(window.location.search).get('lang') || 'en');
+  if (!_RIDE_T[_lang]) _lang = 'en';
+  var _T = _RIDE_T[_lang];
+
   // ── Airport data ─────────────────────────────────────────────────────────────
   var AIRPORTS = {
     SNA: { name: 'John Wayne – Orange County', address: '18601 Airport Way, Santa Ana, CA 92707' },
@@ -539,9 +584,15 @@ window.RideIntake = (function () {
     setHide('riPriceHint',    true);
     setHide('riPriceLoading', true);
 
-    // Route summary line: "35 mi · ~48 phút"
+    // Route summary line: "35 mi · ~48 min"
     var routeEl = document.getElementById('riRouteSummary');
-    if (routeEl) routeEl.textContent = q.miles + ' mi · ~' + q.minutes + ' phút';
+    if (routeEl) routeEl.textContent = q.miles + ' mi · ~' + q.minutes + ' ' + _T.minSuffix;
+
+    // Fare row labels (language-aware)
+    var mktLbl = document.getElementById('riMarketLabel');
+    if (mktLbl) mktLbl.textContent = _T.marketLabel;
+    var dlcLbl = document.getElementById('riDlcLabel');
+    if (dlcLbl) dlcLbl.textContent = _T.dlcLabel;
 
     // Market rate (strikethrough)
     var marketEl = document.getElementById('riMarketAmt');
@@ -551,14 +602,16 @@ window.RideIntake = (function () {
     setText('riPriceAmt', '~$' + q.dlcPrice);
 
     // Savings line
-    var saveText = 'Tiết kiệm ~$' + q.savings + ' so với Uber';
-    if (q.deadheadMiles > 0) saveText += ' · Tài xế cách ' + q.deadheadMiles + ' mi';
+    var saveText = _T.savings(q.savings);
+    if (q.deadheadMiles > 0) saveText += _T.deadhead(q.deadheadMiles);
     setText('riPriceSave', saveText);
 
-    // Maps route link
+    // Maps route link text + href
     var linkEl = document.getElementById('riRouteLink');
     if (linkEl && _lastOrigin && _lastDest) {
       linkEl.href = _mapsRoute(_lastOrigin, _lastDest);
+      var linkTxt = document.getElementById('riRouteLinkText');
+      if (linkTxt) linkTxt.textContent = _T.mapsLink;
       linkEl.hidden = false;
     }
 
@@ -732,15 +785,15 @@ window.RideIntake = (function () {
 
       var priceEl = document.getElementById('riSuccessPrice');
       if (priceEl && _quote) {
-        priceEl.textContent = '~$' + _quote.dlcPrice + ' ước tính · Tiết kiệm ~$' + _quote.savings + ' so với Uber';
+        priceEl.textContent = _T.priceEst(_quote.dlcPrice, _quote.savings);
       }
 
       var mapsEl = document.getElementById('riSuccessMaps');
       if (mapsEl) {
         mapsEl.innerHTML =
-          '<a class="ri-success__map-btn" href="' + _mapsRoute(_lastOrigin, _lastDest) + '" target="_blank" rel="noopener">' + _PIN_SVG + ' Xem tuyến đường</a>' +
-          '<a class="ri-success__map-btn" href="' + _mapsQ(_lastOrigin) + '" target="_blank" rel="noopener">' + _PIN_SVG + ' Điểm đón: ' + fromLabel + '</a>' +
-          '<a class="ri-success__map-btn" href="' + _mapsQ(_lastDest) + '" target="_blank" rel="noopener">' + _PIN_SVG + ' Điểm đến: ' + toLabel + '</a>';
+          '<a class="ri-success__map-btn" href="' + _mapsRoute(_lastOrigin, _lastDest) + '" target="_blank" rel="noopener">' + _PIN_SVG + ' ' + _T.viewRoute + '</a>' +
+          '<a class="ri-success__map-btn" href="' + _mapsQ(_lastOrigin) + '" target="_blank" rel="noopener">' + _PIN_SVG + ' ' + _T.pickupLbl + ': ' + fromLabel + '</a>' +
+          '<a class="ri-success__map-btn" href="' + _mapsQ(_lastDest) + '" target="_blank" rel="noopener">' + _PIN_SVG + ' ' + _T.dropoffLbl + ': ' + toLabel + '</a>';
       }
       summaryEl.hidden = false;
     }

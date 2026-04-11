@@ -628,11 +628,11 @@
           <span class="ri-fare-route" id="riRouteSummary"></span>
           <div class="ri-fare-divider"></div>
           <div class="ri-fare-row ri-fare-row--market">
-            <span>Giá thị trường (UberXL)</span>
+            <span id="riMarketLabel">Market rate (UberXL)</span>
             <span id="riMarketAmt">~$—</span>
           </div>
           <div class="ri-fare-row ri-fare-row--dlc">
-            <span>Giá DLC <span class="ri-price-badge">−20%</span></span>
+            <span><span id="riDlcLabel">DLC price</span> <span class="ri-price-badge">−20%</span></span>
             <span id="riPriceAmt">~$—</span>
           </div>
           <div class="ri-fare-divider"></div>
@@ -640,7 +640,7 @@
           <div class="ri-price-box__right" id="riVehicleBox">Tesla Model Y · 4 chỗ · Chưa bao gồm tip</div>
           <a class="ri-fare-maps" id="riRouteLink" href="#" target="_blank" rel="noopener" hidden>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Xem tuyến đường trên Maps
+            <span id="riRouteLinkText">View route on Maps</span>
           </a>
         </div>
         <div class="ri-price-hint" id="riPriceHint">Nhập địa chỉ để xem giá ước tính</div>
@@ -686,7 +686,7 @@
 <!-- Location module (region detection for airport sorting) -->
 <script src="/location.js?v=20260404"></script>
 <!-- Ride intake modal JS -->
-<script src="/ride-intake.js?v=20260417a"></script>
+<script src="/ride-intake.js?v=20260417b"></script>
 <script src="/marketplace/services-data.js"></script>
 <script src="/landing-nav.js?v=20260417b"></script>
 <script>

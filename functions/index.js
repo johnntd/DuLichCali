@@ -342,15 +342,31 @@ exports.onEmailQueue = onDocumentCreated(
     }
 
     // ── Build and send ────────────────────────────────────────────────────────
-    const shopName = data.shopName || 'Luxurious Nails';
-    const { textBody, htmlBody } = buildConfirmationEmailBody(data);
+    let textBody, htmlBody, subject, fromName;
+
+    if (data.bookingType === 'ride') {
+      // Ride booking emails (airport pickup/dropoff, private ride)
+      fromName = 'Du Lịch Cali';
+      if (data.eventType === 'assigned') {
+        ({ textBody, htmlBody } = buildDriverAssignedEmail(data));
+        subject = `Driver Assigned — Du Lịch Cali [${data.bookingId || ''}]`;
+      } else {
+        ({ textBody, htmlBody } = buildRideConfirmationEmail(data));
+        subject = `Ride Confirmed — Du Lịch Cali [${data.bookingId || ''}]`;
+      }
+    } else {
+      // Appointment emails (nail/hair) — existing template
+      fromName = data.shopName || 'Luxurious Nails';
+      ({ textBody, htmlBody } = buildConfirmationEmailBody(data));
+      subject = `Booking Confirmed — ${fromName} [${data.bookingId || ''}]`;
+    }
 
     try {
       await _resendSend(apiKey, {
-        from:     `${shopName} <appointments@dulichcali21.com>`,
+        from:     `${fromName} <appointments@dulichcali21.com>`,
         reply_to: data.shopEmail || 'dulichcali21@gmail.com',
         to:       [toEmail],
-        subject:  `Booking Confirmed — ${shopName} [${data.bookingId || ''}]`,
+        subject,
         text:     textBody,
         html:     htmlBody,
       });
@@ -398,6 +414,211 @@ function _resendSend(apiKey, payload) {
     req.write(body);
     req.end();
   });
+}
+
+// ── Ride confirmation email builder ──────────────────────────────────────────
+function buildRideConfirmationEmail(data) {
+  const name          = data.customerName || 'Customer';
+  const bookingId     = data.bookingId    || '';
+  const serviceType   = data.serviceType  || '';
+  const isPickup      = serviceType === 'pickup';
+  const isDropoff     = serviceType === 'dropoff';
+  const isPrivate     = serviceType === 'private_ride';
+  const dispatchStatus= data.dispatchStatus || 'awaiting_driver';
+  const driverName    = data.driverName   || null;
+  const trackingToken = data.trackingToken || '';
+  const passengers    = data.passengers   || 1;
+
+  // Format datetime
+  let datetimeStr = data.datetime || '';
+  if (datetimeStr && datetimeStr.includes('T')) {
+    try {
+      const d = new Date(datetimeStr);
+      const DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const h = d.getHours(), m = d.getMinutes();
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const h12  = h % 12 || 12;
+      datetimeStr = `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()} · ${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+    } catch (_) {}
+  }
+
+  // Service label and route
+  let serviceLabel, routeFrom, routeTo;
+  if (isPickup) {
+    serviceLabel = `Airport Pickup — ${data.airport || ''}`;
+    routeFrom    = `${data.airport || 'Airport'}${data.terminal ? ` Terminal ${data.terminal}` : ''}`;
+    routeTo      = data.address || '';
+  } else if (isDropoff) {
+    serviceLabel = `Airport Drop-off — ${data.airport || ''}`;
+    routeFrom    = data.address || '';
+    routeTo      = `${data.airport || 'Airport'}${data.terminal ? ` Terminal ${data.terminal}` : ''}`;
+  } else {
+    serviceLabel = 'Private Ride';
+    routeFrom    = data.pickupAddress  || '';
+    routeTo      = data.dropoffAddress || '';
+  }
+
+  // Dispatch status message
+  const dispatchMsg = (dispatchStatus === 'assigned' && driverName)
+    ? `Your driver ${driverName} has been assigned to your trip. We'll be in touch with exact pickup details.`
+    : `We're matching you with the best available driver. You'll receive a text confirmation within 30 minutes.`;
+
+  const trackUrl = trackingToken
+    ? `https://www.dulichcali21.com/tracking.html?id=${bookingId}&t=${trackingToken}`
+    : 'https://www.dulichcali21.com';
+
+  const fare = data.estimatedPrice ? `~$${data.estimatedPrice}` : null;
+
+  // ── Plain text ──────────────────────────────────────────────────────────────
+  const textLines = [
+    `Hi ${name},`,
+    '',
+    `Your ride has been booked! Here are your details:`,
+    '',
+    `  Booking ID:  ${bookingId}`,
+    `  Service:     ${serviceLabel}`,
+    `  Date/Time:   ${datetimeStr || '(to be confirmed)'}`,
+    `  From:        ${routeFrom}`,
+    `  To:          ${routeTo}`,
+    passengers > 1 ? `  Passengers:  ${passengers}` : null,
+    fare           ? `  Est. Fare:   ${fare}` : null,
+    '',
+    dispatchMsg,
+    '',
+    trackingToken ? `Track your booking: ${trackUrl}` : null,
+    '',
+    'Questions? Call or text: +1 (408) 916-3439',
+    '',
+    '— Du Lịch Cali',
+    'https://www.dulichcali21.com',
+  ].filter(l => l !== null).join('\n');
+
+  // ── HTML ────────────────────────────────────────────────────────────────────
+  const row = (label, value) => value
+    ? `<tr style="border-bottom:1px solid #f0ebe3;">
+        <td style="padding:10px 0;color:#7a6a52;width:38%;font-size:14px;">${label}</td>
+        <td style="padding:10px 0;font-size:14px;">${value}</td>
+       </tr>` : '';
+
+  const htmlBody = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ride Confirmed</title></head>
+<body style="margin:0;padding:16px;background:#f0f4f8;font-family:Arial,sans-serif;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);">
+  <div style="background:#0d2f50;padding:24px 32px;">
+    <h1 style="color:#c9a84c;font-size:20px;margin:0;font-weight:400;letter-spacing:.5px;">Du Lịch Cali</h1>
+    <p style="color:#a8c4d8;font-size:13px;margin:6px 0 0;">Ride Confirmation</p>
+  </div>
+  <div style="padding:28px 32px;color:#2c2c2c;">
+    <p style="font-size:15px;margin:0 0 20px;">Hi <strong>${name}</strong>,<br>Your ride is booked!</p>
+    <table style="width:100%;border-collapse:collapse;">
+      ${row('Booking ID',  `<span style="font-family:monospace;font-weight:600;">${bookingId}</span>`)}
+      ${row('Service',     serviceLabel)}
+      ${row('Date / Time', datetimeStr || '(to be confirmed)')}
+      ${row('From',        routeFrom)}
+      ${row('To',          routeTo)}
+      ${row('Passengers',  passengers > 1 ? String(passengers) : null)}
+      ${row('Est. Fare',   fare)}
+    </table>
+    <div style="margin:24px 0 0;padding:16px;background:#f0f6ff;border-radius:6px;border-left:3px solid #c9a84c;">
+      <p style="margin:0;font-size:13px;color:#2c2c2c;line-height:1.7;">${dispatchMsg}</p>
+    </div>
+    ${trackingToken ? `<p style="margin:20px 0 0;font-size:14px;"><a href="${trackUrl}" style="color:#0d6efd;">Track your booking →</a></p>` : ''}
+    <p style="font-size:13px;margin:20px 0 0;color:#5a4a3a;">Questions? Call <a href="tel:4089163439" style="color:#0d2f50;">+1 (408) 916-3439</a></p>
+  </div>
+  <div style="background:#f0ebe3;padding:14px 32px;text-align:center;">
+    <p style="color:#9a8a7a;font-size:12px;margin:0;">— Du Lịch Cali &nbsp;·&nbsp; <a href="https://www.dulichcali21.com" style="color:#9a8a7a;">dulichcali21.com</a></p>
+  </div>
+</div>
+</body></html>`;
+
+  return { textBody, htmlBody };
+}
+
+// ── Driver-assigned email builder ─────────────────────────────────────────────
+function buildDriverAssignedEmail(data) {
+  const name         = data.customerName || 'Customer';
+  const bookingId    = data.bookingId    || '';
+  const driverName   = data.driverName   || 'Your driver';
+  const driverPhone  = data.driverPhone  || '';
+  const trackingToken= data.trackingToken|| '';
+  const serviceType  = data.serviceType  || '';
+  const isPickup     = serviceType === 'pickup';
+
+  let datetimeStr = data.datetime || '';
+  if (datetimeStr && datetimeStr.includes('T')) {
+    try {
+      const d = new Date(datetimeStr);
+      const DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const h = d.getHours(), m = d.getMinutes();
+      datetimeStr = `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()} · ${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`;
+    } catch (_) {}
+  }
+
+  const meetLocation = isPickup
+    ? `${data.airport || 'Airport'} Arrivals/Baggage Claim`
+    : (data.address || data.pickupAddress || '');
+
+  const trackUrl = trackingToken
+    ? `https://www.dulichcali21.com/tracking.html?id=${bookingId}&t=${trackingToken}`
+    : 'https://www.dulichcali21.com';
+
+  // ── Plain text ──────────────────────────────────────────────────────────────
+  const textLines = [
+    `Hi ${name},`,
+    '',
+    `Great news — your driver has been assigned!`,
+    '',
+    `  Driver:      ${driverName}`,
+    driverPhone ? `  Driver phone: ${driverPhone}` : null,
+    `  Booking ID:  ${bookingId}`,
+    datetimeStr ? `  Date/Time:   ${datetimeStr}` : null,
+    meetLocation ? `  Meet at:     ${meetLocation}` : null,
+    '',
+    'Your driver will contact you closer to the pickup time.',
+    trackingToken ? `Track your ride: ${trackUrl}` : null,
+    '',
+    'Questions? Call or text: +1 (408) 916-3439',
+    '',
+    '— Du Lịch Cali',
+  ].filter(l => l !== null).join('\n');
+
+  // ── HTML ────────────────────────────────────────────────────────────────────
+  const htmlBody = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Driver Assigned</title></head>
+<body style="margin:0;padding:16px;background:#f0f4f8;font-family:Arial,sans-serif;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);">
+  <div style="background:#0d2f50;padding:24px 32px;">
+    <h1 style="color:#c9a84c;font-size:20px;margin:0;font-weight:400;letter-spacing:.5px;">Du Lịch Cali</h1>
+    <p style="color:#a8c4d8;font-size:13px;margin:6px 0 0;">Driver Assigned</p>
+  </div>
+  <div style="padding:28px 32px;color:#2c2c2c;">
+    <p style="font-size:15px;margin:0 0 20px;">Hi <strong>${name}</strong>,<br>Great news — your driver has been assigned!</p>
+    <div style="padding:20px;background:#f8fdf4;border-radius:8px;border:1px solid #c3e6cb;margin-bottom:20px;">
+      <p style="margin:0 0 6px;font-size:18px;font-weight:600;color:#0d2f50;">🚗 ${driverName}</p>
+      ${driverPhone ? `<p style="margin:0;font-size:14px;color:#5a4a3a;">📞 <a href="tel:${driverPhone.replace(/\D/g,'')}" style="color:#0d2f50;">${driverPhone}</a></p>` : ''}
+    </div>
+    <table style="width:100%;border-collapse:collapse;">
+      ${datetimeStr ? `<tr style="border-bottom:1px solid #f0ebe3;"><td style="padding:10px 0;color:#7a6a52;width:38%;font-size:14px;">Date / Time</td><td style="padding:10px 0;font-size:14px;">${datetimeStr}</td></tr>` : ''}
+      ${meetLocation ? `<tr style="border-bottom:1px solid #f0ebe3;"><td style="padding:10px 0;color:#7a6a52;width:38%;font-size:14px;">Meet at</td><td style="padding:10px 0;font-size:14px;">${meetLocation}</td></tr>` : ''}
+      <tr><td style="padding:10px 0;color:#7a6a52;font-size:14px;">Booking ID</td><td style="padding:10px 0;font-size:14px;font-family:monospace;font-weight:600;">${bookingId}</td></tr>
+    </table>
+    <p style="font-size:13px;margin:20px 0 0;color:#5a4a3a;">Your driver will contact you closer to the pickup time.</p>
+    ${trackingToken ? `<p style="font-size:14px;margin:12px 0 0;"><a href="${trackUrl}" style="color:#0d6efd;">Track your ride →</a></p>` : ''}
+    <p style="font-size:13px;margin:16px 0 0;color:#5a4a3a;">Questions? <a href="tel:4089163439" style="color:#0d2f50;">+1 (408) 916-3439</a></p>
+  </div>
+  <div style="background:#f0ebe3;padding:14px 32px;text-align:center;">
+    <p style="color:#9a8a7a;font-size:12px;margin:0;">— Du Lịch Cali &nbsp;·&nbsp; <a href="https://www.dulichcali21.com" style="color:#9a8a7a;">dulichcali21.com</a></p>
+  </div>
+</div>
+</body></html>`;
+
+  return { textBody, htmlBody };
 }
 
 // ── Confirmation email builder ────────────────────────────────────────────────

@@ -157,6 +157,7 @@
       qRideDate:'Ngày đi? (VD: 15/4, thứ Sáu, ngày mai)',
       qRideTime:'Mấy giờ xuất phát? (VD: 9:00 AM, 14:30)',
       qNameSelf:'Tên của bạn?',
+      qEmail:'📧 Email để nhận xác nhận đặt xe?\n(Gõ "bỏ qua" nếu không muốn cung cấp)',
 
       qNailService:'Bạn muốn làm dịch vụ gì?\n1. Manicure (móng tay)\n2. Pedicure (móng chân)\n3. Gel Nails\n4. Acrylic\n5. Full Set\n(hoặc Mani+Pedi, Dip Powder...)',
       qHairService:'Bạn muốn làm gì?\n1. Cắt tóc\n2. Nhuộm tóc\n3. Uốn / Duỗi\n4. Keratin Treatment\n5. Balayage / Highlights',
@@ -271,6 +272,7 @@
       qRideDate:'Departure date? (e.g., 4/15, Friday, tomorrow)',
       qRideTime:'Departure time? (e.g., 9:00 AM, 2:30 PM)',
       qNameSelf:'Your name?',
+      qEmail:'📧 Email for booking confirmation?\n(Type "skip" if you prefer not to share)',
 
       qNailService:'What service would you like?\n1. Manicure\n2. Pedicure\n3. Gel Nails\n4. Acrylic\n5. Full Set\n(or Mani+Pedi, Dip Powder...)',
       qHairService:'What service would you like?\n1. Haircut\n2. Hair Color\n3. Perm / Straighten\n4. Keratin Treatment\n5. Balayage / Highlights',
@@ -385,6 +387,7 @@
       qRideDate:'¿Fecha de salida? (ej: 15/4, viernes, mañana)',
       qRideTime:'¿Hora de salida? (ej: 9:00 AM, 2:30 PM)',
       qNameSelf:'¿Tu nombre?',
+      qEmail:'📧 ¿Email para la confirmación de reserva?\n(Escribe "omitir" si prefieres no compartirlo)',
 
       qNailService:'¿Qué servicio deseas?\n1. Manicure\n2. Pedicure\n3. Gel Nails\n4. Acrylic\n5. Full Set\n(o Mani+Pedi, Dip Powder...)',
       qHairService:'¿Qué servicio deseas?\n1. Corte de cabello\n2. Tinte\n3. Permanente / Alisado\n4. Tratamiento de Keratina\n5. Balayage / Reflejos',
@@ -1286,6 +1289,16 @@
           optional: false,
         },
         {
+          key: 'customerEmail',
+          question: function() { return S('qEmail'); },
+          extract: function(t) {
+            if (/^(bỏ qua|skip|omitir|không|no|none|n\/a|-)$/i.test(t.trim())) return '';
+            var m = t.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+            return m ? m[0].toLowerCase() : ''; // treat non-email input as skip
+          },
+          optional: true,
+        },
+        {
           key: 'notes',
           question: function() { return S('qNotesShort'); },
           extract: function(t) { return /^(không|no|none|n\/a|skip|-|no hay)$/i.test(t.trim()) ? '' : t.trim(); },
@@ -1433,6 +1446,16 @@
           optional: false,
         },
         {
+          key: 'customerEmail',
+          question: function() { return S('qEmail'); },
+          extract: function(t) {
+            if (/^(bỏ qua|skip|omitir|không|no|none|n\/a|-)$/i.test(t.trim())) return '';
+            var m = t.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+            return m ? m[0].toLowerCase() : '';
+          },
+          optional: true,
+        },
+        {
           key: 'notes',
           question: function() { return S('qNotesShort'); },
           extract: function(t) { return /^(không|no|none|n\/a|skip|-|no hay)$/i.test(t.trim()) ? '' : t.trim(); },
@@ -1528,6 +1551,16 @@
           question: function() { return S('qPhone'); },
           extract: function(t) { return X.phone(t); },
           optional: false,
+        },
+        {
+          key: 'customerEmail',
+          question: function() { return S('qEmail'); },
+          extract: function(t) {
+            if (/^(bỏ qua|skip|omitir|không|no|none|n\/a|-)$/i.test(t.trim())) return '';
+            var m = t.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+            return m ? m[0].toLowerCase() : '';
+          },
+          optional: true,
         },
         {
           key: 'notes',
@@ -2277,7 +2310,7 @@
         status:airBookStatus, serviceType:isPickup?'pickup':'dropoff', datetime,
         airport:f.airport||'', airline:f.airline||'', terminal:f.terminal||'',
         address:addrField, passengers:f.passengers||1, luggageCount:f.luggageCount||0,
-        name:f.customerName||'', phone:f.customerPhone||'',
+        name:f.customerName||'', phone:f.customerPhone||'', customerEmail:f.customerEmail||'',
         notes:f.notes||'', source:'ai_chat',
         eligibleDriverIds: eligIds,
         driver: preAssigned ? { driverId:preAssigned.id||'', name:preAssigned.fullName||preAssigned.name||'', phone:preAssigned.phone||'' } : null,
@@ -2313,6 +2346,19 @@
         eligibleCount: eligIds.length,
         preAssigned: preAssigned ? { name:preAssigned.fullName||preAssigned.name||'', phone:preAssigned.phone||'' } : null,
       };
+      // Phase 5: queue confirmation email (non-blocking, no-op if no email)
+      if (typeof DLCNotifications !== 'undefined') {
+        DLCNotifications.queueRideConfirmation({
+          bookingId: orderId, customerEmail: f.customerEmail||'',
+          customerName: f.customerName||'', name: f.customerName||'',
+          serviceType: isPickup ? 'pickup' : 'dropoff',
+          airport: f.airport||'', airline: f.airline||'', terminal: f.terminal||'',
+          datetime: datetime, address: addrField,
+          passengers: f.passengers||1, trackingToken: trackingToken||'',
+          status: airBookStatus,
+          driver: preAssigned ? { name: preAssigned.fullName||preAssigned.name||'' } : null,
+        }, draft.lang || 'vi');
+      }
 
     } else if (draft.intent === 'nail_appointment' || draft.intent === 'hair_appointment') {
       var isNail    = draft.intent === 'nail_appointment';
@@ -2447,7 +2493,7 @@
         status:prBookStatus, serviceType:'private_ride', datetime,
         pickupAddress:f.pickupAddress||'', dropoffAddress:f.dropoffAddress||'',
         passengers:f.passengers||1,
-        name:f.customerName||'', phone:f.customerPhone||'',
+        name:f.customerName||'', phone:f.customerPhone||'', customerEmail:f.customerEmail||'',
         notes:f.notes||'', source:'ai_chat',
         estimatedPrice: rideEst ? rideEst.ourPrice : null,
         eligibleDriverIds: prEligIds,
@@ -2484,6 +2530,20 @@
         eligibleCount: prEligIds.length,
         preAssigned: prPreAssigned ? { name:prPreAssigned.fullName||prPreAssigned.name||'', phone:prPreAssigned.phone||'' } : null,
       };
+      // Phase 5: queue confirmation email (non-blocking, no-op if no email)
+      if (typeof DLCNotifications !== 'undefined') {
+        DLCNotifications.queueRideConfirmation({
+          bookingId: orderId, customerEmail: f.customerEmail||'',
+          customerName: f.customerName||'', name: f.customerName||'',
+          serviceType: 'private_ride',
+          pickupAddress: f.pickupAddress||'', dropoffAddress: f.dropoffAddress||'',
+          datetime: datetime, passengers: f.passengers||1,
+          estimatedPrice: rideEst ? rideEst.ourPrice : null,
+          trackingToken: trackingToken||'',
+          status: prBookStatus,
+          driver: prPreAssigned ? { name: prPreAssigned.fullName||prPreAssigned.name||'' } : null,
+        }, draft.lang || 'vi');
+      }
     }
 
     clearDraft(); draft = null;

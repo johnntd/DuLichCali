@@ -14,6 +14,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="/driver-compliance.js"></script>
+  <script src="/notifications.js?v=20260418a"></script>
 
   <style>
     :root {
@@ -1105,11 +1106,24 @@
       if (!selectedId) return;
       document.querySelectorAll('.driver-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
+      const driverInfo = { driverId: btn.dataset.driverId || '', name: btn.dataset.name, phone: btn.dataset.phone };
       await db.collection('bookings').doc(selectedId).update({
-        driver: { name: btn.dataset.name, phone: btn.dataset.phone }
+        driver: driverInfo, status: 'assigned',
       });
       document.getElementById('driverStatus').textContent =
         `Tài xế: ${btn.dataset.name} · ${btn.dataset.phone}`;
+      // Phase 5: queue driver-assigned email if customer has email on file
+      try {
+        const bookingSnap = await db.collection('bookings').doc(selectedId).get();
+        const bData = bookingSnap.exists ? bookingSnap.data() : null;
+        if (bData && bData.customerEmail && typeof DLCNotifications !== 'undefined') {
+          DLCNotifications.queueDriverAssigned(
+            Object.assign({ bookingId: selectedId }, bData),
+            driverInfo,
+            'en'
+          );
+        }
+      } catch (e) { console.warn('[assignDriver] notification failed:', e.message); }
     }
 
     // ── ETA ──────────────────────────────────────────────────────

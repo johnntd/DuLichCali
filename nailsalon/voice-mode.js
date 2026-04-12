@@ -59,6 +59,7 @@
   var _welcomeBuffer = null;    // Pre-fetched MP3 ArrayBuffer for welcome message
   var _voices        = [];      // Cached voice list — populated once on voiceschanged
   var _pendingSpoken = null;    // Pre-built spoken text for confirmation flows (set by receptionist)
+  var _autoLangTimer = null;    // Timer for auto-detected language hint fadeout
 
   // ── State labels ──────────────────────────────────────────────────────────
   var LABEL = {
@@ -152,19 +153,22 @@
       '</div>';
 
     var closeSVG =
-      '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" ' +
+      '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" ' +
       'stroke-width="2.5" stroke-linecap="round" aria-hidden="true">' +
         '<line x1="18" y1="6" x2="6" y2="18"/>' +
         '<line x1="6" y1="6" x2="18" y2="18"/>' +
       '</svg>';
 
+    // Close button and language pills live on the overlay directly (not inside
+    // the max-width inner card) so they always anchor to the real screen edges.
     el.innerHTML =
+      '<button class="dlc-vm__close" type="button" aria-label="Close voice mode">' +
+        closeSVG +
+      '</button>' +
       '<div class="dlc-vm__inner">' +
-        '<button class="dlc-vm__close" type="button" aria-label="Close voice mode">' +
-          closeSVG +
-        '</button>' +
         '<div class="dlc-vm__name" aria-live="polite"></div>' +
         '<div class="dlc-vm__state-label" aria-live="polite" aria-atomic="true"></div>' +
+        '<div class="dlc-vm__auto-lang" aria-live="polite" aria-atomic="true"></div>' +
         '<div class="dlc-vm__transcript" aria-live="polite"></div>' +
         '<button class="dlc-vm__mic" type="button" aria-label="Speak">' +
           waveHTML +
@@ -173,11 +177,11 @@
         '<div class="dlc-vm__actions">' +
           '<button class="dlc-vm__text-btn" type="button">Switch to text</button>' +
         '</div>' +
-        '<div class="dlc-vm__langs">' +
-          '<button class="dlc-vm__lang" type="button" data-l="en">EN</button>' +
-          '<button class="dlc-vm__lang" type="button" data-l="vi">VI</button>' +
-          '<button class="dlc-vm__lang" type="button" data-l="es">ES</button>' +
-        '</div>' +
+      '</div>' +
+      '<div class="dlc-vm__langs">' +
+        '<button class="dlc-vm__lang" type="button" data-l="en">EN</button>' +
+        '<button class="dlc-vm__lang" type="button" data-l="vi">VI</button>' +
+        '<button class="dlc-vm__lang" type="button" data-l="es">ES</button>' +
       '</div>';
 
     return el;
@@ -231,6 +235,42 @@
       if (s && LANG_TAG[s]) return s;
     } catch (_) {}
     return 'en';
+  }
+
+  // ── Text-based spoken language detection ──────────────────────────────────
+  // Called after STT returns a transcript. Identifies language from Unicode
+  // cues so voice mode can auto-switch TTS voice and UI labels to match.
+  // Returns { lang: 'en'|'vi'|'es', confidence: 'high'|'low' }
+  function _detectLangFromText(text) {
+    if (!text) return { lang: 'en', confidence: 'low' };
+    // Vietnamese: characters unique to Vietnamese — ă Ă đ Đ ơ Ơ ư Ư + full
+    // Latin Extended Additional block U+1EA0-U+1EF9 (ạảấầẩẫậắằẳẵặẹẻ etc.)
+    if (/[\u0102\u0103\u0110\u0111\u01a0\u01a1\u01af\u01b0\u1ea0-\u1ef9]/.test(text)) {
+      return { lang: 'vi', confidence: 'high' };
+    }
+    // Spanish: ñ Ñ, ¿, ¡ — or common Spanish words
+    if (/[\u00f1\u00d1\u00bf\u00a1]/.test(text) ||
+        /\b(hola|qu[ie]ro|hablar|cu[aá]ndo|d[oó]nde|c[oó]mo|gracias|s[ií]|est[aá]|estoy|necesito|reservar|agendar|una\s+cita|para|cita|por\s+favor)\b/i.test(text)) {
+      return { lang: 'es', confidence: 'high' };
+    }
+    return { lang: 'en', confidence: 'low' };
+  }
+
+  // Show a brief auto-detection hint (fades after ~2 s)
+  function _showAutoLangHint(lang) {
+    var el = _overlay && _overlay.querySelector('.dlc-vm__auto-lang');
+    if (!el) return;
+    var hints = {
+      en: 'English detected',
+      vi: 'Ti\u1ebfng Vi\u1ec7t',
+      es: 'Espa\u00f1ol'
+    };
+    el.textContent = hints[lang] || '';
+    el.classList.add('dlc-vm__auto-lang--show');
+    clearTimeout(_autoLangTimer);
+    _autoLangTimer = setTimeout(function () {
+      el.classList.remove('dlc-vm__auto-lang--show');
+    }, 2200);
   }
 
   // ── Voice selection helper ─────────────────────────────────────────────────
@@ -370,6 +410,18 @@
   // MutationObserver detects the bot reply regardless of which path fires.
   function _processTranscript(text) {
     if (!_biz || !_msgsEl) { _setState('idle'); return; }
+
+    // Auto-detect spoken language from transcript text.
+    // Only fires when confidence is high AND the detected language differs from
+    // current — and only when not mid-booking (receptionist already set a lang).
+    if (!(_biz._bookingState && _biz._bookingState.lang)) {
+      var _detected = _detectLangFromText(text);
+      if (_detected.confidence === 'high' && _detected.lang !== _lang) {
+        _setLang(_detected.lang);
+        _showAutoLangHint(_detected.lang);
+      }
+    }
+
     _setState('processing');
 
     // Always use MutationObserver for bot reply detection — reliable across

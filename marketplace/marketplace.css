@@ -2692,19 +2692,20 @@ html.dlc-vm-active body { overflow: hidden !important; }
   align-items: center;
   width: 100%;
   max-width: 380px;
-  padding: 5rem 2rem 2.5rem;
+  /* top: 2.5rem (close btn now lives on overlay); bottom: 5.5rem clears lang bar */
+  padding: 2.5rem 2rem 5.5rem;
   gap: .9rem;
 }
 
-/* ── Close button ─────────────────────────────────────────────────────────── */
+/* ── Close button — positioned on overlay directly, always at real screen corner */
 .dlc-vm__close {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  width: 44px;
-  height: 44px;
+  top: max(1.1rem, env(safe-area-inset-top));
+  right: max(1.1rem, env(safe-area-inset-right));
+  width: 56px;
+  height: 56px;
   border: none;
-  background: rgba(255,255,255,.1);
+  background: rgba(255,255,255,.18);
   border-radius: 50%;
   color: #fff;
   display: flex;
@@ -2712,8 +2713,11 @@ html.dlc-vm-active body { overflow: hidden !important; }
   justify-content: center;
   cursor: pointer;
   transition: background .2s;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 1;
 }
-.dlc-vm__close:hover { background: rgba(255,255,255,.2); }
+.dlc-vm__close:hover  { background: rgba(255,255,255,.28); }
+.dlc-vm__close:active { background: rgba(255,255,255,.38); }
 
 /* ── Vendor name ──────────────────────────────────────────────────────────── */
 .dlc-vm__name {
@@ -2735,6 +2739,19 @@ html.dlc-vm-active body { overflow: hidden !important; }
   min-height: 1.2em;
   text-align: center;
 }
+
+/* ── Auto-detected language hint (fades in/out) ───────────────────────────── */
+.dlc-vm__auto-lang {
+  color: var(--gold, #d4af37);
+  font-size: .7rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  text-align: center;
+  min-height: 1em;
+  opacity: 0;
+  transition: opacity .35s ease;
+}
+.dlc-vm__auto-lang.dlc-vm__auto-lang--show { opacity: 1; }
 
 /* ── Customer transcript ──────────────────────────────────────────────────── */
 .dlc-vm__transcript {
@@ -2875,33 +2892,44 @@ html.dlc-vm-active body { overflow: hidden !important; }
 }
 .dlc-vm__text-btn:hover { border-color: rgba(255,255,255,.45); color: #fff; }
 
-/* ── Language selector ────────────────────────────────────────────────────── */
+/* ── Language selector — pinned to bottom, thumb-friendly ─────────────────── */
+/* Lives on the overlay directly (not inside inner card) for full-width anchoring */
 .dlc-vm__langs {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
-  gap: .45rem;
-  margin-top: .15rem;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.1rem 2rem max(1.5rem, env(safe-area-inset-bottom));
+  background: linear-gradient(to bottom, transparent, rgba(8,22,36,.65));
 }
 .dlc-vm__lang {
-  border: 1px solid rgba(255,255,255,.18);
-  background: transparent;
-  color: rgba(255,255,255,.4);
-  padding: .3rem .75rem;
-  border-radius: 1.5rem;
-  font-size: .72rem;
+  border: 1.5px solid rgba(255,255,255,.25);
+  background: rgba(255,255,255,.07);
+  color: rgba(255,255,255,.55);
+  padding: .65rem 1.5rem;
+  min-width: 72px;
+  min-height: 44px;
+  border-radius: 2rem;
+  font-size: .85rem;
   font-weight: 700;
   letter-spacing: .07em;
   cursor: pointer;
   transition: border-color .15s, color .15s, background .15s;
   font-family: inherit;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
 }
 .dlc-vm__lang.dlc-vm__lang--active {
   border-color: var(--gold, #d4af37);
   color: var(--gold, #d4af37);
-  background: rgba(212,175,55,.1);
+  background: rgba(212,175,55,.14);
 }
 .dlc-vm__lang:not(.dlc-vm__lang--active):hover {
-  border-color: rgba(255,255,255,.35);
-  color: rgba(255,255,255,.7);
+  border-color: rgba(255,255,255,.45);
+  color: rgba(255,255,255,.8);
 }
 
 /* ── Desktop: voice mode is mobile-only ───────────────────────────────────── */

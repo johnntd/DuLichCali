@@ -250,10 +250,10 @@
         placeholder="••••••••" autocomplete="new-password">
     </div>
     <div class="f-row">
-      <label class="f-label" for="setupCode">Mã thiết lập (4 số cuối SĐT)</label>
+      <label class="f-label" for="setupCode">Mã thiết lập (do Admin cấp)</label>
       <input class="f-input" type="text" id="setupCode"
-        placeholder="VD: 2438"
-        autocomplete="off" inputmode="numeric" maxlength="4">
+        placeholder="Mã PIN từ admin"
+        autocomplete="off" inputmode="numeric" maxlength="6">
     </div>
     <div class="error-msg" id="setupError"></div>
     <button class="btn-primary" id="btnSetup" onclick="doSetup()">Tạo Tài Khoản</button>
@@ -265,17 +265,17 @@
     <div class="login-card-title">Liên Kết Tài Khoản</div>
     <div class="setup-hint">
       Tài khoản email này tồn tại nhưng chưa được liên kết với cửa hàng.<br>
-      Nhập <strong>mã thiết lập</strong> (4 số cuối SĐT) để hoàn tất liên kết.
+      Nhập <strong>mã thiết lập</strong> do admin cấp để hoàn tất liên kết.
     </div>
     <div class="f-row">
       <label class="f-label">Email đã đăng nhập</label>
       <div id="claimEmailDisplay" style="font-size:.85rem;color:var(--muted);padding:.5rem 0;"></div>
     </div>
     <div class="f-row">
-      <label class="f-label" for="claimCode">Mã thiết lập (4 số cuối SĐT)</label>
+      <label class="f-label" for="claimCode">Mã thiết lập (do Admin cấp)</label>
       <input class="f-input" type="text" id="claimCode"
-        placeholder="VD: 2438"
-        autocomplete="off" inputmode="numeric" maxlength="4">
+        placeholder="Mã PIN từ admin"
+        autocomplete="off" inputmode="numeric" maxlength="6">
     </div>
     <div class="error-msg" id="claimError"></div>
     <button class="btn-primary" id="btnClaim" onclick="doClaim()">Liên Kết Tài Khoản</button>
@@ -285,7 +285,8 @@
 
 <script>
   // ── Vendor registry ───────────────────────────────────────────────────────
-  // setupCode = last 4 digits of the vendor's registered phone number.
+  // setupCode = PIN issued by admin (4 digits for legacy VENDOR_REGISTRY vendors,
+  // 6 digits for staff accounts created via admin panel).
   // This is the one-time credential to link an Auth account to a vendor.
   var VENDOR_REGISTRY = {
     'nha-bep-cua-emily': { name: 'Nhà Bếp Của Emily',   setupCode: '2438' },

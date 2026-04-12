@@ -44,6 +44,71 @@ window.RideIntake = (function () {
       successSub:   'Your booking ID:',
       successMsg:   'We\'ll confirm within <strong>30 minutes</strong>.<br>Urgent? Call <a href="tel:4089163439">(408) 916-3439</a>.',
       closeBtn:     'Close',
+      // ── Picker, labels, placeholders, validation ──
+      pickerTitle:      'Book a Ride',
+      pickerSubPfx:     'Professional driver · ',
+      pickerSuffix:     ' seats',
+      pickupCardTitle:  'Airport Pickup',
+      pickupCardDesc:   'Arriving · Driver waits at Arrivals',
+      dropoffCardTitle: 'Airport Drop-off',
+      dropoffCardDesc:  'Departing · On-time door pickup',
+      rideCardTitle:    'Private Ride',
+      rideCardDesc:     'Any destination · No airport needed',
+      vanBadge:         'Save <strong>20%</strong> vs Uber &nbsp;·&nbsp; Book ahead · Fixed price',
+      labelAirportP:    'Arrival airport',    labelAirportD:    'Departure airport',
+      labelDropoffAddr: 'Drop-off address',   labelPickupAddr:  'Pickup address',
+      labelFromAddr:    'Pickup location',    labelToAddr:      'Destination',
+      labelArrivalDate: 'Arrival date',       labelArrivalTime: 'Landing time',
+      labelDepartDate:  'Departure date',     labelDepartTime:  'Departure time',
+      labelRideDate:    'Ride date',          labelRideTime:    'Pickup time',
+      labelPassengers:  'Passengers',         labelLuggage:     'Checked bags',
+      labelFlight:      'Flight number',      labelTerminal:    'Terminal',
+      labelName:        'Full name',          labelPhone:       'Phone number',
+      labelNotes:       'Notes',              optional:         '(optional)',
+      phDropoff:        'Address, city, or hotel name',
+      phPickup:         'Home or hotel address',
+      phFrom:           'Address, city, or location',
+      phTo:             'Address, city, or location',
+      phName:           'Full name',
+      phFlightP:        'e.g. United 714',   phTerminalP:      'e.g. TBIT, T5',
+      phFlightD:        'e.g. VN 456',       phTerminalD:      'e.g. Terminal 2',
+      phNotesP:         'Wheelchair, children, special requests...',
+      phNotesD:         'Luggage, wheelchair, special requests...',
+      phNotesR:         'Stops, special requests...',
+      optPassengers:    '— Select —',
+      airportOpt:       '— Select airport —',
+      lugOpts:          ['None (carry-on only)', '1 bag', '2 bags', '3 bags', '4 bags', '5+ bags'],
+      gpsBtn:           'My location',
+      locationBadge:    'Sorted by distance',
+      priceHint:        'Enter address to see price estimate',
+      priceLoading:     'Calculating distance...',
+      estLabel:         'Estimated',
+      backLabel:        'Back',
+      closeLabel:       'Close',
+      unavailTitle:     'Ride Service',
+      unavailHeading:   'No Vehicles Available',
+      unavailBody:      'No drivers scheduled right now.<br>Contact us to book.',
+      callNow:          'Call Now',
+      processing:       'Processing...',
+      alertFill:        'Please complete:\n• ',
+      errAirportP:      'Please select arrival airport',
+      errDropoff:       'Please enter drop-off address',
+      errArrivalDate:   'Please enter arrival date',
+      errArrivalTime:   'Please enter landing time',
+      errPassengers:    'Please select passenger count',
+      errName:          'Please enter your name',
+      errPhone:         'Please enter your phone number',
+      errPickup:        'Please enter pickup address',
+      errAirportD:      'Please select departure airport',
+      errDepartDate:    'Please enter departure date',
+      errDepartTime:    'Please enter departure time',
+      errFrom:          'Please enter pickup location',
+      errTo:            'Please enter destination',
+      errRideDate:      'Please enter ride date',
+      errRideTime:      'Please enter pickup time',
+      noRoute:          'Route not found.',
+      vehicleBox: function(name, seats) { return name + '<br>' + seats + ' seats<br>Tip not included'; },
+      errBooking: 'Booking failed. Please call (408) 916-3439 to book directly.',
     },
     vi: {
       minSuffix:    'phút',
@@ -81,6 +146,71 @@ window.RideIntake = (function () {
       successSub:   'Mã đặt chỗ của bạn:',
       successMsg:   'Chúng tôi sẽ xác nhận trong <strong>30 phút</strong>.<br>Cần gấp? Gọi <a href="tel:4089163439">(408) 916-3439</a>.',
       closeBtn:     'Đóng',
+      // ── Picker, labels, placeholders, validation ──
+      pickerTitle:      'Đặt Xe Đưa Đón',
+      pickerSubPfx:     'Tài xế chuyên nghiệp · ',
+      pickerSuffix:     ' chỗ',
+      pickupCardTitle:  'Đón Sân Bay',
+      pickupCardDesc:   'Bay đến · Tài xế chờ tại cửa Arrivals',
+      dropoffCardTitle: 'Ra Sân Bay',
+      dropoffCardDesc:  'Bay đi · Đón tận nhà đúng giờ',
+      rideCardTitle:    'Xe Riêng Cao Cấp',
+      rideCardDesc:     'Đến bất kỳ điểm nào · Không cần sân bay',
+      vanBadge:         'Rẻ hơn Uber <strong>20%</strong> &nbsp;·&nbsp; Đặt trước · Giá cố định',
+      labelAirportP:    'Sân bay đến',        labelAirportD:    'Sân bay cần đến',
+      labelDropoffAddr: 'Địa chỉ điểm đến',   labelPickupAddr:  'Địa chỉ đón',
+      labelFromAddr:    'Điểm đón',           labelToAddr:      'Điểm đến',
+      labelArrivalDate: 'Ngày đến',           labelArrivalTime: 'Giờ hạ cánh',
+      labelDepartDate:  'Ngày bay',           labelDepartTime:  'Giờ cất cánh',
+      labelRideDate:    'Ngày đi',            labelRideTime:    'Giờ xuất phát',
+      labelPassengers:  'Số hành khách',      labelLuggage:     'Hành lý ký gửi',
+      labelFlight:      'Số chuyến bay',      labelTerminal:    'Terminal',
+      labelName:        'Họ tên',             labelPhone:       'Số điện thoại',
+      labelNotes:       'Ghi chú',            optional:         '(tùy chọn)',
+      phDropoff:        'Địa chỉ, thành phố, hoặc tên khách sạn',
+      phPickup:         'Địa chỉ nhà hoặc khách sạn',
+      phFrom:           'Địa chỉ, thành phố hoặc địa điểm',
+      phTo:             'Địa chỉ, thành phố hoặc địa điểm',
+      phName:           'Tên đầy đủ',
+      phFlightP:        'VD: United 714',     phTerminalP:      'VD: TBIT, T5',
+      phFlightD:        'VD: VN 456',         phTerminalD:      'VD: Terminal 2',
+      phNotesP:         'Wheelchair, trẻ em, yêu cầu đặc biệt...',
+      phNotesD:         'Hành lý, wheelchair, yêu cầu đặc biệt...',
+      phNotesR:         'Điểm dừng, yêu cầu đặc biệt...',
+      optPassengers:    '— Chọn —',
+      airportOpt:       '— Chọn sân bay —',
+      lugOpts:          ['Không có (chỉ xách tay)', '1 kiện', '2 kiện', '3 kiện', '4 kiện', '5+ kiện'],
+      gpsBtn:           'Vị trí của tôi',
+      locationBadge:    'Sắp xếp gần bạn nhất',
+      priceHint:        'Nhập địa chỉ để xem giá ước tính',
+      priceLoading:     'Đang tính khoảng cách...',
+      estLabel:         'Ước tính',
+      backLabel:        'Quay lại',
+      closeLabel:       'Đóng',
+      unavailTitle:     'Dịch Vụ Xe',
+      unavailHeading:   'Hiện Không Có Xe',
+      unavailBody:      'Tài xế chưa có lịch trống lúc này.<br>Vui lòng liên hệ trực tiếp để đặt xe.',
+      callNow:          'Gọi Ngay',
+      processing:       'Đang xử lý...',
+      alertFill:        'Vui lòng điền đầy đủ:\n• ',
+      errAirportP:      'Vui lòng chọn sân bay đến',
+      errDropoff:       'Vui lòng nhập địa chỉ điểm đến',
+      errArrivalDate:   'Vui lòng nhập ngày đến',
+      errArrivalTime:   'Vui lòng nhập giờ hạ cánh',
+      errPassengers:    'Vui lòng chọn số hành khách',
+      errName:          'Vui lòng nhập họ tên',
+      errPhone:         'Vui lòng nhập số điện thoại',
+      errPickup:        'Vui lòng nhập địa chỉ đón',
+      errAirportD:      'Vui lòng chọn sân bay cần đến',
+      errDepartDate:    'Vui lòng nhập ngày bay',
+      errDepartTime:    'Vui lòng nhập giờ cất cánh',
+      errFrom:          'Vui lòng nhập điểm đón',
+      errTo:            'Vui lòng nhập điểm đến',
+      errRideDate:      'Vui lòng nhập ngày đi',
+      errRideTime:      'Vui lòng nhập giờ xuất phát',
+      noRoute:          'Không tìm được tuyến đường.',
+      vehicleBox: function(name, seats) { return name + '<br>' + seats + ' chỗ<br>Chưa bao gồm tip'; },
+      errBooking: 'Đặt chỗ không thành công. Vui lòng gọi (408) 916-3439 để đặt trực tiếp.',
     },
     es: {
       minSuffix:    'min',
@@ -118,11 +248,211 @@ window.RideIntake = (function () {
       successSub:   'Tu ID de reserva:',
       successMsg:   'Confirmaremos en <strong>30 minutos</strong>.<br>¿Urgente? Llama al <a href="tel:4089163439">(408) 916-3439</a>.',
       closeBtn:     'Cerrar',
+      // ── Picker, labels, placeholders, validation ──
+      pickerTitle:      'Reservar un Viaje',
+      pickerSubPfx:     'Conductor profesional · ',
+      pickerSuffix:     ' asientos',
+      pickupCardTitle:  'Recogida en Aeropuerto',
+      pickupCardDesc:   'Llegando · Conductor espera en Llegadas',
+      dropoffCardTitle: 'Al Aeropuerto',
+      dropoffCardDesc:  'Saliendo · Puntual de puerta a puerta',
+      rideCardTitle:    'Viaje Privado',
+      rideCardDesc:     'Cualquier destino · Sin aeropuerto',
+      vanBadge:         'Ahorra <strong>20%</strong> vs Uber &nbsp;·&nbsp; Reserva · Precio fijo',
+      labelAirportP:    'Aeropuerto de llegada',  labelAirportD:    'Aeropuerto de salida',
+      labelDropoffAddr: 'Dirección de destino',    labelPickupAddr:  'Dirección de recogida',
+      labelFromAddr:    'Punto de recogida',       labelToAddr:      'Destino',
+      labelArrivalDate: 'Fecha de llegada',        labelArrivalTime: 'Hora de aterrizaje',
+      labelDepartDate:  'Fecha de vuelo',          labelDepartTime:  'Hora de salida',
+      labelRideDate:    'Fecha del viaje',         labelRideTime:    'Hora de recogida',
+      labelPassengers:  'Pasajeros',               labelLuggage:     'Equipaje facturado',
+      labelFlight:      'Número de vuelo',         labelTerminal:    'Terminal',
+      labelName:        'Nombre completo',         labelPhone:       'Número de teléfono',
+      labelNotes:       'Notas',                   optional:         '(opcional)',
+      phDropoff:        'Dirección, ciudad o nombre del hotel',
+      phPickup:         'Dirección de casa o hotel',
+      phFrom:           'Dirección, ciudad o lugar',
+      phTo:             'Dirección, ciudad o lugar',
+      phName:           'Nombre completo',
+      phFlightP:        'ej. United 714',          phTerminalP:      'ej. TBIT, T5',
+      phFlightD:        'ej. VN 456',              phTerminalD:      'ej. Terminal 2',
+      phNotesP:         'Silla de ruedas, niños, solicitudes especiales...',
+      phNotesD:         'Equipaje, silla de ruedas, solicitudes especiales...',
+      phNotesR:         'Paradas, solicitudes especiales...',
+      optPassengers:    '— Seleccionar —',
+      airportOpt:       '— Seleccionar aeropuerto —',
+      lugOpts:          ['Sin equipaje (solo carry-on)', '1 maleta', '2 maletas', '3 maletas', '4 maletas', '5+ maletas'],
+      gpsBtn:           'Mi ubicación',
+      locationBadge:    'Ordenados por distancia',
+      priceHint:        'Ingresa dirección para ver precio estimado',
+      priceLoading:     'Calculando distancia...',
+      estLabel:         'Estimado',
+      backLabel:        'Atrás',
+      closeLabel:       'Cerrar',
+      unavailTitle:     'Servicio de Vehículos',
+      unavailHeading:   'Sin Vehículos Disponibles',
+      unavailBody:      'No hay conductores disponibles.<br>Contáctenos directamente para reservar.',
+      callNow:          'Llamar Ahora',
+      processing:       'Procesando...',
+      alertFill:        'Por favor completa:\n• ',
+      errAirportP:      'Selecciona el aeropuerto de llegada',
+      errDropoff:       'Ingresa la dirección de destino',
+      errArrivalDate:   'Ingresa la fecha de llegada',
+      errArrivalTime:   'Ingresa la hora de aterrizaje',
+      errPassengers:    'Selecciona el número de pasajeros',
+      errName:          'Ingresa tu nombre',
+      errPhone:         'Ingresa tu número de teléfono',
+      errPickup:        'Ingresa la dirección de recogida',
+      errAirportD:      'Selecciona el aeropuerto de salida',
+      errDepartDate:    'Ingresa la fecha de vuelo',
+      errDepartTime:    'Ingresa la hora de salida',
+      errFrom:          'Ingresa el punto de recogida',
+      errTo:            'Ingresa el destino',
+      errRideDate:      'Ingresa la fecha del viaje',
+      errRideTime:      'Ingresa la hora de recogida',
+      noRoute:          'Ruta no encontrada.',
+      vehicleBox: function(name, seats) { return name + '<br>' + seats + ' asientos<br>Propina no incluida'; },
+      errBooking: 'Reserva fallida. Llama al (408) 916-3439 para reservar directamente.',
     },
   };
   var _lang = (new URLSearchParams(window.location.search).get('lang') || 'en');
   if (!_RIDE_T[_lang]) _lang = 'en';
   var _T = _RIDE_T[_lang];
+
+  // ── i18n DOM updater — applies _T strings to all static modal HTML ────────────
+  var _i18nApplied = false;
+  var _GPS_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+
+  function _i18nModal() {
+    if (_i18nApplied) return;
+    _i18nApplied = true;
+
+    // Helper: update label's first text node (preserves required / optional child spans)
+    function lbl(forId, txt) {
+      var el = document.querySelector('label[for="' + forId + '"]');
+      if (!el) return;
+      var tn = el.firstChild;
+      if (tn && tn.nodeType === 3) tn.textContent = txt + ' ';
+    }
+    // Helper: update (optional) inline-style spans in labels to current lang
+    function updateOptSpans() {
+      document.querySelectorAll('#rideIntakeModal label span[style]').forEach(function(s) {
+        s.textContent = _T.optional;
+      });
+    }
+    // Helper: set placeholder
+    function ph(id, text) { var el = document.getElementById(id); if (el) el.placeholder = text; }
+    // Helper: set first select option text
+    function opt0(id, text) { var sel = document.getElementById(id); if (sel && sel.options[0]) sel.options[0].text = text; }
+    // Helper: set multiple option texts (by index)
+    function opts(id, arr) {
+      var sel = document.getElementById(id);
+      if (!sel) return;
+      arr.forEach(function(t, i) { if (sel.options[i]) sel.options[i].text = t; });
+    }
+    // Helper: set textContent of element by ID
+    function txt(id, text) { var el = document.getElementById(id); if (el) el.textContent = text; }
+    // Helper: update location badge (preserves .ri-loc-dot span)
+    function locBadge(id) {
+      var bdg = document.getElementById(id);
+      if (!bdg) return;
+      var dot = bdg.querySelector('.ri-loc-dot');
+      bdg.textContent = _T.locationBadge;
+      if (dot) bdg.insertBefore(dot, bdg.firstChild);
+    }
+
+    // ── Picker title (also set by showPicker via setText, this is the initial pass) ──
+    txt('riTitle', _T.pickerTitle);
+
+    // ── Service cards ──
+    var cards = document.querySelectorAll('#riPicker .ri-svc-card');
+    var cardData = [
+      [_T.pickupCardTitle,  _T.pickupCardDesc],
+      [_T.dropoffCardTitle, _T.dropoffCardDesc],
+      [_T.rideCardTitle,    _T.rideCardDesc],
+    ];
+    cards.forEach(function(card, i) {
+      var ct = card.querySelector('.ri-svc-card__text');
+      if (ct && cardData[i]) ct.innerHTML = '<strong>' + cardData[i][0] + '</strong><span>' + cardData[i][1] + '</span>';
+    });
+
+    // ── Van badge (preserves leading SVG) ──
+    var vanBdg = document.querySelector('#riPicker .ri-van-badge');
+    if (vanBdg) {
+      var svgEl = vanBdg.querySelector('svg');
+      vanBdg.innerHTML = '';
+      if (svgEl) vanBdg.appendChild(svgEl);
+      vanBdg.insertAdjacentHTML('beforeend', ' ' + _T.vanBadge);
+    }
+
+    // ── Aria labels ──
+    var backBtn = document.getElementById('riBackBtn');
+    if (backBtn) backBtn.setAttribute('aria-label', _T.backLabel);
+    var closeBtn = document.querySelector('#rideIntakeModal .ri-close-btn');
+    if (closeBtn) closeBtn.setAttribute('aria-label', _T.closeLabel);
+
+    // ── Optional spans ──
+    updateOptSpans();
+
+    // ── PICKUP form labels + placeholders ──
+    lbl('ri_p_airport',    _T.labelAirportP);
+    lbl('ri_dropoff_addr', _T.labelDropoffAddr);    ph('ri_dropoff_addr', _T.phDropoff);
+    lbl('ri_arrival_date', _T.labelArrivalDate);
+    lbl('ri_arrival_time', _T.labelArrivalTime);
+    lbl('ri_p_passengers', _T.labelPassengers);     opt0('ri_p_passengers', _T.optPassengers);
+    lbl('ri_p_luggage',    _T.labelLuggage);        opts('ri_p_luggage', _T.lugOpts);
+    lbl('ri_p_flight',     _T.labelFlight);         ph('ri_p_flight', _T.phFlightP);
+    lbl('ri_p_terminal',   _T.labelTerminal);       ph('ri_p_terminal', _T.phTerminalP);
+    lbl('ri_p_name',       _T.labelName);           ph('ri_p_name', _T.phName);
+    lbl('ri_p_phone',      _T.labelPhone);
+    lbl('ri_p_notes',      _T.labelNotes);          ph('ri_p_notes', _T.phNotesP);
+
+    // ── DROPOFF form labels + placeholders ──
+    lbl('ri_pickup_addr',  _T.labelPickupAddr);     ph('ri_pickup_addr', _T.phPickup);
+    lbl('ri_d_airport',    _T.labelAirportD);
+    lbl('ri_depart_date',  _T.labelDepartDate);
+    lbl('ri_depart_time',  _T.labelDepartTime);
+    lbl('ri_d_passengers', _T.labelPassengers);     opt0('ri_d_passengers', _T.optPassengers);
+    lbl('ri_d_luggage',    _T.labelLuggage);        opts('ri_d_luggage', _T.lugOpts);
+    lbl('ri_d_flight',     _T.labelFlight);         ph('ri_d_flight', _T.phFlightD);
+    lbl('ri_d_terminal',   _T.labelTerminal);       ph('ri_d_terminal', _T.phTerminalD);
+    lbl('ri_d_name',       _T.labelName);           ph('ri_d_name', _T.phName);
+    lbl('ri_d_phone',      _T.labelPhone);
+    lbl('ri_d_notes',      _T.labelNotes);          ph('ri_d_notes', _T.phNotesD);
+
+    // ── RIDE form labels + placeholders ──
+    lbl('ri_from_addr',    _T.labelFromAddr);       ph('ri_from_addr', _T.phFrom);
+    lbl('ri_to_addr',      _T.labelToAddr);         ph('ri_to_addr', _T.phTo);
+    lbl('ri_ride_date',    _T.labelRideDate);
+    lbl('ri_ride_time',    _T.labelRideTime);
+    lbl('ri_r_passengers', _T.labelPassengers);     opt0('ri_r_passengers', _T.optPassengers);
+    lbl('ri_r_name',       _T.labelName);           ph('ri_r_name', _T.phName);
+    lbl('ri_r_phone',      _T.labelPhone);
+    lbl('ri_r_notes',      _T.labelNotes);          ph('ri_r_notes', _T.phNotesR);
+
+    // ── GPS buttons (replace emoji with SVG + translated text) ──
+    var geoBtn  = document.getElementById('riGeoBtn');
+    var geoBtnD = document.getElementById('riGeoBtnD');
+    if (geoBtn)  geoBtn.innerHTML  = _GPS_SVG + ' ' + _T.gpsBtn;
+    if (geoBtnD) geoBtnD.innerHTML = _GPS_SVG + ' ' + _T.gpsBtn;
+
+    // ── Location badges ──
+    locBadge('riLocBadgeP');
+    locBadge('riLocBadgeD');
+
+    // ── Price hint + loading ──
+    txt('riPriceHint', _T.priceHint);
+    var ldgEl = document.getElementById('riPriceLoading');
+    if (ldgEl) {
+      var spinner = ldgEl.querySelector('.ri-price-spinner');
+      ldgEl.textContent = _T.priceLoading;
+      if (spinner) ldgEl.insertBefore(spinner, ldgEl.firstChild);
+    }
+
+    // ── Footer estimate label ──
+    var estLbl = document.querySelector('#riFooterEst .ri-footer__est-label');
+    if (estLbl) estLbl.textContent = _T.estLabel;
+  }
 
   // ── Airport data ─────────────────────────────────────────────────────────────
   var AIRPORTS = {
@@ -151,6 +481,31 @@ window.RideIntake = (function () {
   var _lastOrigin    = null; // saved for GPS map links
   var _lastDest      = null;
 
+  // ── iOS keyboard / visualViewport shrink ─────────────────────────────────────
+  // When the software keyboard opens on iOS, the panel shrinks to visualViewport.height
+  // so the footer button always stays visible above the keyboard.
+  var _vpHandler = null;
+
+  function _startViewportWatch() {
+    if (!window.visualViewport || _vpHandler) return;
+    var panel = document.querySelector('#rideIntakeModal .ri-panel');
+    if (!panel) return;
+    _vpHandler = function() {
+      var vvh = Math.round(window.visualViewport.height);
+      panel.style.maxHeight = vvh + 'px';
+    };
+    window.visualViewport.addEventListener('resize', _vpHandler);
+    _vpHandler(); // apply immediately
+  }
+
+  function _stopViewportWatch() {
+    if (!window.visualViewport || !_vpHandler) return;
+    window.visualViewport.removeEventListener('resize', _vpHandler);
+    _vpHandler = null;
+    var panel = document.querySelector('#rideIntakeModal .ri-panel');
+    if (panel) panel.style.maxHeight = '';
+  }
+
   // ── Step management ───────────────────────────────────────────────────────────
   function open(type) {
     // Block if driver availability has been checked and no driver is available
@@ -164,6 +519,8 @@ window.RideIntake = (function () {
     if (!modal) return;
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
+    _i18nModal();           // apply i18n to all static HTML (no-op after first call)
+    _startViewportWatch();  // shrink panel to visual viewport (iOS keyboard safe)
 
     if (type) {
       goForm(type);  // skip picker, go straight to form
@@ -186,9 +543,9 @@ window.RideIntake = (function () {
       _driverCoords = { lat: d.driverLat, lng: d.driverLng };
     }
     var sub = document.getElementById('riPickerSub');
-    if (sub) sub.textContent = 'Tài xế chuyên nghiệp · ' + _driverVehicle.name + ' ' + _driverVehicle.seats + ' chỗ';
+    if (sub) sub.textContent = _T.pickerSubPfx + _driverVehicle.name + ' ' + _driverVehicle.seats + _T.pickerSuffix;
     var box = document.getElementById('riVehicleBox');
-    if (box) box.innerHTML = _driverVehicle.name + '<br>' + _driverVehicle.seats + ' chỗ<br>Chưa bao gồm tip';
+    if (box) box.innerHTML = _T.vehicleBox(_driverVehicle.name, _driverVehicle.seats);
   }
 
   function _fetchDriverVehicle() {
@@ -224,14 +581,17 @@ window.RideIntake = (function () {
     setHide('riProgressWrap', true);
     setHide('riStepQuestion', true);
     setHide('riTitle', false);
-    setText('riTitle', 'Dịch Vụ Xe');
+    setText('riTitle', _T.unavailTitle);
     var body = document.getElementById('riBody');
     if (body) body.innerHTML =
       '<div style="text-align:center;padding:2.5rem 1.5rem">' +
-        '<div style="font-size:2.5rem;margin-bottom:1rem">🚫</div>' +
-        '<p style="font-size:1.05rem;font-weight:600;color:var(--cream);margin:0 0 .5rem">Hiện Không Có Xe</p>' +
-        '<p style="font-size:.85rem;color:var(--muted);margin:0 0 1.5rem">Tài xế chưa có lịch trống lúc này.<br>Vui lòng liên hệ trực tiếp để đặt xe.</p>' +
-        '<a href="tel:+14089163439" style="display:inline-flex;align-items:center;gap:.45rem;background:var(--gold);color:#07101e;font-weight:700;font-size:.9rem;padding:.7rem 1.4rem;border-radius:999px;text-decoration:none">📞 Gọi Ngay</a>' +
+        '<div style="margin-bottom:1rem"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="color:var(--muted)"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>' +
+        '<p style="font-size:1.05rem;font-weight:600;color:var(--cream);margin:0 0 .5rem">' + _T.unavailHeading + '</p>' +
+        '<p style="font-size:.85rem;color:var(--muted);margin:0 0 1.5rem">' + _T.unavailBody + '</p>' +
+        '<a href="tel:+14089163439" style="display:inline-flex;align-items:center;gap:.45rem;background:var(--gold);color:#07101e;font-weight:700;font-size:.9rem;padding:.7rem 1.4rem;border-radius:999px;text-decoration:none">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 11.5 19.79 19.79 0 01.22 2.82 2 2 0 012.22 1h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.91 8.09a16 16 0 006 6l.56-.56a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>' +
+          ' ' + _T.callNow +
+        '</a>' +
       '</div>';
   }
 
@@ -240,6 +600,7 @@ window.RideIntake = (function () {
     if (modal) modal.hidden = true;
     document.body.style.overflow = '';
     clearTimeout(_timer);
+    _stopViewportWatch(); // release visualViewport listener
   }
 
   function showPicker() {
@@ -250,7 +611,7 @@ window.RideIntake = (function () {
     setHide('riBackBtn', true);
     setHide('riProgressWrap', true);
     setHide('riTitle', false);
-    setText('riTitle', 'Đặt Xe Đưa Đón');
+    setText('riTitle', _T.pickerTitle);
     var body = document.getElementById('riBody');
     if (body) body.scrollTop = 0;
   }
@@ -333,7 +694,7 @@ window.RideIntake = (function () {
       scheduleDistance();
       if (_driverVehicle) {
         var box2 = document.getElementById('riVehicleBox');
-        if (box2) box2.innerHTML = _driverVehicle.name + '<br>' + _driverVehicle.seats + ' chỗ<br>Chưa bao gồm tip';
+        if (box2) box2.innerHTML = _T.vehicleBox(_driverVehicle.name, _driverVehicle.seats);
       }
     }
     if (n < 3) { showPriceHint(); }
@@ -355,6 +716,16 @@ window.RideIntake = (function () {
 
     // Init autocomplete on steps where address fields appear
     if (n === 1 || n === 2) setTimeout(initAutocomplete, 60);
+
+    // Attach focus → scroll-into-view for all inputs on this step (iOS keyboard fix)
+    var activeStep = document.getElementById(pfx + '_s' + n);
+    if (activeStep) {
+      activeStep.querySelectorAll('input, select, textarea').forEach(function(inp) {
+        inp.addEventListener('focus', function onFocus() {
+          setTimeout(function() { _scrollInputIntoView(inp); }, 350);
+        }, { once: false, passive: true });
+      });
+    }
   }
 
   // ── Booking review card (shown in step 3 so customer can verify before confirming) ─
@@ -410,46 +781,46 @@ window.RideIntake = (function () {
     var errors = [];
     if (_type === 'pickup') {
       if (step === 1) {
-        if (!val('ri_p_airport'))    errors.push('Vui lòng chọn sân bay đến');
+        if (!val('ri_p_airport'))    errors.push(_T.errAirportP);
       } else if (step === 2) {
-        if (!val('ri_dropoff_addr')) errors.push('Vui lòng nhập địa chỉ điểm đến');
+        if (!val('ri_dropoff_addr')) errors.push(_T.errDropoff);
       } else if (step === 3) {
-        if (!val('ri_arrival_date')) errors.push('Vui lòng nhập ngày đến');
-        if (!val('ri_arrival_time')) errors.push('Vui lòng nhập giờ hạ cánh');
+        if (!val('ri_arrival_date')) errors.push(_T.errArrivalDate);
+        if (!val('ri_arrival_time')) errors.push(_T.errArrivalTime);
       } else if (step === 4) {
-        if (!val('ri_p_passengers')) errors.push('Vui lòng chọn số hành khách');
+        if (!val('ri_p_passengers')) errors.push(_T.errPassengers);
       } else if (step === 5) {
-        if (!val('ri_p_name'))       errors.push('Vui lòng nhập họ tên');
-        if (!val('ri_p_phone'))      errors.push('Vui lòng nhập số điện thoại');
+        if (!val('ri_p_name'))       errors.push(_T.errName);
+        if (!val('ri_p_phone'))      errors.push(_T.errPhone);
       }
       // step 6: no validation — submit() handles final check
     } else if (_type === 'dropoff') {
       if (step === 1) {
-        if (!val('ri_pickup_addr'))  errors.push('Vui lòng nhập địa chỉ đón');
+        if (!val('ri_pickup_addr'))  errors.push(_T.errPickup);
       } else if (step === 2) {
-        if (!val('ri_d_airport'))    errors.push('Vui lòng chọn sân bay cần đến');
+        if (!val('ri_d_airport'))    errors.push(_T.errAirportD);
       } else if (step === 3) {
-        if (!val('ri_depart_date'))  errors.push('Vui lòng nhập ngày bay');
-        if (!val('ri_depart_time'))  errors.push('Vui lòng nhập giờ cất cánh');
+        if (!val('ri_depart_date'))  errors.push(_T.errDepartDate);
+        if (!val('ri_depart_time'))  errors.push(_T.errDepartTime);
       } else if (step === 4) {
-        if (!val('ri_d_passengers')) errors.push('Vui lòng chọn số hành khách');
+        if (!val('ri_d_passengers')) errors.push(_T.errPassengers);
       } else if (step === 5) {
-        if (!val('ri_d_name'))       errors.push('Vui lòng nhập họ tên');
-        if (!val('ri_d_phone'))      errors.push('Vui lòng nhập số điện thoại');
+        if (!val('ri_d_name'))       errors.push(_T.errName);
+        if (!val('ri_d_phone'))      errors.push(_T.errPhone);
       }
     } else if (_type === 'ride') {
       if (step === 1) {
-        if (!val('ri_from_addr'))    errors.push('Vui lòng nhập điểm đón');
+        if (!val('ri_from_addr'))    errors.push(_T.errFrom);
       } else if (step === 2) {
-        if (!val('ri_to_addr'))      errors.push('Vui lòng nhập điểm đến');
+        if (!val('ri_to_addr'))      errors.push(_T.errTo);
       } else if (step === 3) {
-        if (!val('ri_ride_date'))    errors.push('Vui lòng nhập ngày đi');
-        if (!val('ri_ride_time'))    errors.push('Vui lòng nhập giờ xuất phát');
+        if (!val('ri_ride_date'))    errors.push(_T.errRideDate);
+        if (!val('ri_ride_time'))    errors.push(_T.errRideTime);
       } else if (step === 4) {
-        if (!val('ri_r_passengers')) errors.push('Vui lòng chọn số hành khách');
+        if (!val('ri_r_passengers')) errors.push(_T.errPassengers);
       } else if (step === 5) {
-        if (!val('ri_r_name'))       errors.push('Vui lòng nhập họ tên');
-        if (!val('ri_r_phone'))      errors.push('Vui lòng nhập số điện thoại');
+        if (!val('ri_r_name'))       errors.push(_T.errName);
+        if (!val('ri_r_phone'))      errors.push(_T.errPhone);
       }
     }
     return errors;
@@ -497,7 +868,7 @@ window.RideIntake = (function () {
     }
 
     // Build options
-    sel.innerHTML = '<option value="">— Chọn sân bay —</option>';
+    sel.innerHTML = '<option value="">' + _T.airportOpt + '</option>';
     sorted.forEach(function (a) {
       var ap = AIRPORTS[a.code];
       if (!ap) return;
@@ -656,7 +1027,7 @@ window.RideIntake = (function () {
           _quote = DLCPricing.quoteRide(ride.distMiles, ride.durMins);
           showPrice(_quote);
         }).catch(function() {
-          showPriceHint('Không tìm được tuyến đường.');
+          showPriceHint(_T.noRoute);
         });
       });
     } else {
@@ -665,7 +1036,7 @@ window.RideIntake = (function () {
         _quote = DLCPricing.quoteRide(ride.distMiles, ride.durMins);
         showPrice(_quote);
       }).catch(function() {
-        showPriceHint('Không tìm được tuyến đường.');
+        showPriceHint(_T.noRoute);
       });
     }
   }
@@ -686,7 +1057,7 @@ window.RideIntake = (function () {
   function showPriceHint(msg) {
     setHide('riPriceLoading', true);
     setHide('riPriceBox',     true);
-    setText('riPriceHint', msg || 'Nhập địa chỉ để xem giá ước tính');
+    setText('riPriceHint', msg || _T.priceHint);
     setHide('riPriceHint', false);
     setHide('riFooterEst', true);
   }
@@ -742,29 +1113,29 @@ window.RideIntake = (function () {
   function validate() {
     var e = [];
     if (_type === 'pickup') {
-      if (!val('ri_p_airport'))    e.push('Chọn sân bay');
-      if (!val('ri_arrival_date')) e.push('Ngày đến');
-      if (!val('ri_arrival_time')) e.push('Giờ đến');
-      if (!val('ri_dropoff_addr')) e.push('Địa chỉ điểm đến');
-      if (!val('ri_p_passengers')) e.push('Số hành khách');
-      if (!val('ri_p_name'))       e.push('Tên');
-      if (!val('ri_p_phone'))      e.push('Số điện thoại');
+      if (!val('ri_p_airport'))    e.push(_T.errAirportP);
+      if (!val('ri_arrival_date')) e.push(_T.errArrivalDate);
+      if (!val('ri_arrival_time')) e.push(_T.errArrivalTime);
+      if (!val('ri_dropoff_addr')) e.push(_T.errDropoff);
+      if (!val('ri_p_passengers')) e.push(_T.errPassengers);
+      if (!val('ri_p_name'))       e.push(_T.errName);
+      if (!val('ri_p_phone'))      e.push(_T.errPhone);
     } else if (_type === 'dropoff') {
-      if (!val('ri_pickup_addr'))  e.push('Địa chỉ đón');
-      if (!val('ri_d_airport'))    e.push('Chọn sân bay');
-      if (!val('ri_depart_date'))  e.push('Ngày bay');
-      if (!val('ri_depart_time'))  e.push('Giờ bay');
-      if (!val('ri_d_passengers')) e.push('Số hành khách');
-      if (!val('ri_d_name'))       e.push('Tên');
-      if (!val('ri_d_phone'))      e.push('Số điện thoại');
+      if (!val('ri_pickup_addr'))  e.push(_T.errPickup);
+      if (!val('ri_d_airport'))    e.push(_T.errAirportD);
+      if (!val('ri_depart_date'))  e.push(_T.errDepartDate);
+      if (!val('ri_depart_time'))  e.push(_T.errDepartTime);
+      if (!val('ri_d_passengers')) e.push(_T.errPassengers);
+      if (!val('ri_d_name'))       e.push(_T.errName);
+      if (!val('ri_d_phone'))      e.push(_T.errPhone);
     } else {
-      if (!val('ri_from_addr'))    e.push('Điểm đón');
-      if (!val('ri_to_addr'))      e.push('Điểm đến');
-      if (!val('ri_ride_date'))    e.push('Ngày đi');
-      if (!val('ri_ride_time'))    e.push('Giờ đi');
-      if (!val('ri_r_passengers')) e.push('Số hành khách');
-      if (!val('ri_r_name'))       e.push('Tên');
-      if (!val('ri_r_phone'))      e.push('Số điện thoại');
+      if (!val('ri_from_addr'))    e.push(_T.errFrom);
+      if (!val('ri_to_addr'))      e.push(_T.errTo);
+      if (!val('ri_ride_date'))    e.push(_T.errRideDate);
+      if (!val('ri_ride_time'))    e.push(_T.errRideTime);
+      if (!val('ri_r_passengers')) e.push(_T.errPassengers);
+      if (!val('ri_r_name'))       e.push(_T.errName);
+      if (!val('ri_r_phone'))      e.push(_T.errPhone);
     }
     return e;
   }
@@ -774,12 +1145,12 @@ window.RideIntake = (function () {
     if (_busy) return;
     var errors = validate();
     if (errors.length) {
-      alert('Vui lòng điền đầy đủ:\n• ' + errors.join('\n• '));
+      alert(_T.alertFill + errors.join('\n• '));
       return;
     }
     _busy = true;
     var btn = document.getElementById('riSubmit');
-    if (btn) { btn.textContent = 'Đang xử lý...'; btn.disabled = true; }
+    if (btn) { btn.textContent = _T.processing; btn.disabled = true; }
 
     var bookingId = generateId();
     var data      = buildBookingData(bookingId);
@@ -960,10 +1331,11 @@ window.RideIntake = (function () {
     _busy = false;
     var btn = document.getElementById('riSubmit');
     if (btn) {
-      btn.innerHTML = 'Xác Nhận Đặt Xe <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+      var arrowSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+      btn.innerHTML = _T.submitBtn + ' ' + arrowSvg;
       btn.disabled = false;
     }
-    alert('Đặt chỗ không thành công. Vui lòng gọi (408) 916-3439 để đặt trực tiếp.');
+    alert(_T.errBooking);
   }
 
   // ── Utilities ─────────────────────────────────────────────────────────────────

@@ -160,6 +160,110 @@ window.addEventListener('popstate', function () {
   }
 });
 
+// ── Site Language System ──────────────────────────────────────
+var _siteLang = (localStorage.getItem('dlcLang') ||
+  new URLSearchParams(window.location.search).get('lang') || 'en');
+if (!['en','vi','es'].includes(_siteLang)) _siteLang = 'en';
+
+var _UI_STRINGS = {
+  en: {
+    navHome:'Home', navTravel:'Travel', navMarket:'Market', navRides:'Rides', navTranslate:'Translate',
+    intAirport:'Airport', intFood:'Food', intBeauty:'Beauty', intTours:'Tours',
+    hpAirportTitle:'Airport & Private Rides', hpAirportBtn:'Book Now',
+    ridePickupName:'Airport Pickup', ridePickupSub:'Flying in · Driver waiting at Arrivals',
+    rideDropoffName:'Airport Dropoff', rideDropoffSub:'Flying out · Never miss your flight',
+    ridePrivateName:'Premium Private Car', ridePrivateSub:'Mercedes Van · 12 seats · −20% vs Uber',
+    hpMarketTitle:'Marketplace', viewAll:'View all',
+    hpTourTitle:'Tours & Travel California',
+    hpTrustTitle:'Why Choose Du Lich Cali',
+    trustTrips:'Trips Completed', trustCustomers:'Happy Customers',
+    trustAirports:'Airports Served', trustRating:'Average Rating',
+    hpAiTitle:'Not Sure What to Book?',
+    hpAiSub:'Free AI advice · Instant answers · 3 languages',
+    aiMarket:'Marketplace', aiMarketHint:'Food · Nails · Hair',
+    aiAirport:'Airport & Rides', aiAirportHint:'Book a ride · Pickup & dropoff',
+    aiTour:'Tours & Travel', aiTourHint:'Plan a trip · AI suggestions',
+    destTitle:'Destinations', destSub:'Browse destinations and book a tour',
+    destAirportTitle:'Airport Transfers',
+    chatStatus:'Booking assistant · Online',
+    chatEmptyTitle:'Hello!', chatEmptySub:'Ask me about tours, rides, or nearby services',
+    chatPh:'Ask about tours, prices, bookings...',
+  },
+  vi: {
+    navHome:'Trang Chủ', navTravel:'Du Lịch', navMarket:'Mua Sắm', navRides:'Đặt Xe', navTranslate:'Dịch Thuật',
+    intAirport:'Sân Bay', intFood:'Ẩm Thực', intBeauty:'Làm Đẹp', intTours:'Tour',
+    hpAirportTitle:'Sân Bay & Xe Riêng', hpAirportBtn:'Đặt Ngay',
+    ridePickupName:'Đón Sân Bay', ridePickupSub:'Mới đáp · Tài xế đợi tại Arrivals',
+    rideDropoffName:'Đưa Sân Bay', rideDropoffSub:'Ra sân bay · Không trễ chuyến',
+    ridePrivateName:'Xe Riêng Cao Cấp', ridePrivateSub:'Mercedes Van · 12 chỗ · −20% so Uber',
+    hpMarketTitle:'Mua Sắm', viewAll:'Xem tất cả',
+    hpTourTitle:'Tour & Du Lịch California',
+    hpTrustTitle:'Tại Sao Chọn Du Lịch Cali',
+    trustTrips:'Chuyến Đi', trustCustomers:'Khách Hài Lòng',
+    trustAirports:'Sân Bay Phục Vụ', trustRating:'Đánh Giá TB',
+    hpAiTitle:'Chưa Biết Đặt Gì?',
+    hpAiSub:'Tư vấn AI miễn phí · Trả lời ngay · 3 ngôn ngữ',
+    aiMarket:'Mua Sắm', aiMarketHint:'Thức ăn · Nail · Tóc',
+    aiAirport:'Sân Bay & Xe', aiAirportHint:'Đặt xe · Đón & đưa sân bay',
+    aiTour:'Tour & Du Lịch', aiTourHint:'Lên kế hoạch · AI gợi ý',
+    destTitle:'Điểm Đến', destSub:'Khám phá điểm đến và đặt tour',
+    destAirportTitle:'Chuyển Sân Bay',
+    chatStatus:'Trợ lý đặt xe · Trực tuyến',
+    chatEmptyTitle:'Xin chào!', chatEmptySub:'Hỏi về tour, xe, hoặc dịch vụ gần bạn',
+    chatPh:'Nhắn tin Du Lịch Cali...',
+  },
+  es: {
+    navHome:'Inicio', navTravel:'Viajes', navMarket:'Mercado', navRides:'Paseos', navTranslate:'Traducir',
+    intAirport:'Aeropuerto', intFood:'Comida', intBeauty:'Belleza', intTours:'Tours',
+    hpAirportTitle:'Aeropuerto y Viajes Privados', hpAirportBtn:'Reservar',
+    ridePickupName:'Recogida en Aeropuerto', ridePickupSub:'Al llegar · Chofer esperando en Llegadas',
+    rideDropoffName:'Al Aeropuerto', rideDropoffSub:'De salida · Sin perder el vuelo',
+    ridePrivateName:'Auto Privado Premium', ridePrivateSub:'Mercedes Van · 12 asientos · −20% vs Uber',
+    hpMarketTitle:'Mercado', viewAll:'Ver todo',
+    hpTourTitle:'Tours y Viajes California',
+    hpTrustTitle:'Por Qué Elegirnos',
+    trustTrips:'Viajes Completados', trustCustomers:'Clientes Satisfechos',
+    trustAirports:'Aeropuertos Servidos', trustRating:'Calificación Promedio',
+    hpAiTitle:'¿No Sabe Qué Reservar?',
+    hpAiSub:'IA gratis · Respuestas rápidas · 3 idiomas',
+    aiMarket:'Mercado', aiMarketHint:'Comida · Uñas · Cabello',
+    aiAirport:'Aeropuerto y Viajes', aiAirportHint:'Reservar · Recogida y entrega',
+    aiTour:'Tours y Viajes', aiTourHint:'Planificar · Sugerencias IA',
+    destTitle:'Destinos', destSub:'Explorar destinos y reservar tour',
+    destAirportTitle:'Traslados al Aeropuerto',
+    chatStatus:'Asistente de reservas · En línea',
+    chatEmptyTitle:'¡Hola!', chatEmptySub:'Pregúntame sobre tours, viajes o servicios cercanos',
+    chatPh:'Mensaje a Du Lich Cali...',
+  }
+};
+
+function _applyUiLang(lang) {
+  var T = _UI_STRINGS[lang] || _UI_STRINGS.en;
+  document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    var k = el.dataset.i18n;
+    if (T[k] !== undefined) el.textContent = T[k];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
+    var k = el.dataset.i18nPh;
+    if (T[k] !== undefined) el.placeholder = T[k];
+  });
+}
+
+window.setUiLang = function(lang) {
+  if (!_UI_STRINGS[lang]) return;
+  _siteLang = lang;
+  try { localStorage.setItem('dlcLang', lang); } catch(e) {}
+  _applyUiLang(lang);
+  document.documentElement.lang = lang === 'vi' ? 'vi' : lang === 'es' ? 'es' : 'en';
+  document.querySelectorAll('#langPicker .lang-btn').forEach(function(btn) {
+    var active = btn.dataset.lang === lang;
+    btn.classList.toggle('lang-btn--active', active);
+    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
+  // Sync ride intake module if loaded
+  if (window.RideIntake && RideIntake.setLang) RideIntake.setLang(lang);
+};
+
 // Hash-based deep linking (from marketplace bottom nav links like ../#travel)
 // Query-param entry routing: ?entry=airport|tour|marketplace|food|hair|nails
 document.addEventListener('DOMContentLoaded', function () {
@@ -1887,6 +1991,9 @@ function renderFeatureCards() {
 
 // ── DOMContentLoaded ─────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+
+  // Apply saved language preference on load
+  setUiLang(_siteLang);
 
   // Region detection — fires updateRegionUI + availability check + homepage intelligence
   if (window.DLCRegion) {

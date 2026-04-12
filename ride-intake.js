@@ -1407,6 +1407,12 @@ window.RideIntake = (function () {
     schedule:           scheduleDistance,
     useCurrentLocation: useCurrentLocation,
     AIRPORTS:           AIRPORTS,
+    setLang: function(lang) {
+      if (!_RIDE_T[lang]) return;
+      _lang = lang;
+      _T = _RIDE_T[lang];
+      _i18nApplied = false; // force re-apply next open()
+    },
   };
 
 }());

@@ -82,11 +82,18 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-  <link rel="stylesheet" href="style.css?v=20260419k">
+  <link rel="stylesheet" href="style.css?v=20260419l">
   <link rel="stylesheet" href="desktop.css">
 </head>
 <body>
 <div id="app">
+
+  <!-- Language Picker — fixed top-right, always visible -->
+  <div id="langPicker" class="lang-picker" role="group" aria-label="Select language">
+    <button class="lang-btn lang-btn--active" data-lang="en" onclick="setUiLang('en')" aria-pressed="true">EN</button>
+    <button class="lang-btn" data-lang="vi" onclick="setUiLang('vi')" aria-pressed="false">VI</button>
+    <button class="lang-btn" data-lang="es" onclick="setUiLang('es')" aria-pressed="false">ES</button>
+  </div>
 
   <!-- ════════════════════════════════════════════════
        MAIN — 4 SCREENS (SPA)
@@ -172,47 +179,47 @@
       <nav class="hp-intent-bar" aria-label="Quick service selection">
         <button class="hp-intent-tile hp-intent-tile--airport" onclick="RideIntake.open('pickup')" data-ride-gate>
           <span class="hp-intent-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></span>
-          <span class="hp-intent-tile__label">Airport</span>
+          <span class="hp-intent-tile__label" data-i18n="intAirport">Airport</span>
         </button>
         <button class="hp-intent-tile hp-intent-tile--food" onclick="heroCarouselCta('food')">
           <span class="hp-intent-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></span>
-          <span class="hp-intent-tile__label">Food</span>
+          <span class="hp-intent-tile__label" data-i18n="intFood">Food</span>
         </button>
         <button class="hp-intent-tile hp-intent-tile--beauty" onclick="heroCarouselCta('nails')">
           <span class="hp-intent-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
-          <span class="hp-intent-tile__label">Beauty</span>
+          <span class="hp-intent-tile__label" data-i18n="intBeauty">Beauty</span>
         </button>
         <button class="hp-intent-tile hp-intent-tile--tour" onclick="openAIWithIntent('tour')">
           <span class="hp-intent-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7.05 11.5 7.35 11.76a1 1 0 0 0 1.3 0C13 21.5 20 15.4 20 10a8 8 0 0 0-8-8z"/></svg></span>
-          <span class="hp-intent-tile__label">Tours</span>
+          <span class="hp-intent-tile__label" data-i18n="intTours">Tours</span>
         </button>
       </nav>
 
       <!-- ── Panel 1: Airport & Ride (moved first — loss aversion, highest urgency) ── -->
       <section id="hpAirport" class="home-section">
         <div class="section-hdr">
-          <h2 class="section-title">Airport &amp; Private Rides</h2>
-          <button class="see-all" data-ride-gate onclick="RideIntake.open('pickup')">Book Now</button>
+          <h2 class="section-title" data-i18n="hpAirportTitle">Airport &amp; Private Rides</h2>
+          <button class="see-all" data-ride-gate onclick="RideIntake.open('pickup')" data-i18n="hpAirportBtn">Book Now</button>
         </div>
         <div class="hp-avail-badge" id="hpAvailStatus" hidden></div>
         <div class="home-ride-grid">
           <div class="home-ride-tile" data-ride-gate onclick="RideIntake.open('pickup')" role="button" tabindex="0"
                onkeydown="if(event.key==='Enter')RideIntake.open('pickup')">
             <span class="home-ride-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></span>
-            <strong class="home-ride-tile__name">Airport Pickup</strong>
-            <span class="home-ride-tile__sub">Flying in · Driver waiting at Arrivals</span>
+            <strong class="home-ride-tile__name" data-i18n="ridePickupName">Airport Pickup</strong>
+            <span class="home-ride-tile__sub" data-i18n="ridePickupSub">Flying in · Driver waiting at Arrivals</span>
           </div>
           <div class="home-ride-tile" data-ride-gate onclick="RideIntake.open('dropoff')" role="button" tabindex="0"
                onkeydown="if(event.key==='Enter')RideIntake.open('dropoff')">
             <span class="home-ride-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:scaleX(-1)"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></span>
-            <strong class="home-ride-tile__name">Airport Dropoff</strong>
-            <span class="home-ride-tile__sub">Flying out · Never miss your flight</span>
+            <strong class="home-ride-tile__name" data-i18n="rideDropoffName">Airport Dropoff</strong>
+            <span class="home-ride-tile__sub" data-i18n="rideDropoffSub">Flying out · Never miss your flight</span>
           </div>
           <div class="home-ride-tile" data-ride-gate onclick="RideIntake.open('ride')" role="button" tabindex="0"
                onkeydown="if(event.key==='Enter')RideIntake.open('ride')">
             <span class="home-ride-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h14l1 5H4L5 9z"/><path d="M5 9l2-4h10l2 4"/><circle cx="7.5" cy="17" r="2"/><circle cx="16.5" cy="17" r="2"/><path d="M14 14H10"/></svg></span>
-            <strong class="home-ride-tile__name">Premium Private Car</strong>
-            <span class="home-ride-tile__sub">Mercedes Van · 12 seats · −20% vs Uber</span>
+            <strong class="home-ride-tile__name" data-i18n="ridePrivateName">Premium Private Car</strong>
+            <span class="home-ride-tile__sub" data-i18n="ridePrivateSub">Mercedes Van · 12 seats · −20% vs Uber</span>
           </div>
         </div>
       </section>
@@ -220,8 +227,8 @@
       <!-- ── Panel 2: Marketplace ──────────────────────────────── -->
       <section id="hpFeatured" class="home-section">
         <div class="section-hdr">
-          <h2 class="section-title" id="hpFeaturedTitle">Marketplace</h2>
-          <a href="marketplace/" class="see-all">View all</a>
+          <h2 class="section-title" id="hpFeaturedTitle" data-i18n="hpMarketTitle">Marketplace</h2>
+          <a href="marketplace/" class="see-all" data-i18n="viewAll">View all</a>
         </div>
         <div class="hp-vendor-row" id="hpVendorCards" role="list"></div>
       </section>
@@ -229,8 +236,8 @@
       <!-- ── Panel 3: Tour & Travel ───────────────────────────── -->
       <section class="home-section">
         <div class="section-hdr">
-          <h2 class="section-title">Tours &amp; Travel California</h2>
-          <button class="see-all" onclick="switchScreen('screenDest')">View all</button>
+          <h2 class="section-title" data-i18n="hpTourTitle">Tours &amp; Travel California</h2>
+          <button class="see-all" onclick="switchScreen('screenDest')" data-i18n="viewAll">View all</button>
         </div>
         <div class="trav-carousel" id="travCarousel" role="list"></div>
       </section>
@@ -238,24 +245,24 @@
       <!-- ── Trust Stats — social proof anchoring (Bandwagon Effect) ── -->
       <section class="home-section" id="hpTrust">
         <div class="section-hdr">
-          <h2 class="section-title">Why Choose Du Lich Cali</h2>
+          <h2 class="section-title" data-i18n="hpTrustTitle">Why Choose Du Lich Cali</h2>
         </div>
         <div class="trust-grid">
           <div class="trust-cell">
             <span class="trust-num">1,000+</span>
-            <span>Trips Completed</span>
+            <span data-i18n="trustTrips">Trips Completed</span>
           </div>
           <div class="trust-cell">
             <span class="trust-num">500+</span>
-            <span>Happy Customers</span>
+            <span data-i18n="trustCustomers">Happy Customers</span>
           </div>
           <div class="trust-cell">
             <span class="trust-num">6</span>
-            <span>Airports Served</span>
+            <span data-i18n="trustAirports">Airports Served</span>
           </div>
           <div class="trust-cell">
             <span class="trust-num">5★</span>
-            <span>Average Rating</span>
+            <span data-i18n="trustRating">Average Rating</span>
           </div>
         </div>
       </section>
@@ -263,24 +270,24 @@
       <!-- ── AI Panel — guidance framing catches undecided visitors ── -->
       <section class="home-section home-ai-panel">
         <div class="section-hdr">
-          <h2 class="section-title">Not Sure What to Book?</h2>
+          <h2 class="section-title" data-i18n="hpAiTitle">Not Sure What to Book?</h2>
         </div>
-        <p class="home-ai-panel__sub">Free AI advice · Instant answers · 3 languages</p>
+        <p class="home-ai-panel__sub" data-i18n="hpAiSub">Free AI advice · Instant answers · 3 languages</p>
         <div class="home-ai-panel__grid">
           <button class="home-ai-svc" onclick="homeAiSend('I want to order food')">
             <span class="home-ai-svc__icon">🛍️</span>
-            <span class="home-ai-svc__name">Marketplace</span>
-            <span class="home-ai-svc__hint">Food · Nails · Hair</span>
+            <span class="home-ai-svc__name" data-i18n="aiMarket">Marketplace</span>
+            <span class="home-ai-svc__hint" data-i18n="aiMarketHint">Food · Nails · Hair</span>
           </button>
           <button class="home-ai-svc" onclick="openAIWithIntent('airport')">
             <span class="home-ai-svc__icon">✈️</span>
-            <span class="home-ai-svc__name">Airport &amp; Rides</span>
-            <span class="home-ai-svc__hint">Book a ride · Pickup &amp; dropoff</span>
+            <span class="home-ai-svc__name" data-i18n="aiAirport">Airport &amp; Rides</span>
+            <span class="home-ai-svc__hint" data-i18n="aiAirportHint">Book a ride · Pickup &amp; dropoff</span>
           </button>
           <button class="home-ai-svc" onclick="openAIWithIntent('tour')">
             <span class="home-ai-svc__icon">🗺️</span>
-            <span class="home-ai-svc__name">Tours &amp; Travel</span>
-            <span class="home-ai-svc__hint">Plan a trip · AI suggestions</span>
+            <span class="home-ai-svc__name" data-i18n="aiTour">Tours &amp; Travel</span>
+            <span class="home-ai-svc__hint" data-i18n="aiTourHint">Plan a trip · AI suggestions</span>
           </button>
         </div>
       </section>
@@ -299,8 +306,8 @@
     ───────────────────────────────────────── -->
     <section id="screenDest" class="screen" role="tabpanel" aria-labelledby="tabDest">
       <div class="screen-top">
-        <h2 class="screen-top__title">Destinations</h2>
-        <p class="screen-top__sub">Browse destinations and book a tour</p>
+        <h2 class="screen-top__title" data-i18n="destTitle">Destinations</h2>
+        <p class="screen-top__sub" data-i18n="destSub">Browse destinations and book a tour</p>
       </div>
 
       <!-- Full destination cards (rendered by JS) -->
@@ -308,7 +315,7 @@
 
       <!-- Airport section -->
       <div class="airport-block home-section">
-        <div class="section-hdr"><h2 class="section-title">Airport Transfers</h2></div>
+        <div class="section-hdr"><h2 class="section-title" data-i18n="destAirportTitle">Airport Transfers</h2></div>
         <div class="airport-card">
           <div class="airport-card__header">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -575,7 +582,7 @@
             <strong>Du Lịch Cali AI</strong>
             <span class="chat-status">
               <span class="chat-status__dot"></span>
-              Booking assistant · Online
+              <span data-i18n="chatStatus">Booking assistant · Online</span>
             </span>
           </div>
         </div>
@@ -595,8 +602,8 @@
           <!-- Empty state: hidden once first .cmsg appears (CSS :has selector) -->
           <div class="chat-empty-state" aria-hidden="true">
             <div class="chat-empty-state__orb">✦</div>
-            <p class="chat-empty-state__title">Hello!</p>
-            <p class="chat-empty-state__sub">Ask me about tours, rides, or nearby services</p>
+            <p class="chat-empty-state__title" data-i18n="chatEmptyTitle">Hello!</p>
+            <p class="chat-empty-state__sub" data-i18n="chatEmptySub">Ask me about tours, rides, or nearby services</p>
           </div>
         </div>
 
@@ -613,7 +620,7 @@
           </button>
           <input class="chat-input" type="text" id="chatInput"
             placeholder="Ask about tours, prices, bookings..." autocomplete="off"
-            aria-label="Type your message">
+            aria-label="Type your message" data-i18n-ph="chatPh">
           <button class="chat-send" id="chatSend" aria-label="Send">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
@@ -748,7 +755,7 @@
         <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
         <polyline points="9 22 9 12 15 12 15 22"/>
       </svg>
-      <span>Home</span>
+      <span data-i18n="navHome">Home</span>
     </button>
 
     <!-- 2 · Travel -->
@@ -759,7 +766,7 @@
         <circle cx="12" cy="10" r="3"/>
         <path d="M12 2a8 8 0 00-8 8c0 5.25 7.5 12 8 12s8-6.75 8-12a8 8 0 00-8-8z"/>
       </svg>
-      <span>Travel</span>
+      <span data-i18n="navTravel">Travel</span>
     </button>
 
     <!-- 3 · Marketplace -->
@@ -769,7 +776,7 @@
         <line x1="3" y1="6" x2="21" y2="6"/>
         <path d="M16 10a4 4 0 01-8 0"/>
       </svg>
-      <span>Market</span>
+      <span data-i18n="navMarket">Market</span>
     </a>
 
     <!-- 4 · Airport / Ride — opens modal, does not switch screens -->
@@ -781,7 +788,7 @@
         <circle cx="7.5" cy="17.5" r="2.5"/>
         <circle cx="17.5" cy="17.5" r="2.5"/>
       </svg>
-      <span>Rides</span>
+      <span data-i18n="navRides">Rides</span>
     </button>
 
     <!-- 5 · AI Interpreter -->
@@ -796,7 +803,7 @@
         <path d="M22 22l-5-10-5 10"/>
         <path d="M14 18h6"/>
       </svg>
-      <span>Translate</span>
+      <span data-i18n="navTranslate">Translate</span>
     </button>
 
   </nav>
@@ -1246,7 +1253,7 @@
 <script src="ride-intake.js?v=20260419l"></script>
 <script src="notifications.js?v=20260418d"></script>
 <script src="workflowEngine.js?v=20260419f"></script>
-<script src="chat.js?v=20260419g"></script>
-<script src="script.js?v=20260419k" defer></script>
+<script src="chat.js?v=20260419h"></script>
+<script src="script.js?v=20260419l" defer></script>
 </body>
 </html>

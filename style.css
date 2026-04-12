@@ -756,6 +756,43 @@ gmp-placeautocomplete.field-input::part(input):focus {
   transition: none;
 }
 
+/* ── Language Picker — fixed top-right pill ─────────────────── */
+.lang-picker {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  right: 12px;
+  z-index: 400;
+  display: flex;
+  gap: 2px;
+  background: rgba(10,35,68,.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 20px;
+  padding: 3px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.35);
+}
+.lang-btn {
+  padding: 4px 10px;
+  font-size: .68rem;
+  font-weight: 700;
+  font-family: var(--font-b);
+  color: rgba(255,255,255,.55);
+  background: transparent;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  letter-spacing: .05em;
+  line-height: 1.6;
+  -webkit-tap-highlight-color: transparent;
+}
+.lang-btn:hover { color: #fff; }
+.lang-btn--active {
+  background: var(--gold);
+  color: var(--navy);
+}
+
 /* ── Homepage Intelligence ──────────────────────────────────── */
 
 /* Intent Quick Bar — 4 service choices, Hick's Law: fewer options = faster decision */

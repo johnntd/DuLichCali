@@ -1400,8 +1400,6 @@
               var loc = window.DLCLocation && DLCLocation.pickupHint();
               if (loc) { _addrAmbigName = null; return loc; }
             }
-            var _addr = X.address(t);
-            if (_addr) { _addrAmbigName = null; return _addr; }
             var _trimmed = t.trim();
             // Exclude bare airport codes (3 uppercase letters) and short tokens
             if (/^[A-Z]{2,4}$/.test(_trimmed)) return null;
@@ -1409,8 +1407,10 @@
             if (VAGUE_ADDR_RE.test(_trimmed)) return null;
             // Reject partial/generic place names without a street number
             if (!(/\d/.test(_trimmed)) && VAGUE_ADDR_SOFT_RE.test(_trimmed)) return null;
-            // Single-word ambiguity: business/landmark needs city context
+            // Single-word ambiguity check BEFORE X.address() — X.address accepts any string ≥4 chars
             if (_isAmbiguousAddr(_trimmed)) { _addrAmbigName = _trimmed; return null; }
+            var _addr = X.address(t);
+            if (_addr) { _addrAmbigName = null; return _addr; }
             _addrAmbigName = null;
             if (_trimmed.length >= 5) return _trimmed;
             return null;
@@ -1563,8 +1563,6 @@
               var loc = window.DLCLocation && DLCLocation.pickupHint();
               if (loc) { _addrAmbigName = null; return loc; }
             }
-            var _addr = X.address(t);
-            if (_addr) { _addrAmbigName = null; return _addr; }
             var _trimmed = t.trim();
             // Exclude bare airport codes (3 uppercase letters) and short tokens
             if (/^[A-Z]{2,4}$/.test(_trimmed)) return null;
@@ -1572,8 +1570,10 @@
             if (VAGUE_ADDR_RE.test(_trimmed)) return null;
             // Reject partial/generic place names without a street number
             if (!(/\d/.test(_trimmed)) && VAGUE_ADDR_SOFT_RE.test(_trimmed)) return null;
-            // Single-word ambiguity: business/landmark needs city context
+            // Single-word ambiguity check BEFORE X.address() — X.address accepts any string ≥4 chars
             if (_isAmbiguousAddr(_trimmed)) { _addrAmbigName = _trimmed; return null; }
+            var _addr = X.address(t);
+            if (_addr) { _addrAmbigName = null; return _addr; }
             _addrAmbigName = null;
             if (_trimmed.length >= 5) return _trimmed;
             return null;
@@ -1684,8 +1684,6 @@
                 return loc;
               }
             }
-            var _addr = X.address(t);
-            if (_addr) { _addrAmbigName = null; return _addr; }
             var _trimmed = t.trim();
             // Exclude bare airport codes (3 uppercase letters) and short tokens
             if (/^[A-Z]{2,4}$/.test(_trimmed)) return null;
@@ -1693,8 +1691,10 @@
             if (VAGUE_ADDR_RE.test(_trimmed)) return null;
             // Reject partial/generic place names without a street number
             if (!(/\d/.test(_trimmed)) && VAGUE_ADDR_SOFT_RE.test(_trimmed)) return null;
-            // Single-word ambiguity: business/landmark needs city context
+            // Single-word ambiguity check BEFORE X.address() — X.address accepts any string ≥4 chars
             if (_isAmbiguousAddr(_trimmed)) { _addrAmbigName = _trimmed; return null; }
+            var _addr = X.address(t);
+            if (_addr) { _addrAmbigName = null; return _addr; }
             _addrAmbigName = null;
             if (_trimmed.length >= 5) return _trimmed;
             return null;
@@ -1708,14 +1708,14 @@
             return S('qRideDropoff');
           },
           extract: function(t) {
-            var _addr = X.address(t);
-            if (_addr) { _addrAmbigName = null; return _addr; }
             var _trimmed = t.trim();
             if (VAGUE_ADDR_RE.test(_trimmed)) return null;
             // Reject partial/generic place names without a street number
             if (!(/\d/.test(_trimmed)) && VAGUE_ADDR_SOFT_RE.test(_trimmed)) return null;
-            // Single-word ambiguity: business/landmark needs city context
+            // Single-word ambiguity check BEFORE X.address() — X.address accepts any string ≥4 chars
             if (_isAmbiguousAddr(_trimmed)) { _addrAmbigName = _trimmed; return null; }
+            var _addr = X.address(t);
+            if (_addr) { _addrAmbigName = null; return _addr; }
             _addrAmbigName = null;
             return _trimmed.length >= 3 ? _trimmed : null;
           },

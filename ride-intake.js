@@ -533,7 +533,7 @@ window.RideIntake = (function () {
   function _applyDriverVehicle(d, driverId) {
     var v = (d && d.vehicle) || {};
     _driverVehicle = {
-      name:       [v.make, v.model, v.year].filter(Boolean).join(' ') || (d && d.fullName ? d.fullName + "'s vehicle" : 'Xe Riêng'),
+      name:       [v.make, v.model, v.year].filter(Boolean).join(' ') || (d && d.fullName ? d.fullName + "'s vehicle" : 'Private Ride'),
       seats:      v.seats || 4,
       driverId:   driverId || '',
       driverName: (d && d.fullName) || ''
@@ -1165,7 +1165,7 @@ window.RideIntake = (function () {
       .then(function () {
         // Admin notification
         return db.collection('vendors').doc('admin-dlc').collection('notifications').add({
-          type: 'new_booking', title: '🚐 Đặt Xe Mới — ' + svcLabel(),
+          type: 'new_booking', title: '🚐 New Booking — ' + svcLabel(),
           message: buildAdminMsg(data), bookingId: bookingId, read: false, createdAt: ts,
         });
       })
@@ -1342,7 +1342,7 @@ window.RideIntake = (function () {
   function val(id)         { var e = document.getElementById(id); return e ? e.value.trim() : ''; }
   function setText(id, t)  { var e = document.getElementById(id); if (e) e.textContent = t; }
   function setHide(id, h)  { var e = document.getElementById(id); if (e) e.hidden = !!h; }
-  function svcLabel()      { return { pickup:'Đón Sân Bay', dropoff:'Ra Sân Bay', ride:'Xe Riêng' }[_type] || _type; }
+  function svcLabel()      { return { pickup:'Airport Pickup', dropoff:'Airport Dropoff', ride:'Private Ride' }[_type] || _type; }
   function generateId() {
     var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', id = 'DLC-', arr = new Uint8Array(6);
     crypto.getRandomValues(arr);
@@ -1358,17 +1358,17 @@ window.RideIntake = (function () {
   function useCurrentLocation(targetId, btnId) {
     targetId = targetId || 'ri_from_addr';
     if (!navigator.geolocation) {
-      alert('Trình duyệt của bạn không hỗ trợ định vị.');
+      alert('Your browser does not support location services.');
       return;
     }
     var btn = document.getElementById(btnId || 'riGeoBtn');
-    if (btn) { btn.textContent = '⏳ Đang lấy vị trí...'; btn.disabled = true; }
+    if (btn) { btn.textContent = '⏳ Getting location...'; btn.disabled = true; }
 
     navigator.geolocation.getCurrentPosition(
       function(pos) {
         var lat = pos.coords.latitude, lng = pos.coords.longitude;
         var restoreBtn = function() {
-          if (btn) { btn.textContent = '📍 Vị trí của tôi'; btn.disabled = false; }
+          if (btn) { btn.textContent = '📍 My location'; btn.disabled = false; }
         };
         // Use Google Maps Geocoder if available; otherwise fall back to lat,lng string
         if (window.google && google.maps && google.maps.Geocoder) {
@@ -1390,7 +1390,7 @@ window.RideIntake = (function () {
         }
       },
       function(err) {
-        if (btn) { btn.textContent = '📍 Vị trí của tôi'; btn.disabled = false; }
+        if (btn) { btn.textContent = '📍 My location'; btn.disabled = false; }
         console.warn('[RideIntake] geolocation error:', err.message);
       },
       { timeout: 8000, maximumAge: 60000 }

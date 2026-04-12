@@ -30,7 +30,7 @@
     if (!iso) return '—';
     try {
       var d = new Date(iso + 'T12:00:00');
-      var lang = (draft && draft.lang) || 'vi';
+      var lang = (draft && draft.lang) || 'en';
       var cs = CONFIRM_STRINGS[lang] || CONFIRM_STRINGS.vi;
       var DOW = cs.dateDows;
       var MON = cs.dateMonths;
@@ -440,7 +440,7 @@
 
   // Helper: get a string in the current draft language (default vi)
   function S(key) {
-    var lang = (draft && draft.lang) || 'vi';
+    var lang = (draft && draft.lang) || 'en';
     var tbl = CONFIRM_STRINGS[lang] || CONFIRM_STRINGS.vi;
     return tbl[key] !== undefined ? tbl[key] : (CONFIRM_STRINGS.vi[key] || '');
   }
@@ -976,7 +976,7 @@
 
   // Returns a language-appropriate clarification question for an ambiguous place name.
   function _addrClarifyQuestion(name) {
-    var lang = (draft && draft.lang) || 'vi';
+    var lang = (draft && draft.lang) || 'en';
     if (lang === 'vi') {
       return '"' + name + '" ở đâu? Vui lòng thêm tên thành phố hoặc địa chỉ đầy đủ\n(ví dụ: "' + name + ', San Jose, CA" hoặc số nhà + đường phố)';
     }
@@ -1198,7 +1198,7 @@
           key: 'quantity',
           question: function(f) {
             var item = f.item || {};
-            var lang = (draft && draft.lang) || 'vi';
+            var lang = (draft && draft.lang) || 'en';
             var unitLabel = (lang !== 'vi' && item.unitEn) ? item.unitEn : (item.unit||'cái');
             return S('qFoodQtyPre') + unitLabel + S('qFoodQtyPost') +
               (item.minOrder ? ' (' + S('qFoodQtyMin') + item.minOrder + ' ' + unitLabel + ')' : '');
@@ -1270,7 +1270,7 @@
         var item = f.item || {};
         var unitPrice = item.price || 0;
         var sub = (unitPrice * (f.quantity||0)).toFixed(2);
-        var lang = (draft && draft.lang) || 'vi';
+        var lang = (draft && draft.lang) || 'en';
         var unitLabel = (lang !== 'vi' && item.unitEn) ? item.unitEn : (item.unit||'cái');
         var lines = [
           S('hdFood'),
@@ -2255,7 +2255,7 @@
       collectedFields: {},
       awaitingField:   null,
       awaitingConfirm: false,
-      lang:            lang || 'vi',
+      lang:            lang || 'en',
       createdAt:       Date.now(),
       updatedAt:       Date.now(),
     };
@@ -2616,7 +2616,7 @@
           passengers: f.passengers||1, trackingToken: trackingToken||'',
           status: airBookStatus,
           driver: null,
-        }, draft.lang || 'vi');
+        }, draft.lang || 'en');
         // Phase 5B: in-app notifications (admin + customer)
         if (DLCNotifications.queueRideBookedNotification) {
           DLCNotifications.queueRideBookedNotification({
@@ -2624,7 +2624,7 @@
             serviceType: isPickup ? 'airport_pickup' : 'airport_dropoff',
             customerName: f.customerName||'', customerPhone: f.customerPhone||'',
             datetime: datetime, passengers: f.passengers||1,
-          }, draft.lang || 'vi');
+          }, draft.lang || 'en');
         }
       }
 
@@ -2837,14 +2837,14 @@
           trackingToken: trackingToken||'',
           status: prBookStatus,
           driver: null,
-        }, draft.lang || 'vi');
+        }, draft.lang || 'en');
         // Phase 5B: in-app notifications (admin + customer)
         if (DLCNotifications.queueRideBookedNotification) {
           DLCNotifications.queueRideBookedNotification({
             bookingId: orderId, serviceType: 'private_ride',
             customerName: f.customerName||'', customerPhone: f.customerPhone||'',
             datetime: datetime, passengers: f.passengers||1,
-          }, draft.lang || 'vi');
+          }, draft.lang || 'en');
         }
       }
     }

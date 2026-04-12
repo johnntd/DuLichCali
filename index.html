@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0a2344" />
-  <title>Du Lịch Cali — Tour & Đưa Đón Sân Bay California</title>
-  <meta name="description" content="Dịch vụ đưa đón sân bay và tour du lịch California chuyên nghiệp. Las Vegas, San Francisco, Yosemite. Gọi: +1 (408) 916-3439.">
+  <title>Du Lich Cali — California Tours & Airport Rides</title>
+  <meta name="description" content="Professional airport rides and California tours. Las Vegas, San Francisco, Yosemite. Call: +1 (408) 916-3439.">
   <meta name='impact-site-verification' value='a197decf-5fcf-41d2-bc41-1d354542e163'>
 
   <!-- ── Icons & PWA ───────────────────────────────────────────────────────── -->
@@ -21,7 +21,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="DuLịchCali">
+  <meta name="apple-mobile-web-app-title" content="DuLichCali">
   <!-- Windows tile -->
   <meta name="msapplication-TileColor" content="#0a2344">
   <meta name="msapplication-TileImage" content="icons/icon-192.png">
@@ -299,8 +299,8 @@
     ───────────────────────────────────────── -->
     <section id="screenDest" class="screen" role="tabpanel" aria-labelledby="tabDest">
       <div class="screen-top">
-        <h2 class="screen-top__title">Điểm Đến</h2>
-        <p class="screen-top__sub">Chọn điểm đến để xem chi tiết và đặt tour</p>
+        <h2 class="screen-top__title">Destinations</h2>
+        <p class="screen-top__sub">Browse destinations and book a tour</p>
       </div>
 
       <!-- Full destination cards (rendered by JS) -->
@@ -308,26 +308,26 @@
 
       <!-- Airport section -->
       <div class="airport-block home-section">
-        <div class="section-hdr"><h2 class="section-title">Đưa Đón Sân Bay</h2></div>
+        <div class="section-hdr"><h2 class="section-title">Airport Transfers</h2></div>
         <div class="airport-card">
           <div class="airport-card__header">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
             </svg>
-            <strong id="airportCount">6 Sân Bay Phục Vụ</strong>
+            <strong id="airportCount">6 Airports Served</strong>
           </div>
           <div class="airport-chips" id="airportChips"></div>
           <div class="airport-vehicles" id="airportVehicles">
             <div class="vehicle-pill">
               <strong>Tesla Model Y</strong>
-              <span>1–3 khách</span>
+              <span>1–3 passengers</span>
             </div>
             <div class="vehicle-pill">
               <strong>Mercedes Van</strong>
-              <span>4–12 khách</span>
+              <span>4–12 passengers</span>
             </div>
           </div>
-          <button class="btn btn--gold btn--full" data-ride-gate style="margin-top:1rem" onclick="RideIntake.open('pickup')">Đặt Đưa Đón Ngay</button>
+          <button class="btn btn--gold btn--full" data-ride-gate style="margin-top:1rem" onclick="RideIntake.open('pickup')">Book Transfer Now</button>
         </div>
       </div>
 
@@ -348,9 +348,9 @@
       <!-- ── Step 1: Service type ── -->
       <div class="wiz-step" id="wStep1">
         <div class="wiz-header">
-          <a class="wiz-cancel-link" href="#" onclick="switchScreen('screenHome');return false">← Trang chủ</a>
-          <h2>Chọn Dịch Vụ</h2>
-          <p>Bạn cần dịch vụ gì?</p>
+          <a class="wiz-cancel-link" href="#" onclick="switchScreen('screenHome');return false">← Home</a>
+          <h2>Choose Service</h2>
+          <p>What service do you need?</p>
         </div>
         <!-- Airport transfer options -->
         <div class="service-choice-grid">
@@ -360,8 +360,8 @@
                 <polyline points="6 9 12 15 18 9"/><path d="M12 3v12M3 21h18"/>
               </svg>
             </div>
-            <strong>Đón Sân Bay</strong>
-            <span>Chúng tôi đón bạn từ sân bay</span>
+            <strong>Airport Pickup</strong>
+            <span>We pick you up from the airport</span>
           </button>
           <button class="svc-choice" data-svc="dropoff" data-ride-gate onclick="selectService('dropoff')">
             <div class="svc-choice__icon">
@@ -369,12 +369,12 @@
                 <polyline points="18 15 12 9 6 15"/><path d="M12 21V9M3 3h18"/>
               </svg>
             </div>
-            <strong>Đưa Sân Bay</strong>
-            <span>Chúng tôi đưa bạn đến sân bay</span>
+            <strong>Airport Dropoff</strong>
+            <span>We take you to the airport</span>
           </button>
         </div>
         <!-- Tour selection grid (dynamically rendered from DESTINATIONS) -->
-        <div class="svc-section-label">Chọn Tour</div>
+        <div class="svc-section-label">Book a Tour</div>
         <div class="tour-choice-grid" id="tourChoiceGrid">
           <!-- Populated by renderTourChoiceGrid() in script.js -->
         </div>
@@ -383,116 +383,116 @@
       <!-- ── Step 2: Location ── -->
       <div class="wiz-step" id="wStep2" style="display:none">
         <div class="wiz-header">
-          <h2>Địa Điểm</h2>
-          <p id="wStep2Sub">Nhập thông tin địa điểm</p>
+          <h2>Location</h2>
+          <p id="wStep2Sub">Enter location details</p>
         </div>
         <div class="form-fields">
           <!-- Pickup type toggle (airport transfers only) -->
           <div class="field-wrap" id="wPickupTypeWrap" style="display:none">
-            <label class="field-label">Điểm đón / trả</label>
+            <label class="field-label">Pickup / dropoff</label>
             <div class="pickup-toggle" id="pickupToggle">
               <button type="button" class="pickup-toggle__btn pickup-toggle__btn--active" data-pickup="airport" onclick="setPickupType('airport')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="16" height="16">
                   <polyline points="6 9 12 15 18 9"/><path d="M12 3v12M3 21h18"/>
                 </svg>
-                Sân Bay
+                Airport
               </button>
               <button type="button" class="pickup-toggle__btn" data-pickup="address" onclick="setPickupType('address')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="16" height="16">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
                 </svg>
-                Địa Chỉ Riêng
+                Custom Address
               </button>
             </div>
           </div>
           <div class="field-wrap" id="wAirportWrap">
-            <label class="field-label" for="airport">Sân bay</label>
+            <label class="field-label" for="airport">Airport</label>
             <select class="field-input" id="airport" name="airport" onchange="updateEstimate()">
-              <option value="">Chọn sân bay...</option>
+              <option value="">Select airport...</option>
               <!-- Populated by JS from AIRPORTS data -->
             </select>
           </div>
           <div class="field-wrap" id="wAddressWrap">
-            <label class="field-label" for="address">Địa chỉ của bạn</label>
+            <label class="field-label" for="address">Your address</label>
             <input class="field-input" type="text" id="address" name="address"
-              placeholder="Nhập địa chỉ (tìm kiếm tự động)" autocomplete="off" onchange="updateEstimate()">
+              placeholder="Enter address (auto-search)" autocomplete="off" onchange="updateEstimate()">
           </div>
           <div class="field-wrap" id="wLodgingWrap" style="display:none">
-            <label class="field-label" for="lodging">Chỗ ở (tùy chọn)</label>
+            <label class="field-label" for="lodging">Lodging (optional)</label>
             <select class="field-input" id="lodging" name="lodging" onchange="updateEstimate()">
-              <option value="">Tự lo chỗ ở</option>
-              <option value="hotel">Đặt khách sạn (est. +$150/đêm)</option>
-              <option value="airbnb">Đặt Airbnb (est. +$165/đêm)*</option>
+              <option value="">I'll arrange my own</option>
+              <option value="hotel">Hotel (est. +$150/night)</option>
+              <option value="airbnb">Airbnb (est. +$165/night)*</option>
             </select>
-            <p class="field-note">*Ước tính — Airbnb không có API chính thức. Giá thực tế có thể khác.</p>
+            <p class="field-note">*Estimate — no official Airbnb API. Actual price may vary.</p>
           </div>
         </div>
         <div class="wiz-nav">
-          <button class="btn btn--ghost" onclick="goStep(1)">← Quay lại</button>
-          <button class="btn btn--gold" onclick="goStep(3)">Tiếp →</button>
+          <button class="btn btn--ghost" onclick="goStep(1)">← Back</button>
+          <button class="btn btn--gold" onclick="goStep(3)">Next →</button>
         </div>
       </div>
 
       <!-- ── Step 3: Schedule ── -->
       <div class="wiz-step" id="wStep3" style="display:none">
         <div class="wiz-header">
-          <h2>Lịch Trình</h2>
-          <p>Chọn ngày giờ và số lượng khách</p>
+          <h2>Schedule</h2>
+          <p>Select date, time and number of guests</p>
         </div>
         <div class="form-fields">
           <div class="field-wrap">
-            <label class="field-label" for="datetime">Ngày và Giờ</label>
-            <input class="field-input" type="text" id="datetime" placeholder="Chọn ngày và giờ..." readonly>
+            <label class="field-label" for="datetime">Date &amp; Time</label>
+            <input class="field-input" type="text" id="datetime" placeholder="Select date and time..." readonly>
           </div>
           <div class="field-wrap">
-            <label class="field-label" for="passengers">Số Khách</label>
+            <label class="field-label" for="passengers">Passengers</label>
             <input class="field-input" type="number" id="passengers" name="passengers"
-              min="1" max="12" placeholder="1–12 người" value="2" onchange="updateEstimate()">
+              min="1" max="12" placeholder="1–12 people" value="2" onchange="updateEstimate()">
           </div>
           <div class="field-wrap" id="wDaysWrap" style="display:none">
-            <label class="field-label" for="days">Số Ngày</label>
+            <label class="field-label" for="days">Number of Days</label>
             <input class="field-input" type="number" id="days" name="days"
-              min="1" max="7" placeholder="1–7 ngày" value="2" onchange="updateEstimate()">
+              min="1" max="7" placeholder="1–7 days" value="2" onchange="updateEstimate()">
           </div>
         </div>
         <div class="wiz-nav">
-          <button class="btn btn--ghost" onclick="goStep(2)">← Quay lại</button>
-          <button class="btn btn--gold" onclick="goStep(4)">Tính Giá →</button>
+          <button class="btn btn--ghost" onclick="goStep(2)">← Back</button>
+          <button class="btn btn--gold" onclick="goStep(4)">Get Estimate →</button>
         </div>
       </div>
 
       <!-- ── Step 4: Estimate ── -->
       <div class="wiz-step" id="wStep4" style="display:none">
         <div class="wiz-header">
-          <h2>Báo Giá Ước Tính</h2>
-          <p>Dựa trên thông tin bạn đã nhập</p>
+          <h2>Price Estimate</h2>
+          <p>Based on your trip details</p>
         </div>
 
         <div class="estimate-card" id="wizEstimateCard">
           <div class="est-row">
-            <span class="est-label">Chi phí ước tính</span>
+            <span class="est-label">Estimated cost</span>
             <span class="est-val" id="estimateDisplay">—</span>
           </div>
           <div class="est-divider"></div>
           <div class="est-row" id="uberCompareRow" style="display:none">
-            <span class="est-label">Uber ước tính</span>
+            <span class="est-label">Uber estimate</span>
             <span class="est-val est-val--sm est-val--strike" id="uberEstDisplay">—</span>
           </div>
           <div class="est-row" id="savingsRow" style="display:none">
-            <span class="est-label">Bạn tiết kiệm</span>
+            <span class="est-label">You save</span>
             <span class="est-val est-val--sm est-val--savings" id="savingsDisplay">—</span>
           </div>
           <div class="est-divider"></div>
           <div class="est-row">
-            <span class="est-label">Phương tiện</span>
+            <span class="est-label">Vehicle</span>
             <span class="est-val est-val--sm" id="vehicleDisplay">—</span>
           </div>
           <div class="est-row" id="gasRow" style="display:none">
-            <span class="est-label">Giá xăng hiện tại</span>
+            <span class="est-label">Current gas price</span>
             <span class="est-val est-val--sm" id="gasPriceDisplay">—</span>
           </div>
           <p class="est-disclaimer" id="estDisclaimer">
-            Giá thấp hơn Uber ~20%. Giá cuối cùng sẽ được xác nhận khi chúng tôi liên hệ.
+            ~20% below Uber. Final price confirmed when we contact you.
           </p>
         </div>
 
@@ -500,16 +500,16 @@
         <div class="lodging-info-card" id="lodgingInfoCard" style="display:none"></div>
 
         <div class="wiz-nav">
-          <button class="btn btn--ghost" onclick="goStep(3)">← Quay lại</button>
-          <button class="btn btn--gold" onclick="goStep(5)">Đặt Chỗ →</button>
+          <button class="btn btn--ghost" onclick="goStep(3)">← Back</button>
+          <button class="btn btn--gold" onclick="goStep(5)">Book Now →</button>
         </div>
       </div>
 
       <!-- ── Step 5: Contact + Submit ── -->
       <div class="wiz-step" id="wStep5" style="display:none">
         <div class="wiz-header">
-          <h2>Thông Tin Liên Hệ</h2>
-          <p>Điền tên và số điện thoại để chúng tôi xác nhận</p>
+          <h2>Contact Info</h2>
+          <p>Enter your name and phone number to confirm</p>
         </div>
 
         <form id="bookingForm" method="POST" action="https://formspree.io/f/xeokgbpo"
@@ -517,12 +517,12 @@
 
           <div class="form-fields">
             <div class="field-wrap">
-              <label class="field-label" for="name">Tên của bạn</label>
+              <label class="field-label" for="name">Your name</label>
               <input class="field-input" type="text" id="name" name="name"
-                placeholder="Họ và tên đầy đủ" required autocomplete="name">
+                placeholder="Full name" required autocomplete="name">
             </div>
             <div class="field-wrap">
-              <label class="field-label" for="phone">Số điện thoại</label>
+              <label class="field-label" for="phone">Phone number</label>
               <input class="field-input" type="tel" id="phone" name="phone"
                 placeholder="(xxx) xxx-xxxx" required autocomplete="tel">
             </div>
@@ -535,17 +535,17 @@
           <div class="slot-warning" id="slotWarning" role="alert"></div>
 
           <button type="submit" class="btn btn--gold btn--full btn--submit" id="submitBtn">
-            Gửi Yêu Cầu Đặt Chỗ
+            Submit Booking Request
           </button>
-          <p class="submit-note">✦ Chúng tôi sẽ liên hệ trong vòng 2 tiếng để xác nhận lịch và báo giá chính xác</p>
+          <p class="submit-note">✦ We'll contact you within 2 hours to confirm your schedule and final price</p>
 
           <a href="tel:4089163439" class="submit-callalt" id="submitCallAlt">
-            Hoặc gọi ngay: +1 (408) 916-3439
+            Or call now: +1 (408) 916-3439
           </a>
         </form>
 
         <div class="wiz-nav" style="margin-top:0">
-          <button class="btn btn--ghost" onclick="goStep(4)">← Quay lại</button>
+          <button class="btn btn--ghost" onclick="goStep(4)">← Back</button>
         </div>
       </div>
 
@@ -575,19 +575,19 @@
             <strong>Du Lịch Cali AI</strong>
             <span class="chat-status">
               <span class="chat-status__dot"></span>
-              Trợ lý đặt dịch vụ · Online
+              Booking assistant · Online
             </span>
           </div>
         </div>
 
         <!-- Suggestion chips -->
         <div class="chat-chips-wrap" id="chatChips">
-          <button class="chat-chip" data-q="Giá tour Las Vegas bao nhiêu?">Giá tour Las Vegas?</button>
-          <button class="chat-chip" data-q="Đưa đón sân bay LAX như thế nào?">Đưa đón LAX</button>
-          <button class="chat-chip" data-q="Tour Yosemite mấy ngày?">Yosemite mấy ngày?</button>
-          <button class="chat-chip" data-q="Số điện thoại liên hệ?">Số điện thoại?</button>
+          <button class="chat-chip" data-q="How much is a Las Vegas tour?">Las Vegas tour price?</button>
+          <button class="chat-chip" data-q="How does LAX airport pickup work?">LAX pickup</button>
+          <button class="chat-chip" data-q="How many days for a Yosemite tour?">Yosemite — how many days?</button>
+          <button class="chat-chip" data-q="What is your phone number?">Phone number?</button>
           <button class="chat-chip" data-q="What airports do you serve?">Airports served?</button>
-          <button class="chat-chip" data-q="Kiểm tra đơn đặt chỗ">Kiểm tra đơn hàng</button>
+          <button class="chat-chip" data-q="Check my booking status">Check my booking</button>
         </div>
 
         <!-- Messages -->
@@ -595,15 +595,15 @@
           <!-- Empty state: hidden once first .cmsg appears (CSS :has selector) -->
           <div class="chat-empty-state" aria-hidden="true">
             <div class="chat-empty-state__orb">✦</div>
-            <p class="chat-empty-state__title">Chào bạn!</p>
-            <p class="chat-empty-state__sub">Hỏi tôi về tour, đặt xe, hay dịch vụ gần đây</p>
+            <p class="chat-empty-state__title">Hello!</p>
+            <p class="chat-empty-state__sub">Ask me about tours, rides, or nearby services</p>
           </div>
         </div>
 
         <!-- Input bar (sticky to bottom) -->
         <div class="chat-input-bar">
           <button class="chat-mic" id="chatMicBtn" data-state="idle"
-            aria-label="Nhấn để nói" onclick="DLCVoice.toggleListen()">
+            aria-label="Tap to speak" onclick="DLCVoice.toggleListen()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
               <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -612,9 +612,9 @@
             </svg>
           </button>
           <input class="chat-input" type="text" id="chatInput"
-            placeholder="Hỏi về tour, giá cả, đặt chỗ..." autocomplete="off"
-            aria-label="Nhập câu hỏi">
-          <button class="chat-send" id="chatSend" aria-label="Gửi">
+            placeholder="Ask about tours, prices, bookings..." autocomplete="off"
+            aria-label="Type your message">
+          <button class="chat-send" id="chatSend" aria-label="Send">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
             </svg>
@@ -630,13 +630,13 @@
     <section id="screenInterp" class="screen screen--interp" role="tabpanel" aria-labelledby="tabInterp">
       <div class="interp-wrap">
         <div class="interp-header">
-          <h1 class="interp-title">AI Phiên Dịch</h1>
-          <p class="interp-sub">Tiếng Việt · English · Español · và nhiều hơn</p>
+          <h1 class="interp-title">AI Interpreter</h1>
+          <p class="interp-sub">Vietnamese · English · Spanish · and more</p>
         </div>
         <!-- Language pair selector -->
         <div class="interp-lang-bar">
           <select class="interp-sel" id="interpSrc">
-            <option value="auto">Tự Động</option>
+            <option value="auto">Auto</option>
             <option value="vi" selected>Tiếng Việt</option>
             <option value="en">English</option>
             <option value="es">Español</option>
@@ -645,7 +645,7 @@
             <option value="ko">한국어</option>
             <option value="fr">Français</option>
           </select>
-          <button class="interp-swap" onclick="interpSwap()" aria-label="Hoán đổi ngôn ngữ">
+          <button class="interp-swap" onclick="interpSwap()" aria-label="Swap languages">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
               <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/>
             </svg>
@@ -663,7 +663,7 @@
         <!-- Source panel -->
         <div class="interp-panel">
           <textarea class="interp-input" id="interpInput"
-            placeholder="Nhập văn bản hoặc nhấn micro để nói..."
+            placeholder="Enter text or tap mic to speak..."
             rows="5"
             oninput="interpScheduleTranslate()"></textarea>
           <div class="interp-panel-row">
@@ -674,10 +674,10 @@
                 <line x1="12" y1="19" x2="12" y2="23"/>
                 <line x1="8" y1="23" x2="16" y2="23"/>
               </svg>
-              <span id="interpMicLabel">Nói</span>
+              <span id="interpMicLabel">Speak</span>
             </button>
-            <span class="interp-charcount" id="interpCharCount">0 ký tự</span>
-            <button class="interp-clear-btn" onclick="interpClear()">Xóa</button>
+            <span class="interp-charcount" id="interpCharCount">0 chars</span>
+            <button class="interp-clear-btn" onclick="interpClear()">Clear</button>
           </div>
         </div>
         <!-- Output panel -->
@@ -694,20 +694,20 @@
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
                 <path d="M15.54 8.46a5 5 0 010 7.07"/>
               </svg>
-              Nghe
+              Listen
             </button>
             <button class="interp-copy-btn" id="interpCopyBtn" onclick="interpCopy()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                 <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
               </svg>
-              Sao chép
+              Copy
             </button>
           </div>
         </div>
         <!-- Quick phrases -->
         <div class="interp-phrases">
-          <div class="interp-phrases__title">Câu thông dụng</div>
+          <div class="interp-phrases__title">Common phrases</div>
           <div class="interp-phrases__grid">
             <button class="interp-phrase" onclick="interpUsePhrase(this)">Xin chào</button>
             <button class="interp-phrase" onclick="interpUsePhrase(this)">Cảm ơn</button>
@@ -748,7 +748,7 @@
         <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
         <polyline points="9 22 9 12 15 12 15 22"/>
       </svg>
-      <span>Trang Chủ</span>
+      <span>Home</span>
     </button>
 
     <!-- 2 · Travel -->
@@ -759,7 +759,7 @@
         <circle cx="12" cy="10" r="3"/>
         <path d="M12 2a8 8 0 00-8 8c0 5.25 7.5 12 8 12s8-6.75 8-12a8 8 0 00-8-8z"/>
       </svg>
-      <span>Du Lịch</span>
+      <span>Travel</span>
     </button>
 
     <!-- 3 · Marketplace -->
@@ -774,14 +774,14 @@
 
     <!-- 4 · Airport / Ride — opens modal, does not switch screens -->
     <button class="nav-tab" id="tabRide"
-      role="button" aria-label="Đặt Xe Ngay"
+      role="button" aria-label="Book a Ride"
       onclick="window.RideIntake&&RideIntake.open?RideIntake.open('pickup'):location.href='/airport'">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M5 17H3a2 2 0 01-2-2V9a2 2 0 012-2h13l3 4v4a2 2 0 01-2 2h-2"/>
         <circle cx="7.5" cy="17.5" r="2.5"/>
         <circle cx="17.5" cy="17.5" r="2.5"/>
       </svg>
-      <span>Đặt Xe</span>
+      <span>Rides</span>
     </button>
 
     <!-- 5 · AI Interpreter -->
@@ -796,7 +796,7 @@
         <path d="M22 22l-5-10-5 10"/>
         <path d="M14 18h6"/>
       </svg>
-      <span>Phiên Dịch</span>
+      <span>Translate</span>
     </button>
 
   </nav>
@@ -804,7 +804,7 @@
   <!-- ════════════════════════════════════════════════
        DESTINATION VIDEO MODAL
   ════════════════════════════════════════════════ -->
-  <div id="destModal" class="dest-modal" hidden role="dialog" aria-modal="true" aria-label="Điểm đến">
+  <div id="destModal" class="dest-modal" hidden role="dialog" aria-modal="true" aria-label="Destination">
 
     <!-- Video player area -->
     <div class="dest-modal__video-wrap">
@@ -813,14 +813,14 @@
       <div class="dest-modal__vid-grad" aria-hidden="true"></div>
 
       <!-- Back button -->
-      <button class="dest-modal__back" id="destModalClose" onclick="closeDestination()" aria-label="Quay lại">
+      <button class="dest-modal__back" id="destModalClose" onclick="closeDestination()" aria-label="Back">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 12H5M12 5l-7 7 7 7"/>
         </svg>
       </button>
 
       <!-- Sound toggle — shown only once video starts playing -->
-      <button class="dest-modal__sound" id="destSoundBtn" onclick="toggleDestSound()" aria-label="Bật âm thanh" style="display:none">
+      <button class="dest-modal__sound" id="destSoundBtn" onclick="toggleDestSound()" aria-label="Toggle sound" style="display:none">
         <!-- Icon injected by JS -->
       </button>
     </div>
@@ -835,11 +835,11 @@
   <!-- ════════════════════════════════════════════════
        HIGHLIGHT DETAIL SHEET
   ════════════════════════════════════════════════ -->
-  <div id="hlSheet" class="hl-sheet" hidden role="dialog" aria-modal="true" aria-label="Chi tiết điểm tham quan">
+  <div id="hlSheet" class="hl-sheet" hidden role="dialog" aria-modal="true" aria-label="Attraction details">
     <div class="hl-sheet__backdrop" onclick="closeHighlight()"></div>
     <div class="hl-sheet__card">
       <div class="hl-sheet__drag" aria-hidden="true"></div>
-      <button class="hl-sheet__close" onclick="closeHighlight()" aria-label="Đóng">
+      <button class="hl-sheet__close" onclick="closeHighlight()" aria-label="Close">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
@@ -853,7 +853,7 @@
        Appears contextually: wizard step 2+, open modals
   ════════════════════════════════════════════════ -->
   <button id="globalBack" class="global-back" hidden
-    onclick="globalBack()" aria-label="Quay lại">
+    onclick="globalBack()" aria-label="Back">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M19 12H5M12 5l-7 7 7 7"/>
     </svg>
@@ -905,7 +905,7 @@
 
       <!-- Header -->
       <div class="ri-header">
-        <button class="ri-back-btn" id="riBackBtn" onclick="RideIntake.backToPicker()" aria-label="Quay lại" hidden>
+        <button class="ri-back-btn" id="riBackBtn" onclick="RideIntake.backToPicker()" aria-label="Back" hidden>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
         </button>
         <!-- Progress bar — shown during form steps, hidden on picker/success -->
@@ -913,38 +913,38 @@
           <div class="ri-progress-track"><div class="ri-progress-fill" id="riProgressFill"></div></div>
           <div class="ri-step-counter" id="riStepCounter"></div>
         </div>
-        <h2 class="ri-title" id="riTitle">Đặt Xe Đưa Đón</h2>
-        <button class="ri-close-btn" onclick="RideIntake.close()" aria-label="Đóng">
+        <h2 class="ri-title" id="riTitle">Book a Ride</h2>
+        <button class="ri-close-btn" onclick="RideIntake.close()" aria-label="Close">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
 
       <!-- ── Service Picker ── -->
       <div class="ri-picker" id="riPicker">
-        <p class="ri-picker__sub" id="riPickerSub">Tài xế chuyên nghiệp · Mercedes Sprinter Van 12 chỗ</p>
+        <p class="ri-picker__sub" id="riPickerSub">Professional drivers · Mercedes Sprinter Van 12 seats</p>
         <div class="ri-picker__grid">
           <button class="ri-svc-card" onclick="RideIntake.goForm('pickup')">
             <div class="ri-svc-card__icon">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" style="transform:rotate(135deg)"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
             </div>
-            <div class="ri-svc-card__text"><strong>Đón Sân Bay</strong><span>Bay đến · Tài xế chờ tại cửa Arrivals</span></div>
+            <div class="ri-svc-card__text"><strong>Airport Pickup</strong><span>Flying in · Driver waiting at Arrivals</span></div>
           </button>
           <button class="ri-svc-card" onclick="RideIntake.goForm('dropoff')">
             <div class="ri-svc-card__icon">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" style="transform:rotate(-45deg)"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
             </div>
-            <div class="ri-svc-card__text"><strong>Ra Sân Bay</strong><span>Bay đi · Đón tận nhà đúng giờ</span></div>
+            <div class="ri-svc-card__text"><strong>Airport Dropoff</strong><span>Flying out · On-time pickup at your door</span></div>
           </button>
           <button class="ri-svc-card ri-svc-card--wide" onclick="RideIntake.goForm('ride')">
             <div class="ri-svc-card__icon">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h13l3 4v3a2 2 0 0 1-2 2h-1"/><circle cx="7" cy="17" r="2"/><circle cx="15" cy="17" r="2"/></svg>
             </div>
-            <div class="ri-svc-card__text"><strong>Xe Riêng Cao Cấp</strong><span>Đến bất kỳ điểm nào · Không cần sân bay</span></div>
+            <div class="ri-svc-card__text"><strong>Premium Private Car</strong><span>Go anywhere · No airport needed</span></div>
           </button>
         </div>
         <div class="ri-van-badge">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          Rẻ hơn Uber <strong>20%</strong> &nbsp;·&nbsp; Đặt trước · Giá cố định
+          20% below Uber &nbsp;·&nbsp; Book ahead · Fixed price
         </div>
       </div><!-- /riPicker -->
 
@@ -962,71 +962,71 @@
               <!-- Step 1 · Airport -->
               <div class="ri-substep" id="ri_p_s1">
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_p_airport">Sân bay đến <span class="ri-req">*</span></label>
-                  <select class="ri-select" id="ri_p_airport" onchange="RideIntake.schedule()"><option value="">— Chọn sân bay —</option></select>
-                  <span class="ri-loc-badge" id="riLocBadgeP" hidden><span class="ri-loc-dot"></span>Sắp xếp gần bạn nhất</span>
+                  <label class="ri-label" for="ri_p_airport">Arrival airport <span class="ri-req">*</span></label>
+                  <select class="ri-select" id="ri_p_airport" onchange="RideIntake.schedule()"><option value="">— Select airport —</option></select>
+                  <span class="ri-loc-badge" id="riLocBadgeP" hidden><span class="ri-loc-dot"></span>Sorted by nearest to you</span>
                 </div>
               </div>
               <!-- Step 2 · Drop-off address -->
               <div class="ri-substep" id="ri_p_s2" hidden>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_dropoff_addr">Địa chỉ điểm đến <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="text" id="ri_dropoff_addr" placeholder="Địa chỉ, thành phố, hoặc tên khách sạn" autocomplete="off" oninput="RideIntake.schedule()">
+                  <label class="ri-label" for="ri_dropoff_addr">Drop-off address <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="text" id="ri_dropoff_addr" placeholder="Address, city, or hotel name" autocomplete="off" oninput="RideIntake.schedule()">
                 </div>
               </div>
               <!-- Step 3 · Arrival date + time -->
               <div class="ri-substep" id="ri_p_s3" hidden>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_arrival_date">Ngày đến <span class="ri-req">*</span></label>
+                  <label class="ri-label" for="ri_arrival_date">Arrival date <span class="ri-req">*</span></label>
                   <input class="ri-input" type="date" id="ri_arrival_date">
                 </div>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_arrival_time">Giờ hạ cánh <span class="ri-req">*</span></label>
+                  <label class="ri-label" for="ri_arrival_time">Landing time <span class="ri-req">*</span></label>
                   <input class="ri-input" type="time" id="ri_arrival_time">
                 </div>
               </div>
               <!-- Step 4 · Trip details -->
               <div class="ri-substep" id="ri_p_s4" hidden>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_p_passengers">Số hành khách <span class="ri-req">*</span></label>
+                  <label class="ri-label" for="ri_p_passengers">Passengers <span class="ri-req">*</span></label>
                   <select class="ri-select" id="ri_p_passengers">
-                    <option value="">— Chọn —</option>
+                    <option value="">— Select —</option>
                     <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
                     <option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
                   </select>
                 </div>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_p_luggage">Hành lý ký gửi <span style="color:rgba(255,255,255,.4);font-weight:400">(tùy chọn)</span></label>
+                  <label class="ri-label" for="ri_p_luggage">Checked luggage <span style="color:rgba(255,255,255,.4);font-weight:400">(optional)</span></label>
                   <select class="ri-select" id="ri_p_luggage">
-                    <option value="0">Không có (chỉ xách tay)</option>
-                    <option value="1">1 kiện</option><option value="2">2 kiện</option>
-                    <option value="3">3 kiện</option><option value="4">4 kiện</option><option value="5">5+ kiện</option>
+                    <option value="0">None (carry-on only)</option>
+                    <option value="1">1 bag</option><option value="2">2 bags</option>
+                    <option value="3">3 bags</option><option value="4">4 bags</option><option value="5">5+ bags</option>
                   </select>
                 </div>
                 <div class="ri-row">
                   <div class="ri-field">
-                    <label class="ri-label" for="ri_p_flight">Số chuyến bay <span style="color:rgba(255,255,255,.4);font-weight:400">(tùy chọn)</span></label>
-                    <input class="ri-input" type="text" id="ri_p_flight" placeholder="VD: United 714" autocomplete="off">
+                    <label class="ri-label" for="ri_p_flight">Flight number <span style="color:rgba(255,255,255,.4);font-weight:400">(optional)</span></label>
+                    <input class="ri-input" type="text" id="ri_p_flight" placeholder="e.g. United 714" autocomplete="off">
                   </div>
                   <div class="ri-field">
-                    <label class="ri-label" for="ri_p_terminal">Terminal <span style="color:rgba(255,255,255,.4);font-weight:400">(tùy chọn)</span></label>
-                    <input class="ri-input" type="text" id="ri_p_terminal" placeholder="VD: TBIT, T5">
+                    <label class="ri-label" for="ri_p_terminal">Terminal <span style="color:rgba(255,255,255,.4);font-weight:400">(optional)</span></label>
+                    <input class="ri-input" type="text" id="ri_p_terminal" placeholder="e.g. TBIT, T5">
                   </div>
                 </div>
               </div>
               <!-- Step 5 · Contact info -->
               <div class="ri-substep" id="ri_p_s5" hidden>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_p_name">Họ tên <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="text" id="ri_p_name" placeholder="Tên đầy đủ" autocomplete="name">
+                  <label class="ri-label" for="ri_p_name">Full name <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="text" id="ri_p_name" placeholder="Full name" autocomplete="name">
                 </div>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_p_phone">Số điện thoại <span class="ri-req">*</span></label>
+                  <label class="ri-label" for="ri_p_phone">Phone number <span class="ri-req">*</span></label>
                   <input class="ri-input" type="tel" id="ri_p_phone" placeholder="(xxx) xxx-xxxx" autocomplete="tel">
                 </div>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_p_notes">Ghi chú <span style="color:rgba(255,255,255,.4);font-weight:400">(tùy chọn)</span></label>
-                  <textarea class="ri-input ri-textarea" id="ri_p_notes" placeholder="Wheelchair, trẻ em, yêu cầu đặc biệt..." rows="2"></textarea>
+                  <label class="ri-label" for="ri_p_notes">Notes <span style="color:rgba(255,255,255,.4);font-weight:400">(optional)</span></label>
+                  <textarea class="ri-input ri-textarea" id="ri_p_notes" placeholder="Wheelchair, children, special requests..." rows="2"></textarea>
                 </div>
               </div>
               <!-- Step 6 · Review placeholder -->
@@ -1038,72 +1038,72 @@
               <!-- Step 1 · Pickup address + GPS -->
               <div class="ri-substep" id="ri_d_s1">
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_pickup_addr">Địa chỉ đón <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="text" id="ri_pickup_addr" placeholder="Địa chỉ nhà hoặc khách sạn" autocomplete="off" oninput="RideIntake.schedule()">
-                  <button type="button" id="riGeoBtnD" onclick="RideIntake.useCurrentLocation('ri_pickup_addr','riGeoBtnD')" style="display:inline-flex;align-items:center;gap:.3rem;background:none;border:1px solid rgba(255,255,255,.18);color:#94a3b8;padding:.35rem .7rem;border-radius:8px;font-size:.75rem;cursor:pointer;margin-top:.4rem;line-height:1">📍 Vị trí của tôi</button>
+                  <label class="ri-label" for="ri_pickup_addr">Pickup address <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="text" id="ri_pickup_addr" placeholder="Home or hotel address" autocomplete="off" oninput="RideIntake.schedule()">
+                  <button type="button" id="riGeoBtnD" onclick="RideIntake.useCurrentLocation('ri_pickup_addr','riGeoBtnD')" style="display:inline-flex;align-items:center;gap:.3rem;background:none;border:1px solid rgba(255,255,255,.18);color:#94a3b8;padding:.35rem .7rem;border-radius:8px;font-size:.75rem;cursor:pointer;margin-top:.4rem;line-height:1">📍 My location</button>
                 </div>
               </div>
               <!-- Step 2 · Airport selector -->
               <div class="ri-substep" id="ri_d_s2" hidden>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_d_airport">Sân bay cần đến <span class="ri-req">*</span></label>
-                  <select class="ri-select" id="ri_d_airport" onchange="RideIntake.schedule()"><option value="">— Chọn sân bay —</option></select>
-                  <span class="ri-loc-badge" id="riLocBadgeD" hidden><span class="ri-loc-dot"></span>Sắp xếp gần bạn nhất</span>
+                  <label class="ri-label" for="ri_d_airport">Destination airport <span class="ri-req">*</span></label>
+                  <select class="ri-select" id="ri_d_airport" onchange="RideIntake.schedule()"><option value="">— Select airport —</option></select>
+                  <span class="ri-loc-badge" id="riLocBadgeD" hidden><span class="ri-loc-dot"></span>Sorted by nearest to you</span>
                 </div>
               </div>
               <!-- Step 3 · Departure date + time -->
               <div class="ri-substep" id="ri_d_s3" hidden>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_depart_date">Ngày bay <span class="ri-req">*</span></label>
+                  <label class="ri-label" for="ri_depart_date">Flight date <span class="ri-req">*</span></label>
                   <input class="ri-input" type="date" id="ri_depart_date">
                 </div>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_depart_time">Giờ cất cánh <span class="ri-req">*</span></label>
+                  <label class="ri-label" for="ri_depart_time">Departure time <span class="ri-req">*</span></label>
                   <input class="ri-input" type="time" id="ri_depart_time">
                 </div>
               </div>
               <!-- Step 4 · Trip details -->
               <div class="ri-substep" id="ri_d_s4" hidden>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_d_passengers">Số hành khách <span class="ri-req">*</span></label>
+                  <label class="ri-label" for="ri_d_passengers">Passengers <span class="ri-req">*</span></label>
                   <select class="ri-select" id="ri_d_passengers">
-                    <option value="">— Chọn —</option>
+                    <option value="">— Select —</option>
                     <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
                     <option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
                   </select>
                 </div>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_d_luggage">Hành lý ký gửi <span style="color:rgba(255,255,255,.4);font-weight:400">(tùy chọn)</span></label>
+                  <label class="ri-label" for="ri_d_luggage">Checked luggage <span style="color:rgba(255,255,255,.4);font-weight:400">(optional)</span></label>
                   <select class="ri-select" id="ri_d_luggage">
-                    <option value="0">Không có (chỉ xách tay)</option>
-                    <option value="1">1 kiện</option><option value="2">2 kiện</option>
-                    <option value="3">3 kiện</option><option value="4">4 kiện</option><option value="5">5+ kiện</option>
+                    <option value="0">None (carry-on only)</option>
+                    <option value="1">1 bag</option><option value="2">2 bags</option>
+                    <option value="3">3 bags</option><option value="4">4 bags</option><option value="5">5+ bags</option>
                   </select>
                 </div>
                 <div class="ri-row">
                   <div class="ri-field">
-                    <label class="ri-label" for="ri_d_flight">Số chuyến bay <span style="color:rgba(255,255,255,.4);font-weight:400">(tùy chọn)</span></label>
-                    <input class="ri-input" type="text" id="ri_d_flight" placeholder="VD: VN 456" autocomplete="off">
+                    <label class="ri-label" for="ri_d_flight">Flight number <span style="color:rgba(255,255,255,.4);font-weight:400">(optional)</span></label>
+                    <input class="ri-input" type="text" id="ri_d_flight" placeholder="e.g. VN 456" autocomplete="off">
                   </div>
                   <div class="ri-field">
-                    <label class="ri-label" for="ri_d_terminal">Terminal <span style="color:rgba(255,255,255,.4);font-weight:400">(tùy chọn)</span></label>
-                    <input class="ri-input" type="text" id="ri_d_terminal" placeholder="VD: Terminal 2">
+                    <label class="ri-label" for="ri_d_terminal">Terminal <span style="color:rgba(255,255,255,.4);font-weight:400">(optional)</span></label>
+                    <input class="ri-input" type="text" id="ri_d_terminal" placeholder="e.g. Terminal 2">
                   </div>
                 </div>
               </div>
               <!-- Step 5 · Contact info -->
               <div class="ri-substep" id="ri_d_s5" hidden>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_d_name">Họ tên <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="text" id="ri_d_name" placeholder="Tên đầy đủ" autocomplete="name">
+                  <label class="ri-label" for="ri_d_name">Full name <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="text" id="ri_d_name" placeholder="Full name" autocomplete="name">
                 </div>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_d_phone">Số điện thoại <span class="ri-req">*</span></label>
+                  <label class="ri-label" for="ri_d_phone">Phone number <span class="ri-req">*</span></label>
                   <input class="ri-input" type="tel" id="ri_d_phone" placeholder="(xxx) xxx-xxxx" autocomplete="tel">
                 </div>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_d_notes">Ghi chú <span style="color:rgba(255,255,255,.4);font-weight:400">(tùy chọn)</span></label>
-                  <textarea class="ri-input ri-textarea" id="ri_d_notes" placeholder="Hành lý, wheelchair, yêu cầu đặc biệt..." rows="2"></textarea>
+                  <label class="ri-label" for="ri_d_notes">Notes <span style="color:rgba(255,255,255,.4);font-weight:400">(optional)</span></label>
+                  <textarea class="ri-input ri-textarea" id="ri_d_notes" placeholder="Luggage, wheelchair, special requests..." rows="2"></textarea>
                 </div>
               </div>
               <!-- Step 6 · Review placeholder -->
@@ -1115,35 +1115,35 @@
               <!-- Step 1 · From address + GPS -->
               <div class="ri-substep" id="ri_r_s1">
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_from_addr">Điểm đón <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="text" id="ri_from_addr" placeholder="Địa chỉ, thành phố hoặc địa điểm" autocomplete="off" oninput="RideIntake.schedule()">
-                  <button type="button" id="riGeoBtn" onclick="RideIntake.useCurrentLocation('ri_from_addr','riGeoBtn')" style="display:inline-flex;align-items:center;gap:.3rem;background:none;border:1px solid rgba(255,255,255,.18);color:#94a3b8;padding:.35rem .7rem;border-radius:8px;font-size:.75rem;cursor:pointer;margin-top:.4rem;line-height:1">📍 Vị trí của tôi</button>
+                  <label class="ri-label" for="ri_from_addr">Pickup point <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="text" id="ri_from_addr" placeholder="Address, city or place" autocomplete="off" oninput="RideIntake.schedule()">
+                  <button type="button" id="riGeoBtn" onclick="RideIntake.useCurrentLocation('ri_from_addr','riGeoBtn')" style="display:inline-flex;align-items:center;gap:.3rem;background:none;border:1px solid rgba(255,255,255,.18);color:#94a3b8;padding:.35rem .7rem;border-radius:8px;font-size:.75rem;cursor:pointer;margin-top:.4rem;line-height:1">📍 My location</button>
                 </div>
               </div>
               <!-- Step 2 · Destination -->
               <div class="ri-substep" id="ri_r_s2" hidden>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_to_addr">Điểm đến <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="text" id="ri_to_addr" placeholder="Địa chỉ, thành phố hoặc địa điểm" autocomplete="off" oninput="RideIntake.schedule()">
+                  <label class="ri-label" for="ri_to_addr">Destination <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="text" id="ri_to_addr" placeholder="Address, city or place" autocomplete="off" oninput="RideIntake.schedule()">
                 </div>
               </div>
               <!-- Step 3 · Date + time -->
               <div class="ri-substep" id="ri_r_s3" hidden>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_ride_date">Ngày đi <span class="ri-req">*</span></label>
+                  <label class="ri-label" for="ri_ride_date">Travel date <span class="ri-req">*</span></label>
                   <input class="ri-input" type="date" id="ri_ride_date">
                 </div>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_ride_time">Giờ xuất phát <span class="ri-req">*</span></label>
+                  <label class="ri-label" for="ri_ride_time">Departure time <span class="ri-req">*</span></label>
                   <input class="ri-input" type="time" id="ri_ride_time">
                 </div>
               </div>
               <!-- Step 4 · Passengers -->
               <div class="ri-substep" id="ri_r_s4" hidden>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_r_passengers">Số hành khách <span class="ri-req">*</span></label>
+                  <label class="ri-label" for="ri_r_passengers">Passengers <span class="ri-req">*</span></label>
                   <select class="ri-select" id="ri_r_passengers">
-                    <option value="">— Chọn —</option>
+                    <option value="">— Select —</option>
                     <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
                     <option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
                   </select>
@@ -1152,16 +1152,16 @@
               <!-- Step 5 · Contact info -->
               <div class="ri-substep" id="ri_r_s5" hidden>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_r_name">Họ tên <span class="ri-req">*</span></label>
-                  <input class="ri-input" type="text" id="ri_r_name" placeholder="Tên đầy đủ" autocomplete="name">
+                  <label class="ri-label" for="ri_r_name">Full name <span class="ri-req">*</span></label>
+                  <input class="ri-input" type="text" id="ri_r_name" placeholder="Full name" autocomplete="name">
                 </div>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_r_phone">Số điện thoại <span class="ri-req">*</span></label>
+                  <label class="ri-label" for="ri_r_phone">Phone number <span class="ri-req">*</span></label>
                   <input class="ri-input" type="tel" id="ri_r_phone" placeholder="(xxx) xxx-xxxx" autocomplete="tel">
                 </div>
                 <div class="ri-field ri-field--full">
-                  <label class="ri-label" for="ri_r_notes">Ghi chú <span style="color:rgba(255,255,255,.4);font-weight:400">(tùy chọn)</span></label>
-                  <textarea class="ri-input ri-textarea" id="ri_r_notes" placeholder="Điểm dừng, yêu cầu đặc biệt..." rows="2"></textarea>
+                  <label class="ri-label" for="ri_r_notes">Notes <span style="color:rgba(255,255,255,.4);font-weight:400">(optional)</span></label>
+                  <textarea class="ri-input ri-textarea" id="ri_r_notes" placeholder="Stops, special requests..." rows="2"></textarea>
                 </div>
               </div>
               <!-- Step 6 · Review placeholder -->
@@ -1187,15 +1187,15 @@
             </div>
             <div class="ri-fare-divider"></div>
             <span class="ri-price-box__save" id="riPriceSave"></span>
-            <div class="ri-price-box__right" id="riVehicleBox">Mercedes Van · 12 chỗ · Chưa bao gồm tip</div>
+            <div class="ri-price-box__right" id="riVehicleBox">Mercedes Van · 12 seats · Tip not included</div>
             <a class="ri-fare-maps" id="riRouteLink" href="#" target="_blank" rel="noopener" hidden>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
               <span id="riRouteLinkText">View route on Maps</span>
             </a>
           </div>
-          <div class="ri-price-hint" id="riPriceHint">Nhập địa chỉ để xem giá ước tính</div>
+          <div class="ri-price-hint" id="riPriceHint">Enter address to see price estimate</div>
           <div class="ri-price-loading" id="riPriceLoading" hidden>
-            <div class="ri-price-spinner"></div>Đang tính khoảng cách...
+            <div class="ri-price-spinner"></div>Calculating distance...
           </div>
 
         </div><!-- /ri-scrollbody -->
@@ -1206,8 +1206,8 @@
         <div class="ri-success__icon">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
-        <h3 class="ri-success__title">Đặt Xe Thành Công!</h3>
-        <p class="ri-success__sub">Mã đặt chỗ của bạn:</p>
+        <h3 class="ri-success__title">Booking Confirmed!</h3>
+        <p class="ri-success__sub">Your booking ID:</p>
         <div class="ri-success__id" id="riSuccessId">DLC-XXXXXX</div>
         <!-- Booking summary — populated by ride-intake.js onSuccess() -->
         <div class="ri-success__summary" id="riSuccessSummary" hidden>
@@ -1215,17 +1215,17 @@
           <div class="ri-success__price-line" id="riSuccessPrice"></div>
           <div class="ri-success__maps" id="riSuccessMaps"></div>
         </div>
-        <p class="ri-success__msg">Chúng tôi sẽ xác nhận trong <strong>30 phút</strong>.<br>Cần gấp? Gọi <a href="tel:4089163439">(408) 916-3439</a>.</p>
+        <p class="ri-success__msg">We'll confirm within <strong>30 minutes</strong>.<br>Need help now? Call <a href="tel:4089163439">(408) 916-3439</a>.</p>
       </div>
 
       <!-- Footer -->
       <div class="ri-footer" id="riFooter" hidden>
         <div class="ri-footer__est" id="riFooterEst" hidden>
-          <span class="ri-footer__est-label">Ước tính</span>
+          <span class="ri-footer__est-label">Estimate</span>
           <span class="ri-footer__est-amt" id="riFooterAmt">—</span>
         </div>
         <button class="ri-submit" id="riSubmit" onclick="RideIntake.nextSubStep()">
-          Tiếp theo
+          Next
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </button>
       </div>
@@ -1243,7 +1243,7 @@
 <script src="aiOrchestrator.js?v=20260406"></script>
 <script src="marketingEngine.js?v=20260406"></script>
 <script src="ai-engine.js?v=20260412j"></script>
-<script src="ride-intake.js?v=20260419k"></script>
+<script src="ride-intake.js?v=20260419l"></script>
 <script src="notifications.js?v=20260418d"></script>
 <script src="workflowEngine.js?v=20260419f"></script>
 <script src="chat.js?v=20260419g"></script>

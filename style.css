@@ -758,6 +758,80 @@ gmp-placeautocomplete.field-input::part(input):focus {
 
 /* ── Homepage Intelligence ──────────────────────────────────── */
 
+/* Intent Quick Bar — 4 service choices, Hick's Law: fewer options = faster decision */
+.hp-intent-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: .5rem;
+  padding: .75rem 1rem .25rem;
+}
+.hp-intent-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .3rem;
+  padding: .65rem .4rem .6rem;
+  background: var(--navy-800);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color .18s, background .18s;
+}
+.hp-intent-tile:hover, .hp-intent-tile:focus-visible {
+  background: rgba(14,38,72,.85);
+  outline: none;
+}
+.hp-intent-tile__icon {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 7px;
+}
+.hp-intent-tile__icon svg { width: 16px; height: 16px; }
+.hp-intent-tile__label {
+  display: block;
+  font-size: .68rem;
+  font-weight: 600;
+  color: var(--text);
+  font-family: var(--font-b);
+  line-height: 1.2;
+  text-align: center;
+}
+/* Category accent colors */
+.hp-intent-tile--airport .hp-intent-tile__icon { background: rgba(56,189,248,.14); color: var(--sky); }
+.hp-intent-tile--airport:hover, .hp-intent-tile--airport:focus-visible { border-color: rgba(56,189,248,.45); }
+.hp-intent-tile--food .hp-intent-tile__icon { background: rgba(251,191,36,.14); color: var(--gold-lt); }
+.hp-intent-tile--food:hover, .hp-intent-tile--food:focus-visible { border-color: rgba(251,191,36,.45); }
+.hp-intent-tile--beauty .hp-intent-tile__icon { background: rgba(244,114,182,.14); color: #f472b6; }
+.hp-intent-tile--beauty:hover, .hp-intent-tile--beauty:focus-visible { border-color: rgba(244,114,182,.45); }
+.hp-intent-tile--tour .hp-intent-tile__icon { background: rgba(251,146,60,.14); color: var(--sunset); }
+.hp-intent-tile--tour:hover, .hp-intent-tile--tour:focus-visible { border-color: rgba(251,146,60,.45); }
+
+/* Driver availability badge — social proof + scarcity signal */
+.hp-avail-badge {
+  margin: .5rem 1rem .1rem;
+  padding: .4rem .75rem;
+  background: rgba(56,189,248,.1);
+  border: 1px solid rgba(56,189,248,.3);
+  border-radius: var(--r-pill);
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--sky-lt);
+  font-family: var(--font-b);
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+}
+.hp-avail-badge::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--sky);
+  flex-shrink: 0;
+  box-shadow: 0 0 6px var(--sky);
+}
+
 /* Featured vendor row — horizontal scroll */
 .hp-vendor-row {
   display: flex;
@@ -2069,6 +2143,13 @@ gmp-placeautocomplete.field-input::part(input):focus {
   .dest-card { flex: 0 0 240px; }
   .dest-card__img { height: 140px; }
 
+  .hp-intent-bar { padding: .75rem 1.5rem .25rem; gap: .6rem; }
+  .hp-intent-tile { padding: .75rem .5rem .7rem; }
+  .hp-intent-tile__icon { width: 32px; height: 32px; }
+  .hp-intent-tile__icon svg { width: 18px; height: 18px; }
+  .hp-intent-tile__label { font-size: .72rem; }
+  .hp-avail-badge { margin: .5rem 1.5rem .1rem; }
+
   .trust-grid { padding: 0 1.5rem; }
   .home-ride-grid { padding: 0 1.5rem; gap: .85rem; }
   .home-ride-tile { padding: 1.15rem 1rem; }
@@ -2989,6 +3070,14 @@ gmp-placeautocomplete.field-input::part(input):focus {
 
   /* Trust: 4 cols */
   .trust-grid { grid-template-columns: repeat(4, 1fr); padding: 0; }
+
+  /* Intent bar: wider tiles, more breathing room at desktop */
+  .hp-intent-bar { padding: .75rem 0 .25rem; gap: .75rem; max-width: 640px; }
+  .hp-intent-tile { padding: .9rem .6rem .85rem; }
+  .hp-intent-tile__icon { width: 36px; height: 36px; }
+  .hp-intent-tile__icon svg { width: 20px; height: 20px; }
+  .hp-intent-tile__label { font-size: .76rem; }
+  .hp-avail-badge { margin: .5rem 0 .1rem; }
 
   /* Ride grid: 3-column, matches marketplace/tour row width */
   .home-ride-grid { padding: 0; max-width: 720px; gap: 1rem; }

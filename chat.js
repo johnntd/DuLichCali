@@ -1616,7 +1616,7 @@ BEHAVIOR GUIDELINES:
       if (result && typeof result === 'object' && result.type === 'finalize') {
         try {
           const wfDraft  = WF.getDraft();
-          const wfLang   = (wfDraft && wfDraft.lang) || 'vi';
+          const wfLang   = (wfDraft && wfDraft.lang) || 'en';
           const res = await WF.finalize();
           const orderId       = res.id || res;
           const token         = res.token || null;

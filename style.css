@@ -96,6 +96,8 @@
 /* ── Reset ──────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
+/* Prevent 300ms tap delay on interactive elements across all browsers */
+button, a, input, select, textarea { touch-action: manipulation; }
 
 body {
   font-family: var(--font-b);
@@ -196,13 +198,13 @@ button { cursor: pointer; font-family: var(--font-b); }
   height: 26px;
   background: rgba(10,35,60,.92);
   border-top: 1px solid rgba(255,255,255,0.07);
-  font-size: .67rem;
+  font-size: .75rem;
   font-weight: 500;
   letter-spacing: .04em;
   text-transform: uppercase;
 }
 .site-footer a {
-  color: rgba(106,176,212,.55);
+  color: rgba(106,176,212,.85);
   text-decoration: none;
   transition: color .2s;
 }
@@ -213,14 +215,14 @@ button { cursor: pointer; font-family: var(--font-b); }
 .lp-legal-footer {
   text-align: center;
   padding: .85rem 1.25rem 1rem;
-  font-size: .68rem;
+  font-size: .75rem;
   font-weight: 400;
   letter-spacing: .03em;
-  color: rgba(180,210,230,.4);
+  color: rgba(180,210,230,.7);
   line-height: 1.8;
 }
 .lp-legal-footer a {
-  color: rgba(106,176,212,.5);
+  color: rgba(106,176,212,.8);
   text-decoration: none;
   transition: color .18s;
 }
@@ -721,6 +723,13 @@ gmp-placeautocomplete.field-input::part(input):focus {
   padding: 0;
   flex-shrink: 0;
   transition: width .35s ease, background .35s ease;
+  position: relative;  /* for ::before touch-target expansion */
+}
+/* Expand hit area to 44×44px min without affecting layout */
+.hc__dot::before {
+  content: '';
+  position: absolute;
+  inset: -19px;
 }
 .hc__dot--active {
   width: 22px;
@@ -2732,7 +2741,7 @@ gmp-placeautocomplete.field-input::part(input):focus {
 }
 .home-ai-svc__hint {
   display: none;
-  font-size: .64rem;
+  font-size: .7rem;
   color: var(--muted);
   font-family: var(--font-b);
   line-height: 1.35;
@@ -2947,8 +2956,8 @@ gmp-placeautocomplete.field-input::part(input):focus {
   /* ── Screens ── */
   .screen { border-radius: 0; }
 
-  /* Hero: cinematic at desktop */
-  .hc { height: 66vh; min-height: 480px; }
+  /* Hero: cinematic at desktop — max-height cap keeps first content section visible */
+  .hc { height: 66vh; min-height: 480px; max-height: 600px; }
   .hc__title { font-size: clamp(3.2rem, 5vw, 5.5rem); }
   .hc__body { padding: 0 4rem 5rem; align-items: flex-start; text-align: left; }
   .hc__chip { margin-bottom: 1rem; }

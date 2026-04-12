@@ -1657,10 +1657,10 @@
     var localHtml = localFallback.map(function (item) {
       return '<img class="ns-gallery__img" src="' + item.src + '" ' +
         'onerror="this.src=\'' + item.fb + '\'" ' +
-        'alt="" loading="lazy" aria-hidden="true">';
+        'alt="' + _t('Nail art photo','Ảnh nail','Foto de uñas') + '" loading="lazy">';
     }).join('');
     var unsplashHtml = unsplash.map(function (src) {
-      return '<img class="ns-gallery__img" src="' + src + '" alt="" loading="lazy" aria-hidden="true">';
+      return '<img class="ns-gallery__img" src="' + src + '" alt="' + _t('Nail art inspiration','Cảm hứng nail','Inspiración de uñas') + '" loading="lazy">';
     }).join('');
 
     return '<section class="ns-gallery">' +

@@ -1981,9 +1981,10 @@ select.mp-input option {
   }
   .mp-hero__title { font-size: clamp(3rem, 5vw, 4.2rem); }
 
-  /* Business card grid: 4-col, wider gap */
+  /* Business card grid: auto-fit so 1–4 vendors all look right */
   .mp-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(280px, 320px));
+    justify-content: start;
     padding: 0 3rem;
     gap: 1.5rem;
   }

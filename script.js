@@ -213,16 +213,16 @@ function renderDestCards() {
   container.innerHTML = DESTINATIONS.map(d => {
     const cost = d.cost.transport;
     return `
-      <div class="dest-card" role="listitem" onclick="openDestination('${d.id}')" aria-label="${d.name.vi}">
+      <div class="dest-card" role="listitem" onclick="openDestination('${d.id}')" aria-label="${d.name.en}">
         <div class="dest-card__img" style="background:${d.gradient}">
-          <img src="${d.image}" alt="${d.name.vi}" loading="lazy" onerror="this.style.opacity='0'">
+          <img src="${d.image}" alt="${d.name.en}" loading="lazy" onerror="this.style.opacity='0'">
           <div class="dest-card__gradient"></div>
         </div>
         <div class="dest-card__body">
           <div class="dest-card__tag">${d.state}</div>
-          <div class="dest-card__name">${d.name.vi}</div>
+          <div class="dest-card__name">${d.name.en}</div>
           <div class="dest-card__range">
-            Từ <strong>$${cost.min}</strong> · ${d.duration.min}–${d.duration.max} ngày
+            From <strong>$${cost.min}</strong> · ${d.duration.min}–${d.duration.max} days
           </div>
         </div>
       </div>`;
@@ -240,24 +240,24 @@ function renderDestList() {
     return `
       <div class="dest-full-card" onclick="openDestination('${d.id}')">
         <div class="dest-full-card__hero" style="background:${d.gradient}">
-          <img src="${d.image}" alt="${d.name.vi}" loading="lazy" onerror="this.style.opacity='0'">
+          <img src="${d.image}" alt="${d.name.en}" loading="lazy" onerror="this.style.opacity='0'">
           <div class="dest-full-card__hero-overlay"></div>
           <div class="dest-full-card__tagline">
             <div class="dest-full-card__state">${d.state}</div>
-            <div class="dest-full-card__name">${d.name.vi}</div>
+            <div class="dest-full-card__name">${d.name.en}</div>
           </div>
         </div>
         <div class="dest-full-card__body">
-          <p class="dest-full-card__summary">${d.summary.vi}</p>
+          <p class="dest-full-card__summary">${d.summary.en}</p>
           <div class="dest-full-card__highlights">
-            ${highlights.map(h => `<div class="dest-full-card__hl">${h.name} — ${h.vi}</div>`).join('')}
+            ${highlights.map(h => `<div class="dest-full-card__hl">${h.name} — ${h.en}</div>`).join('')}
           </div>
           <div class="dest-full-card__footer">
             <span class="dest-full-card__price">
-              Từ $${cost.min} – $${cost.max}
+              From $${cost.min} – $${cost.max}
             </span>
             <button class="btn btn--gold" style="height:38px;font-size:.75rem;padding:0 1rem">
-              Đặt tour
+              Book Tour
             </button>
           </div>
         </div>
@@ -292,8 +292,8 @@ function populateAirportSelect() {
   const sel = document.getElementById('airport');
   if (!sel) return;
   const airports  = getRegionAirports();
-  const regionName = window.DLCRegion ? DLCRegion.current.nameVi : 'Sân bay';
-  sel.innerHTML = `<option value="">Chọn sân bay...</option>` +
+  const regionName = window.DLCRegion ? DLCRegion.current.nameVi : 'Airport';
+  sel.innerHTML = `<option value="">Select airport...</option>` +
     `<optgroup label="${regionName}">` +
     airports.map(a => `<option value="${a.value}">${a.label}</option>`).join('') +
     `</optgroup>`;
@@ -355,7 +355,7 @@ function applyGasPrice(price) {
   window._gasCaliPrice = price;
   const badge = document.getElementById('gasPriceBadge');
   if (badge) {
-    badge.textContent = `⛽ Giá xăng CA hiện tại: ~$${price.toFixed(2)}/gal (EIA)`;
+    badge.textContent = `⛽ CA gas price: ~$${price.toFixed(2)}/gal (EIA)`;
   }
   const gasRow = document.getElementById('gasRow');
   const gasEl  = document.getElementById('gasPriceDisplay');
@@ -388,7 +388,7 @@ function goStep(n) {
       let cls = 'wiz-dot';
       if (idx < n) cls += ' wiz-dot--done';
       if (idx === n) cls += ' wiz-dot--active';
-      return `<div class="${cls}" aria-label="Bước ${idx}"></div>`;
+      return `<div class="${cls}" aria-label="Step ${idx}"></div>`;
     }).join('');
   }
 
@@ -463,7 +463,7 @@ function selectService(svc) {
     setPickupType('airport');
     if (lodgingWrap) lodgingWrap.style.display = 'none';
     if (daysWrap)    daysWrap.style.display    = 'none';
-    if (step2Sub) step2Sub.textContent = 'Chọn điểm đón hoặc trả khách';
+    if (step2Sub) step2Sub.textContent = 'Select pickup or dropoff location';
   } else {
     // Tour: hide toggle, show only address field
     if (pickupTypeWrap) pickupTypeWrap.style.display = 'none';
@@ -471,7 +471,7 @@ function selectService(svc) {
     if (addressWrap) addressWrap.style.display = '';
     if (lodgingWrap) lodgingWrap.style.display = '';
     if (daysWrap)    daysWrap.style.display    = '';
-    if (step2Sub) step2Sub.textContent = 'Nhập địa chỉ xuất phát / điểm đón của bạn';
+    if (step2Sub) step2Sub.textContent = 'Enter your departure address / pickup point';
   }
 
   goStep(2);
@@ -620,13 +620,13 @@ function updateEstimate() {
         if (lodging === 'hotel') {
           lodgingCard.style.display = '';
           lodgingCard.textContent =
-            `Ước tính khách sạn ~$150/đêm/phòng × ${days} đêm. ` +
-            `Giá thực tế tùy vị trí và mùa — chúng tôi sẽ tư vấn cụ thể sau khi nhận đặt chỗ.`;
+            `Estimated hotel ~$150/night/room × ${days} nights. ` +
+            `Actual price varies by location and season — we'll advise after receiving your booking.`;
         } else if (lodging === 'airbnb') {
           lodgingCard.style.display = '';
           lodgingCard.textContent =
-            `Ước tính Airbnb ~$165/đêm (không có API chính thức — giá thực tế có thể khác đáng kể). ` +
-            `Chúng tôi sẽ giúp tìm kiếm và tư vấn sau khi nhận đặt chỗ.`;
+            `Estimated Airbnb ~$165/night (no official API — actual price may vary significantly). ` +
+            `We'll help search and advise after receiving your booking.`;
         } else {
           lodgingCard.style.display = 'none';
         }
@@ -676,11 +676,11 @@ async function submitBooking(event) {
   if (submitBtn.disabled) return false;
   submitBtn.disabled = true;
   const origText = submitBtn.textContent;
-  submitBtn.textContent = 'Đang gửi...';
+  submitBtn.textContent = 'Sending...';
 
   const datetime = document.getElementById('datetime').value;
   if (!datetime) {
-    document.getElementById('slotWarning').textContent = 'Vui lòng chọn ngày và giờ.';
+    document.getElementById('slotWarning').textContent = 'Please select date and time.';
     submitBtn.disabled = false;
     submitBtn.textContent = origText;
     return false;
@@ -699,7 +699,7 @@ async function submitBooking(event) {
       const diff          = Math.abs((selectedTime - bookedTime) / 60000);
       if (diff < bufferMinutes) {
         document.getElementById('slotWarning').textContent =
-          `Khung giờ xung đột với lịch ${bookedTime.toLocaleTimeString()} (cần cách ${bufferMinutes} phút).`;
+          `Time conflict with existing booking at ${bookedTime.toLocaleTimeString()} (requires ${bufferMinutes} min gap).`;
         submitBtn.disabled = false;
         submitBtn.textContent = origText;
         return false;
@@ -729,16 +729,16 @@ async function submitBooking(event) {
   });
 
   const summary = [
-    `Mã đặt chỗ: ${bookingId}`,
-    `Khách hàng: ${name}`,
-    `Số điện thoại: ${phone}`,
-    `Dịch vụ: ${serviceType}`,
-    airport ? `Sân bay: ${airport}` : '',
-    `Địa chỉ: ${address}`,
-    `Số khách: ${passengers}`,
-    !['pickup','dropoff'].includes(serviceType) ? `Số ngày: ${days}` : '',
-    lodging ? `Chỗ ở: ${lodging}` : '',
-    `Thời gian: ${timeStr}`,
+    `Booking ID: ${bookingId}`,
+    `Customer: ${name}`,
+    `Phone: ${phone}`,
+    `Service: ${serviceType}`,
+    airport ? `Airport: ${airport}` : '',
+    `Address: ${address}`,
+    `Passengers: ${passengers}`,
+    !['pickup','dropoff'].includes(serviceType) ? `Days: ${days}` : '',
+    lodging ? `Lodging: ${lodging}` : '',
+    `Time: ${timeStr}`,
   ].filter(Boolean).join('\n');
 
   document.getElementById('bookingSummary').value = summary;
@@ -778,7 +778,7 @@ async function submitBooking(event) {
         await gapi.client.calendar.events.insert({
           calendarId: 'primary',
           resource: {
-            summary:  `Dịch vụ: ${name} [${bookingId}]`,
+            summary:  `Service: ${name} [${bookingId}]`,
             location: airport || address,
             description: summary,
             start: { dateTime: selectedTime.toISOString(), timeZone: 'America/Los_Angeles' },
@@ -801,7 +801,7 @@ async function submitBooking(event) {
   }
 
   // Redirect to thank-you with tracking params
-  const lang = new URLSearchParams(window.location.search).get('lang') || 'vi';
+  const lang = new URLSearchParams(window.location.search).get('lang') || 'en';
   window.location.href =
     `thankyou.html?id=${encodeURIComponent(bookingId)}&t=${encodeURIComponent(trackingToken)}&lang=${lang}`;
   return false;
@@ -929,7 +929,7 @@ function _showYtLink(videoId) {
     `<svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
       <path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.54 3.5 12 3.5 12 3.5s-7.54 0-9.38.55A3.02 3.02 0 0 0 .5 6.19C0 8.04 0 12 0 12s0 3.96.5 5.81a3.02 3.02 0 0 0 2.12 2.14C4.46 20.5 12 20.5 12 20.5s7.54 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14C24 15.96 24 12 24 12s0-3.96-.5-5.81z"/>
       <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="white"/>
-    </svg><span>Xem trên YouTube</span>`;
+    </svg><span>Watch on YouTube</span>`;
   wrap.appendChild(link);
 }
 
@@ -952,7 +952,7 @@ function openDestination(destId) {
   const poster = document.getElementById('destPoster');
   if (poster) {
     poster.src = dest.image || '';
-    poster.alt = dest.name.vi;
+    poster.alt = dest.name.en;
     poster.classList.remove('dest-modal__poster--hidden');
     poster.onerror = () => {
       poster.style.opacity = '0';
@@ -999,27 +999,27 @@ function openHighlight(destId, hlIdx) {
   if (!body) return;
 
   const bestTimeBadge = h.bestTime
-    ? `<div class="hl-info-row"><div class="hl-info-row__label">Thời điểm tốt nhất</div><div class="hl-info-row__badge">${h.bestTime}</div></div>`
+    ? `<div class="hl-info-row"><div class="hl-info-row__label">Best time to visit</div><div class="hl-info-row__badge">${h.bestTime}</div></div>`
     : '';
   const whySection = h.whyPopular
-    ? `<div class="hl-section"><div class="hl-section__label">Tại sao nổi tiếng</div><p class="hl-section__text">${h.whyPopular}</p></div>`
+    ? `<div class="hl-section"><div class="hl-section__label">Why it's popular</div><p class="hl-section__text">${h.whyPopular}</p></div>`
     : '';
   const notesSection = h.travelNotes
-    ? `<div class="hl-section"><div class="hl-section__label">Ghi chú du lịch</div><p class="hl-section__text">${h.travelNotes}</p></div>`
+    ? `<div class="hl-section"><div class="hl-section__label">Travel notes</div><p class="hl-section__text">${h.travelNotes}</p></div>`
     : '';
 
   body.innerHTML = `
-    <div class="hl-eyebrow">${dest.name.vi}</div>
+    <div class="hl-eyebrow">${dest.name.en}</div>
     <h3 class="hl-title">${h.name}</h3>
-    <p class="hl-desc">${h.vi}</p>
+    <p class="hl-desc">${h.en}</p>
     ${bestTimeBadge}
     ${whySection}
     ${notesSection}
     <div class="hl-ctas">
       <button class="btn btn--gold" style="flex:1;height:46px;font-size:.85rem"
-        onclick="closeHighlight(); selectServiceAndBook('${destId}')">Đặt tour</button>
+        onclick="closeHighlight(); selectServiceAndBook('${destId}')">Book Tour</button>
       <button class="btn btn--outline" style="flex:1;height:46px;font-size:.85rem"
-        onclick="closeHighlight(); switchScreen('screenChat')">Hỏi AI</button>
+        onclick="closeHighlight(); switchScreen('screenChat')">Ask AI</button>
     </div>`;
 
   const sheet = document.getElementById('hlSheet');
@@ -1082,11 +1082,11 @@ function buildDestSheet(dest) {
   const tagsHtml = tags.map(t => `<span class="sheet-tag">${t}</span>`).join('');
 
   const hlHtml = highlights.map((h, idx) => `
-    <button class="sheet-hl" onclick="openHighlight('${dest.id}', ${idx})" aria-label="Chi tiết: ${h.name}">
+    <button class="sheet-hl" onclick="openHighlight('${dest.id}', ${idx})" aria-label="Details: ${h.name}">
       <div class="sheet-hl__dot"></div>
       <div class="sheet-hl__content">
         <div class="sheet-hl__name">${h.name}</div>
-        <div class="sheet-hl__desc">${h.vi}</div>
+        <div class="sheet-hl__desc">${h.en}</div>
       </div>
       <div class="sheet-hl__arrow">›</div>
     </button>`).join('');
@@ -1094,31 +1094,31 @@ function buildDestSheet(dest) {
   return `
     <div class="sheet-drag" aria-hidden="true"></div>
     <div class="sheet-eyebrow">${dest.state}</div>
-    <h2 class="sheet-title">${dest.name.vi}</h2>
-    <p class="sheet-hook">${dest.hook || dest.summary.vi}</p>
+    <h2 class="sheet-title">${dest.name.en}</h2>
+    <p class="sheet-hook">${dest.hook || dest.summary.en}</p>
     ${tags.length ? `<div class="sheet-tags">${tagsHtml}</div>` : ''}
     <div class="sheet-highlights">${hlHtml}</div>
     <div class="sheet-price">
-      <span class="sheet-price__label">Xe khứ hồi</span>
+      <span class="sheet-price__label">Round-trip Transport</span>
       <span class="sheet-price__range">$${cost.min}–$${cost.max}</span>
-      <span class="sheet-price__note">từ OC</span>
+      <span class="sheet-price__note">from OC</span>
     </div>
     <div class="sheet-ctas">
       <button class="btn btn--gold" style="height:48px;font-size:.88rem"
         onclick="closeDestination(); selectServiceAndBook('${dest.id}')">
-        Đặt tour ngay
+        Book Tour Now
       </button>
       <div class="sheet-ctas__row">
         <button class="btn btn--outline" style="height:42px;font-size:.78rem"
           onclick="closeDestination(); switchScreen('screenChat')">
-          Hỏi AI tư vấn
+          Ask AI
         </button>
         <a href="tel:4089163439" class="btn btn--outline" style="height:42px;font-size:.78rem;text-decoration:none">
-          Gọi ngay
+          Call Now
         </a>
       </div>
     </div>
-    <p class="sheet-foot">Giá xe chưa bao gồm chỗ ở. Gọi để nhận báo giá trọn gói.</p>`;
+    <p class="sheet-foot">Transport price excludes lodging. Call for a full package quote.</p>`;
 }
 
 // ── Tour Choice Grid (Booking Step 1) ────────────────────────
@@ -1133,12 +1133,12 @@ function renderTourChoiceGrid() {
     const cost  = dest.cost.transport;
     const dur   = dest.duration;
     const sub   = dest.outOfState
-      ? `${dest.state} · từ $${cost.min}`
-      : `${dur.min}–${dur.max} ngày · từ $${cost.min}`;
+      ? `${dest.state} · from $${cost.min}`
+      : `${dur.min}–${dur.max} days · from $${cost.min}`;
     return `<button class="tour-choice" data-svc="${dest.id}" onclick="selectService('${dest.id}')">
       <div class="tour-choice__img" style="background-image:url('${dest.image}'),${dest.gradient};background-size:cover,cover;background-position:center,center"></div>
       <div class="tour-choice__body">
-        <strong>${dest.name.vi}</strong>
+        <strong>${dest.name.en}</strong>
         <span>${sub}</span>
       </div>
     </button>`;
@@ -1170,8 +1170,8 @@ function updateRegionUI(region) {
     regionTag.innerHTML =
       `<span class="region-tag__loc">📍 ${region.nameVi}</span>` +
       `<span class="region-tag__sep">·</span>` +
-      `<span class="region-tag__vehicle">${region.vehicle.name} · ${region.vehicle.seats} ghế</span>` +
-      `<button class="region-tag__change" onclick="toggleRegionPicker()">Đổi vùng ›</button>`;
+      `<span class="region-tag__vehicle">${region.vehicle.name} · ${region.vehicle.seats} seats</span>` +
+      `<button class="region-tag__change" onclick="toggleRegionPicker()">Change region ›</button>`;
     regionTag.hidden = false;
   }
 
@@ -1191,7 +1191,7 @@ function updateRegionUI(region) {
   const callAlt = document.getElementById('submitCallAlt');
   if (callAlt) {
     callAlt.href        = `tel:${region.hosts[0].phone}`;
-    callAlt.textContent = `Hoặc gọi ngay: ${region.hosts[0].display}`;
+    callAlt.textContent = `Or call us: ${region.hosts[0].display}`;
   }
 
   // 5. Airport chips + booking form dropdown → region airports
@@ -1202,23 +1202,23 @@ function updateRegionUI(region) {
   const airportCount = document.getElementById('airportCount');
   if (airportCount) {
     const n = getRegionAirports().length;
-    airportCount.textContent = `${n} Sân Bay Phục Vụ`;
+    airportCount.textContent = `${n} Airports Served`;
   }
   const airportVehicles = document.getElementById('airportVehicles');
   if (airportVehicles) {
     if (region.id === 'bayarea') {
       airportVehicles.innerHTML =
-        `<div class="vehicle-pill"><strong>${region.vehicle.name}</strong><span>Tối đa ${region.vehicle.seats} khách</span></div>`;
+        `<div class="vehicle-pill"><strong>${region.vehicle.name}</strong><span>Up to ${region.vehicle.seats} passengers</span></div>`;
     } else {
       airportVehicles.innerHTML =
-        `<div class="vehicle-pill"><strong>Tesla Model Y</strong><span>1–3 khách</span></div>` +
-        `<div class="vehicle-pill"><strong>Mercedes Van</strong><span>4–12 khách</span></div>`;
+        `<div class="vehicle-pill"><strong>Tesla Model Y</strong><span>1–3 passengers</span></div>` +
+        `<div class="vehicle-pill"><strong>Mercedes Van</strong><span>4–12 passengers</span></div>`;
     }
   }
 
   // 7. Homepage service card airport count labels
   document.querySelectorAll('.svc-airport-count').forEach(el => {
-    el.textContent = `${getRegionAirports().length} sân bay`;
+    el.textContent = `${getRegionAirports().length} airports`;
   });
 }
 
@@ -1296,12 +1296,24 @@ function updateRideServiceCards(available) {
     if (!available && !existing) {
       var badge = document.createElement('div');
       badge.className = 'ride-unavail-badge';
-      badge.innerHTML = '<span>Không Có Xe</span>';
+      badge.innerHTML = '<span>No Cars Available</span>';
       el.appendChild(badge);
     } else if (available && existing) {
       existing.remove();
     }
   });
+
+  // Update driver availability badge — social proof + scarcity signal
+  var statusEl = document.getElementById('hpAvailStatus');
+  if (statusEl) {
+    var count = (window._availableDrivers || []).length;
+    if (available && count > 0) {
+      statusEl.textContent = count + ' drivers available today';
+      statusEl.hidden = false;
+    } else {
+      statusEl.hidden = true;
+    }
+  }
 }
 
 // ── Homepage Intelligence ─────────────────────────────────────
@@ -1351,7 +1363,7 @@ function _dlcFmtMins(mins) {
 function computeBizAvailability(biz) {
   // Returns { status: 'now'|'soon'|'order'|'closed', label, sublabel }
   if (biz.availabilityType === 'order_window') {
-    return { status: 'order', label: 'Đang nhận đơn', sublabel: 'Giao cuối tuần' };
+    return { status: 'order', label: 'Taking Orders', sublabel: 'Weekend delivery' };
   }
 
   const now   = new Date();
@@ -1365,21 +1377,21 @@ function computeBizAvailability(biz) {
     const close = _dlcParseTimeStr(parts[1]);
     if (open !== null && close !== null) {
       if (cur >= open && cur < close)
-        return { status: 'now',  label: 'Đang mở cửa', sublabel: 'Đến ' + _dlcFmtMins(close) };
+        return { status: 'now',  label: 'Open Now', sublabel: 'Until ' + _dlcFmtMins(close) };
       if (cur < open)
-        return { status: 'soon', label: 'Mở cửa sớm',  sublabel: 'Lúc ' + _dlcFmtMins(open) };
+        return { status: 'soon', label: 'Opens Soon', sublabel: 'At ' + _dlcFmtMins(open) };
     }
   }
 
   // Look ahead up to 6 days
-  const VI_DAYS = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+  const EN_DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   for (let i = 1; i <= 6; i++) {
     const d = (jsDay + i) % 7;
     const h = _dlcHoursForDay(biz, d);
-    if (h && h !== 'Nghỉ') return { status: 'soon', label: 'Mở ' + VI_DAYS[d], sublabel: '' };
+    if (h && h !== 'Nghỉ') return { status: 'soon', label: 'Opens ' + EN_DAYS[d], sublabel: '' };
   }
 
-  return { status: 'closed', label: 'Tạm đóng', sublabel: '' };
+  return { status: 'closed', label: 'Closed', sublabel: '' };
 }
 
 // ── User behavior tracking ────────────────────────────────────
@@ -1438,7 +1450,7 @@ function getFeaturedVendors(regionId) {
     .sort((a, b) => (a.featuredPriority || 99) - (b.featuredPriority || 99));
 }
 
-function _hpCatLabel(c)  { return { nails: 'Nail Salon', hair: 'Tiệm Tóc', food: 'Ẩm Thực' }[c] || c; }
+function _hpCatLabel(c)  { return { nails: 'Nail Salon', hair: 'Hair Salon', food: 'Food' }[c] || c; }
 function _hpCatAccent(c) { return { nails: '#f472b6', hair: '#38bdf8', food: '#f59e0b' }[c] || 'var(--gold)'; }
 
 // ── HTML builders ─────────────────────────────────────────────
@@ -1487,7 +1499,7 @@ function renderFeaturedVendors(regionId) {
   if (!vendors.length) { section.hidden = true; return; }
 
   const regionName = window.DLCRegion?.current?.name;
-  if (titleEl && regionName) titleEl.textContent = `Đề Xuất Tại ${regionName}`;
+  if (titleEl && regionName) titleEl.textContent = `Featured in ${regionName}`;
 
   container.innerHTML = vendors.map(buildVendorCardHtml).join('');
   section.hidden = false;
@@ -1510,7 +1522,7 @@ function renderAvailabilityHighlights(regionId, driverAvailable) {
 
   if (driverAvailable) {
     chips.push(buildAvailChipHtml(
-      'Xe có sẵn', 'Đặt ngay', 'driver',
+      'Car available', 'Book now', 'driver',
       "HomepagePersonalizer.track('travel'); switchScreen('screenBook')"
     ));
   }
@@ -1549,27 +1561,27 @@ function switchHpPanel(panel) {
 // Service cards appended after destinations
 var _TRAVEL_SERVICES_EXTRA = [
   {
-    chip: 'Sân Bay',
-    title: 'Đưa Đón Sân Bay',
+    chip: 'Airport',
+    title: 'Airport Pickup & Dropoff',
     sub: 'LAX · SFO · SJC · OAK · SAN · BUR',
     img: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=600&auto=format&fit=crop&q=80',
-    cta: 'Đặt với AI',
+    cta: 'Book with AI',
     intent: 'airport'
   },
   {
-    chip: 'Xe Riêng',
-    title: 'Xe Riêng Cao Cấp',
+    chip: 'Private Car',
+    title: 'Premium Private Car',
     sub: 'Tesla · Mercedes Van · Bay Area ↔ OC',
     img: 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600&auto=format&fit=crop&q=80',
-    cta: 'Đặt với AI',
+    cta: 'Book with AI',
     intent: 'ride'
   },
   {
-    chip: 'Tùy Chỉnh',
-    title: 'Kế Hoạch Riêng',
-    sub: '15 điểm đến · AI tư vấn 24/7',
+    chip: 'Custom',
+    title: 'Custom Trip Plan',
+    sub: '15 destinations · AI advice 24/7',
     img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&auto=format&fit=crop&q=75',
-    cta: 'Hỏi AI',
+    cta: 'Ask AI',
     intent: 'tour'
   }
 ];
@@ -1585,16 +1597,16 @@ function renderTravelCarousel() {
     cards = DESTINATIONS.map(function(dest) {
       var chip = dest.duration
         ? (dest.duration.min + '–' + dest.duration.max + ' ' + dest.duration.unit)
-        : 'Du Lịch';
+        : 'Travel';
       var id = dest.id;
-      return '<div class="trav-card" role="listitem" onclick="openDestination(\'' + id + '\')" aria-label="' + dest.name.vi + '">' +
+      return '<div class="trav-card" role="listitem" onclick="openDestination(\'' + id + '\')" aria-label="' + dest.name.en + '">' +
         '<div class="trav-card__bg" style="background-image:url(\'' + dest.image + '\')"></div>' +
         '<div class="trav-card__overlay"></div>' +
         '<div class="trav-card__body">' +
           '<span class="trav-card__chip">' + chip + '</span>' +
-          '<h3 class="trav-card__title">' + dest.name.vi + '</h3>' +
-          '<p class="trav-card__sub">' + dest.tagline.vi + '</p>' +
-          '<button class="trav-card__cta" onclick="event.stopPropagation();openDestination(\'' + id + '\')">Khám phá</button>' +
+          '<h3 class="trav-card__title">' + dest.name.en + '</h3>' +
+          '<p class="trav-card__sub">' + dest.tagline.en + '</p>' +
+          '<button class="trav-card__cta" onclick="event.stopPropagation();openDestination(\'' + id + '\')">Explore</button>' +
         '</div>' +
       '</div>';
     });
@@ -1823,8 +1835,8 @@ function openAIWithIntent(intent) {
   }
 
   var prompts = {
-    price: 'Cho tôi biết bảng giá dịch vụ',
-    order: 'Kiểm tra đơn đặt chỗ của tôi'
+    price: 'Tell me about service pricing',
+    order: 'Check my booking status'
   };
   var prompt = intent && prompts[intent];
   if (prompt) {
@@ -1857,19 +1869,19 @@ function renderFeatureCards() {
     var r = DLCRegion.current;
     if (r && r.airports && r.airports.length) {
       var codes = r.airports;
-      airSub.textContent = codes.length + ' sân bay · ' + codes.slice(0, 3).join(' · ') +
-        (codes.length > 3 ? ' và thêm' : '');
+      airSub.textContent = codes.length + ' airports · ' + codes.slice(0, 3).join(' · ') +
+        (codes.length > 3 ? ' and more' : '');
     }
   }
   // Tour destination tags
   var tourTags = document.getElementById('fcTourTags');
   if (tourTags && typeof DESTINATIONS !== 'undefined') {
     var names = DESTINATIONS.slice(0, 9).map(function(d) {
-      return d.name ? (d.name.vi || d.name.en || d.id) : d.id;
+      return d.name ? (d.name.en || d.name.vi || d.id) : d.id;
     });
     tourTags.innerHTML = names.map(function(n) {
       return '<span class="svc-fc__tag">' + n + '</span>';
-    }).join('') + '<span class="svc-fc__tag">+ thêm</span>';
+    }).join('') + '<span class="svc-fc__tag\">+ more</span>';
   }
 }
 
@@ -1984,7 +1996,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     var el = _inputEl();
     if (!el) return;
     var cnt = document.getElementById('interpCharCount');
-    if (cnt) cnt.textContent = el.value.length + ' ký tự';
+    if (cnt) cnt.textContent = el.value.length + ' chars';
     clearTimeout(_timer);
     if (!el.value.trim()) { var o = _outputEl(); if (o) o.textContent = '—'; return; }
     _timer = setTimeout(function () { window.interpTranslate(); }, 800);
@@ -2013,7 +2025,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       })
       .catch(function () {
         if (loadEl) loadEl.hidden = true;
-        if (outEl) outEl.textContent = 'Lỗi kết nối. Vui lòng thử lại.';
+        if (outEl) outEl.textContent = 'Connection error. Please try again.';
       });
   };
 
@@ -2039,7 +2051,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (inp) inp.value = '';
     if (out) out.textContent = '—';
     var cnt = document.getElementById('interpCharCount');
-    if (cnt) cnt.textContent = '0 ký tự';
+    if (cnt) cnt.textContent = '0 chars';
     clearTimeout(_timer);
   };
 
@@ -2049,7 +2061,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text).then(function () {
         var btn = document.getElementById('interpCopyBtn');
-        if (btn) { btn.textContent = '✓ Đã sao chép'; setTimeout(function () { btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Sao chép'; }, 1800); }
+        if (btn) { btn.textContent = '✓ Copied'; setTimeout(function () { btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy'; }, 1800); }
       });
     }
   };
@@ -2066,7 +2078,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   window.interpMicToggle = function () {
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { alert('Trình duyệt không hỗ trợ nhận dạng giọng nói.'); return; }
+    if (!SR) { alert('This browser does not support speech recognition.'); return; }
     if (_micActive) {
       if (_recog) _recog.stop();
       return;
@@ -2082,7 +2094,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     var _stopMic = function () {
       _micActive = false;
       var lbl = document.getElementById('interpMicLabel');
-      if (lbl) lbl.textContent = 'Nói';
+      if (lbl) lbl.textContent = 'Speak';
       var btn = document.getElementById('interpMic');
       if (btn) btn.classList.remove('interp-mic--active');
     };
@@ -2090,7 +2102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     _recog.onend   = _stopMic;
     _micActive = true;
     var lbl = document.getElementById('interpMicLabel');
-    if (lbl) lbl.textContent = 'Đang nghe…';
+    if (lbl) lbl.textContent = 'Listening…';
     var btn = document.getElementById('interpMic');
     if (btn) btn.classList.add('interp-mic--active');
     _recog.start();

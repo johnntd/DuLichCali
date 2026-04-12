@@ -121,14 +121,14 @@
   }
 
   function _empty(el, category, aiEntry) {
-    var nm = { food:'cửa hàng ăn uống', hair:'tiệm tóc', nails:'tiệm nail', rides:'dịch vụ xe', tour:'tour du lịch' };
+    var nm = { food:'restaurants', hair:'hair salons', nails:'nail salons', rides:'ride services', tour:'tours' };
     el.innerHTML = (
       '<div class="lp-status-panel lp-empty">' +
         '<div class="lp-empty__icon">🔍</div>' +
-        '<p class="lp-empty__title">Hiện không có ' + (nm[category] || 'dịch vụ') + ' khả dụng</p>' +
-        '<p class="lp-empty__sub">Vui lòng thử lại sau hoặc liên hệ trực tiếp.</p>' +
-        '<a href="tel:4089163439" class="lp-empty__cta">Gọi: 408-916-3439</a>' +
-        '<button onclick="LandingNav.openChat()" class="lp-empty__ai" style="background:none;border:none;cursor:pointer;text-decoration:underline;color:var(--gold,#f5a623);font-size:.8rem">Hỏi AI để được hỗ trợ</button>' +
+        '<p class="lp-empty__title">No ' + (nm[category] || 'services') + ' currently available</p>' +
+        '<p class="lp-empty__sub">Please try again later or contact us directly.</p>' +
+        '<a href="tel:4089163439" class="lp-empty__cta">Call: 408-916-3439</a>' +
+        '<button onclick="LandingNav.openChat()" class="lp-empty__ai" style="background:none;border:none;cursor:pointer;text-decoration:underline;color:var(--gold,#f5a623);font-size:.8rem">Ask AI for help</button>' +
       '</div>'
     );
   }
@@ -214,10 +214,10 @@
           el.innerHTML = (
             '<div class="lp-status-panel lp-empty">' +
               '<div class="lp-empty__icon">🚫</div>' +
-              '<p class="lp-empty__title">Hiện không có tài xế khả dụng</p>' +
-              '<p class="lp-empty__sub">Tài xế chưa có lịch trống.<br>Liên hệ để đặt xe trước.</p>' +
-              '<a href="tel:4089163439" class="lp-empty__cta">Gọi: 408-916-3439</a>' +
-              '<a href="/?entry=' + esc(aiEntry) + '" class="lp-empty__ai">Đặt lịch qua AI</a>' +
+              '<p class="lp-empty__title">No drivers currently available</p>' +
+              '<p class="lp-empty__sub">No drivers have open slots right now.<br>Contact us to schedule ahead.</p>' +
+              '<a href="tel:4089163439" class="lp-empty__cta">Call: 408-916-3439</a>' +
+              '<a href="/?entry=' + esc(aiEntry) + '" class="lp-empty__ai">Book via AI</a>' +
             '</div>'
           );
         }
@@ -360,7 +360,7 @@
 
     // Greetings
     if (/xin ch[àa]o|hello|hi\b|ch[àa]o|hey/.test(t)) {
-      return ai.welcomeMessage || ('Xin chào! Tôi có thể giúp gì cho bạn tại ' + biz.name + '?');
+      return ai.welcomeMessage || ('Hi! How can I help you at ' + biz.name + '?');
     }
 
     // Staff today helper
@@ -532,8 +532,8 @@
           // After booking chip, offer action chips
           if (/book|đặt|appointment/i.test(val)) {
             _setChips(chipsEl, [
-              { label: 'Đặt lịch online', href: vendorUrl },
-              { label: biz.phoneDisplay || 'Gọi', href: 'tel:' + (biz.phone || biz.hosts && biz.hosts[0] && biz.hosts[0].phone || '') },
+              { label: 'Book online', href: vendorUrl },
+              { label: biz.phoneDisplay || 'Call', href: 'tel:' + (biz.phone || biz.hosts && biz.hosts[0] && biz.hosts[0].phone || '') },
             ], msgsEl, biz, vendorUrl);
           }
         }, 450);
@@ -550,7 +550,7 @@
 
     // Update header
     panel.querySelector('.lp-ch__title').textContent = biz.name;
-    panel.querySelector('.lp-ch__sub').textContent = ai.name ? ('Trợ lý: ' + ai.name) : 'Trợ lý AI';
+    panel.querySelector('.lp-ch__sub').textContent = ai.name ? ('Assistant: ' + ai.name) : 'AI Assistant';
     var backBtn = panel.querySelector('.lp-ch__back');
     if (backBtn) backBtn.classList.add('vis');
 
@@ -564,15 +564,15 @@
     if (row)     row.style.display     = '';
 
     // Welcome message
-    var welcome = ai.welcomeMessage || ('Xin chào! Tôi là ' + (ai.name || 'trợ lý') + ' của ' + biz.name + '. Tôi có thể giúp gì cho bạn?');
+    var welcome = ai.welcomeMessage || ('Hi! I\'m ' + (ai.name || 'the assistant') + ' at ' + biz.name + '. How can I help you?');
     _appendMsg(msgsEl, welcome, 'bot');
 
     // Initial chips
     _setChips(chipsEl, [
-      { label: 'Ai rảnh hôm nay?',   value: 'Who is available today?' },
-      { label: 'Bảng giá',            value: 'What are the prices?' },
-      { label: 'Dịch vụ',             value: 'What services do you offer?' },
-      { label: 'Đặt lịch',            href: vendorUrl },
+      { label: 'Who\'s available today?', value: 'Who is available today?' },
+      { label: 'Pricing',                  value: 'What are the prices?' },
+      { label: 'Services',                 value: 'What services do you offer?' },
+      { label: 'Book appointment',         href: vendorUrl },
     ], msgsEl, biz, vendorUrl);
 
     // Input
@@ -593,8 +593,8 @@
         // Offer booking if they asked about it
         if (/book|appointment|đặt|h[ẹe]n|schedule/i.test(txt)) {
           _setChips(chipsEl, [
-            { label: 'Đặt lịch online', href: vendorUrl },
-            { label: '📞 ' + (biz.phoneDisplay || 'Gọi'), href: 'tel:' + (biz.phone || '') },
+            { label: 'Book online', href: vendorUrl },
+            { label: '📞 ' + (biz.phoneDisplay || 'Call'), href: 'tel:' + (biz.phone || '') },
           ], msgsEl, biz, vendorUrl);
         }
       }, 420);
@@ -618,7 +618,7 @@
     if (existing) existing.remove();
 
     var category  = cfg.category || 'nails';
-    var catLabels = { nails: 'Nail Salon AI', hair: 'Hair Salon AI', food: 'Ẩm Thực AI', rides: 'Đặt Xe AI', tour: 'Tour AI' };
+    var catLabels = { nails: 'Nail Salon AI', hair: 'Hair Salon AI', food: 'Food AI', rides: 'Ride AI', tour: 'Tour AI' };
     var catLabel  = catLabels[category] || 'AI Assistant';
 
     var vendors = _activeVendors(category);
@@ -629,18 +629,18 @@
     overlay.innerHTML = (
       '<div id="lpChatPanel">' +
         '<div class="lp-ch__hdr">' +
-          '<button class="lp-ch__back" id="lpChBack" aria-label="Quay lại">&#8249;</button>' +
+          '<button class="lp-ch__back" id="lpChBack" aria-label="Back">&#8249;</button>' +
           '<div class="lp-ch__info">' +
             '<div class="lp-ch__title">' + esc(catLabel) + '</div>' +
             '<div class="lp-ch__sub">Du Lịch Cali</div>' +
           '</div>' +
-          '<button class="lp-ch__close" id="lpChClose" aria-label="Đóng">&#10005;</button>' +
+          '<button class="lp-ch__close" id="lpChClose" aria-label="Close">&#10005;</button>' +
         '</div>' +
         '<div class="lp-ch__msgs" style="display:none"></div>' +
         '<div class="lp-ch__vpick"></div>' +
         '<div class="lp-ch__chips"></div>' +
         '<div class="lp-ch__row" style="display:none">' +
-          '<input class="lp-ch__inp" type="text" placeholder="Nhập câu hỏi..." autocomplete="off" enterkeyhint="send">' +
+          '<input class="lp-ch__inp" type="text" placeholder="Ask a question..." autocomplete="off" enterkeyhint="send">' +
           '<button class="lp-ch__snd" aria-label="Gửi">' + I.send + '</button>' +
         '</div>' +
       '</div>'
@@ -680,8 +680,8 @@
       vpick.innerHTML = (
         '<div class="lp-ch__no-vendor">' +
           '<div style="font-size:1.6rem;margin-bottom:.5rem">🔍</div>' +
-          '<strong>Hiện không có dịch vụ khả dụng.</strong><br>' +
-          'Vui lòng thử lại sau hoặc gọi trực tiếp:<br>' +
+          '<strong>No services currently available.</strong><br>' +
+          'Please try again later or call us directly:<br>' +
           '<a href="tel:4089163439" style="color:#f5a623;font-weight:600">408-916-3439</a>' +
         '</div>'
       );
@@ -695,7 +695,7 @@
     }
 
     // ── CASE 3: Multiple vendors — show picker ──────────────────────────────────
-    var pHtml = '<div class="lp-ch__vpick-lbl">Chọn tiệm nail:</div>';
+    var pHtml = '<div class="lp-ch__vpick-lbl">Select a location:</div>';
     vendors.forEach(function (biz, idx) {
       var av = computeAvail(biz);
       var avColor = { now: '#4ade80', order: '#fb923c', soon: '#818cf8', closed: '#94a3b8' }[av.status] || '#94a3b8';
@@ -737,18 +737,18 @@
     var aiAction = 'LandingNav.openChat()';
 
     var tabs = [
-      { icon: cfg.tab1Icon || I.home,     label: cfg.tab1Label || 'Trang Chủ', action: 'location.href="' + (cfg.tab1Href || '/') + '"',                 active: true  },
-      { icon: cfg.tab2Icon || I.book,     label: cfg.tab2Label || 'Đặt Ngay',  action: cfg.tab2Action || ('location.href="' + (cfg.tab2Href||'/') + '"'), active: false },
+      { icon: cfg.tab1Icon || I.home,     label: cfg.tab1Label || 'Home',      action: 'location.href="' + (cfg.tab1Href || '/') + '"',                 active: true  },
+      { icon: cfg.tab2Icon || I.book,     label: cfg.tab2Label || 'Book Now',  action: cfg.tab2Action || ('location.href="' + (cfg.tab2Href||'/') + '"'), active: false },
       { icon: I.chat,                     label: 'AI',                          action: aiAction,                                                          center: true  },
-      { icon: cfg.tab4Icon || I.grid,     label: cfg.tab4Label || 'Dịch Vụ',   action: scrollAction,                                                      active: false },
-      { icon: I.home,                     label: 'Du Lịch Cali',               action: 'location.href="/"',                                               active: false },
+      { icon: cfg.tab4Icon || I.grid,     label: cfg.tab4Label || 'Services',  action: scrollAction,                                                      active: false },
+      { icon: I.home,                     label: 'Du Lich Cali',               action: 'location.href="/"',                                               active: false },
     ];
 
     var html = '<nav class="bottom-nav lp-nav-fixed" role="navigation" aria-label="' + esc(cfg.tab1Label || 'Service') + ' navigation">';
     tabs.forEach(function (tab) {
       var cls = 'nav-tab' + (tab.active ? ' nav-tab--active' : '') + (tab.center ? ' nav-tab--center' : '');
       if (tab.center) {
-        html += '<button class="' + cls + '" onclick="' + tab.action + '" aria-label="Mở AI chat">' +
+        html += '<button class="' + cls + '" onclick="' + tab.action + '" aria-label="Open AI chat">' +
           '<div class="nav-center-btn" aria-hidden="true">' + tab.icon + '</div>' +
           '<span>' + tab.label + '</span></button>';
       } else {

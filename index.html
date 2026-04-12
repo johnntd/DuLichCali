@@ -82,7 +82,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-  <link rel="stylesheet" href="style.css?v=20260419j">
+  <link rel="stylesheet" href="style.css?v=20260419k">
   <link rel="stylesheet" href="desktop.css">
 </head>
 <body>
@@ -99,136 +99,66 @@
     <section id="screenHome" class="screen screen--active" role="tabpanel" aria-labelledby="tabHome">
 
       <!-- Hero Carousel -->
-      <div class="hc" id="heroCarousel" aria-roledescription="carousel" aria-label="Dịch vụ nổi bật">
+      <div class="hc" id="heroCarousel" aria-roledescription="carousel" aria-label="Featured services">
 
-        <!-- Slide 1: Vietnamese Food — Chả Giò -->
-        <div class="hc__slide hc__slide--active" data-idx="0" role="group" aria-label="1 của 9"
-             style="--accent:#f59e0b;--accent-glow:rgba(245,158,11,.45);">
-          <div class="hc__bg" style="background-image:url('/images/food-1.jpg');background-position:center center;"></div>
+        <!-- Slide 1: Airport — loss aversion hook, highest urgency first -->
+        <div class="hc__slide hc__slide--active" data-idx="0" role="group" aria-label="1 of 4"
+             style="--accent:#38bdf8;--accent-glow:rgba(56,189,248,.45);">
+          <div class="hc__bg" style="background-image:url('/images/airport-1.jpg');background-position:center center;"></div>
           <div class="hc__gradient"></div>
           <div class="hc__body">
-            <span class="hc__chip">🇻🇳 Ẩm Thực Việt Nam</span>
-            <h2 class="hc__title">Chả Giò Giòn Rụm<br><em>Homemade Mỗi Ngày</em></h2>
-            <p class="hc__sub">Chả Giò · Handmade · Giao Tận Nơi · Bay Area &amp; OC</p>
-            <button class="hc__cta" onclick="heroCarouselCta('food')">Đặt món ngay</button>
+            <span class="hc__chip">✈️ Airport Pickup &amp; Dropoff · 24/7</span>
+            <h2 class="hc__title">Upcoming Flight?<br><em>Book Ahead · Travel Worry-Free</em></h2>
+            <p class="hc__sub">Background-checked drivers · SFO · SJC · OAK · LAX · 7-seat Minivan</p>
+            <button class="hc__cta" onclick="RideIntake.open('pickup')">Secure Your Spot</button>
           </div>
         </div>
 
-        <!-- Slide 2: Vietnamese Food — Chuối Đậu Nấu Ốc -->
-        <div class="hc__slide" data-idx="1" role="group" aria-label="2 của 9"
-             style="--accent:#fbbf24;--accent-glow:rgba(251,191,36,.42);">
-          <div class="hc__bg" style="background-image:url('/images/hero-chuoi-dau-nau-oc.jpg');background-position:center 50%;"></div>
-          <div class="hc__gradient"></div>
-          <div class="hc__body">
-            <span class="hc__chip">🍲 Món Việt Miền Bắc</span>
-            <h2 class="hc__title">Chuối Đậu Nấu Ốc<br><em>Đậm Đà Hương Bắc</em></h2>
-            <p class="hc__sub">Chuối xanh · Đậu phụ · Ốc tươi · Món nhà nấu authentic</p>
-            <button class="hc__cta" onclick="heroCarouselCta('food')">Khám phá món Việt</button>
-          </div>
-        </div>
-
-        <!-- Slide 3: Vietnamese Food — Bún Chả Hà Nội -->
-        <div class="hc__slide" data-idx="2" role="group" aria-label="3 của 9"
-             style="--accent:#f97316;--accent-glow:rgba(249,115,22,.45);">
-          <div class="hc__bg" style="background-image:url('/images/food-2.jpg');background-position:center center;"></div>
-          <div class="hc__gradient"></div>
-          <div class="hc__body">
-            <span class="hc__chip">🔥 Bếp Than · Hà Nội</span>
-            <h2 class="hc__title">Bún Chả Hà Nội<br><em>Than Hồng Nướng Tươi</em></h2>
-            <p class="hc__sub">Thịt nướng · Bún trắng · Rau sống · Handmade mỗi mẻ</p>
-            <button class="hc__cta" onclick="heroCarouselCta('food')">Đặt món ngay</button>
-          </div>
-        </div>
-
-        <!-- Slide 4: Vietnamese Food — Bún Đậu Mắm Tôm -->
-        <div class="hc__slide" data-idx="3" role="group" aria-label="4 của 9"
-             style="--accent:#84cc16;--accent-glow:rgba(132,204,22,.42);">
-          <div class="hc__bg" style="background-image:url('/images/hero-bun-dau-mam-tom.jpg');background-position:center 45%;"></div>
-          <div class="hc__gradient"></div>
-          <div class="hc__body">
-            <span class="hc__chip">🍜 Vỉa Hè Hà Nội</span>
-            <h2 class="hc__title">Bún Đậu Mắm Tôm<br><em>Đậu Chiên Giòn Tan</em></h2>
-            <p class="hc__sub">Đậu phụ · Bún trắng · Mắm tôm · Rau sống đủ vị</p>
-            <button class="hc__cta" onclick="heroCarouselCta('food')">Khám phá món Việt</button>
-          </div>
-        </div>
-
-        <!-- Slide 5: Vietnamese Food — Phở Bắc -->
-        <div class="hc__slide" data-idx="4" role="group" aria-label="5 của 9"
+        <!-- Slide 2: Food — present bias + craving trigger -->
+        <div class="hc__slide" data-idx="1" role="group" aria-label="2 of 4"
              style="--accent:#fbbf24;--accent-glow:rgba(251,191,36,.45);">
           <div class="hc__bg" style="background-image:url('/images/hero-pho-bac.jpg');background-position:center 50%;"></div>
           <div class="hc__gradient"></div>
           <div class="hc__body">
-            <span class="hc__chip">🍜 Phở Bắc · Hà Nội Style</span>
-            <h2 class="hc__title">Phở Bắc<br><em>Nước Dùng Trong Vắt</em></h2>
-            <p class="hc__sub">Xương bò ninh lâu · Thịt tái · Bò viên · Hương vị miền Bắc</p>
-            <button class="hc__cta" onclick="heroCarouselCta('food')">Đặt tô ngay</button>
+            <span class="hc__chip">🍜 Vietnamese Food · Handmade</span>
+            <h2 class="hc__title">Phở Bắc<br><em>Clear Rich Broth</em></h2>
+            <p class="hc__sub">Simmered from early morning · Home delivery · Bay Area &amp; OC</p>
+            <button class="hc__cta" onclick="heroCarouselCta('food')">Order Now · Home Delivery</button>
           </div>
         </div>
 
-        <!-- Slide 6: Hair — Female Coloring & Styling -->
-        <div class="hc__slide" data-idx="5" role="group" aria-label="6 của 9"
+        <!-- Slide 3: Hair — confidence + authority -->
+        <div class="hc__slide" data-idx="2" role="group" aria-label="3 of 4"
              style="--accent:#c084fc;--accent-glow:rgba(192,132,252,.48);">
           <div class="hc__bg" style="background-image:url('/images/hair-1.jpg');background-position:center center;"></div>
           <div class="hc__gradient"></div>
           <div class="hc__body">
             <span class="hc__chip">💇‍♀️ Hair Salon · Bay Area &amp; OC</span>
-            <h2 class="hc__title">Nhuộm Tóc<br><em>Tạo Kiểu Chuyên Nghiệp</em></h2>
-            <p class="hc__sub">Nhuộm · Balayage · Uốn · Duỗi · Cắt Tạo Kiểu</p>
-            <button class="hc__cta" onclick="heroCarouselCta('hair')">Đặt lịch ngay</button>
+            <h2 class="hc__title">Hair Color<br><em>Professional Styling</em></h2>
+            <p class="hc__sub">Color · Balayage · Perm · Straighten · Cut &amp; Style</p>
+            <button class="hc__cta" onclick="heroCarouselCta('hair')">Book Now</button>
           </div>
         </div>
 
-        <!-- Slide 7: Nails -->
-        <div class="hc__slide" data-idx="6" role="group" aria-label="7 của 9"
+        <!-- Slide 4: Nails — self-care ritual + peak-end design -->
+        <div class="hc__slide" data-idx="3" role="group" aria-label="4 of 4"
              style="--accent:#f472b6;--accent-glow:rgba(244,114,182,.45);">
           <div class="hc__bg" style="background-image:url('/images/nails-1.jpg');background-position:center center;"></div>
           <div class="hc__gradient"></div>
           <div class="hc__body">
             <span class="hc__chip">💅 Nail Salon · Bay Area &amp; OC</span>
-            <h2 class="hc__title">Nail Đẹp<br><em>Sang Trọng</em></h2>
+            <h2 class="hc__title">Beautiful Nails<br><em>Luxurious Feel</em></h2>
             <p class="hc__sub">Gel · Acrylic · Ombre · Nail Art · Pedicure</p>
-            <button class="hc__cta" onclick="heroCarouselCta('nails')">Đặt lịch ngay</button>
-          </div>
-        </div>
-
-        <!-- Slide 8: Airport Pickup -->
-        <div class="hc__slide" data-idx="7" role="group" aria-label="8 của 9"
-             style="--accent:#38bdf8;--accent-glow:rgba(56,189,248,.45);">
-          <div class="hc__bg" style="background-image:url('/images/airport-1.jpg');background-position:center center;"></div>
-          <div class="hc__gradient"></div>
-          <div class="hc__body">
-            <span class="hc__chip">✈️ Đưa Đón Sân Bay · 24/7</span>
-            <h2 class="hc__title">Airport Pickup<br><em>An Toàn &amp; Đúng Giờ</em></h2>
-            <p class="hc__sub">SFO · SJC · OAK · LAX · Minivan 7 Chỗ · Đặt Trước</p>
-            <button class="hc__cta" onclick="openAIWithIntent('airport')">Đặt xe ngay</button>
-          </div>
-        </div>
-
-        <!-- Slide 9: Travel -->
-        <div class="hc__slide" data-idx="8" role="group" aria-label="9 của 9"
-             style="--accent:#fb923c;--accent-glow:rgba(251,146,60,.45);">
-          <div class="hc__bg" style="background-image:url('/images/tour-1.jpg');background-position:center center;"></div>
-          <div class="hc__gradient"></div>
-          <div class="hc__body">
-            <span class="hc__chip">🏔️ Du Lịch California</span>
-            <h2 class="hc__title">Khám Phá<br><em>California</em></h2>
-            <p class="hc__sub">Yosemite · Las Vegas · San Francisco · 15 điểm đến</p>
-            <button class="hc__cta" onclick="openAIWithIntent('tour')">Lên Kế Hoạch</button>
+            <button class="hc__cta" onclick="heroCarouselCta('nails')">Book Now</button>
           </div>
         </div>
 
         <!-- Dot indicators -->
-        <div class="hc__dots" role="tablist" aria-label="Chọn slide">
+        <div class="hc__dots" role="tablist" aria-label="Select slide">
           <button class="hc__dot hc__dot--active" data-dot="0" role="tab" aria-selected="true"  aria-label="Slide 1"></button>
           <button class="hc__dot"                 data-dot="1" role="tab" aria-selected="false" aria-label="Slide 2"></button>
           <button class="hc__dot"                 data-dot="2" role="tab" aria-selected="false" aria-label="Slide 3"></button>
           <button class="hc__dot"                 data-dot="3" role="tab" aria-selected="false" aria-label="Slide 4"></button>
-          <button class="hc__dot"                 data-dot="4" role="tab" aria-selected="false" aria-label="Slide 5"></button>
-          <button class="hc__dot"                 data-dot="5" role="tab" aria-selected="false" aria-label="Slide 6"></button>
-          <button class="hc__dot"                 data-dot="6" role="tab" aria-selected="false" aria-label="Slide 7"></button>
-          <button class="hc__dot"                 data-dot="7" role="tab" aria-selected="false" aria-label="Slide 8"></button>
-          <button class="hc__dot"                 data-dot="8" role="tab" aria-selected="false" aria-label="Slide 9"></button>
         </div>
 
         <!-- Progress bar -->
@@ -238,58 +168,128 @@
 
       </div><!-- /.hc -->
 
-      <!-- ── Panel 1: Marketplace ──────────────────────────────── -->
-      <section id="hpFeatured" class="home-section">
-        <div class="section-hdr">
-          <h2 class="section-title" id="hpFeaturedTitle">Marketplace</h2>
-          <a href="marketplace/" class="see-all">Xem tất cả</a>
-        </div>
-        <div class="hp-vendor-row" id="hpVendorCards" role="list"></div>
-      </section>
+      <!-- Intent Quick Bar — Hick's Law: 4 choices vs. 9-slide analysis paralysis -->
+      <nav class="hp-intent-bar" aria-label="Quick service selection">
+        <button class="hp-intent-tile hp-intent-tile--airport" onclick="RideIntake.open('pickup')" data-ride-gate>
+          <span class="hp-intent-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></span>
+          <span class="hp-intent-tile__label">Airport</span>
+        </button>
+        <button class="hp-intent-tile hp-intent-tile--food" onclick="heroCarouselCta('food')">
+          <span class="hp-intent-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></span>
+          <span class="hp-intent-tile__label">Food</span>
+        </button>
+        <button class="hp-intent-tile hp-intent-tile--beauty" onclick="heroCarouselCta('nails')">
+          <span class="hp-intent-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
+          <span class="hp-intent-tile__label">Beauty</span>
+        </button>
+        <button class="hp-intent-tile hp-intent-tile--tour" onclick="openAIWithIntent('tour')">
+          <span class="hp-intent-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7.05 11.5 7.35 11.76a1 1 0 0 0 1.3 0C13 21.5 20 15.4 20 10a8 8 0 0 0-8-8z"/></svg></span>
+          <span class="hp-intent-tile__label">Tours</span>
+        </button>
+      </nav>
 
-      <!-- ── Panel 2: Tour & Du Lịch ───────────────────────────── -->
-      <section class="home-section">
-        <div class="section-hdr">
-          <h2 class="section-title">Tour &amp; Du Lịch California</h2>
-          <button class="see-all" onclick="switchScreen('screenDest')">Xem tất cả</button>
-        </div>
-        <div class="trav-carousel" id="travCarousel" role="list"></div>
-      </section>
-
-      <!-- ── Panel 3: Airport & Ride ────────────────────────────── -->
+      <!-- ── Panel 1: Airport & Ride (moved first — loss aversion, highest urgency) ── -->
       <section id="hpAirport" class="home-section">
         <div class="section-hdr">
-          <h2 class="section-title">Đưa Đón &amp; Xe Riêng</h2>
-          <button class="see-all" data-ride-gate onclick="RideIntake.open('pickup')">Đặt ngay</button>
+          <h2 class="section-title">Airport &amp; Private Rides</h2>
+          <button class="see-all" data-ride-gate onclick="RideIntake.open('pickup')">Book Now</button>
         </div>
+        <div class="hp-avail-badge" id="hpAvailStatus" hidden></div>
         <div class="home-ride-grid">
           <div class="home-ride-tile" data-ride-gate onclick="RideIntake.open('pickup')" role="button" tabindex="0"
                onkeydown="if(event.key==='Enter')RideIntake.open('pickup')">
             <span class="home-ride-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></span>
-            <strong class="home-ride-tile__name">Đón Sân Bay</strong>
-            <span class="home-ride-tile__sub">Bay đến · Tài xế chờ tại Arrivals</span>
+            <strong class="home-ride-tile__name">Airport Pickup</strong>
+            <span class="home-ride-tile__sub">Flying in · Driver waiting at Arrivals</span>
           </div>
           <div class="home-ride-tile" data-ride-gate onclick="RideIntake.open('dropoff')" role="button" tabindex="0"
                onkeydown="if(event.key==='Enter')RideIntake.open('dropoff')">
             <span class="home-ride-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:scaleX(-1)"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></span>
-            <strong class="home-ride-tile__name">Ra Sân Bay</strong>
-            <span class="home-ride-tile__sub">Bay đi · Đón tận nhà đúng giờ</span>
+            <strong class="home-ride-tile__name">Airport Dropoff</strong>
+            <span class="home-ride-tile__sub">Flying out · Never miss your flight</span>
           </div>
           <div class="home-ride-tile" data-ride-gate onclick="RideIntake.open('ride')" role="button" tabindex="0"
                onkeydown="if(event.key==='Enter')RideIntake.open('ride')">
             <span class="home-ride-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h14l1 5H4L5 9z"/><path d="M5 9l2-4h10l2 4"/><circle cx="7.5" cy="17" r="2"/><circle cx="16.5" cy="17" r="2"/><path d="M14 14H10"/></svg></span>
-            <strong class="home-ride-tile__name">Xe Riêng Cao Cấp</strong>
-            <span class="home-ride-tile__sub">Mercedes Van · 12 chỗ · −20% vs Uber</span>
+            <strong class="home-ride-tile__name">Premium Private Car</strong>
+            <span class="home-ride-tile__sub">Mercedes Van · 12 seats · −20% vs Uber</span>
           </div>
         </div>
       </section>
 
-      <!-- Region service indicator (region tag + picker; contact strip removed) -->
+      <!-- ── Panel 2: Marketplace ──────────────────────────────── -->
+      <section id="hpFeatured" class="home-section">
+        <div class="section-hdr">
+          <h2 class="section-title" id="hpFeaturedTitle">Marketplace</h2>
+          <a href="marketplace/" class="see-all">View all</a>
+        </div>
+        <div class="hp-vendor-row" id="hpVendorCards" role="list"></div>
+      </section>
+
+      <!-- ── Panel 3: Tour & Travel ───────────────────────────── -->
+      <section class="home-section">
+        <div class="section-hdr">
+          <h2 class="section-title">Tours &amp; Travel California</h2>
+          <button class="see-all" onclick="switchScreen('screenDest')">View all</button>
+        </div>
+        <div class="trav-carousel" id="travCarousel" role="list"></div>
+      </section>
+
+      <!-- ── Trust Stats — social proof anchoring (Bandwagon Effect) ── -->
+      <section class="home-section" id="hpTrust">
+        <div class="section-hdr">
+          <h2 class="section-title">Why Choose Du Lich Cali</h2>
+        </div>
+        <div class="trust-grid">
+          <div class="trust-cell">
+            <span class="trust-num">1,000+</span>
+            <span>Trips Completed</span>
+          </div>
+          <div class="trust-cell">
+            <span class="trust-num">500+</span>
+            <span>Happy Customers</span>
+          </div>
+          <div class="trust-cell">
+            <span class="trust-num">6</span>
+            <span>Airports Served</span>
+          </div>
+          <div class="trust-cell">
+            <span class="trust-num">5★</span>
+            <span>Average Rating</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── AI Panel — guidance framing catches undecided visitors ── -->
+      <section class="home-section home-ai-panel">
+        <div class="section-hdr">
+          <h2 class="section-title">Not Sure What to Book?</h2>
+        </div>
+        <p class="home-ai-panel__sub">Free AI advice · Instant answers · 3 languages</p>
+        <div class="home-ai-panel__grid">
+          <button class="home-ai-svc" onclick="homeAiSend('I want to order food')">
+            <span class="home-ai-svc__icon">🛍️</span>
+            <span class="home-ai-svc__name">Marketplace</span>
+            <span class="home-ai-svc__hint">Food · Nails · Hair</span>
+          </button>
+          <button class="home-ai-svc" onclick="openAIWithIntent('airport')">
+            <span class="home-ai-svc__icon">✈️</span>
+            <span class="home-ai-svc__name">Airport &amp; Rides</span>
+            <span class="home-ai-svc__hint">Book a ride · Pickup &amp; dropoff</span>
+          </button>
+          <button class="home-ai-svc" onclick="openAIWithIntent('tour')">
+            <span class="home-ai-svc__icon">🗺️</span>
+            <span class="home-ai-svc__name">Tours &amp; Travel</span>
+            <span class="home-ai-svc__hint">Plan a trip · AI suggestions</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Region service indicator -->
       <div class="region-service" id="regionService">
         <div class="region-tag" id="regionTag" hidden></div>
         <div class="region-picker" id="regionPicker" hidden></div>
       </div>
-
 
       <div class="screen-spacer"></div>
     </section>
@@ -1245,8 +1245,8 @@
 <script src="ai-engine.js?v=20260412j"></script>
 <script src="ride-intake.js?v=20260419k"></script>
 <script src="notifications.js?v=20260418d"></script>
-<script src="workflowEngine.js?v=20260419e"></script>
-<script src="chat.js?v=20260419f"></script>
-<script src="script.js?v=20260419i" defer></script>
+<script src="workflowEngine.js?v=20260419f"></script>
+<script src="chat.js?v=20260419g"></script>
+<script src="script.js?v=20260419k" defer></script>
 </body>
 </html>

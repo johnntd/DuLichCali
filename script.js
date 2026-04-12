@@ -163,6 +163,12 @@ window.addEventListener('popstate', function () {
 // Hash-based deep linking (from marketplace bottom nav links like ../#travel)
 // Query-param entry routing: ?entry=airport|tour|marketplace|food|hair|nails
 document.addEventListener('DOMContentLoaded', function () {
+  // Request geolocation eagerly — don't wait for Maps SDK to load.
+  // DLCLocation has sessionStorage caching (1h TTL); this is a no-op if
+  // coordinates are already cached. Enables proximity-sorted airports as
+  // soon as the user opens the ride form, regardless of Maps load timing.
+  if (window.DLCLocation) DLCLocation.request(null, null);
+
   const hash  = location.hash;
   const entry = new URLSearchParams(location.search).get('entry');
 

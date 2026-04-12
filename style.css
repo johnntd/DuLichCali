@@ -1145,7 +1145,12 @@ gmp-placeautocomplete.field-input::part(input):focus {
   background: rgba(14,38,72,.85);
   outline: none;
 }
-.home-ride-tile__icon { font-size: 1.4rem; line-height: 1; margin-bottom: .1rem; }
+.home-ride-tile__icon {
+  width: 36px; height: 36px; border-radius: 9px; margin-bottom: .2rem;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(56,189,248,.12); color: var(--sky); flex-shrink: 0;
+}
+.home-ride-tile__icon svg { width: 20px; height: 20px; }
 .home-ride-tile__name {
   display: block;
   font-size: .82rem;
@@ -2058,7 +2063,7 @@ gmp-placeautocomplete.field-input::part(input):focus {
   .trust-grid { padding: 0 1.5rem; }
   .home-ride-grid { padding: 0 1.5rem; gap: .85rem; }
   .home-ride-tile { padding: 1.15rem 1rem; }
-  .home-ride-tile__icon { font-size: 1.6rem; }
+  .home-ride-tile__icon { width: 38px; height: 38px; }
   .home-ride-tile__name { font-size: .88rem; }
   .home-ride-tile__sub { font-size: .72rem; }
 
@@ -2979,7 +2984,7 @@ gmp-placeautocomplete.field-input::part(input):focus {
   /* Ride grid: 3-column, matches marketplace/tour row width */
   .home-ride-grid { padding: 0; max-width: 720px; gap: 1rem; }
   .home-ride-tile { padding: 1.3rem 1.1rem; }
-  .home-ride-tile__icon { font-size: 1.75rem; }
+  .home-ride-tile__icon { width: 40px; height: 40px; }
   .home-ride-tile__name { font-size: .92rem; }
   .home-ride-tile__sub { font-size: .74rem; }
 

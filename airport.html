@@ -39,7 +39,7 @@
   </script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ&libraries=places&callback=initMap&loading=async"></script>
 
-  <link rel="stylesheet" href="/style.css?v=20260419h">
+  <link rel="stylesheet" href="/style.css?v=20260419i">
   <link rel="stylesheet" href="/desktop.css">
 
   <style>
@@ -67,7 +67,13 @@
       padding: 1.6rem 1.4rem;
       text-align: center;
     }
-    .lp-ai__icon { font-size: 2rem; margin-bottom: .5rem; }
+    .lp-ai__icon {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: rgba(56,189,248,.14); border: 1px solid rgba(56,189,248,.3);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto .85rem; color: var(--sky);
+    }
+    .lp-ai__icon svg { width: 26px; height: 26px; }
     .lp-ai__title {
       font-family: var(--font-d);
       font-size: 1.15rem;
@@ -280,19 +286,19 @@
     <div class="home-ride-grid">
       <div class="home-ride-tile" onclick="RideIntake.open('pickup')" role="button" tabindex="0"
            onkeydown="if(event.key==='Enter')RideIntake.open('pickup')">
-        <span class="home-ride-tile__icon" aria-hidden="true">🛬</span>
+        <span class="home-ride-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></span>
         <strong class="home-ride-tile__name">Đón Sân Bay</strong>
         <span class="home-ride-tile__sub">Bay đến · Tài xế chờ tại Arrivals</span>
       </div>
       <div class="home-ride-tile" onclick="RideIntake.open('dropoff')" role="button" tabindex="0"
            onkeydown="if(event.key==='Enter')RideIntake.open('dropoff')">
-        <span class="home-ride-tile__icon" aria-hidden="true">🛫</span>
+        <span class="home-ride-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:scaleX(-1)"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></span>
         <strong class="home-ride-tile__name">Ra Sân Bay</strong>
         <span class="home-ride-tile__sub">Bay đi · Đón tận nhà đúng giờ</span>
       </div>
       <div class="home-ride-tile" onclick="RideIntake.open('ride')" role="button" tabindex="0"
            onkeydown="if(event.key==='Enter')RideIntake.open('ride')">
-        <span class="home-ride-tile__icon" aria-hidden="true">🚗</span>
+        <span class="home-ride-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h14l1 5H4L5 9z"/><path d="M5 9l2-4h10l2 4"/><circle cx="7.5" cy="17" r="2"/><circle cx="16.5" cy="17" r="2"/><path d="M14 14H10"/></svg></span>
         <strong class="home-ride-tile__name">Xe Riêng Cao Cấp</strong>
         <span class="home-ride-tile__sub">Mercedes Van · 12 chỗ · −20% vs Uber</span>
       </div>
@@ -301,7 +307,7 @@
 
   <!-- ── AI CTA ── -->
   <div class="lp-ai">
-    <div class="lp-ai__icon">✈️</div>
+    <div class="lp-ai__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></div>
     <p class="lp-ai__title">Trợ Lý AI Sân Bay &amp; Xe</p>
     <p class="lp-ai__sub">Hỏi về giá, sân bay, hành trình — AI trả lời tức thì bằng tiếng Việt</p>
     <a href="/?entry=airport" class="lp-ai__btn">

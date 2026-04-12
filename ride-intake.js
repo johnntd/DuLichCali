@@ -20,11 +20,16 @@ window.RideIntake = (function () {
       dropoffLbl:   'Dropoff',
       priceEst:     function(p, s) { return '~$' + p + ' est · Save ~$' + s + ' vs Uber'; },
       // Step navigation
-      stepPrefix:   function(n) { return 'Step ' + n + ' / 3  —  '; },
+      stepPrefix:   function(n) { return 'Step ' + n + ' of 6'; },
       stepLabels:   {
-        pickup:  ['Destination & Flight', 'Trip Details', 'Your Info'],
-        dropoff: ['Pickup & Flight',      'Trip Details', 'Your Info'],
-        ride:    ['Route & Schedule',     'Trip Details', 'Your Info'],
+        pickup:  ['Airport', 'Drop-off', 'Arrival Time', 'Trip Details', 'Your Info', 'Review'],
+        dropoff: ['Pickup Address', 'Airport', 'Departure Time', 'Trip Details', 'Your Info', 'Review'],
+        ride:    ['Pickup', 'Destination', 'Schedule', 'Passengers', 'Your Info', 'Review'],
+      },
+      stepQuestions: {
+        pickup:  ['Arriving at which airport?', 'Where should we take you?', 'When does your flight land?', 'Trip details', 'Your contact info', 'Review your booking'],
+        dropoff: ['Where should we pick you up?', 'Flying out of which airport?', 'When does your flight depart?', 'Trip details', 'Your contact info', 'Review your booking'],
+        ride:    ['Where are you starting from?', 'Where are you headed?', 'When do you need the ride?', 'How many passengers?', 'Your contact info', 'Review your booking'],
       },
       nextBtn:      'Continue',
       submitBtn:    'Confirm Booking',
@@ -52,11 +57,16 @@ window.RideIntake = (function () {
       dropoffLbl:   'Điểm đến',
       priceEst:     function(p, s) { return '~$' + p + ' ước tính · Tiết kiệm ~$' + s + ' so với Uber'; },
       // Step navigation
-      stepPrefix:   function(n) { return 'Bước ' + n + ' / 3  —  '; },
+      stepPrefix:   function(n) { return 'Bước ' + n + ' / 6'; },
       stepLabels:   {
-        pickup:  ['Điểm Đến & Chuyến Bay', 'Chi Tiết', 'Liên Hệ'],
-        dropoff: ['Điểm Đón & Chuyến Bay', 'Chi Tiết', 'Liên Hệ'],
-        ride:    ['Lộ Trình & Lịch Đi',   'Chi Tiết', 'Liên Hệ'],
+        pickup:  ['Sân Bay', 'Điểm Đến', 'Giờ Hạ Cánh', 'Chi Tiết', 'Liên Hệ', 'Xem Lại'],
+        dropoff: ['Điểm Đón', 'Sân Bay', 'Giờ Cất Cánh', 'Chi Tiết', 'Liên Hệ', 'Xem Lại'],
+        ride:    ['Điểm Đón', 'Điểm Đến', 'Lịch Đi', 'Hành Khách', 'Liên Hệ', 'Xem Lại'],
+      },
+      stepQuestions: {
+        pickup:  ['Bạn đến sân bay nào?', 'Chúng tôi đưa bạn đến đâu?', 'Chuyến bay hạ cánh lúc nào?', 'Chi tiết chuyến đi', 'Thông tin liên hệ', 'Xem lại đặt xe'],
+        dropoff: ['Chúng tôi đón bạn ở đâu?', 'Bạn bay từ sân bay nào?', 'Chuyến bay cất cánh lúc nào?', 'Chi tiết chuyến đi', 'Thông tin liên hệ', 'Xem lại đặt xe'],
+        ride:    ['Điểm đón của bạn?', 'Bạn muốn đến đâu?', 'Bạn cần xe lúc nào?', 'Bao nhiêu hành khách?', 'Thông tin liên hệ', 'Xem lại đặt xe'],
       },
       nextBtn:      'Tiếp theo',
       submitBtn:    'Xác Nhận Đặt Xe',
@@ -84,11 +94,16 @@ window.RideIntake = (function () {
       dropoffLbl:   'Destino',
       priceEst:     function(p, s) { return '~$' + p + ' est · Ahorra ~$' + s + ' vs Uber'; },
       // Step navigation
-      stepPrefix:   function(n) { return 'Paso ' + n + ' / 3  —  '; },
+      stepPrefix:   function(n) { return 'Paso ' + n + ' de 6'; },
       stepLabels:   {
-        pickup:  ['Destino & Vuelo', 'Detalles', 'Contacto'],
-        dropoff: ['Recogida & Vuelo','Detalles', 'Contacto'],
-        ride:    ['Ruta & Horario',  'Detalles', 'Contacto'],
+        pickup:  ['Aeropuerto', 'Destino', 'Hora Llegada', 'Detalles', 'Contacto', 'Revisar'],
+        dropoff: ['Dirección', 'Aeropuerto', 'Hora Salida', 'Detalles', 'Contacto', 'Revisar'],
+        ride:    ['Origen', 'Destino', 'Horario', 'Pasajeros', 'Contacto', 'Revisar'],
+      },
+      stepQuestions: {
+        pickup:  ['¿En qué aeropuerto llegas?', '¿A dónde te llevamos?', '¿Cuándo aterriza tu vuelo?', 'Detalles del viaje', 'Tu información de contacto', 'Revisa tu reserva'],
+        dropoff: ['¿Dónde te recogemos?', '¿De qué aeropuerto vuelas?', '¿Cuándo sale tu vuelo?', 'Detalles del viaje', 'Tu información de contacto', 'Revisa tu reserva'],
+        ride:    ['¿Desde dónde sales?', '¿A dónde vas?', '¿Cuándo necesitas el auto?', '¿Cuántos pasajeros?', 'Tu información de contacto', 'Revisa tu reserva'],
       },
       nextBtn:      'Continuar',
       submitBtn:    'Confirmar Reserva',
@@ -206,6 +221,9 @@ window.RideIntake = (function () {
     setHide('riSuccess', true);
     setHide('riFooter', true);
     setHide('riBackBtn', true);
+    setHide('riProgressWrap', true);
+    setHide('riStepQuestion', true);
+    setHide('riTitle', false);
     setText('riTitle', 'Dịch Vụ Xe');
     var body = document.getElementById('riBody');
     if (body) body.innerHTML =
@@ -230,6 +248,8 @@ window.RideIntake = (function () {
     setHide('riSuccess', true);
     setHide('riFooter', true);
     setHide('riBackBtn', true);
+    setHide('riProgressWrap', true);
+    setHide('riTitle', false);
     setText('riTitle', 'Đặt Xe Đưa Đón');
     var body = document.getElementById('riBody');
     if (body) body.scrollTop = 0;
@@ -246,9 +266,9 @@ window.RideIntake = (function () {
     setHide('riSuccess', true);
     setHide('riFooter', false);
     setHide('riBackBtn', false);
-
-    var titles = { pickup: 'Đón Sân Bay', dropoff: 'Ra Sân Bay', ride: 'Xe Riêng Cao Cấp' };
-    setText('riTitle', titles[type] || '');
+    // Hide title, show progress bar during form steps
+    setHide('riTitle', true);
+    setHide('riProgressWrap', false);
 
     resetForm();
     buildAirportOptions();
@@ -275,22 +295,30 @@ window.RideIntake = (function () {
     _subStep = n;
     var pfx = _type === 'pickup' ? 'ri_p' : _type === 'dropoff' ? 'ri_d' : 'ri_r';
 
-    // Show only the active sub-step
-    for (var i = 1; i <= 3; i++) {
+    // Show only the active sub-step (6 steps per type)
+    for (var i = 1; i <= 6; i++) {
       var el = document.getElementById(pfx + '_s' + i);
       if (el) el.hidden = (i !== n);
     }
 
-    // Step indicator (language-aware)
-    var labels = (_T.stepLabels && _T.stepLabels[_type]) || ['', '', ''];
-    var ind = document.getElementById('riStepInd');
-    if (ind) ind.textContent = _T.stepPrefix(n) + labels[n - 1];
+    // Progress bar + counter
+    var fill    = document.getElementById('riProgressFill');
+    var counter = document.getElementById('riStepCounter');
+    if (fill)    fill.style.width = Math.round(n / 6 * 100) + '%';
+    if (counter) counter.textContent = _T.stepPrefix(n);
 
-    // Footer button: Next on steps 1-2, Confirm on step 3 (language-aware)
+    // Step question headline
+    var qEl = document.getElementById('riStepQuestion');
+    if (qEl && _T.stepQuestions && _T.stepQuestions[_type]) {
+      qEl.textContent = _T.stepQuestions[_type][n - 1] || '';
+      qEl.hidden = false;
+    }
+
+    // Footer button: Next on steps 1–5, Confirm on step 6
     var btn = document.getElementById('riSubmit');
     if (btn) {
       var arrowSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
-      if (n === 3) {
+      if (n === 6) {
         btn.innerHTML = _T.submitBtn + ' ' + arrowSvg;
         btn.onclick = function () { RideIntake.submit(); };
       } else {
@@ -300,33 +328,40 @@ window.RideIntake = (function () {
       btn.disabled = false;
     }
 
-    // Price: show hint/box on step 2 (addresses entered)
-    if (n === 2) {
+    // Price: trigger calculation entering step 3 (both addresses now known)
+    if (n === 3) {
       scheduleDistance();
-      // Sync vehicle label with actual driver vehicle (may have resolved after modal opened)
       if (_driverVehicle) {
         var box2 = document.getElementById('riVehicleBox');
         if (box2) box2.innerHTML = _driverVehicle.name + '<br>' + _driverVehicle.seats + ' chỗ<br>Chưa bao gồm tip';
       }
     }
-    if (n !== 2) { showPriceHint(); }
+    if (n < 3) { showPriceHint(); }
 
-    // Step 3: show booking review card (pre-submit summary)
-    showReviewCard(n);
+    // Step 6 (Review): show full price box + review card; hide on all other steps
+    if (n === 6) {
+      setHide('riPriceHint', true);
+      setHide('riPriceLoading', true);
+      if (_quote) { setHide('riPriceBox', false); }
+      showReviewCard(n);
+    } else {
+      setHide('riPriceBox', true);
+      setHide('riReviewCard', true);
+    }
 
     // Scroll top
     var body = document.getElementById('riBody');
     if (body) body.scrollTop = 0;
 
-    // Init autocomplete on step 1 (all types now have address fields on step 1)
-    if (n === 1) setTimeout(initAutocomplete, 60);
+    // Init autocomplete on steps where address fields appear
+    if (n === 1 || n === 2) setTimeout(initAutocomplete, 60);
   }
 
   // ── Booking review card (shown in step 3 so customer can verify before confirming) ─
   function showReviewCard(n) {
     var card = document.getElementById('riReviewCard');
     if (!card) return;
-    if (n !== 3 || !_quote || !_lastOrigin || !_lastDest) { card.hidden = true; return; }
+    if (n !== 6 || !_quote || !_lastOrigin || !_lastDest) { card.hidden = true; return; }
 
     var fromLabel, toLabel;
     if (_type === 'pickup') {
@@ -366,7 +401,7 @@ window.RideIntake = (function () {
       showInlineError(errors[0]);
       return;
     }
-    if (_subStep < 3) {
+    if (_subStep < 6) {
       goSubStep(_subStep + 1);
     }
   }
@@ -375,30 +410,46 @@ window.RideIntake = (function () {
     var errors = [];
     if (_type === 'pickup') {
       if (step === 1) {
-        if (!val('ri_p_airport'))     errors.push('Vui lòng chọn sân bay đến');
-        if (!val('ri_arrival_date'))  errors.push('Vui lòng nhập ngày đến');
-        if (!val('ri_arrival_time'))  errors.push('Vui lòng nhập giờ hạ cánh');
-        if (!val('ri_dropoff_addr'))  errors.push('Vui lòng nhập địa chỉ điểm đến');
+        if (!val('ri_p_airport'))    errors.push('Vui lòng chọn sân bay đến');
       } else if (step === 2) {
+        if (!val('ri_dropoff_addr')) errors.push('Vui lòng nhập địa chỉ điểm đến');
+      } else if (step === 3) {
+        if (!val('ri_arrival_date')) errors.push('Vui lòng nhập ngày đến');
+        if (!val('ri_arrival_time')) errors.push('Vui lòng nhập giờ hạ cánh');
+      } else if (step === 4) {
         if (!val('ri_p_passengers')) errors.push('Vui lòng chọn số hành khách');
+      } else if (step === 5) {
+        if (!val('ri_p_name'))       errors.push('Vui lòng nhập họ tên');
+        if (!val('ri_p_phone'))      errors.push('Vui lòng nhập số điện thoại');
       }
+      // step 6: no validation — submit() handles final check
     } else if (_type === 'dropoff') {
       if (step === 1) {
-        if (!val('ri_pickup_addr'))   errors.push('Vui lòng nhập địa chỉ đón');
-        if (!val('ri_d_airport'))     errors.push('Vui lòng chọn sân bay cần đến');
-        if (!val('ri_depart_date'))   errors.push('Vui lòng nhập ngày bay');
-        if (!val('ri_depart_time'))   errors.push('Vui lòng nhập giờ cất cánh');
+        if (!val('ri_pickup_addr'))  errors.push('Vui lòng nhập địa chỉ đón');
       } else if (step === 2) {
+        if (!val('ri_d_airport'))    errors.push('Vui lòng chọn sân bay cần đến');
+      } else if (step === 3) {
+        if (!val('ri_depart_date'))  errors.push('Vui lòng nhập ngày bay');
+        if (!val('ri_depart_time'))  errors.push('Vui lòng nhập giờ cất cánh');
+      } else if (step === 4) {
         if (!val('ri_d_passengers')) errors.push('Vui lòng chọn số hành khách');
+      } else if (step === 5) {
+        if (!val('ri_d_name'))       errors.push('Vui lòng nhập họ tên');
+        if (!val('ri_d_phone'))      errors.push('Vui lòng nhập số điện thoại');
       }
     } else if (_type === 'ride') {
       if (step === 1) {
-        if (!val('ri_from_addr'))     errors.push('Vui lòng nhập điểm đón');
-        if (!val('ri_to_addr'))       errors.push('Vui lòng nhập điểm đến');
-        if (!val('ri_ride_date'))     errors.push('Vui lòng nhập ngày đi');
-        if (!val('ri_ride_time'))     errors.push('Vui lòng nhập giờ xuất phát');
+        if (!val('ri_from_addr'))    errors.push('Vui lòng nhập điểm đón');
       } else if (step === 2) {
+        if (!val('ri_to_addr'))      errors.push('Vui lòng nhập điểm đến');
+      } else if (step === 3) {
+        if (!val('ri_ride_date'))    errors.push('Vui lòng nhập ngày đi');
+        if (!val('ri_ride_time'))    errors.push('Vui lòng nhập giờ xuất phát');
+      } else if (step === 4) {
         if (!val('ri_r_passengers')) errors.push('Vui lòng chọn số hành khách');
+      } else if (step === 5) {
+        if (!val('ri_r_name'))       errors.push('Vui lòng nhập họ tên');
+        if (!val('ri_r_phone'))      errors.push('Vui lòng nhập số điện thoại');
       }
     }
     return errors;
@@ -679,7 +730,7 @@ window.RideIntake = (function () {
       linkEl.hidden = false;
     }
 
-    setHide('riPriceBox', false);
+    setHide('riPriceBox', _subStep !== 6);  // price box only on step 6 review
     setText('riFooterAmt', '~$' + q.dlcPrice);
     setHide('riFooterEst', false);
   }
@@ -847,6 +898,9 @@ window.RideIntake = (function () {
     setHide('riFooter',   true);
     setText('riSuccessId', bookingId);
     setHide('riBackBtn',   true);
+    setHide('riProgressWrap', true);
+    setHide('riStepQuestion', true);
+    setHide('riTitle', false);
     setText('riTitle', _T.successTitle);
     // Update static success text nodes to current language
     var subEl = document.querySelector('#riSuccess .ri-success__sub');
@@ -926,12 +980,13 @@ window.RideIntake = (function () {
   // Called by the "Use my location" button on the private-ride pickup field.
   // Requests browser location, reverse-geocodes via Google Maps Geocoder, and
   // fills ri_from_addr so the quote engine can calculate the route.
-  function useCurrentLocation() {
+  function useCurrentLocation(targetId, btnId) {
+    targetId = targetId || 'ri_from_addr';
     if (!navigator.geolocation) {
       alert('Trình duyệt của bạn không hỗ trợ định vị.');
       return;
     }
-    var btn = document.getElementById('riGeoBtn');
+    var btn = document.getElementById(btnId || 'riGeoBtn');
     if (btn) { btn.textContent = '⏳ Đang lấy vị trí...'; btn.disabled = true; }
 
     navigator.geolocation.getCurrentPosition(
@@ -949,13 +1004,13 @@ window.RideIntake = (function () {
               var addr = (status === 'OK' && results && results[0])
                 ? results[0].formatted_address
                 : lat.toFixed(5) + ', ' + lng.toFixed(5);
-              var input = document.getElementById('ri_from_addr');
+              var input = document.getElementById(targetId);
               if (input) { input.value = addr; scheduleDistance(); }
             }
           );
         } else {
           restoreBtn();
-          var input = document.getElementById('ri_from_addr');
+          var input = document.getElementById(targetId);
           if (input) { input.value = lat.toFixed(5) + ', ' + lng.toFixed(5); scheduleDistance(); }
         }
       },

@@ -21,6 +21,9 @@
 
   var STORAGE_KEY = 'dlc_wf_draft';
 
+  // Tracks the last rejected single-word address so the re-ask question can reference it
+  var _addrAmbigName = null;
+
   // ── Formatters ─────────────────────────────────────────────────────────────
 
   function fmtDate(iso) {
@@ -958,6 +961,31 @@
   // when the input contains NO digits (real addresses almost always have a street number).
   var VAGUE_ADDR_SOFT_RE = /^(near\s+\S.{0,40}|the\s+[a-z]+\s*$|around\s+\S.{0,40}|somewhere\s+in\s+\S.{0,30}|\w+\s+area\s*$|\w+\s+vicinity\s*$|close\s+to\s+\S.{0,30}|gần\s+\S.{0,30}|khu\s+vực\s+\S.{0,30}|cerca\s+de\s+\S.{0,30})$/i;
 
+  // Single-word California/Nevada/major-US city names that are valid standalone navigation targets.
+  // A single-word input NOT in this list is treated as a potential business/landmark name
+  // that needs city or street context before a driver can navigate to it.
+  var KNOWN_SINGLE_WORD_CITIES_RE = /^(anaheim|irvine|fullerton|torrance|compton|pasadena|burbank|glendale|inglewood|gardena|hawthorne|lakewood|cerritos|norwalk|downey|pomona|ontario|riverside|corona|fontana|upland|claremont|temecula|murrieta|escondido|carlsbad|oceanside|encinitas|coronado|malibu|calabasas|oxnard|ventura|tustin|orange|placentia|brea|westminster|stanton|cypress|huntington|newport|rosemead|covina|azusa|glendora|duarte|arcadia|monrovia|alhambra|whittier|montebello|paramount|lynwood|bellflower|artesia|lawndale|wilmington|carson|victorville|hesperia|highland|redlands|yucaipa|banning|beaumont|hemet|perris|menifee|norco|chino|montclair|walnut|irwindale|yorba|bakersfield|delano|wasco|shafter|taft|arvin|tehachapi|mojave|lancaster|palmdale|fresno|clovis|selma|sanger|reedley|kingsburg|hanford|lemoore|tulare|porterville|visalia|stockton|lodi|manteca|tracy|turlock|modesto|ceres|merced|atwater|vacaville|fairfield|vallejo|napa|petaluma|hayward|fremont|milpitas|sunnyvale|cupertino|campbell|saratoga|alameda|berkeley|richmond|concord|antioch|livermore|pleasanton|dublin|monterey|salinas|gilroy|hollister|watsonville|capitola|aptos|eureka|arcata|ukiah|chico|redding|oroville|auburn|truckee|tahoe|reno|henderson|sparks|phoenix|scottsdale|tempe|mesa|chandler|gilbert|peoria|seattle|tacoma|bellevue|redmond|kirkland|portland|beaverton|hillsboro|denver|aurora|chicago|dallas|irving|plano|frisco|garland|miami|hialeah|honolulu|kailua|kaneohe|sacramento|roseville|folsom|oxnard|chatsworth|reseda|tarzana|encino|northridge|moorpark|camarillo|ojai|solvang|lompoc|goleta|carpinteria|paramount|compton|gardena|lawndale|hawthorne|inglewood|redondo|hermosa|manhattan|torrance|carson|culver|burbank|glendale|monrovia)$/i;
+
+  // Returns true for single-token inputs (no spaces, no comma, no digit, 4–30 chars) that are
+  // NOT recognised standalone city names → likely a business/landmark needing city context.
+  function _isAmbiguousAddr(s) {
+    if (!s || /\d/.test(s) || /,/.test(s) || /\s/.test(s)) return false;
+    if (s.length < 4 || s.length > 30) return false;
+    return !KNOWN_SINGLE_WORD_CITIES_RE.test(s);
+  }
+
+  // Returns a language-appropriate clarification question for an ambiguous place name.
+  function _addrClarifyQuestion(name) {
+    var lang = (draft && draft.lang) || 'vi';
+    if (lang === 'vi') {
+      return '"' + name + '" ở đâu? Vui lòng thêm tên thành phố hoặc địa chỉ đầy đủ\n(ví dụ: "' + name + ', San Jose, CA" hoặc số nhà + đường phố)';
+    }
+    if (lang === 'es') {
+      return '¿Dónde está "' + name + '"? Por favor añade la ciudad o dirección completa\n(p.ej. "' + name + ', San Jose, CA" o una dirección de calle)';
+    }
+    return 'Where is "' + name + '" located? Please add the city or full street address\n(e.g. "' + name + ', San Jose, CA" or "1350 Main St, Milpitas, CA")';
+  }
+
   // Maps airport codes to their city name for use with estimateCityToCity
   var AIRPORT_CITY = {
     'lax': 'Los Angeles',   'sna': 'Orange County',  'lgb': 'Long Beach',
@@ -1360,6 +1388,7 @@
         {
           key: 'dropoffAddress',
           question: function() {
+            if (_addrAmbigName) return _addrClarifyQuestion(_addrAmbigName);
             var hint = '';
             if (window.DLCLocation && DLCLocation.pickupHint()) {
               hint = S('qCurrentLoc') + DLCLocation.pickupHint() + S('qCurrentLocUse');
@@ -1369,10 +1398,10 @@
           extract: function(t) {
             if (/\bđây\b|\bhere\b|aquí|chỗ tôi|vị trí.*tôi|current.?loc/i.test(t)) {
               var loc = window.DLCLocation && DLCLocation.pickupHint();
-              if (loc) return loc;
+              if (loc) { _addrAmbigName = null; return loc; }
             }
             var _addr = X.address(t);
-            if (_addr) return _addr;
+            if (_addr) { _addrAmbigName = null; return _addr; }
             var _trimmed = t.trim();
             // Exclude bare airport codes (3 uppercase letters) and short tokens
             if (/^[A-Z]{2,4}$/.test(_trimmed)) return null;
@@ -1380,6 +1409,9 @@
             if (VAGUE_ADDR_RE.test(_trimmed)) return null;
             // Reject partial/generic place names without a street number
             if (!(/\d/.test(_trimmed)) && VAGUE_ADDR_SOFT_RE.test(_trimmed)) return null;
+            // Single-word ambiguity: business/landmark needs city context
+            if (_isAmbiguousAddr(_trimmed)) { _addrAmbigName = _trimmed; return null; }
+            _addrAmbigName = null;
             if (_trimmed.length >= 5) return _trimmed;
             return null;
           },
@@ -1519,6 +1551,7 @@
         {
           key: 'pickupAddress',
           question: function() {
+            if (_addrAmbigName) return _addrClarifyQuestion(_addrAmbigName);
             var hint = '';
             if (window.DLCLocation && DLCLocation.pickupHint()) {
               hint = S('qCurrentLoc') + DLCLocation.pickupHint() + S('qCurrentLocUse');
@@ -1528,10 +1561,10 @@
           extract: function(t) {
             if (/\bđây\b|\bhere\b|aquí|chỗ tôi|vị trí.*tôi|current.?loc/i.test(t)) {
               var loc = window.DLCLocation && DLCLocation.pickupHint();
-              if (loc) return loc;
+              if (loc) { _addrAmbigName = null; return loc; }
             }
             var _addr = X.address(t);
-            if (_addr) return _addr;
+            if (_addr) { _addrAmbigName = null; return _addr; }
             var _trimmed = t.trim();
             // Exclude bare airport codes (3 uppercase letters) and short tokens
             if (/^[A-Z]{2,4}$/.test(_trimmed)) return null;
@@ -1539,6 +1572,9 @@
             if (VAGUE_ADDR_RE.test(_trimmed)) return null;
             // Reject partial/generic place names without a street number
             if (!(/\d/.test(_trimmed)) && VAGUE_ADDR_SOFT_RE.test(_trimmed)) return null;
+            // Single-word ambiguity: business/landmark needs city context
+            if (_isAmbiguousAddr(_trimmed)) { _addrAmbigName = _trimmed; return null; }
+            _addrAmbigName = null;
             if (_trimmed.length >= 5) return _trimmed;
             return null;
           },
@@ -1624,6 +1660,7 @@
         {
           key: 'pickupAddress',
           question: function() {
+            if (_addrAmbigName) return _addrClarifyQuestion(_addrAmbigName);
             // If we have a full reverse-geocoded address, surface it prominently
             var gpsPlace = window.DLCLocation && DLCLocation.state && DLCLocation.state.place;
             if (gpsPlace) {
@@ -1643,11 +1680,12 @@
                      || (window.DLCLocation && DLCLocation.pickupHint());
               if (loc) {
                 if (draft && draft.collectedFields) draft.collectedFields._pickupSource = 'gps';
+                _addrAmbigName = null;
                 return loc;
               }
             }
             var _addr = X.address(t);
-            if (_addr) return _addr;
+            if (_addr) { _addrAmbigName = null; return _addr; }
             var _trimmed = t.trim();
             // Exclude bare airport codes (3 uppercase letters) and short tokens
             if (/^[A-Z]{2,4}$/.test(_trimmed)) return null;
@@ -1655,6 +1693,9 @@
             if (VAGUE_ADDR_RE.test(_trimmed)) return null;
             // Reject partial/generic place names without a street number
             if (!(/\d/.test(_trimmed)) && VAGUE_ADDR_SOFT_RE.test(_trimmed)) return null;
+            // Single-word ambiguity: business/landmark needs city context
+            if (_isAmbiguousAddr(_trimmed)) { _addrAmbigName = _trimmed; return null; }
+            _addrAmbigName = null;
             if (_trimmed.length >= 5) return _trimmed;
             return null;
           },
@@ -1662,14 +1703,20 @@
         },
         {
           key: 'dropoffAddress',
-          question: function() { return S('qRideDropoff'); },
+          question: function() {
+            if (_addrAmbigName) return _addrClarifyQuestion(_addrAmbigName);
+            return S('qRideDropoff');
+          },
           extract: function(t) {
             var _addr = X.address(t);
-            if (_addr) return _addr;
+            if (_addr) { _addrAmbigName = null; return _addr; }
             var _trimmed = t.trim();
             if (VAGUE_ADDR_RE.test(_trimmed)) return null;
             // Reject partial/generic place names without a street number
             if (!(/\d/.test(_trimmed)) && VAGUE_ADDR_SOFT_RE.test(_trimmed)) return null;
+            // Single-word ambiguity: business/landmark needs city context
+            if (_isAmbiguousAddr(_trimmed)) { _addrAmbigName = _trimmed; return null; }
+            _addrAmbigName = null;
             return _trimmed.length >= 3 ? _trimmed : null;
           },
           optional: false,
@@ -2199,6 +2246,8 @@
   function startWorkflow(intent, seedText, lang) {
     var wf = WORKFLOWS[intent];
     if (!wf) return false;
+
+    _addrAmbigName = null;  // clear any stale ambig state from prior workflow
 
     draft = {
       intent:          intent,
@@ -2804,7 +2853,7 @@
     return { id: orderId, token: trackingToken || null, priceEst: finalPriceEst, appt: finalApptInfo, dispatchState: finalDispatchState };
   }
 
-  function cancel() { clearDraft(); draft = null; }
+  function cancel() { clearDraft(); draft = null; _addrAmbigName = null; }
 
   // ── Public API ─────────────────────────────────────────────────────────────
 

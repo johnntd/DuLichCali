@@ -1472,12 +1472,37 @@ BEHAVIOR GUIDELINES:
   ];
 
   // Map router intents to workflowEngine keys
+  // NOTE: airport_transfer and private_ride are intentionally ABSENT — they use
+  // the structured RideIntake form instead of the AI workflow.
   const ROUTER_TO_WORKFLOW = {
     travel_tour:  'tour_request',
     nail_booking: 'nail_appointment',
     hair_booking: 'hair_appointment',
-    private_ride: 'private_ride',
+    // private_ride: 'private_ride',  ← form-only; handled by FORM_ONLY_WF_INTENTS below
   };
+
+  // Intents that must go through structured forms, not the AI workflow.
+  // These are intercepted before WF.startWorkflow() and before WF.detectIntent() fallback.
+  const FORM_ONLY_WF_INTENTS = new Set([
+    'airport_pickup', 'airport_dropoff', 'private_ride', 'food_order',
+  ]);
+
+  // Returns a language-appropriate "opening form" message for form-redirect intercepts.
+  function _formRedirectMsg(lang, type) {
+    const msgs = {
+      ride: {
+        vi: '✈ Mở form đặt xe cho bạn — điền thông tin để nhận giá và xác nhận ngay.',
+        en: '✈ Opening the ride booking form — fill in your details for a fare estimate and instant confirmation.',
+        es: '✈ Abriendo el formulario de reserva — complete sus datos para obtener una tarifa y confirmación.',
+      },
+      food: {
+        vi: '🍱 Mở trang đặt món ngay cho bạn…',
+        en: '🍱 Opening the food order page for you…',
+        es: '🍱 Abriendo la página de pedidos para usted…',
+      },
+    };
+    return (msgs[type] && msgs[type][lang]) || (msgs[type] && msgs[type].vi) || '';
+  }
 
   // Airport pickup vs dropoff from message text
   function airportDirection(text) {
@@ -1738,16 +1763,23 @@ BEHAVIOR GUIDELINES:
         }
       }
 
-      if (routedIntent === 'airport_transfer' && WF) {
-        const wfKey = airportDirection(text);
-        const _initLang0 = (window.AIEngine && AIEngine.detectLang) ? AIEngine.detectLang(text) : 'vi';
-        if (WF.startWorkflow(wfKey, text, _initLang0)) {
-          const r = WF.process(text);
-          if (r && typeof r === 'object' && r.type === 'message') return r;
-          if (typeof r === 'string') return r;
-        }
+      // ── Airport/ride → structured form (RideIntake) ──────────────
+      // AI workflow disabled for these intents — redirect to the validated
+      // multi-step form which produces a normalized booking object.
+      if (routedIntent === 'airport_transfer') {
+        const intakeType = airportDirection(text) === 'airport_pickup' ? 'pickup' : 'dropoff';
+        const _lang0 = (window.AIEngine && AIEngine.detectLang) ? AIEngine.detectLang(text) : 'vi';
+        if (window.RideIntake) { setTimeout(() => RideIntake.open(intakeType), 350); }
+        return { type: 'message', text: _formRedirectMsg(_lang0, 'ride'), chips: null, hotels: null };
       }
 
+      if (routedIntent === 'private_ride') {
+        const _lang1 = (window.AIEngine && AIEngine.detectLang) ? AIEngine.detectLang(text) : 'vi';
+        if (window.RideIntake) { setTimeout(() => RideIntake.open('ride'), 350); }
+        return { type: 'message', text: _formRedirectMsg(_lang1, 'ride'), chips: null, hotels: null };
+      }
+
+      // ── Other routed intents (tour, nail, hair) → AI workflow ─────
       if (routedIntent && ROUTER_TO_WORKFLOW[routedIntent] && WF) {
         const wfKey = ROUTER_TO_WORKFLOW[routedIntent];
         const _initLang1 = (window.AIEngine && AIEngine.detectLang) ? AIEngine.detectLang(text) : 'vi';
@@ -1760,14 +1792,23 @@ BEHAVIOR GUIDELINES:
     }
 
     // ── 0a. Fallback workflow detection (narrow built-in patterns) ─
+    // Skip any intent that belongs to the FORM_ONLY_WF_INTENTS set — those
+    // must go through structured forms, not the AI workflow.
     if (WF && !WF.isActive()) {
       const wfIntent = WF.detectIntent(text);
-      if (wfIntent) {
+      if (wfIntent && !FORM_ONLY_WF_INTENTS.has(wfIntent)) {
         const _initLang2 = (window.AIEngine && AIEngine.detectLang) ? AIEngine.detectLang(text) : 'vi';
         WF.startWorkflow(wfIntent, text, _initLang2);
         const result = WF.process(text);
         if (result && typeof result === 'object' && result.type === 'message') return result;
         if (typeof result === 'string') return result;
+      }
+      // Form-only intents detected here → show form redirect message
+      if (wfIntent && FORM_ONLY_WF_INTENTS.has(wfIntent)) {
+        const _langFO = (window.AIEngine && AIEngine.detectLang) ? AIEngine.detectLang(text) : 'vi';
+        const isRide = wfIntent !== 'food_order';
+        if (isRide && window.RideIntake) { setTimeout(() => RideIntake.open('pickup'), 350); }
+        return { type: 'message', text: _formRedirectMsg(_langFO, isRide ? 'ride' : 'food'), chips: null, hotels: null };
       }
     }
 

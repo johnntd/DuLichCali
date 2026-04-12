@@ -298,6 +298,41 @@ window.DLCNotifications = (function () {
     }
   }
 
+  // ── Public: driver is heading to pickup — notify customer ───────────────────
+  /**
+   * Called from driver portal when driver taps "Gửi Khách" on an upcoming-ride card.
+   * Queues one email to the customer with a tracking/confirmation link.
+   * Idempotent: doc ID = "{bookingId}_driver_on_way".
+   *
+   * @param {object} booking  — flat object with all booking fields (bookingId required)
+   * @param {object} driver   — { name, phone }
+   * @param {string} lang     — 'vi' | 'en' | 'es'
+   */
+  function queueDriverOnWay(booking, driver, lang) {
+    if (!booking || !booking.customerEmail) return;
+    var bkId = booking.bookingId || '';
+    if (!bkId) return;
+    var token = booking.trackingToken || bkId;
+    _queue(bkId, 'driver_on_way', {
+      customerEmail:  booking.customerEmail,
+      customerName:   booking.customerName || booking.name || '',
+      lang:           lang || 'vi',
+      serviceType:    booking.serviceType   || '',
+      airport:        booking.airport       || '',
+      airline:        booking.airline       || '',
+      terminal:       booking.terminal      || '',
+      datetime:       booking.datetime      || '',
+      address:        booking.address       || '',
+      pickupAddress:  booking.pickupAddress  || '',
+      dropoffAddress: booking.dropoffAddress || '',
+      passengers:     booking.passengers     || 1,
+      estimatedPrice: booking.estimatedPrice || null,
+      trackingToken:  token,
+      driverName:     driver ? (driver.name || driver.fullName || '') : '',
+      driverPhone:    driver ? (driver.phone || '') : '',
+    });
+  }
+
   // ── Expose public API ────────────────────────────────────────────────────────
   return {
     queueRideConfirmation:            queueRideConfirmation,
@@ -305,6 +340,7 @@ window.DLCNotifications = (function () {
     queueRideBookedNotification:      queueRideBookedNotification,
     queueDriverAssignedNotification:  queueDriverAssignedNotification,
     queueStatusChangeNotification:    queueStatusChangeNotification,
+    queueDriverOnWay:                 queueDriverOnWay,
   };
 
 }());

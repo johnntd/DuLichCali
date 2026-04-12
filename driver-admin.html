@@ -14,7 +14,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
   <script src="/driver-compliance.js"></script>
-  <script src="/notifications.js?v=20260418d"></script>
+  <script src="/notifications.js?v=20260419f"></script>
 
   <style>
     :root {
@@ -642,6 +642,64 @@
       text-decoration: none; transition: background .18s; cursor: pointer;
     }
     .btn-maps:hover { background: rgba(74,222,128,.18); }
+    /* Send Customer Update button — default state */
+    .btn-notify {
+      display: inline-flex; align-items: center; gap: .3rem;
+      height: 38px; padding: 0 .95rem;
+      background: rgba(251,191,36,.1); border: 1px solid rgba(251,191,36,.35);
+      color: var(--gold); border-radius: 6px;
+      font-family: var(--font-b); font-size: .72rem; font-weight: 700;
+      text-decoration: none; transition: background .18s, border-color .18s; cursor: pointer;
+    }
+    .btn-notify:hover { background: rgba(251,191,36,.22); }
+    /* Near state — orange accent */
+    .btn-notify.near {
+      background: rgba(251,146,60,.15); border-color: rgba(251,146,60,.5);
+      color: #fb923c;
+    }
+    .btn-notify.near:hover { background: rgba(251,146,60,.28); }
+    /* Imminent state — red accent, pulse */
+    .btn-notify.imminent {
+      background: rgba(248,113,113,.15); border-color: rgba(248,113,113,.6);
+      color: #f87171; animation: pulse-border 1.8s ease-in-out infinite;
+    }
+    .btn-notify.imminent:hover { background: rgba(248,113,113,.28); }
+
+    /* ── Customer update share sheet ── */
+    .drv-share-sheet { position: fixed; inset: 0; z-index: 9000; display: flex; align-items: flex-end; }
+    .drv-share-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.55); }
+    .drv-share-panel {
+      position: relative; z-index: 1; width: 100%; max-width: 480px; margin: 0 auto;
+      background: var(--navy-800); border-radius: 18px 18px 0 0;
+      padding: 1.2rem 1.2rem calc(1.2rem + env(safe-area-inset-bottom, 0px));
+    }
+    .drv-share-hdr { font-size: .85rem; font-weight: 700; color: var(--gold); margin-bottom: .85rem; text-align: center; }
+    .drv-share-label { font-size: .65rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: .4rem; }
+    .drv-share-url {
+      background: rgba(255,255,255,.06); border: 1px solid var(--border); border-radius: 8px;
+      padding: .65rem .9rem; font-size: .68rem; color: #38bdf8; font-family: monospace;
+      word-break: break-all; margin-bottom: .9rem; user-select: all;
+    }
+    .drv-share-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .drv-share-btn {
+      flex: 1; min-width: 120px; display: inline-flex; align-items: center; justify-content: center; gap: .35rem;
+      height: 44px; padding: 0 1rem; border-radius: 10px;
+      font-family: var(--font-b); font-size: .78rem; font-weight: 700;
+      text-decoration: none; cursor: pointer; transition: background .18s;
+    }
+    .drv-share-btn.copy   { background: rgba(251,191,36,.15); border: 1px solid rgba(251,191,36,.4); color: var(--gold); }
+    .drv-share-btn.copy:hover   { background: rgba(251,191,36,.28); }
+    .drv-share-btn.whatsapp { background: rgba(37,211,102,.12); border: 1px solid rgba(37,211,102,.4); color: #25d366; }
+    .drv-share-btn.whatsapp:hover { background: rgba(37,211,102,.24); }
+    .drv-share-btn.native  { background: rgba(56,189,248,.12); border: 1px solid rgba(56,189,248,.35); color: #38bdf8; }
+    .drv-share-btn.native:hover  { background: rgba(56,189,248,.22); }
+    .drv-share-close {
+      display: block; width: 100%; height: 44px; border-radius: 10px;
+      background: rgba(255,255,255,.06); border: 1px solid var(--border);
+      color: var(--text-muted); font-family: var(--font-b); font-size: .8rem; font-weight: 600;
+      cursor: pointer; transition: background .18s;
+    }
+    .drv-share-close:hover { background: rgba(255,255,255,.12); }
 
     /* ── Near-time alert banner ── */
     .near-trip-alert {
@@ -1091,6 +1149,7 @@
   var _unsubUpcoming       = null;
   var _reminderIntervalId  = null;
   var _remindedIds         = {};   // { "rideId_30": true, "rideId_15": true } — prevent spam
+  var _sentUpdateIds       = {};   // { rideDocId: true } — customer update already sent this session
   var _homeHistoryLoaded   = false;
 
   // Trip-status progression for driver (what the driver can advance to)
@@ -2228,13 +2287,19 @@
       if (urgency === 'imminent') {
         alertHtml = '<div class="near-trip-alert imminent">' +
           '<div class="near-trip-alert__icon">⚠</div>' +
-          '<div><div class="near-trip-alert__title">Sắp đến giờ đón!</div>' +
-          '<div class="near-trip-alert__sub">Chuẩn bị xuất phát ngay.</div></div></div>';
+          '<div>' +
+            '<div class="near-trip-alert__title">Sắp đến giờ đón!</div>' +
+            '<div class="near-trip-alert__sub">Thông báo khách và xuất phát ngay.</div>' +
+          '</div>' +
+        '</div>';
       } else if (urgency === 'near') {
         alertHtml = '<div class="near-trip-alert near">' +
           '<div class="near-trip-alert__icon">🕐</div>' +
-          '<div><div class="near-trip-alert__title">Còn ~30 phút đến giờ đón</div>' +
-          '<div class="near-trip-alert__sub">Chuẩn bị xuất phát.</div></div></div>';
+          '<div>' +
+            '<div class="near-trip-alert__title">Còn ~30 phút đến giờ đón</div>' +
+            '<div class="near-trip-alert__sub">Thông báo khách để họ chuẩn bị.</div>' +
+          '</div>' +
+        '</div>';
       }
 
       // Parse pickup datetime for display
@@ -2272,12 +2337,22 @@
         return 'https://maps.google.com/?q=' + encodeURIComponent(q);
       }
 
+      var docId   = ride._id;
+      var alreadySent = !!_sentUpdateIds[docId];
+
       var callBtn = customerPhone
-        ? '<a class="btn-call" href="tel:' + esc(customerPhone) + '">📞 Gọi Khách</a>'
+        ? '<a class="btn-call" href="tel:' + esc(customerPhone) + '">📞 Gọi</a>'
         : '';
       var mapsBtn = fromAddr
-        ? '<a class="btn-maps" href="' + mapsHref(fromAddr) + '" target="_blank" rel="noopener">🗺 Điểm Đón</a>'
+        ? '<a class="btn-maps" href="' + mapsHref(fromAddr) + '" target="_blank" rel="noopener">🗺 Đến Đón</a>'
         : '';
+      // Send Customer Update: prominent on near/imminent, standard otherwise
+      var notifyBtnClass = (urgency === 'imminent') ? 'btn-notify imminent' :
+                           (urgency === 'near')     ? 'btn-notify near'     : 'btn-notify';
+      var notifyBtnLabel = alreadySent ? '✓ Đã Gửi' : '📤 Gửi Khách';
+      var notifyBtn = '<button class="' + notifyBtnClass + '" onclick="sendCustomerUpdate(\'' + esc(docId) + '\')"' +
+                      (alreadySent ? ' title="Đã gửi cập nhật trong phiên này"' : '') + '>' +
+                      notifyBtnLabel + '</button>';
 
       return alertHtml +
         '<div class="upcoming-card' + (urgency ? ' ' + urgency : '') + '">' +
@@ -2294,7 +2369,7 @@
             (price    ? '<div><div class="upcoming-card__lbl">Giá Ước Tính</div><div class="upcoming-card__price">' + esc(price) + '</div></div>' : '') +
             '<div><div class="upcoming-card__lbl">Mã Booking</div><div class="upcoming-card__val" style="font-size:.7rem;color:var(--gold);font-family:monospace">' + esc(bkId) + '</div></div>' +
           '</div>' +
-          '<div class="upcoming-card__actions">' + callBtn + mapsBtn + '</div>' +
+          '<div class="upcoming-card__actions">' + notifyBtn + callBtn + mapsBtn + '</div>' +
         '</div>';
     }).join('');
   }
@@ -2340,6 +2415,119 @@
         }
       }
     });
+  }
+
+  // ── Send customer update + share sheet ───────────────────────────────────
+  /**
+   * Called when driver taps "Gửi Khách" on an upcoming-appointment card.
+   *
+   * Actions taken:
+   *  1. Queues a "driver_on_way" email via DLCNotifications (if customer has email).
+   *  2. Opens a share sheet so the driver can also send the tracking link via
+   *     WhatsApp, copy-to-clipboard, or the system share API.
+   *
+   * Idempotent per session: after the first send the button label changes to
+   * "✓ Đã Gửi" and subsequent taps show a confirmation toast (no double-email).
+   */
+  function sendCustomerUpdate(rideDocId) {
+    var ride = null;
+    for (var i = 0; i < _upcomingRides.length; i++) {
+      if (_upcomingRides[i]._id === rideDocId) { ride = _upcomingRides[i]; break; }
+    }
+    if (!ride) { showDriverToast('Không tìm thấy chuyến', ''); return; }
+
+    var bkId   = ride.bookingId || rideDocId;
+    var token  = ride.trackingToken || bkId;
+    var lang   = ride.lang || 'vi';
+    var url    = 'https://www.dulichcali21.com/tracking?id=' + encodeURIComponent(bkId) +
+                 '&t=' + encodeURIComponent(token) + '&lang=' + lang;
+
+    var alreadySent = !!_sentUpdateIds[rideDocId];
+
+    if (!alreadySent) {
+      // ── Email (if customer provided email) ────────────────────────────────
+      if (ride.customerEmail && typeof DLCNotifications !== 'undefined') {
+        DLCNotifications.queueDriverOnWay(
+          Object.assign({ bookingId: bkId }, ride),
+          { name: _driverName, phone: _driverPhone },
+          lang
+        );
+      }
+      _sentUpdateIds[rideDocId] = true;
+      // Refresh card to show "✓ Đã Gửi" label
+      renderUpcomingSection(_upcomingRides);
+    }
+
+    // ── Always show share sheet (lets driver send via WhatsApp even after email) ──
+    _openShareSheet(ride, bkId, url, lang);
+  }
+
+  /**
+   * Builds and shows the share sheet overlay.
+   * Contains: tracking link (copy), WhatsApp button (if phone known), close.
+   */
+  function _openShareSheet(ride, bkId, url, lang) {
+    var existing = document.getElementById('drvShareSheet');
+    if (existing) existing.remove();
+
+    var customerName  = ride.name || ride.customerName || 'Khách';
+    var customerPhone = ride.phone || ride.customerPhone || '';
+
+    // Compose WhatsApp deep-link message
+    var wa = '';
+    if (customerPhone) {
+      var e164 = customerPhone.replace(/\D/g, '');
+      if (e164.length === 10) e164 = '1' + e164;
+      var waMsg = (lang === 'en')
+        ? 'Hi ' + customerName + ', your Du Lich Cali driver is preparing for your pickup. You can track your trip here: ' + url
+        : (lang === 'es')
+        ? 'Hola ' + customerName + ', su conductor de Du Lịch Cali se está preparando para recogerle. Puede seguir su viaje aquí: ' + url
+        : 'Chào ' + customerName + '! Tài xế Du Lịch Cali đang chuẩn bị đến đón bạn. Theo dõi chuyến đi tại: ' + url;
+      wa = 'https://wa.me/' + e164 + '?text=' + encodeURIComponent(waMsg);
+    }
+
+    var hasShare = !!navigator.share;
+
+    var sheet = document.createElement('div');
+    sheet.id  = 'drvShareSheet';
+    sheet.className = 'drv-share-sheet';
+    sheet.innerHTML =
+      '<div class="drv-share-backdrop" onclick="document.getElementById(\'drvShareSheet\').remove()"></div>' +
+      '<div class="drv-share-panel">' +
+        '<div class="drv-share-hdr">Gửi Cập Nhật Cho Khách</div>' +
+        '<div class="drv-share-label">Link theo dõi chuyến xe:</div>' +
+        '<div class="drv-share-url" id="drvShareUrl">' + url + '</div>' +
+        '<div class="drv-share-actions">' +
+          '<button class="drv-share-btn copy" onclick="_copyShareUrl()">📋 Sao Chép Link</button>' +
+          (wa ? '<a class="drv-share-btn whatsapp" href="' + wa + '" target="_blank" rel="noopener">💬 WhatsApp</a>' : '') +
+          (hasShare ? '<button class="drv-share-btn native" onclick="_nativeShare(\'' + encodeURIComponent(url) + '\')">↗ Chia Sẻ</button>' : '') +
+        '</div>' +
+        '<button class="drv-share-close" onclick="document.getElementById(\'drvShareSheet\').remove()">Đóng</button>' +
+      '</div>';
+    document.body.appendChild(sheet);
+  }
+
+  function _copyShareUrl() {
+    var el = document.getElementById('drvShareUrl');
+    if (!el) return;
+    var text = el.textContent;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function() {
+        showDriverToast('Đã sao chép!', 'Link theo dõi đã được sao chép.');
+      });
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); showDriverToast('Đã sao chép!', ''); } catch(e) {}
+      document.body.removeChild(ta);
+    }
+  }
+
+  function _nativeShare(encodedUrl) {
+    if (!navigator.share) return;
+    navigator.share({ title: 'Du Lịch Cali — Theo dõi chuyến xe', url: decodeURIComponent(encodedUrl) })
+      .catch(function() {});
   }
 
   // ── Recent history for home panel (last 5 completed) ─────────────────────

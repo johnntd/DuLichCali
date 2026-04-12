@@ -29,7 +29,7 @@
   // Default: English. Reads localStorage.dlc_lang; falls back to 'en'.
   var _MP_VALID_LANGS = { en: 1, vi: 1, es: 1 };
   var _currentLang = (function () {
-    var l; try { l = localStorage.getItem('dlc_lang'); } catch(e) {}
+    var l; try { l = localStorage.getItem('dlcLang') || localStorage.getItem('dlc_lang'); } catch(e) {}
     return _MP_VALID_LANGS[l] ? l : 'en';
   }());
   var _lastSalonBiz  = null;
@@ -46,7 +46,7 @@
   // Set language, persist to localStorage, update all [data-t]/[data-tp] elements in place
   function _mpSetLang(l) {
     _currentLang = _MP_VALID_LANGS[l] ? l : 'en';
-    try { localStorage.setItem('dlc_lang', _currentLang); } catch(e) {}
+    try { localStorage.setItem('dlc_lang', _currentLang); localStorage.setItem('dlcLang', _currentLang); } catch(e) {}
     [].forEach.call(document.querySelectorAll('[data-t]'), function (el) {
       var k = el.getAttribute('data-t');
       var rows = k.split('|');
@@ -182,7 +182,7 @@
 
   function renderAppBar(backUrl, backLabel, title, phone) {
     var callBtn = phone
-      ? '<a href="tel:' + phone + '" class="mp-bar__call">' + phoneIcon + 'Gọi ngay</a>'
+      ? '<a href="tel:' + phone + '" class="mp-bar__call">' + phoneIcon + _t('Call Now','Gọi ngay','Llamar') + '</a>'
       : '';
 
     return '<div class="mp-bar">' +
@@ -224,15 +224,15 @@
     var gridIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>';
     // Back uses browser history so the correct previous page is always restored,
     // regardless of whether the user arrived from homepage, marketplace hub, or elsewhere.
-    return '<nav class="mp-bottom-nav" aria-label="Điều hướng trang">' +
-      '<button type="button" class="mp-bottom-nav__tab" onclick="history.back()" aria-label="Quay lại trang trước">' +
-        arrowLeftIcon + '<span>Quay lại</span>' +
+    return '<nav class="mp-bottom-nav" aria-label="Main navigation">' +
+      '<button type="button" class="mp-bottom-nav__tab" onclick="history.back()" aria-label="Go back">' +
+        arrowLeftIcon + '<span>' + _t('Back','Quay lại','Atrás') + '</span>' +
       '</button>' +
       '<a href="/" class="mp-bottom-nav__tab">' +
-        homeIcon + '<span>Trang chủ</span>' +
+        homeIcon + '<span>' + _t('Home','Trang chủ','Inicio') + '</span>' +
       '</a>' +
       '<a href="/marketplace/" class="mp-bottom-nav__tab">' +
-        gridIcon + '<span>Dịch vụ</span>' +
+        gridIcon + '<span>' + _t('Services','Dịch vụ','Servicios') + '</span>' +
       '</a>' +
     '</nav>';
   }
@@ -564,7 +564,7 @@
   function renderDirectory(categoryId) {
     var category = MARKETPLACE.getCategoryMeta(categoryId);
     if (!category) {
-      _container.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--muted)">Không tìm thấy danh mục.</div>';
+      _container.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--muted)">' + _t('Category not found.','Không tìm thấy danh mục.','Categoría no encontrada.') + '</div>';
       return;
     }
 
@@ -585,7 +585,7 @@
     };
 
     var html =
-      renderAppBar('/', 'Trang chủ', category.nameVi, null) +
+      renderAppBar('/', _t('Home','Trang chủ','Inicio'), _t(category.nameEn||category.nameVi, category.nameVi, category.nameEn||category.nameVi), null) +
       '<main class="mp-main">' +
         renderHero(
           'Du Lịch Cali · Services',
@@ -597,7 +597,7 @@
         ) +
         '<div class="mp-section">' +
           '<div class="mp-section-hdr">' +
-            '<h2 class="mp-section-title">Danh sách dịch vụ</h2>' +
+            '<h2 class="mp-section-title">' + _t('Service Directory','Danh sách dịch vụ','Directorio') + '</h2>' +
           '</div>' +
         '</div>' +
         '<div class="mp-grid">' + cardsHtml + '</div>' +
@@ -656,7 +656,7 @@
         '<div class="mp-biz-card__tagline">' + escHtml(biz.tagline) + '</div>' +
         '<div class="mp-biz-card__footer">' +
           '<span class="mp-biz-card__city">' + mapPinIcon + escHtml(biz.city) + '</span>' +
-          '<span class="mp-biz-card__cta">Xem Chi Tiết ' + arrowRightIcon + '</span>' +
+          '<span class="mp-biz-card__cta">' + _t('View Details ','Xem Chi Tiết ','Ver Detalles ') + arrowRightIcon + '</span>' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -669,11 +669,11 @@
 
     if (!biz) {
       _container.innerHTML =
-        renderAppBar(window.location.pathname, 'Quay lại', 'Không tìm thấy', null) +
+        renderAppBar(window.location.pathname, _t('Back','Quay lại','Atrás'), _t('Not Found','Không tìm thấy','No Encontrado'), null) +
         '<div style="padding:3rem 1rem;text-align:center;color:var(--muted)">' +
           '<div style="font-size:3rem;margin-bottom:1rem">🔍</div>' +
-          '<p>Không tìm thấy thông tin doanh nghiệp này.</p>' +
-          '<a href="' + window.location.pathname + '" style="color:var(--sky-lt);margin-top:1rem;display:inline-block">← Quay lại danh sách</a>' +
+          '<p>' + _t('Business information not found.','Không tìm thấy thông tin doanh nghiệp này.','Información no encontrada.') + '</p>' +
+          '<a href="' + window.location.pathname + '" style="color:var(--sky-lt);margin-top:1rem;display:inline-block">' + _t('← Back to list','← Quay lại danh sách','← Volver') + '</a>' +
         '</div>';
       return;
     }
@@ -693,7 +693,7 @@
     }
 
     var html =
-      renderAppBar(backUrl, 'Danh sách', biz.name, biz.phone) +
+      renderAppBar(backUrl, _t('Back','Danh sách','Atrás'), biz.name, biz.phone) +
       '<main class="mp-main">' +
         renderDetailHero(biz) +
         renderInfoStrip(biz) +
@@ -739,10 +739,10 @@
         '<p class="mp-detail-hero__tagline">' + escHtml(biz.tagline) + '</p>' +
         '<div style="display:flex;gap:.5rem;margin-top:1.1rem;flex-wrap:wrap;">' +
           '<button class="mp-btn mp-btn--primary" onclick="document.getElementById(\'bookingSection_' + biz.id + '\').scrollIntoView({behavior:\'smooth\'})">' +
-            calendarIcon + (biz.bookingType === 'reservation' ? 'Đặt Bàn' : 'Đặt Lịch') +
+            calendarIcon + _t(biz.bookingType==='reservation'?'Reserve':'Book', biz.bookingType==='reservation'?'Đặt Bàn':'Đặt Lịch', 'Reservar') +
           '</button>' +
           '<a href="tel:' + biz.phone + '" class="mp-btn mp-btn--ghost">' +
-            phoneIcon + 'Gọi ngay' +
+            phoneIcon + _t('Call Now','Gọi ngay','Llamar') +
           '</a>' +
         '</div>' +
       '</div>' +
@@ -1686,8 +1686,8 @@
 
     if (!activeSvcs.length) {
       return '<div class="mp-section">' +
-        '<div class="mp-section-hdr"><h2 class="mp-section-title">Dịch vụ & Giá</h2></div>' +
-        '<p style="color:var(--muted-lt,#8ab5cc);padding:.75rem 0;font-size:.9rem;">Vui lòng liên hệ trực tiếp để biết thêm thông tin dịch vụ.</p>' +
+        '<div class="mp-section-hdr"><h2 class="mp-section-title">' + _t('Services & Pricing','Dịch vụ & Giá','Servicios y Precios') + '</h2></div>' +
+        '<p style="color:var(--muted-lt,#8ab5cc);padding:.75rem 0;font-size:.9rem;">' + _t('Please contact us directly for service details.','Vui lòng liên hệ trực tiếp để biết thêm thông tin dịch vụ.','Contáctenos para más detalles.') + '</p>' +
       '</div>';
     }
 
@@ -1704,7 +1704,7 @@
 
     return '<div class="mp-section">' +
       '<div class="mp-section-hdr">' +
-        '<h2 class="mp-section-title">Dịch vụ & Giá</h2>' +
+        '<h2 class="mp-section-title">' + _t('Services & Pricing','Dịch vụ & Giá','Servicios y Precios') + '</h2>' +
       '</div>' +
       '<div class="mp-services-grid">' + itemsHtml + '</div>' +
     '</div>';
@@ -1717,7 +1717,7 @@
 
     return '<div class="mp-section">' +
       '<div class="mp-section-hdr">' +
-        '<h2 class="mp-section-title">Giờ Mở Cửa</h2>' +
+        '<h2 class="mp-section-title">' + _t('Hours','Giờ Mở Cửa','Horario') + '</h2>' +
       '</div>' +
       '<table class="mp-hours-table"><tbody>' + rowsHtml + '</tbody></table>' +
     '</div>';
@@ -1725,10 +1725,10 @@
 
   function renderBookingSection(biz) {
     var isReservation = biz.bookingType === 'reservation';
-    var title = isReservation ? 'Đặt Bàn' : 'Đặt Lịch Hẹn';
+    var title = isReservation ? _t('Reservation','Đặt Bàn','Reservar') : _t('Appointment','Đặt Lịch Hẹn','Cita');
     var note = isReservation
-      ? 'Chúng tôi sẽ xác nhận đặt bàn qua điện thoại trong vòng 30 phút.'
-      : 'Chúng tôi sẽ liên hệ xác nhận lịch hẹn trong vòng 1-2 giờ.';
+      ? _t("We'll confirm your reservation by phone within 30 minutes.",'Chúng tôi sẽ xác nhận đặt bàn qua điện thoại trong vòng 30 phút.','Confirmaremos su reserva en 30 minutos.')
+      : _t("We'll contact you to confirm within 1–2 hours.",'Chúng tôi sẽ liên hệ xác nhận lịch hẹn trong vòng 1-2 giờ.','Le contactaremos para confirmar en 1-2 horas.');
 
     var specificFields = isReservation
       ? renderReservationFields(biz)
@@ -1746,17 +1746,17 @@
           '<input type="hidden" name="location" value="' + escAttr(biz.address) + '">' +
           '<div class="mp-form-row-duo">' +
             '<div class="mp-form-row">' +
-              '<label class="mp-label" for="bfName_' + biz.id + '">Họ & Tên</label>' +
+              '<label class="mp-label" for="bfName_' + biz.id + '">' + _t('Full Name','Họ & Tên','Nombre Completo') + '</label>' +
               '<input class="mp-input" type="text" id="bfName_' + biz.id + '" name="name" placeholder="Nguyễn Văn A" required>' +
             '</div>' +
             '<div class="mp-form-row">' +
-              '<label class="mp-label" for="bfPhone_' + biz.id + '">Số Điện Thoại</label>' +
+              '<label class="mp-label" for="bfPhone_' + biz.id + '">' + _t('Phone Number','Số Điện Thoại','Teléfono') + '</label>' +
               '<input class="mp-input" type="tel" id="bfPhone_' + biz.id + '" name="phone" placeholder="(714) 555-0000" required>' +
             '</div>' +
           '</div>' +
           specificFields +
           '<div class="mp-form-row">' +
-            '<label class="mp-label" for="bfDate_' + biz.id + '">Ngày Hẹn</label>' +
+            '<label class="mp-label" for="bfDate_' + biz.id + '">' + _t('Appointment Date','Ngày Hẹn','Fecha') + '</label>' +
             '<input class="mp-input" type="date" id="bfDate_' + biz.id + '" name="date" required>' +
           '</div>' +
           '<div class="mp-form-row">' +
@@ -1764,18 +1764,18 @@
             '<input class="mp-input" type="time" id="bfTime_' + biz.id + '" name="time" required>' +
           '</div>' +
           '<div class="mp-form-row">' +
-            '<label class="mp-label" for="bfNotes_' + biz.id + '">Ghi Chú (tùy chọn)</label>' +
+            '<label class="mp-label" for="bfNotes_' + biz.id + '">' + _t('Notes (optional)','Ghi Chú (tùy chọn)','Notas (opcional)') + '</label>' +
             '<textarea class="mp-input" id="bfNotes_' + biz.id + '" name="notes" placeholder="Yêu cầu đặc biệt hoặc thông tin thêm..."></textarea>' +
           '</div>' +
           '<p class="mp-form-note">' + note + '</p>' +
           '<div class="mp-spacer"></div>' +
           '<button type="submit" class="mp-btn mp-btn--primary mp-btn--full">' +
-            calendarIcon + ' Gửi Đặt ' + (isReservation ? 'Bàn' : 'Lịch') +
+            calendarIcon + ' ' + _t(isReservation?'Submit Reservation':'Submit Appointment', isReservation?'Gửi Đặt Bàn':'Gửi Đặt Lịch', 'Enviar') +
           '</button>' +
           '<div class="mp-form-success" id="bookingSuccess_' + biz.id + '">' +
             checkIcon +
             '<p>Đặt ' + (isReservation ? 'bàn' : 'lịch') + ' thành công!</p>' +
-            '<p style="margin-top:.5rem;font-size:.8rem;color:var(--muted)">Chúng tôi sẽ liên hệ xác nhận sớm nhất.</p>' +
+            '<p style="margin-top:.5rem;font-size:.8rem;color:var(--muted)">' + _t("We'll contact you to confirm shortly.",'Chúng tôi sẽ liên hệ xác nhận sớm nhất.','Le contactaremos pronto.') + '</p>' +
           '</div>' +
         '</form>' +
       '</div>' +
@@ -1790,7 +1790,7 @@
     return '<div class="mp-form-row">' +
       '<label class="mp-label" for="bfService_' + biz.id + '">Dịch Vụ</label>' +
       '<select class="mp-input" id="bfService_' + biz.id + '" name="service" required>' +
-        '<option value="">— Chọn dịch vụ —</option>' +
+        '<option value="">' + _t('— Select service —','— Chọn dịch vụ —','— Seleccionar —') + '</option>' +
         opts +
       '</select>' +
     '</div>';
@@ -1805,7 +1805,7 @@
     return '<div class="mp-form-row">' +
       '<label class="mp-label" for="bfParty">Số Người</label>' +
       '<select class="mp-input" id="bfParty" name="party_size" required>' +
-        '<option value="">— Chọn số người —</option>' +
+        '<option value="">' + _t('— Select party size —','— Chọn số người —','— Número de personas —') + '</option>' +
         sizeOpts +
       '</select>' +
     '</div>';
@@ -1874,10 +1874,10 @@
 
     return '<div class="mp-section">' +
       '<div class="mp-section-hdr">' +
-        '<h2 class="mp-section-title">Liên Hệ</h2>' +
+        '<h2 class="mp-section-title">' + _t('Contact','Liên Hệ','Contacto') + '</h2>' +
       '</div>' +
       '<div class="mp-contact-card">' +
-        '<div class="mp-contact-card__title">Chủ tiệm & Quản lý</div>' +
+        '<div class="mp-contact-card__title">' + _t('Owner & Manager','Chủ tiệm & Quản lý','Dueño y Gerente') + '</div>' +
         hostsHtml +
       '</div>' +
     '</div>';
@@ -1925,7 +1925,7 @@
     }).join('');
 
     var activeStaff = (biz.staff || []).filter(function (m) { return m.active !== false; });
-    var staffOpts = '<option value="Any">Bất kỳ (salon sắp xếp)</option>' +
+    var staffOpts = '<option value="Any">' + _t('Any (salon assigns)','Bất kỳ (salon sắp xếp)','Cualquiera (el salón asigna)') + '</option>' +
       activeStaff.map(function (m) {
         return '<option value="' + escAttr(m.name) + '">' + escHtml(m.name) + (m.role ? ' — ' + escHtml(m.role) : '') + '</option>';
       }).join('');
@@ -1933,13 +1933,13 @@
     var today = new Date().toISOString().slice(0, 10);
 
     return '<div class="mp-section" id="nailBookSection_' + biz.id + '">' +
-      '<div class="mp-section-hdr"><h2 class="mp-section-title">Đặt Lịch Ngay</h2></div>' +
+      '<div class="mp-section-hdr"><h2 class="mp-section-title">' + _t('Book Now','Đặt Lịch Ngay','Reservar Ahora') + '</h2></div>' +
       '<div class="mp-panel-form">' +
         '<form id="nailBookForm_' + biz.id + '">' +
-          '<p class="nb-instruction">Chọn một hoặc nhiều dịch vụ:</p>' +
+          '<p class="nb-instruction">' + _t('Select one or more services:','Chọn một hoặc nhiều dịch vụ:','Selecciona uno o más servicios:') + '</p>' +
           '<div id="nbServices_' + biz.id + '">' + svcHtml + '</div>' +
           '<div class="nb-duration-row" id="nbDurRow_' + biz.id + '" style="display:none">' +
-            '<span>Tổng thời gian: </span>' +
+            '<span>' + _t('Total time: ','Tổng thời gian: ','Tiempo total: ') + '</span>' +
             '<strong id="nbDurVal_' + biz.id + '">0</strong>' +
             '<span> phút</span>' +
           '</div>' +
@@ -1959,7 +1959,7 @@
           '</div>' +
           '<div class="mp-form-row-duo">' +
             '<div class="mp-form-row">' +
-              '<label class="mp-label">Họ & Tên</label>' +
+              '<label class="mp-label">' + _t('Full Name','Họ & Tên','Nombre Completo') + '</label>' +
               '<input class="mp-input" type="text" id="nbName_' + biz.id + '" placeholder="Nguyễn Văn A" required>' +
             '</div>' +
             '<div class="mp-form-row">' +
@@ -1972,7 +1972,7 @@
             '<textarea class="mp-input" id="nbNotes_' + biz.id + '" rows="2" placeholder="Yêu cầu đặc biệt..."></textarea>' +
           '</div>' +
           '<div class="nb-avail-msg" id="nbMsg_' + biz.id + '" style="display:none"></div>' +
-          '<button type="submit" class="mp-btn mp-btn--primary mp-btn--full" id="nbSubmit_' + biz.id + '">' + calendarIcon + ' Gửi Đặt Lịch</button>' +
+          '<button type="submit" class="mp-btn mp-btn--primary mp-btn--full" id="nbSubmit_' + biz.id + '">' + calendarIcon + ' ' + _t('Submit Booking','Gửi Đặt Lịch','Enviar Reserva') + '</button>' +
           '<div class="mp-form-success" id="nbSuccess_' + biz.id + '">' +
             checkIcon +
             '<p>Đặt lịch thành công!</p>' +
@@ -2057,7 +2057,7 @@
         totalMins += parseInt(chk.getAttribute('data-mins') || '60', 10);
       });
 
-      if (!selectedServices.length) { showMsg('Vui lòng chọn ít nhất một dịch vụ.', true); return; }
+      if (!selectedServices.length) { showMsg(_t('Please select at least one service.','Vui lòng chọn ít nhất một dịch vụ.','Por favor selecciona al menos un servicio.'), true); return; }
 
       var staff    = (document.getElementById('nbStaff_' + biz.id) || {}).value || 'Any';
       var date     = (document.getElementById('nbDate_' + biz.id) || {}).value || '';
@@ -2069,15 +2069,15 @@
       var photoUrlEl = document.getElementById('nbPhotoUrl_' + biz.id);
       var photoUrl   = photoUrlEl ? photoUrlEl.value.trim() : '';
 
-      if (!date || !time || !name || !phone) { showMsg('Vui lòng điền đầy đủ thông tin.', true); return; }
+      if (!date || !time || !name || !phone) { showMsg(_t('Please fill in all required fields.','Vui lòng điền đầy đủ thông tin.','Por favor complete todos los campos.'), true); return; }
 
       showMsg('', true);
       if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Đang kiểm tra...'; }
 
       var db = window.dlcDb;
       if (!db) {
-        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = calendarIcon + ' Gửi Đặt Lịch'; }
-        showMsg('Vui lòng gọi trực tiếp: ' + (biz.phoneDisplay || biz.phone || ''), true);
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = calendarIcon + ' ' + _t('Submit Booking','Gửi Đặt Lịch','Enviar Reserva'); }
+        showMsg(_t('Please call us directly: ','Vui lòng gọi trực tiếp: ','Llámenos: ') + (biz.phoneDisplay || biz.phone || ''), true);
         return;
       }
 
@@ -2089,7 +2089,7 @@
 
       // ── Shared validation — same logic as AI booking flow ───────────────────────
       function _doWrite() {
-        if (submitBtn) submitBtn.textContent = 'Đang gửi...';
+        if (submitBtn) submitBtn.textContent = _t('Sending...','Đang gửi...','Enviando...');
         db.collection('escalations').doc(escId).set({
           vendorId:        biz.id || '',
           vendorName:      biz.name || '',
@@ -2116,14 +2116,14 @@
           if (form) form.style.display = 'none';
           if (successDiv) successDiv.classList.add('show');
         }).catch(function () {
-          if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = calendarIcon + ' Gửi Đặt Lịch'; }
-          showMsg('Có lỗi xảy ra. Vui lòng gọi: ' + (biz.phoneDisplay || biz.phone || ''), true);
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = calendarIcon + ' ' + _t('Submit Booking','Gửi Đặt Lịch','Enviar Reserva'); }
+          showMsg(_t('An error occurred. Please call: ','Có lỗi xảy ra. Vui lòng gọi: ','Error. Llame a: ') + (biz.phoneDisplay || biz.phone || ''), true);
         });
       }
 
       function _blockWith(msg) {
-        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = calendarIcon + ' Gửi Đặt Lịch'; }
-        showMsg(msg || 'Thời gian này không còn trống. Vui lòng chọn thời gian khác.', true);
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = calendarIcon + ' ' + _t('Submit Booking','Gửi Đặt Lịch','Enviar Reserva'); }
+        showMsg(msg || _t('This time slot is no longer available. Please choose another time.','Thời gian này không còn trống. Vui lòng chọn thời gian khác.','Este horario ya no está disponible.'), true);
       }
 
       var checker = window.NailAvailabilityChecker;
@@ -2330,10 +2330,10 @@
   function renderSalonVendorDetail(biz) {
     var backUrl = window.location.pathname;
     _container.innerHTML =
-      renderAppBar(backUrl, 'Danh sách', biz.name, biz.phone) +
+      renderAppBar(backUrl, _t('Back','Danh sách','Atrás'), biz.name, biz.phone) +
       '<div class="mp-fv-loading">' +
         '<div class="mp-fv-spinner"></div>' +
-        '<p>Đang tải dịch vụ...</p>' +
+        '<p>' + _t('Loading services...','Đang tải dịch vụ...','Cargando servicios...') + '</p>' +
       '</div>';
 
     if (window.dlcDb) {
@@ -2552,7 +2552,7 @@
       renderAppBar(backUrl, 'Danh sách', biz.name, biz.phone) +
       '<div class="mp-fv-loading">' +
         '<div class="mp-fv-spinner"></div>' +
-        '<p>Đang tải thực đơn...</p>' +
+        '<p>' + _t('Loading menu...','Đang tải thực đơn...','Cargando menú...') + '</p>' +
       '</div>';
 
     if (window.dlcDb) {
@@ -2757,7 +2757,7 @@
         '<p class="mp-detail-hero__tagline">' + escHtml(biz.tagline) + '</p>' +
         '<div style="display:flex;gap:.5rem;margin-top:1.1rem;flex-wrap:wrap;">' +
           '<button class="mp-btn mp-btn--primary" onclick="document.getElementById(\'orderSection_' + biz.id + '\').scrollIntoView({behavior:\'smooth\'})">' +
-            calendarIcon + 'Đặt Đơn Ngay' +
+            calendarIcon + _t('Order Now','Đặt Đơn Ngay','Pedir Ahora') +
           '</button>' +
           '<a href="tel:' + biz.phone + '" class="mp-btn mp-btn--ghost">' +
             phoneIcon + escHtml(biz.phoneDisplay) +
@@ -2770,7 +2770,7 @@
   function renderFoodVendorAbout(biz) {
     return '<div class="mp-section">' +
       '<div class="mp-section-hdr">' +
-        '<h2 class="mp-section-title">Về Chúng Tôi</h2>' +
+        '<h2 class="mp-section-title">' + _t('About Us','Về Chúng Tôi','Acerca de') + '</h2>' +
       '</div>' +
       '<p class="mp-about-prose">' + escHtml(biz.description) + '</p>' +
     '</div>';
@@ -2778,11 +2778,11 @@
 
   function buildInstructionsHtml(product) {
     var rows = [
-      { key: 'preparationInstructions', icon: '🍳', label: 'Cách Chế Biến' },
-      { key: 'reheatingInstructions',   icon: '♨️', label: 'Hâm Nóng'      },
-      { key: 'storageInstructions',     icon: '🧊', label: 'Bảo Quản'       },
-      { key: 'servingNotes',            icon: '🍽️', label: 'Ghi Chú'        },
-      { key: 'allergenNotes',           icon: '⚠️', label: 'Thành Phần'     },
+      { key: 'preparationInstructions', icon: '🍳', label: _t('How to Cook','Cách Chế Biến','Cómo Cocinar') },
+      { key: 'reheatingInstructions',   icon: '♨️', label: _t('Reheating','Hâm Nóng','Recalentar')      },
+      { key: 'storageInstructions',     icon: '🧊', label: _t('Storage','Bảo Quản','Almacenamiento')       },
+      { key: 'servingNotes',            icon: '🍽️', label: _t('Serving Notes','Ghi Chú','Notas de Servicio')        },
+      { key: 'allergenNotes',           icon: '⚠️', label: _t('Allergens','Thành Phần','Alérgenos')     },
     ].filter(function (r) { return product[r.key]; })
      .map(function (r) {
        return '<div class="mp-instr-row">' +
@@ -2797,7 +2797,7 @@
     return '<details class="mp-instr-details">' +
       '<summary class="mp-instr-summary">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="mp-instr-summary__chevron"><polyline points="6 9 12 15 18 9"/></svg>' +
-        'Hướng Dẫn Sử Dụng' +
+        _t('Instructions','Hướng Dẫn Sử Dụng','Instrucciones') +
       '</summary>' +
       '<div class="mp-instr-block">' + rows.join('') + '</div>' +
     '</details>';
@@ -2869,7 +2869,7 @@
       var _ph =
         '<div class="mp-product-img-placeholder" id="pcard-ph-' + escAttr(product.id) + '">' +
           _phIcon +
-          '<span class="mp-product-img-placeholder__text">Ảnh chưa có</span>' +
+          '<span class="mp-product-img-placeholder__text">' + _t('No image yet','Ảnh chưa có','Sin imagen') + '</span>' +
         '</div>';
 
       var mediaHtml = '';
@@ -2878,13 +2878,13 @@
         mediaHtml =
           '<div class="mp-product-card__media-wrap mp-product-card__media-wrap--video" ' +
             'onclick="dlcOpenVideoModal(\'' + escAttr(product.videoUrl) + '\',\'' + escAttr(product.nameEn || product.name) + '\')" ' +
-            'title="Nhấn để xem video">' +
+            'title="' + _t('Click to play video','Nhấn để xem video','Reproducir video') + '">' +
             '<video class="mp-product-card__promo-video" autoplay muted loop playsinline ' +
               'style="' + imgPos + '" ' +
               'poster="' + escAttr(defaultImg) + '">' +
               '<source src="' + escAttr(product.videoUrl) + '" type="video/mp4">' +
             '</video>' +
-            '<span class="mp-product-card__video-badge">▶ Xem Video</span>' +
+            '<span class="mp-product-card__video-badge">' + _t('▶ Play Video','▶ Xem Video','▶ Ver Video') + '</span>' +
           '</div>';
       } else if (defaultImg) {
         // Image exists: render it + hidden placeholder; onerror swaps them
@@ -2954,7 +2954,7 @@
 
     return '<div class="mp-section">' +
       '<div class="mp-section-hdr">' +
-        '<h2 class="mp-section-title">Thực Đơn & Giá</h2>' +
+        '<h2 class="mp-section-title">' + _t('Menu & Pricing','Thực Đơn & Giá','Menú y Precios') + '</h2>' +
       '</div>' +
       '<div class="mp-products-list">' + productsHtml + '</div>' +
     '</div>';
@@ -2985,13 +2985,13 @@
 
     return '<div class="mp-section" id="orderSection_' + biz.id + '">' +
       '<div class="mp-section-hdr">' +
-        '<h2 class="mp-section-title">Đặt Hàng</h2>' +
+        '<h2 class="mp-section-title">' + _t('Place Order','Đặt Hàng','Hacer Pedido') + '</h2>' +
       '</div>' +
       '<div class="mp-panel-form">' +
-        '<p class="mp-form-note" style="margin-bottom:1rem">Điền thông tin để đặt hàng — chúng tôi sẽ xác nhận qua điện thoại. ' +
+        '<p class="mp-form-note" style="margin-bottom:1rem">' + _t('Fill in the form to order — we will confirm by phone. ','Điền thông tin để đặt hàng — chúng tôi sẽ xác nhận qua điện thoại. ','Complete el formulario para ordenar — confirmaremos por teléfono. ') +
           (activeProducts.length === 1 && minQty > 1
-            ? '<strong style="color:var(--gold-lt)">Tối thiểu ' + minQty + ' ' + escHtml((firstProduct && firstProduct.unit) || 'phần') + ' (' + minTotal + ').</strong>'
-            : '<strong style="color:var(--gold-lt)">Chọn sản phẩm để xem giá.</strong>') +
+            ? '<strong style="color:var(--gold-lt)">' + _t('Minimum','Tối thiểu','Mínimo') + ' ' + minQty + ' ' + escHtml((firstProduct && firstProduct.unitEn) || (firstProduct && firstProduct.unit) || 'pieces') + ' (' + minTotal + ').</strong>'
+            : '<strong style="color:var(--gold-lt)">' + _t('Select a product to see pricing.','Chọn sản phẩm để xem giá.','Seleccione un producto para ver el precio.') + '</strong>') +
         '</p>' +
         '<form id="orderForm_' + biz.id + '" class="mp-booking-form">' +
           '<input type="hidden" name="_subject" value="Order Inquiry — ' + escAttr(biz.name) + '">' +
@@ -3096,16 +3096,16 @@
             successDiv.classList.add('show');
           } else {
             return res.json().then(function (data) {
-              throw new Error((data.errors || []).map(function (e) { return e.message; }).join(', ') || 'Gửi thất bại');
+              throw new Error((data.errors || []).map(function (e) { return e.message; }).join(', ') || 'Submission failed');
             });
           }
         })
         .catch(function (err) {
           if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Gửi Đặt Lịch';
+            submitBtn.textContent = _t('Submit Booking','Gửi Đặt Lịch','Enviar Reserva');
           }
-          alert('Có lỗi xảy ra: ' + err.message + '\nVui lòng gọi trực tiếp: ' + biz.phoneDisplay);
+          alert(_t('An error occurred: ','Có lỗi xảy ra: ','Error: ') + err.message + '\n' + _t('Please call us directly: ','Vui lòng gọi trực tiếp: ','Llámenos directamente: ') + biz.phoneDisplay);
         });
     });
   }

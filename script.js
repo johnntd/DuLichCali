@@ -252,7 +252,7 @@ function _applyUiLang(lang) {
 window.setUiLang = function(lang) {
   if (!_UI_STRINGS[lang]) return;
   _siteLang = lang;
-  try { localStorage.setItem('dlcLang', lang); } catch(e) {}
+  try { localStorage.setItem('dlcLang', lang); localStorage.setItem('dlc_lang', lang); } catch(e) {}
   _applyUiLang(lang);
   document.documentElement.lang = lang === 'vi' ? 'vi' : lang === 'es' ? 'es' : 'en';
   document.querySelectorAll('#langPicker .lang-btn').forEach(function(btn) {

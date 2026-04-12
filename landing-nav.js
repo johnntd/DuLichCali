@@ -38,25 +38,44 @@
     return h + (m ? ':' + String(m).padStart(2, '0') : '') + '\u202f' + sfx;
   }
 
+  var _EN_DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var _VI_DAYS = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+  var _ES_DAYS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  function _dayLabel(d) {
+    var l; try { l = localStorage.getItem('dlcLang') || localStorage.getItem('dlc_lang'); } catch(e) {}
+    if (l === 'vi') return _VI_DAYS[d];
+    if (l === 'es') return _ES_DAYS[d];
+    return _EN_DAYS[d];
+  }
+
   function computeAvail(biz) {
+    var l; try { l = localStorage.getItem('dlcLang') || localStorage.getItem('dlc_lang') || 'en'; } catch(e) { l = 'en'; }
+    var isVi = l === 'vi', isEs = l === 'es';
     if (biz.availabilityType === 'order_window')
-      return { status: 'order', label: 'Đang nhận đơn', sub: 'Giao cuối tuần' };
+      return { status: 'order',
+        label: isVi ? 'Đang nhận đơn' : isEs ? 'Recibiendo pedidos' : 'Taking Orders',
+        sub:   isVi ? 'Giao cuối tuần' : isEs ? 'Entrega fin de semana' : 'Weekend delivery' };
     var now = new Date(), day = now.getDay(), cur = now.getHours() * 60 + now.getMinutes();
     var hs = _hoursForDay(biz, day);
     if (hs && hs !== 'Nghỉ') {
       var parts = hs.split('–').map(function (s) { return s.trim(); });
       var op = _parseTime(parts[0]), cl = _parseTime(parts[1]);
       if (op !== null && cl !== null) {
-        if (cur >= op && cur < cl) return { status: 'now',  label: 'Đang mở cửa', sub: 'Đến ' + _fmtMins(cl) };
-        if (cur < op)              return { status: 'soon', label: 'Mở cửa sớm',  sub: 'Lúc ' + _fmtMins(op) };
+        if (cur >= op && cur < cl) return { status: 'now',
+          label: isVi ? 'Đang mở cửa' : isEs ? 'Abierto ahora' : 'Open Now',
+          sub:   (isVi ? 'Đến ' : isEs ? 'Hasta ' : 'Until ') + _fmtMins(cl) };
+        if (cur < op) return { status: 'soon',
+          label: isVi ? 'Mở cửa sớm' : isEs ? 'Abre pronto' : 'Opens Soon',
+          sub:   (isVi ? 'Lúc ' : isEs ? 'A las ' : 'At ') + _fmtMins(op) };
       }
     }
-    var VI = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
     for (var i = 1; i <= 6; i++) {
       var d = (day + i) % 7, dh = _hoursForDay(biz, d);
-      if (dh && dh !== 'Nghỉ') return { status: 'soon', label: 'Mở ' + VI[d], sub: '' };
+      if (dh && dh !== 'Nghỉ') return { status: 'soon',
+        label: (isVi ? 'Mở ' : isEs ? 'Abre el ' : 'Opens ') + _dayLabel(d), sub: '' };
     }
-    return { status: 'closed', label: 'Tạm đóng', sub: '' };
+    return { status: 'closed',
+      label: isVi ? 'Tạm đóng' : isEs ? 'Cerrado' : 'Closed', sub: '' };
   }
 
   // ── Vendor admin-status from Firestore ────────────────────────────────────────
@@ -641,7 +660,7 @@
         '<div class="lp-ch__chips"></div>' +
         '<div class="lp-ch__row" style="display:none">' +
           '<input class="lp-ch__inp" type="text" placeholder="Ask a question..." autocomplete="off" enterkeyhint="send">' +
-          '<button class="lp-ch__snd" aria-label="Gửi">' + I.send + '</button>' +
+          '<button class="lp-ch__snd" aria-label="Send">' + I.send + '</button>' +
         '</div>' +
       '</div>'
     );

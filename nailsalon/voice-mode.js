@@ -159,9 +159,10 @@
         '<line x1="6" y1="6" x2="18" y2="18"/>' +
       '</svg>';
 
-    // Close button and language pills live on the overlay directly (not inside
-    // the max-width inner card) so they always anchor to the real screen edges.
+    // Close button, screen label, and language pills live on the overlay directly
+    // (not inside the max-width inner card) so they always anchor to screen edges.
     el.innerHTML =
+      '<div class="dlc-vm__screen-label" aria-hidden="true">Voice Assistant</div>' +
       '<button class="dlc-vm__close" type="button" aria-label="Close voice mode">' +
         closeSVG +
       '</button>' +

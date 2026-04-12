@@ -2668,7 +2668,9 @@ select.mp-input option {
   position: fixed;
   inset: 0;
   z-index: 600; /* above chat fullscreen overlay (z-index: 200) */
-  background: linear-gradient(160deg, #081624 0%, #0d2f50 45%, #102844 100%);
+  /* Nail salon "Velvet & Gilt" palette — deep purple-black with central spotlight */
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 38%, #271322 0%, #1b0f1c 55%, #130912 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2697,6 +2699,20 @@ html.dlc-vm-active body { overflow: hidden !important; }
   gap: .9rem;
 }
 
+/* ── Screen label (top-left) ──────────────────────────────────────────────── */
+.dlc-vm__screen-label {
+  position: absolute;
+  top: max(1.35rem, env(safe-area-inset-top));
+  left: 1.2rem;
+  font-size: .62rem;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: rgba(249, 168, 212, .45);
+  font-family: var(--font-b, 'Jost', sans-serif);
+  pointer-events: none;
+}
+
 /* ── Close button — positioned on overlay directly, always at real screen corner */
 .dlc-vm__close {
   position: absolute;
@@ -2704,37 +2720,40 @@ html.dlc-vm-active body { overflow: hidden !important; }
   right: max(1.1rem, env(safe-area-inset-right));
   width: 56px;
   height: 56px;
-  border: none;
-  background: rgba(255,255,255,.18);
+  border: 1px solid rgba(249,168,212,.15);
+  background: rgba(39,19,34,.65);
   border-radius: 50%;
-  color: #fff;
+  color: rgba(249,168,212,.8);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background .2s;
+  transition: background .2s, border-color .2s;
   -webkit-tap-highlight-color: transparent;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 1;
 }
-.dlc-vm__close:hover  { background: rgba(255,255,255,.28); }
-.dlc-vm__close:active { background: rgba(255,255,255,.38); }
+.dlc-vm__close:hover  { background: rgba(236,72,153,.18); border-color: rgba(249,168,212,.35); }
+.dlc-vm__close:active { background: rgba(236,72,153,.3);  border-color: rgba(236,72,153,.6); }
 
 /* ── Vendor name ──────────────────────────────────────────────────────────── */
 .dlc-vm__name {
-  color: var(--gold, #d4af37);
+  color: #F59E0B;
   font-family: var(--font-d, 'Bodoni Moda', serif);
-  font-size: 1.05rem;
+  font-size: 1.35rem;
   font-style: italic;
-  letter-spacing: .04em;
+  letter-spacing: .02em;
   text-align: center;
   min-height: 1.4em;
+  text-shadow: 0 0 32px rgba(245,158,11,.3);
 }
 
 /* ── State label ──────────────────────────────────────────────────────────── */
 .dlc-vm__state-label {
-  color: rgba(255,255,255,.65);
-  font-size: .82rem;
-  letter-spacing: .06em;
+  color: rgba(236, 72, 153, .8);
+  font-size: .75rem;
+  letter-spacing: .1em;
   text-transform: uppercase;
   min-height: 1.2em;
   text-align: center;
@@ -2766,19 +2785,20 @@ html.dlc-vm-active body { overflow: hidden !important; }
 
 /* ── AI voice button — waveform circle ────────────────────────────────────── */
 .dlc-vm__mic {
-  width: 90px;
-  height: 90px;
+  width: 104px;
+  height: 104px;
   border-radius: 50%;
-  border: 2px solid rgba(255,255,255,.15);
-  background: rgba(255,255,255,.07);
+  border: 1.5px solid rgba(236,72,153,.25);
+  background: rgba(39,19,34,.7);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   margin: .75rem 0;
-  transition: background .2s, border-color .2s, transform .12s;
-  box-shadow: none;
+  transition: background .25s, border-color .25s, transform .12s, box-shadow .25s;
+  /* Outer ring glow — subtle nail salon pink halo */
+  box-shadow: 0 0 0 10px rgba(236,72,153,.05), 0 6px 32px rgba(0,0,0,.55);
   -webkit-tap-highlight-color: transparent;
 }
 .dlc-vm__mic:active:not(:disabled) { transform: scale(.91); }
@@ -2796,7 +2816,8 @@ html.dlc-vm-active body { overflow: hidden !important; }
   display: block;
   width: 5px;
   border-radius: 3px;
-  background: currentColor;
+  /* Pink gradient bars — nail salon signature aesthetic */
+  background: linear-gradient(to top, #EC4899, rgba(249,168,212,.7));
   flex-shrink: 0;
   transition: height .2s ease, opacity .2s;
 }
@@ -2807,15 +2828,15 @@ html.dlc-vm-active body { overflow: hidden !important; }
 .dlc-vm__wave span:nth-child(4) { height: 18px; }
 .dlc-vm__wave span:nth-child(3) { height: 28px; }
 
-/* Listening — red pulse + bars oscillate */
+/* Listening — nail salon pink pulse + bars oscillate */
 .dlc-vm[data-state="listening"] .dlc-vm__mic {
-  background: rgba(200,40,40,.25);
-  border-color: rgba(220,60,60,.5);
+  background: rgba(236,72,153,.2);
+  border-color: rgba(236,72,153,.65);
   animation: dlcVmPulse 1.1s ease-in-out infinite;
 }
 @keyframes dlcVmPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(220,60,60,.45); }
-  50%       { box-shadow: 0 0 0 22px rgba(220,60,60,0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(236,72,153,.5), 0 0 0 10px rgba(236,72,153,.05); }
+  50%       { box-shadow: 0 0 0 24px rgba(236,72,153,0), 0 0 0 10px rgba(236,72,153,.05); }
 }
 .dlc-vm[data-state="listening"] .dlc-vm__wave span:nth-child(1) { animation: dlcBar .90s ease-in-out 0.00s infinite; }
 .dlc-vm[data-state="listening"] .dlc-vm__wave span:nth-child(2) { animation: dlcBar .80s ease-in-out 0.13s infinite; }
@@ -2830,15 +2851,18 @@ html.dlc-vm-active body { overflow: hidden !important; }
 }
 .dlc-vm[data-state="processing"] .dlc-vm__wave span { height: 6px !important; opacity: .45; }
 
-/* Speaking — gold pulse + faster bar animation */
+/* Speaking — gold pulse + faster bar animation + gold gradient bars */
 .dlc-vm[data-state="speaking"] .dlc-vm__mic {
-  background: rgba(212,175,55,.12);
-  border-color: rgba(212,175,55,.4);
+  background: rgba(245,158,11,.12);
+  border-color: rgba(245,158,11,.45);
   animation: dlcVmSpeak 1.4s ease-in-out infinite;
 }
 @keyframes dlcVmSpeak {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,.55); }
-  55%       { box-shadow: 0 0 0 26px rgba(212,175,55,0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,.55), 0 0 0 10px rgba(236,72,153,.05); }
+  55%       { box-shadow: 0 0 0 26px rgba(245,158,11,0), 0 0 0 10px rgba(236,72,153,.05); }
+}
+.dlc-vm[data-state="speaking"] .dlc-vm__wave span {
+  background: linear-gradient(to top, #F59E0B, rgba(245,158,11,.55));
 }
 .dlc-vm[data-state="speaking"] .dlc-vm__wave span:nth-child(1) { animation: dlcBar .55s ease-in-out 0.00s infinite; }
 .dlc-vm[data-state="speaking"] .dlc-vm__wave span:nth-child(2) { animation: dlcBar .45s ease-in-out 0.08s infinite; }
@@ -2862,9 +2886,9 @@ html.dlc-vm-active body { overflow: hidden !important; }
 
 /* ── AI response text ─────────────────────────────────────────────────────── */
 .dlc-vm__response {
-  color: rgba(255,255,255,.88);
-  font-size: .94rem;
-  line-height: 1.65;
+  color: rgba(255,255,255,.92);
+  font-size: 1.02rem;
+  line-height: 1.7;
   text-align: center;
   min-height: 3em;
   max-height: 9rem;
@@ -2880,19 +2904,23 @@ html.dlc-vm-active body { overflow: hidden !important; }
   margin-top: .25rem;
 }
 .dlc-vm__text-btn {
-  border: 1px solid rgba(255,255,255,.22);
-  background: transparent;
-  color: rgba(255,255,255,.65);
+  border: 1px solid rgba(249,168,212,.18);
+  background: rgba(39,19,34,.45);
+  color: rgba(249,168,212,.5);
   padding: .45rem 1.3rem;
   border-radius: 2rem;
   font-size: .78rem;
   cursor: pointer;
-  transition: border-color .18s, color .18s;
+  transition: border-color .18s, color .18s, background .18s;
   font-family: inherit;
 }
-.dlc-vm__text-btn:hover { border-color: rgba(255,255,255,.45); color: #fff; }
+.dlc-vm__text-btn:hover {
+  border-color: rgba(249,168,212,.4);
+  color: rgba(249,168,212,.85);
+  background: rgba(39,19,34,.7);
+}
 
-/* ── Language selector — pinned to bottom, thumb-friendly ─────────────────── */
+/* ── Language selector — pinned to bottom, thumb-friendly, glassmorphism ─────── */
 /* Lives on the overlay directly (not inside inner card) for full-width anchoring */
 .dlc-vm__langs {
   position: absolute;
@@ -2903,12 +2931,14 @@ html.dlc-vm-active body { overflow: hidden !important; }
   justify-content: center;
   gap: 1rem;
   padding: 1.1rem 2rem max(1.5rem, env(safe-area-inset-bottom));
-  background: linear-gradient(to bottom, transparent, rgba(8,22,36,.65));
+  background: linear-gradient(to bottom, transparent, rgba(19,9,18,.92));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 .dlc-vm__lang {
-  border: 1.5px solid rgba(255,255,255,.25);
-  background: rgba(255,255,255,.07);
-  color: rgba(255,255,255,.55);
+  border: 1.5px solid rgba(249,168,212,.15);
+  background: rgba(39,19,34,.6);
+  color: rgba(255,255,255,.45);
   padding: .65rem 1.5rem;
   min-width: 72px;
   min-height: 44px;
@@ -2917,19 +2947,23 @@ html.dlc-vm-active body { overflow: hidden !important; }
   font-weight: 700;
   letter-spacing: .07em;
   cursor: pointer;
-  transition: border-color .15s, color .15s, background .15s;
+  transition: border-color .2s, color .2s, background .2s;
   font-family: inherit;
   text-align: center;
   -webkit-tap-highlight-color: transparent;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 .dlc-vm__lang.dlc-vm__lang--active {
-  border-color: var(--gold, #d4af37);
-  color: var(--gold, #d4af37);
-  background: rgba(212,175,55,.14);
+  border-color: #EC4899;
+  color: #F9A8D4;
+  background: rgba(236,72,153,.18);
+  box-shadow: 0 0 14px rgba(236,72,153,.25);
 }
 .dlc-vm__lang:not(.dlc-vm__lang--active):hover {
-  border-color: rgba(255,255,255,.45);
-  color: rgba(255,255,255,.8);
+  border-color: rgba(249,168,212,.35);
+  color: rgba(255,255,255,.75);
+  background: rgba(39,19,34,.8);
 }
 
 /* ── Desktop: voice mode is mobile-only ───────────────────────────────────── */

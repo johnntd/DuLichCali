@@ -47,6 +47,9 @@ const DLCPricing = (() => {
     discount:     UBER_DISCOUNT, // 0.20 — DLC charges 20% below Uber market rate
   };
 
+  // Sienna (midsize) rates: between sedan and van
+  UBER_RATES.sienna = { base: 2.00, perMile: 1.20, perMin: 0.32, bookingFee: 4.50, minFare: 12.00 };
+
   /** Estimate what Uber would charge for the same trip */
   function estimateUberPrice(miles, vehicleType) {
     const rate = UBER_RATES[vehicleType] || UBER_RATES.sedan;
@@ -56,31 +59,54 @@ const DLCPricing = (() => {
   }
 
   /**
+   * Get the correct vehicle pricing tier based on passengers + region.
+   * Returns 'sedan' | 'sienna' | 'van'
+   */
+  function getVehiclePricingTier(passengers, regionId) {
+    const pax = Math.max(1, parseInt(passengers) || 1);
+    const isBayArea = regionId === 'bayarea' ||
+      (typeof window !== 'undefined' && window.DLCRegion && window.DLCRegion.current.id === 'bayarea' && !regionId);
+
+    if (isBayArea) return 'sienna'; // Bay Area only has Sienna
+    if (pax <= 3) return 'sedan';
+    if (pax <= 7) return 'sienna';
+    return 'van';
+  }
+
+  /**
    * Calculate a fare for the Airport & Private Ride flow.
    * Uses real route data from Google Routes API (actual miles + duration).
+   * Vehicle is selected automatically based on passenger count.
    * Single source of truth — eliminates the duplicate rate card in ride-intake.js.
    *
    * @param {number} miles       Ride distance in miles (pickup → destination)
    * @param {number} durMins     Ride duration in minutes
    * @param {object} [opts]
    * @param {number} [opts.deadheadMiles]  Driver → pickup distance in miles (default 0)
-   * @returns {{ miles, minutes, deadheadMiles, totalMiles, uberEstimate, dlcPrice, savings }}
+   * @param {number} [opts.passengers]     Passenger count — selects vehicle tier (default 1)
+   * @param {string} [opts.regionId]       'bayarea' | 'socal' — affects vehicle availability
+   * @returns {{ miles, minutes, deadheadMiles, totalMiles, vehicleName, vehicleSeats, uberEstimate, dlcPrice, savings }}
    */
   function quoteRide(miles, durMins, opts) {
-    const dh         = (opts && opts.deadheadMiles) || 0;
-    const totalMiles = miles + dh;
-    const r          = RIDE_RATE_CARD;
-    // Uber market rate: base + booking + distance component + time component
-    const uberRaw    = r.base + r.bookingFee + (totalMiles * r.perMile) + (durMins * r.perMin);
-    const uberEst    = Math.max(uberRaw, r.minFare);
+    const dh          = (opts && opts.deadheadMiles) || 0;
+    const pax         = Math.max(1, parseInt((opts && opts.passengers) || 1));
+    const regionId    = (opts && opts.regionId) || null;
+    const vehicleName = getVehicle(pax, regionId);
+    const r           = VEHICLE_RATE_CARDS[vehicleName] || VEHICLE_RATE_CARDS['Tesla Model Y'];
+    const totalMiles  = miles + dh;
+    // Uber-equivalent market rate: base + booking + distance + time
+    const uberRaw     = r.base + r.bookingFee + (totalMiles * r.perMile) + (durMins * r.perMin);
+    const uberEst     = Math.max(uberRaw, r.minFare);
     // DLC price = Uber baseline × (1 − 20% discount), rounded up to nearest $5
-    const dlcRaw     = uberEst * (1 - r.discount);
-    const dlcPrice   = Math.ceil(dlcRaw / 5) * 5;
+    const dlcRaw      = uberEst * (1 - UBER_DISCOUNT);
+    const dlcPrice    = Math.ceil(dlcRaw / 5) * 5;
     return {
       miles:         Math.round(miles),
       minutes:       Math.round(durMins),
       deadheadMiles: Math.round(dh),
       totalMiles:    Math.round(totalMiles),
+      vehicleName,
+      vehicleSeats:  r.seats,
       uberEstimate:  Math.round(uberEst),
       dlcPrice,
       savings:       Math.round(uberEst) - dlcPrice,
@@ -299,22 +325,35 @@ const DLCPricing = (() => {
       : FUEL_FALLBACK;
   }
 
-  // Vehicle seat capacities — used for capacity warnings
+  // Vehicle seat capacities — used for capacity warnings and UI display
   const VEHICLE_SEATS = {
     'Tesla Model Y': 4,
     'Toyota Sienna': 7,
     'Mercedes Van':  12,
   };
 
+  // Per-vehicle rate cards for quoteRide() — capacity-aware pricing
+  // These are Uber-equivalent market rates; DLC charges UBER_DISCOUNT (20%) less.
+  // Tesla (4-seat) · Sienna (7-seat) · Van (12-seat)
+  const VEHICLE_RATE_CARDS = {
+    'Tesla Model Y': { seats: 4,  base: 3.00, perMile: 2.30, perMin: 0.30, bookingFee: 2.50, minFare: 25.00 },
+    'Toyota Sienna': { seats: 7,  base: 4.00, perMile: 3.00, perMin: 0.40, bookingFee: 3.50, minFare: 35.00 },
+    'Mercedes Van':  { seats: 12, base: 6.00, perMile: 3.80, perMin: 0.55, bookingFee: 5.00, minFare: 60.00 },
+  };
+
   function getVehicle(passengers, regionId) {
+    var pax = Math.max(1, parseInt(passengers) || 1);
     var isBayArea = regionId === 'bayarea' ||
       (typeof window !== 'undefined' && window.DLCRegion &&
        window.DLCRegion.current && window.DLCRegion.current.id === 'bayarea' && !regionId);
     if (isBayArea) {
-      // Sienna holds 7; larger groups need Mercedes Van
-      return passengers > 7 ? 'Mercedes Van' : 'Toyota Sienna';
+      // Bay Area: no Tesla in fleet — Sienna is the base vehicle
+      return pax > 7 ? 'Mercedes Van' : 'Toyota Sienna';
     }
-    return passengers <= 3 ? 'Tesla Model Y' : 'Mercedes Van';
+    // SoCal + default: 3-tier capacity matching
+    if (pax <= 3) return 'Tesla Model Y';   // 1–3 pax → 4-seat Tesla
+    if (pax <= 7) return 'Toyota Sienna';   // 4–7 pax → 7-seat Sienna
+    return 'Mercedes Van';                  // 8+ pax → 12-seat Van
   }
 
   function lookupCityMiles(query) {
@@ -344,9 +383,10 @@ const DLCPricing = (() => {
    * @param {number} passengers Number of passengers
    * @returns {number}          Estimated cost in USD (rounded)
    */
-  function transferCost(miles, passengers) {
-    const isVan      = passengers > 3;
-    const vehType    = isVan ? 'van' : 'sedan';
+  function transferCost(miles, passengers, regionId) {
+    const vehType    = getVehiclePricingTier(passengers, regionId);
+    const isVan      = vehType === 'van';
+    const isSienna   = vehType === 'sienna';
     const uberPrice  = estimateUberPrice(miles, vehType);
 
     // Our price = Uber price minus 20% discount
@@ -357,25 +397,25 @@ const DLCPricing = (() => {
     if (longHaul) {
       // Add driver compensation for long trips
       ourPrice += 250;
-      if (isVan) ourPrice += 50; // larger vehicle wear
+      if (isVan) ourPrice += 75;
+      else if (isSienna) ourPrice += 50;
     } else if (miles > 100) {
       // Medium distance: small surcharge for highway tolls/time
       ourPrice += miles * 0.10;
     }
 
-    // Enforce minimum fare
-    const minFare = isVan ? 120 : BASE_MIN;
+    // Enforce minimum fare by vehicle tier
+    const minFare = isVan ? 140 : isSienna ? 120 : BASE_MIN;
     ourPrice = Math.max(minFare, ourPrice);
 
     return Math.round(ourPrice);
   }
 
   /** Returns transfer cost breakdown with Uber comparison */
-  function transferCostWithComparison(miles, passengers) {
-    const isVan     = passengers > 3;
-    const vehType   = isVan ? 'van' : 'sedan';
+  function transferCostWithComparison(miles, passengers, regionId) {
+    const vehType   = getVehiclePricingTier(passengers, regionId);
     const uberPrice = estimateUberPrice(miles, vehType);
-    const ourPrice  = transferCost(miles, passengers);
+    const ourPrice  = transferCost(miles, passengers, regionId);
     const savings   = Math.round(uberPrice - ourPrice);
     return {
       ourPrice,
@@ -633,9 +673,11 @@ const DLCPricing = (() => {
     transferCostWithComparison,
     tourCost,
     estimateUberPrice,
+    getVehiclePricingTier,
     // Ride-hailing fare engine (used by ride-intake.js)
     quoteRide,
-    RIDE_RATE_CARD,
+    RIDE_RATE_CARD,       // backwards-compat: Tesla-only rate card
+    VEHICLE_RATE_CARDS,   // capacity-aware rate cards keyed by vehicle name
     VEHICLE_SEATS,
     // Higher-level estimates (used by AI chat)
     estimateTour,

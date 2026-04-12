@@ -712,6 +712,8 @@ window.RideIntake = (function () {
         if (box2) box2.innerHTML = _T.vehicleBox(_driverVehicle.name, _driverVehicle.seats);
       }
     }
+    // Re-compute price on step 6 (review) with final passengers count
+    if (n === 6) { scheduleDistance(); }
     if (n < 3) { showPriceHint(); }
 
     // Step 6 (Review): show full price box + review card; hide on all other steps
@@ -765,7 +767,8 @@ window.RideIntake = (function () {
     var paxId = _type === 'pickup' ? 'ri_p_passengers' : _type === 'dropoff' ? 'ri_d_passengers' : 'ri_r_passengers';
     var pax = val(paxId) || '—';
     var vehicle = _driverVehicle ? _driverVehicle.name :
-                  (DLCPricing.RIDE_RATE_CARD && DLCPricing.RIDE_RATE_CARD.vehicleName) || 'Tesla Model Y';
+                  (_quote && _quote.vehicleName) ||
+                  (DLCPricing.getVehicle ? DLCPricing.getVehicle(parseInt(val(paxId) || '1', 10) || 1) : 'Tesla Model Y');
 
     card.innerHTML =
       '<div class="ri-review__title">' + _T.reviewHeading + '</div>' +
@@ -838,6 +841,68 @@ window.RideIntake = (function () {
         if (!val('ri_r_phone'))      errors.push(_T.errPhone);
       }
     }
+
+    // ── Capacity validation (all ride types, step 4 = passengers) ──
+    if (step === 4 && errors.length === 0) {
+      var paxId = _type === 'pickup' ? 'ri_p_passengers' : _type === 'dropoff' ? 'ri_d_passengers' : 'ri_r_passengers';
+      var pax   = parseInt(val(paxId) || '1', 10);
+      var maxSeats = _driverVehicle ? _driverVehicle.seats : 12;
+      if (pax > maxSeats) {
+        errors.push((_driverVehicle ? _driverVehicle.name : 'This vehicle') +
+          ' holds max ' + maxSeats + ' passengers. You selected ' + pax + '.');
+      }
+      // DLCRide capacity check (if ride-booking.js loaded)
+      if (window.DLCRide && pax > 0) {
+        var res = DLCRide.resolveVehicle(pax);
+        if (res.error) {
+          errors.push(res.errorEn || res.error);
+        } else if (_driverVehicle && res.recommended) {
+          // Check if current vehicle can handle the passengers
+          var vehCap = DLCRide.validateCapacity(pax, _mapVehicleType(_driverVehicle.name));
+          if (!vehCap.valid) {
+            errors.push(vehCap.messageEn || vehCap.message);
+            if (vehCap.recommendation) {
+              errors.push('Recommended: ' + vehCap.recommendation.name +
+                ' (' + vehCap.recommendation.description + ')');
+            }
+          }
+        }
+      }
+    }
+
+    // ── Feasibility check (time step — step 3) ──
+    if (step === 3 && errors.length === 0) {
+      var dateId, timeId;
+      if (_type === 'pickup')  { dateId = 'ri_arrival_date'; timeId = 'ri_arrival_time'; }
+      else if (_type === 'dropoff') { dateId = 'ri_depart_date'; timeId = 'ri_depart_time'; }
+      else { dateId = 'ri_ride_date'; timeId = 'ri_ride_time'; }
+      var d = val(dateId), t = val(timeId);
+      if (d && t) {
+        var requested = new Date(d + 'T' + t + ':00');
+        var now = new Date();
+        var leadMins = (requested - now) / 60000;
+        if (requested < now) {
+          errors.push('Cannot book a ride in the past.');
+        } else if (leadMins < 45) {
+          var nextSlot = new Date(now.getTime() + 45 * 60000);
+          nextSlot.setMinutes(Math.ceil(nextSlot.getMinutes() / 15) * 15, 0, 0);
+          errors.push('Need at least 45 min lead time. Earliest: ' +
+            nextSlot.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }));
+        }
+      }
+    }
+
+    // ── Dropoff address ambiguity check (step 2 for pickup, step 2 for ride) ──
+    if (errors.length === 0 && window.DLCRide) {
+      var addrToCheck = null;
+      if (_type === 'pickup' && step === 2) addrToCheck = val('ri_dropoff_addr');
+      if (_type === 'ride'   && step === 2) addrToCheck = val('ri_to_addr');
+      if (addrToCheck && DLCRide.isAmbiguousAddress(addrToCheck)) {
+        var hint = DLCRide.suggestClarification(addrToCheck);
+        errors.push(hint.en);
+      }
+    }
+
     return errors;
   }
 
@@ -1025,6 +1090,11 @@ window.RideIntake = (function () {
     _lastOrigin = pair.origin;
     _lastDest   = pair.destination;
 
+    // Read current passengers count for vehicle-aware pricing
+    var paxId = _type === 'pickup' ? 'ri_p_passengers' : _type === 'dropoff' ? 'ri_d_passengers' : 'ri_r_passengers';
+    var pax   = Math.max(1, parseInt(val(paxId) || '1', 10) || 1);
+    var regionId = (window.DLCRegion && window.DLCRegion.current) ? window.DLCRegion.current.id : null;
+
     var ridePromise = _routeMatrix(pair.origin, pair.destination);
 
     if (_driverCoords) {
@@ -1034,12 +1104,12 @@ window.RideIntake = (function () {
       Promise.all([ridePromise, deadheadPromise]).then(function(results) {
         var ride     = results[0];
         var deadhead = results[1];
-        _quote = DLCPricing.quoteRide(ride.distMiles, ride.durMins, { deadheadMiles: deadhead.distMiles });
+        _quote = DLCPricing.quoteRide(ride.distMiles, ride.durMins, { deadheadMiles: deadhead.distMiles, passengers: pax, regionId: regionId });
         showPrice(_quote);
       }).catch(function() {
         // Deadhead failed — fall back to ride-only price
         ridePromise.then(function(ride) {
-          _quote = DLCPricing.quoteRide(ride.distMiles, ride.durMins);
+          _quote = DLCPricing.quoteRide(ride.distMiles, ride.durMins, { passengers: pax, regionId: regionId });
           showPrice(_quote);
         }).catch(function() {
           showPriceHint(_T.noRoute);
@@ -1048,7 +1118,7 @@ window.RideIntake = (function () {
     } else {
       // No driver GPS yet — price on ride distance only
       ridePromise.then(function(ride) {
-        _quote = DLCPricing.quoteRide(ride.distMiles, ride.durMins);
+        _quote = DLCPricing.quoteRide(ride.distMiles, ride.durMins, { passengers: pax, regionId: regionId });
         showPrice(_quote);
       }).catch(function() {
         showPriceHint(_T.noRoute);
@@ -1219,20 +1289,55 @@ window.RideIntake = (function () {
 
   function buildBookingData(bookingId) {
     var paxId = _type === 'pickup' ? 'ri_p_passengers' : _type === 'dropoff' ? 'ri_d_passengers' : 'ri_r_passengers';
+    var pax = parseInt(val(paxId) || '1', 10);
+    var vehName = _driverVehicle ? _driverVehicle.name :
+                  (_quote && _quote.vehicleName) ||
+                  (DLCPricing.getVehicle ? DLCPricing.getVehicle(pax) : 'Tesla Model Y');
+    var vehSeats = _driverVehicle ? (_driverVehicle.seats || 4) :
+                   (_quote && _quote.vehicleSeats) ||
+                   (DLCPricing.VEHICLE_SEATS && DLCPricing.VEHICLE_SEATS[vehName]) || 4;
+
+    // Resolve correct vehicle based on capacity
+    var resolvedVehicle = vehName;
+    var vehicleCapacity = vehSeats;
+    var pricingTier = 'standard';
+    if (window.DLCRide) {
+      var res = DLCRide.resolveVehicle(pax);
+      if (res.recommended) {
+        resolvedVehicle = res.recommended.name;
+        vehicleCapacity = res.recommended.capacity;
+        pricingTier = res.recommended.tier;
+      }
+    }
+
+    // Build full-trip route link (driver → pickup → dropoff)
+    var fullRouteLink = (_lastOrigin && _lastDest) ? _mapsRoute(_lastOrigin, _lastDest) : null;
+    if (window.DLCRide && _lastOrigin && _lastDest) {
+      var rideObj = { pickupLocation: _lastOrigin, dropoffLocation: _lastDest };
+      var driverLoc = (_driverVehicle && _driverVehicle.currentLocation) ? { address: _driverVehicle.currentLocation } : null;
+      var fullLink = DLCRide.generateMapLink(rideObj, driverLoc);
+      if (fullLink) fullRouteLink = fullLink;
+    }
+
     var base = {
       bookingId: bookingId, status: 'dispatching',
-      vehicle: _driverVehicle ? _driverVehicle.name : (DLCPricing.RIDE_RATE_CARD && DLCPricing.RIDE_RATE_CARD.vehicleName) || 'Tesla Model Y',
+      vehicle: resolvedVehicle,
+      vehicleCapacity: vehicleCapacity,
+      pricingTier: pricingTier,
       driverId: _driverVehicle ? _driverVehicle.driverId : null,
       serviceType: _type === 'ride' ? 'private_ride' : (_type === 'pickup' ? 'pickup' : 'dropoff'),
-      passengers:    parseInt(val(paxId) || '1', 10),
+      passengers:    pax,
       customerName:  val(_type === 'pickup' ? 'ri_p_name'  : _type === 'dropoff' ? 'ri_d_name'  : 'ri_r_name'),
       customerPhone: val(_type === 'pickup' ? 'ri_p_phone' : _type === 'dropoff' ? 'ri_d_phone' : 'ri_r_phone'),
       notes:         val(_type === 'pickup' ? 'ri_p_notes' : _type === 'dropoff' ? 'ri_d_notes' : 'ri_r_notes') || '',
       estimatedPrice:    _quote ? _quote.dlcPrice        : null,
       estimatedMiles:    _quote ? _quote.miles           : null,
       estimatedDuration: _quote ? _quote.minutes         : null,
-      routeLink:         (_lastOrigin && _lastDest) ? _mapsRoute(_lastOrigin, _lastDest) : null,
+      uberEstimate:      _quote ? _quote.uberEstimate    : null,
+      savings:           _quote ? _quote.savings         : null,
+      routeLink:         fullRouteLink,
       region:            (window.DLCRegion && window.DLCRegion.current) ? window.DLCRegion.current.id : null,
+      feasibilityStatus: 'feasible', // passed validation in step 3
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     };
     if (_type === 'pickup') {
@@ -1358,6 +1463,15 @@ window.RideIntake = (function () {
   function setText(id, t)  { var e = document.getElementById(id); if (e) e.textContent = t; }
   function setHide(id, h)  { var e = document.getElementById(id); if (e) e.hidden = !!h; }
   function svcLabel()      { return { pickup:'Airport Pickup', dropoff:'Airport Dropoff', ride:'Private Ride' }[_type] || _type; }
+
+  /** Map display vehicle name to DLCRide type key */
+  function _mapVehicleType(name) {
+    if (!name) return 'sedan';
+    var n = name.toLowerCase();
+    if (n.includes('sienna'))  return 'sienna';
+    if (n.includes('van') || n.includes('mercedes') || n.includes('sprinter')) return 'van';
+    return 'sedan';
+  }
   function generateId() {
     var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', id = 'DLC-', arr = new Uint8Array(6);
     crypto.getRandomValues(arr);

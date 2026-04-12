@@ -1079,15 +1079,16 @@
         };
       }
     }
-    // Fallback rough estimate
-    var isVan   = p > 3;
-    var minFare = isVan ? 120 : 100;
+    // Fallback rough estimate — 3-tier vehicle selection
+    var vehicleName = (DLCPricing && DLCPricing.getVehicle) ? DLCPricing.getVehicle(p)
+                    : (p > 7 ? 'Mercedes Van' : p > 3 ? 'Toyota Sienna' : 'Tesla Model Y');
+    var minFare = vehicleName === 'Mercedes Van' ? 150 : vehicleName === 'Toyota Sienna' ? 120 : 100;
     var uberEst = Math.round(minFare / 0.8);
     return {
       ourPrice: minFare,
       uberEst:  uberEst,
       savings:  uberEst - minFare,
-      vehicle:  isVan ? 'Mercedes Van' : 'Tesla Model Y',
+      vehicle:  vehicleName,
       miles:    null,
       approx:   true,
     };
@@ -1177,6 +1178,35 @@
     if (!ap) return null;
     var query = terminal ? ap.name + ' ' + terminal : ap.name;
     return 'https://maps.google.com/?q=' + encodeURIComponent(query);
+  }
+
+  // ── Vehicle recommendation message (injected after passengers collected) ──────
+
+  // Returns a short vehicle recommendation string in the current draft language,
+  // or null if DLCPricing is unavailable.
+  function _getVehicleRecMsg(pax) {
+    if (!pax) return null;
+    var p = Math.max(1, parseInt(pax) || 1);
+    if (typeof DLCPricing === 'undefined' || !DLCPricing.getVehicle) return null;
+    var v     = DLCPricing.getVehicle(p);
+    var seats = (DLCPricing.VEHICLE_SEATS && DLCPricing.VEHICLE_SEATS[v]) ||
+                (v === 'Tesla Model Y' ? 4 : v === 'Toyota Sienna' ? 7 : 12);
+    var lang  = (draft && draft.lang) || 'en';
+    if (lang === 'vi') {
+      if (v === 'Tesla Model Y') return '🚗 Tesla Model Y (' + seats + ' chỗ) — phù hợp cho nhóm ' + p + ' người.';
+      if (v === 'Toyota Sienna') return '🚐 Toyota Sienna (' + seats + ' chỗ) — phù hợp cho nhóm ' + p + ' người.';
+      return '🚐 Mercedes Van (' + seats + ' chỗ) — phù hợp nhóm lớn ' + p + ' người.';
+    }
+    if (lang === 'es') {
+      if (v === 'Tesla Model Y') return '🚗 Tesla Model Y (' + seats + ' plazas) — perfecto para ' + p + ' pasajero' + (p > 1 ? 's' : '') + '.';
+      if (v === 'Toyota Sienna') return '🚐 Toyota Sienna (' + seats + ' plazas) — ideal para tu grupo de ' + p + '.';
+      return '🚐 Mercedes Van (' + seats + ' plazas) — ideal para grupos de ' + p + '.';
+    }
+    // English (default)
+    var pStr = p + ' passenger' + (p > 1 ? 's' : '');
+    if (v === 'Tesla Model Y') return '🚗 Tesla Model Y (' + seats + ' seats) — perfect for ' + pStr + '.';
+    if (v === 'Toyota Sienna') return '🚐 Toyota Sienna (' + seats + ' seats) — recommended for ' + pStr + '.';
+    return '🚐 Mercedes Van (' + seats + ' seats) — ready for your group of ' + p + '.';
   }
 
   // ── Workflow Definitions ───────────────────────────────────────────────────
@@ -1781,6 +1811,11 @@
       ],
       summary: function(f) {
         var est = estimateRide(f.passengers, f.pickupAddress, f.dropoffAddress);
+        // Resolve vehicle label for display
+        var vehicleLabel = (est && est.vehicle) ||
+                           (DLCPricing && DLCPricing.getVehicle ? DLCPricing.getVehicle(f.passengers) : null);
+        var vehicleSeats = vehicleLabel && DLCPricing && DLCPricing.VEHICLE_SEATS
+                         ? DLCPricing.VEHICLE_SEATS[vehicleLabel] : null;
         // 120-mile service range warning
         var rangeWarn = (est && est.miles && est.miles > MAX_SERVICE_MILES)
           ? '\n⚠️ This trip is ~' + est.miles + ' miles — our team will confirm availability and final pricing.'
@@ -1792,6 +1827,7 @@
           S('sfDate') + fmtDate(f.requestedDate),
           S('sfTime') + fmtTime(f.requestedTime),
           S('sfPassengers') + (f.passengers || '') + S('sfPassengersUnit'),
+          vehicleLabel ? '🚗 ' + vehicleLabel + (vehicleSeats ? ' (' + vehicleSeats + ' seats)' : '') : null,
           S('sfName') + (f.customerName || ''),
           S('sfPhone') + fmtPhone(f.customerPhone),
           f.notes ? S('sfNotes') + f.notes : null,
@@ -2344,6 +2380,7 @@
     }
 
     // ── Extract awaited field first ────────────────────────────────────────
+    var _justCollected = null;
     if (draft.awaitingField) {
       var awFd = null;
       for (var i = 0; i < wf.fields.length; i++) {
@@ -2356,10 +2393,18 @@
             var err = awFd.validate(val, draft.collectedFields);
             if (err) { saveDraft(draft); return err; }
           }
+          _justCollected = draft.awaitingField;
           draft.collectedFields[draft.awaitingField] = val;
           draft.awaitingField = null;
         }
       }
+    }
+
+    // Vehicle recommendation: inject after passengers collected for ride workflows
+    if (_justCollected === 'passengers' &&
+        (draft.intent === 'airport_pickup' || draft.intent === 'airport_dropoff' || draft.intent === 'private_ride')) {
+      var _vrec = _getVehicleRecMsg(draft.collectedFields.passengers);
+      if (_vrec) draft._vehicleRec = _vrec;
     }
 
     // ── Proactively extract any other bonus fields ─────────────────────────
@@ -2382,6 +2427,10 @@
         draft.collectedFields[nextFd.key] = '';
         return process(userText);
       }
+      // Prepend vehicle recommendation (fires once after passengers collected)
+      var vrec = draft._vehicleRec || '';
+      delete draft._vehicleRec;
+      if (vrec) q = vrec + '\n' + q;
       // Prepend any correction acknowledgment
       var ack = draft._correctionAck || '';
       delete draft._correctionAck;
@@ -2530,6 +2579,8 @@
       var airEstStr = estimateTransfer(f.passengers||1, f.airport, addrField);
       var airPriceMatch = typeof airEstStr === 'string' && airEstStr.match(/~?\$(\d+)/);
       var airPrice = airPriceMatch ? parseInt(airPriceMatch[1], 10) : null;
+      // Capacity-matched vehicle type
+      var airVehicleType = DLCPricing && DLCPricing.getVehicle ? DLCPricing.getVehicle(f.passengers||1) : null;
 
       await db.collection('bookings').doc(orderId).set({
         bookingId:orderId, trackingToken,
@@ -2540,6 +2591,7 @@
         pickupAddress:  isPickup ? '' : addrField,
         address:addrField,  // keep for backwards compat
         passengers:f.passengers||1, luggageCount:f.luggageCount||0,
+        vehicleType: airVehicleType||null,  // capacity-matched vehicle
         // Normalized customer fields (ride-intake compatible names)
         customerName:f.customerName||'', customerPhone:f.customerPhone||'',
         name:f.customerName||'', phone:f.customerPhone||'',  // keep for backwards compat
@@ -2760,6 +2812,7 @@
       var prPreAssigned  = prEligDrivers.length === 1 ? prEligDrivers[0] : null;
       var prBookStatus   = 'dispatching'; // Phase 13: all rides go through offer/accept flow
 
+      var prVehicleType = DLCPricing && DLCPricing.getVehicle ? DLCPricing.getVehicle(f.passengers||1) : (rideEst ? rideEst.vehicle : null);
       await db.collection('bookings').doc(orderId).set({
         bookingId:orderId, trackingToken,
         status:prBookStatus, serviceType:'private_ride', datetime,
@@ -2768,6 +2821,7 @@
         rideDate: f.requestedDate||'',
         rideTime: f.requestedTime||'',
         passengers:f.passengers||1,
+        vehicleType: prVehicleType||null,  // capacity-matched vehicle
         // Normalized customer fields
         customerName:f.customerName||'', customerPhone:f.customerPhone||'',
         name:f.customerName||'', phone:f.customerPhone||'',  // keep for backwards compat

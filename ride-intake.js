@@ -477,8 +477,11 @@ window.RideIntake = (function () {
     var hasLoc = false;
 
     if (window.DLCLocation && DLCLocation.state && DLCLocation.state.lat) {
-      // Sort by proximity from DLCLocation
-      var near = DLCLocation.nearestAirports(20);  // get all, sorted
+      // Filter to airports within 120 miles; fallback to 3 nearest if none qualify
+      var near = DLCLocation.airportsWithinMiles(120);
+      if (!near || near.length === 0) {
+        near = DLCLocation.nearestAirports(3);
+      }
       sorted = near.filter(function (a) { return !!AIRPORTS[a.code]; });
       hasLoc = true;
     } else {

@@ -188,35 +188,98 @@ button {
   min-width: 36px;
 }
 
-/* Language toggle — EN / VI / ES pills in vendor salon top bar */
-.mp-bar__lang-toggle {
-  display: flex;
-  align-items: center;
-  gap: 2px;
+/* Globe language picker — single icon replaces old 3-pill toggle */
+.mp-lang-wrap {
+  position: relative;
   flex-shrink: 0;
 }
-.mp-bar__lang-btn {
+.mp-lang-globe {
+  display: flex;
+  align-items: center;
+  gap: 3px;
   background: none;
-  border: 1px solid rgba(255,255,255,.25);
-  border-radius: 4px;
-  color: rgba(255,255,255,.55);
-  font-size: .65rem;
-  font-weight: 600;
-  letter-spacing: .04em;
-  padding: 2px 6px;
+  border: none;
+  padding: 6px 8px;
+  color: rgba(255,255,255,.65);
   cursor: pointer;
-  transition: background .15s, color .15s, border-color .15s;
+  border-radius: 6px;
+  transition: background .15s, color .15s;
   -webkit-tap-highlight-color: transparent;
-  line-height: 1.4;
+  line-height: 1;
 }
-.mp-bar__lang-btn--active {
-  background: rgba(255,255,255,.18);
-  border-color: rgba(255,255,255,.55);
+.mp-lang-globe:hover,
+.mp-lang-globe:focus-visible {
+  background: rgba(255,255,255,.12);
   color: #fff;
 }
-.mp-bar__lang-btn:not(.mp-bar__lang-btn--active):hover {
-  background: rgba(255,255,255,.1);
-  color: rgba(255,255,255,.8);
+.mp-lang-globe svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+.mp-lang-globe__code {
+  font-size: .65rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  font-family: var(--font-b);
+}
+/* Dropdown */
+.mp-lang-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background: #0d2f50;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.45);
+  min-width: 144px;
+  overflow: hidden;
+  z-index: 200;
+}
+.mp-lang-menu[hidden] { display: none; }
+.mp-lang-menu__item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 11px 16px;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,.7);
+  font-family: var(--font-b);
+  font-size: .875rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background .12s, color .12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.mp-lang-menu__item + .mp-lang-menu__item {
+  border-top: 1px solid rgba(255,255,255,.07);
+}
+.mp-lang-menu__item:hover {
+  background: rgba(255,255,255,.08);
+  color: #fff;
+}
+.mp-lang-menu__item--active {
+  color: #fff;
+  font-weight: 600;
+}
+.mp-lang-menu__item--active::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: #38bdf8;
+  border-radius: 50%;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+.mp-lang-menu__item:not(.mp-lang-menu__item--active)::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 10px;
+  flex-shrink: 0;
 }
 
 /* ── Hero ──────────────────────────────────────────────────────────────────── */

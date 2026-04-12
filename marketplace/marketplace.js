@@ -19,6 +19,7 @@
   var voiceModeIcon = '<svg viewBox="0 0 20 14" fill="currentColor" aria-hidden="true"><rect x="0" y="5" width="3" height="4" rx="1.5"/><rect x="4.25" y="2.5" width="3" height="9" rx="1.5"/><rect x="8.5" y="0" width="3" height="14" rx="1.5"/><rect x="12.75" y="2.5" width="3" height="9" rx="1.5"/><rect x="17" y="5" width="3" height="4" rx="1.5"/></svg>';
   var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
   var starIcon = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+  var globeIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>';
 
   // ── State ──────────────────────────────────────────────────────────────────────
 
@@ -61,11 +62,40 @@
       rows.forEach(function(r) { var p = r.split(':'); obj[p[0]] = p.slice(1).join(':'); });
       el.placeholder = obj[_currentLang] || obj.en || '';
     });
-    [].forEach.call(document.querySelectorAll('.mp-bar__lang-btn'), function (btn) {
-      btn.classList.toggle('mp-bar__lang-btn--active', btn.getAttribute('data-lang') === _currentLang);
+    // Update globe badge and dropdown active state
+    var badge = document.getElementById('mpLangCode');
+    if (badge) badge.textContent = _currentLang.toUpperCase();
+    [].forEach.call(document.querySelectorAll('.mp-lang-menu__item'), function (btn) {
+      btn.classList.toggle('mp-lang-menu__item--active', btn.getAttribute('data-lang') === _currentLang);
     });
   }
   window._mpSetLang = _mpSetLang;
+
+  // Language dropdown toggle / close helpers
+  function _mpToggleLangMenu(e) {
+    var menu = document.getElementById('mpLangMenu');
+    if (!menu) return;
+    if (menu.hidden) {
+      menu.hidden = false;
+      setTimeout(function () {
+        document.addEventListener('click', _mpCloseLangMenuOutside, { once: true, capture: true });
+      }, 0);
+    } else {
+      menu.hidden = true;
+    }
+    if (e) e.stopPropagation();
+  }
+  function _mpCloseLangMenuOutside(e) {
+    var wrap = document.getElementById('mpLangWrap');
+    if (wrap && wrap.contains(e.target)) return;
+    _mpCloseLangMenu();
+  }
+  function _mpCloseLangMenu() {
+    var menu = document.getElementById('mpLangMenu');
+    if (menu) menu.hidden = true;
+  }
+  window._mpToggleLangMenu = _mpToggleLangMenu;
+  window._mpCloseLangMenu  = _mpCloseLangMenu;
 
   // ── Capacity Engine ────────────────────────────────────────────────────────────
   // Queries Firestore to determine how many slots remain on a given date.
@@ -194,15 +224,23 @@
 
   // Clean vendor-owned top bar for salon pages — only vendor name, no global contact
   function renderSalonBar(biz) {
-    var langs = ['en','vi','es'];
-    var langBtns = langs.map(function(l) {
-      return '<button type="button" class="mp-bar__lang-btn' + (_currentLang === l ? ' mp-bar__lang-btn--active' : '') +
-        '" data-lang="' + l + '" onclick="window._mpSetLang(\'' + l + '\')">' + l.toUpperCase() + '</button>';
+    var langNames = { en: 'English', vi: 'Tiếng Việt', es: 'Español' };
+    var menuItems = ['en','vi','es'].map(function(l) {
+      var active = _currentLang === l;
+      return '<button type="button" class="mp-lang-menu__item' + (active ? ' mp-lang-menu__item--active' : '') +
+        '" data-lang="' + l + '" onclick="window._mpSetLang(\'' + l + '\');window._mpCloseLangMenu()">' +
+        langNames[l] + '</button>';
     }).join('');
     return '<div class="mp-bar mp-bar--vendor">' +
       '<button type="button" class="mp-bar__back mp-bar__back--icon" onclick="history.back()" aria-label="Back">' + arrowLeftIcon + '</button>' +
       '<span class="mp-bar__title">' + escHtml(biz.name) + '</span>' +
-      '<div class="mp-bar__lang-toggle">' + langBtns + '</div>' +
+      '<div class="mp-lang-wrap" id="mpLangWrap">' +
+        '<button type="button" class="mp-lang-globe" id="mpLangGlobe" onclick="window._mpToggleLangMenu(event)" aria-label="Change language">' +
+          globeIcon +
+          '<span class="mp-lang-globe__code" id="mpLangCode">' + _currentLang.toUpperCase() + '</span>' +
+        '</button>' +
+        '<div class="mp-lang-menu" id="mpLangMenu" hidden>' + menuItems + '</div>' +
+      '</div>' +
     '</div>';
   }
 

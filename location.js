@@ -249,7 +249,7 @@ window.DLCLocation = (function () {
   // ── Public: suggested pickup label for AI workflows ─────────────────────────
   function pickupHint() {
     if (!state.lat) return null;
-    return state.city || state.place || null;
+    return state.place || state.city || null;
   }
 
   // ── Expose public API ────────────────────────────────────────────────────────

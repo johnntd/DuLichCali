@@ -182,6 +182,10 @@
       errTimePast:      '❌ Giờ đó đã qua rồi. Vui lòng chọn giờ sau.',
       errAptTimeTooSoon:'❌ Đặt đón sân bay cần trước ít nhất 2 giờ. Vui lòng chọn giờ sau.',
       errRideTimeTooSoon:'❌ Đặt xe cần trước ít nhất 1 giờ. Vui lòng chọn giờ sau.',
+      errAptNotFeasible:'❌ Tài xế gần nhất dự kiến tới sân bay lúc {time}. Vui lòng chọn từ {time} trở đi.',
+      qGpsPickupFull:   '\n📍 Tôi thấy bạn đang ở:\n',
+      qGpsPickupUse:    '\nGõ "đây" để dùng địa điểm này, hoặc nhập địa chỉ khác.',
+      qAddrClarify:     '📍 Địa chỉ đó có vẻ chưa đủ cụ thể. Vui lòng cung cấp địa chỉ đường phố hoặc tên đầy đủ\n(VD: 123 Main St San Jose, hoặc Marriott San Jose Downtown)',
     },
     en: {
       cancelled:     'Cancelled. How else can I help you?',
@@ -301,6 +305,10 @@
       errTimePast:      '❌ That time has already passed. Please choose a later time.',
       errAptTimeTooSoon:'❌ Airport pickups require at least 2 hours advance notice. Please choose a later time.',
       errRideTimeTooSoon:'❌ Rides require at least 1 hour advance notice. Please choose a later time.',
+      errAptNotFeasible:'❌ The nearest available driver can reach the airport by {time}. Please choose {time} or later.',
+      qGpsPickupFull:   '\n📍 Found your current location:\n',
+      qGpsPickupUse:    '\nType "here" to use this, or enter a different address.',
+      qAddrClarify:     '📍 That address needs more detail. Please provide a full street address or landmark name\n(e.g., 123 Main St San Jose, or Marriott San Jose Downtown)',
     },
     es: {
       cancelled:     'Cancelado. ¿En qué más puedo ayudarte?',
@@ -420,6 +428,10 @@
       errTimePast:      '❌ Esa hora ya pasó. Por favor elige una hora posterior.',
       errAptTimeTooSoon:'❌ Los traslados al aeropuerto requieren al menos 2 horas de anticipación. Elige otra hora.',
       errRideTimeTooSoon:'❌ Los viajes requieren al menos 1 hora de anticipación. Elige otra hora.',
+      errAptNotFeasible:'❌ El conductor más cercano puede llegar al aeropuerto a las {time}. Por favor elige las {time} o más tarde.',
+      qGpsPickupFull:   '\n📍 Encontré tu ubicación actual:\n',
+      qGpsPickupUse:    '\nEscribe "aquí" para usarla, o ingresa otra dirección.',
+      qAddrClarify:     '📍 Esa dirección necesita más detalle. Por favor proporciona una dirección completa\n(ej: 123 Main St San Jose, o Marriott San Jose Downtown)',
     },
   };
 
@@ -939,7 +951,12 @@
 
   // Vague-address guard: single-word/phrase inputs that are not real addresses.
   // Any extract() for pickup/dropoff that matches this returns null → re-ask.
-  var VAGUE_ADDR_RE = /^(home|my home|my house|house|my place|nhà|nhà tôi|nhà của tôi|mi casa|casa|work|my work|office|my office|there|chỗ đó|this place|chỗ này|destination|điểm đến|nơi đến)$/i;
+  var VAGUE_ADDR_RE = /^(home|my home|my house|house|my place|nhà|nhà tôi|nhà của tôi|mi casa|casa|work|my work|office|my office|there|chỗ đó|this place|chỗ này|destination|điểm đến|nơi đến|nearby|near there|somewhere|over there|đó|đây|a hotel|the hotel|the place|chỗ nào đó)$/i;
+
+  // Soft-vague guard: partial/generic place names that cannot be navigated to without
+  // more specificity (hotel names without address, "near X", "X area"). Only fires
+  // when the input contains NO digits (real addresses almost always have a street number).
+  var VAGUE_ADDR_SOFT_RE = /^(near\s+\S.{0,40}|the\s+[a-z]+\s*$|around\s+\S.{0,40}|somewhere\s+in\s+\S.{0,30}|\w+\s+area\s*$|\w+\s+vicinity\s*$|close\s+to\s+\S.{0,30}|gần\s+\S.{0,30}|khu\s+vực\s+\S.{0,30}|cerca\s+de\s+\S.{0,30})$/i;
 
   // Maps airport codes to their city name for use with estimateCityToCity
   var AIRPORT_CITY = {
@@ -1053,6 +1070,64 @@
   function buildMapsLink(address) {
     if (!address) return null;
     return 'https://maps.google.com/?q=' + encodeURIComponent(address);
+  }
+
+  // Multi-stop Google Maps Directions link (mobile-friendly, no API key needed).
+  // origin/destination can be address strings or airport names.
+  function buildRouteLink(origin, destination) {
+    if (!origin && !destination) return null;
+    if (!origin) return buildMapsLink(destination);
+    if (!destination) return buildMapsLink(origin);
+    return 'https://www.google.com/maps/dir/' + encodeURIComponent(origin) + '/' + encodeURIComponent(destination);
+  }
+
+  // Haversine distance in km (local copy — location.js keeps its version private).
+  function _haversineKm(lat1, lng1, lat2, lng2) {
+    var R    = 6371;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLng = (lng2 - lng1) * Math.PI / 180;
+    var a    = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+               Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+               Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  // GPS-based feasibility check for airport rides.
+  // Returns suggested earliest viable time string (e.g. "7:30 PM") if infeasible,
+  // or null if feasible / insufficient data to determine.
+  // Only fires for same-day bookings when fresh driver GPS is available (< 30 min).
+  function _airportFeasibility(airportCode, bookMins, nowMins) {
+    var airports = window.DLCLocation && DLCLocation.AIRPORTS;
+    var apt      = airports && airports[airportCode];
+    if (!apt) return null;
+
+    var pool     = window._activeDrivers || [];
+    var FRESH_MS = 30 * 60 * 1000; // 30-minute freshness threshold
+    var now      = Date.now();
+    var minEta   = Infinity;
+
+    pool.forEach(function(d) {
+      if (d.complianceStatus !== 'approved') return;
+      if (!d.driverLat || !d.driverLng || !d.driverLocAt) return;
+      // Resolve Firestore Timestamp or plain seconds-based object
+      var locMs = d.driverLocAt.toMillis ? d.driverLocAt.toMillis()
+                : (d.driverLocAt.seconds ? d.driverLocAt.seconds * 1000 : Number(d.driverLocAt));
+      if (now - locMs > FRESH_MS) return; // stale GPS — skip
+      var km  = _haversineKm(d.driverLat, d.driverLng, apt.lat, apt.lng);
+      var eta = Math.ceil((km / 80) * 60) + 10; // 80 km/h + 10 min prep buffer
+      if (eta < minEta) minEta = eta;
+    });
+
+    if (minEta === Infinity) return null; // no fresh GPS data — cannot determine
+    if (minEta <= (bookMins - nowMins)) return null; // feasible
+
+    // Build suggested time string
+    var viableMins = nowMins + minEta;
+    var vH   = Math.floor(viableMins / 60) % 24;
+    var vM   = viableMins % 60;
+    var ampm = vH >= 12 ? 'PM' : 'AM';
+    var h12  = vH % 12 || 12;
+    return h12 + ':' + (vM < 10 ? '0' : '') + vM + ' ' + ampm;
   }
 
   var AIRPORT_LOCATIONS = {
@@ -1252,11 +1327,14 @@
             if (!f.requestedDate) return null;
             var today = new Date();
             if (f.requestedDate !== AIEngine.localISODate(today)) return null;
-            var parts = val.split(':');
+            var parts    = val.split(':');
             var bookMins = parseInt(parts[0]) * 60 + parseInt(parts[1] || 0);
             var nowMins  = today.getHours() * 60 + today.getMinutes();
-            if (bookMins <= nowMins)          return S('errTimePast');
-            if (bookMins - nowMins < 120)     return S('errAptTimeTooSoon');
+            if (bookMins <= nowMins)      return S('errTimePast');
+            if (bookMins - nowMins < 120) return S('errAptTimeTooSoon');
+            // GPS-based feasibility: check if any driver can reach the airport in time
+            var suggestTime = f.airport ? _airportFeasibility(f.airport, bookMins, nowMins) : null;
+            if (suggestTime) return S('errAptNotFeasible').replace(/\{time\}/g, suggestTime);
             return null;
           },
           optional: false,
@@ -1300,6 +1378,8 @@
             if (/^[A-Z]{2,4}$/.test(_trimmed)) return null;
             // Reject clearly vague terms — driver cannot navigate to these
             if (VAGUE_ADDR_RE.test(_trimmed)) return null;
+            // Reject partial/generic place names without a street number
+            if (!(/\d/.test(_trimmed)) && VAGUE_ADDR_SOFT_RE.test(_trimmed)) return null;
             if (_trimmed.length >= 5) return _trimmed;
             return null;
           },
@@ -1422,11 +1502,16 @@
             if (!f.requestedDate) return null;
             var today = new Date();
             if (f.requestedDate !== AIEngine.localISODate(today)) return null;
-            var parts = val.split(':');
+            var parts    = val.split(':');
             var bookMins = parseInt(parts[0]) * 60 + parseInt(parts[1] || 0);
             var nowMins  = today.getHours() * 60 + today.getMinutes();
-            if (bookMins <= nowMins)          return S('errTimePast');
-            if (bookMins - nowMins < 120)     return S('errAptTimeTooSoon');
+            if (bookMins <= nowMins)      return S('errTimePast');
+            if (bookMins - nowMins < 120) return S('errAptTimeTooSoon');
+            // GPS-based feasibility: check if any driver can reach the pickup in time
+            // For dropoff, driver needs to reach customer (not airport), but airport
+            // proximity is a reasonable proxy — use same check for consistency.
+            var suggestTime = f.airport ? _airportFeasibility(f.airport, bookMins, nowMins) : null;
+            if (suggestTime) return S('errAptNotFeasible').replace(/\{time\}/g, suggestTime);
             return null;
           },
           optional: false,
@@ -1452,6 +1537,8 @@
             if (/^[A-Z]{2,4}$/.test(_trimmed)) return null;
             // Reject clearly vague terms — driver cannot navigate to these
             if (VAGUE_ADDR_RE.test(_trimmed)) return null;
+            // Reject partial/generic place names without a street number
+            if (!(/\d/.test(_trimmed)) && VAGUE_ADDR_SOFT_RE.test(_trimmed)) return null;
             if (_trimmed.length >= 5) return _trimmed;
             return null;
           },
@@ -1537,6 +1624,12 @@
         {
           key: 'pickupAddress',
           question: function() {
+            // If we have a full reverse-geocoded address, surface it prominently
+            var gpsPlace = window.DLCLocation && DLCLocation.state && DLCLocation.state.place;
+            if (gpsPlace) {
+              return S('qRidePickup') + S('qGpsPickupFull') + gpsPlace + S('qGpsPickupUse');
+            }
+            // Coarse city hint fallback
             var hint = '';
             if (window.DLCLocation && DLCLocation.pickupHint()) {
               hint = S('qCurrentLoc') + DLCLocation.pickupHint() + S('qCurrentLocUse');
@@ -1545,8 +1638,13 @@
           },
           extract: function(t) {
             if (/\bđây\b|\bhere\b|aquí|chỗ tôi|vị trí.*tôi|current.?loc/i.test(t)) {
-              var loc = window.DLCLocation && DLCLocation.pickupHint();
-              if (loc) return loc;
+              // Prefer full GPS address; fall back to coarse city hint
+              var loc = (window.DLCLocation && DLCLocation.state && DLCLocation.state.place)
+                     || (window.DLCLocation && DLCLocation.pickupHint());
+              if (loc) {
+                if (draft && draft.collectedFields) draft.collectedFields._pickupSource = 'gps';
+                return loc;
+              }
             }
             var _addr = X.address(t);
             if (_addr) return _addr;
@@ -1555,6 +1653,8 @@
             if (/^[A-Z]{2,4}$/.test(_trimmed)) return null;
             // Reject clearly vague terms — driver cannot navigate to these
             if (VAGUE_ADDR_RE.test(_trimmed)) return null;
+            // Reject partial/generic place names without a street number
+            if (!(/\d/.test(_trimmed)) && VAGUE_ADDR_SOFT_RE.test(_trimmed)) return null;
             if (_trimmed.length >= 5) return _trimmed;
             return null;
           },
@@ -1568,6 +1668,8 @@
             if (_addr) return _addr;
             var _trimmed = t.trim();
             if (VAGUE_ADDR_RE.test(_trimmed)) return null;
+            // Reject partial/generic place names without a street number
+            if (!(/\d/.test(_trimmed)) && VAGUE_ADDR_SOFT_RE.test(_trimmed)) return null;
             return _trimmed.length >= 3 ? _trimmed : null;
           },
           optional: false,
@@ -2340,20 +2442,29 @@
       var airportMapsLink  = buildAirportMapsLink(f.airport, f.terminal);
       var addrMapsLink     = buildMapsLink(addrField);
       var luggageStr       = f.luggageCount === 0 ? 'Xách tay' : (f.luggageCount ? f.luggageCount + ' kiện' : '');
-      var timeLabel        = isPickup ? 'Hạ cánh' : 'Cất cánh';
+      var timeLabel        = isPickup ? 'Đón khách' : 'Cất cánh';
+      // Full-trip route link: airport → dropoff (pickup) or pickup → airport (dropoff)
+      var airportAddr      = (AIRPORT_LOCATIONS[f.airport] && (AIRPORT_LOCATIONS[f.airport].address || AIRPORT_LOCATIONS[f.airport].name)) || f.airport;
+      var routeLink        = isPickup ? buildRouteLink(airportAddr, addrField) : buildRouteLink(addrField, airportAddr);
+      // Infer pickup source
+      var pickupSrc        = 'airport'; // for pickup, always at airport; for dropoff, from customer address
+      if (!isPickup) {
+        pickupSrc = (window.DLCLocation && DLCLocation.state && DLCLocation.state.place &&
+                     addrField === DLCLocation.state.place) ? 'gps' : 'typed';
+      }
 
       var driverBriefLines = [
         (isPickup ? '✈️ ĐÓN SÂN BAY' : '✈️ ĐƯA RA SÂN BAY') + ' — ' + orderId,
         '',
         '👤 Khách: ' + (f.customerName||'') + ' · ' + fmtPhone(f.customerPhone),
         '🛫 Sân bay: ' + (f.airport||'') + (f.terminal ? ' · ' + f.terminal : ''),
-        airportMapsLink ? '   Map sân bay: ' + airportMapsLink : null,
         f.airline       ? '✈️  Bay: ' + f.airline : null,
         '📅 ' + fmtDate(f.requestedDate) + ' · ' + timeLabel + ': ' + fmtTime(timeField),
         '👥 ' + (f.passengers||1) + ' người' + (luggageStr ? ' · ' + luggageStr : ''),
         isPickup
-          ? ('📍 Điểm đến: ' + addrField + (addrMapsLink ? '\n   Map: ' + addrMapsLink : ''))
-          : ('🚗 Đón tại: ' + addrField + (addrMapsLink ? '\n   Map: ' + addrMapsLink : '')),
+          ? ('📍 Điểm đến: ' + addrField)
+          : ('🚗 Đón tại: ' + addrField),
+        routeLink       ? '🗺️ Tuyến đường: ' + routeLink : null,
         f.notes         ? '📝 ' + f.notes : null,
         isPickup        ? '⏱ Chờ tại cửa Arrivals/Baggage Claim.' : null,
       ];
@@ -2394,6 +2505,8 @@
         eligibleDriverIds: eligIds,
         driver: null, // set when driver accepts offer (Phase 13)
         vehicleLat:null,vehicleLng:null,vehicleHeading:null,etaMinutes:null,
+        routeLink:    routeLink||null,   // full-trip navigation link for driver
+        pickupSource: pickupSrc,         // 'airport' | 'gps' | 'typed'
         createdAt:fv.serverTimestamp(),
       });
       await db.collection('vendors').doc('admin-dlc').collection('notifications').add({
@@ -2405,6 +2518,7 @@
         airline:f.airline||'', passengers:f.passengers||1, luggageCount:f.luggageCount||0,
         pickupAddress:isPickup?'':addrField, dropoffAddress:isPickup?addrField:'',
         airportMapsLink:airportMapsLink||'', addrMapsLink:addrMapsLink||'',
+        routeLink:routeLink||'',
         eligibleDriverCount:eligIds.length, assignedDriverId:preAssigned?preAssigned.id:null,
         read:false, createdAt:fv.serverTimestamp(),
       });
@@ -2427,6 +2541,7 @@
         passengers:       f.passengers||1,
         estimatedPrice:   null,
         estimatedMiles:   null,
+        routeLink:        routeLink||null,
         customerName:     f.customerName||'',
         customerPhone:    f.customerPhone||'',
         createdAt:        fv.serverTimestamp(),
@@ -2566,17 +2681,21 @@
       var datetime = (f.requestedDate && f.requestedTime)
         ? f.requestedDate + 'T' + f.requestedTime + ':00'
         : (f.requestedDate || '');
-      var pickupMapsLink  = buildMapsLink(f.pickupAddress);
-      var dropoffMapsLink = buildMapsLink(f.dropoffAddress);
-      var rideEst = estimateRide(f.passengers, f.pickupAddress, f.dropoffAddress);
-      trackingToken = genId().replace('DLC-','') + genId().replace('DLC-','');
+      var rideEst      = estimateRide(f.passengers, f.pickupAddress, f.dropoffAddress);
+      var prRouteLink  = buildRouteLink(f.pickupAddress, f.dropoffAddress);
+      trackingToken    = genId().replace('DLC-','') + genId().replace('DLC-','');
+      // Infer pickupSource: was GPS used for pickup?
+      var prPickupSrc  = (f._pickupSource === 'gps') ? 'gps'
+                       : (window.DLCLocation && DLCLocation.state && DLCLocation.state.place &&
+                          f.pickupAddress === DLCLocation.state.place) ? 'gps' : 'typed';
 
       var rideBriefLines = [
         '🚗 XE RIÊNG CAO CẤP — ' + orderId,
         '',
         '👤 Khách: ' + (f.customerName||'') + ' · ' + fmtPhone(f.customerPhone),
-        '📍 Đón tại: ' + (f.pickupAddress||'') + (pickupMapsLink ? '\n   Map: ' + pickupMapsLink : ''),
-        '🏁 Điểm đến: ' + (f.dropoffAddress||'') + (dropoffMapsLink ? '\n   Map: ' + dropoffMapsLink : ''),
+        '📍 Đón tại: ' + (f.pickupAddress||''),
+        '🏁 Điểm đến: ' + (f.dropoffAddress||''),
+        prRouteLink ? '🗺️ Tuyến đường: ' + prRouteLink : null,
         '📅 ' + fmtDate(f.requestedDate) + ' · ' + fmtTime(f.requestedTime),
         '👥 ' + (f.passengers||1) + ' người · ' + rideEst.vehicle,
         rideEst.ourPrice
@@ -2610,6 +2729,8 @@
         eligibleDriverIds: prEligIds,
         driver: null, // set when driver accepts offer (Phase 13)
         vehicleLat:null, vehicleLng:null, vehicleHeading:null, etaMinutes:null,
+        routeLink:    prRouteLink||null,  // full-trip navigation link for driver
+        pickupSource: prPickupSrc,        // 'gps' | 'typed'
         createdAt:fv.serverTimestamp(),
       });
       await db.collection('vendors').doc('admin-dlc').collection('notifications').add({
@@ -2619,7 +2740,7 @@
         bookingId:orderId, customerPhone:f.customerPhone||'',
         requestedDate:f.requestedDate||'', requestedTime:f.requestedTime||'',
         pickupAddress:f.pickupAddress||'', dropoffAddress:f.dropoffAddress||'',
-        pickupMapsLink:pickupMapsLink||'', dropoffMapsLink:dropoffMapsLink||'',
+        routeLink:prRouteLink||'',
         passengers:f.passengers||1, estimatedPrice:rideEst ? rideEst.ourPrice : null,
         eligibleDriverCount:prEligIds.length, assignedDriverId:prPreAssigned?prPreAssigned.id:null,
         read:false, createdAt:fv.serverTimestamp(),
@@ -2640,6 +2761,7 @@
         passengers:       f.passengers||1,
         estimatedPrice:   rideEst ? rideEst.ourPrice : null,
         estimatedMiles:   rideEst ? rideEst.miles : null,
+        routeLink:        prRouteLink||null,
         customerName:     f.customerName||'',
         customerPhone:    f.customerPhone||'',
         createdAt:        fv.serverTimestamp(),

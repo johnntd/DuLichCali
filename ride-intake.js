@@ -482,27 +482,42 @@ window.RideIntake = (function () {
   var _lastDest      = null;
 
   // ── iOS keyboard / visualViewport shrink ─────────────────────────────────────
-  // When the software keyboard opens on iOS, the panel shrinks to visualViewport.height
-  // so the footer button always stays visible above the keyboard.
+  // When the software keyboard opens on iOS the visual viewport shrinks and shifts.
+  // We reposition the modal to track the visual viewport (above the keyboard) and
+  // clamp the panel height so the footer CTA stays visible.
   var _vpHandler = null;
 
   function _startViewportWatch() {
-    if (!window.visualViewport || _vpHandler) return;
+    if (_vpHandler) return;
     var panel = document.querySelector('#rideIntakeModal .ri-panel');
-    if (!panel) return;
+    var modal = document.getElementById('rideIntakeModal');
+    if (!panel || !modal) return;
     _vpHandler = function() {
-      var vvh = Math.round(window.visualViewport.height);
+      var vvh = window.visualViewport ? Math.round(window.visualViewport.height) : window.innerHeight;
+      var vvTop = window.visualViewport ? Math.round(window.visualViewport.offsetTop) : 0;
+      // Reposition modal to sit within the visible area above the keyboard
+      modal.style.top    = vvTop + 'px';
+      modal.style.height = vvh  + 'px';
+      modal.style.bottom = 'auto';
       panel.style.maxHeight = vvh + 'px';
     };
-    window.visualViewport.addEventListener('resize', _vpHandler);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', _vpHandler);
+      window.visualViewport.addEventListener('scroll', _vpHandler);
+    }
     _vpHandler(); // apply immediately
   }
 
   function _stopViewportWatch() {
-    if (!window.visualViewport || !_vpHandler) return;
-    window.visualViewport.removeEventListener('resize', _vpHandler);
+    if (!_vpHandler) return;
+    if (window.visualViewport) {
+      window.visualViewport.removeEventListener('resize', _vpHandler);
+      window.visualViewport.removeEventListener('scroll', _vpHandler);
+    }
     _vpHandler = null;
+    var modal = document.getElementById('rideIntakeModal');
     var panel = document.querySelector('#rideIntakeModal .ri-panel');
+    if (modal) { modal.style.height = ''; modal.style.bottom = ''; modal.style.top = ''; }
     if (panel) panel.style.maxHeight = '';
   }
 
@@ -722,7 +737,7 @@ window.RideIntake = (function () {
     if (activeStep) {
       activeStep.querySelectorAll('input, select, textarea').forEach(function(inp) {
         inp.addEventListener('focus', function onFocus() {
-          setTimeout(function() { _scrollInputIntoView(inp); }, 350);
+          setTimeout(function() { _scrollInputIntoView(inp); }, 500);
         }, { once: false, passive: true });
       });
     }
@@ -914,7 +929,7 @@ window.RideIntake = (function () {
     if (!scrollParent) return;
     var elRect = el.getBoundingClientRect();
     var pRect  = scrollParent.getBoundingClientRect();
-    var target = scrollParent.scrollTop + (elRect.top - pRect.top) - 60;
+    var target = scrollParent.scrollTop + (elRect.top - pRect.top) - 80;
     scrollParent.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
   }
 
@@ -939,7 +954,7 @@ window.RideIntake = (function () {
       scheduleDistance();
     });
     input.addEventListener('focus', function() {
-      setTimeout(function() { _scrollInputIntoView(input); }, 400);
+      setTimeout(function() { _scrollInputIntoView(input); }, 500);
     });
     _ac[id] = ac;
   }

@@ -3852,8 +3852,10 @@ gmp-placeautocomplete.field-input::part(input):focus {
   flex: 1;
   overflow-y: auto;
   padding: 1rem;
-  padding-bottom: 80px;
+  padding-bottom: 140px;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-padding-bottom: 80px;
   display: flex;
   flex-direction: column;
 }

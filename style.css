@@ -284,6 +284,98 @@ button { cursor: pointer; font-family: var(--font-b); }
 
 /* sidebar-label, sidebar-divider, sidebar-svc removed from nav */
 
+/* ── AI Interpreter Screen ───────────────────────────────── */
+.screen--interp { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.interp-wrap { padding: 1.25rem 1rem 5rem; max-width: 600px; margin: 0 auto; }
+.interp-header { text-align: center; margin-bottom: 1.2rem; }
+.interp-title {
+  font: 700 1.45rem/1 var(--font-d,'Bodoni Moda',serif);
+  color: #fff; margin: 0 0 .3rem;
+}
+.interp-sub { font-size: .76rem; color: var(--muted); margin: 0; letter-spacing: .04em; }
+/* Language bar */
+.interp-lang-bar { display: flex; align-items: center; gap: .5rem; margin-bottom: 1rem; }
+.interp-sel {
+  flex: 1; padding: .62rem .75rem;
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14);
+  border-radius: 10px; color: #fff;
+  font-size: .82rem; font-family: var(--font-b,'Jost',sans-serif);
+  -webkit-appearance: none; appearance: none;
+}
+.interp-sel option { background: #0d2f50; }
+.interp-swap {
+  flex-shrink: 0; width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.16);
+  border-radius: 50%; color: var(--cream); cursor: pointer; transition: background .15s;
+}
+.interp-swap:hover { background: rgba(255,255,255,.16); }
+/* Panels */
+.interp-panel {
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px; margin-bottom: .75rem; overflow: hidden;
+}
+.interp-input {
+  display: block; width: 100%; min-height: 100px;
+  padding: .9rem 1rem; background: none; border: none;
+  color: #fff; font-size: 1rem; font-family: var(--font-b,'Jost',sans-serif);
+  line-height: 1.55; resize: none; outline: none; box-sizing: border-box;
+}
+.interp-input::placeholder { color: rgba(255,255,255,.28); }
+.interp-panel-row {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .5rem .75rem .65rem;
+  border-top: 1px solid rgba(255,255,255,.07);
+}
+.interp-charcount { font-size: .68rem; color: var(--muted); flex: 1; }
+.interp-mic {
+  display: inline-flex; align-items: center; gap: .3rem;
+  padding: .3rem .65rem;
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14);
+  border-radius: 8px; color: var(--cream); font-size: .72rem; cursor: pointer; transition: background .15s;
+}
+.interp-mic--active { background: rgba(220,60,60,.25); border-color: rgba(220,60,60,.5); color: #f87171; }
+.interp-clear-btn {
+  padding: .3rem .65rem; background: none;
+  border: 1px solid rgba(255,255,255,.1); border-radius: 8px;
+  color: var(--muted); font-size: .72rem; cursor: pointer;
+}
+/* Output panel */
+.interp-panel--out { position: relative; }
+.interp-output-wrap { padding: .9rem 1rem; min-height: 80px; position: relative; }
+.interp-output { font-size: 1rem; color: var(--cream); line-height: 1.55; white-space: pre-wrap; }
+.interp-loading {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  display: flex; align-items: center; justify-content: center;
+}
+.interp-spinner {
+  width: 20px; height: 20px;
+  border: 2px solid rgba(255,255,255,.18); border-top-color: var(--gold,#c9a84c);
+  border-radius: 50%; animation: interp-spin .7s linear infinite;
+}
+@keyframes interp-spin { to { transform: rotate(360deg); } }
+.interp-speak, .interp-copy-btn {
+  display: inline-flex; align-items: center; gap: .3rem;
+  padding: .3rem .7rem;
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14);
+  border-radius: 8px; color: var(--cream); font-size: .72rem; cursor: pointer; transition: background .15s;
+}
+.interp-speak:hover, .interp-copy-btn:hover { background: rgba(255,255,255,.13); }
+/* Quick phrases */
+.interp-phrases { margin-top: .5rem; }
+.interp-phrases__title {
+  font-size: .66rem; color: var(--muted); text-transform: uppercase;
+  letter-spacing: .07em; margin-bottom: .5rem;
+}
+.interp-phrases__grid { display: flex; flex-wrap: wrap; gap: .4rem; }
+.interp-phrase {
+  padding: .36rem .75rem;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px; color: var(--cream); font-size: .76rem; cursor: pointer; transition: background .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.interp-phrase:hover, .interp-phrase:active { background: rgba(255,255,255,.14); }
+
 /* ── Global Floating Back Button ────────────────────────── */
 /* Appears above bottom nav; only shown via JS (_updateBackBtn) */
 .global-back {

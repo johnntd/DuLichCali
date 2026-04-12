@@ -169,6 +169,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if      (hash === '#travel' || hash === '#destinations') switchScreen('screenDest');
   else if (hash === '#ai'     || hash === '#chat')         switchScreen('screenChat');
   else if (hash === '#book'   || hash === '#booking')      switchScreen('screenBook');
+  else if (hash === '#interp' || hash === '#interpreter')  switchScreen('screenInterp');
   else if (hash === '#airport' || hash === '#ride') {
     // Stay on screenHome, scroll to the Airport & Ride section
     setTimeout(function() {
@@ -1957,3 +1958,141 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Initialize Google Calendar (optional)
   safeInitGoogleAPI();
 });
+
+// ══════════════════════════════════════════════════════════════
+// AI INTERPRETER — screenInterp
+// ══════════════════════════════════════════════════════════════
+(function () {
+  var _timer = null;
+  var _micActive = false;
+  var _recog = null;
+
+  function _srcEl()    { return document.getElementById('interpSrc'); }
+  function _tgtEl()    { return document.getElementById('interpTgt'); }
+  function _inputEl()  { return document.getElementById('interpInput'); }
+  function _outputEl() { return document.getElementById('interpOutput'); }
+  function _src()      { return _srcEl() ? _srcEl().value : 'auto'; }
+  function _tgt()      { return _tgtEl() ? _tgtEl().value : 'en'; }
+
+  window.interpScheduleTranslate = function () {
+    var el = _inputEl();
+    if (!el) return;
+    var cnt = document.getElementById('interpCharCount');
+    if (cnt) cnt.textContent = el.value.length + ' ký tự';
+    clearTimeout(_timer);
+    if (!el.value.trim()) { var o = _outputEl(); if (o) o.textContent = '—'; return; }
+    _timer = setTimeout(function () { window.interpTranslate(); }, 800);
+  };
+
+  window.interpTranslate = function () {
+    var text = (_inputEl() || {}).value || '';
+    text = text.trim();
+    if (!text) return;
+    var outEl = _outputEl();
+    var loadEl = document.getElementById('interpLoading');
+    if (outEl) outEl.textContent = '…';
+    if (loadEl) loadEl.hidden = false;
+    var url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=' +
+      encodeURIComponent(_src()) + '&tl=' + encodeURIComponent(_tgt()) +
+      '&dt=t&q=' + encodeURIComponent(text);
+    fetch(url)
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (loadEl) loadEl.hidden = true;
+        var result = '';
+        if (data && Array.isArray(data[0])) {
+          result = data[0].map(function (x) { return (x && x[0]) ? x[0] : ''; }).join('');
+        }
+        if (outEl) outEl.textContent = result || '—';
+      })
+      .catch(function () {
+        if (loadEl) loadEl.hidden = true;
+        if (outEl) outEl.textContent = 'Lỗi kết nối. Vui lòng thử lại.';
+      });
+  };
+
+  window.interpSwap = function () {
+    var se = _srcEl(), te = _tgtEl();
+    if (!se || !te) return;
+    var sv = se.value, tv = te.value;
+    if (sv === 'auto') { se.value = tv; return; }
+    se.value = tv; te.value = sv;
+    // Swap text too: put translated output into input and re-translate
+    var out = _outputEl(), inp = _inputEl();
+    if (!inp || !out) return;
+    var prevOut = out.textContent;
+    if (prevOut && prevOut !== '—' && prevOut !== '…') {
+      inp.value = prevOut;
+      out.textContent = '—';
+      window.interpScheduleTranslate();
+    }
+  };
+
+  window.interpClear = function () {
+    var inp = _inputEl(), out = _outputEl();
+    if (inp) inp.value = '';
+    if (out) out.textContent = '—';
+    var cnt = document.getElementById('interpCharCount');
+    if (cnt) cnt.textContent = '0 ký tự';
+    clearTimeout(_timer);
+  };
+
+  window.interpCopy = function () {
+    var text = (_outputEl() || {}).textContent || '';
+    if (!text || text === '—') return;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(function () {
+        var btn = document.getElementById('interpCopyBtn');
+        if (btn) { btn.textContent = '✓ Đã sao chép'; setTimeout(function () { btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Sao chép'; }, 1800); }
+      });
+    }
+  };
+
+  window.interpSpeak = function () {
+    var text = (_outputEl() || {}).textContent || '';
+    if (!text || text === '—') return;
+    var langMap = { vi: 'vi-VN', en: 'en-US', es: 'es-MX', 'zh-CN': 'zh-CN', ja: 'ja-JP', ko: 'ko-KR', fr: 'fr-FR' };
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = langMap[_tgt()] || _tgt();
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utter);
+  };
+
+  window.interpMicToggle = function () {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { alert('Trình duyệt không hỗ trợ nhận dạng giọng nói.'); return; }
+    if (_micActive) {
+      if (_recog) _recog.stop();
+      return;
+    }
+    _recog = new SR();
+    var langMap = { auto: 'vi-VN', vi: 'vi-VN', en: 'en-US', es: 'es-MX', 'zh-CN': 'zh-CN', ja: 'ja-JP', ko: 'ko-KR', fr: 'fr-FR' };
+    _recog.lang = langMap[_src()] || 'vi-VN';
+    _recog.interimResults = false;
+    _recog.onresult = function (e) {
+      var t = e.results[0][0].transcript;
+      var inp = _inputEl(); if (inp) { inp.value = t; window.interpScheduleTranslate(); }
+    };
+    var _stopMic = function () {
+      _micActive = false;
+      var lbl = document.getElementById('interpMicLabel');
+      if (lbl) lbl.textContent = 'Nói';
+      var btn = document.getElementById('interpMic');
+      if (btn) btn.classList.remove('interp-mic--active');
+    };
+    _recog.onerror = _stopMic;
+    _recog.onend   = _stopMic;
+    _micActive = true;
+    var lbl = document.getElementById('interpMicLabel');
+    if (lbl) lbl.textContent = 'Đang nghe…';
+    var btn = document.getElementById('interpMic');
+    if (btn) btn.classList.add('interp-mic--active');
+    _recog.start();
+  };
+
+  window.interpUsePhrase = function (el) {
+    var inp = _inputEl(); if (!inp) return;
+    inp.value = el.textContent;
+    window.interpScheduleTranslate();
+  };
+}());

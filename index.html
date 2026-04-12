@@ -284,48 +284,10 @@
         </div>
       </section>
 
-      <!-- ── AI Services Panel (mirrors 3 homepage panels) ───────── -->
-      <section class="home-section home-ai-panel" aria-label="Trợ lý AI Du Lịch Cali">
-        <div class="section-hdr">
-          <h2 class="section-title">Trợ Lý AI Du Lịch Cali</h2>
-        </div>
-        <p class="home-ai-panel__sub">Hỏi AI về bất kỳ dịch vụ nào — chọn lĩnh vực để bắt đầu</p>
-        <div class="home-ai-panel__grid">
-
-          <!-- Mirrors Panel 1: Marketplace -->
-          <button class="home-ai-svc" onclick="openMarketplaceChat()">
-            <span class="home-ai-svc__icon" aria-hidden="true">🛍️</span>
-            <span class="home-ai-svc__name">Marketplace</span>
-            <span class="home-ai-svc__hint">Món ăn, nail, tóc, vendor</span>
-          </button>
-
-          <!-- Mirrors Panel 2: Tour & Travel -->
-          <button class="home-ai-svc" onclick="openAIWithIntent('tour')">
-            <span class="home-ai-svc__icon" aria-hidden="true">🗺️</span>
-            <span class="home-ai-svc__name">Tour &amp; Du Lịch</span>
-            <span class="home-ai-svc__hint">Lên kế hoạch &amp; báo giá</span>
-          </button>
-
-          <!-- Mirrors Panel 3: Airport & Ride -->
-          <button class="home-ai-svc" onclick="openAIWithIntent('airport')">
-            <span class="home-ai-svc__icon" aria-hidden="true">✈️</span>
-            <span class="home-ai-svc__name">Sân Bay &amp; Xe</span>
-            <span class="home-ai-svc__hint">Đưa đón, xe riêng, 24/7</span>
-          </button>
-
-        </div>
-      </section>
-
-      <!-- Region service indicator + contact strip -->
+      <!-- Region service indicator (region tag + picker; contact strip removed) -->
       <div class="region-service" id="regionService">
         <div class="region-tag" id="regionTag" hidden></div>
         <div class="region-picker" id="regionPicker" hidden></div>
-        <div class="contact-strip" id="contactStrip">
-          <a href="tel:4089163439" class="contact-strip__item">
-            <span class="contact-strip__name">Du Lịch Cali</span>
-            <span class="contact-strip__num">408-916-3439</span>
-          </a>
-        </div>
       </div>
 
 

@@ -2526,6 +2526,32 @@
           </div>
         </div>
 
+        <!-- Create staff login accounts — owner only -->
+        <div class="sa-card" id="staffCreateLoginCard" style="display:none;margin-top:1.2rem">
+          <div style="font-weight:600;margin-bottom:.2rem;font-size:.85rem">Tạo Tài Khoản Đăng Nhập Nhân Viên</div>
+          <div style="font-size:.7rem;color:var(--muted);margin-bottom:1rem">Tạo tài khoản để nhân viên / quản lý đăng nhập vào salon-admin.html</div>
+          <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.5rem">
+            <input class="sa-input" id="vstf-email" type="email" placeholder="Email nhân viên" style="flex:1;min-width:160px" autocomplete="off">
+            <select class="sa-select" id="vstf-role" style="width:130px">
+              <option value="staff">Nhân Viên</option>
+              <option value="manager">Quản Lý</option>
+            </select>
+          </div>
+          <div style="margin-bottom:.5rem">
+            <input class="sa-input" id="vstf-name" placeholder="Tên hiển thị (dùng để lọc lịch hẹn)" autocomplete="off">
+          </div>
+          <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.75rem">
+            <input class="sa-input" id="vstf-pin" type="text" inputmode="numeric" maxlength="6"
+              placeholder="PIN mật khẩu (6 chữ số)" style="flex:1;letter-spacing:.1em" autocomplete="off">
+            <button class="btn btn--sm btn--outline" type="button" onclick="saRandPin()">PIN ngẫu nhiên</button>
+          </div>
+          <button class="btn btn--primary btn--sm" onclick="createStaffLoginOwner()">Tạo Tài Khoản</button>
+          <span class="sa-msg" id="vstf-msg" style="margin-left:.5rem;font-size:.75rem"></span>
+          <div id="vstf-pw" style="display:none;margin-top:.65rem;padding:.5rem .75rem;
+            background:var(--gold-dim);border:1px solid var(--gold);border-radius:6px;
+            font-size:.75rem;color:var(--gold);word-break:break-all"></div>
+        </div>
+
         <!-- Staff account permissions — owner only -->
         <div class="sa-card" id="staffPermsCard" style="display:none;margin-top:1.2rem">
           <div style="font-weight:600;margin-bottom:.2rem;font-size:.85rem" data-i18n="lbl_staff_perms">Phân Quyền Nhân Viên</div>
@@ -3556,6 +3582,8 @@
         subscribeBookings();
         // Owner: show staff management controls + payment settings + earnings panels
         if (_userRole === 'owner') {
+          var sclc = document.getElementById('staffCreateLoginCard');
+          if (sclc) sclc.style.display = '';
           var spc = document.getElementById('staffPermsCard');
           if (spc) spc.style.display = '';
           loadStaffAccounts();
@@ -7125,6 +7153,95 @@
   }
 
   // ── Staff account permissions (owner manages from Settings tab) ───────────────
+  // ── Staff Login Account Creation (owner-only) ─────────────────────────────
+  var _SA_API_KEY = 'AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ';
+
+  function saRandPin() {
+    var pin = '';
+    for (var i = 0; i < 6; i++) pin += Math.floor(Math.random() * 10);
+    var el = document.getElementById('vstf-pin');
+    if (el) { el.value = pin; el.focus(); }
+  }
+
+  async function createStaffLoginOwner() {
+    var emailEl = document.getElementById('vstf-email');
+    var roleEl  = document.getElementById('vstf-role');
+    var nameEl  = document.getElementById('vstf-name');
+    var pinEl   = document.getElementById('vstf-pin');
+    var msgEl   = document.getElementById('vstf-msg');
+    var pwBox   = document.getElementById('vstf-pw');
+    if (!emailEl || !msgEl) return;
+
+    var email     = emailEl.value.trim().toLowerCase();
+    var role      = roleEl ? roleEl.value : 'staff';
+    var staffName = nameEl ? nameEl.value.trim() : '';
+    var pin       = pinEl ? pinEl.value.trim() : '';
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Email không hợp lệ.'; return;
+    }
+    if (!staffName) {
+      msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Nhập tên nhân viên.'; return;
+    }
+    if (!pin || pin.length < 6) {
+      msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'PIN phải có ít nhất 6 chữ số.'; return;
+    }
+
+    msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Đang tạo…';
+    if (pwBox) pwBox.style.display = 'none';
+
+    try {
+      var resp = await fetch(
+        'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + _SA_API_KEY,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, password: pin, returnSecureToken: true }) }
+      );
+      var result = await resp.json();
+
+      if (result.error) {
+        if (result.error.message === 'EMAIL_EXISTS') {
+          // Account already exists — find UID via vendorUsers and re-assign
+          msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Tài khoản đã tồn tại — đang gán vai trò…';
+          var existSnap = await db.collection('vendorUsers').where('email', '==', email).limit(1).get();
+          if (existSnap.empty) {
+            msgEl.style.color = 'var(--danger)';
+            msgEl.textContent = 'Tài khoản tồn tại nhưng chưa đăng ký. Hãy để họ đăng nhập qua vendor-login.html trước.';
+            return;
+          }
+          var uid = existSnap.docs[0].id;
+          await db.collection('vendorUsers').doc(uid).set(
+            { vendorId: VENDOR_ID, email: email, role: role, staffName: staffName,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+            { merge: true }
+          );
+          emailEl.value = ''; nameEl.value = '';
+          msgEl.style.color = '#7ac87a'; msgEl.textContent = '✓ Đã gán!';
+          if (pwBox) { pwBox.textContent = 'Tài khoản đã có — dùng mật khẩu hiện tại để đăng nhập.'; pwBox.style.display = 'block'; }
+          setTimeout(function() { loadStaffAccounts(); }, 2000);
+          return;
+        }
+        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Lỗi: ' + result.error.message; return;
+      }
+
+      // New account created
+      var uid = result.localId;
+      await db.collection('vendorUsers').doc(uid).set({
+        vendorId: VENDOR_ID, email: email, role: role, pin: pin,
+        staffName: staffName, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      emailEl.value = ''; nameEl.value = ''; pinEl.value = '';
+      msgEl.style.color = '#7ac87a'; msgEl.textContent = '✓ Đã tạo!';
+      if (pwBox) {
+        pwBox.textContent = 'PIN đăng nhập: ' + pin + ' — Chia sẻ với ' + staffName + ' để đăng nhập tại salon-admin.html';
+        pwBox.style.display = 'block';
+      }
+      setTimeout(function() { loadStaffAccounts(); }, 2500);
+    } catch(e) {
+      msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Lỗi: ' + e.message;
+    }
+  }
+
   function loadStaffAccounts() {
     var listEl = document.getElementById('staffPermsList');
     if (!listEl || !VENDOR_ID) return;
@@ -7132,7 +7249,7 @@
       .then(function(snap) {
         var staff = snap.docs.filter(function(d) { return d.data().role === 'manager' || d.data().role === 'staff'; });
         if (!staff.length) {
-          listEl.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">Chưa có tài khoản manager/staff nào. Tạo tài khoản trong trang Admin.</div>';
+          listEl.innerHTML = '<div style="font-size:.78rem;color:var(--muted)">Chưa có tài khoản nhân viên nào. Tạo tài khoản ở phần bên trên.</div>';
           return;
         }
         listEl.innerHTML = staff.map(function(d) {

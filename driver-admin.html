@@ -551,6 +551,141 @@
       from { opacity: 0; transform: translateY(10px); }
       to   { opacity: 1; transform: translateY(0); }
     }
+
+    /* ── Home Dashboard sections ────────────────────────────── */
+    .drv-home-section { margin-bottom: 1.5rem; }
+    .drv-home-section-hdr {
+      display: flex; align-items: center; gap: .5rem;
+      font-size: .58rem; font-weight: 700; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: .75rem; padding: 0 .1rem;
+    }
+    .drv-home-section-hdr.urgent   { color: var(--danger); }
+    .drv-home-section-hdr.active   { color: var(--success); }
+    .drv-home-section-hdr.upcoming { color: #38bdf8; }
+    .drv-section-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--muted); flex-shrink: 0;
+    }
+    .drv-section-dot.urgent   { background: var(--danger);  animation: pulse-dot 1.5s ease-in-out infinite; }
+    .drv-section-dot.active   { background: var(--success); animation: pulse-dot 2s   ease-in-out infinite; }
+    .drv-section-dot.upcoming { background: #38bdf8; }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: .45; transform: scale(1.4); }
+    }
+
+    /* ── Active ride home card ── */
+    .active-ride-card {
+      background: rgba(74,222,128,.04);
+      border: 1px solid rgba(74,222,128,.4);
+      border-radius: 14px; padding: 1rem 1.1rem;
+    }
+
+    /* ── Upcoming appointment cards ── */
+    .upcoming-card {
+      background: var(--navy-800); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1rem 1.1rem;
+      margin-bottom: .65rem; transition: border-color .2s;
+    }
+    .upcoming-card.near     { border-color: rgba(251,146,60,.5); background: rgba(251,146,60,.04); }
+    .upcoming-card.imminent { border-color: var(--danger); background: rgba(248,113,113,.06);
+                              animation: pulse-border 1.8s ease-in-out infinite; }
+    @keyframes pulse-border {
+      0%, 100% { border-color: var(--danger); }
+      50%       { border-color: rgba(248,113,113,.25); }
+    }
+    .upcoming-card__meta {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: .55rem;
+    }
+    .upcoming-card__type {
+      font-size: .6rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--gold);
+    }
+    .upcoming-card__countdown { font-size: .7rem; font-weight: 700; color: var(--muted); }
+    .upcoming-card__countdown.near     { color: #fb923c; }
+    .upcoming-card__countdown.imminent { color: var(--danger); }
+    .upcoming-card__when {
+      font-size: .9rem; font-weight: 700; color: var(--cream); margin-bottom: .55rem;
+    }
+    .upcoming-card__grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: .45rem .6rem;
+      margin-bottom: .55rem;
+    }
+    .upcoming-card__lbl {
+      font-size: .55rem; text-transform: uppercase; letter-spacing: .08em;
+      color: var(--muted); margin-bottom: .12rem;
+    }
+    .upcoming-card__val { font-size: .82rem; color: var(--cream); font-weight: 600; }
+    .upcoming-card__addr {
+      font-size: .78rem; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .upcoming-card__price { font-size: 1.05rem; font-weight: 700; color: var(--gold); }
+    .upcoming-card__actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .7rem; }
+    .btn-call {
+      display: inline-flex; align-items: center; gap: .3rem;
+      height: 38px; padding: 0 .85rem;
+      background: rgba(56,189,248,.1); border: 1px solid rgba(56,189,248,.3);
+      color: #38bdf8; border-radius: 6px;
+      font-family: var(--font-b); font-size: .72rem; font-weight: 700;
+      text-decoration: none; transition: background .18s; cursor: pointer;
+    }
+    .btn-call:hover { background: rgba(56,189,248,.2); }
+    .btn-maps {
+      display: inline-flex; align-items: center; gap: .3rem;
+      height: 38px; padding: 0 .85rem;
+      background: rgba(74,222,128,.08); border: 1px solid rgba(74,222,128,.3);
+      color: var(--success); border-radius: 6px;
+      font-family: var(--font-b); font-size: .72rem; font-weight: 700;
+      text-decoration: none; transition: background .18s; cursor: pointer;
+    }
+    .btn-maps:hover { background: rgba(74,222,128,.18); }
+
+    /* ── Near-time alert banner ── */
+    .near-trip-alert {
+      display: flex; align-items: center; gap: .6rem;
+      border-radius: 10px; padding: .65rem .9rem; margin-bottom: .55rem;
+    }
+    .near-trip-alert.imminent {
+      background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.4);
+    }
+    .near-trip-alert.near {
+      background: rgba(251,146,60,.08); border: 1px solid rgba(251,146,60,.35);
+    }
+    .near-trip-alert__icon { font-size: 1rem; flex-shrink: 0; line-height: 1; }
+    .near-trip-alert__title { font-size: .78rem; font-weight: 700; }
+    .near-trip-alert.imminent .near-trip-alert__title { color: var(--danger); }
+    .near-trip-alert.near     .near-trip-alert__title { color: #fb923c; }
+    .near-trip-alert__sub { font-size: .65rem; color: var(--muted); margin-top: .1rem; }
+
+    /* ── Home empty state ── */
+    .home-empty-state {
+      text-align: center; padding: 1.35rem 1rem;
+      color: var(--muted); font-size: .8rem;
+      background: var(--navy-800); border: 1px solid var(--border);
+      border-radius: 12px; margin-bottom: .5rem;
+    }
+
+    /* ── Compact history items ── */
+    .hist-item {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--navy-800); border: 1px solid var(--border);
+      border-radius: 10px; padding: .6rem .9rem; margin-bottom: .4rem;
+    }
+    .hist-item__main { flex: 1; min-width: 0; }
+    .hist-item__type {
+      font-size: .55rem; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: .1rem;
+    }
+    .hist-item__route {
+      font-size: .8rem; color: var(--cream); font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .hist-item__date { font-size: .6rem; color: var(--muted); margin-top: .1rem; }
+    .hist-item__fare { font-size: .95rem; font-weight: 700; color: var(--gold); flex-shrink: 0; }
+
   </style>
   <link rel="stylesheet" href="/desktop.css">
 </head>
@@ -617,19 +752,7 @@
     </div>
   </div>
 
-  <!-- Tab bar -->
-  <div class="drv-tabs">
-    <button class="drv-tab active" onclick="drvTab('profile')">Hồ Sơ</button>
-    <button class="drv-tab" onclick="drvTab('docs')">Tài Liệu <span class="drv-tab-badge hidden" id="docsBadge"></span></button>
-    <button class="drv-tab" onclick="drvTab('rides')">Chuyến Mới <span class="drv-tab-badge hidden" id="rideBadge">0</span></button>
-    <button class="drv-tab" onclick="drvTab('earnings')">Doanh Thu</button>
-    <button class="drv-tab" onclick="drvTab('active')" id="tabActive" style="display:none">Chuyến Đang Chạy <span class="drv-tab-badge" id="activeBadge" style="background:#22c55e">!</span></button>
-  </div>
-
-  <!-- Profile panel -->
-  <div id="panelProfile" class="drv-panel active">
-
-  <!-- Status toggles -->
+  <!-- Status toggles — always visible above tabs -->
   <div class="status-strip">
     <div class="status-card" id="cardActive" onclick="toggleActive()">
       <div>
@@ -646,6 +769,64 @@
       <div class="toggle-pill" id="pillRide"></div>
     </div>
   </div>
+
+  <!-- Tab bar — 4 tabs -->
+  <div class="drv-tabs">
+    <button class="drv-tab active" onclick="drvTab('home')" id="tabHome">Chuyến Xe <span class="drv-tab-badge hidden" id="rideBadge">0</span></button>
+    <button class="drv-tab" onclick="drvTab('profile')">Hồ Sơ</button>
+    <button class="drv-tab" onclick="drvTab('docs')">Tài Liệu <span class="drv-tab-badge hidden" id="docsBadge"></span></button>
+    <button class="drv-tab" onclick="drvTab('earnings')">Doanh Thu</button>
+  </div>
+
+  <!-- ══ HOME / TRIPS DASHBOARD ══ -->
+  <div id="panelHome" class="drv-panel active">
+
+    <!-- Section 1: Live Offers (new broadcast notifications) -->
+    <div class="drv-home-section" id="homeSectionOffers" style="display:none">
+      <div class="drv-home-section-hdr urgent">
+        <span class="drv-section-dot urgent"></span>
+        Chuyến Mới — Cần Phản Hồi
+        <span class="drv-tab-badge" id="homeOffersCount" style="background:var(--danger);margin-left:.35rem">0</span>
+      </div>
+      <div id="homeOffersList"></div>
+    </div>
+
+    <!-- Section 2: Active Ride in progress -->
+    <div class="drv-home-section" id="homeSectionActive" style="display:none">
+      <div class="drv-home-section-hdr active">
+        <span class="drv-section-dot active"></span>
+        Chuyến Đang Chạy
+      </div>
+      <div id="homeActiveContent" class="active-ride-card"></div>
+    </div>
+
+    <!-- Section 3: Upcoming Appointments -->
+    <div class="drv-home-section" id="homeSectionUpcoming">
+      <div class="drv-home-section-hdr upcoming">
+        <span class="drv-section-dot upcoming"></span>
+        Lịch Hẹn Sắp Tới
+        <span class="drv-tab-badge hidden" id="homeUpcomingCount" style="background:#38bdf8;margin-left:.35rem">0</span>
+      </div>
+      <div id="homeUpcomingList">
+        <div class="home-empty-state">Chưa có lịch hẹn nào sắp tới.</div>
+      </div>
+    </div>
+
+    <!-- Section 4: Recent completed trips -->
+    <div class="drv-home-section" id="homeSectionHistory">
+      <div class="drv-home-section-hdr">
+        <span class="drv-section-dot"></span>
+        Gần Đây
+      </div>
+      <div id="homeHistoryList">
+        <div class="home-empty-state">Chưa có chuyến hoàn thành.</div>
+      </div>
+    </div>
+
+  </div><!-- /panelHome -->
+
+  <!-- Profile panel -->
+  <div id="panelProfile" class="drv-panel">
 
   <!-- GPS Location section -->
   <div class="section" id="gpsSection">
@@ -865,16 +1046,6 @@
 
   </div><!-- /panelDocs -->
 
-  <!-- Rides panel -->
-  <div id="panelRides" class="drv-panel">
-    <div class="ride-notif-list" id="rideNotifList">
-      <div class="ride-notif-empty">
-        <div class="big">🚗</div>
-        <div>Đang tải chuyến đi…</div>
-      </div>
-    </div>
-  </div>
-
   <!-- Earnings panel -->
   <div id="panelEarnings" class="drv-panel">
     <!-- Ratings summary block (top) -->
@@ -883,11 +1054,6 @@
     <div id="earningsTripBlock" style="padding:0">
       <div style="text-align:center;padding:2rem;color:var(--muted);font-size:.82rem">Chạm tab để tải dữ liệu.</div>
     </div>
-  </div>
-
-  <!-- Active ride panel -->
-  <div id="panelActive" class="drv-panel">
-    <div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem">Chưa có chuyến đang chạy.</div>
   </div>
 
 </div>
@@ -919,6 +1085,13 @@
   var _activeRideData   = null; // full booking data for notification use
   var _earningsLoaded   = false;
   var _ratingsLoaded    = false;
+
+  // Upcoming rides state
+  var _upcomingRides       = [];
+  var _unsubUpcoming       = null;
+  var _reminderIntervalId  = null;
+  var _remindedIds         = {};   // { "rideId_30": true, "rideId_15": true } — prevent spam
+  var _homeHistoryLoaded   = false;
 
   // Trip-status progression for driver (what the driver can advance to)
   var _TRIP_STATUS_NEXT = {
@@ -1016,7 +1189,10 @@
       listenRideNotifs();
       listenDriverNotifications();
       _listenDriverActiveRide();
-      listenActiveOffer(); // Phase 13: exclusive offer listener
+      listenActiveOffer();    // Phase 13: exclusive offer listener
+      listenUpcomingRides();  // Phase 14: upcoming appointments
+      loadRecentHistory();    // Phase 14: recent history strip
+      startReminderChecker(); // Phase 14: 30-min + 15-min pickup reminders
     }).catch(function () {
       document.getElementById('authChecking').classList.add('hidden');
       document.getElementById('mainContent').style.display = '';
@@ -1276,31 +1452,24 @@
 
   // ── Tab switching ─────────────────────────────────────────────────────────
   function drvTab(tab) {
-    // Update tab button active states (skip the dynamic 'active' tab button which is 5th)
-    var staticTabs = ['profile', 'docs', 'rides', 'earnings'];
+    var tabs = ['home', 'profile', 'docs', 'earnings'];
     document.querySelectorAll('.drv-tab').forEach(function(btn, i) {
-      if (i < staticTabs.length) {
-        btn.classList.toggle('active', staticTabs[i] === tab);
-      } else {
-        btn.classList.toggle('active', tab === 'active');
-      }
+      btn.classList.toggle('active', tabs[i] === tab);
     });
+    document.getElementById('panelHome').classList.toggle('active',     tab === 'home');
     document.getElementById('panelProfile').classList.toggle('active',  tab === 'profile');
     document.getElementById('panelDocs').classList.toggle('active',     tab === 'docs');
-    document.getElementById('panelRides').classList.toggle('active',    tab === 'rides');
     document.getElementById('panelEarnings').classList.toggle('active', tab === 'earnings');
-    document.getElementById('panelActive').classList.toggle('active',   tab === 'active');
-    if (tab === 'rides' && _unsubRideNotifs === null) listenRideNotifs();
+    if (tab === 'home' && _unsubRideNotifs === null) listenRideNotifs();
     if (tab === 'docs') loadComplianceDocs();
     if (tab === 'earnings') loadEarnings();
   }
 
-  // Show/hide the active ride tab based on whether driver has a live ride
+  // Show/hide active ride section in the home panel
   function _syncActiveRideTab() {
-    var tabBtn = document.getElementById('tabActive');
-    if (!tabBtn) return;
-    var hasActive = !!_activeRideId && !['completed','cancelled'].includes(_activeRideStatus || '');
-    tabBtn.style.display = hasActive ? '' : 'none';
+    var hasActive = !!_activeRideId && ['completed','cancelled'].indexOf(_activeRideStatus || '') === -1;
+    var sec = document.getElementById('homeSectionActive');
+    if (sec) sec.style.display = hasActive ? '' : 'none';
   }
 
   // ── Real-time ride notifications listener ─────────────────────────────────
@@ -1313,14 +1482,19 @@
       .onSnapshot(function(snap) {
         renderRideNotifs(snap.docs);
         var newCount = snap.docs.filter(function(d) { return d.data().status === 'new'; }).length;
+        // Badge on home tab
         var badge = document.getElementById('rideBadge');
-        badge.textContent = newCount;
-        badge.classList.toggle('hidden', newCount === 0);
+        if (badge) { badge.textContent = newCount; badge.classList.toggle('hidden', newCount === 0); }
+        // Show/hide offers section and update count badge
+        var sec = document.getElementById('homeSectionOffers');
+        if (sec) sec.style.display = snap.docs.length ? '' : 'none';
+        var cnt = document.getElementById('homeOffersCount');
+        if (cnt) { cnt.textContent = newCount; cnt.classList.toggle('hidden', newCount === 0); }
       }, function() {});
   }
 
   function renderRideNotifs(docs) {
-    var list = document.getElementById('rideNotifList');
+    var list = document.getElementById('homeOffersList');
     if (!docs.length) {
       list.innerHTML = '<div class="ride-notif-empty"><div class="big">✓</div><div>Chưa có chuyến đi mới.</div></div>';
       return;
@@ -1484,7 +1658,7 @@
         _activeRideId = bookingId;
         _listenActiveRide();
         showToast('✓ Đã nhận chuyến! Liên hệ khách ngay.', false);
-        drvTab('active');
+        drvTab('home');
       } else {
         var reason = (result.data && result.data.reason) || 'unknown';
         _hideOfferOverlay();
@@ -1556,8 +1730,8 @@
         }
       }
       showToast('✓ Đã nhận chuyến! Liên hệ khách ngay.', false);
-      // Switch to active ride panel
-      drvTab('active');
+      // Switch to home panel — active ride section will auto-show
+      drvTab('home');
     } catch(e) {
       if (btn) { btn.disabled = false; btn.textContent = 'Nhận Chuyến'; }
       showToast('Lỗi: ' + e.message, true);
@@ -1621,7 +1795,7 @@
 
   function renderActiveRide(d) {
     _activeRideData = d; // cache for notification use
-    var panel = document.getElementById('panelActive');
+    var panel = document.getElementById('homeActiveContent');
     if (!panel) return;
     var status = d.status || 'driver_confirmed';
     var nextStatus = _TRIP_STATUS_NEXT[status];
@@ -1692,9 +1866,13 @@
     var fromHref = _mapsHref(fromAddr);
     var toHref   = _mapsHref(toAddr);
 
+    // Show/hide active section in home panel
+    var activeSec = document.getElementById('homeSectionActive');
+    if (activeSec) activeSec.style.display = isTerminal ? 'none' : '';
+
     panel.innerHTML =
-      '<div style="padding:1rem;max-width:480px;margin:auto">' +
-        '<h3 style="margin:0 0 .75rem;font-size:1rem;color:var(--gold-lt)">Chuyến Hiện Tại</h3>' +
+      '<div>' +
+        '<h3 style="margin:0 0 .75rem;font-size:.92rem;color:var(--gold-lt)">Chuyến Hiện Tại</h3>' +
         '<div style="background:rgba(255,255,255,.06);border-radius:10px;padding:.875rem 1rem;margin-bottom:.875rem">' +
           '<div style="font-size:.75rem;color:var(--muted);margin-bottom:.25rem">' + (svcLabel[d.serviceType] || d.serviceType || 'Chuyến Xe') + '</div>' +
           '<div style="font-weight:600;margin-bottom:.2rem">' + esc(customerName) + '</div>' +
@@ -1951,6 +2129,270 @@
       msgEl.style.color = 'var(--danger)';
       msgEl.textContent = 'Lỗi: ' + e.message;
     });
+  }
+
+  // ── Parse any booking datetime format → ms timestamp ─────────────────────
+  function _parsePickupMs(ride) {
+    var raw = ride.datetime ||
+      (ride.arrivalDate   ? ride.arrivalDate   + (ride.arrivalTime   ? 'T' + ride.arrivalTime   : '') : null) ||
+      (ride.departureDate ? ride.departureDate + (ride.departureTime ? 'T' + ride.departureTime : '') : null) ||
+      (ride.rideDate      ? ride.rideDate      + (ride.rideTime      ? 'T' + ride.rideTime      : '') : null) || '';
+    if (!raw) return 0;
+    var s = String(raw).replace(' ', 'T');
+    if (s.length <= 10) s += 'T00:00:00';
+    var dt = new Date(s);
+    return isNaN(dt.getTime()) ? 0 : dt.getTime();
+  }
+
+  // ── Upcoming rides listener ────────────────────────────────────────────────
+  // Listens for all bookings assigned to this driver with non-terminal status.
+  // Excludes the current active ride; shows the rest as upcoming appointments.
+  function listenUpcomingRides() {
+    if (!_driverId) return;
+    if (_unsubUpcoming) { _unsubUpcoming(); _unsubUpcoming = null; }
+    _unsubUpcoming = db.collection('bookings')
+      .where('driver.driverId', '==', _driverId)
+      .where('status', 'in', ['assigned', 'driver_confirmed'])
+      .limit(20)
+      .onSnapshot(function(snap) {
+        var now = Date.now();
+        var upcoming = [];
+        snap.docs.forEach(function(doc) {
+          // Skip the current in-progress active ride
+          if (doc.id === _activeRideId) return;
+          var d = doc.data();
+          if (['completed','cancelled'].indexOf(d.status) >= 0) return;
+          var pickupMs = _parsePickupMs(d);
+          // Include if pickup is in the future, or unknown (show anyway as safety net)
+          if (pickupMs === 0 || pickupMs > now - 3600000) {
+            upcoming.push(Object.assign({ _id: doc.id, _pickupMs: pickupMs }, d));
+          }
+        });
+        // Sort ascending — nearest trip first
+        upcoming.sort(function(a, b) {
+          return (a._pickupMs || 9e15) - (b._pickupMs || 9e15);
+        });
+        _upcomingRides = upcoming;
+        renderUpcomingSection(upcoming);
+      }, function() {});
+  }
+
+  // ── Render upcoming appointments section ──────────────────────────────────
+  function renderUpcomingSection(rides) {
+    var container = document.getElementById('homeUpcomingList');
+    var badge     = document.getElementById('homeUpcomingCount');
+    if (!container) return;
+
+    if (badge) {
+      badge.textContent = rides.length;
+      badge.classList.toggle('hidden', rides.length === 0);
+    }
+
+    if (!rides.length) {
+      container.innerHTML = '<div class="home-empty-state">Chưa có lịch hẹn nào sắp tới.</div>';
+      return;
+    }
+
+    var now = Date.now();
+    var svcLabel = {
+      airport_pickup:  'Đón Sân Bay',
+      airport_dropoff: 'Ra Sân Bay',
+      private_ride:    'Xe Riêng',
+      pickup:          'Đón Sân Bay',
+      dropoff:         'Ra Sân Bay'
+    };
+
+    container.innerHTML = rides.map(function(ride) {
+      var pickupMs  = ride._pickupMs || 0;
+      var minsAway  = pickupMs ? Math.round((pickupMs - now) / 60000) : null;
+      var urgency   = '';
+      var cntText   = '';
+      var alertHtml = '';
+
+      if (minsAway !== null) {
+        if      (minsAway <= 15)  urgency = 'imminent';
+        else if (minsAway <= 35)  urgency = 'near';
+
+        if (minsAway < 0) {
+          cntText = 'Đã qua ' + Math.abs(minsAway) + ' phút';
+          urgency = 'imminent';
+        } else if (minsAway < 60) {
+          cntText = minsAway + ' phút nữa';
+        } else {
+          var hrs  = Math.floor(minsAway / 60);
+          var mins = minsAway % 60;
+          cntText  = hrs + 'g' + (mins ? mins + 'p' : '') + ' nữa';
+        }
+      }
+
+      if (urgency === 'imminent') {
+        alertHtml = '<div class="near-trip-alert imminent">' +
+          '<div class="near-trip-alert__icon">⚠</div>' +
+          '<div><div class="near-trip-alert__title">Sắp đến giờ đón!</div>' +
+          '<div class="near-trip-alert__sub">Chuẩn bị xuất phát ngay.</div></div></div>';
+      } else if (urgency === 'near') {
+        alertHtml = '<div class="near-trip-alert near">' +
+          '<div class="near-trip-alert__icon">🕐</div>' +
+          '<div><div class="near-trip-alert__title">Còn ~30 phút đến giờ đón</div>' +
+          '<div class="near-trip-alert__sub">Chuẩn bị xuất phát.</div></div></div>';
+      }
+
+      // Parse pickup datetime for display
+      var rawWhen = ride.datetime ||
+        (ride.arrivalDate   ? ride.arrivalDate   + (ride.arrivalTime   ? 'T' + ride.arrivalTime   : '') : null) ||
+        (ride.departureDate ? ride.departureDate + (ride.departureTime ? 'T' + ride.departureTime : '') : null) ||
+        (ride.rideDate      ? ride.rideDate      + (ride.rideTime      ? 'T' + ride.rideTime      : '') : null) || '';
+      var parsed  = rawWhen ? _parseDatetime(rawWhen) : null;
+      var whenStr = parsed ? (parsed.date + (parsed.time ? ' · ' + parsed.time : '')) : '—';
+
+      var isPickup  = ride.serviceType === 'pickup'  || ride.serviceType === 'airport_pickup';
+      var isDropoff = ride.serviceType === 'dropoff' || ride.serviceType === 'airport_dropoff';
+      var fromAddr, toAddr;
+      if (isPickup) {
+        fromAddr = (ride.airport || '') + (ride.terminal ? ' T' + ride.terminal : '');
+        toAddr   = ride.dropoffAddress || ride.address || '';
+      } else if (isDropoff) {
+        fromAddr = ride.pickupAddress || ride.address || '';
+        toAddr   = (ride.airport || '') + (ride.terminal ? ' T' + ride.terminal : '');
+      } else {
+        fromAddr = ride.pickupAddress || '';
+        toAddr   = ride.dropoffAddress || '';
+      }
+
+      var customerName  = ride.name  || ride.customerName  || '—';
+      var customerPhone = ride.phone || ride.customerPhone || '';
+      var price   = ride.estimatedPrice ? '$' + Number(ride.estimatedPrice).toFixed(0) : '';
+      var pax     = ride.passengers || 1;
+      var bkId    = ride.bookingId || ride._id.slice(0, 8);
+      var svcStr  = svcLabel[ride.serviceType] || 'Chuyến Xe';
+
+      function mapsHref(addr) {
+        if (!addr) return '';
+        var q = addr.length <= 5 ? addr + ' Airport' : addr;
+        return 'https://maps.google.com/?q=' + encodeURIComponent(q);
+      }
+
+      var callBtn = customerPhone
+        ? '<a class="btn-call" href="tel:' + esc(customerPhone) + '">📞 Gọi Khách</a>'
+        : '';
+      var mapsBtn = fromAddr
+        ? '<a class="btn-maps" href="' + mapsHref(fromAddr) + '" target="_blank" rel="noopener">🗺 Điểm Đón</a>'
+        : '';
+
+      return alertHtml +
+        '<div class="upcoming-card' + (urgency ? ' ' + urgency : '') + '">' +
+          '<div class="upcoming-card__meta">' +
+            '<div class="upcoming-card__type">' + esc(svcStr) + '</div>' +
+            (cntText ? '<div class="upcoming-card__countdown' + (urgency ? ' ' + urgency : '') + '">' + esc(cntText) + '</div>' : '') +
+          '</div>' +
+          '<div class="upcoming-card__when">' + esc(whenStr) + '</div>' +
+          '<div class="upcoming-card__grid">' +
+            '<div><div class="upcoming-card__lbl">Khách</div><div class="upcoming-card__val">' + esc(customerName) + '</div></div>' +
+            '<div><div class="upcoming-card__lbl">Hành Khách</div><div class="upcoming-card__val">' + pax + ' người</div></div>' +
+            (fromAddr ? '<div><div class="upcoming-card__lbl">Điểm Đón</div><div class="upcoming-card__addr">' + esc(fromAddr) + '</div></div>' : '') +
+            (toAddr   ? '<div><div class="upcoming-card__lbl">Điểm Đến</div><div class="upcoming-card__addr">' + esc(toAddr)   + '</div></div>' : '') +
+            (price    ? '<div><div class="upcoming-card__lbl">Giá Ước Tính</div><div class="upcoming-card__price">' + esc(price) + '</div></div>' : '') +
+            '<div><div class="upcoming-card__lbl">Mã Booking</div><div class="upcoming-card__val" style="font-size:.7rem;color:var(--gold);font-family:monospace">' + esc(bkId) + '</div></div>' +
+          '</div>' +
+          '<div class="upcoming-card__actions">' + callBtn + mapsBtn + '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  // ── Near-time reminder checker (runs every 60 seconds) ───────────────────
+  // Idempotent: each (rideId + threshold) key fires at most once per session.
+  function startReminderChecker() {
+    if (_reminderIntervalId) return;
+    checkUpcomingReminders(); // immediate first check
+    _reminderIntervalId = setInterval(checkUpcomingReminders, 60000);
+  }
+
+  function checkUpcomingReminders() {
+    if (!_upcomingRides.length) return;
+    var now = Date.now();
+    _upcomingRides.forEach(function(ride) {
+      if (!ride._pickupMs) return;
+      var minsAway = Math.round((ride._pickupMs - now) / 60000);
+      var rideId   = ride._id;
+      var cName    = ride.name || ride.customerName || 'Khách';
+
+      // 30-minute window: fire once when between 25 and 35 minutes away
+      if (minsAway >= 25 && minsAway <= 35) {
+        var k30 = rideId + '_30';
+        if (!_remindedIds[k30]) {
+          _remindedIds[k30] = true;
+          showDriverToast(
+            'Còn 30 phút — ' + cName,
+            'Chuẩn bị xuất phát đến điểm đón. Kiểm tra địa chỉ và liên hệ khách trước khi đi.'
+          );
+        }
+      }
+
+      // 15-minute window: fire once when between 12 and 17 minutes away
+      if (minsAway >= 12 && minsAway <= 17) {
+        var k15 = rideId + '_15';
+        if (!_remindedIds[k15]) {
+          _remindedIds[k15] = true;
+          showDriverToast(
+            '⚠ Còn 15 phút — ' + cName,
+            'Xuất phát ngay để đến đúng giờ đón khách!'
+          );
+        }
+      }
+    });
+  }
+
+  // ── Recent history for home panel (last 5 completed) ─────────────────────
+  function loadRecentHistory() {
+    if (_homeHistoryLoaded || !_driverId) return;
+    db.collection('bookings')
+      .where('driver.driverId', '==', _driverId)
+      .where('status', '==', 'completed')
+      .limit(50)
+      .get()
+      .then(function(snap) {
+        var rides = [];
+        snap.forEach(function(doc) { rides.push(Object.assign({ _id: doc.id }, doc.data())); });
+        rides.sort(function(a, b) {
+          var ta = a.createdAt && a.createdAt.toDate ? a.createdAt.toDate().getTime()
+                 : a.createdAt && a.createdAt.seconds ? a.createdAt.seconds * 1000 : 0;
+          var tb = b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().getTime()
+                 : b.createdAt && b.createdAt.seconds ? b.createdAt.seconds * 1000 : 0;
+          return tb - ta;
+        });
+        renderRecentHistory(rides.slice(0, 5));
+        _homeHistoryLoaded = true;
+      }).catch(function() {});
+  }
+
+  function renderRecentHistory(rides) {
+    var container = document.getElementById('homeHistoryList');
+    if (!container) return;
+    if (!rides.length) {
+      container.innerHTML = '<div class="home-empty-state">Chưa có chuyến hoàn thành.</div>';
+      return;
+    }
+    var svcMap = {
+      airport_pickup:  'Đón SB', airport_dropoff: 'Ra SB',
+      pickup:          'Đón SB', dropoff:         'Ra SB',
+      private_ride:    'Xe Riêng'
+    };
+    container.innerHTML = rides.map(function(r) {
+      var ms = r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().getTime()
+             : r.createdAt && r.createdAt.seconds ? r.createdAt.seconds * 1000 : 0;
+      var dateStr = ms ? new Date(ms).toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
+      var route   = r.dropoffAddress || r.pickupAddress || r.airport || r.address || '—';
+      var fare    = r.estimatedPrice ? '$' + Number(r.estimatedPrice).toFixed(0) : '—';
+      var svc     = svcMap[r.serviceType] || 'Chuyến Xe';
+      return '<div class="hist-item">' +
+        '<div class="hist-item__main">' +
+          '<div class="hist-item__type">' + svc + '</div>' +
+          '<div class="hist-item__route">' + esc(route) + '</div>' +
+          '<div class="hist-item__date">' + (r.customerName ? esc(r.name || r.customerName) + ' · ' : '') + dateStr + '</div>' +
+        '</div>' +
+        '<div class="hist-item__fare">' + fare + '</div>' +
+      '</div>';
+    }).join('');
   }
 
   // ── Build schedule rows on first load ─────────────────────────────────────

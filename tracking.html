@@ -2,12 +2,13 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#050b1a">
   <title>Theo Dõi Chuyến Đi — Du Lịch Cali</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400&family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -25,101 +26,48 @@
       --text:     #a8becf;
       --muted:    #526878;
       --border-g: rgba(200,146,42,0.28);
+      --danger:   #e05a5a;
+      --success:  #4ade80;
+      --info:     #38bdf8;
+      --font-b: 'Jost', system-ui, sans-serif;
+      --font-d: 'Bodoni Moda', Georgia, serif;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
-      height: 100%;
-      font-family: 'Jost', system-ui, sans-serif;
+      height: 100%; width: 100%;
+      font-family: var(--font-b);
       background: var(--navy-900);
       color: var(--text);
       -webkit-font-smoothing: antialiased;
       overflow: hidden;
-    }
-    body {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      height: 100dvh;
+      position: fixed; /* prevent iOS bounce scroll */
     }
 
-    /* ── Overlays ───────────────────────────────── */
-    .overlay {
+    /* ── Full-screen map (background layer) ── */
+    #map {
       position: fixed;
       inset: 0;
-      z-index: 200;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: var(--navy-900);
-      gap: 1rem;
-    }
-    .overlay--hidden { display: none; }
-
-    .spinner {
-      width: 40px; height: 40px;
-      border: 3px solid rgba(200,146,42,0.2);
-      border-top-color: var(--gold);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .overlay p { color: var(--muted); font-size: 0.85rem; }
-
-    .overlay-card {
+      z-index: 0;
       background: var(--navy-800);
-      border: 1px solid var(--border-g);
-      border-radius: 12px;
-      padding: 2.5rem 2rem;
-      max-width: 380px;
-      width: 90%;
-      text-align: center;
     }
-    .overlay-icon {
-      width: 56px; height: 56px;
-      border-radius: 50%;
-      background: rgba(200,146,42,0.12);
-      border: 1px solid var(--border-g);
-      display: inline-flex; align-items: center; justify-content: center;
-      font-size: 1.4rem;
-      color: var(--gold-lt);
-      margin-bottom: 1.25rem;
-    }
-    .overlay-card h2 {
-      font-family: 'Bodoni Moda', serif;
-      color: var(--cream);
-      font-size: 1.5rem;
-      font-weight: 400;
-      margin-bottom: 0.5rem;
-    }
-    .overlay-card p { color: var(--text); font-size: 0.88rem; line-height: 1.6; margin-bottom: 1.5rem; }
-    .btn-gold {
-      display: inline-flex; align-items: center; justify-content: center;
-      height: 44px; padding: 0 1.75rem;
-      background: var(--gold); color: var(--navy-900);
-      font-family: 'Jost', sans-serif; font-size: 0.78rem; font-weight: 700;
-      letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;
-      border-radius: 4px; border: none; cursor: pointer;
-      transition: background 0.2s;
-    }
-    .btn-gold:hover { background: var(--gold-lt); }
 
-    /* ── Nav bar ────────────────────────────────── */
+    /* ── Floating nav bar ── */
     .track-nav {
-      flex: none;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 1.25rem;
-      height: 52px;
-      background: rgba(5,11,26,0.85);
-      backdrop-filter: blur(12px) saturate(140%);
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      z-index: 10;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: calc(52px + env(safe-area-inset-top, 0px));
+      padding-top: env(safe-area-inset-top, 0px);
+      display: flex; align-items: center; justify-content: space-between;
+      padding-left: 1.25rem; padding-right: 1.25rem;
+      background: rgba(5,11,26,0.82);
+      backdrop-filter: blur(14px) saturate(160%);
+      -webkit-backdrop-filter: blur(14px) saturate(160%);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      z-index: 40;
     }
     .nav-brand {
-      font-family: 'Bodoni Moda', serif;
+      font-family: var(--font-d);
       color: var(--gold-lt);
       font-size: 1rem;
       font-weight: 400;
@@ -128,281 +76,323 @@
       background: rgba(200,146,42,0.12);
       border: 1px solid var(--border-g);
       border-radius: 20px;
-      padding: 0.25rem 0.75rem;
-      font-size: 0.75rem;
+      padding: 0.22rem 0.7rem;
+      font-size: 0.72rem;
       color: var(--gold-lt);
       letter-spacing: 0.06em;
       font-weight: 600;
     }
 
-    /* ── Map ────────────────────────────────────── */
-    #map {
-      flex: 1;
-      min-height: 0;
-      background: var(--navy-800);
-    }
-
-    /* ── Bottom panel ───────────────────────────── */
-    .track-panel {
-      flex: none;
-      height: 310px;
-      overflow-y: auto;
-      background: var(--navy-800);
-      border-top: 1px solid var(--border-g);
-      padding-bottom: env(safe-area-inset-bottom, 0);
-      -webkit-overflow-scrolling: touch;
-    }
-    .track-inner {
-      padding: 1rem 1.25rem 1.25rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    /* ── Progress stepper ───────────────────────── */
-    .progress-stepper {
-      display: flex;
-      align-items: flex-start;
-      gap: 0;
-    }
-    .step {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      flex: 1;
-      gap: 0.35rem;
-    }
-    .step-dot {
-      width: 18px; height: 18px;
-      border-radius: 50%;
-      border: 2px solid var(--muted);
-      background: transparent;
-      transition: all 0.3s;
-      position: relative;
-      z-index: 1;
-    }
-    .step.active .step-dot {
-      border-color: var(--gold);
-      background: var(--gold);
-      box-shadow: 0 0 0 3px rgba(200,146,42,0.25);
-    }
-    .step.done .step-dot {
-      border-color: var(--gold);
-      background: var(--gold);
-    }
-    .step.pulsing .step-dot {
-      border-color: var(--gold-lt);
-      background: var(--gold-lt);
-      animation: pulse 1.2s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(200,146,42,0.5); }
-      50%       { box-shadow: 0 0 0 6px rgba(200,146,42,0);  }
-    }
-    .step-label {
-      font-size: 0.67rem;
-      color: var(--muted);
-      text-align: center;
-      letter-spacing: 0.02em;
-      white-space: nowrap;
-    }
-    .step.active .step-label, .step.done .step-label { color: var(--gold-lt); }
-    .step.pulsing .step-label { color: var(--cream); }
-
-    .step-connector {
-      flex: 1;
-      height: 2px;
-      background: var(--muted);
-      opacity: 0.3;
-      margin-top: 8px;
-      transition: background 0.3s, opacity 0.3s;
-    }
-    .step-connector.done {
-      background: var(--gold);
-      opacity: 0.7;
-    }
-
-    /* ── Status section ─────────────────────────── */
-    .status-section { text-align: center; }
-    .status-msg {
-      font-size: 0.95rem;
-      color: var(--cream);
-      font-weight: 500;
-    }
-    .status-eta {
-      font-size: 0.8rem;
-      color: var(--gold-lt);
-      margin-top: 0.2rem;
-    }
-
-    /* ── Driver card ────────────────────────────── */
-    .driver-card {
+    /* ── Floating status banner (over map) ── */
+    .status-banner {
+      position: fixed;
+      top: calc(52px + env(safe-area-inset-top, 0px) + 14px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 30;
       display: flex;
       align-items: center;
-      gap: 0.85rem;
-      background: var(--navy-700);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 8px;
-      padding: 0.75rem 1rem;
-    }
-    .driver-avatar {
-      width: 42px; height: 42px;
-      border-radius: 50%;
-      background: rgba(200,146,42,0.12);
-      border: 1px solid var(--border-g);
-      display: flex; align-items: center; justify-content: center;
-      color: var(--gold-lt);
-      flex-shrink: 0;
-    }
-    .driver-avatar svg { width: 22px; height: 22px; }
-    .driver-info { flex: 1; min-width: 0; }
-    .driver-name { font-size: 0.9rem; color: var(--cream); font-weight: 600; }
-    .driver-role { font-size: 0.72rem; color: var(--muted); margin-top: 0.1rem; }
-
-    .call-btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      height: 36px; padding: 0 1rem;
-      background: rgba(200,146,42,0.12);
-      border: 1px solid var(--border-g);
-      border-radius: 4px;
-      color: var(--gold-lt);
-      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em;
-      text-decoration: none;
-      white-space: nowrap;
-      transition: background 0.2s;
-      flex-shrink: 0;
-    }
-    .call-btn:hover { background: rgba(200,146,42,0.22); }
-
-    /* ── Booking summary ────────────────────────── */
-    .booking-summary {
-      background: var(--navy-700);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 8px;
-      padding: 0.75rem 1rem;
-      display: flex;
-      flex-direction: column;
       gap: 0.55rem;
+      background: rgba(8,18,40,0.88);
+      backdrop-filter: blur(12px) saturate(140%);
+      -webkit-backdrop-filter: blur(12px) saturate(140%);
+      border: 1px solid var(--border-g);
+      border-radius: 100px;
+      padding: 0.5rem 1.1rem;
+      max-width: calc(100vw - 2rem);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.45);
+      transition: opacity .3s, transform .3s;
     }
-    .summary-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.7rem;
-    }
-    .summary-pin {
-      width: 20px; height: 20px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.65rem; font-weight: 700;
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
-    .summary-pin.pin-a {
+    .status-banner.hidden { opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(-8px); }
+    .banner-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
       background: var(--gold);
-      color: var(--navy-900);
+      animation: banner-pulse 2s ease-in-out infinite;
     }
-    .summary-pin.pin-b {
-      background: transparent;
-      border: 2px solid var(--gold);
-      color: var(--gold-lt);
+    .banner-dot.searching { background: var(--info);   animation-duration: 1.2s; }
+    .banner-dot.enroute   { background: var(--gold);   animation-duration: 1.6s; }
+    .banner-dot.arrived   { background: var(--success); animation: none; }
+    .banner-dot.moving    { background: var(--success); animation-duration: 1s; }
+    @keyframes banner-pulse {
+      0%, 100% { opacity: 1;  transform: scale(1); }
+      50%       { opacity: .4; transform: scale(1.35); }
     }
-    .summary-text {
-      font-size: 0.82rem;
-      color: var(--text);
-      line-height: 1.4;
+    .banner-text {
+      font-size: 0.8rem; font-weight: 600; color: var(--cream);
     }
-    .summary-meta {
-      font-size: 0.75rem;
-      color: var(--muted);
-      padding-top: 0.35rem;
-      border-top: 1px solid rgba(255,255,255,0.05);
+    .banner-eta {
+      font-size: 0.75rem; color: var(--gold-lt);
+      border-left: 1px solid rgba(255,255,255,0.12);
+      padding-left: 0.55rem; margin-left: 0.05rem;
+    }
+
+    /* ── Bottom sheet ── */
+    .bottom-sheet {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 50;
+      background: var(--navy-800);
+      border-radius: 20px 20px 0 0;
+      border-top: 1px solid var(--border-g);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      /* default compact height */
+      height: 230px;
+      transition: height 0.36s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      touch-action: none;
+    }
+    .bottom-sheet.expanded { height: 420px; }
+    .bottom-sheet.transitioning { transition: none; } /* during drag */
+
+    .sheet-drag-handle {
+      display: flex; justify-content: center; align-items: center;
+      height: 28px; cursor: grab; flex-shrink: 0;
+      touch-action: none;
+    }
+    .drag-pill {
+      width: 36px; height: 4px; border-radius: 2px;
+      background: rgba(255,255,255,0.18);
+    }
+
+    .sheet-content {
+      height: calc(100% - 28px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      padding: 0 1.25rem 1rem;
+    }
+
+    /* ── ETA + stepper row ── */
+    .eta-strip {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .eta-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+      min-width: 52px;
+    }
+    .eta-big {
+      font-size: 2rem; font-weight: 700; color: var(--cream);
+      line-height: 1; font-family: var(--font-b);
+    }
+    .eta-unit {
+      font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--gold);
       margin-top: 0.1rem;
     }
 
-    /* ── Footer home link ───────────────────────── */
-    .panel-footer {
-      text-align: center;
-      padding-top: 0.25rem;
+    /* ── Progress stepper (horizontal) ── */
+    .progress-stepper {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
     }
-    .panel-footer a {
-      font-size: 0.75rem;
-      color: var(--muted);
-      text-decoration: none;
+    .step {
+      display: flex; flex-direction: column; align-items: center;
+      flex: 1; gap: 0.3rem;
     }
+    .step-dot {
+      width: 16px; height: 16px; border-radius: 50%;
+      border: 2px solid var(--muted); background: transparent;
+      transition: all 0.3s; position: relative; z-index: 1;
+    }
+    .step.active .step-dot {
+      border-color: var(--gold); background: var(--gold);
+      box-shadow: 0 0 0 3px rgba(200,146,42,0.25);
+    }
+    .step.done   .step-dot { border-color: var(--gold); background: var(--gold); }
+    .step.pulsing .step-dot {
+      border-color: var(--gold-lt); background: var(--gold-lt);
+      animation: step-pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes step-pulse {
+      0%, 100% { box-shadow: 0 0 0 0   rgba(200,146,42,0.5); }
+      50%       { box-shadow: 0 0 0 5px rgba(200,146,42,0);   }
+    }
+    .step-label {
+      font-size: 0.6rem; color: var(--muted); text-align: center;
+      letter-spacing: 0.02em; white-space: nowrap;
+    }
+    .step.active .step-label, .step.done .step-label { color: var(--gold-lt); }
+    .step.pulsing .step-label { color: var(--cream); }
+    .step-connector {
+      flex: 1; height: 2px; background: var(--muted);
+      opacity: 0.3; margin-top: 7px; transition: all 0.3s;
+    }
+    .step-connector.done { background: var(--gold); opacity: 0.7; }
+
+    /* ── Driver card ── */
+    .driver-card {
+      display: flex; align-items: center; gap: 0.85rem;
+      background: var(--navy-700);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px; padding: 0.85rem 1rem;
+      margin-bottom: 0.85rem;
+    }
+    .driver-avatar {
+      width: 46px; height: 46px; border-radius: 50%;
+      background: rgba(200,146,42,0.12);
+      border: 1px solid var(--border-g);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--gold-lt); flex-shrink: 0; font-size: 1.3rem;
+    }
+    .driver-info { flex: 1; min-width: 0; }
+    .driver-name { font-size: 0.92rem; color: var(--cream); font-weight: 600; }
+    .driver-meta {
+      font-size: 0.7rem; color: var(--muted); margin-top: 0.15rem;
+      display: flex; align-items: center; gap: .4rem; flex-wrap: wrap;
+    }
+    .driver-rating { color: var(--gold-lt); }
+    .driver-vehicle { }
+
+    .call-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 0.3rem; height: 40px; padding: 0 1rem;
+      background: rgba(200,146,42,0.12);
+      border: 1px solid var(--border-g);
+      border-radius: 8px; color: var(--gold-lt);
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;
+      text-decoration: none; white-space: nowrap;
+      transition: background 0.2s; flex-shrink: 0;
+    }
+    .call-btn:hover { background: rgba(200,146,42,0.22); }
+
+    /* ── Booking summary ── */
+    .booking-summary {
+      background: var(--navy-700);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px; padding: 0.85rem 1rem;
+      display: flex; flex-direction: column; gap: 0.6rem;
+      margin-bottom: 0.85rem;
+    }
+    .summary-row {
+      display: flex; align-items: flex-start; gap: 0.75rem;
+    }
+    .summary-pin {
+      width: 22px; height: 22px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+    }
+    .summary-pin.pin-a { background: var(--gold);  color: var(--navy-900); }
+    .summary-pin.pin-b { border: 2px solid var(--gold); color: var(--gold-lt); }
+    .summary-text { font-size: 0.83rem; color: var(--text); line-height: 1.4; }
+    .summary-meta {
+      font-size: 0.73rem; color: var(--muted);
+      padding-top: 0.35rem; border-top: 1px solid rgba(255,255,255,0.05);
+    }
+
+    /* ── Panel footer ── */
+    .panel-footer { text-align: center; padding: 0.25rem 0 0.5rem; }
+    .panel-footer a { font-size: 0.73rem; color: var(--muted); text-decoration: none; }
     .panel-footer a:hover { color: var(--text); }
 
-    /* ── Rating overlay ──────────────────────────── */
-    .star-row {
-      display: flex; justify-content: center; gap: .45rem;
-      margin: .9rem 0 .25rem;
+    /* ── Overlay base ── */
+    .overlay {
+      position: fixed; inset: 0; z-index: 200;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: var(--navy-900); gap: 1rem;
     }
+    .overlay.overlay--hidden { display: none; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid rgba(200,146,42,0.2); border-top-color: var(--gold);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .overlay > p { color: var(--muted); font-size: 0.85rem; }
+
+    .overlay-card {
+      background: var(--navy-800); border: 1px solid var(--border-g);
+      border-radius: 16px; padding: 2.5rem 2rem;
+      max-width: 380px; width: 90%; text-align: center;
+    }
+    .overlay-icon {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: rgba(200,146,42,0.12); border: 1px solid var(--border-g);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; color: var(--gold-lt); margin-bottom: 1.25rem;
+    }
+    .overlay-card h2 {
+      font-family: var(--font-d); color: var(--cream);
+      font-size: 1.5rem; font-weight: 400; margin-bottom: 0.5rem;
+    }
+    .overlay-card p { color: var(--text); font-size: 0.88rem; line-height: 1.6; margin-bottom: 1.5rem; }
+    .btn-gold {
+      display: inline-flex; align-items: center; justify-content: center;
+      height: 44px; padding: 0 1.75rem;
+      background: var(--gold); color: var(--navy-900);
+      font-family: var(--font-b); font-size: 0.78rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;
+      border-radius: 6px; border: none; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-gold:hover { background: var(--gold-lt); }
+
+    /* ── Rating overlay ── */
+    .star-row { display: flex; justify-content: center; gap: 0.45rem; margin: 0.9rem 0 0.25rem; }
     .star {
-      font-size: 2rem; cursor: pointer;
-      color: var(--muted);
-      transition: color .12s;
-      user-select: none; -webkit-user-select: none;
-      line-height: 1;
+      font-size: 2rem; cursor: pointer; color: var(--muted);
+      transition: color 0.12s; user-select: none; -webkit-user-select: none; line-height: 1;
     }
     .star.lit { color: var(--gold); }
     .rate-note {
       width: 100%; background: var(--navy-700);
-      border: 1px solid var(--border-g); border-radius: 6px;
-      color: var(--cream); font-family: 'Jost', sans-serif; font-size: .82rem;
-      padding: .65rem .8rem; margin-top: .8rem; resize: none; outline: none;
-      display: block;
+      border: 1px solid var(--border-g); border-radius: 8px;
+      color: var(--cream); font-family: var(--font-b); font-size: 0.82rem;
+      padding: 0.65rem 0.8rem; margin-top: 0.8rem; resize: none; outline: none; display: block;
     }
     .rate-note:focus { border-color: var(--gold); }
     .rate-note::placeholder { color: var(--muted); }
     .btn-submit-rate {
       display: flex; align-items: center; justify-content: center;
-      width: 100%; height: 44px; margin-top: .9rem;
+      width: 100%; height: 44px; margin-top: 0.9rem;
       background: var(--gold); color: var(--navy-900);
-      font-family: 'Jost', sans-serif; font-size: .78rem; font-weight: 700;
-      letter-spacing: .1em; text-transform: uppercase;
-      border-radius: 4px; border: none; cursor: pointer;
-      transition: background .2s, opacity .2s;
+      font-family: var(--font-b); font-size: 0.78rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      border-radius: 6px; border: none; cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
     }
-    .btn-submit-rate:disabled { opacity: .35; cursor: not-allowed; }
+    .btn-submit-rate:disabled { opacity: 0.35; cursor: not-allowed; }
     .btn-submit-rate:not(:disabled):hover { background: var(--gold-lt); }
     .btn-skip-rate {
-      display: block; margin: .7rem auto 0;
+      display: block; margin: 0.7rem auto 0;
       background: none; border: none; cursor: pointer;
-      font-size: .72rem; color: var(--muted); text-decoration: underline;
-      font-family: 'Jost', sans-serif; padding: 0;
+      font-size: 0.72rem; color: var(--muted); text-decoration: underline;
+      font-family: var(--font-b); padding: 0;
     }
     .btn-skip-rate:hover { color: var(--text); }
-    .rate-error { font-size: .72rem; color: #e08a8a; margin-top: .5rem; }
-
-    /* ── Mobile adjustments ─────────────────────── */
-    @media (max-height: 700px) {
-      .track-panel { height: 260px; }
-    }
-    @media (max-width: 400px) {
-      .step-label { font-size: 0.6rem; }
-    }
+    .rate-error { font-size: 0.72rem; color: #e08a8a; margin-top: 0.5rem; }
 
     @media (prefers-reduced-motion: reduce) {
       * { animation: none !important; transition: none !important; }
     }
   </style>
 
-  <!-- Define callback BEFORE loading Maps API -->
+  <!-- Define map init callback BEFORE loading Maps API -->
   <script>
     window.initTrackingMap = function () {
       const DARK_STYLES = [
-        { elementType: 'geometry', stylers: [{ color: '#0b1928' }] },
-        { elementType: 'labels.text.stroke', stylers: [{ color: '#0b1928' }] },
-        { elementType: 'labels.text.fill', stylers: [{ color: '#6b8299' }] },
-        { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#14263d' }] },
-        { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#0b1928' }] },
-        { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#c8922a' }] },
-        { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#7a5510' }] },
-        { featureType: 'road.highway', elementType: 'labels.text.fill', stylers: [{ color: '#f0e6d3' }] },
-        { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#8899aa' }] },
-        { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#050f1e' }] },
-        { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#2e4a62' }] },
-        { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-        { featureType: 'transit', stylers: [{ visibility: 'off' }] }
+        { elementType: 'geometry',            stylers: [{ color: '#0b1928' }] },
+        { elementType: 'labels.text.stroke',  stylers: [{ color: '#0b1928' }] },
+        { elementType: 'labels.text.fill',    stylers: [{ color: '#6b8299' }] },
+        { featureType: 'road',          elementType: 'geometry',        stylers: [{ color: '#14263d' }] },
+        { featureType: 'road',          elementType: 'geometry.stroke', stylers: [{ color: '#0b1928' }] },
+        { featureType: 'road.highway',  elementType: 'geometry',        stylers: [{ color: '#c8922a' }] },
+        { featureType: 'road.highway',  elementType: 'geometry.stroke', stylers: [{ color: '#7a5510' }] },
+        { featureType: 'road.highway',  elementType: 'labels.text.fill',stylers: [{ color: '#f0e6d3' }] },
+        { featureType: 'road',          elementType: 'labels.text.fill',stylers: [{ color: '#8899aa' }] },
+        { featureType: 'water',         elementType: 'geometry',        stylers: [{ color: '#050f1e' }] },
+        { featureType: 'water',         elementType: 'labels.text.fill',stylers: [{ color: '#2e4a62' }] },
+        { featureType: 'poi',           elementType: 'labels',          stylers: [{ visibility: 'off' }] },
+        { featureType: 'transit',       stylers: [{ visibility: 'off' }] }
       ];
 
       window._trackingMap = new google.maps.Map(document.getElementById('map'), {
@@ -410,17 +400,18 @@
         zoom: 12,
         styles: DARK_STYLES,
         disableDefaultUI: true,
+        gestureHandling: 'greedy',
         zoomControl: true,
-        zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_TOP }
+        zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_CENTER }
       });
 
       window._routeRenderer = new google.maps.DirectionsRenderer({
         suppressMarkers: true,
-        polylineOptions: { strokeColor: '#c8922a', strokeWeight: 3, strokeOpacity: 0.85 }
+        polylineOptions: { strokeColor: '#c8922a', strokeWeight: 3, strokeOpacity: 0.8 }
       });
       window._routeRenderer.setMap(window._trackingMap);
 
-      // If data arrived before map was ready, apply it now
+      // If booking data arrived before map was ready, apply now
       if (window._pendingBookingData) {
         applyMapUpdate(window._pendingBookingData);
         window._pendingBookingData = null;
@@ -434,13 +425,13 @@
 </head>
 <body>
 
-  <!-- Loading overlay -->
+  <!-- ── Loading overlay ── -->
   <div id="loadingOverlay" class="overlay">
     <div class="spinner"></div>
     <p>Đang tải thông tin chuyến đi...</p>
   </div>
 
-  <!-- Error overlay -->
+  <!-- ── Error overlay ── -->
   <div id="errorOverlay" class="overlay overlay--hidden">
     <div class="overlay-card">
       <div class="overlay-icon">!</div>
@@ -450,10 +441,8 @@
     </div>
   </div>
 
-  <!-- Completed overlay (Phase 10: 2-state rating card) -->
+  <!-- ── Completed overlay (2-state rating card) ── -->
   <div id="completedOverlay" class="overlay overlay--hidden">
-
-    <!-- State 1: Rating form -->
     <div id="ratingFormCard" class="overlay-card">
       <div class="overlay-icon">✓</div>
       <h2 id="rateHeading">Chuyến đi hoàn thành!</h2>
@@ -470,73 +459,85 @@
       <button class="btn-skip-rate" id="rateSkipBtn" onclick="showRatingThanks(false)"></button>
       <div id="rateError" class="rate-error" style="display:none"></div>
     </div>
-
-    <!-- State 2: Thank-you -->
     <div id="ratingThanksCard" class="overlay-card" style="display:none">
       <div class="overlay-icon">★</div>
       <h2 id="thanksTitle"></h2>
       <p id="thanksMsg"></p>
       <a id="homeBtn" href="index.html" class="btn-gold"></a>
     </div>
-
   </div>
 
-  <!-- Cancelled overlay -->
+  <!-- ── Cancelled overlay ── -->
   <div id="cancelledOverlay" class="overlay overlay--hidden">
     <div class="overlay-card">
       <div class="overlay-icon" style="background:rgba(224,90,90,0.15);color:#e08a8a">✕</div>
-      <h2 style="color:#e08a8a">Chuyến đi đã bị hủy</h2>
-      <p>Chuyến đi này đã bị hủy. Nếu bạn cần hỗ trợ, vui lòng liên hệ chúng tôi qua điện thoại hoặc đặt chuyến mới bên dưới.</p>
-      <a href="index.html" class="btn-gold">Đặt chuyến mới</a>
+      <h2 style="color:#e08a8a" id="cancelTitle">Chuyến đi đã bị hủy</h2>
+      <p id="cancelMsg">Chuyến đi này đã bị hủy. Nếu bạn cần hỗ trợ, vui lòng liên hệ chúng tôi.</p>
+      <a href="index.html" class="btn-gold" id="cancelHomeBtn">Đặt chuyến mới</a>
     </div>
   </div>
 
-  <!-- Navigation bar -->
+  <!-- ── Google Map (full-screen background) ── -->
+  <div id="map"></div>
+
+  <!-- ── Floating nav bar ── -->
   <nav class="track-nav">
     <div class="nav-brand">✦ Du Lịch Cali</div>
     <div class="booking-badge" id="navBookingId"></div>
   </nav>
 
-  <!-- Google Maps -->
-  <div id="map"></div>
+  <!-- ── Floating status banner (over map, below nav) ── -->
+  <div class="status-banner hidden" id="statusBanner">
+    <div class="banner-dot searching" id="bannerDot"></div>
+    <div class="banner-text" id="bannerText">Đang tải...</div>
+    <div class="banner-eta hidden" id="bannerEta"></div>
+  </div>
 
-  <!-- Tracking panel -->
-  <div class="track-panel">
-    <div class="track-inner">
+  <!-- ── Draggable bottom sheet ── -->
+  <div class="bottom-sheet" id="bottomSheet">
 
-      <!-- Progress stepper (5 steps) -->
-      <div class="progress-stepper" id="stepper">
-        <div class="step" data-step="1"><div class="step-dot"></div><div class="step-label">Xác nhận</div></div>
-        <div class="step-connector" data-connector="1"></div>
-        <div class="step" data-step="2"><div class="step-dot"></div><div class="step-label">Tài xế</div></div>
-        <div class="step-connector" data-connector="2"></div>
-        <div class="step" data-step="3"><div class="step-dot"></div><div class="step-label">Trên đường</div></div>
-        <div class="step-connector" data-connector="3"></div>
-        <div class="step" data-step="4"><div class="step-dot"></div><div class="step-label">Di chuyển</div></div>
-        <div class="step-connector" data-connector="4"></div>
-        <div class="step" data-step="5"><div class="step-dot"></div><div class="step-label">Xong</div></div>
-      </div>
+    <!-- Drag handle -->
+    <div class="sheet-drag-handle" id="dragHandle">
+      <div class="drag-pill"></div>
+    </div>
 
-      <!-- Status + ETA -->
-      <div class="status-section">
-        <div class="status-msg" id="statusMsg">Đang chờ xác nhận...</div>
-        <div class="status-eta" id="statusEta"></div>
+    <!-- Sheet content -->
+    <div class="sheet-content" id="sheetContent">
+
+      <!-- ETA block + progress stepper -->
+      <div class="eta-strip" id="etaStrip">
+        <div class="eta-block" id="etaBlock" style="display:none">
+          <div class="eta-big" id="etaBig">—</div>
+          <div class="eta-unit" id="etaUnit">min</div>
+        </div>
+        <div class="progress-stepper" id="stepper">
+          <div class="step" data-step="1"><div class="step-dot"></div><div class="step-label">Xác nhận</div></div>
+          <div class="step-connector" data-connector="1"></div>
+          <div class="step" data-step="2"><div class="step-dot"></div><div class="step-label">Tài xế</div></div>
+          <div class="step-connector" data-connector="2"></div>
+          <div class="step" data-step="3"><div class="step-dot"></div><div class="step-label">Trên đường</div></div>
+          <div class="step-connector" data-connector="3"></div>
+          <div class="step" data-step="4"><div class="step-dot"></div><div class="step-label">Di chuyển</div></div>
+          <div class="step-connector" data-connector="4"></div>
+          <div class="step" data-step="5"><div class="step-dot"></div><div class="step-label">Xong</div></div>
+        </div>
       </div>
 
       <!-- Driver card (hidden until driver assigned) -->
       <div class="driver-card" id="driverCard" style="display:none">
-        <div class="driver-avatar">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
-        </div>
+        <div class="driver-avatar" id="driverAvatar">🚗</div>
         <div class="driver-info">
           <div class="driver-name" id="driverName">—</div>
-          <div class="driver-role">Tài xế</div>
+          <div class="driver-meta">
+            <span class="driver-rating" id="driverRating" style="display:none"></span>
+            <span class="driver-vehicle" id="driverVehicle"></span>
+          </div>
         </div>
-        <a id="driverCallBtn" href="#" class="call-btn">Gọi điện</a>
+        <a id="driverCallBtn" href="#" class="call-btn">📞 <span id="callBtnLabel">Gọi</span></a>
       </div>
 
       <!-- Booking summary -->
-      <div class="booking-summary" id="bookingSummaryPanel">
+      <div class="booking-summary" id="bookingSummaryPanel" style="display:none">
         <div class="summary-row">
           <div class="summary-pin pin-a">A</div>
           <span class="summary-text" id="summaryFrom">—</span>
@@ -550,98 +551,216 @@
 
       <!-- Footer -->
       <div class="panel-footer">
-        <a href="index.html">Quay về trang chủ</a>
+        <a href="index.html" id="footerHomeLink">Quay về trang chủ</a>
       </div>
 
     </div>
   </div>
 
   <script>
-    // ── Firebase init ───────────────────────────────────────────
+    // ── Firebase ─────────────────────────────────────────────────
     const firebaseConfig = {
-      apiKey: "AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ",
-      authDomain: "dulichcali-booking-calendar.firebaseapp.com",
-      projectId: "dulichcali-booking-calendar",
-      storageBucket: "dulichcali-booking-calendar.appspot.com",
-      messagingSenderId: "623460884698",
-      appId: "1:623460884698:web:a08bd435c453a7b4db05e3"
+      apiKey:            'AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ',
+      authDomain:        'dulichcali-booking-calendar.firebaseapp.com',
+      projectId:         'dulichcali-booking-calendar',
+      storageBucket:     'dulichcali-booking-calendar.appspot.com',
+      messagingSenderId: '623460884698',
+      appId:             '1:623460884698:web:a08bd435c453a7b4db05e3'
     };
     firebase.initializeApp(firebaseConfig);
     firebase.auth().signInAnonymously().catch(console.error);
     const db = firebase.firestore();
 
-    // ── Language ────────────────────────────────────────────────
+    // ── Language ─────────────────────────────────────────────────
     const _lang = (new URLSearchParams(window.location.search).get('lang') || 'vi');
     const _validLang = ['vi','en','es'].includes(_lang) ? _lang : 'vi';
 
-    // ── Rating i18n ─────────────────────────────────────────────
-    const RATING_T = {
+    // ── All i18n strings ─────────────────────────────────────────
+    const T = {
       vi: {
-        heading:     'Chuyến đi hoàn thành!',
-        prompt:      'Bạn có muốn đánh giá chuyến đi này không?',
-        placeholder: 'Nhận xét (không bắt buộc)...',
-        submit:      'GỬI ĐÁNH GIÁ',
-        skip:        'Bỏ qua',
-        thanksTitle: 'Cảm ơn bạn!',
-        thanksMsg:   'Đánh giá của bạn rất có ý nghĩa với chúng tôi.',
-        alreadyMsg:  'Bạn đã đánh giá chuyến đi này rồi.',
-        homeBtn:     'Đặt chuyến mới',
-        errorMsg:    'Không thể gửi. Vui lòng thử lại.'
+        /* Status messages */
+        awaiting_driver:  'Đang tìm tài xế...',
+        pending:          'Đang chờ xác nhận...',
+        confirmed:        'Đặt chỗ đã xác nhận!',
+        assigned:         'Tài xế đã được phân công.',
+        driver_confirmed: 'Tài xế sẵn sàng đón bạn!',
+        on_the_way:       'Xe đang trên đường đến...',
+        arrived:          'Xe đã đến điểm đón!',
+        in_progress:      'Đang di chuyển...',
+        completed:        'Chuyến đi hoàn thành!',
+        cancelled:        'Chuyến đã bị hủy.',
+        /* ETA */
+        eta_unit:    'phút',
+        eta_prefix:  'Đến trong ',
+        eta_suffix:  ' phút',
+        /* Driver */
+        driver_label: 'Tài xế',
+        call_btn:     'Gọi',
+        /* Booking */
+        passengers:  'khách',
+        /* Stepper labels */
+        step1: 'Xác nhận', step2: 'Tài xế', step3: 'Trên đường', step4: 'Di chuyển', step5: 'Xong',
+        /* Footer */
+        home_link: 'Quay về trang chủ',
+        /* Rating */
+        rate_heading:  'Chuyến đi hoàn thành!',
+        rate_prompt:   'Bạn có muốn đánh giá chuyến đi này không?',
+        rate_ph:       'Nhận xét (không bắt buộc)...',
+        rate_submit:   'GỬI ĐÁNH GIÁ',
+        rate_skip:     'Bỏ qua',
+        thanks_title:  'Cảm ơn bạn!',
+        thanks_msg:    'Đánh giá của bạn rất có ý nghĩa với chúng tôi.',
+        already_rated: 'Bạn đã đánh giá chuyến đi này rồi.',
+        home_btn:      'Đặt chuyến mới',
+        rate_err:      'Không thể gửi. Vui lòng thử lại.',
+        /* Cancelled */
+        cancel_title:  'Chuyến đi đã bị hủy',
+        cancel_msg:    'Chuyến đi này đã bị hủy. Nếu bạn cần hỗ trợ, vui lòng liên hệ chúng tôi.',
+        cancel_home:   'Đặt chuyến mới',
       },
       en: {
-        heading:     'Trip Completed!',
-        prompt:      'How was your ride?',
-        placeholder: 'Leave a note (optional)...',
-        submit:      'SUBMIT RATING',
-        skip:        'Skip',
-        thanksTitle: 'Thank You!',
-        thanksMsg:   'Your feedback helps us improve.',
-        alreadyMsg:  'You have already rated this trip.',
-        homeBtn:     'Book a New Ride',
-        errorMsg:    'Could not submit. Please try again.'
+        awaiting_driver:  'Finding your driver...',
+        pending:          'Confirming your booking...',
+        confirmed:        'Booking confirmed!',
+        assigned:         'Driver has been assigned.',
+        driver_confirmed: 'Your driver is ready!',
+        on_the_way:       'Driver is on the way...',
+        arrived:          'Your driver has arrived!',
+        in_progress:      'On the way to destination...',
+        completed:        'Trip completed!',
+        cancelled:        'Trip cancelled.',
+        eta_unit:    'min',
+        eta_prefix:  'Arriving in ',
+        eta_suffix:  ' min',
+        driver_label: 'Driver',
+        call_btn:     'Call',
+        passengers:  'passengers',
+        step1: 'Confirm', step2: 'Driver', step3: 'En Route', step4: 'Traveling', step5: 'Done',
+        home_link: 'Back to home',
+        rate_heading:  'Trip Completed!',
+        rate_prompt:   'How was your ride?',
+        rate_ph:       'Leave a note (optional)...',
+        rate_submit:   'SUBMIT RATING',
+        rate_skip:     'Skip',
+        thanks_title:  'Thank You!',
+        thanks_msg:    'Your feedback helps us improve.',
+        already_rated: 'You have already rated this trip.',
+        home_btn:      'Book a New Ride',
+        rate_err:      'Could not submit. Please try again.',
+        cancel_title:  'Trip Cancelled',
+        cancel_msg:    'This trip has been cancelled. Please contact us if you need help.',
+        cancel_home:   'Book a New Ride',
       },
       es: {
-        heading:     '¡Viaje completado!',
-        prompt:      '¿Cómo estuvo tu viaje?',
-        placeholder: 'Deja un comentario (opcional)...',
-        submit:      'ENVIAR CALIFICACIÓN',
-        skip:        'Omitir',
-        thanksTitle: '¡Gracias!',
-        thanksMsg:   'Tu opinión nos ayuda a mejorar.',
-        alreadyMsg:  'Ya calificaste este viaje.',
-        homeBtn:     'Reservar otro viaje',
-        errorMsg:    'No se pudo enviar. Inténtalo de nuevo.'
+        awaiting_driver:  'Buscando tu conductor...',
+        pending:          'Confirmando tu reserva...',
+        confirmed:        '¡Reserva confirmada!',
+        assigned:         'Conductor asignado.',
+        driver_confirmed: '¡Tu conductor está listo!',
+        on_the_way:       'El conductor está en camino...',
+        arrived:          '¡Tu conductor ha llegado!',
+        in_progress:      'En camino al destino...',
+        completed:        '¡Viaje completado!',
+        cancelled:        'Viaje cancelado.',
+        eta_unit:    'min',
+        eta_prefix:  'Llega en ',
+        eta_suffix:  ' min',
+        driver_label: 'Conductor',
+        call_btn:     'Llamar',
+        passengers:  'pasajeros',
+        step1: 'Confirmar', step2: 'Conductor', step3: 'En camino', step4: 'Viajando', step5: 'Listo',
+        home_link: 'Volver al inicio',
+        rate_heading:  '¡Viaje completado!',
+        rate_prompt:   '¿Cómo estuvo tu viaje?',
+        rate_ph:       'Deja un comentario (opcional)...',
+        rate_submit:   'ENVIAR CALIFICACIÓN',
+        rate_skip:     'Omitir',
+        thanks_title:  '¡Gracias!',
+        thanks_msg:    'Tu opinión nos ayuda a mejorar.',
+        already_rated: 'Ya calificaste este viaje.',
+        home_btn:      'Reservar otro viaje',
+        rate_err:      'No se pudo enviar. Inténtalo de nuevo.',
+        cancel_title:  'Viaje cancelado',
+        cancel_msg:    'Este viaje fue cancelado. Contáctanos si necesitas ayuda.',
+        cancel_home:   'Reservar otro viaje',
       }
     };
+    function s(key) { return (T[_validLang] || T.vi)[key] || (T.vi[key] || ''); }
 
-    // ── State ────────────────────────────────────────────────────
-    let vehicleMarker    = null;
-    let routeRequested   = false;
-    let _selectedRating  = 0;
-    let _trackingBookingId  = null;
-    let _latestBookingData  = null;
+    // ── State ─────────────────────────────────────────────────────
+    let vehicleMarker      = null;
+    let pickupMarker       = null;
+    let dropoffMarker      = null;
+    let _selectedRating    = 0;
+    let _trackingBookingId = null;
+    let _latestBookingData = null;
+    let _driverGpsUnsub    = null;  // listener for driver GPS from drivers collection
+    let _lastVehicleLat    = null;
+    let _lastVehicleLng    = null;
+    let _sheetExpanded     = false;
 
-    const STATUS_MESSAGES = {
-      awaiting_driver:  'Đang tìm tài xế phù hợp...',
-      pending:          'Đang chờ xác nhận đặt chỗ...',
-      confirmed:        'Đặt chỗ đã được xác nhận!',
-      assigned:         'Tài xế đã được phân công.',
-      driver_confirmed: 'Tài xế đã xác nhận và sẵn sàng đón bạn!',
-      on_the_way:       'Xe đang trên đường đến...',
-      arrived:          'Xe đã đến điểm đón!',
-      in_progress:      'Đang di chuyển đến điểm đến...',
-      completed:        'Chuyến đi hoàn thành!',
-      cancelled:        'Chuyến đi đã bị hủy.',
-    };
-
-    // Status → active step count (1–5)
+    // Status → stepper step
     const STATUS_STEP = {
       pending: 0, awaiting_driver: 1, confirmed: 1,
       assigned: 2, driver_confirmed: 2,
       on_the_way: 3, arrived: 3, in_progress: 4, completed: 5
     };
 
-    // ── UI helpers ───────────────────────────────────────────────
+    // ── Apply language strings on load ────────────────────────────
+    (function applyI18n() {
+      document.getElementById('footerHomeLink').textContent = s('home_link');
+      document.getElementById('callBtnLabel').textContent   = s('call_btn');
+      document.querySelectorAll('[data-step]').forEach(el => {
+        const n = el.dataset.step;
+        el.querySelector('.step-label').textContent = s('step' + n);
+      });
+    })();
+
+    // ── Draggable bottom sheet ────────────────────────────────────
+    const sheet  = document.getElementById('bottomSheet');
+    const handle = document.getElementById('dragHandle');
+    const COMPACT_H  = 230;
+    const EXPANDED_H = 420;
+
+    let _dragStartY  = 0;
+    let _dragStartH  = 0;
+    let _isDragging  = false;
+
+    handle.addEventListener('touchstart', function(e) {
+      _dragStartY = e.touches[0].clientY;
+      _dragStartH = sheet.offsetHeight;
+      _isDragging = true;
+      sheet.classList.add('transitioning');
+    }, { passive: true });
+
+    handle.addEventListener('touchmove', function(e) {
+      if (!_isDragging) return;
+      const dy  = _dragStartY - e.touches[0].clientY;
+      const newH = Math.min(EXPANDED_H, Math.max(COMPACT_H, _dragStartH + dy));
+      sheet.style.height = newH + 'px';
+    }, { passive: true });
+
+    handle.addEventListener('touchend', function() {
+      if (!_isDragging) return;
+      _isDragging = false;
+      sheet.classList.remove('transitioning');
+      sheet.style.height = '';
+      const mid = (COMPACT_H + EXPANDED_H) / 2;
+      const cur = sheet.offsetHeight;
+      setSheetExpanded(cur > mid);
+    });
+
+    // Desktop: click handle to toggle
+    handle.addEventListener('click', function() {
+      setSheetExpanded(!_sheetExpanded);
+    });
+
+    function setSheetExpanded(expand) {
+      _sheetExpanded = expand;
+      sheet.classList.toggle('expanded', expand);
+    }
+
+    // ── UI helpers ────────────────────────────────────────────────
     function hideLoading() {
       document.getElementById('loadingOverlay').classList.add('overlay--hidden');
     }
@@ -651,153 +770,151 @@
       document.getElementById('errorOverlay').classList.remove('overlay--hidden');
     }
     function showCompleted() {
-      showRatingOverlay();
-    }
-
-    // ── Rating functions ─────────────────────────────────────────
-    function _T(key) { return (RATING_T[_validLang] || RATING_T.vi)[key] || ''; }
-
-    function showRatingOverlay() {
       hideLoading();
-      const t = RATING_T[_validLang] || RATING_T.vi;
-      // Apply i18n to form card
-      document.getElementById('rateHeading').textContent   = t.heading;
-      document.getElementById('ratePrompt').textContent    = t.prompt;
-      document.getElementById('rateNote').placeholder      = t.placeholder;
-      document.getElementById('rateSubmitBtn').textContent = t.submit;
-      document.getElementById('rateSkipBtn').textContent   = t.skip;
-      // Apply i18n to thanks card
-      document.getElementById('thanksTitle').textContent   = t.thanksTitle;
-      document.getElementById('thanksMsg').textContent     = t.thanksMsg;
-      document.getElementById('homeBtn').textContent       = t.homeBtn;
-      // Show overlay
-      document.getElementById('completedOverlay').classList.remove('overlay--hidden');
-      // Check if already rated
-      if (_trackingBookingId) {
-        db.collection('rideRatings').doc(_trackingBookingId).get().then(snap => {
-          if (snap.exists) showRatingThanks(false, true);
-        }).catch(() => {});
-      }
-    }
-
-    function setStarRating(n) {
-      _selectedRating = n;
-      document.querySelectorAll('#starRow .star').forEach((el, i) => {
-        el.classList.toggle('lit', i < n);
-      });
-      document.getElementById('rateSubmitBtn').disabled = false;
-    }
-
-    function submitRating() {
-      if (!_selectedRating || !_trackingBookingId) return;
-      const btn = document.getElementById('rateSubmitBtn');
-      btn.disabled = true;
-      const note = (document.getElementById('rateNote').value || '').trim().slice(0, 280);
-      const payload = {
-        rating:      _selectedRating,
-        note:        note,
-        driverId:    (_latestBookingData && _latestBookingData.driver && _latestBookingData.driver.driverId) || null,
-        region:      (_latestBookingData && _latestBookingData.region) || null,
-        bookingId:   _trackingBookingId,
-        submittedAt: firebase.firestore.FieldValue.serverTimestamp()
-      };
-      db.collection('rideRatings').doc(_trackingBookingId).set(payload)
-        .then(() => showRatingThanks(true))
-        .catch(() => {
-          btn.disabled = false;
-          const errEl = document.getElementById('rateError');
-          errEl.textContent = _T('errorMsg');
-          errEl.style.display = 'block';
-        });
-    }
-
-    function showRatingThanks(wasSubmitted, alreadyRated) {
-      const t = RATING_T[_validLang] || RATING_T.vi;
-      document.getElementById('thanksTitle').textContent = t.thanksTitle;
-      document.getElementById('thanksMsg').textContent   = alreadyRated ? t.alreadyMsg : t.thanksMsg;
-      document.getElementById('homeBtn').textContent     = t.homeBtn;
-      document.getElementById('ratingFormCard').style.display  = 'none';
-      document.getElementById('ratingThanksCard').style.display = '';
+      showRatingOverlay();
     }
     function showCancelled() {
       hideLoading();
+      document.getElementById('cancelTitle').textContent  = s('cancel_title');
+      document.getElementById('cancelMsg').textContent    = s('cancel_msg');
+      document.getElementById('cancelHomeBtn').textContent = s('cancel_home');
       document.getElementById('cancelledOverlay').classList.remove('overlay--hidden');
     }
 
-    function updateProgress(status) {
-      const activeStep = STATUS_STEP[status] ?? 0;
-      document.querySelectorAll('.step').forEach(el => {
-        const s = parseInt(el.dataset.step);
-        el.classList.remove('done', 'active', 'pulsing');
-        if (s < activeStep)       el.classList.add('done');
-        else if (s === activeStep) {
-          el.classList.add(status === 'in_progress' ? 'pulsing' : 'active');
-        }
-      });
-      document.querySelectorAll('.step-connector').forEach(el => {
-        const c = parseInt(el.dataset.connector);
-        el.classList.toggle('done', c < activeStep);
-      });
-    }
+    // ── Status banner ─────────────────────────────────────────────
+    function updateStatusBanner(status, etaMinutes) {
+      const banner = document.getElementById('statusBanner');
+      const dot    = document.getElementById('bannerDot');
+      const text   = document.getElementById('bannerText');
+      const etaEl  = document.getElementById('bannerEta');
 
-    function updateStatusMessage(status, etaMinutes) {
-      document.getElementById('statusMsg').textContent = STATUS_MESSAGES[status] || 'Đang cập nhật...';
-      const etaEl = document.getElementById('statusEta');
-      if (etaMinutes && ['on_the_way', 'in_progress'].includes(status)) {
-        etaEl.textContent = `Dự kiến đến trong khoảng ${etaMinutes} phút`;
+      text.textContent = s(status) || 'Đang cập nhật...';
+      banner.classList.remove('hidden');
+
+      // dot style
+      dot.className = 'banner-dot';
+      if (['pending','awaiting_driver','confirmed','assigned','driver_confirmed'].includes(status))
+        dot.classList.add('searching');
+      else if (status === 'on_the_way') dot.classList.add('enroute');
+      else if (status === 'arrived')    dot.classList.add('arrived');
+      else if (status === 'in_progress') dot.classList.add('moving');
+
+      // ETA in banner
+      if (etaMinutes && ['on_the_way','arrived','in_progress'].includes(status)) {
+        etaEl.textContent = s('eta_prefix') + etaMinutes + s('eta_suffix');
+        etaEl.classList.remove('hidden');
       } else {
-        etaEl.textContent = '';
+        etaEl.classList.add('hidden');
       }
     }
 
-    function updateDriverCard(driver) {
+    // ── Stepper ───────────────────────────────────────────────────
+    function updateProgress(status) {
+      const activeStep = STATUS_STEP[status] ?? 0;
+      document.querySelectorAll('.step').forEach(function(el) {
+        const s = parseInt(el.dataset.step);
+        el.classList.remove('done','active','pulsing');
+        if      (s < activeStep)  el.classList.add('done');
+        else if (s === activeStep) el.classList.add(status === 'in_progress' ? 'pulsing' : 'active');
+      });
+      document.querySelectorAll('.step-connector').forEach(function(el) {
+        el.classList.toggle('done', parseInt(el.dataset.connector) < activeStep);
+      });
+    }
+
+    // ── ETA block ─────────────────────────────────────────────────
+    function updateEta(status, etaMinutes) {
+      const block = document.getElementById('etaBlock');
+      if (etaMinutes && ['on_the_way','arrived','in_progress'].includes(status)) {
+        document.getElementById('etaBig').textContent  = etaMinutes;
+        document.getElementById('etaUnit').textContent = s('eta_unit');
+        block.style.display = 'flex';
+      } else {
+        block.style.display = 'none';
+      }
+      // Auto-expand sheet when driver is near (arrived or <=5 min)
+      if (status === 'arrived' || (etaMinutes && etaMinutes <= 5)) {
+        setSheetExpanded(true);
+      }
+    }
+
+    // ── Driver card ───────────────────────────────────────────────
+    function updateDriverCard(driver, bookingData) {
       const card = document.getElementById('driverCard');
       if (!driver || !driver.name) { card.style.display = 'none'; return; }
       card.style.display = 'flex';
+
       document.getElementById('driverName').textContent = driver.name;
+
+      // Rating (from drivers collection — set if available in booking.driver)
+      const ratingEl = document.getElementById('driverRating');
+      if (driver.rating) {
+        ratingEl.textContent = '★ ' + Number(driver.rating).toFixed(1);
+        ratingEl.style.display = 'inline';
+      } else {
+        ratingEl.style.display = 'none';
+      }
+
+      // Vehicle info
+      const vehicleEl = document.getElementById('driverVehicle');
+      if (bookingData && bookingData.vehicle) {
+        const v = bookingData.vehicle;
+        vehicleEl.textContent = [v.color, v.make, v.model, v.plate ? '· ' + v.plate : '']
+          .filter(Boolean).join(' ');
+      } else {
+        vehicleEl.textContent = s('driver_label');
+      }
+
+      // Call button
       const callBtn = document.getElementById('driverCallBtn');
       if (driver.phone) {
-        callBtn.href = `tel:${driver.phone.replace(/\D/g, '')}`;
+        callBtn.href = 'tel:' + driver.phone.replace(/\D/g, '');
         callBtn.style.display = 'inline-flex';
       } else {
         callBtn.style.display = 'none';
       }
     }
 
+    // ── Booking summary ───────────────────────────────────────────
     function updateBookingSummary(data) {
-      const isPickup    = data.serviceType === 'pickup';
-      const isDropoff   = data.serviceType === 'dropoff';
-      const isTransfer  = isPickup || isDropoff;
+      const panel = document.getElementById('bookingSummaryPanel');
+      const isPickup  = data.serviceType === 'pickup'  || data.serviceType === 'airport_pickup';
+      const isDropoff = data.serviceType === 'dropoff' || data.serviceType === 'airport_dropoff';
 
       let fromText, toText;
       if (isPickup) {
-        fromText = data.airport || 'Sân bay';
-        toText   = data.address || '—';
+        fromText = (data.airport || 'Sân bay') + (data.terminal ? ' T' + data.terminal : '');
+        toText   = data.dropoffAddress || data.address || '—';
       } else if (isDropoff) {
-        fromText = data.address || '—';
-        toText   = data.airport || 'Sân bay';
+        fromText = data.pickupAddress || data.address || '—';
+        toText   = (data.airport || 'Sân bay') + (data.terminal ? ' T' + data.terminal : '');
       } else {
-        // Tour
-        fromText = 'Điểm xuất phát';
-        toText   = data.address || '—';
+        fromText = data.pickupAddress || data.address || '—';
+        toText   = data.dropoffAddress || '—';
       }
 
       document.getElementById('summaryFrom').textContent = fromText;
       document.getElementById('summaryTo').textContent   = toText;
 
-      const dt = data.datetime ? new Date(data.datetime) : null;
-      const dtStr = dt && !isNaN(dt) ? dt.toLocaleString('vi-VN', {
+      const rawDt = data.datetime ||
+        (data.arrivalDate   ? data.arrivalDate   + (data.arrivalTime   ? 'T' + data.arrivalTime   : '') : null) ||
+        (data.departureDate ? data.departureDate + (data.departureTime ? 'T' + data.departureTime : '') : null) || '';
+      const dt    = rawDt ? new Date(rawDt.replace(' ', 'T')) : null;
+      const dtStr = dt && !isNaN(dt) ? dt.toLocaleString(_validLang === 'vi' ? 'vi-VN' : (_validLang === 'es' ? 'es-MX' : 'en-US'), {
         weekday: 'short', month: 'short', day: 'numeric',
         hour: '2-digit', minute: '2-digit', hour12: true
       }) : '';
 
       const parts = [];
       if (dtStr) parts.push(dtStr);
-      if (data.passengers) parts.push(`${data.passengers} khách`);
+      if (data.passengers) parts.push(data.passengers + ' ' + s('passengers'));
+      if (data.estimatedPrice) parts.push('$' + Number(data.estimatedPrice).toFixed(0));
       document.getElementById('summaryMeta').textContent = parts.join(' · ');
+
+      panel.style.display = (fromText && fromText !== '—') ? '' : 'none';
     }
 
-    // ── Vehicle marker ───────────────────────────────────────────
+    // ── Map: vehicle marker ───────────────────────────────────────
     function createVehicleIcon(heading) {
       return {
         path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
@@ -810,67 +927,225 @@
       };
     }
 
+    // ── Map: pickup/dropoff pins ──────────────────────────────────
+    function _placePins(data) {
+      const map = window._trackingMap;
+      if (!map) return;
+
+      const isPickup  = data.serviceType === 'pickup'  || data.serviceType === 'airport_pickup';
+      const isDropoff = data.serviceType === 'dropoff' || data.serviceType === 'airport_dropoff';
+
+      let pickupAddr, dropoffAddr;
+      if (isPickup) {
+        pickupAddr  = (data.airport || '') + (data.terminal ? ' Terminal ' + data.terminal : '');
+        dropoffAddr = data.dropoffAddress || data.address;
+      } else if (isDropoff) {
+        pickupAddr  = data.pickupAddress || data.address;
+        dropoffAddr = (data.airport || '') + (data.terminal ? ' Terminal ' + data.terminal : '');
+      } else {
+        pickupAddr  = data.pickupAddress;
+        dropoffAddr = data.dropoffAddress;
+      }
+
+      function geocodeAndPin(addr, isPickupPin) {
+        if (!addr || addr.trim() === '—') return;
+        const gc = new google.maps.Geocoder();
+        gc.geocode({ address: addr + ', California, USA' }, function(results, status) {
+          if (status !== 'OK' || !results[0]) return;
+          const pos = results[0].geometry.location;
+          if (isPickupPin) {
+            if (pickupMarker) pickupMarker.setMap(null);
+            pickupMarker = new google.maps.Marker({
+              position: pos, map,
+              icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                fillColor: '#c8922a', fillOpacity: 1,
+                strokeColor: '#f0e6d3', strokeWeight: 2, scale: 8
+              },
+              title: 'Điểm đón', zIndex: 5
+            });
+          } else {
+            if (dropoffMarker) dropoffMarker.setMap(null);
+            dropoffMarker = new google.maps.Marker({
+              position: pos, map,
+              icon: {
+                path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
+                fillColor: '#e8b84b', fillOpacity: 1,
+                strokeColor: '#f0e6d3', strokeWeight: 1.5,
+                scale: 1.4, anchor: new google.maps.Point(12, 24)
+              },
+              title: 'Điểm đến', zIndex: 4
+            });
+          }
+        });
+      }
+
+      if (!pickupMarker)  geocodeAndPin(pickupAddr, true);
+      if (!dropoffMarker) geocodeAndPin(dropoffAddr, false);
+    }
+
+    // ── Map: apply vehicle position ───────────────────────────────
+    function applyVehiclePosition(lat, lng, heading) {
+      const map = window._trackingMap;
+      if (!map) return;
+      const pos = { lat, lng };
+      if (!vehicleMarker) {
+        vehicleMarker = new google.maps.Marker({
+          position: pos, map,
+          icon: createVehicleIcon(heading || 0),
+          title: 'Xe của bạn', zIndex: 10
+        });
+      } else {
+        vehicleMarker.setPosition(pos);
+        vehicleMarker.setIcon(createVehicleIcon(heading || 0));
+      }
+      map.panTo(pos);
+      _lastVehicleLat = lat;
+      _lastVehicleLng = lng;
+    }
+
     function applyMapUpdate(data) {
       const map = window._trackingMap;
       if (!map) { window._pendingBookingData = data; return; }
 
+      // Vehicle position — prefer booking.vehicleLat if set, else use last GPS from driver listener
       const hasVehicle = data.vehicleLat != null && data.vehicleLng != null;
-
       if (hasVehicle) {
-        const pos = { lat: data.vehicleLat, lng: data.vehicleLng };
-        if (!vehicleMarker) {
-          vehicleMarker = new google.maps.Marker({
-            position: pos, map,
-            icon: createVehicleIcon(data.vehicleHeading || 0),
-            title: 'Xe của bạn', zIndex: 10
-          });
-        } else {
-          vehicleMarker.setPosition(pos);
-          vehicleMarker.setIcon(createVehicleIcon(data.vehicleHeading || 0));
-        }
-        map.panTo(pos);
+        applyVehiclePosition(data.vehicleLat, data.vehicleLng, data.vehicleHeading);
       }
 
-      // Render route when vehicle is moving
-      const activeStatuses = ['on_the_way', 'arrived', 'in_progress'];
-      if (hasVehicle && activeStatuses.includes(data.status)) {
+      // Pickup/dropoff pins (placed once)
+      if (!pickupMarker || !dropoffMarker) _placePins(data);
+
+      // Route when driver is en route
+      const activeStatuses = ['on_the_way','arrived','in_progress'];
+      if ((_lastVehicleLat || hasVehicle) && activeStatuses.includes(data.status)) {
         renderRoute(data);
       } else if (window._routeRenderer) {
         window._routeRenderer.setDirections({ routes: [] });
       }
     }
 
+    // ── Map: route rendering ──────────────────────────────────────
     function renderRoute(data) {
       if (!window._trackingMap || !window._routeRenderer) return;
-      const vehiclePos = { lat: data.vehicleLat, lng: data.vehicleLng };
+      const lat = (data.vehicleLat  != null ? data.vehicleLat  : _lastVehicleLat);
+      const lng = (data.vehicleLng  != null ? data.vehicleLng  : _lastVehicleLng);
+      if (lat == null || lng == null) return;
 
-      let origin, destination;
-      if (data.status === 'in_progress') {
-        // Vehicle is carrying passenger — show remaining route to destination
-        origin      = vehiclePos;
-        destination = data.serviceType === 'pickup'
-          ? (data.address  || data.airport)
-          : (data.airport  || data.address);
+      const vehiclePos   = { lat, lng };
+      const isPickup     = data.serviceType === 'pickup'  || data.serviceType === 'airport_pickup';
+      const isDropoff    = data.serviceType === 'dropoff' || data.serviceType === 'airport_dropoff';
+
+      let pickupDest, dropoffDest;
+      if (isPickup) {
+        pickupDest  = data.airport || data.address;
+        dropoffDest = data.dropoffAddress || data.address;
+      } else if (isDropoff) {
+        pickupDest  = data.pickupAddress || data.address;
+        dropoffDest = data.airport || data.address;
       } else {
-        // Vehicle heading to pickup point
-        origin      = vehiclePos;
-        destination = data.serviceType === 'pickup'
-          ? (data.address || data.airport)
-          : (data.airport || data.address);
+        pickupDest  = data.pickupAddress;
+        dropoffDest = data.dropoffAddress;
       }
 
-      if (!destination) return;
+      // While heading to customer: route to pickup. In-progress: route to dropoff.
+      const dest = data.status === 'in_progress' ? dropoffDest : pickupDest;
+      if (!dest) return;
 
       const ds = new google.maps.DirectionsService();
       ds.route({
-        origin, destination,
+        origin: vehiclePos, destination: dest,
         travelMode: google.maps.TravelMode.DRIVING
-      }, (result, status) => {
+      }, function(result, status) {
         if (status === 'OK') window._routeRenderer.setDirections(result);
       });
     }
 
-    // ── Main tracking logic ──────────────────────────────────────
+    // ── Driver GPS listener (reads drivers collection directly) ───
+    // Fires when driver has GPS on — gives real-time position updates
+    // independent of the booking document.
+    function listenDriverGps(driverId) {
+      if (_driverGpsUnsub || !driverId) return;
+      _driverGpsUnsub = db.collection('drivers').doc(driverId)
+        .onSnapshot(function(doc) {
+          if (!doc.exists) return;
+          const d = doc.data();
+          if (d.driverLat != null && d.driverLng != null) {
+            applyVehiclePosition(d.driverLat, d.driverLng, null);
+            // Refresh route with new position if we have booking data
+            if (_latestBookingData) {
+              const activeStatuses = ['on_the_way','arrived','in_progress'];
+              if (activeStatuses.includes(_latestBookingData.status)) {
+                renderRoute(Object.assign({}, _latestBookingData, {
+                  vehicleLat: d.driverLat, vehicleLng: d.driverLng
+                }));
+              }
+            }
+          }
+        }, function() {});
+    }
+
+    // ── Rating overlay ────────────────────────────────────────────
+    function showRatingOverlay() {
+      document.getElementById('rateHeading').textContent   = s('rate_heading');
+      document.getElementById('ratePrompt').textContent    = s('rate_prompt');
+      document.getElementById('rateNote').placeholder      = s('rate_ph');
+      document.getElementById('rateSubmitBtn').textContent = s('rate_submit');
+      document.getElementById('rateSkipBtn').textContent   = s('rate_skip');
+      document.getElementById('thanksTitle').textContent   = s('thanks_title');
+      document.getElementById('thanksMsg').textContent     = s('thanks_msg');
+      document.getElementById('homeBtn').textContent       = s('home_btn');
+      document.getElementById('completedOverlay').classList.remove('overlay--hidden');
+
+      // Check if already rated
+      if (_trackingBookingId) {
+        db.collection('rideRatings').doc(_trackingBookingId).get()
+          .then(function(snap) { if (snap.exists) showRatingThanks(false, true); })
+          .catch(function() {});
+      }
+    }
+
+    function setStarRating(n) {
+      _selectedRating = n;
+      document.querySelectorAll('#starRow .star').forEach(function(el, i) {
+        el.classList.toggle('lit', i < n);
+      });
+      document.getElementById('rateSubmitBtn').disabled = false;
+    }
+
+    function submitRating() {
+      if (!_selectedRating || !_trackingBookingId) return;
+      const btn  = document.getElementById('rateSubmitBtn');
+      btn.disabled = true;
+      const note = (document.getElementById('rateNote').value || '').trim().slice(0, 280);
+      const payload = {
+        rating:      _selectedRating,
+        note:        note,
+        driverId:    (_latestBookingData && _latestBookingData.driver && _latestBookingData.driver.driverId) || null,
+        region:      (_latestBookingData && _latestBookingData.region) || null,
+        bookingId:   _trackingBookingId,
+        submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      db.collection('rideRatings').doc(_trackingBookingId).set(payload)
+        .then(function() { showRatingThanks(true); })
+        .catch(function() {
+          btn.disabled = false;
+          const errEl = document.getElementById('rateError');
+          errEl.textContent   = s('rate_err');
+          errEl.style.display = 'block';
+        });
+    }
+
+    function showRatingThanks(wasSubmitted, alreadyRated) {
+      document.getElementById('thanksTitle').textContent = s('thanks_title');
+      document.getElementById('thanksMsg').textContent   = alreadyRated ? s('already_rated') : s('thanks_msg');
+      document.getElementById('homeBtn').textContent     = s('home_btn');
+      document.getElementById('ratingFormCard').style.display  = 'none';
+      document.getElementById('ratingThanksCard').style.display = '';
+    }
+
+    // ── Main tracking logic ───────────────────────────────────────
     function loadTracking() {
       const params    = new URLSearchParams(window.location.search);
       const bookingId = params.get('id');
@@ -880,13 +1155,13 @@
 
       document.getElementById('navBookingId').textContent = bookingId;
 
-      db.collection('bookings').doc(bookingId).onSnapshot(doc => {
+      db.collection('bookings').doc(bookingId).onSnapshot(function(doc) {
         if (!doc.exists) { showError('Không tìm thấy đặt chỗ. Mã có thể không đúng.'); return; }
 
         const data = doc.data();
         if (data.trackingToken !== token) { showError('Link theo dõi không hợp lệ.'); return; }
 
-        // Store for rating submission
+        // Cache for rating + GPS re-render
         _trackingBookingId = bookingId;
         _latestBookingData = data;
 
@@ -895,20 +1170,27 @@
         if (data.status === 'completed') { showCompleted(); return; }
         if (data.status === 'cancelled') { showCancelled(); return; }
 
+        // Update all UI components
+        updateStatusBanner(data.status, data.etaMinutes);
         updateProgress(data.status);
-        updateStatusMessage(data.status, data.etaMinutes);
-        updateDriverCard(data.driver);
+        updateEta(data.status, data.etaMinutes);
+        updateDriverCard(data.driver, data);
         updateBookingSummary(data);
         applyMapUpdate(data);
 
-      }, err => {
+        // Start listening to driver GPS if we have a driver assigned
+        if (data.driver && data.driver.driverId && !_driverGpsUnsub) {
+          listenDriverGps(data.driver.driverId);
+        }
+
+      }, function(err) {
         console.error(err);
         showError('Không thể tải thông tin chuyến đi. Vui lòng thử lại.');
       });
     }
 
-    // Start tracking when page loads
-    firebase.auth().onAuthStateChanged(user => {
+    // Start when Firebase Auth is ready (anonymous)
+    firebase.auth().onAuthStateChanged(function(user) {
       if (user) loadTracking();
     });
   </script>

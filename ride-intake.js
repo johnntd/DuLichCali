@@ -106,7 +106,7 @@ window.RideIntake = (function () {
       errTo:            'Please enter destination',
       errRideDate:      'Please enter ride date',
       errRideTime:      'Please enter pickup time',
-      noRoute:          'Route not found.',
+      noRoute:          'Fare estimate unavailable — we\'ll confirm pricing by phone.',
       vehicleBox: function(name, seats) { return name + '<br>' + seats + ' seats<br>Tip not included'; },
       errBooking:       'Booking failed. Please call (408) 916-3439 to book directly.',
       checkingAvail:    'Checking availability...',
@@ -213,7 +213,7 @@ window.RideIntake = (function () {
       errTo:            'Vui lòng nhập điểm đến',
       errRideDate:      'Vui lòng nhập ngày đi',
       errRideTime:      'Vui lòng nhập giờ xuất phát',
-      noRoute:          'Không tìm được tuyến đường.',
+      noRoute:          'Chưa tính được giá — chúng tôi sẽ xác nhận qua điện thoại.',
       vehicleBox: function(name, seats) { return name + '<br>' + seats + ' chỗ<br>Chưa bao gồm tip'; },
       errBooking:       'Đặt chỗ không thành công. Vui lòng gọi (408) 916-3439 để đặt trực tiếp.',
       checkingAvail:    'Đang kiểm tra lịch...',
@@ -320,7 +320,7 @@ window.RideIntake = (function () {
       errTo:            'Ingresa el destino',
       errRideDate:      'Ingresa la fecha del viaje',
       errRideTime:      'Ingresa la hora de recogida',
-      noRoute:          'Ruta no encontrada.',
+      noRoute:          'Tarifa no disponible — confirmaremos el precio por teléfono.',
       vehicleBox: function(name, seats) { return name + '<br>' + seats + ' asientos<br>Propina no incluida'; },
       errBooking:       'Reserva fallida. Llama al (408) 916-3439 para reservar directamente.',
       checkingAvail:    'Verificando disponibilidad...',
@@ -932,30 +932,20 @@ window.RideIntake = (function () {
     }
 
     // ── Capacity validation (all ride types, step 4 = passengers) ──
+    // Only use DLCRide fleet-level capacity (up to 12 for van, 7 for Bay Area Sienna).
+    // Do NOT cap against _driverVehicle.seats — that is the current on-shift driver's car,
+    // not necessarily the vehicle that will be dispatched for a future booking.
     if (step === 4 && errors.length === 0) {
       var paxId = _type === 'pickup' ? 'ri_p_passengers' : _type === 'dropoff' ? 'ri_d_passengers' : 'ri_r_passengers';
       var pax   = parseInt(val(paxId) || '1', 10);
-      var maxSeats = _driverVehicle ? _driverVehicle.seats : 12;
-      if (pax > maxSeats) {
-        errors.push((_driverVehicle ? _driverVehicle.name : 'This vehicle') +
-          ' holds max ' + maxSeats + ' passengers. You selected ' + pax + '.');
-      }
-      // DLCRide capacity check (if ride-booking.js loaded)
       if (window.DLCRide && pax > 0) {
         var res = DLCRide.resolveVehicle(pax);
         if (res.error) {
           errors.push(res.errorEn || res.error);
-        } else if (_driverVehicle && res.recommended) {
-          // Check if current vehicle can handle the passengers
-          var vehCap = DLCRide.validateCapacity(pax, _mapVehicleType(_driverVehicle.name));
-          if (!vehCap.valid) {
-            errors.push(vehCap.messageEn || vehCap.message);
-            if (vehCap.recommendation) {
-              errors.push('Recommended: ' + vehCap.recommendation.name +
-                ' (' + vehCap.recommendation.description + ')');
-            }
-          }
         }
+      } else if (pax > 12) {
+        // Absolute hard cap when DLCRide not loaded
+        errors.push('Maximum 12 passengers per trip. Please contact us for multiple vehicles.');
       }
     }
 
@@ -1117,31 +1107,27 @@ window.RideIntake = (function () {
   // Rate card lives in pricing.js RIDE_RATE_CARD; this file no longer owns the numbers.
 
   // ── Route distance (self-contained — no dependency on script.js) ─────────────
-  // Uses Google Maps Routes API (same implementation as window.DLCRouteMatrix in script.js).
+  // Uses DirectionsService (reliably available in the loaded Maps JS SDK).
   // Returns Promise<{distMiles, durMins}> or rejects on failure.
   function _routeMatrix(origin, destination) {
-    return google.maps.importLibrary('routes').then(function (lib) {
-      var RouteMatrix = lib.RouteMatrix;
-      if (!RouteMatrix) return Promise.reject(new Error('RouteMatrix not available'));
-      var travelMode = (lib.TravelMode && lib.TravelMode.DRIVING) || 'DRIVING';
-      return RouteMatrix.computeRouteMatrix({
-        origins:      [origin],
-        destinations: [destination],
-        travelMode:   travelMode,
-        fields: ['distanceMeters', 'condition', 'localizedValues', 'originIndex', 'destinationIndex'],
-      });
-    }).then(function (result) {
-      var el = result && result.matrix && result.matrix.rows &&
-               result.matrix.rows[0] && result.matrix.rows[0].items &&
-               result.matrix.rows[0].items[0];
-      if (!el || el.condition !== 'ROUTE_EXISTS' || !el.distanceMeters) {
-        return Promise.reject(new Error('no-route'));
+    return new Promise(function (resolve, reject) {
+      if (typeof google === 'undefined' || !google.maps || !google.maps.DirectionsService) {
+        return reject(new Error('Maps not loaded'));
       }
-      var durStr = (el.localizedValues && el.localizedValues.duration) || '';
-      var hrM    = durStr.match(/(\d+)\s*hr/i);
-      var minM   = durStr.match(/(\d+)\s*min/i);
-      var durMins = (hrM ? parseInt(hrM[1]) * 60 : 0) + (minM ? parseInt(minM[1]) : 0);
-      return { distMiles: el.distanceMeters / 1609.34, durMins: durMins };
+      var svc = new google.maps.DirectionsService();
+      svc.route({
+        origin:      origin,
+        destination: destination,
+        travelMode:  google.maps.TravelMode.DRIVING,
+      }, function (result, status) {
+        if (status !== google.maps.DirectionsStatus.OK || !result || !result.routes || !result.routes[0]) {
+          return reject(new Error('no-route'));
+        }
+        var leg = result.routes[0].legs[0];
+        var distMiles = leg.distance ? leg.distance.value / 1609.34 : 0;
+        var durMins   = leg.duration ? Math.round(leg.duration.value / 60) : 0;
+        resolve({ distMiles: distMiles, durMins: durMins });
+      });
     });
   }
 

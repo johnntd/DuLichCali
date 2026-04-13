@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0a2344">
   <title>Airport Pickup & Private Rides · Du Lich Cali</title>
-  <meta name="description" content="Book airport rides to LAX, SNA, SFO, SJC, OAK 24/7. Premium vehicles, fixed pricing, 20% cheaper than Uber. Call: +1 (408) 916-3439.">
+  <meta name="description" content="Book airport rides to LAX, SNA, SFO, SJC, OAK 24/7. Premium vehicles, fixed pricing, professional drivers. Call: +1 (408) 916-3439.">
   <meta property="og:title" content="Airport Pickup & Private Rides · Du Lich Cali">
-  <meta property="og:description" content="Book airport rides 24/7. LAX · SNA · SFO · SJC · OAK. 20% cheaper than Uber.">
+  <meta property="og:description" content="Book airport rides 24/7. LAX · SNA · SFO · SJC · OAK. Fixed price, professional drivers.">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -255,8 +255,8 @@
       <div class="hc__gradient"></div>
       <div class="hc__body">
         <span class="hc__chip">🚗 Premium Private Car</span>
-        <h2 class="hc__title">Private Ride<br><em>Save 20%</em></h2>
-        <p class="hc__sub">Tesla Model Y · Mercedes Van · 12 seats · 20% cheaper than Uber</p>
+        <h2 class="hc__title">Private Ride<br><em>Fixed Price</em></h2>
+        <p class="hc__sub">Tesla Model Y · Mercedes Van · 12 seats · Professional drivers</p>
         <button class="hc__cta" onclick="RideIntake.open('ride')">Book private ride</button>
       </div>
     </div>
@@ -310,7 +310,7 @@
            onkeydown="if(event.key==='Enter')RideIntake.open('ride')">
         <span class="home-ride-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h14l1 5H4L5 9z"/><path d="M5 9l2-4h10l2 4"/><circle cx="7.5" cy="17" r="2"/><circle cx="16.5" cy="17" r="2"/><path d="M14 14H10"/></svg></span>
         <strong class="home-ride-tile__name">Premium Private Car</strong>
-        <span class="home-ride-tile__sub">Mercedes Van · 12 seats · −20% vs Uber</span>
+        <span class="home-ride-tile__sub">Mercedes Van · 12 seats · Fixed price</span>
       </div>
     </div>
   </section>
@@ -435,7 +435,7 @@
       </div>
       <div class="ri-van-badge">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        Cheaper than Uber <strong>20%</strong> &nbsp;·&nbsp; Book ahead · Fixed price
+        Book ahead · Fixed price · Professional drivers
       </div>
     </div><!-- /riPicker -->
 
@@ -668,12 +668,8 @@
         <div class="ri-price-box" id="riPriceBox" hidden>
           <span class="ri-fare-route" id="riRouteSummary"></span>
           <div class="ri-fare-divider"></div>
-          <div class="ri-fare-row ri-fare-row--market">
-            <span id="riMarketLabel">Market rate (UberXL)</span>
-            <span id="riMarketAmt">~$—</span>
-          </div>
           <div class="ri-fare-row ri-fare-row--dlc">
-            <span><span id="riDlcLabel">DLC price</span> <span class="ri-price-badge">−20%</span></span>
+            <span><span id="riDlcLabel">DLC price</span></span>
             <span id="riPriceAmt">~$—</span>
           </div>
           <div class="ri-fare-divider"></div>
@@ -729,9 +725,9 @@
 <!-- Shared pricing engine — must load before ride-intake.js -->
 <script src="/pricing.js?v=20260420a"></script>
 <!-- Ride intake modal JS -->
-<script src="/ride-intake.js?v=20260420b"></script>
+<script src="/ride-intake.js?v=20260420c"></script>
 <script src="/marketplace/services-data.js"></script>
-<script src="/landing-nav.js?v=20260419b"></script>
+<script src="/landing-nav.js?v=20260420a"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     LandingNav.init({

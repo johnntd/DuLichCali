@@ -176,7 +176,7 @@
       '<div class="lp-rides-ready">' +
         '<div class="lp-rides-ready__hdr">' +
           '<span class="lp-avail lp-avail--now" style="position:static;display:inline-block">Xe Sẵn Sàng</span>' +
-          '<div class="lp-rides-ready__vehicle">' + esc(vName) + ' &middot; ' + seats + ' chỗ &middot; <span style="color:var(--gold)">−20% Uber</span></div>' +
+          '<div class="lp-rides-ready__vehicle">' + esc(vName) + ' &middot; ' + seats + ' chỗ &middot; <span style="color:var(--gold)">Giá cố định</span></div>' +
         '</div>' +
         '<div class="lp-rides-ready__grid">' +
           '<button class="lp-rides-tile" onclick="window.RideIntake&&RideIntake.open?RideIntake.open(\'pickup\'):location.href=\'/?entry=airport\'">' +

@@ -1072,10 +1072,10 @@
     var heroBg = 'background-image:url(' + HERO_IMG + '),' +
       (biz.heroGradient || 'linear-gradient(135deg,#831843,#4c1d95)') + ';' +
       'background-size:cover;background-position:center 25%;';
-    var hasAddr = !!(biz.address || biz.phone);
+    // Show only phone in hero — address already appears in renderInfoStrip below
+    var hasAddr = !!biz.phone;
     var addrHtml = hasAddr
       ? '<div class="ns-hero__address">' +
-          (biz.address ? '<span class="ns-hero__address-item">' + mapPinIcon + escHtml(biz.address) + '</span>' : '') +
           (biz.phone ? '<span class="ns-hero__address-item">' + phoneIcon + '<a href="tel:' + biz.phone + '">' + escHtml(biz.phoneDisplay || biz.phone) + '</a></span>' : '') +
         '</div>'
       : '';

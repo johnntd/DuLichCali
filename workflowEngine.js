@@ -123,7 +123,7 @@
 
       priceTotal:'💰 Tổng: $', priceEst:'💰 Ước tính: ',
       priceTransport:'💰 Ước tính transport: ', priceCompare:'💰 So sánh giá (',
-      priceUber:'   Uber/Lyft ước tính: ~$', priceDLC:'   DuLịchCali (-20%):  ~$',
+      priceUber:'', priceDLC:'   DuLịchCali:  ~$',
       priceSave:'  ← tiết kiệm ~$', priceApprox:'   ⚠️ Giá sơ bộ — đội sẽ xác nhận sau khi đặt.',
       driverWait:'⏱ Tài xế chờ tại cửa Arrivals/Baggage Claim.',
 
@@ -246,8 +246,8 @@
 
       priceTotal:'💰 Total: $', priceEst:'💰 Estimate: ',
       priceTransport:'💰 Est. transport: ', priceCompare:'💰 Price comparison (',
-      priceUber:'   Uber/Lyft est.: ~$', priceDLC:'   DuLịchCali (-20%): ~$',
-      priceSave:'  ← save ~$', priceApprox:'   ⚠️ Rough estimate — team will confirm after booking.',
+      priceUber:'', priceDLC:'   DuLịchCali: ~$',
+      priceSave:'', priceApprox:'   ⚠️ Rough estimate — team will confirm after booking.',
       driverWait:'⏱ Driver waits at Arrivals/Baggage Claim.',
 
       qFoodItem:'What would you like to order?\n(e.g., Egg Rolls, Chuối Đậu Nấu Ốc)',
@@ -369,8 +369,8 @@
 
       priceTotal:'💰 Total: $', priceEst:'💰 Estimado: ',
       priceTransport:'💰 Est. transporte: ', priceCompare:'💰 Comparación de precios (',
-      priceUber:'   Uber/Lyft est.: ~$', priceDLC:'   DuLịchCali (-20%): ~$',
-      priceSave:'  ← ahorras ~$', priceApprox:'   ⚠️ Precio aproximado — el equipo confirmará tras la reserva.',
+      priceUber:'', priceDLC:'   DuLịchCali: ~$',
+      priceSave:'', priceApprox:'   ⚠️ Precio aproximado — el equipo confirmará tras la reserva.',
       driverWait:'⏱ El conductor espera en Llegadas/Recogida de equipaje.',
 
       qFoodItem:'¿Qué deseas pedir?\n(ej: Chả Giò, Chuối Đậu Nấu Ốc)',

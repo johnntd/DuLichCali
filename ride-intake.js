@@ -10,15 +10,15 @@ window.RideIntake = (function () {
   var _RIDE_T = {
     en: {
       minSuffix:    'min',
-      savings:      function(n) { return 'Save ~$' + n + ' vs Uber'; },
+      savings:      function(n) { return ''; },
       deadhead:     function(mi) { return ' · Driver ~' + mi + ' mi away'; },
-      marketLabel:  'Market rate (UberXL)',
+      marketLabel:  'Estimated price',
       dlcLabel:     'DLC price',
       mapsLink:     'View route on Maps',
       viewRoute:    'View route',
       pickupLbl:    'Pickup',
       dropoffLbl:   'Dropoff',
-      priceEst:     function(p, s) { return '~$' + p + ' est · Save ~$' + s + ' vs Uber'; },
+      priceEst:     function(p, s) { return '~$' + p + ' estimated · Fixed price'; },
       // Step navigation
       stepPrefix:   function(n) { return 'Step ' + n + ' of 6'; },
       stepLabels:   {
@@ -54,7 +54,7 @@ window.RideIntake = (function () {
       dropoffCardDesc:  'Departing · On-time door pickup',
       rideCardTitle:    'Private Ride',
       rideCardDesc:     'Any destination · No airport needed',
-      vanBadge:         'Save <strong>20%</strong> vs Uber &nbsp;·&nbsp; Book ahead · Fixed price',
+      vanBadge:         'Book ahead · Fixed price · Professional drivers',
       labelAirportP:    'Arrival airport',    labelAirportD:    'Departure airport',
       labelDropoffAddr: 'Drop-off address',   labelPickupAddr:  'Pickup address',
       labelFromAddr:    'Pickup location',    labelToAddr:      'Destination',
@@ -112,15 +112,15 @@ window.RideIntake = (function () {
     },
     vi: {
       minSuffix:    'phút',
-      savings:      function(n) { return 'Tiết kiệm ~$' + n + ' so với Uber'; },
+      savings:      function(n) { return ''; },
       deadhead:     function(mi) { return ' · Tài xế cách ~' + mi + ' mi'; },
-      marketLabel:  'Giá thị trường (UberXL)',
+      marketLabel:  'Giá ước tính',
       dlcLabel:     'Giá DLC',
       mapsLink:     'Xem tuyến đường trên Maps',
       viewRoute:    'Xem tuyến đường',
       pickupLbl:    'Điểm đón',
       dropoffLbl:   'Điểm đến',
-      priceEst:     function(p, s) { return '~$' + p + ' ước tính · Tiết kiệm ~$' + s + ' so với Uber'; },
+      priceEst:     function(p, s) { return '~$' + p + ' ước tính · Giá cố định'; },
       // Step navigation
       stepPrefix:   function(n) { return 'Bước ' + n + ' / 6'; },
       stepLabels:   {
@@ -156,7 +156,7 @@ window.RideIntake = (function () {
       dropoffCardDesc:  'Bay đi · Đón tận nhà đúng giờ',
       rideCardTitle:    'Xe Riêng Cao Cấp',
       rideCardDesc:     'Đến bất kỳ điểm nào · Không cần sân bay',
-      vanBadge:         'Rẻ hơn Uber <strong>20%</strong> &nbsp;·&nbsp; Đặt trước · Giá cố định',
+      vanBadge:         'Đặt trước · Giá cố định · Tài xế chuyên nghiệp',
       labelAirportP:    'Sân bay đến',        labelAirportD:    'Sân bay cần đến',
       labelDropoffAddr: 'Địa chỉ điểm đến',   labelPickupAddr:  'Địa chỉ đón',
       labelFromAddr:    'Điểm đón',           labelToAddr:      'Điểm đến',
@@ -214,15 +214,15 @@ window.RideIntake = (function () {
     },
     es: {
       minSuffix:    'min',
-      savings:      function(n) { return 'Ahorra ~$' + n + ' vs Uber'; },
+      savings:      function(n) { return ''; },
       deadhead:     function(mi) { return ' · Conductor ~' + mi + ' mi'; },
-      marketLabel:  'Precio de mercado (UberXL)',
+      marketLabel:  'Precio estimado',
       dlcLabel:     'Precio DLC',
       mapsLink:     'Ver ruta en Maps',
       viewRoute:    'Ver ruta',
       pickupLbl:    'Recogida',
       dropoffLbl:   'Destino',
-      priceEst:     function(p, s) { return '~$' + p + ' est · Ahorra ~$' + s + ' vs Uber'; },
+      priceEst:     function(p, s) { return '~$' + p + ' est · Precio fijo'; },
       // Step navigation
       stepPrefix:   function(n) { return 'Paso ' + n + ' de 6'; },
       stepLabels:   {
@@ -258,7 +258,7 @@ window.RideIntake = (function () {
       dropoffCardDesc:  'Saliendo · Puntual de puerta a puerta',
       rideCardTitle:    'Viaje Privado',
       rideCardDesc:     'Cualquier destino · Sin aeropuerto',
-      vanBadge:         'Ahorra <strong>20%</strong> vs Uber &nbsp;·&nbsp; Reserva · Precio fijo',
+      vanBadge:         'Reserva · Precio fijo · Conductores profesionales',
       labelAirportP:    'Aeropuerto de llegada',  labelAirportD:    'Aeropuerto de salida',
       labelDropoffAddr: 'Dirección de destino',    labelPickupAddr:  'Dirección de recogida',
       labelFromAddr:    'Punto de recogida',       labelToAddr:      'Destino',

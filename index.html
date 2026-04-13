@@ -219,7 +219,7 @@
             <span class="home-ride-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h14l1 5H4L5 9z"/><path d="M5 9l2-4h10l2 4"/><circle cx="7.5" cy="17" r="2"/><circle cx="16.5" cy="17" r="2"/><path d="M14 14H10"/></svg></span>
             <span class="home-ride-tile__body">
               <strong class="home-ride-tile__name" data-i18n="ridePrivateName">Premium Private Car</strong>
-              <span class="home-ride-tile__sub" data-i18n="ridePrivateSub">Mercedes Van · 12 seats · −20% vs Uber</span>
+              <span class="home-ride-tile__sub" data-i18n="ridePrivateSub">Mercedes Van · 12 seats · Fixed price</span>
             </span>
           </div>
         </div>
@@ -452,15 +452,6 @@
             <span class="est-val" id="estimateDisplay">—</span>
           </div>
           <div class="est-divider"></div>
-          <div class="est-row" id="uberCompareRow" style="display:none">
-            <span class="est-label">Uber estimate</span>
-            <span class="est-val est-val--sm est-val--strike" id="uberEstDisplay">—</span>
-          </div>
-          <div class="est-row" id="savingsRow" style="display:none">
-            <span class="est-label">You save</span>
-            <span class="est-val est-val--sm est-val--savings" id="savingsDisplay">—</span>
-          </div>
-          <div class="est-divider"></div>
           <div class="est-row">
             <span class="est-label">Vehicle</span>
             <span class="est-val est-val--sm" id="vehicleDisplay">—</span>
@@ -470,7 +461,7 @@
             <span class="est-val est-val--sm" id="gasPriceDisplay">—</span>
           </div>
           <p class="est-disclaimer" id="estDisclaimer">
-            ~20% below Uber. Final price confirmed when we contact you.
+            Final price confirmed when we contact you.
           </p>
         </div>
 
@@ -926,7 +917,7 @@
         </div>
         <div class="ri-van-badge">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          20% below Uber &nbsp;·&nbsp; Book ahead · Fixed price
+          Book ahead · Fixed price · Professional drivers
         </div>
       </div><!-- /riPicker -->
 
@@ -1159,12 +1150,8 @@
           <div class="ri-price-box" id="riPriceBox" hidden>
             <span class="ri-fare-route" id="riRouteSummary"></span>
             <div class="ri-fare-divider"></div>
-            <div class="ri-fare-row ri-fare-row--market">
-              <span id="riMarketLabel">Market rate (UberXL)</span>
-              <span id="riMarketAmt">~$—</span>
-            </div>
             <div class="ri-fare-row ri-fare-row--dlc">
-              <span><span id="riDlcLabel">DLC price</span> <span class="ri-price-badge">−20%</span></span>
+              <span><span id="riDlcLabel">DLC price</span></span>
               <span id="riPriceAmt">~$—</span>
             </div>
             <div class="ri-fare-divider"></div>
@@ -1226,10 +1213,10 @@
 <script src="marketingEngine.js?v=20260406"></script>
 <script src="ai-engine.js?v=20260412j"></script>
 <script src="ride-booking.js?v=20260412"></script>
-<script src="ride-intake.js?v=20260420b"></script>
+<script src="ride-intake.js?v=20260420c"></script>
 <script src="notifications.js?v=20260418d"></script>
-<script src="workflowEngine.js?v=20260420a"></script>
+<script src="workflowEngine.js?v=20260420b"></script>
 <script src="chat.js?v=20260419h"></script>
-<script src="script.js?v=20260420c" defer></script>
+<script src="script.js?v=20260420d" defer></script>
 </body>
 </html>

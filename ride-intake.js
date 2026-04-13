@@ -688,29 +688,25 @@ window.RideIntake = (function () {
   }
 
   // ── Vehicle display helpers ────────────────────────────────────────────────────
-  // Show driver's actual vehicle when it can carry the group (seats > pax, driver uses 1).
-  // Only fall back to fleet recommendation when the assigned vehicle is too small.
+  // Vehicle shown to the customer is always based on PASSENGER COUNT (fleet recommendation),
+  // not on which specific driver happens to be fetched. This prevents showing a Sienna
+  // when the customer booked 3 people just because the nearest driver owns a Sienna.
+  // The driver's phone is shown separately and is the contact for the assigned driver.
 
   function _resolveDisplayVehicle(paxNum) {
-    if (_driverVehicle && _driverVehicle.seats > paxNum) {
-      return _driverVehicle.name;
-    }
     if (window.DLCRide) {
       var rv = DLCRide.resolveVehicle(paxNum);
       if (rv.recommended) return rv.recommended.name;
     }
-    return (_quote && _quote.vehicleName) || (_driverVehicle && _driverVehicle.name) || 'Tesla Model Y';
+    return (_quote && _quote.vehicleName) || 'Tesla Model Y';
   }
 
   function _resolveDisplaySeats(paxNum) {
-    if (_driverVehicle && _driverVehicle.seats > paxNum) {
-      return _driverVehicle.seats;
-    }
     if (window.DLCRide) {
       var rv2 = DLCRide.resolveVehicle(paxNum);
       if (rv2.recommended) return rv2.recommended.capacity;
     }
-    return (_driverVehicle && _driverVehicle.seats) || 4;
+    return 4;
   }
 
   // ── Sub-step navigation (progressive disclosure) ──────────────────────────────

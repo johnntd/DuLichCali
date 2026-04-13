@@ -734,6 +734,16 @@ window.RideIntake = (function () {
       setHide('riPriceHint', true);
       setHide('riPriceLoading', true);
       if (_quote) { setHide('riPriceBox', false); }
+      // Update the vehicle box to reflect the correct vehicle for the actual passenger count
+      var paxIdR = _type === 'pickup' ? 'ri_p_passengers' : _type === 'dropoff' ? 'ri_d_passengers' : 'ri_r_passengers';
+      var paxR = parseInt(val(paxIdR) || '1', 10);
+      var boxEl = document.getElementById('riVehicleBox');
+      if (boxEl && window.DLCRide) {
+        var rvR = DLCRide.resolveVehicle(paxR);
+        if (rvR.recommended) {
+          boxEl.innerHTML = _T.vehicleBox(rvR.recommended.name, rvR.recommended.capacity);
+        }
+      }
       showReviewCard(n);
     } else {
       setHide('riPriceBox', true);
@@ -779,9 +789,18 @@ window.RideIntake = (function () {
     }
     var paxId = _type === 'pickup' ? 'ri_p_passengers' : _type === 'dropoff' ? 'ri_d_passengers' : 'ri_r_passengers';
     var pax = val(paxId) || '—';
-    var vehicle = _driverVehicle ? _driverVehicle.name :
-                  (_quote && _quote.vehicleName) ||
-                  (DLCPricing.getVehicle ? DLCPricing.getVehicle(parseInt(val(paxId) || '1', 10) || 1) : 'Tesla Model Y');
+    // Always resolve vehicle from passenger count — _driverVehicle is the current
+    // on-shift driver and may have fewer seats than needed for the selected group size.
+    var paxNum = parseInt(pax, 10) || 1;
+    var vehicle = 'Tesla Model Y';
+    if (window.DLCRide) {
+      var rv = DLCRide.resolveVehicle(paxNum);
+      if (rv.recommended) vehicle = rv.recommended.name;
+    } else if (_quote && _quote.vehicleName) {
+      vehicle = _quote.vehicleName;
+    } else if (_driverVehicle) {
+      vehicle = _driverVehicle.name;
+    }
 
     card.innerHTML =
       '<div class="ri-review__title">' + _T.reviewHeading + '</div>' +

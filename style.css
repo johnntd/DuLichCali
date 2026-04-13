@@ -796,54 +796,61 @@ gmp-placeautocomplete.field-input::part(input):focus {
 /* ── Homepage Intelligence ──────────────────────────────────── */
 
 /* Intent Quick Bar — 4 service choices, Hick's Law: fewer options = faster decision */
+/* ── Intent quick-access bar — horizontal scrolling pill strip ── */
 .hp-intent-bar {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: .5rem;
-  padding: .75rem 1rem .25rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .4rem;
+  padding: .65rem 1rem .5rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+.hp-intent-bar::-webkit-scrollbar { display: none; }
+
 .hp-intent-tile {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: .3rem;
-  padding: .65rem .4rem .6rem;
-  background: var(--navy-800);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
+  gap: .45rem;
+  padding: .45rem .75rem .45rem .5rem;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 100px;
   cursor: pointer;
-  position: relative;
+  flex-shrink: 0;
   -webkit-tap-highlight-color: transparent;
-  transition: border-color .18s, background .18s;
+  transition: background .18s, border-color .18s;
 }
 .hp-intent-tile:hover, .hp-intent-tile:focus-visible {
-  background: rgba(14,38,72,.85);
+  background: rgba(255,255,255,.1);
   outline: none;
 }
 .hp-intent-tile__icon {
-  width: 28px; height: 28px;
+  width: 26px; height: 26px;
   display: flex; align-items: center; justify-content: center;
-  border-radius: 7px;
+  border-radius: 6px;
+  flex-shrink: 0;
 }
-.hp-intent-tile__icon svg { width: 16px; height: 16px; }
+.hp-intent-tile__icon svg { width: 14px; height: 14px; }
 .hp-intent-tile__label {
-  display: block;
-  font-size: .68rem;
+  font-size: .76rem;
   font-weight: 600;
   color: var(--text);
   font-family: var(--font-b);
-  line-height: 1.2;
-  text-align: center;
+  white-space: nowrap;
+  line-height: 1;
 }
 /* Category accent colors */
-.hp-intent-tile--airport .hp-intent-tile__icon { background: rgba(56,189,248,.14); color: var(--sky); }
-.hp-intent-tile--airport:hover, .hp-intent-tile--airport:focus-visible { border-color: rgba(56,189,248,.45); }
-.hp-intent-tile--food .hp-intent-tile__icon { background: rgba(251,191,36,.14); color: var(--gold-lt); }
-.hp-intent-tile--food:hover, .hp-intent-tile--food:focus-visible { border-color: rgba(251,191,36,.45); }
-.hp-intent-tile--beauty .hp-intent-tile__icon { background: rgba(244,114,182,.14); color: #f472b6; }
-.hp-intent-tile--beauty:hover, .hp-intent-tile--beauty:focus-visible { border-color: rgba(244,114,182,.45); }
-.hp-intent-tile--tour .hp-intent-tile__icon { background: rgba(251,146,60,.14); color: var(--sunset); }
-.hp-intent-tile--tour:hover, .hp-intent-tile--tour:focus-visible { border-color: rgba(251,146,60,.45); }
+.hp-intent-tile--airport .hp-intent-tile__icon { background: rgba(56,189,248,.15); color: var(--sky); }
+.hp-intent-tile--airport:hover, .hp-intent-tile--airport:focus-visible { border-color: rgba(56,189,248,.35); background: rgba(56,189,248,.08); }
+.hp-intent-tile--food .hp-intent-tile__icon { background: rgba(251,191,36,.15); color: var(--gold-lt); }
+.hp-intent-tile--food:hover, .hp-intent-tile--food:focus-visible { border-color: rgba(251,191,36,.35); background: rgba(251,191,36,.07); }
+.hp-intent-tile--beauty .hp-intent-tile__icon { background: rgba(244,114,182,.15); color: #f472b6; }
+.hp-intent-tile--beauty:hover, .hp-intent-tile--beauty:focus-visible { border-color: rgba(244,114,182,.35); background: rgba(244,114,182,.07); }
+.hp-intent-tile--tour .hp-intent-tile__icon { background: rgba(251,146,60,.15); color: var(--sunset); }
+.hp-intent-tile--tour:hover, .hp-intent-tile--tour:focus-visible { border-color: rgba(251,146,60,.35); background: rgba(251,146,60,.07); }
 
 /* Driver availability badge — social proof + scarcity signal */
 .hp-avail-badge {
@@ -1242,46 +1249,58 @@ gmp-placeautocomplete.field-input::part(input):focus {
 
 /* ── Airport & Ride Panel  (.home-ride-grid / .home-ride-tile) ── */
 .home-ride-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: .75rem;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
   padding: 0 1rem;
   margin-bottom: .5rem;
 }
 .home-ride-tile {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .85rem;
+  padding: .9rem 1rem;
   background: var(--navy-800);
   border: 1px solid var(--border);
+  border-left-width: 3px;
   border-radius: var(--r-md);
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: .2rem;
   cursor: pointer;
   transition: border-color .18s, background .18s;
   -webkit-tap-highlight-color: transparent;
 }
+.home-ride-tile:first-child { border-left-color: var(--sky); }
+.home-ride-tile:nth-child(2) { border-left-color: var(--gold-lt); }
+.home-ride-tile:nth-child(3) { border-left-color: #fb923c; }
 .home-ride-tile:hover, .home-ride-tile:focus-visible {
-  border-color: rgba(56,189,248,.45);
   background: rgba(14,38,72,.85);
   outline: none;
 }
 .home-ride-tile__icon {
-  width: 36px; height: 36px; border-radius: 9px; margin-bottom: .2rem;
+  width: 40px; height: 40px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(56,189,248,.12); color: var(--sky); flex-shrink: 0;
+  background: rgba(56,189,248,.12); color: var(--sky);
+  flex-shrink: 0;
 }
 .home-ride-tile__icon svg { width: 20px; height: 20px; }
+.home-ride-tile__body {
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+  flex: 1;
+  min-width: 0;
+}
 .home-ride-tile__name {
   display: block;
-  font-size: .82rem;
+  font-size: .9rem;
   font-weight: 600;
   color: var(--cream);
   font-family: var(--font-b);
-  line-height: 1.3;
+  line-height: 1.2;
 }
 .home-ride-tile__sub {
   display: block;
-  font-size: .69rem;
+  font-size: .72rem;
   color: var(--muted);
   font-family: var(--font-b);
   line-height: 1.4;
@@ -2181,18 +2200,17 @@ gmp-placeautocomplete.field-input::part(input):focus {
   .dest-card__img { height: 140px; }
 
   .hp-intent-bar { padding: .75rem 1.5rem .25rem; gap: .6rem; }
-  .hp-intent-tile { padding: .75rem .5rem .7rem; }
-  .hp-intent-tile__icon { width: 32px; height: 32px; }
-  .hp-intent-tile__icon svg { width: 18px; height: 18px; }
-  .hp-intent-tile__label { font-size: .72rem; }
+  .hp-intent-tile { padding: .5rem .9rem .5rem .65rem; }
+  .hp-intent-tile__icon { width: 28px; height: 28px; }
+  .hp-intent-tile__icon svg { width: 15px; height: 15px; }
+  .hp-intent-tile__label { font-size: .76rem; }
   .hp-avail-badge { margin: .5rem 1.5rem .1rem; }
 
   .trust-grid { padding: 0 1.5rem; }
-  .home-ride-grid { padding: 0 1.5rem; gap: .85rem; }
-  .home-ride-tile { padding: 1.15rem 1rem; }
-  .home-ride-tile__icon { width: 38px; height: 38px; }
-  .home-ride-tile__name { font-size: .88rem; }
-  .home-ride-tile__sub { font-size: .72rem; }
+  .home-ride-grid { padding: 0 1.5rem; }
+  .home-ride-tile { padding: 1rem 1.1rem; gap: 1rem; }
+  .home-ride-tile__icon { width: 42px; height: 42px; }
+  .home-ride-tile__name { font-size: .92rem; }
 
   .wiz-step { padding: 1.5rem; }
 
@@ -3110,18 +3128,18 @@ gmp-placeautocomplete.field-input::part(input):focus {
 
   /* Intent bar: wider tiles, more breathing room at desktop */
   .hp-intent-bar { padding: .75rem 0 .25rem; gap: .75rem; max-width: 640px; }
-  .hp-intent-tile { padding: .9rem .6rem .85rem; }
-  .hp-intent-tile__icon { width: 36px; height: 36px; }
-  .hp-intent-tile__icon svg { width: 20px; height: 20px; }
-  .hp-intent-tile__label { font-size: .76rem; }
+  .hp-intent-tile { padding: .55rem 1rem .55rem .8rem; }
+  .hp-intent-tile__icon { width: 28px; height: 28px; }
+  .hp-intent-tile__icon svg { width: 15px; height: 15px; }
+  .hp-intent-tile__label { font-size: .78rem; }
   .hp-avail-badge { margin: .5rem 0 .1rem; }
 
-  /* Ride grid: 3-column, matches marketplace/tour row width */
-  .home-ride-grid { padding: 0; max-width: 720px; gap: 1rem; }
-  .home-ride-tile { padding: 1.3rem 1.1rem; }
+  /* Ride tiles: 3-column grid on desktop, each tile stays horizontal */
+  .home-ride-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 0; max-width: 720px; gap: 1rem; }
+  .home-ride-tile { padding: 1.1rem; gap: .75rem; }
   .home-ride-tile__icon { width: 40px; height: 40px; }
-  .home-ride-tile__name { font-size: .92rem; }
-  .home-ride-tile__sub { font-size: .74rem; }
+  .home-ride-tile__name { font-size: .88rem; }
+  .home-ride-tile__sub { font-size: .72rem; }
 
   /* AI panel: max-width constrained, larger cards */
   .home-ai-panel__grid { max-width: 640px; gap: 1rem; }

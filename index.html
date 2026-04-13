@@ -82,7 +82,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-  <link rel="stylesheet" href="style.css?v=20260419m">
+  <link rel="stylesheet" href="style.css?v=20260420d">
   <link rel="stylesheet" href="desktop.css">
 
   <!-- Google Analytics 4 -->
@@ -216,20 +216,26 @@
           <div class="home-ride-tile" data-ride-gate onclick="RideIntake.open('pickup')" role="button" tabindex="0"
                onkeydown="if(event.key==='Enter')RideIntake.open('pickup')">
             <span class="home-ride-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></span>
-            <strong class="home-ride-tile__name" data-i18n="ridePickupName">Airport Pickup</strong>
-            <span class="home-ride-tile__sub" data-i18n="ridePickupSub">Flying in · Driver waiting at Arrivals</span>
+            <span class="home-ride-tile__body">
+              <strong class="home-ride-tile__name" data-i18n="ridePickupName">Airport Pickup</strong>
+              <span class="home-ride-tile__sub" data-i18n="ridePickupSub">Flying in · Driver waiting at Arrivals</span>
+            </span>
           </div>
           <div class="home-ride-tile" data-ride-gate onclick="RideIntake.open('dropoff')" role="button" tabindex="0"
                onkeydown="if(event.key==='Enter')RideIntake.open('dropoff')">
             <span class="home-ride-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:scaleX(-1)"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></span>
-            <strong class="home-ride-tile__name" data-i18n="rideDropoffName">Airport Dropoff</strong>
-            <span class="home-ride-tile__sub" data-i18n="rideDropoffSub">Flying out · Never miss your flight</span>
+            <span class="home-ride-tile__body">
+              <strong class="home-ride-tile__name" data-i18n="rideDropoffName">Airport Dropoff</strong>
+              <span class="home-ride-tile__sub" data-i18n="rideDropoffSub">Flying out · Never miss your flight</span>
+            </span>
           </div>
           <div class="home-ride-tile" data-ride-gate onclick="RideIntake.open('ride')" role="button" tabindex="0"
                onkeydown="if(event.key==='Enter')RideIntake.open('ride')">
             <span class="home-ride-tile__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h14l1 5H4L5 9z"/><path d="M5 9l2-4h10l2 4"/><circle cx="7.5" cy="17" r="2"/><circle cx="16.5" cy="17" r="2"/><path d="M14 14H10"/></svg></span>
-            <strong class="home-ride-tile__name" data-i18n="ridePrivateName">Premium Private Car</strong>
-            <span class="home-ride-tile__sub" data-i18n="ridePrivateSub">Mercedes Van · 12 seats · −20% vs Uber</span>
+            <span class="home-ride-tile__body">
+              <strong class="home-ride-tile__name" data-i18n="ridePrivateName">Premium Private Car</strong>
+              <span class="home-ride-tile__sub" data-i18n="ridePrivateSub">Mercedes Van · 12 seats · −20% vs Uber</span>
+            </span>
           </div>
         </div>
       </section>

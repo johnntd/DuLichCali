@@ -2840,9 +2840,8 @@ gmp-placeautocomplete.field-input::part(input):focus {
 /* ── Ride service availability gating ─────────────────────────────────────── */
 [data-ride-gate] { position: relative; }
 [data-ride-gate].ride-unavailable {
-  opacity: .45;
-  pointer-events: none;
-  cursor: default;
+  opacity: .72;
+  /* pointer-events intentionally NOT disabled — customers can always book future rides */
 }
 .ride-unavail-badge {
   position: absolute;

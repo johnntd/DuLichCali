@@ -538,11 +538,9 @@ window.RideIntake = (function () {
 
   // ── Step management ───────────────────────────────────────────────────────────
   function open(type) {
-    // Block if driver availability has been checked and no driver is available
-    if (window._rideServiceAvailable === false) {
-      showUnavailable();
-      return;
-    }
+    // Never block the form based on real-time availability.
+    // Customers can always book for future dates — the schedule check runs
+    // at step 3 (date/time) when they pick a specific future date/time.
     _quote = null;
     _busy  = false;
     var modal = document.getElementById('rideIntakeModal');

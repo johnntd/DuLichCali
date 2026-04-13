@@ -230,13 +230,15 @@
         if (avail.length) {
           renderRidesReady(el, avail[0]);
         } else {
+          // No drivers on shift right now, but customers can still book for a future date
           el.innerHTML = (
             '<div class="lp-status-panel lp-empty">' +
-              '<div class="lp-empty__icon">🚫</div>' +
-              '<p class="lp-empty__title">No drivers currently available</p>' +
-              '<p class="lp-empty__sub">No drivers have open slots right now.<br>Contact us to schedule ahead.</p>' +
-              '<a href="tel:4089163439" class="lp-empty__cta">Call: 408-916-3439</a>' +
-              '<a href="/?entry=' + esc(aiEntry) + '" class="lp-empty__ai">Book via AI</a>' +
+              '<div class="lp-empty__icon">📅</div>' +
+              '<p class="lp-empty__title">Book a Future Ride</p>' +
+              '<p class="lp-empty__sub">No drivers on shift right now — but you can schedule a pickup or drop-off for any future date.</p>' +
+              '<button onclick="window.RideIntake&&RideIntake.open(\'pickup\')" class="lp-empty__cta" style="cursor:pointer;border:none">Airport Pickup</button>' +
+              '<button onclick="window.RideIntake&&RideIntake.open(\'dropoff\')" class="lp-empty__cta lp-empty__cta--sec" style="cursor:pointer;border:none;margin-top:.5rem">Airport Drop-off</button>' +
+              '<a href="tel:4089163439" class="lp-empty__ai">Questions? Call 408-916-3439</a>' +
             '</div>'
           );
         }

@@ -35,6 +35,7 @@
   }());
   var _lastSalonBiz  = null;
   var _lastSalonBack = null;
+  var _lastFoodBiz   = null;
   var _currentView   = 'home'; // 'home' | 'airport' | 'local' — in-app view state
 
   // Inline translator: _t(english, vietnamese, spanish) → correct string for _currentLang
@@ -2339,23 +2340,27 @@
     if (!content) return;
 
     if (viewName === 'home') {
-      content.innerHTML =
-        '<main class="mp-main mp-main--nails">' +
-          renderNailsHero(biz) +
-          renderInfoStrip(biz) +
-          renderNailsFeatured(biz) +
-          '<div class="ns-divider"></div>' +
-          renderNailsBookingSection(biz) +
-          '<div class="ns-divider"></div>' +
-          '<div class="ns-ai-section">' + renderAiSection(biz) + '</div>' +
-          '<div class="ns-divider"></div>' +
-          renderNailsInspiration() +
-          '<div class="ns-divider"></div>' +
-          renderNailsTrust(biz) +
-          renderFooter() +
-          '<div class="mp-spacer"></div>' +
-        '</main>';
-      _initNailsHomeView(biz);
+      if (biz.vendorType === 'foodvendor') {
+        _renderFoodHomeIntoView(biz, content);
+      } else {
+        content.innerHTML =
+          '<main class="mp-main mp-main--nails">' +
+            renderNailsHero(biz) +
+            renderInfoStrip(biz) +
+            renderNailsFeatured(biz) +
+            '<div class="ns-divider"></div>' +
+            renderNailsBookingSection(biz) +
+            '<div class="ns-divider"></div>' +
+            '<div class="ns-ai-section">' + renderAiSection(biz) + '</div>' +
+            '<div class="ns-divider"></div>' +
+            renderNailsInspiration() +
+            '<div class="ns-divider"></div>' +
+            renderNailsTrust(biz) +
+            renderFooter() +
+            '<div class="mp-spacer"></div>' +
+          '</main>';
+        _initNailsHomeView(biz);
+      }
     } else if (viewName === 'airport') {
       content.innerHTML = _renderAirportView(biz);
     } else if (viewName === 'local') {
@@ -2744,10 +2749,48 @@
 
   // Internal renderer — called after Firestore data is ready (or on fallback)
   function _renderFoodVendorContent(biz) {
-    var backUrl = window.location.pathname;
+    _lastFoodBiz = biz;
 
     var html =
       renderSalonBar(biz) +
+      '<div id="mp-view-content">' +
+        '<main class="mp-main">' +
+          renderFoodVendorHero(biz) +
+          renderInfoStrip(biz) +
+          '<div class="mp-detail-body">' +
+            '<div class="mp-detail-col mp-detail-col--left">' +
+              renderProductsSection(biz) +
+              renderFoodVendorAbout(biz) +
+            '</div>' +
+            '<div class="mp-detail-col mp-detail-col--right">' +
+              renderOrderInquirySection(biz) +
+              renderAiSection(biz) +
+            '</div>' +
+          '</div>' +
+          '<div class="mp-spacer"></div>' +
+        '</main>' +
+      '</div>' +
+      renderInterpPanel(biz) +
+      renderVendorBottomNav(biz);
+
+    _container.innerHTML = html;
+    _currentView = 'home';
+
+    if (biz.orderEnabled) {
+      initOrderInquiryForm(biz);
+    }
+
+    if (biz.aiReceptionist && biz.aiReceptionist.enabled) {
+      Receptionist.init(biz, 'aiWidget_' + biz.id);
+    }
+
+    _initVendorNav(biz);
+    _updateVnavActive('home');
+  }
+
+  // Re-render food vendor home content into #mp-view-content (used by _switchView)
+  function _renderFoodHomeIntoView(biz, content) {
+    content.innerHTML =
       '<main class="mp-main">' +
         renderFoodVendorHero(biz) +
         renderInfoStrip(biz) +
@@ -2762,11 +2805,7 @@
           '</div>' +
         '</div>' +
         '<div class="mp-spacer"></div>' +
-      '</main>' +
-      renderInterpPanel(biz) +
-      renderVendorBottomNav(biz);
-
-    _container.innerHTML = html;
+      '</main>';
 
     if (biz.orderEnabled) {
       initOrderInquiryForm(biz);
@@ -2775,8 +2814,6 @@
     if (biz.aiReceptionist && biz.aiReceptionist.enabled) {
       Receptionist.init(biz, 'aiWidget_' + biz.id);
     }
-
-    _initVendorNav(biz);
   }
 
   function renderFoodVendorHero(biz) {

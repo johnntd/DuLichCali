@@ -39,7 +39,7 @@
   </script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ&libraries=places&callback=initMap&loading=async"></script>
 
-  <link rel="stylesheet" href="/style.css?v=20260419m">
+  <link rel="stylesheet" href="/style.css?v=20260421a">
   <link rel="stylesheet" href="/desktop.css">
 
   <style>
@@ -446,6 +446,7 @@
       <div class="ri-scrollbody" id="riBody">
         <div class="ri-step-ind" id="riStepInd" hidden></div>
         <div class="ri-error-msg" id="riErrorMsg"></div>
+        <div class="ri-avail-hint" id="riAvailHint" hidden></div>
         <form id="riForm" onsubmit="return false" autocomplete="on">
 
           <!-- ── AIRPORT PICKUP (6 steps) ── -->
@@ -724,8 +725,10 @@
 <script src="/location.js?v=20260419c"></script>
 <!-- Shared pricing engine — must load before ride-intake.js -->
 <script src="/pricing.js?v=20260420a"></script>
+<!-- Ride availability check (conflict prevention) — must load before ride-intake.js -->
+<script src="/ride-avail.js?v=20260421a"></script>
 <!-- Ride intake modal JS -->
-<script src="/ride-intake.js?v=20260420c"></script>
+<script src="/ride-intake.js?v=20260421a"></script>
 <script src="/marketplace/services-data.js"></script>
 <script src="/landing-nav.js?v=20260420a"></script>
 <script>

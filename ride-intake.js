@@ -108,7 +108,12 @@ window.RideIntake = (function () {
       errRideTime:      'Please enter pickup time',
       noRoute:          'Route not found.',
       vehicleBox: function(name, seats) { return name + '<br>' + seats + ' seats<br>Tip not included'; },
-      errBooking: 'Booking failed. Please call (408) 916-3439 to book directly.',
+      errBooking:       'Booking failed. Please call (408) 916-3439 to book directly.',
+      checkingAvail:    'Checking availability...',
+      availOk:          '✓ Available',
+      availNo:          '✗ Not available',
+      noAvailFallback:  'No drivers available for that time. Please choose a different date or time.',
+      slotTakenAlert:   'This time slot is no longer available. Please go back and choose a different time.',
     },
     vi: {
       minSuffix:    'phút',
@@ -210,7 +215,12 @@ window.RideIntake = (function () {
       errRideTime:      'Vui lòng nhập giờ xuất phát',
       noRoute:          'Không tìm được tuyến đường.',
       vehicleBox: function(name, seats) { return name + '<br>' + seats + ' chỗ<br>Chưa bao gồm tip'; },
-      errBooking: 'Đặt chỗ không thành công. Vui lòng gọi (408) 916-3439 để đặt trực tiếp.',
+      errBooking:       'Đặt chỗ không thành công. Vui lòng gọi (408) 916-3439 để đặt trực tiếp.',
+      checkingAvail:    'Đang kiểm tra lịch...',
+      availOk:          '✓ Có chỗ trống',
+      availNo:          '✗ Không có chỗ trống',
+      noAvailFallback:  'Không có tài xế cho giờ này. Vui lòng chọn ngày hoặc giờ khác.',
+      slotTakenAlert:   'Khung giờ này vừa được đặt. Vui lòng quay lại và chọn giờ khác.',
     },
     es: {
       minSuffix:    'min',
@@ -312,7 +322,12 @@ window.RideIntake = (function () {
       errRideTime:      'Ingresa la hora de recogida',
       noRoute:          'Ruta no encontrada.',
       vehicleBox: function(name, seats) { return name + '<br>' + seats + ' asientos<br>Propina no incluida'; },
-      errBooking: 'Reserva fallida. Llama al (408) 916-3439 para reservar directamente.',
+      errBooking:       'Reserva fallida. Llama al (408) 916-3439 para reservar directamente.',
+      checkingAvail:    'Verificando disponibilidad...',
+      availOk:          '✓ Disponible',
+      availNo:          '✗ No disponible',
+      noAvailFallback:  'Sin conductores para ese horario. Por favor elige otra fecha u hora.',
+      slotTakenAlert:   'Este horario ya no está disponible. Vuelve y elige un horario diferente.',
     },
   };
   var _lang = (new URLSearchParams(window.location.search).get('lang') || 'en');
@@ -790,9 +805,78 @@ window.RideIntake = (function () {
       showInlineError(errors[0]);
       return;
     }
+    // Step 3 = date/time step for all ride types. Run async availability check before advancing.
+    if (_subStep === 3 && window.DLCRideAvail) {
+      _checkAvailThenAdvance();
+      return;
+    }
     if (_subStep < 6) {
       goSubStep(_subStep + 1);
     }
+  }
+
+  // Async availability check on step 3 (date/time) before advancing.
+  // Disables the Continue button during the Firestore query; re-enables on result.
+  function _checkAvailThenAdvance() {
+    var btn = document.getElementById('riSubmit');
+    var origHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.innerHTML = '<svg class="ri-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/></svg> ' + _T.checkingAvail;
+      btn.disabled = true;
+    }
+
+    var dateStr, timeStr;
+    if (_type === 'pickup')       { dateStr = val('ri_arrival_date'); timeStr = val('ri_arrival_time'); }
+    else if (_type === 'dropoff') { dateStr = val('ri_depart_date');  timeStr = val('ri_depart_time');  }
+    else                          { dateStr = val('ri_ride_date');    timeStr = val('ri_ride_time');    }
+
+    // Resolve region: airports have fixed regions; private rides use the user's detected region
+    var regionId = null;
+    if (_type === 'pickup' || _type === 'dropoff') {
+      var apCode = val(_type === 'pickup' ? 'ri_p_airport' : 'ri_d_airport');
+      if (apCode) regionId = DLCRideAvail.getRegionForAirport(apCode);
+    } else {
+      regionId = (window.DLCRegion && window.DLCRegion.current) ? window.DLCRegion.current.id : null;
+    }
+
+    // Duration from price quote (minutes) — improves conflict window accuracy
+    var durationMins = (_quote && _quote.minutes) ? _quote.minutes : null;
+
+    var lang = _lang || 'en';
+
+    DLCRideAvail.check(dateStr, timeStr, regionId, durationMins).then(function (result) {
+      if (btn) { btn.innerHTML = origHtml; btn.disabled = false; }
+
+      if (result.available) {
+        // Show a brief confirmation hint so the user sees availability was checked
+        showAvailHint(true, result.freeCount);
+        goSubStep(_subStep + 1);
+      } else {
+        var msg = DLCRideAvail.getMessage(result, dateStr, timeStr, lang);
+        if (!msg) {
+          // Fallback generic message
+          msg = _T.noAvailFallback || 'No drivers available for that time. Please choose a different date or time.';
+        }
+        showInlineError(msg);
+      }
+    }).catch(function () {
+      // Fail open — network/Firestore error should not block a booking
+      if (btn) { btn.innerHTML = origHtml; btn.disabled = false; }
+      goSubStep(_subStep + 1);
+    });
+  }
+
+  // Brief green/red hint near the step 3 footer after availability check
+  function showAvailHint(ok, freeCount) {
+    var el = document.getElementById('riAvailHint');
+    if (!el) return;
+    el.textContent = ok
+      ? (_T.availOk || '✓ Available')
+      : (_T.availNo || '✗ Not available');
+    el.className = 'ri-avail-hint' + (ok ? ' ri-avail-hint--ok' : ' ri-avail-hint--no');
+    el.hidden = false;
+    clearTimeout(el._t);
+    el._t = setTimeout(function () { el.hidden = true; el.textContent = ''; }, 3000);
   }
 
   function validateSubStep(step) {
@@ -1237,6 +1321,44 @@ window.RideIntake = (function () {
     var btn = document.getElementById('riSubmit');
     if (btn) { btn.textContent = _T.processing; btn.disabled = true; }
 
+    // Final double-booking gate: re-check availability immediately before writing to Firestore.
+    // This catches the race condition where two users book the same slot simultaneously.
+    _finalAvailCheck().then(function (result) {
+      if (!result.available && result.reason !== 'error' && result.reason !== 'no_db' && result.reason !== 'no_region') {
+        _busy = false;
+        if (btn) { btn.innerHTML = _T.submitBtn + ' <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'; btn.disabled = false; }
+        alert(_T.slotTakenAlert || 'This time is no longer available. Please choose a different time.');
+        return;
+      }
+      _doFirestoreSubmit(btn);
+    }).catch(function () {
+      // Fail open on unexpected errors
+      _doFirestoreSubmit(btn);
+    });
+  }
+
+  // Resolve region for a final availability re-check at submit time
+  function _finalAvailCheck() {
+    if (!window.DLCRideAvail) return Promise.resolve({ available: true, reason: 'no_module' });
+
+    var dateStr, timeStr;
+    if (_type === 'pickup')       { dateStr = val('ri_arrival_date'); timeStr = val('ri_arrival_time'); }
+    else if (_type === 'dropoff') { dateStr = val('ri_depart_date');  timeStr = val('ri_depart_time');  }
+    else                          { dateStr = val('ri_ride_date');    timeStr = val('ri_ride_time');    }
+
+    var regionId = null;
+    if (_type === 'pickup' || _type === 'dropoff') {
+      var apCode = val(_type === 'pickup' ? 'ri_p_airport' : 'ri_d_airport');
+      if (apCode) regionId = DLCRideAvail.getRegionForAirport(apCode);
+    } else {
+      regionId = (window.DLCRegion && window.DLCRegion.current) ? window.DLCRegion.current.id : null;
+    }
+
+    var durationMins = (_quote && _quote.minutes) ? _quote.minutes : null;
+    return DLCRideAvail.check(dateStr, timeStr, regionId, durationMins);
+  }
+
+  function _doFirestoreSubmit(btn) {
     var bookingId = generateId();
     var data      = buildBookingData(bookingId);
 

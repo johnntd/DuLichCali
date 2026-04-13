@@ -3860,6 +3860,22 @@ gmp-placeautocomplete.field-input::part(input):focus {
 }
 .ri-error-msg:empty { opacity: 0; }
 
+/* ── Availability hint (shown after step-3 check) ── */
+.ri-avail-hint {
+  font: 600 .78rem var(--font-b, 'Jost', sans-serif);
+  text-align: center;
+  padding: .25rem 1rem 0;
+  min-height: 1.2rem;
+  transition: opacity .25s;
+}
+.ri-avail-hint--ok { color: #4ade80; }
+.ri-avail-hint--no { color: #f87171; }
+.ri-avail-hint[hidden] { display: none; }
+
+/* ── Spinner animation for "Checking..." button state ── */
+@keyframes ri-spin { to { transform: rotate(360deg); } }
+.ri-spin { animation: ri-spin .7s linear infinite; display: inline-block; vertical-align: middle; }
+
 /* ── Optional details (collapsible) ── */
 .ri-optional {
   margin-top: .85rem;

@@ -2537,6 +2537,18 @@
       var addrField     = isPickup ? (f.dropoffAddress||'') : (f.pickupAddress||'');
       trackingToken     = genId().replace('DLC-','')+genId().replace('DLC-','');
 
+      // ── Availability gate: verify no double-booking before writing to Firestore ──
+      if (window.DLCRideAvail && f.requestedDate && timeField) {
+        var _apRegion = AIRPORT_REGION[f.airport] || null;
+        if (_apRegion) {
+          var _apAvail = await DLCRideAvail.check(f.requestedDate, timeField, _apRegion, null);
+          if (!_apAvail.available && _apAvail.reason !== 'error' && _apAvail.reason !== 'no_db') {
+            var _apMsg = DLCRideAvail.getMessage(_apAvail, f.requestedDate, timeField, draft.lang || 'en');
+            throw new Error(_apMsg || 'No drivers available for that date/time.');
+          }
+        }
+      }
+
       var airportMapsLink  = buildAirportMapsLink(f.airport, f.terminal);
       var addrMapsLink     = buildMapsLink(addrField);
       var luggageStr       = f.luggageCount === 0 ? 'Xách tay' : (f.luggageCount ? f.luggageCount + ' kiện' : '');
@@ -2785,6 +2797,18 @@
       var rideEst      = estimateRide(f.passengers, f.pickupAddress, f.dropoffAddress);
       var prRouteLink  = buildRouteLink(f.pickupAddress, f.dropoffAddress);
       trackingToken    = genId().replace('DLC-','') + genId().replace('DLC-','');
+
+      // ── Availability gate: prevent double-booking before writing to Firestore ──
+      if (window.DLCRideAvail && f.requestedDate && f.requestedTime) {
+        var _prRegion = (window.DLCRegion && window.DLCRegion.current) ? window.DLCRegion.current.id : null;
+        if (_prRegion) {
+          var _prAvail = await DLCRideAvail.check(f.requestedDate, f.requestedTime, _prRegion, null);
+          if (!_prAvail.available && _prAvail.reason !== 'error' && _prAvail.reason !== 'no_db') {
+            var _prMsg = DLCRideAvail.getMessage(_prAvail, f.requestedDate, f.requestedTime, draft.lang || 'en');
+            throw new Error(_prMsg || 'No drivers available for that date/time.');
+          }
+        }
+      }
       // Infer pickupSource: was GPS used for pickup?
       var prPickupSrc  = (f._pickupSource === 'gps') ? 'gps'
                        : (window.DLCLocation && DLCLocation.state && DLCLocation.state.place &&

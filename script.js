@@ -1679,34 +1679,6 @@ function switchHpPanel(panel) {
 }
 
 // ── Travel Services Carousel ──────────────────────────────────
-// Service cards appended after destinations
-var _TRAVEL_SERVICES_EXTRA = [
-  {
-    chip: 'Airport',
-    title: 'Airport Pickup & Dropoff',
-    sub: 'LAX · SFO · SJC · OAK · SAN · BUR',
-    img: '/images/unsplash/travel-airplane.jpg',
-    cta: 'Book with AI',
-    intent: 'airport'
-  },
-  {
-    chip: 'Private Car',
-    title: 'Premium Private Car',
-    sub: 'Tesla · Mercedes Van · Bay Area ↔ OC',
-    img: '/images/unsplash/travel-road-trip.jpg',
-    cta: 'Book with AI',
-    intent: 'ride'
-  },
-  {
-    chip: 'Custom',
-    title: 'Custom Trip Plan',
-    sub: '15 destinations · AI advice 24/7',
-    img: '/images/unsplash/travel-yosemite.jpg',
-    cta: 'Ask AI',
-    intent: 'tour'
-  }
-];
-
 function renderTravelCarousel() {
   var container = document.getElementById('travCarousel');
   if (!container) return;
@@ -1732,22 +1704,6 @@ function renderTravelCarousel() {
       '</div>';
     });
   }
-
-  // Append service cards
-  _TRAVEL_SERVICES_EXTRA.forEach(function(s) {
-    cards.push(
-      '<div class="trav-card" role="listitem" onclick="openAIWithIntent(\'' + s.intent + '\')" aria-label="' + s.title + '">' +
-        '<div class="trav-card__bg" style="background-image:url(\'' + s.img + '\')"></div>' +
-        '<div class="trav-card__overlay"></div>' +
-        '<div class="trav-card__body">' +
-          '<span class="trav-card__chip">' + s.chip + '</span>' +
-          '<h3 class="trav-card__title">' + s.title + '</h3>' +
-          '<p class="trav-card__sub">' + s.sub + '</p>' +
-          '<button class="trav-card__cta" onclick="event.stopPropagation();openAIWithIntent(\'' + s.intent + '\')">' + s.cta + '</button>' +
-        '</div>' +
-      '</div>'
-    );
-  });
 
   container.innerHTML = cards.join('');
 }

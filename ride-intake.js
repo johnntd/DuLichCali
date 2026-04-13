@@ -687,6 +687,32 @@ window.RideIntake = (function () {
     }
   }
 
+  // ── Vehicle display helpers ────────────────────────────────────────────────────
+  // Show driver's actual vehicle when it can carry the group (seats > pax, driver uses 1).
+  // Only fall back to fleet recommendation when the assigned vehicle is too small.
+
+  function _resolveDisplayVehicle(paxNum) {
+    if (_driverVehicle && _driverVehicle.seats > paxNum) {
+      return _driverVehicle.name;
+    }
+    if (window.DLCRide) {
+      var rv = DLCRide.resolveVehicle(paxNum);
+      if (rv.recommended) return rv.recommended.name;
+    }
+    return (_quote && _quote.vehicleName) || (_driverVehicle && _driverVehicle.name) || 'Tesla Model Y';
+  }
+
+  function _resolveDisplaySeats(paxNum) {
+    if (_driverVehicle && _driverVehicle.seats > paxNum) {
+      return _driverVehicle.seats;
+    }
+    if (window.DLCRide) {
+      var rv2 = DLCRide.resolveVehicle(paxNum);
+      if (rv2.recommended) return rv2.recommended.capacity;
+    }
+    return (_driverVehicle && _driverVehicle.seats) || 4;
+  }
+
   // ── Sub-step navigation (progressive disclosure) ──────────────────────────────
 
   function goSubStep(n) {
@@ -743,15 +769,14 @@ window.RideIntake = (function () {
       setHide('riPriceHint', true);
       setHide('riPriceLoading', true);
       if (_quote) { setHide('riPriceBox', false); }
-      // Update the vehicle box to reflect the correct vehicle for the actual passenger count
+      // Update vehicle box to show correct vehicle for the actual passenger count
       var paxIdR = _type === 'pickup' ? 'ri_p_passengers' : _type === 'dropoff' ? 'ri_d_passengers' : 'ri_r_passengers';
       var paxR = parseInt(val(paxIdR) || '1', 10);
       var boxEl = document.getElementById('riVehicleBox');
-      if (boxEl && window.DLCRide) {
-        var rvR = DLCRide.resolveVehicle(paxR);
-        if (rvR.recommended) {
-          boxEl.innerHTML = _T.vehicleBox(rvR.recommended.name, rvR.recommended.capacity);
-        }
+      if (boxEl) {
+        var dispV = _resolveDisplayVehicle(paxR);
+        var dispSeats = _resolveDisplaySeats(paxR);
+        boxEl.innerHTML = _T.vehicleBox(dispV, dispSeats);
       }
       showReviewCard(n);
     } else {
@@ -798,18 +823,10 @@ window.RideIntake = (function () {
     }
     var paxId = _type === 'pickup' ? 'ri_p_passengers' : _type === 'dropoff' ? 'ri_d_passengers' : 'ri_r_passengers';
     var pax = val(paxId) || '—';
-    // Always resolve vehicle from passenger count — _driverVehicle is the current
-    // on-shift driver and may have fewer seats than needed for the selected group size.
     var paxNum = parseInt(pax, 10) || 1;
-    var vehicle = 'Tesla Model Y';
-    if (window.DLCRide) {
-      var rv = DLCRide.resolveVehicle(paxNum);
-      if (rv.recommended) vehicle = rv.recommended.name;
-    } else if (_quote && _quote.vehicleName) {
-      vehicle = _quote.vehicleName;
-    } else if (_driverVehicle) {
-      vehicle = _driverVehicle.name;
-    }
+    // Use driver's actual vehicle when it fits the group (seats > pax, driver needs 1 seat).
+    // Only fall back to fleet recommendation when the assigned vehicle is too small.
+    var vehicle = _resolveDisplayVehicle(paxNum);
 
     card.innerHTML =
       '<div class="ri-review__title">' + _T.reviewHeading + '</div>' +

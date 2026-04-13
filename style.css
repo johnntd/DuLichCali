@@ -762,36 +762,63 @@ gmp-placeautocomplete.field-input::part(input):focus {
   top: calc(env(safe-area-inset-top, 0px) + 10px);
   right: 12px;
   z-index: 400;
+}
+.lang-globe-btn {
   display: flex;
-  gap: 2px;
-  background: rgba(10,35,68,.8);
+  align-items: center;
+  gap: 4px;
+  padding: 6px 9px;
+  background: rgba(10,35,68,.75);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.18);
   border-radius: 20px;
-  padding: 3px;
-  box-shadow: 0 2px 12px rgba(0,0,0,.35);
+  color: rgba(255,255,255,.8);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 2px 10px rgba(0,0,0,.3);
 }
-.lang-btn {
-  padding: 4px 10px;
+.lang-globe-btn:hover { background: rgba(10,35,68,.95); color: #fff; }
+.lang-globe-label {
   font-size: .68rem;
   font-weight: 700;
   font-family: var(--font-b);
-  color: rgba(255,255,255,.55);
+  letter-spacing: .05em;
+  line-height: 1;
+}
+.lang-dropdown {
+  display: none;
+  flex-direction: column;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: rgba(10,35,68,.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(0,0,0,.45);
+  min-width: 70px;
+}
+.lang-picker--open .lang-dropdown { display: flex; }
+.lang-opt {
+  padding: 9px 16px;
+  font-size: .75rem;
+  font-weight: 700;
+  font-family: var(--font-b);
+  color: rgba(255,255,255,.65);
   background: transparent;
   border: none;
-  border-radius: 16px;
   cursor: pointer;
-  transition: background .15s, color .15s;
+  text-align: center;
   letter-spacing: .05em;
-  line-height: 1.6;
+  transition: background .12s, color .12s;
   -webkit-tap-highlight-color: transparent;
 }
-.lang-btn:hover { color: #fff; }
-.lang-btn--active {
-  background: var(--gold);
-  color: var(--navy);
-}
+.lang-opt:hover { background: rgba(255,255,255,.08); color: #fff; }
+.lang-opt--active { color: var(--gold-lt); background: rgba(212,175,55,.1); }
 
 /* ── Homepage Intelligence ──────────────────────────────────── */
 

@@ -82,7 +82,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-  <link rel="stylesheet" href="style.css?v=20260420e">
+  <link rel="stylesheet" href="style.css?v=20260420f">
   <link rel="stylesheet" href="desktop.css">
 
   <!-- Google Analytics 4 -->
@@ -98,11 +98,17 @@
 <body>
 <div id="app">
 
-  <!-- Language Picker — fixed top-right, always visible -->
-  <div id="langPicker" class="lang-picker" role="group" aria-label="Select language">
-    <button class="lang-btn lang-btn--active" data-lang="en" onclick="setUiLang('en')" aria-pressed="true">EN</button>
-    <button class="lang-btn" data-lang="vi" onclick="setUiLang('vi')" aria-pressed="false">VI</button>
-    <button class="lang-btn" data-lang="es" onclick="setUiLang('es')" aria-pressed="false">ES</button>
+  <!-- Language Picker — globe icon + dropdown, top-right -->
+  <div id="langPicker" class="lang-picker">
+    <button class="lang-globe-btn" id="langGlobeBtn" aria-label="Select language" onclick="document.getElementById('langPicker').classList.toggle('lang-picker--open')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      <span id="langGlobeLabel" class="lang-globe-label">EN</span>
+    </button>
+    <div class="lang-dropdown">
+      <button class="lang-opt lang-opt--active" data-lang="en" onclick="setUiLang('en');document.getElementById('langPicker').classList.remove('lang-picker--open')">EN</button>
+      <button class="lang-opt" data-lang="vi" onclick="setUiLang('vi');document.getElementById('langPicker').classList.remove('lang-picker--open')">VI</button>
+      <button class="lang-opt" data-lang="es" onclick="setUiLang('es');document.getElementById('langPicker').classList.remove('lang-picker--open')">ES</button>
+    </div>
   </div>
 
   <!-- ════════════════════════════════════════════════
@@ -1220,6 +1226,6 @@
 <script src="notifications.js?v=20260418d"></script>
 <script src="workflowEngine.js?v=20260420a"></script>
 <script src="chat.js?v=20260419h"></script>
-<script src="script.js?v=20260420b" defer></script>
+<script src="script.js?v=20260420c" defer></script>
 </body>
 </html>

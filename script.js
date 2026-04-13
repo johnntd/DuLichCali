@@ -255,14 +255,22 @@ window.setUiLang = function(lang) {
   try { localStorage.setItem('dlcLang', lang); localStorage.setItem('dlc_lang', lang); } catch(e) {}
   _applyUiLang(lang);
   document.documentElement.lang = lang === 'vi' ? 'vi' : lang === 'es' ? 'es' : 'en';
-  document.querySelectorAll('#langPicker .lang-btn').forEach(function(btn) {
-    var active = btn.dataset.lang === lang;
-    btn.classList.toggle('lang-btn--active', active);
-    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  // Update globe label
+  var lbl = document.getElementById('langGlobeLabel');
+  if (lbl) lbl.textContent = lang.toUpperCase();
+  // Update dropdown active state
+  document.querySelectorAll('#langPicker .lang-opt').forEach(function(btn) {
+    btn.classList.toggle('lang-opt--active', btn.dataset.lang === lang);
   });
   // Sync ride intake module if loaded
   if (window.RideIntake && RideIntake.setLang) RideIntake.setLang(lang);
 };
+
+// Close language dropdown when tapping outside it
+document.addEventListener('click', function(e) {
+  var picker = document.getElementById('langPicker');
+  if (picker && !picker.contains(e.target)) picker.classList.remove('lang-picker--open');
+});
 
 // Hash-based deep linking (from marketplace bottom nav links like ../#travel)
 // Query-param entry routing: ?entry=airport|tour|marketplace|food|hair|nails

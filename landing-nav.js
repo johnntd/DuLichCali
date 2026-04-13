@@ -179,13 +179,13 @@
           '<div class="lp-rides-ready__vehicle">' + esc(vName) + ' &middot; ' + seats + ' chỗ &middot; <span style="color:var(--gold)">Giá cố định</span></div>' +
         '</div>' +
         '<div class="lp-rides-ready__grid">' +
-          '<button class="lp-rides-tile" onclick="window.RideIntake&&RideIntake.open?RideIntake.open(\'pickup\'):location.href=\'/?entry=airport\'">' +
+          '<button class="lp-rides-tile" onclick="window.RideIntake&&RideIntake.open?RideIntake.open(\'pickup\'):location.href=\'/airport\'">' +
             '<span>🛬</span><strong>Đón Sân Bay</strong><em>Bay đến · Arrivals</em>' +
           '</button>' +
-          '<button class="lp-rides-tile" onclick="window.RideIntake&&RideIntake.open?RideIntake.open(\'dropoff\'):location.href=\'/?entry=airport\'">' +
+          '<button class="lp-rides-tile" onclick="window.RideIntake&&RideIntake.open?RideIntake.open(\'dropoff\'):location.href=\'/airport\'">' +
             '<span>🛫</span><strong>Ra Sân Bay</strong><em>Bay đi · Đón tại nhà</em>' +
           '</button>' +
-          '<button class="lp-rides-tile lp-rides-tile--wide" onclick="window.RideIntake&&RideIntake.open?RideIntake.open(\'ride\'):location.href=\'/?entry=airport\'">' +
+          '<button class="lp-rides-tile lp-rides-tile--wide" onclick="window.RideIntake&&RideIntake.open?RideIntake.open(\'ride\'):location.href=\'/airport\'">' +
             '<span>🚗</span><strong>Xe Riêng Cao Cấp</strong><em>Bất kỳ điểm nào</em>' +
           '</button>' +
         '</div>' +
@@ -754,13 +754,19 @@
     if (!wrap) return;
 
     var scrollAction = "var s=document.getElementById('lpVendorSection');if(s)s.scrollIntoView({behavior:'smooth'})";
-    // AI button opens overlay — no page navigation
+    // AI button opens overlay — no page navigation (not used for rides)
     var aiAction = 'LandingNav.openChat()';
+
+    // For rides: replace AI chat center tab with a direct phone call button
+    var isRidesCategory = cfg.category === 'rides';
+    var centerTab = isRidesCategory
+      ? { icon: I.phone || '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.64A2 2 0 012 1h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 15v1.92z"/></svg>', label: 'Call Us', action: 'location.href="tel:4089163439"', center: true }
+      : { icon: I.chat, label: 'AI', action: aiAction, center: true };
 
     var tabs = [
       { icon: cfg.tab1Icon || I.home,     label: cfg.tab1Label || 'Home',      action: 'location.href="' + (cfg.tab1Href || '/') + '"',                 active: true  },
       { icon: cfg.tab2Icon || I.book,     label: cfg.tab2Label || 'Book Now',  action: cfg.tab2Action || ('location.href="' + (cfg.tab2Href||'/') + '"'), active: false },
-      { icon: I.chat,                     label: 'AI',                          action: aiAction,                                                          center: true  },
+      centerTab,
       { icon: cfg.tab4Icon || I.grid,     label: cfg.tab4Label || 'Services',  action: scrollAction,                                                      active: false },
       { icon: I.home,                     label: 'Du Lich Cali',               action: 'location.href="/"',                                               active: false },
     ];
@@ -769,7 +775,7 @@
     tabs.forEach(function (tab) {
       var cls = 'nav-tab' + (tab.active ? ' nav-tab--active' : '') + (tab.center ? ' nav-tab--center' : '');
       if (tab.center) {
-        html += '<button class="' + cls + '" onclick="' + tab.action + '" aria-label="Open AI chat">' +
+        html += '<button class="' + cls + '" onclick="' + tab.action + '" aria-label="' + esc(tab.label) + '">' +
           '<div class="nav-center-btn" aria-hidden="true">' + tab.icon + '</div>' +
           '<span>' + tab.label + '</span></button>';
       } else {

@@ -350,12 +350,24 @@ button { cursor: pointer; font-family: var(--font-b); }
   position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
   display: flex; align-items: center; justify-content: center;
 }
+.interp-loading[hidden] { display: none; }
 .interp-spinner {
   width: 20px; height: 20px;
   border: 2px solid rgba(255,255,255,.18); border-top-color: var(--gold,#c9a84c);
   border-radius: 50%; animation: interp-spin .7s linear infinite;
 }
 @keyframes interp-spin { to { transform: rotate(360deg); } }
+.interp-translate-btn {
+  display: flex; align-items: center; justify-content: center; gap: .4rem;
+  width: 100%; margin-top: .65rem;
+  padding: .7rem 1rem;
+  background: var(--gold); color: var(--navy-900);
+  border: none; border-radius: var(--r-md);
+  font-size: .85rem; font-weight: 700; font-family: var(--font-b);
+  cursor: pointer; transition: background .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.interp-translate-btn:hover { background: var(--gold-lt); }
 .interp-speak, .interp-copy-btn {
   display: inline-flex; align-items: center; gap: .3rem;
   padding: .3rem .7rem;

@@ -558,13 +558,22 @@ window.RideIntake = (function () {
     _fetchDriverVehicle(); // async, non-blocking
   }
 
+  function _fmtPhone(raw) {
+    // Format a 10-digit US phone string → "(408) 916-3439"
+    var digits = (raw || '').replace(/\D/g, '');
+    if (digits.length === 11 && digits[0] === '1') digits = digits.slice(1);
+    if (digits.length === 10) return '(' + digits.slice(0,3) + ') ' + digits.slice(3,6) + '-' + digits.slice(6);
+    return raw || '';
+  }
+
   function _applyDriverVehicle(d, driverId) {
     var v = (d && d.vehicle) || {};
     _driverVehicle = {
-      name:       [v.make, v.model, v.year].filter(Boolean).join(' ') || (d && d.fullName ? d.fullName + "'s vehicle" : 'Private Ride'),
-      seats:      v.seats || 4,
-      driverId:   driverId || '',
-      driverName: (d && d.fullName) || ''
+      name:        [v.make, v.model, v.year].filter(Boolean).join(' ') || (d && d.fullName ? d.fullName + "'s vehicle" : 'Private Ride'),
+      seats:       v.seats || 4,
+      driverId:    driverId || '',
+      driverName:  (d && d.fullName) || '',
+      driverPhone: (d && (d.phone || d.phoneNumber || d.phoneNum)) ? _fmtPhone(d.phone || d.phoneNumber || d.phoneNum) : ''
     };
     // Capture driver's real-time GPS coords if available (updated by driver-admin.html)
     if (d && d.driverLat != null && d.driverLng != null) {
@@ -1543,7 +1552,23 @@ window.RideIntake = (function () {
     var subEl = document.querySelector('#riSuccess .ri-success__sub');
     if (subEl) subEl.textContent = _T.successSub;
     var msgEl = document.querySelector('#riSuccess .ri-success__msg');
-    if (msgEl) msgEl.innerHTML = _T.successMsg;
+    if (msgEl) {
+      // Show driver's direct number if we have it; otherwise fall back to business number.
+      var driverPhone = _driverVehicle && _driverVehicle.driverPhone;
+      var driverName  = _driverVehicle && _driverVehicle.driverName;
+      if (driverPhone) {
+        var telHref = 'tel:' + driverPhone.replace(/\D/g, '');
+        var nameTag = driverName ? '<strong>' + driverName + '</strong>' : _T.driverLabel || 'your driver';
+        var driverMsg = {
+          en: 'Contact ' + nameTag + ' directly: <a href="' + telHref + '">' + driverPhone + '</a>.',
+          vi: 'Liên hệ tài xế ' + nameTag + ' trực tiếp: <a href="' + telHref + '">' + driverPhone + '</a>.',
+          es: 'Contacte a ' + nameTag + ' directamente: <a href="' + telHref + '">' + driverPhone + '</a>.',
+        };
+        msgEl.innerHTML = driverMsg[_lang] || driverMsg.en;
+      } else {
+        msgEl.innerHTML = _T.successMsg;
+      }
+    }
 
     // Build booking summary with route + GPS links
     var summaryEl = document.getElementById('riSuccessSummary');

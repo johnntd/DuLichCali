@@ -3868,8 +3868,9 @@ gmp-placeautocomplete.field-input::part(input):focus {
   min-height: 1.2rem;
   transition: opacity .25s;
 }
-.ri-avail-hint--ok { color: #4ade80; }
-.ri-avail-hint--no { color: #f87171; }
+.ri-avail-hint--ok   { color: #4ade80; }
+.ri-avail-hint--no   { color: #f87171; }
+.ri-avail-hint--warn { color: #fbbf24; }
 .ri-avail-hint[hidden] { display: none; }
 
 /* ── Spinner animation for "Checking..." button state ── */

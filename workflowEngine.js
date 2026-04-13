@@ -2537,15 +2537,17 @@
       var addrField     = isPickup ? (f.dropoffAddress||'') : (f.pickupAddress||'');
       trackingToken     = genId().replace('DLC-','')+genId().replace('DLC-','');
 
-      // ── Availability gate: verify no double-booking before writing to Firestore ──
+      // ── Availability check: notify customer if slot looks busy, but always book ──
+      var _apAvailNote = null;
       if (window.DLCRideAvail && f.requestedDate && timeField) {
         var _apRegion = AIRPORT_REGION[f.airport] || null;
         if (_apRegion) {
-          var _apAvail = await DLCRideAvail.check(f.requestedDate, timeField, _apRegion, null);
-          if (!_apAvail.available && _apAvail.reason !== 'error' && _apAvail.reason !== 'no_db') {
-            var _apMsg = DLCRideAvail.getMessage(_apAvail, f.requestedDate, timeField, draft.lang || 'en');
-            throw new Error(_apMsg || 'No drivers available for that date/time.');
-          }
+          try {
+            var _apAvail = await DLCRideAvail.check(f.requestedDate, timeField, _apRegion, null);
+            if (!_apAvail.available && _apAvail.reason !== 'error' && _apAvail.reason !== 'no_db') {
+              _apAvailNote = _apAvail.reason; // 'no_schedule' | 'fully_booked'
+            }
+          } catch(e) { /* fail open */ }
         }
       }
 
@@ -2620,6 +2622,9 @@
         vehicleLat:null,vehicleLng:null,vehicleHeading:null,etaMinutes:null,
         routeLink:    routeLink||null,   // full-trip navigation link for driver
         pickupSource: pickupSrc,         // 'airport' | 'gps' | 'typed'
+        // If availability check flagged a conflict, hold for admin confirmation
+        status: _apAvailNote ? 'pending_confirm' : airBookStatus,
+        availabilityNote: _apAvailNote ? ('Slot may be busy (' + _apAvailNote + '). Please confirm with customer.') : null,
         createdAt:fv.serverTimestamp(),
       });
       await db.collection('vendors').doc('admin-dlc').collection('notifications').add({
@@ -2665,9 +2670,10 @@
         createdAt: fv.serverTimestamp(),
       }).catch(function(e){ console.warn('[dispatchQueue] write failed:', e.message); });
       finalDispatchState = {
-        status: airBookStatus,
+        status: _apAvailNote ? 'pending_confirm' : airBookStatus,
         eligibleCount: eligIds.length,
-        preAssigned: null, // Phase 13: no pre-assignment, all go through dispatch
+        preAssigned: null,
+        availNote: _apAvailNote || null, // 'no_schedule' | 'fully_booked' | null
       };
       // Phase 5A: queue confirmation email (non-blocking, no-op if no email)
       if (typeof DLCNotifications !== 'undefined') {
@@ -2798,15 +2804,17 @@
       var prRouteLink  = buildRouteLink(f.pickupAddress, f.dropoffAddress);
       trackingToken    = genId().replace('DLC-','') + genId().replace('DLC-','');
 
-      // ── Availability gate: prevent double-booking before writing to Firestore ──
+      // ── Availability check: notify customer if slot looks busy, but always book ──
+      var _prAvailNote = null;
       if (window.DLCRideAvail && f.requestedDate && f.requestedTime) {
         var _prRegion = (window.DLCRegion && window.DLCRegion.current) ? window.DLCRegion.current.id : null;
         if (_prRegion) {
-          var _prAvail = await DLCRideAvail.check(f.requestedDate, f.requestedTime, _prRegion, null);
-          if (!_prAvail.available && _prAvail.reason !== 'error' && _prAvail.reason !== 'no_db') {
-            var _prMsg = DLCRideAvail.getMessage(_prAvail, f.requestedDate, f.requestedTime, draft.lang || 'en');
-            throw new Error(_prMsg || 'No drivers available for that date/time.');
-          }
+          try {
+            var _prAvail = await DLCRideAvail.check(f.requestedDate, f.requestedTime, _prRegion, null);
+            if (!_prAvail.available && _prAvail.reason !== 'error' && _prAvail.reason !== 'no_db') {
+              _prAvailNote = _prAvail.reason;
+            }
+          } catch(e) { /* fail open */ }
         }
       }
       // Infer pickupSource: was GPS used for pickup?
@@ -2858,6 +2866,9 @@
         vehicleLat:null, vehicleLng:null, vehicleHeading:null, etaMinutes:null,
         routeLink:    prRouteLink||null,  // full-trip navigation link for driver
         pickupSource: prPickupSrc,        // 'gps' | 'typed'
+        // Hold for admin confirmation if availability check flagged a conflict
+        status: _prAvailNote ? 'pending_confirm' : prBookStatus,
+        availabilityNote: _prAvailNote ? ('Slot may be busy (' + _prAvailNote + '). Please confirm with customer.') : null,
         createdAt:fv.serverTimestamp(),
       });
       await db.collection('vendors').doc('admin-dlc').collection('notifications').add({
@@ -2899,9 +2910,10 @@
         createdAt: fv.serverTimestamp(),
       }).catch(function(e){ console.warn('[dispatchQueue] write failed:', e.message); });
       finalDispatchState = {
-        status: prBookStatus,
+        status: _prAvailNote ? 'pending_confirm' : prBookStatus,
         eligibleCount: prEligIds.length,
-        preAssigned: null, // Phase 13: no pre-assignment, all go through dispatch
+        preAssigned: null,
+        availNote: _prAvailNote || null,
       };
       // Phase 5A: queue confirmation email (non-blocking, no-op if no email)
       if (typeof DLCNotifications !== 'undefined') {

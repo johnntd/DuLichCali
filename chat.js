@@ -677,11 +677,20 @@
       match: [/xe|vehicle|car|toyota|sienna|tesla|van|mercedes/i],
       reply: (text) => {
         const r = resolveRegion(text);
+        const intent = parseIntent(text);
+        const pax = intent.passengers || 0;
+
+        // Capacity-aware recommendation if passenger count given
+        if (pax > 0 && window.DLCRide) {
+          const rec = DLCRide.recommendRide({ passengers: pax, isAirport: intent.isTransfer });
+          return rec.text + `\n\nĐể đặt chỗ, gọi ${regionHostName()}: ${regionPhone()} hoặc bấm tab "Đặt chỗ".`;
+        }
+
         if (r && r.id === 'bayarea') {
           const hosts = r.hosts.map(h => `${h.name} (${h.display})`).join(', ');
           return `Xe phục vụ vùng Bay Area:\n🚐 ${r.vehicle.name} — tối đa ${r.vehicle.seats} ghế\n\nLiên hệ: ${hosts}`;
         }
-        return 'Đội xe Du Lịch Cali:\n🚗 Tesla Model Y — 1–3 khách (điện, cao cấp, yên tĩnh)\n🚐 Mercedes-Benz Van — 4–12 khách (rộng rãi, thoải mái)\n\nXe sạch sẽ, mới, đầy đủ tiện nghi.';
+        return 'Đội xe Du Lịch Cali:\n🚗 Tesla Model Y — 1–3 khách (điện, cao cấp)\n🚐 Toyota Sienna — 4–7 khách (tiết kiệm, rộng rãi)\n🚐 Mercedes Van — 8–12 khách (sang trọng, thoải mái)\n\nGiá khác nhau theo loại xe và số khách.';
       }
     },
     {
@@ -1667,7 +1676,14 @@ BEHAVIOR GUIDELINES:
           var rideIntent = wfDraft && (wfDraft.intent === 'airport_pickup' || wfDraft.intent === 'airport_dropoff' || wfDraft.intent === 'private_ride');
           var rideSentence = '';
           if (rideIntent && dispatchState) {
-            if (dispatchState.status === 'assigned' && dispatchState.preAssigned && dispatchState.preAssigned.name) {
+            if (dispatchState.availNote) {
+              // Availability check flagged a potential conflict — booking saved, admin will confirm
+              rideSentence = wfLang === 'vi'
+                ? '⚠️ Khung giờ này có thể đang bận. Đặt chỗ của bạn đã được ghi nhận và đội ngũ sẽ gọi điện xác nhận trong vòng 30 phút.'
+                : wfLang === 'es'
+                ? '⚠️ Este horario podría estar ocupado. Tu reserva fue registrada y el equipo te llamará para confirmar en 30 minutos.'
+                : '⚠️ This time slot may be busy. Your booking has been saved and our team will call to confirm within 30 minutes.';
+            } else if (dispatchState.status === 'assigned' && dispatchState.preAssigned && dispatchState.preAssigned.name) {
               rideSentence = wfLang === 'vi'
                 ? 'Tài xế **' + dispatchState.preAssigned.name + '** đã được phân công cho chuyến của bạn. Chúng tôi sẽ nhắn tin xác nhận giờ đón.'
                 : wfLang === 'es'

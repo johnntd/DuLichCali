@@ -847,36 +847,43 @@ window.RideIntake = (function () {
     DLCRideAvail.check(dateStr, timeStr, regionId, durationMins).then(function (result) {
       if (btn) { btn.innerHTML = origHtml; btn.disabled = false; }
 
-      if (result.available) {
-        // Show a brief confirmation hint so the user sees availability was checked
-        showAvailHint(true, result.freeCount);
-        goSubStep(_subStep + 1);
+      if (!result.available && result.reason !== 'error' && result.reason !== 'no_db' && result.reason !== 'no_region') {
+        // Slot looks busy — show a soft warning but always let the customer continue.
+        // The booking goes through and admin will confirm or contact the customer.
+        var msg = DLCRideAvail.getMessage(result, dateStr, timeStr, lang)
+          || (_T.noAvailFallback || 'Drivers may be limited at this time — we\'ll confirm your booking shortly.');
+        showAvailWarning(msg);
       } else {
-        var msg = DLCRideAvail.getMessage(result, dateStr, timeStr, lang);
-        if (!msg) {
-          // Fallback generic message
-          msg = _T.noAvailFallback || 'No drivers available for that time. Please choose a different date or time.';
-        }
-        showInlineError(msg);
+        showAvailHint(true, result.freeCount);
       }
+      goSubStep(_subStep + 1);
     }).catch(function () {
-      // Fail open — network/Firestore error should not block a booking
       if (btn) { btn.innerHTML = origHtml; btn.disabled = false; }
       goSubStep(_subStep + 1);
     });
   }
 
-  // Brief green/red hint near the step 3 footer after availability check
+  // Brief green hint after a successful availability check
   function showAvailHint(ok, freeCount) {
     var el = document.getElementById('riAvailHint');
     if (!el) return;
-    el.textContent = ok
-      ? (_T.availOk || '✓ Available')
-      : (_T.availNo || '✗ Not available');
-    el.className = 'ri-avail-hint' + (ok ? ' ri-avail-hint--ok' : ' ri-avail-hint--no');
+    el.textContent = _T.availOk || '✓ Available';
+    el.className = 'ri-avail-hint ri-avail-hint--ok';
     el.hidden = false;
     clearTimeout(el._t);
-    el._t = setTimeout(function () { el.hidden = true; el.textContent = ''; }, 3000);
+    el._t = setTimeout(function () { el.hidden = true; el.textContent = ''; }, 2500);
+  }
+
+  // Amber warning — slot looks busy, but booking still proceeds.
+  // Shown briefly then auto-hides; the step advances immediately regardless.
+  function showAvailWarning(msg) {
+    var el = document.getElementById('riAvailHint');
+    if (!el) return;
+    el.textContent = '⚠ ' + msg;
+    el.className = 'ri-avail-hint ri-avail-hint--warn';
+    el.hidden = false;
+    clearTimeout(el._t);
+    el._t = setTimeout(function () { el.hidden = true; el.textContent = ''; }, 5000);
   }
 
   function validateSubStep(step) {
@@ -1321,19 +1328,12 @@ window.RideIntake = (function () {
     var btn = document.getElementById('riSubmit');
     if (btn) { btn.textContent = _T.processing; btn.disabled = true; }
 
-    // Final double-booking gate: re-check availability immediately before writing to Firestore.
-    // This catches the race condition where two users book the same slot simultaneously.
+    // Availability re-check at submit time: if slot looks busy, tag the booking
+    // so admin is alerted, but always proceed — never block the customer.
     _finalAvailCheck().then(function (result) {
-      if (!result.available && result.reason !== 'error' && result.reason !== 'no_db' && result.reason !== 'no_region') {
-        _busy = false;
-        if (btn) { btn.innerHTML = _T.submitBtn + ' <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'; btn.disabled = false; }
-        alert(_T.slotTakenAlert || 'This time is no longer available. Please choose a different time.');
-        return;
-      }
-      _doFirestoreSubmit(btn);
+      _doFirestoreSubmit(btn, result);
     }).catch(function () {
-      // Fail open on unexpected errors
-      _doFirestoreSubmit(btn);
+      _doFirestoreSubmit(btn, null);
     });
   }
 
@@ -1358,9 +1358,17 @@ window.RideIntake = (function () {
     return DLCRideAvail.check(dateStr, timeStr, regionId, durationMins);
   }
 
-  function _doFirestoreSubmit(btn) {
+  function _doFirestoreSubmit(btn, availResult) {
     var bookingId = generateId();
     var data      = buildBookingData(bookingId);
+
+    // If availability check flagged a potential conflict, mark the booking so
+    // the admin knows to confirm with the customer before dispatching.
+    if (availResult && !availResult.available &&
+        availResult.reason !== 'error' && availResult.reason !== 'no_db' && availResult.reason !== 'no_region') {
+      data.availabilityNote = 'Slot may be busy (reason: ' + availResult.reason + '). Please confirm with customer.';
+      data.status = 'pending_confirm'; // admin reviews before dispatch
+    }
 
     if (typeof firebase === 'undefined' || !firebase.firestore) {
       onSuccess(bookingId);

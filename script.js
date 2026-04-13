@@ -1677,7 +1677,7 @@ var _TRAVEL_SERVICES_EXTRA = [
     chip: 'Airport',
     title: 'Airport Pickup & Dropoff',
     sub: 'LAX · SFO · SJC · OAK · SAN · BUR',
-    img: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=600&auto=format&fit=crop&q=80',
+    img: '/images/unsplash/travel-airplane.jpg',
     cta: 'Book with AI',
     intent: 'airport'
   },
@@ -1685,7 +1685,7 @@ var _TRAVEL_SERVICES_EXTRA = [
     chip: 'Private Car',
     title: 'Premium Private Car',
     sub: 'Tesla · Mercedes Van · Bay Area ↔ OC',
-    img: 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600&auto=format&fit=crop&q=80',
+    img: '/images/unsplash/travel-road-trip.jpg',
     cta: 'Book with AI',
     intent: 'ride'
   },
@@ -1693,7 +1693,7 @@ var _TRAVEL_SERVICES_EXTRA = [
     chip: 'Custom',
     title: 'Custom Trip Plan',
     sub: '15 destinations · AI advice 24/7',
-    img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&auto=format&fit=crop&q=75',
+    img: '/images/unsplash/travel-yosemite.jpg',
     cta: 'Ask AI',
     intent: 'tour'
   }

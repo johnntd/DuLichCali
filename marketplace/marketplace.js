@@ -617,8 +617,8 @@
     }).join('');
 
     var _catHeroImages = {
-      nails: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=1400&auto=format&fit=crop&q=80',
-      hair:  'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1400&auto=format&fit=crop&q=80',
+      nails: '/images/unsplash/nails-manicure.jpg',
+      hair:  '/images/unsplash/hair-salon-2.jpg',
       food:  '/nha-bep-emily-eggroll.jpg'
     };
 
@@ -1145,17 +1145,17 @@
       spa: 'Spa Treatments', addon: 'Add-ons', other: _t('Services', 'D\u1ecbch V\u1ee5', 'Servicios')
     };
     var CAT_IMAGES = {
-      manicure: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=82',
-      pedicure: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=600&auto=format&fit=crop&q=82',
-      acrylic:  'https://images.unsplash.com/photo-1632345031435-8727f592d8db?w=600&auto=format&fit=crop&q=82',
-      gel:      'https://images.unsplash.com/photo-1604902396830-aca29e19b067?w=600&auto=format&fit=crop&q=82',
-      nailart:  'https://images.unsplash.com/photo-1636018492665-21ce4ac4e0f1?w=600&auto=format&fit=crop&q=82',
-      dip:      'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=82',
-      addon:    'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&auto=format&fit=crop&q=82',
-      spa:      'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&auto=format&fit=crop&q=82',
-      other:    'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=82'
+      manicure: '/images/unsplash/nails-manicure.jpg',
+      pedicure: '/images/unsplash/nails-pedicure.jpg',
+      acrylic:  '/images/unsplash/nails-acrylic.jpg',
+      gel:      '/images/unsplash/nails-gel-2.jpg',
+      nailart:  '/images/unsplash/nails-nail-art.jpg',
+      dip:      '/images/unsplash/nails-manicure.jpg',
+      addon:    '/images/unsplash/nails-care.jpg',
+      spa:      '/images/unsplash/nails-care.jpg',
+      other:    '/images/unsplash/nails-manicure.jpg'
     };
-    var FALLBACK = 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&auto=format&fit=crop&q=60';
+    var FALLBACK = '/images/unsplash/nails-manicure.jpg';
 
     // Live data: featured:true first, then one-per-category, then first 6
     var liveSvcs = biz._staticServices || biz.services || [];
@@ -1312,17 +1312,17 @@
 
     // ── Category images (same art direction as ns-feat-card) ──────────────────
     var catImages = {
-      manicure: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=82',
-      pedicure: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=600&auto=format&fit=crop&q=82',
-      acrylic:  'https://images.unsplash.com/photo-1632345031435-8727f592d8db?w=600&auto=format&fit=crop&q=82',
-      gel:      'https://images.unsplash.com/photo-1604902396830-aca29e19b067?w=600&auto=format&fit=crop&q=82',
-      nailart:  'https://images.unsplash.com/photo-1636018492665-21ce4ac4e0f1?w=600&auto=format&fit=crop&q=82',
-      dip:      'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=82',
-      addon:    'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&auto=format&fit=crop&q=82',
-      spa:      'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&auto=format&fit=crop&q=82',
-      other:    'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=82'
+      manicure: '/images/unsplash/nails-manicure.jpg',
+      pedicure: '/images/unsplash/nails-pedicure.jpg',
+      acrylic:  '/images/unsplash/nails-acrylic.jpg',
+      gel:      '/images/unsplash/nails-gel-2.jpg',
+      nailart:  '/images/unsplash/nails-nail-art.jpg',
+      dip:      '/images/unsplash/nails-manicure.jpg',
+      addon:    '/images/unsplash/nails-care.jpg',
+      spa:      '/images/unsplash/nails-care.jpg',
+      other:    '/images/unsplash/nails-manicure.jpg'
     };
-    var FALLBACK = 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&auto=format&fit=crop&q=60';
+    var FALLBACK = '/images/unsplash/nails-manicure.jpg';
 
     // ── VIEW 1a: Featured showcase carousel — live from vendor service data ─────
     // Priority: featured:true flags → one-per-category with imageUrl → one-per-category → first 6
@@ -1683,14 +1683,14 @@
 
   function renderNailsInspiration() {
     var localFallback = [
-      { src: '/images/nails-1.jpg',  fb: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=500&auto=format&fit=crop&q=80' },
-      { src: '/images/nails-2.jpg',  fb: 'https://images.unsplash.com/photo-1636018492665-21ce4ac4e0f1?w=500&auto=format&fit=crop&q=80' },
-      { src: '/images/nails-3.jpg',  fb: 'https://images.unsplash.com/photo-1632345031435-8727f592d8db?w=500&auto=format&fit=crop&q=80' }
+      { src: '/images/nails-1.jpg',  fb: '/images/unsplash/nails-manicure.jpg' },
+      { src: '/images/nails-2.jpg',  fb: '/images/unsplash/nails-nail-art.jpg' },
+      { src: '/images/nails-3.jpg',  fb: '/images/unsplash/nails-acrylic.jpg' }
     ];
     var unsplash = [
-      'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=500&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=500&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&auto=format&fit=crop&q=80'
+      '/images/unsplash/nails-pedicure.jpg',
+      '/images/unsplash/nails-gel.jpg',
+      '/images/unsplash/nails-care.jpg'
     ];
     var localHtml = localFallback.map(function (item) {
       return '<img class="ns-gallery__img" src="' + item.src + '" ' +

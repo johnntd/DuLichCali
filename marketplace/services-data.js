@@ -6,12 +6,12 @@
   'use strict';
 
   // ── Nail service image URLs (reused across catalog entries) ───────────────
-  var _IM_MANI = 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&auto=format&fit=crop&q=80';
-  var _IM_PEDI = 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=400&auto=format&fit=crop&q=80';
-  var _IM_ACRY = 'https://images.unsplash.com/photo-1632345031435-8727f592d8db?w=400&auto=format&fit=crop&q=80';
-  var _IM_GEL  = 'https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?w=400&auto=format&fit=crop&q=80';
-  var _IM_ART  = 'https://images.unsplash.com/photo-1636018492665-21ce4ac4e0f1?w=400&auto=format&fit=crop&q=80';
-  var _IM_CARE = 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400&auto=format&fit=crop&q=80';
+  var _IM_MANI = '/images/unsplash/nails-manicure.jpg';
+  var _IM_PEDI = '/images/unsplash/nails-pedicure.jpg';
+  var _IM_ACRY = '/images/unsplash/nails-acrylic.jpg';
+  var _IM_GEL  = '/images/unsplash/nails-gel.jpg';
+  var _IM_ART  = '/images/unsplash/nails-nail-art.jpg';
+  var _IM_CARE = '/images/unsplash/nails-care.jpg';
 
   var categories = {
     nails: {
@@ -115,7 +115,7 @@
       trustSubtitleI18n: { en: 'Over 10 years of beauty care in Bay Area', vi: 'H\u01a1n 10 n\u0103m ch\u0103m s\xf3c s\u1eafc \u0111\u1eb9p t\u1ea1i Bay Area', es: 'M\xe1s de 10 a\xf1os cuidando tu belleza en Bay Area' },
       description:
         'Tiệm nail sang trọng hơn 10 năm kinh nghiệm tại Bay Area. Sản phẩm an toàn, đội ngũ lành nghề, không gian cao cấp và thoải mái.',
-      heroImage: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=80',
+      heroImage: '/images/unsplash/nails-manicure.jpg',
       heroGradient:
         'linear-gradient(135deg,#831843 0%,#9d174d 40%,#4c1d95 100%)',
       // ── Full service catalog — 59 services, all active:false by default ─────
@@ -246,7 +246,7 @@
       ],
       description:
         'Điểm đến làm đẹp tin cậy tại Quận Cam. Không gian thoải mái, sản phẩm an toàn, thợ lành nghề.',
-      heroImage: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&auto=format&fit=crop&q=80',
+      heroImage: '/images/unsplash/nails-manicure.jpg',
       heroGradient:
         'linear-gradient(135deg,#be185d 0%,#db2777 40%,#7c3aed 100%)',
       serviceCategories: [
@@ -311,7 +311,7 @@
       ],
       description:
         'Phong cách tóc kết hợp nghệ thuật Á Đông và xu hướng quốc tế. Stylist giàu kinh nghiệm tư vấn kiểu tóc phù hợp với khuôn mặt và phong cách.',
-      heroImage: 'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=600&auto=format&fit=crop&q=80',
+      heroImage: '/images/unsplash/hair-salon-1.jpg',
       heroGradient:
         'linear-gradient(135deg,#064e3b 0%,#065f46 40%,#1e40af 100%)',
       services: [
@@ -369,7 +369,7 @@
       ],
       description:
         'Tọa lạc tại Little Saigon Garden Grove. Chuyên cắt uốn nhuộm và chăm sóc tóc theo phong cách Việt–Mỹ hiện đại. Đội ngũ thợ luôn cập nhật xu hướng mới.',
-      heroImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&auto=format&fit=crop&q=80',
+      heroImage: '/images/unsplash/hair-salon-2.jpg',
       heroGradient:
         'linear-gradient(135deg,#92400e 0%,#b45309 40%,#7c2d12 100%)',
       services: [

@@ -904,6 +904,15 @@ async function submitBooking(event) {
     console.warn('Formspree notification failed:', err);
   }
 
+  // Analytics: booking conversion
+  if (window.DLCAnalytics) {
+    DLCAnalytics.track('booking_completed', {
+      service_type: serviceType,
+      booking_id:   bookingId,
+      lang:         new URLSearchParams(window.location.search).get('lang') || 'en'
+    });
+  }
+
   // Redirect to thank-you with tracking params
   const lang = new URLSearchParams(window.location.search).get('lang') || 'en';
   window.location.href =

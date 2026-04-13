@@ -2375,6 +2375,16 @@
         };
         vendorBookingsRef.doc(finalBookingId).set(bookingDoc)
           .catch(function(e) { console.warn('[booking] Firestore write failed:', e.message); });
+
+        // Analytics: nail appointment conversion
+        if (window.DLCAnalytics) {
+          DLCAnalytics.track('appointment_booked', {
+            vendor_id:    vendorId,
+            service_type: svcStr,
+            is_reschedule: isExactReschedule,
+            lang:         lang
+          });
+        }
       }
 
       // Show image upload widget after packet

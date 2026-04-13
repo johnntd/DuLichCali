@@ -1387,6 +1387,16 @@ window.RideIntake = (function () {
   }
 
   function onSuccess(bookingId) {
+    // Analytics: ride booking conversion
+    if (window.DLCAnalytics) {
+      DLCAnalytics.track('ride_booking_completed', {
+        service_type:    _type,
+        booking_id:      bookingId,
+        estimated_price: _quote ? _quote.dlcPrice : null,
+        savings:         _quote ? _quote.savings   : null
+      });
+    }
+
     _busy = false;
     setHide('riFormWrap', true);
     setHide('riFooter',   true);

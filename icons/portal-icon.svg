@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <!-- Background -->
+  <rect width="192" height="192" rx="42" fill="#07111e"/>
+  <!-- Badge lanyard clip -->
+  <rect x="79" y="13" width="34" height="20" rx="7" fill="#f5a623"/>
+  <!-- Badge card body -->
+  <rect x="34" y="24" width="124" height="148" rx="14" fill="#0d2f50" stroke="#f5a623" stroke-width="5.5"/>
+  <!-- Person head -->
+  <circle cx="96" cy="82" r="23" fill="#f5a623"/>
+  <!-- Person shoulders/body -->
+  <path d="M48 140 C48 113 69 99 96 99 C123 99 144 113 144 140 Z" fill="#f5a623"/>
+  <!-- ID card info lines -->
+  <rect x="56" y="153" width="80" height="7" rx="3.5" fill="#f5a623" opacity="0.42"/>
+  <rect x="64" y="164" width="56" height="6" rx="3" fill="#f5a623" opacity="0.24"/>
+</svg>

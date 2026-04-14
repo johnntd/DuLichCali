@@ -34,6 +34,7 @@
     "cleanUrls": true,
     "trailingSlash": false,
     "rewrites": [
+      { "source": "/portal",       "destination": "/portal.html" },
       { "source": "/vendor-admin", "destination": "/vendor-admin.html" },
       { "source": "/vendor-login", "destination": "/vendor-login.html" }
     ],

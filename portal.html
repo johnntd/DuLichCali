@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#07111e">
+
+  <!-- PWA / Home Screen -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DLC Portal">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="icons/portal-icon.svg">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="manifest" href="manifest-portal.json">
+
+  <title>DLC · Staff Portal</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;700&family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:       #07111e;
+      --card:     #0d2340;
+      --card2:    #0f1e36;
+      --gold:     #f5a623;
+      --gold-lt:  #ffc857;
+      --gold-dim: rgba(245,166,35,.14);
+      --cream:    #fff8ee;
+      --text:     #c8e4f8;
+      --muted:    #5a8fad;
+      --border:   rgba(255,255,255,.10);
+      --border-g: rgba(245,166,35,.32);
+      --font-d:   'Bodoni Moda', Georgia, serif;
+      --font-b:   'Jost', system-ui, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font-b);
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100%;
+      padding: 2.5rem 1.25rem;
+      padding-top:    max(2.5rem, calc(env(safe-area-inset-top,  0px) + 2rem));
+      padding-bottom: max(2.5rem, calc(env(safe-area-inset-bottom, 0px) + 2rem));
+    }
+
+    /* ── Header ──────────────────────────────────── */
+    .portal-header {
+      text-align: center;
+      margin-bottom: 2.4rem;
+    }
+
+    .portal-badge {
+      width: 72px; height: 72px;
+      margin: 0 auto 1rem;
+      display: block;
+      filter: drop-shadow(0 4px 18px rgba(245,166,35,.28));
+    }
+
+    .portal-brand {
+      font-family: var(--font-d);
+      font-size: 1.45rem;
+      color: var(--cream);
+      letter-spacing: .02em;
+      line-height: 1.1;
+    }
+
+    .portal-tag {
+      display: inline-block;
+      margin-top: .55rem;
+      font-size: .62rem;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      border: 1px solid var(--border-g);
+      border-radius: 999px;
+      padding: .28rem .85rem;
+    }
+
+    /* ── Cards ───────────────────────────────────── */
+    .portal-cards {
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .portal-card {
+      display: flex;
+      align-items: center;
+      gap: 1.1rem;
+      background: var(--card);
+      border: 1px solid var(--border-g);
+      border-radius: 18px;
+      padding: 1.5rem 1.4rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background .18s, border-color .18s, transform .14s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .portal-card:hover  { background: #112a50; border-color: var(--gold); }
+    .portal-card:active { transform: scale(.97); }
+
+    .portal-card--vendor {
+      background: var(--card2);
+      border-color: rgba(245,166,35,.22);
+    }
+    .portal-card--vendor:hover { background: #0f2340; border-color: var(--gold); }
+
+    .card-icon {
+      flex-shrink: 0;
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      background: var(--gold-dim);
+      border: 1px solid var(--border-g);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .card-icon svg { width: 26px; height: 26px; }
+
+    .card-body { flex: 1; }
+
+    .card-title {
+      font-family: var(--font-d);
+      font-size: 1.15rem;
+      color: var(--cream);
+      line-height: 1.15;
+    }
+
+    .card-sub {
+      font-size: .7rem;
+      color: var(--muted);
+      margin-top: .2rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+    }
+
+    .card-arrow {
+      flex-shrink: 0;
+      color: var(--gold);
+      opacity: .7;
+    }
+
+    /* ── Footer ──────────────────────────────────── */
+    .portal-footer {
+      margin-top: 2.2rem;
+      font-size: .65rem;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: .04em;
+      opacity: .7;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="portal-header">
+    <!-- Staff badge icon -->
+    <svg class="portal-badge" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" aria-hidden="true">
+      <rect width="192" height="192" rx="42" fill="#0d2340"/>
+      <rect x="79" y="13" width="34" height="20" rx="7" fill="#f5a623"/>
+      <rect x="34" y="24" width="124" height="148" rx="14" fill="#07111e" stroke="#f5a623" stroke-width="5.5"/>
+      <circle cx="96" cy="82" r="23" fill="#f5a623"/>
+      <path d="M48 140 C48 113 69 99 96 99 C123 99 144 113 144 140 Z" fill="#f5a623"/>
+      <rect x="56" y="153" width="80" height="7" rx="3.5" fill="#f5a623" opacity="0.42"/>
+      <rect x="64" y="164" width="56" height="6" rx="3" fill="#f5a623" opacity="0.24"/>
+    </svg>
+
+    <div class="portal-brand">Du Lịch Cali</div>
+    <span class="portal-tag">Staff Portal · Nhân Viên</span>
+  </header>
+
+  <nav class="portal-cards" aria-label="Login options">
+
+    <!-- Driver -->
+    <a class="portal-card" href="/driver-login">
+      <div class="card-icon">
+        <!-- Steering wheel icon -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="#f5a623" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <circle cx="12" cy="12" r="3"/>
+          <line x1="12" y1="2"  x2="12" y2="9"/>
+          <line x1="4.2" y1="16.5" x2="10.1" y2="13.5"/>
+          <line x1="19.8" y1="16.5" x2="13.9" y2="13.5"/>
+        </svg>
+      </div>
+      <div class="card-body">
+        <div class="card-title">Tài Xế</div>
+        <div class="card-sub">Driver Login</div>
+      </div>
+      <svg class="card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <line x1="5" y1="12" x2="19" y2="12"/>
+        <polyline points="12 5 19 12 12 19"/>
+      </svg>
+    </a>
+
+    <!-- Vendor -->
+    <a class="portal-card portal-card--vendor" href="/vendor-login">
+      <div class="card-icon">
+        <!-- Store/shop icon -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="#f5a623" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </div>
+      <div class="card-body">
+        <div class="card-title">Nhà Cung Cấp</div>
+        <div class="card-sub">Vendor Login</div>
+      </div>
+      <svg class="card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <line x1="5" y1="12" x2="19" y2="12"/>
+        <polyline points="12 5 19 12 12 19"/>
+      </svg>
+    </a>
+
+  </nav>
+
+  <p class="portal-footer">Chỉ dành cho nhân viên được ủy quyền &nbsp;·&nbsp; Authorized staff only</p>
+
+</body>
+</html>

@@ -244,30 +244,140 @@
           role: 'Owner'
         }
       ],
+      staff: [
+        {
+          name: 'Amy',
+          active: true,
+          role: 'Senior Nail Tech',
+          specialties: ['Manicure', 'Pedicure', 'Gel Color', 'Acrylic Full Set', 'Ombre', 'Nail Art'],
+          assignedServices: ['Classic Manicure', 'Gel Manicure', 'French Manicure', 'Spa Manicure', 'Classic Pedicure', 'Spa Pedicure', 'Gel Pedicure', 'Acrylic Full Set', 'Acrylic Fill', 'Ombre Acrylic Full Set', 'Gel Polish on Hands', 'Gel Polish on Feet', 'Basic Nail Art', 'Advanced Nail Art', 'Chrome Add-On', 'Nail Repair'],
+          schedule: {
+            mon: { active: true,  start: '09:30', end: '19:30' },
+            tue: { active: true,  start: '09:30', end: '19:30' },
+            wed: { active: true,  start: '09:30', end: '19:30' },
+            thu: { active: true,  start: '09:30', end: '19:30' },
+            fri: { active: true,  start: '09:30', end: '19:30' },
+            sat: { active: true,  start: '09:00', end: '19:00' },
+            sun: { active: true,  start: '10:00', end: '18:00' }
+          }
+        },
+        {
+          name: 'Lily',
+          active: true,
+          role: 'Nail Tech',
+          specialties: ['Manicure', 'Pedicure', 'Gel Nails', 'Dip Powder'],
+          assignedServices: ['Classic Manicure', 'Express Manicure', 'Gel Manicure', 'Classic Pedicure', 'Spa Pedicure', 'Gel Pedicure', 'Dip Powder Natural Nails', 'Dip Powder with Tips', 'Nail Repair', 'Paraffin Wax Hands', 'Paraffin Wax Feet'],
+          schedule: {
+            mon: { active: true,  start: '09:30', end: '19:30' },
+            tue: { active: true,  start: '09:30', end: '19:30' },
+            wed: { active: true,  start: '09:30', end: '19:30' },
+            thu: { active: true,  start: '09:30', end: '19:30' },
+            fri: { active: true,  start: '09:30', end: '19:30' },
+            sat: { active: true,  start: '09:00', end: '19:00' },
+            sun: { active: false, start: '10:00', end: '18:00' }
+          }
+        }
+      ],
+      features: [
+        'Nail salon chuyên nghiệp tại Little Saigon',
+        'Sản phẩm an toàn, không độc hại',
+        'Không gian thoải mái, sang trọng',
+        'Thợ lành nghề, tỉ mỉ từng chi tiết',
+        'Nhận walk-in và đặt lịch trước'
+      ],
       description:
         'Điểm đến làm đẹp tin cậy tại Quận Cam. Không gian thoải mái, sản phẩm an toàn, thợ lành nghề.',
       heroImage: '/images/unsplash/nails-manicure.jpg',
       heroGradient:
         'linear-gradient(135deg,#be185d 0%,#db2777 40%,#7c3aed 100%)',
+      // ── Full service catalog — all active:false by default ─────────────────
+      // Enable individual services from vendor admin (salon-admin.html)
+      // Public page and AI only show active:true services (fetched from Firestore)
+      services: [
+        // ── MANICURE ──────────────────────────────────────────────────────────
+        { category:'manicure', name:'Classic Manicure',      price:'$18+', priceFrom:18, duration:'45 min', durationMins:45,  active:true,  assignedStaff:[], imageUrl:_IM_MANI, desc:'Traditional manicure — nail shaping, cuticle care, hand massage, and polish of your choice.' },
+        { category:'manicure', name:'Express Manicure',      price:'',     priceFrom:0,  duration:'30 min', durationMins:30,  active:false, assignedStaff:[], imageUrl:_IM_MANI, desc:'Quick nail clean-up, shape, and polish. Perfect for a fast refresh on the go.' },
+        { category:'manicure', name:'Spa Manicure',          price:'',     priceFrom:0,  duration:'60 min', durationMins:60,  active:false, assignedStaff:[], imageUrl:_IM_MANI, desc:'Relaxing manicure with exfoliation, mask, hot towel wrap, and extended hand massage.' },
+        { category:'manicure', name:'Deluxe Manicure',       price:'',     priceFrom:0,  duration:'75 min', durationMins:75,  active:false, assignedStaff:[], imageUrl:_IM_MANI, desc:'Premium manicure with sugar scrub, paraffin dip, mask, deep conditioning, and polish.' },
+        { category:'manicure', name:'Gel Manicure',          price:'$30+', priceFrom:30, duration:'60 min', durationMins:60,  active:true,  assignedStaff:[], imageUrl:_IM_GEL,  desc:'Long-lasting gel polish that stays chip-free for 2–3 weeks. Cured under UV light.' },
+        { category:'manicure', name:'French Manicure',       price:'',     priceFrom:0,  duration:'50 min', durationMins:50,  active:false, assignedStaff:[], imageUrl:_IM_MANI, desc:'Classic white-tip French style — elegant and timeless for any occasion.' },
+        { category:'manicure', name:'American Manicure',     price:'',     priceFrom:0,  duration:'50 min', durationMins:50,  active:false, assignedStaff:[], imageUrl:_IM_MANI, desc:'Softer, more natural look than French — sheer pink base with ivory tips.' },
+        { category:'manicure', name:'Paraffin Manicure',     price:'',     priceFrom:0,  duration:'60 min', durationMins:60,  active:false, assignedStaff:[], imageUrl:_IM_MANI, desc:'Manicure with warm paraffin wax dip to deeply moisturize and soften hands.' },
+        // ── PEDICURE ──────────────────────────────────────────────────────────
+        { category:'pedicure', name:'Classic Pedicure',          price:'$28+', priceFrom:28, duration:'60 min',  durationMins:60,  active:true,  assignedStaff:[], imageUrl:_IM_PEDI, desc:'Essential foot care — soak, scrub, nail shaping, cuticle clean, and polish.' },
+        { category:'pedicure', name:'Express Pedicure',          price:'',     priceFrom:0,  duration:'40 min',  durationMins:40,  active:false, assignedStaff:[], imageUrl:_IM_PEDI, desc:'Quick pedicure with soak, shape, and polish. Perfect for a fast touch-up.' },
+        { category:'pedicure', name:'Spa Pedicure',              price:'',     priceFrom:0,  duration:'75 min',  durationMins:75,  active:false, assignedStaff:[], imageUrl:_IM_PEDI, desc:'Relaxing spa treatment with sea salt soak, mask, and hot stone massage.' },
+        { category:'pedicure', name:'Deluxe Pedicure',           price:'',     priceFrom:0,  duration:'90 min',  durationMins:90,  active:false, assignedStaff:[], imageUrl:_IM_PEDI, desc:'Premium pedicure with scrub, callus removal, mask, paraffin, and deep massage.' },
+        { category:'pedicure', name:'Luxury Pedicure',           price:'',     priceFrom:0,  duration:'105 min', durationMins:105, active:false, assignedStaff:[], imageUrl:_IM_PEDI, desc:'Our most indulgent treatment — collagen soak, crystal mask, paraffin, and gel polish.' },
+        { category:'pedicure', name:'Gel Pedicure',              price:'',     priceFrom:0,  duration:'75 min',  durationMins:75,  active:false, assignedStaff:[], imageUrl:_IM_PEDI, desc:'Pedicure with long-lasting gel polish that stays vibrant for 3–4 weeks.' },
+        { category:'pedicure', name:'Jelly Pedicure',            price:'',     priceFrom:0,  duration:'90 min',  durationMins:90,  active:false, assignedStaff:[], imageUrl:_IM_PEDI, desc:'Fun fizzing jelly soak that softens skin for a deeply moisturizing experience.' },
+        { category:'pedicure', name:'Callus Treatment Pedicure', price:'',     priceFrom:0,  duration:'90 min',  durationMins:90,  active:false, assignedStaff:[], imageUrl:_IM_PEDI, desc:'Targeted callus removal with medical-grade file and intensive softening treatment.' },
+        { category:'pedicure', name:'Paraffin Pedicure',         price:'',     priceFrom:0,  duration:'80 min',  durationMins:80,  active:false, assignedStaff:[], imageUrl:_IM_PEDI, desc:'Pedicure with warm paraffin wax boot for ultra-soft, deeply moisturized feet.' },
+        // ── ACRYLIC / ENHANCEMENTS ────────────────────────────────────────────
+        { category:'acrylic', name:'Acrylic Full Set',       price:'$40+', priceFrom:40, duration:'75 min', durationMins:75,  active:true,  assignedStaff:[], imageUrl:_IM_ACRY, desc:'Full set of acrylic nails for strength and length. Choose your shape and color.' },
+        { category:'acrylic', name:'Acrylic Fill',           price:'',     priceFrom:0,  duration:'50 min', durationMins:50,  active:false, assignedStaff:[], imageUrl:_IM_ACRY, desc:'Fill in nail growth to maintain your acrylic set — recommended every 2–3 weeks.' },
+        { category:'acrylic', name:'Pink & White Full Set',  price:'',     priceFrom:0,  duration:'90 min', durationMins:90,  active:false, assignedStaff:[], imageUrl:_IM_ACRY, desc:'Classic two-tone acrylic with pink body and white tips — no polish needed.' },
+        { category:'acrylic', name:'Pink & White Fill',      price:'',     priceFrom:0,  duration:'60 min', durationMins:60,  active:false, assignedStaff:[], imageUrl:_IM_ACRY, desc:'Fill in your Pink & White acrylic growth. Keep that flawless look every 2–3 weeks.' },
+        { category:'acrylic', name:'Ombre Acrylic Full Set', price:'$55+', priceFrom:55, duration:'90 min', durationMins:90,  active:true,  assignedStaff:[], imageUrl:_IM_ACRY, desc:'Gradient fade acrylic — smooth color transition from base to tip.' },
+        { category:'acrylic', name:'Ombre Acrylic Fill',     price:'',     priceFrom:0,  duration:'60 min', durationMins:60,  active:false, assignedStaff:[], imageUrl:_IM_ACRY, desc:'Fill in your ombre acrylic to keep the gradient fade looking fresh.' },
+        { category:'acrylic', name:'Color Powder Full Set',  price:'',     priceFrom:0,  duration:'90 min', durationMins:90,  active:false, assignedStaff:[], imageUrl:_IM_ACRY, desc:'Acrylic full set using vibrant colored acrylic powder — no polish needed.' },
+        { category:'acrylic', name:'Color Powder Fill',      price:'',     priceFrom:0,  duration:'60 min', durationMins:60,  active:false, assignedStaff:[], imageUrl:_IM_ACRY, desc:'Fill in your color powder acrylic — keep the color bold and fresh.' },
+        // ── GEL / GEL EXTENSIONS ──────────────────────────────────────────────
+        { category:'gel', name:'Gel Polish Change',          price:'',     priceFrom:0,  duration:'45 min', durationMins:45,  active:false, assignedStaff:[], imageUrl:_IM_GEL, desc:'Remove old gel and apply fresh color — clean, fast, and chip-free for 2–3 weeks.' },
+        { category:'gel', name:'Gel Polish on Hands',        price:'$30+', priceFrom:30, duration:'60 min', durationMins:60,  active:true,  assignedStaff:[], imageUrl:_IM_GEL, desc:'Gel polish on natural nails — beautiful chip-free color that lasts 2–3 weeks.' },
+        { category:'gel', name:'Gel Polish on Feet',         price:'',     priceFrom:0,  duration:'60 min', durationMins:60,  active:false, assignedStaff:[], imageUrl:_IM_GEL, desc:'Gel polish on toenails — vibrant and long-lasting for up to 4 weeks.' },
+        { category:'gel', name:'Builder Gel Full Set',       price:'',     priceFrom:0,  duration:'90 min', durationMins:90,  active:false, assignedStaff:[], imageUrl:_IM_GEL, desc:'Strong, flexible builder gel extensions — lighter than acrylic, natural look.' },
+        { category:'gel', name:'Builder Gel Fill',           price:'',     priceFrom:0,  duration:'60 min', durationMins:60,  active:false, assignedStaff:[], imageUrl:_IM_GEL, desc:'Fill in builder gel nail growth. Maintain your extensions every 2–3 weeks.' },
+        { category:'gel', name:'Hard Gel Full Set',          price:'',     priceFrom:0,  duration:'90 min', durationMins:90,  active:false, assignedStaff:[], imageUrl:_IM_GEL, desc:'Extremely durable hard gel extensions — ideal for those wanting maximum strength.' },
+        { category:'gel', name:'Hard Gel Fill',              price:'',     priceFrom:0,  duration:'60 min', durationMins:60,  active:false, assignedStaff:[], imageUrl:_IM_GEL, desc:'Fill in hard gel nail growth — keep extensions strong and looking fresh.' },
+        { category:'gel', name:'Gel X / Soft Gel Extensions',price:'',     priceFrom:0,  duration:'90 min', durationMins:90,  active:false, assignedStaff:[], imageUrl:_IM_GEL, desc:'Full-cover soft gel tips — lightweight, flexible, no drill needed.' },
+        // ── DIP POWDER ────────────────────────────────────────────────────────
+        { category:'dip', name:'Dip Powder Natural Nails',   price:'',     priceFrom:0,  duration:'60 min', durationMins:60,  active:false, assignedStaff:[], imageUrl:_IM_MANI, desc:'Dip powder on natural nails — no UV light needed, odorless, lasts 3–4 weeks.' },
+        { category:'dip', name:'Dip Powder with Tips',       price:'',     priceFrom:0,  duration:'75 min', durationMins:75,  active:false, assignedStaff:[], imageUrl:_IM_MANI, desc:'Dip powder over nail tips for added length — durable and natural-looking.' },
+        { category:'dip', name:'Dip Powder Ombre',           price:'',     priceFrom:0,  duration:'75 min', durationMins:75,  active:false, assignedStaff:[], imageUrl:_IM_MANI, desc:'Gradient ombre effect using dip powder — fade between two or more colors.' },
+        { category:'dip', name:'Dip Powder Removal',         price:'',     priceFrom:0,  duration:'30 min', durationMins:30,  active:false, assignedStaff:[], imageUrl:_IM_MANI, desc:'Safe dip powder removal — gentle process that protects your natural nails.' },
+        // ── NAIL ART / DESIGN ─────────────────────────────────────────────────
+        { category:'nailart', name:'Basic Nail Art',         price:'$8+',  priceFrom:8,  duration:'+20 min', durationMins:20, active:true,  assignedStaff:[], imageUrl:_IM_ART, desc:'Simple designs — dots, stripes, flowers, geometric. Add to any service.' },
+        { category:'nailart', name:'Advanced Nail Art',      price:'',     priceFrom:0,  duration:'+40 min', durationMins:40, active:false, assignedStaff:[], imageUrl:_IM_ART, desc:'Detailed designs — marble, abstract, detailed florals. Hand-painted artistry.' },
+        { category:'nailart', name:'Custom Nail Art',        price:'',     priceFrom:0,  duration:'by quote', durationMins:0, active:false, assignedStaff:[], imageUrl:_IM_ART, desc:'Fully custom design from your inspiration — consult with our nail artist.' },
+        { category:'nailart', name:'French Tip Add-On',      price:'',     priceFrom:0,  duration:'+15 min', durationMins:15, active:false, assignedStaff:[], imageUrl:_IM_ART, desc:'Add a classic white French tip to any manicure or pedicure service.' },
+        { category:'nailart', name:'Ombre Add-On',           price:'',     priceFrom:0,  duration:'+25 min', durationMins:25, active:false, assignedStaff:[], imageUrl:_IM_ART, desc:'Smooth color-fade gradient — one or multiple color fade.' },
+        { category:'nailart', name:'Chrome Add-On',          price:'',     priceFrom:0,  duration:'+15 min', durationMins:15, active:false, assignedStaff:[], imageUrl:_IM_ART, desc:'Mirror chrome powder for an ultra-glossy metallic finish — silver, gold, rose.' },
+        { category:'nailart', name:'Cat Eye Add-On',         price:'',     priceFrom:0,  duration:'+15 min', durationMins:15, active:false, assignedStaff:[], imageUrl:_IM_ART, desc:'Magnetic cat eye effect — subtle shimmer line that shifts with the light.' },
+        { category:'nailart', name:'Rhinestones Add-On',     price:'',     priceFrom:0,  duration:'+20 min', durationMins:20, active:false, assignedStaff:[], imageUrl:_IM_ART, desc:'Crystal rhinestone accents for a glamorous, sparkly nail look.' },
+        { category:'nailart', name:'3D Nail Art',            price:'',     priceFrom:0,  duration:'+45 min', durationMins:45, active:false, assignedStaff:[], imageUrl:_IM_ART, desc:'Raised 3D designs using gel or acrylic — flowers, bows, and sculptured art.' },
+        { category:'nailart', name:'Hand-Painted Design',    price:'',     priceFrom:0,  duration:'+35 min', durationMins:35, active:false, assignedStaff:[], imageUrl:_IM_ART, desc:'Freehand painted art on nails — portraits, landscapes, illustrations, and more.' },
+        // ── ADD-ONS / CARE ────────────────────────────────────────────────────
+        { category:'addon', name:'Nail Repair',              price:'',     priceFrom:0,  duration:'+15 min', durationMins:15, active:false, assignedStaff:[], imageUrl:_IM_CARE, desc:'Fix one broken or lifted nail — quick repair without a full redo.' },
+        { category:'addon', name:'Nail Removal (Acrylic)',   price:'',     priceFrom:0,  duration:'30 min',  durationMins:30, active:false, assignedStaff:[], imageUrl:_IM_CARE, desc:'Safe acrylic nail removal to protect your natural nails underneath.' },
+        { category:'addon', name:'Nail Removal (Gel)',       price:'',     priceFrom:0,  duration:'30 min',  durationMins:30, active:false, assignedStaff:[], imageUrl:_IM_CARE, desc:'Gentle soak-off removal of gel polish or gel extensions.' },
+        { category:'addon', name:'Nail Removal (Dip)',       price:'',     priceFrom:0,  duration:'30 min',  durationMins:30, active:false, assignedStaff:[], imageUrl:_IM_CARE, desc:'Careful dip powder removal that keeps natural nails intact.' },
+        { category:'addon', name:'Cuticle Care',             price:'',     priceFrom:0,  duration:'+15 min', durationMins:15, active:false, assignedStaff:[], imageUrl:_IM_CARE, desc:'Detailed cuticle trimming and conditioning treatment — add to any service.' },
+        { category:'addon', name:'Hand Massage',             price:'',     priceFrom:0,  duration:'+15 min', durationMins:15, active:false, assignedStaff:[], imageUrl:_IM_CARE, desc:'Relaxing hand and wrist massage with lotion — add to any manicure.' },
+        { category:'addon', name:'Foot Massage',             price:'',     priceFrom:0,  duration:'+15 min', durationMins:15, active:false, assignedStaff:[], imageUrl:_IM_CARE, desc:'Stress-relieving foot and calf massage with oil — add to any pedicure.' },
+        { category:'addon', name:'Paraffin Wax Hands',       price:'',     priceFrom:0,  duration:'+20 min', durationMins:20, active:false, assignedStaff:[], imageUrl:_IM_CARE, desc:'Warm paraffin wax dip for hands — deeply moisturizes and softens skin.' },
+        { category:'addon', name:'Paraffin Wax Feet',        price:'',     priceFrom:0,  duration:'+20 min', durationMins:20, active:false, assignedStaff:[], imageUrl:_IM_CARE, desc:'Warm paraffin wax boot for feet — ultra-soft skin and deep hydration.' },
+        { category:'addon', name:'Callus Removal Add-On',    price:'',     priceFrom:0,  duration:'+20 min', durationMins:20, active:false, assignedStaff:[], imageUrl:_IM_CARE, desc:'Targeted callus and rough skin removal — add to any pedicure service.' },
+        { category:'addon', name:'Extra Length Add-On',      price:'',     priceFrom:0,  duration:'+15 min', durationMins:15, active:false, assignedStaff:[], imageUrl:_IM_CARE, desc:'Add extra length to any nail enhancement — choose your preferred type.' },
+        { category:'addon', name:'Shape Change Add-On',      price:'',     priceFrom:0,  duration:'+15 min', durationMins:15, active:false, assignedStaff:[], imageUrl:_IM_CARE, desc:'Reshape existing nails to a different shape — square, oval, coffin, almond, etc.' }
+      ],
       serviceCategories: [
         { key: 'manicure', label: 'Manicure' },
         { key: 'pedicure', label: 'Pedicure' },
-        { key: 'gel',      label: 'Gel Color' },
         { key: 'acrylic',  label: 'Acrylic & Ombre' },
-        { key: 'nailart',  label: 'Nail Art' }
-      ],
-      services: [
-        { name: 'Manicure',        category: 'manicure', durationMins: 40, price: '$18+', duration: '40 phút',      desc: 'Chăm sóc và làm đẹp móng tay',      imageUrl: _IM_MANI },
-        { name: 'Pedicure',        category: 'pedicure', durationMins: 55, price: '$28+', duration: '55 phút',      desc: 'Chăm sóc và làm đẹp móng chân',    imageUrl: _IM_PEDI },
-        { name: 'Gel Color',       category: 'gel',      durationMins: 55, price: '$30+', duration: '55 phút',      desc: 'Sơn gel bền và đẹp',                imageUrl: _IM_GEL  },
-        { name: 'Full Set Acrylic',category: 'acrylic',  durationMins: 70, price: '$40+', duration: '70 phút',      desc: 'Bộ móng acrylic đầy đủ',            imageUrl: _IM_ACRY },
-        { name: 'Ombre Nails',     category: 'acrylic',  durationMins: 90, price: '$55+', duration: '90 phút',      desc: 'Móng gradient màu sắc hiện đại',    imageUrl: _IM_ACRY },
-        { name: 'Nail Art Design', category: 'nailart',  durationMins: 60, price: '$8+',  duration: 'Tùy thiết kế', desc: 'Nghệ thuật trang trí móng',         imageUrl: _IM_ART  }
+        { key: 'gel',      label: 'Gel Color' },
+        { key: 'dip',      label: 'Dip Powder' },
+        { key: 'nailart',  label: 'Nail Art' },
+        { key: 'addon',    label: 'Add-ons / Care' }
       ],
       hours: {
-        'Thứ 2–6':  '9:30 AM – 7:30 PM',
-        'Thứ 7':    '9:00 AM – 7:00 PM',
-        'Chủ Nhật': '10:00 AM – 6:00 PM'
+        'Mon': '9:30 AM – 7:30 PM',
+        'Tue': '9:30 AM – 7:30 PM',
+        'Wed': '9:30 AM – 7:30 PM',
+        'Thu': '9:30 AM – 7:30 PM',
+        'Fri': '9:30 AM – 7:30 PM',
+        'Sat': '9:00 AM – 7:00 PM',
+        'Sun': '10:00 AM – 6:00 PM'
       },
       bookingEnabled: true,
       bookingType: 'appointment',
@@ -276,10 +386,10 @@
         enabled: true,
         name: 'Amy',
         welcomeMessage:
-          'Chào mừng đến Beauty Nails OC! Tôi là Amy, sẵn sàng hỗ trợ đặt lịch hoặc giải đáp thắc mắc. Bạn muốn biết gì ạ?',
-        quickReplies: ['Bảng giá', 'Đặt lịch hẹn', 'Giờ hoạt động', 'Dịch vụ'],
+          'Hi! I\'m Amy, your AI receptionist at Beauty Nails OC in Westminster. I can help with services, pricing, availability, and booking.\n\nTambién hablo español · Tôi cũng nói tiếng Việt',
+        quickReplies: ['Services & Pricing', 'Book an Appointment', "Who's available today?", '¿Servicios y precios?', 'Bảng giá'],
         systemExtra:
-          'You are Amy, receptionist for Beauty Nails OC in Westminster Orange County. Contact: Du Lịch Cali 408-916-3439. Specializes in nail services. Always warm and professional.'
+          'You are Amy, AI receptionist for Beauty Nails OC in Westminster, Orange County (Little Saigon area). Contact: 408-916-3439. Always warm, professional, and direct. You are fluent in English, Spanish, and Vietnamese — respond in the customer\'s language. Only quote services and prices from the SERVICES section above. For anything not listed, say "please call for current pricing." You also serve as a voice receptionist — keep responses natural and concise.'
       }
     },
 

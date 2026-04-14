@@ -2142,8 +2142,8 @@
       } else if (_allIds2.length === 1) {
         VENDOR_ID = _allIds2[0];
       } else if (_allIds2.length > 1) {
-        // Show redirect-based picker (reuse salon-admin picker via vendor-login)
-        window.location.href = 'vendor-login.html';
+        // Multiple stores — show inline picker overlay (no redirect loop)
+        _showVendorPicker(_allIds2, _d2.role || 'owner');
         return;
       } else {
         VENDOR_ID = _d2.vendorId || null;
@@ -2162,7 +2162,7 @@
         var cat = vdata.category || vdata.vendorType || VENDOR_CATEGORY_FALLBACK[VENDOR_ID] || 'food';
         // Salon vendors (nails/hair) have their own dedicated admin
         if (cat === 'nails' || cat === 'hair') {
-          window.location.href = 'salon-admin.html';
+          window.location.href = 'salon-admin.html?id=' + encodeURIComponent(VENDOR_ID);
           return;
         }
         var bizName = vdata.businessName || vdata.name || VENDOR_ID;
@@ -2199,6 +2199,65 @@
       goToLogin(null);
     });
   });
+
+  // ── Vendor picker overlay (multi-store owners with no ?id= target) ──────────
+  function _showVendorPicker(vendorIds, role) {
+    var overlay = document.createElement('div');
+    overlay.id = 'vendorPickerOverlay';
+    overlay.style.cssText = [
+      'position:fixed;inset:0;background:rgba(13,47,80,.97);z-index:99999;',
+      'display:flex;flex-direction:column;align-items:center;justify-content:center;',
+      'padding:2rem 1.25rem;font-family:var(--font-b,sans-serif);'
+    ].join('');
+    overlay.innerHTML = [
+      '<div style="max-width:400px;width:100%;text-align:center;">',
+        '<div style="font-size:1.4rem;font-weight:700;color:#f5a623;margin-bottom:.4rem;">✦ Du Lịch Cali</div>',
+        '<div style="font-size:.9rem;color:#c8e4f8;margin-bottom:1.5rem;">Select the store you want to manage:</div>',
+        '<div id="vpGrid" style="display:flex;flex-direction:column;gap:.75rem;"></div>',
+        '<button onclick="auth.signOut().then(function(){window.location.href=\'vendor-login.html\';})" ',
+          'style="margin-top:1.5rem;background:transparent;border:1px solid rgba(255,255,255,.2);',
+          'color:#6ab0d4;border-radius:8px;padding:.5rem 1.25rem;cursor:pointer;font-size:.8rem;">',
+          'Sign Out</button>',
+      '</div>'
+    ].join('');
+    document.body.appendChild(overlay);
+    var grid = document.getElementById('vpGrid');
+    vendorIds.forEach(function(vid) {
+      db.collection('vendors').doc(vid).get().then(function(vdoc) {
+        var vdata    = vdoc.exists ? vdoc.data() : {};
+        var name     = vdata.businessName || vdata.name || vid;
+        var cat      = vdata.category || '';
+        var catLabel = cat === 'nails' ? 'Nail Salon' : cat === 'hair' ? 'Hair Salon' : cat === 'food' ? 'Food Vendor' : cat;
+        var btn = document.createElement('button');
+        btn.style.cssText = [
+          'background:rgba(255,255,255,.07);border:1px solid rgba(245,166,35,.3);',
+          'border-radius:12px;padding:1rem 1.25rem;cursor:pointer;text-align:left;',
+          'color:#c8e4f8;transition:background .15s;width:100%;'
+        ].join('');
+        btn.innerHTML = [
+          '<div style="font-weight:600;font-size:.95rem;color:#f5a623;">' + name + '</div>',
+          catLabel ? '<div style="font-size:.78rem;color:#6ab0d4;margin-top:.15rem;">' + catLabel + '</div>' : ''
+        ].join('');
+        btn.onmouseover = function() { btn.style.background = 'rgba(245,166,35,.12)'; };
+        btn.onmouseout  = function() { btn.style.background = 'rgba(255,255,255,.07)'; };
+        btn.onclick = function() {
+          try { sessionStorage.setItem('dlc_vendor_id', vid); } catch(e) {}
+          var page = (cat === 'nails' || cat === 'hair') ? 'salon-admin.html' : 'vendor-admin.html';
+          window.location.href = page + '?id=' + encodeURIComponent(vid);
+        };
+        grid.appendChild(btn);
+      }).catch(function() {
+        var btn = document.createElement('button');
+        btn.style.cssText = 'background:rgba(255,255,255,.07);border:1px solid rgba(245,166,35,.3);border-radius:12px;padding:1rem;cursor:pointer;color:#c8e4f8;width:100%;';
+        btn.textContent = vid;
+        btn.onclick = function() {
+          try { sessionStorage.setItem('dlc_vendor_id', vid); } catch(e) {}
+          window.location.href = 'vendor-admin.html?id=' + encodeURIComponent(vid);
+        };
+        grid.appendChild(btn);
+      });
+    });
+  }
 
   function logout() {
     if (unsubMenu)   unsubMenu();

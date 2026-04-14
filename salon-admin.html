@@ -2855,8 +2855,12 @@
         <span id="pmSumBeforeTip" class="pm-summary-val"></span>
       </div>
       <div class="pm-summary-row" id="pmSumTipRow" style="display:none">
-        <span class="pm-summary-label" style="color:#fbbf24" data-i18n="pay_tip">Tip</span>
+        <span class="pm-summary-label" style="color:#fbbf24" data-i18n="pay_tip">Tip (digital)</span>
         <span id="pmSumTip" class="pm-summary-val" style="color:#fbbf24"></span>
+      </div>
+      <div class="pm-summary-row" id="pmSumCashTipRow" style="display:none">
+        <span class="pm-summary-label" style="color:#4ade80">Cash Tip</span>
+        <span id="pmSumCashTip" class="pm-summary-val" style="color:#4ade80"></span>
       </div>
       <div class="pm-summary-row pm-summary-row--balance" id="pmSumGrandRow" style="display:none">
         <span class="pm-summary-label" style="color:var(--cream);font-weight:700;font-size:.68rem" data-i18n="pay_final">Final Total</span>
@@ -2934,6 +2938,15 @@
     </div>
     <!-- Tip suggestion buttons (rendered by openPaymentModal when price is known) -->
     <div id="pmTipBtns" class="pm-tip-btns" style="display:none"></div>
+    <!-- Cash tip input — separate tracking for tips received in cash (e.g. card payment + cash tip) -->
+    <div id="pmCashTipRow" style="display:none;margin-top:-.3rem;margin-bottom:.6rem">
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <span style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);white-space:nowrap">Cash Tip $</span>
+        <input class="sa-input" id="pmCashTip" type="number" min="0" step="0.01" placeholder="0.00"
+          style="width:90px;height:34px;font-size:.82rem;padding:0 8px" oninput="_updatePmBalance()">
+        <span style="font-size:.62rem;color:var(--muted);line-height:1.3">tracked<br>separately</span>
+      </div>
+    </div>
     <div class="pm-group">
       <label class="pm-label" data-i18n="pay_method_lbl">Phương thức</label>
       <select class="sa-input" id="pmMethod" style="width:100%;height:38px;padding:0 8px" onchange="_onPmMethodChange()">
@@ -5140,6 +5153,12 @@
       if (tipRowEl)   tipRowEl.style.display = 'none';
       if (grandRowEl) grandRowEl.style.display = 'none';
     }
+    // ── Separate cash tip display ────────────────────────────────────────────────
+    var cashTipDisp    = parseFloat((document.getElementById('pmCashTip') || {}).value) || 0;
+    var cashTipRowDisp = document.getElementById('pmSumCashTipRow');
+    var cashTipElDisp  = document.getElementById('pmSumCashTip');
+    if (cashTipRowDisp) cashTipRowDisp.style.display = cashTipDisp > 0 ? 'flex' : 'none';
+    if (cashTipElDisp && cashTipDisp > 0) cashTipElDisp.textContent = '$' + cashTipDisp.toFixed(2);
 
     // ── Active tip button highlight (based on discounted subtotal) ────────────
     [15, 20, 25].forEach(function(pct) {
@@ -5182,6 +5201,25 @@
     var tip = Math.round(total * pct) / 100;
     document.getElementById('pmTip').value = tip.toFixed(2);
     _updatePmBalance();
+  }
+
+  // Toggle the separate cash tip input. Called by the 4th "Cash Tip" button.
+  // Used when a customer pays by card/Zelle/Venmo but tips in cash separately.
+  function _toggleCashTip() {
+    var row = document.getElementById('pmCashTipRow');
+    var btn = document.getElementById('pmTipBtnCash');
+    if (!row) return;
+    var isOpen = row.style.display !== 'none';
+    row.style.display = isOpen ? 'none' : '';
+    if (btn) btn.classList.toggle('pm-tip-btn--active', !isOpen);
+    if (!isOpen) {
+      var inp = document.getElementById('pmCashTip');
+      if (inp) inp.focus();
+    } else {
+      var inp = document.getElementById('pmCashTip');
+      if (inp) { inp.value = ''; }
+      _updatePmBalance();
+    }
   }
 
   // ── AI pricing guide (local lookup — no external API) ────────────────────────
@@ -5352,7 +5390,9 @@
           var tipAmt = Math.round(priceTotal * pct) / 100;
           return '<button class="pm-tip-btn" id="pmTipBtn' + pct + '" onclick="_pickTip(' + pct + ')">' +
             pct + '%<br><span style="font-weight:400;opacity:.8">$' + tipAmt.toFixed(2) + '</span></button>';
-        }).join('');
+        }).join('') +
+        '<button class="pm-tip-btn" id="pmTipBtnCash" onclick="_toggleCashTip()" title="Record a separate cash tip">' +
+          'Cash<br><span style="font-weight:400;opacity:.8">Tip</span></button>';
       } else {
         tipBtnsEl.style.display = 'none';
         tipBtnsEl.innerHTML = '';
@@ -5363,7 +5403,15 @@
     // Restore saved status (including 'paid'/'partial') when re-opening a prior payment.
     document.getElementById('pmStatus').value = b.paymentStatus || 'unpaid';
     document.getElementById('pmAmount').value  = b.amountPaid != null ? b.amountPaid : '';
-    document.getElementById('pmTip').value     = b.tipAmount   != null ? b.tipAmount   : '';
+    document.getElementById('pmTip').value     = b.nonCashTip  != null ? b.nonCashTip  : (b.tipAmount != null ? b.tipAmount : '');
+    // Restore separate cash tip (only meaningful when payment method is non-cash)
+    var _ctEl  = document.getElementById('pmCashTip');
+    var _ctRow = document.getElementById('pmCashTipRow');
+    var _ctBtn = document.getElementById('pmTipBtnCash');
+    var _savedCashTip = (b.cashTip && b.paymentMethod !== 'cash') ? Number(b.cashTip) : 0;
+    if (_ctEl)  _ctEl.value = _savedCashTip > 0 ? _savedCashTip.toFixed(2) : '';
+    if (_ctRow) _ctRow.style.display = _savedCashTip > 0 ? '' : 'none';
+    if (_ctBtn) _ctBtn.classList.toggle('pm-tip-btn--active', _savedCashTip > 0);
     // Populate method options from vendor config, then restore saved value
     var pmMethodEl = document.getElementById('pmMethod');
     pmMethodEl.innerHTML = _buildMethodOptions();
@@ -5742,8 +5790,10 @@
     _pmMsg('Đang lưu…', false);
 
     var fv = firebase.firestore.FieldValue;
-    // Part 2: track tip separately by payment type (cash vs non-cash)
-    var cashTip    = (method === 'cash') ? tip : 0;
+    // Separate cash tip entered via the 4th "Cash Tip" button (non-cash payment methods)
+    var cashTipInput = parseFloat((document.getElementById('pmCashTip') || {}).value) || 0;
+    // Track tip by type: cash payment → all tip is cash; digital payment → split by inputs
+    var cashTip    = (method === 'cash') ? tip : cashTipInput;
     var nonCashTip = (method && method !== 'cash') ? tip : 0;
     // Part 3: cash discount amount applied
     var cashDiscAmt = (method === 'cash' && _vendorCashDiscountPct > 0)
@@ -5756,9 +5806,9 @@
     var update = {
       paymentStatus:        payStatus,
       amountPaid:           amount,
-      tipAmount:            tip,           // backward-compat: total tip regardless of method
-      cashTip:              cashTip,       // Part 2: tip paid in cash
-      nonCashTip:           nonCashTip,    // Part 2: tip paid by card/digital/other
+      tipAmount:            tip + cashTipInput, // total tip (digital + separate cash)
+      cashTip:              cashTip,           // tip paid in cash
+      nonCashTip:           nonCashTip,        // tip paid by card/digital/Zelle/Venmo
       paymentMethod:        method || null,
       paymentNote:          note   || null,
       transactionRef:       null,
@@ -5769,7 +5819,7 @@
         action:        'payment_recorded',
         paymentStatus: payStatus,
         amountPaid:    amount,
-        tipAmount:     tip,
+        tipAmount:     tip + cashTipInput,
         cashTip:       cashTip,
         nonCashTip:    nonCashTip,
         cashDiscount:  cashDiscAmt,

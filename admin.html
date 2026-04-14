@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -849,14 +849,14 @@
   <div id="loginModal">
     <div class="pin-card">
       <div class="pin-brand">✦ Du Lịch Cali</div>
-      <h2>Trang Quản Trị</h2>
-      <p>Đăng nhập bằng tài khoản admin</p>
+      <h2>Admin Portal</h2>
+      <p>Sign in with your admin account</p>
       <input type="email" id="loginEmail" class="pin-input"
         placeholder="Email" autocomplete="email">
       <input type="password" id="loginPassword" class="pin-input"
-        placeholder="Mật khẩu" autocomplete="current-password">
+        placeholder="Password" autocomplete="current-password">
       <div class="pin-error" id="loginError"></div>
-      <button class="btn-primary" id="loginBtn" onclick="signIn()">Đăng nhập</button>
+      <button class="btn-primary" id="loginBtn" onclick="signIn()">Sign In</button>
     </div>
   </div>
 
@@ -866,16 +866,16 @@
       <div class="brand">✦ Du Lịch Cali Admin</div>
       <div style="display:flex;gap:0.75rem;align-items:center">
         <span class="badge" id="liveIndicator">Live</span>
-        <button class="btn-sm" onclick="logout()">Đăng xuất</button>
+        <button class="btn-sm" onclick="logout()">Sign Out</button>
       </div>
     </nav>
 
     <!-- Tab bar -->
     <div class="admin-tabs">
-      <button class="admin-tab active" onclick="switchTab('bookings')">Đặt Chỗ</button>
+      <button class="admin-tab active" onclick="switchTab('bookings')">Bookings</button>
       <button class="admin-tab" onclick="switchTab('vendors')">Vendors</button>
-      <button class="admin-tab" onclick="switchTab('drivers')">Tài Xế</button>
-      <button class="admin-tab" onclick="switchTab('revenue')">Doanh Thu</button>
+      <button class="admin-tab" onclick="switchTab('drivers')">Drivers</button>
+      <button class="admin-tab" onclick="switchTab('revenue')">Revenue</button>
     </div>
 
     <!-- ── TAB: Bookings ─────────────────────────────────── -->
@@ -883,8 +883,8 @@
       <!-- Booking list -->
       <div class="booking-list">
         <div class="list-header">
-          <span class="list-title">Đặt chỗ</span>
-          <span class="list-count" id="listCount">0 mục</span>
+          <span class="list-title">Bookings</span>
+          <span class="list-count" id="listCount">0 items</span>
         </div>
         <div class="list-scroll" id="bookingList"></div>
       </div>
@@ -893,7 +893,7 @@
       <div class="detail-panel" id="detailPanel">
         <div class="empty-state" id="emptyState">
           <div class="big-icon">◎</div>
-          <p>Chọn một đặt chỗ để xem chi tiết</p>
+          <p>Select a booking to view details</p>
         </div>
 
         <!-- Detail content (hidden until booking selected) -->
@@ -901,46 +901,46 @@
 
           <!-- Booking info -->
           <div class="detail-section">
-            <h3>Thông tin đặt chỗ</h3>
+            <h3>Booking Info</h3>
             <div class="info-grid">
               <div class="info-item">
-                <div class="info-label">Mã đặt chỗ</div>
+                <div class="info-label">Booking ID</div>
                 <div class="info-value mono" id="di-id">—</div>
               </div>
               <div class="info-item">
-                <div class="info-label">Trạng thái</div>
+                <div class="info-label">Status</div>
                 <div class="info-value" id="di-status">—</div>
               </div>
               <div class="info-item">
-                <div class="info-label">Khách hàng</div>
+                <div class="info-label">Customer</div>
                 <div class="info-value" id="di-name">—</div>
               </div>
               <div class="info-item">
-                <div class="info-label">Điện thoại</div>
+                <div class="info-label">Phone</div>
                 <div class="info-value" id="di-phone">—</div>
               </div>
               <div class="info-item">
-                <div class="info-label">Dịch vụ</div>
+                <div class="info-label">Service</div>
                 <div class="info-value" id="di-service">—</div>
               </div>
               <div class="info-item">
-                <div class="info-label">Thời gian</div>
+                <div class="info-label">Date / Time</div>
                 <div class="info-value" id="di-datetime">—</div>
               </div>
               <div class="info-item">
-                <div class="info-label">Từ</div>
+                <div class="info-label">From</div>
                 <div class="info-value" id="di-from">—</div>
               </div>
               <div class="info-item">
-                <div class="info-label">Đến</div>
+                <div class="info-label">To</div>
                 <div class="info-value" id="di-to">—</div>
               </div>
               <div class="info-item">
-                <div class="info-label">Số khách</div>
+                <div class="info-label">Passengers</div>
                 <div class="info-value" id="di-pax">—</div>
               </div>
               <div class="info-item">
-                <div class="info-label">Khoảng cách</div>
+                <div class="info-label">Distance</div>
                 <div class="info-value" id="di-dist">—</div>
               </div>
             </div>
@@ -948,7 +948,7 @@
 
           <!-- Status management -->
           <div class="detail-section">
-            <h3>Cập nhật trạng thái</h3>
+            <h3>Update Status</h3>
             <div class="status-actions" id="statusActions"></div>
           </div>
 
@@ -957,43 +957,43 @@
 
           <!-- Driver assignment (dynamic — loaded from Firestore drivers collection) -->
           <div class="detail-section">
-            <h3>Phân công tài xế</h3>
+            <h3>Assign Driver</h3>
             <div class="driver-select" id="driverSelectContainer">
-              <span style="font-size:0.75rem;color:var(--muted)">Đang tải tài xế…</span>
+              <span style="font-size:0.75rem;color:var(--muted)">Loading drivers…</span>
             </div>
             <div style="font-size:0.75rem;color:var(--muted);margin-top:0.6rem" id="driverStatus"></div>
           </div>
 
           <!-- ETA -->
           <div class="detail-section">
-            <h3>Thời gian dự kiến (ETA)</h3>
+            <h3>Estimated Arrival Time (ETA)</h3>
             <div class="eta-row">
               <input type="number" id="etaInput" class="eta-input" min="1" max="240" placeholder="—">
-              <span class="eta-label">phút</span>
-              <button class="btn-save" onclick="saveEta()">Lưu</button>
+              <span class="eta-label">min</span>
+              <button class="btn-save" onclick="saveEta()">Save</button>
             </div>
           </div>
 
           <!-- GPS Streaming -->
           <div class="detail-section">
-            <h3>GPS Streaming (từ điện thoại này)</h3>
+            <h3>GPS Streaming (from this device)</h3>
             <div class="gps-row">
-              <button class="btn-gps start" id="gpsStartBtn" onclick="startGps()">Bắt đầu GPS</button>
-              <button class="btn-gps stop" id="gpsStopBtn" onclick="stopGps()" style="display:none">Dừng GPS</button>
-              <span class="gps-status" id="gpsStatus">Chưa bắt đầu</span>
+              <button class="btn-gps start" id="gpsStartBtn" onclick="startGps()">Start GPS</button>
+              <button class="btn-gps stop" id="gpsStopBtn" onclick="stopGps()" style="display:none">Stop GPS</button>
+              <span class="gps-status" id="gpsStatus">Not started</span>
             </div>
             <div style="font-size:0.72rem;color:var(--muted);margin-top:0.6rem">
-              Mở trên điện thoại để phát vị trí thực tế cho khách theo dõi.
+              Open on your phone to broadcast live location for customer tracking.
             </div>
           </div>
 
           <!-- Tracking link -->
           <div class="detail-section">
-            <h3>Link theo dõi</h3>
+            <h3>Tracking Link</h3>
             <div class="link-row">
-              <a id="openTrackingBtn" href="#" target="_blank" class="btn-link">Mở trang theo dõi</a>
-              <button class="btn-link" onclick="copyTrackingLink()">Sao chép link</button>
-              <span class="copy-feedback hidden" id="copyFeedback">Đã sao chép!</span>
+              <a id="openTrackingBtn" href="#" target="_blank" class="btn-link">Open tracking page</a>
+              <button class="btn-link" onclick="copyTrackingLink()">Copy link</button>
+              <span class="copy-feedback hidden" id="copyFeedback">Copied!</span>
             </div>
           </div>
 
@@ -1004,7 +1004,7 @@
     <!-- ── TAB: Vendors ──────────────────────────────────── -->
     <div id="tabVendors" class="tab-panel">
       <div class="vendor-mgmt-wrap" id="vendorMgmtWrap">
-        <div style="font-size:0.8rem;color:var(--muted)">Đang tải danh sách vendors…</div>
+        <div style="font-size:0.8rem;color:var(--muted)">Loading vendor list…</div>
       </div>
     </div>
 
@@ -1014,35 +1014,35 @@
 
         <!-- Create driver form -->
         <div class="driver-create-form">
-          <h3>Tạo Tài Khoản Tài Xế Mới</h3>
+          <h3>Create New Driver Account</h3>
           <div class="driver-form-row">
             <div class="driver-form-field">
-              <label class="driver-form-label">Họ và tên</label>
-              <input class="driver-form-input" type="text" id="newDriverName" placeholder="Nguyễn Văn A">
+              <label class="driver-form-label">Full Name</label>
+              <input class="driver-form-input" type="text" id="newDriverName" placeholder="John Smith">
             </div>
             <div class="driver-form-field">
-              <label class="driver-form-label">Số điện thoại</label>
+              <label class="driver-form-label">Phone Number</label>
               <input class="driver-form-input" type="tel" id="newDriverPhone" placeholder="(408) 916-3439">
             </div>
             <div class="driver-form-field">
-              <label class="driver-form-label">Email đăng nhập</label>
+              <label class="driver-form-label">Login Email</label>
               <input class="driver-form-input" type="email" id="newDriverEmail" placeholder="driver@email.com" autocomplete="off">
             </div>
             <div class="driver-form-field" style="max-width:120px">
-              <label class="driver-form-label">Mã PIN (4–6 số)</label>
+              <label class="driver-form-label">PIN (4–6 digits)</label>
               <input class="driver-form-input" type="text" id="newDriverPin"
                 placeholder="e.g. 1234" inputmode="numeric" maxlength="6">
             </div>
-            <button class="btn-create-driver" id="btnCreateDriver" onclick="createDriver()">Tạo Tài Xế</button>
+            <button class="btn-create-driver" id="btnCreateDriver" onclick="createDriver()">Create Driver</button>
           </div>
           <div class="driver-form-error" id="driverFormError"></div>
         </div>
 
         <!-- Driver list -->
         <div class="driver-list-section">
-          <h3>Danh Sách Tài Xế</h3>
+          <h3>Driver List</h3>
           <div id="driverList">
-            <div style="font-size:0.8rem;color:var(--muted)">Đang tải…</div>
+            <div style="font-size:0.8rem;color:var(--muted)">Loading…</div>
           </div>
         </div>
 
@@ -1052,7 +1052,7 @@
     <!-- ── TAB: Revenue ──────────────────────────────────── -->
     <div id="tabRevenue" class="tab-panel">
       <div class="rev-panel" id="revPanel">
-        <div class="rev-loading">Đang tải dữ liệu doanh thu…</div>
+        <div class="rev-loading">Loading revenue data…</div>
       </div>
     </div>
 
@@ -1085,20 +1085,20 @@
       const errEl    = document.getElementById('loginError');
 
       if (!email || !password) {
-        errEl.textContent = 'Vui lòng nhập email và mật khẩu.';
+        errEl.textContent = 'Please enter your email and password.';
         return;
       }
       btn.disabled = true;
-      btn.textContent = 'Đang đăng nhập…';
+      btn.textContent = 'Signing in…';
       errEl.textContent = '';
 
       try {
         await firebase.auth().signInWithEmailAndPassword(email, password);
         // onAuthStateChanged below will reveal the app
       } catch (err) {
-        errEl.textContent = 'Email hoặc mật khẩu không đúng.';
+        errEl.textContent = 'Incorrect email or password.';
         btn.disabled = false;
-        btn.textContent = 'Đăng nhập';
+        btn.textContent = 'Sign In';
         document.getElementById('loginPassword').value = '';
       }
     }
@@ -1127,7 +1127,7 @@
         document.getElementById('app').classList.remove('visible');
         if (unsubscribeAll) { unsubscribeAll(); unsubscribeAll = null; }
         const btn = document.getElementById('loginBtn');
-        if (btn) { btn.disabled = false; btn.textContent = 'Đăng nhập'; }
+        if (btn) { btn.disabled = false; btn.textContent = 'Sign In'; }
       }
     });
 
@@ -1150,25 +1150,25 @@
     function renderList() {
       const container = document.getElementById('bookingList');
       const count = Object.keys(allBookings).length;
-      document.getElementById('listCount').textContent = `${count} mục`;
+      document.getElementById('listCount').textContent = `${count} items`;
 
       if (count === 0) {
-        container.innerHTML = '<div style="padding:2rem 1rem;text-align:center;color:var(--muted);font-size:0.82rem">Chưa có đặt chỗ nào.</div>';
+        container.innerHTML = '<div style="padding:2rem 1rem;text-align:center;color:var(--muted);font-size:0.82rem">No bookings yet.</div>';
         return;
       }
 
       container.innerHTML = Object.entries(allBookings).map(([id, data]) => {
         const dt = data.datetime ? new Date(data.datetime) : null;
-        const dtStr = dt && !isNaN(dt) ? dt.toLocaleDateString('vi-VN', {
+        const dtStr = dt && !isNaN(dt) ? dt.toLocaleDateString('en-US', {
           day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true
         }) : data.datetime || id;
 
         const statusLabel = {
-          dispatching: 'Đang điều phối', offered_to_driver: 'Đã gửi lời mời',
-          awaiting_driver: 'Chờ tài xế (thủ công)', pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận',
-          assigned: 'Có tài xế', driver_confirmed: 'Tài xế xác nhận',
-          on_the_way: 'Trên đường', arrived: 'Đã đến', in_progress: 'Di chuyển',
-          completed: 'Hoàn thành', cancelled: 'Đã hủy'
+          dispatching: 'Dispatching', offered_to_driver: 'Offered to driver',
+          awaiting_driver: 'Awaiting driver (manual)', pending: 'Pending', confirmed: 'Confirmed',
+          assigned: 'Driver assigned', driver_confirmed: 'Driver confirmed',
+          on_the_way: 'On the way', arrived: 'Arrived', in_progress: 'In progress',
+          completed: 'Completed', cancelled: 'Cancelled'
         }[data.status] || data.status;
 
         const active = id === selectedId ? ' active' : '';
@@ -1202,23 +1202,23 @@
       document.getElementById('di-phone').textContent = data.phone || '—';
 
       const statusLabel = {
-        dispatching: 'Đang điều phối', offered_to_driver: 'Đã gửi lời mời',
-        awaiting_driver: 'Chờ tài xế (thủ công)', pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận',
-        assigned: 'Có tài xế', driver_confirmed: 'Tài xế xác nhận',
-        on_the_way: 'Trên đường đến', arrived: 'Đã đến điểm đón',
-        in_progress: 'Đang di chuyển', completed: 'Hoàn thành', cancelled: 'Đã hủy'
+        dispatching: 'Dispatching', offered_to_driver: 'Offered to driver',
+        awaiting_driver: 'Awaiting driver (manual)', pending: 'Pending', confirmed: 'Confirmed',
+        assigned: 'Driver assigned', driver_confirmed: 'Driver confirmed',
+        on_the_way: 'On the way', arrived: 'Arrived at pickup',
+        in_progress: 'In progress', completed: 'Completed', cancelled: 'Cancelled'
       }[data.status] || data.status;
       document.getElementById('di-status').innerHTML = `<span class="status-badge status-${data.status}">${statusLabel}</span>`;
 
       const serviceLabels = {
-        pickup: 'Đón sân bay', dropoff: 'Đưa sân bay',
-        lasvegas: 'Tour Las Vegas', yosemite: 'Tour Yosemite', sanfrancisco: 'Tour San Francisco'
+        pickup: 'Airport Pickup', dropoff: 'Airport Dropoff',
+        lasvegas: 'Las Vegas Tour', yosemite: 'Yosemite Tour', sanfrancisco: 'San Francisco Tour'
       };
       document.getElementById('di-service').textContent = serviceLabels[data.serviceType] || data.serviceType || '—';
 
       const dt = data.datetime ? new Date(data.datetime) : null;
       document.getElementById('di-datetime').textContent = dt && !isNaN(dt)
-        ? dt.toLocaleString('vi-VN', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true })
+        ? dt.toLocaleString('en-US', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true })
         : data.datetime || '—';
 
       const isTransfer = data.serviceType === 'pickup' || data.serviceType === 'dropoff';
@@ -1229,8 +1229,8 @@
         ? (data.serviceType === 'pickup' ? (data.address || '—') : (data.airport || '—'))
         : (data.address || '—');
 
-      document.getElementById('di-pax').textContent = data.passengers ? `${data.passengers} người` : '—';
-      document.getElementById('di-dist').textContent = data.distance ? `${Math.round(data.distance)} dặm` : '—';
+      document.getElementById('di-pax').textContent = data.passengers ? `${data.passengers} passengers` : '—';
+      document.getElementById('di-dist').textContent = data.distance ? `${Math.round(data.distance)} mi` : '—';
 
       // Status action buttons
       renderStatusActions(data.status);
@@ -1238,12 +1238,12 @@
       // Driver status
       const driverStatusEl = document.getElementById('driverStatus');
       if (data.driver && data.driver.name) {
-        driverStatusEl.textContent = `Tài xế hiện tại: ${data.driver.name} · ${data.driver.phone || ''}`;
+        driverStatusEl.textContent = `Current driver: ${data.driver.name} · ${data.driver.phone || ''}`;
         document.querySelectorAll('.driver-btn').forEach(btn => {
           btn.classList.toggle('selected', btn.dataset.name === data.driver.name);
         });
       } else {
-        driverStatusEl.textContent = 'Chưa phân công tài xế';
+        driverStatusEl.textContent = 'No driver assigned';
         document.querySelectorAll('.driver-btn').forEach(btn => btn.classList.remove('selected'));
       }
 
@@ -1257,8 +1257,8 @@
       // Vehicle position info
       const hasPos = data.vehicleLat != null && data.vehicleLng != null;
       document.getElementById('gpsStatus').textContent = gpsWatchId
-        ? 'GPS đang phát...'
-        : hasPos ? `Vị trí: ${data.vehicleLat?.toFixed(4)}, ${data.vehicleLng?.toFixed(4)}` : 'Chưa có vị trí';
+        ? 'GPS broadcasting...'
+        : hasPos ? `Position: ${data.vehicleLat?.toFixed(4)}, ${data.vehicleLng?.toFixed(4)}` : 'No position yet';
       document.getElementById('gpsStatus').className = gpsWatchId ? 'gps-status active' : 'gps-status';
     }
 
@@ -1281,17 +1281,17 @@
     };
 
     const STATUS_BTN_LABELS = {
-      dispatching:       'Chuyển sang chờ thủ công',
-      offered_to_driver: 'Chuyển sang chờ thủ công',
-      awaiting_driver:  'Đang tìm tài xế (thủ công)',
-      pending:          'Chờ xác nhận',
-      confirmed:        'Xác nhận',
-      assigned:         'Phân công tài xế',
-      driver_confirmed: 'Tài xế đã xác nhận',
-      on_the_way:       'Bắt đầu di chuyển đến khách',
-      arrived:          'Đã đến điểm đón',
-      in_progress:      'Bắt đầu chuyến đi',
-      completed:        'Hoàn thành chuyến',
+      dispatching:       'Move to manual hold',
+      offered_to_driver: 'Move to manual hold',
+      awaiting_driver:  'Finding driver (manual)',
+      pending:          'Pending confirmation',
+      confirmed:        'Confirm',
+      assigned:         'Driver assigned',
+      driver_confirmed: 'Driver confirmed',
+      on_the_way:       'Start driving to customer',
+      arrived:          'Arrived at pickup',
+      in_progress:      'Start trip',
+      completed:        'Complete trip',
     };
 
     // Statuses that cannot be cancelled
@@ -1301,17 +1301,17 @@
       const container = document.getElementById('statusActions');
       const nextStates = STATUS_FLOW[currentStatus] || [];
       if (currentStatus === 'completed') {
-        container.innerHTML = '<span style="font-size:0.8rem;color:var(--muted)">Chuyến đã hoàn thành.</span>';
+        container.innerHTML = '<span style="font-size:0.8rem;color:var(--muted)">Trip completed.</span>';
         return;
       }
       if (currentStatus === 'cancelled') {
-        container.innerHTML = '<span style="font-size:0.8rem;color:#e08a8a">Chuyến đã bị hủy.</span>';
+        container.innerHTML = '<span style="font-size:0.8rem;color:#e08a8a">Trip cancelled.</span>';
         return;
       }
       const advanceBtn = nextStates.length > 0
         ? `<button class="btn-status next" onclick="updateStatus('${nextStates[0]}')">${STATUS_BTN_LABELS[nextStates[0]] || nextStates[0]}</button>`
         : '';
-      const cancelBtn = `<button class="btn-status" style="border-color:#e08a8a;color:#e08a8a" onclick="cancelBooking()">Hủy Chuyến</button>`;
+      const cancelBtn = `<button class="btn-status" style="border-color:#e08a8a;color:#e08a8a" onclick="cancelBooking()">Cancel Trip</button>`;
       container.innerHTML = advanceBtn + cancelBtn;
     }
 
@@ -1340,7 +1340,7 @@
 
     async function cancelBooking() {
       if (!selectedId) return;
-      const ok = confirm('Xác nhận hủy chuyến này?');
+      const ok = confirm('Confirm cancellation of this trip?');
       if (!ok) return;
       const ts = firebase.firestore.FieldValue.serverTimestamp();
       await db.collection('bookings').doc(selectedId).update({
@@ -1373,7 +1373,7 @@
         driver: driverInfo, status: 'assigned',
       });
       document.getElementById('driverStatus').textContent =
-        `Tài xế: ${btn.dataset.name} · ${btn.dataset.phone}`;
+        `Driver: ${btn.dataset.name} · ${btn.dataset.phone}`;
       // Phase 5: queue driver-assigned email if customer has email on file
       try {
         const bookingSnap = await db.collection('bookings').doc(selectedId).get();
@@ -1398,12 +1398,12 @@
 
     // ── GPS Streaming ────────────────────────────────────────────
     function startGps() {
-      if (!selectedId) { alert('Vui lòng chọn đặt chỗ trước.'); return; }
-      if (!navigator.geolocation) { alert('Thiết bị này không hỗ trợ GPS.'); return; }
+      if (!selectedId) { alert('Please select a booking first.'); return; }
+      if (!navigator.geolocation) { alert('This device does not support GPS.'); return; }
 
       document.getElementById('gpsStartBtn').style.display = 'none';
       document.getElementById('gpsStopBtn').style.display  = 'inline-flex';
-      document.getElementById('gpsStatus').textContent = 'Đang lấy GPS...';
+      document.getElementById('gpsStatus').textContent = 'Acquiring GPS...';
       document.getElementById('gpsStatus').className   = 'gps-status active';
 
       const watchId = navigator.geolocation.watchPosition(
@@ -1418,7 +1418,7 @@
         },
         err => {
           console.error('GPS error:', err);
-          document.getElementById('gpsStatus').textContent = 'Lỗi GPS: ' + err.message;
+          document.getElementById('gpsStatus').textContent = 'GPS error: ' + err.message;
           document.getElementById('gpsStatus').className   = 'gps-status';
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
@@ -1433,7 +1433,7 @@
       }
       document.getElementById('gpsStartBtn').style.display = 'inline-flex';
       document.getElementById('gpsStopBtn').style.display  = 'none';
-      document.getElementById('gpsStatus').textContent = 'GPS đã dừng';
+      document.getElementById('gpsStatus').textContent = 'GPS stopped';
       document.getElementById('gpsStatus').className   = 'gps-status';
     }
 
@@ -1448,7 +1448,7 @@
         fb.classList.remove('hidden');
         setTimeout(() => fb.classList.add('hidden'), 2200);
       } catch (err) {
-        prompt('Sao chép link:', trackUrl);
+        prompt('Copy link:', trackUrl);
       }
     }
 
@@ -1488,7 +1488,7 @@
       if (!container) return;
       const active = Object.entries(allDrivers).filter(([,d]) => d.active);
       if (!active.length) {
-        container.innerHTML = '<span style="font-size:0.75rem;color:var(--muted)">Chưa có tài xế nào đang hoạt động.</span>';
+        container.innerHTML = '<span style="font-size:0.75rem;color:var(--muted)">No active drivers yet.</span>';
         return;
       }
       container.innerHTML = active.map(([uid, d]) => {
@@ -1516,20 +1516,20 @@
       const rs = document.getElementById('ratingSection');
       if (!rs) return;
       rs.style.display = 'block';
-      rs.innerHTML = '<div class="rating-section"><h3>Đánh Giá Từ Khách</h3><div class="rating-none">Đang tải…</div></div>';
+      rs.innerHTML = '<div class="rating-section"><h3>Customer Rating</h3><div class="rating-none">Loading…</div></div>';
       db.collection('rideRatings').doc(bookingId).get()
         .then(snap => {
           if (!snap.exists) {
-            rs.innerHTML = '<div class="rating-section"><h3>Đánh Giá Từ Khách</h3><div class="rating-none">Chưa có đánh giá.</div></div>';
+            rs.innerHTML = '<div class="rating-section"><h3>Customer Rating</h3><div class="rating-none">No rating yet.</div></div>';
             return;
           }
           const r = snap.data();
           const stars = (n => { let s = ''; for (let i = 1; i <= 5; i++) s += (i <= n ? '★' : '☆'); return s; })(r.rating || 0);
           const ms = r.submittedAt && r.submittedAt.toDate ? r.submittedAt.toDate().getTime() : 0;
-          const dStr = ms ? new Date(ms).toLocaleString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true }) : '—';
+          const dStr = ms ? new Date(ms).toLocaleString('en-US', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true }) : '—';
           const noteHtml = r.note ? `<div class="rating-note">${escHtml(r.note)}</div>` : '';
           rs.innerHTML = `<div class="rating-section">
-            <h3>Đánh Giá Từ Khách</h3>
+            <h3>Customer Rating</h3>
             <div class="rating-stars-row">
               <span class="rating-stars">${stars}</span>
               <span class="rating-avg">${r.rating}/5</span>
@@ -1539,7 +1539,7 @@
           </div>`;
         })
         .catch(() => {
-          rs.innerHTML = '<div class="rating-section"><h3>Đánh Giá Từ Khách</h3><div class="rating-none">Không thể tải.</div></div>';
+          rs.innerHTML = '<div class="rating-section"><h3>Customer Rating</h3><div class="rating-none">Unable to load.</div></div>';
         });
     }
 
@@ -1558,7 +1558,7 @@
         driver: driverPayload, status: 'assigned',
       });
       document.getElementById('driverStatus').textContent =
-        `Tài xế: ${btn.dataset.name} · ${btn.dataset.phone}`;
+        `Driver: ${btn.dataset.name} · ${btn.dataset.phone}`;
       // Notifications: email + in-app for driver and customer
       try {
         const bookingSnap = await db.collection('bookings').doc(selectedId).get();
@@ -1599,7 +1599,7 @@
 
     async function loadVendorPanel() {
       const wrap = document.getElementById('vendorMgmtWrap');
-      wrap.innerHTML = '<div style="font-size:0.8rem;color:var(--muted)">Đang tải…</div>';
+      wrap.innerHTML = '<div style="font-size:0.8rem;color:var(--muted)">Loading…</div>';
 
       // Fetch Firestore vendor docs + registered email map in parallel
       const [vendorSnap, vuSnap] = await Promise.all([
@@ -1633,40 +1633,40 @@
       ];
 
       const createFormHtml = `<div class="driver-create-form" id="vcCreateForm" style="display:none">
-        <h3>Tạo Vendor Mới · Status bắt đầu là "Pending" — kích hoạt để vendor đăng ký</h3>
+        <h3>Create New Vendor · Status starts as "Pending" — activate to allow vendor registration</h3>
         <div class="driver-form-row">
           <div class="driver-form-field">
-            <label class="driver-form-label">Vendor ID (slug, không dấu)</label>
-            <input class="driver-form-input" id="newVendorId" placeholder="ten-cua-hang" maxlength="40">
+            <label class="driver-form-label">Vendor ID (slug, no spaces)</label>
+            <input class="driver-form-input" id="newVendorId" placeholder="store-name" maxlength="40">
           </div>
           <div class="driver-form-field">
-            <label class="driver-form-label">Tên cửa hàng</label>
-            <input class="driver-form-input" id="newVendorName" placeholder="Nhà Bếp Của Lan">
+            <label class="driver-form-label">Store Name</label>
+            <input class="driver-form-input" id="newVendorName" placeholder="Emily's Kitchen">
           </div>
           <div class="driver-form-field" style="max-width:110px">
-            <label class="driver-form-label">Danh mục</label>
+            <label class="driver-form-label">Category</label>
             <select class="driver-form-input" id="newVendorCat">
               <option>Food</option><option>Nails</option><option>Hair</option>
             </select>
           </div>
           <div class="driver-form-field" style="max-width:100px">
-            <label class="driver-form-label">Khu vực</label>
+            <label class="driver-form-label">Region</label>
             <select class="driver-form-input" id="newVendorRegion">
               <option>Bay Area</option><option>OC</option><option>LA</option>
             </select>
           </div>
           <div class="driver-form-field" style="max-width:130px">
-            <label class="driver-form-label">Điện thoại</label>
+            <label class="driver-form-label">Phone</label>
             <input class="driver-form-input" id="newVendorPhone" placeholder="4081234567" inputmode="tel">
           </div>
           <div class="driver-form-field" style="max-width:120px">
-            <label class="driver-form-label">PIN đầu tiên
+            <label class="driver-form-label">Initial PIN
               <button type="button" style="margin-left:4px;font-size:.55rem;color:var(--gold);background:none;border:none;cursor:pointer"
-                onclick="document.getElementById('newVendorPin').value=genPin()">🎲 Tạo</button>
+                onclick="document.getElementById('newVendorPin').value=genPin()">🎲 Generate</button>
             </label>
             <input class="driver-form-input" id="newVendorPin" placeholder="e.g. 1234" inputmode="numeric" maxlength="6">
           </div>
-          <button class="btn-create-driver" id="btnCreateVendor" onclick="createVendorProfile()">Tạo Vendor</button>
+          <button class="btn-create-driver" id="btnCreateVendor" onclick="createVendorProfile()">Create Vendor</button>
         </div>
         <div class="driver-form-error" id="vendorFormError"></div>
       </div>`;
@@ -1675,7 +1675,7 @@
         <span style="font-size:.68rem;font-weight:700;color:var(--gold);letter-spacing:.1em;text-transform:uppercase">
           Vendors · ${allVendors.length} providers
         </span>
-        <button class="btn-vend" onclick="toggleVendorCreateForm()">+ Tạo Vendor Mới</button>
+        <button class="btn-vend" onclick="toggleVendorCreateForm()">+ Create New Vendor</button>
       </div>`;
 
       wrap.innerHTML = createFormHtml + headerHtml +
@@ -1684,41 +1684,41 @@
 
     function _renderVendorCard(v, vdata, vendorUsers) {
       const st = vdata.adminStatus || 'active';
-      const stLabel = {active:'Hoạt động',pending:'Chờ duyệt',blocked:'Bị chặn',deactivated:'Tạm dừng',archived:'Lưu trữ'}[st]||st;
+      const stLabel = {active:'Active',pending:'Pending',blocked:'Blocked',deactivated:'Deactivated',archived:'Archived'}[st]||st;
       const stClass = 'status-' + st;
       const note = vdata.adminNote ? ` — <span style="font-size:.65rem;color:var(--muted)">${escHtml(vdata.adminNote)}</span>` : '';
       const currentPin = vdata.setupCode || VENDOR_DEFAULT_CODES[v.id] || '—';
-      const pinSrc = vdata.setupCode ? '' : ' <span style="font-size:.6rem;color:var(--muted)">(mặc định)</span>';
+      const pinSrc = vdata.setupCode ? '' : ' <span style="font-size:.6rem;color:var(--muted)">(default)</span>';
       const loginUrl = `https://www.dulichcali21.com/vendor-login.html?id=${v.id}`;
       const primaryUser = vendorUsers.find(u => u.role === 'owner') || vendorUsers[0];
       const emailBadge = primaryUser
         ? `<span class="vc-badge vc-badge--reg" title="${escHtml(primaryUser.email)}">✓ ${escHtml(primaryUser.email)}</span>`
-        : `<span class="vc-badge vc-badge--unreg">○ Chưa đăng ký</span>`;
+        : `<span class="vc-badge vc-badge--unreg">○ Not registered</span>`;
       const newTag = v.isNew ? ` <span style="font-size:.58rem;color:var(--gold);border:1px solid var(--gold);padding:1px 4px;border-radius:3px">Firestore</span>` : '';
 
       // Build user-roles rows (only if there are registered users)
       const usersHtml = vendorUsers.length ? `
         <div class="vcl-row" style="flex-direction:column;align-items:flex-start;gap:.4rem">
-          <span class="vcl-label" style="margin-bottom:.2rem">Tài khoản &amp; Vai trò:</span>
+          <span class="vcl-label" style="margin-bottom:.2rem">Accounts &amp; Roles:</span>
           ${vendorUsers.map(u => `
             <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.35rem;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.04)">
-              <span style="font-size:.65rem;min-width:170px;color:var(--muted)">${u.email ? escHtml(u.email) : '<em style="opacity:.5">không có email</em>'}</span>
+              <span style="font-size:.65rem;min-width:170px;color:var(--muted)">${u.email ? escHtml(u.email) : '<em style="opacity:.5">no email</em>'}</span>
               <select class="vcl-role-select" id="vrole-${escHtml(u.uid)}" onchange="toggleStaffNameInput('vstaff-${escHtml(u.uid)}',this.value)">
                 <option value="owner"   ${u.role==='owner'  ?'selected':''}>Owner</option>
                 <option value="manager" ${u.role==='manager'?'selected':''}>Manager</option>
                 <option value="staff"   ${u.role==='staff'  ?'selected':''}>Staff</option>
               </select>
               <input class="vcl-pin-input" id="vstaff-${escHtml(u.uid)}" type="text" maxlength="40"
-                placeholder="Tên nhân viên" value="${escHtml(u.staffName)}"
+                placeholder="Staff name" value="${escHtml(u.staffName)}"
                 style="width:130px${u.role==='owner'||!u.role?';display:none':''}">
-              <button class="btn-vend success" onclick="saveVendorUserRole('${escHtml(u.uid)}','${escHtml(v.id)}')">Lưu</button>
-              <button class="btn-vend danger" onclick="deleteVendorUser('${escHtml(u.uid)}','${escHtml(u.email)}','${escHtml(v.id)}')">Xóa</button>
+              <button class="btn-vend success" onclick="saveVendorUserRole('${escHtml(u.uid)}','${escHtml(v.id)}')">Save</button>
+              <button class="btn-vend danger" onclick="deleteVendorUser('${escHtml(u.uid)}','${escHtml(u.email)}','${escHtml(v.id)}')">Delete</button>
               <span class="vcl-msg" id="vrole-msg-${escHtml(u.uid)}"></span>
               <span style="font-size:.6rem;color:var(--muted);margin-left:.2rem">PIN:</span>
               <code id="vpindisp-${escHtml(u.uid)}" style="font-family:monospace;background:var(--navy-700);padding:2px 8px;border-radius:4px;font-size:.8rem;letter-spacing:.12em;color:var(--cream)">${u.pin ? escHtml(u.pin) : '——'}</code>
-              <input class="vcl-pin-input" id="vpinnew-${escHtml(u.uid)}" type="text" maxlength="6" inputmode="numeric" placeholder="PIN mới" style="width:76px">
+              <input class="vcl-pin-input" id="vpinnew-${escHtml(u.uid)}" type="text" maxlength="6" inputmode="numeric" placeholder="New PIN" style="width:76px">
               <button class="btn-vend" style="font-size:.6rem;color:var(--muted)" onclick="document.getElementById('vpinnew-${escHtml(u.uid)}').value=String(Math.floor(100000+Math.random()*900000))">🎲</button>
-              <button class="btn-vend" style="color:var(--gold);border-color:rgba(212,175,55,.35)" onclick="changeStaffPin('${escHtml(u.uid)}','${escHtml(u.email)}','${escHtml(v.id)}')">Đổi PIN</button>
+              <button class="btn-vend" style="color:var(--gold);border-color:rgba(212,175,55,.35)" onclick="changeStaffPin('${escHtml(u.uid)}','${escHtml(u.email)}','${escHtml(v.id)}')">Change PIN</button>
               <span class="vcl-msg" id="vpin-msg-${escHtml(u.uid)}"></span>
             </div>
           `).join('')}
@@ -1732,23 +1732,23 @@
             <div class="vendor-card__meta">${v.phone?escHtml(v.phone)+' · ':''}${emailBadge}</div>
           </div>
           <div class="vendor-card__actions">
-            ${st!=='active'      ?`<button class="btn-vend success" onclick="setVendorStatus('${v.id}','active','')">Mở lại</button>`:''}
+            ${st!=='active'      ?`<button class="btn-vend success" onclick="setVendorStatus('${v.id}','active','')">Set Active</button>`:''}
             ${st!=='pending'     ?`<button class="btn-vend" style="color:#f5a623;border-color:rgba(245,166,35,.35)" onclick="setVendorStatus('${v.id}','pending','')">Pending</button>`:''}
-            ${st!=='blocked'     ?`<button class="btn-vend danger" onclick="promptBlock('${v.id}')">Chặn</button>`:''}
-            ${st!=='deactivated' ?`<button class="btn-vend" onclick="setVendorStatus('${v.id}','deactivated','')">Tạm dừng</button>`:''}
-            ${st!=='archived'    ?`<button class="btn-vend" onclick="setVendorStatus('${v.id}','archived','')">Lưu trữ</button>`:''}
+            ${st!=='blocked'     ?`<button class="btn-vend danger" onclick="promptBlock('${v.id}')">Block</button>`:''}
+            ${st!=='deactivated' ?`<button class="btn-vend" onclick="setVendorStatus('${v.id}','deactivated','')">Deactivate</button>`:''}
+            ${st!=='archived'    ?`<button class="btn-vend" onclick="setVendorStatus('${v.id}','archived','')">Archive</button>`:''}
             <button class="btn-vend" onclick="toggleVendorLogin('${v.id}')">🔐 Login / PIN</button>
           </div>
         </div>
         <div class="vendor-card__login" id="vcl-${v.id}" style="display:none">
           <div class="vcl-row">
-            <span class="vcl-label">URL đăng nhập:</span>
+            <span class="vcl-label">Login URL:</span>
             <a class="vcl-url" href="${loginUrl}" target="_blank">${loginUrl}</a>
             <button class="btn-vend" onclick="copyVendorUrl('${v.id}')">Copy</button>
           </div>
           ${usersHtml}
           <div class="vcl-row" style="flex-direction:column;align-items:flex-start;gap:.4rem">
-            <span class="vcl-label">Thêm tài khoản:</span>
+            <span class="vcl-label">Add account:</span>
             <div style="display:flex;flex-wrap:wrap;gap:.35rem;align-items:center">
               <input class="vcl-pin-input" id="vstf-email-${v.id}" type="email"
                 placeholder="Email" style="width:180px">
@@ -1759,12 +1759,12 @@
                 <option value="staff">Staff</option>
               </select>
               <input class="vcl-pin-input" id="vstf-name-${v.id}" type="text"
-                placeholder="Tên nhân viên" style="width:120px;display:none" maxlength="40">
+                placeholder="Staff name" style="width:120px;display:none" maxlength="40">
               <input class="vcl-pin-input" id="vstf-pin-${v.id}" type="text"
-                placeholder="PIN mật khẩu" inputmode="numeric" maxlength="6" style="width:90px">
+                placeholder="PIN password" inputmode="numeric" maxlength="6" style="width:90px">
               <button class="btn-vend" style="font-size:.6rem;color:var(--muted)"
                 onclick="document.getElementById('vstf-pin-${v.id}').value=genPin()">🎲</button>
-              <button class="btn-vend success" onclick="createStaffLogin('${v.id}')">Tạo tài khoản</button>
+              <button class="btn-vend success" onclick="createStaffLogin('${v.id}')">Create account</button>
               <span class="vcl-msg" id="vstf-msg-${v.id}"></span>
             </div>
             <div id="vstf-pw-${v.id}" style="display:none;font-size:.68rem;color:#7ac87a;background:rgba(122,200,122,.08);padding:6px 10px;border-radius:6px;border:1px solid rgba(122,200,122,.3);word-break:break-all"></div>
@@ -1788,15 +1788,15 @@
       const errEl  = document.getElementById('vendorFormError');
       const btn    = document.getElementById('btnCreateVendor');
       errEl.textContent = ''; errEl.style.color = 'var(--danger)';
-      if (!vid||!name||!pin) { errEl.textContent='Vendor ID, tên và PIN là bắt buộc.'; return; }
-      if (!/^[a-z0-9-]+$/.test(vid)) { errEl.textContent='Vendor ID chỉ được dùng chữ thường, số, dấu gạch ngang.'; return; }
-      if (pin.length<3) { errEl.textContent='PIN phải có ít nhất 3 ký tự.'; return; }
-      btn.disabled=true; errEl.style.color='var(--muted)'; errEl.textContent='Đang tạo…';
+      if (!vid||!name||!pin) { errEl.textContent='Vendor ID, name and PIN are required.'; return; }
+      if (!/^[a-z0-9-]+$/.test(vid)) { errEl.textContent='Vendor ID may only contain lowercase letters, numbers, and hyphens.'; return; }
+      if (pin.length<3) { errEl.textContent='PIN must be at least 3 characters.'; return; }
+      btn.disabled=true; errEl.style.color='var(--muted)'; errEl.textContent='Creating…';
       try {
         const existing = await db.collection('vendors').doc(vid).get();
         if (existing.exists) {
           errEl.style.color='var(--danger)';
-          errEl.textContent=`Vendor ID "${vid}" đã tồn tại. Dùng ID khác hoặc quản lý vendor bên dưới.`;
+          errEl.textContent=`Vendor ID "${vid}" already exists. Use a different ID or manage the vendor below.`;
           btn.disabled=false; return;
         }
         await db.collection('vendors').doc(vid).set({
@@ -1807,13 +1807,13 @@
           const el=document.getElementById(id); if(el) el.value='';
         });
         errEl.style.color='#7ac87a';
-        errEl.textContent=`✓ Đã tạo "${name}" (${vid}) với status "pending". Nhấn "Mở lại" để kích hoạt.`;
+        errEl.textContent=`✓ Created "${name}" (${vid}) with status "pending". Click "Set Active" to activate.`;
         btn.disabled=false; loadVendorPanel();
-      } catch(e) { errEl.style.color='var(--danger)'; errEl.textContent='Lỗi: '+e.message; btn.disabled=false; }
+      } catch(e) { errEl.style.color='var(--danger)'; errEl.textContent='Error: '+e.message; btn.disabled=false; }
     }
 
     function promptBlock(vendorId) {
-      const reason = prompt('Lý do chặn vendor (để trống nếu không cần):') ?? null;
+      const reason = prompt('Reason for blocking vendor (leave blank if none):') ?? null;
       if (reason === null) return;
       setVendorStatus(vendorId, 'blocked', reason);
     }
@@ -1825,7 +1825,7 @@
           adminUpdatedAt:firebase.firestore.FieldValue.serverTimestamp()
         }, { merge:true });
         loadVendorPanel();
-      } catch(e) { alert('Lỗi: '+e.message); }
+      } catch(e) { alert('Error: '+e.message); }
     }
 
     function toggleVendorLogin(vendorId) {
@@ -1847,16 +1847,16 @@
       const displayEl=document.getElementById('vpin-display-'+vendorId);
       if (!input||!msgEl) return;
       const pin=input.value.trim();
-      if (!pin||pin.length<3) { msgEl.style.color='var(--danger)'; msgEl.textContent='PIN phải có ít nhất 3 ký tự.'; return; }
-      msgEl.style.color='var(--muted)'; msgEl.textContent='Đang lưu…';
+      if (!pin||pin.length<3) { msgEl.style.color='var(--danger)'; msgEl.textContent='PIN must be at least 3 characters.'; return; }
+      msgEl.style.color='var(--muted)'; msgEl.textContent='Saving…';
       try {
         await db.collection('vendors').doc(vendorId).set({
           setupCode:pin, adminUpdatedAt:firebase.firestore.FieldValue.serverTimestamp()
         }, { merge:true });
         if (displayEl) displayEl.textContent=pin;
-        input.value=''; msgEl.style.color='#7ac87a'; msgEl.textContent='Đã lưu!';
+        input.value=''; msgEl.style.color='#7ac87a'; msgEl.textContent='Saved!';
         setTimeout(()=>{ msgEl.textContent=''; },3000);
-      } catch(e) { msgEl.style.color='var(--danger)'; msgEl.textContent='Lỗi: '+e.message; }
+      } catch(e) { msgEl.style.color='var(--danger)'; msgEl.textContent='Error: '+e.message; }
     }
 
     async function saveVendorUserRole(uid, vendorId) {
@@ -1867,17 +1867,17 @@
       const role      = roleEl.value;
       const staffName = nameEl ? nameEl.value.trim() : '';
       if ((role === 'staff' || role === 'manager') && !staffName) {
-        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Nhập tên nhân viên.'; return;
+        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Enter staff name.'; return;
       }
-      msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Đang lưu…';
+      msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Saving…';
       try {
         await db.collection('vendorUsers').doc(uid).set(
           { role, staffName: (role === 'staff' || role === 'manager') ? staffName : '', adminUpdatedAt: firebase.firestore.FieldValue.serverTimestamp() },
           { merge: true }
         );
-        msgEl.style.color = '#7ac87a'; msgEl.textContent = 'Đã lưu!';
+        msgEl.style.color = '#7ac87a'; msgEl.textContent = 'Saved!';
         setTimeout(() => { msgEl.textContent = ''; }, 3000);
-      } catch(e) { msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Lỗi: ' + e.message; }
+      } catch(e) { msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Error: ' + e.message; }
     }
 
     function toggleStaffNameInput(inputId, role) {
@@ -1892,10 +1892,10 @@
       const newPin = (document.getElementById('vpinnew-' + uid) || {}).value?.trim();
       const msgEl  = document.getElementById('vpin-msg-' + uid);
       if (!newPin || newPin.length < 6) {
-        if (msgEl) { msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'PIN phải có ít nhất 6 ký tự.'; }
+        if (msgEl) { msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'PIN must be at least 6 characters.'; }
         return;
       }
-      if (msgEl) { msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Đang cập nhật…'; }
+      if (msgEl) { msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Updating…'; }
       try {
         // Get old PIN from Firestore so we can sign in as the user to update Auth password
         const vuDoc = await db.collection('vendorUsers').doc(uid).get();
@@ -1929,20 +1929,20 @@
         if (inpEl) inpEl.value = '';
         if (msgEl) {
           msgEl.style.color = authUpdated ? '#7ac87a' : '#f5a623';
-          msgEl.textContent  = authUpdated ? `✓ PIN mới: ${newPin}` : `Firestore đã lưu — Auth cần đổi thủ công (PIN cũ không khớp).`;
+          msgEl.textContent  = authUpdated ? `✓ New PIN: ${newPin}` : `Firestore saved — Auth password must be changed manually (old PIN did not match).`;
         }
       } catch(e) {
-        if (msgEl) { msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Lỗi: ' + e.message; }
+        if (msgEl) { msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Error: ' + e.message; }
       }
     }
 
     async function deleteVendorUser(uid, email, vendorId) {
       const label = email || uid;
-      if (!confirm(`Xóa tài khoản "${label}"?\nHành động này không thể hoàn tác.`)) return;
+      if (!confirm(`Delete account "${label}"?\nThis action cannot be undone.`)) return;
       try {
         await db.collection('vendorUsers').doc(uid).delete();
         loadVendorPanel();
-      } catch(e) { alert('Lỗi: ' + e.message); }
+      } catch(e) { alert('Error: ' + e.message); }
     }
 
     async function createStaffLogin(vendorId) {
@@ -1960,16 +1960,16 @@
       const pin       = pinEl ? pinEl.value.trim() : '';
 
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Email không hợp lệ.'; return;
+        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Invalid email.'; return;
       }
       if ((role === 'staff' || role === 'manager') && !staffName) {
-        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Nhập tên (dùng để lọc lịch hẹn).'; return;
+        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Enter name (used to filter appointments).'; return;
       }
       if (!pin || pin.length < 6) {
-        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'PIN phải có ít nhất 6 ký tự.'; return;
+        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'PIN must be at least 6 characters.'; return;
       }
 
-      msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Đang tạo…';
+      msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Creating…';
       if (pwBox) pwBox.style.display = 'none';
 
       // PIN is the password — used verbatim (6-char minimum enforced above)
@@ -1985,7 +1985,7 @@
         if (result.error) {
           if (result.error.message === 'EMAIL_EXISTS') {
             // Account already exists — find their UID via vendorUsers email lookup and assign them to this vendor
-            msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Tài khoản đã tồn tại — đang gán vai trò…';
+            msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Account already exists — assigning role…';
             const existingSnap = await db.collection('vendorUsers').where('email', '==', email).limit(1).get();
             let uid;
             if (!existingSnap.empty) {
@@ -1993,7 +1993,7 @@
             } else {
               // Auth account exists but no vendorUsers doc yet — can't get UID from client without password
               msgEl.style.color = 'var(--danger)';
-              msgEl.textContent = 'Tài khoản tồn tại nhưng chưa đăng ký hệ thống. Hãy để họ đăng nhập qua vendor-login.html trước.';
+              msgEl.textContent = 'Account exists but is not yet registered in the system. Have them log in via vendor-login.html first.';
               return;
             }
             await db.collection('vendorUsers').doc(uid).set({
@@ -2002,12 +2002,12 @@
               updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
             emailEl.value = ''; if (nameEl) nameEl.value = '';
-            msgEl.style.color = '#7ac87a'; msgEl.textContent = '✓ Đã gán!';
-            if (pwBox) { pwBox.textContent = 'Tài khoản đã có — dùng mật khẩu hiện tại để đăng nhập salon-admin.html'; pwBox.style.display = 'block'; }
+            msgEl.style.color = '#7ac87a'; msgEl.textContent = '✓ Assigned!';
+            if (pwBox) { pwBox.textContent = 'Account already exists — use current password to log in at salon-admin.html'; pwBox.style.display = 'block'; }
             setTimeout(() => { loadVendorPanel(); }, 2000);
             return;
           }
-          msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Lỗi tạo tài khoản: ' + result.error.message; return;
+          msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Error creating account: ' + result.error.message; return;
         }
 
         const uid = result.localId;
@@ -2020,19 +2020,19 @@
         emailEl.value = '';
         if (nameEl) nameEl.value = '';
         if (pinEl)  pinEl.value  = '';
-        msgEl.style.color = '#7ac87a'; msgEl.textContent = '✓ Đã tạo!';
+        msgEl.style.color = '#7ac87a'; msgEl.textContent = '✓ Created!';
 
         // Show PIN — admin shares with new user
         if (pwBox) {
           const label = (role === 'staff' || role === 'manager') ? staffName : email;
-          pwBox.textContent = `PIN đăng nhập: ${pin}  —  Chia sẻ với ${label} để đăng nhập tại salon-admin.html`;
+          pwBox.textContent = `Login PIN: ${pin}  —  Share with ${label} to log in at salon-admin.html`;
           pwBox.style.display = 'block';
         }
 
         // Reload panel after 3s so new account appears in the list
         setTimeout(() => { loadVendorPanel(); }, 3000);
       } catch(e) {
-        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Lỗi: ' + e.message;
+        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Error: ' + e.message;
       }
     }
 
@@ -2043,13 +2043,13 @@
       db.collection('drivers').orderBy('createdAt', 'asc').get().then(snap => {
         const list = document.getElementById('driverList');
         if (snap.empty) {
-          list.innerHTML = '<div style="font-size:0.8rem;color:var(--muted)">Chưa có tài xế nào. Tạo tài xế đầu tiên ở trên.</div>';
+          list.innerHTML = '<div style="font-size:0.8rem;color:var(--muted)">No drivers yet. Create the first driver above.</div>';
           return;
         }
         list.innerHTML = snap.docs.map(doc => _renderDriverRow(doc.id, doc.data())).join('');
       }).catch(e => {
         document.getElementById('driverList').innerHTML =
-          '<div style="color:var(--danger);font-size:0.8rem">Lỗi tải: ' + escHtml(e.message) + '</div>';
+          '<div style="color:var(--danger);font-size:0.8rem">Load error: ' + escHtml(e.message) + '</div>';
       });
     }
 
@@ -2069,9 +2069,9 @@
       // Expiry warning from mirror fields
       const today = DLCCompliance.todayStr();
       const expWarn = [
-        d.licExpiry && d.licExpiry < today ? '⚠ Bằng lái hết hạn' : (d.licExpiry && DLCCompliance.daysUntil(d.licExpiry) <= 30 ? '⚡ Bằng lái sắp hết hạn' : ''),
-        d.regExpiry && d.regExpiry < today ? '⚠ Đăng ký hết hạn'  : (d.regExpiry && DLCCompliance.daysUntil(d.regExpiry) <= 30 ? '⚡ Đăng ký sắp hết hạn' : ''),
-        d.insExpiry && d.insExpiry < today ? '⚠ Bảo hiểm hết hạn' : (d.insExpiry && DLCCompliance.daysUntil(d.insExpiry) <= 30 ? '⚡ Bảo hiểm sắp hết hạn' : ''),
+        d.licExpiry && d.licExpiry < today ? '⚠ License expired' : (d.licExpiry && DLCCompliance.daysUntil(d.licExpiry) <= 30 ? '⚡ License expiring soon' : ''),
+        d.regExpiry && d.regExpiry < today ? '⚠ Registration expired'  : (d.regExpiry && DLCCompliance.daysUntil(d.regExpiry) <= 30 ? '⚡ Registration expiring soon' : ''),
+        d.insExpiry && d.insExpiry < today ? '⚠ Insurance expired' : (d.insExpiry && DLCCompliance.daysUntil(d.insExpiry) <= 30 ? '⚡ Insurance expiring soon' : ''),
       ].filter(Boolean).join(' · ');
 
       return `<div class="driver-row" id="dr-${id}">
@@ -2088,73 +2088,73 @@
           <div class="driver-row__actions">
             <button class="toggle-pill ${d.active?'on':'off'}" onclick="toggleDriver('${id}','active',${!d.active})">${d.active?'● Active':'○ Inactive'}</button>
             <button class="toggle-pill ${d.rideServiceEnabled?'on':'off'}" onclick="toggleDriver('${id}','rideServiceEnabled',${!d.rideServiceEnabled})">${d.rideServiceEnabled?'● Ride On':'○ Ride Off'}</button>
-            <button class="btn-sm-outline" onclick="toggleDriverProfile('${id}')">Hồ Sơ</button>
+            <button class="btn-sm-outline" onclick="toggleDriverProfile('${id}')">Profile</button>
             <button class="btn-sm-outline" onclick="toggleDriverInfo('${id}')">PIN / Login</button>
-            <button class="btn-sm-outline" onclick="toggleDriverCompliance('${id}')">Pháp Lý</button>
+            <button class="btn-sm-outline" onclick="toggleDriverCompliance('${id}')">Compliance</button>
             ${cs !== 'approved' ? `<button class="btn-sm-test" onclick="testApproveDriver('${id}')">⚡ Test Approve</button>` : ''}
-            <button class="btn-del-driver" onclick="deleteDriver('${id}','${escHtml(d.fullName||'')}')">Xóa</button>
+            <button class="btn-del-driver" onclick="deleteDriver('${id}','${escHtml(d.fullName||'')}')">Delete</button>
           </div>
         </div>
         <div class="driver-row__login hidden" id="dri-${id}">
           <div style="font-size:0.72rem;color:var(--muted);margin-bottom:0.4rem">
-            Đăng nhập: <strong style="color:var(--cream)">${escHtml(derivedEmail)}</strong>
-            &nbsp;·&nbsp; PIN hiện tại: <strong style="color:var(--gold)" id="dpin-${id}">${escHtml(pin)}</strong>
+            Login: <strong style="color:var(--cream)">${escHtml(derivedEmail)}</strong>
+            &nbsp;·&nbsp; Current PIN: <strong style="color:var(--gold)" id="dpin-${id}">${escHtml(pin)}</strong>
           </div>
           <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
-            <input type="text" id="dpinInput-${id}" placeholder="PIN mới (4+ chữ số)" inputmode="numeric" maxlength="6"
+            <input type="text" id="dpinInput-${id}" placeholder="New PIN (4+ digits)" inputmode="numeric" maxlength="6"
               style="width:120px;background:var(--navy-900);border:1px solid var(--border);border-radius:4px;padding:4px 8px;color:var(--cream);font-size:0.75rem">
-            <button class="btn-sm-gold" onclick="resetDriverPin('${id}','${escHtml(d.authEmail||'')}')">Đặt PIN</button>
-            <button class="btn-sm-outline" onclick="resetDriverPin('${id}','${escHtml(d.authEmail||'')}',true)">🎲 Ngẫu nhiên</button>
+            <button class="btn-sm-gold" onclick="resetDriverPin('${id}','${escHtml(d.authEmail||'')}')">Set PIN</button>
+            <button class="btn-sm-outline" onclick="resetDriverPin('${id}','${escHtml(d.authEmail||'')}',true)">🎲 Random</button>
           </div>
           <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.5rem">
-            ${st !== 'active'       ? `<button class="btn-sm-green"  onclick="setDriverStatus('${id}','active')">Kích hoạt</button>` : ''}
-            ${st === 'active'       ? `<button class="btn-sm-warn"   onclick="promptBlockDriver('${id}')">Chặn</button>` : ''}
-            ${st !== 'deactivated'  ? `<button class="btn-sm-outline" onclick="setDriverStatus('${id}','deactivated')">Tạm dừng</button>` : ''}
-            ${st !== 'archived'     ? `<button class="btn-sm-outline" onclick="setDriverStatus('${id}','archived')">Lưu trữ</button>` : ''}
+            ${st !== 'active'       ? `<button class="btn-sm-green"  onclick="setDriverStatus('${id}','active')">Activate</button>` : ''}
+            ${st === 'active'       ? `<button class="btn-sm-warn"   onclick="promptBlockDriver('${id}')">Block</button>` : ''}
+            ${st !== 'deactivated'  ? `<button class="btn-sm-outline" onclick="setDriverStatus('${id}','deactivated')">Deactivate</button>` : ''}
+            ${st !== 'archived'     ? `<button class="btn-sm-outline" onclick="setDriverStatus('${id}','archived')">Archive</button>` : ''}
           </div>
           <div id="dpinMsg-${id}" style="font-size:0.72rem;margin-top:0.3rem"></div>
         </div>
         <!-- Profile edit panel -->
         <div class="driver-row__profile hidden" id="drp-${id}">
-          <div class="profile-section-title">Thông Tin Cơ Bản</div>
+          <div class="profile-section-title">Basic Info</div>
           <div class="profile-field-row">
             <div class="profile-field">
-              <label class="profile-label">Họ và tên</label>
-              <input class="profile-input" id="prn-${id}" type="text" value="${escHtml(d.fullName||'')}" placeholder="Nguyễn Văn A">
+              <label class="profile-label">Full Name</label>
+              <input class="profile-input" id="prn-${id}" type="text" value="${escHtml(d.fullName||'')}" placeholder="John Smith">
             </div>
             <div class="profile-field" style="max-width:160px">
-              <label class="profile-label">Số điện thoại</label>
+              <label class="profile-label">Phone Number</label>
               <input class="profile-input" id="prph-${id}" type="tel" value="${escHtml(d.phone||'')}" placeholder="4081234567">
             </div>
           </div>
-          <div class="profile-section-title" style="margin-top:0.4rem">Xe</div>
+          <div class="profile-section-title" style="margin-top:0.4rem">Vehicle</div>
           <div class="profile-field-row">
             <div class="profile-field">
-              <label class="profile-label">Hãng xe (Make)</label>
+              <label class="profile-label">Make</label>
               <input class="profile-input" id="prvm-${id}" type="text" value="${escHtml(d.vehicle?.make||'')}" placeholder="Toyota">
             </div>
             <div class="profile-field">
-              <label class="profile-label">Dòng xe (Model)</label>
+              <label class="profile-label">Model</label>
               <input class="profile-input" id="prvmo-${id}" type="text" value="${escHtml(d.vehicle?.model||'')}" placeholder="Sienna">
             </div>
             <div class="profile-field short">
-              <label class="profile-label">Năm</label>
+              <label class="profile-label">Year</label>
               <input class="profile-input short" id="prvy-${id}" type="text" value="${escHtml(d.vehicle?.year?String(d.vehicle.year):'')}" placeholder="2022">
             </div>
             <div class="profile-field">
-              <label class="profile-label">Màu (Color)</label>
+              <label class="profile-label">Color</label>
               <input class="profile-input" id="prvc-${id}" type="text" value="${escHtml(d.vehicle?.color||'')}" placeholder="Silver">
             </div>
             <div class="profile-field seats">
-              <label class="profile-label">Ghế</label>
+              <label class="profile-label">Seats</label>
               <input class="profile-input seats" id="prvs-${id}" type="number" min="1" max="20" value="${escHtml(d.vehicle?.seats?String(d.vehicle.seats):'4')}" placeholder="7">
             </div>
             <div class="profile-field">
-              <label class="profile-label">Biển số</label>
+              <label class="profile-label">License Plate</label>
               <input class="profile-input" id="prvp-${id}" type="text" value="${escHtml(d.vehicle?.plate||'')}" placeholder="8ABC123">
             </div>
           </div>
-          <div class="profile-section-title" style="margin-top:0.4rem">Khu Vực Hoạt Động</div>
+          <div class="profile-section-title" style="margin-top:0.4rem">Service Area</div>
           <div class="region-chips" id="prr-${id}">
             ${['bayarea','socal','sandiego','palmsprings','oc'].map(r => {
               const sel = (d.regions||[]).includes(r) ? ' selected' : '';
@@ -2163,12 +2163,12 @@
             }).join('')}
           </div>
           <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.35rem">
-            <button class="btn-save-profile" id="prsbtn-${id}" onclick="saveDriverProfile('${id}')">Lưu Hồ Sơ</button>
+            <button class="btn-save-profile" id="prsbtn-${id}" onclick="saveDriverProfile('${id}')">Save Profile</button>
             <span class="profile-msg" id="prmsg-${id}"></span>
           </div>
         </div>
         <div class="driver-row__compliance hidden" id="drc-${id}">
-          <div id="drc-content-${id}" class="comp-loading">Đang tải hồ sơ pháp lý…</div>
+          <div id="drc-content-${id}" class="comp-loading">Loading compliance records…</div>
         </div>
       </div>`;
     }
@@ -2201,11 +2201,11 @@
       const regions = Array.from(regionChips).map(c => c.dataset.region);
 
       if (!fullName) {
-        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Họ và tên không được để trống.'; return;
+        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Full name cannot be empty.'; return;
       }
 
       btn.disabled = true;
-      msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Đang lưu…';
+      msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Saving…';
 
       try {
         await db.collection('drivers').doc(driverId).update({
@@ -2215,7 +2215,7 @@
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         msgEl.style.color = '#7ac87a';
-        msgEl.textContent = '✓ Đã lưu!';
+        msgEl.textContent = '✓ Saved!';
         setTimeout(() => { msgEl.textContent = ''; }, 3000);
         // Update header in-place — do NOT call loadDriverPanel() here because it
         // re-renders and collapses the profile panel, causing data-loss confusion
@@ -2236,7 +2236,7 @@
         }
         loadDriversRealtime();
       } catch(e) {
-        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Lỗi: ' + e.message;
+        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Error: ' + e.message;
       } finally {
         btn.disabled = false;
       }
@@ -2255,7 +2255,7 @@
     }
 
     function promptBlockDriver(driverId) {
-      const note = prompt('Lý do chặn tài xế này (tùy chọn):') ?? null;
+      const note = prompt('Reason for blocking this driver (optional):') ?? null;
       if (note === null) return; // cancelled
       db.collection('drivers').doc(driverId).update({
         adminStatus: 'blocked',
@@ -2275,17 +2275,17 @@
         pin = inp ? inp.value.trim() : '';
       }
       if (!pin || pin.length < 4) {
-        if (msgEl) { msgEl.style.color='var(--danger)'; msgEl.textContent='PIN phải có ít nhất 4 chữ số.'; }
+        if (msgEl) { msgEl.style.color='var(--danger)'; msgEl.textContent='PIN must be at least 4 digits.'; }
         return;
       }
       // 'phone' param is now the driver's real authEmail
       const derivedEmail = (phone||'').trim();
       if (!derivedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(derivedEmail)) {
-        if (msgEl) { msgEl.style.color='var(--danger)'; msgEl.textContent='Không tìm thấy email tài xế.'; }
+        if (msgEl) { msgEl.style.color='var(--danger)'; msgEl.textContent='Driver email not found.'; }
         return;
       }
       const derivedPass  = pin.padEnd(6, '0');
-      if (msgEl) { msgEl.style.color='var(--muted)'; msgEl.textContent='Đang cập nhật…'; }
+      if (msgEl) { msgEl.style.color='var(--muted)'; msgEl.textContent='Updating…'; }
 
       try {
         // Look up Firebase Auth UID via sign-in (secondary call, won't affect admin session)
@@ -2310,7 +2310,7 @@
           // For now: update Firestore setupCode and warn admin
           if (msgEl) {
             msgEl.style.color = '#f5a623';
-            msgEl.textContent = 'PIN Firestore đã lưu. Tài khoản Auth cần được tạo lại nếu tài xế không đăng nhập được.';
+            msgEl.textContent = 'PIN saved to Firestore. Auth account may need to be recreated if driver cannot log in.';
           }
           await db.collection('drivers').doc(driverId).update({
             setupCode: pin, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2344,10 +2344,10 @@
         if (pinEl) pinEl.textContent = pin;
         const inp = document.getElementById('dpinInput-' + driverId);
         if (inp) inp.value = '';
-        if (msgEl) { msgEl.style.color = '#7ac87a'; msgEl.textContent = '✓ PIN đã cập nhật thành công. Mật khẩu Auth đồng bộ.'; }
+        if (msgEl) { msgEl.style.color = '#7ac87a'; msgEl.textContent = '✓ PIN updated successfully. Auth password synced.'; }
 
       } catch(e) {
-        if (msgEl) { msgEl.style.color='var(--danger)'; msgEl.textContent='Lỗi: ' + e.message; }
+        if (msgEl) { msgEl.style.color='var(--danger)'; msgEl.textContent='Error: ' + e.message; }
       }
     }
 
@@ -2360,7 +2360,7 @@
     }
 
     async function deleteDriver(driverId, name) {
-      if (!confirm(`Xóa tài xế "${name}"?\n\nHành động này sẽ xóa hoàn toàn tài khoản. Không thể hoàn tác.`)) return;
+      if (!confirm(`Delete driver "${name}"?\n\nThis will permanently delete the account. This cannot be undone.`)) return;
 
       // 1. Fetch driver doc to get auth credentials for Firebase Auth deletion
       let authEmail = '', setupCode = '';
@@ -2400,8 +2400,8 @@
       await db.collection('driverUsers').doc(driverId).delete().catch(()=>{});
       await db.collection('driver_compliance').doc(driverId).delete().catch(()=>{});
 
-      const note = authDeleted ? '' : '\n(Tài khoản Auth chưa xóa được — liên hệ Firebase Console nếu cần.)';
-      alert(`Đã xóa tài xế "${name}".${note}`);
+      const note = authDeleted ? '' : '\n(Auth account could not be deleted — contact Firebase Console if needed.)';
+      alert(`Driver "${name}" deleted.${note}`);
       loadDriverPanel();
     }
 
@@ -2414,14 +2414,14 @@
       const btn   = document.getElementById('btnCreateDriver');
       errEl.textContent = '';
 
-      if (!name || !phone || !email || !pin) { errEl.textContent = 'Vui lòng điền đầy đủ thông tin.'; return; }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent = 'Email không hợp lệ.'; return; }
+      if (!name || !phone || !email || !pin) { errEl.textContent = 'Please fill in all fields.'; return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent = 'Invalid email.'; return; }
       const digits = phone.replace(/\D/g, '');
-      if (digits.length < 10) { errEl.textContent = 'Số điện thoại phải có ít nhất 10 chữ số.'; return; }
-      if (pin.length < 4)  { errEl.textContent = 'Mã PIN phải có ít nhất 4 ký tự.'; return; }
+      if (digits.length < 10) { errEl.textContent = 'Phone number must have at least 10 digits.'; return; }
+      if (pin.length < 4)  { errEl.textContent = 'PIN must be at least 4 characters.'; return; }
 
       btn.disabled = true;
-      btn.textContent = 'Đang tạo…';
+      btn.textContent = 'Creating…';
 
       // Create Firebase Auth user via REST API (does NOT affect current admin session)
       // Driver logs in with their real email + PIN (padded to 6 chars for Firebase min length)
@@ -2440,7 +2440,7 @@
           if (result.error.message === 'EMAIL_EXISTS') {
             // Email already exists in Firebase Auth — try to sign in with same PIN
             // to recover an orphaned Auth account (created but Firestore doc was never saved).
-            errEl.textContent = 'Email đã tồn tại — đang kiểm tra…';
+            errEl.textContent = 'Email already exists — checking…';
             const signInResp = await fetch(
               `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`,
               { method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -2448,22 +2448,22 @@
             );
             const signInResult = await signInResp.json();
             if (signInResult.error || !signInResult.localId) {
-              errEl.textContent = 'Email này đã được dùng cho tài khoản khác. Vui lòng dùng email khác hoặc đặt lại mật khẩu.';
-              btn.disabled = false; btn.textContent = 'Tạo Tài Xế'; return;
+              errEl.textContent = 'This email is already used by another account. Please use a different email or reset the password.';
+              btn.disabled = false; btn.textContent = 'Create Driver'; return;
             }
             uid = signInResult.localId;
             // Check if Firestore driver doc already exists for this UID
             const existingDoc = await db.collection('drivers').doc(uid).get();
             if (existingDoc.exists) {
-              errEl.textContent = 'Tài xế với email này đã tồn tại trong hệ thống.';
-              btn.disabled = false; btn.textContent = 'Tạo Tài Xế'; return;
+              errEl.textContent = 'A driver with this email already exists in the system.';
+              btn.disabled = false; btn.textContent = 'Create Driver'; return;
             }
             // Orphaned Auth account found — proceed to create Firestore docs
             errEl.style.color = '#7ac87a';
-            errEl.textContent = 'Khôi phục tài khoản Auth cũ — đang tạo hồ sơ…';
+            errEl.textContent = 'Recovering existing Auth account — creating profile…';
           } else {
-            errEl.textContent = 'Lỗi tạo tài khoản: ' + result.error.message;
-            btn.disabled = false; btn.textContent = 'Tạo Tài Xế'; return;
+            errEl.textContent = 'Error creating account: ' + result.error.message;
+            btn.disabled = false; btn.textContent = 'Create Driver'; return;
           }
         }
         const ts = firebase.firestore.FieldValue.serverTimestamp();
@@ -2500,13 +2500,13 @@
         document.getElementById('newDriverEmail').value = '';
         document.getElementById('newDriverPin').value = '';
         errEl.style.color = '#7ac87a';
-        errEl.textContent = `✓ Tạo tài xế thành công! Phone: ${phone} · PIN: ${pin}`;
-        btn.disabled = false; btn.textContent = 'Tạo Tài Xế';
+        errEl.textContent = `✓ Driver created successfully! Phone: ${phone} · PIN: ${pin}`;
+        btn.disabled = false; btn.textContent = 'Create Driver';
         loadDriverPanel();
         loadDriversRealtime();
       } catch(e) {
-        errEl.textContent = 'Lỗi: ' + e.message;
-        btn.disabled = false; btn.textContent = 'Tạo Tài Xế';
+        errEl.textContent = 'Error: ' + e.message;
+        btn.disabled = false; btn.textContent = 'Create Driver';
       }
     }
 
@@ -2526,13 +2526,13 @@
     async function _loadComplianceAdmin(driverId) {
       var container = document.getElementById('drc-content-' + driverId);
       if (!container) return;
-      container.innerHTML = '<div class="comp-loading">Đang tải hồ sơ pháp lý…</div>';
+      container.innerHTML = '<div class="comp-loading">Loading compliance records…</div>';
       try {
         var doc = await db.collection('driver_compliance').doc(driverId).get();
         var comp = doc.exists ? doc.data() : DLCCompliance.blankDoc(driverId);
         _renderComplianceAdmin(driverId, comp);
       } catch(e) {
-        container.innerHTML = '<div style="color:var(--danger);font-size:0.75rem">Lỗi: ' + escHtml(e.message) + '</div>';
+        container.innerHTML = '<div style="color:var(--danger);font-size:0.75rem">Error: ' + escHtml(e.message) + '</div>';
       }
     }
 
@@ -2555,27 +2555,27 @@
         if (exp) {
           var dStr = DLCCompliance.formatDays(days);
           if (days !== null && days < 0) {
-            expiryHtml = '<div class="comp-doc-expired">⚠ HẾT HẠN: ' + escHtml(exp) + ' (' + dStr + ')</div>';
+            expiryHtml = '<div class="comp-doc-expired">⚠ EXPIRED: ' + escHtml(exp) + ' (' + dStr + ')</div>';
           } else if (days !== null && days <= 30) {
-            expiryHtml = '<div class="comp-doc-warn">⚡ Sắp hết hạn: ' + escHtml(exp) + ' (' + dStr + ')</div>';
+            expiryHtml = '<div class="comp-doc-warn">⚡ Expiring soon: ' + escHtml(exp) + ' (' + dStr + ')</div>';
           } else {
-            expiryHtml = '<div class="comp-doc-sub">Hết hạn: ' + escHtml(exp) + (days !== null ? ' (' + dStr + ')' : '') + '</div>';
+            expiryHtml = '<div class="comp-doc-sub">Expires: ' + escHtml(exp) + (days !== null ? ' (' + dStr + ')' : '') + '</div>';
           }
         }
 
         var rejNote = (status === 'rejected' && doc.rejectionReason)
-          ? '<div class="comp-doc-reject-reason">Lý do: ' + escHtml(doc.rejectionReason) + '</div>' : '';
+          ? '<div class="comp-doc-reject-reason">Reason: ' + escHtml(doc.rejectionReason) + '</div>' : '';
 
         // Future verification hook display
         var verifyHtml = doc.verificationStatus
-          ? '<div class="comp-doc-sub" style="color:#60a5fa;margin-top:.1rem">Xác thực: ' + escHtml(doc.verificationStatus) + (doc.verificationSource ? ' (' + escHtml(doc.verificationSource) + ')' : '') + '</div>' : '';
+          ? '<div class="comp-doc-sub" style="color:#60a5fa;margin-top:.1rem">Verification: ' + escHtml(doc.verificationStatus) + (doc.verificationSource ? ' (' + escHtml(doc.verificationSource) + ')' : '') + '</div>' : '';
 
         var viewBtn = fileUrl
-          ? '<a class="btn-comp-view" href="' + escHtml(fileUrl) + '" target="_blank" rel="noopener noreferrer">Xem ↗</a>' : '';
+          ? '<a class="btn-comp-view" href="' + escHtml(fileUrl) + '" target="_blank" rel="noopener noreferrer">View ↗</a>' : '';
         var approveBtn = status !== 'approved'
-          ? '<button class="btn-comp-approve" onclick="approveCompDoc(\'' + driverId + '\',\'' + key + '\')">Duyệt</button>' : '';
+          ? '<button class="btn-comp-approve" onclick="approveCompDoc(\'' + driverId + '\',\'' + key + '\')">Approve</button>' : '';
         var rejectBtn = status !== 'rejected'
-          ? '<button class="btn-comp-reject" onclick="rejectCompDoc(\'' + driverId + '\',\'' + key + '\')">Từ Chối</button>' : '';
+          ? '<button class="btn-comp-reject" onclick="rejectCompDoc(\'' + driverId + '\',\'' + key + '\')">Reject</button>' : '';
 
         return '<div class="comp-doc-row">' +
           '<div class="comp-doc-info">' +
@@ -2592,23 +2592,23 @@
       var insMeta = [ins.insurer, ins.policyNumber ? 'Policy: ' + ins.policyNumber : '', ins.namedInsured].filter(Boolean).join(' · ') || '—';
 
       var lastReview = comp.lastReviewAt
-        ? ('Duyệt gần nhất: ' + (comp.lastReviewBy ? escHtml(comp.lastReviewBy) + ' — ' : '') +
-           (() => { try { return new Date(comp.lastReviewAt.toDate ? comp.lastReviewAt.toDate() : comp.lastReviewAt).toLocaleDateString('vi-VN'); } catch(_) { return ''; } })())
-        : 'Chưa có lần duyệt nào';
+        ? ('Last review: ' + (comp.lastReviewBy ? escHtml(comp.lastReviewBy) + ' — ' : '') +
+           (() => { try { return new Date(comp.lastReviewAt.toDate ? comp.lastReviewAt.toDate() : comp.lastReviewAt).toLocaleDateString('en-US'); } catch(_) { return ''; } })())
+        : 'No reviews yet';
 
       var hasPending  = [lic.status, reg.status, ins.status].some(function(s) { return s === 'pending'; });
       var approveAll  = hasPending
-        ? '<button class="btn-approve-all" onclick="approveAllCompDocs(\'' + driverId + '\')">✓ Duyệt Tất Cả Đang Chờ</button>' : '';
-      var reqUpdate   = '<button class="btn-req-update" onclick="requestCompUpdate(\'' + driverId + '\')">Yêu Cầu Cập Nhật</button>';
+        ? '<button class="btn-approve-all" onclick="approveAllCompDocs(\'' + driverId + '\')">✓ Approve All Pending</button>' : '';
+      var reqUpdate   = '<button class="btn-req-update" onclick="requestCompUpdate(\'' + driverId + '\')">Request Update</button>';
 
       container.innerHTML =
         '<div style="font-size:.65rem;color:var(--muted);margin-bottom:.65rem">' + lastReview + '</div>' +
-        docRow('license',      'Bằng Lái Xe',  lic, licMeta, lic.fileFrontUrl || lic.fileBackUrl) +
-        docRow('registration', 'Đăng Ký Xe',   reg, regMeta, reg.fileUrl) +
-        docRow('insurance',    'Bảo Hiểm Xe',  ins, insMeta, ins.fileUrl) +
+        docRow('license',      'Driver\'s License',  lic, licMeta, lic.fileFrontUrl || lic.fileBackUrl) +
+        docRow('registration', 'Vehicle Registration',   reg, regMeta, reg.fileUrl) +
+        docRow('insurance',    'Vehicle Insurance',  ins, insMeta, ins.fileUrl) +
         '<div style="margin-top:.55rem">' +
-          '<label style="font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.3rem">Ghi Chú Nội Bộ</label>' +
-          '<textarea class="comp-notes-input" id="comp-notes-' + driverId + '" placeholder="Ghi chú admin (không hiển thị với tài xế)…">' + escHtml(comp.complianceNotes || '') + '</textarea>' +
+          '<label style="font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.3rem">Internal Notes</label>' +
+          '<textarea class="comp-notes-input" id="comp-notes-' + driverId + '" placeholder="Admin notes (not visible to driver)…">' + escHtml(comp.complianceNotes || '') + '</textarea>' +
         '</div>' +
         '<div class="comp-review-footer">' + approveAll + reqUpdate + '</div>';
     }
@@ -2691,7 +2691,7 @@
         alert('✓ Test approved! Driver can now appear in ride availability.\n\nRegions set to: ' + regions.join(', '));
         loadDriverPanel();
         loadDriversRealtime();
-      } catch(e) { alert('Lỗi: ' + e.message); }
+      } catch(e) { alert('Error: ' + e.message); }
     }
 
     async function approveCompDoc(driverId, docType) {
@@ -2699,21 +2699,21 @@
         var comp = await _applyCompUpdate(driverId, { [docType]: { status: 'approved', rejectionReason: '' } });
         _renderComplianceAdmin(driverId, comp);
         loadDriverPanel(); // Refresh badge in driver list
-      } catch(e) { alert('Lỗi: ' + e.message); }
+      } catch(e) { alert('Error: ' + e.message); }
     }
 
     async function rejectCompDoc(driverId, docType) {
-      var reason = prompt('Lý do từ chối (bắt buộc):');
+      var reason = prompt('Rejection reason (required):');
       if (!reason || !reason.trim()) return;
       try {
         var comp = await _applyCompUpdate(driverId, { [docType]: { status: 'rejected', rejectionReason: reason.trim() } });
         _renderComplianceAdmin(driverId, comp);
         loadDriverPanel();
-      } catch(e) { alert('Lỗi: ' + e.message); }
+      } catch(e) { alert('Error: ' + e.message); }
     }
 
     async function approveAllCompDocs(driverId) {
-      if (!confirm('Duyệt tất cả tài liệu đang ở trạng thái "Chờ Duyệt"?')) return;
+      if (!confirm('Approve all documents currently in "Pending" status?')) return;
       var ts      = firebase.firestore.FieldValue.serverTimestamp();
       var compRef = db.collection('driver_compliance').doc(driverId);
       var snap    = await compRef.get();
@@ -2737,7 +2737,7 @@
       comp.expirationWarning = warning;
       comp.lastReviewAt      = ts;
       comp.lastReviewBy      = 'admin';
-      comp.nextRequiredAction = overall === 'approved' ? 'Monitor expiration dates.' : 'Some documents still need attention.';
+      comp.nextRequiredAction = overall === 'approved' ? 'Monitor expiration dates.' : 'Some documents still require attention.';
 
       var driverMirror = { complianceStatus: overall, updatedAt: ts };
       if (comp.license      && comp.license.expirationDate)      driverMirror.licExpiry = comp.license.expirationDate;
@@ -2751,16 +2751,16 @@
         await batch.commit();
         _renderComplianceAdmin(driverId, comp);
         loadDriverPanel();
-      } catch(e) { alert('Lỗi: ' + e.message); }
+      } catch(e) { alert('Error: ' + e.message); }
     }
 
     async function requestCompUpdate(driverId) {
-      var note = prompt('Thông báo cho tài xế (tùy chọn — sẽ lưu vào ghi chú nội bộ):');
+      var note = prompt('Message for driver (optional — will be saved to internal notes):');
       if (note === null) return; // cancelled
       var ts      = firebase.firestore.FieldValue.serverTimestamp();
       var notesEl = document.getElementById('comp-notes-' + driverId);
       var existing = notesEl ? notesEl.value.trim() : '';
-      var combined = existing + (note ? '\n[Yêu cầu cập nhật ' + new Date().toLocaleDateString('vi-VN') + ': ' + note + ']' : '');
+      var combined = existing + (note ? '\n[Update requested ' + new Date().toLocaleDateString('en-US') + ': ' + note + ']' : '');
       try {
         var batch = db.batch();
         batch.set(db.collection('driver_compliance').doc(driverId), {
@@ -2776,7 +2776,7 @@
         loadDriverPanel();
         // Refresh panel content
         await _loadComplianceAdmin(driverId);
-      } catch(e) { alert('Lỗi: ' + e.message); }
+      } catch(e) { alert('Error: ' + e.message); }
     }
 
     // ── Auth state is managed by firebase.auth().onAuthStateChanged() above ──
@@ -2823,7 +2823,7 @@
             if (_shownNotifIds.has(docId)) return;
             _shownNotifIds.add(docId);
             var d = change.doc.data();
-            showToast(d.title || 'Thông báo', d.message || '');
+            showToast(d.title || 'Notification', d.message || '');
             // Mark as read after showing (best-effort)
             change.doc.ref.update({ read: true }).catch(function(){});
           });
@@ -2841,16 +2841,16 @@
     var _revServiceTypes = ['pickup', 'dropoff', 'private_ride'];
 
     function _revServiceLabel(type) {
-      return { pickup: 'Đón sân bay', dropoff: 'Đưa sân bay', private_ride: 'Xe riêng' }[type] || type || '—';
+      return { pickup: 'Airport Pickup', dropoff: 'Airport Dropoff', private_ride: 'Private Ride' }[type] || type || '—';
     }
 
     function _revStatusLabel(status) {
       return {
-        completed: 'Hoàn thành', cancelled: 'Đã hủy',
-        awaiting_driver: 'Chờ tài xế', pending: 'Chờ xác nhận',
-        confirmed: 'Đã xác nhận', assigned: 'Có tài xế',
-        driver_confirmed: 'TX xác nhận', on_the_way: 'Đang đến',
-        arrived: 'Đã đến', in_progress: 'Đang di chuyển'
+        completed: 'Completed', cancelled: 'Cancelled',
+        awaiting_driver: 'Awaiting driver', pending: 'Pending',
+        confirmed: 'Confirmed', assigned: 'Driver assigned',
+        driver_confirmed: 'Driver confirmed', on_the_way: 'On the way',
+        arrived: 'Arrived', in_progress: 'In progress'
       }[status] || status || '—';
     }
 
@@ -2955,7 +2955,7 @@
       var filtered = _revFilterBookings(_revBookings, _revPeriod);
       var m = _revMetrics(filtered);
 
-      var periodLabels = { today: 'Hôm nay', week: 'Tuần này', month: 'Tháng này', all: 'Tất cả' };
+      var periodLabels = { today: 'Today', week: 'This week', month: 'This month', all: 'All time' };
 
       // Period buttons
       var periodBtns = ['today','week','month','all'].map(function(p) {
@@ -2964,17 +2964,17 @@
 
       // Metric cards
       var grossNote = m.missingFare > 0
-        ? '<div class="rev-metric-sub">Thiếu ' + m.missingFare + ' chuyến sân bay</div>'
+        ? '<div class="rev-metric-sub">Missing ' + m.missingFare + ' airport trip fares</div>'
         : '';
 
       var cards = [
-        { label: 'Doanh thu ước tính', value: _revFmt(m.gross), cls: 'gold', sub: grossNote },
-        { label: 'Tổng chuyến', value: m.total },
-        { label: 'Hoàn thành', value: m.completed },
-        { label: 'Đã hủy', value: m.cancelled + (m.total ? ' (' + m.cancelRate + '%)' : '') },
-        { label: 'Fare TB / chuyến', value: m.avgFare != null ? _revFmt(m.avgFare) : '—' },
-        { label: 'Tài xế nhiều nhất', value: m.topDriver || '—',
-          sub: m.topDriver ? '<div class="rev-metric-sub">' + m.topDriverCount + ' chuyến</div>' : '' }
+        { label: 'Estimated Revenue', value: _revFmt(m.gross), cls: 'gold', sub: grossNote },
+        { label: 'Total Trips', value: m.total },
+        { label: 'Completed', value: m.completed },
+        { label: 'Cancelled', value: m.cancelled + (m.total ? ' (' + m.cancelRate + '%)' : '') },
+        { label: 'Avg Fare / trip', value: m.avgFare != null ? _revFmt(m.avgFare) : '—' },
+        { label: 'Top Driver', value: m.topDriver || '—',
+          sub: m.topDriver ? '<div class="rev-metric-sub">' + m.topDriverCount + ' trips</div>' : '' }
       ].map(function(c) {
         return '<div class="rev-metric-card">'
           + '<div class="rev-metric-label">' + c.label + '</div>'
@@ -2986,7 +2986,7 @@
       // Ride table rows
       var rows = '';
       if (filtered.length === 0) {
-        rows = '<tr><td colspan="6" class="rev-empty">Không có dữ liệu trong khoảng thời gian này</td></tr>';
+        rows = '<tr><td colspan="6" class="rev-empty">No data for this time period</td></tr>';
       } else {
         // Sort newest first
         var sorted = filtered.slice().sort(function(a,b) {
@@ -2998,7 +2998,7 @@
         });
         sorted.forEach(function(bk) {
           var ts = _revBookingTs(bk);
-          var dtStr = ts && !isNaN(ts) ? ts.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+          var dtStr = ts && !isNaN(ts) ? ts.toLocaleDateString('en-US', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
           var badgeCls = _revStatusBadgeClass(bk.status);
           rows += '<tr>'
             + '<td>' + escHtml(dtStr) + '</td>'
@@ -3013,18 +3013,18 @@
 
       var noteHtml = '';
       if (m.missingFare > 0) {
-        noteHtml = '<div class="rev-note">Chuyến sân bay (đón/đưa) không lưu giá ước tính — doanh thu ước tính chỉ tính từ chuyến xe riêng.</div>';
+        noteHtml = '<div class="rev-note">Airport trips (pickup/dropoff) do not store an estimated price — estimated revenue is calculated from private ride trips only.</div>';
       }
 
       panel.innerHTML = ''
         + '<div class="rev-period-bar">' + periodBtns + '</div>'
         + '<div class="rev-metrics">' + cards + '</div>'
         + (noteHtml ? noteHtml : '')
-        + '<div class="rev-section-title">Danh sách chuyến xe (' + filtered.length + ')</div>'
+        + '<div class="rev-section-title">Trip list (' + filtered.length + ')</div>'
         + '<div style="overflow-x:auto"><table class="rev-table">'
         + '<thead><tr>'
-        + '<th>Thời gian</th><th>Loại dịch vụ</th><th>Khách hàng</th>'
-        + '<th>Tài xế</th><th>Trạng thái</th><th>Doanh thu</th>'
+        + '<th>Date/Time</th><th>Service Type</th><th>Customer</th>'
+        + '<th>Driver</th><th>Status</th><th>Revenue</th>'
         + '</tr></thead>'
         + '<tbody>' + rows + '</tbody>'
         + '</table></div>';
@@ -3037,7 +3037,7 @@
       // If already loaded, just re-render
       if (_revLoaded) { renderRevenueDashboard(); return; }
 
-      panel.innerHTML = '<div class="rev-loading">Đang tải dữ liệu doanh thu…</div>';
+      panel.innerHTML = '<div class="rev-loading">Loading revenue data…</div>';
 
       db.collection('bookings')
         .where('serviceType', 'in', _revServiceTypes)
@@ -3050,7 +3050,7 @@
           renderRevenueDashboard();
         })
         .catch(function(err) {
-          panel.innerHTML = '<div class="rev-loading" style="color:var(--danger)">Lỗi tải dữ liệu: ' + escHtml(err.message) + '</div>';
+          panel.innerHTML = '<div class="rev-loading" style="color:var(--danger)">Error loading data: ' + escHtml(err.message) + '</div>';
         });
     }
   </script>

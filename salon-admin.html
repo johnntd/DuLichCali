@@ -5855,6 +5855,12 @@
     if (payStatus === 'paid' && !cached.paidAt) {
       update.paidAt = fv.serverTimestamp();
     }
+    // Auto-complete: when payment is paid in full, mark the booking as done immediately.
+    // Vendor should not have to tap a separate Done button after collecting payment.
+    var alreadyDone = ['completed','canceled','cancelled','no_show'].indexOf(cached.status || '') >= 0;
+    if (payStatus === 'paid' && !alreadyDone) {
+      update.status = 'completed';
+    }
 
     vendorRef.collection('bookings').doc(bookingId).update(update)
       .then(function() {

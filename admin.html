@@ -876,6 +876,7 @@
       <button class="admin-tab" onclick="switchTab('vendors')">Vendors</button>
       <button class="admin-tab" onclick="switchTab('drivers')">Drivers</button>
       <button class="admin-tab" onclick="switchTab('revenue')">Revenue</button>
+      <button class="admin-tab" onclick="switchTab('settings')">Settings</button>
     </div>
 
     <!-- ── TAB: Bookings ─────────────────────────────────── -->
@@ -1053,6 +1054,64 @@
     <div id="tabRevenue" class="tab-panel">
       <div class="rev-panel" id="revPanel">
         <div class="rev-loading">Loading revenue data…</div>
+      </div>
+    </div>
+
+    <!-- ── TAB: Settings ─────────────────────────────────── -->
+    <div id="tabSettings" class="tab-panel">
+      <div style="max-width:640px;margin:1.5rem auto;padding:0 1rem;display:flex;flex-direction:column;gap:1.5rem;">
+
+        <!-- Platform AI Settings -->
+        <div class="driver-card" style="padding:1.25rem 1.5rem;">
+          <div style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">Platform AI Settings</div>
+          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">
+            These keys are shared across ALL vendors as a fallback. Any vendor without their own key will use these automatically — giving every vendor full AI quality.
+          </div>
+
+          <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:0.25rem;">Claude API Key (shared fallback)</label>
+          <input type="password" id="platAiKey" placeholder="sk-ant-api03-…" autocomplete="off"
+            style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.75rem;color:var(--text);font-size:0.85rem;box-sizing:border-box;margin-bottom:0.75rem;">
+
+          <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:0.25rem;">OpenAI Key (optional — speeds up booking confirmation)</label>
+          <input type="password" id="platOpenAiKey" placeholder="sk-…" autocomplete="off"
+            style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.75rem;color:var(--text);font-size:0.85rem;box-sizing:border-box;margin-bottom:0.75rem;">
+
+          <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:0.25rem;">Gemini Key (optional — used for informational queries)</label>
+          <input type="password" id="platGeminiKey" placeholder="AIza…" autocomplete="off"
+            style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.75rem;color:var(--text);font-size:0.85rem;box-sizing:border-box;margin-bottom:1rem;">
+
+          <div style="display:flex;gap:0.75rem;align-items:center;">
+            <button class="btn-vend success" onclick="savePlatformSettings()">Save Platform Keys</button>
+            <span id="platSettingsMsg" style="font-size:0.82rem;"></span>
+          </div>
+        </div>
+
+        <!-- Per-Vendor AI Key Override -->
+        <div class="driver-card" style="padding:1.25rem 1.5rem;">
+          <div style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">Set AI Key for a Specific Vendor</div>
+          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">
+            Use this to give a specific vendor their own Claude key without requiring them to log in to their portal first.
+          </div>
+          <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:0.25rem;">Vendor ID</label>
+          <select id="vendorAiKeyId" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.75rem;color:var(--text);font-size:0.85rem;box-sizing:border-box;margin-bottom:0.75rem;">
+            <option value="">— select vendor —</option>
+            <option value="luxurious-nails">luxurious-nails (Luxurious Nails &amp; Spa)</option>
+            <option value="beauty-nails-oc">beauty-nails-oc (Beauty Nails OC)</option>
+            <option value="viet-hair-bayarea">viet-hair-bayarea (Việt Hair Studio)</option>
+            <option value="cali-hair-oc">cali-hair-oc (Cali Hair &amp; Beauty)</option>
+            <option value="nha-bep-cua-emily">nha-bep-cua-emily (Nhà Bếp Của Emily)</option>
+            <option value="pho-bac-bayarea">pho-bac-bayarea (Phở Bắc Bay Area)</option>
+            <option value="com-tam-oc">com-tam-oc (Cơm Tấm OC)</option>
+          </select>
+          <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:0.25rem;">Claude API Key for this vendor</label>
+          <input type="password" id="vendorAiKeyVal" placeholder="sk-ant-api03-… (leave blank to clear)" autocomplete="off"
+            style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.75rem;color:var(--text);font-size:0.85rem;box-sizing:border-box;margin-bottom:1rem;">
+          <div style="display:flex;gap:0.75rem;align-items:center;">
+            <button class="btn-vend success" onclick="saveVendorAiKey()">Save Vendor Key</button>
+            <span id="vendorAiKeyMsg" style="font-size:0.82rem;"></span>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -1460,7 +1519,7 @@
     // ── Tab switching ────────────────────────────────────────────
     function switchTab(tab) {
       document.querySelectorAll('.admin-tab').forEach((btn, i) => {
-        const tabs = ['bookings','vendors','drivers','revenue'];
+        const tabs = ['bookings','vendors','drivers','revenue','settings'];
         btn.classList.toggle('active', tabs[i] === tab);
       });
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -1469,6 +1528,7 @@
       if (tab === 'vendors') loadVendorPanel();
       if (tab === 'drivers') loadDriverPanel();
       if (tab === 'revenue') loadRevenueDashboard();
+      if (tab === 'settings') loadPlatformSettings();
     }
 
     // ── Load dynamic driver buttons for booking assignment ───────
@@ -3045,6 +3105,61 @@
         + '</tr></thead>'
         + '<tbody>' + rows + '</tbody>'
         + '</table></div>';
+    }
+
+    // ── Platform & Vendor AI Settings ────────────────────────────────────────
+    async function loadPlatformSettings() {
+      try {
+        const doc = await db.collection('config').doc('platform').get();
+        if (doc.exists) {
+          const d = doc.data();
+          // Show masked key if set (show only last 4 chars)
+          if (d.aiKey)     document.getElementById('platAiKey').placeholder    = '••••••••' + d.aiKey.slice(-4);
+          if (d.openaiKey) document.getElementById('platOpenAiKey').placeholder = '••••••••' + d.openaiKey.slice(-4);
+          if (d.geminiKey) document.getElementById('platGeminiKey').placeholder = '••••••••' + d.geminiKey.slice(-4);
+        }
+      } catch(e) {}
+    }
+
+    async function savePlatformSettings() {
+      const aiKey     = document.getElementById('platAiKey').value.trim();
+      const openaiKey = document.getElementById('platOpenAiKey').value.trim();
+      const geminiKey = document.getElementById('platGeminiKey').value.trim();
+      const msgEl     = document.getElementById('platSettingsMsg');
+      msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Saving…';
+      try {
+        const updates = { updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+        if (aiKey)     updates.aiKey     = aiKey;
+        if (openaiKey) updates.openaiKey = openaiKey;
+        if (geminiKey) updates.geminiKey = geminiKey;
+        await db.collection('config').doc('platform').set(updates, { merge: true });
+        msgEl.style.color = '#7ac87a'; msgEl.textContent = '✓ Saved! All vendors will use this key.';
+        // Clear fields after save
+        if (aiKey)     { document.getElementById('platAiKey').value = '';     document.getElementById('platAiKey').placeholder     = '••••••••' + aiKey.slice(-4); }
+        if (openaiKey) { document.getElementById('platOpenAiKey').value = ''; document.getElementById('platOpenAiKey').placeholder = '••••••••' + openaiKey.slice(-4); }
+        if (geminiKey) { document.getElementById('platGeminiKey').value = ''; document.getElementById('platGeminiKey').placeholder = '••••••••' + geminiKey.slice(-4); }
+      } catch(e) {
+        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Error: ' + e.message;
+      }
+    }
+
+    async function saveVendorAiKey() {
+      const vendorId = document.getElementById('vendorAiKeyId').value;
+      const aiKey    = document.getElementById('vendorAiKeyVal').value.trim();
+      const msgEl    = document.getElementById('vendorAiKeyMsg');
+      if (!vendorId) { msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Select a vendor.'; return; }
+      msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Saving…';
+      try {
+        const update = { updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+        if (aiKey) { update.aiKey = aiKey; }
+        else       { update.aiKey = firebase.firestore.FieldValue.delete(); }
+        await db.collection('vendors').doc(vendorId).set(update, { merge: true });
+        msgEl.style.color = '#7ac87a';
+        msgEl.textContent = aiKey ? `✓ AI key saved for ${vendorId}` : `✓ AI key cleared for ${vendorId}`;
+        document.getElementById('vendorAiKeyVal').value = '';
+      } catch(e) {
+        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Error: ' + e.message;
+      }
     }
 
     function loadRevenueDashboard() {

@@ -2226,7 +2226,7 @@
     _initNsCatHc(biz.id);
     _initNsFeatHc(biz.id);
     if (biz.aiReceptionist && biz.aiReceptionist.enabled) {
-      var _R = (window.LilyReceptionist && biz.id === 'luxurious-nails')
+      var _R = window.LilyReceptionist
         ? window.LilyReceptionist
         : Receptionist;
       _R.init(biz, 'aiWidget_' + biz.id);
@@ -2575,7 +2575,7 @@
         initBookingForm(biz);
       }
       if (biz.aiReceptionist && biz.aiReceptionist.enabled) {
-        var _R = (window.LilyReceptionist && biz.id === 'luxurious-nails')
+        var _R = window.LilyReceptionist
           ? window.LilyReceptionist
           : Receptionist;
         _R.init(biz, 'aiWidget_' + biz.id);
@@ -3867,6 +3867,22 @@
 
       if (!input || !sendBtn || !messagesEl) return;
 
+      // Fetch platform-level shared API key so all vendors get AI (not rule-based fallback)
+      // even if they haven't configured their own key in salon-admin.
+      biz._platformApiKey = biz._platformApiKey || null;
+      if (!biz._platformApiKey && window.dlcDb) {
+        window.dlcDb.collection('config').doc('platform').get().then(function(doc) {
+          if (doc.exists && doc.data().aiKey) biz._platformApiKey = doc.data().aiKey;
+        }).catch(function() {});
+      }
+      // Also fetch vendor-specific aiKey from Firestore vendors doc
+      biz._firestoreApiKey = biz._firestoreApiKey || null;
+      if (!biz._firestoreApiKey && window.dlcDb && biz.id) {
+        window.dlcDb.collection('vendors').doc(biz.id).get().then(function(doc) {
+          if (doc.exists && doc.data().aiKey) biz._firestoreApiKey = doc.data().aiKey;
+        }).catch(function() {});
+      }
+
       // Send button
       sendBtn.addEventListener('click', function () {
         var text = input.value.trim();
@@ -4024,6 +4040,8 @@
 
       var apiKey = null;
       try { apiKey = localStorage.getItem('dlc_claude_key'); } catch (e) {}
+      // Priority: localStorage → vendor Firestore key → platform shared key
+      if (!apiKey) apiKey = biz._firestoreApiKey || biz._platformApiKey || null;
 
       // Pre-fetch capacity if food vendor + date found in message
       var capPromise = Promise.resolve(null);

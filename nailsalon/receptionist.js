@@ -2640,6 +2640,9 @@
       //   Services   → one-time server get: active service catalog
       // _dataPromise resolves when all three are ready; _handleMessage awaits it before building prompt.
       biz._firestoreApiKey    = null;
+      biz._platformApiKey     = null;  // shared platform key — fallback when no vendor-specific key
+      biz._platformGeminiKey  = null;
+      biz._platformOpenAiKey  = null;
       biz._parallelServices   = [];
       biz._dataFetchedAt      = 0;
       biz._dataPromise        = null;
@@ -2680,15 +2683,26 @@
             }, function() { resolve(); }); // resolve on error too — keep existing biz.staff
           });
 
-          // ── Vendor doc + services: one-time server reads ───────────────────────────
+          // ── Vendor doc + services + platform config: one-time server reads ──────────
           biz._dataPromise = Promise.all([
             _vref.get({ source: 'server' }),
             _vref.collection('services').where('active', '==', true).get({ source: 'server' }),
-            _staffReady
+            _staffReady,
+            // Platform-level shared API key — fallback for vendors without their own key
+            window.dlcDb.collection('config').doc('platform').get().catch(function() { return null; })
           ]).then(function(results) {
-            var vdoc    = results[0];
-            var svcSnap = results[1];
+            var vdoc      = results[0];
+            var svcSnap   = results[1];
+            var platDoc   = results[3];
             // results[2] is undefined — staff handled by onSnapshot above
+
+            // ── Platform config: shared API keys (fallback when vendor has no key) ──
+            if (platDoc && platDoc.exists) {
+              var pd = platDoc.data();
+              if (pd.aiKey)     biz._platformApiKey    = pd.aiKey;
+              if (pd.geminiKey) biz._platformGeminiKey = pd.geminiKey;
+              if (pd.openaiKey) biz._platformOpenAiKey = pd.openaiKey;
+            }
 
             // ── Vendor doc: apiKey, parallelServices, hoursSchedule ─────────────────
             if (vdoc.exists) {
@@ -2836,7 +2850,8 @@
 
         var apiKey = null;
         try { apiKey = localStorage.getItem('dlc_claude_key'); } catch (e) {}
-        if (!apiKey) apiKey = biz._firestoreApiKey || null;
+        // Priority: localStorage → vendor Firestore key → platform shared key
+        if (!apiKey) apiKey = biz._firestoreApiKey || biz._platformApiKey || null;
 
         _handleMessage(biz, text, apiKey)
           .then(function (result) {

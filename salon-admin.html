@@ -3510,7 +3510,12 @@
     db.collection('vendorUsers').doc(user.uid).get().then(function(doc) {
       if (!doc.exists) { auth.signOut().then(function(){ window.location.href = 'vendor-login.html'; }); return; }
 
-      VENDOR_ID       = doc.data().vendorId;
+      // Prefer ?id= URL param (set by vendor-login redirect) so multi-vendor owners
+      // land on the correct store. Fall back to the legacy vendorId field.
+      var _urlId = new URLSearchParams(window.location.search).get('id');
+      VENDOR_ID       = (_urlId && (_urlId === doc.data().vendorId || (doc.data().vendorIds || []).includes(_urlId)))
+                        ? _urlId
+                        : (doc.data().vendorId || (doc.data().vendorIds && doc.data().vendorIds[0]));
       // Role: owner=full access; staff=permissions-controlled. Default to 'owner' if not set.
       _userRole       = doc.data().role || 'owner';
       _userStaffName  = doc.data().staffName || '';

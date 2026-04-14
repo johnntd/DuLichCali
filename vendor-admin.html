@@ -2127,7 +2127,12 @@
         auth.signOut().then(function () { goToLogin(null); });
         return;
       }
-      VENDOR_ID = doc.data().vendorId;
+      // Prefer ?id= URL param (set by vendor-login redirect) so multi-vendor owners
+      // land on the correct store. Fall back to legacy vendorId field.
+      var _urlId = new URLSearchParams(window.location.search).get('id');
+      VENDOR_ID = (_urlId && (_urlId === doc.data().vendorId || (doc.data().vendorIds || []).includes(_urlId)))
+                  ? _urlId
+                  : (doc.data().vendorId || (doc.data().vendorIds && doc.data().vendorIds[0]));
       vendorRef = db.collection('vendors').doc(VENDOR_ID);
       menuRef   = vendorRef.collection('menuItems');
       // Fetch vendor doc for category (Firestore-first) + business name

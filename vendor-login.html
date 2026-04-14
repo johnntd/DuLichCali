@@ -389,12 +389,14 @@
   }
 
   // ── Helper: redirect to correct admin page based on vendor category ─────────
+  // Always passes ?id= so multi-vendor owners land on the correct portal.
   function _redirectToVendorAdmin(vendorId) {
     if (!vendorId) { window.location.href = 'vendor-admin.html'; return; }
     db.collection('vendors').doc(vendorId).get().then(function(vdoc) {
       var cat = vdoc.exists ? vdoc.data().category : null;
-      window.location.href = (cat === 'nails' || cat === 'hair') ? 'salon-admin.html' : 'vendor-admin.html';
-    }).catch(function() { window.location.href = 'vendor-admin.html'; });
+      var page = (cat === 'nails' || cat === 'hair') ? 'salon-admin.html' : 'vendor-admin.html';
+      window.location.href = page + '?id=' + encodeURIComponent(vendorId);
+    }).catch(function() { window.location.href = 'vendor-admin.html?id=' + encodeURIComponent(vendorId); });
   }
 
   // ── Auth state check — redirect if already signed in ─────────────────────
@@ -549,7 +551,8 @@
               });
             }
             var cat = vdoc.exists ? vdoc.data().category : null;
-            window.location.href = (cat === 'nails' || cat === 'hair') ? 'salon-admin.html' : 'vendor-admin.html';
+            var _page = (cat === 'nails' || cat === 'hair') ? 'salon-admin.html' : 'vendor-admin.html';
+            window.location.href = _page + '?id=' + encodeURIComponent(VENDOR_ID);
           });
         } else if (!doc.exists) {
           // Existing Auth account, no vendor mapping — offer claim flow

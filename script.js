@@ -1411,26 +1411,31 @@ async function checkRideServiceAvailability(regionId) {
 
 // Toggle ride-gated UI elements based on driver availability.
 function updateRideServiceCards(available) {
+  // Tiles are ALWAYS bookable — customers can book for any future date regardless of
+  // whether a driver is on shift right now. Never disable or overlay the cards.
+  // Remove any stale unavailability badges from earlier page state.
   document.querySelectorAll('[data-ride-gate]').forEach(el => {
-    el.classList.toggle('ride-unavailable', !available);
-    var existing = el.querySelector('.ride-unavail-badge');
-    if (!available && !existing) {
-      var badge = document.createElement('div');
-      badge.className = 'ride-unavail-badge';
-      badge.innerHTML = '<span>No Cars Available</span>';
-      el.appendChild(badge);
-    } else if (available && existing) {
-      existing.remove();
-    }
+    el.classList.remove('ride-unavailable');
+    var stale = el.querySelector('.ride-unavail-badge');
+    if (stale) stale.remove();
   });
 
-  // Update driver availability badge — social proof + scarcity signal
+  // Update driver availability badge — social proof signal
   var statusEl = document.getElementById('hpAvailStatus');
   if (statusEl) {
     var count = (window._availableDrivers || []).length;
     if (available && count > 0) {
       statusEl.textContent = count + ' drivers available today';
       statusEl.hidden = false;
+    } else if (!available) {
+      // Drivers exist but none on shift right now — encourage future booking
+      var totalDrivers = (window._activeDrivers || []).length;
+      if (totalDrivers > 0) {
+        statusEl.textContent = 'Book for any future date';
+        statusEl.hidden = false;
+      } else {
+        statusEl.hidden = true;
+      }
     } else {
       statusEl.hidden = true;
     }

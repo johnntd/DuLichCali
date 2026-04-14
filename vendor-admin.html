@@ -2127,12 +2127,27 @@
         auth.signOut().then(function () { goToLogin(null); });
         return;
       }
-      // Prefer ?id= URL param (set by vendor-login redirect) so multi-vendor owners
-      // land on the correct store. Fall back to legacy vendorId field.
-      var _urlId = new URLSearchParams(window.location.search).get('id');
-      VENDOR_ID = (_urlId && (_urlId === doc.data().vendorId || (doc.data().vendorIds || []).includes(_urlId)))
-                  ? _urlId
-                  : (doc.data().vendorId || (doc.data().vendorIds && doc.data().vendorIds[0]));
+      // Determine which vendor to load:
+      // Priority: ?id= URL param → sessionStorage → only store if one → picker if many
+      var _d2     = doc.data();
+      var _allIds2 = _d2.vendorIds && _d2.vendorIds.length ? _d2.vendorIds : (_d2.vendorId ? [_d2.vendorId] : []);
+      var _urlId2  = new URLSearchParams(window.location.search).get('id');
+      var _ssId2   = null;
+      try { _ssId2 = sessionStorage.getItem('dlc_vendor_id'); sessionStorage.removeItem('dlc_vendor_id'); } catch(e) {}
+
+      if (_urlId2 && _allIds2.indexOf(_urlId2) >= 0) {
+        VENDOR_ID = _urlId2;
+      } else if (_ssId2 && _allIds2.indexOf(_ssId2) >= 0) {
+        VENDOR_ID = _ssId2;
+      } else if (_allIds2.length === 1) {
+        VENDOR_ID = _allIds2[0];
+      } else if (_allIds2.length > 1) {
+        // Show redirect-based picker (reuse salon-admin picker via vendor-login)
+        window.location.href = 'vendor-login.html';
+        return;
+      } else {
+        VENDOR_ID = _d2.vendorId || null;
+      }
       vendorRef = db.collection('vendors').doc(VENDOR_ID);
       menuRef   = vendorRef.collection('menuItems');
       // Fetch vendor doc for category (Firestore-first) + business name

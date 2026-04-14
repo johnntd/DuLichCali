@@ -3510,16 +3510,35 @@
     db.collection('vendorUsers').doc(user.uid).get().then(function(doc) {
       if (!doc.exists) { auth.signOut().then(function(){ window.location.href = 'vendor-login.html'; }); return; }
 
-      // Prefer ?id= URL param (set by vendor-login redirect) so multi-vendor owners
-      // land on the correct store. Fall back to the legacy vendorId field.
-      var _urlId = new URLSearchParams(window.location.search).get('id');
-      VENDOR_ID       = (_urlId && (_urlId === doc.data().vendorId || (doc.data().vendorIds || []).includes(_urlId)))
-                        ? _urlId
-                        : (doc.data().vendorId || (doc.data().vendorIds && doc.data().vendorIds[0]));
+      // Determine which vendor to load:
+      // Priority: ?id= URL param → sessionStorage → vendorId (legacy first-store)
+      // If the user owns multiple stores and no specific one is targeted, show a picker.
+      var _d          = doc.data();
+      var _allIds     = _d.vendorIds && _d.vendorIds.length ? _d.vendorIds : (_d.vendorId ? [_d.vendorId] : []);
+      var _urlId      = new URLSearchParams(window.location.search).get('id');
+      var _ssId       = null;
+      try { _ssId = sessionStorage.getItem('dlc_vendor_id'); sessionStorage.removeItem('dlc_vendor_id'); } catch(e) {}
+
+      var _targetId   = null;
+      if (_urlId && _allIds.indexOf(_urlId) >= 0) {
+        _targetId = _urlId;                            // ?id= param wins if valid
+      } else if (_ssId && _allIds.indexOf(_ssId) >= 0) {
+        _targetId = _ssId;                             // sessionStorage fallback
+      } else if (_allIds.length === 1) {
+        _targetId = _allIds[0];                        // only one store — use it
+      } else if (_allIds.length > 1) {
+        // Multiple stores, no specific one requested — show picker overlay
+        _showVendorPicker(_allIds, _d.role || 'owner');
+        return;
+      } else {
+        _targetId = _d.vendorId || null;               // last resort legacy field
+      }
+
+      VENDOR_ID       = _targetId;
       // Role: owner=full access; staff=permissions-controlled. Default to 'owner' if not set.
-      _userRole       = doc.data().role || 'owner';
-      _userStaffName  = doc.data().staffName || '';
-      _userPerms      = Object.assign({ viewAll: false, contactCustomer: false, canCancel: false, canConfirm: false }, doc.data().permissions || {});
+      _userRole       = _d.role || 'owner';
+      _userStaffName  = _d.staffName || '';
+      _userPerms      = Object.assign({ viewAll: false, contactCustomer: false, canCancel: false, canConfirm: false }, _d.permissions || {});
       _userEmail      = user.email || '';
 
       vendorRef   = db.collection('vendors').doc(VENDOR_ID);
@@ -3638,6 +3657,71 @@
       });
     }).catch(function() { window.location.href = 'vendor-login.html'; });
   });
+
+  // ── Vendor picker overlay (multi-store owners with no ?id= target) ──────────
+  function _showVendorPicker(vendorIds, role) {
+    // Build a simple overlay that lets the owner pick which store to manage.
+    // After selection, reload with ?id= so the normal auth flow runs cleanly.
+    var overlay = document.createElement('div');
+    overlay.id = 'vendorPickerOverlay';
+    overlay.style.cssText = [
+      'position:fixed;inset:0;background:rgba(13,47,80,.97);z-index:99999;',
+      'display:flex;flex-direction:column;align-items:center;justify-content:center;',
+      'padding:2rem 1.25rem;font-family:var(--font-b,sans-serif);'
+    ].join('');
+    overlay.innerHTML = [
+      '<div style="max-width:400px;width:100%;text-align:center;">',
+        '<div style="font-size:1.4rem;font-weight:700;color:#f5a623;margin-bottom:.4rem;">✦ Du Lịch Cali</div>',
+        '<div style="font-size:.9rem;color:#c8e4f8;margin-bottom:1.5rem;">Select the store you want to manage:</div>',
+        '<div id="vpGrid" style="display:flex;flex-direction:column;gap:.75rem;"></div>',
+        '<button onclick="auth.signOut().then(function(){window.location.href=\'vendor-login.html\';})" ',
+          'style="margin-top:1.5rem;background:transparent;border:1px solid rgba(255,255,255,.2);',
+          'color:#6ab0d4;border-radius:8px;padding:.5rem 1.25rem;cursor:pointer;font-size:.8rem;">',
+          'Sign Out</button>',
+      '</div>'
+    ].join('');
+    document.body.appendChild(overlay);
+
+    var grid = document.getElementById('vpGrid');
+    var loaded = 0;
+    vendorIds.forEach(function(vid) {
+      db.collection('vendors').doc(vid).get().then(function(vdoc) {
+        var vdata   = vdoc.exists ? vdoc.data() : {};
+        var name    = vdata.businessName || vdata.name || vid;
+        var cat     = vdata.category || '';
+        var catLabel = cat === 'nails' ? 'Nail Salon' : cat === 'hair' ? 'Hair Salon' : cat === 'food' ? 'Food Vendor' : cat;
+        var btn = document.createElement('button');
+        btn.style.cssText = [
+          'background:rgba(255,255,255,.07);border:1px solid rgba(245,166,35,.3);',
+          'border-radius:12px;padding:1rem 1.25rem;cursor:pointer;text-align:left;',
+          'color:#c8e4f8;transition:background .15s;width:100%;'
+        ].join('');
+        btn.innerHTML = [
+          '<div style="font-weight:600;font-size:.95rem;color:#f5a623;">' + name + '</div>',
+          catLabel ? '<div style="font-size:.78rem;color:#6ab0d4;margin-top:.15rem;">' + catLabel + '</div>' : ''
+        ].join('');
+        btn.onmouseover = function() { btn.style.background = 'rgba(245,166,35,.12)'; };
+        btn.onmouseout  = function() { btn.style.background = 'rgba(255,255,255,.07)'; };
+        btn.onclick = function() {
+          try { sessionStorage.setItem('dlc_vendor_id', vid); } catch(e) {}
+          // For nails/hair → salon-admin; for food → vendor-admin
+          var page = (cat === 'nails' || cat === 'hair') ? 'salon-admin.html' : 'vendor-admin.html';
+          window.location.href = page + '?id=' + encodeURIComponent(vid);
+        };
+        grid.appendChild(btn);
+      }).catch(function() {
+        // Vendor doc not found — use plain ID button
+        var btn = document.createElement('button');
+        btn.style.cssText = 'background:rgba(255,255,255,.07);border:1px solid rgba(245,166,35,.3);border-radius:12px;padding:1rem;cursor:pointer;color:#c8e4f8;width:100%;';
+        btn.textContent = vid;
+        btn.onclick = function() {
+          try { sessionStorage.setItem('dlc_vendor_id', vid); } catch(e) {}
+          window.location.href = 'salon-admin.html?id=' + encodeURIComponent(vid);
+        };
+        grid.appendChild(btn);
+      });
+    });
+  }
 
   function logout() {
     if (unsubSvcs)      unsubSvcs();

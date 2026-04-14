@@ -406,7 +406,12 @@
         db.collection('vendorUsers').doc(user.uid).get().then(function (doc) {
           if (doc.exists) {
             var d0 = doc.data();
-            var primaryId = d0.vendorId || (d0.vendorIds && d0.vendorIds[0]);
+            // Prefer vendorIds array (updated list) over legacy vendorId field.
+            // Legacy vendorId may refer to a store no longer in the user's active list,
+            // which would cause salon-admin to show the picker on every visit.
+            var primaryId = (d0.vendorIds && d0.vendorIds.length)
+              ? d0.vendorIds[0]
+              : (d0.vendorId || null);
             _redirectToVendorAdmin(primaryId);
           } else {
             auth.signOut().then(function () {

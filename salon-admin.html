@@ -3534,6 +3534,12 @@
         _targetId = _d.vendorId || null;               // last resort legacy field
       }
 
+      // Guard: if no vendor resolved, sign out cleanly so vendor-login shows the form
+      if (!_targetId) {
+        auth.signOut().then(function() { window.location.href = 'vendor-login.html'; });
+        return;
+      }
+
       VENDOR_ID       = _targetId;
       // Role: owner=full access; staff=permissions-controlled. Default to 'owner' if not set.
       _userRole       = _d.role || 'owner';
@@ -3655,7 +3661,16 @@
         subscribeNotifications();
         loadHoursGrid(null);
       });
-    }).catch(function() { window.location.href = 'vendor-login.html'; });
+    }).catch(function(err) {
+      // Sign out before redirecting so vendor-login shows the login form
+      // (without sign-out, vendor-login auto-redirects back here → infinite loop)
+      console.error('[DLC] salon-admin auth error:', err);
+      auth.signOut().then(function() {
+        window.location.href = 'vendor-login.html';
+      }).catch(function() {
+        window.location.href = 'vendor-login.html';
+      });
+    });
   });
 
   // ── Vendor picker overlay (multi-store owners with no ?id= target) ──────────

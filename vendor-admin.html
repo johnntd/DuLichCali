@@ -2195,8 +2195,10 @@
         renderAIProviderChips();
         startApp();
       });
-    }).catch(function () {
-      goToLogin(null);
+    }).catch(function (err) {
+      // Sign out before redirecting to prevent redirect loop
+      console.error('[DLC] vendor-admin auth error:', err);
+      auth.signOut().then(function() { goToLogin(null); }).catch(function() { goToLogin(null); });
     });
   });
 

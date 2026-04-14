@@ -738,13 +738,22 @@ window.RideIntake = (function () {
       return null;
     }
 
-    // Prefer a driver whose vehicle matches the target type; fall back to any with a vehicle
+    // Only apply a driver if their vehicle type EXACTLY matches the target.
+    // Never fall back to a wrong-type driver — that would show the right vehicle
+    // name (from DLCRide fleet recommendation) but the wrong driver's phone.
     var matched = pool.find(function(d) {
       var vName = [d.vehicle && d.vehicle.make, d.vehicle && d.vehicle.model].filter(Boolean).join(' ');
       return _guessType(vName) === targetType;
-    }) || pool.find(function(d) { return d.vehicle && d.vehicle.make; }) || pool[0];
+    });
 
-    if (matched) _applyDriverVehicle(matched, matched.id);
+    if (matched) {
+      _applyDriverVehicle(matched, matched.id);
+    } else {
+      // No driver in pool has their vehicle data entered for this type.
+      // Clear _driverVehicle so the confirmation falls back to the business number
+      // instead of showing a wrong driver's contact.
+      _driverVehicle = null;
+    }
   }
 
   // ── Sub-step navigation (progressive disclosure) ──────────────────────────────

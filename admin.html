@@ -1611,9 +1611,13 @@
       const vendorUsersMap = {}; // vendorId → [{uid, email, role, staffName}]
       if (vuSnap) vuSnap.docs.forEach(doc => {
         const d = doc.data();
-        if (!d.vendorId) return;
-        if (!vendorUsersMap[d.vendorId]) vendorUsersMap[d.vendorId] = [];
-        vendorUsersMap[d.vendorId].push({ uid: doc.id, email: d.email || '', role: d.role || 'owner', staffName: d.staffName || '', pin: d.pin || '' });
+        // Support both legacy vendorId (string) and new vendorIds (array for multi-vendor owners)
+        const ids = d.vendorIds ? d.vendorIds : (d.vendorId ? [d.vendorId] : []);
+        if (ids.length === 0) return;
+        ids.forEach(vid => {
+          if (!vendorUsersMap[vid]) vendorUsersMap[vid] = [];
+          vendorUsersMap[vid].push({ uid: doc.id, email: d.email || '', role: d.role || 'owner', staffName: d.staffName || '', pin: d.pin || '' });
+        });
       });
 
       // Merge: VENDOR_LIST baseline + Firestore-only vendors

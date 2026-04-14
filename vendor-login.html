@@ -403,7 +403,9 @@
       if (!VENDOR_ID) {
         db.collection('vendorUsers').doc(user.uid).get().then(function (doc) {
           if (doc.exists) {
-            _redirectToVendorAdmin(doc.data().vendorId);
+            var d0 = doc.data();
+            var primaryId = d0.vendorId || (d0.vendorIds && d0.vendorIds[0]);
+            _redirectToVendorAdmin(primaryId);
           } else {
             auth.signOut().then(function () {
               document.getElementById('authChecking').classList.add('hidden');
@@ -417,7 +419,7 @@
         return;
       }
       db.collection('vendorUsers').doc(user.uid).get().then(function (doc) {
-        if (doc.exists && doc.data().vendorId === VENDOR_ID) {
+        if (doc.exists && (doc.data().vendorId === VENDOR_ID || (doc.data().vendorIds || []).includes(VENDOR_ID))) {
           _redirectToVendorAdmin(VENDOR_ID);
         } else if (!doc.exists) {
           document.getElementById('authChecking').classList.add('hidden');
@@ -534,7 +536,7 @@
     }
     auth.signInWithEmailAndPassword(email, pass).then(function (cred) {
       return db.collection('vendorUsers').doc(cred.user.uid).get().then(function (doc) {
-        if (doc.exists && doc.data().vendorId === VENDOR_ID) {
+        if (doc.exists && (doc.data().vendorId === VENDOR_ID || (doc.data().vendorIds || []).includes(VENDOR_ID))) {
           // Check admin status before allowing entry
           return db.collection('vendors').doc(VENDOR_ID).get().then(function (vdoc) {
             var st = vdoc.exists ? vdoc.data().adminStatus : null;
@@ -620,11 +622,17 @@
     btn.disabled = true;
 
     function writeMapping(uid) {
-      return db.collection('vendorUsers').doc(uid).set({
-        vendorId:  VENDOR_ID,
-        email:     email,
-        role:      'owner',   // first registrant for a vendor is always the owner
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      return db.collection('vendorUsers').doc(uid).get().then(function (existing) {
+        var updates = {
+          vendorIds: firebase.firestore.FieldValue.arrayUnion(VENDOR_ID),
+          email:     email,
+          role:      'owner'
+        };
+        if (!existing.exists) {
+          updates.vendorId  = VENDOR_ID;  // legacy field for new docs only
+          updates.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        }
+        return db.collection('vendorUsers').doc(uid).set(updates, { merge: true });
       });
     }
 
@@ -637,16 +645,21 @@
       if (err.code === 'auth/email-already-in-use') {
         auth.signInWithEmailAndPassword(email, pass).then(function (cred) {
           return db.collection('vendorUsers').doc(cred.user.uid).get().then(function (doc) {
-            if (doc.exists && doc.data().vendorId === VENDOR_ID) {
+            if (doc.exists && (doc.data().vendorId === VENDOR_ID || (doc.data().vendorIds || []).includes(VENDOR_ID))) {
               _redirectToVendorAdmin(VENDOR_ID);
             } else if (!doc.exists) {
               return writeMapping(cred.user.uid).then(function () {
                 _redirectToVendorAdmin(VENDOR_ID);
               });
             } else {
-              auth.signOut();
-              errEl.textContent = 'Tài khoản này đã được liên kết với cửa hàng khác.';
-              btn.disabled = false;
+              // Owner already linked to a different vendor — add this one too
+              return writeMapping(cred.user.uid).then(function () {
+                _redirectToVendorAdmin(VENDOR_ID);
+              }).catch(function (e) {
+                auth.signOut();
+                errEl.textContent = 'Lỗi liên kết cửa hàng: ' + e.message;
+                btn.disabled = false;
+              });
             }
           });
         }).catch(function (signInErr) {
@@ -690,11 +703,17 @@
     var user = auth.currentUser;
     if (!user) { showScreen('login'); return; }
     btn.disabled = true;
-    db.collection('vendorUsers').doc(user.uid).set({
-      vendorId:  VENDOR_ID,
-      email:     user.email || '',
-      role:      'owner',   // claim uses owner setup code — claimer is always owner
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    db.collection('vendorUsers').doc(user.uid).get().then(function (existing) {
+      var updates = {
+        vendorIds: firebase.firestore.FieldValue.arrayUnion(VENDOR_ID),
+        email:     user.email || '',
+        role:      'owner'
+      };
+      if (!existing.exists) {
+        updates.vendorId  = VENDOR_ID;
+        updates.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      }
+      return db.collection('vendorUsers').doc(user.uid).set(updates, { merge: true });
     }).then(function () {
       _redirectToVendorAdmin(VENDOR_ID);
     }).catch(function (err) {

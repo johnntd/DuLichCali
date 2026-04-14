@@ -1984,26 +1984,43 @@
         const result = await resp.json();
         if (result.error) {
           if (result.error.message === 'EMAIL_EXISTS') {
-            // Account already exists — find their UID via vendorUsers email lookup and assign them to this vendor
-            msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Account already exists — assigning role…';
+            // Account already exists — find UID via vendorUsers email lookup first
+            msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Account exists — looking up user…';
             const existingSnap = await db.collection('vendorUsers').where('email', '==', email).limit(1).get();
             let uid;
             if (!existingSnap.empty) {
               uid = existingSnap.docs[0].id;
             } else {
-              // Auth account exists but no vendorUsers doc yet — can't get UID from client without password
-              msgEl.style.color = 'var(--danger)';
-              msgEl.textContent = 'Account exists but is not yet registered in the system. Have them log in via vendor-login.html first.';
-              return;
+              // No vendorUsers doc found — try signing in with the provided PIN to get the UID
+              msgEl.textContent = 'Resolving account via sign-in…';
+              const signInResp = await fetch(
+                `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`,
+                { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email, password: tempPass, returnSecureToken: true }) }
+              );
+              const signInResult = await signInResp.json();
+              if (signInResult.error) {
+                msgEl.style.color = 'var(--danger)';
+                msgEl.textContent = 'Account exists but PIN is incorrect. Verify the PIN matches their existing password.';
+                return;
+              }
+              uid = signInResult.localId;
             }
-            await db.collection('vendorUsers').doc(uid).set({
-              vendorId, email, role,
+            // Link this vendor to the existing user using arrayUnion (multi-vendor support)
+            const fv = firebase.firestore.FieldValue;
+            const vuUpdates = {
+              vendorIds: fv.arrayUnion(vendorId),
+              email, role,
               staffName: (role === 'staff' || role === 'manager') ? staffName : '',
-              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
+              updatedAt: fv.serverTimestamp()
+            };
+            // Also set singular vendorId if doc is new (backward compat for vendor-login.html)
+            const vuDoc = await db.collection('vendorUsers').doc(uid).get();
+            if (!vuDoc.exists || !vuDoc.data().vendorId) vuUpdates.vendorId = vendorId;
+            await db.collection('vendorUsers').doc(uid).set(vuUpdates, { merge: true });
             emailEl.value = ''; if (nameEl) nameEl.value = '';
-            msgEl.style.color = '#7ac87a'; msgEl.textContent = '✓ Assigned!';
-            if (pwBox) { pwBox.textContent = 'Account already exists — use current password to log in at salon-admin.html'; pwBox.style.display = 'block'; }
+            msgEl.style.color = '#7ac87a'; msgEl.textContent = '✓ Assigned to this store!';
+            if (pwBox) { pwBox.textContent = 'Account already exists — they log in with their existing PIN/password.'; pwBox.style.display = 'block'; }
             setTimeout(() => { loadVendorPanel(); }, 2000);
             return;
           }
@@ -2012,7 +2029,7 @@
 
         const uid = result.localId;
         await db.collection('vendorUsers').doc(uid).set({
-          vendorId, email, role, pin,
+          vendorId, vendorIds: [vendorId], email, role, pin,
           staffName: (role === 'staff' || role === 'manager') ? staffName : '',
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });

@@ -2213,7 +2213,23 @@
         msgEl.style.color = '#7ac87a';
         msgEl.textContent = '✓ Đã lưu!';
         setTimeout(() => { msgEl.textContent = ''; }, 3000);
-        loadDriverPanel();
+        // Update header in-place — do NOT call loadDriverPanel() here because it
+        // re-renders and collapses the profile panel, causing data-loss confusion
+        const infoEl = document.querySelector('#dr-' + driverId + ' .driver-row__info');
+        if (infoEl) {
+          const nameEl = infoEl.querySelector('.driver-row__name');
+          if (nameEl) {
+            // Preserve badge spans; update only the leading text node
+            const tn = nameEl.firstChild;
+            if (tn && tn.nodeType === Node.TEXT_NODE) tn.textContent = fullName || '—';
+          }
+          const meta0 = infoEl.querySelectorAll('.driver-row__meta')[0];
+          if (meta0) {
+            const vehStr = [make, model, year].filter(Boolean).join(' ');
+            const regStr = regions.join(', ') || 'No region';
+            meta0.textContent = (phone || '—') + (vehStr ? ' · ' + vehStr : '') + ' · ' + regStr;
+          }
+        }
         loadDriversRealtime();
       } catch(e) {
         msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Lỗi: ' + e.message;

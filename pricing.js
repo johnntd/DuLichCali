@@ -98,8 +98,9 @@ const DLCPricing = (() => {
     const uberRaw     = r.base + r.bookingFee + (totalMiles * r.perMile) + (durMins * r.perMin);
     const uberEst     = Math.max(uberRaw, r.minFare);
     // DLC price = Uber baseline × (1 − 20% discount), rounded up to nearest $5
+    // dlcMin floor ensures consistency with transferCost() minimums across both booking paths
     const dlcRaw      = uberEst * (1 - UBER_DISCOUNT);
-    const dlcPrice    = Math.ceil(dlcRaw / 5) * 5;
+    const dlcPrice    = Math.ceil(Math.max(dlcRaw, r.dlcMin || 80) / 5) * 5;
     return {
       miles:         Math.round(miles),
       minutes:       Math.round(durMins),
@@ -336,9 +337,11 @@ const DLCPricing = (() => {
   // These are Uber-equivalent market rates; DLC charges UBER_DISCOUNT (20%) less.
   // Tesla (4-seat) · Sienna (7-seat) · Van (12-seat)
   const VEHICLE_RATE_CARDS = {
-    'Tesla Model Y': { seats: 4,  base: 3.00, perMile: 2.30, perMin: 0.30, bookingFee: 2.50, minFare: 25.00 },
-    'Toyota Sienna': { seats: 7,  base: 4.00, perMile: 3.00, perMin: 0.40, bookingFee: 3.50, minFare: 35.00 },
-    'Mercedes Van':  { seats: 12, base: 6.00, perMile: 3.80, perMin: 0.55, bookingFee: 5.00, minFare: 60.00 },
+    // minFare = Uber-equivalent floor (applied before discount)
+    // dlcMin  = DLC price floor after 20% discount (must match transferCost() minimums)
+    'Tesla Model Y': { seats: 4,  base: 3.00, perMile: 2.30, perMin: 0.30, bookingFee: 2.50, minFare: 25.00, dlcMin: 100 },
+    'Toyota Sienna': { seats: 7,  base: 4.00, perMile: 3.00, perMin: 0.40, bookingFee: 3.50, minFare: 35.00, dlcMin: 120 },
+    'Mercedes Van':  { seats: 12, base: 6.00, perMile: 3.80, perMin: 0.55, bookingFee: 5.00, minFare: 60.00, dlcMin: 140 },
   };
 
   function getVehicle(passengers, regionId) {

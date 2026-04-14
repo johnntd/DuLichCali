@@ -726,8 +726,6 @@ window.RideIntake = (function () {
     if (!rv.recommended) return;
 
     var targetType = rv.recommended.type;  // 'sedan' | 'sienna' | 'van'
-    var pool = window._activeDrivers || window._availableDrivers || [];
-    if (!pool.length) return;
 
     // Map vehicle name keywords → type
     function _guessType(name) {
@@ -738,20 +736,40 @@ window.RideIntake = (function () {
       return null;
     }
 
+    function _findInPool(poolArr) {
+      return poolArr.find(function(d) {
+        var vName = [d.vehicle && d.vehicle.make, d.vehicle && d.vehicle.model].filter(Boolean).join(' ');
+        return _guessType(vName) === targetType;
+      });
+    }
+
     // Only apply a driver if their vehicle type EXACTLY matches the target.
     // Never fall back to a wrong-type driver — that would show the right vehicle
     // name (from DLCRide fleet recommendation) but the wrong driver's phone.
-    var matched = pool.find(function(d) {
-      var vName = [d.vehicle && d.vehicle.make, d.vehicle && d.vehicle.model].filter(Boolean).join(' ');
-      return _guessType(vName) === targetType;
-    });
+    var pool = window._activeDrivers || window._availableDrivers || [];
+    var matched = _findInPool(pool);
 
     if (matched) {
       _applyDriverVehicle(matched, matched.id);
+    } else if (typeof firebase !== 'undefined' && firebase.firestore) {
+      // Cached pool has no matching driver — query Firestore for fresh data.
+      // This handles the case where vehicle data was entered after page load.
+      firebase.firestore().collection('drivers')
+        .where('adminStatus', '==', 'active')
+        .get()
+        .then(function(snap) {
+          var docs = snap.docs.map(function(doc) {
+            return Object.assign({ id: doc.id }, doc.data());
+          });
+          var fresh = _findInPool(docs);
+          if (fresh) {
+            _applyDriverVehicle(fresh, fresh.id);
+          } else {
+            _driverVehicle = null;
+          }
+        })
+        .catch(function() { _driverVehicle = null; });
     } else {
-      // No driver in pool has their vehicle data entered for this type.
-      // Clear _driverVehicle so the confirmation falls back to the business number
-      // instead of showing a wrong driver's contact.
       _driverVehicle = null;
     }
   }

@@ -74,15 +74,29 @@ window.DLCRide = (() => {
     { min: 12, max: 12, eligible: ['van'],                    recommended: 'van' },
   ];
 
-  // Bay Area override: only Toyota Sienna available
+  // Derive available vehicle types from actual active drivers in the detected region.
+  // Fails open to full fleet if no driver data is available yet.
   function getRegionVehicles() {
-    if (window.DLCRegion && DLCRegion.current.id === 'bayarea') {
-      return {
-        override: true,
-        available: ['sienna'],
-        maxPassengers: 7,
-      };
+    const regionId = window.DLCRegion?.current?.id;
+    const pool = window._activeDrivers || [];
+    const inRegion = regionId ? pool.filter(d => (d.regions || []).includes(regionId)) : pool;
+
+    if (inRegion.length > 0) {
+      const seen = new Set();
+      for (const d of inRegion) {
+        const vn = ((d.vehicle?.make || '') + ' ' + (d.vehicle?.model || '')).toLowerCase();
+        if (/tesla|model y|model 3|model s/.test(vn))    seen.add('sedan');
+        if (/sienna|minivan|odyssey|pacifica/.test(vn))  seen.add('sienna');
+        if (/van|sprinter|transit|mercedes|promaster/.test(vn)) seen.add('van');
+      }
+      if (seen.size > 0) {
+        const available = ['sedan', 'sienna', 'van'].filter(t => seen.has(t));
+        const maxPax = seen.has('van') ? 11 : seen.has('sienna') ? 7 : 4;
+        return { override: true, available, maxPassengers: maxPax };
+      }
     }
+
+    // Fail open: driver data not loaded yet — allow full fleet
     return { override: false, available: ['sedan', 'sienna', 'van'], maxPassengers: 11 };
   }
 
@@ -92,7 +106,7 @@ window.DLCRide = (() => {
 
   /**
    * Given passenger count, return the recommended vehicle + all eligible options.
-   * Respects regional availability (Bay Area → Sienna only).
+   * Respects regional availability (derived dynamically from active driver fleet).
    */
   function resolveVehicle(passengers, luggage) {
     const pax = Math.max(1, parseInt(passengers) || 1);
@@ -131,12 +145,16 @@ window.DLCRide = (() => {
     ) || eligible[0];
 
     if (!recommended || eligible.length === 0) {
+      const regionName = window.DLCRegion?.current?.name || 'This region';
+      const regionNameVi = window.DLCRegion?.current?.nameVi || 'Vùng này';
+      const regionVeh = getRegionVehicles();
+      const maxAvail = regionVeh.maxPassengers;
       return {
         recommended: null,
         eligible: [],
         passengers: pax,
-        error: `Vùng ${window.DLCRegion?.current?.nameVi || 'này'} chỉ có ${VEHICLES.sienna.name} (tối đa ${VEHICLES.sienna.maxPassengers} khách).`,
-        errorEn: `${window.DLCRegion?.current?.name || 'This region'} only has ${VEHICLES.sienna.name} (max ${VEHICLES.sienna.maxPassengers} passengers).`,
+        error: `${regionNameVi} chỉ phục vụ tối đa ${maxAvail} khách mỗi chuyến. Vui lòng liên hệ để đặt nhiều xe.`,
+        errorEn: `${regionName} can accommodate up to ${maxAvail} passengers per trip. Please contact us for larger groups.`,
       };
     }
 

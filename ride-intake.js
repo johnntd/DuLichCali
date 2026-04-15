@@ -509,9 +509,14 @@ window.RideIntake = (function () {
     if (!panel || !modal) return;
     _vpHandler = function() {
       var vvh = window.visualViewport ? Math.round(window.visualViewport.height) : window.innerHeight;
-      var vvTop = window.visualViewport ? Math.round(window.visualViewport.offsetTop) : 0;
-      // Reposition modal to sit within the visible area above the keyboard
-      modal.style.top    = vvTop + 'px';
+      // iOS Safari bug: when the keyboard opens, iOS may scroll the layout viewport
+      // (window.scrollY becomes non-zero) even for inputs inside position:fixed elements.
+      // visualViewport.scroll fires at an intermediate scroll position; if the page
+      // finishes scrolling without another event, the modal ends up above the screen.
+      // Fix: reset any iOS-induced scroll so position:fixed top:0 is always screen-top.
+      if (document.documentElement.scrollTop !== 0) document.documentElement.scrollTop = 0;
+      if (document.body.scrollTop !== 0) document.body.scrollTop = 0;
+      modal.style.top    = '0px';
       modal.style.height = vvh  + 'px';
       modal.style.bottom = 'auto';
       panel.style.maxHeight = vvh + 'px';

@@ -499,7 +499,9 @@ const DLCPricing = (() => {
       destId,
       total:      cost,
       perPerson:  Math.round(cost / p),
-      vehicle:    getVehicle(p, regionId),  // use pickup-location region, not browser region
+      // OC always has a 12-seat van available for tours — never downgrade to Tesla/Sienna.
+      // Bay Area uses Sienna as base (no van in that fleet).
+      vehicle:    (regionId === 'bayarea') ? getVehicle(p, regionId) : 'Mercedes Van',
       miles,
       passengers: p,
       days:       d,

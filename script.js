@@ -30,6 +30,62 @@ function getRegionVehicle(passengers) {
   return passengers <= 3 ? 'Tesla Model Y' : 'Mercedes Van';
 }
 
+// ── Travel booking: vehicle + driver selection ───────────────
+/**
+ * Select the best vehicle type for a travel booking.
+ * @param {number} travelers  Number of travelers
+ * @param {string} region     'bayarea' | 'socal'
+ * @returns {string} vehicle name
+ */
+function selectVehicleForTravelBooking(travelers, region) {
+  const pax = Math.max(1, parseInt(travelers) || 1);
+  if (region === 'bayarea') {
+    return pax >= 8 ? 'Mercedes Van' : 'Toyota Sienna';
+  }
+  // SoCal
+  if (pax <= 3) return 'Tesla Model Y';
+  if (pax <= 7) return 'Toyota Sienna';
+  return 'Mercedes Van';
+}
+
+/**
+ * Find an available driver for a travel booking date.
+ * Queries travel_drivers collection — returns first driver whose
+ * vehicle matches and who has no conflicting travel_booking on that date.
+ * Returns null when no driver found — caller should surface "call to confirm" message.
+ *
+ * @param {string} vehicleType  'Tesla Model Y' | 'Toyota Sienna' | 'Mercedes Van'
+ * @param {string} dateStr      ISO date string 'YYYY-MM-DD'
+ * @returns {Promise<object|null>}
+ */
+async function selectDriverForTravelBooking(vehicleType, dateStr) {
+  try {
+    const snap = await db.collection('travel_drivers').where('active', '==', true).get();
+    if (snap.empty) return null;
+
+    const candidates = snap.docs
+      .map(d => Object.assign({ id: d.id }, d.data()))
+      .filter(d => d.vehicle && d.vehicle.name &&
+        d.vehicle.name.toLowerCase().includes(vehicleType.toLowerCase().split(' ')[0]));
+
+    const datePrefix = (dateStr || '').slice(0, 10);
+    const busyIds = new Set();
+    if (datePrefix) {
+      const conflicts = await db.collection('travel_bookings')
+        .where('date', '>=', datePrefix)
+        .where('date', '<', datePrefix + 'z')
+        .where('status', 'in', ['pending', 'confirmed'])
+        .get();
+      conflicts.forEach(d => { if (d.data().driverId) busyIds.add(d.data().driverId); });
+    }
+
+    return candidates.find(d => !busyIds.has(d.id)) || candidates[0] || null;
+  } catch (e) {
+    console.warn('[selectDriverForTravelBooking]', e.message);
+    return null;
+  }
+}
+
 // ── Booking ID & Tracking Token ──────────────────────────────
 function generateBookingId() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';

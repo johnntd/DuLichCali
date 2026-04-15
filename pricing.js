@@ -440,7 +440,7 @@ const DLCPricing = (() => {
   function tourCost(miles, passengers, days, lodging) {
     const gasPrice       = getFuelPrice();
     const isVan          = passengers > 3;
-    const mpg            = isVan ? VAN_MPG : 30; // Tesla-equivalent efficiency for sedan
+    const mpg            = isVan ? VAN_MPG : 30; // Van MPG vs Tesla-equivalent for sedan
     const fuelPerMile    = gasPrice / mpg;
     const roundtripMiles = miles * 2;
 
@@ -453,25 +453,27 @@ const DLCPricing = (() => {
       lodgingCost  = units * LODGING_RATE.airbnb * days;
     }
 
-    // Driver wear/lodging allowance when no lodging selected
-    const wearCost = !lodging
-      ? (passengers > 8 ? 150 : passengers > 4 ? 100 : 50) * days
-      : 0;
+    // Driver overnight accommodation: for trips >75 miles the driver must stay at the
+    // destination. Charged per night away from home (a days-day tour = days-1 nights).
+    // $120/night covers a budget hotel room for the driver.
+    const driverNights = miles > 75 && days > 1 ? days - 1 : 0;
+    const driverAccomm = driverNights * 120;
 
-    // Base driver rate: higher for van due to vehicle size/wear
+    // Vehicle wear allowance (misc costs: parking, tolls, vehicle upkeep)
+    const wearCost = (passengers > 8 ? 100 : passengers > 4 ? 75 : 50) * days;
+
+    // Base driver daily rate: higher for van (larger vehicle, more responsibility)
     const driverRate = isVan ? 220 : 180;
 
+    // Note: estimateUberPrice uses 35 mph average which only applies to short urban trips.
+    // Multi-day highway tours are not an Uber use case — we use cost-based pricing only.
     let cost = (driverRate + roundtripMiles * fuelPerMile) * days
                + lodgingCost
-               + 50 * days   // service/tolls
+               + 50 * days      // service/tolls/misc
+               + driverAccomm   // driver hotel for overnight trips
                + wearCost;
 
-    // Compare with Uber equivalent for the transport portion and ensure 20% savings
-    const uberTransport = estimateUberPrice(roundtripMiles, isVan ? 'van' : 'sedan') * days;
-    const uberBasedPrice = uberTransport * (1 - UBER_DISCOUNT) + lodgingCost + wearCost;
-    // Use whichever is more reasonable (don't undercut ourselves on long tours)
-    cost = Math.max(cost, uberBasedPrice * 0.85);
-
+    // Daily minimum floor (covers vehicle depreciation + driver base compensation)
     cost = Math.max(cost, (isVan ? 350 : 300) * days);
     return Math.round(cost);
   }

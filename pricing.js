@@ -673,6 +673,51 @@ const DLCPricing = (() => {
     };
   }
 
+  // ── Travel package quote ─────────────────────────────────────
+  /**
+   * Calculate a price quote for a travel package booking.
+   * @param {object} pkg          A DLC_TRAVEL_PACKAGES entry
+   * @param {'private'|'group'} type  Booking type
+   * @param {number} travelers    Number of travelers (used for group type)
+   * @param {string} pickupRegion 'bayarea' | 'socal' — affects deadhead surcharge
+   * @returns {{ type, travelers, subtotal, taxes, total, pricePerPerson, vehicle, breakdown }}
+   */
+  function calculateTravelQuote(pkg, type, travelers, pickupRegion) {
+    const pax       = Math.max(1, parseInt(travelers) || 1);
+    const isSocal   = pickupRegion === 'socal';
+    const surcharge = isSocal ? 1.15 : 1.00;
+    const TAX_RATE  = 0.0875;
+
+    let subtotal, pricePerPerson;
+
+    if (type === 'private') {
+      subtotal      = Math.round(pkg.base_price_private * surcharge);
+      pricePerPerson = null;
+    } else {
+      pricePerPerson = Math.round(pkg.base_price_per_person_group * surcharge);
+      subtotal       = pricePerPerson * pax;
+    }
+
+    const taxes = Math.round(subtotal * TAX_RATE);
+    const total = subtotal + taxes;
+    const vehicleName = getVehicle(pax, pickupRegion);
+
+    return {
+      type,
+      travelers:      pax,
+      subtotal,
+      taxes,
+      total,
+      pricePerPerson,
+      vehicle:        vehicleName,
+      breakdown: {
+        base:      type === 'private' ? pkg.base_price_private : pkg.base_price_per_person_group,
+        surcharge: isSocal ? '15% SoCal surcharge' : null,
+        taxRate:   '8.75%',
+      },
+    };
+  }
+
   // ── Expose ───────────────────────────────────────────────────
   return {
     // Core math (used by script.js updateEstimate)
@@ -693,6 +738,8 @@ const DLCPricing = (() => {
     estimateCityToCity,
     compareTours,
     explainTour,
+    // Travel package pricing
+    calculateTravelQuote,
     // Context helpers
     getCurrentFormState,
     getFuelPrice,

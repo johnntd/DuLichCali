@@ -80,7 +80,7 @@ function switchScreen(screenId) {
       _updateBookVH();
     } else {
       const bookEl = document.getElementById('screenBook');
-      if (bookEl) { bookEl.style.height = ''; bookEl.style.top = ''; }
+      if (bookEl) { bookEl.style.height = ''; bookEl.style.top = ''; bookEl.style.bottom = ''; }
     }
   }
 
@@ -111,13 +111,17 @@ function _updateChatVH() {
 }
 
 function _updateBookVH() {
-  const vv  = window.visualViewport;
-  const h   = vv ? vv.height    : window.innerHeight;
-  const top = vv ? vv.offsetTop : 0;
-  const bookEl = document.getElementById('screenBook');
+  var vvh = window.visualViewport ? Math.round(window.visualViewport.height) : window.innerHeight;
+  // iOS Safari scrolls document.body even when body has overflow:hidden,
+  // pushing #app (position:static) above the visible viewport.
+  // Reset the scroll so top:0 on #screenBook lands at the screen top.
+  if (document.documentElement.scrollTop !== 0) document.documentElement.scrollTop = 0;
+  if (document.body.scrollTop !== 0) document.body.scrollTop = 0;
+  var bookEl = document.getElementById('screenBook');
   if (bookEl) {
-    bookEl.style.height = h + 'px';
-    bookEl.style.top    = top + 'px';
+    bookEl.style.top    = '0px';
+    bookEl.style.height = vvh + 'px';
+    bookEl.style.bottom = 'auto'; // override inset:0 which sets bottom:0 and fights height
   }
 }
 

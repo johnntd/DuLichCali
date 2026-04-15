@@ -65,6 +65,7 @@ function switchScreen(screenId) {
   // ── Mobile full-screen chat: toggle body.chat-open ──────────
   if (window.innerWidth < 768) {
     const enteringChat = screenId === 'screenChat';
+    const enteringBook = screenId === 'screenBook';
     document.body.classList.toggle('chat-open', enteringChat);
     if (enteringChat) {
       // Size #screenChat to current visual viewport (before keyboard opens)
@@ -73,6 +74,13 @@ function switchScreen(screenId) {
       // Restore inline styles when leaving chat so normal layout is intact
       const chatEl = document.getElementById('screenChat');
       if (chatEl) { chatEl.style.height = ''; chatEl.style.top = ''; }
+    }
+    if (enteringBook) {
+      // Size #screenBook to visual viewport so keyboard doesn't push it off-screen
+      _updateBookVH();
+    } else {
+      const bookEl = document.getElementById('screenBook');
+      if (bookEl) { bookEl.style.height = ''; bookEl.style.top = ''; }
     }
   }
 
@@ -85,16 +93,15 @@ function switchScreen(screenId) {
   _updateBackBtn();
 }
 
-// ── iOS keyboard: resize #screenChat to the visual viewport ─────
-// The problem on iOS Safari: when the keyboard opens, position:fixed
-// elements still span the FULL physical screen (keyboard overlaps them).
-// visualViewport.height gives the real visible height above the keyboard.
-// Resizing #screenChat to that height makes the flex column fit exactly:
-//   chat-header + messages (flex:1) + input-bar = visualViewport.height
-// → input bar is flush against the top of the keyboard.
+// ── iOS keyboard: resize #screenChat / #screenBook to the visual viewport ───
+// On iOS Safari, when the keyboard opens the layout viewport does NOT shrink
+// but the visual viewport does. iOS may also scroll the layout viewport
+// (vv.offsetTop > 0), which pushes position:absolute screens above the visible
+// area. Setting height = vv.height and top = vv.offsetTop keeps each screen
+// locked to the visible area above the keyboard.
 function _updateChatVH() {
   const vv  = window.visualViewport;
-  const h   = vv ? vv.height   : window.innerHeight;
+  const h   = vv ? vv.height    : window.innerHeight;
   const top = vv ? vv.offsetTop : 0;
   const chatEl = document.getElementById('screenChat');
   if (chatEl) {
@@ -103,10 +110,23 @@ function _updateChatVH() {
   }
 }
 
-(function _initChatViewport() {
+function _updateBookVH() {
+  const vv  = window.visualViewport;
+  const h   = vv ? vv.height    : window.innerHeight;
+  const top = vv ? vv.offsetTop : 0;
+  const bookEl = document.getElementById('screenBook');
+  if (bookEl) {
+    bookEl.style.height = h + 'px';
+    bookEl.style.top    = top + 'px';
+  }
+}
+
+(function _initViewport() {
   if (!window.visualViewport) return;
   function onVVChange() {
     if (document.body.classList.contains('chat-open')) _updateChatVH();
+    const bookEl = document.getElementById('screenBook');
+    if (bookEl && bookEl.classList.contains('screen--active')) _updateBookVH();
   }
   window.visualViewport.addEventListener('resize', onVVChange);
   window.visualViewport.addEventListener('scroll', onVVChange);

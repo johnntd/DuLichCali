@@ -39,7 +39,8 @@ const _DLC_REGIONS = {
       'palo alto', 'redwood city', 'san mateo', 'daly city', 'hayward',
       'berkeley', 'walnut creek', 'concord', 'pleasanton', 'livermore',
       'gilroy', 'morgan hill', 'campbell', 'los gatos', 'saratoga',
-      'sfo', 'sjc', 'oak',
+      'sfo', 'sjc', 'oak', 'smf',
+      'san francisco international', 'mineta san jose', 'metro oakland', 'sacramento international',
     ],
 
     // Bounding box for GPS-based detection
@@ -69,6 +70,8 @@ const _DLC_REGIONS = {
       'los angeles', 'riverside', 'corona', 'ontario', 'pomona',
       'long beach', 'torrance', 'pasadena', 'burbank', 'glendale',
       'san diego', 'lax', 'sna', 'lgb', 'ont', 'bur',
+      'john wayne', 'los angeles international', 'long beach airport',
+      'ontario airport', 'burbank airport',
     ],
 
     geoBounds: { latMin: 32.5, latMax: 34.8, lngMin: -118.6, lngMax: -116.0 },

@@ -916,30 +916,55 @@
 
   /**
    * Detect which fleet region a tour pickup address belongs to.
-   * Returns 'bayarea' or 'oc' (default).
+   * Uses live DLCRegion config (airport codes + keywords) — no hardcoded lists.
    *
    * Priority:
-   *  1. Bay Area airport codes / names  → 'bayarea'
-   *  2. OC/SoCal airport codes / names  → 'oc'
-   *  3. DLCRegion keyword detection     → region.id
-   *  4. Default                         → 'oc'
+   *  1. Airport code match against DLCRegion.all[rid].airports  → rid
+   *  2. DLCRegion keyword/city detection                        → region.id
+   *  3. Default                                                 → 'oc'
    */
   function _detectTourRegion(startingPoint) {
     if (!startingPoint) return 'oc';
     var t = startingPoint;
-    // Bay Area airports — code or common name
-    if (/\b(SFO|SJC|OAK|SMF)\b/i.test(t) ||
-        /san francisco int|mineta san jose|metro oakland|sacramento int/i.test(t)) {
-      return 'bayarea';
+    // Check each region's airport codes from live config
+    if (window.DLCRegion && window.DLCRegion.all) {
+      var allRegions = window.DLCRegion.all;
+      for (var rid in allRegions) {
+        var airports = allRegions[rid].airports || [];
+        if (airports.some(function(code) {
+          return new RegExp('\\b' + code + '\\b', 'i').test(t);
+        })) return rid;
+      }
     }
-    // OC / SoCal airports — code or common name (John Wayne = SNA)
-    if (/\b(LAX|SNA|LGB|ONT|BUR)\b/i.test(t) ||
-        /john wayne|los angeles int|long beach airport|ontario airport|burbank airport/i.test(t)) {
-      return 'oc';
-    }
-    // Keyword-based detection for city / neighbourhood names
+    // Keyword/city-based detection (includes airport common names from regions.js keywords)
     var region = (window.DLCRegion) ? window.DLCRegion.detectFromText(t) : null;
     return region ? region.id : 'oc';
+  }
+
+  /**
+   * Returns the best vehicle name for a tour in the given region.
+   * Uses live Firestore driver data (window._activeDrivers) when available;
+   * falls back to DLCRegion.all[regionId].vehicle.name config.
+   */
+  function _getTourVehicleForRegion(regionId) {
+    var drivers = _driversForRegion(regionId);
+    if (drivers.length) {
+      // Pick the driver with the most seats — largest vehicle for tour groups
+      var best = drivers.reduce(function(a, b) {
+        var sa = (a.vehicle && a.vehicle.seats) ? parseInt(a.vehicle.seats) : 0;
+        var sb = (b.vehicle && b.vehicle.seats) ? parseInt(b.vehicle.seats) : 0;
+        return sb > sa ? b : a;
+      });
+      if (best.vehicle && best.vehicle.make) {
+        return [best.vehicle.make, best.vehicle.model].filter(Boolean).join(' ');
+      }
+    }
+    // Fall back to region config when no driver data is loaded
+    if (window.DLCRegion && window.DLCRegion.all && window.DLCRegion.all[regionId]) {
+      var cfg = window.DLCRegion.all[regionId].vehicle;
+      if (cfg && cfg.name) return cfg.name;
+    }
+    return null;
   }
 
   // Returns active+compliant drivers for the given region from window._activeDrivers
@@ -1070,7 +1095,8 @@
   function estimateTour(passengers, days, destId, regionId) {
     if (!passengers || !days) return null;
     if (typeof DLCPricing !== 'undefined' && DLCPricing.estimateTour) {
-      var r = DLCPricing.estimateTour({ destId: destId||'lasvegas', passengers: passengers, days: days, lodging: null, regionId: regionId||null });
+      var vehicleOverride = _getTourVehicleForRegion(regionId);
+      var r = DLCPricing.estimateTour({ destId: destId||'lasvegas', passengers: passengers, days: days, lodging: null, regionId: regionId||null, vehicleOverride: vehicleOverride||null });
       return r ? '~$' + r.total + ' (~$' + r.perPerson + '/người · ' + r.vehicle + ')' : null;
     }
     return null;

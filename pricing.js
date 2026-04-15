@@ -488,7 +488,7 @@ const DLCPricing = (() => {
    * @param {string} [params.lodging]     '' | 'hotel' | 'airbnb'
    * @returns {object|null}
    */
-  function estimateTour({ destId, passengers = 2, days = 2, lodging = '', regionId = null }) {
+  function estimateTour({ destId, passengers = 2, days = 2, lodging = '', regionId = null, vehicleOverride = null }) {
     const miles = OC_TO_DEST[destId];
     if (!miles) return null;
     const p    = Math.max(1, passengers);
@@ -499,9 +499,9 @@ const DLCPricing = (() => {
       destId,
       total:      cost,
       perPerson:  Math.round(cost / p),
-      // OC always has a 12-seat van available for tours — never downgrade to Tesla/Sienna.
-      // Bay Area uses Sienna as base (no van in that fleet).
-      vehicle:    (regionId === 'bayarea') ? getVehicle(p, regionId) : 'Mercedes Van',
+      // Vehicle comes from live Firestore driver data via vehicleOverride.
+      // Falls back to region-based selection when no driver data is available.
+      vehicle:    vehicleOverride || getVehicle(p, regionId),
       miles,
       passengers: p,
       days:       d,

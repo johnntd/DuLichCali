@@ -16,26 +16,26 @@
  *   --no-firestore     Skip Firestore youtubeId update
  *   --help
  *
- * First-time YouTube auth:
- *   1. Enable YouTube Data API v3 in Google Cloud Console
- *   2. Create OAuth2 Desktop credentials → download → save as client_secret.json in this dir
- *   3. Run the script — it will open a browser auth URL and prompt for the code
- *   4. token.json is saved for future runs
+ * YouTube auth uses the shared credentials in scripts/youtube/ (already authenticated).
  *
  * Output: out/<pkg-id>.mp4
  */
 'use strict';
 
-const { execSync } = require('child_process');
-const fs           = require('fs');
-const path         = require('path');
-const readline     = require('readline');
+const { execSync }        = require('child_process');
+const fs                  = require('fs');
+const path                = require('path');
+const http                = require('http');
+const urlModule           = require('url');
 
 const SCRIPT_DIR  = __dirname;
 const PUBLIC_DIR  = path.join(SCRIPT_DIR, 'public');
 const OUT_DIR     = path.join(SCRIPT_DIR, 'out');
-const TOKEN_FILE  = path.join(SCRIPT_DIR, 'token.json');
-const SECRET_FILE = path.join(SCRIPT_DIR, 'client_secret.json');
+
+// Reuse the shared YouTube OAuth credentials (already authenticated)
+const YT_DIR      = path.join(__dirname, '..', 'scripts', 'youtube');
+const TOKEN_FILE  = path.join(YT_DIR, 'token.json');
+const SECRET_FILE = path.join(YT_DIR, 'client_secret.json');
 
 // ── Argument parsing ─────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
@@ -141,39 +141,55 @@ async function uploadToYouTube() {
   const { google } = require('googleapis');
 
   if (!fs.existsSync(SECRET_FILE)) {
-    console.error([
-      '',
-      'client_secret.json not found at: ' + SECRET_FILE,
-      '',
-      'To set up YouTube upload:',
-      '  1. Open Google Cloud Console → APIs & Services → Credentials',
-      '  2. Create OAuth 2.0 Client ID (Desktop app)',
-      '  3. Download JSON → rename to client_secret.json → place in remotion-promo/',
-      '  4. Run this script again',
-    ].join('\n'));
+    console.error('\nclient_secret.json not found at: ' + SECRET_FILE);
+    console.error('Expected location: scripts/youtube/client_secret.json');
     process.exit(1);
   }
 
   const secret = JSON.parse(fs.readFileSync(SECRET_FILE, 'utf8'));
   const creds  = secret.installed || secret.web;
-  const { client_id, client_secret, redirect_uris } = creds;
+  const { client_id, client_secret } = creds;
 
-  const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+  // Use the same redirect URI as scripts/youtube/upload.js
+  const oAuth2Client = new google.auth.OAuth2(
+    client_id, client_secret, 'http://localhost:3456/callback'
+  );
 
   if (fs.existsSync(TOKEN_FILE)) {
     oAuth2Client.setCredentials(JSON.parse(fs.readFileSync(TOKEN_FILE, 'utf8')));
-    // Refresh token if needed
-    try { await oAuth2Client.getAccessToken(); } catch (_) {}
+    // Auto-refresh if expired
+    const expiry = oAuth2Client.credentials.expiry_date;
+    if (expiry && Date.now() > expiry - 60000) {
+      console.log('  ↻  Refreshing access token...');
+      const { credentials } = await oAuth2Client.refreshAccessToken();
+      oAuth2Client.setCredentials(credentials);
+      fs.writeFileSync(TOKEN_FILE, JSON.stringify(credentials, null, 2));
+    } else {
+      console.log('  ✓  Token loaded from scripts/youtube/token.json');
+    }
   } else {
+    // First-time auth via local HTTP server (same as scripts/youtube/upload.js)
     const authUrl = oAuth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: ['https://www.googleapis.com/auth/youtube.upload'],
+      prompt: 'consent',
     });
-    console.log('\nOpen this URL in your browser to authorize YouTube access:');
-    console.log('\n  ' + authUrl + '\n');
+    console.log('\nOpen this URL in your browser:\n\n  ' + authUrl);
+    try { require('child_process').exec('open "' + authUrl + '"'); } catch (_) {}
 
-    const rl   = readline.createInterface({ input: process.stdin, output: process.stdout });
-    const code = await new Promise(res => rl.question('Paste the auth code here: ', c => { rl.close(); res(c.trim()); }));
+    const code = await new Promise((resolve, reject) => {
+      const server = http.createServer((req, res) => {
+        const parsed = urlModule.parse(req.url, true);
+        if (parsed.pathname !== '/callback') { res.end('Not found'); return; }
+        const c = parsed.query.code;
+        if (!c) { res.end('No code'); reject(new Error('No code')); return; }
+        res.end('<html><body style="font-family:sans-serif;padding:40px"><h2>✓ Authorized!</h2><p>Close this window.</p></body></html>');
+        server.close();
+        resolve(c);
+      });
+      server.listen(3456, '127.0.0.1');
+    });
+
     const { tokens } = await oAuth2Client.getToken(code);
     oAuth2Client.setCredentials(tokens);
     fs.writeFileSync(TOKEN_FILE, JSON.stringify(tokens, null, 2));

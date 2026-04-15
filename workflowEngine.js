@@ -1039,10 +1039,10 @@
     return '~$' + base + '–$' + (base + 25) + ' (ước tính sơ bộ)';
   }
 
-  function estimateTour(passengers, days, destId) {
+  function estimateTour(passengers, days, destId, regionId) {
     if (!passengers || !days) return null;
     if (typeof DLCPricing !== 'undefined' && DLCPricing.estimateTour) {
-      var r = DLCPricing.estimateTour({ destId: destId||'lasvegas', passengers: passengers, days: days, lodging: null });
+      var r = DLCPricing.estimateTour({ destId: destId||'lasvegas', passengers: passengers, days: days, lodging: null, regionId: regionId||null });
       return r ? '~$' + r.total + ' (~$' + r.perPerson + '/người · ' + r.vehicle + ')' : null;
     }
     return null;
@@ -2126,7 +2126,9 @@
       summary: function(f) {
         var dest = typeof f.destination === 'object' ? f.destination.name : (f.destination||'');
         var destId = typeof f.destination === 'object' ? f.destination.id : '';
-        var est = estimateTour(f.passengers, f.days, destId);
+        // Detect pickup region from startingPoint so vehicle matches the correct fleet
+        var pickupRegion = (window.DLCRegion && f.startingPoint) ? window.DLCRegion.detectFromText(f.startingPoint) : null;
+        var est = estimateTour(f.passengers, f.days, destId, pickupRegion ? pickupRegion.id : null);
         var lodgeLabelMap = { hotel: S('sfLodgeHotel'), airbnb: S('sfLodgeAirbnb'), none: S('sfLodgeNone') };
         var areaLabelMap  = { strip: S('sfAreaStrip'), downtown: S('sfAreaDT'), off_strip: S('sfAreaOff'), city_center: S('sfAreaCC'), beach: S('sfAreaBeach'), airport: S('sfAreaAirport') };
         var budgLabelMap  = { budget: S('sfBudgBudget'), midrange: S('sfBudgMid'), premium: S('sfBudgPrem') };
@@ -2755,6 +2757,10 @@
       var lodging = f.lodging || 'none';
       trackingToken = genId().replace('DLC-','')+genId().replace('DLC-','');
 
+      // Detect pickup region from startingPoint — determines which fleet (OC vs Bay Area) to dispatch
+      var tourPickupRegion = (window.DLCRegion && f.startingPoint) ? window.DLCRegion.detectFromText(f.startingPoint) : null;
+      var tourRegionId = tourPickupRegion ? tourPickupRegion.id : 'oc'; // default OC
+
       var startMapsLink = buildMapsLink(f.startingPoint);
       var lodgeLabel2 = { hotel:'Khách sạn', airbnb:'Airbnb', none:'Tự túc' }[lodging] || lodging;
 
@@ -2782,6 +2788,7 @@
         chosenHotel:f.chosenHotel||'', bookingMode:f.bookingMode||'',
         name:f.customerName||'', phone:f.customerPhone||'',
         notes:f.notes||'', source:'ai_chat',
+        region:tourRegionId,  // fleet region derived from pickup address
         driver:null,vehicleLat:null,vehicleLng:null,vehicleHeading:null,etaMinutes:null,
         createdAt:fv.serverTimestamp(),
       });
@@ -2793,6 +2800,7 @@
         requestedDate:f.requestedDate||'', destination:dest.name||'',
         passengers:f.passengers||1, days:f.days||1,
         lodging, hotelArea:f.hotelArea||'', chosenHotel:f.chosenHotel||'', bookingMode:f.bookingMode||'',
+        region:tourRegionId,
         read:false, createdAt:fv.serverTimestamp(),
       });
 

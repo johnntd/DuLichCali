@@ -488,7 +488,7 @@ const DLCPricing = (() => {
    * @param {string} [params.lodging]     '' | 'hotel' | 'airbnb'
    * @returns {object|null}
    */
-  function estimateTour({ destId, passengers = 2, days = 2, lodging = '' }) {
+  function estimateTour({ destId, passengers = 2, days = 2, lodging = '', regionId = null }) {
     const miles = OC_TO_DEST[destId];
     if (!miles) return null;
     const p    = Math.max(1, passengers);
@@ -499,7 +499,7 @@ const DLCPricing = (() => {
       destId,
       total:      cost,
       perPerson:  Math.round(cost / p),
-      vehicle:    getVehicle(p),
+      vehicle:    getVehicle(p, regionId),  // use pickup-location region, not browser region
       miles,
       passengers: p,
       days:       d,

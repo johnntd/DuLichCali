@@ -914,6 +914,34 @@
     SAN: 'sandiego', PSP: 'palmsprings',
   };
 
+  /**
+   * Detect which fleet region a tour pickup address belongs to.
+   * Returns 'bayarea' or 'oc' (default).
+   *
+   * Priority:
+   *  1. Bay Area airport codes / names  → 'bayarea'
+   *  2. OC/SoCal airport codes / names  → 'oc'
+   *  3. DLCRegion keyword detection     → region.id
+   *  4. Default                         → 'oc'
+   */
+  function _detectTourRegion(startingPoint) {
+    if (!startingPoint) return 'oc';
+    var t = startingPoint;
+    // Bay Area airports — code or common name
+    if (/\b(SFO|SJC|OAK|SMF)\b/i.test(t) ||
+        /san francisco int|mineta san jose|metro oakland|sacramento int/i.test(t)) {
+      return 'bayarea';
+    }
+    // OC / SoCal airports — code or common name (John Wayne = SNA)
+    if (/\b(LAX|SNA|LGB|ONT|BUR)\b/i.test(t) ||
+        /john wayne|los angeles int|long beach airport|ontario airport|burbank airport/i.test(t)) {
+      return 'oc';
+    }
+    // Keyword-based detection for city / neighbourhood names
+    var region = (window.DLCRegion) ? window.DLCRegion.detectFromText(t) : null;
+    return region ? region.id : 'oc';
+  }
+
   // Returns active+compliant drivers for the given region from window._activeDrivers
   function _driversForRegion(regionId) {
     if (!regionId) return [];
@@ -2126,9 +2154,7 @@
       summary: function(f) {
         var dest = typeof f.destination === 'object' ? f.destination.name : (f.destination||'');
         var destId = typeof f.destination === 'object' ? f.destination.id : '';
-        // Detect pickup region from startingPoint so vehicle matches the correct fleet
-        var pickupRegion = (window.DLCRegion && f.startingPoint) ? window.DLCRegion.detectFromText(f.startingPoint) : null;
-        var est = estimateTour(f.passengers, f.days, destId, pickupRegion ? pickupRegion.id : null);
+        var est = estimateTour(f.passengers, f.days, destId, _detectTourRegion(f.startingPoint));
         var lodgeLabelMap = { hotel: S('sfLodgeHotel'), airbnb: S('sfLodgeAirbnb'), none: S('sfLodgeNone') };
         var areaLabelMap  = { strip: S('sfAreaStrip'), downtown: S('sfAreaDT'), off_strip: S('sfAreaOff'), city_center: S('sfAreaCC'), beach: S('sfAreaBeach'), airport: S('sfAreaAirport') };
         var budgLabelMap  = { budget: S('sfBudgBudget'), midrange: S('sfBudgMid'), premium: S('sfBudgPrem') };
@@ -2758,8 +2784,7 @@
       trackingToken = genId().replace('DLC-','')+genId().replace('DLC-','');
 
       // Detect pickup region from startingPoint — determines which fleet (OC vs Bay Area) to dispatch
-      var tourPickupRegion = (window.DLCRegion && f.startingPoint) ? window.DLCRegion.detectFromText(f.startingPoint) : null;
-      var tourRegionId = tourPickupRegion ? tourPickupRegion.id : 'oc'; // default OC
+      var tourRegionId = _detectTourRegion(f.startingPoint);
 
       var startMapsLink = buildMapsLink(f.startingPoint);
       var lodgeLabel2 = { hotel:'Khách sạn', airbnb:'Airbnb', none:'Tự túc' }[lodging] || lodging;

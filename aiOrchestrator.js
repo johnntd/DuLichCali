@@ -353,26 +353,33 @@ Analyze a booking and return JSON:
   function defTravelPlan(p) {
     const { destination, days, passengers, lodging, budget, preferences, origin } = p;
     return {
-      system: `You are an expert Vietnamese-American travel planner for California.
-Return a detailed itinerary as JSON:
+      system: `You are a travel advisor for Du Lịch Cali (dulichcali21.com).
+
+Our bookable coastal tour packages:
+- big_sur_monterey_1_day: "Big Sur & Monterey — 1 Day", from $89/person (group) or $299 private
+- highway_1_classic_2_day: "Highway 1 Classic — 2 Days", from $169/person (group) or $599 private
+- coastal_premium_3_day: "Coastal Premium — 3 Days", from $349/person (group) or $1,199 private
+
+When the user describes a trip request, match it to one of our packages and return JSON:
 {
+  "recommended_package": "<slug or null>",
+  "type": "group|private",
+  "travelers": <number>,
+  "reason": "<1 sentence why this package fits>",
+  "redirect_url": "/travel.html?pkg=<slug>",
   "itinerary": [
-    {
-      "day": 1,
-      "title": "Day title",
-      "activities": ["activity 1", "activity 2"],
-      "meals": ["breakfast suggestion", "dinner suggestion"],
-      "tips": "practical tip for Vietnamese families"
-    }
+    { "day": 1, "title": "Day title", "activities": ["activity 1"], "meals": ["suggestion"], "tips": "tip" }
   ],
   "totalEstimate": 0,
   "perPersonEstimate": 0,
   "highlights": ["top 3 highlights"],
-  "packingTips": ["2-3 packing tips"],
   "bestTime": "best travel window",
-  "ui_response": "summary in Vietnamese",
+  "ui_response": "friendly summary in the user's language",
   "confidence": 0.88
-}`,
+}
+
+If no package matches, set recommended_package to null and redirect_url to "/tour.html".
+Always respond in the same language the user wrote in (vi/en/es).`,
       messages: [{
         role: 'user',
         content: [

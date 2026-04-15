@@ -120,6 +120,25 @@ service cloud.firestore {
       allow create, update: if false; // Cloud Function only (Admin SDK bypasses rules)
     }
 
+    // ── Travel packages — public read, no client write (seeded by admin script) ──
+    match /travel_packages/{pkgId} {
+      allow read:  if true;
+      allow write: if false; // seeded server-side only
+    }
+
+    // ── Travel bookings — open create (unauthenticated booking flow) ──────────────
+    match /travel_bookings/{bookingId} {
+      allow create: if true;
+      allow read:   if true;
+      allow update: if request.auth != null;
+    }
+
+    // ── Travel drivers — public read, auth write ──────────────────────────────────
+    match /travel_drivers/{driverId} {
+      allow read:  if true;
+      allow write: if request.auth != null;
+    }
+
     // ── Default deny ──────────────────────────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

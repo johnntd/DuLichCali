@@ -91,7 +91,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="TravelPromo"
         component={TravelPromo}
-        durationInFrames={600}
+        durationInFrames={900}
         fps={30}
         width={1920}
         height={1080}
@@ -114,11 +114,14 @@ export const RemotionRoot: React.FC = () => {
             { time: '2:30 PM',  desc: 'Monterey Bay Aquarium' },
             { time: '5:00 PM',  desc: 'Return to San Jose' },
           ],
-          heroImageUrl: '',
-          accentColor:  '#d4af37',
-          phone:        '(408) 916-3439',
-          website:      'dulichcali21.com/travel',
-          ctaText:      'Book Now',
+          heroImageUrl:  '',
+          accentColor:   '#d4af37',
+          phone:         '(408) 916-3439',
+          website:       'dulichcali21.com/travel',
+          ctaText:       'Book Now',
+          scenePaths:    [],
+          narrationPath: '',
+          musicPath:     '',
         }}
       />
     </>

@@ -1,289 +1,318 @@
-// TravelPromo.tsx — 5-scene promo video, 1920×1080, 600 frames @ 30fps = 20s
-// Scene 1 (0–90):    Hero — name, duration, price
-// Scene 2 (90–210):  Highlights — 3 bullet points
-// Scene 3 (210–360): Itinerary — day timeline
-// Scene 4 (360–480): Pricing — private vs group comparison
-// Scene 5 (480–600): CTA — call to action
+// TravelPromo.tsx — 6-scene AI-directed cinematic promo, 1920×1080, 900 frames @ 30fps = 30s
+//
+// Scene layout (5 s each):
+//   Scene 1 (  0–150) — Aerial Establish:  Brand name, "California Awaits"
+//   Scene 2 (150–300) — Journey Begins:    Package name + tagline
+//   Scene 3 (300–450) — First Wonder:      highlights[0]
+//   Scene 4 (450–600) — Human Moment:      highlights[1] — genuine joy
+//   Scene 5 (600–750) — Second Wonder:     highlights[2]
+//   Scene 6 (750–900) — Golden Close:      Brand + price + phone + CTA
+//
+// Each scene fades in over 20 frames (smooth cut-in).
+// Ken Burns: slow zoom (1.0→1.09 scale) + 1.5% drift left/right alternating.
+// Text overlays: bottom-third, fade in at frame 20, fade out at frame 130.
+// Audio: narration at 1.0 volume, music underscore at 0.18 volume.
+// Fallback: navy gradient when no clip path is supplied.
 
 import React from 'react';
-import { AbsoluteFill, Img, Sequence, interpolate, useCurrentFrame } from 'remotion';
+import {
+  AbsoluteFill, Audio, OffthreadVideo, Sequence,
+  interpolate, staticFile, useCurrentFrame,
+} from 'remotion';
 import { TravelPromoProps } from './schema';
 
-const NAVY  = '#0a2344';
-const NAVY2 = '#0e2c54';
-const CREAM = '#f5f0e8';
-const MUTED = 'rgba(245,240,232,0.65)';
+// ── Constants ─────────────────────────────────────────────────────────────────
+const ACCENT    = '#d4af37';
+const NAVY_BG   = 'linear-gradient(160deg, #0a2344 0%, #0e2c54 50%, #061628 100%)';
+const SCENE_LEN = 150; // frames per scene (5 s @ 30 fps)
+const FADE_IN   = 20;  // scene fade-in duration
 
-const fadeIn = (frame: number, start: number, dur: number) =>
-  interpolate(frame, [start, start + dur], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-const slideUp = (frame: number, start: number, dur: number) =>
-  interpolate(frame, [start, start + dur], [28, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+/** Slow Ken Burns zoom + drift. dir=1 → drift left; dir=-1 → drift right. */
+function kenBurnsTransform(f: number, dir: 1 | -1 = 1): string {
+  const s  = interpolate(f, [0, SCENE_LEN], [1.0,  1.09],       { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const tx = interpolate(f, [0, SCENE_LEN], [0,    dir * -1.5], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const ty = interpolate(f, [0, SCENE_LEN], [0,    -0.8],       { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  return `scale(${s.toFixed(4)}) translate(${tx.toFixed(2)}%, ${ty.toFixed(2)}%)`;
+}
 
-const slideX = (frame: number, start: number, dur: number, from = -30) =>
-  interpolate(frame, [start, start + dur], [from, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+/** Scene container opacity: fade in from 0→1 over FADE_IN frames. */
+function sceneFade(f: number): number {
+  return interpolate(f, [0, FADE_IN], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+}
 
-export const TravelPromo: React.FC<TravelPromoProps> = (props) => {
-  const frame  = useCurrentFrame();
-  const accent = props.accentColor || '#d4af37';
+/** Text overlay opacity: invisible → fade in at 20 → hold → fade out at 130. */
+function textFade(f: number): number {
+  return interpolate(
+    f,
+    [FADE_IN, FADE_IN + 10, 130, SCENE_LEN],
+    [0, 1, 1, 0],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
+  );
+}
 
-  const base: React.CSSProperties = {
-    fontFamily: "'Jost', 'Inter', sans-serif",
-    color: CREAM,
-  };
+// ── SceneLayer — reusable for scenes 1–5 ─────────────────────────────────────
+
+interface SceneLayerProps {
+  clipFile: string;       // filename in public/ (empty string = use fallback)
+  dir?: 1 | -1;
+  label?: string;
+  sublabel?: string;
+  accentColor?: string;
+}
+
+const SceneLayer: React.FC<SceneLayerProps> = ({
+  clipFile, dir = 1, label, sublabel, accentColor = ACCENT,
+}) => {
+  const f = useCurrentFrame();
 
   return (
-    <AbsoluteFill style={{ background: NAVY }}>
+    <AbsoluteFill style={{ opacity: sceneFade(f) }}>
 
-      {/* ── Scene 1: Hero (frames 0–90) ───────────────────────────── */}
-      <Sequence from={0} durationInFrames={90}>
-        <AbsoluteFill style={base}>
-          {props.heroImageUrl ? (
-            <Img
-              src={props.heroImageUrl}
-              style={{
-                position: 'absolute', inset: 0,
-                width: '100%', height: '100%',
-                objectFit: 'cover',
-                opacity: interpolate(frame, [0, 20], [0, 0.4], { extrapolateRight: 'clamp' }),
-              }}
-            />
-          ) : null}
-          <div style={{
+      {/* ── Video or navy fallback ── */}
+      {clipFile ? (
+        <OffthreadVideo
+          src={staticFile(clipFile)}
+          style={{
             position: 'absolute', inset: 0,
-            background: `linear-gradient(to bottom, rgba(10,35,68,0.25), rgba(10,35,68,0.88))`,
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            padding: '80px',
-          }}>
-            {/* Brand */}
-            <div style={{
-              fontSize: 30, letterSpacing: '0.14em', color: accent,
-              textTransform: 'uppercase', marginBottom: 20,
-              opacity: fadeIn(frame, 5, 18),
-            }}>
-              Du Lich Cali
-            </div>
+            width: '100%', height: '100%',
+            objectFit: 'cover',
+            transform: kenBurnsTransform(f, dir),
+            transformOrigin: 'center center',
+          }}
+          muted
+        />
+      ) : (
+        <AbsoluteFill style={{ background: NAVY_BG }} />
+      )}
 
-            {/* Package name */}
+      {/* ── Cinema vignette ── */}
+      <AbsoluteFill style={{
+        background:
+          'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0) 48%, rgba(0,0,0,0.20) 100%)',
+        pointerEvents: 'none',
+      }} />
+
+      {/* ── Bottom-third text overlay ── */}
+      {(label || sublabel) && (
+        <AbsoluteFill style={{
+          display: 'flex', flexDirection: 'column',
+          justifyContent: 'flex-end',
+          padding: '0 100px 90px',
+          opacity: textFade(f),
+          fontFamily: "'Jost', 'Inter', sans-serif",
+        }}>
+          {sublabel && (
             <div style={{
+              fontSize: 26, letterSpacing: '0.22em', color: accentColor,
+              textTransform: 'uppercase', marginBottom: 14,
+            }}>
+              {sublabel}
+            </div>
+          )}
+          {label && (
+            <div style={{
+              fontSize: 68, fontWeight: 300, color: '#fff',
               fontFamily: "'Bodoni Moda', 'Georgia', serif",
-              fontSize: 78, fontWeight: 400, color: CREAM,
-              textAlign: 'center', lineHeight: 1.15,
-              opacity: fadeIn(frame, 15, 22),
-              transform: `translateY(${slideUp(frame, 15, 22)}px)`,
+              lineHeight: 1.15, textShadow: '0 2px 16px rgba(0,0,0,0.6)',
+              maxWidth: 1400,
             }}>
-              {props.packageName}
+              {label}
             </div>
-
-            {/* Tagline */}
-            <div style={{
-              fontSize: 34, color: MUTED, marginTop: 22, textAlign: 'center',
-              opacity: fadeIn(frame, 32, 18),
-            }}>
-              {props.tagline}
-            </div>
-
-            {/* Price badges */}
-            <div style={{
-              marginTop: 44, display: 'flex', gap: 52, alignItems: 'center',
-              opacity: fadeIn(frame, 48, 18),
-            }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 52, fontWeight: 700, color: accent, lineHeight: 1 }}>
-                  {props.priceGroup}
-                </div>
-                <div style={{ fontSize: 24, color: MUTED, marginTop: 8 }}>per person</div>
-              </div>
-              <div style={{ width: 2, height: 64, background: accent, opacity: 0.45 }} />
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 52, fontWeight: 700, color: accent, lineHeight: 1 }}>
-                  {props.pricePrivate}
-                </div>
-                <div style={{ fontSize: 24, color: MUTED, marginTop: 8 }}>exclusive</div>
-              </div>
-            </div>
-          </div>
+          )}
         </AbsoluteFill>
+      )}
+    </AbsoluteFill>
+  );
+};
+
+// ── GoldenClose — Scene 6 CTA ─────────────────────────────────────────────────
+
+interface GoldenCloseProps {
+  clipFile: string;
+  packageName: string;
+  priceGroup: string;
+  phone: string;
+  website: string;
+  accentColor: string;
+}
+
+const GoldenClose: React.FC<GoldenCloseProps> = ({
+  clipFile, packageName, priceGroup, phone, website, accentColor,
+}) => {
+  const f = useCurrentFrame();
+
+  /** Sequential fade helpers — each text element fades in at a staggered start. */
+  const fade = (start: number, dur = 18) =>
+    interpolate(f, [start, start + dur], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+
+  return (
+    <AbsoluteFill style={{ opacity: sceneFade(f) }}>
+
+      {/* ── Video or navy fallback ── */}
+      {clipFile ? (
+        <OffthreadVideo
+          src={staticFile(clipFile)}
+          style={{
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%',
+            objectFit: 'cover',
+            transform: kenBurnsTransform(f, -1),
+            transformOrigin: 'center center',
+          }}
+          muted
+        />
+      ) : (
+        <AbsoluteFill style={{ background: NAVY_BG }} />
+      )}
+
+      {/* Dark overlay for CTA legibility */}
+      <AbsoluteFill style={{ background: 'rgba(5,15,35,0.68)' }} />
+
+      {/* ── CTA content — centered ── */}
+      <AbsoluteFill style={{
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        textAlign: 'center', padding: '80px',
+        fontFamily: "'Jost', 'Inter', sans-serif",
+      }}>
+        {/* Brand label */}
+        <div style={{
+          fontSize: 28, letterSpacing: '0.20em', color: accentColor,
+          textTransform: 'uppercase', marginBottom: 24, opacity: fade(10),
+        }}>
+          Du Lich Cali
+        </div>
+
+        {/* Package name */}
+        <div style={{
+          fontFamily: "'Bodoni Moda', 'Georgia', serif",
+          fontSize: 76, fontWeight: 400, color: '#fff',
+          lineHeight: 1.1, marginBottom: 36,
+          textShadow: '0 2px 20px rgba(0,0,0,0.5)',
+          opacity: fade(22),
+        }}>
+          {packageName}
+        </div>
+
+        {/* Price */}
+        <div style={{
+          fontSize: 50, fontWeight: 700, color: accentColor,
+          marginBottom: 8, opacity: fade(40),
+        }}>
+          From {priceGroup}
+        </div>
+
+        {/* Phone */}
+        <div style={{
+          fontSize: 42, color: '#fff', marginBottom: 8, opacity: fade(54),
+        }}>
+          {phone}
+        </div>
+
+        {/* Website */}
+        <div style={{
+          fontSize: 30, color: 'rgba(255,255,255,0.72)', opacity: fade(64),
+        }}>
+          {website}
+        </div>
+
+        {/* Animated gold underline */}
+        <div style={{
+          marginTop: 48, height: 3, borderRadius: 2, background: accentColor,
+          width: interpolate(f, [74, 120], [0, 560], {
+            extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
+          }),
+        }} />
+      </AbsoluteFill>
+    </AbsoluteFill>
+  );
+};
+
+// ── TravelPromo — root composition ────────────────────────────────────────────
+
+export const TravelPromo: React.FC<TravelPromoProps> = (props) => {
+  const {
+    packageName, tagline,
+    priceGroup, phone, website,
+    accentColor = ACCENT,
+    highlights  = [],
+    scenePaths  = [],
+    narrationPath,
+    musicPath,
+  } = props;
+
+  // Helper: get the filename for scene index i (empty string = fallback gradient)
+  const clip = (i: number): string => scenePaths[i] || '';
+
+  return (
+    <AbsoluteFill style={{ background: '#061628' }}>
+
+      {/* ── Audio tracks ── */}
+      {narrationPath && <Audio src={staticFile(narrationPath)} volume={1.0} />}
+      {musicPath     && <Audio src={staticFile(musicPath)}     volume={0.18} />}
+
+      {/* ── Scene 1: Aerial Establish (0–150) ── */}
+      <Sequence from={0} durationInFrames={SCENE_LEN} name="Aerial Establish">
+        <SceneLayer
+          clipFile={clip(0)} dir={1}
+          sublabel="Du Lich Cali"
+          label="California Awaits"
+          accentColor={accentColor}
+        />
       </Sequence>
 
-      {/* ── Scene 2: Highlights (90–210) ─────────────────────────── */}
-      <Sequence from={90} durationInFrames={120}>
-        <AbsoluteFill style={{
-          ...base, background: NAVY2,
-          flexDirection: 'column', justifyContent: 'center',
-          padding: '80px 110px',
-          display: 'flex',
-        }}>
-          <div style={{
-            fontFamily: "'Bodoni Moda', serif",
-            fontSize: 56, color: CREAM, marginBottom: 48,
-            opacity: fadeIn(frame - 90, 0, 14),
-          }}>
-            Highlights
-          </div>
-
-          {(props.highlights || []).slice(0, 3).map((h: string, i: number) => (
-            <div key={i} style={{
-              display: 'flex', alignItems: 'center', gap: 30, marginBottom: 38,
-              opacity: fadeIn(frame - 90, 18 + i * 16, 18),
-              transform: `translateX(${slideX(frame - 90, 18 + i * 16, 18)}px)`,
-            }}>
-              <div style={{
-                width: 54, height: 54, borderRadius: '50%',
-                background: accent, color: NAVY,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 26, fontWeight: 800, flexShrink: 0,
-              }}>✓</div>
-              <div style={{ fontSize: 40, color: CREAM, lineHeight: 1.3 }}>{h}</div>
-            </div>
-          ))}
-        </AbsoluteFill>
+      {/* ── Scene 2: Journey Begins (150–300) ── */}
+      <Sequence from={SCENE_LEN} durationInFrames={SCENE_LEN} name="Journey Begins">
+        <SceneLayer
+          clipFile={clip(1)} dir={-1}
+          sublabel={tagline}
+          label={packageName}
+          accentColor={accentColor}
+        />
       </Sequence>
 
-      {/* ── Scene 3: Itinerary (210–360) ─────────────────────────── */}
-      <Sequence from={210} durationInFrames={150}>
-        <AbsoluteFill style={{
-          ...base, background: NAVY,
-          flexDirection: 'column',
-          padding: '64px 88px',
-          display: 'flex',
-          overflow: 'hidden',
-        }}>
-          <div style={{
-            fontFamily: "'Bodoni Moda', serif",
-            fontSize: 56, color: CREAM, marginBottom: 36,
-            opacity: fadeIn(frame - 210, 0, 14),
-          }}>
-            Your Day
-          </div>
-
-          {(props.itinerary || []).slice(0, 5).map((item: { time: string; desc: string }, i: number) => (
-            <div key={i} style={{
-              display: 'flex', gap: 34, alignItems: 'flex-start', marginBottom: 28,
-              opacity: fadeIn(frame - 210, 14 + i * 13, 16),
-              transform: `translateX(${slideX(frame - 210, 14 + i * 13, 16)}px)`,
-            }}>
-              <div style={{
-                fontSize: 25, color: accent, fontWeight: 700,
-                minWidth: 130, paddingTop: 5, flexShrink: 0,
-              }}>
-                {item.time}
-              </div>
-              <div style={{ width: 2, alignSelf: 'stretch', background: accent, opacity: 0.35, flexShrink: 0 }} />
-              <div style={{ fontSize: 34, color: CREAM, lineHeight: 1.4 }}>{item.desc}</div>
-            </div>
-          ))}
-        </AbsoluteFill>
+      {/* ── Scene 3: First Wonder (300–450) ── */}
+      <Sequence from={SCENE_LEN * 2} durationInFrames={SCENE_LEN} name="First Wonder">
+        <SceneLayer
+          clipFile={clip(2)} dir={1}
+          sublabel="Discover"
+          label={highlights[0] || 'Pacific Coast Magic'}
+          accentColor={accentColor}
+        />
       </Sequence>
 
-      {/* ── Scene 4: Pricing (360–480) ───────────────────────────── */}
-      <Sequence from={360} durationInFrames={120}>
-        <AbsoluteFill style={{
-          ...base, background: NAVY2,
-          flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          padding: '80px',
-          display: 'flex',
-        }}>
-          <div style={{
-            fontFamily: "'Bodoni Moda', serif",
-            fontSize: 54, color: CREAM, marginBottom: 56, textAlign: 'center',
-            opacity: fadeIn(frame - 360, 0, 14),
-          }}>
-            Choose Your Experience
-          </div>
-
-          <div style={{ display: 'flex', gap: 48, width: '100%', maxWidth: 1100 }}>
-            {/* Group */}
-            <div style={{
-              flex: 1,
-              background: 'rgba(255,255,255,0.06)',
-              border: '2px solid rgba(255,255,255,0.15)',
-              borderRadius: 28, padding: '48px 44px',
-              opacity: fadeIn(frame - 360, 18, 20),
-              transform: `translateY(${slideUp(frame - 360, 18, 20)}px)`,
-            }}>
-              <div style={{ fontSize: 30, color: MUTED, marginBottom: 14 }}>Group</div>
-              <div style={{ fontSize: 78, fontWeight: 700, color: accent, lineHeight: 1 }}>
-                {props.priceGroup}
-              </div>
-              <div style={{ fontSize: 26, color: MUTED, marginTop: 14 }}>Join a shared group</div>
-              <div style={{ marginTop: 22, fontSize: 23, color: CREAM }}>
-                Min 4 · Max 12 travelers
-              </div>
-            </div>
-
-            {/* Private */}
-            <div style={{
-              flex: 1,
-              background: `rgba(212,175,55,0.1)`,
-              border: `2px solid ${accent}`,
-              borderRadius: 28, padding: '48px 44px',
-              opacity: fadeIn(frame - 360, 28, 20),
-              transform: `translateY(${slideUp(frame - 360, 28, 20)}px)`,
-            }}>
-              <div style={{ fontSize: 30, color: MUTED, marginBottom: 14 }}>Private</div>
-              <div style={{ fontSize: 78, fontWeight: 700, color: accent, lineHeight: 1 }}>
-                {props.pricePrivate}
-              </div>
-              <div style={{ fontSize: 26, color: MUTED, marginTop: 14 }}>Exclusive vehicle</div>
-              <div style={{ marginTop: 22, fontSize: 23, color: CREAM }}>
-                All-inclusive · Bilingual guide
-              </div>
-            </div>
-          </div>
-        </AbsoluteFill>
+      {/* ── Scene 4: Human Moment (450–600) ── */}
+      <Sequence from={SCENE_LEN * 3} durationInFrames={SCENE_LEN} name="Human Moment">
+        <SceneLayer
+          clipFile={clip(3)} dir={-1}
+          sublabel="Experience"
+          label={highlights[1] || 'Unforgettable Moments'}
+          accentColor={accentColor}
+        />
       </Sequence>
 
-      {/* ── Scene 5: CTA (480–600) ───────────────────────────────── */}
-      <Sequence from={480} durationInFrames={120}>
-        <AbsoluteFill style={{
-          ...base, background: NAVY,
-          flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          textAlign: 'center', padding: '80px',
-          display: 'flex',
-        }}>
-          <div style={{
-            fontSize: 36, letterSpacing: '0.12em', color: accent,
-            textTransform: 'uppercase', marginBottom: 22,
-            opacity: fadeIn(frame - 480, 5, 18),
-          }}>
-            Du Lich Cali
-          </div>
+      {/* ── Scene 5: Second Wonder (600–750) ── */}
+      <Sequence from={SCENE_LEN * 4} durationInFrames={SCENE_LEN} name="Second Wonder">
+        <SceneLayer
+          clipFile={clip(4)} dir={1}
+          sublabel="Explore"
+          label={highlights[2] || 'Hidden California'}
+          accentColor={accentColor}
+        />
+      </Sequence>
 
-          <div style={{
-            fontFamily: "'Bodoni Moda', serif",
-            fontSize: 100, fontWeight: 400, color: CREAM,
-            lineHeight: 1.1, marginBottom: 36,
-            opacity: fadeIn(frame - 480, 14, 22),
-            transform: `translateY(${slideUp(frame - 480, 14, 22)}px)`,
-          }}>
-            {props.ctaText}
-          </div>
-
-          <div style={{
-            fontSize: 54, color: accent, fontWeight: 700, marginBottom: 18,
-            opacity: fadeIn(frame - 480, 34, 18),
-          }}>
-            {props.phone}
-          </div>
-
-          <div style={{
-            fontSize: 36, color: MUTED,
-            opacity: fadeIn(frame - 480, 46, 18),
-          }}>
-            {props.website}
-          </div>
-
-          {/* Animated underline */}
-          <div style={{
-            marginTop: 52, height: 4, borderRadius: 2,
-            background: accent,
-            width: interpolate(frame - 480, [56, 90], [0, 620], {
-              extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
-            }),
-          }} />
-        </AbsoluteFill>
+      {/* ── Scene 6: Golden Close (750–900) ── */}
+      <Sequence from={SCENE_LEN * 5} durationInFrames={SCENE_LEN} name="Golden Close">
+        <GoldenClose
+          clipFile={clip(5)}
+          packageName={packageName}
+          priceGroup={priceGroup}
+          phone={phone}
+          website={website}
+          accentColor={accentColor}
+        />
       </Sequence>
 
     </AbsoluteFill>

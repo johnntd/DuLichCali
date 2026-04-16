@@ -47,8 +47,8 @@ const SECRET_FILE = path.join(YT_DIR, 'client_secret.json');
 // Shared music file (downloaded once, reused across all packages)
 const MUSIC_FILE    = 'travel-music.mp3';
 const MUSIC_PATH    = path.join(PUBLIC_DIR, MUSIC_FILE);
-// Update this URL with any cinematic travel track from pixabay.com/music (free, no login needed)
-const MUSIC_CDN_URL = 'https://cdn.pixabay.com/download/audio/2022/03/24/audio_3c6cd1b87a.mp3';
+// Public-domain cinematic instrumental from SoundHelix (royalty-free)
+const MUSIC_CDN_URL = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
 
 // ── Argument parsing ──────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
@@ -160,48 +160,51 @@ Itinerary: ${(packageData.itinerary || []).map(i => i.time + ' ' + i.en).join(' 
 }
 
 /**
- * generateSoraClip — calls OpenAI Sora, downloads the MP4.
+ * generateSoraClip — submits an async Sora video job, polls until complete, downloads MP4.
  *
- * NOTE: The Sora video generation endpoint and exact response shape may evolve.
- * Check https://platform.openai.com/docs and update the endpoint/body/response
- * parsing below if the API returns a different structure.
+ * Sora-2 generates asynchronously. The API:
+ *   1. openai.videos.create()  → returns job with status "queued"
+ *   2. openai.videos.retrieve(id) → poll until status "completed" | "failed"
+ *   3. openai.videos.downloadContent(id) → binary MP4
+ *
+ * Valid sizes: "1280x720" (landscape) or "720x1280" (portrait)
+ * Valid seconds: 4, 8, 12  (we use 4 — minimum; Ken Burns CSS motion runs for full 5s scene)
  */
 async function generateSoraClip(prompt, outputPath) {
-  const res = await fetch('https://api.openai.com/v1/video/generations', {
-    method: 'POST',
-    headers: {
-      'Authorization': 'Bearer ' + OPENAI_KEY,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'sora-1.0-turbo',
-      prompt,
-      n: 1,
-      size: '1920x1080',
-      duration: 5,
-    }),
+  const OpenAI = require('openai');
+  const openai = new OpenAI.default({ apiKey: OPENAI_KEY });
+
+  // Submit generation job
+  const job = await openai.videos.create({
+    model: 'sora-2',
+    prompt,
+    size: '1280x720',   // landscape; Remotion objectFit:cover upscales to 1920x1080
+    seconds: 4,         // minimum supported (5 not valid); Ken Burns CSS runs for full scene
   });
+  console.log('    job ' + job.id + ' queued...');
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error('Sora API ' + res.status + ': ' + err.slice(0, 300));
+  // Poll until completed or failed (max 12 minutes per clip)
+  const POLL_MS  = 20000;  // 20 s between checks
+  const MAX_MS   = 720000; // 12 min timeout
+  const deadline = Date.now() + MAX_MS;
+
+  let video = job;
+  while (video.status !== 'completed' && video.status !== 'failed') {
+    if (Date.now() > deadline) throw new Error('Sora timed out after 12 minutes');
+    await new Promise(r => setTimeout(r, POLL_MS));
+    video = await openai.videos.retrieve(job.id);
+    process.stdout.write('    ' + video.progress + '% ');
+  }
+  process.stdout.write('\n');
+
+  if (video.status === 'failed') {
+    throw new Error('Sora generation failed: ' + JSON.stringify(video.error));
   }
 
-  const data = await res.json();
-
-  // The response contains data[].url with the generated MP4 URL
-  const videoUrl = data.data?.[0]?.url;
-  if (!videoUrl) {
-    // Log the full response shape to help debug if API format has changed
-    console.warn('  Sora response shape:', JSON.stringify(data).slice(0, 400));
-    throw new Error('No video URL found in Sora response');
-  }
-
-  // Download the MP4
-  const dlRes = await fetch(videoUrl);
-  if (!dlRes.ok) throw new Error('Video download failed: HTTP ' + dlRes.status);
-  const buf = await dlRes.arrayBuffer();
-  fs.writeFileSync(outputPath, Buffer.from(buf));
+  // Download the MP4 binary
+  const content = await openai.videos.downloadContent(job.id);
+  const buffer  = Buffer.from(await content.arrayBuffer());
+  fs.writeFileSync(outputPath, buffer);
 }
 
 /**

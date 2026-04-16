@@ -73,10 +73,11 @@ if (hasFlag('--help')) {
   process.exit(0);
 }
 
-const pkgId    = flag('--pkg');
-const skipYT   = hasFlag('--no-youtube');
-const skipFS   = hasFlag('--no-firestore');
-const skipSora = hasFlag('--no-sora');
+const pkgId      = flag('--pkg');
+const skipYT     = hasFlag('--no-youtube');
+const skipFS     = hasFlag('--no-firestore');
+const skipSora   = hasFlag('--no-sora');
+const skipClaude = hasFlag('--no-claude') || skipSora; // --no-sora implies --no-claude
 
 if (!pkgId) { console.error('--pkg <id> is required'); process.exit(1); }
 
@@ -400,7 +401,14 @@ async function main() {
   console.log('='.repeat(60));
 
   // ── Step 1: Claude generates narration + scene prompts ────────────────────
-  const { narration, scenes } = await generateScript(pkg);
+  let narration, scenes;
+  if (skipClaude) {
+    console.log('\n[1/4] Claude: skipped (--no-claude / --no-sora)');
+    narration = pkg.name + ' — a California coastal adventure awaits. Book with Du Lich Cali.';
+    scenes = Array(6).fill('');
+  } else {
+    ({ narration, scenes } = await generateScript(pkg));
+  }
 
   // ── Step 2: Sora generates 6 clips in parallel ────────────────────────────
   console.log('\n[2/4] Sora: generating 6 × 5-second clips in parallel...');

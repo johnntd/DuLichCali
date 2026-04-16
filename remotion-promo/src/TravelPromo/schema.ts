@@ -21,11 +21,16 @@ export const TravelPromoSchema = z.object({
     { time: '2:30 PM',  desc: 'Monterey Aquarium' },
     { time: '5:00 PM',  desc: 'Return' },
   ]),
-  heroImageUrl: z.string().default(''),
-  accentColor:  z.string().default('#d4af37'),
-  phone:        z.string().default('(408) 916-3439'),
-  website:      z.string().default('dulichcali21.com/travel'),
-  ctaText:      z.string().default('Book Now'),
+  heroImageUrl:  z.string().default(''),
+  accentColor:   z.string().default('#d4af37'),
+  phone:         z.string().default('(408) 916-3439'),
+  website:       z.string().default('dulichcali21.com/travel'),
+  ctaText:       z.string().default('Book Now'),
+  // ── AI-generated cinematic assets ───────────────────────────────────────
+  // Filenames (no path prefix) for files saved in remotion-promo/public/
+  scenePaths:    z.array(z.string()).default([]),       // 6 Sora MP4 clips
+  narrationPath: z.string().default(''),                // TTS narration MP3
+  musicPath:     z.string().default(''),                // Pixabay underscore MP3
 });
 
 export type TravelPromoProps = z.infer<typeof TravelPromoSchema>;

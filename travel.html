@@ -220,6 +220,15 @@
       font-weight: 700; font-size: .95rem; cursor: pointer; margin-top: .5rem;
     }
 
+    /* Wizard inline error */
+    .tp-wizard-error {
+      display: none;
+      background: rgba(220,53,69,.12); border: 1px solid rgba(220,53,69,.35);
+      border-radius: var(--r-md); padding: .6rem .85rem;
+      font-size: .8rem; color: #ff8a93;
+      margin-bottom: .75rem;
+    }
+
     /* Success state */
     .tp-success { text-align: center; padding: 2rem 1rem; }
     .tp-success__icon { font-size: 3rem; margin-bottom: .75rem; }
@@ -227,11 +236,90 @@
     .tp-success__sub { font-size: .82rem; color: var(--muted); line-height: 1.6; }
     .tp-success__id { font-size: .75rem; color: var(--gold); margin-top: .75rem; font-family: monospace; letter-spacing: .05em; }
 
+    /* ── Attractions section ── */
+    .tp-attr-list { display: flex; flex-direction: column; gap: .5rem; }
+    .tp-attr-card {
+      display: grid; grid-template-columns: 1fr auto;
+      gap: .1rem .5rem;
+      background: var(--navy-800); border: 1px solid var(--border);
+      border-radius: var(--r-md); padding: .65rem .85rem;
+    }
+    .tp-attr-name { font-size: .84rem; color: var(--cream); font-weight: 500; grid-column: 1; }
+    .tp-attr-fee  { font-size: .75rem; color: var(--gold); font-weight: 600; grid-column: 2; grid-row: 1; text-align: right; }
+    .tp-attr-note { font-size: .72rem; color: var(--muted); grid-column: 1 / -1; margin-top: .1rem; }
+
+    /* ── Hotels section ── */
+    .tp-hotel-list { display: flex; flex-direction: column; gap: .65rem; }
+    .tp-hotel-card {
+      background: var(--navy-800); border: 1px solid var(--border);
+      border-radius: var(--r-md); padding: .75rem .85rem;
+    }
+    .tp-hotel-card__header { display: flex; justify-content: space-between; align-items: flex-start; gap: .5rem; margin-bottom: .2rem; }
+    .tp-hotel-card__name   { font-size: .85rem; color: var(--cream); font-weight: 500; }
+    .tp-hotel-card__tier   { font-size: .68rem; color: var(--gold); white-space: nowrap; padding: .15rem .45rem; border: 1px solid var(--gold); border-radius: 10px; flex-shrink: 0; }
+    .tp-hotel-card__loc    { font-size: .72rem; color: var(--muted); margin-bottom: .25rem; }
+    .tp-hotel-card__price  { font-size: .82rem; color: var(--cream); font-weight: 600; margin-bottom: .25rem; }
+    .tp-hotel-card__amenities { font-size: .72rem; color: var(--muted); line-height: 1.45; }
+
+    /* ── Related packages ── */
+    .tp-related-list { display: flex; flex-direction: column; gap: .65rem; }
+    .tp-related-card {
+      display: flex; gap: .85rem;
+      text-decoration: none;
+      background: var(--navy-800); border: 1px solid var(--border);
+      border-radius: var(--r-md); overflow: hidden;
+    }
+    .tp-related-card:active { opacity: .82; }
+    .tp-related-card__img {
+      width: 90px; min-height: 72px; flex-shrink: 0;
+      background-size: cover; background-position: center;
+    }
+    .tp-related-card__body { display: flex; flex-direction: column; justify-content: center; padding: .55rem .65rem .55rem 0; gap: .2rem; }
+    .tp-related-card__name  { font-size: .82rem; color: var(--cream); font-weight: 500; line-height: 1.35; }
+    .tp-related-card__price { font-size: .75rem; color: var(--gold); }
+
+    .tp-section--hidden { display: none; }
+
+    /* ── Media thumbnail strip ── */
+    .tp-media-strip {
+      display: flex; gap: .45rem;
+      overflow-x: auto; padding: .55rem 1rem;
+      background: var(--navy-900);
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .tp-media-strip::-webkit-scrollbar { display: none; }
+    .tp-media-thumb {
+      flex-shrink: 0; width: 68px; height: 46px;
+      border-radius: 6px; overflow: hidden; cursor: pointer;
+      border: 2px solid transparent;
+      position: relative; background: var(--navy-800);
+      transition: border-color .15s;
+    }
+    .tp-media-thumb--active { border-color: var(--gold); }
+    .tp-media-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .tp-media-thumb__play {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,.38);
+      font-size: .95rem; color: #fff; pointer-events: none;
+    }
+
+    /* ── Hero video panel (replaces image when video is active) ── */
+    .tp-hero__video {
+      display: none; position: absolute; inset: 0; background: #000;
+    }
+    .tp-hero__video--visible { display: block; }
+    .tp-hero__video iframe { width: 100%; height: 100%; border: 0; }
+
     @media (min-width: 768px) {
       .tp-hero { max-height: 560px; }
       .tp-content { padding: 2rem 1.5rem 8rem; }
       .tp-wizard { align-items: center; }
       .tp-wizard__sheet { max-width: 480px; margin: 0 auto; border-radius: var(--r-xl); }
+      .tp-attr-list, .tp-hotel-list { gap: .65rem; }
+      .tp-related-list { flex-direction: row; flex-wrap: wrap; }
+      .tp-related-card { flex: 1 1 calc(50% - .35rem); }
     }
   </style>
 </head>
@@ -247,7 +335,11 @@
     <h1 class="tp-hero__name" id="tpPkgName">California Tour</h1>
     <p class="tp-hero__sub">Du Lich Cali · Bilingual Guide</p>
   </div>
+  <div class="tp-hero__video" id="tpHeroVideo"></div>
 </div>
+
+<!-- Media thumbnail strip (shown only when package has a promo video) -->
+<div id="tpMediaStrip" class="tp-media-strip" style="display:none"></div>
 
 <!-- Content -->
 <div class="tp-content">
@@ -277,6 +369,24 @@
   <div id="tpVideoSection" style="display:none">
     <h2 class="tp-section-head" data-i18n="tpVideoHead">Tour Preview</h2>
     <div class="tp-video-wrap" id="tpVideoWrap"></div>
+  </div>
+
+  <!-- Attractions -->
+  <div id="tpAttractionsSection">
+    <h2 class="tp-section-head">Key Attractions</h2>
+    <div class="tp-attr-list" id="tpAttractions"></div>
+  </div>
+
+  <!-- Hotel Suggestions (multi-day only) -->
+  <div id="tpHotelsSection">
+    <h2 class="tp-section-head">Suggested Hotels</h2>
+    <div class="tp-hotel-list" id="tpHotels"></div>
+  </div>
+
+  <!-- Related Packages -->
+  <div id="tpRelatedSection">
+    <h2 class="tp-section-head">Other Tours</h2>
+    <div class="tp-related-list" id="tpRelatedPkgs"></div>
   </div>
 
 </div>
@@ -322,15 +432,11 @@
       </div>
       <span class="tp-wizard__label" data-i18n="tpDateLabel">Tour date</span>
       <input class="tp-date-input" type="date" id="tpDateInput" min="">
-      <span class="tp-wizard__label" data-i18n="tpRegionLabel">Pickup region</span>
-      <div class="tp-opt-group">
-        <button class="tp-opt-btn tp-opt-btn--selected" data-region="bayarea">
-          <span data-i18n="tpBayArea">Bay Area (San Jose / San Francisco)</span>
-        </button>
-        <button class="tp-opt-btn" data-region="socal">
-          <span data-i18n="tpSoCal">SoCal (LA / San Diego) +15%</span>
-        </button>
-      </div>
+      <span class="tp-wizard__label" data-i18n="tpPickupLabel">Your pickup location</span>
+      <input class="tp-date-input" type="text" id="tpPickupInput"
+             data-i18n-ph="tpPickupPh"
+             placeholder="City or address (e.g. San Jose, CA)"
+             autocomplete="off">
       <button class="tp-next-btn" id="tpStep2Next" data-i18n="tpNext">Next →</button>
     </div>
 
@@ -342,6 +448,9 @@
       <input class="tp-field" type="text" id="tpCustName" placeholder="Full name" autocomplete="name">
       <span class="tp-wizard__label" data-i18n="tpPhoneLabel">Phone number</span>
       <input class="tp-field" type="tel" id="tpCustPhone" placeholder="+1 (408) 555-0100" autocomplete="tel">
+      <span class="tp-wizard__label" data-i18n="tpEmailLabel">Email (optional — for confirmation)</span>
+      <input class="tp-field" type="email" id="tpCustEmail" data-i18n-ph="tpEmailPh" placeholder="you@email.com" autocomplete="email">
+      <div class="tp-wizard-error" id="tpWizardError" role="alert"></div>
       <button class="tp-next-btn" id="tpConfirmBtn" data-i18n="tpConfirm">Confirm Booking</button>
     </div>
 
@@ -363,9 +472,10 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-<script src="/travel-packages.js?v=20260421a"></script>
-<script src="/pricing.js?v=20260421f"></script>
-<script src="/travel-booking.js?v=20260421a"></script>
+<script src="/travel-packages.js?v=20260416a"></script>
+<script src="/pricing.js?v=20260421h"></script>
+<script src="/notifications.js?v=20260421a"></script>
+<script src="/travel-booking.js?v=20260421g"></script>
 <script src="/landing-nav.js?v=20260421b"></script>
 
 <script>

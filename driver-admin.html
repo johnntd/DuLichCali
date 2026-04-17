@@ -1723,7 +1723,7 @@
             pickupAddress: t.pickupAddress || '',
             bookingId:     t.bookingId     || t.docId,
             travelers:     t.travelers     || 1,
-            total:         t.total         || 0,
+            total:         t.total         || null,
             travelDate:    t.travelDate    || '',
             duration_days: t.duration_days || 1,
             status:        t.status        || 'assigned',
@@ -2581,7 +2581,7 @@
       }
 
       // Parse pickup datetime for display
-      var rawWhen = ride.datetime ||
+      var rawWhen = ride.travelDate || ride.datetime ||
         (ride.arrivalDate   ? ride.arrivalDate   + (ride.arrivalTime   ? 'T' + ride.arrivalTime   : '') : null) ||
         (ride.departureDate ? ride.departureDate + (ride.departureTime ? 'T' + ride.departureTime : '') : null) ||
         (ride.rideDate      ? ride.rideDate      + (ride.rideTime      ? 'T' + ride.rideTime      : '') : null) || '';
@@ -2605,9 +2605,9 @@
       var customerName  = ride.name  || ride.customerName  || '—';
       var customerPhone = ride.phone || ride.customerPhone || '';
       var price   = ride._type === 'tour'
-        ? (ride.total ? '$' + ride.total : '')
+        ? (ride.total ? '$' + Number(ride.total).toFixed(0) : '')
         : (ride.estimatedPrice ? '$' + Number(ride.estimatedPrice).toFixed(0) : '');
-      var pax     = ride.passengers || 1;
+      var pax     = ride.passengers || ride.travelers || 1;
       var bkId    = ride.bookingId || ride._id.slice(0, 8);
       var svcStr  = ride._type === 'tour'
         ? ('🗺 ' + (ride.packageName || 'California Tour') +
@@ -2709,8 +2709,8 @@
           if (!_remindedIds[ktomorrow]) {
             _remindedIds[ktomorrow] = true;
             showDriverToast(
-              '📅 Tour ngày mai — ' + (ride.packageName || 'California Tour'),
-              'Kiểm tra lộ trình và liên hệ khách tối nay. Điểm đón: ' + (ride.pickupAddress || '—')
+              '📅 Tour ngày mai — ' + esc(ride.packageName || 'California Tour'),
+              'Kiểm tra lộ trình và liên hệ khách tối nay. Điểm đón: ' + esc(ride.pickupAddress || '—')
             );
           }
         }

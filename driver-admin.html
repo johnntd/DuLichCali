@@ -1703,7 +1703,10 @@
         if (sec) sec.style.display = active.length ? '' : 'none';
         var cnt = document.getElementById('homeTourCount');
         if (cnt) { cnt.textContent = active.length; cnt.classList.toggle('hidden', active.length === 0); }
-      }, function() {});
+      }, function(err) {
+        console.warn('[TourAssign] listener error:', err && err.message);
+        showToast('Không thể tải tour: ' + (err && err.message ? err.message : 'lỗi không xác định'), true);
+      });
   }
 
   function renderTourAssignments(docs) {
@@ -1768,7 +1771,7 @@
       var nextStatus  = _TOUR_STATUS_NEXT[status];
       var actionLabel = _TOUR_STATUS_BTN[status];
 
-      return '<div class="tour-card tc-' + status + '" id="tour-card-' + docId + '">' +
+      return '<div class="tour-card tc-' + esc(status) + '" id="tour-card-' + esc(docId) + '">' +
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem">' +
           '<div class="tour-card__type">🗺 ' + esc(d.packageName || 'California Tour') + (dur > 1 ? ' · ' + dur + ' ngày' : '') + '</div>' +
           '<span class="tour-status ts-' + status + '">' + (_TOUR_STATUS_DISPLAY[status] || status) + '</span>' +
@@ -1776,9 +1779,9 @@
         '<div class="tour-card__when">' + esc(d.travelDate || '(chưa có ngày)') + (endDateStr ? ' – ' + esc(endDateStr) : '') + '</div>' +
         '<div class="tour-card__grid">' +
           '<div><div class="upcoming-card__lbl">Khách</div><div class="upcoming-card__val">' + esc(d.customerName || '—') + '</div></div>' +
-          '<div><div class="upcoming-card__lbl">Số Khách</div><div class="upcoming-card__val">' + (d.travelers || 1) + ' người</div></div>' +
+          '<div><div class="upcoming-card__lbl">Số Khách</div><div class="upcoming-card__val">' + esc(String(d.travelers || 1)) + ' người</div></div>' +
           '<div><div class="upcoming-card__lbl">Loại</div><div class="upcoming-card__val">' + mode + '</div></div>' +
-          (d.total ? '<div><div class="upcoming-card__lbl">Ước Tính</div><div class="upcoming-card__val" style="color:var(--gold)">$' + d.total + '</div></div>' : '') +
+          (d.total ? '<div><div class="upcoming-card__lbl">Ước Tính</div><div class="upcoming-card__val" style="color:var(--gold)">$' + esc(String(d.total)) + '</div></div>' : '') +
           (d.customerPhone ? '<div><div class="upcoming-card__lbl">Điện Thoại</div><div class="upcoming-card__val">' + esc(d.customerPhone) + '</div></div>' : '') +
           (d.customerEmail ? '<div style="grid-column:1/-1"><div class="upcoming-card__lbl">Email</div><div class="upcoming-card__addr">' + esc(d.customerEmail) + '</div></div>' : '') +
           (d.pickupAddress ? '<div style="grid-column:1/-1"><div class="upcoming-card__lbl">Điểm Đón</div><div class="upcoming-card__addr">' + esc(d.pickupAddress) + '</div></div>' : '') +
@@ -1788,7 +1791,7 @@
         '<div class="tour-card__actions">' +
           (ph ? '<a class="btn-call" href="tel:' + ph + '" style="min-width:unset">📞 Gọi</a>' : '') +
           (nextStatus && status !== 'completed'
-            ? '<button class="btn-tour-action" id="tour-action-' + docId + '" onclick="advanceTourStatus(\'' + docId + '\',\'' + status + '\')">' + actionLabel + '</button>'
+            ? '<button class="btn-tour-action" id="tour-action-' + esc(docId) + '" data-doc-id="' + esc(docId) + '" data-status="' + esc(status) + '" onclick="advanceTourStatus(this.dataset.docId,this.dataset.status)">' + esc(actionLabel || '') + '</button>'
             : '') +
           (smsHref   ? '<a class="btn-notify" href="' + smsHref   + '">💬 SMS</a>' : '') +
           (emailHref ? '<a class="btn-notify" href="' + emailHref + '">✉️ Email</a>' : '') +

@@ -1681,6 +1681,7 @@
     completed:   'Hoàn Thành',
   };
   var _unsubTourAssign  = null;
+  var _activeTourDocs   = [];   // raw tour data for calendar + reminders
 
   function listenTourAssignments() {
     if (!_travelDriverIds.length) return;
@@ -1692,12 +1693,56 @@
         var active = snap.docs.filter(function(d) {
           return ['assigned','confirmed','picked_up','in_progress'].indexOf(d.data().status) >= 0;
         });
-        // Sort newest first
+        // Sort ascending by travelDate for unified timeline
         active.sort(function(a, b) {
           var at = a.data().travelDate || '';
           var bt = b.data().travelDate || '';
-          return bt < at ? -1 : bt > at ? 1 : 0;
+          return at < bt ? -1 : at > bt ? 1 : 0;
         });
+
+        // Cache raw tour data for calendar rendering
+        _activeTourDocs = active.map(function(d) { return Object.assign({ docId: d.id }, d.data()); });
+
+        // Normalize tours into ride shape and push into _upcomingRides
+        var todayMs = new Date().setHours(0, 0, 0, 0);
+        var tourUpcoming = _activeTourDocs.map(function(t) {
+          var dateMs = 0;
+          if (t.travelDate) {
+            var parts = t.travelDate.split('-').map(Number);
+            dateMs = new Date(parts[0], parts[1] - 1, parts[2]).getTime();
+          }
+          return {
+            _id:           t.docId,
+            _pickupMs:     dateMs,
+            _type:         'tour',
+            customerName:  t.customerName  || '',
+            customerPhone: t.customerPhone || '',
+            customerEmail: t.customerEmail || '',
+            serviceType:   'tour',
+            packageName:   t.packageName   || '',
+            pickupAddress: t.pickupAddress || '',
+            bookingId:     t.bookingId     || t.docId,
+            travelers:     t.travelers     || 1,
+            total:         t.total         || 0,
+            travelDate:    t.travelDate    || '',
+            duration_days: t.duration_days || 1,
+            status:        t.status        || 'assigned',
+            coDrivers:     t.coDrivers     || null,
+            notes:         t.notes         || '',
+            driverPhone:   t.driverPhone   || _driverPhone,
+            driverName:    t.driverName    || _driverName,
+          };
+        }).filter(function(t) {
+          return t._pickupMs === 0 || t._pickupMs >= todayMs;
+        });
+
+        // Merge with ride entries, preserving ride data, re-sort chronologically
+        var rideOnly = _upcomingRides.filter(function(r) { return r._type !== 'tour'; });
+        _upcomingRides = rideOnly.concat(tourUpcoming).sort(function(a, b) {
+          return (a._pickupMs || 9e15) - (b._pickupMs || 9e15);
+        });
+        renderUpcomingSection(_upcomingRides);
+
         renderTourAssignments(active);
         var sec = document.getElementById('homeSectionTours');
         if (sec) sec.style.display = active.length ? '' : 'none';
@@ -2460,8 +2505,12 @@
         upcoming.sort(function(a, b) {
           return (a._pickupMs || 9e15) - (b._pickupMs || 9e15);
         });
-        _upcomingRides = upcoming;
-        renderUpcomingSection(upcoming);
+        // Preserve tour entries already merged by listenTourAssignments
+        var tourEntries = _upcomingRides.filter(function(r) { return r._type === 'tour'; });
+        _upcomingRides = upcoming.concat(tourEntries).sort(function(a, b) {
+          return (a._pickupMs || 9e15) - (b._pickupMs || 9e15);
+        });
+        renderUpcomingSection(_upcomingRides);
       }, function() {});
   }
 
@@ -2555,10 +2604,15 @@
 
       var customerName  = ride.name  || ride.customerName  || '—';
       var customerPhone = ride.phone || ride.customerPhone || '';
-      var price   = ride.estimatedPrice ? '$' + Number(ride.estimatedPrice).toFixed(0) : '';
+      var price   = ride._type === 'tour'
+        ? (ride.total ? '$' + ride.total : '')
+        : (ride.estimatedPrice ? '$' + Number(ride.estimatedPrice).toFixed(0) : '');
       var pax     = ride.passengers || 1;
       var bkId    = ride.bookingId || ride._id.slice(0, 8);
-      var svcStr  = svcLabel[ride.serviceType] || 'Chuyến Xe';
+      var svcStr  = ride._type === 'tour'
+        ? ('🗺 ' + (ride.packageName || 'California Tour') +
+            (ride.duration_days > 1 ? ' · ' + ride.duration_days + ' ngày' : ''))
+        : (svcLabel[ride.serviceType] || 'Chuyến Xe');
 
       function mapsHref(addr) {
         if (!addr) return '';
@@ -2641,6 +2695,24 @@
             '⚠ Còn 15 phút — ' + cName,
             'Xuất phát ngay để đến đúng giờ đón khách!'
           );
+        }
+      }
+
+      // Day-before reminder for tours (fires once when travel date is tomorrow)
+      if (ride._type === 'tour' && ride._pickupMs) {
+        var startOfTomorrow = new Date();
+        startOfTomorrow.setHours(0, 0, 0, 0);
+        startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+        var endOfTomorrow = startOfTomorrow.getTime() + 86400000;
+        if (ride._pickupMs >= startOfTomorrow.getTime() && ride._pickupMs < endOfTomorrow) {
+          var ktomorrow = ride._id + '_tomorrow';
+          if (!_remindedIds[ktomorrow]) {
+            _remindedIds[ktomorrow] = true;
+            showDriverToast(
+              '📅 Tour ngày mai — ' + (ride.packageName || 'California Tour'),
+              'Kiểm tra lộ trình và liên hệ khách tối nay. Điểm đón: ' + (ride.pickupAddress || '—')
+            );
+          }
         }
       }
     });

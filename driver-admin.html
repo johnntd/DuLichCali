@@ -744,6 +744,53 @@
     .hist-item__date { font-size: .6rem; color: var(--muted); margin-top: .1rem; }
     .hist-item__fare { font-size: .95rem; font-weight: 700; color: var(--gold); flex-shrink: 0; }
 
+    /* ── Tour assignment cards ── */
+    .tour-card {
+      background: var(--navy-800);
+      border: 1px solid rgba(245,166,35,.35);
+      border-radius: 12px; padding: .9rem 1rem; margin-bottom: .6rem;
+    }
+    .tour-card__type {
+      font-size: .6rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--gold); margin-bottom: .35rem;
+    }
+    .tour-card__when {
+      font-size: .92rem; font-weight: 700; color: var(--cream); margin-bottom: .55rem;
+    }
+    .tour-card__grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: .4rem .6rem; margin-bottom: .55rem;
+    }
+    .tour-card__codrivers {
+      font-size: .68rem; color: var(--muted); margin-top: .35rem; line-height: 1.4;
+    }
+    .tour-card__actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .6rem; }
+
+    /* ── Tour status badges ── */
+    .tour-status {
+      display: inline-flex; align-items: center;
+      padding: .15rem .55rem; border-radius: 999px;
+      font-size: .58rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    }
+    .tour-status.ts-assigned    { background: rgba(245,166,35,.12); color: var(--gold);    border: 1px solid rgba(245,166,35,.3); }
+    .tour-status.ts-confirmed   { background: rgba(56,189,248,.12); color: #38bdf8;        border: 1px solid rgba(56,189,248,.3); }
+    .tour-status.ts-picked_up   { background: rgba(251,146,60,.12); color: #fb923c;        border: 1px solid rgba(251,146,60,.3); }
+    .tour-status.ts-in_progress { background: rgba(74,222,128,.12); color: var(--success); border: 1px solid rgba(74,222,128,.3); }
+    .tour-status.ts-completed   { background: rgba(148,163,184,.08); color: #94a3b8;       border: 1px solid rgba(148,163,184,.2); }
+    .btn-tour-action {
+      flex: 1; height: 40px;
+      background: var(--gold); color: var(--navy-900);
+      border: none; border-radius: 6px;
+      font-family: var(--font-b); font-size: .75rem; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase;
+      cursor: pointer; transition: background .18s;
+    }
+    .btn-tour-action:hover { background: var(--gold-lt); }
+    .btn-tour-action:disabled { opacity: .45; cursor: not-allowed; }
+    .tour-card.tc-confirmed   { border-color: rgba(56,189,248,.4); }
+    .tour-card.tc-picked_up   { border-color: rgba(251,146,60,.5); }
+    .tour-card.tc-in_progress { border-color: rgba(74,222,128,.5); background: rgba(74,222,128,.03); }
+    .tour-card.tc-completed   { opacity: .6; }
+
   </style>
   <link rel="stylesheet" href="/desktop.css">
 </head>
@@ -847,6 +894,16 @@
         <span class="drv-tab-badge" id="homeOffersCount" style="background:var(--danger);margin-left:.35rem">0</span>
       </div>
       <div id="homeOffersList"></div>
+    </div>
+
+    <!-- Section: Tour Assignments (travel_drivers portal feed) -->
+    <div class="drv-home-section" id="homeSectionTours" style="display:none">
+      <div class="drv-home-section-hdr" style="color:var(--gold-lt)">
+        <span class="drv-section-dot" style="background:var(--gold)"></span>
+        Tour Được Giao
+        <span class="drv-tab-badge hidden" id="homeTourCount" style="background:var(--gold);color:var(--navy-900);margin-left:.35rem">0</span>
+      </div>
+      <div id="homeTourList"></div>
     </div>
 
     <!-- Section 2: Active Ride in progress -->
@@ -1215,8 +1272,11 @@
       var d = doc.data();
       document.getElementById('fName').value  = d.fullName || '';
       document.getElementById('fPhone').value = d.phone || '';
-      _driverName  = d.fullName || '';
-      _driverPhone = d.phone    || '';
+      _driverName      = d.fullName || '';
+      _driverPhone     = d.phone    || '';
+      // Support array (multi-region) or legacy single string
+      var rawId = d.travel_driver_ids || d.travel_driver_id || null;
+      _travelDriverIds = Array.isArray(rawId) ? rawId : (rawId ? [rawId] : []);
       document.getElementById('driverEmail').textContent = (_driverName || (auth.currentUser && auth.currentUser.email) || '') + ' · Tài Xế';
 
       var v = d.vehicle || {};
@@ -1249,9 +1309,10 @@
       listenDriverNotifications();
       _listenDriverActiveRide();
       listenActiveOffer();    // Phase 13: exclusive offer listener
-      listenUpcomingRides();  // Phase 14: upcoming appointments
-      loadRecentHistory();    // Phase 14: recent history strip
-      startReminderChecker(); // Phase 14: 30-min + 15-min pickup reminders
+      listenUpcomingRides();    // Phase 14: upcoming appointments
+      loadRecentHistory();      // Phase 14: recent history strip
+      startReminderChecker();   // Phase 14: 30-min + 15-min pickup reminders
+      listenTourAssignments();  // Travel tour bookings feed
     }).catch(function () {
       document.getElementById('authChecking').classList.add('hidden');
       document.getElementById('mainContent').style.display = '';
@@ -1596,6 +1657,171 @@
 
   function esc(s) {
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Tour assignment feed (travel_drivers portal) ─────────────────────────
+  var _travelDriverIds  = [];   // array — driver may operate in multiple regions
+  var _TOUR_STATUS_NEXT = {
+    assigned:    'confirmed',
+    confirmed:   'picked_up',
+    picked_up:   'in_progress',
+    in_progress: 'completed',
+  };
+  var _TOUR_STATUS_BTN = {
+    assigned:    'Xác Nhận Tour',
+    confirmed:   'Đã Đón Khách',
+    picked_up:   'Bắt Đầu Tour',
+    in_progress: 'Hoàn Thành Tour',
+  };
+  var _TOUR_STATUS_DISPLAY = {
+    assigned:    'Được Giao',
+    confirmed:   'Đã Xác Nhận',
+    picked_up:   'Đã Đón Khách',
+    in_progress: 'Đang Trong Tour',
+    completed:   'Hoàn Thành',
+  };
+  var _unsubTourAssign  = null;
+
+  function listenTourAssignments() {
+    if (!_travelDriverIds.length) return;
+    if (_unsubTourAssign) _unsubTourAssign();
+    _unsubTourAssign = db.collection('travelAssignments')
+      .where('travel_driver_id', 'in', _travelDriverIds)
+      .onSnapshot(function(snap) {
+        // Filter to active assignments client-side (avoids composite index)
+        var active = snap.docs.filter(function(d) {
+          return ['assigned','confirmed','picked_up','in_progress'].indexOf(d.data().status) >= 0;
+        });
+        // Sort newest first
+        active.sort(function(a, b) {
+          var at = a.data().travelDate || '';
+          var bt = b.data().travelDate || '';
+          return bt < at ? -1 : bt > at ? 1 : 0;
+        });
+        renderTourAssignments(active);
+        var sec = document.getElementById('homeSectionTours');
+        if (sec) sec.style.display = active.length ? '' : 'none';
+        var cnt = document.getElementById('homeTourCount');
+        if (cnt) { cnt.textContent = active.length; cnt.classList.toggle('hidden', active.length === 0); }
+      }, function() {});
+  }
+
+  function renderTourAssignments(docs) {
+    var list = document.getElementById('homeTourList');
+    if (!docs.length) {
+      list.innerHTML = '<div class="home-empty-state">Chưa có tour nào được giao.</div>';
+      return;
+    }
+    list.innerHTML = docs.map(function(doc) {
+      var d      = doc.data();
+      var docId  = doc.id;
+      var ph     = (d.customerPhone || '').replace(/\D/g, '');
+      var mode   = d.bookingMode === 'private' ? 'Riêng' : 'Nhóm';
+      var status = d.status || 'assigned';
+      var dur    = Math.max(1, parseInt(d.duration_days || 1, 10));
+
+      // Compute end date for multi-day tours
+      var endDateStr = '';
+      if (dur > 1 && d.travelDate) {
+        var startParts = d.travelDate.split('-').map(Number);
+        var endD = new Date(startParts[0], startParts[1] - 1, startParts[2] + dur - 1);
+        endDateStr = endD.getFullYear() + '-' +
+          String(endD.getMonth() + 1).padStart(2, '0') + '-' +
+          String(endD.getDate()).padStart(2, '0');
+      }
+
+      // Pre-filled SMS confirmation message
+      var smsBody = 'Hi ' + (d.customerName || '') + ', this is ' + (d.driverName || _driverName || 'your Du Lich Cali guide') +
+        '. Your tour: ' + (d.packageName || 'California Tour') +
+        ' on ' + (d.travelDate || '') +
+        (endDateStr ? '–' + endDateStr : '') +
+        '. Pickup: ' + (d.pickupAddress || '') +
+        ', ' + (d.travelers || 1) + ' travelers' +
+        (d.total ? ', est. $' + d.total : '') +
+        '. Please confirm. Questions? Call ' + (d.driverPhone || _driverPhone || '') + '. - Du Lich Cali';
+      var smsHref = ph ? 'sms:+1' + ph + '?body=' + encodeURIComponent(smsBody) : '';
+
+      // Pre-filled email confirmation
+      var emailSubj = 'Tour Confirmation — ' + (d.packageName || 'California Tour') + ' on ' + (d.travelDate || '');
+      var emailBody = 'Hi ' + (d.customerName || '') + ',\n\n' +
+        'I\'m ' + (d.driverName || _driverName || 'your guide') + ', your Du Lich Cali tour guide.\n\n' +
+        'Tour: ' + (d.packageName || '') + '\n' +
+        'Start Date: ' + (d.travelDate || '') + '\n' +
+        (endDateStr ? 'End Date: ' + endDateStr + '\n' : '') +
+        'Duration: ' + dur + (dur === 1 ? ' day' : ' days') + '\n' +
+        'Travelers: ' + (d.travelers || 1) + '\n' +
+        'Type: ' + (d.bookingMode === 'private' ? 'Private' : 'Group') + '\n' +
+        'Pickup: ' + (d.pickupAddress || '') + '\n' +
+        (d.total ? 'Est. Total: $' + d.total + '\n' : '') +
+        (d.notes ? 'Notes: ' + d.notes + '\n' : '') +
+        '\nPlease reply to confirm these details.\n' +
+        'Call/text me at ' + (d.driverPhone || _driverPhone || '') + ' with any questions.\n\n' +
+        '— ' + (d.driverName || _driverName || '') + '\nDu Lich Cali · www.dulichcali21.com';
+      var emailHref = d.customerEmail
+        ? 'mailto:' + d.customerEmail + '?subject=' + encodeURIComponent(emailSubj) + '&body=' + encodeURIComponent(emailBody)
+        : '';
+
+      var mapsHref = d.pickupAddress
+        ? 'https://maps.google.com/?q=' + encodeURIComponent(d.pickupAddress)
+        : '';
+
+      var nextStatus  = _TOUR_STATUS_NEXT[status];
+      var actionLabel = _TOUR_STATUS_BTN[status];
+
+      return '<div class="tour-card tc-' + status + '" id="tour-card-' + docId + '">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem">' +
+          '<div class="tour-card__type">🗺 ' + esc(d.packageName || 'California Tour') + (dur > 1 ? ' · ' + dur + ' ngày' : '') + '</div>' +
+          '<span class="tour-status ts-' + status + '">' + (_TOUR_STATUS_DISPLAY[status] || status) + '</span>' +
+        '</div>' +
+        '<div class="tour-card__when">' + esc(d.travelDate || '(chưa có ngày)') + (endDateStr ? ' – ' + esc(endDateStr) : '') + '</div>' +
+        '<div class="tour-card__grid">' +
+          '<div><div class="upcoming-card__lbl">Khách</div><div class="upcoming-card__val">' + esc(d.customerName || '—') + '</div></div>' +
+          '<div><div class="upcoming-card__lbl">Số Khách</div><div class="upcoming-card__val">' + (d.travelers || 1) + ' người</div></div>' +
+          '<div><div class="upcoming-card__lbl">Loại</div><div class="upcoming-card__val">' + mode + '</div></div>' +
+          (d.total ? '<div><div class="upcoming-card__lbl">Ước Tính</div><div class="upcoming-card__val" style="color:var(--gold)">$' + d.total + '</div></div>' : '') +
+          (d.customerPhone ? '<div><div class="upcoming-card__lbl">Điện Thoại</div><div class="upcoming-card__val">' + esc(d.customerPhone) + '</div></div>' : '') +
+          (d.customerEmail ? '<div style="grid-column:1/-1"><div class="upcoming-card__lbl">Email</div><div class="upcoming-card__addr">' + esc(d.customerEmail) + '</div></div>' : '') +
+          (d.pickupAddress ? '<div style="grid-column:1/-1"><div class="upcoming-card__lbl">Điểm Đón</div><div class="upcoming-card__addr">' + esc(d.pickupAddress) + '</div></div>' : '') +
+          (d.notes ? '<div style="grid-column:1/-1"><div class="upcoming-card__lbl">Ghi Chú</div><div class="upcoming-card__addr">' + esc(d.notes) + '</div></div>' : '') +
+        '</div>' +
+        (d.coDrivers ? '<div class="tour-card__codrivers">🤝 Cùng tài xế: ' + esc(d.coDrivers) + '</div>' : '') +
+        '<div class="tour-card__actions">' +
+          (ph ? '<a class="btn-call" href="tel:' + ph + '" style="min-width:unset">📞 Gọi</a>' : '') +
+          (nextStatus && status !== 'completed'
+            ? '<button class="btn-tour-action" id="tour-action-' + docId + '" onclick="advanceTourStatus(\'' + docId + '\',\'' + status + '\')">' + actionLabel + '</button>'
+            : '') +
+          (smsHref   ? '<a class="btn-notify" href="' + smsHref   + '">💬 SMS</a>' : '') +
+          (emailHref ? '<a class="btn-notify" href="' + emailHref + '">✉️ Email</a>' : '') +
+          (mapsHref  ? '<a class="btn-maps"   href="' + mapsHref  + '" target="_blank" rel="noopener">📍 Bản Đồ</a>' : '') +
+        '</div>' +
+        '<div style="font-size:.6rem;color:var(--muted);margin-top:.5rem;font-family:monospace">' + esc(d.bookingId || docId) + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  async function advanceTourStatus(docId, currentStatus) {
+    var next = _TOUR_STATUS_NEXT[currentStatus];
+    if (!next) return;
+    var btn = document.getElementById('tour-action-' + docId);
+    if (btn) { btn.disabled = true; btn.textContent = 'Đang cập nhật…'; }
+    try {
+      await db.collection('travelAssignments').doc(docId).update({
+        status:          next,
+        statusUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        statusHistory:   firebase.firestore.FieldValue.arrayUnion({
+          status: next,
+          by:     'driver:' + _driverId,
+          at:     new Date().toISOString()
+        })
+      });
+      showToast('✓ ' + (_TOUR_STATUS_DISPLAY[next] || next));
+    } catch(e) {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = _TOUR_STATUS_BTN[currentStatus] || currentStatus;
+      }
+      showToast('Lỗi: ' + e.message, true);
+    }
   }
 
   // ── Phase 13: Exclusive offer flow ──────────────────────────────────────────

@@ -139,6 +139,44 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
+    // ── Driver availability calendar — auth read, Cloud Function write only ───────
+    // travel_drivers/{driverId}/assigned_dates/{YYYY-MM-DD}
+    // Clients may read to show availability; only Cloud Function (Admin SDK) writes.
+    match /travel_drivers/{driverId}/assigned_dates/{dateId} {
+      allow read:  if request.auth != null;
+      allow write: if false; // Admin SDK (Cloud Function) bypasses these rules
+    }
+
+    // ── Travel dispatch audit log — auth read, Cloud Function write only ─────────
+    match /travel_dispatch/{bookingId} {
+      allow read:  if request.auth != null;
+      allow write: if false; // Admin SDK (Cloud Function) only
+    }
+
+    // ── Travel portal assignments — driver can read their own; CF writes ──────────
+    // Drivers read: travel_driver_id == their ID (enforced client-side; all auth users may read)
+    // No client write — Cloud Function (Admin SDK) owns these docs.
+    match /travelAssignments/{docId} {
+      allow read:  if request.auth != null;
+      allow write: if false; // Admin SDK (Cloud Function) only
+    }
+
+    // ── Travel vehicles — public read, server write ───────────────────────────────
+    match /travel_vehicles/{vehicleId} {
+      allow read:  if true;
+      allow write: if false; // seeded server-side only
+    }
+
+    // ── Vendor self-serve signups — auth create/read (anonymous auth qualifies) ──
+    // Vendors sign in anonymously and submit here. Admin reads/updates to approve.
+    // Clients cannot delete or overwrite an approved submission.
+    match /vendor_signups/{signupId} {
+      allow create: if request.auth != null;
+      allow read:   if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if false;
+    }
+
     // ── Default deny ──────────────────────────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

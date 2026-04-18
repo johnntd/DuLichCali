@@ -40,7 +40,8 @@
       { "source": "/pricing",            "destination": "/vendor-pricing.html" },
       { "source": "/vendor-onboarding", "destination": "/vendor-onboarding.html" },
       { "source": "/vendor",               "destination": "/vendor-detail.html" },
-      { "source": "/vendor-subscription",  "destination": "/vendor-subscription.html" }
+      { "source": "/vendor-subscription",  "destination": "/vendor-subscription.html" },
+      { "source": "/vendor-signup",         "destination": "/vendor-signup.html" }
     ],
     "headers": [
       {

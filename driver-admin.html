@@ -1262,7 +1262,6 @@
   var _activeRideStatus = null;
   var _activeRideData   = null; // full booking data for notification use
   var _earningsLoaded   = false;
-  var _tourEarningsLoaded = false;
   var _ratingsLoaded    = false;
 
   // Upcoming rides state
@@ -3054,7 +3053,7 @@
     // Tour earnings — completed assignments for this driver's travel_driver_ids
     var tourPromise = (_travelDriverIds.length
       ? db.collection('travelAssignments')
-          .where('travel_driver_id', 'in', _travelDriverIds)
+          .where('travel_driver_id', 'in', _travelDriverIds.slice(0, 30))
           .where('status', '==', 'completed')
           .limit(200)
           .get()
@@ -3067,7 +3066,7 @@
           _id:            doc.id,
           _earningType:   'tour',
           serviceType:    'tour',
-          estimatedPrice: d.total || 0,
+          estimatedPrice: d.total != null ? d.total : null,
           customerName:   d.customerName || '',
           pickupAddress:  d.pickupAddress || '',
           packageName:    d.packageName || '',
@@ -3177,6 +3176,7 @@
     function rideMs(r) {
       if (r.createdAt && r.createdAt.toDate)    return r.createdAt.toDate().getTime();
       if (r.createdAt && r.createdAt.seconds)   return r.createdAt.seconds * 1000;
+      if (r.travelDate) return new Date(r.travelDate + 'T00:00:00').getTime();
       return 0;
     }
     function sumFare(list) {
@@ -3221,7 +3221,7 @@
           : (r.dropoffAddress || r.pickupAddress || r.airport || '—');
         var fareNum = r.estimatedPrice ? Number(r.estimatedPrice) : null;
         var fareStr = fareNum !== null ? '$' + fareNum.toFixed(0) : '—';
-        var svc = svcMap[r.serviceType] || (r.serviceType ? r.serviceType.replace(/_/g, ' ') : 'Chuyến Xe');
+        var svc = svcMap[r.serviceType] || (r.serviceType ? esc(r.serviceType.replace(/_/g, ' ')) : 'Chuyến Xe');
         var milesStr = r.estimatedMiles ? Number(r.estimatedMiles).toFixed(1) + ' mi' : '';
         var dateLine = 'Đặt ngày ' + dateStr + (r.customerName ? ' · ' + esc(r.customerName) : '');
         return '<div class="earn-trip-item">' +
@@ -3252,7 +3252,7 @@
         '</div>' +
       '</div>' +
       '<div class="earn-refresh-row">' +
-        '<button class="btn-sm" onclick="_earningsLoaded=false;_tourEarningsLoaded=false;_ratingsLoaded=false;loadEarnings()" style="font-size:.65rem;height:32px;padding:0 .7rem">Làm Mới</button>' +
+        '<button class="btn-sm" onclick="_earningsLoaded=false;_ratingsLoaded=false;loadEarnings()" style="font-size:.65rem;height:32px;padding:0 .7rem">Làm Mới</button>' +
       '</div>' +
       '<div class="earn-summary-grid">' + statsHtml + '</div>' +
       '<div class="earn-section-title">' + sectionTitle + '</div>' +

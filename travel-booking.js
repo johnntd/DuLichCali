@@ -25,9 +25,10 @@ var TravelBooking = (function() {
       tpTravelersLabel: 'Number of travelers',
       tpDateLabel:      'Tour date',
       tpPickupLabel:    'Your pickup location',
-      tpPickupPh:       'City or address (e.g. San Jose, CA)',
-      tpQuoteLabel:     'Your quote',
-      tpNameLabel:      'Your name',
+      tpPickupPh:        'City or address (e.g. San Jose, CA)',
+      tpPickupFullLabel: 'Full pickup address',
+      tpQuoteLabel:      'Your quote',
+      tpNameLabel:       'Your name',
       tpPhoneLabel:     'Phone number',
       tpEmailLabel:     'Email (optional — for confirmation)',
       tpEmailPh:        'you@email.com',
@@ -37,9 +38,15 @@ var TravelBooking = (function() {
       tpSubtotal:       'Subtotal',
       tpTaxes:          'Taxes (8.75%)',
       tpTotal:          'Total',
-      tpVehicle:        'Vehicle',
-      tpDay:            'day',
-      tpDays:           'days',
+      tpVehicle:          'Vehicle',
+      tpDay:              'day',
+      tpDays:             'days',
+      tpDeparture:        'Departure',
+      tpPassengers:       'Passengers',
+      tpEstTotal:         'Estimated Total',
+      tpPriceNote:        '* Estimated — we will confirm final cost when we call.',
+      tpRegionPriceNote:  'Price varies by departure region',
+      tpDepartureRegion:  'Departure region',
     },
     vi: {
       tpFromLabel:      'Từ',
@@ -57,9 +64,10 @@ var TravelBooking = (function() {
       tpTravelersLabel: 'Số người',
       tpDateLabel:      'Ngày tour',
       tpPickupLabel:    'Điểm đón của bạn',
-      tpPickupPh:       'Thành phố hoặc địa chỉ (ví dụ: San Jose, CA)',
-      tpQuoteLabel:     'Báo giá',
-      tpNameLabel:      'Họ tên',
+      tpPickupPh:        'Thành phố hoặc địa chỉ (ví dụ: San Jose, CA)',
+      tpPickupFullLabel: 'Địa chỉ đón đầy đủ',
+      tpQuoteLabel:      'Báo giá',
+      tpNameLabel:       'Họ tên',
       tpPhoneLabel:     'Điện thoại',
       tpEmailLabel:     'Email (tùy chọn — nhận xác nhận đặt tour)',
       tpEmailPh:        'ban@email.com',
@@ -69,9 +77,15 @@ var TravelBooking = (function() {
       tpSubtotal:       'Tạm tính',
       tpTaxes:          'Thuế (8.75%)',
       tpTotal:          'Tổng cộng',
-      tpVehicle:        'Phương tiện',
-      tpDay:            'ngày',
-      tpDays:           'ngày',
+      tpVehicle:          'Phương tiện',
+      tpDay:              'ngày',
+      tpDays:             'ngày',
+      tpDeparture:        'Điểm khởi hành',
+      tpPassengers:       'Số hành khách',
+      tpEstTotal:         'Tổng ước tính',
+      tpPriceNote:        '* Ước tính — chúng tôi sẽ xác nhận giá cuối khi gọi điện.',
+      tpRegionPriceNote:  'Giá thay đổi theo khu vực xuất phát',
+      tpDepartureRegion:  'Khu vực xuất phát',
     },
     es: {
       tpFromLabel:      'Desde',
@@ -89,9 +103,10 @@ var TravelBooking = (function() {
       tpTravelersLabel: 'Viajeros',
       tpDateLabel:      'Fecha del tour',
       tpPickupLabel:    'Tu lugar de recogida',
-      tpPickupPh:       'Ciudad o dirección (ej. San Jose, CA)',
-      tpQuoteLabel:     'Tu cotización',
-      tpNameLabel:      'Tu nombre',
+      tpPickupPh:        'Ciudad o dirección (ej. San Jose, CA)',
+      tpPickupFullLabel: 'Dirección completa de recogida',
+      tpQuoteLabel:      'Tu cotización',
+      tpNameLabel:       'Tu nombre',
       tpPhoneLabel:     'Teléfono',
       tpEmailLabel:     'Correo electrónico (opcional — para confirmación)',
       tpEmailPh:        'tu@correo.com',
@@ -101,14 +116,142 @@ var TravelBooking = (function() {
       tpSubtotal:       'Subtotal',
       tpTaxes:          'Impuestos (8.75%)',
       tpTotal:          'Total',
-      tpVehicle:        'Vehículo',
-      tpDay:            'día',
-      tpDays:           'días',
+      tpVehicle:          'Vehículo',
+      tpDay:              'día',
+      tpDays:             'días',
+      tpDeparture:        'Salida',
+      tpPassengers:       'Pasajeros',
+      tpEstTotal:         'Total estimado',
+      tpPriceNote:        '* Estimado — confirmaremos el precio final al llamarte.',
+      tpRegionPriceNote:  'El precio varía según la región de salida',
+      tpDepartureRegion:  'Región de salida',
     },
   };
 
   // ── Module state ──────────────────────────────────────────────────────────
-  var _db, _lang, _pkg, _type, _travelers, _date, _pickupLocation, _email, _quote;
+  var _db, _lang, _pkg, _type, _travelers, _date, _pickupLocation, _pickupRegion, _pickupFull, _name, _phone, _email, _quote;
+
+  // ── Detect departure region from free-text pickup input ───────────────────
+  // Priority: ZIP code (most reliable) → Bay Area city match → SoCal city match
+  // → 'bayarea' safe fallback.
+  function _detectPickupRegion(text) {
+    if (!text) return 'bayarea';
+    var q = text.toLowerCase().replace(/\s+/g, ' ').trim();
+
+    // ── 1. ZIP code range lookup ────────────────────────────────────────────
+    // Most reliable signal: 5-digit CA ZIP present in the string.
+    var zipMatch = q.match(/\b(\d{5})\b/);
+    if (zipMatch) {
+      var zip = parseInt(zipMatch[1], 10);
+      // Bay Area: 940xx–941xx (SF/Peninsula), 943xx–948xx (East Bay/Marin),
+      //           949xx (South East Bay), 950xx–951xx (Silicon Valley / San Jose)
+      if ((zip >= 94000 && zip <= 94999) || (zip >= 95000 && zip <= 95199)) {
+        return 'bayarea';
+      }
+      // SoCal: 900xx–939xx covers LA, OC, San Diego, Riverside, Ventura, Santa Barbara.
+      // (93xxx includes Central Valley too, but those customers are still non-Bay-Area
+      //  so the surcharge is still correct directionally.)
+      if (zip >= 90000 && zip <= 93999) {
+        return 'socal';
+      }
+    }
+
+    // ── 2. Bay Area city/region keywords (run before SoCal to win ties) ────
+    var bayAreaTerms = [
+      'san jose','san francisco','sf, ca','sf ca','oakland','berkeley','fremont',
+      'milpitas','santa clara','sunnyvale','mountain view','palo alto','los altos',
+      'redwood city','san mateo','hayward','castro valley','san leandro','union city',
+      'newark','fremont','concord','walnut creek','pleasant hill','martinez',
+      'pleasanton','livermore','san ramon','dublin','danville','castro valley',
+      'daly city','south san francisco','pacifica','south bay','east bay',
+      'silicon valley','cupertino','campbell','los gatos','saratoga','gilroy',
+      'morgan hill','scotts valley','santa cruz','watsonville',
+      'sjc','sfo',
+    ];
+    for (var i = 0; i < bayAreaTerms.length; i++) {
+      if (q.indexOf(bayAreaTerms[i]) !== -1) return 'bayarea';
+    }
+
+    // ── 3. SoCal city/county/region keywords ───────────────────────────────
+    var socalTerms = [
+      // Orange County — explicit full-name variants first
+      'orange county',
+      // City of Orange: match only when followed by state context to avoid false matches
+      'orange, ca','orange ca','orange,ca',
+      // OC cities (complete list including previously missing ones)
+      'santa ana','irvine','anaheim','garden grove','fullerton','westminster',
+      'fountain valley','costa mesa','huntington beach','tustin','mission viejo',
+      'lake forest','newport beach','newport coast','laguna beach','laguna niguel',
+      'laguna hills','laguna woods','aliso viejo','rancho santa margarita',
+      'san clemente','dana point','brea','yorba linda','placentia','buena park',
+      'la habra','seal beach','cypress','stanton','los alamitos','la palma',
+      'villa park','rossmoor',
+      // LA Basin
+      'los angeles','long beach','torrance','culver city','santa monica','pasadena',
+      'glendale','burbank','north hollywood','van nuys','encino','reseda',
+      'chatsworth','northridge','canoga park','woodland hills','tarzana','granada hills',
+      'northridge','arleta','pacoima','sun valley','sylmar','san fernando',
+      'el monte','compton','downey','norwalk','bellflower','cerritos','artesia',
+      'paramount','lynwood','inglewood','hawthorne','gardena','carson','lomita',
+      'redondo beach','hermosa beach','manhattan beach','el segundo','lawndale',
+      'pomona','ontario','chino','chino hills','rancho cucamonga','fontana','rialto',
+      'ontario','upland','montclair','claremont','la verne','san dimas','glendora',
+      'covina','west covina','industry','rowland heights','diamond bar','walnut',
+      // Inland Empire
+      'riverside','san bernardino','rialto','colton','redlands','highland',
+      'victorville','hesperia','apple valley','barstow','hemet','murrieta','temecula',
+      'lake elsinore','menifee','perris','moreno valley','corona',
+      // San Diego
+      'san diego','chula vista','el cajon','la mesa','santee','escondido',
+      'vista','carlsbad','oceanside','encinitas','solana beach','del mar',
+      // Ventura / SB area
+      'oxnard','ventura','camarillo','thousand oaks','simi valley','moorpark',
+      'santa paula','fillmore','santa barbara','santa clarita','palmdale','lancaster',
+      // Palm Springs / Coachella
+      'palm springs','palm desert','indio','coachella','la quinta','cathedral city',
+      // Bakersfield (Central CA — non-Bay, surcharge appropriate)
+      'bakersfield',
+      // Common shorthands / airports
+      'socal','so cal','southern ca','southern california','sna','lax','ont','bur',
+    ];
+    for (var j = 0; j < socalTerms.length; j++) {
+      if (q.indexOf(socalTerms[j]) !== -1) return 'socal';
+    }
+
+    return 'bayarea'; // safe default
+  }
+
+  // ── Update all visible price elements when departure region changes ────────
+  // Called whenever _pickupRegion is set. Re-paints price bar, bottom panel,
+  // and wizard Step 1 type buttons so the user always sees the correct price.
+  function _updatePriceDisplay() {
+    if (!_pkg || !DLCPricing) return;
+
+    var adjMap  = _pkg.departure_region_adjustments || {};
+    var adj     = adjMap[_pickupRegion] || adjMap['bayarea'] || { multiplier: 1.0 };
+    var mult    = adj.multiplier || 1.0;
+
+    var groupPpp = Math.round((_pkg.base_price_per_person_group || 0) * mult);
+
+    // Private price: use 1_2 tier if tiered, else flat base
+    var privBase = (_pkg.pricing_private && _pkg.pricing_private['1_2'])
+      ? _pkg.pricing_private['1_2']
+      : (_pkg.base_price_private || 0);
+    var privateFrom = Math.round(privBase * mult);
+    var privateDisplay = 'from $' + privateFrom;
+
+    var gpEl    = document.getElementById('tpGroupPrice');
+    var ppEl    = document.getElementById('tpPrivatePrice');
+    var panelEl = document.getElementById('tpPanelPrice');
+    var tpp     = document.getElementById('tpTypePrivatePrice');
+    var tpg     = document.getElementById('tpTypeGroupPrice');
+
+    if (gpEl)    gpEl.textContent    = '$' + groupPpp;
+    if (ppEl)    ppEl.textContent    = privateDisplay;
+    if (panelEl) panelEl.textContent = '$' + groupPpp + '/person';
+    if (tpp)     tpp.textContent     = privateDisplay;
+    if (tpg)     tpg.textContent     = '$' + groupPpp + '/person';
+  }
 
   function t(key) {
     var s = STRINGS[_lang] || STRINGS.en;
@@ -116,7 +259,17 @@ var TravelBooking = (function() {
   }
 
   // ── Booking ID (TRV- prefix, distinct from DLC- ride bookings) ───────────
-  function generateBookingId() {
+  function generateBookingId(phone, pkgId, date) {
+    // Deterministic when customer info is provided — idempotent against network retries.
+    // Same customer + package + date always produces the same doc ID, so a re-submit
+    // overwrites the same Firestore document instead of creating a duplicate.
+    if (phone && pkgId && date) {
+      var p = phone.replace(/\D/g, '').slice(-10);
+      var d = (date + '').replace(/-/g, '');
+      var g = (pkgId + '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase();
+      return 'TRV-' + p + '-' + d + '-' + g;
+    }
+    // Fallback: random ID (used when any key field is missing)
     var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     var id = 'TRV-';
     var arr = new Uint8Array(6);
@@ -418,12 +571,19 @@ var TravelBooking = (function() {
     // Reset to step 1 defaults
     _type           = 'private';
     _travelers      = 2;
+    _date           = '';
     _pickupLocation = '';
+    _pickupRegion   = 'bayarea';
+    _pickupFull     = '';
     _email          = '';
+    _updatePriceDisplay(); // reset price bar to Bay Area base on fresh open
+    _updateGroupHints();   // hide group hints (private is default)
     setTravelersDisplay(2);
     // Reset pickup and email fields
     var pickupEl = document.getElementById('tpPickupInput');
     if (pickupEl) pickupEl.value = '';
+    var dateEl = document.getElementById('tpDateInput');
+    if (dateEl) dateEl.value = '';
     var emailEl = document.getElementById('tpCustEmail');
     if (emailEl) emailEl.value = '';
     // Mark private as selected
@@ -443,14 +603,69 @@ var TravelBooking = (function() {
     if (el) el.textContent = n;
   }
 
+  /**
+   * Update Step 1 group-info hint and Step 2 travelers hint.
+   * Called whenever booking type or traveler count changes.
+   */
+  function _updateGroupHints() {
+    var minGroup = (_pkg && _pkg.min_group) ? _pkg.min_group : 4;
+    var isGroup  = (_type === 'group');
+
+    // Step 1: show group minimum notice when group is selected
+    var infoEl = document.getElementById('tpGroupMinInfo');
+    if (infoEl) {
+      if (isGroup) {
+        infoEl.textContent = 'Group bookings require at least ' + minGroup + ' travelers.';
+        infoEl.style.display = 'block';
+      } else {
+        infoEl.style.display = 'none';
+      }
+    }
+
+    // Step 2: travelers hint — warn / ok depending on count + live price
+    var hintEl = document.getElementById('tpTravelersHint');
+    if (hintEl) {
+      if (isGroup) {
+        var met = _travelers >= minGroup;
+        // Live price estimate (only when minimum is met and pricing engine is ready)
+        var priceText = '';
+        if (met && DLCPricing && _pkg) {
+          var liveQ = DLCPricing.calculateTravelQuote(_pkg, 'group', _travelers, _pickupRegion);
+          if (liveQ && liveQ.total) {
+            priceText = ' · Est. $' + liveQ.total + ' total';
+          }
+        }
+        hintEl.textContent = met
+          ? 'Minimum met (' + minGroup + ' required)' + priceText
+          : 'Group requires min ' + minGroup + ' travelers — currently ' + _travelers;
+        hintEl.className = 'tp-wizard__hint ' + (met ? 'tp-wizard__hint--ok' : 'tp-wizard__hint--warn');
+        hintEl.style.display = 'block';
+        // Clear step-2 error once minimum is met
+        if (met) {
+          var errEl = document.getElementById('tpStep2Error');
+          if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+        }
+      } else {
+        hintEl.style.display = 'none';
+      }
+    }
+  }
+
   // ── Build and render the price quote ─────────────────────────────────────
   function renderQuote() {
-    if (!window.DLCPricing || !_pkg) return;
-    _quote = DLCPricing.calculateTravelQuote(_pkg, _type, _travelers);
+    if (!DLCPricing || !_pkg) return;
+    _quote = DLCPricing.calculateTravelQuote(_pkg, _type, _travelers, _pickupRegion);
     var rows = document.getElementById('tpQuoteRows');
     if (!rows) return;
 
     var html = '';
+
+    // Show departure region row when it differs from the Bay Area default
+    if (_quote.regionLabel && _quote.pickupRegion !== 'bayarea') {
+      html += '<div class="tp-quote-row"><span>' + t('tpDepartureRegion') + '</span>' +
+              '<span>' + escapeHtml(_quote.regionLabel) + '</span></div>';
+    }
+
     if (_type === 'group' && _quote.pricePerPerson) {
       html += '<div class="tp-quote-row"><span>' + t('tpGroupType') + ' ×' + _travelers + '</span>' +
               '<span>$' + _quote.pricePerPerson + '/person</span></div>';
@@ -568,6 +783,8 @@ var TravelBooking = (function() {
     var emailEl = document.getElementById('tpCustEmail');
     var name    = nameEl  ? nameEl.value.trim()  : '';
     var phone   = phoneEl ? phoneEl.value.trim() : '';
+    _name       = name;
+    _phone      = phone;
     _email      = emailEl ? emailEl.value.trim() : '';
 
     if (!name) { showWizardError('Please enter your name.'); return; }
@@ -582,13 +799,28 @@ var TravelBooking = (function() {
     var btn = document.getElementById('tpConfirmBtn');
     if (btn) { btn.disabled = true; btn.textContent = '...'; }
 
-    var bookingId = generateBookingId();
+    var bookingId = generateBookingId(phone, _pkg.id, _date);
 
-    // Check for soft conflict first, then save
-    detectTravelBookingConflict(_pkg.id, _date).then(function(conflictResult) {
-      if (conflictResult.conflict) {
-        showWizardError(conflictResult.reason + ' Your booking is still being submitted.');
+    // ── Hard duplicate check — same bookingId = same customer+tour+date ──────
+    // If the doc already exists with an active status the customer already has a
+    // booking. Show the existing ID and abort. If cancelled, allow re-booking.
+    _db.collection('travel_bookings').doc(bookingId).get().then(function(snap) {
+      if (snap.exists) {
+        var s = snap.data().status;
+        if (s === 'pending' || s === 'confirmed' || s === 'assigned') {
+          showWizardError(
+            'You already have a booking for this tour on ' + _date + '. ' +
+            'Booking ID: ' + bookingId + '. ' +
+            'Call (408) 916-3439 if you need to make changes.'
+          );
+          if (btn) { btn.disabled = false; btn.textContent = t('tpConfirm'); }
+          return;
+        }
       }
+      return detectTravelBookingConflict(_pkg.id, _date).then(function(conflictResult) {
+        if (conflictResult.conflict) {
+          showWizardError(conflictResult.reason + ' Your booking is still being submitted.');
+        }
 
       var bookingDoc = {
         bookingId:    bookingId,
@@ -603,6 +835,8 @@ var TravelBooking = (function() {
         date:            _date || '',
         travel_date:     _date || '',
         pickup_location: _pickupLocation || '',
+        pickup_address:  _pickupFull     || _pickupLocation || '',
+        pickup_region:   _pickupRegion   || 'bayarea',
         customer: {
           name:  name,
           phone: phone,
@@ -619,22 +853,54 @@ var TravelBooking = (function() {
           taxes:    _quote.taxes,
           total:    _quote.total,
         } : {},
-        total:     _quote ? _quote.total    : 0,
-        subtotal:  _quote ? _quote.subtotal : 0,
-        taxes:     _quote ? _quote.taxes    : 0,
+        total:        _quote ? _quote.total    : 0,
+        subtotal:     _quote ? _quote.subtotal : 0,
+        taxes:        _quote ? _quote.taxes    : 0,
+        duration_days: _pkg.duration_days || 1,
         status:    'pending',
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         created_at: firebase.firestore.FieldValue.serverTimestamp(),
       };
       return _db.collection('travel_bookings').doc(bookingId).set(bookingDoc)
         .then(function() { return bookingDoc; });
+      });  // end detectTravelBookingConflict.then()
     }).then(function(bookingDoc) {
+      if (!bookingDoc) return;  // early exit from duplicate check
       // Send confirmation email (customer) + owner notification
       if (window.DLCNotifications) {
         DLCNotifications.queueTravelConfirmation(bookingDoc, _lang);
       }
       var idEl = document.getElementById('tpSuccessId');
       if (idEl) idEl.textContent = 'Booking ID: ' + bookingId;
+
+      // ── Populate confirmation breakdown ────────────────────────────────────
+      var breakdownEl = document.getElementById('tpSuccessBreakdown');
+      if (breakdownEl && _pkg) {
+        var nameKey = _lang === 'vi' ? 'name_vi' : (_lang === 'es' ? 'name_es' : 'name');
+        var pkgName = _pkg[nameKey] || _pkg.name;
+        // Prefer full address if provided, else city/area from Step 2
+        var depStr  = (_pickupFull || _pickupLocation) ? (_pickupFull || _pickupLocation) : (_pkg.hub_city || 'Bay Area');
+        var bhtml   = '';
+        bhtml += '<div class="tp-success__row"><span>Package</span><span>' + escapeHtml(pkgName) + '</span></div>';
+        bhtml += '<div class="tp-success__row"><span>' + t('tpDeparture') + '</span><span>' + escapeHtml(depStr) + '</span></div>';
+        bhtml += '<div class="tp-success__row"><span>' + t('tpPassengers') + '</span><span>' + _travelers + '</span></div>';
+        if (_name)  bhtml += '<div class="tp-success__row"><span>' + t('tpNameLabel') + '</span><span>' + escapeHtml(_name) + '</span></div>';
+        if (_phone) bhtml += '<div class="tp-success__row"><span>' + t('tpPhoneLabel') + '</span><span>' + escapeHtml(_phone) + '</span></div>';
+        if (_email) bhtml += '<div class="tp-success__row"><span>Email</span><span>' + escapeHtml(_email) + '</span></div>';
+        // Recompute quote if it wasn't set (safety net)
+        if (!_quote && DLCPricing && _pkg) {
+          _quote = DLCPricing.calculateTravelQuote(_pkg, _type, _travelers, _pickupRegion);
+        }
+        if (_quote) {
+          if (_type === 'group' && _quote.pricePerPerson) {
+            bhtml += '<div class="tp-success__row"><span>' + t('tpGroupType') + '</span><span>$' + _quote.pricePerPerson + '/person</span></div>';
+          }
+          bhtml += '<div class="tp-success__row tp-success__row--total"><span>' + t('tpEstTotal') + '</span><span>$' + _quote.total + '*</span></div>';
+        }
+        bhtml += '<div class="tp-success__note">' + t('tpPriceNote') + '</div>';
+        breakdownEl.innerHTML = bhtml;
+      }
+
       showStep(4);
     }).catch(function(err) {
       console.error('[TravelBooking] submit error', err);
@@ -707,11 +973,26 @@ var TravelBooking = (function() {
         document.querySelectorAll('[data-type]').forEach(function(b) {
           b.classList.toggle('tp-opt-btn--selected', b === btn);
         });
+        _updateGroupHints();
+        // Group: skip the Next tap — go straight to Step 2 so the traveler
+        // counter and requirement hint are immediately visible.
+        if (_type === 'group') {
+          showStep(2);
+        }
       });
     });
 
     var step1Next = document.getElementById('tpStep1Next');
-    if (step1Next) step1Next.addEventListener('click', function() { showStep(2); });
+    if (step1Next) step1Next.addEventListener('click', function() {
+      _updateGroupHints(); // show hint state the moment Step 2 becomes visible
+      showStep(2);
+    });
+
+    var step2Back = document.getElementById('tpStep2Back');
+    if (step2Back) step2Back.addEventListener('click', function() { showStep(1); });
+
+    var step3Back = document.getElementById('tpStep3Back');
+    if (step3Back) step3Back.addEventListener('click', function() { showStep(2); });
 
     // Travelers counter
     var decBtn = document.getElementById('tpDecBtn');
@@ -719,20 +1000,34 @@ var TravelBooking = (function() {
     if (decBtn) decBtn.addEventListener('click', function() {
       _travelers = Math.max(1, _travelers - 1);
       setTravelersDisplay(_travelers);
+      _updateGroupHints();
     });
     if (incBtn) incBtn.addEventListener('click', function() {
       var maxPax = (_pkg && _pkg.max_group) ? _pkg.max_group : 12;
       _travelers = Math.min(maxPax, _travelers + 1);
       setTravelersDisplay(_travelers);
+      _updateGroupHints();
     });
 
-    // Date input
-    if (dateInput) dateInput.addEventListener('change', function() { _date = this.value; });
+    // Date input — listen to both change and input for iOS Safari compatibility
+    if (dateInput) {
+      dateInput.addEventListener('change', function() { _date = this.value; });
+      dateInput.addEventListener('input',  function() { _date = this.value; });
+    }
 
-    // Pickup location text field
+    // Pickup location text field — infers departure region and live-updates prices
     var pickupInput = document.getElementById('tpPickupInput');
     if (pickupInput) pickupInput.addEventListener('input', function() {
       _pickupLocation = this.value.trim();
+      _pickupRegion   = _detectPickupRegion(_pickupLocation);
+      _updatePriceDisplay();
+      _updateGroupHints(); // keep estimated total in hint in sync with region
+    });
+
+    // Full pickup address (Step 3)
+    var pickupFullInput = document.getElementById('tpPickupFull');
+    if (pickupFullInput) pickupFullInput.addEventListener('input', function() {
+      _pickupFull = this.value.trim();
     });
 
     // Email field (optional)
@@ -743,6 +1038,19 @@ var TravelBooking = (function() {
 
     var step2Next = document.getElementById('tpStep2Next');
     if (step2Next) step2Next.addEventListener('click', function() {
+      // Validate group minimum while the traveler counter is still visible
+      if (_type === 'group') {
+        var minGroup = (_pkg && _pkg.min_group) ? _pkg.min_group : 4;
+        if (_travelers < minGroup) {
+          var errEl = document.getElementById('tpStep2Error');
+          if (errEl) {
+            errEl.textContent = 'Group bookings require at least ' + minGroup + ' travelers. Please increase the count above.';
+            errEl.style.display = 'block';
+          }
+          _updateGroupHints(); // refresh hint state
+          return; // block step advance
+        }
+      }
       renderQuote();
       showStep(3);
     });

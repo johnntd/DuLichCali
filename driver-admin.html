@@ -1701,7 +1701,7 @@
         ? (d.arrivalDate || '') + (d.arrivalTime ? ' ' + d.arrivalTime : '')
         : '';
       return '<div class="ride-notif-card' + (isNew ? ' new' : '') + '" id="rn-' + doc.id + '">' +
-        '<div class="ride-notif-card__type">' + (svcLabel[d.serviceType] || d.serviceLabel || d.serviceType || 'Chuyến Xe') + '</div>' +
+        '<div class="ride-notif-card__type">' + (svcLabel[d.serviceType] || esc(d.serviceLabel || d.serviceType || 'Chuyến Xe')) + '</div>' +
         '<div class="ride-notif-card__row">' +
           '<div class="ride-notif-card__field"><div class="ride-notif-card__label">Khách</div><div class="ride-notif-card__val">' + esc(d.customerName || '—') + '</div></div>' +
           '<div class="ride-notif-card__field"><div class="ride-notif-card__label">Hành Khách</div><div class="ride-notif-card__val">' + (d.passengers || 1) + ' người</div></div>' +
@@ -1840,7 +1840,7 @@
       var docId  = doc.id;
       var ph     = (d.customerPhone || '').replace(/\D/g, '');
       var mode   = d.bookingMode === 'private' ? 'Riêng' : 'Nhóm';
-      var status = d.status || 'assigned';
+      var status = (_TOUR_STATUS_NEXT[d.status] !== undefined || d.status === 'completed') ? d.status : 'assigned';
       var dur    = Math.max(1, parseInt(d.duration_days || 1, 10));
 
       // Compute end date for multi-day tours
@@ -2282,7 +2282,7 @@
       '<div>' +
         '<h3 style="margin:0 0 .75rem;font-size:.92rem;color:var(--gold-lt)">Chuyến Hiện Tại</h3>' +
         '<div style="background:rgba(255,255,255,.06);border-radius:10px;padding:.875rem 1rem;margin-bottom:.875rem">' +
-          '<div style="font-size:.75rem;color:var(--muted);margin-bottom:.25rem">' + (svcLabel[d.serviceType] || d.serviceType || 'Chuyến Xe') + '</div>' +
+          '<div style="font-size:.75rem;color:var(--muted);margin-bottom:.25rem">' + (svcLabel[d.serviceType] || esc(d.serviceType || 'Chuyến Xe')) + '</div>' +
           '<div style="font-weight:600;margin-bottom:.2rem">' + esc(customerName) + '</div>' +
           (customerPhone ? '<div style="font-size:.8rem;margin-bottom:.35rem"><a href="tel:' + esc(customerPhone) + '" style="color:var(--gold-lt);text-decoration:none">📞 ' + esc(customerPhone) + '</a></div>' : '') +
           (when && when.date ? '<div style="font-size:.78rem;color:#94a3b8;margin-top:.35rem">📅 ' + esc(when.date) + '</div>' : '') +

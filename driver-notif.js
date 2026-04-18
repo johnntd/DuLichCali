@@ -12,6 +12,7 @@
   var _queue      = [];     // alerts waiting while one is displayed
   var _unread     = 0;      // current tour unread count
   var _audioCtx   = null;
+  var _FieldValue = null;
 
   var COL_TOURS = 'travelAssignments';
 
@@ -20,6 +21,7 @@
   function init(db, driverId) {
     _db       = db;
     _driverId = driverId;
+    try { _FieldValue = firebase.firestore.FieldValue; } catch(e) {}
     _buildDOM();
     _audioUnlock();
   }
@@ -54,7 +56,7 @@
     if (data.type === 'tour' && _db && data.id) {
       _db.collection(COL_TOURS).doc(data.id).update({
         notif_status:       'confirmed',
-        notif_confirmedAt:  firebase.firestore.FieldValue.serverTimestamp(),
+        notif_confirmedAt:  (_FieldValue || firebase.firestore.FieldValue).serverTimestamp(),
       }).catch(function(e) {
         console.warn('[DLCNotif] confirm write:', e.message);
       });
@@ -69,7 +71,7 @@
     if (data.type === 'tour' && _db && data.id) {
       _db.collection(COL_TOURS).doc(data.id).update({
         notif_status:      'dismissed',
-        notif_dismissedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        notif_dismissedAt: (_FieldValue || firebase.firestore.FieldValue).serverTimestamp(),
       }).catch(function(e) {
         console.warn('[DLCNotif] dismiss write:', e.message);
       });
@@ -84,7 +86,7 @@
     if (data.type === 'tour' && _db && data.id) {
       _db.collection(COL_TOURS).doc(data.id).update({
         notif_status:    'viewed',
-        notif_viewedAt:  firebase.firestore.FieldValue.serverTimestamp(),
+        notif_viewedAt:  (_FieldValue || firebase.firestore.FieldValue).serverTimestamp(),
       }).catch(function() {});
       updateBadge(Math.max(0, _unread - 1));
     }
@@ -194,8 +196,10 @@
     if (isTour && (data.duration_days || 1) > 1) {
       fields += _field('Thời Gian', String(data.duration_days) + ' ngày');
     }
-    if (data.total || data.estimatedPrice) {
-      fields += _field('Ước Tính', '$' + Number(data.total || data.estimatedPrice).toFixed(0));
+    var rawPrice = data.total || data.estimatedPrice;
+    var numPrice = Number(rawPrice);
+    if (rawPrice && !isNaN(numPrice)) {
+      fields += _field('Ước Tính', '$' + numPrice.toFixed(0));
     }
     fields += _field('Mã Booking',  data.bookingId || data.id);
     document.getElementById('dlcNFields').innerHTML = fields;
@@ -227,8 +231,8 @@
     // Mobile browsers require a user gesture before AudioContext can play.
     // We create (and immediately resume) the context on the first tap/click.
     function unlock() { _getAudioCtx(); }
-    document.addEventListener('touchstart', unlock, { once: false, passive: true });
-    document.addEventListener('click',      unlock, { once: false, passive: true });
+    document.addEventListener('touchstart', unlock, { once: true, passive: true });
+    document.addEventListener('click',      unlock, { once: true, passive: true });
   }
 
   function _getAudioCtx() {
@@ -255,6 +259,7 @@
         gain.gain.setValueAtTime(0.38, ctx.currentTime + startAt);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startAt + dur);
         osc.start(ctx.currentTime + startAt);
+        osc.onended = function() { osc.disconnect(); gain.disconnect(); };
         osc.stop(ctx.currentTime  + startAt + dur);
       }
       beep(880,  0,    0.18);

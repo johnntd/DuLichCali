@@ -1262,6 +1262,7 @@
   var _activeRideStatus = null;
   var _activeRideData   = null; // full booking data for notification use
   var _earningsLoaded   = false;
+  var _tourEarningsLoaded = false;
   var _ratingsLoaded    = false;
 
   // Upcoming rides state
@@ -3037,9 +3038,7 @@
     tripBlock.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.82rem">Đang tải…</div>';
     loadDriverRatings();
 
-    // Query all bookings assigned to this driver, filter completed client-side.
-    // Single-field query on driver.driverId avoids composite index requirements.
-    db.collection('bookings')
+    var ridePromise = db.collection('bookings')
       .where('driver.driverId', '==', _driverId)
       .limit(500)
       .get()
@@ -3047,22 +3046,56 @@
         var rides = [];
         snap.forEach(function(doc) {
           var d = doc.data();
-          if (d.status === 'completed') rides.push(Object.assign({ _id: doc.id }, d));
+          if (d.status === 'completed') rides.push(Object.assign({ _id: doc.id, _earningType: 'ride' }, d));
         });
-        // Sort newest first by createdAt
-        rides.sort(function(a, b) {
-          var ta = a.createdAt && a.createdAt.toDate ? a.createdAt.toDate().getTime()
-                 : a.createdAt && a.createdAt.seconds ? a.createdAt.seconds * 1000 : 0;
-          var tb = b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().getTime()
-                 : b.createdAt && b.createdAt.seconds ? b.createdAt.seconds * 1000 : 0;
-          return tb - ta;
-        });
-        renderEarnings(rides);
-        _earningsLoaded = true;
-      })
-      .catch(function(err) {
-        tripBlock.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--danger);font-size:.82rem">Lỗi: ' + esc(err.message) + '</div>';
+        return rides;
       });
+
+    // Tour earnings — completed assignments for this driver's travel_driver_ids
+    var tourPromise = (_travelDriverIds.length
+      ? db.collection('travelAssignments')
+          .where('travel_driver_id', 'in', _travelDriverIds)
+          .where('status', '==', 'completed')
+          .limit(200)
+          .get()
+      : Promise.resolve({ docs: [] })
+    ).then(function(snap) {
+      var tours = [];
+      snap.docs.forEach(function(doc) {
+        var d = doc.data();
+        tours.push({
+          _id:            doc.id,
+          _earningType:   'tour',
+          serviceType:    'tour',
+          estimatedPrice: d.total || 0,
+          customerName:   d.customerName || '',
+          pickupAddress:  d.pickupAddress || '',
+          packageName:    d.packageName || '',
+          travelDate:     d.travelDate || '',
+          createdAt:      d.assignedAt || null,
+        });
+      });
+      return tours;
+    });
+
+    Promise.all([ridePromise, tourPromise]).then(function(results) {
+      var rides = results[0];
+      var tours = results[1];
+      // Combine + sort newest first by createdAt
+      var all = rides.concat(tours).sort(function(a, b) {
+        function ms(r) {
+          if (r.createdAt && r.createdAt.toDate)  return r.createdAt.toDate().getTime();
+          if (r.createdAt && r.createdAt.seconds) return r.createdAt.seconds * 1000;
+          if (r.travelDate) return new Date(r.travelDate + 'T00:00:00').getTime();
+          return 0;
+        }
+        return ms(b) - ms(a);
+      });
+      renderEarnings(all);
+      _earningsLoaded = true;
+    }).catch(function(err) {
+      tripBlock.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--danger);font-size:.82rem">Lỗi: ' + esc(err.message) + '</div>';
+    });
   }
 
   function loadDriverRatings() {
@@ -3169,15 +3202,23 @@
       '</div>';
     }).join('');
 
-    var svcMap = { airport_pickup: 'Đón Sân Bay', airport_dropoff: 'Ra Sân Bay', private_ride: 'Xe Riêng' };
+    var svcMap = { airport_pickup: 'Đón Sân Bay', airport_dropoff: 'Ra Sân Bay',
+                   private_ride: 'Xe Riêng', tour: '🗺 Tour Du Lịch' };
     var listHtml = '';
     if (!rides.length) {
       listHtml = '<div class="earn-empty">Chưa có chuyến hoàn thành nào được ghi nhận.</div>';
     } else {
       listHtml = rides.slice(0, 50).map(function(r) {
-        var ms  = rideMs(r);
-        var dateStr = ms ? new Date(ms).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
-        var route = r.dropoffAddress || r.pickupAddress || r.airport || '—';
+        var ms = (function() {
+          if (r.createdAt && r.createdAt.toDate)  return r.createdAt.toDate().getTime();
+          if (r.createdAt && r.createdAt.seconds) return r.createdAt.seconds * 1000;
+          if (r.travelDate) return new Date(r.travelDate + 'T00:00:00').getTime();
+          return 0;
+        })();
+        var dateStr = ms ? new Date(ms).toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
+        var route = r._earningType === 'tour'
+          ? (r.packageName || r.pickupAddress || '—')
+          : (r.dropoffAddress || r.pickupAddress || r.airport || '—');
         var fareNum = r.estimatedPrice ? Number(r.estimatedPrice) : null;
         var fareStr = fareNum !== null ? '$' + fareNum.toFixed(0) : '—';
         var svc = svcMap[r.serviceType] || (r.serviceType ? r.serviceType.replace(/_/g, ' ') : 'Chuyến Xe');
@@ -3211,7 +3252,7 @@
         '</div>' +
       '</div>' +
       '<div class="earn-refresh-row">' +
-        '<button class="btn-sm" onclick="_earningsLoaded=false;_ratingsLoaded=false;loadEarnings()" style="font-size:.65rem;height:32px;padding:0 .7rem">Làm Mới</button>' +
+        '<button class="btn-sm" onclick="_earningsLoaded=false;_tourEarningsLoaded=false;_ratingsLoaded=false;loadEarnings()" style="font-size:.65rem;height:32px;padding:0 .7rem">Làm Mới</button>' +
       '</div>' +
       '<div class="earn-summary-grid">' + statsHtml + '</div>' +
       '<div class="earn-section-title">' + sectionTitle + '</div>' +

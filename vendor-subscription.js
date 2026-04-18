@@ -287,7 +287,6 @@
       'vsub-h1':           { prop: 'textContent', val: LOCALE.h1         },
       'vsub-sub':          { prop: 'textContent', val: LOCALE.sub        },
       'vsub-plans-label':  { prop: 'textContent', val: LOCALE.availPlans },
-      'vsub-plans-visible':{ prop: 'textContent', val: LOCALE.availPlans },
       'vsub-notice-title': { prop: 'textContent', val: LOCALE.howTitle   },
       'vsub-notice-body':  { prop: 'innerHTML',   val: LOCALE.howBody    },
     };

@@ -180,6 +180,17 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ── Pending plan selections — funnel analytics (anonymous auth qualifies) ───
+    // Written by vendor-signup.html on wizard load (fire-and-forget tracking).
+    // Admin reads to see plan selection funnel. Immutable once created.
+    match /pending_signups/{docId} {
+      allow create: if request.auth != null;
+      allow read:   if request.auth != null
+                 && request.auth.token.firebase.sign_in_provider != 'anonymous';
+      allow update: if false;
+      allow delete: if false;
+    }
+
     // ── Default deny ──────────────────────────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

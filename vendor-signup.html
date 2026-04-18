@@ -94,9 +94,9 @@
     // ── Plan from URL ────────────────────────────────────────
     var _plan = (new URLSearchParams(window.location.search)).get('plan') || 'starter';
     var PLAN_LABELS = {
-      starter: 'Starter Plan — $39/mo',
-      growth:  'Growth Plan — $79/mo',
-      pro:     'Pro Plan — $129/mo'
+      starter: 'Starter Plan — $99/mo',
+      growth:  'Growth Plan — $199/mo',
+      pro:     'Pro Plan — $299/mo'
     };
 
     // ── State ────────────────────────────────────────────────
@@ -664,6 +664,18 @@
       var nextBtn = document.getElementById('vsNext');
       if (prevBtn) prevBtn.addEventListener('click', _prev);
       if (nextBtn) nextBtn.addEventListener('click', _next);
+
+      // Track plan selection in pending_signups for funnel analytics.
+      // Fire-and-forget — tracking failure must never block the wizard.
+      try {
+        var sessionId = 'vs_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+        firebase.firestore().collection('pending_signups').add({
+          plan:      _plan,
+          sessionId: sessionId,
+          source:    'subscription_page',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        }).catch(function () { /* non-blocking */ });
+      } catch (e) { /* non-blocking */ }
 
       _renderMain();
     }

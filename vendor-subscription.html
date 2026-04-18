@@ -102,38 +102,6 @@
       margin: 0;
     }
 
-    /* ── Confirmation overlay ─────────────────────────────── */
-    .vsub-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, .72);
-      z-index: 9999;
-      display: none;           /* shown by vsub.select() */
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
-    }
-
-    .vsub-confirm {
-      background: var(--navy-800);
-      border: 1.5px solid var(--border-g);
-      border-radius: 20px;
-      padding: 2rem 1.5rem 1.75rem;
-      max-width: 420px;
-      width: 100%;
-      text-align: center;
-      position: relative;
-    }
-
-    .vsub-confirm__icon   { font-size: 2.5rem; margin-bottom: .75rem; display: block; }
-    .vsub-confirm__plan   { font-family: var(--font-d); font-size: 1.45rem; font-weight: 400; color: var(--cream); margin-bottom: .6rem; }
-    .vsub-confirm__body   { font-size: .86rem; color: var(--text); line-height: 1.65; margin-bottom: 1.5rem; }
-    .vsub-confirm__body strong { color: var(--gold); }
-    .vsub-confirm__call   { display: flex; align-items: center; justify-content: center; height: 50px; border-radius: var(--r-pill); background: linear-gradient(105deg,var(--coral) 0%,var(--sunset) 50%,var(--gold-lt) 100%); color: var(--navy-900); font-weight: 700; font-size: .88rem; letter-spacing: .05em; text-decoration: none; width: 100%; margin-bottom: .65rem; transition: filter .2s; }
-    .vsub-confirm__call:hover { filter: brightness(1.07); }
-    .vsub-confirm__close  { background: none; border: 1px solid rgba(255,255,255,.18); border-radius: var(--r-pill); color: var(--muted); font-size: .8rem; font-weight: 500; cursor: pointer; width: 100%; height: 40px; transition: border-color .15s, color .15s; }
-    .vsub-confirm__close:hover { border-color: rgba(255,255,255,.38); color: var(--cream); }
-
     /* Override vpp-plan-cta to use <button> — vendor-pricing.css sizes <a> by default */
     .vsub-cta { width: 100%; }
   </style>
@@ -181,44 +149,19 @@
 
 
   <!-- ═══════════════════════════════════════════════════
-       PAYMENT NOTICE (honest — no fake payment)
+       HOW IT WORKS
        ═══════════════════════════════════════════════════ -->
   <div style="padding:0 1.25rem">
-    <div class="vsub-notice" role="note" aria-label="How subscription setup works">
-      <span class="vsub-notice__icon" aria-hidden="true">ℹ️</span>
+    <div class="vsub-notice" role="note" aria-label="How onboarding works">
+      <span class="vsub-notice__icon" aria-hidden="true">🚀</span>
       <div class="vsub-notice__title">How It Works</div>
       <p class="vsub-notice__body">
-        Online billing is being set up. When you click <strong style="color:var(--gold-lt)">"Choose This Plan"</strong>,
-        our team will contact you within <strong style="color:var(--gold-lt)">24 hours</strong>
-        to complete your subscription. No payment is collected until you confirm.
+        Click a plan to start your <strong style="color:var(--gold-lt)">AI-powered setup wizard</strong>.
+        Tell us about your business — our AI builds your page in minutes.
+        We review it and you're <strong style="color:var(--gold-lt)">live within 24 hours</strong>.
+        No payment collected until your page is approved.
         Questions? Call <a href="tel:+14089163439" style="color:var(--gold-lt)">(408) 916-3439</a>.
       </p>
-    </div>
-  </div>
-
-
-  <!-- ═══════════════════════════════════════════════════
-       CONFIRMATION OVERLAY
-       ═══════════════════════════════════════════════════ -->
-  <div class="vsub-overlay" id="vsub-confirm" role="dialog" aria-modal="true" aria-labelledby="vsub-confirm-plan" aria-describedby="vsub-confirm-desc">
-    <div class="vsub-confirm" tabindex="-1">
-      <span class="vsub-confirm__icon" aria-hidden="true">✅</span>
-
-      <div class="vsub-confirm__plan" id="vsub-confirm-plan">Growth Plan — $79/month</div>
-
-      <p class="vsub-confirm__body" id="vsub-confirm-desc">
-        Great choice! Our team will contact you within
-        <strong>24 hours</strong> to activate your subscription.
-        No payment is collected until you confirm with us directly.
-      </p>
-
-      <a href="tel:+14089163439" class="vsub-confirm__call" onclick="vsub.dismiss()">
-        📞 Call Us — (408) 916-3439
-      </a>
-
-      <button class="vsub-confirm__close" onclick="vsub.dismiss()">
-        Close
-      </button>
     </div>
   </div>
 

@@ -34,9 +34,13 @@
     "cleanUrls": true,
     "trailingSlash": false,
     "rewrites": [
-      { "source": "/portal",       "destination": "/portal.html" },
-      { "source": "/vendor-admin", "destination": "/vendor-admin.html" },
-      { "source": "/vendor-login", "destination": "/vendor-login.html" }
+      { "source": "/portal",          "destination": "/portal.html" },
+      { "source": "/vendor-admin",    "destination": "/vendor-admin.html" },
+      { "source": "/vendor-login",    "destination": "/vendor-login.html" },
+      { "source": "/pricing",            "destination": "/vendor-pricing.html" },
+      { "source": "/vendor-onboarding", "destination": "/vendor-onboarding.html" },
+      { "source": "/vendor",               "destination": "/vendor-detail.html" },
+      { "source": "/vendor-subscription",  "destination": "/vendor-subscription.html" }
     ],
     "headers": [
       {

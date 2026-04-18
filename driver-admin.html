@@ -13,6 +13,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+  <script src="/driver-notif.js?v=20260418a"></script>
   <script src="/driver-calendar.js?v=20260422a"></script>
   <script src="/driver-compliance.js"></script>
   <script src="/notifications.js?v=20260419f"></script>
@@ -932,7 +933,7 @@
 
   <!-- Tab bar — 4 tabs -->
   <div class="drv-tabs">
-    <button class="drv-tab active" onclick="drvTab('home')" id="tabHome">Chuyến Xe <span class="drv-tab-badge hidden" id="rideBadge">0</span></button>
+    <button class="drv-tab active" onclick="drvTab('home')" id="tabHome">Chuyến Xe <span class="drv-tab-badge hidden" id="rideBadge">0</span><span class="drv-tab-badge hidden" id="dlcTourBadge" style="background:var(--gold);color:var(--navy-900)">0</span></button>
     <button class="drv-tab" onclick="drvTab('calendar')" id="tabCalendar">Lịch</button>
     <button class="drv-tab" onclick="drvTab('profile')">Hồ Sơ</button>
     <button class="drv-tab" onclick="drvTab('docs')">Tài Liệu <span class="drv-tab-badge hidden" id="docsBadge"></span></button>
@@ -1317,6 +1318,7 @@
         return;
       }
       _driverId = doc.data().driverId || user.uid;
+      if (typeof DLCNotif !== 'undefined') DLCNotif.init(db, _driverId);
       document.getElementById('driverEmail').textContent = (user.email || '') + ' · Tài Xế';
       loadDriver();
     }).catch(function () {
@@ -1664,6 +1666,7 @@
   }
 
   // ── Real-time ride notifications listener ─────────────────────────────────
+  var _rideNotifInitLoad = true;
   function listenRideNotifs() {
     if (_unsubRideNotifs) _unsubRideNotifs();
     _unsubRideNotifs = db.collection('rideNotifications')
@@ -1671,6 +1674,32 @@
       .orderBy('createdAt', 'desc')
       .limit(30)
       .onSnapshot(function(snap) {
+        // ── Popup for new ride offers ─────────────────────────────────────
+        if (!_rideNotifInitLoad && typeof DLCNotif !== 'undefined') {
+          snap.docChanges().forEach(function(change) {
+            if (change.type === 'added') {
+              var d = change.doc.data();
+              if (d.status === 'new') {
+                var svcLabel = { airport_pickup: '✈ Đón Sân Bay', airport_dropoff: '✈ Ra Sân Bay', private_ride: '🚗 Xe Riêng' };
+                DLCNotif.showAlert({
+                  id:             change.doc.id,
+                  type:           'ride',
+                  serviceLabel:   svcLabel[d.serviceType] || d.serviceLabel || d.serviceType,
+                  customerName:   d.customerName    || '',
+                  customerPhone:  '',
+                  airport:        d.airport         || '',
+                  arrivalDate:    d.arrivalDate     || '',
+                  arrivalTime:    d.arrivalTime     || '',
+                  passengers:     d.passengers      || 1,
+                  estimatedPrice: d.estimatedPrice  || 0,
+                  bookingId:      d.bookingId       || change.doc.id,
+                });
+              }
+            }
+          });
+        }
+        _rideNotifInitLoad = false;
+        // ─────────────────────────────────────────────────────────────────
         renderRideNotifs(snap.docs);
         var newCount = snap.docs.filter(function(d) { return d.data().status === 'new'; }).length;
         // Badge on home tab
@@ -1754,12 +1783,37 @@
   var _unsubTourAssign  = null;
   var _activeTourDocs   = [];   // raw tour data for calendar + reminders
 
+  var _tourNotifInitLoad = true;
   function listenTourAssignments() {
     if (!_travelDriverIds.length) return;
     if (_unsubTourAssign) _unsubTourAssign();
     _unsubTourAssign = db.collection('travelAssignments')
       .where('travel_driver_id', 'in', _travelDriverIds)
       .onSnapshot(function(snap) {
+        // ── Popup for newly assigned tours ────────────────────────────────
+        if (!_tourNotifInitLoad && typeof DLCNotif !== 'undefined') {
+          snap.docChanges().forEach(function(change) {
+            if (change.type === 'added') {
+              var d = change.doc.data();
+              DLCNotif.showAlert({
+                id:            change.doc.id,
+                type:          'tour',
+                packageName:   d.packageName   || '',
+                customerName:  d.customerName  || '',
+                customerPhone: d.customerPhone || '',
+                pickupAddress: d.pickupAddress || '',
+                travelDate:    d.travelDate    || '',
+                travelers:     d.travelers     || 1,
+                duration_days: d.duration_days || 1,
+                bookingId:     d.bookingId     || change.doc.id,
+                total:         d.total         || null,
+                notes:         d.notes         || '',
+              });
+            }
+          });
+        }
+        _tourNotifInitLoad = false;
+        // ─────────────────────────────────────────────────────────────────
         // Filter to active assignments client-side (avoids composite index)
         var active = snap.docs.filter(function(d) {
           return ['assigned','confirmed','picked_up','in_progress'].indexOf(d.data().status) >= 0;
@@ -1823,6 +1877,13 @@
         if (sec) sec.style.display = active.length ? '' : 'none';
         var cnt = document.getElementById('homeTourCount');
         if (cnt) { cnt.textContent = active.length; cnt.classList.toggle('hidden', active.length === 0); }
+        // ── Tour unread badge ─────────────────────────────────────────────
+        if (typeof DLCNotif !== 'undefined') {
+          var unreadTours = snap.docs.filter(function(d) {
+            return d.data().notif_status === 'new';
+          }).length;
+          DLCNotif.updateBadge(unreadTours);
+        }
       }, function(err) {
         console.warn('[TourAssign] listener error:', err && err.message);
         showToast('Không thể tải tour: ' + (err && err.message ? err.message : 'lỗi không xác định'), true);

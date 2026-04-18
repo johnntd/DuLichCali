@@ -1004,6 +1004,14 @@
 
     <!-- ── TAB: Vendors ──────────────────────────────────── -->
     <div id="tabVendors" class="tab-panel">
+      <div style="padding:1rem 1.25rem 0;display:flex;justify-content:flex-end">
+        <a href="/vendor-onboarding" style="display:inline-flex;align-items:center;gap:0.4rem;height:34px;padding:0 1rem;background:var(--gold,#f5a623);color:var(--navy-900,#0d2f50);border-radius:7px;font-size:0.82rem;font-weight:700;text-decoration:none">
+          + Onboard New Vendor
+        </a>
+      </div>
+      <!-- Pending vendor self-serve submissions (from vendor_signups collection) -->
+      <div id="pendingSubmissionsWrap" style="padding:.75rem 1.25rem 0"></div>
+
       <div class="vendor-mgmt-wrap" id="vendorMgmtWrap">
         <div style="font-size:0.8rem;color:var(--muted)">Loading vendor list…</div>
       </div>
@@ -1525,7 +1533,7 @@
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       const panel = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1));
       if (panel) panel.classList.add('active');
-      if (tab === 'vendors') loadVendorPanel();
+      if (tab === 'vendors') { loadVendorPanel(); loadPendingSubmissions(); }
       if (tab === 'drivers') loadDriverPanel();
       if (tab === 'revenue') loadRevenueDashboard();
       if (tab === 'settings') loadPlatformSettings();
@@ -1886,6 +1894,169 @@
         }, { merge:true });
         loadVendorPanel();
       } catch(e) { alert('Error: '+e.message); }
+    }
+
+    // ── Pending vendor self-serve submissions ──────────────────────────────────
+
+    async function loadPendingSubmissions() {
+      const wrap = document.getElementById('pendingSubmissionsWrap');
+      if (!wrap) return;
+      try {
+        const snap = await db.collection('vendor_signups')
+          .where('status', '==', 'submitted')
+          .orderBy('submittedAt', 'desc')
+          .limit(50)
+          .get();
+        if (snap.empty) { wrap.innerHTML = ''; return; }
+        wrap.innerHTML =
+          '<div style="font-size:.7rem;font-weight:700;color:var(--gold,#f5a623);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem">' +
+            '🟡 Pending Submissions — ' + snap.docs.length + ' awaiting review' +
+          '</div>' +
+          snap.docs.map(d => _renderSignupCard(d.id, d.data())).join('');
+      } catch(e) {
+        wrap.innerHTML = '<div style="font-size:.8rem;color:var(--danger)">Error loading submissions: ' + escHtml(e.message) + '</div>';
+      }
+    }
+
+    function _renderSignupCard(signupId, d) {
+      const planLabels = { starter: 'Starter $39/mo', growth: 'Growth $79/mo', pro: 'Pro $129/mo' };
+      const plan = planLabels[d.plan] || d.plan || '—';
+      const submittedStr = d.submittedAt && d.submittedAt.toDate ? d.submittedAt.toDate().toLocaleDateString() : '—';
+      const sf = d.storefront || {};
+      const aiCtx = d.aiContext || {};
+      const services = Array.isArray(d.services) ? d.services : [];
+      return '<div class="vendor-card" id="sig-' + escHtml(signupId) + '" style="border-color:rgba(245,166,35,.45);margin-bottom:.5rem">' +
+        '<div class="vendor-card__main">' +
+          '<div class="vendor-card__info">' +
+            '<div class="vendor-card__name">📝 ' + escHtml(d.name || d.businessName || signupId) + '</div>' +
+            '<div class="vendor-card__meta">' + escHtml(d.category || '—') + ' · ' + escHtml(d.region || '—') + ' · <span style="color:var(--gold,#f5a623)">' + escHtml(plan) + '</span></div>' +
+            '<div class="vendor-card__meta">' + escHtml(d.phoneDisplay || d.phone || '—') + ' · ' + escHtml(d.email || '—') + '</div>' +
+            '<div class="vendor-card__meta" style="font-size:.65rem;color:var(--muted)">Submitted: ' + submittedStr + ' · ID: <code>' + escHtml(d.id || signupId) + '</code></div>' +
+          '</div>' +
+          '<div class="vendor-card__actions">' +
+            '<button class="btn-vend" onclick="toggleSignupDetails(\'' + escHtml(signupId) + '\')">👁 Review</button>' +
+            '<button class="btn-vend success" onclick="approveSubmission(\'' + escHtml(signupId) + '\')">✓ Approve &amp; Go Live</button>' +
+            '<button class="btn-vend danger" onclick="rejectSubmission(\'' + escHtml(signupId) + '\')">Reject</button>' +
+          '</div>' +
+        '</div>' +
+        '<div id="sig-details-' + escHtml(signupId) + '" style="display:none;padding:.75rem 1rem;border-top:1px solid rgba(255,255,255,.06);font-size:.8rem;color:var(--text)">' +
+          '<p><strong>Tagline:</strong> ' + escHtml(d.tagline || '—') + '</p>' +
+          '<p><strong>Short description:</strong> ' + escHtml(sf.shortDescription || '—') + '</p>' +
+          '<p><strong>Address:</strong> ' + escHtml(d.address || '—') + ', ' + escHtml(d.city || '') + '</p>' +
+          '<p><strong>Services (' + services.length + '):</strong> ' + escHtml(services.slice(0,4).map(s=>s.name).join(', ') || '—') + '</p>' +
+          '<p><strong>AI greeting:</strong> ' + escHtml(aiCtx.greeting || '—') + '</p>' +
+          '<div id="sig-msg-' + escHtml(signupId) + '" style="margin-top:.5rem"></div>' +
+        '</div>' +
+      '</div>';
+    }
+
+    function toggleSignupDetails(signupId) {
+      const el = document.getElementById('sig-details-' + signupId);
+      if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function approveSubmission(signupId) {
+      if (!confirm('Approve this vendor and make their page live immediately?')) return;
+      const msgEl = document.getElementById('sig-msg-' + signupId);
+      if (msgEl) { msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Approving…'; }
+      try {
+        const signupSnap = await db.collection('vendor_signups').doc(signupId).get();
+        if (!signupSnap.exists) throw new Error('Submission not found.');
+        const d = signupSnap.data();
+        const id = d.id || signupId;
+        const pin = String(Math.floor(100000 + Math.random() * 900000));
+        const ts = firebase.firestore.FieldValue.serverTimestamp();
+
+        // Refuse if vendor already exists and is active
+        const existingSnap = await db.collection('vendors').doc(id).get();
+        if (existingSnap.exists && existingSnap.data().adminStatus === 'active') {
+          throw new Error('Vendor "' + id + '" is already active.');
+        }
+
+        // Build main vendor doc (services/menuItems go to subcollections)
+        const { services, menuItems, plan, status, submittedAt, ...vendorData } = d;
+        const docToWrite = Object.assign({}, vendorData, {
+          id,
+          setupCode:   pin,
+          adminStatus: 'active',
+          active:      true,
+          createdAt:   (existingSnap.exists && existingSnap.data().createdAt) || ts,
+          updatedAt:   ts,
+          onboarding:  Object.assign({}, d.onboarding || {}, {
+            status:      'published',
+            publishedAt: new Date().toISOString(),
+          }),
+        });
+        // Remove fields that should not be on the top-level vendor doc
+        delete docToWrite.status;
+        delete docToWrite.submittedAt;
+        delete docToWrite.plan;
+
+        const batch = db.batch();
+        const vendorRef = db.collection('vendors').doc(id);
+
+        // 1. Main vendor document
+        batch.set(vendorRef, docToWrite, { merge: true });
+
+        // 2. Services subcollection (nails / hair)
+        if ((d.category === 'nails' || d.category === 'hair') && Array.isArray(services) && services.length > 0) {
+          services.forEach(function(svc, i) {
+            batch.set(vendorRef.collection('services').doc('svc_' + String(i).padStart(3,'0')),
+              Object.assign({}, svc, { updatedAt: ts }));
+          });
+        }
+
+        // 3. Menu items subcollection (food)
+        if (d.category === 'food' && Array.isArray(menuItems) && menuItems.length > 0) {
+          menuItems.forEach(function(item, i) {
+            batch.set(vendorRef.collection('menuItems').doc('item_' + String(i).padStart(3,'0')),
+              Object.assign({}, item, { updatedAt: ts }));
+          });
+        }
+
+        // 4. Staff placeholder to initialize the subcollection (salons)
+        if (d.category === 'nails' || d.category === 'hair') {
+          batch.set(vendorRef.collection('staff').doc('_placeholder'), {
+            _placeholder: true, createdAt: ts,
+          });
+        }
+
+        // 5. Mark signup as approved (store pin so admin can re-share if needed)
+        batch.set(db.collection('vendor_signups').doc(signupId), {
+          status: 'approved', approvedAt: ts, setupCode: pin,
+        }, { merge: true });
+
+        await batch.commit();
+
+        const loginUrl = 'https://www.dulichcali21.com/vendor-login?id=' + encodeURIComponent(id);
+        alert(
+          '✓ ' + (d.name || id) + ' is now LIVE!\n\n' +
+          'Share with vendor:\n' +
+          'Login URL: ' + loginUrl + '\n' +
+          'Setup PIN: ' + pin + '\n\n' +
+          'Vendor uses their email + this PIN on first login to set their password.'
+        );
+
+        const card = document.getElementById('sig-' + signupId);
+        if (card) card.remove();
+        loadVendorPanel();
+      } catch(e) {
+        if (msgEl) { msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Error: ' + escHtml(e.message); }
+        alert('Approval failed: ' + e.message);
+      }
+    }
+
+    async function rejectSubmission(signupId) {
+      const reason = prompt('Reason for rejection (optional):');
+      if (reason === null) return;
+      try {
+        const ts = firebase.firestore.FieldValue.serverTimestamp();
+        await db.collection('vendor_signups').doc(signupId).set({
+          status: 'rejected', rejectedAt: ts, rejectionReason: reason || '',
+        }, { merge: true });
+        const card = document.getElementById('sig-' + signupId);
+        if (card) card.remove();
+      } catch(e) { alert('Rejection failed: ' + e.message); }
     }
 
     function toggleVendorLogin(vendorId) {

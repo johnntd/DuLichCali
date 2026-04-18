@@ -1813,6 +1813,10 @@
           return (a._pickupMs || 9e15) - (b._pickupMs || 9e15);
         });
         renderUpcomingSection(_upcomingRides);
+        if (document.getElementById('panelCalendar') &&
+            document.getElementById('panelCalendar').classList.contains('active')) {
+          renderCalendarPanel();
+        }
 
         renderTourAssignments(active);
         var sec = document.getElementById('homeSectionTours');
@@ -2582,6 +2586,10 @@
           return (a._pickupMs || 9e15) - (b._pickupMs || 9e15);
         });
         renderUpcomingSection(_upcomingRides);
+        if (document.getElementById('panelCalendar') &&
+            document.getElementById('panelCalendar').classList.contains('active')) {
+          renderCalendarPanel();
+        }
       }, function() {});
   }
 

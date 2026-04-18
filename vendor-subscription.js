@@ -114,24 +114,15 @@
 
   // ── Plan selection ────────────────────────────────────────
   function select(planId) {
-    var plan = null;
+    var valid = false;
     for (var i = 0; i < PLANS.length; i++) {
-      if (PLANS[i].id === planId) { plan = PLANS[i]; break; }
+      if (PLANS[i].id === planId) { valid = true; break; }
     }
-    if (!plan) return;
-
-    var nameEl = document.getElementById('vsub-confirm-plan');
-    if (nameEl) {
-      nameEl.textContent = plan.name + ' Plan \u2014 $' + plan.price + '/month';
-    }
-
-    var overlay = document.getElementById('vsub-confirm');
-    if (overlay) {
-      overlay.style.display = 'flex';
-      // Move focus into dialog for keyboard/screen reader accessibility
-      var dialogEl = overlay.querySelector('[tabindex="-1"]');
-      if (dialogEl) dialogEl.focus();
-    }
+    if (!valid) return;
+    // Redirect vendor to the self-serve onboarding wizard with plan pre-selected.
+    // The wizard collects business info, calls AI generation, and saves a draft
+    // for admin review — no "call us" dead-end.
+    window.location.href = '/vendor-signup?plan=' + encodeURIComponent(planId);
   }
 
   function dismiss() {

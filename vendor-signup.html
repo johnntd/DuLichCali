@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join Du Lịch Cali — Set Up Your Business</title>
+  <meta name="description" content="Set up your business on Du Lịch Cali. Our AI builds your page draft — you review, we go live.">
+  <link rel="icon" href="/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,300;0,6..96,400;1,6..96,300;1,6..96,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/vendor-onboarding.css?v=20260414a">
+</head>
+<body class="vob-body">
+
+  <!-- Loading state while anonymous auth initializes -->
+  <div id="vsAuthGate" class="vob-auth-gate">
+    <div class="vob-auth-gate__inner">
+      <div class="vob-auth-gate__logo">Du Lịch Cali</div>
+      <p style="font-size:0.88rem;color:rgba(245,240,232,0.5)">Setting up your workspace…</p>
+      <div class="vob-spinner vob-spinner--lg"></div>
+    </div>
+  </div>
+
+  <!-- App shell: hidden until auth confirmed -->
+  <div id="vsApp" class="vob-app" hidden>
+
+    <header class="vob-header">
+      <a href="/vendor-subscription" class="vob-back">← Plans</a>
+      <div style="text-align:center">
+        <h1 class="vob-header__title">Set Up Your Business</h1>
+        <div id="vsPlanBadge" style="font-size:.7rem;color:var(--gold,#f5a623);letter-spacing:.05em;margin-top:.15rem"></div>
+      </div>
+      <div style="width:60px"></div><!-- spacer to center title -->
+    </header>
+
+    <div class="vob-progress" id="vsProgress">
+      <div class="vob-progress__track">
+        <div class="vob-progress__fill" id="vsProgressFill" style="width:0%"></div>
+      </div>
+      <div class="vob-steps" id="vsStepDots"></div>
+    </div>
+
+    <main class="vob-main" id="vsMain"></main>
+
+    <footer class="vob-footer" id="vsFooter">
+      <button class="vob-btn vob-btn--ghost" id="vsPrev" type="button">← Back</button>
+      <span class="vob-step-label" id="vsStepLabel"></span>
+      <button class="vob-btn vob-btn--gold" id="vsNext" type="button">Continue →</button>
+    </footer>
+
+  </div><!-- /vsApp -->
+
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+  <script>
+    (function () {
+      var cfg = {
+        apiKey:            'AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ',
+        authDomain:        'dulichcali-booking-calendar.firebaseapp.com',
+        projectId:         'dulichcali-booking-calendar',
+        storageBucket:     'dulichcali-booking-calendar.appspot.com',
+        messagingSenderId: '623460884698',
+        appId:             '1:623460884698:web:a08bd435c453a7b4db05e3'
+      };
+      if (!firebase.apps.length) { firebase.initializeApp(cfg); }
+      window.dlcDb        = firebase.firestore();
+      window.dlcFunctions = firebase.functions();
+    })();
+  </script>
+
+  <!-- Core pipeline: schema, normalizer, AI generator, validator, publisher, preview -->
+  <script src="/vendor-onboarding-pipeline.js?v=20260418b"></script>
+
+  <!-- ═══════════════════════════════════════════════════════
+       WIZARD CONTROLLER (vendor self-serve version)
+       Differences from vendor-onboarding.html:
+         - Anonymous auth boot (not admin gate)
+         - __vs* prefixed globals (not __*)
+         - _submit() calls Publisher.saveSignup() (not publish())
+         - _renderDone() shows "Submission Received!"
+         - Email field required
+         - Preview uses { skipSetupCode: true }
+       ═══════════════════════════════════════════════════════ -->
+  <script>
+  (function () {
+    'use strict';
+
+    // ── Plan from URL ────────────────────────────────────────
+    var _plan = (new URLSearchParams(window.location.search)).get('plan') || 'starter';
+    var PLAN_LABELS = {
+      starter: 'Starter Plan — $39/mo',
+      growth:  'Growth Plan — $79/mo',
+      pro:     'Pro Plan — $129/mo'
+    };
+
+    // ── State ────────────────────────────────────────────────
+    var _step   = 0;
+    var _done   = false;
+    var _aiOut  = null;
+    var _pubDoc = null;
+
+    // form data accumulates across steps
+    var _fd = {
+      category:     '',
+      name:         '',
+      ownerName:    '',
+      phone:        '',
+      email:        '',
+      website:      '',
+      address:      '',
+      city:         '',
+      state:        'CA',
+      zip:          '',
+      region:       'bay-area',
+      hours: {
+        mon: { open: '09:00', close: '19:00', closed: false },
+        tue: { open: '09:00', close: '19:00', closed: false },
+        wed: { open: '09:00', close: '19:00', closed: false },
+        thu: { open: '09:00', close: '19:00', closed: false },
+        fri: { open: '09:00', close: '19:00', closed: false },
+        sat: { open: '10:00', close: '18:00', closed: false },
+        sun: { open: '10:00', close: '18:00', closed: true  }
+      },
+      services:     [],
+      aiNotes:      '',
+      cancelPolicy: '',
+      leadTimeMins: 60
+    };
+
+    // ── DAYS ─────────────────────────────────────────────────
+    var DAYS = [
+      { key: 'mon', label: 'Mon' },
+      { key: 'tue', label: 'Tue' },
+      { key: 'wed', label: 'Wed' },
+      { key: 'thu', label: 'Thu' },
+      { key: 'fri', label: 'Fri' },
+      { key: 'sat', label: 'Sat' },
+      { key: 'sun', label: 'Sun' }
+    ];
+
+    // ── STEP DEFINITIONS ─────────────────────────────────────
+    var STEPS = [
+      { label: '1', title: 'Category',      icon: '🏪' },
+      { label: '2', title: 'Business Info', icon: '📋' },
+      { label: '3', title: 'Location',      icon: '📍' },
+      { label: '4', title: 'Hours',         icon: '🕐' },
+      { label: '5', title: 'Services',      icon: '✨' },
+      { label: '6', title: 'AI Setup',      icon: '🤖' },
+      { label: '7', title: 'Preview',       icon: '🚀' }
+    ];
+
+    // ─────────────────────────────────────────────────────────
+    // STEP RENDERS
+    // ─────────────────────────────────────────────────────────
+
+    function _renderStep0() {
+      return '<div class="vob-step">' +
+        '<h2 class="vob-step__title">What type of<br>business is this?</h2>' +
+        '<p class="vob-step__sub">Choose the category that best describes your business.</p>' +
+        '<div class="vob-cat-grid">' +
+          _catCard('nails', '💅', 'Nail Salon') +
+          _catCard('hair',  '✂️', 'Hair Salon') +
+          _catCard('food',  '🍜', 'Food Vendor') +
+        '</div>' +
+      '</div>';
+    }
+
+    function _catCard(id, icon, label) {
+      var sel = _fd.category === id ? ' vob-cat-card--selected' : '';
+      return '<div class="vob-cat-card' + sel + '" onclick="__vsCatPick(\'' + id + '\')" tabindex="0">' +
+        '<span class="vob-cat-card__icon">' + icon + '</span>' +
+        '<span class="vob-cat-card__label">' + label + '</span>' +
+      '</div>';
+    }
+
+    function _renderStep1() {
+      // NOTE: email is required here (vendor must provide contact email for admin to reach them)
+      return '<div class="vob-step">' +
+        '<h2 class="vob-step__title">Business Info</h2>' +
+        '<p class="vob-step__sub">Tell us about your business. We use this to set everything up.</p>' +
+        _field('Business Name', 'name', 'type="text"', 'Luxury Nails & Spa', true) +
+        _field('Owner / Contact Name', 'ownerName', 'type="text"', 'e.g. Tina Nguyen') +
+        '<div class="vob-field--row">' +
+          _field('Phone', 'phone', 'type="tel"', '(408) 555-0000', true) +
+          _field('Email', 'email', 'type="email"', 'owner@example.com', true) +
+        '</div>' +
+        _field('Website (optional)', 'website', 'type="url"', 'https://...') +
+      '</div>';
+    }
+
+    function _renderStep2() {
+      return '<div class="vob-step">' +
+        '<h2 class="vob-step__title">Location</h2>' +
+        '<p class="vob-step__sub">Where is your business located?</p>' +
+        _field('Street Address', 'address', 'type="text"', '1234 Main St') +
+        '<div class="vob-field--row">' +
+          _field('City', 'city', 'type="text"', 'San Jose', true) +
+          _field('Zip', 'zip', 'type="text" maxlength="5"', '95123') +
+        '</div>' +
+        '<div class="vob-field">' +
+          '<label class="vob-label">State</label>' +
+          '<input class="vob-input" value="CA" readonly style="opacity:0.5">' +
+        '</div>' +
+        '<div class="vob-field">' +
+          '<label class="vob-label">Region <span>*</span></label>' +
+          '<div class="vob-region-group">' +
+            _regionCard('bay-area', 'Bay Area') +
+            _regionCard('orange-county', 'Orange County') +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }
+
+    function _regionCard(id, label) {
+      return '<label class="vob-region-card">' +
+        '<input type="radio" name="vs_region" value="' + id + '"' +
+          (_fd.region === id ? ' checked' : '') +
+          ' onchange="__vsRegionPick(\'' + id + '\')">' +
+        '<span class="vob-region-card__label">' + label + '</span>' +
+      '</label>';
+    }
+
+    function _renderStep3() {
+      var rows = DAYS.map(function (d) {
+        var h = _fd.hours[d.key] || { open: '09:00', close: '18:00', closed: false };
+        var chk = h.closed ? '' : ' checked';
+        var timesHtml = h.closed
+          ? '<span class="vob-hours-closed">Closed</span>'
+          : '<input type="time" class="vob-time-input" value="' + h.open + '"' +
+              ' onchange="__vsHourChange(\'' + d.key + '\',\'open\',this.value)">' +
+            '<span class="vob-hours-row__sep">–</span>' +
+            '<input type="time" class="vob-time-input" value="' + h.close + '"' +
+              ' onchange="__vsHourChange(\'' + d.key + '\',\'close\',this.value)">';
+
+        return '<div class="vob-hours-row">' +
+          '<span class="vob-hours-row__day">' + d.label + '</span>' +
+          '<div class="vob-hours-row__times">' +
+            '<label class="vob-toggle">' +
+              '<input type="checkbox"' + chk + ' onchange="__vsHourToggle(\'' + d.key + '\',this.checked)">' +
+            '</label>' +
+            timesHtml +
+          '</div>' +
+        '</div>';
+      }).join('');
+
+      return '<div class="vob-step">' +
+        '<h2 class="vob-step__title">Business Hours</h2>' +
+        '<p class="vob-step__sub">Toggle days open and set hours. Toggle off = Closed.</p>' +
+        '<div class="vob-hours-grid">' + rows + '</div>' +
+      '</div>';
+    }
+
+    function _renderStep4() {
+      var isFood = _fd.category === 'food';
+      var itemsHtml = _fd.services.map(function (svc, i) {
+        return _svcRow(svc, i, isFood);
+      }).join('');
+
+      var hdrs = isFood
+        ? '<div class="vob-svc-headers vob-svc-headers--food">' +
+            '<span class="vob-svc-hdr">Item Name</span>' +
+            '<span class="vob-svc-hdr">Price $</span>' +
+            '<span class="vob-svc-hdr"></span>' +
+          '</div>'
+        : '<div class="vob-svc-headers">' +
+            '<span class="vob-svc-hdr">Service Name</span>' +
+            '<span class="vob-svc-hdr">Price $</span>' +
+            '<span class="vob-svc-hdr">Mins</span>' +
+            '<span class="vob-svc-hdr"></span>' +
+          '</div>';
+
+      var addLabel = isFood ? '+ Add Menu Item' : '+ Add Service';
+
+      return '<div class="vob-step">' +
+        '<h2 class="vob-step__title">' + (isFood ? 'Menu Items' : 'Services') + '</h2>' +
+        '<p class="vob-step__sub">Pre-loaded with defaults. Edit or add more.</p>' +
+        hdrs +
+        '<div class="vob-services-list" id="vsSvcList">' + itemsHtml + '</div>' +
+        '<button class="vob-add-btn" type="button" onclick="__vsAddSvc()">' + addLabel + '</button>' +
+      '</div>';
+    }
+
+    function _svcRow(svc, i, isFood) {
+      if (isFood) {
+        return '<div class="vob-svc-row vob-svc-row--food" data-idx="' + i + '">' +
+          '<input class="vob-input" type="text" placeholder="Item name" value="' + _esc(svc.name || '') + '"' +
+            ' onchange="__vsSvcChange(' + i + ',\'name\',this.value)">' +
+          '<input class="vob-input" type="number" placeholder="0" min="0" value="' + (svc.priceFrom || '') + '"' +
+            ' onchange="__vsSvcChange(' + i + ',\'priceFrom\',+this.value)">' +
+          '<button class="vob-svc-del" type="button" onclick="__vsDelSvc(' + i + ')">×</button>' +
+        '</div>';
+      }
+      return '<div class="vob-svc-row" data-idx="' + i + '">' +
+        '<input class="vob-input" type="text" placeholder="Service name" value="' + _esc(svc.name || '') + '"' +
+          ' onchange="__vsSvcChange(' + i + ',\'name\',this.value)">' +
+        '<input class="vob-input" type="number" placeholder="0" min="0" value="' + (svc.priceFrom || '') + '"' +
+          ' onchange="__vsSvcChange(' + i + ',\'priceFrom\',+this.value)">' +
+        '<input class="vob-input" type="number" placeholder="30" min="5" step="5" value="' + (svc.durationMins || '') + '"' +
+          ' onchange="__vsSvcChange(' + i + ',\'durationMins\',+this.value)">' +
+        '<button class="vob-svc-del" type="button" onclick="__vsDelSvc(' + i + ')">×</button>' +
+      '</div>';
+    }
+
+    function _renderStep5() {
+      return '<div class="vob-step">' +
+        '<h2 class="vob-step__title">AI Receptionist<br>Setup</h2>' +
+        '<p class="vob-step__sub">Help our AI understand your business. The more you share, the better your customers are served.</p>' +
+        '<div class="vob-field">' +
+          '<label class="vob-label">What makes your business special?</label>' +
+          '<textarea class="vob-textarea" rows="4" placeholder="e.g. Family-owned since 2010. We specialize in natural nail care and Vietnamese nail art. All services are vegan-friendly. Walk-ins welcome on weekdays..."' +
+            ' onchange="__vsFdSet(\'aiNotes\',this.value)">' + _esc(_fd.aiNotes) + '</textarea>' +
+        '</div>' +
+        '<div class="vob-field">' +
+          '<label class="vob-label">Cancellation Policy</label>' +
+          '<input class="vob-input" type="text" placeholder="e.g. 24-hour notice required for cancellations"' +
+            ' value="' + _esc(_fd.cancelPolicy) + '" onchange="__vsFdSet(\'cancelPolicy\',this.value)">' +
+        '</div>' +
+        '<div class="vob-field">' +
+          '<label class="vob-label">Booking Lead Time (minutes)</label>' +
+          '<input class="vob-input" type="number" min="0" step="15" placeholder="60"' +
+            ' value="' + (_fd.leadTimeMins || 60) + '" onchange="__vsFdSet(\'leadTimeMins\',+this.value)">' +
+        '</div>' +
+      '</div>';
+    }
+
+    function _renderStep6(aiStatus) {
+      var statusHtml = '';
+      var previewHtml = '';
+      var validHtml = '';
+
+      if (aiStatus === 'loading') {
+        statusHtml = '<div class="vob-ai-status">' +
+          '<div class="vob-spinner"></div>' +
+          '<span>AI is building your business profile… this takes 10–20 seconds.</span>' +
+        '</div>';
+      } else if ((aiStatus === 'done' || aiStatus === 'fallback') && _pubDoc) {
+        var icon = aiStatus === 'done' ? '✅' : '⚠️';
+        var msg  = aiStatus === 'done'
+          ? 'Your AI-generated business profile is ready to review.'
+          : 'AI generation skipped — using smart defaults. You can update your profile after setup.';
+        statusHtml = '<div class="vob-ai-status">' +
+          '<span class="vob-ai-status__icon">' + icon + '</span>' +
+          '<span>' + msg + '</span>' +
+        '</div>';
+        var previewDoc = Object.assign({}, _pubDoc, { setupCode: 'PENDING' });
+        var vResult = VendorOnboarding.Validator.validate(previewDoc, { skipSetupCode: true });
+        validHtml = _validationHtml(vResult);
+        previewHtml = '<div class="vob-preview-wrap">' +
+          '<div class="vob-preview-head">Your Business Profile Preview</div>' +
+          '<div class="vob-preview-body">' + VendorOnboarding.PreviewBuilder.build(previewDoc) + '</div>' +
+        '</div>';
+      } else if (aiStatus === 'error') {
+        statusHtml = '<div class="vob-ai-status">' +
+          '<span class="vob-ai-status__icon">❌</span>' +
+          '<span>AI generation failed. <button class="vob-btn vob-btn--ghost" style="height:32px;font-size:0.8rem" onclick="__vsRunAI()">Retry</button></span>' +
+        '</div>';
+      }
+
+      return '<div class="vob-step">' +
+        '<h2 class="vob-step__title">Review &amp; Submit</h2>' +
+        '<p class="vob-step__sub">Review your AI-generated profile. Our team reviews it before going live — no manual work needed if it looks right!</p>' +
+        statusHtml + validHtml + previewHtml +
+      '</div>';
+    }
+
+    function _validationHtml(result) {
+      if (!result) return '';
+      var cls = result.errors.length ? 'vob-validation--err'
+              : result.warnings.length ? 'vob-validation--warn'
+              : 'vob-validation--ok';
+      var lines = [];
+      if (result.valid && !result.warnings.length) {
+        lines.push('✓ Profile looks great!');
+      }
+      result.errors.forEach(function (e) { lines.push('✗ ' + e); });
+      result.warnings.forEach(function (w) { lines.push('⚠ ' + w); });
+      return '<div class="vob-validation ' + cls + '">' +
+        lines.map(function (l) { return '<div>' + _esc(l) + '</div>'; }).join('') +
+      '</div>';
+    }
+
+    function _renderDone(vendorId) {
+      return '<div class="vob-result">' +
+        '<div class="vob-result__icon">🎉</div>' +
+        '<div class="vob-result__title">Submission Received!</div>' +
+        '<p class="vob-result__sub">Thank you! Our team will review your business profile and contact you within <strong>24 hours</strong> with your login credentials.<br><br>Your <strong>' + _esc(PLAN_LABELS[_plan] || _plan) + '</strong> is reserved.</p>' +
+        '<div class="vob-result__id">Reference ID: ' + _esc(vendorId) + '</div>' +
+        '<p style="font-size:.8rem;color:var(--muted,#8e8e93);margin:.85rem 0 0">Questions? Call <a href="tel:+14089163439" style="color:var(--gold,#f5a623)">(408) 916-3439</a></p>' +
+        '<a href="/" class="vob-btn vob-btn--gold" style="margin-top:1.25rem;display:inline-flex;align-items:center;justify-content:center">← Back to Home</a>' +
+      '</div>';
+    }
+
+    // ── GLOBAL EVENT HANDLERS ─────────────────────────────────
+    // Prefixed __vs* to avoid collision if vendor-onboarding.html globals are ever in scope
+
+    window.__vsCatPick = function (id) {
+      _fd.category = id;
+      if (window.VendorOnboarding && VendorOnboarding.CATEGORY_PACKS) {
+        var pack = VendorOnboarding.CATEGORY_PACKS[id];
+        if (pack && pack.defaultServices) {
+          _fd.services = pack.defaultServices.map(function (s) {
+            return { name: s.name, priceFrom: s.priceFrom, durationMins: s.durationMins, active: true };
+          });
+        } else if (id === 'food') {
+          _fd.services = [];
+        }
+      }
+      _renderMain();
+    };
+
+    window.__vsRegionPick = function (id) { _fd.region = id; };
+
+    window.__vsHourToggle = function (day, isOpen) {
+      _fd.hours[day] = _fd.hours[day] || {};
+      _fd.hours[day].closed = !isOpen;
+      _renderMain();
+    };
+
+    window.__vsHourChange = function (day, field, val) {
+      _fd.hours[day] = _fd.hours[day] || {};
+      _fd.hours[day][field] = val;
+    };
+
+    window.__vsFdSet = function (key, val) { _fd[key] = val; };
+
+    window.__vsSvcChange = function (i, field, val) {
+      if (_fd.services[i]) _fd.services[i][field] = val;
+    };
+
+    window.__vsDelSvc = function (i) {
+      _fd.services.splice(i, 1);
+      _renderMain();
+    };
+
+    window.__vsAddSvc = function () {
+      var isFood = _fd.category === 'food';
+      _fd.services.push(isFood
+        ? { name: '', priceFrom: 0 }
+        : { name: '', priceFrom: 0, durationMins: 30 });
+      _renderMain();
+    };
+
+    window.__vsRunAI = function () {
+      _renderMain('loading');
+      // Pass setupCode: 'PENDING' so Normalizer doesn't see an empty string
+      var rawInput = Object.assign({}, _fd, { setupCode: 'PENDING' });
+      var normalized = VendorOnboarding.Normalizer.run(rawInput);
+      VendorOnboarding.AIGenerator.generate(normalized)
+        .then(function (ai) {
+          _aiOut  = ai;
+          _pubDoc = VendorOnboarding.assemble(rawInput, ai);
+          _pubDoc.setupCode = 'PENDING';
+          _renderMain('done');
+          _setNext(false);
+        })
+        .catch(function (err) {
+          console.warn('[VendorSignup] AI generation failed:', err);
+          _pubDoc = VendorOnboarding.assemble(rawInput, null);
+          _pubDoc.setupCode = 'PENDING';
+          _renderMain('fallback');
+          _setNext(false);
+        });
+    };
+
+    // ── RENDER MAIN ──────────────────────────────────────────
+    function _renderMain(aiStatus) {
+      var el = document.getElementById('vsMain');
+      if (!el) return;
+      switch (_step) {
+        case 0: el.innerHTML = _renderStep0(); break;
+        case 1: el.innerHTML = _renderStep1(); break;
+        case 2: el.innerHTML = _renderStep2(); break;
+        case 3: el.innerHTML = _renderStep3(); break;
+        case 4: el.innerHTML = _renderStep4(); break;
+        case 5: el.innerHTML = _renderStep5(); break;
+        case 6: el.innerHTML = _renderStep6(aiStatus || null); break;
+      }
+      _updateProgress();
+      _updateFooter();
+    }
+
+    // ── PROGRESS ─────────────────────────────────────────────
+    function _updateProgress() {
+      var fill = document.getElementById('vsProgressFill');
+      if (fill) fill.style.width = Math.round((_step / (STEPS.length - 1)) * 100) + '%';
+
+      var dots = document.getElementById('vsStepDots');
+      if (!dots) return;
+      dots.innerHTML = STEPS.map(function (s, i) {
+        var cls = 'vob-step-dot';
+        if (i < _step)        cls += ' vob-step-dot--done';
+        else if (i === _step) cls += ' vob-step-dot--active';
+        return '<div class="' + cls + '" title="' + s.title + '">' + s.icon + '</div>';
+      }).join('');
+    }
+
+    // ── FOOTER ────────────────────────────────────────────────
+    function _updateFooter() {
+      var prevBtn = document.getElementById('vsPrev');
+      var nextBtn = document.getElementById('vsNext');
+      var stepLbl = document.getElementById('vsStepLabel');
+      var footer  = document.getElementById('vsFooter');
+      if (!prevBtn || !nextBtn || !footer) return;
+
+      if (_done) { footer.style.display = 'none'; return; }
+
+      footer.style.display = '';
+      prevBtn.disabled = (_step === 0);
+      if (stepLbl) stepLbl.textContent = 'Step ' + (_step + 1) + ' of ' + STEPS.length;
+
+      if (_step === STEPS.length - 1) {
+        nextBtn.textContent = 'Submit for Review';
+        nextBtn.disabled    = !_pubDoc;
+      } else {
+        nextBtn.textContent = 'Continue →';
+        nextBtn.disabled    = false;
+      }
+    }
+
+    function _setNext(disabled) {
+      var btn = document.getElementById('vsNext');
+      if (btn) btn.disabled = disabled;
+    }
+
+    // ── VALIDATION ────────────────────────────────────────────
+    function _validateStep() {
+      switch (_step) {
+        case 0:
+          if (!_fd.category) { alert('Please select a category.'); return false; }
+          return true;
+        case 1:
+          if (!_fd.name.trim())  { _focusField('name');  return false; }
+          if (!_fd.phone.trim()) { _focusField('phone'); return false; }
+          if (!_fd.email.trim()) { _focusField('email'); return false; }
+          return true;
+        case 2:
+          if (!_fd.city.trim()) { _focusField('city'); return false; }
+          return true;
+        default:
+          return true;
+      }
+    }
+
+    function _focusField(name) {
+      var el = document.querySelector('[onchange*="__vsFdSet(\'' + name + '\'"]');
+      if (!el) el = document.querySelector('[name="' + name + '"]');
+      if (el) { el.focus(); el.style.borderColor = '#f87171'; }
+    }
+
+    // ── GATHER DOM VALUES ────────────────────────────────────
+    function _gatherStep() {
+      var getVal = function (sel) {
+        var el = document.querySelector(sel);
+        return el ? el.value : '';
+      };
+      switch (_step) {
+        case 1:
+          _fd.name      = getVal('input[onchange*="__vsFdSet(\'name\'"]')      || _fd.name;
+          _fd.ownerName = getVal('input[onchange*="__vsFdSet(\'ownerName\'"]') || _fd.ownerName;
+          _fd.phone     = getVal('input[onchange*="__vsFdSet(\'phone\'"]')     || _fd.phone;
+          _fd.email     = getVal('input[onchange*="__vsFdSet(\'email\'"]')     || _fd.email;
+          _fd.website   = getVal('input[onchange*="__vsFdSet(\'website\'"]')   || _fd.website;
+          break;
+        case 2:
+          _fd.address = getVal('input[onchange*="__vsFdSet(\'address\'"]') || _fd.address;
+          _fd.city    = getVal('input[onchange*="__vsFdSet(\'city\'"]')    || _fd.city;
+          _fd.zip     = getVal('input[onchange*="__vsFdSet(\'zip\'"]')     || _fd.zip;
+          break;
+        case 5:
+          _fd.aiNotes      = getVal('textarea') || _fd.aiNotes;
+          _fd.cancelPolicy = getVal('input[onchange*="__vsFdSet(\'cancelPolicy\'"]') || _fd.cancelPolicy;
+          var ltEl = document.querySelector('input[onchange*="__vsFdSet(\'leadTimeMins\'"]');
+          if (ltEl) _fd.leadTimeMins = +ltEl.value || 60;
+          break;
+      }
+    }
+
+    // ── NAVIGATE ─────────────────────────────────────────────
+    function _next() {
+      if (_done) return;
+      _gatherStep();
+      if (!_validateStep()) return;
+
+      if (_step === STEPS.length - 1) {
+        _submit();
+        return;
+      }
+
+      _step++;
+
+      // Entering the preview step — kick off AI generation
+      if (_step === STEPS.length - 1) {
+        _renderMain(null);
+        _setNext(true);
+        window.__vsRunAI();
+        return;
+      }
+
+      _renderMain();
+    }
+
+    function _prev() {
+      if (_step > 0) { _step--; _renderMain(); }
+    }
+
+    // ── SUBMIT ────────────────────────────────────────────────
+    function _submit() {
+      if (!_pubDoc) return;
+
+      var nextBtn = document.getElementById('vsNext');
+      if (nextBtn) { nextBtn.disabled = true; nextBtn.textContent = 'Submitting…'; }
+
+      VendorOnboarding.Publisher.saveSignup(_pubDoc, _plan)
+        .then(function (result) {
+          _done = true;
+          document.getElementById('vsMain').innerHTML = _renderDone(_pubDoc.id);
+          document.getElementById('vsFooter').style.display = 'none';
+        })
+        .catch(function (err) {
+          if (nextBtn) { nextBtn.disabled = false; nextBtn.textContent = 'Submit for Review'; }
+          alert('Submission failed: ' + (err.message || err));
+        });
+    }
+
+    // ── FIELD HELPER ─────────────────────────────────────────
+    function _field(label, key, attrs, placeholder, required) {
+      var req = required ? '<span>*</span>' : '';
+      var val = _fd[key] || '';
+      return '<div class="vob-field">' +
+        '<label class="vob-label">' + label + req + '</label>' +
+        '<input class="vob-input" ' + (attrs || '') +
+          ' placeholder="' + (placeholder || '') + '"' +
+          ' value="' + _esc(val) + '"' +
+          ' onchange="__vsFdSet(\'' + key + '\',this.value)">' +
+      '</div>';
+    }
+
+    function _esc(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    // ── BOOT — anonymous auth ─────────────────────────────────
+    function _boot() {
+      var planBadge = document.getElementById('vsPlanBadge');
+      if (planBadge) planBadge.textContent = PLAN_LABELS[_plan] || '';
+
+      var prevBtn = document.getElementById('vsPrev');
+      var nextBtn = document.getElementById('vsNext');
+      if (prevBtn) prevBtn.addEventListener('click', _prev);
+      if (nextBtn) nextBtn.addEventListener('click', _next);
+
+      _renderMain();
+    }
+
+    firebase.auth().onAuthStateChanged(function (user) {
+      var gate = document.getElementById('vsAuthGate');
+      var app  = document.getElementById('vsApp');
+
+      if (user) {
+        // Authenticated (anonymous or otherwise) — show the wizard
+        if (gate) gate.style.display = 'none';
+        if (app)  app.removeAttribute('hidden');
+        _boot();
+      } else {
+        // Not signed in — sign in anonymously (provides auth token for aiProxy)
+        firebase.auth().signInAnonymously().catch(function (err) {
+          console.warn('[VendorSignup] Anonymous sign-in failed:', err);
+          if (gate) gate.innerHTML =
+            '<div class="vob-auth-gate__inner">' +
+              '<div class="vob-auth-gate__logo">Du Lịch Cali</div>' +
+              '<p style="color:#f87171;font-size:.88rem;margin-bottom:.5rem">Unable to initialize. Please refresh the page.</p>' +
+              '<p style="font-size:.8rem">Or call <a href="tel:+14089163439" style="color:var(--gold,#f5a623)">(408) 916-3439</a> and we\'ll set you up directly.</p>' +
+            '</div>';
+        });
+      }
+    });
+
+  })();
+  </script>
+
+</body>
+</html>

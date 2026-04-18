@@ -128,9 +128,9 @@
     var overlay = document.getElementById('vsub-confirm');
     if (overlay) {
       overlay.style.display = 'flex';
-      // Trap focus inside overlay for accessibility
-      var firstBtn = overlay.querySelector('a, button');
-      if (firstBtn) firstBtn.focus();
+      // Move focus into dialog for keyboard/screen reader accessibility
+      var dialogEl = overlay.querySelector('[tabindex="-1"]');
+      if (dialogEl) dialogEl.focus();
     }
   }
 

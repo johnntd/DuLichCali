@@ -176,7 +176,7 @@
     aria-labelledby="vsub-plans-label"
   >
     <h2 id="vsub-plans-label" class="visually-hidden">Available plans</h2>
-    <div class="vpp-cards" id="vsub-cards" role="list" aria-label="Subscription plans"></div>
+    <div class="vpp-cards" id="vsub-cards" role="list"></div>
   </section>
 
 
@@ -200,13 +200,13 @@
   <!-- ═══════════════════════════════════════════════════
        CONFIRMATION OVERLAY
        ═══════════════════════════════════════════════════ -->
-  <div class="vsub-overlay" id="vsub-confirm" role="dialog" aria-modal="true" aria-labelledby="vsub-confirm-plan">
-    <div class="vsub-confirm">
+  <div class="vsub-overlay" id="vsub-confirm" role="dialog" aria-modal="true" aria-labelledby="vsub-confirm-plan" aria-describedby="vsub-confirm-desc">
+    <div class="vsub-confirm" tabindex="-1">
       <span class="vsub-confirm__icon" aria-hidden="true">✅</span>
 
       <div class="vsub-confirm__plan" id="vsub-confirm-plan">Growth Plan — $79/month</div>
 
-      <p class="vsub-confirm__body">
+      <p class="vsub-confirm__body" id="vsub-confirm-desc">
         Great choice! Our team will contact you within
         <strong>24 hours</strong> to activate your subscription.
         No payment is collected until you confirm with us directly.

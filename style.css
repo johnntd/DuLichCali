@@ -186,7 +186,7 @@ button { cursor: pointer; font-family: var(--font-b); }
 }
 .screen--active { opacity: 1; pointer-events: auto; }
 .screen--chat  { overflow: hidden; }   /* chat manages its own scroll internally */
-.screen-spacer { height: 1rem; }
+.screen-spacer { height: 2rem; }
 
 /* ── Site Footer (Privacy / Terms strip above bottom nav) ───── */
 .site-footer {
@@ -194,8 +194,10 @@ button { cursor: pointer; font-family: var(--font-b); }
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
   gap: .6rem;
-  height: 26px;
+  min-height: 44px;
+  padding: 0 0.75rem;
   background: rgba(10,35,60,.92);
   border-top: 1px solid rgba(255,255,255,0.07);
   font-size: .75rem;

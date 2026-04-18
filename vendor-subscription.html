@@ -124,11 +124,11 @@
        PAGE HEADER
        ═══════════════════════════════════════════════════ -->
   <header class="vsub-header">
-    <div class="vpp-eyebrow">Platform Plans</div>
-    <h1 class="vsub-header__h1">
+    <div class="vpp-eyebrow" id="vsub-eyebrow">Platform Plans</div>
+    <h1 class="vsub-header__h1" id="vsub-h1">
       Choose Your Plan
     </h1>
-    <p class="vsub-header__sub">
+    <p class="vsub-header__sub" id="vsub-sub">
       Subscribe to the plan that fits your business.
       Start with Starter and upgrade anytime — no lock-in, cancel anytime.
     </p>
@@ -144,6 +144,9 @@
     aria-labelledby="vsub-plans-label"
   >
     <h2 id="vsub-plans-label" class="visually-hidden">Available plans</h2>
+    <div id="vsub-plans-heading" class="vpp-section-hd" style="padding-bottom:0;margin-bottom:1.5rem">
+      <h2 id="vsub-plans-visible" style="font-family:var(--font-b);font-size:1.1rem;font-weight:600;color:var(--cream);margin:0">Available plans</h2>
+    </div>
     <div class="vpp-cards" id="vsub-cards" role="list"></div>
   </section>
 
@@ -154,8 +157,8 @@
   <div style="padding:0 1.25rem">
     <div class="vsub-notice" role="note" aria-label="How onboarding works">
       <span class="vsub-notice__icon" aria-hidden="true">🚀</span>
-      <div class="vsub-notice__title">How It Works</div>
-      <p class="vsub-notice__body">
+      <div class="vsub-notice__title" id="vsub-notice-title">How It Works</div>
+      <p class="vsub-notice__body" id="vsub-notice-body">
         Click a plan to start your <strong style="color:var(--gold-lt)">AI-powered setup wizard</strong>.
         Tell us about your business — our AI builds your page in minutes.
         We review it and you're <strong style="color:var(--gold-lt)">live within 24 hours</strong>.
@@ -186,6 +189,6 @@
   </footer>
 
 
-  <script src="vendor-subscription.js?v=20260418b"></script>
+  <script src="vendor-subscription.js?v=20260418c"></script>
 </body>
 </html>

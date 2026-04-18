@@ -19,6 +19,12 @@
   // ── i18n strings ──────────────────────────────────────────
   var T = {
     en: {
+      eyebrow:      'Platform Plans',
+      h1:           'Choose Your Plan',
+      sub:          'Subscribe to the plan that fits your business. Start with Starter and upgrade anytime — no lock-in, cancel anytime.',
+      availPlans:   'Available plans',
+      howTitle:     'How It Works',
+      howBody:      'Click a plan to start your <strong style="color:var(--gold-lt)">AI-powered setup wizard</strong>. Tell us about your business — our AI builds your page in minutes. We review it and you\'re <strong style="color:var(--gold-lt)">live within 24 hours</strong>. No payment collected until your page is approved. Questions? Call <a href="tel:+14089163439" style="color:var(--gold-lt)">(408) 916-3439</a>.',
       choosePlan:   'Choose This Plan',
       noSetup:      'No setup fee · Cancel anytime',
       mostPopular:  'Most Popular',
@@ -81,6 +87,12 @@
     },
 
     vi: {
+      eyebrow:      'Gói Dịch Vụ',
+      h1:           'Chọn Gói Của Bạn',
+      sub:          'Đăng ký gói phù hợp với doanh nghiệp của bạn. Bắt đầu với Khởi Đầu và nâng cấp bất cứ lúc nào — không ràng buộc, hủy bất cứ lúc nào.',
+      availPlans:   'Các gói có sẵn',
+      howTitle:     'Cách Thức Hoạt Động',
+      howBody:      'Chọn một gói để bắt đầu <strong style="color:var(--gold-lt)">trình hướng dẫn AI</strong>. Cho chúng tôi biết về doanh nghiệp của bạn — AI sẽ xây dựng trang của bạn trong vài phút. Chúng tôi xem xét và bạn <strong style="color:var(--gold-lt)">ra mắt trong 24 giờ</strong>. Không thu tiền cho đến khi trang được duyệt. Liên hệ: <a href="tel:+14089163439" style="color:var(--gold-lt)">(408) 916-3439</a>.',
       choosePlan:   'Chọn Gói Này',
       noSetup:      'Không phí cài đặt · Hủy bất cứ lúc nào',
       mostPopular:  'Phổ Biến Nhất',
@@ -143,6 +155,12 @@
     },
 
     es: {
+      eyebrow:      'Planes de Plataforma',
+      h1:           'Elige Tu Plan',
+      sub:          'Suscríbete al plan que se adapta a tu negocio. Empieza con Básico y actualiza cuando quieras — sin compromiso, cancela cuando quieras.',
+      availPlans:   'Planes disponibles',
+      howTitle:     'Cómo Funciona',
+      howBody:      'Elige un plan para iniciar tu <strong style="color:var(--gold-lt)">asistente de configuración AI</strong>. Cuéntanos sobre tu negocio — nuestra AI crea tu página en minutos. La revisamos y estás <strong style="color:var(--gold-lt)">en línea en 24 horas</strong>. Sin cobro hasta que tu página sea aprobada. ¿Preguntas? Llama al <a href="tel:+14089163439" style="color:var(--gold-lt)">(408) 916-3439</a>.',
       choosePlan:   'Elegir Este Plan',
       noSetup:      'Sin tarifa de configuración · Cancela cuando quieras',
       mostPopular:  'Más Popular',
@@ -263,8 +281,24 @@
 
   // ── Mount ─────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function () {
-    var el = document.getElementById('vsub-cards');
-    if (el) el.innerHTML = LOCALE.plans.map(_renderCard).join('');
+    // Patch static page text
+    var patches = {
+      'vsub-eyebrow':      { prop: 'textContent', val: LOCALE.eyebrow    },
+      'vsub-h1':           { prop: 'textContent', val: LOCALE.h1         },
+      'vsub-sub':          { prop: 'textContent', val: LOCALE.sub        },
+      'vsub-plans-label':  { prop: 'textContent', val: LOCALE.availPlans },
+      'vsub-plans-visible':{ prop: 'textContent', val: LOCALE.availPlans },
+      'vsub-notice-title': { prop: 'textContent', val: LOCALE.howTitle   },
+      'vsub-notice-body':  { prop: 'innerHTML',   val: LOCALE.howBody    },
+    };
+    Object.keys(patches).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el[patches[id].prop] = patches[id].val;
+    });
+
+    // Render plan cards
+    var cards = document.getElementById('vsub-cards');
+    if (cards) cards.innerHTML = LOCALE.plans.map(_renderCard).join('');
   });
 
   // ── Public API ────────────────────────────────────────────

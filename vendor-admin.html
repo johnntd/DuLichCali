@@ -867,6 +867,8 @@
     .np-content { flex: 1; min-width: 0; }
     .np-title { font-size: .78rem; font-weight: 700; color: var(--gold); margin-bottom: .08rem; }
     .np-msg { font-size: .72rem; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .np-detail-row { display: flex; justify-content: space-between; align-items: baseline; font-size: .72rem; line-height: 1.5; gap: .5rem; }
+    .np-detail-lbl { color: rgba(255,255,255,.45); flex-shrink: 0; font-weight: 600; font-size: .64rem; text-transform: uppercase; letter-spacing: .05em; }
     .np-view {
       height: 32px; padding: 0 .7rem; flex-shrink: 0;
       background: var(--gold); color: var(--navy-900);
@@ -1611,6 +1613,10 @@
       <!-- SMS notification card -->
       <div class="va-cap-card">
         <div class="va-cap-card__title" data-i18n="sms_title">📱 SMS Notifications</div>
+        <!-- SMS temporarily offline notice — remove when SMS_ENABLED=true in Cloud Functions -->
+        <div style="background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.35);border-radius:6px;padding:.45rem .7rem;margin-bottom:.8rem;font-size:.78rem;color:#f5a623;line-height:1.4">
+          ⚠️ SMS notifications are temporarily offline while we upgrade the messaging system. Your settings are saved and will activate automatically when SMS is restored.
+        </div>
         <div class="f-toggle-row" style="margin-bottom:.9rem">
           <span class="f-toggle-label" data-i18n="sms_toggle_label">Receive SMS for new orders</span>
           <div class="f-toggle" id="smsToggle" onclick="toggleSms()">
@@ -1692,6 +1698,7 @@
     <div class="np-content">
       <div class="np-title" id="popupTitle" data-i18n="popup_new_order">New Order!</div>
       <div class="np-msg" id="popupMsg"></div>
+      <div id="popupDetails" style="display:none;margin:.35rem 0;border-top:1px solid rgba(255,255,255,.08);padding-top:.4rem"></div>
       <div class="np-actions" id="popupActions"></div>
     </div>
     <button class="np-close" onclick="dismissPopup()">&#215;</button>
@@ -4524,7 +4531,27 @@
     var isQuestion = notif.type === 'buyer_question';
     document.getElementById('popupIcon').innerHTML = isQuestion ? '&#128172;' : '&#128276;';
     document.getElementById('popupTitle').textContent = notif.title   || (isQuestion ? _vlb('popup_question', 'Customer Question!') : _vlb('popup_new_order', 'New Order!'));
-    document.getElementById('popupMsg').textContent   = notif.message || '';
+    document.getElementById('popupMsg').textContent = notif.message || '';
+
+    // ── Structured booking details ─────────────────────────────────────────
+    var detailsEl = document.getElementById('popupDetails');
+    if (detailsEl) {
+      var rows = '';
+      if (notif.customerName)  rows += '<div class="np-detail-row"><span class="np-detail-lbl">Khách</span><span>' + esc(notif.customerName) + '</span></div>';
+      if (notif.customerPhone) rows += '<div class="np-detail-row"><span class="np-detail-lbl">SĐT</span><span>' + esc(notif.customerPhone) + '</span></div>';
+      if (notif.requestedDate) rows += '<div class="np-detail-row"><span class="np-detail-lbl">Ngày</span><span>' + esc(notif.requestedDate) + '</span></div>';
+      if (notif.quantity)      rows += '<div class="np-detail-row"><span class="np-detail-lbl">Số Lượng</span><span>' + esc(String(notif.quantity)) + '</span></div>';
+      if (notif.bookingId)     rows += '<div class="np-detail-row"><span class="np-detail-lbl">Mã</span><span style="font-family:monospace;font-size:.75rem;color:#f5a623">' + esc(notif.bookingId) + '</span></div>';
+      detailsEl.innerHTML = rows;
+      detailsEl.style.display = rows ? '' : 'none';
+    }
+
+    // Write viewedAt so we know the popup was seen (additive — does not affect read/acknowledged)
+    if (notif.id && vendorRef) {
+      vendorRef.collection('notifications').doc(notif.id).update({
+        viewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }).catch(function() {});
+    }
 
     // Build quick-action buttons
     var actionsHtml = '';
@@ -4547,6 +4574,14 @@
   function dismissPopup() {
     clearTimeout(_popupTimer);
     document.getElementById('notifPopup').classList.remove('show');
+    // Write dismissed state — additive, does not affect read/acknowledged
+    if (_currentPopupNotif && _currentPopupNotif.id && vendorRef) {
+      vendorRef.collection('notifications').doc(_currentPopupNotif.id).update({
+        dismissed:   true,
+        dismissedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }).catch(function() {});
+    }
+    _currentPopupNotif = null;
   }
 
   function openNotifTab() {

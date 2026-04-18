@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Choose Your Plan — Du Lịch Cali</title>
+  <meta name="description" content="Subscribe to the Du Lịch Cali vendor platform. Choose Starter, Growth, or Pro — starting at $39/month.">
+  <link rel="icon" href="/favicon.ico">
+
+  <!-- Fonts (same stack as vendor-pricing.html) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,300;0,6..96,400;1,6..96,300;1,6..96,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Design system + existing plan-card styles — no new CSS file needed -->
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="vendor-pricing.css?v=20260414a">
+
+  <!-- Page-specific overrides (minimal — cards handled by vendor-pricing.css) -->
+  <style>
+    /* ── Subscription nav (simpler than marketing nav) ───── */
+    .vsub-nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: var(--z-nav);
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.25rem;
+      background: rgba(13,47,80,.97);
+      backdrop-filter: blur(18px) saturate(160%);
+      -webkit-backdrop-filter: blur(18px) saturate(160%);
+      border-bottom: 1px solid var(--border-g);
+    }
+
+    .vsub-nav__logo {
+      font-family: var(--font-d);
+      font-size: 1.15rem;
+      font-weight: 400;
+      color: var(--cream);
+      text-decoration: none;
+      letter-spacing: .02em;
+    }
+
+    /* ── Page header ──────────────────────────────────────── */
+    .vsub-header {
+      padding: 110px 1.25rem 3rem;
+      text-align: center;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .vsub-header__h1 {
+      font-family: var(--font-d);
+      font-size: clamp(2rem, 8vw, 3.5rem);
+      font-weight: 400;
+      color: var(--cream);
+      line-height: 1.08;
+      margin: 0 0 .85rem;
+      letter-spacing: -.025em;
+    }
+
+    .vsub-header__sub {
+      font-size: clamp(.88rem, 2.5vw, 1.05rem);
+      color: var(--muted);
+      line-height: 1.65;
+      font-weight: 300;
+      margin: 0;
+    }
+
+    /* ── Payment notice below cards ──────────────────────── */
+    .vsub-notice {
+      max-width: 600px;
+      margin: 2.5rem auto 4rem;
+      padding: 1.25rem 1.5rem;
+      background: rgba(245,166,35,.07);
+      border: 1px solid rgba(245,166,35,.28);
+      border-radius: 14px;
+      text-align: center;
+    }
+
+    .vsub-notice__icon {
+      font-size: 1.5rem;
+      margin-bottom: .5rem;
+      display: block;
+    }
+
+    .vsub-notice__title {
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--gold-lt);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: .45rem;
+    }
+
+    .vsub-notice__body {
+      font-size: .82rem;
+      color: var(--text);
+      line-height: 1.65;
+      margin: 0;
+    }
+
+    /* ── Confirmation overlay ─────────────────────────────── */
+    .vsub-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .72);
+      z-index: 9999;
+      display: none;           /* shown by vsub.select() */
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .vsub-confirm {
+      background: var(--navy-800);
+      border: 1.5px solid var(--border-g);
+      border-radius: 20px;
+      padding: 2rem 1.5rem 1.75rem;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+    }
+
+    .vsub-confirm__icon   { font-size: 2.5rem; margin-bottom: .75rem; display: block; }
+    .vsub-confirm__plan   { font-family: var(--font-d); font-size: 1.45rem; font-weight: 400; color: var(--cream); margin-bottom: .6rem; }
+    .vsub-confirm__body   { font-size: .86rem; color: var(--text); line-height: 1.65; margin-bottom: 1.5rem; }
+    .vsub-confirm__body strong { color: var(--gold); }
+    .vsub-confirm__call   { display: flex; align-items: center; justify-content: center; height: 50px; border-radius: var(--r-pill); background: linear-gradient(105deg,var(--coral) 0%,var(--sunset) 50%,var(--gold-lt) 100%); color: var(--navy-900); font-weight: 700; font-size: .88rem; letter-spacing: .05em; text-decoration: none; width: 100%; margin-bottom: .65rem; transition: filter .2s; }
+    .vsub-confirm__call:hover { filter: brightness(1.07); }
+    .vsub-confirm__close  { background: none; border: 1px solid rgba(255,255,255,.18); border-radius: var(--r-pill); color: var(--muted); font-size: .8rem; font-weight: 500; cursor: pointer; width: 100%; height: 40px; transition: border-color .15s, color .15s; }
+    .vsub-confirm__close:hover { border-color: rgba(255,255,255,.38); color: var(--cream); }
+
+    /* Override vpp-plan-cta to use <button> — vendor-pricing.css sizes <a> by default */
+    .vsub-cta { width: 100%; }
+  </style>
+</head>
+
+<body class="vpp-body">
+
+  <!-- ═══════════════════════════════════════════════════
+       NAV
+       ═══════════════════════════════════════════════════ -->
+  <nav class="vsub-nav" aria-label="Page navigation">
+    <a href="/" class="vsub-nav__logo">Du Lịch Cali</a>
+    <a href="/vendor-admin" class="vpp-btn vpp-btn--ghost vpp-btn--sm">
+      ← Back to Admin
+    </a>
+  </nav>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       PAGE HEADER
+       ═══════════════════════════════════════════════════ -->
+  <header class="vsub-header">
+    <div class="vpp-eyebrow">Platform Plans</div>
+    <h1 class="vsub-header__h1">
+      Choose Your Plan
+    </h1>
+    <p class="vsub-header__sub">
+      Subscribe to the plan that fits your business.
+      Start with Starter and upgrade anytime — no lock-in, cancel anytime.
+    </p>
+  </header>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       PLAN CARDS (rendered by vendor-subscription.js)
+       ═══════════════════════════════════════════════════ -->
+  <section
+    class="vpp-section vpp-pricing"
+    style="padding-top:0"
+    aria-labelledby="vsub-plans-label"
+  >
+    <h2 id="vsub-plans-label" class="visually-hidden">Available plans</h2>
+    <div class="vpp-cards" id="vsub-cards" role="list" aria-label="Subscription plans"></div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       PAYMENT NOTICE (honest — no fake payment)
+       ═══════════════════════════════════════════════════ -->
+  <div style="padding:0 1.25rem">
+    <div class="vsub-notice" role="note" aria-label="How subscription setup works">
+      <span class="vsub-notice__icon" aria-hidden="true">ℹ️</span>
+      <div class="vsub-notice__title">How It Works</div>
+      <p class="vsub-notice__body">
+        Online billing is being set up. When you click <strong style="color:var(--gold-lt)">"Choose This Plan"</strong>,
+        our team will contact you within <strong style="color:var(--gold-lt)">24 hours</strong>
+        to complete your subscription. No payment is collected until you confirm.
+        Questions? Call <a href="tel:+14089163439" style="color:var(--gold-lt)">(408) 916-3439</a>.
+      </p>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       CONFIRMATION OVERLAY
+       ═══════════════════════════════════════════════════ -->
+  <div class="vsub-overlay" id="vsub-confirm" role="dialog" aria-modal="true" aria-labelledby="vsub-confirm-plan">
+    <div class="vsub-confirm">
+      <span class="vsub-confirm__icon" aria-hidden="true">✅</span>
+
+      <div class="vsub-confirm__plan" id="vsub-confirm-plan">Growth Plan — $79/month</div>
+
+      <p class="vsub-confirm__body">
+        Great choice! Our team will contact you within
+        <strong>24 hours</strong> to activate your subscription.
+        No payment is collected until you confirm with us directly.
+      </p>
+
+      <a href="tel:+14089163439" class="vsub-confirm__call" onclick="vsub.dismiss()">
+        📞 Call Us — (408) 916-3439
+      </a>
+
+      <button class="vsub-confirm__close" onclick="vsub.dismiss()">
+        Close
+      </button>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════════ -->
+  <footer class="vpp-footer">
+    <div class="vpp-footer__inner">
+      <div class="vpp-footer__brand">
+        <span class="vpp-footer__logo">Du Lịch Cali</span>
+        <p class="vpp-footer__tag">AI-powered booking for local businesses</p>
+      </div>
+      <nav class="vpp-footer__links" aria-label="Footer links">
+        <a href="/">Home</a>
+        <a href="/pricing">View All Plans</a>
+        <a href="/vendor-admin">Vendor Admin</a>
+        <a href="tel:+14089163439">(408) 916-3439</a>
+      </nav>
+      <p class="vpp-footer__copy">&copy; 2026 Du Lịch Cali. All rights reserved.</p>
+    </div>
+  </footer>
+
+
+  <script src="vendor-subscription.js?v=20260418a"></script>
+</body>
+</html>

@@ -167,13 +167,16 @@ service cloud.firestore {
       allow write: if false; // seeded server-side only
     }
 
-    // ── Vendor self-serve signups — auth create/read (anonymous auth qualifies) ──
-    // Vendors sign in anonymously and submit here. Admin reads/updates to approve.
-    // Clients cannot delete or overwrite an approved submission.
+    // ── Vendor self-serve signups ──────────────────────────────────────────────
+    // Vendors sign in anonymously to create submissions (anonymous auth qualifies).
+    // Only non-anonymous (admin) accounts can update submissions (approve/reject).
+    // Reads are open to any authenticated user (admin queries the full collection).
+    // No one can delete submissions — they are permanent records.
     match /vendor_signups/{signupId} {
       allow create: if request.auth != null;
       allow read:   if request.auth != null;
-      allow update: if request.auth != null;
+      allow update: if request.auth != null
+                 && request.auth.token.firebase.sign_in_provider != 'anonymous';
       allow delete: if false;
     }
 

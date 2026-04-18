@@ -1919,13 +1919,15 @@
     }
 
     function _renderSignupCard(signupId, d) {
+      const safeIdAttr = escHtml(signupId); // safe for HTML attributes (double-quoted)
+      const safeIdJs   = safeIdAttr.replace(/'/g, '&#x27;'); // safe for JS string (single-quoted)
       const planLabels = { starter: 'Starter $39/mo', growth: 'Growth $79/mo', pro: 'Pro $129/mo' };
       const plan = planLabels[d.plan] || d.plan || '—';
       const submittedStr = d.submittedAt && d.submittedAt.toDate ? d.submittedAt.toDate().toLocaleDateString() : '—';
       const sf = d.storefront || {};
       const aiCtx = d.aiContext || {};
       const services = Array.isArray(d.services) ? d.services : [];
-      return '<div class="vendor-card" id="sig-' + escHtml(signupId) + '" style="border-color:rgba(245,166,35,.45);margin-bottom:.5rem">' +
+      return '<div class="vendor-card" id="sig-' + safeIdAttr + '" style="border-color:rgba(245,166,35,.45);margin-bottom:.5rem">' +
         '<div class="vendor-card__main">' +
           '<div class="vendor-card__info">' +
             '<div class="vendor-card__name">📝 ' + escHtml(d.name || d.businessName || signupId) + '</div>' +
@@ -1934,18 +1936,18 @@
             '<div class="vendor-card__meta" style="font-size:.65rem;color:var(--muted)">Submitted: ' + submittedStr + ' · ID: <code>' + escHtml(d.id || signupId) + '</code></div>' +
           '</div>' +
           '<div class="vendor-card__actions">' +
-            '<button class="btn-vend" onclick="toggleSignupDetails(\'' + escHtml(signupId) + '\')">👁 Review</button>' +
-            '<button class="btn-vend success" onclick="approveSubmission(\'' + escHtml(signupId) + '\')">✓ Approve &amp; Go Live</button>' +
-            '<button class="btn-vend danger" onclick="rejectSubmission(\'' + escHtml(signupId) + '\')">Reject</button>' +
+            '<button class="btn-vend" onclick="toggleSignupDetails(\'' + safeIdJs + '\')">👁 Review</button>' +
+            '<button class="btn-vend success" onclick="approveSubmission(\'' + safeIdJs + '\')">✓ Approve &amp; Go Live</button>' +
+            '<button class="btn-vend danger" onclick="rejectSubmission(\'' + safeIdJs + '\')">Reject</button>' +
           '</div>' +
         '</div>' +
-        '<div id="sig-details-' + escHtml(signupId) + '" style="display:none;padding:.75rem 1rem;border-top:1px solid rgba(255,255,255,.06);font-size:.8rem;color:var(--text)">' +
+        '<div id="sig-details-' + safeIdAttr + '" style="display:none;padding:.75rem 1rem;border-top:1px solid rgba(255,255,255,.06);font-size:.8rem;color:var(--text)">' +
           '<p><strong>Tagline:</strong> ' + escHtml(d.tagline || '—') + '</p>' +
           '<p><strong>Short description:</strong> ' + escHtml(sf.shortDescription || '—') + '</p>' +
           '<p><strong>Address:</strong> ' + escHtml(d.address || '—') + ', ' + escHtml(d.city || '') + '</p>' +
           '<p><strong>Services (' + services.length + '):</strong> ' + escHtml(services.slice(0,4).map(s=>s.name).join(', ') || '—') + '</p>' +
           '<p><strong>AI greeting:</strong> ' + escHtml(aiCtx.greeting || '—') + '</p>' +
-          '<div id="sig-msg-' + escHtml(signupId) + '" style="margin-top:.5rem"></div>' +
+          '<div id="sig-msg-' + safeIdAttr + '" style="margin-top:.5rem"></div>' +
         '</div>' +
       '</div>';
     }
@@ -1964,6 +1966,9 @@
         if (!signupSnap.exists) throw new Error('Submission not found.');
         const d = signupSnap.data();
         const id = d.id || signupId;
+        if (!/^[a-z0-9_-]{3,80}$/i.test(id)) {
+          throw new Error('Invalid vendor ID format: "' + escHtml(id) + '". Contact support.');
+        }
         const pin = String(Math.floor(100000 + Math.random() * 900000));
         const ts = firebase.firestore.FieldValue.serverTimestamp();
 

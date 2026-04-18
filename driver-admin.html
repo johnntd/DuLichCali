@@ -1879,7 +1879,7 @@
         if (cnt) { cnt.textContent = active.length; cnt.classList.toggle('hidden', active.length === 0); }
         // ── Tour unread badge ─────────────────────────────────────────────
         if (typeof DLCNotif !== 'undefined') {
-          var unreadTours = snap.docs.filter(function(d) {
+          var unreadTours = active.filter(function(d) {
             return d.data().notif_status === 'new';
           }).length;
           DLCNotif.updateBadge(unreadTours);

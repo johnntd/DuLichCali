@@ -100,10 +100,11 @@
     };
 
     // ── State ────────────────────────────────────────────────
-    var _step   = 0;
-    var _done   = false;
-    var _aiOut  = null;
-    var _pubDoc = null;
+    var _step      = 0;
+    var _done      = false;
+    var _aiRunning = false;
+    var _aiOut     = null;
+    var _pubDoc    = null;
 
     // form data accumulates across steps
     var _fd = {
@@ -314,7 +315,7 @@
         '<div class="vob-field">' +
           '<label class="vob-label">What makes your business special?</label>' +
           '<textarea class="vob-textarea" rows="4" placeholder="e.g. Family-owned since 2010. We specialize in natural nail care and Vietnamese nail art. All services are vegan-friendly. Walk-ins welcome on weekdays..."' +
-            ' onchange="__vsFdSet(\'aiNotes\',this.value)">' + _esc(_fd.aiNotes) + '</textarea>' +
+            ' onchange="__vsFdSet(\'aiNotes\',this.value)">' + _esc(_fd.aiNotes).replace(/\//g, '&#x2F;') + '</textarea>' +
         '</div>' +
         '<div class="vob-field">' +
           '<label class="vob-label">Cancellation Policy</label>' +
@@ -447,12 +448,15 @@
     };
 
     window.__vsRunAI = function () {
+      if (_aiRunning) return;
+      _aiRunning = true;
       _renderMain('loading');
       // Pass setupCode: 'PENDING' so Normalizer doesn't see an empty string
       var rawInput = Object.assign({}, _fd, { setupCode: 'PENDING' });
       var normalized = VendorOnboarding.Normalizer.run(rawInput);
       VendorOnboarding.AIGenerator.generate(normalized)
         .then(function (ai) {
+          _aiRunning = false;
           _aiOut  = ai;
           _pubDoc = VendorOnboarding.assemble(rawInput, ai);
           _pubDoc.setupCode = 'PENDING';
@@ -460,6 +464,7 @@
           _setNext(false);
         })
         .catch(function (err) {
+          _aiRunning = false;
           console.warn('[VendorSignup] AI generation failed:', err);
           _pubDoc = VendorOnboarding.assemble(rawInput, null);
           _pubDoc.setupCode = 'PENDING';
@@ -619,7 +624,8 @@
       VendorOnboarding.Publisher.saveSignup(_pubDoc, _plan)
         .then(function (result) {
           _done = true;
-          document.getElementById('vsMain').innerHTML = _renderDone(_pubDoc.id);
+          var vendorId = (result && result.id) || _pubDoc.id || '';
+          document.getElementById('vsMain').innerHTML = _renderDone(vendorId);
           document.getElementById('vsFooter').style.display = 'none';
         })
         .catch(function (err) {

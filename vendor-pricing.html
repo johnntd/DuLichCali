@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing — Du Lịch Cali | Your 24/7 AI Receptionist</title>
+  <meta name="description" content="Simple pricing for your 24/7 AI receptionist. Book more appointments, take orders, and serve customers in 3 languages — even while you sleep. From $39/month. No setup fee.">
+  <link rel="icon" href="/favicon.ico">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,300;0,6..96,400;1,6..96,300;1,6..96,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Design system (CSS variables, shared utilities) -->
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="desktop.css">
+
+  <!-- Page-specific styles -->
+  <link rel="stylesheet" href="vendor-pricing.css?v=20260414a">
+</head>
+
+<body class="vpp-body">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       NAV
+       ═══════════════════════════════════════════════════════════ -->
+  <nav class="vpp-nav" id="vpp-nav" aria-label="Main navigation">
+    <a href="/" class="vpp-nav__logo">Du Lịch Cali</a>
+    <div class="vpp-nav__right">
+      <a href="#pricing" class="vpp-btn vpp-btn--ghost vpp-btn--sm vpp-nav__plans-link">
+        View Plans
+      </a>
+      <a href="/vendor-login.html" class="vpp-btn vpp-btn--gold vpp-btn--sm">
+        Start Free Trial
+      </a>
+    </div>
+  </nav>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       HERO
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="vpp-hero" id="hero">
+    <!-- Sentinel: when this leaves viewport the nav turns opaque -->
+    <div class="vpp-hero__sentinel" id="vpp-hero-sentinel" aria-hidden="true"></div>
+
+    <div class="vpp-hero__inner">
+      <!-- Eyebrow pill with live dot -->
+      <div class="vpp-hero__pill" aria-hidden="true">
+        <span class="vpp-hero__pill-dot"></span>
+        Your 24/7 AI Receptionist
+      </div>
+
+      <h1 class="vpp-hero__h1">
+        Never Miss a<br>
+        <em>Customer Again</em>
+      </h1>
+
+      <p class="vpp-hero__sub">
+        Your AI receptionist books appointments, takes orders, and answers customer
+        questions — even while you sleep. Works in Vietnamese, English, and Spanish.
+      </p>
+
+      <div class="vpp-hero__ctas">
+        <a href="/vendor-login.html" class="vpp-btn vpp-btn--gold vpp-btn--lg">
+          Start Free Trial
+        </a>
+        <a href="#how-it-works" class="vpp-btn vpp-btn--ghost vpp-btn--lg">
+          See How It Works
+        </a>
+      </div>
+
+      <div class="vpp-hero__trust" role="list" aria-label="Reassurance points">
+        <span role="listitem">No setup fee</span>
+        <span role="listitem">Cancel anytime</span>
+        <span role="listitem">Setup in minutes</span>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCROLLING PROOF BAR
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="vpp-marquee" aria-hidden="true">
+    <div class="vpp-marquee__track">
+      <!-- First set -->
+      <span class="vpp-marquee__item">📅 Automated bookings</span>
+      <span class="vpp-marquee__sep">·</span>
+      <span class="vpp-marquee__item">🌙 Works 24/7</span>
+      <span class="vpp-marquee__sep">·</span>
+      <span class="vpp-marquee__item">🌍 3 languages</span>
+      <span class="vpp-marquee__sep">·</span>
+      <span class="vpp-marquee__item">⚡ Instant replies</span>
+      <span class="vpp-marquee__sep">·</span>
+      <span class="vpp-marquee__item">🚫 Zero missed calls</span>
+      <span class="vpp-marquee__sep">·</span>
+      <span class="vpp-marquee__item">💰 Pays for itself</span>
+      <span class="vpp-marquee__sep">·</span>
+      <span class="vpp-marquee__item">📲 Less stress</span>
+      <span class="vpp-marquee__sep">·</span>
+      <span class="vpp-marquee__item">🤖 AI receptionist</span>
+      <span class="vpp-marquee__sep">·</span>
+      <!-- Duplicate set for seamless loop -->
+      <span class="vpp-marquee__item">📅 Automated bookings</span>
+      <span class="vpp-marquee__sep">·</span>
+      <span class="vpp-marquee__item">🌙 Works 24/7</span>
+      <span class="vpp-marquee__sep">·</span>
+      <span class="vpp-marquee__item">🌍 3 languages</span>
+      <span class="vpp-marquee__sep">·</span>
+      <span class="vpp-marquee__item">⚡ Instant replies</span>
+      <span class="vpp-marquee__sep">·</span>
+      <span class="vpp-marquee__item">🚫 Zero missed calls</span>
+      <span class="vpp-marquee__sep">·</span>
+      <span class="vpp-marquee__item">💰 Pays for itself</span>
+      <span class="vpp-marquee__sep">·</span>
+      <span class="vpp-marquee__item">📲 Less stress</span>
+      <span class="vpp-marquee__sep">·</span>
+      <span class="vpp-marquee__item">🤖 AI receptionist</span>
+      <span class="vpp-marquee__sep">·</span>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PRICING CARDS
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="vpp-section vpp-pricing" id="pricing" aria-labelledby="pricing-title">
+    <div class="vpp-section-hd">
+      <div class="vpp-eyebrow">Simple Pricing</div>
+      <h2 class="vpp-section-title" id="pricing-title">
+        One platform. Everything you need to grow.
+      </h2>
+      <p class="vpp-section-sub">
+        Start free. Upgrade when you're ready. Cancel anytime — no questions asked.
+      </p>
+    </div>
+
+    <!-- Rendered by vendor-pricing-page.js -->
+    <div class="vpp-cards" id="vpp-cards" role="list" aria-label="Pricing plans"></div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       ROI COMPARISON
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="vpp-section vpp-roi" id="how-it-works" aria-labelledby="roi-title">
+    <div class="vpp-section-hd">
+      <div class="vpp-eyebrow">The Math Is Simple</div>
+      <h2 class="vpp-section-title" id="roi-title">
+        One tool replaces everything
+      </h2>
+      <p class="vpp-section-sub">
+        Compare what you're spending now to what you could spend with DuLichCali.
+      </p>
+    </div>
+
+    <!-- Rendered by vendor-pricing-page.js -->
+    <div class="vpp-roi__grid" id="vpp-roi" role="list" aria-label="Cost comparison"></div>
+
+    <div class="vpp-roi__quote">
+      <blockquote>
+        Just one extra booking can pay for the month.
+      </blockquote>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       BENEFITS
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="vpp-section vpp-benefits" aria-labelledby="benefits-title">
+    <div class="vpp-section-hd">
+      <div class="vpp-eyebrow">What Your AI Does For You</div>
+      <h2 class="vpp-section-title" id="benefits-title">
+        Less stress. More customers.
+      </h2>
+      <p class="vpp-section-sub">
+        Your AI handles the repetitive stuff so you can focus on the work that actually grows your business.
+      </p>
+    </div>
+
+    <!-- Rendered by vendor-pricing-page.js -->
+    <div class="vpp-benefits__grid" id="vpp-benefits" role="list" aria-label="Platform benefits"></div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       USE CASES BY VENDOR TYPE
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="vpp-section vpp-usecases" aria-labelledby="usecases-title">
+    <div class="vpp-section-hd">
+      <div class="vpp-eyebrow">Built For Your Business</div>
+      <h2 class="vpp-section-title" id="usecases-title">
+        Designed for local service businesses
+      </h2>
+      <p class="vpp-section-sub">
+        Whether you run a nail salon, food business, or ride service — DuLichCali is built for how you actually work.
+      </p>
+    </div>
+
+    <!-- Rendered by vendor-pricing-page.js -->
+    <div class="vpp-usecases__grid" id="vpp-usecases" role="list" aria-label="Business use cases"></div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       FINAL CTA
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="vpp-cta-section" aria-labelledby="final-cta-title">
+    <div class="vpp-cta-section__inner">
+      <div class="vpp-eyebrow" style="color: var(--gold-lt);">Ready to grow?</div>
+
+      <h2 class="vpp-cta-section__h2" id="final-cta-title">
+        Start Getting More<br>Customers Today
+      </h2>
+
+      <p class="vpp-cta-section__sub">
+        Join vendors across California already using DuLichCali to automate their
+        bookings and never miss a customer again.
+      </p>
+
+      <a href="/vendor-login.html" class="vpp-btn vpp-btn--gold vpp-btn--xl">
+        Start Free Trial — It's Free
+      </a>
+
+      <div class="vpp-cta-section__trust">
+        <span>No setup fee</span>
+        <span>Cancel anytime</span>
+        <span>Setup in minutes</span>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════════════════ -->
+  <footer class="vpp-footer">
+    <div class="vpp-footer__inner">
+      <div class="vpp-footer__brand">
+        <span class="vpp-footer__logo">Du Lịch Cali</span>
+        <p class="vpp-footer__tag">AI-powered booking for local businesses</p>
+      </div>
+
+      <nav class="vpp-footer__links" aria-label="Footer links">
+        <a href="/">Home</a>
+        <a href="/airport.html">Airport &amp; Rides</a>
+        <a href="/marketplace/">Marketplace</a>
+        <a href="/nails.html">Nail Salons</a>
+        <a href="/food.html">Food Vendors</a>
+        <a href="tel:+14089163439">(408) 916-3439</a>
+        <a href="/vendor-subscription">Manage Plan</a>
+      </nav>
+
+      <p class="vpp-footer__copy">&copy; 2026 Du Lịch Cali. All rights reserved.</p>
+    </div>
+  </footer>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       STICKY MOBILE CTA (appears after hero scrolls out of view)
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="vpp-sticky" id="vpp-sticky" aria-hidden="true">
+    <div class="vpp-sticky__from">
+      From <span class="vpp-sticky__price">$39/month</span>
+    </div>
+    <a href="/vendor-login.html" class="vpp-btn vpp-btn--gold vpp-sticky__btn" tabindex="-1">
+      Start Free Trial
+    </a>
+  </div>
+
+
+  <!-- Data + rendering -->
+  <script src="vendor-pricing-page.js?v=20260414a"></script>
+</body>
+</html>

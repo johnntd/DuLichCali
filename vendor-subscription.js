@@ -9,68 +9,204 @@
 (function () {
   'use strict';
 
-  // ── Plan data ─────────────────────────────────────────────
-  // Prices: Starter $99 / Growth $199 / Pro $299
-  // Tier differentiator: notification channel
-  //   Starter  — app booking + in-app notifications only
-  //   Growth   — adds SMS (reminders + confirmations)
-  //   Pro      — adds AI phone receptionist (answers calls 24/7)
-  var PLANS = [
-    {
-      id:          'starter',
-      name:        'Starter',
-      price:       99,
-      description: 'App-based booking and notifications. Everything you need to get started.',
-      badge:       null,
-      highlighted: false,
-      features: [
-        { text: 'AI receptionist (24/7)',          included: true  },
-        { text: 'Online booking system',           included: true  },
-        { text: 'In-app notifications',            included: true  },
-        { text: 'Marketplace listing',             included: true  },
-        { text: 'Multi-language AI (VI/EN/ES)',    included: true  },
-        { text: 'Smart scheduling',                included: true  },
-        { text: 'SMS reminders & confirmations',   included: false },
-        { text: 'AI phone receptionist',           included: false },
+  // ── Language ──────────────────────────────────────────────
+  var _lang = 'en';
+  try {
+    var _stored = localStorage.getItem('dlcLang');
+    if (_stored && ['en','vi','es'].indexOf(_stored) !== -1) _lang = _stored;
+  } catch(e) {}
+
+  // ── i18n strings ──────────────────────────────────────────
+  var T = {
+    en: {
+      choosePlan:   'Choose This Plan',
+      noSetup:      'No setup fee · Cancel anytime',
+      mostPopular:  'Most Popular',
+      plans: [
+        {
+          id:          'starter',
+          name:        'Starter',
+          price:       99,
+          description: 'App-based booking and notifications. Everything you need to get started.',
+          badge:       null,
+          highlighted: false,
+          features: [
+            { text: 'AI receptionist (24/7)',          included: true  },
+            { text: 'Online booking system',           included: true  },
+            { text: 'In-app notifications',            included: true  },
+            { text: 'Marketplace listing',             included: true  },
+            { text: 'Multi-language AI (VI/EN/ES)',    included: true  },
+            { text: 'Smart scheduling',                included: true  },
+            { text: 'SMS reminders & confirmations',   included: false },
+            { text: 'AI phone receptionist',           included: false },
+          ],
+        },
+        {
+          id:          'growth',
+          name:        'Growth',
+          price:       199,
+          description: 'Adds SMS so customers get reminders and confirmations by text. Most popular.',
+          badge:       'Most Popular',
+          highlighted: true,
+          features: [
+            { text: 'Everything in Starter',           included: true  },
+            { text: 'SMS appointment reminders',       included: true  },
+            { text: 'SMS booking confirmations',       included: true  },
+            { text: 'No double-booking logic',         included: true  },
+            { text: 'AI upselling',                    included: true  },
+            { text: 'Priority support',                included: true  },
+            { text: 'Analytics dashboard',             included: true  },
+            { text: 'AI phone receptionist',           included: false },
+          ],
+        },
+        {
+          id:          'pro',
+          name:        'Pro',
+          price:       299,
+          description: 'Adds a 24/7 AI phone receptionist that answers calls and takes bookings for you.',
+          badge:       null,
+          highlighted: false,
+          features: [
+            { text: 'Everything in Growth',            included: true  },
+            { text: 'AI phone receptionist (24/7)',    included: true  },
+            { text: 'Answers & books by phone',        included: true  },
+            { text: 'Customer follow-up calls',        included: true  },
+            { text: 'Custom AI voice training',        included: true  },
+            { text: 'White-glove onboarding',          included: true  },
+            { text: 'Dedicated account manager',       included: true  },
+            { text: 'Advanced analytics',              included: true  },
+          ],
+        },
       ],
     },
-    {
-      id:          'growth',
-      name:        'Growth',
-      price:       199,
-      description: 'Adds SMS so customers get reminders and confirmations by text. Most popular.',
-      badge:       'Most Popular',
-      highlighted: true,
-      features: [
-        { text: 'Everything in Starter',           included: true  },
-        { text: 'SMS appointment reminders',       included: true  },
-        { text: 'SMS booking confirmations',       included: true  },
-        { text: 'No double-booking logic',         included: true  },
-        { text: 'AI upselling',                    included: true  },
-        { text: 'Priority support',                included: true  },
-        { text: 'Analytics dashboard',             included: true  },
-        { text: 'AI phone receptionist',           included: false },
+
+    vi: {
+      choosePlan:   'Chọn Gói Này',
+      noSetup:      'Không phí cài đặt · Hủy bất cứ lúc nào',
+      mostPopular:  'Phổ Biến Nhất',
+      plans: [
+        {
+          id:          'starter',
+          name:        'Khởi Đầu',
+          price:       99,
+          description: 'Đặt lịch và thông báo qua ứng dụng. Tất cả những gì bạn cần để bắt đầu.',
+          badge:       null,
+          highlighted: false,
+          features: [
+            { text: 'Lễ tân AI (24/7)',                    included: true  },
+            { text: 'Hệ thống đặt lịch trực tuyến',       included: true  },
+            { text: 'Thông báo trong ứng dụng',            included: true  },
+            { text: 'Niêm yết trên Marketplace',           included: true  },
+            { text: 'AI đa ngôn ngữ (VI/EN/ES)',           included: true  },
+            { text: 'Lên lịch thông minh',                 included: true  },
+            { text: 'Nhắc nhở & xác nhận qua SMS',         included: false },
+            { text: 'Lễ tân AI qua điện thoại',            included: false },
+          ],
+        },
+        {
+          id:          'growth',
+          name:        'Tăng Trưởng',
+          price:       199,
+          description: 'Thêm SMS để khách hàng nhận nhắc nhở và xác nhận qua tin nhắn. Phổ biến nhất.',
+          badge:       'Phổ Biến Nhất',
+          highlighted: true,
+          features: [
+            { text: 'Tất cả tính năng Khởi Đầu',           included: true  },
+            { text: 'Nhắc lịch hẹn qua SMS',               included: true  },
+            { text: 'Xác nhận đặt lịch qua SMS',           included: true  },
+            { text: 'Tự động tránh đặt trùng lịch',        included: true  },
+            { text: 'AI upselling tự động',                 included: true  },
+            { text: 'Hỗ trợ ưu tiên',                      included: true  },
+            { text: 'Bảng phân tích dữ liệu',              included: true  },
+            { text: 'Lễ tân AI qua điện thoại',            included: false },
+          ],
+        },
+        {
+          id:          'pro',
+          name:        'Chuyên Nghiệp',
+          price:       299,
+          description: 'Thêm lễ tân AI 24/7 qua điện thoại — tự động nghe máy và đặt lịch cho bạn.',
+          badge:       null,
+          highlighted: false,
+          features: [
+            { text: 'Tất cả tính năng Tăng Trưởng',        included: true  },
+            { text: 'Lễ tân AI qua điện thoại (24/7)',      included: true  },
+            { text: 'Nghe máy & đặt lịch tự động',         included: true  },
+            { text: 'Gọi theo dõi khách hàng',             included: true  },
+            { text: 'Huấn luyện giọng AI riêng',           included: true  },
+            { text: 'Hỗ trợ onboarding tận tay',           included: true  },
+            { text: 'Quản lý tài khoản chuyên biệt',       included: true  },
+            { text: 'Phân tích nâng cao',                  included: true  },
+          ],
+        },
       ],
     },
-    {
-      id:          'pro',
-      name:        'Pro',
-      price:       299,
-      description: 'Adds a 24/7 AI phone receptionist that answers calls and takes bookings for you.',
-      badge:       null,
-      highlighted: false,
-      features: [
-        { text: 'Everything in Growth',            included: true  },
-        { text: 'AI phone receptionist (24/7)',    included: true  },
-        { text: 'Answers & books by phone',        included: true  },
-        { text: 'Customer follow-up calls',        included: true  },
-        { text: 'Custom AI voice training',        included: true  },
-        { text: 'White-glove onboarding',          included: true  },
-        { text: 'Dedicated account manager',       included: true  },
-        { text: 'Advanced analytics',              included: true  },
+
+    es: {
+      choosePlan:   'Elegir Este Plan',
+      noSetup:      'Sin tarifa de configuración · Cancela cuando quieras',
+      mostPopular:  'Más Popular',
+      plans: [
+        {
+          id:          'starter',
+          name:        'Básico',
+          price:       99,
+          description: 'Reservas y notificaciones por app. Todo lo que necesitas para empezar.',
+          badge:       null,
+          highlighted: false,
+          features: [
+            { text: 'Recepcionista AI (24/7)',              included: true  },
+            { text: 'Sistema de reservas en línea',         included: true  },
+            { text: 'Notificaciones en la app',             included: true  },
+            { text: 'Listado en el Marketplace',            included: true  },
+            { text: 'AI multilingüe (VI/EN/ES)',            included: true  },
+            { text: 'Programación inteligente',             included: true  },
+            { text: 'Recordatorios y confirmaciones SMS',   included: false },
+            { text: 'Recepcionista AI por teléfono',        included: false },
+          ],
+        },
+        {
+          id:          'growth',
+          name:        'Crecimiento',
+          price:       199,
+          description: 'Agrega SMS para que los clientes reciban recordatorios y confirmaciones. El más popular.',
+          badge:       'Más Popular',
+          highlighted: true,
+          features: [
+            { text: 'Todo lo del plan Básico',              included: true  },
+            { text: 'Recordatorios de citas por SMS',       included: true  },
+            { text: 'Confirmaciones de reservas por SMS',   included: true  },
+            { text: 'Sin doble reserva',                    included: true  },
+            { text: 'Ventas adicionales con AI',            included: true  },
+            { text: 'Soporte prioritario',                  included: true  },
+            { text: 'Panel de análisis',                    included: true  },
+            { text: 'Recepcionista AI por teléfono',        included: false },
+          ],
+        },
+        {
+          id:          'pro',
+          name:        'Profesional',
+          price:       299,
+          description: 'Agrega un recepcionista AI 24/7 por teléfono que contesta llamadas y hace reservas.',
+          badge:       null,
+          highlighted: false,
+          features: [
+            { text: 'Todo lo del plan Crecimiento',         included: true  },
+            { text: 'Recepcionista AI por teléfono (24/7)', included: true  },
+            { text: 'Responde y reserva por teléfono',      included: true  },
+            { text: 'Llamadas de seguimiento a clientes',   included: true  },
+            { text: 'Entrenamiento de voz AI personalizado',included: true  },
+            { text: 'Incorporación personalizada',          included: true  },
+            { text: 'Gerente de cuenta dedicado',           included: true  },
+            { text: 'Análisis avanzado',                    included: true  },
+          ],
+        },
       ],
     },
-  ];
+  };
+
+  // ── Active locale ─────────────────────────────────────────
+  var LOCALE = T[_lang] || T['en'];
 
   // ── Card renderer ─────────────────────────────────────────
   function _renderCard(plan) {
@@ -108,9 +244,9 @@
           featureList +
         '</ul>' +
         '<button class="' + ctaClass + '" onclick="vsub.select(\'' + plan.id + '\')">' +
-          'Choose This Plan' +
+          LOCALE.choosePlan +
         '</button>' +
-        '<p class="vpp-plan-fine">No setup fee &middot; Cancel anytime</p>' +
+        '<p class="vpp-plan-fine">' + LOCALE.noSetup + '</p>' +
       '</div>'
     );
   }
@@ -118,20 +254,17 @@
   // ── Plan selection ────────────────────────────────────────
   function select(planId) {
     var valid = false;
-    for (var i = 0; i < PLANS.length; i++) {
-      if (PLANS[i].id === planId) { valid = true; break; }
+    for (var i = 0; i < LOCALE.plans.length; i++) {
+      if (LOCALE.plans[i].id === planId) { valid = true; break; }
     }
     if (!valid) return;
-    // Redirect vendor to the self-serve onboarding wizard with plan pre-selected.
-    // The wizard collects business info, calls AI generation, and saves a draft
-    // for admin review — no "call us" dead-end.
     window.location.href = '/vendor-signup?plan=' + encodeURIComponent(planId);
   }
 
   // ── Mount ─────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function () {
     var el = document.getElementById('vsub-cards');
-    if (el) el.innerHTML = PLANS.map(_renderCard).join('');
+    if (el) el.innerHTML = LOCALE.plans.map(_renderCard).join('');
   });
 
   // ── Public API ────────────────────────────────────────────

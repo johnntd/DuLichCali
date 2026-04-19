@@ -26,7 +26,7 @@ const _DLC_REGIONS = {
 
     // First host = primary (used for app bar call button, fallback phone)
     hosts: [
-      { name: 'Du Lịch Cali', phone: '4089163439', display: '408-916-3439' },
+      { name: 'Dung Pham', phone: '4088596718', display: '408-859-6718' },
     ],
 
     vehicle:  { name: 'Toyota Sienna', seats: 8 },
@@ -57,7 +57,7 @@ const _DLC_REGIONS = {
 
     // First host = primary
     hosts: [
-      { name: 'Du Lịch Cali', phone: '4089163439', display: '408-916-3439' },
+      { name: 'Duy Hoa', phone: '7142276007', display: '714-227-6007' },
     ],
 
     vehicle:  { name: 'Tesla Model Y / Mercedes Van', seats: 12 },

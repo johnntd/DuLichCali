@@ -42,7 +42,7 @@ window.RideIntake = (function () {
       // Success screen
       successTitle: 'Booking Confirmed!',
       successSub:   'Your booking ID:',
-      successMsg:   'We\'ll confirm within <strong>30 minutes</strong>.<br>Urgent? <a href="mailto:dulichcali21@gmail.com">Email us</a>.',
+      successMsg:   'We\'ll confirm within <strong>30 minutes</strong>.<br>Urgent? Call <a href="tel:4089163439">(408) 916-3439</a>.',
       closeBtn:     'Close',
       // ── Picker, labels, placeholders, validation ──
       pickerTitle:      'Book a Ride',
@@ -108,7 +108,7 @@ window.RideIntake = (function () {
       errRideTime:      'Please enter pickup time',
       noRoute:          'Fare estimate unavailable — we\'ll confirm pricing by phone.',
       vehicleBox: function(name, seats) { return name + '<br>' + seats + ' seats<br>Tip not included'; },
-      errBooking:       'Booking failed. Please email dulichcali21@gmail.com to book directly.',
+      errBooking:       'Booking failed. Please call (408) 916-3439 to book directly.',
       checkingAvail:    'Checking availability...',
       availOk:          '✓ Available',
       availNo:          '✗ Not available',
@@ -149,7 +149,7 @@ window.RideIntake = (function () {
       // Success screen
       successTitle: 'Đặt Xe Thành Công!',
       successSub:   'Mã đặt chỗ của bạn:',
-      successMsg:   'Chúng tôi sẽ xác nhận trong <strong>30 phút</strong>.<br>Cần gấp? <a href="mailto:dulichcali21@gmail.com">Email</a>.',
+      successMsg:   'Chúng tôi sẽ xác nhận trong <strong>30 phút</strong>.<br>Cần gấp? Gọi <a href="tel:4089163439">(408) 916-3439</a>.',
       closeBtn:     'Đóng',
       // ── Picker, labels, placeholders, validation ──
       pickerTitle:      'Đặt Xe Đưa Đón',
@@ -215,7 +215,7 @@ window.RideIntake = (function () {
       errRideTime:      'Vui lòng nhập giờ xuất phát',
       noRoute:          'Chưa tính được giá — chúng tôi sẽ xác nhận qua điện thoại.',
       vehicleBox: function(name, seats) { return name + '<br>' + seats + ' chỗ<br>Chưa bao gồm tip'; },
-      errBooking:       'Đặt chỗ không thành công. Vui lòng email dulichcali21@gmail.com để đặt trực tiếp.',
+      errBooking:       'Đặt chỗ không thành công. Vui lòng gọi (408) 916-3439 để đặt trực tiếp.',
       checkingAvail:    'Đang kiểm tra lịch...',
       availOk:          '✓ Có chỗ trống',
       availNo:          '✗ Không có chỗ trống',
@@ -256,7 +256,7 @@ window.RideIntake = (function () {
       // Success screen
       successTitle: '¡Reserva Confirmada!',
       successSub:   'Tu ID de reserva:',
-      successMsg:   'Confirmaremos en <strong>30 minutos</strong>.<br>¿Urgente? <a href="mailto:dulichcali21@gmail.com">Escríbenos</a>.',
+      successMsg:   'Confirmaremos en <strong>30 minutos</strong>.<br>¿Urgente? Llama al <a href="tel:4089163439">(408) 916-3439</a>.',
       closeBtn:     'Cerrar',
       // ── Picker, labels, placeholders, validation ──
       pickerTitle:      'Reservar un Viaje',
@@ -322,7 +322,7 @@ window.RideIntake = (function () {
       errRideTime:      'Ingresa la hora de recogida',
       noRoute:          'Tarifa no disponible — confirmaremos el precio por teléfono.',
       vehicleBox: function(name, seats) { return name + '<br>' + seats + ' asientos<br>Propina no incluida'; },
-      errBooking:       'Reserva fallida. Email dulichcali21@gmail.com para reservar directamente.',
+      errBooking:       'Reserva fallida. Llama al (408) 916-3439 para reservar directamente.',
       checkingAvail:    'Verificando disponibilidad...',
       availOk:          '✓ Disponible',
       availNo:          '✗ No disponible',
@@ -630,8 +630,8 @@ window.RideIntake = (function () {
         '<div style="margin-bottom:1rem"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="color:var(--muted)"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>' +
         '<p style="font-size:1.05rem;font-weight:600;color:var(--cream);margin:0 0 .5rem">' + _T.unavailHeading + '</p>' +
         '<p style="font-size:.85rem;color:var(--muted);margin:0 0 1.5rem">' + _T.unavailBody + '</p>' +
-        '<a href="mailto:dulichcali21@gmail.com" style="display:inline-flex;align-items:center;gap:.45rem;background:var(--gold);color:#07101e;font-weight:700;font-size:.9rem;padding:.7rem 1.4rem;border-radius:999px;text-decoration:none">' +
-          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>' +
+        '<a href="tel:+14089163439" style="display:inline-flex;align-items:center;gap:.45rem;background:var(--gold);color:#07101e;font-weight:700;font-size:.9rem;padding:.7rem 1.4rem;border-radius:999px;text-decoration:none">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 11.5 19.79 19.79 0 01.22 2.82 2 2 0 012.22 1h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.91 8.09a16 16 0 006 6l.56-.56a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>' +
           ' ' + _T.callNow +
         '</a>' +
       '</div>';

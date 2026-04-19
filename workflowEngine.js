@@ -1391,7 +1391,7 @@
                 return S('qAirportPickup') + S('qAirportNear') + list + ')';
               } else if (nearby !== null) {
                 // Location known but no airports within range
-                return S('qAirportPickup') + '\n⚠️ No airports within our 120-mile service area near your location. Please call (408) 916-3439.';
+                return S('qAirportPickup') + '\n⚠️ No airports within our 120-mile service area near your location. Please email dulichcali21@gmail.com for help.';
               }
             }
             return S('qAirportPickup') + S('qAirportList');
@@ -1570,7 +1570,7 @@
                 var list = nearby.map(function(a) { return a.code; }).join(' · ');
                 return S('qAirportDropoff') + S('qAirportNear') + list + ')';
               } else if (nearby !== null) {
-                return S('qAirportDropoff') + '\n⚠️ No airports within our 120-mile service area near your location. Please call (408) 916-3439.';
+                return S('qAirportDropoff') + '\n⚠️ No airports within our 120-mile service area near your location. Please email dulichcali21@gmail.com for help.';
               }
             }
             return S('qAirportDropoff') + S('qAirportList');

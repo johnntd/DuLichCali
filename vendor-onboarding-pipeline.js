@@ -905,10 +905,10 @@ window.VendorOnboarding = (() => {
       if (existing.exists) {
         const st = existing.data().status;
         if (st === 'approved') {
-          throw new Error('This business has already been approved. Check your email for login details or call (408) 916-3439.');
+          throw new Error('This business has already been approved. Check your email for login details or email dulichcali21@gmail.com for help.');
         }
         if (st === 'rejected') {
-          throw new Error('This submission was previously rejected. Call (408) 916-3439 for assistance.');
+          throw new Error('This submission was previously rejected. Email dulichcali21@gmail.com for assistance.');
         }
       }
 

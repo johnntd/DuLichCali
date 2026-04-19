@@ -146,7 +146,7 @@
         '<div class="lp-empty__icon">🔍</div>' +
         '<p class="lp-empty__title">No ' + (nm[category] || 'services') + ' currently available</p>' +
         '<p class="lp-empty__sub">Please try again later or contact us directly.</p>' +
-        '<a href="tel:4089163439" class="lp-empty__cta">Call: 408-916-3439</a>' +
+        '<a href="mailto:dulichcali21@gmail.com" class="lp-empty__cta">Email Us</a>' +
         '<button onclick="LandingNav.openChat()" class="lp-empty__ai" style="background:none;border:none;cursor:pointer;text-decoration:underline;color:var(--gold,#f5a623);font-size:.8rem">Ask AI for help</button>' +
       '</div>'
     );
@@ -238,7 +238,7 @@
               '<p class="lp-empty__sub">No drivers on shift right now — but you can schedule a pickup or drop-off for any future date.</p>' +
               '<button onclick="window.RideIntake&&RideIntake.open(\'pickup\')" class="lp-empty__cta" style="cursor:pointer;border:none">Airport Pickup</button>' +
               '<button onclick="window.RideIntake&&RideIntake.open(\'dropoff\')" class="lp-empty__cta lp-empty__cta--sec" style="cursor:pointer;border:none;margin-top:.5rem">Airport Drop-off</button>' +
-              '<a href="tel:4089163439" class="lp-empty__ai">Questions? Call 408-916-3439</a>' +
+              '<a href="mailto:dulichcali21@gmail.com" class="lp-empty__ai">Questions? Email us</a>' +
             '</div>'
           );
         }
@@ -702,8 +702,8 @@
         '<div class="lp-ch__no-vendor">' +
           '<div style="font-size:1.6rem;margin-bottom:.5rem">🔍</div>' +
           '<strong>No services currently available.</strong><br>' +
-          'Please try again later or call us directly:<br>' +
-          '<a href="tel:4089163439" style="color:#f5a623;font-weight:600">408-916-3439</a>' +
+          'Please try again later or contact us directly:<br>' +
+          '<a href="mailto:dulichcali21@gmail.com" style="color:#f5a623;font-weight:600">dulichcali21@gmail.com</a>' +
         '</div>'
       );
       return;
@@ -760,7 +760,7 @@
     // For rides: replace AI chat center tab with a direct phone call button
     var isRidesCategory = cfg.category === 'rides';
     var centerTab = isRidesCategory
-      ? { icon: I.phone || '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.64A2 2 0 012 1h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 15v1.92z"/></svg>', label: 'Call Us', action: 'location.href="tel:4089163439"', center: true }
+      ? { icon: I.phone || '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>', label: 'Email Us', action: 'location.href="mailto:dulichcali21@gmail.com"', center: true }
       : { icon: I.chat, label: 'AI', action: aiAction, center: true };
 
     var tabs = [

@@ -4,18 +4,20 @@
  * DuLichCali — Firebase Cloud Functions
  *
  * Functions:
- *  1. onVendorNotification  — Twilio SMS on new vendor notification
- *  2. aiOrchestrate         — Secure server-side AI orchestration proxy
+ *  1. onVendorNotification  — Twilio SMS on new vendor notification  [DISABLED — SMS_ENABLED=false]
+ *  2. onRideNotification    — Twilio SMS to drivers on new ride       [DISABLED — SMS_ENABLED=false]
+ *  3. onEmailQueue          — Booking confirmation emails via Resend  [ACTIVE]
+ *  4. onInboundEmail        — Inbound email reply handler via Resend  [ACTIVE]
+ *  5. aiOrchestrate         — Secure server-side AI orchestration proxy [ACTIVE]
+ *
+ * SMS STATUS: DISABLED as of 2026-04-17.
+ *   A2P Sole Proprietor Messaging Service was generating repeated Outgoing API
+ *   failures. Flip SMS_ENABLED = true (line ~72) only after Twilio is reprovisioned.
  *
  * Secrets (Google Cloud Secret Manager):
- *   SMS:  TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER
- *   AI:   OPENAI_API_KEY, GEMINI_API_KEY, CLAUDE_API_KEY
- *
- * Set secrets once with:
- *   firebase functions:secrets:set TWILIO_ACCOUNT_SID
- *   firebase functions:secrets:set OPENAI_API_KEY
- *   firebase functions:secrets:set GEMINI_API_KEY
- *   firebase functions:secrets:set CLAUDE_API_KEY
+ *   SMS:   TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER  (inactive until SMS_ENABLED=true)
+ *   Email: RESEND_API_KEY, RESEND_WEBHOOK_SECRET
+ *   AI:    OPENAI_API_KEY, GEMINI_API_KEY, CLAUDE_API_KEY
  */
 
 const { onDocumentCreated } = require('firebase-functions/v2/firestore');
@@ -52,6 +54,16 @@ const RESEND_WEBHOOK_SECRET = defineSecret('RESEND_WEBHOOK_SECRET');
 if (!admin.apps.length) admin.initializeApp();
 const db = admin.firestore();
 
+// ── Travel dispatch service ───────────────────────────────────────────────────
+const travelDispatch = require('./travelDispatch');
+
+// ── SMS kill-switch ───────────────────────────────────────────────────────────
+// Set to false to stop ALL outbound Twilio calls without removing the implementation.
+// Current state: DISABLED — A2P Sole Proprietor Messaging Service was generating
+// repeated Outgoing API failures (drivers: +14088596718, +14084397522, +17142276007).
+// Flip to true only after Twilio account/messaging service is correctly reprovisioned.
+const SMS_ENABLED = false;
+
 // ── Twilio error codes that are fatal (don't retry) ──────────────────────────
 const FATAL_TWILIO_CODES = new Set([
   20003,  // Authentication failed
@@ -82,6 +94,20 @@ exports.onVendorNotification = onDocumentCreated(
       console.log(`[sms][${vendorId}/${notificationId}] ${msg}`, ...args);
 
     log('triggered');
+
+    // ── SMS kill-switch ────────────────────────────────────────────────────────
+    // Twilio outbound disabled 2026-04-17. A2P Messaging Service was generating
+    // repeated Outgoing API failures. Re-enable SMS_ENABLED at top of file
+    // only after Twilio account is correctly reprovisioned.
+    if (!SMS_ENABLED) {
+      log('SMS disabled — Twilio path intentionally disabled pending rebuild');
+      await notifRef.update({
+        smsSent:       false,
+        smsStatus:     'disabled',
+        smsSkipReason: 'sms_rebuild_pending',
+      });
+      return;
+    }
 
     // ── Idempotency: live-read current doc state ───────────────────────────────
     // event.data.data() is the state AT TRIGGER TIME, which won't reflect a
@@ -255,6 +281,20 @@ exports.onRideNotification = onDocumentCreated(
     const log = (msg) => console.log(`[driver-sms][${notifId}] ${msg}`);
 
     log('triggered');
+
+    // ── SMS kill-switch ────────────────────────────────────────────────────────
+    // Twilio outbound disabled 2026-04-17. Driver SMS was generating repeated
+    // Outgoing API failures via A2P Messaging Service. Re-enable SMS_ENABLED at
+    // top of file only after Twilio account is correctly reprovisioned.
+    if (!SMS_ENABLED) {
+      log('SMS disabled — Twilio path intentionally disabled pending rebuild');
+      await notifRef.update({
+        driverSmsSent:       false,
+        driverSmsStatus:     'disabled',
+        driverSmsSkipReason: 'sms_rebuild_pending',
+      });
+      return;
+    }
 
     // ── Idempotency ───────────────────────────────────────────────────────────
     const current = (await notifRef.get()).data() || {};
@@ -455,11 +495,18 @@ exports.onEmailQueue = onDocumentCreated(
       return;
     }
 
-    const data    = event.data.data();
-    const toEmail = data.customerEmail;
+    const data = event.data.data();
+
+    // Driver-notify emails route to the driver, not the customer
+    const toEmail = data.bookingType === 'travel_driver_notify'
+      ? data.driverEmail
+      : data.customerEmail;
 
     if (!toEmail) {
-      await queueRef.update({ emailStatus: 'skipped', emailSkipReason: 'no_customer_email' });
+      const skipReason = data.bookingType === 'travel_driver_notify'
+        ? 'no_driver_email'
+        : 'no_customer_email';
+      await queueRef.update({ emailStatus: 'skipped', emailSkipReason: skipReason });
       return;
     }
 
@@ -499,6 +546,21 @@ exports.onEmailQueue = onDocumentCreated(
         ({ textBody, htmlBody } = buildRideConfirmationEmail(data));
         subject = `Ride Confirmed — Du Lịch Cali [${data.bookingId || ''}]`;
       }
+    } else if (data.bookingType === 'travel') {
+      // Customer travel booking confirmation
+      fromName = 'Du Lịch Cali Tours';
+      ({ textBody, htmlBody } = buildTravelConfirmationEmail(data));
+      subject = `Tour Confirmed — Du Lịch Cali [${data.bookingId || ''}]`;
+    } else if (data.bookingType === 'travel_owner') {
+      // Owner notification for new travel booking
+      fromName = 'Du Lịch Cali Bookings';
+      ({ textBody, htmlBody } = buildTravelOwnerEmail(data));
+      subject = `New Tour Booking: ${data.packageName || 'Tour'} — [${data.bookingId || ''}]`;
+    } else if (data.bookingType === 'travel_driver_notify') {
+      // Driver dispatch notification — sent only to the assigned driver(s)
+      fromName = 'Du Lịch Cali Dispatch';
+      ({ textBody, htmlBody } = buildDriverNotifyEmail(data));
+      subject = `[Tour Assignment] ${data.travelDate || 'Upcoming Tour'} — ${data.packageName || ''} [${data.bookingId || ''}]`;
     } else {
       // Appointment emails (nail/hair) — existing template
       fromName = data.shopName || 'Luxurious Nails';
@@ -524,6 +586,44 @@ exports.onEmailQueue = onDocumentCreated(
     } catch (err) {
       log('send failed:', err.message);
       await queueRef.update({ emailStatus: 'error', emailError: err.message.slice(0, 200) });
+    }
+  }
+);
+
+// ── Travel booking dispatch ───────────────────────────────────────────────────
+// Fires on every new travel_bookings document. Runs driver selection,
+// writes to travel_dispatch/{bookingId}, and queues driver emails.
+// Does NOT touch existing booking fields set by travel-booking.js.
+// Additive: failure is logged and does not affect the saved booking.
+exports.onTravelBookingCreated = onDocumentCreated(
+  {
+    document:       'travel_bookings/{bookingId}',
+    region:         'us-central1',
+    timeoutSeconds: 60,
+    retry:          false,
+  },
+  async (event) => {
+    const { bookingId } = event.params;
+    const booking = event.data ? event.data.data() : null;
+    if (!booking) return;
+
+    // Skip if dispatch already ran (safety for manual re-triggers)
+    if (booking.dispatch_status) {
+      console.log(`[TravelDispatch] ${bookingId} already dispatched — skip`);
+      return;
+    }
+
+    try {
+      const result = await travelDispatch.assignDrivers(booking, bookingId);
+      console.log(`[TravelDispatch] ${bookingId} complete:`, result.assignment_type);
+    } catch (err) {
+      console.error(`[TravelDispatch] ${bookingId} error:`, err.message);
+      // Fail silently — booking is already persisted; admin can dispatch manually
+      await db.collection('travel_bookings').doc(bookingId).update({
+        dispatch_status: 'error',
+        dispatch_error:  err.message.slice(0, 500),
+        dispatched_at:   admin.firestore.FieldValue.serverTimestamp(),
+      }).catch(() => {});
     }
   }
 );
@@ -633,7 +733,7 @@ function buildRideConfirmationEmail(data) {
     '',
     trackingToken ? `Track your booking: ${trackUrl}` : null,
     '',
-    'Questions? Call or text: +1 (408) 916-3439',
+    'Questions? Email: dulichcali21@gmail.com',
     '',
     '— Du Lịch Cali',
     'https://www.dulichcali21.com',
@@ -671,7 +771,7 @@ function buildRideConfirmationEmail(data) {
       <p style="margin:0;font-size:13px;color:#2c2c2c;line-height:1.7;">${dispatchMsg}</p>
     </div>
     ${trackingToken ? `<p style="margin:20px 0 0;font-size:14px;"><a href="${trackUrl}" style="color:#0d6efd;">Track your booking →</a></p>` : ''}
-    <p style="font-size:13px;margin:20px 0 0;color:#5a4a3a;">Questions? Call <a href="tel:4089163439" style="color:#0d2f50;">+1 (408) 916-3439</a></p>
+    <p style="font-size:13px;margin:20px 0 0;color:#5a4a3a;">Questions? <a href="mailto:dulichcali21@gmail.com" style="color:#0d2f50;">Email us</a></p>
   </div>
   <div style="background:#f0ebe3;padding:14px 32px;text-align:center;">
     <p style="color:#9a8a7a;font-size:12px;margin:0;">— Du Lịch Cali &nbsp;·&nbsp; <a href="https://www.dulichcali21.com" style="color:#9a8a7a;">dulichcali21.com</a></p>
@@ -726,7 +826,7 @@ function buildDriverAssignedEmail(data) {
     'Your driver will contact you closer to the pickup time.',
     trackingToken ? `Track your ride: ${trackUrl}` : null,
     '',
-    'Questions? Call or text: +1 (408) 916-3439',
+    'Questions? Email: dulichcali21@gmail.com',
     '',
     '— Du Lịch Cali',
   ].filter(l => l !== null).join('\n');
@@ -755,7 +855,7 @@ function buildDriverAssignedEmail(data) {
     </table>
     <p style="font-size:13px;margin:20px 0 0;color:#5a4a3a;">Your driver will contact you closer to the pickup time.</p>
     ${trackingToken ? `<p style="font-size:14px;margin:12px 0 0;"><a href="${trackUrl}" style="color:#0d6efd;">Track your ride →</a></p>` : ''}
-    <p style="font-size:13px;margin:16px 0 0;color:#5a4a3a;">Questions? <a href="tel:4089163439" style="color:#0d2f50;">+1 (408) 916-3439</a></p>
+    <p style="font-size:13px;margin:16px 0 0;color:#5a4a3a;">Questions? <a href="mailto:dulichcali21@gmail.com" style="color:#0d2f50;">Email us</a></p>
   </div>
   <div style="background:#f0ebe3;padding:14px 32px;text-align:center;">
     <p style="color:#9a8a7a;font-size:12px;margin:0;">— Du Lịch Cali &nbsp;·&nbsp; <a href="https://www.dulichcali21.com" style="color:#9a8a7a;">dulichcali21.com</a></p>
@@ -848,7 +948,7 @@ function buildRideStatusEmail(data) {
     '',
     s.ctaUrl ? `${s.cta}: ${s.ctaUrl}` : null,
     '',
-    'Questions? Call or text: +1 (408) 916-3439',
+    'Questions? Email: dulichcali21@gmail.com',
     '— Du Lịch Cali · dulichcali21.com',
   ].filter(l => l !== null).join('\n');
 
@@ -886,7 +986,7 @@ function buildRideStatusEmail(data) {
       </tr>
     </table>
     ${s.ctaUrl ? `<p style="margin:0 0 16px;"><a href="${s.ctaUrl}" style="display:inline-block;padding:10px 24px;background:#c9a84c;color:#fff;text-decoration:none;border-radius:5px;font-size:14px;font-weight:600;">${s.cta} →</a></p>` : ''}
-    <p style="font-size:13px;margin:0;color:#5a4a3a;">Questions? Call <a href="tel:4089163439" style="color:#0d2f50;">+1 (408) 916-3439</a></p>
+    <p style="font-size:13px;margin:0;color:#5a4a3a;">Questions? <a href="mailto:dulichcali21@gmail.com" style="color:#0d2f50;">Email us</a></p>
   </div>
   <div style="background:#f0ebe3;padding:14px 32px;text-align:center;">
     <p style="color:#9a8a7a;font-size:12px;margin:0;">— Du Lịch Cali &nbsp;·&nbsp; <a href="https://www.dulichcali21.com" style="color:#9a8a7a;">dulichcali21.com</a></p>
@@ -972,7 +1072,7 @@ function buildRideReminderEmail(data, reminderType) {
     `Track your ride: ${trackUrl}`,
     mapsUrl ? `Pickup map:     ${mapsUrl}` : null,
     '',
-    'Questions? Call or text: +1 (408) 916-3439',
+    'Questions? Email: dulichcali21@gmail.com',
     '— Du Lịch Cali · dulichcali21.com',
   ].filter(l => l !== null).join('\n');
 
@@ -1010,7 +1110,7 @@ function buildRideReminderEmail(data, reminderType) {
       <a href="${trackUrl}" style="display:inline-block;padding:10px 20px;background:#0d2f50;color:#c9a84c;text-decoration:none;border-radius:4px;font-size:13px;font-weight:600;margin-right:8px;">Track Ride</a>
       ${mapsUrl ? `<a href="${mapsUrl}" style="display:inline-block;padding:10px 20px;background:#f0ebe3;color:#5a4030;text-decoration:none;border-radius:4px;font-size:13px;">View Pickup on Map</a>` : ''}
     </div>
-    <p style="font-size:13px;margin:20px 0 0;color:#5a4a3a;">Questions? Call <a href="tel:4089163439" style="color:#0d2f50;">+1 (408) 916-3439</a></p>
+    <p style="font-size:13px;margin:20px 0 0;color:#5a4a3a;">Questions? <a href="mailto:dulichcali21@gmail.com" style="color:#0d2f50;">Email us</a></p>
   </div>
   <div style="background:#f0ebe3;padding:14px 32px;text-align:center;">
     <p style="color:#9a8a7a;font-size:12px;margin:0;">— Du Lịch Cali &nbsp;&middot;&nbsp; <a href="https://www.dulichcali21.com" style="color:#9a8a7a;">dulichcali21.com</a></p>
@@ -2472,3 +2572,293 @@ exports.checkRideReminders = onSchedule(
     log(`done — ${queued} reminder(s) queued`);
   }
 );
+
+// ── Travel booking confirmation email (to customer) ───────────────────────────
+function buildTravelConfirmationEmail(data) {
+  const name        = data.customerName || 'Guest';
+  const bookingId   = data.bookingId    || '';
+  const pkgName     = data.packageName  || 'California Tour';
+  const travelDate  = data.travelDate   || '';
+  const travelers   = data.travelers    || 1;
+  const mode        = data.bookingMode  === 'private' ? 'Private (exclusive vehicle)' : 'Group tour';
+  const pickup      = data.pickupLocation || '';
+  const vehicle     = data.vehicle        || '';
+  const subtotal    = data.subtotal != null ? `$${data.subtotal}` : '';
+  const taxes       = data.taxes    != null ? `$${data.taxes}`    : '';
+  const total       = data.total    != null ? `$${data.total}`    : '';
+  const contactEmail = 'dulichcali21@gmail.com';
+
+  // ── Plain text ─────────────────────────────────────────────────────────────
+  const textLines = [
+    `Hi ${name},`,
+    '',
+    `Your tour booking has been confirmed! Here are your details:`,
+    '',
+    `  Booking ID:   ${bookingId}`,
+    `  Tour:         ${pkgName}`,
+    `  Date:         ${travelDate || '(to be confirmed)'}`,
+    `  Travelers:    ${travelers}`,
+    `  Tour type:    ${mode}`,
+    pickup  ? `  Pickup:       ${pickup}` : null,
+    vehicle ? `  Vehicle:      ${vehicle}` : null,
+    subtotal ? `  Subtotal:     ${subtotal}` : null,
+    taxes    ? `  Taxes:        ${taxes}`    : null,
+    total    ? `  Total:        ${total}`    : null,
+    '',
+    `We will call you within 2 hours to confirm your pickup details.`,
+    '',
+    `Questions? Call us: ${phone}`,
+    `  www.dulichcali21.com`,
+    '',
+    `Thank you for choosing Du Lịch Cali!`,
+    `— Du Lịch Cali Tours`,
+  ].filter(l => l !== null).join('\n');
+
+  // ── HTML ───────────────────────────────────────────────────────────────────
+  const rows = [
+    ['Booking ID',  bookingId],
+    ['Tour',        pkgName],
+    ['Date',        travelDate || '(to be confirmed)'],
+    ['Travelers',   travelers],
+    ['Tour type',   mode],
+    pickup  ? ['Pickup location', pickup]  : null,
+    vehicle ? ['Vehicle',         vehicle] : null,
+    subtotal ? ['Subtotal', subtotal] : null,
+    taxes    ? ['Taxes',    taxes]    : null,
+    total    ? ['<strong>Total</strong>', `<strong>${total}</strong>`] : null,
+  ].filter(Boolean);
+
+  const tableRows = rows.map(([label, val]) =>
+    `<tr><td style="padding:6px 12px;color:#666;white-space:nowrap">${label}</td>` +
+    `<td style="padding:6px 12px;font-weight:500">${val}</td></tr>`
+  ).join('');
+
+  const htmlBody = `
+<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:system-ui,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:24px 0">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;max-width:560px">
+  <!-- Header -->
+  <tr><td style="background:#0a2344;padding:24px 32px">
+    <p style="margin:0;color:#fff;font-size:20px;font-weight:600">Du Lịch Cali</p>
+    <p style="margin:4px 0 0;color:rgba(255,255,255,.7);font-size:13px">California Tour Booking</p>
+  </td></tr>
+  <!-- Body -->
+  <tr><td style="padding:28px 32px">
+    <p style="margin:0 0 6px;font-size:22px;font-weight:700;color:#0a2344">Tour Confirmed!</p>
+    <p style="margin:0 0 20px;color:#444">Hi ${name}, your booking is confirmed.</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e8e8e8;border-radius:6px;overflow:hidden;margin-bottom:20px">
+      ${tableRows}
+    </table>
+    <p style="margin:0 0 8px;color:#444;font-size:14px">We will call you within 2 hours to confirm your pickup details.</p>
+    <p style="margin:0;color:#444;font-size:14px">Questions? <a href="mailto:${contactEmail}" style="color:#0a2344;font-weight:600">Email us</a></p>
+  </td></tr>
+  <!-- Footer -->
+  <tr><td style="background:#f9f9f9;padding:16px 32px;border-top:1px solid #eee">
+    <p style="margin:0;color:#999;font-size:12px">Du Lịch Cali · <a href="https://www.dulichcali21.com" style="color:#999">www.dulichcali21.com</a></p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+
+  return { textBody, htmlBody };
+}
+
+// ── Travel booking owner-notification email ───────────────────────────────────
+function buildTravelOwnerEmail(data) {
+  const bookingId  = data.bookingId      || '';
+  const pkgName    = data.packageName    || 'California Tour';
+  const travelDate = data.travelDate     || '';
+  const travelers  = data.travelers      || 1;
+  const mode       = data.bookingMode    === 'private' ? 'Private' : 'Group';
+  const custName   = data.customerName          || '';
+  const custPhone  = data.customerPhone         || '';
+  const custEmail  = data.bookingCustomerEmail  || '';
+  const pickup     = data.pickupAddress || data.pickupLocation || '';
+  const vehicle    = data.vehicle        || '';
+  const total      = data.total    != null ? `$${data.total}`    : '';
+  const subtotal   = data.subtotal != null ? `$${data.subtotal}` : '';
+  const taxes      = data.taxes    != null ? `$${data.taxes}`    : '';
+
+  // ── Plain text ─────────────────────────────────────────────────────────────
+  const textBody = [
+    `NEW TRAVEL BOOKING`,
+    '',
+    `  Booking ID:   ${bookingId}`,
+    `  Tour:         ${pkgName}`,
+    `  Date:         ${travelDate || 'TBD'}`,
+    `  Type:         ${mode}`,
+    `  Travelers:    ${travelers}`,
+    `  Customer:     ${custName}`,
+    `  Phone:        ${custPhone}`,
+    custEmail ? `  Email:        ${custEmail}` : null,
+    pickup  ? `  Pickup:       ${pickup}`  : null,
+    vehicle ? `  Vehicle:      ${vehicle}` : null,
+    subtotal ? `  Subtotal:     ${subtotal}` : null,
+    taxes    ? `  Taxes:        ${taxes}`    : null,
+    total    ? `  Total:        ${total}`    : null,
+    '',
+    `View in Firebase: https://console.firebase.google.com/`,
+  ].filter(l => l !== null).join('\n');
+
+  // ── HTML ───────────────────────────────────────────────────────────────────
+  const rows = [
+    ['Booking ID',  bookingId],
+    ['Tour',        pkgName],
+    ['Date',        travelDate || 'TBD'],
+    ['Type',        mode],
+    ['Travelers',   travelers],
+    ['Customer',    custName],
+    ['Phone',       `<a href="tel:${custPhone}" style="color:#0a2344">${custPhone}</a>`],
+    custEmail ? ['Email', `<a href="mailto:${custEmail}" style="color:#0a2344">${custEmail}</a>`] : null,
+    pickup  ? ['Pickup',   pickup]  : null,
+    vehicle ? ['Vehicle',  vehicle] : null,
+    subtotal ? ['Subtotal', subtotal] : null,
+    taxes    ? ['Taxes',    taxes]    : null,
+    total    ? ['<strong>Total</strong>', `<strong>${total}</strong>`] : null,
+  ].filter(Boolean);
+
+  const tableRows = rows.map(([label, val]) =>
+    `<tr><td style="padding:6px 12px;color:#666;white-space:nowrap">${label}</td>` +
+    `<td style="padding:6px 12px;font-weight:500">${val}</td></tr>`
+  ).join('');
+
+  const htmlBody = `
+<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:system-ui,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:24px 0">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;max-width:560px">
+  <tr><td style="background:#c0392b;padding:20px 32px">
+    <p style="margin:0;color:#fff;font-size:18px;font-weight:700">New Tour Booking</p>
+    <p style="margin:4px 0 0;color:rgba(255,255,255,.8);font-size:13px">Du Lịch Cali — Action Required</p>
+  </td></tr>
+  <tr><td style="padding:28px 32px">
+    <p style="margin:0 0 16px;color:#333;font-size:15px">A new tour booking has been submitted. Please call the customer to confirm pickup details.</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e8e8e8;border-radius:6px;overflow:hidden;margin-bottom:20px">
+      ${tableRows}
+    </table>
+    <p style="margin:0;color:#666;font-size:13px">
+      <a href="https://console.firebase.google.com/u/0/project/dullichcali21/firestore/data/~2Ftravel_bookings~2F${bookingId}"
+         style="color:#0a2344;font-weight:600">View in Firestore →</a>
+    </p>
+  </td></tr>
+  <tr><td style="background:#f9f9f9;padding:14px 32px;border-top:1px solid #eee">
+    <p style="margin:0;color:#999;font-size:12px">Du Lịch Cali internal notification</p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+
+  return { textBody, htmlBody };
+}
+
+// ── Driver assignment notification email ──────────────────────────────────────
+// Sent to each assigned driver when a new tour booking is dispatched to them.
+function buildDriverNotifyEmail(data) {
+  const driverName  = data.driverName    || 'Driver';
+  const bookingId   = data.bookingId     || '';
+  const custName    = data.customerName  || '';
+  const custPhone   = data.customerPhone || '';
+  const custEmail   = data.customerEmail || '';
+  const pickup      = data.pickupAddress || data.pickupRegion || '';
+  const travelDate  = data.travelDate    || '';
+  const travelers   = data.travelers     || 1;
+  const mode        = data.bookingMode === 'private' ? 'Private (exclusive)' : 'Group tour';
+  const pkgName     = data.packageName   || 'California Tour';
+  const notes       = data.notes         || '';
+  const coDrivers   = data.coDrivers     || null;
+  const isMulti     = data.assignmentType === 'multi';
+
+  // ── Plain text ─────────────────────────────────────────────────────────────
+  const textBody = [
+    `Hi ${driverName},`,
+    '',
+    `You have been assigned to a new tour booking. Please contact the customer to confirm pickup details.`,
+    '',
+    `CUSTOMER`,
+    `  Name:    ${custName}`,
+    `  Phone:   ${custPhone}`,
+    custEmail ? `  Email:   ${custEmail}` : null,
+    '',
+    `TOUR DETAILS`,
+    `  Booking ID:  ${bookingId}`,
+    `  Tour:        ${pkgName}`,
+    `  Date:        ${travelDate || '(see booking)'}`,
+    `  Passengers:  ${travelers}`,
+    `  Tour type:   ${mode}`,
+    pickup ? `  Pickup:      ${pickup}` : null,
+    notes  ? `  Notes:       ${notes}`  : null,
+    '',
+    isMulti && coDrivers ? `SHARED ASSIGNMENT\n  Co-drivers: ${coDrivers}` : null,
+    '',
+    `ACTION REQUIRED: Call the customer at ${custPhone} to confirm the exact pickup address and time.`,
+    '',
+    `Questions? Contact dispatch: dulichcali21@gmail.com`,
+    `— Du Lịch Cali`,
+    `https://www.dulichcali21.com`,
+  ].filter(l => l !== null).join('\n');
+
+  // ── HTML ───────────────────────────────────────────────────────────────────
+  const row = (label, value) => value
+    ? `<tr><td style="padding:6px 12px;color:#666;white-space:nowrap;font-size:14px">${label}</td>` +
+      `<td style="padding:6px 12px;font-weight:500;font-size:14px">${value}</td></tr>`
+    : '';
+
+  const htmlBody = `
+<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:system-ui,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:24px 0">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;max-width:560px">
+  <tr><td style="background:#0a2344;padding:20px 32px">
+    <p style="margin:0;color:#c9a84c;font-size:18px;font-weight:700">Tour Assignment</p>
+    <p style="margin:4px 0 0;color:rgba(255,255,255,.8);font-size:13px">Du Lịch Cali — Driver Notification</p>
+  </td></tr>
+  <tr><td style="padding:28px 32px">
+    <p style="margin:0 0 20px;color:#333;font-size:15px">Hi <strong>${driverName}</strong>, you have been assigned to a new tour. Please call the customer to confirm.</p>
+
+    <p style="margin:0 0 8px;color:#0a2344;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Customer</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e8e8e8;border-radius:6px;overflow:hidden;margin-bottom:20px">
+      ${row('Name',  custName)}
+      ${row('Phone', `<a href="tel:${custPhone.replace(/\D/g,'')}" style="color:#0a2344;font-weight:600">${custPhone}</a>`)}
+      ${custEmail ? row('Email', `<a href="mailto:${custEmail}" style="color:#0a2344">${custEmail}</a>`) : ''}
+    </table>
+
+    <p style="margin:0 0 8px;color:#0a2344;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Tour Details</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e8e8e8;border-radius:6px;overflow:hidden;margin-bottom:20px">
+      ${row('Booking ID',  `<span style="font-family:monospace;font-weight:600">${bookingId}</span>`)}
+      ${row('Tour',        pkgName)}
+      ${row('Date',        travelDate || '(see booking)')}
+      ${row('Passengers',  String(travelers))}
+      ${row('Tour type',   mode)}
+      ${pickup ? row('Pickup', pickup) : ''}
+      ${notes  ? row('Notes',  notes)  : ''}
+    </table>
+
+    ${isMulti && coDrivers ? `
+    <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:14px 16px;margin-bottom:20px">
+      <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#0a2344">Shared Assignment</p>
+      <p style="margin:0;font-size:13px;color:#555">Co-drivers: ${coDrivers}</p>
+    </div>` : ''}
+
+    <div style="background:#e8f4fd;border:1px solid #bee3f8;border-radius:6px;padding:16px;margin-bottom:20px">
+      <p style="margin:0;font-size:14px;font-weight:700;color:#0a2344">Action Required</p>
+      <p style="margin:6px 0 0;font-size:14px;color:#333">Call the customer at <a href="tel:${custPhone.replace(/\D/g,'')}" style="color:#0a2344;font-weight:600">${custPhone}</a> to confirm the exact pickup address and time.</p>
+    </div>
+
+    <p style="margin:0;color:#666;font-size:13px">Questions? Contact dispatch: <a href="mailto:dulichcali21@gmail.com" style="color:#0a2344">dulichcali21@gmail.com</a></p>
+  </td></tr>
+  <tr><td style="background:#f9f9f9;padding:14px 32px;border-top:1px solid #eee">
+    <p style="margin:0;color:#999;font-size:12px">Du Lịch Cali driver dispatch</p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+
+  return { textBody, htmlBody };
+}

@@ -811,7 +811,7 @@ var TravelBooking = (function() {
           showWizardError(
             'You already have a booking for this tour on ' + _date + '. ' +
             'Booking ID: ' + bookingId + '. ' +
-            'Call (408) 916-3439 if you need to make changes.'
+            'Email dulichcali21@gmail.com if you need to make changes.'
           );
           if (btn) { btn.disabled = false; btn.textContent = t('tpConfirm'); }
           return;
@@ -904,7 +904,7 @@ var TravelBooking = (function() {
       showStep(4);
     }).catch(function(err) {
       console.error('[TravelBooking] submit error', err);
-      showWizardError('Booking failed — please call (408) 916-3439');
+      showWizardError('Booking failed — please email dulichcali21@gmail.com for help.');
       if (btn) { btn.disabled = false; btn.textContent = t('tpConfirm'); }
     });
   }

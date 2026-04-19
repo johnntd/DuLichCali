@@ -682,38 +682,70 @@ const DLCPricing = (() => {
    * @param {string} pickupRegion 'bayarea' | 'socal' — affects deadhead surcharge
    * @returns {{ type, travelers, subtotal, taxes, total, pricePerPerson, vehicle, breakdown }}
    */
-  function calculateTravelQuote(pkg, type, travelers, pickupRegion) {
-    const pax       = Math.max(1, parseInt(travelers) || 1);
-    const isSocal   = pickupRegion === 'socal';
-    const surcharge = isSocal ? 1.15 : 1.00;
-    const TAX_RATE  = 0.0875;
+  /**
+   * Resolve private-pricing tier key for a given party size.
+   * Returns { basePrice, tierKey } — tierKey is null when flat pricing used.
+   */
+  function _travelPrivateTier(pkg, pax) {
+    var tiers = pkg.pricing_private;
+    if (tiers && typeof tiers === 'object') {
+      if (pax <= 2) return { basePrice: tiers['1_2'],  tierKey: '1_2'  };
+      if (pax <= 5) return { basePrice: tiers['3_5'],  tierKey: '3_5'  };
+      if (pax <= 7) return { basePrice: tiers['6_7'],  tierKey: '6_7'  };
+      return            { basePrice: tiers['8_12'], tierKey: '8_12' };
+    }
+    return { basePrice: pkg.base_price_private || 0, tierKey: null };
+  }
 
-    let subtotal, pricePerPerson;
+  function calculateTravelQuote(pkg, type, travelers, pickupRegion) {
+    const pax      = Math.max(1, parseInt(travelers) || 1);
+    const TAX_RATE = 0.0875;
+
+    // ── Regional price adjustment ────────────────────────────────────────────
+    // Packages define departure_region_adjustments keyed by 'bayarea' | 'socal'.
+    // If the package has no adjustments, or the region is unknown, fall back to
+    // bayarea (multiplier 1.0) so legacy packages continue working unchanged.
+    const adjMap   = (pkg && pkg.departure_region_adjustments) || {};
+    const rKey     = pickupRegion || 'bayarea';
+    const adj      = adjMap[rKey] || adjMap['bayarea'] || { multiplier: 1.0, label: '' };
+    const mult     = (adj.multiplier != null) ? adj.multiplier : 1.0;
+    const rLabel   = adj.label || '';
+
+    let subtotal, pricePerPerson, tierKey;
 
     if (type === 'private') {
-      subtotal      = Math.round(pkg.base_price_private * surcharge);
+      const tier    = _travelPrivateTier(pkg, pax);
+      tierKey       = tier.tierKey;
+      subtotal      = Math.round((tier.basePrice || 0) * mult);
       pricePerPerson = null;
     } else {
-      pricePerPerson = Math.round(pkg.base_price_per_person_group * surcharge);
+      tierKey        = null;
+      pricePerPerson = Math.round((pkg.base_price_per_person_group || 0) * mult);
       subtotal       = pricePerPerson * pax;
     }
 
-    const taxes = Math.round(subtotal * TAX_RATE);
-    const total = subtotal + taxes;
-    const vehicleName = getVehicle(pax, pickupRegion);
+    const taxes       = Math.round(subtotal * TAX_RATE);
+    const total       = subtotal + taxes;
+    const vehicleName = getVehicle(pax, 'bayarea'); // vehicle size by pax
 
     return {
       type,
-      travelers:      pax,
+      travelers:    pax,
+      pickupRegion: rKey,
+      regionLabel:  rLabel,
       subtotal,
       taxes,
       total,
       pricePerPerson,
-      vehicle:        vehicleName,
+      vehicle:      vehicleName,
       breakdown: {
-        base:      type === 'private' ? pkg.base_price_private : pkg.base_price_per_person_group,
-        surcharge: isSocal ? '15% SoCal surcharge' : null,
-        taxRate:   '8.75%',
+        base:             type === 'private'
+          ? (pkg.pricing_private && tierKey ? pkg.pricing_private[tierKey] : pkg.base_price_private)
+          : pkg.base_price_per_person_group,
+        tierKey,
+        taxRate:          '8.75%',
+        regionMultiplier: mult,
+        regionLabel:      rLabel,
       },
     };
   }

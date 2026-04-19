@@ -1019,6 +1019,24 @@ gmp-placeautocomplete.field-input::part(input):focus {
 }
 
 /* Availability chip row */
+/* ── Homepage vendor loading / empty states ──────────────────── */
+.hp-vendor-loading {
+  display: flex; align-items: center; gap: .6rem;
+  padding: 1.25rem 1rem; color: var(--muted); font-size: .78rem;
+}
+.hp-vendor-spinner {
+  width: 16px; height: 16px; flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,.1);
+  border-top-color: var(--gold, #f5a623);
+  border-radius: 50%;
+  animation: ri-spin .7s linear infinite;
+}
+.hp-vendors-empty {
+  padding: 1.25rem 1rem;
+  color: var(--muted); font-size: .8rem;
+  font-style: italic;
+}
+
 .hp-avail-row {
   display: flex;
   gap: .55rem;
@@ -1071,6 +1089,29 @@ gmp-placeautocomplete.field-input::part(input):focus {
 .hp-chip--order  .hp-chip__label { color: #fb923c; }
 .hp-chip--driver { border-color: rgba(56,189,248,.3); }
 .hp-chip--driver .hp-chip__label { color: var(--sky); }
+
+/* ── Vendor Phone Strip ────────────────────────────────────── */
+.vendor-phone-strip {
+  padding: .6rem 1rem;
+  background: var(--navy-800);
+  border-bottom: 1px solid var(--border);
+}
+.vendor-phone-strip__link {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  color: var(--text);
+  font-size: .85rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color .2s;
+}
+.vendor-phone-strip__link svg { stroke: var(--gold); flex-shrink: 0; }
+.vendor-phone-strip__link:hover { color: var(--cream); }
+
+/* ── Call tab accent ──────────────────────────────────────── */
+#tabCall { color: var(--sky); }
+#tabCall svg { stroke: var(--sky); }
 
 /* ── Home Sections ──────────────────────────────────────────── */
 .home-section { padding: 1.5rem 1rem 0.5rem; }

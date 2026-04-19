@@ -63,10 +63,14 @@ async function selectDriverForTravelBooking(vehicleType, dateStr) {
     const snap = await db.collection('travel_drivers').where('active', '==', true).get();
     if (snap.empty) return null;
 
+    const vtLower = vehicleType.toLowerCase().split(' ')[0];  // e.g. 'toyota', 'mercedes', 'tesla'
     const candidates = snap.docs
       .map(d => Object.assign({ id: d.id }, d.data()))
-      .filter(d => d.vehicle && d.vehicle.name &&
-        d.vehicle.name.toLowerCase().includes(vehicleType.toLowerCase().split(' ')[0]));
+      .filter(d => {
+        // Support both old schema (d.vehicle.name) and new schema (d.vehicle_name)
+        const vname = (d.vehicle_name || (d.vehicle && d.vehicle.name) || '').toLowerCase();
+        return vname.includes(vtLower);
+      });
 
     const datePrefix = (dateStr || '').slice(0, 10);
     const busyIds = new Set();
@@ -1358,6 +1362,16 @@ function updateRegionUI(region) {
     callBtn.href = `tel:${region.hosts[0].phone}`;
   }
 
+  // 1b. Vendor phone strip (prominent phone on home screen)
+  const phoneLink = document.getElementById('vendorPhoneLink');
+  const phoneNum  = document.getElementById('vendorPhoneNum');
+  if (phoneLink) phoneLink.href = `tel:${region.hosts[0].phone}`;
+  if (phoneNum)  phoneNum.textContent = region.hosts[0].display;
+
+  // 1c. Bottom nav call tab
+  const callTab = document.getElementById('tabCall');
+  if (callTab) callTab.href = `tel:${region.hosts[0].phone}`;
+
   // 2. Region tag strip
   const regionTag = document.getElementById('regionTag');
   if (regionTag) {
@@ -1421,6 +1435,9 @@ function updateRegionUI(region) {
   document.querySelectorAll('.svc-airport-count').forEach(el => {
     el.textContent = `${getRegionAirports().length} airports`;
   });
+
+  // 8. Vendor carousel — refresh live from Firestore for the new region
+  renderHomepageVendors(region.id);
 }
 
 function toggleRegionPicker() {
@@ -1659,6 +1676,16 @@ function getFeaturedVendors(regionId) {
 function _hpCatLabel(c)  { return { nails: 'Nail Salon', hair: 'Hair Salon', food: 'Food' }[c] || c; }
 function _hpCatAccent(c) { return { nails: '#f472b6', hair: '#38bdf8', food: '#f59e0b' }[c] || 'var(--gold)'; }
 
+// Normalize a vendor region string to a region ID ('oc', 'bayarea', 'la', …)
+function _regionMatchesId(regionStr, regionId) {
+  if (!regionStr || !regionId) return !regionId; // no regionId = show all
+  const s = regionStr.toLowerCase().replace(/[\s\-]+/g, '');
+  if (regionId === 'oc')      return s === 'oc' || s.includes('orange') || s.includes('westminster');
+  if (regionId === 'bayarea') return s === 'bayarea' || s.includes('bay') || s.includes('sanjose') || s.includes('sanfran');
+  if (regionId === 'la')      return s === 'la' || s.includes('losangel');
+  return s.includes(regionId.toLowerCase());
+}
+
 // ── HTML builders ─────────────────────────────────────────────
 const _CAT_PATHS = { nails: 'nailsalon/', hair: 'hairsalon/', food: 'foods/' };
 
@@ -1695,21 +1722,96 @@ function buildAvailChipHtml(label, sublabel, status, onclick) {
 }
 
 // ── Homepage renderers ────────────────────────────────────────
-function renderFeaturedVendors(regionId) {
+
+// Primary renderer: Firestore-powered, region-aware, with static-data fallback.
+// Called on initial load and on every region switch.
+async function renderHomepageVendors(regionId) {
   const section   = document.getElementById('hpFeatured');
   const container = document.getElementById('hpVendorCards');
   const titleEl   = document.getElementById('hpFeaturedTitle');
   if (!section || !container) return;
 
-  const vendors = getFeaturedVendors(regionId);
-  if (!vendors.length) { section.hidden = true; return; }
+  // Show section immediately with loading state
+  section.hidden = false;
+  container.innerHTML =
+    '<div class="hp-vendor-loading"><div class="hp-vendor-spinner"></div><span>Loading…</span></div>';
 
+  // Update section title
   const regionName = window.DLCRegion?.current?.name;
-  if (titleEl && regionName) titleEl.textContent = `Featured in ${regionName}`;
+  if (titleEl) titleEl.textContent = regionName ? `Featured in ${regionName}` : 'Marketplace';
+
+  let vendors = [];
+
+  try {
+    const _db = window.db || window.dlcDb;
+    if (!_db) throw new Error('no db');
+
+    // Query all active vendors from Firestore (single query, client-side region filter)
+    const snap = await _db.collection('vendors')
+      .where('adminStatus', '==', 'active')
+      .limit(50)
+      .get();
+
+    // Build a lookup of static vendor data for rich fields (heroImage, heroGradient, hours, etc.)
+    const staticById = {};
+    if (window.MARKETPLACE) {
+      window.MARKETPLACE.businesses.forEach(b => { staticById[b.id] = b; });
+    }
+
+    snap.docs.forEach(doc => {
+      const data = doc.data();
+      const vid  = doc.id;
+
+      // Region filter — skip vendors outside the selected region
+      if (regionId && !_regionMatchesId(data.region, regionId)) return;
+
+      // Merge Firestore doc with static data: static provides richer display fields
+      const s = staticById[vid];
+      vendors.push({
+        id:             vid,
+        name:           s ? s.name : (data.name || data.businessName || vid),
+        category:       (s ? s.category : data.category || '').toLowerCase() || 'other',
+        city:           s ? s.city  : (data.city || data.address || ''),
+        region:         data.region || '',
+        heroImage:      s ? (s.heroImage  || '') : (data.heroImage  || ''),
+        heroGradient:   s ? (s.heroGradient || 'linear-gradient(135deg,#0d2f50 0%,#1e3a5f 100%)')
+                          : (data.heroGradient || 'linear-gradient(135deg,#0d2f50 0%,#1e3a5f 100%)'),
+        shortPromoText: s ? (s.shortPromoText || s.tagline || '') : (data.shortPromoText || data.tagline || ''),
+        hours:          s ? (s.hours || []) : [],
+        featuredPriority: s ? (s.featuredPriority || 50) : (data.featuredPriority || 50),
+        bookingEnabled: s ? !!s.bookingEnabled : (data.bookingEnabled !== false),
+        active: true
+      });
+    });
+
+    // Sort: lower featuredPriority = higher on page; tie-break alphabetically
+    vendors.sort((a, b) =>
+      (a.featuredPriority - b.featuredPriority) || a.name.localeCompare(b.name)
+    );
+    vendors = vendors.slice(0, 8);
+
+  } catch (_) {
+    // Firestore unavailable — fall back to static marketplace data
+    if (window.MARKETPLACE) {
+      vendors = window.MARKETPLACE.businesses
+        .filter(b => b.active && b.homepageActive &&
+          (!regionId || (b.featuredRegions || []).includes(regionId)) &&
+          _isVendorActive(b.id))
+        .sort((a, b) => (a.featuredPriority || 99) - (b.featuredPriority || 99))
+        .slice(0, 8);
+    }
+  }
+
+  if (!vendors.length) {
+    container.innerHTML = '<p class="hp-vendors-empty">Coming soon in this area ✦</p>';
+    return;
+  }
 
   container.innerHTML = vendors.map(buildVendorCardHtml).join('');
-  section.hidden = false;
 }
+
+// Backward-compat shim — delegates to Firestore-powered renderer
+function renderFeaturedVendors(regionId) { return renderHomepageVendors(regionId); }
 
 function renderAvailabilityHighlights(regionId, driverAvailable) {
   const section   = document.getElementById('hpAvail');
@@ -1739,8 +1841,7 @@ function renderAvailabilityHighlights(regionId, driverAvailable) {
 }
 
 function initHomepageIntelligence(region, driverAvailable) {
-  const regionId = region?.id || 'oc';
-  renderFeaturedVendors(regionId);
+  // Vendor rendering is handled by updateRegionUI → renderHomepageVendors
   // renderAvailabilityHighlights removed — "Có Sẵn Hôm Nay" section removed from homepage
 }
 
@@ -1770,23 +1871,48 @@ function renderTravelCarousel() {
 
   var cards = [];
 
-  // All destinations from DESTINATIONS array (destinations.js)
+  // ── Bookable coastal packages (DLC_TRAVEL_PACKAGES) — shown first ──
+  if (typeof DLC_TRAVEL_PACKAGES !== 'undefined') {
+    DLC_TRAVEL_PACKAGES.filter(function(p) { return p.active !== false; }).forEach(function(pkg) {
+      var img   = (pkg.images && pkg.images[0]) || '/monterey.jpg';
+      var chip  = pkg.duration_days + (pkg.duration_days === 1 ? ' Day' : ' Days') + ' · Coastal';
+      var slug  = pkg.slug || pkg.id;
+      var price = pkg.base_price_per_person_group ? 'From $' + pkg.base_price_per_person_group + '/person' : '';
+      var href  = '/travel?pkg=' + slug;
+      cards.push(
+        '<a class="trav-card trav-card--pkg" role="listitem" href="' + href + '" aria-label="' + pkg.name + '">' +
+          '<div class="trav-card__bg" style="background-image:url(\'' + img + '\')"></div>' +
+          '<div class="trav-card__overlay"></div>' +
+          '<div class="trav-card__body">' +
+            '<span class="trav-card__chip">' + chip + '</span>' +
+            '<h3 class="trav-card__title">' + pkg.name + '</h3>' +
+            (price ? '<p class="trav-card__sub">' + price + '</p>' : '') +
+            '<span class="trav-card__cta">Book Now</span>' +
+          '</div>' +
+        '</a>'
+      );
+    });
+  }
+
+  // ── General destinations from destinations.js — shown after packages ──
   if (typeof DESTINATIONS !== 'undefined') {
-    cards = DESTINATIONS.map(function(dest) {
+    DESTINATIONS.forEach(function(dest) {
       var chip = dest.duration
         ? (dest.duration.min + '–' + dest.duration.max + ' ' + dest.duration.unit)
         : 'Travel';
       var id = dest.id;
-      return '<div class="trav-card" role="listitem" onclick="openDestination(\'' + id + '\')" aria-label="' + dest.name.en + '">' +
-        '<div class="trav-card__bg" style="background-image:url(\'' + dest.image + '\')"></div>' +
-        '<div class="trav-card__overlay"></div>' +
-        '<div class="trav-card__body">' +
-          '<span class="trav-card__chip">' + chip + '</span>' +
-          '<h3 class="trav-card__title">' + dest.name.en + '</h3>' +
-          '<p class="trav-card__sub">' + dest.tagline.en + '</p>' +
-          '<button class="trav-card__cta" onclick="event.stopPropagation();openDestination(\'' + id + '\')">Explore</button>' +
-        '</div>' +
-      '</div>';
+      cards.push(
+        '<div class="trav-card" role="listitem" onclick="openDestination(\'' + id + '\')" aria-label="' + dest.name.en + '">' +
+          '<div class="trav-card__bg" style="background-image:url(\'' + dest.image + '\')"></div>' +
+          '<div class="trav-card__overlay"></div>' +
+          '<div class="trav-card__body">' +
+            '<span class="trav-card__chip">' + chip + '</span>' +
+            '<h3 class="trav-card__title">' + dest.name.en + '</h3>' +
+            '<p class="trav-card__sub">' + dest.tagline.en + '</p>' +
+            '<button class="trav-card__cta" onclick="event.stopPropagation();openDestination(\'' + id + '\')">Explore</button>' +
+          '</div>' +
+        '</div>'
+      );
     });
   }
 
@@ -2062,11 +2188,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Load vendor admin statuses first, then render with region filter when known
-  loadVendorAdminStatuses().then(function() {
-    var regionId = window.DLCRegion && window.DLCRegion.current && window.DLCRegion.current.id;
-    if (regionId) { renderFeaturedVendors(regionId); } else { renderAllHomepageVendors(); }
-  });
+  // Load vendor admin statuses into cache (used by _isVendorActive for static fallback)
+  loadVendorAdminStatuses();
+
+  // If DLCRegion is unavailable, render vendors without region filter
+  if (!window.DLCRegion) renderHomepageVendors(null);
 
   // Render data-driven UI
   renderTravelCarousel();

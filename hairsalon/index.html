@@ -11,11 +11,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,300;0,6..96,400;1,6..96,300;1,6..96,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../marketplace/marketplace.css?v=20260420b">
   <link rel="stylesheet" href="../desktop.css">
+  <link rel="stylesheet" href="/nailsalon/salon.css?v=20260417n">
 
   <!-- Firebase: required for live staff/services/hours data in Salon AI -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
   <script>
     (function () {
       var cfg = {
@@ -27,7 +29,8 @@
         appId:             '1:623460884698:web:a08bd435c453a7b4db05e3'
       };
       if (!firebase.apps.length) { firebase.initializeApp(cfg); }
-      window.dlcDb = firebase.firestore();
+      window.dlcDb      = firebase.firestore();
+      window.dlcStorage = firebase.storage();
       firebase.auth().onAuthStateChanged(function(u) {
         if (!u) firebase.auth().signInAnonymously().catch(function() {});
       });
@@ -48,19 +51,35 @@
 <div id="mpApp" class="mp-app"></div>
 <script src="/ai-engine.js?v=20260412j"></script>
 <script src="/regions.js?v=20260421a"></script>
-<script src="../marketplace/services-data.js?v=20260421a"></script>
+<script src="../marketplace/services-data.js?v=20260421d"></script>
 <script src="../marketplace/vendor-data-service.js?v=20260414a"></script>
-<script src="../marketplace/marketplace.js?v=20260421a"></script>
+<script src="../marketplace/marketplace.js?v=20260421c"></script>
+<script src="/nailsalon/receptionist.js?v=20260420b"></script>
+<script src="/nailsalon/voice-mode.js?v=20260419b"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    var _inited = false;
-    function _onRegion(region) {
-      try { sessionStorage.setItem('dlc_region', region.id); } catch (_) {}
-      if (!_inited) { _inited = true; Marketplace.init('hair'); }
-      else { Marketplace.refreshGrid(); }
+    var params = new URLSearchParams(window.location.search);
+    var vendorId = params.get('id');
+
+    if (vendorId) {
+      // ── Vendor detail mode ─────────────────────────────────────────────────────
+      // A specific vendor is requested. Init immediately — no region detection
+      // needed or wanted. DLCRegion callbacks must NEVER re-run init on a vendor
+      // detail page (they would call refreshGrid which is harmless, but region
+      // detection async callbacks arriving after Firestore loads could interfere).
+      Marketplace.init('hair');
+    } else {
+      // ── Directory mode ─────────────────────────────────────────────────────────
+      // No vendor specified — show category listing, filtered by user's region.
+      var _inited = false;
+      function _onRegion(region) {
+        try { sessionStorage.setItem('dlc_region', region.id); } catch (_) {}
+        if (!_inited) { _inited = true; Marketplace.init('hair'); }
+        else { Marketplace.refreshGrid(); }
+      }
+      if (window.DLCRegion) { DLCRegion.init(_onRegion); }
+      else { Marketplace.init('hair'); }
     }
-    if (window.DLCRegion) { DLCRegion.init(_onRegion); }
-    else { Marketplace.init('hair'); }
   });
 </script>
 </body>

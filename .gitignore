@@ -9,5 +9,9 @@ scripts/youtube/client_secret*.json
 scripts/youtube/token.json
 scripts/youtube/.env
 
+# Google service account keys (NEVER commit these — rotate if ever deployed)
+*-6796caee41ac.json
+dulichcali-booking-calendar-*.json
+
 # AI run artifacts — ephemeral, not source
 .ai_runs/

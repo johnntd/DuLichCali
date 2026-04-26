@@ -1,0 +1,33 @@
+# Firebase Hosting deploy exclusions
+# These files must NEVER be served via Firebase Hosting.
+
+# Google service account key — server credential, never deploy
+dulichcali-booking-calendar-6796caee41ac.json
+dulichcali-booking-calendar-*.json
+*-service-account*.json
+
+# YouTube OAuth credentials
+scripts/youtube/client_secret*.json
+scripts/youtube/token.json
+scripts/youtube/.env
+
+# All scripts (server-side tools, not web assets)
+scripts/**
+
+# AI run artifacts
+.ai_runs/**
+
+# Docs/plans
+docs/**
+
+# Standard excludes
+.git/**
+.claude/**
+node_modules/**
+firebase.json
+firestore.rules
+firestore.indexes.json
+.firebaserc
+functions/**
+remotion-promo/**
+generate_icons.py

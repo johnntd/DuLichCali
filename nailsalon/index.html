@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,300;0,6..96,400;1,6..96,300;1,6..96,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../marketplace/marketplace.css?v=20260420b">
+  <link rel="stylesheet" href="../marketplace/marketplace.css?v=20260421e">
   <link rel="stylesheet" href="../desktop.css">
   <link rel="stylesheet" href="/nailsalon/salon.css?v=20260417n">
   <!-- v=20260414a: skill chips CSS -->
@@ -51,23 +51,32 @@
 </head>
 <body>
 <div id="mpApp" class="mp-app"></div>
-<script src="/ai-engine.js?v=20260412j"></script>
+<script src="/ai-engine.js?v=20260420m"></script>
 <script src="/regions.js?v=20260421a"></script>
-<script src="../marketplace/services-data.js?v=20260421a"></script>
+<script src="../marketplace/services-data.js?v=20260420g"></script>
 <script src="../marketplace/vendor-data-service.js?v=20260414a"></script>
-<script src="../marketplace/marketplace.js?v=20260421a"></script>
-<script src="/nailsalon/receptionist.js?v=20260420b"></script>
-<script src="/nailsalon/voice-mode.js?v=20260419b"></script>
+<script src="../marketplace/marketplace.js?v=20260426a"></script>
+<script src="/nailsalon/receptionist.js?v=20260426c"></script>
+<script src="/nailsalon/voice-mode.js?v=20260421s"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    var _inited = false;
-    function _onRegion(region) {
-      try { sessionStorage.setItem('dlc_region', region.id); } catch (_) {}
-      if (!_inited) { _inited = true; Marketplace.init('nails'); }
-      else { Marketplace.refreshGrid(); }
+    var params = new URLSearchParams(window.location.search);
+    var vendorId = params.get('id');
+
+    if (vendorId) {
+      // Vendor detail mode — init immediately, no region detection.
+      Marketplace.init('nails');
+    } else {
+      // Directory mode — region-filtered listing.
+      var _inited = false;
+      function _onRegion(region) {
+        try { sessionStorage.setItem('dlc_region', region.id); } catch (_) {}
+        if (!_inited) { _inited = true; Marketplace.init('nails'); }
+        else { Marketplace.refreshGrid(); }
+      }
+      if (window.DLCRegion) { DLCRegion.init(_onRegion); }
+      else { Marketplace.init('nails'); }
     }
-    if (window.DLCRegion) { DLCRegion.init(_onRegion); }
-    else { Marketplace.init('nails'); }
   });
 </script>
 </body>

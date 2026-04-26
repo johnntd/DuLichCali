@@ -1,4 +1,4 @@
-// Lily Receptionist v3.5 — Stateful, time-aware AI receptionist for Luxurious Nails & Spa
+// Lily Receptionist v3.5 — Stateful, time-aware AI receptionist for nail & hair salon vendors
 // Voice-ready: LilyReceptionist.handleMessage(biz, text, apiKey) → Promise<{text, escalationType}>
 // Languages: English + Spanish + Vietnamese (Claude-detected, not just regex)
 // Features: intent classification, entity extraction, booking state machine,
@@ -33,7 +33,20 @@
     if (biz._bookingState) return;
     try {
       var raw = sessionStorage.getItem('lily_s_' + biz.id);
-      if (raw) { biz._bookingState = JSON.parse(raw); return; }
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        // Clear stale date: if the saved date is in the past, wipe date/time/staff/pendingAction
+        // so old booking context from a prior day never bleeds into a fresh conversation.
+        var todayIso = AIEngine.localISODate(new Date());
+        if (parsed.date && parsed.date < todayIso) {
+          parsed.date          = null;
+          parsed.time          = null;
+          parsed.staff         = null;
+          parsed.pendingAction = null;
+        }
+        biz._bookingState = parsed;
+        return;
+      }
     } catch (e) {}
     biz._bookingState = _emptyState();
   }
@@ -251,6 +264,7 @@
       var member = null;
       for (var i = 0; i < biz.staff.length; i++) {
         var nm = (biz.staff[i].name || '').toLowerCase().trim();
+        if (!nm) continue; // skip placeholder/unnamed staff docs
         // Partial-match: handles "Tracy" matching "Tracy Nguyen" and vice-versa
         if (nm === keyLower || nm.indexOf(keyLower) >= 0 || keyLower.indexOf(nm) >= 0) {
           member = biz.staff[i]; break;
@@ -325,54 +339,39 @@
     }
 
     // Build a natural language conflict / hours message
+    // _buildMsg returns English-only structured facts about why a slot was rejected.
+    // These strings go into AI history as context so the AI can respond naturally
+    // in the customer's language — no translations here.
     function _buildMsg(biz, key, data) {
-      // data.lang wins (needed after booking state reset); biz._bookingState.lang as secondary
-      var lang  = (data && data.lang) || (biz._bookingState && biz._bookingState.lang) || 'en';
       var phone = biz.phoneDisplay || biz.phone || '';
 
       if (key === 'closed') {
         var d = data.day.charAt(0).toUpperCase() + data.day.slice(1);
-        if (lang === 'vi') return 'Rất tiếc, tiệm không mở cửa vào ' + d + '. Bạn muốn chọn ngày khác không?';
-        if (lang === 'es') return 'Lo sentimos, el salón está cerrado los ' + d + 's. ¿Le gustaría elegir otro día?';
         return 'Sorry, the salon is closed on ' + d + 's. Would you like to pick a different day?';
       }
 
       if (key === 'too_late') {
         var dur = data.totalMins + ' min';
-        if (lang === 'vi') return 'Dịch vụ này cần ' + dur + ' và sẽ kết thúc sau giờ đóng cửa lúc ' + data.close + '. Thời gian bắt đầu muộn nhất là ' + data.latest + '. Bạn có muốn đặt vào lúc đó không?';
-        if (lang === 'es') return 'Este servicio toma ' + dur + ' y terminaría después del cierre (' + data.close + '). La última hora disponible es ' + data.latest + '. ¿Le gustaría ese horario?';
         return 'This service takes ' + dur + ' and would run past closing time (' + data.close + '). The latest start available is ' + data.latest + '. Would you like that time instead?';
       }
 
       if (key === 'conflict') {
         var staffNote = data.staff && data.staff.toLowerCase() !== 'any' ? ' with ' + data.staff : '';
-        // Prefer altSlots array (multi-slot); fall back to nextSlot (legacy single-slot)
         var alts = data.altSlots && data.altSlots.length ? data.altSlots : (data.nextSlot ? [data.nextSlot] : []);
-
-        // RX-012: build alternative-staff suffix when other technicians are free at the same time
         var staffSuffix = '';
         if (data.altStaff && data.altStaff.length > 0) {
           var _as = data.altStaff;
           var _nameStr = _as.length === 1 ? _as[0]
             : _as.slice(0, -1).join(', ') + (_as.length > 2 ? ',' : '') + ' or ' + _as[_as.length - 1];
-          if (lang === 'vi')   staffSuffix = ' ' + _nameStr + ' thì đang trống vào giờ đó.';
-          else if (lang === 'es') staffSuffix = ' Sin embargo, ' + _nameStr + ' ' + (_as.length > 1 ? 'están disponibles' : 'está disponible') + ' a esa hora.';
-          else staffSuffix = ' However, ' + _nameStr + ' ' + (_as.length === 1 ? 'is' : 'are') + ' available at that time.';
+          staffSuffix = ' However, ' + _nameStr + ' ' + (_as.length === 1 ? 'is' : 'are') + ' available at that time.';
         }
-
         if (alts.length === 1) {
-          if (lang === 'vi') return 'Rất tiếc, khung giờ ' + data.time + staffNote + ' đã có lịch. Thời gian trống gần nhất là ' + alts[0] + '.' + staffSuffix + ' Bạn muốn chọn giờ nào?';
-          if (lang === 'es') return 'Lo sentimos, el horario de las ' + data.time + staffNote + ' ya está reservado. El horario más cercano disponible es ' + alts[0] + '.' + staffSuffix + ' ¿Cuál prefiere?';
           return 'Sorry, ' + data.time + staffNote + ' is already booked. The closest available time is ' + alts[0] + '.' + staffSuffix + ' Which would you prefer?';
         } else if (alts.length >= 2) {
           var last = alts[alts.length - 1];
           var rest = alts.slice(0, alts.length - 1);
-          if (lang === 'vi') return 'Rất tiếc, khung giờ ' + data.time + staffNote + ' đã có lịch. Các khung giờ trống gần nhất là ' + rest.join(', ') + ' và ' + last + '.' + staffSuffix + ' Bạn muốn chọn giờ nào?';
-          if (lang === 'es') return 'Lo sentimos, el horario de las ' + data.time + staffNote + ' ya está reservado. Los horarios más cercanos disponibles son ' + rest.join(', ') + ' y ' + last + '.' + staffSuffix + ' ¿Cuál prefiere?';
           return 'Sorry, ' + data.time + staffNote + ' is already booked. The closest available times are ' + rest.join(', ') + ' and ' + last + '.' + staffSuffix + ' Which would you prefer?';
         } else {
-          if (lang === 'vi') return 'Rất tiếc, không còn khung giờ trống hôm đó' + (staffNote ? ' cho ' + data.staff : '') + '.' + staffSuffix + (staffSuffix ? '' : ' Vui lòng gọi ' + phone + ' hoặc chọn ngày khác.');
-          if (lang === 'es') return 'Lo sentimos, no quedan horarios disponibles ese día' + (staffNote ? ' con ' + data.staff : '') + '.' + staffSuffix + (staffSuffix ? '' : ' Llame al ' + phone + ' o elija otra fecha.');
           return 'Sorry, there are no more available slots that day' + (staffNote ? ' with ' + data.staff : '') + '.' + staffSuffix + (staffSuffix ? '' : ' Please call ' + phone + ' or choose a different date.');
         }
       }
@@ -380,17 +379,13 @@
       if (key === 'staff_not_working') {
         var sn  = data.staff || 'That technician';
         var day = data.day.charAt(0).toUpperCase() + data.day.slice(1);
-        if (lang === 'vi') return sn + ' không làm việc vào ' + day + '. Bạn muốn chọn ngày khác hoặc nhân viên khác không?';
-        if (lang === 'es') return sn + ' no trabaja el ' + day + '. ¿Le gustaría elegir otro día u otro técnico?';
         return sn + ' is not working on ' + day + '. Would you like to pick a different day or a different technician?';
       }
 
       if (key === 'outside_shift') {
-        var sn2    = data.staff || 'That technician';
-        var hours  = data.open + ' – ' + data.close;
-        var latStr = data.latest ? (' ' + (lang === 'vi' ? 'Giờ bắt đầu muộn nhất là ' + data.latest + '.' : lang === 'es' ? 'La última hora disponible es ' + data.latest + '.' : 'The latest start is ' + data.latest + '.')) : '';
-        if (lang === 'vi') return sn2 + ' làm từ ' + data.open + ' đến ' + data.close + '.' + latStr + ' Bạn muốn chọn giờ khác không?';
-        if (lang === 'es') return sn2 + ' trabaja de ' + data.open + ' a ' + data.close + '.' + latStr + ' ¿Le gustaría elegir otro horario?';
+        var sn2   = data.staff || 'That technician';
+        var hours = data.open + ' \u2013 ' + data.close;
+        var latStr = data.latest ? (' The latest start is ' + data.latest + '.') : '';
         return sn2 + ' works ' + hours + '.' + latStr + ' Would you like to choose a different time?';
       }
 
@@ -398,8 +393,6 @@
         var existSvcs  = Array.isArray(data.services) && data.services.length ? data.services.join(' + ') : 'an appointment';
         var existStaff = data.staff && data.staff.toLowerCase() !== 'any' ? ' with ' + data.staff : '';
         var existTime  = data.time || 'another time';
-        if (lang === 'vi') return 'Bạn đã có lịch hẹn ' + existSvcs + existStaff + ' lúc ' + existTime + ' hôm đó rồi. Bạn muốn thay lịch đó, giữ nguyên, hay chọn giờ khác?';
-        if (lang === 'es') return 'Ya tiene una cita de ' + existSvcs + existStaff + ' a las ' + existTime + ' ese día. ¿Desea reemplazarla, conservarla o elegir otra hora?';
         return 'You already have ' + existSvcs + existStaff + ' at ' + existTime + ' that day. Would you like to replace it, keep it, or pick a different time?';
       }
 
@@ -454,12 +447,7 @@
       if (checkStaff) {
         var shift = _getStaffShift(biz, draft.staff, draft.date);
         if (shift === null) {
-          // isWorkingDay failed (off that day, or missing schedule data)
-          return Promise.resolve({ valid: false, message: _buildMsg(biz, 'staff_not_working', {
-            staff: draft.staff,
-            day:   _dayName(draft.date),
-            lang:  draft.lang
-          })});
+          return Promise.resolve({ valid: false, message: _buildMsg(biz, 'staff_not_working', { staff: draft.staff, day: _dayName(draft.date), lang: draft.lang }) });
         }
         // isWithinShift: booking must start at or after shift open, end at or before shift close
         if (reqStartMins < shift.open || reqEndMins > shift.close) {
@@ -840,38 +828,38 @@
     if (bs && (bs.intent === 'booking_request' || bs.pendingAction)) {
       // In booking flow — ask for the next uncollected field
       if (!bs.services || bs.services.length === 0) {
-        safe = lang === 'vi' ? 'Bạn muốn làm dịch vụ gì hôm nay?' :
-               lang === 'es' ? '¿Qué servicio le gustaría reservar?' :
-               'What service would you like to book?';
+        if (lang === 'vi') safe = 'Bạn muốn đặt dịch vụ gì ạ?';
+        else if (lang === 'es') safe = '¿Qué servicio desea reservar?';
+        else safe = 'What service would you like to book?';
       } else if (!bs.date) {
-        safe = lang === 'vi' ? 'Bạn muốn đặt lịch ngày nào?' :
-               lang === 'es' ? '¿Qué día prefiere?' :
-               'What day works for you?';
+        if (lang === 'vi') safe = 'Bạn muốn đặt vào ngày nào ạ?';
+        else if (lang === 'es') safe = '¿Qué día le viene bien?';
+        else safe = 'What day works for you?';
       } else if (!bs.time) {
-        safe = lang === 'vi' ? 'Bạn muốn đặt vào lúc mấy giờ?' :
-               lang === 'es' ? '¿A qué hora le gustaría?' :
-               'What time would you prefer?';
+        if (lang === 'vi') safe = 'Bạn muốn đặt lúc mấy giờ ạ?';
+        else if (lang === 'es') safe = '¿A qué hora prefiere?';
+        else safe = 'What time would you prefer?';
       } else if (!bs.name) {
-        safe = lang === 'vi' ? 'Cho tôi biết tên bạn nhé!' :
-               lang === 'es' ? '¿Me puede dar su nombre?' :
-               'Could I get your name?';
+        if (lang === 'vi') safe = 'Cho mình biết tên của bạn được không ạ?';
+        else if (lang === 'es') safe = '¿Me podría dar su nombre?';
+        else safe = 'Could I get your name?';
       } else if (!bs.phone) {
-        safe = lang === 'vi' ? 'Và số điện thoại của bạn?' :
-               lang === 'es' ? '¿Y su número de teléfono?' :
-               'And your phone number?';
+        if (lang === 'vi') safe = 'Và số điện thoại của bạn ạ?';
+        else if (lang === 'es') safe = '¿Y su número de teléfono?';
+        else safe = 'And your phone number?';
       } else {
-        safe = lang === 'vi' ? 'Để tôi xác nhận cho bạn nhé!' :
-               lang === 'es' ? '¡Un momento, por favor!' :
-               'Let me get that confirmed for you!';
+        if (lang === 'vi') safe = 'Để mình xác nhận cho bạn nhé!';
+        else if (lang === 'es') safe = '¡Permítame confirmarle la reserva!';
+        else safe = 'Let me get that confirmed for you!';
       }
     } else if (bs && bs.intent === 'staff_availability' && bs.staff) {
-      safe = lang === 'vi' ? 'Bạn muốn đặt lịch ngày và giờ nào với ' + bs.staff + '?' :
-             lang === 'es' ? '¿Qué día y hora prefiere con ' + bs.staff + '?' :
-             'What day and time would you like with ' + bs.staff + '?';
+      if (lang === 'vi') safe = 'Bạn muốn đặt với ' + bs.staff + ' vào ngày và giờ nào ạ?';
+      else if (lang === 'es') safe = '¿Qué día y hora desea con ' + bs.staff + '?';
+      else safe = 'What day and time would you like with ' + bs.staff + '?';
     } else {
-      safe = lang === 'vi' ? 'Tôi có thể giúp gì cho bạn hôm nay?' :
-             lang === 'es' ? '¿En qué le puedo ayudar hoy?' :
-             'What can I help you with today?';
+      if (lang === 'vi') safe = 'Mình có thể giúp gì cho bạn ạ?';
+      else if (lang === 'es') safe = '¿En qué le puedo ayudar?';
+      else safe = 'What can I help you with today?';
     }
 
     console.warn('[GUARD] _sanitizeResponse: banned phrase blocked before display.',
@@ -974,7 +962,7 @@
     var _timeOfDay  = _hour < 12 ? 'morning' : _hour < 18 ? 'afternoon' : 'evening';
 
     var receptionistName = (biz.aiReceptionist && biz.aiReceptionist.name) || 'Lily';
-    var salonName = biz.name || 'Luxurious Nails & Spa';
+    var salonName = biz.name || 'this salon';
     var phone     = biz.phoneDisplay || biz.phone || '';
     var address   = biz.address || 'Bay Area, California';
 
@@ -1144,6 +1132,7 @@
       staffBlock = '(Staff data not yet loaded — tell customer to call ' + phone + ' for scheduling.)';
     }
 
+
     // Active context for pronoun resolution
     var selectedStaffCtx = '';
     if (biz._selectedStaff) {
@@ -1156,7 +1145,18 @@
     var tomorrowIso = (function() { var d = new Date(); d.setDate(d.getDate()+1); return AIEngine.localISODate(d); })();
     var pendingActionStr = (biz._bookingState && biz._bookingState.pendingAction) || 'none';
 
-    return [
+    var voiceModeBlock = biz._isVoiceMode ? [
+      '=== VOICE MODE — CRITICAL ===',
+      'Customer is speaking — responses will be read aloud via text-to-speech.',
+      'Keep every reply to 1–2 SHORT sentences. Maximum 25 words.',
+      'No lists. No options rundowns. Ask ONE question at a time.',
+      'Sound like a quick phone call, not a written message.',
+      'WRONG: "I can offer you gel nails, acrylic nails, dip powder, or a manicure. Which would you like?"',
+      'RIGHT: "Sure — gel or acrylic nails?"',
+      '',
+    ] : [];
+
+    return voiceModeBlock.concat([
       'You are ' + receptionistName + ', the professional AI receptionist for ' + salonName + '.',
       'Today is ' + dateStr + ' (ISO date: ' + isoDate + ').',
       '',
@@ -1385,6 +1385,11 @@
       '             use that context to infer — no need to ask again.',
       '  lang      — "en", "es", or "vi" based on THIS message',
       '',
+      '=== SYSTEM FEEDBACK MESSAGES ===',
+      'When you see a user message starting with [SYSTEM: ...], it is an availability result from the backend.',
+      'Respond naturally as the receptionist — relay the information warmly in the customer language.',
+      'Never expose "[SYSTEM:]" or any technical detail to the customer.',
+      '',
       '=== AVAILABILITY — CRITICAL RULE ===',
       'The SYSTEM validates real-time slot availability automatically — you do not need to and cannot do it yourself.',
       'Your job: collect service, staff preference, date, and time from the customer. The system checks the slot silently.',
@@ -1519,17 +1524,17 @@
       '',
       '"¿Cuánto cuesta gel manicure?":',
       '[STATE:{"intent":"price_question","services":["Gel Manicure"],"staff":null,"date":null,"time":null,"name":null,"phone":null,"lang":"es","pendingAction":null,"existingBookingId":null}]',
-    ]).join('\n');
+    ])).join('\n');
   }
 
   // ── Pending-confirmation messages (shown after avail check passes, before vendor confirms) ──
   // These replace Claude's premature "confirmed" text.
   // Status: AVAILABLE_NOT_CONFIRMED → shown to customer while waiting for vendor.
   function _buildPendingConfirmMsg(biz, draft) {
-    var lang  = (draft && draft.lang) || (biz._bookingState && biz._bookingState.lang) || 'en';
     var salon = biz.name || 'the salon';
-    if (lang === 'vi') return 'Yêu cầu của bạn đã được gửi đến ' + salon + ' và đang chờ xác nhận. Chúng tôi sẽ nhắn tin cho bạn ngay khi lịch được xác nhận.';
-    if (lang === 'es') return 'Su solicitud fue enviada a ' + salon + ' y está pendiente de confirmación. Le avisaremos por mensaje de texto en cuanto sea confirmada.';
+    var lang  = (draft && draft.lang) || 'en';
+    if (lang === 'vi') return 'Yêu cầu của bạn đã được gửi đến ' + salon + ' và đang chờ xác nhận. Chúng tôi sẽ nhắn tin cho bạn khi tiệm xác nhận.';
+    if (lang === 'es') return 'Su solicitud ha sido enviada a ' + salon + ' y está pendiente de confirmación. Le enviaremos un mensaje en cuanto el salón confirme.';
     return 'Your request has been sent to ' + salon + ' and is pending confirmation. We\'ll text you as soon as the salon confirms.';
   }
 
@@ -1537,7 +1542,6 @@
   // Replaces Claude's speculative "What's your name?" with an explicit availability confirm.
   // Status: SLOT_CONFIRMED_AVAILABLE — customer must accept before contact details are collected.
   function _buildAvailConfirmMsg(biz, draft) {
-    var lang  = (draft && draft.lang) || 'en';
     var staff = draft.staff || 'Your technician';
     var t24   = draft.time || '';
     // HH:MM (24h) → friendly 12h display
@@ -1555,22 +1559,27 @@
     var prices = (draft.services || []).map(function(sn) { return _priceForService(biz, sn); }).filter(Boolean);
     var priceHint = prices.length ? ' (' + prices.join(' + ') + ')' : '';
 
-    if (lang === 'vi') {
-      return staff + ' trống lúc ' + timeDisplay + (svcs ? ' — dịch vụ ' + svcs + priceHint : '') + '. Bạn có muốn đặt lịch không?';
-    }
-    if (lang === 'es') {
-      return staff + ' está disponible a las ' + timeDisplay + (svcs ? ' para ' + svcs + priceHint : '') + '. ¿Le gustaría hacer la reserva?';
-    }
+    var lang = (draft && draft.lang) || 'en';
+    if (lang === 'vi') return staff + ' có thể phục vụ bạn lúc ' + timeDisplay + (svcs ? ' cho dịch vụ ' + svcs + priceHint : '') + '. Bạn có muốn đặt lịch không?';
+    if (lang === 'es') return staff + ' está disponible a las ' + timeDisplay + (svcs ? ' para ' + svcs + priceHint : '') + '. ¿Desea reservar?';
     return staff + ' is available at ' + timeDisplay + (svcs ? ' for ' + svcs + priceHint : '') + '. Would you like to book that?';
   }
 
   // Shown at 60-second mark if vendor has not yet confirmed (status still PENDING_VENDOR_CONFIRMATION).
   function _buildTextBackMsg(biz, draft) {
-    var lang  = (draft && draft.lang) || 'en';
     var phone = draft && draft.phone ? draft.phone : null;
-    if (lang === 'vi') return 'Chưa nhận được xác nhận ngay lúc này. Chúng tôi sẽ gửi tin nhắn' + (phone ? ' đến ' + phone : '') + ' khi tiệm xác nhận lịch hẹn của bạn.';
-    if (lang === 'es') return 'Aún no tenemos confirmación inmediata. Le enviaremos un mensaje' + (phone ? ' a ' + phone : '') + ' en cuanto el salón confirme su cita.';
+    var lang  = (draft && draft.lang) || 'en';
+    if (lang === 'vi') return 'Chưa có xác nhận. Chúng tôi sẽ nhắn tin cho bạn' + (phone ? ' tại ' + phone : '') + ' khi tiệm xác nhận lịch hẹn.';
+    if (lang === 'es') return 'Aún no hay confirmación. Le enviaremos un mensaje' + (phone ? ' al ' + phone : '') + ' cuando el salón confirme su cita.';
     return 'No confirmation yet. We\'ll text you' + (phone ? ' at ' + phone : '') + ' once the salon confirms your appointment.';
+  }
+
+  // Localized generic slot-rejection message for catch/fallback paths where the
+  // AI could not re-phrase the English avail.message in the customer's language.
+  function _rejectionFallback(lang) {
+    if (lang === 'vi') return 'Rất tiếc, khung giờ đó không còn trống. Bạn có muốn chọn ngày/giờ khác không?';
+    if (lang === 'es') return 'Lo sentimos, ese horario no está disponible. ¿Desea elegir otra fecha u hora?';
+    return 'Sorry, that time is no longer available. Would you like to choose a different date or time?';
   }
 
   // ── Fallback (no API key / network error) ────────────────────────────────────
@@ -1578,7 +1587,7 @@
   // Uses biz._aiHistory to understand context (last AI message = pending question).
   function _fallback(biz, text) {
     var phone = biz.phoneDisplay || biz.phone || '';
-    var name  = biz.name || 'Luxurious Nails & Spa';
+    var name  = biz.name || 'this salon';
     var t     = text.toLowerCase().trim();
     var lang  = _detectLang(text);
 
@@ -2469,7 +2478,7 @@
       shopName:      (biz.aiReceptionist && biz.aiReceptionist.name) || biz.businessName || biz.name || '',
       shopPhone:     biz.phone     || biz.businessPhone    || '',
       shopAddress:   biz.address   || biz.businessAddress  || '',
-      shopUrl:       'https://www.dulichcali21.com/nailsalon?id=' + (biz.id || 'luxurious-nails'),
+      shopUrl:       'https://www.dulichcali21.com/' + (biz.category === 'hair' ? 'hairsalon' : 'nailsalon') + '?id=' + (biz.id || ''),
       status:        'pending',
     };
     if (fv) emailDoc.createdAt = fv.serverTimestamp();
@@ -2654,33 +2663,50 @@
           if (!window.dlcDb || !biz.id) return;
           var _vref = window.dlcDb.collection('vendors').doc(biz.id);
 
-          // ── Staff: live onSnapshot ─────────────────────────────────────────────────
-          // Fires immediately on subscription (page load) AND whenever admin saves a
-          // staff change — biz.staff is always current without requiring a page refresh.
+          // ── Staff: forced server read + onSnapshot for live updates ─────────────
+          // onSnapshot fires from Firestore local cache first. If the cache is stale
+          // (e.g. admin saved a new schedule but the customer's browser cached the old
+          // empty-{} data), booking validation would see no schedule and block the
+          // booking. get({ source: 'server' }) bypasses the cache and returns the
+          // authoritative server data, then we subscribe to onSnapshot so that any
+          // subsequent admin saves push to the client without a page refresh.
           if (biz._staffUnsub) { biz._staffUnsub(); biz._staffUnsub = null; }
-          var _staffReady = new Promise(function(resolve) {
-            biz._staffUnsub = _vref.collection('staff').onSnapshot(function(snap) {
-              if (!snap.empty) {
-                var _staffArr = [];
-                snap.forEach(function(sdoc) {
-                  var s = sdoc.data();
-                  _staffArr.push({
-                    id:               sdoc.id,
-                    name:             s.name             || '',
-                    role:             s.role             || 'Nail Tech',
-                    specialties:      s.specialties      || [],
-                    assignedServices: s.assignedServices || [],
-                    schedule:         s.schedule         || {},
-                    active:           s.active !== false,
-                    sortOrder:        s.sortOrder        || 0
-                  });
-                });
-                _staffArr.sort(function(a, b) { return a.sortOrder - b.sortOrder; });
-                biz.staff = _staffArr;
-              }
-              resolve(); // resolve on first callback so _dataPromise knows staff is ready
-              // subsequent onSnapshot callbacks keep updating biz.staff for live accuracy
-            }, function() { resolve(); }); // resolve on error too — keep existing biz.staff
+          var _staffRef = _vref.collection('staff');
+          function _buildStaffArrFromSnap(snap) {
+            var arr = [];
+            snap.forEach(function(sdoc) {
+              var s = sdoc.data();
+              if (!s.name) return; // skip placeholder / nameless docs
+              arr.push({
+                id:               sdoc.id,
+                name:             s.name,
+                role:             s.role             || 'Nail Tech',
+                specialties:      s.specialties      || [],
+                assignedServices: s.assignedServices || [],
+                schedule:         s.schedule         || {},
+                active:           s.active !== false,
+                sortOrder:        s.sortOrder        || 0
+              });
+            });
+            arr.sort(function(a, b) { return a.sortOrder - b.sortOrder; });
+            return arr;
+          }
+          var _staffReady = _staffRef.get({ source: 'server' }).then(function(snap) {
+            if (!snap.empty) { biz.staff = _buildStaffArrFromSnap(snap); }
+            // Subscribe AFTER server read so onSnapshot starts with fresh cached data,
+            // not the stale pre-read cache version.
+            biz._staffUnsub = _staffRef.onSnapshot(function(liveSnap) {
+              if (!liveSnap.empty) { biz.staff = _buildStaffArrFromSnap(liveSnap); }
+            }, function(err) { console.warn('[DLC Staff] Firestore onSnapshot error for', biz.id, err); });
+          }, function(err) {
+            // Server read failed (offline?) — fall back to onSnapshot which may serve cache
+            console.warn('[DLC Staff] Server read failed, falling back to onSnapshot for', biz.id, err);
+            return new Promise(function(resolve) {
+              biz._staffUnsub = _staffRef.onSnapshot(function(snap) {
+                if (!snap.empty) { biz.staff = _buildStaffArrFromSnap(snap); }
+                resolve();
+              }, function(e) { console.warn('[DLC Staff] Firestore error for', biz.id, e); resolve(); });
+            });
           });
 
           // ── Vendor doc + services + platform config: one-time server reads ──────────
@@ -2795,13 +2821,13 @@
         // commit latency). After 5s the doc IS queryable so any re-try will hit
         // the conflict check and be rejected correctly.
         if (biz._submissionInFlight) {
-          var guardLang = (biz._bookingState && biz._bookingState.lang) || 'en';
-          var guardMsg = guardLang === 'vi'
-            ? 'Yêu cầu của bạn đã được gửi và đang chờ xác nhận. Xin vui lòng chờ.'
-            : guardLang === 'es'
-              ? 'Su solicitud ya fue enviada y está pendiente de confirmación. Por favor espere.'
+          var _inflightLang = (biz._bookingState && biz._bookingState.lang) || 'en';
+          var _inflightMsg = _inflightLang === 'vi'
+            ? 'Yêu cầu của bạn đã được gửi đi và đang chờ xác nhận. Vui lòng chờ một chút.'
+            : _inflightLang === 'es'
+              ? 'Su solicitud ya ha sido enviada y está pendiente de confirmación. Por favor, espere un momento.'
               : 'Your request has already been sent and is pending confirmation. Please wait a moment.';
-          _appendMessage(messagesEl, guardMsg, 'bot');
+          _appendMessage(messagesEl, _inflightMsg, 'bot');
           return;
         }
 
@@ -2823,13 +2849,13 @@
             biz._emailState   = null;
             _appendMessage(messagesEl, emailIn, 'user');
             _queueBookingEmail(biz, emailIn, capturedState);
-            var eLang   = (biz._bookingState && biz._bookingState.lang) || 'en';
-            var sentAck = eLang === 'vi'
-              ? 'Đã ghi nhận! Chúng tôi sẽ gửi email xác nhận đến ' + emailIn + '.'
-              : eLang === 'es'
-                ? '¡Listo! Le enviaremos la confirmación a ' + emailIn + '.'
+            var _emailLang = (capturedState && capturedState.draft && capturedState.draft.lang) || 'en';
+            var _emailAckMsg = _emailLang === 'vi'
+              ? 'Được rồi! Email xác nhận đang được gửi đến ' + emailIn + '.'
+              : _emailLang === 'es'
+                ? '¡Listo! Su confirmación está en camino a ' + emailIn + '.'
                 : 'Got it! Your confirmation is on its way to ' + emailIn + '.';
-            _appendMessage(messagesEl, sentAck, 'bot');
+            _appendMessage(messagesEl, _emailAckMsg, 'bot');
             return;
           }
           // Anything else: clear email state and fall through to normal AI handling
@@ -2959,15 +2985,33 @@
                       }
                     }
                   } else {
-                    // Slot is taken — replace Claude's response with conflict notice
+                    // Slot is taken — re-route through AI so it responds in customer language
                     if (biz._aiHistory.length &&
                         biz._aiHistory[biz._aiHistory.length - 1].role === 'assistant') {
                       biz._aiHistory.pop();
                     }
-                    biz._aiHistory.push({ role: 'assistant', content: avail.message });
-                    _saveHistory(biz);
-                    biz._offeredSlot = null; // slot changed — clear pending offer
-                    _appendMessage(messagesEl, avail.message, 'bot');
+                    biz._offeredSlot = null;
+                    var _rjLang1 = (biz._bookingState && biz._bookingState.lang) || 'en';
+                    biz._aiHistory.push({ role: 'user', content: '[SYSTEM: ' + avail.message + ']' });
+                    AIEngine.call('nails', apiKey, _buildPrompt(biz, _rjLang1),
+                        biz._aiHistory.map(function(m) { return { role: m.role, content: m.content }; }),
+                        { intent: null }
+                    ).then(function(_rd1) {
+                        var _rt1raw = (_rd1.content && _rd1.content[0] && _rd1.content[0].text) || _rejectionFallback(_rjLang1);
+                        var _st1 = _parseStateMarker(_rt1raw);
+                        if (_st1) _mergeState(biz, _st1);
+                        var _rt1 = _stripAllMarkers(_rt1raw);
+                        biz._aiHistory.pop();
+                        biz._aiHistory.push({ role: 'assistant', content: _rt1raw });
+                        _saveHistory(biz);
+                        _appendMessage(messagesEl, _rt1, 'bot');
+                    }).catch(function() {
+                        var _fb1 = _rejectionFallback(_rjLang1);
+                        biz._aiHistory.pop();
+                        biz._aiHistory.push({ role: 'assistant', content: _fb1 });
+                        _saveHistory(biz);
+                        _appendMessage(messagesEl, _fb1, 'bot');
+                    });
                     // State preserved: customer only needs a different time/date/staff
                   }
                 })
@@ -3022,14 +3066,16 @@
                     _appendMessage(messagesEl, result.text, 'bot');
                   } else {
                     // Slot is taken — replace Claude's schedule-based answer with truth
+                    var _sadLang = (_ecs && _ecs.lang) || 'en';
+                    var _sadMsg = _rejectionFallback(_sadLang);
                     if (biz._aiHistory.length &&
                         biz._aiHistory[biz._aiHistory.length - 1].role === 'assistant') {
                       biz._aiHistory.pop();
                     }
-                    biz._aiHistory.push({ role: 'assistant', content: avail.message });
+                    biz._aiHistory.push({ role: 'assistant', content: avail.message }); // English for AI context
                     _saveHistory(biz);
                     biz._offeredSlot = null;
-                    _appendMessage(messagesEl, avail.message, 'bot');
+                    _appendMessage(messagesEl, _sadMsg, 'bot');
                   }
                 })
                 .catch(function() {
@@ -3125,18 +3171,34 @@
                       _submitDirectBooking(biz, confirmedDraft, messagesEl);
                     }
                   } else {
-                    // Not available — suppress Claude's premature "confirmed" message.
-                    // Replace it in history with the rejection so Claude knows what was
-                    // told to the customer and can answer follow-ups naturally:
-                    //   "when does Tracy work?", "what about 3 PM?", "who else is free?"
+                    // Not available — re-route through AI so it responds in customer language.
+                    // Claude knows what happened and can answer follow-ups naturally.
                     if (biz._aiHistory && biz._aiHistory.length &&
                         biz._aiHistory[biz._aiHistory.length - 1].role === 'assistant') {
                       biz._aiHistory.pop();
                     }
-                    biz._aiHistory.push({ role: 'assistant', content: avail.message });
-                    _saveHistory(biz);
-                    biz._offeredSlot = null; // slot conflict at final check — clear offer
-                    _appendMessage(messagesEl, avail.message, 'bot');
+                    biz._offeredSlot = null;
+                    var _rjLang2 = (biz._bookingState && biz._bookingState.lang) || 'en';
+                    biz._aiHistory.push({ role: 'user', content: '[SYSTEM: ' + avail.message + ']' });
+                    AIEngine.call('nails', apiKey, _buildPrompt(biz, _rjLang2),
+                        biz._aiHistory.map(function(m) { return { role: m.role, content: m.content }; }),
+                        { intent: null }
+                    ).then(function(_rd2) {
+                        var _rt2raw = (_rd2.content && _rd2.content[0] && _rd2.content[0].text) || _rejectionFallback(_rjLang2);
+                        var _st2 = _parseStateMarker(_rt2raw);
+                        if (_st2) _mergeState(biz, _st2);
+                        var _rt2 = _stripAllMarkers(_rt2raw);
+                        biz._aiHistory.pop();
+                        biz._aiHistory.push({ role: 'assistant', content: _rt2raw });
+                        _saveHistory(biz);
+                        _appendMessage(messagesEl, _rt2, 'bot');
+                    }).catch(function() {
+                        var _fb2 = _rejectionFallback(_rjLang2);
+                        biz._aiHistory.pop();
+                        biz._aiHistory.push({ role: 'assistant', content: _fb2 });
+                        _saveHistory(biz);
+                        _appendMessage(messagesEl, _fb2, 'bot');
+                    });
                     // Do NOT clear _bookingState or _bookingDraft.
                     // Rejection ≠ cancellation: staff, service, name, phone are still valid.
                     // Customer should only need to supply a new date/time or staff member.
@@ -3266,9 +3328,11 @@
             e.stopPropagation(); // prevent chat fullscreen toggle
             window.DLCVoiceMode.open(biz, messagesEl);
           });
-        } else {
-          _vmBtn.style.display = 'none';
         }
+        // If DLCVoiceMode is not defined, do NOT set style.display='none' —
+        // the CSS default (display:none on .mp-ai__voice-btn) already hides it,
+        // and an inline style would permanently block the CSS rule that shows it
+        // when mp-ai--fs.mp-ai--voice-ready is later applied.
       }
 
       // ── Full-screen mode (mobile only) ──────────────────────────────────────

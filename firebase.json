@@ -29,7 +29,12 @@
       "generate_icons.py",
       ".git/**",
       ".claude/**",
-      "node_modules/**"
+      "node_modules/**",
+      "scripts/**",
+      "dulichcali-booking-calendar-6796caee41ac.json",
+      "*.json.bak",
+      ".ai_runs/**",
+      "docs/**"
     ],
     "cleanUrls": true,
     "trailingSlash": false,

@@ -1,0 +1,111 @@
+=== Git Branch ===
+main
+
+=== Git Status ===
+ M .firebase/hosting..cache
+ M CLAUDE.md
+ M admin.html
+ M ai-engine.js
+ M aiOrchestrator.js
+ M firestore.indexes.json
+ M firestore.rules
+ M foods/index.html
+ M functions/index.js
+ M hairsalon/index.html
+ M images/unsplash/hair-styling.jpg
+ M index.html
+ M marketingEngine.js
+ M marketplace/marketplace.css
+ M marketplace/marketplace.js
+ M marketplace/services-data.js
+ M nailsalon/index.html
+ M nailsalon/receptionist.js
+ M nailsalon/voice-mode.js
+ M notifications.js
+ M package.json
+ M qr.html
+ M remotion-promo/src/SalonPromo/SalonPromo.tsx
+ M salon-admin.html
+ M tests/runner.js
+ M travel-packages.js
+ M travel.html
+ M vendor-admin.html
+ M vendor-detail.html
+ M vendor-login.html
+?? .stitch-project.json
+?? automation/
+?? docs/superpowers/plans/2026-04-15-travel-promo-video.md
+?? docs/superpowers/plans/2026-04-18-realtime-portal-notifications.md
+?? docs/superpowers/plans/2026-04-18-vendor-self-serve-onboarding.md
+?? docs/superpowers/plans/2026-04-18-vendor-subscription-page.md
+?? docs/superpowers/plans/2026-04-22-driver-ops-dashboard.md
+?? docs/superpowers/specs/
+?? dulichcali-booking-calendar-6796caee41ac.json
+?? food_poster_premium_A.pdf
+?? food_poster_premium_B.pdf
+?? food_social_premium_A.png
+?? food_social_premium_B.png
+?? images/emily_kitchen.jpg
+?? marketplace/vendor-data-service.js
+?? package-lock.json
+?? remotion-promo/out/
+?? remotion-promo/presets/luxurious-nails.json
+?? remotion-promo/public/big_sur_monterey_1_day-hero.jpg
+?? remotion-promo/public/big_sur_monterey_1_day-narration.mp3
+?? remotion-promo/public/big_sur_monterey_1_day-scene-1.mp4
+?? remotion-promo/public/big_sur_monterey_1_day-scene-2.mp4
+?? remotion-promo/public/big_sur_monterey_1_day-scene-3.mp4
+?? remotion-promo/public/big_sur_monterey_1_day-scene-4.mp4
+?? remotion-promo/public/big_sur_monterey_1_day-scene-5.mp4
+?? remotion-promo/public/big_sur_monterey_1_day-scene-6.mp4
+?? remotion-promo/public/coastal_premium_3_day-hero.jpg
+?? remotion-promo/public/coastal_premium_3_day-narration.mp3
+?? remotion-promo/public/coastal_premium_3_day-scene-1.mp4
+?? remotion-promo/public/coastal_premium_3_day-scene-2.mp4
+?? remotion-promo/public/coastal_premium_3_day-scene-3.mp4
+?? remotion-promo/public/coastal_premium_3_day-scene-4.mp4
+?? remotion-promo/public/coastal_premium_3_day-scene-5.mp4
+?? remotion-promo/public/coastal_premium_3_day-scene-6.mp4
+?? remotion-promo/public/highway_1_classic_2_day-hero.jpg
+?? remotion-promo/public/highway_1_classic_2_day-narration.mp3
+?? remotion-promo/public/highway_1_classic_2_day-scene-1.mp4
+?? remotion-promo/public/highway_1_classic_2_day-scene-2.mp4
+?? remotion-promo/public/highway_1_classic_2_day-scene-3.mp4
+?? remotion-promo/public/highway_1_classic_2_day-scene-4.mp4
+?? remotion-promo/public/highway_1_classic_2_day-scene-5.mp4
+?? remotion-promo/public/highway_1_classic_2_day-scene-6.mp4
+?? remotion-promo/public/nails-1.jpg
+?? remotion-promo/public/nails-2.jpg
+?? remotion-promo/public/travel-music.mp3
+?? remotion-promo/src/SalonPromo/components/
+?? remotion-promo/src/SalonPromo/schema.ts
+?? screen_64d6f1017b35400e99e9dd32a35286e8.png
+?? scripts/seed-travel-drivers-vehicles.js
+?? tests/cases/025-fullscreen-bleed-through-stacking-context.json
+?? tests/cases/026-voice-mic-stuck-disabled.json
+?? tests/cases/027-voice-tts-not-interruptible.json
+?? tests/cases/028-voice-tts-chain-regression.json
+?? tests/cases/029-voice-api-key-fallback.json
+?? tests/cases/030-receptionist-syntax-stability.json
+?? tests/cases/031-voice-auto-restart-delay.json
+?? tests/check-auth.js
+?? tests/check-drivers.js
+?? tests/create-test-booking.js
+?? tests/fix-driver-users.js
+?? tests/fix-vendor-status.js
+?? tests/reset-driver-passwords.js
+?? tests/test-live-offer.js
+?? tests/test_driver_overlay.py
+?? vendor-onboarding.css
+?? vendor-onboarding.html
+?? vendor-pricing.css
+?? vendors_inputs/
+
+=== Latest 5 Commits ===
+2f2f4b3 feat: add Codex → Claude review workflow (ai_reviews/, scripts/ai_review_flow.sh, .github/PR template)
+b8b1896 Add voice mode + receptionist to hair salon, phone strip, call tab, ride booking upgrades
+959c491 Fix: bump version on vendor-subscription.js to bust cache
+47d4df0 Rides/tours: use per-region driver phone for contact, not email
+1de24c6 Replace all customer-facing phone contacts with email
+
+=== Files Changed vs main ===

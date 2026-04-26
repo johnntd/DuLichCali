@@ -1,0 +1,53 @@
+=== Core App Files ===
+  index.html                                    1230 lines
+  style.css                                     4542 lines
+  desktop.css                                   64 lines
+  script.js                                     2407 lines
+  destinations.js                               661 lines
+  ai-engine.js                                  283 lines
+  aiOrchestrator.js                             697 lines
+  chat.js                                       2140 lines
+  notifications.js                              402 lines
+  travel.html                                   563 lines
+  travel-packages.js                            308 lines
+  firebase.json                                 67 lines
+  firestore.rules                               208 lines
+  firestore.indexes.json                        46 lines
+
+=== Hairsalon ===
+  hairsalon/index.html                          86 lines
+
+=== Nailsalon (reference standard) ===
+  nailsalon/index.html                          83 lines
+  nailsalon/receptionist.js                     3365 lines
+  nailsalon/voice-mode.js                       924 lines
+  nailsalon/salon.css                           1439 lines
+
+=== Marketplace ===
+  marketplace/marketplace.js                    5193 lines
+  marketplace/marketplace.css                   3166 lines
+  marketplace/services-data.js                  1033 lines
+  marketplace/vendor-data-service.js            186 lines
+
+=== Admin / Vendor / Driver ===
+  admin.html                                    3367 lines
+  vendor-admin.html                             5317 lines
+  vendor-login.html                             782 lines
+  driver-admin.html                             3324 lines
+  driver-login.html                             363 lines
+  salon-admin.html                              10870 lines
+
+=== Functions ===
+  functions/index.js                            2864 lines
+  functions/travelDispatch.js                   365 lines
+
+=== Tests ===
+  tests/cases/ — 31 case files
+  tests/runner.js                               1184 lines
+
+=== Scripts / Automation ===
+  scripts/ai_review_flow.sh
+  automation/auto_run.sh
+  automation/prompts/full_app_system_audit.md
+  automation/prompts/hair_salon_system_audit.md
+  automation/prompts/phase1_hair_salon_fix.md

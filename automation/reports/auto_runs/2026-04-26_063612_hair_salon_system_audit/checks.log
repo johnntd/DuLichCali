@@ -1,0 +1,260 @@
+
+=== Checks run at 2026-04-26_063612 ===
+
+> test:receptionist
+> node tests/runner.js
+
+
+[Prompt Integrity]  ← static-source-check
+  ✓ ENTITY_EXTRACTION: old "inherit from STATE" instruction is gone [RX-001]
+  ✓ ENTITY_EXTRACTION: updated staff rule says "do NOT inherit prior staff" [RX-001]
+  ✓ CONFLICT_RESOLUTION — STAFF SWITCH section exists [RX-001/002]
+  ✓ CONFLICT_RESOLUTION: instructs to KEEP date/time from STATE [RX-001/002]
+  ✓ booking_offer affirmative: clears pendingAction (prevents re-ask loop)
+  ✓ "replace it" handling: clears time to null (prevents customer_conflict loop) [RX-003]
+  ✓ "replace it": instructs to ask ONCE and not re-show conflict [RX-003]
+  ✓ CANCEL BOOKING section exists [RX-004]
+  ✓ CANCEL: handles "cancel" without redirecting to phone [RX-004]
+  ✓ _earlyCheckReady: passes isModify flag for modify_booking [RX-003/006]
+  ✓ _earlyCheckReady: passes phone when in modify mode [RX-003/006]
+  ✓ Post-booking state context: BOOKING STATUS: CONFIRMED signal [RX-009]
+  ✓ Post-booking state context: Do NOT ask for date/time again [RX-009]
+  ✓ Confirmation text: warm closing present [RX-009]
+  ✓ _submitDirectBooking: isExactReschedule guard present [RX-005]
+  ✓ _fetchLiveBizData: live data refresh function exists [RX-010]
+  ✓ 10-minute data cache interval configured [RX-010]
+  ✓ RX-011: _earlyCheckReady does NOT overwrite modify_booking pendingAction [RX-011]
+  ✓ RX-012: altStaff computation present in availability checker [RX-012]
+  ✓ RX-013: RESPONSE QUALITY — ALWAYS LEAD section exists [RX-013]
+  ✓ RX-013: NEVER end with bare statement rule present [RX-013]
+  ✓ RX-014: cancel handler includes in_progress status [RX-014]
+  ✓ RX-014: cancel handler uses shared lookup (most-recent-only) [RX-014]
+  ✓ RX-015: _xsBookingLookup function exists [RX-015]
+  ✓ RX-015: CROSS-SESSION prompt instruction exists in MODIFY section [RX-015]
+  ✓ RX-015: SAME-SESSION prompt instruction exists in MODIFY section [RX-015]
+  ✓ RX-016: _mergeState has field validation comment [RX-016]
+  ✓ RX-016: date validation rejects non-ISO format [RX-016]
+  ✓ RX-017: _lookupActiveBookingByPhone shared utility exists [RX-017]
+  ✓ RX-017: _findFreeStaff function exists [RX-017]
+  ✓ RX-017: modify submission skips Firestore when ID already known [RX-017]
+  ✓ RX-018: _validateResponseQuality function exists [RX-018]
+  ✓ RX-018: response quality validator gates ESCALATE:appointment on empty services [RX-018]
+  ✓ RX-018: response quality validator wired into callClaude pipeline [RX-018]
+  ✓ RX-019: receptionist passes intent to AIEngine.call [RX-019]
+  ✓ RX-019: AIEngine has _callOpenAI adapter [RX-019]
+  ✓ RX-019: AIEngine has _callGemini adapter [RX-019]
+  ✓ RX-019: AIEngine has _HIGH_RISK_INTENTS routing map [RX-019]
+  ✓ RX-019: AIEngine normalises OpenAI response to Claude format [RX-019]
+  ✓ RX-019: AIEngine call() has safe Claude fallback after provider failure [RX-019]
+  ✓ RX-020: customer conflict check uses _overlaps() (no back-to-back false positive) [RX-020]
+  ✓ RX-021: _lastConfirmedTime stored in _submitDirectBooking for stale-time detection [RX-021]
+  ✓ RX-021: _lastConfirmedDate stored in _submitDirectBooking [RX-021]
+  ✓ RX-021: _mergeState clears _lastBookingId on fresh booking_request with different time [RX-021]
+  ✓ RX-021: CONFIRMED signal includes instruction not to reuse confirmed slot [RX-021]
+  ✓ RX-021: isModify guard checks _lastConfirmedTime for stale-time reuse [RX-021]
+  ✓ RX-022: AVAILABILITY CRITICAL RULE — BANNED PHRASES list present in prompt [RX-022]
+  ✓ RX-022: AVAILABILITY CRITICAL RULE — no longer leaks "NOT real-time booking data" to Claude [RX-022]
+  ✓ RX-022: Step E — does NOT instruct Claude to write premature confirmation text [RX-022]
+  ✓ RX-022: Step E — old permissive confirmation instruction removed from prompt [RX-022]
+  ✓ RX-022: _validateResponseQuality — banned phrase detection wired in [RX-022]
+  ✓ RX-023: _sanitizeResponse function defined in source [RX-023]
+  ✓ RX-023: _sanitizeResponse called as FIRST operation in send() .then() [RX-023]
+  ✓ RX-023: _sanitizeResponse GUARD log message present [RX-023]
+  ✓ RX-023: _sanitizeResponse corrects _aiHistory after sanitization [RX-023]
+  ✓ RX-023: _sanitizeResponse contains regex patterns for banned phrases [RX-023]
+  ✓ RX-023: _sanitizeResponse is wired before earlyCheckReady in send() [RX-023]
+  ✓ RX-023: _sanitizeResponse clears escalationType on sanitized response [RX-023]
+
+[State Parser]  ← mirrored-unit-logic
+  ✓ parses a complete STATE marker
+  ✓ parses STATE with all null fields
+  ✓ returns null when no STATE marker present
+  ✓ uses lastIndexOf — picks LAST STATE marker when multiple present
+  ✓ parses STATE with pendingAction=booking_offer
+  ✓ parses STATE with pendingAction=modify_booking, time=null [RX-003 fix]
+  ✓ extracts escalation type: appointment
+  ✓ extracts escalation type: cancel [RX-004]
+  ✓ escalation type is case-insensitive
+  ✓ returns null when no escalation marker
+  ✓ parses BOOKING draft with lang field [RX-007]
+  ✓ BOOKING draft returns null on malformed JSON
+  ✓ mergeState applies all update keys
+  ✓ [RX-016] mergeState: rejects invalid date format (not YYYY-MM-DD)
+  ✓ [RX-016] mergeState: rejects past date
+  ✓ [RX-016] mergeState: accepts valid future date
+  ✓ [RX-016] mergeState: rejects invalid time format (not H:MM or HH:MM)
+  ✓ [RX-016] mergeState: accepts valid time
+  ✓ [RX-016] mergeState: rejects phone with fewer than 7 digits
+  ✓ [RX-016] mergeState: strips non-digits from phone
+  ✓ [RX-016] mergeState: rejects non-array services
+  ✓ [RX-016] mergeState: filters empty strings from services array
+  ✓ [RX-016] mergeState: rejects unknown lang
+  ✓ [RX-016] mergeState: accepts valid lang values
+  ✓ [RX-016] mergeState: rejects unknown pendingAction
+  ✓ [RX-016] mergeState: null value always clears a field
+
+[Availability Logic]  ← mirrored-unit-logic | fixture-behavioral
+  ✓ free slot: empty schedule returns valid=true
+  ✓ staff not working Sunday returns key=staff_not_working
+  ✓ Lisa does not work Tuesdays
+  ✓ time after shift end returns key=outside_shift
+  ✓ time before shift start returns key=outside_shift
+  ✓ staff conflict: exact same time returns key=conflict
+  ✓ staff conflict: overlapping (not exact) time returns key=conflict
+  ✓ staff conflict: suggests alternative slots
+  ✓ adjacent booking (back-to-back) does NOT conflict
+  ✓ "any" staff booking skips named-staff conflict check
+  ✓ cancelled booking does NOT block the slot
+  ✓ customer conflict: same phone, overlapping time returns key=customer_conflict
+  ✓ customer conflict: same name (no phone) triggers conflict
+  ✓ [RX-003] isModify=true excludes own booking — no customer_conflict loop
+  ✓ [RX-003] isModify=true, OTHER staff still detects conflict
+  ✓ [RX-006] customer reschedules to slot their old booking occupied (same staff)
+  ✓ null draft falls through to valid=true (fail-open)
+  ✓ missing time field falls through to valid=true (fail-open)
+  ✓ [RX-012] conflict result includes altStaff — Tracy and/or Lisa available when Helen booked at 14:00
+  ✓ [RX-012] altStaff excludes the conflicted staff and inactive members
+  ✓ [RX-012] altStaff is empty when all other staff are also busy
+
+[Regression Case Library]  ← structural | static-source-check
+  ✓ at least 10 case files exist
+  ✓ RX-001 — 001-staff-switch-helen-to-tracy.json: required fields and valid status
+  ✓ RX-002 — 002-staff-switch-any-tech.json: required fields and valid status
+  ✓ RX-003 — 003-replace-booking-loop.json: required fields and valid status
+  ✓ RX-004 — 004-cancel-booking.json: required fields and valid status
+  ✓ RX-005 — 005-modify-to-available-time.json: required fields and valid status
+  ✓ RX-006 — 006-modify-to-conflict-time.json: required fields and valid status
+  ✓ RX-007 — 007-language-consistency.json: required fields and valid status
+  ✓ RX-008 — 008-confirmation-quality.json: required fields and valid status
+  ✓ RX-009 — 009-booking-close-clarity.json: required fields and valid status
+  ✓ RX-010 — 010-stale-hours-data.json: required fields and valid status
+  ✓ RX-011 — 011-reschedule-creates-duplicate-booking.json: required fields and valid status
+  ✓ RX-012 — 012-multistaff-conflict-alternatives.json: required fields and valid status
+  ✓ RX-013 — 013-conversation-quality-always-lead.json: required fields and valid status
+  ✓ RX-014 — 014-cross-session-cancel.json: required fields and valid status
+  ✓ RX-015 — 015-cross-session-modify.json: required fields and valid status
+  ✓ RX-016 — 016-state-field-validation.json: required fields and valid status
+  ✓ RX-017 — 017-phase3-tool-hardening.json: required fields and valid status
+  ✓ RX-018 — 018-response-quality-validator.json: required fields and valid status
+  ✓ RX-019 — 019-phase5-hybrid-router.json: required fields and valid status
+  ✓ RX-020 — 020-conflict-backtoback-false-positive.json: required fields and valid status
+  ✓ RX-021 — 021-stale-booking-state-contamination.json: required fields and valid status
+  ✓ RX-022 — 022-availability-contract-enforcement.json: required fields and valid status
+  ✓ RX-023 — 023-sanitize-response-guard.json: required fields and valid status
+  ✓ RX-024 — 024-specific-time-slot-vs-schedule.json: required fields and valid status
+  ✓ RX-025 — 025-fullscreen-bleed-through-stacking-context.json: required fields and valid status
+  ✓ RX-026 — 026-voice-mic-stuck-disabled.json: required fields and valid status
+  ✓ RX-027 — 027-voice-tts-not-interruptible.json: required fields and valid status
+  ✓ RX-028 — 028-voice-tts-chain-regression.json: required fields and valid status
+  ✓ RX-029 — 029-voice-api-key-fallback.json: required fields and valid status
+  ✓ RX-030 — 030-receptionist-syntax-stability.json: required fields and valid status
+  ✓ RX-031 — 031-voice-auto-restart-delay.json: required fields and valid status
+  ✓ RX-024: _staffAvailWithTime guard defined in source [RX-024]
+  ✓ RX-024: _staffAvailWithTime covers staff_availability intent [RX-024]
+  ✓ RX-024: _staffAvailWithTime covers booking_request + no services gap [RX-024]
+  ✓ RX-024: _staffAvailWithTime excluded when earlyCheckReady fires [RX-024]
+  ✓ RX-024: _staffAvailWithTime requires named staff (not "any") [RX-024]
+  ✓ RX-024: _staffAvailWithTime requires time to be present [RX-024]
+  ✓ RX-024: _timeOfDay variable computed from real clock [RX-024]
+  ✓ RX-024: GREETING RULE section present in prompt [RX-024]
+  ✓ RX-024: Greeting rule forbids "Good day" [RX-024]
+  ✓ RX-024: Greeting rule injects _timeOfDay into prompt [RX-024]
+  ✓ RX-024: SCHEDULE ≠ SLOT AVAILABILITY critical rule in prompt [RX-024]
+  ✓ RX-024: Shift start ≠ slot open rule explicit in prompt [RX-024]
+  ✓ RX-024: Specific time → booking_request classification rule in prompt [RX-024]
+  ✓ RX-001 [verified_in_runner]: fix detectable in source — Staff switch: Helen unavailable → user explicitl
+  ✓ RX-002 [verified_in_runner]: fix detectable in source — Staff switch: Helen unavailable → user asks for 
+  ✓ RX-003 [verified_in_runner]: fix detectable in source — Replace booking loop: user says 'replace it' but
+  ✓ RX-004 [verified_in_runner]: fix detectable in source — Cancel booking: AI refuses direct cancellation a
+  ✓ RX-005 [verified_in_runner]: fix detectable in source — Modify booking: reschedule to available new time
+  ✓ RX-006 [verified_in_runner]: fix detectable in source — Modify booking: reschedule to conflicting time —
+  ✓ RX-007 [verified_in_runner]: fix detectable in source — Language consistency: English booking conversati
+  ✓ RX-008 [verified_in_runner]: fix detectable in source — Confirmation summary must include time and price
+  ✓ RX-009 [verified_in_runner]: fix detectable in source — Booking close: 'is it done?' should get clear co
+  ✓ RX-010 [verified_in_runner]: fix detectable in source — Stale hours: admin changes staff schedule but AI
+  ✓ RX-011 [verified_live]: fix detectable in source — In-session reschedule creates duplicate new book
+  ✓ RX-012 [verified_in_runner]: fix detectable in source — Conflict message shows only alt slots for same s
+  ✓ RX-013 [verified_in_runner]: fix detectable in source — AI ends turns passively — statement with no next
+  ✓ RX-014 [verified_in_runner]: fix detectable in source — Cross-session cancel: customer returns in new br
+  ✓ RX-015 [verified_in_runner]: fix detectable in source — Cross-session modify: customer returns in new se
+  ✓ RX-016 [verified_in_runner]: fix detectable in source — State machine: malformed Claude STATE fields cor
+  ✓ RX-017 [verified_in_runner]: fix detectable in source — Phase 3: Tool/lookup hardening — shared utility,
+  ✓ RX-018 [verified_in_runner]: fix detectable in source — Phase 4: Response quality validator — lang consi
+  ✓ RX-019 [verified_in_runner]: fix detectable in source — Phase 5: Hybrid AI router — OpenAI for booking-c
+  ✓ RX-020 [verified_in_runner]: fix detectable in source — Customer conflict back-to-back false positive — 
+  ✓ RX-022 [verified_in_runner]: fix detectable in source — Availability contract: AI must never say it cann
+  ✓ RX-023 [verified_in_runner]: fix detectable in source — Permanent non-bypassable execution guard: _sanit
+  ✓ RX-024 [verified_in_runner]: fix detectable in source — Availability-first hardening: schedule ≠ slot, _
+  ✓ RX-025 [verified_in_runner]: fix detectable in source — iOS fullscreen chat: page content bleeds through
+  ✓ RX-026 [verified_in_runner]: fix detectable in source — Voice mode: mic button stuck disabled during AI 
+  ✓ RX-027 [verified_in_runner]: fix detectable in source — Voice mode: tapping mic during AI processing doe
+  ✓ RX-028 [verified_in_runner]: fix detectable in source — Voice TTS regression: OpenAI and Gemini TTS both
+  ✓ RX-030 [verified_in_runner]: fix detectable in source — receptionist.js silent load failure: missing ) i
+  ✓ RX-031 [verified_in_runner]: fix detectable in source — Voice mode: user misses first 1-2 words of respo
+
+  Case statuses:
+    verified_in_runner: 29
+    verified_live: 2
+  Categories: alternate_staff(2), booking_replace(1), booking_cancel(2), booking_modify(4), conflict_handling(2), language_consistency(1), confirmation_quality(1), conversation_closing(2), stale_data(5), conflict_resolution(1), availability_contract(3), ui_overlay(1), voice_mode(5), syntax_stability(1)
+
+[UI Overlay Regression (marketplace.js)]  ← static-source-check
+  ✓ RX-025: _origParent saved before container is moved to body [RX-025]
+  ✓ RX-025: _origNextSib saved before container is moved to body [RX-025]
+  ✓ RX-025: container moved to document.body on _fsOpen [RX-025]
+  ✓ RX-025: mp-ai-open-root added to documentElement (html) on open [RX-025]
+  ✓ RX-025: container restored to original DOM position on _fsClose [RX-025]
+  ✓ RX-025: mp-ai-open-root removed from documentElement on close [RX-025]
+  ✓ RX-025: body.style.position NOT used for scroll lock (causes iOS viewport bugs) [RX-025]
+
+[Voice Mode Regression (voice-mode.js)]  ← static-source-check
+  ✓ RX-026: mic disabled only during listening (not processing) [RX-026]
+  ✓ RX-026: mic NOT disabled during processing state [RX-026]
+  ✓ RX-027: _interruptNext flag defined in module state [RX-027]
+  ✓ RX-027: mic tap during processing sets _interruptNext instead of silently dropping [RX-027]
+  ✓ RX-027: _interruptNext flag checked in bot-reply callback [RX-027]
+  ✓ RX-027: _interruptNext cleared after use and on close [RX-027]
+  ✓ RX-027: biz._isVoiceMode set when voice overlay opens [RX-027]
+  ✓ RX-027: biz._isVoiceMode cleared when voice overlay closes [RX-027]
+  ✓ Voice mode prompt block: receptionist shortens responses in voice mode [RX-027]
+  ✓ Voice mode prompt block: maximum 25 words per response rule [RX-027]
+  ✓ RX-028: OpenAI TTS uses hardcoded nova voice (no Firestore override) [RX-028]
+  ✓ RX-028: No AbortController in _speakViaOpenAi (caused silent TTS failure) [RX-028]
+  ✓ RX-028: _speakReply uses original nested-if callback structure [RX-028]
+  ✓ RX-028: Gemini TTS uses hardcoded voice (no Firestore geminiVoice override) [RX-028]
+
+[Voice Mode: Auto-Restart Listening Delay (RX-031)]  ← static-source-check
+  ✓ RX-031: _autoRestartListening delay is ≤ 400ms (was 700ms — caused first words to be cut off) [RX-031]
+  ✓ RX-031: _autoRestartListening delay is > 100ms (prevents audio bleed from TTS tail) [RX-031]
+
+[Voice Mode: API Key Fallback Chain (RX-029)]  ← static-source-check
+  ✓ RX-029: _speakViaOpenAi tries platform key before localStorage [RX-029]
+  ✓ RX-029: _speakViaOpenAi platform key fallback comes before localStorage [RX-029]
+  ✓ RX-029: _speakViaGemini tries platform key before localStorage [RX-029]
+  ✓ RX-029: _speakViaGemini platform key fallback comes before localStorage [RX-029]
+  ✓ RX-029: _prefetchWelcome tries platform key before localStorage [RX-029]
+
+[Receptionist.js Syntax Stability (RX-030)]  ← static-source-check
+  ✓ RX-030: receptionist.js parses without syntax errors [RX-030]
+  ✓ RX-030: _buildPrompt returns voiceModeBlock.concat with balanced closing paren [RX-030]
+  ✓ RX-030: _buildPrompt uses voiceModeBlock.concat (not bare array return) [RX-030]
+  ✓ RX-030: voice-mode.js parses without syntax errors [RX-030]
+
+==============================================================
+✅  ALL TESTS PASSED: 211 passed, 0 failed
+
+Confidence by layer:
+  Layer 1 (Prompt Integrity)    static-source-check    MEDIUM  — instruction text present, Claude compliance unverified
+  Layer 2 (State Parser)        mirrored-unit-logic    MED-HI  — algorithm verified, production sync by manual audit
+  Layer 3 (Availability Logic)  mirrored + fixture     HIGH    — algorithm verified; Firestore queries untested
+  Layer 4 (Case Library)        structural + static    MED     — schema valid, fix strings present in source
+  Layer 5 (UI Overlay)          static-source-check    MEDIUM  — fix code present in marketplace.js; iOS runtime unverified
+  Layer 6 (Voice Mode)          static-source-check    MEDIUM  — fix code present in voice-mode.js; device runtime unverified
+
+What this harness does NOT guarantee:
+  — Claude follows prompt instructions (requires live API testing)
+  — NailAvailabilityChecker matches avail-logic.js (requires manual sync check)
+  — End-to-end booking correctness on production Firestore
+  — Correct behavior under real customer input variation
+  — Regression-free after Claude model updates
+==============================================================
+

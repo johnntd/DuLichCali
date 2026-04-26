@@ -1,0 +1,26 @@
+=== package.json (root) ===
+  test:receptionist: node tests/runner.js
+  auto:hair: bash automation/auto_run.sh automation/prompts/hair_salon_system_audit.md
+  auto:full: bash automation/auto_run.sh automation/prompts/full_app_system_audit.md
+  auto:phase1: bash automation/auto_run.sh automation/prompts/phase1_hair_salon_fix.md
+
+=== functions/package.json ===
+  deploy: firebase deploy --only functions
+  logs: firebase functions:log
+
+=== Environment Variable Names Used (values NOT shown) ===
+  Server-side (Firebase Secret Manager):
+  - TWILIO_ACCOUNT_SID
+  - TWILIO_AUTH_TOKEN
+  - TWILIO_FROM_NUMBER
+  - OPENAI_API_KEY
+  - GEMINI_API_KEY
+  - CLAUDE_API_KEY
+  - RESEND_API_KEY
+  - RESEND_WEBHOOK_SECRET
+  Client-side (browser localStorage keys):
+  - dlc_claude_key
+  - dlc_gemini_key
+  - dlc_openai_key
+  CLI tools:
+  - ANTHROPIC_API_KEY (process.env)

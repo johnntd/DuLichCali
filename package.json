@@ -3,7 +3,10 @@
   "private": true,
   "description": "Du Lich Cali — static hosting project. No build step.",
   "scripts": {
-    "test:receptionist": "node tests/runner.js"
+    "test:receptionist": "node tests/runner.js",
+    "auto:hair": "bash automation/auto_run.sh automation/prompts/hair_salon_system_audit.md",
+    "auto:full": "bash automation/auto_run.sh automation/prompts/full_app_system_audit.md",
+    "auto:phase1": "bash automation/auto_run.sh automation/prompts/phase1_hair_salon_fix.md"
   },
   "engines": {
     "node": ">=14"

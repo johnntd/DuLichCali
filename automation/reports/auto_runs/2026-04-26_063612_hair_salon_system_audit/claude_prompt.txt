@@ -1,0 +1,879 @@
+You are auditing the DuLichCali project (dulichcali21.com).
+
+This is an automated run created by automation/auto_run.sh.
+Run ID: 2026-04-26_063612_hair_salon_system_audit
+Run dir: /Users/johntd/Documents/claude-projects/ai_dulich_cali/DuLichCali/automation/reports/auto_runs/2026-04-26_063612_hair_salon_system_audit
+
+Read the following context carefully before executing the prompt below.
+
+===== PROMPT (source of truth for this run) =====
+# DuLichCali Hair Salon System Audit Prompt
+
+## Role
+
+You are auditing the DuLichCali app with special focus on the hair salon interface, specifically Beauty Hair OC.
+
+**Do not start coding immediately.**
+
+Your job is to inspect the codebase, identify confirmed weaknesses, compare Beauty Hair OC against the Luxurious Nails standard, and produce a prioritized audit report.
+
+---
+
+## Reference Standard
+
+Luxurious Nails (`/nailsalon?id=luxurious-nails`) is the gold standard for all vendor pages.
+
+The hair salon page for Beauty Hair OC (`/hairsalon?id=beauty-hair-oc`) must be an equivalent vendor-specific page — not a generic directory page.
+
+---
+
+## Audit Target: Beauty Hair OC
+
+Audit `hairsalon/index.html` and all files it loads for:
+
+| Feature | Expected | Actual | Gap | Root Cause | Fix Priority |
+|---|---|---|---|---|---|
+| Vendor name shown | "Beauty Hair OC" | ? | ? | ? | ? |
+| Vendor phone shown | Vendor-specific | ? | ? | ? | ? |
+| Vendor address shown | Westminster, OC | ? | ? | ? | ? |
+| Business hours shown | Hair salon hours | ? | ? | ? | ? |
+| Hair-specific services listed | Cut, Color, Balayage, Keratin, etc. | ? | ? | ? | ? |
+| Hair-specific staff/stylists | Michael, Michele, Tracy | ? | ? | ? | ? |
+| Pricing displayed | Per services-data.js | ? | ? | ? | ? |
+| Carousel/showcase present | Yes | ? | ? | ? | ? |
+| AI receptionist panel | Michelle persona | ? | ? | ? | ? |
+| Voice support | Enabled | ? | ? | ? | ? |
+| Booking flow entry point | Works | ? | ? | ? | ? |
+| Availability check gates booking | Yes | ? | ? | ? | ? |
+| Mobile layout (375px) | Correct | ? | ? | ? | ? |
+| Desktop layout (1280px) | Correct | ? | ? | ? | ? |
+| Z-index/overlay correct | No bleed-through | ? | ? | ? | ? |
+| Correct vendor context injected | beauty-hair-oc | ? | ? | ? | ? |
+| No leakage from Luxurious Nails | Clean | ? | ? | ? | ? |
+| No generic directory behavior | Single vendor | ? | ? | ? | ? |
+
+---
+
+## Files to Read
+
+Read these files fully or in relevant sections:
+
+1. `hairsalon/index.html` — entire file
+2. `marketplace/services-data.js` — beauty-hair-oc vendor block + cali-hair-beauty block
+3. `marketplace/marketplace.js` — vendor loading and rendering logic
+4. `marketplace/vendor-data-service.js` — if present, how vendor data is fetched
+5. `nailsalon/index.html` — first 100 lines (reference structure)
+6. `nailsalon/receptionist.js` — how vendor context is injected into AI prompt (reference)
+
+---
+
+## Related Systems to Audit
+
+After auditing the vendor page itself, check:
+
+**Routes and loading:**
+- How does `hairsalon/index.html` decide which vendor to show?
+- Is `?id=beauty-hair-oc` required? What happens without it?
+- Does it fall back to a correct default or show wrong data?
+
+**Firestore/data loading:**
+- Which Firestore collection powers the hair salon page?
+- What happens if Firestore is unavailable — does it fall back to services-data.js correctly?
+
+**AI receptionist:**
+- What system prompt context is injected for Beauty Hair OC?
+- Is Michelle's persona correctly applied?
+- Is the correct vendor data (services, staff, hours) in the AI context?
+- Is language detection (vi/en/es) wired correctly?
+
+**Booking:**
+- Where does the booking entry point live on the hair salon page?
+- Does it check availability before confirming?
+
+**Staff/services model:**
+- Is the hair services model consistent with nailsalon services structure?
+- Are staff working hours and days configured correctly for hair stylists?
+
+**Carousel/media:**
+- Is there a hero carousel on the hair salon page?
+- Are hair-specific images used (not nail salon images)?
+
+**Mobile controls:**
+- Does the bottom navigation show on mobile for hair salon?
+- Are touch targets correctly sized?
+
+**Voice mode:**
+- Is voice mode enabled for the hair salon AI receptionist?
+- Is the TTS chain (OpenAI → Gemini → browser) present?
+
+---
+
+## Classification
+
+Classify every finding as:
+
+| Code | Meaning |
+|---|---|
+| P0 | Production blocker — incorrect data shown, broken booking, broken AI |
+| P1 | Major user-facing bug — wrong layout, broken carousel, voice not working |
+| P2 | Important weakness — minor display errors, missing features vs nailsalon |
+| P3 | Improvement — nice-to-have polish |
+
+---
+
+## Finding Format
+
+For each confirmed finding:
+
+```
+ID: H-01
+Severity: P0 / P1 / P2 / P3
+Symptom: [what the user sees or what breaks]
+Root cause: [exact file + line if known, or code path]
+Files involved: [file.js:line or file.html section]
+Proposed fix: [smallest safe change]
+Risk: [what else could break]
+Required test: [how to verify the fix]
+```
+
+---
+
+## Output Format
+
+Produce a structured audit report with:
+
+1. **Executive summary** — overall health of Beauty Hair OC page vs Luxurious Nails standard
+2. **Feature comparison table** — filled in from the audit
+3. **Confirmed findings** — all P0/P1/P2/P3 items in finding format above
+4. **Root cause analysis** — shared vs per-vendor code paths
+5. **Recommended fix order** — P0 first, then P1, then P2
+6. **Regression risks** — what to watch when fixing
+
+---
+
+## Hard Rules
+
+- Do not start fixing. Stop after the audit report.
+- Do not guess — only report confirmed findings from source.
+- Do not include unrelated pages, routes, or booking systems unless they are directly involved in the hair salon flow.
+- Do not expose API keys, Firebase credentials, customer data, or vendor private data in the report.
+- Use the Luxurious Nails page as the comparison standard throughout.
+
+===== GIT STATUS =====
+=== Git Branch ===
+main
+
+=== Git Status ===
+ M .firebase/hosting..cache
+ M CLAUDE.md
+ M admin.html
+ M ai-engine.js
+ M aiOrchestrator.js
+ M firestore.indexes.json
+ M firestore.rules
+ M foods/index.html
+ M functions/index.js
+ M hairsalon/index.html
+ M images/unsplash/hair-styling.jpg
+ M index.html
+ M marketingEngine.js
+ M marketplace/marketplace.css
+ M marketplace/marketplace.js
+ M marketplace/services-data.js
+ M nailsalon/index.html
+ M nailsalon/receptionist.js
+ M nailsalon/voice-mode.js
+ M notifications.js
+ M package.json
+ M qr.html
+ M remotion-promo/src/SalonPromo/SalonPromo.tsx
+ M salon-admin.html
+ M tests/runner.js
+ M travel-packages.js
+ M travel.html
+ M vendor-admin.html
+ M vendor-detail.html
+ M vendor-login.html
+?? .stitch-project.json
+?? automation/
+?? docs/superpowers/plans/2026-04-15-travel-promo-video.md
+?? docs/superpowers/plans/2026-04-18-realtime-portal-notifications.md
+?? docs/superpowers/plans/2026-04-18-vendor-self-serve-onboarding.md
+?? docs/superpowers/plans/2026-04-18-vendor-subscription-page.md
+?? docs/superpowers/plans/2026-04-22-driver-ops-dashboard.md
+?? docs/superpowers/specs/
+?? dulichcali-booking-calendar-6796caee41ac.json
+?? food_poster_premium_A.pdf
+?? food_poster_premium_B.pdf
+?? food_social_premium_A.png
+?? food_social_premium_B.png
+?? images/emily_kitchen.jpg
+?? marketplace/vendor-data-service.js
+?? package-lock.json
+?? remotion-promo/out/
+?? remotion-promo/presets/luxurious-nails.json
+?? remotion-promo/public/big_sur_monterey_1_day-hero.jpg
+?? remotion-promo/public/big_sur_monterey_1_day-narration.mp3
+?? remotion-promo/public/big_sur_monterey_1_day-scene-1.mp4
+?? remotion-promo/public/big_sur_monterey_1_day-scene-2.mp4
+?? remotion-promo/public/big_sur_monterey_1_day-scene-3.mp4
+?? remotion-promo/public/big_sur_monterey_1_day-scene-4.mp4
+?? remotion-promo/public/big_sur_monterey_1_day-scene-5.mp4
+?? remotion-promo/public/big_sur_monterey_1_day-scene-6.mp4
+?? remotion-promo/public/coastal_premium_3_day-hero.jpg
+?? remotion-promo/public/coastal_premium_3_day-narration.mp3
+?? remotion-promo/public/coastal_premium_3_day-scene-1.mp4
+?? remotion-promo/public/coastal_premium_3_day-scene-2.mp4
+?? remotion-promo/public/coastal_premium_3_day-scene-3.mp4
+?? remotion-promo/public/coastal_premium_3_day-scene-4.mp4
+?? remotion-promo/public/coastal_premium_3_day-scene-5.mp4
+?? remotion-promo/public/coastal_premium_3_day-scene-6.mp4
+?? remotion-promo/public/highway_1_classic_2_day-hero.jpg
+?? remotion-promo/public/highway_1_classic_2_day-narration.mp3
+?? remotion-promo/public/highway_1_classic_2_day-scene-1.mp4
+?? remotion-promo/public/highway_1_classic_2_day-scene-2.mp4
+?? remotion-promo/public/highway_1_classic_2_day-scene-3.mp4
+?? remotion-promo/public/highway_1_classic_2_day-scene-4.mp4
+?? remotion-promo/public/highway_1_classic_2_day-scene-5.mp4
+?? remotion-promo/public/highway_1_classic_2_day-scene-6.mp4
+?? remotion-promo/public/nails-1.jpg
+?? remotion-promo/public/nails-2.jpg
+?? remotion-promo/public/travel-music.mp3
+?? remotion-promo/src/SalonPromo/components/
+?? remotion-promo/src/SalonPromo/schema.ts
+?? screen_64d6f1017b35400e99e9dd32a35286e8.png
+?? scripts/seed-travel-drivers-vehicles.js
+?? tests/cases/025-fullscreen-bleed-through-stacking-context.json
+?? tests/cases/026-voice-mic-stuck-disabled.json
+?? tests/cases/027-voice-tts-not-interruptible.json
+?? tests/cases/028-voice-tts-chain-regression.json
+?? tests/cases/029-voice-api-key-fallback.json
+?? tests/cases/030-receptionist-syntax-stability.json
+?? tests/cases/031-voice-auto-restart-delay.json
+?? tests/check-auth.js
+?? tests/check-drivers.js
+?? tests/create-test-booking.js
+?? tests/fix-driver-users.js
+?? tests/fix-vendor-status.js
+?? tests/reset-driver-passwords.js
+?? tests/test-live-offer.js
+?? tests/test_driver_overlay.py
+?? vendor-onboarding.css
+?? vendor-onboarding.html
+?? vendor-pricing.css
+?? vendors_inputs/
+
+=== Latest 5 Commits ===
+2f2f4b3 feat: add Codex → Claude review workflow (ai_reviews/, scripts/ai_review_flow.sh, .github/PR template)
+b8b1896 Add voice mode + receptionist to hair salon, phone strip, call tab, ride booking upgrades
+959c491 Fix: bump version on vendor-subscription.js to bust cache
+47d4df0 Rides/tours: use per-region driver phone for contact, not email
+1de24c6 Replace all customer-facing phone contacts with email
+
+=== Files Changed vs main ===
+
+===== FILE INVENTORY =====
+=== Core App Files ===
+  index.html                                    1230 lines
+  style.css                                     4542 lines
+  desktop.css                                   64 lines
+  script.js                                     2407 lines
+  destinations.js                               661 lines
+  ai-engine.js                                  283 lines
+  aiOrchestrator.js                             697 lines
+  chat.js                                       2140 lines
+  notifications.js                              402 lines
+  travel.html                                   563 lines
+  travel-packages.js                            308 lines
+  firebase.json                                 67 lines
+  firestore.rules                               208 lines
+  firestore.indexes.json                        46 lines
+
+=== Hairsalon ===
+  hairsalon/index.html                          86 lines
+
+=== Nailsalon (reference standard) ===
+  nailsalon/index.html                          83 lines
+  nailsalon/receptionist.js                     3365 lines
+  nailsalon/voice-mode.js                       924 lines
+  nailsalon/salon.css                           1439 lines
+
+=== Marketplace ===
+  marketplace/marketplace.js                    5193 lines
+  marketplace/marketplace.css                   3166 lines
+  marketplace/services-data.js                  1033 lines
+  marketplace/vendor-data-service.js            186 lines
+
+=== Admin / Vendor / Driver ===
+  admin.html                                    3367 lines
+  vendor-admin.html                             5317 lines
+  vendor-login.html                             782 lines
+  driver-admin.html                             3324 lines
+  driver-login.html                             363 lines
+  salon-admin.html                              10870 lines
+
+=== Functions ===
+  functions/index.js                            2864 lines
+  functions/travelDispatch.js                   365 lines
+
+=== Tests ===
+  tests/cases/ — 31 case files
+  tests/runner.js                               1184 lines
+
+=== Scripts / Automation ===
+  scripts/ai_review_flow.sh
+  automation/auto_run.sh
+  automation/prompts/full_app_system_audit.md
+  automation/prompts/hair_salon_system_audit.md
+  automation/prompts/phase1_hair_salon_fix.md
+
+===== PACKAGE SCRIPTS + ENV VAR NAMES =====
+=== package.json (root) ===
+  test:receptionist: node tests/runner.js
+  auto:hair: bash automation/auto_run.sh automation/prompts/hair_salon_system_audit.md
+  auto:full: bash automation/auto_run.sh automation/prompts/full_app_system_audit.md
+  auto:phase1: bash automation/auto_run.sh automation/prompts/phase1_hair_salon_fix.md
+
+=== functions/package.json ===
+  deploy: firebase deploy --only functions
+  logs: firebase functions:log
+
+=== Environment Variable Names Used (values NOT shown) ===
+  Server-side (Firebase Secret Manager):
+  - TWILIO_ACCOUNT_SID
+  - TWILIO_AUTH_TOKEN
+  - TWILIO_FROM_NUMBER
+  - OPENAI_API_KEY
+  - GEMINI_API_KEY
+  - CLAUDE_API_KEY
+  - RESEND_API_KEY
+  - RESEND_WEBHOOK_SECRET
+  Client-side (browser localStorage keys):
+  - dlc_claude_key
+  - dlc_gemini_key
+  - dlc_openai_key
+  CLI tools:
+  - ANTHROPIC_API_KEY (process.env)
+
+===== CHECK RESULTS =====
+  PASS    | npm run test:receptionist | npm run test:receptionist
+  SKIPPED | lint — no lint script in package.json
+  SKIPPED | build — no build step (static HTML project)
+  SKIPPED | typecheck — no typecheck script
+Full check log: /Users/johntd/Documents/claude-projects/ai_dulich_cali/DuLichCali/automation/reports/auto_runs/2026-04-26_063612_hair_salon_system_audit/checks.log
+
+===== KEY FILE EXCERPTS =====
+
+=== hairsalon/index.html (first 100 lines) ===
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d2f50" />
+  <title>Hair Salon · Du Lich Cali Services</title>
+  <meta name="description" content="Dịch vụ làm tóc chuyên nghiệp tại Bay Area và Orange County. Cắt uốn nhuộm theo phong cách hiện đại. Đặt lịch trực tuyến.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,300;0,6..96,400;1,6..96,300;1,6..96,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../marketplace/marketplace.css?v=20260421e">
+  <link rel="stylesheet" href="../desktop.css">
+  <link rel="stylesheet" href="/nailsalon/salon.css?v=20260417n">
+
+  <!-- Firebase: required for live staff/services/hours data in Salon AI -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <script>
+    (function () {
+      var cfg = {
+        apiKey:            'AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ',
+        authDomain:        'dulichcali-booking-calendar.firebaseapp.com',
+        projectId:         'dulichcali-booking-calendar',
+        storageBucket:     'dulichcali-booking-calendar.appspot.com',
+        messagingSenderId: '623460884698',
+        appId:             '1:623460884698:web:a08bd435c453a7b4db05e3'
+      };
+      if (!firebase.apps.length) { firebase.initializeApp(cfg); }
+      window.dlcDb      = firebase.firestore();
+      window.dlcStorage = firebase.storage();
+      firebase.auth().onAuthStateChanged(function(u) {
+        if (!u) firebase.auth().signInAnonymously().catch(function() {});
+      });
+    })();
+  </script>
+
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5S0P4XMCJR"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-5S0P4XMCJR');
+  </script>
+  <script src="/analytics.js?v=20260420a"></script>
+</head>
+<body>
+<div id="mpApp" class="mp-app"></div>
+<script src="/ai-engine.js?v=20260420m"></script>
+<script src="/regions.js?v=20260421a"></script>
+<script src="../marketplace/services-data.js?v=20260420h"></script>
+<script src="../marketplace/vendor-data-service.js?v=20260414a"></script>
+<script src="../marketplace/marketplace.js?v=20260421m"></script>
+<script src="/nailsalon/receptionist.js?v=20260421s"></script>
+<script src="/nailsalon/voice-mode.js?v=20260421s"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var params = new URLSearchParams(window.location.search);
+    var vendorId = params.get('id');
+
+    if (vendorId) {
+      // ── Vendor detail mode ─────────────────────────────────────────────────────
+      // A specific vendor is requested. Init immediately — no region detection
+      // needed or wanted. DLCRegion callbacks must NEVER re-run init on a vendor
+      // detail page (they would call refreshGrid which is harmless, but region
+      // detection async callbacks arriving after Firestore loads could interfere).
+      Marketplace.init('hair');
+    } else {
+      // ── Directory mode ─────────────────────────────────────────────────────────
+      // No vendor specified — show category listing, filtered by user's region.
+      var _inited = false;
+      function _onRegion(region) {
+        try { sessionStorage.setItem('dlc_region', region.id); } catch (_) {}
+        if (!_inited) { _inited = true; Marketplace.init('hair'); }
+        else { Marketplace.refreshGrid(); }
+      }
+      if (window.DLCRegion) { DLCRegion.init(_onRegion); }
+      else { Marketplace.init('hair'); }
+    }
+  });
+</script>
+</body>
+</html>
+
+=== marketplace/services-data.js — hair/beauty vendor block ===
+      id: 'beauty-hair-oc',
+      category: 'hair',
+      active: true,
+      featured: true,
+      featuredPriority: 2,
+      featuredRegions: ['oc'],
+      homepageActive: true,
+      shortPromoText: 'Cut \xb7 Color \xb7 Balayage \xb7 Keratin \u2014 Book Now',
+      availabilityType: 'appointment',
+      name: 'Beauty Hair OC',
+      tagline: 'Premium Hair Salon \xb7 Orange County',
+      taglineI18n: {
+        en: 'Premium Hair Salon \xb7 Orange County',
+        vi: 'Ti\u1ec7m T\xf3c Cao C\u1ea5p \xb7 Qu\u1eadn Cam',
+        es: 'Sal\xf3n de Cabello Premium \xb7 Orange County'
+      },
+      region: 'Orange County',
+      city: 'Westminster',
+      address: 'Westminster, CA',
+      phone: '4089163439',
+      phoneDisplay: '408-916-3439',
+      hosts: [
+        {
+          name: 'Du L\u1ecbch Cali',
+          phone: '4089163439',
+          display: '408-916-3439',
+          role: 'Owner'
+        }
+      ],
+      // ── STYLISTS ─────────────────────────────────────────────────────────────────
+      // Michael Nguyen (Barber): Men's Cut, Blowout, Updo/Event Style, Balayage.
+      // Michele (Stylist): Women's Cut, Blowout, Hair Styling, Updo/Event Style.
+      // Tracy Tran (Colorist): Highlights, Full Color, Root Touch-Up, Hair Styling.
+      staff: [
+        {
+          name: 'Michael Nguyen',
+          active: true,
+          role: 'Barber',
+          pricingTier: 'standard',
+          specialties: ["Men's Cut", 'Blowout', 'Updo / Event Style', 'Balayage'],
+          assignedServices: ["Men's Haircut", 'Blowout', 'Hair Styling', 'Balayage', 'Scalp Treatment'],
+          schedule: {
+            mon: { active: true,  start: '09:00', end: '18:00' },
+            tue: { active: true,  start: '09:00', end: '18:00' },
+            wed: { active: true,  start: '09:00', end: '18:00' },
+            thu: { active: true,  start: '09:00', end: '18:00' },
+            fri: { active: true,  start: '09:00', end: '18:00' },
+            sat: { active: true,  start: '09:00', end: '18:00' },
+            sun: { active: false, start: '09:00', end: '18:00' }
+          }
+        },
+        {
+          name: 'Michele',
+          active: true,
+          role: 'Stylist',
+          pricingTier: 'standard',
+          specialties: ["Women's Cut", 'Blowout', 'Hair Styling', 'Updo / Event Style'],
+          assignedServices: ["Women's Haircut", 'Blowout', 'Hair Styling', 'Deep Conditioning'],
+          schedule: {
+            mon: { active: true,  start: '09:00', end: '18:00' },
+            tue: { active: true,  start: '09:00', end: '18:00' },
+            wed: { active: true,  start: '09:00', end: '18:00' },
+            thu: { active: true,  start: '09:00', end: '18:00' },
+            fri: { active: true,  start: '09:00', end: '18:00' },
+            sat: { active: true,  start: '09:00', end: '18:00' },
+            sun: { active: false, start: '09:00', end: '18:00' }
+          }
+        },
+        {
+          name: 'Tracy Tran',
+          active: true,
+          role: 'Colorist',
+          pricingTier: 'senior',
+          specialties: ['Highlights', 'Full Color', 'Root Touch-Up', 'Hair Styling'],
+          assignedServices: ['Full Color', 'Root Touch-Up', 'Highlights', 'Hair Styling', 'Color Correction', 'Keratin Treatment', 'Hair Extensions', 'Deep Conditioning'],
+          schedule: {
+            mon: { active: true,  start: '09:00', end: '18:00' },
+            tue: { active: true,  start: '09:00', end: '18:00' },
+            wed: { active: true,  start: '09:00', end: '18:00' },
+            thu: { active: true,  start: '09:00', end: '18:00' },
+            fri: { active: true,  start: '09:00', end: '18:00' },
+            sat: { active: true,  start: '09:00', end: '18:00' },
+            sun: { active: false, start: '09:00', end: '18:00' }
+          }
+        }
+      ],
+      features: [
+        'Expert colorists specializing in Balayage & Highlights',
+        'Keratin treatments & hair restoration services',
+        'Free consultation for all new clients',
+        'Premium salon-quality products only',
+        'Walk-ins welcome \xb7 appointments preferred'
+      ],
+      featuresI18n: [
+        { en: 'Expert colorists specializing in Balayage & Highlights', vi: 'Th\u1ee3 nhu\u1ed9m chuy\xean nghi\u1ec7p v\u1ec1 Balayage & Highlights',   es: 'Coloristas expertos en Balayage & Highlights'            },
+        { en: 'Keratin treatments & hair restoration services',          vi: 'D\u1ecbch v\u1ee5 Keratin & ph\u1ee5c h\u1ed3i t\xf3c h\u01b0 t\u1ed5n',    es: 'Tratamientos de queratina y restauraci\xf3n capilar'     },
+        { en: 'Free consultation for all new clients',                   vi: 'T\u01b0 v\u1ea5n mi\u1ec5n ph\xed cho kh\xe1ch m\u1edbi',                  es: 'Consulta gratuita para nuevos clientes'                 },
+        { en: 'Premium salon-quality products only',                     vi: 'Ch\u1ec9 d\xf9ng s\u1ea3n ph\u1ea9m salon cao c\u1ea5p',                    es: 'Solo productos de calidad salon premium'                },
+        { en: 'Walk-ins welcome \xb7 appointments preferred',            vi: 'Nh\u1eadn walk-in \xb7 \u01b0u ti\xean \u0111\u1eb7t l\u1ecbch tr\u01b0\u1edbc', es: 'Se aceptan sin cita \xb7 se prefiere con cita'       }
+      ],
+(not found)
+
+=== marketplace/services-data.js — nail reference vendor block (first 80 lines) ===
+      id: 'luxurious-nails',
+      category: 'nails',
+      active: true,
+      featured: true,
+      featuredPriority: 2,
+      featuredRegions: ['bayarea'],
+      homepageActive: true,
+      shortPromoText: 'Nail cao cấp & spa sang trọng — đặt lịch ngay',
+      availabilityType: 'appointment',
+      name: 'Luxurious Nails & Spa',
+      tagline: 'Nail cao cấp & spa sang trọng · Bay Area',
+      taglineI18n: { en: 'Premium nail care & luxury spa · Bay Area', vi: 'Nail cao c\u1ea5p & spa sang tr\u1ecdng · Bay Area', es: 'Cuidado de u\xf1as premium & spa de lujo · Bay Area' },
+      region: 'Bay Area',
+      city: 'San Jose',
+      address: 'San Jose, CA',
+      phone: '',
+      phoneDisplay: '',
+      hosts: [],
+      staff: [
+        {
+          name: 'Helen',
+          active: true,
+          role: 'Senior Nail Tech',
+          specialties: ['Acrylic Full Set', 'Nail Art', 'Gel Nails', 'Chrome Powder', 'Ombre', '3D Art'],
+          assignedServices: ['Manicure Cơ Bản', 'French Manicure', 'Hot Oil Manicure', 'Gel Manicure', 'Gel Extensions', 'Shellac', 'Acrylic Full Set', 'Acrylic Fill', 'Pink & White', 'Nail Art Cơ Bản', 'Nail Art Phức Tạp', '3D Nail Art', 'Chrome Powder', 'Ombre Nails', 'Spa Package', 'French Tip Add-on'],
+          schedule: {
+            mon: { active: true,  start: '09:00', end: '19:00' },
+            tue: { active: true,  start: '09:00', end: '19:00' },
+            wed: { active: true,  start: '09:00', end: '19:00' },
+            thu: { active: true,  start: '09:00', end: '19:00' },
+            fri: { active: true,  start: '09:00', end: '19:00' },
+            sat: { active: true,  start: '09:00', end: '18:00' },
+            sun: { active: false, start: '10:00', end: '17:00' }
+          }
+        },
+        {
+          name: 'Tracy',
+          active: true,
+          role: 'Nail Tech',
+          specialties: ['Manicure', 'Pedicure', 'Gel Nails', 'Spa Pedicure'],
+          assignedServices: ['Manicure Cơ Bản', 'French Manicure', 'Pedicure Cơ Bản', 'Spa Pedicure', 'Deluxe Pedicure', 'Gel Manicure', 'Shellac', 'Nail Repair', 'Paraffin Wax'],
+          schedule: {
+            mon: { active: true,  start: '10:00', end: '18:00' },
+            tue: { active: true,  start: '10:00', end: '18:00' },
+            wed: { active: true,  start: '10:00', end: '18:00' },
+            thu: { active: true,  start: '10:00', end: '18:00' },
+            fri: { active: true,  start: '10:00', end: '18:00' },
+            sat: { active: false, start: '09:00', end: '18:00' },
+            sun: { active: false, start: '10:00', end: '17:00' }
+          }
+        }
+      ],
+      features: [
+        'Hơn 10 năm kinh nghiệm tại Bay Area',
+        'Sản phẩm an toàn, không độc hại',
+        'Không gian sang trọng, thoải mái',
+        'Thợ lành nghề, tỉ mỉ từng chi tiết',
+        'Nhận walk-in và đặt lịch trước'
+      ],
+      featuresI18n: [
+        { en: 'Over 10 years of experience in Bay Area',  vi: 'H\u01a1n 10 n\u0103m kinh nghi\u1ec7m t\u1ea1i Bay Area',       es: 'M\xe1s de 10 a\xf1os de experiencia en Bay Area'   },
+        { en: 'Safe, non-toxic products',                 vi: 'S\u1ea3n ph\u1ea9m an to\xe0n, kh\xf4ng \u0111\u1ed9c h\u1ea1i', es: 'Productos seguros y no t\xf3xicos'               },
+        { en: 'Luxurious, comfortable environment',       vi: 'Kh\xf4ng gian sang tr\u1ecdng, tho\u1ea3i m\xe1i',            es: 'Ambiente lujoso y c\xf3modo'                    },
+        { en: 'Skilled technicians, meticulous care',     vi: 'Th\u1ee3 l\xe0nh ngh\u1ec1, t\u1ec9 m\u1ec9 t\u1eebng chi ti\u1ebft', es: 'T\xe9cnicos h\xe1biles, cuidado meticuloso'  },
+        { en: 'Walk-ins and appointments welcome',        vi: 'Nh\u1eadn walk-in v\xe0 \u0111\u1eb7t l\u1ecbch tr\u01b0\u1edbc', es: 'Se aceptan clientes sin cita'                   }
+      ],
+      trustSubtitleI18n: { en: 'Over 10 years of beauty care in Bay Area', vi: 'H\u01a1n 10 n\u0103m ch\u0103m s\xf3c s\u1eafc \u0111\u1eb9p t\u1ea1i Bay Area', es: 'M\xe1s de 10 a\xf1os cuidando tu belleza en Bay Area' },
+      description:
+        'Tiệm nail sang trọng hơn 10 năm kinh nghiệm tại Bay Area. Sản phẩm an toàn, đội ngũ lành nghề, không gian cao cấp và thoải mái.',
+      heroImage: '/images/unsplash/nails-manicure.jpg',
+      heroGradient:
+        'linear-gradient(135deg,#831843 0%,#9d174d 40%,#4c1d95 100%)',
+      // ── Full service catalog — 59 services, all active:false by default ─────
+      // Enable individual services from vendor admin (salon-admin.html)
+      // Public page and AI only show active:true services (fetched from Firestore)
+      services: [
+        // ── MANICURE (8) ──────────────────────────────────────────────────
+        { category:'manicure', name:'Classic Manicure',      price:'', priceFrom:0, duration:'45 min', durationMins:45,  active:false, assignedStaff:[], imageUrl:_IM_MANI, desc:'Traditional manicure — nail shaping, cuticle care, hand massage, and polish of your choice.' },
+        { category:'manicure', name:'Express Manicure',      price:'', priceFrom:0, duration:'30 min', durationMins:30,  active:false, assignedStaff:[], imageUrl:_IM_MANI, desc:'Quick nail clean-up, shape, and polish. Perfect for a fast refresh on the go.' },
+        { category:'manicure', name:'Spa Manicure',          price:'', priceFrom:0, duration:'60 min', durationMins:60,  active:false, assignedStaff:[], imageUrl:_IM_MANI, desc:'Relaxing manicure with exfoliation, mask, hot towel wrap, and extended hand massage.' },
+(not found)
+
+=== nailsalon/index.html (first 80 lines) — reference standard ===
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d2f50" />
+  <title>Nail Salon · Du Lich Cali Services</title>
+  <meta name="description" content="Dịch vụ nail salon chuyên nghiệp tại Bay Area và Orange County. Đặt lịch trực tuyến.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,300;0,6..96,400;1,6..96,300;1,6..96,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../marketplace/marketplace.css?v=20260421e">
+  <link rel="stylesheet" href="../desktop.css">
+  <link rel="stylesheet" href="/nailsalon/salon.css?v=20260417n">
+  <!-- v=20260414a: skill chips CSS -->
+
+  <!-- Firebase: required for live staff/services/hours data in Salon AI -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <script>
+    (function () {
+      var cfg = {
+        apiKey:            'AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ',
+        authDomain:        'dulichcali-booking-calendar.firebaseapp.com',
+        projectId:         'dulichcali-booking-calendar',
+        storageBucket:     'dulichcali-booking-calendar.appspot.com',
+        messagingSenderId: '623460884698',
+        appId:             '1:623460884698:web:a08bd435c453a7b4db05e3'
+      };
+      if (!firebase.apps.length) { firebase.initializeApp(cfg); }
+      window.dlcDb      = firebase.firestore();
+      window.dlcStorage = firebase.storage();
+      // Only sign in anonymously when no existing session — prevents overwriting vendor/driver auth
+      firebase.auth().onAuthStateChanged(function(u) {
+        if (!u) firebase.auth().signInAnonymously().catch(function() {});
+      });
+    })();
+  </script>
+
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5S0P4XMCJR"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-5S0P4XMCJR');
+  </script>
+  <script src="/analytics.js?v=20260420a"></script>
+</head>
+<body>
+<div id="mpApp" class="mp-app"></div>
+<script src="/ai-engine.js?v=20260420m"></script>
+<script src="/regions.js?v=20260421a"></script>
+<script src="../marketplace/services-data.js?v=20260420g"></script>
+<script src="../marketplace/vendor-data-service.js?v=20260414a"></script>
+<script src="../marketplace/marketplace.js?v=20260421m"></script>
+<script src="/nailsalon/receptionist.js?v=20260421s"></script>
+<script src="/nailsalon/voice-mode.js?v=20260421s"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var params = new URLSearchParams(window.location.search);
+    var vendorId = params.get('id');
+
+    if (vendorId) {
+      // Vendor detail mode — init immediately, no region detection.
+      Marketplace.init('nails');
+    } else {
+      // Directory mode — region-filtered listing.
+      var _inited = false;
+      function _onRegion(region) {
+        try { sessionStorage.setItem('dlc_region', region.id); } catch (_) {}
+        if (!_inited) { _inited = true; Marketplace.init('nails'); }
+        else { Marketplace.refreshGrid(); }
+      }
+      if (window.DLCRegion) { DLCRegion.init(_onRegion); }
+      else { Marketplace.init('nails'); }
+    }
+  });
+
+=== firestore.rules (full) ===
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ──────────────────────────────────────────────────────────
+    // isVendorMember: caller is authenticated AND their vendorUsers doc maps them to this vendorId.
+    // Used to restrict writes to members of the specific vendor — prevents cross-vendor tampering.
+    function isVendorMember(vendorId) {
+      return request.auth != null
+          && exists(/databases/$(database)/documents/vendorUsers/$(request.auth.uid))
+          && get(/databases/$(database)/documents/vendorUsers/$(request.auth.uid)).data.vendorId == vendorId;
+    }
+
+    // ── Vendor top-level docs ─────────────────────────────────────────────────────
+    // Public read: homepage checks vendor status without requiring auth.
+    // Write: only authenticated members of that specific vendor (not just any auth user).
+    match /vendors/{vendorId} {
+      allow read:  if true;
+      allow write: if isVendorMember(vendorId);
+    }
+
+    // ── Staff schedule/availability — public read, vendor-member write ────────────
+    // Customers need name/schedule/specialties to book without authenticating.
+    // IMPORTANT: compensation fields (compensationType, monthlyBasePay, hireDate, payNotes)
+    // are NOT stored here — they live in staffCompensation (see below).
+    match /vendors/{vendorId}/staff/{doc} {
+      allow read:  if true;
+      allow write: if isVendorMember(vendorId);
+    }
+
+    // ── Services catalog — public read, vendor-member write ──────────────────────
+    match /vendors/{vendorId}/services/{doc} {
+      allow read:  if true;
+      allow write: if isVendorMember(vendorId);
+    }
+
+    // ── Staff compensation — SENSITIVE, never public ──────────────────────────────
+    // Contains: compensationType, monthlyBasePay, hireDate, payNotes.
+    // Never publicly readable. Only authenticated members of this specific vendor.
+    // Future: tighten to role='owner' only once role-check helpers are added.
+    match /vendors/{vendorId}/staffCompensation/{doc} {
+      allow read, write: if isVendorMember(vendorId);
+    }
+
+    // ── Payroll periods — SENSITIVE, vendor-member only ───────────────────────────
+    // Contains monthly payout records: totalOwed, amountPaidOut, payrollStatus per staff.
+    // Never publicly readable. Vendor-member write (owner manages payouts).
+    match /vendors/{vendorId}/payrollPeriods/{doc} {
+      allow read, write: if isVendorMember(vendorId);
+    }
+
+    // ── Other vendor subcollections (menuItems, notifications, etc.) ──────────────
+    // Auth required. Broad auth (not vendor-membership-only) to preserve admin.html access.
+    // staffCompensation is explicitly handled above with tighter rules.
+    match /vendors/{vendorId}/{sub=**} {
+      allow read, write: if request.auth != null;
+    }
+
+    // ── Vendor user mappings ──────────────────────────────────────────────────────
+    // Auth required — no anonymous enumeration of staff emails and roles.
+    // Previously: allow read: if true (needed for setup-code check) — that check
+    // actually runs AFTER Firebase Auth sign-in, so auth != null is safe here.
+    match /vendorUsers/{uid} {
+      allow read:  if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    // ── Bookings — open (customer booking flow is unauthenticated) ────────────────
+    match /bookings/{doc=**} {
+      allow read, write: if true;
+    }
+
+    // ── Driver profiles — public read, auth write ─────────────────────────────────
+    // Homepage availability check runs unauthenticated; drivers sign in to write.
+    match /drivers/{driverId} {
+      allow read:  if true;
+      allow write: if request.auth != null;
+    }
+
+    // ── Driver user mappings — auth only ─────────────────────────────────────────
+
+=== firebase.json (full) ===
+{
+  "firestore": {
+    "rules":   "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ],
+  "hosting": {
+    "site": "dulichcali-booking-calendar",
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "firestore.rules",
+      "firestore.indexes.json",
+      ".firebaserc",
+      "functions/**",
+      "remotion-promo/**",
+      "generate_icons.py",
+      ".git/**",
+      ".claude/**",
+      "node_modules/**"
+    ],
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "rewrites": [
+      { "source": "/portal",          "destination": "/portal.html" },
+      { "source": "/vendor-admin",    "destination": "/vendor-admin.html" },
+      { "source": "/vendor-login",    "destination": "/vendor-login.html" },
+      { "source": "/pricing",            "destination": "/vendor-pricing.html" },
+      { "source": "/vendor-onboarding", "destination": "/vendor-onboarding.html" },
+      { "source": "/vendor",               "destination": "/vendor-detail.html" },
+      { "source": "/vendor-subscription",  "destination": "/vendor-subscription.html" },
+      { "source": "/vendor-signup",         "destination": "/vendor-signup.html" }
+    ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+        ]
+      },
+      {
+        "source": "**/*.@(js|css)",
+        "headers": [
+          { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        ]
+      },
+      {
+        "source": "**/*.@(jpg|jpeg|png|webp|gif|svg|ico)",
+        "headers": [
+          { "key": "Cache-Control", "value": "public, max-age=86400" }
+        ]
+      }
+    ]
+  }
+}
+
+===== CLAUDE.md RULES SUMMARY =====
+Mobile is primary. No hardcoded strings in any language. Bump ?v= on every JS change.
+Firebase Hosting is production (www.dulichcali21.com). No build step — static HTML/JS.
+Vendor pages must show vendor-specific data (not directory data).
+Luxurious Nails is the visual/behavioral reference for salon/vendor pages.
+All customer-facing strings must exist in vi + en + es.

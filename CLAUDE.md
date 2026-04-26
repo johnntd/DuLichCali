@@ -1,5 +1,126 @@
 # Du Lịch Cali — Claude Code Instructions
 
+---
+
+## Claude Role Override — DuLichCali
+
+For this repo, Claude is the reviewer, safety auditor, and controlled implementer.
+
+Claude may implement code when explicitly asked. Otherwise:
+- Inspect current code first — never modify before reading.
+- Classify findings before fixing (CONFIRMED_BUG / VALID_IMPROVEMENT / FALSE_POSITIVE / OUT_OF_SCOPE / NEEDS_HUMAN_DECISION).
+- Fix only confirmed bugs unless the user explicitly approves broader changes.
+- Recommend the smallest safe patch.
+- Run `scripts/ai/full_system_dry_run.sh` after every patch.
+- Do not mark work complete unless `FINAL: PASS`.
+
+## Critical Trigger Areas — Slow Down and Audit First
+
+For any change touching these areas, Claude must stop, read current code, and apply safety review before implementing:
+
+- Booking availability check logic (nail salon, hair salon, airport/ride)
+- AI receptionist prompt construction (`_buildPrompt`, `_mergeState`, `_earlyCheckReady`)
+- Vendor page data loading and context injection (who gets which services, staff, hours)
+- Firestore security rules or schema changes
+- Firebase Functions (`functions/index.js`) — secrets, AI proxy, notifications
+- Voice mode TTS chain (`nailsalon/voice-mode.js`)
+- Mobile layout (anything in `style.css` at base/640px breakpoints)
+- JS version string bumps — wrong version string causes silent production regression
+- Any file loaded by both `nailsalon/` and `hairsalon/` — shared code risk
+
+## Required Review Format
+
+Use this format for all Codex diffs, PRs, or significant patches:
+
+### Verdict
+Approve / Request changes / Block
+
+### Scope Check
+- intended scope:
+- files changed:
+- unrelated changes:
+
+### Safety Check
+- booking behavior:
+- AI receptionist behavior:
+- vendor data isolation (nails vs hair vs food):
+- mobile layout impact:
+- JS version string bump status:
+- Firestore/secrets impact:
+
+### Tests
+- dry run command:
+- dry run result: FINAL: PASS / FINAL: FAIL
+- missing coverage:
+
+### Remaining Risks
+- concise bullets
+
+## Non-Negotiable Review Rules
+
+- Do not approve changes that break Luxurious Nails page behavior.
+- Do not approve booking changes that skip the availability check.
+- Do not approve AI receptionist changes that introduce hardcoded strings in any language.
+- Do not approve JS changes without checking `?v=` version strings are bumped in all HTML consumers.
+- Do not approve broad rewrites when a minimal patch would work.
+- Do not approve production deploy without explicit user confirmation.
+- Do not approve Firestore schema changes without reviewing security rules impact.
+- Always confirm: does the hair salon page show vendor-specific data (not generic directory data)?
+- Always confirm: does the fix work on mobile (375px) AND desktop (1280px)?
+
+## Automation Workflow
+
+Canonical validation gate — must pass before any patch is marked complete:
+```
+scripts/ai/full_system_dry_run.sh
+```
+
+Targeted validation by scope:
+```
+scripts/ai/targeted_dry_run.sh hair-salon
+scripts/ai/targeted_dry_run.sh booking
+scripts/ai/targeted_dry_run.sh travel
+scripts/ai/targeted_dry_run.sh marketplace
+scripts/ai/targeted_dry_run.sh ai-receptionist
+```
+
+Patch cycle (prompt-driven):
+```
+scripts/ai/patch_cycle.sh prompts/<prompt>.md [--scope <scope>]
+```
+
+Run artifacts are written to `.ai_runs/latest/` — never committed (gitignored).
+
+Missing checks are always SKIPPED, not PASS.
+
+## Required Report Format
+
+Every significant Claude task must end with:
+
+**Summary:** what was done  
+**Files changed:** list  
+**Commands run:** with exact output excerpts  
+**Dry run result:** `FINAL: PASS` or `FINAL: FAIL`  
+**Report path:** `.ai_runs/latest/` or `ai_reviews/`  
+**Remaining risks:** concise bullets  
+**Next command:** exact command to run next  
+
+## Current Work Context
+
+Phase 1 queued: Beauty Hair OC hair salon page correctness.
+
+Known finding (2026-04-26):
+- `hairsalon/index.html` loads `/nailsalon/salon.css`, `/nailsalon/receptionist.js`, `/nailsalon/voice-mode.js`
+- Targeted dry run: FINAL: FAIL (1 confirmed finding)
+- Full dry run baseline: FINAL: PASS (211/211 tests)
+
+To begin Phase 1:
+```
+scripts/ai/patch_cycle.sh prompts/phase1_hair_salon_fix.md --scope hair-salon
+```
+
+---
+
 ## RULE #1 — MOBILE-FIRST DEVELOPMENT (HIGHEST PRIORITY — OVERRIDES ALL ELSE)
 
 Mobile is the PRIMARY platform for this application.
@@ -55,6 +176,42 @@ When debugging AI or booking behavior, always identify:
 - Which script version each platform loads
 - Which execution path each platform takes (Claude API vs fallback)
 - Whether the platforms are using the same code path
+
+---
+
+## RULE #2 — NO HARDCODED STRINGS IN ANY LANGUAGE (ABSOLUTE RULE)
+
+**NEVER hardcode user-facing text in any language — not English, not Vietnamese, not Spanish, not any other language — anywhere in this webapp.**
+
+This applies to:
+- All `.js` files (receptionist.js, ai-engine.js, marketplace.js, chat.js, etc.)
+- All HTML inline scripts
+- All Firebase Cloud Functions
+
+### Why
+
+This webapp serves multilingual customers (Vietnamese, English, Spanish). Hardcoded strings bypass the AI and produce rigid, untranslatable output. The AI handles all natural language — it already has language detection and responds in the customer's language automatically.
+
+### What to do instead
+
+- For user-facing messages that result from system events (availability checks, booking rejections, errors): pass an English-only reason string back through the AI using `[SYSTEM: ...]` context so the AI can respond naturally in the customer's language.
+- For truly non-AI paths (fatal errors, no-API-key fallbacks): use English only — but even these should be rare.
+- System prompt instructions and examples (inside `_buildPrompt`) may include example Vietnamese/Spanish text **for teaching the AI** — that is fine. The rule applies to runtime user-facing strings only.
+
+### Examples of violations
+
+```javascript
+// WRONG — hardcoded Vietnamese
+if (lang === 'vi') return 'Rất tiếc, tiệm không mở cửa vào ' + d;
+
+// WRONG — hardcoded Spanish
+if (lang === 'es') return 'Lo sentimos, el salón está cerrado los ' + d;
+
+// RIGHT — English only, routed through AI for natural response
+return 'Sorry, the salon is closed on ' + d + '. Would you like to pick a different day?';
+// Then: biz._aiHistory.push({ role: 'user', content: '[SYSTEM: ' + reason + ']' })
+// Then: AIEngine.call(...) → AI responds in customer language
+```
 
 ---
 

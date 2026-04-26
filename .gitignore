@@ -8,3 +8,6 @@ remotion-promo/node_modules/
 scripts/youtube/client_secret*.json
 scripts/youtube/token.json
 scripts/youtube/.env
+
+# AI run artifacts — ephemeral, not source
+.ai_runs/

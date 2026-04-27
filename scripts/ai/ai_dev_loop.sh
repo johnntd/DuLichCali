@@ -29,6 +29,7 @@ MAX_LOOPS=1
 COMMIT_MESSAGE=""
 ALLOW_DIRTY=0
 SELF_TEST=0
+IMPLEMENTER_TIMEOUT="${IMPLEMENTER_TIMEOUT:-900}"
 
 CONFIG_FILE="config/ai_project_profile.json"
 
@@ -49,6 +50,7 @@ Modes:
 Safety:
   --auto-commit / --commit  Commit after APPROVE verdict (requires --commit-message).
   --allow-dirty             Allow running with uncommitted changes (default: FAIL if dirty).
+  --timeout N               Implementer timeout in seconds (default: 900; env: IMPLEMENTER_TIMEOUT).
   --max-loops defaults to 1.
   Default: no commit, no push, no deploy.
   Deployment is always manual — run firebase deploy only after user approval.
@@ -64,6 +66,7 @@ while [ "$#" -gt 0 ]; do
     --commit)          AUTO_COMMIT=1; shift ;;
     --allow-dirty)     ALLOW_DIRTY=1; shift ;;
     --self-test)       SELF_TEST=1; shift ;;
+    --timeout)         IMPLEMENTER_TIMEOUT="${2:-900}"; shift 2 ;;
     --max-loops)       MAX_LOOPS="${2:-}"; shift 2 ;;
     --loops)           MAX_LOOPS="${2:-}"; shift 2 ;;
     --commit-message)  COMMIT_MESSAGE="${2:-}"; shift 2 ;;
@@ -414,13 +417,17 @@ run_codex_once() {
 }
 
 # run_implementer: invoke Codex non-interactively to edit files.
-# Writes proof to implementer_iter_N.txt.
+# Wrapped with a configurable timeout (default 900s, override via --timeout or $IMPLEMENTER_TIMEOUT).
+# Any nonzero exit — including timeout (124), SIGTERM (143), SIGINT (130) — is a hard failure.
+# Writes stdout/stderr to codex_loop_N.txt and a summary to implementer_iter_N.txt.
 # Fails immediately if codex is not installed.
 run_implementer() {
   local prompt_file="$1"
   local loop_num="$2"
   local proof_file="$RUN_DIR/implementer_iter_${loop_num}.txt"
+  local log_file="$RUN_DIR/codex_loop_${loop_num}.txt"
   local impl_cmd="codex exec --dangerously-bypass-approvals-and-sandbox"
+  local impl_timeout="$IMPLEMENTER_TIMEOUT"
 
   if ! command -v codex >/dev/null 2>&1; then
     echo "FINAL: FAIL"
@@ -428,15 +435,47 @@ run_implementer() {
     exit 1
   fi
 
+  # Detect timeout binary: macOS coreutils installs gtimeout; Linux ships timeout.
+  local timeout_bin=""
+  if command -v timeout >/dev/null 2>&1; then
+    timeout_bin="timeout"
+  elif command -v gtimeout >/dev/null 2>&1; then
+    timeout_bin="gtimeout"
+  fi
+
   echo "== Running implementer (iteration $loop_num) =="
-  echo "  Command: $impl_cmd"
+  echo "  Command: ${timeout_bin:+$timeout_bin ${impl_timeout}s }$impl_cmd - (stdin)"
   echo "  Prompt:  $prompt_file"
+  echo "  Timeout: ${impl_timeout}s${timeout_bin:+ via $timeout_bin}"
+  [ -z "$timeout_bin" ] && echo "  WARNING: no timeout binary found — running without timeout guard"
 
   local impl_rc=0
-  # Prompt is passed via stdin to avoid shell arg-length limits on large files.
-  # DANGER: --dangerously-bypass-approvals-and-sandbox skips all prompts and sandboxing.
+  # Prompt via stdin avoids shell arg-length limits on large prompts.
+  # DANGER: --dangerously-bypass-approvals-and-sandbox skips all sandbox and approval prompts.
   # Scope is enforced by check_scope() immediately after this step.
-  $impl_cmd - < "$prompt_file" 2>&1 | tee "$RUN_DIR/codex_loop_${loop_num}.txt" || impl_rc=$?
+  if [ -n "$timeout_bin" ]; then
+    # GNU timeout / gtimeout available — preferred path.
+    $timeout_bin "$impl_timeout" $impl_cmd - < "$prompt_file" 2>&1 | tee "$log_file" || impl_rc=$?
+  else
+    # Bash-native timeout fallback: run implementer in background, watchdog kills it after
+    # $impl_timeout seconds. Output is buffered to log_file and streamed after completion.
+    $impl_cmd - < "$prompt_file" > "$log_file" 2>&1 &
+    local cmd_pid=$!
+    ( sleep "$impl_timeout" 2>/dev/null
+      if kill -0 "$cmd_pid" 2>/dev/null; then
+        printf '\n[ai_dev_loop: TIMEOUT — killing implementer (pid %d) after %ds]\n' \
+          "$cmd_pid" "$impl_timeout" >> "$log_file"
+        kill -TERM "$cmd_pid" 2>/dev/null
+      fi
+    ) &
+    local wd_pid=$!
+    wait "$cmd_pid" || impl_rc=$?
+    kill "$wd_pid" 2>/dev/null || true
+    wait "$wd_pid" 2>/dev/null || true
+    cat "$log_file"
+    # Remap SIGTERM (143) and SIGKILL (137) exits to 124 to match GNU timeout behaviour.
+    case "$impl_rc" in 137|143) impl_rc=124 ;; esac
+  fi
 
   local impl_changed
   impl_changed="$( {
@@ -445,8 +484,9 @@ run_implementer() {
   } | sort -u | grep -v '^$' )"
 
   {
-    echo "Command: $impl_cmd - (prompt via stdin)"
+    echo "Command: ${timeout_bin:+$timeout_bin ${impl_timeout}s }$impl_cmd - (prompt via stdin)"
     echo "Prompt file: $prompt_file"
+    echo "Timeout: ${impl_timeout}s"
     echo "Exit code: $impl_rc"
     echo "Changed files after implementer step (tracked + untracked):"
     if [ -n "$impl_changed" ]; then
@@ -457,7 +497,18 @@ run_implementer() {
   } > "$proof_file"
 
   echo "Implementer proof: $proof_file"
-  return "$impl_rc"
+
+  # Any nonzero exit is a hard stop — do not fall through to tests or Claude review.
+  if [ "$impl_rc" -ne 0 ]; then
+    case "$impl_rc" in
+      124) echo "Reason: implementer timed out after ${impl_timeout}s (exit 124)" ;;
+      130) echo "Reason: implementer interrupted — SIGINT (exit 130)" ;;
+      143) echo "Reason: implementer terminated — SIGTERM (exit 143)" ;;
+      *)   echo "Reason: implementer terminated or failed (exit $impl_rc)" ;;
+    esac
+    return "$impl_rc"
+  fi
+  return 0
 }
 
 run_gate() {
@@ -707,6 +758,10 @@ if [ "$SELF_TEST" -eq 1 ]; then
   # 2. Codex available
   if command -v codex >/dev/null 2>&1; then echo "  PASS  codex available: $(codex --version 2>/dev/null || echo unknown)"
   else echo "  FAIL  codex not found — implementer will not run"; _st_fail=1; fi
+  # 2b. Timeout binary
+  if command -v timeout >/dev/null 2>&1; then echo "  PASS  timeout binary: timeout (default ${IMPLEMENTER_TIMEOUT}s)"
+  elif command -v gtimeout >/dev/null 2>&1; then echo "  PASS  timeout binary: gtimeout (default ${IMPLEMENTER_TIMEOUT}s)"
+  else echo "  PASS  timeout binary: bash-native watchdog fallback (default ${IMPLEMENTER_TIMEOUT}s)"; fi
   # 3. Test runner detectable
   if _tr="$(detect_test_runner 2>/dev/null)"; then echo "  PASS  test runner: $_tr"
   else echo "  WARN  no test runner detected (SKIPPED in gate)"; fi

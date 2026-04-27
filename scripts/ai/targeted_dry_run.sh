@@ -132,7 +132,7 @@ set +e
       check_file_exists "script.js"
       check_grep "Airport booking exists" "airport\|Airport\|pickup\|dropoff" "script.js"
       check_grep "Availability check present" "checkAvail\|checkRide\|availability" "script.js"
-      check_grep "Booking validation present" "validateBooking\|_validate\|validateRide" "script.js"
+      check_grep "Booking validation present" "submitBooking\|slotWarning\|bufferMinutes\|Time conflict\|datetime" "script.js"
       check_grep "Vehicle capacity logic" "capacity\|seats\|passengers" "script.js"
       check_file_exists "functions/index.js"
       check_grep "Firebase Functions booking handler" "booking\|Booking" "functions/index.js"

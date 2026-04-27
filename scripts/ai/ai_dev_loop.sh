@@ -28,6 +28,7 @@ AUTO_COMMIT=0
 MAX_LOOPS=1
 COMMIT_MESSAGE=""
 ALLOW_DIRTY=0
+SELF_TEST=0
 
 CONFIG_FILE="config/ai_project_profile.json"
 
@@ -43,6 +44,7 @@ Modes:
   --audit-only     Skip Codex; audit the current working tree.
   --manual-claude  Build prompt for manual paste; skip Claude API.
   --check-claude   Verify Claude API readiness only.
+  --self-test      Run automation self-test (no Codex, no API calls).
 
 Safety:
   --auto-commit / --commit  Commit after APPROVE verdict (requires --commit-message).
@@ -61,6 +63,7 @@ while [ "$#" -gt 0 ]; do
     --auto-commit)     AUTO_COMMIT=1; shift ;;
     --commit)          AUTO_COMMIT=1; shift ;;
     --allow-dirty)     ALLOW_DIRTY=1; shift ;;
+    --self-test)       SELF_TEST=1; shift ;;
     --max-loops)       MAX_LOOPS="${2:-}"; shift 2 ;;
     --loops)           MAX_LOOPS="${2:-}"; shift 2 ;;
     --commit-message)  COMMIT_MESSAGE="${2:-}"; shift 2 ;;
@@ -142,6 +145,7 @@ detect_scope() {
     *travel*)                   echo "travel" ;;
     *marketplace*)              echo "marketplace" ;;
     *ai*receptionist*|*ai-receptionist*) echo "ai-receptionist" ;;
+    *salon*memory*|*customer*memory*)   echo "salon-memory" ;;
     *auth*)                     echo "auth" ;;
     *api*)                      echo "api" ;;
     *frontend*)                 echo "frontend" ;;
@@ -194,6 +198,10 @@ print_artifacts() {
   else
     echo "  audit_report.md        audit report"
   fi
+  # Print any implementer proof files that exist
+  for _proof in "$RUN_DIR"/implementer_iter_*.txt; do
+    [ -f "$_proof" ] && echo "  $(basename "$_proof")   implementer run proof"
+  done
   if [ -s "$RUN_DIR/loop_summary.txt" ]; then
     echo
     echo "Loop prompt history:"
@@ -215,7 +223,10 @@ sha256_file() {
 
 # ── scope enforcement helpers ─────────────────────────────────────────────────
 
-# parse_allowed_files: extract "Allowed files:" bullet list from a prompt file
+# parse_allowed_files: extract "Allowed files" bullet list from a prompt file.
+# Handles all heading formats: "## Allowed files", "### Allowed files", "Allowed files:"
+# Handles bullet prefixes: "- " and "* "
+# Stops at next # header (bullets stop matching before header lines).
 parse_allowed_files() {
   local prompt_file="${1:-}"
   [ -f "$prompt_file" ] || return
@@ -224,10 +235,16 @@ import sys, re
 try:
     with open(sys.argv[1]) as f:
         text = f.read()
-    m = re.search(r'Allowed files:\s*\n((?:[ \t]*[-*][ \t]*\S[^\n]*\n?)+)', text)
+    # Match: optional "#...# " prefix, "Allowed files" with optional colon,
+    # rest of line, then optional blank lines, then one or more bullet lines.
+    m = re.search(
+        r'(?:#{1,6}[ \t]+)?Allowed files:?[^\n]*\n(?:[ \t]*\n)*((?:[ \t]*[-*][ \t]+\S[^\n]*\n?)+)',
+        text,
+        re.IGNORECASE
+    )
     if m:
         for line in m.group(1).splitlines():
-            line = line.strip().lstrip('-').lstrip('*').strip()
+            line = line.strip().lstrip('-*').strip()
             if line:
                 print(line)
 except Exception:
@@ -243,11 +260,12 @@ check_scope() {
   local base="$2"
   local report="$3"
 
-  # Collect all changed files: committed since base + current working tree changes
+  # Collect all changed files: committed since base + working tree diffs + untracked new files
   local changed
   changed="$( {
     git diff --name-only "${base}" HEAD 2>/dev/null || true
-    git diff --name-only HEAD        2>/dev/null || true
+    git diff --name-only HEAD 2>/dev/null || true
+    git ls-files --others --exclude-standard 2>/dev/null || true
   } | sort -u | grep -v '^$' )"
 
   {
@@ -395,6 +413,53 @@ run_codex_once() {
   codex exec "$(cat "$prompt_file")" 2>&1 | tee "$RUN_DIR/codex_loop_${loop_num}.txt"
 }
 
+# run_implementer: invoke Codex non-interactively to edit files.
+# Writes proof to implementer_iter_N.txt.
+# Fails immediately if codex is not installed.
+run_implementer() {
+  local prompt_file="$1"
+  local loop_num="$2"
+  local proof_file="$RUN_DIR/implementer_iter_${loop_num}.txt"
+  local impl_cmd="codex exec --dangerously-bypass-approvals-and-sandbox"
+
+  if ! command -v codex >/dev/null 2>&1; then
+    echo "FINAL: FAIL"
+    echo "Reason: implementer command not available. No code changes can be applied."
+    exit 1
+  fi
+
+  echo "== Running implementer (iteration $loop_num) =="
+  echo "  Command: $impl_cmd"
+  echo "  Prompt:  $prompt_file"
+
+  local impl_rc=0
+  # Prompt is passed via stdin to avoid shell arg-length limits on large files.
+  # DANGER: --dangerously-bypass-approvals-and-sandbox skips all prompts and sandboxing.
+  # Scope is enforced by check_scope() immediately after this step.
+  $impl_cmd - < "$prompt_file" 2>&1 | tee "$RUN_DIR/codex_loop_${loop_num}.txt" || impl_rc=$?
+
+  local impl_changed
+  impl_changed="$( {
+    git diff --name-only "$BASE_COMMIT" 2>/dev/null || true
+    git ls-files --others --exclude-standard 2>/dev/null || true
+  } | sort -u | grep -v '^$' )"
+
+  {
+    echo "Command: $impl_cmd - (prompt via stdin)"
+    echo "Prompt file: $prompt_file"
+    echo "Exit code: $impl_rc"
+    echo "Changed files after implementer step (tracked + untracked):"
+    if [ -n "$impl_changed" ]; then
+      echo "$impl_changed" | sed 's/^/  /'
+    else
+      echo "  (none)"
+    fi
+  } > "$proof_file"
+
+  echo "Implementer proof: $proof_file"
+  return "$impl_rc"
+}
+
 run_gate() {
   local current_task_file="${1:-$TASK_FILE}"
   echo "== Running project test gate =="
@@ -402,23 +467,41 @@ run_gate() {
   git diff > "$RUN_DIR/diff.patch"
   git status --short | tee "$RUN_DIR/status.txt"
 
+  # ── Unit tests (fatal on failure) ────────────────────────────────────────
   local test_rc=0
   if TEST_CMD="$(detect_test_runner)"; then
     echo "== Running: $TEST_CMD =="
     { eval "$TEST_CMD"; } 2>&1 | tee "$RUN_DIR/tests.txt" || test_rc=$?
+    [ "$test_rc" -ne 0 ] && echo "Test command exited $test_rc."
   else
     echo "(no test runner detected — SKIPPED)" | tee "$RUN_DIR/tests.txt"
   fi
 
-  # Run targeted scope check if available
+  # ── Targeted scope dry run (fatal on failure) ─────────────────────────────
+  local targeted_rc=0
   local targeted_output=""
   if [ -n "$SCOPE" ] && [ -f "scripts/ai/targeted_dry_run.sh" ]; then
     echo "== Running targeted_dry_run.sh $SCOPE =="
-    bash scripts/ai/targeted_dry_run.sh "$SCOPE" 2>&1 | tee "$RUN_DIR/targeted_tests.txt" || true
+    bash scripts/ai/targeted_dry_run.sh "$SCOPE" 2>&1 | tee "$RUN_DIR/targeted_tests.txt" || targeted_rc=$?
     targeted_output="$(cat "$RUN_DIR/targeted_tests.txt" 2>/dev/null)"
+    [ "$targeted_rc" -ne 0 ] && echo "Targeted dry run exited $targeted_rc."
   fi
 
-  # Read project context for the prompt
+  # ── Full system dry run (fix/patch prompts only, fatal on failure) ────────
+  local full_rc=0
+  local full_output=""
+  if [ "$REPORT_TYPE" = "fix" ] && [ -f "scripts/ai/full_system_dry_run.sh" ]; then
+    echo "== Running full_system_dry_run.sh (required for fix prompts) =="
+    bash scripts/ai/full_system_dry_run.sh 2>&1 | tee "$RUN_DIR/full_system_dry_run.txt" || full_rc=$?
+    full_output="$(cat "$RUN_DIR/full_system_dry_run.txt" 2>/dev/null)"
+    # Treat FINAL: PASS absence as failure even if exit code 0
+    if [ "$full_rc" -eq 0 ] && ! grep -q "FINAL: PASS" "$RUN_DIR/full_system_dry_run.txt" 2>/dev/null; then
+      full_rc=1
+    fi
+    [ "$full_rc" -ne 0 ] && echo "Full system dry run did not pass."
+  fi
+
+  # ── Build Claude prompt (always — useful for manual diagnostics) ──────────
   local project_name project_type
   project_name="$(read_config_str project_name "$(basename "$(pwd)")")"
   project_type="$(read_config_str project_type "unknown")"
@@ -427,7 +510,6 @@ run_gate() {
   local forbidden
   forbidden="$(read_config_list forbidden_commands | head -10)"
 
-  # Read task prompt content — uses current iteration's prompt, not always the original
   local task_content=""
   [ -n "$current_task_file" ] && [ -f "$current_task_file" ] && task_content="$(cat "$current_task_file")"
 
@@ -475,6 +557,9 @@ $(cat "$RUN_DIR/tests.txt" 2>/dev/null || echo "(not found)")
 ===== TARGETED OUTPUT (scope: ${SCOPE:-none}) =====
 ${targeted_output:-"(no targeted test run)"}
 
+===== FULL SYSTEM DRY RUN =====
+${full_output:-"(not run — audit-only or full_system_dry_run.sh not present)"}
+
 ===== PATCH DIFF =====
 $(cat "$RUN_DIR/diff.patch" 2>/dev/null || echo "(empty — no tracked changes)")
 EOF
@@ -484,6 +569,20 @@ EOF
   echo "  Tests:          $RUN_DIR/tests.txt"
   echo "  Claude prompt:  $RUN_DIR/claude_manual_prompt.txt"
   cp "$RUN_DIR/diff.patch" "$RUN_DIR/codex.diff" 2>/dev/null || true
+
+  # ── Fail with specific reason (after prompt is built for diagnostics) ─────
+  if [ "$test_rc" -ne 0 ]; then
+    echo "Reason: test command failed"
+    return 1
+  fi
+  if [ "$targeted_rc" -ne 0 ]; then
+    echo "Reason: targeted dry run failed"
+    return 1
+  fi
+  if [ "$full_rc" -ne 0 ]; then
+    echo "Reason: full system dry run failed"
+    return 1
+  fi
   return 0
 }
 
@@ -549,6 +648,15 @@ write_followup_prompt() {
       echo "Original task:"; echo '```'; cat "$source_task"; echo '```'; echo
     fi
     echo "Claude review:"; echo '```'; cat "$audit_iter_file"; echo '```'; echo
+    # Propagate Allowed files into follow-up so scope enforcement works on next iteration
+    if [ -s "$ALLOWED_FILES_LIST" ]; then
+      echo "## Allowed files"
+      echo
+      while IFS= read -r _af; do
+        [ -n "$_af" ] && echo "- $_af"
+      done < "$ALLOWED_FILES_LIST"
+      echo
+    fi
     echo "Make the smallest safe changes. Do not push. Do not deploy."
   } > "$tmp"
   mv "$tmp" "$followup"
@@ -576,8 +684,11 @@ echo
 
 git status --short | tee "$RUN_DIR/status_before.txt"
 
-# Parse allowed files from prompt (if "Allowed files:" block present)
+# Parse allowed files from original task prompt and save as the canonical original.
+# Each loop iteration re-parses from its own current_task; if that prompt has no
+# Allowed files block, the original is used as fallback.
 parse_allowed_files "${TASK_FILE:-}" > "$ALLOWED_FILES_LIST" 2>/dev/null || true
+cp "$ALLOWED_FILES_LIST" "$RUN_DIR/allowed_files_original.txt" 2>/dev/null || true
 if [ -s "$ALLOWED_FILES_LIST" ]; then
   echo "Allowed files (from prompt):"
   sed 's/^/  /' "$ALLOWED_FILES_LIST"
@@ -586,6 +697,42 @@ fi
 
 # Warn if prompt mentions deployment (deploy is always manual)
 check_no_deploy "${TASK_FILE:-}"
+
+if [ "$SELF_TEST" -eq 1 ]; then
+  echo "== Automation Self-Test =="
+  _st_fail=0
+  # 1. Bash syntax check
+  if bash -n "$0" 2>/dev/null; then echo "  PASS  bash -n syntax check"
+  else echo "  FAIL  bash -n syntax check"; _st_fail=1; fi
+  # 2. Codex available
+  if command -v codex >/dev/null 2>&1; then echo "  PASS  codex available: $(codex --version 2>/dev/null || echo unknown)"
+  else echo "  FAIL  codex not found — implementer will not run"; _st_fail=1; fi
+  # 3. Test runner detectable
+  if _tr="$(detect_test_runner 2>/dev/null)"; then echo "  PASS  test runner: $_tr"
+  else echo "  WARN  no test runner detected (SKIPPED in gate)"; fi
+  # 4. Targeted dry-run script present
+  if [ -f "scripts/ai/targeted_dry_run.sh" ]; then echo "  PASS  targeted_dry_run.sh found"
+  else echo "  WARN  targeted_dry_run.sh not found"; fi
+  # 5. Full system dry-run script present
+  if [ -f "scripts/ai/full_system_dry_run.sh" ]; then echo "  PASS  full_system_dry_run.sh found"
+  else echo "  WARN  full_system_dry_run.sh not found (required for fix prompts)"; fi
+  # 6. parse_allowed_files on a known prompt
+  if [ -n "$TASK_FILE" ]; then
+    _af_count="$(parse_allowed_files "$TASK_FILE" 2>/dev/null | wc -l | tr -d ' ')"
+    if [ "$_af_count" -gt 0 ]; then echo "  PASS  parse_allowed_files: found $_af_count files in $TASK_FILE"
+    else echo "  WARN  parse_allowed_files: no Allowed files block in $TASK_FILE"; fi
+  fi
+  echo
+  echo "Manual test scenarios (verify by hand):"
+  echo "  no-change guard:       run loop on fix prompt; if Codex makes no changes → FAIL 'implementer made no changes'"
+  echo "  out-of-scope file:     create a file not in Allowed files → FAIL 'out-of-scope files changed'"
+  echo "  untracked allowed:     create an allowed untracked file → accepted by scope check"
+  echo "  untracked forbidden:   create a file not in Allowed files → FAIL 'out-of-scope files changed'"
+  echo "  targeted dry-run fail: break a check in targeted_dry_run.sh → FAIL 'targeted dry run failed'"
+  echo "  full_system fail:      inject a FINAL: FAIL in full_system → FAIL 'full system dry run failed'"
+  if [ "$_st_fail" -eq 0 ]; then echo "FINAL: PASS"; exit 0
+  else echo "FINAL: FAIL"; exit 1; fi
+fi
 
 if [ "$CHECK_CLAUDE" -eq 1 ]; then
   check_claude_ready && { print_artifacts; echo "FINAL: PASS"; exit 0; }
@@ -631,6 +778,19 @@ while [ "$loop" -le "$MAX_LOOPS" ]; do
     fi
   fi
 
+  # Re-parse Allowed files for this iteration's prompt.
+  # write_followup_prompt injects the block so follow-up prompts carry it forward.
+  # If the current prompt has no block, fall back to the saved original.
+  parse_allowed_files "$current_task" > "$ALLOWED_FILES_LIST" 2>/dev/null || true
+  if [ ! -s "$ALLOWED_FILES_LIST" ] && [ -s "$RUN_DIR/allowed_files_original.txt" ]; then
+    cp "$RUN_DIR/allowed_files_original.txt" "$ALLOWED_FILES_LIST"
+    echo "(Allowed files: using original prompt's list for iteration $loop)"
+  fi
+  if [ -s "$ALLOWED_FILES_LIST" ]; then
+    echo "Allowed files (iteration $loop):"
+    sed 's/^/  /' "$ALLOWED_FILES_LIST"
+  fi
+
   prompt_sha="$(sha256_file "$RUN_DIR/codex_prompt_iter_${loop}.md" 2>/dev/null || echo 'n/a')"
   {
     echo "Iteration $loop prompt: $current_task"
@@ -638,18 +798,41 @@ while [ "$loop" -le "$MAX_LOOPS" ]; do
   } >> "$RUN_DIR/loop_summary.txt"
 
   if [ "$AUDIT_ONLY" -eq 0 ]; then
-    run_codex_once "$current_task" "$loop" || { print_artifacts; echo "FINAL: FAIL"; exit 2; }
+    run_implementer "$current_task" "$loop" || { print_artifacts; echo "FINAL: FAIL"; exit 2; }
+
+    # ── No-change guard ───────────────────────────────────────────────────
+    # For fix/patch prompts: the implementer must change or create at least one file.
+    # Includes both tracked diffs and untracked new files (e.g. new customer-memory.js).
+    if [ "$REPORT_TYPE" = "fix" ]; then
+      _changed_after="$( {
+        git diff --name-only "$BASE_COMMIT" 2>/dev/null || true
+        git ls-files --others --exclude-standard 2>/dev/null || true
+      } | sort -u | grep -v '^$' )"
+      if [ -z "$_changed_after" ]; then
+        echo "FINAL: FAIL"
+        echo "Reason: implementer made no changes"
+        print_artifacts; exit 1
+      fi
+    fi
   else
-    echo "Audit-only mode: skipping Codex."
+    echo "Audit-only mode: skipping implementer."
   fi
 
-  run_gate "$current_task" || { echo "Test gate failed."; print_artifacts; echo "FINAL: FAIL"; exit 1; }
+  if ! run_gate "$current_task"; then
+    print_artifacts; echo "FINAL: FAIL"; exit 1
+  fi
 
   # ── Scope enforcement ─────────────────────────────────────────────────────
-  # Compare all files changed since BASE_COMMIT against the allowed list.
-  # Fails the loop if any out-of-scope files were modified.
+  # For fix/patch prompts with no allowed files list: fail explicitly so the
+  # loop does not proceed with unconstrained scope.
+  # For prompts with an allowed list: fail if any changed file is out of scope.
   SCOPE_REPORT="$RUN_DIR/scope_report.txt"
   : > "$SCOPE_REPORT"
+  if [ "$REPORT_TYPE" = "fix" ] && [ ! -s "$ALLOWED_FILES_LIST" ]; then
+    echo "FINAL: FAIL"
+    echo "Reason: patch prompt has no allowed files block"
+    print_artifacts; exit 1
+  fi
   if ! check_scope "$ALLOWED_FILES_LIST" "$BASE_COMMIT" "$SCOPE_REPORT"; then
     echo "FINAL: FAIL"
     echo "Reason: out-of-scope files changed"

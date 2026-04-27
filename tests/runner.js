@@ -1209,6 +1209,162 @@ piTest('PI-014', 'Filler "là" skipped, result valid',
   'là bốn không tám chín một sáu ba bốn ba chín', 'vi', '4089163439');
 
 // ══════════════════════════════════════════════════════════════════════════
+// GROUP 12 — SHARED SALON RETURNING CUSTOMER MEMORY
+// type: unit
+// Covers shared nails/hair customer memory helper and static receptionist wiring.
+// ══════════════════════════════════════════════════════════════════════════
+
+group('Shared Salon Returning Customer Memory', 'unit');
+
+var SalonCustomerMemory;
+try {
+  SalonCustomerMemory = require('../nailsalon/customer-memory.js');
+} catch (e) {
+  SalonCustomerMemory = null;
+}
+
+var cmSrc = fs.existsSync(path.join(__dirname, '../nailsalon/customer-memory.js'))
+  ? fs.readFileSync(path.join(__dirname, '../nailsalon/customer-memory.js'), 'utf8')
+  : '';
+var nailHtml = fs.readFileSync(path.join(__dirname, '../nailsalon/index.html'), 'utf8');
+var hairHtml = fs.readFileSync(path.join(__dirname, '../hairsalon/index.html'), 'utf8');
+
+function memoryRecords() {
+  return [
+    {
+      vendorId: 'luxurious-nails',
+      customerName: 'Jane Nguyen',
+      customerPhone: '4085551234',
+      services: ['Gel Manicure'],
+      staff: 'Tracy',
+      requestedDate: '2026-04-20',
+      createdAt: 100
+    },
+    {
+      vendorId: 'beauty-hair-oc',
+      customerName: 'Minh Tran',
+      customerPhone: '(714) 555-1212',
+      services: ['Women\'s Haircut'],
+      staff: 'Michele',
+      requestedDate: '2026-04-21',
+      createdAt: 200
+    },
+    {
+      vendorId: 'other-vendor',
+      customerName: 'Private Customer',
+      customerPhone: '4085551234',
+      services: ['Private Service'],
+      staff: 'Hidden',
+      createdAt: 300
+    }
+  ];
+}
+
+test('Phone-first booking intent prompts for phone before name/service', function() {
+  assertContains(src, '_isPhoneFirstBookingIntent');
+  assertContains(src, '_buildPhoneFirstPrompt');
+  assertContains(src, 'look up your customer record');
+  assert(src.indexOf('_maybeHandleSalonCustomerMemory') < src.indexOf('AIEngine.call'),
+    'memory/phone-first intercept must run before AIEngine.call');
+});
+
+test('Returning customer lookup uses normalized phone', function() {
+  assert(SalonCustomerMemory, 'customer-memory.js could not be loaded');
+  var phone = SalonCustomerMemory.normalizePhone('+1 (408) 555-1234');
+  assertEq(phone, '4085551234');
+  var found = SalonCustomerMemory.findReturningSalonCustomerInRecords(
+    memoryRecords(),
+    { id: 'luxurious-nails' },
+    '+1 (408) 555-1234'
+  );
+  assertEq(found.name, 'Jane Nguyen');
+});
+
+test('Returning customer greeting English includes name/service/staff', function() {
+  assert(SalonCustomerMemory, 'customer-memory.js could not be loaded');
+  var msg = SalonCustomerMemory.buildReturningCustomerGreeting({
+    name: 'Jane Nguyen',
+    lastService: 'Gel Manicure',
+    lastStaff: 'Tracy'
+  }, 'en');
+  assertContains(msg, 'Jane Nguyen');
+  assertContains(msg, 'Gel Manicure');
+  assertContains(msg, 'Tracy');
+});
+
+test('Returning customer greeting Vietnamese includes name/service/staff and “lần trước”', function() {
+  assert(SalonCustomerMemory, 'customer-memory.js could not be loaded');
+  var msg = SalonCustomerMemory.buildReturningCustomerGreeting({
+    name: 'Jane Nguyen',
+    lastService: 'Gel Manicure',
+    lastStaff: 'Tracy'
+  }, 'vi');
+  assertContains(msg, 'Jane Nguyen');
+  assertContains(msg, 'Gel Manicure');
+  assertContains(msg, 'Tracy');
+  assertContains(msg, 'lần trước');
+});
+
+test('Returning customer greeting Spanish includes name/service/staff and “La última vez”', function() {
+  assert(SalonCustomerMemory, 'customer-memory.js could not be loaded');
+  var msg = SalonCustomerMemory.buildReturningCustomerGreeting({
+    name: 'Jane Nguyen',
+    lastService: 'Gel Manicure',
+    lastStaff: 'Tracy'
+  }, 'es');
+  assertContains(msg, 'Jane Nguyen');
+  assertContains(msg, 'Gel Manicure');
+  assertContains(msg, 'Tracy');
+  assertContains(msg, 'La última vez');
+});
+
+test('Name-only returning customer does not invent service/staff', function() {
+  assert(SalonCustomerMemory, 'customer-memory.js could not be loaded');
+  var msg = SalonCustomerMemory.buildReturningCustomerGreeting({ name: 'Jane Nguyen' }, 'en');
+  assertContains(msg, 'Welcome back, Jane Nguyen');
+  assertNotContains(msg, 'Last time');
+  assertNotContains(msg, 'with Tracy');
+  assertContains(src, '_serviceStillExistsAtVendor');
+  assertContains(src, '_staffStillWorksAtVendor');
+});
+
+test('No record found falls back to normal new-customer flow', function() {
+  assert(SalonCustomerMemory, 'customer-memory.js could not be loaded');
+  var found = SalonCustomerMemory.findReturningSalonCustomerInRecords(
+    memoryRecords(),
+    { id: 'luxurious-nails' },
+    '4085559999'
+  );
+  assertEq(found, null);
+});
+
+test('Vendor scoping prevents cross-vendor leakage', function() {
+  assert(SalonCustomerMemory, 'customer-memory.js could not be loaded');
+  var found = SalonCustomerMemory.findReturningSalonCustomerInRecords(
+    memoryRecords(),
+    { id: 'luxurious-nails' },
+    '4085551234'
+  );
+  assertEq(found.name, 'Jane Nguyen');
+  assertNotContains(found.lastService, 'Private Service');
+});
+
+test('Lookup failure is safe and does not break booking flow', function() {
+  assert(SalonCustomerMemory, 'customer-memory.js could not be loaded');
+  assertContains(cmSrc, '.catch(function () { return null; })');
+  assertContains(src, '.catch(function ()');
+});
+
+test('Both nails and hair contexts are covered', function() {
+  assertContains(nailHtml, '/nailsalon/customer-memory.js');
+  assertContains(hairHtml, '/nailsalon/customer-memory.js');
+  assertContains(nailHtml, '/nailsalon/receptionist.js');
+  assertContains(hairHtml, '/nailsalon/receptionist.js');
+  assertContains(cmSrc, 'lookupReturningSalonCustomer');
+  assertContains(cmSrc, 'buildReturningCustomerGreeting');
+});
+
+// ══════════════════════════════════════════════════════════════════════════
 // FINAL REPORT
 // ══════════════════════════════════════════════════════════════════════════
 

@@ -204,22 +204,39 @@ set +e
       echo "== Scope: salon-memory =="
       echo
       echo "-- Customer memory helper (returning customer lookup) --"
-      check_grep "returning customer lookup helper exists (_lookupActiveBookingByPhone)" \
-        "_lookupActiveBookingByPhone" "nailsalon/receptionist.js"
-      check_grep "cross-session booking lookup exists (_xsBookingLookup)" \
-        "_xsBookingLookup" "nailsalon/receptionist.js"
+      check_file_exists "nailsalon/customer-memory.js"
+      check_grep "SalonCustomerMemory exported" \
+        "SalonCustomerMemory" "nailsalon/customer-memory.js"
+      check_grep "lookupReturningSalonCustomer helper exists" \
+        "lookupReturningSalonCustomer" "nailsalon/customer-memory.js"
+      check_grep "buildReturningCustomerGreeting helper exists" \
+        "buildReturningCustomerGreeting" "nailsalon/customer-memory.js"
+      check_grep "phone-first booking intent exists" \
+        "_isPhoneFirstBookingIntent" "nailsalon/receptionist.js"
+      check_grep "memory intercept runs before normal AI flow" \
+        "_maybeHandleSalonCustomerMemory" "nailsalon/receptionist.js"
       echo
       echo "-- Returning customer memory tests in runner.js --"
-      check_grep "runner.js has RX-014 (cross-session cancel)" "RX-014" "tests/runner.js"
-      check_grep "runner.js has RX-015 (cross-session modify)" "RX-015" "tests/runner.js"
-      check_grep "runner.js has RX-017 (shared lookup utility)" "RX-017" "tests/runner.js"
+      check_grep "runner.js has Shared Salon Returning Customer Memory group" \
+        "Shared Salon Returning Customer Memory" "tests/runner.js"
+      check_grep "runner.js tests normalized phone lookup" \
+        "Returning customer lookup uses normalized phone" "tests/runner.js"
+      check_grep "runner.js tests vendor scoping" \
+        "Vendor scoping prevents cross-vendor leakage" "tests/runner.js"
+      check_grep "runner.js tests lookup failure safety" \
+        "Lookup failure is safe" "tests/runner.js"
       echo
       echo "-- Vendor scoping --"
-      check_grep "lookup is vendor-scoped via biz.id/biz.slug" "biz\.id\|biz\.slug" "nailsalon/receptionist.js"
-      check_grep "vendor scoping tested in runner.js (RX-017)" \
-        "_lookupActiveBookingByPhone shared utility" "tests/runner.js"
+      check_grep "lookup is vendor-scoped via vendor id" \
+        "vendorIdFromBiz" "nailsalon/customer-memory.js"
+      check_grep "helper queries vendors/{vendorId}/bookings" \
+        "collection('vendors').doc(vendorId).collection('bookings')" "nailsalon/customer-memory.js"
       echo
       echo "-- Hair and nail contexts both covered --"
+      check_grep "nailsalon/index.html loads customer-memory before receptionist" \
+        "customer-memory\.js.*v=20260427a" "nailsalon/index.html"
+      check_grep "hairsalon/index.html loads customer-memory before receptionist" \
+        "customer-memory\.js.*v=20260427a" "hairsalon/index.html"
       check_grep "nail context: receptionist.js loaded by nailsalon/index.html" \
         "receptionist\.js" "nailsalon/index.html"
       check_grep "hair context: receptionist.js loaded by hairsalon/index.html (shared module)" \

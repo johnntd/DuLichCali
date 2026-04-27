@@ -27,6 +27,7 @@ CHECK_CLAUDE=0
 AUTO_COMMIT=0
 MAX_LOOPS=1
 COMMIT_MESSAGE=""
+ALLOW_DIRTY=0
 
 CONFIG_FILE="config/ai_project_profile.json"
 
@@ -34,19 +35,21 @@ usage() {
   cat <<'EOF'
 Usage:
   scripts/ai/ai_dev_loop.sh [--audit-only] [--manual-claude] [--check-claude]
-                             [--auto-commit] [--max-loops N]
-                             [--commit-message "..."] prompts/task.md
+                             [--auto-commit|--commit] [--allow-dirty]
+                             [--max-loops N] [--commit-message "..."] prompts/task.md
 
 Modes:
-  default        Run Codex non-interactively (when supported), then test/audit.
-  --audit-only   Skip Codex; audit the current working tree.
+  default          Run Codex non-interactively (when supported), then test/audit.
+  --audit-only     Skip Codex; audit the current working tree.
   --manual-claude  Build prompt for manual paste; skip Claude API.
   --check-claude   Verify Claude API readiness only.
 
 Safety:
-  --auto-commit requires --commit-message.
+  --auto-commit / --commit  Commit after APPROVE verdict (requires --commit-message).
+  --allow-dirty             Allow running with uncommitted changes (default: FAIL if dirty).
   --max-loops defaults to 1.
-  Never pushes to remote. Never deploys. Never deletes files.
+  Default: no commit, no push, no deploy.
+  Deployment is always manual — run firebase deploy only after user approval.
 EOF
 }
 
@@ -56,6 +59,8 @@ while [ "$#" -gt 0 ]; do
     --manual-claude)   MANUAL_CLAUDE=1; AUDIT_ONLY=1; shift ;;
     --check-claude)    CHECK_CLAUDE=1; shift ;;
     --auto-commit)     AUTO_COMMIT=1; shift ;;
+    --commit)          AUTO_COMMIT=1; shift ;;
+    --allow-dirty)     ALLOW_DIRTY=1; shift ;;
     --max-loops)       MAX_LOOPS="${2:-}"; shift 2 ;;
     --loops)           MAX_LOOPS="${2:-}"; shift 2 ;;
     --commit-message)  COMMIT_MESSAGE="${2:-}"; shift 2 ;;
@@ -79,6 +84,7 @@ if [ -n "$TASK_FILE" ] && [ ! -f "$TASK_FILE" ]; then
 fi
 
 mkdir -p "$RUN_DIR"
+BASE_COMMIT="$(git rev-parse HEAD 2>/dev/null || echo 'unknown')"
 
 # ── config helpers ────────────────────────────────────────────────────────────
 read_config_str() {
@@ -155,6 +161,7 @@ detect_report_type() {
 
 SCOPE="$(detect_scope "$TASK_FILE")"
 REPORT_TYPE="$(detect_report_type "$TASK_FILE")"
+ALLOWED_FILES_LIST="$RUN_DIR/allowed_files.txt"
 
 # ── test runner detection ─────────────────────────────────────────────────────
 detect_test_runner() {
@@ -192,6 +199,10 @@ print_artifacts() {
     echo "Loop prompt history:"
     cat "$RUN_DIR/loop_summary.txt"
   fi
+  if [ -s "$RUN_DIR/scope_report.txt" ]; then
+    echo
+    cat "$RUN_DIR/scope_report.txt"
+  fi
 }
 
 sha256_file() {
@@ -199,6 +210,105 @@ sha256_file() {
     sha256sum "$1" | awk '{print $1}'
   else
     shasum -a 256 "$1" | awk '{print $1}'
+  fi
+}
+
+# ── scope enforcement helpers ─────────────────────────────────────────────────
+
+# parse_allowed_files: extract "Allowed files:" bullet list from a prompt file
+parse_allowed_files() {
+  local prompt_file="${1:-}"
+  [ -f "$prompt_file" ] || return
+  python3 - "$prompt_file" <<'PYEOF'
+import sys, re
+try:
+    with open(sys.argv[1]) as f:
+        text = f.read()
+    m = re.search(r'Allowed files:\s*\n((?:[ \t]*[-*][ \t]*\S[^\n]*\n?)+)', text)
+    if m:
+        for line in m.group(1).splitlines():
+            line = line.strip().lstrip('-').lstrip('*').strip()
+            if line:
+                print(line)
+except Exception:
+    pass
+PYEOF
+}
+
+# check_scope: compare changed files (vs base commit) against allowed list
+# Writes ## Scope Enforcement section to report_file.
+# Returns 0 if clean, 1 if violation.
+check_scope() {
+  local allowed_list="$1"
+  local base="$2"
+  local report="$3"
+
+  # Collect all changed files: committed since base + current working tree changes
+  local changed
+  changed="$( {
+    git diff --name-only "${base}" HEAD 2>/dev/null || true
+    git diff --name-only HEAD        2>/dev/null || true
+  } | sort -u | grep -v '^$' )"
+
+  {
+    echo "## Scope Enforcement"
+    echo "Base commit: ${base}"
+    echo "Changed files:"
+    if [ -n "$changed" ]; then
+      echo "$changed" | sed 's/^/  /'
+    else
+      echo "  (none)"
+    fi
+  } >> "$report"
+
+  # No allowed list — scope check skipped
+  if [ ! -s "$allowed_list" ]; then
+    {
+      echo "Allowed files: (none specified — scope check skipped)"
+      echo "Out-of-scope files: N/A"
+      echo "Result: SKIP"
+    } >> "$report"
+    return 0
+  fi
+
+  {
+    echo "Allowed files:"
+    sed 's/^/  /' "$allowed_list"
+  } >> "$report"
+
+  local violations=()
+  while IFS= read -r f; do
+    [ -z "$f" ] && continue
+    if ! grep -qxF "$f" "$allowed_list" 2>/dev/null; then
+      violations+=("$f")
+    fi
+  done <<< "$changed"
+
+  if [ "${#violations[@]}" -gt 0 ]; then
+    echo "Out-of-scope files:" >> "$report"
+    for f in "${violations[@]}"; do
+      echo "    - $f" >> "$report"
+    done
+    echo "Result: FAIL" >> "$report"
+    echo "SCOPE VIOLATION: the following files were changed outside the allowed list:"
+    for f in "${violations[@]}"; do
+      echo "  - $f"
+    done
+    return 1
+  fi
+
+  echo "Out-of-scope files: none" >> "$report"
+  echo "Result: PASS" >> "$report"
+  return 0
+}
+
+# check_no_deploy: warn if the task prompt mentions deployment
+check_no_deploy() {
+  local prompt_file="${1:-}"
+  [ -f "$prompt_file" ] || return
+  if grep -qiE 'firebase deploy|deploy.*production|deploy.*hosting|push.*firebase|npm run deploy' \
+      "$prompt_file" 2>/dev/null; then
+    echo "NOTE: Deployment is manual. Run firebase deploy only after user approval."
   fi
 }
 
@@ -466,6 +576,17 @@ echo
 
 git status --short | tee "$RUN_DIR/status_before.txt"
 
+# Parse allowed files from prompt (if "Allowed files:" block present)
+parse_allowed_files "${TASK_FILE:-}" > "$ALLOWED_FILES_LIST" 2>/dev/null || true
+if [ -s "$ALLOWED_FILES_LIST" ]; then
+  echo "Allowed files (from prompt):"
+  sed 's/^/  /' "$ALLOWED_FILES_LIST"
+  echo
+fi
+
+# Warn if prompt mentions deployment (deploy is always manual)
+check_no_deploy "${TASK_FILE:-}"
+
 if [ "$CHECK_CLAUDE" -eq 1 ]; then
   check_claude_ready && { print_artifacts; echo "FINAL: PASS"; exit 0; }
   rc=$?
@@ -480,6 +601,21 @@ loop=1
 
 while [ "$loop" -le "$MAX_LOOPS" ]; do
   echo; echo "== Loop $loop / $MAX_LOOPS =="
+
+  # ── Preflight dirty-tree check ────────────────────────────────────────────
+  # A dirty tree makes scope enforcement unreliable (can't isolate Codex changes).
+  # Require --allow-dirty to proceed when uncommitted changes exist.
+  if ! git diff --quiet HEAD 2>/dev/null; then
+    if [ "$ALLOW_DIRTY" -eq 0 ]; then
+      echo "ERROR: Working tree has uncommitted changes."
+      echo "Commit or stash changes before running, or pass --allow-dirty to override."
+      echo "Dirty files:"
+      git status --short | head -20
+      print_artifacts; echo "FINAL: FAIL"; exit 1
+    fi
+    echo "WARNING: --allow-dirty passed; working tree has uncommitted changes."
+  fi
+
   echo "== Codex prompt for iteration $loop =="
   echo "$current_task"
   cp "$current_task" "$RUN_DIR/codex_prompt_iter_${loop}.md" 2>/dev/null || true
@@ -509,6 +645,17 @@ while [ "$loop" -le "$MAX_LOOPS" ]; do
 
   run_gate "$current_task" || { echo "Test gate failed."; print_artifacts; echo "FINAL: FAIL"; exit 1; }
 
+  # ── Scope enforcement ─────────────────────────────────────────────────────
+  # Compare all files changed since BASE_COMMIT against the allowed list.
+  # Fails the loop if any out-of-scope files were modified.
+  SCOPE_REPORT="$RUN_DIR/scope_report.txt"
+  : > "$SCOPE_REPORT"
+  if ! check_scope "$ALLOWED_FILES_LIST" "$BASE_COMMIT" "$SCOPE_REPORT"; then
+    echo "FINAL: FAIL"
+    echo "Reason: out-of-scope files changed"
+    print_artifacts; exit 1
+  fi
+
   if [ "$MANUAL_CLAUDE" -eq 1 ]; then
     echo "Manual Claude mode: prompt ready at $RUN_DIR/claude_manual_prompt.txt"
     print_artifacts; echo "FINAL: MANUAL_REVIEW_REQUIRED"; exit 1
@@ -537,7 +684,13 @@ while [ "$loop" -le "$MAX_LOOPS" ]; do
 
   case "$verdict" in
     APPROVE)
-      commit_if_requested; print_artifacts; echo "FINAL: PASS"; exit 0
+      commit_if_requested
+      print_artifacts
+      if [ "$AUTO_COMMIT" -eq 0 ]; then
+        echo "Validation passed. Review git diff, then manually stage/commit/deploy."
+        echo "  Deployment is manual — run firebase deploy only after user approval."
+      fi
+      echo "FINAL: PASS"; exit 0
       ;;
     REQUEST_CHANGES)
       write_followup_prompt "$current_task" "$loop"

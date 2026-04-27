@@ -25,7 +25,7 @@
   }
 
   function _normalizeSalonMemoryPhone(text) {
-    var phone = _normalizeSalonRuntimePhone(text);
+    var phone = _normalizeSalonRuntimePhone(text, null, { phoneContext: true, expected: 'phone' });
     if (phone) return phone;
     var mem = _memoryHelper();
     if (mem && typeof mem.normalizePhone === 'function') return mem.normalizePhone(text);
@@ -40,15 +40,16 @@
       : (typeof PhoneIntake !== 'undefined' ? PhoneIntake : null);
   }
 
-  function _normalizeSalonRuntimePhone(text, lang) {
-    var digits = _extractSalonRuntimePhoneDigits(text, lang);
+  function _normalizeSalonRuntimePhone(text, lang, context) {
+    var digits = _extractSalonRuntimePhoneDigits(text, lang, context);
     return digits && digits.length === 10 ? digits : null;
   }
 
-  function _extractSalonRuntimePhoneDigits(text, lang) {
+  function _extractSalonRuntimePhoneDigits(text, lang, context) {
+    context = context || {};
     var pi = _phoneIntakeHelper();
     var digits = pi && typeof pi.normalizeSpokenPhoneNumber === 'function'
-      ? pi.normalizeSpokenPhoneNumber(String(text || ''), lang || null, { mode: 'phone' })
+      ? pi.normalizeSpokenPhoneNumber(String(text || ''), lang || null, context)
       : null;
     if (!digits) digits = String(text || '').replace(/\D/g, '');
     if (digits.length === 11 && digits.charAt(0) === '1') digits = digits.slice(1);
@@ -75,10 +76,48 @@
       !!state.date || !!state.time || !!state.name || !!state.staff;
   }
 
+  function _hasPhoneIntentText(text) {
+    var pi = _phoneIntakeHelper();
+    if (pi && typeof pi.hasPhoneIntent === 'function') return pi.hasPhoneIntent(text);
+    var raw = String(text || '').toLowerCase();
+    var plain = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
+    return /\b(phone|phone number|number|cell|mobile|telephone|tel)\b/.test(plain) ||
+      /\b(numero de telefono|telefono|celular|movil)\b/.test(plain) ||
+      /(số điện thoại|so dien thoai|điện thoại|dien thoai)/i.test(raw);
+  }
+
+  function _hasSalonPhoneContext(biz, text, lang) {
+    var s = (biz && biz._bookingState) || _emptyState();
+    return !!(
+      (biz && biz._expectingPhone) ||
+      _isAwaitingPhoneNumber(s) ||
+      _hasPhoneIntentText(text) ||
+      (s && !s.phone && (
+        s.pendingAction === 'modify_booking' ||
+        s.pendingAction === 'booking_offer' ||
+        (s.intent === 'booking_request' && (
+          (s.services && s.services.length) || s.date || s.time || s.name || s.staff
+        ))
+      ))
+    );
+  }
+
+  function _markExpectingPhoneFromReply(biz, reply) {
+    if (!biz) return;
+    var s = biz._bookingState || null;
+    if (s && s.phone) {
+      biz._expectingPhone = false;
+      return;
+    }
+    if (_hasPhoneIntentText(reply)) {
+      biz._expectingPhone = true;
+    }
+  }
+
   function _buildPhoneConfirmReply(phone, lang) {
     var formatted = _formatPhoneForConfirm(phone);
-    if (lang === 'vi') return 'Em xác nhận số điện thoại của mình là ' + formatted + ', đúng không ạ?';
-    if (lang === 'es') return 'Confirmo que su número de teléfono es ' + formatted + ', ¿correcto?';
+    if (lang === 'vi') return 'Em nghe số điện thoại là ' + formatted + ', đúng không ạ?';
+    if (lang === 'es') return 'Escuché su número como ' + formatted + '. ¿Es correcto?';
     return 'I heard your phone number as ' + formatted + '. Is that correct?';
   }
 
@@ -137,9 +176,13 @@
 
   function _maybeHandleSalonCustomerMemory(biz, text, lang) {
     var mem = _memoryHelper();
-    var phoneCandidate = _extractSalonRuntimePhoneDigits(text, lang);
-    var phone = (phoneCandidate && phoneCandidate.length === 10 ? phoneCandidate : null) || _normalizeSalonMemoryPhone(text);
     var s = biz._bookingState || _emptyState();
+    var phoneContext = _hasSalonPhoneContext(biz, text, lang);
+    var phoneCandidate = phoneContext
+      ? _extractSalonRuntimePhoneDigits(text, lang, { phoneContext: true, expected: 'phone' })
+      : null;
+    var phone = (phoneCandidate && phoneCandidate.length === 10 ? phoneCandidate : null) ||
+      ((phoneContext || /^\D*\+?[\d\s().-]{7,}\D*$/.test(String(text || ''))) ? _normalizeSalonMemoryPhone(text) : null);
     var wasAwaitingPhone = _isAwaitingPhoneNumber(s);
     var hasPhone = s.phone || phone;
     var bookingIntent = _isPhoneFirstBookingIntent(text) || s.intent === 'booking_request' || s.pendingAction === 'booking_offer';
@@ -154,18 +197,21 @@
       });
       s = biz._bookingState;
       if (wasAwaitingPhone || bookingIntent) {
+        biz._expectingPhone = false;
         _saveBookingState(biz);
         return Promise.resolve({ directResponse: _buildPhoneConfirmReply(phone, lang || s.lang || 'en') });
       }
     }
 
     if (!phone && phoneCandidate && (wasAwaitingPhone || bookingIntent)) {
+      biz._expectingPhone = true;
       return Promise.resolve({ directResponse: _buildPartialPhoneReply(phoneCandidate, lang || s.lang || 'en') });
     }
 
     if (bookingIntent && !hasPhone) {
       s.intent = 'booking_request';
       s.lang = lang || s.lang || 'en';
+      biz._expectingPhone = true;
       _saveBookingState(biz);
       return Promise.resolve({ systemContext: _buildPhoneFirstPrompt() });
     }
@@ -276,7 +322,7 @@
         var _PI = (typeof window !== 'undefined' && window.PhoneIntake)
           ? window.PhoneIntake
           : (typeof PhoneIntake !== 'undefined' ? PhoneIntake : null);
-        var normalized = _PI ? _PI.normalizeSpokenPhoneNumber(rawPhone, biz._bookingState.lang) : null;
+        var normalized = _PI ? _PI.normalizeSpokenPhoneNumber(rawPhone, biz._bookingState.lang, { phoneContext: true, expected: 'phone' }) : null;
         var phoneDigits = normalized || rawPhone.replace(/\D/g, '');
         // Normalize 11-digit +1 country code to 10 digits for consistent lookup
         if (phoneDigits.length === 11 && phoneDigits.charAt(0) === '1') {
@@ -2093,6 +2139,7 @@
       }
 
       biz._aiHistory.push({ role: 'assistant', content: clean });
+      _markExpectingPhoneFromReply(biz, clean);
       _saveHistory(biz);
 
       return { text: clean, escalationType: escalationType };

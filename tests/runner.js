@@ -1169,7 +1169,7 @@ try {
 function piTest(id, desc, input, lang, expected) {
   test(id + ': ' + desc, function () {
     assert(PhoneIntake, id + ': phone-intake.js could not be loaded');
-    var result = PhoneIntake.normalizeSpokenPhoneNumber(input, lang);
+    var result = PhoneIntake.normalizeSpokenPhoneNumber(input, lang, { phoneContext: true, expected: 'phone' });
     if (expected === null) {
       assert(result === null, id + ': expected null but got "' + result + '"');
     } else {
@@ -1223,14 +1223,83 @@ piTest('PI-020', 'Vietnamese polite filler does not turn năm into year',
 test('Runtime phone intake intercept runs before AI call for Vietnamese spoken numbers', function() {
   assertContains(src, 'directResponse: _buildPhoneConfirmReply(phone',
     'Runtime path must return deterministic phone confirmation before AIEngine.call');
-  assertContains(src, 'Em xác nhận số điện thoại của mình là ',
+  assertContains(src, 'Em nghe số điện thoại là ',
     'Runtime phone confirmation must include Vietnamese confirmation copy');
   assertContains(src, '_buildPartialPhoneReply(phoneCandidate',
     'Runtime path must handle partial spoken-phone parses before AIEngine.call');
   assertContains(src, 'Mình đọc lại đầy đủ 10 số giúp em nhé?',
     'Runtime partial phone response must not let Vietnamese "năm" reach AI as year text');
-  assertContains(src, '_normalizeSalonRuntimePhone(text, lang)',
+  assertContains(src, '_hasSalonPhoneContext(biz, text, lang)',
+    'Runtime path must check phone-intake context before spoken digit normalization');
+  assertContains(src, '_extractSalonRuntimePhoneDigits(text, lang, { phoneContext: true, expected: \'phone\' })',
     'Runtime path must call shared phone normalization on raw user text');
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// GROUP 11b — SHARED SALON PHONE CONTEXT RUNTIME
+// type: mirrored-unit-logic + static-source-check
+// Verifies the shared phone helper is context-gated for both nails and hair.
+// ══════════════════════════════════════════════════════════════════════════
+
+group('Shared Salon Phone Context Runtime', 'mirrored-unit-logic | static-source-check');
+
+function phoneContextTest(input, expected) {
+  test('phone context: ' + input + ' -> ' + expected, function () {
+    assert(PhoneIntake, 'phone-intake.js could not be loaded');
+    assertEq(
+      PhoneIntake.normalizeSpokenPhoneNumber(input, 'vi', { phoneContext: true, expected: 'phone' }),
+      expected
+    );
+  });
+}
+
+function nonPhoneContextTest(input) {
+  test('non-phone context does not parse: ' + input, function () {
+    assert(PhoneIntake, 'phone-intake.js could not be loaded');
+    assertEq(PhoneIntake.normalizeSpokenPhoneNumber(input, 'vi', { phoneContext: false }), null);
+  });
+}
+
+phoneContextTest('4084 397 năm 22', '4084397522');
+phoneContextTest('4084 397 nam 22', '4084397522');
+phoneContextTest('4084 397 bảy 22', '4084397722');
+phoneContextTest('4084 397 bay 22', '4084397722');
+phoneContextTest('4084 397 tám 22', '4084397822');
+phoneContextTest('4084 397 tam 22', '4084397822');
+phoneContextTest('4084 397 sáu 22', '4084397622');
+phoneContextTest('4084 397 sau 22', '4084397622');
+phoneContextTest('À số điện thoại là 4084 397 năm 22', '4084397522');
+phoneContextTest('bốn không tám bốn ba chín bảy năm hai hai', '4084397522');
+phoneContextTest('bốn không tám bốn ba chín tám năm hai hai', '4084398522');
+phoneContextTest('bốn không tám bốn ba chín sáu tám hai hai', '4084396822');
+phoneContextTest('bon khong tam bon ba chin bay nam hai hai', '4084397522');
+phoneContextTest('số điện thoại là 408 439 bảy năm hai hai', '4084397522');
+phoneContextTest('my phone is bốn không tám 439 bảy năm hai hai', '4084397522');
+
+nonPhoneContextTest('Anh Bảy làm hôm nay không?');
+nonPhoneContextTest('Chị Tám có làm không?');
+nonPhoneContextTest('Năm nay tôi muốn đặt lịch');
+nonPhoneContextTest('Tôi muốn gặp cô Sáu');
+
+test('Phone-intake context gate and runtime marker are present before AIEngine.call', function() {
+  assertContains(src, 'function _hasSalonPhoneContext');
+  assertContains(src, 'biz._expectingPhone');
+  assertContains(src, '_markExpectingPhoneFromReply');
+  assert(src.indexOf('_maybeHandleSalonCustomerMemory') < src.indexOf('AIEngine.call'),
+    'phone-context runtime intercept must run before AIEngine.call');
+  assertContains(src, 'Escuché su número como ');
+  assertContains(src, 'I heard your phone number as ');
+});
+
+test('Both salon routes load shared phone-intake helper before receptionist runtime', function() {
+  var nailRouteHtml = fs.readFileSync(path.join(__dirname, '../nailsalon/index.html'), 'utf8');
+  var hairRouteHtml = fs.readFileSync(path.join(__dirname, '../hairsalon/index.html'), 'utf8');
+  assertContains(nailRouteHtml, '/nailsalon/phone-intake.js');
+  assertContains(hairRouteHtml, '/nailsalon/phone-intake.js');
+  assert(nailRouteHtml.indexOf('/nailsalon/phone-intake.js') < nailRouteHtml.indexOf('/nailsalon/receptionist.js'),
+    'nailsalon route must load phone-intake.js before receptionist.js');
+  assert(hairRouteHtml.indexOf('/nailsalon/phone-intake.js') < hairRouteHtml.indexOf('/nailsalon/receptionist.js'),
+    'hairsalon route must load phone-intake.js before receptionist.js');
 });
 
 // ══════════════════════════════════════════════════════════════════════════

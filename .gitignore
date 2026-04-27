@@ -15,3 +15,6 @@ dulichcali-booking-calendar-*.json
 
 # AI run artifacts — ephemeral, not source
 .ai_runs/
+
+# Firebase local deploy cache
+.firebase/

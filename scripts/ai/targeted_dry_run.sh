@@ -97,7 +97,18 @@ set +e
       echo
       echo "-- Hair vs Nail isolation --"
       check_grep_absent "hairsalon/index.html does not hardcode luxurious-nails" "luxurious-nails" "hairsalon/index.html"
-      check_grep_absent "hairsalon/index.html does not hardcode nail salon title" "Nail Salon\|Nail salon\|nailsalon" "hairsalon/index.html"
+      # Strip <script>…</script>, <link …>, and <!-- comments --> before checking
+      # for nail salon content — shared infrastructure paths (/nailsalon/*.js)
+      # in src/href/comment attributes must not count as visible content leakage.
+      if perl -0777 -pe \
+          's/<script\b[^>]*>.*?<\/script>//gis;
+           s/<link\b[^>]*>//gis;
+           s/<!--.*?-->//gs' hairsalon/index.html 2>/dev/null \
+          | grep -qiE 'Nail Salon|nailsalon'; then
+        check_fail "hairsalon/index.html does not hardcode nail salon title (visible/template content)"
+      else
+        check_pass "hairsalon/index.html does not hardcode nail salon title (visible/template content)"
+      fi
       echo
       echo "-- Route validation --"
       run_node_check "hairsalon/index.html is valid UTF-8" \
@@ -189,9 +200,39 @@ set +e
       check_grep "runner.js has PI-014 test" "PI-014" "tests/runner.js"
       ;;
 
+    salon-memory)
+      echo "== Scope: salon-memory =="
+      echo
+      echo "-- Customer memory helper (returning customer lookup) --"
+      check_grep "returning customer lookup helper exists (_lookupActiveBookingByPhone)" \
+        "_lookupActiveBookingByPhone" "nailsalon/receptionist.js"
+      check_grep "cross-session booking lookup exists (_xsBookingLookup)" \
+        "_xsBookingLookup" "nailsalon/receptionist.js"
+      echo
+      echo "-- Returning customer memory tests in runner.js --"
+      check_grep "runner.js has RX-014 (cross-session cancel)" "RX-014" "tests/runner.js"
+      check_grep "runner.js has RX-015 (cross-session modify)" "RX-015" "tests/runner.js"
+      check_grep "runner.js has RX-017 (shared lookup utility)" "RX-017" "tests/runner.js"
+      echo
+      echo "-- Vendor scoping --"
+      check_grep "lookup is vendor-scoped via biz.id/biz.slug" "biz\.id\|biz\.slug" "nailsalon/receptionist.js"
+      check_grep "vendor scoping tested in runner.js (RX-017)" \
+        "_lookupActiveBookingByPhone shared utility" "tests/runner.js"
+      echo
+      echo "-- Hair and nail contexts both covered --"
+      check_grep "nail context: receptionist.js loaded by nailsalon/index.html" \
+        "receptionist\.js" "nailsalon/index.html"
+      check_grep "hair context: receptionist.js loaded by hairsalon/index.html (shared module)" \
+        "receptionist\.js" "hairsalon/index.html"
+      check_grep "hair vendor data: beauty-hair-oc in services-data.js" \
+        "beauty-hair-oc" "marketplace/services-data.js"
+      check_grep "nail vendor data: luxurious-nails in services-data.js" \
+        "luxurious-nails" "marketplace/services-data.js"
+      ;;
+
     *)
       echo "Unknown scope: $SCOPE"
-      echo "Valid: hair-salon  booking  travel  marketplace  ai-receptionist  phone-intake"
+      echo "Valid: hair-salon  booking  travel  marketplace  ai-receptionist  phone-intake  salon-memory"
       echo "FINAL: FAIL"
       exit 2
       ;;

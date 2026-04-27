@@ -10,11 +10,13 @@ set -euo pipefail
 #   scripts/ai/targeted_dry_run.sh travel
 #   scripts/ai/targeted_dry_run.sh marketplace
 #   scripts/ai/targeted_dry_run.sh ai-receptionist
+#   scripts/ai/targeted_dry_run.sh phone-intake
+#   scripts/ai/targeted_dry_run.sh salon-memory
 
 SCOPE="${1:-}"
 if [ -z "$SCOPE" ]; then
   echo "Usage: scripts/ai/targeted_dry_run.sh <scope>"
-  echo "Scopes: hair-salon  booking  travel  marketplace  ai-receptionist"
+  echo "Scopes: hair-salon  booking  travel  marketplace  ai-receptionist  phone-intake  salon-memory"
   exit 2
 fi
 
@@ -215,6 +217,10 @@ set +e
         "_isPhoneFirstBookingIntent" "nailsalon/receptionist.js"
       check_grep "memory intercept runs before normal AI flow" \
         "_maybeHandleSalonCustomerMemory" "nailsalon/receptionist.js"
+      check_grep "phone-first routes through AI via systemContext" \
+        "systemContext: _buildPhoneFirstPrompt" "nailsalon/receptionist.js"
+      check_grep "returning customer routes through AI via systemContext" \
+        "systemContext: ctx" "nailsalon/receptionist.js"
       echo
       echo "-- Returning customer memory tests in runner.js --"
       check_grep "runner.js has Shared Salon Returning Customer Memory group" \
@@ -225,6 +231,8 @@ set +e
         "Vendor scoping prevents cross-vendor leakage" "tests/runner.js"
       check_grep "runner.js tests lookup failure safety" \
         "Lookup failure is safe" "tests/runner.js"
+      check_grep "runner.js tests validation is not bypassed" \
+        "Memory suggestions do not bypass booking validation" "tests/runner.js"
       echo
       echo "-- Vendor scoping --"
       check_grep "lookup is vendor-scoped via vendor id" \
@@ -234,9 +242,9 @@ set +e
       echo
       echo "-- Hair and nail contexts both covered --"
       check_grep "nailsalon/index.html loads customer-memory before receptionist" \
-        "customer-memory\.js.*v=20260427a" "nailsalon/index.html"
+        "customer-memory\.js.*v=20260427b" "nailsalon/index.html"
       check_grep "hairsalon/index.html loads customer-memory before receptionist" \
-        "customer-memory\.js.*v=20260427a" "hairsalon/index.html"
+        "customer-memory\.js.*v=20260427b" "hairsalon/index.html"
       check_grep "nail context: receptionist.js loaded by nailsalon/index.html" \
         "receptionist\.js" "nailsalon/index.html"
       check_grep "hair context: receptionist.js loaded by hairsalon/index.html (shared module)" \

@@ -87,8 +87,10 @@
     var db = opts.db || root.dlcDb;
     if (!db || !db.collection) return Promise.resolve(null);
 
+    var bookingsRef = db.collection('vendors').doc(vendorId).collection('bookings');
+
     function query(field) {
-      return db.collection('vendors').doc(vendorId).collection('bookings')
+      return bookingsRef
         .where(field, '==', phone)
         .get()
         .then(function (snap) {
@@ -101,11 +103,29 @@
         });
     }
 
-    return query('customerPhone')
-      .then(function (docs) {
-        if (docs.length) return docs;
-        return query('phone');
+    function scanVendorBookings() {
+      if (!bookingsRef.get) return Promise.resolve([]);
+      return bookingsRef.get().then(function (snap) {
+        return (snap && snap.docs ? snap.docs : [])
+          .map(function (doc) { return valueFromRecord(doc); })
+          .map(function (data) {
+            if (data && !data.vendorId) data.vendorId = vendorId;
+            return data;
+          });
+      });
+    }
+
+    var fields = ['customerPhoneNormalized', 'phoneNormalized', 'normalizedPhone', 'customerPhone', 'phone'];
+
+    function tryNextField(index) {
+      if (index >= fields.length) return scanVendorBookings();
+      return query(fields[index]).then(function (docs) {
+        return docs.length ? docs : tryNextField(index + 1);
       })
+      .catch(function () { return tryNextField(index + 1); });
+    }
+
+    return tryNextField(0)
       .then(function (docs) { return fromRecords(docs, vendorId, phone); })
       .catch(function () { return null; });
   }

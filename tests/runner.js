@@ -1278,6 +1278,9 @@ test('Returning customer lookup uses normalized phone', function() {
     '+1 (408) 555-1234'
   );
   assertEq(found.name, 'Jane Nguyen');
+  assertContains(cmSrc, 'customerPhoneNormalized');
+  assertContains(cmSrc, 'phoneNormalized');
+  assertContains(cmSrc, 'scanVendorBookings');
 });
 
 test('Returning customer greeting English includes name/service/staff', function() {
@@ -1347,12 +1350,20 @@ test('Vendor scoping prevents cross-vendor leakage', function() {
   );
   assertEq(found.name, 'Jane Nguyen');
   assertNotContains(found.lastService, 'Private Service');
+  assertContains(cmSrc, "collection('vendors').doc(vendorId).collection('bookings')");
 });
 
 test('Lookup failure is safe and does not break booking flow', function() {
   assert(SalonCustomerMemory, 'customer-memory.js could not be loaded');
   assertContains(cmSrc, '.catch(function () { return null; })');
   assertContains(src, '.catch(function ()');
+});
+
+test('Memory suggestions do not bypass booking validation', function() {
+  assertContains(src, 'All booking details must still be validated before confirming');
+  assertContains(src, 'NailAvailabilityChecker');
+  assertContains(src, '_validateResponseQuality');
+  assertContains(src, 'ESCALATE:appointment');
 });
 
 test('Both nails and hair contexts are covered', function() {

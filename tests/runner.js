@@ -1207,6 +1207,31 @@ piTest('PI-013', 'Unknown token → null',
   'hello world', 'en', null);
 piTest('PI-014', 'Filler "là" skipped, result valid',
   'là bốn không tám chín một sáu ba bốn ba chín', 'vi', '4089163439');
+piTest('PI-015', 'Vietnamese mixed chunks: "năm" is digit 5, not year',
+  '4084 397 năm 22', 'vi', '4084397522');
+piTest('PI-016', 'Vietnamese unaccented "nam" is digit 5 in phone context',
+  '4084 397 nam 22', 'vi', '4084397522');
+piTest('PI-017', 'Vietnamese mixed digit chunk boundary',
+  '408 4397 năm 22', 'vi', '4084397522');
+piTest('PI-018', 'Vietnamese digit words inside numeric chunks',
+  '408 439 bảy năm hai hai', 'vi', '4084397522');
+piTest('PI-019', 'Vietnamese phone phrase filler before mixed chunks',
+  'à số điện thoại là 4084 397 năm 22', 'vi', '4084397522');
+piTest('PI-020', 'Vietnamese polite filler does not turn năm into year',
+  'cũng 084397 năm 22', 'vi', '084397522');
+
+test('Runtime phone intake intercept runs before AI call for Vietnamese spoken numbers', function() {
+  assertContains(src, 'directResponse: _buildPhoneConfirmReply(phone',
+    'Runtime path must return deterministic phone confirmation before AIEngine.call');
+  assertContains(src, 'Em xác nhận số điện thoại của mình là ',
+    'Runtime phone confirmation must include Vietnamese confirmation copy');
+  assertContains(src, '_buildPartialPhoneReply(phoneCandidate',
+    'Runtime path must handle partial spoken-phone parses before AIEngine.call');
+  assertContains(src, 'Mình đọc lại đầy đủ 10 số giúp em nhé?',
+    'Runtime partial phone response must not let Vietnamese "năm" reach AI as year text');
+  assertContains(src, '_normalizeSalonRuntimePhone(text, lang)',
+    'Runtime path must call shared phone normalization on raw user text');
+});
 
 // ══════════════════════════════════════════════════════════════════════════
 // GROUP 12 — SHARED SALON RETURNING CUSTOMER MEMORY

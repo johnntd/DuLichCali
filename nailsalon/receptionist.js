@@ -25,11 +25,68 @@
   }
 
   function _normalizeSalonMemoryPhone(text) {
+    var phone = _normalizeSalonRuntimePhone(text);
+    if (phone) return phone;
     var mem = _memoryHelper();
     if (mem && typeof mem.normalizePhone === 'function') return mem.normalizePhone(text);
     var digits = String(text || '').replace(/\D/g, '');
     if (digits.length === 11 && digits.charAt(0) === '1') digits = digits.slice(1);
     return digits.length === 10 ? digits : null;
+  }
+
+  function _phoneIntakeHelper() {
+    return (typeof window !== 'undefined' && window.PhoneIntake)
+      ? window.PhoneIntake
+      : (typeof PhoneIntake !== 'undefined' ? PhoneIntake : null);
+  }
+
+  function _normalizeSalonRuntimePhone(text, lang) {
+    var digits = _extractSalonRuntimePhoneDigits(text, lang);
+    return digits && digits.length === 10 ? digits : null;
+  }
+
+  function _extractSalonRuntimePhoneDigits(text, lang) {
+    var pi = _phoneIntakeHelper();
+    var digits = pi && typeof pi.normalizeSpokenPhoneNumber === 'function'
+      ? pi.normalizeSpokenPhoneNumber(String(text || ''), lang || null, { mode: 'phone' })
+      : null;
+    if (!digits) digits = String(text || '').replace(/\D/g, '');
+    if (digits.length === 11 && digits.charAt(0) === '1') digits = digits.slice(1);
+    return digits.length >= 6 && digits.length <= 10 ? digits : null;
+  }
+
+  function _formatPhoneForConfirm(phone) {
+    var digits = String(phone || '').replace(/\D/g, '');
+    if (digits.length === 10) {
+      return digits.slice(0, 3) + '-' + digits.slice(3, 6) + '-' + digits.slice(6);
+    }
+    if (digits.length === 9) {
+      return digits.slice(0, 3) + '-' + digits.slice(3, 6) + '-' + digits.slice(6);
+    }
+    return phone;
+  }
+
+  function _isAwaitingPhoneNumber(state) {
+    if (!state || state.phone) return false;
+    if (state.pendingAction === 'modify_booking') return true;
+    if (state.intent !== 'booking_request' && state.pendingAction !== 'booking_offer') return false;
+    return state.pendingAction === 'booking_offer' ||
+      !!(state.services && state.services.length) ||
+      !!state.date || !!state.time || !!state.name || !!state.staff;
+  }
+
+  function _buildPhoneConfirmReply(phone, lang) {
+    var formatted = _formatPhoneForConfirm(phone);
+    if (lang === 'vi') return 'Em xác nhận số điện thoại của mình là ' + formatted + ', đúng không ạ?';
+    if (lang === 'es') return 'Confirmo que su número de teléfono es ' + formatted + ', ¿correcto?';
+    return 'I heard your phone number as ' + formatted + '. Is that correct?';
+  }
+
+  function _buildPartialPhoneReply(phone, lang) {
+    var formatted = _formatPhoneForConfirm(phone);
+    if (lang === 'vi') return 'Em nghe được ' + formatted + ', nhưng hình như còn thiếu số. Mình đọc lại đầy đủ 10 số giúp em nhé?';
+    if (lang === 'es') return 'Escuché ' + formatted + ', pero parece que falta un dígito. ¿Me lo puede repetir completo con 10 números?';
+    return 'I heard ' + formatted + ', but it looks like one digit is missing. Could you repeat the full 10-digit phone number?';
   }
 
   function _isPhoneFirstBookingIntent(text) {
@@ -80,14 +137,30 @@
 
   function _maybeHandleSalonCustomerMemory(biz, text, lang) {
     var mem = _memoryHelper();
-    var phone = _normalizeSalonMemoryPhone(text);
+    var phoneCandidate = _extractSalonRuntimePhoneDigits(text, lang);
+    var phone = (phoneCandidate && phoneCandidate.length === 10 ? phoneCandidate : null) || _normalizeSalonMemoryPhone(text);
     var s = biz._bookingState || _emptyState();
+    var wasAwaitingPhone = _isAwaitingPhoneNumber(s);
     var hasPhone = s.phone || phone;
     var bookingIntent = _isPhoneFirstBookingIntent(text) || s.intent === 'booking_request' || s.pendingAction === 'booking_offer';
 
     if (phone && !s.phone) {
-      _mergeState(biz, { intent: 'booking_request', services: s.services || [], phone: phone, lang: lang || s.lang || 'en', pendingAction: null });
+      _mergeState(biz, {
+        intent: s.intent || 'booking_request',
+        services: s.services || [],
+        phone: phone,
+        lang: lang || s.lang || 'en',
+        pendingAction: s.pendingAction || null
+      });
       s = biz._bookingState;
+      if (wasAwaitingPhone || bookingIntent) {
+        _saveBookingState(biz);
+        return Promise.resolve({ directResponse: _buildPhoneConfirmReply(phone, lang || s.lang || 'en') });
+      }
+    }
+
+    if (!phone && phoneCandidate && (wasAwaitingPhone || bookingIntent)) {
+      return Promise.resolve({ directResponse: _buildPartialPhoneReply(phoneCandidate, lang || s.lang || 'en') });
     }
 
     if (bookingIntent && !hasPhone) {
@@ -1901,6 +1974,12 @@
     return _ready.then(function() {
 
     return _maybeHandleSalonCustomerMemory(biz, text, lang).then(function(memoryResult) {
+      if (memoryResult && memoryResult.directResponse) {
+        biz._aiHistory.push({ role: 'assistant', content: memoryResult.directResponse });
+        _saveHistory(biz);
+        return { text: memoryResult.directResponse, escalationType: null };
+      }
+
       if (memoryResult && memoryResult.systemContext) {
         biz._aiHistory.push({ role: 'user', content: '[SYSTEM: ' + memoryResult.systemContext + ']' });
         _saveHistory(biz);

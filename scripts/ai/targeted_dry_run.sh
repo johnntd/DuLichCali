@@ -200,6 +200,9 @@ set +e
       check_grep "receptionist.js wires phone-intake" "PhoneIntake\|normalizeSpokenPhoneNumber" "nailsalon/receptionist.js"
       check_grep "runner.js has PI-001 test" "PI-001" "tests/runner.js"
       check_grep "runner.js has PI-014 test" "PI-014" "tests/runner.js"
+      check_grep "runner.js covers runtime Vietnamese mixed chunks" "4084 397 năm 22" "tests/runner.js"
+      check_grep "receptionist.js has pre-AI direct phone confirmation" "directResponse: _buildPhoneConfirmReply" "nailsalon/receptionist.js"
+      check_grep "receptionist.js confirms Vietnamese phone deterministically" "Em xác nhận số điện thoại" "nailsalon/receptionist.js"
       ;;
 
     salon-memory)

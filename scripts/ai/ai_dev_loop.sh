@@ -144,11 +144,11 @@ detect_scope() {
   # Generic scope detection from filename
   case "$fname" in
     *hair*salon*|*hair-salon*)  echo "hair-salon" ;;
+    *salon*memory*|*customer*memory*)   echo "salon-memory" ;;
     *booking*)                  echo "booking" ;;
     *travel*)                   echo "travel" ;;
     *marketplace*)              echo "marketplace" ;;
     *ai*receptionist*|*ai-receptionist*) echo "ai-receptionist" ;;
-    *salon*memory*|*customer*memory*)   echo "salon-memory" ;;
     *auth*)                     echo "auth" ;;
     *api*)                      echo "api" ;;
     *frontend*)                 echo "frontend" ;;

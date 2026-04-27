@@ -20,6 +20,107 @@
   // _detectLang() kept as a thin local alias so call sites inside this file are unchanged.
   function _detectLang(text) { return AIEngine.detectLang(text); }
 
+  function _memoryHelper() {
+    return (typeof window !== 'undefined' && window.SalonCustomerMemory) ? window.SalonCustomerMemory : null;
+  }
+
+  function _normalizeSalonMemoryPhone(text) {
+    var mem = _memoryHelper();
+    if (mem && typeof mem.normalizePhone === 'function') return mem.normalizePhone(text);
+    var digits = String(text || '').replace(/\D/g, '');
+    if (digits.length === 11 && digits.charAt(0) === '1') digits = digits.slice(1);
+    return digits.length === 10 ? digits : null;
+  }
+
+  function _isPhoneFirstBookingIntent(text) {
+    var t = String(text || '').toLowerCase();
+    return /\b(book|booking|appointment|appt|come today|come in|schedule|haircut|cut my hair|nails done|manicure|pedicure)\b/.test(t) ||
+      /(đặt lịch|dat lich|làm móng|lam mong|cắt tóc|cat toc|làm tóc|lam toc|muốn làm|muon lam|muốn cắt|muon cat)/i.test(t) ||
+      /\b(cita|reservar|agenda|quiero.*(uñas|corte|pelo|cabello))\b/.test(t);
+  }
+
+  function _buildPhoneFirstPrompt() {
+    return 'The customer wants to book an appointment. Ask for their phone number first — it is needed to look up your customer record. Do not ask for service, staff, or time yet.';
+  }
+
+  function _serviceStillExistsAtVendor(biz, serviceName) {
+    if (!serviceName) return false;
+    var key = String(serviceName).toLowerCase();
+    var catalog = (biz.services || []).concat(biz._staticServices || []);
+    return catalog.some(function (svc) {
+      return svc && svc.name && String(svc.name).toLowerCase() === key && svc.active !== false;
+    });
+  }
+
+  function _staffStillWorksAtVendor(biz, staffName) {
+    if (!staffName) return false;
+    var key = String(staffName).toLowerCase();
+    return (biz.staff || []).some(function (m) {
+      return m && m.name && String(m.name).toLowerCase() === key && m.active !== false;
+    });
+  }
+
+  function _safeApplyReturningCustomer(biz, customer) {
+    if (!customer || !biz._bookingState) return null;
+    var safeCustomer = {
+      name: customer.name || null,
+      lastService: _serviceStillExistsAtVendor(biz, customer.lastService) ? customer.lastService : null,
+      lastStaff: _staffStillWorksAtVendor(biz, customer.lastStaff) ? customer.lastStaff : null,
+      lastAppointmentDate: customer.lastAppointmentDate || null,
+      vendorId: customer.vendorId || null
+    };
+    if (safeCustomer.name) biz._bookingState.name = safeCustomer.name;
+    if (safeCustomer.lastService && (!biz._bookingState.services || !biz._bookingState.services.length)) {
+      biz._bookingState.services = [safeCustomer.lastService];
+    }
+    if (safeCustomer.lastStaff && !biz._bookingState.staff) biz._bookingState.staff = safeCustomer.lastStaff;
+    biz._returningCustomerMemory = safeCustomer;
+    return safeCustomer;
+  }
+
+  function _maybeHandleSalonCustomerMemory(biz, text, lang) {
+    var mem = _memoryHelper();
+    var phone = _normalizeSalonMemoryPhone(text);
+    var s = biz._bookingState || _emptyState();
+    var hasPhone = s.phone || phone;
+    var bookingIntent = _isPhoneFirstBookingIntent(text) || s.intent === 'booking_request' || s.pendingAction === 'booking_offer';
+
+    if (phone && !s.phone) {
+      _mergeState(biz, { intent: 'booking_request', services: s.services || [], phone: phone, lang: lang || s.lang || 'en', pendingAction: null });
+      s = biz._bookingState;
+    }
+
+    if (bookingIntent && !hasPhone) {
+      s.intent = 'booking_request';
+      s.lang = lang || s.lang || 'en';
+      _saveBookingState(biz);
+      return Promise.resolve({ systemContext: _buildPhoneFirstPrompt() });
+    }
+
+    if (!mem || !hasPhone || biz._returningCustomerMemoryChecked === hasPhone) {
+      return Promise.resolve(null);
+    }
+
+    biz._returningCustomerMemoryChecked = hasPhone;
+    return mem.lookupReturningSalonCustomer({
+      db: window.dlcDb,
+      biz: biz,
+      phone: hasPhone
+    }).then(function (customer) {
+      if (!customer) return null;
+      var safeCustomer = _safeApplyReturningCustomer(biz, customer);
+      _saveBookingState(biz);
+      var ctx = 'Returning customer found.';
+      if (safeCustomer.name) ctx += ' Name: ' + safeCustomer.name + '.';
+      if (safeCustomer.lastService) ctx += ' Last service: ' + safeCustomer.lastService + '.';
+      if (safeCustomer.lastStaff) ctx += ' Last staff/stylist: ' + safeCustomer.lastStaff + '.';
+      ctx += ' Greet them warmly and suggest the same service with the same staff. All booking details must still be validated before confirming — do not skip availability or conflict checks.';
+      return { systemContext: ctx };
+    }).catch(function () {
+      return null;
+    });
+  }
+
   // ── Booking state machine ─────────────────────────────────────────────────────
   function _emptyState() {
     return { intent: null, services: [], staff: null, date: null, time: null, name: null, phone: null, lang: null, pendingAction: null, existingBookingId: null };
@@ -1799,6 +1900,12 @@
     var _ready = biz._dataPromise || Promise.resolve();
     return _ready.then(function() {
 
+    return _maybeHandleSalonCustomerMemory(biz, text, lang).then(function(memoryResult) {
+      if (memoryResult && memoryResult.systemContext) {
+        biz._aiHistory.push({ role: 'user', content: '[SYSTEM: ' + memoryResult.systemContext + ']' });
+        _saveHistory(biz);
+      }
+
     if (!apiKey) {
       return new Promise(function (resolve) {
         setTimeout(function () {
@@ -1910,6 +2017,7 @@
       _saveHistory(biz);
 
       return { text: clean, escalationType: escalationType };
+    });
     });
     }); // end _ready.then — guarantees first-message prompt uses fresh Firestore data
   }

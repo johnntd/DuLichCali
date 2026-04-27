@@ -24,8 +24,9 @@
 //
 // See README.md for full confidence model and workflow.
 
-var path = require('path');
-var fs   = require('fs');
+var path       = require('path');
+var fs         = require('fs');
+var execSync   = require('child_process').execSync;
 
 // ── Assertion helpers ─────────────────────────────────────────────────────
 
@@ -74,6 +75,8 @@ var PC  = require('./lib/prompt-checker');
 var BIZ      = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/biz.json')));
 var BOOK_FIX = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/bookings.json')));
 var aiSrc    = fs.readFileSync(path.join(__dirname, '../ai-engine.js'), 'utf8');
+var mkSrc    = fs.readFileSync(path.join(__dirname, '../marketplace/marketplace.js'), 'utf8');
+var vmSrc    = fs.readFileSync(path.join(__dirname, '../nailsalon/voice-mode.js'), 'utf8');
 
 function bookings() {
   var args = Array.prototype.slice.call(arguments);
@@ -831,11 +834,11 @@ test('RX-024: Specific time → booking_request classification rule in prompt [R
 // Fix string checks for cases with status=verified_in_runner or verified_live
 allCases.forEach(function(c) {
   if ((c.status !== 'verified_in_runner' && c.status !== 'verified_live') || !c.verify_fix_string) return;
-  // Search both receptionist.js and ai-engine.js — Phase 5 fixes span both files
-  var combinedSrc = src + '\n' + aiSrc;
+  // Search receptionist.js, ai-engine.js, marketplace.js, and voice-mode.js
+  var combinedSrc = src + '\n' + aiSrc + '\n' + mkSrc + '\n' + vmSrc;
   test(c.id + ' [' + c.status + ']: fix detectable in source \u2014 ' + c.title.slice(0, 48), function() {
     assertContains(combinedSrc, c.verify_fix_string,
-      c.id + ' fix string not found in receptionist.js or ai-engine.js.\n    String: "' + c.verify_fix_string + '"\n    The fix may have been accidentally reverted.');
+      c.id + ' fix string not found in any source file.\n    String: "' + c.verify_fix_string + '"\n    The fix may have been accidentally reverted.');
   });
 });
 
@@ -852,6 +855,358 @@ VALID_STATUSES.forEach(function(s) {
   if (statusCounts[s] > 0) console.log('    ' + s + ': ' + statusCounts[s]);
 });
 console.log('  Categories: ' + Object.keys(categories).map(function(k) { return k + '(' + categories[k] + ')'; }).join(', '));
+
+// ══════════════════════════════════════════════════════════════════════════
+// GROUP 6 — UI OVERLAY REGRESSION (marketplace.js)
+// type: static-source-check
+//
+// CONFIDENCE: MEDIUM — confirms fix code is present in marketplace.js.
+// Does NOT verify runtime behavior on a real iOS device.
+//
+// RX-025: iOS fullscreen chat bleed-through.
+// Root cause: position:fixed inside a stacking-context ancestor positions
+// relative to the ancestor, not the viewport. Fix: move container to
+// document.body on _fsOpen so it is always viewport-relative.
+// ══════════════════════════════════════════════════════════════════════════
+
+group('UI Overlay Regression (marketplace.js)', 'static-source-check');
+
+test('RX-025: _origParent saved before container is moved to body [RX-025]', function() {
+  assertContains(mkSrc, '_origParent  = container.parentNode',
+    'RX-025: _origParent must be saved before body-move — required to restore on close');
+});
+
+test('RX-025: _origNextSib saved before container is moved to body [RX-025]', function() {
+  assertContains(mkSrc, '_origNextSib = container.nextSibling',
+    'RX-025: _origNextSib must be saved — insertBefore(null) appends to end, may break re-open');
+});
+
+test('RX-025: container moved to document.body on _fsOpen [RX-025]', function() {
+  assertContains(mkSrc, 'document.body.appendChild(container)',
+    'RX-025: container must be appended to body — stacking-context fix requires body-child position:fixed');
+});
+
+test('RX-025: mp-ai-open-root added to documentElement (html) on open [RX-025]', function() {
+  assertContains(mkSrc, "document.documentElement.classList.add('mp-ai-open-root')",
+    "RX-025: html element needs mp-ai-open-root class — iOS Safari ignores overflow:hidden on body alone");
+});
+
+test('RX-025: container restored to original DOM position on _fsClose [RX-025]', function() {
+  assertContains(mkSrc, '_origParent.insertBefore(container, _origNextSib)',
+    'RX-025: container must be restored via insertBefore on close — prevents widget disappearing after chat closes');
+});
+
+test('RX-025: mp-ai-open-root removed from documentElement on close [RX-025]', function() {
+  assertContains(mkSrc, "document.documentElement.classList.remove('mp-ai-open-root')",
+    'RX-025: mp-ai-open-root must be removed on close — leaving it would lock page scroll permanently');
+});
+
+test('RX-025: body.style.position NOT used for scroll lock (causes iOS viewport bugs) [RX-025]', function() {
+  // The old broken approach set body.style.position = 'fixed' for scroll lock.
+  // This interferes with visualViewport.resize on iOS and causes coordinate bugs.
+  // The fix uses overflow:hidden via CSS class instead.
+  // Check the _fsOpen function specifically — it must NOT set body.style.position.
+  var fsOpenStart = mkSrc.indexOf('function _fsOpen()');
+  var fsOpenEnd   = mkSrc.indexOf('function _fsClose()', fsOpenStart);
+  var fsOpenBody  = fsOpenStart >= 0 && fsOpenEnd > fsOpenStart
+    ? mkSrc.slice(fsOpenStart, fsOpenEnd)
+    : '';
+  assert(fsOpenBody.length > 0, 'RX-025: _fsOpen function not found in marketplace.js');
+  assert(fsOpenBody.indexOf("body.style.position = 'fixed'") < 0,
+    "RX-025: body.style.position='fixed' must NOT be in _fsOpen — it breaks visualViewport.resize on iOS");
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// GROUP 7 — VOICE MODE REGRESSION (voice-mode.js)
+// type: static-source-check
+//
+// CONFIDENCE: MEDIUM — confirms fix code present in voice-mode.js source.
+// Does NOT verify runtime STT/TTS behavior on a real iOS device.
+//
+// RX-026: Mic button stuck disabled during processing (input delay every turn)
+// RX-027: No way to skip TTS during processing (must wait for full reply)
+// ══════════════════════════════════════════════════════════════════════════
+
+group('Voice Mode Regression (voice-mode.js)', 'static-source-check');
+
+test('RX-026: mic disabled only during listening (not processing) [RX-026]', function() {
+  assertContains(vmSrc, "mic.disabled = (s === 'listening')",
+    "RX-026: mic.disabled must gate on 'listening' state only — gating on 'processing' blocked user input for 1-3s every turn");
+});
+
+test('RX-026: mic NOT disabled during processing state [RX-026]', function() {
+  assertNotContains(vmSrc, "mic.disabled = (s === 'processing')",
+    "RX-026: mic must NOT be disabled during processing — the old gate that caused the input delay must be gone");
+});
+
+test('RX-027: _interruptNext flag defined in module state [RX-027]', function() {
+  assertContains(vmSrc, '_interruptNext',
+    'RX-027: _interruptNext flag must exist — it is the mechanism to skip TTS when mic tapped during processing');
+});
+
+test('RX-027: mic tap during processing sets _interruptNext instead of silently dropping [RX-027]', function() {
+  assertContains(vmSrc, '_interruptNext = true',
+    'RX-027: processing state tap must set _interruptNext=true — silent discard was the pre-fix behavior');
+});
+
+test('RX-027: _interruptNext flag checked in bot-reply callback [RX-027]', function() {
+  assertContains(vmSrc, 'if (_interruptNext)',
+    'RX-027: bot-reply callback must check _interruptNext — this is where TTS skip decision is made');
+});
+
+test('RX-027: _interruptNext cleared after use and on close [RX-027]', function() {
+  // Count occurrences — must appear at least twice: in the callback AND in close()
+  var count = 0, idx = 0, needle = '_interruptNext = false';
+  while ((idx = vmSrc.indexOf(needle, idx)) >= 0) { count++; idx++; }
+  assert(count >= 2,
+    'RX-027: _interruptNext must be cleared in at least two places (after use + in close()) — found ' + count);
+});
+
+test('RX-027: biz._isVoiceMode set when voice overlay opens [RX-027]', function() {
+  assertContains(vmSrc, 'biz._isVoiceMode = true',
+    'RX-027: biz._isVoiceMode must be set on open — receptionist uses it to shorten AI responses for speech');
+});
+
+test('RX-027: biz._isVoiceMode cleared when voice overlay closes [RX-027]', function() {
+  assertContains(vmSrc, '_biz._isVoiceMode = false',
+    'RX-027: biz._isVoiceMode must be cleared on close — leaving it set would force short responses in text mode too');
+});
+
+test('Voice mode prompt block: receptionist shortens responses in voice mode [RX-027]', function() {
+  assertContains(src, 'biz._isVoiceMode',
+    'Voice mode prompt: receptionist._buildPrompt must check biz._isVoiceMode to switch to short spoken-language responses');
+});
+
+test('Voice mode prompt block: maximum 25 words per response rule [RX-027]', function() {
+  assertContains(src, 'Maximum 25 words',
+    'Voice mode: prompt must cap response length at 25 words for TTS delivery');
+});
+
+// RX-028: OpenAI + Gemini TTS chain broken by risky additions (abort controller, voice overrides)
+// Both fell through to browser TTS silently. Fix: revert TTS functions to committed baseline.
+test('RX-028: OpenAI TTS uses hardcoded nova voice (no Firestore override) [RX-028]', function() {
+  assertContains(vmSrc, "voice: 'nova'",
+    "RX-028: OpenAI TTS voice must be hardcoded 'nova' — pulling from Firestore ttsVoice caused 400 errors when field had invalid value");
+});
+
+test('RX-028: No AbortController in _speakViaOpenAi (caused silent TTS failure) [RX-028]', function() {
+  assertNotContains(vmSrc, 'AbortController',
+    'RX-028: AbortController must not be present in voice-mode.js — it caused OpenAI TTS to fail silently and fall through to browser TTS');
+});
+
+test('RX-028: _speakReply uses original nested-if callback structure [RX-028]', function() {
+  assertContains(vmSrc, 'if (!s1 && _state === \'speaking\')',
+    "RX-028: _speakReply must use original '!s1 && _state' form — restructured early-return form introduced risk");
+});
+
+test('RX-028: Gemini TTS uses hardcoded voice (no Firestore geminiVoice override) [RX-028]', function() {
+  assertNotContains(vmSrc, 'geminiVoice)',
+    "RX-028: Gemini TTS must not pull voice from biz.aiReceptionist.geminiVoice — invalid Firestore values caused Gemini TTS to fail");
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// GROUP 9 — VOICE MODE: AUTO-RESTART LISTENING DELAY
+// RX-031: After TTS ends, the mic took 700ms + SpeechRecognition init time
+// (~200ms) = ~900ms before the user's voice was captured. Users consistently
+// missed the first 1-2 words of their responses.
+// Fix: reduce auto-restart delay from 700ms → 300ms.
+// The 300ms delay is enough to prevent audio bleed (TTS audio feeding the mic)
+// while matching natural conversational turn-taking cadence.
+// type: static-source-check
+// ══════════════════════════════════════════════════════════════════════════
+
+group('Voice Mode: Auto-Restart Listening Delay (RX-031)', 'static-source-check');
+
+test('RX-031: _autoRestartListening delay is ≤ 400ms (was 700ms — caused first words to be cut off) [RX-031]', function() {
+  var fnStart = vmSrc.indexOf('function _autoRestartListening(');
+  assert(fnStart >= 0, 'RX-031: _autoRestartListening function not found');
+  var fnSlice = vmSrc.slice(fnStart, fnStart + 300);
+  var delayMatch = fnSlice.match(/setTimeout\s*\([^,]+,\s*(\d+)\s*\)/);
+  assert(delayMatch, 'RX-031: setTimeout not found in _autoRestartListening — function structure changed');
+  var delay = parseInt(delayMatch[1], 10);
+  assert(delay <= 400,
+    'RX-031: auto-restart delay is ' + delay + 'ms — must be ≤ 400ms. ' +
+    'The original 700ms + SpeechRecognition init (~200ms) = ~900ms dead zone where first words are lost. ' +
+    '300ms is the natural conversational turn-taking gap and prevents audio bleed from the TTS ending.');
+});
+
+test('RX-031: _autoRestartListening delay is > 100ms (prevents audio bleed from TTS tail) [RX-031]', function() {
+  var fnStart = vmSrc.indexOf('function _autoRestartListening(');
+  assert(fnStart >= 0, 'RX-031: _autoRestartListening function not found');
+  var fnSlice = vmSrc.slice(fnStart, fnStart + 300);
+  var delayMatch = fnSlice.match(/setTimeout\s*\([^,]+,\s*(\d+)\s*\)/);
+  assert(delayMatch, 'RX-031: setTimeout not found in _autoRestartListening');
+  var delay = parseInt(delayMatch[1], 10);
+  assert(delay > 100,
+    'RX-031: auto-restart delay is ' + delay + 'ms — must be > 100ms. ' +
+    'Too short causes the mic to open while TTS audio is still ringing, producing echo/bleed artifacts.');
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// GROUP 10 — VOICE MODE: API KEY FALLBACK CHAIN
+// RX-029: OpenAI/Gemini TTS fell through to browser voice because vendor doc
+// had no openaiKey/geminiKey and the code went straight to stale localStorage.
+// Platform-level keys (_platformOpenAiKey / _platformGeminiKey) must be tried
+// before localStorage so vendors without their own keys still get quality TTS.
+// type: static-source-check
+// ══════════════════════════════════════════════════════════════════════════
+
+group('Voice Mode: API Key Fallback Chain (RX-029)', 'static-source-check');
+
+test('RX-029: _speakViaOpenAi tries platform key before localStorage [RX-029]', function() {
+  assertContains(vmSrc, "_biz._platformOpenAiKey",
+    "RX-029: _speakViaOpenAi must include _platformOpenAiKey in fallback chain — vendors without their own openaiKey fall through to browser TTS without it");
+});
+
+test('RX-029: _speakViaOpenAi platform key fallback comes before localStorage [RX-029]', function() {
+  // Check that _platformOpenAiKey appears in the key= line BEFORE the localStorage.getItem call
+  var speakFnStart = vmSrc.indexOf('function _speakViaOpenAi(');
+  assert(speakFnStart >= 0, 'RX-029: _speakViaOpenAi function not found');
+  var fnSlice = vmSrc.slice(speakFnStart, speakFnStart + 500);
+  var platformIdx = fnSlice.indexOf('_platformOpenAiKey');
+  var localStorageIdx = fnSlice.indexOf('localStorage.getItem');
+  assert(platformIdx >= 0,    'RX-029: _platformOpenAiKey not found in _speakViaOpenAi');
+  assert(localStorageIdx >= 0, 'RX-029: localStorage.getItem not found in _speakViaOpenAi');
+  assert(platformIdx < localStorageIdx,
+    'RX-029: _platformOpenAiKey must appear BEFORE localStorage.getItem in _speakViaOpenAi — otherwise stale local key shadows valid platform key');
+});
+
+test('RX-029: _speakViaGemini tries platform key before localStorage [RX-029]', function() {
+  assertContains(vmSrc, "_biz._platformGeminiKey",
+    "RX-029: _speakViaGemini must include _platformGeminiKey in fallback chain — vendors without their own geminiKey fall through to browser TTS without it");
+});
+
+test('RX-029: _speakViaGemini platform key fallback comes before localStorage [RX-029]', function() {
+  var speakFnStart = vmSrc.indexOf('function _speakViaGemini(');
+  assert(speakFnStart >= 0, 'RX-029: _speakViaGemini function not found');
+  var fnSlice = vmSrc.slice(speakFnStart, speakFnStart + 500);
+  var platformIdx = fnSlice.indexOf('_platformGeminiKey');
+  var localStorageIdx = fnSlice.indexOf('localStorage.getItem');
+  assert(platformIdx >= 0,    'RX-029: _platformGeminiKey not found in _speakViaGemini');
+  assert(localStorageIdx >= 0, 'RX-029: localStorage.getItem not found in _speakViaGemini');
+  assert(platformIdx < localStorageIdx,
+    'RX-029: _platformGeminiKey must appear BEFORE localStorage.getItem in _speakViaGemini — otherwise stale local key shadows valid platform key');
+});
+
+test('RX-029: _prefetchWelcome tries platform key before localStorage [RX-029]', function() {
+  var fnStart = vmSrc.indexOf('function _prefetchWelcome(');
+  assert(fnStart >= 0, 'RX-029: _prefetchWelcome function not found');
+  var fnSlice = vmSrc.slice(fnStart, fnStart + 500);
+  var platformIdx = fnSlice.indexOf('_platformOpenAiKey');
+  var localStorageIdx = fnSlice.indexOf('localStorage.getItem');
+  assert(platformIdx >= 0,    'RX-029: _platformOpenAiKey not found in _prefetchWelcome — prefetch would 401 for vendors without their own key');
+  assert(localStorageIdx >= 0, 'RX-029: localStorage.getItem not found in _prefetchWelcome');
+  assert(platformIdx < localStorageIdx,
+    'RX-029: _platformOpenAiKey must appear BEFORE localStorage.getItem in _prefetchWelcome');
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// GROUP 10 — RECEPTIONIST.JS SYNTAX STABILITY
+// RX-030: receptionist.js _buildPrompt had a missing ) that caused the entire
+// file to fail to load silently — all AI and voice functionality stopped working.
+// Root cause: `return voiceModeBlock.concat([` added without a matching `)`
+// at the end, leaving the return statement with an unbalanced paren.
+// type: static-source-check + parse-check
+// ══════════════════════════════════════════════════════════════════════════
+
+group('Receptionist.js Syntax Stability (RX-030)', 'static-source-check');
+
+test('RX-030: receptionist.js parses without syntax errors [RX-030]', function() {
+  var recPath = path.join(__dirname, '../nailsalon/receptionist.js');
+  try {
+    execSync('node --check "' + recPath + '"', { stdio: 'pipe' });
+  } catch (e) {
+    throw new Error(
+      'RX-030: receptionist.js has a syntax error — the entire file fails to load when this happens, ' +
+      'silently breaking all AI and voice functionality. Error: ' + (e.stderr || e.message).toString().trim()
+    );
+  }
+});
+
+test('RX-030: _buildPrompt returns voiceModeBlock.concat with balanced closing paren [RX-030]', function() {
+  // When `return voiceModeBlock.concat([` was added, the closing `)` was missing.
+  // The correct closing sequence is `])).join('\n')` — two `)` close the inner
+  // .concat( and the outer voiceModeBlock.concat( before the .join chains.
+  assertContains(src, "])).join('\\n')",
+    "RX-030: _buildPrompt must close voiceModeBlock.concat( with ])).join — a single ] would leave the outer concat( unclosed, causing a parse error that silently kills the whole file");
+});
+
+test('RX-030: _buildPrompt uses voiceModeBlock.concat (not bare array return) [RX-030]', function() {
+  assertContains(src, 'return voiceModeBlock.concat([',
+    'RX-030: _buildPrompt must prepend voiceModeBlock via concat — voice mode prompt shortening requires this');
+});
+
+test('RX-030: voice-mode.js parses without syntax errors [RX-030]', function() {
+  var vmPath = path.join(__dirname, '../nailsalon/voice-mode.js');
+  try {
+    execSync('node --check "' + vmPath + '"', { stdio: 'pipe' });
+  } catch (e) {
+    throw new Error(
+      'RX-030: voice-mode.js has a syntax error — the file fails to load silently. Error: ' +
+      (e.stderr || e.message).toString().trim()
+    );
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// GROUP 11 — PHONE INTAKE helper (phone-intake.js)
+// type: mirrored-unit-logic
+// Tests normalizeSpokenPhoneNumber word-parsing only.
+// These tests cover the HELPER, not booking finalization.
+// _mergeState accepts only full US numbers (10 digits, or 11 starting with 1).
+// Helper results of 6–9 digits are valid partial parses here but are NOT stored by _mergeState.
+// ══════════════════════════════════════════════════════════════════════════
+
+group('Phone Intake helper (phone-intake.js)', 'mirrored-unit-logic');
+
+var PhoneIntake;
+try {
+  PhoneIntake = require('../nailsalon/phone-intake.js');
+} catch (e) {
+  PhoneIntake = null;
+}
+
+function piTest(id, desc, input, lang, expected) {
+  test(id + ': ' + desc, function () {
+    assert(PhoneIntake, id + ': phone-intake.js could not be loaded');
+    var result = PhoneIntake.normalizeSpokenPhoneNumber(input, lang);
+    if (expected === null) {
+      assert(result === null, id + ': expected null but got "' + result + '"');
+    } else {
+      assert(result === expected,
+        id + ': expected "' + expected + '" but got "' + result + '"');
+    }
+  });
+}
+
+piTest('PI-001', 'Vietnamese digit words → digit string',
+  'không một hai ba bốn năm sáu bảy tám chín', 'vi', '0123456789');
+piTest('PI-002', 'English digit words → digit string',
+  'four zero eight nine one six three four three nine', 'en', '4089163439');
+piTest('PI-003', 'Mixed Vietnamese/English — helper returns partial (6 digits; not stored by _mergeState)',
+  'không một hai ba four five', 'vi', '012345');
+piTest('PI-004', 'Already-digit string passes through',
+  '4089163439', 'en', '4089163439');
+piTest('PI-005', 'Digit string with dashes',
+  '408-916-3439', 'en', '4089163439');
+piTest('PI-006', 'Digit string with dots',
+  '408.916.3439', 'en', '4089163439');
+piTest('PI-007', 'Filler word "số" skipped — helper returns partial (7 digits; not stored by _mergeState)',
+  'số không một hai ba bốn năm sáu', 'vi', '0123456');
+piTest('PI-008', 'Filler word "phone" skipped — helper returns partial (6 digits; not stored by _mergeState)',
+  'phone four zero eight nine one six', 'en', '408916');
+piTest('PI-009', 'Too short → null',
+  'một hai ba', 'vi', null);
+piTest('PI-010', 'Too long (>11 digits) → null',
+  'một hai ba bốn năm sáu bảy tám chín không một hai', 'vi', null);
+piTest('PI-011', 'Null input → null',
+  null, 'en', null);
+piTest('PI-012', 'Empty string → null',
+  '', 'en', null);
+piTest('PI-013', 'Unknown token → null',
+  'hello world', 'en', null);
+piTest('PI-014', 'Filler "là" skipped, result valid',
+  'là bốn không tám chín một sáu ba bốn ba chín', 'vi', '4089163439');
 
 // ══════════════════════════════════════════════════════════════════════════
 // FINAL REPORT
@@ -874,6 +1229,8 @@ console.log('  Layer 1 (Prompt Integrity)    static-source-check    MEDIUM  — 
 console.log('  Layer 2 (State Parser)        mirrored-unit-logic    MED-HI  — algorithm verified, production sync by manual audit');
 console.log('  Layer 3 (Availability Logic)  mirrored + fixture     HIGH    — algorithm verified; Firestore queries untested');
 console.log('  Layer 4 (Case Library)        structural + static    MED     — schema valid, fix strings present in source');
+console.log('  Layer 5 (UI Overlay)          static-source-check    MEDIUM  — fix code present in marketplace.js; iOS runtime unverified');
+console.log('  Layer 6 (Voice Mode)          static-source-check    MEDIUM  — fix code present in voice-mode.js; device runtime unverified');
 
 console.log('\nWhat this harness does NOT guarantee:');
 console.log('  \u2014 Claude follows prompt instructions (requires live API testing)');

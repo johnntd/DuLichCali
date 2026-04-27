@@ -104,7 +104,8 @@
   // a key is available.  INFORMATIONAL intents prefer Gemini.  Both fall back to
   // Claude if the preferred provider key is absent or the request fails.
 
-  // Intents that change a booking — route to OpenAI when available.
+  // HIGH_RISK_INTENTS kept for reference; OpenAI removed from browser routing
+  // because OpenAI blocks direct browser CORS requests. Booking intents use Claude.
   var _HIGH_RISK_INTENTS = { booking_request: 1, modify_booking: 1, booking_offer: 1 };
 
   // ── Claude adapter (existing) — returns native Claude JSON unchanged ──────────
@@ -184,17 +185,11 @@
   // Keys are also read from localStorage (dlc_openai_key, dlc_gemini_key) as fallback.
   // Safe fallback: if preferred provider fails, retries with Claude.
   function _resolveProvider(intent, altKeys) {
-    if (!altKeys) altKeys = {};
-    // Read from localStorage if not supplied by caller
-    if (!altKeys.openai) {
-      try { altKeys.openai = localStorage.getItem('dlc_openai_key') || null; } catch (e) {}
-    }
-    if (!altKeys.gemini) {
-      try { altKeys.gemini = localStorage.getItem('dlc_gemini_key') || null; } catch (e) {}
-    }
-    if (intent && _HIGH_RISK_INTENTS[intent] && altKeys.openai) return { provider: 'openai', keys: altKeys };
-    if (intent && !_HIGH_RISK_INTENTS[intent] && altKeys.gemini) return { provider: 'gemini', keys: altKeys };
-    return { provider: 'claude', keys: altKeys };
+    // All browser-side AI calls use Claude exclusively:
+    //   - OpenAI: blocked by CORS (no Access-Control-Allow-Origin)
+    //   - Gemini: v1beta model IDs change frequently causing 404s
+    //   - Claude: reliable, no CORS issues (Anthropic allows cross-origin)
+    return { provider: 'claude', keys: altKeys || {} };
   }
 
   // ── Conversation History Persistence ─────────────────────────────────────────
@@ -226,13 +221,13 @@
   // Phase 5: added openaiModel and geminiModel per-service overrides (optional).
   // If a provider key is not available, _resolveProvider falls back to Claude.
   var SERVICE_CONFIG = {
-    travel:      { model: 'claude-haiku-4-5-20251001', maxTokens: 900, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-1.5-flash' }, // chat.js
-    food:        { model: 'claude-haiku-4-5-20251001', maxTokens: 384, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-1.5-flash' }, // marketplace.js
-    appointment: { model: 'claude-haiku-4-5-20251001', maxTokens: 384, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-1.5-flash' }, // marketplace.js
-    nails:       { model: 'claude-sonnet-4-6',         maxTokens: 900, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-1.5-flash' }, // receptionist.js
-    translation: { model: 'claude-haiku-4-5-20251001', maxTokens: 512, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-1.5-flash' }  // marketplace.js
+    travel:      { model: 'claude-haiku-4-5-20251001', maxTokens: 900, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-2.0-flash' }, // chat.js
+    food:        { model: 'claude-haiku-4-5-20251001', maxTokens: 384, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-2.0-flash' }, // marketplace.js
+    appointment: { model: 'claude-haiku-4-5-20251001', maxTokens: 384, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-2.0-flash' }, // marketplace.js
+    nails:       { model: 'claude-sonnet-4-6',         maxTokens: 900, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-2.0-flash' }, // receptionist.js
+    translation: { model: 'claude-haiku-4-5-20251001', maxTokens: 512, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-2.0-flash' }  // marketplace.js
   };
-  var _DEFAULT_CFG = { model: 'claude-haiku-4-5-20251001', maxTokens: 600, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-1.5-flash' };
+  var _DEFAULT_CFG = { model: 'claude-haiku-4-5-20251001', maxTokens: 600, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-2.0-flash' };
 
   // ── Unified AI Dispatcher — Phase 5: Hybrid Router ───────────────────────────
   // Single entry point for ALL AI calls in the app.
@@ -264,7 +259,7 @@
         });
     }
     if (provider === 'gemini' && keys.gemini) {
-      return _callGemini(keys.gemini, cfg.geminiModel || 'gemini-1.5-flash', cfg.maxTokens, systemPrompt, messages)
+      return _callGemini(keys.gemini, cfg.geminiModel || 'gemini-2.0-flash', cfg.maxTokens, systemPrompt, messages)
         .catch(function (e) {
           console.warn('[AIEngine] Gemini failed (' + e.message + '), falling back to Claude');
           return _callClaude(apiKey, cfg.model, cfg.maxTokens, systemPrompt, messages);

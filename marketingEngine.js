@@ -574,7 +574,7 @@ Return JSON matching FoodPromoSchema exactly:
           { text: taskDef.system + '\n\nRespond ONLY with valid JSON.' },
           ...(taskDef.messages || []).map(m => ({ text: m.content })),
         ];
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${localKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${localKey}`;
         const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

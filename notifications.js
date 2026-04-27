@@ -22,16 +22,17 @@ window.DLCNotifications = (function () {
   var VENDOR_ID = 'admin-dlc';
 
   // ── Internal: write one email-queue doc ──────────────────────────────────────
+  // payload.bookingType overrides the default 'ride' — travel bookings pass
+  // bookingType: 'travel' or 'travel_owner' in their payload.
   function _queue(bookingId, eventType, payload) {
     if (typeof firebase === 'undefined') return;
     var db    = firebase.firestore();
     var docId = bookingId + '_' + eventType;
     db.collection('vendors').doc(VENDOR_ID).collection('emailQueue').doc(docId)
       .set(
-        Object.assign({}, payload, {
+        Object.assign({}, { bookingType: 'ride' }, payload, {
           bookingId:   bookingId,
           eventType:   eventType,
-          bookingType: 'ride',    // routes Cloud Function to ride email templates
           status:      'pending',
           createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
         }),
@@ -333,6 +334,60 @@ window.DLCNotifications = (function () {
     });
   }
 
+  // ── Public: queue travel booking confirmation + owner notification ──────────
+  /**
+   * Call immediately after a travel booking is saved to Firestore.
+   * Sends two emails:
+   *   1. Customer confirmation (only if customerEmail provided)
+   *   2. Owner notification to dulichcali21@gmail.com (always)
+   *
+   * @param {object} booking  — flat booking object (bookingId required)
+   * @param {string} lang     — 'vi' | 'en' | 'es'
+   */
+  function queueTravelConfirmation(booking, lang) {
+    if (!booking || !booking.bookingId) return;
+    var bkId = booking.bookingId;
+
+    // 1. Customer confirmation email (only when email was provided)
+    if (booking.customerEmail) {
+      _queue(bkId, 'confirmed', {
+        bookingType:     'travel',
+        customerEmail:   booking.customerEmail,
+        customerName:    booking.customerName  || booking.customer_name || '',
+        lang:            lang || 'en',
+        packageName:     booking.packageName   || '',
+        travelDate:      booking.date          || booking.travel_date  || '',
+        travelers:       booking.travelers     || booking.traveler_count || 1,
+        bookingMode:     booking.booking_mode  || booking.type         || 'private',
+        pickupLocation:  booking.pickup_location || '',
+        vehicle:         booking.vehicle        || '',
+        total:           booking.total          || 0,
+        subtotal:        booking.subtotal        || 0,
+        taxes:           booking.taxes           || 0,
+      });
+    }
+
+    // 2. Owner notification email (always)
+    _queue(bkId, 'owner_notify', {
+      bookingType:          'travel_owner',
+      customerEmail:        'dulichcali21@gmail.com',   // recipient = owner
+      bookingCustomerEmail: booking.customerEmail || booking.customer_email || '',
+      customerName:         booking.customerName  || booking.customer_name || '',
+      customerPhone:        booking.customerPhone || booking.customer_phone || '',
+      lang:                 lang || 'en',
+      packageName:          booking.packageName   || '',
+      travelDate:           booking.date          || booking.travel_date  || '',
+      travelers:            booking.travelers     || booking.traveler_count || 1,
+      bookingMode:          booking.booking_mode  || booking.type         || 'private',
+      pickupAddress:        booking.pickup_address  || booking.pickup_location || '',
+      pickupLocation:       booking.pickup_location || '',
+      vehicle:              booking.vehicle        || '',
+      total:                booking.total          || 0,
+      subtotal:             booking.subtotal        || 0,
+      taxes:                booking.taxes           || 0,
+    });
+  }
+
   // ── Expose public API ────────────────────────────────────────────────────────
   return {
     queueRideConfirmation:            queueRideConfirmation,
@@ -341,6 +396,7 @@ window.DLCNotifications = (function () {
     queueDriverAssignedNotification:  queueDriverAssignedNotification,
     queueStatusChangeNotification:    queueStatusChangeNotification,
     queueDriverOnWay:                 queueDriverOnWay,
+    queueTravelConfirmation:          queueTravelConfirmation,
   };
 
 }());

@@ -509,6 +509,169 @@
       }
     },
 
+    {
+      id: 'beauty-hair-oc',
+      category: 'hair',
+      active: true,
+      featured: true,
+      featuredPriority: 2,
+      featuredRegions: ['oc'],
+      homepageActive: true,
+      shortPromoText: 'Cut \xb7 Color \xb7 Balayage \xb7 Keratin \u2014 Book Now',
+      availabilityType: 'appointment',
+      name: 'Beauty Hair OC',
+      tagline: 'Premium Hair Salon \xb7 Orange County',
+      taglineI18n: {
+        en: 'Premium Hair Salon \xb7 Orange County',
+        vi: 'Ti\u1ec7m T\xf3c Cao C\u1ea5p \xb7 Qu\u1eadn Cam',
+        es: 'Sal\xf3n de Cabello Premium \xb7 Orange County'
+      },
+      region: 'Orange County',
+      city: 'Westminster',
+      address: 'Westminster, CA',
+      phone: '4089163439',
+      phoneDisplay: '408-916-3439',
+      hosts: [
+        {
+          name: 'Du L\u1ecbch Cali',
+          phone: '4089163439',
+          display: '408-916-3439',
+          role: 'Owner'
+        }
+      ],
+      // ── STYLISTS ─────────────────────────────────────────────────────────────────
+      // Michael Nguyen (Barber): Men's Cut, Blowout, Updo/Event Style, Balayage.
+      // Michele (Stylist): Women's Cut, Blowout, Hair Styling, Updo/Event Style.
+      // Tracy Tran (Colorist): Highlights, Full Color, Root Touch-Up, Hair Styling.
+      staff: [
+        {
+          name: 'Michael Nguyen',
+          active: true,
+          role: 'Barber',
+          pricingTier: 'standard',
+          specialties: ["Men's Cut", 'Blowout', 'Updo / Event Style', 'Balayage'],
+          assignedServices: ["Men's Haircut", 'Blowout', 'Hair Styling', 'Balayage', 'Scalp Treatment'],
+          schedule: {
+            mon: { active: true,  start: '09:00', end: '18:00' },
+            tue: { active: true,  start: '09:00', end: '18:00' },
+            wed: { active: true,  start: '09:00', end: '18:00' },
+            thu: { active: true,  start: '09:00', end: '18:00' },
+            fri: { active: true,  start: '09:00', end: '18:00' },
+            sat: { active: true,  start: '09:00', end: '18:00' },
+            sun: { active: false, start: '09:00', end: '18:00' }
+          }
+        },
+        {
+          name: 'Michele',
+          active: true,
+          role: 'Stylist',
+          pricingTier: 'standard',
+          specialties: ["Women's Cut", 'Blowout', 'Hair Styling', 'Updo / Event Style'],
+          assignedServices: ["Women's Haircut", 'Blowout', 'Hair Styling', 'Deep Conditioning'],
+          schedule: {
+            mon: { active: true,  start: '09:00', end: '18:00' },
+            tue: { active: true,  start: '09:00', end: '18:00' },
+            wed: { active: true,  start: '09:00', end: '18:00' },
+            thu: { active: true,  start: '09:00', end: '18:00' },
+            fri: { active: true,  start: '09:00', end: '18:00' },
+            sat: { active: true,  start: '09:00', end: '18:00' },
+            sun: { active: false, start: '09:00', end: '18:00' }
+          }
+        },
+        {
+          name: 'Tracy Tran',
+          active: true,
+          role: 'Colorist',
+          pricingTier: 'senior',
+          specialties: ['Highlights', 'Full Color', 'Root Touch-Up', 'Hair Styling'],
+          assignedServices: ['Full Color', 'Root Touch-Up', 'Highlights', 'Hair Styling', 'Color Correction', 'Keratin Treatment', 'Hair Extensions', 'Deep Conditioning'],
+          schedule: {
+            mon: { active: true,  start: '09:00', end: '18:00' },
+            tue: { active: true,  start: '09:00', end: '18:00' },
+            wed: { active: true,  start: '09:00', end: '18:00' },
+            thu: { active: true,  start: '09:00', end: '18:00' },
+            fri: { active: true,  start: '09:00', end: '18:00' },
+            sat: { active: true,  start: '09:00', end: '18:00' },
+            sun: { active: false, start: '09:00', end: '18:00' }
+          }
+        }
+      ],
+      features: [
+        'Expert colorists specializing in Balayage & Highlights',
+        'Keratin treatments & hair restoration services',
+        'Free consultation for all new clients',
+        'Premium salon-quality products only',
+        'Walk-ins welcome \xb7 appointments preferred'
+      ],
+      featuresI18n: [
+        { en: 'Expert colorists specializing in Balayage & Highlights', vi: 'Th\u1ee3 nhu\u1ed9m chuy\xean nghi\u1ec7p v\u1ec1 Balayage & Highlights',   es: 'Coloristas expertos en Balayage & Highlights'            },
+        { en: 'Keratin treatments & hair restoration services',          vi: 'D\u1ecbch v\u1ee5 Keratin & ph\u1ee5c h\u1ed3i t\xf3c h\u01b0 t\u1ed5n',    es: 'Tratamientos de queratina y restauraci\xf3n capilar'     },
+        { en: 'Free consultation for all new clients',                   vi: 'T\u01b0 v\u1ea5n mi\u1ec5n ph\xed cho kh\xe1ch m\u1edbi',                  es: 'Consulta gratuita para nuevos clientes'                 },
+        { en: 'Premium salon-quality products only',                     vi: 'Ch\u1ec9 d\xf9ng s\u1ea3n ph\u1ea9m salon cao c\u1ea5p',                    es: 'Solo productos de calidad salon premium'                },
+        { en: 'Walk-ins welcome \xb7 appointments preferred',            vi: 'Nh\u1eadn walk-in \xb7 \u01b0u ti\xean \u0111\u1eb7t l\u1ecbch tr\u01b0\u1edbc', es: 'Se aceptan sin cita \xb7 se prefiere con cita'       }
+      ],
+      trustSubtitleI18n: {
+        en: 'Premium hair transformations in Orange County',
+        vi: 'Ch\u0103m s\xf3c t\xf3c cao c\u1ea5p t\u1ea1i Qu\u1eadn Cam',
+        es: 'Transformaciones capilares premium en Orange County'
+      },
+      description:
+        'Premium hair salon in Westminster, Orange County. Specializing in Balayage, Color Correction, Keratin Treatments, and precision cuts. Free consultations for new clients. Services in English, Vietnamese, and Spanish.',
+      heroImage: '/images/unsplash/hair-salon-1.jpg',
+      heroGradient:
+        'linear-gradient(135deg,#0f172a 0%,#1e1b4b 40%,#312e81 100%)',
+      serviceCategories: [
+        { key: 'haircut',    label: 'Haircut' },
+        { key: 'styling',    label: 'Styling' },
+        { key: 'color',      label: 'Hair Color' },
+        { key: 'balayage',   label: 'Balayage' },
+        { key: 'treatment',  label: 'Treatment' },
+        { key: 'extensions', label: 'Extensions' }
+      ],
+      services: [
+        // ── HAIRCUTS ────────────────────────────────────────────────────────────
+        { name: "Women's Haircut",   category: 'haircut',    price: '$55+',  durationMins: 60,  duration: '60 min',      desc: 'Consultation, shampoo, precision cut, and blow-dry. Stylist recommends based on face shape and hair texture.' },
+        { name: "Men's Haircut",     category: 'haircut',    price: '$35+',  durationMins: 40,  duration: '30\u201345 min',   desc: "Classic or contemporary men's cut with consultation, shampoo, cut, and style." },
+        { name: 'Blowout',           category: 'styling',    price: '$45+',  durationMins: 45,  duration: '45\u201360 min',   desc: 'Professional blow-dry for smooth, voluminous, or sleek results. Perfect for events.' },
+        { name: 'Hair Styling',      category: 'styling',    price: '$55+',  durationMins: 60,  duration: '60 min',      desc: 'Full styling for special occasions \u2014 updos, waves, curls, or custom event looks.' },
+        // ── COLOR SERVICES ──────────────────────────────────────────────────────
+        { name: 'Full Color',        category: 'color',      price: '$80+',  durationMins: 105, duration: '90\u2013120 min',  desc: 'Single-process all-over color. Covers grays, refreshes your shade, or transforms your look.' },
+        { name: 'Root Touch-Up',     category: 'color',      price: '$55+',  durationMins: 65,  duration: '60\u201375 min',   desc: 'Target regrowth to keep your color seamless and vibrant between full-color sessions.' },
+        { name: 'Balayage',          category: 'balayage',   price: '$120+', durationMins: 150, duration: '2.5\u20133 hr',    desc: "Hand-painted highlights for sun-kissed natural dimension. Low-maintenance \u2014 grows out beautifully. Michael Nguyen's specialty." },
+        { name: 'Highlights',        category: 'color',      price: '$95+',  durationMins: 135, duration: '2\u20132.5 hr',    desc: 'Foil highlights for bright, multi-dimensional color throughout the hair.' },
+        // ── TREATMENTS ──────────────────────────────────────────────────────────
+        { name: 'Keratin Treatment', category: 'treatment',  price: '$180+', durationMins: 150, duration: '2.5\u20133 hr',    desc: 'Smooth and de-frizz for 3\u20135 months. Eliminates up to 95% of frizz and cuts blow-dry time in half.' },
+        { name: 'Deep Conditioning', category: 'treatment',  price: '$45+',  durationMins: 45,  duration: '45 min',      desc: 'Intensive moisture and protein repair mask. Restores softness, shine, and elasticity after chemical services.' },
+        { name: 'Scalp Treatment',   category: 'treatment',  price: '$50+',  durationMins: 45,  duration: '45 min',      desc: 'Targeted scalp therapy for dryness, buildup, or thinning. Includes massage and treatment serum.' },
+        // ── PREMIUM ─────────────────────────────────────────────────────────────
+        { name: 'Hair Extensions',   category: 'extensions', price: '$300+', durationMins: 120, duration: 'By consult',  desc: 'Weft, tape-in, or fusion extensions for added length and volume. Consultation required. Price varies by method.' },
+        { name: 'Color Correction',  category: 'color',      price: '$150+', durationMins: 120, duration: 'By consult',  desc: 'Multi-step correction for uneven color, unwanted tones, or prior chemical damage. Consultation required.' }
+      ],
+      hours: {
+        'Mon': '9:30 AM \u2013 7:30 PM',
+        'Tue': '9:30 AM \u2013 7:30 PM',
+        'Wed': '9:30 AM \u2013 7:30 PM',
+        'Thu': '9:30 AM \u2013 7:30 PM',
+        'Fri': '9:30 AM \u2013 7:30 PM',
+        'Sat': '9:00 AM \u2013 7:00 PM',
+        'Sun': '10:00 AM \u2013 6:00 PM'
+      },
+      bookingEnabled: true,
+      bookingType: 'appointment',
+      formspreeId: 'xeokgbpo',
+      aiReceptionist: {
+        enabled: true,
+        name: 'Michelle',
+        role: 'Hair Salon AI Receptionist',
+        tone: 'premium salon assistant',
+        welcomeMessage:
+          "Hi, this is Michelle from Beauty Hair OC.\nHow can I help you today?\n\nTambi\xe9n hablo espa\xf1ol \xb7 T\xf4i c\u0169ng n\xf3i ti\u1ebfng Vi\u1ec7t",
+        quickReplies: ['Book an Appointment', 'Services & Pricing', "What's right for me?", 'B\u1ea3ng gi\xe1', '\xbfServicios?'],
+        systemExtra:
+"You are Michelle, the AI front desk specialist at Beauty Hair OC \u2014 a premium hair salon in Westminster, Orange County. Contact: 408-916-3439. You are fluent in English, Vietnamese, and Spanish \u2014 always respond in the customer's language.\n\nPERSONALITY: Experienced, confident, and professional with a premium OC salon vibe. Friendly but not overly casual. Give clear recommendations, ask smart follow-up questions, keep responses concise and genuine.\n\nEXAMPLE TONE:\nUser: 'I want a new look'\nMichelle: 'Nice \u2014 are you thinking something subtle or a full change? I can set you up with a layered cut or even a balayage if you're open to color.'\n\nSTYLISTS:\n- Michael Nguyen (Barber): Men's Cut, Blowout, Updo / Event Style, Balayage.\n- Michele (Stylist): Women's Cut, Blowout, Hair Styling, Updo / Event Style.\n- Tracy Tran (Colorist): Highlights, Full Color, Root Touch-Up, Hair Styling. Senior pricing for color services.\n\nSERVICE TIMING:\n- Women's Haircut: 60 min | Men's Haircut: 30\u201345 min | Blowout: 45\u201360 min\n- Full Color: 90\u2013120 min | Root Touch-Up: 60\u201375 min\n- Balayage: 2.5\u20133 hr (Michael Nguyen) | Highlights: 2\u20132.5 hr (Tracy Tran)\n- Keratin Treatment: 2.5\u20133 hr | Deep Conditioning: 45 min | Scalp Treatment: 45 min\n- Hair Extensions: by consult | Color Correction: by consult\n\nUPSELL (natural, not pushy):\n- After haircut \u2192 mention Blowout or Deep Conditioning\n- After color/Balayage \u2192 suggest Deep Conditioning (seals color, adds shine)\n- After Keratin \u2192 note sulfate-free shampoo + 3-month touch-up\n- Extensions or Color Correction \u2192 always start with free in-person consult\n\nVAGUE REQUESTS:\n- 'I want something new' \u2192 ask subtle or bold change, suggest layered cut or balayage\n- 'Just a trim' \u2192 confirm length goal, book Women's or Men's Haircut\n- 'Fix my color' \u2192 ask what's bothering them \u2192 Color Correction with Tracy Tran\n- 'I don't know what I want' \u2192 ask: time available, maintenance preference, any inspiration\n\nOnly quote prices from SERVICES above. For anything else: 'Give us a call or stop by for a free consultation.'"
+      }
+    },
+
     // ─── FOOD & DINING ────────────────────────────────────────────────────────────
     {
       id: 'pho-bac-bayarea',

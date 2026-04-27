@@ -27,7 +27,7 @@
   const MODELS = {
     claude: 'claude-haiku-4-5-20251001',
     openai: 'gpt-4o-mini',
-    gemini: 'gemini-1.5-flash',
+    gemini: 'gemini-2.0-flash',
   };
 
   // ── Key accessors (localStorage — admin-configured) ────────────────────────
@@ -355,10 +355,16 @@ Analyze a booking and return JSON:
     return {
       system: `You are a travel advisor for Du Lịch Cali (dulichcali21.com).
 
-Our bookable coastal tour packages:
-- big_sur_monterey_1_day: "Big Sur & Monterey — 1 Day", from $89/person (group) or $299 private
-- highway_1_classic_2_day: "Highway 1 Classic — 2 Days", from $169/person (group) or $599 private
-- coastal_premium_3_day: "Coastal Premium — 3 Days", from $349/person (group) or $1,199 private
+Our bookable coastal tour packages (available to anyone, from any location):
+- big_sur_monterey_1_day: "Big Sur & Monterey — 1 Day"
+    Group: $89/person  |  Private: from $349 (1–2 pax) / $449 (3–5) / $599 (6–7) / $799 (8–12)
+- highway_1_classic_2_day: "Highway 1 Classic — 2 Days"
+    Group: $169/person  |  Private: from $699 (1–2) / $999 (3–5) / $1,299 (6–7) / $1,699 (8–12)
+- coastal_premium_3_day: "Coastal Premium — 3 Days"
+    Group: $349/person  |  Private: from $1,299 (1–2) / $1,699 (3–5) / $2,099 (6–7) / $2,699 (8–12)
+
+There are no region restrictions. Anyone can book from anywhere.
+Use the private pricing tier that matches their party size when quoting a private tour.
 
 When the user describes a trip request, match it to one of our packages and return JSON:
 {

@@ -1,51 +1,59 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# patch_cycle.sh — DuLichCali controlled patch workflow
-# Mirrors ai_trading_system codex_then_claude_audit.sh + precommit_ai_gate.sh pattern
+# patch_cycle.sh — AI Project Template
+# Prompt-driven patch helper. Captures state, runs pre-check, builds Claude prompt.
 #
 # Usage:
-#   scripts/ai/patch_cycle.sh prompts/phase1_hair_salon_fix.md
-#   scripts/ai/patch_cycle.sh prompts/<any_prompt>.md [--scope <targeted-scope>]
+#   scripts/ai/patch_cycle.sh prompts/<prompt>.md [--scope <scope>]
 #
-# Workflow:
-#   1. Copy prompt into .ai_runs/latest/prompt_used.md
-#   2. Run pre-check (targeted dry run if scope given, else full)
-#   3. Build claude_manual_prompt.txt with embedded context
-#   4. Claude applies only scoped changes from the prompt
-#   5. Run targeted dry run after changes
-#   6. Run full_system_dry_run.sh
-#   7. Generate patch_cycle_report.md
-#   Require FINAL: PASS before marking complete.
+# This is a SECONDARY helper. The canonical workflow uses ai_dev_loop.sh.
+# Use patch_cycle.sh when you want to manually prepare a Claude prompt
+# for a specific patch without running the full dev loop.
 
 PROMPT_FILE="${1:-}"
 SCOPE=""
+shift 2>/dev/null || true
 
-for arg in "${@:2}"; do
-  case "$arg" in
-    --scope) ;;
-    hair-salon|booking|travel|marketplace|ai-receptionist) SCOPE="$arg" ;;
-    *) echo "Unknown arg: $arg"; exit 2 ;;
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --scope) SCOPE="${2:-}"; shift 2 ;;
+    *) shift ;;
   esac
 done
 
-if [ -z "$PROMPT_FILE" ]; then
+if [ -z "$PROMPT_FILE" ] || [ ! -f "$PROMPT_FILE" ]; then
   echo "Usage: scripts/ai/patch_cycle.sh prompts/<prompt>.md [--scope <scope>]"
-  exit 2
-fi
-
-if [ ! -f "$PROMPT_FILE" ]; then
-  echo "Prompt file not found: $PROMPT_FILE"
+  echo "  Example: scripts/ai/patch_cycle.sh prompts/phase1_fix.md --scope frontend"
   exit 2
 fi
 
 RUN_DIR=".ai_runs/latest"
 mkdir -p "$RUN_DIR"
 
-echo "== DULICHCALI PATCH CYCLE =="
-echo "Prompt:   $PROMPT_FILE"
-echo "Scope:    ${SCOPE:-full}"
-echo "Run dir:  $RUN_DIR"
+CONFIG_FILE="config/ai_project_profile.json"
+
+read_config_str() {
+  local key="$1" default="${2:-}"
+  [ -f "$CONFIG_FILE" ] || { echo "$default"; return; }
+  python3 -c "
+import json
+try:
+  d=json.load(open('$CONFIG_FILE'))
+  v=d.get('$key','$default')
+  print(v if isinstance(v,str) else '$default')
+except: print('$default')
+" 2>/dev/null || echo "$default"
+}
+
+PROJECT_NAME="$(read_config_str project_name "$(basename "$(pwd)")")"
+RUN_ID="$(date +%Y%m%d-%H%M%S)"
+
+echo "== $PROJECT_NAME PATCH CYCLE =="
+echo "Run ID:       $RUN_ID"
+echo "Prompt:       $PROMPT_FILE"
+echo "Scope:        ${SCOPE:-"(none)"}"
+echo "Run dir:      $RUN_DIR"
 echo
 
 # ── step 1: copy prompt ───────────────────────────────────────────────────────
@@ -54,109 +62,90 @@ echo "== Step 1: Prompt saved =="
 echo "  $RUN_DIR/prompt_used.md"
 echo
 
-# ── step 2: capture pre-patch state ──────────────────────────────────────────
-echo "== Step 2: Pre-patch state =="
+# ── step 2: capture state ─────────────────────────────────────────────────────
+echo "== Step 2: Capturing state =="
 git diff > "$RUN_DIR/diff_before.patch"
 git status --short | tee "$RUN_DIR/status_before.txt"
 echo
 
-# ── step 3: run pre-check dry run ────────────────────────────────────────────
-echo "== Step 3: Pre-check dry run =="
-if [ -n "$SCOPE" ]; then
-  echo "  Running targeted dry run: $SCOPE"
-  bash scripts/ai/targeted_dry_run.sh "$SCOPE" | tee "$RUN_DIR/precheck_targeted.txt" || true
+# ── step 3: pre-check ─────────────────────────────────────────────────────────
+echo "== Step 3: Pre-check =="
+PRE_CHECK_OUTPUT="$RUN_DIR/pre_check.txt"
+if [ -n "$SCOPE" ] && [ -f "scripts/ai/targeted_dry_run.sh" ]; then
+  echo "Running targeted_dry_run.sh $SCOPE"
+  bash scripts/ai/targeted_dry_run.sh "$SCOPE" 2>&1 | tee "$PRE_CHECK_OUTPUT" || true
+elif [ -f "scripts/ai/full_system_dry_run.sh" ]; then
+  echo "Running full_system_dry_run.sh"
+  bash scripts/ai/full_system_dry_run.sh 2>&1 | tee "$PRE_CHECK_OUTPUT" || true
 else
-  echo "  Running full system dry run"
-  bash scripts/ai/full_system_dry_run.sh | tee "$RUN_DIR/precheck_full.txt" || true
+  echo "(no pre-check script found)" | tee "$PRE_CHECK_OUTPUT"
 fi
 echo
 
-# ── step 4: build claude manual prompt ───────────────────────────────────────
+# ── step 4: build claude prompt ───────────────────────────────────────────────
 echo "== Step 4: Building Claude prompt =="
 cat > "$RUN_DIR/claude_manual_prompt.txt" << EOF
-You are applying a scoped patch to the DuLichCali project.
+You are a safety reviewer for the $PROJECT_NAME project.
 
-Read the prompt below carefully. Apply ONLY the changes it describes.
-Do not touch unrelated files. Do not rewrite unrelated flows.
-Do not break Luxurious Nails (the reference standard for salon/vendor pages).
+Task (from prompt file: $PROMPT_FILE):
+$(cat "$PROMPT_FILE")
 
-After applying changes:
-1. Run: scripts/ai/targeted_dry_run.sh ${SCOPE:-hair-salon}
-2. Run: scripts/ai/full_system_dry_run.sh
-3. Both must end with FINAL: PASS before this patch is complete.
+Output exactly one verdict line FIRST:
+VERDICT: APPROVE
+or
+VERDICT: REQUEST_CHANGES
+or
+VERDICT: BLOCK
 
-===== PATCH PROMPT =====
-$(cat "$RUN_DIR/prompt_used.md")
+Then explain your findings.
 
-===== CLAUDE.md KEY RULES =====
-$(grep -A3 "RULE #1\|RULE #2\|JS VERSION\|PRODUCTION DOMAIN" CLAUDE.md 2>/dev/null | head -60 || echo "(CLAUDE.md not found)")
+===== AGENTS.md (excerpt) =====
+$(head -80 AGENTS.md 2>/dev/null || echo "(not found)")
 
-===== CURRENT GIT STATUS =====
-$(cat "$RUN_DIR/status_before.txt")
+===== CLAUDE.md (excerpt) =====
+$(head -60 CLAUDE.md 2>/dev/null || echo "(not found)")
 
-===== CURRENT DIFF (uncommitted changes) =====
-$(cat "$RUN_DIR/diff_before.patch" 2>/dev/null || echo "(no uncommitted changes)")
+===== GIT STATUS =====
+$(cat "$RUN_DIR/status_before.txt" 2>/dev/null || echo "(not found)")
 
-===== PRE-CHECK RESULT =====
-$(cat "$RUN_DIR/precheck_targeted.txt" 2>/dev/null || cat "$RUN_DIR/precheck_full.txt" 2>/dev/null || echo "(no precheck output)")
+===== PRE-CHECK OUTPUT =====
+$(cat "$PRE_CHECK_OUTPUT" 2>/dev/null || echo "(not found)")
+
+===== CURRENT DIFF =====
+$(cat "$RUN_DIR/diff_before.patch" 2>/dev/null || echo "(empty — no tracked changes)")
 EOF
 echo "  $RUN_DIR/claude_manual_prompt.txt"
 echo
 
-# ── step 5: tell user how to proceed ─────────────────────────────────────────
-echo "== Step 5: Apply patch =="
-echo "  Claude should now read: $RUN_DIR/claude_manual_prompt.txt"
-echo "  and apply ONLY the changes described in: $PROMPT_FILE"
+# ── step 5: report ────────────────────────────────────────────────────────────
+cat > "$RUN_DIR/patch_cycle_report.md" << EOF
+# Patch Cycle Report — $PROJECT_NAME
+Run ID: $RUN_ID
+Prompt: $PROMPT_FILE
+Scope:  ${SCOPE:-"(none)"}
+
+## Pre-Check Result
+$(tail -3 "$PRE_CHECK_OUTPUT" 2>/dev/null || echo "(no pre-check)")
+
+## Files
+- Prompt:       $RUN_DIR/prompt_used.md
+- State:        $RUN_DIR/status_before.txt
+- Diff (before): $RUN_DIR/diff_before.patch
+- Claude prompt: $RUN_DIR/claude_manual_prompt.txt
+- Pre-check:    $PRE_CHECK_OUTPUT
+
+## Next Steps
+1. Use ai_dev_loop.sh for automated review:
+   scripts/ai/ai_dev_loop.sh --audit-only $PROMPT_FILE
+2. Or paste the prompt manually:
+   $RUN_DIR/claude_manual_prompt.txt
+3. After fixes, validate:
+   scripts/ai/full_system_dry_run.sh
+EOF
+
+echo "== Patch Cycle Ready =="
+echo "  Prompt:         $RUN_DIR/claude_manual_prompt.txt"
+echo "  Report:         $RUN_DIR/patch_cycle_report.md"
 echo
-echo "  After Claude applies changes, run:"
-if [ -n "$SCOPE" ]; then
-  echo "    scripts/ai/targeted_dry_run.sh $SCOPE"
-fi
-echo "    scripts/ai/full_system_dry_run.sh"
-echo
-
-# ── step 6: generate patch_cycle_report.md ───────────────────────────────────
-cat > "$RUN_DIR/patch_cycle_report.md" << REPORT
-# Patch Cycle Report — DuLichCali
-
-Date:         $(date '+%Y-%m-%d %H:%M:%S')
-Prompt:       $PROMPT_FILE
-Scope:        ${SCOPE:-full}
-Run dir:      $RUN_DIR
-
-## Status
-
-- Pre-check: see \`$RUN_DIR/precheck_targeted.txt\` or \`precheck_full.txt\`
-- Patch applied: [fill in after Claude applies changes]
-- Post-check: [fill in after running targeted_dry_run + full_system_dry_run]
-- Final verdict: PENDING
-
-## Files in This Run
-
-| File | Purpose |
-|------|---------|
-| \`prompt_used.md\` | Exact prompt that drove this patch |
-| \`status_before.txt\` | Git status before any changes |
-| \`diff_before.patch\` | Git diff before any changes |
-| \`precheck_targeted.txt\` | Targeted dry run before patch |
-| \`claude_manual_prompt.txt\` | Combined context + prompt for Claude |
-
-## Required Before Marking Complete
-
-- [ ] scripts/ai/targeted_dry_run.sh ${SCOPE:-hair-salon} → FINAL: PASS
-- [ ] scripts/ai/full_system_dry_run.sh → FINAL: PASS
-- [ ] Manual QA: Luxurious Nails still works
-- [ ] Manual QA: Beauty Hair OC shows vendor-specific data
-- [ ] No console errors
-- [ ] No exposed secrets
-
-## Final Verdict
-
-[Fill in: READY_FOR_USER_REVIEW / NEEDS_MORE_FIXES / BLOCKED_NEEDS_HUMAN_DECISION]
-REPORT
-echo "  $RUN_DIR/patch_cycle_report.md"
-echo
-
-echo "PATCH CYCLE READY — waiting for Claude to apply changes."
-echo "After changes are applied, run:"
-echo "  scripts/ai/full_system_dry_run.sh"
+echo "Next:"
+echo "  scripts/ai/ai_dev_loop.sh --audit-only $PROMPT_FILE"

@@ -1235,6 +1235,8 @@ select.mp-input option {
     flex: 1;
     min-height: 0;   /* allow flex shrinking — without this, messages won't shrink below content height */
     height: auto;
+    /* Solid background — overrides the semi-transparent rgba rule so no salon content bleeds through */
+    background: var(--navy-900);
     /* Contain bounce so rubber-band doesn't expose the locked page */
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;

@@ -41,6 +41,16 @@ var DLC_TRAVEL_PACKAGES = [
     // ── Available pickup regions ─────────────────────────────────────────────
     available_regions: ['all'],
 
+    // ── Departure-region price adjustments ────────────────────────────────────
+    // Hub is San Jose (Bay Area). Longer-origin departures carry a surcharge.
+    // Rationale: OC → Monterey ~330 mi OW vs SJ → Monterey ~180 mi OW → ~1.83× distance.
+    // Group pricing doesn't scale purely with mileage (fixed overhead shared),
+    // so we apply a conservative 1.45× for SoCal. Private scales similarly.
+    departure_region_adjustments: {
+      bayarea: { multiplier: 1.00, label: 'Bay Area (San Jose hub)' },
+      socal:   { multiplier: 1.45, label: 'Southern CA departure' },
+    },
+
     // ── Highlights ───────────────────────────────────────────────────────────
     highlights: [
       { en: 'McWay Falls viewpoint at golden hour', vi: 'Thác McWay lúc hoàng hôn', es: 'Mirador de McWay Falls en hora dorada' },
@@ -107,6 +117,15 @@ var DLC_TRAVEL_PACKAGES = [
     },
 
     available_regions: ['all'],
+
+    // ── Departure-region price adjustments ────────────────────────────────────
+    // Rationale: 2-day route is based in SJ. SoCal origin adds ~2× deadhead on
+    // each day. Multiplier 1.35 on a 2-day tour reflects the disproportionate
+    // fixed-cost impact of a longer daily route.
+    departure_region_adjustments: {
+      bayarea: { multiplier: 1.00, label: 'Bay Area (San Jose hub)' },
+      socal:   { multiplier: 1.35, label: 'Southern CA departure' },
+    },
 
     // ── Highlights ───────────────────────────────────────────────────────────
     highlights: [
@@ -196,6 +215,15 @@ var DLC_TRAVEL_PACKAGES = [
     },
 
     available_regions: ['all'],
+
+    // ── Departure-region price adjustments ────────────────────────────────────
+    // Rationale: 3-day itinerary ends in Malibu (near SoCal), so the SoCal
+    // surcharge is lower than shorter packages. 1.25× covers the extra
+    // SJ→SoCal deadhead on the first and last day of the driver's cycle.
+    departure_region_adjustments: {
+      bayarea: { multiplier: 1.00, label: 'Bay Area (San Jose hub)' },
+      socal:   { multiplier: 1.25, label: 'Southern CA departure' },
+    },
 
     // ── Highlights ───────────────────────────────────────────────────────────
     highlights: [

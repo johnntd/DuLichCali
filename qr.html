@@ -404,6 +404,9 @@
       .qr-grid { grid-template-columns: 1fr; }
     }
   </style>
+  <!-- Firebase: read active vendors from Firestore -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -688,105 +691,83 @@
     return card;
   }
 
-  /* ── Individual vendor pages ────────────────── */
-  /* Nail banner — shared across ALL nail salon vendor cards */
-  var _NAIL_IMGS = ['/images/nails-1.jpg', '/images/nails-2.jpg', '/images/nails-3.jpg'];
+  /* ── Category → page path / accent / default sub ───────────────────────── */
+  var CAT_PATH    = { nails: '/nailsalon/', hair: '/hairsalon/', food: '/foods/' };
+  var CAT_ACCENT  = { nails: '#f472b6',     hair: '#c084fc',     food: '#f59e0b' };
+  var CAT_SUB     = {
+    nails: 'Gel \xb7 Acrylic \xb7 Ombre \xb7 Nail Art \xb7 Pedicure',
+    hair:  'Color \xb7 Balayage \xb7 Keratin \xb7 Cut & Style',
+    food:  'Authentic Vietnamese Cuisine'
+  };
+  var CAT_CTA     = { nails: 'Scan to Book', hair: 'Scan to Book', food: 'Scan to Order' };
+  var CAT_ORDER   = { nails: 0, hair: 1, food: 2 };
 
-  var VENDORS = [
-    /* ── Nail Salons ── */
-    {
-      id:      'luxurious-nails',
-      title:   'Luxurious Nails & Spa',
-      titleVi: 'Làm Nail · San Jose',
-      badge:   'San Jose, CA',
-      sub:     'Gel · Acrylic · Ombre · Nail Art · Pedicure',
-      cta:     'Scan to Book',
-      url:     BASE + '/nailsalon/?id=luxurious-nails',
-      accent:  '#f472b6',
-      imgs:    _NAIL_IMGS,
-    },
-    {
-      id:      'beauty-nails-oc',
-      title:   'Beauty Nails OC',
-      titleVi: 'Làm Nail · Westminster',
-      badge:   'Westminster, CA',
-      sub:     'Gel · Acrylic · Ombre · Nail Art · Pedicure',
-      cta:     'Scan to Book',
-      url:     BASE + '/nailsalon/?id=beauty-nails-oc',
-      accent:  '#f472b6',
-      imgs:    _NAIL_IMGS,
-    },
-    /* ── Hair Salons ── */
-    {
-      id:      'viet-hair-bayarea',
-      title:   'Việt Hair Studio',
-      titleVi: 'Salon Tóc · San Jose',
-      badge:   'San Jose, CA',
-      sub:     'Cắt · Nhuộm · Uốn · Highlight · Keratin',
-      cta:     'Scan to Book',
-      url:     BASE + '/hairsalon/?id=viet-hair-bayarea',
-      accent:  '#c084fc',
-      img:     '/images/unsplash/hair-salon-1.jpg',
-    },
-    {
-      id:      'cali-hair-oc',
-      title:   'Cali Hair & Beauty',
-      titleVi: 'Salon Tóc · Garden Grove',
-      badge:   'Garden Grove, CA',
-      sub:     'Cắt · Balayage · Uốn Hàn Quốc · Highlight · Deep Conditioning',
-      cta:     'Scan to Book',
-      url:     BASE + '/hairsalon/?id=cali-hair-oc',
-      accent:  '#c084fc',
-      img:     '/images/unsplash/hair-salon-2.jpg',
-    },
-    /* ── Food Vendors ── */
-    {
-      id:      'pho-bac-bayarea',
-      title:   'Phở Bắc Bay Area',
-      titleVi: 'Phở Hà Nội · San Jose',
-      badge:   'San Jose, CA',
-      sub:     'Phở Bò · Bún Bò Huế · Bún Chả · Cơm Tấm · Catering',
-      cta:     'Scan to Order',
-      url:     BASE + '/foods/?id=pho-bac-bayarea',
-      accent:  '#f59e0b',
-      img:     BASE + '/images/hero-pho-bac.jpg',
-    },
-    {
-      id:      'nha-bep-cua-emily',
-      title:   'Nhà Bếp Của Emily',
-      titleVi: 'Đặt Món · San Jose',
-      badge:   'San Jose, CA',
-      sub:     'Chả Giò · Bún Chả Hà Nội · Chuối Đậu Nấu Ốc · Phở Bắc',
-      cta:     'Scan to Order',
-      url:     BASE + '/foods/?id=nha-bep-cua-emily',
-      accent:  '#f97316',
-      imgs:    [BASE + '/images/hero-cha-gio.jpg', BASE + '/images/hero-bun-cha-hanoi.jpg', BASE + '/images/hero-chuoi-dau-nau-oc.jpg'],
-    },
-    {
-      id:      'com-tam-oc',
-      title:   'Cơm Tấm Dì Tám',
-      titleVi: 'Cơm Tấm · Westminster',
-      badge:   'Westminster, CA',
-      sub:     'Cơm Tấm Sườn · Hủ Tiếu · Bánh Mì · Chả Giò · Catering',
-      cta:     'Scan to Order',
-      url:     BASE + '/foods/?id=com-tam-oc',
-      accent:  '#dc2626',
-      img:     null,
-      gradient: 'linear-gradient(135deg, #dc2626 0%, #b45309 50%, #92400e 100%)',
-    },
-  ];
+  /* Convert a Firestore vendor doc into the svc shape buildCard() expects */
+  function vendorDocToSvc(id, d) {
+    var cat    = d.category || (d.vendorType === 'foodvendor' ? 'food' : 'nails');
+    var path   = CAT_PATH[cat]   || '/nailsalon/';
+    var accent = CAT_ACCENT[cat] || '#0d2f50';
+    return {
+      id:      id,
+      title:   d.businessName || d.name || id,
+      badge:   d.city || (d.address || '').split(',').slice(-2).join(',').trim(),
+      sub:     d.tagline || CAT_SUB[cat] || '',
+      cta:     CAT_CTA[cat] || 'Scan to Book',
+      url:     BASE + path + '?id=' + id,
+      accent:  accent,
+      img:     d.heroImage || null
+    };
+  }
 
-  /* ── Render category grid ────────────────────── */
+  /* ── Render category grid (always static) ────── */
   var grid = document.getElementById('qrGrid');
-  SERVICES.forEach(function(svc) {
-    grid.appendChild(buildCard(svc));
-  });
+  SERVICES.forEach(function(svc) { grid.appendChild(buildCard(svc)); });
 
-  /* ── Render vendor grid ──────────────────────── */
+  /* ── Render vendor grid from Firestore ──────── */
   var vendorGrid = document.getElementById('qrVendorGrid');
-  VENDORS.forEach(function(svc) {
-    vendorGrid.appendChild(buildCard(svc));
-  });
+  vendorGrid.innerHTML = '<p style="text-align:center;color:#999;padding:2rem;grid-column:1/-1">Loading vendors\u2026</p>';
+
+  /* Init Firebase (same project as all other pages) */
+  (function() {
+    var cfg = {
+      apiKey:    'AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ',
+      authDomain:'dulichcali-booking-calendar.firebaseapp.com',
+      projectId: 'dulichcali-booking-calendar'
+    };
+    if (!firebase.apps.length) firebase.initializeApp(cfg);
+  })();
+
+  firebase.firestore()
+    .collection('vendors')
+    .where('active', '==', true)
+    .get()
+    .then(function(snap) {
+      vendorGrid.innerHTML = '';
+      var docs = [];
+      snap.forEach(function(doc) { docs.push({ id: doc.id, data: doc.data() }); });
+
+      /* Sort: nails → hair → food, then alphabetically within each group */
+      docs.sort(function(a, b) {
+        var ac = a.data.category || 'nails';
+        var bc = b.data.category || 'nails';
+        var ao = CAT_ORDER[ac] != null ? CAT_ORDER[ac] : 9;
+        var bo = CAT_ORDER[bc] != null ? CAT_ORDER[bc] : 9;
+        if (ao !== bo) return ao - bo;
+        return (a.data.businessName || a.id).localeCompare(b.data.businessName || b.id);
+      });
+
+      if (!docs.length) {
+        vendorGrid.innerHTML = '<p style="text-align:center;color:#999;padding:2rem;grid-column:1/-1">No active vendors found.</p>';
+        return;
+      }
+      docs.forEach(function(v) {
+        vendorGrid.appendChild(buildCard(vendorDocToSvc(v.id, v.data)));
+      });
+    })
+    .catch(function() {
+      /* Firestore unavailable — nothing to show; page still works for category cards */
+      vendorGrid.innerHTML = '<p style="text-align:center;color:#bbb;padding:2rem;grid-column:1/-1">Could not load vendor list.</p>';
+    });
 
   /* ── Print mode toggle ─────────────────────── */
   function setMode(mode) {

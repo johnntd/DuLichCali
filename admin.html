@@ -1868,7 +1868,7 @@
           btn.disabled=false; return;
         }
         await db.collection('vendors').doc(vid).set({
-          name, category:cat, region, phone:phone||'', setupCode:pin,
+          name, category:cat.toLowerCase(), region, phone:phone||'', setupCode:pin,
           adminStatus:'pending', createdAt:firebase.firestore.FieldValue.serverTimestamp(), createdBy:'admin'
         });
         ['newVendorId','newVendorName','newVendorPhone','newVendorPin'].forEach(id=>{

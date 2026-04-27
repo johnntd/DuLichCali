@@ -59,6 +59,7 @@
   var _welcomeBuffer = null;    // Pre-fetched MP3 ArrayBuffer for welcome message
   var _voices        = [];      // Cached voice list — populated once on voiceschanged
   var _pendingSpoken = null;    // Pre-built spoken text for confirmation flows (set by receptionist)
+  var _interruptNext = false;  // User tapped mic during processing — skip TTS, go straight to listening
   var _autoLangTimer = null;    // Timer for auto-detected language hint fadeout
 
   // ── State labels ──────────────────────────────────────────────────────────
@@ -196,7 +197,7 @@
     var el = _overlay.querySelector('.dlc-vm__state-label');
     if (el) el.textContent = _lbl(s);
     var mic = _overlay.querySelector('.dlc-vm__mic');
-    if (mic) mic.disabled = (s === 'processing');
+    if (mic) mic.disabled = (s === 'listening');
   }
 
   function _setTranscript(text) {
@@ -336,8 +337,10 @@
   }
 
   // ── Hands-free auto-restart ────────────────────────────────────────────────
-  // Called after every TTS completion. Waits a natural conversational pause,
+  // Called after every TTS completion. Waits a brief conversational pause,
   // then restarts the microphone so the user can reply without tapping.
+  // 300ms: long enough to prevent audio bleed from TTS tail, short enough
+  // that users don't miss the first word of their response.
   // Guards: only fires if overlay is still open and state is still idle.
   function _autoRestartListening() {
     setTimeout(function () {
@@ -345,14 +348,16 @@
       if (_state !== 'idle') return;     // something else already started
       if (!hasSR) return;
       _startListening();
-    }, 700);
+    }, 300);
   }
 
   function _startListening() {
     // Mic tap while speaking → interrupt AI and start listening immediately
     if (_state === 'speaking') { _stopSpeaking(); _startListening(); return; }
     if (_state === 'listening') { _stopRec(); return; }
-    if (_state === 'processing') return;
+    // Mic tap while AI is processing → flag it; TTS will be skipped and mic
+    // auto-starts once the bot reply is detected.
+    if (_state === 'processing') { _interruptNext = true; return; }
 
     // Prime iOS TTS while we're still inside the tap handler
     _primeIosTts();
@@ -430,6 +435,13 @@
     // the generic Receptionist._sendMessage path.
     _watchForBotBubble(function (replyText) {
       _setResponse(replyText);
+      // If user tapped mic during processing, skip TTS and go straight to listening.
+      if (_interruptNext) {
+        _interruptNext = false;
+        _setState('idle');
+        _autoRestartListening();
+        return;
+      }
       _speakReply(replyText);
     });
 
@@ -573,9 +585,9 @@
   // OpenAI TTS — primary engine for all languages.
   // model: tts-1 (speed-optimised), voice: nova (warm female, multilingual).
   // Roundtrip ~200–400 ms vs Gemini's 500–1500 ms.
-  // Requires openaiKey in Firestore vendor doc or localStorage 'dlc_openai_key'.
+  // Requires openaiKey in Firestore vendor doc, platform config, or localStorage 'dlc_openai_key'.
   function _speakViaOpenAi(text, onDone) {
-    var key = (_biz && _biz._firestoreOpenAiKey) || '';
+    var key = (_biz && _biz._firestoreOpenAiKey) || (_biz && _biz._platformOpenAiKey) || '';
     if (!key) { try { key = localStorage.getItem('dlc_openai_key') || ''; } catch (_) {} }
     if (!key) { onDone(false); return; }
 
@@ -622,7 +634,7 @@
   // Called by receptionist.js after Firestore vendor data loads (keys available).
   function _prefetchWelcome(biz) {
     if (_welcomeBuffer) return; // already fetched
-    var key = (biz && biz._firestoreOpenAiKey) || '';
+    var key = (biz && biz._firestoreOpenAiKey) || (biz && biz._platformOpenAiKey) || '';
     if (!key) { try { key = localStorage.getItem('dlc_openai_key') || ''; } catch (_) {} }
     if (!key) return;
 
@@ -646,8 +658,8 @@
   // Calls onDone(true) on success, onDone(false) on any failure so the caller
   // can fall through to browser TTS.
   function _speakViaGemini(text, onDone) {
-    // Key priority: Firestore vendor doc (geminiKey) → localStorage override
-    var key = (_biz && _biz._firestoreGeminiKey) || '';
+    // Key priority: Firestore vendor doc (geminiKey) → platform config → localStorage override
+    var key = (_biz && _biz._firestoreGeminiKey) || (_biz && _biz._platformGeminiKey) || '';
     if (!key) { try { key = localStorage.getItem('dlc_gemini_key') || ''; } catch (_) {} }
     if (!key) { onDone(false); return; }
 
@@ -784,6 +796,7 @@
     _biz    = biz;
     _msgsEl = messagesEl;
     _lang   = _detectLang();
+    biz._isVoiceMode = true;   // tells AI prompt to give short spoken-language responses
 
     if (!_overlay) {
       _overlay = _buildOverlay();
@@ -861,8 +874,10 @@
     }
     document.documentElement.classList.remove('dlc-vm-active');
 
-    _biz    = null;
-    _msgsEl = null;
+    if (_biz) _biz._isVoiceMode = false;
+    _biz           = null;
+    _msgsEl        = null;
+    _interruptNext = false;
     _setState('idle');
   }
 

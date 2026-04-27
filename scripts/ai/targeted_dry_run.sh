@@ -176,9 +176,22 @@ set +e
       check_fail "receptionist.js syntax check failed"
       ;;
 
+    phone-intake)
+      echo "== Scope: phone-intake =="
+      echo
+      check_file_exists "nailsalon/phone-intake.js"
+      check_grep "normalizeSpokenPhoneNumber defined" "normalizeSpokenPhoneNumber" "nailsalon/phone-intake.js"
+      check_grep "VI_DIGIT_MAP defined" "VI_DIGIT_MAP" "nailsalon/phone-intake.js"
+      check_grep "Vietnamese digit không" "không" "nailsalon/phone-intake.js"
+      check_grep "PhoneIntake exported" "PhoneIntake" "nailsalon/phone-intake.js"
+      check_grep "receptionist.js wires phone-intake" "PhoneIntake\|normalizeSpokenPhoneNumber" "nailsalon/receptionist.js"
+      check_grep "runner.js has PI-001 test" "PI-001" "tests/runner.js"
+      check_grep "runner.js has PI-014 test" "PI-014" "tests/runner.js"
+      ;;
+
     *)
       echo "Unknown scope: $SCOPE"
-      echo "Valid: hair-salon  booking  travel  marketplace  ai-receptionist"
+      echo "Valid: hair-salon  booking  travel  marketplace  ai-receptionist  phone-intake"
       echo "FINAL: FAIL"
       exit 2
       ;;
@@ -192,7 +205,7 @@ set +e
 set -e
 
 # Re-read counts from output since subshell doesn't propagate vars through tee
-FINAL_FAIL=$(grep -c "^  FAIL " "$OUTPUT" 2>/dev/null || echo 0)
+FINAL_FAIL=$(grep -c "^  FAIL " "$OUTPUT" 2>/dev/null) || FINAL_FAIL=0
 
 if [ "$FINAL_FAIL" -eq 0 ]; then
   echo "FINAL: PASS" | tee -a "$OUTPUT"

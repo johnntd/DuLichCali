@@ -655,6 +655,22 @@
         window.location.href = '?id=' + bizId;
       });
     });
+
+    // Async: fetch Firestore vendors not in the static list and
+    // append them to the grid if any are found.
+    if (window.VendorDataService) {
+      VendorDataService.fetchVendors(categoryId, _getRegionName()).then(function (fullList) {
+        if (fullList.length <= bizList.length) return; // nothing new
+        var grid = _container.querySelector('.mp-grid');
+        if (!grid) return;
+        grid.innerHTML = fullList.map(renderBizCard).join('');
+        grid.querySelectorAll('.mp-biz-card').forEach(function (card) {
+          card.addEventListener('click', function () {
+            window.location.href = '?id=' + card.getAttribute('data-id');
+          });
+        });
+      });
+    }
   }
 
   function renderHero(eyebrow, title, sub, gradient, ctas, bgImage) {
@@ -703,34 +719,21 @@
 
   // ── Detail Page ────────────────────────────────────────────────────────────────
 
-  function renderDetail(businessId) {
-    var biz = MARKETPLACE.getBusiness(businessId);
+  function _renderDetailNotFound() {
+    _container.innerHTML =
+      renderAppBar(window.location.pathname, _t('Back','Quay lại','Atrás'), _t('Not Found','Không tìm thấy','No Encontrado'), null) +
+      '<div style="padding:3rem 1rem;text-align:center;color:var(--muted)">' +
+        '<div style="font-size:3rem;margin-bottom:1rem">🔍</div>' +
+        '<p>' + _t('Business information not found.','Không tìm thấy thông tin doanh nghiệp này.','Información no encontrada.') + '</p>' +
+        '<a href="' + window.location.pathname + '" style="color:var(--sky-lt);margin-top:1rem;display:inline-block">' + _t('← Back to list','← Quay lại danh sách','← Volver') + '</a>' +
+      '</div>';
+  }
 
-    if (!biz) {
-      _container.innerHTML =
-        renderAppBar(window.location.pathname, _t('Back','Quay lại','Atrás'), _t('Not Found','Không tìm thấy','No Encontrado'), null) +
-        '<div style="padding:3rem 1rem;text-align:center;color:var(--muted)">' +
-          '<div style="font-size:3rem;margin-bottom:1rem">🔍</div>' +
-          '<p>' + _t('Business information not found.','Không tìm thấy thông tin doanh nghiệp này.','Información no encontrada.') + '</p>' +
-          '<a href="' + window.location.pathname + '" style="color:var(--sky-lt);margin-top:1rem;display:inline-block">' + _t('← Back to list','← Quay lại danh sách','← Volver') + '</a>' +
-        '</div>';
-      return;
-    }
-
-    var backUrl = window.location.pathname;
-
-    // Route food vendors to their own renderer
-    if (biz.vendorType === 'foodvendor') {
-      renderFoodVendorDetail(biz);
-      return;
-    }
-
-    // Route salon vendors through async Firestore loader
-    if (biz.category === 'nails' || biz.category === 'hair') {
-      renderSalonVendorDetail(biz);
-      return;
-    }
-
+  function _dispatchDetail(biz) {
+    if (biz.vendorType === 'foodvendor')                          { renderFoodVendorDetail(biz); return; }
+    if (biz.category === 'nails' || biz.category === 'hair')     { renderSalonVendorDetail(biz); return; }
+    // General detail renderer (non-salon, non-food)
+    var backUrl  = window.location.pathname;
     var html =
       renderAppBar(backUrl, _t('Back','Danh sách','Atrás'), biz.name, biz.phone) +
       '<main class="mp-main">' +
@@ -751,18 +754,33 @@
       '</main>' +
       renderFooter() +
       renderBottomNav(backUrl);
-
     _container.innerHTML = html;
+    if (biz.bookingEnabled)                              initBookingForm(biz);
+    if (biz.aiReceptionist && biz.aiReceptionist.enabled) Receptionist.init(biz, 'aiWidget_' + biz.id);
+  }
 
-    // Init booking form
-    if (biz.bookingEnabled) {
-      initBookingForm(biz);
+  function renderDetail(businessId) {
+    var biz = MARKETPLACE.getBusiness(businessId);
+
+    if (!biz) {
+      // Not in static array — try Firestore via VendorDataService
+      if (window.VendorDataService) {
+        _container.innerHTML =
+          renderAppBar(window.location.pathname, _t('Back','Quay lại','Atrás'), '&nbsp;', null) +
+          '<div class="mp-fv-loading"><div class="mp-fv-spinner"></div><p>' +
+            _t('Loading...','Đang tải...','Cargando...') +
+          '</p></div>';
+        VendorDataService.fetchVendor(businessId).then(function (fbBiz) {
+          if (!fbBiz) { _renderDetailNotFound(); return; }
+          _dispatchDetail(fbBiz);
+        });
+        return;
+      }
+      _renderDetailNotFound();
+      return;
     }
 
-    // Init AI receptionist
-    if (biz.aiReceptionist && biz.aiReceptionist.enabled) {
-      Receptionist.init(biz, 'aiWidget_' + biz.id);
-    }
+    _dispatchDetail(biz);
   }
 
   function renderDetailHero(biz) {
@@ -1064,11 +1082,11 @@
   window._initNsFeatHc = _initNsFeatHc;
 
   function renderNailsHero(biz) {
-    // Hero background: looping MP4 video with static image fallback via poster.
-    // The <video> is positioned absolute, object-fit:cover — same visual as background-image.
-    // poster="/images/nails-1.jpg" acts as the frame shown before playback and on error.
-    var HERO_VIDEO = '/images/nails-showcase-loop.mp4';
-    var HERO_IMG   = '/images/nails-1.jpg';
+    // Hero background: looping MP4 video (nails only) with static image fallback.
+    // Non-nails vendors use their own heroImage; nails vendors use the branded video loop.
+    var isNailsCat = biz.category === 'nails';
+    var HERO_VIDEO = isNailsCat ? '/images/nails-showcase-loop.mp4' : null;
+    var HERO_IMG   = biz.heroImage || '/images/nails-1.jpg';
     // Fallback inline style used only when video element is hidden (onerror)
     var heroBg = 'background-image:url(' + HERO_IMG + '),' +
       (biz.heroGradient || 'linear-gradient(135deg,#831843,#4c1d95)') + ';' +
@@ -1101,11 +1119,13 @@
     return '<div class="ns-hero' + (hasAddr ? ' ns-hero--has-address' : '') + '">' +
       // Fallback bg-image on the wrapper — shown if video element is hidden via onerror
       '<div class="ns-hero__bg" style="' + heroBg + '">' +
-        '<video class="ns-hero__video" autoplay muted loop playsinline ' +
-          'poster="' + HERO_IMG + '" ' +
-          'onerror="this.style.display=\'none\'">' +
-          '<source src="' + HERO_VIDEO + '" type="video/mp4">' +
-        '</video>' +
+        (HERO_VIDEO
+          ? '<video class="ns-hero__video" autoplay muted loop playsinline ' +
+              'poster="' + HERO_IMG + '" ' +
+              'onerror="this.style.display=\'none\'">' +
+              '<source src="' + HERO_VIDEO + '" type="video/mp4">' +
+            '</video>'
+          : '') +
       '</div>' +
       '<div class="ns-hero__overlay"></div>' +
       '<div class="ns-hero__content">' +
@@ -1141,11 +1161,17 @@
     // ~76% wide portrait cards on mobile; swipe to reveal next card.
     // Each card = featured service. Tapping CTA → nsScrollToBooking → opens category.
     var CAT_LABELS = {
+      // Nails
       manicure: 'Manicure', pedicure: 'Pedicure', gel: 'Gel & Shellac',
       acrylic: 'Acrylic & Extensions', nailart: 'Nail Art', dip: 'Dip Powder',
-      spa: 'Spa Treatments', addon: 'Add-ons', other: _t('Services', 'D\u1ecbch V\u1ee5', 'Servicios')
+      spa: 'Spa Treatments', addon: 'Add-ons',
+      // Hair
+      haircut: 'Haircut', color: 'Hair Color', balayage: 'Balayage',
+      styling: 'Styling', treatment: 'Treatment', extensions: 'Extensions', blowout: 'Blowout',
+      other: _t('Services', 'D\u1ecbch V\u1ee5', 'Servicios')
     };
     var CAT_IMAGES = {
+      // Nails
       manicure: '/images/unsplash/nails-manicure.jpg',
       pedicure: '/images/unsplash/nails-pedicure.jpg',
       acrylic:  '/images/unsplash/nails-acrylic.jpg',
@@ -1154,9 +1180,16 @@
       dip:      '/images/unsplash/nails-manicure.jpg',
       addon:    '/images/unsplash/nails-care.jpg',
       spa:      '/images/unsplash/nails-care.jpg',
-      other:    '/images/unsplash/nails-manicure.jpg'
+      // Hair
+      haircut:    '/images/unsplash/hair-salon-1.jpg',
+      color:      '/images/unsplash/hair-salon-2.jpg',
+      balayage:   '/images/unsplash/hair-salon-3.jpg',
+      styling:    '/images/unsplash/hair-salon-1.jpg',
+      blowout:    '/images/unsplash/hair-salon-1.jpg',
+      treatment:  '/images/unsplash/hair-salon-2.jpg',
+      extensions: '/images/unsplash/hair-salon-3.jpg',
     };
-    var FALLBACK = '/images/unsplash/nails-manicure.jpg';
+    var FALLBACK = biz.heroImage || '/images/unsplash/nails-manicure.jpg';
 
     // Live data: featured:true first, then one-per-category, then first 6
     var liveSvcs = biz._staticServices || biz.services || [];
@@ -1281,7 +1314,11 @@
     var catLabels = {
       manicure: 'Manicure', pedicure: 'Pedicure', gel: 'Gel & Shellac',
       acrylic: 'Acrylic & Extensions', nailart: 'Nail Art', dip: 'Dip Powder',
-      spa: 'Spa Treatments', addon: 'Add-ons / Care', other: _t('Services','D\u1ecbch V\u1ee5','Servicios')
+      spa: 'Spa Treatments', addon: 'Add-ons / Care',
+      haircut: 'Haircut', color: 'Hair Color', balayage: 'Balayage',
+      styling: 'Styling', blowout: 'Blowout', treatment: 'Treatment',
+      extensions: 'Extensions',
+      other: _t('Services','D\u1ecbch V\u1ee5','Servicios')
     };
 
     // Per-category maps: Firestore-active first, static as fallback
@@ -1321,9 +1358,16 @@
       dip:      '/images/unsplash/nails-manicure.jpg',
       addon:    '/images/unsplash/nails-care.jpg',
       spa:      '/images/unsplash/nails-care.jpg',
+      haircut:    '/images/unsplash/hair-salon-1.jpg',
+      color:      '/images/unsplash/hair-salon-2.jpg',
+      balayage:   '/images/unsplash/hair-salon-3.jpg',
+      styling:    '/images/unsplash/hair-salon-1.jpg',
+      blowout:    '/images/unsplash/hair-salon-1.jpg',
+      treatment:  '/images/unsplash/hair-salon-2.jpg',
+      extensions: '/images/unsplash/hair-salon-3.jpg',
       other:    '/images/unsplash/nails-manicure.jpg'
     };
-    var FALLBACK = '/images/unsplash/nails-manicure.jpg';
+    var FALLBACK = biz.heroImage || '/images/unsplash/nails-manicure.jpg';
 
     // ── VIEW 1a: Featured showcase carousel — live from vendor service data ─────
     // Priority: featured:true flags → one-per-category with imageUrl → one-per-category → first 6
@@ -1682,32 +1726,45 @@
     '</section>';
   }
 
-  function renderNailsInspiration() {
-    var localFallback = [
-      { src: '/images/nails-1.jpg',  fb: '/images/unsplash/nails-manicure.jpg' },
-      { src: '/images/nails-2.jpg',  fb: '/images/unsplash/nails-nail-art.jpg' },
-      { src: '/images/nails-3.jpg',  fb: '/images/unsplash/nails-acrylic.jpg' }
-    ];
-    var unsplash = [
-      '/images/unsplash/nails-pedicure.jpg',
-      '/images/unsplash/nails-gel.jpg',
-      '/images/unsplash/nails-care.jpg'
-    ];
-    var localHtml = localFallback.map(function (item) {
-      return '<img class="ns-gallery__img" src="' + item.src + '" ' +
-        'onerror="this.src=\'' + item.fb + '\'" ' +
-        'alt="' + _t('Nail art photo','Ảnh nail','Foto de uñas') + '" loading="lazy">';
-    }).join('');
-    var unsplashHtml = unsplash.map(function (src) {
-      return '<img class="ns-gallery__img" src="' + src + '" alt="' + _t('Nail art inspiration','Cảm hứng nail','Inspiración de uñas') + '" loading="lazy">';
+  function renderNailsInspiration() { return renderSalonInspiration(null); }
+
+  function renderSalonInspiration(biz) {
+    var isHair = biz && biz.category === 'hair';
+    var heading, sub, imgs;
+    if (isHair) {
+      heading = _t('Hair Inspiration','C\u1ea3m H\u1ee9ng T\xf3c','Inspiraci\xf3n de Cabello');
+      sub     = _t('Real photos from our salon','H\xecnh \u1ea3nh th\u1ef1c t\u1ebf t\u1eeb salon','Fotos reales de nuestro sal\xf3n');
+      imgs = [
+        { src: '/images/unsplash/hair-salon-1.jpg',  alt: _t('Hair salon photo','Ảnh salon tóc','Foto de salón de pelo') },
+        { src: '/images/unsplash/hair-salon-2.jpg',  alt: _t('Hair color photo','Ảnh nhuộm tóc','Foto de coloración de cabello') },
+        { src: '/images/unsplash/hair-salon-3.jpg',  alt: _t('Hair styling photo','Ảnh tạo kiểu','Foto de peinado') },
+        { src: '/images/unsplash/hair-salon-1.jpg',  alt: _t('Hair styling inspiration','Cảm hứng tạo kiểu','Inspiración de peinado') },
+        { src: '/images/unsplash/hair-salon-1.jpg',  alt: _t('Hair salon photo','Ảnh salon tóc','Foto de salón de pelo') },
+        { src: '/images/unsplash/hair-salon-2.jpg',  alt: _t('Hair inspiration','Cảm hứng tóc','Inspiración de cabello') }
+      ];
+    } else {
+      heading = _t('Nail Inspiration','C\u1ea3m H\u1ee9ng Nail','Inspiraci\xf3n de U\xf1as');
+      sub     = _t('Real photos from our salon','H\xecnh \u1ea3nh th\u1ef1c t\u1ebf t\u1eeb salon','Fotos reales de nuestro sal\xf3n');
+      imgs = [
+        { src: '/images/nails-1.jpg', fb: '/images/unsplash/nails-manicure.jpg', alt: _t('Nail art photo','Ảnh nail','Foto de uñas') },
+        { src: '/images/nails-2.jpg', fb: '/images/unsplash/nails-nail-art.jpg', alt: _t('Nail art photo','Ảnh nail','Foto de uñas') },
+        { src: '/images/nails-3.jpg', fb: '/images/unsplash/nails-acrylic.jpg',  alt: _t('Nail art photo','Ảnh nail','Foto de uñas') },
+        { src: '/images/unsplash/nails-pedicure.jpg',  alt: _t('Nail art inspiration','Cảm hứng nail','Inspiración de uñas') },
+        { src: '/images/unsplash/nails-gel.jpg',       alt: _t('Nail art inspiration','Cảm hứng nail','Inspiración de uñas') },
+        { src: '/images/unsplash/nails-care.jpg',      alt: _t('Nail art inspiration','Cảm hứng nail','Inspiración de uñas') }
+      ];
+    }
+    var imgsHtml = imgs.map(function (item) {
+      var onerr = item.fb ? ' onerror="this.onerror=null;this.src=\'' + item.fb + '\'"' : '';
+      return '<img class="ns-gallery__img" src="' + item.src + '"' + onerr + ' alt="' + item.alt + '" loading="lazy">';
     }).join('');
 
     return '<section class="ns-gallery">' +
       '<div class="ns-gallery__header">' +
-        '<h2 class="ns-section-heading" data-t="en:Nail Inspiration|vi:Cảm Hứng Nail|es:Inspiración de Uñas">' + _t('Nail Inspiration','C\u1ea3m H\u1ee9ng Nail','Inspiraci\xf3n de U\xf1as') + '</h2>' +
-        '<p class="ns-section-sub" data-t="en:Real photos from our salon|vi:Hình ảnh thực tế từ salon|es:Fotos reales de nuestro salón">' + _t('Real photos from our salon','H\xecnh \u1ea3nh th\u1ef1c t\u1ebf t\u1eeb salon','Fotos reales de nuestro sal\xf3n') + '</p>' +
+        '<h2 class="ns-section-heading">' + heading + '</h2>' +
+        '<p class="ns-section-sub">' + sub + '</p>' +
       '</div>' +
-      '<div class="ns-gallery__scroll">' + localHtml + unsplashHtml + '</div>' +
+      '<div class="ns-gallery__scroll">' + imgsHtml + '</div>' +
     '</section>';
   }
 
@@ -2343,8 +2400,9 @@
       if (biz.vendorType === 'foodvendor') {
         _renderFoodHomeIntoView(biz, content);
       } else {
+        var _salonCls = biz.category === 'hair' ? 'mp-main--hair' : 'mp-main--nails';
         content.innerHTML =
-          '<main class="mp-main mp-main--nails">' +
+          '<main class="mp-main ' + _salonCls + '">' +
             renderNailsHero(biz) +
             renderInfoStrip(biz) +
             renderNailsFeatured(biz) +
@@ -2353,7 +2411,7 @@
             '<div class="ns-divider"></div>' +
             '<div class="ns-ai-section">' + renderAiSection(biz) + '</div>' +
             '<div class="ns-divider"></div>' +
-            renderNailsInspiration() +
+            renderSalonInspiration(biz) +
             '<div class="ns-divider"></div>' +
             renderNailsTrust(biz) +
             renderFooter() +
@@ -2422,9 +2480,14 @@
 
       if (vendorDoc.exists) {
         var vd = vendorDoc.data();
-        if (vd.businessName)             merged.name        = vd.businessName;
-        if (vd.phoneDisplay)             merged.phoneDisplay = vd.phoneDisplay;
-        if (vd.phone)                    merged.phone        = vd.phone;
+        if (vd.businessName)             merged.name         = vd.businessName;
+        // phoneDisplay is the admin-panel source of truth; derive phone from it.
+        // vd.phone may be a stale seed value if the vendor only saved via the settings panel.
+        var _fsPhone = vd.phoneDisplay || vd.phone || '';
+        if (_fsPhone) {
+          merged.phoneDisplay = vd.phoneDisplay || _fsPhone;
+          merged.phone        = vd.phone || _fsPhone.replace(/\D/g, '');
+        }
         if (vd.address)                  merged.address      = vd.address;
         if (vd.description)              merged.description  = vd.description;
         if (vd.heroImage)                merged.heroImage    = vd.heroImage;
@@ -2444,8 +2507,8 @@
       // ── Load services + staff in parallel ─────────────────────────────────────
       // Both subcollections are authoritative: vendor-admin writes here, public page reads here.
       Promise.all([
-        vendorRef.collection('services').where('active', '==', true).get(),
-        vendorRef.collection('staff').get()
+        vendorRef.collection('services').where('active', '==', true).get({ source: 'server' }),
+        vendorRef.collection('staff').get({ source: 'server' })
       ]).then(function (results) {
         var svcSnap   = results[0];
         var staffSnap = results[1];
@@ -2509,79 +2572,40 @@
     }).catch(function () { callback(biz); });
   }
 
+  // ALL salon vendors (nails, hair, …) use one shared premium template.
+  // Template + Data = UI — no per-category layout forks.
   function _renderSalonDetailContent(biz, backUrl) {
     _lastSalonBiz  = biz;
     _lastSalonBack = backUrl;
-    var isNails = biz.category === 'nails';
-    var html;
 
-    if (isNails) {
-      // Premium nails redesign — stacked full-width sections
-      // Mobile hierarchy: Screen 1 (Hero+CTAs) → Screen 2 (Services) → Screen 3 (Booking) → AI → Gallery → Trust
-      // #mp-view-content is the swappable area; salon bar + nav + interp panel stay persistent.
-      html =
-        renderSalonBar(biz) +
-        '<div id="mp-view-content">' +
-          '<main class="mp-main mp-main--nails">' +
-            renderNailsHero(biz) +
-            renderInfoStrip(biz) +
-            renderNailsFeatured(biz) +
-            '<div class="ns-divider"></div>' +
-            renderNailsBookingSection(biz) +
-            '<div class="ns-divider"></div>' +
-            '<div class="ns-ai-section">' + renderAiSection(biz) + '</div>' +
-            '<div class="ns-divider"></div>' +
-            renderNailsInspiration() +
-            '<div class="ns-divider"></div>' +
-            renderNailsTrust(biz) +
-            renderFooter() +
-            '<div class="mp-spacer"></div>' +
-          '</main>' +
-        '</div>' +
-        renderInterpPanel(biz) +
-        renderVendorBottomNav(biz);
-    } else {
-      // Standard hair/other salon 2-column layout
-      html =
-        renderSalonBar(biz) +
-        '<main class="mp-main">' +
-          renderDetailHero(biz) +
+    var _salonCls2 = biz.category === 'hair' ? 'mp-main--hair' : 'mp-main--nails';
+    var html =
+      renderSalonBar(biz) +
+      '<div id="mp-view-content">' +
+        '<main class="mp-main ' + _salonCls2 + '">' +
+          renderNailsHero(biz) +
           renderInfoStrip(biz) +
-          '<div class="mp-detail-body">' +
-            '<div class="mp-detail-col mp-detail-col--left">' +
-              renderServicesSection(biz) +
-              renderHoursSection(biz) +
-            '</div>' +
-            '<div class="mp-detail-col mp-detail-col--right">' +
-              (biz.bookingEnabled ? renderBookingSection(biz) : '') +
-              renderAiSection(biz) +
-            '</div>' +
-          '</div>' +
+          renderNailsFeatured(biz) +
+          '<div class="ns-divider"></div>' +
+          renderNailsBookingSection(biz) +
+          '<div class="ns-divider"></div>' +
+          '<div class="ns-ai-section">' + renderAiSection(biz) + '</div>' +
+          '<div class="ns-divider"></div>' +
+          renderSalonInspiration(biz) +
+          '<div class="ns-divider"></div>' +
+          renderNailsTrust(biz) +
+          renderFooter() +
           '<div class="mp-spacer"></div>' +
         '</main>' +
-        renderInterpPanel(biz) +
-        renderVendorBottomNav(biz);
-    }
+      '</div>' +
+      renderInterpPanel(biz) +
+      renderVendorBottomNav(biz);
 
     _container.innerHTML = html;
     _currentView = 'home';
-
-    if (isNails) {
-      _initVendorNav(biz);
-      _initNailsHomeView(biz);
-      _updateVnavActive('home');
-    } else {
-      if (biz.bookingEnabled) {
-        initBookingForm(biz);
-      }
-      if (biz.aiReceptionist && biz.aiReceptionist.enabled) {
-        var _R = window.LilyReceptionist
-          ? window.LilyReceptionist
-          : Receptionist;
-        _R.init(biz, 'aiWidget_' + biz.id);
-      }
-      _initVendorNav(biz);
-    }
+    _initVendorNav(biz);
+    _initNailsHomeView(biz);
+    _updateVnavActive('home');
   }
 
   // ── Food Vendor Detail Page ────────────────────────────────────────────────────
@@ -3956,22 +3980,33 @@
         function _fsUpdateVH() {
           var vv = window.visualViewport;
           if (!vv || !container.classList.contains('mp-ai--fs')) return;
-          container.style.height = vv.height + 'px';
-          container.style.top    = vv.offsetTop + 'px';
+          var fullH = window.innerHeight;
+          var kbH   = Math.max(0, fullH - vv.height - (vv.offsetTop || 0));
+          container.style.top           = '0px';
+          container.style.height        = fullH + 'px';
+          container.style.paddingBottom = kbH + 'px';
         }
 
-        var _fsSavedY = 0;
+        var _fsSavedY    = 0;
+        var _origParent  = null;
+        var _origNextSib = null;
 
         function _fsOpen() {
-          if (window.innerWidth >= 768) return;
-          // iOS Safari: position:fixed on body is the only reliable scroll lock.
-          // overflow:hidden alone does NOT prevent background touch-scroll on iOS.
+          if (window.innerWidth >= 768 || container.classList.contains('mp-ai--fs')) return;
           _fsSavedY = window.scrollY || window.pageYOffset || 0;
-          document.body.style.position = 'fixed';
-          document.body.style.top      = '-' + _fsSavedY + 'px';
-          document.body.style.width    = '100%';
-          document.body.classList.add('mp-ai-open');
+
+          // Move container to <body> so position:fixed is unambiguously viewport-relative.
+          // When the widget lives inside #mpApp, any ancestor stacking context (transforms,
+          // backdrop-filter, isolation) can make position:fixed relative to that ancestor
+          // instead of the viewport — causing page content to bleed through regardless of
+          // how top/height/background are set. Moving to body eliminates that class of bug.
+          _origParent  = container.parentNode;
+          _origNextSib = container.nextSibling;
           container.classList.add('mp-ai--fs');
+          document.body.appendChild(container);
+
+          document.documentElement.classList.add('mp-ai-open-root');
+          document.body.classList.add('mp-ai-open');
           _fsUpdateVH();
           setTimeout(function () {
             messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -3980,14 +4015,20 @@
 
         function _fsClose() {
           container.classList.remove('mp-ai--fs');
+          document.documentElement.classList.remove('mp-ai-open-root');
           document.body.classList.remove('mp-ai-open');
-          // Restore body BEFORE scrollTo — iOS requires this order.
-          document.body.style.position = '';
-          document.body.style.top      = '';
-          document.body.style.width    = '';
+
+          // Restore container to its original position in the page before scrolling back.
+          if (_origParent) {
+            _origParent.insertBefore(container, _origNextSib);
+            _origParent  = null;
+            _origNextSib = null;
+          }
+
           window.scrollTo(0, _fsSavedY);
-          container.style.height = '';
-          container.style.top    = '';
+          container.style.height        = '';
+          container.style.top           = '';
+          container.style.paddingBottom = '';
         }
 
         // Open on any tap/click inside the widget (not just input focus)
@@ -5041,23 +5082,30 @@
   function refreshGrid() {
     var grid = _container && _container.querySelector('.mp-grid');
     if (!grid || !_categoryId) return;
-    var region   = _getRegionName();
-    var bizList  = MARKETPLACE.getBusinesses(_categoryId, region);
-    if (!bizList.length) return; // fail-open — no vendors in region yet
-    var newHtml = bizList.map(function(b) { return renderBizCard(b); }).join('');
-    // Skip if nothing changed
-    if (grid.innerHTML === newHtml) return;
-    grid.style.transition = 'opacity 0.2s';
-    grid.style.opacity    = '0';
-    setTimeout(function() {
-      grid.innerHTML = newHtml;
-      grid.querySelectorAll('.mp-biz-card').forEach(function(card) {
-        card.addEventListener('click', function() {
-          window.location.href = '?id=' + card.getAttribute('data-id');
+    var region = _getRegionName();
+
+    function _applyList(bizList) {
+      if (!bizList.length) return; // fail-open — no vendors in region
+      var newHtml = bizList.map(function (b) { return renderBizCard(b); }).join('');
+      if (grid.innerHTML === newHtml) return; // nothing changed
+      grid.style.transition = 'opacity 0.2s';
+      grid.style.opacity    = '0';
+      setTimeout(function () {
+        grid.innerHTML = newHtml;
+        grid.querySelectorAll('.mp-biz-card').forEach(function (card) {
+          card.addEventListener('click', function () {
+            window.location.href = '?id=' + card.getAttribute('data-id');
+          });
         });
-      });
-      grid.style.opacity = '1';
-    }, 200);
+        grid.style.opacity = '1';
+      }, 200);
+    }
+
+    if (window.VendorDataService) {
+      VendorDataService.fetchVendors(_categoryId, region).then(_applyList);
+    } else {
+      _applyList(MARKETPLACE.getBusinesses(_categoryId, region));
+    }
   }
 
   window.Marketplace = {

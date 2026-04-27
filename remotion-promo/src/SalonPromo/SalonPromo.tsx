@@ -1,78 +1,45 @@
 import React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Series } from "remotion";
+import { SalonPromoProps } from "./schema";
+import { Scene1Intro } from "./components/Scene1Intro";
+import { Scene2Services } from "./components/Scene2Services";
+import { Scene3Ambiance } from "./components/Scene3Ambiance";
+import { Scene4CTA } from "./components/Scene4CTA";
 
-// Stub — replace with full implementation when ready
-export const SalonPromo: React.FC<{
-  salonName: string;
-  salonTagline: string;
-  accentColor: string;
-  phone: string;
-}> = ({ salonName, salonTagline, accentColor, phone }) => {
-  const frame = useCurrentFrame();
-  const { durationInFrames } = useVideoConfig();
+// Scene durations @ 30fps:
+//   Scene 1 Intro     : 105f  (3.5s)
+//   Scene 2 Services  : 195f  (6.5s)
+//   Scene 3 Ambiance  :  90f  (3.0s)
+//   Scene 4 CTA       : 105f  (3.5s)
+// With 3 × 15-frame crossfades:
+//   105 + (195-15) + (90-15) + (105-15) = 105 + 180 + 75 + 90 = 450 ✓
 
-  const opacity = interpolate(frame, [0, 20, durationInFrames - 20, durationInFrames], [0, 1, 1, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+const SCENE1_DUR = 105;
+const SCENE2_DUR = 195;
+const SCENE3_DUR =  90;
+const SCENE4_DUR = 105;
+const OVERLAP    =  15;
 
+export const SalonPromo: React.FC<SalonPromoProps> = (props) => {
   return (
-    <AbsoluteFill
-      style={{
-        background: `linear-gradient(135deg, #831843 0%, #4c1d95 100%)`,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "'Jost', sans-serif",
-        opacity,
-      }}
-    >
-      <div
-        style={{
-          color: accentColor,
-          fontSize: 36,
-          fontWeight: 600,
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          marginBottom: 24,
-        }}
-      >
-        Luxurious Nails & Spa
-      </div>
-      <div
-        style={{
-          color: "#fff8ee",
-          fontSize: 72,
-          fontWeight: 700,
-          textAlign: "center",
-          lineHeight: 1.1,
-          marginBottom: 32,
-          padding: "0 80px",
-        }}
-      >
-        {salonName}
-      </div>
-      <div
-        style={{
-          color: "#c8e4f8",
-          fontSize: 40,
-          textAlign: "center",
-          padding: "0 80px",
-          marginBottom: 60,
-        }}
-      >
-        {salonTagline}
-      </div>
-      <div
-        style={{
-          color: accentColor,
-          fontSize: 48,
-          fontWeight: 600,
-        }}
-      >
-        {phone}
-      </div>
+    <AbsoluteFill style={{ background: "#06000f" }}>
+      <Series>
+        <Series.Sequence durationInFrames={SCENE1_DUR}>
+          <Scene1Intro {...props} />
+        </Series.Sequence>
+
+        <Series.Sequence durationInFrames={SCENE2_DUR} offset={-OVERLAP}>
+          <Scene2Services {...props} />
+        </Series.Sequence>
+
+        <Series.Sequence durationInFrames={SCENE3_DUR} offset={-OVERLAP}>
+          <Scene3Ambiance {...props} />
+        </Series.Sequence>
+
+        <Series.Sequence durationInFrames={SCENE4_DUR} offset={-OVERLAP}>
+          <Scene4CTA {...props} />
+        </Series.Sequence>
+      </Series>
     </AbsoluteFill>
   );
 };

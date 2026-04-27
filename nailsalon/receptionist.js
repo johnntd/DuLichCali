@@ -98,11 +98,25 @@
         biz._bookingState[k] = val; return;
       }
       if (k === 'phone') {
-        var digits = String(val).replace(/\D/g, '');
-        if (digits.length < 7) {
-          console.warn('[mergeState] rejected invalid phone:', val); return;
+        var rawPhone = String(val);
+        var _PI = (typeof window !== 'undefined' && window.PhoneIntake)
+          ? window.PhoneIntake
+          : (typeof PhoneIntake !== 'undefined' ? PhoneIntake : null);
+        var normalized = _PI ? _PI.normalizeSpokenPhoneNumber(rawPhone, biz._bookingState.lang) : null;
+        var phoneDigits = normalized || rawPhone.replace(/\D/g, '');
+        // Normalize 11-digit +1 country code to 10 digits for consistent lookup
+        if (phoneDigits.length === 11 && phoneDigits.charAt(0) === '1') {
+          phoneDigits = phoneDigits.slice(1);
         }
-        biz._bookingState[k] = digits; return; // store digits only for consistent lookup
+        if (phoneDigits.length === 10) {
+          biz._bookingState[k] = phoneDigits; return; // full US number — store
+        }
+        if (phoneDigits.length >= 6) {
+          // Partial candidate — helper parsed something but it's not a complete number.
+          // Do NOT store; leave phone null so the AI asks for the full number.
+          console.warn('[mergeState] partial phone (not a full number):', val); return;
+        }
+        console.warn('[mergeState] rejected invalid phone:', val); return;
       }
       if (k === 'services') {
         if (!Array.isArray(val)) {

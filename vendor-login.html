@@ -394,7 +394,8 @@
     if (!vendorId) { window.location.href = 'vendor-admin.html'; return; }
     db.collection('vendors').doc(vendorId).get().then(function(vdoc) {
       var cat = vdoc.exists ? vdoc.data().category : null;
-      var page = (cat === 'nails' || cat === 'hair') ? 'salon-admin.html' : 'vendor-admin.html';
+      var _cat = (cat || '').toLowerCase();
+      var page = (_cat === 'nails' || _cat === 'hair') ? 'salon-admin.html' : 'vendor-admin.html';
       window.location.href = page + '?id=' + encodeURIComponent(vendorId);
     }).catch(function() { window.location.href = 'vendor-admin.html?id=' + encodeURIComponent(vendorId); });
   }
@@ -458,24 +459,45 @@
     var grid = document.getElementById('vendorGrid');
     grid.innerHTML = '<div style="text-align:center;color:var(--muted);padding:1.5rem;font-size:.8rem">Đang tải…</div>';
 
-    // Load active vendors from Firestore; fall back to VENDOR_REGISTRY
+    // Step 1: get all active vendors from Firestore
     db.collection('vendors').where('adminStatus', '==', 'active').get().then(function(snap) {
       var items = [];
       var seenIds = {};
-      // Firestore active vendors first
       snap.docs.forEach(function(doc) {
         var vid = doc.id;
         var data = doc.data();
         seenIds[vid] = true;
-        items.push({ id: vid, name: data.name || (VENDOR_REGISTRY[vid] && VENDOR_REGISTRY[vid].name) || vid });
+        items.push({ id: vid, name: data.name || data.businessName || (VENDOR_REGISTRY[vid] && VENDOR_REGISTRY[vid].name) || vid });
       });
-      // Registry vendors not in Firestore (treated as active by default)
-      Object.keys(VENDOR_REGISTRY).forEach(function(vid) {
-        if (!seenIds[vid]) items.push({ id: vid, name: VENDOR_REGISTRY[vid].name });
+
+      // Step 2: for VENDOR_REGISTRY entries not in active set,
+      // do individual doc reads to check — only add if truly absent from Firestore
+      // (i.e. no doc at all = pre-Firestore vendor). If doc exists but inactive → skip.
+      var missingIds = Object.keys(VENDOR_REGISTRY).filter(function(vid) { return !seenIds[vid]; });
+      if (!missingIds.length) { _renderPickerGrid(grid, items); return; }
+
+      Promise.all(missingIds.map(function(vid) {
+        return db.collection('vendors').doc(vid).get();
+      })).then(function(docs) {
+        docs.forEach(function(doc, i) {
+          var vid = missingIds[i];
+          if (!doc.exists) {
+            // No Firestore doc — legacy vendor, keep showing via registry
+            items.push({ id: vid, name: VENDOR_REGISTRY[vid].name });
+          }
+          // doc exists but adminStatus != 'active' → intentionally inactive, skip
+        });
+        _renderPickerGrid(grid, items);
+      }).catch(function() {
+        // Individual reads failed — include registry entries as fallback
+        missingIds.forEach(function(vid) {
+          items.push({ id: vid, name: VENDOR_REGISTRY[vid].name });
+        });
+        _renderPickerGrid(grid, items);
       });
-      _renderPickerGrid(grid, items);
+
     }).catch(function() {
-      // Firestore unavailable — fall back to registry
+      // Firestore completely unavailable — fall back to registry only
       var items = Object.keys(VENDOR_REGISTRY).map(function(vid) {
         return { id: vid, name: VENDOR_REGISTRY[vid].name };
       });
@@ -556,7 +578,8 @@
               });
             }
             var cat = vdoc.exists ? vdoc.data().category : null;
-            var _page = (cat === 'nails' || cat === 'hair') ? 'salon-admin.html' : 'vendor-admin.html';
+            var _cat2 = (cat || '').toLowerCase();
+            var _page = (_cat2 === 'nails' || _cat2 === 'hair') ? 'salon-admin.html' : 'vendor-admin.html';
             window.location.href = _page + '?id=' + encodeURIComponent(VENDOR_ID);
           });
         } else if (!doc.exists) {

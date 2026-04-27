@@ -15,7 +15,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <!-- Static salon data -->
-  <script src="marketplace/services-data.js?v=20260420b"></script>
+  <script src="marketplace/services-data.js?v=20260421f"></script>
   <!-- QR code generation — client-side, no API key, no data sent externally -->
   <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
 
@@ -2633,14 +2633,7 @@
       <div class="sa-field">
         <label data-i18n="lbl_role">Vai Trò</label>
         <select class="sa-select" id="staffRole">
-          <option value="" data-i18n="role_select">— Chọn vai trò —</option>
-          <option value="Nail Technician">Nail Technician</option>
-          <option value="Senior Nail Technician">Senior Nail Technician</option>
-          <option value="Lead Technician">Lead Technician</option>
-          <option value="Specialist">Specialist</option>
-          <option value="Nail Artist">Nail Artist</option>
-          <option value="Stylist">Stylist</option>
-          <option value="Manager">Manager</option>
+          <option value="">— Select role —</option>
         </select>
       </div>
       <div class="sa-field">
@@ -3267,19 +3260,47 @@
   var VENDOR_CATEGORY_MAP = {
     'nha-bep-cua-emily': 'food', 'pho-bac-bayarea': 'food', 'com-tam-oc': 'food',
     'luxurious-nails': 'nails',  'beauty-nails-oc': 'nails',
-    'viet-hair-bayarea': 'hair', 'cali-hair-oc': 'hair'
+    'viet-hair-bayarea': 'hair', 'cali-hair-oc': 'hair', 'beauty-hair-oc': 'hair'
   };
 
-  // ── Day metadata ─────────────────────────────────────────────────────────────
-  var SKILL_OPTIONS = [
+  // ── Specialty chips by category ───────────────────────────────────────────────
+  var ROLE_OPTIONS_NAILS = [
+    'Nail Technician', 'Senior Nail Technician', 'Lead Technician',
+    'Specialist', 'Nail Artist', 'Stylist', 'Manager'
+  ];
+
+  var ROLE_OPTIONS_HAIR = [
+    'Stylist', 'Senior Stylist', 'Lead Stylist', 'Colorist',
+    'Barber', 'Esthetician', 'Manager'
+  ];
+
+  function populateRoleSelect(selectedValue) {
+    var sel = document.getElementById('staffRole');
+    if (!sel) return;
+    var options = (VENDOR_CAT === 'hair') ? ROLE_OPTIONS_HAIR : ROLE_OPTIONS_NAILS;
+    sel.innerHTML = '<option value="">— Select role —</option>' +
+      options.map(function (r) {
+        return '<option value="' + r + '"' + (r === selectedValue ? ' selected' : '') + '>' + r + '</option>';
+      }).join('');
+  }
+
+  var SKILL_OPTIONS_NAILS = [
     'Manicure', 'Pedicure', 'Gel Nails', 'Acrylic', 'Ombre / Dip Powder',
     'Nail Art', 'Nail Repair', 'Eyelash Extensions', 'Waxing',
     'Hair Styling', 'Massage', 'Facial'
   ];
 
+  var SKILL_OPTIONS_HAIR = [
+    "Women's Cut", "Men's Cut", 'Blowout', 'Hair Styling', 'Updo / Event Style',
+    'Balayage', 'Highlights', 'Full Color', 'Root Touch-Up', 'Color Correction',
+    'Keratin Treatment', 'Deep Conditioning', 'Scalp Treatment',
+    'Hair Extensions', 'Braiding', 'Perms'
+  ];
+
   function buildSkillsGrid(selected) {
     var sel = selected || [];
-    return SKILL_OPTIONS.map(function (skill) {
+    var options = (VENDOR_CAT === 'hair') ? SKILL_OPTIONS_HAIR : SKILL_OPTIONS_NAILS;
+    return options.map(function (skill) {
       var isChecked = sel.indexOf(skill) !== -1;
       return '<label class="skill-chip' + (isChecked ? ' checked' : '') + '">' +
         '<input type="checkbox" value="' + skill + '"' + (isChecked ? ' checked' : '') + ' onchange="this.parentElement.classList.toggle(\'checked\',this.checked)">' +
@@ -3704,7 +3725,7 @@
         var vdata   = vdoc.exists ? vdoc.data() : {};
         var name    = vdata.businessName || vdata.name || vid;
         var cat     = vdata.category || '';
-        var catLabel = cat === 'nails' ? 'Nail Salon' : cat === 'hair' ? 'Hair Salon' : cat === 'food' ? 'Food Vendor' : cat;
+        var catLabel = (cat||'').toLowerCase() === 'nails' ? 'Nail Salon' : (cat||'').toLowerCase() === 'hair' ? 'Hair Salon' : (cat||'').toLowerCase() === 'food' ? 'Food Vendor' : cat;
         var btn = document.createElement('button');
         btn.style.cssText = [
           'background:rgba(255,255,255,.07);border:1px solid rgba(245,166,35,.3);',
@@ -3720,7 +3741,8 @@
         btn.onclick = function() {
           try { sessionStorage.setItem('dlc_vendor_id', vid); } catch(e) {}
           // For nails/hair → salon-admin; for food → vendor-admin
-          var page = (cat === 'nails' || cat === 'hair') ? 'salon-admin.html' : 'vendor-admin.html';
+          var _catLc = (cat || '').toLowerCase();
+          var page = (_catLc === 'nails' || _catLc === 'hair') ? 'salon-admin.html' : 'vendor-admin.html';
           window.location.href = page + '?id=' + encodeURIComponent(vid);
         };
         grid.appendChild(btn);
@@ -3777,7 +3799,11 @@
     // Seed vendor doc if missing
     vendorRef.get().then(function(doc) {
       if (!doc.exists) {
+        // Derive a setup code from last 4 digits of phone; fallback to random 4-digit PIN
+        var _phone    = String(staticData.phone || '').replace(/\D/g, '');
+        var _seedPin  = _phone.length >= 4 ? _phone.slice(-4) : String(Math.floor(1000 + Math.random() * 9000));
         vendorRef.set({
+          name:         staticData.name || '',
           businessName: staticData.name || '',
           category:     staticData.category || VENDOR_CAT,
           phone:        staticData.phone || '',
@@ -3786,6 +3812,8 @@
           description:  staticData.description || '',
           region:       staticData.region || '',
           city:         staticData.city || '',
+          adminStatus:  'active',
+          setupCode:    _seedPin,
           active:       true,
           createdAt:    ts(), updatedAt: ts()
         }).catch(function(){});
@@ -4220,6 +4248,7 @@
       document.getElementById('staffHireDate').value        = '';
       document.getElementById('staffPayNotes').value        = '';
       _onCompTypeChange();
+      populateRoleSelect('');
       document.getElementById('staffSkillsGrid').innerHTML  = buildSkillsGrid([]);
       document.getElementById('schedEditor').innerHTML = buildSchedEditor(null);
       return;
@@ -4237,7 +4266,7 @@
       document.getElementById('staffModalTitle').textContent = lb.modal_edit_staff;
       document.getElementById('staffDocId').value    = id;
       document.getElementById('staffName').value     = d.name || '';
-      document.getElementById('staffRole').value          = d.role || '';
+      populateRoleSelect(d.role || '');
       document.getElementById('staffLevel').value         = d.level || '';
       document.getElementById('staffEmploymentType').value = d.employmentType || '';
       document.getElementById('staffCommission').value    = d.commissionPct != null ? d.commissionPct : '';
@@ -9234,9 +9263,11 @@
       es: oldSub.es || subText
     };
 
+    var _rawPhone = document.getElementById('settingPhone').value.trim();
     var data = {
       businessName:       document.getElementById('settingName').value.trim(),
-      phoneDisplay:       document.getElementById('settingPhone').value.trim(),
+      phoneDisplay:       _rawPhone,
+      phone:              _rawPhone.replace(/\D/g, ''),
       address:            document.getElementById('settingAddress').value.trim(),
       description:        document.getElementById('settingDesc').value.trim(),
       parallelServices:   vendorParallelServices,

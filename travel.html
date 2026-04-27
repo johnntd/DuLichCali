@@ -67,6 +67,7 @@
     }
     .tp-price-bar__label { font-size: .72rem; color: var(--muted); }
     .tp-price-bar__amount { font-size: 1.3rem; font-weight: 600; color: var(--gold); line-height: 1; }
+    .tp-price-bar__region { font-size: .63rem; color: rgba(255,255,255,.38); margin-top: .18rem; }
 
     /* ── Section headers ── */
     .tp-section-head {
@@ -193,7 +194,9 @@
       width: 100%; background: var(--navy-900); border: 1px solid var(--border);
       border-radius: var(--r-md); padding: .75rem 1rem; color: var(--cream);
       font-size: .9rem; margin-bottom: 1rem;
+      color-scheme: dark; -webkit-appearance: none; appearance: none;
     }
+    .tp-date-input::-webkit-date-and-time-value { color: var(--cream); }
 
     /* Quote rows */
     .tp-quote-rows { margin-bottom: 1rem; }
@@ -220,6 +223,13 @@
       font-weight: 700; font-size: .95rem; cursor: pointer; margin-top: .5rem;
     }
 
+    /* Back link */
+    .tp-back-btn {
+      background: none; border: none; padding: 0; margin-bottom: .75rem;
+      font-size: .8rem; color: var(--muted); cursor: pointer; text-decoration: underline;
+    }
+    .tp-back-btn:hover { color: var(--gold); }
+
     /* Wizard inline error */
     .tp-wizard-error {
       display: none;
@@ -229,12 +239,49 @@
       margin-bottom: .75rem;
     }
 
+    /* Wizard hint (group minimum requirement) */
+    .tp-wizard__hint {
+      display: none;
+      font-size: .8rem; border-radius: var(--r-md);
+      padding: .55rem .85rem; margin-bottom: .75rem;
+    }
+    .tp-wizard__hint--info {
+      background: rgba(212,175,55,.1); border: 1px solid rgba(212,175,55,.3);
+      color: var(--gold);
+    }
+    .tp-wizard__hint--warn {
+      background: rgba(220,53,69,.1); border: 1px solid rgba(220,53,69,.3);
+      color: #ff8a93;
+    }
+    .tp-wizard__hint--ok {
+      background: rgba(52,199,89,.1); border: 1px solid rgba(52,199,89,.3);
+      color: #30d158;
+    }
+
     /* Success state */
     .tp-success { text-align: center; padding: 2rem 1rem; }
     .tp-success__icon { font-size: 3rem; margin-bottom: .75rem; }
-    .tp-success__title { font-family: var(--font-d); font-size: 1.4rem; color: var(--cream); margin-bottom: .5rem; }
+    .tp-success__title { font-family: var(--font-d); font-size: 1.4rem; color: var(--cream); margin-bottom: .75rem; }
     .tp-success__sub { font-size: .82rem; color: var(--muted); line-height: 1.6; }
     .tp-success__id { font-size: .75rem; color: var(--gold); margin-top: .75rem; font-family: monospace; letter-spacing: .05em; }
+
+    /* Confirmation breakdown */
+    .tp-success__breakdown {
+      background: rgba(255,255,255,.05); border: 1px solid var(--border);
+      border-radius: var(--r-md); padding: .75rem 1rem;
+      margin: 0 0 .85rem; text-align: left;
+    }
+    .tp-success__row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: .8rem; padding: .32rem 0;
+      color: var(--cream); border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .tp-success__row:last-of-type { border-bottom: none; }
+    .tp-success__row span:first-child { color: var(--muted); flex-shrink: 0; margin-right: .5rem; }
+    .tp-success__row span:last-child  { text-align: right; }
+    .tp-success__row--total { font-weight: 700; }
+    .tp-success__row--total span:last-child { color: var(--gold); }
+    .tp-success__note { font-size: .68rem; color: var(--muted); margin-top: .5rem; text-align: center; line-height: 1.5; }
 
     /* ── Attractions section ── */
     .tp-attr-list { display: flex; flex-direction: column; gap: .5rem; }
@@ -350,6 +397,7 @@
       <div class="tp-price-bar__label" data-i18n="tpFromLabel">From</div>
       <div class="tp-price-bar__amount" id="tpGroupPrice">$89</div>
       <div class="tp-price-bar__label" data-i18n="tpPerPersonLabel">per person (group)</div>
+      <div class="tp-price-bar__region" data-i18n="tpRegionPriceNote">Price varies by departure region</div>
     </div>
     <div style="text-align:right">
       <div class="tp-price-bar__label" data-i18n="tpPrivateLabel">Private from</div>
@@ -419,33 +467,42 @@
           <span class="tp-opt-btn__price" id="tpTypeGroupPrice">$89/person</span>
         </button>
       </div>
+      <div id="tpGroupMinInfo" class="tp-wizard__hint tp-wizard__hint--info"></div>
       <button class="tp-next-btn" id="tpStep1Next" data-i18n="tpNext">Next →</button>
     </div>
 
     <!-- Step 2: Travelers, date, region -->
     <div class="tp-wizard__step" id="tpStep2">
+      <button class="tp-back-btn" id="tpStep2Back">← Change tour type</button>
       <span class="tp-wizard__label" data-i18n="tpTravelersLabel">Number of travelers</span>
       <div class="tp-num-input">
         <button class="tp-num-btn" id="tpDecBtn" aria-label="Decrease">−</button>
         <span class="tp-num-val" id="tpTravelersVal">2</span>
         <button class="tp-num-btn" id="tpIncBtn" aria-label="Increase">+</button>
       </div>
-      <span class="tp-wizard__label" data-i18n="tpDateLabel">Tour date</span>
-      <input class="tp-date-input" type="date" id="tpDateInput" min="">
+      <div id="tpTravelersHint" class="tp-wizard__hint"></div>
       <span class="tp-wizard__label" data-i18n="tpPickupLabel">Your pickup location</span>
       <input class="tp-date-input" type="text" id="tpPickupInput"
              data-i18n-ph="tpPickupPh"
              placeholder="City or address (e.g. San Jose, CA)"
              autocomplete="off">
+      <div id="tpStep2Error" class="tp-wizard-error" role="alert"></div>
       <button class="tp-next-btn" id="tpStep2Next" data-i18n="tpNext">Next →</button>
     </div>
 
     <!-- Step 3: Quote + customer info -->
     <div class="tp-wizard__step" id="tpStep3">
+      <button class="tp-back-btn" id="tpStep3Back">← Back</button>
       <span class="tp-wizard__label" data-i18n="tpQuoteLabel">Your quote</span>
       <div class="tp-quote-rows" id="tpQuoteRows"></div>
+      <span class="tp-wizard__label" data-i18n="tpDateLabel">Tour date</span>
+      <input class="tp-date-input" type="date" id="tpDateInput" min="">
       <span class="tp-wizard__label" data-i18n="tpNameLabel">Your name</span>
       <input class="tp-field" type="text" id="tpCustName" placeholder="Full name" autocomplete="name">
+      <span class="tp-wizard__label" data-i18n="tpPickupFullLabel">Full pickup address</span>
+      <input class="tp-field" type="text" id="tpPickupFull"
+             placeholder="123 Main St, Santa Ana, CA 92701"
+             autocomplete="street-address">
       <span class="tp-wizard__label" data-i18n="tpPhoneLabel">Phone number</span>
       <input class="tp-field" type="tel" id="tpCustPhone" placeholder="+1 (408) 555-0100" autocomplete="tel">
       <span class="tp-wizard__label" data-i18n="tpEmailLabel">Email (optional — for confirmation)</span>
@@ -459,7 +516,8 @@
       <div class="tp-success">
         <div class="tp-success__icon">✅</div>
         <div class="tp-success__title" data-i18n="tpSuccessTitle">Booking Confirmed!</div>
-        <div class="tp-success__sub" data-i18n="tpSuccessSub">We'll call you within 2 hours to confirm details and send a confirmation SMS.</div>
+        <div class="tp-success__breakdown" id="tpSuccessBreakdown"></div>
+        <div class="tp-success__sub" data-i18n="tpSuccessSub">We'll call you within 2 hours to confirm details.</div>
         <div class="tp-success__id" id="tpSuccessId"></div>
       </div>
     </div>
@@ -472,10 +530,10 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-<script src="/travel-packages.js?v=20260416a"></script>
-<script src="/pricing.js?v=20260421h"></script>
-<script src="/notifications.js?v=20260421a"></script>
-<script src="/travel-booking.js?v=20260416b"></script>
+<script src="/travel-packages.js?v=20260417a"></script>
+<script src="/pricing.js?v=20260417a"></script>
+<script src="/notifications.js?v=20260421b"></script>
+<script src="/travel-booking.js?v=20260422a"></script>
 <script src="/landing-nav.js?v=20260421b"></script>
 
 <script>

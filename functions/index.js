@@ -1552,7 +1552,7 @@ async function serverCallOpenAI(system, userContent, jsonMode, openaiKey, maxTok
 async function serverCallGemini(prompt, geminiKey) {
   const raw = await httpsPost(
     'generativelanguage.googleapis.com',
-    `/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+    `/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
     {},
     { contents: [{ parts: [{ text: prompt }] }] }
   );

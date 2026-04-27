@@ -1,12 +1,10 @@
 # Patch: Shared Salon Customer Memory Booking Update
 
-## Execution Rule
+## Your role
 
-This update must be run through the guarded AI auto script:
-
-scripts/ai/ai_dev_loop.sh prompts/patch_shared_salon_customer_memory_booking_update.md --loops 3
-
-Do not implement manually outside the auto script unless the script fails and the user explicitly approves a manual fallback.
+You are the implementer. You have been invoked by the ai_dev_loop.sh automation script.
+Implement the code changes described in this prompt directly in the listed files.
+Do not run scripts. Do not call other tools. Just write the code.
 
 ## Allowed files
 

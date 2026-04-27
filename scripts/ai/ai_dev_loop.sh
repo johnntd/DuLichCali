@@ -455,11 +455,11 @@ run_implementer() {
   local impl_rc=0
   if [ -n "$timeout_bin" ]; then
     # GNU timeout / gtimeout available — preferred path.
-    $timeout_bin "$impl_timeout" codex exec "$prompt_content" 2>&1 | tee "$log_file" || impl_rc=$?
+    $timeout_bin "$impl_timeout" codex exec -s workspace-write "$prompt_content" 2>&1 | tee "$log_file" || impl_rc=$?
   else
     # Bash-native timeout watchdog: run implementer in background, watchdog kills it after
     # $impl_timeout seconds. Output buffered to log_file and streamed after completion.
-    codex exec "$prompt_content" > "$log_file" 2>&1 &
+    codex exec -s workspace-write "$prompt_content" > "$log_file" 2>&1 &
     local cmd_pid=$!
     ( sleep "$impl_timeout" 2>/dev/null
       if kill -0 "$cmd_pid" 2>/dev/null; then
@@ -484,7 +484,7 @@ run_implementer() {
   } | sort -u | grep -v '^$' )"
 
   {
-    echo "Command: ${timeout_bin:+$timeout_bin ${impl_timeout}s }codex exec (prompt as arg)"
+    echo "Command: ${timeout_bin:+$timeout_bin ${impl_timeout}s }codex exec -s workspace-write (prompt as arg)"
     echo "Prompt file: $prompt_file"
     echo "Timeout: ${impl_timeout}s"
     echo "Exit code: $impl_rc"

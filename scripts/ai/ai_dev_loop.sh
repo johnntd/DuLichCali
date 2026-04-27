@@ -426,7 +426,6 @@ run_implementer() {
   local loop_num="$2"
   local proof_file="$RUN_DIR/implementer_iter_${loop_num}.txt"
   local log_file="$RUN_DIR/codex_loop_${loop_num}.txt"
-  local impl_cmd="codex exec --dangerously-bypass-approvals-and-sandbox"
   local impl_timeout="$IMPLEMENTER_TIMEOUT"
 
   if ! command -v codex >/dev/null 2>&1; then
@@ -443,23 +442,24 @@ run_implementer() {
     timeout_bin="gtimeout"
   fi
 
+  # Read prompt content now — used as a shell argument (matching ai_trading_system pattern).
+  # Argument form avoids stdin interaction that codex may handle differently across platforms.
+  local prompt_content
+  prompt_content="$(cat "$prompt_file")"
+
   echo "== Running implementer (iteration $loop_num) =="
-  echo "  Command: ${timeout_bin:+$timeout_bin ${impl_timeout}s }$impl_cmd - (stdin)"
+  echo "  Command: ${timeout_bin:+$timeout_bin ${impl_timeout}s }codex exec (prompt as arg)"
   echo "  Prompt:  $prompt_file"
-  echo "  Timeout: ${impl_timeout}s${timeout_bin:+ via $timeout_bin}"
-  [ -z "$timeout_bin" ] && echo "  WARNING: no timeout binary found — running without timeout guard"
+  echo "  Timeout: ${impl_timeout}s${timeout_bin:+ via $timeout_bin}${timeout_bin:-" (bash-native watchdog)"}"
 
   local impl_rc=0
-  # Prompt via stdin avoids shell arg-length limits on large prompts.
-  # DANGER: --dangerously-bypass-approvals-and-sandbox skips all sandbox and approval prompts.
-  # Scope is enforced by check_scope() immediately after this step.
   if [ -n "$timeout_bin" ]; then
     # GNU timeout / gtimeout available — preferred path.
-    $timeout_bin "$impl_timeout" $impl_cmd - < "$prompt_file" 2>&1 | tee "$log_file" || impl_rc=$?
+    $timeout_bin "$impl_timeout" codex exec "$prompt_content" 2>&1 | tee "$log_file" || impl_rc=$?
   else
-    # Bash-native timeout fallback: run implementer in background, watchdog kills it after
-    # $impl_timeout seconds. Output is buffered to log_file and streamed after completion.
-    $impl_cmd - < "$prompt_file" > "$log_file" 2>&1 &
+    # Bash-native timeout watchdog: run implementer in background, watchdog kills it after
+    # $impl_timeout seconds. Output buffered to log_file and streamed after completion.
+    codex exec "$prompt_content" > "$log_file" 2>&1 &
     local cmd_pid=$!
     ( sleep "$impl_timeout" 2>/dev/null
       if kill -0 "$cmd_pid" 2>/dev/null; then
@@ -484,7 +484,7 @@ run_implementer() {
   } | sort -u | grep -v '^$' )"
 
   {
-    echo "Command: ${timeout_bin:+$timeout_bin ${impl_timeout}s }$impl_cmd - (prompt via stdin)"
+    echo "Command: ${timeout_bin:+$timeout_bin ${impl_timeout}s }codex exec (prompt as arg)"
     echo "Prompt file: $prompt_file"
     echo "Timeout: ${impl_timeout}s"
     echo "Exit code: $impl_rc"

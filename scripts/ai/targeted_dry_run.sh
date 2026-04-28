@@ -201,8 +201,27 @@ set +e
       check_grep "runner.js has PI-001 test" "PI-001" "tests/runner.js"
       check_grep "runner.js has PI-014 test" "PI-014" "tests/runner.js"
       check_grep "runner.js covers runtime Vietnamese mixed chunks" "4084 397 năm 22" "tests/runner.js"
+      check_grep "runner.js has Shared Salon Phone Context Runtime group" "Shared Salon Phone Context Runtime" "tests/runner.js"
+      check_grep "runner.js covers production failure phrase exactly" "À số điện thoại là 4084 397 năm 22\|à số điện thoại là 4084 397 năm 22" "tests/runner.js"
+      check_grep "runner.js covers năm digit word generally" "4084 397 năm 22" "tests/runner.js"
+      check_grep "runner.js covers bảy digit word generally" "4084 397 bảy 22" "tests/runner.js"
+      check_grep "runner.js covers tám digit word generally" "4084 397 tám 22" "tests/runner.js"
+      check_grep "runner.js covers sáu digit word generally" "4084 397 sáu 22" "tests/runner.js"
+      check_grep "runner.js covers non-phone Bảy name case" "Anh Bảy làm hôm nay không" "tests/runner.js"
+      check_grep "runner.js covers non-phone Tám name case" "Chị Tám có làm không" "tests/runner.js"
+      check_grep "runner.js covers non-phone Năm normal-word case" "Năm nay tôi muốn đặt lịch" "tests/runner.js"
+      check_grep "runner.js covers non-phone Sáu name case" "Tôi muốn gặp cô Sáu" "tests/runner.js"
       check_grep "receptionist.js has pre-AI direct phone confirmation" "directResponse: _buildPhoneConfirmReply" "nailsalon/receptionist.js"
-      check_grep "receptionist.js confirms Vietnamese phone deterministically" "Em xác nhận số điện thoại" "nailsalon/receptionist.js"
+      check_grep "receptionist.js detects phone context before parsing" "_hasSalonPhoneContext" "nailsalon/receptionist.js"
+      check_grep "receptionist.js tracks just-asked-phone state" "_expectingPhone" "nailsalon/receptionist.js"
+      check_grep "receptionist.js confirms Vietnamese phone deterministically" "Em nghe số điện thoại là" "nailsalon/receptionist.js"
+      check_grep "nailsalon/index.html loads shared phone-intake helper" "phone-intake\.js" "nailsalon/index.html"
+      check_grep "hairsalon/index.html loads shared phone-intake helper" "phone-intake\.js" "hairsalon/index.html"
+      if node tests/runner.js >/tmp/dulichcali_phone_intake_runner.log 2>&1; then
+        check_pass "node tests/runner.js passes"
+      else
+        check_fail "node tests/runner.js passes — see /tmp/dulichcali_phone_intake_runner.log"
+      fi
       ;;
 
     salon-memory)

@@ -1,0 +1,755 @@
+/* ================================================================
+   vendor-pricing.css  v20260501a
+   Shared styles for vendor-pricing.html and vendor-subscription.html.
+   Mobile-first. All media queries use min-width.
+   Uses CSS custom properties from style.css :root.
+   ================================================================ */
+
+/* ── 1. Page body override ──────────────────────────────────────
+   style.css sets:  html, body { height: 100%; }
+                    body        { overflow: hidden; }
+   These are correct for the SPA but must be reset for standalone
+   vendor pages. Using class selector wins the specificity battle
+   over style.css element selectors.
+   -webkit-overflow-scrolling enables momentum scroll on iOS.
+   ──────────────────────────────────────────────────────────────── */
+body.vpp-body {
+  height: auto;
+  min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  background: var(--navy-900);
+  font-family: var(--font-b);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* html height reset — required because style.css sets html { height: 100% }
+   which in combination with overflow:hidden on body locks iOS scroll.
+   Targeting html via :has() has iOS 16+ support; this inline approach
+   uses the fact that vpp-body overrides the body height, which is enough
+   when html has no overflow of its own. */
+body.vpp-body + html,
+html:has(body.vpp-body) {
+  height: auto;
+}
+
+/* ── 2. Visually hidden (a11y) ──────────────────────────────── */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* ── 3. Navigation ──────────────────────────────────────────── */
+.vpp-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-nav);
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.25rem;
+  background: rgba(13, 47, 80, .92);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border-bottom: 1px solid var(--border-g);
+  transition: background var(--dur-fast, .2s);
+}
+
+.vpp-nav__logo {
+  font-family: var(--font-d);
+  font-size: 1.15rem;
+  font-weight: 400;
+  color: var(--cream);
+  text-decoration: none;
+  letter-spacing: .02em;
+}
+.vpp-nav__logo:hover { color: var(--cream); }
+
+.vpp-nav__right {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+}
+
+/* ── 4. Button system ───────────────────────────────────────── */
+.vpp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--r-pill, 99px);
+  font-family: var(--font-b);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  white-space: nowrap;
+  transition: background .2s, transform .2s, box-shadow .2s, color .2s;
+  box-sizing: border-box;
+}
+
+.vpp-btn--sm  { font-size: .8rem;  padding: .45rem 1rem;   min-height: 36px; }
+.vpp-btn--lg  { font-size: 1rem;   padding: .85rem 2rem;   min-height: 48px; }
+.vpp-btn--xl  { font-size: 1.05rem; padding: .95rem 2.4rem; min-height: 52px; }
+
+.vpp-btn--gold {
+  background: var(--gold);
+  color: #1a1000;
+  box-shadow: 0 6px 20px rgba(245, 166, 35, .45);
+}
+.vpp-btn--gold:hover,
+.vpp-btn--gold:active {
+  background: var(--gold-lt);
+  color: #1a1000;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px rgba(245, 166, 35, .6);
+}
+
+.vpp-btn--ghost {
+  background: transparent;
+  color: var(--cream);
+  border: 1px solid rgba(255, 255, 255, .25);
+}
+.vpp-btn--ghost:hover,
+.vpp-btn--ghost:active {
+  background: rgba(255, 255, 255, .08);
+  color: var(--cream);
+  border-color: rgba(255, 255, 255, .42);
+}
+
+/* ── 5. Eyebrow pill label ──────────────────────────────────── */
+.vpp-eyebrow {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid rgba(245, 166, 35, .3);
+  border-radius: var(--r-pill, 99px);
+  padding: .3rem .85rem;
+  margin-bottom: 1rem;
+}
+
+/* ── 6. Hero ────────────────────────────────────────────────── */
+.vpp-hero {
+  position: relative;
+  padding: 120px 1.25rem 5rem;
+  text-align: center;
+  background: linear-gradient(180deg, #082440 0%, var(--navy-900) 100%);
+  overflow: hidden;
+}
+
+.vpp-hero__sentinel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.vpp-hero__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .8rem;
+  font-weight: 500;
+  color: var(--gold-lt);
+  background: rgba(245, 166, 35, .1);
+  border: 1px solid rgba(245, 166, 35, .28);
+  border-radius: var(--r-pill, 99px);
+  padding: .4rem 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+.vpp-hero__pill-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gold);
+  flex-shrink: 0;
+  animation: vpp-pulse 2s ease-in-out infinite;
+}
+
+@keyframes vpp-pulse {
+  0%, 100% { opacity: 1;  transform: scale(1);   }
+  50%       { opacity: .5; transform: scale(1.3); }
+}
+
+.vpp-hero__h1 {
+  font-family: var(--font-d);
+  font-size: clamp(2.4rem, 9vw, 5rem);
+  font-weight: 400;
+  color: var(--cream);
+  line-height: 1.06;
+  margin: 0 0 1.1rem;
+  letter-spacing: -.025em;
+}
+
+.vpp-hero__h1 em {
+  font-style: italic;
+  color: var(--gold-lt);
+}
+
+.vpp-hero__sub {
+  font-size: clamp(.92rem, 2.5vw, 1.1rem);
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 600px;
+  margin: 0 auto 2rem;
+  font-weight: 300;
+}
+
+.vpp-hero__ctas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .85rem;
+  margin-bottom: 2.5rem;
+}
+
+@media (min-width: 560px) {
+  .vpp-hero__ctas { flex-direction: row; justify-content: center; }
+}
+
+.vpp-hero__trust {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .4rem 1.5rem;
+  font-size: .78rem;
+  color: var(--muted);
+  font-weight: 300;
+}
+
+/* ── 7. Marquee proof bar ───────────────────────────────────── */
+.vpp-marquee {
+  overflow: hidden;
+  padding: 1rem 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: rgba(18, 59, 98, .5);
+}
+
+.vpp-marquee__track {
+  display: flex;
+  width: max-content;
+  animation: vpp-marquee 30s linear infinite;
+  will-change: transform;
+}
+
+@keyframes vpp-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vpp-marquee__track { animation: none; }
+}
+
+.vpp-marquee__item {
+  font-size: .8rem;
+  color: var(--muted);
+  white-space: nowrap;
+  padding: 0 1.25rem;
+}
+
+.vpp-marquee__sep {
+  color: var(--border-g);
+  white-space: nowrap;
+  align-self: center;
+}
+
+/* ── 8. Section layout ──────────────────────────────────────── */
+.vpp-section {
+  padding: 4.5rem 1.25rem;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.vpp-section-hd {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto 2.75rem;
+}
+
+.vpp-section-title {
+  font-family: var(--font-d);
+  font-size: clamp(1.6rem, 5vw, 2.6rem);
+  font-weight: 400;
+  color: var(--cream);
+  line-height: 1.18;
+  margin: 0 0 .85rem;
+  letter-spacing: -.02em;
+}
+
+.vpp-section-sub {
+  font-size: clamp(.86rem, 2vw, 1rem);
+  color: var(--muted);
+  line-height: 1.7;
+  margin: 0;
+  font-weight: 300;
+}
+
+/* ── 9. Pricing section + card grid ─────────────────────────── */
+.vpp-pricing {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.vpp-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  max-width: 1060px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .vpp-cards {
+    grid-template-columns: repeat(3, 1fr);
+    align-items: start;
+  }
+}
+
+/* ── 10. Plan card ──────────────────────────────────────────── */
+.vpp-plan-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: rgba(18, 59, 98, .65);
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 20px;
+  padding: 2rem 1.5rem 1.75rem;
+  box-shadow: var(--shadow-card, 0 8px 28px rgba(0,0,0,.3));
+  transition: transform .2s, box-shadow .2s;
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+@media (hover: hover) {
+  .vpp-plan-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, .4);
+  }
+}
+
+.vpp-plan-card--highlight {
+  background: rgba(25, 74, 120, .8);
+  border-color: rgba(245, 166, 35, .5);
+  box-shadow: 0 8px 32px rgba(245, 166, 35, .18), var(--shadow-card, 0 8px 28px rgba(0,0,0,.3));
+}
+
+@media (hover: hover) {
+  .vpp-plan-card--highlight:hover {
+    box-shadow: 0 16px 44px rgba(245, 166, 35, .28), 0 14px 40px rgba(0, 0, 0, .4);
+  }
+}
+
+/* ── 11. Plan badge ─────────────────────────────────────────── */
+.vpp-plan-badge {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--gold);
+  color: #1a1000;
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: .28rem .85rem;
+  border-radius: var(--r-pill, 99px);
+  white-space: nowrap;
+  box-shadow: 0 3px 10px rgba(245, 166, 35, .5);
+}
+
+/* ── 12. Plan name / price / description ────────────────────── */
+.vpp-plan-name {
+  font-family: var(--font-d);
+  font-size: 1.4rem;
+  font-weight: 400;
+  color: var(--cream);
+  margin: .2rem 0 .75rem;
+  letter-spacing: -.01em;
+}
+
+.vpp-plan-price {
+  display: flex;
+  align-items: baseline;
+  gap: .15rem;
+  margin-bottom: .85rem;
+  line-height: 1;
+}
+
+.vpp-plan-price__sign {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--gold-lt);
+  align-self: flex-start;
+  margin-top: .5rem;
+}
+
+.vpp-plan-price__num {
+  font-family: var(--font-d);
+  font-size: 3rem;
+  font-weight: 400;
+  color: var(--cream);
+  line-height: 1;
+  letter-spacing: -.03em;
+}
+
+.vpp-plan-price__mo {
+  font-size: .8rem;
+  color: var(--muted);
+  font-weight: 300;
+  margin-left: .1rem;
+}
+
+.vpp-plan-desc {
+  font-size: .86rem;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0 0 1rem;
+  font-weight: 300;
+}
+
+/* ── 13. Divider ────────────────────────────────────────────── */
+.vpp-plan-rule {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, .1);
+  margin: .65rem 0 1rem;
+}
+
+.vpp-plan-card--highlight .vpp-plan-rule {
+  border-color: rgba(245, 166, 35, .18);
+}
+
+/* ── 14. Feature list ───────────────────────────────────────── */
+.vpp-plan-features {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  flex: 1;
+}
+
+.vpp-plan-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: .6rem;
+  font-size: .84rem;
+  color: var(--text);
+  padding: .35rem 0;
+  line-height: 1.45;
+  border-bottom: 1px solid rgba(255, 255, 255, .05);
+}
+
+.vpp-plan-feature:last-child { border-bottom: none; }
+
+.vpp-plan-feature--off { color: rgba(140, 198, 224, .38); }
+
+.vpp-plan-feature__dot {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(245, 166, 35, .16);
+  color: var(--gold);
+  font-size: .72rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: .05rem;
+}
+
+.vpp-plan-feature__dot--off {
+  background: rgba(255, 255, 255, .06);
+  color: rgba(140, 198, 224, .3);
+}
+
+/* ── 15. Plan CTA button ────────────────────────────────────── */
+.vpp-plan-cta {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: .875rem 1.25rem;
+  border: none;
+  border-radius: var(--r-pill, 99px);
+  font-family: var(--font-b);
+  font-size: .95rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  transition: background .2s, transform .2s, box-shadow .2s, color .2s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  box-sizing: border-box;
+}
+
+.vpp-plan-cta--highlight {
+  background: var(--gold);
+  color: #1a1000;
+  box-shadow: 0 6px 20px rgba(245, 166, 35, .45);
+}
+.vpp-plan-cta--highlight:hover,
+.vpp-plan-cta--highlight:active {
+  background: var(--gold-lt);
+  color: #1a1000;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(245, 166, 35, .6);
+}
+
+.vpp-plan-cta--secondary {
+  background: rgba(255, 255, 255, .08);
+  color: var(--cream);
+  border: 1px solid rgba(255, 255, 255, .18);
+}
+.vpp-plan-cta--secondary:hover,
+.vpp-plan-cta--secondary:active {
+  background: rgba(255, 255, 255, .14);
+  color: var(--cream);
+  border-color: rgba(255, 255, 255, .3);
+}
+
+/* ── 16. Plan fine print ────────────────────────────────────── */
+.vpp-plan-fine {
+  font-size: .74rem;
+  color: var(--muted);
+  text-align: center;
+  margin: .7rem 0 0;
+  font-weight: 300;
+  opacity: .7;
+}
+
+/* ── 17. ROI section ────────────────────────────────────────── */
+.vpp-roi__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  max-width: 880px;
+  margin: 0 auto 2.5rem;
+}
+
+@media (min-width: 600px) {
+  .vpp-roi__grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 960px) {
+  .vpp-roi__grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.vpp-roi__quote {
+  text-align: center;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.vpp-roi__quote blockquote {
+  font-family: var(--font-d);
+  font-size: clamp(1.2rem, 3.5vw, 1.85rem);
+  font-style: italic;
+  color: var(--gold-lt);
+  margin: 0;
+  padding: 0;
+  border: none;
+  line-height: 1.4;
+}
+
+/* ── 18. Benefits + use-case grids ─────────────────────────── */
+.vpp-benefits__grid,
+.vpp-usecases__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.1rem;
+  max-width: 1060px;
+  margin: 0 auto;
+}
+
+@media (min-width: 600px) {
+  .vpp-benefits__grid,
+  .vpp-usecases__grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 1024px) {
+  .vpp-benefits__grid,
+  .vpp-usecases__grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ── 19. Final CTA section ──────────────────────────────────── */
+.vpp-cta-section {
+  background: linear-gradient(135deg, #0a2e4e 0%, #0d2f50 60%, #0f3660 100%);
+  border-top: 1px solid rgba(245, 166, 35, .18);
+  border-bottom: 1px solid rgba(245, 166, 35, .18);
+  padding: 5rem 1.25rem;
+  text-align: center;
+}
+
+.vpp-cta-section__inner {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.vpp-cta-section__h2 {
+  font-family: var(--font-d);
+  font-size: clamp(2rem, 7vw, 3.5rem);
+  font-weight: 400;
+  color: var(--cream);
+  line-height: 1.1;
+  margin: 0 0 1rem;
+  letter-spacing: -.025em;
+}
+
+.vpp-cta-section__sub {
+  font-size: clamp(.88rem, 2.2vw, 1.05rem);
+  color: var(--muted);
+  line-height: 1.7;
+  margin: 0 0 2.25rem;
+  font-weight: 300;
+}
+
+.vpp-cta-section__trust {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .4rem 1.5rem;
+  font-size: .78rem;
+  color: var(--muted);
+  margin-top: 1.25rem;
+  font-weight: 300;
+}
+
+/* ── 20. Footer ─────────────────────────────────────────────── */
+.vpp-footer {
+  border-top: 1px solid var(--border);
+  padding: 2.5rem 1.25rem 3rem;
+  background: rgba(7, 33, 58, .6);
+  box-sizing: border-box;
+}
+
+.vpp-footer__inner {
+  max-width: 1060px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.75rem;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .vpp-footer__inner {
+    grid-template-columns: auto 1fr auto;
+    text-align: left;
+    align-items: start;
+  }
+}
+
+.vpp-footer__logo {
+  font-family: var(--font-d);
+  font-size: 1.05rem;
+  font-weight: 400;
+  color: var(--cream);
+  letter-spacing: .02em;
+}
+
+.vpp-footer__tag {
+  font-size: .78rem;
+  color: var(--muted);
+  margin: .3rem 0 0;
+  font-weight: 300;
+}
+
+.vpp-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .5rem 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .vpp-footer__links {
+    justify-content: flex-start;
+    flex-direction: column;
+    gap: .55rem;
+  }
+}
+
+.vpp-footer__links a {
+  font-size: .82rem;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color .2s;
+}
+.vpp-footer__links a:hover { color: var(--cream); }
+
+.vpp-footer__copy {
+  font-size: .75rem;
+  color: rgba(140, 198, 224, .4);
+  margin: 0;
+  font-weight: 300;
+}
+
+/* ── 21. Sticky mobile CTA bar ──────────────────────────────── */
+.vpp-sticky {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-nav, 40);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .8rem 1.25rem;
+  padding-bottom: calc(.8rem + env(safe-area-inset-bottom, 0px));
+  background: rgba(13, 47, 80, .97);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  border-top: 1px solid rgba(245, 166, 35, .22);
+  transform: translateY(100%);
+  transition: transform .3s ease;
+}
+
+.vpp-sticky.vpp-sticky--visible {
+  transform: translateY(0);
+}
+
+@media (min-width: 768px) {
+  .vpp-sticky { display: none; }
+}
+
+.vpp-sticky__from {
+  font-size: .85rem;
+  color: var(--muted);
+  font-weight: 300;
+}
+
+.vpp-sticky__price {
+  color: var(--gold-lt);
+  font-weight: 600;
+}
+
+.vpp-sticky__btn { font-size: .85rem; }
+
+/* ── 22. Desktop layout overrides (1200px+) ─────────────────── */
+@media (min-width: 1200px) {
+  .vpp-hero { padding: 140px 2rem 6rem; }
+
+  .vpp-section { padding: 5.5rem 2rem; }
+
+  .vpp-hero__h1 { font-size: 5rem; }
+}

@@ -12,12 +12,19 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,300;0,6..96,400;1,6..96,300;1,6..96,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-  <!-- Design system + existing plan-card styles — no new CSS file needed -->
+  <!-- Design system + plan-card styles -->
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="vendor-pricing.css?v=20260414a">
+  <link rel="stylesheet" href="desktop.css">
+  <link rel="stylesheet" href="vendor-pricing.css?v=20260501a">
 
-  <!-- Page-specific overrides (minimal — cards handled by vendor-pricing.css) -->
+  <!-- Page-specific overrides -->
   <style>
+    /* Reset SPA scroll lock from style.css (html,body{height:100%} + body{overflow:hidden})
+       body.vpp-body has higher specificity than body, but html needs an explicit reset.
+       Inline style here loads AFTER all link tags, so wins same-specificity cascade. */
+    html { height: auto; }
+    body.vpp-body { height: auto; min-height: 100vh; overflow-y: auto; overflow-x: hidden;
+                    -webkit-overflow-scrolling: touch; }
     /* ── Subscription nav (simpler than marketing nav) ───── */
     .vsub-nav {
       position: fixed;

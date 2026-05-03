@@ -99,11 +99,6 @@ service cloud.firestore {
       allow read:   if request.auth != null;
     }
 
-    // ── Food promo studio projects — auth only (vendor + admin tool) ──────────────
-    match /food_promo_projects/{projectId} {
-      allow read, write: if request.auth != null;
-    }
-
     // ── AI escalations — public create+read, auth update ─────────────────────────
     match /escalations/{escalationId} {
       allow create: if true;

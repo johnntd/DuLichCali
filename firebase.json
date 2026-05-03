@@ -46,9 +46,7 @@
       { "source": "/vendor-onboarding", "destination": "/vendor-onboarding.html" },
       { "source": "/vendor",               "destination": "/vendor-detail.html" },
       { "source": "/vendor-subscription",  "destination": "/vendor-subscription.html" },
-      { "source": "/vendor-signup",         "destination": "/vendor-signup.html" },
-      { "source": "/ai-food-video-studio", "destination": "/ai-food-video-studio.html" },
-      { "source": "/ai-food-video-studio/**", "destination": "/ai-food-video-studio.html" }
+      { "source": "/vendor-signup",         "destination": "/vendor-signup.html" }
     ],
     "headers": [
       {

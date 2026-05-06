@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Privacy Policy — Du Lịch Cali</title>
-  <meta name="description" content="Privacy Policy for Du Lịch Cali — California travel, airport transfer, and marketplace services.">
+  <title>SMS Opt-In Disclosure — Du Lịch Cali</title>
+  <meta name="description" content="SMS opt-in disclosure for Du Lịch Cali — how users consent to transactional SMS messages.">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -112,6 +112,60 @@
       content: '·'; position: absolute; left: 0; color: var(--gold); font-weight: 700;
     }
 
+    .doc-section ol {
+      list-style: none; margin: .5rem 0 .85rem; padding: 0;
+      counter-reset: opt-in-steps;
+    }
+    .doc-section ol li {
+      font-size: .93rem; color: var(--text);
+      padding: .4rem 0 .4rem 2rem; position: relative;
+      counter-increment: opt-in-steps;
+    }
+    .doc-section ol li::before {
+      content: counter(opt-in-steps);
+      position: absolute; left: 0;
+      width: 1.4rem; height: 1.4rem;
+      background: rgba(245,166,35,0.18);
+      border: 1px solid rgba(245,166,35,0.35);
+      border-radius: 50%;
+      color: var(--gold-lt);
+      font-size: .72rem; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+      top: .45rem;
+    }
+
+    /* Checkbox disclosure example box */
+    .consent-box {
+      background: rgba(18,59,98,.55);
+      border: 1px solid rgba(245,166,35,0.28);
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      margin: 1.25rem 0;
+    }
+    .consent-box__label {
+      display: flex; align-items: flex-start; gap: .75rem;
+      cursor: default;
+    }
+    .consent-box__checkbox {
+      flex-shrink: 0;
+      width: 18px; height: 18px;
+      margin-top: .2rem;
+      appearance: none; -webkit-appearance: none;
+      border: 2px solid rgba(245,166,35,0.55);
+      border-radius: 4px;
+      background: transparent;
+    }
+    .consent-box__text {
+      font-size: .88rem; color: var(--text); line-height: 1.6;
+    }
+    .consent-box__text a { color: var(--gold-lt); text-decoration: underline; }
+    .consent-box__text a:hover { color: var(--cream); }
+    .consent-box__caption {
+      margin-top: .75rem;
+      font-size: .78rem; color: var(--muted);
+      font-style: italic;
+    }
+
     .contact-box {
       background: rgba(25,74,120,.45);
       border: 1px solid rgba(245,166,35,0.22);
@@ -129,7 +183,7 @@
     }
     .site-footer a { color: var(--muted); text-decoration: none; }
     .site-footer a:hover { color: var(--text); }
-    .site-footer__links { display: flex; justify-content: center; gap: 1.5rem; margin-bottom: .75rem; }
+    .site-footer__links { display: flex; justify-content: center; gap: 1.5rem; margin-bottom: .75rem; flex-wrap: wrap; }
 
     @media (min-width: 768px) { .page-wrap { padding: 3.5rem 2.5rem 5rem; } }
     @media (min-width: 1200px) { .page-wrap { padding: 4rem 3rem 6rem; } }
@@ -150,76 +204,80 @@
   <main class="page-wrap">
 
     <div class="doc-header">
-      <div class="doc-header__eyebrow">Legal</div>
-      <h1 class="doc-header__title">Privacy Policy</h1>
-      <p class="doc-header__meta">Last updated: April 3, 2026 &nbsp;·&nbsp; Du Lịch Cali</p>
+      <div class="doc-header__eyebrow">Compliance</div>
+      <h1 class="doc-header__title">SMS Opt-In Disclosure</h1>
+      <p class="doc-header__meta">Last updated: May 5, 2026 &nbsp;·&nbsp; Du Lịch Cali</p>
     </div>
 
     <div class="doc-section">
-      <h2>Company Information</h2>
-      <p>This website and services are operated by <strong>JDNETWORKS AI SERVICES LLC</strong>.</p>
-      <p>We are responsible for the collection, use, and protection of your information in accordance with this Privacy Policy.</p>
+      <p>DuLichCali sends transactional SMS messages only to users who request a booking, food order, airport pickup/ride, or service inquiry on our website.</p>
     </div>
 
     <div class="doc-section">
-      <p>Du Lịch Cali ("we", "our", or "us") operates the website <strong>https://www.dulichcali21.com</strong>. This Privacy Policy explains how we collect, use, and protect your personal information.</p>
+      <h2>How users opt in</h2>
+      <ol>
+        <li>User visits <a href="https://www.dulichcali21.com" style="color:var(--gold-lt)">https://www.dulichcali21.com</a></li>
+        <li>User selects a service such as salon booking, food order, airport pickup/ride request, or service inquiry</li>
+        <li>User enters their name, mobile phone number, and request details</li>
+        <li>Before submitting, user must actively check an <strong>unchecked</strong> SMS consent checkbox</li>
+        <li>User then clicks <em>Confirm Booking</em>, <em>Place Order</em>, <em>Request Ride</em>, or <em>Submit Request</em></li>
+        <li>SMS is sent only for updates related to that user's own request</li>
+      </ol>
     </div>
 
     <div class="doc-section">
-      <h2>1. Information We Collect</h2>
+      <h2>Consent checkbox</h2>
+      <p>The following checkbox appears unchecked on every booking, order, and ride request form. Users must actively check it before submitting:</p>
+      <div class="consent-box">
+        <label class="consent-box__label">
+          <input type="checkbox" class="consent-box__checkbox" disabled aria-label="SMS consent checkbox — shown unchecked by default">
+          <span class="consent-box__text">
+            I agree to receive transactional SMS messages from DuLichCali about my booking, order, ride, or service request, including confirmations, updates, reminders, and support replies. Message frequency varies. Message and data rates may apply. Reply STOP to unsubscribe or HELP for help. Consent is not required to purchase. View our <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>.
+          </span>
+        </label>
+        <p class="consent-box__caption">Above: the checkbox as it appears to users — unchecked by default. Submission is blocked until the user actively checks it.</p>
+      </div>
+    </div>
+
+    <div class="doc-section">
+      <h2>Message types</h2>
+      <p>All SMS messages sent through this campaign are transactional:</p>
       <ul>
-        <li>Name</li>
-        <li>Phone number</li>
-        <li>Booking/service details</li>
-        <li>Location (for coordination)</li>
-        <li>Device/usage data</li>
+        <li>Appointment confirmations</li>
+        <li>Booking updates</li>
+        <li>Appointment reminders</li>
+        <li>Food order confirmations</li>
+        <li>Order ready notices</li>
+        <li>Airport pickup or ride updates</li>
+        <li>Customer support replies related to the user's request</li>
       </ul>
     </div>
 
     <div class="doc-section">
-      <h2>2. How We Use Data</h2>
-      <ul>
-        <li>Process bookings</li>
-        <li>Connect customers with vendors</li>
-        <li>Send confirmations and updates</li>
-        <li>Improve service</li>
-      </ul>
+      <h2>No marketing SMS</h2>
+      <p>DuLichCali does not use this SMS campaign for marketing, advertising, promotions, abandoned-cart messages, or unsolicited outreach.</p>
     </div>
 
     <div class="doc-section">
-      <h2>3. Sharing</h2>
-      <p>Shared only with:</p>
-      <ul>
-        <li>Vendors (for fulfilling requests)</li>
-        <li>Firebase (hosting/database)</li>
-        <li>Google Maps (navigation)</li>
-      </ul>
-      <p><strong>We DO NOT sell data.</strong></p>
+      <h2>Opt out and help</h2>
+      <p>Users can reply <strong>STOP</strong> to unsubscribe or <strong>HELP</strong> for help. Message frequency varies. Message and data rates may apply.</p>
     </div>
 
     <div class="doc-section">
-      <h2>4. Security</h2>
-      <p>Data stored securely via Firebase with industry-standard encryption in transit and at rest.</p>
-    </div>
-
-    <div class="doc-section">
-      <h2>5. California Rights</h2>
-      <p>Users may request:</p>
-      <ul>
-        <li>Data access</li>
-        <li>Deletion</li>
-        <li>Usage explanation</li>
-      </ul>
-      <p>To exercise these rights, contact us using the information below.</p>
-    </div>
-
-    <div class="doc-section">
-      <h2>6. Contact</h2>
+      <h2>Contact</h2>
       <div class="contact-box">
         <p><strong>Du Lịch Cali</strong></p>
         <p>Email: <a href="mailto:dulichcali21@gmail.com">dulichcali21@gmail.com</a></p>
         <p>Website: <a href="https://www.dulichcali21.com">www.dulichcali21.com</a></p>
       </div>
+    </div>
+
+    <div class="doc-section">
+      <h2>Legal</h2>
+      <ul>
+        <li><a href="/privacy" style="color:var(--gold-lt)">Privacy Policy</a></li>
+        <li><a href="/terms" style="color:var(--gold-lt)">Terms of Service</a></li>
+      </ul>
     </div>
 
   </main>

@@ -171,14 +171,17 @@
     var db = _db();
     return db.collection('vendors').doc(vendorId).collection('inventory')
       .where('active', '==', true)
-      .orderBy('category')
-      .orderBy('name')
       .get()
       .then(function (snap) {
         return snap.docs
           .map(function (doc) { return Object.assign({ id: doc.id }, doc.data()); })
           .filter(function (item) {
             return Number(item.currentQty) <= Number(item.minQty);
+          })
+          .sort(function (a, b) {
+            var ca = (a.category || '').toLowerCase(), cb = (b.category || '').toLowerCase();
+            if (ca !== cb) return ca < cb ? -1 : 1;
+            return (a.name || '').toLowerCase() < (b.name || '').toLowerCase() ? -1 : 1;
           });
       })
       .catch(function () {

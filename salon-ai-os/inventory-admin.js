@@ -339,11 +339,13 @@
     return new Promise(function (resolve, reject) {
       state.unsubscribe = inventoryRef()
         .where('active', '==', true)
-        .orderBy('category')
-        .orderBy('name')
         .onSnapshot(function (snap) {
           state.items = snap.docs.map(function (doc) {
             return Object.assign({ id: doc.id }, doc.data());
+          }).sort(function (a, b) {
+            var ca = (a.category || '').toLowerCase(), cb = (b.category || '').toLowerCase();
+            if (ca !== cb) return ca < cb ? -1 : 1;
+            return (a.name || '').toLowerCase() < (b.name || '').toLowerCase() ? -1 : 1;
           });
           state.loading = false;
           state.error = '';

@@ -136,12 +136,14 @@
     if (!state.vendorId || !state.db) return Promise.reject(new Error(_T('sm_err_not_init')));
     return inventoryColRef()
       .where('active', '==', true)
-      .orderBy('category')
-      .orderBy('name')
       .get()
       .then(function (snap) {
         state.inventory = snap.docs.map(function (doc) {
           return Object.assign({ id: doc.id }, doc.data());
+        }).sort(function (a, b) {
+          var ca = (a.category || '').toLowerCase(), cb = (b.category || '').toLowerCase();
+          if (ca !== cb) return ca < cb ? -1 : 1;
+          return (a.name || '').toLowerCase() < (b.name || '').toLowerCase() ? -1 : 1;
         });
         return state.inventory;
       })

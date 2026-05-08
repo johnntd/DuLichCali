@@ -19,3 +19,6 @@ dulichcali-booking-calendar-*.json
 
 # Firebase local deploy cache
 .firebase/
+
+# MCP config (contains API keys — never commit)
+.mcp.json

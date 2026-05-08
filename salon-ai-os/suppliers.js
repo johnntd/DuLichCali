@@ -5,12 +5,18 @@
   // Phase 4: Supplier records and restock order drafting.
   // NEVER auto-orders. All orders are DRAFTS until explicitly marked ordered.
 
-  var ORDER_STATUSES = [
-    { value: 'draft',     label: 'Nháp',        cls: 'sup-st--draft' },
-    { value: 'ordered',   label: 'Đã đặt',      cls: 'sup-st--ordered' },
-    { value: 'received',  label: 'Đã nhận',     cls: 'sup-st--received' },
-    { value: 'cancelled', label: 'Đã huỷ',      cls: 'sup-st--cancelled' }
-  ];
+  function _T(key) {
+    return (window.SalonI18n && window.SalonI18n.t) ? window.SalonI18n.t(key) : key;
+  }
+
+  function ORDER_STATUSES() {
+    return [
+      { value: 'draft',     label: _T('sup_status_draft'),     cls: 'sup-st--draft' },
+      { value: 'ordered',   label: _T('sup_status_ordered'),   cls: 'sup-st--ordered' },
+      { value: 'received',  label: _T('sup_status_received'),  cls: 'sup-st--received' },
+      { value: 'cancelled', label: _T('sup_status_cancelled'), cls: 'sup-st--cancelled' }
+    ];
+  }
 
   var state = {
     vendorId: '',
@@ -45,12 +51,12 @@
   }
 
   function orderStatusLabel(status) {
-    var found = ORDER_STATUSES.find(function (s) { return s.value === status; });
+    var found = ORDER_STATUSES().find(function (s) { return s.value === status; });
     return found ? found.label : status;
   }
 
   function orderStatusCls(status) {
-    var found = ORDER_STATUSES.find(function (s) { return s.value === status; });
+    var found = ORDER_STATUSES().find(function (s) { return s.value === status; });
     return found ? found.cls : '';
   }
 
@@ -76,7 +82,7 @@
 
   function sanitizeSupplierData(data, isCreate) {
     var name = String(data.name || '').trim();
-    if (!name) throw new Error('Vui lòng nhập tên nhà cung cấp.');
+    if (!name) throw new Error(_T('sup_err_name_required'));
 
     var payload = {
       name: name,
@@ -104,7 +110,7 @@
   // ── Public API: loadSuppliers ───────────────────────────────────────────────
 
   function loadSuppliers() {
-    if (!state.vendorId || !state.db) return Promise.reject(new Error('SalonSuppliers chưa được khởi tạo.'));
+    if (!state.vendorId || !state.db) return Promise.reject(new Error(_T('sup_err_not_init')));
 
     if (state.unsubSuppliers) {
       state.unsubSuppliers();
@@ -123,7 +129,7 @@
           render();
           resolve(state.suppliers);
         }, function (err) {
-          state.error = err.message || 'Không thể tải nhà cung cấp.';
+          state.error = err.message || _T('sup_err_load_failed');
           render();
           reject(err);
         });
@@ -133,7 +139,7 @@
   // ── Public API: loadOrders ──────────────────────────────────────────────────
 
   function loadOrders() {
-    if (!state.vendorId || !state.db) return Promise.reject(new Error('SalonSuppliers chưa được khởi tạo.'));
+    if (!state.vendorId || !state.db) return Promise.reject(new Error(_T('sup_err_not_init')));
     return ordersColRef()
       .orderBy('createdAt', 'desc')
       .limit(50)
@@ -146,7 +152,7 @@
         return state.orders;
       })
       .catch(function (err) {
-        state.error = err.message || 'Không thể tải đơn đặt hàng.';
+        state.error = err.message || _T('sup_err_load_orders');
         render();
         return [];
       });
@@ -155,7 +161,7 @@
   // ── Public API: addSupplier ─────────────────────────────────────────────────
 
   function addSupplier(data) {
-    if (!state.vendorId || !state.db) return Promise.reject(new Error('SalonSuppliers chưa được khởi tạo.'));
+    if (!state.vendorId || !state.db) return Promise.reject(new Error(_T('sup_err_not_init')));
     var payload = sanitizeSupplierData(data, true);
     return suppliersColRef().add(payload);
   }
@@ -163,7 +169,7 @@
   // ── Public API: updateSupplier ──────────────────────────────────────────────
 
   function updateSupplier(supplierId, data) {
-    if (!supplierId) return Promise.reject(new Error('Thiếu mã nhà cung cấp.'));
+    if (!supplierId) return Promise.reject(new Error(_T('sup_err_missing_id')));
     var payload = sanitizeSupplierData(data, false);
     return supplierDocRef(supplierId).update(payload);
   }
@@ -171,7 +177,7 @@
   // ── Public API: deleteSupplier (soft delete) ────────────────────────────────
 
   function deleteSupplier(supplierId) {
-    if (!supplierId) return Promise.reject(new Error('Thiếu mã nhà cung cấp.'));
+    if (!supplierId) return Promise.reject(new Error(_T('sup_err_missing_id')));
     return supplierDocRef(supplierId).update({
       active: false,
       updatedAt: fv().serverTimestamp()
@@ -182,8 +188,8 @@
   // NEVER auto-orders. Always creates status: 'draft'.
 
   function createDraftOrder(supplierId, items) {
-    if (!supplierId) return Promise.reject(new Error('Thiếu mã nhà cung cấp.'));
-    if (!state.vendorId || !state.db) return Promise.reject(new Error('SalonSuppliers chưa được khởi tạo.'));
+    if (!supplierId) return Promise.reject(new Error(_T('sup_err_missing_id')));
+    if (!state.vendorId || !state.db) return Promise.reject(new Error(_T('sup_err_not_init')));
 
     var supplier = state.suppliers.find(function (s) { return s.id === supplierId; });
     var supplierName = supplier ? supplier.name : supplierId;
@@ -222,7 +228,7 @@
   // Vendor must click explicitly — never called automatically.
 
   function markOrdered(orderId) {
-    if (!orderId) return Promise.reject(new Error('Thiếu mã đơn hàng.'));
+    if (!orderId) return Promise.reject(new Error(_T('sup_err_missing_order')));
     return orderDocRef(orderId).update({
       status:    'ordered',
       orderedAt: fv().serverTimestamp(),
@@ -236,7 +242,7 @@
   // Sets status received; updates inventory quantities via SalonInventoryAdmin.
 
   function markReceived(orderId, receivedItems) {
-    if (!orderId) return Promise.reject(new Error('Thiếu mã đơn hàng.'));
+    if (!orderId) return Promise.reject(new Error(_T('sup_err_missing_order')));
 
     var updates = {
       status:     'received',
@@ -274,7 +280,7 @@
   // ── Public API: cancelOrder ─────────────────────────────────────────────────
 
   function cancelOrder(orderId) {
-    if (!orderId) return Promise.reject(new Error('Thiếu mã đơn hàng.'));
+    if (!orderId) return Promise.reject(new Error(_T('sup_err_missing_order')));
     return orderDocRef(orderId).update({
       status:    'cancelled',
       updatedAt: fv().serverTimestamp()
@@ -288,9 +294,9 @@
   // supplier with source: 'low_stock_alert'. Returns array of created order IDs.
 
   function generateLowStockDraft(vendorId) {
-    if (!vendorId) return Promise.reject(new Error('Thiếu vendorId.'));
+    if (!vendorId) return Promise.reject(new Error(_T('idt_err_missing_vendor')));
     if (!window.SalonInventoryDeduction) {
-      return Promise.reject(new Error('SalonInventoryDeduction chưa sẵn sàng.'));
+      return Promise.reject(new Error(_T('sup_err_inv_dep')));
     }
 
     return window.SalonInventoryDeduction.getLowStockItems(vendorId).then(function (lowItems) {
@@ -418,44 +424,44 @@
     var d = supplier || { preferred: false, active: true };
     return '<div class="sup-form" id="supplierFormCard">' +
       '<div class="sa-section-header" style="margin-bottom:.55rem">' +
-        '<div class="sa-section-title">' + (isEdit ? 'Sửa nhà cung cấp' : 'Thêm nhà cung cấp') + '</div>' +
+        '<div class="sa-section-title">' + esc(isEdit ? _T('sup_form_edit_title') : _T('sup_form_add_title')) + '</div>' +
       '</div>' +
       '<div class="sup-form-grid">' +
-        supField('Tên nhà cung cấp *', '<input class="sa-input" id="supName" value="' + esc(d.name || '') + '" autocomplete="off">') +
-        supField('Người liên hệ', '<input class="sa-input" id="supContactName" value="' + esc(d.contactName || '') + '" autocomplete="off">') +
-        supField('Điện thoại', '<input class="sa-input" id="supPhone" type="tel" value="' + esc(d.phone || '') + '" autocomplete="off">') +
-        supField('Email', '<input class="sa-input" id="supEmail" type="email" value="' + esc(d.email || '') + '" autocomplete="off">') +
-        supField('Website', '<input class="sa-input" id="supWebsite" type="url" value="' + esc(d.website || '') + '" autocomplete="off">') +
-        supField('Địa chỉ', '<input class="sa-input" id="supAddress" value="' + esc(d.address || '') + '" autocomplete="off">') +
-        supField('Thời gian giao hàng (ngày)', '<input class="sa-input" id="supLeadTimeDays" type="number" step="1" min="0" value="' + esc(d.leadTimeDays == null ? '' : d.leadTimeDays) + '">') +
-        supField('Đơn hàng tối thiểu ($)', '<input class="sa-input" id="supMinOrder" type="number" step="0.01" min="0" value="' + esc(d.minimumOrderAmount == null ? '' : d.minimumOrderAmount) + '">') +
-        supField('Ghi chú', '<input class="sa-input" id="supNotes" value="' + esc(d.notes || '') + '" autocomplete="off">') +
-        '<label class="sup-field sup-check"><input id="supPreferred" type="checkbox"' + (d.preferred ? ' checked' : '') + '> Nhà cung cấp ưu tiên</label>' +
+        supField(_T('sup_field_name'), '<input class="sa-input" id="supName" value="' + esc(d.name || '') + '" autocomplete="off">') +
+        supField(_T('sup_field_contact'), '<input class="sa-input" id="supContactName" value="' + esc(d.contactName || '') + '" autocomplete="off">') +
+        supField(_T('sup_field_phone'), '<input class="sa-input" id="supPhone" type="tel" value="' + esc(d.phone || '') + '" autocomplete="off">') +
+        supField(_T('sup_field_email'), '<input class="sa-input" id="supEmail" type="email" value="' + esc(d.email || '') + '" autocomplete="off">') +
+        supField(_T('sup_field_website'), '<input class="sa-input" id="supWebsite" type="url" value="' + esc(d.website || '') + '" autocomplete="off">') +
+        supField(_T('sup_field_address'), '<input class="sa-input" id="supAddress" value="' + esc(d.address || '') + '" autocomplete="off">') +
+        supField(_T('sup_field_lead_time'), '<input class="sa-input" id="supLeadTimeDays" type="number" step="1" min="0" value="' + esc(d.leadTimeDays == null ? '' : d.leadTimeDays) + '">') +
+        supField(_T('sup_field_min_order'), '<input class="sa-input" id="supMinOrder" type="number" step="0.01" min="0" value="' + esc(d.minimumOrderAmount == null ? '' : d.minimumOrderAmount) + '">') +
+        supField(_T('sup_field_notes'), '<input class="sa-input" id="supNotes" value="' + esc(d.notes || '') + '" autocomplete="off">') +
+        '<label class="sup-field sup-check"><input id="supPreferred" type="checkbox"' + (d.preferred ? ' checked' : '') + '> ' + esc(_T('sup_field_preferred')) + '</label>' +
       '</div>' +
       '<div class="sup-msg" id="supFormMsg" style="display:none"></div>' +
       '<div class="sup-form-actions">' +
-        '<button class="btn btn--outline btn--sm" type="button" data-sup-action="cancel-sup-form">Hủy</button>' +
-        '<button class="btn btn--primary btn--sm" type="button" data-sup-action="save-sup-form">' + (isEdit ? 'Lưu thay đổi' : 'Thêm nhà cung cấp') + '</button>' +
+        '<button class="btn btn--outline btn--sm" type="button" data-sup-action="cancel-sup-form">' + esc(_T('btn_cancel')) + '</button>' +
+        '<button class="btn btn--primary btn--sm" type="button" data-sup-action="save-sup-form">' + esc(isEdit ? _T('btn_save_changes') : _T('sup_btn_save_add')) + '</button>' +
       '</div>' +
     '</div>';
   }
 
   function renderSupplierTable() {
     if (!state.suppliers.length) {
-      return '<div class="sup-empty">Chưa có nhà cung cấp nào. Bấm "+ Thêm" để thêm.</div>';
+      return '<div class="sup-empty">' + esc(_T('sup_empty')) + '</div>';
     }
     return '<div style="overflow-x:auto"><table class="sup-table">' +
       '<thead><tr>' +
-        '<th>Nhà Cung Cấp</th>' +
-        '<th>Liên Hệ</th>' +
-        '<th>Giao Hàng</th>' +
-        '<th>Thao Tác</th>' +
+        '<th>' + esc(_T('sup_col_supplier')) + '</th>' +
+        '<th>' + esc(_T('sup_col_contact')) + '</th>' +
+        '<th>' + esc(_T('sup_col_delivery')) + '</th>' +
+        '<th>' + esc(_T('sup_col_actions')) + '</th>' +
       '</tr></thead>' +
       '<tbody>' +
       state.suppliers.map(function (s) {
         return '<tr>' +
           '<td>' +
-            '<div class="sup-name">' + esc(s.name) + (s.preferred ? '<span class="sup-preferred">Ưu tiên</span>' : '') + '</div>' +
+            '<div class="sup-name">' + esc(s.name) + (s.preferred ? '<span class="sup-preferred">' + esc(_T('sup_label_preferred')) + '</span>' : '') + '</div>' +
             (s.address ? '<div class="sup-contact">' + esc(s.address) + '</div>' : '') +
           '</td>' +
           '<td>' +
@@ -464,13 +470,13 @@
             (s.email ? '<div class="sup-contact"><a href="mailto:' + esc(s.email) + '" style="color:var(--muted);text-decoration:none">' + esc(s.email) + '</a></div>' : '') +
           '</td>' +
           '<td>' +
-            (s.leadTimeDays != null ? esc(s.leadTimeDays) + ' ngày' : '—') +
-            (s.minimumOrderAmount != null ? '<div class="sup-contact">Tối thiểu $' + esc(s.minimumOrderAmount) + '</div>' : '') +
+            (s.leadTimeDays != null ? esc(s.leadTimeDays) + ' ' + esc(_T('sup_label_days')) : '—') +
+            (s.minimumOrderAmount != null ? '<div class="sup-contact">' + esc(_T('sup_label_min')) + ' $' + esc(s.minimumOrderAmount) + '</div>' : '') +
           '</td>' +
           '<td>' +
             '<div class="sup-actions">' +
-              '<button class="btn btn--outline btn--sm" type="button" data-sup-action="edit-sup" data-sup-id="' + esc(s.id) + '">Sửa</button>' +
-              '<button class="btn btn--outline btn--sm" type="button" data-sup-action="delete-sup" data-sup-id="' + esc(s.id) + '" style="color:var(--danger)">Xóa</button>' +
+              '<button class="btn btn--outline btn--sm" type="button" data-sup-action="edit-sup" data-sup-id="' + esc(s.id) + '">' + esc(_T('btn_edit')) + '</button>' +
+              '<button class="btn btn--outline btn--sm" type="button" data-sup-action="delete-sup" data-sup-id="' + esc(s.id) + '" style="color:var(--danger)">' + esc(_T('btn_delete')) + '</button>' +
             '</div>' +
           '</td>' +
         '</tr>';
@@ -486,30 +492,32 @@
 
     var showForm = (state.editingSupplierId === '__new__' || editingSupplier);
 
+    var summary = _T('sup_summary').replace('{count}', state.suppliers.length);
     return '<div class="sup-panel">' +
       '<div class="sup-toolbar">' +
         '<div>' +
-          '<div class="sa-section-title">Nhà Cung Cấp</div>' +
-          '<div class="sup-summary">' + state.suppliers.length + ' nhà cung cấp</div>' +
+          '<div class="sa-section-title">' + esc(_T('sup_title')) + '</div>' +
+          '<div class="sup-summary">' + esc(summary) + '</div>' +
         '</div>' +
-        '<button class="btn btn--primary btn--sm" type="button" data-sup-action="open-add-sup">+ Thêm</button>' +
+        '<button class="btn btn--primary btn--sm" type="button" data-sup-action="open-add-sup">' + esc(_T('sup_btn_add')) + '</button>' +
       '</div>' +
       (state.error ? '<div class="sup-msg">' + esc(state.error) + '</div>' : '') +
       (showForm ? renderSupplierForm(editingSupplier || null) : '') +
-      (state.loading ? '<div class="sup-empty">Đang tải nhà cung cấp…</div>' : renderSupplierTable()) +
+      (state.loading ? '<div class="sup-empty">' + esc(_T('sup_loading')) + '</div>' : renderSupplierTable()) +
     '</div>';
   }
 
   function renderOrdersSection() {
+    var summary = _T('sup_orders_summary').replace('{count}', state.orders.length);
     return '<div class="sup-panel">' +
       '<div class="sup-toolbar">' +
         '<div>' +
-          '<div class="sa-section-title">Đơn Đặt Hàng</div>' +
-          '<div class="sup-summary">' + state.orders.length + ' đơn hàng gần đây</div>' +
+          '<div class="sa-section-title">' + esc(_T('sup_orders_title')) + '</div>' +
+          '<div class="sup-summary">' + esc(summary) + '</div>' +
         '</div>' +
         '<div style="display:flex;gap:.4rem;flex-wrap:wrap">' +
-          '<button class="btn btn--outline btn--sm" type="button" data-sup-action="open-manual-order">+ Thêm đơn thủ công</button>' +
-          '<button class="btn btn--primary btn--sm" type="button" data-sup-action="gen-low-stock-draft">Tạo đơn từ hàng sắp hết</button>' +
+          '<button class="btn btn--outline btn--sm" type="button" data-sup-action="open-manual-order">' + esc(_T('sup_btn_add_manual')) + '</button>' +
+          '<button class="btn btn--primary btn--sm" type="button" data-sup-action="gen-low-stock-draft">' + esc(_T('sup_btn_gen_low')) + '</button>' +
         '</div>' +
       '</div>' +
       renderOrderList() +
@@ -518,25 +526,28 @@
 
   function renderOrderList() {
     if (!state.orders.length) {
-      return '<div class="sup-empty">Chưa có đơn đặt hàng nào.</div>';
+      return '<div class="sup-empty">' + esc(_T('sup_orders_empty')) + '</div>';
     }
     return '<div class="sup-order-list">' +
       state.orders.map(function (order) {
-        var sourceLabel = order.source === 'low_stock_alert' ? '<span class="sup-source-badge">Hàng sắp hết</span>' : '';
+        var sourceLabel = order.source === 'low_stock_alert'
+          ? '<span class="sup-source-badge">' + esc(_T('sup_source_low_stock')) + '</span>'
+          : '';
         var itemCount = Array.isArray(order.items) ? order.items.length : 0;
         var total = order.estimatedTotal != null ? '$' + Number(order.estimatedTotal).toFixed(2) : '';
 
         var actionBtns = '';
         if (order.status === 'draft') {
           actionBtns =
-            '<button class="btn btn--outline btn--sm" type="button" data-sup-action="mark-ordered" data-order-id="' + esc(order.id) + '">Đã đặt hàng</button>' +
-            '<button class="btn btn--outline btn--sm" type="button" data-sup-action="cancel-order" data-order-id="' + esc(order.id) + '" style="color:var(--danger)">Huỷ</button>';
+            '<button class="btn btn--outline btn--sm" type="button" data-sup-action="mark-ordered" data-order-id="' + esc(order.id) + '">' + esc(_T('sup_btn_mark_ordered')) + '</button>' +
+            '<button class="btn btn--outline btn--sm" type="button" data-sup-action="cancel-order" data-order-id="' + esc(order.id) + '" style="color:var(--danger)">' + esc(_T('sup_btn_cancel')) + '</button>';
         } else if (order.status === 'ordered') {
           actionBtns =
-            '<button class="btn btn--success btn--sm" type="button" data-sup-action="mark-received" data-order-id="' + esc(order.id) + '">Đã nhận hàng</button>' +
-            '<button class="btn btn--outline btn--sm" type="button" data-sup-action="cancel-order" data-order-id="' + esc(order.id) + '" style="color:var(--danger)">Huỷ</button>';
+            '<button class="btn btn--success btn--sm" type="button" data-sup-action="mark-received" data-order-id="' + esc(order.id) + '">' + esc(_T('sup_btn_mark_received')) + '</button>' +
+            '<button class="btn btn--outline btn--sm" type="button" data-sup-action="cancel-order" data-order-id="' + esc(order.id) + '" style="color:var(--danger)">' + esc(_T('sup_btn_cancel')) + '</button>';
         }
 
+        var perUnit = _T('sup_label_per_unit');
         var itemsHtml = '';
         if (itemCount > 0) {
           itemsHtml = '<div class="sup-order-items">' +
@@ -544,11 +555,13 @@
             order.items.map(function (item) {
               return '<li>' + esc(item.productNameSnapshot || item.productId) +
                 (item.qty ? ' — ' + esc(item.qty) + (item.unit ? ' ' + esc(item.unit) : '') : '') +
-                (item.estimatedUnitCost ? ' (~$' + esc(Number(item.estimatedUnitCost).toFixed(2)) + '/đơn vị)' : '') +
+                (item.estimatedUnitCost ? ' (~$' + esc(Number(item.estimatedUnitCost).toFixed(2)) + esc(perUnit) + ')' : '') +
                 '</li>';
             }).join('') +
             '</ul></div>';
         }
+
+        var itemsMeta = _T('sup_meta_items').replace('{count}', itemCount);
 
         return '<div class="sup-order-row">' +
           '<div class="sup-order-head">' +
@@ -557,7 +570,7 @@
               '<div class="sup-order-meta">' +
                 '<span class="sup-st ' + orderStatusCls(order.status) + '">' + esc(orderStatusLabel(order.status)) + '</span>' +
                 sourceLabel +
-                ' · ' + itemCount + ' vật tư' +
+                ' · ' + esc(itemsMeta) +
               '</div>' +
             '</div>' +
             '<div class="sup-order-right">' +
@@ -575,7 +588,7 @@
 
   function openManualOrderModal() {
     if (!state.suppliers.length) {
-      alert('Vui lòng thêm ít nhất một nhà cung cấp trước.');
+      alert(_T('sup_modal_no_suppliers'));
       return;
     }
 
@@ -589,22 +602,22 @@
         'display:flex;align-items:center;justify-content:center;padding:1rem">' +
         '<div style="background:var(--navy-800);border:1px solid var(--border-g);border-radius:12px;' +
           'padding:1.5rem 1.75rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto">' +
-          '<h3 style="font-family:var(--font-d);font-size:1.1rem;color:var(--cream);margin-bottom:1rem">Thêm đơn đặt hàng thủ công</h3>' +
-          '<div class="sa-field"><label class="sa-field label">Nhà cung cấp *</label>' +
-            '<select class="sa-input" id="supModalSupplier"><option value="">— Chọn nhà cung cấp —</option>' + supplierOptions + '</select>' +
+          '<h3 style="font-family:var(--font-d);font-size:1.1rem;color:var(--cream);margin-bottom:1rem">' + esc(_T('sup_modal_title')) + '</h3>' +
+          '<div class="sa-field"><label class="sa-field label">' + esc(_T('sup_modal_supplier_lbl')) + '</label>' +
+            '<select class="sa-input" id="supModalSupplier"><option value="">' + esc(_T('sup_modal_supplier_ph')) + '</option>' + supplierOptions + '</select>' +
           '</div>' +
           '<div class="sa-field" style="margin-top:.6rem">' +
             '<label style="display:block;font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem">' +
-              'Sản phẩm cần đặt (mỗi dòng: Tên — Số lượng — Đơn vị)' +
+              esc(_T('sup_modal_items_lbl')) +
             '</label>' +
             '<textarea class="sa-input" id="supModalItems" rows="5" ' +
               'style="resize:vertical" ' +
-              'placeholder="Ví dụ:&#10;Gel polish đỏ — 10 — chai&#10;Buffer 180 grit — 50 — cái"></textarea>' +
+              'placeholder="' + esc(_T('sup_modal_items_ph')) + '"></textarea>' +
           '</div>' +
           '<div class="sup-msg" id="supModalMsg" style="display:none;margin-top:.4rem"></div>' +
           '<div style="display:flex;gap:.6rem;justify-content:flex-end;margin-top:1rem">' +
-            '<button class="btn btn--outline btn--sm" type="button" id="supModalCancel">Hủy</button>' +
-            '<button class="btn btn--primary btn--sm" type="button" id="supModalSave">Tạo đơn nháp</button>' +
+            '<button class="btn btn--outline btn--sm" type="button" id="supModalCancel">' + esc(_T('btn_cancel')) + '</button>' +
+            '<button class="btn btn--primary btn--sm" type="button" id="supModalSave">' + esc(_T('sup_modal_btn_create')) + '</button>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -622,7 +635,7 @@
       var msgEl      = document.getElementById('supModalMsg');
 
       if (!supplierId) {
-        msgEl.textContent = 'Vui lòng chọn nhà cung cấp.';
+        msgEl.textContent = _T('sup_modal_err_supplier');
         msgEl.style.display = 'block';
         return;
       }
@@ -648,7 +661,7 @@
       });
 
       if (!items.length) {
-        msgEl.textContent = 'Vui lòng nhập ít nhất một sản phẩm.';
+        msgEl.textContent = _T('sup_modal_err_items');
         msgEl.style.display = 'block';
         return;
       }
@@ -657,7 +670,7 @@
         var modal = document.getElementById('supOrderModal');
         if (modal) modal.remove();
       }).catch(function (err) {
-        msgEl.textContent = err.message || 'Không thể tạo đơn hàng.';
+        msgEl.textContent = err.message || _T('sup_err_create_failed');
         msgEl.style.display = 'block';
       });
     });
@@ -708,10 +721,10 @@
         state.editingSupplierId = null;
         // loadSuppliers() real-time listener will update state and re-render
       }).catch(function (err) {
-        showFormError(err.message || 'Không thể lưu nhà cung cấp.');
+        showFormError(err.message || _T('sup_err_save_failed'));
       });
     } catch (err) {
-      showFormError(err.message || 'Dữ liệu không hợp lệ.');
+      showFormError(err.message || _T('msg_invalid_data'));
     }
   }
 
@@ -743,9 +756,9 @@
         render();
 
       } else if (action === 'delete-sup') {
-        if (window.confirm('Xóa nhà cung cấp này khỏi danh sách?')) {
+        if (window.confirm(_T('sup_confirm_delete'))) {
           deleteSupplier(supId).catch(function (err) {
-            state.error = err.message || 'Không thể xóa nhà cung cấp.';
+            state.error = err.message || _T('sup_err_delete_failed');
             render();
           });
         }
@@ -755,36 +768,36 @@
         openManualOrderModal();
 
       } else if (action === 'gen-low-stock-draft') {
-        if (!window.confirm('Tạo đơn đặt hàng nháp cho tất cả vật tư sắp hết?')) return;
+        if (!window.confirm(_T('sup_confirm_gen_low'))) return;
         generateLowStockDraft(state.vendorId).then(function (ids) {
           if (!ids || !ids.length) {
-            alert('Không có vật tư sắp hết nào được liên kết với nhà cung cấp.');
+            alert(_T('sup_alert_no_low'));
           } else {
-            alert('Đã tạo ' + ids.length + ' đơn đặt hàng nháp.');
+            alert(_T('sup_alert_drafts_made').replace('{count}', ids.length));
           }
         }).catch(function (err) {
-          alert('Lỗi: ' + (err.message || 'Không thể tạo đơn hàng.'));
+          alert(_T('sup_alert_error_prefix') + (err.message || _T('sup_err_create_failed')));
         });
 
       } else if (action === 'mark-ordered') {
-        if (!window.confirm('Xác nhận đã đặt hàng này?')) return;
+        if (!window.confirm(_T('sup_confirm_mark_ordered'))) return;
         markOrdered(orderId).catch(function (err) {
-          alert('Lỗi: ' + (err.message || 'Không thể cập nhật đơn hàng.'));
+          alert(_T('sup_alert_error_prefix') + (err.message || _T('sup_err_update_failed')));
         });
 
       } else if (action === 'mark-received') {
         // Use order items as receivedItems (all items fully received)
         var order = state.orders.find(function (o) { return o.id === orderId; });
         if (!order) return;
-        if (!window.confirm('Xác nhận đã nhận hàng và cập nhật tồn kho?')) return;
+        if (!window.confirm(_T('sup_confirm_mark_received'))) return;
         markReceived(orderId, order.items || []).catch(function (err) {
-          alert('Lỗi: ' + (err.message || 'Không thể cập nhật nhận hàng.'));
+          alert(_T('sup_alert_error_prefix') + (err.message || _T('sup_err_received_failed')));
         });
 
       } else if (action === 'cancel-order') {
-        if (!window.confirm('Huỷ đơn hàng này?')) return;
+        if (!window.confirm(_T('sup_confirm_cancel'))) return;
         cancelOrder(orderId).catch(function (err) {
-          alert('Lỗi: ' + (err.message || 'Không thể huỷ đơn hàng.'));
+          alert(_T('sup_alert_error_prefix') + (err.message || _T('sup_err_cancel_failed')));
         });
       }
     });
@@ -793,9 +806,9 @@
   // ── Public API: init ────────────────────────────────────────────────────────
 
   function init(vendorId, containerEl) {
-    if (!vendorId)    throw new Error('Thiếu vendorId cho nhà cung cấp.');
-    if (!containerEl) throw new Error('Thiếu vùng hiển thị nhà cung cấp.');
-    if (!window.firebase || !firebase.firestore) throw new Error('Firebase chưa sẵn sàng.');
+    if (!vendorId)    throw new Error(_T('sup_err_init_vendor'));
+    if (!containerEl) throw new Error(_T('sup_err_init_container'));
+    if (!window.firebase || !firebase.firestore) throw new Error(_T('msg_firebase_not_ready'));
 
     if (state.unsubSuppliers && state.vendorId !== vendorId) {
       state.unsubSuppliers();
@@ -819,7 +832,7 @@
       })
       .catch(function (err) {
         state.loading = false;
-        state.error   = err.message || 'Không thể khởi tạo nhà cung cấp.';
+        state.error   = err.message || _T('sup_err_init_failed');
         render();
       });
   }

@@ -10,29 +10,30 @@
   //   vendors/{vendorId}/bookings  — last 90 days, limit 200
   //   vendors/{vendorId}/services  — active services for upsell suggestions
 
+  function _T(key) {
+    return (window.SalonI18n && window.SalonI18n.t) ? window.SalonI18n.t(key) : key;
+  }
+
   var DAYS_90 = 90 * 24 * 60 * 60 * 1000;   // 90 days in ms
   var RETURN_THRESHOLD_DAYS = 28;            // 28+ days → "due for return"
 
   // ── Upsell rule map ──────────────────────────────────────────────────────────
-  // Keys are lowercase partial matches on service name.
-  // Each entry maps to a suggested add-on label.
-  // Simple rule-based — no AI inference.
+  // Each entry maps a lowercase keyword fragment → an i18n key for the
+  // suggested add-on label so the upsell text can switch language.
   var UPSELL_RULES = [
-    { match: 'gel manicure',     suggest: 'Gel Pedicure hoặc Nail Art' },
-    { match: 'manicure',         suggest: 'Gel Upgrade hoặc Pedicure cơ bản' },
-    { match: 'gel pedicure',     suggest: 'Spa Pedicure nâng cấp hoặc Massage chân' },
-    { match: 'pedicure',         suggest: 'Spa Pedicure nâng cấp hoặc Hot Stone Massage' },
-    { match: 'acrylic',          suggest: 'Nail Art họa tiết hoặc Gel Top Coat bảo vệ' },
-    { match: 'nail art',         suggest: 'Gel Chrome Powder hoặc 3D Nail Design' },
-    { match: 'dipping',          suggest: 'Nail Art thêm hoặc Cuticle Treatment' },
-    { match: 'waxing',           suggest: 'Moisturizing Treatment sau khi wax' },
-    { match: 'eyebrow',          suggest: 'Eyebrow Tinting hoặc Wax toàn diện' },
-    { match: 'eyelash',          suggest: 'Eyebrow Shaping kết hợp' },
-    { match: 'massage',          suggest: 'Hot Stone Upgrade hoặc Aromatherapy Add-on' },
-    { match: 'facial',           suggest: 'Collagen Mask Add-on hoặc LED Treatment' }
+    { match: 'gel manicure', key: 'upsell_gel_manicure' },
+    { match: 'manicure',     key: 'upsell_manicure' },
+    { match: 'gel pedicure', key: 'upsell_gel_pedicure' },
+    { match: 'pedicure',     key: 'upsell_pedicure' },
+    { match: 'acrylic',      key: 'upsell_acrylic' },
+    { match: 'nail art',     key: 'upsell_nail_art' },
+    { match: 'dipping',      key: 'upsell_dipping' },
+    { match: 'waxing',       key: 'upsell_waxing' },
+    { match: 'eyebrow',      key: 'upsell_eyebrow' },
+    { match: 'eyelash',      key: 'upsell_eyelash' },
+    { match: 'massage',      key: 'upsell_massage' },
+    { match: 'facial',       key: 'upsell_facial' }
   ];
-
-  var DEFAULT_UPSELL = 'Dịch vụ bổ sung phù hợp với nhu cầu khách hàng';
 
   // ── State ────────────────────────────────────────────────────────────────────
 
@@ -94,9 +95,9 @@
   function findUpsell(serviceName) {
     var lower = String(serviceName || '').toLowerCase();
     for (var i = 0; i < UPSELL_RULES.length; i++) {
-      if (lower.indexOf(UPSELL_RULES[i].match) !== -1) return UPSELL_RULES[i].suggest;
+      if (lower.indexOf(UPSELL_RULES[i].match) !== -1) return _T(UPSELL_RULES[i].key);
     }
-    return DEFAULT_UPSELL;
+    return _T('ri_default_upsell');
   }
 
   // ── computeInsights ──────────────────────────────────────────────────────────
@@ -104,7 +105,7 @@
 
   function computeInsights() {
     if (!state.vendorId || !state.db) {
-      return Promise.reject(new Error('SalonRetentionInsights chưa được khởi tạo.'));
+      return Promise.reject(new Error(_T('ri_err_not_init')));
     }
 
     var cutoff = new Date(Date.now() - DAYS_90);
@@ -148,6 +149,7 @@
 
     return Promise.all([pBookings, pServices]).then(function (results) {
       var bookings = results[0];
+      var customerFallback = _T('ri_customer_fallback');
 
       // Group bookings by phone → { phone: { name, visits: [{ms, service}] } }
       var byPhone = {};
@@ -161,12 +163,12 @@
         if (!byPhone[digits]) {
           byPhone[digits] = {
             phone:     digits,
-            name:      b.customerName || b.name || 'Khách',
+            name:      b.customerName || b.name || customerFallback,
             visits:    []
           };
         }
         // Update name if we now have a real value
-        if ((b.customerName || b.name) && byPhone[digits].name === 'Khách') {
+        if ((b.customerName || b.name) && byPhone[digits].name === customerFallback) {
           byPhone[digits].name = b.customerName || b.name;
         }
         byPhone[digits].visits.push({ ms: ms, service: serviceLabel(b) });
@@ -297,15 +299,15 @@
   function renderLoyal() {
     var rows = state.loyal;
     if (!rows.length) {
-      return '<div class="ri-empty">Ch&#432;a c&#243; kh&aacute;ch h&agrave;ng n&agrave;o c&#243; t&#7915; 2 l&#7847;n gh&#233; th&#259;m trong 90 ng&agrave;y.</div>';
+      return '<div class="ri-empty">' + esc(_T('ri_empty_loyal')) + '</div>';
     }
     var html =
       '<div class="ri-table-wrap"><table class="ri-table">' +
       '<thead><tr>' +
-        '<th>T&ecirc;n &amp; S&#273;T</th>' +
-        '<th>S&#7889; l&#7847;n</th>' +
-        '<th>D&#7883;ch v&#7909; g&#7847;n nh&#7845;t</th>' +
-        '<th>Ng&agrave;y cu&#7889;i</th>' +
+        '<th>' + esc(_T('ri_col_name_phone')) + '</th>' +
+        '<th>' + esc(_T('ri_col_visits')) + '</th>' +
+        '<th>' + esc(_T('ri_col_last_service')) + '</th>' +
+        '<th>' + esc(_T('ri_col_last_date')) + '</th>' +
       '</tr></thead><tbody>';
 
     rows.forEach(function (c) {
@@ -328,15 +330,15 @@
   function renderDueReturn() {
     var rows = state.dueReturn;
     if (!rows.length) {
-      return '<div class="ri-empty">Kh&ocirc;ng c&#243; kh&aacute;ch n&agrave;o ch&#432;a quay l&#7841;i sau 28 ng&agrave;y.</div>';
+      return '<div class="ri-empty">' + esc(_T('ri_empty_due')) + '</div>';
     }
     var html =
       '<div class="ri-table-wrap"><table class="ri-table">' +
       '<thead><tr>' +
-        '<th>T&ecirc;n &amp; S&#273;T</th>' +
-        '<th>V&#7855;ng m&#7863;t</th>' +
-        '<th>D&#7883;ch v&#7909; g&#7847;n nh&#7845;t</th>' +
-        '<th>Ng&agrave;y cu&#7889;i</th>' +
+        '<th>' + esc(_T('ri_col_name_phone')) + '</th>' +
+        '<th>' + esc(_T('ri_col_absent')) + '</th>' +
+        '<th>' + esc(_T('ri_col_last_service')) + '</th>' +
+        '<th>' + esc(_T('ri_col_last_date')) + '</th>' +
       '</tr></thead><tbody>';
 
     rows.forEach(function (c) {
@@ -346,33 +348,29 @@
             '<div class="ri-name">' + esc(c.name) + '</div>' +
             '<div class="ri-phone">' + esc(maskPhone(c.phone)) + '</div>' +
           '</td>' +
-          '<td><span class="ri-badge-days">' + c.daysSince + ' ng&agrave;y</span></td>' +
+          '<td><span class="ri-badge-days">' + c.daysSince + ' ' + esc(_T('ri_days_suffix')) + '</span></td>' +
           '<td>' + esc(c.lastService) + '</td>' +
           '<td style="white-space:nowrap;font-size:.72rem">' + esc(fmtDate(c.lastMs)) + '</td>' +
         '</tr>';
     });
 
     html += '</tbody></table></div>';
-    html +=
-      '<div class="ri-note">' +
-        '&#9888; G&#7907;i &yacute; g&#7885;i &#273;i&#7879;n ho&#7863;c nh&#7855;n tin theo c&aacute;ch th&#7911; c&ocirc;ng. ' +
-        'H&#7879; th&#7889;ng kh&ocirc;ng t&#7921; &#273;&#7897;ng li&ecirc;n h&#7879; kh&aacute;ch h&agrave;ng.' +
-      '</div>';
+    html += '<div class="ri-note">' + esc(_T('ri_note_due')) + '</div>';
     return html;
   }
 
   function renderTopServices() {
     var rows = state.topServices;
     if (!rows.length) {
-      return '<div class="ri-empty">Ch&#432;a c&#243; d&#7883;ch v&#7909; n&agrave;o trong 90 ng&agrave;y g&#7847;n nh&#7845;t.</div>';
+      return '<div class="ri-empty">' + esc(_T('ri_empty_top')) + '</div>';
     }
     var maxCount = rows[0].count || 1;
     var html =
       '<div class="ri-table-wrap"><table class="ri-table">' +
       '<thead><tr>' +
-        '<th>D&#7883;ch V&#7909;</th>' +
-        '<th>S&#7889; l&#432;&#7907;t</th>' +
-        '<th>G&#7907;i &yacute; upsell</th>' +
+        '<th>' + esc(_T('ri_col_service')) + '</th>' +
+        '<th>' + esc(_T('ri_col_visits_short')) + '</th>' +
+        '<th>' + esc(_T('ri_col_upsell')) + '</th>' +
       '</tr></thead><tbody>';
 
     rows.forEach(function (row, idx) {
@@ -387,17 +385,13 @@
           '</td>' +
           '<td><span class="ri-count-pill">' + row.count + '</span></td>' +
           '<td>' +
-            '<div class="ri-upsell">&#10022; ' + esc(row.upsell) + '</div>' +
+            '<div class="ri-upsell">✦ ' + esc(row.upsell) + '</div>' +
           '</td>' +
         '</tr>';
     });
 
     html += '</tbody></table></div>';
-    html +=
-      '<div class="ri-note">' +
-        '* G&#7907;i &yacute; upsell d&#7921;a tr&ecirc;n danh m&#7909;c d&#7883;ch v&#7909;. ' +
-        'Kh&ocirc;ng t&#7921; &#273;&#7897;ng &aacute;p d&#7909;ng &mdash; nh&acirc;n vi&ecirc;n t&#7921; quy&#7871;t &#273;&#7883;nh c&oacute; &#273;&#7873; ngh&#7883; kh&aacute;ch hay kh&ocirc;ng.' +
-      '</div>';
+    html += '<div class="ri-note">' + esc(_T('ri_note_top')) + '</div>';
     return html;
   }
 
@@ -412,7 +406,7 @@
     if (state.loading) {
       el.innerHTML =
         '<div class="ri-wrap">' +
-          '<div class="ri-loading">&#9203; &#272;ang t&#7843;i d&#7919; li&#7879;u kh&aacute;ch h&agrave;ng&hellip;</div>' +
+          '<div class="ri-loading">⏳ ' + esc(_T('ri_loading')) + '</div>' +
         '</div>';
       return;
     }
@@ -420,13 +414,17 @@
     if (state.error) {
       el.innerHTML =
         '<div class="ri-wrap">' +
-          '<div class="ri-error">&#10005; ' + esc(state.error) + '</div>' +
+          '<div class="ri-error">✕ ' + esc(state.error) + '</div>' +
           '<div style="margin-top:.75rem">' +
-            '<button class="btn btn--outline btn--sm" onclick="window.SalonRetentionInsights.refresh()">T&#7843;i L&#7841;i</button>' +
+            '<button class="btn btn--outline btn--sm" onclick="window.SalonRetentionInsights.refresh()">' + esc(_T('btn_refresh')) + '</button>' +
           '</div>' +
         '</div>';
       return;
     }
+
+    var loyalCount = _T('ri_count_customers').replace('{count}', state.loyal.length);
+    var dueCount   = _T('ri_count_customers').replace('{count}', state.dueReturn.length);
+    var topCount   = _T('ri_count_top').replace('{count}', state.topServices.length);
 
     el.innerHTML =
       '<div class="ri-wrap">' +
@@ -434,17 +432,17 @@
         // ── Toolbar ──
         '<div class="ri-toolbar">' +
           '<div>' +
-            '<div class="ri-title">Kh&aacute;ch H&agrave;ng &amp; Upsell</div>' +
-            '<div class="ri-subtitle">D&#7921;a tr&ecirc;n l&#7883;ch h&#7865;n 90 ng&agrave;y g&#7847;n nh&#7845;t &mdash; ch&#7881; hi&#7875;n th&#7883; cho ti&#7879;m, kh&ocirc;ng g&#7917;i kh&aacute;ch.</div>' +
+            '<div class="ri-title">' + esc(_T('ri_title')) + '</div>' +
+            '<div class="ri-subtitle">' + esc(_T('ri_subtitle')) + '</div>' +
           '</div>' +
-          '<button class="btn btn--outline btn--sm" onclick="window.SalonRetentionInsights.refresh()" style="flex-shrink:0">&#8635; T&#7843;i L&#7841;i</button>' +
+          '<button class="btn btn--outline btn--sm" onclick="window.SalonRetentionInsights.refresh()" style="flex-shrink:0">↻ ' + esc(_T('btn_refresh')) + '</button>' +
         '</div>' +
 
         // ── Panel 1: Loyal ──
         '<div class="ri-panel">' +
           '<div class="ri-panel-hdr">' +
-            '<span class="ri-panel-title">&#11088; Kh&aacute;ch H&agrave;ng Trung Th&agrave;nh</span>' +
-            '<span class="ri-panel-count">' + state.loyal.length + ' kh&aacute;ch</span>' +
+            '<span class="ri-panel-title">' + esc(_T('ri_panel_loyal')) + '</span>' +
+            '<span class="ri-panel-count">' + esc(loyalCount) + '</span>' +
           '</div>' +
           renderLoyal() +
         '</div>' +
@@ -452,8 +450,8 @@
         // ── Panel 2: Due for return ──
         '<div class="ri-panel">' +
           '<div class="ri-panel-hdr">' +
-            '<span class="ri-panel-title">&#128337; C&#7847;n Li&ecirc;n H&#7879; L&#7841;i</span>' +
-            '<span class="ri-panel-count">' + state.dueReturn.length + ' kh&aacute;ch</span>' +
+            '<span class="ri-panel-title">' + esc(_T('ri_panel_due')) + '</span>' +
+            '<span class="ri-panel-count">' + esc(dueCount) + '</span>' +
           '</div>' +
           renderDueReturn() +
         '</div>' +
@@ -461,8 +459,8 @@
         // ── Panel 3: Top services + upsell ──
         '<div class="ri-panel">' +
           '<div class="ri-panel-hdr">' +
-            '<span class="ri-panel-title">&#128200; D&#7883;ch V&#7909; Ph&#7893; Bi&#7871;n &amp; C&#417; H&#7897;i Upsell</span>' +
-            '<span class="ri-panel-count">Top ' + state.topServices.length + '</span>' +
+            '<span class="ri-panel-title">' + esc(_T('ri_panel_top')) + '</span>' +
+            '<span class="ri-panel-count">' + esc(topCount) + '</span>' +
           '</div>' +
           renderTopServices() +
         '</div>' +
@@ -505,7 +503,7 @@
       })
       .catch(function (err) {
         state.loading = false;
-        state.error   = (err && err.message) ? err.message : 'Không thể tải dữ liệu.';
+        state.error   = (err && err.message) ? err.message : _T('ri_err_load_failed');
         render();
       });
   }

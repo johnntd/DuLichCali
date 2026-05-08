@@ -4,110 +4,112 @@
   // ── SalonSupplyMarketplace ────────────────────────────────────────────────
   // Phase 11: AI Supply Marketplace — vendor-facing curated supply panel.
   //
-  // IMPORTANT: This module does NOT auto-purchase anything. All "Tìm Mua"
+  // IMPORTANT: This module does NOT auto-purchase anything. All "Find & Buy"
   // links open external search pages (Amazon, BSG, etc.) in a new browser
   // tab. The vendor manually places any orders. No transactions are initiated
   // by this code.
-  //
-  // Firestore reads:
-  //   vendors/{vendorId}/inventory  — to detect low-stock items
-  //   vendors/{vendorId}/suppliers  — to show preferred suppliers first
-  //
-  // The static curated catalog is embedded below (SUPPLY_CATALOG).
+
+  function _T(key) {
+    return (window.SalonI18n && window.SalonI18n.t) ? window.SalonI18n.t(key) : key;
+  }
 
   // ── Static curated catalog ───────────────────────────────────────────────
-  var SUPPLY_CATALOG = [
-    {
-      id: 'gel_polish',
-      name: 'Gel Polish',
-      categoryLabel: 'Gel Polish',
-      brands: ['Gelish', 'OPI', 'CND', 'Entity'],
-      searchUrl: 'https://www.amazon.com/s?k=gelish+gel+polish+salon+professional',
-      bsgUrl: 'https://www.bsgbeauty.com/search?type=product&q=gel+polish',
-      avgPrice: '$12 – $18 / lọ',
-      icon: '&#128137;'
-    },
-    {
-      id: 'acrylic_powder',
-      name: 'Bột Acrylic',
-      categoryLabel: 'Acrylic Powder',
-      brands: ['Young Nails', 'NSI', 'Tammy Taylor', 'Mia Secret'],
-      searchUrl: 'https://www.amazon.com/s?k=nail+acrylic+powder+salon+professional',
-      bsgUrl: 'https://www.bsgbeauty.com/search?type=product&q=acrylic+powder',
-      avgPrice: '$20 – $35 / hộp',
-      icon: '&#129398;'
-    },
-    {
-      id: 'nail_tips',
-      name: 'Móng Giả (Tips)',
-      categoryLabel: 'Nail Tips',
-      brands: ['Tammy Taylor', 'Elegant Touch', 'IBD', 'Young Nails'],
-      searchUrl: 'https://www.amazon.com/s?k=nail+tips+salon+professional+500pcs',
-      bsgUrl: 'https://www.bsgbeauty.com/search?type=product&q=nail+tips',
-      avgPrice: '$8 – $15 / hộp',
-      icon: '&#10024;'
-    },
-    {
-      id: 'dip_powder',
-      name: 'Bột Dip',
-      categoryLabel: 'Dip Powder',
-      brands: ['Kiara Sky', 'SNS', 'OPI', 'Revel Nail'],
-      searchUrl: 'https://www.amazon.com/s?k=dip+powder+nails+salon+professional',
-      bsgUrl: 'https://www.bsgbeauty.com/search?type=product&q=dip+powder',
-      avgPrice: '$15 – $28 / lọ',
-      icon: '&#127774;'
-    },
-    {
-      id: 'nail_glue',
-      name: 'Keo Dán Móng',
-      categoryLabel: 'Nail Glue',
-      brands: ['IBD', 'Nailene', 'Mia Secret', 'Star Nail'],
-      searchUrl: 'https://www.amazon.com/s?k=professional+nail+glue+salon',
-      bsgUrl: 'https://www.bsgbeauty.com/search?type=product&q=nail+glue',
-      avgPrice: '$5 – $12 / tuýp',
-      icon: '&#129521;'
-    },
-    {
-      id: 'files_buffers',
-      name: 'Giũa & Buffer',
-      categoryLabel: 'Files & Buffers',
-      brands: ['Kupa', 'Orly', 'OPI', 'Star Nail'],
-      searchUrl: 'https://www.amazon.com/s?k=professional+nail+files+buffers+salon+bulk',
-      bsgUrl: 'https://www.bsgbeauty.com/search?type=product&q=nail+files+buffers',
-      avgPrice: '$8 – $20 / bộ',
-      icon: '&#128296;'
-    },
-    {
-      id: 'disposable',
-      name: 'Vật Tư Dùng Một Lần',
-      categoryLabel: 'Disposables',
-      brands: ['Dynarex', 'Medpride', 'CleanStar'],
-      searchUrl: 'https://www.amazon.com/s?k=nail+salon+disposable+supplies+bulk',
-      bsgUrl: 'https://www.bsgbeauty.com/search?type=product&q=salon+disposables',
-      avgPrice: '$15 – $40 / thùng',
-      icon: '&#128716;'
-    },
-    {
-      id: 'sanitation',
-      name: 'Khử Trùng & Vệ Sinh',
-      categoryLabel: 'Sanitation',
-      brands: ['Barbicide', 'Marvy', 'Rejuvenate', 'CRC'],
-      searchUrl: 'https://www.amazon.com/s?k=nail+salon+sanitation+disinfectant+professional',
-      bsgUrl: 'https://www.bsgbeauty.com/search?type=product&q=salon+disinfectant',
-      avgPrice: '$12 – $35 / chai',
-      icon: '&#129529;'
-    },
-    {
-      id: 'retail',
-      name: 'Sản Phẩm Bán Lẻ',
-      categoryLabel: 'Retail Products',
-      brands: ['OPI', 'Essie', 'Sally Hansen', 'Seche Vite'],
-      searchUrl: 'https://www.amazon.com/s?k=nail+salon+retail+top+coat+cuticle+oil',
-      bsgUrl: 'https://www.bsgbeauty.com/search?type=product&q=retail+nail+products',
-      avgPrice: '$8 – $22 / chai',
-      icon: '&#127979;'
-    }
-  ];
+  // Translatable fields (name, categoryLabel, avgPrice) are looked up via
+  // i18n keys at render time so the panel reflects the active language.
+  function SUPPLY_CATALOG() {
+    return [
+      {
+        id: 'gel_polish',
+        nameKey: 'smk_cat_gel_polish_name',
+        categoryLabel: 'Gel Polish',
+        brands: ['Gelish', 'OPI', 'CND', 'Entity'],
+        searchUrl: 'https://www.amazon.com/s?k=gelish+gel+polish+salon+professional',
+        bsgUrl: 'https://www.bsgbeauty.com/search?type=product&q=gel+polish',
+        avgPriceKey: 'smk_avg_per_bottle',
+        icon: '&#128137;'
+      },
+      {
+        id: 'acrylic_powder',
+        nameKey: 'smk_cat_acrylic_name',
+        categoryLabel: 'Acrylic Powder',
+        brands: ['Young Nails', 'NSI', 'Tammy Taylor', 'Mia Secret'],
+        searchUrl: 'https://www.amazon.com/s?k=nail+acrylic+powder+salon+professional',
+        bsgUrl: 'https://www.bsgbeauty.com/search?type=product&q=acrylic+powder',
+        avgPriceKey: 'smk_avg_per_box_acrylic',
+        icon: '&#129398;'
+      },
+      {
+        id: 'nail_tips',
+        nameKey: 'smk_cat_tips_name',
+        categoryLabel: 'Nail Tips',
+        brands: ['Tammy Taylor', 'Elegant Touch', 'IBD', 'Young Nails'],
+        searchUrl: 'https://www.amazon.com/s?k=nail+tips+salon+professional+500pcs',
+        bsgUrl: 'https://www.bsgbeauty.com/search?type=product&q=nail+tips',
+        avgPriceKey: 'smk_avg_per_box_tips',
+        icon: '&#10024;'
+      },
+      {
+        id: 'dip_powder',
+        nameKey: 'smk_cat_dip_name',
+        categoryLabel: 'Dip Powder',
+        brands: ['Kiara Sky', 'SNS', 'OPI', 'Revel Nail'],
+        searchUrl: 'https://www.amazon.com/s?k=dip+powder+nails+salon+professional',
+        bsgUrl: 'https://www.bsgbeauty.com/search?type=product&q=dip+powder',
+        avgPriceKey: 'smk_avg_per_jar_dip',
+        icon: '&#127774;'
+      },
+      {
+        id: 'nail_glue',
+        nameKey: 'smk_cat_glue_name',
+        categoryLabel: 'Nail Glue',
+        brands: ['IBD', 'Nailene', 'Mia Secret', 'Star Nail'],
+        searchUrl: 'https://www.amazon.com/s?k=professional+nail+glue+salon',
+        bsgUrl: 'https://www.bsgbeauty.com/search?type=product&q=nail+glue',
+        avgPriceKey: 'smk_avg_per_tube',
+        icon: '&#129521;'
+      },
+      {
+        id: 'files_buffers',
+        nameKey: 'smk_cat_files_name',
+        categoryLabel: 'Files & Buffers',
+        brands: ['Kupa', 'Orly', 'OPI', 'Star Nail'],
+        searchUrl: 'https://www.amazon.com/s?k=professional+nail+files+buffers+salon+bulk',
+        bsgUrl: 'https://www.bsgbeauty.com/search?type=product&q=nail+files+buffers',
+        avgPriceKey: 'smk_avg_per_set',
+        icon: '&#128296;'
+      },
+      {
+        id: 'disposable',
+        nameKey: 'smk_cat_disposable_name',
+        categoryLabel: 'Disposables',
+        brands: ['Dynarex', 'Medpride', 'CleanStar'],
+        searchUrl: 'https://www.amazon.com/s?k=nail+salon+disposable+supplies+bulk',
+        bsgUrl: 'https://www.bsgbeauty.com/search?type=product&q=salon+disposables',
+        avgPriceKey: 'smk_avg_per_carton',
+        icon: '&#128716;'
+      },
+      {
+        id: 'sanitation',
+        nameKey: 'smk_cat_sanitation_name',
+        categoryLabel: 'Sanitation',
+        brands: ['Barbicide', 'Marvy', 'Rejuvenate', 'CRC'],
+        searchUrl: 'https://www.amazon.com/s?k=nail+salon+sanitation+disinfectant+professional',
+        bsgUrl: 'https://www.bsgbeauty.com/search?type=product&q=salon+disinfectant',
+        avgPriceKey: 'smk_avg_per_bottle_san',
+        icon: '&#129529;'
+      },
+      {
+        id: 'retail',
+        nameKey: 'smk_cat_retail_name',
+        categoryLabel: 'Retail Products',
+        brands: ['OPI', 'Essie', 'Sally Hansen', 'Seche Vite'],
+        searchUrl: 'https://www.amazon.com/s?k=nail+salon+retail+top+coat+cuticle+oil',
+        bsgUrl: 'https://www.bsgbeauty.com/search?type=product&q=retail+nail+products',
+        avgPriceKey: 'smk_avg_per_bottle_ret',
+        icon: '&#127979;'
+      }
+    ];
+  }
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -121,7 +123,7 @@
   }
 
   function _db() {
-    if (!window.firebase || !firebase.firestore) throw new Error('Firebase chưa sẵn sàng.');
+    if (!window.firebase || !firebase.firestore) throw new Error(_T('msg_firebase_not_ready'));
     return firebase.firestore();
   }
 
@@ -158,7 +160,7 @@
 
     // Show loading state
     state.containerEl.innerHTML =
-      '<div class="sa-empty">Đang tải thông tin vật tư…</div>';
+      '<div class="sa-empty">' + esc(_T('smk_loading')) + '</div>';
 
     var lowStockPromise = (window.SalonInventoryDeduction)
       ? window.SalonInventoryDeduction.getLowStockItems(state.vendorId)
@@ -186,10 +188,10 @@
       })
       .catch(function (err) {
         state.loading = false;
-        state.error = err && err.message ? err.message : 'Lỗi không xác định';
+        state.error = err && err.message ? err.message : _T('msg_unknown_error');
         if (state.containerEl) {
           state.containerEl.innerHTML =
-            '<div class="sa-empty">Không thể tải trang vật tư. Vui lòng thử lại.</div>';
+            '<div class="sa-empty">' + esc(_T('smk_err_load')) + '</div>';
         }
       });
   }
@@ -199,18 +201,19 @@
   // Match by item.category field or a loose name match.
 
   function _matchCatalogEntry(item) {
+    var catalog = SUPPLY_CATALOG();
     var cat  = String(item.category || '').toLowerCase().replace(/[\s\-]/g, '_');
     var name = String(item.name || '').toLowerCase();
 
     // Direct category match
-    var byCategory = SUPPLY_CATALOG.filter(function (entry) {
+    var byCategory = catalog.filter(function (entry) {
       return entry.id === cat || cat.indexOf(entry.id) !== -1 || entry.id.indexOf(cat) !== -1;
     });
     if (byCategory.length) return byCategory[0];
 
     // Loose name match
-    var byName = SUPPLY_CATALOG.filter(function (entry) {
-      var lc = entry.name.toLowerCase();
+    var byName = catalog.filter(function (entry) {
+      var lc = _T(entry.nameKey).toLowerCase();
       return name.indexOf(lc) !== -1 ||
              lc.indexOf(name) !== -1 ||
              name.indexOf(entry.id) !== -1;
@@ -229,26 +232,29 @@
     }).join('');
 
     var supplierNote = preferredSupplierName
-      ? '<div class="sm-preferred-supplier">&#11088; Nhà cung cấp ưu tiên: <strong>' + esc(preferredSupplierName) + '</strong></div>'
+      ? '<div class="sm-preferred-supplier">' + _T('smk_preferred_supplier') + ' <strong>' + esc(preferredSupplierName) + '</strong></div>'
       : '';
+
+    var displayName = _T(entry.nameKey);
+    var displayPrice = _T(entry.avgPriceKey);
 
     return (
       '<div class="sm-catalog-card">' +
         '<div class="sm-card-header">' +
           '<span class="sm-card-icon">' + entry.icon + '</span>' +
           '<div class="sm-card-info">' +
-            '<div class="sm-card-name">' + esc(entry.name) + '</div>' +
+            '<div class="sm-card-name">' + esc(displayName) + '</div>' +
             '<div class="sm-card-category">' + esc(entry.categoryLabel) + '</div>' +
           '</div>' +
-          '<div class="sm-card-price">' + esc(entry.avgPrice) + '</div>' +
+          '<div class="sm-card-price">' + esc(displayPrice) + '</div>' +
         '</div>' +
         '<div class="sm-brands">' + brandsHtml + '</div>' +
         supplierNote +
         '<div class="sm-card-actions">' +
           '<a href="' + esc(entry.searchUrl) + '" target="_blank" rel="noopener noreferrer" ' +
-            'class="btn btn--primary btn--sm sm-order-btn">&#128722; Tìm Mua (Amazon)</a>' +
+            'class="btn btn--primary btn--sm sm-order-btn">' + esc(_T('smk_btn_search_amazon')) + '</a>' +
           '<a href="' + esc(entry.bsgUrl) + '" target="_blank" rel="noopener noreferrer" ' +
-            'class="btn btn--outline btn--sm sm-order-btn">&#128722; BSG Beauty</a>' +
+            'class="btn btn--outline btn--sm sm-order-btn">' + esc(_T('smk_btn_search_bsg')) + '</a>' +
         '</div>' +
       '</div>'
     );
@@ -260,26 +266,24 @@
   function render() {
     if (!state.containerEl) return;
 
+    var catalog = SUPPLY_CATALOG();
     var html = '';
 
     // ── Section 1: Disclaimer ────────────────────────────────────────────────
     html +=
-      '<div class="sm-disclaimer">' +
-        '&#8505; Các liên kết trên mở trang tìm kiếm bên ngoài. ' +
-        'Không có giao dịch tự động.' +
-      '</div>';
+      '<div class="sm-disclaimer">' + esc(_T('smk_disclaimer_top')) + '</div>';
 
-    // ── Section 2: Cần Đặt Hàng Ngay (low stock) ────────────────────────────
+    // ── Section 2: Restock Now (low stock) ────────────────────────────
     html += '<div class="sa-section-header" style="margin-top:1rem">';
-    html += '<div class="sa-section-title">&#9888; Cần Đặt Hàng Ngay</div>';
-    html += '<button class="btn btn--outline btn--sm" onclick="window.SalonSupplyMarketplace.loadMarketplace()">&#8635; Làm mới</button>';
+    html += '<div class="sa-section-title">' + esc(_T('smk_section_low_title')) + '</div>';
+    html += '<button class="btn btn--outline btn--sm" onclick="window.SalonSupplyMarketplace.loadMarketplace()">' + esc(_T('smk_btn_refresh')) + '</button>';
     html += '</div>';
 
     if (!state.lowStockItems || !state.lowStockItems.length) {
       html +=
         '<div class="sa-card" style="margin-bottom:1.25rem">' +
           '<div class="sa-empty" style="padding:1.25rem 0">' +
-            '&#10003; Không có vật tư nào sắp hết. Kho hàng đang ổn định.' +
+            esc(_T('smk_lowstock_ok')) +
           '</div>' +
         '</div>';
     } else {
@@ -289,13 +293,17 @@
         var currentQty   = Number(item.currentQty) || 0;
         var minQty       = Number(item.minQty) || 0;
         var unit         = item.unit ? ' ' + esc(item.unit) : '';
+        var stockBadge   = _T('smk_stock_label')
+          .replace(/\{current\}/g, currentQty)
+          .replace(/\{min\}/g, minQty)
+          .replace(/\{unit\}/g, unit);
 
         html +=
           '<div class="sm-lowstock-card">' +
             '<div class="sm-lowstock-header">' +
               '<div class="sm-lowstock-name">' + esc(item.name || item.id) + '</div>' +
               '<span class="sm-stock-badge sm-stock-badge--low">' +
-                'Còn ' + currentQty + unit + ' / tối thiểu ' + minQty + unit +
+                stockBadge +
               '</span>' +
             '</div>';
 
@@ -303,25 +311,26 @@
           html +=
             '<div class="sm-lowstock-actions">' +
               '<a href="' + esc(item.supplierUrl) + '" target="_blank" rel="noopener noreferrer" ' +
-                'class="btn btn--primary btn--sm sm-order-btn">&#128722; Đặt Hàng Ngay</a>' +
+                'class="btn btn--primary btn--sm sm-order-btn">' + esc(_T('smk_btn_order_now')) + '</a>' +
             '</div>';
         } else if (catalogEntry) {
           html +=
             '<div style="font-size:.7rem;color:var(--muted);margin:.2rem 0 .4rem">' +
-              'Phù hợp danh mục: <em>' + esc(catalogEntry.name) + '</em>' +
+              esc(_T('smk_match_label')) + ' <em>' + esc(_T(catalogEntry.nameKey)) + '</em>' +
             '</div>' +
             '<div class="sm-lowstock-actions">' +
               '<a href="' + esc(catalogEntry.searchUrl) + '" target="_blank" rel="noopener noreferrer" ' +
-                'class="btn btn--primary btn--sm sm-order-btn">&#128722; Tìm Mua (Amazon)</a>' +
+                'class="btn btn--primary btn--sm sm-order-btn">' + esc(_T('smk_btn_search_amazon')) + '</a>' +
               '<a href="' + esc(catalogEntry.bsgUrl) + '" target="_blank" rel="noopener noreferrer" ' +
-                'class="btn btn--outline btn--sm sm-order-btn">&#128722; BSG Beauty</a>' +
+                'class="btn btn--outline btn--sm sm-order-btn">' + esc(_T('smk_btn_search_bsg')) + '</a>' +
             '</div>';
         } else {
+          var fallbackQuery = item.name || _T('smk_brand_default_search');
           html +=
             '<div class="sm-lowstock-actions">' +
-              '<a href="https://www.amazon.com/s?k=' + encodeURIComponent(item.name || 'nail salon supplies') + '" ' +
+              '<a href="https://www.amazon.com/s?k=' + encodeURIComponent(fallbackQuery) + '" ' +
                 'target="_blank" rel="noopener noreferrer" ' +
-                'class="btn btn--outline btn--sm sm-order-btn">&#128722; Tìm Mua</a>' +
+                'class="btn btn--outline btn--sm sm-order-btn">' + esc(_T('smk_btn_search')) + '</a>' +
             '</div>';
         }
 
@@ -330,16 +339,16 @@
       html += '</div>'; // .sm-lowstock-list
     }
 
-    // ── Section 3: Danh Mục Vật Tư (full catalog) ───────────────────────────
+    // ── Section 3: Supply Catalog ───────────────────────────
     html += '<div class="sa-section-header" style="margin-top:1.5rem">';
-    html += '<div class="sa-section-title">&#128218; Danh Mục Vật Tư</div>';
+    html += '<div class="sa-section-title">' + esc(_T('smk_section_catalog')) + '</div>';
     html += '</div>';
 
     // Build a set of preferred supplier names keyed by supply category
     // (simple heuristic: if a supplier's name contains a known brand, flag it)
     var preferredByCategory = {};
     if (state.suppliers && state.suppliers.length) {
-      SUPPLY_CATALOG.forEach(function (entry) {
+      catalog.forEach(function (entry) {
         state.suppliers.forEach(function (sup) {
           var supName = String(sup.name || '').toLowerCase();
           var matched = entry.brands.some(function (brand) {
@@ -353,7 +362,7 @@
     }
 
     html += '<div class="sm-catalog-grid">';
-    SUPPLY_CATALOG.forEach(function (entry) {
+    catalog.forEach(function (entry) {
       html += _renderCatalogCard(entry, preferredByCategory[entry.id] || null);
     });
     html += '</div>';
@@ -361,8 +370,7 @@
     // ── Footer disclaimer ────────────────────────────────────────────────────
     html +=
       '<div class="sm-disclaimer sm-disclaimer--footer">' +
-        '&#8505; Tất cả liên kết "Tìm Mua" chỉ mở trang tìm kiếm bên ngoài (Amazon, BSG Beauty). ' +
-        'Không có giao dịch tự động xảy ra. Chủ tiệm tự quyết định mua hàng.' +
+        esc(_T('smk_disclaimer_bottom')) +
       '</div>';
 
     state.containerEl.innerHTML = html;

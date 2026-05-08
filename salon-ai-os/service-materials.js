@@ -1,11 +1,17 @@
 (function () {
   'use strict';
 
-  var DEDUCT_MODES = [
-    { value: 'fixed',    label: 'Cố định / lần' },
-    { value: 'per_nail', label: 'Theo móng' },
-    { value: 'manual',   label: 'Thủ công' }
-  ];
+  function _T(key) {
+    return (window.SalonI18n && window.SalonI18n.t) ? window.SalonI18n.t(key) : key;
+  }
+
+  function DEDUCT_MODES() {
+    return [
+      { value: 'fixed',    label: _T('sm_mode_fixed') },
+      { value: 'per_nail', label: _T('sm_mode_per_nail') },
+      { value: 'manual',   label: _T('sm_mode_manual') }
+    ];
+  }
 
   var state = {
     vendorId: '',
@@ -37,11 +43,6 @@
     return Number.isFinite(n) ? n : fallback;
   }
 
-  function deductLabel(val) {
-    var found = DEDUCT_MODES.find(function (m) { return m.value === val; });
-    return found ? found.label : val;
-  }
-
   function selectHtml(id, options, selected) {
     return '<select class="sa-input sm-select" id="' + esc(id) + '">' +
       options.map(function (o) {
@@ -67,7 +68,7 @@
   // ── Public API: loadMappings ───────────────────────────────────────────────
 
   function loadMappings() {
-    if (!state.vendorId || !state.db) return Promise.reject(new Error('SalonServiceMaterials chưa được khởi tạo.'));
+    if (!state.vendorId || !state.db) return Promise.reject(new Error(_T('sm_err_not_init')));
     state.loading = true;
     render();
 
@@ -89,7 +90,7 @@
           resolve(state.mappings);
         }, function (err) {
           state.loading = false;
-          state.error = err.message || 'Không thể tải danh sách nguyên liệu.';
+          state.error = err.message || _T('sm_err_load_failed');
           render();
           reject(err);
         });
@@ -101,7 +102,7 @@
   // window.SALON_SERVICES_DATA if present (services-data.js) keyed by vendorId.
 
   function loadServices() {
-    if (!state.vendorId || !state.db) return Promise.reject(new Error('SalonServiceMaterials chưa được khởi tạo.'));
+    if (!state.vendorId || !state.db) return Promise.reject(new Error(_T('sm_err_not_init')));
 
     return state.db.collection('vendors').doc(state.vendorId)
       .collection('services').where('active', '==', true)
@@ -132,7 +133,7 @@
   // ── Public API: loadInventory ──────────────────────────────────────────────
 
   function loadInventory() {
-    if (!state.vendorId || !state.db) return Promise.reject(new Error('SalonServiceMaterials chưa được khởi tạo.'));
+    if (!state.vendorId || !state.db) return Promise.reject(new Error(_T('sm_err_not_init')));
     return inventoryColRef()
       .where('active', '==', true)
       .orderBy('category')
@@ -153,8 +154,8 @@
   // ── Public API: saveMaterials ──────────────────────────────────────────────
 
   function saveMaterials(serviceId, serviceNameSnapshot, materialsArray) {
-    if (!serviceId) return Promise.reject(new Error('Thiếu serviceId.'));
-    if (!state.vendorId || !state.db) return Promise.reject(new Error('SalonServiceMaterials chưa được khởi tạo.'));
+    if (!serviceId) return Promise.reject(new Error(_T('sm_err_missing_svc')));
+    if (!state.vendorId || !state.db) return Promise.reject(new Error(_T('sm_err_not_init')));
 
     var now = firebase.firestore.FieldValue.serverTimestamp();
     var existing = state.mappings.find(function (m) { return m.id === serviceId; });
@@ -182,7 +183,7 @@
   // ── Public API: deleteMaterials ────────────────────────────────────────────
 
   function deleteMaterials(serviceId) {
-    if (!serviceId) return Promise.reject(new Error('Thiếu serviceId.'));
+    if (!serviceId) return Promise.reject(new Error(_T('sm_err_missing_svc')));
     return mappingDocRef(serviceId).update({
       active: false,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -238,7 +239,7 @@
   // ── Render helpers ─────────────────────────────────────────────────────────
 
   function inventorySelectOptions(selectedId) {
-    var opts = '<option value="">— chọn vật tư —</option>';
+    var opts = '<option value="">' + esc(_T('sm_choose_product')) + '</option>';
     state.inventory.forEach(function (item) {
       opts += '<option value="' + esc(item.id) + '"' + (item.id === selectedId ? ' selected' : '') + '>' + esc(item.name) + (item.brand ? ' (' + esc(item.brand) + ')' : '') + '</option>';
     });
@@ -252,10 +253,10 @@
     var reqId    = 'smReq_' + idx;
 
     var prodSelect = '<select class="sa-input sm-select" id="' + selectId + '">' + inventorySelectOptions(line.productId) + '</select>';
-    var qtyInput   = '<input class="sa-input sm-qty-input" type="number" id="' + qtyId + '" step="0.01" min="0" value="' + esc(line.qtyPerService == null ? '' : line.qtyPerService) + '" placeholder="SL">';
-    var modeSelect = selectHtml(modeId, DEDUCT_MODES, line.deductMode || 'fixed');
-    var reqCheck   = '<label class="sm-line-req"><input type="checkbox" id="' + reqId + '"' + (line.required !== false ? ' checked' : '') + '> Bắt buộc</label>';
-    var delBtn     = '<button class="sm-line-del" type="button" data-sm-action="del-line" data-line-idx="' + idx + '" aria-label="Xóa dòng">×</button>';
+    var qtyInput   = '<input class="sa-input sm-qty-input" type="number" id="' + qtyId + '" step="0.01" min="0" value="' + esc(line.qtyPerService == null ? '' : line.qtyPerService) + '" placeholder="' + esc(_T('sm_qty_ph')) + '">';
+    var modeSelect = selectHtml(modeId, DEDUCT_MODES(), line.deductMode || 'fixed');
+    var reqCheck   = '<label class="sm-line-req"><input type="checkbox" id="' + reqId + '"' + (line.required !== false ? ' checked' : '') + '> ' + esc(_T('sm_required')) + '</label>';
+    var delBtn     = '<button class="sm-line-del" type="button" data-sm-action="del-line" data-line-idx="' + idx + '" aria-label="' + esc(_T('sm_aria_del_line')) + '">×</button>';
 
     return '<div class="sm-line" data-line-idx="' + idx + '">' +
       prodSelect + qtyInput + modeSelect + reqCheck + delBtn +
@@ -266,16 +267,16 @@
     var lines = state.draftLines;
     var lineHtml = lines.length
       ? lines.map(function (line, i) { return renderEditorLine(line, i); }).join('')
-      : '<div class="sm-empty-row">Chưa có nguyên liệu — bấm "+ Thêm dòng" để thêm.</div>';
+      : '<div class="sm-empty-row">' + esc(_T('sm_empty_lines')) + '</div>';
 
     return '<div class="sm-editor" id="smEditor_' + esc(serviceId) + '">' +
-      '<div style="font-size:.72rem;color:var(--muted);font-weight:700;margin-bottom:.2rem">Nguyên liệu cho: <span style="color:var(--cream)">' + esc(serviceName) + '</span></div>' +
+      '<div style="font-size:.72rem;color:var(--muted);font-weight:700;margin-bottom:.2rem">' + esc(_T('sm_editor_for')) + ' <span style="color:var(--cream)">' + esc(serviceName) + '</span></div>' +
       '<div class="sm-line-list" id="smLineList_' + esc(serviceId) + '">' + lineHtml + '</div>' +
-      '<button class="btn btn--outline btn--sm sm-add-line" type="button" data-sm-action="add-line" data-svc-id="' + esc(serviceId) + '">+ Thêm dòng</button>' +
+      '<button class="btn btn--outline btn--sm sm-add-line" type="button" data-sm-action="add-line" data-svc-id="' + esc(serviceId) + '">' + esc(_T('sm_btn_add_line')) + '</button>' +
       '<div class="sm-msg" id="smEditorMsg" style="display:none"></div>' +
       '<div class="sm-editor-actions">' +
-        '<button class="btn btn--outline btn--sm" type="button" data-sm-action="cancel-edit">Hủy</button>' +
-        '<button class="btn btn--primary btn--sm" type="button" data-sm-action="save-edit" data-svc-id="' + esc(serviceId) + '" data-svc-name="' + esc(serviceName) + '">Lưu nguyên liệu</button>' +
+        '<button class="btn btn--outline btn--sm" type="button" data-sm-action="cancel-edit">' + esc(_T('btn_cancel')) + '</button>' +
+        '<button class="btn btn--primary btn--sm" type="button" data-sm-action="save-edit" data-svc-id="' + esc(serviceId) + '" data-svc-name="' + esc(serviceName) + '">' + esc(_T('sm_btn_save_lines')) + '</button>' +
       '</div>' +
     '</div>';
   }
@@ -294,18 +295,25 @@
     }
     var isEditing = state.editingServiceId === svc.id;
 
+    var matSummary = matCount
+      ? _T('sm_meta_count').replace('{count}', matCount)
+      : _T('sm_meta_no_materials');
+    var costSummary = estCost > 0
+      ? ' · ' + _T('sm_meta_est_cost').replace('{cost}', estCost.toFixed(2))
+      : '';
+    var badgeText = _T('sm_badge_count').replace('{count}', matCount);
+
     var head = '<div class="sm-row__head">' +
       '<div>' +
         '<div class="sm-svc-name">' + esc(svc.name || svc.serviceName || svc.id) + '</div>' +
         '<div class="sm-meta">' +
-          (matCount ? matCount + ' nguyên liệu' : 'Chưa cài nguyên liệu') +
-          (estCost > 0 ? ' · ~$' + estCost.toFixed(2) + '/dịch vụ' : '') +
+          esc(matSummary) + esc(costSummary) +
         '</div>' +
       '</div>' +
       '<div class="sm-head-right">' +
-        (matCount ? '<span class="sm-badge">' + matCount + ' NL</span>' : '') +
-        '<button class="btn btn--outline btn--sm" type="button" data-sm-action="edit-svc" data-svc-id="' + esc(svc.id) + '" data-svc-name="' + esc(svc.name || svc.serviceName || svc.id) + '">' + (isEditing ? 'Đóng' : 'Cài nguyên liệu') + '</button>' +
-        (matCount ? '<button class="btn btn--outline btn--sm" type="button" data-sm-action="clear-svc" data-svc-id="' + esc(svc.id) + '" style="color:var(--danger)">Xóa</button>' : '') +
+        (matCount ? '<span class="sm-badge">' + esc(badgeText) + '</span>' : '') +
+        '<button class="btn btn--outline btn--sm" type="button" data-sm-action="edit-svc" data-svc-id="' + esc(svc.id) + '" data-svc-name="' + esc(svc.name || svc.serviceName || svc.id) + '">' + esc(isEditing ? _T('sm_btn_close') : _T('sm_btn_setup')) + '</button>' +
+        (matCount ? '<button class="btn btn--outline btn--sm" type="button" data-sm-action="clear-svc" data-svc-id="' + esc(svc.id) + '" style="color:var(--danger)">' + esc(_T('btn_delete')) + '</button>' : '') +
       '</div>' +
     '</div>';
 
@@ -317,7 +325,7 @@
 
   function renderList() {
     if (!state.services.length) {
-      return '<div class="sa-empty">Chưa có dịch vụ nào. Thêm dịch vụ trước rồi quay lại cài nguyên liệu.</div>';
+      return '<div class="sa-empty">' + esc(_T('sm_empty_services')) + '</div>';
     }
     return state.services.map(function (svc) { return renderServiceRow(svc); }).join('');
   }
@@ -325,16 +333,19 @@
   function render() {
     if (!state.containerEl) return;
     var totalMapped = state.mappings.length;
+    var summary = _T('sm_summary')
+      .replace('{services}', state.services.length)
+      .replace('{mapped}', totalMapped);
     state.containerEl.innerHTML = renderStyles() +
       '<div class="sm-wrap">' +
         '<div class="sm-toolbar">' +
           '<div>' +
-            '<div class="sa-section-title">Nguyên Liệu Theo Dịch Vụ</div>' +
-            '<div class="sm-summary">' + state.services.length + ' dịch vụ · ' + totalMapped + ' đã cài nguyên liệu</div>' +
+            '<div class="sa-section-title">' + esc(_T('sm_title')) + '</div>' +
+            '<div class="sm-summary">' + esc(summary) + '</div>' +
           '</div>' +
         '</div>' +
         (state.error ? '<div class="sm-msg">' + esc(state.error) + '</div>' : '') +
-        (state.loading ? '<div class="sa-empty">Đang tải…</div>' : renderList()) +
+        (state.loading ? '<div class="sa-empty">' + esc(_T('empty_loading')) + '</div>' : renderList()) +
       '</div>';
   }
 
@@ -420,13 +431,13 @@
             state.draftLines = [];
           })
           .catch(function (err) {
-            showEditorMsg(err.message || 'Không thể lưu nguyên liệu.');
+            showEditorMsg(err.message || _T('sm_err_save_failed'));
           });
 
       } else if (action === 'clear-svc') {
-        if (window.confirm('Xóa toàn bộ nguyên liệu cho dịch vụ này?')) {
+        if (window.confirm(_T('sm_confirm_clear'))) {
           deleteMaterials(svcId).catch(function (err) {
-            state.error = err.message || 'Không thể xóa.';
+            state.error = err.message || _T('sm_err_delete_failed');
             render();
           });
         }
@@ -437,9 +448,9 @@
   // ── Public API: init ───────────────────────────────────────────────────────
 
   function init(vendorId, containerEl) {
-    if (!vendorId)    throw new Error('Thiếu vendorId cho service materials.');
-    if (!containerEl) throw new Error('Thiếu vùng hiển thị service materials.');
-    if (!window.firebase || !firebase.firestore) throw new Error('Firebase chưa sẵn sàng.');
+    if (!vendorId)    throw new Error(_T('sm_err_init_vendor'));
+    if (!containerEl) throw new Error(_T('sm_err_init_container'));
+    if (!window.firebase || !firebase.firestore) throw new Error(_T('msg_firebase_not_ready'));
 
     if (state.unsubscribe && state.vendorId !== vendorId) {
       state.unsubscribe();
@@ -464,7 +475,7 @@
       })
       .catch(function (err) {
         state.loading = false;
-        state.error   = err.message || 'Không thể khởi tạo nguyên liệu dịch vụ.';
+        state.error   = err.message || _T('sm_err_init_failed');
         render();
       });
   }

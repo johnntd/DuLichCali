@@ -12,6 +12,10 @@
   //   serviceMaterials  — material costs per service
   //   inventory         — costPerUnit per product
 
+  function _T(key) {
+    return (window.SalonI18n && window.SalonI18n.t) ? window.SalonI18n.t(key) : key;
+  }
+
   var DAYS_60 = 60 * 24 * 60 * 60 * 1000;
 
   // Thresholds
@@ -101,7 +105,7 @@
 
   function computeSuggestions() {
     if (!state.vendorId || !state.db) {
-      return Promise.reject(new Error('SalonPricingSuggestions chưa được khởi tạo.'));
+      return Promise.reject(new Error(_T('ps_err_not_init')));
     }
 
     var cutoff = new Date(Date.now() - DAYS_60);
@@ -216,7 +220,7 @@
 
         // ── Step 3: Build suggestion per service ──
         var suggestions = services.map(function (svc) {
-          var name         = svc.name || svc.serviceName || svc.id || '(Không tên)';
+          var name         = svc.name || svc.serviceName || svc.id || _T('ps_no_name');
           var currentPrice = parsePrice(svc);
           var materialCost = computeMaterialCost(svc.id);
 
@@ -257,11 +261,9 @@
               // Suggest small price drop to attract interest
               suggestedPrice = Math.max(materialCost * 2.5, currentPrice * 0.9);
               suggestedPrice = Math.round(suggestedPrice);
-              reasoning = 'Dịch vụ này chưa có lượt đặt trong 60 ngày. ' +
-                'Cân nhắc giảm giá nhẹ hoặc chạy khuyến mãi để thu hút khách.';
+              reasoning = _T('ps_reason_no_bookings_drop');
             } else {
-              reasoning = 'Dịch vụ này chưa có lượt đặt trong 60 ngày. ' +
-                'Cân nhắc chạy khuyến mãi để thu hút khách mới.';
+              reasoning = _T('ps_reason_no_bookings_promote');
             }
           } else if (demand === 'high' && marginPct !== null && marginPct < MARGIN_THRESHOLD_LOW) {
             // High demand but margin below 40% → raise price
@@ -271,29 +273,29 @@
               suggestedPrice = Math.ceil(materialCost / 0.50);
               // But also ensure at least a 10% bump from current
               suggestedPrice = Math.max(suggestedPrice, Math.ceil(currentPrice * 1.10));
-              reasoning = 'Dịch vụ có lượng đặt cao (' + count + ' lượt/60 ngày) ' +
-                'nhưng lãi gộp chỉ ' + fmtPct(marginPct) + ' (dưới 40%). ' +
-                'Nên tăng giá để cải thiện biên lợi nhuận.';
+              reasoning = _T('ps_reason_high_low_margin')
+                .replace('{count}', count)
+                .replace('{pct}', fmtPct(marginPct));
             } else {
-              reasoning = 'Dịch vụ có lượng đặt cao (' + count + ' lượt/60 ngày) ' +
-                'nhưng biên lợi nhuận thấp. Cân nhắc tăng giá.';
+              reasoning = _T('ps_reason_high_low_margin_simple').replace('{count}', count);
             }
           } else if (materialCost > 0 && currentPrice > 0 && currentPrice < materialCost * COST_MULTIPLE_FLOOR) {
             // Price below 3× cost floor → likely underpriced
             suggestion = 'raise_price';
             suggestedPrice = Math.ceil(materialCost * COST_MULTIPLE_FLOOR);
-            reasoning = 'Giá hiện tại (' + fmtCurrency(currentPrice) + ') thấp hơn ' +
-              COST_MULTIPLE_FLOOR + '× chi phí nguyên liệu (' + fmtCurrency(materialCost) + '). ' +
-              'Có thể đang định giá quá thấp so với chi phí thực tế.';
+            reasoning = _T('ps_reason_below_floor')
+              .replace('{price}', fmtCurrency(currentPrice))
+              .replace('{mult}', COST_MULTIPLE_FLOOR)
+              .replace('{cost}', fmtCurrency(materialCost));
           } else {
             // Default: ok
             suggestion = 'ok';
             if (demand === 'high') {
-              reasoning = 'Dịch vụ phổ biến với biên lợi nhuận hợp lý. Giá đang tốt.';
+              reasoning = _T('ps_reason_ok_high');
             } else if (demand === 'medium') {
-              reasoning = 'Lượng đặt ổn định. Không cần thay đổi giá lúc này.';
+              reasoning = _T('ps_reason_ok_med');
             } else {
-              reasoning = 'Lượng đặt thấp nhưng giá và chi phí hợp lý.';
+              reasoning = _T('ps_reason_ok_low');
             }
           }
 
@@ -401,28 +403,25 @@
 
   // ── Render helpers ────────────────────────────────────────────────────────────
 
-  var DEMAND_LABELS = {
-    high:   'Cao',
-    medium: 'Vừa',
-    low:    'Thấp',
-    none:   'Không có'
-  };
+  function demandLabel(d) {
+    return _T('ps_demand_' + d);
+  }
 
-  var SUGGESTION_LABELS = {
-    raise_price: 'Tăng Giá',
-    lower_price: 'Giảm Giá',
-    promote:     'Khuyến Mãi',
-    ok:          'Tốt'
-  };
+  function suggestionLabel(s) {
+    if (s === 'raise_price') return _T('ps_sugg_raise');
+    if (s === 'lower_price') return _T('ps_sugg_lower');
+    if (s === 'promote')     return _T('ps_sugg_promote');
+    return _T('ps_sugg_ok');
+  }
 
   function demandBadge(demand) {
     return '<span class="ps-demand ps-demand--' + esc(demand) + '">' +
-      esc(DEMAND_LABELS[demand] || demand) + '</span>';
+      esc(demandLabel(demand)) + '</span>';
   }
 
   function suggestionBadge(suggestion) {
     return '<span class="ps-sug ps-sug--' + esc(suggestion) + '">' +
-      esc(SUGGESTION_LABELS[suggestion] || suggestion) + '</span>';
+      esc(suggestionLabel(suggestion)) + '</span>';
   }
 
   // openEditRow: show inline price edit for a row
@@ -434,8 +433,8 @@
       '<div class="ps-edit-row">' +
         '<span style="font-size:.65rem;color:var(--muted)">$</span>' +
         '<input id="ps-inp-' + esc(serviceId) + '" class="ps-price-input" type="number" min="0" step="1" value="' + esc(initVal || '') + '">' +
-        '<button class="ps-save-btn" onclick="window._psSave(' + "'" + esc(serviceId) + "'" + ')">Lưu</button>' +
-        '<button class="ps-cancel-btn" onclick="window._psCancel(' + "'" + esc(serviceId) + "'" + ')">Hủy</button>' +
+        '<button class="ps-save-btn" onclick="window._psSave(' + "'" + esc(serviceId) + "'" + ')">' + esc(_T('ps_btn_save')) + '</button>' +
+        '<button class="ps-cancel-btn" onclick="window._psCancel(' + "'" + esc(serviceId) + "'" + ')">' + esc(_T('ps_btn_cancel')) + '</button>' +
       '</div>';
   }
 
@@ -461,7 +460,7 @@
         var editZone = document.getElementById('ps-edit-zone-' + serviceId);
         if (editZone) {
           editZone.innerHTML =
-            '<span class="ps-saved-msg">&#10003; Đã lưu $' + newPrice.toFixed(2) + '</span>';
+            '<span class="ps-saved-msg">' + esc(_T('ps_msg_saved').replace('{price}', newPrice.toFixed(2))) + '</span>';
         }
         // Update local state so the price cell reflects the change
         state.suggestions.forEach(function (s) {
@@ -475,16 +474,16 @@
         var editZone = document.getElementById('ps-edit-zone-' + serviceId);
         if (editZone) {
           editZone.innerHTML =
-            '<span style="color:#f87171;font-size:.65rem">&#10005; Lưu thất bại. Thử lại.</span>' +
+            '<span style="color:#f87171;font-size:.65rem">' + esc(_T('ps_msg_save_failed')) + '</span>' +
             '<button class="ps-edit-btn" onclick="window._psOpenEdit(' +
               "'" + esc(serviceId) + "', " + newPrice + ', null' +
-            ')">Sửa Lại</button>';
+            ')">' + esc(_T('ps_btn_edit_again')) + '</button>';
         }
         console.warn('[pricing-suggestions] save failed:', err && err.message ? err.message : err);
       });
   };
 
-  // _psCancel: restore the "Cập Nhật Giá" button
+  // _psCancel: restore the "Update Price" button
   window._psCancel = function (serviceId) {
     var found = null;
     state.suggestions.forEach(function (s) {
@@ -507,7 +506,7 @@
         "'" + esc(row.serviceId) + "'," +
         row.currentPrice + ',' +
         (row.suggestedPrice !== null ? row.suggestedPrice : 'null') +
-      ')">C&#7853;p Nh&#7853;t Gi&aacute;</button>';
+      ')">' + esc(_T('ps_btn_update_price')) + '</button>';
   }
 
   // ── render ────────────────────────────────────────────────────────────────────
@@ -521,7 +520,7 @@
     if (state.loading) {
       el.innerHTML =
         '<div class="ps-wrap">' +
-          '<div class="ps-loading">&#9203; &#272;ang t&#7843;i d&#7919; li&#7879;u &#273;&#7883;nh gi&aacute;&hellip;</div>' +
+          '<div class="ps-loading">⏳ ' + esc(_T('ps_loading')) + '</div>' +
         '</div>';
       return;
     }
@@ -529,9 +528,9 @@
     if (state.error) {
       el.innerHTML =
         '<div class="ps-wrap">' +
-          '<div class="ps-error">&#10005; ' + esc(state.error) + '</div>' +
+          '<div class="ps-error">✕ ' + esc(state.error) + '</div>' +
           '<div style="margin-top:.75rem">' +
-            '<button class="btn btn--outline btn--sm" onclick="window.SalonPricingSuggestions.refresh()">T&#7843;i L&#7841;i</button>' +
+            '<button class="btn btn--outline btn--sm" onclick="window.SalonPricingSuggestions.refresh()">' + esc(_T('btn_refresh')) + '</button>' +
           '</div>' +
         '</div>';
       return;
@@ -541,40 +540,40 @@
 
     var tableRows = '';
     if (!rows.length) {
-      tableRows = '<tr><td colspan="7"><div class="ps-empty">Ch&#432;a c&#243; d&#7883;ch v&#7909; n&agrave;o &#273;&#432;&#7907;c t&#7843;i.</div></td></tr>';
+      tableRows = '<tr><td colspan="7"><div class="ps-empty">' + esc(_T('ps_empty')) + '</div></td></tr>';
     } else {
       rows.forEach(function (row) {
         tableRows +=
           '<tr>' +
-            // Dịch Vụ
+            // Service
             '<td style="min-width:160px">' +
               '<div class="ps-svc-name">' + esc(row.serviceName) + '</div>' +
               '<div class="ps-reasoning">' + esc(row.reasoning) + '</div>' +
             '</td>' +
-            // Giá Hiện Tại
+            // Current price
             '<td><span id="ps-price-' + esc(row.serviceId) + '">' +
-              (row.currentPrice > 0 ? '$' + row.currentPrice.toFixed(2) : '&mdash;') +
+              (row.currentPrice > 0 ? '$' + row.currentPrice.toFixed(2) : '—') +
             '</span></td>' +
-            // Chi Phí VL
-            '<td>' + (row.materialCost > 0 ? '$' + row.materialCost.toFixed(2) : '&mdash;') + '</td>' +
-            // Lãi %
+            // Material cost
+            '<td>' + (row.materialCost > 0 ? '$' + row.materialCost.toFixed(2) : '—') + '</td>' +
+            // Margin %
             '<td>' +
               (row.marginPct !== null && Number.isFinite(row.marginPct)
                 ? '<span style="color:' + (row.marginPct < 0.40 ? '#fb923c' : '#4ade80') + '">' +
                     Math.round(row.marginPct * 100) + '%' +
                   '</span>'
-                : '&mdash;') +
+                : '—') +
             '</td>' +
-            // Lượt Đặt 60N
+            // Bookings 60d
             '<td>' +
               '<span style="font-weight:700;color:' +
                 (row.bookingCount60d === 0 ? '#f87171' : row.bookingCount60d >= HIGH_DEMAND_MIN ? '#4ade80' : 'var(--text)') +
               '">' + row.bookingCount60d + '</span>' +
               ' ' + demandBadge(row.demand) +
             '</td>' +
-            // Gợi Ý (badge)
+            // Suggestion (badge)
             '<td>' + suggestionBadge(row.suggestion) + '</td>' +
-            // Cập Nhật Giá (action)
+            // Update price (action)
             '<td>' +
               '<div id="ps-edit-zone-' + esc(row.serviceId) + '">' +
                 renderEditButton(row) +
@@ -590,22 +589,22 @@
         // ── Toolbar ──
         '<div class="ps-toolbar">' +
           '<div>' +
-            '<div class="ps-title">&#272;&#7883;nh Gi&aacute; Th&#244;ng Minh</div>' +
-            '<div class="ps-subtitle">G&#7907;i &yacute; d&#7921;a tr&ecirc;n nhu c&#7847;u &#273;&#7863;t l&#7883;ch &amp; chi ph&iacute; nguy&ecirc;n li&#7879;u (60 ng&agrave;y g&#7847;n nh&#7845;t)</div>' +
+            '<div class="ps-title">' + esc(_T('ps_title')) + '</div>' +
+            '<div class="ps-subtitle">' + esc(_T('ps_subtitle')) + '</div>' +
           '</div>' +
-          '<button class="btn btn--outline btn--sm" onclick="window.SalonPricingSuggestions.refresh()" style="flex-shrink:0">&#8635; T&#7843;i L&#7841;i</button>' +
+          '<button class="btn btn--outline btn--sm" onclick="window.SalonPricingSuggestions.refresh()" style="flex-shrink:0">↻ ' + esc(_T('btn_refresh')) + '</button>' +
         '</div>' +
 
         // ── Table ──
         '<div class="ps-table-wrap">' +
           '<table class="ps-table">' +
           '<thead><tr>' +
-            '<th>D&#7883;ch V&#7909;</th>' +
-            '<th>Gi&aacute; Hi&#7879;n T&#7841;i</th>' +
-            '<th>Chi Ph&iacute; VL</th>' +
-            '<th>L&atilde;i %</th>' +
-            '<th>L&#432;&#7907;t &#272;&#7863;t (60N)</th>' +
-            '<th>G&#7907;i &yacute;</th>' +
+            '<th>' + esc(_T('ps_col_service')) + '</th>' +
+            '<th>' + esc(_T('ps_col_price_now')) + '</th>' +
+            '<th>' + esc(_T('ps_col_mat_cost')) + '</th>' +
+            '<th>' + esc(_T('ps_col_margin')) + '</th>' +
+            '<th>' + esc(_T('ps_col_bookings_60d')) + '</th>' +
+            '<th>' + esc(_T('ps_col_suggestion')) + '</th>' +
             '<th></th>' +
           '</tr></thead>' +
           '<tbody>' + tableRows + '</tbody>' +
@@ -613,11 +612,7 @@
         '</div>' +
 
         // ── Disclaimer ──
-        '<div class="ps-note">' +
-          '&#9432; &#272;&acirc;y l&agrave; g&#7907;i &yacute; d&#7921;a tr&ecirc;n d&#7919; li&#7879;u n&#7897;i b&#7897;. ' +
-          'Gi&aacute; ch&#7881; thay &#273;&#7893;i khi b&#7841;n b&#7845;m <strong>L&#432;u</strong>. ' +
-          'H&#7879; th&#7889;ng kh&ocirc;ng t&#7921; &#273;&#7897;ng thay &#273;&#7893;i gi&aacute; ni&ecirc;m y&#7871;t.' +
-        '</div>' +
+        '<div class="ps-note">' + _T('ps_disclaimer') + '</div>' +
 
       '</div>';
   }
@@ -655,7 +650,7 @@
       })
       .catch(function (err) {
         state.loading = false;
-        state.error   = (err && err.message) ? err.message : 'Không thể tải dữ liệu.';
+        state.error   = (err && err.message) ? err.message : _T('ps_err_load_failed');
         render();
       });
   }

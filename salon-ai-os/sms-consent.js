@@ -1,6 +1,10 @@
 (function () {
   'use strict';
 
+  function _T(key) {
+    return (window.SalonI18n && window.SalonI18n.t) ? window.SalonI18n.t(key) : key;
+  }
+
   // ── SalonSmsConsent ──────────────────────────────────────────────────────────
   // Phase 10: SMS Opt-In / Opt-Out consent tracking infrastructure.
   //
@@ -156,43 +160,43 @@
         '<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);' +
             'border-radius:8px;padding:.85rem 1rem;margin-bottom:1.25rem;' +
             'font-size:.78rem;color:#fbbf24;line-height:1.5">' +
-          '&#9888;&#65039; SMS hiện đang tắt. Danh sách này dùng để chuẩn bị cho khi SMS được bật lại.' +
+          _T('sms_disabled_notice') +
         '</div>' +
 
         // Summary stats row
         '<div id="smsConsentStats" style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem">' +
           '<div style="background:var(--navy-700);border:1px solid var(--border);border-radius:8px;padding:.6rem .9rem;min-width:110px">' +
             '<div id="smsStatOptedIn" style="font-size:1.4rem;font-weight:700;color:var(--success)">—</div>' +
-            '<div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px">Đồng Ý</div>' +
+            '<div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px">' + _T('sms_stat_optedin') + '</div>' +
           '</div>' +
           '<div style="background:var(--navy-700);border:1px solid var(--border);border-radius:8px;padding:.6rem .9rem;min-width:110px">' +
             '<div id="smsStatOptedOut" style="font-size:1.4rem;font-weight:700;color:var(--danger)">—</div>' +
-            '<div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px">Từ Chối</div>' +
+            '<div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px">' + _T('sms_stat_optedout') + '</div>' +
           '</div>' +
           '<div style="background:var(--navy-700);border:1px solid var(--border);border-radius:8px;padding:.6rem .9rem;min-width:110px">' +
             '<div id="smsStatUnknown" style="font-size:1.4rem;font-weight:700;color:var(--text)">—</div>' +
-            '<div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px">Chưa Rõ</div>' +
+            '<div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px">' + _T('sms_stat_unknown') + '</div>' +
           '</div>' +
           '<div style="background:var(--navy-700);border:1px solid var(--border);border-radius:8px;padding:.6rem .9rem;min-width:110px">' +
             '<div id="smsStatTotal" style="font-size:1.4rem;font-weight:700;color:var(--gold)">—</div>' +
-            '<div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px">Tổng</div>' +
+            '<div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px">' + _T('sms_stat_total') + '</div>' +
           '</div>' +
         '</div>' +
 
         // Header + refresh button
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;flex-wrap:wrap;gap:.5rem">' +
-          '<div style="font-size:.8rem;color:var(--text);font-weight:500">Danh Sách Đồng Ý SMS</div>' +
+          '<div style="font-size:.8rem;color:var(--text);font-weight:500">' + _T('sms_list_title') + '</div>' +
           '<button onclick="window.SalonSmsConsent._refreshPanel(\'' + vendorId + '\')" ' +
               'style="background:transparent;border:1px solid var(--border-g);color:var(--gold);' +
                      'border-radius:6px;font-size:.72rem;padding:.28rem .75rem;cursor:pointer;' +
                      'font-family:var(--font-b);transition:border-color .2s,color .2s">' +
-            'Tải Danh Sách' +
+            _T('sms_btn_load') +
           '</button>' +
         '</div>' +
 
         // Table wrapper
         '<div id="smsConsentTableWrap" style="overflow-x:auto">' +
-          '<div class="sa-empty">Nhấn "Tải Danh Sách" để xem dữ liệu.</div>' +
+          '<div class="sa-empty">' + _T('sms_empty_initial') + '</div>' +
         '</div>' +
 
       '</div>';
@@ -206,7 +210,7 @@
   function _refreshPanel(vendorId) {
     var tableWrap = document.getElementById('smsConsentTableWrap');
     if (tableWrap) {
-      tableWrap.innerHTML = '<div class="sa-empty">Đang tải…</div>';
+      tableWrap.innerHTML = '<div class="sa-empty">' + _T('sms_loading') + '</div>';
     }
 
     loadConsentList(vendorId).then(function (records) {
@@ -229,7 +233,7 @@
       if (!wrap) return;
 
       if (!records.length) {
-        wrap.innerHTML = '<div class="sa-empty">Chưa có dữ liệu đồng ý SMS.</div>';
+        wrap.innerHTML = '<div class="sa-empty">' + _T('sms_empty_no_data') + '</div>';
         return;
       }
 
@@ -238,26 +242,28 @@
         var badge;
         if (status === 'opted_in') {
           badge = '<span style="background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.3);' +
-                  'border-radius:99px;padding:2px 8px;font-size:.65rem;font-weight:600">Đồng Ý</span>';
+                  'border-radius:99px;padding:2px 8px;font-size:.65rem;font-weight:600">' + _T('sms_stat_optedin') + '</span>';
         } else if (status === 'opted_out') {
           badge = '<span style="background:rgba(248,113,113,.12);color:#f87171;border:1px solid rgba(248,113,113,.3);' +
-                  'border-radius:99px;padding:2px 8px;font-size:.65rem;font-weight:600">Từ Chối</span>';
+                  'border-radius:99px;padding:2px 8px;font-size:.65rem;font-weight:600">' + _T('sms_stat_optedout') + '</span>';
         } else {
           badge = '<span style="background:rgba(148,163,184,.1);color:#94a3b8;border:1px solid rgba(148,163,184,.2);' +
-                  'border-radius:99px;padding:2px 8px;font-size:.65rem;font-weight:600">Chưa Rõ</span>';
+                  'border-radius:99px;padding:2px 8px;font-size:.65rem;font-weight:600">' + _T('sms_stat_unknown') + '</span>';
         }
 
         var sourceLabel = {
-          'booking_form': 'Đặt lịch',
-          'manual_admin': 'Admin',
-          'stop_reply':   'STOP Reply'
+          'booking_form': _T('sms_source_booking'),
+          'manual_admin': _T('sms_source_admin'),
+          'stop_reply':   _T('sms_source_stop')
         }[r.consentSource || ''] || (r.consentSource || '—');
 
         var dateStr = '—';
         var ts = r.consentAt || r.updatedAt;
         if (ts && ts.toDate) {
           var d = ts.toDate();
-          dateStr = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          var lang = (window.SalonI18n && window.SalonI18n.getLang) ? window.SalonI18n.getLang() : 'vi';
+          var locale = lang === 'en' ? 'en-US' : lang === 'es' ? 'es-US' : 'vi-VN';
+          dateStr = d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' });
         }
 
         var lastFour = r.phoneLastFour ? '••••' + r.phoneLastFour : '—';
@@ -274,10 +280,10 @@
         '<table style="width:100%;border-collapse:collapse;min-width:340px">' +
           '<thead>' +
             '<tr style="border-bottom:1px solid var(--border)">' +
-              '<th style="padding:.4rem .75rem;text-align:left;font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:500">SĐT (4 số cuối)</th>' +
-              '<th style="padding:.4rem .75rem;text-align:left;font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:500">Trạng Thái</th>' +
-              '<th style="padding:.4rem .75rem;text-align:left;font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:500">Nguồn</th>' +
-              '<th style="padding:.4rem .75rem;text-align:left;font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:500">Ngày</th>' +
+              '<th style="padding:.4rem .75rem;text-align:left;font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:500">' + _T('sms_col_phone') + '</th>' +
+              '<th style="padding:.4rem .75rem;text-align:left;font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:500">' + _T('sms_col_status') + '</th>' +
+              '<th style="padding:.4rem .75rem;text-align:left;font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:500">' + _T('sms_col_source') + '</th>' +
+              '<th style="padding:.4rem .75rem;text-align:left;font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:500">' + _T('sms_col_date') + '</th>' +
             '</tr>' +
           '</thead>' +
           '<tbody>' + rows + '</tbody>' +
@@ -285,7 +291,7 @@
 
     }).catch(function (err) {
       var wrap = document.getElementById('smsConsentTableWrap');
-      if (wrap) wrap.innerHTML = '<div class="sa-empty">Lỗi tải dữ liệu: ' + (err && err.message ? err.message : 'unknown') + '</div>';
+      if (wrap) wrap.innerHTML = '<div class="sa-empty">' + _T('sms_err_load_prefix') + (err && err.message ? err.message : 'unknown') + '</div>';
       console.warn('[sms-consent] loadConsentList failed:', err);
     });
   }

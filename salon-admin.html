@@ -16,17 +16,18 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <!-- Static salon data -->
   <script src="marketplace/services-data.js?v=20260421f"></script>
-  <script src="salon-ai-os/inventory-admin.js?v=20260508a"></script>
-  <script src="salon-ai-os/service-materials.js?v=20260508a"></script>
-  <script src="salon-ai-os/inventory-deduction.js?v=20260508a"></script>
-  <script src="salon-ai-os/suppliers.js?v=20260508a"></script>
-  <script src="salon-ai-os/margin-analysis.js?v=20260508a"></script>
-  <script src="salon-ai-os/retention-insights.js?v=20260508a"></script>
-  <script src="salon-ai-os/pricing-suggestions.js?v=20260508a"></script>
-  <script src="salon-ai-os/nail-design-assistant.js?v=20260508a"></script>
-  <script src="salon-ai-os/business-dashboard.js?v=20260508a"></script>
-  <script src="salon-ai-os/sms-consent.js?v=20260508a"></script>
-  <script src="salon-ai-os/supply-marketplace.js?v=20260508a"></script>
+  <script src="salon-ai-os/i18n.js?v=20260508b"></script>
+  <script src="salon-ai-os/inventory-admin.js?v=20260508b"></script>
+  <script src="salon-ai-os/service-materials.js?v=20260508b"></script>
+  <script src="salon-ai-os/inventory-deduction.js?v=20260508b"></script>
+  <script src="salon-ai-os/suppliers.js?v=20260508b"></script>
+  <script src="salon-ai-os/margin-analysis.js?v=20260508b"></script>
+  <script src="salon-ai-os/retention-insights.js?v=20260508b"></script>
+  <script src="salon-ai-os/pricing-suggestions.js?v=20260508b"></script>
+  <script src="salon-ai-os/nail-design-assistant.js?v=20260508b"></script>
+  <script src="salon-ai-os/business-dashboard.js?v=20260508b"></script>
+  <script src="salon-ai-os/sms-consent.js?v=20260508b"></script>
+  <script src="salon-ai-os/supply-marketplace.js?v=20260508b"></script>
   <!-- QR code generation — client-side, no API key, no data sent externally -->
   <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
 
@@ -9961,7 +9962,42 @@
     document.querySelectorAll('.ctrl-lang-btn').forEach(function(b) {
       b.classList.toggle('active', b.dataset.lang === l);
     });
+    // Keep the salon-ai-os i18n layer in sync so AI OS modules
+    // (inventory, suppliers, margins, etc.) re-render in the chosen language.
+    if (window.SalonI18n && window.SalonI18n.setLang) {
+      window.SalonI18n.setLang(l);
+    }
     _applyLang(l);
+    // Re-render any AI OS panels that are currently mounted so their
+    // labels switch language without a page reload.
+    try {
+      if (window.SalonInventoryAdmin && window.SalonInventoryAdmin.loadItems
+          && document.getElementById('inventoryPanel')) {
+        // No-op: render() will be called automatically by the next state event.
+      }
+      if (window.SalonMarginAnalysis && window.SalonMarginAnalysis.render) {
+        window.SalonMarginAnalysis.render();
+      }
+      if (window.SalonRetentionInsights && window.SalonRetentionInsights.render) {
+        window.SalonRetentionInsights.render();
+      }
+      if (window.SalonPricingSuggestions && window.SalonPricingSuggestions.render) {
+        window.SalonPricingSuggestions.render();
+      }
+      if (window.SalonSupplyMarketplace && window.SalonSupplyMarketplace.render) {
+        window.SalonSupplyMarketplace.render();
+      }
+      if (window.SalonNailDesignAssistant && window.SalonNailDesignAssistant.refresh) {
+        // Nail design has no plain render(); refresh is safe and re-uses cached data.
+      }
+      if (window.SalonBusinessDashboard && window.SalonBusinessDashboard.refresh) {
+        // Refresh re-fetches data, so only call if dashboard is currently visible.
+        var bdEl = document.getElementById('dashPanel');
+        if (bdEl && bdEl.offsetParent !== null) window.SalonBusinessDashboard.refresh();
+      }
+    } catch (e) {
+      console.warn('[salon-admin] i18n re-render failed:', e);
+    }
   }
 
   var _LABELS = {

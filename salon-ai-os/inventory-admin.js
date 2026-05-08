@@ -1,29 +1,37 @@
 (function () {
   'use strict';
 
-  var CATEGORIES = [
-    { value: 'gel_polish', label: 'Gel polish' },
-    { value: 'acrylic_powder', label: 'Bột acrylic' },
-    { value: 'dip_powder', label: 'Bột dip' },
-    { value: 'nail_tips', label: 'Móng tip' },
-    { value: 'glue', label: 'Keo' },
-    { value: 'files_buffers', label: 'Dũa / buffer' },
-    { value: 'disposable', label: 'Đồ dùng một lần' },
-    { value: 'sanitation', label: 'Vệ sinh' },
-    { value: 'retail', label: 'Bán lẻ' },
-    { value: 'other', label: 'Khác' }
-  ];
+  function _T(key) {
+    return (window.SalonI18n && window.SalonI18n.t) ? window.SalonI18n.t(key) : key;
+  }
 
-  var UNITS = [
-    { value: 'ml', label: 'ml' },
-    { value: 'oz', label: 'oz' },
-    { value: 'g', label: 'g' },
-    { value: 'piece', label: 'cái' },
-    { value: 'set', label: 'bộ' },
-    { value: 'bottle', label: 'chai' },
-    { value: 'box', label: 'hộp' },
-    { value: 'pack', label: 'gói' }
-  ];
+  function CATEGORIES() {
+    return [
+      { value: 'gel_polish',     label: _T('cat_gel_polish') },
+      { value: 'acrylic_powder', label: _T('cat_acrylic_powder') },
+      { value: 'dip_powder',     label: _T('cat_dip_powder') },
+      { value: 'nail_tips',      label: _T('cat_nail_tips') },
+      { value: 'glue',           label: _T('cat_glue') },
+      { value: 'files_buffers',  label: _T('cat_files_buffers') },
+      { value: 'disposable',     label: _T('cat_disposable') },
+      { value: 'sanitation',     label: _T('cat_sanitation') },
+      { value: 'retail',         label: _T('cat_retail') },
+      { value: 'other',          label: _T('cat_other') }
+    ];
+  }
+
+  function UNITS() {
+    return [
+      { value: 'ml',     label: _T('unit_ml') },
+      { value: 'oz',     label: _T('unit_oz') },
+      { value: 'g',      label: _T('unit_g') },
+      { value: 'piece',  label: _T('unit_piece') },
+      { value: 'set',    label: _T('unit_set') },
+      { value: 'bottle', label: _T('unit_bottle') },
+      { value: 'box',    label: _T('unit_box') },
+      { value: 'pack',   label: _T('unit_pack') }
+    ];
+  }
 
   var state = {
     vendorId: '',
@@ -46,12 +54,14 @@
   }
 
   function categoryLabel(value) {
-    var found = CATEGORIES.find(function (cat) { return cat.value === value; });
-    return found ? found.label : 'Khác';
+    var cats = CATEGORIES();
+    var found = cats.find(function (cat) { return cat.value === value; });
+    return found ? found.label : _T('cat_other');
   }
 
   function unitLabel(value) {
-    var found = UNITS.find(function (unit) { return unit.value === value; });
+    var units = UNITS();
+    var found = units.find(function (unit) { return unit.value === value; });
     return found ? found.label : value;
   }
 
@@ -76,11 +86,14 @@
     var currentQty = asNumber(data.currentQty, NaN);
     var minQty = asNumber(data.minQty, NaN);
 
-    if (!name) throw new Error('Vui lòng nhập tên vật tư.');
-    if (!CATEGORIES.some(function (cat) { return cat.value === category; })) throw new Error('Danh mục không hợp lệ.');
-    if (!UNITS.some(function (u) { return u.value === unit; })) throw new Error('Đơn vị không hợp lệ.');
-    if (!Number.isFinite(currentQty)) throw new Error('Số lượng hiện tại không hợp lệ.');
-    if (!Number.isFinite(minQty)) throw new Error('Mức tối thiểu không hợp lệ.');
+    var validCats = CATEGORIES().map(function (c) { return c.value; });
+    var validUnits = UNITS().map(function (u) { return u.value; });
+
+    if (!name) throw new Error(_T('inv_err_name_required'));
+    if (validCats.indexOf(category) === -1) throw new Error(_T('inv_err_invalid_cat'));
+    if (validUnits.indexOf(unit) === -1) throw new Error(_T('inv_err_invalid_unit'));
+    if (!Number.isFinite(currentQty)) throw new Error(_T('inv_err_invalid_qty'));
+    if (!Number.isFinite(minQty)) throw new Error(_T('inv_err_invalid_min'));
 
     var payload = {
       name: name,
@@ -138,26 +151,26 @@
     var data = item || { category: 'gel_polish', unit: 'bottle', currentQty: 0, minQty: 1, reorderQty: 1, trackStock: true };
     return '<div class="inv-form-card" id="inventoryFormCard">' +
       '<div class="sa-section-header" style="margin-bottom:.65rem">' +
-        '<div class="sa-section-title">' + (isEdit ? 'Sửa vật tư' : 'Thêm vật tư') + '</div>' +
+        '<div class="sa-section-title">' + (isEdit ? _T('inv_form_edit_title') : _T('inv_form_add_title')) + '</div>' +
       '</div>' +
       '<div class="inv-form-grid">' +
-        field('Tên vật tư *', '<input class="sa-input" id="invName" value="' + esc(data.name || '') + '" autocomplete="off">') +
-        field('Danh mục *', select('invCategory', CATEGORIES, data.category || 'other')) +
-        field('Thương hiệu', '<input class="sa-input" id="invBrand" value="' + esc(data.brand || '') + '" autocomplete="off">') +
-        field('SKU', '<input class="sa-input" id="invSku" value="' + esc(data.sku || '') + '" autocomplete="off">') +
-        field('Đơn vị *', select('invUnit', UNITS, data.unit || 'piece')) +
-        field('Số lượng hiện tại *', '<input class="sa-input" id="invCurrentQty" type="number" step="0.01" min="0" value="' + esc(data.currentQty || 0) + '">') +
-        field('Mức tối thiểu *', '<input class="sa-input" id="invMinQty" type="number" step="0.01" min="0" value="' + esc(data.minQty || 0) + '">') +
-        field('Số lượng đặt thêm', '<input class="sa-input" id="invReorderQty" type="number" step="0.01" min="0" value="' + esc(data.reorderQty || 0) + '">') +
-        field('Giá vốn / đơn vị', '<input class="sa-input" id="invCostPerUnit" type="number" step="0.01" min="0" value="' + esc(data.costPerUnit == null ? '' : data.costPerUnit) + '">') +
-        field('Mã nhà cung cấp', '<input class="sa-input" id="invSupplierId" value="' + esc(data.supplierId || '') + '" autocomplete="off">') +
-        field('Link đặt hàng thủ công', '<input class="sa-input" id="invSupplierUrl" type="url" value="' + esc(data.supplierUrl || '') + '" autocomplete="off">') +
-        '<label class="inv-field inv-check"><input id="invTrackStock" type="checkbox"' + (data.trackStock !== false ? ' checked' : '') + '> Theo dõi tồn kho</label>' +
+        field(_T('inv_field_name'), '<input class="sa-input" id="invName" value="' + esc(data.name || '') + '" autocomplete="off">') +
+        field(_T('inv_field_category'), select('invCategory', CATEGORIES(), data.category || 'other')) +
+        field(_T('inv_field_brand'), '<input class="sa-input" id="invBrand" value="' + esc(data.brand || '') + '" autocomplete="off">') +
+        field(_T('inv_field_sku'), '<input class="sa-input" id="invSku" value="' + esc(data.sku || '') + '" autocomplete="off">') +
+        field(_T('inv_field_unit'), select('invUnit', UNITS(), data.unit || 'piece')) +
+        field(_T('inv_field_current_qty'), '<input class="sa-input" id="invCurrentQty" type="number" step="0.01" min="0" value="' + esc(data.currentQty || 0) + '">') +
+        field(_T('inv_field_min_qty'), '<input class="sa-input" id="invMinQty" type="number" step="0.01" min="0" value="' + esc(data.minQty || 0) + '">') +
+        field(_T('inv_field_reorder_qty'), '<input class="sa-input" id="invReorderQty" type="number" step="0.01" min="0" value="' + esc(data.reorderQty || 0) + '">') +
+        field(_T('inv_field_cost_per_unit'), '<input class="sa-input" id="invCostPerUnit" type="number" step="0.01" min="0" value="' + esc(data.costPerUnit == null ? '' : data.costPerUnit) + '">') +
+        field(_T('inv_field_supplier_id'), '<input class="sa-input" id="invSupplierId" value="' + esc(data.supplierId || '') + '" autocomplete="off">') +
+        field(_T('inv_field_supplier_url'), '<input class="sa-input" id="invSupplierUrl" type="url" value="' + esc(data.supplierUrl || '') + '" autocomplete="off">') +
+        '<label class="inv-field inv-check"><input id="invTrackStock" type="checkbox"' + (data.trackStock !== false ? ' checked' : '') + '> ' + esc(_T('inv_field_track_stock')) + '</label>' +
       '</div>' +
       '<div class="inv-msg" id="invFormMsg" style="display:none"></div>' +
       '<div class="inv-form-actions">' +
-        '<button class="btn btn--outline btn--sm" type="button" data-inv-action="cancel-form">Hủy</button>' +
-        '<button class="btn btn--primary btn--sm" type="button" data-inv-action="save-form">' + (isEdit ? 'Lưu thay đổi' : 'Thêm vật tư') + '</button>' +
+        '<button class="btn btn--outline btn--sm" type="button" data-inv-action="cancel-form">' + esc(_T('btn_cancel')) + '</button>' +
+        '<button class="btn btn--primary btn--sm" type="button" data-inv-action="save-form">' + (isEdit ? esc(_T('btn_save_changes')) : esc(_T('inv_btn_save_add'))) + '</button>' +
       '</div>' +
     '</div>';
   }
@@ -174,7 +187,7 @@
 
   function renderList() {
     if (!state.items.length) {
-      return '<div class="sa-empty">Chưa có vật tư nào. Bấm “Thêm vật tư” để tạo danh sách tồn kho.</div>';
+      return '<div class="sa-empty">' + esc(_T('inv_empty')) + '</div>';
     }
 
     return '<div class="inv-grid">' + state.items.map(function (item) {
@@ -185,18 +198,18 @@
             '<div class="inv-name">' + esc(item.name) + '</div>' +
             '<div class="inv-meta">' + esc(categoryLabel(item.category)) + (item.brand ? ' · ' + esc(item.brand) : '') + '</div>' +
           '</div>' +
-          (low ? '<span class="inv-badge">Sắp hết</span>' : '') +
+          (low ? '<span class="inv-badge">' + esc(_T('inv_badge_low')) + '</span>' : '') +
         '</div>' +
         '<div class="inv-qty">' +
           '<div><span class="inv-qty__value">' + esc(item.currentQty) + '</span><span class="inv-qty__unit">' + esc(unitLabel(item.unit)) + '</span></div>' +
           '<div class="inv-stepper">' +
-            '<button class="inv-icon-btn" type="button" data-inv-action="decrement" data-item-id="' + esc(item.id) + '" aria-label="Giảm số lượng">−</button>' +
-            '<button class="inv-icon-btn" type="button" data-inv-action="increment" data-item-id="' + esc(item.id) + '" aria-label="Tăng số lượng">+</button>' +
+            '<button class="inv-icon-btn" type="button" data-inv-action="decrement" data-item-id="' + esc(item.id) + '" aria-label="' + esc(_T('inv_aria_decrement')) + '">−</button>' +
+            '<button class="inv-icon-btn" type="button" data-inv-action="increment" data-item-id="' + esc(item.id) + '" aria-label="' + esc(_T('inv_aria_increment')) + '">+</button>' +
           '</div>' +
         '</div>' +
         '<div class="inv-actions">' +
-          '<button class="btn btn--outline btn--sm" type="button" data-inv-action="edit" data-item-id="' + esc(item.id) + '">Sửa</button>' +
-          '<button class="btn btn--outline btn--sm" type="button" data-inv-action="delete" data-item-id="' + esc(item.id) + '">Ngưng dùng</button>' +
+          '<button class="btn btn--outline btn--sm" type="button" data-inv-action="edit" data-item-id="' + esc(item.id) + '">' + esc(_T('btn_edit')) + '</button>' +
+          '<button class="btn btn--outline btn--sm" type="button" data-inv-action="delete" data-item-id="' + esc(item.id) + '">' + esc(_T('inv_btn_deactivate')) + '</button>' +
         '</div>' +
       '</div>';
     }).join('') + '</div>';
@@ -206,18 +219,21 @@
     if (!state.containerEl) return;
     var lowCount = getLowStockItems().length;
     var editingItem = state.editingId ? state.items.find(function (item) { return item.id === state.editingId; }) : null;
+    var summary = _T('inv_summary')
+      .replace('{count}', state.items.length)
+      .replace('{low}', lowCount);
     state.containerEl.innerHTML = renderStyles() +
       '<div class="inv-admin">' +
         '<div class="inv-toolbar">' +
           '<div>' +
-            '<div class="sa-section-title">Kho vật tư</div>' +
-            '<div class="inv-summary">' + state.items.length + ' vật tư · ' + lowCount + ' sắp hết</div>' +
+            '<div class="sa-section-title">' + esc(_T('inv_title')) + '</div>' +
+            '<div class="inv-summary">' + esc(summary) + '</div>' +
           '</div>' +
-          '<button class="btn btn--primary btn--sm" type="button" data-inv-action="open-add">+ Thêm vật tư</button>' +
+          '<button class="btn btn--primary btn--sm" type="button" data-inv-action="open-add">' + esc(_T('inv_btn_add')) + '</button>' +
         '</div>' +
         (state.error ? '<div class="inv-msg">' + esc(state.error) + '</div>' : '') +
         ((state.editingId === '__new__' || editingItem) ? renderForm(editingItem) : '') +
-        (state.loading ? '<div class="sa-empty">Đang tải tồn kho…</div>' : renderList()) +
+        (state.loading ? '<div class="sa-empty">' + esc(_T('inv_loading')) + '</div>' : renderList()) +
       '</div>';
   }
 
@@ -271,7 +287,7 @@
       } else if (action === 'decrement' && item) {
         updateQty(item.id, Math.max(0, asNumber(item.currentQty, 0) - 1));
       } else if (action === 'delete' && item) {
-        if (window.confirm('Ngưng dùng vật tư này?')) deleteItem(item.id);
+        if (window.confirm(_T('inv_confirm_deactivate'))) deleteItem(item.id);
       }
     });
   }
@@ -285,17 +301,17 @@
       promise.then(function () {
         state.editingId = null;
       }).catch(function (err) {
-        showFormError(err.message || 'Không thể lưu vật tư.');
+        showFormError(err.message || _T('inv_err_save_failed'));
       });
     } catch (err) {
-      showFormError(err.message || 'Dữ liệu không hợp lệ.');
+      showFormError(err.message || _T('msg_invalid_data'));
     }
   }
 
   function init(vendorId, containerEl) {
-    if (!vendorId) throw new Error('Thiếu vendorId cho tồn kho.');
-    if (!containerEl) throw new Error('Thiếu vùng hiển thị tồn kho.');
-    if (!window.firebase || !firebase.firestore) throw new Error('Firebase chưa sẵn sàng.');
+    if (!vendorId) throw new Error(_T('inv_err_init_vendor'));
+    if (!containerEl) throw new Error(_T('inv_err_init_container'));
+    if (!window.firebase || !firebase.firestore) throw new Error(_T('msg_firebase_not_ready'));
 
     if (state.unsubscribe && state.vendorId !== vendorId) {
       state.unsubscribe();
@@ -311,7 +327,7 @@
   }
 
   function loadItems() {
-    if (!state.vendorId || !state.db) return Promise.reject(new Error('Kho chưa được khởi tạo.'));
+    if (!state.vendorId || !state.db) return Promise.reject(new Error(_T('inv_err_not_init')));
     state.loading = true;
     render();
 
@@ -335,7 +351,7 @@
           resolve(state.items);
         }, function (err) {
           state.loading = false;
-          state.error = err.message || 'Không thể tải tồn kho.';
+          state.error = err.message || _T('inv_err_load_failed');
           render();
           reject(err);
         });
@@ -347,14 +363,14 @@
   }
 
   function updateItem(itemId, updates) {
-    if (!itemId || itemId === '__new__') return Promise.reject(new Error('Thiếu mã vật tư.'));
+    if (!itemId || itemId === '__new__') return Promise.reject(new Error(_T('inv_err_missing_id')));
     return itemRef(itemId).update(sanitizeItemData(updates, false));
   }
 
   function updateQty(itemId, newQty) {
-    if (!itemId) return Promise.reject(new Error('Thiếu mã vật tư.'));
+    if (!itemId) return Promise.reject(new Error(_T('inv_err_missing_id')));
     var qty = asNumber(newQty, NaN);
-    if (!Number.isFinite(qty)) return Promise.reject(new Error('Số lượng không hợp lệ.'));
+    if (!Number.isFinite(qty)) return Promise.reject(new Error(_T('inv_err_qty_invalid')));
     return itemRef(itemId).update({
       currentQty: qty,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -362,7 +378,7 @@
   }
 
   function deleteItem(itemId) {
-    if (!itemId) return Promise.reject(new Error('Thiếu mã vật tư.'));
+    if (!itemId) return Promise.reject(new Error(_T('inv_err_missing_id')));
     return itemRef(itemId).update({
       active: false,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()

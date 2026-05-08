@@ -6,6 +6,10 @@
   // Computes per-service material cost vs service price locally from Firestore.
   // NEVER auto-changes prices. Suggestions only.
 
+  function _T(key) {
+    return (window.SalonI18n && window.SalonI18n.t) ? window.SalonI18n.t(key) : key;
+  }
+
   var state = {
     vendorId: '',
     containerEl: null,
@@ -75,7 +79,7 @@
 
   function computeMargins() {
     if (!state.vendorId || !state.db) {
-      return Promise.reject(new Error('SalonMarginAnalysis chưa được khởi tạo.'));
+      return Promise.reject(new Error(_T('ma_err_not_init')));
     }
 
     // 1. Load services (active)
@@ -246,18 +250,18 @@
 
   function renderTable(rows) {
     if (!rows || !rows.length) {
-      return '<div class="ma-empty">Chưa có dịch vụ nào. Thêm dịch vụ trong tab Dịch Vụ.</div>';
+      return '<div class="ma-empty">' + esc(_T('ma_empty')) + '</div>';
     }
 
     var html =
       '<div class="ma-table-wrap">' +
       '<table class="ma-table">' +
       '<thead><tr>' +
-        '<th>Dịch V&#7909;</th>' +
-        '<th>Gi&aacute;</th>' +
-        '<th>Chi Ph&iacute; VL</th>' +
-        '<th>L&atilde;i G&#7897;p</th>' +
-        '<th>T&#7927; L&#7879; %</th>' +
+        '<th>' + esc(_T('ma_col_service')) + '</th>' +
+        '<th>' + esc(_T('ma_col_price')) + '</th>' +
+        '<th>' + esc(_T('ma_col_mat_cost')) + '</th>' +
+        '<th>' + esc(_T('ma_col_gross')) + '</th>' +
+        '<th>' + esc(_T('ma_col_pct')) + '</th>' +
       '</tr></thead>' +
       '<tbody>';
 
@@ -270,7 +274,7 @@
         : '0';
 
       var noMatsNote = !row.hasMaterials
-        ? '<div class="ma-svc-note">Ch&#432;a c&#243; v&#7853;t li&#7879;u</div>'
+        ? '<div class="ma-svc-note">' + esc(_T('ma_no_materials')) + '</div>'
         : '';
 
       html +=
@@ -305,24 +309,25 @@
 
     var items = candidates.map(function (row) {
       var pct = row.marginPct.toFixed(1);
-      var icon = row.marginPct < 30 ? '&#9888;' : '&#8728;';
+      var icon = row.marginPct < 30 ? '⚠' : '∘';
       var msg;
+      var safeName = esc(row.serviceName);
       if (row.materialCost === 0 && !row.hasMaterials) {
-        msg = 'D&#7883;ch v&#7909; <strong>' + esc(row.serviceName) + '</strong> ch&#432;a c&#243; v&#7853;t li&#7879;u &#273;&#432;&#7907;c c&#7845;u h&igrave;nh. Th&ecirc;m v&#7853;t li&#7879;u &#273;&#7875; t&iacute;nh ch&iacute;nh x&aacute;c chi ph&iacute;.';
+        msg = _T('ma_sugg_no_mats').replace('{name}', safeName);
       } else if (row.marginPct < 30) {
-        msg = 'D&#7883;ch v&#7909; <strong>' + esc(row.serviceName) + '</strong> c&oacute; t&#7927; l&#7879; l&#227;i th&#7845;p (' + pct + '%). Xem x&eacute;t &#273;i&#7873;u ch&#7881;nh gi&aacute; ho&#7863;c gi&#7843;m chi ph&iacute; v&#7853;t li&#7879;u.';
+        msg = _T('ma_sugg_low').replace('{name}', safeName).replace('{pct}', pct);
       } else {
-        msg = 'D&#7883;ch v&#7909; <strong>' + esc(row.serviceName) + '</strong> c&oacute; t&#7927; l&#7879; l&#227;i trung b&igrave;nh (' + pct + '%). Ki&#7875;m tra l&#7841;i gi&aacute; v&#7853;t li&#7879;u &#273;&#7875; c&#7843;i thi&#7879;n.';
+        msg = _T('ma_sugg_med').replace('{name}', safeName).replace('{pct}', pct);
       }
       return '<div class="ma-sugg-item"><span class="ma-sugg-icon">' + icon + '</span>' + msg + '</div>';
     }).join('');
 
     return (
       '<div class="ma-suggestions">' +
-        '<div class="ma-sugg-title">G&#7907;i &Yacute; C&#7843;i Thi&#7879;n</div>' +
+        '<div class="ma-sugg-title">' + esc(_T('ma_sugg_title')) + '</div>' +
         items +
         '<div style="font-size:.64rem;color:var(--muted);margin-top:.5rem;font-style:italic">' +
-          '* G&#7907;i &yacute; ch&#7881; mang t&iacute;nh tham kh&#7843;o. Kh&ocirc;ng c&oacute; thay &#273;&#7893;i gi&aacute; t&#7921; &#273;&#7897;ng.' +
+          esc(_T('ma_sugg_disclaimer')) +
         '</div>' +
       '</div>'
     );
@@ -339,7 +344,7 @@
     if (state.loading) {
       el.innerHTML =
         '<div class="ma-wrap">' +
-          '<div class="ma-loading">&#9203; &#272;ang t&iacute;nh to&aacute;n l&#227;i g&#7897;p&hellip;</div>' +
+          '<div class="ma-loading">⏳ ' + esc(_T('ma_loading')) + '</div>' +
         '</div>';
       return;
     }
@@ -347,9 +352,9 @@
     if (state.error) {
       el.innerHTML =
         '<div class="ma-wrap">' +
-          '<div class="ma-error">&#10005; ' + esc(state.error) + '</div>' +
+          '<div class="ma-error">✕ ' + esc(state.error) + '</div>' +
           '<div style="margin-top:.75rem">' +
-            '<button class="btn btn--outline btn--sm" onclick="window.SalonMarginAnalysis.refresh()">T&iacute;nh L&#7841;i</button>' +
+            '<button class="btn btn--outline btn--sm" onclick="window.SalonMarginAnalysis.refresh()">' + esc(_T('btn_recalc')) + '</button>' +
           '</div>' +
         '</div>';
       return;
@@ -362,10 +367,10 @@
       '<div class="ma-wrap">' +
         '<div class="ma-toolbar">' +
           '<div>' +
-            '<div class="ma-title">L&#227;i G&#7897;p D&#7883;ch V&#7909;</div>' +
-            '<div class="ma-subtitle">So s&aacute;nh gi&aacute; d&#7883;ch v&#7909; v&#7899;i chi ph&iacute; v&#7853;t li&#7879;u &mdash; ch&#7881; xem, kh&ocirc;ng t&#7921; &#273;&#7897;ng thay &#273;&#7893;i gi&aacute;</div>' +
+            '<div class="ma-title">' + esc(_T('ma_title')) + '</div>' +
+            '<div class="ma-subtitle">' + esc(_T('ma_subtitle')) + '</div>' +
           '</div>' +
-          '<button class="btn btn--outline btn--sm" onclick="window.SalonMarginAnalysis.refresh()" style="flex-shrink:0">&#8635; T&iacute;nh L&#7841;i</button>' +
+          '<button class="btn btn--outline btn--sm" onclick="window.SalonMarginAnalysis.refresh()" style="flex-shrink:0">↻ ' + esc(_T('btn_recalc')) + '</button>' +
         '</div>' +
         tableHtml +
         suggestionsHtml +
@@ -407,7 +412,7 @@
       })
       .catch(function (err) {
         state.loading = false;
-        state.error   = (err && err.message) ? err.message : 'Kh&ocirc;ng th&#7875; t&#7843;i d&#7919; li&#7879;u.';
+        state.error   = (err && err.message) ? err.message : _T('ma_err_load_failed');
         render();
       });
   }

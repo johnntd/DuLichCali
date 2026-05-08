@@ -1,6 +1,10 @@
 (function () {
   'use strict';
 
+  function _T(key) {
+    return (window.SalonI18n && window.SalonI18n.t) ? window.SalonI18n.t(key) : key;
+  }
+
   // ── SalonBusinessDashboard ───────────────────────────────────────────────────
   // Phase 9: Consolidated vendor business dashboard — aggregates key KPIs
   // from bookings, inventory, suppliers/restockOrders, margins, and retention
@@ -244,7 +248,7 @@
       '<div style="padding:2rem 1rem;text-align:center;color:var(--muted);font-size:.85rem">' +
         '<div style="display:inline-block;width:28px;height:28px;border:2px solid var(--border);' +
           'border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:.75rem"></div>' +
-        '<div>Đang tải dữ liệu tổng quan…</div>' +
+        '<div>' + esc(_T('bdb_loading')) + '</div>' +
       '</div>';
   }
 
@@ -252,10 +256,10 @@
     if (!state.containerEl) return;
     state.containerEl.innerHTML =
       '<div style="padding:1.5rem 1rem;text-align:center;color:var(--danger);font-size:.82rem">' +
-        '<div style="font-size:1.1rem;margin-bottom:.4rem">&#9888;</div>' +
-        '<div>' + esc(msg || 'Không thể tải dữ liệu.') + '</div>' +
+        '<div style="font-size:1.1rem;margin-bottom:.4rem">⚠</div>' +
+        '<div>' + esc(msg || _T('bdb_err_load_failed')) + '</div>' +
         '<button class="btn btn--outline btn--sm" onclick="window.SalonBusinessDashboard.refresh()" ' +
-          'style="margin-top:.75rem">Thử Lại</button>' +
+          'style="margin-top:.75rem">' + esc(_T('bdb_btn_retry')) + '</button>' +
       '</div>';
   }
 
@@ -272,29 +276,29 @@
       {
         id: 'tile-today',
         num: metrics.todayCount,
-        lbl: 'Đặt Lịch Hôm Nay',
+        lbl: _T('bdb_tile_today'),
         icon: '&#128197;',
         alert: false
       },
       {
         id: 'tile-week',
         num: metrics.weekCount,
-        lbl: 'Đặt Lịch Tuần Này',
+        lbl: _T('bdb_tile_week'),
         icon: '&#128336;',
         alert: false
       },
       {
         id: 'tile-revenue',
         num: fmtCurrency(metrics.weekRevenue),
-        lbl: 'Doanh Thu Ước Tính Tuần',
+        lbl: _T('bdb_tile_revenue'),
         icon: '&#128178;',
         alert: false,
-        sub: 'lịch hoàn thành'
+        sub: _T('bdb_tile_revenue_sub')
       },
       {
         id: 'tile-lowstock',
         num: lowStock,
-        lbl: 'Vật Tư Sắp Hết',
+        lbl: _T('bdb_tile_lowstock'),
         icon: '&#9638;',
         alert: lowStock > 0,
         alertColor: '#f87171'
@@ -302,7 +306,7 @@
       {
         id: 'tile-orders',
         num: pendingOrds,
-        lbl: 'Đơn Đặt Hàng Chờ',
+        lbl: _T('bdb_tile_orders'),
         icon: '&#128666;',
         alert: pendingOrds > 0,
         alertColor: '#fbbf24'
@@ -310,11 +314,11 @@
       {
         id: 'tile-atrisk',
         num: metrics.atRiskCount,
-        lbl: 'Khách Cần Liên Hệ',
+        lbl: _T('bdb_tile_atrisk'),
         icon: '&#128101;',
         alert: metrics.atRiskCount > 0,
         alertColor: '#fb923c',
-        sub: '> 28 ngày chưa quay lại'
+        sub: _T('bdb_tile_atrisk_sub')
       }
     ];
 
@@ -349,14 +353,14 @@
         ? Math.round(marginSummary.best.marginPct) + '%' : '—';
       marginHtml =
         '<div class="bdb-insight">' +
-          '<div class="bdb-insight__title">&#128200; Biên Lợi Nhuận</div>' +
+          '<div class="bdb-insight__title">' + esc(_T('bdb_margin_title')) + '</div>' +
           '<div class="bdb-insight__row">' +
-            '<span class="bdb-insight__badge bdb-insight__badge--low">Thấp nhất</span>' +
+            '<span class="bdb-insight__badge bdb-insight__badge--low">' + esc(_T('bdb_margin_low')) + '</span>' +
             '<span class="bdb-insight__val">' + esc(worstName) + '</span>' +
             '<span class="bdb-insight__pct" style="color:var(--danger)">' + esc(worstPct) + '</span>' +
           '</div>' +
           '<div class="bdb-insight__row">' +
-            '<span class="bdb-insight__badge bdb-insight__badge--high">Cao nhất</span>' +
+            '<span class="bdb-insight__badge bdb-insight__badge--high">' + esc(_T('bdb_margin_high')) + '</span>' +
             '<span class="bdb-insight__val">' + esc(bestName) + '</span>' +
             '<span class="bdb-insight__pct" style="color:var(--success)">' + esc(bestPct) + '</span>' +
           '</div>' +
@@ -368,15 +372,15 @@
       '<div class="bdb-actions">' +
         '<button class="btn btn--outline btn--sm bdb-action-btn" ' +
           'onclick="typeof switchTab===\'function\' && switchTab(\'inventory\')">' +
-          '&#9638; Xem Kho' +
+          '&#9638; ' + esc(_T('bdb_action_inventory')) +
         '</button>' +
         '<button class="btn btn--outline btn--sm bdb-action-btn" ' +
           'onclick="typeof switchTab===\'function\' && switchTab(\'pricing\')">' +
-          '&#128178; Gợi Ý Giá' +
+          '&#128178; ' + esc(_T('bdb_action_pricing')) +
         '</button>' +
         '<button class="btn btn--outline btn--sm bdb-action-btn" ' +
           'onclick="window.SalonBusinessDashboard.refresh()">' +
-          '&#8635; Làm Mới' +
+          '&#8635; ' + esc(_T('bdb_action_refresh')) +
         '</button>' +
       '</div>';
 
@@ -412,7 +416,7 @@
 
       // Section header
       '<div class="sa-section-header">' +
-        '<div class="sa-section-title">Tổng Quan AI OS</div>' +
+        '<div class="sa-section-title">' + esc(_T('bdb_title')) + '</div>' +
       '</div>' +
 
       // KPI tiles
@@ -429,7 +433,7 @@
 
   function loadDashboard() {
     if (!state.vendorId || !state.db) {
-      renderError('Chưa khởi tạo — thiếu vendorId hoặc Firestore.');
+      renderError(_T('bdb_err_not_init'));
       return Promise.resolve();
     }
     if (state.loading) return Promise.resolve();
@@ -461,7 +465,7 @@
       })
       .catch(function (err) {
         state.loading = false;
-        state.error = err && err.message ? err.message : 'Lỗi không xác định.';
+        state.error = err && err.message ? err.message : _T('bdb_err_unknown');
         renderError(state.error);
         console.warn('[business-dashboard] loadDashboard error:', state.error);
       });
@@ -480,7 +484,7 @@
     }
     if (!window.firebase || !window.firebase.firestore) {
       if (containerEl) {
-        containerEl.innerHTML = '<div class="sa-empty">Firebase chưa sẵn sàng.</div>';
+        containerEl.innerHTML = '<div class="sa-empty">' + (window.SalonI18n && window.SalonI18n.t ? window.SalonI18n.t('bdb_err_firebase') : 'Firebase chưa sẵn sàng.') + '</div>';
       }
       console.warn('[business-dashboard] init: Firebase Firestore not available');
       return;

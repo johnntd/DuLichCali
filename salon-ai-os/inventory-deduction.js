@@ -6,8 +6,12 @@
   // Uses `inventoryDeductionStatus` on the booking doc as an idempotency guard:
   // once set to 'deducted', the same booking will never deduct twice.
 
+  function _T(key) {
+    return (window.SalonI18n && window.SalonI18n.t) ? window.SalonI18n.t(key) : key;
+  }
+
   function _db() {
-    if (!window.firebase || !firebase.firestore) throw new Error('Firebase chưa sẵn sàng.');
+    if (!window.firebase || !firebase.firestore) throw new Error(_T('msg_firebase_not_ready'));
     return firebase.firestore();
   }
 
@@ -35,8 +39,8 @@
   //   deducted: false → already deducted (idempotency guard hit)
 
   function deductForBooking(vendorId, bookingId, servicesArray) {
-    if (!vendorId)  return Promise.reject(new Error('Thiếu vendorId.'));
-    if (!bookingId) return Promise.reject(new Error('Thiếu bookingId.'));
+    if (!vendorId)  return Promise.reject(new Error(_T('idt_err_missing_vendor')));
+    if (!bookingId) return Promise.reject(new Error(_T('idt_err_missing_booking')));
 
     var db = _db();
     var bRef = _bookingRef(db, vendorId, bookingId);

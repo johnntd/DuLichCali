@@ -1,6 +1,10 @@
 (function () {
   'use strict';
 
+  function _T(key) {
+    return (window.SalonI18n && window.SalonI18n.t) ? window.SalonI18n.t(key) : key;
+  }
+
   // ── SalonNailDesignAssistant ─────────────────────────────────────────────────
   // Phase 8: AI Nail Design Assistant — READ-ONLY analytics + design matching.
   // Customer-facing: _detectDesignRequest helper (in receptionist.js) enriches
@@ -100,7 +104,9 @@
     var ms = tsMillis(ts);
     if (!ms) return '—';
     var d = new Date(ms);
-    return d.toLocaleDateString('vi-VN', { month: 'short', day: 'numeric', year: 'numeric' });
+    var lang = (window.SalonI18n && window.SalonI18n.getLang) ? window.SalonI18n.getLang() : 'vi';
+    var locale = lang === 'en' ? 'en-US' : lang === 'es' ? 'es-US' : 'vi-VN';
+    return d.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
   function maskPhone(phone) {
@@ -277,7 +283,7 @@
     if (state.loading) {
       el.innerHTML =
         '<div class="nda-wrap">' +
-          '<div class="nda-loading">&#9203; &#272;ang t&#7843;i y&#234;u c&#7847;u m&#7851;u m&#243;ng&hellip;</div>' +
+          '<div class="nda-loading">⏳ ' + esc(_T('nda_loading')) + '</div>' +
         '</div>';
       return;
     }
@@ -285,9 +291,9 @@
     if (state.error) {
       el.innerHTML =
         '<div class="nda-wrap">' +
-          '<div class="nda-error">&#10005; ' + esc(state.error) + '</div>' +
+          '<div class="nda-error">✕ ' + esc(state.error) + '</div>' +
           '<div style="margin-top:.75rem">' +
-            '<button class="btn btn--outline btn--sm" onclick="window.SalonNailDesignAssistant.refresh()">T&#7843;i L&#7841;i</button>' +
+            '<button class="btn btn--outline btn--sm" onclick="window.SalonNailDesignAssistant.refresh()">' + esc(_T('btn_refresh')) + '</button>' +
           '</div>' +
         '</div>';
       return;
@@ -299,10 +305,7 @@
     if (!rows.length) {
       tableRows =
         '<tr><td colspan="4">' +
-          '<div class="nda-empty">' +
-            '&#128137; Ch&#432;a c&#243; y&#234;u c&#7847;u m&#7851;u m&#243;ng n&agrave;o. ' +
-            'Y&#234;u c&#7847;u xu&#7845;t hi&#7879;n khi kh&aacute;ch m&#244; t&#7843; thi&#7871;t k&#7871; trong chat AI.' +
-          '</div>' +
+          '<div class="nda-empty">' + esc(_T('nda_empty')) + '</div>' +
         '</td></tr>';
     } else {
       rows.forEach(function (row) {
@@ -328,28 +331,25 @@
 
         '<div class="nda-toolbar">' +
           '<div>' +
-            '<div class="nda-title">&#128137; M&#7851;u M&#243;ng AI</div>' +
-            '<div class="nda-subtitle">30 y&#234;u c&#7847;u thi&#7871;t k&#7871; m&#7851;u m&#243;ng g&#7847;n nh&#7845;t t&#7915; AI chat</div>' +
+            '<div class="nda-title">' + esc(_T('nda_title')) + '</div>' +
+            '<div class="nda-subtitle">' + esc(_T('nda_subtitle')) + '</div>' +
           '</div>' +
-          '<button class="btn btn--outline btn--sm" onclick="window.SalonNailDesignAssistant.refresh()" style="flex-shrink:0">&#8635; T&#7843;i L&#7841;i</button>' +
+          '<button class="btn btn--outline btn--sm" onclick="window.SalonNailDesignAssistant.refresh()" style="flex-shrink:0">↻ ' + esc(_T('btn_refresh')) + '</button>' +
         '</div>' +
 
         '<div class="nda-table-wrap">' +
           '<table class="nda-table">' +
           '<thead><tr>' +
-            '<th>Ng&agrave;y</th>' +
-            '<th>Kh&aacute;ch</th>' +
-            '<th>M&ocirc; T&#7843; M&#7853;u M&#243;ng</th>' +
-            '<th>D&#7883;ch V&#7909; G&#7907;i &yacute;</th>' +
+            '<th>' + esc(_T('nda_col_date')) + '</th>' +
+            '<th>' + esc(_T('nda_col_customer')) + '</th>' +
+            '<th>' + esc(_T('nda_col_design')) + '</th>' +
+            '<th>' + esc(_T('nda_col_services')) + '</th>' +
           '</tr></thead>' +
           '<tbody>' + tableRows + '</tbody>' +
           '</table>' +
         '</div>' +
 
-        '<div class="nda-note">' +
-          '&#9432; D&#7919; li&#7879;u n&agrave;y ch&#7881; &#273;&#7875; tham kh&#7843;o. ' +
-          'Y&#234;u c&#7847;u m&#7851;u m&#243;ng kh&#244;ng t&#7921; &#273;&#7897;ng tr&#7915; kho hay thay &#273;&#7893;i l&#7883;ch h&#7865;n.' +
-        '</div>' +
+        '<div class="nda-note">' + esc(_T('nda_note')) + '</div>' +
 
       '</div>';
   }
@@ -388,7 +388,7 @@
       })
       .catch(function (err) {
         state.loading = false;
-        state.error   = (err && err.message) ? err.message : 'Không thể tải dữ liệu.';
+        state.error   = (err && err.message) ? err.message : _T('nda_err_load_failed');
         render();
       });
   }

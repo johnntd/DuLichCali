@@ -120,11 +120,10 @@
     return new Promise(function (resolve, reject) {
       state.unsubSuppliers = suppliersColRef()
         .where('active', '==', true)
-        .orderBy('name')
         .onSnapshot(function (snap) {
           state.suppliers = snap.docs.map(function (doc) {
             return Object.assign({ id: doc.id }, doc.data());
-          });
+          }).sort(function (a, b) { return (a.name || '').localeCompare(b.name || ''); });
           state.error = '';
           render();
           resolve(state.suppliers);
@@ -141,12 +140,15 @@
   function loadOrders() {
     if (!state.vendorId || !state.db) return Promise.reject(new Error(_T('sup_err_not_init')));
     return ordersColRef()
-      .orderBy('createdAt', 'desc')
       .limit(50)
       .get()
       .then(function (snap) {
         state.orders = snap.docs.map(function (doc) {
           return Object.assign({ id: doc.id }, doc.data());
+        }).sort(function (a, b) {
+          var ta = (a.createdAt && a.createdAt.toMillis) ? a.createdAt.toMillis() : 0;
+          var tb = (b.createdAt && b.createdAt.toMillis) ? b.createdAt.toMillis() : 0;
+          return tb - ta;
         });
         render();
         return state.orders;

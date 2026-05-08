@@ -10009,6 +10009,9 @@
       logout:'Đăng xuất', openLbl:'● Mở', closedLbl:'○ Đóng',
       today:'Hôm Nay', upcoming:'Sắp Tới', aiMsg:'Tin Nhắn AI',
       nav_ops:'Vận Hành', nav_manage:'Quản Lý',
+      nav_aios_dashboard:'AI OS', nav_inventory:'Kho Hàng', nav_suppliers:'Nhà Cung Cấp',
+      nav_margin:'Lãi Gộp', nav_retention:'Giữ Khách', nav_pricing:'Định Giá',
+      nav_naildesign:'Mẫu Móng', nav_smsconsent:'Đồng Ý SMS', nav_supplymarket:'Tìm Nguồn Hàng',
       // ── Buttons ─────────────────────────────────────────────────────────────
       btn_refresh:'Làm Mới', btn_add_svc:'+ Thêm Dịch Vụ', btn_add_staff:'+ Thêm Nhân Viên',
       btn_save:'Lưu', btn_cancel:'Hủy', btn_delete:'Xóa', btn_edit:'Sửa',
@@ -10378,6 +10381,9 @@
       logout:'Sign out', openLbl:'● Open', closedLbl:'○ Closed',
       today:'Today', upcoming:'Upcoming', aiMsg:'AI Messages',
       nav_ops:'Operations', nav_manage:'Management',
+      nav_aios_dashboard:'AI OS', nav_inventory:'Inventory', nav_suppliers:'Suppliers',
+      nav_margin:'Margins', nav_retention:'Retention', nav_pricing:'Pricing',
+      nav_naildesign:'Nail Design', nav_smsconsent:'SMS Consent', nav_supplymarket:'Supply Market',
       // ── Buttons ─────────────────────────────────────────────────────────────
       btn_refresh:'Refresh', btn_add_svc:'+ Add Service', btn_add_staff:'+ Add Staff',
       btn_save:'Save', btn_cancel:'Cancel', btn_delete:'Delete', btn_edit:'Edit',
@@ -10746,6 +10752,9 @@
       logout:'Cerrar sesión', openLbl:'● Abierto', closedLbl:'○ Cerrado',
       today:'Hoy', upcoming:'Próximas', aiMsg:'Mensajes AI',
       nav_ops:'Operaciones', nav_manage:'Gestión',
+      nav_aios_dashboard:'AI OS', nav_inventory:'Inventario', nav_suppliers:'Proveedores',
+      nav_margin:'Márgenes', nav_retention:'Retención', nav_pricing:'Precios',
+      nav_naildesign:'Diseños', nav_smsconsent:'SMS Consent', nav_supplymarket:'Mercado',
       // ── Buttons ─────────────────────────────────────────────────────────────
       btn_refresh:'Actualizar', btn_add_svc:'+ Agregar Servicio', btn_add_staff:'+ Agregar Personal',
       btn_save:'Guardar', btn_cancel:'Cancelar', btn_delete:'Eliminar', btn_edit:'Editar',
@@ -11112,15 +11121,23 @@
     var lb = _LABELS[l] || _LABELS.vi;
     // ── Sidebar nav labels ──────────────────────────────────────────────────────
     var navMap = {
-      'nav-dashboard':    lb.dashboard,
-      'nav-services':     lb.services,
-      'nav-staff':        lb.staff,
-      'nav-availability': lb.availability,
-      'nav-hours':        lb.hours,
-      'nav-inventory':    'Kho Hàng',
-      'nav-appointments': lb.appointments,
-      'nav-customers':    lb.customers,
-      'nav-settings':     lb.settings
+      'nav-aios-dashboard': lb.nav_aios_dashboard,
+      'nav-dashboard':      lb.dashboard,
+      'nav-services':       lb.services,
+      'nav-staff':          lb.staff,
+      'nav-availability':   lb.availability,
+      'nav-hours':          lb.hours,
+      'nav-inventory':      lb.nav_inventory,
+      'nav-suppliers':      lb.nav_suppliers,
+      'nav-appointments':   lb.appointments,
+      'nav-customers':      lb.customers,
+      'nav-settings':       lb.settings,
+      'nav-margin':         lb.nav_margin,
+      'nav-retention':      lb.nav_retention,
+      'nav-pricing':        lb.nav_pricing,
+      'nav-naildesign':     lb.nav_naildesign,
+      'nav-smsconsent':     lb.nav_smsconsent,
+      'nav-supplymarket':   lb.nav_supplymarket
     };
     Object.keys(navMap).forEach(function(id) {
       var el = document.getElementById(id);
@@ -11142,11 +11159,18 @@
         if (badge) lbl.appendChild(badge);
       }
     }
-    // Mobile tab labels
-    var mobMap = [lb.dashboard, lb.services, lb.staff, lb.availability, lb.hours, 'Kho', lb.appointments, lb.inbox, lb.customers, lb.settings];
+    // Mobile tab labels — order matches TABS array:
+    // aios-dashboard,dashboard,services,staff,availability,hours,inventory,suppliers,appointments,inbox,customers,settings,margin,retention,pricing,naildesign,smsconsent,supplymarket
+    var mobMap = [
+      lb.nav_aios_dashboard, lb.dashboard, lb.services, lb.staff,
+      lb.availability, lb.hours, lb.nav_inventory, lb.nav_suppliers,
+      lb.appointments, lb.inbox, lb.customers, lb.settings,
+      lb.nav_margin, lb.nav_retention, lb.nav_pricing,
+      lb.nav_naildesign, lb.nav_smsconsent, lb.nav_supplymarket
+    ];
     document.querySelectorAll('.mob-tab-lbl').forEach(function(el, i) {
       if (mobMap[i] === undefined) return;
-      if (i === 7) {
+      if (i === 9) {
         var badge = document.getElementById('escMobileBadge');
         el.textContent = lb.inbox;
         if (badge) el.appendChild(badge);

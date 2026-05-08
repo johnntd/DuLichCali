@@ -181,31 +181,47 @@ When debugging AI or booking behavior, always identify:
 
 ## RULE #2 — NO HARDCODED STRINGS IN ANY LANGUAGE (ABSOLUTE RULE)
 
-**NEVER hardcode user-facing text in any language — not English, not Vietnamese, not Spanish, not any other language — anywhere in this webapp.**
+**NEVER hardcode user-facing text in any language — not Vietnamese, not English, not Spanish — anywhere in this webapp. This applies to customer-facing pages AND all admin/vendor/driver internal tools equally.**
 
 This applies to:
-- All `.js` files (receptionist.js, ai-engine.js, marketplace.js, chat.js, etc.)
+- All `.js` files (receptionist.js, ai-engine.js, marketplace.js, salon-ai-os/*.js, etc.)
 - All HTML inline scripts
 - All Firebase Cloud Functions
+- All admin pages (`admin.html`, `salon-admin.html`, `vendor-admin.html`, `driver-admin.html`)
 
 ### Why
 
-This webapp serves multilingual customers (Vietnamese, English, Spanish). Hardcoded strings bypass the AI and produce rigid, untranslatable output. The AI handles all natural language — it already has language detection and responds in the customer's language automatically.
+This webapp and its admin tools serve Vietnamese, English, and Spanish speakers. Hardcoded strings in any language — even in "internal" tools — produce output that cannot be switched by the language selector and will appear broken to users who prefer a different language.
+
+- **Customer-facing strings**: Hardcoded strings bypass the AI and produce rigid, untranslatable output.
+- **Admin tool strings**: Hardcoded Vietnamese is as wrong as hardcoded English. The vendor or operator clicking the EN button must see English. Always use a translation key lookup.
 
 ### What to do instead
 
-- For user-facing messages that result from system events (availability checks, booking rejections, errors): pass an English-only reason string back through the AI using `[SYSTEM: ...]` context so the AI can respond naturally in the customer's language.
-- For truly non-AI paths (fatal errors, no-API-key fallbacks): use English only — but even these should be rare.
+**For customer-facing AI paths (booking flow, receptionist, etc.):**
+- Pass an English-only reason string back through the AI using `[SYSTEM: ...]` context so the AI responds naturally in the customer's language.
+- For fatal error / no-API-key fallbacks: English only (these are rare).
 - System prompt instructions and examples (inside `_buildPrompt`) may include example Vietnamese/Spanish text **for teaching the AI** — that is fine. The rule applies to runtime user-facing strings only.
+
+**For admin tool strings (salon-admin.html, admin.html, driver-admin.html, etc.):**
+- Add the key to the `_LABELS` object (vi + en + es) in `salon-admin.html`, or to `salon-ai-os/i18n.js` for AI OS modules.
+- Access via `SalonI18n.t('key')` inside salon-ai-os modules, or `lb.key` inside `_applyLang()` for nav/panel labels.
+- Never write a string directly into the DOM — always go through the translation lookup.
 
 ### Examples of violations
 
 ```javascript
-// WRONG — hardcoded Vietnamese
-if (lang === 'vi') return 'Rất tiếc, tiệm không mở cửa vào ' + d;
+// WRONG — hardcoded Vietnamese in admin module
+el.innerHTML = '<h2>Nguyên Liệu Theo Dịch Vụ</h2>';
 
-// WRONG — hardcoded Spanish
-if (lang === 'es') return 'Lo sentimos, el salón está cerrado los ' + d;
+// WRONG — hardcoded English in admin module
+el.innerHTML = '<h2>Service Materials</h2>';
+
+// RIGHT — translation key used, works in vi/en/es
+el.innerHTML = '<h2>' + SalonI18n.t('sm_header') + '</h2>';
+
+// WRONG — hardcoded Vietnamese in customer flow
+if (lang === 'vi') return 'Rất tiếc, tiệm không mở cửa vào ' + d;
 
 // RIGHT — English only, routed through AI for natural response
 return 'Sorry, the salon is closed on ' + d + '. Would you like to pick a different day?';
@@ -369,15 +385,15 @@ A change that works on mobile but breaks desktop (or vice versa) is **not comple
 
 ## MULTI-LANGUAGE — NON-NEGOTIABLE
 
-Du Lịch Cali serves Vietnamese, English, and Spanish-speaking customers. All customer-facing surfaces must work correctly in all three languages.
+**Every surface in this webapp — customer-facing AND internal admin tools — must support Vietnamese, English, and Spanish.** There are no Vietnamese-only exceptions. Operators, vendors, and drivers may also prefer English or Spanish; the language switcher must work everywhere.
 
 ### Supported Languages
 
 | Code | Language | Role |
 |------|----------|------|
-| `vi` | Vietnamese | Primary — default for customer AI and all internal tools |
-| `en` | English | Full support on all customer-facing flows |
-| `es` | Spanish | Full support on all customer-facing flows |
+| `vi` | Vietnamese | Primary — default when no preference is stored |
+| `en` | English | Full support on ALL surfaces (customer and admin) |
+| `es` | Spanish | Full support on ALL surfaces (customer and admin) |
 
 ### Surface Coverage
 
@@ -389,16 +405,18 @@ Du Lịch Cali serves Vietnamese, English, and Spanish-speaking customers. All c
 | Email notifications | ✅ vi / en / es | `lang` param passed to all `DLCNotifications` functions |
 | Homepage + landing pages | ✅ vi / en / es | Customer-facing — text must support all 3 |
 | Marketplace pages (food/nail/hair) | ✅ vi / en / es | Customer-facing UI text must support all 3 |
-| `admin.html` | ❌ Vietnamese only | Internal ops tool — Vietnamese is correct and intentional |
-| `vendor-admin.html` | ❌ Vietnamese only | Internal ops tool |
-| `driver-admin.html` | ❌ Vietnamese only | Internal ops tool |
-| Login pages (driver/vendor) | ❌ Vietnamese only | Internal |
+| `salon-admin.html` + all salon-ai-os modules | ✅ vi / en / es | Uses `salon-ai-os/i18n.js` + `_LABELS` in salon-admin.html |
+| `admin.html` | ✅ vi / en / es | Must have a lang switcher wired to `_LABELS`-style table |
+| `vendor-admin.html` | ✅ vi / en / es | Must have a lang switcher |
+| `driver-admin.html` | ✅ vi / en / es | Must have a lang switcher |
+| Login pages (driver/vendor) | ✅ vi / en / es | All UI strings must be translatable |
 
 ### How Language Is Detected and Propagated
 
 1. **AI chat (primary path)**: `AIEngine.detectLang(text)` reads user input → returns `'vi'`, `'en'`, or `'es'` → stored as `draft.lang` in workflow state. Auto-updates if the user switches language mid-conversation.
 2. **URL param (forms and confirmation)**: `?lang=vi|en|es` — set when opening ride intake or launching `thankyou.html`. `ride-intake.js` reads it as `_lang`; `thankyou.html` reads the same param.
-3. **Default**: `'vi'` for all internal/admin UI. `'en'` for ride intake when no `?lang=` param is present.
+3. **Admin tools (salon-admin.html, admin.html, etc.)**: Lang switcher buttons call `dlcSetLang(l)` → stores in `localStorage('dlc_lang')` → applies to all nav labels, panel titles, and buttons via a `_LABELS` lookup table or `SalonI18n.t('key')`.
+4. **Default**: `'vi'` when no stored preference is found.
 
 ### Where to Add New Strings
 
@@ -407,17 +425,20 @@ Du Lịch Cali serves Vietnamese, English, and Spanish-speaking customers. All c
 | AI workflow (confirmations, questions, field labels) | `workflowEngine.js` → `CONFIRM_STRINGS` | Add key to all 3 tables (`vi`, `en`, `es`). Access via `S('key')` |
 | Ride intake form (step nav, fare card, success screen) | `ride-intake.js` → `_RIDE_T` | Add key to `vi`, `en`, `es` tables. Access via `_T.key` |
 | Email notifications | `notifications.js` | Use the `lang` param already passed to each function |
+| Salon AI OS modules (`salon-ai-os/*.js`) | `salon-ai-os/i18n.js` | Add key to `vi`, `en`, `es` objects. Access via `SalonI18n.t('key')` or `_T('key')` inside the module |
+| Salon admin nav + panel labels | `salon-admin.html` → `_LABELS` | Add key to all 3 `_LABELS` tables; wire into `_applyLang()` and `navMap` |
 
 ### Hard Rules
 
-- **Every new customer-facing string must exist in vi + en + es in the same commit.** Never ship a string that only works in one language.
-- Never hardcode a UI string inline on a customer-facing page. Use `S('key')` or `_T.key`.
+- **Every new string — on any surface, customer or admin — must exist in vi + en + es in the same commit.** Never ship a string that only works in one language.
+- Never hardcode a UI string in any language (Vietnamese, English, or Spanish) directly in HTML or JS. Always use a translation key lookup.
 - Never leave a language entry as an empty string or a copy of another language's text as a placeholder. Translate correctly or flag it explicitly.
-- **Admin, driver, and vendor internal pages are intentionally Vietnamese-only.** Do NOT add multi-language support to these tools. Operators speak Vietnamese — this is correct by design.
+- When adding a new admin module or page: include a `_LABELS`-style object or use `SalonI18n.t()`, and wire a lang switcher that persists to `localStorage('dlc_lang')`.
+- Do NOT create new Vietnamese-only pages or modules. The historical Vietnamese-only exceptions in admin tools are a bug to be fixed, not a pattern to follow.
 
 ### Failure Condition
 
-A new customer-facing string that exists only in one language is an incomplete implementation. Add all 3 entries before deploying.
+Any string that exists only in one language — on any surface, customer-facing or internal — is an incomplete implementation. Add all 3 entries before deploying.
 
 ---
 

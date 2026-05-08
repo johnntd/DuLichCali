@@ -2870,6 +2870,34 @@
     if (el && el.parentNode) el.parentNode.removeChild(el);
   }
 
+  // ── Phase 8: Design request detection (additive, isolated) ───────────────────
+  // _detectDesignRequest — pure helper. Returns null if not a design request.
+  // Returns { designText, keywords } if design-related keywords detected.
+  // Does NOT modify booking flow, availability checks, state machine, or AI prompt.
+  // Multilingual: English, Vietnamese, Spanish keyword detection.
+  function _detectDesignRequest(userMessage) {
+    if (!userMessage) return null;
+    var text = String(userMessage).toLowerCase();
+
+    // Delegate to SalonNailDesignAssistant if loaded; otherwise use inline list.
+    var triggers = (window.SalonNailDesignAssistant && window.SalonNailDesignAssistant.DESIGN_TRIGGER_KEYWORDS)
+      ? window.SalonNailDesignAssistant.DESIGN_TRIGGER_KEYWORDS
+      : [
+          'nail design', 'nail art', 'nail idea', 'nail inspo', 'ombre', 'glitter nail',
+          'chrome nail', 'acrylic', 'gel nail', 'french tip', '3d nail',
+          'mẫu móng', 'mau mong', 'thiết kế móng', 'nail đẹp', 'móng đẹp', 'kiểu móng', 'mẫu nail',
+          'diseño de uñas', 'arte de uñas', 'uñas bonitas', 'uñas acrílicas', 'uñas de gel', 'pedicura'
+        ];
+
+    var foundKeywords = [];
+    triggers.forEach(function (kw) {
+      if (text.indexOf(kw.toLowerCase()) !== -1) foundKeywords.push(kw);
+    });
+
+    if (!foundKeywords.length) return null;
+    return { designText: userMessage, keywords: foundKeywords };
+  }
+
   // ── Public API ────────────────────────────────────────────────────────────────
   window.LilyReceptionist = {
 
@@ -2878,6 +2906,9 @@
 
     // Inspectable prompt builder for debugging / voice gateway
     buildPrompt: _buildPrompt,
+
+    // Phase 8: Design request detection (additive, read-only)
+    detectDesignRequest: _detectDesignRequest,
 
     // DOM binding — same interface as Receptionist.init in marketplace.js
     init: function (biz, containerId) {

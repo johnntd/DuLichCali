@@ -49,6 +49,10 @@ service cloud.firestore {
       allow read, write: if isVendorMember(vendorId);
     }
 
+    match /vendors/{vendorId}/inventory/{doc} {
+      allow read, write: if isVendorMember(vendorId);
+    }
+
     // ── Other vendor subcollections (menuItems, notifications, etc.) ──────────────
     // Auth required. Broad auth (not vendor-membership-only) to preserve admin.html access.
     // staffCompensation is explicitly handled above with tighter rules.

@@ -1,0 +1,502 @@
+# SMS Opt-In Disclosure Page Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Add a public `/sms-opt-in` compliance page that Twilio A2P reviewers can verify, documenting the unchecked-checkbox opt-in flow and linking to Terms and Privacy.
+
+**Architecture:** Single static `sms-opt-in.html` at the project root. Firebase Hosting's `cleanUrls: true` setting automatically serves it at `/sms-opt-in` with no rewrite rule needed. Page is self-contained (inline CSS, no JS), following the exact pattern of `privacy.html` and `terms.html`. Footer links in those two pages gain a new `/sms-opt-in` entry.
+
+**Tech Stack:** Static HTML/CSS, Firebase Hosting, no build step, no JS.
+
+---
+
+## File Map
+
+| Action | File | Purpose |
+|--------|------|---------|
+| Create | `sms-opt-in.html` | New public compliance disclosure page |
+| Modify | `privacy.html` lines 229–233 | Add footer link to `/sms-opt-in` |
+| Modify | `terms.html` lines 253–257 | Add footer link to `/sms-opt-in` |
+
+---
+
+## Task 1: Create `sms-opt-in.html`
+
+**Files:**
+- Create: `sms-opt-in.html`
+
+- [ ] **Step 1: Create the file with this exact content**
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMS Opt-In Disclosure — Du Lịch Cali</title>
+  <meta name="description" content="SMS opt-in disclosure for Du Lịch Cali — how users consent to transactional SMS messages.">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;1,6..96,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy-900: #0d2f50;
+      --navy-800: #123b62;
+      --navy-700: #194a78;
+      --gold:     #f5a623;
+      --gold-lt:  #ffc857;
+      --cream:    #fff8ee;
+      --text:     #c8e4f8;
+      --muted:    #6ab0d4;
+      --border:   rgba(255,255,255,0.13);
+      --font-d: 'Bodoni Moda', Georgia, serif;
+      --font-b: 'Jost', system-ui, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-b);
+      background: var(--navy-900);
+      color: var(--text);
+      line-height: 1.7;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 40% at 50% 0%, rgba(245,166,35,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 50% at 85% 85%, rgba(14,165,233,0.06) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app-bar {
+      position: sticky; top: 0; z-index: 100;
+      height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.25rem;
+      background: rgba(13,47,80,.94);
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      border-bottom: 1px solid rgba(245,166,35,0.18);
+    }
+    .app-bar__brand {
+      font-family: var(--font-d); font-size: 1.1rem; color: var(--gold-lt);
+      letter-spacing: .04em; text-decoration: none;
+    }
+    .app-bar__back {
+      display: flex; align-items: center; gap: .4rem;
+      font-size: .82rem; font-weight: 500; color: var(--muted);
+      text-decoration: none; padding: .4rem .75rem;
+      border: 1px solid var(--border); border-radius: 20px;
+      transition: color .2s, border-color .2s;
+    }
+    .app-bar__back:hover { color: var(--text); border-color: rgba(255,255,255,0.25); }
+    .app-bar__back svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    .page-wrap {
+      position: relative; z-index: 1;
+      max-width: 760px; margin: 0 auto;
+      padding: 3rem 1.5rem 5rem;
+    }
+
+    .doc-header {
+      margin-bottom: 3rem; padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .doc-header__eyebrow {
+      font-size: .75rem; font-weight: 600; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--gold); margin-bottom: .75rem;
+    }
+    .doc-header__title {
+      font-family: var(--font-d);
+      font-size: clamp(1.9rem, 5vw, 2.8rem);
+      font-weight: 400; color: var(--cream);
+      line-height: 1.2; margin-bottom: 1rem;
+    }
+    .doc-header__meta { font-size: .82rem; color: var(--muted); }
+
+    .doc-section { margin-bottom: 2.75rem; }
+
+    .doc-section h2 {
+      font-family: var(--font-d); font-size: 1.15rem; font-weight: 400;
+      color: var(--gold-lt); margin-bottom: 1rem; padding-bottom: .5rem;
+      border-bottom: 1px solid rgba(245,166,35,0.18);
+    }
+    .doc-section p { font-size: .93rem; color: var(--text); margin-bottom: .85rem; }
+    .doc-section p:last-child { margin-bottom: 0; }
+
+    .doc-section ul { list-style: none; margin: .5rem 0 .85rem; padding: 0; }
+    .doc-section ul li {
+      font-size: .93rem; color: var(--text);
+      padding: .3rem 0 .3rem 1.25rem; position: relative;
+    }
+    .doc-section ul li::before {
+      content: '·'; position: absolute; left: 0; color: var(--gold); font-weight: 700;
+    }
+
+    .doc-section ol {
+      list-style: none; margin: .5rem 0 .85rem; padding: 0;
+      counter-reset: opt-in-steps;
+    }
+    .doc-section ol li {
+      font-size: .93rem; color: var(--text);
+      padding: .4rem 0 .4rem 2rem; position: relative;
+      counter-increment: opt-in-steps;
+    }
+    .doc-section ol li::before {
+      content: counter(opt-in-steps);
+      position: absolute; left: 0;
+      width: 1.4rem; height: 1.4rem;
+      background: rgba(245,166,35,0.18);
+      border: 1px solid rgba(245,166,35,0.35);
+      border-radius: 50%;
+      color: var(--gold-lt);
+      font-size: .72rem; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+      top: .45rem;
+    }
+
+    /* Checkbox disclosure example box */
+    .consent-box {
+      background: rgba(18,59,98,.55);
+      border: 1px solid rgba(245,166,35,0.28);
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      margin: 1.25rem 0;
+    }
+    .consent-box__label {
+      display: flex; align-items: flex-start; gap: .75rem;
+      cursor: default;
+    }
+    .consent-box__checkbox {
+      flex-shrink: 0;
+      width: 18px; height: 18px;
+      margin-top: .2rem;
+      appearance: none; -webkit-appearance: none;
+      border: 2px solid rgba(245,166,35,0.55);
+      border-radius: 4px;
+      background: transparent;
+    }
+    .consent-box__text {
+      font-size: .88rem; color: var(--text); line-height: 1.6;
+    }
+    .consent-box__text a { color: var(--gold-lt); text-decoration: underline; }
+    .consent-box__text a:hover { color: var(--cream); }
+    .consent-box__caption {
+      margin-top: .75rem;
+      font-size: .78rem; color: var(--muted);
+      font-style: italic;
+    }
+
+    .contact-box {
+      background: rgba(25,74,120,.45);
+      border: 1px solid rgba(245,166,35,0.22);
+      border-radius: 10px; padding: 1.25rem 1.5rem; margin-top: .5rem;
+    }
+    .contact-box p { margin-bottom: .4rem; font-size: .9rem; }
+    .contact-box a { color: var(--gold-lt); text-decoration: none; }
+    .contact-box a:hover { color: var(--cream); }
+
+    .site-footer {
+      position: relative; z-index: 1; text-align: center;
+      padding: 1.5rem 1.5rem 2.5rem;
+      border-top: 1px solid var(--border);
+      font-size: .8rem; color: var(--muted);
+    }
+    .site-footer a { color: var(--muted); text-decoration: none; }
+    .site-footer a:hover { color: var(--text); }
+    .site-footer__links { display: flex; justify-content: center; gap: 1.5rem; margin-bottom: .75rem; flex-wrap: wrap; }
+
+    @media (min-width: 768px) { .page-wrap { padding: 3.5rem 2.5rem 5rem; } }
+    @media (min-width: 1200px) { .page-wrap { padding: 4rem 3rem 6rem; } }
+  </style>
+</head>
+<body>
+
+  <header class="app-bar">
+    <a href="/" class="app-bar__brand">✦ Du Lịch Cali</a>
+    <a href="/" class="app-bar__back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 5l-7 7 7 7"/>
+      </svg>
+      Back to Home
+    </a>
+  </header>
+
+  <main class="page-wrap">
+
+    <div class="doc-header">
+      <div class="doc-header__eyebrow">Compliance</div>
+      <h1 class="doc-header__title">SMS Opt-In Disclosure</h1>
+      <p class="doc-header__meta">Last updated: May 5, 2026 &nbsp;·&nbsp; Du Lịch Cali</p>
+    </div>
+
+    <div class="doc-section">
+      <p>DuLichCali sends transactional SMS messages only to users who request a booking, food order, airport pickup/ride, or service inquiry on our website.</p>
+    </div>
+
+    <div class="doc-section">
+      <h2>How users opt in</h2>
+      <ol>
+        <li>User visits <a href="https://www.dulichcali21.com" style="color:var(--gold-lt)">https://www.dulichcali21.com</a></li>
+        <li>User selects a service such as salon booking, food order, airport pickup/ride request, or service inquiry</li>
+        <li>User enters their name, mobile phone number, and request details</li>
+        <li>Before submitting, user must actively check an <strong>unchecked</strong> SMS consent checkbox</li>
+        <li>User then clicks <em>Confirm Booking</em>, <em>Place Order</em>, <em>Request Ride</em>, or <em>Submit Request</em></li>
+        <li>SMS is sent only for updates related to that user's own request</li>
+      </ol>
+    </div>
+
+    <div class="doc-section">
+      <h2>Consent checkbox</h2>
+      <p>The following checkbox appears unchecked on every booking, order, and ride request form. Users must actively check it before submitting:</p>
+      <div class="consent-box">
+        <label class="consent-box__label">
+          <input type="checkbox" class="consent-box__checkbox" disabled aria-label="SMS consent checkbox — shown unchecked by default">
+          <span class="consent-box__text">
+            I agree to receive transactional SMS messages from DuLichCali about my booking, order, ride, or service request, including confirmations, updates, reminders, and support replies. Message frequency varies. Message and data rates may apply. Reply STOP to unsubscribe or HELP for help. Consent is not required to purchase. View our <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>.
+          </span>
+        </label>
+        <p class="consent-box__caption">Above: the checkbox as it appears to users — unchecked by default. Submission is blocked until the user actively checks it.</p>
+      </div>
+    </div>
+
+    <div class="doc-section">
+      <h2>Message types</h2>
+      <p>All SMS messages sent through this campaign are transactional:</p>
+      <ul>
+        <li>Appointment confirmations</li>
+        <li>Booking updates</li>
+        <li>Appointment reminders</li>
+        <li>Food order confirmations</li>
+        <li>Order ready notices</li>
+        <li>Airport pickup or ride updates</li>
+        <li>Customer support replies related to the user's request</li>
+      </ul>
+    </div>
+
+    <div class="doc-section">
+      <h2>No marketing SMS</h2>
+      <p>DuLichCali does not use this SMS campaign for marketing, advertising, promotions, abandoned-cart messages, or unsolicited outreach.</p>
+    </div>
+
+    <div class="doc-section">
+      <h2>Opt out and help</h2>
+      <p>Users can reply <strong>STOP</strong> to unsubscribe or <strong>HELP</strong> for help. Message frequency varies. Message and data rates may apply.</p>
+    </div>
+
+    <div class="doc-section">
+      <h2>Contact</h2>
+      <div class="contact-box">
+        <p><strong>Du Lịch Cali</strong></p>
+        <p>Email: <a href="mailto:dulichcali21@gmail.com">dulichcali21@gmail.com</a></p>
+        <p>Website: <a href="https://www.dulichcali21.com">www.dulichcali21.com</a></p>
+      </div>
+    </div>
+
+    <div class="doc-section">
+      <h2>Legal</h2>
+      <ul>
+        <li><a href="/privacy" style="color:var(--gold-lt)">Privacy Policy</a></li>
+        <li><a href="/terms" style="color:var(--gold-lt)">Terms of Service</a></li>
+      </ul>
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__links">
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+      <a href="/sms-opt-in">SMS Opt-In</a>
+      <a href="/">Home</a>
+    </div>
+    <p>&copy; 2026 JDNETWORKS AI SERVICES LLC. All rights reserved. DulichCali21 is operated by JDNETWORKS AI SERVICES LLC.</p>
+  </footer>
+
+</body>
+</html>
+```
+
+- [ ] **Step 2: Verify the file was created**
+
+```bash
+ls -lh sms-opt-in.html
+```
+
+Expected: file exists, ~5–7 KB
+
+---
+
+## Task 2: Add `/sms-opt-in` link to `privacy.html` footer
+
+**Files:**
+- Modify: `privacy.html` (footer `site-footer__links` div, lines ~229–232)
+
+- [ ] **Step 1: Locate the footer links block in `privacy.html`**
+
+The current footer block looks like this (lines ~228–233):
+
+```html
+    <div class="site-footer__links">
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+      <a href="/">Home</a>
+    </div>
+```
+
+- [ ] **Step 2: Replace with this updated footer links block**
+
+```html
+    <div class="site-footer__links">
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+      <a href="/sms-opt-in">SMS Opt-In</a>
+      <a href="/">Home</a>
+    </div>
+```
+
+- [ ] **Step 3: Verify**
+
+```bash
+grep -n "sms-opt-in" privacy.html
+```
+
+Expected: one match in the footer.
+
+---
+
+## Task 3: Add `/sms-opt-in` link to `terms.html` footer
+
+**Files:**
+- Modify: `terms.html` (footer `site-footer__links` div, lines ~253–257)
+
+- [ ] **Step 1: Locate the footer links block in `terms.html`**
+
+Current block (lines ~253–257):
+
+```html
+    <div class="site-footer__links">
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+      <a href="/">Home</a>
+    </div>
+```
+
+- [ ] **Step 2: Replace with this updated footer links block**
+
+```html
+    <div class="site-footer__links">
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+      <a href="/sms-opt-in">SMS Opt-In</a>
+      <a href="/">Home</a>
+    </div>
+```
+
+- [ ] **Step 3: Verify**
+
+```bash
+grep -n "sms-opt-in" terms.html
+```
+
+Expected: one match in the footer.
+
+---
+
+## Task 4: Run the validation gate
+
+- [ ] **Step 1: Run the full system dry run**
+
+```bash
+scripts/ai/full_system_dry_run.sh
+```
+
+Expected: `FINAL: PASS`
+
+(This is a static HTML addition with no JS changes. The dry run should pass cleanly. If it does not, investigate the specific failing check before proceeding.)
+
+---
+
+## Task 5: Commit and deploy
+
+- [ ] **Step 1: Stage the three changed files**
+
+```bash
+git add sms-opt-in.html privacy.html terms.html
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git commit -m "feat: add /sms-opt-in compliance disclosure page for Twilio A2P review
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
+```
+
+- [ ] **Step 3: Push to repo**
+
+```bash
+git push origin main
+```
+
+- [ ] **Step 4: Deploy to production**
+
+```bash
+firebase deploy --only hosting
+```
+
+Expected output includes: `Hosting URL: https://dulichcali-booking-calendar.web.app`
+
+- [ ] **Step 5: Verify production**
+
+```bash
+curl -s "https://www.dulichcali21.com/sms-opt-in" | head -10
+```
+
+Expected: first lines of the HTML including `<title>SMS Opt-In Disclosure`.
+
+```bash
+curl -s "https://www.dulichcali21.com/privacy" | grep "sms-opt-in"
+```
+
+Expected: one line containing the footer link.
+
+```bash
+curl -s "https://www.dulichcali21.com/terms" | grep "sms-opt-in"
+```
+
+Expected: one line containing the footer link.
+
+- [ ] **Step 6: Confirm production**
+
+Output: `✔ Production domain updated — https://www.dulichcali21.com`
+
+---
+
+## Required Report Format
+
+At the end, output:
+
+**Summary:** Added public `/sms-opt-in` compliance disclosure page with full Twilio A2P opt-in documentation; added footer links from `/privacy` and `/terms`.
+
+**Files changed:**
+- `sms-opt-in.html` (created)
+- `privacy.html` (footer link added)
+- `terms.html` (footer link added)
+
+**Commands run:** with exact output excerpts
+
+**Dry run result:** `FINAL: PASS` or `FINAL: FAIL`
+
+**Remaining risks:**
+- The checkbox shown on the page is a visual example only (`disabled`) — the actual booking forms still need to be verified to have unchecked checkboxes at page load (out of scope for this plan)
+- No Twilio sending code is wired up yet

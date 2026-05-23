@@ -221,13 +221,13 @@
   // Phase 5: added openaiModel and geminiModel per-service overrides (optional).
   // If a provider key is not available, _resolveProvider falls back to Claude.
   var SERVICE_CONFIG = {
-    travel:      { model: 'claude-haiku-4-5-20251001', maxTokens: 900, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-2.0-flash' }, // chat.js
-    food:        { model: 'claude-haiku-4-5-20251001', maxTokens: 384, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-2.0-flash' }, // marketplace.js
-    appointment: { model: 'claude-haiku-4-5-20251001', maxTokens: 384, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-2.0-flash' }, // marketplace.js
-    nails:       { model: 'claude-sonnet-4-6',         maxTokens: 900, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-2.0-flash' }, // receptionist.js
-    translation: { model: 'claude-haiku-4-5-20251001', maxTokens: 512, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-2.0-flash' }  // marketplace.js
+    travel:      { model: 'claude-haiku-4-5-20251001', maxTokens: 900, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-2.5-flash' }, // chat.js
+    food:        { model: 'claude-haiku-4-5-20251001', maxTokens: 384, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-2.5-flash' }, // marketplace.js
+    appointment: { model: 'claude-haiku-4-5-20251001', maxTokens: 384, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-2.5-flash' }, // marketplace.js
+    nails:       { model: 'claude-sonnet-4-6',         maxTokens: 900, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-2.5-flash' }, // receptionist.js
+    translation: { model: 'claude-haiku-4-5-20251001', maxTokens: 512, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-2.5-flash' }  // marketplace.js
   };
-  var _DEFAULT_CFG = { model: 'claude-haiku-4-5-20251001', maxTokens: 600, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-2.0-flash' };
+  var _DEFAULT_CFG = { model: 'claude-haiku-4-5-20251001', maxTokens: 600, openaiModel: 'gpt-4o-mini', geminiModel: 'gemini-2.5-flash' };
 
   // ── Unified AI Dispatcher — Phase 5: Hybrid Router ───────────────────────────
   // Single entry point for ALL AI calls in the app.
@@ -259,7 +259,7 @@
         });
     }
     if (provider === 'gemini' && keys.gemini) {
-      return _callGemini(keys.gemini, cfg.geminiModel || 'gemini-2.0-flash', cfg.maxTokens, systemPrompt, messages)
+      return _callGemini(keys.gemini, cfg.geminiModel || 'gemini-2.5-flash', cfg.maxTokens, systemPrompt, messages)
         .catch(function (e) {
           console.warn('[AIEngine] Gemini failed (' + e.message + '), falling back to Claude');
           return _callClaude(apiKey, cfg.model, cfg.maxTokens, systemPrompt, messages);

@@ -27,7 +27,7 @@
   const MODELS = {
     claude: 'claude-haiku-4-5-20251001',
     openai: 'gpt-4o-mini',
-    gemini: 'gemini-2.0-flash',
+    gemini: 'gemini-2.5-flash',
   };
 
   // ── Key accessors (localStorage — admin-configured) ────────────────────────

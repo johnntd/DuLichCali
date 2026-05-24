@@ -25,7 +25,8 @@
     'id', 'businessName', 'barberName', 'phone', 'email',
     'profilePhoto', 'heroImage', 'serviceAreas', 'travelRadiusMiles',
     'baseTravelFee', 'addressOptional', 'languages', 'active', 'rating',
-    'reviewCount', 'serviceBadges', 'createdAt', 'updatedAt'
+    'reviewCount', 'serviceBadges', 'createdAt', 'updatedAt',
+    'bio', 'region', 'yearsExperience', 'zipCoverage', 'travelFeeTiers'
   ]);
 
   var SERVICE_FIELDS = Object.freeze([
@@ -51,7 +52,9 @@
 
   var PORTFOLIO_IMAGE_FIELDS = Object.freeze([
     'id', 'vendorId', 'title', 'description', 'imageUrl', 'beforeImageUrl',
-    'afterImageUrl', 'alt', 'displayOrder', 'hidden', 'createdAt', 'updatedAt'
+    'afterImageUrl', 'alt', 'displayOrder', 'hidden', 'createdAt', 'updatedAt',
+    'category', 'active', 'isAIGenerated', 'requiresReplacementWithRealWork',
+    'beforeImagePrompt', 'afterImagePrompt'
   ]);
 
   var REVIEW_FIELDS = Object.freeze([
@@ -87,6 +90,8 @@
 
   var SEED_TIMESTAMP = '2026-05-23T00:00:00.000Z';
   var SAMPLE_VENDOR_ID = 'oc-mobile-barber-demo';
+  var MICHAEL_VENDOR_ID = 'michael-nguyen-oc';
+  var TIM_VENDOR_ID = 'tim-nguyen-bay';
 
   var sampleVendors = Object.freeze([
     Object.freeze({
@@ -108,8 +113,110 @@
       serviceBadges: Object.freeze(['fade', 'beardTrim', 'kidsCut', 'seniorCut', 'vietnameseSpeaking', 'spanishSpeaking']),
       createdAt: SEED_TIMESTAMP,
       updatedAt: SEED_TIMESTAMP
+    }),
+    Object.freeze({
+      id: MICHAEL_VENDOR_ID,
+      businessName: 'Michael Mobile Barber OC',
+      barberName: 'Michael Nguyen',
+      phone: '(714) 227-6007',
+      email: 'duyhoa9256@gmail.com',
+      profilePhoto: '/assets/mobile-barber/michael-profile-placeholder.jpg',
+      heroImage: '/assets/mobile-barber/michael-hero-placeholder.jpg',
+      serviceAreas: Object.freeze([
+        'Irvine', 'Garden Grove', 'Westminster', 'Santa Ana', 'Fountain Valley',
+        'Huntington Beach', 'Costa Mesa', 'Anaheim', 'Tustin', 'Orange'
+      ]),
+      travelRadiusMiles: 25,
+      baseTravelFee: 0,
+      addressOptional: true,
+      languages: Object.freeze(['en', 'vi']),
+      active: true,
+      rating: 4.9,
+      reviewCount: 5,
+      serviceBadges: Object.freeze(['fade', 'beardTrim', 'kidsCut', 'vietnameseSpeaking']),
+      bio: 'Professional mobile barber serving Orange County with in-home haircut services. Specializing in fades, tapers, beard work, family cuts, kids haircuts, and clean professional styles.',
+      region: 'Orange County',
+      yearsExperience: 8,
+      zipCoverage: Object.freeze(['92647', '92683', '92627', '92704', '92840', '92843', '92703', '92868']),
+      travelFeeTiers: Object.freeze([
+        Object.freeze({ maxMiles: 10, fee: 0 }),
+        Object.freeze({ maxMiles: 20, fee: 10 }),
+        Object.freeze({ maxMiles: 25, fee: 20 })
+      ]),
+      createdAt: SEED_TIMESTAMP,
+      updatedAt: SEED_TIMESTAMP
+    }),
+    Object.freeze({
+      id: TIM_VENDOR_ID,
+      businessName: 'Tim Mobile Barber Bay Area',
+      barberName: 'Tim Nguyen',
+      phone: '(408) 504-3684',
+      email: 'tuananhnta@gmail.com',
+      profilePhoto: '/assets/mobile-barber/tim-profile-placeholder.jpg',
+      heroImage: '/assets/mobile-barber/tim-hero-placeholder.jpg',
+      serviceAreas: Object.freeze([
+        'San Jose', 'Santa Clara', 'Sunnyvale', 'Milpitas', 'Campbell',
+        'Cupertino', 'Mountain View', 'Los Gatos', 'Fremont'
+      ]),
+      travelRadiusMiles: 30,
+      baseTravelFee: 0,
+      addressOptional: true,
+      languages: Object.freeze(['en', 'vi']),
+      active: true,
+      rating: 4.9,
+      reviewCount: 5,
+      serviceBadges: Object.freeze(['fade', 'beardTrim', 'kidsCut', 'seniorCut', 'vietnameseSpeaking']),
+      bio: 'Mobile barber providing premium in-home haircut services across the Bay Area with modern fades, beard trims, family cuts, and professional grooming.',
+      region: 'Bay Area',
+      yearsExperience: 10,
+      zipCoverage: Object.freeze(['95112', '95122', '95050', '95051', '95035', '94085', '94040']),
+      travelFeeTiers: Object.freeze([
+        Object.freeze({ maxMiles: 15, fee: 0 }),
+        Object.freeze({ maxMiles: 25, fee: 10 }),
+        Object.freeze({ maxMiles: 30, fee: 20 })
+      ]),
+      createdAt: SEED_TIMESTAMP,
+      updatedAt: SEED_TIMESTAMP
     })
   ]);
+
+  function makeService(vendorId, slug, name, description, price, mins, category) {
+    return Object.freeze({
+      id: vendorId + '-' + slug,
+      vendorId: vendorId,
+      name: name,
+      description: description,
+      durationMinutes: mins,
+      price: price,
+      cleanupBufferMinutes: 10,
+      travelBufferMinutes: 20,
+      category: category,
+      active: true,
+      imageUrl: '/assets/mobile-barber/service-' + slug + '-placeholder.jpg'
+    });
+  }
+
+  var MOBILE_BARBER_MENU = [
+    { slug: 'classic-haircut',     name: 'Classic Haircut',         desc: 'In-home classic haircut with neckline and cleanup.',           price: 40,  mins: 45, cat: 'haircut'  },
+    { slug: 'fade-haircut',        name: 'Fade Haircut',            desc: 'Mobile fade haircut with clean blend and finish.',             price: 45,  mins: 45, cat: 'fade'     },
+    { slug: 'skin-fade',           name: 'Skin Fade',               desc: 'Bald fade taken to skin with precise blend.',                  price: 50,  mins: 50, cat: 'fade'     },
+    { slug: 'taper-fade',          name: 'Taper Fade',              desc: 'Clean taper around ears and neckline with soft blend.',        price: 45,  mins: 45, cat: 'fade'     },
+    { slug: 'haircut-beard',       name: 'Haircut and Beard',       desc: 'Full haircut plus beard shape, lineup, and cleanup.',          price: 65,  mins: 60, cat: 'combo'    },
+    { slug: 'beard-trim',          name: 'Beard Trim',              desc: 'Beard shape, neckline cleanup, and detail.',                   price: 25,  mins: 25, cat: 'beard'    },
+    { slug: 'kids-haircut',        name: 'Kids Haircut',            desc: 'In-home haircut for kids in a comfortable setting.',           price: 35,  mins: 35, cat: 'kids'     },
+    { slug: 'senior-haircut',      name: 'Senior Haircut',          desc: 'In-home haircut for seniors with extra care and patience.',    price: 35,  mins: 35, cat: 'senior'   },
+    { slug: 'business-haircut',    name: 'Business Style Haircut',  desc: 'Clean professional cut tailored for the workplace.',           price: 45,  mins: 45, cat: 'business' },
+    { slug: 'buzz-cut',            name: 'Buzz Cut',                desc: 'Quick clipper cut with even guard length.',                    price: 30,  mins: 25, cat: 'haircut'  },
+    { slug: 'line-up',             name: 'Line Up',                 desc: 'Edge-up around hairline, sideburns, and neck.',                price: 20,  mins: 20, cat: 'detail'   },
+    { slug: 'modern-styling',      name: 'Modern Styling',          desc: 'Stylish modern haircut with product styling and finish.',      price: 55,  mins: 60, cat: 'haircut'  },
+    { slug: 'home-family-package', name: 'Home Family Package',     desc: 'Two adults included. Three or more family members from $100+.',price: 75,  mins: 90, cat: 'package'  }
+  ];
+
+  function buildMenuForVendor(vendorId) {
+    return MOBILE_BARBER_MENU.map(function(item) {
+      return makeService(vendorId, item.slug, item.name, item.desc, item.price, item.mins, item.cat);
+    });
+  }
 
   var sampleServices = Object.freeze([
     Object.freeze({
@@ -138,7 +245,7 @@
       active: true,
       imageUrl: '/assets/mobile-barber/service-combo-placeholder.jpg'
     })
-  ]);
+  ].concat(buildMenuForVendor(MICHAEL_VENDOR_ID)).concat(buildMenuForVendor(TIM_VENDOR_ID)));
 
   var sampleAvailability = Object.freeze([
     Object.freeze({
@@ -157,8 +264,149 @@
       blackoutDates: Object.freeze([]),
       createdAt: SEED_TIMESTAMP,
       updatedAt: SEED_TIMESTAMP
+    }),
+    Object.freeze({
+      id: 'michael-weekly-default',
+      vendorId: MICHAEL_VENDOR_ID,
+      timezone: 'America/Los_Angeles',
+      weeklyHours: Object.freeze({
+        monday:    Object.freeze({ active: true,  start: '09:00', end: '19:00' }),
+        tuesday:   Object.freeze({ active: true,  start: '09:00', end: '19:00' }),
+        wednesday: Object.freeze({ active: true,  start: '09:00', end: '19:00' }),
+        thursday:  Object.freeze({ active: true,  start: '09:00', end: '19:00' }),
+        friday:    Object.freeze({ active: true,  start: '09:00', end: '19:00' }),
+        saturday:  Object.freeze({ active: true,  start: '09:00', end: '17:00' }),
+        sunday:    Object.freeze({ active: false, start: null,    end: null })
+      }),
+      blackoutDates: Object.freeze([]),
+      createdAt: SEED_TIMESTAMP,
+      updatedAt: SEED_TIMESTAMP
+    }),
+    Object.freeze({
+      id: 'tim-weekly-default',
+      vendorId: TIM_VENDOR_ID,
+      timezone: 'America/Los_Angeles',
+      weeklyHours: Object.freeze({
+        monday:    Object.freeze({ active: true, start: '09:00', end: '20:00' }),
+        tuesday:   Object.freeze({ active: true, start: '09:00', end: '20:00' }),
+        wednesday: Object.freeze({ active: true, start: '09:00', end: '20:00' }),
+        thursday:  Object.freeze({ active: true, start: '09:00', end: '20:00' }),
+        friday:    Object.freeze({ active: true, start: '09:00', end: '20:00' }),
+        saturday:  Object.freeze({ active: true, start: '10:00', end: '17:00' }),
+        sunday:    Object.freeze({ active: true, start: '10:00', end: '15:00' })
+      }),
+      blackoutDates: Object.freeze([]),
+      createdAt: SEED_TIMESTAMP,
+      updatedAt: SEED_TIMESTAMP
     })
   ]);
+
+  var AI_PORTFOLIO_CATEGORIES = [
+    {
+      id: 'fade',
+      title: 'Fade haircut',
+      description: 'Mobile fade haircut transformation in a home setting.',
+      beforeBase: 'Generic young adult male customer at home before mobile fade haircut, overgrown sides, natural indoor lighting, neutral background, realistic stock-style portrait, no logos, no real-person likeness',
+      afterBase: 'Same generic young adult male customer after sharp clean fade haircut, crisp blend on sides, finished mobile barber result, natural indoor lighting, realistic stock-style portrait, no logos, no real-person likeness'
+    },
+    {
+      id: 'skin-fade',
+      title: 'Skin fade',
+      description: 'Bald skin-fade taken to skin with precise blend.',
+      beforeBase: 'Generic adult male customer at home before skin fade, longer sides, natural lighting, realistic stock-style portrait, no logos, no real-person likeness',
+      afterBase: 'Same generic adult male customer after bald skin fade, taken to skin with seamless blend, finished mobile barber result, realistic stock-style portrait, no logos, no real-person likeness'
+    },
+    {
+      id: 'kids-haircut',
+      title: 'Kids haircut',
+      description: 'Friendly in-home kids haircut transformation.',
+      beforeBase: 'Generic young child customer in home environment before haircut, overgrown hair, realistic family portrait stock-style, no logos, no real-person likeness',
+      afterBase: 'Same generic young child after a clean tidy kids haircut, smiling at home, friendly mobile barber result, realistic stock-style portrait, no logos, no real-person likeness'
+    },
+    {
+      id: 'senior-haircut',
+      title: 'Senior haircut',
+      description: 'In-home senior haircut with extra care.',
+      beforeBase: 'Generic senior adult customer at home before haircut, gray hair, neutral lighting, realistic stock-style portrait, no logos, no real-person likeness',
+      afterBase: 'Same generic senior adult after a clean dignified haircut, comfortable home setting, neat finish, realistic stock-style portrait, no logos, no real-person likeness'
+    },
+    {
+      id: 'business-haircut',
+      title: 'Business haircut',
+      description: 'Clean professional cut tailored for the workplace.',
+      beforeBase: 'Generic adult professional male customer with longer unkept hair before business haircut, neutral indoor background, realistic stock-style portrait, no logos, no real-person likeness',
+      afterBase: 'Same generic professional after clean executive business haircut, tidy sides, polished workplace-ready finish, realistic stock-style portrait, no logos, no real-person likeness'
+    },
+    {
+      id: 'beard-cleanup',
+      title: 'Beard cleanup',
+      description: 'Beard shape, neckline cleanup, and detail.',
+      beforeBase: 'Generic adult male customer with messy untrimmed beard before mobile beard cleanup, realistic stock-style portrait, neutral indoor background, no logos, no real-person likeness',
+      afterBase: 'Same generic adult male after clean trimmed beard with shaped neckline and cheekline, finished mobile grooming result, realistic stock-style portrait, no logos, no real-person likeness'
+    },
+    {
+      id: 'modern-taper',
+      title: 'Modern taper',
+      description: 'Clean modern taper with soft blend.',
+      beforeBase: 'Generic young adult male customer before modern taper, longer top and overgrown sides, neutral indoor background, realistic stock-style portrait, no logos, no real-person likeness',
+      afterBase: 'Same generic young adult male after modern taper haircut with clean soft blend around ears and neckline, finished mobile barber result, realistic stock-style portrait, no logos, no real-person likeness'
+    },
+    {
+      id: 'line-up',
+      title: 'Line up',
+      description: 'Sharp hairline edge-up and detail.',
+      beforeBase: 'Generic adult male customer before hairline edge-up, soft uneven hairline, neutral indoor lighting, realistic stock-style portrait, no logos, no real-person likeness',
+      afterBase: 'Same generic adult male after crisp line-up around forehead, sideburns, and neckline, finished mobile barber result, realistic stock-style portrait, no logos, no real-person likeness'
+    },
+    {
+      id: 'hair-beard',
+      title: 'Hair and beard',
+      description: 'Haircut plus beard shaping in one mobile appointment.',
+      beforeBase: 'Generic adult male customer before combined haircut and beard service, longer hair and untrimmed beard, neutral indoor lighting, realistic stock-style portrait, no logos, no real-person likeness',
+      afterBase: 'Same generic adult male after combined clean haircut and shaped beard, polished mobile barber result, realistic stock-style portrait, no logos, no real-person likeness'
+    },
+    {
+      id: 'family-haircut',
+      title: 'Family haircut',
+      description: 'In-home family haircut session.',
+      beforeBase: 'Generic family group at home before haircuts, parent and child, casual home environment, realistic family stock-style portrait, no logos, no real-person likeness',
+      afterBase: 'Same generic family group after fresh in-home haircuts, smiling together at home, realistic family stock-style portrait, no logos, no real-person likeness'
+    }
+  ];
+
+  var AI_PORTFOLIO_VARIANTS = [
+    { suffix: '1', tag: 'set 1', extra: 'natural daylight, living room background, warm tone' },
+    { suffix: '2', tag: 'set 2', extra: 'cooler indoor lighting, neutral wall background, soft contrast' }
+  ];
+
+  function buildAIPortfolioForVendor(vendorId, vendorOrderOffset) {
+    var rows = [];
+    AI_PORTFOLIO_CATEGORIES.forEach(function(category, categoryIndex) {
+      AI_PORTFOLIO_VARIANTS.forEach(function(variant, variantIndex) {
+        rows.push(Object.freeze({
+          id: vendorId + '-ai-' + category.id + '-' + variant.suffix,
+          vendorId: vendorId,
+          title: category.title + ' — before and after (' + variant.tag + ')',
+          description: category.description + ' AI-generated style preview. Real barber portfolio coming soon.',
+          imageUrl: '',
+          beforeImageUrl: '',
+          afterImageUrl: '',
+          alt: category.title + ' before and after sample preview',
+          displayOrder: vendorOrderOffset + (categoryIndex * 10) + variantIndex + 1,
+          hidden: false,
+          createdAt: SEED_TIMESTAMP,
+          updatedAt: SEED_TIMESTAMP,
+          category: category.id,
+          active: true,
+          isAIGenerated: true,
+          requiresReplacementWithRealWork: true,
+          beforeImagePrompt: category.beforeBase + ', ' + variant.extra,
+          afterImagePrompt: category.afterBase + ', ' + variant.extra
+        }));
+      });
+    });
+    return rows;
+  }
 
   var samplePortfolioImages = Object.freeze([
     Object.freeze({
@@ -189,7 +437,8 @@
       createdAt: SEED_TIMESTAMP,
       updatedAt: SEED_TIMESTAMP
     })
-  ]);
+  ].concat(buildAIPortfolioForVendor(MICHAEL_VENDOR_ID, 100))
+   .concat(buildAIPortfolioForVendor(TIM_VENDOR_ID, 100)));
 
   var sampleReviews = Object.freeze([
     Object.freeze({
@@ -217,6 +466,136 @@
       vendorResponse: '',
       createdAt: '2026-05-21T16:00:00.000Z',
       updatedAt: '2026-05-21T16:00:00.000Z'
+    }),
+    Object.freeze({
+      id: 'michael-review-1',
+      vendorId: MICHAEL_VENDOR_ID,
+      customerName: 'Hung P.',
+      rating: 5,
+      body: 'Great fade service at home. Sharp blend and clean lineup.',
+      serviceName: 'Fade Haircut',
+      lang: 'en',
+      hidden: false,
+      vendorResponse: '',
+      createdAt: '2026-05-20T17:00:00.000Z',
+      updatedAt: '2026-05-20T17:00:00.000Z'
+    }),
+    Object.freeze({
+      id: 'michael-review-2',
+      vendorId: MICHAEL_VENDOR_ID,
+      customerName: 'Linda V.',
+      rating: 5,
+      body: 'Very convenient. My son sat still the whole time and his cut looked great.',
+      serviceName: 'Kids Haircut',
+      lang: 'en',
+      hidden: false,
+      vendorResponse: '',
+      createdAt: '2026-05-18T15:30:00.000Z',
+      updatedAt: '2026-05-18T15:30:00.000Z'
+    }),
+    Object.freeze({
+      id: 'michael-review-3',
+      vendorId: MICHAEL_VENDOR_ID,
+      customerName: 'David N.',
+      rating: 4.8,
+      body: 'Professional and punctual. Easy to book and clean in-home service.',
+      serviceName: 'Business Style Haircut',
+      lang: 'en',
+      hidden: false,
+      vendorResponse: '',
+      createdAt: '2026-05-15T14:00:00.000Z',
+      updatedAt: '2026-05-15T14:00:00.000Z'
+    }),
+    Object.freeze({
+      id: 'michael-review-4',
+      vendorId: MICHAEL_VENDOR_ID,
+      customerName: 'Anh Q.',
+      rating: 5,
+      body: 'Great beard cleanup and fade combo. Will book again.',
+      serviceName: 'Haircut and Beard',
+      lang: 'en',
+      hidden: false,
+      vendorResponse: '',
+      createdAt: '2026-05-12T18:00:00.000Z',
+      updatedAt: '2026-05-12T18:00:00.000Z'
+    }),
+    Object.freeze({
+      id: 'michael-review-5',
+      vendorId: MICHAEL_VENDOR_ID,
+      customerName: 'Bao L.',
+      rating: 4.9,
+      body: 'Excellent with kids and seniors. Did my dad and son back to back.',
+      serviceName: 'Home Family Package',
+      lang: 'en',
+      hidden: false,
+      vendorResponse: '',
+      createdAt: '2026-05-10T16:00:00.000Z',
+      updatedAt: '2026-05-10T16:00:00.000Z'
+    }),
+    Object.freeze({
+      id: 'tim-review-1',
+      vendorId: TIM_VENDOR_ID,
+      customerName: 'Kevin H.',
+      rating: 5,
+      body: 'Clean modern taper and very professional. Showed up right on time.',
+      serviceName: 'Taper Fade',
+      lang: 'en',
+      hidden: false,
+      vendorResponse: '',
+      createdAt: '2026-05-19T19:00:00.000Z',
+      updatedAt: '2026-05-19T19:00:00.000Z'
+    }),
+    Object.freeze({
+      id: 'tim-review-2',
+      vendorId: TIM_VENDOR_ID,
+      customerName: 'Maria S.',
+      rating: 4.9,
+      body: 'Great beard cleanup at home in San Jose. Tidy setup and easy booking.',
+      serviceName: 'Beard Trim',
+      lang: 'en',
+      hidden: false,
+      vendorResponse: '',
+      createdAt: '2026-05-17T17:30:00.000Z',
+      updatedAt: '2026-05-17T17:30:00.000Z'
+    }),
+    Object.freeze({
+      id: 'tim-review-3',
+      vendorId: TIM_VENDOR_ID,
+      customerName: 'Tony M.',
+      rating: 5,
+      body: 'Excellent with my dad in the senior community. Patient and very kind.',
+      serviceName: 'Senior Haircut',
+      lang: 'en',
+      hidden: false,
+      vendorResponse: '',
+      createdAt: '2026-05-14T15:00:00.000Z',
+      updatedAt: '2026-05-14T15:00:00.000Z'
+    }),
+    Object.freeze({
+      id: 'tim-review-4',
+      vendorId: TIM_VENDOR_ID,
+      customerName: 'Jenny T.',
+      rating: 5,
+      body: 'Very convenient mobile service. Family of four done in one visit.',
+      serviceName: 'Home Family Package',
+      lang: 'en',
+      hidden: false,
+      vendorResponse: '',
+      createdAt: '2026-05-11T18:30:00.000Z',
+      updatedAt: '2026-05-11T18:30:00.000Z'
+    }),
+    Object.freeze({
+      id: 'tim-review-5',
+      vendorId: TIM_VENDOR_ID,
+      customerName: 'Ricardo V.',
+      rating: 4.8,
+      body: 'Professional and punctual. Clean fade and great line up.',
+      serviceName: 'Fade Haircut',
+      lang: 'en',
+      hidden: false,
+      vendorResponse: '',
+      createdAt: '2026-05-09T16:00:00.000Z',
+      updatedAt: '2026-05-09T16:00:00.000Z'
     })
   ]);
 
@@ -297,8 +676,19 @@
     });
     requireNumber(image, 'displayOrder', errors, { min: 0 });
     if (typeof image.hidden !== 'boolean') errors.push('hidden must be boolean.');
-    if (!hasText(image.imageUrl) && !hasText(image.beforeImageUrl) && !hasText(image.afterImageUrl)) {
-      errors.push('portfolio image must include imageUrl or before/after URLs.');
+    var hasMedia = hasText(image.imageUrl) || hasText(image.beforeImageUrl) || hasText(image.afterImageUrl);
+    var hasPrompt = hasText(image.beforeImagePrompt) || hasText(image.afterImagePrompt);
+    if (!hasMedia && !hasPrompt) {
+      errors.push('portfolio image must include imageUrl, before/after URLs, or AI image prompt metadata.');
+    }
+    if (image.active != null && typeof image.active !== 'boolean') {
+      errors.push('active must be boolean when present.');
+    }
+    if (image.isAIGenerated != null && typeof image.isAIGenerated !== 'boolean') {
+      errors.push('isAIGenerated must be boolean when present.');
+    }
+    if (image.requiresReplacementWithRealWork != null && typeof image.requiresReplacementWithRealWork !== 'boolean') {
+      errors.push('requiresReplacementWithRealWork must be boolean when present.');
     }
     if (opts.vendorIds && opts.vendorIds.indexOf(image.vendorId) < 0) {
       errors.push('portfolio image vendorId does not match a known mobile barber vendor.');
@@ -431,7 +821,11 @@
   function listPortfolioForVendor(vendorId, images, includeHidden) {
     images = images || samplePortfolioImages;
     return images.filter(function(image) {
-      return image.vendorId === vendorId && (includeHidden || image.hidden !== true);
+      if (image.vendorId !== vendorId) return false;
+      if (includeHidden) return true;
+      if (image.hidden === true) return false;
+      if (image.active === false) return false;
+      return true;
     }).sort(function(a, b) {
       return (a.displayOrder || 0) - (b.displayOrder || 0);
     });
@@ -472,6 +866,10 @@
     BOOKING_STATUSES: BOOKING_STATUSES,
     BOOKING_SOURCES: BOOKING_SOURCES,
     SAMPLE_VENDOR_ID: SAMPLE_VENDOR_ID,
+    MICHAEL_VENDOR_ID: MICHAEL_VENDOR_ID,
+    TIM_VENDOR_ID: TIM_VENDOR_ID,
+    AI_PORTFOLIO_CATEGORIES: AI_PORTFOLIO_CATEGORIES,
+    buildAIPortfolioForVendor: buildAIPortfolioForVendor,
     sampleVendors: sampleVendors,
     sampleServices: sampleServices,
     sampleAvailability: sampleAvailability,

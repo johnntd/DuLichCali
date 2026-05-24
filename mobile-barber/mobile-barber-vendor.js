@@ -15,6 +15,10 @@
       trustKicker: 'Trust',
       portfolioTitle: 'Barber portfolio',
       portfolioEmpty: 'Portfolio photos are being updated. Bookings still use the verified service menu and availability check.',
+      aiSampleDisclaimer: 'Sample AI-generated style preview. Real barber portfolio coming soon.',
+      aiSampleBadge: 'AI sample preview',
+      aiSampleBeforePlaceholder: 'Before — AI sample preview',
+      aiSampleAfterPlaceholder: 'After — AI sample preview',
       beforeLabel: 'Before',
       afterLabel: 'After',
       reviewsTitle: 'Reviews and ratings',
@@ -120,6 +124,10 @@
       trustKicker: 'Uy tín',
       portfolioTitle: 'Portfolio của thợ',
       portfolioEmpty: 'Hình portfolio đang được cập nhật. Việc đặt lịch vẫn dùng menu dịch vụ và kiểm tra lịch trống.',
+      aiSampleDisclaimer: 'Mẫu xem trước phong cách do AI tạo. Portfolio thật của thợ sắp ra mắt.',
+      aiSampleBadge: 'Mẫu xem trước do AI',
+      aiSampleBeforePlaceholder: 'Trước — mẫu AI',
+      aiSampleAfterPlaceholder: 'Sau — mẫu AI',
       beforeLabel: 'Trước',
       afterLabel: 'Sau',
       reviewsTitle: 'Đánh giá và điểm sao',
@@ -225,6 +233,10 @@
       trustKicker: 'Confianza',
       portfolioTitle: 'Portafolio del barbero',
       portfolioEmpty: 'Las fotos del portafolio se están actualizando. Las reservas todavía usan el menú verificado y revisión de disponibilidad.',
+      aiSampleDisclaimer: 'Vista previa de estilo generada por IA. El portafolio real del barbero estará disponible pronto.',
+      aiSampleBadge: 'Muestra IA',
+      aiSampleBeforePlaceholder: 'Antes — muestra IA',
+      aiSampleAfterPlaceholder: 'Después — muestra IA',
       beforeLabel: 'Antes',
       afterLabel: 'Después',
       reviewsTitle: 'Reseñas y calificaciones',
@@ -621,12 +633,31 @@
 
   function portfolioImageCard(image) {
     var card = el('article', 'mb-portfolio-card');
-    var hasBeforeAfter = image.beforeImageUrl || image.afterImageUrl;
-    var media = el('div', hasBeforeAfter ? 'mb-portfolio-card__compare' : 'mb-portfolio-card__media');
+    var hasBefore = !!image.beforeImageUrl;
+    var hasAfter = !!image.afterImageUrl;
+    var hasBeforeAfter = hasBefore || hasAfter;
+    var hasMainImage = !!image.imageUrl;
+    var isAIPlaceholder = image.isAIGenerated === true && !hasBeforeAfter && !hasMainImage;
+    var media = el('div', hasBeforeAfter || isAIPlaceholder ? 'mb-portfolio-card__compare' : 'mb-portfolio-card__media');
     var title = el('h3');
     var desc = el('p');
 
-    if (hasBeforeAfter) {
+    if (isAIPlaceholder) {
+      card.classList.add('mb-portfolio-card--ai-sample');
+      [
+        ['aiSampleBeforePlaceholder'],
+        ['aiSampleAfterPlaceholder']
+      ].forEach(function(pair) {
+        var wrap = el('figure', 'mb-portfolio-card__ai-frame');
+        var badge = el('span', 'mb-portfolio-card__ai-badge');
+        var caption = el('figcaption');
+        badge.textContent = t('aiSampleBadge');
+        caption.textContent = t(pair[0]);
+        wrap.appendChild(badge);
+        wrap.appendChild(caption);
+        media.appendChild(wrap);
+      });
+    } else if (hasBeforeAfter) {
       [
         ['beforeImageUrl', 'beforeLabel'],
         ['afterImageUrl', 'afterLabel']
@@ -658,12 +689,20 @@
     var list = document.getElementById('mbPortfolioGallery');
     if (!list) return;
     list.innerHTML = '';
-    var rows = (state.portfolio || []).filter(function(image) { return image.hidden !== true; });
+    var rows = (state.portfolio || []).filter(function(image) {
+      return image.hidden !== true && image.active !== false;
+    });
     if (!rows.length) {
       var empty = el('div', 'mb-empty');
       empty.textContent = t('portfolioEmpty');
       list.appendChild(empty);
       return;
+    }
+    var hasAI = rows.some(function(image) { return image.isAIGenerated === true; });
+    if (hasAI) {
+      var banner = el('div', 'mb-ai-sample-banner');
+      banner.textContent = t('aiSampleDisclaimer');
+      list.appendChild(banner);
     }
     rows.forEach(function(image) {
       list.appendChild(portfolioImageCard(image));

@@ -249,13 +249,14 @@
       var barber = el('p');
       var area = el('p');
       var row = el('div', 'mb-meta-row');
+      var cta = el('a', 'mb-button mb-button--primary');
 
       title.textContent = vendor.businessName;
       barber.textContent = vendor.barberName;
-      area.textContent = t('serviceAreaLabel') + ': ' + vendor.serviceAreas.join(', ');
+      area.textContent = t('serviceAreaLabel') + ': ' + (vendor.serviceAreas || []).join(', ');
       row.appendChild(metaChip(t('radiusLabel'), vendor.travelRadiusMiles + ' mi'));
       row.appendChild(metaChip(t('travelFeeLabel'), formatMoney(vendor.baseTravelFee)));
-      row.appendChild(metaChip(t('languagesLabel'), vendor.languages.join(', ').toUpperCase()));
+      row.appendChild(metaChip(t('languagesLabel'), (vendor.languages || []).join(', ').toUpperCase()));
       row.appendChild(metaChip(t('ratingLabel'), String(vendor.rating || '')));
       cta.href = '/mobile-barber/vendor/' + encodeURIComponent(vendor.id);
       cta.textContent = t('bookNow');

@@ -144,7 +144,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260524h');
     assertContains(vendorHtml, '/ai-engine.js?v=20260523a');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-agent.js?v=20260524g');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-voice.js?v=20260524j');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-voice.js?v=20260524p');
     assertContains(vendorHtml, 'firebase-functions-compat.js');
     assertContains(vendorHtml, '/notifications.js?v=20260523a');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-vendor.js?v=20260524o');

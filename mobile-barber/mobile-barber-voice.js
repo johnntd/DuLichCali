@@ -264,13 +264,87 @@
     try { root.speechSynthesis.speak(utter); } catch (e) { afterSpeech(false); }
   }
 
+  function _playDecodedAudioBuffer(buf, ctx, onDone) {
+    return new Promise(function(resolve, reject) { ctx.decodeAudioData(buf, resolve, reject); })
+      .then(function(decoded) {
+        if (state !== 'confirming' && state !== 'booked' && state !== 'thinking') return;
+        var src = ctx.createBufferSource();
+        src.buffer = decoded;
+        src.connect(ctx.destination);
+        currentSource = src;
+        src.onended = function() { currentSource = null; onDone(true); afterSpeech(true); };
+        src.start();
+      })
+      .catch(function() { currentSource = null; onDone(false); });
+  }
+
+  function _b64ToArrayBuffer(b64) {
+    var raw = atob(b64);
+    var bytes = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+    return bytes.buffer;
+  }
+
   function _speakViaOpenAi(text, onDone) {
-    var key = getOpenAiKey();
     var ctx = ensureAudioCtx();
-    if (!key || !ctx) {
+    if (!ctx) {
+      _voiceProviderLog({ selectedProvider: 'openai', fallbackReason: 'no-audio-context' });
+      onDone(false); return;
+    }
+
+    var hasFunctions = !!(root.firebase && typeof root.firebase.functions === 'function');
+    if (hasFunctions) {
       _voiceProviderLog({
         selectedProvider: 'openai',
-        fallbackReason: !key ? 'no-openai-key' : 'no-audio-context'
+        selectedModel: 'tts-1',
+        selectedVoice: 'nova',
+        transport: 'aiTtsProxy',
+        usingOpenAI: true
+      });
+      try {
+        var fn = root.firebase.functions().httpsCallable('aiTtsProxy');
+        fn({ provider: 'openai', text: text, voice: 'nova', language: lang })
+          .then(function(result) {
+            var data = (result && result.data) || {};
+            if (!data.ok || !data.audioBase64) {
+              _voiceProviderLog({
+                selectedProvider: 'openai',
+                usingOpenAI: false,
+                fallbackReason: 'proxy:' + (data.debugCode || 'no-audio')
+              });
+              currentSource = null;
+              onDone(false);
+              return;
+            }
+            _playDecodedAudioBuffer(_b64ToArrayBuffer(data.audioBase64), ctx, onDone);
+          })
+          .catch(function(err) {
+            _voiceProviderLog({
+              selectedProvider: 'openai',
+              usingOpenAI: false,
+              fallbackReason: 'proxy-call-failed:' + ((err && err.message) || '').slice(0, 80)
+            });
+            currentSource = null;
+            onDone(false);
+          });
+        return;
+      } catch (e) {
+        _voiceProviderLog({
+          selectedProvider: 'openai',
+          usingOpenAI: false,
+          fallbackReason: 'proxy-throw:' + ((e && e.message) || '').slice(0, 80)
+        });
+        // fall through to legacy client-direct path
+      }
+    }
+
+    // Legacy fallback: only fires if Firebase Functions SDK isn't loaded AND a
+    // client-readable OpenAI key happens to be configured.
+    var key = getOpenAiKey();
+    if (!key) {
+      _voiceProviderLog({
+        selectedProvider: 'openai',
+        fallbackReason: hasFunctions ? 'no-proxy-and-no-key' : 'no-functions-sdk-and-no-key'
       });
       onDone(false); return;
     }
@@ -290,18 +364,7 @@
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       return resp.arrayBuffer();
     })
-    .then(function(buf) {
-      return new Promise(function(resolve, reject) { ctx.decodeAudioData(buf, resolve, reject); });
-    })
-    .then(function(decoded) {
-      if (state !== 'confirming' && state !== 'booked' && state !== 'thinking') return;
-      var src = ctx.createBufferSource();
-      src.buffer = decoded;
-      src.connect(ctx.destination);
-      currentSource = src;
-      src.onended = function() { currentSource = null; onDone(true); afterSpeech(true); };
-      src.start();
-    })
+    .then(function(buf) { return _playDecodedAudioBuffer(buf, ctx, onDone); })
     .catch(function() { currentSource = null; onDone(false); });
   }
 

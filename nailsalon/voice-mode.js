@@ -582,17 +582,64 @@
     }
   }
 
+  function _playOpenAiAudioBuffer(buf, ctx, onDone) {
+    return new Promise(function (resolve, reject) { ctx.decodeAudioData(buf, resolve, reject); })
+      .then(function (decoded) {
+        if (_state !== 'speaking') return;
+        var src = ctx.createBufferSource();
+        src.buffer = decoded;
+        src.connect(ctx.destination);
+        _currentSource = src;
+        src.onended = function () {
+          _currentSource = null;
+          if (_state === 'speaking') _setState('idle');
+          onDone(true);
+          _autoRestartListening();
+        };
+        src.start();
+      })
+      .catch(function () { _currentSource = null; onDone(false); });
+  }
+
+  function _b64ToArrayBuffer(b64) {
+    var raw = atob(b64);
+    var bytes = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+    return bytes.buffer;
+  }
+
   // OpenAI TTS — primary engine for all languages.
-  // model: tts-1 (speed-optimised), voice: nova (warm female, multilingual).
-  // Roundtrip ~200–400 ms vs Gemini's 500–1500 ms.
-  // Requires openaiKey in Firestore vendor doc, platform config, or localStorage 'dlc_openai_key'.
+  // Preferred path: server-side aiTtsProxy reuses the OPENAI_API_KEY Functions
+  // secret. Falls back to a legacy client-direct fetch only when Firebase
+  // Functions SDK is missing.
   function _speakViaOpenAi(text, onDone) {
+    var ctx = _ensureAudioCtx();
+    if (!ctx) { onDone(false); return; }
+
+    if (typeof firebase !== 'undefined' && typeof firebase.functions === 'function') {
+      try {
+        var fn = firebase.functions().httpsCallable('aiTtsProxy');
+        fn({ provider: 'openai', text: text, voice: 'nova', language: _lang })
+          .then(function (result) {
+            var data = (result && result.data) || {};
+            if (!data.ok || !data.audioBase64) {
+              _currentSource = null;
+              onDone(false);
+              return;
+            }
+            _playOpenAiAudioBuffer(_b64ToArrayBuffer(data.audioBase64), ctx, onDone);
+          })
+          .catch(function () { _currentSource = null; onDone(false); });
+        return;
+      } catch (_) {
+        // fall through to legacy client-direct path
+      }
+    }
+
+    // Legacy fallback: only fires when Firebase Functions SDK isn't loaded.
     var key = (_biz && _biz._firestoreOpenAiKey) || (_biz && _biz._platformOpenAiKey) || '';
     if (!key) { try { key = localStorage.getItem('dlc_openai_key') || ''; } catch (_) {} }
     if (!key) { onDone(false); return; }
-
-    var ctx = _ensureAudioCtx();
-    if (!ctx) { onDone(false); return; }
 
     fetch('https://api.openai.com/v1/audio/speech', {
       method:  'POST',
@@ -603,44 +650,43 @@
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       return resp.arrayBuffer();
     })
-    .then(function (buf) {
-      return new Promise(function (resolve, reject) {
-        ctx.decodeAudioData(buf, resolve, reject);
-      });
-    })
-    .then(function (decoded) {
-      if (_state !== 'speaking') return; // cancelled while waiting
-      var src = ctx.createBufferSource();
-      src.buffer = decoded;
-      src.connect(ctx.destination);
-      _currentSource = src;
-      src.onended = function () {
-        _currentSource = null;
-        if (_state === 'speaking') _setState('idle');
-        onDone(true);
-        _autoRestartListening();
-      };
-      src.start();
-    })
-    .catch(function () {
-      _currentSource = null;
-      onDone(false);
-    });
+    .then(function (buf) { return _playOpenAiAudioBuffer(buf, ctx, onDone); })
+    .catch(function () { _currentSource = null; onDone(false); });
   }
 
   // Pre-fetch welcome message audio via OpenAI TTS while the user is still on
-  // the page (before they tap voice mode).  Stores raw MP3 ArrayBuffer so open()
-  // can decode + play it instantly with no perceptible delay.
-  // Called by receptionist.js after Firestore vendor data loads (keys available).
+  // the page (before they tap voice mode). Stores raw MP3 ArrayBuffer so open()
+  // can decode + play it instantly with no perceptible delay. Called by
+  // receptionist.js after Firestore vendor data loads.
+  // Preferred path: server-side aiTtsProxy. Falls back to a client-direct
+  // fetch if Firebase Functions SDK is missing.
   function _prefetchWelcome(biz) {
-    if (_welcomeBuffer) return; // already fetched
-    var key = (biz && biz._firestoreOpenAiKey) || (biz && biz._platformOpenAiKey) || '';
-    if (!key) { try { key = localStorage.getItem('dlc_openai_key') || ''; } catch (_) {} }
-    if (!key) return;
+    if (_welcomeBuffer) return;
 
     var welcome = (biz && biz.aiReceptionist && biz.aiReceptionist.welcomeMessage) || '';
     var text = _cleanForTts(welcome);
     if (!text) return;
+
+    if (typeof firebase !== 'undefined' && typeof firebase.functions === 'function') {
+      try {
+        var fn = firebase.functions().httpsCallable('aiTtsProxy');
+        fn({ provider: 'openai', text: text, voice: 'nova', language: _lang })
+          .then(function (result) {
+            var data = (result && result.data) || {};
+            if (data.ok && data.audioBase64) {
+              _welcomeBuffer = _b64ToArrayBuffer(data.audioBase64);
+            }
+          })
+          .catch(function () {});
+        return;
+      } catch (_) {
+        // fall through to legacy client-direct path
+      }
+    }
+
+    var key = (biz && biz._firestoreOpenAiKey) || (biz && biz._platformOpenAiKey) || '';
+    if (!key) { try { key = localStorage.getItem('dlc_openai_key') || ''; } catch (_) {} }
+    if (!key) return;
 
     fetch('https://api.openai.com/v1/audio/speech', {
       method:  'POST',
@@ -649,7 +695,7 @@
     })
     .then(function (resp) { if (!resp.ok) throw new Error(); return resp.arrayBuffer(); })
     .then(function (buf) { _welcomeBuffer = buf; })
-    .catch(function () {}); // silent fail — open() will fall back gracefully
+    .catch(function () {});
   }
 
   // Gemini TTS path — fallback when OpenAI key is unavailable.

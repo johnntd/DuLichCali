@@ -1063,10 +1063,11 @@ test('RX-029: _speakViaOpenAi tries platform key before localStorage [RX-029]', 
 });
 
 test('RX-029: _speakViaOpenAi platform key fallback comes before localStorage [RX-029]', function() {
-  // Check that _platformOpenAiKey appears in the key= line BEFORE the localStorage.getItem call
   var speakFnStart = vmSrc.indexOf('function _speakViaOpenAi(');
   assert(speakFnStart >= 0, 'RX-029: _speakViaOpenAi function not found');
-  var fnSlice = vmSrc.slice(speakFnStart, speakFnStart + 500);
+  // Window widened to 3000 because the function now starts with the server-side
+  // aiTtsProxy path before falling through to the legacy client-direct key chain.
+  var fnSlice = vmSrc.slice(speakFnStart, speakFnStart + 3000);
   var platformIdx = fnSlice.indexOf('_platformOpenAiKey');
   var localStorageIdx = fnSlice.indexOf('localStorage.getItem');
   assert(platformIdx >= 0,    'RX-029: _platformOpenAiKey not found in _speakViaOpenAi');
@@ -1104,7 +1105,10 @@ test('RX-029: _speakViaGemini platform key fallback comes before localStorage [R
 test('RX-029: _prefetchWelcome tries platform key before localStorage [RX-029]', function() {
   var fnStart = vmSrc.indexOf('function _prefetchWelcome(');
   assert(fnStart >= 0, 'RX-029: _prefetchWelcome function not found');
-  var fnSlice = vmSrc.slice(fnStart, fnStart + 500);
+  // Window widened to 3000 because _prefetchWelcome now starts with the
+  // server-side aiTtsProxy path before falling through to the legacy
+  // client-direct key chain.
+  var fnSlice = vmSrc.slice(fnStart, fnStart + 3000);
   var platformIdx = fnSlice.indexOf('_platformOpenAiKey');
   var localStorageIdx = fnSlice.indexOf('localStorage.getItem');
   assert(platformIdx >= 0,    'RX-029: _platformOpenAiKey not found in _prefetchWelcome — prefetch would 401 for vendors without their own key');

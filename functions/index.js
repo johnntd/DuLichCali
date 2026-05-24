@@ -1943,52 +1943,116 @@ async function serverCallGeminiTts(text, voice, geminiKey) {
   };
 }
 
+const OPENAI_TTS_MODEL = 'tts-1';
+const OPENAI_TTS_DEFAULT_VOICE = 'nova';
+
+async function serverCallOpenAiTts(text, voice, openaiKey) {
+  const resp = await fetch('https://api.openai.com/v1/audio/speech', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + openaiKey,
+      'Content-Type':  'application/json'
+    },
+    body: JSON.stringify({
+      model:           OPENAI_TTS_MODEL,
+      input:           text,
+      voice:           voice || OPENAI_TTS_DEFAULT_VOICE,
+      response_format: 'mp3'
+    })
+  });
+  if (!resp.ok) {
+    const errText = await resp.text().catch(() => '');
+    throw new Error('openai-tts HTTP ' + resp.status + ' ' + errText.slice(0, 200));
+  }
+  const arrayBuffer = await resp.arrayBuffer();
+  const audioBase64 = Buffer.from(arrayBuffer).toString('base64');
+  return {
+    audioBase64,
+    mimeType: 'audio/mpeg'
+  };
+}
+
 exports.aiTtsProxy = onCall(
   {
     region:         'us-central1',
-    secrets:        [GEMINI_API_KEY],
+    secrets:        [GEMINI_API_KEY, OPENAI_API_KEY],
     timeoutSeconds: 30,
     cors:           true,
   },
   async (request) => {
     const { provider, text, voice, language } = request.data || {};
-    if (provider !== 'gemini') {
-      return { ok: false, error: 'Unsupported provider', debugCode: 'UNSUPPORTED' };
-    }
     if (typeof text !== 'string' || !text.trim()) {
       return { ok: false, error: 'Missing text', debugCode: 'INVALID_REQUEST' };
     }
     const safeText = text.slice(0, TTS_MAX_TEXT);
-    const safeVoice = (typeof voice === 'string' && voice.length <= 64) ? voice : 'Aoede';
-    const geminiKey = GEMINI_API_KEY.value();
-    if (!geminiKey) {
-      return { ok: false, error: 'Gemini key not configured', debugCode: 'NO_GEMINI_KEY' };
+
+    if (provider === 'gemini') {
+      const safeVoice = (typeof voice === 'string' && voice.length <= 64) ? voice : 'Aoede';
+      const geminiKey = GEMINI_API_KEY.value();
+      if (!geminiKey) {
+        return { ok: false, error: 'Gemini key not configured', debugCode: 'NO_GEMINI_KEY' };
+      }
+      try {
+        const result = await serverCallGeminiTts(safeText, safeVoice, geminiKey);
+        console.info('[aiTtsProxy] gemini ok', {
+          language: language || '',
+          voice:    safeVoice,
+          textLen:  safeText.length,
+          audioB64Len: result.audioBase64.length
+        });
+        return {
+          ok:          true,
+          provider:    'gemini',
+          model:       GEMINI_TTS_MODEL,
+          voice:       safeVoice,
+          audioBase64: result.audioBase64,
+          mimeType:    result.mimeType
+        };
+      } catch (err) {
+        console.error('[aiTtsProxy] gemini error:', err && err.message);
+        return {
+          ok:        false,
+          error:     'TTS provider error',
+          debugCode: 'PROVIDER_ERROR',
+          detail:    (err && err.message || '').slice(0, 200)
+        };
+      }
     }
-    try {
-      const result = await serverCallGeminiTts(safeText, safeVoice, geminiKey);
-      console.info('[aiTtsProxy] gemini ok', {
-        language: language || '',
-        voice:    safeVoice,
-        textLen:  safeText.length,
-        audioB64Len: result.audioBase64.length
-      });
-      return {
-        ok:          true,
-        provider:    'gemini',
-        model:       GEMINI_TTS_MODEL,
-        voice:       safeVoice,
-        audioBase64: result.audioBase64,
-        mimeType:    result.mimeType
-      };
-    } catch (err) {
-      console.error('[aiTtsProxy] gemini error:', err && err.message);
-      return {
-        ok:        false,
-        error:     'TTS provider error',
-        debugCode: 'PROVIDER_ERROR',
-        detail:    (err && err.message || '').slice(0, 200)
-      };
+
+    if (provider === 'openai') {
+      const safeVoice = (typeof voice === 'string' && voice.length <= 64) ? voice : OPENAI_TTS_DEFAULT_VOICE;
+      const openaiKey = OPENAI_API_KEY.value();
+      if (!openaiKey) {
+        return { ok: false, error: 'OpenAI key not configured', debugCode: 'NO_OPENAI_KEY' };
+      }
+      try {
+        const result = await serverCallOpenAiTts(safeText, safeVoice, openaiKey);
+        console.info('[aiTtsProxy] openai ok', {
+          language: language || '',
+          voice:    safeVoice,
+          textLen:  safeText.length,
+          audioB64Len: result.audioBase64.length
+        });
+        return {
+          ok:          true,
+          provider:    'openai',
+          model:       OPENAI_TTS_MODEL,
+          voice:       safeVoice,
+          audioBase64: result.audioBase64,
+          mimeType:    result.mimeType
+        };
+      } catch (err) {
+        console.error('[aiTtsProxy] openai error:', err && err.message);
+        return {
+          ok:        false,
+          error:     'TTS provider error',
+          debugCode: 'PROVIDER_ERROR',
+          detail:    (err && err.message || '').slice(0, 200)
+        };
+      }
     }
+
+    return { ok: false, error: 'Unsupported provider', debugCode: 'UNSUPPORTED' };
   }
 );
 

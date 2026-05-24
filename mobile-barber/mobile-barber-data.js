@@ -964,6 +964,39 @@
     return null;
   }
 
+  // Maps an AI portfolio category id to a SERVICE_IMAGE_TEMPLATES slug so the
+  // empty before/after placeholder cards can carry a representative photo.
+  // Portfolio category vocabulary is similar but not identical to the service
+  // slug vocabulary, so we map explicitly and fall back to classic-haircut.
+  var PORTFOLIO_CATEGORY_TO_SERVICE_SLUG = Object.freeze({
+    'fade':             'fade-haircut',
+    'skin-fade':        'skin-fade',
+    'taper-fade':       'taper-fade',
+    'modern-taper':     'taper-fade',
+    'kids-haircut':     'kids-haircut',
+    'senior-haircut':   'senior-haircut',
+    'business-haircut': 'business-haircut',
+    'beard-cleanup':    'beard-trim',
+    'beard-trim':       'beard-trim',
+    'hair-beard':       'haircut-beard',
+    'line-up':          'line-up',
+    'family-haircut':   'home-family-package',
+    'classic-haircut':  'classic-haircut',
+    'modern-styling':   'modern-styling',
+    'buzz-cut':         'buzz-cut'
+  });
+
+  function findServiceImageByPortfolioCategory(category) {
+    var slug = PORTFOLIO_CATEGORY_TO_SERVICE_SLUG[category] || 'classic-haircut';
+    var tmpl = SERVICE_IMAGE_TEMPLATES[slug] || SERVICE_IMAGE_TEMPLATES['classic-haircut'];
+    if (!tmpl) return null;
+    return {
+      imageUrl:    tmpl.imageUrl,
+      imageAlt:    tmpl.imageAlt,
+      imagePrompt: tmpl.imagePrompt
+    };
+  }
+
   function listPortfolioForVendor(vendorId, images, includeHidden) {
     images = images || samplePortfolioImages;
     return images.filter(function(image) {
@@ -1063,6 +1096,8 @@
     listServicesForVendor: listServicesForVendor,
     listServiceImagesForVendor: listServiceImagesForVendor,
     findServiceImageByServiceId: findServiceImageByServiceId,
+    findServiceImageByPortfolioCategory: findServiceImageByPortfolioCategory,
+    PORTFOLIO_CATEGORY_TO_SERVICE_SLUG: PORTFOLIO_CATEGORY_TO_SERVICE_SLUG,
     listPortfolioForVendor: listPortfolioForVendor,
     listReviewsForVendor: listReviewsForVendor,
     createSeedPayload: createSeedPayload,

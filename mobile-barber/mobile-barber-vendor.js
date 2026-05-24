@@ -776,15 +776,25 @@
 
     if (isAIPlaceholder) {
       card.classList.add('mb-portfolio-card--ai-sample');
+      var categoryImage = DATA && DATA.findServiceImageByPortfolioCategory
+        ? DATA.findServiceImageByPortfolioCategory(image.category)
+        : null;
       [
-        ['aiSampleBeforePlaceholder'],
-        ['aiSampleAfterPlaceholder']
+        ['aiSampleBeforePlaceholder', 'before'],
+        ['aiSampleAfterPlaceholder',  'after']
       ].forEach(function(pair) {
-        var wrap = el('figure', 'mb-portfolio-card__ai-frame');
+        var wrap = el('figure', 'mb-portfolio-card__ai-frame mb-portfolio-card__ai-frame--' + pair[1]);
         var badge = el('span', 'mb-portfolio-card__ai-badge');
         var caption = el('figcaption');
         badge.textContent = t('aiSampleBadge');
         caption.textContent = t(pair[0]);
+        if (categoryImage && categoryImage.imageUrl) {
+          // Use the matching service Unsplash photo as a representative style
+          // preview. The "before" half is desaturated; the "after" half shows
+          // full color. Both halves stay labelled as AI samples for honesty.
+          wrap.style.backgroundImage = "url('" + categoryImage.imageUrl + "')";
+          wrap.setAttribute('aria-label', categoryImage.imageAlt || '');
+        }
         wrap.appendChild(badge);
         wrap.appendChild(caption);
         media.appendChild(wrap);

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0d2f50">
+  <title>Mobile Barber Vendor | Du Lich Cali</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,300;6..96,400&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/style.css?v=20260421b">
+  <link rel="stylesheet" href="/desktop.css">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260524b">
+</head>
+<body class="mb-page mb-vendor-page">
+  <main class="mb-shell mb-vendor-shell" id="mobileBarberVendorApp" data-page="mobile-barber-vendor">
+    <div class="mb-language" id="mbVendorLanguage" aria-label="">
+      <button class="mb-language__button" type="button" data-lang="en">EN</button>
+      <button class="mb-language__button" type="button" data-lang="vi">VI</button>
+      <button class="mb-language__button" type="button" data-lang="es">ES</button>
+    </div>
+
+    <section class="mb-vendor-error" id="mbVendorError" hidden>
+      <p class="mb-kicker" data-i18n="errorKicker"></p>
+      <h1 data-i18n="errorTitle"></h1>
+      <p data-i18n="errorCopy"></p>
+      <a class="mb-button mb-button--primary" href="/mobile-barber" data-i18n="backToMobileBarber"></a>
+    </section>
+
+    <article class="mb-vendor-detail" id="mbVendorDetail" hidden>
+      <section class="mb-vendor-hero" aria-labelledby="mbVendorName">
+        <div class="mb-vendor-hero__image-wrap">
+          <img class="mb-vendor-hero__image" id="mbVendorHeroImage" alt="">
+        </div>
+        <div class="mb-vendor-hero__body">
+          <p class="mb-kicker" data-i18n="vendorKicker"></p>
+          <div class="mb-vendor-identity">
+            <img class="mb-vendor-identity__photo" id="mbVendorProfilePhoto" alt="">
+            <div>
+              <h1 id="mbVendorName"></h1>
+              <p id="mbVendorBarberName"></p>
+            </div>
+          </div>
+          <div class="mb-meta-row" id="mbVendorMeta"></div>
+          <div class="mb-service-badges" aria-label="" id="mbServiceBadges"></div>
+          <div class="mb-vendor-contact">
+            <a class="mb-button mb-button--primary" id="mbVendorPhone" href=""></a>
+            <button class="mb-button mb-button--ghost" type="button" data-action="openAssistant" data-i18n="aiBookingButton"></button>
+            <button class="mb-button mb-button--voice" type="button" data-action="openVoiceAssistant" data-i18n="voiceBookingButton"></button>
+          </div>
+        </div>
+      </section>
+
+      <section class="mb-section mb-vendor-layout" aria-labelledby="mbVendorServicesTitle">
+        <div>
+          <div class="mb-section__head">
+            <p class="mb-kicker" data-i18n="servicesKicker"></p>
+            <h2 id="mbVendorServicesTitle" data-i18n="servicesTitle"></h2>
+          </div>
+          <div class="mb-card-grid mb-vendor-service-list" id="mbVendorServices"></div>
+        </div>
+
+        <aside class="mb-booking-panel" aria-labelledby="mbBookingTitle">
+          <p class="mb-kicker" data-i18n="bookingKicker"></p>
+          <h2 id="mbBookingTitle" data-i18n="bookingTitle"></h2>
+          <p id="mbAvailabilityPreview"></p>
+          <button class="mb-button mb-button--primary" type="button" data-action="openManualBooking" data-i18n="manualBookingButton"></button>
+          <button class="mb-button mb-button--ghost" type="button" data-action="openAssistant" data-i18n="aiBookingButton"></button>
+          <button class="mb-button mb-button--voice" type="button" data-action="openVoiceAssistant" data-i18n="voiceBookingButton"></button>
+        </aside>
+      </section>
+
+      <section class="mb-section mb-trust-section" aria-labelledby="mbPortfolioTitle">
+        <div class="mb-section__head">
+          <p class="mb-kicker" data-i18n="trustKicker"></p>
+          <h2 id="mbPortfolioTitle" data-i18n="portfolioTitle"></h2>
+        </div>
+        <div class="mb-portfolio-grid" id="mbPortfolioGallery"></div>
+      </section>
+
+      <section class="mb-section mb-trust-section" aria-labelledby="mbReviewsTitle">
+        <div class="mb-section__head">
+          <p class="mb-kicker" data-i18n="ratingLabel"></p>
+          <h2 id="mbReviewsTitle" data-i18n="reviewsTitle"></h2>
+        </div>
+        <div class="mb-review-list" id="mbReviewList"></div>
+      </section>
+
+      <section class="mb-section mb-customer-account" aria-labelledby="mbCustomerAccountTitle">
+        <div class="mb-section__head">
+          <p class="mb-kicker" data-i18n="customerAccountKicker"></p>
+          <h2 id="mbCustomerAccountTitle" data-i18n="customerAccountTitle"></h2>
+          <p data-i18n="customerAccountCopy"></p>
+        </div>
+        <div class="mb-customer-account__grid">
+          <form class="mb-customer-panel" id="mbCustomerAccountForm">
+            <label class="mb-field">
+              <span data-i18n="phoneInputLabel"></span>
+              <input id="mbHistoryPhone" type="tel" autocomplete="tel">
+            </label>
+            <label class="mb-field">
+              <span data-i18n="stylePreferenceLabel"></span>
+              <input id="mbStylePreference" type="text" autocomplete="off">
+            </label>
+            <label class="mb-field">
+              <span data-i18n="savedNotesLabel"></span>
+              <textarea id="mbSavedCustomerNotes" rows="3"></textarea>
+            </label>
+            <label class="mb-field">
+              <span data-i18n="stylePhotosLabel"></span>
+              <input id="mbStylePhotos" type="file" accept="image/*" multiple>
+            </label>
+            <div class="mb-form-actions">
+              <button class="mb-button mb-button--ghost" type="button" data-action="loadHistory" data-i18n="loadHistoryButton"></button>
+              <button class="mb-button mb-button--primary" type="button" data-action="savePreference" data-i18n="savePreferenceButton"></button>
+            </div>
+          </form>
+          <div class="mb-customer-panel">
+            <h3 data-i18n="upcomingHistoryTitle"></h3>
+            <div class="mb-history-list" id="mbUpcomingHistoryList"></div>
+            <h3 data-i18n="pastHistoryTitle"></h3>
+            <div class="mb-history-list" id="mbPastHistoryList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="mb-booking-modal" id="mbManualBookingModal" hidden aria-labelledby="mbManualBookingTitle" aria-live="polite">
+        <div class="mb-booking-modal__dialog">
+          <div class="mb-booking-modal__head">
+            <div>
+              <p class="mb-kicker" id="mbManualStepLabel"></p>
+              <h2 id="mbManualBookingTitle" data-i18n="manualBookingTitle"></h2>
+            </div>
+            <button class="mb-booking-modal__close" type="button" data-action="closeManualBooking" data-i18n-aria="closeManualBooking">×</button>
+          </div>
+          <form id="mbManualBookingForm" novalidate>
+            <div class="mb-form-step" data-step="1">
+              <label class="mb-field">
+                <span data-i18n="serviceLabel"></span>
+                <select id="mbBookingService" required></select>
+              </label>
+              <label class="mb-field">
+                <span data-i18n="dateLabel"></span>
+                <input id="mbBookingDate" type="date" required>
+              </label>
+              <label class="mb-field">
+                <span data-i18n="timeLabel"></span>
+                <input id="mbBookingTime" type="time" required>
+              </label>
+            </div>
+            <div class="mb-form-step" data-step="2" hidden>
+              <label class="mb-field">
+                <span data-i18n="addressLabel"></span>
+                <input id="mbBookingAddress" type="text" autocomplete="street-address" required>
+              </label>
+              <label class="mb-field">
+                <span data-i18n="cityLabel"></span>
+                <input id="mbBookingCity" type="text" autocomplete="address-level2" required>
+              </label>
+              <label class="mb-field">
+                <span data-i18n="zipLabel"></span>
+                <input id="mbBookingZip" type="text" inputmode="numeric" autocomplete="postal-code" required>
+              </label>
+              <details class="mb-form-optional">
+                <summary data-i18n="moreDetails"></summary>
+                <label class="mb-field">
+                  <span data-i18n="notesLabel"></span>
+                  <textarea id="mbCustomerNotes" rows="3"></textarea>
+                </label>
+                <label class="mb-field">
+                  <span data-i18n="stylePreferenceLabel"></span>
+                  <input id="mbBookingStylePreference" type="text" autocomplete="off">
+                </label>
+                <label class="mb-field">
+                  <span data-i18n="photoLabel"></span>
+                  <input id="mbReferencePhoto" type="file" accept="image/*">
+                </label>
+              </details>
+            </div>
+            <div class="mb-form-step" data-step="3" hidden>
+              <label class="mb-field">
+                <span data-i18n="nameLabel"></span>
+                <input id="mbCustomerName" type="text" autocomplete="name" required>
+              </label>
+              <label class="mb-field">
+                <span data-i18n="phoneInputLabel"></span>
+                <input id="mbCustomerPhone" type="tel" autocomplete="tel" required>
+              </label>
+              <label class="mb-field">
+                <span data-i18n="emailLabel"></span>
+                <input id="mbCustomerEmail" type="email" autocomplete="email">
+              </label>
+            </div>
+            <div class="mb-form-error" id="mbManualBookingError" hidden></div>
+            <div class="mb-booking-summary" id="mbBookingSummary" hidden></div>
+            <div class="mb-form-actions">
+              <button class="mb-button mb-button--ghost" type="button" data-action="manualBack" data-i18n="backButton"></button>
+              <button class="mb-button mb-button--primary" type="button" data-action="manualNext" data-i18n="nextButton"></button>
+              <button class="mb-button mb-button--primary" type="button" data-action="manualReview" data-i18n="reviewButton" hidden></button>
+              <button class="mb-button mb-button--primary" type="button" data-action="manualConfirm" data-i18n="confirmButton" hidden disabled></button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="mb-assistant mb-vendor-assistant" id="mbVendorAssistant" hidden aria-live="polite">
+        <div class="mb-chat">
+          <p class="mb-kicker" data-i18n="assistantKicker"></p>
+          <h2 id="mbAssistantTitle"></h2>
+          <p id="mbAssistantCopy"></p>
+          <div class="mb-chat__log" id="mbAgentLog" aria-live="polite"></div>
+          <form class="mb-chat__form" id="mbAgentForm">
+            <label class="mb-field mb-chat__field">
+              <span data-i18n="agentInputLabel"></span>
+              <textarea id="mbAgentInput" rows="3" data-i18n-placeholder="agentInputPlaceholder"></textarea>
+            </label>
+            <label class="mb-field mb-chat__photo">
+              <span data-i18n="photoLabel"></span>
+              <input id="mbAgentPhoto" type="file" accept="image/*">
+            </label>
+            <button class="mb-button mb-button--primary" type="submit" data-i18n="agentSendButton"></button>
+          </form>
+        </div>
+        <button class="mb-button mb-button--primary" type="button" data-action="closeAssistant" data-i18n="assistantClose"></button>
+      </section>
+    </article>
+  </main>
+
+  <script src="/mobile-barber/mobile-barber-data.js?v=20260524b"></script>
+  <script src="/mobile-barber/mobile-barber-booking.js?v=20260524a"></script>
+  <script src="/mobile-barber/mobile-barber-agent.js?v=20260523a"></script>
+  <script src="/mobile-barber/mobile-barber-voice.js?v=20260523a"></script>
+  <script src="/notifications.js?v=20260523a"></script>
+  <script src="/mobile-barber/mobile-barber-vendor.js?v=20260524b"></script>
+</body>
+</html>

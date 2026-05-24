@@ -71,6 +71,10 @@ function assertNotContains(haystack, needle, msg) {
 var SP  = require('./lib/state-parser');
 var AL  = require('./lib/avail-logic');
 var PC  = require('./lib/prompt-checker');
+var MBD = require('./lib/mobile-barber-data-model');
+var MBL = require('./lib/mobile-barber-landing');
+var MBB = require('./lib/mobile-barber-booking');
+var MBA = require('./lib/mobile-barber-agent');
 
 var BIZ      = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/biz.json')));
 var BOOK_FIX = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/bookings.json')));
@@ -1468,6 +1472,18 @@ test('Both nails and hair contexts are covered', function() {
   assertContains(cmSrc, 'lookupReturningSalonCustomer');
   assertContains(cmSrc, 'buildReturningCustomerGreeting');
 });
+
+group('Mobile Barber Data Model', 'schema-validation');
+MBD.runMobileBarberDataModelTests(test);
+
+group('Mobile Barber Landing Page', 'static-source-check');
+MBL.runMobileBarberLandingTests(test);
+
+group('Mobile Barber Manual Booking', 'mirrored-unit-logic');
+MBB.runMobileBarberBookingTests(test);
+
+group('Mobile Barber AI Chat Agent', 'mirrored-unit-logic | static-source-check');
+MBA.runMobileBarberAgentTests(test);
 
 // ══════════════════════════════════════════════════════════════════════════
 // FINAL REPORT

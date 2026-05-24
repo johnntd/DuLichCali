@@ -561,6 +561,11 @@ exports.onEmailQueue = onDocumentCreated(
       fromName = 'Du Lịch Cali Dispatch';
       ({ textBody, htmlBody } = buildDriverNotifyEmail(data));
       subject = `[Tour Assignment] ${data.travelDate || 'Upcoming Tour'} — ${data.packageName || ''} [${data.bookingId || ''}]`;
+    } else if (data.bookingType === 'mobile_barber') {
+      // Mobile barber customer booking confirmation
+      fromName = data.businessName || 'Du Lịch Cali Mobile Barber';
+      ({ textBody, htmlBody } = buildMobileBarberConfirmationEmail(data));
+      subject = `Mobile Barber Request Received — ${fromName} [${data.bookingId || ''}]`;
     } else {
       // Appointment emails (nail/hair) — existing template
       fromName = data.shopName || 'Luxurious Nails';
@@ -1234,6 +1239,166 @@ function buildConfirmationEmailBody(data) {
   <!-- Footer -->
   <div style="background:#f0ebe3;padding:14px 32px;text-align:center;">
     <p style="color:#9a8a7a;font-size:12px;margin:0;">— ${shop} &nbsp;·&nbsp; <a href="${shopUrl}" style="color:#9a8a7a;">${shopUrl.replace('https://','')}</a></p>
+  </div>
+</div>
+</body></html>`;
+
+  return { textBody, htmlBody };
+}
+
+// ── Mobile barber confirmation email builder ─────────────────────────────────
+function buildMobileBarberConfirmationEmail(data) {
+  const {
+    customerName     = 'Customer',
+    bookingId        = '',
+    barberName       = 'Mobile Barber',
+    businessName     = barberName,
+    vendorPhone      = '',
+    serviceName      = 'Mobile barber service',
+    requestedDate    = '',
+    startTime        = '',
+    endTime          = '',
+    durationMinutes  = '',
+    servicePrice     = '',
+    addressSummary   = '',
+    customerPhone    = '',
+    cancellationNote = 'To cancel or reschedule, contact the barber before the appointment time.',
+    lang             = 'en',
+  } = data;
+
+  const timeRange = [startTime, endTime].filter(Boolean).join(' - ');
+  const price = servicePrice === '' || servicePrice == null ? '' : `$${Number(servicePrice).toFixed(0)}`;
+  const COPY = {
+    en: {
+      greeting: 'Your mobile barber request has been received. Here are your details:',
+      htmlIntro: 'Your request has been received. The barber will confirm the appointment or contact you if a schedule change is needed.',
+      header: 'Mobile barber request received',
+      bookingId: 'Booking ID',
+      barber: 'Barber',
+      service: 'Service',
+      date: 'Date',
+      time: 'Time',
+      duration: 'Estimated duration',
+      price: 'Price',
+      address: 'Address',
+      customerPhone: 'Your phone',
+      vendorPhone: 'Barber phone',
+      minutes: 'minutes',
+    },
+    vi: {
+      greeting: 'Yêu cầu mobile barber của bạn đã được nhận. Thông tin chi tiết:',
+      htmlIntro: 'Yêu cầu của bạn đã được nhận. Thợ sẽ xác nhận lịch hẹn hoặc liên hệ nếu cần đổi lịch.',
+      header: 'Đã nhận yêu cầu mobile barber',
+      bookingId: 'Mã đặt lịch',
+      barber: 'Thợ',
+      service: 'Dịch vụ',
+      date: 'Ngày',
+      time: 'Giờ',
+      duration: 'Thời gian ước tính',
+      price: 'Giá',
+      address: 'Địa chỉ',
+      customerPhone: 'Số điện thoại của bạn',
+      vendorPhone: 'Số điện thoại thợ',
+      minutes: 'phút',
+    },
+    es: {
+      greeting: 'Su solicitud de barbero móvil fue recibida. Estos son los detalles:',
+      htmlIntro: 'Su solicitud fue recibida. El barbero confirmará la cita o se comunicará si necesita cambiar el horario.',
+      header: 'Solicitud de barbero móvil recibida',
+      bookingId: 'ID de reserva',
+      barber: 'Barbero',
+      service: 'Servicio',
+      date: 'Fecha',
+      time: 'Hora',
+      duration: 'Duración estimada',
+      price: 'Precio',
+      address: 'Dirección',
+      customerPhone: 'Su teléfono',
+      vendorPhone: 'Teléfono del barbero',
+      minutes: 'minutos',
+    },
+  };
+  const copy = COPY[lang] || COPY.en;
+  const duration = durationMinutes ? `${durationMinutes} ${copy.minutes}` : '';
+  const escapeHtml = (value) => String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+  const safeCustomerName = escapeHtml(customerName || 'Customer');
+  const safeBookingId = escapeHtml(bookingId);
+  const safeBarberName = escapeHtml(barberName);
+  const safeBusinessName = escapeHtml(businessName);
+  const safeServiceName = escapeHtml(serviceName);
+  const safeRequestedDate = escapeHtml(requestedDate);
+  const safeTimeRange = escapeHtml(timeRange);
+  const safeDuration = escapeHtml(duration);
+  const safePrice = escapeHtml(price);
+  const safeAddressSummary = escapeHtml(addressSummary);
+  const safeCustomerPhone = escapeHtml(customerPhone);
+  const safeVendorPhone = escapeHtml(vendorPhone);
+  const safeCancellationNote = escapeHtml(cancellationNote);
+
+  const textBody = [
+    `Hi ${customerName || 'Customer'},`,
+    '',
+    copy.greeting,
+    '',
+    `  ${copy.bookingId}: ${bookingId}`,
+    `  ${copy.barber}: ${barberName}`,
+    `  ${copy.service}: ${serviceName}`,
+    requestedDate ? `  ${copy.date}: ${requestedDate}` : null,
+    timeRange ? `  ${copy.time}: ${timeRange}` : null,
+    duration ? `  ${copy.duration}: ${duration}` : null,
+    price ? `  ${copy.price}: ${price}` : null,
+    addressSummary ? `  ${copy.address}: ${addressSummary}` : null,
+    customerPhone ? `  ${copy.customerPhone}: ${customerPhone}` : null,
+    vendorPhone ? `  ${copy.vendorPhone}: ${vendorPhone}` : null,
+    '',
+    cancellationNote,
+    '',
+    `— ${businessName}`,
+    'https://www.dulichcali21.com/mobile-barber',
+  ].filter(l => l !== null).join('\n');
+
+  const row = (label, value) => value
+    ? `<tr style="border-bottom:1px solid #edf0f2;">
+        <td style="padding:10px 0;color:#52616f;width:38%;font-size:14px;">${label}</td>
+        <td style="padding:10px 0;font-size:14px;">${value}</td>
+       </tr>`
+    : '';
+
+  const htmlBody = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mobile Barber Request Received</title></head>
+<body style="margin:0;padding:16px;background:#f5f7f8;font-family:Arial,sans-serif;">
+<div style="max-width:560px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);">
+  <div style="background:#0d2f50;padding:24px 32px;">
+    <h1 style="color:#fff;font-size:20px;margin:0;font-weight:700;">${safeBusinessName}</h1>
+    <p style="color:#c7d6e2;font-size:13px;margin:6px 0 0;">${copy.header}</p>
+  </div>
+  <div style="padding:28px 32px;color:#1f2a33;">
+    <p style="font-size:15px;margin:0 0 20px;">Hi <strong>${safeCustomerName}</strong>,<br>${copy.htmlIntro}</p>
+    <table style="width:100%;border-collapse:collapse;">
+      ${row(copy.bookingId, `<span style="font-family:monospace;font-weight:600;">${safeBookingId}</span>`)}
+      ${row(copy.barber, safeBarberName)}
+      ${row(copy.service, safeServiceName)}
+      ${row(copy.date, safeRequestedDate)}
+      ${row(copy.time, safeTimeRange)}
+      ${row(copy.duration, safeDuration)}
+      ${row(copy.price, safePrice)}
+      ${row(copy.address, safeAddressSummary)}
+      ${row(copy.customerPhone, safeCustomerPhone)}
+      ${row(copy.vendorPhone, safeVendorPhone)}
+    </table>
+    <div style="margin:24px 0 0;padding:14px 16px;background:#f5f7f8;border-left:3px solid #0d2f50;border-radius:6px;">
+      <p style="margin:0;font-size:13px;line-height:1.6;color:#52616f;">${safeCancellationNote}</p>
+    </div>
+  </div>
+  <div style="background:#edf0f2;padding:14px 32px;text-align:center;">
+    <p style="color:#697886;font-size:12px;margin:0;">Du Lịch Cali · <a href="https://www.dulichcali21.com/mobile-barber" style="color:#0d2f50;">dulichcali21.com/mobile-barber</a></p>
   </div>
 </div>
 </body></html>`;

@@ -11,6 +11,43 @@ service cloud.firestore {
           && get(/databases/$(database)/documents/vendorUsers/$(request.auth.uid)).data.vendorId == vendorId;
     }
 
+    function isMobileBarberBookingCustomer() {
+      return request.auth != null
+          && resource.data.customerUid is string
+          && resource.data.customerUid == request.auth.uid;
+    }
+
+    function isValidMobileBarberBookingCreate() {
+      // Guest booking requests are intentional for public customer pages.
+      // Rules allow create-only pending requests; reads remain owner/vendor scoped.
+      return request.resource.data.keys().hasAll([
+            'vendorId', 'customerName', 'customerPhone', 'serviceId',
+            'serviceName', 'address', 'city', 'zip', 'requestedDate',
+            'startTime', 'endTime', 'status', 'source'
+          ])
+          && request.resource.data.status in ['pending_confirmation', 'vendor_review']
+          && request.resource.data.vendorId is string
+          && request.resource.data.customerName is string
+          && request.resource.data.customerPhone is string
+          && request.resource.data.address is string
+          && request.resource.data.city is string
+          && request.resource.data.zip is string
+          && request.resource.data.source in ['customer_form', 'ai_chat', 'ai_voice'];
+    }
+
+    function isMobileBarberCustomerOwner() {
+      return request.auth != null
+          && resource.data.customerUid is string
+          && resource.data.customerUid == request.auth.uid;
+    }
+
+    function isValidMobileBarberCustomerCreate() {
+      return request.auth != null
+          && request.resource.data.customerUid == request.auth.uid
+          && request.resource.data.vendorId is string
+          && request.resource.data.customerPhoneNormalized is string;
+    }
+
     // ── Vendor top-level docs ─────────────────────────────────────────────────────
     // Public read: homepage checks vendor status without requiring auth.
     // Write: only authenticated members of that specific vendor (not just any auth user).
@@ -192,6 +229,51 @@ service cloud.firestore {
       allow read:   if request.auth != null
                  && request.auth.token.firebase.sign_in_provider != 'anonymous';
       allow update: if false;
+      allow delete: if false;
+    }
+
+    // ── Mobile Barber public catalog — safe public data only ─────────────────────
+    match /mobileBarberVendors/{vendorId} {
+      allow read: if true;
+      allow write: if isVendorMember(vendorId);
+    }
+
+    match /mobileBarberServices/{serviceId} {
+      allow read: if true;
+      allow write: if isVendorMember(request.resource.data.vendorId);
+    }
+
+    match /mobileBarberAvailability/{availabilityId} {
+      allow read: if true;
+      allow write: if isVendorMember(request.resource.data.vendorId);
+    }
+
+    // ── Mobile Barber private bookings — customer address protected ──────────────
+    // Public pages may create pending requests but cannot read booking documents.
+    // Reads are limited to the signed-in booking owner or the involved vendor.
+    match /mobileBarberBookings/{bookingId} {
+      allow create: if isValidMobileBarberBookingCreate();
+      allow read: if isMobileBarberBookingCustomer()
+               || isVendorMember(resource.data.vendorId);
+      allow update: if isMobileBarberBookingCustomer()
+                 || isVendorMember(resource.data.vendorId);
+      allow delete: if false;
+    }
+
+    // ── Mobile Barber customer profiles — private owner/vendor cut history ───────
+    match /mobileBarberCustomers/{customerId} {
+      allow create: if isValidMobileBarberCustomerCreate();
+      allow read, update: if isMobileBarberCustomerOwner()
+                       || isVendorMember(resource.data.vendorId);
+      allow delete: if false;
+    }
+
+    match /mobileBarberAgentSessions/{sessionId} {
+      allow create: if request.auth != null
+                 && request.resource.data.customerUid is string
+                 && request.resource.data.customerUid == request.auth.uid;
+      allow read, update: if request.auth != null
+                       && resource.data.customerUid == request.auth.uid;
       allow delete: if false;
     }
 

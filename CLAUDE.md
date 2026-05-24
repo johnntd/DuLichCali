@@ -18,7 +18,7 @@ Claude may implement code when explicitly asked. Otherwise:
 
 For any change touching these areas, Claude must stop, read current code, and apply safety review before implementing:
 
-- Booking availability check logic (nail salon, hair salon, airport/ride)
+- Booking availability check logic (nail salon, hair salon, airport/ride, mobile barber)
 - AI receptionist prompt construction (`_buildPrompt`, `_mergeState`, `_earlyCheckReady`)
 - Vendor page data loading and context injection (who gets which services, staff, hours)
 - Firestore security rules or schema changes

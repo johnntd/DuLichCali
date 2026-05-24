@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0d2f50">
+  <title></title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,300;6..96,400&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/style.css?v=20260421b">
+  <link rel="stylesheet" href="/desktop.css">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260524b">
+</head>
+<body class="mb-page">
+  <main class="mb-shell" id="mobileBarberApp">
+    <div class="mb-language" id="mbLanguage" aria-label="">
+      <button class="mb-language__button" type="button" data-lang="en">EN</button>
+      <button class="mb-language__button" type="button" data-lang="vi">VI</button>
+      <button class="mb-language__button" type="button" data-lang="es">ES</button>
+    </div>
+
+    <section class="mb-hero" aria-labelledby="mbHeroTitle">
+      <div class="mb-hero__media" aria-hidden="true">
+        <div class="mb-hero__photo"></div>
+        <div class="mb-hero__glass">
+          <span class="mb-hero__status" data-i18n="heroStatus"></span>
+          <strong data-i18n="heroCardTitle"></strong>
+          <span data-i18n="heroCardSub"></span>
+        </div>
+      </div>
+      <div class="mb-hero__body">
+        <p class="mb-kicker" data-i18n="heroKicker"></p>
+        <h1 class="mb-hero__title" id="mbHeroTitle" data-i18n="heroTitle"></h1>
+        <p class="mb-hero__copy" data-i18n="heroCopy"></p>
+        <div class="mb-hero__actions" aria-label="">
+          <a class="mb-button mb-button--primary" href="#mbServices" data-i18n="bookNow"></a>
+          <button class="mb-button mb-button--ghost" type="button" data-action="chat" data-i18n="chatAssistant"></button>
+          <button class="mb-icon-button" type="button" data-action="voice" aria-label="">
+            <span class="mb-icon-button__icon" aria-hidden="true">☎</span>
+            <span data-i18n="talkAssistant"></span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="mb-trust" aria-label="">
+      <article>
+        <span aria-hidden="true">⌂</span>
+        <strong data-i18n="trustHomeTitle"></strong>
+        <p data-i18n="trustHomeCopy"></p>
+      </article>
+      <article>
+        <span aria-hidden="true">✓</span>
+        <strong data-i18n="trustVerifiedTitle"></strong>
+        <p data-i18n="trustVerifiedCopy"></p>
+      </article>
+      <article>
+        <span aria-hidden="true">$</span>
+        <strong data-i18n="trustPricingTitle"></strong>
+        <p data-i18n="trustPricingCopy"></p>
+      </article>
+      <article>
+        <span aria-hidden="true">↗</span>
+        <strong data-i18n="trustConfirmTitle"></strong>
+        <p data-i18n="trustConfirmCopy"></p>
+      </article>
+    </section>
+
+    <section class="mb-section" id="mbServices" aria-labelledby="mbServicesTitle">
+      <div class="mb-section__head">
+        <p class="mb-kicker" data-i18n="servicesKicker"></p>
+        <h2 id="mbServicesTitle" data-i18n="servicesTitle"></h2>
+      </div>
+      <div class="mb-card-grid" id="mbServiceList"></div>
+    </section>
+
+    <section class="mb-section" aria-labelledby="mbVendorsTitle">
+      <div class="mb-section__head">
+        <p class="mb-kicker" data-i18n="vendorsKicker"></p>
+        <h2 id="mbVendorsTitle" data-i18n="vendorsTitle"></h2>
+      </div>
+      <div class="mb-vendor-grid" id="mbVendorList"></div>
+      <div class="mb-empty" id="mbEmptyState" hidden>
+        <strong data-i18n="emptyTitle"></strong>
+        <p data-i18n="emptyCopy"></p>
+        <a class="mb-button mb-button--primary" href="/" data-i18n="emptyCta"></a>
+      </div>
+    </section>
+
+    <section class="mb-assistant" id="mbAssistantPanel" hidden aria-live="polite">
+      <div>
+        <p class="mb-kicker" data-i18n="assistantKicker"></p>
+        <h2 data-i18n="assistantTitle"></h2>
+        <p data-i18n="assistantCopy"></p>
+      </div>
+      <button class="mb-button mb-button--primary" type="button" data-action="closeAssistant" data-i18n="assistantClose"></button>
+    </section>
+  </main>
+
+  <script src="/mobile-barber/mobile-barber-data.js?v=20260524b"></script>
+  <script src="/mobile-barber/mobile-barber.js?v=20260523b"></script>
+</body>
+</html>

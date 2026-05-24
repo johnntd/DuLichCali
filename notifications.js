@@ -388,6 +388,95 @@ window.DLCNotifications = (function () {
     });
   }
 
+  // ── Public: queue mobile barber booking confirmation hooks ─────────────────
+  /**
+   * Call immediately after a mobile barber booking is saved.
+   * Writes customer/vendor in-app notifications and optionally queues one
+   * customer email when an email address is present. SMS is intentionally not
+   * sent from this client hook; Functions keeps Twilio disabled unless approved.
+   *
+   * @param {object} booking  — mobile barber booking object (id or bookingId required)
+   * @param {object} vendor   — mobile barber vendor profile
+   * @param {object} service  — selected service, optional fallback to booking fields
+   * @param {string} lang     — 'vi' | 'en' | 'es'
+   */
+  function queueMobileBarberConfirmation(booking, vendor, service, lang) {
+    if (!booking) return;
+    var bkId = booking.bookingId || booking.id || '';
+    if (!bkId) return;
+
+    lang = lang || 'en';
+    vendor = vendor || {};
+    service = service || {};
+
+    var barberName = vendor.barberName || vendor.businessName || booking.vendorName || 'Mobile Barber';
+    var businessName = vendor.businessName || barberName;
+    var serviceName = booking.serviceName || service.name || 'Mobile barber service';
+    var dateTime = [booking.requestedDate || '', booking.startTime || ''].filter(Boolean).join(' ');
+    var addressSummary = [booking.address, booking.city, booking.zip].filter(Boolean).join(', ');
+    var duration = booking.durationMinutes || service.durationMinutes || '';
+    var price = booking.servicePrice || service.price || '';
+    var contactPhone = vendor.phone || booking.vendorPhone || '';
+
+    var COPY = {
+      en: {
+        customerTitle: 'Mobile barber request received',
+        customerMsg: 'Your request with ' + barberName + ' for ' + serviceName + ' on ' + dateTime + ' was received. The barber will confirm or contact you to reschedule.',
+        vendorTitle: 'New mobile barber request',
+        vendorMsg: (booking.customerName || 'Customer') + ' requested ' + serviceName + (dateTime ? ' on ' + dateTime : '') + '.',
+        note: 'To cancel or reschedule, contact the barber before the appointment time.'
+      },
+      vi: {
+        customerTitle: 'Đã nhận yêu cầu mobile barber',
+        customerMsg: 'Yêu cầu với ' + barberName + ' cho ' + serviceName + ' vào ' + dateTime + ' đã được nhận. Thợ sẽ xác nhận hoặc liên hệ đổi lịch nếu cần.',
+        vendorTitle: 'Yêu cầu mobile barber mới',
+        vendorMsg: (booking.customerName || 'Khách') + ' yêu cầu ' + serviceName + (dateTime ? ' vào ' + dateTime : '') + '.',
+        note: 'Muốn hủy hoặc đổi lịch, vui lòng liên hệ thợ trước giờ hẹn.'
+      },
+      es: {
+        customerTitle: 'Solicitud de barbero móvil recibida',
+        customerMsg: 'Su solicitud con ' + barberName + ' para ' + serviceName + ' el ' + dateTime + ' fue recibida. El barbero confirmará o se comunicará para cambiar la cita.',
+        vendorTitle: 'Nueva solicitud de barbero móvil',
+        vendorMsg: (booking.customerName || 'Cliente') + ' solicitó ' + serviceName + (dateTime ? ' el ' + dateTime : '') + '.',
+        note: 'Para cancelar o reprogramar, comuníquese con el barbero antes de la cita.'
+      }
+    };
+    var copy = COPY[lang] || COPY.en;
+
+    _writeNotification(bkId, 'mobile_barber_confirmed', 'mobile_barber_vendor', vendor.id || booking.vendorId || 'vendor',
+      copy.vendorTitle,
+      copy.vendorMsg
+    );
+
+    if (booking.customerPhone) {
+      _writeNotification(bkId, 'mobile_barber_confirmed', 'customer', booking.customerPhone,
+        copy.customerTitle,
+        copy.customerMsg
+      );
+    }
+
+    if (booking.customerEmail) {
+      _queue(bkId, 'confirmed', {
+        bookingType:       'mobile_barber',
+        customerEmail:     booking.customerEmail,
+        customerName:      booking.customerName || '',
+        customerPhone:     booking.customerPhone || '',
+        lang:              lang,
+        barberName:        barberName,
+        businessName:      businessName,
+        vendorPhone:       contactPhone,
+        serviceName:       serviceName,
+        requestedDate:     booking.requestedDate || '',
+        startTime:         booking.startTime || '',
+        endTime:           booking.endTime || '',
+        durationMinutes:   duration,
+        servicePrice:      price,
+        addressSummary:    addressSummary,
+        cancellationNote:  copy.note,
+      });
+    }
+  }
+
   // ── Expose public API ────────────────────────────────────────────────────────
   return {
     queueRideConfirmation:            queueRideConfirmation,
@@ -397,6 +486,7 @@ window.DLCNotifications = (function () {
     queueStatusChangeNotification:    queueStatusChangeNotification,
     queueDriverOnWay:                 queueDriverOnWay,
     queueTravelConfirmation:          queueTravelConfirmation,
+    queueMobileBarberConfirmation:    queueMobileBarberConfirmation,
   };
 
 }());

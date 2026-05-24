@@ -29,6 +29,20 @@ function baseDraft() {
   };
 }
 
+function sampleBuiltBooking(id) {
+  var draft = baseDraft();
+  var result = check(draft);
+  var built = MobileBarberBooking.buildBooking({
+    id: id || 'save-source-test',
+    now: '2026-05-24T00:00:00.000Z',
+    vendor: MobileBarberData.findVendorById(MobileBarberData.SAMPLE_VENDOR_ID),
+    draft: draft,
+    availabilityResult: result
+  });
+  if (!built.valid) throw new Error('sample booking failed to build: ' + built.errors.join('; '));
+  return built.booking;
+}
+
 function check(draft, existingBookings, extra) {
   extra = extra || {};
   return MobileBarberBooking.checkAvailability({
@@ -313,6 +327,72 @@ function runMobileBarberBookingTests(test) {
     assertEq(built.booking.rebookedFromBookingId, 'old-booking');
     assertEq(built.booking.previousServiceName, 'Classic Mobile Haircut');
     assertEq(built.booking.stylePreference, 'Low fade, no hard part');
+  });
+
+  test('Mobile Barber saveBooking reports firestore source when Firebase write resolves', function() {
+    var originalFirebase = global.firebase;
+    var writes = [];
+    global.firebase = {
+      apps: [{}],
+      firestore: function() {
+        return {
+          collection: function(collectionName) {
+            return {
+              doc: function(id) {
+                return {
+                  set: function(doc) {
+                    writes.push({ collectionName: collectionName, id: id, doc: doc });
+                    return {
+                      then: function(cb) {
+                        var value = cb();
+                        return { catch: function() { return value; } };
+                      }
+                    };
+                  }
+                };
+              }
+            };
+          }
+        };
+      }
+    };
+    try {
+      var booking = sampleBuiltBooking('firestore-source-1');
+      var saved = MobileBarberBooking.saveBooking(booking);
+      assertEq(saved.saved, true);
+      assertEq(saved.source, 'firestore');
+      assertEq(writes.length, 1);
+      assertEq(writes[0].collectionName, MobileBarberData.COLLECTIONS.bookings);
+      assertEq(writes[0].id, booking.id);
+    } finally {
+      global.firebase = originalFirebase;
+    }
+  });
+
+  test('Mobile Barber saveBooking reports local source when Firestore is unavailable', function() {
+    var originalFirebase = global.firebase;
+    var originalLocalStorage = global.localStorage;
+    var originalPromiseResolve = Promise.resolve;
+    var store = {};
+    global.firebase = undefined;
+    global.localStorage = {
+      getItem: function(key) { return Object.prototype.hasOwnProperty.call(store, key) ? store[key] : null; },
+      setItem: function(key, value) { store[key] = value; }
+    };
+    Promise.resolve = function(value) { return value; };
+    try {
+      var booking = sampleBuiltBooking('local-source-1');
+      var saved = MobileBarberBooking.saveBooking(booking);
+      assertEq(saved.saved, true);
+      assertEq(saved.source, 'local');
+      var localRows = JSON.parse(store.dlc_mobile_barber_bookings || '[]');
+      assertEq(localRows.length, 1);
+      assertEq(localRows[0].id, booking.id);
+    } finally {
+      global.firebase = originalFirebase;
+      global.localStorage = originalLocalStorage;
+      Promise.resolve = originalPromiseResolve;
+    }
   });
 }
 

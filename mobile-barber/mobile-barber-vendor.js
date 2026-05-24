@@ -85,6 +85,7 @@
       pendingStatusCopy: 'Your request will be pending until this barber confirms the slot.',
       vendorReviewStatusCopy: 'This request will be marked for vendor review because the service area needs manual approval.',
       bookingSaved: 'Request sent. Booking ID: {id}',
+      bookingQueuedLocal: 'Your request was queued on this device while we reconnect. The barber will see it once you are online. Booking ID: {id}',
       finalSummaryTitle: 'Booking request sent',
       finalSummaryNote: 'To cancel or reschedule, contact the barber before the appointment time.',
       finalSummaryCustomer: 'Customer',
@@ -201,6 +202,7 @@
       pendingStatusCopy: 'Yêu cầu sẽ chờ cho đến khi thợ xác nhận lịch trống.',
       vendorReviewStatusCopy: 'Yêu cầu này sẽ được chuyển cho thợ xem xét vì khu vực phục vụ cần xác nhận thủ công.',
       bookingSaved: 'Đã gửi yêu cầu. Mã đặt lịch: {id}',
+      bookingQueuedLocal: 'Yêu cầu đã được lưu tạm trên thiết bị này trong lúc kết nối lại. Thợ sẽ thấy yêu cầu khi bạn có mạng. Mã đặt lịch: {id}',
       finalSummaryTitle: 'Đã gửi yêu cầu đặt lịch',
       finalSummaryNote: 'Muốn hủy hoặc đổi lịch, vui lòng liên hệ thợ trước giờ hẹn.',
       finalSummaryCustomer: 'Khách hàng',
@@ -317,6 +319,7 @@
       pendingStatusCopy: 'Su solicitud quedará pendiente hasta que este barbero confirme el horario.',
       vendorReviewStatusCopy: 'Esta solicitud se marcará para revisión del vendedor porque el área de servicio necesita aprobación manual.',
       bookingSaved: 'Solicitud enviada. ID de reserva: {id}',
+      bookingQueuedLocal: 'Tu solicitud quedó en cola en este dispositivo mientras reconectamos. El barbero la verá cuando vuelvas a estar en línea. ID de reserva: {id}',
       finalSummaryTitle: 'Solicitud de reserva enviada',
       finalSummaryNote: 'Para cancelar o reprogramar, comuníquese con el barbero antes de la cita.',
       finalSummaryCustomer: 'Cliente',
@@ -587,12 +590,13 @@
     root.DLCNotifications.queueMobileBarberConfirmation(booking, state.vendor, service, state.lang);
   }
 
-  function renderFinalBookingSummary(booking) {
+  function renderFinalBookingSummary(booking, saveSource) {
     var summary = document.getElementById('mbBookingSummary');
     var service = bookingService(booking) || {};
     var duration = (state.availabilityResult && state.availabilityResult.timing && state.availabilityResult.timing.totalMinutes) ||
       booking.durationMinutes || service.durationMinutes || '';
     var when = [booking.requestedDate, [booking.startTime, booking.endTime].filter(Boolean).join(' - ')].filter(Boolean).join(' ');
+    var savedOnline = saveSource !== 'local';
     var rows = [
       [t('finalSummaryCustomer'), booking.customerName],
       [t('finalSummaryBarber'), (state.vendor && (state.vendor.barberName || state.vendor.businessName)) || booking.vendorId],
@@ -604,7 +608,7 @@
       [t('finalSummaryPhone'), (state.vendor && state.vendor.phone) || booking.customerPhone]
     ];
     summary.innerHTML = '<h3>' + t('finalSummaryTitle') + '</h3>' +
-      '<p>' + interpolate(t('bookingSaved'), { id: booking.id }) + '</p>' +
+      '<p>' + interpolate(t(savedOnline ? 'bookingSaved' : 'bookingQueuedLocal'), { id: booking.id }) + '</p>' +
       '<dl class="mb-confirmation-list">' +
       rows.map(function(row) {
         if (!row[1]) return '';
@@ -612,7 +616,7 @@
       }).join('') +
       '</dl>' +
       '<p>' + t('finalSummaryNote') + '</p>' +
-      '<p>' + t('notificationQueued') + '</p>';
+      (savedOnline ? '<p>' + t('notificationQueued') + '</p>' : '');
     summary.hidden = false;
   }
 
@@ -1251,9 +1255,9 @@
     BOOKING.saveBooking(built.booking).then(function(result) {
       state.lastBooking = result.booking;
       rememberCustomerFromBooking(result.booking);
-      queueBookingNotifications(result.booking);
+      if (result.source === 'firestore') queueBookingNotifications(result.booking);
       showManualError('');
-      renderFinalBookingSummary(result.booking);
+      renderFinalBookingSummary(result.booking, result.source);
       loadCustomerHistory();
     }).catch(function() {
       document.querySelector('[data-action="manualConfirm"]').disabled = false;
@@ -1303,9 +1307,9 @@
         return BOOKING.saveBooking(result.booking).then(function(saveResult) {
           state.lastBooking = saveResult.booking;
           rememberCustomerFromBooking(saveResult.booking);
-          queueBookingNotifications(saveResult.booking);
+          if (saveResult.source === 'firestore') queueBookingNotifications(saveResult.booking);
           appendAgentMessage('assistant', result.response);
-          renderFinalBookingSummary(saveResult.booking);
+          renderFinalBookingSummary(saveResult.booking, saveResult.source);
           loadCustomerHistory();
           result.booking = saveResult.booking;
           return result;

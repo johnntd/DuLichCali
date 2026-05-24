@@ -1001,6 +1001,32 @@
     };
   }
 
+  function cloneForFirestore(doc) {
+    var copy = JSON.parse(JSON.stringify(doc || {}));
+    delete copy.geminiKey;
+    delete copy.openaiKey;
+    return copy;
+  }
+
+  function seedCollectionFromSamples(db, collectionName, rows) {
+    rows = rows || [];
+    return rows.map(function(row) {
+      var doc = cloneForFirestore(row);
+      return db.collection(collectionName).doc(doc.id).set(doc, { merge: true });
+    });
+  }
+
+  function seedFirestoreFromSamples(db) {
+    if (!db || typeof db.collection !== 'function') {
+      return Promise.reject(new Error('Firestore db is required.'));
+    }
+    var writes = []
+      .concat(seedCollectionFromSamples(db, COLLECTIONS.vendors, sampleVendors))
+      .concat(seedCollectionFromSamples(db, COLLECTIONS.services, sampleServices))
+      .concat(seedCollectionFromSamples(db, COLLECTIONS.availability, sampleAvailability));
+    return Promise.all(writes);
+  }
+
   return {
     COLLECTIONS: COLLECTIONS,
     VENDOR_FIELDS: VENDOR_FIELDS,
@@ -1039,6 +1065,7 @@
     findServiceImageByServiceId: findServiceImageByServiceId,
     listPortfolioForVendor: listPortfolioForVendor,
     listReviewsForVendor: listReviewsForVendor,
-    createSeedPayload: createSeedPayload
+    createSeedPayload: createSeedPayload,
+    seedFirestoreFromSamples: seedFirestoreFromSamples
   };
 });

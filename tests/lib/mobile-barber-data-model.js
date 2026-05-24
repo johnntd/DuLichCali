@@ -179,6 +179,41 @@ function runMobileBarberDataModelTests(test) {
     assertEq(MobileBarberData.findVendorById('luxurious-nails'), null);
     assertEq(MobileBarberData.findVendorById('beauty-hair-oc'), null);
   });
+
+  test('Mobile Barber Firestore sample seed helper is exported', function() {
+    assertEq(typeof MobileBarberData.seedFirestoreFromSamples, 'function');
+  });
+
+  test('Mobile Barber Firestore sample seed writes vendors services and availability with merge', function() {
+    var writes = [];
+    var db = {
+      collection: function(collectionName) {
+        return {
+          doc: function(id) {
+            return {
+              set: function(doc, opts) {
+                writes.push({ collectionName: collectionName, id: id, doc: doc, opts: opts });
+                return { ok: true };
+              }
+            };
+          }
+        };
+      }
+    };
+    MobileBarberData.seedFirestoreFromSamples(db);
+    var expected = MobileBarberData.sampleVendors.length +
+      MobileBarberData.sampleServices.length +
+      MobileBarberData.sampleAvailability.length;
+    assertEq(writes.length, expected);
+    assertEq(writes.filter(function(w) { return w.collectionName === MobileBarberData.COLLECTIONS.vendors; }).length, MobileBarberData.sampleVendors.length);
+    assertEq(writes.filter(function(w) { return w.collectionName === MobileBarberData.COLLECTIONS.services; }).length, MobileBarberData.sampleServices.length);
+    assertEq(writes.filter(function(w) { return w.collectionName === MobileBarberData.COLLECTIONS.availability; }).length, MobileBarberData.sampleAvailability.length);
+    writes.forEach(function(write) {
+      assertEq(write.opts && write.opts.merge, true, 'seed writes must use merge');
+      assert(!Object.prototype.hasOwnProperty.call(write.doc, 'geminiKey'), 'seed must not write geminiKey');
+      assert(!Object.prototype.hasOwnProperty.call(write.doc, 'openaiKey'), 'seed must not write openaiKey');
+    });
+  });
 }
 
 if (require.main === module) {

@@ -337,6 +337,25 @@
     return typeof root.firebase !== 'undefined' && root.firebase.firestore && root.firebase.apps && root.firebase.apps.length;
   }
 
+  function noop() {}
+
+  function firestoreDb() {
+    return canUseFirestore() ? root.firebase.firestore() : null;
+  }
+
+  function seedSamplesOnce() {
+    var db = firestoreDb();
+    if (!db || !DATA || typeof DATA.seedFirestoreFromSamples !== 'function') return Promise.resolve();
+    try {
+      if (root.sessionStorage && root.sessionStorage.getItem('dlc_mb_seeded') === '1') return Promise.resolve();
+    } catch (e) {}
+    return DATA.seedFirestoreFromSamples(db).then(function() {
+      try {
+        if (root.sessionStorage) root.sessionStorage.setItem('dlc_mb_seeded', '1');
+      } catch (e) {}
+    });
+  }
+
   function loadVendor() {
     var base = DATA && DATA.findVendorById ? DATA.findVendorById(state.vendorId) : null;
     var overrides = readJson(STORAGE.vendor, {});
@@ -360,9 +379,30 @@
   }
 
   function loadBookings() {
-    state.bookings = readJson(STORAGE.bookings, []).filter(function(booking) {
-      return booking.vendorId === state.vendorId;
-    });
+    var localRows = function() {
+      state.bookings = readJson(STORAGE.bookings, []).filter(function(booking) {
+        return booking.vendorId === state.vendorId;
+      });
+      return state.bookings;
+    };
+    var db = firestoreDb();
+    if (!db) return Promise.resolve(localRows());
+    return db.collection(DATA.COLLECTIONS.bookings)
+      .where('vendorId', '==', state.vendorId)
+      .get()
+      .then(function(snapshot) {
+        var rows = [];
+        snapshot.forEach(function(doc) {
+          var data = doc.data() || {};
+          data.id = data.id || doc.id;
+          rows.push(data);
+        });
+        state.bookings = rows;
+        return rows;
+      })
+      .catch(function() {
+        return localRows();
+      });
   }
 
   function loadBlocks() {
@@ -440,8 +480,7 @@
         updatedAt: new Date().toISOString()
       }, { merge: true });
     }
-    loadBookings();
-    render();
+    loadBookings().then(render);
   }
 
   function el(tag, className) {
@@ -860,8 +899,7 @@
       btn.addEventListener('click', function() { setLang(btn.getAttribute('data-lang')); });
     });
     document.querySelector('[data-action="refresh"]').addEventListener('click', function() {
-      loadBookings();
-      renderBookings();
+      loadBookings().then(renderBookings);
     });
     document.querySelector('[data-action="saveProfile"]').addEventListener('click', saveProfile);
     document.querySelector('[data-action="saveService"]').addEventListener('click', saveService);
@@ -889,12 +927,13 @@
     loadVendor();
     loadServices();
     loadAvailability();
-    loadBookings();
     loadBlocks();
     loadPortfolio();
     loadReviews();
     bind();
-    render();
+    seedSamplesOnce().catch(noop).then(function() {
+      return loadBookings();
+    }).then(render);
   }
 
   if (document.readyState === 'loading') {

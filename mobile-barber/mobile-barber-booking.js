@@ -5,11 +5,11 @@
  */
 (function(root, factory) {
   if (typeof module === 'object' && module.exports) {
-    module.exports = factory(require('./mobile-barber-data'));
+    module.exports = factory(require('./mobile-barber-data'), root);
   } else {
-    root.MobileBarberBooking = factory(root.MobileBarberData);
+    root.MobileBarberBooking = factory(root.MobileBarberData, root);
   }
-})(typeof window !== 'undefined' ? window : globalThis, function(DATA) {
+})(typeof window !== 'undefined' ? window : globalThis, function(DATA, root) {
   var ACTIVE_BOOKING_STATUSES = ['pending_confirmation', 'confirmed', 'vendor_review'];
   var REVIEW_STATUS = 'vendor_review';
   var PENDING_STATUS = 'pending_confirmation';
@@ -562,17 +562,22 @@
     }
   }
 
+  function saveBookingLocal(booking) {
+    var key = 'dlc_mobile_barber_bookings';
+    var existing = JSON.parse(root.localStorage.getItem(key) || '[]');
+    existing.push(booking);
+    root.localStorage.setItem(key, JSON.stringify(existing));
+    return { saved: true, source: 'local', method: 'local', booking: booking };
+  }
+
   function saveBooking(booking) {
     if (canUseFirestore()) {
       return root.firebase.firestore().collection(DATA.COLLECTIONS.bookings).doc(booking.id).set(booking)
-        .then(function() { return { saved: true, method: 'firestore', booking: booking }; });
+        .then(function() { return { saved: true, source: 'firestore', method: 'firestore', booking: booking }; })
+        .catch(function() { return saveBookingLocal(booking); });
     }
     try {
-      var key = 'dlc_mobile_barber_bookings';
-      var existing = JSON.parse(root.localStorage.getItem(key) || '[]');
-      existing.push(booking);
-      root.localStorage.setItem(key, JSON.stringify(existing));
-      return Promise.resolve({ saved: true, method: 'local', booking: booking });
+      return Promise.resolve(saveBookingLocal(booking));
     } catch (e) {
       return Promise.reject(e);
     }

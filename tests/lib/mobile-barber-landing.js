@@ -23,6 +23,20 @@ function read(relPath) {
   return fs.readFileSync(path.join(__dirname, '../..', relPath), 'utf8');
 }
 
+function assertFirebaseLoadsBeforeMobileBarberScripts(html, label) {
+  var appIndex = html.indexOf('firebase-app-compat.js');
+  var firestoreIndex = html.indexOf('firebase-firestore-compat.js');
+  var initIndex = html.indexOf('firebase.initializeApp(');
+  var mbScriptIndex = html.indexOf('/mobile-barber/mobile-barber-');
+  assert(appIndex >= 0, label + ' must load firebase-app-compat.js');
+  assert(firestoreIndex >= 0, label + ' must load firebase-firestore-compat.js');
+  assert(initIndex >= 0, label + ' must initialize Firebase');
+  assert(mbScriptIndex >= 0, label + ' must load a Mobile Barber script');
+  assert(appIndex < mbScriptIndex, label + ' firebase app SDK must load before Mobile Barber scripts');
+  assert(firestoreIndex < mbScriptIndex, label + ' firestore SDK must load before Mobile Barber scripts');
+  assert(initIndex < mbScriptIndex, label + ' Firebase init must run before Mobile Barber scripts');
+}
+
 function runMobileBarberLandingTests(test) {
   var html = read('mobile-barber/index.html');
   var vendorHtml = read('mobile-barber/vendor.html');
@@ -45,8 +59,14 @@ function runMobileBarberLandingTests(test) {
 
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
     assertContains(html, '/mobile-barber/mobile-barber.css?v=20260524f');
-    assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260524g');
+    assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260524h');
     assertContains(html, '/mobile-barber/mobile-barber.js?v=20260524g');
+  });
+
+  test('Mobile Barber pages load Firebase before local runtime scripts', function() {
+    assertFirebaseLoadsBeforeMobileBarberScripts(html, 'index.html');
+    assertFirebaseLoadsBeforeMobileBarberScripts(vendorHtml, 'vendor.html');
+    assertFirebaseLoadsBeforeMobileBarberScripts(dashboardHtml, 'dashboard.html');
   });
 
   test('Mobile Barber landing content is translation-table driven', function() {
@@ -119,12 +139,13 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorHtml, 'id="mbBookingTitle"');
     assertContains(vendorHtml, 'id="mbVendorPromoTitle"');
     assertContains(vendorHtml, 'id="mbSelectedServiceSummary"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260524a');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260524h');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260524h');
     assertContains(vendorHtml, '/ai-engine.js?v=20260523a');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-agent.js?v=20260524g');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-voice.js?v=20260524g');
     assertContains(vendorHtml, '/notifications.js?v=20260523a');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-vendor.js?v=20260524g');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-vendor.js?v=20260524h');
     assert(vendorHtml.indexOf('/ai-engine.js?v=') < vendorHtml.indexOf('/mobile-barber/mobile-barber-agent.js'), 'ai-engine.js must load before mobile-barber-agent.js');
   });
 
@@ -242,8 +263,8 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/dashboard"');
     assertContains(firebase, '"destination": "/mobile-barber/dashboard.html"');
     assertContains(dashboardHtml, 'id="mobileBarberDashboardApp"');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260524g');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260524b');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260524h');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260524h');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260524f');
     assertNotContains(dashboardHtml, 'vendor-admin.html');
     assertNotContains(dashboardHtml, 'salon-admin.html');

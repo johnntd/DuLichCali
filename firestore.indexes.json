@@ -32,6 +32,22 @@
         { "fieldPath": "targetId",   "order": "ASCENDING" },
         { "fieldPath": "read",       "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "mobileBarberBookings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "vendorId",      "order": "ASCENDING" },
+        { "fieldPath": "customerPhone", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "mobileBarberBookings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "vendorId",     "order": "ASCENDING" },
+        { "fieldPath": "customerUid",  "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

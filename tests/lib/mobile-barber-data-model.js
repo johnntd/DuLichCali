@@ -40,6 +40,14 @@ function runMobileBarberDataModelTests(test) {
     assert(vendor.rating > 0 && vendor.reviewCount > 0, 'sample vendor needs trust metrics');
   });
 
+  test('Mobile Barber vendor validator accepts optional provider keys', function() {
+    var vendor = clone(MobileBarberData.findVendorById(MobileBarberData.SAMPLE_VENDOR_ID));
+    vendor.geminiKey = 'test-gemini-key';
+    vendor.openaiKey = 'test-openai-key';
+    var result = MobileBarberData.validateVendor(vendor);
+    assertEq(result.valid, true, result.errors.join('; '));
+  });
+
   test('Mobile Barber services load for the sample vendor', function() {
     var services = MobileBarberData.listServicesForVendor(MobileBarberData.SAMPLE_VENDOR_ID);
     var vendorIds = MobileBarberData.sampleVendors.map(function(v) { return v.id; });

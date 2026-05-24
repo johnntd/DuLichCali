@@ -371,7 +371,9 @@
     customerHistory: { upcoming: [], past: [], all: [] },
     rebookDraft: null,
     preselectedServiceId: '',
-    preselectedAssistantMode: ''
+    preselectedAssistantMode: '',
+    voiceProviderKeys: {},
+    voiceProviderKeysPromise: null
   };
   var fallbackImage = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><rect width="1200" height="800" fill="#09213a"/><path d="M0 610c190-120 390-130 600-35s405 98 600-45v270H0z" fill="#123d63"/><circle cx="845" cy="255" r="135" fill="#f5a623"/><text x="90" y="170" font-family="Arial" font-size="72" font-weight="700" fill="#f7efe1">Mobile Barber</text></svg>'
@@ -408,6 +410,60 @@
   function getQueryParam(name) {
     var params = new URLSearchParams(root.location.search);
     return params.get(name) || '';
+  }
+
+  function getFirestoreDb() {
+    if (root.dlcDb) return root.dlcDb;
+    if (root.firebase && root.firebase.firestore && root.firebase.apps && root.firebase.apps.length) {
+      return root.firebase.firestore();
+    }
+    return null;
+  }
+
+  function loadVoiceProviderKeys() {
+    if (state.voiceProviderKeysPromise) return state.voiceProviderKeysPromise;
+    var keys = {
+      vendorGeminiKey: state.vendor && state.vendor.geminiKey || '',
+      vendorOpenAiKey: state.vendor && state.vendor.openaiKey || '',
+      firestoreGeminiKey: state.vendor && state.vendor.geminiKey || '',
+      firestoreOpenAiKey: state.vendor && state.vendor.openaiKey || '',
+      platformGeminiKey: '',
+      platformOpenAiKey: ''
+    };
+    keys.geminiKey = keys.vendorGeminiKey;
+    keys.openAiKey = keys.vendorOpenAiKey;
+    state.voiceProviderKeys = keys;
+
+    var db = getFirestoreDb();
+    if (!db || !state.vendor || !state.vendor.id || !DATA || !DATA.COLLECTIONS) {
+      state.voiceProviderKeysPromise = Promise.resolve(keys);
+      return state.voiceProviderKeysPromise;
+    }
+
+    state.voiceProviderKeysPromise = Promise.all([
+      db.collection(DATA.COLLECTIONS.vendors).doc(state.vendor.id).get().catch(function() { return null; }),
+      db.collection('config').doc('platform').get().catch(function() { return null; })
+    ]).then(function(results) {
+      var vendorDoc = results[0];
+      var platformDoc = results[1];
+      if (vendorDoc && vendorDoc.exists) {
+        var vd = vendorDoc.data() || {};
+        if (vd.geminiKey) keys.vendorGeminiKey = keys.firestoreGeminiKey = vd.geminiKey;
+        if (vd.openaiKey) keys.vendorOpenAiKey = keys.firestoreOpenAiKey = vd.openaiKey;
+      }
+      if (platformDoc && platformDoc.exists) {
+        var pd = platformDoc.data() || {};
+        if (pd.geminiKey) keys.platformGeminiKey = pd.geminiKey;
+        if (pd.openaiKey) keys.platformOpenAiKey = pd.openaiKey;
+      }
+      keys.geminiKey = keys.vendorGeminiKey || keys.platformGeminiKey || '';
+      keys.openAiKey = keys.vendorOpenAiKey || keys.platformOpenAiKey || '';
+      state.voiceProviderKeys = keys;
+      return keys;
+    }).catch(function() {
+      return keys;
+    });
+    return state.voiceProviderKeysPromise;
   }
 
   function validServiceId(serviceId) {
@@ -1315,11 +1371,32 @@
       openTextFallback();
       return;
     }
-    root.MobileBarberVoice.open({
+    var voiceController = {
       getLang: function() { return state.lang; },
       setLang: setLang,
       sendMessage: sendAgentMessage,
-      openTextFallback: openTextFallback
+      openTextFallback: openTextFallback,
+      geminiKey: state.voiceProviderKeys.geminiKey || '',
+      openAiKey: state.voiceProviderKeys.openAiKey || '',
+      platformGeminiKey: state.voiceProviderKeys.platformGeminiKey || '',
+      platformOpenAiKey: state.voiceProviderKeys.platformOpenAiKey || '',
+      firestoreGeminiKey: state.voiceProviderKeys.firestoreGeminiKey || '',
+      firestoreOpenAiKey: state.voiceProviderKeys.firestoreOpenAiKey || '',
+      vendorGeminiKey: state.voiceProviderKeys.vendorGeminiKey || '',
+      vendorOpenAiKey: state.voiceProviderKeys.vendorOpenAiKey || ''
+    };
+    root.MobileBarberVoice.open(voiceController);
+    loadVoiceProviderKeys().then(function(keys) {
+      Object.assign(voiceController, {
+        geminiKey: keys.geminiKey || '',
+        openAiKey: keys.openAiKey || '',
+        platformGeminiKey: keys.platformGeminiKey || '',
+        platformOpenAiKey: keys.platformOpenAiKey || '',
+        firestoreGeminiKey: keys.firestoreGeminiKey || '',
+        firestoreOpenAiKey: keys.firestoreOpenAiKey || '',
+        vendorGeminiKey: keys.vendorGeminiKey || '',
+        vendorOpenAiKey: keys.vendorOpenAiKey || ''
+      });
     });
   }
 
@@ -1384,6 +1461,7 @@
     state.lang = getLang();
     bind();
     setLang(state.lang);
+    loadVoiceProviderKeys();
     openQueryMode();
   }
 

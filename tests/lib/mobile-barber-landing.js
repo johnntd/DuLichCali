@@ -45,8 +45,8 @@ function runMobileBarberLandingTests(test) {
 
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
     assertContains(html, '/mobile-barber/mobile-barber.css?v=20260524f');
-    assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260524d');
-    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260524f');
+    assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260524g');
+    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260524g');
   });
 
   test('Mobile Barber landing content is translation-table driven', function() {
@@ -83,6 +83,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(js, 'selectService(service)');
     assertContains(js, 'vendorUrl(service,');
     assertContains(js, "params.set('assistant', mode)");
+    assertContains(js, "params.set('lang'");
     assertContains(html, 'id="mbPromoTitle"');
     assertContains(html, 'id="mbPromoPreview"');
     assertContains(js, 'promoTitle');
@@ -119,10 +120,12 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorHtml, 'id="mbVendorPromoTitle"');
     assertContains(vendorHtml, 'id="mbSelectedServiceSummary"');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260524a');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-agent.js?v=20260523a');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-voice.js?v=20260523a');
+    assertContains(vendorHtml, '/ai-engine.js?v=20260523a');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-agent.js?v=20260524g');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-voice.js?v=20260524g');
     assertContains(vendorHtml, '/notifications.js?v=20260523a');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-vendor.js?v=20260524f');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-vendor.js?v=20260524g');
+    assert(vendorHtml.indexOf('/ai-engine.js?v=') < vendorHtml.indexOf('/mobile-barber/mobile-barber-agent.js'), 'ai-engine.js must load before mobile-barber-agent.js');
   });
 
   test('Mobile Barber vendor page is vendor-id scoped', function() {
@@ -163,6 +166,8 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorJs, 'BOOKING.saveBooking');
     assertContains(vendorJs, 'AGENT.handleMessage');
     assertContains(vendorJs, 'root.MobileBarberVoice.open');
+    assertContains(vendorJs, 'MobileBarberVoice.open(voiceController)');
+    assertContains(vendorJs, 'geminiKey:');
     assertContains(vendorJs, 'loadCustomerHistory');
     assertContains(vendorJs, 'BOOKING.buildRebookDraft');
     assertContains(vendorJs, 'BOOKING.splitCustomerBookingHistory');
@@ -203,6 +208,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(voiceJs, 'root.MobileBarberVoice');
     assertContains(voiceJs, '_speakViaOpenAi');
     assertContains(voiceJs, '_speakViaGemini');
+    assertContains(voiceJs, "lang === 'vi'");
     assertContains(voiceJs, 'speechSynthesis');
     assertContains(voiceJs, "voice: 'nova'");
     assertContains(voiceJs, 'gemini-2.5-flash-preview-tts');
@@ -236,7 +242,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/dashboard"');
     assertContains(firebase, '"destination": "/mobile-barber/dashboard.html"');
     assertContains(dashboardHtml, 'id="mobileBarberDashboardApp"');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260524d');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260524g');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260524b');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260524f');
     assertNotContains(dashboardHtml, 'vendor-admin.html');

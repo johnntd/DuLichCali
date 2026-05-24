@@ -27,7 +27,8 @@
     'profilePhoto', 'heroImage', 'serviceAreas', 'travelRadiusMiles',
     'baseTravelFee', 'addressOptional', 'languages', 'active', 'rating',
     'reviewCount', 'serviceBadges', 'createdAt', 'updatedAt',
-    'bio', 'region', 'yearsExperience', 'zipCoverage', 'travelFeeTiers'
+    'bio', 'region', 'yearsExperience', 'zipCoverage', 'travelFeeTiers',
+    'geminiKey', 'openaiKey'
   ]);
 
   var SERVICE_FIELDS = Object.freeze([

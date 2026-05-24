@@ -2,7 +2,7 @@
 /*
  * Mobile Barber Phase 7 voice booking agent.
  * Reuses the DuLichCali voice pattern: SpeechRecognition input and
- * OpenAI TTS -> Gemini TTS -> browser speechSynthesis fallback output.
+ * language-aware provider fallback for speechSynthesis output.
  */
 (function(root) {
   var SR = root.SpeechRecognition || root.webkitSpeechRecognition;
@@ -107,6 +107,10 @@
   }
 
   function detectLangFromText(text) {
+    if (root.AIEngine && typeof root.AIEngine.detectLang === 'function') {
+      var detected = root.AIEngine.detectLang(text);
+      if (LANG_TAG[detected]) return detected;
+    }
     if (/[\u0102\u0103\u0110\u0111\u01a0\u01a1\u01af\u01b0\u1ea0-\u1ef9]/.test(text || '')) return 'vi';
     if (/[\u00f1\u00d1\u00bf\u00a1]/.test(text || '') ||
         /\b(hola|quiero|cu[aá]ndo|gracias|reservar|cita|por favor|barbero)\b/i.test(text || '')) return 'es';
@@ -122,13 +126,13 @@
   }
 
   function getOpenAiKey() {
-    var key = controller && (controller.openAiKey || controller.platformOpenAiKey || controller.firestoreOpenAiKey);
+    var key = controller && (controller.openAiKey || controller.vendorOpenAiKey || controller.platformOpenAiKey || controller.firestoreOpenAiKey);
     if (!key) { try { key = root.localStorage.getItem('dlc_openai_key') || ''; } catch (e) {} }
     return key || '';
   }
 
   function getGeminiKey() {
-    var key = controller && (controller.geminiKey || controller.platformGeminiKey || controller.firestoreGeminiKey);
+    var key = controller && (controller.geminiKey || controller.vendorGeminiKey || controller.platformGeminiKey || controller.firestoreGeminiKey);
     if (!key) { try { key = root.localStorage.getItem('dlc_gemini_key') || ''; } catch (e) {} }
     return key || '';
   }
@@ -324,6 +328,16 @@
     if (!spoken) { afterSpeech(false); return; }
     stopSpeaking();
     setState(nextState || 'thinking');
+    if (lang === 'vi') {
+      _speakViaGemini(spoken, function(okGemini) {
+        if (!okGemini && (state === 'confirming' || state === 'booked' || state === 'thinking')) {
+          _speakViaOpenAi(spoken, function(okOpenAi) {
+            if (!okOpenAi && (state === 'confirming' || state === 'booked' || state === 'thinking')) speakViaBrowser(spoken);
+          });
+        }
+      });
+      return;
+    }
     _speakViaOpenAi(spoken, function(okOpenAi) {
       if (!okOpenAi && (state === 'confirming' || state === 'booked' || state === 'thinking')) {
         _speakViaGemini(spoken, function(okGemini) {

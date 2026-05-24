@@ -110,6 +110,22 @@ function runMobileBarberAgentTests(test) {
     assertEq(es.session.state.lang, 'es');
   });
 
+  test('Mobile Barber AI uses AIEngine for unaccented Vietnamese detection', function() {
+    var previous = global.AIEngine;
+    global.AIEngine = {
+      detectLang: function(text) {
+        return text === 'toi muon cat toc ngay mai' ? 'vi' : 'en';
+      }
+    };
+    try {
+      var vi = MobileBarberAgent.handleMessage(null, 'toi muon cat toc ngay mai', context());
+      assertEq(vi.session.state.lang, 'vi');
+    } finally {
+      if (previous) global.AIEngine = previous;
+      else delete global.AIEngine;
+    }
+  });
+
   test('Mobile Barber AI handles cancel or reschedule intent without changing bookings', function() {
     var result = MobileBarberAgent.handleMessage(null, 'I want to reschedule my booking', context());
     assertEq(result.session.state.intent, 'modify_existing');

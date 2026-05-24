@@ -85,7 +85,8 @@
   }
 
   function detectLang(text) {
-    if (AIEngine && AIEngine.detectLang) return AIEngine.detectLang(text);
+    var engine = AIEngine || (typeof globalThis !== 'undefined' && globalThis.AIEngine);
+    if (engine && engine.detectLang) return engine.detectLang(text);
     if (/[\u1EA0-\u1EF9]|[ơưđĐ]/i.test(text)) return 'vi';
     if (/[¿¡ñÑ]|\b(hola|cuanto|cuánto|quiero|cita|mañana|gracias)\b/i.test(text)) return 'es';
     return 'en';

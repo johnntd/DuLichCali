@@ -188,12 +188,13 @@
   var state = { lang: 'en', selectedServiceId: '' };
 
   function getLang() {
+    var param = new URLSearchParams(root.location.search).get('lang');
+    if (param && STRINGS[param]) return param;
     try {
       var saved = localStorage.getItem('dlcLang') || localStorage.getItem('dlc_lang');
       if (saved && STRINGS[saved]) return saved;
     } catch (e) {}
-    var param = new URLSearchParams(root.location.search).get('lang');
-    return STRINGS[param] ? param : 'en';
+    return 'en';
   }
 
   function t(key) {
@@ -254,6 +255,7 @@
     var params = new URLSearchParams();
     params.set('serviceId', service.id);
     if (mode) params.set('assistant', mode);
+    if (state.lang) params.set('lang', state.lang);
     return '/mobile-barber/vendor/' + encodeURIComponent(service.vendorId) + '?' + params.toString();
   }
 

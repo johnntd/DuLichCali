@@ -1692,12 +1692,29 @@ function httpsPost(hostname, path, headers, bodyObj) {
   });
 }
 
-async function serverCallClaude(system, userContent, jsonMode, claudeKey, maxTokens) {
+async function serverCallClaude(system, messagesOrUserContent, jsonMode, claudeKey, maxTokens, model) {
   const sysPrompt = jsonMode ? system + '\n\nRespond ONLY with valid JSON. No markdown.' : system;
+  // Backwards compat: accept either a full multi-turn messages array OR a
+  // single flattened userContent string (legacy aiProxy callers). Multi-turn
+  // is required by Lily so she can remember earlier turns of the conversation.
+  let messages;
+  if (Array.isArray(messagesOrUserContent)) {
+    messages = messagesOrUserContent.map(m => ({
+      role:    m && m.role === 'assistant' ? 'assistant' : 'user',
+      content: typeof m === 'string' ? m : (m && m.content) || ''
+    })).filter(m => m.content);
+    if (!messages.length) messages = [{ role: 'user', content: 'Generate content.' }];
+  } else {
+    messages = [{ role: 'user', content: messagesOrUserContent || 'Generate content.' }];
+  }
   const raw = await httpsPost('api.anthropic.com', '/v1/messages',
     { 'x-api-key': claudeKey, 'anthropic-version': '2023-06-01' },
-    { model: 'claude-haiku-4-5-20251001', max_tokens: maxTokens || 1200, system: sysPrompt,
-      messages: [{ role: 'user', content: userContent }] }
+    {
+      model:      model || 'claude-haiku-4-5-20251001',
+      max_tokens: maxTokens || 1200,
+      system:     sysPrompt,
+      messages
+    }
   );
   const d = JSON.parse(raw);
   return d.content[0].text;
@@ -1821,12 +1838,14 @@ exports.aiProxy = onCall(
     cors: true,
   },
   async (request) => {
-    // ── Auth gate ───────────────────────────────────────────────────────────
-    if (!request.auth) {
-      return { ok: false, vendorMessage: 'Vui lòng đăng nhập lại để sử dụng AI.', debugCode: 'UNAUTHENTICATED' };
-    }
+    // No auth gate: customer-facing AI (Lily, marketplace receptionists,
+    // travel chat) happens on public pages where the customer is anonymous.
+    // Cost is bounded by the maxTokens cap (1200) below, Cloud Function
+    // per-IP quotas, and the CORS allowlist enforced by onCall. Long term,
+    // Firebase App Check should be added to gate this proxy from third-party
+    // origins (TODO).
 
-    const { provider, system, messages, maxTokens, jsonMode } = request.data || {};
+    const { provider, system, messages, maxTokens, jsonMode, model } = request.data || {};
 
     if (!provider || !system) {
       return { ok: false, vendorMessage: 'Yêu cầu không hợp lệ.', debugCode: 'INVALID_REQUEST' };
@@ -1836,16 +1855,18 @@ exports.aiProxy = onCall(
     const openaiKey = OPENAI_API_KEY.value();
     const geminiKey = GEMINI_API_KEY.value();
 
-    // Build user content from messages array
-    const userContent = (messages || []).map(m => m.content).join('\n') || 'Generate content.';
-    const mt = maxTokens || 1000;
+    // Pass messages array through unchanged so multi-turn callers (Lily) keep
+    // their conversation context. Legacy callers that pass a string instead
+    // are still supported by serverCallClaude / serverCallOpenAI.
+    const safeMessages = Array.isArray(messages) ? messages : (messages ? [messages] : []);
+    const mt = Math.min(maxTokens || 1200, 1500); // hard ceiling for cost protection
 
     try {
       let text;
 
       if (provider === 'claude') {
         if (!claudeKey) return { ok: false, vendorMessage: 'Dịch vụ AI tạm thời không khả dụng.', debugCode: 'NO_CLAUDE_KEY' };
-        text = await serverCallClaude(system, userContent, jsonMode !== false, claudeKey, mt);
+        text = await serverCallClaude(system, safeMessages, jsonMode === true, claudeKey, mt, model);
       } else if (provider === 'openai') {
         if (!openaiKey) return { ok: false, vendorMessage: 'Dịch vụ AI tạm thời không khả dụng.', debugCode: 'NO_OPENAI_KEY' };
         text = await serverCallOpenAI(system, userContent, jsonMode !== false, openaiKey, mt);

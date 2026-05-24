@@ -108,8 +108,48 @@
   // because OpenAI blocks direct browser CORS requests. Booking intents use Claude.
   var _HIGH_RISK_INTENTS = { booking_request: 1, modify_booking: 1, booking_offer: 1 };
 
-  // ── Claude adapter (existing) — returns native Claude JSON unchanged ──────────
+  // ── Claude adapter — server-side aiTtsProxy preferred, direct fetch fallback ──
+  // The browser never needs to hold a Claude key when Firebase Functions SDK is
+  // loaded: aiProxy uses CLAUDE_API_KEY (Functions secret) server-side and
+  // returns the same { content: [{ text }] } shape downstream code expects.
+  // If the SDK isn't available (e.g. dev tools, older browsers) we fall back
+  // to the legacy client-direct fetch using the apiKey argument.
+  function _callClaudeViaProxy(model, maxTokens, systemPrompt, messages) {
+    var fn = window.firebase.functions().httpsCallable('aiProxy', { timeout: 55000 });
+    return fn({
+      provider:  'claude',
+      system:    systemPrompt || '',
+      messages:  messages || [],
+      maxTokens: maxTokens,
+      jsonMode:  false,
+      model:     model
+    }).then(function (result) {
+      var data = (result && result.data) || {};
+      if (!data.ok || typeof data.text !== 'string') {
+        var err = new Error('aiProxy returned no text: ' + (data.debugCode || ''));
+        err.isApiError = true;
+        throw err;
+      }
+      // Normalise to the Claude content shape downstream code expects.
+      return { content: [{ text: data.text }] };
+    });
+  }
+
   function _callClaude(apiKey, model, maxTokens, systemPrompt, messages) {
+    if (typeof window !== 'undefined' && window.firebase && typeof window.firebase.functions === 'function') {
+      return _callClaudeViaProxy(model, maxTokens, systemPrompt, messages)
+        .catch(function (err) {
+          // Only fall back to a direct Anthropic call when (a) we actually have
+          // a client-side apiKey, and (b) the error is NOT a structured API
+          // error (which we should surface to the caller, not retry differently).
+          if (err && err.isApiError) throw err;
+          if (!apiKey) throw err;
+          console.warn('[AIEngine] aiProxy unavailable, falling back to client-direct Claude:', err && err.message);
+          var body = { model: model, max_tokens: maxTokens, messages: messages };
+          if (systemPrompt) body.system = systemPrompt;
+          return fetchWithRetry(apiKey, body);
+        });
+    }
     var body = { model: model, max_tokens: maxTokens, messages: messages };
     if (systemPrompt) body.system = systemPrompt;
     return fetchWithRetry(apiKey, body);

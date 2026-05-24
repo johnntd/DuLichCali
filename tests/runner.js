@@ -1083,13 +1083,22 @@ test('RX-029: _speakViaGemini tries platform key before localStorage [RX-029]', 
 test('RX-029: _speakViaGemini platform key fallback comes before localStorage [RX-029]', function() {
   var speakFnStart = vmSrc.indexOf('function _speakViaGemini(');
   assert(speakFnStart >= 0, 'RX-029: _speakViaGemini function not found');
-  var fnSlice = vmSrc.slice(speakFnStart, speakFnStart + 500);
+  // Window widened to 3000 because the function now starts with the server-side
+  // aiTtsProxy path before falling through to the legacy client-direct key chain.
+  var fnSlice = vmSrc.slice(speakFnStart, speakFnStart + 3000);
   var platformIdx = fnSlice.indexOf('_platformGeminiKey');
   var localStorageIdx = fnSlice.indexOf('localStorage.getItem');
   assert(platformIdx >= 0,    'RX-029: _platformGeminiKey not found in _speakViaGemini');
   assert(localStorageIdx >= 0, 'RX-029: localStorage.getItem not found in _speakViaGemini');
   assert(platformIdx < localStorageIdx,
     'RX-029: _platformGeminiKey must appear BEFORE localStorage.getItem in _speakViaGemini — otherwise stale local key shadows valid platform key');
+  // RX-029b: prefer the server-side aiTtsProxy when Firebase Functions SDK is loaded so the
+  // Gemini key can stay in Firebase Functions secrets and never reach the client.
+  assert(fnSlice.indexOf('aiTtsProxy') >= 0,
+    'RX-029b: _speakViaGemini must try the server-side aiTtsProxy callable before any client-direct fetch');
+  var proxyIdx = fnSlice.indexOf('aiTtsProxy');
+  assert(proxyIdx < platformIdx,
+    'RX-029b: aiTtsProxy preferred path must appear BEFORE the legacy _platformGeminiKey client-direct path');
 });
 
 test('RX-029: _prefetchWelcome tries platform key before localStorage [RX-029]', function() {

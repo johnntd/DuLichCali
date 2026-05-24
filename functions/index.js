@@ -1886,6 +1886,112 @@ exports.aiProxy = onCall(
   }
 );
 
+// ── aiTtsProxy ─────────────────────────────────────────────────────────────────
+// Callable function: server-side TTS proxy so the client never needs a Gemini
+// API key. Reuses the existing GEMINI_API_KEY Functions secret (the "latest
+// and valid key"). Returns audio as base64.
+//
+// Input:  { provider: 'gemini', text, voice?, language? }
+// Output: { ok: true,  provider, audioBase64, mimeType, model, voice }
+//      |  { ok: false, error,    debugCode,   detail?  }
+//
+// Authless (anonymous customers must be able to hear Vietnamese voice). Input
+// text is capped at TTS_MAX_TEXT to keep abuse bounded. Cloud Function CORS
+// already restricts callers to the project's app domain.
+const TTS_MAX_TEXT = 2000;
+const GEMINI_TTS_MODEL = 'gemini-2.5-flash-preview-tts';
+
+async function serverCallGeminiTts(text, voice, geminiKey) {
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/' +
+              GEMINI_TTS_MODEL + ':generateContent?key=' + encodeURIComponent(geminiKey);
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text }] }],
+      generationConfig: {
+        responseModalities: ['AUDIO'],
+        speechConfig: {
+          voiceConfig: { prebuiltVoiceConfig: { voiceName: voice || 'Aoede' } }
+        }
+      }
+    })
+  });
+  if (!resp.ok) {
+    const errText = await resp.text().catch(() => '');
+    throw new Error('gemini-tts HTTP ' + resp.status + ' ' + errText.slice(0, 200));
+  }
+  const data = await resp.json();
+  const part = data && data.candidates && data.candidates[0] && data.candidates[0].content &&
+               data.candidates[0].content.parts && data.candidates[0].content.parts[0];
+  if (!part || !part.inlineData || !part.inlineData.data) {
+    // Diagnostic: dump a redacted summary of what came back so we can see the actual
+    // response shape. Only the first 600 chars of the JSON to keep logs bounded.
+    let preview = '';
+    try {
+      preview = JSON.stringify(data, function(k, v) {
+        // strip anything that looks like audio bytes
+        if (typeof v === 'string' && v.length > 80) return '<' + v.length + ' chars>';
+        return v;
+      }).slice(0, 600);
+    } catch (_) {}
+    throw new Error('gemini-tts no audio in response | shape=' + preview);
+  }
+  return {
+    audioBase64: part.inlineData.data,
+    mimeType: part.inlineData.mimeType || 'audio/L16;rate=24000'
+  };
+}
+
+exports.aiTtsProxy = onCall(
+  {
+    region:         'us-central1',
+    secrets:        [GEMINI_API_KEY],
+    timeoutSeconds: 30,
+    cors:           true,
+  },
+  async (request) => {
+    const { provider, text, voice, language } = request.data || {};
+    if (provider !== 'gemini') {
+      return { ok: false, error: 'Unsupported provider', debugCode: 'UNSUPPORTED' };
+    }
+    if (typeof text !== 'string' || !text.trim()) {
+      return { ok: false, error: 'Missing text', debugCode: 'INVALID_REQUEST' };
+    }
+    const safeText = text.slice(0, TTS_MAX_TEXT);
+    const safeVoice = (typeof voice === 'string' && voice.length <= 64) ? voice : 'Aoede';
+    const geminiKey = GEMINI_API_KEY.value();
+    if (!geminiKey) {
+      return { ok: false, error: 'Gemini key not configured', debugCode: 'NO_GEMINI_KEY' };
+    }
+    try {
+      const result = await serverCallGeminiTts(safeText, safeVoice, geminiKey);
+      console.info('[aiTtsProxy] gemini ok', {
+        language: language || '',
+        voice:    safeVoice,
+        textLen:  safeText.length,
+        audioB64Len: result.audioBase64.length
+      });
+      return {
+        ok:          true,
+        provider:    'gemini',
+        model:       GEMINI_TTS_MODEL,
+        voice:       safeVoice,
+        audioBase64: result.audioBase64,
+        mimeType:    result.mimeType
+      };
+    } catch (err) {
+      console.error('[aiTtsProxy] gemini error:', err && err.message);
+      return {
+        ok:        false,
+        error:     'TTS provider error',
+        debugCode: 'PROVIDER_ERROR',
+        detail:    (err && err.message || '').slice(0, 200)
+      };
+    }
+  }
+);
+
 // ── generateItemVideo ─────────────────────────────────────────────────────────
 // Callable function: accepts {vendorId, itemId}
 // Creates a 15-second promotional MP4 using ffmpeg, uploads to Firebase Storage,

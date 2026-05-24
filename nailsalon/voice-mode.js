@@ -658,20 +658,65 @@
   // Calls onDone(true) on success, onDone(false) on any failure so the caller
   // can fall through to browser TTS.
   function _speakViaGemini(text, onDone) {
+    var ctx = _ensureAudioCtx();
+    if (!ctx) { onDone(false); return; }
+
+    // Voice per language: Sulafat (warm) for EN, Aoede (breezy) for VI/ES
+    var voiceName = _lang === 'en' ? 'Sulafat' : 'Aoede';
+
+    function _playGeminiPcm(audioBase64) {
+      var raw   = atob(audioBase64);
+      var bytes = new Uint8Array(raw.length);
+      for (var i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+      var int16   = new Int16Array(bytes.buffer);
+      var float32 = new Float32Array(int16.length);
+      for (var j = 0; j < int16.length; j++) float32[j] = int16[j] / 32768;
+      var buf = ctx.createBuffer(1, float32.length, 24000);
+      buf.copyToChannel(float32, 0);
+      var src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);
+      _currentSource = src;
+      src.onended = function () {
+        _currentSource = null;
+        if (_state === 'speaking') _setState('idle');
+        onDone(true);
+        _autoRestartListening();
+      };
+      src.start();
+    }
+
+    // Preferred path: server-side aiTtsProxy uses the Functions GEMINI_API_KEY
+    // secret. Keeps the API key off the client and works for guest customers.
+    if (typeof firebase !== 'undefined' && typeof firebase.functions === 'function') {
+      try {
+        var fn = firebase.functions().httpsCallable('aiTtsProxy');
+        fn({ provider: 'gemini', text: text, voice: voiceName, language: _lang })
+          .then(function (result) {
+            var data = (result && result.data) || {};
+            if (!data.ok || !data.audioBase64) {
+              _currentSource = null;
+              onDone(false);
+              return;
+            }
+            try { _playGeminiPcm(data.audioBase64); } catch (_) { _currentSource = null; onDone(false); }
+          })
+          .catch(function () { _currentSource = null; onDone(false); });
+        return;
+      } catch (_) {
+        // fall through to legacy client-direct path
+      }
+    }
+
+    // Legacy fallback: only fires when Firebase Functions SDK isn't loaded.
     // Key priority: Firestore vendor doc (geminiKey) → platform config → localStorage override
     var key = (_biz && _biz._firestoreGeminiKey) || (_biz && _biz._platformGeminiKey) || '';
     if (!key) { try { key = localStorage.getItem('dlc_gemini_key') || ''; } catch (_) {} }
     if (!key) { onDone(false); return; }
 
-    var ctx = _ensureAudioCtx();
-    if (!ctx) { onDone(false); return; }
-
     var url = 'https://generativelanguage.googleapis.com/v1beta/models/' +
               'gemini-2.5-flash-preview-tts:generateContent?key=' +
               encodeURIComponent(key);
-
-    // Voice per language: Sulafat (warm) for EN, Aoede (breezy) for VI/ES
-    var voiceName = _lang === 'en' ? 'Sulafat' : 'Aoede';
 
     var payload = {
       contents: [{ parts: [{ text: text }] }],
@@ -695,7 +740,6 @@
       return resp.json();
     })
     .then(function (data) {
-      // Navigate the response to the inline audio data
       var part = data.candidates &&
                  data.candidates[0] &&
                  data.candidates[0].content &&
@@ -704,34 +748,7 @@
       if (!part || !part.inlineData || !part.inlineData.data) {
         throw new Error('no audio data');
       }
-
-      // Decode base64 → raw bytes
-      var raw   = atob(part.inlineData.data);
-      var bytes = new Uint8Array(raw.length);
-      for (var i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
-
-      // Interpret as Int16 PCM signed little-endian → normalize to Float32
-      var int16   = new Int16Array(bytes.buffer);
-      var float32 = new Float32Array(int16.length);
-      for (var i = 0; i < int16.length; i++) float32[i] = int16[i] / 32768;
-
-      // Create AudioBuffer (mono, 24 kHz) and play
-      var buf = ctx.createBuffer(1, float32.length, 24000);
-      buf.copyToChannel(float32, 0);
-
-      var src = ctx.createBufferSource();
-      src.buffer = buf;
-      src.connect(ctx.destination);
-      _currentSource = src;
-
-      src.onended = function () {
-        _currentSource = null;
-        if (_state === 'speaking') _setState('idle');
-        onDone(true);
-        _autoRestartListening();
-      };
-
-      src.start();
+      _playGeminiPcm(part.inlineData.data);
     })
     .catch(function () {
       _currentSource = null;

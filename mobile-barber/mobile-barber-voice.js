@@ -227,7 +227,17 @@
   }
 
   function speakViaBrowser(text) {
-    if (!hasTTS) { afterSpeech(false); return; }
+    if (!hasTTS) {
+      _voiceProviderLog({ selectedProvider: 'browser', fallbackReason: 'no-speech-synthesis' });
+      afterSpeech(false);
+      return;
+    }
+    _voiceProviderLog({
+      selectedProvider: 'browser',
+      selectedModel: 'speechSynthesis',
+      transport: 'browser-builtin',
+      fallbackReason: 'gemini-and-openai-unavailable'
+    });
     var utter = new SpeechSynthesisUtterance(text);
     utter.lang = LANG_TAG[lang] || 'en-US';
     utter.rate = 0.92;
@@ -257,7 +267,20 @@
   function _speakViaOpenAi(text, onDone) {
     var key = getOpenAiKey();
     var ctx = ensureAudioCtx();
-    if (!key || !ctx) { onDone(false); return; }
+    if (!key || !ctx) {
+      _voiceProviderLog({
+        selectedProvider: 'openai',
+        fallbackReason: !key ? 'no-openai-key' : 'no-audio-context'
+      });
+      onDone(false); return;
+    }
+    _voiceProviderLog({
+      selectedProvider: 'openai',
+      selectedModel: 'tts-1',
+      selectedVoice: 'nova',
+      transport: 'client-direct',
+      usingOpenAI: true
+    });
     fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
@@ -282,30 +305,26 @@
     .catch(function() { currentSource = null; onDone(false); });
   }
 
-  function _speakViaGemini(text, onDone) {
-    var key = getGeminiKey();
-    var ctx = ensureAudioCtx();
-    if (!key || !ctx) { onDone(false); return; }
-    fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=' + encodeURIComponent(key), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: text }] }],
-        generationConfig: {
-          responseModalities: ['AUDIO'],
-          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: lang === 'en' ? 'Sulafat' : 'Aoede' } } }
-        }
-      })
-    })
-    .then(function(resp) {
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      return resp.json();
-    })
-    .then(function(data) {
-      var part = data.candidates && data.candidates[0] && data.candidates[0].content &&
-        data.candidates[0].content.parts && data.candidates[0].content.parts[0];
-      if (!part || !part.inlineData || !part.inlineData.data) throw new Error('no audio');
-      var raw = atob(part.inlineData.data);
+  function _voiceProviderLog(payload) {
+    try {
+      var base = {
+        vertical: 'mobile-barber',
+        route: (root.location && root.location.pathname) || '',
+        vendorId: (controller && controller.vendorId) || '',
+        requestedLanguage: lang,
+        normalizedLanguage: lang,
+        usingGemini: false,
+        usingOpenAI: false,
+        usingAnthropic: false
+      };
+      Object.keys(payload || {}).forEach(function(k) { base[k] = payload[k]; });
+      console.info('[voice-provider]', base);
+    } catch (e) {}
+  }
+
+  function _decodeGeminiPcm(audioBase64, ctx, onDone) {
+    try {
+      var raw = atob(audioBase64);
       var bytes = new Uint8Array(raw.length);
       for (var i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
       var int16 = new Int16Array(bytes.buffer);
@@ -319,6 +338,104 @@
       currentSource = src;
       src.onended = function() { currentSource = null; onDone(true); afterSpeech(true); };
       src.start();
+    } catch (e) {
+      currentSource = null;
+      onDone(false);
+    }
+  }
+
+  function _speakViaGemini(text, onDone) {
+    var ctx = ensureAudioCtx();
+    if (!ctx) {
+      _voiceProviderLog({ selectedProvider: 'gemini', fallbackReason: 'no-audio-context' });
+      onDone(false); return;
+    }
+
+    var voice = lang === 'en' ? 'Sulafat' : 'Aoede';
+    var hasFunctions = !!(root.firebase && typeof root.firebase.functions === 'function');
+    if (hasFunctions) {
+      _voiceProviderLog({
+        selectedProvider: 'gemini',
+        selectedModel: 'gemini-2.5-flash-preview-tts',
+        selectedVoice: voice,
+        transport: 'aiTtsProxy',
+        usingGemini: true
+      });
+      try {
+        var fn = root.firebase.functions().httpsCallable('aiTtsProxy');
+        fn({ provider: 'gemini', text: text, voice: voice, language: lang })
+          .then(function(result) {
+            var data = (result && result.data) || {};
+            if (!data.ok || !data.audioBase64) {
+              _voiceProviderLog({
+                selectedProvider: 'gemini',
+                usingGemini: false,
+                fallbackReason: 'proxy:' + (data.debugCode || 'no-audio')
+              });
+              currentSource = null;
+              onDone(false);
+              return;
+            }
+            _decodeGeminiPcm(data.audioBase64, ctx, onDone);
+          })
+          .catch(function(err) {
+            _voiceProviderLog({
+              selectedProvider: 'gemini',
+              usingGemini: false,
+              fallbackReason: 'proxy-call-failed:' + ((err && err.message) || '').slice(0, 80)
+            });
+            currentSource = null;
+            onDone(false);
+          });
+        return;
+      } catch (e) {
+        _voiceProviderLog({
+          selectedProvider: 'gemini',
+          usingGemini: false,
+          fallbackReason: 'proxy-throw:' + ((e && e.message) || '').slice(0, 80)
+        });
+        // fall through to legacy client-direct path if a client key exists
+      }
+    }
+
+    // Legacy fallback: only fires if Firebase Functions SDK isn't loaded AND a
+    // client-readable Gemini key happens to be configured. Keeps backwards-compat.
+    var key = getGeminiKey();
+    if (!key) {
+      _voiceProviderLog({
+        selectedProvider: 'gemini',
+        fallbackReason: hasFunctions ? 'no-proxy-and-no-key' : 'no-functions-sdk-and-no-key'
+      });
+      onDone(false);
+      return;
+    }
+    _voiceProviderLog({
+      selectedProvider: 'gemini',
+      selectedModel: 'gemini-2.5-flash-preview-tts',
+      selectedVoice: voice,
+      transport: 'client-direct',
+      usingGemini: true
+    });
+    fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=' + encodeURIComponent(key), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: text }] }],
+        generationConfig: {
+          responseModalities: ['AUDIO'],
+          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } } }
+        }
+      })
+    })
+    .then(function(resp) {
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      return resp.json();
+    })
+    .then(function(data) {
+      var part = data.candidates && data.candidates[0] && data.candidates[0].content &&
+        data.candidates[0].content.parts && data.candidates[0].content.parts[0];
+      if (!part || !part.inlineData || !part.inlineData.data) throw new Error('no audio');
+      _decodeGeminiPcm(part.inlineData.data, ctx, onDone);
     })
     .catch(function() { currentSource = null; onDone(false); });
   }

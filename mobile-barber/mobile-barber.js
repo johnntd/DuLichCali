@@ -35,6 +35,12 @@
       travelBufferLabel: 'Travel buffer',
       cleanupLabel: 'Cleanup',
       minutes: 'min',
+      selectService: 'Select Service',
+      selectedServiceLabel: 'Selected service',
+      bookThisService: 'Book this service',
+      chatThisService: 'Chat with AI to book',
+      talkThisService: 'Talk to AI to book',
+      aiPreviewDisclosure: 'Sample AI-generated style preview. Real barber portfolio coming soon.',
       serviceAreaLabel: 'Service area',
       radiusLabel: 'Travel radius',
       travelFeeLabel: 'Base travel fee',
@@ -83,6 +89,12 @@
       travelBufferLabel: 'Thời gian di chuyển',
       cleanupLabel: 'Dọn dẹp',
       minutes: 'phút',
+      selectService: 'Chọn Dịch Vụ',
+      selectedServiceLabel: 'Dịch vụ đã chọn',
+      bookThisService: 'Đặt dịch vụ này',
+      chatThisService: 'Chat với AI để đặt',
+      talkThisService: 'Nói với AI để đặt',
+      aiPreviewDisclosure: 'Ảnh mẫu tạo bằng AI. Portfolio thật của thợ sẽ có sau.',
       serviceAreaLabel: 'Khu vực phục vụ',
       radiusLabel: 'Bán kính di chuyển',
       travelFeeLabel: 'Phí di chuyển cơ bản',
@@ -131,6 +143,12 @@
       travelBufferLabel: 'Tiempo de viaje',
       cleanupLabel: 'Limpieza',
       minutes: 'min',
+      selectService: 'Seleccionar Servicio',
+      selectedServiceLabel: 'Servicio seleccionado',
+      bookThisService: 'Reservar este servicio',
+      chatThisService: 'Chatear con AI para reservar',
+      talkThisService: 'Hablar con AI para reservar',
+      aiPreviewDisclosure: 'Vista previa de estilo generada por AI. Portafolio real del barbero próximamente.',
       serviceAreaLabel: 'Área de servicio',
       radiusLabel: 'Radio de viaje',
       travelFeeLabel: 'Tarifa base de viaje',
@@ -155,7 +173,7 @@
     'mobile-haircut-beard': { name: 'serviceComboName', desc: 'serviceComboDesc' }
   };
 
-  var state = { lang: 'en' };
+  var state = { lang: 'en', selectedServiceId: '' };
 
   function getLang() {
     try {
@@ -198,6 +216,103 @@
     return field === 'name' ? t(keys.name) : t(keys.desc);
   }
 
+  function landingServices(services) {
+    var source = services || [];
+    var preferredVendor = DATA && DATA.MICHAEL_VENDOR_ID;
+    var preferred = source.filter(function(service) {
+      return service.vendorId === preferredVendor && service.active !== false;
+    });
+    if (preferred.length) return preferred;
+    var seen = {};
+    return source.filter(function(service) {
+      if (service.active === false || seen[service.name]) return false;
+      seen[service.name] = true;
+      return true;
+    });
+  }
+
+  function serviceImage(service) {
+    if (DATA && DATA.findServiceImageByServiceId) {
+      return DATA.findServiceImageByServiceId(service.id) || service;
+    }
+    return service;
+  }
+
+  function vendorUrl(service, mode) {
+    var params = new URLSearchParams();
+    params.set('serviceId', service.id);
+    if (mode) params.set('assistant', mode);
+    return '/mobile-barber/vendor/' + encodeURIComponent(service.vendorId) + '?' + params.toString();
+  }
+
+  function renderServiceProgress(services) {
+    var progress = document.getElementById('mbServiceProgress');
+    if (!progress) return;
+    progress.innerHTML = '';
+    services.forEach(function(service, index) {
+      var dot = el('button', 'mb-service-progress__dot');
+      dot.type = 'button';
+      dot.setAttribute('aria-label', service.name);
+      dot.addEventListener('click', function() {
+        var cards = document.querySelectorAll('#mbServiceList .mb-service-card');
+        if (cards[index]) cards[index].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      });
+      progress.appendChild(dot);
+    });
+  }
+
+  function syncServiceProgress() {
+    var list = document.getElementById('mbServiceList');
+    var dots = document.querySelectorAll('#mbServiceProgress .mb-service-progress__dot');
+    if (!list || !dots.length) return;
+    var card = list.querySelector('.mb-service-card');
+    var width = card ? card.getBoundingClientRect().width : list.clientWidth;
+    var index = width ? Math.round(list.scrollLeft / width) : 0;
+    dots.forEach(function(dot, i) {
+      dot.classList.toggle('mb-service-progress__dot--active', i === index);
+    });
+  }
+
+  function selectService(service) {
+    state.selectedServiceId = service.id;
+    document.querySelectorAll('#mbServiceList .mb-service-card').forEach(function(card) {
+      card.classList.toggle('mb-service-card--selected', card.getAttribute('data-service-id') === service.id);
+    });
+    renderSelectedService(service);
+  }
+
+  function renderSelectedService(service) {
+    var panel = document.getElementById('mbServiceSelection');
+    if (!panel || !service) return;
+    panel.innerHTML = '';
+
+    var text = el('div', 'mb-service-selection__text');
+    var label = el('span');
+    var title = el('strong');
+    var actions = el('div', 'mb-service-selection__actions');
+    var book = el('a', 'mb-button mb-button--primary');
+    var chat = el('a', 'mb-button mb-button--ghost');
+    var voice = el('a', 'mb-button mb-button--ghost');
+
+    label.textContent = t('selectedServiceLabel');
+    title.textContent = serviceCopy(service, 'name') + ' · ' + formatMoney(service.price);
+    book.href = vendorUrl(service, '');
+    chat.href = vendorUrl(service, 'chat');
+    voice.href = vendorUrl(service, 'voice');
+    book.textContent = t('bookThisService');
+    chat.textContent = t('chatThisService');
+    voice.textContent = t('talkThisService');
+
+    text.appendChild(label);
+    text.appendChild(title);
+    actions.appendChild(book);
+    actions.appendChild(chat);
+    actions.appendChild(voice);
+    panel.appendChild(text);
+    panel.appendChild(actions);
+    panel.hidden = false;
+  }
+
   function renderServices() {
     var list = document.getElementById('mbServiceList');
     if (!list) return;
@@ -205,29 +320,54 @@
     var services = DATA && DATA.sampleServices ? DATA.sampleServices.filter(function(service) {
       return service.active !== false;
     }) : [];
+    services = landingServices(services);
     services.forEach(function(service) {
       var card = el('article', 'mb-service-card');
       var media = el('div', 'mb-service-card__media');
+      var image = el('img', 'mb-service-card__image');
+      var disclosure = el('span', 'mb-service-card__disclosure');
       var body = el('div', 'mb-service-card__body');
       var title = el('h3');
       var desc = el('p');
       var row = el('div', 'mb-meta-row');
-      var cta = el('a', 'mb-button mb-button--primary');
+      var cta = el('button', 'mb-button mb-button--primary');
+      var imageRecord = serviceImage(service);
 
+      card.setAttribute('data-service-id', service.id);
+      image.src = imageRecord.imageUrl || service.imageUrl || '';
+      image.alt = imageRecord.imageAlt || service.imageAlt || service.name;
+      disclosure.textContent = t('aiPreviewDisclosure');
       title.textContent = serviceCopy(service, 'name');
       desc.textContent = serviceCopy(service, 'desc');
       row.appendChild(metaChip(t('priceLabel'), formatMoney(service.price)));
       row.appendChild(metaChip(t('durationLabel'), service.durationMinutes + ' ' + t('minutes')));
       row.appendChild(metaChip(t('travelBufferLabel'), service.travelBufferMinutes + ' ' + t('minutes')));
       row.appendChild(metaChip(t('cleanupLabel'), service.cleanupBufferMinutes + ' ' + t('minutes')));
+      cta.type = 'button';
+      cta.textContent = t('selectService');
+      cta.addEventListener('click', function() {
+        selectService(service);
+      });
 
+      media.appendChild(image);
+      media.appendChild(disclosure);
       body.appendChild(title);
       body.appendChild(desc);
       body.appendChild(row);
+      body.appendChild(cta);
       card.appendChild(media);
       card.appendChild(body);
       list.appendChild(card);
     });
+    renderServiceProgress(services);
+    if (state.selectedServiceId) {
+      var selected = services.filter(function(service) { return service.id === state.selectedServiceId; })[0];
+      if (selected) renderSelectedService(selected);
+    } else {
+      var selection = document.getElementById('mbServiceSelection');
+      if (selection) selection.hidden = true;
+    }
+    syncServiceProgress();
   }
 
   function renderVendors() {
@@ -312,6 +452,13 @@
     document.querySelector('[data-action="closeAssistant"]').addEventListener('click', function() {
       document.getElementById('mbAssistantPanel').hidden = true;
     });
+
+    var list = document.getElementById('mbServiceList');
+    if (list) {
+      list.addEventListener('scroll', function() {
+        root.requestAnimationFrame(syncServiceProgress);
+      }, { passive: true });
+    }
   }
 
   function init() {

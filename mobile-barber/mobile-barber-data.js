@@ -13,6 +13,7 @@
   var COLLECTIONS = Object.freeze({
     vendors: 'mobileBarberVendors',
     services: 'mobileBarberServices',
+    serviceImages: 'mobileBarberServiceImages',
     availability: 'mobileBarberAvailability',
     bookings: 'mobileBarberBookings',
     customers: 'mobileBarberCustomers',
@@ -32,7 +33,12 @@
   var SERVICE_FIELDS = Object.freeze([
     'id', 'vendorId', 'name', 'description', 'durationMinutes', 'price',
     'cleanupBufferMinutes', 'travelBufferMinutes', 'category', 'active',
-    'imageUrl'
+    'imageUrl', 'imagePrompt', 'imageAlt', 'isAIGenerated'
+  ]);
+
+  var SERVICE_IMAGE_FIELDS = Object.freeze([
+    'serviceId', 'vendorId', 'imageUrl', 'imagePrompt', 'imageAlt',
+    'category', 'isAIGenerated', 'active'
   ]);
 
   var BOOKING_FIELDS = Object.freeze([
@@ -92,6 +98,76 @@
   var SAMPLE_VENDOR_ID = 'oc-mobile-barber-demo';
   var MICHAEL_VENDOR_ID = 'michael-nguyen-oc';
   var TIM_VENDOR_ID = 'tim-nguyen-bay';
+
+  var SERVICE_IMAGE_TEMPLATES = Object.freeze({
+    'classic-haircut': Object.freeze({
+      imageUrl: 'https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=900&q=80',
+      imagePrompt: 'realistic mobile barber in-home classic men haircut, clean professional result, natural lighting, modern grooming photography',
+      imageAlt: 'Classic haircut style preview for mobile barber service'
+    }),
+    'fade-haircut': Object.freeze({
+      imageUrl: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=900&q=80',
+      imagePrompt: 'realistic sharp fade haircut result, mobile barber service, clean blend, professional haircut photography, no celebrity, no logo',
+      imageAlt: 'Fade haircut style preview with clean blended sides'
+    }),
+    'skin-fade': Object.freeze({
+      imageUrl: 'https://images.unsplash.com/photo-1593702275687-f8b402bf1fb5?auto=format&fit=crop&w=900&q=80',
+      imagePrompt: 'realistic skin fade haircut close-up, sharp blend, professional barber result, indoor mobile haircut service',
+      imageAlt: 'Skin fade haircut close-up style preview'
+    }),
+    'taper-fade': Object.freeze({
+      imageUrl: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=900&q=80',
+      imagePrompt: 'realistic taper fade haircut, clean neckline and side blend, professional mobile barber promotional photo',
+      imageAlt: 'Taper fade haircut style preview with clean neckline'
+    }),
+    'haircut-beard': Object.freeze({
+      imageUrl: 'https://images.unsplash.com/photo-1517832606299-7ae9b720a186?auto=format&fit=crop&w=900&q=80',
+      imagePrompt: 'realistic men haircut and beard trim result, clean beard line, fresh haircut, mobile barber promotion',
+      imageAlt: 'Haircut and beard trim style preview'
+    }),
+    'beard-trim': Object.freeze({
+      imageUrl: 'https://images.unsplash.com/photo-1622296089863-eb7fc530daa8?auto=format&fit=crop&w=900&q=80',
+      imagePrompt: 'realistic beard trim and lineup, clean neck line, professional grooming service, mobile barber',
+      imageAlt: 'Beard trim and lineup grooming preview'
+    }),
+    'kids-haircut': Object.freeze({
+      imageUrl: 'https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&w=900&q=80',
+      imagePrompt: 'realistic child haircut at home, clean kids haircut, family-friendly mobile barber service, warm natural lighting',
+      imageAlt: 'Kids haircut at home style preview'
+    }),
+    'senior-haircut': Object.freeze({
+      imageUrl: 'https://images.unsplash.com/photo-1566753323558-f4e0952af115?auto=format&fit=crop&w=900&q=80',
+      imagePrompt: 'realistic senior gentleman haircut at home, clean classic haircut, respectful professional mobile barber service',
+      imageAlt: 'Senior haircut at home style preview'
+    }),
+    'business-haircut': Object.freeze({
+      imageUrl: 'https://images.unsplash.com/photo-1618077360395-f3068be8e001?auto=format&fit=crop&w=900&q=80',
+      imagePrompt: 'realistic professional business haircut, clean executive style, neat side part, mobile barber finished result',
+      imageAlt: 'Business style haircut preview with neat executive finish'
+    }),
+    'buzz-cut': Object.freeze({
+      imageUrl: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=900&q=80',
+      imagePrompt: 'realistic buzz cut haircut result, clean even guard length, simple professional mobile barber service',
+      imageAlt: 'Buzz cut haircut style preview'
+    }),
+    'line-up': Object.freeze({
+      imageUrl: 'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=900&q=80',
+      imagePrompt: 'realistic hairline edge up lineup haircut, sharp clean edges, professional barber close-up',
+      imageAlt: 'Line up haircut preview with clean hairline edge'
+    }),
+    'modern-styling': Object.freeze({
+      imageUrl: 'https://images.unsplash.com/photo-1622288432450-277d0fef5ed6?auto=format&fit=crop&w=900&q=80',
+      imagePrompt: 'realistic modern men hairstyle with product styling, clean texture, professional mobile barber result',
+      imageAlt: 'Modern styled haircut preview with textured finish'
+    }),
+    'home-family-package': Object.freeze({
+      imageUrl: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=900&q=80',
+      imagePrompt: 'realistic family mobile haircut service at home, barber setup, father and child haircut theme, warm professional promotional photo',
+      imageAlt: 'Home family haircut package preview'
+    })
+  });
+
+  var SERVICE_IMAGE_DISCLOSURE = 'Sample AI-generated style preview. Real barber portfolio coming soon.';
 
   var sampleVendors = Object.freeze([
     Object.freeze({
@@ -181,6 +257,7 @@
   ]);
 
   function makeService(vendorId, slug, name, description, price, mins, category) {
+    var image = SERVICE_IMAGE_TEMPLATES[slug] || SERVICE_IMAGE_TEMPLATES['classic-haircut'];
     return Object.freeze({
       id: vendorId + '-' + slug,
       vendorId: vendorId,
@@ -192,7 +269,10 @@
       travelBufferMinutes: 20,
       category: category,
       active: true,
-      imageUrl: '/assets/mobile-barber/service-' + slug + '-placeholder.jpg'
+      imageUrl: image.imageUrl,
+      imagePrompt: image.imagePrompt,
+      imageAlt: image.imageAlt,
+      isAIGenerated: true
     });
   }
 
@@ -218,6 +298,26 @@
     });
   }
 
+  function makeServiceImage(vendorId, serviceId, slug, category) {
+    var image = SERVICE_IMAGE_TEMPLATES[slug] || SERVICE_IMAGE_TEMPLATES['classic-haircut'];
+    return Object.freeze({
+      serviceId: serviceId,
+      vendorId: vendorId,
+      imageUrl: image.imageUrl,
+      imagePrompt: image.imagePrompt,
+      imageAlt: image.imageAlt,
+      category: category,
+      isAIGenerated: true,
+      active: true
+    });
+  }
+
+  function buildServiceImagesForVendor(vendorId) {
+    return MOBILE_BARBER_MENU.map(function(item) {
+      return makeServiceImage(vendorId, vendorId + '-' + item.slug, item.slug, item.cat);
+    });
+  }
+
   var sampleServices = Object.freeze([
     Object.freeze({
       id: 'classic-mobile-cut',
@@ -230,7 +330,10 @@
       travelBufferMinutes: 20,
       category: 'haircut',
       active: true,
-      imageUrl: '/assets/mobile-barber/service-haircut-placeholder.jpg'
+      imageUrl: SERVICE_IMAGE_TEMPLATES['classic-haircut'].imageUrl,
+      imagePrompt: SERVICE_IMAGE_TEMPLATES['classic-haircut'].imagePrompt,
+      imageAlt: SERVICE_IMAGE_TEMPLATES['classic-haircut'].imageAlt,
+      isAIGenerated: true
     }),
     Object.freeze({
       id: 'mobile-haircut-beard',
@@ -243,9 +346,17 @@
       travelBufferMinutes: 25,
       category: 'combo',
       active: true,
-      imageUrl: '/assets/mobile-barber/service-combo-placeholder.jpg'
+      imageUrl: SERVICE_IMAGE_TEMPLATES['haircut-beard'].imageUrl,
+      imagePrompt: SERVICE_IMAGE_TEMPLATES['haircut-beard'].imagePrompt,
+      imageAlt: SERVICE_IMAGE_TEMPLATES['haircut-beard'].imageAlt,
+      isAIGenerated: true
     })
   ].concat(buildMenuForVendor(MICHAEL_VENDOR_ID)).concat(buildMenuForVendor(TIM_VENDOR_ID)));
+
+  var sampleServiceImages = Object.freeze([
+    makeServiceImage(SAMPLE_VENDOR_ID, 'classic-mobile-cut', 'classic-haircut', 'haircut'),
+    makeServiceImage(SAMPLE_VENDOR_ID, 'mobile-haircut-beard', 'haircut-beard', 'combo')
+  ].concat(buildServiceImagesForVendor(MICHAEL_VENDOR_ID)).concat(buildServiceImagesForVendor(TIM_VENDOR_ID)));
 
   var sampleAvailability = Object.freeze([
     Object.freeze({
@@ -735,6 +846,25 @@
     return { valid: errors.length === 0, errors: errors };
   }
 
+  function validateServiceImage(image, opts) {
+    var errors = [];
+    opts = opts || {};
+    if (!isPlainObject(image)) return { valid: false, errors: ['service image must be an object.'] };
+    hasOnlyKnownFields(image, SERVICE_IMAGE_FIELDS, errors, 'service image');
+    ['serviceId', 'vendorId', 'imageUrl', 'imagePrompt', 'imageAlt', 'category'].forEach(function(field) {
+      requireText(image, field, errors);
+    });
+    if (typeof image.isAIGenerated !== 'boolean') errors.push('isAIGenerated must be boolean.');
+    if (typeof image.active !== 'boolean') errors.push('active must be boolean.');
+    if (opts.vendorIds && opts.vendorIds.indexOf(image.vendorId) < 0) {
+      errors.push('service image vendorId does not match a known mobile barber vendor.');
+    }
+    if (opts.serviceIds && opts.serviceIds.indexOf(image.serviceId) < 0) {
+      errors.push('service image serviceId does not match a known mobile barber service.');
+    }
+    return { valid: errors.length === 0, errors: errors };
+  }
+
   function validateBooking(booking, opts) {
     var errors = [];
     opts = opts || {};
@@ -818,6 +948,21 @@
     });
   }
 
+  function listServiceImagesForVendor(vendorId, images) {
+    images = images || sampleServiceImages;
+    return images.filter(function(image) {
+      return image.vendorId === vendorId && image.active !== false;
+    });
+  }
+
+  function findServiceImageByServiceId(serviceId, images) {
+    images = images || sampleServiceImages;
+    for (var i = 0; i < images.length; i++) {
+      if (images[i].serviceId === serviceId && images[i].active !== false) return images[i];
+    }
+    return null;
+  }
+
   function listPortfolioForVendor(vendorId, images, includeHidden) {
     images = images || samplePortfolioImages;
     return images.filter(function(image) {
@@ -845,6 +990,7 @@
       collections: COLLECTIONS,
       vendors: sampleVendors.slice(),
       services: sampleServices.slice(),
+      serviceImages: sampleServiceImages.slice(),
       availability: sampleAvailability.slice(),
       portfolioImages: samplePortfolioImages.slice(),
       reviews: sampleReviews.slice(),
@@ -858,6 +1004,7 @@
     COLLECTIONS: COLLECTIONS,
     VENDOR_FIELDS: VENDOR_FIELDS,
     SERVICE_FIELDS: SERVICE_FIELDS,
+    SERVICE_IMAGE_FIELDS: SERVICE_IMAGE_FIELDS,
     BOOKING_FIELDS: BOOKING_FIELDS,
     CUSTOMER_FIELDS: CUSTOMER_FIELDS,
     PORTFOLIO_IMAGE_FIELDS: PORTFOLIO_IMAGE_FIELDS,
@@ -868,21 +1015,27 @@
     SAMPLE_VENDOR_ID: SAMPLE_VENDOR_ID,
     MICHAEL_VENDOR_ID: MICHAEL_VENDOR_ID,
     TIM_VENDOR_ID: TIM_VENDOR_ID,
+    SERVICE_IMAGE_TEMPLATES: SERVICE_IMAGE_TEMPLATES,
+    SERVICE_IMAGE_DISCLOSURE: SERVICE_IMAGE_DISCLOSURE,
     AI_PORTFOLIO_CATEGORIES: AI_PORTFOLIO_CATEGORIES,
     buildAIPortfolioForVendor: buildAIPortfolioForVendor,
     sampleVendors: sampleVendors,
     sampleServices: sampleServices,
+    sampleServiceImages: sampleServiceImages,
     sampleAvailability: sampleAvailability,
     samplePortfolioImages: samplePortfolioImages,
     sampleReviews: sampleReviews,
     validateVendor: validateVendor,
     validateService: validateService,
+    validateServiceImage: validateServiceImage,
     validateBooking: validateBooking,
     validateCustomer: validateCustomer,
     validatePortfolioImage: validatePortfolioImage,
     validateReview: validateReview,
     findVendorById: findVendorById,
     listServicesForVendor: listServicesForVendor,
+    listServiceImagesForVendor: listServiceImagesForVendor,
+    findServiceImageByServiceId: findServiceImageByServiceId,
     listPortfolioForVendor: listPortfolioForVendor,
     listReviewsForVendor: listReviewsForVendor,
     createSeedPayload: createSeedPayload

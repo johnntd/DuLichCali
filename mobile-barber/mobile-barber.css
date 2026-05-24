@@ -268,16 +268,33 @@
 }
 
 .mb-service-card__media {
+  position: relative;
   min-height: 10rem;
   background:
     linear-gradient(135deg, rgba(14, 165, 233, .42), rgba(245, 166, 35, .28)),
-    url("https://images.unsplash.com/photo-1517832606299-7ae9b720a186?auto=format&fit=crop&w=900&q=80") center / cover;
+    #0a233d;
 }
 
-.mb-service-card:nth-child(2) .mb-service-card__media {
-  background:
-    linear-gradient(135deg, rgba(249, 115, 22, .34), rgba(56, 189, 248, .24)),
-    url("https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=900&q=80") center / cover;
+.mb-service-card__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 10rem;
+  object-fit: cover;
+}
+
+.mb-service-card__disclosure {
+  position: absolute;
+  left: .7rem;
+  right: .7rem;
+  bottom: .7rem;
+  padding: .42rem .55rem;
+  border-radius: var(--r-sm);
+  background: rgba(3, 12, 22, .72);
+  color: var(--cream);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  line-height: var(--leading-normal);
 }
 
 .mb-service-card__body,
@@ -285,6 +302,54 @@
   display: grid;
   gap: .65rem;
   padding: 1rem;
+}
+
+.mb-service-card--selected {
+  border-color: rgba(255, 200, 87, .72);
+  box-shadow: var(--shadow-gold);
+}
+
+.mb-service-progress {
+  display: none;
+}
+
+.mb-service-selection {
+  position: sticky;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + .75rem);
+  z-index: var(--z-float);
+  display: grid;
+  gap: .7rem;
+  margin-top: .9rem;
+  padding: .85rem;
+  border: 1px solid rgba(255, 200, 87, .34);
+  border-radius: var(--r-md);
+  background: rgba(8, 28, 48, .94);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.mb-service-selection__text {
+  display: grid;
+  gap: .15rem;
+}
+
+.mb-service-selection__text span {
+  color: var(--gold-lt);
+  font-size: var(--text-xs);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.mb-service-selection__text strong {
+  color: var(--cream);
+  font-size: var(--text-base);
+  line-height: var(--leading-snug);
+}
+
+.mb-service-selection__actions {
+  display: grid;
+  gap: .55rem;
 }
 
 .mb-service-card h3,
@@ -1278,6 +1343,79 @@
   }
 }
 
+@media (max-width: 768px) {
+  .mb-service-selector {
+    display: flex;
+    grid-template-columns: none;
+    gap: .85rem;
+    margin-inline: -1rem;
+    padding: .15rem 1rem .85rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 1rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mb-service-selector::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mb-service-selector .mb-service-card {
+    flex: 0 0 87%;
+    scroll-snap-align: center;
+  }
+
+  .mb-service-selector .mb-service-card__media,
+  .mb-service-selector .mb-service-card__image {
+    min-height: 14rem;
+  }
+
+  .mb-service-selector .mb-service-card__body {
+    gap: .75rem;
+    padding: 1rem;
+  }
+
+  .mb-service-selector .mb-button {
+    min-height: 3.35rem;
+  }
+
+  .mb-service-progress {
+    display: flex;
+    justify-content: center;
+    gap: .38rem;
+    margin-top: .15rem;
+  }
+
+  .mb-service-progress__dot {
+    position: relative;
+    width: 1.45rem;
+    height: 1.45rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--r-circle);
+    background: transparent;
+  }
+
+  .mb-service-progress__dot::after {
+    content: "";
+    position: absolute;
+    inset: .45rem;
+    border-radius: var(--r-circle);
+    background: rgba(255, 255, 255, .24);
+  }
+
+  .mb-service-progress__dot--active {
+    border-radius: var(--r-pill);
+  }
+
+  .mb-service-progress__dot--active::after {
+    inset-inline: .25rem;
+    border-radius: var(--r-pill);
+    background: var(--gold);
+  }
+}
+
 @media (min-width: 1200px) {
   .mb-shell {
     max-width: 1280px;
@@ -1305,6 +1443,15 @@
   .mb-card-grid,
   .mb-vendor-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .mb-service-selection {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .mb-service-selection__actions {
+    grid-template-columns: repeat(3, max-content);
   }
 
   .mb-vendor-service-list {

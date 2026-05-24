@@ -348,7 +348,9 @@
     agentSession: null,
     customerProfile: null,
     customerHistory: { upcoming: [], past: [], all: [] },
-    rebookDraft: null
+    rebookDraft: null,
+    preselectedServiceId: '',
+    preselectedAssistantMode: ''
   };
   var fallbackImage = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><rect width="1200" height="800" fill="#09213a"/><path d="M0 610c190-120 390-130 600-35s405 98 600-45v270H0z" fill="#123d63"/><circle cx="845" cy="255" r="135" fill="#f5a623"/><text x="90" y="170" font-family="Arial" font-size="72" font-weight="700" fill="#f7efe1">Mobile Barber</text></svg>'
@@ -380,6 +382,23 @@
     if (fromQuery) return fromQuery;
     var match = root.location.pathname.match(/\/mobile-barber\/vendor\/([^/?#]+)/);
     return match ? decodeURIComponent(match[1]) : '';
+  }
+
+  function getQueryParam(name) {
+    var params = new URLSearchParams(root.location.search);
+    return params.get(name) || '';
+  }
+
+  function validServiceId(serviceId) {
+    return state.services.some(function(service) {
+      return service.id === serviceId && service.active !== false;
+    });
+  }
+
+  function selectedServiceName() {
+    var serviceId = state.preselectedServiceId;
+    var service = state.services.filter(function(row) { return row.id === serviceId; })[0];
+    return service ? service.name : '';
   }
 
   function formatMoney(value) {
@@ -954,10 +973,13 @@
     renderManualStep();
     if (state.customerProfile) {
       setManualDraft({
+        serviceId: state.preselectedServiceId,
         customerPhone: state.customerProfile.customerPhone || state.customerProfile.customerPhoneNormalized,
         notes: state.customerProfile.notes,
         stylePreference: state.customerProfile.stylePreference
       });
+    } else if (state.preselectedServiceId) {
+      setManualDraft({ serviceId: state.preselectedServiceId });
     }
     var modal = document.getElementById('mbManualBookingModal');
     modal.hidden = false;
@@ -1140,8 +1162,34 @@
     if (AGENT && !state.agentSession) {
       state.agentSession = { state: AGENT.emptyState(state.lang) };
     }
+    if (AGENT && state.preselectedServiceId) {
+      state.agentSession.state = AGENT.mergeState(
+        state.agentSession.state || AGENT.emptyState(state.lang),
+        { serviceId: state.preselectedServiceId, intent: 'booking_request' },
+        new Date()
+      );
+      var input = document.getElementById('mbAgentInput');
+      if (input && !input.value) input.value = selectedServiceName();
+    }
     panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     return panel;
+  }
+
+  function applyQuerySelection() {
+    var serviceId = getQueryParam('serviceId');
+    if (serviceId && validServiceId(serviceId)) state.preselectedServiceId = serviceId;
+    var mode = getQueryParam('assistant');
+    state.preselectedAssistantMode = mode === 'chat' || mode === 'voice' ? mode : '';
+  }
+
+  function openQueryMode() {
+    if (state.preselectedAssistantMode === 'chat') {
+      openTextFallback();
+    } else if (state.preselectedAssistantMode === 'voice') {
+      openVoiceAssistant();
+    } else if (state.preselectedServiceId) {
+      openManualBooking();
+    }
   }
 
   function openTextFallback() {
@@ -1220,9 +1268,11 @@
     var vendorId = getVendorId();
     state.vendor = DATA && DATA.findVendorById ? DATA.findVendorById(vendorId) : null;
     state.services = state.vendor && DATA.listServicesForVendor ? DATA.listServicesForVendor(state.vendor.id) : [];
+    applyQuerySelection();
     state.lang = getLang();
     bind();
     setLang(state.lang);
+    openQueryMode();
   }
 
   if (document.readyState === 'loading') {

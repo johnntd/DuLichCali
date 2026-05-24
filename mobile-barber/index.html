@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260524c">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260524d">
 </head>
 <body class="mb-page">
   <main class="mb-shell" id="mobileBarberApp">
@@ -74,7 +74,9 @@
         <p class="mb-kicker" data-i18n="servicesKicker"></p>
         <h2 id="mbServicesTitle" data-i18n="servicesTitle"></h2>
       </div>
-      <div class="mb-card-grid" id="mbServiceList"></div>
+      <div class="mb-card-grid mb-service-selector" id="mbServiceList" aria-live="polite"></div>
+      <div class="mb-service-progress" id="mbServiceProgress" aria-hidden="true"></div>
+      <div class="mb-service-selection" id="mbServiceSelection" hidden></div>
     </section>
 
     <section class="mb-section" aria-labelledby="mbVendorsTitle">
@@ -100,7 +102,7 @@
     </section>
   </main>
 
-  <script src="/mobile-barber/mobile-barber-data.js?v=20260524c"></script>
-  <script src="/mobile-barber/mobile-barber.js?v=20260524c"></script>
+  <script src="/mobile-barber/mobile-barber-data.js?v=20260524d"></script>
+  <script src="/mobile-barber/mobile-barber.js?v=20260524d"></script>
 </body>
 </html>

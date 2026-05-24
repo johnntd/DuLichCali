@@ -20,6 +20,7 @@ function runMobileBarberDataModelTests(test) {
   test('Mobile Barber collections expose all required top-level names', function() {
     assertEq(MobileBarberData.COLLECTIONS.vendors, 'mobileBarberVendors');
     assertEq(MobileBarberData.COLLECTIONS.services, 'mobileBarberServices');
+    assertEq(MobileBarberData.COLLECTIONS.serviceImages, 'mobileBarberServiceImages');
     assertEq(MobileBarberData.COLLECTIONS.availability, 'mobileBarberAvailability');
     assertEq(MobileBarberData.COLLECTIONS.bookings, 'mobileBarberBookings');
     assertEq(MobileBarberData.COLLECTIONS.customers, 'mobileBarberCustomers');
@@ -48,6 +49,22 @@ function runMobileBarberDataModelTests(test) {
       assertEq(result.valid, true, result.errors.join('; '));
       assertEq(service.vendorId, MobileBarberData.SAMPLE_VENDOR_ID);
     });
+  });
+
+  test('Mobile Barber service images have prompt metadata and unique service previews', function() {
+    var vendorIds = MobileBarberData.sampleVendors.map(function(v) { return v.id; });
+    var serviceIds = MobileBarberData.sampleServices.map(function(s) { return s.id; });
+    var michaelImages = MobileBarberData.listServiceImagesForVendor(MobileBarberData.MICHAEL_VENDOR_ID);
+    var uniqueUrls = {};
+    assertEq(michaelImages.length, 13, 'Michael vendor must have one preview per menu service');
+    michaelImages.forEach(function(image) {
+      var result = MobileBarberData.validateServiceImage(image, { vendorIds: vendorIds, serviceIds: serviceIds });
+      assertEq(result.valid, true, result.errors.join('; '));
+      assertEq(image.isAIGenerated, true);
+      assertEq(image.active, true);
+      uniqueUrls[image.imageUrl] = true;
+    });
+    assertEq(Object.keys(uniqueUrls).length, 13, 'Each service preview URL should be distinct');
   });
 
   test('Mobile Barber booking validates required fields', function() {
@@ -149,6 +166,7 @@ function runMobileBarberDataModelTests(test) {
     assert(seed.collections.bookings !== 'bookings', 'must not reuse existing bookings collection');
     assert(!Object.prototype.hasOwnProperty.call(seed, 'businesses'), 'must not mutate marketplace businesses');
     assert(seed.portfolioImages.length >= 1, 'seed payload includes portfolio images');
+    assert(seed.serviceImages.length >= 13, 'seed payload includes service image metadata');
     assert(seed.reviews.length >= 1, 'seed payload includes reviews');
     assertEq(MobileBarberData.findVendorById('luxurious-nails'), null);
     assertEq(MobileBarberData.findVendorById('beauty-hair-oc'), null);

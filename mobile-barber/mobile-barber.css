@@ -595,6 +595,7 @@
 
 .mb-vendor-detail {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.5rem;
 }
 
@@ -633,9 +634,30 @@
 
 .mb-vendor-identity {
   display: grid;
-  grid-template-columns: 4.5rem 1fr;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
   gap: .85rem;
   align-items: center;
+}
+
+.mb-vendor-identity > * {
+  /* allow grid children (photo + text block) to shrink below their intrinsic
+     content width so long business names wrap instead of overflowing */
+  min-width: 0;
+}
+
+/* Walk min-width:0 up the grid/flex chain so .mb-vendor-identity is allowed
+   to resize. Without this every container in the path inherits an implicit
+   min-width: auto = max-content, and the h1 just expands its grandparent
+   grid instead of wrapping. The chain at mobile is:
+     .mb-vendor-detail (grid)
+       .mb-vendor-hero (flex column)            <- needs min-width:0
+         .mb-vendor-hero__body (grid)           <- needs min-width:0
+           .mb-vendor-identity (grid)           <- needs min-width:0
+             > div (block, contains h1+p)       <- needs min-width:0 via > * */
+.mb-vendor-hero,
+.mb-vendor-hero__body,
+.mb-vendor-identity {
+  min-width: 0;
 }
 
 .mb-vendor-identity__photo {
@@ -648,6 +670,17 @@
 
 .mb-vendor-identity h1 {
   font-size: var(--text-3xl);
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.05;
+  margin: 0;
+}
+
+.mb-vendor-identity p {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .mb-vendor-identity p,

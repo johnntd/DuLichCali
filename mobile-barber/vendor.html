@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260524f">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260524i">
 </head>
 <body class="mb-page mb-vendor-page">
   <main class="mb-shell mb-vendor-shell" id="mobileBarberVendorApp" data-page="mobile-barber-vendor">
@@ -31,9 +31,6 @@
 
     <article class="mb-vendor-detail" id="mbVendorDetail" hidden>
       <section class="mb-vendor-hero" aria-labelledby="mbVendorName">
-        <div class="mb-vendor-hero__image-wrap">
-          <img class="mb-vendor-hero__image" id="mbVendorHeroImage" alt="">
-        </div>
         <div class="mb-vendor-hero__body">
           <p class="mb-kicker" data-i18n="vendorKicker"></p>
           <div class="mb-vendor-identity">
@@ -50,6 +47,9 @@
             <button class="mb-button mb-button--ghost" type="button" data-action="openAssistant" data-i18n="aiBookingButton"></button>
             <button class="mb-button mb-button--voice" type="button" data-action="openVoiceAssistant" data-i18n="voiceBookingButton"></button>
           </div>
+        </div>
+        <div class="mb-vendor-hero__image-wrap">
+          <img class="mb-vendor-hero__image" id="mbVendorHeroImage" alt="">
         </div>
       </section>
 
@@ -236,6 +236,12 @@
         </div>
         <button class="mb-button mb-button--primary" type="button" data-action="closeAssistant" data-i18n="assistantClose"></button>
       </section>
+
+      <nav class="mb-mobile-sticky-cta" aria-label="" data-i18n-aria="bookingTitle">
+        <button class="mb-button mb-button--primary" type="button" data-action="openManualBooking" data-i18n="manualBookingButton"></button>
+        <button class="mb-button mb-button--ghost" type="button" data-action="openAssistant" data-i18n="aiBookingButton"></button>
+        <button class="mb-button mb-button--voice" type="button" data-action="openVoiceAssistant" data-i18n="voiceBookingButton"></button>
+      </nav>
     </article>
   </main>
 

@@ -58,7 +58,7 @@ function runMobileBarberLandingTests(test) {
   });
 
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
-    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260524f');
+    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260524i');
     assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260524h');
     assertContains(html, '/mobile-barber/mobile-barber.js?v=20260524g');
   });
@@ -133,12 +133,13 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/vendor/**"');
     assertContains(firebase, '"destination": "/mobile-barber/vendor.html"');
     assertContains(vendorHtml, 'id="mobileBarberVendorApp"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260524f');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260524i');
     assertContains(vendorHtml, 'id="mbVendorName"');
     assertContains(vendorHtml, 'id="mbVendorServices"');
     assertContains(vendorHtml, 'id="mbBookingTitle"');
     assertContains(vendorHtml, 'id="mbVendorPromoTitle"');
     assertContains(vendorHtml, 'id="mbSelectedServiceSummary"');
+    assertContains(vendorHtml, 'class="mb-mobile-sticky-cta"');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260524h');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260524h');
     assertContains(vendorHtml, '/ai-engine.js?v=20260523a');
@@ -223,6 +224,11 @@ function runMobileBarberLandingTests(test) {
     assertContains(css, 'mb-portfolio-grid');
     assertContains(css, 'mb-review-list');
     assertContains(css, 'mb-chip--badge');
+    assertContains(css, '.mb-mobile-sticky-cta');
+    assertContains(css, 'grid-template-columns: 1.1fr .95fr .95fr');
+    assertContains(css, 'flex: 0 0 min(88vw, 23rem)');
+    assertContains(css, '.mb-vendor-shell');
+    assertContains(css, 'overflow-x: hidden');
   });
 
   test('Mobile Barber voice agent uses existing TTS fallback chain and text fallback', function() {
@@ -265,7 +271,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(dashboardHtml, 'id="mobileBarberDashboardApp"');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260524h');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260524h');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260524f');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260524i');
     assertNotContains(dashboardHtml, 'vendor-admin.html');
     assertNotContains(dashboardHtml, 'salon-admin.html');
     assertNotContains(dashboardHtml, 'admin.html');

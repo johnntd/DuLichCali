@@ -210,7 +210,14 @@
     var lang = detectLang(message);
     var lower = trim(message).toLowerCase();
     var service = matchService(message, ctx.services);
-    var update = { lang: lang };
+    // Only emit a language update when detection found a STRONG non-default
+    // signal (vi or es). detectLang() falls through to 'en' for any input
+    // that lacks diacritics, including unaccented Vietnamese coming back from
+    // mobile speech-to-text. Emitting `lang: 'en'` here would silently
+    // downgrade a session that the user explicitly set to vi via UI / URL.
+    // The UI language button remains the only path back to en.
+    var update = {};
+    if (lang !== 'en') update.lang = lang;
 
     if (/\b(price|how much|bao nhiêu|giá|cu[aá]nto|precio)\b/i.test(lower)) update.intent = 'price';
     else if (/\b(cancel|reschedule|hủy|đổi lịch|cancelar|cambiar)\b/i.test(lower)) update.intent = 'modify_existing';

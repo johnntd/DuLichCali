@@ -570,7 +570,13 @@
         rec = null;
         if (!transcript) { setState('idle'); return; }
         var detected = detectLangFromText(transcript);
-        if (detected !== lang) {
+        // Auto-detect may only UPGRADE from the English default to vi/es. It
+        // must never downgrade vi/es -> en, because Web Speech often returns
+        // unaccented Vietnamese ("toi muon cat toc") which the diacritic
+        // detector misreads as English. The user's explicit UI/URL choice
+        // wins; downgrades happen only via the EN button.
+        var allowSwitch = detected !== lang && (lang === 'en' || (detected !== 'en' && detected !== lang));
+        if (allowSwitch && detected !== 'en') {
           lang = detected;
           if (controller && typeof controller.setLang === 'function') controller.setLang(lang);
           syncLabels();

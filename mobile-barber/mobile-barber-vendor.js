@@ -28,9 +28,22 @@
       serviceBadgesLabel: 'Service badges',
       bookingKicker: 'Booking',
       bookingTitle: 'Request this barber',
+      selectedServiceLabel: 'Selected service',
+      selectService: 'Select Service',
+      selectedServiceReady: '{service} selected for this barber.',
       aiBookingButton: 'AI Booking Assistant',
       voiceBookingButton: 'Talk to Barber Assistant',
       manualBookingButton: 'Manual Booking',
+      promoKicker: 'Service preview',
+      promoTitle: 'In-home cuts with a polished barber finish.',
+      promoCopy: 'Sample promotional motion highlights fades, beard trims, kids cuts, and business styles while real barber media is being prepared.',
+      promoCta: 'Book an in-home haircut today',
+      promoBefore: 'Before',
+      promoAfter: 'After',
+      promoStackFade: 'Fade',
+      promoStackBeard: 'Beard trim',
+      promoStackKids: 'Kids cut',
+      promoStackBusiness: 'Business cut',
       manualBookingTitle: 'In-home haircut request',
       closeManualBooking: 'Close booking form',
       serviceLabel: 'Service',
@@ -137,9 +150,22 @@
       serviceBadgesLabel: 'Huy hiệu dịch vụ',
       bookingKicker: 'Đặt lịch',
       bookingTitle: 'Yêu cầu đúng thợ này',
+      selectedServiceLabel: 'Dịch vụ đã chọn',
+      selectService: 'Chọn Dịch Vụ',
+      selectedServiceReady: 'Đã chọn {service} cho thợ này.',
       aiBookingButton: 'Trợ Lý AI Đặt Lịch',
       voiceBookingButton: 'Nói chuyện với Trợ Lý Barber',
       manualBookingButton: 'Đặt Lịch Thủ Công',
+      promoKicker: 'Xem trước dịch vụ',
+      promoTitle: 'Cắt tóc tận nhà với phong cách barber chuyên nghiệp.',
+      promoCopy: 'Chuyển động promo mẫu giới thiệu fade, tỉa râu, cắt tóc trẻ em, và kiểu công sở trong lúc chuẩn bị hình thật của thợ.',
+      promoCta: 'Đặt lịch cắt tóc tại nhà hôm nay',
+      promoBefore: 'Trước',
+      promoAfter: 'Sau',
+      promoStackFade: 'Fade',
+      promoStackBeard: 'Tỉa râu',
+      promoStackKids: 'Cắt tóc trẻ em',
+      promoStackBusiness: 'Kiểu công sở',
       manualBookingTitle: 'Yêu cầu cắt tóc tại nhà',
       closeManualBooking: 'Đóng form đặt lịch',
       serviceLabel: 'Dịch vụ',
@@ -246,9 +272,22 @@
       serviceBadgesLabel: 'Insignias de servicio',
       bookingKicker: 'Reserva',
       bookingTitle: 'Solicitar este barbero',
+      selectedServiceLabel: 'Servicio seleccionado',
+      selectService: 'Seleccionar Servicio',
+      selectedServiceReady: '{service} seleccionado para este barbero.',
       aiBookingButton: 'Asistente AI de Reserva',
       voiceBookingButton: 'Hablar con el Asistente Barber',
       manualBookingButton: 'Reserva Manual',
+      promoKicker: 'Vista de servicio',
+      promoTitle: 'Cortes en casa con acabado profesional.',
+      promoCopy: 'Movimiento promocional de muestra destaca fades, barba, cortes para niños y estilos de negocio mientras se prepara el contenido real.',
+      promoCta: 'Reservar corte en casa hoy',
+      promoBefore: 'Antes',
+      promoAfter: 'Después',
+      promoStackFade: 'Fade',
+      promoStackBeard: 'Barba',
+      promoStackKids: 'Corte para niños',
+      promoStackBusiness: 'Estilo de negocio',
       manualBookingTitle: 'Solicitud de corte en casa',
       closeManualBooking: 'Cerrar formulario de reserva',
       serviceLabel: 'Servicio',
@@ -592,6 +631,37 @@
     return chip;
   }
 
+  function serviceImage(service) {
+    if (DATA && DATA.findServiceImageByServiceId) {
+      return DATA.findServiceImageByServiceId(service.id) || service;
+    }
+    return service;
+  }
+
+  function setSelectedService(serviceId) {
+    if (!validServiceId(serviceId)) return;
+    state.preselectedServiceId = serviceId;
+    document.querySelectorAll('#mbVendorServices .mb-service-card').forEach(function(card) {
+      card.classList.toggle('mb-service-card--selected', card.getAttribute('data-service-id') === serviceId);
+    });
+    renderSelectedServiceSummary();
+  }
+
+  function renderSelectedServiceSummary() {
+    var summary = document.getElementById('mbSelectedServiceSummary');
+    if (!summary) return;
+    var service = state.services.filter(function(row) { return row.id === state.preselectedServiceId; })[0];
+    if (!service) {
+      summary.hidden = true;
+      summary.innerHTML = '';
+      return;
+    }
+    summary.innerHTML = '<span>' + t('selectedServiceLabel') + '</span><strong>' +
+      service.name + ' · ' + formatMoney(service.price) + '</strong><p>' +
+      interpolate(t('selectedServiceReady'), { service: service.name }) + '</p>';
+    summary.hidden = false;
+  }
+
   function badgeLabel(badgeId) {
     var badge = DATA && DATA.SERVICE_BADGES && DATA.SERVICE_BADGES[badgeId];
     if (!badge || !badge.labels) return badgeId;
@@ -658,6 +728,7 @@
     var hasMainImage = !!image.imageUrl;
     var isAIPlaceholder = image.isAIGenerated === true && !hasBeforeAfter && !hasMainImage;
     var media = el('div', hasBeforeAfter || isAIPlaceholder ? 'mb-portfolio-card__compare' : 'mb-portfolio-card__media');
+    var chip = el('span', 'mb-portfolio-card__category');
     var title = el('h3');
     var desc = el('p');
 
@@ -696,9 +767,11 @@
       media.appendChild(img);
     }
 
+    chip.textContent = image.category || 'Portfolio';
     title.textContent = image.title || t('portfolioTitle');
     desc.textContent = image.description || '';
     card.appendChild(media);
+    card.appendChild(chip);
     card.appendChild(title);
     if (desc.textContent) card.appendChild(desc);
     return card;
@@ -799,23 +872,48 @@
     list.innerHTML = '';
     state.services.forEach(function(service) {
       var card = el('article', 'mb-service-card mb-vendor-service-card');
+      var media = el('div', 'mb-service-card__media');
+      var image = el('img', 'mb-service-card__image');
+      var disclosure = el('span', 'mb-service-card__disclosure');
       var body = el('div', 'mb-service-card__body');
       var title = el('h3');
       var desc = el('p');
       var row = el('div', 'mb-meta-row');
+      var cta = el('button', 'mb-button mb-button--primary');
+      var imageRecord = serviceImage(service);
 
+      card.setAttribute('data-service-id', service.id);
+      image.src = imageRecord.imageUrl || service.imageUrl || fallbackImage;
+      image.alt = imageRecord.imageAlt || service.imageAlt || service.name;
+      image.onerror = function() {
+        image.onerror = null;
+        image.src = fallbackImage;
+        image.classList.add('mb-image-fallback');
+      };
+      disclosure.textContent = t('aiSampleDisclaimer');
       title.textContent = service.name;
       desc.textContent = service.description || t('serviceFallback');
       row.appendChild(metaChip(t('priceLabel'), formatMoney(service.price)));
       row.appendChild(metaChip(t('durationLabel'), service.durationMinutes + ' ' + t('minutes')));
       row.appendChild(metaChip(t('travelBufferLabel'), service.travelBufferMinutes + ' ' + t('minutes')));
       row.appendChild(metaChip(t('cleanupLabel'), service.cleanupBufferMinutes + ' ' + t('minutes')));
+      cta.type = 'button';
+      cta.textContent = t('selectService');
+      cta.addEventListener('click', function() {
+        setSelectedService(service.id);
+        openManualBooking();
+      });
+      media.appendChild(image);
+      media.appendChild(disclosure);
       body.appendChild(title);
       body.appendChild(desc);
       body.appendChild(row);
+      body.appendChild(cta);
+      card.appendChild(media);
       card.appendChild(body);
       list.appendChild(card);
     });
+    renderSelectedServiceSummary();
   }
 
   function renderServiceOptions() {
@@ -1242,7 +1340,9 @@
     document.querySelectorAll('[data-action="openVoiceAssistant"]').forEach(function(btn) {
       btn.addEventListener('click', openVoiceAssistant);
     });
-    document.querySelector('[data-action="openManualBooking"]').addEventListener('click', openManualBooking);
+    document.querySelectorAll('[data-action="openManualBooking"]').forEach(function(btn) {
+      btn.addEventListener('click', openManualBooking);
+    });
     document.querySelector('[data-action="loadHistory"]').addEventListener('click', loadCustomerHistory);
     document.querySelector('[data-action="savePreference"]').addEventListener('click', saveCustomerProfile);
     document.querySelector('[data-action="closeManualBooking"]').addEventListener('click', closeManualBooking);

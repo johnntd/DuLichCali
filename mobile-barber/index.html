@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260524e">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260524f">
 </head>
 <body class="mb-page">
   <main class="mb-shell" id="mobileBarberApp">
@@ -70,25 +70,13 @@
     </section>
 
     <section class="mb-section mb-promo" aria-labelledby="mbPromoTitle">
-      <div class="mb-promo__stage" aria-hidden="true">
-        <div class="mb-promo__pole"></div>
-        <div class="mb-promo__stack">
-          <span data-i18n="promoStackFade"></span>
-          <span data-i18n="promoStackBeard"></span>
-          <span data-i18n="promoStackKids"></span>
-          <span data-i18n="promoStackBusiness"></span>
-        </div>
-        <div class="mb-promo__before-after">
-          <div class="mb-promo__before" data-i18n="promoBefore"></div>
-          <div class="mb-promo__after" data-i18n="promoAfter"></div>
-        </div>
-      </div>
       <div class="mb-promo__copy">
         <p class="mb-kicker" data-i18n="promoKicker"></p>
         <h2 id="mbPromoTitle" data-i18n="promoTitle"></h2>
         <p data-i18n="promoCopy"></p>
-        <a class="mb-button mb-button--primary" href="#mbServices" data-i18n="promoCta"></a>
       </div>
+      <div class="mb-promo__preview" id="mbPromoPreview" aria-live="polite"></div>
+      <a class="mb-button mb-button--primary mb-promo__cta" href="#mbServices" data-i18n="promoCta"></a>
     </section>
 
     <section class="mb-section" id="mbServices" aria-labelledby="mbServicesTitle">
@@ -125,6 +113,6 @@
   </main>
 
   <script src="/mobile-barber/mobile-barber-data.js?v=20260524d"></script>
-  <script src="/mobile-barber/mobile-barber.js?v=20260524e"></script>
+  <script src="/mobile-barber/mobile-barber.js?v=20260524f"></script>
 </body>
 </html>

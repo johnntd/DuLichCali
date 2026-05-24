@@ -28,14 +28,8 @@
       trustConfirmCopy: 'Bookings stay pending until availability is checked.',
       promoKicker: 'Service preview',
       promoTitle: 'Fresh barber work, brought to your door.',
-      promoCopy: 'A lightweight sample promo loop shows the Mobile Barber experience until the Remotion clip is generated and real barber media is uploaded.',
+      promoCopy: 'Swipe through the in-home haircut menu — fades, beard work, kids cuts, and family packages.',
       promoCta: 'Book an in-home haircut today',
-      promoBefore: 'Before',
-      promoAfter: 'After',
-      promoStackFade: 'Fade',
-      promoStackBeard: 'Beard trim',
-      promoStackKids: 'Kids cut',
-      promoStackBusiness: 'Business cut',
       servicesKicker: 'Services',
       servicesTitle: 'Choose a mobile barber service',
       vendorsKicker: 'Barbers',
@@ -92,14 +86,8 @@
       trustConfirmCopy: 'Lịch giữ trạng thái chờ cho đến khi kiểm tra chỗ trống.',
       promoKicker: 'Xem trước dịch vụ',
       promoTitle: 'Kiểu tóc gọn đẹp, phục vụ tận nơi.',
-      promoCopy: 'Vòng promo mẫu nhẹ hiển thị trải nghiệm Mobile Barber cho đến khi có clip Remotion và hình thật của thợ.',
+      promoCopy: 'Lướt qua menu cắt tóc tại nhà — fade, tỉa râu, cắt tóc trẻ em, và gói gia đình.',
       promoCta: 'Đặt lịch cắt tóc tại nhà hôm nay',
-      promoBefore: 'Trước',
-      promoAfter: 'Sau',
-      promoStackFade: 'Fade',
-      promoStackBeard: 'Tỉa râu',
-      promoStackKids: 'Cắt tóc trẻ em',
-      promoStackBusiness: 'Kiểu công sở',
       servicesKicker: 'Dịch vụ',
       servicesTitle: 'Chọn dịch vụ cắt tóc tại nhà',
       vendorsKicker: 'Thợ cắt tóc',
@@ -156,14 +144,8 @@
       trustConfirmCopy: 'Las reservas quedan pendientes hasta revisar disponibilidad.',
       promoKicker: 'Vista de servicio',
       promoTitle: 'Corte fresco, directamente en su puerta.',
-      promoCopy: 'Un loop promocional ligero muestra la experiencia Mobile Barber hasta que se genere el clip Remotion y se suban medios reales.',
+      promoCopy: 'Desliza por el menú de cortes en casa — fades, barba, cortes para niños, y paquetes familiares.',
       promoCta: 'Reservar corte en casa hoy',
-      promoBefore: 'Antes',
-      promoAfter: 'Después',
-      promoStackFade: 'Fade',
-      promoStackBeard: 'Barba',
-      promoStackKids: 'Corte para niños',
-      promoStackBusiness: 'Estilo de negocio',
       servicesKicker: 'Servicios',
       servicesTitle: 'Elija un servicio de barbero móvil',
       vendorsKicker: 'Barberos',
@@ -400,6 +382,34 @@
     syncServiceProgress();
   }
 
+  function renderPromoPreview() {
+    var list = document.getElementById('mbPromoPreview');
+    if (!list) return;
+    list.innerHTML = '';
+    var services = DATA && DATA.sampleServices ? DATA.sampleServices.filter(function(service) {
+      return service.active !== false;
+    }) : [];
+    services = landingServices(services);
+    services.forEach(function(service) {
+      var card = el('article', 'mb-promo__card');
+      var img = document.createElement('img');
+      var body = el('div', 'mb-promo__card-body');
+      var title = el('strong');
+      var price = el('span');
+      var imageRecord = serviceImage(service);
+      img.src = imageRecord.imageUrl || service.imageUrl || '';
+      img.alt = imageRecord.imageAlt || service.imageAlt || service.name;
+      img.loading = 'lazy';
+      title.textContent = serviceCopy(service, 'name');
+      price.textContent = formatMoney(service.price);
+      body.appendChild(title);
+      body.appendChild(price);
+      card.appendChild(img);
+      card.appendChild(body);
+      list.appendChild(card);
+    });
+  }
+
   function renderVendors() {
     var list = document.getElementById('mbVendorList');
     var empty = document.getElementById('mbEmptyState');
@@ -453,6 +463,7 @@
     document.querySelector('.mb-trust').setAttribute('aria-label', t('trustLabel'));
     document.querySelector('[data-action="voice"]').setAttribute('aria-label', t('talkAssistant'));
     setText(document);
+    renderPromoPreview();
     renderServices();
     renderVendors();
     document.querySelectorAll('.mb-language__button').forEach(function(btn) {

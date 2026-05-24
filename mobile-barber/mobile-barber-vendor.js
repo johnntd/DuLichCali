@@ -36,14 +36,8 @@
       manualBookingButton: 'Manual Booking',
       promoKicker: 'Service preview',
       promoTitle: 'In-home cuts with a polished barber finish.',
-      promoCopy: 'Sample promotional motion highlights fades, beard trims, kids cuts, and business styles while real barber media is being prepared.',
+      promoCopy: 'Swipe through this barber’s service menu — fades, beard work, kids cuts, and business styles.',
       promoCta: 'Book an in-home haircut today',
-      promoBefore: 'Before',
-      promoAfter: 'After',
-      promoStackFade: 'Fade',
-      promoStackBeard: 'Beard trim',
-      promoStackKids: 'Kids cut',
-      promoStackBusiness: 'Business cut',
       manualBookingTitle: 'In-home haircut request',
       closeManualBooking: 'Close booking form',
       serviceLabel: 'Service',
@@ -158,14 +152,8 @@
       manualBookingButton: 'Đặt Lịch Thủ Công',
       promoKicker: 'Xem trước dịch vụ',
       promoTitle: 'Cắt tóc tận nhà với phong cách barber chuyên nghiệp.',
-      promoCopy: 'Chuyển động promo mẫu giới thiệu fade, tỉa râu, cắt tóc trẻ em, và kiểu công sở trong lúc chuẩn bị hình thật của thợ.',
+      promoCopy: 'Lướt qua menu dịch vụ của thợ — fade, tỉa râu, cắt tóc trẻ em, và kiểu công sở.',
       promoCta: 'Đặt lịch cắt tóc tại nhà hôm nay',
-      promoBefore: 'Trước',
-      promoAfter: 'Sau',
-      promoStackFade: 'Fade',
-      promoStackBeard: 'Tỉa râu',
-      promoStackKids: 'Cắt tóc trẻ em',
-      promoStackBusiness: 'Kiểu công sở',
       manualBookingTitle: 'Yêu cầu cắt tóc tại nhà',
       closeManualBooking: 'Đóng form đặt lịch',
       serviceLabel: 'Dịch vụ',
@@ -280,14 +268,8 @@
       manualBookingButton: 'Reserva Manual',
       promoKicker: 'Vista de servicio',
       promoTitle: 'Cortes en casa con acabado profesional.',
-      promoCopy: 'Movimiento promocional de muestra destaca fades, barba, cortes para niños y estilos de negocio mientras se prepara el contenido real.',
+      promoCopy: 'Desliza por el menú del barbero — fades, barba, cortes para niños, y estilos de negocio.',
       promoCta: 'Reservar corte en casa hoy',
-      promoBefore: 'Antes',
-      promoAfter: 'Después',
-      promoStackFade: 'Fade',
-      promoStackBeard: 'Barba',
-      promoStackKids: 'Corte para niños',
-      promoStackBusiness: 'Estilo de negocio',
       manualBookingTitle: 'Solicitud de corte en casa',
       closeManualBooking: 'Cerrar formulario de reserva',
       serviceLabel: 'Servicio',
@@ -777,6 +759,35 @@
     return card;
   }
 
+  function renderPromoPreview() {
+    var list = document.getElementById('mbVendorPromoPreview');
+    if (!list) return;
+    list.innerHTML = '';
+    (state.services || []).forEach(function(service) {
+      if (service.active === false) return;
+      var card = el('article', 'mb-promo__card');
+      var img = document.createElement('img');
+      var body = el('div', 'mb-promo__card-body');
+      var title = el('strong');
+      var price = el('span');
+      var imageRecord = serviceImage(service);
+      img.src = imageRecord.imageUrl || service.imageUrl || fallbackImage;
+      img.alt = imageRecord.imageAlt || service.imageAlt || service.name;
+      img.loading = 'lazy';
+      img.onerror = function() {
+        img.onerror = null;
+        img.src = fallbackImage;
+      };
+      title.textContent = service.name;
+      price.textContent = formatMoney(service.price);
+      body.appendChild(title);
+      body.appendChild(price);
+      card.appendChild(img);
+      card.appendChild(body);
+      list.appendChild(card);
+    });
+  }
+
   function renderPortfolio() {
     var list = document.getElementById('mbPortfolioGallery');
     if (!list) return;
@@ -963,6 +974,7 @@
     meta.appendChild(metaChip(t('travelFeeLabel'), formatMoney(vendor.baseTravelFee)));
     meta.appendChild(metaChip(t('languagesLabel'), vendor.languages.join(', ').toUpperCase()));
     renderBadges();
+    renderPromoPreview();
     renderServices();
     renderPortfolio();
     renderReviews();

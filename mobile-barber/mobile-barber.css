@@ -114,18 +114,44 @@
 
 .mb-hero__glass {
   position: absolute;
-  left: .7rem;
-  right: .7rem;
-  bottom: .7rem;
-  display: grid;
-  gap: .12rem;
-  padding: .6rem .75rem;
-  border-radius: var(--r-md);
-  background: rgba(6, 24, 42, .72);
+  left: .55rem;
+  right: auto;
+  bottom: .55rem;
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  max-width: calc(100% - 1.1rem);
+  padding: .35rem .6rem;
+  border-radius: 999px;
+  background: rgba(6, 24, 42, .82);
   border: 1px solid rgba(255, 255, 255, .16);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
   font-size: var(--text-xs);
+  line-height: 1.2;
+}
+
+/* Hide title + sub on small mobile so the photo dominates;
+   the verified badge stays as a tiny corner pill. */
+.mb-hero__glass strong,
+.mb-hero__glass > span:last-child {
+  display: none;
+}
+
+@media (min-width: 680px) {
+  .mb-hero__glass {
+    right: .9rem;
+    bottom: .9rem;
+    display: grid;
+    gap: .18rem;
+    padding: .9rem 1rem;
+    border-radius: var(--r-md);
+    max-width: none;
+  }
+  .mb-hero__glass strong,
+  .mb-hero__glass > span:last-child {
+    display: block;
+  }
 }
 
 .mb-hero__status {

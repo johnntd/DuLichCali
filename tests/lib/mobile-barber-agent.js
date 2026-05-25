@@ -112,6 +112,30 @@ function runMobileBarberAgentTests(test) {
     assertEq(second.booking.endTime, '11:15');
   });
 
+  test('Mobile Barber AI parses spoken English and Vietnamese phone digits', function() {
+    var en = MobileBarberAgent.handleMessage(null, 'four oh eight five zero four three six eight four', context());
+    assertEq(en.session.state.phone, '4085043684');
+    var vi = MobileBarberAgent.handleMessage(null, 'bốn không tám năm không bốn ba sáu tám bốn', Object.assign(context(), { lang: 'vi' }));
+    assertEq(vi.session.state.phone, '4085043684');
+  });
+
+  test('Mobile Barber AI uses repair prompts for unclear phone and partial address', function() {
+    var r1 = MobileBarberAgent.handleMessage(null, 'call me maybe', context());
+    assertEq(r1.session.state.step, 'ASK_PHONE');
+    var r2 = MobileBarberAgent.handleMessage(r1.session, 'five four maybe', context());
+    assert(r2.response.indexOf('digits one by one') >= 0, 'phone repair prompt must ask for digit-by-digit retry');
+
+    var session = { state: MobileBarberAgent.mergeState(MobileBarberAgent.emptyState('en'), {
+      phone: '4085043684',
+      customerLookupStatus: 'not_found',
+      customerName: 'Kim',
+      step: 'ASK_ADDRESS'
+    }, new Date('2026-05-25T12:00:00-07:00')) };
+    var r3 = MobileBarberAgent.handleMessage(session, 'Main Street San Jose', context());
+    assert(r3.response.indexOf('San Jose') >= 0, 'partial address confirmation should preserve heard city');
+    assert(r3.response.indexOf('Is that correct') >= 0, 'partial address should confirm instead of restarting');
+  });
+
   test('Mobile Barber AI blocks unavailable overlapping time', function() {
     var ctx = context({
       existingBookings: [{

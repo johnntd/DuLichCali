@@ -63,6 +63,16 @@
   var ttsStartGuard = null;
   var voices = [];
   var autoTimer = null;
+  var voiceSession = null;
+  var voiceTurn = 0;
+  var voiceHadSuccessfulAudio = false;
+  var sessionCounter = 0;
+
+  var VOICE_CONFIG = {
+    en: { provider: 'openai', model: 'tts-1', voice: 'nova', accent: 'en-us' },
+    vi: { provider: 'gemini', model: 'gemini-2.5-flash-preview-tts', voice: 'Aoede', accent: 'vi-stable' },
+    es: { provider: 'openai', model: 'tts-1', voice: 'nova', accent: 'es-us' }
+  };
 
   function _loadVoices() {
     if (!hasTTS) return;
@@ -106,6 +116,16 @@
     return text.substring(0, dot > max * 0.4 ? dot + 1 : max).trim();
   }
 
+  function safeRepairFragment(text) {
+    return cleanForTts(text).substring(0, 60).trim();
+  }
+
+  function getControllerVendorId() {
+    if (!controller) return '';
+    if (typeof controller.vendorId === 'function') return controller.vendorId() || '';
+    return controller.vendorId || '';
+  }
+
   function detectLangFromText(text) {
     if (root.AIEngine && typeof root.AIEngine.detectLang === 'function') {
       var detected = root.AIEngine.detectLang(text);
@@ -115,6 +135,83 @@
     if (/[\u00f1\u00d1\u00bf\u00a1]/.test(text || '') ||
         /\b(hola|quiero|cu[aá]ndo|gracias|reservar|cita|por favor|barbero)\b/i.test(text || '')) return 'es';
     return 'en';
+  }
+
+  function createVoiceSession(language) {
+    var normalized = LANG_TAG[language] ? language : 'en';
+    var cfg = VOICE_CONFIG[normalized] || VOICE_CONFIG.en;
+    sessionCounter += 1;
+    voiceTurn = 0;
+    voiceHadSuccessfulAudio = false;
+    voiceSession = {
+      sessionId: 'mbv-' + Date.now().toString(36) + '-' + sessionCounter,
+      provider: cfg.provider,
+      model: cfg.model,
+      voice: cfg.voice,
+      accent: cfg.accent,
+      language: normalized
+    };
+    try {
+      console.info('[voice-session]', {
+        sessionId: voiceSession.sessionId,
+        language: voiceSession.language,
+        provider: voiceSession.provider,
+        model: voiceSession.model,
+        voice: voiceSession.voice,
+        accent: voiceSession.accent,
+        vendorId: getControllerVendorId()
+      });
+    } catch (e) {}
+    return voiceSession;
+  }
+
+  function currentVoiceSession() {
+    return voiceSession || createVoiceSession(lang);
+  }
+
+  function logTtsTurn() {
+    var session = currentVoiceSession();
+    voiceTurn += 1;
+    try {
+      console.info('[tts-turn]', {
+        sessionId: session.sessionId,
+        turn: voiceTurn,
+        provider: session.provider,
+        voice: session.voice,
+        accent: session.accent
+      });
+    } catch (e) {}
+    return session;
+  }
+
+  function lockVoiceFallback(provider, model, voice, accent, reason) {
+    var session = currentVoiceSession();
+    if (voiceHadSuccessfulAudio) {
+      _voiceProviderLog({
+        selectedProvider: session.provider,
+        selectedModel: session.model,
+        selectedVoice: session.voice,
+        selectedAccent: session.accent,
+        fallbackReason: 'session-locked:' + reason
+      });
+      return session;
+    }
+    session.provider = provider;
+    session.model = model;
+    session.voice = voice;
+    session.accent = accent;
+    _voiceProviderLog({
+      selectedProvider: provider,
+      selectedModel: model,
+      selectedVoice: voice,
+      selectedAccent: accent,
+      fallbackReason: reason
+    });
+    return session;
+  }
+
+  function markVoiceAudioSuccess() {
+    voiceHadSuccessfulAudio = true;
   }
 
   function ensureAudioCtx() {
@@ -227,6 +324,7 @@
   }
 
   function speakViaBrowser(text) {
+    var session = currentVoiceSession();
     if (!hasTTS) {
       _voiceProviderLog({ selectedProvider: 'browser', fallbackReason: 'no-speech-synthesis' });
       afterSpeech(false);
@@ -235,6 +333,8 @@
     _voiceProviderLog({
       selectedProvider: 'browser',
       selectedModel: 'speechSynthesis',
+      selectedVoice: session.voice,
+      selectedAccent: session.accent,
       transport: 'browser-builtin',
       fallbackReason: 'gemini-and-openai-unavailable'
     });
@@ -244,7 +344,7 @@
     utter.pitch = 1;
     var voice = pickVoice(utter.lang);
     if (voice) utter.voice = voice;
-    utter.onend = function() { afterSpeech(true); };
+    utter.onend = function() { markVoiceAudioSuccess(); afterSpeech(true); };
     utter.onerror = function() { afterSpeech(false); };
     utter.onstart = function() {
       clearTimeout(ttsStartGuard);
@@ -272,7 +372,7 @@
         src.buffer = decoded;
         src.connect(ctx.destination);
         currentSource = src;
-        src.onended = function() { currentSource = null; onDone(true); afterSpeech(true); };
+        src.onended = function() { currentSource = null; markVoiceAudioSuccess(); onDone(true); afterSpeech(true); };
         src.start();
       })
       .catch(function() { currentSource = null; onDone(false); });
@@ -286,6 +386,7 @@
   }
 
   function _speakViaOpenAi(text, onDone) {
+    var session = currentVoiceSession();
     var ctx = ensureAudioCtx();
     if (!ctx) {
       _voiceProviderLog({ selectedProvider: 'openai', fallbackReason: 'no-audio-context' });
@@ -296,14 +397,15 @@
     if (hasFunctions) {
       _voiceProviderLog({
         selectedProvider: 'openai',
-        selectedModel: 'tts-1',
-        selectedVoice: 'nova',
+        selectedModel: session.model || 'tts-1',
+        selectedVoice: session.voice || 'nova',
+        selectedAccent: session.accent,
         transport: 'aiTtsProxy',
         usingOpenAI: true
       });
       try {
         var fn = root.firebase.functions().httpsCallable('aiTtsProxy');
-        fn({ provider: 'openai', text: text, voice: 'nova', language: lang })
+        fn({ provider: 'openai', text: text, voice: session.voice || 'nova', language: session.language || lang })
           .then(function(result) {
             var data = (result && result.data) || {};
             if (!data.ok || !data.audioBase64) {
@@ -350,15 +452,16 @@
     }
     _voiceProviderLog({
       selectedProvider: 'openai',
-      selectedModel: 'tts-1',
-      selectedVoice: 'nova',
+      selectedModel: session.model || 'tts-1',
+      selectedVoice: session.voice || 'nova',
+      selectedAccent: session.accent,
       transport: 'client-direct',
       usingOpenAI: true
     });
     fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'tts-1', input: text, voice: 'nova', response_format: 'mp3' })
+      body: JSON.stringify({ model: session.model || 'tts-1', input: text, voice: session.voice || 'nova', response_format: 'mp3' })
     })
     .then(function(resp) {
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -373,7 +476,7 @@
       var base = {
         vertical: 'mobile-barber',
         route: (root.location && root.location.pathname) || '',
-        vendorId: (controller && controller.vendorId) || '',
+        vendorId: getControllerVendorId(),
         requestedLanguage: lang,
         normalizedLanguage: lang,
         usingGemini: false,
@@ -399,7 +502,7 @@
       src.buffer = buf;
       src.connect(ctx.destination);
       currentSource = src;
-      src.onended = function() { currentSource = null; onDone(true); afterSpeech(true); };
+      src.onended = function() { currentSource = null; markVoiceAudioSuccess(); onDone(true); afterSpeech(true); };
       src.start();
     } catch (e) {
       currentSource = null;
@@ -408,25 +511,27 @@
   }
 
   function _speakViaGemini(text, onDone) {
+    var session = currentVoiceSession();
     var ctx = ensureAudioCtx();
     if (!ctx) {
       _voiceProviderLog({ selectedProvider: 'gemini', fallbackReason: 'no-audio-context' });
       onDone(false); return;
     }
 
-    var voice = lang === 'en' ? 'Sulafat' : 'Aoede';
+    var voice = session.voice || (lang === 'en' ? 'Sulafat' : 'Aoede');
     var hasFunctions = !!(root.firebase && typeof root.firebase.functions === 'function');
     if (hasFunctions) {
       _voiceProviderLog({
         selectedProvider: 'gemini',
-        selectedModel: 'gemini-2.5-flash-preview-tts',
+        selectedModel: session.model || 'gemini-2.5-flash-preview-tts',
         selectedVoice: voice,
+        selectedAccent: session.accent,
         transport: 'aiTtsProxy',
         usingGemini: true
       });
       try {
         var fn = root.firebase.functions().httpsCallable('aiTtsProxy');
-        fn({ provider: 'gemini', text: text, voice: voice, language: lang })
+        fn({ provider: 'gemini', text: text, voice: voice, language: session.language || lang })
           .then(function(result) {
             var data = (result && result.data) || {};
             if (!data.ok || !data.audioBase64) {
@@ -474,8 +579,9 @@
     }
     _voiceProviderLog({
       selectedProvider: 'gemini',
-      selectedModel: 'gemini-2.5-flash-preview-tts',
+      selectedModel: session.model || 'gemini-2.5-flash-preview-tts',
       selectedVoice: voice,
+      selectedAccent: session.accent,
       transport: 'client-direct',
       usingGemini: true
     });
@@ -508,23 +614,88 @@
     if (!spoken) { afterSpeech(false); return; }
     stopSpeaking();
     setState(nextState || 'thinking');
-    if (lang === 'vi') {
+    var session = logTtsTurn();
+    if (session.provider === 'gemini') {
       _speakViaGemini(spoken, function(okGemini) {
         if (!okGemini && (state === 'confirming' || state === 'booked' || state === 'thinking')) {
+          session = lockVoiceFallback('openai', 'tts-1', 'nova', (session.language || lang) + '-openai', 'gemini-unavailable-before-first-audio');
           _speakViaOpenAi(spoken, function(okOpenAi) {
-            if (!okOpenAi && (state === 'confirming' || state === 'booked' || state === 'thinking')) speakViaBrowser(spoken);
+            if (!okOpenAi && (state === 'confirming' || state === 'booked' || state === 'thinking')) {
+              session = lockVoiceFallback('browser', 'speechSynthesis', session.voice, session.accent, 'openai-unavailable-before-first-audio');
+              speakViaBrowser(spoken);
+            }
           });
         }
       });
       return;
     }
-    _speakViaOpenAi(spoken, function(okOpenAi) {
-      if (!okOpenAi && (state === 'confirming' || state === 'booked' || state === 'thinking')) {
-        _speakViaGemini(spoken, function(okGemini) {
-          if (!okGemini && (state === 'confirming' || state === 'booked' || state === 'thinking')) speakViaBrowser(spoken);
-        });
+    if (session.provider === 'openai') {
+      _speakViaOpenAi(spoken, function(okOpenAi) {
+        if (!okOpenAi && (state === 'confirming' || state === 'booked' || state === 'thinking')) {
+          session = lockVoiceFallback('gemini', 'gemini-2.5-flash-preview-tts', (session.language === 'en' ? 'Sulafat' : 'Aoede'), (session.language || lang) + '-gemini', 'openai-unavailable-before-first-audio');
+          _speakViaGemini(spoken, function(okGemini) {
+            if (!okGemini && (state === 'confirming' || state === 'booked' || state === 'thinking')) {
+              session = lockVoiceFallback('browser', 'speechSynthesis', session.voice, session.accent, 'gemini-unavailable-before-first-audio');
+              speakViaBrowser(spoken);
+            }
+          });
+        }
+      });
+      return;
+    }
+    speakViaBrowser(spoken);
+  }
+
+  function getExpectedRepairType() {
+    var session = controller && typeof controller.getSession === 'function' ? controller.getSession() : null;
+    var st = session && session.state;
+    if (!st) return '';
+    if (!st.phone || st.step === 'ASK_PHONE' || st.step === 'LOOKUP_CUSTOMER') return 'phone';
+    if (!st.address || st.step === 'ASK_ADDRESS' || !st.city || !st.zip) return 'address';
+    return '';
+  }
+
+  function repairPrompt(type, transcript) {
+    if (type === 'phone') {
+      return lang === 'vi'
+        ? 'Dạ em nghe số chưa rõ. Mình đọc từng số chậm giúp em nhé?'
+        : lang === 'es'
+        ? 'No escuché bien el número. ¿Puede decir los dígitos uno por uno?'
+        : "I didn't catch the number clearly. Could you say the digits one by one?";
+    }
+    if (type === 'address') {
+      var city = /\b(san jose|westminster|garden grove|irvine|orange county|santa ana|fountain valley|anaheim)\b/i.exec(transcript || '');
+      var street = /\b([a-zA-ZÀ-ỹ.'-]+\s+(?:st|street|ave|avenue|rd|road|dr|drive|ln|lane|blvd|way|ct|court))\b/i.exec(transcript || '');
+      if (city || street) {
+        var heardStreet = street && safeRepairFragment(street[1]);
+        var heardCity = city && safeRepairFragment(city[1]);
+        return lang === 'vi'
+          ? 'Dạ em nghe ' + [heardStreet, heardCity].filter(Boolean).join(' ở ') + '. Đúng không ạ?'
+          : lang === 'es'
+          ? 'Escuché ' + [heardStreet, heardCity].filter(Boolean).join(' en ') + '. ¿Es correcto?'
+          : 'I heard ' + [heardStreet, heardCity].filter(Boolean).join(' in ') + '. Is that correct?';
       }
-    });
+      return lang === 'vi'
+        ? 'Dạ em có thể bị lỡ địa chỉ. Mình đọc thành phố trước, rồi đánh vần tên đường giúp em nhé?'
+        : lang === 'es'
+        ? 'Puede que haya perdido la dirección. ¿Puede decir la ciudad primero y luego deletrear la calle?'
+        : 'I may have missed the address. Could you say the city first, then spell the street name?';
+    }
+    return '';
+  }
+
+  function maybeRepairLowConfidence(transcript, confidence) {
+    // Browser STT confidence is noisy; 0.72 catches clear misrecognitions
+    // without interrupting normal mobile speech in quiet rooms.
+    if (confidence === undefined || confidence === null || confidence >= 0.72) return false;
+    var type = getExpectedRepairType();
+    if (!type) return false;
+    var prompt = repairPrompt(type, transcript);
+    if (!prompt) return false;
+    setTranscript(transcript);
+    setResponse(prompt);
+    speakReply(prompt, 'thinking');
+    return true;
   }
 
   function afterSpeech() {
@@ -566,9 +737,12 @@
       rec.interimResults = false;
       rec.maxAlternatives = 1;
       rec.onresult = function(event) {
-        var transcript = (event.results[0] && event.results[0][0].transcript || '').trim();
+        var alt = event.results[0] && event.results[0][0];
+        var transcript = (alt && alt.transcript || '').trim();
+        var confidence = alt && typeof alt.confidence === 'number' ? alt.confidence : null;
         rec = null;
         if (!transcript) { setState('idle'); return; }
+        if (maybeRepairLowConfidence(transcript, confidence)) return;
         var detected = detectLangFromText(transcript);
         // Auto-detect may only UPGRADE from the English default to vi/es. It
         // must never downgrade vi/es -> en, because Web Speech often returns
@@ -610,6 +784,7 @@
 
   function setLang(next) {
     if (!LANG_TAG[next]) return;
+    if (voiceSession) return;
     lang = next;
     syncLabels();
   }
@@ -638,19 +813,25 @@
     setResponse('');
     setState('idle');
     overlay.removeAttribute('hidden');
-    requestAnimationFrame(function() { overlay.classList.add('mb-voice--open'); });
     document.documentElement.classList.add('mb-voice-active');
     ensureAudioCtx();
-    var welcome = controller && typeof controller.initialPrompt === 'function'
-      ? controller.initialPrompt()
-      : t('welcome');
-    speakReply(welcome, 'thinking');
+    requestAnimationFrame(function() {
+      overlay.classList.add('mb-voice--open');
+      createVoiceSession(lang);
+      var welcome = controller && typeof controller.initialPrompt === 'function'
+        ? controller.initialPrompt()
+        : t('welcome');
+      speakReply(welcome, 'thinking');
+    });
   }
 
   function close() {
     clearTimeout(autoTimer);
     stopSpeaking();
     stopRec();
+    voiceSession = null;
+    voiceTurn = 0;
+    voiceHadSuccessfulAudio = false;
     if (overlay) overlay.classList.remove('mb-voice--open');
     document.documentElement.classList.remove('mb-voice-active');
     setState('idle');

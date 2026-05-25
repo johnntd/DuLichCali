@@ -1424,6 +1424,7 @@
     var voiceController = {
       getLang: function() { return state.lang; },
       setLang: setLang,
+      getSession: function() { return state.agentSession; },
       sendMessage: sendAgentMessage,
       initialPrompt: function() {
         return AGENT && typeof AGENT.initialPrompt === 'function'
@@ -1431,6 +1432,7 @@
           : '';
       },
       openTextFallback: openTextFallback,
+      vendorId: function() { return state.vendor && state.vendor.id; },
       geminiKey: state.voiceProviderKeys.geminiKey || '',
       openAiKey: state.voiceProviderKeys.openAiKey || '',
       platformGeminiKey: state.voiceProviderKeys.platformGeminiKey || '',

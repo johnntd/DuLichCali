@@ -365,13 +365,18 @@
     var controller = {
       getLang: function() { return state.lang; },
       setLang: setLang,
+      getSession: function() { return state.agentSession; },
       sendMessage: sendAgentMessage,
       initialPrompt: function() {
         return AGENT && typeof AGENT.initialPrompt === 'function'
           ? AGENT.initialPrompt({}, state.lang)
           : '';
       },
-      openTextFallback: function() { openAssistantPanel('general'); }
+      openTextFallback: function() { openAssistantPanel('general'); },
+      vendorId: function() {
+        var vendor = preferredVendor();
+        return vendor && vendor.id;
+      }
     };
     root.MobileBarberVoice.open(controller);
   }

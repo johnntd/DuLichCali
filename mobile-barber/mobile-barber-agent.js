@@ -20,6 +20,7 @@
       welcome: 'Hi, I can help book a mobile haircut. What phone number should I use to look up your appointment record?',
       welcomeVendor: 'Hi, this is {vendor}. What phone number should I use to look up your appointment record?',
       askPhone: 'What phone number should I use to look up your appointment record?',
+      askPhoneRepair: "I didn't catch the number clearly. Could you say the digits one by one?",
       checkingPhone: 'Thanks. I am checking that phone number now.',
       foundCustomer: 'I found your record, {name}. Do you want to use the same address in {city}?',
       foundCustomerNoAddress: 'I found your record, {name}. What service address should the barber visit?',
@@ -28,6 +29,8 @@
       askMissing: 'I still need: {fields}.',
       askAddress: 'What service address, city, and ZIP should the barber visit?',
       askCityZip: 'What city and ZIP code is that address in?',
+      askAddressRepair: 'I may have missed the address. Could you say the city first, then spell the street name?',
+      confirmPartialAddress: 'I heard {partial}. Is that correct?',
       askService: 'What barber service would you like?',
       askDateTime: 'What day and time would you like?',
       priceOnly: '{service} is {price}. Travel fee starts at {travelFee}.',
@@ -44,6 +47,7 @@
       welcome: 'Dạ em có thể giúp đặt thợ cắt tóc tại nhà. Mình cho em số điện thoại để em tìm hồ sơ trước nhé?',
       welcomeVendor: 'Dạ đây là {vendor}. Mình cho em số điện thoại để em tìm hồ sơ đặt lịch trước nhé?',
       askPhone: 'Mình cho em số điện thoại để em tìm hồ sơ đặt lịch trước nhé?',
+      askPhoneRepair: 'Dạ em nghe số chưa rõ. Mình đọc từng số chậm giúp em nhé?',
       checkingPhone: 'Dạ em đang kiểm tra số điện thoại đó.',
       foundCustomer: 'Em thấy hồ sơ của anh/chị {name}. Mình muốn dùng lại địa chỉ ở {city} không ạ?',
       foundCustomerNoAddress: 'Em thấy hồ sơ của anh/chị {name}. Thợ sẽ đến địa chỉ nào ạ?',
@@ -52,6 +56,8 @@
       askMissing: 'Em còn cần: {fields}.',
       askAddress: 'Thợ sẽ đến địa chỉ nào, thành phố nào, và mã ZIP nào?',
       askCityZip: 'Địa chỉ đó ở thành phố nào và mã ZIP nào ạ?',
+      askAddressRepair: 'Dạ em có thể bị lỡ địa chỉ. Mình đọc thành phố trước, rồi đánh vần tên đường giúp em nhé?',
+      confirmPartialAddress: 'Dạ em nghe {partial}. Đúng không ạ?',
       askService: 'Mình muốn đặt dịch vụ barber nào ạ?',
       askDateTime: 'Mình muốn đặt ngày nào và giờ nào ạ?',
       priceOnly: '{service} là {price}. Phí di chuyển bắt đầu từ {travelFee}.',
@@ -68,6 +74,7 @@
       welcome: 'Puedo ayudar a reservar un corte móvil. ¿Qué número de teléfono debo usar para buscar su historial?',
       welcomeVendor: 'Este es {vendor}. ¿Qué número de teléfono debo usar para buscar su historial?',
       askPhone: '¿Qué número de teléfono debo usar para buscar su historial?',
+      askPhoneRepair: 'No escuché bien el número. ¿Puede decir los dígitos uno por uno?',
       checkingPhone: 'Gracias. Estoy revisando ese número ahora.',
       foundCustomer: 'Encontré su registro, {name}. ¿Quiere usar la misma dirección en {city}?',
       foundCustomerNoAddress: 'Encontré su registro, {name}. ¿A qué dirección debe ir el barbero?',
@@ -76,6 +83,8 @@
       askMissing: 'Todavía necesito: {fields}.',
       askAddress: '¿A qué dirección, ciudad, y código ZIP debe ir el barbero?',
       askCityZip: '¿En qué ciudad y código ZIP está esa dirección?',
+      askAddressRepair: 'Puede que haya perdido la dirección. ¿Puede decir la ciudad primero y luego deletrear la calle?',
+      confirmPartialAddress: 'Escuché {partial}. ¿Es correcto?',
       askService: '¿Qué servicio de barbería quiere?',
       askDateTime: '¿Qué día y hora prefiere?',
       priceOnly: '{service} cuesta {price}. La tarifa de viaje empieza en {travelFee}.',
@@ -120,6 +129,41 @@
     if (/[\u1EA0-\u1EF9]|[ơưđĐ]/i.test(text)) return 'vi';
     if (/[¿¡ñÑ]|\b(hola|cuanto|cuánto|quiero|cita|mañana|gracias)\b/i.test(text)) return 'es';
     return 'en';
+  }
+
+  var SPOKEN_DIGITS = {
+    zero: '0', oh: '0', o: '0',
+    one: '1', two: '2', three: '3', four: '4', five: '5',
+    six: '6', seven: '7', eight: '8', nine: '9',
+    khong: '0', le: '0', linh: '0',
+    mot: '1', hai: '2', ba: '3', bon: '4', tu: '4',
+    nam: '5', lam: '5', sau: '6', bay: '7', tam: '8', chin: '9',
+    cero: '0', uno: '1', una: '1', dos: '2', tres: '3', cuatro: '4',
+    cinco: '5', seis: '6', siete: '7', ocho: '8', nueve: '9'
+  };
+
+  function stripDiacritics(text) {
+    return trim(text).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
+  }
+
+  function normalizeSpokenPhone(text) {
+    var numeric = digits(text);
+    if (numeric.length === 11 && numeric.charAt(0) === '1') numeric = numeric.slice(1);
+    if (numeric.length === 10) return numeric;
+    var tokens = stripDiacritics(text).toLowerCase().split(/[\s,\-.\/]+/);
+    var out = [];
+    for (var i = 0; i < tokens.length; i++) {
+      var tok = tokens[i].replace(/[^a-z0-9]/g, '');
+      if (!tok) continue;
+      if (/^\d+$/.test(tok)) {
+        for (var j = 0; j < tok.length; j++) out.push(tok[j]);
+      } else if (SPOKEN_DIGITS[tok] !== undefined) {
+        out.push(SPOKEN_DIGITS[tok]);
+      }
+    }
+    var joined = out.join('');
+    if (joined.length === 11 && joined.charAt(0) === '1') joined = joined.slice(1);
+    return joined.length === 10 ? joined : null;
   }
 
   function localISODate(date) {
@@ -246,6 +290,38 @@
     return String(hour).padStart(2, '0') + ':' + String(minute).padStart(2, '0');
   }
 
+  function parseAddressParts(message, ctx) {
+    var text = trim(message)
+      .replace(/\b20\d{2}-\d{2}-\d{2}\b/g, ' ')
+      .replace(/\b\d{1,2}:\d{2}\s*(?:am|pm)?\b/ig, ' ')
+      .replace(/\b(?:at|lúc|luc|a las)\s+(?=\d{1,2}(?::\d{2})?\s*(?:am|pm)\b)/ig, ' ')
+      .replace(/\s+/g, ' ');
+    var lower = text.toLowerCase();
+    var parsed = {};
+    var zip = /\b(9\d{4})\b/.exec(text);
+    if (zip) parsed.zip = zip[1];
+
+    var knownCities = ['San Jose', 'Westminster', 'Garden Grove', 'Irvine', 'Santa Ana', 'Fountain Valley', 'Anaheim'];
+    (ctx.vendor && ctx.vendor.serviceAreas || []).forEach(function(area) {
+      if (knownCities.indexOf(area) < 0) knownCities.push(area);
+    });
+    for (var i = 0; i < knownCities.length; i++) {
+      if (lower.indexOf(knownCities[i].toLowerCase()) >= 0) {
+        parsed.city = knownCities[i];
+        break;
+      }
+    }
+
+    var streetRe = /\b(\d{1,6}\s+[a-zA-Z0-9À-ỹ\s.'-]{2,70}?\s(?:st|street|ave|avenue|rd|road|dr|drive|ln|lane|blvd|boulevard|way|ct|court|place|pl)\b\.?)/i;
+    var street = streetRe.exec(text);
+    if (street) parsed.address = street[1].replace(/\s*,?\s*(?:California|CA)\b.*$/i, '').trim();
+    else {
+      var firstPart = text.split(',')[0].trim();
+      if (/^\d{1,6}\s+/.test(firstPart) && firstPart.length <= 90) parsed.address = firstPart;
+    }
+    return parsed;
+  }
+
   function matchService(text, services) {
     var lower = trim(text).toLowerCase();
     services = services || [];
@@ -295,6 +371,9 @@
     else if (ctx.phoneIntake && typeof ctx.phoneIntake.normalizeSpokenPhoneNumber === 'function') {
       var spokenPhone = ctx.phoneIntake.normalizeSpokenPhoneNumber(message, lang, { phoneContext: true, expected: 'phone' });
       if (spokenPhone) update.phone = spokenPhone;
+    } else {
+      var builtinPhone = normalizeSpokenPhone(message);
+      if (builtinPhone) update.phone = builtinPhone;
     }
     var zip = /\b9\d{4}\b/.exec(message);
     if (zip) update.zip = zip[0];
@@ -308,8 +387,15 @@
     var name = /\b(?:my name is|i am|tên tôi là|mình tên|me llamo|soy)\s+([a-zA-ZÀ-ỹ\s'-]{2,40})/i.exec(message);
     if (name) update.customerName = name[1].replace(/\b(?:and|và|y)\b.*$/i, '').trim();
 
-    var address = /\b(\d{2,6}\s+[a-zA-Z0-9À-ỹ\s.'-]{3,60}(?:st|street|ave|avenue|rd|road|dr|drive|ln|lane|blvd|way|ct|court)\b\.?)/i.exec(message);
-    if (address) update.address = address[1];
+    var shouldParseAddress = prevStep === 'ASK_ADDRESS' ||
+      /\b(?:st|street|ave|avenue|rd|road|dr|drive|ln|lane|blvd|boulevard|way|ct|court|place|pl)\b/i.test(message) ||
+      /,\s*[a-zA-ZÀ-ỹ]/.test(message);
+    if (shouldParseAddress) {
+      var parsedAddress = parseAddressParts(message, ctx);
+      if (parsedAddress.address) update.address = parsedAddress.address;
+      if (parsedAddress.city) update.city = parsedAddress.city;
+      if (parsedAddress.zip) update.zip = parsedAddress.zip;
+    }
 
     if (/\b(same address|same place|use same|yes|yeah|correct|đúng|dạ đúng|địa chỉ cũ|sí|si|misma dirección)\b/i.test(lower)) {
       update.addressConfirmed = true;
@@ -343,7 +429,7 @@
       if (prevStep === 'ASK_ADDRESS' && trimmedMsg.length <= 160) {
         var parts = trimmedMsg.split(',').map(function(p) { return p.trim(); }).filter(Boolean);
         if (!update.address) {
-          var addrCandidate = parts[0] || trimmedMsg;
+          var addrCandidate = (parseAddressParts(trimmedMsg, ctx).address) || parts[0] || trimmedMsg;
           if (addrCandidate && addrCandidate.length >= 3 && addrCandidate.length <= 120) {
             update.address = addrCandidate;
           }
@@ -481,6 +567,10 @@
       return reply(lang, 'askDateTime');
     }
     return null;
+  }
+
+  function partialAddressText(state) {
+    return [state.address, state.city, state.zip].filter(function(value) { return trim(value); }).join(', ');
   }
 
   function initialPrompt(ctx, lang) {
@@ -696,6 +786,7 @@
     ctx = ctx || {};
     session = session || {};
     var currentState = session.state || emptyState(ctx.lang || 'en');
+    var previousStep = currentState.step;
     var update = extractUpdate(message, ctx, currentState);
     var state = mergeState(currentState, update, ctx.now);
     session._lastExtractedUpdate = update;
@@ -728,7 +819,7 @@
     if (!state.phone) {
       state.step = 'ASK_PHONE';
       session.lastSystemContext = systemReason('ask_phone_first');
-      return { session: session, response: reply(lang, 'askPhone') };
+      return { session: session, response: previousStep === 'ASK_PHONE' && trim(message) ? reply(lang, 'askPhoneRepair') : reply(lang, 'askPhone') };
     }
 
     if (!state.customerLookupStatus) {
@@ -754,6 +845,15 @@
     if (nextQuestion) {
       var missing = missingFields(state);
       session.lastSystemContext = systemReason('missing_fields', { fields: missing.join(',') });
+      if (previousStep === 'ASK_ADDRESS' && trim(message) &&
+          missing.some(function(key) { return key === 'address' || key === 'city' || key === 'zip'; }) &&
+          (state.address || state.city || state.zip)) {
+        return { session: session, response: reply(lang, 'confirmPartialAddress', { partial: partialAddressText(state) }) };
+      }
+      if (previousStep === 'ASK_ADDRESS' && trim(message) &&
+          missing.some(function(key) { return key === 'address' || key === 'city' || key === 'zip'; })) {
+        return { session: session, response: reply(lang, 'askAddressRepair') };
+      }
       return { session: session, response: nextQuestion };
     }
 

@@ -61,9 +61,9 @@ function runMobileBarberLandingTests(test) {
     assertContains(html, '/mobile-barber/mobile-barber.css?v=20260524o');
     assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260524o');
     assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260525c');
-    assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260525c');
-    assertContains(html, '/mobile-barber/mobile-barber-voice.js?v=20260525c');
-    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260525c');
+    assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260525e');
+    assertContains(html, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
+    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260525f');
   });
 
   test('Mobile Barber pages load Firebase before local runtime scripts', function() {
@@ -148,11 +148,11 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260524o');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260525c');
     assertContains(vendorHtml, '/ai-engine.js?v=20260524a');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-agent.js?v=20260525c');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-voice.js?v=20260525c');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-agent.js?v=20260525e');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
     assertContains(vendorHtml, 'firebase-functions-compat.js');
     assertContains(vendorHtml, '/notifications.js?v=20260523a');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-vendor.js?v=20260525c');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-vendor.js?v=20260525f');
     assert(vendorHtml.indexOf('/ai-engine.js?v=') < vendorHtml.indexOf('/mobile-barber/mobile-barber-agent.js'), 'ai-engine.js must load before mobile-barber-agent.js');
   });
 
@@ -239,6 +239,12 @@ function runMobileBarberLandingTests(test) {
 
   test('Mobile Barber voice agent uses existing TTS fallback chain and text fallback', function() {
     assertContains(voiceJs, 'root.MobileBarberVoice');
+    assertContains(voiceJs, '[voice-session]');
+    assertContains(voiceJs, '[tts-turn]');
+    assertContains(voiceJs, 'voiceSession');
+    assertContains(voiceJs, 'getControllerVendorId()');
+    assertContains(voiceJs, "overlay.classList.add('mb-voice--open');\n      createVoiceSession(lang)");
+    assertContains(voiceJs, 'safeRepairFragment');
     assertContains(voiceJs, '_speakViaOpenAi');
     assertContains(voiceJs, '_speakViaGemini');
     assertContains(voiceJs, "lang === 'vi'");
@@ -254,6 +260,8 @@ function runMobileBarberLandingTests(test) {
     assertContains(voiceJs, 'statusBooked');
     assertContains(voiceJs, 'data-lang="vi"');
     assertContains(voiceJs, 'data-lang="es"');
+    assertContains(js, 'vendorId: function()');
+    assertContains(vendorJs, 'vendorId: function()');
   });
 
   test('Mobile Barber notification hooks are idempotent and multilingual', function() {

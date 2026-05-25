@@ -468,18 +468,35 @@
   }
 
   function updateBookingStatus(bookingId, status) {
+    var booking = (state.bookings || []).filter(function(b) { return b.id === bookingId; })[0] || null;
     var all = readJson(STORAGE.bookings, []);
-    all = all.map(function(booking) {
-      if (booking.id !== bookingId) return booking;
-      return Object.assign({}, booking, { status: status, updatedAt: new Date().toISOString() });
+    all = all.map(function(b) {
+      if (b.id !== bookingId) return b;
+      return Object.assign({}, b, { status: status, updatedAt: new Date().toISOString() });
     });
     writeJson(STORAGE.bookings, all);
-    if (canUseFirestore()) {
-      root.firebase.firestore().collection(DATA.COLLECTIONS.bookings).doc(bookingId).set({
-        status: status,
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
-    }
+    var writePromise = canUseFirestore()
+      ? root.firebase.firestore().collection(DATA.COLLECTIONS.bookings).doc(bookingId).set({
+          status: status,
+          updatedAt: new Date().toISOString()
+        }, { merge: true })
+      : Promise.resolve();
+    writePromise.then(function() {
+      if (booking && root.DLCNotifications && typeof root.DLCNotifications.queueMobileBarberStatusChange === 'function') {
+        try {
+          root.DLCNotifications.queueMobileBarberStatusChange(
+            Object.assign({}, booking, { status: status }),
+            state.vendor || {},
+            status,
+            state.lang || 'en'
+          );
+        } catch (e) {
+          if (root.console) root.console.warn('[mobile-barber-dashboard] notify failed', e);
+        }
+      }
+    }).catch(function(err) {
+      if (root.console) root.console.error('[mobile-barber-dashboard] status write failed', err);
+    });
     loadBookings().then(render);
   }
 

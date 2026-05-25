@@ -152,11 +152,10 @@ function runMobileBarberAgentTests(test) {
     assert(!result.booking, 'overlap must not create booking');
   });
 
-  test('Mobile Barber AI marks out-of-service-area request for vendor review only after validation', function() {
+  test('Mobile Barber AI blocks out-of-service-area request (strict)', function() {
     var result = MobileBarberAgent.handleMessage(null, 'My name is Kim. Phone 714-555-0100. I need haircut on 2026-06-01 at 10:00 at 123 Main St San Jose 95112.', Object.assign(context(), { customerLookupResult: null }));
-    assertEq(result.session.state.lastAvailabilityKey, 'service_area_review');
-    assertEq(result.session.lastAvailabilityResult.status, 'pending_barber_confirmation');
-    assert(!result.booking, 'review request still requires final confirmation');
+    assertEq(result.session.state.lastAvailabilityKey, 'service_area_out_of_range');
+    assert(!result.booking, 'out-of-area must not create booking');
   });
 
   test('Mobile Barber AI supports Vietnamese and Spanish language detection', function() {

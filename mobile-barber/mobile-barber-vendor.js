@@ -108,6 +108,7 @@
       vendorSwitchBannerTitle: 'Wrong service area',
       vendorSwitchBannerBody: 'This address in {city} is outside this barber\'s service area. {name} serves {city}.',
       vendorSwitchBannerCta: 'Switch to {name}',
+      outOfServiceAreaBlocked: 'This address is outside this barber\'s service area. Please change the address or switch to a barber who serves it.',
       bookingConfirmedTitle: 'Booking confirmed',
       copyBookingId: 'Copy booking ID',
       saveConfirmation: 'Save confirmation',
@@ -261,6 +262,7 @@
       vendorSwitchBannerTitle: 'Sai khu vực phục vụ',
       vendorSwitchBannerBody: 'Địa chỉ ở {city} nằm ngoài khu vực phục vụ của thợ này. {name} có phục vụ {city}.',
       vendorSwitchBannerCta: 'Chuyển sang {name}',
+      outOfServiceAreaBlocked: 'Địa chỉ này nằm ngoài khu vực phục vụ của thợ này. Vui lòng đổi địa chỉ hoặc chuyển sang thợ có phục vụ khu vực đó.',
       bookingConfirmedTitle: 'Đã xác nhận đặt lịch',
       copyBookingId: 'Sao chép mã đặt lịch',
       saveConfirmation: 'Lưu xác nhận',
@@ -414,6 +416,7 @@
       vendorSwitchBannerTitle: 'Área de servicio incorrecta',
       vendorSwitchBannerBody: 'Esta dirección en {city} está fuera del área de servicio de este barbero. {name} sí atiende {city}.',
       vendorSwitchBannerCta: 'Cambiar a {name}',
+      outOfServiceAreaBlocked: 'Esta dirección está fuera del área de servicio de este barbero. Por favor cambie la dirección o cambie a un barbero que la atienda.',
       bookingConfirmedTitle: 'Reserva confirmada',
       copyBookingId: 'Copiar ID de reserva',
       saveConfirmation: 'Guardar confirmación',
@@ -1529,7 +1532,16 @@
         notice.hidden = false;
       }
     }
-    if (state.manualStep === 2) checkAddressVendorMatch();
+    if (state.manualStep === 2) {
+      var draftForArea = getManualDraft();
+      checkAddressVendorMatch();
+      if (draftForArea && draftForArea.address && draftForArea.city &&
+          !BOOKING.isWithinServiceArea(state.vendor, draftForArea)) {
+        showManualError(t('outOfServiceAreaBlocked'));
+        logManualBookingState({ submitStatus: 'blocked', error: 'out_of_service_area' });
+        return;
+      }
+    }
     showManualError('');
     state.manualStep = Math.min(4, state.manualStep + 1);
     renderManualStep();

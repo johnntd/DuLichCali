@@ -185,14 +185,14 @@ function runMobileBarberBookingTests(test) {
     assertEq(result.key, 'same_day_cutoff');
   });
 
-  test('Mobile Barber non-service-area address is marked pending barber confirmation', function() {
+  test('Mobile Barber rejects out-of-service-area address (strict)', function() {
     var draft = baseDraft();
-    draft.city = 'Irvine';
-    draft.zip = '92614';
+    draft.city = 'San Jose';
+    draft.zip = '95121';
     var result = check(draft);
-    assertEq(result.canCreate, true);
-    assertEq(result.reviewRequired, true);
-    assertEq(result.status, 'pending_barber_confirmation');
+    assertEq(result.canCreate, false);
+    assertEq(result.key, 'service_area_out_of_range');
+    assertEq(result.reviewRequired, false);
   });
 
   test('Mobile Barber service-area helper rejects out-of-area address', function() {

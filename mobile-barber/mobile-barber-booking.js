@@ -169,7 +169,7 @@
 
   function validateServiceArea(vendor, draft) {
     if (isWithinServiceArea(vendor, draft)) return { valid: true, reviewRequired: false, key: 'service_area_ok' };
-    return { valid: true, reviewRequired: true, key: 'service_area_review' };
+    return { valid: false, canCreate: false, reviewRequired: false, key: 'service_area_out_of_range' };
   }
 
   function findVendorForAddress(address, options) {
@@ -411,6 +411,16 @@
     if (errors.length) return { valid: false, canCreate: false, key: 'required_fields', errors: errors };
 
     var areaResult = validateServiceArea(vendor, draft);
+    if (!areaResult.valid) {
+      return {
+        valid: false,
+        canCreate: false,
+        key: areaResult.key,
+        reviewRequired: false,
+        errors: [areaResult.key],
+        suggestedVendor: findVendorForAddress(draft, { excludeVendorId: vendor && vendor.id })
+      };
+    }
     var service = findService(services, draft.serviceId);
     if (!service) return { valid: false, canCreate: false, key: 'service_missing', errors: ['missing_service_duration'] };
 

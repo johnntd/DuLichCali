@@ -593,18 +593,26 @@
     { suffix: '2', tag: 'set 2', extra: 'cooler indoor lighting, neutral wall background, soft contrast' }
   ];
 
+  // Shared AI-generated before/after assets — same image set is referenced
+  // from every vendor row to avoid duplicating ~3 MB JPGs per vendor.
+  function portfolioAssetUrl(categoryId, variantSuffix, kind) {
+    return '/assets/mobile-barber/portfolio/' + categoryId + '-' + variantSuffix + '-' + kind + '.jpg';
+  }
+
   function buildAIPortfolioForVendor(vendorId, vendorOrderOffset) {
     var rows = [];
     AI_PORTFOLIO_CATEGORIES.forEach(function(category, categoryIndex) {
       AI_PORTFOLIO_VARIANTS.forEach(function(variant, variantIndex) {
+        var beforeUrl = portfolioAssetUrl(category.id, variant.suffix, 'before');
+        var afterUrl = portfolioAssetUrl(category.id, variant.suffix, 'after');
         rows.push(Object.freeze({
           id: vendorId + '-ai-' + category.id + '-' + variant.suffix,
           vendorId: vendorId,
           title: category.title + ' — before and after (' + variant.tag + ')',
           description: category.description + ' AI-generated style preview. Real barber portfolio coming soon.',
-          imageUrl: '',
-          beforeImageUrl: '',
-          afterImageUrl: '',
+          imageUrl: afterUrl,
+          beforeImageUrl: beforeUrl,
+          afterImageUrl: afterUrl,
           alt: category.title + ' before and after sample preview',
           displayOrder: vendorOrderOffset + (categoryIndex * 10) + variantIndex + 1,
           hidden: false,

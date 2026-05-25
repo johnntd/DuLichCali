@@ -25,7 +25,7 @@ service cloud.firestore {
             'serviceName', 'address', 'city', 'zip', 'requestedDate',
             'startTime', 'endTime', 'status', 'source'
           ])
-          && request.resource.data.status in ['pending_confirmation', 'vendor_review']
+          && request.resource.data.status in ['pending_barber_confirmation', 'pending_confirmation', 'vendor_review']
           && request.resource.data.vendorId is string
           && request.resource.data.customerName is string
           && request.resource.data.customerPhone is string

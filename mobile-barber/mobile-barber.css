@@ -1193,8 +1193,20 @@
   -webkit-overflow-scrolling: touch;
   padding: 1rem;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
   align-content: start;
+}
+
+.mb-booking-modal__body > * {
+  min-width: 0;
+  width: 100%;
+}
+
+.mb-booking-modal__body .mb-form-step {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: .9rem;
 }
 
 .mb-service-pill {

@@ -1386,6 +1386,12 @@
     var pct = Math.max(25, Math.min(100, state.manualStep * 25));
     if (progressFill) progressFill.style.width = pct + '%';
     if (progressBar) progressBar.setAttribute('aria-valuenow', String(pct));
+    modal.querySelectorAll('[data-progress-step]').forEach(function(node) {
+      var idx = Number(node.getAttribute('data-progress-step'));
+      node.classList.remove('is-active', 'is-done');
+      if (idx < state.manualStep) node.classList.add('is-done');
+      else if (idx === state.manualStep) node.classList.add('is-active');
+    });
     if (body && body.scrollTo) {
       try { body.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { body.scrollTop = 0; }
     } else if (body) {

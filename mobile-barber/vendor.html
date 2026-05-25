@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260525k">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260525l">
 </head>
 <body class="mb-page mb-vendor-page">
   <main class="mb-shell mb-vendor-shell" id="mobileBarberVendorApp" data-page="mobile-barber-vendor">
@@ -143,8 +143,16 @@
       <section class="mb-booking-modal" id="mbManualBookingModal" hidden aria-labelledby="mbManualBookingTitle" aria-live="polite">
         <div class="mb-booking-modal__dialog">
           <div class="mb-booking-modal__head">
-            <div class="mb-progress-bar" id="mbManualProgressBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="25">
-              <div class="mb-progress-bar__fill" id="mbManualProgressFill" style="width:25%"></div>
+            <div class="mb-progress">
+              <div class="mb-progress-bar" id="mbManualProgressBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="25">
+                <div class="mb-progress-bar__fill" id="mbManualProgressFill" style="width:25%"></div>
+              </div>
+              <div class="mb-progress__steps" id="mbManualProgressSteps" aria-hidden="true">
+                <span data-progress-step="1" class="is-active">1</span>
+                <span data-progress-step="2">2</span>
+                <span data-progress-step="3">3</span>
+                <span data-progress-step="4">4</span>
+              </div>
             </div>
             <div class="mb-booking-modal__head-row">
               <div>
@@ -287,6 +295,6 @@
   <script src="/mobile-barber/mobile-barber-agent.js?v=20260525e"></script>
   <script src="/mobile-barber/mobile-barber-voice.js?v=20260525f"></script>
   <script src="/notifications.js?v=20260525a"></script>
-  <script src="/mobile-barber/mobile-barber-vendor.js?v=20260525j"></script>
+  <script src="/mobile-barber/mobile-barber-vendor.js?v=20260525k"></script>
 </body>
 </html>

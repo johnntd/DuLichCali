@@ -58,7 +58,7 @@ function runMobileBarberLandingTests(test) {
   });
 
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
-    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260525i');
+    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260525j');
     assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260524o');
     assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260525e');
     assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260525e');
@@ -138,7 +138,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/vendor/**"');
     assertContains(firebase, '"destination": "/mobile-barber/vendor.html"');
     assertContains(vendorHtml, 'id="mobileBarberVendorApp"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260525i');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260525j');
     assertContains(vendorHtml, 'id="mbVendorName"');
     assertContains(vendorHtml, 'id="mbVendorServices"');
     assertContains(vendorHtml, 'id="mbBookingTitle"');
@@ -152,7 +152,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
     assertContains(vendorHtml, 'firebase-functions-compat.js');
     assertContains(vendorHtml, '/notifications.js?v=20260525a');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-vendor.js?v=20260525i');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-vendor.js?v=20260525j');
     assert(vendorHtml.indexOf('/ai-engine.js?v=') < vendorHtml.indexOf('/mobile-barber/mobile-barber-agent.js'), 'ai-engine.js must load before mobile-barber-agent.js');
   });
 
@@ -210,6 +210,36 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorJs, "submitStatus: 'error'");
     assertContains(vendorJs, "step4Label");
     assertContains(vendorJs, "Confirm Booking");
+  });
+
+  test('Mobile Barber manual modal has progress bar, scrollable body, and service pill', function() {
+    assertContains(vendorHtml, 'id="mbManualProgressBar"');
+    assertContains(vendorHtml, 'role="progressbar"');
+    assertContains(vendorHtml, 'id="mbManualProgressFill"');
+    assertContains(vendorHtml, 'class="mb-booking-modal__body"');
+    assertContains(vendorHtml, 'id="mbServicePill"');
+    assertContains(vendorHtml, 'data-action="manualChangeService"');
+    assertContains(vendorHtml, 'class="mb-form-actions mb-booking-modal__footer"');
+    assertContains(vendorJs, "servicePillChangeLabel: 'Change'");
+    assertContains(vendorJs, "servicePillChangeLabel: 'Đổi'");
+    assertContains(vendorJs, "servicePillChangeLabel: 'Cambiar'");
+    assertContains(vendorJs, 'function manualChangeService()');
+    assertContains(vendorJs, "progressFill.style.width = pct + '%'");
+    assertContains(vendorJs, 'body.scrollTo');
+    assertContains(vendorJs, "scrollReset: true");
+    assertContains(vendorJs, 'progressPct: pct');
+    assertContains(vendorJs, 'servicePillVisible:');
+  });
+
+  test('Mobile Barber CSS uses full-viewport modal on mobile and centered on desktop', function() {
+    assertContains(css, '.mb-booking-modal__body');
+    assertContains(css, '.mb-booking-modal__footer.mb-form-actions');
+    assertContains(css, '.mb-progress-bar');
+    assertContains(css, '.mb-progress-bar__fill');
+    assertContains(css, '.mb-service-pill');
+    assertContains(css, '.mb-service-pill__change');
+    assertContains(css, 'env(safe-area-inset-bottom)');
+    assertContains(css, '@media (min-width: 768px)');
   });
 
   test('Mobile Barber manual booking remains data-driven for Michael and Tim vendor pages', function() {

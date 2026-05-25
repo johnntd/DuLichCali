@@ -75,6 +75,7 @@
       step2Label: 'Step 2 / 4 — Service address',
       step3Label: 'Step 3 / 4 — Date and time',
       step4Label: 'Step 4 / 4 — Review and confirm',
+      servicePillChangeLabel: 'Change',
       requiredError: 'Please complete the required fields for this step.',
       availabilityError: 'This time is not available. Please choose another date or time.',
       overlapError: 'This barber already has an appointment that overlaps with your request.',
@@ -220,6 +221,7 @@
       step2Label: 'Bước 2 / 4 — Địa chỉ phục vụ',
       step3Label: 'Bước 3 / 4 — Ngày và giờ',
       step4Label: 'Bước 4 / 4 — Xem lại và xác nhận',
+      servicePillChangeLabel: 'Đổi',
       requiredError: 'Vui lòng điền đủ thông tin bắt buộc cho bước này.',
       availabilityError: 'Giờ này không còn trống. Vui lòng chọn ngày hoặc giờ khác.',
       overlapError: 'Thợ này đã có lịch trùng với yêu cầu của bạn.',
@@ -365,6 +367,7 @@
       step2Label: 'Paso 2 / 4 — Dirección',
       step3Label: 'Paso 3 / 4 — Fecha y hora',
       step4Label: 'Paso 4 / 4 — Revisar y confirmar',
+      servicePillChangeLabel: 'Cambiar',
       requiredError: 'Complete los campos obligatorios de este paso.',
       availabilityError: 'Este horario no está disponible. Elija otra fecha u hora.',
       overlapError: 'Este barbero ya tiene una cita que se cruza con su solicitud.',
@@ -1335,8 +1338,14 @@
     var form = document.getElementById('mbManualBookingForm');
     var selected = modal.querySelector('.mb-selected-service-field');
     var actions = modal.querySelector('.mb-form-actions');
+    var pill = modal.querySelector('#mbServicePill');
+    var pillText = modal.querySelector('#mbServicePillText');
+    var progressFill = modal.querySelector('#mbManualProgressFill');
+    var progressBar = modal.querySelector('#mbManualProgressBar');
+    var body = modal.querySelector('.mb-booking-modal__body');
     if (state.manualSuccess) {
       if (selected) selected.hidden = true;
+      if (pill) pill.hidden = true;
       modal.querySelectorAll('.mb-form-step').forEach(function(step) {
         step.hidden = step.getAttribute('data-step') !== '4';
       });
@@ -1349,10 +1358,23 @@
         }
       });
       document.getElementById('mbManualStepLabel').textContent = t('bookingConfirmedTitle');
+      if (progressFill) progressFill.style.width = '100%';
+      if (progressBar) progressBar.setAttribute('aria-valuenow', '100');
       return;
     }
-    if (selected) selected.hidden = false;
     if (actions) actions.hidden = false;
+    var onStepOne = state.manualStep === 1;
+    if (selected) selected.hidden = !onStepOne;
+    if (pill) pill.hidden = onStepOne;
+    if (!onStepOne && pillText) {
+      var selectEl = document.getElementById('mbBookingService');
+      var label = '';
+      if (selectEl && selectEl.selectedIndex >= 0) {
+        var opt = selectEl.options[selectEl.selectedIndex];
+        if (opt) label = opt.textContent || opt.value || '';
+      }
+      pillText.textContent = label || t('serviceLabel');
+    }
     modal.querySelectorAll('.mb-form-step').forEach(function(step) {
       step.hidden = Number(step.getAttribute('data-step')) !== state.manualStep;
     });
@@ -1361,8 +1383,24 @@
     document.querySelector('[data-action="manualNext"]').hidden = state.manualStep >= 3;
     document.querySelector('[data-action="manualReview"]').hidden = state.manualStep !== 3;
     document.querySelector('[data-action="manualConfirm"]').hidden = state.manualStep !== 4 || !state.availabilityResult || !state.availabilityResult.canCreate;
+    var pct = Math.max(25, Math.min(100, state.manualStep * 25));
+    if (progressFill) progressFill.style.width = pct + '%';
+    if (progressBar) progressBar.setAttribute('aria-valuenow', String(pct));
+    if (body && body.scrollTo) {
+      try { body.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { body.scrollTop = 0; }
+    } else if (body) {
+      body.scrollTop = 0;
+    }
     updateEmailWarning();
-    logManualBookingState();
+    logManualBookingState({ scrollReset: true, progressPct: pct, servicePillVisible: !onStepOne });
+  }
+
+  function manualChangeService() {
+    if (state.manualSuccess) return;
+    state.manualStep = 1;
+    renderManualStep();
+    var selectEl = document.getElementById('mbBookingService');
+    if (selectEl && typeof selectEl.focus === 'function') selectEl.focus();
   }
 
   function openManualBooking(options) {
@@ -1957,6 +1995,8 @@
     document.querySelector('[data-action="manualBack"]').addEventListener('click', manualBack);
     document.querySelector('[data-action="manualReview"]').addEventListener('click', reviewManualBooking);
     document.querySelector('[data-action="manualConfirm"]').addEventListener('click', confirmManualBooking);
+    var pillChange = document.querySelector('[data-action="manualChangeService"]');
+    if (pillChange) pillChange.addEventListener('click', manualChangeService);
     document.getElementById('mbManualBookingForm').addEventListener('input', function(event) {
       if (event.target && event.target.id === 'mbCustomerEmail') updateEmailWarning();
       clearManualResult();

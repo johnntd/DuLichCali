@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260525i">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260525j">
 </head>
 <body class="mb-page mb-vendor-page">
   <main class="mb-shell mb-vendor-shell" id="mobileBarberVendorApp" data-page="mobile-barber-vendor">
@@ -143,17 +143,27 @@
       <section class="mb-booking-modal" id="mbManualBookingModal" hidden aria-labelledby="mbManualBookingTitle" aria-live="polite">
         <div class="mb-booking-modal__dialog">
           <div class="mb-booking-modal__head">
-            <div>
-              <p class="mb-kicker" id="mbManualStepLabel"></p>
-              <h2 id="mbManualBookingTitle" data-i18n="manualBookingTitle"></h2>
+            <div class="mb-progress-bar" id="mbManualProgressBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="25">
+              <div class="mb-progress-bar__fill" id="mbManualProgressFill" style="width:25%"></div>
             </div>
-            <button class="mb-booking-modal__close" type="button" data-action="closeManualBooking" data-i18n-aria="closeManualBooking">×</button>
+            <div class="mb-booking-modal__head-row">
+              <div>
+                <p class="mb-kicker" id="mbManualStepLabel"></p>
+                <h2 id="mbManualBookingTitle" data-i18n="manualBookingTitle"></h2>
+              </div>
+              <button class="mb-booking-modal__close" type="button" data-action="closeManualBooking" data-i18n-aria="closeManualBooking">×</button>
+            </div>
           </div>
           <form id="mbManualBookingForm" novalidate>
+            <div class="mb-booking-modal__body">
             <label class="mb-field mb-selected-service-field">
               <span data-i18n="serviceLabel"></span>
               <select id="mbBookingService" required></select>
             </label>
+            <div class="mb-service-pill" id="mbServicePill" hidden>
+              <span class="mb-service-pill__label" id="mbServicePillText"></span>
+              <button type="button" class="mb-service-pill__change" data-action="manualChangeService" data-i18n="servicePillChangeLabel"></button>
+            </div>
             <div class="mb-form-step" data-step="1">
               <label class="mb-field">
                 <span data-i18n="nameLabel"></span>
@@ -217,7 +227,8 @@
               <div class="mb-booking-summary" id="mbBookingSummary" hidden></div>
             </div>
             <div class="mb-form-error" id="mbManualBookingError" hidden></div>
-            <div class="mb-form-actions">
+            </div>
+            <div class="mb-form-actions mb-booking-modal__footer">
               <button class="mb-button mb-button--ghost" type="button" data-action="manualBack" data-i18n="backButton"></button>
               <button class="mb-button mb-button--primary" type="button" data-action="manualNext" data-i18n="nextButton"></button>
               <button class="mb-button mb-button--primary" type="button" data-action="manualReview" data-i18n="reviewButton" hidden></button>
@@ -276,6 +287,6 @@
   <script src="/mobile-barber/mobile-barber-agent.js?v=20260525e"></script>
   <script src="/mobile-barber/mobile-barber-voice.js?v=20260525f"></script>
   <script src="/notifications.js?v=20260525a"></script>
-  <script src="/mobile-barber/mobile-barber-vendor.js?v=20260525i"></script>
+  <script src="/mobile-barber/mobile-barber-vendor.js?v=20260525j"></script>
 </body>
 </html>

@@ -44,6 +44,38 @@
             <span data-i18n="talkAssistant"></span>
           </button>
         </div>
+        <section class="mb-assistant" id="mbLocationGate" aria-labelledby="mbLocationGateTitle">
+          <div>
+            <p class="mb-kicker" data-i18n="locationGateKicker"></p>
+            <h2 id="mbLocationGateTitle" data-i18n="locationGateTitle"></h2>
+            <p id="mbLocationGateCopy" data-i18n="locationGateCopy"></p>
+          </div>
+          <form id="mbLocationGateForm" novalidate>
+            <label class="mb-field">
+              <span data-i18n="cityLabel"></span>
+              <input id="mbLocationCity" type="text" autocomplete="address-level2" required>
+            </label>
+            <label class="mb-field">
+              <span data-i18n="zipLabel"></span>
+              <input id="mbLocationZip" type="text" inputmode="numeric" autocomplete="postal-code">
+            </label>
+            <div class="mb-form-actions">
+              <button class="mb-button mb-button--primary" type="submit" data-i18n="findMyBarber"></button>
+              <button class="mb-button mb-button--ghost" type="button" data-action="changeLocation" data-i18n="changeLocation" hidden></button>
+            </div>
+          </form>
+          <form id="mbWaitlistForm" hidden novalidate>
+            <p class="mb-inline-notice" id="mbWaitlistCopy"></p>
+            <label class="mb-field">
+              <span data-i18n="emailLabel"></span>
+              <input id="mbWaitlistEmail" type="email" autocomplete="email" required>
+            </label>
+            <div class="mb-form-actions">
+              <button class="mb-button mb-button--primary" type="submit" data-i18n="notifyMe"></button>
+            </div>
+          </form>
+          <p class="mb-inline-notice" id="mbLocationGateStatus" aria-live="polite"></p>
+        </section>
       </div>
     </section>
 
@@ -157,9 +189,9 @@
   <script src="/ai-engine.js?v=20260524a"></script>
   <script src="/nailsalon/phone-intake.js?v=20260427d"></script>
   <script src="/mobile-barber/mobile-barber-data.js?v=20260525e"></script>
-  <script src="/mobile-barber/mobile-barber-booking.js?v=20260525h"></script>
+  <script src="/mobile-barber/mobile-barber-booking.js?v=20260525aa"></script>
   <script src="/mobile-barber/mobile-barber-agent.js?v=20260525g"></script>
   <script src="/mobile-barber/mobile-barber-voice.js?v=20260525f"></script>
-  <script src="/mobile-barber/mobile-barber.js?v=20260525v"></script>
+  <script src="/mobile-barber/mobile-barber.js?v=20260525aa"></script>
 </body>
 </html>

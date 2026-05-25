@@ -188,12 +188,27 @@
       ? options.vendors
       : (root.MobileBarberData && Array.isArray(root.MobileBarberData.sampleVendors) ? root.MobileBarberData.sampleVendors : []);
     if (!address || !allVendors.length) return null;
+    var candidates = [];
     for (var i = 0; i < allVendors.length; i++) {
       var v = allVendors[i];
       if (options.excludeVendorId && v && v.id === options.excludeVendorId) continue;
-      if (isWithinServiceArea(v, address)) return v;
+      if (isWithinServiceArea(v, address)) candidates.push(v);
     }
-    return null;
+    if (!candidates.length) return null;
+    candidates.sort(function(a, b) {
+      return vendorRoutingScore(b) - vendorRoutingScore(a);
+    });
+    return candidates[0];
+  }
+
+  function vendorRoutingScore(vendor) {
+    var score = 0;
+    if (!vendor || vendor.active === false) return -1000;
+    if (vendor.region) score += 4;
+    if (Array.isArray(vendor.zipCoverage) && vendor.zipCoverage.length) score += 3;
+    if (Array.isArray(vendor.travelFeeTiers) && vendor.travelFeeTiers.length) score += 2;
+    if (vendor.bio) score += 1;
+    return score;
   }
 
   function calculateAppointmentWindow(service, requestedTime, vendor) {

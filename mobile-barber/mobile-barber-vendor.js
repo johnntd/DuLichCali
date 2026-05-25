@@ -108,6 +108,8 @@
       vendorSwitchBannerTitle: 'Wrong service area',
       vendorSwitchBannerBody: 'This address in {city} is outside this barber\'s service area. {name} serves {city}.',
       vendorSwitchBannerCta: 'Switch to {name}',
+      vendorSwitchCountdown: 'Switching to {name} in 2s — Stay?',
+      vendorSwitchStay: 'Stay',
       outOfServiceAreaBlocked: 'This address is outside this barber\'s service area. Please change the address or switch to a barber who serves it.',
       bookingConfirmedTitle: 'Booking confirmed',
       copyBookingId: 'Copy booking ID',
@@ -270,6 +272,8 @@
       vendorSwitchBannerTitle: 'Sai khu vực phục vụ',
       vendorSwitchBannerBody: 'Địa chỉ ở {city} nằm ngoài khu vực phục vụ của thợ này. {name} có phục vụ {city}.',
       vendorSwitchBannerCta: 'Chuyển sang {name}',
+      vendorSwitchCountdown: 'Đang chuyển sang {name} trong 2 giây — Ở lại?',
+      vendorSwitchStay: 'Ở lại',
       outOfServiceAreaBlocked: 'Địa chỉ này nằm ngoài khu vực phục vụ của thợ này. Vui lòng đổi địa chỉ hoặc chuyển sang thợ có phục vụ khu vực đó.',
       bookingConfirmedTitle: 'Đã xác nhận đặt lịch',
       copyBookingId: 'Sao chép mã đặt lịch',
@@ -432,6 +436,8 @@
       vendorSwitchBannerTitle: 'Área de servicio incorrecta',
       vendorSwitchBannerBody: 'Esta dirección en {city} está fuera del área de servicio de este barbero. {name} sí atiende {city}.',
       vendorSwitchBannerCta: 'Cambiar a {name}',
+      vendorSwitchCountdown: 'Cambiando a {name} en 2s — ¿Quedarse?',
+      vendorSwitchStay: 'Quedarse',
       outOfServiceAreaBlocked: 'Esta dirección está fuera del área de servicio de este barbero. Por favor cambie la dirección o cambie a un barbero que la atienda.',
       bookingConfirmedTitle: 'Reserva confirmada',
       copyBookingId: 'Copiar ID de reserva',
@@ -518,8 +524,12 @@
     preselectedServiceId: '',
     preselectedAssistantMode: '',
     voiceProviderKeys: {},
-    voiceProviderKeysPromise: null
+    voiceProviderKeysPromise: null,
+    vendorSwitchTimer: null,
+    vendorSwitchTargetUrl: ''
   };
+  var LOCATION_STORAGE_KEY = 'mb_customer_location';
+  var LOCATION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
   var fallbackImage = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><rect width="1200" height="800" fill="#09213a"/><path d="M0 610c190-120 390-130 600-35s405 98 600-45v270H0z" fill="#123d63"/><circle cx="845" cy="255" r="135" fill="#f5a623"/><text x="90" y="170" font-family="Arial" font-size="72" font-weight="700" fill="#f7efe1">Mobile Barber</text></svg>'
   );
@@ -634,6 +644,32 @@
     } catch (e) {
       return fallback;
     }
+  }
+
+  function readSavedLocation() {
+    try {
+      var raw = root.localStorage && root.localStorage.getItem(LOCATION_STORAGE_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      if (!parsed || !parsed.city || !parsed.savedAt) return null;
+      if ((Date.now() - Number(parsed.savedAt)) > LOCATION_MAX_AGE_MS) {
+        root.localStorage.removeItem(LOCATION_STORAGE_KEY);
+        return null;
+      }
+      return { city: String(parsed.city || ''), zip: String(parsed.zip || ''), savedAt: Number(parsed.savedAt) };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function saveCustomerLocation(location) {
+    try {
+      root.localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify({
+        city: String(location.city || '').trim(),
+        zip: String(location.zip || '').trim(),
+        savedAt: Date.now()
+      }));
+    } catch (e) {}
   }
 
   function addressSummary(booking) {
@@ -1519,6 +1555,21 @@
     } else if (state.preselectedServiceId) {
       setManualDraft({ serviceId: state.preselectedServiceId });
     }
+    var savedLocation = readSavedLocation();
+    var queryLocation = {
+      city: getQueryParam('city'),
+      zip: getQueryParam('zip')
+    };
+    if (queryLocation.city || queryLocation.zip) {
+      savedLocation = queryLocation;
+      saveCustomerLocation(queryLocation);
+    }
+    if (savedLocation) {
+      var cityInput = document.getElementById('mbBookingCity');
+      var zipInput = document.getElementById('mbBookingZip');
+      if (cityInput && !cityInput.value) cityInput.value = savedLocation.city;
+      if (zipInput && !zipInput.value) zipInput.value = savedLocation.zip;
+    }
     var modal = document.getElementById('mbManualBookingModal');
     modal.hidden = false;
     modal.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1589,8 +1640,10 @@
   }
 
   function checkAddressVendorMatch() {
+    cancelVendorAutoSwitch();
     var draft = getManualDraft();
     if (!draft || !draft.city) return;
+    saveCustomerLocation({ city: draft.city, zip: draft.zip });
     if (BOOKING.isWithinServiceArea(state.vendor, draft)) return;
     var otherVendor = BOOKING.findVendorForAddress(draft, {
       vendors: DATA.sampleVendors,
@@ -1604,10 +1657,27 @@
     banner.innerHTML =
       '<strong>' + escapeHtml(t('vendorSwitchBannerTitle')) + '</strong>' +
       '<p>' + escapeHtml(interpolate(t('vendorSwitchBannerBody'), { name: label, city: draft.city })) + '</p>' +
+      '<p>' + escapeHtml(interpolate(t('vendorSwitchCountdown'), { name: label })) + '</p>' +
       '<a class="mb-button mb-button--primary mb-button--sm" data-action="switchVendor" href="' + url + '">' +
       escapeHtml(interpolate(t('vendorSwitchBannerCta'), { name: label })) +
-      '</a>';
+      '</a>' +
+      '<button class="mb-button mb-button--ghost mb-button--sm" type="button" data-action="stayVendor">' +
+      escapeHtml(t('vendorSwitchStay')) +
+      '</button>';
     banner.hidden = false;
+    state.vendorSwitchTargetUrl = url;
+    state.vendorSwitchTimer = setTimeout(function() {
+      persistDraftForSwitch();
+      root.location.href = state.vendorSwitchTargetUrl;
+    }, 2000);
+  }
+
+  function cancelVendorAutoSwitch() {
+    if (state.vendorSwitchTimer) {
+      clearTimeout(state.vendorSwitchTimer);
+      state.vendorSwitchTimer = null;
+      state.vendorSwitchTargetUrl = '';
+    }
   }
 
   function persistDraftForSwitch() {
@@ -2169,11 +2239,15 @@
     if (pillChange) pillChange.addEventListener('click', manualChangeService);
     document.getElementById('mbManualBookingForm').addEventListener('input', function(event) {
       if (event.target && event.target.id === 'mbCustomerEmail') updateEmailWarning();
+      cancelVendorAutoSwitch();
       clearManualResult();
     });
     document.getElementById('mbManualBookingModal').addEventListener('click', function(event) {
       var actionNode = event.target && event.target.closest && event.target.closest('[data-action]');
-      if (!actionNode) return;
+      if (!actionNode) {
+        cancelVendorAutoSwitch();
+        return;
+      }
       var action = actionNode.getAttribute('data-action');
       if (action === 'copyBookingId' && state.lastBooking) {
         copyText(state.lastBooking.id || state.lastBooking.bookingId || '', t('bookingIdCopied'));
@@ -2195,6 +2269,9 @@
       } else if (action === 'switchVendor') {
         persistDraftForSwitch();
         // allow default navigation to proceed
+      } else if (action === 'stayVendor') {
+        cancelVendorAutoSwitch();
+        event.preventDefault();
       }
     });
     document.querySelector('[data-action="closeAssistant"]').addEventListener('click', function() {

@@ -71,6 +71,21 @@ function checkVendor(vendorId, draft, existingBookings, extra) {
 }
 
 function runMobileBarberBookingTests(test) {
+  test('Mobile Barber address lookup routes covered cities to the matching vendor', function() {
+    var sanJose = MobileBarberBooking.findVendorForAddress({ city: 'San Jose' }, {
+      vendors: MobileBarberData.sampleVendors
+    });
+    var westminster = MobileBarberBooking.findVendorForAddress({ city: 'Westminster' }, {
+      vendors: MobileBarberData.sampleVendors
+    });
+    var boston = MobileBarberBooking.findVendorForAddress({ city: 'Boston' }, {
+      vendors: MobileBarberData.sampleVendors
+    });
+    assertEq(sanJose && sanJose.id, MobileBarberData.TIM_VENDOR_ID);
+    assertEq(westminster && westminster.id, MobileBarberData.MICHAEL_VENDOR_ID);
+    assertEq(boston, null);
+  });
+
   test('Mobile Barber manual booking blocks missing phone and address', function() {
     var missingPhone = baseDraft();
     missingPhone.customerPhone = '';

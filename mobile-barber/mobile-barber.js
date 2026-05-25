@@ -54,6 +54,18 @@
       bookThisService: 'Book this service',
       chatThisService: 'Chat with AI to book',
       talkThisService: 'Talk to AI to book',
+      locationGateKicker: 'Service area',
+      locationGateTitle: 'Where would you like the barber to come?',
+      locationGateCopy: 'Enter your city and ZIP so we can match you with the right mobile barber.',
+      cityLabel: 'City',
+      zipLabel: 'ZIP code',
+      findMyBarber: 'Find My Barber',
+      changeLocation: 'Change location',
+      emailLabel: 'Email',
+      notifyMe: 'Notify me',
+      noServiceArea: "We don't serve {city} yet. Leave your email and we'll let you know when we expand.",
+      waitlistSaved: "Thanks. We'll let you know when we expand there.",
+      locationRequired: 'Please enter your city.',
       aiPreviewDisclosure: 'Sample AI-generated style preview. Real barber portfolio coming soon.',
       serviceAreaLabel: 'Service area',
       radiusLabel: 'Travel radius',
@@ -120,6 +132,18 @@
       bookThisService: 'Đặt dịch vụ này',
       chatThisService: 'Chat với AI để đặt',
       talkThisService: 'Nói với AI để đặt',
+      locationGateKicker: 'Khu vực phục vụ',
+      locationGateTitle: 'Bạn muốn thợ đến khu vực nào?',
+      locationGateCopy: 'Nhập thành phố và ZIP để hệ thống chọn đúng thợ cắt tóc tại nhà.',
+      cityLabel: 'Thành phố',
+      zipLabel: 'Mã ZIP',
+      findMyBarber: 'Tìm Thợ Cắt Tóc',
+      changeLocation: 'Đổi khu vực',
+      emailLabel: 'Email',
+      notifyMe: 'Báo cho tôi',
+      noServiceArea: 'Hiện chưa phục vụ {city}. Để lại email, tụi em sẽ báo khi mở rộng khu vực.',
+      waitlistSaved: 'Cảm ơn bạn. Tụi em sẽ báo khi mở rộng khu vực đó.',
+      locationRequired: 'Vui lòng nhập thành phố.',
       aiPreviewDisclosure: 'Ảnh mẫu tạo bằng AI. Portfolio thật của thợ sẽ có sau.',
       serviceAreaLabel: 'Khu vực phục vụ',
       radiusLabel: 'Bán kính di chuyển',
@@ -186,6 +210,18 @@
       bookThisService: 'Reservar este servicio',
       chatThisService: 'Chatear con AI para reservar',
       talkThisService: 'Hablar con AI para reservar',
+      locationGateKicker: 'Área de servicio',
+      locationGateTitle: '¿Dónde quiere que llegue el barbero?',
+      locationGateCopy: 'Ingrese ciudad y ZIP para conectarle con el barbero correcto.',
+      cityLabel: 'Ciudad',
+      zipLabel: 'Código ZIP',
+      findMyBarber: 'Buscar Mi Barbero',
+      changeLocation: 'Cambiar ubicación',
+      emailLabel: 'Email',
+      notifyMe: 'Avisarme',
+      noServiceArea: 'Todavía no servimos {city}. Deje su email y le avisaremos cuando lleguemos.',
+      waitlistSaved: 'Gracias. Le avisaremos cuando ampliemos a esa zona.',
+      locationRequired: 'Ingrese su ciudad.',
       aiPreviewDisclosure: 'Vista previa de estilo generada por AI. Portafolio real del barbero próximamente.',
       serviceAreaLabel: 'Área de servicio',
       radiusLabel: 'Radio de viaje',
@@ -211,7 +247,18 @@
     'mobile-haircut-beard': { name: 'serviceComboName', desc: 'serviceComboDesc' }
   };
 
-  var state = { lang: 'en', selectedServiceId: '', agentSession: null, lastBooking: null, existingBookings: [] };
+  var LOCATION_STORAGE_KEY = 'mb_customer_location';
+  var LOCATION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+  var state = {
+    lang: 'en',
+    selectedServiceId: '',
+    pendingServiceId: '',
+    agentSession: null,
+    lastBooking: null,
+    existingBookings: [],
+    locationSubmitted: false,
+    waitlistLocation: null
+  };
 
   function getLang() {
     var param = new URLSearchParams(root.location.search).get('lang');
@@ -237,6 +284,12 @@
     return '$' + Number(value || 0).toFixed(0);
   }
 
+  function interpolate(template, values) {
+    return String(template || '').replace(/\{(\w+)\}/g, function(_, key) {
+      return values[key] == null ? '' : values[key];
+    });
+  }
+
   function el(tag, className) {
     var node = document.createElement(tag);
     if (className) node.className = className;
@@ -258,6 +311,160 @@
   function selectedService() {
     var services = DATA && DATA.sampleServices ? DATA.sampleServices : [];
     return services.filter(function(service) { return service.id === state.selectedServiceId; })[0] || null;
+  }
+
+  function readSavedLocation() {
+    try {
+      var raw = root.localStorage && root.localStorage.getItem(LOCATION_STORAGE_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      if (!parsed || !parsed.city || !parsed.savedAt) return null;
+      if ((Date.now() - Number(parsed.savedAt)) > LOCATION_MAX_AGE_MS) {
+        root.localStorage.removeItem(LOCATION_STORAGE_KEY);
+        return null;
+      }
+      return { city: String(parsed.city || ''), zip: String(parsed.zip || ''), savedAt: Number(parsed.savedAt) };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function saveCustomerLocation(location) {
+    try {
+      root.localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify({
+        city: String(location.city || '').trim(),
+        zip: String(location.zip || '').trim(),
+        savedAt: Date.now()
+      }));
+    } catch (e) {}
+  }
+
+  function clearCustomerLocation() {
+    try { root.localStorage.removeItem(LOCATION_STORAGE_KEY); } catch (e) {}
+  }
+
+  function currentLocationInput() {
+    return {
+      city: String((document.getElementById('mbLocationCity') || {}).value || '').trim(),
+      zip: String((document.getElementById('mbLocationZip') || {}).value || '').trim()
+    };
+  }
+
+  function setLocationStatus(message) {
+    var status = document.getElementById('mbLocationGateStatus');
+    if (status) status.textContent = message || '';
+  }
+
+  function prefillLocationGate() {
+    var saved = readSavedLocation();
+    var city = document.getElementById('mbLocationCity');
+    var zip = document.getElementById('mbLocationZip');
+    var change = document.querySelector('[data-action="changeLocation"]');
+    if (saved) {
+      if (city && !city.value) city.value = saved.city;
+      if (zip && !zip.value) zip.value = saved.zip;
+      if (change) change.hidden = false;
+    } else if (change) {
+      change.hidden = true;
+    }
+  }
+
+  function vendorUrlForRoute(vendor, serviceId, mode, location) {
+    var params = new URLSearchParams();
+    serviceId = serviceIdForVendor(vendor, serviceId);
+    if (serviceId) params.set('serviceId', serviceId);
+    if (mode) params.set('assistant', mode);
+    if (location && location.city) params.set('city', location.city);
+    if (location && location.zip) params.set('zip', location.zip);
+    params.set('from', 'landing');
+    if (state.lang) params.set('lang', state.lang);
+    return '/mobile-barber/vendor/' + encodeURIComponent(vendor.id) + '?' + params.toString();
+  }
+
+  function serviceSlug(serviceId) {
+    var vendors = DATA && DATA.sampleVendors ? DATA.sampleVendors : [];
+    for (var i = 0; i < vendors.length; i++) {
+      var prefix = vendors[i].id + '-';
+      if (String(serviceId || '').indexOf(prefix) === 0) return String(serviceId).slice(prefix.length);
+    }
+    return String(serviceId || '');
+  }
+
+  function serviceIdForVendor(vendor, serviceId) {
+    if (!vendor || !serviceId) return serviceId || '';
+    if (String(serviceId).indexOf(vendor.id + '-') === 0) return serviceId;
+    var selected = (DATA.sampleServices || []).filter(function(service) { return service.id === serviceId; })[0] || null;
+    var slug = serviceSlug(serviceId);
+    var services = DATA.listServicesForVendor ? DATA.listServicesForVendor(vendor.id) : [];
+    var matched = services.filter(function(service) {
+      return service.id === vendor.id + '-' + slug ||
+        (selected && String(service.name || '').toLowerCase() === String(selected.name || '').toLowerCase());
+    })[0];
+    return (matched && matched.id) || serviceId;
+  }
+
+  function routeByLocation(location, serviceId, mode) {
+    if (!location || !location.city) {
+      setLocationStatus(t('locationRequired'));
+      return false;
+    }
+    var vendor = BOOKING && BOOKING.findVendorForAddress ? BOOKING.findVendorForAddress(location, {
+      vendors: DATA.sampleVendors
+    }) : null;
+    if (!vendor) {
+      state.waitlistLocation = location;
+      var copy = document.getElementById('mbWaitlistCopy');
+      var waitlist = document.getElementById('mbWaitlistForm');
+      if (copy) copy.textContent = interpolate(t('noServiceArea'), { city: location.city });
+      if (waitlist) waitlist.hidden = false;
+      setLocationStatus('');
+      return false;
+    }
+    saveCustomerLocation(location);
+    root.location.href = vendorUrlForRoute(vendor, serviceId, mode, location);
+    return true;
+  }
+
+  function promptForLocation(serviceId) {
+    state.pendingServiceId = serviceId || '';
+    var gate = document.getElementById('mbLocationGate');
+    var waitlist = document.getElementById('mbWaitlistForm');
+    if (waitlist) waitlist.hidden = true;
+    prefillLocationGate();
+    setLocationStatus('');
+    if (gate) {
+      gate.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      gate.classList.add('mb-location-gate--active');
+    }
+    var city = document.getElementById('mbLocationCity');
+    if (city && typeof city.focus === 'function') setTimeout(function() { city.focus(); }, 120);
+  }
+
+  function submitWaitlist() {
+    var email = String((document.getElementById('mbWaitlistEmail') || {}).value || '').trim();
+    var location = state.waitlistLocation || currentLocationInput();
+    if (!email || !location.city) return Promise.resolve(false);
+    var db = root.firebase && root.firebase.firestore && root.firebase.apps && root.firebase.apps.length
+      ? root.firebase.firestore()
+      : null;
+    if (!db) {
+      setLocationStatus(t('waitlistSaved'));
+      return Promise.resolve(false);
+    }
+    return db.collection('mobileBarberWaitlist').add({
+      email: email,
+      city: location.city,
+      zip: location.zip || '',
+      createdAt: root.firebase.firestore.FieldValue.serverTimestamp(),
+      source: 'landing_no_match'
+    }).then(function() {
+      setLocationStatus(t('waitlistSaved'));
+      document.getElementById('mbWaitlistForm').hidden = true;
+      return true;
+    }).catch(function() {
+      setLocationStatus(t('waitlistSaved'));
+      return false;
+    });
   }
 
   function preferredVendor() {
@@ -407,15 +614,15 @@
 
   function landingServices(services) {
     var source = services || [];
-    var preferredVendor = DATA && DATA.MICHAEL_VENDOR_ID;
-    var preferred = source.filter(function(service) {
-      return service.vendorId === preferredVendor && service.active !== false;
+    var activeVendorIds = {};
+    (DATA && DATA.sampleVendors ? DATA.sampleVendors : []).forEach(function(vendor) {
+      if (vendor.active !== false) activeVendorIds[vendor.id] = true;
     });
-    if (preferred.length) return preferred;
     var seen = {};
     return source.filter(function(service) {
-      if (service.active === false || seen[service.name]) return false;
-      seen[service.name] = true;
+      var key = String(service.name || service.id).toLowerCase();
+      if (service.active === false || !activeVendorIds[service.vendorId] || seen[key]) return false;
+      seen[key] = true;
       return true;
     });
   }
@@ -474,11 +681,12 @@
   }
 
   function vendorUrl(service, mode) {
-    var params = new URLSearchParams();
-    params.set('serviceId', service.id);
-    if (mode) params.set('assistant', mode);
-    if (state.lang) params.set('lang', state.lang);
-    return '/mobile-barber/vendor/' + encodeURIComponent(service.vendorId) + '?' + params.toString();
+    var saved = readSavedLocation();
+    if (saved && BOOKING && BOOKING.findVendorForAddress) {
+      var vendor = BOOKING.findVendorForAddress(saved, { vendors: DATA.sampleVendors });
+      if (vendor) return vendorUrlForRoute(vendor, service.id, mode, saved);
+    }
+    return '#mbLocationGate';
   }
 
   function renderServiceProgress(services) {
@@ -533,6 +741,12 @@
     label.textContent = t('selectedServiceLabel');
     title.textContent = serviceCopy(service, 'name') + ' · ' + formatMoney(service.price);
     book.href = vendorUrl(service, '');
+    book.addEventListener('click', function(event) {
+      var saved = readSavedLocation();
+      if (saved && BOOKING.findVendorForAddress(saved, { vendors: DATA.sampleVendors })) return;
+      event.preventDefault();
+      promptForLocation(service.id);
+    });
     chat.type = 'button';
     voice.type = 'button';
     chat.setAttribute('data-action', 'chatSelectedService');
@@ -593,6 +807,10 @@
       cta.textContent = t('selectService');
       cta.addEventListener('click', function() {
         selectService(service);
+        var saved = readSavedLocation();
+        if (!saved || !BOOKING.findVendorForAddress(saved, { vendors: DATA.sampleVendors })) {
+          promptForLocation(service.id);
+        }
       });
 
       media.appendChild(image);
@@ -648,11 +866,21 @@
     var list = document.getElementById('mbBeforeAfterGallery');
     if (!list) return;
     list.innerHTML = '';
-    var rows = DATA && DATA.listPortfolioForVendor && DATA.MICHAEL_VENDOR_ID
-      ? DATA.listPortfolioForVendor(DATA.MICHAEL_VENDOR_ID).filter(function(image) {
-        return image.active !== false && image.hidden !== true && image.isAIGenerated === true;
-      }).slice(0, 6)
-      : [];
+    var rows = [];
+    if (DATA && DATA.listPortfolioForVendor) {
+      (DATA.sampleVendors || []).filter(function(vendor) {
+        return vendor.active !== false;
+      }).forEach(function(vendor) {
+        DATA.listPortfolioForVendor(vendor.id).forEach(function(image) {
+          if (image.active !== false && image.hidden !== true && image.isAIGenerated === true) {
+            rows.push(image);
+          }
+        });
+      });
+      rows = rows.sort(function(a, b) {
+        return (a.displayOrder || 999) - (b.displayOrder || 999);
+      }).slice(0, 6);
+    }
     rows.forEach(function(image) {
       var card = el('article', 'mb-portfolio-card mb-portfolio-card--ai-sample');
       var categoryImage = DATA && DATA.findServiceImageByPortfolioCategory
@@ -866,6 +1094,35 @@
         root.requestAnimationFrame(syncServiceProgress);
       }, { passive: true });
     }
+
+    var gateForm = document.getElementById('mbLocationGateForm');
+    if (gateForm) {
+      gateForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        state.locationSubmitted = true;
+        routeByLocation(currentLocationInput(), state.pendingServiceId || state.selectedServiceId, '');
+      });
+    }
+
+    var waitlist = document.getElementById('mbWaitlistForm');
+    if (waitlist) {
+      waitlist.addEventListener('submit', function(event) {
+        event.preventDefault();
+        submitWaitlist();
+      });
+    }
+
+    var change = document.querySelector('[data-action="changeLocation"]');
+    if (change) {
+      change.addEventListener('click', function() {
+        clearCustomerLocation();
+        state.locationSubmitted = false;
+        document.getElementById('mbLocationCity').value = '';
+        document.getElementById('mbLocationZip').value = '';
+        change.hidden = true;
+        promptForLocation(state.selectedServiceId);
+      });
+    }
   }
 
   var HERO_SLIDES = [
@@ -900,7 +1157,9 @@
 
   function init() {
     state.lang = getLang();
+    state.selectedServiceId = new URLSearchParams(root.location.search).get('serviceId') || '';
     bind();
+    prefillLocationGate();
     setLang(state.lang);
     startHeroRotation();
   }

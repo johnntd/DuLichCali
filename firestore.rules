@@ -285,6 +285,14 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /mobileBarberWaitlist/{waitlistId} {
+      allow create: if request.resource.data.email is string
+                 && request.resource.data.email.size() > 0
+                 && request.resource.data.city is string
+                 && request.resource.data.city.size() > 0;
+      allow read, update, delete: if false;
+    }
+
     // ── Default deny ──────────────────────────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

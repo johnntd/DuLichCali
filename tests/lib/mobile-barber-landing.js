@@ -60,10 +60,10 @@ function runMobileBarberLandingTests(test) {
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
     assertContains(html, '/mobile-barber/mobile-barber.css?v=20260525x');
     assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260525e');
-    assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260525h');
+    assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260525aa');
     assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260525g');
     assertContains(html, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
-    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260525v');
+    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260525aa');
   });
 
   test('Mobile Barber pages load Firebase before local runtime scripts', function() {
@@ -124,6 +124,38 @@ function runMobileBarberLandingTests(test) {
     assertContains(css, '@media (prefers-reduced-motion: reduce)');
   });
 
+  test('Mobile Barber landing has location gate and waitlist capture', function() {
+    assertContains(html, 'id="mbLocationGate"');
+    assertContains(html, 'id="mbLocationGateForm"');
+    assertContains(html, 'id="mbLocationCity"');
+    assertContains(html, 'id="mbLocationZip"');
+    assertContains(html, 'id="mbWaitlistForm"');
+    assertContains(html, 'id="mbWaitlistEmail"');
+    assertContains(js, "LOCATION_STORAGE_KEY = 'mb_customer_location'");
+    assertContains(js, 'LOCATION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000');
+    assertContains(js, 'function readSavedLocation');
+    assertContains(js, 'function saveCustomerLocation');
+    assertContains(js, 'function clearCustomerLocation');
+    assertContains(js, 'function currentLocationInput');
+    assertContains(js, 'BOOKING.findVendorForAddress');
+    assertContains(js, 'root.location.href = vendorUrlForRoute');
+    assertContains(js, "db.collection('mobileBarberWaitlist').add");
+    assertContains(js, "source: 'landing_no_match'");
+    assertContains(html, 'data-action="changeLocation"');
+  });
+
+  test('Mobile Barber landing routes service cards through location before vendor navigation', function() {
+    assertContains(js, 'function promptForLocation(serviceId)');
+    assertContains(js, 'state.pendingServiceId = serviceId ||');
+    assertContains(js, 'routeByLocation(currentLocationInput(), state.pendingServiceId || state.selectedServiceId');
+    assertContains(js, 'serviceIdForVendor(vendor, serviceId)');
+    assertContains(js, "params.set('city', location.city)");
+    assertContains(js, "params.set('zip', location.zip)");
+    assertContains(js, "params.set('from', 'landing')");
+    assertContains(js, "new URLSearchParams(root.location.search).get('serviceId')");
+    assertNotContains(js, 'var preferredVendor = DATA && DATA.MICHAEL_VENDOR_ID', 'landingServices must not prefer Michael');
+  });
+
   test('Mobile Barber landing shows before-after, convenience, and animated promo fallback sections', function() {
     assertContains(html, 'id="mbBeforeAfterGallery"');
     assertContains(html, 'data-i18n="beforeAfterTitle"');
@@ -139,6 +171,9 @@ function runMobileBarberLandingTests(test) {
     assertContains(css, 'mb-convenience-grid');
     assertContains(css, 'mb-promo-clips__track');
     assertContains(css, 'mbPromoPulse');
+    var galleryFn = js.slice(js.indexOf('function renderBeforeAfterGallery'), js.indexOf('function renderConvenience'));
+    assertNotContains(galleryFn, 'MICHAEL_VENDOR_ID', 'before-after gallery must blend active vendors');
+    assertContains(galleryFn, 'DATA.listPortfolioForVendor(vendor.id)');
   });
 
   test('Mobile Barber page does not duplicate global bottom navigation', function() {
@@ -166,13 +201,13 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorHtml, 'id="mbSelectedServiceSummary"');
     assertContains(vendorHtml, 'class="mb-mobile-sticky-cta"');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260525e');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260525h');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260525aa');
     assertContains(vendorHtml, '/ai-engine.js?v=20260524a');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-agent.js?v=20260525g');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
     assertContains(vendorHtml, 'firebase-functions-compat.js');
     assertContains(vendorHtml, '/notifications.js?v=20260525a');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-vendor.js?v=20260525s');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-vendor.js?v=20260525aa');
     assert(vendorHtml.indexOf('/ai-engine.js?v=') < vendorHtml.indexOf('/mobile-barber/mobile-barber-agent.js'), 'ai-engine.js must load before mobile-barber-agent.js');
   });
 
@@ -251,6 +286,24 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorJs, "scrollReset: true");
     assertContains(vendorJs, 'progressPct: pct');
     assertContains(vendorJs, 'servicePillVisible:');
+    assertContains(vendorJs, "LOCATION_STORAGE_KEY = 'mb_customer_location'");
+    assertContains(vendorJs, 'readSavedLocation()');
+    assertContains(vendorJs, 'if (cityInput && !cityInput.value) cityInput.value = savedLocation.city');
+  });
+
+  test('Mobile Barber vendor page auto-switches to matching vendor after address mismatch', function() {
+    assertContains(vendorJs, "vendorSwitchCountdown: 'Switching to {name} in 2s");
+    assertContains(vendorJs, "vendorSwitchCountdown: 'Đang chuyển sang {name} trong 2 giây");
+    assertContains(vendorJs, "vendorSwitchCountdown: 'Cambiando a {name} en 2s");
+    assertContains(vendorJs, "vendorSwitchStay: 'Stay'");
+    assertContains(vendorJs, "vendorSwitchStay: 'Ở lại'");
+    assertContains(vendorJs, "vendorSwitchStay: 'Quedarse'");
+    assertContains(vendorJs, 'state.vendorSwitchTimer = setTimeout(function()');
+    assertContains(vendorJs, 'persistDraftForSwitch();');
+    assertContains(vendorJs, 'root.location.href = state.vendorSwitchTargetUrl');
+    assertContains(vendorJs, 'cancelVendorAutoSwitch();');
+    assertContains(vendorJs, "action === 'stayVendor'");
+    assertContains(vendorJs, "action === 'switchVendor'");
   });
 
   test('Mobile Barber canonical style schema exposes required fields at the data layer', function() {
@@ -402,7 +455,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"destination": "/mobile-barber/dashboard.html"');
     assertContains(dashboardHtml, 'id="mobileBarberDashboardApp"');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260525e');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260525h');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260525aa');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260525c');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260525x');
     assertContains(dashboardHtml, 'firebase-auth-compat.js');
@@ -507,6 +560,9 @@ function runMobileBarberLandingTests(test) {
     assertContains(firestoreRules, 'match /mobileBarberCustomers/{customerId}');
     assertContains(firestoreRules, 'allow read, update: if isMobileBarberCustomerOwner()');
     assertContains(firestoreRules, 'allow read:  if true;');
+    assertContains(firestoreRules, 'match /mobileBarberWaitlist/{waitlistId}');
+    assertContains(firestoreRules, 'allow create: if request.resource.data.email is string');
+    assertContains(firestoreRules, 'allow read, update, delete: if false;');
   });
 
   test('Mobile Barber dashboard supports en vi es translations', function() {

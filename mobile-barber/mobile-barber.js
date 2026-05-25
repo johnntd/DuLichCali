@@ -655,33 +655,19 @@
       : [];
     rows.forEach(function(image) {
       var card = el('article', 'mb-portfolio-card mb-portfolio-card--ai-sample');
-      var media = el('div', 'mb-portfolio-card__compare');
       var categoryImage = DATA && DATA.findServiceImageByPortfolioCategory
         ? DATA.findServiceImageByPortfolioCategory(image.category)
         : null;
-      var slots = [
-        ['Before', 'before', image.beforeImageUrl],
-        ['After', 'after', image.afterImageUrl]
-      ];
-      slots.forEach(function(pair) {
-        var wrap = el('figure', 'mb-portfolio-card__ai-frame mb-portfolio-card__ai-frame--' + pair[1]);
-        var badge = el('span', 'mb-portfolio-card__ai-badge');
-        var caption = el('figcaption');
-        badge.textContent = 'AI preview';
-        caption.textContent = pair[0];
-        var url = pair[2] || (categoryImage && categoryImage.imageUrl) || '';
-        if (url) {
-          wrap.style.backgroundImage = "url('" + url + "')";
-          wrap.setAttribute('aria-label', image.alt || image.title);
-        }
-        wrap.appendChild(badge);
-        wrap.appendChild(caption);
-        media.appendChild(wrap);
-      });
+
       if (image.clipUrl) {
+        // Single transformation video — replaces the two static stills because
+        // the crossfade already shows before → after better than dual frames.
         var clipWrap = el('div', 'mb-portfolio-card__clip');
+        var clipBadge = el('span', 'mb-portfolio-card__ai-badge mb-portfolio-card__ai-badge--clip');
+        clipBadge.textContent = 'AI preview';
         var video = document.createElement('video');
         video.src = image.clipUrl;
+        video.poster = image.afterImageUrl || image.imageUrl || '';
         video.autoplay = true;
         video.loop = true;
         video.muted = true;
@@ -690,15 +676,39 @@
         video.setAttribute('preload', 'metadata');
         video.setAttribute('aria-label', (image.title || '') + ' before and after preview');
         clipWrap.appendChild(video);
+        clipWrap.appendChild(clipBadge);
         card.appendChild(clipWrap);
+      } else {
+        // Static fallback when no clip is available.
+        var media = el('div', 'mb-portfolio-card__compare');
+        var slots = [
+          ['Before', 'before', image.beforeImageUrl],
+          ['After', 'after', image.afterImageUrl]
+        ];
+        slots.forEach(function(pair) {
+          var wrap = el('figure', 'mb-portfolio-card__ai-frame mb-portfolio-card__ai-frame--' + pair[1]);
+          var badge = el('span', 'mb-portfolio-card__ai-badge');
+          var caption = el('figcaption');
+          badge.textContent = 'AI preview';
+          caption.textContent = pair[0];
+          var url = pair[2] || (categoryImage && categoryImage.imageUrl) || '';
+          if (url) {
+            wrap.style.backgroundImage = "url('" + url + "')";
+            wrap.setAttribute('aria-label', image.alt || image.title);
+          }
+          wrap.appendChild(badge);
+          wrap.appendChild(caption);
+          media.appendChild(wrap);
+        });
+        card.appendChild(media);
       }
+
       var chip = el('span', 'mb-portfolio-card__category');
       var title = el('h3');
       var desc = el('p');
       chip.textContent = image.category || 'style';
       title.textContent = image.title || '';
       desc.textContent = image.description || t('aiPreviewDisclosure');
-      card.appendChild(media);
       card.appendChild(chip);
       card.appendChild(title);
       card.appendChild(desc);

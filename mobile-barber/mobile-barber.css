@@ -799,7 +799,7 @@
 }
 
 .mb-portfolio-card__clip {
-  margin-top: .75rem;
+  position: relative;
   border-radius: var(--r-sm);
   overflow: hidden;
   background: #000;
@@ -811,6 +811,13 @@
   height: 100%;
   display: block;
   object-fit: cover;
+}
+
+.mb-portfolio-card__ai-badge--clip {
+  position: absolute;
+  top: .6rem;
+  left: .6rem;
+  z-index: 2;
 }
 
 @keyframes mbPromoCardLift {
@@ -2590,16 +2597,14 @@
 }
 
 .mb-portfolio-card__ai-frame::before {
-  /* Dark gradient + light hatch so the caption stays legible over any photo
-     and the card still reads as a placeholder rather than a real customer
-     photo. Lives behind the badge + caption via z-index. */
+  /* Subtle bottom-only fade so the Before/After caption stays legible over
+     the photo. No hatch, no top dim — the photo must read clearly. */
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
-  background:
-    linear-gradient(180deg, rgba(3, 12, 22, .12) 0%, rgba(3, 12, 22, .82) 78%, rgba(3, 12, 22, .92) 100%),
-    repeating-linear-gradient(135deg, rgba(255, 255, 255, .04) 0, rgba(255, 255, 255, .04) 8px, rgba(255, 255, 255, .08) 8px, rgba(255, 255, 255, .08) 16px);
+  background: linear-gradient(180deg, transparent 60%, rgba(3, 12, 22, .7) 100%);
+  pointer-events: none;
 }
 
 .mb-portfolio-card__ai-frame--before {

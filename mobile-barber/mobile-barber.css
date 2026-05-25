@@ -1813,6 +1813,7 @@
 }
 
 .mb-dashboard-hero,
+.mb-dashboard-vendor-card,
 .mb-dashboard-panel,
 .mb-dashboard-stats article {
   border: 1px solid rgba(255, 255, 255, .12);
@@ -1826,6 +1827,17 @@
   gap: 1rem;
   padding: 1rem;
   align-items: start;
+}
+
+.mb-dashboard-vendor-card {
+  padding: .9rem 1rem;
+  color: var(--text);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+
+.mb-dashboard-vendor-card strong {
+  color: var(--gold-lt);
 }
 
 .mb-dashboard-hero h1 {
@@ -1885,6 +1897,13 @@
   grid-template-columns: 1fr auto;
   gap: .75rem;
   align-items: center;
+}
+
+.mb-dashboard-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  justify-content: flex-end;
 }
 
 .mb-dashboard-panel h2 {

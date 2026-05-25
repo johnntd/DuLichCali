@@ -227,6 +227,68 @@ function runMobileBarberBookingTests(test) {
     assertEq(price.reviewRequired, false);
   });
 
+  test('Mobile Barber profit pricing tiers include travel, wear, minimums, and custom quote', function() {
+    var vendor = Object.assign({}, MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID), {
+      baseTravelFee: 0,
+      travelFeeTiers: null
+    });
+    var service = MobileBarberData.listServicesForVendor(MobileBarberData.MICHAEL_VENDOR_ID).filter(function(row) {
+      return row.id.indexOf('fade-haircut') >= 0;
+    })[0];
+    var p3 = MobileBarberBooking.calculateMobileBarberPrice({ vendor: vendor, service: service, distanceMiles: 3, travelMinutes: 20 });
+    var p8 = MobileBarberBooking.calculateMobileBarberPrice({ vendor: vendor, service: service, distanceMiles: 8, travelMinutes: 20 });
+    var p14 = MobileBarberBooking.calculateMobileBarberPrice({ vendor: vendor, service: service, distanceMiles: 14, travelMinutes: 25 });
+    var p19 = MobileBarberBooking.calculateMobileBarberPrice({ vendor: vendor, service: service, distanceMiles: 19, travelMinutes: 30 });
+    var p25 = MobileBarberBooking.calculateMobileBarberPrice({ vendor: vendor, service: service, distanceMiles: 25, travelMinutes: 40 });
+    assertEq(p3.travelFee, 0);
+    assertEq(p3.totalPrice, 50);
+    assertEq(p8.travelFee, 8);
+    assertEq(p14.travelFee, 15);
+    assertEq(p19.travelFee, 25);
+    assertEq(p25.quoteType, 'vendor_review');
+    assert(p14.vehicleWearCost > 0, 'vehicle wear cost should be estimated');
+    assert(p19.pricingExplanation.indexOf('payment due after service') >= 0, 'pricing explanation should be customer safe');
+  });
+
+  test('Mobile Barber booking saves complete pricing and payment fields', function() {
+    var vendor = MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID);
+    var service = MobileBarberData.listServicesForVendor(MobileBarberData.MICHAEL_VENDOR_ID)[0];
+    var draft = Object.assign(baseDraft(), {
+      serviceId: service.id,
+      city: 'Westminster',
+      zip: '92683',
+      distanceMiles: 8,
+      paymentMethod: 'zelle'
+    });
+    var availability = MobileBarberBooking.checkAvailability({
+      vendor: vendor,
+      services: MobileBarberData.listServicesForVendor(vendor.id),
+      availability: MobileBarberData.sampleAvailability,
+      draft: draft,
+      existingBookings: []
+    });
+    var built = MobileBarberBooking.buildBooking({
+      id: 'pricing-fields-test',
+      vendor: vendor,
+      draft: draft,
+      availabilityResult: availability,
+      now: '2026-05-25T12:00:00.000Z'
+    });
+    assertEq(built.valid, true);
+    assertEq(built.booking.amountDue, built.booking.totalPrice);
+    assert(built.booking.travelFee >= 0, 'travel fee should be saved');
+    assert(built.booking.vehicleWearCost >= 0, 'vehicle wear should be saved');
+    assertEq(built.booking.paymentStatus, 'unpaid');
+    assertEq(built.booking.zellePhone, vendor.phone);
+    assert(built.booking.pricingExplanation.indexOf('Service price') >= 0, 'pricing explanation should be saved');
+  });
+
+  test('Mobile Barber 12-hour time formatter normalizes appointment display', function() {
+    assertEq(MobileBarberBooking.formatTime12Hour('09:00'), '9:00 AM');
+    assertEq(MobileBarberBooking.formatTime12Hour('10:30'), '10:30 AM');
+    assertEq(MobileBarberBooking.formatTime12Hour('14:15'), '2:15 PM');
+  });
+
   test('Mobile Barber raw window availability detects overlap', function() {
     var result = MobileBarberBooking.checkMobileBarberAvailability(
       MobileBarberData.SAMPLE_VENDOR_ID,

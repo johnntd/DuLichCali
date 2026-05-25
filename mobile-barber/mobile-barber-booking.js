@@ -20,6 +20,13 @@
   var STATUS_LIFECYCLE = ['pending_barber_confirmation', 'confirmed', 'declined', 'completed', 'cancelled'];
   var DEFAULT_SLOT_STEP_MINUTES = 30;
   var DEFAULT_SAME_DAY_CUTOFF_MINUTES = 120;
+  var DEFAULT_PRICING = {
+    wearRatePerMile: 0.67,
+    freeTravelMiles: 5,
+    customQuoteMiles: 20,
+    minimumMobileVisitPrice: 50,
+    minimumHourlyTarget: 35
+  };
 
   function trim(value) {
     return String(value == null ? '' : value).trim();
@@ -122,6 +129,19 @@
     var hour = Math.floor(total / 60);
     var minute = total % 60;
     return String(hour).padStart(2, '0') + ':' + String(minute).padStart(2, '0');
+  }
+
+  function formatTime12Hour(dateOrTime) {
+    var parsed = parseRequestedTime(dateOrTime);
+    var mins = parsed.minutes;
+    if (mins == null && typeof dateOrTime === 'string') mins = minutesFromTime(dateOrTime);
+    if (mins == null) return trim(dateOrTime);
+    var hour = Math.floor(mins / 60) % 24;
+    var minute = mins % 60;
+    var suffix = hour >= 12 ? 'PM' : 'AM';
+    var displayHour = hour % 12;
+    if (displayHour === 0) displayHour = 12;
+    return displayHour + ':' + String(minute).padStart(2, '0') + ' ' + suffix;
   }
 
   function parseRequestedTime(value) {
@@ -299,19 +319,105 @@
     return { valid: true, key: 'no_overlap' };
   }
 
-  function calculateMobileBarberPrice(vendor, service, address) {
-    var base = Number(service.price || 0);
-    var travel = Number(vendor && vendor.baseTravelFee || 0);
-    var distanceFee = 0;
-    if (address && isFinite(Number(address.distanceMiles)) && vendor && isFinite(Number(vendor.pricePerTravelMile))) {
-      distanceFee = Math.max(0, Number(address.distanceMiles)) * Math.max(0, Number(vendor.pricePerTravelMile));
+  function pricingNumber(source, key) {
+    var value = source && source[key];
+    return isFinite(Number(value)) ? Number(value) : DEFAULT_PRICING[key];
+  }
+
+  function distanceTierFee(vendor, miles, freeTravelMiles, customQuoteMiles) {
+    var tiers = Array.isArray(vendor && vendor.travelFeeTiers) ? vendor.travelFeeTiers.slice() : [];
+    if (tiers.length) {
+      tiers.sort(function(a, b) { return Number(a.maxMiles || 0) - Number(b.maxMiles || 0); });
+      for (var i = 0; i < tiers.length; i++) {
+        if (miles <= Number(tiers[i].maxMiles || 0)) return Number(tiers[i].fee || 0);
+      }
+      return Number(tiers[tiers.length - 1].fee || 0);
     }
+    if (miles <= freeTravelMiles) return 0;
+    if (miles <= 10) return 8;
+    if (miles <= 15) return 15;
+    if (miles <= customQuoteMiles) return 25;
+    return 25;
+  }
+
+  function estimateDistance(input, address) {
+    var source = input || {};
+    address = address || {};
+    if (isFinite(Number(source.roundTripMiles))) return Math.max(0, Number(source.roundTripMiles));
+    if (isFinite(Number(address.roundTripMiles))) return Math.max(0, Number(address.roundTripMiles));
+    if (isFinite(Number(source.distanceMiles))) return Math.max(0, Number(source.distanceMiles));
+    if (isFinite(Number(address.distanceMiles))) return Math.max(0, Number(address.distanceMiles));
+    if (isFinite(Number(source.oneWayMiles))) return Math.max(0, Number(source.oneWayMiles) * 2);
+    if (isFinite(Number(address.oneWayMiles))) return Math.max(0, Number(address.oneWayMiles) * 2);
+    return 0;
+  }
+
+  function calculateMobileBarberPrice(arg1, arg2, arg3) {
+    var input = arg1 && arg1.vendor ? arg1 : {
+      vendor: arg1,
+      service: arg2,
+      customerAddress: arg3
+    };
+    var vendor = input.vendor || {};
+    var service = input.service || {};
+    var address = input.customerAddress || input.address || arg3 || {};
+    var base = Number(service.price || 0);
+    var freeTravelMiles = pricingNumber(vendor, 'freeTravelMiles');
+    var customQuoteMiles = pricingNumber(vendor, 'customQuoteMiles');
+    var estimatedDistance = estimateDistance(input, address);
+    var estimatedTravelMinutes = isFinite(Number(input.travelMinutes))
+      ? Math.max(0, Number(input.travelMinutes))
+      : Number(service.travelBufferMinutes != null ? service.travelBufferMinutes : vendor.travelBufferMinutes || 0);
+    var tierFee = distanceTierFee(vendor, estimatedDistance, freeTravelMiles, customQuoteMiles);
+    var baseTravelFee = Number(vendor.baseTravelFee || 0);
+    var travel = Math.max(baseTravelFee, tierFee);
+    var vehicleWearCost = Math.round(estimatedDistance * pricingNumber(vendor, 'wearRatePerMile') * 100) / 100;
+    var distanceAdjustment = 0;
+    var peakAdjustment = 0;
+    var total = base + travel;
+    var quoteType = estimatedDistance > customQuoteMiles ? 'vendor_review' : 'standard';
+    var effectiveMinutes = Number(service.durationMinutes || 0) + Number(service.cleanupBufferMinutes || 0) + estimatedTravelMinutes;
+    var minimumVisit = pricingNumber(vendor, 'minimumMobileVisitPrice');
+    if (total < minimumVisit && quoteType !== 'vendor_review') {
+      distanceAdjustment += minimumVisit - total;
+      total = minimumVisit;
+    }
+    var hourlyTarget = pricingNumber(vendor, 'minimumHourlyTarget');
+    var grossProfitEstimate = total - vehicleWearCost;
+    var estimatedHourlyGross = effectiveMinutes > 0 ? grossProfitEstimate / (effectiveMinutes / 60) : grossProfitEstimate;
+    if (quoteType !== 'vendor_review' && estimatedHourlyGross < hourlyTarget) {
+      var needed = Math.ceil((hourlyTarget * (effectiveMinutes / 60) + vehicleWearCost) - total);
+      if (needed > 0 && needed <= 15) {
+        distanceAdjustment += needed;
+        total += needed;
+        estimatedHourlyGross = (total - vehicleWearCost) / (effectiveMinutes / 60);
+      } else if (needed > 15) {
+        quoteType = 'vendor_review';
+      }
+    }
+    var explanation = [
+      'Service price ' + base,
+      'mobile travel fee ' + travel,
+      'estimated vehicle wear ' + vehicleWearCost.toFixed(2),
+      estimatedDistance ? ('estimated distance ' + estimatedDistance + ' miles') : 'distance unavailable; used configured/fallback travel tier',
+      distanceAdjustment ? ('profitability adjustment ' + distanceAdjustment) : '',
+      quoteType === 'vendor_review' ? 'vendor review required for distance/profitability' : 'payment due after service by cash or Zelle'
+    ].filter(Boolean).join('; ');
     return {
+      baseServicePrice: base,
       servicePrice: base,
       travelFee: travel,
-      distanceFee: distanceFee,
-      totalPrice: base + travel + distanceFee,
-      reviewRequired: !isWithinServiceArea(vendor, address || {})
+      vehicleWearCost: vehicleWearCost,
+      distanceAdjustment: distanceAdjustment,
+      peakAdjustment: peakAdjustment,
+      totalPrice: total,
+      estimatedDistanceMiles: estimatedDistance,
+      estimatedTravelMinutes: estimatedTravelMinutes,
+      pricingExplanation: explanation,
+      quoteType: quoteType,
+      grossProfitEstimate: Math.round((total - vehicleWearCost) * 100) / 100,
+      estimatedHourlyGross: Math.round(estimatedHourlyGross * 100) / 100,
+      reviewRequired: quoteType === 'vendor_review' || !isWithinServiceArea(vendor, address || {})
     };
   }
 
@@ -479,7 +585,7 @@
     var now = input.now || new Date().toISOString();
     var id = input.id || ('mb-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8));
     var servicePrice = Number(check.price.servicePrice || check.service.price || 0);
-    var travelFee = Number(check.price.travelFee || 0) + Number(check.price.distanceFee || 0);
+    var travelFee = Number(check.price.travelFee || 0);
     var amountDue = Number(check.price.totalPrice != null ? check.price.totalPrice : (servicePrice + travelFee));
     var booking = {
       id: id,
@@ -492,7 +598,15 @@
       serviceName: check.service.name,
       servicePrice: servicePrice,
       travelFee: travelFee,
+      vehicleWearCost: Number(check.price.vehicleWearCost || 0),
+      distanceAdjustment: Number(check.price.distanceAdjustment || 0),
+      peakAdjustment: Number(check.price.peakAdjustment || 0),
       amountDue: amountDue,
+      totalPrice: amountDue,
+      estimatedDistanceMiles: Number(check.price.estimatedDistanceMiles || 0),
+      estimatedTravelMinutes: Number(check.price.estimatedTravelMinutes || 0),
+      pricingExplanation: trim(check.price.pricingExplanation),
+      quoteType: trim(check.price.quoteType || 'standard'),
       paymentMethod: normalizePaymentMethod(draft.paymentMethod),
       paymentStatus: normalizePaymentStatus(draft.paymentStatus),
       zellePhone: trim(draft.zellePhone) || trim(input.vendor.phone),
@@ -772,13 +886,22 @@
     booking = Object.assign({}, booking || {});
     var servicePrice = Number(booking.servicePrice || 0);
     var travelFee = Number(booking.travelFee || 0);
+    var amountDue = Number(booking.amountDue != null ? booking.amountDue : (servicePrice + travelFee));
     var legacyTotal = servicePrice && !travelFee && !booking.amountDue ? servicePrice : null;
     booking.paymentMethod = normalizePaymentMethod(booking.paymentMethod);
     booking.paymentStatus = normalizePaymentStatus(booking.paymentStatus);
     booking.zellePhone = trim(booking.zellePhone) || trim(vendor && vendor.phone);
     booking.servicePrice = servicePrice;
     booking.travelFee = travelFee;
-    booking.amountDue = Number(booking.amountDue != null ? booking.amountDue : (legacyTotal != null ? legacyTotal : servicePrice + travelFee));
+    booking.vehicleWearCost = Number(booking.vehicleWearCost || 0);
+    booking.distanceAdjustment = Number(booking.distanceAdjustment || 0);
+    booking.peakAdjustment = Number(booking.peakAdjustment || 0);
+    booking.amountDue = Number(legacyTotal != null ? legacyTotal : amountDue);
+    booking.totalPrice = Number(booking.totalPrice != null ? booking.totalPrice : booking.amountDue);
+    booking.estimatedDistanceMiles = Number(booking.estimatedDistanceMiles || 0);
+    booking.estimatedTravelMinutes = Number(booking.estimatedTravelMinutes || 0);
+    booking.pricingExplanation = trim(booking.pricingExplanation);
+    booking.quoteType = trim(booking.quoteType || 'standard');
     booking.paymentNote = trim(booking.paymentNote);
     return booking;
   }
@@ -825,6 +948,7 @@
     validateServiceArea: validateServiceArea,
     findVendorForAddress: findVendorForAddress,
     calculateAppointmentWindow: calculateAppointmentWindow,
+    formatTime12Hour: formatTime12Hour,
     checkMobileBarberAvailability: checkMobileBarberAvailability,
     findNextAvailableSlots: findNextAvailableSlots,
     calculateMobileBarberPrice: calculateMobileBarberPrice,

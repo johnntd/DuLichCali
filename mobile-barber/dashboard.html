@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260525x">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260525y">
 </head>
 <body class="mb-page mb-dashboard-page">
   <main class="mb-shell mb-dashboard-shell" id="mobileBarberDashboardApp" data-page="mobile-barber-dashboard">
@@ -30,6 +30,8 @@
       </div>
       <a class="mb-button mb-button--ghost" id="mbPublicVendorLink" href=""></a>
     </section>
+
+    <section class="mb-dashboard-vendor-card" id="mbDashboardVendorCard" aria-label="Vendor"></section>
 
     <section class="mb-dashboard-stats" aria-label="">
       <article><span data-i18n="statToday"></span><strong id="mbStatToday">0</strong></article>
@@ -57,6 +59,12 @@
     <section class="mb-dashboard-panel" aria-labelledby="mbUpcomingTitle">
       <div class="mb-dashboard-panel__head">
         <h2 id="mbUpcomingTitle" data-i18n="upcomingTitle"></h2>
+        <div class="mb-dashboard-filters" id="mbBookingFilters" role="group" aria-label="Booking filters">
+          <button class="mb-button mb-button--ghost mb-button--sm" type="button" data-booking-filter="upcoming" data-i18n="filterUpcoming"></button>
+          <button class="mb-button mb-button--ghost mb-button--sm" type="button" data-booking-filter="all" data-i18n="filterAll"></button>
+          <button class="mb-button mb-button--ghost mb-button--sm" type="button" data-booking-filter="completed" data-i18n="filterCompleted"></button>
+          <button class="mb-button mb-button--ghost mb-button--sm" type="button" data-booking-filter="cancelled" data-i18n="filterCancelled"></button>
+        </div>
       </div>
       <div class="mb-dashboard-list mb-dashboard-list--wide" id="mbUpcomingList"></div>
     </section>
@@ -164,8 +172,8 @@
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
   </script>
   <script src="/notifications.js?v=20260525a"></script>
-  <script src="/mobile-barber/mobile-barber-data.js?v=20260525e"></script>
-  <script src="/mobile-barber/mobile-barber-booking.js?v=20260525aa"></script>
-  <script src="/mobile-barber/mobile-barber-dashboard.js?v=20260525c"></script>
+  <script src="/mobile-barber/mobile-barber-data.js?v=20260525f"></script>
+  <script src="/mobile-barber/mobile-barber-booking.js?v=20260525ab"></script>
+  <script src="/mobile-barber/mobile-barber-dashboard.js?v=20260525d"></script>
 </body>
 </html>

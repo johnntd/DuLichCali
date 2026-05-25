@@ -28,6 +28,8 @@
     'baseTravelFee', 'addressOptional', 'languages', 'active', 'rating',
     'reviewCount', 'serviceBadges', 'createdAt', 'updatedAt',
     'bio', 'region', 'yearsExperience', 'zipCoverage', 'travelFeeTiers',
+    'wearRatePerMile', 'freeTravelMiles', 'customQuoteMiles',
+    'minimumMobileVisitPrice', 'minimumHourlyTarget',
     'geminiKey', 'openaiKey'
   ]);
 
@@ -44,7 +46,10 @@
 
   var BOOKING_FIELDS = Object.freeze([
     'id', 'vendorId', 'customerName', 'customerPhone', 'customerEmail',
-    'serviceId', 'serviceName', 'servicePrice', 'travelFee', 'amountDue',
+    'serviceId', 'serviceName', 'servicePrice', 'travelFee',
+    'vehicleWearCost', 'distanceAdjustment', 'peakAdjustment',
+    'amountDue', 'totalPrice', 'estimatedDistanceMiles',
+    'estimatedTravelMinutes', 'pricingExplanation', 'quoteType',
     'paymentMethod', 'paymentStatus', 'zellePhone', 'paymentNote',
     'address', 'city', 'zip',
     'requestedDate', 'startTime', 'endTime', 'status', 'source', 'notes',
@@ -882,6 +887,9 @@
     if (vendor.serviceBadges != null) requireArray(vendor, 'serviceBadges', errors);
     requireNumber(vendor, 'travelRadiusMiles', errors, { min: 0 });
     requireNumber(vendor, 'baseTravelFee', errors, { min: 0 });
+    ['wearRatePerMile', 'freeTravelMiles', 'customQuoteMiles', 'minimumMobileVisitPrice', 'minimumHourlyTarget'].forEach(function(field) {
+      if (vendor[field] != null) requireNumber(vendor, field, errors, { min: 0 });
+    });
     requireNumber(vendor, 'rating', errors, { min: 0 });
     if (vendor.reviewCount != null) requireNumber(vendor, 'reviewCount', errors, { min: 0 });
     if (typeof vendor.addressOptional !== 'boolean') errors.push('addressOptional must be boolean.');
@@ -998,7 +1006,9 @@
     });
     requireNumber(booking, 'servicePrice', errors, { min: 0 });
     if (booking.travelFee != null) requireNumber(booking, 'travelFee', errors, { min: 0 });
-    if (booking.amountDue != null) requireNumber(booking, 'amountDue', errors, { min: 0 });
+    ['vehicleWearCost', 'distanceAdjustment', 'peakAdjustment', 'amountDue', 'totalPrice', 'estimatedDistanceMiles', 'estimatedTravelMinutes'].forEach(function(field) {
+      if (booking[field] != null) requireNumber(booking, field, errors, { min: 0 });
+    });
     if (hasText(booking.paymentMethod) && ['cash', 'zelle', 'unknown'].indexOf(booking.paymentMethod) < 0) {
       errors.push('paymentMethod is not supported.');
     }

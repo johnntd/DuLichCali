@@ -33,7 +33,7 @@
       confirmPartialAddress: 'I heard {partial}. Is that correct?',
       askService: 'What barber service would you like?',
       askDateTime: 'What day and time would you like?',
-      priceOnly: '{service} is {price}. Travel fee starts at {travelFee}.',
+      priceOnly: '{service} is {price}. With the mobile travel fee, the estimated total due after service is {total}. Pay by cash or Zelle after the haircut.',
       language: 'Yes. This assistant can help in English, Vietnamese, or Spanish.',
       photo: 'Yes. Upload a reference photo in the photo field and I will attach it to the booking request.',
       unavailable: 'That time is not available. Please send another date or time.',
@@ -60,7 +60,7 @@
       confirmPartialAddress: 'Dạ em nghe {partial}. Đúng không ạ?',
       askService: 'Mình muốn đặt dịch vụ barber nào ạ?',
       askDateTime: 'Mình muốn đặt ngày nào và giờ nào ạ?',
-      priceOnly: '{service} là {price}. Phí di chuyển bắt đầu từ {travelFee}.',
+      priceOnly: '{service} là {price}. Cộng phí di chuyển, tổng ước tính trả sau khi cắt là {total}. Thanh toán bằng tiền mặt hoặc Zelle sau dịch vụ.',
       language: 'Dạ có. Trợ lý này hỗ trợ tiếng Việt, tiếng Anh, hoặc tiếng Tây Ban Nha.',
       photo: 'Dạ được. Tải ảnh tham khảo ở ô ảnh và em sẽ đính kèm vào yêu cầu đặt lịch.',
       unavailable: 'Giờ đó không còn trống. Vui lòng gửi ngày hoặc giờ khác.',
@@ -87,7 +87,7 @@
       confirmPartialAddress: 'Escuché {partial}. ¿Es correcto?',
       askService: '¿Qué servicio de barbería quiere?',
       askDateTime: '¿Qué día y hora prefiere?',
-      priceOnly: '{service} cuesta {price}. La tarifa de viaje empieza en {travelFee}.',
+      priceOnly: '{service} cuesta {price}. Con la tarifa móvil, el total estimado después del servicio es {total}. Puede pagar en efectivo o Zelle después del corte.',
       language: 'Sí. Este asistente puede ayudar en inglés, vietnamita, o español.',
       photo: 'Sí. Suba una foto de referencia en el campo de foto y la adjuntaré a la solicitud.',
       unavailable: 'Ese horario no está disponible. Envíe otra fecha u hora.',
@@ -505,6 +505,7 @@
       'Service areas: ' + (vendor.serviceAreas || []).join(', ') + '. Travel radius miles: ' + vendor.travelRadiusMiles + '.',
       'Services and prices:\n' + services,
       'Never invent availability, prices, travel radius, barber names, or internal data.',
+      'Use MobileBarberBooking.calculateMobileBarberPrice for quotes; service price alone is not the final mobile total.',
       'Never confirm a booking until backend availability and service-area checks have passed.',
       'Payment is collected after service by cash or Zelle to the barber phone number. Do not require prepayment or card payment.',
       'When you see a user message starting with [SYSTEM: ...], rewrite that backend result naturally in the customer language and do not expose the marker.',
@@ -824,9 +825,15 @@
     if (state.intent === 'modify_existing') return { session: session, response: reply(lang, 'cancelled') };
 
     if (state.intent === 'price' && service) {
+      var quickPrice = BOOKING.calculateMobileBarberPrice({
+        vendor: vendor,
+        service: service,
+        customerAddress: draftFromState(state),
+        requestedDateTime: state.date && state.time ? (state.date + 'T' + state.time) : ''
+      });
       return {
         session: session,
-        response: reply(lang, 'priceOnly', { service: service.name, price: money(service.price), travelFee: money(vendor.baseTravelFee) })
+        response: reply(lang, 'priceOnly', { service: service.name, price: money(quickPrice.baseServicePrice), total: money(quickPrice.totalPrice) })
       };
     }
 
@@ -896,7 +903,7 @@
       var summaryText = reply(lang, 'summary', {
         service: availability.service.name,
         date: draft.requestedDate,
-        time: draft.startTime,
+        time: BOOKING.formatTime12Hour ? BOOKING.formatTime12Hour(draft.startTime) : draft.startTime,
         address: draft.address,
         city: draft.city,
         zip: draft.zip,

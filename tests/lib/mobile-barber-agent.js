@@ -113,7 +113,26 @@ function runMobileBarberAgentTests(test) {
     assertEq(second.booking.paymentMethod, 'unknown');
     assertEq(second.booking.paymentStatus, 'unpaid');
     assertEq(second.booking.zellePhone, '(714) 555-0148');
+    assertEq(second.booking.amountDue, second.booking.totalPrice);
+    assert(second.booking.pricingExplanation.indexOf('Service price') >= 0, 'AI booking should save shared pricing explanation');
     assert(second.response.indexOf('Zelle') >= 0, 'AI confirmation should mention Zelle after-service payment');
+  });
+
+  test('Mobile Barber AI summary uses shared pricing engine and after-service payment copy', function() {
+    var ctx = context({ id: 'ai-pricing-1' });
+    var result = MobileBarberAgent.handleMessage(null, 'My name is Kim. Phone 714-555-0100. I need fade haircut on 2026-06-01 at 10:00 at 123 Brookhurst St Westminster 92683.', Object.assign(ctx, { customerLookupResult: null }));
+    var expected = MobileBarberBooking.calculateMobileBarberPrice({
+      vendor: ctx.vendor,
+      service: result.session.lastAvailabilityResult.service,
+      customerAddress: {
+        address: '123 Brookhurst St',
+        city: 'Westminster',
+        zip: '92683'
+      }
+    });
+    assert(result.response.indexOf('$' + expected.totalPrice.toFixed(0)) >= 0, 'summary should use shared pricing total');
+    assert(result.response.indexOf('Payment is collected after the haircut by cash or Zelle') >= 0, 'summary should explain after-service cash/Zelle');
+    assert(result.response.indexOf('10:00 AM') >= 0, 'summary should display 12-hour time');
   });
 
   test('Mobile Barber AI parses spoken English and Vietnamese phone digits', function() {

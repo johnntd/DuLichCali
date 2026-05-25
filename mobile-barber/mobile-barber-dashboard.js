@@ -27,6 +27,10 @@
       todayTitle: "Today's appointments",
       pendingTitle: 'Pending confirmations',
       upcomingTitle: 'Upcoming bookings',
+      filterUpcoming: 'Upcoming',
+      filterAll: 'All',
+      filterCompleted: 'Completed',
+      filterCancelled: 'Cancelled',
       refreshButton: 'Refresh',
       profileTitle: 'Profile and contact',
       saveButton: 'Save Profile',
@@ -84,6 +88,8 @@
       paymentMethod: 'Payment method',
       paymentStatus: 'Payment status',
       zelleNumber: 'Zelle number',
+      vehicleWearCost: 'Vehicle/travel cost included',
+      quoteType: 'Quote type',
       paymentNote: 'Payment note',
       paymentCash: 'Cash',
       paymentZelle: 'Zelle',
@@ -136,6 +142,10 @@
       todayTitle: 'Lịch hẹn hôm nay',
       pendingTitle: 'Yêu cầu chờ xác nhận',
       upcomingTitle: 'Lịch hẹn sắp tới',
+      filterUpcoming: 'Sắp tới',
+      filterAll: 'Tất cả',
+      filterCompleted: 'Hoàn tất',
+      filterCancelled: 'Đã hủy',
       refreshButton: 'Làm mới',
       profileTitle: 'Hồ sơ và liên hệ',
       saveButton: 'Lưu Hồ Sơ',
@@ -193,6 +203,8 @@
       paymentMethod: 'Cách thanh toán',
       paymentStatus: 'Trạng thái thanh toán',
       zelleNumber: 'Số Zelle',
+      vehicleWearCost: 'Chi phí xe/di chuyển đã gồm',
+      quoteType: 'Loại báo giá',
       paymentNote: 'Ghi chú thanh toán',
       paymentCash: 'Tiền mặt',
       paymentZelle: 'Zelle',
@@ -245,6 +257,10 @@
       todayTitle: 'Citas de hoy',
       pendingTitle: 'Confirmaciones pendientes',
       upcomingTitle: 'Reservas próximas',
+      filterUpcoming: 'Próximas',
+      filterAll: 'Todas',
+      filterCompleted: 'Completadas',
+      filterCancelled: 'Canceladas',
       refreshButton: 'Actualizar',
       profileTitle: 'Perfil y contacto',
       saveButton: 'Guardar Perfil',
@@ -302,6 +318,8 @@
       paymentMethod: 'Metodo de pago',
       paymentStatus: 'Estado de pago',
       zelleNumber: 'Numero Zelle',
+      vehicleWearCost: 'Costo de viaje incluido',
+      quoteType: 'Tipo de cotización',
       paymentNote: 'Nota de pago',
       paymentCash: 'Efectivo',
       paymentZelle: 'Zelle',
@@ -362,7 +380,8 @@
     bookings: [],
     blocks: [],
     portfolio: [],
-    reviews: []
+    reviews: [],
+    bookingFilter: 'upcoming'
   };
 
   function clone(value) {
@@ -612,6 +631,30 @@
     return '$' + Number(value || 0).toFixed(0);
   }
 
+  function formatTime12Hour(value) {
+    return BOOKING && BOOKING.formatTime12Hour ? BOOKING.formatTime12Hour(value) : String(value || '');
+  }
+
+  function bookingStartMillis(booking) {
+    var raw = [booking.requestedDate || '', booking.startTime || '00:00'].join('T');
+    var parsed = Date.parse(raw);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+
+  function isUpcomingBooking(booking, now) {
+    var status = booking.status || '';
+    return status !== 'cancelled' && status !== 'completed' && bookingStartMillis(booking) >= now.getTime();
+  }
+
+  function filteredBookings(now) {
+    now = now || new Date();
+    var rows = (state.bookings || []).slice();
+    if (state.bookingFilter === 'completed') rows = rows.filter(function(b) { return b.status === 'completed'; });
+    else if (state.bookingFilter === 'cancelled') rows = rows.filter(function(b) { return b.status === 'cancelled'; });
+    else if (state.bookingFilter === 'upcoming') rows = rows.filter(function(b) { return isUpcomingBooking(b, now); });
+    return rows.sort(function(a, b) { return bookingStartMillis(a) - bookingStartMillis(b); });
+  }
+
   function serviceForBooking(booking) {
     return (state.services || []).filter(function(service) {
       return service.id === booking.serviceId;
@@ -690,7 +733,7 @@
     var zellePhone = booking.zellePhone || (state.vendor && state.vendor.phone) || '';
 
     title.textContent = booking.customerName || booking.serviceName || booking.id;
-    meta.textContent = [booking.requestedDate, booking.startTime, booking.endTime, statusLabel(booking.status)].filter(Boolean).join(' • ');
+    meta.textContent = [booking.requestedDate, [formatTime12Hour(booking.startTime), formatTime12Hour(booking.endTime)].filter(Boolean).join(' - '), statusLabel(booking.status)].filter(Boolean).join(' • ');
 
     if (trim(booking.address)) {
       var link = el('a', 'mb-button mb-button--ghost mb-button--sm');
@@ -754,8 +797,8 @@
       [t('serviceType'), service.category || booking.serviceCategory || ''],
       [t('serviceDurationLabel'), duration ? duration + ' ' + t('minutesShort') : ''],
       [t('blockDateLabel'), booking.requestedDate],
-      [t('blockStartLabel'), booking.startTime],
-      [t('blockEndLabel'), booking.endTime],
+      [t('blockStartLabel'), formatTime12Hour(booking.startTime)],
+      [t('blockEndLabel'), formatTime12Hour(booking.endTime)],
       ['Status', statusLabel(booking.status)]
     ]));
     card.appendChild(detailSection(t('customerAddress'), [
@@ -764,7 +807,9 @@
     card.appendChild(detailSection(t('pricingDetails'), [
       [t('servicePrice'), formatMoney(booking.servicePrice)],
       [t('travelFee'), formatMoney(booking.travelFee)],
-      [t('amountDue'), formatMoney(total)]
+      [t('vehicleWearCost'), booking.vehicleWearCost ? formatMoney(booking.vehicleWearCost) : formatMoney(0)],
+      [t('amountDue'), formatMoney(total)],
+      [t('quoteType'), booking.quoteType || 'standard']
     ]));
     card.appendChild(detailSection(t('paymentDetails'), [
       [t('paymentMethod'), paymentMethodLabel(booking.paymentMethod)],
@@ -815,11 +860,12 @@
   }
 
   function renderBookings() {
+    var now = new Date();
     var today = getTodayIso();
     var active = state.bookings.filter(function(booking) { return booking.status !== 'cancelled' && booking.status !== 'completed'; });
     var todayRows = active.filter(function(booking) { return booking.requestedDate === today; });
-    var upcomingRows = active.filter(function(booking) { return booking.requestedDate >= today; })
-      .sort(function(a, b) { return (a.requestedDate + a.startTime).localeCompare(b.requestedDate + b.startTime); });
+    var upcomingRows = active.filter(function(booking) { return isUpcomingBooking(booking, now); })
+      .sort(function(a, b) { return bookingStartMillis(a) - bookingStartMillis(b); });
     var pendingRows = active.filter(function(booking) {
       return booking.status === 'pending_confirmation' || booking.status === 'pending_barber_confirmation' || booking.status === 'vendor_review';
     });
@@ -828,7 +874,10 @@
     document.getElementById('mbStatPending').textContent = pendingRows.length;
     renderBookingList('mbTodayList', todayRows);
     renderBookingList('mbPendingList', pendingRows);
-    renderBookingList('mbUpcomingList', upcomingRows);
+    renderBookingList('mbUpcomingList', filteredBookings(now));
+    document.querySelectorAll('[data-booking-filter]').forEach(function(btn) {
+      btn.classList.toggle('mb-button--primary', btn.getAttribute('data-booking-filter') === state.bookingFilter);
+    });
   }
 
   function renderProfileForm() {
@@ -843,6 +892,15 @@
     document.getElementById('mbDashServiceAreas').value = (state.vendor.serviceAreas || []).join(', ');
     document.getElementById('mbDashTravelRadius').value = state.vendor.travelRadiusMiles || 0;
     document.getElementById('mbDashTravelFee').value = state.vendor.baseTravelFee || 0;
+    var card = document.getElementById('mbDashboardVendorCard');
+    if (card) {
+      card.innerHTML = '<strong>Vendor:</strong> ' + [
+        state.vendor.businessName || state.vendorId,
+        state.vendor.barberName || '',
+        state.vendor.region || (state.vendor.serviceAreas || []).slice(0, 2).join(', '),
+        'Zelle: ' + (state.vendor.phone || '')
+      ].filter(Boolean).map(function(part) { return String(part).replace(/</g, '&lt;').replace(/>/g, '&gt;'); }).join('<br>');
+    }
   }
 
   function renderServiceForm() {
@@ -1128,6 +1186,12 @@
     });
     document.querySelector('[data-action="refresh"]').addEventListener('click', function() {
       loadBookings().then(renderBookings);
+    });
+    document.querySelectorAll('[data-booking-filter]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        state.bookingFilter = btn.getAttribute('data-booking-filter') || 'upcoming';
+        renderBookings();
+      });
     });
     document.querySelector('[data-action="saveProfile"]').addEventListener('click', saveProfile);
     document.querySelector('[data-action="saveService"]').addEventListener('click', saveService);

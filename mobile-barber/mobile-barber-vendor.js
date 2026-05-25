@@ -637,6 +637,10 @@
     return '$' + Number(value || 0).toFixed(0);
   }
 
+  function formatTime12Hour(value) {
+    return BOOKING && BOOKING.formatTime12Hour ? BOOKING.formatTime12Hour(value) : String(value || '');
+  }
+
   function storageRead(key, fallback) {
     try {
       var raw = root.localStorage && root.localStorage.getItem(key);
@@ -710,7 +714,7 @@
       'DuLichCali Mobile Barber',
       'Booking ' + (booking.id || booking.bookingId || ''),
       (state.vendor && (state.vendor.barberName || state.vendor.businessName)) || booking.vendorId || '',
-      [booking.requestedDate || '', booking.startTime || ''].filter(Boolean).join(' '),
+      [booking.requestedDate || '', formatTime12Hour(booking.startTime || '')].filter(Boolean).join(' '),
       addressSummary(booking)
     ].filter(Boolean).join(' - ');
   }
@@ -823,7 +827,7 @@
     var service = bookingService(booking) || {};
     var duration = (state.availabilityResult && state.availabilityResult.timing && state.availabilityResult.timing.totalMinutes) ||
       booking.durationMinutes || service.durationMinutes || '';
-    var when = [booking.requestedDate, [booking.startTime, booking.endTime].filter(Boolean).join(' - ')].filter(Boolean).join(' ');
+    var when = [booking.requestedDate, [formatTime12Hour(booking.startTime), formatTime12Hour(booking.endTime)].filter(Boolean).join(' - ')].filter(Boolean).join(' ');
     var savedOnline = saveSource !== 'local';
     var rows = [
       [t('finalSummaryCustomer'), booking.customerName],
@@ -831,6 +835,8 @@
       [t('finalSummaryService'), booking.serviceName],
       [t('finalSummaryDateTime'), when],
       [t('finalSummaryDuration'), duration ? duration + ' ' + t('minutes') : ''],
+      [t('servicePriceLabel'), formatMoney(booking.servicePrice)],
+      [t('travelFeeLabel'), formatMoney(booking.travelFee)],
       [t('finalSummaryPrice'), formatMoney(booking.amountDue != null ? booking.amountDue : booking.servicePrice)],
       [t('paymentPreferenceLabel'), booking.paymentMethod || 'unknown'],
       [t('zelleLabel'), booking.zellePhone || ((state.vendor && state.vendor.phone) || '')],
@@ -906,7 +912,7 @@
       var rebook = el('button', 'mb-button mb-button--ghost mb-button--sm');
       title.textContent = booking.serviceName || booking.serviceId || t('previousServiceLabel');
       meta.textContent = [
-        t('historyDateLabel') + ': ' + [booking.requestedDate, booking.startTime].filter(Boolean).join(' '),
+        t('historyDateLabel') + ': ' + [booking.requestedDate, formatTime12Hour(booking.startTime)].filter(Boolean).join(' '),
         booking.city || '',
         booking.id || booking.bookingId ? '#' + (booking.id || booking.bookingId).slice(-8) : ''
       ].filter(Boolean).join(' • ');
@@ -1414,6 +1420,33 @@
     error.hidden = !message;
   }
 
+  function selectedManualService() {
+    var serviceId = document.getElementById('mbBookingService').value || state.preselectedServiceId;
+    return state.services.filter(function(service) { return service.id === serviceId; })[0] || null;
+  }
+
+  function renderPricePreview(draft) {
+    var preview = document.getElementById('mbPricePreview');
+    if (!preview || !BOOKING || !BOOKING.calculateMobileBarberPrice) return null;
+    var service = selectedManualService();
+    if (!service) return null;
+    var quote = BOOKING.calculateMobileBarberPrice({
+      vendor: state.vendor,
+      service: service,
+      address: draft || getManualDraft()
+    });
+    preview.innerHTML = '<dl class="mb-confirmation-list">' + [
+      [t('finalSummaryService'), service.name],
+      [t('servicePriceLabel'), formatMoney(quote.baseServicePrice)],
+      [t('travelFeeLabel'), formatMoney(quote.travelFee)],
+      [t('finalSummaryPrice'), formatMoney(quote.totalPrice)]
+    ].map(function(row) {
+      return '<div><dt>' + escapeHtml(row[0]) + '</dt><dd>' + escapeHtml(row[1]) + '</dd></div>';
+    }).join('') + '</dl><p>' + escapeHtml(quote.pricingExplanation || '') + '</p>';
+    preview.hidden = false;
+    return quote;
+  }
+
   function hasManualValues(ids) {
     return ids.every(function(id) {
       var node = document.getElementById(id);
@@ -1633,6 +1666,7 @@
         logManualBookingState({ submitStatus: 'blocked', error: 'out_of_service_area' });
         return;
       }
+      renderPricePreview(draftForArea);
     }
     showManualError('');
     state.manualStep = Math.min(4, state.manualStep + 1);
@@ -1723,12 +1757,15 @@
     var rows = [
       [t('finalSummaryBarber'), barber],
       [t('finalSummaryService'), result.service.name],
+      [t('servicePriceLabel'), formatMoney(result.price.baseServicePrice)],
+      [t('travelFeeLabel'), formatMoney(result.price.travelFee)],
       [t('finalSummaryPrice'), formatMoney(result.price.totalPrice)],
       [t('paymentPreferenceLabel'), draft.paymentMethod || 'unknown'],
       [t('zelleLabel'), (state.vendor && state.vendor.phone) || ''],
       [t('finalSummaryDuration'), result.timing.totalMinutes + ' ' + t('minutes')],
       [t('finalSummaryAddress'), address],
-      [t('finalSummaryDateTime'), interpolate(t('summaryTime'), { date: draft.requestedDate, start: draft.startTime, end: result.timing.endTime })]
+      [t('finalSummaryDateTime'), interpolate(t('summaryTime'), { date: draft.requestedDate, start: formatTime12Hour(draft.startTime), end: formatTime12Hour(result.timing.endTime) })],
+      ['Quote', result.price.pricingExplanation]
     ];
     summary.innerHTML = [
       '<h3>' + t('summaryTitle') + '</h3>',
@@ -1738,6 +1775,7 @@
       '<p class="mb-payment-after-service">' + escapeHtml(t('paymentCollectedAfterService')) + '<br>' +
         escapeHtml(interpolate(t('paymentOptionsSummary'), { phone: (state.vendor && state.vendor.phone) || '' })) + '<br>' +
         escapeHtml(t('paymentNoPrepay')) + '</p>',
+      result.price.quoteType === 'vendor_review' ? '<p>This address may be outside the normal service area. The barber will review and confirm the final travel fee.</p>' : '',
       result.reviewRequired ? '<p>' + t('reviewAreaNotice') + '</p>' : '',
       '<p>' + notice + '</p>'
     ].join('');
@@ -2040,7 +2078,7 @@
       var id = booking.id || booking.bookingId || '';
       return '<article class="mb-vendor-notification-row" data-booking-id="' + escapeHtml(id) + '">' +
         '<strong>' + escapeHtml(booking.customerName || 'Customer') + '</strong>' +
-        '<span>' + escapeHtml([booking.requestedDate, booking.startTime].filter(Boolean).join(' ')) + '</span>' +
+        '<span>' + escapeHtml([booking.requestedDate, formatTime12Hour(booking.startTime)].filter(Boolean).join(' ')) + '</span>' +
         statusBadgeHtml(booking.status) +
         '<div class="mb-vendor-notification-actions">' +
         '<button class="mb-button mb-button--ghost mb-button--sm" type="button" data-action="vendorAcceptBooking">' + t('acceptBooking') + '</button>' +
@@ -2084,7 +2122,7 @@
     msg.textContent = interpolate(t('newBookingToast'), {
       customer: booking.customerName || 'Customer',
       date: booking.requestedDate || '',
-      time: booking.startTime || ''
+      time: formatTime12Hour(booking.startTime || '')
     });
     view.type = 'button';
     view.textContent = t('viewBooking');

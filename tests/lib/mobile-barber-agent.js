@@ -252,24 +252,141 @@ function runMobileBarberAgentTests(test) {
     assertEq(r2.session.id, firstId, 'session id must persist across turns');
     assert(r2.session.lastReply && r2.session.lastReply.length > 0, 'lastReply must be tracked for diagnostics');
   });
+
+  // ── AI Brain (Phase 2) ──────────────────────────────────────────────────────
+
+  test('parseStateMarker extracts JSON STATE marker', function() {
+    var update = MobileBarberAgent.parseStateMarker('Hello John. [STATE:{"customerName":"John"}]');
+    assertEq(update && update.customerName, 'John');
+    assertEq(MobileBarberAgent.parseStateMarker('no marker here'), null);
+    assertEq(MobileBarberAgent.parseStateMarker('[STATE:{not json}]'), null);
+  });
+
+  test('stripMarkers removes STATE and ACTION markers from visible reply', function() {
+    var visible = MobileBarberAgent.stripMarkers('Nice to meet you. [STATE:{"customerName":"Ann"}] [ACTION:check_availability]');
+    assertEq(visible, 'Nice to meet you.');
+  });
+
+  test('buildAIBrainPrompt includes vendor, services, current state, and STATE protocol', function() {
+    var ctx = context();
+    var state = MobileBarberAgent.mergeState(MobileBarberAgent.emptyState('vi'), {
+      phone: '7145550100', customerName: 'Linh'
+    }, new Date('2026-05-25T12:00:00'));
+    state.step = 'ASK_ADDRESS';
+    var prompt = MobileBarberAgent.buildAIBrainPrompt(state, ctx, 'vi');
+    assert(prompt.indexOf('Mobile Barber') >= 0, 'prompt must name the assistant');
+    assert(prompt.indexOf('tiếng Việt') >= 0, 'Vietnamese instruction must be present for vi lang');
+    assert(prompt.indexOf('customerName: Linh') >= 0, 'collected slots must be in prompt');
+    assert(prompt.indexOf('Next step the deterministic agent will run: ASK_ADDRESS') >= 0, 'next step guidance present');
+    assert(prompt.indexOf('STATE MARKER PROTOCOL') >= 0, 'marker contract present');
+    assert(prompt.indexOf('classic-mobile-cut') >= 0, 'allowed serviceId values listed');
+  });
+
+  test('handleMessageAsync calls aiBrainProvider and uses paraphrased reply', function() {
+    var ctx = context();
+    var aiCalls = [];
+    ctx.aiBrainProvider = function(req) {
+      aiCalls.push({ step: req.state.step, history: req.history.slice() });
+      return Promise.resolve({ text: 'Sure, what is your phone number? [STATE:{"intent":"booking_request"}]' });
+    };
+    return MobileBarberAgent.handleMessageAsync(null, 'I want a haircut', ctx).then(function(result) {
+      assertEq(aiCalls.length, 1, 'AI brain must be invoked');
+      assertEq(result.aiBrainUsed, true);
+      assert(result.response.indexOf('phone') >= 0, 'AI reply text must surface');
+      assert(result.response.indexOf('[STATE') < 0, 'STATE marker must be stripped from user-visible reply');
+      assert(result.session.history.length >= 2, 'history must contain user + assistant turns');
+    });
+  });
+
+  test('handleMessageAsync AI brain STATE marker overrides deterministic state', function() {
+    var ctx = context();
+    ctx.aiBrainProvider = function() {
+      return Promise.resolve({ text: 'Hello Daniel Tran. What address?\n[STATE:{"customerName":"Daniel Tran"}]' });
+    };
+    var session = { state: MobileBarberAgent.mergeState(MobileBarberAgent.emptyState('en'), {
+      phone: '7145550100',
+      customerLookupStatus: 'not_found',
+      step: 'IF_NEW_CUSTOMER_ASK_NAME'
+    }, new Date('2026-05-25T10:00:00')) };
+    return MobileBarberAgent.handleMessageAsync(session, 'Daniel Tran', ctx).then(function(result) {
+      assertEq(result.session.state.customerName, 'Daniel Tran', 'AI marker must update customerName');
+      assertEq(result.session.state.step, 'ASK_ADDRESS', 'state must advance after AI fills slot');
+    });
+  });
+
+  test('handleMessageAsync falls back to deterministic reply when AI brain throws', function() {
+    var ctx = context();
+    ctx.aiBrainProvider = function() { return Promise.reject(new Error('aiProxy 500')); };
+    return MobileBarberAgent.handleMessageAsync(null, '714-555-0100', ctx).then(function(result) {
+      assert(!result.aiBrainUsed, 'aiBrainUsed must be false when AI throws');
+      assertEq(result.aiBrainError, 'aiProxy 500');
+      assert(result.response && result.response.length > 0, 'deterministic reply must surface as fallback');
+    });
+  });
+
+  test('handleMessageAsync accumulates history across multiple turns', function() {
+    var ctx = context();
+    var turnIdx = 0;
+    ctx.aiBrainProvider = function() {
+      turnIdx++;
+      return Promise.resolve({ text: 'Reply ' + turnIdx + '. [STATE:{}]' });
+    };
+    ctx.customerLookupProvider = function() { return Promise.resolve(null); };
+    var session = null;
+    return MobileBarberAgent.handleMessageAsync(session, '714-555-0123', ctx)
+      .then(function(r1) {
+        session = r1.session;
+        assert(session.history.length >= 2, 'history must accumulate after first turn');
+        return MobileBarberAgent.handleMessageAsync(session, 'My name is Tom', ctx);
+      })
+      .then(function(r2) {
+        session = r2.session;
+        var roles = session.history.map(function(m) { return m.role; });
+        assert(roles.indexOf('user') >= 0 && roles.indexOf('assistant') >= 0, 'history has both roles');
+        assert(session.history.length >= 4, 'history must keep prior turns');
+      });
+  });
+
+  test('handleMessageAsync sends customer_lookup_miss system context to AI after no-record', function() {
+    var ctx = context();
+    var sentSystem = null;
+    ctx.aiBrainProvider = function(req) {
+      var last = req.history[req.history.length - 1];
+      if (last && last.content && last.content.indexOf('[SYSTEM:') === 0) sentSystem = last.content;
+      return Promise.resolve({ text: 'No record yet — what name should I use? [STATE:{}]' });
+    };
+    ctx.customerLookupProvider = function() { return Promise.resolve(null); };
+    return MobileBarberAgent.handleMessageAsync(null, '714-555-0177', ctx).then(function() {
+      assert(sentSystem && sentSystem.indexOf('customer_lookup_miss') >= 0,
+        'AI must see [SYSTEM: customer_lookup_miss] after no-record lookup');
+    });
+  });
 }
 
 if (require.main === module) {
   var passed = 0;
   var failed = 0;
+  var pending = [];
   runMobileBarberAgentTests(function(name, fn) {
-    try {
-      fn();
-      passed++;
-      console.log('PASS', name);
-    } catch (e) {
-      failed++;
-      console.log('FAIL', name);
-      console.log(' ', e.message);
+    var result;
+    try { result = fn(); }
+    catch (e) { failed++; console.log('FAIL', name); console.log(' ', e.message); return; }
+    if (result && typeof result.then === 'function') {
+      pending.push(result.then(function() {
+        passed++; console.log('PASS', name);
+      }, function(err) {
+        failed++; console.log('FAIL', name); console.log(' ', err && err.message);
+      }));
+      return;
     }
+    passed++;
+    console.log('PASS', name);
+    return;
   });
-  console.log('Mobile Barber agent tests:', passed + ' passed, ' + failed + ' failed');
-  if (failed > 0) process.exit(1);
+  Promise.all(pending).then(function() {
+    console.log('Mobile Barber agent tests:', passed + ' passed, ' + failed + ' failed');
+    if (failed > 0) process.exit(1);
+  });
 }
 
 module.exports = {

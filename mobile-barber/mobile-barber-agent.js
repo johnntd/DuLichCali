@@ -489,6 +489,180 @@
     return vendorName ? reply(lang, 'welcomeVendor', { vendor: vendorName }) : reply(lang, 'welcome');
   }
 
+  // ── AI Brain (Phase 2) ─────────────────────────────────────────────────────
+  // The deterministic state machine above decides WHICH question to ask next.
+  // The AI brain (when present) is responsible for understanding short / natural
+  // customer replies and paraphrasing the next question in a human voice, while
+  // emitting a [STATE:{...}] marker so the deterministic state can be re-merged
+  // with what the AI understood. Deterministic guards (phone lookup, availability,
+  // booking write) stay the source of truth — the AI never confirms a booking.
+
+  var STATE_MARKER_RE = /\[STATE:(\{[\s\S]*?\})\s*\]/i;
+  var ACTION_MARKER_RE = /\[ACTION:[^\]]+\]/gi;
+
+  var AI_STEP_GUIDANCE = {
+    START: 'Greet briefly and ask for the customer phone number.',
+    ASK_PHONE: 'Politely ask for the customer phone number so you can look up their record.',
+    LOOKUP_CUSTOMER: 'Acknowledge you are checking the phone number. Do not ask another question yet.',
+    IF_NEW_CUSTOMER_ASK_NAME: 'Say you do not see a record yet. Ask what name should go on the booking.',
+    IF_EXISTING_CUSTOMER_CONFIRM_PROFILE: 'Greet the customer by their saved name. If you have a saved address, offer it for reuse; otherwise ask for the service address.',
+    ASK_NAME: 'Ask for the customer name.',
+    ASK_ADDRESS: 'Ask for the service address (street, city, ZIP). One question only.',
+    ASK_SERVICE: 'Ask which barber service they would like. List a couple of options if helpful.',
+    ASK_DATE_TIME: 'Ask what day and time they would prefer.',
+    CHECK_AVAILABILITY: 'Acknowledge the request and wait for the system availability result. Do not promise the slot.',
+    CONFIRM_SUMMARY: 'Read back the booking summary (service, date/time, address, total). Ask the customer to reply yes to send it.',
+    CREATE_BOOKING: 'Acknowledge the booking is being sent.',
+    DONE: 'Confirm the request was sent and mention the barber still needs to confirm.'
+  };
+
+  function _parseStateMarker(reply) {
+    if (!reply || typeof reply !== 'string') return null;
+    var m = STATE_MARKER_RE.exec(reply);
+    if (!m) return null;
+    try { return JSON.parse(m[1]); } catch (e) { return null; }
+  }
+
+  function _stripMarkers(reply) {
+    if (!reply || typeof reply !== 'string') return '';
+    return reply.replace(STATE_MARKER_RE, '').replace(ACTION_MARKER_RE, '').replace(/\s+\n/g, '\n').trim();
+  }
+
+  function _buildAIBrainPrompt(state, ctx, lang) {
+    var vendor = (ctx && ctx.vendor) || {};
+    var services = (ctx && ctx.services) || [];
+    var langCode = VALID_LANGS[lang] ? lang : 'en';
+
+    var serviceLines = services.map(function(s) {
+      return '- ' + s.id + ' : ' + s.name + ' ($' + s.price + ', ' + s.durationMinutes + ' min)';
+    }).join('\n');
+
+    var slotLines = [];
+    if (state.customerName) slotLines.push('customerName: ' + state.customerName);
+    if (state.phone) slotLines.push('phone: ' + state.phone);
+    if (state.address || state.city || state.zip) {
+      slotLines.push('address: ' + trim((state.address || '') + ', ' + (state.city || '') + ' ' + (state.zip || '')));
+    }
+    if (state.serviceId) slotLines.push('serviceId: ' + state.serviceId);
+    if (state.date) slotLines.push('date: ' + state.date);
+    if (state.time) slotLines.push('time: ' + state.time);
+    if (state.customerLookupStatus) slotLines.push('customerLookupStatus: ' + state.customerLookupStatus);
+    if (state.addressConfirmed) slotLines.push('addressConfirmed: true');
+
+    var guidance = AI_STEP_GUIDANCE[state.step] || AI_STEP_GUIDANCE.START;
+
+    var serviceAreas = (vendor.serviceAreas || []).join(', ') || 'Bay Area & Orange County';
+    var vendorName = vendor.businessName || vendor.barberName || 'Mobile Barber';
+    var barberName = vendor.barberName || vendorName;
+
+    var langInstruction = {
+      en: 'Respond in English. Keep replies short and warm.',
+      vi: 'Trả lời bằng tiếng Việt. Giọng thân thiện, lịch sự, dùng dạ/anh/chị tự nhiên.',
+      es: 'Responde en español. Sé cálido y breve.'
+    }[langCode] || 'Respond in English.';
+
+    return [
+      'You are the Du Lich Cali Mobile Barber booking assistant for ' + vendorName + ' (barber: ' + barberName + ').',
+      langInstruction,
+      'Behave human. Acknowledge what the customer just said before asking the next question. One question per turn.',
+      'Never ask for name, phone, address, service, date, and time all at once. Phone lookup is always first for booking.',
+      'Service areas: ' + serviceAreas + '.',
+      'Available services:',
+      serviceLines || '(none configured)',
+      'NEVER invent prices, services, availability, addresses, or barber names not listed above.',
+      'NEVER claim a booking is confirmed — only the system confirms; you wait for the system to acknowledge.',
+      '',
+      'Currently collected booking slots:',
+      slotLines.length ? slotLines.join('\n') : '(none yet)',
+      '',
+      'Next step the deterministic agent will run: ' + state.step,
+      'Guidance for this turn: ' + guidance,
+      '',
+      'STATE MARKER PROTOCOL — when the customer reply contains a value for a slot, emit ONE marker on the LAST line of your response (NEVER inside the customer-facing text). Examples:',
+      '  Customer: "My name is John"',
+      '  You: "Nice to meet you, John. What address should the barber visit?',
+      '       [STATE:{"customerName":"John"}]"',
+      '',
+      '  Customer: "Same address as before"',
+      '  You: "Great, using your saved San Jose address. What barber service would you like?',
+      '       [STATE:{"addressConfirmed":true}]"',
+      '',
+      '  Customer: "fade tomorrow at 5pm"',
+      '  You: "A fade tomorrow at 5pm — let me check that slot.',
+      '       [STATE:{"serviceId":"classic-mobile-cut","date":"' + (ctx && ctx.todayIso ? ctx.todayIso : '2026-05-26') + '","time":"17:00"}]"',
+      '',
+      'Allowed STATE keys: customerName, phone, address, city, zip, serviceId, date, time, addressConfirmed, intent, barberPreference, notes.',
+      'Allowed serviceId values: ' + (services.map(function(s) { return s.id; }).join(', ') || '(none)') + '.',
+      'date MUST be ISO YYYY-MM-DD. time MUST be HH:MM 24-hour. Phone digits only.',
+      'If the customer reply contains NO new slot value, do not emit a marker — just ask the next question naturally.',
+      'The marker is stripped from the user-visible reply automatically. NEVER paraphrase the marker or read it aloud.'
+    ].join('\n');
+  }
+
+  function _runAIBrain(session, message, ctx, baseResult) {
+    if (!baseResult || !baseResult.session) return Promise.resolve(baseResult);
+    var provider = ctx && ctx.aiBrainProvider;
+    if (typeof provider !== 'function') return Promise.resolve(baseResult);
+    // Skip the AI hop when there is nothing to say (e.g. customer-lookup phase
+    // returned a status message that the second handleMessage call replaces).
+    if (!baseResult.response && !message) return Promise.resolve(baseResult);
+
+    var state = baseResult.session.state || {};
+    var lang = state.lang || 'en';
+    var systemPrompt = _buildAIBrainPrompt(state, ctx, lang);
+    baseResult.session.history = baseResult.session.history || [];
+    var history = baseResult.session.history;
+
+    if (message) {
+      history.push({ role: 'user', content: trim(message) });
+    } else if (baseResult.systemContextForAI) {
+      // Synthetic system message describing what the deterministic layer just did
+      // (e.g. "customer lookup miss") so the AI can react naturally.
+      history.push({ role: 'user', content: '[SYSTEM: ' + baseResult.systemContextForAI + ']' });
+    }
+
+    // Keep history bounded (last 20 turns) to limit token spend.
+    var historyForAI = history.slice(-20);
+
+    return Promise.resolve(provider({
+      systemPrompt: systemPrompt,
+      history: historyForAI,
+      state: state,
+      vendor: ctx.vendor,
+      lang: lang
+    })).then(function(aiResp) {
+      var rawReply = (aiResp && (aiResp.text || aiResp.reply)) || '';
+      var stateUpdate = _parseStateMarker(rawReply);
+      var naturalReply = _stripMarkers(rawReply);
+
+      if (stateUpdate && typeof stateUpdate === 'object') {
+        baseResult.session.state = mergeState(baseResult.session.state, stateUpdate, ctx.now);
+        baseResult.session._aiStateUpdate = stateUpdate;
+      }
+
+      if (naturalReply) {
+        baseResult.response = naturalReply;
+        baseResult.session.lastReply = naturalReply;
+        history.push({ role: 'assistant', content: naturalReply });
+      } else if (baseResult.response) {
+        history.push({ role: 'assistant', content: baseResult.response });
+      }
+      baseResult.aiBrainUsed = true;
+      baseResult.session.history = history;
+      return baseResult;
+    }).catch(function(err) {
+      // AI failed → keep deterministic reply. Do not append failed AI text to history.
+      baseResult.aiBrainError = (err && err.message) || String(err);
+      if (typeof console !== 'undefined' && console.warn) {
+        console.warn('[mobile-barber-agent] AI brain failed, using deterministic reply:', baseResult.aiBrainError);
+      }
+      if (baseResult.response) {
+        history.push({ role: 'assistant', content: baseResult.response });
+      }
+      return baseResult;
+    });
+  }
+
   var _sessionCounter = 0;
   function _assignSessionId(session) {
     if (!session.id) {
@@ -662,19 +836,26 @@
   function handleMessageAsync(session, message, ctx) {
     ctx = ctx || {};
     var first = handleMessage(session, message, ctx);
-    if (!first || !first.needsCustomerLookup || typeof ctx.customerLookupProvider !== 'function') {
-      return Promise.resolve(first);
+    if (first && first.needsCustomerLookup && typeof ctx.customerLookupProvider === 'function') {
+      var phone = first.session && first.session.state && first.session.state.phone;
+      return Promise.resolve(ctx.customerLookupProvider(phone, first.session.state))
+        .then(function(record) {
+          var nextCtx = Object.assign({}, ctx, { customerLookupResult: record || null });
+          var second = handleMessage(first.session, '', nextCtx);
+          // AI brain reacts to the post-lookup state (new vs existing customer).
+          second.systemContextForAI = record
+            ? 'customer_lookup_hit'
+            : 'customer_lookup_miss';
+          return _runAIBrain(second.session, '', nextCtx, second);
+        })
+        .catch(function() {
+          var nextCtx = Object.assign({}, ctx, { customerLookupResult: null });
+          var second = handleMessage(first.session, '', nextCtx);
+          second.systemContextForAI = 'customer_lookup_error';
+          return _runAIBrain(second.session, '', nextCtx, second);
+        });
     }
-    var phone = first.session && first.session.state && first.session.state.phone;
-    return Promise.resolve(ctx.customerLookupProvider(phone, first.session.state))
-      .then(function(record) {
-        var nextCtx = Object.assign({}, ctx, { customerLookupResult: record || null });
-        return handleMessage(first.session, '', nextCtx);
-      })
-      .catch(function() {
-        var nextCtx = Object.assign({}, ctx, { customerLookupResult: null });
-        return handleMessage(first.session, '', nextCtx);
-      });
+    return _runAIBrain(first && first.session, message, ctx, first);
   }
 
   function serviceBookingAgentBrain(config) {
@@ -695,6 +876,9 @@
     mergeState: mergeState,
     extractUpdate: extractUpdate,
     buildPrompt: buildPrompt,
+    buildAIBrainPrompt: _buildAIBrainPrompt,
+    parseStateMarker: _parseStateMarker,
+    stripMarkers: _stripMarkers,
     handleMessage: handleMessage,
     handleMessageAsync: handleMessageAsync,
     serviceBookingAgentBrain: serviceBookingAgentBrain,

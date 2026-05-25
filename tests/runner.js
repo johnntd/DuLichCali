@@ -38,16 +38,42 @@ function group(name, testType) {
   console.log('\n[' + name + ']' + (testType ? '  \u2190 ' + testType : ''));
 }
 
+var _pendingAsync = [];
+
 function test(name, fn) {
+  var groupAtCall = _currentGroup;
+  var result;
   try {
-    fn();
-    console.log('  \u2713', name);
-    _passed++;
+    result = fn();
   } catch (e) {
     console.log('  \u2717', name);
     console.log('    \u2192', e.message);
     _failed++;
-    _failures.push({ group: _currentGroup, name: name, error: e.message });
+    _failures.push({ group: groupAtCall, name: name, error: e.message });
+    return;
+  }
+  if (result && typeof result.then === 'function') {
+    // Promise-returning test: queue for async drain at end of run
+    _pendingAsync.push({ group: groupAtCall, name: name, promise: result });
+    return;
+  }
+  console.log('  \u2713', name);
+  _passed++;
+}
+
+async function _drainPendingAsync() {
+  for (var i = 0; i < _pendingAsync.length; i++) {
+    var item = _pendingAsync[i];
+    try {
+      await item.promise;
+      console.log('  \u2713 (async)', item.name);
+      _passed++;
+    } catch (e) {
+      console.log('  \u2717 (async)', item.name);
+      console.log('    \u2192', e && e.message ? e.message : String(e));
+      _failed++;
+      _failures.push({ group: item.group, name: item.name, error: e && e.message ? e.message : String(e) });
+    }
   }
 }
 
@@ -1502,6 +1528,8 @@ MBA.runMobileBarberAgentTests(test);
 // FINAL REPORT
 // ══════════════════════════════════════════════════════════════════════════
 
+_drainPendingAsync().then(function() {
+
 console.log('\n' + '='.repeat(62));
 if (_failed === 0) {
   console.log('\u2705  ALL TESTS PASSED: ' + _passed + ' passed, 0 failed');
@@ -1532,3 +1560,5 @@ console.log('  \u2014 Regression-free after Claude model updates');
 console.log('='.repeat(62) + '\n');
 
 if (_failed > 0) process.exit(1);
+
+}); // end _drainPendingAsync().then()

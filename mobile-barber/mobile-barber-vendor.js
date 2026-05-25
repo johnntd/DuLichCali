@@ -1284,10 +1284,24 @@
     log.scrollTop = log.scrollHeight;
   }
 
+  function _buildAIBrainProvider(vendorId) {
+    if (!root.AIEngine || typeof root.AIEngine.call !== 'function') return null;
+    return function(req) {
+      // Use 'nails' service config (sonnet 4-6, 900 tokens) since mobile_barber
+      // shares the conversational depth needed by the receptionist.
+      return root.AIEngine.call('nails', '', req.systemPrompt, req.history || [], { intent: 'booking' })
+        .then(function(resp) {
+          var text = (resp && resp.content && resp.content[0] && resp.content[0].text) || '';
+          return { text: text };
+        });
+    };
+  }
+
   function agentContext() {
     return {
       lang: state.lang,
       vendor: state.vendor,
+      vendorId: state.vendor && state.vendor.id,
       services: state.services,
       availability: DATA.sampleAvailability,
       existingBookings: state.existingBookings,
@@ -1296,7 +1310,8 @@
       customerLookupProvider: function(phone) {
         if (!BOOKING || typeof BOOKING.lookupReturningCustomer !== 'function') return Promise.resolve(null);
         return BOOKING.lookupReturningCustomer(state.vendor.id, phone);
-      }
+      },
+      aiBrainProvider: _buildAIBrainProvider(state.vendor && state.vendor.id)
     };
   }
 
@@ -1320,6 +1335,10 @@
         : Promise.resolve(AGENT.handleMessage(state.agentSession, message, agentContext()));
       return runner.then(function(result) {
       state.agentSession = result.session;
+      if (state.agentSession && state.agentSession.history && state.agentSession._historyKey
+          && root.AIEngine && typeof root.AIEngine.saveHistory === 'function') {
+        root.AIEngine.saveHistory(state.agentSession._historyKey, state.agentSession.history.slice(-20));
+      }
       if (result.booking) {
         if (options.source) result.booking.source = options.source;
         return BOOKING.saveBooking(result.booking).then(function(saveResult) {
@@ -1349,7 +1368,15 @@
     var panel = document.getElementById('mbVendorAssistant');
     panel.hidden = false;
     if (AGENT && !state.agentSession) {
-      state.agentSession = { state: AGENT.emptyState(state.lang) };
+      var historyKey = 'mb_h_' + ((state.vendor && state.vendor.id) || 'general');
+      var restoredHistory = (root.AIEngine && typeof root.AIEngine.restoreHistory === 'function')
+        ? root.AIEngine.restoreHistory(historyKey)
+        : null;
+      state.agentSession = {
+        state: AGENT.emptyState(state.lang),
+        history: restoredHistory || [],
+        _historyKey: historyKey
+      };
     }
     if (AGENT && state.preselectedServiceId) {
       state.agentSession.state = AGENT.mergeState(

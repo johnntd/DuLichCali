@@ -259,11 +259,23 @@
     });
   }
 
+  function _buildAIBrainProvider() {
+    if (!root.AIEngine || typeof root.AIEngine.call !== 'function') return null;
+    return function(req) {
+      return root.AIEngine.call('nails', '', req.systemPrompt, req.history || [], { intent: 'booking' })
+        .then(function(resp) {
+          var text = (resp && resp.content && resp.content[0] && resp.content[0].text) || '';
+          return { text: text };
+        });
+    };
+  }
+
   function agentContext(vendor) {
     vendor = vendor || preferredVendor();
     return {
       lang: state.lang,
       vendor: vendor,
+      vendorId: vendor && vendor.id,
       services: servicesForVendor(vendor && vendor.id),
       availability: DATA && DATA.sampleAvailability,
       existingBookings: state.existingBookings,
@@ -272,12 +284,24 @@
       customerLookupProvider: function(phone) {
         if (!BOOKING || typeof BOOKING.lookupReturningCustomer !== 'function' || !vendor) return Promise.resolve(null);
         return BOOKING.lookupReturningCustomer(vendor.id, phone);
-      }
+      },
+      aiBrainProvider: _buildAIBrainProvider()
     };
   }
 
   function ensureAgentSession() {
-    if (AGENT && !state.agentSession) state.agentSession = { state: AGENT.emptyState(state.lang) };
+    if (AGENT && !state.agentSession) {
+      var vendor = preferredVendor();
+      var historyKey = 'mb_h_' + ((vendor && vendor.id) || 'general');
+      var restored = (root.AIEngine && typeof root.AIEngine.restoreHistory === 'function')
+        ? root.AIEngine.restoreHistory(historyKey)
+        : null;
+      state.agentSession = {
+        state: AGENT.emptyState(state.lang),
+        history: restored || [],
+        _historyKey: historyKey
+      };
+    }
     var service = selectedService();
     if (AGENT && service) {
       state.agentSession.state = AGENT.mergeState(
@@ -303,6 +327,10 @@
         : Promise.resolve(AGENT.handleMessage(state.agentSession, message, ctx));
       return runner.then(function(result) {
         state.agentSession = result.session;
+        if (state.agentSession && state.agentSession.history && state.agentSession._historyKey
+            && root.AIEngine && typeof root.AIEngine.saveHistory === 'function') {
+          root.AIEngine.saveHistory(state.agentSession._historyKey, state.agentSession.history.slice(-20));
+        }
         if (result.booking) {
           if (options.source) result.booking.source = options.source;
           return BOOKING.saveBooking(result.booking).then(function(saved) {

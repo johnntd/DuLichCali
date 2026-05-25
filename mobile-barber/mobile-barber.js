@@ -2,6 +2,8 @@
 
 (function(root) {
   var DATA = root.MobileBarberData;
+  var BOOKING = root.MobileBarberBooking;
+  var AGENT = root.MobileBarberAgent;
 
   var STRINGS = {
     en: {
@@ -185,7 +187,7 @@
     'mobile-haircut-beard': { name: 'serviceComboName', desc: 'serviceComboDesc' }
   };
 
-  var state = { lang: 'en', selectedServiceId: '' };
+  var state = { lang: 'en', selectedServiceId: '', agentSession: null, lastBooking: null, existingBookings: [] };
 
   function getLang() {
     var param = new URLSearchParams(root.location.search).get('lang');
@@ -227,6 +229,123 @@
     var keys = SERVICE_COPY[service.id];
     if (!keys) return field === 'name' ? service.name : service.description;
     return field === 'name' ? t(keys.name) : t(keys.desc);
+  }
+
+  function selectedService() {
+    var services = DATA && DATA.sampleServices ? DATA.sampleServices : [];
+    return services.filter(function(service) { return service.id === state.selectedServiceId; })[0] || null;
+  }
+
+  function preferredVendor() {
+    var vendors = DATA && DATA.sampleVendors ? DATA.sampleVendors.filter(function(vendor) { return vendor.active !== false; }) : [];
+    var sessionState = state.agentSession && state.agentSession.state;
+    var preference = String(sessionState && sessionState.barberPreference || '').toLowerCase();
+    if (preference) {
+      var matched = vendors.filter(function(vendor) {
+        return String(vendor.businessName + ' ' + vendor.barberName + ' ' + vendor.id).toLowerCase().indexOf(preference.split(/\s+/)[0]) >= 0;
+      })[0];
+      if (matched) return matched;
+    }
+    var service = selectedService();
+    if (service && DATA.findVendorById) return DATA.findVendorById(service.vendorId);
+    if (DATA.findVendorById && DATA.MICHAEL_VENDOR_ID) return DATA.findVendorById(DATA.MICHAEL_VENDOR_ID);
+    return vendors[0] || null;
+  }
+
+  function servicesForVendor(vendorId) {
+    if (DATA && typeof DATA.listServicesForVendor === 'function') return DATA.listServicesForVendor(vendorId);
+    return (DATA && DATA.sampleServices ? DATA.sampleServices : []).filter(function(service) {
+      return service.vendorId === vendorId && service.active !== false;
+    });
+  }
+
+  function agentContext(vendor) {
+    vendor = vendor || preferredVendor();
+    return {
+      lang: state.lang,
+      vendor: vendor,
+      services: servicesForVendor(vendor && vendor.id),
+      availability: DATA && DATA.sampleAvailability,
+      existingBookings: state.existingBookings,
+      now: new Date(),
+      phoneIntake: root.PhoneIntake || null,
+      customerLookupProvider: function(phone) {
+        if (!BOOKING || typeof BOOKING.lookupReturningCustomer !== 'function' || !vendor) return Promise.resolve(null);
+        return BOOKING.lookupReturningCustomer(vendor.id, phone);
+      }
+    };
+  }
+
+  function ensureAgentSession() {
+    if (AGENT && !state.agentSession) state.agentSession = { state: AGENT.emptyState(state.lang) };
+    var service = selectedService();
+    if (AGENT && service) {
+      state.agentSession.state = AGENT.mergeState(
+        state.agentSession.state || AGENT.emptyState(state.lang),
+        { serviceId: service.id, intent: 'booking_request' },
+        new Date()
+      );
+    }
+    return state.agentSession;
+  }
+
+  function sendAgentMessage(message, options) {
+    options = options || {};
+    if (!AGENT || !BOOKING) return Promise.resolve({ response: t('assistantCopy') });
+    var vendor = preferredVendor();
+    if (!vendor) return Promise.resolve({ response: t('assistantCopy') });
+    ensureAgentSession();
+    var finish = function(existing) {
+      state.existingBookings = existing || [];
+      var ctx = agentContext(vendor);
+      var runner = typeof AGENT.handleMessageAsync === 'function'
+        ? AGENT.handleMessageAsync(state.agentSession, message, ctx)
+        : Promise.resolve(AGENT.handleMessage(state.agentSession, message, ctx));
+      return runner.then(function(result) {
+        state.agentSession = result.session;
+        if (result.booking) {
+          if (options.source) result.booking.source = options.source;
+          return BOOKING.saveBooking(result.booking).then(function(saved) {
+            state.lastBooking = saved.booking;
+            result.booking = saved.booking;
+            return result;
+          });
+        }
+        return result;
+      });
+    };
+    return BOOKING.loadExistingBookings(vendor.id).then(finish).catch(function() {
+      return finish([]);
+    });
+  }
+
+  function openAssistantPanel(mode) {
+    ensureAgentSession();
+    var panel = document.getElementById('mbAssistantPanel');
+    panel.hidden = false;
+    var copy = panel.querySelector('[data-i18n="assistantCopy"]');
+    if (copy && AGENT && typeof AGENT.initialPrompt === 'function') {
+      copy.textContent = AGENT.initialPrompt(mode === 'vendor' ? { vendor: preferredVendor() } : {}, state.lang);
+    }
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    return panel;
+  }
+
+  function openVoiceAssistant() {
+    openAssistantPanel('general');
+    if (!root.MobileBarberVoice) return;
+    var controller = {
+      getLang: function() { return state.lang; },
+      setLang: setLang,
+      sendMessage: sendAgentMessage,
+      initialPrompt: function() {
+        return AGENT && typeof AGENT.initialPrompt === 'function'
+          ? AGENT.initialPrompt({}, state.lang)
+          : '';
+      },
+      openTextFallback: function() { openAssistantPanel('general'); }
+    };
+    root.MobileBarberVoice.open(controller);
   }
 
   function landingServices(services) {
@@ -305,17 +424,27 @@
     var title = el('strong');
     var actions = el('div', 'mb-service-selection__actions');
     var book = el('a', 'mb-button mb-button--primary');
-    var chat = el('a', 'mb-button mb-button--ghost');
-    var voice = el('a', 'mb-button mb-button--ghost');
+    var chat = el('button', 'mb-button mb-button--ghost');
+    var voice = el('button', 'mb-button mb-button--ghost');
 
     label.textContent = t('selectedServiceLabel');
     title.textContent = serviceCopy(service, 'name') + ' · ' + formatMoney(service.price);
     book.href = vendorUrl(service, '');
-    chat.href = vendorUrl(service, 'chat');
-    voice.href = vendorUrl(service, 'voice');
+    chat.type = 'button';
+    voice.type = 'button';
+    chat.setAttribute('data-action', 'chatSelectedService');
+    voice.setAttribute('data-action', 'voiceSelectedService');
     book.textContent = t('bookThisService');
     chat.textContent = t('chatThisService');
     voice.textContent = t('talkThisService');
+    chat.addEventListener('click', function() {
+      state.selectedServiceId = service.id;
+      openAssistantPanel('general');
+    });
+    voice.addEventListener('click', function() {
+      state.selectedServiceId = service.id;
+      openVoiceAssistant();
+    });
 
     text.appendChild(label);
     text.appendChild(title);
@@ -486,9 +615,8 @@
 
     document.querySelectorAll('[data-action="chat"], [data-action="voice"]').forEach(function(btn) {
       btn.addEventListener('click', function() {
-        var panel = document.getElementById('mbAssistantPanel');
-        panel.hidden = false;
-        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        if (btn.getAttribute('data-action') === 'voice') openVoiceAssistant();
+        else openAssistantPanel('general');
       });
     });
 

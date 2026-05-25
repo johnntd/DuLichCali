@@ -17,9 +17,19 @@
 
   var STRINGS = {
     en: {
-      welcome: 'Tell me what service, date, time, and address you want. You can also upload a style photo before we send the request.',
+      welcome: 'Hi, I can help book a mobile haircut. What phone number should I use to look up your appointment record?',
+      welcomeVendor: 'Hi, this is {vendor}. What phone number should I use to look up your appointment record?',
+      askPhone: 'What phone number should I use to look up your appointment record?',
+      checkingPhone: 'Thanks. I am checking that phone number now.',
+      foundCustomer: 'I found your record, {name}. Do you want to use the same address in {city}?',
+      foundCustomerNoAddress: 'I found your record, {name}. What service address should the barber visit?',
+      newCustomerName: "I don't see a record yet. What name should I put on the booking?",
+      askName: 'What name should I put on the booking?',
       askMissing: 'I still need: {fields}.',
       askAddress: 'What service address, city, and ZIP should the barber visit?',
+      askCityZip: 'What city and ZIP code is that address in?',
+      askService: 'What barber service would you like?',
+      askDateTime: 'What day and time would you like?',
       priceOnly: '{service} is {price}. Travel fee starts at {travelFee}.',
       language: 'Yes. This assistant can help in English, Vietnamese, or Spanish.',
       photo: 'Yes. Upload a reference photo in the photo field and I will attach it to the booking request.',
@@ -28,12 +38,22 @@
       summary: 'Review this request: {service} on {date} at {time}, {address}, {city} {zip}. Estimated total {price}. Reply yes to send it.',
       saved: 'Request sent. Booking ID: {id}. The barber still needs to confirm the appointment.',
       cancelled: 'I can help with cancellation or rescheduling, but this phase does not change existing bookings yet. Please call the barber for existing booking changes.',
-      fallback: 'I can help collect a mobile barber booking request. Please send service, date, time, address, city, ZIP, name, and phone.'
+      fallback: 'I can help collect a mobile barber booking request. What phone number should I use first?'
     },
     vi: {
-      welcome: 'Cho em biết dịch vụ, ngày, giờ, và địa chỉ muốn đặt. Anh/chị cũng có thể tải ảnh kiểu tóc trước khi gửi yêu cầu.',
+      welcome: 'Dạ em có thể giúp đặt thợ cắt tóc tại nhà. Mình cho em số điện thoại để em tìm hồ sơ trước nhé?',
+      welcomeVendor: 'Dạ đây là {vendor}. Mình cho em số điện thoại để em tìm hồ sơ đặt lịch trước nhé?',
+      askPhone: 'Mình cho em số điện thoại để em tìm hồ sơ đặt lịch trước nhé?',
+      checkingPhone: 'Dạ em đang kiểm tra số điện thoại đó.',
+      foundCustomer: 'Em thấy hồ sơ của anh/chị {name}. Mình muốn dùng lại địa chỉ ở {city} không ạ?',
+      foundCustomerNoAddress: 'Em thấy hồ sơ của anh/chị {name}. Thợ sẽ đến địa chỉ nào ạ?',
+      newCustomerName: 'Em chưa thấy hồ sơ với số này. Mình cho em tên để đặt lịch nhé?',
+      askName: 'Mình cho em tên để đặt lịch nhé?',
       askMissing: 'Em còn cần: {fields}.',
       askAddress: 'Thợ sẽ đến địa chỉ nào, thành phố nào, và mã ZIP nào?',
+      askCityZip: 'Địa chỉ đó ở thành phố nào và mã ZIP nào ạ?',
+      askService: 'Mình muốn đặt dịch vụ barber nào ạ?',
+      askDateTime: 'Mình muốn đặt ngày nào và giờ nào ạ?',
       priceOnly: '{service} là {price}. Phí di chuyển bắt đầu từ {travelFee}.',
       language: 'Dạ có. Trợ lý này hỗ trợ tiếng Việt, tiếng Anh, hoặc tiếng Tây Ban Nha.',
       photo: 'Dạ được. Tải ảnh tham khảo ở ô ảnh và em sẽ đính kèm vào yêu cầu đặt lịch.',
@@ -42,12 +62,22 @@
       summary: 'Vui lòng xem lại: {service} ngày {date} lúc {time}, {address}, {city} {zip}. Tổng ước tính {price}. Trả lời đồng ý để gửi.',
       saved: 'Đã gửi yêu cầu. Mã đặt lịch: {id}. Thợ vẫn cần xác nhận lịch hẹn.',
       cancelled: 'Em có thể hỗ trợ hướng dẫn hủy hoặc đổi lịch, nhưng phase này chưa thay đổi lịch đã có. Vui lòng gọi trực tiếp cho thợ.',
-      fallback: 'Em có thể nhận yêu cầu đặt thợ cắt tóc tại nhà. Vui lòng gửi dịch vụ, ngày, giờ, địa chỉ, thành phố, ZIP, tên, và số điện thoại.'
+      fallback: 'Em có thể nhận yêu cầu đặt thợ cắt tóc tại nhà. Mình cho em số điện thoại trước nhé?'
     },
     es: {
-      welcome: 'Dígame el servicio, fecha, hora, y dirección que prefiere. También puede subir una foto de referencia antes de enviar la solicitud.',
+      welcome: 'Puedo ayudar a reservar un corte móvil. ¿Qué número de teléfono debo usar para buscar su historial?',
+      welcomeVendor: 'Este es {vendor}. ¿Qué número de teléfono debo usar para buscar su historial?',
+      askPhone: '¿Qué número de teléfono debo usar para buscar su historial?',
+      checkingPhone: 'Gracias. Estoy revisando ese número ahora.',
+      foundCustomer: 'Encontré su registro, {name}. ¿Quiere usar la misma dirección en {city}?',
+      foundCustomerNoAddress: 'Encontré su registro, {name}. ¿A qué dirección debe ir el barbero?',
+      newCustomerName: 'No veo un registro con ese número. ¿Qué nombre pongo en la reserva?',
+      askName: '¿Qué nombre pongo en la reserva?',
       askMissing: 'Todavía necesito: {fields}.',
       askAddress: '¿A qué dirección, ciudad, y código ZIP debe ir el barbero?',
+      askCityZip: '¿En qué ciudad y código ZIP está esa dirección?',
+      askService: '¿Qué servicio de barbería quiere?',
+      askDateTime: '¿Qué día y hora prefiere?',
       priceOnly: '{service} cuesta {price}. La tarifa de viaje empieza en {travelFee}.',
       language: 'Sí. Este asistente puede ayudar en inglés, vietnamita, o español.',
       photo: 'Sí. Suba una foto de referencia en el campo de foto y la adjuntaré a la solicitud.',
@@ -56,7 +86,7 @@
       summary: 'Revise esta solicitud: {service} el {date} a las {time}, {address}, {city} {zip}. Total estimado {price}. Responda sí para enviarla.',
       saved: 'Solicitud enviada. ID de reserva: {id}. El barbero todavía debe confirmar la cita.',
       cancelled: 'Puedo ayudar con cancelación o cambio, pero esta fase todavía no modifica reservas existentes. Llame directamente al barbero.',
-      fallback: 'Puedo recopilar una solicitud de barbero móvil. Envíe servicio, fecha, hora, dirección, ciudad, ZIP, nombre, y teléfono.'
+      fallback: 'Puedo recopilar una solicitud de barbero móvil. ¿Qué teléfono debo usar primero?'
     }
   };
 
@@ -112,6 +142,10 @@
       intent: null,
       customerName: null,
       phone: null,
+      customerLookupStatus: null,
+      customerRecord: null,
+      addressConfirmed: false,
+      step: 'START',
       serviceId: null,
       date: null,
       time: null,
@@ -144,10 +178,31 @@
         if (VALID_PENDING[value]) state.pendingAction = value;
         return;
       }
+      if (key === 'customerLookupStatus') {
+        if (value === 'found' || value === 'not_found' || value === 'done') state.customerLookupStatus = value;
+        return;
+      }
+      if (key === 'customerRecord') {
+        if (value && typeof value === 'object') state.customerRecord = value;
+        return;
+      }
+      if (key === 'addressConfirmed') {
+        state.addressConfirmed = value === true;
+        return;
+      }
+      if (key === 'step') {
+        if (typeof value === 'string' && trim(value)) state.step = trim(value);
+        return;
+      }
       if (key === 'phone') {
         var phone = digits(value);
         if (phone.length === 11 && phone.charAt(0) === '1') phone = phone.slice(1);
-        if (phone.length >= 7) state.phone = phone;
+        if (phone.length >= 7 && state.phone !== phone) {
+          state.phone = phone;
+          state.customerLookupStatus = null;
+          state.customerRecord = null;
+          state.addressConfirmed = false;
+        }
         return;
       }
       if (key === 'date') {
@@ -236,6 +291,10 @@
 
     var phone = /(?:\+?1[\s.-]?)?(?:\(?\d{3}\)?[\s.-]?)\d{3}[\s.-]?\d{4}/.exec(message);
     if (phone) update.phone = phone[0];
+    else if (ctx.phoneIntake && typeof ctx.phoneIntake.normalizeSpokenPhoneNumber === 'function') {
+      var spokenPhone = ctx.phoneIntake.normalizeSpokenPhoneNumber(message, lang, { phoneContext: true, expected: 'phone' });
+      if (spokenPhone) update.phone = spokenPhone;
+    }
     var zip = /\b9\d{4}\b/.exec(message);
     if (zip) update.zip = zip[0];
 
@@ -251,8 +310,13 @@
     var address = /\b(\d{2,6}\s+[a-zA-Z0-9À-ỹ\s.'-]{3,60}(?:st|street|ave|avenue|rd|road|dr|drive|ln|lane|blvd|way|ct|court)\b\.?)/i.exec(message);
     if (address) update.address = address[1];
 
+    if (/\b(same address|same place|use same|yes|yeah|correct|đúng|dạ đúng|địa chỉ cũ|sí|si|misma dirección)\b/i.test(lower)) {
+      update.addressConfirmed = true;
+    }
     if (/\bjohn\b/i.test(message)) update.barberPreference = 'John';
     if (/\bdaniel\b/i.test(message)) update.barberPreference = 'Daniel Nguyen';
+    if (/\btim\b/i.test(message)) update.barberPreference = 'Tim Nguyen';
+    if (/\bmichael\b/i.test(message)) update.barberPreference = 'Michael Nguyen';
     if (/\b(style|kiểu|estilo|fade|beard|râu|barba)\b/i.test(lower)) update.notes = trim(message);
     return update;
   }
@@ -292,7 +356,8 @@
       'Never invent availability, prices, travel radius, barber names, or internal data.',
       'Never confirm a booking until backend availability and service-area checks have passed.',
       'When you see a user message starting with [SYSTEM: ...], rewrite that backend result naturally in the customer language and do not expose the marker.',
-      'Collect name, phone, service, preferred date/time, address/city/ZIP, barber preference, notes/style, and photo if available.'
+      'Use the serviceBookingAgentBrain pattern: intent extraction, slot filling, one question at a time, customer lookup, service lookup, availability check, summary, then booking write.',
+      'Phone lookup is always first for booking. Never ask for name, phone, address, service, date, and time in one message.'
     ].join('\n');
   }
 
@@ -314,6 +379,62 @@
     return interpolate((STRINGS[lang] && STRINGS[lang][key]) || STRINGS.en[key], values || {});
   }
 
+  function publicAddressCity(record) {
+    return trim(record && record.city) || trim(record && record.serviceCity) || trim(record && record.lastCity) || 'the saved city';
+  }
+
+  function applyCustomerRecord(state, record) {
+    if (!record) {
+      state.customerLookupStatus = 'not_found';
+      state.customerRecord = null;
+      return;
+    }
+    state.customerLookupStatus = 'found';
+    state.customerRecord = record;
+    if (record.customerName || record.name) state.customerName = record.customerName || record.name;
+    if (record.lastServiceId && !state.serviceId) state.previousServiceId = record.lastServiceId;
+    if (record.lastServiceName && !state.previousServiceName) state.previousServiceName = record.lastServiceName;
+    if (record.preferredBarber && !state.barberPreference) state.barberPreference = record.preferredBarber;
+    if (record.barberName && !state.barberPreference) state.barberPreference = record.barberName;
+  }
+
+  function applySavedAddress(state) {
+    var record = state.customerRecord || {};
+    state.address = state.address || record.address || record.serviceAddress || record.lastAddress || '';
+    state.city = state.city || record.city || record.serviceCity || record.lastCity || '';
+    state.zip = state.zip || record.zip || record.serviceZip || record.lastZip || '';
+  }
+
+  function nextMissingQuestion(state, lang) {
+    if (!trim(state.customerName)) {
+      state.step = state.customerLookupStatus === 'not_found' ? 'IF_NEW_CUSTOMER_ASK_NAME' : 'ASK_NAME';
+      return reply(lang, state.customerLookupStatus === 'not_found' ? 'newCustomerName' : 'askName');
+    }
+    if (!trim(state.address)) {
+      state.step = 'ASK_ADDRESS';
+      return reply(lang, 'askAddress');
+    }
+    if (!trim(state.city) || !trim(state.zip)) {
+      state.step = 'ASK_ADDRESS';
+      return reply(lang, 'askCityZip');
+    }
+    if (!trim(state.serviceId)) {
+      state.step = 'ASK_SERVICE';
+      return reply(lang, 'askService');
+    }
+    if (!trim(state.date) || !trim(state.time)) {
+      state.step = 'ASK_DATE_TIME';
+      return reply(lang, 'askDateTime');
+    }
+    return null;
+  }
+
+  function initialPrompt(ctx, lang) {
+    var vendor = ctx && ctx.vendor;
+    var vendorName = vendor && (vendor.businessName || vendor.barberName);
+    return vendorName ? reply(lang, 'welcomeVendor', { vendor: vendorName }) : reply(lang, 'welcome');
+  }
+
   function handleMessage(session, message, ctx) {
     ctx = ctx || {};
     session = session || {};
@@ -329,6 +450,10 @@
     session.systemPrompt = buildPrompt(ctx, lang);
     session.lastSystemContext = null;
 
+    if (ctx.customerLookupResult !== undefined && state.phone && !state.customerLookupStatus) {
+      applyCustomerRecord(state, ctx.customerLookupResult);
+    }
+
     if (state.intent === 'language') return { session: session, response: reply(lang, 'language') };
     if (state.intent === 'photo') return { session: session, response: reply(lang, 'photo') };
     if (state.intent === 'modify_existing') return { session: session, response: reply(lang, 'cancelled') };
@@ -340,17 +465,39 @@
       };
     }
 
-    var missing = missingFields(state);
-    if (missing.length) {
-      session.lastSystemContext = systemReason('missing_fields', { fields: missing.join(',') });
-      var labels = FIELD_LABELS[lang] || FIELD_LABELS.en;
-      if (missing.indexOf('address') >= 0 || missing.indexOf('city') >= 0 || missing.indexOf('zip') >= 0) {
-        return { session: session, response: reply(lang, 'askAddress') };
-      }
-      return { session: session, response: reply(lang, 'askMissing', {
-        fields: missing.map(function(key) { return labels[key] || key; }).join(', ')
-      }) };
+    if (!state.phone) {
+      state.step = 'ASK_PHONE';
+      session.lastSystemContext = systemReason('ask_phone_first');
+      return { session: session, response: reply(lang, 'askPhone') };
     }
+
+    if (!state.customerLookupStatus) {
+      state.step = 'LOOKUP_CUSTOMER';
+      session.lastSystemContext = systemReason('lookup_customer', { phone: state.phone });
+      return { session: session, response: reply(lang, 'checkingPhone'), needsCustomerLookup: true };
+    }
+
+    if (state.customerLookupStatus === 'found' && state.customerRecord && !state.addressConfirmed && !state.address) {
+      state.step = 'IF_EXISTING_CUSTOMER_CONFIRM_PROFILE';
+      var foundName = state.customerName || state.customerRecord.customerName || state.customerRecord.name || '';
+      if (state.customerRecord.address || state.customerRecord.serviceAddress || state.customerRecord.lastAddress) {
+        return { session: session, response: reply(lang, 'foundCustomer', { name: foundName, city: publicAddressCity(state.customerRecord) }) };
+      }
+      return { session: session, response: reply(lang, 'foundCustomerNoAddress', { name: foundName }) };
+    }
+
+    if (state.addressConfirmed && state.customerRecord) {
+      applySavedAddress(state);
+    }
+
+    var nextQuestion = nextMissingQuestion(state, lang);
+    if (nextQuestion) {
+      var missing = missingFields(state);
+      session.lastSystemContext = systemReason('missing_fields', { fields: missing.join(',') });
+      return { session: session, response: nextQuestion };
+    }
+
+    state.step = 'CHECK_AVAILABILITY';
 
     var draft = draftFromState(state);
     var availability = BOOKING.checkAvailability({
@@ -369,6 +516,7 @@
 
     if (!affirmative || state.pendingAction !== 'final_confirmation') {
       state.pendingAction = 'final_confirmation';
+      state.step = 'CONFIRM_SUMMARY';
       session.lastAvailabilityResult = availability;
       session.lastSystemContext = systemReason('booking_summary_ready', { status: availability.status, total: availability.price.totalPrice });
       var summaryText = reply(lang, 'summary', {
@@ -404,9 +552,41 @@
       notes: state.notes || ''
     });
     state.pendingAction = null;
+    state.step = 'DONE';
     session.lastBooking = built.booking;
     session.lastSystemContext = systemReason('booking_created', { id: built.booking.id, status: built.booking.status });
     return { session: session, response: reply(lang, 'saved', { id: built.booking.id }), booking: built.booking };
+  }
+
+  function handleMessageAsync(session, message, ctx) {
+    ctx = ctx || {};
+    var first = handleMessage(session, message, ctx);
+    if (!first || !first.needsCustomerLookup || typeof ctx.customerLookupProvider !== 'function') {
+      return Promise.resolve(first);
+    }
+    var phone = first.session && first.session.state && first.session.state.phone;
+    return Promise.resolve(ctx.customerLookupProvider(phone, first.session.state))
+      .then(function(record) {
+        var nextCtx = Object.assign({}, ctx, { customerLookupResult: record || null });
+        return handleMessage(first.session, '', nextCtx);
+      })
+      .catch(function() {
+        var nextCtx = Object.assign({}, ctx, { customerLookupResult: null });
+        return handleMessage(first.session, '', nextCtx);
+      });
+  }
+
+  function serviceBookingAgentBrain(config) {
+    config = config || {};
+    return {
+      vertical: config.vertical || 'mobile_barber',
+      handleMessage: function(session, message, ctx) {
+        return handleMessage(session, message, Object.assign({}, config, ctx || {}));
+      },
+      handleMessageAsync: function(session, message, ctx) {
+        return handleMessageAsync(session, message, Object.assign({}, config, ctx || {}));
+      }
+    };
   }
 
   return {
@@ -415,6 +595,9 @@
     extractUpdate: extractUpdate,
     buildPrompt: buildPrompt,
     handleMessage: handleMessage,
+    handleMessageAsync: handleMessageAsync,
+    serviceBookingAgentBrain: serviceBookingAgentBrain,
+    initialPrompt: initialPrompt,
     missingFields: missingFields,
     draftFromState: draftFromState,
     _systemReason: systemReason

@@ -52,11 +52,43 @@ function runMobileBarberAgentTests(test) {
   });
 
   test('Mobile Barber AI asks for missing address before availability check', function() {
-    var result = MobileBarberAgent.handleMessage(null, 'I need a haircut at home tomorrow after 5 PM. My name is Kim and phone is 714-555-0100.', context());
+    var result = MobileBarberAgent.handleMessage(null, 'I need a haircut at home tomorrow after 5 PM. My name is Kim and phone is 714-555-0100.', Object.assign(context(), { customerLookupResult: null }));
     assert(result.session.lastSystemContext.indexOf('missing_fields') === 0, 'missing fields should use system context');
     assert(result.session.state.serviceId, 'service should be extracted');
     assertEq(result.session.state.date, '2026-05-24');
     assertEq(result.session.state.time, '17:00');
+  });
+
+  test('Mobile Barber AI asks phone first before collecting booking details', function() {
+    var result = MobileBarberAgent.handleMessage(null, 'I need a fade tomorrow afternoon', context());
+    assertEq(result.session.state.step, 'ASK_PHONE');
+    assert(result.response.indexOf('phone number') >= 0, 'first booking question must ask for phone');
+    assert(!result.booking, 'phone-first turn must not create booking');
+  });
+
+  test('Mobile Barber AI new customer flow asks name after phone lookup misses', function() {
+    var result = MobileBarberAgent.handleMessage(null, 'My number is 714-555-0100', Object.assign(context(), { customerLookupResult: null }));
+    assertEq(result.session.state.customerLookupStatus, 'not_found');
+    assertEq(result.session.state.step, 'IF_NEW_CUSTOMER_ASK_NAME');
+    assert(result.response.indexOf('name') >= 0, 'new customer after phone lookup should ask name');
+  });
+
+  test('Mobile Barber AI existing customer flow confirms saved address', function() {
+    var result = MobileBarberAgent.handleMessage(null, 'My number is 714-555-0100', Object.assign(context(), {
+      customerLookupResult: {
+        customerName: 'John',
+        customerPhone: '7145550100',
+        address: '123 Brookhurst St',
+        city: 'Westminster',
+        zip: '92683',
+        lastServiceName: 'Fade Haircut',
+        preferredBarber: 'Daniel Nguyen'
+      }
+    }));
+    assertEq(result.session.state.customerLookupStatus, 'found');
+    assertEq(result.session.state.step, 'IF_EXISTING_CUSTOMER_CONFIRM_PROFILE');
+    assert(result.response.indexOf('John') >= 0, 'existing customer greeting should use name');
+    assert(result.response.indexOf('Westminster') >= 0, 'existing customer prompt should confirm saved city');
   });
 
   test('Mobile Barber AI handles price-only request without creating booking', function() {
@@ -68,7 +100,7 @@ function runMobileBarberAgentTests(test) {
   test('Mobile Barber AI successful booking requires summary then final confirmation', function() {
     var session = null;
     var ctx = context({ id: 'ai-success-1' });
-    var first = MobileBarberAgent.handleMessage(session, 'My name is Kim. Phone 714-555-0100. I need haircut on 2026-06-01 at 10:00 at 123 Brookhurst St Westminster 92683.', ctx);
+    var first = MobileBarberAgent.handleMessage(session, 'My name is Kim. Phone 714-555-0100. I need haircut on 2026-06-01 at 10:00 at 123 Brookhurst St Westminster 92683.', Object.assign(ctx, { customerLookupResult: null }));
     session = first.session;
     assertEq(session.state.pendingAction, 'final_confirmation');
     assert(!first.booking, 'first complete turn presents summary only');
@@ -91,13 +123,13 @@ function runMobileBarberAgentTests(test) {
         status: 'confirmed'
       }]
     });
-    var result = MobileBarberAgent.handleMessage(null, 'My name is Kim. Phone 714-555-0100. I need haircut on 2026-06-01 at 10:00 at 123 Brookhurst St Westminster 92683.', ctx);
+    var result = MobileBarberAgent.handleMessage(null, 'My name is Kim. Phone 714-555-0100. I need haircut on 2026-06-01 at 10:00 at 123 Brookhurst St Westminster 92683.', Object.assign(ctx, { customerLookupResult: null }));
     assertEq(result.session.state.lastAvailabilityKey, 'booking_overlap');
     assert(!result.booking, 'overlap must not create booking');
   });
 
   test('Mobile Barber AI marks out-of-service-area request for vendor review only after validation', function() {
-    var result = MobileBarberAgent.handleMessage(null, 'My name is Kim. Phone 714-555-0100. I need haircut on 2026-06-01 at 10:00 at 123 Main St San Jose 95112.', context());
+    var result = MobileBarberAgent.handleMessage(null, 'My name is Kim. Phone 714-555-0100. I need haircut on 2026-06-01 at 10:00 at 123 Main St San Jose 95112.', Object.assign(context(), { customerLookupResult: null }));
     assertEq(result.session.state.lastAvailabilityKey, 'service_area_review');
     assertEq(result.session.lastAvailabilityResult.status, 'vendor_review');
     assert(!result.booking, 'review request still requires final confirmation');

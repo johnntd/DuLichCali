@@ -22,7 +22,7 @@
       micLabel: 'Talk to Barber Assistant',
       closeLabel: 'Close',
       textFallback: 'Use text chat',
-      welcome: 'Hi, I can help request an in-home haircut. Tell me the service, day, time, and address.'
+      welcome: 'Hi, I can help book a mobile haircut. What phone number should I use to look up your appointment record?'
     },
     vi: {
       title: 'Trợ Lý Giọng Nói Barber',
@@ -35,7 +35,7 @@
       micLabel: 'Nói chuyện với Trợ Lý Barber',
       closeLabel: 'Đóng',
       textFallback: 'Dùng chat chữ',
-      welcome: 'Em có thể giúp gửi yêu cầu cắt tóc tại nhà. Hãy nói dịch vụ, ngày, giờ, và địa chỉ.'
+      welcome: 'Dạ em có thể giúp đặt thợ cắt tóc tại nhà. Mình cho em số điện thoại để em tìm hồ sơ trước nhé?'
     },
     es: {
       title: 'Asistente de Voz Barber',
@@ -48,7 +48,7 @@
       micLabel: 'Hablar con el Asistente Barber',
       closeLabel: 'Cerrar',
       textFallback: 'Usar chat de texto',
-      welcome: 'Puedo ayudar a solicitar un corte en casa. Dígame el servicio, día, hora, y dirección.'
+      welcome: 'Puedo ayudar a reservar un corte móvil. ¿Qué número de teléfono debo usar para buscar su historial?'
     }
   };
 
@@ -641,7 +641,10 @@
     requestAnimationFrame(function() { overlay.classList.add('mb-voice--open'); });
     document.documentElement.classList.add('mb-voice-active');
     ensureAudioCtx();
-    speakReply(t('welcome'), 'thinking');
+    var welcome = controller && typeof controller.initialPrompt === 'function'
+      ? controller.initialPrompt()
+      : t('welcome');
+    speakReply(welcome, 'thinking');
   }
 
   function close() {

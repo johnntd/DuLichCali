@@ -60,7 +60,10 @@ function runMobileBarberLandingTests(test) {
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
     assertContains(html, '/mobile-barber/mobile-barber.css?v=20260524o');
     assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260524o');
-    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260524g');
+    assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260525a');
+    assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260525a');
+    assertContains(html, '/mobile-barber/mobile-barber-voice.js?v=20260525a');
+    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260525a');
   });
 
   test('Mobile Barber pages load Firebase before local runtime scripts', function() {
@@ -104,6 +107,8 @@ function runMobileBarberLandingTests(test) {
     assertContains(js, 'vendorUrl(service,');
     assertContains(js, "params.set('assistant', mode)");
     assertContains(js, "params.set('lang'");
+    assertContains(js, 'openVoiceAssistant()');
+    assertContains(js, 'voiceSelectedService');
     assertContains(html, 'id="mbPromoTitle"');
     assertContains(html, 'id="mbPromoPreview"');
     assertContains(js, 'promoTitle');
@@ -141,13 +146,13 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorHtml, 'id="mbSelectedServiceSummary"');
     assertContains(vendorHtml, 'class="mb-mobile-sticky-cta"');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260524o');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260524h');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260525a');
     assertContains(vendorHtml, '/ai-engine.js?v=20260524a');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-agent.js?v=20260524q');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-voice.js?v=20260524q');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-agent.js?v=20260525a');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-voice.js?v=20260525a');
     assertContains(vendorHtml, 'firebase-functions-compat.js');
     assertContains(vendorHtml, '/notifications.js?v=20260523a');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-vendor.js?v=20260524o');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-vendor.js?v=20260525a');
     assert(vendorHtml.indexOf('/ai-engine.js?v=') < vendorHtml.indexOf('/mobile-barber/mobile-barber-agent.js'), 'ai-engine.js must load before mobile-barber-agent.js');
   });
 

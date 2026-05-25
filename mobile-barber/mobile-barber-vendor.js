@@ -1291,7 +1291,12 @@
       services: state.services,
       availability: DATA.sampleAvailability,
       existingBookings: state.existingBookings,
-      now: new Date()
+      now: new Date(),
+      phoneIntake: root.PhoneIntake || null,
+      customerLookupProvider: function(phone) {
+        if (!BOOKING || typeof BOOKING.lookupReturningCustomer !== 'function') return Promise.resolve(null);
+        return BOOKING.lookupReturningCustomer(state.vendor.id, phone);
+      }
     };
   }
 
@@ -1310,7 +1315,10 @@
     }
     var finish = function(existing) {
       state.existingBookings = existing || [];
-      var result = AGENT.handleMessage(state.agentSession, message, agentContext());
+      var runner = typeof AGENT.handleMessageAsync === 'function'
+        ? AGENT.handleMessageAsync(state.agentSession, message, agentContext())
+        : Promise.resolve(AGENT.handleMessage(state.agentSession, message, agentContext()));
+      return runner.then(function(result) {
       state.agentSession = result.session;
       if (result.booking) {
         if (options.source) result.booking.source = options.source;
@@ -1330,6 +1338,7 @@
       }
       appendAgentMessage('assistant', result.response);
       return result;
+      });
     };
     return BOOKING.loadExistingBookings(state.vendor.id).then(finish).catch(function() {
       return finish([]);
@@ -1389,6 +1398,11 @@
       getLang: function() { return state.lang; },
       setLang: setLang,
       sendMessage: sendAgentMessage,
+      initialPrompt: function() {
+        return AGENT && typeof AGENT.initialPrompt === 'function'
+          ? AGENT.initialPrompt({ vendor: state.vendor }, state.lang)
+          : '';
+      },
       openTextFallback: openTextFallback,
       geminiKey: state.voiceProviderKeys.geminiKey || '',
       openAiKey: state.voiceProviderKeys.openAiKey || '',

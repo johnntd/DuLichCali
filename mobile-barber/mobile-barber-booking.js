@@ -470,6 +470,111 @@
       .catch(function() { return []; });
   }
 
+  function firstValue(data, keys) {
+    data = data || {};
+    for (var i = 0; i < keys.length; i++) {
+      if (hasText(data[keys[i]])) return trim(data[keys[i]]);
+    }
+    return '';
+  }
+
+  function safeCustomerRecord(data, vendorId, phone) {
+    data = data || {};
+    var recPhone = normalizePhone(data.customerPhoneNormalized || data.phoneNormalized || data.normalizedPhone || data.customerPhone || data.phone);
+    if (!recPhone || recPhone !== phone) return null;
+    var recVendor = trim(data.vendorId || data.vendor_id);
+    if (vendorId && recVendor && recVendor !== vendorId) return null;
+    return {
+      id: trim(data.id),
+      vendorId: recVendor || vendorId || '',
+      customerName: firstValue(data, ['customerName', 'name']),
+      customerPhone: recPhone,
+      customerEmail: firstValue(data, ['customerEmail', 'email']),
+      address: firstValue(data, ['address', 'serviceAddress', 'lastAddress']),
+      city: firstValue(data, ['city', 'serviceCity', 'lastCity']),
+      zip: firstValue(data, ['zip', 'serviceZip', 'lastZip']),
+      preferredBarber: firstValue(data, ['preferredBarber', 'barberPreference', 'barberName']),
+      lastServiceId: firstValue(data, ['lastServiceId', 'serviceId']),
+      lastServiceName: firstValue(data, ['lastServiceName', 'serviceName', 'previousServiceName']),
+      lastBookingId: firstValue(data, ['lastBookingId', 'id', 'bookingId']),
+      notes: firstValue(data, ['notes', 'safeNotes', 'stylePreference'])
+    };
+  }
+
+  function recordMillis(record) {
+    var value = record && (record.updatedAt || record.createdAt || record.requestedDate || record.date);
+    if (!value) return 0;
+    if (value.toMillis) return value.toMillis();
+    var parsed = Date.parse(value);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+
+  function bestCustomerRecord(records, vendorId, phone) {
+    var matches = (records || [])
+      .map(function(record) {
+        var data = typeof record.data === 'function' ? record.data() : record;
+        if (data && record.id && !data.id) data.id = record.id;
+        return data;
+      })
+      .filter(function(data) { return !!safeCustomerRecord(data, vendorId, phone); })
+      .sort(function(a, b) { return recordMillis(b) - recordMillis(a); });
+    return matches.length ? safeCustomerRecord(matches[0], vendorId, phone) : null;
+  }
+
+  function scanCollectionByPhone(collectionName, vendorId, phone) {
+    if (!canUseFirestore()) return Promise.resolve([]);
+    var db = root.firebase.firestore();
+    var fields = ['customerPhoneNormalized', 'phoneNormalized', 'normalizedPhone', 'customerPhone', 'phone'];
+    function queryField(index) {
+      if (index >= fields.length) return db.collection(collectionName).get();
+      return db.collection(collectionName).where(fields[index], '==', phone).get()
+        .then(function(snapshot) {
+          return snapshot && snapshot.docs && snapshot.docs.length ? snapshot : queryField(index + 1);
+        })
+        .catch(function() { return queryField(index + 1); });
+    }
+    return queryField(0).then(function(snapshot) {
+      var rows = [];
+      if (snapshot && snapshot.forEach) {
+        snapshot.forEach(function(doc) {
+          var data = doc.data() || {};
+          data.id = data.id || doc.id;
+          rows.push(data);
+        });
+      }
+      return rows.filter(function(row) {
+        return !!safeCustomerRecord(row, vendorId, phone);
+      });
+    }).catch(function() { return []; });
+  }
+
+  function lookupReturningCustomer(vendorId, phone, options) {
+    options = options || {};
+    var normalized = normalizePhone(phone);
+    if (normalized.length === 11 && normalized.charAt(0) === '1') normalized = normalized.slice(1);
+    if (!normalized) return Promise.resolve(null);
+    if (options.records) return Promise.resolve(bestCustomerRecord(options.records, vendorId, normalized));
+
+    var localRows = [];
+    try {
+      localRows = JSON.parse(root.localStorage.getItem('dlc_mobile_barber_bookings') || '[]');
+    } catch (e) {}
+    var localMatch = bestCustomerRecord(localRows, vendorId, normalized);
+
+    if (!canUseFirestore()) return Promise.resolve(localMatch);
+
+    return scanCollectionByPhone(DATA.COLLECTIONS.customers, vendorId, normalized)
+      .then(function(customerRows) {
+        var customerMatch = bestCustomerRecord(customerRows, vendorId, normalized);
+        if (customerMatch) return customerMatch;
+        return scanCollectionByPhone(DATA.COLLECTIONS.bookings, vendorId, normalized)
+          .then(function(bookingRows) {
+            return bestCustomerRecord(bookingRows, vendorId, normalized) || localMatch;
+          });
+      })
+      .catch(function() { return localMatch; });
+  }
+
   function bookingMatchesCustomer(booking, identity) {
     identity = identity || {};
     var phone = normalizePhone(identity.phone || identity.customerPhone);
@@ -602,6 +707,7 @@
     buildRebookDraft: buildRebookDraft,
     filterCustomerBookings: filterCustomerBookings,
     splitCustomerBookingHistory: splitCustomerBookingHistory,
+    lookupReturningCustomer: lookupReturningCustomer,
     loadCustomerBookings: loadCustomerBookings,
     loadExistingBookings: loadExistingBookings,
     saveBooking: saveBooking,

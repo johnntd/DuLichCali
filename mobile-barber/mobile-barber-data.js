@@ -100,73 +100,175 @@
   var MICHAEL_VENDOR_ID = 'michael-nguyen-oc';
   var TIM_VENDOR_ID = 'tim-nguyen-bay';
 
+  // Canonical schema for every haircut-style preview record.
+  // Renderers must read displayOrder/category/clipUrl/isAIGenerated/active from
+  // here, not synthesise them at render time.
   var SERVICE_IMAGE_TEMPLATES = Object.freeze({
     'classic-haircut': Object.freeze({
+      id: 'classic-haircut',
+      title: 'Classic Haircut',
+      category: 'classic',
+      displayOrder: 1,
       imageUrl: 'https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=900&q=80',
+      clipUrl: '',
       imagePrompt: 'realistic mobile barber in-home classic men haircut, clean professional result, natural lighting, modern grooming photography',
-      imageAlt: 'Classic haircut style preview for mobile barber service'
+      imageAlt: 'Classic haircut style preview for mobile barber service',
+      isAIGenerated: true,
+      active: true
     }),
     'fade-haircut': Object.freeze({
+      id: 'fade-haircut',
+      title: 'Fade Haircut',
+      category: 'fade',
+      displayOrder: 2,
       imageUrl: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=900&q=80',
+      clipUrl: '',
       imagePrompt: 'realistic sharp fade haircut result, mobile barber service, clean blend, professional haircut photography, no celebrity, no logo',
-      imageAlt: 'Fade haircut style preview with clean blended sides'
+      imageAlt: 'Fade haircut style preview with clean blended sides',
+      isAIGenerated: true,
+      active: true
     }),
     'skin-fade': Object.freeze({
+      id: 'skin-fade',
+      title: 'Skin Fade',
+      category: 'fade',
+      displayOrder: 3,
       imageUrl: 'https://images.unsplash.com/photo-1593702275687-f8b402bf1fb5?auto=format&fit=crop&w=900&q=80',
+      clipUrl: '',
       imagePrompt: 'realistic skin fade haircut close-up, sharp blend, professional barber result, indoor mobile haircut service',
-      imageAlt: 'Skin fade haircut close-up style preview'
+      imageAlt: 'Skin fade haircut close-up style preview',
+      isAIGenerated: true,
+      active: true
     }),
     'taper-fade': Object.freeze({
+      id: 'taper-fade',
+      title: 'Taper Fade',
+      category: 'taper',
+      displayOrder: 4,
       imageUrl: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=900&q=80',
+      clipUrl: '',
       imagePrompt: 'realistic taper fade haircut, clean neckline and side blend, professional mobile barber promotional photo',
-      imageAlt: 'Taper fade haircut style preview with clean neckline'
+      imageAlt: 'Taper fade haircut style preview with clean neckline',
+      isAIGenerated: true,
+      active: true
     }),
     'haircut-beard': Object.freeze({
+      id: 'haircut-beard',
+      title: 'Haircut + Beard',
+      category: 'beard',
+      displayOrder: 5,
       imageUrl: 'https://images.unsplash.com/photo-1517832606299-7ae9b720a186?auto=format&fit=crop&w=900&q=80',
+      clipUrl: '',
       imagePrompt: 'realistic men haircut and beard trim result, clean beard line, fresh haircut, mobile barber promotion',
-      imageAlt: 'Haircut and beard trim style preview'
+      imageAlt: 'Haircut and beard trim style preview',
+      isAIGenerated: true,
+      active: true
     }),
     'beard-trim': Object.freeze({
+      id: 'beard-trim',
+      title: 'Beard Trim',
+      category: 'beard',
+      displayOrder: 6,
       imageUrl: 'https://images.unsplash.com/photo-1622296089863-eb7fc530daa8?auto=format&fit=crop&w=900&q=80',
+      clipUrl: '',
       imagePrompt: 'realistic beard trim and lineup, clean neck line, professional grooming service, mobile barber',
-      imageAlt: 'Beard trim and lineup grooming preview'
+      imageAlt: 'Beard trim and lineup grooming preview',
+      isAIGenerated: true,
+      active: true
     }),
     'kids-haircut': Object.freeze({
+      id: 'kids-haircut',
+      title: 'Kids Haircut',
+      category: 'kids',
+      displayOrder: 7,
       imageUrl: 'https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&w=900&q=80',
+      clipUrl: '',
       imagePrompt: 'realistic child haircut at home, clean kids haircut, family-friendly mobile barber service, warm natural lighting',
-      imageAlt: 'Kids haircut at home style preview'
+      imageAlt: 'Kids haircut at home style preview',
+      isAIGenerated: true,
+      active: true
     }),
     'senior-haircut': Object.freeze({
+      id: 'senior-haircut',
+      title: 'Senior Haircut',
+      category: 'senior',
+      displayOrder: 8,
       imageUrl: 'https://images.unsplash.com/photo-1566753323558-f4e0952af115?auto=format&fit=crop&w=900&q=80',
+      clipUrl: '',
       imagePrompt: 'realistic senior gentleman haircut at home, clean classic haircut, respectful professional mobile barber service',
-      imageAlt: 'Senior haircut at home style preview'
+      imageAlt: 'Senior haircut at home style preview',
+      isAIGenerated: true,
+      active: true
     }),
     'business-haircut': Object.freeze({
+      id: 'business-haircut',
+      title: 'Business Haircut',
+      category: 'business',
+      displayOrder: 9,
       imageUrl: 'https://images.unsplash.com/photo-1618077360395-f3068be8e001?auto=format&fit=crop&w=900&q=80',
+      clipUrl: '',
       imagePrompt: 'realistic professional business haircut, clean executive style, neat side part, mobile barber finished result',
-      imageAlt: 'Business style haircut preview with neat executive finish'
+      imageAlt: 'Business style haircut preview with neat executive finish',
+      isAIGenerated: true,
+      active: true
     }),
     'buzz-cut': Object.freeze({
+      id: 'buzz-cut',
+      title: 'Buzz Cut',
+      category: 'classic',
+      displayOrder: 10,
       imageUrl: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=900&q=80',
+      clipUrl: '',
       imagePrompt: 'realistic buzz cut haircut result, clean even guard length, simple professional mobile barber service',
-      imageAlt: 'Buzz cut haircut style preview'
+      imageAlt: 'Buzz cut haircut style preview',
+      isAIGenerated: true,
+      active: true
     }),
     'line-up': Object.freeze({
+      id: 'line-up',
+      title: 'Line Up',
+      category: 'lineup',
+      displayOrder: 11,
       imageUrl: 'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=900&q=80',
+      clipUrl: '',
       imagePrompt: 'realistic hairline edge up lineup haircut, sharp clean edges, professional barber close-up',
-      imageAlt: 'Line up haircut preview with clean hairline edge'
+      imageAlt: 'Line up haircut preview with clean hairline edge',
+      isAIGenerated: true,
+      active: true
     }),
     'modern-styling': Object.freeze({
+      id: 'modern-styling',
+      title: 'Modern Styling',
+      category: 'styling',
+      displayOrder: 12,
       imageUrl: 'https://images.unsplash.com/photo-1622288432450-277d0fef5ed6?auto=format&fit=crop&w=900&q=80',
+      clipUrl: '',
       imagePrompt: 'realistic modern men hairstyle with product styling, clean texture, professional mobile barber result',
-      imageAlt: 'Modern styled haircut preview with textured finish'
+      imageAlt: 'Modern styled haircut preview with textured finish',
+      isAIGenerated: true,
+      active: true
     }),
     'home-family-package': Object.freeze({
+      id: 'home-family-package',
+      title: 'Family Package',
+      category: 'family',
+      displayOrder: 13,
       imageUrl: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=900&q=80',
+      clipUrl: '',
       imagePrompt: 'realistic family mobile haircut service at home, barber setup, father and child haircut theme, warm professional promotional photo',
-      imageAlt: 'Home family haircut package preview'
+      imageAlt: 'Home family haircut package preview',
+      isAIGenerated: true,
+      active: true
     })
   });
+
+  // Ordered list for renderers — single source of truth for promo carousel
+  function listStyleTemplates() {
+    return Object.keys(SERVICE_IMAGE_TEMPLATES)
+      .map(function(k) { return SERVICE_IMAGE_TEMPLATES[k]; })
+      .filter(function(s) { return s.active !== false; })
+      .sort(function(a, b) { return (a.displayOrder || 999) - (b.displayOrder || 999); });
+  }
 
   var SERVICE_IMAGE_DISCLOSURE = 'Sample AI-generated style preview. Real barber portfolio coming soon.';
 
@@ -1077,6 +1179,7 @@
     TIM_VENDOR_ID: TIM_VENDOR_ID,
     SERVICE_IMAGE_TEMPLATES: SERVICE_IMAGE_TEMPLATES,
     SERVICE_IMAGE_DISCLOSURE: SERVICE_IMAGE_DISCLOSURE,
+    listStyleTemplates: listStyleTemplates,
     AI_PORTFOLIO_CATEGORIES: AI_PORTFOLIO_CATEGORIES,
     buildAIPortfolioForVendor: buildAIPortfolioForVendor,
     sampleVendors: sampleVendors,

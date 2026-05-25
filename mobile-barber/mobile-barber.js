@@ -29,9 +29,17 @@
       trustConfirmTitle: 'Appointment confirmation',
       trustConfirmCopy: 'Bookings stay pending until availability is checked.',
       promoKicker: 'Service preview',
-      promoTitle: 'Fresh barber work, brought to your door.',
-      promoCopy: 'Swipe through the in-home haircut menu — fades, beard work, kids cuts, and family packages.',
+      promoTitle: 'Latest AI Haircut Styles',
+      promoCopy: 'Swipe through fade, taper, beard trim, kids cut, business cut, senior cut, line up, and family package previews.',
       promoCta: 'Book an in-home haircut today',
+      beforeAfterKicker: 'Before / after',
+      beforeAfterTitle: 'AI-generated haircut transformations',
+      beforeAfterCopy: 'Preview clean mobile haircut results before real barber portfolio photos are uploaded.',
+      convenienceKicker: 'Convenience',
+      convenienceTitle: 'Mobile Haircut Convenience',
+      promoClipsKicker: 'Promo clips',
+      promoClipsTitle: 'Animated mobile barber promos',
+      promoClipsCopy: 'Video generation is not wired on this page yet, so these cards use motion fallback instead of repeating the hero image.',
       servicesKicker: 'Services',
       servicesTitle: 'Choose a mobile barber service',
       vendorsKicker: 'Barbers',
@@ -87,9 +95,17 @@
       trustConfirmTitle: 'Xác nhận lịch hẹn',
       trustConfirmCopy: 'Lịch giữ trạng thái chờ cho đến khi kiểm tra chỗ trống.',
       promoKicker: 'Xem trước dịch vụ',
-      promoTitle: 'Kiểu tóc gọn đẹp, phục vụ tận nơi.',
-      promoCopy: 'Lướt qua menu cắt tóc tại nhà — fade, tỉa râu, cắt tóc trẻ em, và gói gia đình.',
+      promoTitle: 'Kiểu tóc AI mới nhất',
+      promoCopy: 'Lướt qua fade, taper, tỉa râu, cắt tóc trẻ em, kiểu công sở, người lớn tuổi, line up, và gói gia đình.',
       promoCta: 'Đặt lịch cắt tóc tại nhà hôm nay',
+      beforeAfterKicker: 'Trước / sau',
+      beforeAfterTitle: 'Mẫu biến đổi kiểu tóc do AI tạo',
+      beforeAfterCopy: 'Xem trước kết quả cắt tóc lưu động trước khi portfolio thật của thợ được cập nhật.',
+      convenienceKicker: 'Tiện lợi',
+      convenienceTitle: 'Sự tiện lợi của cắt tóc lưu động',
+      promoClipsKicker: 'Clip quảng bá',
+      promoClipsTitle: 'Thẻ quảng bá barber có chuyển động',
+      promoClipsCopy: 'Trang này chưa nối pipeline tạo video, nên dùng thẻ chuyển động thay vì lặp lại hình hero.',
       servicesKicker: 'Dịch vụ',
       servicesTitle: 'Chọn dịch vụ cắt tóc tại nhà',
       vendorsKicker: 'Thợ cắt tóc',
@@ -145,9 +161,17 @@
       trustConfirmTitle: 'Confirmación de cita',
       trustConfirmCopy: 'Las reservas quedan pendientes hasta revisar disponibilidad.',
       promoKicker: 'Vista de servicio',
-      promoTitle: 'Corte fresco, directamente en su puerta.',
-      promoCopy: 'Desliza por el menú de cortes en casa — fades, barba, cortes para niños, y paquetes familiares.',
+      promoTitle: 'Últimos estilos de corte AI',
+      promoCopy: 'Desliza por fade, taper, barba, niños, corte ejecutivo, senior, line up, y paquete familiar.',
       promoCta: 'Reservar corte en casa hoy',
+      beforeAfterKicker: 'Antes / después',
+      beforeAfterTitle: 'Transformaciones de corte generadas por AI',
+      beforeAfterCopy: 'Vea resultados de barbero móvil antes de que se suba el portafolio real.',
+      convenienceKicker: 'Conveniencia',
+      convenienceTitle: 'Conveniencia del corte móvil',
+      promoClipsKicker: 'Clips promocionales',
+      promoClipsTitle: 'Promos animadas de barbero móvil',
+      promoClipsCopy: 'La generación de video aún no está conectada aquí, así que usamos tarjetas animadas en vez de repetir el hero.',
       servicesKicker: 'Servicios',
       servicesTitle: 'Elija un servicio de barbero móvil',
       vendorsKicker: 'Barberos',
@@ -403,6 +427,52 @@
     return service;
   }
 
+  function promoContentItems(services) {
+    // Prefer the canonical style templates (DATA.listStyleTemplates) when
+    // available — that's the single source of truth for displayOrder,
+    // category, isAIGenerated, active, clipUrl. Fall back to per-vendor
+    // services so vendor-specific menus still render.
+    if (DATA && typeof DATA.listStyleTemplates === 'function') {
+      var templates = DATA.listStyleTemplates();
+      if (templates && templates.length) {
+        return templates.map(function(tmpl) {
+          var service = (services || []).filter(function(s) { return s.id === tmpl.id; })[0] || null;
+          return {
+            id: tmpl.id,
+            title: service ? serviceCopy(service, 'name') : tmpl.title,
+            category: tmpl.category,
+            imageUrl: tmpl.imageUrl,
+            clipUrl: tmpl.clipUrl || '',
+            prompt: tmpl.imagePrompt || '',
+            isAIGenerated: tmpl.isAIGenerated === true,
+            active: tmpl.active !== false,
+            displayOrder: tmpl.displayOrder,
+            price: service && service.price,
+            imageAlt: tmpl.imageAlt || tmpl.title
+          };
+        }).filter(function(item) { return item.active; });
+      }
+    }
+    return (services || []).map(function(service, index) {
+      var imageRecord = serviceImage(service);
+      return {
+        id: service.id,
+        title: serviceCopy(service, 'name'),
+        category: service.category || 'haircut',
+        imageUrl: imageRecord.imageUrl || service.imageUrl || '',
+        clipUrl: imageRecord.clipUrl || service.clipUrl || '',
+        prompt: imageRecord.prompt || imageRecord.imagePrompt || service.prompt || service.imagePrompt || '',
+        isAIGenerated: true,
+        active: service.active !== false,
+        displayOrder: index + 1,
+        price: service.price,
+        imageAlt: imageRecord.imageAlt || service.imageAlt || service.name
+      };
+    }).filter(function(item) {
+      return item.active;
+    });
+  }
+
   function vendorUrl(service, mode) {
     var params = new URLSearchParams();
     params.set('serviceId', service.id);
@@ -553,23 +623,117 @@
     var services = DATA && DATA.sampleServices ? DATA.sampleServices.filter(function(service) {
       return service.active !== false;
     }) : [];
-    services = landingServices(services);
-    services.forEach(function(service) {
+    promoContentItems(landingServices(services)).forEach(function(item) {
       var card = el('article', 'mb-promo__card');
       var img = document.createElement('img');
       var body = el('div', 'mb-promo__card-body');
       var title = el('strong');
       var price = el('span');
-      var imageRecord = serviceImage(service);
-      img.src = imageRecord.imageUrl || service.imageUrl || '';
-      img.alt = imageRecord.imageAlt || service.imageAlt || service.name;
+      card.setAttribute('data-promo-id', item.id);
+      card.setAttribute('data-promo-category', item.category);
+      img.src = item.imageUrl;
+      img.alt = item.imageAlt;
       img.loading = 'lazy';
-      title.textContent = serviceCopy(service, 'name');
-      price.textContent = formatMoney(service.price);
+      title.textContent = item.title;
+      price.textContent = formatMoney(item.price);
       body.appendChild(title);
       body.appendChild(price);
       card.appendChild(img);
       card.appendChild(body);
+      list.appendChild(card);
+    });
+  }
+
+  function renderBeforeAfterGallery() {
+    var list = document.getElementById('mbBeforeAfterGallery');
+    if (!list) return;
+    list.innerHTML = '';
+    var rows = DATA && DATA.listPortfolioForVendor && DATA.MICHAEL_VENDOR_ID
+      ? DATA.listPortfolioForVendor(DATA.MICHAEL_VENDOR_ID).filter(function(image) {
+        return image.active !== false && image.hidden !== true && image.isAIGenerated === true;
+      }).slice(0, 6)
+      : [];
+    rows.forEach(function(image) {
+      var card = el('article', 'mb-portfolio-card mb-portfolio-card--ai-sample');
+      var media = el('div', 'mb-portfolio-card__compare');
+      var categoryImage = DATA && DATA.findServiceImageByPortfolioCategory
+        ? DATA.findServiceImageByPortfolioCategory(image.category)
+        : null;
+      [
+        ['Before', 'before'],
+        ['After', 'after']
+      ].forEach(function(pair) {
+        var wrap = el('figure', 'mb-portfolio-card__ai-frame mb-portfolio-card__ai-frame--' + pair[1]);
+        var badge = el('span', 'mb-portfolio-card__ai-badge');
+        var caption = el('figcaption');
+        badge.textContent = 'AI preview';
+        caption.textContent = pair[0];
+        if (categoryImage && categoryImage.imageUrl) {
+          wrap.style.backgroundImage = "url('" + categoryImage.imageUrl + "')";
+          wrap.setAttribute('aria-label', categoryImage.imageAlt || image.alt || image.title);
+        }
+        wrap.appendChild(badge);
+        wrap.appendChild(caption);
+        media.appendChild(wrap);
+      });
+      var chip = el('span', 'mb-portfolio-card__category');
+      var title = el('h3');
+      var desc = el('p');
+      chip.textContent = image.category || 'style';
+      title.textContent = image.title || '';
+      desc.textContent = image.description || t('aiPreviewDisclosure');
+      card.appendChild(media);
+      card.appendChild(chip);
+      card.appendChild(title);
+      card.appendChild(desc);
+      list.appendChild(card);
+    });
+  }
+
+  function renderConvenience() {
+    var list = document.getElementById('mbConvenienceList');
+    if (!list) return;
+    list.innerHTML = '';
+    [
+      'Barber comes to your home',
+      'Good for kids and seniors',
+      'Hotel / office / care facility appointments',
+      'Transparent pricing',
+      'No waiting room',
+      'Flexible scheduling',
+      'English / Vietnamese support'
+    ].forEach(function(text) {
+      var card = el('article', 'mb-convenience-card');
+      var icon = el('span');
+      var body = el('strong');
+      icon.setAttribute('aria-hidden', 'true');
+      icon.textContent = '✓';
+      body.textContent = text;
+      card.appendChild(icon);
+      card.appendChild(body);
+      list.appendChild(card);
+    });
+  }
+
+  function renderPromoClips() {
+    var list = document.getElementById('mbPromoClips');
+    if (!list) return;
+    list.innerHTML = '';
+    [
+      ['Fade at home', 'Fresh fade setup, cleanup, and finish without a waiting room.'],
+      ['Family haircut stop', 'One mobile visit can cover kids, seniors, and parents.'],
+      ['Hotel-ready grooming', 'Business cut and beard detail before meetings or events.']
+    ].forEach(function(row, index) {
+      var card = el('article', 'mb-promo-clip-card');
+      var pulse = el('span', 'mb-promo-clip-card__pulse');
+      var title = el('strong');
+      var copy = el('p');
+      card.style.setProperty('--clip-delay', String(index * 120) + 'ms');
+      title.textContent = row[0];
+      copy.textContent = row[1];
+      card.appendChild(pulse);
+      card.appendChild(title);
+      card.appendChild(copy);
       list.appendChild(card);
     });
   }
@@ -628,6 +792,9 @@
     document.querySelector('[data-action="voice"]').setAttribute('aria-label', t('talkAssistant'));
     setText(document);
     renderPromoPreview();
+    renderBeforeAfterGallery();
+    renderConvenience();
+    renderPromoClips();
     renderServices();
     renderVendors();
     document.querySelectorAll('.mb-language__button').forEach(function(btn) {

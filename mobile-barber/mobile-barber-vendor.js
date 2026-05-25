@@ -1039,7 +1039,7 @@
     var list = document.getElementById('mbVendorPromoPreview');
     if (!list) return;
     list.innerHTML = '';
-    (state.services || []).forEach(function(service) {
+    (state.services || []).forEach(function(service, index) {
       if (service.active === false) return;
       var card = el('article', 'mb-promo__card');
       var img = document.createElement('img');
@@ -1047,6 +1047,11 @@
       var title = el('strong');
       var price = el('span');
       var imageRecord = serviceImage(service);
+      card.setAttribute('data-promo-id', service.id);
+      card.setAttribute('data-promo-category', service.category || 'haircut');
+      card.setAttribute('data-display-order', String(index + 1));
+      card.setAttribute('data-ai-generated', 'true');
+      card.setAttribute('data-prompt', imageRecord.prompt || imageRecord.imagePrompt || service.prompt || service.imagePrompt || '');
       img.src = imageRecord.imageUrl || service.imageUrl || fallbackImage;
       img.alt = imageRecord.imageAlt || service.imageAlt || service.name;
       img.loading = 'lazy';

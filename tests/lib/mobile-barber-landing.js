@@ -59,11 +59,11 @@ function runMobileBarberLandingTests(test) {
 
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
     assertContains(html, '/mobile-barber/mobile-barber.css?v=20260525q');
-    assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260524o');
+    assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260525a');
     assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260525g');
     assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260525f');
     assertContains(html, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
-    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260525f');
+    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260525s');
   });
 
   test('Mobile Barber pages load Firebase before local runtime scripts', function() {
@@ -111,14 +111,34 @@ function runMobileBarberLandingTests(test) {
     assertContains(js, 'voiceSelectedService');
     assertContains(html, 'id="mbPromoTitle"');
     assertContains(html, 'id="mbPromoPreview"');
-    assertContains(js, 'promoTitle');
+    assertContains(js, "promoTitle: 'Latest AI Haircut Styles'");
     assertContains(js, 'renderPromoPreview');
+    assertContains(js, 'promoContentItems');
+    assertContains(js, 'clipUrl');
+    assertContains(js, 'displayOrder');
     assertContains(css, 'mb-promo__preview');
     assertContains(css, 'mb-promo__card');
     assertContains(css, '@media (max-width: 768px)');
     assertContains(css, 'scroll-snap-type: x mandatory');
     assertContains(css, 'mb-service-card--selected');
     assertContains(css, '@media (prefers-reduced-motion: reduce)');
+  });
+
+  test('Mobile Barber landing shows before-after, convenience, and animated promo fallback sections', function() {
+    assertContains(html, 'id="mbBeforeAfterGallery"');
+    assertContains(html, 'data-i18n="beforeAfterTitle"');
+    assertContains(html, 'id="mbConvenienceList"');
+    assertContains(html, 'data-i18n="convenienceTitle"');
+    assertContains(html, 'id="mbPromoClips"');
+    assertContains(html, 'data-i18n="promoClipsTitle"');
+    assertContains(js, 'renderBeforeAfterGallery');
+    assertContains(js, 'renderConvenience');
+    assertContains(js, 'renderPromoClips');
+    assertContains(js, 'Video generation is not wired');
+    assertContains(css, 'mb-before-after');
+    assertContains(css, 'mb-convenience-grid');
+    assertContains(css, 'mb-promo-clips__track');
+    assertContains(css, 'mbPromoPulse');
   });
 
   test('Mobile Barber page does not duplicate global bottom navigation', function() {
@@ -145,14 +165,14 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorHtml, 'id="mbVendorPromoTitle"');
     assertContains(vendorHtml, 'id="mbSelectedServiceSummary"');
     assertContains(vendorHtml, 'class="mb-mobile-sticky-cta"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260524o');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260525a');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260525g');
     assertContains(vendorHtml, '/ai-engine.js?v=20260524a');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-agent.js?v=20260525f');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
     assertContains(vendorHtml, 'firebase-functions-compat.js');
     assertContains(vendorHtml, '/notifications.js?v=20260525a');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-vendor.js?v=20260525p');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-vendor.js?v=20260525r');
     assert(vendorHtml.indexOf('/ai-engine.js?v=') < vendorHtml.indexOf('/mobile-barber/mobile-barber-agent.js'), 'ai-engine.js must load before mobile-barber-agent.js');
   });
 
@@ -161,6 +181,8 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorJs, "DATA.findVendorById(vendorId)");
     assertContains(vendorJs, 'DATA.listServicesForVendor(state.vendor.id)');
     assertContains(vendorJs, 'interpolate(t(\'assistantCopy\'), { vendorId: vendor.id })');
+    assertContains(vendorJs, "card.setAttribute('data-promo-id'");
+    assertContains(vendorJs, "card.setAttribute('data-prompt'");
     assertNotContains(vendorHtml, 'mbVendorList', 'vendor page must not render a marketplace listing grid');
   });
 
@@ -229,6 +251,27 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorJs, "scrollReset: true");
     assertContains(vendorJs, 'progressPct: pct');
     assertContains(vendorJs, 'servicePillVisible:');
+  });
+
+  test('Mobile Barber canonical style schema exposes required fields at the data layer', function() {
+    var dataJs = read('mobile-barber/mobile-barber-data.js');
+    assertContains(dataJs, 'function listStyleTemplates');
+    assertContains(dataJs, 'listStyleTemplates: listStyleTemplates');
+    assertContains(dataJs, "id: 'classic-haircut'");
+    assertContains(dataJs, "id: 'fade-haircut'");
+    assertContains(dataJs, "category: 'fade'");
+    assertContains(dataJs, "category: 'beard'");
+    assertContains(dataJs, "category: 'kids'");
+    assertContains(dataJs, "category: 'senior'");
+    assertContains(dataJs, "category: 'business'");
+    assertContains(dataJs, "category: 'lineup'");
+    assertContains(dataJs, "category: 'family'");
+    assertContains(dataJs, 'displayOrder: 1');
+    assertContains(dataJs, 'displayOrder: 13');
+    assertContains(dataJs, 'isAIGenerated: true');
+    assertContains(dataJs, 'active: true');
+    assertContains(dataJs, "clipUrl: ''");
+    assertContains(js, 'DATA.listStyleTemplates');
   });
 
   test('Mobile Barber CSS uses full-viewport modal on mobile and centered on desktop', function() {
@@ -358,7 +401,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/dashboard"');
     assertContains(firebase, '"destination": "/mobile-barber/dashboard.html"');
     assertContains(dashboardHtml, 'id="mobileBarberDashboardApp"');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260524o');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260525a');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260525b');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260524o');
     assertContains(dashboardHtml, 'firebase-auth-compat.js');

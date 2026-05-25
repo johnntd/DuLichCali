@@ -668,6 +668,117 @@
   justify-self: start;
 }
 
+.mb-before-after,
+.mb-convenience,
+.mb-promo-clips {
+  display: grid;
+  gap: 1rem;
+}
+
+.mb-before-after__grid {
+  grid-template-columns: none;
+}
+
+.mb-convenience-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: .7rem;
+}
+
+.mb-convenience-card {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  min-height: 3.25rem;
+  padding: .85rem;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, .06);
+  color: var(--cream);
+  box-shadow: var(--shadow-sm);
+}
+
+.mb-convenience-card span {
+  display: grid;
+  place-items: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: rgba(245, 166, 35, .18);
+  color: var(--gold-lt);
+  font-weight: 900;
+}
+
+.mb-convenience-card strong {
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+}
+
+.mb-promo-clips__track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(13rem, 78%);
+  gap: .85rem;
+  overflow-x: auto;
+  padding-bottom: .25rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mb-promo-clip-card {
+  position: relative;
+  min-height: 10.5rem;
+  display: grid;
+  align-content: end;
+  gap: .4rem;
+  overflow: hidden;
+  scroll-snap-align: start;
+  padding: 1rem;
+  border: 1px solid rgba(125, 211, 252, .18);
+  border-radius: var(--r-md);
+  background:
+    linear-gradient(145deg, rgba(11, 36, 60, .96), rgba(13, 47, 80, .68)),
+    radial-gradient(circle at 20% 18%, rgba(245, 166, 35, .24), transparent 34%);
+  color: var(--cream);
+  box-shadow: var(--shadow-sm);
+  animation: mbPromoCardLift 4.5s ease-in-out infinite;
+  animation-delay: var(--clip-delay, 0ms);
+}
+
+.mb-promo-clip-card__pulse {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 50%;
+  background: rgba(245, 166, 35, .9);
+  box-shadow: 0 0 0 0 rgba(245, 166, 35, .34);
+  animation: mbPromoPulse 1.9s ease-out infinite;
+}
+
+.mb-promo-clip-card strong {
+  font-size: var(--text-lg);
+  line-height: var(--leading-snug);
+}
+
+.mb-promo-clip-card p {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+
+@keyframes mbPromoCardLift {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes mbPromoPulse {
+  0% { box-shadow: 0 0 0 0 rgba(245, 166, 35, .34); }
+  100% { box-shadow: 0 0 0 1.15rem rgba(245, 166, 35, 0); }
+}
+
 .mb-vendor-card__top {
   display: grid;
   grid-template-columns: 3.75rem 1fr;

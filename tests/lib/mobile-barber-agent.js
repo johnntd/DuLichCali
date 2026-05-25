@@ -163,6 +163,95 @@ function runMobileBarberAgentTests(test) {
     assertEq(result.session.state.intent, 'modify_existing');
     assert(!result.booking, 'modify intent must not create booking in Phase 6');
   });
+
+  test('Mobile Barber AI new customer multi-turn flow advances past phone lookup', function() {
+    var ctx = context();
+    var r1 = MobileBarberAgent.handleMessage(null, '714-555-0199', ctx);
+    assertEq(r1.session.state.step, 'LOOKUP_CUSTOMER');
+    var r2 = MobileBarberAgent.handleMessage(r1.session, '', Object.assign({}, ctx, { customerLookupResult: null }));
+    assertEq(r2.session.state.step, 'IF_NEW_CUSTOMER_ASK_NAME');
+    var r3 = MobileBarberAgent.handleMessage(r2.session, 'John Smith', ctx);
+    assertEq(r3.session.state.customerName, 'John Smith', 'bare name reply must bind to customerName');
+    assertEq(r3.session.state.step, 'ASK_ADDRESS', 'after name captured, must advance to address');
+    var r4 = MobileBarberAgent.handleMessage(r3.session, '123 Main St, San Jose, 95123', ctx);
+    assertEq(r4.session.state.address, '123 Main St');
+    assertEq(r4.session.state.city, 'San Jose');
+    assertEq(r4.session.state.zip, '95123');
+    assertEq(r4.session.state.step, 'ASK_SERVICE');
+    var r5 = MobileBarberAgent.handleMessage(r4.session, 'fade', ctx);
+    assert(r5.session.state.serviceId, 'bare service word must bind to serviceId');
+    assertEq(r5.session.state.step, 'ASK_DATE_TIME');
+  });
+
+  test('Mobile Barber AI never restarts after detecting new customer', function() {
+    var ctx = context();
+    var r1 = MobileBarberAgent.handleMessage(null, '714-555-0188', ctx);
+    var r2 = MobileBarberAgent.handleMessage(r1.session, '', Object.assign({}, ctx, { customerLookupResult: null }));
+    assertEq(r2.session.state.customerLookupStatus, 'not_found');
+    // Next turn: user provides ANY plausible name. Step must move forward.
+    var r3 = MobileBarberAgent.handleMessage(r2.session, 'Alex', ctx);
+    assertEq(r3.session.state.step, 'ASK_ADDRESS', 'agent must not loop on name question');
+    // And another turn: customer answers ONLY for the next slot.
+    var r4 = MobileBarberAgent.handleMessage(r3.session, '999 Park Ave, Garden Grove, 92840', ctx);
+    assert(r4.session.state.step === 'ASK_SERVICE' || r4.session.state.step === 'ASK_DATE_TIME',
+      'agent must keep advancing through slots, got ' + r4.session.state.step);
+  });
+
+  test('Mobile Barber AI Vietnamese natural replies advance state machine', function() {
+    var ctx = context({ now: new Date('2026-05-25T12:00:00-07:00') });
+    var r1 = MobileBarberAgent.handleMessage(null, '408 555 1234', Object.assign({}, ctx, { lang: 'vi' }));
+    var r2 = MobileBarberAgent.handleMessage(r1.session, '', Object.assign({}, ctx, { customerLookupResult: null }));
+    assertEq(r2.session.state.step, 'IF_NEW_CUSTOMER_ASK_NAME');
+    var r3 = MobileBarberAgent.handleMessage(r2.session, 'Nguyễn Văn A', ctx);
+    assertEq(r3.session.state.customerName, 'Nguyễn Văn A');
+    assertEq(r3.session.state.step, 'ASK_ADDRESS');
+    var r4 = MobileBarberAgent.handleMessage(r3.session, '456 Lê Lợi, San Jose, 95128', ctx);
+    assertEq(r4.session.state.address, '456 Lê Lợi');
+    assertEq(r4.session.state.city, 'San Jose');
+    assertEq(r4.session.state.zip, '95128');
+    var r5 = MobileBarberAgent.handleMessage(r4.session, 'cắt tóc fade', ctx);
+    assert(r5.session.state.serviceId, 'Vietnamese service phrase must bind to serviceId');
+    var r6 = MobileBarberAgent.handleMessage(r5.session, 'ngày mai 3pm', ctx);
+    assertEq(r6.session.state.date, '2026-05-26');
+    assertEq(r6.session.state.time, '15:00');
+  });
+
+  test('Mobile Barber AI existing customer reuses saved profile and confirms address', function() {
+    var ctx = context();
+    var r1 = MobileBarberAgent.handleMessage(null, '714-555-0100', ctx);
+    var r2 = MobileBarberAgent.handleMessage(r1.session, '', Object.assign({}, ctx, {
+      customerLookupResult: {
+        customerName: 'John',
+        customerPhone: '7145550100',
+        address: '123 Brookhurst St',
+        city: 'Westminster',
+        zip: '92683'
+      }
+    }));
+    assertEq(r2.session.state.customerLookupStatus, 'found');
+    assertEq(r2.session.state.step, 'IF_EXISTING_CUSTOMER_CONFIRM_PROFILE');
+    assert(r2.response.indexOf('John') >= 0, 'must greet by saved name');
+    assert(r2.response.indexOf('Westminster') >= 0, 'must offer saved city');
+    var r3 = MobileBarberAgent.handleMessage(r2.session, 'same address', ctx);
+    assertEq(r3.session.state.addressConfirmed, true);
+    assertEq(r3.session.state.address, '123 Brookhurst St');
+    assertEq(r3.session.state.city, 'Westminster');
+    assertEq(r3.session.state.zip, '92683');
+    assert(r3.session.state.step === 'ASK_SERVICE' || r3.session.state.step === 'ASK_DATE_TIME',
+      'after address confirmed, must advance to service or date/time, got ' + r3.session.state.step);
+  });
+
+  test('Mobile Barber AI session carries id, vendorId, and lastReply across turns', function() {
+    var ctx = context({ id: 'sess-test' });
+    ctx.vendorId = 'oc-mobile-barber-demo';
+    var r1 = MobileBarberAgent.handleMessage(null, '714-555-0150', ctx);
+    assert(r1.session.id, 'session must receive an id');
+    assertEq(r1.session.vendorId, 'oc-mobile-barber-demo');
+    var firstId = r1.session.id;
+    var r2 = MobileBarberAgent.handleMessage(r1.session, '', Object.assign({}, ctx, { customerLookupResult: null }));
+    assertEq(r2.session.id, firstId, 'session id must persist across turns');
+    assert(r2.session.lastReply && r2.session.lastReply.length > 0, 'lastReply must be tracked for diagnostics');
+  });
 }
 
 if (require.main === module) {

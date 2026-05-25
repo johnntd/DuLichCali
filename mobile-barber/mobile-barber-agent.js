@@ -260,11 +260,12 @@
     return null;
   }
 
-  function extractUpdate(message, ctx) {
+  function extractUpdate(message, ctx, currentState) {
     var now = ctx.now || new Date();
     var lang = detectLang(message);
     var lower = trim(message).toLowerCase();
     var service = matchService(message, ctx.services);
+    var prevStep = currentState && currentState.step;
     // Only emit a language update when detection found a STRONG non-default
     // signal (vi or es). detectLang() falls through to 'en' for any input
     // that lacks diacritics, including unaccented Vietnamese coming back from
@@ -318,6 +319,59 @@
     if (/\btim\b/i.test(message)) update.barberPreference = 'Tim Nguyen';
     if (/\bmichael\b/i.test(message)) update.barberPreference = 'Michael Nguyen';
     if (/\b(style|kiểu|estilo|fade|beard|râu|barba)\b/i.test(lower)) update.notes = trim(message);
+
+    // Step-aware fallback: when the agent has just asked for a specific slot
+    // and the regex extractors above did not populate it, treat the user's
+    // reply as the answer to that slot. Without this, replies like
+    // "John Smith" / "123 Main St, San Jose, 95123" / "fade" never bind to
+    // their target field and the agent loops on the same question.
+    var trimmedMsg = trim(message);
+    if (trimmedMsg) {
+      var lowerMsg = trimmedMsg.toLowerCase();
+
+      if (!update.customerName &&
+          (prevStep === 'ASK_NAME' || prevStep === 'IF_NEW_CUSTOMER_ASK_NAME') &&
+          trimmedMsg.length >= 2 && trimmedMsg.length <= 60 &&
+          !/^\d+$/.test(trimmedMsg) && !/\d{3,}/.test(trimmedMsg) &&
+          !/^(yes|no|ok|sure|đúng|sí|si)\b/i.test(lowerMsg)) {
+        update.customerName = trimmedMsg
+          .replace(/^(?:my name is|i am|i'm|tên tôi là|tên em là|tên là|mình tên|em tên|tôi là|me llamo|soy)\s+/i, '')
+          .replace(/^(?:it'?s|this is)\s+/i, '')
+          .trim();
+      }
+
+      if (prevStep === 'ASK_ADDRESS' && trimmedMsg.length <= 160) {
+        var parts = trimmedMsg.split(',').map(function(p) { return p.trim(); }).filter(Boolean);
+        if (!update.address) {
+          var addrCandidate = parts[0] || trimmedMsg;
+          if (addrCandidate && addrCandidate.length >= 3 && addrCandidate.length <= 120) {
+            update.address = addrCandidate;
+          }
+        }
+        if (!update.city && parts.length >= 2) {
+          var cityCandidate = parts[1].replace(/\s*\d{5}.*$/, '').trim();
+          if (cityCandidate && cityCandidate.length >= 2 && cityCandidate.length <= 40 && !/^\d+$/.test(cityCandidate)) {
+            update.city = cityCandidate;
+          }
+        }
+        if (!update.zip) {
+          var zipCandidate = /\b(9\d{4})\b/.exec(trimmedMsg);
+          if (zipCandidate) update.zip = zipCandidate[1];
+        }
+      }
+
+      if (prevStep === 'ASK_SERVICE' && !update.serviceId) {
+        (ctx.services || []).forEach(function(svc) {
+          if (update.serviceId) return;
+          var name = (svc.name || '').toLowerCase();
+          var cat = (svc.category || '').toLowerCase();
+          if (name && lowerMsg.indexOf(name) >= 0) update.serviceId = svc.id;
+          else if (name && name.indexOf(lowerMsg) >= 0 && lowerMsg.length >= 3) update.serviceId = svc.id;
+          else if (cat && lowerMsg.indexOf(cat) >= 0 && cat.length >= 3) update.serviceId = svc.id;
+        });
+      }
+    }
+
     return update;
   }
 
@@ -435,10 +489,42 @@
     return vendorName ? reply(lang, 'welcomeVendor', { vendor: vendorName }) : reply(lang, 'welcome');
   }
 
-  function handleMessage(session, message, ctx) {
+  var _sessionCounter = 0;
+  function _assignSessionId(session) {
+    if (!session.id) {
+      _sessionCounter += 1;
+      session.id = 'mb-' + Date.now().toString(36) + '-' + _sessionCounter;
+    }
+    return session.id;
+  }
+
+  function logStateTransition(previousStep, lastQuestion, message, session, extracted, response) {
+    if (typeof console === 'undefined' || !console.log) return;
+    try {
+      var state = (session && session.state) || {};
+      console.log('[mobile-barber-agent-state]', JSON.stringify({
+        sessionId: session && session.id || null,
+        vendorId: session && session.vendorId || null,
+        previousStep: previousStep || 'START',
+        lastQuestion: trim(lastQuestion || '').substring(0, 120),
+        userInput: trim(message).substring(0, 120),
+        understoodIntent: state.intent || null,
+        extractedSlots: extracted || {},
+        nextStep: state.step || 'UNKNOWN',
+        customerFound: state.customerLookupStatus === 'found',
+        missingSlots: missingFields(state),
+        reply: trim(response || '').substring(0, 120)
+      }));
+    } catch (e) { /* logging is best-effort */ }
+  }
+
+  function _handleMessageCore(session, message, ctx) {
     ctx = ctx || {};
     session = session || {};
-    var state = mergeState(session.state || emptyState(ctx.lang || 'en'), extractUpdate(message, ctx), ctx.now);
+    var currentState = session.state || emptyState(ctx.lang || 'en');
+    var update = extractUpdate(message, ctx, currentState);
+    var state = mergeState(currentState, update, ctx.now);
+    session._lastExtractedUpdate = update;
     var lang = state.lang;
     var vendor = ctx.vendor;
     var services = ctx.services || [];
@@ -556,6 +642,21 @@
     session.lastBooking = built.booking;
     session.lastSystemContext = systemReason('booking_created', { id: built.booking.id, status: built.booking.status });
     return { session: session, response: reply(lang, 'saved', { id: built.booking.id }), booking: built.booking };
+  }
+
+  function handleMessage(session, message, ctx) {
+    session = session || {};
+    _assignSessionId(session);
+    if (ctx && ctx.vendorId && !session.vendorId) session.vendorId = ctx.vendorId;
+    var previousStep = session.state && session.state.step;
+    var lastQuestion = session.lastReply || '';
+    var result = _handleMessageCore(session, message, ctx);
+    var extracted = (result && result.session && result.session._lastExtractedUpdate) || {};
+    if (result && result.session) {
+      result.session.lastReply = result.response || '';
+      logStateTransition(previousStep, lastQuestion, message, result.session, extracted, result.response);
+    }
+    return result;
   }
 
   function handleMessageAsync(session, message, ctx) {

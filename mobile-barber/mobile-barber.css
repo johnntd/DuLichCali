@@ -1112,7 +1112,7 @@
   flex-direction: column;
   border: 0;
   border-radius: 0;
-  background: rgba(8, 28, 48, .98);
+  background: #081c30;
   box-shadow: var(--shadow-lg);
   overflow: hidden;
   padding-top: env(safe-area-inset-top);
@@ -1131,7 +1131,7 @@
   gap: .65rem;
   padding: .85rem 1rem .75rem;
   border-bottom: 1px solid rgba(255, 255, 255, .08);
-  background: rgba(8, 28, 48, .98);
+  background: #081c30;
 }
 
 .mb-booking-modal__head-row {
@@ -1205,7 +1205,7 @@
   gap: .75rem;
   padding: .85rem 1rem max(1rem, env(safe-area-inset-bottom));
   border-top: 1px solid rgba(255, 255, 255, .08);
-  background: rgba(8, 28, 48, .98);
+  background: #081c30;
 }
 
 .mb-form-actions {

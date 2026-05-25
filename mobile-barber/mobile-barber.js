@@ -868,10 +868,41 @@
     }
   }
 
+  var HERO_SLIDES = [
+    '/assets/mobile-barber/styles/classic-haircut.jpg',
+    '/assets/mobile-barber/styles/fade-haircut.jpg',
+    '/assets/mobile-barber/styles/business-haircut.jpg',
+    '/assets/mobile-barber/styles/home-family-package.jpg',
+    '/assets/mobile-barber/styles/kids-haircut.jpg',
+    '/assets/mobile-barber/styles/modern-styling.jpg'
+  ];
+
+  function startHeroRotation() {
+    var a = document.querySelector('.mb-hero__photo--a');
+    var b = document.querySelector('.mb-hero__photo--b');
+    if (!a || !b || HERO_SLIDES.length < 2) return;
+    var gradient = 'linear-gradient(180deg, rgba(7, 31, 56, .12), rgba(7, 31, 56, .82))';
+    var idx = 0;
+    var showingA = true;
+    a.style.backgroundImage = gradient + ', url("' + HERO_SLIDES[idx] + '")';
+    a.style.opacity = '1';
+    b.style.opacity = '0';
+    setInterval(function() {
+      idx = (idx + 1) % HERO_SLIDES.length;
+      var next = showingA ? b : a;
+      var current = showingA ? a : b;
+      next.style.backgroundImage = gradient + ', url("' + HERO_SLIDES[idx] + '")';
+      next.style.opacity = '1';
+      current.style.opacity = '0';
+      showingA = !showingA;
+    }, 4500);
+  }
+
   function init() {
     state.lang = getLang();
     bind();
     setLang(state.lang);
+    startHeroRotation();
   }
 
   if (document.readyState === 'loading') {

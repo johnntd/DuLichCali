@@ -1546,15 +1546,43 @@
     if (!otherVendor) return;
     var banner = document.getElementById('mbVendorSwitchBanner');
     if (!banner) return;
-    var url = '/mobile-barber/vendor/' + encodeURIComponent(otherVendor.id);
+    var url = '/mobile-barber/vendor/' + encodeURIComponent(otherVendor.id) + '?carryDraft=1';
     var label = otherVendor.barberName || otherVendor.businessName || otherVendor.id;
     banner.innerHTML =
       '<strong>' + escapeHtml(t('vendorSwitchBannerTitle')) + '</strong>' +
       '<p>' + escapeHtml(interpolate(t('vendorSwitchBannerBody'), { name: label, city: draft.city })) + '</p>' +
-      '<a class="mb-button mb-button--primary mb-button--sm" href="' + url + '">' +
+      '<a class="mb-button mb-button--primary mb-button--sm" data-action="switchVendor" href="' + url + '">' +
       escapeHtml(interpolate(t('vendorSwitchBannerCta'), { name: label })) +
       '</a>';
     banner.hidden = false;
+  }
+
+  function persistDraftForSwitch() {
+    try {
+      var draft = getManualDraft();
+      if (!draft) return;
+      var payload = {
+        savedAt: Date.now(),
+        draft: draft,
+        smsOptIn: !!document.getElementById('mbSmsOptIn').checked
+      };
+      sessionStorage.setItem('mb_switch_draft', JSON.stringify(payload));
+    } catch (e) { /* sessionStorage may be unavailable; carry-over silently skipped */ }
+  }
+
+  function consumeSwitchDraft() {
+    try {
+      var params = new URLSearchParams(root.location && root.location.search ? root.location.search : '');
+      if (params.get('carryDraft') !== '1') return null;
+      var raw = sessionStorage.getItem('mb_switch_draft');
+      if (!raw) return null;
+      sessionStorage.removeItem('mb_switch_draft');
+      var parsed = JSON.parse(raw);
+      if (!parsed || !parsed.draft) return null;
+      // expire after 5 minutes
+      if (parsed.savedAt && (Date.now() - parsed.savedAt) > 5 * 60 * 1000) return null;
+      return parsed;
+    } catch (e) { return null; }
   }
 
   function manualBack() {
@@ -2106,6 +2134,9 @@
         resetManualBooking();
       } else if (action === 'viewBookingLater') {
         viewBookingLater();
+      } else if (action === 'switchVendor') {
+        persistDraftForSwitch();
+        // allow default navigation to proceed
       }
     });
     document.querySelector('[data-action="closeAssistant"]').addEventListener('click', function() {
@@ -2138,6 +2169,16 @@
     root.addEventListener('beforeunload', detachVendorRealtime);
     root.addEventListener('pagehide', detachVendorRealtime);
     openQueryMode();
+    var carried = consumeSwitchDraft();
+    if (carried && carried.draft) {
+      state.preselectedServiceId = carried.draft.serviceId || state.preselectedServiceId;
+      openManualBooking();
+      setManualDraft(carried.draft);
+      if (carried.smsOptIn) {
+        var sms = document.getElementById('mbSmsOptIn');
+        if (sms) sms.checked = true;
+      }
+    }
   }
 
   if (document.readyState === 'loading') {

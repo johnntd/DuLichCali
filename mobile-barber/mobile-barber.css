@@ -1772,6 +1772,10 @@
   background: rgba(6, 24, 42, .56);
 }
 
+.mb-chat__log:empty {
+  display: none;
+}
+
 .mb-chat__message {
   max-width: 88%;
   padding: .72rem .85rem;

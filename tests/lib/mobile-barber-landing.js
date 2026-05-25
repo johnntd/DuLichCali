@@ -58,7 +58,7 @@ function runMobileBarberLandingTests(test) {
   });
 
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
-    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260525p');
+    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260525q');
     assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260524o');
     assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260525f');
     assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260525e');
@@ -138,7 +138,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/vendor/**"');
     assertContains(firebase, '"destination": "/mobile-barber/vendor.html"');
     assertContains(vendorHtml, 'id="mobileBarberVendorApp"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260525p');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260525q');
     assertContains(vendorHtml, 'id="mbVendorName"');
     assertContains(vendorHtml, 'id="mbVendorServices"');
     assertContains(vendorHtml, 'id="mbBookingTitle"');

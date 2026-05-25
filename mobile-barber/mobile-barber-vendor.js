@@ -99,8 +99,12 @@
       finalSummaryAddress: 'Address',
       finalSummaryPhone: 'Contact phone',
       notificationQueued: 'Confirmation message prepared.',
-      notificationStatusOnline: 'Customer in-app notice and vendor notice are queued. Email is queued when an email is provided.',
+      notificationStatusOnline: 'Email confirmation sent and vendor notified.',
+      notificationStatusNoEmail: 'Vendor notified. No email on file — save your booking ID to check back later.',
       notificationStatusLocal: 'Saved on this device. Copy or save this confirmation before closing.',
+      noEmailBannerTitle: 'No email on file',
+      noEmailBannerBody: 'Save booking ID {id}. Come back later and look it up by phone in Customer Account below.',
+      viewBookingLaterCta: 'View My Booking',
       bookingConfirmedTitle: 'Booking confirmed',
       copyBookingId: 'Copy booking ID',
       saveConfirmation: 'Save confirmation',
@@ -245,8 +249,12 @@
       finalSummaryAddress: 'Địa chỉ',
       finalSummaryPhone: 'Số điện thoại liên hệ',
       notificationQueued: 'Đã chuẩn bị tin nhắn xác nhận.',
-      notificationStatusOnline: 'Đã xếp hàng thông báo trong app cho khách và thợ. Email sẽ được gửi nếu có email.',
+      notificationStatusOnline: 'Đã gửi email xác nhận và báo cho thợ.',
+      notificationStatusNoEmail: 'Đã báo cho thợ. Không có email — vui lòng lưu mã đặt lịch để xem lại sau.',
       notificationStatusLocal: 'Đã lưu trên thiết bị này. Vui lòng sao chép hoặc lưu xác nhận trước khi đóng.',
+      noEmailBannerTitle: 'Không có email',
+      noEmailBannerBody: 'Vui lòng lưu mã đặt lịch {id}. Quay lại sau và tra cứu theo số điện thoại trong mục Tài Khoản Khách Hàng bên dưới.',
+      viewBookingLaterCta: 'Xem Lịch Đã Đặt',
       bookingConfirmedTitle: 'Đã xác nhận đặt lịch',
       copyBookingId: 'Sao chép mã đặt lịch',
       saveConfirmation: 'Lưu xác nhận',
@@ -391,8 +399,12 @@
       finalSummaryAddress: 'Dirección',
       finalSummaryPhone: 'Teléfono de contacto',
       notificationQueued: 'Mensaje de confirmación preparado.',
-      notificationStatusOnline: 'Aviso en la app para cliente y vendedor en cola. El correo se enviará si hay email.',
+      notificationStatusOnline: 'Correo de confirmación enviado y barbero notificado.',
+      notificationStatusNoEmail: 'Barbero notificado. Sin correo registrado — guarde su ID de reserva para consultar después.',
       notificationStatusLocal: 'Guardado en este dispositivo. Copie o guarde esta confirmación antes de cerrar.',
+      noEmailBannerTitle: 'Sin correo registrado',
+      noEmailBannerBody: 'Guarde el ID de reserva {id}. Vuelva más tarde y búsquelo por teléfono en Cuenta del Cliente abajo.',
+      viewBookingLaterCta: 'Ver Mi Reserva',
       bookingConfirmedTitle: 'Reserva confirmada',
       copyBookingId: 'Copiar ID de reserva',
       saveConfirmation: 'Guardar confirmación',
@@ -753,8 +765,20 @@
     ];
     var bookingId = booking.id || booking.bookingId || '';
     var manualSuccess = state.manualSuccess === true;
-    var notificationLine = savedOnline ? t('notificationStatusOnline') : t('notificationStatusLocal');
+    var hasEmail = !!(booking.customerEmail && String(booking.customerEmail).trim());
+    var notificationLine = hasEmail
+      ? t('notificationStatusOnline')
+      : (savedOnline ? t('notificationStatusNoEmail') : t('notificationStatusLocal'));
     summary.classList.toggle('mb-confirmation-card', manualSuccess);
+    var noEmailBanner = (manualSuccess && !hasEmail && savedOnline)
+      ? '<div class="mb-no-email-banner">' +
+        '<strong>' + escapeHtml(t('noEmailBannerTitle')) + '</strong>' +
+        '<p>' + escapeHtml(interpolate(t('noEmailBannerBody'), { id: bookingId })) + '</p>' +
+        '<button class="mb-button mb-button--primary mb-button--sm" type="button" data-action="viewBookingLater">' +
+          escapeHtml(t('viewBookingLaterCta')) +
+        '</button>' +
+        '</div>'
+      : '';
     summary.innerHTML = '<h3>' + t(manualSuccess ? 'bookingConfirmedTitle' : 'finalSummaryTitle') + '</h3>' +
       '<div class="mb-booking-id-row"><button class="mb-booking-id" type="button" data-action="copyBookingId">' + escapeHtml(bookingId) + '</button>' +
       statusBadgeHtml(booking.status) + '</div>' +
@@ -765,6 +789,7 @@
         return '<div><dt>' + escapeHtml(row[0]) + '</dt><dd>' + escapeHtml(row[1]) + '</dd></div>';
       }).join('') +
       '</dl>' +
+      noEmailBanner +
       '<p class="mb-notification-status">' + escapeHtml(notificationLine) + '</p>' +
       '<p>' + t('finalSummaryNote') + '</p>' +
       '<div class="mb-confirmation-actions">' +
@@ -774,6 +799,16 @@
         '<button class="mb-button mb-button--ghost" type="button" data-action="manualNewBooking">' + t('newBookingButton') + '</button>' : '') +
       '</div>';
     summary.hidden = false;
+  }
+
+  function viewBookingLater() {
+    var phone = state.lastBooking && (state.lastBooking.customerPhone || state.lastBooking.customerPhoneNormalized);
+    var phoneInput = document.getElementById('mbHistoryPhone');
+    if (phoneInput && phone) phoneInput.value = phone;
+    closeManualBooking();
+    var section = document.querySelector('.mb-customer-account');
+    if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (phone) loadCustomerHistory();
   }
 
   function renderHistoryList(id, rows) {
@@ -790,17 +825,20 @@
       var card = el('article', 'mb-history-card');
       var title = el('h4');
       var meta = el('p');
+      var statusRow = el('div', 'mb-history-card__status');
       var rebook = el('button', 'mb-button mb-button--ghost mb-button--sm');
       title.textContent = booking.serviceName || booking.serviceId || t('previousServiceLabel');
       meta.textContent = [
         t('historyDateLabel') + ': ' + [booking.requestedDate, booking.startTime].filter(Boolean).join(' '),
         booking.city || '',
-        booking.status || ''
+        booking.id || booking.bookingId ? '#' + (booking.id || booking.bookingId).slice(-8) : ''
       ].filter(Boolean).join(' • ');
+      statusRow.innerHTML = statusBadgeHtml(booking.status);
       rebook.type = 'button';
       rebook.textContent = t('rebookButton');
       rebook.addEventListener('click', function() { startRebook(booking); });
       card.appendChild(title);
+      card.appendChild(statusRow);
       card.appendChild(meta);
       if (booking.stylePreference) {
         var pref = el('p');
@@ -2034,6 +2072,8 @@
         closeManualBooking();
       } else if (action === 'manualNewBooking') {
         resetManualBooking();
+      } else if (action === 'viewBookingLater') {
+        viewBookingLater();
       }
     });
     document.querySelector('[data-action="closeAssistant"]').addEventListener('click', function() {

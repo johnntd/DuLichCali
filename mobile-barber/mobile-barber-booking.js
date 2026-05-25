@@ -675,12 +675,17 @@
     return { saved: true, source: 'local', method: 'local', booking: booking };
   }
 
-  function saveBooking(booking) {
+  function saveBooking(booking, options) {
+    options = options || {};
     if (canUseFirestore()) {
       return root.firebase.firestore().collection(DATA.COLLECTIONS.bookings).doc(booking.id).set(booking)
         .then(function() { return { saved: true, source: 'firestore', method: 'firestore', booking: booking }; })
-        .catch(function() { return saveBookingLocal(booking); });
+        .catch(function(error) {
+          if (options.requireDatabase) return Promise.reject(error);
+          return saveBookingLocal(booking);
+        });
     }
+    if (options.requireDatabase) return Promise.reject(new Error('firestore_unavailable'));
     try {
       return Promise.resolve(saveBookingLocal(booking));
     } catch (e) {

@@ -147,18 +147,22 @@
             <button class="mb-booking-modal__close" type="button" data-action="closeManualBooking" data-i18n-aria="closeManualBooking">×</button>
           </div>
           <form id="mbManualBookingForm" novalidate>
+            <label class="mb-field mb-selected-service-field">
+              <span data-i18n="serviceLabel"></span>
+              <select id="mbBookingService" required></select>
+            </label>
             <div class="mb-form-step" data-step="1">
               <label class="mb-field">
-                <span data-i18n="serviceLabel"></span>
-                <select id="mbBookingService" required></select>
+                <span data-i18n="nameLabel"></span>
+                <input id="mbCustomerName" type="text" autocomplete="name" required>
               </label>
               <label class="mb-field">
-                <span data-i18n="dateLabel"></span>
-                <input id="mbBookingDate" type="date" required>
+                <span data-i18n="phoneInputLabel"></span>
+                <input id="mbCustomerPhone" type="tel" autocomplete="tel" required>
               </label>
               <label class="mb-field">
-                <span data-i18n="timeLabel"></span>
-                <input id="mbBookingTime" type="time" required>
+                <span data-i18n="emailLabel"></span>
+                <input id="mbCustomerEmail" type="email" autocomplete="email">
               </label>
             </div>
             <div class="mb-form-step" data-step="2" hidden>
@@ -192,20 +196,18 @@
             </div>
             <div class="mb-form-step" data-step="3" hidden>
               <label class="mb-field">
-                <span data-i18n="nameLabel"></span>
-                <input id="mbCustomerName" type="text" autocomplete="name" required>
+                <span data-i18n="dateLabel"></span>
+                <input id="mbBookingDate" type="date" required>
               </label>
               <label class="mb-field">
-                <span data-i18n="phoneInputLabel"></span>
-                <input id="mbCustomerPhone" type="tel" autocomplete="tel" required>
-              </label>
-              <label class="mb-field">
-                <span data-i18n="emailLabel"></span>
-                <input id="mbCustomerEmail" type="email" autocomplete="email">
+                <span data-i18n="timeLabel"></span>
+                <input id="mbBookingTime" type="time" required>
               </label>
             </div>
+            <div class="mb-form-step" data-step="4" hidden>
+              <div class="mb-booking-summary" id="mbBookingSummary" hidden></div>
+            </div>
             <div class="mb-form-error" id="mbManualBookingError" hidden></div>
-            <div class="mb-booking-summary" id="mbBookingSummary" hidden></div>
             <div class="mb-form-actions">
               <button class="mb-button mb-button--ghost" type="button" data-action="manualBack" data-i18n="backButton"></button>
               <button class="mb-button mb-button--primary" type="button" data-action="manualNext" data-i18n="nextButton"></button>
@@ -261,10 +263,10 @@
   </script>
   <script src="/ai-engine.js?v=20260524a"></script>
   <script src="/mobile-barber/mobile-barber-data.js?v=20260524o"></script>
-  <script src="/mobile-barber/mobile-barber-booking.js?v=20260525c"></script>
+  <script src="/mobile-barber/mobile-barber-booking.js?v=20260525d"></script>
   <script src="/mobile-barber/mobile-barber-agent.js?v=20260525e"></script>
   <script src="/mobile-barber/mobile-barber-voice.js?v=20260525f"></script>
   <script src="/notifications.js?v=20260523a"></script>
-  <script src="/mobile-barber/mobile-barber-vendor.js?v=20260525f"></script>
+  <script src="/mobile-barber/mobile-barber-vendor.js?v=20260525h"></script>
 </body>
 </html>

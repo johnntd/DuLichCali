@@ -60,7 +60,7 @@ function runMobileBarberLandingTests(test) {
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
     assertContains(html, '/mobile-barber/mobile-barber.css?v=20260524o');
     assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260524o');
-    assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260525c');
+    assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260525d');
     assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260525e');
     assertContains(html, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
     assertContains(html, '/mobile-barber/mobile-barber.js?v=20260525f');
@@ -146,13 +146,13 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorHtml, 'id="mbSelectedServiceSummary"');
     assertContains(vendorHtml, 'class="mb-mobile-sticky-cta"');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260524o');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260525c');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260525d');
     assertContains(vendorHtml, '/ai-engine.js?v=20260524a');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-agent.js?v=20260525e');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
     assertContains(vendorHtml, 'firebase-functions-compat.js');
     assertContains(vendorHtml, '/notifications.js?v=20260523a');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-vendor.js?v=20260525f');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-vendor.js?v=20260525h');
     assert(vendorHtml.indexOf('/ai-engine.js?v=') < vendorHtml.indexOf('/mobile-barber/mobile-barber-agent.js'), 'ai-engine.js must load before mobile-barber-agent.js');
   });
 
@@ -177,11 +177,43 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorHtml, 'data-step="1"');
     assertContains(vendorHtml, 'data-step="2"');
     assertContains(vendorHtml, 'data-step="3"');
+    assertContains(vendorHtml, 'data-step="4"');
     assertContains(vendorHtml, 'data-action="manualReview"');
     assertContains(vendorHtml, 'data-action="manualConfirm"');
     assertContains(vendorHtml, 'id="mbCustomerNotes"');
     assertContains(vendorHtml, 'id="mbBookingStylePreference"');
     assertContains(vendorHtml, 'type="file" accept="image/*"');
+  });
+
+  test('Mobile Barber manual booking modal uses contact, address, date/time, review flow', function() {
+    assertContains(vendorHtml, 'mb-selected-service-field');
+    assert(vendorHtml.indexOf('data-step="1"') < vendorHtml.indexOf('id="mbCustomerName"'), 'step 1 should contain customer contact fields');
+    assert(vendorHtml.indexOf('id="mbCustomerName"') < vendorHtml.indexOf('data-step="2"'), 'contact fields must come before address step');
+    assert(vendorHtml.indexOf('id="mbBookingAddress"') < vendorHtml.indexOf('data-step="3"'), 'address step must come before date/time step');
+    assert(vendorHtml.indexOf('id="mbBookingDate"') < vendorHtml.indexOf('data-step="4"'), 'date/time step must come before review step');
+    assert(vendorJs.indexOf("1: ['mbCustomerName', 'mbCustomerPhone']") >= 0, 'step 1 validation must require contact');
+    assert(vendorJs.indexOf("2: ['mbBookingAddress', 'mbBookingCity', 'mbBookingZip']") >= 0, 'step 2 validation must require address');
+    assert(vendorJs.indexOf("3: ['mbBookingService', 'mbBookingDate', 'mbBookingTime']") >= 0, 'step 3 validation must require service and date/time');
+    assertContains(vendorJs, "state.manualStep = 4");
+    assertContains(vendorJs, "state.manualStep !== 4 || !state.availabilityResult || !state.availabilityResult.canCreate");
+    assertContains(vendorJs, "confirm.hidden = true");
+    assertContains(vendorJs, "confirm.disabled = true");
+    assertContains(vendorJs, "BOOKING.saveBooking(built.booking, { requireDatabase: true })");
+    assertContains(vendorJs, "[mobile-barber-manual-booking]");
+    assertContains(vendorJs, "bookingId");
+    assertContains(vendorJs, "submitStatus: 'error'");
+    assertContains(vendorJs, "step4Label");
+    assertContains(vendorJs, "Confirm Booking");
+  });
+
+  test('Mobile Barber manual booking remains data-driven for Michael and Tim vendor pages', function() {
+    var data = read('mobile-barber/mobile-barber-data.js');
+    assertContains(data, "MICHAEL_VENDOR_ID = 'michael-nguyen-oc'");
+    assertContains(data, "TIM_VENDOR_ID = 'tim-nguyen-bay'");
+    assertContains(vendorJs, 'DATA.findVendorById(vendorId)');
+    assertContains(vendorJs, 'DATA.listServicesForVendor(state.vendor.id)');
+    assertContains(vendorJs, 'renderServiceOptions()');
+    assertContains(vendorJs, 'state.services.forEach(function(service)');
   });
 
   test('Mobile Barber vendor page supports en vi es translations', function() {

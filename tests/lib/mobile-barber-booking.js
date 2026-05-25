@@ -56,6 +56,19 @@ function check(draft, existingBookings, extra) {
   });
 }
 
+function checkVendor(vendorId, draft, existingBookings, extra) {
+  extra = extra || {};
+  return MobileBarberBooking.checkAvailability({
+    vendor: MobileBarberData.findVendorById(vendorId),
+    services: MobileBarberData.listServicesForVendor(vendorId),
+    availability: MobileBarberData.sampleAvailability,
+    draft: draft,
+    existingBookings: existingBookings || [],
+    unavailableBlocks: extra.unavailableBlocks || [],
+    now: extra.now
+  });
+}
+
 function runMobileBarberBookingTests(test) {
   test('Mobile Barber manual booking blocks missing phone and address', function() {
     var missingPhone = baseDraft();
@@ -266,6 +279,84 @@ function runMobileBarberBookingTests(test) {
     assertEq(built.booking.endTime, '11:15');
   });
 
+  test('Mobile Barber manual booking works for Michael and Tim vendor data', function() {
+    [
+      {
+        vendorId: MobileBarberData.MICHAEL_VENDOR_ID,
+        draft: Object.assign(baseDraft(), {
+          serviceId: MobileBarberData.MICHAEL_VENDOR_ID + '-classic-haircut',
+          city: 'Westminster',
+          zip: '92683',
+          requestedDate: '2026-06-01',
+          startTime: '10:00'
+        })
+      },
+      {
+        vendorId: MobileBarberData.TIM_VENDOR_ID,
+        draft: Object.assign(baseDraft(), {
+          serviceId: MobileBarberData.TIM_VENDOR_ID + '-classic-haircut',
+          city: 'San Jose',
+          zip: '95112',
+          requestedDate: '2026-06-01',
+          startTime: '10:00'
+        })
+      }
+    ].forEach(function(row) {
+      var vendor = MobileBarberData.findVendorById(row.vendorId);
+      var result = checkVendor(row.vendorId, row.draft);
+      assertEq(result.canCreate, true, row.vendorId + ' availability must pass');
+      var built = MobileBarberBooking.buildBooking({
+        id: row.vendorId + '-manual-ok',
+        now: '2026-05-25T00:00:00.000Z',
+        vendor: vendor,
+        draft: row.draft,
+        availabilityResult: result
+      });
+      assertEq(built.valid, true, row.vendorId + ' booking must build after availability');
+      assertEq(built.booking.vendorId, row.vendorId);
+      assertEq(built.booking.source, 'customer_form');
+    });
+  });
+
+  test('Mobile Barber confirm booking calls create/write path after availability', function() {
+    var originalFirebase = global.firebase;
+    var writes = [];
+    global.firebase = {
+      apps: [{}],
+      firestore: function() {
+        return {
+          collection: function(collectionName) {
+            return {
+              doc: function(id) {
+                return {
+                  set: function(doc) {
+                    writes.push({ collectionName: collectionName, id: id, doc: doc });
+                    return {
+                      then: function(cb) {
+                        var value = cb();
+                        return { catch: function() { return value; } };
+                      }
+                    };
+                  }
+                };
+              }
+            };
+          }
+        };
+      }
+    };
+    try {
+      var booking = sampleBuiltBooking('manual-create-path-1');
+      var saved = MobileBarberBooking.saveBooking(booking, { requireDatabase: true });
+      assertEq(saved.source, 'firestore');
+      assertEq(writes.length, 1);
+      assertEq(writes[0].id, booking.id);
+      assertEq(writes[0].doc.source, 'customer_form');
+    } finally {
+      global.firebase = originalFirebase;
+    }
+  });
+
   test('Mobile Barber customer history filters by vendor and phone', function() {
     var rows = MobileBarberBooking.filterCustomerBookings([
       { id: 'a', vendorId: MobileBarberData.SAMPLE_VENDOR_ID, customerPhone: '(714) 555-0100', requestedDate: '2026-06-01', startTime: '10:00' },
@@ -393,6 +484,50 @@ function runMobileBarberBookingTests(test) {
       global.localStorage = originalLocalStorage;
       Promise.resolve = originalPromiseResolve;
     }
+  });
+
+  test('Mobile Barber manual confirm can require database write failure to reject', function() {
+    var originalFirebase = global.firebase;
+    var originalLocalStorage = global.localStorage;
+    var wroteLocal = false;
+    global.firebase = {
+      apps: [{}],
+      firestore: function() {
+        return {
+          collection: function() {
+            return {
+              doc: function() {
+                return {
+                  set: function() {
+                    return Promise.reject(new Error('permission-denied'));
+                  }
+                };
+              }
+            };
+          }
+        };
+      }
+    };
+    global.localStorage = {
+      getItem: function() { return '[]'; },
+      setItem: function() { wroteLocal = true; }
+    };
+    return MobileBarberBooking.saveBooking(sampleBuiltBooking('firestore-required-fail'), { requireDatabase: true })
+      .then(function() {
+        throw new Error('database failure should reject');
+      })
+      .catch(function(error) {
+        assert(error, 'database failure should produce an error');
+        assertEq(wroteLocal, false, 'manual confirm must not silently queue local booking after database failure');
+      })
+      .then(function() {
+        global.firebase = originalFirebase;
+        global.localStorage = originalLocalStorage;
+      }, function(error) {
+        global.firebase = originalFirebase;
+        global.localStorage = originalLocalStorage;
+        throw error;
+      });
   });
 }
 

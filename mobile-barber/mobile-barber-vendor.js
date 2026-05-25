@@ -70,10 +70,11 @@
       backButton: 'Back',
       nextButton: 'Next',
       reviewButton: 'Check availability',
-      confirmButton: 'Confirm request',
-      step1Label: 'Step 1 / 3 — Service',
-      step2Label: 'Step 2 / 3 — Address',
-      step3Label: 'Step 3 / 3 — Contact',
+      confirmButton: 'Confirm Booking',
+      step1Label: 'Step 1 / 4 — Customer contact',
+      step2Label: 'Step 2 / 4 — Service address',
+      step3Label: 'Step 3 / 4 — Date and time',
+      step4Label: 'Step 4 / 4 — Review and confirm',
       requiredError: 'Please complete the required fields for this step.',
       availabilityError: 'This time is not available. Please choose another date or time.',
       overlapError: 'This barber already has an appointment that overlaps with your request.',
@@ -187,10 +188,11 @@
       backButton: 'Lùi lại',
       nextButton: 'Tiếp tục',
       reviewButton: 'Kiểm tra lịch trống',
-      confirmButton: 'Xác nhận yêu cầu',
-      step1Label: 'Bước 1 / 3 — Dịch vụ',
-      step2Label: 'Bước 2 / 3 — Địa chỉ',
-      step3Label: 'Bước 3 / 3 — Liên hệ',
+      confirmButton: 'Xác nhận đặt lịch',
+      step1Label: 'Bước 1 / 4 — Liên hệ khách hàng',
+      step2Label: 'Bước 2 / 4 — Địa chỉ phục vụ',
+      step3Label: 'Bước 3 / 4 — Ngày và giờ',
+      step4Label: 'Bước 4 / 4 — Xem lại và xác nhận',
       requiredError: 'Vui lòng điền đủ thông tin bắt buộc cho bước này.',
       availabilityError: 'Giờ này không còn trống. Vui lòng chọn ngày hoặc giờ khác.',
       overlapError: 'Thợ này đã có lịch trùng với yêu cầu của bạn.',
@@ -304,10 +306,11 @@
       backButton: 'Atrás',
       nextButton: 'Siguiente',
       reviewButton: 'Verificar disponibilidad',
-      confirmButton: 'Confirmar solicitud',
-      step1Label: 'Paso 1 / 3 — Servicio',
-      step2Label: 'Paso 2 / 3 — Dirección',
-      step3Label: 'Paso 3 / 3 — Contacto',
+      confirmButton: 'Confirmar reserva',
+      step1Label: 'Paso 1 / 4 — Contacto',
+      step2Label: 'Paso 2 / 4 — Dirección',
+      step3Label: 'Paso 3 / 4 — Fecha y hora',
+      step4Label: 'Paso 4 / 4 — Revisar y confirmar',
       requiredError: 'Complete los campos obligatorios de este paso.',
       availabilityError: 'Este horario no está disponible. Elija otra fecha u hora.',
       overlapError: 'Este barbero ya tiene una cita que se cruza con su solicitud.',
@@ -1103,7 +1106,10 @@
       summary.hidden = true;
       summary.innerHTML = '';
     }
-    if (confirm) confirm.disabled = true;
+    if (confirm) {
+      confirm.hidden = true;
+      confirm.disabled = true;
+    }
   }
 
   function showManualError(message) {
@@ -1112,11 +1118,37 @@
     error.hidden = !message;
   }
 
+  function hasManualValues(ids) {
+    return ids.every(function(id) {
+      var node = document.getElementById(id);
+      return node && String(node.value || '').trim();
+    });
+  }
+
+  function logManualBookingState(extra) {
+    extra = extra || {};
+    var draft = getManualDraft();
+    var payload = {
+      step: state.manualStep,
+      selectedService: draft.serviceId || state.preselectedServiceId || '',
+      hasContact: hasManualValues(['mbCustomerName', 'mbCustomerPhone']),
+      hasAddress: hasManualValues(['mbBookingAddress', 'mbBookingCity', 'mbBookingZip']),
+      hasDateTime: hasManualValues(['mbBookingDate', 'mbBookingTime']),
+      availabilityStatus: state.availabilityResult && state.availabilityResult.canCreate ? 'available' : (extra.availabilityStatus || 'unchecked'),
+      submitStatus: extra.submitStatus || 'idle',
+      bookingId: extra.bookingId || (state.lastBooking && state.lastBooking.id) || '',
+      error: extra.error || ''
+    };
+    if (root.console && root.console.log) {
+      root.console.log('[mobile-barber-manual-booking]', payload);
+    }
+  }
+
   function currentStepFields() {
     var map = {
-      1: ['mbBookingService', 'mbBookingDate', 'mbBookingTime'],
+      1: ['mbCustomerName', 'mbCustomerPhone'],
       2: ['mbBookingAddress', 'mbBookingCity', 'mbBookingZip'],
-      3: ['mbCustomerName', 'mbCustomerPhone']
+      3: ['mbBookingService', 'mbBookingDate', 'mbBookingTime']
     };
     return map[state.manualStep] || [];
   }
@@ -1139,9 +1171,10 @@
     });
     document.getElementById('mbManualStepLabel').textContent = t('step' + state.manualStep + 'Label');
     document.querySelector('[data-action="manualBack"]').hidden = state.manualStep === 1;
-    document.querySelector('[data-action="manualNext"]').hidden = state.manualStep === 3;
+    document.querySelector('[data-action="manualNext"]').hidden = state.manualStep >= 3;
     document.querySelector('[data-action="manualReview"]').hidden = state.manualStep !== 3;
-    document.querySelector('[data-action="manualConfirm"]').hidden = state.manualStep !== 3;
+    document.querySelector('[data-action="manualConfirm"]').hidden = state.manualStep !== 4 || !state.availabilityResult || !state.availabilityResult.canCreate;
+    logManualBookingState();
   }
 
   function openManualBooking(options) {
@@ -1164,6 +1197,7 @@
     var modal = document.getElementById('mbManualBookingModal');
     modal.hidden = false;
     modal.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    logManualBookingState();
   }
 
   function closeManualBooking() {
@@ -1196,12 +1230,13 @@
   function manualNext() {
     if (!validateCurrentStep()) return;
     showManualError('');
-    state.manualStep = Math.min(3, state.manualStep + 1);
+    state.manualStep = Math.min(4, state.manualStep + 1);
     renderManualStep();
   }
 
   function manualBack() {
     showManualError('');
+    if (state.manualStep === 4) clearManualResult();
     state.manualStep = Math.max(1, state.manualStep - 1);
     renderManualStep();
   }
@@ -1209,17 +1244,29 @@
   function renderSummary(result, draft) {
     var summary = document.getElementById('mbBookingSummary');
     var notice = result.reviewRequired ? t('vendorReviewStatusCopy') : t('pendingStatusCopy');
+    var barber = (state.vendor && (state.vendor.barberName || state.vendor.businessName)) || state.vendor.id;
+    var address = [draft.address, draft.city, draft.zip].filter(Boolean).join(', ');
+    var rows = [
+      [t('finalSummaryBarber'), barber],
+      [t('finalSummaryService'), result.service.name],
+      [t('finalSummaryPrice'), formatMoney(result.price.totalPrice)],
+      [t('finalSummaryDuration'), result.timing.totalMinutes + ' ' + t('minutes')],
+      [t('finalSummaryAddress'), address],
+      [t('finalSummaryDateTime'), interpolate(t('summaryTime'), { date: draft.requestedDate, start: draft.startTime, end: result.timing.endTime })]
+    ];
     summary.innerHTML = [
       '<h3>' + t('summaryTitle') + '</h3>',
-      '<p><strong>' + result.service.name + '</strong></p>',
-      '<p>' + interpolate(t('summaryTime'), { date: draft.requestedDate, start: draft.startTime, end: result.timing.endTime }) + '</p>',
-      '<p>' + interpolate(t('summaryPrice'), { price: formatMoney(result.price.totalPrice) }) + '</p>',
-      '<p>' + interpolate(t('summaryDuration'), { minutes: result.timing.totalMinutes }) + '</p>',
+      '<dl class="mb-confirmation-list">' + rows.map(function(row) {
+        return '<div><dt>' + row[0] + '</dt><dd>' + row[1] + '</dd></div>';
+      }).join('') + '</dl>',
       result.reviewRequired ? '<p>' + t('reviewAreaNotice') + '</p>' : '',
       '<p>' + notice + '</p>'
     ].join('');
     summary.hidden = false;
+    state.manualStep = 4;
+    renderManualStep();
     document.querySelector('[data-action="manualConfirm"]').disabled = false;
+    logManualBookingState({ availabilityStatus: result.key });
   }
 
   function reviewManualBooking() {
@@ -1240,6 +1287,7 @@
         var msg = result.key === 'booking_overlap' ? t('overlapError') : t('availabilityError');
         if (result.key === 'required_fields') msg = t('requiredError');
         showManualError(msg);
+        logManualBookingState({ availabilityStatus: result.key, error: msg });
         return;
       }
       state.availabilityResult = result;
@@ -1251,6 +1299,11 @@
   }
 
   function confirmManualBooking() {
+    if (!state.availabilityResult || !state.availabilityResult.canCreate) {
+      showManualError(t('availabilityError'));
+      logManualBookingState({ submitStatus: 'blocked', error: 'availability_check_required' });
+      return;
+    }
     var draft = getManualDraft();
     var built = BOOKING.buildBooking({
       vendor: state.vendor,
@@ -1262,16 +1315,19 @@
       return;
     }
     document.querySelector('[data-action="manualConfirm"]').disabled = true;
-    BOOKING.saveBooking(built.booking).then(function(result) {
+    logManualBookingState({ submitStatus: 'submitting' });
+    BOOKING.saveBooking(built.booking, { requireDatabase: true }).then(function(result) {
       state.lastBooking = result.booking;
       rememberCustomerFromBooking(result.booking);
       if (result.source === 'firestore') queueBookingNotifications(result.booking);
       showManualError('');
       renderFinalBookingSummary(result.booking, result.source);
       loadCustomerHistory();
-    }).catch(function() {
+      logManualBookingState({ submitStatus: 'success', bookingId: result.booking.id });
+    }).catch(function(error) {
       document.querySelector('[data-action="manualConfirm"]').disabled = false;
       showManualError(t('bookingSaveError'));
+      logManualBookingState({ submitStatus: 'error', error: error && error.message || 'booking_save_failed' });
     });
   }
 

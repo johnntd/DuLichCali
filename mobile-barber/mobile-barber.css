@@ -1008,6 +1008,7 @@
 
 .mb-form-step,
 .mb-form-optional,
+.mb-selected-service-field,
 .mb-booking-summary {
   display: grid;
   gap: .8rem;
@@ -1046,6 +1047,38 @@
 
 .mb-booking-summary p {
   color: var(--text);
+}
+
+.mb-confirmation-list {
+  display: grid;
+  gap: .55rem;
+  margin: 0;
+}
+
+.mb-confirmation-list div {
+  display: grid;
+  gap: .15rem;
+  padding-bottom: .55rem;
+  border-bottom: 1px solid rgba(255, 255, 255, .12);
+}
+
+.mb-confirmation-list div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.mb-confirmation-list dt {
+  color: var(--gold-lt);
+  font-size: var(--text-xs);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.mb-confirmation-list dd {
+  margin: 0;
+  color: var(--cream);
+  font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .mb-form-actions {

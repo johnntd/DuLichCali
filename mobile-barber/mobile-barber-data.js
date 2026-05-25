@@ -44,7 +44,9 @@
 
   var BOOKING_FIELDS = Object.freeze([
     'id', 'vendorId', 'customerName', 'customerPhone', 'customerEmail',
-    'serviceId', 'serviceName', 'servicePrice', 'address', 'city', 'zip',
+    'serviceId', 'serviceName', 'servicePrice', 'travelFee', 'amountDue',
+    'paymentMethod', 'paymentStatus', 'zellePhone', 'paymentNote',
+    'address', 'city', 'zip',
     'requestedDate', 'startTime', 'endTime', 'status', 'source', 'notes',
     'stylePreference', 'photoUrls', 'aiConversationSummary',
     'rebookedFromBookingId', 'previousServiceName', 'customerUid',
@@ -995,6 +997,14 @@
       requireText(booking, field, errors);
     });
     requireNumber(booking, 'servicePrice', errors, { min: 0 });
+    if (booking.travelFee != null) requireNumber(booking, 'travelFee', errors, { min: 0 });
+    if (booking.amountDue != null) requireNumber(booking, 'amountDue', errors, { min: 0 });
+    if (hasText(booking.paymentMethod) && ['cash', 'zelle', 'unknown'].indexOf(booking.paymentMethod) < 0) {
+      errors.push('paymentMethod is not supported.');
+    }
+    if (hasText(booking.paymentStatus) && ['unpaid', 'pending', 'paid', 'waived'].indexOf(booking.paymentStatus) < 0) {
+      errors.push('paymentStatus is not supported.');
+    }
 
     if (booking.id != null && !hasText(booking.id)) errors.push('id must be a non-empty string when present.');
     if (booking.customerEmail != null && booking.customerEmail !== '' && !/.+@.+\..+/.test(booking.customerEmail)) {

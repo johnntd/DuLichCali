@@ -47,6 +47,16 @@
     return STATUS_LIFECYCLE.indexOf(status) >= 0 ? status : PENDING_STATUS;
   }
 
+  function normalizePaymentMethod(method) {
+    method = lower(method);
+    return ['cash', 'zelle', 'unknown'].indexOf(method) >= 0 ? method : 'unknown';
+  }
+
+  function normalizePaymentStatus(status) {
+    status = lower(status);
+    return ['unpaid', 'pending', 'paid', 'waived'].indexOf(status) >= 0 ? status : 'unpaid';
+  }
+
   function findService(services, serviceId) {
     services = services || [];
     for (var i = 0; i < services.length; i++) {
@@ -453,6 +463,9 @@
     }
     var now = input.now || new Date().toISOString();
     var id = input.id || ('mb-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8));
+    var servicePrice = Number(check.price.servicePrice || check.service.price || 0);
+    var travelFee = Number(check.price.travelFee || 0) + Number(check.price.distanceFee || 0);
+    var amountDue = Number(check.price.totalPrice != null ? check.price.totalPrice : (servicePrice + travelFee));
     var booking = {
       id: id,
       vendorId: input.vendor.id,
@@ -462,7 +475,13 @@
       smsOptIn: draft.smsOptIn === true || draft.smsOptIn === 'true',
       serviceId: check.service.id,
       serviceName: check.service.name,
-      servicePrice: check.price.totalPrice,
+      servicePrice: servicePrice,
+      travelFee: travelFee,
+      amountDue: amountDue,
+      paymentMethod: normalizePaymentMethod(draft.paymentMethod),
+      paymentStatus: normalizePaymentStatus(draft.paymentStatus),
+      zellePhone: trim(draft.zellePhone) || trim(input.vendor.phone),
+      paymentNote: trim(draft.paymentNote),
       address: trim(draft.address),
       city: trim(draft.city),
       zip: trim(draft.zip),
@@ -734,6 +753,36 @@
     }
   }
 
+  function withPaymentDefaults(booking, vendor) {
+    booking = Object.assign({}, booking || {});
+    var servicePrice = Number(booking.servicePrice || 0);
+    var travelFee = Number(booking.travelFee || 0);
+    var legacyTotal = servicePrice && !travelFee && !booking.amountDue ? servicePrice : null;
+    booking.paymentMethod = normalizePaymentMethod(booking.paymentMethod);
+    booking.paymentStatus = normalizePaymentStatus(booking.paymentStatus);
+    booking.zellePhone = trim(booking.zellePhone) || trim(vendor && vendor.phone);
+    booking.servicePrice = servicePrice;
+    booking.travelFee = travelFee;
+    booking.amountDue = Number(booking.amountDue != null ? booking.amountDue : (legacyTotal != null ? legacyTotal : servicePrice + travelFee));
+    booking.paymentNote = trim(booking.paymentNote);
+    return booking;
+  }
+
+  function updateBookingPayment(bookingId, patch, options) {
+    options = options || {};
+    patch = patch || {};
+    if (!bookingId) return Promise.reject(new Error('missing_booking_id'));
+    var update = { updatedAt: options.now || new Date().toISOString() };
+    if (patch.paymentMethod != null) update.paymentMethod = normalizePaymentMethod(patch.paymentMethod);
+    if (patch.paymentStatus != null) update.paymentStatus = normalizePaymentStatus(patch.paymentStatus);
+    if (patch.paymentNote != null) update.paymentNote = trim(patch.paymentNote);
+    if (patch.zellePhone != null) update.zellePhone = trim(patch.zellePhone);
+    if (!canUseFirestore()) return Promise.reject(new Error('firestore_unavailable'));
+    return root.firebase.firestore().collection(DATA.COLLECTIONS.bookings).doc(bookingId).set(update, { merge: true }).then(function() {
+      return { saved: true, bookingId: bookingId, update: update };
+    });
+  }
+
   function updateBookingStatus(bookingId, status, options) {
     options = options || {};
     var normalized = normalizeBookingStatus(status);
@@ -752,6 +801,9 @@
     ACTIVE_BOOKING_STATUSES: ACTIVE_BOOKING_STATUSES,
     STATUS_LIFECYCLE: STATUS_LIFECYCLE,
     normalizeBookingStatus: normalizeBookingStatus,
+    normalizePaymentMethod: normalizePaymentMethod,
+    normalizePaymentStatus: normalizePaymentStatus,
+    withPaymentDefaults: withPaymentDefaults,
     normalizePhone: normalizePhone,
     validateRequiredFields: validateRequiredFields,
     isWithinServiceArea: isWithinServiceArea,
@@ -775,6 +827,7 @@
     loadExistingBookings: loadExistingBookings,
     saveBooking: saveBooking,
     updateBookingStatus: updateBookingStatus,
+    updateBookingPayment: updateBookingPayment,
     _minutesFromTime: minutesFromTime,
     _rangesOverlap: rangesOverlap
   };

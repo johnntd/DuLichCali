@@ -1717,6 +1717,34 @@
   color: var(--text);
 }
 
+.mb-payment-after-service {
+  border-left: 3px solid var(--gold);
+  padding-left: .8rem;
+}
+
+.mb-payment-choice {
+  display: grid;
+  gap: .65rem;
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: var(--r-sm);
+  padding: .85rem;
+  margin: 0;
+}
+
+.mb-payment-choice legend {
+  padding: 0 .25rem;
+  color: var(--cream);
+  font-weight: 800;
+}
+
+.mb-payment-choice label {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  min-height: 2rem;
+  color: var(--text);
+}
+
 .mb-confirmation-list {
   display: grid;
   gap: .55rem;
@@ -1908,6 +1936,39 @@
   display: flex;
   flex-wrap: wrap;
   gap: .45rem;
+}
+
+.mb-booking-card__section {
+  border-top: 1px solid rgba(255, 255, 255, .1);
+  padding-top: .7rem;
+}
+
+.mb-booking-card__section h4 {
+  margin: 0 0 .45rem;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.mb-booking-card__details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: .5rem .8rem;
+  margin: 0;
+}
+
+.mb-booking-card__details dt {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.mb-booking-card__details dd {
+  margin: .1rem 0 0;
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .mb-service-admin-row {

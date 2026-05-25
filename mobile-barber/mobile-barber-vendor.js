@@ -119,6 +119,14 @@
       emailBlankWarning: "No email - you won't receive an email confirmation.",
       emailRecommendedNotice: 'Email recommended for confirmation. Continue without?',
       smsOptInLabel: 'Text me a confirmation',
+      paymentChoiceLabel: 'How would you like to pay after the haircut?',
+      paymentCash: 'Cash',
+      paymentZelle: 'Zelle',
+      paymentCollectedAfterService: 'Payment is collected after service.',
+      paymentNoPrepay: 'No online prepayment is required.',
+      paymentOptionsSummary: 'You can pay your barber by cash or Zelle to {phone}.',
+      paymentPreferenceLabel: 'Payment preference',
+      zelleLabel: 'Zelle',
       statusPending: 'Waiting for barber confirmation',
       statusConfirmed: 'Confirmed',
       statusDeclined: 'Declined',
@@ -273,6 +281,14 @@
       emailBlankWarning: 'Không có email - bạn sẽ không nhận xác nhận đặt lịch qua email.',
       emailRecommendedNotice: 'Nên thêm email để nhận xác nhận. Tiếp tục khi không có email?',
       smsOptInLabel: 'Nhắn tin xác nhận',
+      paymentChoiceLabel: 'Mình muốn trả tiền sau khi cắt tóc bằng cách nào?',
+      paymentCash: 'Tiền mặt',
+      paymentZelle: 'Zelle',
+      paymentCollectedAfterService: 'Thanh toán sau khi hoàn tất dịch vụ.',
+      paymentNoPrepay: 'Không cần trả trước online.',
+      paymentOptionsSummary: 'Mình có thể trả bằng tiền mặt hoặc Zelle tới {phone}.',
+      paymentPreferenceLabel: 'Cách thanh toán muốn dùng',
+      zelleLabel: 'Zelle',
       statusPending: 'Đang chờ thợ xác nhận',
       statusConfirmed: 'Đã xác nhận',
       statusDeclined: 'Bị từ chối',
@@ -427,6 +443,14 @@
       emailBlankWarning: 'Sin correo - no recibirá confirmación por correo.',
       emailRecommendedNotice: 'Se recomienda email para confirmación. ¿Continuar sin email?',
       smsOptInLabel: 'Enviar SMS de confirmación',
+      paymentChoiceLabel: 'Como prefiere pagar despues del corte?',
+      paymentCash: 'Efectivo',
+      paymentZelle: 'Zelle',
+      paymentCollectedAfterService: 'El pago se cobra despues del servicio.',
+      paymentNoPrepay: 'No se requiere prepago en linea.',
+      paymentOptionsSummary: 'Puede pagar al barbero en efectivo o por Zelle a {phone}.',
+      paymentPreferenceLabel: 'Preferencia de pago',
+      zelleLabel: 'Zelle',
       statusPending: 'Esperando confirmación del barbero',
       statusConfirmed: 'Confirmado',
       statusDeclined: 'Rechazado',
@@ -771,7 +795,9 @@
       [t('finalSummaryService'), booking.serviceName],
       [t('finalSummaryDateTime'), when],
       [t('finalSummaryDuration'), duration ? duration + ' ' + t('minutes') : ''],
-      [t('finalSummaryPrice'), formatMoney(booking.servicePrice)],
+      [t('finalSummaryPrice'), formatMoney(booking.amountDue != null ? booking.amountDue : booking.servicePrice)],
+      [t('paymentPreferenceLabel'), booking.paymentMethod || 'unknown'],
+      [t('zelleLabel'), booking.zellePhone || ((state.vendor && state.vendor.phone) || '')],
       [t('finalSummaryAddress'), addressSummary(booking)],
       [t('finalSummaryPhone'), (state.vendor && state.vendor.phone) || booking.customerPhone]
     ];
@@ -803,6 +829,9 @@
       '</dl>' +
       noEmailBanner +
       '<p class="mb-notification-status">' + escapeHtml(notificationLine) + '</p>' +
+      '<p class="mb-payment-after-service">' + escapeHtml(t('paymentCollectedAfterService')) + '<br>' +
+      escapeHtml(interpolate(t('paymentOptionsSummary'), { phone: booking.zellePhone || ((state.vendor && state.vendor.phone) || '') })) + '<br>' +
+      escapeHtml(t('paymentNoPrepay')) + '</p>' +
       '<p>' + t('finalSummaryNote') + '</p>' +
       '<div class="mb-confirmation-actions">' +
       '<button class="mb-button mb-button--ghost" type="button" data-action="copyBookingId">' + t('copyBookingId') + '</button>' +
@@ -1280,6 +1309,9 @@
       customerName: document.getElementById('mbCustomerName').value,
       customerPhone: document.getElementById('mbCustomerPhone').value,
       customerEmail: document.getElementById('mbCustomerEmail').value,
+      paymentMethod: (document.querySelector('input[name="mbPaymentMethod"]:checked') || {}).value || 'unknown',
+      paymentStatus: 'unpaid',
+      zellePhone: (state.vendor && state.vendor.phone) || '',
       smsOptIn: !!(document.getElementById('mbSmsOptIn') && document.getElementById('mbSmsOptIn').checked),
       rebookedFromBookingId: state.rebookDraft && state.rebookDraft.rebookedFromBookingId,
       previousServiceName: state.rebookDraft && state.rebookDraft.previousServiceName
@@ -1306,6 +1338,10 @@
     });
     var sms = document.getElementById('mbSmsOptIn');
     if (sms && draft.smsOptIn != null) sms.checked = draft.smsOptIn === true || draft.smsOptIn === 'true';
+    if (draft.paymentMethod) {
+      var payment = document.querySelector('input[name="mbPaymentMethod"][value="' + draft.paymentMethod + '"]');
+      if (payment) payment.checked = true;
+    }
   }
 
   function clearManualResult() {
@@ -1618,6 +1654,8 @@
       [t('finalSummaryBarber'), barber],
       [t('finalSummaryService'), result.service.name],
       [t('finalSummaryPrice'), formatMoney(result.price.totalPrice)],
+      [t('paymentPreferenceLabel'), draft.paymentMethod || 'unknown'],
+      [t('zelleLabel'), (state.vendor && state.vendor.phone) || ''],
       [t('finalSummaryDuration'), result.timing.totalMinutes + ' ' + t('minutes')],
       [t('finalSummaryAddress'), address],
       [t('finalSummaryDateTime'), interpolate(t('summaryTime'), { date: draft.requestedDate, start: draft.startTime, end: result.timing.endTime })]
@@ -1627,6 +1665,9 @@
       '<dl class="mb-confirmation-list">' + rows.map(function(row) {
         return '<div><dt>' + row[0] + '</dt><dd>' + row[1] + '</dd></div>';
       }).join('') + '</dl>',
+      '<p class="mb-payment-after-service">' + escapeHtml(t('paymentCollectedAfterService')) + '<br>' +
+        escapeHtml(interpolate(t('paymentOptionsSummary'), { phone: (state.vendor && state.vendor.phone) || '' })) + '<br>' +
+        escapeHtml(t('paymentNoPrepay')) + '</p>',
       result.reviewRequired ? '<p>' + t('reviewAreaNotice') + '</p>' : '',
       '<p>' + notice + '</p>'
     ].join('');

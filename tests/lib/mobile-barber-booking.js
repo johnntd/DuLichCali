@@ -280,6 +280,32 @@ function runMobileBarberBookingTests(test) {
     assertEq(built.booking.smsOptIn, true);
     assertEq(built.booking.source, 'customer_form');
     assertEq(built.booking.endTime, '11:15');
+    assertEq(built.booking.servicePrice, 45);
+    assertEq(built.booking.travelFee, 15);
+    assertEq(built.booking.amountDue, 60);
+    assertEq(built.booking.paymentMethod, 'unknown');
+    assertEq(built.booking.paymentStatus, 'unpaid');
+    assertEq(built.booking.zellePhone, '(714) 555-0148');
+  });
+
+  test('Mobile Barber manual booking stores cash and Zelle payment preferences from vendor phone', function() {
+    ['cash', 'zelle', ''].forEach(function(method) {
+      var draft = baseDraft();
+      draft.paymentMethod = method;
+      var result = check(draft);
+      var built = MobileBarberBooking.buildBooking({
+        id: 'payment-' + (method || 'unknown'),
+        now: '2026-05-25T00:00:00.000Z',
+        vendor: MobileBarberData.findVendorById(MobileBarberData.SAMPLE_VENDOR_ID),
+        draft: draft,
+        availabilityResult: result
+      });
+      assertEq(built.valid, true, built.errors && built.errors.join('; '));
+      assertEq(built.booking.paymentMethod, method || 'unknown');
+      assertEq(built.booking.paymentStatus, 'unpaid');
+      assertEq(built.booking.zellePhone, '(714) 555-0148');
+      assertEq(built.booking.amountDue, built.booking.servicePrice + built.booking.travelFee);
+    });
   });
 
   test('Mobile Barber status lifecycle normalizes legacy statuses', function() {
@@ -325,6 +351,7 @@ function runMobileBarberBookingTests(test) {
       assertEq(built.valid, true, row.vendorId + ' booking must build after availability');
       assertEq(built.booking.vendorId, row.vendorId);
       assertEq(built.booking.source, 'customer_form');
+      assertEq(built.booking.zellePhone, vendor.phone);
     });
   });
 

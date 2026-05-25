@@ -2,6 +2,7 @@
 
 (function(root) {
   var DATA = root.MobileBarberData;
+  var BOOKING = root.MobileBarberBooking;
   var STORAGE = {
     vendor: 'dlc_mobile_barber_vendor_overrides',
     services: 'dlc_mobile_barber_service_overrides',
@@ -73,6 +74,30 @@
       customerContact: 'Customer contact',
       customerAddress: 'Service address',
       customerNotes: 'Customer notes',
+      appointmentDetails: 'Appointment',
+      pricingDetails: 'Pricing',
+      paymentDetails: 'Payment',
+      serviceType: 'Service type',
+      servicePrice: 'Service price',
+      travelFee: 'Travel fee',
+      amountDue: 'Total amount due',
+      paymentMethod: 'Payment method',
+      paymentStatus: 'Payment status',
+      zelleNumber: 'Zelle number',
+      paymentNote: 'Payment note',
+      paymentCash: 'Cash',
+      paymentZelle: 'Zelle',
+      paymentUnknown: 'Unknown',
+      paymentPaid: 'Paid',
+      paymentUnpaid: 'Unpaid',
+      paymentPending: 'Pending',
+      paymentWaived: 'Waived',
+      markPaidAction: 'Mark paid',
+      markUnpaidAction: 'Mark unpaid',
+      setCashAction: 'Set cash',
+      setZelleAction: 'Set Zelle',
+      addPaymentNoteAction: 'Payment note',
+      completeAction: 'Complete',
       customerCutHistory: 'Customer cut history',
       stylePreference: 'Style preference',
       previousService: 'Previous service',
@@ -158,6 +183,30 @@
       customerContact: 'Liên hệ khách',
       customerAddress: 'Địa chỉ phục vụ',
       customerNotes: 'Ghi chú khách hàng',
+      appointmentDetails: 'Lịch hẹn',
+      pricingDetails: 'Giá tiền',
+      paymentDetails: 'Thanh toán',
+      serviceType: 'Loại dịch vụ',
+      servicePrice: 'Giá dịch vụ',
+      travelFee: 'Phí di chuyển',
+      amountDue: 'Tổng cần thu',
+      paymentMethod: 'Cách thanh toán',
+      paymentStatus: 'Trạng thái thanh toán',
+      zelleNumber: 'Số Zelle',
+      paymentNote: 'Ghi chú thanh toán',
+      paymentCash: 'Tiền mặt',
+      paymentZelle: 'Zelle',
+      paymentUnknown: 'Chưa rõ',
+      paymentPaid: 'Đã thu',
+      paymentUnpaid: 'Chưa thu',
+      paymentPending: 'Đang chờ',
+      paymentWaived: 'Đã miễn',
+      markPaidAction: 'Đánh dấu đã thu',
+      markUnpaidAction: 'Đánh dấu chưa thu',
+      setCashAction: 'Chọn tiền mặt',
+      setZelleAction: 'Chọn Zelle',
+      addPaymentNoteAction: 'Ghi chú thanh toán',
+      completeAction: 'Hoàn tất',
       customerCutHistory: 'Lịch sử cắt tóc của khách',
       stylePreference: 'Kiểu tóc ưa thích',
       previousService: 'Dịch vụ lần trước',
@@ -243,6 +292,30 @@
       customerContact: 'Contacto del cliente',
       customerAddress: 'Dirección del servicio',
       customerNotes: 'Notas del cliente',
+      appointmentDetails: 'Cita',
+      pricingDetails: 'Precio',
+      paymentDetails: 'Pago',
+      serviceType: 'Tipo de servicio',
+      servicePrice: 'Precio del servicio',
+      travelFee: 'Tarifa de viaje',
+      amountDue: 'Total a pagar',
+      paymentMethod: 'Metodo de pago',
+      paymentStatus: 'Estado de pago',
+      zelleNumber: 'Numero Zelle',
+      paymentNote: 'Nota de pago',
+      paymentCash: 'Efectivo',
+      paymentZelle: 'Zelle',
+      paymentUnknown: 'Desconocido',
+      paymentPaid: 'Pagado',
+      paymentUnpaid: 'No pagado',
+      paymentPending: 'Pendiente',
+      paymentWaived: 'Exento',
+      markPaidAction: 'Marcar pagado',
+      markUnpaidAction: 'Marcar no pagado',
+      setCashAction: 'Usar efectivo',
+      setZelleAction: 'Usar Zelle',
+      addPaymentNoteAction: 'Nota de pago',
+      completeAction: 'Completar',
       customerCutHistory: 'Historial de cortes del cliente',
       stylePreference: 'Preferencia de estilo',
       previousService: 'Servicio anterior',
@@ -272,6 +345,7 @@
 
   var DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
   var STATUS_LABELS = {
+    pending_barber_confirmation: 'statusPending',
     pending_confirmation: 'statusPending',
     confirmed: 'statusConfirmed',
     vendor_review: 'statusVendorReview',
@@ -379,11 +453,18 @@
   }
 
   function loadBookings() {
-    var localRows = function() {
-      state.bookings = readJson(STORAGE.bookings, []).filter(function(booking) {
-        return booking.vendorId === state.vendorId;
+    function normalizeRows(rows) {
+      state.bookings = (rows || []).map(function(booking) {
+        return BOOKING && BOOKING.withPaymentDefaults
+          ? BOOKING.withPaymentDefaults(booking, state.vendor)
+          : booking;
       });
       return state.bookings;
+    }
+    var localRows = function() {
+      return normalizeRows(readJson(STORAGE.bookings, []).filter(function(booking) {
+        return booking.vendorId === state.vendorId;
+      }));
     };
     var db = firestoreDb();
     if (!db) return Promise.resolve(localRows());
@@ -397,8 +478,7 @@
           data.id = data.id || doc.id;
           rows.push(data);
         });
-        state.bookings = rows;
-        return rows;
+        return normalizeRows(rows);
       })
       .catch(function() {
         return localRows();
@@ -528,18 +608,89 @@
     return t(STATUS_LABELS[status] || 'statusPending');
   }
 
+  function formatMoney(value) {
+    return '$' + Number(value || 0).toFixed(0);
+  }
+
+  function serviceForBooking(booking) {
+    return (state.services || []).filter(function(service) {
+      return service.id === booking.serviceId;
+    })[0] || {};
+  }
+
+  function paymentMethodLabel(method) {
+    method = BOOKING && BOOKING.normalizePaymentMethod ? BOOKING.normalizePaymentMethod(method) : (method || 'unknown');
+    return t({ cash: 'paymentCash', zelle: 'paymentZelle', unknown: 'paymentUnknown' }[method] || 'paymentUnknown');
+  }
+
+  function paymentStatusLabel(status) {
+    status = BOOKING && BOOKING.normalizePaymentStatus ? BOOKING.normalizePaymentStatus(status) : (status || 'unpaid');
+    return t({ paid: 'paymentPaid', unpaid: 'paymentUnpaid', pending: 'paymentPending', waived: 'paymentWaived' }[status] || 'paymentUnpaid');
+  }
+
+  function detailSection(title, rows) {
+    var section = el('div', 'mb-booking-card__section');
+    var heading = el('h4');
+    var dl = el('dl', 'mb-booking-card__details');
+    heading.textContent = title;
+    rows.forEach(function(row) {
+      if (row[1] == null || row[1] === '') return;
+      var wrap = el('div');
+      var dt = el('dt');
+      var dd = el('dd');
+      dt.textContent = row[0];
+      dd.textContent = row[1];
+      wrap.appendChild(dt);
+      wrap.appendChild(dd);
+      dl.appendChild(wrap);
+    });
+    section.appendChild(heading);
+    section.appendChild(dl);
+    return section;
+  }
+
+  function updateBookingPatch(bookingId, patch) {
+    var now = new Date().toISOString();
+    patch = Object.assign({}, patch || {}, { updatedAt: now });
+    var all = readJson(STORAGE.bookings, []);
+    all = all.map(function(b) {
+      return b.id === bookingId ? Object.assign({}, b, patch) : b;
+    });
+    writeJson(STORAGE.bookings, all);
+    state.bookings = state.bookings.map(function(b) {
+      return b.id === bookingId ? (BOOKING.withPaymentDefaults ? BOOKING.withPaymentDefaults(Object.assign({}, b, patch), state.vendor) : Object.assign({}, b, patch)) : b;
+    });
+    render();
+    if (canUseFirestore()) {
+      root.firebase.firestore().collection(DATA.COLLECTIONS.bookings).doc(bookingId).set(patch, { merge: true })
+        .catch(function(err) {
+          if (root.console) root.console.error('[mobile-barber-dashboard] booking patch failed', err);
+        });
+    }
+  }
+
+  function updateBookingPayment(bookingId, patch) {
+    if (patch.paymentMethod != null && BOOKING && BOOKING.normalizePaymentMethod) {
+      patch.paymentMethod = BOOKING.normalizePaymentMethod(patch.paymentMethod);
+    }
+    if (patch.paymentStatus != null && BOOKING && BOOKING.normalizePaymentStatus) {
+      patch.paymentStatus = BOOKING.normalizePaymentStatus(patch.paymentStatus);
+    }
+    updateBookingPatch(bookingId, patch);
+  }
+
   function bookingCard(booking) {
     var card = el('article', 'mb-booking-card');
     var title = el('h3');
     var meta = el('p', 'mb-booking-card__meta');
-    var contact = el('p');
-    var address = el('p');
     var actions = el('div', 'mb-booking-card__actions');
+    var service = serviceForBooking(booking);
+    var duration = booking.durationMinutes || service.durationMinutes || '';
+    var total = booking.amountDue != null ? booking.amountDue : Number(booking.servicePrice || 0) + Number(booking.travelFee || 0);
+    var zellePhone = booking.zellePhone || (state.vendor && state.vendor.phone) || '';
 
     title.textContent = booking.customerName || booking.serviceName || booking.id;
     meta.textContent = [booking.requestedDate, booking.startTime, booking.endTime, statusLabel(booking.status)].filter(Boolean).join(' • ');
-    contact.textContent = t('customerContact') + ': ' + [booking.customerPhone, booking.customerEmail].filter(Boolean).join(' / ');
-    address.textContent = t('customerAddress') + ': ' + [booking.address, booking.city, booking.zip].filter(Boolean).join(', ');
 
     if (trim(booking.address)) {
       var link = el('a', 'mb-button mb-button--ghost mb-button--sm');
@@ -553,7 +704,8 @@
     [
       ['confirmed', 'acceptAction'],
       ['rescheduled', 'rescheduleAction'],
-      ['cancelled', 'cancelAction']
+      ['cancelled', 'cancelAction'],
+      ['completed', 'completeAction']
     ].forEach(function(pair) {
       var btn = el('button', 'mb-button mb-button--ghost mb-button--sm');
       btn.type = 'button';
@@ -561,15 +713,74 @@
       btn.addEventListener('click', function() { updateBookingStatus(booking.id, pair[0]); });
       actions.appendChild(btn);
     });
+    [
+      ['paid', 'markPaidAction'],
+      ['unpaid', 'markUnpaidAction']
+    ].forEach(function(pair) {
+      var btn = el('button', 'mb-button mb-button--ghost mb-button--sm');
+      btn.type = 'button';
+      btn.textContent = t(pair[1]);
+      btn.addEventListener('click', function() { updateBookingPayment(booking.id, { paymentStatus: pair[0] }); });
+      actions.appendChild(btn);
+    });
+    [
+      ['cash', 'setCashAction'],
+      ['zelle', 'setZelleAction']
+    ].forEach(function(pair) {
+      var btn = el('button', 'mb-button mb-button--ghost mb-button--sm');
+      btn.type = 'button';
+      btn.textContent = t(pair[1]);
+      btn.addEventListener('click', function() { updateBookingPayment(booking.id, { paymentMethod: pair[0], zellePhone: zellePhone }); });
+      actions.appendChild(btn);
+    });
+    var noteBtn = el('button', 'mb-button mb-button--ghost mb-button--sm');
+    noteBtn.type = 'button';
+    noteBtn.textContent = t('addPaymentNoteAction');
+    noteBtn.addEventListener('click', function() {
+      var note = root.prompt ? root.prompt(t('paymentNote'), booking.paymentNote || '') : null;
+      if (note != null) updateBookingPayment(booking.id, { paymentNote: note });
+    });
+    actions.appendChild(noteBtn);
 
     card.appendChild(title);
     card.appendChild(meta);
-    card.appendChild(contact);
-    card.appendChild(address);
+    card.appendChild(detailSection(t('customerContact'), [
+      ['Name', booking.customerName],
+      [t('phoneLabel'), booking.customerPhone],
+      [t('emailLabel'), booking.customerEmail]
+    ]));
+    card.appendChild(detailSection(t('appointmentDetails'), [
+      [t('serviceNameLabel'), booking.serviceName || booking.serviceId],
+      [t('serviceType'), service.category || booking.serviceCategory || ''],
+      [t('serviceDurationLabel'), duration ? duration + ' ' + t('minutesShort') : ''],
+      [t('blockDateLabel'), booking.requestedDate],
+      [t('blockStartLabel'), booking.startTime],
+      [t('blockEndLabel'), booking.endTime],
+      ['Status', statusLabel(booking.status)]
+    ]));
+    card.appendChild(detailSection(t('customerAddress'), [
+      [t('customerAddress'), [booking.address, booking.city, booking.zip].filter(Boolean).join(', ')]
+    ]));
+    card.appendChild(detailSection(t('pricingDetails'), [
+      [t('servicePrice'), formatMoney(booking.servicePrice)],
+      [t('travelFee'), formatMoney(booking.travelFee)],
+      [t('amountDue'), formatMoney(total)]
+    ]));
+    card.appendChild(detailSection(t('paymentDetails'), [
+      [t('paymentMethod'), paymentMethodLabel(booking.paymentMethod)],
+      [t('paymentStatus'), paymentStatusLabel(booking.paymentStatus)],
+      [t('zelleNumber'), zellePhone],
+      [t('paymentNote'), booking.paymentNote]
+    ]));
     if (trim(booking.notes)) {
       var notes = el('p');
       notes.textContent = t('customerNotes') + ': ' + booking.notes;
       card.appendChild(notes);
+    }
+    if (trim(booking.aiConversationSummary)) {
+      var aiSummary = el('p');
+      aiSummary.textContent = 'AI: ' + booking.aiConversationSummary;
+      card.appendChild(aiSummary);
     }
     if (trim(booking.stylePreference) || trim(booking.previousServiceName) || trim(booking.rebookedFromBookingId)) {
       var history = el('p');
@@ -610,7 +821,7 @@
     var upcomingRows = active.filter(function(booking) { return booking.requestedDate >= today; })
       .sort(function(a, b) { return (a.requestedDate + a.startTime).localeCompare(b.requestedDate + b.startTime); });
     var pendingRows = active.filter(function(booking) {
-      return booking.status === 'pending_confirmation' || booking.status === 'vendor_review';
+      return booking.status === 'pending_confirmation' || booking.status === 'pending_barber_confirmation' || booking.status === 'vendor_review';
     });
     document.getElementById('mbStatToday').textContent = todayRows.length;
     document.getElementById('mbStatUpcoming').textContent = upcomingRows.length;

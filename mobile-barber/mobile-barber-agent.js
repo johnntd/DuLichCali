@@ -38,8 +38,8 @@
       photo: 'Yes. Upload a reference photo in the photo field and I will attach it to the booking request.',
       unavailable: 'That time is not available. Please send another date or time.',
       outOfArea: 'That address is outside the normal service area, so the request can be sent for barber review before confirmation.',
-      summary: 'Review this request: {service} on {date} at {time}, {address}, {city} {zip}. Estimated total {price}. Reply yes to send it.',
-      saved: 'Request sent. Booking ID: {id}. The barber still needs to confirm the appointment.',
+      summary: 'Review this request: {service} on {date} at {time}, {address}, {city} {zip}. Estimated total {price}. Payment is collected after the haircut by cash or Zelle to {zellePhone}; preference: {paymentMethod}. Reply yes to send it.',
+      saved: 'Request sent. Booking ID: {id}. The barber still needs to confirm the appointment. Payment is collected after service by cash or Zelle to {zellePhone}. No online prepayment is required.',
       cancelled: 'I can help with cancellation or rescheduling, but this phase does not change existing bookings yet. Please call the barber for existing booking changes.',
       fallback: 'I can help collect a mobile barber booking request. What phone number should I use first?'
     },
@@ -65,8 +65,8 @@
       photo: 'Dạ được. Tải ảnh tham khảo ở ô ảnh và em sẽ đính kèm vào yêu cầu đặt lịch.',
       unavailable: 'Giờ đó không còn trống. Vui lòng gửi ngày hoặc giờ khác.',
       outOfArea: 'Địa chỉ đó ngoài khu vực phục vụ thường lệ, nên yêu cầu có thể gửi để thợ xem xét trước khi xác nhận.',
-      summary: 'Vui lòng xem lại: {service} ngày {date} lúc {time}, {address}, {city} {zip}. Tổng ước tính {price}. Trả lời đồng ý để gửi.',
-      saved: 'Đã gửi yêu cầu. Mã đặt lịch: {id}. Thợ vẫn cần xác nhận lịch hẹn.',
+      summary: 'Vui lòng xem lại: {service} ngày {date} lúc {time}, {address}, {city} {zip}. Tổng ước tính {price}. Thanh toán sau khi cắt bằng tiền mặt hoặc Zelle tới {zellePhone}; cách muốn dùng: {paymentMethod}. Trả lời đồng ý để gửi.',
+      saved: 'Đã gửi yêu cầu. Mã đặt lịch: {id}. Thợ vẫn cần xác nhận lịch hẹn. Thanh toán sau dịch vụ bằng tiền mặt hoặc Zelle tới {zellePhone}; không cần trả trước online.',
       cancelled: 'Em có thể hỗ trợ hướng dẫn hủy hoặc đổi lịch, nhưng phase này chưa thay đổi lịch đã có. Vui lòng gọi trực tiếp cho thợ.',
       fallback: 'Em có thể nhận yêu cầu đặt thợ cắt tóc tại nhà. Mình cho em số điện thoại trước nhé?'
     },
@@ -92,8 +92,8 @@
       photo: 'Sí. Suba una foto de referencia en el campo de foto y la adjuntaré a la solicitud.',
       unavailable: 'Ese horario no está disponible. Envíe otra fecha u hora.',
       outOfArea: 'Esa dirección está fuera del área normal de servicio, así que se puede enviar para revisión del barbero antes de confirmar.',
-      summary: 'Revise esta solicitud: {service} el {date} a las {time}, {address}, {city} {zip}. Total estimado {price}. Responda sí para enviarla.',
-      saved: 'Solicitud enviada. ID de reserva: {id}. El barbero todavía debe confirmar la cita.',
+      summary: 'Revise esta solicitud: {service} el {date} a las {time}, {address}, {city} {zip}. Total estimado {price}. El pago se cobra despues del corte en efectivo o por Zelle a {zellePhone}; preferencia: {paymentMethod}. Responda si para enviarla.',
+      saved: 'Solicitud enviada. ID de reserva: {id}. El barbero todavía debe confirmar la cita. El pago se cobra despues del servicio en efectivo o por Zelle a {zellePhone}; no se requiere prepago en linea.',
       cancelled: 'Puedo ayudar con cancelación o cambio, pero esta fase todavía no modifica reservas existentes. Llame directamente al barbero.',
       fallback: 'Puedo recopilar una solicitud de barbero móvil. ¿Qué teléfono debo usar primero?'
     }
@@ -198,6 +198,7 @@
       zip: null,
       barberPreference: null,
       notes: null,
+      paymentMethod: 'unknown',
       photoUrls: [],
       pendingAction: null,
       lastAvailabilityKey: null
@@ -259,6 +260,11 @@
       }
       if (key === 'photoUrls') {
         if (Array.isArray(value)) state.photoUrls = value.filter(function(item) { return trim(item); });
+        return;
+      }
+      if (key === 'paymentMethod') {
+        var method = trim(value).toLowerCase();
+        if (method === 'cash' || method === 'zelle' || method === 'unknown') state.paymentMethod = method;
         return;
       }
       if (key === 'customerName' || key === 'serviceId' || key === 'address' || key === 'city' || key === 'zip' || key === 'barberPreference' || key === 'notes' || key === 'intent' || key === 'lastAvailabilityKey') {
@@ -405,6 +411,8 @@
     if (/\btim\b/i.test(message)) update.barberPreference = 'Tim Nguyen';
     if (/\bmichael\b/i.test(message)) update.barberPreference = 'Michael Nguyen';
     if (/\b(style|kiểu|estilo|fade|beard|râu|barba)\b/i.test(lower)) update.notes = trim(message);
+    if (/\b(zelle)\b/i.test(lower)) update.paymentMethod = 'zelle';
+    else if (/\b(cash|tiền mặt|tien mat|efectivo)\b/i.test(lower)) update.paymentMethod = 'cash';
 
     // Step-aware fallback: when the agent has just asked for a specific slot
     // and the regex extractors above did not populate it, treat the user's
@@ -472,6 +480,9 @@
       city: state.city,
       zip: state.zip,
       notes: state.notes || state.barberPreference || '',
+      paymentMethod: state.paymentMethod || 'unknown',
+      paymentStatus: 'unpaid',
+      zellePhone: (state.vendorPhone || '').trim(),
       photoUrls: state.photoUrls || []
     };
   }
@@ -495,6 +506,7 @@
       'Services and prices:\n' + services,
       'Never invent availability, prices, travel radius, barber names, or internal data.',
       'Never confirm a booking until backend availability and service-area checks have passed.',
+      'Payment is collected after service by cash or Zelle to the barber phone number. Do not require prepayment or card payment.',
       'When you see a user message starting with [SYSTEM: ...], rewrite that backend result naturally in the customer language and do not expose the marker.',
       'Use the serviceBookingAgentBrain pattern: intent extraction, slot filling, one question at a time, customer lookup, service lookup, availability check, summary, then booking write.',
       'Phone lookup is always first for booking. Never ask for name, phone, address, service, date, and time in one message.'
@@ -636,6 +648,7 @@
     if (state.serviceId) slotLines.push('serviceId: ' + state.serviceId);
     if (state.date) slotLines.push('date: ' + state.date);
     if (state.time) slotLines.push('time: ' + state.time);
+    if (state.paymentMethod && state.paymentMethod !== 'unknown') slotLines.push('paymentMethod: ' + state.paymentMethod);
     if (state.customerLookupStatus) slotLines.push('customerLookupStatus: ' + state.customerLookupStatus);
     if (state.addressConfirmed) slotLines.push('addressConfirmed: true');
 
@@ -661,6 +674,7 @@
       serviceLines || '(none configured)',
       'NEVER invent prices, services, availability, addresses, or barber names not listed above.',
       'NEVER claim a booking is confirmed — only the system confirms; you wait for the system to acknowledge.',
+      'Payment is collected after the haircut. Customers can pay cash or Zelle to the barber phone number (' + (vendor.phone || 'vendor phone') + '). Ask which they prefer when natural, but do not block booking if they skip it.',
       '',
       'Currently collected booking slots:',
       slotLines.length ? slotLines.join('\n') : '(none yet)',
@@ -681,7 +695,7 @@
       '  You: "A fade tomorrow at 5pm — let me check that slot.',
       '       [STATE:{"serviceId":"classic-mobile-cut","date":"' + (ctx && ctx.todayIso ? ctx.todayIso : '2026-05-26') + '","time":"17:00"}]"',
       '',
-      'Allowed STATE keys: customerName, phone, address, city, zip, serviceId, date, time, addressConfirmed, intent, barberPreference, notes.',
+      'Allowed STATE keys: customerName, phone, address, city, zip, serviceId, date, time, addressConfirmed, intent, barberPreference, notes, paymentMethod.',
       'Allowed serviceId values: ' + (services.map(function(s) { return s.id; }).join(', ') || '(none)') + '.',
       'date MUST be ISO YYYY-MM-DD. time MUST be HH:MM 24-hour. Phone digits only.',
       'If the customer reply contains NO new slot value, do not emit a marker — just ask the next question naturally.',
@@ -886,7 +900,9 @@
         address: draft.address,
         city: draft.city,
         zip: draft.zip,
-        price: money(availability.price.totalPrice)
+        price: money(availability.price.totalPrice),
+        zellePhone: vendor.phone || '',
+        paymentMethod: state.paymentMethod || 'unknown'
       });
       return {
         session: session,
@@ -915,7 +931,7 @@
     state.step = 'DONE';
     session.lastBooking = built.booking;
     session.lastSystemContext = systemReason('booking_created', { id: built.booking.id, status: built.booking.status });
-    return { session: session, response: reply(lang, 'saved', { id: built.booking.id }), booking: built.booking };
+    return { session: session, response: reply(lang, 'saved', { id: built.booking.id, zellePhone: built.booking.zellePhone || vendor.phone || '' }), booking: built.booking };
   }
 
   function handleMessage(session, message, ctx) {

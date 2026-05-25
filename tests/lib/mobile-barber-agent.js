@@ -110,6 +110,10 @@ function runMobileBarberAgentTests(test) {
     assertEq(second.booking.source, 'ai_chat');
     assertEq(second.booking.status, 'pending_barber_confirmation');
     assertEq(second.booking.endTime, '11:15');
+    assertEq(second.booking.paymentMethod, 'unknown');
+    assertEq(second.booking.paymentStatus, 'unpaid');
+    assertEq(second.booking.zellePhone, '(714) 555-0148');
+    assert(second.response.indexOf('Zelle') >= 0, 'AI confirmation should mention Zelle after-service payment');
   });
 
   test('Mobile Barber AI parses spoken English and Vietnamese phone digits', function() {

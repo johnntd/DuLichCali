@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260525w">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260525x">
 </head>
 <body class="mb-page mb-vendor-page">
   <main class="mb-shell mb-vendor-shell" id="mobileBarberVendorApp" data-page="mobile-barber-vendor">
@@ -231,6 +231,17 @@
                 <span data-i18n="timeLabel"></span>
                 <input id="mbBookingTime" type="time" required>
               </label>
+              <fieldset class="mb-payment-choice" aria-labelledby="mbPaymentChoiceLabel">
+                <legend id="mbPaymentChoiceLabel" data-i18n="paymentChoiceLabel"></legend>
+                <label>
+                  <input type="radio" name="mbPaymentMethod" value="cash">
+                  <span data-i18n="paymentCash"></span>
+                </label>
+                <label>
+                  <input type="radio" name="mbPaymentMethod" value="zelle">
+                  <span data-i18n="paymentZelle"></span>
+                </label>
+              </fieldset>
             </div>
             <div class="mb-form-step" data-step="4" hidden>
               <div class="mb-booking-summary" id="mbBookingSummary" hidden></div>
@@ -291,11 +302,11 @@
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
   </script>
   <script src="/ai-engine.js?v=20260524a"></script>
-  <script src="/mobile-barber/mobile-barber-data.js?v=20260525d"></script>
-  <script src="/mobile-barber/mobile-barber-booking.js?v=20260525g"></script>
-  <script src="/mobile-barber/mobile-barber-agent.js?v=20260525f"></script>
+  <script src="/mobile-barber/mobile-barber-data.js?v=20260525e"></script>
+  <script src="/mobile-barber/mobile-barber-booking.js?v=20260525h"></script>
+  <script src="/mobile-barber/mobile-barber-agent.js?v=20260525g"></script>
   <script src="/mobile-barber/mobile-barber-voice.js?v=20260525f"></script>
   <script src="/notifications.js?v=20260525a"></script>
-  <script src="/mobile-barber/mobile-barber-vendor.js?v=20260525r"></script>
+  <script src="/mobile-barber/mobile-barber-vendor.js?v=20260525s"></script>
 </body>
 </html>

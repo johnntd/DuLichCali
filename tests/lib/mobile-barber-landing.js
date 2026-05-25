@@ -359,8 +359,12 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"destination": "/mobile-barber/dashboard.html"');
     assertContains(dashboardHtml, 'id="mobileBarberDashboardApp"');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260524o');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260524h');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260525a');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260524o');
+    assertContains(dashboardHtml, 'firebase-auth-compat.js');
+    assertContains(dashboardJs, 'function gateAndInit');
+    assertContains(dashboardJs, "vendorUsers");
+    assertContains(dashboardJs, "adminStatus");
     assertNotContains(dashboardHtml, 'vendor-admin.html');
     assertNotContains(dashboardHtml, 'salon-admin.html');
     assertNotContains(dashboardHtml, 'admin.html');

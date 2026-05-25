@@ -395,7 +395,10 @@
     db.collection('vendors').doc(vendorId).get().then(function(vdoc) {
       var cat = vdoc.exists ? vdoc.data().category : null;
       var _cat = (cat || '').toLowerCase();
-      var page = (_cat === 'nails' || _cat === 'hair') ? 'salon-admin.html' : 'vendor-admin.html';
+      var page;
+      if (_cat === 'nails' || _cat === 'hair') page = 'salon-admin.html';
+      else if (_cat === 'mobile_barber' || _cat === 'mobile-barber') page = 'mobile-barber/dashboard.html';
+      else page = 'vendor-admin.html';
       window.location.href = page + '?id=' + encodeURIComponent(vendorId);
     }).catch(function() { window.location.href = 'vendor-admin.html?id=' + encodeURIComponent(vendorId); });
   }

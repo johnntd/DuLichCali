@@ -936,9 +936,72 @@
     }).then(render);
   }
 
+  function redirectToLogin(vendorId) {
+    var dest = '/vendor-login.html';
+    if (vendorId) dest += '?id=' + encodeURIComponent(vendorId);
+    root.location.href = dest;
+  }
+
+  function gateAndInit() {
+    var requestedVendorId = getVendorId();
+    if (typeof firebase === 'undefined' || !firebase.auth) {
+      console.error('[mobile-barber-dashboard] Firebase Auth SDK not loaded');
+      redirectToLogin(requestedVendorId);
+      return;
+    }
+    if (!requestedVendorId) {
+      redirectToLogin('');
+      return;
+    }
+    var auth = firebase.auth();
+    var db = firebase.firestore();
+    var unsub = auth.onAuthStateChanged(function(user) {
+      unsub();
+      if (!user) {
+        redirectToLogin(requestedVendorId);
+        return;
+      }
+      Promise.all([
+        db.collection('vendorUsers').doc(user.uid).get(),
+        db.collection('vendors').doc(requestedVendorId).get()
+      ]).then(function(results) {
+        var uDoc = results[0];
+        var vDoc = results[1];
+        if (!uDoc.exists) {
+          console.warn('[mobile-barber-dashboard] no vendorUsers/{uid} mapping for', user.uid);
+          auth.signOut().then(function() { redirectToLogin(requestedVendorId); });
+          return;
+        }
+        var uData = uDoc.data() || {};
+        var allowed = uData.vendorId === requestedVendorId
+                   || (Array.isArray(uData.vendorIds) && uData.vendorIds.indexOf(requestedVendorId) >= 0);
+        if (!allowed) {
+          console.warn('[mobile-barber-dashboard] user not authorized for vendor', requestedVendorId);
+          auth.signOut().then(function() { redirectToLogin(requestedVendorId); });
+          return;
+        }
+        if (!vDoc.exists) {
+          console.warn('[mobile-barber-dashboard] vendor doc missing for', requestedVendorId);
+          redirectToLogin(requestedVendorId);
+          return;
+        }
+        var vData = vDoc.data() || {};
+        if (vData.adminStatus && vData.adminStatus !== 'active') {
+          console.warn('[mobile-barber-dashboard] vendor adminStatus=', vData.adminStatus);
+          auth.signOut().then(function() { redirectToLogin(requestedVendorId); });
+          return;
+        }
+        init();
+      }).catch(function(err) {
+        console.error('[mobile-barber-dashboard] auth check failed', err);
+        redirectToLogin(requestedVendorId);
+      });
+    });
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', gateAndInit);
   } else {
-    init();
+    gateAndInit();
   }
 })(window);

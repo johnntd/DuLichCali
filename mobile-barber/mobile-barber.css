@@ -187,6 +187,141 @@
   border-color: rgba(255, 255, 255, .16);
 }
 
+.mb-field-warning,
+.mb-inline-notice {
+  color: #ffd166;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+}
+
+.mb-checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.mb-checkbox-field input {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--gold);
+}
+
+.mb-confirmation-card {
+  width: 100%;
+  max-width: 100%;
+  padding: 1.15rem;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, .08);
+  overflow-wrap: anywhere;
+}
+
+.mb-booking-id-row,
+.mb-confirmation-actions,
+.mb-vendor-notification-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .6rem;
+}
+
+.mb-booking-id {
+  max-width: 100%;
+  padding: .7rem .85rem;
+  border: 1px dashed rgba(255, 255, 255, .28);
+  border-radius: var(--r-sm);
+  background: rgba(5, 18, 32, .72);
+  color: var(--cream);
+  font-size: var(--text-lg);
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.mb-status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
+  padding: .25rem .6rem;
+  border-radius: var(--r-pill);
+  font-size: var(--text-xs);
+  font-weight: 900;
+}
+
+.mb-status-pill--pending_barber_confirmation,
+.mb-status-pill--pending_confirmation,
+.mb-status-pill--vendor_review {
+  background: rgba(245, 166, 35, .18);
+  color: #ffd166;
+}
+
+.mb-status-pill--confirmed {
+  background: rgba(34, 197, 94, .18);
+  color: #86efac;
+}
+
+.mb-status-pill--declined,
+.mb-status-pill--cancelled {
+  background: rgba(248, 113, 113, .18);
+  color: #fca5a5;
+}
+
+.mb-status-pill--completed {
+  background: rgba(148, 163, 184, .18);
+  color: #cbd5e1;
+}
+
+.mb-notification-status {
+  color: var(--gold-lt);
+  font-weight: 800;
+}
+
+.mb-vendor-notifications {
+  display: grid;
+  gap: .75rem;
+  margin-top: .8rem;
+  padding: .85rem;
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: var(--r-md);
+  background: rgba(6, 24, 42, .82);
+}
+
+.mb-vendor-notification-row {
+  display: grid;
+  gap: .45rem;
+  padding: .75rem;
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, .07);
+}
+
+.mb-vendor-toast-region {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right, 0px));
+  bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  z-index: var(--z-modal);
+  display: grid;
+  gap: .65rem;
+  width: min(24rem, calc(100vw - 2rem));
+}
+
+.mb-vendor-toast {
+  display: grid;
+  gap: .65rem;
+  padding: .9rem;
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: var(--r-md);
+  background: rgba(6, 24, 42, .94);
+  color: var(--cream);
+  box-shadow: var(--shadow-lg);
+}
+
+.mb-button--sm {
+  min-height: 2.35rem;
+  padding: .55rem .75rem;
+  font-size: var(--text-sm);
+}
+
 .mb-button--voice {
   min-height: 3.5rem;
   background: rgba(56, 189, 248, .18);

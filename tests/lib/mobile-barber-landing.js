@@ -58,9 +58,9 @@ function runMobileBarberLandingTests(test) {
   });
 
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
-    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260524o');
+    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260525i');
     assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260524o');
-    assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260525d');
+    assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260525e');
     assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260525e');
     assertContains(html, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
     assertContains(html, '/mobile-barber/mobile-barber.js?v=20260525f');
@@ -138,7 +138,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/vendor/**"');
     assertContains(firebase, '"destination": "/mobile-barber/vendor.html"');
     assertContains(vendorHtml, 'id="mobileBarberVendorApp"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260524o');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260525i');
     assertContains(vendorHtml, 'id="mbVendorName"');
     assertContains(vendorHtml, 'id="mbVendorServices"');
     assertContains(vendorHtml, 'id="mbBookingTitle"');
@@ -146,13 +146,13 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorHtml, 'id="mbSelectedServiceSummary"');
     assertContains(vendorHtml, 'class="mb-mobile-sticky-cta"');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260524o');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260525d');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260525e');
     assertContains(vendorHtml, '/ai-engine.js?v=20260524a');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-agent.js?v=20260525e');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
     assertContains(vendorHtml, 'firebase-functions-compat.js');
-    assertContains(vendorHtml, '/notifications.js?v=20260523a');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-vendor.js?v=20260525h');
+    assertContains(vendorHtml, '/notifications.js?v=20260525a');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-vendor.js?v=20260525i');
     assert(vendorHtml.indexOf('/ai-engine.js?v=') < vendorHtml.indexOf('/mobile-barber/mobile-barber-agent.js'), 'ai-engine.js must load before mobile-barber-agent.js');
   });
 
@@ -182,6 +182,8 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorHtml, 'data-action="manualConfirm"');
     assertContains(vendorHtml, 'id="mbCustomerNotes"');
     assertContains(vendorHtml, 'id="mbBookingStylePreference"');
+    assertContains(vendorHtml, 'id="mbEmailWarning"');
+    assertContains(vendorHtml, 'id="mbSmsOptIn"');
     assertContains(vendorHtml, 'type="file" accept="image/*"');
   });
 
@@ -198,6 +200,10 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorJs, "state.manualStep !== 4 || !state.availabilityResult || !state.availabilityResult.canCreate");
     assertContains(vendorJs, "confirm.hidden = true");
     assertContains(vendorJs, "confirm.disabled = true");
+    assertContains(vendorJs, "state.manualSuccess = true");
+    assertContains(vendorJs, "manualNewBooking");
+    assertContains(vendorJs, "copyBookingId");
+    assertContains(vendorJs, "navigator.share");
     assertContains(vendorJs, "BOOKING.saveBooking(built.booking, { requireDatabase: true })");
     assertContains(vendorJs, "[mobile-barber-manual-booking]");
     assertContains(vendorJs, "bookingId");
@@ -298,9 +304,16 @@ function runMobileBarberLandingTests(test) {
 
   test('Mobile Barber notification hooks are idempotent and multilingual', function() {
     assertContains(notificationsJs, 'function queueMobileBarberConfirmation');
+    assertContains(notificationsJs, 'function queueMobileBarberStatusChange');
     assertContains(notificationsJs, "bookingType:       'mobile_barber'");
     assertContains(notificationsJs, "'mobile_barber_confirmed'");
+    assertContains(notificationsJs, 'mobile_barber_sms_confirmation');
+    assertContains(notificationsJs, '[mobile-barber-notification]');
     assertContains(vendorJs, 'root.DLCNotifications.queueMobileBarberConfirmation');
+    assertContains(vendorJs, 'queueMobileBarberStatusChange');
+    assertContains(vendorJs, "where('createdAt', '>'");
+    assertContains(vendorJs, 'state.realtimeUnsubscribe');
+    assertContains(vendorJs, '[mobile-barber-vendor-realtime]');
     assertContains(vendorJs, 'queueBookingNotifications(result.booking)');
     assertContains(vendorJs, 'queueBookingNotifications(saveResult.booking)');
     assertContains(vendorJs, 'finalSummaryTitle');

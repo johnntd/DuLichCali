@@ -108,7 +108,7 @@ function runMobileBarberAgentTests(test) {
     var second = MobileBarberAgent.handleMessage(session, 'yes', ctx);
     assert(second.booking, 'affirmative after summary creates booking');
     assertEq(second.booking.source, 'ai_chat');
-    assertEq(second.booking.status, 'pending_confirmation');
+    assertEq(second.booking.status, 'pending_barber_confirmation');
     assertEq(second.booking.endTime, '11:15');
   });
 
@@ -155,7 +155,7 @@ function runMobileBarberAgentTests(test) {
   test('Mobile Barber AI marks out-of-service-area request for vendor review only after validation', function() {
     var result = MobileBarberAgent.handleMessage(null, 'My name is Kim. Phone 714-555-0100. I need haircut on 2026-06-01 at 10:00 at 123 Main St San Jose 95112.', Object.assign(context(), { customerLookupResult: null }));
     assertEq(result.session.state.lastAvailabilityKey, 'service_area_review');
-    assertEq(result.session.lastAvailabilityResult.status, 'vendor_review');
+    assertEq(result.session.lastAvailabilityResult.status, 'pending_barber_confirmation');
     assert(!result.booking, 'review request still requires final confirmation');
   });
 

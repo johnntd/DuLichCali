@@ -98,6 +98,33 @@
       finalSummaryAddress: 'Address',
       finalSummaryPhone: 'Contact phone',
       notificationQueued: 'Confirmation message prepared.',
+      notificationStatusOnline: 'Customer in-app notice and vendor notice are queued. Email is queued when an email is provided.',
+      notificationStatusLocal: 'Saved on this device. Copy or save this confirmation before closing.',
+      bookingConfirmedTitle: 'Booking confirmed',
+      copyBookingId: 'Copy booking ID',
+      saveConfirmation: 'Save confirmation',
+      doneButton: 'Done',
+      newBookingButton: 'New booking',
+      bookingIdCopied: 'Booking ID copied.',
+      confirmationCopied: 'Confirmation copied.',
+      emailBlankWarning: "No email - you won't receive an email confirmation.",
+      emailRecommendedNotice: 'Email recommended for confirmation. Continue without?',
+      smsOptInLabel: 'Text me a confirmation',
+      statusPending: 'Waiting for barber confirmation',
+      statusConfirmed: 'Confirmed',
+      statusDeclined: 'Declined',
+      statusCompleted: 'Completed',
+      statusCancelled: 'Cancelled',
+      soundOn: 'Sound: On',
+      soundOff: 'Sound: Off',
+      notificationBell: 'Notifications {count}',
+      notificationsEmpty: 'No new bookings yet.',
+      newBookingToast: 'New booking: {customer} - {date} {time}',
+      viewBooking: 'View',
+      dismissNotification: 'Dismiss',
+      acceptBooking: 'Accept',
+      declineBooking: 'Decline',
+      notificationEmailLabel: 'Vendor notification email',
       bookingSaveError: 'The request could not be saved. Please call the barber directly.',
       assistantKicker: 'Vendor-scoped AI assistant',
       assistantTitle: 'AI booking assistant for {vendor}',
@@ -216,6 +243,33 @@
       finalSummaryAddress: 'Địa chỉ',
       finalSummaryPhone: 'Số điện thoại liên hệ',
       notificationQueued: 'Đã chuẩn bị tin nhắn xác nhận.',
+      notificationStatusOnline: 'Đã xếp hàng thông báo trong app cho khách và thợ. Email sẽ được gửi nếu có email.',
+      notificationStatusLocal: 'Đã lưu trên thiết bị này. Vui lòng sao chép hoặc lưu xác nhận trước khi đóng.',
+      bookingConfirmedTitle: 'Đã xác nhận đặt lịch',
+      copyBookingId: 'Sao chép mã đặt lịch',
+      saveConfirmation: 'Lưu xác nhận',
+      doneButton: 'Xong',
+      newBookingButton: 'Đặt lịch mới',
+      bookingIdCopied: 'Đã sao chép mã đặt lịch.',
+      confirmationCopied: 'Đã sao chép xác nhận.',
+      emailBlankWarning: 'Không có email - bạn sẽ không nhận xác nhận đặt lịch qua email.',
+      emailRecommendedNotice: 'Nên thêm email để nhận xác nhận. Tiếp tục khi không có email?',
+      smsOptInLabel: 'Nhắn tin xác nhận',
+      statusPending: 'Đang chờ thợ xác nhận',
+      statusConfirmed: 'Đã xác nhận',
+      statusDeclined: 'Bị từ chối',
+      statusCompleted: 'Hoàn thành',
+      statusCancelled: 'Đã hủy',
+      soundOn: 'Âm thanh: Bật',
+      soundOff: 'Âm thanh: Tắt',
+      notificationBell: 'Thông báo {count}',
+      notificationsEmpty: 'Chưa có lịch mới.',
+      newBookingToast: 'Lịch mới: {customer} - {date} {time}',
+      viewBooking: 'Xem',
+      dismissNotification: 'Đóng',
+      acceptBooking: 'Nhận lịch',
+      declineBooking: 'Từ chối',
+      notificationEmailLabel: 'Email nhận thông báo của thợ',
       bookingSaveError: 'Không lưu được yêu cầu. Vui lòng gọi trực tiếp cho thợ.',
       assistantKicker: 'Trợ lý AI theo đúng thợ',
       assistantTitle: 'Trợ lý AI đặt lịch cho {vendor}',
@@ -334,6 +388,33 @@
       finalSummaryAddress: 'Dirección',
       finalSummaryPhone: 'Teléfono de contacto',
       notificationQueued: 'Mensaje de confirmación preparado.',
+      notificationStatusOnline: 'Aviso en la app para cliente y vendedor en cola. El correo se enviará si hay email.',
+      notificationStatusLocal: 'Guardado en este dispositivo. Copie o guarde esta confirmación antes de cerrar.',
+      bookingConfirmedTitle: 'Reserva confirmada',
+      copyBookingId: 'Copiar ID de reserva',
+      saveConfirmation: 'Guardar confirmación',
+      doneButton: 'Listo',
+      newBookingButton: 'Nueva reserva',
+      bookingIdCopied: 'ID de reserva copiado.',
+      confirmationCopied: 'Confirmación copiada.',
+      emailBlankWarning: 'Sin correo - no recibirá confirmación por correo.',
+      emailRecommendedNotice: 'Se recomienda email para confirmación. ¿Continuar sin email?',
+      smsOptInLabel: 'Enviar SMS de confirmación',
+      statusPending: 'Esperando confirmación del barbero',
+      statusConfirmed: 'Confirmado',
+      statusDeclined: 'Rechazado',
+      statusCompleted: 'Completado',
+      statusCancelled: 'Cancelado',
+      soundOn: 'Sonido: Activado',
+      soundOff: 'Sonido: Desactivado',
+      notificationBell: 'Notificaciones {count}',
+      notificationsEmpty: 'No hay reservas nuevas.',
+      newBookingToast: 'Nueva reserva: {customer} - {date} {time}',
+      viewBooking: 'Ver',
+      dismissNotification: 'Cerrar',
+      acceptBooking: 'Aceptar',
+      declineBooking: 'Rechazar',
+      notificationEmailLabel: 'Email de notificación del vendedor',
       bookingSaveError: 'No se pudo guardar la solicitud. Llame directamente al barbero.',
       assistantKicker: 'Asistente AI limitado a este vendedor',
       assistantTitle: 'Asistente AI para {vendor}',
@@ -376,6 +457,13 @@
     customerProfile: null,
     customerHistory: { upcoming: [], past: [], all: [] },
     rebookDraft: null,
+    manualDraft: null,
+    manualSuccess: false,
+    pageLoadTime: new Date(),
+    realtimeUnsubscribe: null,
+    realtimeSeen: {},
+    realtimeBookings: [],
+    soundEnabled: true,
     preselectedServiceId: '',
     preselectedAssistantMode: '',
     voiceProviderKeys: {},
@@ -501,6 +589,56 @@
     return [booking.address, booking.city, booking.zip].filter(Boolean).join(', ');
   }
 
+  function escapeHtml(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function normalizedStatus(status) {
+    return BOOKING && BOOKING.normalizeBookingStatus ? BOOKING.normalizeBookingStatus(status) : (status || 'pending_barber_confirmation');
+  }
+
+  function statusCopy(status) {
+    var key = {
+      pending_barber_confirmation: 'statusPending',
+      confirmed: 'statusConfirmed',
+      declined: 'statusDeclined',
+      completed: 'statusCompleted',
+      cancelled: 'statusCancelled'
+    }[normalizedStatus(status)] || 'statusPending';
+    return t(key);
+  }
+
+  function statusBadgeHtml(status) {
+    var normalized = normalizedStatus(status);
+    return '<span class="mb-status-pill mb-status-pill--' + normalized + '">' + escapeHtml(statusCopy(normalized)) + '</span>';
+  }
+
+  function confirmationText(booking) {
+    return [
+      'DuLichCali Mobile Barber',
+      'Booking ' + (booking.id || booking.bookingId || ''),
+      (state.vendor && (state.vendor.barberName || state.vendor.businessName)) || booking.vendorId || '',
+      [booking.requestedDate || '', booking.startTime || ''].filter(Boolean).join(' '),
+      addressSummary(booking)
+    ].filter(Boolean).join(' - ');
+  }
+
+  function copyText(text, message) {
+    var done = function() { showManualError(message || t('confirmationCopied')); };
+    if (root.navigator && root.navigator.clipboard && root.navigator.clipboard.writeText) {
+      return root.navigator.clipboard.writeText(text).then(done).catch(function() {
+        showManualError(text);
+      });
+    }
+    showManualError(text);
+    return Promise.resolve();
+  }
+
   function customerProfileKey(phone) {
     var normalized = BOOKING && BOOKING.normalizePhone ? BOOKING.normalizePhone(phone) : String(phone || '').replace(/\D/g, '');
     return 'dlc_mobile_barber_customer_' + state.vendor.id + '_' + normalized;
@@ -610,16 +748,28 @@
       [t('finalSummaryAddress'), addressSummary(booking)],
       [t('finalSummaryPhone'), (state.vendor && state.vendor.phone) || booking.customerPhone]
     ];
-    summary.innerHTML = '<h3>' + t('finalSummaryTitle') + '</h3>' +
-      '<p>' + interpolate(t(savedOnline ? 'bookingSaved' : 'bookingQueuedLocal'), { id: booking.id }) + '</p>' +
+    var bookingId = booking.id || booking.bookingId || '';
+    var manualSuccess = state.manualSuccess === true;
+    var notificationLine = savedOnline ? t('notificationStatusOnline') : t('notificationStatusLocal');
+    summary.classList.toggle('mb-confirmation-card', manualSuccess);
+    summary.innerHTML = '<h3>' + t(manualSuccess ? 'bookingConfirmedTitle' : 'finalSummaryTitle') + '</h3>' +
+      '<div class="mb-booking-id-row"><button class="mb-booking-id" type="button" data-action="copyBookingId">' + escapeHtml(bookingId) + '</button>' +
+      statusBadgeHtml(booking.status) + '</div>' +
+      '<p>' + interpolate(t(savedOnline ? 'bookingSaved' : 'bookingQueuedLocal'), { id: bookingId }) + '</p>' +
       '<dl class="mb-confirmation-list">' +
       rows.map(function(row) {
         if (!row[1]) return '';
-        return '<div><dt>' + row[0] + '</dt><dd>' + row[1] + '</dd></div>';
+        return '<div><dt>' + escapeHtml(row[0]) + '</dt><dd>' + escapeHtml(row[1]) + '</dd></div>';
       }).join('') +
       '</dl>' +
+      '<p class="mb-notification-status">' + escapeHtml(notificationLine) + '</p>' +
       '<p>' + t('finalSummaryNote') + '</p>' +
-      (savedOnline ? '<p>' + t('notificationQueued') + '</p>' : '');
+      '<div class="mb-confirmation-actions">' +
+      '<button class="mb-button mb-button--ghost" type="button" data-action="copyBookingId">' + t('copyBookingId') + '</button>' +
+      '<button class="mb-button mb-button--ghost" type="button" data-action="saveConfirmation">' + t('saveConfirmation') + '</button>' +
+      (manualSuccess ? '<button class="mb-button mb-button--primary" type="button" data-action="manualDone">' + t('doneButton') + '</button>' +
+        '<button class="mb-button mb-button--ghost" type="button" data-action="manualNewBooking">' + t('newBookingButton') + '</button>' : '') +
+      '</div>';
     summary.hidden = false;
   }
 
@@ -1072,6 +1222,7 @@
       customerName: document.getElementById('mbCustomerName').value,
       customerPhone: document.getElementById('mbCustomerPhone').value,
       customerEmail: document.getElementById('mbCustomerEmail').value,
+      smsOptIn: !!(document.getElementById('mbSmsOptIn') && document.getElementById('mbSmsOptIn').checked),
       rebookedFromBookingId: state.rebookDraft && state.rebookDraft.rebookedFromBookingId,
       previousServiceName: state.rebookDraft && state.rebookDraft.previousServiceName
     };
@@ -1095,9 +1246,12 @@
       var node = document.getElementById(pair[0]);
       if (node && draft[pair[1]] != null) node.value = draft[pair[1]];
     });
+    var sms = document.getElementById('mbSmsOptIn');
+    if (sms && draft.smsOptIn != null) sms.checked = draft.smsOptIn === true || draft.smsOptIn === 'true';
   }
 
   function clearManualResult() {
+    if (state.manualSuccess) return;
     state.availabilityResult = null;
     state.lastBooking = null;
     var summary = document.getElementById('mbBookingSummary');
@@ -1110,6 +1264,18 @@
       confirm.hidden = true;
       confirm.disabled = true;
     }
+  }
+
+  function updateEmailWarning() {
+    var email = document.getElementById('mbCustomerEmail');
+    var warning = document.getElementById('mbEmailWarning');
+    var notice = document.getElementById('mbEmailRecommendedNotice');
+    var blank = !email || !String(email.value || '').trim();
+    if (warning) {
+      warning.textContent = blank ? t('emailBlankWarning') : '';
+      warning.hidden = !blank;
+    }
+    if (notice && (!blank || state.manualStep !== 1)) notice.hidden = true;
   }
 
   function showManualError(message) {
@@ -1166,6 +1332,27 @@
   function renderManualStep() {
     var modal = document.getElementById('mbManualBookingModal');
     if (!modal) return;
+    var form = document.getElementById('mbManualBookingForm');
+    var selected = modal.querySelector('.mb-selected-service-field');
+    var actions = modal.querySelector('.mb-form-actions');
+    if (state.manualSuccess) {
+      if (selected) selected.hidden = true;
+      modal.querySelectorAll('.mb-form-step').forEach(function(step) {
+        step.hidden = step.getAttribute('data-step') !== '4';
+      });
+      if (actions) actions.hidden = true;
+      ['manualBack', 'manualNext', 'manualReview', 'manualConfirm'].forEach(function(action) {
+        var btn = modal.querySelector('[data-action="' + action + '"]');
+        if (btn) {
+          btn.hidden = true;
+          btn.disabled = true;
+        }
+      });
+      document.getElementById('mbManualStepLabel').textContent = t('bookingConfirmedTitle');
+      return;
+    }
+    if (selected) selected.hidden = false;
+    if (actions) actions.hidden = false;
     modal.querySelectorAll('.mb-form-step').forEach(function(step) {
       step.hidden = Number(step.getAttribute('data-step')) !== state.manualStep;
     });
@@ -1174,6 +1361,7 @@
     document.querySelector('[data-action="manualNext"]').hidden = state.manualStep >= 3;
     document.querySelector('[data-action="manualReview"]').hidden = state.manualStep !== 3;
     document.querySelector('[data-action="manualConfirm"]').hidden = state.manualStep !== 4 || !state.availabilityResult || !state.availabilityResult.canCreate;
+    updateEmailWarning();
     logManualBookingState();
   }
 
@@ -1181,6 +1369,8 @@
     options = options || {};
     if (!options.keepRebook) state.rebookDraft = null;
     state.manualStep = 1;
+    state.manualSuccess = false;
+    state.manualDraft = null;
     clearManualResult();
     showManualError('');
     renderManualStep();
@@ -1202,6 +1392,18 @@
 
   function closeManualBooking() {
     document.getElementById('mbManualBookingModal').hidden = true;
+  }
+
+  function resetManualBooking() {
+    state.lastBooking = null;
+    state.availabilityResult = null;
+    state.manualDraft = null;
+    state.manualSuccess = false;
+    state.manualStep = 1;
+    document.getElementById('mbManualBookingForm').reset();
+    showManualError('');
+    clearManualResult();
+    renderManualStep();
   }
 
   function startRebook(booking) {
@@ -1229,6 +1431,13 @@
 
   function manualNext() {
     if (!validateCurrentStep()) return;
+    if (state.manualStep === 1 && !String(document.getElementById('mbCustomerEmail').value || '').trim()) {
+      var notice = document.getElementById('mbEmailRecommendedNotice');
+      if (notice) {
+        notice.textContent = t('emailRecommendedNotice');
+        notice.hidden = false;
+      }
+    }
     showManualError('');
     state.manualStep = Math.min(4, state.manualStep + 1);
     renderManualStep();
@@ -1274,6 +1483,7 @@
     showManualError('');
     clearManualResult();
     var draft = getManualDraft();
+    state.manualDraft = draft;
     var finish = function(existing) {
       state.existingBookings = existing || [];
       var result = BOOKING.checkAvailability({
@@ -1317,14 +1527,27 @@
     document.querySelector('[data-action="manualConfirm"]').disabled = true;
     logManualBookingState({ submitStatus: 'submitting' });
     BOOKING.saveBooking(built.booking, { requireDatabase: true }).then(function(result) {
+      var confirm = document.querySelector('[data-action="manualConfirm"]');
+      var back = document.querySelector('[data-action="manualBack"]');
+      if (confirm) {
+        confirm.disabled = true;
+        confirm.hidden = true;
+      }
+      if (back) {
+        back.disabled = true;
+        back.hidden = true;
+      }
       state.lastBooking = result.booking;
+      state.manualSuccess = true;
       rememberCustomerFromBooking(result.booking);
       if (result.source === 'firestore') queueBookingNotifications(result.booking);
       showManualError('');
       renderFinalBookingSummary(result.booking, result.source);
+      renderManualStep();
       loadCustomerHistory();
       logManualBookingState({ submitStatus: 'success', bookingId: result.booking.id });
     }).catch(function(error) {
+      state.manualSuccess = false;
       document.querySelector('[data-action="manualConfirm"]').disabled = false;
       showManualError(t('bookingSaveError'));
       logManualBookingState({ submitStatus: 'error', error: error && error.message || 'booking_save_failed' });
@@ -1513,6 +1736,164 @@
     });
   }
 
+  function logVendorRealtime(extra) {
+    extra = extra || {};
+    if (root.console && root.console.log) {
+      root.console.log('[mobile-barber-vendor-realtime]', {
+        event: extra.event || '',
+        bookingId: extra.bookingId || '',
+        vendorId: extra.vendorId || (state.vendor && state.vendor.id) || '',
+        source: extra.source || 'manual',
+        soundEnabled: state.soundEnabled
+      });
+    }
+  }
+
+  function renderVendorRealtimeControls() {
+    var sound = document.getElementById('mbVendorSoundToggle');
+    var bell = document.getElementById('mbVendorBell');
+    if (sound) sound.textContent = t(state.soundEnabled ? 'soundOn' : 'soundOff');
+    if (bell) bell.textContent = interpolate(t('notificationBell'), { count: state.realtimeBookings.length });
+    var panel = document.getElementById('mbVendorNotifications');
+    if (!panel) return;
+    var email = '';
+    try { email = localStorage.getItem('mb_vendor_notification_email_' + state.vendor.id) || ''; } catch (e) {}
+    var rows = state.realtimeBookings.map(function(booking) {
+      var id = booking.id || booking.bookingId || '';
+      return '<article class="mb-vendor-notification-row" data-booking-id="' + escapeHtml(id) + '">' +
+        '<strong>' + escapeHtml(booking.customerName || 'Customer') + '</strong>' +
+        '<span>' + escapeHtml([booking.requestedDate, booking.startTime].filter(Boolean).join(' ')) + '</span>' +
+        statusBadgeHtml(booking.status) +
+        '<div class="mb-vendor-notification-actions">' +
+        '<button class="mb-button mb-button--ghost mb-button--sm" type="button" data-action="vendorAcceptBooking">' + t('acceptBooking') + '</button>' +
+        '<button class="mb-button mb-button--ghost mb-button--sm" type="button" data-action="vendorDeclineBooking">' + t('declineBooking') + '</button>' +
+        '</div></article>';
+    }).join('');
+    panel.innerHTML =
+      '<label class="mb-field mb-vendor-notification-email"><span>' + t('notificationEmailLabel') + '</span>' +
+      '<input id="mbVendorNotificationEmail" type="email" value="' + escapeHtml(email) + '"></label>' +
+      (rows || '<p class="mb-empty">' + t('notificationsEmpty') + '</p>');
+  }
+
+  function playVendorCue() {
+    if (!state.soundEnabled) return;
+    try {
+      var AudioContext = root.AudioContext || root.webkitAudioContext;
+      if (!AudioContext) return;
+      var ctx = new AudioContext();
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.frequency.value = 880;
+      gain.gain.value = 0.04;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.12);
+    } catch (e) {}
+  }
+
+  function renderVendorToast(booking) {
+    var wrap = document.getElementById('mbVendorToastRegion');
+    if (!wrap) {
+      wrap = el('div', 'mb-vendor-toast-region');
+      wrap.id = 'mbVendorToastRegion';
+      document.body.appendChild(wrap);
+    }
+    var toast = el('div', 'mb-vendor-toast');
+    var msg = el('span');
+    var view = el('button', 'mb-button mb-button--primary mb-button--sm');
+    var dismiss = el('button', 'mb-button mb-button--ghost mb-button--sm');
+    msg.textContent = interpolate(t('newBookingToast'), {
+      customer: booking.customerName || 'Customer',
+      date: booking.requestedDate || '',
+      time: booking.startTime || ''
+    });
+    view.type = 'button';
+    view.textContent = t('viewBooking');
+    dismiss.type = 'button';
+    dismiss.textContent = t('dismissNotification');
+    view.addEventListener('click', function() {
+      document.getElementById('mbVendorNotifications').hidden = false;
+      document.getElementById('mbVendorNotifications').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      toast.remove();
+    });
+    dismiss.addEventListener('click', function() { toast.remove(); });
+    toast.appendChild(msg);
+    toast.appendChild(view);
+    toast.appendChild(dismiss);
+    wrap.appendChild(toast);
+  }
+
+  function handleRealtimeBooking(booking, source) {
+    var id = booking.id || booking.bookingId || '';
+    if (!id || state.realtimeSeen[id]) return;
+    state.realtimeSeen[id] = true;
+    state.realtimeBookings.unshift(booking);
+    state.realtimeBookings = state.realtimeBookings.slice(0, 5);
+    renderVendorRealtimeControls();
+    renderVendorToast(booking);
+    playVendorCue();
+    logVendorRealtime({ event: 'new_booking', bookingId: id, source: source || 'snapshot' });
+  }
+
+  function attachVendorRealtime() {
+    detachVendorRealtime();
+    var db = getFirestoreDb();
+    if (!db || !state.vendor || !DATA || !DATA.COLLECTIONS) return;
+    var query = db.collection(DATA.COLLECTIONS.bookings)
+      .where('vendorId', '==', state.vendor.id)
+      .where('createdAt', '>', state.pageLoadTime.toISOString())
+      .orderBy('createdAt', 'desc')
+      .limit(5);
+    if (!query.onSnapshot) return;
+    state.realtimeUnsubscribe = query.onSnapshot(function(snapshot) {
+      if (!snapshot || !snapshot.docChanges) return;
+      snapshot.docChanges().forEach(function(change) {
+        if (change.type !== 'added') return;
+        var data = change.doc.data() || {};
+        data.id = data.id || change.doc.id;
+        handleRealtimeBooking(data, 'snapshot');
+      });
+    }, function(error) {
+      logVendorRealtime({ event: 'listener_error', error: error && error.message, source: 'snapshot' });
+    });
+    logVendorRealtime({ event: 'listener_attached', source: 'snapshot' });
+  }
+
+  function detachVendorRealtime() {
+    if (state.realtimeUnsubscribe) {
+      state.realtimeUnsubscribe();
+      state.realtimeUnsubscribe = null;
+      logVendorRealtime({ event: 'listener_detached', source: 'manual' });
+    }
+  }
+
+  function updateVendorBookingStatus(actionNode, status) {
+    var row = actionNode && actionNode.closest && actionNode.closest('[data-booking-id]');
+    var bookingId = row && row.getAttribute('data-booking-id');
+    if (!bookingId || !BOOKING || !BOOKING.updateBookingStatus) return;
+    var booking = state.realtimeBookings.filter(function(item) {
+      return (item.id || item.bookingId) === bookingId;
+    })[0] || { id: bookingId, vendorId: state.vendor.id };
+    var fromStatus = booking.status || '';
+    BOOKING.updateBookingStatus(bookingId, status).then(function() {
+      booking.status = status;
+      renderVendorRealtimeControls();
+      if (root.DLCNotifications && root.DLCNotifications.queueMobileBarberStatusChange) {
+        root.DLCNotifications.queueMobileBarberStatusChange(booking, state.vendor, status, state.lang);
+      }
+      if (root.console && root.console.log) {
+        root.console.log('[mobile-barber-status-change]', {
+          bookingId: bookingId,
+          fromStatus: fromStatus,
+          toStatus: status,
+          actor: 'vendor',
+          lang: state.lang
+        });
+      }
+    });
+  }
+
   function setLang(lang) {
     if (!STRINGS[lang]) return;
     state.lang = lang;
@@ -1545,6 +1926,30 @@
     document.querySelectorAll('[data-action="openManualBooking"]').forEach(function(btn) {
       btn.addEventListener('click', openManualBooking);
     });
+    document.querySelector('[data-action="toggleVendorSound"]').addEventListener('click', function() {
+      state.soundEnabled = !state.soundEnabled;
+      try { localStorage.setItem('mb_vendor_sound', state.soundEnabled ? 'on' : 'off'); } catch (e) {}
+      renderVendorRealtimeControls();
+      logVendorRealtime({ event: 'sound_toggle', source: 'manual' });
+    });
+    document.querySelector('[data-action="toggleVendorNotifications"]').addEventListener('click', function() {
+      var panel = document.getElementById('mbVendorNotifications');
+      if (panel) panel.hidden = !panel.hidden;
+      renderVendorRealtimeControls();
+    });
+    document.getElementById('mbVendorNotifications').addEventListener('click', function(event) {
+      var actionNode = event.target && event.target.closest && event.target.closest('[data-action]');
+      if (!actionNode) return;
+      var action = actionNode.getAttribute('data-action');
+      if (action === 'vendorAcceptBooking') updateVendorBookingStatus(actionNode, 'confirmed');
+      if (action === 'vendorDeclineBooking') updateVendorBookingStatus(actionNode, 'declined');
+    });
+    document.getElementById('mbVendorNotifications').addEventListener('input', function(event) {
+      if (event.target && event.target.id === 'mbVendorNotificationEmail' && state.vendor) {
+        state.vendor.notificationEmail = event.target.value;
+        try { localStorage.setItem('mb_vendor_notification_email_' + state.vendor.id, event.target.value); } catch (e) {}
+      }
+    });
     document.querySelector('[data-action="loadHistory"]').addEventListener('click', loadCustomerHistory);
     document.querySelector('[data-action="savePreference"]').addEventListener('click', saveCustomerProfile);
     document.querySelector('[data-action="closeManualBooking"]').addEventListener('click', closeManualBooking);
@@ -1552,7 +1957,31 @@
     document.querySelector('[data-action="manualBack"]').addEventListener('click', manualBack);
     document.querySelector('[data-action="manualReview"]').addEventListener('click', reviewManualBooking);
     document.querySelector('[data-action="manualConfirm"]').addEventListener('click', confirmManualBooking);
-    document.getElementById('mbManualBookingForm').addEventListener('input', clearManualResult);
+    document.getElementById('mbManualBookingForm').addEventListener('input', function(event) {
+      if (event.target && event.target.id === 'mbCustomerEmail') updateEmailWarning();
+      clearManualResult();
+    });
+    document.getElementById('mbManualBookingModal').addEventListener('click', function(event) {
+      var actionNode = event.target && event.target.closest && event.target.closest('[data-action]');
+      if (!actionNode) return;
+      var action = actionNode.getAttribute('data-action');
+      if (action === 'copyBookingId' && state.lastBooking) {
+        copyText(state.lastBooking.id || state.lastBooking.bookingId || '', t('bookingIdCopied'));
+      } else if (action === 'saveConfirmation' && state.lastBooking) {
+        var text = confirmationText(state.lastBooking);
+        if (root.navigator && root.navigator.share) {
+          root.navigator.share({ title: 'DuLichCali Mobile Barber', text: text }).catch(function() {
+            copyText(text, t('confirmationCopied'));
+          });
+        } else {
+          copyText(text, t('confirmationCopied'));
+        }
+      } else if (action === 'manualDone') {
+        closeManualBooking();
+      } else if (action === 'manualNewBooking') {
+        resetManualBooking();
+      }
+    });
     document.querySelector('[data-action="closeAssistant"]').addEventListener('click', function() {
       document.getElementById('mbVendorAssistant').hidden = true;
     });
@@ -1572,9 +2001,16 @@
     state.services = state.vendor && DATA.listServicesForVendor ? DATA.listServicesForVendor(state.vendor.id) : [];
     applyQuerySelection();
     state.lang = getLang();
+    try {
+      state.soundEnabled = localStorage.getItem('mb_vendor_sound') !== 'off';
+    } catch (e) {}
     bind();
     setLang(state.lang);
     loadVoiceProviderKeys();
+    renderVendorRealtimeControls();
+    attachVendorRealtime();
+    root.addEventListener('beforeunload', detachVendorRealtime);
+    root.addEventListener('pagehide', detachVendorRealtime);
     openQueryMode();
   }
 

@@ -10,9 +10,14 @@
     root.MobileBarberBooking = factory(root.MobileBarberData, root);
   }
 })(typeof window !== 'undefined' ? window : globalThis, function(DATA, root) {
-  var ACTIVE_BOOKING_STATUSES = ['pending_confirmation', 'confirmed', 'vendor_review'];
-  var REVIEW_STATUS = 'vendor_review';
-  var PENDING_STATUS = 'pending_confirmation';
+  var ACTIVE_BOOKING_STATUSES = ['pending_barber_confirmation', 'pending_confirmation', 'confirmed', 'vendor_review'];
+  var PENDING_STATUS = 'pending_barber_confirmation';
+  var STATUS_ALIASES = {
+    pending_confirmation: 'pending_barber_confirmation',
+    vendor_review: 'pending_barber_confirmation',
+    pending: 'pending_barber_confirmation'
+  };
+  var STATUS_LIFECYCLE = ['pending_barber_confirmation', 'confirmed', 'declined', 'completed', 'cancelled'];
   var DEFAULT_SLOT_STEP_MINUTES = 30;
   var DEFAULT_SAME_DAY_CUTOFF_MINUTES = 120;
 
@@ -34,6 +39,12 @@
 
   function hasText(value) {
     return trim(value).length > 0;
+  }
+
+  function normalizeBookingStatus(status) {
+    status = trim(status);
+    if (STATUS_ALIASES[status]) return STATUS_ALIASES[status];
+    return STATUS_LIFECYCLE.indexOf(status) >= 0 ? status : PENDING_STATUS;
   }
 
   function findService(services, serviceId) {
@@ -401,7 +412,7 @@
       canCreate: true,
       key: areaResult.key,
       reviewRequired: areaResult.reviewRequired,
-      status: areaResult.reviewRequired ? REVIEW_STATUS : PENDING_STATUS,
+      status: PENDING_STATUS,
       service: service,
       timing: timing,
       price: price,
@@ -424,6 +435,7 @@
       customerName: trim(draft.customerName),
       customerPhone: digits(draft.customerPhone),
       customerEmail: trim(draft.customerEmail),
+      smsOptIn: draft.smsOptIn === true || draft.smsOptIn === 'true',
       serviceId: check.service.id,
       serviceName: check.service.name,
       servicePrice: check.price.totalPrice,
@@ -433,7 +445,7 @@
       requestedDate: trim(draft.requestedDate),
       startTime: trim(draft.startTime),
       endTime: check.timing.endTime,
-      status: check.status,
+      status: normalizeBookingStatus(check.status),
       source: 'customer_form',
       notes: trim(draft.notes),
       stylePreference: trim(draft.stylePreference),
@@ -445,7 +457,12 @@
       createdAt: now,
       updatedAt: now
     };
-    var validation = DATA && DATA.validateBooking ? DATA.validateBooking(booking) : { valid: true, errors: [] };
+    var validationBooking = Object.assign({}, booking);
+    delete validationBooking.smsOptIn;
+    if (validationBooking.status === 'pending_barber_confirmation') {
+      validationBooking.status = 'pending_confirmation';
+    }
+    var validation = DATA && DATA.validateBooking ? DATA.validateBooking(validationBooking) : { valid: true, errors: [] };
     return validation.valid ? { valid: true, booking: booking, errors: [] } : { valid: false, errors: validation.errors };
   }
 
@@ -693,8 +710,24 @@
     }
   }
 
+  function updateBookingStatus(bookingId, status, options) {
+    options = options || {};
+    var normalized = normalizeBookingStatus(status);
+    if (!bookingId) return Promise.reject(new Error('missing_booking_id'));
+    if (STATUS_LIFECYCLE.indexOf(normalized) < 0) return Promise.reject(new Error('invalid_booking_status'));
+    if (!canUseFirestore()) return Promise.reject(new Error('firestore_unavailable'));
+    return root.firebase.firestore().collection(DATA.COLLECTIONS.bookings).doc(bookingId).set({
+      status: normalized,
+      updatedAt: options.now || new Date().toISOString()
+    }, { merge: true }).then(function() {
+      return { saved: true, bookingId: bookingId, status: normalized };
+    });
+  }
+
   return {
     ACTIVE_BOOKING_STATUSES: ACTIVE_BOOKING_STATUSES,
+    STATUS_LIFECYCLE: STATUS_LIFECYCLE,
+    normalizeBookingStatus: normalizeBookingStatus,
     normalizePhone: normalizePhone,
     validateRequiredFields: validateRequiredFields,
     isWithinServiceArea: isWithinServiceArea,
@@ -716,6 +749,7 @@
     loadCustomerBookings: loadCustomerBookings,
     loadExistingBookings: loadExistingBookings,
     saveBooking: saveBooking,
+    updateBookingStatus: updateBookingStatus,
     _minutesFromTime: minutesFromTime,
     _rangesOverlap: rangesOverlap
   };

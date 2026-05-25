@@ -18,6 +18,7 @@ function baseDraft() {
     customerName: 'Test Customer',
     customerPhone: '714-555-0100',
     customerEmail: '',
+    smsOptIn: false,
     serviceId: 'classic-mobile-cut',
     requestedDate: '2026-06-01',
     startTime: '10:00',
@@ -184,14 +185,14 @@ function runMobileBarberBookingTests(test) {
     assertEq(result.key, 'same_day_cutoff');
   });
 
-  test('Mobile Barber non-service-area address is marked vendor_review', function() {
+  test('Mobile Barber non-service-area address is marked pending barber confirmation', function() {
     var draft = baseDraft();
     draft.city = 'Irvine';
     draft.zip = '92614';
     var result = check(draft);
     assertEq(result.canCreate, true);
     assertEq(result.reviewRequired, true);
-    assertEq(result.status, 'vendor_review');
+    assertEq(result.status, 'pending_barber_confirmation');
   });
 
   test('Mobile Barber service-area helper rejects out-of-area address', function() {
@@ -265,6 +266,7 @@ function runMobileBarberBookingTests(test) {
 
   test('Mobile Barber builds pending booking only after availability check', function() {
     var draft = baseDraft();
+    draft.smsOptIn = true;
     var result = check(draft);
     var built = MobileBarberBooking.buildBooking({
       id: 'manual-ok-1',
@@ -274,9 +276,17 @@ function runMobileBarberBookingTests(test) {
       availabilityResult: result
     });
     assertEq(built.valid, true, built.errors && built.errors.join('; '));
-    assertEq(built.booking.status, 'pending_confirmation');
+    assertEq(built.booking.status, 'pending_barber_confirmation');
+    assertEq(built.booking.smsOptIn, true);
     assertEq(built.booking.source, 'customer_form');
     assertEq(built.booking.endTime, '11:15');
+  });
+
+  test('Mobile Barber status lifecycle normalizes legacy statuses', function() {
+    assertEq(MobileBarberBooking.normalizeBookingStatus('pending_confirmation'), 'pending_barber_confirmation');
+    assertEq(MobileBarberBooking.normalizeBookingStatus('vendor_review'), 'pending_barber_confirmation');
+    assertEq(MobileBarberBooking.normalizeBookingStatus('confirmed'), 'confirmed');
+    assertEq(MobileBarberBooking.normalizeBookingStatus('unknown'), 'pending_barber_confirmation');
   });
 
   test('Mobile Barber manual booking works for Michael and Tim vendor data', function() {
@@ -414,7 +424,7 @@ function runMobileBarberBookingTests(test) {
       now: '2026-05-24T00:00:00.000Z'
     });
     assertEq(built.valid, true, built.errors && built.errors.join('; '));
-    assertEq(built.booking.status, 'pending_confirmation');
+    assertEq(built.booking.status, 'pending_barber_confirmation');
     assertEq(built.booking.rebookedFromBookingId, 'old-booking');
     assertEq(built.booking.previousServiceName, 'Classic Mobile Haircut');
     assertEq(built.booking.stylePreference, 'Low fade, no hard part');

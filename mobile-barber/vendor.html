@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260524o">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260525i">
 </head>
 <body class="mb-page mb-vendor-page">
   <main class="mb-shell mb-vendor-shell" id="mobileBarberVendorApp" data-page="mobile-barber-vendor">
@@ -46,7 +46,10 @@
             <a class="mb-button mb-button--primary" id="mbVendorPhone" href=""></a>
             <button class="mb-button mb-button--ghost" type="button" data-action="openAssistant" data-i18n="aiBookingButton"></button>
             <button class="mb-button mb-button--voice" type="button" data-action="openVoiceAssistant" data-i18n="voiceBookingButton"></button>
+            <button class="mb-button mb-button--ghost mb-vendor-sound-toggle" type="button" data-action="toggleVendorSound" id="mbVendorSoundToggle"></button>
+            <button class="mb-button mb-button--ghost mb-vendor-bell" type="button" data-action="toggleVendorNotifications" id="mbVendorBell"></button>
           </div>
+          <div class="mb-vendor-notifications" id="mbVendorNotifications" hidden></div>
         </div>
         <div class="mb-vendor-hero__image-wrap">
           <img class="mb-vendor-hero__image" id="mbVendorHeroImage" alt="">
@@ -163,6 +166,12 @@
               <label class="mb-field">
                 <span data-i18n="emailLabel"></span>
                 <input id="mbCustomerEmail" type="email" autocomplete="email">
+                <small class="mb-field-warning" id="mbEmailWarning"></small>
+              </label>
+              <p class="mb-inline-notice" id="mbEmailRecommendedNotice" hidden></p>
+              <label class="mb-checkbox-field">
+                <input id="mbSmsOptIn" type="checkbox">
+                <span data-i18n="smsOptInLabel"></span>
               </label>
             </div>
             <div class="mb-form-step" data-step="2" hidden>
@@ -263,10 +272,10 @@
   </script>
   <script src="/ai-engine.js?v=20260524a"></script>
   <script src="/mobile-barber/mobile-barber-data.js?v=20260524o"></script>
-  <script src="/mobile-barber/mobile-barber-booking.js?v=20260525d"></script>
+  <script src="/mobile-barber/mobile-barber-booking.js?v=20260525e"></script>
   <script src="/mobile-barber/mobile-barber-agent.js?v=20260525e"></script>
   <script src="/mobile-barber/mobile-barber-voice.js?v=20260525f"></script>
-  <script src="/notifications.js?v=20260523a"></script>
-  <script src="/mobile-barber/mobile-barber-vendor.js?v=20260525h"></script>
+  <script src="/notifications.js?v=20260525a"></script>
+  <script src="/mobile-barber/mobile-barber-vendor.js?v=20260525i"></script>
 </body>
 </html>

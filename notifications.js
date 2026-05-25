@@ -135,6 +135,17 @@ window.DLCNotifications = (function () {
       });
   }
 
+  function _logMobileBarberNotification(type, bookingId, channelOutcome, lang) {
+    if (window.console && window.console.log) {
+      window.console.log('[mobile-barber-notification]', {
+        type: type,
+        bookingId: bookingId,
+        channelOutcome: channelOutcome,
+        lang: lang || 'en'
+      });
+    }
+  }
+
   // ── Public: in-app notifications for new ride booking ───────────────────────
   /**
    * Writes admin + customer in-app notification docs.
@@ -447,12 +458,14 @@ window.DLCNotifications = (function () {
       copy.vendorTitle,
       copy.vendorMsg
     );
+    _logMobileBarberNotification('vendor_inapp', bkId, 'queued', lang);
 
     if (booking.customerPhone) {
       _writeNotification(bkId, 'mobile_barber_confirmed', 'customer', booking.customerPhone,
         copy.customerTitle,
         copy.customerMsg
       );
+      _logMobileBarberNotification('customer_inapp', bkId, 'queued', lang);
     }
 
     if (booking.customerEmail) {
@@ -474,6 +487,96 @@ window.DLCNotifications = (function () {
         addressSummary:    addressSummary,
         cancellationNote:  copy.note,
       });
+      _logMobileBarberNotification('customer_email', bkId, 'queued', lang);
+    } else {
+      _logMobileBarberNotification('customer_email', bkId, 'skipped_missing_email', lang);
+    }
+
+    // TODO(mobile-barber-sms): smsOptIn is saved on the booking, but Twilio
+    // dispatch stays disabled until approved. When enabled, the Firebase
+    // Function should consume mobile_barber_sms_confirmation queue docs.
+    if (booking.smsOptIn) {
+      _logMobileBarberNotification('sms_optin', bkId, 'flagged_off_twilio_disabled', lang);
+    }
+
+    if (vendor.notificationEmail) {
+      _queue(bkId, 'vendor_notify', {
+        bookingType:       'mobile_barber_vendor',
+        customerEmail:     vendor.notificationEmail,
+        customerName:      vendor.barberName || vendor.businessName || '',
+        lang:              lang,
+        barberName:        barberName,
+        businessName:      businessName,
+        serviceName:       serviceName,
+        bookingCustomerName: booking.customerName || '',
+        bookingCustomerPhone: booking.customerPhone || '',
+        requestedDate:     booking.requestedDate || '',
+        startTime:         booking.startTime || '',
+        addressSummary:    addressSummary,
+      });
+      _logMobileBarberNotification('vendor_email', bkId, 'queued', lang);
+    } else {
+      _logMobileBarberNotification('vendor_email', bkId, 'skipped_no_vendor_email', lang);
+    }
+  }
+
+  function queueMobileBarberStatusChange(booking, vendor, newStatus, lang) {
+    if (!booking) return;
+    var bkId = booking.bookingId || booking.id || '';
+    if (!bkId) return;
+    lang = lang || 'en';
+    var visible = ['confirmed', 'declined', 'cancelled'];
+    if (visible.indexOf(newStatus) < 0) return;
+    if (window.console && window.console.log) {
+      window.console.log('[mobile-barber-status-change]', {
+        bookingId: bkId,
+        fromStatus: booking.status || '',
+        toStatus: newStatus,
+        actor: 'system',
+        lang: lang
+      });
+    }
+    vendor = vendor || {};
+    var barberName = vendor.barberName || vendor.businessName || booking.vendorName || 'Mobile Barber';
+    var COPY = {
+      en: {
+        confirmed: ['Mobile barber confirmed', barberName + ' confirmed your booking.'],
+        declined: ['Mobile barber declined', barberName + ' declined this booking. Please choose another time.'],
+        cancelled: ['Mobile barber booking cancelled', 'This mobile barber booking was cancelled.']
+      },
+      vi: {
+        confirmed: ['Thợ đã xác nhận', barberName + ' đã xác nhận lịch đặt của bạn.'],
+        declined: ['Thợ đã từ chối', barberName + ' đã từ chối lịch này. Vui lòng chọn giờ khác.'],
+        cancelled: ['Lịch mobile barber đã hủy', 'Lịch mobile barber này đã được hủy.']
+      },
+      es: {
+        confirmed: ['Barbero confirmado', barberName + ' confirmó su reserva.'],
+        declined: ['Barbero rechazó', barberName + ' rechazó esta reserva. Elija otro horario.'],
+        cancelled: ['Reserva de barbero cancelada', 'Esta reserva de barbero móvil fue cancelada.']
+      }
+    };
+    var copy = (COPY[lang] || COPY.en)[newStatus];
+    if (booking.customerPhone) {
+      _writeNotification(bkId, 'mobile_barber_status_' + newStatus, 'customer', booking.customerPhone, copy[0], copy[1]);
+      _logMobileBarberNotification('customer_inapp', bkId, 'queued_status_' + newStatus, lang);
+    }
+    if (booking.customerEmail) {
+      _queue(bkId, 'status_' + newStatus, {
+        bookingType:       'mobile_barber',
+        customerEmail:     booking.customerEmail,
+        customerName:      booking.customerName || '',
+        customerPhone:     booking.customerPhone || '',
+        lang:              lang,
+        barberName:        barberName,
+        businessName:      vendor.businessName || barberName,
+        serviceName:       booking.serviceName || '',
+        requestedDate:     booking.requestedDate || '',
+        startTime:         booking.startTime || '',
+        status:            newStatus,
+        statusTitle:       copy[0],
+        statusMessage:     copy[1],
+      });
+      _logMobileBarberNotification('customer_email', bkId, 'queued_status_' + newStatus, lang);
     }
   }
 
@@ -487,6 +590,7 @@ window.DLCNotifications = (function () {
     queueDriverOnWay:                 queueDriverOnWay,
     queueTravelConfirmation:          queueTravelConfirmation,
     queueMobileBarberConfirmation:    queueMobileBarberConfirmation,
+    queueMobileBarberStatusChange:    queueMobileBarberStatusChange,
   };
 
 }());

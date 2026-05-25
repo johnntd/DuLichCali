@@ -659,23 +659,39 @@
       var categoryImage = DATA && DATA.findServiceImageByPortfolioCategory
         ? DATA.findServiceImageByPortfolioCategory(image.category)
         : null;
-      [
-        ['Before', 'before'],
-        ['After', 'after']
-      ].forEach(function(pair) {
+      var slots = [
+        ['Before', 'before', image.beforeImageUrl],
+        ['After', 'after', image.afterImageUrl]
+      ];
+      slots.forEach(function(pair) {
         var wrap = el('figure', 'mb-portfolio-card__ai-frame mb-portfolio-card__ai-frame--' + pair[1]);
         var badge = el('span', 'mb-portfolio-card__ai-badge');
         var caption = el('figcaption');
         badge.textContent = 'AI preview';
         caption.textContent = pair[0];
-        if (categoryImage && categoryImage.imageUrl) {
-          wrap.style.backgroundImage = "url('" + categoryImage.imageUrl + "')";
-          wrap.setAttribute('aria-label', categoryImage.imageAlt || image.alt || image.title);
+        var url = pair[2] || (categoryImage && categoryImage.imageUrl) || '';
+        if (url) {
+          wrap.style.backgroundImage = "url('" + url + "')";
+          wrap.setAttribute('aria-label', image.alt || image.title);
         }
         wrap.appendChild(badge);
         wrap.appendChild(caption);
         media.appendChild(wrap);
       });
+      if (image.clipUrl) {
+        var clipWrap = el('div', 'mb-portfolio-card__clip');
+        var video = document.createElement('video');
+        video.src = image.clipUrl;
+        video.autoplay = true;
+        video.loop = true;
+        video.muted = true;
+        video.playsInline = true;
+        video.setAttribute('playsinline', '');
+        video.setAttribute('preload', 'metadata');
+        video.setAttribute('aria-label', (image.title || '') + ' before and after preview');
+        clipWrap.appendChild(video);
+        card.appendChild(clipWrap);
+      }
       var chip = el('span', 'mb-portfolio-card__category');
       var title = el('h3');
       var desc = el('p');
@@ -719,19 +735,29 @@
     var list = document.getElementById('mbPromoClips');
     if (!list) return;
     list.innerHTML = '';
-    [
-      ['Fade at home', 'Fresh fade setup, cleanup, and finish without a waiting room.'],
-      ['Family haircut stop', 'One mobile visit can cover kids, seniors, and parents.'],
-      ['Hotel-ready grooming', 'Business cut and beard detail before meetings or events.']
-    ].forEach(function(row, index) {
-      var card = el('article', 'mb-promo-clip-card');
-      var pulse = el('span', 'mb-promo-clip-card__pulse');
+    var rails = [
+      ['Fade at home', 'Fresh fade setup, cleanup, and finish without a waiting room.', '/assets/mobile-barber/clips/fade-1.mp4', '/assets/mobile-barber/portfolio/fade-1-after.jpg'],
+      ['Family haircut stop', 'One mobile visit can cover kids, seniors, and parents.', '/assets/mobile-barber/clips/family-haircut-1.mp4', '/assets/mobile-barber/portfolio/family-haircut-1-after.jpg'],
+      ['Hotel-ready grooming', 'Business cut and beard detail before meetings or events.', '/assets/mobile-barber/clips/business-haircut-1.mp4', '/assets/mobile-barber/portfolio/business-haircut-1-after.jpg']
+    ];
+    rails.forEach(function(row, index) {
+      var card = el('article', 'mb-promo-clip-card mb-promo-clip-card--video');
       var title = el('strong');
       var copy = el('p');
       card.style.setProperty('--clip-delay', String(index * 120) + 'ms');
+      var video = document.createElement('video');
+      video.src = row[2];
+      video.poster = row[3];
+      video.autoplay = true;
+      video.loop = true;
+      video.muted = true;
+      video.playsInline = true;
+      video.setAttribute('playsinline', '');
+      video.setAttribute('preload', 'metadata');
+      video.setAttribute('aria-label', row[0]);
       title.textContent = row[0];
       copy.textContent = row[1];
-      card.appendChild(pulse);
+      card.appendChild(video);
       card.appendChild(title);
       card.appendChild(copy);
       list.appendChild(card);

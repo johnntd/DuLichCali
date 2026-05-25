@@ -761,12 +761,56 @@
 .mb-promo-clip-card strong {
   font-size: var(--text-lg);
   line-height: var(--leading-snug);
+  position: relative;
+  z-index: 2;
 }
 
 .mb-promo-clip-card p {
   color: var(--muted);
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
+  position: relative;
+  z-index: 2;
+}
+
+.mb-promo-clip-card--video {
+  min-height: 18rem;
+  padding: 1rem;
+  align-content: end;
+}
+
+.mb-promo-clip-card--video video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  filter: brightness(.6);
+}
+
+.mb-promo-clip-card--video::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8, 28, 48, 0) 35%, rgba(8, 28, 48, .92) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.mb-portfolio-card__clip {
+  margin-top: .75rem;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: #000;
+  aspect-ratio: 4 / 3;
+}
+
+.mb-portfolio-card__clip video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
 }
 
 @keyframes mbPromoCardLift {

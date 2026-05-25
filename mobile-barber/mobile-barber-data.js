@@ -598,6 +598,9 @@
   function portfolioAssetUrl(categoryId, variantSuffix, kind) {
     return '/assets/mobile-barber/portfolio/' + categoryId + '-' + variantSuffix + '-' + kind + '.jpg';
   }
+  function portfolioClipUrl(categoryId, variantSuffix) {
+    return '/assets/mobile-barber/clips/' + categoryId + '-' + variantSuffix + '.mp4';
+  }
 
   function buildAIPortfolioForVendor(vendorId, vendorOrderOffset) {
     var rows = [];
@@ -605,6 +608,7 @@
       AI_PORTFOLIO_VARIANTS.forEach(function(variant, variantIndex) {
         var beforeUrl = portfolioAssetUrl(category.id, variant.suffix, 'before');
         var afterUrl = portfolioAssetUrl(category.id, variant.suffix, 'after');
+        var clipUrl = portfolioClipUrl(category.id, variant.suffix);
         rows.push(Object.freeze({
           id: vendorId + '-ai-' + category.id + '-' + variant.suffix,
           vendorId: vendorId,
@@ -613,6 +617,7 @@
           imageUrl: afterUrl,
           beforeImageUrl: beforeUrl,
           afterImageUrl: afterUrl,
+          clipUrl: clipUrl,
           alt: category.title + ' before and after sample preview',
           displayOrder: vendorOrderOffset + (categoryIndex * 10) + variantIndex + 1,
           hidden: false,

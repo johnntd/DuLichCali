@@ -1586,8 +1586,16 @@
       rememberCustomerFromBooking(result.booking);
       if (result.source === 'firestore') queueBookingNotifications(result.booking);
       showManualError('');
-      renderFinalBookingSummary(result.booking, result.source);
-      renderManualStep();
+      try {
+        renderFinalBookingSummary(result.booking, result.source);
+      } catch (renderErr) {
+        console.error('[mobile-barber-manual-booking] render success error', renderErr);
+      }
+      try { renderManualStep(); } catch (stepErr) {
+        console.error('[mobile-barber-manual-booking] render step error', stepErr);
+      }
+      var body = document.querySelector('.mb-booking-modal__body');
+      if (body && body.scrollTo) { try { body.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { body.scrollTop = 0; } }
       loadCustomerHistory();
       logManualBookingState({ submitStatus: 'success', bookingId: result.booking.id });
     }).catch(function(error) {

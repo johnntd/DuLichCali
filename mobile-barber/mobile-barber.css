@@ -945,6 +945,62 @@
   background-color: rgba(6, 24, 42, .72);
 }
 
+.mb-field input[type="date"],
+.mb-field input[type="time"],
+.mb-field input[type="datetime-local"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 3rem;
+  padding: .7rem .8rem;
+  font-size: 1rem;
+  line-height: 1.3;
+  display: block;
+}
+
+.mb-field input[type="date"]::-webkit-date-and-time-value,
+.mb-field input[type="time"]::-webkit-date-and-time-value,
+.mb-field input[type="datetime-local"]::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.3em;
+}
+
+.mb-confirmation-card {
+  background: linear-gradient(180deg, rgba(74,222,128,.18), rgba(74,222,128,.06)) !important;
+  border: 1px solid rgba(74,222,128,.45) !important;
+  position: relative;
+}
+
+.mb-confirmation-card::before {
+  content: "✓";
+  position: absolute;
+  top: -1.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 999px;
+  background: #22c55e;
+  color: #fff;
+  font-size: 1.4rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(34,197,94,.45);
+}
+
+.mb-confirmation-card h3 {
+  color: #4ade80;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.mb-confirmation-card .mb-booking-id {
+  background: rgba(74,222,128,.18);
+  border: 1px solid rgba(74,222,128,.45);
+  color: #4ade80;
+}
+
 .mb-customer-account__grid {
   display: grid;
   gap: 1rem;

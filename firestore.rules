@@ -90,6 +90,14 @@ service cloud.firestore {
       allow read, write: if isVendorMember(vendorId);
     }
 
+    // ── Email queue — customer booking flow writes confirmation emails here ─────
+    // Public create only (booking flow is unauthenticated). Read/update gated to
+    // authenticated callers; Functions trigger uses admin SDK so it bypasses rules.
+    match /vendors/{vendorId}/emailQueue/{queueId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
+    }
+
     // ── Other vendor subcollections (menuItems, notifications, etc.) ──────────────
     // Auth required. Broad auth (not vendor-membership-only) to preserve admin.html access.
     // staffCompensation is explicitly handled above with tighter rules.

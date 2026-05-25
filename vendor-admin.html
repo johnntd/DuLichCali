@@ -2189,6 +2189,11 @@
           window.location.href = 'salon-admin.html?id=' + encodeURIComponent(VENDOR_ID);
           return;
         }
+        // Mobile barber vendors have their own dedicated dashboard
+        if (cat === 'mobile_barber' || cat === 'mobile-barber') {
+          window.location.href = 'mobile-barber/dashboard.html?id=' + encodeURIComponent(VENDOR_ID);
+          return;
+        }
         var bizName = vdata.businessName || vdata.name || VENDOR_ID;
         // Update top bar
         var bn = document.getElementById('barVendorName');
@@ -3079,7 +3084,10 @@
         var link = document.getElementById('publicPageLink');
         if (link && data.category) {
           var catPath = data.category === 'food' ? 'foods' :
-                        data.category === 'nails' ? 'nailsalon' : 'hairsalon';
+                        data.category === 'nails' ? 'nailsalon' :
+                        data.category === 'hair' ? 'hairsalon' :
+                        (data.category === 'mobile_barber' || data.category === 'mobile-barber') ? 'mobile-barber/vendor' :
+                        'foods';
           link.href = '/' + catPath + '/?id=' + VENDOR_ID;
           link.textContent = '/' + catPath + '/?id=' + VENDOR_ID;
         }

@@ -50,14 +50,14 @@
 .mb-hero {
   display: grid;
   gap: 1.4rem;
-  min-height: calc(100dvh - 2rem);
   align-content: start;
   animation: mbFadeUp .55s ease both;
 }
 
 .mb-hero__media {
   position: relative;
-  min-height: 48dvh;
+  min-height: 32dvh;
+  max-height: 42dvh;
   border-radius: var(--r-md);
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, .12);
@@ -65,7 +65,6 @@
   background: #0a233d;
 }
 
-.mb-hero__media::after,
 .mb-vendor-hero__image-wrap::after {
   content: "";
   position: absolute;

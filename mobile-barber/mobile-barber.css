@@ -56,13 +56,21 @@
 
 .mb-hero__media {
   position: relative;
-  min-height: 32dvh;
-  max-height: 42dvh;
+  min-height: 22dvh;
+  max-height: 28dvh;
   border-radius: var(--r-md);
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, .12);
   box-shadow: var(--shadow-lg);
   background: #0a233d;
+}
+
+@media (min-width: 480px) {
+  .mb-hero__media { min-height: 28dvh; max-height: 36dvh; }
+}
+
+@media (min-width: 680px) {
+  .mb-hero__media { min-height: 34dvh; max-height: 48dvh; }
 }
 
 .mb-vendor-hero__image-wrap::after {
@@ -106,17 +114,18 @@
 
 .mb-hero__glass {
   position: absolute;
-  left: .9rem;
-  right: .9rem;
-  bottom: .9rem;
+  left: .7rem;
+  right: .7rem;
+  bottom: .7rem;
   display: grid;
-  gap: .18rem;
-  padding: .9rem 1rem;
+  gap: .12rem;
+  padding: .6rem .75rem;
   border-radius: var(--r-md);
   background: rgba(6, 24, 42, .72);
   border: 1px solid rgba(255, 255, 255, .16);
   backdrop-filter: blur(16px) saturate(150%);
   -webkit-backdrop-filter: blur(16px) saturate(150%);
+  font-size: var(--text-xs);
 }
 
 .mb-hero__status {

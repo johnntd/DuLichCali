@@ -172,6 +172,20 @@
     return { valid: true, reviewRequired: true, key: 'service_area_review' };
   }
 
+  function findVendorForAddress(address, options) {
+    options = options || {};
+    var allVendors = Array.isArray(options.vendors) && options.vendors.length
+      ? options.vendors
+      : (root.MobileBarberData && Array.isArray(root.MobileBarberData.sampleVendors) ? root.MobileBarberData.sampleVendors : []);
+    if (!address || !allVendors.length) return null;
+    for (var i = 0; i < allVendors.length; i++) {
+      var v = allVendors[i];
+      if (options.excludeVendorId && v && v.id === options.excludeVendorId) continue;
+      if (isWithinServiceArea(v, address)) return v;
+    }
+    return null;
+  }
+
   function calculateAppointmentWindow(service, requestedTime, vendor) {
     var parsed = parseRequestedTime(requestedTime);
     var start = parsed.minutes;
@@ -732,6 +746,7 @@
     validateRequiredFields: validateRequiredFields,
     isWithinServiceArea: isWithinServiceArea,
     validateServiceArea: validateServiceArea,
+    findVendorForAddress: findVendorForAddress,
     calculateAppointmentWindow: calculateAppointmentWindow,
     checkMobileBarberAvailability: checkMobileBarberAvailability,
     findNextAvailableSlots: findNextAvailableSlots,

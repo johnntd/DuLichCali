@@ -1001,7 +1001,8 @@
   color: #4ade80;
 }
 
-.mb-no-email-banner {
+.mb-no-email-banner,
+.mb-vendor-switch-banner {
   display: grid;
   gap: .55rem;
   padding: .85rem;
@@ -1010,6 +1011,27 @@
   border: 1px solid rgba(251, 146, 60, .45);
   color: var(--cream);
   margin-top: .25rem;
+}
+
+.mb-vendor-switch-banner strong {
+  color: #fb923c;
+  font-size: var(--text-sm);
+  font-weight: 900;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+
+.mb-vendor-switch-banner p {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  color: var(--cream);
+}
+
+.mb-vendor-switch-banner .mb-button {
+  width: max-content;
+  justify-self: start;
+  text-decoration: none;
 }
 
 .mb-no-email-banner strong {

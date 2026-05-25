@@ -105,6 +105,9 @@
       noEmailBannerTitle: 'No email on file',
       noEmailBannerBody: 'Save booking ID {id}. Come back later and look it up by phone in Customer Account below.',
       viewBookingLaterCta: 'View My Booking',
+      vendorSwitchBannerTitle: 'Wrong service area',
+      vendorSwitchBannerBody: 'This address in {city} is outside this barber\'s service area. {name} serves {city}.',
+      vendorSwitchBannerCta: 'Switch to {name}',
       bookingConfirmedTitle: 'Booking confirmed',
       copyBookingId: 'Copy booking ID',
       saveConfirmation: 'Save confirmation',
@@ -255,6 +258,9 @@
       noEmailBannerTitle: 'Không có email',
       noEmailBannerBody: 'Vui lòng lưu mã đặt lịch {id}. Quay lại sau và tra cứu theo số điện thoại trong mục Tài Khoản Khách Hàng bên dưới.',
       viewBookingLaterCta: 'Xem Lịch Đã Đặt',
+      vendorSwitchBannerTitle: 'Sai khu vực phục vụ',
+      vendorSwitchBannerBody: 'Địa chỉ ở {city} nằm ngoài khu vực phục vụ của thợ này. {name} có phục vụ {city}.',
+      vendorSwitchBannerCta: 'Chuyển sang {name}',
       bookingConfirmedTitle: 'Đã xác nhận đặt lịch',
       copyBookingId: 'Sao chép mã đặt lịch',
       saveConfirmation: 'Lưu xác nhận',
@@ -405,6 +411,9 @@
       noEmailBannerTitle: 'Sin correo registrado',
       noEmailBannerBody: 'Guarde el ID de reserva {id}. Vuelva más tarde y búsquelo por teléfono en Cuenta del Cliente abajo.',
       viewBookingLaterCta: 'Ver Mi Reserva',
+      vendorSwitchBannerTitle: 'Área de servicio incorrecta',
+      vendorSwitchBannerBody: 'Esta dirección en {city} está fuera del área de servicio de este barbero. {name} sí atiende {city}.',
+      vendorSwitchBannerCta: 'Cambiar a {name}',
       bookingConfirmedTitle: 'Reserva confirmada',
       copyBookingId: 'Copiar ID de reserva',
       saveConfirmation: 'Guardar confirmación',
@@ -1520,9 +1529,32 @@
         notice.hidden = false;
       }
     }
+    if (state.manualStep === 2) checkAddressVendorMatch();
     showManualError('');
     state.manualStep = Math.min(4, state.manualStep + 1);
     renderManualStep();
+  }
+
+  function checkAddressVendorMatch() {
+    var draft = getManualDraft();
+    if (!draft || !draft.city) return;
+    if (BOOKING.isWithinServiceArea(state.vendor, draft)) return;
+    var otherVendor = BOOKING.findVendorForAddress(draft, {
+      vendors: DATA.sampleVendors,
+      excludeVendorId: state.vendor.id
+    });
+    if (!otherVendor) return;
+    var banner = document.getElementById('mbVendorSwitchBanner');
+    if (!banner) return;
+    var url = '/mobile-barber/vendor/' + encodeURIComponent(otherVendor.id);
+    var label = otherVendor.barberName || otherVendor.businessName || otherVendor.id;
+    banner.innerHTML =
+      '<strong>' + escapeHtml(t('vendorSwitchBannerTitle')) + '</strong>' +
+      '<p>' + escapeHtml(interpolate(t('vendorSwitchBannerBody'), { name: label, city: draft.city })) + '</p>' +
+      '<a class="mb-button mb-button--primary mb-button--sm" href="' + url + '">' +
+      escapeHtml(interpolate(t('vendorSwitchBannerCta'), { name: label })) +
+      '</a>';
+    banner.hidden = false;
   }
 
   function manualBack() {

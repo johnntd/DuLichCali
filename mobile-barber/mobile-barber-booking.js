@@ -352,6 +352,71 @@
     return 0;
   }
 
+  // Distance Matrix lookup via Google Maps JS SDK (already loaded with the
+  // public Web API key on mobile-barber pages). Caches results in
+  // sessionStorage so the same address doesn't burn repeated API calls.
+  function requestDistanceMatrix(vendor, customerAddress) {
+    function originStr() {
+      if (vendor && typeof vendor.homeBaseAddress === 'string' && vendor.homeBaseAddress.trim()) {
+        return vendor.homeBaseAddress.trim();
+      }
+      var areas = vendor && Array.isArray(vendor.serviceAreas) ? vendor.serviceAreas : [];
+      return (areas[0] || '') + ', CA';
+    }
+    function destStr() {
+      if (!customerAddress) return '';
+      if (typeof customerAddress === 'string') return customerAddress;
+      var parts = [customerAddress.address, customerAddress.city, customerAddress.zip].filter(function(x) { return x && String(x).trim(); });
+      return parts.join(', ');
+    }
+    var origin = originStr();
+    var dest = destStr();
+    if (!origin || !dest) return Promise.resolve(null);
+    var cacheKey = 'mb_dist_' + (vendor && vendor.id) + '|' + dest.toLowerCase();
+    try {
+      var cached = root.sessionStorage && root.sessionStorage.getItem(cacheKey);
+      if (cached) {
+        var parsed = JSON.parse(cached);
+        if (parsed && isFinite(parsed.distanceMiles)) return Promise.resolve(parsed);
+      }
+    } catch (e) { /* ignore */ }
+    if (typeof root.google === 'undefined' || !root.google.maps || !root.google.maps.DistanceMatrixService) {
+      return Promise.resolve(null);
+    }
+    return new Promise(function(resolve) {
+      try {
+        var service = new root.google.maps.DistanceMatrixService();
+        service.getDistanceMatrix({
+          origins: [origin],
+          destinations: [dest],
+          travelMode: root.google.maps.TravelMode.DRIVING,
+          unitSystem: root.google.maps.UnitSystem.IMPERIAL
+        }, function(response, status) {
+          if (status !== 'OK' || !response || !response.rows || !response.rows[0]) {
+            if (root.console) root.console.warn('[mobile-barber-distance] status', status);
+            return resolve(null);
+          }
+          var el = response.rows[0].elements && response.rows[0].elements[0];
+          if (!el || el.status !== 'OK') {
+            if (root.console) root.console.warn('[mobile-barber-distance] element', el && el.status);
+            return resolve(null);
+          }
+          var meters = el.distance && el.distance.value;
+          var seconds = el.duration && el.duration.value;
+          var miles = isFinite(meters) ? meters / 1609.344 : null;
+          var minutes = isFinite(seconds) ? seconds / 60 : null;
+          if (!isFinite(miles)) return resolve(null);
+          var result = { distanceMiles: miles, travelMinutes: minutes || 0, origin: origin, dest: dest };
+          try { root.sessionStorage && root.sessionStorage.setItem(cacheKey, JSON.stringify(result)); } catch (e) {}
+          resolve(result);
+        });
+      } catch (e) {
+        if (root.console) root.console.warn('[mobile-barber-distance] error', e);
+        resolve(null);
+      }
+    });
+  }
+
   function calculateMobileBarberPrice(arg1, arg2, arg3) {
     var input = arg1 && arg1.vendor ? arg1 : {
       vendor: arg1,
@@ -952,6 +1017,7 @@
     checkMobileBarberAvailability: checkMobileBarberAvailability,
     findNextAvailableSlots: findNextAvailableSlots,
     calculateMobileBarberPrice: calculateMobileBarberPrice,
+    requestDistanceMatrix: requestDistanceMatrix,
     calculateTiming: calculateTiming,
     checkUnavailableBlocks: checkUnavailableBlocks,
     checkSameDayCutoff: checkSameDayCutoff,

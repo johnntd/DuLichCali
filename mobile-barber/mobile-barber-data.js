@@ -30,6 +30,7 @@
     'bio', 'region', 'yearsExperience', 'zipCoverage', 'travelFeeTiers',
     'wearRatePerMile', 'freeTravelMiles', 'customQuoteMiles',
     'minimumMobileVisitPrice', 'minimumHourlyTarget',
+    'homeBaseAddress',
     'geminiKey', 'openaiKey'
   ]);
 
@@ -324,6 +325,7 @@
       region: 'Orange County',
       yearsExperience: 8,
       zipCoverage: Object.freeze(['92647', '92683', '92627', '92704', '92840', '92843', '92703', '92868']),
+      homeBaseAddress: 'Westminster, CA 92683',
       travelFeeTiers: Object.freeze([
         Object.freeze({ maxMiles: 10, fee: 0 }),
         Object.freeze({ maxMiles: 20, fee: 10 }),
@@ -356,6 +358,7 @@
       region: 'Bay Area',
       yearsExperience: 10,
       zipCoverage: Object.freeze(['95112', '95122', '95050', '95051', '95035', '94085', '94040']),
+      homeBaseAddress: 'San Jose, CA 95112',
       travelFeeTiers: Object.freeze([
         Object.freeze({ maxMiles: 15, fee: 0 }),
         Object.freeze({ maxMiles: 25, fee: 10 }),

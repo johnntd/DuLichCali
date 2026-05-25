@@ -1430,21 +1430,44 @@
     if (!preview || !BOOKING || !BOOKING.calculateMobileBarberPrice) return null;
     var service = selectedManualService();
     if (!service) return null;
-    var quote = BOOKING.calculateMobileBarberPrice({
+    var draftRef = draft || getManualDraft();
+    function paintQuote(quote) {
+      preview.innerHTML = '<dl class="mb-confirmation-list">' + [
+        [t('finalSummaryService'), service.name],
+        [t('servicePriceLabel'), formatMoney(quote.baseServicePrice)],
+        [t('travelFeeLabel'), formatMoney(quote.travelFee)],
+        [t('finalSummaryPrice'), formatMoney(quote.totalPrice)]
+      ].map(function(row) {
+        return '<div><dt>' + escapeHtml(row[0]) + '</dt><dd>' + escapeHtml(row[1]) + '</dd></div>';
+      }).join('') + '</dl><p>' + escapeHtml(quote.pricingExplanation || '') + '</p>';
+      preview.hidden = false;
+    }
+    var initialQuote = BOOKING.calculateMobileBarberPrice({
       vendor: state.vendor,
       service: service,
-      address: draft || getManualDraft()
+      address: draftRef
     });
-    preview.innerHTML = '<dl class="mb-confirmation-list">' + [
-      [t('finalSummaryService'), service.name],
-      [t('servicePriceLabel'), formatMoney(quote.baseServicePrice)],
-      [t('travelFeeLabel'), formatMoney(quote.travelFee)],
-      [t('finalSummaryPrice'), formatMoney(quote.totalPrice)]
-    ].map(function(row) {
-      return '<div><dt>' + escapeHtml(row[0]) + '</dt><dd>' + escapeHtml(row[1]) + '</dd></div>';
-    }).join('') + '</dl><p>' + escapeHtml(quote.pricingExplanation || '') + '</p>';
-    preview.hidden = false;
-    return quote;
+    paintQuote(initialQuote);
+    // Kick off real-distance lookup; repaint when it lands. Guarded so the
+    // sync return value stays correct for callers that read it immediately.
+    if (typeof BOOKING.requestDistanceMatrix === 'function' && draftRef &&
+        (draftRef.address || draftRef.city)) {
+      BOOKING.requestDistanceMatrix(state.vendor, draftRef).then(function(dist) {
+        if (!dist || !isFinite(dist.distanceMiles)) return;
+        var freshQuote = BOOKING.calculateMobileBarberPrice({
+          vendor: state.vendor,
+          service: service,
+          address: draftRef,
+          distanceMiles: dist.distanceMiles,
+          travelMinutes: dist.travelMinutes
+        });
+        state.lastDistanceLookup = dist;
+        state.lastPricingQuote = freshQuote;
+        paintQuote(freshQuote);
+      }).catch(function() { /* swallow — initial fallback already painted */ });
+    }
+    state.lastPricingQuote = initialQuote;
+    return initialQuote;
   }
 
   function hasManualValues(ids) {

@@ -63,14 +63,20 @@ function runMobileBarberLandingTests(test) {
   test('Homepage Marketplace panel lists Mobile Barber through existing vendor renderer', function() {
     assertContains(homeHtml, 'id="hpFeatured"', 'homepage must keep Marketplace panel');
     assertContains(homeHtml, 'id="hpVendorCards"', 'homepage must keep vendor-card mount');
-    assertContains(homeHtml, 'style.css?v=20260526a', 'homepage must load bumped stylesheet');
-    assertContains(homeHtml, 'script.js?v=20260526a', 'homepage must load bumped script.js');
+    assertContains(homeHtml, 'style.css?v=20260526b', 'homepage must load bumped stylesheet');
+    assertContains(homeHtml, 'script.js?v=20260526b', 'homepage must load bumped script.js');
     assertContains(homeJs, 'HOMEPAGE_MARKETPLACE_ENTRIES');
-    assertContains(homeJs, "name: 'Mobile Barber'");
-    assertContains(homeJs, "shortPromoText: 'In-home haircuts. We come to you.'");
-    assertContains(homeJs, "ctaText: 'Book Mobile Barber'");
-    assertContains(homeJs, "href: 'https://www.dulichcali21.com/mobile-barber'");
+    // Region-scoped: Michael in OC, Tim in Bay Area
+    assertContains(homeJs, "id: 'mobile-barber-michael-oc'");
+    assertContains(homeJs, "name: 'Michael Mobile Barber OC'");
+    assertContains(homeJs, "featuredRegions: ['oc']");
+    assertContains(homeJs, "href: 'https://www.dulichcali21.com/mobile-barber/vendor/michael-nguyen-oc'");
+    assertContains(homeJs, "id: 'mobile-barber-tim-bayarea'");
+    assertContains(homeJs, "name: 'Tim Mobile Barber Bay Area'");
+    assertContains(homeJs, "featuredRegions: ['bayarea']");
+    assertContains(homeJs, "href: 'https://www.dulichcali21.com/mobile-barber/vendor/tim-nguyen-bay'");
     assertContains(homeJs, "heroImage: '/assets/mobile-barber/styles/classic-haircut.jpg'");
+    assertContains(homeJs, "heroImage: '/assets/mobile-barber/styles/fade-haircut.jpg'");
     assertContains(homeJs, 'vendors = _withHomepageMarketplaceEntries(vendors, regionId).slice(0, 8)');
     assertContains(homeJs, 'container.innerHTML = vendors.map(buildVendorCardHtml).join');
     assertContains(homeJs, 'class="hp-vendor-card" role="listitem" href="${href}"');

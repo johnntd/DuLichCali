@@ -1691,19 +1691,36 @@ const _CAT_PATHS = { nails: 'nailsalon/', hair: 'hairsalon/', food: 'foods/', ba
 
 const HOMEPAGE_MARKETPLACE_ENTRIES = [
   {
-    id: 'mobile-barber-homepage',
+    id: 'mobile-barber-michael-oc',
     category: 'barber',
     active: true,
     homepageActive: true,
     featuredPriority: 1.5,
-    featuredRegions: ['oc', 'bayarea', 'la'],
-    name: 'Mobile Barber',
-    city: 'Southern California',
-    shortPromoText: 'In-home haircuts. We come to you.',
+    featuredRegions: ['oc'],
+    name: 'Michael Mobile Barber OC',
+    city: 'Orange County',
+    shortPromoText: 'In-home haircuts in OC. Michael comes to you.',
     heroImage: '/assets/mobile-barber/styles/classic-haircut.jpg',
     heroGradient: 'linear-gradient(135deg,#052e2b 0%,#0f766e 50%,#172554 100%)',
-    href: 'https://www.dulichcali21.com/mobile-barber',
-    ctaText: 'Book Mobile Barber',
+    href: 'https://www.dulichcali21.com/mobile-barber/vendor/michael-nguyen-oc',
+    ctaText: 'Book Michael',
+    availabilityLabel: 'Book Now',
+    availabilityStatus: 'now'
+  },
+  {
+    id: 'mobile-barber-tim-bayarea',
+    category: 'barber',
+    active: true,
+    homepageActive: true,
+    featuredPriority: 1.5,
+    featuredRegions: ['bayarea'],
+    name: 'Tim Mobile Barber Bay Area',
+    city: 'Bay Area',
+    shortPromoText: 'In-home haircuts in the Bay Area. Tim comes to you.',
+    heroImage: '/assets/mobile-barber/styles/fade-haircut.jpg',
+    heroGradient: 'linear-gradient(135deg,#052e2b 0%,#0f766e 50%,#172554 100%)',
+    href: 'https://www.dulichcali21.com/mobile-barber/vendor/tim-nguyen-bay',
+    ctaText: 'Book Tim',
     availabilityLabel: 'Book Now',
     availabilityStatus: 'now'
   }

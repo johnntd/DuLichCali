@@ -50,11 +50,32 @@ function runMobileBarberLandingTests(test) {
   var functionsJs = read('functions/index.js');
   var firebase = read('firebase.json');
   var firestoreRules = read('firestore.rules');
+  var homeHtml = read('index.html');
+  var homeJs = read('script.js');
+  var homeCss = read('style.css');
 
   test('Mobile Barber route has a static index page', function() {
     assertContains(html, 'id="mobileBarberApp"');
     assertContains(firebase, '"source": "/mobile-barber"');
     assertContains(firebase, '"destination": "/mobile-barber/index.html"');
+  });
+
+  test('Homepage Marketplace panel lists Mobile Barber through existing vendor renderer', function() {
+    assertContains(homeHtml, 'id="hpFeatured"', 'homepage must keep Marketplace panel');
+    assertContains(homeHtml, 'id="hpVendorCards"', 'homepage must keep vendor-card mount');
+    assertContains(homeHtml, 'style.css?v=20260526a', 'homepage must load bumped stylesheet');
+    assertContains(homeHtml, 'script.js?v=20260526a', 'homepage must load bumped script.js');
+    assertContains(homeJs, 'HOMEPAGE_MARKETPLACE_ENTRIES');
+    assertContains(homeJs, "name: 'Mobile Barber'");
+    assertContains(homeJs, "shortPromoText: 'In-home haircuts. We come to you.'");
+    assertContains(homeJs, "ctaText: 'Book Mobile Barber'");
+    assertContains(homeJs, "href: 'https://www.dulichcali21.com/mobile-barber'");
+    assertContains(homeJs, "heroImage: '/assets/mobile-barber/styles/classic-haircut.jpg'");
+    assertContains(homeJs, 'vendors = _withHomepageMarketplaceEntries(vendors, regionId).slice(0, 8)');
+    assertContains(homeJs, 'container.innerHTML = vendors.map(buildVendorCardHtml).join');
+    assertContains(homeJs, 'class="hp-vendor-card" role="listitem" href="${href}"');
+    assertContains(homeCss, '.hp-vendor-card__cta');
+    assertContains(homeCss, 'flex: 0 0 calc(72% - .5rem)');
   });
 
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {

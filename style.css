@@ -940,6 +940,8 @@ gmp-placeautocomplete.field-input::part(input):focus {
   scroll-snap-align: start;
   cursor: pointer;
   transition: transform .18s ease, border-color .2s ease;
+  color: inherit;
+  text-decoration: none;
 }
 .hp-vendor-card:hover {
   transform: translateY(-2px);
@@ -1016,6 +1018,21 @@ gmp-placeautocomplete.field-input::part(input):focus {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+.hp-vendor-card__cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  margin-top: .55rem;
+  padding: .32rem .62rem;
+  border-radius: 999px;
+  background: rgba(245,166,35,.14);
+  border: 1px solid rgba(245,166,35,.34);
+  color: var(--gold);
+  font-size: .62rem;
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
 /* Availability chip row */

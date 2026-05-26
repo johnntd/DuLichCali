@@ -1673,8 +1673,8 @@ function getFeaturedVendors(regionId) {
     .sort((a, b) => (a.featuredPriority || 99) - (b.featuredPriority || 99));
 }
 
-function _hpCatLabel(c)  { return { nails: 'Nail Salon', hair: 'Hair Salon', food: 'Food' }[c] || c; }
-function _hpCatAccent(c) { return { nails: '#f472b6', hair: '#38bdf8', food: '#f59e0b' }[c] || 'var(--gold)'; }
+function _hpCatLabel(c)  { return { nails: 'Nail Salon', hair: 'Hair Salon', food: 'Food', barber: 'Mobile Barber' }[c] || c; }
+function _hpCatAccent(c) { return { nails: '#f472b6', hair: '#38bdf8', food: '#f59e0b', barber: '#22c55e' }[c] || 'var(--gold)'; }
 
 // Normalize a vendor region string to a region ID ('oc', 'bayarea', 'la', …)
 function _regionMatchesId(regionStr, regionId) {
@@ -1687,20 +1687,61 @@ function _regionMatchesId(regionStr, regionId) {
 }
 
 // ── HTML builders ─────────────────────────────────────────────
-const _CAT_PATHS = { nails: 'nailsalon/', hair: 'hairsalon/', food: 'foods/' };
+const _CAT_PATHS = { nails: 'nailsalon/', hair: 'hairsalon/', food: 'foods/', barber: 'https://www.dulichcali21.com/mobile-barber' };
+
+const HOMEPAGE_MARKETPLACE_ENTRIES = [
+  {
+    id: 'mobile-barber-homepage',
+    category: 'barber',
+    active: true,
+    homepageActive: true,
+    featuredPriority: 1.5,
+    featuredRegions: ['oc', 'bayarea', 'la'],
+    name: 'Mobile Barber',
+    city: 'Southern California',
+    shortPromoText: 'In-home haircuts. We come to you.',
+    heroImage: '/assets/mobile-barber/styles/classic-haircut.jpg',
+    heroGradient: 'linear-gradient(135deg,#052e2b 0%,#0f766e 50%,#172554 100%)',
+    href: 'https://www.dulichcali21.com/mobile-barber',
+    ctaText: 'Book Mobile Barber',
+    availabilityLabel: 'Book Now',
+    availabilityStatus: 'now'
+  }
+];
+
+function _withHomepageMarketplaceEntries(vendors, regionId) {
+  const list = Array.isArray(vendors) ? vendors.slice() : [];
+  HOMEPAGE_MARKETPLACE_ENTRIES.forEach(entry => {
+    if (!entry.active || !entry.homepageActive || !_isVendorActive(entry.id)) return;
+    if (regionId && !(entry.featuredRegions || []).includes(regionId)) return;
+    const exists = list.some(v =>
+      v.id === entry.id ||
+      v.href === entry.href ||
+      (v.category === entry.category && v.name === entry.name)
+    );
+    if (!exists) list.push(entry);
+  });
+  return list.sort((a, b) =>
+    ((a.featuredPriority || 99) - (b.featuredPriority || 99)) ||
+    String(a.name || '').localeCompare(String(b.name || ''))
+  );
+}
 
 function buildVendorCardHtml(biz) {
-  const avail  = computeBizAvailability(biz);
+  const avail  = biz.availabilityLabel
+    ? { status: biz.availabilityStatus || 'now', label: biz.availabilityLabel, sublabel: '' }
+    : computeBizAvailability(biz);
   const accent = _hpCatAccent(biz.category);
   const catPath = _CAT_PATHS[biz.category] || ('marketplace/index.html?cat=' + biz.category);
-  const href   = biz.id ? catPath + '?id=' + biz.id : catPath;
+  const href   = biz.href || (biz.id ? catPath + '?id=' + biz.id : catPath);
   const bg     = biz.heroImage
     ? `background:${biz.heroGradient};background-image:url(${biz.heroImage});background-size:cover;background-position:center`
     : `background:${biz.heroGradient}`;
   const trk = `HomepagePersonalizer.track('${biz.category}')`;
+  const cta = biz.ctaText ? `<span class="hp-vendor-card__cta">${biz.ctaText}</span>` : '';
 
-  return `<div class="hp-vendor-card" role="listitem"
-    onclick="${trk}; window.location.href='${href}'">
+  return `<a class="hp-vendor-card" role="listitem" href="${href}"
+    onclick="${trk}">
     <div class="hp-vendor-card__img" style="${bg}">
       <span class="hp-vendor-card__cat" style="--cat-accent:${accent}">${_hpCatLabel(biz.category)}</span>
       <span class="hp-avail-badge hp-avail-badge--${avail.status}">${avail.label}</span>
@@ -1709,8 +1750,9 @@ function buildVendorCardHtml(biz) {
       <div class="hp-vendor-card__name">${biz.name}</div>
       <div class="hp-vendor-card__city">${biz.city}</div>
       <div class="hp-vendor-card__promo">${biz.shortPromoText || biz.tagline}</div>
+      ${cta}
     </div>
-  </div>`;
+  </a>`;
 }
 
 function buildAvailChipHtml(label, sublabel, status, onclick) {
@@ -1784,11 +1826,7 @@ async function renderHomepageVendors(regionId) {
       });
     });
 
-    // Sort: lower featuredPriority = higher on page; tie-break alphabetically
-    vendors.sort((a, b) =>
-      (a.featuredPriority - b.featuredPriority) || a.name.localeCompare(b.name)
-    );
-    vendors = vendors.slice(0, 8);
+    vendors = _withHomepageMarketplaceEntries(vendors, regionId).slice(0, 8);
 
   } catch (_) {
     // Firestore unavailable — fall back to static marketplace data
@@ -1797,8 +1835,8 @@ async function renderHomepageVendors(regionId) {
         .filter(b => b.active && b.homepageActive &&
           (!regionId || (b.featuredRegions || []).includes(regionId)) &&
           _isVendorActive(b.id))
-        .sort((a, b) => (a.featuredPriority || 99) - (b.featuredPriority || 99))
-        .slice(0, 8);
+        .sort((a, b) => (a.featuredPriority || 99) - (b.featuredPriority || 99));
+      vendors = _withHomepageMarketplaceEntries(vendors, regionId).slice(0, 8);
     }
   }
 
@@ -1927,6 +1965,7 @@ function renderAllHomepageVendors() {
   var vendors = MARKETPLACE.businesses
     .filter(function(b) { return b.active && b.homepageActive && _isVendorActive(b.id); })
     .sort(function(a, b) { return (a.featuredPriority || 99) - (b.featuredPriority || 99); });
+  vendors = _withHomepageMarketplaceEntries(vendors, null);
   if (!vendors.length) return;
   container.innerHTML = vendors.map(buildVendorCardHtml).join('');
   if (section) section.hidden = false;

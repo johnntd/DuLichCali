@@ -21,24 +21,40 @@
 
 .mb-language {
   position: sticky;
-  top: .75rem;
+  top: max(.4rem, env(safe-area-inset-top));
   z-index: var(--z-float);
   display: flex;
   justify-content: flex-end;
-  gap: .35rem;
-  margin-bottom: 1rem;
+  gap: .25rem;
+  margin-bottom: .35rem;
 }
 
 .mb-language__button {
-  min-width: 2.65rem;
-  min-height: 2.25rem;
-  border: 1px solid rgba(255, 255, 255, .18);
-  border-radius: var(--r-sm);
-  background: rgba(8, 28, 48, .72);
+  min-width: 2.15rem;
+  min-height: 1.9rem;
+  padding: 0 .55rem;
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 999px;
+  background: rgba(8, 28, 48, .82);
   color: var(--muted);
   font-weight: 700;
+  font-size: var(--text-xs);
+  letter-spacing: .04em;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+}
+
+@media (min-width: 680px) {
+  .mb-language {
+    top: .75rem;
+    gap: .35rem;
+    margin-bottom: 1rem;
+  }
+  .mb-language__button {
+    min-width: 2.65rem;
+    min-height: 2.25rem;
+    border-radius: var(--r-sm);
+  }
 }
 
 .mb-language__button--active {
@@ -49,15 +65,24 @@
 
 .mb-hero {
   display: grid;
-  gap: 1.4rem;
+  gap: .85rem;
   align-content: start;
   animation: mbFadeUp .55s ease both;
+  min-height: 100svh;
+  padding-bottom: .5rem;
+}
+
+@media (min-width: 680px) {
+  .mb-hero {
+    gap: 1.4rem;
+    min-height: auto;
+  }
 }
 
 .mb-hero__media {
   position: relative;
-  min-height: 22dvh;
-  max-height: 28dvh;
+  min-height: 340px;
+  max-height: 420px;
   border-radius: var(--r-md);
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, .12);
@@ -66,7 +91,7 @@
 }
 
 @media (min-width: 480px) {
-  .mb-hero__media { min-height: 28dvh; max-height: 36dvh; }
+  .mb-hero__media { min-height: 380px; max-height: 460px; }
 }
 
 @media (min-width: 680px) {
@@ -178,7 +203,11 @@
 
 .mb-hero__body {
   display: grid;
-  gap: .85rem;
+  gap: .55rem;
+}
+
+@media (min-width: 680px) {
+  .mb-hero__body { gap: .85rem; }
 }
 
 .mb-kicker {
@@ -190,12 +219,13 @@
 }
 
 .mb-hero__title {
-  max-width: 18ch;
+  max-width: 20ch;
   color: var(--cream);
   font-family: var(--font-d);
-  font-size: 2.1rem;
-  line-height: 1;
+  font-size: 1.65rem;
+  line-height: 1.05;
   font-weight: 400;
+  margin: 0;
 }
 
 @media (min-width: 480px) {
@@ -209,23 +239,55 @@
 .mb-hero__copy {
   max-width: 34rem;
   color: var(--text);
-  font-size: var(--text-sm);
-  line-height: var(--leading-snug);
+  font-size: var(--text-xs);
+  line-height: 1.35;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 @media (min-width: 480px) {
+  .mb-hero__copy {
+    font-size: var(--text-sm);
+    line-height: var(--leading-snug);
+    -webkit-line-clamp: unset;
+    display: block;
+    overflow: visible;
+  }
+}
+
+@media (min-width: 680px) {
   .mb-hero__copy { font-size: var(--text-md); line-height: var(--leading-relaxed); }
 }
 
 .mb-hero__actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: .6rem;
+  grid-template-columns: 1fr;
+  grid-template-areas: 'primary' 'chat' 'talk';
+  gap: .5rem;
   margin-top: .35rem;
 }
+.mb-hero__actions > :nth-child(1) { grid-area: primary; min-height: 48px; }
+.mb-hero__actions > :nth-child(2) { grid-area: chat;    min-height: 44px; }
+.mb-hero__actions > :nth-child(3) { grid-area: talk;    min-height: 44px; }
 
-@media (max-width: 380px) {
-  .mb-hero__actions { grid-template-columns: 1fr; }
+@media (min-width: 380px) {
+  .mb-hero__actions {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      'primary primary'
+      'chat    talk';
+    gap: .55rem;
+  }
+}
+
+@media (min-width: 680px) {
+  .mb-hero__actions {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'primary' 'chat' 'talk';
+  }
 }
 
 .mb-button,
@@ -445,6 +507,36 @@
   border-radius: var(--r-md);
   background: rgba(255, 255, 255, .06);
   box-shadow: var(--shadow-sm);
+}
+
+/* Location gate sits inside .mb-hero__body. On mobile keep it visually
+   light so it doesn't dominate the first screen. Title and copy collapse
+   to a single compact label; users still see the city/zip inputs. */
+#mbLocationGate {
+  padding: .75rem .85rem;
+  margin-top: .65rem;
+  background: rgba(255, 255, 255, .03);
+  border-color: rgba(255, 255, 255, .08);
+  display: grid;
+  gap: .55rem;
+}
+#mbLocationGate h2 {
+  font-size: var(--text-sm);
+  margin: 0;
+  line-height: 1.2;
+}
+#mbLocationGate > div > .mb-kicker { display: none; }
+#mbLocationGate #mbLocationGateCopy { display: none; }
+#mbLocationGate .mb-field { gap: .2rem; }
+#mbLocationGate .mb-form-actions { margin-top: .15rem; }
+
+@media (min-width: 680px) {
+  #mbLocationGate {
+    padding: 1rem 1.1rem;
+  }
+  #mbLocationGate h2 { font-size: var(--text-md); }
+  #mbLocationGate > div > .mb-kicker,
+  #mbLocationGate #mbLocationGateCopy { display: block; }
 }
 
 .mb-trust article {

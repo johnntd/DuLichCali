@@ -888,6 +888,19 @@
   z-index: 2;
 }
 
+/* Single-image style preview cards — replaces the unreliable before/after
+   pairs. One curated AI photo per category, clearly labeled as a preview. */
+.mb-style-preview-card__media {
+  position: relative;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background-color: #0a233d;
+  background-size: cover;
+  background-position: center 32%;
+  background-repeat: no-repeat;
+}
+
 @keyframes mbPromoCardLift {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }

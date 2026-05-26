@@ -37,9 +37,10 @@
       promoTitle: 'Latest AI Haircut Styles',
       promoCopy: 'Swipe through fade, taper, beard trim, kids cut, business cut, senior cut, line up, and family package previews.',
       promoCta: 'Book an in-home haircut today',
-      beforeAfterKicker: 'Before / after',
-      beforeAfterTitle: 'AI-generated haircut transformations',
-      beforeAfterCopy: 'Preview clean mobile haircut results before real barber portfolio photos are uploaded.',
+      beforeAfterKicker: 'Style previews',
+      beforeAfterTitle: 'AI-generated mobile barber style previews',
+      beforeAfterCopy: 'Curated AI previews of mobile barber styles. Real barber portfolio photos coming soon.',
+      stylePreviewSuffix: 'Style Preview',
       convenienceKicker: 'Convenience',
       convenienceTitle: 'Mobile Haircut Convenience',
       promoClipsKicker: 'Promo clips',
@@ -120,9 +121,10 @@
       promoTitle: 'Kiểu tóc AI mới nhất',
       promoCopy: 'Lướt qua fade, taper, tỉa râu, cắt tóc trẻ em, kiểu công sở, người lớn tuổi, line up, và gói gia đình.',
       promoCta: 'Đặt lịch cắt tóc tại nhà hôm nay',
-      beforeAfterKicker: 'Trước / sau',
-      beforeAfterTitle: 'Mẫu biến đổi kiểu tóc do AI tạo',
-      beforeAfterCopy: 'Xem trước kết quả cắt tóc lưu động trước khi portfolio thật của thợ được cập nhật.',
+      beforeAfterKicker: 'Mẫu kiểu tóc',
+      beforeAfterTitle: 'Mẫu kiểu tóc thợ cắt tại nhà do AI tạo',
+      beforeAfterCopy: 'Mẫu kiểu tóc thợ cắt tại nhà do AI tạo. Hình thật của thợ sẽ được cập nhật sau.',
+      stylePreviewSuffix: 'Mẫu Kiểu Tóc',
       convenienceKicker: 'Tiện lợi',
       convenienceTitle: 'Sự tiện lợi của cắt tóc lưu động',
       promoClipsKicker: 'Clip quảng bá',
@@ -203,9 +205,10 @@
       promoTitle: 'Últimos estilos de corte AI',
       promoCopy: 'Desliza por fade, taper, barba, niños, corte ejecutivo, senior, line up, y paquete familiar.',
       promoCta: 'Reservar corte en casa hoy',
-      beforeAfterKicker: 'Antes / después',
-      beforeAfterTitle: 'Transformaciones de corte generadas por AI',
-      beforeAfterCopy: 'Vea resultados de barbero móvil antes de que se suba el portafolio real.',
+      beforeAfterKicker: 'Estilos de muestra',
+      beforeAfterTitle: 'Estilos de barbero móvil generados por AI',
+      beforeAfterCopy: 'Vistas previas curadas de estilos de barbero móvil. Las fotos reales del portafolio del barbero estarán disponibles pronto.',
+      stylePreviewSuffix: 'Vista de Estilo',
       convenienceKicker: 'Conveniencia',
       convenienceTitle: 'Conveniencia del corte móvil',
       promoClipsKicker: 'Clips promocionales',
@@ -877,81 +880,42 @@
     });
   }
 
-  function renderBeforeAfterGallery() {
+  function renderStylePreviewGallery() {
+    // Truth-first replacement for the old before/after gallery.
+    // The image-to-image identity lock for AI before/after pairs is not
+    // reliable enough to claim 'same person'. Showing one curated style
+    // preview per category avoids misleading the customer until a real
+    // barber portfolio is uploaded.
     var list = document.getElementById('mbBeforeAfterGallery');
     if (!list) return;
     list.innerHTML = '';
-    var rows = [];
-    if (DATA && DATA.listPortfolioForVendor) {
-      (DATA.sampleVendors || []).filter(function(vendor) {
-        return vendor.active !== false;
-      }).forEach(function(vendor) {
-        DATA.listPortfolioForVendor(vendor.id).forEach(function(image) {
-          if (image.active !== false && image.hidden !== true && image.isAIGenerated === true) {
-            rows.push(image);
-          }
-        });
-      });
-      rows = rows.sort(function(a, b) {
-        return (a.displayOrder || 999) - (b.displayOrder || 999);
-      }).slice(0, 6);
-    }
-    rows.forEach(function(image) {
-      var card = el('article', 'mb-portfolio-card mb-portfolio-card--ai-sample');
-      var categoryImage = DATA && DATA.findServiceImageByPortfolioCategory
-        ? DATA.findServiceImageByPortfolioCategory(image.category)
-        : null;
+    var templates = (DATA && typeof DATA.listStyleTemplates === 'function')
+      ? DATA.listStyleTemplates()
+      : [];
+    var picked = templates.filter(function(tmpl) {
+      return tmpl && tmpl.active !== false && tmpl.imageUrl;
+    }).slice(0, 6);
 
-      if (image.clipUrl) {
-        // Single transformation video — replaces the two static stills because
-        // the crossfade already shows before → after better than dual frames.
-        var clipWrap = el('div', 'mb-portfolio-card__clip');
-        var clipBadge = el('span', 'mb-portfolio-card__ai-badge mb-portfolio-card__ai-badge--clip');
-        clipBadge.textContent = 'AI preview';
-        var video = document.createElement('video');
-        video.src = image.clipUrl;
-        video.poster = image.afterImageUrl || image.imageUrl || '';
-        video.autoplay = true;
-        video.loop = true;
-        video.muted = true;
-        video.playsInline = true;
-        video.setAttribute('playsinline', '');
-        video.setAttribute('preload', 'metadata');
-        video.setAttribute('aria-label', (image.title || '') + ' before and after preview');
-        clipWrap.appendChild(video);
-        clipWrap.appendChild(clipBadge);
-        card.appendChild(clipWrap);
-      } else {
-        // Static fallback when no clip is available.
-        var media = el('div', 'mb-portfolio-card__compare');
-        var slots = [
-          ['Before', 'before', image.beforeImageUrl],
-          ['After', 'after', image.afterImageUrl]
-        ];
-        slots.forEach(function(pair) {
-          var wrap = el('figure', 'mb-portfolio-card__ai-frame mb-portfolio-card__ai-frame--' + pair[1]);
-          var badge = el('span', 'mb-portfolio-card__ai-badge');
-          var caption = el('figcaption');
-          badge.textContent = 'AI preview';
-          caption.textContent = pair[0];
-          var url = pair[2] || (categoryImage && categoryImage.imageUrl) || '';
-          if (url) {
-            wrap.style.backgroundImage = "url('" + url + "')";
-            wrap.setAttribute('aria-label', image.alt || image.title);
-          }
-          wrap.appendChild(badge);
-          wrap.appendChild(caption);
-          media.appendChild(wrap);
-        });
-        card.appendChild(media);
+    picked.forEach(function(tmpl) {
+      var card = el('article', 'mb-portfolio-card mb-portfolio-card--ai-sample mb-style-preview-card');
+
+      var media = el('div', 'mb-style-preview-card__media');
+      var badge = el('span', 'mb-portfolio-card__ai-badge mb-portfolio-card__ai-badge--clip');
+      badge.textContent = 'AI preview';
+      media.appendChild(badge);
+      if (tmpl.imageUrl) {
+        media.style.backgroundImage = "url('" + tmpl.imageUrl + "')";
+        media.setAttribute('role', 'img');
+        media.setAttribute('aria-label', tmpl.imageAlt || tmpl.title || '');
       }
+      card.appendChild(media);
 
       var chip = el('span', 'mb-portfolio-card__category');
       var title = el('h3');
       var desc = el('p');
-      chip.textContent = image.category || 'style';
-      title.textContent = image.title || '';
-      desc.textContent = image.description || t('aiPreviewDisclosure');
+      chip.textContent = tmpl.category || 'style';
+      title.textContent = (tmpl.title || '') + ' — ' + t('stylePreviewSuffix');
+      desc.textContent = t('aiPreviewDisclosure');
       card.appendChild(chip);
       card.appendChild(title);
       card.appendChild(desc);
@@ -1071,7 +1035,7 @@
     document.querySelector('[data-action="voice"]').setAttribute('aria-label', t('talkAssistant'));
     setText(document);
     renderPromoPreview();
-    renderBeforeAfterGallery();
+    renderStylePreviewGallery();
     renderConvenience();
     renderPromoClips();
     renderServices();

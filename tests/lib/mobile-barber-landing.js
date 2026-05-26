@@ -85,12 +85,12 @@ function runMobileBarberLandingTests(test) {
   });
 
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
-    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260525aa');
+    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260525ab');
     assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260525f');
     assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260525ac');
     assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260525h');
     assertContains(html, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
-    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260525ab');
+    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260525ac');
   });
 
   test('Mobile Barber pages load Firebase before local runtime scripts', function() {
@@ -190,7 +190,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(html, 'data-i18n="convenienceTitle"');
     assertContains(html, 'id="mbPromoClips"');
     assertContains(html, 'data-i18n="promoClipsTitle"');
-    assertContains(js, 'renderBeforeAfterGallery');
+    assertContains(js, 'renderStylePreviewGallery');
     assertContains(js, 'renderConvenience');
     assertContains(js, 'renderPromoClips');
     assertContains(js, 'Video generation is not wired');
@@ -198,9 +198,16 @@ function runMobileBarberLandingTests(test) {
     assertContains(css, 'mb-convenience-grid');
     assertContains(css, 'mb-promo-clips__track');
     assertContains(css, 'mbPromoPulse');
-    var galleryFn = js.slice(js.indexOf('function renderBeforeAfterGallery'), js.indexOf('function renderConvenience'));
-    assertNotContains(galleryFn, 'MICHAEL_VENDOR_ID', 'before-after gallery must blend active vendors');
-    assertContains(galleryFn, 'DATA.listPortfolioForVendor(vendor.id)');
+    var galleryFn = js.slice(js.indexOf('function renderStylePreviewGallery'), js.indexOf('function renderConvenience'));
+    assertNotContains(galleryFn, "['Before', 'before'", 'gallery must not render before/after pairs');
+    assertNotContains(galleryFn, 'beforeImageUrl', 'gallery must not read before image url');
+    assertNotContains(galleryFn, 'afterImageUrl', 'gallery must not read after image url');
+    assertContains(galleryFn, 'DATA.listStyleTemplates', 'gallery must source from canonical style templates');
+    assertContains(galleryFn, 'mb-style-preview-card', 'gallery must use single-image preview card class');
+    assertContains(css, '.mb-style-preview-card__media');
+    assertContains(js, "stylePreviewSuffix: 'Style Preview'");
+    assertContains(js, "stylePreviewSuffix: 'Mẫu Kiểu Tóc'");
+    assertContains(js, "stylePreviewSuffix: 'Vista de Estilo'");
   });
 
   test('Mobile Barber page does not duplicate global bottom navigation', function() {
@@ -220,7 +227,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/vendor/**"');
     assertContains(firebase, '"destination": "/mobile-barber/vendor.html"');
     assertContains(vendorHtml, 'id="mobileBarberVendorApp"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260525aa');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260525ab');
     assertContains(vendorHtml, 'id="mbVendorName"');
     assertContains(vendorHtml, 'id="mbVendorServices"');
     assertContains(vendorHtml, 'id="mbBookingTitle"');
@@ -484,7 +491,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260525f');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260525ac');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260525e');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260525aa');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260525ab');
     assertContains(dashboardHtml, 'firebase-auth-compat.js');
     assertContains(dashboardHtml, '/notifications.js?v=20260525a');
     assertContains(dashboardHtml, 'id="mbBookingAlertRegion"');

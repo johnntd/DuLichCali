@@ -537,18 +537,14 @@
 
 /* Single-field flow: ZIP only. JS auto-fills the city from the ZIP. The
    city field is kept in the DOM (the form still reads it as a fallback)
-   but hidden from view to keep the form tight on every viewport. */
-#mbLocationGate label.mb-field:has(#mbLocationCity) {
-  display: none;
+   but hidden from view to keep the form tight on every viewport.
+   Using :first-of-type so this works without :has() — city is always
+   the first .mb-field child of the form. */
+#mbLocationGate #mbLocationGateForm > label.mb-field:first-of-type {
+  display: none !important;
 }
 #mbLocationCity {
-  visibility: hidden;
-  height: 0;
-  padding: 0;
-  border: 0;
-  margin: 0;
-  position: absolute;
-  pointer-events: none;
+  display: none !important;
 }
 
 @media (min-width: 680px) {
@@ -579,36 +575,41 @@
   #mbLocationGate #mbLocationGateCopy { display: none; }
   #mbLocationGate #mbLocationGateForm {
     display: grid;
-    grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+    grid-template-columns: 11rem minmax(11rem, 14rem) 1fr;
+    grid-template-areas:
+      'zip submit change';
     gap: .55rem .75rem;
     align-items: end;
     width: 100%;
     box-sizing: border-box;
   }
-  #mbLocationGate #mbLocationGateForm .mb-field { min-width: 0; }
+  /* Single visible field (ZIP) goes into the 'zip' column.
+     The hidden city .mb-field is display: none and skipped by grid. */
+  #mbLocationGate #mbLocationGateForm > .mb-field {
+    grid-area: zip;
+    min-width: 0;
+  }
   #mbLocationGate #mbLocationGateForm .mb-field input { min-width: 0; width: 100%; }
+  /* Let the two buttons inside .mb-form-actions participate directly in
+     the parent grid so each lands in its own column without overflow. */
   #mbLocationGate #mbLocationGateForm .mb-form-actions {
-    grid-column: 1 / -1;
-    display: flex;
-    flex-wrap: wrap;
-    gap: .55rem;
-    align-items: center;
-    margin-top: .25rem;
-    width: 100%;
+    display: contents;
   }
   #mbLocationGate #mbLocationGateForm .mb-form-actions > [type="submit"] {
-    flex: 0 0 auto;
-    min-width: 10rem;
-    max-width: 14rem;
+    grid-area: submit;
+    align-self: end;
     height: 2.8rem;
-    padding: 0 1.4rem;
+    padding: 0 1.2rem;
+    width: 100%;
   }
   #mbLocationGate #mbLocationGateForm .mb-form-actions > [data-action="changeLocation"] {
-    margin-left: auto;
+    grid-area: change;
+    align-self: end;
+    justify-self: end;
     height: 2.4rem;
     padding: 0 .9rem;
     font-size: var(--text-xs);
-    flex: 0 0 auto;
+    width: max-content;
   }
 }
 

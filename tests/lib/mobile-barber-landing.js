@@ -86,9 +86,9 @@ function runMobileBarberLandingTests(test) {
 
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
     assertContains(html, '/mobile-barber/mobile-barber.css?v=20260525aj');
-    assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260525g');
+    assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260525h');
     assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260525ac');
-    assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260525h');
+    assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260525i');
     assertContains(html, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
     assertContains(html, '/mobile-barber/mobile-barber.js?v=20260525ae');
   });
@@ -234,10 +234,10 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorHtml, 'id="mbVendorPromoTitle"');
     assertContains(vendorHtml, 'id="mbSelectedServiceSummary"');
     assertContains(vendorHtml, 'class="mb-mobile-sticky-cta"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260525g');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260525h');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260525ac');
     assertContains(vendorHtml, '/ai-engine.js?v=20260524a');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-agent.js?v=20260525h');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-agent.js?v=20260525i');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
     assertContains(vendorHtml, 'firebase-functions-compat.js');
     assertContains(vendorHtml, '/notifications.js?v=20260525a');
@@ -488,7 +488,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/dashboard"');
     assertContains(firebase, '"destination": "/mobile-barber/dashboard.html"');
     assertContains(dashboardHtml, 'id="mobileBarberDashboardApp"');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260525g');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260525h');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260525ac');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260525e');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260525aj');

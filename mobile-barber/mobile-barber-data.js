@@ -284,7 +284,7 @@
     Object.freeze({
       id: SAMPLE_VENDOR_ID,
       businessName: 'OC Mobile Barber Demo',
-      barberName: 'Daniel Nguyen',
+      barberName: 'Demo Barber',
       phone: '(714) 555-0148',
       email: 'demo-mobile-barber@dulichcali21.com',
       profilePhoto: '/assets/mobile-barber/profile-placeholder.jpg',
@@ -294,7 +294,7 @@
       baseTravelFee: 15,
       addressOptional: true,
       languages: Object.freeze(['en', 'vi']),
-      active: true,
+      active: false,
       rating: 4.9,
       reviewCount: 2,
       serviceBadges: Object.freeze(['fade', 'beardTrim', 'kidsCut', 'seniorCut', 'vietnameseSpeaking', 'spanishSpeaking']),

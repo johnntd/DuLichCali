@@ -33,7 +33,10 @@ function runMobileBarberDataModelTests(test) {
     var vendor = MobileBarberData.findVendorById(MobileBarberData.SAMPLE_VENDOR_ID);
     var result = MobileBarberData.validateVendor(vendor);
     assert(vendor, 'sample vendor missing');
-    assertEq(vendor.active, true);
+    // Demo vendor is intentionally inactive so it doesn't show on the
+    // public landing/homepage — only Michael + Tim are real barbers.
+    // It still loads + validates so test fixtures keep working.
+    assertEq(vendor.active, false);
     assertEq(result.valid, true, result.errors.join('; '));
     assert(vendor.serviceAreas.length >= 1, 'sample vendor needs service areas');
     assert(vendor.serviceBadges.indexOf('fade') >= 0, 'sample vendor needs service badges');

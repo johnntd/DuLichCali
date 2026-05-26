@@ -407,7 +407,6 @@
       update.addressConfirmed = true;
     }
     if (/\bjohn\b/i.test(message)) update.barberPreference = 'John';
-    if (/\bdaniel\b/i.test(message)) update.barberPreference = 'Daniel Nguyen';
     if (/\btim\b/i.test(message)) update.barberPreference = 'Tim Nguyen';
     if (/\bmichael\b/i.test(message)) update.barberPreference = 'Michael Nguyen';
     if (/\b(style|kiểu|estilo|fade|beard|râu|barba)\b/i.test(lower)) update.notes = trim(message);

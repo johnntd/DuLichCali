@@ -30,7 +30,7 @@ function context(overrides) {
 function runMobileBarberAgentTests(test) {
   test('Mobile Barber AI agent builds vendor-scoped prompt with booking guardrails', function() {
     var prompt = MobileBarberAgent.buildPrompt(context(), 'en');
-    assert(prompt.indexOf('Vendor scope: OC Mobile Barber Demo / Daniel Nguyen') >= 0, 'prompt must be vendor scoped');
+    assert(prompt.indexOf('Vendor scope: OC Mobile Barber Demo / Demo Barber') >= 0, 'prompt must be vendor scoped');
     assert(prompt.indexOf('Never invent availability') >= 0, 'prompt must forbid invented availability');
     assert(prompt.indexOf('[SYSTEM: ...]') >= 0, 'prompt must route backend reasons through AI system context');
   });
@@ -82,7 +82,7 @@ function runMobileBarberAgentTests(test) {
         city: 'Westminster',
         zip: '92683',
         lastServiceName: 'Fade Haircut',
-        preferredBarber: 'Daniel Nguyen'
+        preferredBarber: 'Demo Barber'
       }
     }));
     assertEq(result.session.state.customerLookupStatus, 'found');

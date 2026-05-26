@@ -19,6 +19,8 @@
       aiSampleBadge: 'AI sample preview',
       aiSampleBeforePlaceholder: 'Before — AI sample preview',
       aiSampleAfterPlaceholder: 'After — AI sample preview',
+      stylePreviewSuffix: 'Style Preview',
+      aiPreviewDisclosure: 'AI-generated style preview. Real barber portfolio coming soon.',
       beforeLabel: 'Before',
       afterLabel: 'After',
       reviewsTitle: 'Reviews and ratings',
@@ -183,6 +185,8 @@
       aiSampleBadge: 'Mẫu xem trước do AI',
       aiSampleBeforePlaceholder: 'Trước — mẫu AI',
       aiSampleAfterPlaceholder: 'Sau — mẫu AI',
+      stylePreviewSuffix: 'Mẫu Kiểu Tóc',
+      aiPreviewDisclosure: 'Mẫu kiểu tóc do AI tạo. Portfolio thật của thợ sẽ được cập nhật sau.',
       beforeLabel: 'Trước',
       afterLabel: 'Sau',
       reviewsTitle: 'Đánh giá và điểm sao',
@@ -347,6 +351,8 @@
       aiSampleBadge: 'Muestra IA',
       aiSampleBeforePlaceholder: 'Antes — muestra IA',
       aiSampleAfterPlaceholder: 'Después — muestra IA',
+      stylePreviewSuffix: 'Vista de Estilo',
+      aiPreviewDisclosure: 'Vista previa de estilo generada por AI. Las fotos reales del portafolio del barbero estarán disponibles pronto.',
       beforeLabel: 'Antes',
       afterLabel: 'Después',
       reviewsTitle: 'Reseñas y calificaciones',
@@ -1040,66 +1046,59 @@
   }
 
   function portfolioImageCard(image) {
+    // Truth-first: any AI-generated record collapses to a single style
+    // preview image. Before/after pairs are not rendered because the AI
+    // image-to-image identity lock is not reliable (different child / age
+    // / ethnicity in each frame). Real barber-uploaded portfolio photos
+    // (isAIGenerated !== true with a single imageUrl) still render as-is.
     var card = el('article', 'mb-portfolio-card');
-    var hasBefore = !!image.beforeImageUrl;
-    var hasAfter = !!image.afterImageUrl;
-    var hasBeforeAfter = hasBefore || hasAfter;
-    var hasMainImage = !!image.imageUrl;
-    var isAIPlaceholder = image.isAIGenerated === true && !hasBeforeAfter && !hasMainImage;
-    var media = el('div', hasBeforeAfter || isAIPlaceholder ? 'mb-portfolio-card__compare' : 'mb-portfolio-card__media');
     var chip = el('span', 'mb-portfolio-card__category');
     var title = el('h3');
     var desc = el('p');
+    var isAI = image.isAIGenerated === true;
 
-    if (isAIPlaceholder) {
-      card.classList.add('mb-portfolio-card--ai-sample');
+    if (isAI) {
+      card.classList.add('mb-portfolio-card--ai-sample', 'mb-style-preview-card');
       var categoryImage = DATA && DATA.findServiceImageByPortfolioCategory
         ? DATA.findServiceImageByPortfolioCategory(image.category)
         : null;
-      [
-        ['aiSampleBeforePlaceholder', 'before'],
-        ['aiSampleAfterPlaceholder',  'after']
-      ].forEach(function(pair) {
-        var wrap = el('figure', 'mb-portfolio-card__ai-frame mb-portfolio-card__ai-frame--' + pair[1]);
-        var badge = el('span', 'mb-portfolio-card__ai-badge');
-        var caption = el('figcaption');
-        badge.textContent = t('aiSampleBadge');
-        caption.textContent = t(pair[0]);
-        if (categoryImage && categoryImage.imageUrl) {
-          // Use the matching service Unsplash photo as a representative style
-          // preview. The "before" half is desaturated; the "after" half shows
-          // full color. Both halves stay labelled as AI samples for honesty.
-          wrap.style.backgroundImage = "url('" + categoryImage.imageUrl + "')";
-          wrap.setAttribute('aria-label', categoryImage.imageAlt || '');
-        }
-        wrap.appendChild(badge);
-        wrap.appendChild(caption);
-        media.appendChild(wrap);
-      });
-    } else if (hasBeforeAfter) {
-      [
-        ['beforeImageUrl', 'beforeLabel'],
-        ['afterImageUrl', 'afterLabel']
-      ].forEach(function(pair) {
-        var wrap = el('figure');
-        var label = el('figcaption');
-        var img = document.createElement('img');
-        label.textContent = t(pair[1]);
-        setImage(img, image[pair[0]], image.alt || image.title);
-        wrap.appendChild(img);
-        wrap.appendChild(label);
-        media.appendChild(wrap);
-      });
-    } else {
+      var previewUrl = image.afterImageUrl
+        || image.imageUrl
+        || (categoryImage && categoryImage.imageUrl)
+        || '';
+      var media = el('div', 'mb-style-preview-card__media');
+      var badge = el('span', 'mb-portfolio-card__ai-badge mb-portfolio-card__ai-badge--clip');
+      badge.textContent = t('aiSampleBadge');
+      media.appendChild(badge);
+      if (previewUrl) {
+        media.style.backgroundImage = "url('" + previewUrl + "')";
+        media.setAttribute('role', 'img');
+        media.setAttribute('aria-label', image.alt || image.title || '');
+      }
+      card.appendChild(media);
+    } else if (image.imageUrl) {
+      var media2 = el('div', 'mb-portfolio-card__media');
       var img = document.createElement('img');
       setImage(img, image.imageUrl, image.alt || image.title);
-      media.appendChild(img);
+      media2.appendChild(img);
+      card.appendChild(media2);
     }
 
     chip.textContent = image.category || 'Portfolio';
-    title.textContent = image.title || t('portfolioTitle');
-    desc.textContent = image.description || '';
-    card.appendChild(media);
+    var rawTitle = image.title || t('portfolioTitle');
+    // Strip 'before and after' phrasing from AI sample titles so the card
+    // never claims a same-person transformation we can't guarantee.
+    if (isAI) {
+      rawTitle = rawTitle
+        .replace(/ — before and after \([^)]*\)/i, '')
+        .replace(/before and after/i, t('stylePreviewSuffix') || 'Style Preview');
+      var suffix = t('stylePreviewSuffix') || 'Style Preview';
+      if (rawTitle.indexOf(suffix) < 0) rawTitle = rawTitle + ' — ' + suffix;
+    }
+    title.textContent = rawTitle;
+    desc.textContent = isAI
+      ? (t('aiPreviewDisclosure') || image.description || '')
+      : (image.description || '');
     card.appendChild(chip);
     card.appendChild(title);
     if (desc.textContent) card.appendChild(desc);

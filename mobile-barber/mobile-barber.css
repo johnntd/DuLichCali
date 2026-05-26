@@ -1840,6 +1840,28 @@
   color: var(--gold-lt);
 }
 
+.mb-dashboard-alert-panel {
+  background:
+    linear-gradient(135deg, rgba(245, 166, 35, .1), rgba(56, 189, 248, .06)),
+    rgba(255, 255, 255, .06);
+}
+
+.mb-notification-control-grid {
+  display: grid;
+  gap: .55rem;
+}
+
+.mb-notification-control-grid p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+  margin: 0;
+}
+
+.mb-notification-control-grid strong {
+  color: var(--gold-lt);
+}
+
 .mb-dashboard-hero h1 {
   color: var(--cream);
   font-family: var(--font-d);
@@ -1938,6 +1960,11 @@
   display: grid;
   gap: .55rem;
   padding: .85rem;
+}
+
+.mb-booking-card--highlight {
+  border-color: rgba(245, 166, 35, .85);
+  box-shadow: 0 0 0 3px rgba(245, 166, 35, .2), var(--shadow-lg);
 }
 
 .mb-booking-card h3 {
@@ -2063,6 +2090,51 @@
   font-weight: 900;
   text-align: center;
   box-shadow: var(--shadow-lg);
+}
+
+.mb-booking-alert-region {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right, 0px));
+  bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  z-index: var(--z-toast, 1100);
+  display: grid;
+  gap: .75rem;
+  width: min(26rem, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.mb-booking-alert {
+  display: grid;
+  gap: .75rem;
+  padding: 1rem;
+  border: 1px solid rgba(245, 166, 35, .42);
+  border-radius: var(--r-md);
+  background: rgba(6, 24, 42, .96);
+  color: var(--cream);
+  box-shadow: var(--shadow-lg);
+  pointer-events: auto;
+}
+
+.mb-booking-alert h3 {
+  color: var(--gold-lt);
+  font-size: var(--text-lg);
+  line-height: var(--leading-snug);
+}
+
+.mb-booking-alert pre {
+  margin: 0;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.mb-booking-alert__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
 }
 
 .mb-chat {

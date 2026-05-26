@@ -10,7 +10,9 @@
     bookings: 'dlc_mobile_barber_bookings',
     blocks: 'dlc_mobile_barber_unavailable_blocks',
     portfolio: 'dlc_mobile_barber_portfolio_overrides',
-    reviews: 'dlc_mobile_barber_review_overrides'
+    reviews: 'dlc_mobile_barber_review_overrides',
+    notified: 'dlc_mobile_barber_notified_booking_ids',
+    sound: 'dlc_mobile_barber_sound_alerts'
   };
 
   var STRINGS = {
@@ -21,6 +23,24 @@
       dashboardTitle: 'Mobile Barber Dashboard',
       dashboardSubtitle: '{business} can manage profile, services, hours, blocks, and booking requests here.',
       publicVendorLink: 'View Public Page',
+      notificationTitle: 'Booking alerts',
+      soundAlertsLabel: 'Sound alerts:',
+      notificationPermissionLabel: 'Browser notifications:',
+      lastBookingAlertLabel: 'Last booking alert:',
+      enableSoundAlerts: 'Enable Sound Alerts',
+      soundAlertsOn: 'On',
+      soundAlertsOff: 'Off',
+      soundAlertsBlocked: 'Needs enable',
+      permissionGranted: 'Granted',
+      permissionDenied: 'Denied',
+      permissionDefault: 'Not requested',
+      permissionUnsupported: 'Not supported',
+      lastAlertNone: 'None yet',
+      toggleSoundOn: 'Turn sound on',
+      toggleSoundOff: 'Turn sound off',
+      newBookingAlertTitle: 'New Mobile Barber Booking',
+      viewBookingAction: 'View Booking',
+      dismissAction: 'Dismiss',
       statToday: 'Today',
       statUpcoming: 'Upcoming',
       statPending: 'Pending',
@@ -136,6 +156,24 @@
       dashboardTitle: 'Bảng Điều Khiển Mobile Barber',
       dashboardSubtitle: '{business} có thể quản lý hồ sơ, dịch vụ, giờ làm, ngày bận, và yêu cầu đặt lịch tại đây.',
       publicVendorLink: 'Xem Trang Công Khai',
+      notificationTitle: 'Thông báo đặt lịch',
+      soundAlertsLabel: 'Âm thanh báo lịch:',
+      notificationPermissionLabel: 'Thông báo trình duyệt:',
+      lastBookingAlertLabel: 'Báo lịch gần nhất:',
+      enableSoundAlerts: 'Bật Âm Thanh Báo Lịch',
+      soundAlertsOn: 'Bật',
+      soundAlertsOff: 'Tắt',
+      soundAlertsBlocked: 'Cần bật',
+      permissionGranted: 'Đã cho phép',
+      permissionDenied: 'Đã chặn',
+      permissionDefault: 'Chưa xin quyền',
+      permissionUnsupported: 'Không hỗ trợ',
+      lastAlertNone: 'Chưa có',
+      toggleSoundOn: 'Bật âm thanh',
+      toggleSoundOff: 'Tắt âm thanh',
+      newBookingAlertTitle: 'Lịch Mobile Barber Mới',
+      viewBookingAction: 'Xem Lịch',
+      dismissAction: 'Bỏ qua',
       statToday: 'Hôm nay',
       statUpcoming: 'Sắp tới',
       statPending: 'Chờ xác nhận',
@@ -251,6 +289,24 @@
       dashboardTitle: 'Panel de Barbero Móvil',
       dashboardSubtitle: '{business} puede administrar perfil, servicios, horarios, bloqueos, y solicitudes de reserva aquí.',
       publicVendorLink: 'Ver Página Pública',
+      notificationTitle: 'Alertas de reservas',
+      soundAlertsLabel: 'Alertas con sonido:',
+      notificationPermissionLabel: 'Notificaciones del navegador:',
+      lastBookingAlertLabel: 'Última alerta:',
+      enableSoundAlerts: 'Activar Sonido',
+      soundAlertsOn: 'Activo',
+      soundAlertsOff: 'Inactivo',
+      soundAlertsBlocked: 'Necesita activar',
+      permissionGranted: 'Permitido',
+      permissionDenied: 'Denegado',
+      permissionDefault: 'No solicitado',
+      permissionUnsupported: 'No compatible',
+      lastAlertNone: 'Ninguna',
+      toggleSoundOn: 'Activar sonido',
+      toggleSoundOff: 'Desactivar sonido',
+      newBookingAlertTitle: 'Nueva Reserva de Barbero Móvil',
+      viewBookingAction: 'Ver Reserva',
+      dismissAction: 'Descartar',
       statToday: 'Hoy',
       statUpcoming: 'Próximas',
       statPending: 'Pendientes',
@@ -381,8 +437,16 @@
     blocks: [],
     portfolio: [],
     reviews: [],
-    bookingFilter: 'upcoming'
+    bookingFilter: 'upcoming',
+    bookingAlertUnsubscribe: null,
+    bookingAlertInitialSnapshot: true,
+    notifiedBookingIds: {},
+    soundAlertsEnabled: true,
+    soundReady: false,
+    soundBlocked: false,
+    lastBookingAlert: ''
   };
+  var audioCtx = null;
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
@@ -415,6 +479,29 @@
     try {
       if (root.localStorage) root.localStorage.setItem(key, JSON.stringify(value));
     } catch (e) {}
+  }
+
+  function readString(key, fallback) {
+    try {
+      var raw = root.localStorage && root.localStorage.getItem(key);
+      return raw == null ? fallback : raw;
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  function writeString(key, value) {
+    try {
+      if (root.localStorage) root.localStorage.setItem(key, String(value));
+    } catch (e) {}
+  }
+
+  function notifiedStorageKey() {
+    return STORAGE.notified + '_' + (state.vendorId || 'unknown');
+  }
+
+  function soundStorageKey() {
+    return STORAGE.sound + '_' + (state.vendorId || 'unknown');
   }
 
   function getVendorId() {
@@ -618,6 +705,108 @@
     root.setTimeout(function() { toast.hidden = true; }, 1800);
   }
 
+  function notificationPermissionLabel() {
+    if (!('Notification' in root)) return t('permissionUnsupported');
+    return t({
+      granted: 'permissionGranted',
+      denied: 'permissionDenied',
+      default: 'permissionDefault'
+    }[root.Notification.permission] || 'permissionDefault');
+  }
+
+  function getAudioCtx() {
+    if (!audioCtx) {
+      try {
+        audioCtx = new (root.AudioContext || root.webkitAudioContext)();
+      } catch (e) {
+        audioCtx = null;
+      }
+    }
+    return audioCtx;
+  }
+
+  function renderNotificationControls() {
+    var soundState = document.getElementById('mbSoundAlertState');
+    var permission = document.getElementById('mbNotificationPermissionState');
+    var last = document.getElementById('mbLastBookingAlert');
+    var toggle = document.getElementById('mbToggleSoundAlerts');
+    var enable = document.querySelector('[data-action="enableSoundAlerts"]');
+    if (soundState) {
+      soundState.textContent = state.soundBlocked ? t('soundAlertsBlocked') : (state.soundAlertsEnabled ? t('soundAlertsOn') : t('soundAlertsOff'));
+    }
+    if (permission) permission.textContent = notificationPermissionLabel();
+    if (last) last.textContent = state.lastBookingAlert || t('lastAlertNone');
+    if (toggle) toggle.textContent = state.soundAlertsEnabled ? t('toggleSoundOff') : t('toggleSoundOn');
+    if (enable) enable.hidden = state.soundReady && !state.soundBlocked;
+  }
+
+  function unlockSoundAlerts() {
+    state.soundAlertsEnabled = true;
+    state.soundBlocked = false;
+    writeString(soundStorageKey(), 'on');
+    if ('Notification' in root && root.Notification.permission === 'default' && root.Notification.requestPermission) {
+      try {
+        root.Notification.requestPermission().then(renderNotificationControls).catch(noop);
+      } catch (e) {}
+    }
+    var ctx = getAudioCtx();
+    if (!ctx) {
+      state.soundReady = false;
+      state.soundBlocked = true;
+      renderNotificationControls();
+      return Promise.resolve(false);
+    }
+    var ready = ctx.state === 'suspended' ? ctx.resume() : Promise.resolve();
+    return ready.then(function() {
+      state.soundReady = ctx.state !== 'suspended';
+      renderNotificationControls();
+      return state.soundReady;
+    }).catch(function() {
+      state.soundReady = false;
+      state.soundBlocked = true;
+      renderNotificationControls();
+      return false;
+    });
+  }
+
+  function playBookingChime() {
+    if (!state.soundAlertsEnabled) return;
+    var ctx = getAudioCtx();
+    if (!ctx) return;
+    function doPlay() {
+      try {
+        [523.25, 659.25, 783.99].forEach(function(freq, i) {
+          var osc = ctx.createOscillator();
+          var gain = ctx.createGain();
+          var start = ctx.currentTime + i * 0.18;
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.001, start);
+          gain.gain.exponentialRampToValueAtTime(0.24, start + 0.035);
+          gain.gain.exponentialRampToValueAtTime(0.001, start + 0.55);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(start);
+          osc.stop(start + 0.58);
+        });
+        state.soundReady = true;
+        state.soundBlocked = false;
+      } catch (e) {
+        state.soundBlocked = true;
+      }
+      renderNotificationControls();
+    }
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(doPlay).catch(function() {
+        state.soundReady = false;
+        state.soundBlocked = true;
+        renderNotificationControls();
+      });
+    } else {
+      doPlay();
+    }
+  }
+
   function mapUrl(booking) {
     var address = [booking.address, booking.city, booking.zip].filter(Boolean).join(', ');
     return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address);
@@ -724,6 +913,8 @@
 
   function bookingCard(booking) {
     var card = el('article', 'mb-booking-card');
+    card.id = 'mbBookingCard-' + String(booking.id || '').replace(/[^a-zA-Z0-9_-]/g, '');
+    card.setAttribute('data-booking-id', booking.id || '');
     var title = el('h3');
     var meta = el('p', 'mb-booking-card__meta');
     var actions = el('div', 'mb-booking-card__actions');
@@ -843,6 +1034,161 @@
     }
     card.appendChild(actions);
     return card;
+  }
+
+  function markBookingNotified(bookingId) {
+    if (!bookingId) return;
+    state.notifiedBookingIds[bookingId] = Date.now();
+    var ids = Object.keys(state.notifiedBookingIds).sort(function(a, b) {
+      return Number(state.notifiedBookingIds[b] || 0) - Number(state.notifiedBookingIds[a] || 0);
+    }).slice(0, 80);
+    var trimmed = {};
+    ids.forEach(function(id) { trimmed[id] = state.notifiedBookingIds[id]; });
+    state.notifiedBookingIds = trimmed;
+    writeJson(notifiedStorageKey(), trimmed);
+  }
+
+  function shouldAlertForBooking(booking, changeType) {
+    if (!booking || booking.vendorId !== state.vendorId) return false;
+    var bookingId = booking.id || booking.bookingId || '';
+    if (!bookingId || state.notifiedBookingIds[bookingId]) return false;
+    var status = booking.status || '';
+    var alertStatuses = {
+      pending_barber_confirmation: true,
+      pending_confirmation: true,
+      vendor_review: true,
+      confirmed: true
+    };
+    return changeType === 'added' || !!alertStatuses[status];
+  }
+
+  function formatAlertAddress(booking) {
+    return [booking.address, booking.city, booking.zip].filter(Boolean).join(', ');
+  }
+
+  function formatAlertMessage(booking) {
+    var amount = booking.amountDue != null ? booking.amountDue : Number(booking.servicePrice || 0) + Number(booking.travelFee || 0);
+    return [
+      'Customer: ' + (booking.customerName || ''),
+      'Phone: ' + (booking.customerPhone || ''),
+      'Service: ' + (booking.serviceName || booking.serviceId || ''),
+      'Date: ' + (booking.requestedDate || ''),
+      'Time: ' + formatTime12Hour(booking.startTime),
+      'Address: ' + formatAlertAddress(booking),
+      'Payment: ' + paymentMethodLabel(booking.paymentMethod),
+      'Amount Due: ' + formatMoney(amount)
+    ].filter(function(line) { return !/: $/.test(line); }).join('\n');
+  }
+
+  function viewBooking(bookingId) {
+    state.bookingFilter = 'all';
+    renderBookings();
+    root.setTimeout(function() {
+      var card = null;
+      document.querySelectorAll('[data-booking-id]').forEach(function(node) {
+        if (node.getAttribute('data-booking-id') === String(bookingId)) card = node;
+      });
+      if (!card) return;
+      card.classList.add('mb-booking-card--highlight');
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      root.setTimeout(function() { card.classList.remove('mb-booking-card--highlight'); }, 2800);
+    }, 30);
+  }
+
+  function showBookingAlert(booking) {
+    var region = document.getElementById('mbBookingAlertRegion');
+    if (!region) return;
+    var bookingId = booking.id || booking.bookingId || '';
+    var popup = el('article', 'mb-booking-alert');
+    var title = el('h3');
+    var message = el('pre');
+    var actions = el('div', 'mb-booking-alert__actions');
+    var view = el('button', 'mb-button mb-button--primary mb-button--sm');
+    var dismiss = el('button', 'mb-button mb-button--ghost mb-button--sm');
+    title.textContent = t('newBookingAlertTitle');
+    message.textContent = formatAlertMessage(booking);
+    view.type = 'button';
+    view.textContent = t('viewBookingAction');
+    view.addEventListener('click', function() {
+      popup.remove();
+      viewBooking(bookingId);
+    });
+    dismiss.type = 'button';
+    dismiss.textContent = t('dismissAction');
+    dismiss.addEventListener('click', function() { popup.remove(); });
+    actions.appendChild(view);
+    actions.appendChild(dismiss);
+    popup.appendChild(title);
+    popup.appendChild(message);
+    popup.appendChild(actions);
+    region.appendChild(popup);
+    state.lastBookingAlert = [booking.customerName || bookingId, booking.requestedDate, formatTime12Hour(booking.startTime)].filter(Boolean).join(' • ');
+    renderNotificationControls();
+    if ('Notification' in root && root.Notification.permission === 'granted') {
+      try {
+        var nativeNotice = new root.Notification(t('newBookingAlertTitle'), {
+          body: [booking.customerName || '', booking.serviceName || '', booking.requestedDate || '', formatTime12Hour(booking.startTime)].filter(Boolean).join(' • '),
+          tag: 'mobile-barber-' + bookingId
+        });
+        nativeNotice.onclick = function() {
+          try { root.focus(); } catch (e) {}
+          viewBooking(bookingId);
+          nativeNotice.close();
+        };
+      } catch (e) {}
+    }
+    root.setTimeout(function() {
+      if (popup && popup.parentNode) popup.remove();
+    }, 45000);
+  }
+
+  function handleBookingAlert(booking, changeType) {
+    var bookingId = booking && (booking.id || booking.bookingId || '');
+    if (bookingId && state.bookingAlertInitialSnapshot) {
+      markBookingNotified(bookingId);
+      return;
+    }
+    if (!shouldAlertForBooking(booking, changeType)) {
+      return;
+    }
+    markBookingNotified(bookingId);
+    showBookingAlert(booking);
+    playBookingChime();
+  }
+
+  function subscribeBookingAlerts() {
+    var db = firestoreDb();
+    if (!db || !DATA || !DATA.COLLECTIONS || !DATA.COLLECTIONS.bookings || !state.vendorId) return;
+    if (state.bookingAlertUnsubscribe) state.bookingAlertUnsubscribe();
+    state.bookingAlertInitialSnapshot = true;
+    var query = db.collection(DATA.COLLECTIONS.bookings)
+      .where('vendorId', '==', state.vendorId)
+      .orderBy('createdAt', 'desc')
+      .limit(25);
+    state.bookingAlertUnsubscribe = query.onSnapshot(function(snapshot) {
+      snapshot.docChanges().forEach(function(change) {
+        var data = change.doc.data() || {};
+        data.id = data.id || change.doc.id;
+        handleBookingAlert(data, change.type);
+      });
+      state.bookingAlertInitialSnapshot = false;
+      loadBookings().then(renderBookings);
+    }, function(err) {
+      if (root.console) root.console.warn('[mobile-barber-dashboard] booking alert listener failed', err);
+      if (state.bookingAlertUnsubscribe) state.bookingAlertUnsubscribe();
+      state.bookingAlertUnsubscribe = db.collection(DATA.COLLECTIONS.bookings)
+        .where('vendorId', '==', state.vendorId)
+        .limit(25)
+        .onSnapshot(function(snapshot) {
+          snapshot.docChanges().forEach(function(change) {
+            var data = change.doc.data() || {};
+            data.id = data.id || change.doc.id;
+            handleBookingAlert(data, change.type);
+          });
+          state.bookingAlertInitialSnapshot = false;
+          loadBookings().then(renderBookings);
+        });
+    });
   }
 
   function renderBookingList(id, rows) {
@@ -1168,6 +1514,7 @@
     renderPortfolio();
     renderReviews();
     renderBookings();
+    renderNotificationControls();
   }
 
   function setLang(lang) {
@@ -1199,6 +1546,14 @@
     document.querySelector('[data-action="addBlock"]').addEventListener('click', addBlock);
     document.querySelector('[data-action="addPortfolio"]').addEventListener('click', addPortfolioImage);
     document.querySelector('[data-action="saveReviewResponses"]').addEventListener('click', saveReviewResponses);
+    document.querySelector('[data-action="enableSoundAlerts"]').addEventListener('click', unlockSoundAlerts);
+    document.querySelector('[data-action="toggleSoundAlerts"]').addEventListener('click', function() {
+      state.soundAlertsEnabled = !state.soundAlertsEnabled;
+      state.soundBlocked = false;
+      writeString(soundStorageKey(), state.soundAlertsEnabled ? 'on' : 'off');
+      if (state.soundAlertsEnabled) unlockSoundAlerts();
+      renderNotificationControls();
+    });
     document.getElementById('mbDashServiceSelect').addEventListener('change', fillSelectedService);
   }
 
@@ -1216,6 +1571,8 @@
   function init() {
     state.vendorId = getVendorId();
     state.lang = initLang();
+    state.notifiedBookingIds = readJson(notifiedStorageKey(), {});
+    state.soundAlertsEnabled = readString(soundStorageKey(), 'on') !== 'off';
     loadVendor();
     loadServices();
     loadAvailability();
@@ -1225,7 +1582,10 @@
     bind();
     seedSamplesOnce().catch(noop).then(function() {
       return loadBookings();
-    }).then(render);
+    }).then(function() {
+      render();
+      subscribeBookingAlerts();
+    });
   }
 
   function redirectToLogin(vendorId) {

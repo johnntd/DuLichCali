@@ -2347,6 +2347,39 @@
     });
   }
 
+  // Vendor hero rotation — cycles through real AI haircut photos so the
+  // vendor profile feels like a premium showcase, not a static placeholder.
+  // Lives in this file (not in the data module) because the asset list is
+  // a presentation concern that other vendor pages may want to override.
+  var VENDOR_HERO_ROTATION = [
+    '/assets/mobile-barber/styles/classic-haircut.jpg',
+    '/assets/mobile-barber/styles/fade-haircut.jpg',
+    '/assets/mobile-barber/styles/business-haircut.jpg',
+    '/assets/mobile-barber/styles/home-family-package.jpg',
+    '/assets/mobile-barber/styles/kids-haircut.jpg',
+    '/assets/mobile-barber/styles/modern-styling.jpg'
+  ];
+
+  function startVendorHeroRotation() {
+    var img = document.getElementById('mbVendorHeroImage');
+    if (!img) return;
+    var primary = (state.vendor && state.vendor.heroImage) || VENDOR_HERO_ROTATION[0];
+    var pool = [primary].concat(VENDOR_HERO_ROTATION.filter(function(u) { return u !== primary; }));
+    if (pool.length < 2) return;
+    var idx = 0;
+    img.src = pool[idx];
+    img.style.transition = 'opacity .8s ease';
+    state._vendorHeroInterval && clearInterval(state._vendorHeroInterval);
+    state._vendorHeroInterval = setInterval(function() {
+      idx = (idx + 1) % pool.length;
+      img.style.opacity = '0';
+      setTimeout(function() {
+        img.src = pool[idx];
+        img.style.opacity = '1';
+      }, 320);
+    }, 5000);
+  }
+
   function init() {
     var vendorId = getVendorId();
     state.vendor = DATA && DATA.findVendorById ? DATA.findVendorById(vendorId) : null;
@@ -2364,6 +2397,7 @@
     root.addEventListener('beforeunload', detachVendorRealtime);
     root.addEventListener('pagehide', detachVendorRealtime);
     openQueryMode();
+    startVendorHeroRotation();
     var carried = consumeSwitchDraft();
     if (carried && carried.draft) {
       state.preselectedServiceId = carried.draft.serviceId || state.preselectedServiceId;

@@ -288,7 +288,7 @@
       phone: '(714) 555-0148',
       email: 'demo-mobile-barber@dulichcali21.com',
       profilePhoto: '/assets/mobile-barber/profile-placeholder.jpg',
-      heroImage: '/assets/mobile-barber/hero-placeholder.jpg',
+      heroImage: '/assets/mobile-barber/styles/classic-haircut.jpg',
       serviceAreas: Object.freeze(['Westminster', 'Garden Grove', 'Fountain Valley']),
       travelRadiusMiles: 12,
       baseTravelFee: 15,
@@ -308,7 +308,7 @@
       phone: '(714) 227-6007',
       email: 'duyhoa9256@gmail.com',
       profilePhoto: '/assets/mobile-barber/michael-profile-placeholder.jpg',
-      heroImage: '/assets/mobile-barber/michael-hero-placeholder.jpg',
+      heroImage: '/assets/mobile-barber/styles/business-haircut.jpg',
       serviceAreas: Object.freeze([
         'Irvine', 'Garden Grove', 'Westminster', 'Santa Ana', 'Fountain Valley',
         'Huntington Beach', 'Costa Mesa', 'Anaheim', 'Tustin', 'Orange'
@@ -341,7 +341,7 @@
       phone: '(408) 504-3684',
       email: 'tuananhnta@gmail.com',
       profilePhoto: '/assets/mobile-barber/tim-profile-placeholder.jpg',
-      heroImage: '/assets/mobile-barber/tim-hero-placeholder.jpg',
+      heroImage: '/assets/mobile-barber/styles/home-family-package.jpg',
       serviceAreas: Object.freeze([
         'San Jose', 'Santa Clara', 'Sunnyvale', 'Milpitas', 'Campbell',
         'Cupertino', 'Mountain View', 'Los Gatos', 'Fremont'

@@ -535,17 +535,8 @@
 #mbLocationGate .mb-field { gap: .2rem; }
 #mbLocationGate .mb-form-actions { margin-top: .15rem; }
 
-/* Single-field flow: ZIP only. JS auto-fills the city from the ZIP. The
-   city field is kept in the DOM (the form still reads it as a fallback)
-   but hidden from view to keep the form tight on every viewport.
-   Using :first-of-type so this works without :has() — city is always
-   the first .mb-field child of the form. */
-#mbLocationGate #mbLocationGateForm > label.mb-field:first-of-type {
-  display: none !important;
-}
-#mbLocationCity {
-  display: none !important;
-}
+/* Either-or flow: customer can type city OR ZIP. JS uses whichever is
+   present. Both fields visible; previous hide-the-city rules removed. */
 
 @media (min-width: 680px) {
   #mbLocationGate {
@@ -587,9 +578,15 @@
 
   #mbLocationGate #mbLocationGateForm > .mb-field {
     flex: 0 0 auto;
-    width: 8.5rem;
     min-width: 0;
     gap: .25rem;
+  }
+  /* City takes a touch more room than ZIP — names are longer */
+  #mbLocationGate #mbLocationGateForm > .mb-field:first-of-type {
+    width: 11rem;
+  }
+  #mbLocationGate #mbLocationGateForm > .mb-field:nth-of-type(2) {
+    width: 7.5rem;
   }
   #mbLocationGate #mbLocationGateForm > .mb-field > span {
     font-size: var(--text-xs);

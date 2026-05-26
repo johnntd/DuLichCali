@@ -61,8 +61,8 @@
       chatThisService: 'Chat with AI to book',
       talkThisService: 'Talk to AI to book',
       locationGateKicker: 'Service area',
-      locationGateTitle: 'What ZIP code should the barber come to?',
-      locationGateCopy: 'Enter your 5-digit ZIP and we will match you with the right mobile barber.',
+      locationGateTitle: 'What city or ZIP should the barber come to?',
+      locationGateCopy: 'Enter your city or 5-digit ZIP — either one is enough to match you with the right mobile barber.',
       cityLabel: 'City',
       zipLabel: 'ZIP code',
       findMyBarber: 'Find My Barber',
@@ -71,7 +71,7 @@
       notifyMe: 'Notify me',
       noServiceArea: "We don't serve {city} yet. Leave your email and we'll let you know when we expand.",
       waitlistSaved: "Thanks. We'll let you know when we expand there.",
-      locationRequired: 'Please enter a 5-digit ZIP code.',
+      locationRequired: 'Please enter a city or 5-digit ZIP code.',
       aiPreviewDisclosure: 'Sample AI-generated style preview. Real barber portfolio coming soon.',
       serviceAreaLabel: 'Service area',
       radiusLabel: 'Travel radius',
@@ -145,8 +145,8 @@
       chatThisService: 'Chat với AI để đặt',
       talkThisService: 'Nói với AI để đặt',
       locationGateKicker: 'Khu vực phục vụ',
-      locationGateTitle: 'Mã ZIP nơi muốn thợ đến?',
-      locationGateCopy: 'Nhập mã ZIP 5 số để hệ thống chọn đúng thợ cắt tóc tại nhà.',
+      locationGateTitle: 'Thành phố hoặc mã ZIP nơi muốn thợ đến?',
+      locationGateCopy: 'Nhập thành phố hoặc mã ZIP 5 số — chỉ cần một trong hai là đủ để chọn đúng thợ.',
       cityLabel: 'Thành phố',
       zipLabel: 'Mã ZIP',
       findMyBarber: 'Tìm Thợ Cắt Tóc',
@@ -155,7 +155,7 @@
       notifyMe: 'Báo cho tôi',
       noServiceArea: 'Hiện chưa phục vụ {city}. Để lại email, tụi em sẽ báo khi mở rộng khu vực.',
       waitlistSaved: 'Cảm ơn bạn. Tụi em sẽ báo khi mở rộng khu vực đó.',
-      locationRequired: 'Vui lòng nhập mã ZIP 5 số.',
+      locationRequired: 'Vui lòng nhập thành phố hoặc mã ZIP 5 số.',
       aiPreviewDisclosure: 'Ảnh mẫu tạo bằng AI. Portfolio thật của thợ sẽ có sau.',
       serviceAreaLabel: 'Khu vực phục vụ',
       radiusLabel: 'Bán kính di chuyển',
@@ -229,8 +229,8 @@
       chatThisService: 'Chatear con AI para reservar',
       talkThisService: 'Hablar con AI para reservar',
       locationGateKicker: 'Área de servicio',
-      locationGateTitle: '¿A qué código postal debe ir el barbero?',
-      locationGateCopy: 'Ingrese su código postal de 5 dígitos y le conectaremos con el barbero correcto.',
+      locationGateTitle: '¿A qué ciudad o código postal debe ir el barbero?',
+      locationGateCopy: 'Ingrese su ciudad o código postal de 5 dígitos — basta con uno para conectarle con el barbero correcto.',
       cityLabel: 'Ciudad',
       zipLabel: 'Código ZIP',
       findMyBarber: 'Buscar Mi Barbero',
@@ -239,7 +239,7 @@
       notifyMe: 'Avisarme',
       noServiceArea: 'Todavía no servimos {city}. Deje su email y le avisaremos cuando lleguemos.',
       waitlistSaved: 'Gracias. Le avisaremos cuando ampliemos a esa zona.',
-      locationRequired: 'Ingrese un código postal de 5 dígitos.',
+      locationRequired: 'Ingrese una ciudad o un código postal de 5 dígitos.',
       aiPreviewDisclosure: 'Vista previa de estilo generada por AI. Portafolio real del barbero próximamente.',
       serviceAreaLabel: 'Área de servicio',
       radiusLabel: 'Radio de viaje',
@@ -363,8 +363,10 @@
 
   function currentLocationInput() {
     var zip = String((document.getElementById('mbLocationZip') || {}).value || '').trim();
-    var city = String((document.getElementById('mbLocationCity') || {}).value || '').trim();
-    return { zip: zip, city: cityForZip(zip) || city };
+    var typedCity = String((document.getElementById('mbLocationCity') || {}).value || '').trim();
+    // Either field is sufficient. If only ZIP is typed, derive city from
+    // the embedded lookup so findVendorForAddress can match on city too.
+    return { zip: zip, city: typedCity || cityForZip(zip) };
   }
 
   // Minimal zip → city fallback so we can keep findVendorForAddress() honest
@@ -443,7 +445,13 @@
   }
 
   function routeByLocation(location, serviceId, mode) {
-    if (!location || !location.zip || !/^\d{5}$/.test(location.zip)) {
+    if (!location) {
+      setLocationStatus(t('locationRequired'));
+      return false;
+    }
+    var hasCity = !!(location.city && location.city.trim());
+    var hasZip = !!(location.zip && /^\d{5}$/.test(location.zip));
+    if (!hasCity && !hasZip) {
       setLocationStatus(t('locationRequired'));
       return false;
     }

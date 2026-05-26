@@ -556,60 +556,76 @@
   #mbLocationGate #mbLocationGateCopy { display: block; }
 }
 
-@media (min-width: 1024px) {
-  /* Compact, two-row form on desktop so the gate doesn't make the left
-     hero column tower above the image. */
+@media (min-width: 769px) {
+  /* Desktop ZIP card: compact, premium, all controls on one row at the
+     same height. Mobile rules (<769px) untouched. */
   #mbLocationGate {
-    padding: .85rem 1rem;
+    padding: 1rem 1.1rem;
     margin-top: 1rem;
+    background: rgba(255, 255, 255, .04);
+    border-color: rgba(255, 255, 255, .1);
   }
+  #mbLocationGate > div { margin: 0; }
   #mbLocationGate > div > .mb-kicker { display: none; }
+  #mbLocationGate #mbLocationGateCopy { display: none; }
   #mbLocationGate h2 {
     font-size: var(--text-sm);
     color: var(--gold-lt);
     text-transform: uppercase;
     letter-spacing: .04em;
     font-weight: 800;
-    margin: 0 0 .4rem;
+    margin: 0 0 .55rem;
   }
-  #mbLocationGate #mbLocationGateCopy { display: none; }
+
   #mbLocationGate #mbLocationGateForm {
-    display: grid;
-    grid-template-columns: 11rem minmax(11rem, 14rem) 1fr;
-    grid-template-areas:
-      'zip submit change';
-    gap: .55rem .75rem;
-    align-items: end;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: .55rem;
     width: 100%;
-    box-sizing: border-box;
   }
-  /* Single visible field (ZIP) goes into the 'zip' column.
-     The hidden city .mb-field is display: none and skipped by grid. */
+
   #mbLocationGate #mbLocationGateForm > .mb-field {
-    grid-area: zip;
+    flex: 0 0 auto;
+    width: 8.5rem;
     min-width: 0;
+    gap: .25rem;
   }
-  #mbLocationGate #mbLocationGateForm .mb-field input { min-width: 0; width: 100%; }
-  /* Let the two buttons inside .mb-form-actions participate directly in
-     the parent grid so each lands in its own column without overflow. */
-  #mbLocationGate #mbLocationGateForm .mb-form-actions {
-    display: contents;
+  #mbLocationGate #mbLocationGateForm > .mb-field > span {
+    font-size: var(--text-xs);
+    color: var(--muted);
+    letter-spacing: .02em;
   }
-  #mbLocationGate #mbLocationGateForm .mb-form-actions > [type="submit"] {
-    grid-area: submit;
-    align-self: end;
-    height: 2.8rem;
-    padding: 0 1.2rem;
+  #mbLocationGate #mbLocationGateForm .mb-field input {
+    min-width: 0;
     width: 100%;
+    height: 2.6rem;
+    padding: 0 .8rem;
+    font-size: var(--text-sm);
+    border-radius: var(--r-sm);
+  }
+
+  /* Both buttons live inside .mb-form-actions, render at identical height
+     + radius + typography so they read as one design system. */
+  #mbLocationGate #mbLocationGateForm .mb-form-actions {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: .55rem;
+    margin-top: 0;
+  }
+  #mbLocationGate #mbLocationGateForm .mb-form-actions > .mb-button {
+    flex: 0 0 auto;
+    height: 2.6rem;
+    min-height: 2.6rem;
+    padding: 0 1.2rem;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    border-radius: var(--r-sm);
+    letter-spacing: .02em;
   }
   #mbLocationGate #mbLocationGateForm .mb-form-actions > [data-action="changeLocation"] {
-    grid-area: change;
-    align-self: end;
-    justify-self: end;
-    height: 2.4rem;
-    padding: 0 .9rem;
-    font-size: var(--text-xs);
-    width: max-content;
+    margin-left: auto;
   }
 }
 

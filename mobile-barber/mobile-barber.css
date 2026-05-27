@@ -1107,6 +1107,41 @@
   border: 2px solid rgba(255, 200, 87, .72);
 }
 
+/* ---------- Coverage-area cards (marketplace routing) ---------- */
+.mb-coverage-card {
+  display: grid;
+  gap: .55rem;
+  align-content: start;
+}
+
+.mb-coverage-card .mb-vendor-card__top {
+  grid-template-columns: 1fr;
+}
+
+.mb-coverage-card .mb-vendor-card__top h3 {
+  font-family: var(--font-d, 'Bodoni Moda', serif);
+  font-size: var(--text-lg);
+  letter-spacing: .01em;
+  color: var(--cream);
+  margin: 0;
+}
+
+.mb-coverage-card .mb-vendor-card__top p {
+  margin: .15rem 0 0;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--muted);
+}
+
+.mb-coverage-card__cities {
+  font-size: var(--text-sm);
+  color: var(--text);
+  line-height: var(--leading-snug);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
 .mb-empty,
 .mb-assistant {
   display: grid;

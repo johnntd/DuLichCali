@@ -66,15 +66,18 @@ function runMobileBarberLandingTests(test) {
     assertContains(homeHtml, 'style.css?v=20260526b', 'homepage must load bumped stylesheet');
     assertContains(homeHtml, 'script.js?v=20260526b', 'homepage must load bumped script.js');
     assertContains(homeJs, 'HOMEPAGE_MARKETPLACE_ENTRIES');
-    // Region-scoped: Michael in OC, Tim in Bay Area
-    assertContains(homeJs, "id: 'mobile-barber-michael-oc'");
-    assertContains(homeJs, "name: 'Michael Mobile Barber OC'");
+    // Region-scoped marketplace routing: cards land on /mobile-barber (with
+    // ?region=...) and never expose individual barber names or vendor pages.
+    assertContains(homeJs, "id: 'mobile-barber-oc'");
+    assertContains(homeJs, "name: 'Mobile Barber — Orange County'");
     assertContains(homeJs, "featuredRegions: ['oc']");
-    assertContains(homeJs, "href: 'https://www.dulichcali21.com/mobile-barber/vendor/michael-nguyen-oc'");
-    assertContains(homeJs, "id: 'mobile-barber-tim-bayarea'");
-    assertContains(homeJs, "name: 'Tim Mobile Barber Bay Area'");
+    assertContains(homeJs, "href: 'https://www.dulichcali21.com/mobile-barber?region=oc'");
+    assertContains(homeJs, "id: 'mobile-barber-bayarea'");
+    assertContains(homeJs, "name: 'Mobile Barber — Bay Area'");
     assertContains(homeJs, "featuredRegions: ['bayarea']");
-    assertContains(homeJs, "href: 'https://www.dulichcali21.com/mobile-barber/vendor/tim-nguyen-bay'");
+    assertContains(homeJs, "href: 'https://www.dulichcali21.com/mobile-barber?region=bayarea'");
+    assertNotContains(homeJs, '/mobile-barber/vendor/michael-nguyen-oc', 'homepage must not link customers to vendor customer page');
+    assertNotContains(homeJs, '/mobile-barber/vendor/tim-nguyen-bay', 'homepage must not link customers to vendor customer page');
     assertContains(homeJs, "heroImage: '/assets/mobile-barber/styles/classic-haircut.jpg'");
     assertContains(homeJs, "heroImage: '/assets/mobile-barber/styles/fade-haircut.jpg'");
     assertContains(homeJs, 'vendors = _withHomepageMarketplaceEntries(vendors, regionId).slice(0, 8)');
@@ -85,12 +88,12 @@ function runMobileBarberLandingTests(test) {
   });
 
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
-    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260525aj');
+    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260527a');
     assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260525h');
     assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260525ac');
     assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260525i');
     assertContains(html, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
-    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260525ae');
+    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260527a');
   });
 
   test('Mobile Barber pages load Firebase before local runtime scripts', function() {
@@ -121,8 +124,11 @@ function runMobileBarberLandingTests(test) {
     assertContains(js, 'DATA.sampleServices');
     assertContains(js, 'DATA.sampleVendors');
     assertContains(js, 'DATA.findServiceImageByServiceId');
-    assertContains(js, 'empty.hidden = vendors.length > 0');
-    assertContains(js, "'/mobile-barber/vendor/' + encodeURIComponent(vendor.id)");
+    // Coverage cards drive empty-state visibility; per-barber vendor URLs are
+    // gone from the customer-facing landing (vendorUrlForRoute() still exists
+    // for backwards compat / debug but is no longer invoked on customer paths).
+    assertContains(js, 'empty.hidden = regions.length > 0');
+    assertNotContains(js, "cta.href = '/mobile-barber/vendor/'", 'landing CTA must not navigate to per-vendor page');
   });
 
   test('Mobile Barber landing has mobile service slider and selection CTAs', function() {
@@ -165,7 +171,12 @@ function runMobileBarberLandingTests(test) {
     assertContains(js, 'function clearCustomerLocation');
     assertContains(js, 'function currentLocationInput');
     assertContains(js, 'BOOKING.findVendorForAddress');
-    assertContains(js, 'root.location.href = vendorUrlForRoute');
+    // Marketplace routing: the Find-My-Barber gate must NOT navigate to a
+    // per-vendor customer page. It pins state.routedVendor and opens the AI
+    // assistant on the same page.
+    assertContains(js, 'state.routedVendor = vendor');
+    assertContains(js, 'openAssistantPanel');
+    assertNotContains(js, 'root.location.href = vendorUrlForRoute', 'Find-My-Barber gate must not redirect to per-vendor page');
     assertContains(js, "db.collection('mobileBarberWaitlist').add");
     assertContains(js, "source: 'landing_no_match'");
     assertContains(html, 'data-action="changeLocation"');
@@ -176,10 +187,13 @@ function runMobileBarberLandingTests(test) {
     assertContains(js, 'state.pendingServiceId = serviceId ||');
     assertContains(js, 'routeByLocation(currentLocationInput(), state.pendingServiceId || state.selectedServiceId');
     assertContains(js, 'serviceIdForVendor(vendor, serviceId)');
+    // vendorUrlForRoute() is preserved for SEO/debug deep-links but customer
+    // navigation no longer calls it. The serviceId still comes from the URL.
     assertContains(js, "params.set('city', location.city)");
     assertContains(js, "params.set('zip', location.zip)");
     assertContains(js, "params.set('from', 'landing')");
-    assertContains(js, "new URLSearchParams(root.location.search).get('serviceId')");
+    assertContains(js, "params.get('serviceId')");
+    assertContains(js, "state.region = String(params.get('region')");
     assertNotContains(js, 'var preferredVendor = DATA && DATA.MICHAEL_VENDOR_ID', 'landingServices must not prefer Michael');
   });
 
@@ -227,7 +241,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/vendor/**"');
     assertContains(firebase, '"destination": "/mobile-barber/vendor.html"');
     assertContains(vendorHtml, 'id="mobileBarberVendorApp"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260525aj');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260527a');
     assertContains(vendorHtml, 'id="mbVendorName"');
     assertContains(vendorHtml, 'id="mbVendorServices"');
     assertContains(vendorHtml, 'id="mbBookingTitle"');
@@ -490,8 +504,8 @@ function runMobileBarberLandingTests(test) {
     assertContains(dashboardHtml, 'id="mobileBarberDashboardApp"');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260525h');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260525ac');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260525e');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260525aj');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260526a');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260527a');
     assertContains(dashboardHtml, 'firebase-auth-compat.js');
     assertContains(dashboardHtml, '/notifications.js?v=20260525a');
     assertContains(dashboardHtml, 'id="mbBookingAlertRegion"');

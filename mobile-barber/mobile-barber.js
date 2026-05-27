@@ -48,8 +48,15 @@
       promoClipsCopy: 'Video generation is not wired on this page yet, so these cards use motion fallback instead of repeating the hero image.',
       servicesKicker: 'Services',
       servicesTitle: 'Choose a mobile barber service',
-      vendorsKicker: 'Barbers',
-      vendorsTitle: 'Available mobile barber profiles',
+      vendorsKicker: 'Coverage',
+      vendorsTitle: 'Where we serve',
+      coverageCityListLabel: 'Cities served',
+      coverageCta: 'Find My Barber',
+      coverageRegionOC: 'Orange County coverage',
+      coverageRegionBay: 'Bay Area coverage',
+      regionGateBannerOC: 'Orange County coverage selected. Enter your city or ZIP to get matched with the nearest barber.',
+      regionGateBannerBay: 'Bay Area coverage selected. Enter your city or ZIP to get matched with the nearest barber.',
+      barberMatchedAnnounce: 'Got it. The AI assistant will confirm the right barber for {city}.',
       priceLabel: 'Price',
       durationLabel: 'Duration',
       travelBufferLabel: 'Travel buffer',
@@ -132,8 +139,15 @@
       promoClipsCopy: 'Trang này chưa nối pipeline tạo video, nên dùng thẻ chuyển động thay vì lặp lại hình hero.',
       servicesKicker: 'Dịch vụ',
       servicesTitle: 'Chọn dịch vụ cắt tóc tại nhà',
-      vendorsKicker: 'Thợ cắt tóc',
-      vendorsTitle: 'Hồ sơ thợ cắt tóc đang phục vụ',
+      vendorsKicker: 'Khu vực',
+      vendorsTitle: 'Khu vực đang phục vụ',
+      coverageCityListLabel: 'Thành phố phục vụ',
+      coverageCta: 'Tìm Thợ Cắt Tóc',
+      coverageRegionOC: 'Khu vực Orange County',
+      coverageRegionBay: 'Khu vực Bay Area',
+      regionGateBannerOC: 'Đã chọn khu vực Orange County. Nhập thành phố hoặc mã ZIP để được ghép với thợ gần nhất.',
+      regionGateBannerBay: 'Đã chọn khu vực Bay Area. Nhập thành phố hoặc mã ZIP để được ghép với thợ gần nhất.',
+      barberMatchedAnnounce: 'Đã ghi nhận. Trợ lý AI sẽ xác nhận thợ phù hợp cho {city}.',
       priceLabel: 'Giá',
       durationLabel: 'Thời lượng',
       travelBufferLabel: 'Thời gian di chuyển',
@@ -216,8 +230,15 @@
       promoClipsCopy: 'La generación de video aún no está conectada aquí, así que usamos tarjetas animadas en vez de repetir el hero.',
       servicesKicker: 'Servicios',
       servicesTitle: 'Elija un servicio de barbero móvil',
-      vendorsKicker: 'Barberos',
-      vendorsTitle: 'Perfiles de barberos móviles disponibles',
+      vendorsKicker: 'Cobertura',
+      vendorsTitle: 'Áreas donde servimos',
+      coverageCityListLabel: 'Ciudades atendidas',
+      coverageCta: 'Buscar Mi Barbero',
+      coverageRegionOC: 'Cobertura en Orange County',
+      coverageRegionBay: 'Cobertura en Bay Area',
+      regionGateBannerOC: 'Cobertura en Orange County seleccionada. Ingrese su ciudad o código postal para conectarle con el barbero más cercano.',
+      regionGateBannerBay: 'Cobertura en Bay Area seleccionada. Ingrese su ciudad o código postal para conectarle con el barbero más cercano.',
+      barberMatchedAnnounce: 'Listo. El asistente AI confirmará el barbero adecuado para {city}.',
       priceLabel: 'Precio',
       durationLabel: 'Duración',
       travelBufferLabel: 'Tiempo de viaje',
@@ -275,7 +296,9 @@
     lastBooking: null,
     existingBookings: [],
     locationSubmitted: false,
-    waitlistLocation: null
+    waitlistLocation: null,
+    routedVendor: null,
+    region: ''
   };
 
   function getLang() {
@@ -468,7 +491,33 @@
       return false;
     }
     saveCustomerLocation(location);
-    root.location.href = vendorUrlForRoute(vendor, serviceId, mode, location);
+    // Marketplace routing: never redirect to a per-vendor customer page.
+    // The vendor is resolved by findVendorForAddress() and pinned in state;
+    // the AI assistant takes over on the same page. Customers only learn
+    // which barber they got at booking-confirmation time.
+    state.routedVendor = vendor;
+    if (state.agentSession && AGENT && typeof AGENT.mergeState === 'function') {
+      try {
+        state.agentSession.state = AGENT.mergeState(
+          state.agentSession.state || AGENT.emptyState(state.lang),
+          {
+            city: location.city,
+            zip: location.zip,
+            lang: state.lang
+          },
+          new Date()
+        );
+      } catch (e) {}
+    }
+    var change = document.querySelector('[data-action="changeLocation"]');
+    if (change) change.hidden = false;
+    var announce = interpolate(t('barberMatchedAnnounce'), { city: location.city || location.zip });
+    setLocationStatus(announce);
+    if (mode === 'voice') {
+      openVoiceAssistant();
+    } else {
+      openAssistantPanel('general');
+    }
     return true;
   }
 
@@ -516,6 +565,13 @@
 
   function preferredVendor() {
     var vendors = DATA && DATA.sampleVendors ? DATA.sampleVendors.filter(function(vendor) { return vendor.active !== false; }) : [];
+    // 1) An explicit Find-My-Barber gate match wins. This is the marketplace
+    //    auto-routing result and reflects the customer's actual address.
+    if (state.routedVendor && state.routedVendor.active !== false) {
+      var stillValid = vendors.filter(function(vendor) { return vendor.id === state.routedVendor.id; })[0];
+      if (stillValid) return stillValid;
+    }
+    // 2) Customer barber preference expressed to the AI agent (override).
     var sessionState = state.agentSession && state.agentSession.state;
     var preference = String(sessionState && sessionState.barberPreference || '').toLowerCase();
     if (preference) {
@@ -523,6 +579,14 @@
         return String(vendor.businessName + ' ' + vendor.barberName + ' ' + vendor.id).toLowerCase().indexOf(preference.split(/\s+/)[0]) >= 0;
       })[0];
       if (matched) return matched;
+    }
+    // 3) Address-based fallback before the customer has touched the gate, so
+    //    a returning visitor with a saved location still talks to the right
+    //    vendor on first message.
+    var saved = readSavedLocation();
+    if (saved && BOOKING && typeof BOOKING.findVendorForAddress === 'function') {
+      var routed = BOOKING.findVendorForAddress(saved, { vendors: vendors });
+      if (routed) return routed;
     }
     var service = selectedService();
     if (service && DATA.findVendorById) return DATA.findVendorById(service.vendorId);
@@ -728,12 +792,14 @@
   }
 
   function vendorUrl(service, mode) {
-    var saved = readSavedLocation();
-    if (saved && BOOKING && BOOKING.findVendorForAddress) {
-      var vendor = BOOKING.findVendorForAddress(saved, { vendors: DATA.sampleVendors });
-      if (vendor) return vendorUrlForRoute(vendor, service.id, mode, saved);
-    }
-    return '#mbLocationGate';
+    // Marketplace routing: the "Book this service" CTA never navigates to a
+    // per-vendor customer page. It either opens the location gate (if the
+    // customer has not entered city/ZIP yet) or anchors to the AI assistant.
+    // The click handler in renderSelectedService() short-circuits with
+    // openAssistantPanel() when a vendor has already been routed.
+    void mode;
+    void service;
+    return readSavedLocation() ? '#mbAssistantPanel' : '#mbLocationGate';
   }
 
   function renderServiceProgress(services) {
@@ -789,10 +855,18 @@
     title.textContent = serviceCopy(service, 'name') + ' · ' + formatMoney(service.price);
     book.href = vendorUrl(service, '');
     book.addEventListener('click', function(event) {
-      var saved = readSavedLocation();
-      if (saved && BOOKING.findVendorForAddress(saved, { vendors: DATA.sampleVendors })) return;
       event.preventDefault();
-      promptForLocation(service.id);
+      state.selectedServiceId = service.id;
+      var saved = readSavedLocation();
+      var routed = saved && BOOKING && BOOKING.findVendorForAddress
+        ? BOOKING.findVendorForAddress(saved, { vendors: DATA.sampleVendors })
+        : null;
+      if (routed) {
+        state.routedVendor = routed;
+        openAssistantPanel('general');
+      } else {
+        promptForLocation(service.id);
+      }
     });
     chat.type = 'button';
     voice.type = 'button';
@@ -1010,44 +1084,97 @@
     });
   }
 
+  function coverageRegionsFromVendors() {
+    // Group active vendors into coverage regions instead of leaking individual
+    // barber names. Each region card aggregates serviceAreas + languages +
+    // travel radius so customers see *where* we serve, not *who* serves it.
+    var vendors = DATA && DATA.sampleVendors ? DATA.sampleVendors.filter(function(vendor) {
+      return vendor.active !== false;
+    }) : [];
+    var byRegion = {};
+    vendors.forEach(function(vendor) {
+      var key = vendor.region || 'general';
+      if (!byRegion[key]) {
+        byRegion[key] = {
+          key: key,
+          cities: {},
+          languages: {},
+          maxRadius: 0,
+          minTravelFee: null,
+          maxRating: 0,
+          vendorCount: 0
+        };
+      }
+      var region = byRegion[key];
+      region.vendorCount += 1;
+      (vendor.serviceAreas || []).forEach(function(city) { region.cities[city] = true; });
+      (vendor.languages || []).forEach(function(lang) { region.languages[lang] = true; });
+      if (Number(vendor.travelRadiusMiles || 0) > region.maxRadius) region.maxRadius = Number(vendor.travelRadiusMiles || 0);
+      var fee = Number(vendor.baseTravelFee || 0);
+      if (region.minTravelFee === null || fee < region.minTravelFee) region.minTravelFee = fee;
+      if (Number(vendor.rating || 0) > region.maxRating) region.maxRating = Number(vendor.rating || 0);
+    });
+    return Object.keys(byRegion).map(function(key) {
+      var r = byRegion[key];
+      return {
+        key: key,
+        cities: Object.keys(r.cities),
+        languages: Object.keys(r.languages),
+        maxRadius: r.maxRadius,
+        minTravelFee: r.minTravelFee || 0,
+        maxRating: r.maxRating,
+        vendorCount: r.vendorCount
+      };
+    });
+  }
+
+  function coverageRegionLabel(regionKey) {
+    if (regionKey === 'oc') return t('coverageRegionOC');
+    if (regionKey === 'bayarea' || regionKey === 'bay-area' || regionKey === 'bay') return t('coverageRegionBay');
+    return t('vendorsTitle');
+  }
+
   function renderVendors() {
+    // Marketplace routing: render coverage-area cards instead of per-barber
+    // profiles. No barber names. No /mobile-barber/vendor/ links. The CTA
+    // scrolls to the Find-My-Barber gate which then auto-routes via
+    // BOOKING.findVendorForAddress().
     var list = document.getElementById('mbVendorList');
     var empty = document.getElementById('mbEmptyState');
     if (!list || !empty) return;
     list.innerHTML = '';
-    var vendors = DATA && DATA.sampleVendors ? DATA.sampleVendors.filter(function(vendor) {
-      return vendor.active !== false;
-    }) : [];
-
-    empty.hidden = vendors.length > 0;
-    vendors.forEach(function(vendor) {
-      var card = el('article', 'mb-vendor-card');
+    var regions = coverageRegionsFromVendors();
+    empty.hidden = regions.length > 0;
+    regions.forEach(function(region) {
+      var card = el('article', 'mb-vendor-card mb-coverage-card');
       var top = el('div', 'mb-vendor-card__top');
-      var avatar = el('div', 'mb-vendor-card__avatar');
       var headingWrap = el('div');
       var title = el('h3');
-      var barber = el('p');
-      var area = el('p');
-      var row = el('div', 'mb-meta-row');
-      var cta = el('a', 'mb-button mb-button--primary');
+      var subtitle = el('p');
+      var citiesLabel = el('p');
+      var metaRow = el('div', 'mb-meta-row');
+      var cta = el('button', 'mb-button mb-button--primary');
 
-      title.textContent = vendor.businessName;
-      barber.textContent = vendor.barberName;
-      area.textContent = t('serviceAreaLabel') + ': ' + (vendor.serviceAreas || []).join(', ');
-      row.appendChild(metaChip(t('radiusLabel'), vendor.travelRadiusMiles + ' mi'));
-      row.appendChild(metaChip(t('travelFeeLabel'), formatMoney(vendor.baseTravelFee)));
-      row.appendChild(metaChip(t('languagesLabel'), (vendor.languages || []).join(', ').toUpperCase()));
-      row.appendChild(metaChip(t('ratingLabel'), String(vendor.rating || '')));
-      cta.href = '/mobile-barber/vendor/' + encodeURIComponent(vendor.id);
-      cta.textContent = t('bookNow');
+      title.textContent = coverageRegionLabel(region.key);
+      subtitle.textContent = t('coverageCityListLabel');
+      citiesLabel.textContent = region.cities.slice(0, 8).join(' · ');
+      citiesLabel.className = 'mb-coverage-card__cities';
+      metaRow.appendChild(metaChip(t('radiusLabel'), region.maxRadius + ' mi'));
+      metaRow.appendChild(metaChip(t('travelFeeLabel'), formatMoney(region.minTravelFee)));
+      metaRow.appendChild(metaChip(t('languagesLabel'), region.languages.join(', ').toUpperCase()));
+      if (region.maxRating) metaRow.appendChild(metaChip(t('ratingLabel'), String(region.maxRating)));
+      cta.type = 'button';
+      cta.textContent = t('coverageCta');
+      cta.addEventListener('click', function() {
+        promptForLocation(state.selectedServiceId);
+      });
 
       headingWrap.appendChild(title);
-      headingWrap.appendChild(barber);
-      top.appendChild(avatar);
+      headingWrap.appendChild(subtitle);
       top.appendChild(headingWrap);
       card.appendChild(top);
-      card.appendChild(area);
-      card.appendChild(row);
+      card.appendChild(citiesLabel);
+      card.appendChild(metaRow);
       card.appendChild(cta);
       list.appendChild(card);
     });
@@ -1165,11 +1292,28 @@
 
   function init() {
     state.lang = getLang();
-    state.selectedServiceId = new URLSearchParams(root.location.search).get('serviceId') || '';
+    var params = new URLSearchParams(root.location.search);
+    state.selectedServiceId = params.get('serviceId') || '';
+    state.region = String(params.get('region') || '').toLowerCase();
     bind();
     prefillLocationGate();
     setLang(state.lang);
     startHeroRotation();
+    applyRegionDeepLink();
+  }
+
+  function applyRegionDeepLink() {
+    if (!state.region) return;
+    var bannerKey = state.region === 'oc' ? 'regionGateBannerOC'
+      : (state.region === 'bayarea' || state.region === 'bay-area' || state.region === 'bay') ? 'regionGateBannerBay'
+      : '';
+    if (!bannerKey) return;
+    setLocationStatus(t(bannerKey));
+    var gate = document.getElementById('mbLocationGate');
+    if (gate) {
+      try { gate.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+      gate.classList.add('mb-location-gate--active');
+    }
   }
 
   if (document.readyState === 'loading') {

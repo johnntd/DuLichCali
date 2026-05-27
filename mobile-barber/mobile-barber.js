@@ -79,6 +79,7 @@
       noServiceArea: "We don't serve {city} yet. Leave your email and we'll let you know when we expand.",
       waitlistSaved: "Thanks. We'll let you know when we expand there.",
       locationRequired: 'Please enter a city or 5-digit ZIP code.',
+      saveFailedRetry: "We couldn't save the booking just now. Please try again, or call the barber directly.",
       aiPreviewDisclosure: 'Sample AI-generated style preview. Real barber portfolio coming soon.',
       serviceAreaLabel: 'Service area',
       radiusLabel: 'Travel radius',
@@ -170,6 +171,7 @@
       noServiceArea: 'Hiện chưa phục vụ {city}. Để lại email, tụi em sẽ báo khi mở rộng khu vực.',
       waitlistSaved: 'Cảm ơn bạn. Tụi em sẽ báo khi mở rộng khu vực đó.',
       locationRequired: 'Vui lòng nhập thành phố hoặc mã ZIP 5 số.',
+      saveFailedRetry: 'Tụi em chưa lưu được lịch hẹn. Vui lòng thử lại, hoặc gọi trực tiếp cho thợ.',
       aiPreviewDisclosure: 'Ảnh mẫu tạo bằng AI. Portfolio thật của thợ sẽ có sau.',
       serviceAreaLabel: 'Khu vực phục vụ',
       radiusLabel: 'Bán kính di chuyển',
@@ -261,6 +263,7 @@
       noServiceArea: 'Todavía no servimos {city}. Deje su email y le avisaremos cuando lleguemos.',
       waitlistSaved: 'Gracias. Le avisaremos cuando ampliemos a esa zona.',
       locationRequired: 'Ingrese una ciudad o un código postal de 5 dígitos.',
+      saveFailedRetry: 'No pudimos guardar la cita ahora. Inténtelo de nuevo o llame directamente al barbero.',
       aiPreviewDisclosure: 'Vista previa de estilo generada por AI. Portafolio real del barbero próximamente.',
       serviceAreaLabel: 'Área de servicio',
       radiusLabel: 'Radio de viaje',
@@ -675,11 +678,24 @@
         }
         if (result.booking) {
           if (options.source) result.booking.source = options.source;
-          return BOOKING.saveBooking(result.booking).then(function(saved) {
-            state.lastBooking = saved.booking;
-            result.booking = saved.booking;
-            return result;
-          });
+          // Require a real Firestore write. The previous default silently
+          // fell back to localStorage when Firestore rejected, so the
+          // customer saw "saved" but the vendor portal never received the
+          // booking. Surface the failure to the customer + log it so the
+          // root cause is visible instead of buried.
+          return BOOKING.saveBooking(result.booking, { requireDatabase: true })
+            .then(function(saved) {
+              state.lastBooking = saved.booking;
+              result.booking = saved.booking;
+              if (root.console) root.console.info('[mobile-barber-agent] booking saved', { id: saved.booking.id, vendorId: saved.booking.vendorId, source: saved.source });
+              return result;
+            })
+            .catch(function(error) {
+              if (root.console) root.console.error('[mobile-barber-agent] booking save FAILED', error);
+              result.booking = null;
+              result.response = (result.response || '') + '\n\n⚠️ ' + t('saveFailedRetry');
+              return result;
+            });
         }
         return result;
       });

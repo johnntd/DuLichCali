@@ -97,25 +97,24 @@ function runMobileBarberAgentTests(test) {
     assertEq(result.session.state.intent, 'price');
   });
 
-  test('Mobile Barber AI successful booking requires summary then final confirmation', function() {
-    var session = null;
+  test('Mobile Barber AI successful booking auto-submits on first complete turn', function() {
+    // Behavior shipped 2026-05-27: once all required slots are filled AND
+    // availability passes, the agent auto-submits the booking. No second
+    // "yes" / "ok" / "confirm" round-trip. This eliminates the confirmation
+    // loop that previously left customers replying "ok" forever.
     var ctx = context({ id: 'ai-success-1' });
-    var first = MobileBarberAgent.handleMessage(session, 'My name is Kim. Phone 714-555-0100. I need haircut on 2026-06-01 at 10:00 at 123 Brookhurst St Westminster 92683.', Object.assign(ctx, { customerLookupResult: null }));
-    session = first.session;
-    assertEq(session.state.pendingAction, 'final_confirmation');
-    assert(!first.booking, 'first complete turn presents summary only');
-
-    var second = MobileBarberAgent.handleMessage(session, 'yes', ctx);
-    assert(second.booking, 'affirmative after summary creates booking');
-    assertEq(second.booking.source, 'ai_chat');
-    assertEq(second.booking.status, 'pending_barber_confirmation');
-    assertEq(second.booking.endTime, '11:15');
-    assertEq(second.booking.paymentMethod, 'unknown');
-    assertEq(second.booking.paymentStatus, 'unpaid');
-    assertEq(second.booking.zellePhone, '(714) 555-0148');
-    assertEq(second.booking.amountDue, second.booking.totalPrice);
-    assert(second.booking.pricingExplanation.indexOf('Service price') >= 0, 'AI booking should save shared pricing explanation');
-    assert(second.response.indexOf('Zelle') >= 0, 'AI confirmation should mention Zelle after-service payment');
+    var result = MobileBarberAgent.handleMessage(null, 'My name is Kim. Phone 714-555-0100. I need haircut on 2026-06-01 at 10:00 at 123 Brookhurst St Westminster 92683.', Object.assign(ctx, { customerLookupResult: null }));
+    assert(result.booking, 'first complete turn auto-creates booking (no extra confirm needed)');
+    assertEq(result.booking.source, 'ai_chat');
+    assertEq(result.booking.status, 'pending_barber_confirmation');
+    assertEq(result.booking.endTime, '11:15');
+    assertEq(result.booking.paymentMethod, 'unknown');
+    assertEq(result.booking.paymentStatus, 'unpaid');
+    assertEq(result.booking.zellePhone, '(714) 555-0148');
+    assertEq(result.booking.amountDue, result.booking.totalPrice);
+    assert(result.booking.pricingExplanation.indexOf('Service price') >= 0, 'AI booking should save shared pricing explanation');
+    assert(result.response.indexOf('Zelle') >= 0, 'AI confirmation should mention Zelle after-service payment');
+    assert(result.response.indexOf('Booking ID') >= 0 || result.response.indexOf('Mã đặt lịch') >= 0 || result.response.indexOf('ID de reserva') >= 0, 'success reply must reference the booking id');
   });
 
   test('Mobile Barber AI summary uses shared pricing engine and after-service payment copy', function() {
@@ -130,9 +129,9 @@ function runMobileBarberAgentTests(test) {
         zip: '92683'
       }
     });
-    assert(result.response.indexOf('$' + expected.totalPrice.toFixed(0)) >= 0, 'summary should use shared pricing total');
-    assert(result.response.indexOf('Payment is collected after the haircut by cash or Zelle') >= 0, 'summary should explain after-service cash/Zelle');
-    assert(result.response.indexOf('10:00 AM') >= 0, 'summary should display 12-hour time');
+    assert(result.response.indexOf('$' + expected.totalPrice.toFixed(0)) >= 0, 'saved reply should use shared pricing total');
+    assert(result.response.indexOf('Payment after the haircut by cash or Zelle') >= 0, 'saved reply should explain after-service cash/Zelle');
+    assert(result.response.indexOf('10:00 AM') >= 0, 'saved reply should display 12-hour time');
   });
 
   test('Mobile Barber AI parses spoken English and Vietnamese phone digits', function() {

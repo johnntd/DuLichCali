@@ -39,7 +39,7 @@
       unavailable: 'That time is not available. Please send another date or time.',
       outOfArea: 'That address is outside the normal service area, so the request can be sent for barber review before confirmation.',
       summary: 'Review this request: {service} on {date} at {time}, {address}, {city} {zip}. Estimated total {price}. Payment is collected after the haircut by cash or Zelle to {zellePhone}; preference: {paymentMethod}. Reply yes to send it.',
-      saved: 'Request sent. Booking ID: {id}. The barber still needs to confirm the appointment. Payment is collected after service by cash or Zelle to {zellePhone}. No online prepayment is required.',
+      saved: "Perfect. {service} on {date} at {time} sent to {barber}. You'll get a confirmation once they accept. Booking ID: {id}. Estimated total {price}. Payment after the haircut by cash or Zelle to {zellePhone}.",
       cancelled: 'I can help with cancellation or rescheduling, but this phase does not change existing bookings yet. Please call the barber for existing booking changes.',
       fallback: 'I can help collect a mobile barber booking request. What phone number should I use first?'
     },
@@ -66,7 +66,7 @@
       unavailable: 'Giờ đó không còn trống. Vui lòng gửi ngày hoặc giờ khác.',
       outOfArea: 'Địa chỉ đó ngoài khu vực phục vụ thường lệ, nên yêu cầu có thể gửi để thợ xem xét trước khi xác nhận.',
       summary: 'Vui lòng xem lại: {service} ngày {date} lúc {time}, {address}, {city} {zip}. Tổng ước tính {price}. Thanh toán sau khi cắt bằng tiền mặt hoặc Zelle tới {zellePhone}; cách muốn dùng: {paymentMethod}. Trả lời đồng ý để gửi.',
-      saved: 'Đã gửi yêu cầu. Mã đặt lịch: {id}. Thợ vẫn cần xác nhận lịch hẹn. Thanh toán sau dịch vụ bằng tiền mặt hoặc Zelle tới {zellePhone}; không cần trả trước online.',
+      saved: 'Tuyệt vời. Đã gửi {service} ngày {date} lúc {time} cho {barber}. Bạn sẽ nhận xác nhận khi thợ chấp nhận. Mã đặt lịch: {id}. Tổng ước tính {price}. Thanh toán sau dịch vụ bằng tiền mặt hoặc Zelle tới {zellePhone}.',
       cancelled: 'Em có thể hỗ trợ hướng dẫn hủy hoặc đổi lịch, nhưng phase này chưa thay đổi lịch đã có. Vui lòng gọi trực tiếp cho thợ.',
       fallback: 'Em có thể nhận yêu cầu đặt thợ cắt tóc tại nhà. Mình cho em số điện thoại trước nhé?'
     },
@@ -93,7 +93,7 @@
       unavailable: 'Ese horario no está disponible. Envíe otra fecha u hora.',
       outOfArea: 'Esa dirección está fuera del área normal de servicio, así que se puede enviar para revisión del barbero antes de confirmar.',
       summary: 'Revise esta solicitud: {service} el {date} a las {time}, {address}, {city} {zip}. Total estimado {price}. El pago se cobra despues del corte en efectivo o por Zelle a {zellePhone}; preferencia: {paymentMethod}. Responda si para enviarla.',
-      saved: 'Solicitud enviada. ID de reserva: {id}. El barbero todavía debe confirmar la cita. El pago se cobra despues del servicio en efectivo o por Zelle a {zellePhone}; no se requiere prepago en linea.',
+      saved: 'Perfecto. {service} el {date} a las {time} enviado a {barber}. Recibirá confirmación cuando lo acepte. ID de reserva: {id}. Total estimado {price}. Pago despues del servicio en efectivo o Zelle a {zellePhone}.',
       cancelled: 'Puedo ayudar con cancelación o cambio, pero esta fase todavía no modifica reservas existentes. Llame directamente al barbero.',
       fallback: 'Puedo recopilar una solicitud de barbero móvil. ¿Qué teléfono debo usar primero?'
     }
@@ -809,7 +809,11 @@
     var services = ctx.services || [];
     var service = serviceById(state.serviceId, services) || services[0];
     var text = trim(message).toLowerCase();
-    var affirmative = /\b(yes|confirm|send|book it|đồng ý|xác nhận|sí|si|confirmar)\b/i.test(text);
+    // Affirmative detection — broad enough to cover everyday human replies.
+    // The previous regex only matched literal yes/confirm/send/book it, so
+    // customers replying "ok", "okay", "perfect", "thanks", "go ahead",
+    // "sure", "yeah", "sounds good" got stuck in a confirmation loop.
+    var affirmative = /\b(yes|yeah|yep|yup|ok|okay|sure|please|confirm|confirmed|send|submit|book it|go ahead|sounds good|perfect|great|good|alright|all right|that works|let's do it|do it|fine|cool|thanks|thank you|đồng ý|xác nhận|được|ok luôn|ok nhé|tốt|cảm ơn|cám ơn|cảm ơn nhé|sí|si|claro|por favor|confirmar|gracias|adelante)\b/i.test(text);
 
     session.state = state;
     session.systemPrompt = buildPrompt(ctx, lang);
@@ -894,7 +898,13 @@
       return { session: session, response: reply(lang, 'unavailable') };
     }
 
-    if (!affirmative || state.pendingAction !== 'final_confirmation') {
+    // Out-of-area + review-required quotes still need one round of explicit
+    // confirmation because the price might shift; those keep the legacy gate.
+    // Otherwise: ALL slots present + availability OK → auto-submit. The
+    // customer never has to say "yes" / "ok" again. This eliminates the
+    // confirmation loop the nail-agent flow already avoided.
+    var requiresExplicitConfirm = !!availability.reviewRequired;
+    if (requiresExplicitConfirm && (!affirmative || state.pendingAction !== 'final_confirmation')) {
       state.pendingAction = 'final_confirmation';
       state.step = 'CONFIRM_SUMMARY';
       session.lastAvailabilityResult = availability;
@@ -912,7 +922,7 @@
       });
       return {
         session: session,
-        response: availability.reviewRequired ? (reply(lang, 'outOfArea') + ' ' + summaryText) : summaryText
+        response: reply(lang, 'outOfArea') + ' ' + summaryText
       };
     }
 
@@ -935,9 +945,23 @@
     });
     state.pendingAction = null;
     state.step = 'DONE';
+    session.lastAvailabilityResult = availability;
     session.lastBooking = built.booking;
     session.lastSystemContext = systemReason('booking_created', { id: built.booking.id, status: built.booking.status });
-    return { session: session, response: reply(lang, 'saved', { id: built.booking.id, zellePhone: built.booking.zellePhone || vendor.phone || '' }), booking: built.booking };
+    var barberDisplay = (vendor.barberName || vendor.businessName || '').trim() || 'the barber';
+    return {
+      session: session,
+      response: reply(lang, 'saved', {
+        id: built.booking.id,
+        zellePhone: built.booking.zellePhone || vendor.phone || '',
+        barber: barberDisplay,
+        service: availability.service.name,
+        date: draft.requestedDate,
+        time: BOOKING.formatTime12Hour ? BOOKING.formatTime12Hour(draft.startTime) : draft.startTime,
+        price: money(availability.price.totalPrice)
+      }),
+      booking: built.booking
+    };
   }
 
   function handleMessage(session, message, ctx) {

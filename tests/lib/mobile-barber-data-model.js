@@ -157,30 +157,23 @@ function runMobileBarberDataModelTests(test) {
     assert(bigResult.errors.some(function(err) { return err.indexOf('selfieDataUrl') >= 0; }), 'oversized selfie should fail');
   });
 
-  test('Mobile Barber AI preview module exposes compress + analyze + fallback', function() {
+  test('Mobile Barber AI preview module exposes compress + generate (no static fallback)', function() {
+    // The module no longer carries a deterministic catalog. The Firebase
+    // Function (generateHaircutPreviews) is the only source of truth, and
+    // it must return real image-to-image previews from Gemini 2.5 Flash
+    // Image. If the Function fails, the caller surfaces an explicit error
+    // — never a static substitute.
     var AIPreview = require('../../mobile-barber/mobile-barber-ai-preview');
-    assertEq(typeof AIPreview.analyze, 'function');
     assertEq(typeof AIPreview.compressImage, 'function');
-    assertEq(typeof AIPreview.staticRecommendations, 'function');
-    var recs = AIPreview.staticRecommendations({ lang: 'en' });
-    assertEq(recs.length, 3, '3 fallback recommendations');
-    assertEq(recs[0].styleId, 'business-haircut');
-    assertEq(recs[1].styleId, 'fade-haircut');
-    assertEq(recs[2].styleId, 'classic-haircut');
-    recs.forEach(function(r) {
-      assert(r.title && r.explanation && r.barberNotes && r.previewUrl, 'every rec has title/explanation/notes/previewUrl');
-      assertEq(r.isFallback, true);
-    });
-    // analyze() with no image must return a thenable that resolves with the
-    // fallback shape. The test runner is sync; we only sanity-check the
-    // shape inline (the full promise contract is exercised at runtime).
-    var pending = AIPreview.analyze({ lang: 'en' });
-    assert(pending && typeof pending.then === 'function', 'analyze returns a thenable');
+    assertEq(typeof AIPreview.generate, 'function');
+    assert(!AIPreview.staticRecommendations, 'static fallback API must be removed');
+    assert(!AIPreview.fallbackAnalysisSummary, 'fallback summary API must be removed');
+    // generate() with no image must resolve with an explicit error shape,
+    // not a fake recommendation list.
+    var pending = AIPreview.generate({ lang: 'en' });
+    assert(pending && typeof pending.then === 'function', 'generate returns a thenable');
     var captured = null;
     pending.then(function(r) { captured = r; }).catch(function() { captured = null; });
-    // Synchronous fallback function is independently testable:
-    var summary = AIPreview.fallbackAnalysisSummary('vi');
-    assert(summary && summary.length > 0, 'vi fallback summary present');
   });
 
   test('Mobile Barber customer profile validates preferences and vendor scope', function() {

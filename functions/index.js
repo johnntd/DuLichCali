@@ -2365,6 +2365,227 @@ exports.uploadVendorImage = onCall(
   }
 );
 
+// ── Mobile Barber: REAL AI haircut preview (image-to-image, identity preserved)
+//
+// Uses Gemini 2.5 Flash Image (Nano Banana) to generate 3 hairstyle previews
+// from a customer selfie. The model is multimodal image-in / image-out and
+// preserves the input subject reasonably well across edits — that is the
+// whole point of this endpoint vs the prior text-only fallback.
+//
+// No silent degradation. If the GEMINI_API_KEY secret is missing or the
+// provider call fails, this Function returns { ok:false, vendorMessage,
+// debugCode } and the client shows an explicit "AI preview unavailable"
+// message rather than substituting a static catalog.
+//
+// Cost: ~$0.039/image × 3 styles = ~$0.12 per booking that uses the feature.
+// Latency: 3 parallel calls, ~8-20s wall-clock typical.
+//
+// Endpoint contract:
+//   Input:  { selfieDataUrl: 'data:image/jpeg;base64,...', lang: 'en'|'vi'|'es' }
+//   Output: { ok: true, recommendations: [ { styleId, title, explanation,
+//                                              maintenance, barberNotes,
+//                                              previewDataUrl } x 3 ],
+//                       analysis: '...short text...' }
+//   Errors: { ok: false, vendorMessage: '...', debugCode: '...' }
+
+const HAIRCUT_STYLE_PROMPTS = {
+  en: [
+    {
+      styleId: 'business-haircut',
+      title: 'Classic Professional',
+      maintenance: 'Medium maintenance',
+      explanation: 'Clean side part, tapered sides, square neckline. Office-ready and timeless.',
+      barberNotes: '#3 on sides, scissor on top, square the neckline, light pomade.',
+      editPrompt: 'Same person, same face, same skin tone, same age, same ethnicity, same lighting. ONLY change the hairstyle to a classic professional men\'s haircut: clean side part, neatly tapered sides, slightly longer combed top, square neckline. Keep the beard or facial hair identical to the original. Photorealistic studio portrait quality. Do not change the face. Do not change the background drastically.'
+    },
+    {
+      styleId: 'fade-haircut',
+      title: 'Modern Fade',
+      maintenance: 'Medium maintenance',
+      explanation: 'Tight skin fade from temple to neck, textured top with light styling product.',
+      barberNotes: 'Skin fade up to temple line, scissor texture on top, hard part optional.',
+      editPrompt: 'Same person, same face, same skin tone, same age, same ethnicity, same lighting. ONLY change the hairstyle to a modern skin fade: very short on the sides fading from skin near the ears up to medium length on the top, textured and lightly styled top. Keep the beard or facial hair identical. Photorealistic. Do not change the face.'
+    },
+    {
+      styleId: 'classic-haircut',
+      title: 'Low-maintenance Clean Cut',
+      maintenance: 'Low maintenance',
+      explanation: 'Even length all around, easy to grow out, no daily styling required.',
+      barberNotes: '#4 all over, clean ear lines, clean neckline.',
+      editPrompt: 'Same person, same face, same skin tone, same age, same ethnicity, same lighting. ONLY change the hairstyle to a clean low-maintenance buzz / short crop: even short length all over the head, neat ear lines and neckline. Keep the beard or facial hair identical. Photorealistic. Do not change the face.'
+    }
+  ],
+  vi: [
+    {
+      styleId: 'business-haircut', title: 'Lịch sự cổ điển', maintenance: 'Trung bình',
+      explanation: 'Rẽ ngôi gọn, hai bên tapered, gáy vuông. Phù hợp văn phòng và sự kiện.',
+      barberNotes: 'Tông #3 hai bên, kéo trên đầu, cắt vuông gáy, một chút pomade.',
+      editPrompt: 'Same person, same face, same skin tone, same age, same ethnicity, same lighting. ONLY change the hairstyle to a classic professional Vietnamese men\'s haircut: clean side part, neatly tapered sides, slightly longer combed top, square neckline. Keep the beard or facial hair identical to the original. Photorealistic. Do not change the face.'
+    },
+    {
+      styleId: 'fade-haircut', title: 'Fade hiện đại', maintenance: 'Trung bình',
+      explanation: 'Fade sát từ thái dương đến gáy, phần trên tạo kết cấu với chút keo.',
+      barberNotes: 'Skin fade tới thái dương, kéo tạo kết cấu trên, có thể kẻ đường.',
+      editPrompt: 'Same person, same face, same skin tone, same age, same ethnicity, same lighting. ONLY change the hairstyle to a modern skin fade. Keep the beard or facial hair identical. Photorealistic. Do not change the face.'
+    },
+    {
+      styleId: 'classic-haircut', title: 'Gọn dễ giữ', maintenance: 'Dễ giữ',
+      explanation: 'Cùng độ dài quanh đầu, dễ dài ra, không cần tạo kiểu mỗi ngày.',
+      barberNotes: 'Tông #4 toàn đầu, gọn tai và gáy.',
+      editPrompt: 'Same person, same face, same skin tone, same age, same ethnicity, same lighting. ONLY change the hairstyle to a clean low-maintenance short crop. Keep the beard or facial hair identical. Photorealistic. Do not change the face.'
+    }
+  ],
+  es: [
+    {
+      styleId: 'business-haircut', title: 'Profesional clásico', maintenance: 'Mantenimiento medio',
+      explanation: 'Raya lateral limpia, lados degradados, nuca cuadrada. Listo para la oficina.',
+      barberNotes: '#3 a los lados, tijera arriba, nuca cuadrada, pomada ligera.',
+      editPrompt: 'Same person, same face, same skin tone, same age, same ethnicity, same lighting. ONLY change the hairstyle to a classic professional men\'s haircut. Keep the beard or facial hair identical. Photorealistic. Do not change the face.'
+    },
+    {
+      styleId: 'fade-haircut', title: 'Fade moderno', maintenance: 'Mantenimiento medio',
+      explanation: 'Fade ajustado de piel a largo natural, parte superior texturizada con producto ligero.',
+      barberNotes: 'Skin fade hasta la sien, textura con tijera arriba, raya marcada opcional.',
+      editPrompt: 'Same person, same face, same skin tone, same age, same ethnicity, same lighting. ONLY change the hairstyle to a modern skin fade. Keep the beard or facial hair identical. Photorealistic. Do not change the face.'
+    },
+    {
+      styleId: 'classic-haircut', title: 'Corte limpio de bajo mantenimiento', maintenance: 'Bajo mantenimiento',
+      explanation: 'Largo parejo, fácil de dejar crecer, sin estilizado diario.',
+      barberNotes: '#4 en toda la cabeza, oreja y nuca limpias.',
+      editPrompt: 'Same person, same face, same skin tone, same age, same ethnicity, same lighting. ONLY change the hairstyle to a clean low-maintenance short crop. Keep the beard or facial hair identical. Photorealistic. Do not change the face.'
+    }
+  ]
+};
+
+async function callGeminiImageEdit(geminiKey, inlineImageBase64, mimeType, editPrompt) {
+  // Gemini 2.5 Flash Image (Nano Banana) — image-to-image edit via the
+  // Generative Language REST API. Returns one or more inline_data parts.
+  const body = {
+    contents: [{
+      role: 'user',
+      parts: [
+        { inline_data: { mime_type: mimeType || 'image/jpeg', data: inlineImageBase64 } },
+        { text: editPrompt }
+      ]
+    }],
+    generationConfig: {
+      responseModalities: ['IMAGE']
+    }
+  };
+  const raw = await httpsPost(
+    'generativelanguage.googleapis.com',
+    `/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${geminiKey}`,
+    {},
+    body
+  );
+  const parsed = JSON.parse(raw);
+  if (!parsed.candidates || !parsed.candidates.length) throw new Error('no_candidates');
+  const parts = parsed.candidates[0].content && parsed.candidates[0].content.parts;
+  if (!parts || !parts.length) throw new Error('no_parts');
+  const imagePart = parts.find(p => p.inline_data || p.inlineData);
+  if (!imagePart) throw new Error('no_inline_data');
+  const inline = imagePart.inline_data || imagePart.inlineData;
+  return {
+    dataUrl: `data:${inline.mime_type || inline.mimeType || 'image/png'};base64,${inline.data}`
+  };
+}
+
+exports.generateHaircutPreviews = onCall(
+  {
+    region: 'us-central1',
+    secrets: [GEMINI_API_KEY],
+    timeoutSeconds: 180,
+    memory: '512MiB',
+    cors: true,
+  },
+  async (request) => {
+    // Public endpoint — customers calling from /mobile-barber landing are
+    // unauthenticated. The selfie itself is the auth surface; we treat the
+    // call as untrusted and clamp the input.
+    const data = request.data || {};
+    const rawDataUrl = String(data.selfieDataUrl || '');
+    const langParam  = String(data.lang || 'en').toLowerCase();
+    const lang = HAIRCUT_STYLE_PROMPTS[langParam] ? langParam : 'en';
+
+    if (!rawDataUrl || rawDataUrl.indexOf('data:image/') !== 0) {
+      return { ok: false, vendorMessage: 'Missing or invalid selfie image.', debugCode: 'INVALID_INPUT' };
+    }
+    // Pull mime + base64 portion. Hard cap input size at 1.5 MB to keep
+    // egress to Gemini reasonable.
+    const match = rawDataUrl.match(/^data:(image\/(?:jpeg|png|webp));base64,(.+)$/);
+    if (!match) return { ok: false, vendorMessage: 'Selfie format not supported (use JPEG/PNG/WebP).', debugCode: 'BAD_MIME' };
+    const mimeType = match[1];
+    const base64   = match[2];
+    if (base64.length > 1_500_000) {
+      return { ok: false, vendorMessage: 'Selfie is too large. Please use a smaller photo.', debugCode: 'IMAGE_TOO_LARGE' };
+    }
+
+    const geminiKey = GEMINI_API_KEY.value();
+    if (!geminiKey) {
+      return { ok: false, vendorMessage: 'AI preview is temporarily unavailable. Please continue your booking; the barber will suggest a style in person.', debugCode: 'NO_GEMINI_KEY' };
+    }
+
+    const prompts = HAIRCUT_STYLE_PROMPTS[lang];
+    const t0 = Date.now();
+    let results;
+    try {
+      // 3 parallel image edits. Each takes ~5–15 s; running in parallel
+      // keeps the wall-clock for the customer under 20 s typically.
+      results = await Promise.all(prompts.map(async (style) => {
+        try {
+          const edit = await callGeminiImageEdit(geminiKey, base64, mimeType, style.editPrompt);
+          return {
+            styleId: style.styleId,
+            title: style.title,
+            explanation: style.explanation,
+            maintenance: style.maintenance,
+            barberNotes: style.barberNotes,
+            previewDataUrl: edit.dataUrl,
+            error: null
+          };
+        } catch (err) {
+          return {
+            styleId: style.styleId,
+            title: style.title,
+            explanation: style.explanation,
+            maintenance: style.maintenance,
+            barberNotes: style.barberNotes,
+            previewDataUrl: '',
+            error: (err && err.message) || 'gemini_failed'
+          };
+        }
+      }));
+    } catch (e) {
+      console.error('[generateHaircutPreviews] catastrophic failure', e);
+      return { ok: false, vendorMessage: 'AI preview failed. Please try again or continue without a preview.', debugCode: 'PROVIDER_ERROR' };
+    }
+
+    const successful = results.filter(r => !r.error && r.previewDataUrl);
+    if (!successful.length) {
+      // Surface the underlying provider error verbatim so dev tools show
+      // the real cause; the customer-facing message stays human.
+      const firstErr = (results[0] && results[0].error) || 'unknown';
+      console.error('[generateHaircutPreviews] all 3 generations failed', results.map(r => r.error));
+      return {
+        ok: false,
+        vendorMessage: 'AI preview did not return a usable image. Please continue your booking; you can discuss styles with the barber in person.',
+        debugCode: 'PROVIDER_EMPTY',
+        debug: firstErr
+      };
+    }
+
+    const tookMs = Date.now() - t0;
+    return {
+      ok: true,
+      analysis: '', // future: a true vision call can populate this; today we omit fake text
+      recommendations: results,
+      provider: 'gemini-2.5-flash-image-preview',
+      generationTimeMs: tookMs,
+      successCount: successful.length
+    };
+  }
+);
+
 // ── Phase 13: Automatic Driver Dispatch ──────────────────────────────────────
 //
 // Flow:

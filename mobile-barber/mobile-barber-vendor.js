@@ -145,9 +145,8 @@
       aiPreviewCompressFailed: 'We could not read that image. Try a different photo or skip this step.',
       aiPreviewReadyToAnalyze: 'Ready. Tap Get 3 AI haircut suggestions.',
       aiPreviewAnalyzing: 'Analyzing your selfie…',
-      aiPreviewDoneNotice: '3 AI suggestions ready below. Pick one or skip.',
-      aiPreviewFallbackNotice: 'AI analysis was not available, so 3 popular styles are shown below. Pick one or skip.',
-      aiPreviewFallbackSummary: '3 popular haircut styles to discuss with the barber.',
+      aiPreviewDoneNotice: '3 AI-generated previews ready below. Pick one or skip.',
+      aiPreviewProviderError: 'AI preview is temporarily unavailable. Please continue your booking — the barber will discuss styles in person.',
       aiPreviewRemovedNotice: 'Selfie removed.',
       paymentChoiceLabel: 'How would you like to pay after the haircut?',
       paymentCash: 'Cash',
@@ -337,9 +336,8 @@
       aiPreviewCompressFailed: 'Không đọc được ảnh đó. Thử ảnh khác hoặc bỏ qua bước này.',
       aiPreviewReadyToAnalyze: 'Sẵn sàng. Nhấn Lấy 3 gợi ý.',
       aiPreviewAnalyzing: 'Đang phân tích selfie…',
-      aiPreviewDoneNotice: '3 gợi ý AI sẵn ở dưới. Chọn một hoặc bỏ qua.',
-      aiPreviewFallbackNotice: 'AI phân tích không khả dụng, dưới đây là 3 kiểu phổ biến. Chọn một hoặc bỏ qua.',
-      aiPreviewFallbackSummary: '3 kiểu tóc phổ biến để trao đổi với thợ.',
+      aiPreviewDoneNotice: '3 ảnh xem trước AI đã sẵn ở dưới. Chọn một hoặc bỏ qua.',
+      aiPreviewProviderError: 'AI preview tạm thời không khả dụng. Vui lòng tiếp tục đặt lịch — thợ sẽ trao đổi kiểu tóc trực tiếp.',
       aiPreviewRemovedNotice: 'Đã xóa ảnh selfie.',
       paymentChoiceLabel: 'Mình muốn trả tiền sau khi cắt tóc bằng cách nào?',
       paymentCash: 'Tiền mặt',
@@ -529,9 +527,8 @@
       aiPreviewCompressFailed: 'No pudimos leer esa imagen. Intente otra foto o salte este paso.',
       aiPreviewReadyToAnalyze: 'Listo. Toque Obtener 3 sugerencias.',
       aiPreviewAnalyzing: 'Analizando su selfie…',
-      aiPreviewDoneNotice: '3 sugerencias AI listas abajo. Elija una o salte.',
-      aiPreviewFallbackNotice: 'La AI no estaba disponible; abajo hay 3 estilos populares. Elija uno o salte.',
-      aiPreviewFallbackSummary: '3 estilos populares para conversar con el barbero.',
+      aiPreviewDoneNotice: '3 vistas previas AI listas abajo. Elija una o salte.',
+      aiPreviewProviderError: 'La vista previa AI no está disponible. Continúe la reserva — el barbero conversará los estilos en persona.',
       aiPreviewRemovedNotice: 'Selfie eliminada.',
       paymentChoiceLabel: 'Como prefiere pagar despues del corte?',
       paymentCash: 'Efectivo',
@@ -1441,11 +1438,25 @@
       customerEmail: document.getElementById('mbCustomerEmail').value,
       confirmationPreference: (document.querySelector('input[name="mbConfirmationPreference"]:checked') || {}).value || 'text',
       // Optional AI haircut preview. All fields default to empty / false so
-      // bookings without the feature stay valid.
+      // bookings without the feature stay valid. Recommendations are
+      // serialized lightly — preview images are stored on the booking as
+      // data URLs (Firestore inline) so the vendor can render them without
+      // re-calling the provider.
       selfieDataUrl: state.aiPreview.selfieDataUrl || '',
       aiAnalysisSummary: state.aiPreview.summary || '',
       aiAnalysisConsent: state.aiPreview.consent ? 'true' : 'false',
-      recommendedStyles: state.aiPreview.recommendations || [],
+      // Metadata only — strip the bulk image data URLs from the unselected
+      // recommendations so the booking doc stays well under Firestore's
+      // 1MB limit. The selected preview is stored separately below.
+      recommendedStyles: (state.aiPreview.recommendations || []).map(function(rec) {
+        return {
+          styleId: rec.styleId || '',
+          title: rec.title || '',
+          explanation: rec.explanation || '',
+          maintenance: rec.maintenance || '',
+          barberNotes: rec.barberNotes || ''
+        };
+      }),
       selectedStyleId: state.aiPreview.selectedStyleId || '',
       selectedStylePreviewUrl: state.aiPreview.selectedStylePreviewUrl || '',
       paymentMethod: (document.querySelector('input[name="mbPaymentMethod"]:checked') || {}).value || 'unknown',
@@ -2399,15 +2410,18 @@
         input.checked = true;
         card.classList.add('mb-ai-rec-card--selected');
       }
+      var imgSrc = rec.previewDataUrl || rec.previewUrl || '';
       input.addEventListener('change', function() {
         state.aiPreview.selectedStyleId = rec.styleId || '';
-        state.aiPreview.selectedStylePreviewUrl = rec.previewUrl || '';
+        // Store the generated image (or referenced URL) so the vendor
+        // dashboard renders the actual chosen preview later.
+        state.aiPreview.selectedStylePreviewUrl = imgSrc;
         renderAiRecommendationCards();
       });
       var thumb = document.createElement('div');
       thumb.className = 'mb-ai-rec-card__thumb';
       var img = document.createElement('img');
-      img.src = rec.previewUrl || '/assets/mobile-barber/styles/classic-haircut.jpg';
+      img.src = imgSrc;
       img.alt = rec.title || '';
       img.loading = 'lazy';
       thumb.appendChild(img);
@@ -2484,46 +2498,52 @@
       return;
     }
     if (state.aiPreview.analyzing) return;
-    if (!root.MobileBarberAIPreview || typeof root.MobileBarberAIPreview.analyze !== 'function') {
-      // Module missing — fall through to static recs so booking still works.
-      state.aiPreview.recommendations = staticAiRecsFallback();
-      state.aiPreview.summary = t('aiPreviewFallbackSummary');
+    if (!root.MobileBarberAIPreview || typeof root.MobileBarberAIPreview.generate !== 'function') {
+      // Module didn't load — explicit unavailable message, no static cards.
+      state.aiPreview.recommendations = [];
+      state.aiPreview.summary = '';
       renderAiRecommendationCards();
-      setAiPreviewStatus(t('aiPreviewFallbackNotice'));
+      setAiPreviewStatus(t('aiPreviewModuleMissing'));
       return;
     }
     state.aiPreview.analyzing = true;
+    state.aiPreview.recommendations = [];
+    state.aiPreview.selectedStyleId = '';
+    state.aiPreview.selectedStylePreviewUrl = '';
+    renderAiRecommendationCards();
     setAiPreviewStatus(t('aiPreviewAnalyzing'));
-    root.MobileBarberAIPreview.analyze({
+    root.MobileBarberAIPreview.generate({
       dataUrl: state.aiPreview.selfieDataUrl,
-      lang: state.lang,
-      engine: root.AIEngine || null
+      lang: state.lang
     }).then(function(result) {
       state.aiPreview.analyzing = false;
-      state.aiPreview.summary = result.summary || '';
+      if (!result || !result.ok) {
+        // Explicit failure message — do NOT fall back to a static catalog.
+        // The customer can still complete the booking; the preview is
+        // optional. The error code goes to the console for diagnostics.
+        var msg = (result && result.message) || t('aiPreviewProviderError');
+        if (root.console) root.console.warn('[mobile-barber-vendor] AI preview unavailable', result);
+        state.aiPreview.summary = '';
+        state.aiPreview.recommendations = [];
+        state.aiPreview.lastError = (result && result.code) || 'unknown';
+        renderAiRecommendationCards();
+        setAiPreviewStatus(msg);
+        return;
+      }
+      state.aiPreview.summary = result.analysis || '';
       state.aiPreview.recommendations = result.recommendations || [];
+      state.aiPreview.lastError = '';
       renderAiRecommendationCards();
-      setAiPreviewStatus(result.isFallback
-        ? t('aiPreviewFallbackNotice')
-        : t('aiPreviewDoneNotice'));
+      setAiPreviewStatus(t('aiPreviewDoneNotice'));
     }).catch(function(err) {
-      // Defensive — analyze() resolves with fallback rather than rejecting,
-      // but in case of an unexpected throw, still surface 3 static recs so
-      // the customer never gets stuck.
+      // Defensive — generate() should never reject, but if it does we still
+      // refuse to fake recommendations.
       state.aiPreview.analyzing = false;
-      state.aiPreview.recommendations = staticAiRecsFallback();
-      state.aiPreview.summary = t('aiPreviewFallbackSummary');
+      state.aiPreview.recommendations = [];
       state.aiPreview.lastError = (err && err.message) || 'analyze_failed';
       renderAiRecommendationCards();
-      setAiPreviewStatus(t('aiPreviewFallbackNotice'));
+      setAiPreviewStatus(t('aiPreviewProviderError'));
     });
-  }
-
-  function staticAiRecsFallback() {
-    if (root.MobileBarberAIPreview && typeof root.MobileBarberAIPreview.staticRecommendations === 'function') {
-      return root.MobileBarberAIPreview.staticRecommendations({ lang: state.lang });
-    }
-    return [];
   }
 
   function removeAiPreviewSelfie(silent) {

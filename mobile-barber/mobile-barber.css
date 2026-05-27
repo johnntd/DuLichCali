@@ -2339,6 +2339,150 @@
 }
 /* ---------- /Compact list-row ---------- */
 
+/* ---------- Settings section + accordion panels (vendor dashboard) ---------- */
+.mb-settings-section {
+  margin-top: 1.6rem;
+  padding: 1.1rem;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: var(--r-md);
+  background: rgba(4, 18, 32, .58);
+}
+
+.mb-settings-section__head {
+  display: grid;
+  gap: .2rem;
+  margin: 0 0 .85rem;
+}
+
+.mb-settings-section__head h2 {
+  font-family: var(--font-d, 'Bodoni Moda', serif);
+  font-size: var(--text-xl);
+  color: var(--cream);
+  letter-spacing: .01em;
+  margin: 0;
+}
+
+.mb-settings-section__hint {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.mb-settings-grid {
+  display: grid;
+  gap: .6rem;
+}
+
+.mb-settings-panel {
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: var(--r-sm);
+  background: rgba(6, 24, 42, .54);
+  overflow: hidden;
+  transition: border-color .18s ease, background .18s ease;
+}
+
+.mb-settings-panel[open] {
+  border-color: rgba(245, 166, 35, .55);
+  background: rgba(8, 30, 52, .82);
+}
+
+.mb-settings-panel__summary {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'title chevron'
+    'sub   chevron';
+  align-items: center;
+  column-gap: .75rem;
+  padding: .8rem 1rem;
+  cursor: pointer;
+  list-style: none;
+  min-height: 56px;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mb-settings-panel__summary::-webkit-details-marker { display: none; }
+.mb-settings-panel__summary::marker { content: ''; }
+
+.mb-settings-panel__summary:focus-visible {
+  outline: 2px solid var(--gold-lt);
+  outline-offset: -2px;
+}
+
+.mb-settings-panel__summary:hover {
+  background: rgba(8, 30, 52, .35);
+}
+
+.mb-settings-panel__title {
+  grid-area: title;
+  font-size: var(--text-md);
+  font-weight: 800;
+  color: var(--cream);
+  letter-spacing: .01em;
+}
+
+.mb-settings-panel__sub {
+  grid-area: sub;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.mb-settings-panel__chevron {
+  grid-area: chevron;
+  width: 1.4rem;
+  text-align: center;
+  font-size: var(--text-md);
+  color: var(--muted);
+  transition: transform .2s ease, color .2s ease;
+}
+
+.mb-settings-panel[open] .mb-settings-panel__chevron {
+  transform: rotate(180deg);
+  color: var(--gold-lt);
+}
+
+.mb-settings-panel__body {
+  display: grid;
+  gap: .65rem;
+  padding: .25rem 1rem 1rem;
+  border-top: 1px solid rgba(255, 255, 255, .08);
+}
+
+.mb-settings-panel__body .mb-dashboard-panel__head h3 {
+  font-family: var(--font-d, 'Bodoni Moda', serif);
+  font-size: var(--text-md);
+  margin: 0;
+  color: var(--cream);
+}
+
+/* Smooth open animation when supported (chrome, edge, safari 18+) */
+@supports (interpolate-size: allow-keywords) {
+  .mb-settings-panel { interpolate-size: allow-keywords; }
+  .mb-settings-panel::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition: block-size .25s ease, content-visibility .25s ease allow-discrete;
+  }
+  .mb-settings-panel[open]::details-content { block-size: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mb-settings-panel,
+  .mb-settings-panel__chevron,
+  .mb-settings-panel__summary { transition: none; }
+}
+
+/* Desktop: two-column accordion grid so multiple panels can be expanded
+   side-by-side without long vertical scrolls. */
+@media (min-width: 1200px) {
+  .mb-settings-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem;
+  }
+}
+/* ---------- /Settings section ---------- */
+
 .mb-booking-card {
   display: grid;
   gap: .55rem;

@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260527a">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260527b">
 </head>
 <body class="mb-page mb-dashboard-page">
   <main class="mb-shell mb-dashboard-shell" id="mobileBarberDashboardApp" data-page="mobile-barber-dashboard">
@@ -84,88 +84,134 @@
       <div class="mb-dashboard-list mb-dashboard-list--wide" id="mbUpcomingList"></div>
     </section>
 
-    <section class="mb-dashboard-grid">
-      <article class="mb-dashboard-panel" aria-labelledby="mbProfileTitle">
-        <div class="mb-dashboard-panel__head">
-          <h2 id="mbProfileTitle" data-i18n="profileTitle"></h2>
-          <button class="mb-button mb-button--primary mb-button--sm" type="button" data-action="saveProfile" data-i18n="saveButton"></button>
-        </div>
-        <form class="mb-dashboard-form" id="mbProfileForm">
-          <label class="mb-field"><span data-i18n="businessNameLabel"></span><input id="mbDashBusinessName" type="text"></label>
-          <label class="mb-field"><span data-i18n="barberNameLabel"></span><input id="mbDashBarberName" type="text"></label>
-          <label class="mb-field"><span data-i18n="phoneLabel"></span><input id="mbDashPhone" type="tel"></label>
-          <label class="mb-field"><span data-i18n="emailLabel"></span><input id="mbDashEmail" type="email"></label>
-          <label class="mb-field"><span data-i18n="serviceAreaLabel"></span><textarea id="mbDashServiceAreas" rows="3"></textarea></label>
-          <label class="mb-field"><span data-i18n="travelRadiusLabel"></span><input id="mbDashTravelRadius" type="number" min="0" step="1"></label>
-          <label class="mb-field"><span data-i18n="travelFeeLabel"></span><input id="mbDashTravelFee" type="number" min="0" step="1"></label>
-        </form>
-      </article>
+    <section class="mb-settings-section" id="mbSettingsSection" aria-labelledby="mbSettingsTitle">
+      <header class="mb-settings-section__head">
+        <h2 id="mbSettingsTitle" data-i18n="settingsTitle"></h2>
+        <p class="mb-settings-section__hint" data-i18n="settingsHint"></p>
+      </header>
+      <div class="mb-settings-grid">
 
-      <article class="mb-dashboard-panel" aria-labelledby="mbServicesManageTitle">
-        <div class="mb-dashboard-panel__head">
-          <h2 id="mbServicesManageTitle" data-i18n="servicesManageTitle"></h2>
-          <button class="mb-button mb-button--primary mb-button--sm" type="button" data-action="saveService" data-i18n="saveServiceButton"></button>
-        </div>
-        <form class="mb-dashboard-form" id="mbServiceForm">
-          <label class="mb-field"><span data-i18n="serviceSelectLabel"></span><select id="mbDashServiceSelect"></select></label>
-          <label class="mb-field"><span data-i18n="serviceNameLabel"></span><input id="mbDashServiceName" type="text"></label>
-          <label class="mb-field"><span data-i18n="servicePriceLabel"></span><input id="mbDashServicePrice" type="number" min="0" step="1"></label>
-          <label class="mb-field"><span data-i18n="serviceDurationLabel"></span><input id="mbDashServiceDuration" type="number" min="1" step="5"></label>
-          <label class="mb-field"><span data-i18n="cleanupBufferLabel"></span><input id="mbDashCleanupBuffer" type="number" min="0" step="5"></label>
-          <label class="mb-field"><span data-i18n="travelBufferLabel"></span><input id="mbDashTravelBuffer" type="number" min="0" step="5"></label>
-        </form>
-        <div class="mb-dashboard-list" id="mbServicesManageList"></div>
-      </article>
-    </section>
+        <details class="mb-settings-panel" id="mbSettingsProfile">
+          <summary class="mb-settings-panel__summary">
+            <span class="mb-settings-panel__title" data-i18n="settingsProfileTitle"></span>
+            <span class="mb-settings-panel__sub" data-i18n="settingsProfileSub"></span>
+            <span class="mb-settings-panel__chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div class="mb-settings-panel__body">
+            <div class="mb-dashboard-panel__head">
+              <h3 id="mbProfileTitle" data-i18n="profileTitle"></h3>
+              <button class="mb-button mb-button--primary mb-button--sm" type="button" data-action="saveProfile" data-i18n="saveButton"></button>
+            </div>
+            <form class="mb-dashboard-form" id="mbProfileForm">
+              <label class="mb-field"><span data-i18n="businessNameLabel"></span><input id="mbDashBusinessName" type="text"></label>
+              <label class="mb-field"><span data-i18n="barberNameLabel"></span><input id="mbDashBarberName" type="text"></label>
+              <label class="mb-field"><span data-i18n="phoneLabel"></span><input id="mbDashPhone" type="tel"></label>
+              <label class="mb-field"><span data-i18n="emailLabel"></span><input id="mbDashEmail" type="email"></label>
+              <label class="mb-field"><span data-i18n="serviceAreaLabel"></span><textarea id="mbDashServiceAreas" rows="3"></textarea></label>
+              <label class="mb-field"><span data-i18n="travelRadiusLabel"></span><input id="mbDashTravelRadius" type="number" min="0" step="1"></label>
+              <label class="mb-field"><span data-i18n="travelFeeLabel"></span><input id="mbDashTravelFee" type="number" min="0" step="1"></label>
+            </form>
+          </div>
+        </details>
 
-    <section class="mb-dashboard-grid">
-      <article class="mb-dashboard-panel" aria-labelledby="mbHoursTitle">
-        <div class="mb-dashboard-panel__head">
-          <h2 id="mbHoursTitle" data-i18n="hoursTitle"></h2>
-          <button class="mb-button mb-button--primary mb-button--sm" type="button" data-action="saveHours" data-i18n="saveHoursButton"></button>
-        </div>
-        <div class="mb-hours-grid" id="mbHoursGrid"></div>
-      </article>
+        <details class="mb-settings-panel" id="mbSettingsServices">
+          <summary class="mb-settings-panel__summary">
+            <span class="mb-settings-panel__title" data-i18n="settingsServicesTitle"></span>
+            <span class="mb-settings-panel__sub" data-i18n="settingsServicesSub"></span>
+            <span class="mb-settings-panel__chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div class="mb-settings-panel__body">
+            <div class="mb-dashboard-panel__head">
+              <h3 id="mbServicesManageTitle" data-i18n="servicesManageTitle"></h3>
+              <button class="mb-button mb-button--primary mb-button--sm" type="button" data-action="saveService" data-i18n="saveServiceButton"></button>
+            </div>
+            <form class="mb-dashboard-form" id="mbServiceForm">
+              <label class="mb-field"><span data-i18n="serviceSelectLabel"></span><select id="mbDashServiceSelect"></select></label>
+              <label class="mb-field"><span data-i18n="serviceNameLabel"></span><input id="mbDashServiceName" type="text"></label>
+              <label class="mb-field"><span data-i18n="servicePriceLabel"></span><input id="mbDashServicePrice" type="number" min="0" step="1"></label>
+              <label class="mb-field"><span data-i18n="serviceDurationLabel"></span><input id="mbDashServiceDuration" type="number" min="1" step="5"></label>
+              <label class="mb-field"><span data-i18n="cleanupBufferLabel"></span><input id="mbDashCleanupBuffer" type="number" min="0" step="5"></label>
+              <label class="mb-field"><span data-i18n="travelBufferLabel"></span><input id="mbDashTravelBuffer" type="number" min="0" step="5"></label>
+            </form>
+            <div class="mb-dashboard-list" id="mbServicesManageList"></div>
+          </div>
+        </details>
 
-      <article class="mb-dashboard-panel" aria-labelledby="mbBlocksTitle">
-        <div class="mb-dashboard-panel__head">
-          <h2 id="mbBlocksTitle" data-i18n="blocksTitle"></h2>
-          <button class="mb-button mb-button--primary mb-button--sm" type="button" data-action="addBlock" data-i18n="addBlockButton"></button>
-        </div>
-        <form class="mb-dashboard-form" id="mbBlockForm">
-          <label class="mb-field"><span data-i18n="blockDateLabel"></span><input id="mbBlockDate" type="date"></label>
-          <label class="mb-field"><span data-i18n="blockStartLabel"></span><input id="mbBlockStart" type="time"></label>
-          <label class="mb-field"><span data-i18n="blockEndLabel"></span><input id="mbBlockEnd" type="time"></label>
-          <label class="mb-field"><span data-i18n="blockReasonLabel"></span><input id="mbBlockReason" type="text"></label>
-        </form>
-        <div class="mb-dashboard-list" id="mbBlocksList"></div>
-      </article>
-    </section>
+        <details class="mb-settings-panel" id="mbSettingsHours">
+          <summary class="mb-settings-panel__summary">
+            <span class="mb-settings-panel__title" data-i18n="settingsHoursTitle"></span>
+            <span class="mb-settings-panel__sub" data-i18n="settingsHoursSub"></span>
+            <span class="mb-settings-panel__chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div class="mb-settings-panel__body">
+            <div class="mb-dashboard-panel__head">
+              <h3 id="mbHoursTitle" data-i18n="hoursTitle"></h3>
+              <button class="mb-button mb-button--primary mb-button--sm" type="button" data-action="saveHours" data-i18n="saveHoursButton"></button>
+            </div>
+            <div class="mb-hours-grid" id="mbHoursGrid"></div>
+          </div>
+        </details>
 
-    <section class="mb-dashboard-grid">
-      <article class="mb-dashboard-panel" aria-labelledby="mbPortfolioManageTitle">
-        <div class="mb-dashboard-panel__head">
-          <h2 id="mbPortfolioManageTitle" data-i18n="portfolioTitle"></h2>
-          <button class="mb-button mb-button--primary mb-button--sm" type="button" data-action="addPortfolio" data-i18n="addPortfolioButton"></button>
-        </div>
-        <form class="mb-dashboard-form" id="mbPortfolioForm">
-          <label class="mb-field"><span data-i18n="portfolioTitleLabel"></span><input id="mbPortfolioTitleInput" type="text"></label>
-          <label class="mb-field"><span data-i18n="portfolioDescriptionLabel"></span><textarea id="mbPortfolioDescription" rows="3"></textarea></label>
-          <label class="mb-field"><span data-i18n="portfolioOrderLabel"></span><input id="mbPortfolioOrder" type="number" min="0" step="1"></label>
-          <label class="mb-field"><span data-i18n="portfolioUploadLabel"></span><input id="mbPortfolioUpload" type="file" accept="image/*"></label>
-          <label class="mb-field"><span data-i18n="beforeImageLabel"></span><input id="mbPortfolioBeforeUpload" type="file" accept="image/*"></label>
-          <label class="mb-field"><span data-i18n="afterImageLabel"></span><input id="mbPortfolioAfterUpload" type="file" accept="image/*"></label>
-        </form>
-        <div class="mb-dashboard-list" id="mbPortfolioManageList"></div>
-      </article>
+        <details class="mb-settings-panel" id="mbSettingsBlocks">
+          <summary class="mb-settings-panel__summary">
+            <span class="mb-settings-panel__title" data-i18n="settingsBlocksTitle"></span>
+            <span class="mb-settings-panel__sub" data-i18n="settingsBlocksSub"></span>
+            <span class="mb-settings-panel__chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div class="mb-settings-panel__body">
+            <div class="mb-dashboard-panel__head">
+              <h3 id="mbBlocksTitle" data-i18n="blocksTitle"></h3>
+              <button class="mb-button mb-button--primary mb-button--sm" type="button" data-action="addBlock" data-i18n="addBlockButton"></button>
+            </div>
+            <form class="mb-dashboard-form" id="mbBlockForm">
+              <label class="mb-field"><span data-i18n="blockDateLabel"></span><input id="mbBlockDate" type="date"></label>
+              <label class="mb-field"><span data-i18n="blockStartLabel"></span><input id="mbBlockStart" type="time"></label>
+              <label class="mb-field"><span data-i18n="blockEndLabel"></span><input id="mbBlockEnd" type="time"></label>
+              <label class="mb-field"><span data-i18n="blockReasonLabel"></span><input id="mbBlockReason" type="text"></label>
+            </form>
+            <div class="mb-dashboard-list" id="mbBlocksList"></div>
+          </div>
+        </details>
 
-      <article class="mb-dashboard-panel" aria-labelledby="mbReviewsManageTitle">
-        <div class="mb-dashboard-panel__head">
-          <h2 id="mbReviewsManageTitle" data-i18n="reviewsManageTitle"></h2>
-          <button class="mb-button mb-button--primary mb-button--sm" type="button" data-action="saveReviewResponses" data-i18n="saveReviewResponsesButton"></button>
-        </div>
-        <div class="mb-dashboard-list" id="mbReviewsManageList"></div>
-      </article>
+        <details class="mb-settings-panel" id="mbSettingsPortfolio">
+          <summary class="mb-settings-panel__summary">
+            <span class="mb-settings-panel__title" data-i18n="settingsPortfolioTitle"></span>
+            <span class="mb-settings-panel__sub" data-i18n="settingsPortfolioSub"></span>
+            <span class="mb-settings-panel__chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div class="mb-settings-panel__body">
+            <div class="mb-dashboard-panel__head">
+              <h3 id="mbPortfolioManageTitle" data-i18n="portfolioTitle"></h3>
+              <button class="mb-button mb-button--primary mb-button--sm" type="button" data-action="addPortfolio" data-i18n="addPortfolioButton"></button>
+            </div>
+            <form class="mb-dashboard-form" id="mbPortfolioForm">
+              <label class="mb-field"><span data-i18n="portfolioTitleLabel"></span><input id="mbPortfolioTitleInput" type="text"></label>
+              <label class="mb-field"><span data-i18n="portfolioDescriptionLabel"></span><textarea id="mbPortfolioDescription" rows="3"></textarea></label>
+              <label class="mb-field"><span data-i18n="portfolioOrderLabel"></span><input id="mbPortfolioOrder" type="number" min="0" step="1"></label>
+              <label class="mb-field"><span data-i18n="portfolioUploadLabel"></span><input id="mbPortfolioUpload" type="file" accept="image/*"></label>
+              <label class="mb-field"><span data-i18n="beforeImageLabel"></span><input id="mbPortfolioBeforeUpload" type="file" accept="image/*"></label>
+              <label class="mb-field"><span data-i18n="afterImageLabel"></span><input id="mbPortfolioAfterUpload" type="file" accept="image/*"></label>
+            </form>
+            <div class="mb-dashboard-list" id="mbPortfolioManageList"></div>
+          </div>
+        </details>
+
+        <details class="mb-settings-panel" id="mbSettingsReviews">
+          <summary class="mb-settings-panel__summary">
+            <span class="mb-settings-panel__title" data-i18n="settingsReviewsTitle"></span>
+            <span class="mb-settings-panel__sub" data-i18n="settingsReviewsSub"></span>
+            <span class="mb-settings-panel__chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div class="mb-settings-panel__body">
+            <div class="mb-dashboard-panel__head">
+              <h3 id="mbReviewsManageTitle" data-i18n="reviewsManageTitle"></h3>
+              <button class="mb-button mb-button--primary mb-button--sm" type="button" data-action="saveReviewResponses" data-i18n="saveReviewResponsesButton"></button>
+            </div>
+            <div class="mb-dashboard-list" id="mbReviewsManageList"></div>
+          </div>
+        </details>
+
+      </div>
     </section>
 
     <div class="mb-dashboard-toast" id="mbDashboardToast" hidden></div>
@@ -191,6 +237,6 @@
   <script src="/notifications.js?v=20260525a"></script>
   <script src="/mobile-barber/mobile-barber-data.js?v=20260525h"></script>
   <script src="/mobile-barber/mobile-barber-booking.js?v=20260525ac"></script>
-  <script src="/mobile-barber/mobile-barber-dashboard.js?v=20260526a"></script>
+  <script src="/mobile-barber/mobile-barber-dashboard.js?v=20260527a"></script>
 </body>
 </html>

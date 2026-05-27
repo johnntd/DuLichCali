@@ -80,6 +80,27 @@
       waitlistSaved: "Thanks. We'll let you know when we expand there.",
       locationRequired: 'Please enter a city or 5-digit ZIP code.',
       saveFailedRetry: "We couldn't save the booking just now. Please try again, or call the barber directly.",
+      homeAiPreviewKicker: 'Optional',
+      homeAiPreviewTitle: 'See yourself in 3 AI haircut previews',
+      homeAiPreviewIntro: "Upload a selfie and the AI will generate 3 photorealistic previews of your face with different hairstyles. Pick one and we'll attach it to your booking so the barber knows exactly what you want.",
+      homeAiPreviewConsent: 'I agree the AI may use my selfie to generate haircut previews. The image is shared only with my assigned barber and is never used for marketing.',
+      homeAiPreviewUploadLabel: 'Upload a selfie (face + hair visible, good light)',
+      homeAiPreviewAnalyze: 'Get 3 AI hairstyle previews',
+      homeAiPreviewRemove: 'Remove selfie',
+      homeAiPreviewDisclosure: 'AI previews are suggestions only — final result may differ. Your selfie stays on this booking and is only shown to the assigned barber.',
+      homeAiPreviewBadge: 'AI suggestion',
+      homeAiPreviewBarberNotesLabel: 'Barber notes:',
+      homeAiPreviewSelfieAlt: 'Your selfie preview',
+      homeAiPreviewConsentRequired: 'Please tick the consent box first.',
+      homeAiPreviewCompressing: 'Preparing image…',
+      homeAiPreviewCompressFailed: 'Could not read that photo. Try a different one.',
+      homeAiPreviewReady: 'Ready. Tap "Get 3 AI hairstyle previews".',
+      homeAiPreviewAnalyzing: 'Generating 3 previews… this can take ~10 seconds.',
+      homeAiPreviewDone: '3 previews ready. Pick one to attach to your booking, or scroll past.',
+      homeAiPreviewProviderError: 'AI preview is temporarily unavailable. You can still book without it — the barber will discuss styles in person.',
+      homeAiPreviewSelectedAck: 'Style attached. Continue booking with the chat below.',
+      homeAiPreviewRemoved: 'Selfie removed.',
+      homeAiPreviewAttachNote: 'Your selection will be attached to the booking automatically when you send it through the chat.',
       aiPreviewDisclosure: 'Sample AI-generated style preview. Real barber portfolio coming soon.',
       serviceAreaLabel: 'Service area',
       radiusLabel: 'Travel radius',
@@ -178,6 +199,27 @@
       waitlistSaved: 'Cảm ơn bạn. Tụi em sẽ báo khi mở rộng khu vực đó.',
       locationRequired: 'Vui lòng nhập thành phố hoặc mã ZIP 5 số.',
       saveFailedRetry: 'Tụi em chưa lưu được lịch hẹn. Vui lòng thử lại, hoặc gọi trực tiếp cho thợ.',
+      homeAiPreviewKicker: 'Không bắt buộc',
+      homeAiPreviewTitle: 'Xem chính bạn trong 3 kiểu tóc do AI tạo',
+      homeAiPreviewIntro: 'Tải ảnh selfie và AI sẽ tạo 3 hình xem trước chân thực với các kiểu tóc khác nhau. Chọn một kiểu và tụi em sẽ đính kèm vào lịch hẹn để thợ biết chính xác bạn muốn gì.',
+      homeAiPreviewConsent: 'Tôi đồng ý cho AI dùng ảnh selfie để tạo hình xem trước kiểu tóc. Ảnh chỉ chia sẻ với thợ phụ trách và không dùng cho mục đích quảng cáo.',
+      homeAiPreviewUploadLabel: 'Tải ảnh selfie (thấy rõ mặt và tóc, đủ sáng)',
+      homeAiPreviewAnalyze: 'Lấy 3 hình xem trước kiểu tóc từ AI',
+      homeAiPreviewRemove: 'Xóa selfie',
+      homeAiPreviewDisclosure: 'Hình AI chỉ mang tính tham khảo — kết quả thực tế có thể khác. Selfie chỉ lưu trên lịch hẹn này và chỉ thợ phụ trách xem được.',
+      homeAiPreviewBadge: 'Gợi ý AI',
+      homeAiPreviewBarberNotesLabel: 'Ghi chú cho thợ:',
+      homeAiPreviewSelfieAlt: 'Ảnh selfie của bạn',
+      homeAiPreviewConsentRequired: 'Vui lòng đồng ý điều khoản AI trước.',
+      homeAiPreviewCompressing: 'Đang chuẩn bị ảnh…',
+      homeAiPreviewCompressFailed: 'Không đọc được ảnh đó. Vui lòng thử ảnh khác.',
+      homeAiPreviewReady: 'Sẵn sàng. Nhấn "Lấy 3 hình xem trước".',
+      homeAiPreviewAnalyzing: 'Đang tạo 3 hình xem trước… mất khoảng 10 giây.',
+      homeAiPreviewDone: '3 hình đã sẵn. Chọn một để đính kèm lịch hẹn, hoặc bỏ qua.',
+      homeAiPreviewProviderError: 'AI preview tạm thời không khả dụng. Bạn vẫn có thể đặt lịch — thợ sẽ trao đổi kiểu tóc trực tiếp.',
+      homeAiPreviewSelectedAck: 'Đã đính kèm kiểu tóc. Tiếp tục đặt lịch trong khung chat bên dưới.',
+      homeAiPreviewRemoved: 'Đã xóa selfie.',
+      homeAiPreviewAttachNote: 'Lựa chọn của bạn sẽ tự động đính kèm vào lịch hẹn khi gửi qua chat.',
       aiPreviewDisclosure: 'Ảnh mẫu tạo bằng AI. Portfolio thật của thợ sẽ có sau.',
       serviceAreaLabel: 'Khu vực phục vụ',
       radiusLabel: 'Bán kính di chuyển',
@@ -276,6 +318,27 @@
       waitlistSaved: 'Gracias. Le avisaremos cuando ampliemos a esa zona.',
       locationRequired: 'Ingrese una ciudad o un código postal de 5 dígitos.',
       saveFailedRetry: 'No pudimos guardar la cita ahora. Inténtelo de nuevo o llame directamente al barbero.',
+      homeAiPreviewKicker: 'Opcional',
+      homeAiPreviewTitle: 'Vea su rostro en 3 cortes generados por AI',
+      homeAiPreviewIntro: 'Suba una selfie y la AI generará 3 vistas previas fotorrealistas de su rostro con distintos cortes. Elija uno y lo adjuntaremos a su cita para que el barbero sepa exactamente qué quiere.',
+      homeAiPreviewConsent: 'Acepto que la AI use mi selfie para generar vistas previas. La imagen se comparte solo con el barbero asignado y nunca se usa para marketing.',
+      homeAiPreviewUploadLabel: 'Suba una selfie (cara y cabello visibles, buena luz)',
+      homeAiPreviewAnalyze: 'Obtener 3 vistas previas con AI',
+      homeAiPreviewRemove: 'Eliminar selfie',
+      homeAiPreviewDisclosure: 'Las vistas previas AI son sólo sugerencias — el resultado real puede variar. Su selfie queda en esta cita y sólo la ve el barbero asignado.',
+      homeAiPreviewBadge: 'Sugerencia AI',
+      homeAiPreviewBarberNotesLabel: 'Notas para el barbero:',
+      homeAiPreviewSelfieAlt: 'Vista previa de su selfie',
+      homeAiPreviewConsentRequired: 'Por favor acepte el consentimiento de AI primero.',
+      homeAiPreviewCompressing: 'Preparando imagen…',
+      homeAiPreviewCompressFailed: 'No pudimos leer esa foto. Pruebe otra.',
+      homeAiPreviewReady: 'Listo. Toque "Obtener 3 vistas previas con AI".',
+      homeAiPreviewAnalyzing: 'Generando 3 vistas previas… toma ~10 segundos.',
+      homeAiPreviewDone: '3 vistas listas. Elija una para adjuntar a su cita, o salte.',
+      homeAiPreviewProviderError: 'La vista previa AI no está disponible. Puede reservar igualmente — el barbero conversará los estilos en persona.',
+      homeAiPreviewSelectedAck: 'Estilo adjuntado. Continúe la reserva en el chat de abajo.',
+      homeAiPreviewRemoved: 'Selfie eliminada.',
+      homeAiPreviewAttachNote: 'Su selección se adjuntará automáticamente a la cita al enviarla por el chat.',
       aiPreviewDisclosure: 'Vista previa de estilo generada por AI. Portafolio real del barbero próximamente.',
       serviceAreaLabel: 'Área de servicio',
       radiusLabel: 'Radio de viaje',
@@ -319,7 +382,18 @@
     locationSubmitted: false,
     waitlistLocation: null,
     routedVendor: null,
-    region: ''
+    region: '',
+    aiPreview: {
+      consent: false,
+      selfieDataUrl: '',
+      summary: '',
+      recommendations: [],
+      selectedStyleId: '',
+      selectedStylePreviewUrl: '',
+      analyzing: false,
+      sessionId: '',
+      lastError: ''
+    }
   };
 
   function getLang() {
@@ -696,6 +770,10 @@
         }
         if (result.booking) {
           if (options.source) result.booking.source = options.source;
+          // Attach any optional AI haircut preview the customer selected
+          // before submitting. The vendor dashboard reads selectedStyleId,
+          // selectedStylePreviewUrl, and selfieDataUrl off the booking.
+          attachAiPreviewToBooking(result.booking);
           // Require a real Firestore write. The previous default silently
           // fell back to localStorage when Firestore rejected, so the
           // customer saw "saved" but the vendor portal never received the
@@ -1371,6 +1449,246 @@
         promptForLocation(state.selectedServiceId);
       });
     }
+
+    // Optional AI haircut preview — wires the new section between the trust
+    // strip and the promo. Customer picks one style; selection is attached
+    // to the next booking the chat agent submits (see attachAiPreviewToBooking).
+    var aiConsent  = document.getElementById('mbHomeAiPreviewConsent');
+    var aiUpload   = document.getElementById('mbHomeAiPreviewUpload');
+    var aiAnalyze  = document.getElementById('mbHomeAiPreviewAnalyze');
+    var aiRemove   = document.getElementById('mbHomeAiPreviewRemove');
+    if (aiConsent) aiConsent.addEventListener('change', handleAiConsentChange);
+    if (aiUpload)  aiUpload.addEventListener('change', handleAiUpload);
+    if (aiAnalyze) aiAnalyze.addEventListener('click', handleAiAnalyze);
+    if (aiRemove)  aiRemove.addEventListener('click', function() { resetAiPreviewSelfie(false); });
+  }
+
+  // ── AI Haircut Preview (marketplace landing) ──────────────────────────
+  function setAiStatus(msg) {
+    var node = document.getElementById('mbHomeAiPreviewStatus');
+    if (node) node.textContent = msg || '';
+  }
+
+  function renderAiSelfie() {
+    var node = document.getElementById('mbHomeAiPreviewSelfie');
+    var remove = document.getElementById('mbHomeAiPreviewRemove');
+    if (!node) return;
+    if (!state.aiPreview.selfieDataUrl) {
+      node.hidden = true; node.innerHTML = '';
+      if (remove) remove.hidden = true;
+      return;
+    }
+    node.hidden = false; node.innerHTML = '';
+    var img = document.createElement('img');
+    img.src = state.aiPreview.selfieDataUrl;
+    img.alt = t('homeAiPreviewSelfieAlt') || 'Selfie preview';
+    img.className = 'mb-ai-preview__selfie-img';
+    node.appendChild(img);
+    if (remove) remove.hidden = false;
+  }
+
+  function renderAiResults() {
+    var list = document.getElementById('mbHomeAiPreviewResults');
+    var attach = document.getElementById('mbHomeAiPreviewAttachNote');
+    if (!list) return;
+    list.innerHTML = '';
+    var recs = state.aiPreview.recommendations || [];
+    if (!recs.length) {
+      list.hidden = true;
+      if (attach) attach.hidden = true;
+      return;
+    }
+    list.hidden = false;
+    recs.forEach(function(rec, idx) {
+      var imgSrc = rec.previewDataUrl || rec.previewUrl || '';
+      var card = document.createElement('label');
+      card.className = 'mb-ai-rec-card';
+      var input = document.createElement('input');
+      input.type = 'radio';
+      input.name = 'mbHomeAiRec';
+      input.value = rec.styleId || ('rec-' + idx);
+      input.className = 'mb-ai-rec-card__radio';
+      if (state.aiPreview.selectedStyleId === input.value) {
+        input.checked = true;
+        card.classList.add('mb-ai-rec-card--selected');
+      }
+      input.addEventListener('change', function() {
+        handleAiSelect(rec, imgSrc);
+      });
+      var thumb = document.createElement('div');
+      thumb.className = 'mb-ai-rec-card__thumb';
+      var img = document.createElement('img');
+      img.src = imgSrc;
+      img.alt = rec.title || '';
+      img.loading = 'lazy';
+      thumb.appendChild(img);
+      var body = document.createElement('div');
+      body.className = 'mb-ai-rec-card__body';
+      var title = document.createElement('strong'); title.textContent = rec.title || '';
+      var meta = document.createElement('span');
+      meta.className = 'mb-ai-rec-card__maintenance';
+      meta.textContent = rec.maintenance || '';
+      var desc = document.createElement('p'); desc.textContent = rec.explanation || '';
+      var notes = document.createElement('p');
+      notes.className = 'mb-ai-rec-card__barber-notes';
+      notes.textContent = (t('homeAiPreviewBarberNotesLabel') || 'Barber notes:') + ' ' + (rec.barberNotes || '');
+      var badge = document.createElement('span');
+      badge.className = 'mb-ai-rec-card__ai-badge';
+      badge.textContent = t('homeAiPreviewBadge') || 'AI suggestion';
+      body.appendChild(title);
+      body.appendChild(meta);
+      body.appendChild(desc);
+      body.appendChild(notes);
+      body.appendChild(badge);
+      card.appendChild(input);
+      card.appendChild(thumb);
+      card.appendChild(body);
+      list.appendChild(card);
+    });
+    if (attach) attach.hidden = !state.aiPreview.selectedStyleId;
+  }
+
+  function handleAiConsentChange() {
+    var checkbox = document.getElementById('mbHomeAiPreviewConsent');
+    var upload   = document.getElementById('mbHomeAiPreviewUpload');
+    var analyze  = document.getElementById('mbHomeAiPreviewAnalyze');
+    state.aiPreview.consent = !!(checkbox && checkbox.checked);
+    if (upload)  upload.disabled  = !state.aiPreview.consent;
+    if (analyze) analyze.disabled = !state.aiPreview.consent || !state.aiPreview.selfieDataUrl;
+    if (!state.aiPreview.consent) resetAiPreviewSelfie(true);
+  }
+
+  function handleAiUpload(event) {
+    var file = event && event.target && event.target.files && event.target.files[0];
+    if (!file) return;
+    if (!state.aiPreview.consent) {
+      setAiStatus(t('homeAiPreviewConsentRequired'));
+      event.target.value = '';
+      return;
+    }
+    if (!root.MobileBarberAIPreview || typeof root.MobileBarberAIPreview.compressImage !== 'function') {
+      setAiStatus(t('homeAiPreviewProviderError'));
+      return;
+    }
+    setAiStatus(t('homeAiPreviewCompressing'));
+    root.MobileBarberAIPreview.compressImage(file)
+      .then(function(dataUrl) {
+        state.aiPreview.selfieDataUrl = dataUrl;
+        state.aiPreview.lastError = '';
+        renderAiSelfie();
+        var analyze = document.getElementById('mbHomeAiPreviewAnalyze');
+        if (analyze) analyze.disabled = false;
+        setAiStatus(t('homeAiPreviewReady'));
+      })
+      .catch(function(err) {
+        state.aiPreview.lastError = (err && (err.code || err.message)) || 'compress_failed';
+        setAiStatus(t('homeAiPreviewCompressFailed'));
+      });
+  }
+
+  function handleAiAnalyze() {
+    if (!state.aiPreview.consent) { setAiStatus(t('homeAiPreviewConsentRequired')); return; }
+    if (state.aiPreview.analyzing) return;
+    if (!root.MobileBarberAIPreview || typeof root.MobileBarberAIPreview.generate !== 'function') {
+      setAiStatus(t('homeAiPreviewProviderError'));
+      return;
+    }
+    state.aiPreview.analyzing = true;
+    state.aiPreview.recommendations = [];
+    state.aiPreview.selectedStyleId = '';
+    state.aiPreview.selectedStylePreviewUrl = '';
+    state.aiPreview.sessionId = 'ses_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+    renderAiResults();
+    setAiStatus(t('homeAiPreviewAnalyzing'));
+    root.MobileBarberAIPreview.generate({
+      dataUrl: state.aiPreview.selfieDataUrl,
+      lang: state.lang
+    }).then(function(result) {
+      state.aiPreview.analyzing = false;
+      if (!result || !result.ok) {
+        if (root.console) root.console.warn('[mobile-barber] AI preview failed', result);
+        state.aiPreview.recommendations = [];
+        state.aiPreview.summary = '';
+        state.aiPreview.lastError = (result && result.code) || 'unknown';
+        renderAiResults();
+        setAiStatus((result && result.message) || t('homeAiPreviewProviderError'));
+        return;
+      }
+      state.aiPreview.summary = result.analysis || '';
+      state.aiPreview.recommendations = result.recommendations || [];
+      state.aiPreview.lastError = '';
+      renderAiResults();
+      setAiStatus(t('homeAiPreviewDone'));
+    }).catch(function(err) {
+      state.aiPreview.analyzing = false;
+      state.aiPreview.recommendations = [];
+      state.aiPreview.lastError = (err && err.message) || 'analyze_failed';
+      renderAiResults();
+      setAiStatus(t('homeAiPreviewProviderError'));
+    });
+  }
+
+  function handleAiSelect(rec, fullDataUrl) {
+    state.aiPreview.selectedStyleId = rec.styleId || '';
+    var AIP = root.MobileBarberAIPreview;
+    // Save the FULL-quality original to the customer's localStorage so they
+    // can re-view their high-res preview later on this device.
+    if (AIP && typeof AIP.saveLocalCopy === 'function' && fullDataUrl) {
+      try { AIP.saveLocalCopy(state.aiPreview.sessionId || '', rec.styleId || '', fullDataUrl); } catch (e) {}
+    }
+    // Compress to ~400KB JPEG for the booking doc (Firestore 1MB cap).
+    if (AIP && typeof AIP.compressDataUrl === 'function' && fullDataUrl && fullDataUrl.indexOf('data:image/') === 0) {
+      AIP.compressDataUrl(fullDataUrl, { maxDimension: 512, quality: 0.78 })
+        .then(function(small) { state.aiPreview.selectedStylePreviewUrl = small || fullDataUrl; })
+        .catch(function() { state.aiPreview.selectedStylePreviewUrl = fullDataUrl; });
+    } else {
+      state.aiPreview.selectedStylePreviewUrl = fullDataUrl;
+    }
+    renderAiResults();
+    setAiStatus(t('homeAiPreviewSelectedAck'));
+  }
+
+  function resetAiPreviewSelfie(silent) {
+    state.aiPreview.selfieDataUrl = '';
+    state.aiPreview.recommendations = [];
+    state.aiPreview.selectedStyleId = '';
+    state.aiPreview.selectedStylePreviewUrl = '';
+    state.aiPreview.summary = '';
+    var upload = document.getElementById('mbHomeAiPreviewUpload');
+    if (upload) upload.value = '';
+    var analyze = document.getElementById('mbHomeAiPreviewAnalyze');
+    if (analyze) analyze.disabled = !state.aiPreview.consent;
+    renderAiSelfie();
+    renderAiResults();
+    if (!silent) setAiStatus(t('homeAiPreviewRemoved'));
+    else setAiStatus('');
+  }
+
+  // Caller-side enrichment: when the chat agent returns a freshly-built
+  // booking, attach the customer's optional AI preview selection so the
+  // vendor dashboard surfaces it alongside the appointment.
+  function attachAiPreviewToBooking(booking) {
+    if (!booking) return booking;
+    var ai = state.aiPreview || {};
+    if (!ai.selectedStyleId && !ai.selfieDataUrl) return booking;
+    booking.selfieDataUrl = ai.selfieDataUrl || '';
+    booking.aiAnalysisSummary = ai.summary || '';
+    booking.aiAnalysisConsent = ai.consent ? 'true' : 'false';
+    // Strip the bulk previewDataUrl from each rec — keep only metadata so
+    // the booking doc stays under Firestore's 1 MB cap. The selected
+    // preview is stored separately in selectedStylePreviewUrl (compressed).
+    booking.recommendedStyles = (ai.recommendations || []).map(function(r) {
+      return {
+        styleId: r.styleId || '',
+        title: r.title || '',
+        explanation: r.explanation || '',
+        maintenance: r.maintenance || '',
+        barberNotes: r.barberNotes || ''
+      };
+    });
+    booking.selectedStyleId = ai.selectedStyleId || '';
+    booking.selectedStylePreviewUrl = ai.selectedStylePreviewUrl || '';
+    return booking;
   }
 
   var HERO_SLIDES = [

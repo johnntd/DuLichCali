@@ -109,6 +109,35 @@
       </article>
     </section>
 
+    <section class="mb-section mb-ai-preview-section" id="mbHomeAiPreview" aria-labelledby="mbHomeAiPreviewTitle">
+      <div class="mb-section__head">
+        <p class="mb-kicker" data-i18n="homeAiPreviewKicker"></p>
+        <h2 id="mbHomeAiPreviewTitle" data-i18n="homeAiPreviewTitle"></h2>
+        <p data-i18n="homeAiPreviewIntro"></p>
+      </div>
+      <div class="mb-ai-preview" id="mbHomeAiPreviewBox">
+        <div class="mb-ai-preview__body">
+          <label class="mb-checkbox-field">
+            <input id="mbHomeAiPreviewConsent" type="checkbox">
+            <span data-i18n="homeAiPreviewConsent"></span>
+          </label>
+          <label class="mb-field">
+            <span data-i18n="homeAiPreviewUploadLabel"></span>
+            <input id="mbHomeAiPreviewUpload" type="file" accept="image/*" capture="user" disabled>
+          </label>
+          <div class="mb-ai-preview__preview" id="mbHomeAiPreviewSelfie" hidden></div>
+          <div class="mb-ai-preview__actions">
+            <button class="mb-button mb-button--primary mb-button--sm" type="button" id="mbHomeAiPreviewAnalyze" data-i18n="homeAiPreviewAnalyze" disabled></button>
+            <button class="mb-button mb-button--ghost mb-button--sm" type="button" id="mbHomeAiPreviewRemove" hidden data-i18n="homeAiPreviewRemove"></button>
+          </div>
+          <p class="mb-ai-preview__status" id="mbHomeAiPreviewStatus" aria-live="polite"></p>
+          <p class="mb-form-hint mb-ai-preview__disclosure" data-i18n="homeAiPreviewDisclosure"></p>
+          <div class="mb-ai-preview__results" id="mbHomeAiPreviewResults" hidden role="radiogroup" aria-label="AI haircut style recommendations"></div>
+          <p class="mb-form-hint" id="mbHomeAiPreviewAttachNote" hidden data-i18n="homeAiPreviewAttachNote"></p>
+        </div>
+      </div>
+    </section>
+
     <section class="mb-section mb-promo" aria-labelledby="mbPromoTitle">
       <div class="mb-promo__copy">
         <p class="mb-kicker" data-i18n="promoKicker"></p>
@@ -211,6 +240,7 @@
   <script src="/mobile-barber/mobile-barber-booking.js?v=20260527b"></script>
   <script src="/mobile-barber/mobile-barber-agent.js?v=20260527b"></script>
   <script src="/mobile-barber/mobile-barber-voice.js?v=20260525f"></script>
-  <script src="/mobile-barber/mobile-barber.js?v=20260527c"></script>
+  <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260527c"></script>
+  <script src="/mobile-barber/mobile-barber.js?v=20260527d"></script>
 </body>
 </html>

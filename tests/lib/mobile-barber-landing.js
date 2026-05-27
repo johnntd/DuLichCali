@@ -93,7 +93,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260527b');
     assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260527b');
     assertContains(html, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
-    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260527c');
+    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260527d');
   });
 
   test('Mobile Barber pages load Firebase before local runtime scripts', function() {

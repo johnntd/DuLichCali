@@ -617,7 +617,8 @@
       selectedStyleId: '',
       selectedStylePreviewUrl: '',
       analyzing: false,
-      lastError: ''
+      lastError: '',
+      sessionId: ''
     }
   };
   var LOCATION_STORAGE_KEY = 'mb_customer_location';
@@ -2413,9 +2414,28 @@
       var imgSrc = rec.previewDataUrl || rec.previewUrl || '';
       input.addEventListener('change', function() {
         state.aiPreview.selectedStyleId = rec.styleId || '';
-        // Store the generated image (or referenced URL) so the vendor
-        // dashboard renders the actual chosen preview later.
-        state.aiPreview.selectedStylePreviewUrl = imgSrc;
+        // The Gemini-generated previews are 1024px PNGs (~2-3 MB base64),
+        // far above the Firestore 1 MB document cap. Compress to ~400 KB
+        // for the booking doc that the vendor will see, AND keep the full
+        // original in the customer's localStorage so they can re-view
+        // their high-quality preview later on their own device.
+        if (root.MobileBarberAIPreview && typeof root.MobileBarberAIPreview.saveLocalCopy === 'function') {
+          try { root.MobileBarberAIPreview.saveLocalCopy(state.aiPreview.sessionId || '', rec.styleId || '', imgSrc); } catch (e) {}
+        }
+        if (root.MobileBarberAIPreview && typeof root.MobileBarberAIPreview.compressDataUrl === 'function' && imgSrc.indexOf('data:image/') === 0) {
+          root.MobileBarberAIPreview.compressDataUrl(imgSrc, { maxDimension: 512, quality: 0.78 })
+            .then(function(compressed) {
+              state.aiPreview.selectedStylePreviewUrl = compressed || imgSrc;
+            })
+            .catch(function() {
+              // If compression fails, fall back to the original. The
+              // validator will reject if it's still too big — better to
+              // show the error than persist a bloated doc.
+              state.aiPreview.selectedStylePreviewUrl = imgSrc;
+            });
+        } else {
+          state.aiPreview.selectedStylePreviewUrl = imgSrc;
+        }
         renderAiRecommendationCards();
       });
       var thumb = document.createElement('div');
@@ -2510,6 +2530,7 @@
     state.aiPreview.recommendations = [];
     state.aiPreview.selectedStyleId = '';
     state.aiPreview.selectedStylePreviewUrl = '';
+    state.aiPreview.sessionId = 'ses_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
     renderAiRecommendationCards();
     setAiPreviewStatus(t('aiPreviewAnalyzing'));
     root.MobileBarberAIPreview.generate({

@@ -156,8 +156,98 @@
       });
   }
 
+  // Re-encode a data URL through a canvas to a smaller JPEG. Gemini 2.5
+  // Flash Image returns ~2-3 MB base64 PNGs (1024px native), which exceed
+  // Firestore's 1 MB document cap. The COPY we persist on the booking is
+  // downscaled to ~400-500 KB. The original full-quality data URL is kept
+  // in the customer's localStorage so they can re-view the high-res preview
+  // on their own device. Vendor sees the compressed inline version.
+  function compressDataUrl(dataUrl, opts) {
+    opts = opts || {};
+    var max = opts.maxDimension || 512;
+    var quality = opts.quality || 0.78;
+    return new Promise(function (resolve, reject) {
+      if (!dataUrl) return reject({ code: 'no_data_url' });
+      var img = new Image();
+      img.onerror = function () { reject({ code: 'decode_failed' }); };
+      img.onload = function () {
+        var w = img.width, h = img.height;
+        var scale = Math.min(1, max / Math.max(w, h));
+        var cw = Math.max(1, Math.round(w * scale));
+        var ch = Math.max(1, Math.round(h * scale));
+        var canvas = document.createElement('canvas');
+        canvas.width = cw; canvas.height = ch;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, cw, ch);
+        try { resolve(canvas.toDataURL('image/jpeg', quality)); }
+        catch (e) { reject({ code: 'canvas_export_failed' }); }
+      };
+      img.src = dataUrl;
+    });
+  }
+
+  // Customer-side localStorage cache for the FULL-quality generated images.
+  // Vendor never reads from this cache; the booking doc carries the
+  // compressed inline copy for vendor display. localStorage cap is ~5 MB
+  // per origin; we prune anything older than 30 days on every write.
+  var STORAGE_KEY_PREFIX = 'mb_ai_preview_';
+  var MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
+  function localCacheKey(sessionId, styleId) {
+    return STORAGE_KEY_PREFIX + (sessionId || 'session') + '__' + (styleId || 'style');
+  }
+
+  function saveLocalCopy(sessionId, styleId, dataUrl) {
+    try {
+      if (!dataUrl || typeof localStorage === 'undefined') return false;
+      pruneOldLocalCopies();
+      var payload = JSON.stringify({ dataUrl: dataUrl, savedAt: Date.now() });
+      localStorage.setItem(localCacheKey(sessionId, styleId), payload);
+      return true;
+    } catch (e) {
+      if (typeof console !== 'undefined') console.warn('[mobile-barber-ai-preview] localStorage skip', e && e.message);
+      return false;
+    }
+  }
+
+  function readLocalCopy(sessionId, styleId) {
+    try {
+      if (typeof localStorage === 'undefined') return '';
+      var raw = localStorage.getItem(localCacheKey(sessionId, styleId));
+      if (!raw) return '';
+      var parsed = JSON.parse(raw);
+      if (!parsed || !parsed.dataUrl) return '';
+      if ((Date.now() - Number(parsed.savedAt || 0)) > MAX_AGE_MS) {
+        try { localStorage.removeItem(localCacheKey(sessionId, styleId)); } catch (e) {}
+        return '';
+      }
+      return parsed.dataUrl;
+    } catch (e) { return ''; }
+  }
+
+  function pruneOldLocalCopies() {
+    try {
+      if (typeof localStorage === 'undefined') return;
+      var now = Date.now();
+      for (var i = localStorage.length - 1; i >= 0; i--) {
+        var key = localStorage.key(i);
+        if (!key || key.indexOf(STORAGE_KEY_PREFIX) !== 0) continue;
+        try {
+          var raw = localStorage.getItem(key);
+          var parsed = raw ? JSON.parse(raw) : null;
+          if (!parsed || (now - Number(parsed.savedAt || 0)) > MAX_AGE_MS) {
+            localStorage.removeItem(key);
+          }
+        } catch (e) { localStorage.removeItem(key); }
+      }
+    } catch (e) {}
+  }
+
   return {
     compressImage: compressImage,
-    generate: generate
+    compressDataUrl: compressDataUrl,
+    generate: generate,
+    saveLocalCopy: saveLocalCopy,
+    readLocalCopy: readLocalCopy
   };
 });

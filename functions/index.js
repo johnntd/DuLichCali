@@ -2474,7 +2474,7 @@ async function callGeminiImageEdit(geminiKey, inlineImageBase64, mimeType, editP
   };
   const raw = await httpsPost(
     'generativelanguage.googleapis.com',
-    `/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${geminiKey}`,
+    `/v1beta/models/gemini-2.5-flash-image:generateContent?key=${geminiKey}`,
     {},
     body
   );
@@ -2579,7 +2579,7 @@ exports.generateHaircutPreviews = onCall(
       ok: true,
       analysis: '', // future: a true vision call can populate this; today we omit fake text
       recommendations: results,
-      provider: 'gemini-2.5-flash-image-preview',
+      provider: 'gemini-2.5-flash-image',
       generationTimeMs: tookMs,
       successCount: successful.length
     };

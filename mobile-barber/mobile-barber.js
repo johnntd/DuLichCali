@@ -80,6 +80,17 @@
       waitlistSaved: "Thanks. We'll let you know when we expand there.",
       locationRequired: 'Please enter a city or 5-digit ZIP code.',
       saveFailedRetry: "We couldn't save the booking just now. Please try again, or call the barber directly.",
+      howMatchingKicker: 'How it works',
+      howMatchingTitle: 'We match you with the right barber automatically',
+      howMatchingIntro: "Tap Book Now or Chat below. You'll share your address with the AI assistant — we'll match you with the nearest available barber and send your request for confirmation.",
+      howMatchingStep1Title: 'Tell us what and when',
+      howMatchingStep1Body: ' — Service, date, time, and your address (via chat or voice).',
+      howMatchingStep2Title: 'We match the right barber',
+      howMatchingStep2Body: ' — Based on your address, service area, languages, and availability.',
+      howMatchingStep3Title: 'Barber confirms',
+      howMatchingStep3Body: ' — Your matched barber reviews the request and accepts in their portal.',
+      howMatchingStep4Title: 'You get a confirmation',
+      howMatchingStep4Body: " — Once accepted you'll receive a confirmation with the barber's name and arrival time.",
       homeAiPreviewKicker: 'Optional',
       homeAiPreviewTitle: 'See yourself in 3 AI haircut previews',
       homeAiPreviewIntro: "Upload a selfie and the AI will generate 3 photorealistic previews of your face with different hairstyles. Pick one and we'll attach it to your booking so the barber knows exactly what you want.",
@@ -199,6 +210,17 @@
       waitlistSaved: 'Cảm ơn bạn. Tụi em sẽ báo khi mở rộng khu vực đó.',
       locationRequired: 'Vui lòng nhập thành phố hoặc mã ZIP 5 số.',
       saveFailedRetry: 'Tụi em chưa lưu được lịch hẹn. Vui lòng thử lại, hoặc gọi trực tiếp cho thợ.',
+      howMatchingKicker: 'Cách hoạt động',
+      howMatchingTitle: 'Tụi em tự động ghép bạn với thợ phù hợp',
+      howMatchingIntro: 'Nhấn Đặt Ngay hoặc Chat bên dưới. Bạn chia sẻ địa chỉ với trợ lý AI — tụi em sẽ ghép với thợ gần nhất đang rảnh và gửi yêu cầu để thợ xác nhận.',
+      howMatchingStep1Title: 'Cho biết dịch vụ và thời gian',
+      howMatchingStep1Body: ' — Dịch vụ, ngày, giờ, và địa chỉ (qua chat hoặc thoại).',
+      howMatchingStep2Title: 'Tụi em ghép đúng thợ',
+      howMatchingStep2Body: ' — Dựa trên địa chỉ, khu vực phục vụ, ngôn ngữ, và lịch rảnh.',
+      howMatchingStep3Title: 'Thợ xác nhận',
+      howMatchingStep3Body: ' — Thợ được ghép sẽ xem yêu cầu và chấp nhận trên portal.',
+      howMatchingStep4Title: 'Bạn nhận xác nhận',
+      howMatchingStep4Body: ' — Sau khi thợ chấp nhận, bạn nhận xác nhận có tên thợ và giờ đến.',
       homeAiPreviewKicker: 'Không bắt buộc',
       homeAiPreviewTitle: 'Xem chính bạn trong 3 kiểu tóc do AI tạo',
       homeAiPreviewIntro: 'Tải ảnh selfie và AI sẽ tạo 3 hình xem trước chân thực với các kiểu tóc khác nhau. Chọn một kiểu và tụi em sẽ đính kèm vào lịch hẹn để thợ biết chính xác bạn muốn gì.',
@@ -318,6 +340,17 @@
       waitlistSaved: 'Gracias. Le avisaremos cuando ampliemos a esa zona.',
       locationRequired: 'Ingrese una ciudad o un código postal de 5 dígitos.',
       saveFailedRetry: 'No pudimos guardar la cita ahora. Inténtelo de nuevo o llame directamente al barbero.',
+      howMatchingKicker: 'Cómo funciona',
+      howMatchingTitle: 'Le emparejamos con el barbero correcto automáticamente',
+      howMatchingIntro: 'Toque Reservar o Chat. Comparta su dirección con el asistente AI — le emparejamos con el barbero más cercano disponible y enviamos su solicitud para confirmación.',
+      howMatchingStep1Title: 'Dígame qué y cuándo',
+      howMatchingStep1Body: ' — Servicio, fecha, hora y dirección (por chat o voz).',
+      howMatchingStep2Title: 'Encontramos al barbero correcto',
+      howMatchingStep2Body: ' — Según dirección, área de servicio, idiomas y disponibilidad.',
+      howMatchingStep3Title: 'El barbero confirma',
+      howMatchingStep3Body: ' — El barbero asignado revisa la solicitud y acepta en su portal.',
+      howMatchingStep4Title: 'Recibirá confirmación',
+      howMatchingStep4Body: ' — Una vez aceptada recibirá confirmación con el nombre del barbero y la hora.',
       homeAiPreviewKicker: 'Opcional',
       homeAiPreviewTitle: 'Vea su rostro en 3 cortes generados por AI',
       homeAiPreviewIntro: 'Suba una selfie y la AI generará 3 vistas previas fotorrealistas de su rostro con distintos cortes. Elija uno y lo adjuntaremos a su cita para que el barbero sepa exactamente qué quiere.',
@@ -616,19 +649,12 @@
     return true;
   }
 
+  // Legacy shim — the location gate is gone. Callers used to scroll the
+  // gate into view + focus the city input. Now we just open the chat;
+  // the agent will ask for the address via its slot-fill flow.
   function promptForLocation(serviceId) {
     state.pendingServiceId = serviceId || '';
-    var gate = document.getElementById('mbLocationGate');
-    var waitlist = document.getElementById('mbWaitlistForm');
-    if (waitlist) waitlist.hidden = true;
-    prefillLocationGate();
-    setLocationStatus('');
-    if (gate) {
-      gate.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      gate.classList.add('mb-location-gate--active');
-    }
-    var city = document.getElementById('mbLocationCity');
-    if (city && typeof city.focus === 'function') setTimeout(function() { city.focus(); }, 120);
+    openAssistantPanel('general');
   }
 
   function submitWaitlist() {
@@ -810,22 +836,16 @@
     if (copy && AGENT && typeof AGENT.initialPrompt === 'function') {
       copy.textContent = AGENT.initialPrompt(mode === 'vendor' ? { vendor: preferredVendor() } : {}, state.lang);
     }
-    // If we don't have a routed vendor yet, surface a clear "tell us your
-    // location first" hint inside the chat panel AND scroll the location
-    // gate into view so the customer knows what to do. The chat input
-    // stays disabled until we can resolve a vendor.
-    var hasLocation = !!(state.routedVendor || readSavedLocation());
+    // No more upfront location gate — the chat agent collects address via
+    // slot fill (ASK_ADDRESS) and routes to the right vendor via
+    // BOOKING.findVendorForAddress at booking-build time. Chat opens
+    // immediately with an active input.
     var needHint = panel.querySelector('#mbAssistantNeedLocation');
     var input    = panel.querySelector('#mbAssistantInput');
     var sendBtn  = panel.querySelector('.mb-chat-panel__send');
-    if (needHint) needHint.hidden = !!hasLocation;
-    if (input)    input.disabled  = !hasLocation;
-    if (sendBtn)  sendBtn.disabled = !hasLocation;
-
-    if (!hasLocation) {
-      promptForLocation(state.selectedServiceId);
-      return panel;
-    }
+    if (needHint) needHint.hidden = true;
+    if (input)    input.disabled  = false;
+    if (sendBtn)  sendBtn.disabled = false;
 
     seedAssistantTranscriptIfEmpty();
     panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1421,34 +1441,9 @@
       }, { passive: true });
     }
 
-    var gateForm = document.getElementById('mbLocationGateForm');
-    if (gateForm) {
-      gateForm.addEventListener('submit', function(event) {
-        event.preventDefault();
-        state.locationSubmitted = true;
-        routeByLocation(currentLocationInput(), state.pendingServiceId || state.selectedServiceId, '');
-      });
-    }
-
-    var waitlist = document.getElementById('mbWaitlistForm');
-    if (waitlist) {
-      waitlist.addEventListener('submit', function(event) {
-        event.preventDefault();
-        submitWaitlist();
-      });
-    }
-
-    var change = document.querySelector('[data-action="changeLocation"]');
-    if (change) {
-      change.addEventListener('click', function() {
-        clearCustomerLocation();
-        state.locationSubmitted = false;
-        document.getElementById('mbLocationCity').value = '';
-        document.getElementById('mbLocationZip').value = '';
-        change.hidden = true;
-        promptForLocation(state.selectedServiceId);
-      });
-    }
+    // Location gate is gone — the chat agent collects city/ZIP via slot
+    // fill and routes via BOOKING.findVendorForAddress. No gateForm /
+    // waitlist / changeLocation bindings needed on the marketplace landing.
 
     // Optional AI haircut preview — wires the new section between the trust
     // strip and the promo. Customer picks one style; selection is attached

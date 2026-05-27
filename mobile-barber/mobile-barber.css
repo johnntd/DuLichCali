@@ -2837,6 +2837,49 @@
 }
 /* ── /landing AI preview section ─────────────────────────────────────── */
 
+/* ── How matching works (replaces Find My Barber gate) ───────────────── */
+.mb-how-matching__steps {
+  list-style: none;
+  padding: 0;
+  margin: .8rem 0 0;
+  display: grid;
+  gap: .75rem;
+}
+
+.mb-how-matching__steps li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: .85rem;
+  align-items: start;
+  padding: .75rem .85rem;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: var(--r-sm);
+  background: rgba(6, 24, 42, .58);
+}
+
+.mb-how-matching__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem; height: 2rem;
+  border-radius: var(--r-circle);
+  background: var(--gold, #f5a623);
+  color: #0d2f50;
+  font-weight: 900;
+  font-size: var(--text-md);
+}
+
+.mb-how-matching__steps li div { display: grid; gap: .15rem; }
+.mb-how-matching__steps li strong { color: var(--cream); font-size: var(--text-sm); }
+.mb-how-matching__steps li span { color: var(--muted); font-size: var(--text-sm); }
+
+@media (min-width: 768px) {
+  .mb-how-matching__steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+/* ── /How matching works ─────────────────────────────────────────────── */
+
 /* ---------- Optional AI haircut preview (customer form) ---------- */
 .mb-ai-preview {
   margin: .9rem 0 .3rem;

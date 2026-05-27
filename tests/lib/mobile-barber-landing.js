@@ -88,12 +88,12 @@ function runMobileBarberLandingTests(test) {
   });
 
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
-    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260527h');
+    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260527i');
     assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260527b');
     assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260527b');
     assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260527b');
     assertContains(html, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
-    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260527d');
+    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260527e');
   });
 
   test('Mobile Barber pages load Firebase before local runtime scripts', function() {
@@ -157,41 +157,37 @@ function runMobileBarberLandingTests(test) {
     assertContains(css, '@media (prefers-reduced-motion: reduce)');
   });
 
-  test('Mobile Barber landing has location gate and waitlist capture', function() {
-    assertContains(html, 'id="mbLocationGate"');
-    assertContains(html, 'id="mbLocationGateForm"');
-    assertContains(html, 'id="mbLocationCity"');
-    assertContains(html, 'id="mbLocationZip"');
-    assertContains(html, 'id="mbWaitlistForm"');
-    assertContains(html, 'id="mbWaitlistEmail"');
-    assertContains(js, "LOCATION_STORAGE_KEY = 'mb_customer_location'");
-    assertContains(js, 'LOCATION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000');
-    assertContains(js, 'function readSavedLocation');
-    assertContains(js, 'function saveCustomerLocation');
-    assertContains(js, 'function clearCustomerLocation');
-    assertContains(js, 'function currentLocationInput');
+  test('Mobile Barber landing no longer shows the Find My Barber gate', function() {
+    // 2026-05-27: the upfront location gate was removed. The chat agent
+    // collects city/ZIP via slot fill (ASK_ADDRESS) and routes via
+    // BOOKING.findVendorForAddress at booking-build time. The gate's DOM
+    // ids must all be absent from the rendered landing.
+    assertNotContains(html, 'id="mbLocationGate"', 'location gate section removed');
+    assertNotContains(html, 'id="mbLocationGateForm"', 'gate form removed');
+    assertNotContains(html, 'id="mbLocationCity"', 'gate city input removed');
+    assertNotContains(html, 'id="mbLocationZip"', 'gate zip input removed');
+    assertNotContains(html, 'id="mbWaitlistForm"', 'waitlist form removed');
+    assertNotContains(html, 'data-action="changeLocation"', 'change location button removed');
+    // Replaced with a compact educational "How matching works" section.
+    assertContains(html, 'mb-how-matching');
+    assertContains(html, 'data-i18n="howMatchingTitle"');
+    assertContains(html, 'data-i18n="howMatchingStep1Title"');
+    assertContains(html, 'data-i18n="howMatchingStep4Title"');
+    // Internal helpers stay (used by saved-location restore for routing).
     assertContains(js, 'BOOKING.findVendorForAddress');
-    // Marketplace routing: the Find-My-Barber gate must NOT navigate to a
-    // per-vendor customer page. It pins state.routedVendor and opens the AI
-    // assistant on the same page.
-    assertContains(js, 'state.routedVendor = vendor');
-    assertContains(js, 'openAssistantPanel');
-    assertNotContains(js, 'root.location.href = vendorUrlForRoute', 'Find-My-Barber gate must not redirect to per-vendor page');
-    assertContains(js, "db.collection('mobileBarberWaitlist').add");
-    assertContains(js, "source: 'landing_no_match'");
-    assertContains(html, 'data-action="changeLocation"');
+    assertContains(js, 'function readSavedLocation');
   });
 
-  test('Mobile Barber landing routes service cards through location before vendor navigation', function() {
+  test('Mobile Barber landing routes booking through the AI chat agent', function() {
+    // 2026-05-27: customer no longer hits a gate before chatting. The
+    // chat button opens the assistant directly; the agent asks for city/
+    // ZIP via its own ASK_ADDRESS step and routes via findVendorForAddress.
     assertContains(js, 'function promptForLocation(serviceId)');
     assertContains(js, 'state.pendingServiceId = serviceId ||');
-    assertContains(js, 'routeByLocation(currentLocationInput(), state.pendingServiceId || state.selectedServiceId');
+    assertContains(js, 'openAssistantPanel');
     assertContains(js, 'serviceIdForVendor(vendor, serviceId)');
     // vendorUrlForRoute() is preserved for SEO/debug deep-links but customer
-    // navigation no longer calls it. The serviceId still comes from the URL.
-    assertContains(js, "params.set('city', location.city)");
-    assertContains(js, "params.set('zip', location.zip)");
-    assertContains(js, "params.set('from', 'landing')");
+    // navigation no longer calls it.
     assertContains(js, "params.get('serviceId')");
     assertContains(js, "state.region = String(params.get('region')");
     assertNotContains(js, 'var preferredVendor = DATA && DATA.MICHAEL_VENDOR_ID', 'landingServices must not prefer Michael');
@@ -241,7 +237,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/vendor/**"');
     assertContains(firebase, '"destination": "/mobile-barber/vendor.html"');
     assertContains(vendorHtml, 'id="mobileBarberVendorApp"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260527h');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260527i');
     assertContains(vendorHtml, 'id="mbVendorName"');
     assertContains(vendorHtml, 'id="mbVendorServices"');
     assertContains(vendorHtml, 'id="mbBookingTitle"');
@@ -505,7 +501,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260527b');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260527b');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260527d');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260527h');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260527i');
     assertContains(dashboardHtml, 'firebase-auth-compat.js');
     assertContains(dashboardHtml, '/notifications.js?v=20260525a');
     assertContains(dashboardHtml, 'id="mbBookingAlertRegion"');

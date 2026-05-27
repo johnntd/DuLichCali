@@ -44,6 +44,8 @@
       statToday: 'Today',
       statUpcoming: 'Upcoming',
       statPending: 'Pending',
+      statInProgress: 'In progress',
+      statCompleted: 'Completed today',
       todayTitle: "Today's appointments",
       pendingTitle: 'Pending confirmations',
       upcomingTitle: 'Upcoming bookings',
@@ -177,6 +179,8 @@
       statToday: 'Hôm nay',
       statUpcoming: 'Sắp tới',
       statPending: 'Chờ xác nhận',
+      statInProgress: 'Đang làm',
+      statCompleted: 'Hoàn tất hôm nay',
       todayTitle: 'Lịch hẹn hôm nay',
       pendingTitle: 'Yêu cầu chờ xác nhận',
       upcomingTitle: 'Lịch hẹn sắp tới',
@@ -310,6 +314,8 @@
       statToday: 'Hoy',
       statUpcoming: 'Próximas',
       statPending: 'Pendientes',
+      statInProgress: 'En curso',
+      statCompleted: 'Completadas hoy',
       todayTitle: 'Citas de hoy',
       pendingTitle: 'Confirmaciones pendientes',
       upcomingTitle: 'Reservas próximas',
@@ -444,7 +450,8 @@
     soundAlertsEnabled: true,
     soundReady: false,
     soundBlocked: false,
-    lastBookingAlert: ''
+    lastBookingAlert: '',
+    expandedBookingId: null
   };
   var audioCtx = null;
 
@@ -911,21 +918,88 @@
     updateBookingPatch(bookingId, patch);
   }
 
+  // Map a booking status onto one of six visual buckets used by the row
+  // (pending / confirmed / traveling / completed / cancelled / repeat).
+  function statusBucket(status) {
+    switch (status) {
+      case 'pending_confirmation':
+      case 'pending_barber_confirmation':
+      case 'vendor_review': return 'pending';
+      case 'confirmed': return 'confirmed';
+      case 'in_progress':
+      case 'traveling':    return 'traveling';
+      case 'completed':    return 'completed';
+      case 'cancelled':    return 'cancelled';
+      default:             return 'pending';
+    }
+  }
+
   function bookingCard(booking) {
-    var card = el('article', 'mb-booking-card');
-    card.id = 'mbBookingCard-' + String(booking.id || '').replace(/[^a-zA-Z0-9_-]/g, '');
-    card.setAttribute('data-booking-id', booking.id || '');
-    var title = el('h3');
-    var meta = el('p', 'mb-booking-card__meta');
-    var actions = el('div', 'mb-booking-card__actions');
+    // Compact list row + click-to-expand detail panel. The function name
+    // stays bookingCard() so existing callers (renderBookingList, viewBooking,
+    // realtime alerts) keep working without changes.
+    var row = el('article', 'mb-booking-row');
+    var bucket = statusBucket(booking.status);
+    row.classList.add('mb-booking-row--' + bucket);
+    row.id = 'mbBookingCard-' + String(booking.id || '').replace(/[^a-zA-Z0-9_-]/g, '');
+    row.setAttribute('data-booking-id', booking.id || '');
+    row.setAttribute('data-status', booking.status || '');
+    var isExpanded = state.expandedBookingId === booking.id;
+    if (isExpanded) row.classList.add('mb-booking-row--expanded');
+
     var service = serviceForBooking(booking);
     var duration = booking.durationMinutes || service.durationMinutes || '';
     var total = booking.amountDue != null ? booking.amountDue : Number(booking.servicePrice || 0) + Number(booking.travelFee || 0);
     var zellePhone = booking.zellePhone || (state.vendor && state.vendor.phone) || '';
+    var locationStr = [booking.city, booking.zip].filter(Boolean).join(' • ');
+    var serviceStr = booking.serviceName || booking.serviceId || '';
 
-    title.textContent = booking.customerName || booking.serviceName || booking.id;
-    meta.textContent = [booking.requestedDate, [formatTime12Hour(booking.startTime), formatTime12Hour(booking.endTime)].filter(Boolean).join(' - '), statusLabel(booking.status)].filter(Boolean).join(' • ');
+    // Head — single tappable button so the whole row toggles expansion
+    var head = el('button', 'mb-booking-row__head');
+    head.type = 'button';
+    head.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
 
+    var pill = el('span', 'mb-booking-row__status mb-status-pill mb-status-pill--' + bucket);
+    pill.textContent = statusLabel(booking.status);
+    head.appendChild(pill);
+
+    var time = el('span', 'mb-booking-row__time');
+    time.textContent = formatTime12Hour(booking.startTime) || booking.requestedDate || '';
+    head.appendChild(time);
+
+    var meat = el('span', 'mb-booking-row__meat');
+    var who = el('strong', 'mb-booking-row__customer');
+    who.textContent = booking.customerName || '—';
+    meat.appendChild(who);
+    var svc = el('span', 'mb-booking-row__service');
+    svc.textContent = serviceStr;
+    meat.appendChild(svc);
+    if (locationStr) {
+      var loc = el('span', 'mb-booking-row__city');
+      loc.textContent = locationStr;
+      meat.appendChild(loc);
+    }
+    head.appendChild(meat);
+
+    var price = el('span', 'mb-booking-row__price');
+    price.textContent = formatMoney(total);
+    head.appendChild(price);
+
+    var chevron = el('span', 'mb-booking-row__chevron');
+    chevron.setAttribute('aria-hidden', 'true');
+    chevron.textContent = '▾';
+    head.appendChild(chevron);
+
+    head.addEventListener('click', function() {
+      toggleBookingRow(booking.id);
+    });
+    row.appendChild(head);
+
+    // Detail panel — built lazily but always in DOM (hidden when collapsed)
+    var detail = el('div', 'mb-booking-row__detail');
+    detail.hidden = !isExpanded;
+
+    var actions = el('div', 'mb-booking-card__actions mb-booking-row__actions');
     if (trim(booking.address)) {
       var link = el('a', 'mb-button mb-button--ghost mb-button--sm');
       link.href = mapUrl(booking);
@@ -934,7 +1008,6 @@
       link.textContent = t('mapLink');
       actions.appendChild(link);
     }
-
     [
       ['confirmed', 'acceptAction'],
       ['rescheduled', 'rescheduleAction'],
@@ -976,15 +1049,13 @@
     });
     actions.appendChild(noteBtn);
 
-    card.appendChild(title);
-    card.appendChild(meta);
-    card.appendChild(detailSection(t('customerContact'), [
+    detail.appendChild(detailSection(t('customerContact'), [
       ['Name', booking.customerName],
       [t('phoneLabel'), booking.customerPhone],
       [t('emailLabel'), booking.customerEmail]
     ]));
-    card.appendChild(detailSection(t('appointmentDetails'), [
-      [t('serviceNameLabel'), booking.serviceName || booking.serviceId],
+    detail.appendChild(detailSection(t('appointmentDetails'), [
+      [t('serviceNameLabel'), serviceStr],
       [t('serviceType'), service.category || booking.serviceCategory || ''],
       [t('serviceDurationLabel'), duration ? duration + ' ' + t('minutesShort') : ''],
       [t('blockDateLabel'), booking.requestedDate],
@@ -992,17 +1063,17 @@
       [t('blockEndLabel'), formatTime12Hour(booking.endTime)],
       ['Status', statusLabel(booking.status)]
     ]));
-    card.appendChild(detailSection(t('customerAddress'), [
+    detail.appendChild(detailSection(t('customerAddress'), [
       [t('customerAddress'), [booking.address, booking.city, booking.zip].filter(Boolean).join(', ')]
     ]));
-    card.appendChild(detailSection(t('pricingDetails'), [
+    detail.appendChild(detailSection(t('pricingDetails'), [
       [t('servicePrice'), formatMoney(booking.servicePrice)],
       [t('travelFee'), formatMoney(booking.travelFee)],
       [t('vehicleWearCost'), booking.vehicleWearCost ? formatMoney(booking.vehicleWearCost) : formatMoney(0)],
       [t('amountDue'), formatMoney(total)],
       [t('quoteType'), booking.quoteType || 'standard']
     ]));
-    card.appendChild(detailSection(t('paymentDetails'), [
+    detail.appendChild(detailSection(t('paymentDetails'), [
       [t('paymentMethod'), paymentMethodLabel(booking.paymentMethod)],
       [t('paymentStatus'), paymentStatusLabel(booking.paymentStatus)],
       [t('zelleNumber'), zellePhone],
@@ -1011,12 +1082,12 @@
     if (trim(booking.notes)) {
       var notes = el('p');
       notes.textContent = t('customerNotes') + ': ' + booking.notes;
-      card.appendChild(notes);
+      detail.appendChild(notes);
     }
     if (trim(booking.aiConversationSummary)) {
       var aiSummary = el('p');
       aiSummary.textContent = 'AI: ' + booking.aiConversationSummary;
-      card.appendChild(aiSummary);
+      detail.appendChild(aiSummary);
     }
     if (trim(booking.stylePreference) || trim(booking.previousServiceName) || trim(booking.rebookedFromBookingId)) {
       var history = el('p');
@@ -1025,15 +1096,22 @@
         trim(booking.stylePreference) ? t('stylePreference') + ' ' + booking.stylePreference : '',
         trim(booking.rebookedFromBookingId) ? booking.rebookedFromBookingId : ''
       ].filter(Boolean).join(' • ');
-      card.appendChild(history);
+      detail.appendChild(history);
     }
     if (Array.isArray(booking.photoUrls) && booking.photoUrls.length) {
       var photos = el('p');
       photos.textContent = t('referencePhotos') + ': ' + booking.photoUrls.join(', ');
-      card.appendChild(photos);
+      detail.appendChild(photos);
     }
-    card.appendChild(actions);
-    return card;
+    detail.appendChild(actions);
+    row.appendChild(detail);
+    return row;
+  }
+
+  function toggleBookingRow(bookingId) {
+    if (!bookingId) return;
+    state.expandedBookingId = state.expandedBookingId === bookingId ? null : bookingId;
+    renderBookings();
   }
 
   function markBookingNotified(bookingId) {
@@ -1215,9 +1293,19 @@
     var pendingRows = active.filter(function(booking) {
       return booking.status === 'pending_confirmation' || booking.status === 'pending_barber_confirmation' || booking.status === 'vendor_review';
     });
+    var inProgressRows = active.filter(function(booking) {
+      return booking.status === 'in_progress' || booking.status === 'traveling';
+    });
+    var completedTodayRows = state.bookings.filter(function(booking) {
+      return booking.status === 'completed' && booking.requestedDate === today;
+    });
     document.getElementById('mbStatToday').textContent = todayRows.length;
     document.getElementById('mbStatUpcoming').textContent = upcomingRows.length;
     document.getElementById('mbStatPending').textContent = pendingRows.length;
+    var inProg = document.getElementById('mbStatInProgress');
+    if (inProg) inProg.textContent = inProgressRows.length;
+    var completed = document.getElementById('mbStatCompleted');
+    if (completed) completed.textContent = completedTodayRows.length;
     renderBookingList('mbTodayList', todayRows);
     renderBookingList('mbPendingList', pendingRows);
     renderBookingList('mbUpcomingList', filteredBookings(now));

@@ -2162,6 +2162,148 @@
   background: rgba(6, 24, 42, .54);
 }
 
+/* ---------- Compact list-row + expandable detail (vendor dashboard) ---------- */
+.mb-booking-row {
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-left: 4px solid rgba(255, 255, 255, .12);
+  border-radius: var(--r-sm);
+  background: rgba(6, 24, 42, .58);
+  overflow: hidden;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.mb-booking-row + .mb-booking-row { margin-top: .5rem; }
+
+.mb-booking-row--pending     { border-left-color: #f5a623; }
+.mb-booking-row--confirmed   { border-left-color: #22c55e; }
+.mb-booking-row--traveling   { border-left-color: #38bdf8; }
+.mb-booking-row--completed   { border-left-color: #94a3b8; opacity: .82; }
+.mb-booking-row--cancelled   { border-left-color: #f87171; opacity: .68; }
+
+.mb-booking-row--expanded {
+  background: rgba(8, 30, 52, .82);
+  border-color: rgba(245, 166, 35, .55);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, .35);
+}
+
+.mb-booking-row__head {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto auto;
+  align-items: center;
+  gap: .55rem;
+  width: 100%;
+  padding: .6rem .75rem;
+  border: 0;
+  background: transparent;
+  color: var(--cream);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  min-height: 56px;
+}
+
+.mb-booking-row__head:focus-visible {
+  outline: 2px solid var(--gold-lt);
+  outline-offset: -2px;
+}
+
+.mb-booking-row__status {
+  flex-shrink: 0;
+}
+
+.mb-booking-row__time {
+  font-family: var(--font-d, 'Bodoni Moda', serif);
+  font-size: var(--text-md);
+  font-weight: 800;
+  color: var(--gold-lt);
+  white-space: nowrap;
+  letter-spacing: .01em;
+}
+
+.mb-booking-row__meat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .15rem .55rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.mb-booking-row__customer {
+  font-size: var(--text-sm);
+  font-weight: 800;
+  color: var(--cream);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.mb-booking-row__service,
+.mb-booking-row__city {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mb-booking-row__price {
+  font-size: var(--text-sm);
+  font-weight: 900;
+  color: var(--gold-lt);
+  white-space: nowrap;
+}
+
+.mb-booking-row__chevron {
+  width: 1.25rem;
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  transition: transform .2s ease;
+}
+
+.mb-booking-row--expanded .mb-booking-row__chevron {
+  transform: rotate(180deg);
+  color: var(--gold-lt);
+}
+
+.mb-booking-row__detail {
+  display: grid;
+  gap: .55rem;
+  padding: .25rem .85rem .85rem;
+  border-top: 1px solid rgba(255, 255, 255, .08);
+}
+
+.mb-booking-row__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  padding-top: .25rem;
+}
+
+/* Sticky filter bar treatment for the upcoming panel head */
+.mb-dashboard-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+}
+
+/* In-progress + completed pill colors (extend existing palette) */
+.mb-status-pill--traveling,
+.mb-status-pill--in_progress {
+  background: rgba(56, 189, 248, .18);
+  color: #93c5fd;
+}
+
+@media (min-width: 680px) {
+  .mb-booking-row__head { grid-template-columns: auto auto 1fr auto auto; padding: .7rem 1rem; }
+  .mb-booking-row__customer { font-size: var(--text-md); }
+  .mb-booking-row__service,
+  .mb-booking-row__city { font-size: var(--text-sm); }
+}
+/* ---------- /Compact list-row ---------- */
+
 .mb-booking-card {
   display: grid;
   gap: .55rem;

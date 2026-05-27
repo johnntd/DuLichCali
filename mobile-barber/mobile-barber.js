@@ -83,14 +83,16 @@
       howMatchingKicker: 'How it works',
       howMatchingTitle: 'We match you with the right barber automatically',
       howMatchingIntro: "Tap Book Now or Chat below. You'll share your address with the AI assistant — we'll match you with the nearest available barber and send your request for confirmation.",
-      howMatchingStep1Title: 'Tell us what and when',
-      howMatchingStep1Body: ' — Service, date, time, and your address (via chat or voice).',
-      howMatchingStep2Title: 'We match the right barber',
-      howMatchingStep2Body: ' — Based on your address, service area, languages, and availability.',
-      howMatchingStep3Title: 'Barber confirms',
-      howMatchingStep3Body: ' — Your matched barber reviews the request and accepts in their portal.',
-      howMatchingStep4Title: 'You get a confirmation',
-      howMatchingStep4Body: " — Once accepted you'll receive a confirmation with the barber's name and arrival time.",
+      howMatchingStep1Title: 'Enter your address',
+      howMatchingStep1Body: " — Tell the assistant where the barber should come (the address you give decides who serves you).",
+      howMatchingStep2Title: 'Pick service and time',
+      howMatchingStep2Body: ' — Choose the haircut you want and when.',
+      howMatchingStep3Title: 'Optional: preferred barber',
+      howMatchingStep3Body: " — Pick a specific barber from the ones who serve your area, or leave it on 'no preference' for the best match.",
+      howMatchingStep4Title: 'We route your request',
+      howMatchingStep4Body: ' — Routed by service area, language, travel radius, and barber workload.',
+      howMatchingStep5Title: 'Barber confirms',
+      howMatchingStep5Body: " — Your matched barber accepts and you receive a confirmation with their name and arrival time.",
       homeAiPreviewKicker: 'Optional',
       homeAiPreviewTitle: 'See yourself in 3 AI haircut previews',
       homeAiPreviewIntro: "Upload a selfie and the AI will generate 3 photorealistic previews of your face with different hairstyles. Pick one and we'll attach it to your booking so the barber knows exactly what you want.",
@@ -131,6 +133,12 @@
       assistantNeedLocation: 'Tell us your city or ZIP first so we can match you with the nearest barber. The chat will unlock right after.',
       assistantFallbackReply: 'Sorry, I did not catch that. Could you say it another way?',
       assistantErrorReply: "I'm having trouble reaching the assistant right now. Please try again in a moment, or call the barber directly.",
+      preferredBarberLabel: 'Preferred barber (optional)',
+      preferredBarberHint: 'Only barbers serving your area are listed. Leave on "No preference" for the best automatic match.',
+      preferredBarberNoneOption: 'No preference — match me automatically',
+      preferredBarberAckAuto: "Got it — I'll match you with the best available barber.",
+      preferredBarberAckChosen: "Great — I'll route this to {name}.",
+      preferredBarberNotAvailable: "{name} doesn't cover {city}. Would you like the next available barber?",
       serviceClassicName: 'Classic Mobile Haircut',
       serviceClassicDesc: 'In-home haircut with time reserved for setup and cleanup.',
       serviceComboName: 'Haircut and Beard Trim',
@@ -213,14 +221,16 @@
       howMatchingKicker: 'Cách hoạt động',
       howMatchingTitle: 'Tụi em tự động ghép bạn với thợ phù hợp',
       howMatchingIntro: 'Nhấn Đặt Ngay hoặc Chat bên dưới. Bạn chia sẻ địa chỉ với trợ lý AI — tụi em sẽ ghép với thợ gần nhất đang rảnh và gửi yêu cầu để thợ xác nhận.',
-      howMatchingStep1Title: 'Cho biết dịch vụ và thời gian',
-      howMatchingStep1Body: ' — Dịch vụ, ngày, giờ, và địa chỉ (qua chat hoặc thoại).',
-      howMatchingStep2Title: 'Tụi em ghép đúng thợ',
-      howMatchingStep2Body: ' — Dựa trên địa chỉ, khu vực phục vụ, ngôn ngữ, và lịch rảnh.',
-      howMatchingStep3Title: 'Thợ xác nhận',
-      howMatchingStep3Body: ' — Thợ được ghép sẽ xem yêu cầu và chấp nhận trên portal.',
-      howMatchingStep4Title: 'Bạn nhận xác nhận',
-      howMatchingStep4Body: ' — Sau khi thợ chấp nhận, bạn nhận xác nhận có tên thợ và giờ đến.',
+      howMatchingStep1Title: 'Nhập địa chỉ',
+      howMatchingStep1Body: ' — Cho trợ lý biết địa chỉ thợ sẽ đến (địa chỉ này quyết định thợ nào phục vụ bạn).',
+      howMatchingStep2Title: 'Chọn dịch vụ và thời gian',
+      howMatchingStep2Body: ' — Chọn kiểu cắt và thời điểm bạn muốn.',
+      howMatchingStep3Title: 'Không bắt buộc: chọn thợ',
+      howMatchingStep3Body: ' — Chọn thợ cụ thể từ những thợ phục vụ khu vực của bạn, hoặc để mặc định "không yêu cầu" để tụi em ghép tốt nhất.',
+      howMatchingStep4Title: 'Tụi em chuyển yêu cầu',
+      howMatchingStep4Body: ' — Dựa trên khu vực phục vụ, ngôn ngữ, bán kính di chuyển, và lịch của thợ.',
+      howMatchingStep5Title: 'Thợ xác nhận',
+      howMatchingStep5Body: ' — Thợ được ghép sẽ chấp nhận và bạn nhận xác nhận có tên thợ và giờ đến.',
       homeAiPreviewKicker: 'Không bắt buộc',
       homeAiPreviewTitle: 'Xem chính bạn trong 3 kiểu tóc do AI tạo',
       homeAiPreviewIntro: 'Tải ảnh selfie và AI sẽ tạo 3 hình xem trước chân thực với các kiểu tóc khác nhau. Chọn một kiểu và tụi em sẽ đính kèm vào lịch hẹn để thợ biết chính xác bạn muốn gì.',
@@ -261,6 +271,12 @@
       assistantNeedLocation: 'Hãy cho biết thành phố hoặc mã ZIP để được ghép với thợ gần nhất. Sau đó khung chat sẽ mở.',
       assistantFallbackReply: 'Xin lỗi, tôi chưa hiểu rõ. Bạn có thể nói lại theo cách khác không?',
       assistantErrorReply: 'Hệ thống tạm thời gặp sự cố. Vui lòng thử lại trong giây lát, hoặc gọi trực tiếp cho thợ.',
+      preferredBarberLabel: 'Thợ ưu tiên (không bắt buộc)',
+      preferredBarberHint: 'Chỉ liệt kê thợ phục vụ khu vực của bạn. Để "Không yêu cầu" để được ghép tự động tốt nhất.',
+      preferredBarberNoneOption: 'Không yêu cầu — ghép tự động giúp em',
+      preferredBarberAckAuto: 'Đã rõ — tụi em sẽ ghép với thợ phù hợp nhất.',
+      preferredBarberAckChosen: 'Tuyệt — tụi em sẽ chuyển yêu cầu cho {name}.',
+      preferredBarberNotAvailable: '{name} không phục vụ {city}. Bạn có muốn dùng thợ kế tiếp đang rảnh không?',
       serviceClassicName: 'Cắt Tóc Tận Nhà Cơ Bản',
       serviceClassicDesc: 'Cắt tóc tại nhà với thời gian chuẩn bị và dọn dẹp.',
       serviceComboName: 'Cắt Tóc và Tỉa Râu',
@@ -343,14 +359,16 @@
       howMatchingKicker: 'Cómo funciona',
       howMatchingTitle: 'Le emparejamos con el barbero correcto automáticamente',
       howMatchingIntro: 'Toque Reservar o Chat. Comparta su dirección con el asistente AI — le emparejamos con el barbero más cercano disponible y enviamos su solicitud para confirmación.',
-      howMatchingStep1Title: 'Dígame qué y cuándo',
-      howMatchingStep1Body: ' — Servicio, fecha, hora y dirección (por chat o voz).',
-      howMatchingStep2Title: 'Encontramos al barbero correcto',
-      howMatchingStep2Body: ' — Según dirección, área de servicio, idiomas y disponibilidad.',
-      howMatchingStep3Title: 'El barbero confirma',
-      howMatchingStep3Body: ' — El barbero asignado revisa la solicitud y acepta en su portal.',
-      howMatchingStep4Title: 'Recibirá confirmación',
-      howMatchingStep4Body: ' — Una vez aceptada recibirá confirmación con el nombre del barbero y la hora.',
+      howMatchingStep1Title: 'Ingrese su dirección',
+      howMatchingStep1Body: ' — Dígale al asistente a dónde debe ir el barbero (la dirección determina quién le sirve).',
+      howMatchingStep2Title: 'Elija servicio y hora',
+      howMatchingStep2Body: ' — Escoja el corte y el momento que desea.',
+      howMatchingStep3Title: 'Opcional: barbero preferido',
+      howMatchingStep3Body: ' — Elija un barbero específico de los que sirven su área, o deje "sin preferencia" para el mejor emparejamiento.',
+      howMatchingStep4Title: 'Enrutamos su solicitud',
+      howMatchingStep4Body: ' — Según área de servicio, idiomas, radio de viaje y carga de trabajo del barbero.',
+      howMatchingStep5Title: 'El barbero confirma',
+      howMatchingStep5Body: ' — El barbero asignado acepta y recibirá una confirmación con su nombre y hora de llegada.',
       homeAiPreviewKicker: 'Opcional',
       homeAiPreviewTitle: 'Vea su rostro en 3 cortes generados por AI',
       homeAiPreviewIntro: 'Suba una selfie y la AI generará 3 vistas previas fotorrealistas de su rostro con distintos cortes. Elija uno y lo adjuntaremos a su cita para que el barbero sepa exactamente qué quiere.',
@@ -391,6 +409,12 @@
       assistantNeedLocation: 'Indica tu ciudad o código postal primero para conectarte con el barbero más cercano. El chat se desbloquea enseguida.',
       assistantFallbackReply: 'Disculpa, no entendí. ¿Puedes decirlo de otra forma?',
       assistantErrorReply: 'Tengo problemas para conectar con el asistente. Intenta de nuevo en un momento o llama al barbero directamente.',
+      preferredBarberLabel: 'Barbero preferido (opcional)',
+      preferredBarberHint: 'Solo se listan los barberos que sirven su área. Deje "Sin preferencia" para el mejor emparejamiento automático.',
+      preferredBarberNoneOption: 'Sin preferencia — empareja automáticamente',
+      preferredBarberAckAuto: 'Entendido — le emparejaré con el mejor barbero disponible.',
+      preferredBarberAckChosen: 'Genial — enviaré esto a {name}.',
+      preferredBarberNotAvailable: '{name} no cubre {city}. ¿Quiere el siguiente barbero disponible?',
       serviceClassicName: 'Corte Móvil Clásico',
       serviceClassicDesc: 'Corte a domicilio con tiempo reservado para preparación y limpieza.',
       serviceComboName: 'Corte y Arreglo de Barba',
@@ -898,6 +922,11 @@
       .then(function(result) {
         var reply = (result && result.response) || t('assistantFallbackReply');
         appendChatMessage('ai', reply);
+        // After every turn, re-evaluate whether the preferred-barber
+        // dropdown should be visible (it appears once the agent has the
+        // customer's address and we can scope the list to vendors who
+        // actually serve that area).
+        refreshPreferredBarberPicker();
       })
       .catch(function(err) {
         if (root.console) root.console.error('[mobile-barber] chat error', err);
@@ -907,6 +936,100 @@
         if (input) { input.disabled = false; input.focus(); }
         if (sendBtn) sendBtn.disabled = false;
       });
+  }
+
+  // ── Optional preferred-barber dropdown ────────────────────────────────
+  // Hidden by default. Appears once the AI agent has captured the customer's
+  // address (so we can scope the list to vendors who actually serve that
+  // area). Default "No preference / Match me automatically".
+  function refreshPreferredBarberPicker() {
+    var wrap   = document.getElementById('mbPreferredBarberWrap');
+    var select = document.getElementById('mbPreferredBarberSelect');
+    if (!wrap || !select) return;
+    var agentState = state.agentSession && state.agentSession.state;
+    var hasAddress = !!(agentState && (agentState.city || agentState.zip || agentState.address));
+    if (!hasAddress) { wrap.hidden = true; return; }
+
+    var location = {
+      city: (agentState && agentState.city) || '',
+      zip:  (agentState && agentState.zip)  || ''
+    };
+    var allActive = (DATA && DATA.sampleVendors ? DATA.sampleVendors : [])
+      .filter(function(v) { return v && v.active !== false; });
+    var vendorsForArea = allActive.filter(function(v) {
+      if (!BOOKING || typeof BOOKING.isWithinServiceArea !== 'function') return true;
+      try { return BOOKING.isWithinServiceArea(v, location); }
+      catch (e) { return false; }
+    });
+    // If no vendor matches the area, fall back to "no vendors here" — the
+    // dropdown stays hidden because the agent will refuse out-of-area
+    // bookings via service_area_out_of_range anyway.
+    if (!vendorsForArea.length) { wrap.hidden = true; return; }
+
+    var current = select.value;
+    select.innerHTML = '';
+    var noOpt = document.createElement('option');
+    noOpt.value = '';
+    noOpt.textContent = t('preferredBarberNoneOption') || 'No preference — match me automatically';
+    select.appendChild(noOpt);
+    vendorsForArea.forEach(function(v) {
+      var opt = document.createElement('option');
+      opt.value = v.id;
+      opt.textContent = (v.barberName || v.businessName || v.id) +
+        ((v.languages && v.languages.length) ? ' (' + v.languages.join('/').toUpperCase() + ')' : '');
+      select.appendChild(opt);
+    });
+    // Restore prior selection if still valid; otherwise default to none.
+    select.value = vendorsForArea.some(function(v) { return v.id === current; }) ? current : '';
+    wrap.hidden = false;
+  }
+
+  function handlePreferredBarberChange() {
+    var select = document.getElementById('mbPreferredBarberSelect');
+    if (!select) return;
+    var chosenId = select.value;
+    var agentState = state.agentSession && state.agentSession.state;
+    if (!agentState) return;
+
+    if (!chosenId) {
+      // "No preference" — clear any prior override; routing falls back to
+      // automatic by address + service area + availability.
+      agentState.barberPreference = '';
+      state.routedVendor = null;
+      appendChatMessage('ai', t('preferredBarberAckAuto') || "Got it — I'll match you with the best available barber.");
+      return;
+    }
+    var vendor = (DATA && typeof DATA.findVendorById === 'function')
+      ? DATA.findVendorById(chosenId)
+      : null;
+    if (!vendor) return;
+    // Validate the chosen barber actually serves the customer's area.
+    var location = {
+      city: (agentState && agentState.city) || '',
+      zip:  (agentState && agentState.zip)  || ''
+    };
+    var serves = (BOOKING && typeof BOOKING.isWithinServiceArea === 'function')
+      ? BOOKING.isWithinServiceArea(vendor, location)
+      : true;
+    if (!serves) {
+      // Show the explicit "not available" message and clear the override.
+      appendChatMessage('ai', interpolate(t('preferredBarberNotAvailable') ||
+        "{name} doesn't cover {city}. Would you like the next available barber?", {
+          name: vendor.barberName || vendor.businessName || chosenId,
+          city: location.city || location.zip || 'your area'
+        }));
+      select.value = '';
+      agentState.barberPreference = '';
+      return;
+    }
+    // Honor the override — mirror into both the agent's slot (which
+    // preferredVendor() already reads) and state.routedVendor so the chat
+    // flow + booking-build path use the chosen vendor.
+    var preferenceKey = String(vendor.barberName || vendor.businessName || vendor.id).split(/\s+/)[0].toLowerCase();
+    agentState.barberPreference = preferenceKey;
+    state.routedVendor = vendor;
+    appendChatMessage('ai', interpolate(t('preferredBarberAckChosen') ||
+      "Great — I'll route this to {name}.", { name: vendor.barberName || vendor.businessName }));
   }
 
   function openVoiceAssistant() {
@@ -1433,6 +1556,9 @@
 
     var assistantForm = document.getElementById('mbAssistantForm');
     if (assistantForm) assistantForm.addEventListener('submit', handleAssistantSubmit);
+
+    var preferredSelect = document.getElementById('mbPreferredBarberSelect');
+    if (preferredSelect) preferredSelect.addEventListener('change', handlePreferredBarberChange);
 
     var list = document.getElementById('mbServiceList');
     if (list) {

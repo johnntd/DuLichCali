@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260527i">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260527j">
 </head>
 <body class="mb-page">
   <main class="mb-shell" id="mobileBarberApp">
@@ -65,6 +65,7 @@
         <li><span class="mb-how-matching__num">2</span><div><strong data-i18n="howMatchingStep2Title"></strong><span data-i18n="howMatchingStep2Body"></span></div></li>
         <li><span class="mb-how-matching__num">3</span><div><strong data-i18n="howMatchingStep3Title"></strong><span data-i18n="howMatchingStep3Body"></span></div></li>
         <li><span class="mb-how-matching__num">4</span><div><strong data-i18n="howMatchingStep4Title"></strong><span data-i18n="howMatchingStep4Body"></span></div></li>
+        <li><span class="mb-how-matching__num">5</span><div><strong data-i18n="howMatchingStep5Title"></strong><span data-i18n="howMatchingStep5Body"></span></div></li>
       </ol>
     </section>
 
@@ -179,6 +180,13 @@
       </header>
       <div class="mb-chat-panel__transcript" id="mbAssistantTranscript" role="log" aria-live="polite" aria-atomic="false"></div>
       <p class="mb-chat-panel__hint" id="mbAssistantNeedLocation" hidden data-i18n="assistantNeedLocation"></p>
+      <div class="mb-chat-panel__preferred-barber" id="mbPreferredBarberWrap" hidden>
+        <label for="mbPreferredBarberSelect" class="mb-chat-panel__preferred-label">
+          <span data-i18n="preferredBarberLabel"></span>
+          <select id="mbPreferredBarberSelect" class="mb-chat-panel__preferred-select"></select>
+        </label>
+        <p class="mb-chat-panel__preferred-hint" id="mbPreferredBarberHint" data-i18n="preferredBarberHint"></p>
+      </div>
       <form class="mb-chat-panel__form" id="mbAssistantForm" novalidate>
         <label class="mb-chat-panel__input-wrap">
           <span class="mb-visually-hidden" data-i18n="assistantInputLabel"></span>
@@ -211,6 +219,6 @@
   <script src="/mobile-barber/mobile-barber-agent.js?v=20260527b"></script>
   <script src="/mobile-barber/mobile-barber-voice.js?v=20260525f"></script>
   <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260527c"></script>
-  <script src="/mobile-barber/mobile-barber.js?v=20260527e"></script>
+  <script src="/mobile-barber/mobile-barber.js?v=20260527f"></script>
 </body>
 </html>

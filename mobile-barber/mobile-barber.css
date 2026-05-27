@@ -2880,6 +2880,48 @@
 }
 /* ── /How matching works ─────────────────────────────────────────────── */
 
+/* ── Preferred-barber dropdown inside the chat panel ─────────────────── */
+.mb-chat-panel__preferred-barber {
+  display: grid;
+  gap: .35rem;
+  padding: .6rem .75rem;
+  border: 1px solid rgba(245, 166, 35, .45);
+  border-radius: var(--r-sm);
+  background: rgba(245, 166, 35, .08);
+}
+
+.mb-chat-panel__preferred-label {
+  display: grid;
+  gap: .3rem;
+  font-size: var(--text-sm);
+  color: var(--cream);
+  font-weight: 700;
+}
+
+.mb-chat-panel__preferred-select {
+  width: 100%;
+  min-height: 44px;
+  padding: .45rem .65rem;
+  border-radius: var(--r-sm);
+  border: 1px solid rgba(255, 255, 255, .25);
+  background: rgba(2, 12, 22, .72);
+  color: var(--cream);
+  font: inherit;
+}
+
+.mb-chat-panel__preferred-select:focus-visible {
+  outline: 2px solid var(--gold-lt);
+  outline-offset: 1px;
+  border-color: rgba(245, 166, 35, .85);
+}
+
+.mb-chat-panel__preferred-hint {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+/* ── /preferred barber dropdown ──────────────────────────────────────── */
+
 /* ---------- Optional AI haircut preview (customer form) ---------- */
 .mb-ai-preview {
   margin: .9rem 0 .3rem;

@@ -2801,6 +2801,42 @@
 }
 /* ---------- /Customer form radios ---------- */
 
+/* ── /mobile-barber landing: AI haircut preview section ───────────────── */
+.mb-ai-preview-section {
+  padding: 1.5rem 1rem;
+  background:
+    linear-gradient(180deg, rgba(245, 166, 35, .05), rgba(8, 30, 52, 0)),
+    rgba(6, 24, 42, .48);
+  border-radius: var(--r-md);
+  border: 1px dashed rgba(245, 166, 35, .45);
+}
+
+.mb-ai-preview-section .mb-section__head {
+  margin-bottom: .85rem;
+}
+
+.mb-ai-preview-section .mb-section__head .mb-kicker {
+  color: var(--gold-lt);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-weight: 800;
+}
+
+.mb-ai-preview-section .mb-section__head h2 {
+  font-family: var(--font-d, 'Bodoni Moda', serif);
+  font-size: clamp(1.45rem, 4vw, 2rem);
+  margin: .25rem 0 .3rem;
+  color: var(--cream);
+}
+
+/* The landing version uses a plain <div> (not <details>) so the body is
+   always visible — no [open] gating needed. */
+.mb-ai-preview-section .mb-ai-preview {
+  border-style: solid;
+  background: rgba(2, 12, 22, .55);
+}
+/* ── /landing AI preview section ─────────────────────────────────────── */
+
 /* ---------- Optional AI haircut preview (customer form) ---------- */
 .mb-ai-preview {
   margin: .9rem 0 .3rem;

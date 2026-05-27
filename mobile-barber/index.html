@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260527e">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260527g">
 </head>
 <body class="mb-page">
   <main class="mb-shell" id="mobileBarberApp">
@@ -169,13 +169,24 @@
       </div>
     </section>
 
-    <section class="mb-assistant" id="mbAssistantPanel" hidden aria-live="polite">
-      <div>
-        <p class="mb-kicker" data-i18n="assistantKicker"></p>
-        <h2 data-i18n="assistantTitle"></h2>
-        <p data-i18n="assistantCopy"></p>
-      </div>
-      <button class="mb-button mb-button--primary" type="button" data-action="closeAssistant" data-i18n="assistantClose"></button>
+    <section class="mb-assistant mb-chat-panel" id="mbAssistantPanel" hidden aria-live="polite" aria-labelledby="mbAssistantPanelTitle">
+      <header class="mb-chat-panel__head">
+        <div>
+          <p class="mb-kicker" data-i18n="assistantKicker"></p>
+          <h2 id="mbAssistantPanelTitle" data-i18n="assistantTitle"></h2>
+          <p class="mb-chat-panel__copy" data-i18n="assistantCopy"></p>
+        </div>
+        <button class="mb-button mb-button--ghost mb-button--sm" type="button" data-action="closeAssistant" data-i18n="assistantClose"></button>
+      </header>
+      <div class="mb-chat-panel__transcript" id="mbAssistantTranscript" role="log" aria-live="polite" aria-atomic="false"></div>
+      <p class="mb-chat-panel__hint" id="mbAssistantNeedLocation" hidden data-i18n="assistantNeedLocation"></p>
+      <form class="mb-chat-panel__form" id="mbAssistantForm" novalidate>
+        <label class="mb-chat-panel__input-wrap">
+          <span class="mb-visually-hidden" data-i18n="assistantInputLabel"></span>
+          <input id="mbAssistantInput" type="text" autocomplete="off" maxlength="500" required>
+        </label>
+        <button class="mb-button mb-button--primary mb-chat-panel__send" type="submit" data-i18n="assistantSend"></button>
+      </form>
     </section>
   </main>
 
@@ -200,6 +211,6 @@
   <script src="/mobile-barber/mobile-barber-booking.js?v=20260527b"></script>
   <script src="/mobile-barber/mobile-barber-agent.js?v=20260527a"></script>
   <script src="/mobile-barber/mobile-barber-voice.js?v=20260525f"></script>
-  <script src="/mobile-barber/mobile-barber.js?v=20260527b"></script>
+  <script src="/mobile-barber/mobile-barber.js?v=20260527c"></script>
 </body>
 </html>

@@ -90,9 +90,15 @@
       emptyCopy: 'Please check the marketplace or ask Du Lich Cali for the next available in-home service option.',
       emptyCta: 'Back to Du Lich Cali',
       assistantKicker: 'AI assistant',
-      assistantTitle: 'Mobile barber assistant is ready for booking intake.',
-      assistantCopy: 'This Phase 2 page does not confirm appointments. The assistant CTA will collect service, address, date, time, barber preference, and contact details in a later phase.',
+      assistantTitle: 'Chat with your AI barber assistant',
+      assistantCopy: "Tell me what haircut you'd like and when. I'll route you to the nearest barber and confirm the appointment.",
       assistantClose: 'Close',
+      assistantInputLabel: 'Type a message to the AI barber assistant',
+      assistantSend: 'Send',
+      assistantGreeting: "Hi! I'm the Mobile Barber assistant. What haircut would you like, and when?",
+      assistantNeedLocation: 'Tell us your city or ZIP first so we can match you with the nearest barber. The chat will unlock right after.',
+      assistantFallbackReply: 'Sorry, I did not catch that. Could you say it another way?',
+      assistantErrorReply: "I'm having trouble reaching the assistant right now. Please try again in a moment, or call the barber directly.",
       serviceClassicName: 'Classic Mobile Haircut',
       serviceClassicDesc: 'In-home haircut with time reserved for setup and cleanup.',
       serviceComboName: 'Haircut and Beard Trim',
@@ -182,9 +188,15 @@
       emptyCopy: 'Vui lòng xem marketplace hoặc hỏi Du Lich Cali về lựa chọn dịch vụ tận nhà sắp tới.',
       emptyCta: 'Về Du Lich Cali',
       assistantKicker: 'Trợ lý AI',
-      assistantTitle: 'Trợ lý mobile barber đã sẵn sàng nhận thông tin đặt lịch.',
-      assistantCopy: 'Trang Phase 2 này không xác nhận lịch hẹn. CTA trợ lý sẽ thu thập dịch vụ, địa chỉ, ngày, giờ, thợ mong muốn, và thông tin liên hệ ở phase sau.',
+      assistantTitle: 'Trò chuyện với trợ lý AI thợ cắt tóc',
+      assistantCopy: 'Hãy cho biết bạn muốn kiểu tóc nào và khi nào. Tôi sẽ kết nối bạn với thợ gần nhất và xác nhận lịch hẹn.',
       assistantClose: 'Đóng',
+      assistantInputLabel: 'Nhập tin nhắn cho trợ lý AI',
+      assistantSend: 'Gửi',
+      assistantGreeting: 'Xin chào! Tôi là trợ lý Mobile Barber. Bạn muốn kiểu tóc nào và khi nào ạ?',
+      assistantNeedLocation: 'Hãy cho biết thành phố hoặc mã ZIP để được ghép với thợ gần nhất. Sau đó khung chat sẽ mở.',
+      assistantFallbackReply: 'Xin lỗi, tôi chưa hiểu rõ. Bạn có thể nói lại theo cách khác không?',
+      assistantErrorReply: 'Hệ thống tạm thời gặp sự cố. Vui lòng thử lại trong giây lát, hoặc gọi trực tiếp cho thợ.',
       serviceClassicName: 'Cắt Tóc Tận Nhà Cơ Bản',
       serviceClassicDesc: 'Cắt tóc tại nhà với thời gian chuẩn bị và dọn dẹp.',
       serviceComboName: 'Cắt Tóc và Tỉa Râu',
@@ -274,9 +286,15 @@
       emptyCopy: 'Revise el marketplace o pregunte a Du Lich Cali por la próxima opción de servicio a domicilio.',
       emptyCta: 'Volver a Du Lich Cali',
       assistantKicker: 'Asistente AI',
-      assistantTitle: 'El asistente de barbero móvil está listo para tomar datos de reserva.',
-      assistantCopy: 'Esta página de Phase 2 no confirma citas. El CTA del asistente recopilará servicio, dirección, fecha, hora, preferencia de barbero, y contacto en una fase posterior.',
+      assistantTitle: 'Chatea con tu asistente AI de barbero',
+      assistantCopy: 'Dime qué corte quieres y cuándo. Te conecto con el barbero más cercano y confirmamos la cita.',
       assistantClose: 'Cerrar',
+      assistantInputLabel: 'Escribe un mensaje al asistente AI',
+      assistantSend: 'Enviar',
+      assistantGreeting: 'Hola! Soy el asistente Mobile Barber. ¿Qué corte deseas y cuándo?',
+      assistantNeedLocation: 'Indica tu ciudad o código postal primero para conectarte con el barbero más cercano. El chat se desbloquea enseguida.',
+      assistantFallbackReply: 'Disculpa, no entendí. ¿Puedes decirlo de otra forma?',
+      assistantErrorReply: 'Tengo problemas para conectar con el asistente. Intenta de nuevo en un momento o llama al barbero directamente.',
       serviceClassicName: 'Corte Móvil Clásico',
       serviceClassicDesc: 'Corte a domicilio con tiempo reservado para preparación y limpieza.',
       serviceComboName: 'Corte y Arreglo de Barba',
@@ -708,13 +726,89 @@
   function openAssistantPanel(mode) {
     ensureAgentSession();
     var panel = document.getElementById('mbAssistantPanel');
+    if (!panel) return null;
     panel.hidden = false;
     var copy = panel.querySelector('[data-i18n="assistantCopy"]');
     if (copy && AGENT && typeof AGENT.initialPrompt === 'function') {
       copy.textContent = AGENT.initialPrompt(mode === 'vendor' ? { vendor: preferredVendor() } : {}, state.lang);
     }
-    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    // If we don't have a routed vendor yet, surface a clear "tell us your
+    // location first" hint inside the chat panel AND scroll the location
+    // gate into view so the customer knows what to do. The chat input
+    // stays disabled until we can resolve a vendor.
+    var hasLocation = !!(state.routedVendor || readSavedLocation());
+    var needHint = panel.querySelector('#mbAssistantNeedLocation');
+    var input    = panel.querySelector('#mbAssistantInput');
+    var sendBtn  = panel.querySelector('.mb-chat-panel__send');
+    if (needHint) needHint.hidden = !!hasLocation;
+    if (input)    input.disabled  = !hasLocation;
+    if (sendBtn)  sendBtn.disabled = !hasLocation;
+
+    if (!hasLocation) {
+      promptForLocation(state.selectedServiceId);
+      return panel;
+    }
+
+    seedAssistantTranscriptIfEmpty();
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(function() {
+      if (input && typeof input.focus === 'function') input.focus();
+    }, 280);
     return panel;
+  }
+
+  // ── Chat transcript renderer (customer landing) ───────────────────────
+  function appendChatMessage(role, text) {
+    var transcript = document.getElementById('mbAssistantTranscript');
+    if (!transcript || !text) return;
+    var row = document.createElement('div');
+    row.className = 'mb-chat-msg mb-chat-msg--' + (role === 'user' ? 'user' : 'ai');
+    var bubble = document.createElement('div');
+    bubble.className = 'mb-chat-msg__bubble';
+    bubble.textContent = String(text);
+    row.appendChild(bubble);
+    transcript.appendChild(row);
+    transcript.scrollTop = transcript.scrollHeight;
+  }
+
+  function seedAssistantTranscriptIfEmpty() {
+    var transcript = document.getElementById('mbAssistantTranscript');
+    if (!transcript || transcript.childElementCount > 0) return;
+    var greeting = '';
+    if (AGENT && typeof AGENT.initialPrompt === 'function') {
+      greeting = AGENT.initialPrompt({ vendor: preferredVendor() }, state.lang) || '';
+    }
+    if (!greeting) greeting = t('assistantGreeting');
+    appendChatMessage('ai', greeting);
+  }
+
+  function handleAssistantSubmit(event) {
+    event.preventDefault();
+    var input = document.getElementById('mbAssistantInput');
+    if (!input) return;
+    var message = String(input.value || '').trim();
+    if (!message) return;
+    input.value = '';
+    appendChatMessage('user', message);
+
+    var sendBtn = document.querySelector('.mb-chat-panel__send');
+    if (sendBtn) sendBtn.disabled = true;
+    if (input) input.disabled = true;
+
+    var pending = sendAgentMessage(message, { source: 'ai_chat' });
+    Promise.resolve(pending)
+      .then(function(result) {
+        var reply = (result && result.response) || t('assistantFallbackReply');
+        appendChatMessage('ai', reply);
+      })
+      .catch(function(err) {
+        if (root.console) root.console.error('[mobile-barber] chat error', err);
+        appendChatMessage('ai', t('assistantErrorReply'));
+      })
+      .then(function() {
+        if (input) { input.disabled = false; input.focus(); }
+        if (sendBtn) sendBtn.disabled = false;
+      });
   }
 
   function openVoiceAssistant() {
@@ -1238,6 +1332,9 @@
     document.querySelector('[data-action="closeAssistant"]').addEventListener('click', function() {
       document.getElementById('mbAssistantPanel').hidden = true;
     });
+
+    var assistantForm = document.getElementById('mbAssistantForm');
+    if (assistantForm) assistantForm.addEventListener('submit', handleAssistantSubmit);
 
     var list = document.getElementById('mbServiceList');
     if (list) {

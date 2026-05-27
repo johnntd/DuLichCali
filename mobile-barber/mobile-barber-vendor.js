@@ -123,6 +123,11 @@
       emailBlankWarning: "No email - you won't receive an email confirmation.",
       emailRecommendedNotice: 'Email recommended for confirmation. Continue without?',
       smsOptInLabel: 'Text me a confirmation',
+      confirmationPreferenceLabel: 'How would you like us to confirm your appointment?',
+      confirmationPreferenceText: 'Text (SMS)',
+      confirmationPreferenceCall: 'Phone call',
+      confirmationPreferenceApp: 'App notification',
+      confirmationPreferenceHint: 'Text is the default. The barber will reach out using your choice.',
       paymentChoiceLabel: 'How would you like to pay after the haircut?',
       paymentCash: 'Cash',
       paymentZelle: 'Zelle',
@@ -289,6 +294,11 @@
       emailBlankWarning: 'Không có email - bạn sẽ không nhận xác nhận đặt lịch qua email.',
       emailRecommendedNotice: 'Nên thêm email để nhận xác nhận. Tiếp tục khi không có email?',
       smsOptInLabel: 'Nhắn tin xác nhận',
+      confirmationPreferenceLabel: 'Bạn muốn được xác nhận lịch hẹn bằng cách nào?',
+      confirmationPreferenceText: 'Tin nhắn (SMS)',
+      confirmationPreferenceCall: 'Gọi điện',
+      confirmationPreferenceApp: 'Thông báo trong app',
+      confirmationPreferenceHint: 'Mặc định là tin nhắn. Thợ sẽ liên hệ theo cách bạn chọn.',
       paymentChoiceLabel: 'Mình muốn trả tiền sau khi cắt tóc bằng cách nào?',
       paymentCash: 'Tiền mặt',
       paymentZelle: 'Zelle',
@@ -455,6 +465,11 @@
       emailBlankWarning: 'Sin correo - no recibirá confirmación por correo.',
       emailRecommendedNotice: 'Se recomienda email para confirmación. ¿Continuar sin email?',
       smsOptInLabel: 'Enviar SMS de confirmación',
+      confirmationPreferenceLabel: '¿Cómo quiere que confirmemos su cita?',
+      confirmationPreferenceText: 'SMS (texto)',
+      confirmationPreferenceCall: 'Llamada',
+      confirmationPreferenceApp: 'Notificación en la app',
+      confirmationPreferenceHint: 'El predeterminado es SMS. El barbero se comunicará por su opción elegida.',
       paymentChoiceLabel: 'Como prefiere pagar despues del corte?',
       paymentCash: 'Efectivo',
       paymentZelle: 'Zelle',
@@ -1350,6 +1365,7 @@
       customerName: document.getElementById('mbCustomerName').value,
       customerPhone: document.getElementById('mbCustomerPhone').value,
       customerEmail: document.getElementById('mbCustomerEmail').value,
+      confirmationPreference: (document.querySelector('input[name="mbConfirmationPreference"]:checked') || {}).value || 'text',
       paymentMethod: (document.querySelector('input[name="mbPaymentMethod"]:checked') || {}).value || 'unknown',
       paymentStatus: 'unpaid',
       zellePhone: (state.vendor && state.vendor.phone) || '',
@@ -1383,6 +1399,9 @@
       var payment = document.querySelector('input[name="mbPaymentMethod"][value="' + draft.paymentMethod + '"]');
       if (payment) payment.checked = true;
     }
+    var conf = draft.confirmationPreference || 'text';
+    var confRadio = document.querySelector('input[name="mbConfirmationPreference"][value="' + conf + '"]');
+    if (confRadio) confRadio.checked = true;
   }
 
   function clearManualResult() {

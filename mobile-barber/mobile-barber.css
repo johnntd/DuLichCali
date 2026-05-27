@@ -2538,6 +2538,132 @@
 }
 /* ---------- /Settings section ---------- */
 
+/* ---------- Confirmation preference chip + SMS launcher ---------- */
+.mb-confirmation-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .25rem .55rem;
+  border-radius: var(--r-pill);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  line-height: 1.1;
+}
+
+.mb-confirmation-chip--text {
+  background: rgba(245, 166, 35, .18);
+  color: #ffd166;
+  border: 1px solid rgba(245, 166, 35, .55);
+  box-shadow: 0 0 0 2px rgba(245, 166, 35, .12);
+  animation: mbChipPulse 2.4s ease-in-out infinite;
+}
+
+.mb-confirmation-chip--call {
+  background: rgba(56, 189, 248, .15);
+  color: #93c5fd;
+  border: 1px solid rgba(56, 189, 248, .45);
+}
+
+.mb-confirmation-chip--app {
+  background: rgba(148, 163, 184, .18);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, .45);
+}
+
+@keyframes mbChipPulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(245, 166, 35, .12); }
+  50%      { box-shadow: 0 0 0 4px rgba(245, 166, 35, .26); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mb-confirmation-chip--text { animation: none; }
+}
+
+/* Row-level highlight when an expanded booking is awaiting an SMS confirm */
+.mb-booking-row:has(.mb-confirmation-chip--text) {
+  border-left-color: rgba(245, 166, 35, .85);
+}
+
+/* SMS launcher button — base style is same as primary; on mobile we make it
+   fill the row so it's easy to thumb. */
+.mb-sms-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  font-weight: 900;
+  letter-spacing: .02em;
+}
+
+@media (max-width: 680px) {
+  .mb-sms-button {
+    flex: 1 1 100%;
+    min-height: 48px;
+    font-size: var(--text-md);
+    padding: .85rem 1rem;
+  }
+}
+/* ---------- /Confirmation preference ---------- */
+
+/* ---------- Customer form: confirmation preference radio pills ---------- */
+.mb-radio-group {
+  border: 0;
+  margin: .5rem 0 0;
+  padding: 0;
+}
+
+.mb-radio-group__legend {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--cream);
+  margin-bottom: .4rem;
+}
+
+.mb-radio-group--confirmation {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+}
+
+.mb-radio-pill {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .55rem .7rem;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, .04);
+  cursor: pointer;
+  transition: border-color .18s ease, background .18s ease;
+  min-height: 44px;
+}
+
+.mb-radio-pill:hover {
+  border-color: rgba(245, 166, 35, .45);
+  background: rgba(245, 166, 35, .06);
+}
+
+.mb-radio-pill input[type="radio"] {
+  accent-color: var(--gold-lt, #ffd166);
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.mb-radio-pill:has(input[type="radio"]:checked) {
+  border-color: rgba(245, 166, 35, .85);
+  background: rgba(245, 166, 35, .12);
+}
+
+.mb-form-hint {
+  margin: .35rem 0 0;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+/* ---------- /Customer form radios ---------- */
+
 .mb-booking-card {
   display: grid;
   gap: .55rem;

@@ -53,6 +53,17 @@
       appointmentListHintPending: 'Showing requests waiting for your confirmation.',
       appointmentListHintInProgress: 'Showing appointments currently in progress or traveling.',
       appointmentListHintCompleted: "Showing today's completed appointments.",
+      confirmTextChip: 'TEXT CONFIRMATION REQUIRED',
+      confirmTextChipAria: 'Customer requested SMS confirmation',
+      confirmCallChip: 'CALL TO CONFIRM',
+      confirmAppChip: 'APP NOTIFICATION',
+      confirmationPreferenceLabel: 'Customer preference',
+      confirmPrefText: 'SMS (text message)',
+      confirmPrefCall: 'Phone call',
+      confirmPrefApp: 'In-app notification',
+      sendConfirmationTextAction: 'Send Confirmation Text',
+      sendConfirmationTextAria: 'Open SMS compose with prefilled confirmation',
+      smsConfirmationBody: 'Hi {customer},\n\nThis is {barber} Mobile Barber.\n\nConfirming your appointment:\n\nService: {service}\nDate: {date}\nTime: {time}\n\nReply YES to confirm.\n\nThank you.',
       todayTitle: "Today's appointments",
       pendingTitle: 'Pending confirmations',
       upcomingTitle: 'Upcoming bookings',
@@ -209,6 +220,17 @@
       appointmentListHintPending: 'Hiển thị yêu cầu đang chờ bạn xác nhận.',
       appointmentListHintInProgress: 'Hiển thị lịch đang làm hoặc đang trên đường.',
       appointmentListHintCompleted: 'Hiển thị lịch đã hoàn tất hôm nay.',
+      confirmTextChip: 'CẦN XÁC NHẬN QUA TIN NHẮN',
+      confirmTextChipAria: 'Khách yêu cầu xác nhận bằng SMS',
+      confirmCallChip: 'GỌI ĐIỆN XÁC NHẬN',
+      confirmAppChip: 'THÔNG BÁO TRONG APP',
+      confirmationPreferenceLabel: 'Khách muốn xác nhận qua',
+      confirmPrefText: 'Tin nhắn (SMS)',
+      confirmPrefCall: 'Gọi điện',
+      confirmPrefApp: 'Thông báo trong app',
+      sendConfirmationTextAction: 'Gửi tin xác nhận',
+      sendConfirmationTextAria: 'Mở ứng dụng SMS với nội dung xác nhận đã điền sẵn',
+      smsConfirmationBody: 'Chào {customer},\n\nĐây là {barber} Mobile Barber.\n\nXác nhận lịch hẹn của bạn:\n\nDịch vụ: {service}\nNgày: {date}\nGiờ: {time}\n\nVui lòng trả lời YES để xác nhận.\n\nCảm ơn bạn.',
       todayTitle: 'Lịch hẹn hôm nay',
       pendingTitle: 'Yêu cầu chờ xác nhận',
       upcomingTitle: 'Lịch hẹn sắp tới',
@@ -365,6 +387,17 @@
       appointmentListHintPending: 'Mostrando solicitudes esperando tu confirmación.',
       appointmentListHintInProgress: 'Mostrando citas en curso o en camino.',
       appointmentListHintCompleted: 'Mostrando las citas completadas de hoy.',
+      confirmTextChip: 'CONFIRMACIÓN POR SMS REQUERIDA',
+      confirmTextChipAria: 'Cliente solicitó confirmación por SMS',
+      confirmCallChip: 'LLAMAR PARA CONFIRMAR',
+      confirmAppChip: 'NOTIFICACIÓN EN APP',
+      confirmationPreferenceLabel: 'Preferencia del cliente',
+      confirmPrefText: 'SMS (mensaje de texto)',
+      confirmPrefCall: 'Llamada',
+      confirmPrefApp: 'Notificación en la app',
+      sendConfirmationTextAction: 'Enviar SMS de confirmación',
+      sendConfirmationTextAria: 'Abrir SMS con la confirmación rellenada',
+      smsConfirmationBody: 'Hola {customer},\n\nSoy {barber} de Mobile Barber.\n\nConfirmando su cita:\n\nServicio: {service}\nFecha: {date}\nHora: {time}\n\nResponda YES para confirmar.\n\nGracias.',
       todayTitle: 'Citas de hoy',
       pendingTitle: 'Confirmaciones pendientes',
       upcomingTitle: 'Reservas próximas',
@@ -931,6 +964,42 @@
     return t({ paid: 'paymentPaid', unpaid: 'paymentUnpaid', pending: 'paymentPending', waived: 'paymentWaived' }[status] || 'paymentUnpaid');
   }
 
+  function confirmationPreferenceLabel(pref) {
+    var key = { text: 'confirmPrefText', call: 'confirmPrefCall', app: 'confirmPrefApp' }[String(pref || '').toLowerCase()] || 'confirmPrefText';
+    return t(key);
+  }
+
+  // Phone-friendly digits only (preserves leading + if present).
+  function smsAddress(phone) {
+    var s = String(phone || '').trim();
+    if (!s) return '';
+    var plus = s.charAt(0) === '+' ? '+' : '';
+    return plus + s.replace(/[^\d]/g, '');
+  }
+
+  function buildConfirmationSmsHref(booking) {
+    var customerPhone = smsAddress(booking.customerPhone);
+    if (!customerPhone) return '#';
+    var body = buildConfirmationSmsBody(booking);
+    // iOS uses ?&body=; Android tolerates ?body=. ?&body= works for both.
+    return 'sms:' + customerPhone + '?&body=' + encodeURIComponent(body);
+  }
+
+  function buildConfirmationSmsBody(booking) {
+    var firstName = String(booking.customerName || '').trim().split(/\s+/)[0] || 'there';
+    var barber = (state.vendor && (state.vendor.barberName || state.vendor.businessName)) || 'your barber';
+    var serviceName = booking.serviceName || '';
+    var date = booking.requestedDate || '';
+    var time = formatTime12Hour(booking.startTime) || booking.startTime || '';
+    return interpolate(t('smsConfirmationBody'), {
+      customer: firstName,
+      barber: barber,
+      service: serviceName,
+      date: date,
+      time: time
+    });
+  }
+
   function detailSection(title, rows) {
     var section = el('div', 'mb-booking-card__section');
     var heading = el('h4');
@@ -1049,6 +1118,24 @@
     price.textContent = formatMoney(total);
     head.appendChild(price);
 
+    // Confirmation preference chip — highlighted when customer wants TEXT
+    // so the vendor can see at a glance which rows need an SMS confirmation.
+    var pref = String(booking.confirmationPreference || 'text').toLowerCase();
+    if (pref === 'text') {
+      var smsChip = el('span', 'mb-confirmation-chip mb-confirmation-chip--text');
+      smsChip.setAttribute('aria-label', t('confirmTextChipAria'));
+      smsChip.textContent = '📱 ' + t('confirmTextChip');
+      head.appendChild(smsChip);
+    } else if (pref === 'call') {
+      var callChip = el('span', 'mb-confirmation-chip mb-confirmation-chip--call');
+      callChip.textContent = '📞 ' + t('confirmCallChip');
+      head.appendChild(callChip);
+    } else if (pref === 'app') {
+      var appChip = el('span', 'mb-confirmation-chip mb-confirmation-chip--app');
+      appChip.textContent = '🔔 ' + t('confirmAppChip');
+      head.appendChild(appChip);
+    }
+
     var chevron = el('span', 'mb-booking-row__chevron');
     chevron.setAttribute('aria-hidden', 'true');
     chevron.textContent = '▾';
@@ -1071,6 +1158,16 @@
       link.rel = 'noopener';
       link.textContent = t('mapLink');
       actions.appendChild(link);
+    }
+    // SMS confirmation launcher — opens the vendor's native SMS app composing
+    // to the customer with a prefilled confirmation template. Shown only when
+    // (a) the customer asked for text confirmation AND (b) we have a phone.
+    if (pref === 'text' && trim(booking.customerPhone)) {
+      var smsBtn = el('a', 'mb-button mb-button--primary mb-button--sm mb-sms-button');
+      smsBtn.href = buildConfirmationSmsHref(booking);
+      smsBtn.textContent = '📱 ' + t('sendConfirmationTextAction');
+      smsBtn.setAttribute('aria-label', t('sendConfirmationTextAria'));
+      actions.appendChild(smsBtn);
     }
     [
       ['confirmed', 'acceptAction'],
@@ -1116,7 +1213,8 @@
     detail.appendChild(detailSection(t('customerContact'), [
       ['Name', booking.customerName],
       [t('phoneLabel'), booking.customerPhone],
-      [t('emailLabel'), booking.customerEmail]
+      [t('emailLabel'), booking.customerEmail],
+      [t('confirmationPreferenceLabel'), confirmationPreferenceLabel(pref)]
     ]));
     detail.appendChild(detailSection(t('appointmentDetails'), [
       [t('serviceNameLabel'), serviceStr],

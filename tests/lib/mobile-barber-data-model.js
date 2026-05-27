@@ -103,6 +103,8 @@ function runMobileBarberDataModelTests(test) {
       rebookedFromBookingId: '',
       previousServiceName: '',
       customerUid: '',
+      confirmationPreference: 'text',
+      confirmationSentAt: '',
       createdAt: '2026-05-23T00:00:00.000Z',
       updatedAt: '2026-05-23T00:00:00.000Z'
     };
@@ -117,6 +119,17 @@ function runMobileBarberDataModelTests(test) {
     var bad = MobileBarberData.validateBooking(missingAddress);
     assertEq(bad.valid, false);
     assert(bad.errors.some(function(err) { return err.indexOf('address is required') >= 0; }), 'missing address should fail');
+
+    // Confirmation preference must be one of call/text/app or empty.
+    assertEq(MobileBarberData.CONFIRMATION_PREFERENCES.indexOf('text') >= 0, true, 'text supported');
+    assertEq(MobileBarberData.CONFIRMATION_PREFERENCES.indexOf('call') >= 0, true, 'call supported');
+    assertEq(MobileBarberData.CONFIRMATION_PREFERENCES.indexOf('app') >= 0, true, 'app supported');
+    assertEq(MobileBarberData.DEFAULT_CONFIRMATION_PREFERENCE, 'text');
+    var bogus = clone(booking);
+    bogus.confirmationPreference = 'pigeon';
+    var badPref = MobileBarberData.validateBooking(bogus);
+    assertEq(badPref.valid, false);
+    assert(badPref.errors.some(function(err) { return err.indexOf('confirmationPreference') >= 0; }), 'invalid preference should fail');
   });
 
   test('Mobile Barber customer profile validates preferences and vendor scope', function() {

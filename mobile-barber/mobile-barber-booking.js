@@ -64,6 +64,15 @@
     return ['unpaid', 'pending', 'paid', 'waived'].indexOf(status) >= 0 ? status : 'unpaid';
   }
 
+  // Customer confirmation channel preference. Defaults to 'text' so every
+  // booking has a deterministic value the vendor portal can render against.
+  function normalizeConfirmationPreference(pref) {
+    var supported = (DATA && DATA.CONFIRMATION_PREFERENCES) || ['call', 'text', 'app'];
+    var def = (DATA && DATA.DEFAULT_CONFIRMATION_PREFERENCE) || 'text';
+    var v = lower(pref);
+    return supported.indexOf(v) >= 0 ? v : def;
+  }
+
   function findService(services, serviceId) {
     services = services || [];
     for (var i = 0; i < services.length; i++) {
@@ -691,6 +700,8 @@
       rebookedFromBookingId: trim(draft.rebookedFromBookingId),
       previousServiceName: trim(draft.previousServiceName),
       customerUid: trim(draft.customerUid),
+      confirmationPreference: normalizeConfirmationPreference(draft.confirmationPreference),
+      confirmationSentAt: '',
       createdAt: now,
       updatedAt: now
     };
@@ -883,7 +894,8 @@
       stylePreference: trim(profile.stylePreference) || trim(booking.stylePreference),
       photoUrls: Array.isArray(profile.photoUrls) && profile.photoUrls.length ? profile.photoUrls.slice() : [],
       rebookedFromBookingId: trim(booking.id),
-      previousServiceName: trim(booking.serviceName)
+      previousServiceName: trim(booking.serviceName),
+      confirmationPreference: normalizeConfirmationPreference(profile.confirmationPreference || booking.confirmationPreference)
     }, overrides);
   }
 

@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260527c">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260527d">
 </head>
 <body class="mb-page mb-vendor-page">
   <main class="mb-shell mb-vendor-shell" id="mobileBarberVendorApp" data-page="mobile-barber-vendor">
@@ -191,6 +191,22 @@
                 <input id="mbSmsOptIn" type="checkbox">
                 <span data-i18n="smsOptInLabel"></span>
               </label>
+              <fieldset class="mb-radio-group mb-radio-group--confirmation" id="mbConfirmationPreferenceGroup">
+                <legend class="mb-radio-group__legend" data-i18n="confirmationPreferenceLabel"></legend>
+                <label class="mb-radio-pill">
+                  <input type="radio" name="mbConfirmationPreference" value="text" checked>
+                  <span data-i18n="confirmationPreferenceText"></span>
+                </label>
+                <label class="mb-radio-pill">
+                  <input type="radio" name="mbConfirmationPreference" value="call">
+                  <span data-i18n="confirmationPreferenceCall"></span>
+                </label>
+                <label class="mb-radio-pill">
+                  <input type="radio" name="mbConfirmationPreference" value="app">
+                  <span data-i18n="confirmationPreferenceApp"></span>
+                </label>
+              </fieldset>
+              <p class="mb-form-hint" data-i18n="confirmationPreferenceHint"></p>
             </div>
             <div class="mb-vendor-switch-banner" id="mbVendorSwitchBanner" hidden></div>
             <div class="mb-form-step" data-step="2" hidden>
@@ -304,11 +320,11 @@
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
   </script>
   <script src="/ai-engine.js?v=20260524a"></script>
-  <script src="/mobile-barber/mobile-barber-data.js?v=20260525h"></script>
-  <script src="/mobile-barber/mobile-barber-booking.js?v=20260525ac"></script>
+  <script src="/mobile-barber/mobile-barber-data.js?v=20260527a"></script>
+  <script src="/mobile-barber/mobile-barber-booking.js?v=20260527a"></script>
   <script src="/mobile-barber/mobile-barber-agent.js?v=20260525i"></script>
   <script src="/mobile-barber/mobile-barber-voice.js?v=20260525f"></script>
   <script src="/notifications.js?v=20260525a"></script>
-  <script src="/mobile-barber/mobile-barber-vendor.js?v=20260525ae"></script>
+  <script src="/mobile-barber/mobile-barber-vendor.js?v=20260527a"></script>
 </body>
 </html>

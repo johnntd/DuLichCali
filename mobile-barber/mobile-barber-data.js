@@ -56,8 +56,12 @@
     'requestedDate', 'startTime', 'endTime', 'status', 'source', 'notes',
     'stylePreference', 'photoUrls', 'aiConversationSummary',
     'rebookedFromBookingId', 'previousServiceName', 'customerUid',
+    'confirmationPreference', 'confirmationSentAt',
     'createdAt', 'updatedAt'
   ]);
+
+  var CONFIRMATION_PREFERENCES = Object.freeze(['call', 'text', 'app']);
+  var DEFAULT_CONFIRMATION_PREFERENCE = 'text';
 
   var CUSTOMER_FIELDS = Object.freeze([
     'id', 'vendorId', 'customerName', 'customerPhone', 'customerPhoneNormalized',
@@ -1018,6 +1022,9 @@
     if (hasText(booking.paymentStatus) && ['unpaid', 'pending', 'paid', 'waived'].indexOf(booking.paymentStatus) < 0) {
       errors.push('paymentStatus is not supported.');
     }
+    if (hasText(booking.confirmationPreference) && CONFIRMATION_PREFERENCES.indexOf(booking.confirmationPreference) < 0) {
+      errors.push('confirmationPreference is not supported.');
+    }
 
     if (booking.id != null && !hasText(booking.id)) errors.push('id must be a non-empty string when present.');
     if (booking.customerEmail != null && booking.customerEmail !== '' && !/.+@.+\..+/.test(booking.customerEmail)) {
@@ -1210,6 +1217,8 @@
     SERVICE_BADGES: SERVICE_BADGES,
     BOOKING_STATUSES: BOOKING_STATUSES,
     BOOKING_SOURCES: BOOKING_SOURCES,
+    CONFIRMATION_PREFERENCES: CONFIRMATION_PREFERENCES,
+    DEFAULT_CONFIRMATION_PREFERENCE: DEFAULT_CONFIRMATION_PREFERENCE,
     SAMPLE_VENDOR_ID: SAMPLE_VENDOR_ID,
     MICHAEL_VENDOR_ID: MICHAEL_VENDOR_ID,
     TIM_VENDOR_ID: TIM_VENDOR_ID,

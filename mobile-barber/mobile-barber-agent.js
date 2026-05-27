@@ -41,6 +41,7 @@
       summary: 'Review this request: {service} on {date} at {time}, {address}, {city} {zip}. Estimated total {price}. Payment is collected after the haircut by cash or Zelle to {zellePhone}; preference: {paymentMethod}. Reply yes to send it.',
       saved: "Perfect. {service} on {date} at {time} sent to {barber}. You'll get a confirmation once they accept. Booking ID: {id}. Estimated total {price}. Payment after the haircut by cash or Zelle to {zellePhone}.",
       cancelled: 'I can help with cancellation or rescheduling, but this phase does not change existing bookings yet. Please call the barber for existing booking changes.',
+      alreadyBooked: "Your booking is already in (ID: {id}). The barber will confirm shortly. If you need to change or cancel, please call the barber directly.",
       fallback: 'I can help collect a mobile barber booking request. What phone number should I use first?'
     },
     vi: {
@@ -68,6 +69,7 @@
       summary: 'Vui lòng xem lại: {service} ngày {date} lúc {time}, {address}, {city} {zip}. Tổng ước tính {price}. Thanh toán sau khi cắt bằng tiền mặt hoặc Zelle tới {zellePhone}; cách muốn dùng: {paymentMethod}. Trả lời đồng ý để gửi.',
       saved: 'Tuyệt vời. Đã gửi {service} ngày {date} lúc {time} cho {barber}. Bạn sẽ nhận xác nhận khi thợ chấp nhận. Mã đặt lịch: {id}. Tổng ước tính {price}. Thanh toán sau dịch vụ bằng tiền mặt hoặc Zelle tới {zellePhone}.',
       cancelled: 'Em có thể hỗ trợ hướng dẫn hủy hoặc đổi lịch, nhưng phase này chưa thay đổi lịch đã có. Vui lòng gọi trực tiếp cho thợ.',
+      alreadyBooked: 'Lịch hẹn của bạn đã được gửi (Mã: {id}). Thợ sẽ xác nhận trong giây lát. Nếu cần đổi hoặc hủy, vui lòng gọi trực tiếp cho thợ.',
       fallback: 'Em có thể nhận yêu cầu đặt thợ cắt tóc tại nhà. Mình cho em số điện thoại trước nhé?'
     },
     es: {
@@ -95,6 +97,7 @@
       summary: 'Revise esta solicitud: {service} el {date} a las {time}, {address}, {city} {zip}. Total estimado {price}. El pago se cobra despues del corte en efectivo o por Zelle a {zellePhone}; preferencia: {paymentMethod}. Responda si para enviarla.',
       saved: 'Perfecto. {service} el {date} a las {time} enviado a {barber}. Recibirá confirmación cuando lo acepte. ID de reserva: {id}. Total estimado {price}. Pago despues del servicio en efectivo o Zelle a {zellePhone}.',
       cancelled: 'Puedo ayudar con cancelación o cambio, pero esta fase todavía no modifica reservas existentes. Llame directamente al barbero.',
+      alreadyBooked: 'Su reserva ya está enviada (ID: {id}). El barbero confirmará en breve. Si necesita cambiar o cancelar, llame directamente al barbero.',
       fallback: 'Puedo recopilar una solicitud de barbero móvil. ¿Qué teléfono debo usar primero?'
     }
   };
@@ -826,6 +829,20 @@
     if (state.intent === 'language') return { session: session, response: reply(lang, 'language') };
     if (state.intent === 'photo') return { session: session, response: reply(lang, 'photo') };
     if (state.intent === 'modify_existing') return { session: session, response: reply(lang, 'cancelled') };
+
+    // Terminal-state guard: once a booking has been submitted in this session
+    // (step === 'DONE' AND lastBooking is set), any further customer message
+    // must NOT re-enter the auto-submit path. Without this guard, replies
+    // like "thanks" or "what time again?" would re-trigger buildBooking and
+    // write a duplicate row to the vendor's Pending list — which is exactly
+    // the bug reported on 2026-05-27 (two identical 4:00 PM $50 rows).
+    if (state.step === 'DONE' && session.lastBooking && session.lastBooking.id) {
+      session.lastSystemContext = systemReason('already_booked', { id: session.lastBooking.id });
+      return {
+        session: session,
+        response: reply(lang, 'alreadyBooked', { id: session.lastBooking.id })
+      };
+    }
 
     if (state.intent === 'price' && service) {
       var quickPrice = BOOKING.calculateMobileBarberPrice({

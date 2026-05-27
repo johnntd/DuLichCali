@@ -117,6 +117,30 @@ function runMobileBarberAgentTests(test) {
     assert(result.response.indexOf('Booking ID') >= 0 || result.response.indexOf('Mã đặt lịch') >= 0 || result.response.indexOf('ID de reserva') >= 0, 'success reply must reference the booking id');
   });
 
+  test('Mobile Barber AI does not duplicate a booking on follow-up messages', function() {
+    // Regression: a vendor reported two identical 4:00 PM $50 rows (one
+    // CONFIRMED, one PENDING) after a single chat session. Root cause: any
+    // message sent after the auto-submit re-entered the build path because
+    // state.step === 'DONE' was not enforced as terminal. The guard at the
+    // top of _handleMessageCore now returns alreadyBooked instead.
+    var ctx = context({ id: 'ai-no-dup-1' });
+    var first = MobileBarberAgent.handleMessage(null,
+      'My name is Kim. Phone 714-555-0100. I need haircut on 2026-06-01 at 10:00 at 123 Brookhurst St Westminster 92683.',
+      Object.assign(ctx, { customerLookupResult: null }));
+    assert(first.booking, 'first complete turn must create the booking');
+    var firstId = first.booking.id;
+    assertEq(first.session.state.step, 'DONE');
+
+    // Customer says "thanks!" — must NOT submit a second booking.
+    var second = MobileBarberAgent.handleMessage(first.session, 'thanks!', ctx);
+    assert(!second.booking, 'follow-up message must not create a second booking');
+    assert(second.response.indexOf(firstId) >= 0 || second.response.indexOf('already') >= 0 || second.response.indexOf('đã được gửi') >= 0 || second.response.indexOf('ya está') >= 0, 'follow-up reply should reference the existing booking');
+
+    // Another follow-up — same guard, still no new booking.
+    var third = MobileBarberAgent.handleMessage(second.session, 'what time was it again?', ctx);
+    assert(!third.booking, 'subsequent messages must not create duplicates either');
+  });
+
   test('Mobile Barber AI summary uses shared pricing engine and after-service payment copy', function() {
     var ctx = context({ id: 'ai-pricing-1' });
     var result = MobileBarberAgent.handleMessage(null, 'My name is Kim. Phone 714-555-0100. I need fade haircut on 2026-06-01 at 10:00 at 123 Brookhurst St Westminster 92683.', Object.assign(ctx, { customerLookupResult: null }));

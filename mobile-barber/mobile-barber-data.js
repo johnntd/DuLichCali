@@ -57,6 +57,11 @@
     'stylePreference', 'photoUrls', 'aiConversationSummary',
     'rebookedFromBookingId', 'previousServiceName', 'customerUid',
     'confirmationPreference', 'confirmationSentAt',
+    // Optional AI haircut preview (privacy-respecting; selfie is inline
+    // base64 on the booking doc, not a separate storage bucket).
+    'selfieDataUrl', 'aiAnalysisSummary', 'aiAnalysisConsent',
+    'recommendedStyles', 'selectedStyleId', 'selectedStylePreviewUrl',
+    'barberCuttingNotes',
     'createdAt', 'updatedAt'
   ]);
 
@@ -1024,6 +1029,22 @@
     }
     if (hasText(booking.confirmationPreference) && CONFIRMATION_PREFERENCES.indexOf(booking.confirmationPreference) < 0) {
       errors.push('confirmationPreference is not supported.');
+    }
+    if (booking.recommendedStyles != null && !Array.isArray(booking.recommendedStyles)) {
+      errors.push('recommendedStyles must be an array when present.');
+    }
+    if (booking.aiAnalysisConsent != null && booking.aiAnalysisConsent !== '' &&
+        booking.aiAnalysisConsent !== 'true' && booking.aiAnalysisConsent !== 'false' &&
+        booking.aiAnalysisConsent !== true && booking.aiAnalysisConsent !== false) {
+      errors.push('aiAnalysisConsent must be "true" or "false" when present.');
+    }
+    if (booking.selfieDataUrl != null && booking.selfieDataUrl !== '' && typeof booking.selfieDataUrl === 'string') {
+      // Size guard: keep inline images small enough that the booking doc
+      // stays under Firestore's 1MB document cap with headroom for other
+      // fields. 800KB is the practical max for a single base64 image.
+      if (booking.selfieDataUrl.length > 900000) {
+        errors.push('selfieDataUrl exceeds 900000 chars; compress further before saving.');
+      }
     }
 
     if (booking.id != null && !hasText(booking.id)) errors.push('id must be a non-empty string when present.');

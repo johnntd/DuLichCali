@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260527d">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260527e">
 </head>
 <body class="mb-page mb-vendor-page">
   <main class="mb-shell mb-vendor-shell" id="mobileBarberVendorApp" data-page="mobile-barber-vendor">
@@ -207,6 +207,32 @@
                 </label>
               </fieldset>
               <p class="mb-form-hint" data-i18n="confirmationPreferenceHint"></p>
+
+              <details class="mb-ai-preview" id="mbAiPreviewPanel">
+                <summary class="mb-ai-preview__summary">
+                  <span class="mb-ai-preview__title" data-i18n="aiPreviewTitle"></span>
+                  <span class="mb-ai-preview__optional" data-i18n="aiPreviewOptional"></span>
+                </summary>
+                <div class="mb-ai-preview__body">
+                  <p class="mb-form-hint" data-i18n="aiPreviewIntro"></p>
+                  <label class="mb-checkbox-field">
+                    <input id="mbAiPreviewConsent" type="checkbox">
+                    <span data-i18n="aiPreviewConsentLabel"></span>
+                  </label>
+                  <label class="mb-field">
+                    <span data-i18n="aiPreviewUploadLabel"></span>
+                    <input id="mbAiPreviewUpload" type="file" accept="image/*" capture="user" disabled>
+                  </label>
+                  <div class="mb-ai-preview__preview" id="mbAiPreviewSelfie" hidden></div>
+                  <div class="mb-ai-preview__actions">
+                    <button class="mb-button mb-button--primary mb-button--sm" type="button" id="mbAiPreviewAnalyze" data-i18n="aiPreviewAnalyzeButton" disabled></button>
+                    <button class="mb-button mb-button--ghost mb-button--sm" type="button" id="mbAiPreviewRemove" hidden data-i18n="aiPreviewRemoveButton"></button>
+                  </div>
+                  <p class="mb-ai-preview__status" id="mbAiPreviewStatus" aria-live="polite"></p>
+                  <p class="mb-form-hint mb-ai-preview__disclosure" data-i18n="aiPreviewDisclosureLabel"></p>
+                  <div class="mb-ai-preview__results" id="mbAiPreviewResults" hidden role="radiogroup" aria-label="AI haircut style recommendations"></div>
+                </div>
+              </details>
             </div>
             <div class="mb-vendor-switch-banner" id="mbVendorSwitchBanner" hidden></div>
             <div class="mb-form-step" data-step="2" hidden>
@@ -320,11 +346,12 @@
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
   </script>
   <script src="/ai-engine.js?v=20260524a"></script>
-  <script src="/mobile-barber/mobile-barber-data.js?v=20260527a"></script>
-  <script src="/mobile-barber/mobile-barber-booking.js?v=20260527a"></script>
+  <script src="/mobile-barber/mobile-barber-data.js?v=20260527b"></script>
+  <script src="/mobile-barber/mobile-barber-booking.js?v=20260527b"></script>
   <script src="/mobile-barber/mobile-barber-agent.js?v=20260527a"></script>
   <script src="/mobile-barber/mobile-barber-voice.js?v=20260525f"></script>
+  <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260527a"></script>
   <script src="/notifications.js?v=20260525a"></script>
-  <script src="/mobile-barber/mobile-barber-vendor.js?v=20260527a"></script>
+  <script src="/mobile-barber/mobile-barber-vendor.js?v=20260527b"></script>
 </body>
 </html>

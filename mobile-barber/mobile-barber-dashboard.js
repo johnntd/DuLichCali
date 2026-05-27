@@ -64,6 +64,20 @@
       sendConfirmationTextAction: 'Send Confirmation Text',
       sendConfirmationTextAria: 'Open SMS compose with prefilled confirmation',
       smsConfirmationBody: 'Hi {customer},\n\nThis is {barber} Mobile Barber.\n\nConfirming your appointment:\n\nService: {service}\nDate: {date}\nTime: {time}\n\nReply YES to confirm.\n\nThank you.',
+      vendorAiPreviewHeading: 'AI haircut preview',
+      vendorAiPreviewBadge: 'AI-generated suggestion — review with customer',
+      vendorAiPreviewSelfieAlt: 'Customer selfie (vendor-only)',
+      vendorAiPreviewSelfieCaption: 'Customer selfie',
+      vendorAiPreviewStyleAlt: 'Customer-selected haircut style',
+      vendorAiPreviewStyleCaption: 'Selected style',
+      vendorAiPreviewSummaryLabel: 'AI summary',
+      vendorAiPreviewSuggestedNotes: 'Suggested cutting notes',
+      vendorAiPreviewBarberInstructions: 'Your cutting notes',
+      vendorAiPreviewBarberInstructionsPlaceholder: 'Add specific instructions, e.g. #3 sides, scissor on top, square neck.',
+      vendorAiPreviewSaveNotesAction: 'Save cutting notes',
+      vendorAiPreviewDeleteSelfie: 'Delete selfie (privacy)',
+      vendorAiPreviewDeleteConfirm: 'Delete the customer selfie from this booking? This cannot be undone.',
+      vendorAiPreviewSelfieDeleted: 'Selfie removed from booking.',
       todayTitle: "Today's appointments",
       pendingTitle: 'Pending confirmations',
       upcomingTitle: 'Upcoming bookings',
@@ -231,6 +245,20 @@
       sendConfirmationTextAction: 'Gửi tin xác nhận',
       sendConfirmationTextAria: 'Mở ứng dụng SMS với nội dung xác nhận đã điền sẵn',
       smsConfirmationBody: 'Chào {customer},\n\nĐây là {barber} Mobile Barber.\n\nXác nhận lịch hẹn của bạn:\n\nDịch vụ: {service}\nNgày: {date}\nGiờ: {time}\n\nVui lòng trả lời YES để xác nhận.\n\nCảm ơn bạn.',
+      vendorAiPreviewHeading: 'Xem trước kiểu tóc bằng AI',
+      vendorAiPreviewBadge: 'Gợi ý do AI tạo — vui lòng xem cùng khách',
+      vendorAiPreviewSelfieAlt: 'Ảnh selfie của khách (chỉ thợ xem được)',
+      vendorAiPreviewSelfieCaption: 'Selfie của khách',
+      vendorAiPreviewStyleAlt: 'Kiểu tóc khách đã chọn',
+      vendorAiPreviewStyleCaption: 'Kiểu đã chọn',
+      vendorAiPreviewSummaryLabel: 'Tóm tắt AI',
+      vendorAiPreviewSuggestedNotes: 'Ghi chú cắt gợi ý',
+      vendorAiPreviewBarberInstructions: 'Ghi chú cắt của bạn',
+      vendorAiPreviewBarberInstructionsPlaceholder: 'Thêm hướng dẫn cụ thể, ví dụ: số 3 hai bên, kéo trên đầu, vuông gáy.',
+      vendorAiPreviewSaveNotesAction: 'Lưu ghi chú cắt',
+      vendorAiPreviewDeleteSelfie: 'Xóa selfie (quyền riêng tư)',
+      vendorAiPreviewDeleteConfirm: 'Xóa ảnh selfie của khách khỏi lịch hẹn? Không thể hoàn tác.',
+      vendorAiPreviewSelfieDeleted: 'Đã xóa selfie khỏi lịch hẹn.',
       todayTitle: 'Lịch hẹn hôm nay',
       pendingTitle: 'Yêu cầu chờ xác nhận',
       upcomingTitle: 'Lịch hẹn sắp tới',
@@ -398,6 +426,20 @@
       sendConfirmationTextAction: 'Enviar SMS de confirmación',
       sendConfirmationTextAria: 'Abrir SMS con la confirmación rellenada',
       smsConfirmationBody: 'Hola {customer},\n\nSoy {barber} de Mobile Barber.\n\nConfirmando su cita:\n\nServicio: {service}\nFecha: {date}\nHora: {time}\n\nResponda YES para confirmar.\n\nGracias.',
+      vendorAiPreviewHeading: 'Vista previa de corte con AI',
+      vendorAiPreviewBadge: 'Sugerencia de AI — revise con el cliente',
+      vendorAiPreviewSelfieAlt: 'Selfie del cliente (solo barbero)',
+      vendorAiPreviewSelfieCaption: 'Selfie del cliente',
+      vendorAiPreviewStyleAlt: 'Estilo elegido por el cliente',
+      vendorAiPreviewStyleCaption: 'Estilo elegido',
+      vendorAiPreviewSummaryLabel: 'Resumen AI',
+      vendorAiPreviewSuggestedNotes: 'Notas de corte sugeridas',
+      vendorAiPreviewBarberInstructions: 'Sus notas de corte',
+      vendorAiPreviewBarberInstructionsPlaceholder: 'Instrucciones específicas, p. ej. #3 a los lados, tijera arriba, nuca cuadrada.',
+      vendorAiPreviewSaveNotesAction: 'Guardar notas de corte',
+      vendorAiPreviewDeleteSelfie: 'Eliminar selfie (privacidad)',
+      vendorAiPreviewDeleteConfirm: 'Eliminar la selfie del cliente de esta cita? No se puede deshacer.',
+      vendorAiPreviewSelfieDeleted: 'Selfie eliminada de la cita.',
       todayTitle: 'Citas de hoy',
       pendingTitle: 'Confirmaciones pendientes',
       upcomingTitle: 'Reservas próximas',
@@ -1265,9 +1307,119 @@
       photos.textContent = t('referencePhotos') + ': ' + booking.photoUrls.join(', ');
       detail.appendChild(photos);
     }
+    // AI haircut preview block — only rendered when the customer opted in
+    // and either uploaded a selfie OR picked a style. Selfie thumbnail is
+    // vendor-only (Firestore rules already gate the booking doc).
+    var hasAiPreview = trim(booking.selfieDataUrl) ||
+      trim(booking.selectedStyleId) ||
+      (Array.isArray(booking.recommendedStyles) && booking.recommendedStyles.length);
+    if (hasAiPreview) {
+      detail.appendChild(buildAiPreviewSection(booking));
+    }
     detail.appendChild(actions);
     row.appendChild(detail);
     return row;
+  }
+
+  function buildAiPreviewSection(booking) {
+    var section = el('div', 'mb-booking-card__section mb-booking-ai-preview');
+    var heading = el('h4');
+    heading.textContent = t('vendorAiPreviewHeading');
+    section.appendChild(heading);
+
+    var aiLabel = el('span', 'mb-confirmation-chip mb-confirmation-chip--app');
+    aiLabel.textContent = '🤖 ' + t('vendorAiPreviewBadge');
+    section.appendChild(aiLabel);
+
+    var grid = el('div', 'mb-booking-ai-preview__grid');
+    // Customer selfie (vendor-only, never publicly displayed)
+    if (trim(booking.selfieDataUrl)) {
+      var selfieWrap = el('figure', 'mb-booking-ai-preview__media');
+      var selfieImg = document.createElement('img');
+      selfieImg.src = booking.selfieDataUrl;
+      selfieImg.alt = t('vendorAiPreviewSelfieAlt');
+      selfieImg.loading = 'lazy';
+      var caption = el('figcaption');
+      caption.textContent = t('vendorAiPreviewSelfieCaption');
+      selfieWrap.appendChild(selfieImg);
+      selfieWrap.appendChild(caption);
+      grid.appendChild(selfieWrap);
+    }
+    // Selected style preview
+    if (trim(booking.selectedStylePreviewUrl)) {
+      var styleWrap = el('figure', 'mb-booking-ai-preview__media');
+      var styleImg = document.createElement('img');
+      styleImg.src = booking.selectedStylePreviewUrl;
+      styleImg.alt = t('vendorAiPreviewStyleAlt');
+      styleImg.loading = 'lazy';
+      var styleCaption = el('figcaption');
+      var styleTitle = recommendationTitle(booking, booking.selectedStyleId) || t('vendorAiPreviewStyleCaption');
+      styleCaption.textContent = styleTitle;
+      styleWrap.appendChild(styleImg);
+      styleWrap.appendChild(styleCaption);
+      grid.appendChild(styleWrap);
+    }
+    section.appendChild(grid);
+
+    // AI analysis summary
+    if (trim(booking.aiAnalysisSummary)) {
+      var summary = el('p', 'mb-booking-ai-preview__summary');
+      summary.textContent = t('vendorAiPreviewSummaryLabel') + ': ' + booking.aiAnalysisSummary;
+      section.appendChild(summary);
+    }
+    // Selected recommendation barber notes (from the catalog rec, if any)
+    var selectedRec = (Array.isArray(booking.recommendedStyles) ? booking.recommendedStyles : [])
+      .filter(function(r) { return r && r.styleId === booking.selectedStyleId; })[0];
+    if (selectedRec && trim(selectedRec.barberNotes)) {
+      var recNotes = el('p', 'mb-booking-ai-preview__notes');
+      recNotes.textContent = t('vendorAiPreviewSuggestedNotes') + ': ' + selectedRec.barberNotes;
+      section.appendChild(recNotes);
+    }
+    // Free-form barber cutting notes input (vendor writes here)
+    var notesField = el('label', 'mb-booking-ai-preview__field');
+    var notesLabelEl = el('span');
+    notesLabelEl.textContent = t('vendorAiPreviewBarberInstructions');
+    var notesInput = document.createElement('textarea');
+    notesInput.rows = 2;
+    notesInput.value = booking.barberCuttingNotes || '';
+    notesInput.placeholder = t('vendorAiPreviewBarberInstructionsPlaceholder');
+    notesInput.id = 'mbBarberCuttingNotes-' + String(booking.id || '').replace(/[^a-zA-Z0-9_-]/g, '');
+    notesField.appendChild(notesLabelEl);
+    notesField.appendChild(notesInput);
+    section.appendChild(notesField);
+
+    // Action row: save notes + privacy delete
+    var aiActions = el('div', 'mb-booking-ai-preview__actions');
+    var saveNotesBtn = el('button', 'mb-button mb-button--primary mb-button--sm');
+    saveNotesBtn.type = 'button';
+    saveNotesBtn.textContent = t('vendorAiPreviewSaveNotesAction');
+    saveNotesBtn.addEventListener('click', function() {
+      updateBookingPatch(booking.id, { barberCuttingNotes: notesInput.value });
+      showToast(t('toastSaved'));
+    });
+    aiActions.appendChild(saveNotesBtn);
+
+    if (trim(booking.selfieDataUrl)) {
+      var deleteSelfie = el('button', 'mb-button mb-button--ghost mb-button--sm');
+      deleteSelfie.type = 'button';
+      deleteSelfie.textContent = '🗑 ' + t('vendorAiPreviewDeleteSelfie');
+      deleteSelfie.addEventListener('click', function() {
+        if (root.confirm && !root.confirm(t('vendorAiPreviewDeleteConfirm'))) return;
+        updateBookingPatch(booking.id, { selfieDataUrl: '' });
+        showToast(t('vendorAiPreviewSelfieDeleted'));
+      });
+      aiActions.appendChild(deleteSelfie);
+    }
+    section.appendChild(aiActions);
+
+    return section;
+  }
+
+  function recommendationTitle(booking, styleId) {
+    if (!styleId) return '';
+    var recs = Array.isArray(booking.recommendedStyles) ? booking.recommendedStyles : [];
+    var match = recs.filter(function(r) { return r && r.styleId === styleId; })[0];
+    return match && match.title ? match.title : '';
   }
 
   function toggleBookingRow(bookingId) {

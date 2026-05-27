@@ -128,6 +128,27 @@
       confirmationPreferenceCall: 'Phone call',
       confirmationPreferenceApp: 'App notification',
       confirmationPreferenceHint: 'Text is the default. The barber will reach out using your choice.',
+      aiPreviewTitle: 'AI haircut preview',
+      aiPreviewOptional: '(optional)',
+      aiPreviewIntro: 'Upload a clear selfie and the AI will suggest 3 haircut styles for you to discuss with the barber.',
+      aiPreviewConsentLabel: 'I agree that the AI may analyze my selfie to suggest haircut styles. The image is shared only with the assigned barber and is never used for marketing.',
+      aiPreviewUploadLabel: 'Upload a selfie (face + hair visible)',
+      aiPreviewAnalyzeButton: 'Get 3 AI haircut suggestions',
+      aiPreviewRemoveButton: 'Remove selfie',
+      aiPreviewDisclosureLabel: 'AI previews are suggestions only. Final result may differ. The selfie is stored only on this booking and shown only to the assigned barber.',
+      aiPreviewBadgeLabel: 'AI suggestion',
+      aiPreviewBarberNotesLabel: 'Barber notes:',
+      aiPreviewSelfieAlt: 'Your selfie preview',
+      aiPreviewConsentRequired: 'Please agree to the AI preview consent first.',
+      aiPreviewModuleMissing: 'AI preview is unavailable right now. You can finish booking and discuss styles with the barber.',
+      aiPreviewCompressing: 'Preparing image…',
+      aiPreviewCompressFailed: 'We could not read that image. Try a different photo or skip this step.',
+      aiPreviewReadyToAnalyze: 'Ready. Tap Get 3 AI haircut suggestions.',
+      aiPreviewAnalyzing: 'Analyzing your selfie…',
+      aiPreviewDoneNotice: '3 AI suggestions ready below. Pick one or skip.',
+      aiPreviewFallbackNotice: 'AI analysis was not available, so 3 popular styles are shown below. Pick one or skip.',
+      aiPreviewFallbackSummary: '3 popular haircut styles to discuss with the barber.',
+      aiPreviewRemovedNotice: 'Selfie removed.',
       paymentChoiceLabel: 'How would you like to pay after the haircut?',
       paymentCash: 'Cash',
       paymentZelle: 'Zelle',
@@ -299,6 +320,27 @@
       confirmationPreferenceCall: 'Gọi điện',
       confirmationPreferenceApp: 'Thông báo trong app',
       confirmationPreferenceHint: 'Mặc định là tin nhắn. Thợ sẽ liên hệ theo cách bạn chọn.',
+      aiPreviewTitle: 'Xem trước kiểu tóc bằng AI',
+      aiPreviewOptional: '(không bắt buộc)',
+      aiPreviewIntro: 'Tải ảnh selfie rõ mặt và AI sẽ gợi ý 3 kiểu tóc để bạn trao đổi với thợ.',
+      aiPreviewConsentLabel: 'Tôi đồng ý cho AI phân tích ảnh selfie để gợi ý kiểu tóc. Ảnh chỉ chia sẻ với thợ phụ trách và không dùng cho mục đích quảng cáo.',
+      aiPreviewUploadLabel: 'Tải ảnh selfie (thấy rõ mặt và tóc)',
+      aiPreviewAnalyzeButton: 'Lấy 3 gợi ý kiểu tóc từ AI',
+      aiPreviewRemoveButton: 'Xóa ảnh selfie',
+      aiPreviewDisclosureLabel: 'Gợi ý từ AI chỉ mang tính tham khảo. Kết quả thực tế có thể khác. Ảnh chỉ lưu trên lịch hẹn này và chỉ thợ phụ trách xem được.',
+      aiPreviewBadgeLabel: 'Gợi ý AI',
+      aiPreviewBarberNotesLabel: 'Ghi chú cho thợ:',
+      aiPreviewSelfieAlt: 'Ảnh selfie của bạn',
+      aiPreviewConsentRequired: 'Vui lòng đồng ý điều khoản AI trước.',
+      aiPreviewModuleMissing: 'AI preview tạm không khả dụng. Bạn vẫn có thể đặt lịch và trao đổi kiểu tóc trực tiếp với thợ.',
+      aiPreviewCompressing: 'Đang chuẩn bị ảnh…',
+      aiPreviewCompressFailed: 'Không đọc được ảnh đó. Thử ảnh khác hoặc bỏ qua bước này.',
+      aiPreviewReadyToAnalyze: 'Sẵn sàng. Nhấn Lấy 3 gợi ý.',
+      aiPreviewAnalyzing: 'Đang phân tích selfie…',
+      aiPreviewDoneNotice: '3 gợi ý AI sẵn ở dưới. Chọn một hoặc bỏ qua.',
+      aiPreviewFallbackNotice: 'AI phân tích không khả dụng, dưới đây là 3 kiểu phổ biến. Chọn một hoặc bỏ qua.',
+      aiPreviewFallbackSummary: '3 kiểu tóc phổ biến để trao đổi với thợ.',
+      aiPreviewRemovedNotice: 'Đã xóa ảnh selfie.',
       paymentChoiceLabel: 'Mình muốn trả tiền sau khi cắt tóc bằng cách nào?',
       paymentCash: 'Tiền mặt',
       paymentZelle: 'Zelle',
@@ -470,6 +512,27 @@
       confirmationPreferenceCall: 'Llamada',
       confirmationPreferenceApp: 'Notificación en la app',
       confirmationPreferenceHint: 'El predeterminado es SMS. El barbero se comunicará por su opción elegida.',
+      aiPreviewTitle: 'Vista previa de corte con AI',
+      aiPreviewOptional: '(opcional)',
+      aiPreviewIntro: 'Suba una selfie clara y la AI sugerirá 3 estilos de corte para conversar con el barbero.',
+      aiPreviewConsentLabel: 'Acepto que la AI analice mi selfie para sugerir cortes. La imagen se comparte solo con el barbero asignado y nunca se usa para marketing.',
+      aiPreviewUploadLabel: 'Suba una selfie (cara y cabello visibles)',
+      aiPreviewAnalyzeButton: 'Obtener 3 sugerencias de la AI',
+      aiPreviewRemoveButton: 'Eliminar selfie',
+      aiPreviewDisclosureLabel: 'Las previas de AI son solo sugerencias. El resultado real puede variar. La selfie se guarda solo en esta cita y solo el barbero asignado la ve.',
+      aiPreviewBadgeLabel: 'Sugerencia AI',
+      aiPreviewBarberNotesLabel: 'Notas para el barbero:',
+      aiPreviewSelfieAlt: 'Vista previa de su selfie',
+      aiPreviewConsentRequired: 'Por favor acepte el consentimiento de AI primero.',
+      aiPreviewModuleMissing: 'La AI no está disponible ahora. Puede continuar y conversar los estilos con el barbero.',
+      aiPreviewCompressing: 'Preparando imagen…',
+      aiPreviewCompressFailed: 'No pudimos leer esa imagen. Intente otra foto o salte este paso.',
+      aiPreviewReadyToAnalyze: 'Listo. Toque Obtener 3 sugerencias.',
+      aiPreviewAnalyzing: 'Analizando su selfie…',
+      aiPreviewDoneNotice: '3 sugerencias AI listas abajo. Elija una o salte.',
+      aiPreviewFallbackNotice: 'La AI no estaba disponible; abajo hay 3 estilos populares. Elija uno o salte.',
+      aiPreviewFallbackSummary: '3 estilos populares para conversar con el barbero.',
+      aiPreviewRemovedNotice: 'Selfie eliminada.',
       paymentChoiceLabel: 'Como prefiere pagar despues del corte?',
       paymentCash: 'Efectivo',
       paymentZelle: 'Zelle',
@@ -547,7 +610,18 @@
     voiceProviderKeys: {},
     voiceProviderKeysPromise: null,
     vendorSwitchTimer: null,
-    vendorSwitchTargetUrl: ''
+    vendorSwitchTargetUrl: '',
+    // Optional AI haircut preview (never blocks booking).
+    aiPreview: {
+      consent: false,
+      selfieDataUrl: '',
+      summary: '',
+      recommendations: [],
+      selectedStyleId: '',
+      selectedStylePreviewUrl: '',
+      analyzing: false,
+      lastError: ''
+    }
   };
   var LOCATION_STORAGE_KEY = 'mb_customer_location';
   var LOCATION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
@@ -1366,6 +1440,14 @@
       customerPhone: document.getElementById('mbCustomerPhone').value,
       customerEmail: document.getElementById('mbCustomerEmail').value,
       confirmationPreference: (document.querySelector('input[name="mbConfirmationPreference"]:checked') || {}).value || 'text',
+      // Optional AI haircut preview. All fields default to empty / false so
+      // bookings without the feature stay valid.
+      selfieDataUrl: state.aiPreview.selfieDataUrl || '',
+      aiAnalysisSummary: state.aiPreview.summary || '',
+      aiAnalysisConsent: state.aiPreview.consent ? 'true' : 'false',
+      recommendedStyles: state.aiPreview.recommendations || [],
+      selectedStyleId: state.aiPreview.selectedStyleId || '',
+      selectedStylePreviewUrl: state.aiPreview.selectedStylePreviewUrl || '',
       paymentMethod: (document.querySelector('input[name="mbPaymentMethod"]:checked') || {}).value || 'unknown',
       paymentStatus: 'unpaid',
       zellePhone: (state.vendor && state.vendor.phone) || '',
@@ -1663,6 +1745,7 @@
     document.getElementById('mbManualBookingForm').reset();
     showManualError('');
     clearManualResult();
+    resetAiPreview();
     renderManualStep();
   }
 
@@ -2266,12 +2349,234 @@
     } catch (e) {}
   }
 
+  // ── Optional AI haircut preview ────────────────────────────────────────
+  // None of these handlers can block the booking. If the customer skips
+  // the panel entirely, the rest of the form works unchanged.
+  function renderAiPreviewSelfie() {
+    var node = document.getElementById('mbAiPreviewSelfie');
+    var remove = document.getElementById('mbAiPreviewRemove');
+    if (!node) return;
+    if (!state.aiPreview.selfieDataUrl) {
+      node.hidden = true;
+      node.innerHTML = '';
+      if (remove) remove.hidden = true;
+      return;
+    }
+    node.hidden = false;
+    node.innerHTML = '';
+    var img = document.createElement('img');
+    img.src = state.aiPreview.selfieDataUrl;
+    img.alt = t('aiPreviewSelfieAlt') || 'Selfie preview';
+    img.className = 'mb-ai-preview__selfie-img';
+    node.appendChild(img);
+    if (remove) remove.hidden = false;
+  }
+
+  function setAiPreviewStatus(msg) {
+    var node = document.getElementById('mbAiPreviewStatus');
+    if (node) node.textContent = msg || '';
+  }
+
+  function renderAiRecommendationCards() {
+    var list = document.getElementById('mbAiPreviewResults');
+    if (!list) return;
+    list.innerHTML = '';
+    var recs = state.aiPreview.recommendations || [];
+    if (!recs.length) {
+      list.hidden = true;
+      return;
+    }
+    list.hidden = false;
+    recs.forEach(function(rec, idx) {
+      var card = document.createElement('label');
+      card.className = 'mb-ai-rec-card';
+      var input = document.createElement('input');
+      input.type = 'radio';
+      input.name = 'mbAiRecommendation';
+      input.value = rec.styleId || ('rec-' + idx);
+      input.className = 'mb-ai-rec-card__radio';
+      if (state.aiPreview.selectedStyleId === input.value) {
+        input.checked = true;
+        card.classList.add('mb-ai-rec-card--selected');
+      }
+      input.addEventListener('change', function() {
+        state.aiPreview.selectedStyleId = rec.styleId || '';
+        state.aiPreview.selectedStylePreviewUrl = rec.previewUrl || '';
+        renderAiRecommendationCards();
+      });
+      var thumb = document.createElement('div');
+      thumb.className = 'mb-ai-rec-card__thumb';
+      var img = document.createElement('img');
+      img.src = rec.previewUrl || '/assets/mobile-barber/styles/classic-haircut.jpg';
+      img.alt = rec.title || '';
+      img.loading = 'lazy';
+      thumb.appendChild(img);
+      var body = document.createElement('div');
+      body.className = 'mb-ai-rec-card__body';
+      var title = document.createElement('strong');
+      title.textContent = rec.title || '';
+      var meta = document.createElement('span');
+      meta.className = 'mb-ai-rec-card__maintenance';
+      meta.textContent = rec.maintenance || '';
+      var desc = document.createElement('p');
+      desc.textContent = rec.explanation || '';
+      var notes = document.createElement('p');
+      notes.className = 'mb-ai-rec-card__barber-notes';
+      notes.textContent = (t('aiPreviewBarberNotesLabel') || 'Barber notes:') + ' ' + (rec.barberNotes || '');
+      var badge = document.createElement('span');
+      badge.className = 'mb-ai-rec-card__ai-badge';
+      badge.textContent = t('aiPreviewBadgeLabel') || 'AI suggestion';
+      body.appendChild(title);
+      body.appendChild(meta);
+      body.appendChild(desc);
+      body.appendChild(notes);
+      body.appendChild(badge);
+      card.appendChild(input);
+      card.appendChild(thumb);
+      card.appendChild(body);
+      list.appendChild(card);
+    });
+  }
+
+  function handleAiPreviewConsentChange() {
+    var checkbox = document.getElementById('mbAiPreviewConsent');
+    var upload = document.getElementById('mbAiPreviewUpload');
+    var analyze = document.getElementById('mbAiPreviewAnalyze');
+    state.aiPreview.consent = !!(checkbox && checkbox.checked);
+    if (upload) upload.disabled = !state.aiPreview.consent;
+    if (analyze) analyze.disabled = !state.aiPreview.consent || !state.aiPreview.selfieDataUrl;
+    if (!state.aiPreview.consent) {
+      removeAiPreviewSelfie(true);
+    }
+  }
+
+  function handleAiPreviewUpload(event) {
+    var file = event && event.target && event.target.files && event.target.files[0];
+    if (!file) return;
+    if (!state.aiPreview.consent) {
+      setAiPreviewStatus(t('aiPreviewConsentRequired'));
+      event.target.value = '';
+      return;
+    }
+    if (!root.MobileBarberAIPreview) {
+      setAiPreviewStatus(t('aiPreviewModuleMissing'));
+      return;
+    }
+    setAiPreviewStatus(t('aiPreviewCompressing'));
+    root.MobileBarberAIPreview.compressImage(file)
+      .then(function(dataUrl) {
+        state.aiPreview.selfieDataUrl = dataUrl;
+        state.aiPreview.lastError = '';
+        renderAiPreviewSelfie();
+        var analyze = document.getElementById('mbAiPreviewAnalyze');
+        if (analyze) analyze.disabled = false;
+        setAiPreviewStatus(t('aiPreviewReadyToAnalyze'));
+      })
+      .catch(function(err) {
+        state.aiPreview.lastError = (err && err.message) || 'compress_failed';
+        setAiPreviewStatus(t('aiPreviewCompressFailed'));
+      });
+  }
+
+  function handleAiPreviewAnalyze() {
+    if (!state.aiPreview.consent) {
+      setAiPreviewStatus(t('aiPreviewConsentRequired'));
+      return;
+    }
+    if (state.aiPreview.analyzing) return;
+    if (!root.MobileBarberAIPreview || typeof root.MobileBarberAIPreview.analyze !== 'function') {
+      // Module missing — fall through to static recs so booking still works.
+      state.aiPreview.recommendations = staticAiRecsFallback();
+      state.aiPreview.summary = t('aiPreviewFallbackSummary');
+      renderAiRecommendationCards();
+      setAiPreviewStatus(t('aiPreviewFallbackNotice'));
+      return;
+    }
+    state.aiPreview.analyzing = true;
+    setAiPreviewStatus(t('aiPreviewAnalyzing'));
+    root.MobileBarberAIPreview.analyze({
+      dataUrl: state.aiPreview.selfieDataUrl,
+      lang: state.lang,
+      engine: root.AIEngine || null
+    }).then(function(result) {
+      state.aiPreview.analyzing = false;
+      state.aiPreview.summary = result.summary || '';
+      state.aiPreview.recommendations = result.recommendations || [];
+      renderAiRecommendationCards();
+      setAiPreviewStatus(result.isFallback
+        ? t('aiPreviewFallbackNotice')
+        : t('aiPreviewDoneNotice'));
+    }).catch(function(err) {
+      // Defensive — analyze() resolves with fallback rather than rejecting,
+      // but in case of an unexpected throw, still surface 3 static recs so
+      // the customer never gets stuck.
+      state.aiPreview.analyzing = false;
+      state.aiPreview.recommendations = staticAiRecsFallback();
+      state.aiPreview.summary = t('aiPreviewFallbackSummary');
+      state.aiPreview.lastError = (err && err.message) || 'analyze_failed';
+      renderAiRecommendationCards();
+      setAiPreviewStatus(t('aiPreviewFallbackNotice'));
+    });
+  }
+
+  function staticAiRecsFallback() {
+    if (root.MobileBarberAIPreview && typeof root.MobileBarberAIPreview.staticRecommendations === 'function') {
+      return root.MobileBarberAIPreview.staticRecommendations({ lang: state.lang });
+    }
+    return [];
+  }
+
+  function removeAiPreviewSelfie(silent) {
+    state.aiPreview.selfieDataUrl = '';
+    state.aiPreview.summary = '';
+    state.aiPreview.recommendations = [];
+    state.aiPreview.selectedStyleId = '';
+    state.aiPreview.selectedStylePreviewUrl = '';
+    var upload = document.getElementById('mbAiPreviewUpload');
+    if (upload) upload.value = '';
+    var analyze = document.getElementById('mbAiPreviewAnalyze');
+    if (analyze) analyze.disabled = !state.aiPreview.consent;
+    renderAiPreviewSelfie();
+    renderAiRecommendationCards();
+    if (!silent) setAiPreviewStatus(t('aiPreviewRemovedNotice'));
+    else setAiPreviewStatus('');
+  }
+
+  function resetAiPreview() {
+    state.aiPreview.consent = false;
+    state.aiPreview.selfieDataUrl = '';
+    state.aiPreview.summary = '';
+    state.aiPreview.recommendations = [];
+    state.aiPreview.selectedStyleId = '';
+    state.aiPreview.selectedStylePreviewUrl = '';
+    state.aiPreview.analyzing = false;
+    state.aiPreview.lastError = '';
+    var consent = document.getElementById('mbAiPreviewConsent');
+    if (consent) consent.checked = false;
+    var upload = document.getElementById('mbAiPreviewUpload');
+    if (upload) { upload.value = ''; upload.disabled = true; }
+    var analyze = document.getElementById('mbAiPreviewAnalyze');
+    if (analyze) analyze.disabled = true;
+    renderAiPreviewSelfie();
+    renderAiRecommendationCards();
+    setAiPreviewStatus('');
+  }
+
   function bind() {
     document.querySelectorAll('[data-lang]').forEach(function(btn) {
       btn.addEventListener('click', function() {
         setLang(btn.getAttribute('data-lang'));
       });
     });
+    // AI haircut preview (optional).
+    var aiConsent = document.getElementById('mbAiPreviewConsent');
+    if (aiConsent) aiConsent.addEventListener('change', handleAiPreviewConsentChange);
+    var aiUpload = document.getElementById('mbAiPreviewUpload');
+    if (aiUpload) aiUpload.addEventListener('change', handleAiPreviewUpload);
+    var aiAnalyze = document.getElementById('mbAiPreviewAnalyze');
+    if (aiAnalyze) aiAnalyze.addEventListener('click', handleAiPreviewAnalyze);
+    var aiRemove = document.getElementById('mbAiPreviewRemove');
+    if (aiRemove) aiRemove.addEventListener('click', function() { removeAiPreviewSelfie(false); });
     document.querySelectorAll('[data-action="openAssistant"]').forEach(function(btn) {
       btn.addEventListener('click', function() {
         openAssistantPanel();

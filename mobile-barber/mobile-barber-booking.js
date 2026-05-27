@@ -702,6 +702,15 @@
       customerUid: trim(draft.customerUid),
       confirmationPreference: normalizeConfirmationPreference(draft.confirmationPreference),
       confirmationSentAt: '',
+      // Optional AI haircut preview (all default to empty so bookings stay
+      // valid when the customer skips the feature).
+      selfieDataUrl: typeof draft.selfieDataUrl === 'string' ? draft.selfieDataUrl : '',
+      aiAnalysisSummary: trim(draft.aiAnalysisSummary),
+      aiAnalysisConsent: draft.aiAnalysisConsent === true || draft.aiAnalysisConsent === 'true' ? 'true' : 'false',
+      recommendedStyles: Array.isArray(draft.recommendedStyles) ? draft.recommendedStyles.slice() : [],
+      selectedStyleId: trim(draft.selectedStyleId),
+      selectedStylePreviewUrl: trim(draft.selectedStylePreviewUrl),
+      barberCuttingNotes: trim(draft.barberCuttingNotes),
       createdAt: now,
       updatedAt: now
     };

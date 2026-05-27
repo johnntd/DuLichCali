@@ -130,6 +130,57 @@ function runMobileBarberDataModelTests(test) {
     var badPref = MobileBarberData.validateBooking(bogus);
     assertEq(badPref.valid, false);
     assert(badPref.errors.some(function(err) { return err.indexOf('confirmationPreference') >= 0; }), 'invalid preference should fail');
+
+    // Optional AI haircut preview fields — booking must validate when all
+    // are populated AND when they're all absent / empty (feature is opt-in).
+    var withAi = clone(booking);
+    withAi.selfieDataUrl = 'data:image/jpeg;base64,abc123';
+    withAi.aiAnalysisSummary = 'Round face, short hair, no beard. Try fade.';
+    withAi.aiAnalysisConsent = 'true';
+    withAi.recommendedStyles = [{ styleId: 'fade-haircut', title: 'Modern Fade' }];
+    withAi.selectedStyleId = 'fade-haircut';
+    withAi.selectedStylePreviewUrl = '/assets/mobile-barber/styles/fade-haircut.jpg';
+    withAi.barberCuttingNotes = '#3 sides, scissor top';
+    var aiOk = MobileBarberData.validateBooking(withAi);
+    assertEq(aiOk.valid, true, aiOk.errors.join('; '));
+    // Bad recommendedStyles type
+    var badRec = clone(booking);
+    badRec.recommendedStyles = 'not-an-array';
+    var badRecResult = MobileBarberData.validateBooking(badRec);
+    assertEq(badRecResult.valid, false);
+    assert(badRecResult.errors.some(function(err) { return err.indexOf('recommendedStyles') >= 0; }), 'bad recommendedStyles should fail');
+    // Oversized selfie
+    var bigSelfie = clone(booking);
+    bigSelfie.selfieDataUrl = 'data:image/jpeg;base64,' + new Array(950000).join('A');
+    var bigResult = MobileBarberData.validateBooking(bigSelfie);
+    assertEq(bigResult.valid, false);
+    assert(bigResult.errors.some(function(err) { return err.indexOf('selfieDataUrl') >= 0; }), 'oversized selfie should fail');
+  });
+
+  test('Mobile Barber AI preview module exposes compress + analyze + fallback', function() {
+    var AIPreview = require('../../mobile-barber/mobile-barber-ai-preview');
+    assertEq(typeof AIPreview.analyze, 'function');
+    assertEq(typeof AIPreview.compressImage, 'function');
+    assertEq(typeof AIPreview.staticRecommendations, 'function');
+    var recs = AIPreview.staticRecommendations({ lang: 'en' });
+    assertEq(recs.length, 3, '3 fallback recommendations');
+    assertEq(recs[0].styleId, 'business-haircut');
+    assertEq(recs[1].styleId, 'fade-haircut');
+    assertEq(recs[2].styleId, 'classic-haircut');
+    recs.forEach(function(r) {
+      assert(r.title && r.explanation && r.barberNotes && r.previewUrl, 'every rec has title/explanation/notes/previewUrl');
+      assertEq(r.isFallback, true);
+    });
+    // analyze() with no image must return a thenable that resolves with the
+    // fallback shape. The test runner is sync; we only sanity-check the
+    // shape inline (the full promise contract is exercised at runtime).
+    var pending = AIPreview.analyze({ lang: 'en' });
+    assert(pending && typeof pending.then === 'function', 'analyze returns a thenable');
+    var captured = null;
+    pending.then(function(r) { captured = r; }).catch(function() { captured = null; });
+    // Synchronous fallback function is independently testable:
+    var summary = AIPreview.fallbackAnalysisSummary('vi');
+    assert(summary && summary.length > 0, 'vi fallback summary present');
   });
 
   test('Mobile Barber customer profile validates preferences and vendor scope', function() {

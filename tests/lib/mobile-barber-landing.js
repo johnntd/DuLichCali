@@ -88,7 +88,7 @@ function runMobileBarberLandingTests(test) {
   });
 
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
-    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260527b');
+    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260527c');
     assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260525h');
     assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260525ac');
     assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260525i');
@@ -241,7 +241,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/vendor/**"');
     assertContains(firebase, '"destination": "/mobile-barber/vendor.html"');
     assertContains(vendorHtml, 'id="mobileBarberVendorApp"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260527b');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260527c');
     assertContains(vendorHtml, 'id="mbVendorName"');
     assertContains(vendorHtml, 'id="mbVendorServices"');
     assertContains(vendorHtml, 'id="mbBookingTitle"');
@@ -504,8 +504,8 @@ function runMobileBarberLandingTests(test) {
     assertContains(dashboardHtml, 'id="mobileBarberDashboardApp"');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260525h');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260525ac');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260527a');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260527b');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260527b');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260527c');
     assertContains(dashboardHtml, 'firebase-auth-compat.js');
     assertContains(dashboardHtml, '/notifications.js?v=20260525a');
     assertContains(dashboardHtml, 'id="mbBookingAlertRegion"');
@@ -563,12 +563,25 @@ function runMobileBarberLandingTests(test) {
   });
 
   test('Mobile Barber dashboard covers booking views and status actions', function() {
-    assertContains(dashboardHtml, 'mbTodayList');
-    assertContains(dashboardHtml, 'mbUpcomingList');
-    assertContains(dashboardHtml, 'mbPendingList');
-    assertContains(dashboardHtml, 'data-booking-filter="upcoming"');
-    assertContains(dashboardHtml, 'data-booking-filter="completed"');
-    assertContains(dashboardJs, "bookingFilter: 'upcoming'");
+    // The 5 stat cards are now clickable filters; the 3 separate lists
+    // (today/pending/upcoming) collapsed into one dynamic list bound to
+    // state.summaryFilter. Counter IDs are preserved.
+    assertContains(dashboardHtml, 'data-summary-filter="today"');
+    assertContains(dashboardHtml, 'data-summary-filter="upcoming"');
+    assertContains(dashboardHtml, 'data-summary-filter="pending"');
+    assertContains(dashboardHtml, 'data-summary-filter="in_progress"');
+    assertContains(dashboardHtml, 'data-summary-filter="completed_today"');
+    assertContains(dashboardHtml, 'id="mbAppointmentList"');
+    assertContains(dashboardHtml, 'id="mbAppointmentListTitle"');
+    assertContains(dashboardHtml, 'id="mbStatToday"');
+    assertContains(dashboardHtml, 'id="mbStatUpcoming"');
+    assertContains(dashboardHtml, 'id="mbStatPending"');
+    assertContains(dashboardHtml, 'id="mbStatInProgress"');
+    assertContains(dashboardHtml, 'id="mbStatCompleted"');
+    assertContains(dashboardJs, "summaryFilter: 'today'");
+    assertContains(dashboardJs, 'function bookingsForSummaryFilter');
+    assertContains(dashboardJs, 'function setSummaryFilter');
+    assertContains(dashboardJs, "renderBookingList('mbAppointmentList'");
     assertContains(dashboardJs, 'function formatTime12Hour');
     assertContains(dashboardJs, 'isUpcomingBooking');
     assertContains(dashboardJs, 'formatTime12Hour(booking.startTime)');
@@ -634,7 +647,10 @@ function runMobileBarberLandingTests(test) {
     assertContains(dashboardJs, 'es: {');
     assertContains(dashboardJs, 'setTranslatedText');
     assertContains(dashboardHtml, 'data-i18n="dashboardTitle"');
-    assertContains(dashboardHtml, 'data-i18n="todayTitle"');
+    // The standalone "Today" panel title is gone (clickable filter cards
+    // drive the single appointment list now). Header is dynamic.
+    assertContains(dashboardHtml, 'data-i18n="appointmentListTitle"');
+    assertContains(dashboardHtml, 'data-i18n="statToday"');
     assertContains(dashboardHtml, 'data-i18n="servicesManageTitle"');
     assertContains(dashboardHtml, 'data-i18n="hoursTitle"');
     assertContains(dashboardHtml, 'data-i18n="portfolioTitle"');

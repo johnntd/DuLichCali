@@ -46,6 +46,13 @@
       statPending: 'Pending',
       statInProgress: 'In progress',
       statCompleted: 'Completed today',
+      appointmentListTitle: 'Appointments',
+      appointmentListHint: 'Tap a card above to switch the list.',
+      appointmentListHintToday: 'Showing appointments scheduled for today.',
+      appointmentListHintUpcoming: 'Showing future bookings not yet started.',
+      appointmentListHintPending: 'Showing requests waiting for your confirmation.',
+      appointmentListHintInProgress: 'Showing appointments currently in progress or traveling.',
+      appointmentListHintCompleted: "Showing today's completed appointments.",
       todayTitle: "Today's appointments",
       pendingTitle: 'Pending confirmations',
       upcomingTitle: 'Upcoming bookings',
@@ -195,6 +202,13 @@
       statPending: 'Chờ xác nhận',
       statInProgress: 'Đang làm',
       statCompleted: 'Hoàn tất hôm nay',
+      appointmentListTitle: 'Lịch hẹn',
+      appointmentListHint: 'Bấm thẻ ở trên để chuyển danh sách.',
+      appointmentListHintToday: 'Hiển thị lịch hẹn cho hôm nay.',
+      appointmentListHintUpcoming: 'Hiển thị lịch sắp tới chưa bắt đầu.',
+      appointmentListHintPending: 'Hiển thị yêu cầu đang chờ bạn xác nhận.',
+      appointmentListHintInProgress: 'Hiển thị lịch đang làm hoặc đang trên đường.',
+      appointmentListHintCompleted: 'Hiển thị lịch đã hoàn tất hôm nay.',
       todayTitle: 'Lịch hẹn hôm nay',
       pendingTitle: 'Yêu cầu chờ xác nhận',
       upcomingTitle: 'Lịch hẹn sắp tới',
@@ -344,6 +358,13 @@
       statPending: 'Pendientes',
       statInProgress: 'En curso',
       statCompleted: 'Completadas hoy',
+      appointmentListTitle: 'Citas',
+      appointmentListHint: 'Toca una tarjeta arriba para cambiar la lista.',
+      appointmentListHintToday: 'Mostrando citas programadas para hoy.',
+      appointmentListHintUpcoming: 'Mostrando reservas futuras aún no iniciadas.',
+      appointmentListHintPending: 'Mostrando solicitudes esperando tu confirmación.',
+      appointmentListHintInProgress: 'Mostrando citas en curso o en camino.',
+      appointmentListHintCompleted: 'Mostrando las citas completadas de hoy.',
       todayTitle: 'Citas de hoy',
       pendingTitle: 'Confirmaciones pendientes',
       upcomingTitle: 'Reservas próximas',
@@ -486,6 +507,7 @@
     portfolio: [],
     reviews: [],
     bookingFilter: 'upcoming',
+    summaryFilter: 'today',
     bookingAlertUnsubscribe: null,
     bookingAlertInitialSnapshot: true,
     notifiedBookingIds: {},
@@ -1313,6 +1335,7 @@
 
   function renderBookingList(id, rows) {
     var list = document.getElementById(id);
+    if (!list) return;
     list.innerHTML = '';
     if (!rows.length) {
       var empty = el('div', 'mb-empty');
@@ -1325,13 +1348,45 @@
     });
   }
 
+  // Bucket rows by summary-card filter. Sorting is by start time except for
+  // completed_today which sorts most-recent first since the operator usually
+  // wants to see the freshly finished bookings at the top.
+  function bookingsForSummaryFilter(filter, now) {
+    now = now || new Date();
+    var today = getTodayIso();
+    var active = (state.bookings || []).filter(function(b) {
+      return b.status !== 'cancelled' && b.status !== 'completed';
+    });
+    var rows;
+    if (filter === 'today') {
+      rows = active.filter(function(b) { return b.requestedDate === today; });
+    } else if (filter === 'upcoming') {
+      rows = active.filter(function(b) { return isUpcomingBooking(b, now); });
+    } else if (filter === 'pending') {
+      rows = active.filter(function(b) {
+        return b.status === 'pending_confirmation' || b.status === 'pending_barber_confirmation' || b.status === 'vendor_review';
+      });
+    } else if (filter === 'in_progress') {
+      rows = active.filter(function(b) {
+        return b.status === 'in_progress' || b.status === 'traveling';
+      });
+    } else if (filter === 'completed_today') {
+      rows = (state.bookings || []).filter(function(b) {
+        return b.status === 'completed' && b.requestedDate === today;
+      });
+      return rows.sort(function(a, b) { return bookingStartMillis(b) - bookingStartMillis(a); });
+    } else {
+      rows = active;
+    }
+    return rows.sort(function(a, b) { return bookingStartMillis(a) - bookingStartMillis(b); });
+  }
+
   function renderBookings() {
     var now = new Date();
     var today = getTodayIso();
     var active = state.bookings.filter(function(booking) { return booking.status !== 'cancelled' && booking.status !== 'completed'; });
     var todayRows = active.filter(function(booking) { return booking.requestedDate === today; });
-    var upcomingRows = active.filter(function(booking) { return isUpcomingBooking(booking, now); })
-      .sort(function(a, b) { return bookingStartMillis(a) - bookingStartMillis(b); });
+    var upcomingRows = active.filter(function(booking) { return isUpcomingBooking(booking, now); });
     var pendingRows = active.filter(function(booking) {
       return booking.status === 'pending_confirmation' || booking.status === 'pending_barber_confirmation' || booking.status === 'vendor_review';
     });
@@ -1341,6 +1396,7 @@
     var completedTodayRows = state.bookings.filter(function(booking) {
       return booking.status === 'completed' && booking.requestedDate === today;
     });
+    // Counters stay live and synced regardless of which filter is active.
     document.getElementById('mbStatToday').textContent = todayRows.length;
     document.getElementById('mbStatUpcoming').textContent = upcomingRows.length;
     document.getElementById('mbStatPending').textContent = pendingRows.length;
@@ -1348,12 +1404,58 @@
     if (inProg) inProg.textContent = inProgressRows.length;
     var completed = document.getElementById('mbStatCompleted');
     if (completed) completed.textContent = completedTodayRows.length;
-    renderBookingList('mbTodayList', todayRows);
-    renderBookingList('mbPendingList', pendingRows);
-    renderBookingList('mbUpcomingList', filteredBookings(now));
+
+    // Single appointment list driven by the active summary card.
+    var activeFilter = state.summaryFilter || 'today';
+    var rows = bookingsForSummaryFilter(activeFilter, now);
+    renderBookingList('mbAppointmentList', rows);
+    var title = document.getElementById('mbAppointmentListTitle');
+    if (title) title.textContent = summaryFilterTitle(activeFilter, rows.length);
+    var hint = document.getElementById('mbAppointmentListHint');
+    if (hint) hint.textContent = summaryFilterHint(activeFilter);
+    // Sync card active states (CSS + ARIA).
+    document.querySelectorAll('[data-summary-filter]').forEach(function(btn) {
+      var isActive = btn.getAttribute('data-summary-filter') === activeFilter;
+      btn.classList.toggle('mb-dashboard-stats__article--active', isActive);
+      btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+    // Legacy chip filter (now unused in DOM but tolerated).
     document.querySelectorAll('[data-booking-filter]').forEach(function(btn) {
       btn.classList.toggle('mb-button--primary', btn.getAttribute('data-booking-filter') === state.bookingFilter);
     });
+  }
+
+  function summaryFilterTitle(filter, count) {
+    var labelKey;
+    if (filter === 'today') labelKey = 'statToday';
+    else if (filter === 'upcoming') labelKey = 'statUpcoming';
+    else if (filter === 'pending') labelKey = 'statPending';
+    else if (filter === 'in_progress') labelKey = 'statInProgress';
+    else if (filter === 'completed_today') labelKey = 'statCompleted';
+    else labelKey = 'upcomingTitle';
+    return t(labelKey) + ' (' + (count || 0) + ')';
+  }
+
+  function summaryFilterHint(filter) {
+    var key;
+    if (filter === 'today') key = 'appointmentListHintToday';
+    else if (filter === 'upcoming') key = 'appointmentListHintUpcoming';
+    else if (filter === 'pending') key = 'appointmentListHintPending';
+    else if (filter === 'in_progress') key = 'appointmentListHintInProgress';
+    else if (filter === 'completed_today') key = 'appointmentListHintCompleted';
+    else key = 'appointmentListHint';
+    return t(key);
+  }
+
+  function setSummaryFilter(filter) {
+    if (!filter) return;
+    state.summaryFilter = filter;
+    state.expandedBookingId = null;
+    renderBookings();
+    var list = document.getElementById('mbAppointmentList');
+    if (list && typeof list.scrollIntoView === 'function') {
+      try { list.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+    }
   }
 
   function renderProfileForm() {
@@ -1668,6 +1770,17 @@
       btn.addEventListener('click', function() {
         state.bookingFilter = btn.getAttribute('data-booking-filter') || 'upcoming';
         renderBookings();
+      });
+    });
+    document.querySelectorAll('[data-summary-filter]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        setSummaryFilter(btn.getAttribute('data-summary-filter'));
+      });
+      btn.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          setSummaryFilter(btn.getAttribute('data-summary-filter'));
+        }
       });
     });
     document.querySelector('[data-action="saveProfile"]').addEventListener('click', saveProfile);

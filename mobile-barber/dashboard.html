@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260527b">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260527c">
 </head>
 <body class="mb-page mb-dashboard-page">
   <main class="mb-shell mb-dashboard-shell" id="mobileBarberDashboardApp" data-page="mobile-barber-dashboard">
@@ -46,42 +46,36 @@
       <button class="mb-button mb-button--ghost mb-button--sm" type="button" data-action="toggleSoundAlerts" id="mbToggleSoundAlerts"></button>
     </section>
 
-    <section class="mb-dashboard-stats" aria-label="">
-      <article><span data-i18n="statToday"></span><strong id="mbStatToday">0</strong></article>
-      <article><span data-i18n="statUpcoming"></span><strong id="mbStatUpcoming">0</strong></article>
-      <article><span data-i18n="statPending"></span><strong id="mbStatPending">0</strong></article>
-      <article><span data-i18n="statInProgress"></span><strong id="mbStatInProgress">0</strong></article>
-      <article><span data-i18n="statCompleted"></span><strong id="mbStatCompleted">0</strong></article>
+    <section class="mb-dashboard-stats" role="tablist" aria-label="Appointment filters">
+      <button class="mb-dashboard-stats__article mb-dashboard-stats__article--active" type="button" role="tab" aria-selected="true" data-summary-filter="today">
+        <span data-i18n="statToday"></span>
+        <strong id="mbStatToday">0</strong>
+      </button>
+      <button class="mb-dashboard-stats__article" type="button" role="tab" aria-selected="false" data-summary-filter="upcoming">
+        <span data-i18n="statUpcoming"></span>
+        <strong id="mbStatUpcoming">0</strong>
+      </button>
+      <button class="mb-dashboard-stats__article" type="button" role="tab" aria-selected="false" data-summary-filter="pending">
+        <span data-i18n="statPending"></span>
+        <strong id="mbStatPending">0</strong>
+      </button>
+      <button class="mb-dashboard-stats__article" type="button" role="tab" aria-selected="false" data-summary-filter="in_progress">
+        <span data-i18n="statInProgress"></span>
+        <strong id="mbStatInProgress">0</strong>
+      </button>
+      <button class="mb-dashboard-stats__article" type="button" role="tab" aria-selected="false" data-summary-filter="completed_today">
+        <span data-i18n="statCompleted"></span>
+        <strong id="mbStatCompleted">0</strong>
+      </button>
     </section>
 
-    <section class="mb-dashboard-grid">
-      <article class="mb-dashboard-panel" aria-labelledby="mbTodayTitle">
-        <div class="mb-dashboard-panel__head">
-          <h2 id="mbTodayTitle" data-i18n="todayTitle"></h2>
-          <button class="mb-button mb-button--ghost mb-button--sm" type="button" data-action="refresh" data-i18n="refreshButton"></button>
-        </div>
-        <div class="mb-dashboard-list" id="mbTodayList"></div>
-      </article>
-
-      <article class="mb-dashboard-panel" aria-labelledby="mbPendingTitle">
-        <div class="mb-dashboard-panel__head">
-          <h2 id="mbPendingTitle" data-i18n="pendingTitle"></h2>
-        </div>
-        <div class="mb-dashboard-list" id="mbPendingList"></div>
-      </article>
-    </section>
-
-    <section class="mb-dashboard-panel" aria-labelledby="mbUpcomingTitle">
+    <section class="mb-dashboard-panel mb-dashboard-appointments" aria-labelledby="mbAppointmentListTitle">
       <div class="mb-dashboard-panel__head">
-        <h2 id="mbUpcomingTitle" data-i18n="upcomingTitle"></h2>
-        <div class="mb-dashboard-filters" id="mbBookingFilters" role="group" aria-label="Booking filters">
-          <button class="mb-button mb-button--ghost mb-button--sm" type="button" data-booking-filter="upcoming" data-i18n="filterUpcoming"></button>
-          <button class="mb-button mb-button--ghost mb-button--sm" type="button" data-booking-filter="all" data-i18n="filterAll"></button>
-          <button class="mb-button mb-button--ghost mb-button--sm" type="button" data-booking-filter="completed" data-i18n="filterCompleted"></button>
-          <button class="mb-button mb-button--ghost mb-button--sm" type="button" data-booking-filter="cancelled" data-i18n="filterCancelled"></button>
-        </div>
+        <h2 id="mbAppointmentListTitle" data-i18n="appointmentListTitle"></h2>
+        <button class="mb-button mb-button--ghost mb-button--sm" type="button" data-action="refresh" data-i18n="refreshButton"></button>
       </div>
-      <div class="mb-dashboard-list mb-dashboard-list--wide" id="mbUpcomingList"></div>
+      <p class="mb-dashboard-appointments__hint" id="mbAppointmentListHint" data-i18n="appointmentListHint"></p>
+      <div class="mb-dashboard-list mb-dashboard-list--wide" id="mbAppointmentList"></div>
     </section>
 
     <section class="mb-settings-section" id="mbSettingsSection" aria-labelledby="mbSettingsTitle">
@@ -237,6 +231,6 @@
   <script src="/notifications.js?v=20260525a"></script>
   <script src="/mobile-barber/mobile-barber-data.js?v=20260525h"></script>
   <script src="/mobile-barber/mobile-barber-booking.js?v=20260525ac"></script>
-  <script src="/mobile-barber/mobile-barber-dashboard.js?v=20260527a"></script>
+  <script src="/mobile-barber/mobile-barber-dashboard.js?v=20260527b"></script>
 </body>
 </html>

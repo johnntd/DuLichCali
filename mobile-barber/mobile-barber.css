@@ -1112,6 +1112,108 @@
   box-shadow: 0 6px 22px -8px rgba(245, 166, 35, .65);
 }
 
+/* Persistent promo ribbon — sits ABOVE every slide via z-index so the
+   discount is visible no matter which slide is currently active in the
+   carousel rotation. Clickable; opens the AI assistant. */
+.mb-hero-showcase__ribbon {
+  position: absolute;
+  top: .8rem;
+  right: .8rem;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  max-width: calc(100% - 1.6rem);
+  padding: .45rem .7rem .45rem .55rem;
+  border: 1px solid rgba(245, 166, 35, .55);
+  border-radius: var(--r-pill);
+  background: linear-gradient(135deg, rgba(11, 29, 51, .92), rgba(7, 24, 42, .92));
+  color: #fff;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 10px 24px -10px rgba(0, 0, 0, .6),
+              0 0 0 3px rgba(245, 166, 35, .12);
+  backdrop-filter: blur(8px) saturate(150%);
+  -webkit-backdrop-filter: blur(8px) saturate(150%);
+  text-align: left;
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+  min-height: 40px;
+}
+.mb-hero-showcase__ribbon:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 14px 28px -10px rgba(0, 0, 0, .65),
+              0 0 0 3px rgba(245, 166, 35, .22);
+}
+.mb-hero-showcase__ribbon:focus-visible {
+  outline: 2px solid rgba(245, 166, 35, .9);
+  outline-offset: 2px;
+}
+
+.mb-hero-showcase__ribbon-badge {
+  flex: 0 0 auto;
+  padding: .15rem .55rem;
+  border-radius: var(--r-pill);
+  background: linear-gradient(135deg, #f6c352, #d97706);
+  color: #0b1d33;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+
+.mb-hero-showcase__ribbon-copy {
+  display: none;                /* hide secondary copy on mobile to keep it compact */
+  flex-direction: column;
+  gap: 0;
+  line-height: 1.15;
+  min-width: 0;
+  overflow: hidden;
+}
+.mb-hero-showcase__ribbon-copy strong {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mb-hero-showcase__ribbon-copy span {
+  font-size: 10px;
+  color: rgba(255, 255, 255, .68);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mb-hero-showcase__ribbon-cta {
+  display: none;                /* CTA arrow only shown ≥ 480px */
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fcd34d;
+  white-space: nowrap;
+}
+
+@media (min-width: 480px) {
+  .mb-hero-showcase__ribbon-copy,
+  .mb-hero-showcase__ribbon-cta { display: flex; }
+}
+@media (min-width: 768px) {
+  .mb-hero-showcase__ribbon {
+    top: 1rem; right: 1rem;
+    padding: .55rem .9rem .55rem .65rem;
+  }
+  .mb-hero-showcase__ribbon-badge { font-size: 12px; padding: .2rem .65rem; }
+  .mb-hero-showcase__ribbon-copy strong { font-size: 13px; }
+  .mb-hero-showcase__ribbon-copy span { font-size: 11px; }
+  .mb-hero-showcase__ribbon-cta { font-size: 13px; }
+}
+
+/* Avoid double-badging on the dedicated promo slide — the promo card
+   already carries its own gold __badge in the top-LEFT corner. The
+   persistent ribbon sits in the top-RIGHT corner so they coexist
+   without overlapping. */
+
 /* Inline discounted-services list on the promo slide — top 3 services with
    original strikethrough → final price arrow. Keeps the slide informative
    so a customer can immediately see what the discount is worth. */

@@ -1861,6 +1861,15 @@
     slides.forEach(function(slide, idx) {
       frag.appendChild(_buildHeroShowcaseCard(slide, idx === activeIdx));
     });
+
+    // Persistent promo ribbon — sits ABOVE every slide via z-index so the
+    // discount is visible regardless of which slide is currently active.
+    // Customer never loses sight of the deal as the carousel rotates.
+    var bestPromo = _bestActivePromo();
+    if (bestPromo) {
+      frag.appendChild(_buildHeroShowcaseRibbon(bestPromo));
+    }
+
     mount.innerHTML = '';
     mount.appendChild(frag);
 
@@ -1877,6 +1886,49 @@
         _heroShowcaseActiveKey = cards[active].getAttribute('data-key') || _heroShowcaseActiveKey;
       }, 5000);
     }
+  }
+
+  // Highest-discount active promo. Drives the persistent ribbon visible
+  // on every slide of the hero rotation.
+  function _bestActivePromo() {
+    var promos = collectActiveCustomerPromos() || [];
+    if (!promos.length) return null;
+    var sorted = promos.slice().sort(function(a, b) {
+      return Number(b.discountPercent || 0) - Number(a.discountPercent || 0);
+    });
+    return sorted[0];
+  }
+
+  // Persistent ribbon that floats above every slide. Always visible while
+  // any promo is active so the discount never disappears between rotations.
+  function _buildHeroShowcaseRibbon(promo) {
+    var ribbon = el('button', 'mb-hero-showcase__ribbon');
+    ribbon.type = 'button';
+    var pct = Number(promo.discountPercent || 0);
+    var name = promo.name || '';
+    var vendor = promo.vendorBarberName || '';
+    var detailBits = [];
+    if (vendor) detailBits.push(vendor);
+    if (promo.endDate) {
+      detailBits.push(interpolate(t('heroPromoUntil') || 'Through {date}', { date: promo.endDate }));
+    }
+    ribbon.innerHTML =
+      '<span class="mb-hero-showcase__ribbon-badge">🔥 ' + pct + '% ' +
+      (t('heroPromoBadgeOff') || 'OFF') + '</span>' +
+      '<span class="mb-hero-showcase__ribbon-copy">' +
+        '<strong>' + name + '</strong>' +
+        (detailBits.length ? '<span>' + detailBits.join(' · ') + '</span>' : '') +
+      '</span>' +
+      '<span class="mb-hero-showcase__ribbon-cta">' +
+        (t('heroPromoCta') || 'Book') + ' →</span>';
+    ribbon.setAttribute('aria-label',
+      pct + '% off promotion — ' + name + (vendor ? ' by ' + vendor : '') + ' — tap to book');
+    ribbon.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      openAssistantPanel('general');
+    });
+    return ribbon;
   }
 
   function _buildHeroShowcaseCard(slide, isActive) {

@@ -146,6 +146,31 @@
       homeAiPreviewBookCutoff: 'Too close to your time. Please pick a later slot.',
       homeAiPreviewBookOverlap: 'That slot was just taken. Please pick another.',
       homeAiPreviewBookGeneric: 'Could not send the booking. Please try again.',
+      manualBookingFormTitle: 'Book this service',
+      manualBookingFormSub: 'Fill these once — the barber confirms after.',
+      manualBookingAiAttached: 'AI hairstyle attached',
+      manualBookingPhone: 'Phone number',
+      manualBookingName: 'Your name',
+      manualBookingAddress: 'Street address',
+      manualBookingCity: 'City',
+      manualBookingZip: 'ZIP',
+      manualBookingDate: 'Preferred date',
+      manualBookingTime: 'Preferred time',
+      manualBookingNotes: 'Optional notes',
+      manualBookingNotesPlaceholder: 'Anything the barber should know',
+      manualBookingSubmit: 'Send booking request',
+      manualBookingSubmitting: 'Sending…',
+      manualBookingSuccess: 'Booking sent. The barber will confirm shortly.',
+      manualBookingCancel: 'Cancel',
+      manualBookingMissing: 'Please fill the required fields.',
+      manualBookingNoVendor: 'No barber covers this address yet. Try a different ZIP.',
+      manualBookingNoService: 'No service available for this barber right now.',
+      manualBookingBlackout: 'That date is unavailable. Please pick another.',
+      manualBookingClosed: 'The barber is closed that day. Please pick another.',
+      manualBookingOutsideHours: 'That time is outside the barber’s hours.',
+      manualBookingCutoff: 'Too close to your time. Please pick a later slot.',
+      manualBookingOverlap: 'That slot was just taken. Please pick another.',
+      manualBookingGeneric: 'Could not send the booking. Please try again.',
       aiPreviewDisclosure: 'Sample AI-generated style preview. Real barber portfolio coming soon.',
       serviceAreaLabel: 'Service area',
       radiusLabel: 'Travel radius',
@@ -321,6 +346,31 @@
       homeAiPreviewBookCutoff: 'Quá gần với giờ bạn chọn. Vui lòng chọn giờ trễ hơn.',
       homeAiPreviewBookOverlap: 'Khung giờ này vừa có người đặt. Vui lòng chọn giờ khác.',
       homeAiPreviewBookGeneric: 'Không gửi được lịch hẹn. Vui lòng thử lại.',
+      manualBookingFormTitle: 'Đặt dịch vụ này',
+      manualBookingFormSub: 'Điền một lần — thợ sẽ xác nhận sau.',
+      manualBookingAiAttached: 'Đã đính kèm kiểu tóc AI',
+      manualBookingPhone: 'Số điện thoại',
+      manualBookingName: 'Họ và tên',
+      manualBookingAddress: 'Địa chỉ',
+      manualBookingCity: 'Thành phố',
+      manualBookingZip: 'Mã ZIP',
+      manualBookingDate: 'Ngày mong muốn',
+      manualBookingTime: 'Giờ mong muốn',
+      manualBookingNotes: 'Ghi chú thêm',
+      manualBookingNotesPlaceholder: 'Điều gì cần thợ lưu ý',
+      manualBookingSubmit: 'Gửi yêu cầu đặt',
+      manualBookingSubmitting: 'Đang gửi…',
+      manualBookingSuccess: 'Đã gửi lịch hẹn. Thợ sẽ xác nhận sớm.',
+      manualBookingCancel: 'Hủy',
+      manualBookingMissing: 'Vui lòng điền các ô bắt buộc.',
+      manualBookingNoVendor: 'Hiện chưa có thợ phục vụ địa chỉ này. Thử ZIP khác giúp em.',
+      manualBookingNoService: 'Hiện không có dịch vụ phù hợp cho thợ này.',
+      manualBookingBlackout: 'Ngày này thợ nghỉ. Vui lòng chọn ngày khác.',
+      manualBookingClosed: 'Thợ không làm việc ngày này. Vui lòng chọn ngày khác.',
+      manualBookingOutsideHours: 'Giờ này nằm ngoài khung làm việc của thợ.',
+      manualBookingCutoff: 'Quá gần với giờ bạn chọn. Vui lòng chọn giờ trễ hơn.',
+      manualBookingOverlap: 'Khung giờ này vừa có người đặt. Vui lòng chọn giờ khác.',
+      manualBookingGeneric: 'Không gửi được lịch hẹn. Vui lòng thử lại.',
       aiPreviewDisclosure: 'Ảnh mẫu tạo bằng AI. Portfolio thật của thợ sẽ có sau.',
       serviceAreaLabel: 'Khu vực phục vụ',
       radiusLabel: 'Bán kính di chuyển',
@@ -496,6 +546,31 @@
       homeAiPreviewBookCutoff: 'Demasiado cerca de la hora. Elija una más tarde.',
       homeAiPreviewBookOverlap: 'Ese horario ya fue tomado. Elija otro.',
       homeAiPreviewBookGeneric: 'No se pudo enviar la solicitud. Intente de nuevo.',
+      manualBookingFormTitle: 'Reservar este servicio',
+      manualBookingFormSub: 'Complete una vez — el barbero confirma después.',
+      manualBookingAiAttached: 'Estilo AI adjuntado',
+      manualBookingPhone: 'Teléfono',
+      manualBookingName: 'Su nombre',
+      manualBookingAddress: 'Dirección',
+      manualBookingCity: 'Ciudad',
+      manualBookingZip: 'Código postal',
+      manualBookingDate: 'Fecha preferida',
+      manualBookingTime: 'Hora preferida',
+      manualBookingNotes: 'Notas (opcional)',
+      manualBookingNotesPlaceholder: 'Algo que el barbero deba saber',
+      manualBookingSubmit: 'Enviar solicitud',
+      manualBookingSubmitting: 'Enviando…',
+      manualBookingSuccess: 'Solicitud enviada. El barbero confirmará pronto.',
+      manualBookingCancel: 'Cancelar',
+      manualBookingMissing: 'Por favor complete los campos requeridos.',
+      manualBookingNoVendor: 'Ningún barbero cubre esta dirección. Pruebe otro código postal.',
+      manualBookingNoService: 'No hay servicio disponible para este barbero ahora.',
+      manualBookingBlackout: 'Esa fecha no está disponible. Elija otra.',
+      manualBookingClosed: 'El barbero no trabaja ese día. Elija otro.',
+      manualBookingOutsideHours: 'Esa hora está fuera del horario del barbero.',
+      manualBookingCutoff: 'Demasiado cerca de la hora. Elija una más tarde.',
+      manualBookingOverlap: 'Ese horario ya fue tomado. Elija otro.',
+      manualBookingGeneric: 'No se pudo enviar la solicitud. Intente de nuevo.',
       aiPreviewDisclosure: 'Vista previa de estilo generada por AI. Portafolio real del barbero próximamente.',
       serviceAreaLabel: 'Área de servicio',
       radiusLabel: 'Radio de viaje',
@@ -551,6 +626,16 @@
     waitlistLocation: null,
     routedVendor: null,
     region: '',
+    // Inline manual-booking-form state. Tied to the currently-selected
+    // service. Kept separate from aiPreview so the manual flow does NOT
+    // share any handler with the AI hairstyle inline booking.
+    manualBooking: {
+      expandedServiceId: '',
+      submitting: false,
+      lastSubmittedServiceId: '',
+      lastSubmissionError: '',
+      formDraft: {}
+    },
     aiPreview: {
       consent: false,
       selfieDataUrl: '',
@@ -1359,34 +1444,31 @@
     var label = el('span');
     var title = el('strong');
     var actions = el('div', 'mb-service-selection__actions');
-    var book = el('a', 'mb-button mb-button--primary');
+    var book = el('button', 'mb-button mb-button--primary');
     var chat = el('button', 'mb-button mb-button--ghost');
     var voice = el('button', 'mb-button mb-button--ghost');
 
     label.textContent = t('selectedServiceLabel');
     title.textContent = serviceCopy(service, 'name') + ' · ' + formatMoney(service.price);
-    book.href = vendorUrl(service, '');
-    book.addEventListener('click', function(event) {
-      event.preventDefault();
-      state.selectedServiceId = service.id;
-      var saved = readSavedLocation();
-      var routed = saved && BOOKING && BOOKING.findVendorForAddress
-        ? BOOKING.findVendorForAddress(saved, { vendors: DATA.sampleVendors })
-        : null;
-      if (routed) {
-        state.routedVendor = routed;
-        openAssistantPanel('general');
-      } else {
-        promptForLocation(service.id);
-      }
-    });
+    book.type = 'button';
     chat.type = 'button';
     voice.type = 'button';
+    book.setAttribute('data-action', 'bookSelectedService');
     chat.setAttribute('data-action', 'chatSelectedService');
     voice.setAttribute('data-action', 'voiceSelectedService');
     book.textContent = t('bookThisService');
     chat.textContent = t('chatThisService');
     voice.textContent = t('talkThisService');
+
+    // "Book this service" → MANUAL booking form, NOT the AI assistant.
+    // These three CTAs are intentionally three separate flows: manual,
+    // text AI, voice AI. Do not collapse them into a shared handler.
+    book.addEventListener('click', function(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      state.selectedServiceId = service.id;
+      openManualBookingForm(service);
+    });
     chat.addEventListener('click', function() {
       state.selectedServiceId = service.id;
       openAssistantPanel('general');
@@ -1403,7 +1485,17 @@
     actions.appendChild(voice);
     panel.appendChild(text);
     panel.appendChild(actions);
+    // Manual booking form mount point. Rendered on demand by the Book CTA;
+    // hidden by default so the three-CTA row stays minimal.
+    var manualMount = el('div', 'mb-manual-booking-mount');
+    manualMount.id = 'mbManualBookingMount';
+    manualMount.hidden = true;
+    panel.appendChild(manualMount);
     panel.hidden = false;
+    // Re-mount the form if the customer flipped between services while it was open.
+    if (state.manualBooking && state.manualBooking.expandedServiceId === service.id) {
+      openManualBookingForm(service);
+    }
   }
 
   function renderServices() {
@@ -1438,11 +1530,15 @@
       row.appendChild(metaChip(t('cleanupLabel'), service.cleanupBufferMinutes + ' ' + t('minutes')));
       cta.type = 'button';
       cta.textContent = t('selectService');
+      // Selecting a service ONLY surfaces the selection panel with the three
+      // CTAs (Book / Chat / Talk). It must NOT auto-open the AI assistant —
+      // location is collected inside the manual booking form itself, or
+      // asked by the AI assistant if the customer chooses chat/voice.
       cta.addEventListener('click', function() {
         selectService(service);
-        var saved = readSavedLocation();
-        if (!saved || !BOOKING.findVendorForAddress(saved, { vendors: DATA.sampleVendors })) {
-          promptForLocation(service.id);
+        var sel = document.getElementById('mbServiceSelection');
+        if (sel && sel.scrollIntoView) {
+          try { sel.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
         }
       });
 
@@ -1872,6 +1968,336 @@
       list.appendChild(card);
     });
     if (attach) attach.hidden = !state.aiPreview.selectedStyleId;
+  }
+
+  // ── Manual booking form (Book this service CTA) ───────────────────────
+  // Mounts an inline manual booking form inside the selected-service panel.
+  // Completely independent of the AI assistant; tapping Book here must
+  // never open the chat or voice panel.
+  function openManualBookingForm(service) {
+    if (!service) return;
+    var mount = document.getElementById('mbManualBookingMount');
+    if (!mount) return;
+    state.manualBooking.expandedServiceId = service.id;
+    state.manualBooking.lastSubmissionError = '';
+    mount.hidden = false;
+    mount.innerHTML = '';
+    mount.appendChild(renderManualBookingPanel(service));
+    requestAnimationFrame(function() {
+      if (mount.scrollIntoView) {
+        try { mount.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
+      }
+      var firstInput = mount.querySelector('input,textarea,select');
+      if (firstInput && firstInput.focus) { try { firstInput.focus({ preventScroll: true }); } catch (e) {} }
+    });
+  }
+
+  function renderManualBookingPanel(service) {
+    var panel = el('form', 'mb-manual-booking');
+    panel.setAttribute('novalidate', 'novalidate');
+    panel.setAttribute('data-service-id', service.id);
+
+    var draft = state.manualBooking.formDraft || {};
+    var savedLoc = readSavedLocation() || {};
+    var lastBooking = state.lastBooking || {};
+    var aiStyle = (state.aiPreview && state.aiPreview.selectedStyleId)
+      ? (state.aiPreview.recommendations || []).filter(function(r) {
+          return r && r.styleId === state.aiPreview.selectedStyleId;
+        })[0] || null
+      : null;
+    var phonePrefill = draft.customerPhone || lastBooking.customerPhone || '';
+    var namePrefill = draft.customerName || lastBooking.customerName || '';
+    var addressPrefill = draft.address || lastBooking.address || '';
+    var cityPrefill = draft.city || lastBooking.city || savedLoc.city || '';
+    var zipPrefill = draft.zip || lastBooking.zip || savedLoc.zip || '';
+    var datePrefill = draft.requestedDate || '';
+    var timePrefill = draft.startTime || '';
+    var notesPrefill = draft.notes || '';
+    var paymentPrefill = draft.paymentMethod || lastBooking.paymentMethod || 'cash';
+
+    var head = el('div', 'mb-manual-booking__head');
+    var headTitle = el('strong');
+    headTitle.textContent = t('manualBookingFormTitle') || 'Book this service';
+    var headSub = el('span', 'mb-manual-booking__sub');
+    headSub.textContent = t('manualBookingFormSub') || 'Quick details — the barber confirms after.';
+    head.appendChild(headTitle); head.appendChild(headSub);
+    panel.appendChild(head);
+
+    // Summary of selected service so the customer keeps context.
+    var summary = el('div', 'mb-manual-booking__summary');
+    var summaryName = el('span', 'mb-manual-booking__summary-name');
+    summaryName.textContent = serviceCopy(service, 'name');
+    var summaryPrice = el('span', 'mb-manual-booking__summary-price');
+    summaryPrice.textContent = formatMoney(service.price);
+    summary.appendChild(summaryName);
+    summary.appendChild(summaryPrice);
+    panel.appendChild(summary);
+
+    if (aiStyle) {
+      var aiBadge = el('div', 'mb-manual-booking__ai-attach');
+      aiBadge.innerHTML = '<strong>' + (t('manualBookingAiAttached') || 'AI hairstyle attached') + ':</strong> ' + (aiStyle.title || '');
+      panel.appendChild(aiBadge);
+    }
+
+    function fieldWrap(labelText, inputNode) {
+      var wrap = el('label', 'mb-manual-booking__field');
+      var l = el('span'); l.textContent = labelText;
+      wrap.appendChild(l); wrap.appendChild(inputNode);
+      return wrap;
+    }
+    function mkInput(type, name, value, attrs) {
+      var n = document.createElement('input');
+      n.type = type; n.name = name; n.value = value || '';
+      if (attrs) Object.keys(attrs).forEach(function(k) { n.setAttribute(k, attrs[k]); });
+      return n;
+    }
+
+    var phone = mkInput('tel', 'customerPhone', phonePrefill, { autocomplete: 'tel', inputmode: 'tel', required: 'required', placeholder: '(714) 555-0123' });
+    var name = mkInput('text', 'customerName', namePrefill, { autocomplete: 'name', required: 'required' });
+    var address = mkInput('text', 'address', addressPrefill, { autocomplete: 'street-address', required: 'required' });
+    var city = mkInput('text', 'city', cityPrefill, { autocomplete: 'address-level2', required: 'required' });
+    var zip = mkInput('text', 'zip', zipPrefill, { autocomplete: 'postal-code', inputmode: 'numeric', required: 'required', pattern: '[0-9]{5}' });
+    var date = mkInput('date', 'requestedDate', datePrefill, { required: 'required' });
+    var time = mkInput('time', 'startTime', timePrefill, { required: 'required' });
+    var notes = document.createElement('textarea');
+    notes.name = 'notes'; notes.rows = 2; notes.value = notesPrefill;
+    notes.placeholder = t('manualBookingNotesPlaceholder') || 'Anything the barber should know';
+
+    var paymentWrap = el('fieldset', 'mb-manual-booking__payment');
+    var paymentLegend = el('legend');
+    paymentLegend.textContent = t('paymentChoiceLegend') || 'Preferred payment method';
+    paymentWrap.appendChild(paymentLegend);
+    ['cash', 'zelle'].forEach(function(method) {
+      var lbl = el('label', 'mb-manual-booking__payment-option');
+      var radio = document.createElement('input');
+      radio.type = 'radio'; radio.name = 'paymentMethod'; radio.value = method;
+      radio.checked = paymentPrefill === method;
+      var span = el('span'); span.textContent = method === 'cash' ? (t('paymentCash') || 'Cash') : (t('paymentZelle') || 'Zelle');
+      lbl.appendChild(radio); lbl.appendChild(span);
+      paymentWrap.appendChild(lbl);
+    });
+
+    panel.appendChild(fieldWrap(t('manualBookingPhone') || 'Phone number', phone));
+    panel.appendChild(fieldWrap(t('manualBookingName') || 'Your name', name));
+    panel.appendChild(fieldWrap(t('manualBookingAddress') || 'Street address', address));
+    var cityZipRow = el('div', 'mb-manual-booking__row');
+    cityZipRow.appendChild(fieldWrap(t('manualBookingCity') || 'City', city));
+    cityZipRow.appendChild(fieldWrap(t('manualBookingZip') || 'ZIP', zip));
+    panel.appendChild(cityZipRow);
+    var dateTimeRow = el('div', 'mb-manual-booking__row');
+    dateTimeRow.appendChild(fieldWrap(t('manualBookingDate') || 'Preferred date', date));
+    dateTimeRow.appendChild(fieldWrap(t('manualBookingTime') || 'Preferred time', time));
+    panel.appendChild(dateTimeRow);
+    panel.appendChild(fieldWrap(t('manualBookingNotes') || 'Optional notes', notes));
+    panel.appendChild(paymentWrap);
+
+    var status = el('p', 'mb-manual-booking__status');
+    status.setAttribute('aria-live', 'polite');
+    if (state.manualBooking.lastSubmissionError) {
+      status.textContent = state.manualBooking.lastSubmissionError;
+      status.classList.add('mb-manual-booking__status--error');
+    }
+    panel.appendChild(status);
+
+    var actions = el('div', 'mb-manual-booking__actions');
+    var submit = el('button', 'mb-button mb-button--primary mb-manual-booking__submit');
+    submit.type = 'submit';
+    submit.textContent = state.manualBooking.submitting
+      ? (t('manualBookingSubmitting') || 'Sending…')
+      : (t('manualBookingSubmit') || 'Send booking request');
+    submit.disabled = !!state.manualBooking.submitting;
+    var cancel = el('button', 'mb-button mb-button--ghost mb-button--sm mb-manual-booking__cancel');
+    cancel.type = 'button';
+    cancel.textContent = t('manualBookingCancel') || 'Cancel';
+    cancel.addEventListener('click', function() {
+      state.manualBooking.expandedServiceId = '';
+      var mount = document.getElementById('mbManualBookingMount');
+      if (mount) { mount.hidden = true; mount.innerHTML = ''; }
+    });
+    actions.appendChild(submit);
+    actions.appendChild(cancel);
+    panel.appendChild(actions);
+
+    panel.addEventListener('input', function() {
+      state.manualBooking.formDraft = readManualBookingDraft(panel);
+    });
+
+    panel.addEventListener('submit', function(event) {
+      event.preventDefault();
+      submitManualBooking(service, panel);
+    });
+
+    return panel;
+  }
+
+  function readManualBookingDraft(panel) {
+    var get = function(name) {
+      var n = panel.querySelector('[name="' + name + '"]');
+      return n ? String(n.value || '').trim() : '';
+    };
+    var paymentNode = panel.querySelector('[name="paymentMethod"]:checked');
+    return {
+      customerPhone: get('customerPhone'),
+      customerName: get('customerName'),
+      address: get('address'),
+      city: get('city'),
+      zip: get('zip'),
+      requestedDate: get('requestedDate'),
+      startTime: get('startTime'),
+      notes: get('notes'),
+      paymentMethod: paymentNode ? String(paymentNode.value || 'cash') : 'cash'
+    };
+  }
+
+  function submitManualBooking(service, panel) {
+    if (!BOOKING || !service) return;
+    if (state.manualBooking.submitting) return;
+    var draft = readManualBookingDraft(panel);
+    state.manualBooking.formDraft = draft;
+    var statusEl = panel.querySelector('.mb-manual-booking__status');
+
+    var required = ['customerPhone', 'customerName', 'address', 'city', 'zip', 'requestedDate', 'startTime'];
+    var missing = required.filter(function(k) { return !draft[k]; });
+    if (missing.length) {
+      var msg = t('manualBookingMissing') || 'Please fill the required fields.';
+      state.manualBooking.lastSubmissionError = msg;
+      if (statusEl) { statusEl.textContent = msg; statusEl.classList.add('mb-manual-booking__status--error'); }
+      return;
+    }
+
+    var addressObj = { address: draft.address, city: draft.city, zip: draft.zip };
+    var vendor = BOOKING.findVendorForAddress(addressObj);
+    if (!vendor) {
+      var msgV = t('manualBookingNoVendor') || 'No barber covers this address yet. Try a different ZIP.';
+      state.manualBooking.lastSubmissionError = msgV;
+      if (statusEl) { statusEl.textContent = msgV; statusEl.classList.add('mb-manual-booking__status--error'); }
+      return;
+    }
+    var services = DATA && typeof DATA.listServicesForVendor === 'function'
+      ? DATA.listServicesForVendor(vendor.id)
+      : (DATA && DATA.sampleServices) || [];
+    // Use the originally-selected service if the vendor offers it, otherwise
+    // fall back to the vendor's matching service or the first one.
+    var resolvedService = services.filter(function(s) { return s && s.id === service.id; })[0]
+      || services.filter(function(s) { return s && s.name === service.name; })[0]
+      || services[0];
+    if (!resolvedService) {
+      var msgS = t('manualBookingNoService') || 'No service available for this barber right now.';
+      state.manualBooking.lastSubmissionError = msgS;
+      if (statusEl) { statusEl.textContent = msgS; statusEl.classList.add('mb-manual-booking__status--error'); }
+      return;
+    }
+    var availability = (DATA && DATA.sampleAvailability) || [];
+
+    state.manualBooking.submitting = true;
+    if (statusEl) {
+      statusEl.classList.remove('mb-manual-booking__status--error');
+      statusEl.textContent = t('manualBookingSubmitting') || 'Sending…';
+    }
+    var submitBtn = panel.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+
+    // Optional AI hairstyle attachment — same canonical contract as the
+    // inline-from-AI-card flow. Only attached when the customer has
+    // actually selected an AI preview earlier on the page.
+    var aiAttachments = {};
+    var aiSel = (state.aiPreview && state.aiPreview.selectedStyleId) ? state.aiPreview : null;
+    if (aiSel && aiSel.selectedStyleId) {
+      var rec = (aiSel.recommendations || []).filter(function(r) {
+        return r && r.styleId === aiSel.selectedStyleId;
+      })[0] || null;
+      aiAttachments = {
+        selfieDataUrl: aiSel.selfieDataUrl || '',
+        aiAnalysisSummary: aiSel.summary || '',
+        aiAnalysisConsent: aiSel.consent ? 'true' : 'false',
+        recommendedStyles: (aiSel.recommendations || []).map(function(r) {
+          return {
+            styleId: r.styleId || '',
+            title: r.title || '',
+            explanation: r.explanation || '',
+            maintenance: r.maintenance || '',
+            barberNotes: r.barberNotes || ''
+          };
+        }),
+        selectedAiStyleId: aiSel.selectedStyleId,
+        selectedAiStyleName: rec ? rec.title || '' : '',
+        selectedAiStyleImage: aiSel.selectedStylePreviewUrl || '',
+        selectedAiStyleDescription: rec ? rec.explanation || '' : '',
+        selectedAiBarberNotes: rec ? rec.barberNotes || '' : '',
+        selectedAiMaintenanceLevel: rec ? rec.maintenance || '' : ''
+      };
+    }
+
+    var finalDraft = Object.assign({
+      customerEmail: '',
+      serviceId: resolvedService.id,
+      smsOptIn: false,
+      confirmationPreference: 'text',
+      source: 'customer_form'
+    }, draft, aiAttachments);
+
+    BOOKING.loadExistingBookings(vendor.id)
+      .catch(function() { return []; })
+      .then(function(existing) {
+        var avail = BOOKING.checkAvailability({
+          vendor: vendor,
+          services: services,
+          availability: availability,
+          draft: finalDraft,
+          existingBookings: existing,
+          now: new Date()
+        });
+        if (!avail || !avail.canCreate) {
+          throw new Error(avail && avail.key ? avail.key : 'unavailable');
+        }
+        var built = BOOKING.buildBooking({ vendor: vendor, draft: finalDraft, availabilityResult: avail });
+        if (!built || !built.valid) {
+          throw new Error((built && built.errors && built.errors.join(', ')) || 'invalid_booking');
+        }
+        built.booking.source = 'customer_form';
+        return BOOKING.saveBooking(built.booking, { requireDatabase: true });
+      })
+      .then(function(saved) {
+        state.manualBooking.submitting = false;
+        state.lastBooking = saved.booking;
+        state.manualBooking.lastSubmittedServiceId = service.id;
+        state.manualBooking.expandedServiceId = '';
+        state.manualBooking.lastSubmissionError = '';
+        if (draft.city || draft.zip) saveCustomerLocation({ city: draft.city, zip: draft.zip });
+        var mount = document.getElementById('mbManualBookingMount');
+        if (mount) {
+          mount.innerHTML = '';
+          var success = el('div', 'mb-manual-booking__success');
+          success.setAttribute('role', 'status');
+          success.textContent = t('manualBookingSuccess') || 'Booking sent. The barber will confirm shortly.';
+          mount.appendChild(success);
+        }
+      })
+      .catch(function(error) {
+        state.manualBooking.submitting = false;
+        var rawMessage = (error && error.message) || 'submit_failed';
+        var human = manualBookingErrorMessage(rawMessage);
+        state.manualBooking.lastSubmissionError = human;
+        if (statusEl) {
+          statusEl.textContent = human;
+          statusEl.classList.add('mb-manual-booking__status--error');
+        }
+        if (submitBtn) submitBtn.disabled = false;
+        if (root.console) root.console.error('[mobile-barber] manual booking failed', rawMessage);
+      });
+  }
+
+  function manualBookingErrorMessage(key) {
+    var map = {
+      service_area_out_of_range: t('manualBookingNoVendor') || 'No barber covers this address yet.',
+      blackout_date: t('manualBookingBlackout') || 'That date is unavailable. Please pick another.',
+      closed_day: t('manualBookingClosed') || 'The barber is closed that day. Please pick another.',
+      outside_hours: t('manualBookingOutsideHours') || 'That time is outside the barber’s hours.',
+      same_day_cutoff: t('manualBookingCutoff') || 'Too close to your time. Please pick a later slot.',
+      booking_overlap: t('manualBookingOverlap') || 'That slot was just taken. Please pick another.',
+      service_missing: t('manualBookingNoService') || 'No service available for this barber right now.'
+    };
+    return map[key] || (t('manualBookingGeneric') || 'Could not send the booking. Please try again.');
   }
 
   // Toggle the inline booking panel under an AI hairstyle card.

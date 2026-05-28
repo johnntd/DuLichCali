@@ -64,7 +64,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(homeHtml, 'id="hpFeatured"', 'homepage must keep Marketplace panel');
     assertContains(homeHtml, 'id="hpVendorCards"', 'homepage must keep vendor-card mount');
     assertContains(homeHtml, 'style.css?v=20260526b', 'homepage must load bumped stylesheet');
-    assertContains(homeHtml, 'script.js?v=20260528b', 'homepage must load bumped script.js');
+    assertContains(homeHtml, 'script.js?v=20260528c', 'homepage must load bumped script.js');
     assertContains(homeJs, 'HOMEPAGE_MARKETPLACE_ENTRIES');
     // Region-scoped marketplace routing: cards land on /mobile-barber (with
     // ?region=...) and never expose individual barber names or vendor pages.

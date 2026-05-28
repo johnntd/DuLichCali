@@ -1688,37 +1688,83 @@ function _isVendorActive(vendorId) {
 // Cache-driven gate: is there at least one currently-active vendor in this
 // (category, region)? Used by the hero carousel + marketplace region cards
 // so we never surface a category that has no real underlying provider.
-// Falls back to MARKETPLACE static data when the Firestore cache is empty,
-// so the gate still works on offline / blocked-rules first paint.
+// Consults three sources in order; falls OPEN when no source has data so a
+// missing cache never silently empties the homepage.
 function _hasActiveVendorInCategory(category, regionId) {
   const cat = String(category || '').toLowerCase();
   if (!cat) return false;
+  // Category synonyms — different surfaces refer to the same thing.
+  const synonyms = { barber: ['barber', 'mobile-barber', 'mobilebarber', 'haircut'] };
+  const accept = synonyms[cat] || [cat];
+  function matchesCat(value) {
+    const v = String(value || '').toLowerCase();
+    return accept.indexOf(v) >= 0;
+  }
+
+  let sawAnyData = false;
+
+  // Pass 1: Firestore-derived cache (loadVendorAdminStatuses).
   const meta = window._vendorAdminMeta || {};
   const ids  = Object.keys(meta);
-  // Pass 1: prefer the Firestore-derived cache when populated.
   if (ids.length) {
+    sawAnyData = true;
     for (let i = 0; i < ids.length; i++) {
       const m = meta[ids[i]];
       if (!m || !m.active) continue;
-      if (m.category !== cat) continue;
+      if (!matchesCat(m.category)) continue;
       if (window._vendorAdminStatus[ids[i]] && window._vendorAdminStatus[ids[i]] !== 'active') continue;
-      if (regionId && !_regionMatchesId(m.region, regionId)) continue;
+      if (regionId && m.region && !_regionMatchesId(m.region, regionId)) continue;
       return true;
     }
   }
-  // Pass 2: static MARKETPLACE fallback for the first paint while the
-  // Firestore cache is still loading or unavailable.
+
+  // Pass 2: static MARKETPLACE catalogue (nails / hair / food).
   if (window.MARKETPLACE && Array.isArray(window.MARKETPLACE.businesses)) {
     for (let i = 0; i < window.MARKETPLACE.businesses.length; i++) {
       const b = window.MARKETPLACE.businesses[i];
       if (!b || !b.active || b.disabled === true || b.homepageActive === false) continue;
-      if (String(b.category || '').toLowerCase() !== cat) continue;
+      if (!matchesCat(b.category)) continue;
+      sawAnyData = true;
       if (regionId && !(Array.isArray(b.featuredRegions) && b.featuredRegions.indexOf(regionId) >= 0)) continue;
       if (!_isVendorActive(b.id)) continue;
       return true;
     }
   }
-  return false;
+
+  // Pass 3: mobile-barber static catalogue. These vendors live in
+  // MobileBarberData.sampleVendors (NOT MARKETPLACE) and don't always carry
+  // a `category` field on their Firestore doc, so Pass 1 / 2 miss them.
+  // Without Pass 3 the Mobile Barber routing card was hidden even when
+  // active barbers served the region — the bug this fix targets.
+  if (cat === 'barber' && window.MobileBarberData && Array.isArray(window.MobileBarberData.sampleVendors)) {
+    const mbRegionKey = regionId === 'bayarea' ? 'bay'
+      : regionId === 'oc' ? 'oc'
+      : (regionId || '');
+    for (let i = 0; i < window.MobileBarberData.sampleVendors.length; i++) {
+      const v = window.MobileBarberData.sampleVendors[i];
+      if (!v || v.active === false) continue;
+      sawAnyData = true;
+      if (!_isVendorActive(v.id)) continue;
+      if (!regionId) return true;
+      const vRegion = String(v.region || '').toLowerCase();
+      if (!vRegion) return true; // no region on the seed = serves everywhere
+      if (_regionMatchesId(vRegion, regionId)) return true;
+      // Fallback: serviceAreas list contains a city we recognise as in the region.
+      if (Array.isArray(v.serviceAreas)) {
+        for (let j = 0; j < v.serviceAreas.length; j++) {
+          if (_regionMatchesId(v.serviceAreas[j], regionId)) return true;
+        }
+      }
+      // Last resort: id suffix hint (mobile-barber vendors are named
+      // `<name>-oc` / `<name>-bay` by convention).
+      const idLower = String(v.id || '').toLowerCase();
+      if (mbRegionKey && idLower.endsWith('-' + mbRegionKey)) return true;
+    }
+  }
+
+  // Fall OPEN when no data source had anything to say. Never silently
+  // empty the homepage just because the cache hasn't loaded yet.
+  return !sawAnyData;
 }
 
 // Canonical single-item visibility filter. EVERY homepage surface that lists

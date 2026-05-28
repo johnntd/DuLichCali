@@ -160,6 +160,23 @@ function runHomepageVisibilityTests(test) {
   test('Region-scoped Mobile Barber entries still set availabilityStatus="now"', function() {
     assertContains(src, "availabilityStatus: 'now'");
   });
+
+  test('_hasActiveVendorInCategory has Pass 3 for mobile-barber vendors', function() {
+    // Mobile barber vendors live in MobileBarberData.sampleVendors, NOT in
+    // MARKETPLACE and not always with a category field on the Firestore doc.
+    // Without Pass 3, _hasActiveVendorInCategory("barber", region) returned
+    // false even when active barbers served the region, hiding the routing
+    // card from the homepage marketplace. Pin Pass 3 + region heuristics.
+    var fn = src.slice(src.indexOf('function _hasActiveVendorInCategory'),
+                       src.indexOf('function _hasActiveVendorInCategory') + 3500);
+    assertContains(fn, 'window.MobileBarberData', 'Pass 3 must consult MobileBarberData');
+    assertContains(fn, 'sampleVendors', 'Pass 3 must walk sampleVendors');
+    assertContains(fn, 'serviceAreas', 'Pass 3 must check serviceAreas');
+    assertContains(fn, "endsWith('-' + mbRegionKey)", 'Pass 3 must fall back to id-suffix hint');
+    assertContains(fn, "synonyms", 'category synonyms must allow barber === mobile-barber');
+    assertContains(fn, 'return !sawAnyData',
+      'Filter must fall OPEN when no data source has been consulted (prevents silent homepage blanking)');
+  });
 }
 
 if (require.main === module) {

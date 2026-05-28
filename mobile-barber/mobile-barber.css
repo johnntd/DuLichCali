@@ -3034,12 +3034,31 @@
 }
 .mb-ai-preview__source > legend {
   display: block;
-  margin-bottom: .35rem;
+  margin-bottom: .55rem;
   font-size: var(--text-sm);
   color: var(--cream);
-  font-weight: 700;
+  font-weight: 600;
+  opacity: .85;
 }
 .mb-ai-preview__source[disabled] { opacity: .55; pointer-events: none; }
+
+/* Solo-button parent: center the auto-width pill and add breathing room. */
+.mb-ai-preview__source:has(.mb-ai-preview__source-button--solo) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: .25rem;
+}
+.mb-ai-preview__source:has(.mb-ai-preview__source-button--solo) > legend {
+  align-self: flex-start;
+}
+.mb-ai-preview__source:has(.mb-ai-preview__source-button--solo) .mb-form-hint {
+  margin: .45rem 0 0;
+  font-size: var(--text-xs);
+  color: var(--muted);
+  opacity: .8;
+}
 
 .mb-ai-preview__source-buttons {
   display: grid;
@@ -3085,12 +3104,52 @@
 }
 
 /* Solo (single) variant — used when iOS / Android already provide the
-   gallery vs camera choice via their native file-picker sheet. */
+   gallery vs camera choice via their native file-picker sheet. Designed
+   as a refined pill that blends with the surrounding glass card instead
+   of a full-width slab. */
 .mb-ai-preview__source-button--solo {
-  width: 100%;
-  min-height: 56px;
-  padding: 1rem 1rem;
-  font-size: var(--text-md, 1rem);
+  width: auto;
+  min-height: 46px;
+  padding: .65rem 1.25rem;
+  margin: .25rem auto 0;
+  font-size: var(--text-sm, .95rem);
+  font-weight: 600;
+  letter-spacing: .015em;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 166, 35, .55);
+  background:
+    linear-gradient(180deg, rgba(245, 166, 35, .12), rgba(245, 166, 35, .04));
+  color: var(--gold-lt, #ffd166);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .06),
+    0 1px 0 rgba(0, 0, 0, .15);
+  transition:
+    background .18s ease,
+    border-color .18s ease,
+    box-shadow .18s ease,
+    transform .12s ease;
+}
+
+.mb-ai-preview__source-button--solo:hover {
+  border-color: rgba(245, 166, 35, .85);
+  background:
+    linear-gradient(180deg, rgba(245, 166, 35, .2), rgba(245, 166, 35, .08));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .1),
+    0 4px 14px rgba(245, 166, 35, .18);
+}
+
+.mb-ai-preview__source-button--solo:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .06),
+    0 1px 4px rgba(0, 0, 0, .2);
+}
+
+.mb-ai-preview__source-button--solo > span[aria-hidden] {
+  font-size: 1.05rem;
+  margin-right: .15rem;
+  opacity: .9;
 }
 
 @media (max-width: 420px) {

@@ -1022,18 +1022,25 @@
 .mb-convenience-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: .7rem;
+  gap: .55rem;
+}
+
+@media (min-width: 768px) {
+  .mb-convenience-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: .6rem;
+  }
 }
 
 .mb-convenience-card {
   display: flex;
   align-items: center;
-  gap: .7rem;
-  min-height: 3.25rem;
-  padding: .85rem;
-  border: 1px solid rgba(255, 255, 255, .12);
+  gap: .65rem;
+  min-height: 2.75rem;
+  padding: .65rem .8rem;
+  border: 1px solid rgba(255, 255, 255, .1);
   border-radius: var(--r-md);
-  background: rgba(255, 255, 255, .06);
+  background: rgba(255, 255, 255, .05);
   color: var(--cream);
   box-shadow: var(--shadow-sm);
 }
@@ -1055,87 +1062,114 @@
   line-height: var(--leading-snug);
 }
 
-.mb-promo-clips__track {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(13rem, 78%);
-  gap: .85rem;
-  overflow-x: auto;
-  padding-bottom: .25rem;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-}
-
-.mb-promo-clip-card {
+/* ── Hero showcase strip — auto-rotating promo clip / promo cards
+   that live inside the hero. Replaces the lower-page promo-clips
+   section so this content is part of the customer's first view. ── */
+.mb-hero__showcase {
   position: relative;
-  min-height: 10.5rem;
-  display: grid;
-  align-content: end;
-  gap: .4rem;
+  margin-top: 1rem;
+  border-radius: var(--r-md, 14px);
   overflow: hidden;
-  scroll-snap-align: start;
-  padding: 1rem;
-  border: 1px solid rgba(125, 211, 252, .18);
-  border-radius: var(--r-md);
-  background:
-    linear-gradient(145deg, rgba(11, 36, 60, .96), rgba(13, 47, 80, .68)),
-    radial-gradient(circle at 20% 18%, rgba(245, 166, 35, .24), transparent 34%);
-  color: var(--cream);
-  box-shadow: var(--shadow-sm);
-  animation: mbPromoCardLift 4.5s ease-in-out infinite;
-  animation-delay: var(--clip-delay, 0ms);
+  min-height: 9.5rem;
+  isolation: isolate;
+  box-shadow: 0 18px 38px -22px rgba(0, 0, 0, .55);
 }
+.mb-hero__showcase[hidden] { display: none; }
 
-.mb-promo-clip-card__pulse {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  width: 2.35rem;
-  height: 2.35rem;
-  border-radius: 50%;
-  background: rgba(245, 166, 35, .9);
-  box-shadow: 0 0 0 0 rgba(245, 166, 35, .34);
-  animation: mbPromoPulse 1.9s ease-out infinite;
-}
-
-.mb-promo-clip-card strong {
-  font-size: var(--text-lg);
-  line-height: var(--leading-snug);
-  position: relative;
-  z-index: 2;
-}
-
-.mb-promo-clip-card p {
-  color: var(--muted);
-  font-size: var(--text-sm);
-  line-height: var(--leading-normal);
-  position: relative;
-  z-index: 2;
-}
-
-.mb-promo-clip-card--video {
-  min-height: 18rem;
-  padding: 1rem;
-  align-content: end;
-}
-
-.mb-promo-clip-card--video video {
+.mb-hero-showcase-card {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 0;
-  filter: brightness(.6);
+  display: grid;
+  grid-template-rows: 1fr auto;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .35s ease;
+}
+.mb-hero-showcase-card--visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mb-hero-showcase-card { transition: none; }
 }
 
-.mb-promo-clip-card--video::before {
+.mb-hero-showcase-card__media {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #062138;
+  background-size: cover;
+  background-position: center 35%;
+  overflow: hidden;
+}
+.mb-hero-showcase-card__media video {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  filter: brightness(.7);
+}
+.mb-hero-showcase-card__media--promo {
+  background: linear-gradient(135deg, rgba(245, 166, 35, .35), rgba(7, 31, 56, .85)),
+              radial-gradient(circle at 20% 18%, rgba(245, 166, 35, .4), transparent 50%);
+}
+.mb-hero-showcase-card::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(8, 28, 48, 0) 35%, rgba(8, 28, 48, .92) 100%);
-  z-index: 1;
+  background: linear-gradient(180deg, rgba(7, 24, 42, 0) 40%, rgba(7, 24, 42, .92) 100%);
   pointer-events: none;
+}
+
+.mb-hero-showcase-card__badge {
+  position: absolute;
+  top: .65rem;
+  left: .75rem;
+  padding: .2rem .55rem;
+  border-radius: var(--r-pill);
+  background: rgba(220, 38, 38, .9);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  z-index: 2;
+}
+
+.mb-hero-showcase-card__body {
+  position: relative;
+  z-index: 1;
+  align-self: end;
+  padding: .85rem .95rem 1rem;
+  display: grid;
+  gap: .25rem;
+  color: #fff;
+}
+.mb-hero-showcase-card__body strong {
+  font-size: var(--text-md, 1rem);
+  line-height: 1.2;
+}
+.mb-hero-showcase-card__body p {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, .82);
+  line-height: 1.35;
+}
+.mb-hero-showcase-card__cta {
+  justify-self: start;
+  margin-top: .35rem;
+  min-height: 44px;
+}
+
+@media (min-width: 768px) {
+  .mb-hero__showcase { min-height: 12rem; }
+  .mb-hero-showcase-card__body { padding: 1.1rem 1.2rem 1.2rem; }
+  .mb-hero-showcase-card__body strong { font-size: var(--text-lg, 1.15rem); }
+  .mb-hero-showcase-card__body p { font-size: var(--text-sm); }
+}
+@media (min-width: 1024px) {
+  .mb-hero__showcase { min-height: 13.5rem; }
 }
 
 .mb-portfolio-card__clip {

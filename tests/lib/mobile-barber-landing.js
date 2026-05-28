@@ -88,12 +88,12 @@ function runMobileBarberLandingTests(test) {
   });
 
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
-    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260528f');
-    assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260528f');
-    assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260528f');
+    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260528g');
+    assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260528g');
+    assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260528g');
     assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260527p');
     assertContains(html, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
-    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260528f');
+    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260528g');
   });
 
   test('Mobile Barber pages load Firebase before local runtime scripts', function() {
@@ -193,10 +193,10 @@ function runMobileBarberLandingTests(test) {
     assertNotContains(js, 'var preferredVendor = DATA && DATA.MICHAEL_VENDOR_ID', 'landingServices must not prefer Michael');
   });
 
-  test('Mobile Barber landing shows convenience + animated promo fallback sections', function() {
-    // The redundant "AI-generated mobile barber style previews" gallery was
-    // removed (those same images already render in the bookable "Latest AI
-    // Haircut Styles" carousel above). Regression guards keep it gone.
+  test('Mobile Barber landing has hero showcase + convenience; promo-clips lower section removed', function() {
+    // Style-preview gallery + lower promo-clips section both removed:
+    // promo clips moved INTO the hero showcase strip so they live in the
+    // first impression rather than buried lower on the page.
     assertNotContains(html, 'id="mbBeforeAfterGallery"',
       'redundant style-preview gallery must not be re-added');
     assertNotContains(html, 'data-i18n="beforeAfterTitle"',
@@ -206,16 +206,51 @@ function runMobileBarberLandingTests(test) {
     assertNotContains(js, "stylePreviewSuffix:",
       'redundant gallery i18n must stay removed');
 
+    // Lower promo-clips section removed in favor of the hero showcase.
+    assertNotContains(html, 'id="mbPromoClips"',
+      'lower promo-clips section must NOT exist — content moved into hero showcase');
+    assertNotContains(html, 'data-i18n="promoClipsTitle"',
+      'promoClipsTitle i18n must be removed');
+    assertNotContains(js, 'function renderPromoClips',
+      'renderPromoClips must be removed');
+    assertNotContains(css, '.mb-promo-clips__track',
+      'lower promo-clips track CSS must be removed');
+
+    // New hero showcase strip lives inside the hero section.
+    assertContains(html, 'id="mbHeroShowcase"');
+    assertContains(js, 'function renderHeroShowcase');
+    assertContains(js, 'heroShowcaseFadeTitle');
+    assertContains(js, 'heroShowcaseFamilyTitle');
+    assertContains(js, 'heroShowcaseHotelTitle');
+    assertContains(css, '.mb-hero__showcase');
+    assertContains(css, '.mb-hero-showcase-card');
+
+    // Convenience kept but compact (still present, moved near the bottom).
     assertContains(html, 'id="mbConvenienceList"');
     assertContains(html, 'data-i18n="convenienceTitle"');
-    assertContains(html, 'id="mbPromoClips"');
-    assertContains(html, 'data-i18n="promoClipsTitle"');
     assertContains(js, 'renderConvenience');
-    assertContains(js, 'renderPromoClips');
-    assertContains(js, 'Video generation is not wired');
     assertContains(css, 'mb-convenience-grid');
-    assertContains(css, 'mb-promo-clips__track');
-    assertContains(css, 'mbPromoPulse');
+  });
+
+  test('Section order: hero → services → ai-preview → trust → mb-promo → how-matching → convenience', function() {
+    var pos = function(needle) {
+      var i = html.indexOf(needle);
+      if (i < 0) throw new Error('missing marker: ' + needle);
+      return i;
+    };
+    var heroShowcase = pos('id="mbHeroShowcase"');
+    var services     = pos('id="mbServices"');
+    var aiPreview    = pos('id="mbHomeAiPreview"');
+    var trust        = pos('class="mb-trust"');
+    var promo        = pos('class="mb-section mb-promo"');
+    var howMatching  = pos('class="mb-section mb-how-matching"');
+    var convenience  = pos('class="mb-section mb-convenience"');
+    assert(heroShowcase < services,     'hero showcase must come before services');
+    assert(services     < aiPreview,    'services must come before AI preview');
+    assert(aiPreview    < trust,        'AI preview must come before trust strip');
+    assert(trust        < promo,        'trust strip must come before Latest AI Haircut Styles');
+    assert(promo        < howMatching,  '"Latest AI Haircut Styles" must come before How Matching Works');
+    assert(howMatching  < convenience,  'How Matching Works must come before Convenience');
   });
 
   test('Mobile Barber page does not duplicate global bottom navigation', function() {
@@ -235,15 +270,15 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/vendor/**"');
     assertContains(firebase, '"destination": "/mobile-barber/vendor.html"');
     assertContains(vendorHtml, 'id="mobileBarberVendorApp"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260528f');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260528g');
     assertContains(vendorHtml, 'id="mbVendorName"');
     assertContains(vendorHtml, 'id="mbVendorServices"');
     assertContains(vendorHtml, 'id="mbBookingTitle"');
     assertContains(vendorHtml, 'id="mbVendorPromoTitle"');
     assertContains(vendorHtml, 'id="mbSelectedServiceSummary"');
     assertContains(vendorHtml, 'class="mb-mobile-sticky-cta"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260528f');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260528f');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260528g');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260528g');
     assertContains(vendorHtml, '/ai-engine.js?v=20260524a');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-agent.js?v=20260527p');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
@@ -496,10 +531,10 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/dashboard"');
     assertContains(firebase, '"destination": "/mobile-barber/dashboard.html"');
     assertContains(dashboardHtml, 'id="mobileBarberDashboardApp"');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260528f');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260528f');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260528f');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260528f');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260528g');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260528g');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260528g');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260528g');
     assertContains(dashboardHtml, 'firebase-auth-compat.js');
     assertContains(dashboardHtml, '/notifications.js?v=20260525a');
     assertContains(dashboardHtml, 'id="mbBookingAlertRegion"');

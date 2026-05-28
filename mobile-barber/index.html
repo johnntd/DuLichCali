@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260528f">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260528g">
 </head>
 <body class="mb-page">
   <main class="mb-shell" id="mobileBarberApp">
@@ -55,22 +55,22 @@
           <li class="mb-trust-chip" data-i18n="trustChipTravel"></li>
           <li class="mb-trust-chip" data-i18n="trustChipFamily"></li>
         </ul>
+        <!-- Hero showcase strip — auto-rotating cards with promo clips
+             (Fade at home / Family stop / Hotel-ready) plus an extra slide
+             per active vendor promotion. Populated by renderHeroShowcase()
+             in mobile-barber.js. -->
+        <div class="mb-hero__showcase" id="mbHeroShowcase" aria-live="polite" aria-label="Featured services"></div>
       </div>
     </section>
 
-    <section class="mb-section mb-how-matching" aria-labelledby="mbHowMatchingTitle">
+    <section class="mb-section" id="mbServices" aria-labelledby="mbServicesTitle">
       <div class="mb-section__head">
-        <p class="mb-kicker" data-i18n="howMatchingKicker"></p>
-        <h2 id="mbHowMatchingTitle" data-i18n="howMatchingTitle"></h2>
-        <p data-i18n="howMatchingIntro"></p>
+        <p class="mb-kicker" data-i18n="servicesKicker"></p>
+        <h2 id="mbServicesTitle" data-i18n="servicesTitle"></h2>
       </div>
-      <ol class="mb-how-matching__steps">
-        <li><span class="mb-how-matching__num">1</span><div><strong data-i18n="howMatchingStep1Title"></strong><span data-i18n="howMatchingStep1Body"></span></div></li>
-        <li><span class="mb-how-matching__num">2</span><div><strong data-i18n="howMatchingStep2Title"></strong><span data-i18n="howMatchingStep2Body"></span></div></li>
-        <li><span class="mb-how-matching__num">3</span><div><strong data-i18n="howMatchingStep3Title"></strong><span data-i18n="howMatchingStep3Body"></span></div></li>
-        <li><span class="mb-how-matching__num">4</span><div><strong data-i18n="howMatchingStep4Title"></strong><span data-i18n="howMatchingStep4Body"></span></div></li>
-        <li><span class="mb-how-matching__num">5</span><div><strong data-i18n="howMatchingStep5Title"></strong><span data-i18n="howMatchingStep5Body"></span></div></li>
-      </ol>
+      <div class="mb-card-grid mb-service-selector" id="mbServiceList" aria-live="polite"></div>
+      <div class="mb-service-progress" id="mbServiceProgress" aria-hidden="true"></div>
+      <div class="mb-service-selection" id="mbServiceSelection" hidden></div>
     </section>
 
     <section class="mb-section mb-ai-preview-section" id="mbHomeAiPreview" aria-labelledby="mbHomeAiPreviewTitle">
@@ -140,31 +140,28 @@
       <a class="mb-button mb-button--primary mb-promo__cta" href="#mbServices" data-i18n="promoCta"></a>
     </section>
 
+    <!-- Supporting / educational content moved below booking sections -->
+    <section class="mb-section mb-how-matching" aria-labelledby="mbHowMatchingTitle">
+      <div class="mb-section__head">
+        <p class="mb-kicker" data-i18n="howMatchingKicker"></p>
+        <h2 id="mbHowMatchingTitle" data-i18n="howMatchingTitle"></h2>
+        <p data-i18n="howMatchingIntro"></p>
+      </div>
+      <ol class="mb-how-matching__steps">
+        <li><span class="mb-how-matching__num">1</span><div><strong data-i18n="howMatchingStep1Title"></strong><span data-i18n="howMatchingStep1Body"></span></div></li>
+        <li><span class="mb-how-matching__num">2</span><div><strong data-i18n="howMatchingStep2Title"></strong><span data-i18n="howMatchingStep2Body"></span></div></li>
+        <li><span class="mb-how-matching__num">3</span><div><strong data-i18n="howMatchingStep3Title"></strong><span data-i18n="howMatchingStep3Body"></span></div></li>
+        <li><span class="mb-how-matching__num">4</span><div><strong data-i18n="howMatchingStep4Title"></strong><span data-i18n="howMatchingStep4Body"></span></div></li>
+        <li><span class="mb-how-matching__num">5</span><div><strong data-i18n="howMatchingStep5Title"></strong><span data-i18n="howMatchingStep5Body"></span></div></li>
+      </ol>
+    </section>
+
     <section class="mb-section mb-convenience" aria-labelledby="mbConvenienceTitle">
       <div class="mb-section__head">
         <p class="mb-kicker" data-i18n="convenienceKicker"></p>
         <h2 id="mbConvenienceTitle" data-i18n="convenienceTitle"></h2>
       </div>
       <div class="mb-convenience-grid" id="mbConvenienceList"></div>
-    </section>
-
-    <section class="mb-section mb-promo-clips" aria-labelledby="mbPromoClipsTitle">
-      <div class="mb-section__head">
-        <p class="mb-kicker" data-i18n="promoClipsKicker"></p>
-        <h2 id="mbPromoClipsTitle" data-i18n="promoClipsTitle"></h2>
-        <p data-i18n="promoClipsCopy"></p>
-      </div>
-      <div class="mb-promo-clips__track" id="mbPromoClips"></div>
-    </section>
-
-    <section class="mb-section" id="mbServices" aria-labelledby="mbServicesTitle">
-      <div class="mb-section__head">
-        <p class="mb-kicker" data-i18n="servicesKicker"></p>
-        <h2 id="mbServicesTitle" data-i18n="servicesTitle"></h2>
-      </div>
-      <div class="mb-card-grid mb-service-selector" id="mbServiceList" aria-live="polite"></div>
-      <div class="mb-service-progress" id="mbServiceProgress" aria-hidden="true"></div>
-      <div class="mb-service-selection" id="mbServiceSelection" hidden></div>
     </section>
 
 
@@ -218,11 +215,11 @@
   </script>
   <script src="/ai-engine.js?v=20260524a"></script>
   <script src="/nailsalon/phone-intake.js?v=20260427d"></script>
-  <script src="/mobile-barber/mobile-barber-data.js?v=20260528f"></script>
-  <script src="/mobile-barber/mobile-barber-booking.js?v=20260528f"></script>
+  <script src="/mobile-barber/mobile-barber-data.js?v=20260528g"></script>
+  <script src="/mobile-barber/mobile-barber-booking.js?v=20260528g"></script>
   <script src="/mobile-barber/mobile-barber-agent.js?v=20260527p"></script>
   <script src="/mobile-barber/mobile-barber-voice.js?v=20260525f"></script>
   <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260527c"></script>
-  <script src="/mobile-barber/mobile-barber.js?v=20260528f"></script>
+  <script src="/mobile-barber/mobile-barber.js?v=20260528g"></script>
 </body>
 </html>

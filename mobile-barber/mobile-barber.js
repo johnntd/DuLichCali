@@ -39,9 +39,15 @@
       promoCta: 'Book an in-home haircut today',
       convenienceKicker: 'Convenience',
       convenienceTitle: 'Mobile Haircut Convenience',
-      promoClipsKicker: 'Promo clips',
-      promoClipsTitle: 'Animated mobile barber promos',
-      promoClipsCopy: 'Video generation is not wired on this page yet, so these cards use motion fallback instead of repeating the hero image.',
+      heroShowcaseFadeTitle: 'Fade at home',
+      heroShowcaseFadeCopy:  'Fresh fade setup, cleanup, and finish — no waiting room.',
+      heroShowcaseFadeCta:   'Book a fade',
+      heroShowcaseFamilyTitle: 'Family haircut stop',
+      heroShowcaseFamilyCopy:  'One mobile visit covers kids, seniors, and parents.',
+      heroShowcaseFamilyCta:   'Book family visit',
+      heroShowcaseHotelTitle: 'Hotel-ready grooming',
+      heroShowcaseHotelCopy:  'Business cut and beard detail before meetings or events.',
+      heroShowcaseHotelCta:   'Book business cut',
       servicesKicker: 'Services',
       servicesTitle: 'Choose a mobile barber service',
       vendorsKicker: 'Coverage',
@@ -236,9 +242,15 @@
       promoCta: 'Đặt lịch cắt tóc tại nhà hôm nay',
       convenienceKicker: 'Tiện lợi',
       convenienceTitle: 'Sự tiện lợi của cắt tóc lưu động',
-      promoClipsKicker: 'Clip quảng bá',
-      promoClipsTitle: 'Thẻ quảng bá barber có chuyển động',
-      promoClipsCopy: 'Trang này chưa nối pipeline tạo video, nên dùng thẻ chuyển động thay vì lặp lại hình hero.',
+      heroShowcaseFadeTitle: 'Fade tại nhà',
+      heroShowcaseFadeCopy:  'Cắt fade gọn gàng tại nhà, không cần ra tiệm.',
+      heroShowcaseFadeCta:   'Đặt cắt fade',
+      heroShowcaseFamilyTitle: 'Cắt cả nhà một lần',
+      heroShowcaseFamilyCopy:  'Một chuyến thợ tới nhà phục vụ cả trẻ em, người lớn tuổi và cha mẹ.',
+      heroShowcaseFamilyCta:   'Đặt cắt cả nhà',
+      heroShowcaseHotelTitle: 'Chỉnh chu trước buổi họp',
+      heroShowcaseHotelCopy:  'Cắt tóc + tỉa râu trước cuộc họp hoặc sự kiện quan trọng.',
+      heroShowcaseHotelCta:   'Đặt kiểu công sở',
       servicesKicker: 'Dịch vụ',
       servicesTitle: 'Chọn dịch vụ cắt tóc tại nhà',
       vendorsKicker: 'Khu vực',
@@ -433,9 +445,15 @@
       promoCta: 'Reservar corte en casa hoy',
       convenienceKicker: 'Conveniencia',
       convenienceTitle: 'Conveniencia del corte móvil',
-      promoClipsKicker: 'Clips promocionales',
-      promoClipsTitle: 'Promos animadas de barbero móvil',
-      promoClipsCopy: 'La generación de video aún no está conectada aquí, así que usamos tarjetas animadas en vez de repetir el hero.',
+      heroShowcaseFadeTitle: 'Fade en casa',
+      heroShowcaseFadeCopy:  'Fade limpio y prolijo sin salir de casa.',
+      heroShowcaseFadeCta:   'Reservar fade',
+      heroShowcaseFamilyTitle: 'Cortes para toda la familia',
+      heroShowcaseFamilyCopy:  'Una sola visita cubre niños, adultos mayores y padres.',
+      heroShowcaseFamilyCta:   'Reservar familiar',
+      heroShowcaseHotelTitle: 'Listo para una reunión',
+      heroShowcaseHotelCopy:  'Corte de negocios y detalle de barba antes del evento.',
+      heroShowcaseHotelCta:   'Reservar corte ejecutivo',
       servicesKicker: 'Servicios',
       servicesTitle: 'Elija un servicio de barbero móvil',
       vendorsKicker: 'Cobertura',
@@ -1676,38 +1694,124 @@
     });
   }
 
-  function renderPromoClips() {
-    var list = document.getElementById('mbPromoClips');
-    if (!list) return;
-    list.innerHTML = '';
-    var rails = [
-      ['Fade at home', 'Fresh fade setup, cleanup, and finish without a waiting room.', '/assets/mobile-barber/clips/fade-1.mp4', '/assets/mobile-barber/portfolio/fade-1-after.jpg'],
-      ['Family haircut stop', 'One mobile visit can cover kids, seniors, and parents.', '/assets/mobile-barber/clips/family-haircut-1.mp4', '/assets/mobile-barber/portfolio/family-haircut-1-after.jpg'],
-      ['Hotel-ready grooming', 'Business cut and beard detail before meetings or events.', '/assets/mobile-barber/clips/business-haircut-1.mp4', '/assets/mobile-barber/portfolio/business-haircut-1-after.jpg']
-    ];
-    rails.forEach(function(row, index) {
-      var card = el('article', 'mb-promo-clip-card mb-promo-clip-card--video');
-      var title = el('strong');
-      var copy = el('p');
-      card.style.setProperty('--clip-delay', String(index * 120) + 'ms');
-      var video = document.createElement('video');
-      video.src = row[2];
-      video.poster = row[3];
-      video.autoplay = true;
-      video.loop = true;
-      video.muted = true;
-      video.playsInline = true;
-      video.setAttribute('playsinline', '');
-      video.setAttribute('preload', 'metadata');
-      video.setAttribute('aria-label', row[0]);
-      title.textContent = row[0];
-      copy.textContent = row[1];
-      card.appendChild(video);
-      card.appendChild(title);
-      card.appendChild(copy);
-      list.appendChild(card);
+  // Hero showcase strip — auto-rotating cards inside the hero section:
+  // promo clips (Fade / Family / Hotel) plus an extra slide per active
+  // vendor promotion. Each slide has a large visual + headline + CTA.
+  // Replaces the previous lower-page "Animated mobile barber promos"
+  // section so this content lives in the customer's first impression.
+  var _heroShowcaseTimer = null;
+  function renderHeroShowcase() {
+    var mount = document.getElementById('mbHeroShowcase');
+    if (!mount) return;
+    if (_heroShowcaseTimer) { clearInterval(_heroShowcaseTimer); _heroShowcaseTimer = null; }
+    mount.innerHTML = '';
+
+    var slides = [];
+    // Slide 1-3: hardcoded mobile-barber promo clips.
+    slides.push({
+      type: 'clip',
+      key:  'heroShowcaseFade',
+      title: t('heroShowcaseFadeTitle') || 'Fade at home',
+      copy:  t('heroShowcaseFadeCopy')  || 'Fresh fade setup, cleanup, and finish without a waiting room.',
+      cta:   t('heroShowcaseFadeCta')   || 'Book a fade',
+      video: '/assets/mobile-barber/clips/fade-1.mp4',
+      poster:'/assets/mobile-barber/portfolio/fade-1-after.jpg',
+      action: function() { openAssistantPanel('general'); }
     });
+    slides.push({
+      type: 'clip',
+      key:  'heroShowcaseFamily',
+      title: t('heroShowcaseFamilyTitle') || 'Family haircut stop',
+      copy:  t('heroShowcaseFamilyCopy')  || 'One mobile visit can cover kids, seniors, and parents.',
+      cta:   t('heroShowcaseFamilyCta')   || 'Book family visit',
+      video: '/assets/mobile-barber/clips/family-haircut-1.mp4',
+      poster:'/assets/mobile-barber/portfolio/family-haircut-1-after.jpg',
+      action: function() { openAssistantPanel('general'); }
+    });
+    slides.push({
+      type: 'clip',
+      key:  'heroShowcaseHotel',
+      title: t('heroShowcaseHotelTitle') || 'Hotel-ready grooming',
+      copy:  t('heroShowcaseHotelCopy')  || 'Business cut and beard detail before meetings or events.',
+      cta:   t('heroShowcaseHotelCta')   || 'Book business cut',
+      video: '/assets/mobile-barber/clips/business-haircut-1.mp4',
+      poster:'/assets/mobile-barber/portfolio/business-haircut-1-after.jpg',
+      action: function() { openAssistantPanel('general'); }
+    });
+
+    // Slide 4+: one slide per active vendor promotion (live).
+    (collectActiveCustomerPromos() || []).forEach(function(promo) {
+      slides.push({
+        type:  'promo',
+        key:   'heroShowcasePromo-' + (promo.id || ''),
+        title: promo.name || (t('heroPromoBadgeOff') || 'OFF'),
+        copy:  promo.description ||
+               interpolate(t('heroPromoBadge') || '{pct}% OFF', { pct: Number(promo.discountPercent || 0) }),
+        cta:   t('heroPromoCta') || 'Book this discount',
+        badge: '🔥 ' + Number(promo.discountPercent || 0) + '% ' + (t('heroPromoBadgeOff') || 'OFF'),
+        promo: promo,
+        action: function() { openAssistantPanel('general'); }
+      });
+    });
+
+    if (!slides.length) { mount.hidden = true; return; }
+    mount.hidden = false;
+
+    // Render every slide as a card; only one is visible at a time via the
+    // --visible modifier. CSS handles the fade transition.
+    slides.forEach(function(slide, idx) {
+      var card = el('article', 'mb-hero-showcase-card mb-hero-showcase-card--' + slide.type);
+      if (idx === 0) card.classList.add('mb-hero-showcase-card--visible');
+      card.setAttribute('data-key', slide.key);
+
+      var media = el('div', 'mb-hero-showcase-card__media');
+      if (slide.type === 'clip' && slide.video) {
+        var video = document.createElement('video');
+        video.src = slide.video;
+        if (slide.poster) video.poster = slide.poster;
+        video.autoplay = true; video.loop = true; video.muted = true;
+        video.playsInline = true;
+        video.setAttribute('playsinline', '');
+        video.setAttribute('preload', 'metadata');
+        video.setAttribute('aria-hidden', 'true');
+        media.appendChild(video);
+      } else if (slide.poster) {
+        media.style.backgroundImage = "url('" + slide.poster + "')";
+      } else if (slide.type === 'promo') {
+        media.classList.add('mb-hero-showcase-card__media--promo');
+      }
+      card.appendChild(media);
+
+      if (slide.badge) {
+        var badge = el('span', 'mb-hero-showcase-card__badge');
+        badge.textContent = slide.badge;
+        card.appendChild(badge);
+      }
+      var body = el('div', 'mb-hero-showcase-card__body');
+      var title = el('strong'); title.textContent = slide.title;
+      var copy = el('p');        copy.textContent  = slide.copy;
+      var cta = el('button', 'mb-button mb-button--primary mb-button--sm mb-hero-showcase-card__cta');
+      cta.type = 'button';
+      cta.textContent = slide.cta;
+      cta.addEventListener('click', function(e) { e.preventDefault(); slide.action(); });
+      body.appendChild(title); body.appendChild(copy); body.appendChild(cta);
+      card.appendChild(body);
+      mount.appendChild(card);
+    });
+
+    // Auto-rotate every 5s when there's more than one slide.
+    if (slides.length > 1) {
+      var active = 0;
+      _heroShowcaseTimer = setInterval(function() {
+        var cards = mount.querySelectorAll('.mb-hero-showcase-card');
+        if (!cards.length) return;
+        cards[active].classList.remove('mb-hero-showcase-card--visible');
+        active = (active + 1) % cards.length;
+        cards[active].classList.add('mb-hero-showcase-card--visible');
+      }, 5000);
+    }
   }
+  if (typeof window !== 'undefined') window._mbRenderHeroShowcase = renderHeroShowcase;
 
   function coverageRegionsFromVendors() {
     // Group active vendors into coverage regions instead of leaking individual
@@ -1817,7 +1921,7 @@
     setText(document);
     renderPromoPreview();
     renderConvenience();
-    renderPromoClips();
+    renderHeroShowcase();
     renderServices();
     renderVendors();
     document.querySelectorAll('.mb-language__button').forEach(function(btn) {
@@ -2821,6 +2925,7 @@
     loadVendorPromosFromFirestore()
       .then(function() {
         renderHeroPromoSpotlight();
+        renderHeroShowcase();
         renderServices();
       })
       .then(function() { subscribeVendorPromos(); })
@@ -2954,6 +3059,7 @@
                 vendorId: vendorId, count: (_vendorPromosFor(vendorId) || []).length
               });
               renderHeroPromoSpotlight();
+              renderHeroShowcase();
               renderServices();
             }
           }, function(err) {

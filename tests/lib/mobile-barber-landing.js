@@ -88,12 +88,12 @@ function runMobileBarberLandingTests(test) {
   });
 
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
-    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260528l');
-    assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260528l');
-    assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260528l');
+    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260528m');
+    assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260528m');
+    assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260528m');
     assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260527p');
     assertContains(html, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
-    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260528l');
+    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260528m');
   });
 
   test('Mobile Barber pages load Firebase before local runtime scripts', function() {
@@ -144,7 +144,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(js, 'voiceSelectedService');
     assertContains(html, 'id="mbPromoTitle"');
     assertContains(html, 'id="mbPromoPreview"');
-    assertContains(js, "promoTitle: 'Latest AI Haircut Styles'");
+    assertContains(js, "promoTitle: 'See Your Next Hairstyle Before You Book'");
     assertContains(js, 'renderPromoPreview');
     assertContains(js, 'promoContentItems');
     assertContains(js, 'clipUrl');
@@ -239,24 +239,26 @@ function runMobileBarberLandingTests(test) {
     assertContains(css, 'mb-convenience-grid');
   });
 
-  test('Section order: hero → services → ai-preview → trust → mb-promo → how-matching → convenience', function() {
+  test('Section order: hero → AI haircut styles → services → AI preview → trust → how-matching → convenience', function() {
     var pos = function(needle) {
       var i = html.indexOf(needle);
       if (i < 0) throw new Error('missing marker: ' + needle);
       return i;
     };
     var heroShowcase = pos('id="mbHeroMedia"');
+    var promo        = pos('class="mb-section mb-promo"');
     var services     = pos('id="mbServices"');
     var aiPreview    = pos('id="mbHomeAiPreview"');
     var trust        = pos('class="mb-trust"');
-    var promo        = pos('class="mb-section mb-promo"');
     var howMatching  = pos('class="mb-section mb-how-matching"');
     var convenience  = pos('class="mb-section mb-convenience"');
-    assert(heroShowcase < services,     'hero showcase must come before services');
-    assert(services     < aiPreview,    'services must come before AI preview');
+    // "Latest AI Haircut Styles" moved RIGHT AFTER the hero — it is the
+    // platform's flagship visual feature and drives conversion.
+    assert(heroShowcase < promo,        'hero must come before AI haircut styles carousel');
+    assert(promo        < services,     'AI haircut styles must come BEFORE services (flagship feature)');
+    assert(services     < aiPreview,    'services must come before AI preview/upload');
     assert(aiPreview    < trust,        'AI preview must come before trust strip');
-    assert(trust        < promo,        'trust strip must come before Latest AI Haircut Styles');
-    assert(promo        < howMatching,  '"Latest AI Haircut Styles" must come before How Matching Works');
+    assert(trust        < howMatching,  'trust strip must come before How Matching Works');
     assert(howMatching  < convenience,  'How Matching Works must come before Convenience');
   });
 
@@ -277,15 +279,15 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/vendor/**"');
     assertContains(firebase, '"destination": "/mobile-barber/vendor.html"');
     assertContains(vendorHtml, 'id="mobileBarberVendorApp"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260528l');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260528m');
     assertContains(vendorHtml, 'id="mbVendorName"');
     assertContains(vendorHtml, 'id="mbVendorServices"');
     assertContains(vendorHtml, 'id="mbBookingTitle"');
     assertContains(vendorHtml, 'id="mbVendorPromoTitle"');
     assertContains(vendorHtml, 'id="mbSelectedServiceSummary"');
     assertContains(vendorHtml, 'class="mb-mobile-sticky-cta"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260528l');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260528l');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260528m');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260528m');
     assertContains(vendorHtml, '/ai-engine.js?v=20260524a');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-agent.js?v=20260527p');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
@@ -538,10 +540,10 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/dashboard"');
     assertContains(firebase, '"destination": "/mobile-barber/dashboard.html"');
     assertContains(dashboardHtml, 'id="mobileBarberDashboardApp"');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260528l');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260528l');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260528l');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260528l');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260528m');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260528m');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260528m');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260528m');
     assertContains(dashboardHtml, 'firebase-auth-compat.js');
     assertContains(dashboardHtml, '/notifications.js?v=20260525a');
     assertContains(dashboardHtml, 'id="mbBookingAlertRegion"');

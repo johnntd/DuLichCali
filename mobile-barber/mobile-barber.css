@@ -812,18 +812,22 @@
   letter-spacing: .03em;
 }
 
+/* ── Flagship "See Your Next Hairstyle Before You Book" carousel ──
+   Repositioned right after the hero. Cinematic gold-tinted backdrop,
+   taller cards, smoother scroll-snap, premium typography. */
 .mb-promo {
   display: grid;
-  gap: 1rem;
-  margin: .5rem 0 1rem;
-  padding: 1rem;
+  gap: 1.1rem;
+  margin: 1rem 0 1.25rem;
+  padding: 1.25rem 1.1rem 1.35rem;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, .13);
+  border: 1px solid rgba(245, 166, 35, .22);
   border-radius: var(--r-md);
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .035)),
-    radial-gradient(circle at 20% 0%, rgba(245, 166, 35, .18), transparent 18rem);
-  box-shadow: var(--shadow-sm);
+    linear-gradient(135deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .02)),
+    radial-gradient(circle at 22% -10%, rgba(245, 166, 35, .26), transparent 22rem),
+    radial-gradient(circle at 95% 110%, rgba(56, 189, 248, .12), transparent 16rem);
+  box-shadow: var(--shadow-md, 0 14px 30px -16px rgba(0, 0, 0, .55));
 }
 
 .mb-promo__copy {
@@ -831,43 +835,74 @@
   gap: .55rem;
 }
 
+.mb-promo__copy .mb-kicker {
+  color: #fcd34d;
+}
+
 .mb-promo__copy h2 {
   color: var(--cream);
-  font-size: var(--text-2xl);
-  line-height: var(--leading-snug);
+  font-family: var(--font-d, 'Bodoni Moda', serif);
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  line-height: 1.08;
+  letter-spacing: -.01em;
+  max-width: 22ch;
+  font-weight: 400;
 }
 
 .mb-promo__copy p {
-  color: var(--muted);
-  line-height: var(--leading-normal);
+  color: var(--text);
+  opacity: .88;
+  line-height: var(--leading-relaxed, 1.6);
+  max-width: 56ch;
+  font-size: var(--text-sm);
+}
+
+@media (min-width: 768px) {
+  .mb-promo { padding: 1.6rem 1.5rem 1.7rem; }
+  .mb-promo__copy h2 { font-size: clamp(2rem, 3.5vw, 2.6rem); }
+  .mb-promo__copy p { font-size: var(--text-md, 1rem); }
 }
 
 .mb-promo__preview {
   display: flex;
-  gap: .7rem;
-  margin-inline: -1rem;
-  padding: .15rem 1rem .5rem;
+  gap: .85rem;
+  margin-inline: -1.1rem;
+  padding: .25rem 1.1rem .75rem;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
-  scroll-padding-inline: 1rem;
+  scroll-padding-inline: 1.1rem;
+  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
 }
 
-.mb-promo__preview::-webkit-scrollbar {
-  display: none;
-}
+.mb-promo__preview::-webkit-scrollbar { display: none; }
 
 .mb-promo__card {
   position: relative;
-  flex: 0 0 11.5rem;
+  flex: 0 0 13rem;             /* was 11.5rem — wider for cinematic feel */
   scroll-snap-align: start;
   display: grid;
-  grid-template-rows: 8rem auto;
+  grid-template-rows: 11rem auto; /* was 8rem — taller, more cinematic */
   border-radius: var(--r-md);
   overflow: hidden;
-  background: rgba(255, 255, 255, .06);
+  background: rgba(255, 255, 255, .05);
   border: 1px solid rgba(255, 255, 255, .12);
+  box-shadow: 0 6px 18px -10px rgba(0, 0, 0, .55);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.mb-promo__card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(245, 166, 35, .45);
+  box-shadow: 0 16px 32px -16px rgba(0, 0, 0, .65);
+}
+
+@media (min-width: 640px) {
+  .mb-promo__card { flex: 0 0 14rem; grid-template-rows: 12rem auto; }
+}
+@media (min-width: 1024px) {
+  .mb-promo__card { flex: 0 0 16rem; grid-template-rows: 13.5rem auto; }
 }
 
 .mb-promo__card img {
@@ -879,8 +914,8 @@
 
 .mb-promo__card-body {
   display: grid;
-  gap: .18rem;
-  padding: .55rem .7rem .7rem;
+  gap: .25rem;
+  padding: .7rem .85rem .85rem;
 }
 
 .mb-promo__card-body strong {

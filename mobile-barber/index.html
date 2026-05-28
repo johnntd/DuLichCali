@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260528l">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260528m">
 </head>
 <body class="mb-page">
   <main class="mb-shell" id="mobileBarberApp">
@@ -50,6 +50,19 @@
           <li class="mb-trust-chip" data-i18n="trustChipFamily"></li>
         </ul>
       </div>
+    </section>
+
+    <!-- Flagship "Latest AI Haircut Styles" carousel — moved up directly
+         after the hero. AI hairstyle previews are the platform's most
+         visually-impressive feature; surfacing them early drives conversion. -->
+    <section class="mb-section mb-promo" aria-labelledby="mbPromoTitle">
+      <div class="mb-promo__copy">
+        <p class="mb-kicker" data-i18n="promoKicker"></p>
+        <h2 id="mbPromoTitle" data-i18n="promoTitle"></h2>
+        <p data-i18n="promoCopy"></p>
+      </div>
+      <div class="mb-promo__preview" id="mbPromoPreview" aria-live="polite"></div>
+      <a class="mb-button mb-button--primary mb-promo__cta" href="#mbServices" data-i18n="promoCta"></a>
     </section>
 
     <section class="mb-section" id="mbServices" aria-labelledby="mbServicesTitle">
@@ -117,16 +130,6 @@
         <strong data-i18n="trustConfirmTitle"></strong>
         <p data-i18n="trustConfirmCopy"></p>
       </article>
-    </section>
-
-    <section class="mb-section mb-promo" aria-labelledby="mbPromoTitle">
-      <div class="mb-promo__copy">
-        <p class="mb-kicker" data-i18n="promoKicker"></p>
-        <h2 id="mbPromoTitle" data-i18n="promoTitle"></h2>
-        <p data-i18n="promoCopy"></p>
-      </div>
-      <div class="mb-promo__preview" id="mbPromoPreview" aria-live="polite"></div>
-      <a class="mb-button mb-button--primary mb-promo__cta" href="#mbServices" data-i18n="promoCta"></a>
     </section>
 
     <!-- Supporting / educational content moved below booking sections -->
@@ -204,11 +207,11 @@
   </script>
   <script src="/ai-engine.js?v=20260524a"></script>
   <script src="/nailsalon/phone-intake.js?v=20260427d"></script>
-  <script src="/mobile-barber/mobile-barber-data.js?v=20260528l"></script>
-  <script src="/mobile-barber/mobile-barber-booking.js?v=20260528l"></script>
+  <script src="/mobile-barber/mobile-barber-data.js?v=20260528m"></script>
+  <script src="/mobile-barber/mobile-barber-booking.js?v=20260528m"></script>
   <script src="/mobile-barber/mobile-barber-agent.js?v=20260527p"></script>
   <script src="/mobile-barber/mobile-barber-voice.js?v=20260525f"></script>
   <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260527c"></script>
-  <script src="/mobile-barber/mobile-barber.js?v=20260528l"></script>
+  <script src="/mobile-barber/mobile-barber.js?v=20260528m"></script>
 </body>
 </html>

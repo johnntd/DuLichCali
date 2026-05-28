@@ -1648,22 +1648,115 @@ const HomepagePersonalizer = (() => {
 })();
 
 // ── Featured vendor helpers ───────────────────────────────────
-// ── Vendor admin-status cache (populated from Firestore on load) ─────────────
+// ── Vendor admin cache (populated from Firestore once on load) ───────────────
+// Stores BOTH adminStatus AND category+region so the homepage can answer
+// "does this category have any active vendor in this region?" without a
+// second Firestore round-trip. Drives:
+//   - _isVendorActive(vendorId)
+//   - _hasActiveVendorInCategory(category, regionId)
+//   - HOMEPAGE_MARKETPLACE_ENTRIES gating
+//   - Hero carousel slide visibility
 window._vendorAdminStatus = {}; // vendorId → 'active'|'blocked'|'deactivated'|'archived'
+window._vendorAdminMeta = {};   // vendorId → { category, region, active }
+window._vendorAdminCacheReady = null; // Promise that resolves after the first load
 
-async function loadVendorAdminStatuses() {
-  try {
-    const snap = await db.collection('vendors').get();
-    snap.docs.forEach(doc => {
-      const s = doc.data().adminStatus;
-      if (s) window._vendorAdminStatus[doc.id] = s;
-    });
-  } catch (_) { /* fail open — show all vendors if Firestore unreachable */ }
+function loadVendorAdminStatuses() {
+  if (window._vendorAdminCacheReady) return window._vendorAdminCacheReady;
+  window._vendorAdminCacheReady = (async function() {
+    try {
+      const snap = await db.collection('vendors').get();
+      snap.docs.forEach(doc => {
+        const d = doc.data() || {};
+        if (d.adminStatus) window._vendorAdminStatus[doc.id] = d.adminStatus;
+        window._vendorAdminMeta[doc.id] = {
+          category: String(d.category || '').toLowerCase(),
+          region:   String(d.region   || '').toLowerCase(),
+          active:   d.active !== false && d.disabled !== true
+        };
+      });
+    } catch (_) { /* fail open — show all vendors if Firestore unreachable */ }
+    return true;
+  })();
+  return window._vendorAdminCacheReady;
 }
 
 function _isVendorActive(vendorId) {
   const s = window._vendorAdminStatus[vendorId];
   return !s || s === 'active'; // undefined or 'active' = show
+}
+
+// Cache-driven gate: is there at least one currently-active vendor in this
+// (category, region)? Used by the hero carousel + marketplace region cards
+// so we never surface a category that has no real underlying provider.
+// Falls back to MARKETPLACE static data when the Firestore cache is empty,
+// so the gate still works on offline / blocked-rules first paint.
+function _hasActiveVendorInCategory(category, regionId) {
+  const cat = String(category || '').toLowerCase();
+  if (!cat) return false;
+  const meta = window._vendorAdminMeta || {};
+  const ids  = Object.keys(meta);
+  // Pass 1: prefer the Firestore-derived cache when populated.
+  if (ids.length) {
+    for (let i = 0; i < ids.length; i++) {
+      const m = meta[ids[i]];
+      if (!m || !m.active) continue;
+      if (m.category !== cat) continue;
+      if (window._vendorAdminStatus[ids[i]] && window._vendorAdminStatus[ids[i]] !== 'active') continue;
+      if (regionId && !_regionMatchesId(m.region, regionId)) continue;
+      return true;
+    }
+  }
+  // Pass 2: static MARKETPLACE fallback for the first paint while the
+  // Firestore cache is still loading or unavailable.
+  if (window.MARKETPLACE && Array.isArray(window.MARKETPLACE.businesses)) {
+    for (let i = 0; i < window.MARKETPLACE.businesses.length; i++) {
+      const b = window.MARKETPLACE.businesses[i];
+      if (!b || !b.active || b.disabled === true || b.homepageActive === false) continue;
+      if (String(b.category || '').toLowerCase() !== cat) continue;
+      if (regionId && !(Array.isArray(b.featuredRegions) && b.featuredRegions.indexOf(regionId) >= 0)) continue;
+      if (!_isVendorActive(b.id)) continue;
+      return true;
+    }
+  }
+  return false;
+}
+
+// Canonical single-item visibility filter. EVERY homepage surface that lists
+// vendors must run each candidate through this before rendering. Keep the
+// rules in one place so admin toggles / closed hours / region gating behave
+// consistently across hero, featured, and category cards.
+function isPublicProviderVisible(biz, regionId) {
+  if (!biz) return false;
+  // 1) Hard inactive flags.
+  if (biz.active === false || biz.disabled === true) return false;
+  if (biz.status && String(biz.status).toLowerCase() === 'inactive') return false;
+  // 2) Firestore-cached adminStatus (covers vendors that came from the
+  // static MARKETPLACE list but were toggled inactive in the admin panel).
+  if (biz.id && !_isVendorActive(biz.id)) return false;
+  // 3) Region gate (optional). Allow vendors whose region matches OR whose
+  // featuredRegions list includes the current region.
+  if (regionId) {
+    const regionStr = String(biz.region || '').toLowerCase();
+    const featured  = Array.isArray(biz.featuredRegions) ? biz.featuredRegions : [];
+    if (regionStr && !_regionMatchesId(regionStr, regionId) && featured.indexOf(regionId) < 0) {
+      return false;
+    }
+  }
+  // 4) Marketplace region cards (Mobile Barber) are always-available
+  // routing placeholders and have no business hours.
+  if (biz._homepageMarketplaceEntry === true) return true;
+  if (biz.availabilityStatus && biz.availabilityStatus !== 'closed') return true;
+  // 5) Anything else: real-time business hours.
+  if (typeof computeBizAvailability === 'function') {
+    const avail = computeBizAvailability(biz);
+    if (avail && avail.status === 'closed') return false;
+  }
+  return true;
+}
+
+if (typeof window !== 'undefined') {
+  window.isPublicProviderVisible = isPublicProviderVisible;
+  window._hasActiveVendorInCategory = _hasActiveVendorInCategory;
 }
 
 function getFeaturedVendors(regionId) {
@@ -1731,12 +1824,21 @@ function _withHomepageMarketplaceEntries(vendors, regionId) {
   HOMEPAGE_MARKETPLACE_ENTRIES.forEach(entry => {
     if (!entry.active || !entry.homepageActive || !_isVendorActive(entry.id)) return;
     if (regionId && !(entry.featuredRegions || []).includes(regionId)) return;
+    // CRITICAL: never surface a region routing card whose underlying provider
+    // pool is empty. e.g. don't show "Mobile Barber — OC" if there are zero
+    // active barbers serving OC. Falls open ONLY when the cache hasn't loaded
+    // yet AND the static catalog also has zero entries (very edge-case).
+    const targetRegion = (entry.featuredRegions || [])[0] || regionId || null;
+    if (!_hasActiveVendorInCategory(entry.category, targetRegion)) return;
+    // Tag with the bypass flag so isPublicProviderVisible doesn't gate them
+    // on business-hours (they're always-available routing placeholders).
+    const tagged = Object.assign({}, entry, { _homepageMarketplaceEntry: true });
     const exists = list.some(v =>
-      v.id === entry.id ||
-      v.href === entry.href ||
-      (v.category === entry.category && v.name === entry.name)
+      v.id === tagged.id ||
+      v.href === tagged.href ||
+      (v.category === tagged.category && v.name === tagged.name)
     );
-    if (!exists) list.push(entry);
+    if (!exists) list.push(tagged);
   });
   return list.sort((a, b) =>
     ((a.featuredPriority || 99) - (b.featuredPriority || 99)) ||
@@ -1798,6 +1900,14 @@ async function renderHomepageVendors(regionId) {
   // Update section title
   const regionName = window.DLCRegion?.current?.name;
   if (titleEl) titleEl.textContent = regionName ? `Featured in ${regionName}` : 'Marketplace';
+
+  // Wait for the admin-status cache so the static-fallback path doesn't
+  // leak inactive vendors on first paint. This is what caused the bug
+  // where the homepage showed inactive cards until the user changed
+  // location — by then the cache had loaded in the background.
+  if (window._vendorAdminCacheReady && typeof window._vendorAdminCacheReady.then === 'function') {
+    try { await window._vendorAdminCacheReady; } catch (_) {}
+  }
 
   let vendors = [];
 
@@ -1865,11 +1975,12 @@ async function renderHomepageVendors(regionId) {
   }
 
   // PUBLIC VISIBILITY GATE — strip vendors that customers should not see:
-  //   1) flagged inactive (active === false)
+  //   1) flagged inactive (active === false / disabled / status=inactive)
   //   2) currently outside business hours (computeBizAvailability → 'closed')
+  //   3) outside the selected region (when regionId is provided)
   // Homepage marketplace entries (the Mobile Barber region cards) bypass
   // the closed check because they're always available (no business hours).
-  vendors = _filterPubliclyVisibleVendors(vendors);
+  vendors = _filterPubliclyVisibleVendors(vendors, regionId);
 
   if (!vendors.length) {
     // Per business rule: do not render the section at all when there are
@@ -1877,34 +1988,27 @@ async function renderHomepageVendors(regionId) {
     // explicit setting opts in.
     section.hidden = true;
     container.innerHTML = '';
+    // Hero carousel must also reflect this — if no vendors are visible at
+    // all in the selected region, downstream slides for those categories
+    // should be hidden too.
+    if (typeof applyHeroSlideVisibility === 'function') applyHeroSlideVisibility(regionId);
     return;
   }
 
   section.hidden = false;
   container.innerHTML = vendors.map(buildVendorCardHtml).join('');
+  // Sync hero carousel to the same active-category set.
+  if (typeof applyHeroSlideVisibility === 'function') applyHeroSlideVisibility(regionId);
 }
 
 // Pure helper: filter a vendor list down to those a customer should see on
-// the public homepage right now. Exported on window for tests.
-function _filterPubliclyVisibleVendors(vendors) {
+// the public homepage right now. Delegates to isPublicProviderVisible so
+// every surface uses the same rules. regionId is optional — pass null to
+// keep cross-region listings (e.g. legacy callers).
+function _filterPubliclyVisibleVendors(vendors, regionId) {
   if (!Array.isArray(vendors)) return [];
   return vendors.filter(function(biz) {
-    if (!biz) return false;
-    // 1) Inactive vendors never appear publicly.
-    if (biz.active === false || biz.disabled === true) return false;
-    if (biz.status && String(biz.status).toLowerCase() === 'inactive') return false;
-    // 2) Homepage marketplace entries (e.g. Mobile Barber region cards)
-    // are always-available routing placeholders and don't have hours.
-    if (biz._homepageMarketplaceEntry === true) return true;
-    if (biz.availabilityStatus && biz.availabilityStatus !== 'closed') return true;
-    // 3) Anything else: check real-time availability via business hours.
-    // Hide if currently closed (matches what customers expect from
-    // "Featured in <region>" — they shouldn't see un-bookable cards).
-    if (typeof computeBizAvailability === 'function') {
-      var avail = computeBizAvailability(biz);
-      if (avail && avail.status === 'closed') return false;
-    }
-    return true;
+    return isPublicProviderVisible(biz, regionId || null);
   });
 }
 
@@ -2046,57 +2150,119 @@ function heroCarouselCta(service) {
   }
 }
 
+// Hide hero carousel slides whose category has no active vendor in the
+// current region. Slides without a [data-hc-category] (e.g. the Airport
+// slide) are always shown. Dots for hidden slides are also hidden so the
+// carousel pagination stays honest.
+function applyHeroSlideVisibility(regionId) {
+  var el = document.getElementById('heroCarousel');
+  if (!el) return;
+  var allSlides = el.querySelectorAll('.hc__slide');
+  var allDots   = el.querySelectorAll('.hc__dot');
+  var anyChange = false;
+  allSlides.forEach(function(slide, idx) {
+    var cat = slide.getAttribute('data-hc-category');
+    if (!cat) { slide.hidden = false; if (allDots[idx]) allDots[idx].hidden = false; return; }
+    var visible = _hasActiveVendorInCategory(cat, regionId || (window.DLCRegion && DLCRegion.current && DLCRegion.current.id));
+    if (slide.hidden !== !visible) anyChange = true;
+    slide.hidden = !visible;
+    if (allDots[idx]) allDots[idx].hidden = !visible;
+  });
+  if (anyChange && window.HeroCarousel && typeof HeroCarousel.refresh === 'function') {
+    HeroCarousel.refresh();
+  }
+}
+if (typeof window !== 'undefined') {
+  window.applyHeroSlideVisibility = applyHeroSlideVisibility;
+}
+
 var HeroCarousel = (function () {
-  var SLIDES   = 4;
   var DURATION = 5000;
   var current  = 0;
   var timer    = null;
-  var slides, dots, bar;
+  var bar;
   var startX = 0;
+  var rootEl = null;
+
+  function visibleSlides() {
+    if (!rootEl) return [];
+    return Array.prototype.filter.call(
+      rootEl.querySelectorAll('.hc__slide'),
+      function(s) { return !s.hidden; }
+    );
+  }
+  function visibleDots() {
+    if (!rootEl) return [];
+    return Array.prototype.filter.call(
+      rootEl.querySelectorAll('.hc__dot'),
+      function(d) { return !d.hidden; }
+    );
+  }
 
   function init() {
-    var el = document.getElementById('heroCarousel');
-    if (!el) return;
-    slides = el.querySelectorAll('.hc__slide');
-    dots   = el.querySelectorAll('.hc__dot');
-    SLIDES = slides.length; // always matches actual slide count in HTML
-    bar    = document.getElementById('hcProgressBar');
+    rootEl = document.getElementById('heroCarousel');
+    if (!rootEl) return;
+    bar = document.getElementById('hcProgressBar');
 
-    dots.forEach(function (dot) {
+    rootEl.querySelectorAll('.hc__dot').forEach(function (dot) {
       dot.addEventListener('click', function () {
-        goto(parseInt(dot.dataset.dot, 10));
+        if (dot.hidden) return;
+        var vis = visibleDots();
+        var idx = vis.indexOf(dot);
+        if (idx >= 0) goto(idx);
       });
     });
 
-    el.addEventListener('touchstart', function (e) {
+    rootEl.addEventListener('touchstart', function (e) {
       startX = e.changedTouches[0].clientX;
     }, { passive: true });
 
-    el.addEventListener('touchend', function (e) {
+    rootEl.addEventListener('touchend', function (e) {
       var dx = e.changedTouches[0].clientX - startX;
       if (Math.abs(dx) < 44) return;
-      goto(dx < 0 ? (current + 1) % SLIDES : (current - 1 + SLIDES) % SLIDES);
+      var len = visibleSlides().length;
+      if (len < 2) return;
+      goto(dx < 0 ? (current + 1) % len : (current - 1 + len) % len);
     }, { passive: true });
 
+    refresh();
     start();
   }
 
+  // Re-sync to the current visible-slide set. Called after
+  // applyHeroSlideVisibility hides/shows slides based on active vendors.
+  function refresh() {
+    var slides = visibleSlides();
+    var dots   = visibleDots();
+    if (!slides.length) return;
+    // Clamp current to the visible range.
+    if (current >= slides.length) current = 0;
+    slides.forEach(function(s, i) { s.classList.toggle('hc__slide--active', i === current); });
+    dots.forEach(function(d, i) {
+      d.classList.toggle('hc__dot--active', i === current);
+      d.setAttribute('aria-selected', i === current ? 'true' : 'false');
+    });
+  }
+
   function goto(idx) {
-    slides[current].classList.remove('hc__slide--active');
-    dots[current].classList.remove('hc__dot--active');
-    dots[current].setAttribute('aria-selected', 'false');
-    current = idx;
+    var slides = visibleSlides();
+    var dots   = visibleDots();
+    if (!slides.length) return;
+    if (slides[current]) slides[current].classList.remove('hc__slide--active');
+    if (dots[current])   { dots[current].classList.remove('hc__dot--active'); dots[current].setAttribute('aria-selected', 'false'); }
+    current = ((idx % slides.length) + slides.length) % slides.length;
     slides[current].classList.add('hc__slide--active');
-    dots[current].classList.add('hc__dot--active');
-    dots[current].setAttribute('aria-selected', 'true');
+    if (dots[current]) { dots[current].classList.add('hc__dot--active'); dots[current].setAttribute('aria-selected', 'true'); }
     stop();
     start();
   }
 
   function start() {
+    var len = visibleSlides().length;
+    if (len < 2) return; // no rotation needed with 0 or 1 visible slide
     animateProgress();
     timer = setTimeout(function () {
-      goto((current + 1) % SLIDES);
+      goto((current + 1) % len);
     }, DURATION);
   }
 
@@ -2122,7 +2288,7 @@ var HeroCarousel = (function () {
     bar.style.width = '100%';
   }
 
-  return { init: init, goto: goto };
+  return { init: init, goto: goto, refresh: refresh };
 })();
 
 // ── AI-Centric Homepage Functions ────────────────────────────
@@ -2282,17 +2448,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Apply saved language preference on load
   setUiLang(_siteLang);
 
+  // Kick off the admin-status cache load FIRST. renderHomepageVendors and
+  // the hero carousel both await window._vendorAdminCacheReady before
+  // filtering, so this prevents the first-paint race where inactive
+  // vendors leaked through until the cache populated later.
+  loadVendorAdminStatuses();
+
   // Region detection — fires updateRegionUI + availability check + homepage intelligence
   if (window.DLCRegion) {
     DLCRegion.init(async function(region) {
       updateRegionUI(region);
+      // Make sure the hero carousel reflects the (possibly newly-detected)
+      // region as soon as the admin cache is available — even if the user
+      // never changes location.
+      if (window._vendorAdminCacheReady && typeof window._vendorAdminCacheReady.then === 'function') {
+        window._vendorAdminCacheReady.then(function() {
+          if (typeof applyHeroSlideVisibility === 'function') applyHeroSlideVisibility(region.id);
+        });
+      }
       const driverAvail = await checkRideServiceAvailability(region.id);
       initHomepageIntelligence(region, driverAvail);
     });
   }
-
-  // Load vendor admin statuses into cache (used by _isVendorActive for static fallback)
-  loadVendorAdminStatuses();
 
   // If DLCRegion is unavailable, render vendors without region filter
   if (!window.DLCRegion) renderHomepageVendors(null);
@@ -2338,8 +2515,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Initialize wizard to step 1 state
   goStep(1);
 
-  // Initialize hero carousel
+  // Initialize hero carousel. We apply category visibility once the admin
+  // cache resolves so inactive-category slides (e.g. Hair when no hair
+  // salons are active) drop out before rotation starts.
   HeroCarousel.init();
+  if (window._vendorAdminCacheReady && typeof window._vendorAdminCacheReady.then === 'function') {
+    window._vendorAdminCacheReady.then(function() {
+      var regionId = (window.DLCRegion && DLCRegion.current && DLCRegion.current.id) || null;
+      if (typeof applyHeroSlideVisibility === 'function') applyHeroSlideVisibility(regionId);
+    });
+  }
 
   // Initialize AI chat module
   if (window.DLChat) {

@@ -104,6 +104,7 @@ var MBA = require('./lib/mobile-barber-agent');
 var MBP = require('./lib/mobile-barber-promotions');
 var MBS = require('./lib/mobile-barber-ai-style-booking');
 var MBM = require('./lib/mobile-barber-manual-booking');
+var HPV = require('./lib/homepage-visibility');
 
 var BIZ      = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/biz.json')));
 var BOOK_FIX = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/bookings.json')));
@@ -1535,6 +1536,9 @@ MBS.runMobileBarberAiStyleBookingTests(test);
 
 group('Mobile Barber Manual Booking (Book this service)', 'static-source-check');
 MBM.runMobileBarberManualBookingTests(test);
+
+group('Homepage Public Visibility Filter', 'static-source-check');
+HPV.runHomepageVisibilityTests(test);
 
 // ══════════════════════════════════════════════════════════════════════════
 // FINAL REPORT

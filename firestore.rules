@@ -5,10 +5,18 @@ service cloud.firestore {
     // ── Helper functions ──────────────────────────────────────────────────────────
     // isVendorMember: caller is authenticated AND their vendorUsers doc maps them to this vendorId.
     // Used to restrict writes to members of the specific vendor — prevents cross-vendor tampering.
+    // A vendorUsers doc may map a user via a singular vendorId OR a vendorIds[]
+    // array (unified owner accounts managing multiple businesses). Both forms
+    // must be honored — matching the dashboard auth gate — otherwise an owner's
+    // writes (e.g. saving a promotion) are silently rejected.
     function isVendorMember(vendorId) {
       return request.auth != null
           && exists(/databases/$(database)/documents/vendorUsers/$(request.auth.uid))
-          && get(/databases/$(database)/documents/vendorUsers/$(request.auth.uid)).data.vendorId == vendorId;
+          && (
+               get(/databases/$(database)/documents/vendorUsers/$(request.auth.uid)).data.get('vendorId', '') == vendorId
+            || (get(/databases/$(database)/documents/vendorUsers/$(request.auth.uid)).data.get('vendorIds', []) is list
+                && vendorId in get(/databases/$(database)/documents/vendorUsers/$(request.auth.uid)).data.get('vendorIds', []))
+          );
     }
 
     function isMobileBarberBookingCustomer() {

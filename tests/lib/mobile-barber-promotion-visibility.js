@@ -213,8 +213,14 @@ function runMobileBarberPromotionVisibilityTests(test) {
                        src.indexOf('function hydrateVendorFromFirestore') + 1200);
     assert(fn.indexOf('DATA.COLLECTIONS.vendors') >= 0,
       'Hydration must read from the mobileBarberVendors collection');
-    assert(fn.indexOf('Object.assign({}, state.vendor, data)') >= 0,
-      'Hydration must merge Firestore fields over the local baseline');
+    // Last-write-wins by updatedAt so a stale/rejected Firestore write can
+    // never clobber a fresher locally-saved promotion.
+    assert(fn.indexOf('updatedAt') >= 0 && fn.indexOf('Date.parse') >= 0,
+      'Hydration must compare updatedAt timestamps (last-write-wins)');
+    assert(fn.indexOf('remoteTs > localTs') >= 0,
+      'Firestore may only win when strictly newer than the local baseline');
+    assert(fn.indexOf('Object.assign({}, remote, state.vendor)') >= 0,
+      'When local is newer/equal, local edits must win over the Firestore doc');
     // init() must call hydration after seeding, before render.
     var init = src.slice(src.indexOf('function init()'),
                          src.indexOf('function init()') + 900);

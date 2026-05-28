@@ -867,11 +867,18 @@
     return db.collection(DATA.COLLECTIONS.vendors).doc(state.vendorId).get()
       .then(function(doc) {
         if (!doc || !doc.exists) return state.vendor;
-        var data = doc.data() || {};
-        // Merge Firestore fields over the local baseline. A missing promotions
-        // field leaves the local value intact; an explicit array (incl. []) is
-        // authoritative.
-        state.vendor = Object.assign({}, state.vendor, data);
+        var remote = doc.data() || {};
+        // Last-write-wins by updatedAt. The local baseline (loadVendor) already
+        // carries any edit this device just saved, which has a newer updatedAt.
+        // A stale Firestore doc — or one whose write was rejected by the
+        // security rule (e.g. a vendorIds[]-mapped owner) — must NEVER clobber
+        // that fresher local state. Firestore wins only when it is strictly
+        // newer, i.e. an edit saved on another device.
+        var localTs = Date.parse((state.vendor && state.vendor.updatedAt) || '') || 0;
+        var remoteTs = Date.parse(remote.updatedAt || '') || 0;
+        state.vendor = remoteTs > localTs
+          ? Object.assign({}, state.vendor, remote)
+          : Object.assign({}, remote, state.vendor);
         var rows = readJson(STORAGE.vendor, {});
         rows[state.vendorId] = state.vendor;
         writeJson(STORAGE.vendor, rows);

@@ -23,7 +23,7 @@
   });
 
   var VENDOR_FIELDS = Object.freeze([
-    'id', 'businessName', 'barberName', 'phone', 'email',
+    'id', 'ownerId', 'serviceType', 'businessName', 'barberName', 'phone', 'email',
     'profilePhoto', 'heroImage', 'serviceAreas', 'travelRadiusMiles',
     'baseTravelFee', 'addressOptional', 'languages', 'active', 'rating',
     'reviewCount', 'serviceBadges', 'createdAt', 'updatedAt',
@@ -346,6 +346,8 @@
     }),
     Object.freeze({
       id: MICHAEL_VENDOR_ID,
+      ownerId: 'michael-nguyen',
+      serviceType: 'barber',
       businessName: 'Michael Mobile Barber OC',
       barberName: 'Michael Nguyen',
       phone: '(714) 227-6007',
@@ -387,6 +389,8 @@
     }),
     Object.freeze({
       id: TIM_VENDOR_ID,
+      ownerId: 'tim-nguyen',
+      serviceType: 'barber',
       businessName: 'Tim Mobile Barber Bay Area',
       barberName: 'Tim Nguyen',
       phone: '(408) 504-3684',

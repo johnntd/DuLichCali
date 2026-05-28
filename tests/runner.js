@@ -108,6 +108,7 @@ var MPA = require('./lib/mobile-barber-promotion-activation');
 var MPV = require('./lib/mobile-barber-promotion-visibility');
 var MZP = require('./lib/mobile-barber-zero-price');
 var HPV = require('./lib/homepage-visibility');
+var OAM = require('./lib/owner-account-model');
 
 var BIZ      = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/biz.json')));
 var BOOK_FIX = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/bookings.json')));
@@ -1551,6 +1552,9 @@ MPV.runMobileBarberPromotionVisibilityTests(test);
 
 group('Homepage Public Visibility Filter', 'static-source-check');
 HPV.runHomepageVisibilityTests(test);
+
+group('Unified Owner Account Model (Phase 1)', 'unit-logic | static-source-check');
+OAM.runOwnerAccountModelTests(test);
 
 // ══════════════════════════════════════════════════════════════════════════
 // FINAL REPORT

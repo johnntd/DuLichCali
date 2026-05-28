@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Owner Portal — DuLichCali</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy-900:#0d2f50; --navy-800:#123b62; --navy-700:#194a78;
+  --gold:#f5a623; --gold-lt:#ffc857; --gold-dim:rgba(245,166,35,.16);
+  --ink:#e9f1fa; --muted:#9fb6cd; --line:rgba(255,255,255,.10);
+  --card:rgba(255,255,255,.045); --card-2:rgba(255,255,255,.07);
+  --ok:#34d399; --soon:#f5a623;
+  --font-d:'Bodoni Moda',Georgia,serif; --font-b:'Jost',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:auto}
+body{
+  font-family:var(--font-b); color:var(--ink); min-height:100vh;
+  background:radial-gradient(1200px 600px at 80% -10%,var(--navy-700) 0%,var(--navy-900) 55%) fixed, var(--navy-900);
+  -webkit-font-smoothing:antialiased; padding-bottom:3rem;
+}
+a{color:var(--gold-lt);text-decoration:none}
+button{cursor:pointer;font-family:var(--font-b);border:none;background:none;color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:0 1rem}
+
+/* ── Header ───────────────────────────── */
+.ob-bar{
+  position:sticky;top:0;z-index:40;
+  background:linear-gradient(180deg,rgba(13,47,80,.96),rgba(13,47,80,.86));
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
+}
+.ob-bar__in{display:flex;align-items:center;gap:.75rem;padding:.7rem 1rem;max-width:1180px;margin:0 auto;flex-wrap:wrap}
+.ob-brand{font-family:var(--font-d);font-weight:700;font-size:1.15rem;letter-spacing:.5px;color:var(--gold-lt);white-space:nowrap}
+.ob-brand small{display:block;font-family:var(--font-b);font-weight:400;font-size:.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.ob-bar__spacer{flex:1 1 auto}
+.ob-lang{display:flex;gap:.25rem;background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:999px;padding:.18rem}
+.ob-lang button{min-width:38px;min-height:34px;padding:.2rem .5rem;border-radius:999px;font-size:.78rem;color:var(--muted)}
+.ob-lang button.is-on{background:var(--gold);color:var(--navy-900);font-weight:600}
+
+/* ── Switcher ─────────────────────────── */
+.ob-switcher{position:relative}
+.ob-switch-btn{
+  display:flex;align-items:center;gap:.55rem;min-height:44px;padding:.5rem .9rem;
+  background:var(--card-2);border:1px solid var(--line);border-radius:12px;
+  font-size:.92rem;color:var(--ink);transition:border-color .2s,background .2s;max-width:62vw
+}
+.ob-switch-btn:hover{border-color:var(--gold);background:rgba(245,166,35,.08)}
+.ob-switch-btn .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ob-switch-btn .caret{margin-left:auto;color:var(--gold-lt);transition:transform .2s}
+.ob-switcher.is-open .caret{transform:rotate(180deg)}
+.ob-menu{
+  position:absolute;top:calc(100% + .4rem);right:0;min-width:min(92vw,320px);
+  background:var(--navy-800);border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 18px 48px rgba(0,0,0,.45);padding:.4rem;display:none;z-index:50
+}
+.ob-switcher.is-open .ob-menu{display:block}
+.ob-menu__item{
+  display:flex;align-items:center;gap:.65rem;width:100%;text-align:left;
+  min-height:48px;padding:.55rem .65rem;border-radius:10px;color:var(--ink);font-size:.9rem;transition:background .15s
+}
+.ob-menu__item:hover{background:rgba(255,255,255,.06)}
+.ob-menu__item.is-on{background:var(--gold-dim)}
+.ob-menu__item .ico{flex:0 0 30px;height:30px;display:grid;place-items:center;border-radius:8px;background:rgba(255,255,255,.07)}
+.ob-menu__item .ico svg{width:17px;height:17px;stroke:var(--gold-lt)}
+.ob-menu__item .meta{display:flex;flex-direction:column;line-height:1.15;overflow:hidden}
+.ob-menu__item .meta b{font-weight:600;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ob-menu__item .meta span{font-size:.72rem;color:var(--muted)}
+
+/* ── Hero greeting ────────────────────── */
+.ob-hero{padding:1.6rem 0 .4rem}
+.ob-hero h1{font-family:var(--font-d);font-weight:600;font-size:1.7rem;line-height:1.15}
+.ob-hero p{color:var(--muted);font-size:.92rem;margin-top:.3rem}
+
+/* ── Current business panel ───────────── */
+.ob-current{
+  margin-top:1.2rem;background:linear-gradient(135deg,var(--navy-800),var(--navy-700));
+  border:1px solid var(--line);border-radius:18px;padding:1.3rem;position:relative;overflow:hidden
+}
+.ob-current::after{content:"";position:absolute;inset:0;background:radial-gradient(420px 200px at 100% 0,rgba(245,166,35,.16),transparent 60%);pointer-events:none}
+.ob-current__top{display:flex;align-items:flex-start;gap:.9rem;position:relative}
+.ob-current__ico{flex:0 0 52px;height:52px;display:grid;place-items:center;border-radius:14px;background:var(--gold-dim);border:1px solid rgba(245,166,35,.4)}
+.ob-current__ico svg{width:26px;height:26px;stroke:var(--gold-lt)}
+.ob-current__head h2{font-family:var(--font-d);font-weight:600;font-size:1.3rem;line-height:1.2}
+.ob-meta-row{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.5rem}
+.ob-chip{font-size:.72rem;padding:.28rem .6rem;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid var(--line);color:var(--ink)}
+.ob-chip.is-type{color:var(--gold-lt);border-color:rgba(245,166,35,.4)}
+.ob-chip.is-active{color:var(--ok);border-color:rgba(52,211,153,.4)}
+.ob-chip.is-soon{color:var(--soon);border-color:rgba(245,166,35,.4)}
+.ob-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1.1rem;position:relative}
+.ob-btn{min-height:46px;padding:.7rem 1.1rem;border-radius:12px;font-size:.9rem;font-weight:600;display:inline-flex;align-items:center;gap:.5rem;transition:transform .15s,background .2s,opacity .2s}
+.ob-btn--gold{background:var(--gold);color:var(--navy-900)}
+.ob-btn--gold:hover{background:var(--gold-lt)}
+.ob-btn--ghost{background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--ink)}
+.ob-btn--ghost:hover{border-color:var(--gold)}
+.ob-btn[aria-disabled="true"]{opacity:.5;pointer-events:none}
+
+/* ── Businesses grid ──────────────────── */
+.ob-section-h{font-family:var(--font-d);font-weight:600;font-size:1.15rem;margin:1.9rem 0 .9rem}
+.ob-grid{display:grid;grid-template-columns:1fr;gap:.85rem}
+.ob-card{
+  display:flex;align-items:center;gap:.8rem;text-align:left;width:100%;
+  background:var(--card);border:1px solid var(--line);border-radius:14px;padding:.9rem 1rem;
+  transition:border-color .2s,background .2s,transform .15s
+}
+.ob-card:hover{border-color:var(--gold);background:var(--card-2)}
+.ob-card.is-on{border-color:var(--gold);background:var(--gold-dim)}
+.ob-card__ico{flex:0 0 42px;height:42px;display:grid;place-items:center;border-radius:11px;background:rgba(255,255,255,.07)}
+.ob-card__ico svg{width:20px;height:20px;stroke:var(--gold-lt)}
+.ob-card__body{flex:1 1 auto;min-width:0}
+.ob-card__body b{font-weight:600;font-size:.96rem;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ob-card__body span{font-size:.76rem;color:var(--muted)}
+.ob-card__status{flex:0 0 auto;font-size:.7rem;padding:.24rem .55rem;border-radius:999px;border:1px solid var(--line)}
+.ob-card__status.is-active{color:var(--ok);border-color:rgba(52,211,153,.4)}
+.ob-card__status.is-soon{color:var(--soon);border-color:rgba(245,166,35,.4)}
+
+.ob-foot{margin-top:2.2rem;text-align:center;color:var(--muted);font-size:.8rem}
+.ob-foot a{color:var(--gold-lt)}
+
+@media(min-width:768px){
+  .ob-hero h1{font-size:2.1rem}
+  .ob-grid{grid-template-columns:1fr 1fr}
+  .ob-current{padding:1.6rem 1.8rem}
+}
+@media(min-width:1200px){
+  .ob-grid{grid-template-columns:1fr 1fr 1fr}
+  .ob-hero h1{font-size:2.4rem}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="ob-bar">
+  <div class="ob-bar__in">
+    <div class="ob-brand">DuLichCali<small data-i18n="ownerPortal">Owner Portal</small></div>
+    <div class="ob-switcher" id="obSwitcher" hidden>
+      <button class="ob-switch-btn" id="obSwitchBtn" aria-haspopup="true" aria-expanded="false">
+        <span class="lbl" id="obSwitchLbl">—</span>
+        <svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="ob-menu" id="obMenu" role="menu"></div>
+    </div>
+    <div class="ob-bar__spacer"></div>
+    <div class="ob-lang" role="group" aria-label="Language">
+      <button data-lang="vi">VI</button>
+      <button data-lang="en">EN</button>
+      <button data-lang="es">ES</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="ob-hero">
+    <h1 id="obGreeting">—</h1>
+    <p id="obSub" data-i18n="subtitle">Manage all your businesses from one place.</p>
+  </section>
+
+  <section class="ob-current" id="obCurrent" aria-live="polite"><!-- filled by JS --></section>
+
+  <h2 class="ob-section-h" data-i18n="yourBusinesses">Your Businesses</h2>
+  <div class="ob-grid" id="obGrid"><!-- filled by JS --></div>
+
+  <p class="ob-foot"><a href="/" data-i18n="backToSite">← Back to site</a></p>
+</main>
+
+<script src="/owner-model.js?v=20260528a"></script>
+<script>
+(function(){
+  'use strict';
+  var OM = window.OwnerModel;
+
+  // ── i18n ────────────────────────────────
+  var LABELS = {
+    en:{ownerPortal:'Owner Portal',subtitle:'Manage all your businesses from one place.',
+        yourBusinesses:'Your Businesses',currentBusiness:'Current Business',
+        backToSite:'← Back to site',openDashboard:'Open dashboard',viewCustomer:'View customer page',
+        region:'Region',welcome:'Welcome, ',
+        t_barber:'Mobile Barber',t_ride:'Airport & Ride',t_tour:'Tours',
+        s_active:'Active',s_soon:'Coming soon',switchBusiness:'Switch business',
+        noOwner:'No owner account found.'},
+    vi:{ownerPortal:'Cổng Chủ Sở Hữu',subtitle:'Quản lý tất cả doanh nghiệp của bạn ở một nơi.',
+        yourBusinesses:'Doanh Nghiệp Của Bạn',currentBusiness:'Doanh Nghiệp Hiện Tại',
+        backToSite:'← Về trang chính',openDashboard:'Mở bảng điều khiển',viewCustomer:'Xem trang khách hàng',
+        region:'Khu vực',welcome:'Chào, ',
+        t_barber:'Thợ Cắt Tóc Lưu Động',t_ride:'Sân Bay & Xe',t_tour:'Tour Du Lịch',
+        s_active:'Đang hoạt động',s_soon:'Sắp ra mắt',switchBusiness:'Chuyển doanh nghiệp',
+        noOwner:'Không tìm thấy tài khoản chủ sở hữu.'},
+    es:{ownerPortal:'Portal del Propietario',subtitle:'Gestiona todos tus negocios desde un solo lugar.',
+        yourBusinesses:'Tus Negocios',currentBusiness:'Negocio Actual',
+        backToSite:'← Volver al sitio',openDashboard:'Abrir panel',viewCustomer:'Ver página de cliente',
+        region:'Región',welcome:'Bienvenido, ',
+        t_barber:'Barbero Móvil',t_ride:'Aeropuerto y Viajes',t_tour:'Tours',
+        s_active:'Activo',s_soon:'Próximamente',switchBusiness:'Cambiar negocio',
+        noOwner:'No se encontró cuenta de propietario.'}
+  };
+  var lang = (localStorage.getItem('dlc_lang') || 'vi');
+  if(!LABELS[lang]) lang='en';
+  function t(k){ return (LABELS[lang] && LABELS[lang][k]) || LABELS.en[k] || k; }
+  function typeLabel(st){ return t('t_'+st); }
+  function statusLabel(s){ return s==='active' ? t('s_active') : t('s_soon'); }
+
+  // ── service-type icons (inline SVG, no emoji) ──
+  function icon(st){
+    if(st==='ride') return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l2-5a2 2 0 0 1 2-1h10a2 2 0 0 1 2 1l2 5"/><path d="M5 17h14"/><path d="M5 13h14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/><circle cx="7.5" cy="18.5" r="1.3"/><circle cx="16.5" cy="18.5" r="1.3"/></svg>';
+    if(st==='tour') return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>';
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a6 6 0 0 0 12 0V3"/><path d="M6 21v-3a6 6 0 0 1 12 0v3"/></svg>';
+  }
+
+  // ── resolve owner (Phase 1 shell, no new auth) ──
+  function qs(k){ try{ return new URLSearchParams(location.search).get(k); }catch(e){ return null; } }
+  function resolveOwnerId(){
+    var byParam = qs('owner');
+    if(byParam && OM.findOwner(byParam)) return byParam;
+    var byEmail = OM.ownerForEmail(qs('email') || localStorage.getItem('dlc_vendor_email') || '');
+    if(byEmail) return byEmail;
+    var stored = localStorage.getItem('dlc_owner_id');
+    if(stored && OM.findOwner(stored)) return stored;
+    var owners = OM.listOwners();
+    return owners.length ? owners[0].id : null;
+  }
+
+  var ownerId = resolveOwnerId();
+  var owner = OM.findOwner(ownerId);
+  var businesses = ownerId ? OM.businessesForOwner(ownerId) : [];
+  var currentId = (function(){
+    var saved = localStorage.getItem('dlc_owner_business');
+    if(saved && businesses.some(function(b){return b.id===saved;})) return saved;
+    return businesses.length ? businesses[0].id : null;
+  })();
+
+  // ── renderers ───────────────────────────
+  function renderGreeting(){
+    document.getElementById('obGreeting').textContent = owner ? (t('welcome')+owner.displayName) : t('noOwner');
+  }
+  function renderCurrent(){
+    var el = document.getElementById('obCurrent');
+    var b = businesses.filter(function(x){return x.id===currentId;})[0];
+    if(!b){ el.innerHTML=''; el.style.display='none'; return; }
+    el.style.display='';
+    var soon = b.status!=='active';
+    el.innerHTML =
+      '<div class="ob-current__top">'
+      + '<div class="ob-current__ico">'+icon(b.serviceType)+'</div>'
+      + '<div class="ob-current__head">'
+        + '<h2>'+esc(b.name)+'</h2>'
+        + '<div class="ob-meta-row">'
+          + '<span class="ob-chip is-type">'+esc(typeLabel(b.serviceType))+'</span>'
+          + '<span class="ob-chip">'+esc(t('region'))+': '+esc(b.region)+'</span>'
+          + '<span class="ob-chip '+(soon?'is-soon':'is-active')+'">'+esc(statusLabel(b.status))+'</span>'
+        + '</div>'
+      + '</div>'
+      + '</div>'
+      + '<div class="ob-actions">'
+        + '<a class="ob-btn ob-btn--gold" '+(soon?'aria-disabled="true" href="#"':'href="'+attr(b.dashboardUrl)+'"')+'>'+esc(t('openDashboard'))+'</a>'
+        + '<a class="ob-btn ob-btn--ghost" '+(soon?'aria-disabled="true" href="#"':'href="'+attr(b.customerUrl)+'" target="_blank" rel="noopener"')+'>'+esc(t('viewCustomer'))+'</a>'
+      + '</div>';
+  }
+  function renderGrid(){
+    var g = document.getElementById('obGrid'); g.innerHTML='';
+    businesses.forEach(function(b){
+      var btn = document.createElement('button');
+      btn.className = 'ob-card'+(b.id===currentId?' is-on':'');
+      btn.type='button';
+      var soon = b.status!=='active';
+      btn.innerHTML =
+        '<span class="ob-card__ico">'+icon(b.serviceType)+'</span>'
+        + '<span class="ob-card__body"><b>'+esc(b.name)+'</b><span>'+esc(typeLabel(b.serviceType))+' · '+esc(b.region)+'</span></span>'
+        + '<span class="ob-card__status '+(soon?'is-soon':'is-active')+'">'+esc(statusLabel(b.status))+'</span>';
+      btn.addEventListener('click', function(){ selectBusiness(b.id); });
+      g.appendChild(btn);
+    });
+  }
+  function renderSwitcher(){
+    var sw = document.getElementById('obSwitcher');
+    if(businesses.length <= 1){ sw.hidden = true; return; }
+    sw.hidden = false;
+    var cur = businesses.filter(function(x){return x.id===currentId;})[0];
+    document.getElementById('obSwitchLbl').textContent = cur ? cur.name : t('switchBusiness');
+    var menu = document.getElementById('obMenu'); menu.innerHTML='';
+    businesses.forEach(function(b){
+      var item = document.createElement('button');
+      item.className = 'ob-menu__item'+(b.id===currentId?' is-on':'');
+      item.type='button'; item.setAttribute('role','menuitem');
+      item.innerHTML = '<span class="ico">'+icon(b.serviceType)+'</span>'
+        + '<span class="meta"><b>'+esc(b.name)+'</b><span>'+esc(typeLabel(b.serviceType))+' · '+esc(statusLabel(b.status))+'</span></span>';
+      item.addEventListener('click', function(){ selectBusiness(b.id); closeMenu(); });
+      menu.appendChild(item);
+    });
+  }
+  function selectBusiness(id){
+    currentId = id;
+    try{ localStorage.setItem('dlc_owner_business', id); }catch(e){}
+    renderCurrent(); renderGrid(); renderSwitcher();
+  }
+
+  // ── switcher open/close ─────────────────
+  var sw = document.getElementById('obSwitcher');
+  var swBtn = document.getElementById('obSwitchBtn');
+  function closeMenu(){ sw.classList.remove('is-open'); swBtn.setAttribute('aria-expanded','false'); }
+  swBtn.addEventListener('click', function(e){
+    e.stopPropagation();
+    var open = sw.classList.toggle('is-open');
+    swBtn.setAttribute('aria-expanded', open?'true':'false');
+  });
+  document.addEventListener('click', function(e){ if(!sw.contains(e.target)) closeMenu(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeMenu(); });
+
+  // ── lang ────────────────────────────────
+  function applyLang(){
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-i18n]').forEach(function(n){ n.textContent = t(n.getAttribute('data-i18n')); });
+    document.querySelectorAll('.ob-lang button').forEach(function(b){
+      b.classList.toggle('is-on', b.getAttribute('data-lang')===lang);
+    });
+    renderGreeting(); renderCurrent(); renderGrid(); renderSwitcher();
+  }
+  document.querySelectorAll('.ob-lang button').forEach(function(b){
+    b.addEventListener('click', function(){
+      lang = b.getAttribute('data-lang'); if(!LABELS[lang]) lang='en';
+      try{ localStorage.setItem('dlc_lang', lang); }catch(e){}
+      applyLang();
+    });
+  });
+
+  // ── helpers ─────────────────────────────
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function attr(s){ return esc(s); }
+
+  // ── boot ────────────────────────────────
+  applyLang();
+})();
+</script>
+</body>
+</html>

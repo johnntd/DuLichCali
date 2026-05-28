@@ -46,11 +46,12 @@ function runHomepageVisibilityTests(test) {
       '_filterPubliclyVisibleVendors must delegate to isPublicProviderVisible');
   });
 
-  test('isPublicProviderVisible covers all inactive cases', function() {
+  test('isPublicProviderVisible covers all inactive cases (via canonical helper)', function() {
     var fn = src.slice(src.indexOf('function isPublicProviderVisible'),
                        src.indexOf('function isPublicProviderVisible') + 1600);
-    assertContains(fn, 'if (biz.active === false || biz.disabled === true) return false');
-    assertContains(fn, "if (biz.status && String(biz.status).toLowerCase() === 'inactive') return false");
+    // active/disabled/status etc. now go through the canonical
+    // isActiveProvider helper (see "Canonical isActiveProvider …" test).
+    assertContains(fn, 'if (!isActiveProvider(biz)) return false');
     assertContains(fn, 'if (biz.id && !_isVendorActive(biz.id)) return false');
     assertContains(fn, 'if (biz._homepageMarketplaceEntry === true) return true');
     assertContains(fn, "if (avail && avail.status === 'closed') return false");
@@ -176,6 +177,64 @@ function runHomepageVisibilityTests(test) {
     assertContains(fn, "synonyms", 'category synonyms must allow barber === mobile-barber');
     assertContains(fn, 'return !sawMatchingData',
       'Filter must fall OPEN when no source had data ABOUT THIS CATEGORY (prevents silent blanking of categories whose data module is not loaded on a given page — e.g. Mobile Barber on the main homepage which does NOT load mobile-barber-data.js)');
+  });
+
+  test('Canonical isActiveProvider + normalizeProviderStatus exported on window', function() {
+    assertContains(src, 'function isActiveProvider');
+    assertContains(src, 'function normalizeProviderStatus');
+    assertContains(src, 'window.isActiveProvider        = isActiveProvider');
+    assertContains(src, 'window.normalizeProviderStatus = normalizeProviderStatus');
+    // The normalizer must handle the canonical inactive set per the spec.
+    var fn = src.slice(src.indexOf('function normalizeProviderStatus'),
+                       src.indexOf('function normalizeProviderStatus') + 2500);
+    ['inactive', 'disabled', 'suspended', 'archived', 'closed', 'blocked',
+     'deactivated'].forEach(function(needle) {
+      assert(fn.indexOf("'" + needle + "'") >= 0 || src.indexOf("'" + needle + "'") >= 0,
+        'normalizer must reject status="' + needle + '"');
+    });
+    // Boolean field coverage per spec
+    ['active', 'isActive', 'enabled', 'isEnabled', 'visible', 'publicVisible'].forEach(function(field) {
+      assert(fn.indexOf('record.' + field) >= 0,
+        'normalizer must check boolean field record.' + field);
+    });
+  });
+
+  test('isPublicProviderVisible delegates to isActiveProvider (no duplicated checks)', function() {
+    var fn = src.slice(src.indexOf('function isPublicProviderVisible'),
+                       src.indexOf('function isPublicProviderVisible') + 1800);
+    assertContains(fn, 'if (!isActiveProvider(biz)) return false',
+      'isPublicProviderVisible must delegate the active gate to isActiveProvider');
+  });
+
+  test('Ride section hides when no active driver serves the region', function() {
+    // checkRideServiceAvailability must compute hasRegionalDriver +
+    // updateRideServiceCards must hide #hpAirport when there are zero
+    // active drivers covering the current region.
+    var checker = src.slice(src.indexOf('async function checkRideServiceAvailability'),
+                            src.indexOf('async function checkRideServiceAvailability') + 4500);
+    assertContains(checker, 'window._hasRegionalDriver',
+      'checkRideServiceAvailability must compute _hasRegionalDriver');
+    assertContains(checker, 'window._regionalDrivers',
+      'checkRideServiceAvailability must store the per-region driver list');
+    assertContains(checker, '[ride-visibility]',
+      'must emit [ride-visibility] diagnostics');
+
+    var updater = src.slice(src.indexOf('function updateRideServiceCards'),
+                            src.indexOf('function updateRideServiceCards') + 2500);
+    assertContains(updater, "document.getElementById('hpAirport')",
+      'updateRideServiceCards must touch the airport section');
+    assertContains(updater, 'airportSection.hidden = !hasRegional',
+      'airport section must hide when hasRegional is false');
+    assertContains(updater, '[public-visibility-filter]',
+      'updater must emit [public-visibility-filter] diagnostics');
+  });
+
+  test('renderHomepageVendors emits [public-visibility-filter] diagnostics', function() {
+    var rendererSlice = src.split('async function renderHomepageVendors')[1] || '';
+    assertContains(rendererSlice, "section: 'hpFeatured'",
+      'marketplace renderer must tag its diagnostics with section=hpFeatured');
+    assertContains(rendererSlice, '[public-visibility-filter]',
+      'marketplace renderer must emit [public-visibility-filter] diagnostics');
   });
 }
 

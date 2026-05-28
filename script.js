@@ -1462,7 +1462,26 @@ async function checkRideServiceAvailability(regionId) {
     const todayStr = now.toISOString().split('T')[0];        // YYYY-MM-DD
 
     // Store ALL active drivers for vehicle display (regardless of schedule/region)
-    window._activeDrivers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    window._activeDrivers = snap.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(isActiveProvider);   // belt-and-suspenders — canonical helper
+
+    // Compliance + non-expired credentials, but NOT schedule. Drives the
+    // "should the airport section render at all in this region?" gate.
+    // Customers can pre-book for future dates as long as ANY active
+    // compliant driver covers the region.
+    const isRegionallyEligible = doc => {
+      const d = doc.data ? doc.data() : doc;
+      if (!isActiveProvider(d)) return false;
+      if (d.complianceStatus !== 'approved') return false;
+      if (d.licExpiry && d.licExpiry < todayStr) return false;
+      if (d.regExpiry && d.regExpiry < todayStr) return false;
+      if (d.insExpiry && d.insExpiry < todayStr) return false;
+      return Array.isArray(d.regions) && d.regions.includes(regionId);
+    };
+    window._regionalDrivers = snap.docs.filter(isRegionallyEligible)
+      .map(doc => ({ id: doc.id, ...doc.data() }));
+    window._hasRegionalDriver = window._regionalDrivers.length > 0;
 
     console.log('[RideAvail] query returned', snap.size, 'driver(s). regionId:', regionId, 'day:', day, 'nowMins:', nowMins);
 
@@ -1497,17 +1516,51 @@ async function checkRideServiceAvailability(regionId) {
       .map(doc => ({ id: doc.id, ...doc.data() }));
 
     window._rideServiceAvailable = hasAvailable;
+    if (typeof console !== 'undefined') {
+      console.info('[ride-visibility]', {
+        region: regionId,
+        totalDrivers: snap.size,
+        activeDrivers: (window._activeDrivers || []).length,
+        regionalDrivers: (window._regionalDrivers || []).length,
+        onShiftNow: (window._availableDrivers || []).length,
+        showRideService: !!window._hasRegionalDriver
+      });
+    }
     updateRideServiceCards(hasAvailable);
     return hasAvailable;
   } catch (_) {
     window._rideServiceAvailable = true; // fail open
-    updateRideServiceCards(true); // fail open — never hide service on error
+    window._hasRegionalDriver = true;    // fail open — never hide service on error
+    if (typeof console !== 'undefined') {
+      console.info('[ride-visibility]', { region: regionId, error: 'firestore-query-failed', showRideService: true });
+    }
+    updateRideServiceCards(true);
     return true;
   }
 }
 
 // Toggle ride-gated UI elements based on driver availability.
 function updateRideServiceCards(available) {
+  // Hide the entire Airport & Private Rides section when NO active driver
+  // covers the current region. Customers can still pre-book in regions
+  // with drivers (even if they're not on-shift right now), but a region
+  // with zero coverage shouldn't surface bookable tiles at all.
+  const airportSection = document.getElementById('hpAirport');
+  const hasRegional = window._hasRegionalDriver !== false; // default true (fail-open)
+  if (airportSection) {
+    airportSection.hidden = !hasRegional;
+    if (typeof console !== 'undefined') {
+      console.info('[public-visibility-filter]', {
+        section: 'hpAirport',
+        region: (window.DLCRegion && window.DLCRegion.current && window.DLCRegion.current.id) || null,
+        totalRecords: (window._activeDrivers || []).length,
+        activeRecords: (window._regionalDrivers || []).length,
+        hidden: !hasRegional,
+        hiddenReason: hasRegional ? null : 'no-active-driver-in-region'
+      });
+    }
+  }
+
   // Tiles are ALWAYS bookable — customers can book for any future date regardless of
   // whether a driver is on shift right now. Never disable or overlay the cards.
   // Remove any stale unavailability badges from earlier page state.
@@ -1685,6 +1738,54 @@ function _isVendorActive(vendorId) {
   return !s || s === 'active'; // undefined or 'active' = show
 }
 
+// ── Canonical active-provider model (vendors, drivers, services) ──────────
+// One helper, one truth. Public surfaces (homepage, marketplace, hero,
+// ride/airport) all consult this so no inactive provider leaks through
+// because of a one-off filter being missed somewhere.
+const _INACTIVE_STATUS_VALUES = new Set([
+  'inactive', 'disabled', 'suspended', 'archived', 'closed',
+  'blocked', 'deactivated', 'paused', 'banned', 'removed', 'deleted'
+]);
+
+function normalizeProviderStatus(record) {
+  if (!record || typeof record !== 'object') {
+    return { isActive: false, reasonInactive: 'no-record', statusSource: 'null' };
+  }
+  // Hard inactive flags — any of these immediately disqualifies.
+  if (record.disabled === true) return { isActive: false, reasonInactive: 'disabled', statusSource: 'disabled' };
+  if (record.suspended === true) return { isActive: false, reasonInactive: 'suspended', statusSource: 'suspended' };
+  if (record.archived === true) return { isActive: false, reasonInactive: 'archived', statusSource: 'archived' };
+  if (record.deleted === true) return { isActive: false, reasonInactive: 'deleted', statusSource: 'deleted' };
+  // adminStatus is the canonical Firestore field for vendors/drivers.
+  const admin = String(record.adminStatus || '').toLowerCase();
+  if (admin && _INACTIVE_STATUS_VALUES.has(admin)) {
+    return { isActive: false, reasonInactive: admin, statusSource: 'adminStatus' };
+  }
+  // Generic status field — anything matching the inactive set disqualifies.
+  const status = String(record.status || '').toLowerCase();
+  if (status && _INACTIVE_STATUS_VALUES.has(status)) {
+    return { isActive: false, reasonInactive: status, statusSource: 'status' };
+  }
+  // Boolean active flags — must not be explicitly false.
+  if (record.active === false)        return { isActive: false, reasonInactive: 'active=false',     statusSource: 'active' };
+  if (record.isActive === false)      return { isActive: false, reasonInactive: 'isActive=false',   statusSource: 'isActive' };
+  if (record.enabled === false)       return { isActive: false, reasonInactive: 'enabled=false',    statusSource: 'enabled' };
+  if (record.isEnabled === false)     return { isActive: false, reasonInactive: 'isEnabled=false',  statusSource: 'isEnabled' };
+  if (record.visible === false)       return { isActive: false, reasonInactive: 'visible=false',    statusSource: 'visible' };
+  if (record.publicVisible === false) return { isActive: false, reasonInactive: 'publicVisible=false', statusSource: 'publicVisible' };
+  // If we made it here, the record is active by default.
+  return { isActive: true, reasonInactive: null, statusSource: 'default' };
+}
+
+function isActiveProvider(record) {
+  return normalizeProviderStatus(record).isActive;
+}
+
+if (typeof window !== 'undefined') {
+  window.isActiveProvider        = isActiveProvider;
+  window.normalizeProviderStatus = normalizeProviderStatus;
+}
+
 // Cache-driven gate: is there at least one currently-active vendor in this
 // (category, region)? Used by the hero carousel + marketplace region cards
 // so we never surface a category that has no real underlying provider.
@@ -1783,9 +1884,9 @@ function _hasActiveVendorInCategory(category, regionId) {
 // consistently across hero, featured, and category cards.
 function isPublicProviderVisible(biz, regionId) {
   if (!biz) return false;
-  // 1) Hard inactive flags.
-  if (biz.active === false || biz.disabled === true) return false;
-  if (biz.status && String(biz.status).toLowerCase() === 'inactive') return false;
+  // 1) Canonical active gate — covers active/disabled/isActive/enabled/
+  //    isEnabled/visible/publicVisible/adminStatus/status with one helper.
+  if (!isActiveProvider(biz)) return false;
   // 2) Firestore-cached adminStatus (covers vendors that came from the
   // static MARKETPLACE list but were toggled inactive in the admin panel).
   if (biz.id && !_isVendorActive(biz.id)) return false;
@@ -2036,7 +2137,17 @@ async function renderHomepageVendors(regionId) {
   //   3) outside the selected region (when regionId is provided)
   // Homepage marketplace entries (the Mobile Barber region cards) bypass
   // the closed check because they're always available (no business hours).
+  const _preFilterCount = vendors.length;
   vendors = _filterPubliclyVisibleVendors(vendors, regionId);
+  if (typeof console !== 'undefined') {
+    console.info('[public-visibility-filter]', {
+      section: 'hpFeatured',
+      region: regionId,
+      totalRecords: _preFilterCount,
+      activeRecords: vendors.length,
+      hiddenRecords: _preFilterCount - vendors.length
+    });
+  }
 
   if (!vendors.length) {
     // Per business rule: do not render the section at all when there are

@@ -379,29 +379,9 @@
         Object.freeze({ maxMiles: 20, fee: 10 }),
         Object.freeze({ maxMiles: 25, fee: 20 })
       ]),
-      // Seed promo so the landing page shows a live promotion immediately,
-      // without waiting for the vendor to enable one in the dashboard.
-      // Vendor can edit/remove from Settings → Promotions.
-      promotions: Object.freeze([
-        Object.freeze({
-          id: 'michael-classic-haircut-20',
-          vendorId: MICHAEL_VENDOR_ID,
-          name: '20% Off Classic Haircut',
-          description: 'Try Michael for the first time. Save 20% on a Classic Haircut.',
-          discountPercent: 20,
-          applyToScope: 'selected',
-          appliesToServiceIds: Object.freeze([MICHAEL_VENDOR_ID + '-classic-haircut']),
-          startDate: '',
-          endDate: '',
-          maxRedemptions: 0,
-          currentRedemptions: 0,
-          active: true,
-          promoCode: '',
-          displayOnCustomerPage: true,
-          createdAt: SEED_TIMESTAMP,
-          updatedAt: SEED_TIMESTAMP
-        })
-      ]),
+      // No default promotions — only what the vendor enables in their
+      // dashboard should appear on the customer page.
+      promotions: Object.freeze([]),
       createdAt: SEED_TIMESTAMP,
       updatedAt: SEED_TIMESTAMP
     }),
@@ -440,28 +420,9 @@
         Object.freeze({ maxMiles: 25, fee: 10 }),
         Object.freeze({ maxMiles: 30, fee: 20 })
       ]),
-      // Seed promo so the landing page shows a live promotion immediately,
-      // without waiting for the vendor to enable one in the dashboard.
-      promotions: Object.freeze([
-        Object.freeze({
-          id: 'tim-all-services-15',
-          vendorId: TIM_VENDOR_ID,
-          name: '15% Off All Services',
-          description: 'Welcome offer from Tim — 15% off any in-home service across the Bay Area.',
-          discountPercent: 15,
-          applyToScope: 'all',
-          appliesToServiceIds: Object.freeze([]),
-          startDate: '',
-          endDate: '',
-          maxRedemptions: 0,
-          currentRedemptions: 0,
-          active: true,
-          promoCode: '',
-          displayOnCustomerPage: true,
-          createdAt: SEED_TIMESTAMP,
-          updatedAt: SEED_TIMESTAMP
-        })
-      ]),
+      // No default promotions — only what the vendor enables in their
+      // dashboard should appear on the customer page.
+      promotions: Object.freeze([]),
       createdAt: SEED_TIMESTAMP,
       updatedAt: SEED_TIMESTAMP
     })

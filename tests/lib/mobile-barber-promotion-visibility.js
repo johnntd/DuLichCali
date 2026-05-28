@@ -64,58 +64,59 @@ function runMobileBarberPromotionVisibilityTests(test) {
       'Must not mutate vendor.promotions on the frozen catalog');
   });
 
-  test('V4. Static seed: Michael 20% Classic + Tim 15% all-services', function() {
+  test('V4. No phantom seed promotions — sampleVendors must be empty by default', function() {
+    // Customers must only see promos a vendor actually enabled in their
+    // dashboard. Baked-in seed promos previously caused a fake 15% Tim
+    // promo to appear when only Michael had configured one — regression
+    // guard so we don't re-introduce that.
     var michael = DATA.findVendorById(DATA.MICHAEL_VENDOR_ID);
     var tim     = DATA.findVendorById(DATA.TIM_VENDOR_ID);
-    assert(michael && Array.isArray(michael.promotions) && michael.promotions.length >= 1,
-      'Michael must carry at least one seeded promo');
-    var mClassic = michael.promotions.filter(function(p) {
-      return Number(p.discountPercent) === 20 && p.applyToScope === 'selected';
-    })[0];
-    assert(mClassic, 'Michael must carry a 20% selected-scope seed promo');
-    assert(mClassic.active === true, 'Seed promo must be active');
-    assert(mClassic.displayOnCustomerPage !== false, 'Seed promo must be displayable');
-    assert(Array.isArray(mClassic.appliesToServiceIds) && mClassic.appliesToServiceIds[0],
-      'Seed promo must reference a specific service id');
-
-    assert(tim && Array.isArray(tim.promotions) && tim.promotions.length >= 1,
-      'Tim must carry at least one seeded promo');
-    var tAll = tim.promotions.filter(function(p) {
-      return Number(p.discountPercent) === 15 && p.applyToScope === 'all';
-    })[0];
-    assert(tAll, 'Tim must carry a 15% all-scope seed promo');
-    assert(tAll.active === true);
+    assert(michael && Array.isArray(michael.promotions),
+      'Michael must declare promotions (even if empty)');
+    assertEq(michael.promotions.length, 0,
+      'Michael MUST NOT carry hard-coded seed promotions');
+    assert(tim && Array.isArray(tim.promotions),
+      'Tim must declare promotions (even if empty)');
+    assertEq(tim.promotions.length, 0,
+      'Tim MUST NOT carry hard-coded seed promotions');
   });
 
-  test('V5. findActivePromotionForService finds the seed promos for the right service', function() {
-    var michael = DATA.findVendorById(DATA.MICHAEL_VENDOR_ID);
+  test('V5. findActivePromotionForService matches injected promo for the right service', function() {
+    // Use a cloned vendor with an injected promo — same shape the vendor
+    // dashboard would persist.
+    var michael = JSON.parse(JSON.stringify(DATA.findVendorById(DATA.MICHAEL_VENDOR_ID)));
+    michael.promotions = [{
+      id: 'test-mc-20', vendorId: michael.id, name: '20% Classic',
+      discountPercent: 20, applyToScope: 'selected',
+      appliesToServiceIds: [michael.id + '-classic-haircut'],
+      active: true, displayOnCustomerPage: true,
+      startDate: '', endDate: '', maxRedemptions: 0, currentRedemptions: 0,
+      promoCode: '', createdAt: '', updatedAt: ''
+    }];
     var classic = DATA.listServicesForVendor(michael.id).filter(function(s) {
       return s.slug === 'classic-haircut';
     })[0];
-    assert(classic, 'Classic haircut service must exist for Michael');
-    var match = DATA.findActivePromotionForService(michael, classic, new Date());
-    assert(match, 'Michael 20% Classic promo must match the classic-haircut service');
-    assertEq(Number(match.discountPercent), 20);
-
     var fade = DATA.listServicesForVendor(michael.id).filter(function(s) {
       return s.slug === 'fade-haircut';
     })[0];
-    // Michael's seed promo is selected-scope on classic only, so fade gets no promo.
+    assert(classic && fade, 'Classic + Fade services must exist');
+    var match = DATA.findActivePromotionForService(michael, classic, new Date());
+    assert(match, '20% Classic-scoped promo must match classic-haircut');
+    assertEq(Number(match.discountPercent), 20);
     var noMatch = DATA.findActivePromotionForService(michael, fade, new Date());
-    assertEq(noMatch, null, 'Michael seed promo must NOT apply to fade (scope=selected)');
-
-    var tim = DATA.findVendorById(DATA.TIM_VENDOR_ID);
-    var timClassic = DATA.listServicesForVendor(tim.id).filter(function(s) {
-      return s.slug === 'classic-haircut';
-    })[0];
-    var timMatch = DATA.findActivePromotionForService(tim, timClassic, new Date());
-    assert(timMatch, 'Tim 15% all-scope promo must apply to every service');
-    assertEq(Number(timMatch.discountPercent), 15);
+    assertEq(noMatch, null, 'selected-scope promo must NOT apply to other services');
   });
 
-  test('V6. Pricing engine applies the seed promo to the booking total', function() {
+  test('V6. Pricing engine applies an injected promo to the booking total', function() {
     var BOOK    = require('../../mobile-barber/mobile-barber-booking');
-    var michael = DATA.findVendorById(DATA.MICHAEL_VENDOR_ID);
+    var michael = JSON.parse(JSON.stringify(DATA.findVendorById(DATA.MICHAEL_VENDOR_ID)));
+    michael.promotions = [{
+      id: 'test-mc-30', vendorId: michael.id, name: '30% Off',
+      discountPercent: 30, applyToScope: 'all', appliesToServiceIds: [],
+      active: true, displayOnCustomerPage: true,
+      startDate: '', endDate: '', maxRedemptions: 0, currentRedemptions: 0,
+      promoCode: '', createdAt: '', updatedAt: ''
+    }];
     var classic = DATA.listServicesForVendor(michael.id).filter(function(s) {
       return s.slug === 'classic-haircut';
     })[0];
@@ -125,15 +126,22 @@ function runMobileBarberPromotionVisibilityTests(test) {
       customerAddress: { address: '123 Beach Blvd', city: 'Westminster', zip: '92683' },
       now: new Date('2026-06-10T10:00:00-07:00')
     });
-    assertEq(quote.promoApplied, true, 'promoApplied must be true with seed promo');
-    assertEq(Number(quote.discountPercent), 20);
+    assertEq(quote.promoApplied, true, 'promoApplied must be true with injected promo');
+    assertEq(Number(quote.discountPercent), 30);
     assert(quote.discountedPrice < quote.originalPrice, 'discounted < original');
     assertEq(quote.totalPrice, quote.discountedPrice, 'totalPrice must equal discountedPrice');
   });
 
   test('V7. Booking persistence carries promo snapshot fields', function() {
     var BOOK    = require('../../mobile-barber/mobile-barber-booking');
-    var michael = DATA.findVendorById(DATA.MICHAEL_VENDOR_ID);
+    var michael = JSON.parse(JSON.stringify(DATA.findVendorById(DATA.MICHAEL_VENDOR_ID)));
+    michael.promotions = [{
+      id: 'test-mc-25', vendorId: michael.id, name: 'Spring 25',
+      discountPercent: 25, applyToScope: 'all', appliesToServiceIds: [],
+      active: true, displayOnCustomerPage: true,
+      startDate: '', endDate: '', maxRedemptions: 0, currentRedemptions: 0,
+      promoCode: '', createdAt: '', updatedAt: ''
+    }];
     var classic = DATA.listServicesForVendor(michael.id).filter(function(s) {
       return s.slug === 'classic-haircut';
     })[0];
@@ -147,12 +155,12 @@ function runMobileBarberPromotionVisibilityTests(test) {
       vendor: michael, services: [classic], availability: DATA.sampleAvailability,
       draft: draft, existingBookings: [], now: new Date('2026-06-10T08:00:00-07:00')
     });
-    if (!avail.canCreate) return; // schedule edge — skip if seed availability isn't open
+    if (!avail.canCreate) return;
     var built = BOOK.buildBooking({ vendor: michael, draft: draft, availabilityResult: avail, now: '2026-06-10T08:00:00.000Z', id: 'vis-test' });
     assertEq(built.valid, true, (built.errors || []).join('; '));
     assertEq(built.booking.promoApplied, true);
-    assertEq(Number(built.booking.discountPercent), 20);
-    assert(typeof built.booking.promotionName === 'string' && built.booking.promotionName.length > 0);
+    assertEq(Number(built.booking.discountPercent), 25);
+    assertEq(built.booking.promotionName, 'Spring 25');
     assert(built.booking.originalPrice > built.booking.discountedPrice);
     assertEq(built.booking.totalPrice, built.booking.discountedPrice);
   });

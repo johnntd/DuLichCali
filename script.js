@@ -1824,6 +1824,11 @@ async function renderHomepageVendors(regionId) {
       // Region filter — skip vendors outside the selected region
       if (regionId && !_regionMatchesId(data.region, regionId)) return;
 
+      // HARD active check — never push vendors flagged inactive in Firestore.
+      // (The .where('adminStatus','==','active') guards adminStatus, but
+      // vendors may also be flagged `active: false` independently.)
+      if (data.active === false || data.disabled === true) return;
+
       // Merge Firestore doc with static data: static provides richer display fields
       const s = staticById[vid];
       vendors.push({
@@ -1839,7 +1844,9 @@ async function renderHomepageVendors(regionId) {
         hours:          s ? (s.hours || []) : [],
         featuredPriority: s ? (s.featuredPriority || 50) : (data.featuredPriority || 50),
         bookingEnabled: s ? !!s.bookingEnabled : (data.bookingEnabled !== false),
-        active: true
+        // Preserve the Firestore active flag — used by the downstream filter
+        // (see _filterPubliclyVisibleVendors). Defaults to true if missing.
+        active: data.active !== false
       });
     });
 
@@ -1857,12 +1864,52 @@ async function renderHomepageVendors(regionId) {
     }
   }
 
+  // PUBLIC VISIBILITY GATE — strip vendors that customers should not see:
+  //   1) flagged inactive (active === false)
+  //   2) currently outside business hours (computeBizAvailability → 'closed')
+  // Homepage marketplace entries (the Mobile Barber region cards) bypass
+  // the closed check because they're always available (no business hours).
+  vendors = _filterPubliclyVisibleVendors(vendors);
+
   if (!vendors.length) {
-    container.innerHTML = '<p class="hp-vendors-empty">Coming soon in this area ✦</p>';
+    // Per business rule: do not render the section at all when there are
+    // no publicly visible vendors. No "Coming soon" placeholder unless an
+    // explicit setting opts in.
+    section.hidden = true;
+    container.innerHTML = '';
     return;
   }
 
+  section.hidden = false;
   container.innerHTML = vendors.map(buildVendorCardHtml).join('');
+}
+
+// Pure helper: filter a vendor list down to those a customer should see on
+// the public homepage right now. Exported on window for tests.
+function _filterPubliclyVisibleVendors(vendors) {
+  if (!Array.isArray(vendors)) return [];
+  return vendors.filter(function(biz) {
+    if (!biz) return false;
+    // 1) Inactive vendors never appear publicly.
+    if (biz.active === false || biz.disabled === true) return false;
+    if (biz.status && String(biz.status).toLowerCase() === 'inactive') return false;
+    // 2) Homepage marketplace entries (e.g. Mobile Barber region cards)
+    // are always-available routing placeholders and don't have hours.
+    if (biz._homepageMarketplaceEntry === true) return true;
+    if (biz.availabilityStatus && biz.availabilityStatus !== 'closed') return true;
+    // 3) Anything else: check real-time availability via business hours.
+    // Hide if currently closed (matches what customers expect from
+    // "Featured in <region>" — they shouldn't see un-bookable cards).
+    if (typeof computeBizAvailability === 'function') {
+      var avail = computeBizAvailability(biz);
+      if (avail && avail.status === 'closed') return false;
+    }
+    return true;
+  });
+}
+
+if (typeof window !== 'undefined') {
+  window._filterPubliclyVisibleVendors = _filterPubliclyVisibleVendors;
 }
 
 // Backward-compat shim — delegates to Firestore-powered renderer

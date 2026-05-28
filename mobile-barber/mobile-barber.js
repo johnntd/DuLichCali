@@ -37,10 +37,6 @@
       promoTitle: 'Latest AI Haircut Styles',
       promoCopy: 'Swipe through fade, taper, beard trim, kids cut, business cut, senior cut, line up, and family package previews.',
       promoCta: 'Book an in-home haircut today',
-      beforeAfterKicker: 'Style previews',
-      beforeAfterTitle: 'AI-generated mobile barber style previews',
-      beforeAfterCopy: 'Curated AI previews of mobile barber styles. Real barber portfolio photos coming soon.',
-      stylePreviewSuffix: 'Style Preview',
       convenienceKicker: 'Convenience',
       convenienceTitle: 'Mobile Haircut Convenience',
       promoClipsKicker: 'Promo clips',
@@ -238,10 +234,6 @@
       promoTitle: 'Kiểu tóc AI mới nhất',
       promoCopy: 'Lướt qua fade, taper, tỉa râu, cắt tóc trẻ em, kiểu công sở, người lớn tuổi, line up, và gói gia đình.',
       promoCta: 'Đặt lịch cắt tóc tại nhà hôm nay',
-      beforeAfterKicker: 'Mẫu kiểu tóc',
-      beforeAfterTitle: 'Mẫu kiểu tóc thợ cắt tại nhà do AI tạo',
-      beforeAfterCopy: 'Mẫu kiểu tóc thợ cắt tại nhà do AI tạo. Hình thật của thợ sẽ được cập nhật sau.',
-      stylePreviewSuffix: 'Mẫu Kiểu Tóc',
       convenienceKicker: 'Tiện lợi',
       convenienceTitle: 'Sự tiện lợi của cắt tóc lưu động',
       promoClipsKicker: 'Clip quảng bá',
@@ -439,10 +431,6 @@
       promoTitle: 'Últimos estilos de corte AI',
       promoCopy: 'Desliza por fade, taper, barba, niños, corte ejecutivo, senior, line up, y paquete familiar.',
       promoCta: 'Reservar corte en casa hoy',
-      beforeAfterKicker: 'Estilos de muestra',
-      beforeAfterTitle: 'Estilos de barbero móvil generados por AI',
-      beforeAfterCopy: 'Vistas previas curadas de estilos de barbero móvil. Las fotos reales del portafolio del barbero estarán disponibles pronto.',
-      stylePreviewSuffix: 'Vista de Estilo',
       convenienceKicker: 'Conveniencia',
       convenienceTitle: 'Conveniencia del corte móvil',
       promoClipsKicker: 'Clips promocionales',
@@ -1663,49 +1651,6 @@
     });
   }
 
-  function renderStylePreviewGallery() {
-    // Truth-first replacement for the old before/after gallery.
-    // The image-to-image identity lock for AI before/after pairs is not
-    // reliable enough to claim 'same person'. Showing one curated style
-    // preview per category avoids misleading the customer until a real
-    // barber portfolio is uploaded.
-    var list = document.getElementById('mbBeforeAfterGallery');
-    if (!list) return;
-    list.innerHTML = '';
-    var templates = (DATA && typeof DATA.listStyleTemplates === 'function')
-      ? DATA.listStyleTemplates()
-      : [];
-    var picked = templates.filter(function(tmpl) {
-      return tmpl && tmpl.active !== false && tmpl.imageUrl;
-    }).slice(0, 6);
-
-    picked.forEach(function(tmpl) {
-      var card = el('article', 'mb-portfolio-card mb-portfolio-card--ai-sample mb-style-preview-card');
-
-      var media = el('div', 'mb-style-preview-card__media');
-      var badge = el('span', 'mb-portfolio-card__ai-badge mb-portfolio-card__ai-badge--clip');
-      badge.textContent = 'AI preview';
-      media.appendChild(badge);
-      if (tmpl.imageUrl) {
-        media.style.backgroundImage = "url('" + tmpl.imageUrl + "')";
-        media.setAttribute('role', 'img');
-        media.setAttribute('aria-label', tmpl.imageAlt || tmpl.title || '');
-      }
-      card.appendChild(media);
-
-      var chip = el('span', 'mb-portfolio-card__category');
-      var title = el('h3');
-      var desc = el('p');
-      chip.textContent = tmpl.category || 'style';
-      title.textContent = (tmpl.title || '') + ' — ' + t('stylePreviewSuffix');
-      desc.textContent = t('aiPreviewDisclosure');
-      card.appendChild(chip);
-      card.appendChild(title);
-      card.appendChild(desc);
-      list.appendChild(card);
-    });
-  }
-
   function renderConvenience() {
     var list = document.getElementById('mbConvenienceList');
     if (!list) return;
@@ -1871,7 +1816,6 @@
     document.querySelector('[data-action="voice"]').setAttribute('aria-label', t('talkAssistant'));
     setText(document);
     renderPromoPreview();
-    renderStylePreviewGallery();
     renderConvenience();
     renderPromoClips();
     renderServices();

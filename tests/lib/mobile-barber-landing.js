@@ -89,7 +89,7 @@ function runMobileBarberLandingTests(test) {
 
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
     assertContains(html, '/mobile-barber/mobile-barber.css?v=20260528o');
-    assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260528p');
+    assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260528q');
     assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260528o');
     assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260527p');
     assertContains(html, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
@@ -290,7 +290,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorHtml, 'id="mbVendorPromoTitle"');
     assertContains(vendorHtml, 'id="mbSelectedServiceSummary"');
     assertContains(vendorHtml, 'class="mb-mobile-sticky-cta"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260528p');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260528q');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260528o');
     assertContains(vendorHtml, '/ai-engine.js?v=20260524a');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-agent.js?v=20260527p');
@@ -544,9 +544,9 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/dashboard"');
     assertContains(firebase, '"destination": "/mobile-barber/dashboard.html"');
     assertContains(dashboardHtml, 'id="mobileBarberDashboardApp"');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260528p');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260528q');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260528o');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260528p');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260528q');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260528o');
     assertContains(dashboardHtml, 'firebase-auth-compat.js');
     assertContains(dashboardHtml, '/notifications.js?v=20260525a');

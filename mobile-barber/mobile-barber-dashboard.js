@@ -856,6 +856,32 @@
     state.vendor = Object.assign({}, clone(base || {}), overrides[state.vendorId] || {});
   }
 
+  // Hydrate state.vendor from Firestore so the dashboard reflects the portal's
+  // true persisted state across devices. Firestore is the source of truth for
+  // vendor-owned fields (promotions, profile). loadVendor() runs first to give
+  // an instant local baseline; this overlays the authoritative Firestore doc,
+  // writes it through to the keyed localStorage map, and re-renders.
+  function hydrateVendorFromFirestore() {
+    var db = firestoreDb();
+    if (!db || !state.vendorId) return Promise.resolve(state.vendor);
+    return db.collection(DATA.COLLECTIONS.vendors).doc(state.vendorId).get()
+      .then(function(doc) {
+        if (!doc || !doc.exists) return state.vendor;
+        var data = doc.data() || {};
+        // Merge Firestore fields over the local baseline. A missing promotions
+        // field leaves the local value intact; an explicit array (incl. []) is
+        // authoritative.
+        state.vendor = Object.assign({}, state.vendor, data);
+        var rows = readJson(STORAGE.vendor, {});
+        rows[state.vendorId] = state.vendor;
+        writeJson(STORAGE.vendor, rows);
+        return state.vendor;
+      })
+      .catch(function() {
+        return state.vendor;
+      });
+  }
+
   function loadServices() {
     var base = DATA && DATA.listServicesForVendor ? DATA.listServicesForVendor(state.vendorId).map(clone) : [];
     var overrides = readJson(STORAGE.services, {});
@@ -2620,6 +2646,8 @@
     loadReviews();
     bind();
     seedSamplesOnce().catch(noop).then(function() {
+      return hydrateVendorFromFirestore();
+    }).then(function() {
       return loadBookings();
     }).then(function() {
       render();

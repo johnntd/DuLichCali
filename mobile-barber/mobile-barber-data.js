@@ -1381,6 +1381,11 @@
     rows = rows || [];
     return rows.map(function(row) {
       var doc = cloneForFirestore(row);
+      // Promotions are vendor-owned (set from the portal). The sample seed
+      // must never overwrite a vendor's saved promotions array — a merge:true
+      // write with the empty seed array would wipe a real portal promo on the
+      // next session's seed. So strip promotions from vendor seed payloads.
+      if (collectionName === COLLECTIONS.vendors) delete doc.promotions;
       return db.collection(collectionName).doc(doc.id).set(doc, { merge: true });
     });
   }

@@ -204,6 +204,23 @@ function runMobileBarberPromotionVisibilityTests(test) {
     assert(loader.indexOf('using-seed') >= 0,
       'Loader must report when falling back to seed (proves the semantic is intentional)');
   });
+
+  test('V12. Dashboard hydrates vendor (incl. promotions) from Firestore on init', function() {
+    var src = read('mobile-barber/mobile-barber-dashboard.js');
+    assert(src.indexOf('function hydrateVendorFromFirestore') >= 0,
+      'hydrateVendorFromFirestore helper must exist');
+    var fn = src.slice(src.indexOf('function hydrateVendorFromFirestore'),
+                       src.indexOf('function hydrateVendorFromFirestore') + 1200);
+    assert(fn.indexOf('DATA.COLLECTIONS.vendors') >= 0,
+      'Hydration must read from the mobileBarberVendors collection');
+    assert(fn.indexOf('Object.assign({}, state.vendor, data)') >= 0,
+      'Hydration must merge Firestore fields over the local baseline');
+    // init() must call hydration after seeding, before render.
+    var init = src.slice(src.indexOf('function init()'),
+                         src.indexOf('function init()') + 900);
+    assert(init.indexOf('hydrateVendorFromFirestore()') >= 0,
+      'init() must call hydrateVendorFromFirestore');
+  });
 }
 
 if (require.main === module) {

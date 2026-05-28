@@ -284,6 +284,10 @@ function runMobileBarberDataModelTests(test) {
       assertEq(write.opts && write.opts.merge, true, 'seed writes must use merge');
       assert(!Object.prototype.hasOwnProperty.call(write.doc, 'geminiKey'), 'seed must not write geminiKey');
       assert(!Object.prototype.hasOwnProperty.call(write.doc, 'openaiKey'), 'seed must not write openaiKey');
+      if (write.collectionName === MobileBarberData.COLLECTIONS.vendors) {
+        assert(!Object.prototype.hasOwnProperty.call(write.doc, 'promotions'),
+          'vendor seed must NOT write promotions (would clobber portal-saved promos on merge)');
+      }
     });
   });
 }

@@ -101,6 +101,8 @@ var MBD = require('./lib/mobile-barber-data-model');
 var MBL = require('./lib/mobile-barber-landing');
 var MBB = require('./lib/mobile-barber-booking');
 var MBA = require('./lib/mobile-barber-agent');
+var MBP = require('./lib/mobile-barber-promotions');
+var MBS = require('./lib/mobile-barber-ai-style-booking');
 
 var BIZ      = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/biz.json')));
 var BOOK_FIX = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/bookings.json')));
@@ -1523,6 +1525,12 @@ MBB.runMobileBarberBookingTests(test);
 
 group('Mobile Barber AI Chat Agent', 'mirrored-unit-logic | static-source-check');
 MBA.runMobileBarberAgentTests(test);
+
+group('Mobile Barber Vendor Promotions', 'mirrored-unit-logic | static-source-check');
+MBP.runMobileBarberPromotionsTests(test);
+
+group('Mobile Barber AI Style Booking', 'mirrored-unit-logic | static-source-check');
+MBS.runMobileBarberAiStyleBookingTests(test);
 
 // ══════════════════════════════════════════════════════════════════════════
 // FINAL REPORT

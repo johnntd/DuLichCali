@@ -81,6 +81,12 @@
     'selfieDataUrl', 'aiAnalysisSummary', 'aiAnalysisConsent',
     'recommendedStyles', 'selectedStyleId', 'selectedStylePreviewUrl',
     'barberCuttingNotes',
+    // Canonical AI hairstyle reference (set when a customer books directly
+    // from an AI preview card). Mirrored into the legacy selectedStyleId /
+    // selectedStylePreviewUrl fields too so existing renderers keep working.
+    'selectedAiStyleId', 'selectedAiStyleName', 'selectedAiStyleImage',
+    'selectedAiStyleDescription', 'selectedAiBarberNotes',
+    'selectedAiMaintenanceLevel',
     // Vendor promotion applied (optional). All fields written together
     // by buildBooking when a promo is active.
     'promotionId', 'promotionName', 'discountPercent',
@@ -1187,6 +1193,11 @@
       if (booking.selfieDataUrl.length > 900000) {
         errors.push('selfieDataUrl exceeds 900000 chars; compress further before saving.');
       }
+    }
+    if (booking.selectedAiStyleImage != null && booking.selectedAiStyleImage !== '' &&
+        typeof booking.selectedAiStyleImage === 'string' &&
+        booking.selectedAiStyleImage.length > 900000) {
+      errors.push('selectedAiStyleImage exceeds 900000 chars; compress further before saving.');
     }
 
     if (booking.id != null && !hasText(booking.id)) errors.push('id must be a non-empty string when present.');

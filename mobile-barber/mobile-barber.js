@@ -118,6 +118,34 @@
       homeAiPreviewSelectedAck: 'Style attached. Continue booking with the chat below.',
       homeAiPreviewRemoved: 'Selfie removed.',
       homeAiPreviewAttachNote: 'Your selection will be attached to the booking automatically when you send it through the chat.',
+      homeAiPreviewMaintenanceLabel: 'Maintenance:',
+      homeAiPreviewBookCta: 'Book this style',
+      homeAiPreviewBookCancel: 'Close booking form',
+      homeAiPreviewBookAgain: 'Book another time',
+      homeAiPreviewBookFormTitle: 'Book this style',
+      homeAiPreviewBookFormSub: 'Quick details — the barber confirms after.',
+      homeAiPreviewBookPhone: 'Phone number',
+      homeAiPreviewBookName: 'Your name',
+      homeAiPreviewBookAddress: 'Street address',
+      homeAiPreviewBookCity: 'City',
+      homeAiPreviewBookZip: 'ZIP',
+      homeAiPreviewBookDate: 'Preferred date',
+      homeAiPreviewBookTime: 'Preferred time',
+      homeAiPreviewBookNotes: 'Optional notes',
+      homeAiPreviewBookNotesPlaceholder: 'Anything the barber should know',
+      homeAiPreviewBookSubmit: 'Send booking request',
+      homeAiPreviewBookSubmitting: 'Sending…',
+      homeAiPreviewBookSuccess: 'Booking sent. The barber will confirm shortly.',
+      homeAiPreviewBookSubmitted: 'Booking submitted. The barber will confirm shortly.',
+      homeAiPreviewBookMissing: 'Please fill the highlighted fields.',
+      homeAiPreviewBookNoVendor: 'No barber covers this address yet. Try a different ZIP.',
+      homeAiPreviewBookNoService: 'No service available for this barber right now.',
+      homeAiPreviewBookBlackout: 'That date is unavailable. Please pick another.',
+      homeAiPreviewBookClosed: 'The barber is closed that day. Please pick another.',
+      homeAiPreviewBookOutsideHours: 'That time is outside the barber’s hours.',
+      homeAiPreviewBookCutoff: 'Too close to your time. Please pick a later slot.',
+      homeAiPreviewBookOverlap: 'That slot was just taken. Please pick another.',
+      homeAiPreviewBookGeneric: 'Could not send the booking. Please try again.',
       aiPreviewDisclosure: 'Sample AI-generated style preview. Real barber portfolio coming soon.',
       serviceAreaLabel: 'Service area',
       radiusLabel: 'Travel radius',
@@ -265,6 +293,34 @@
       homeAiPreviewSelectedAck: 'Đã đính kèm kiểu tóc. Tiếp tục đặt lịch trong khung chat bên dưới.',
       homeAiPreviewRemoved: 'Đã xóa selfie.',
       homeAiPreviewAttachNote: 'Lựa chọn của bạn sẽ tự động đính kèm vào lịch hẹn khi gửi qua chat.',
+      homeAiPreviewMaintenanceLabel: 'Mức độ chăm sóc:',
+      homeAiPreviewBookCta: 'Đặt kiểu tóc này',
+      homeAiPreviewBookCancel: 'Đóng phiếu đặt',
+      homeAiPreviewBookAgain: 'Đặt lịch khác',
+      homeAiPreviewBookFormTitle: 'Đặt kiểu tóc này',
+      homeAiPreviewBookFormSub: 'Vài thông tin nhanh — thợ sẽ xác nhận sau.',
+      homeAiPreviewBookPhone: 'Số điện thoại',
+      homeAiPreviewBookName: 'Họ và tên',
+      homeAiPreviewBookAddress: 'Địa chỉ',
+      homeAiPreviewBookCity: 'Thành phố',
+      homeAiPreviewBookZip: 'Mã ZIP',
+      homeAiPreviewBookDate: 'Ngày mong muốn',
+      homeAiPreviewBookTime: 'Giờ mong muốn',
+      homeAiPreviewBookNotes: 'Ghi chú thêm',
+      homeAiPreviewBookNotesPlaceholder: 'Điều gì cần thợ lưu ý',
+      homeAiPreviewBookSubmit: 'Gửi yêu cầu đặt',
+      homeAiPreviewBookSubmitting: 'Đang gửi…',
+      homeAiPreviewBookSuccess: 'Đã gửi lịch hẹn. Thợ sẽ xác nhận sớm.',
+      homeAiPreviewBookSubmitted: 'Đã gửi lịch hẹn. Thợ sẽ xác nhận sớm.',
+      homeAiPreviewBookMissing: 'Vui lòng điền các ô được yêu cầu.',
+      homeAiPreviewBookNoVendor: 'Hiện chưa có thợ phục vụ địa chỉ này. Thử ZIP khác giúp em.',
+      homeAiPreviewBookNoService: 'Hiện không có dịch vụ phù hợp cho thợ này.',
+      homeAiPreviewBookBlackout: 'Ngày này thợ nghỉ. Vui lòng chọn ngày khác.',
+      homeAiPreviewBookClosed: 'Thợ không làm việc ngày này. Vui lòng chọn ngày khác.',
+      homeAiPreviewBookOutsideHours: 'Giờ này nằm ngoài khung làm việc của thợ.',
+      homeAiPreviewBookCutoff: 'Quá gần với giờ bạn chọn. Vui lòng chọn giờ trễ hơn.',
+      homeAiPreviewBookOverlap: 'Khung giờ này vừa có người đặt. Vui lòng chọn giờ khác.',
+      homeAiPreviewBookGeneric: 'Không gửi được lịch hẹn. Vui lòng thử lại.',
       aiPreviewDisclosure: 'Ảnh mẫu tạo bằng AI. Portfolio thật của thợ sẽ có sau.',
       serviceAreaLabel: 'Khu vực phục vụ',
       radiusLabel: 'Bán kính di chuyển',
@@ -412,6 +468,34 @@
       homeAiPreviewSelectedAck: 'Estilo adjuntado. Continúe la reserva en el chat de abajo.',
       homeAiPreviewRemoved: 'Selfie eliminada.',
       homeAiPreviewAttachNote: 'Su selección se adjuntará automáticamente a la cita al enviarla por el chat.',
+      homeAiPreviewMaintenanceLabel: 'Mantenimiento:',
+      homeAiPreviewBookCta: 'Reservar este estilo',
+      homeAiPreviewBookCancel: 'Cerrar formulario',
+      homeAiPreviewBookAgain: 'Reservar de nuevo',
+      homeAiPreviewBookFormTitle: 'Reservar este estilo',
+      homeAiPreviewBookFormSub: 'Datos rápidos — el barbero confirma después.',
+      homeAiPreviewBookPhone: 'Teléfono',
+      homeAiPreviewBookName: 'Su nombre',
+      homeAiPreviewBookAddress: 'Dirección',
+      homeAiPreviewBookCity: 'Ciudad',
+      homeAiPreviewBookZip: 'Código postal',
+      homeAiPreviewBookDate: 'Fecha preferida',
+      homeAiPreviewBookTime: 'Hora preferida',
+      homeAiPreviewBookNotes: 'Notas (opcional)',
+      homeAiPreviewBookNotesPlaceholder: 'Algo que el barbero deba saber',
+      homeAiPreviewBookSubmit: 'Enviar solicitud',
+      homeAiPreviewBookSubmitting: 'Enviando…',
+      homeAiPreviewBookSuccess: 'Solicitud enviada. El barbero confirmará pronto.',
+      homeAiPreviewBookSubmitted: 'Solicitud enviada. El barbero confirmará pronto.',
+      homeAiPreviewBookMissing: 'Por favor complete los campos requeridos.',
+      homeAiPreviewBookNoVendor: 'Ningún barbero cubre esta dirección. Pruebe otro código postal.',
+      homeAiPreviewBookNoService: 'No hay servicio disponible para este barbero ahora.',
+      homeAiPreviewBookBlackout: 'Esa fecha no está disponible. Elija otra.',
+      homeAiPreviewBookClosed: 'El barbero no trabaja ese día. Elija otro.',
+      homeAiPreviewBookOutsideHours: 'Esa hora está fuera del horario del barbero.',
+      homeAiPreviewBookCutoff: 'Demasiado cerca de la hora. Elija una más tarde.',
+      homeAiPreviewBookOverlap: 'Ese horario ya fue tomado. Elija otro.',
+      homeAiPreviewBookGeneric: 'No se pudo enviar la solicitud. Intente de nuevo.',
       aiPreviewDisclosure: 'Vista previa de estilo generada por AI. Portafolio real del barbero próximamente.',
       serviceAreaLabel: 'Área de servicio',
       radiusLabel: 'Radio de viaje',
@@ -476,7 +560,15 @@
       selectedStylePreviewUrl: '',
       analyzing: false,
       sessionId: '',
-      lastError: ''
+      lastError: '',
+      // Inline booking-from-card state. expandedStyleId is the styleId whose
+      // inline booking form is open. lastSubmittedStyleId is set after a
+      // successful direct save so we can render a success state on that card.
+      expandedStyleId: '',
+      submitting: false,
+      lastSubmittedStyleId: '',
+      lastSubmissionError: '',
+      formDrafts: {}
     }
   };
 
@@ -1711,53 +1803,363 @@
       return;
     }
     list.hidden = false;
+    var expandedId = state.aiPreview.expandedStyleId || '';
+    var lastSubmitted = state.aiPreview.lastSubmittedStyleId || '';
     recs.forEach(function(rec, idx) {
       var imgSrc = rec.previewDataUrl || rec.previewUrl || '';
-      var card = document.createElement('label');
+      var styleId = rec.styleId || ('rec-' + idx);
+      var card = document.createElement('article');
       card.className = 'mb-ai-rec-card';
-      var input = document.createElement('input');
-      input.type = 'radio';
-      input.name = 'mbHomeAiRec';
-      input.value = rec.styleId || ('rec-' + idx);
-      input.className = 'mb-ai-rec-card__radio';
-      if (state.aiPreview.selectedStyleId === input.value) {
-        input.checked = true;
-        card.classList.add('mb-ai-rec-card--selected');
-      }
-      input.addEventListener('change', function() {
-        handleAiSelect(rec, imgSrc);
-      });
-      var thumb = document.createElement('div');
-      thumb.className = 'mb-ai-rec-card__thumb';
+      card.setAttribute('data-style-id', styleId);
+      var isExpanded = expandedId === styleId;
+      var isSubmitted = lastSubmitted === styleId;
+      if (state.aiPreview.selectedStyleId === styleId) card.classList.add('mb-ai-rec-card--selected');
+      if (isExpanded) card.classList.add('mb-ai-rec-card--expanded');
+      if (isSubmitted) card.classList.add('mb-ai-rec-card--booked');
+
+      var thumb = el('div', 'mb-ai-rec-card__thumb');
       var img = document.createElement('img');
       img.src = imgSrc;
       img.alt = rec.title || '';
       img.loading = 'lazy';
       thumb.appendChild(img);
-      var body = document.createElement('div');
-      body.className = 'mb-ai-rec-card__body';
-      var title = document.createElement('strong'); title.textContent = rec.title || '';
-      var meta = document.createElement('span');
-      meta.className = 'mb-ai-rec-card__maintenance';
-      meta.textContent = rec.maintenance || '';
-      var desc = document.createElement('p'); desc.textContent = rec.explanation || '';
-      var notes = document.createElement('p');
-      notes.className = 'mb-ai-rec-card__barber-notes';
-      notes.textContent = (t('homeAiPreviewBarberNotesLabel') || 'Barber notes:') + ' ' + (rec.barberNotes || '');
-      var badge = document.createElement('span');
-      badge.className = 'mb-ai-rec-card__ai-badge';
+      var badge = el('span', 'mb-ai-rec-card__ai-badge');
       badge.textContent = t('homeAiPreviewBadge') || 'AI suggestion';
+      thumb.appendChild(badge);
+
+      var body = el('div', 'mb-ai-rec-card__body');
+      var title = el('strong', 'mb-ai-rec-card__title'); title.textContent = rec.title || '';
+      var meta = el('span', 'mb-ai-rec-card__maintenance');
+      if (rec.maintenance) {
+        meta.textContent = (t('homeAiPreviewMaintenanceLabel') || 'Maintenance:') + ' ' + rec.maintenance;
+      }
+      var desc = el('p', 'mb-ai-rec-card__desc'); desc.textContent = rec.explanation || '';
+      var notes = el('p', 'mb-ai-rec-card__barber-notes');
+      notes.textContent = (t('homeAiPreviewBarberNotesLabel') || 'Barber notes:') + ' ' + (rec.barberNotes || '');
       body.appendChild(title);
-      body.appendChild(meta);
+      if (rec.maintenance) body.appendChild(meta);
       body.appendChild(desc);
       body.appendChild(notes);
-      body.appendChild(badge);
-      card.appendChild(input);
+
+      var actions = el('div', 'mb-ai-rec-card__actions');
+      var bookBtn = el('button', 'mb-button mb-button--primary mb-ai-rec-card__cta');
+      bookBtn.type = 'button';
+      bookBtn.setAttribute('data-style-id', styleId);
+      bookBtn.textContent = isExpanded
+        ? (t('homeAiPreviewBookCancel') || 'Close')
+        : (isSubmitted
+          ? (t('homeAiPreviewBookAgain') || 'Book another time')
+          : (t('homeAiPreviewBookCta') || 'Book this style'));
+      bookBtn.addEventListener('click', function() {
+        toggleInlineBooking(rec, imgSrc);
+      });
+      actions.appendChild(bookBtn);
+
+      body.appendChild(actions);
       card.appendChild(thumb);
       card.appendChild(body);
+
+      // Inline booking panel (only the expanded card renders it)
+      if (isExpanded) {
+        card.appendChild(renderInlineBookingPanel(rec, imgSrc));
+      } else if (isSubmitted) {
+        var success = el('div', 'mb-ai-rec-card__success');
+        success.setAttribute('role', 'status');
+        success.textContent = t('homeAiPreviewBookSubmitted')
+          || 'Booking submitted. The barber will confirm shortly.';
+        card.appendChild(success);
+      }
       list.appendChild(card);
     });
     if (attach) attach.hidden = !state.aiPreview.selectedStyleId;
+  }
+
+  // Toggle the inline booking panel under an AI hairstyle card.
+  function toggleInlineBooking(rec, fullDataUrl) {
+    var styleId = rec.styleId || '';
+    if (state.aiPreview.expandedStyleId === styleId) {
+      state.aiPreview.expandedStyleId = '';
+      renderAiResults();
+      return;
+    }
+    // Selecting a style for booking also marks it as the selected style for
+    // the legacy chat-attach flow, so behaviour is consistent if the customer
+    // later sends through chat instead of submitting the inline form.
+    handleAiSelect(rec, fullDataUrl);
+    state.aiPreview.expandedStyleId = styleId;
+    state.aiPreview.lastSubmissionError = '';
+    renderAiResults();
+    // Scroll the panel into view on mobile so the form is in the thumb zone.
+    requestAnimationFrame(function() {
+      var card = document.querySelector('.mb-ai-rec-card--expanded');
+      if (card && card.scrollIntoView) {
+        try { card.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
+      }
+    });
+  }
+
+  function renderInlineBookingPanel(rec, fullDataUrl) {
+    var styleId = rec.styleId || '';
+    var panel = el('form', 'mb-ai-rec-card__booking');
+    panel.setAttribute('data-style-id', styleId);
+    panel.setAttribute('novalidate', 'novalidate');
+    var draft = state.aiPreview.formDrafts[styleId] || {};
+    var savedLoc = readSavedLocation() || {};
+    var lastBooking = state.lastBooking || {};
+    var phonePrefill = draft.customerPhone || lastBooking.customerPhone || '';
+    var namePrefill = draft.customerName || lastBooking.customerName || '';
+    var addressPrefill = draft.address || lastBooking.address || '';
+    var cityPrefill = draft.city || lastBooking.city || savedLoc.city || '';
+    var zipPrefill = draft.zip || lastBooking.zip || savedLoc.zip || '';
+    var datePrefill = draft.requestedDate || '';
+    var timePrefill = draft.startTime || '';
+    var notesPrefill = draft.notes || '';
+    var paymentPrefill = draft.paymentMethod || lastBooking.paymentMethod || 'cash';
+
+    var head = el('div', 'mb-ai-rec-card__booking-head');
+    var headTitle = el('strong'); headTitle.textContent = t('homeAiPreviewBookFormTitle') || 'Book this style';
+    var headSub = el('span', 'mb-ai-rec-card__booking-sub');
+    headSub.textContent = t('homeAiPreviewBookFormSub') || 'Quick details — the barber confirms after.';
+    head.appendChild(headTitle); head.appendChild(headSub);
+    panel.appendChild(head);
+
+    function field(labelText, input) {
+      var wrap = el('label', 'mb-ai-rec-card__field');
+      var l = el('span'); l.textContent = labelText;
+      wrap.appendChild(l); wrap.appendChild(input);
+      return wrap;
+    }
+    function input(type, name, value, attrs) {
+      var n = document.createElement('input');
+      n.type = type; n.name = name; n.value = value || '';
+      if (attrs) Object.keys(attrs).forEach(function(k) { n.setAttribute(k, attrs[k]); });
+      return n;
+    }
+
+    var phone = input('tel', 'customerPhone', phonePrefill, { autocomplete: 'tel', inputmode: 'tel', required: 'required', placeholder: '(714) 555-0123' });
+    var name = input('text', 'customerName', namePrefill, { autocomplete: 'name', required: 'required' });
+    var address = input('text', 'address', addressPrefill, { autocomplete: 'street-address', required: 'required' });
+    var city = input('text', 'city', cityPrefill, { autocomplete: 'address-level2', required: 'required' });
+    var zip = input('text', 'zip', zipPrefill, { autocomplete: 'postal-code', inputmode: 'numeric', required: 'required', pattern: '[0-9]{5}' });
+    var date = input('date', 'requestedDate', datePrefill, { required: 'required' });
+    var time = input('time', 'startTime', timePrefill, { required: 'required' });
+    var notes = document.createElement('textarea');
+    notes.name = 'notes'; notes.rows = 2; notes.value = notesPrefill;
+    notes.placeholder = t('homeAiPreviewBookNotesPlaceholder') || 'Anything the barber should know';
+
+    var paymentWrap = el('fieldset', 'mb-ai-rec-card__payment');
+    var paymentLegend = el('legend'); paymentLegend.textContent = t('paymentChoiceLegend') || 'Preferred payment method';
+    paymentWrap.appendChild(paymentLegend);
+    ['cash', 'zelle'].forEach(function(method) {
+      var lbl = el('label', 'mb-ai-rec-card__payment-option');
+      var radio = document.createElement('input');
+      radio.type = 'radio'; radio.name = 'paymentMethod'; radio.value = method;
+      radio.checked = paymentPrefill === method;
+      var span = el('span'); span.textContent = method === 'cash' ? (t('paymentCash') || 'Cash') : (t('paymentZelle') || 'Zelle');
+      lbl.appendChild(radio); lbl.appendChild(span);
+      paymentWrap.appendChild(lbl);
+    });
+
+    panel.appendChild(field(t('homeAiPreviewBookPhone') || 'Phone number', phone));
+    panel.appendChild(field(t('homeAiPreviewBookName') || 'Your name', name));
+    panel.appendChild(field(t('homeAiPreviewBookAddress') || 'Street address', address));
+    var cityZipRow = el('div', 'mb-ai-rec-card__row');
+    cityZipRow.appendChild(field(t('homeAiPreviewBookCity') || 'City', city));
+    cityZipRow.appendChild(field(t('homeAiPreviewBookZip') || 'ZIP', zip));
+    panel.appendChild(cityZipRow);
+    var dateTimeRow = el('div', 'mb-ai-rec-card__row');
+    dateTimeRow.appendChild(field(t('homeAiPreviewBookDate') || 'Preferred date', date));
+    dateTimeRow.appendChild(field(t('homeAiPreviewBookTime') || 'Preferred time', time));
+    panel.appendChild(dateTimeRow);
+    panel.appendChild(field(t('homeAiPreviewBookNotes') || 'Optional notes', notes));
+    panel.appendChild(paymentWrap);
+
+    var status = el('p', 'mb-ai-rec-card__booking-status');
+    status.setAttribute('aria-live', 'polite');
+    status.id = 'mbAiBookStatus-' + styleId.replace(/[^a-zA-Z0-9_-]/g, '');
+    if (state.aiPreview.lastSubmissionError) {
+      status.textContent = state.aiPreview.lastSubmissionError;
+      status.classList.add('mb-ai-rec-card__booking-status--error');
+    }
+    panel.appendChild(status);
+
+    var submitRow = el('div', 'mb-ai-rec-card__booking-actions');
+    var submit = el('button', 'mb-button mb-button--primary mb-ai-rec-card__submit');
+    submit.type = 'submit';
+    submit.textContent = state.aiPreview.submitting
+      ? (t('homeAiPreviewBookSubmitting') || 'Sending…')
+      : (t('homeAiPreviewBookSubmit') || 'Send booking request');
+    submit.disabled = !!state.aiPreview.submitting;
+    submitRow.appendChild(submit);
+    panel.appendChild(submitRow);
+
+    // Persist user input back to formDrafts as they type so re-renders don't wipe it
+    panel.addEventListener('input', function() {
+      state.aiPreview.formDrafts[styleId] = readInlineFormDraft(panel);
+    });
+
+    panel.addEventListener('submit', function(event) {
+      event.preventDefault();
+      submitInlineStyleBooking(rec, fullDataUrl, panel);
+    });
+
+    return panel;
+  }
+
+  function readInlineFormDraft(panel) {
+    var get = function(name) {
+      var n = panel.querySelector('[name="' + name + '"]');
+      return n ? String(n.value || '').trim() : '';
+    };
+    var paymentNode = panel.querySelector('[name="paymentMethod"]:checked');
+    return {
+      customerPhone: get('customerPhone'),
+      customerName: get('customerName'),
+      address: get('address'),
+      city: get('city'),
+      zip: get('zip'),
+      requestedDate: get('requestedDate'),
+      startTime: get('startTime'),
+      notes: get('notes'),
+      paymentMethod: paymentNode ? String(paymentNode.value || 'cash') : 'cash'
+    };
+  }
+
+  function submitInlineStyleBooking(rec, fullDataUrl, panel) {
+    if (!BOOKING) return;
+    if (state.aiPreview.submitting) return;
+    var styleId = rec.styleId || '';
+    var draft = readInlineFormDraft(panel);
+    state.aiPreview.formDrafts[styleId] = draft;
+    var statusEl = panel.querySelector('.mb-ai-rec-card__booking-status');
+
+    // Required-field guard (mirrors the legacy customer form so we can give
+    // a friendly message before hitting BOOKING.checkAvailability).
+    var required = ['customerPhone', 'customerName', 'address', 'city', 'zip', 'requestedDate', 'startTime'];
+    var missing = required.filter(function(k) { return !draft[k]; });
+    if (missing.length) {
+      var msg = t('homeAiPreviewBookMissing') || 'Please fill the highlighted fields.';
+      state.aiPreview.lastSubmissionError = msg;
+      if (statusEl) { statusEl.textContent = msg; statusEl.classList.add('mb-ai-rec-card__booking-status--error'); }
+      return;
+    }
+    // Find the right vendor by service area
+    var addressObj = { address: draft.address, city: draft.city, zip: draft.zip };
+    var vendor = BOOKING.findVendorForAddress(addressObj);
+    if (!vendor) {
+      var msgV = t('homeAiPreviewBookNoVendor') || 'No barber covers this address yet. Try a different ZIP.';
+      state.aiPreview.lastSubmissionError = msgV;
+      if (statusEl) { statusEl.textContent = msgV; statusEl.classList.add('mb-ai-rec-card__booking-status--error'); }
+      return;
+    }
+    var services = DATA && typeof DATA.listServicesForVendor === 'function'
+      ? DATA.listServicesForVendor(vendor.id)
+      : (DATA && DATA.sampleServices) || [];
+    var service = services.filter(function(s) { return s && s.id === state.selectedServiceId; })[0] || services[0];
+    if (!service) {
+      var msgS = t('homeAiPreviewBookNoService') || 'No service available for this barber right now.';
+      state.aiPreview.lastSubmissionError = msgS;
+      if (statusEl) { statusEl.textContent = msgS; statusEl.classList.add('mb-ai-rec-card__booking-status--error'); }
+      return;
+    }
+    var availability = (DATA && DATA.sampleAvailability) || [];
+
+    state.aiPreview.submitting = true;
+    if (statusEl) {
+      statusEl.classList.remove('mb-ai-rec-card__booking-status--error');
+      statusEl.textContent = t('homeAiPreviewBookSubmitting') || 'Sending…';
+    }
+    var submitBtn = panel.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+
+    // Build the AI-style draft once so both the chat-attach and direct paths
+    // see the same canonical reference.
+    var aiAttachments = {
+      selfieDataUrl: state.aiPreview.selfieDataUrl || '',
+      aiAnalysisSummary: state.aiPreview.summary || '',
+      aiAnalysisConsent: state.aiPreview.consent ? 'true' : 'false',
+      recommendedStyles: (state.aiPreview.recommendations || []).map(function(r) {
+        return {
+          styleId: r.styleId || '',
+          title: r.title || '',
+          explanation: r.explanation || '',
+          maintenance: r.maintenance || '',
+          barberNotes: r.barberNotes || ''
+        };
+      }),
+      selectedAiStyleId: styleId,
+      selectedAiStyleName: rec.title || '',
+      selectedAiStyleImage: state.aiPreview.selectedStylePreviewUrl || fullDataUrl || '',
+      selectedAiStyleDescription: rec.explanation || '',
+      selectedAiBarberNotes: rec.barberNotes || '',
+      selectedAiMaintenanceLevel: rec.maintenance || ''
+    };
+
+    var finalDraft = Object.assign({
+      customerEmail: '',
+      serviceId: service.id,
+      smsOptIn: false,
+      confirmationPreference: 'text',
+      source: 'customer_form'
+    }, draft, aiAttachments);
+
+    BOOKING.loadExistingBookings(vendor.id)
+      .catch(function() { return []; })
+      .then(function(existing) {
+        var avail = BOOKING.checkAvailability({
+          vendor: vendor,
+          services: services,
+          availability: availability,
+          draft: finalDraft,
+          existingBookings: existing,
+          now: new Date()
+        });
+        if (!avail || !avail.canCreate) {
+          throw new Error(avail && avail.key ? avail.key : 'unavailable');
+        }
+        var built = BOOKING.buildBooking({ vendor: vendor, draft: finalDraft, availabilityResult: avail });
+        if (!built || !built.valid) {
+          throw new Error((built && built.errors && built.errors.join(', ')) || 'invalid_booking');
+        }
+        built.booking.source = 'customer_form';
+        return BOOKING.saveBooking(built.booking, { requireDatabase: true });
+      })
+      .then(function(saved) {
+        state.aiPreview.submitting = false;
+        state.lastBooking = saved.booking;
+        state.aiPreview.lastSubmittedStyleId = styleId;
+        state.aiPreview.expandedStyleId = '';
+        state.aiPreview.lastSubmissionError = '';
+        // Persist customer location for next session
+        if (draft.city || draft.zip) saveCustomerLocation({ city: draft.city, zip: draft.zip });
+        renderAiResults();
+        setAiStatus(t('homeAiPreviewBookSuccess') || 'Booking sent. The barber will confirm shortly.');
+      })
+      .catch(function(error) {
+        state.aiPreview.submitting = false;
+        var rawMessage = (error && error.message) || 'submit_failed';
+        var human = inlineBookingErrorMessage(rawMessage);
+        state.aiPreview.lastSubmissionError = human;
+        if (statusEl) {
+          statusEl.textContent = human;
+          statusEl.classList.add('mb-ai-rec-card__booking-status--error');
+        }
+        if (submitBtn) submitBtn.disabled = false;
+        if (root.console) root.console.error('[mobile-barber] inline AI booking failed', rawMessage);
+      });
+  }
+
+  function inlineBookingErrorMessage(key) {
+    var map = {
+      service_area_out_of_range: t('homeAiPreviewBookNoVendor') || 'No barber covers this address yet.',
+      blackout_date: t('homeAiPreviewBookBlackout') || 'That date is unavailable. Please pick another.',
+      closed_day: t('homeAiPreviewBookClosed') || 'The barber is closed that day. Please pick another.',
+      outside_hours: t('homeAiPreviewBookOutsideHours') || 'That time is outside the barber’s hours.',
+      same_day_cutoff: t('homeAiPreviewBookCutoff') || 'Too close to your time. Please pick a later slot.',
+      booking_overlap: t('homeAiPreviewBookOverlap') || 'That slot was just taken. Please pick another.',
+      service_missing: t('homeAiPreviewBookNoService') || 'No service available for this barber right now.'
+    };
+    return map[key] || (t('homeAiPreviewBookGeneric') || 'Could not send the booking. Please try again.');
   }
 
   function handleAiConsentChange() {
@@ -1873,6 +2275,11 @@
     state.aiPreview.selectedStyleId = '';
     state.aiPreview.selectedStylePreviewUrl = '';
     state.aiPreview.summary = '';
+    state.aiPreview.expandedStyleId = '';
+    state.aiPreview.lastSubmittedStyleId = '';
+    state.aiPreview.lastSubmissionError = '';
+    state.aiPreview.submitting = false;
+    state.aiPreview.formDrafts = {};
     ['mbHomeAiPreviewUpload', 'mbHomeAiPreviewFile'].forEach(function(id) {
       var node = document.getElementById(id);
       if (node) node.value = '';
@@ -1909,6 +2316,18 @@
     });
     booking.selectedStyleId = ai.selectedStyleId || '';
     booking.selectedStylePreviewUrl = ai.selectedStylePreviewUrl || '';
+    // Mirror the canonical AI-style reference fields so the vendor portal
+    // can render the hairstyle reference uniformly regardless of which path
+    // submitted the booking (inline form vs chat agent).
+    var selectedRec = (ai.recommendations || []).filter(function(r) {
+      return r && r.styleId === ai.selectedStyleId;
+    })[0];
+    booking.selectedAiStyleId = ai.selectedStyleId || '';
+    booking.selectedAiStyleImage = ai.selectedStylePreviewUrl || '';
+    booking.selectedAiStyleName = (selectedRec && selectedRec.title) || '';
+    booking.selectedAiStyleDescription = (selectedRec && selectedRec.explanation) || '';
+    booking.selectedAiBarberNotes = (selectedRec && selectedRec.barberNotes) || '';
+    booking.selectedAiMaintenanceLevel = (selectedRec && selectedRec.maintenance) || '';
     return booking;
   }
 

@@ -72,6 +72,9 @@
       vendorAiPreviewStyleCaption: 'Selected style',
       vendorAiPreviewSummaryLabel: 'AI summary',
       vendorAiPreviewSuggestedNotes: 'Suggested cutting notes',
+      vendorAiPreviewStyleLabel: 'Style',
+      vendorAiPreviewMaintenanceLabel: 'Maintenance',
+      vendorAiPreviewBarberRefNotes: 'Barber reference notes',
       vendorAiPreviewBarberInstructions: 'Your cutting notes',
       vendorAiPreviewBarberInstructionsPlaceholder: 'Add specific instructions, e.g. #3 sides, scissor on top, square neck.',
       vendorAiPreviewSaveNotesAction: 'Save cutting notes',
@@ -306,6 +309,9 @@
       vendorAiPreviewStyleCaption: 'Kiểu đã chọn',
       vendorAiPreviewSummaryLabel: 'Tóm tắt AI',
       vendorAiPreviewSuggestedNotes: 'Ghi chú cắt gợi ý',
+      vendorAiPreviewStyleLabel: 'Kiểu tóc',
+      vendorAiPreviewMaintenanceLabel: 'Mức chăm sóc',
+      vendorAiPreviewBarberRefNotes: 'Ghi chú tham khảo cho thợ',
       vendorAiPreviewBarberInstructions: 'Ghi chú cắt của bạn',
       vendorAiPreviewBarberInstructionsPlaceholder: 'Thêm hướng dẫn cụ thể, ví dụ: số 3 hai bên, kéo trên đầu, vuông gáy.',
       vendorAiPreviewSaveNotesAction: 'Lưu ghi chú cắt',
@@ -540,6 +546,9 @@
       vendorAiPreviewStyleCaption: 'Estilo elegido',
       vendorAiPreviewSummaryLabel: 'Resumen AI',
       vendorAiPreviewSuggestedNotes: 'Notas de corte sugeridas',
+      vendorAiPreviewStyleLabel: 'Estilo',
+      vendorAiPreviewMaintenanceLabel: 'Mantenimiento',
+      vendorAiPreviewBarberRefNotes: 'Notas de referencia del barbero',
       vendorAiPreviewBarberInstructions: 'Sus notas de corte',
       vendorAiPreviewBarberInstructionsPlaceholder: 'Instrucciones específicas, p. ej. #3 a los lados, tijera arriba, nuca cuadrada.',
       vendorAiPreviewSaveNotesAction: 'Guardar notas de corte',
@@ -1549,6 +1558,7 @@
     // and either uploaded a selfie OR picked a style. Selfie thumbnail is
     // vendor-only (Firestore rules already gate the booking doc).
     var hasAiPreview = trim(booking.selfieDataUrl) ||
+      trim(booking.selectedAiStyleId) ||
       trim(booking.selectedStyleId) ||
       (Array.isArray(booking.recommendedStyles) && booking.recommendedStyles.length);
     if (hasAiPreview) {
@@ -1583,35 +1593,65 @@
       selfieWrap.appendChild(caption);
       grid.appendChild(selfieWrap);
     }
-    // Selected style preview
-    if (trim(booking.selectedStylePreviewUrl)) {
+    // Selected style preview (prefer canonical selectedAi* fields, fall back
+    // to legacy selectedStyleId / selectedStylePreviewUrl mirrors).
+    var styleImgUrl = trim(booking.selectedAiStyleImage) || trim(booking.selectedStylePreviewUrl);
+    var styleNameTxt = trim(booking.selectedAiStyleName)
+      || recommendationTitle(booking, booking.selectedAiStyleId || booking.selectedStyleId)
+      || t('vendorAiPreviewStyleCaption');
+    if (styleImgUrl) {
       var styleWrap = el('figure', 'mb-booking-ai-preview__media');
       var styleImg = document.createElement('img');
-      styleImg.src = booking.selectedStylePreviewUrl;
+      styleImg.src = styleImgUrl;
       styleImg.alt = t('vendorAiPreviewStyleAlt');
       styleImg.loading = 'lazy';
       var styleCaption = el('figcaption');
-      var styleTitle = recommendationTitle(booking, booking.selectedStyleId) || t('vendorAiPreviewStyleCaption');
-      styleCaption.textContent = styleTitle;
+      styleCaption.textContent = styleNameTxt;
       styleWrap.appendChild(styleImg);
       styleWrap.appendChild(styleCaption);
       grid.appendChild(styleWrap);
     }
     section.appendChild(grid);
 
+    // Canonical AI hairstyle reference (style name + description + maintenance
+    // + barber notes from the AI). Prefer the new selectedAi* fields, fall
+    // back to data derived from recommendedStyles[] for older bookings.
+    var legacyRec = (Array.isArray(booking.recommendedStyles) ? booking.recommendedStyles : [])
+      .filter(function(r) { return r && r.styleId === (booking.selectedAiStyleId || booking.selectedStyleId); })[0];
+    var aiName = styleNameTxt;
+    var aiDesc = trim(booking.selectedAiStyleDescription) || (legacyRec && trim(legacyRec.explanation)) || '';
+    var aiMaint = trim(booking.selectedAiMaintenanceLevel) || (legacyRec && trim(legacyRec.maintenance)) || '';
+    var aiBarberNotes = trim(booking.selectedAiBarberNotes) || (legacyRec && trim(legacyRec.barberNotes)) || '';
+    if (aiName || aiDesc || aiMaint || aiBarberNotes) {
+      var ref = el('div', 'mb-booking-ai-preview__reference');
+      if (aiName) {
+        var refStyle = el('p', 'mb-booking-ai-preview__reference-name');
+        refStyle.innerHTML = '<strong>' + (t('vendorAiPreviewStyleLabel') || 'Style') + ':</strong> ' + aiName;
+        ref.appendChild(refStyle);
+      }
+      if (aiMaint) {
+        var refMaint = el('p', 'mb-booking-ai-preview__reference-meta');
+        refMaint.innerHTML = '<strong>' + (t('vendorAiPreviewMaintenanceLabel') || 'Maintenance') + ':</strong> ' + aiMaint;
+        ref.appendChild(refMaint);
+      }
+      if (aiDesc) {
+        var refDesc = el('p', 'mb-booking-ai-preview__reference-desc');
+        refDesc.textContent = aiDesc;
+        ref.appendChild(refDesc);
+      }
+      if (aiBarberNotes) {
+        var refNotes = el('p', 'mb-booking-ai-preview__notes');
+        refNotes.innerHTML = '<strong>' + (t('vendorAiPreviewBarberRefNotes') || 'Barber reference notes') + ':</strong> ' + aiBarberNotes;
+        ref.appendChild(refNotes);
+      }
+      section.appendChild(ref);
+    }
+
     // AI analysis summary
     if (trim(booking.aiAnalysisSummary)) {
       var summary = el('p', 'mb-booking-ai-preview__summary');
       summary.textContent = t('vendorAiPreviewSummaryLabel') + ': ' + booking.aiAnalysisSummary;
       section.appendChild(summary);
-    }
-    // Selected recommendation barber notes (from the catalog rec, if any)
-    var selectedRec = (Array.isArray(booking.recommendedStyles) ? booking.recommendedStyles : [])
-      .filter(function(r) { return r && r.styleId === booking.selectedStyleId; })[0];
-    if (selectedRec && trim(selectedRec.barberNotes)) {
-      var recNotes = el('p', 'mb-booking-ai-preview__notes');
-      recNotes.textContent = t('vendorAiPreviewSuggestedNotes') + ': ' + selectedRec.barberNotes;
-      section.appendChild(recNotes);
     }
     // Free-form barber cutting notes input (vendor writes here)
     var notesField = el('label', 'mb-booking-ai-preview__field');

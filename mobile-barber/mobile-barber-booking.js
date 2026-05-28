@@ -740,8 +740,19 @@
       aiAnalysisSummary: trim(draft.aiAnalysisSummary),
       aiAnalysisConsent: draft.aiAnalysisConsent === true || draft.aiAnalysisConsent === 'true' ? 'true' : 'false',
       recommendedStyles: Array.isArray(draft.recommendedStyles) ? draft.recommendedStyles.slice() : [],
-      selectedStyleId: trim(draft.selectedStyleId),
-      selectedStylePreviewUrl: trim(draft.selectedStylePreviewUrl),
+      // Canonical AI hairstyle reference. selectedStyleId / selectedStylePreviewUrl
+      // are kept as legacy mirrors so the vendor dashboard, source-pattern tests,
+      // and saved bookings written before this field set was added all continue to work.
+      selectedAiStyleId: trim(draft.selectedAiStyleId || draft.selectedStyleId),
+      selectedAiStyleName: trim(draft.selectedAiStyleName),
+      selectedAiStyleImage: typeof draft.selectedAiStyleImage === 'string'
+        ? draft.selectedAiStyleImage
+        : (typeof draft.selectedStylePreviewUrl === 'string' ? draft.selectedStylePreviewUrl : ''),
+      selectedAiStyleDescription: trim(draft.selectedAiStyleDescription),
+      selectedAiBarberNotes: trim(draft.selectedAiBarberNotes),
+      selectedAiMaintenanceLevel: trim(draft.selectedAiMaintenanceLevel),
+      selectedStyleId: trim(draft.selectedAiStyleId || draft.selectedStyleId),
+      selectedStylePreviewUrl: trim(draft.selectedStylePreviewUrl || draft.selectedAiStyleImage),
       barberCuttingNotes: trim(draft.barberCuttingNotes),
       // Promotion fields — populated by calculateMobileBarberPrice when an
       // active vendor promotion applies. All default to empty/0/false so

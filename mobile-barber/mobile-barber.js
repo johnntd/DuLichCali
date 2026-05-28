@@ -1703,16 +1703,58 @@
   // promo slide leads the rotation; otherwise the default brand slide +
   // 3 service clip slides rotate.
   var _heroShowcaseTimer = null;
+  var _heroShowcaseHash  = '';   // last rendered slide-set hash (skip identical rebuilds)
+  var _heroShowcaseActiveKey = ''; // currently visible slide key (preserved across rebuilds)
+  var _heroShowcaseHashHadPromo = false; // true if previous render had at least one promo slide
+  var DEFAULT_HERO_POSTER  = '/assets/mobile-barber/styles/classic-haircut.jpg';
+  var PROMO_HERO_FALLBACK  = '/assets/mobile-barber/styles/business-haircut.jpg';
+
+  // Pick top 3 active services for a vendor (sort by price desc) so the
+  // promo slide shows the most-discountable haircuts inline.
+  function _topDiscountedServicesForPromo(promo, vendorId) {
+    if (!DATA || typeof DATA.listServicesForVendor !== 'function') return [];
+    var pct = Number(promo && promo.discountPercent || 0);
+    if (pct <= 0) return [];
+    var services = DATA.listServicesForVendor(vendorId) || [];
+    var scoped = services.filter(function(svc) {
+      if (!svc || svc.active === false) return false;
+      if (typeof svc.price !== 'number' || svc.price <= 0) return false;
+      if (promo.applyToScope === 'selected') {
+        return Array.isArray(promo.appliesToServiceIds) &&
+               promo.appliesToServiceIds.indexOf(svc.id) >= 0;
+      }
+      return true;
+    });
+    scoped.sort(function(a, b) { return Number(b.price) - Number(a.price); });
+    return scoped.slice(0, 3).map(function(svc) {
+      var final = Math.round(svc.price * (1 - pct / 100));
+      return {
+        slug: svc.slug || svc.id,
+        name: serviceCopy(svc, 'name'),
+        originalPrice: svc.price,
+        discountedPrice: final
+      };
+    });
+  }
+
+  function _hashSlideSet(slides) {
+    return JSON.stringify(slides.map(function(s) {
+      return [s.key, s.title, s.copy, s.meta, s.badge, s.poster, s.video,
+              (s.services || []).map(function(x) {
+                return [x.slug, x.name, x.originalPrice, x.discountedPrice];
+              })];
+    }));
+  }
+
   function renderHeroShowcase() {
     var mount = document.getElementById('mbHeroMedia') || document.getElementById('mbHeroShowcase');
     if (!mount) return;
-    if (_heroShowcaseTimer) { clearInterval(_heroShowcaseTimer); _heroShowcaseTimer = null; }
-    mount.innerHTML = '';
 
+    // ── Build the slide set ────────────────────────────────────────────
     var slides = [];
 
-    // Active vendor promotions lead the rotation so customers see live deals
-    // first. One single integrated promo surface — no duplicate widgets.
+    // Active vendor promotions LEAD the rotation. Each promo carries its
+    // own service list + poster fallback so the slide never renders blank.
     (collectActiveCustomerPromos() || []).forEach(function(promo) {
       var pct = Number(promo.discountPercent || 0);
       var byline = promo.vendorBarberName ? promo.vendorBarberName : '';
@@ -1720,20 +1762,23 @@
         byline = (byline ? byline + ' · ' : '') +
           interpolate(t('heroPromoUntil') || 'Through {date}', { date: promo.endDate });
       }
+      var services = _topDiscountedServicesForPromo(promo, promo.vendorId);
       slides.push({
         type:  'promo',
         key:   'heroShowcasePromo-' + (promo.id || ''),
         title: promo.name || (pct + '% OFF'),
-        copy:  promo.description || byline,
-        meta:  promo.description ? byline : '',
+        copy:  promo.description || '',
+        meta:  byline,
         cta:   t('heroPromoCta') || 'Book this discount',
         badge: '🔥 ' + pct + '% ' + (t('heroPromoBadgeOff') || 'OFF'),
+        poster: PROMO_HERO_FALLBACK,
+        services: services,
         promo: promo,
         action: function() { openAssistantPanel('general'); }
       });
     });
 
-    // Default brand slide — first in the rotation when no promo is active.
+    // Default brand slide — leads when no promo is active.
     slides.push({
       type:  'default',
       key:   'heroShowcaseDefault',
@@ -1741,14 +1786,13 @@
       copy:  t('heroCardSub')   || 'Service area, price, duration, and confirmation shown before booking.',
       cta:   t('bookNow')       || 'Book Now',
       badge: '✓ ' + (t('heroStatus') || 'Verified barber'),
-      poster:'/assets/mobile-barber/styles/classic-haircut.jpg',
+      poster: DEFAULT_HERO_POSTER,
       action: function() { openAssistantPanel('general'); }
     });
 
     // 3 hardcoded mobile-barber promo clips.
     slides.push({
-      type: 'clip',
-      key:  'heroShowcaseFade',
+      type: 'clip', key: 'heroShowcaseFade',
       title: t('heroShowcaseFadeTitle') || 'Fade at home',
       copy:  t('heroShowcaseFadeCopy')  || 'Fresh fade setup, cleanup, and finish without a waiting room.',
       cta:   t('heroShowcaseFadeCta')   || 'Book a fade',
@@ -1757,8 +1801,7 @@
       action: function() { openAssistantPanel('general'); }
     });
     slides.push({
-      type: 'clip',
-      key:  'heroShowcaseFamily',
+      type: 'clip', key: 'heroShowcaseFamily',
       title: t('heroShowcaseFamilyTitle') || 'Family haircut stop',
       copy:  t('heroShowcaseFamilyCopy')  || 'One mobile visit can cover kids, seniors, and parents.',
       cta:   t('heroShowcaseFamilyCta')   || 'Book family visit',
@@ -1767,8 +1810,7 @@
       action: function() { openAssistantPanel('general'); }
     });
     slides.push({
-      type: 'clip',
-      key:  'heroShowcaseHotel',
+      type: 'clip', key: 'heroShowcaseHotel',
       title: t('heroShowcaseHotelTitle') || 'Hotel-ready grooming',
       copy:  t('heroShowcaseHotelCopy')  || 'Business cut and beard detail before meetings or events.',
       cta:   t('heroShowcaseHotelCta')   || 'Book business cut',
@@ -1780,69 +1822,139 @@
     if (!slides.length) { mount.hidden = true; return; }
     mount.hidden = false;
 
-    // Render every slide as a card; only one is visible at a time via the
-    // --visible modifier. CSS handles the fade transition.
+    // ── Skip if the slide set hasn't actually changed ──────────────────
+    // Prevents the brief blank flash when init + Firestore-loaded fire
+    // back-to-back with identical content.
+    var hash = _hashSlideSet(slides);
+    if (hash === _heroShowcaseHash && mount.children.length === slides.length) {
+      return;
+    }
+    _heroShowcaseHash = hash;
+
+    // ── Pick the slide key to keep visible across the rebuild ──────────
+    // Rules:
+    //  1. If a promo slide just appeared that wasn't visible before → lead
+    //     with it (this is the moment the customer needs to notice the deal).
+    //  2. Otherwise if the previously-active slide still exists → keep it.
+    //  3. Otherwise lead with slide 0 (default brand or first promo).
+    var firstPromoKey = '';
+    for (var pi = 0; pi < slides.length; pi++) {
+      if (slides[pi].type === 'promo') { firstPromoKey = slides[pi].key; break; }
+    }
+    var keepKey = _heroShowcaseActiveKey;
+    var activeIdx = 0;
+    if (firstPromoKey && !_heroShowcaseHashHadPromo) {
+      // Promo just activated — lead with it on this render.
+      for (var fi = 0; fi < slides.length; fi++) {
+        if (slides[fi].key === firstPromoKey) { activeIdx = fi; break; }
+      }
+    } else if (keepKey) {
+      for (var ki = 0; ki < slides.length; ki++) {
+        if (slides[ki].key === keepKey) { activeIdx = ki; break; }
+      }
+    }
+    _heroShowcaseHashHadPromo = !!firstPromoKey;
+    _heroShowcaseActiveKey = slides[activeIdx].key;
+
+    // ── Build into a fragment, then atomic swap (no blank frame) ───────
+    var frag = document.createDocumentFragment();
     slides.forEach(function(slide, idx) {
-      var card = el('article', 'mb-hero-showcase-card mb-hero-showcase-card--' + slide.type);
-      if (idx === 0) card.classList.add('mb-hero-showcase-card--visible');
-      card.setAttribute('data-key', slide.key);
-
-      var media = el('div', 'mb-hero-showcase-card__media');
-      if (slide.type === 'clip' && slide.video) {
-        var video = document.createElement('video');
-        video.src = slide.video;
-        if (slide.poster) video.poster = slide.poster;
-        video.autoplay = true; video.loop = true; video.muted = true;
-        video.playsInline = true;
-        video.setAttribute('playsinline', '');
-        video.setAttribute('preload', 'metadata');
-        video.setAttribute('aria-hidden', 'true');
-        media.appendChild(video);
-      } else if (slide.poster) {
-        media.style.backgroundImage = "url('" + slide.poster + "')";
-      } else if (slide.type === 'promo') {
-        media.classList.add('mb-hero-showcase-card__media--promo');
-      }
-      card.appendChild(media);
-
-      if (slide.badge) {
-        var badge = el('span', 'mb-hero-showcase-card__badge');
-        badge.textContent = slide.badge;
-        card.appendChild(badge);
-      }
-      var body = el('div', 'mb-hero-showcase-card__body');
-      var title = el('strong'); title.textContent = slide.title;
-      body.appendChild(title);
-      if (slide.copy) {
-        var copy = el('p'); copy.textContent = slide.copy;
-        body.appendChild(copy);
-      }
-      if (slide.meta) {
-        var meta = el('span', 'mb-hero-showcase-card__meta');
-        meta.textContent = slide.meta;
-        body.appendChild(meta);
-      }
-      var cta = el('button', 'mb-button mb-button--primary mb-button--sm mb-hero-showcase-card__cta');
-      cta.type = 'button';
-      cta.textContent = slide.cta;
-      cta.addEventListener('click', function(e) { e.preventDefault(); slide.action(); });
-      body.appendChild(cta);
-      card.appendChild(body);
-      mount.appendChild(card);
+      frag.appendChild(_buildHeroShowcaseCard(slide, idx === activeIdx));
     });
+    mount.innerHTML = '';
+    mount.appendChild(frag);
 
-    // Auto-rotate every 5s when there's more than one slide.
+    // ── Restart auto-rotate ─────────────────────────────────────────────
+    if (_heroShowcaseTimer) { clearInterval(_heroShowcaseTimer); _heroShowcaseTimer = null; }
     if (slides.length > 1) {
-      var active = 0;
+      var active = activeIdx;
       _heroShowcaseTimer = setInterval(function() {
         var cards = mount.querySelectorAll('.mb-hero-showcase-card');
         if (!cards.length) return;
         cards[active].classList.remove('mb-hero-showcase-card--visible');
         active = (active + 1) % cards.length;
         cards[active].classList.add('mb-hero-showcase-card--visible');
+        _heroShowcaseActiveKey = cards[active].getAttribute('data-key') || _heroShowcaseActiveKey;
       }, 5000);
     }
   }
+
+  function _buildHeroShowcaseCard(slide, isActive) {
+    var card = el('article', 'mb-hero-showcase-card mb-hero-showcase-card--' + slide.type);
+    if (isActive) card.classList.add('mb-hero-showcase-card--visible');
+    card.setAttribute('data-key', slide.key);
+
+    var media = el('div', 'mb-hero-showcase-card__media');
+    if (slide.type === 'clip' && slide.video) {
+      var video = document.createElement('video');
+      video.src = slide.video;
+      if (slide.poster) video.poster = slide.poster;
+      video.autoplay = true; video.loop = true; video.muted = true;
+      video.playsInline = true;
+      video.setAttribute('playsinline', '');
+      video.setAttribute('preload', 'metadata');
+      video.setAttribute('aria-hidden', 'true');
+      media.appendChild(video);
+    } else if (slide.poster) {
+      // Promo slide: poster image PLUS the gold gradient overlay via CSS.
+      media.style.backgroundImage = "url('" + slide.poster + "')";
+      if (slide.type === 'promo') {
+        media.classList.add('mb-hero-showcase-card__media--promo');
+      }
+    } else if (slide.type === 'promo') {
+      media.classList.add('mb-hero-showcase-card__media--promo');
+    }
+    card.appendChild(media);
+
+    if (slide.badge) {
+      var badge = el('span', 'mb-hero-showcase-card__badge');
+      badge.textContent = slide.badge;
+      card.appendChild(badge);
+    }
+
+    var body = el('div', 'mb-hero-showcase-card__body');
+    var title = el('strong'); title.textContent = slide.title;
+    body.appendChild(title);
+
+    if (slide.copy) {
+      var copy = el('p'); copy.textContent = slide.copy;
+      body.appendChild(copy);
+    }
+
+    // Promo slide: inline service grid (top 3 discounted, original→final).
+    if (slide.type === 'promo' && slide.services && slide.services.length) {
+      var grid = el('ul', 'mb-hero-showcase-card__services');
+      slide.services.forEach(function(svc) {
+        var li = el('li', 'mb-hero-showcase-card__service-row');
+        var nm = el('span', 'mb-hero-showcase-card__service-name');
+        nm.textContent = svc.name;
+        var pr = el('span', 'mb-hero-showcase-card__service-prices');
+        pr.innerHTML =
+          '<span class="mb-hero-showcase-card__service-original">' + formatMoney(svc.originalPrice) + '</span>' +
+          ' <span class="mb-hero-showcase-card__service-arrow">→</span> ' +
+          '<span class="mb-hero-showcase-card__service-final">' + formatMoney(svc.discountedPrice) + '</span>';
+        li.appendChild(nm); li.appendChild(pr);
+        grid.appendChild(li);
+      });
+      body.appendChild(grid);
+    }
+
+    if (slide.meta) {
+      var meta = el('span', 'mb-hero-showcase-card__meta');
+      meta.textContent = slide.meta;
+      body.appendChild(meta);
+    }
+
+    var cta = el('button', 'mb-button mb-button--primary mb-button--sm mb-hero-showcase-card__cta');
+    cta.type = 'button';
+    cta.textContent = slide.cta;
+    cta.addEventListener('click', function(e) { e.preventDefault(); slide.action(); });
+    body.appendChild(cta);
+
+    card.appendChild(body);
+    return card;
+  }
+
   if (typeof window !== 'undefined') window._mbRenderHeroShowcase = renderHeroShowcase;
 
   function coverageRegionsFromVendors() {

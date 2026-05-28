@@ -1083,12 +1083,22 @@
   color: #052e16;
 }
 
-/* Promo slide gets a cinematic gold treatment so it leads the rotation
-   with visible authority but stays inside the hero media — one surface. */
+/* Promo slide gets a cinematic gold gradient OVER the barber poster so it
+   reads as a premium offer card with imagery, never as a blank gradient. */
 .mb-hero-showcase-card--promo .mb-hero-showcase-card__media {
+  background-blend-mode: multiply;
+  background-size: cover;
+  background-position: center 35%;
+  background-color: #062138;
+}
+.mb-hero-showcase-card--promo .mb-hero-showcase-card__media::before {
+  content: '';
+  position: absolute;
+  inset: 0;
   background:
     radial-gradient(circle at 18% 25%, rgba(245, 166, 35, .55), transparent 55%),
-    linear-gradient(135deg, rgba(7, 24, 42, .95) 30%, rgba(11, 36, 60, .85) 100%);
+    linear-gradient(135deg, rgba(7, 24, 42, .82) 30%, rgba(11, 36, 60, .78) 100%);
+  pointer-events: none;
 }
 .mb-hero-showcase-card--promo {
   box-shadow: inset 0 0 0 1px rgba(245, 166, 35, .35);
@@ -1097,6 +1107,55 @@
   background: linear-gradient(135deg, #f6c352, #d97706);
   color: #0b1d33;
   box-shadow: 0 6px 22px -8px rgba(245, 166, 35, .65);
+}
+
+/* Inline discounted-services list on the promo slide — top 3 services with
+   original strikethrough → final price arrow. Keeps the slide informative
+   so a customer can immediately see what the discount is worth. */
+.mb-hero-showcase-card__services {
+  list-style: none;
+  margin: .4rem 0 .15rem;
+  padding: 0;
+  display: grid;
+  gap: .2rem;
+}
+.mb-hero-showcase-card__service-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: .6rem;
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, .92);
+  line-height: 1.3;
+}
+.mb-hero-showcase-card__service-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mb-hero-showcase-card__service-prices {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.mb-hero-showcase-card__service-original {
+  color: rgba(255, 255, 255, .55);
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  font-weight: 600;
+}
+.mb-hero-showcase-card__service-arrow {
+  color: rgba(255, 255, 255, .55);
+  margin: 0 .15rem;
+}
+.mb-hero-showcase-card__service-final {
+  color: #fcd34d;
+  font-weight: 800;
+}
+@media (min-width: 768px) {
+  .mb-hero-showcase-card__services { gap: .3rem; }
+  .mb-hero-showcase-card__service-row { font-size: var(--text-sm); }
 }
 
 @media (min-width: 768px) {

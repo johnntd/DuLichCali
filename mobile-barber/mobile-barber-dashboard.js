@@ -2344,7 +2344,15 @@
 
   function persistVendorPromotions() {
     // Mirror into local storage for offline / static-fallback rendering.
-    if (state.vendor) writeJson(STORAGE.vendor, state.vendor);
+    // STORAGE.vendor is a map keyed by vendorId (same shape persistVendor
+    // and loadVendor use). Writing the raw vendor object here corrupted the
+    // map so loadVendor() could no longer find it on reload — which made
+    // every added/enabled promotion vanish on the next load.
+    if (state.vendor && state.vendorId) {
+      var rows = readJson(STORAGE.vendor, {});
+      rows[state.vendorId] = state.vendor;
+      writeJson(STORAGE.vendor, rows);
+    }
     // Push to Firestore via the same merge pattern used by saveProfile.
     if (!canUseFirestore() || !state.vendorId) return;
     var patch = { promotions: state.vendor.promotions || [], updatedAt: state.vendor.updatedAt };

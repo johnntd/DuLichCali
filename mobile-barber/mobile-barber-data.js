@@ -381,8 +381,9 @@
         Object.freeze({ maxMiles: 20, fee: 10 }),
         Object.freeze({ maxMiles: 25, fee: 20 })
       ]),
-      // No default promotions — only what the vendor enables in their
-      // dashboard should appear on the customer page.
+      // Promotions come exclusively from the vendor portal (Firestore
+      // mobileBarberVendors/{id}.promotions). No hard-coded seeds — the
+      // landing shows a promo only after the vendor enables one.
       promotions: Object.freeze([]),
       createdAt: SEED_TIMESTAMP,
       updatedAt: SEED_TIMESTAMP
@@ -424,8 +425,8 @@
         Object.freeze({ maxMiles: 25, fee: 10 }),
         Object.freeze({ maxMiles: 30, fee: 20 })
       ]),
-      // No default promotions — only what the vendor enables in their
-      // dashboard should appear on the customer page.
+      // No default promotion for Tim — only what he enables in his dashboard
+      // appears on the customer page. (Michael carries the seed promo.)
       promotions: Object.freeze([]),
       createdAt: SEED_TIMESTAMP,
       updatedAt: SEED_TIMESTAMP

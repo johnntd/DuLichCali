@@ -64,21 +64,21 @@ function runMobileBarberPromotionVisibilityTests(test) {
       'Must not mutate vendor.promotions on the frozen catalog');
   });
 
-  test('V4. No phantom seed promotions — sampleVendors must be empty by default', function() {
-    // Customers must only see promos a vendor actually enabled in their
-    // dashboard. Baked-in seed promos previously caused a fake 15% Tim
-    // promo to appear when only Michael had configured one — regression
-    // guard so we don't re-introduce that.
+  test('V4. No hard-coded seed promos — promotions come from the vendor portal', function() {
+    // Promotions must originate exclusively from the vendor dashboard
+    // (Firestore mobileBarberVendors/{id}.promotions). The static catalog
+    // MUST NOT carry any seed promo for any vendor — a vendor shows a promo
+    // only after they enable one in their own portal.
     var michael = DATA.findVendorById(DATA.MICHAEL_VENDOR_ID);
     var tim     = DATA.findVendorById(DATA.TIM_VENDOR_ID);
     assert(michael && Array.isArray(michael.promotions),
-      'Michael must declare promotions (even if empty)');
+      'Michael must declare promotions (empty)');
     assertEq(michael.promotions.length, 0,
-      'Michael MUST NOT carry hard-coded seed promotions');
+      'Michael MUST NOT carry a hard-coded seed promo');
     assert(tim && Array.isArray(tim.promotions),
-      'Tim must declare promotions (even if empty)');
+      'Tim must declare promotions (empty)');
     assertEq(tim.promotions.length, 0,
-      'Tim MUST NOT carry hard-coded seed promotions');
+      'Tim MUST NOT carry a hard-coded seed promo');
   });
 
   test('V5. findActivePromotionForService matches injected promo for the right service', function() {

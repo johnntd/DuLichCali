@@ -3084,6 +3084,15 @@
   line-height: 1;
 }
 
+/* Solo (single) variant — used when iOS / Android already provide the
+   gallery vs camera choice via their native file-picker sheet. */
+.mb-ai-preview__source-button--solo {
+  width: 100%;
+  min-height: 56px;
+  padding: 1rem 1rem;
+  font-size: var(--text-md, 1rem);
+}
+
 @media (max-width: 420px) {
   .mb-ai-preview__source-buttons { grid-template-columns: 1fr; }
 }

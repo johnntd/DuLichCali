@@ -98,6 +98,8 @@
       homeAiPreviewIntro: "Upload a selfie and the AI will generate 3 photorealistic previews of your face with different hairstyles. Pick one and we'll attach it to your booking so the barber knows exactly what you want.",
       homeAiPreviewConsent: 'I agree the AI may use my selfie to generate haircut previews. The image is shared only with my assigned barber and is never used for marketing.',
       homeAiPreviewUploadLabel: 'Add a selfie (face + hair visible, good light)',
+      homeAiPreviewAddPhoto: 'Add a photo or selfie',
+      homeAiPreviewAddPhotoHint: "Your phone will let you take a new selfie or pick one from your library.",
       homeAiPreviewChooseFile: 'Choose from gallery',
       homeAiPreviewTakeSelfie: 'Take a selfie',
       homeAiPreviewAnalyze: 'Get 3 AI hairstyle previews',
@@ -243,6 +245,8 @@
       homeAiPreviewIntro: 'Tải ảnh selfie và AI sẽ tạo 3 hình xem trước chân thực với các kiểu tóc khác nhau. Chọn một kiểu và tụi em sẽ đính kèm vào lịch hẹn để thợ biết chính xác bạn muốn gì.',
       homeAiPreviewConsent: 'Tôi đồng ý cho AI dùng ảnh selfie để tạo hình xem trước kiểu tóc. Ảnh chỉ chia sẻ với thợ phụ trách và không dùng cho mục đích quảng cáo.',
       homeAiPreviewUploadLabel: 'Thêm ảnh selfie (thấy rõ mặt và tóc, đủ sáng)',
+      homeAiPreviewAddPhoto: 'Thêm ảnh hoặc selfie',
+      homeAiPreviewAddPhotoHint: 'Điện thoại sẽ cho bạn chụp selfie mới hoặc chọn từ thư viện.',
       homeAiPreviewChooseFile: 'Chọn từ thư viện',
       homeAiPreviewTakeSelfie: 'Chụp ảnh selfie',
       homeAiPreviewAnalyze: 'Lấy 3 hình xem trước kiểu tóc từ AI',
@@ -388,6 +392,8 @@
       homeAiPreviewIntro: 'Suba una selfie y la AI generará 3 vistas previas fotorrealistas de su rostro con distintos cortes. Elija uno y lo adjuntaremos a su cita para que el barbero sepa exactamente qué quiere.',
       homeAiPreviewConsent: 'Acepto que la AI use mi selfie para generar vistas previas. La imagen se comparte solo con el barbero asignado y nunca se usa para marketing.',
       homeAiPreviewUploadLabel: 'Agregue una selfie (cara y cabello visibles, buena luz)',
+      homeAiPreviewAddPhoto: 'Agregar foto o selfie',
+      homeAiPreviewAddPhotoHint: 'Su teléfono le permitirá tomar una selfie o elegir una de la galería.',
       homeAiPreviewChooseFile: 'Elegir de la galería',
       homeAiPreviewTakeSelfie: 'Tomar una selfie',
       homeAiPreviewAnalyze: 'Obtener 3 vistas previas con AI',
@@ -1660,13 +1666,11 @@
     var aiConsent  = document.getElementById('mbHomeAiPreviewConsent');
     var aiUpload   = document.getElementById('mbHomeAiPreviewUpload');
     var aiFile     = document.getElementById('mbHomeAiPreviewFile');
-    var aiCamera   = document.getElementById('mbHomeAiPreviewCamera');
     var aiAnalyze  = document.getElementById('mbHomeAiPreviewAnalyze');
     var aiRemove   = document.getElementById('mbHomeAiPreviewRemove');
     if (aiConsent) aiConsent.addEventListener('change', handleAiConsentChange);
     if (aiUpload)  aiUpload.addEventListener('change', handleAiUpload);
     if (aiFile)    aiFile.addEventListener('change', handleAiUpload);
-    if (aiCamera)  aiCamera.addEventListener('change', handleAiUpload);
     if (aiAnalyze) aiAnalyze.addEventListener('click', handleAiAnalyze);
     if (aiRemove)  aiRemove.addEventListener('click', function() { resetAiPreviewSelfie(false); });
   }
@@ -1763,13 +1767,11 @@
     // input ID if it's still present anywhere.
     var fieldset = document.getElementById('mbHomeAiPreviewSourceFieldset');
     var fileInput = document.getElementById('mbHomeAiPreviewFile');
-    var cameraInput = document.getElementById('mbHomeAiPreviewCamera');
     var legacyUpload = document.getElementById('mbHomeAiPreviewUpload');
     var analyze  = document.getElementById('mbHomeAiPreviewAnalyze');
     state.aiPreview.consent = !!(checkbox && checkbox.checked);
     if (fieldset)     fieldset.disabled = !state.aiPreview.consent;
     if (fileInput)    fileInput.disabled = !state.aiPreview.consent;
-    if (cameraInput)  cameraInput.disabled = !state.aiPreview.consent;
     if (legacyUpload) legacyUpload.disabled = !state.aiPreview.consent;
     if (analyze)      analyze.disabled = !state.aiPreview.consent || !state.aiPreview.selfieDataUrl;
     if (!state.aiPreview.consent) resetAiPreviewSelfie(true);
@@ -1871,7 +1873,7 @@
     state.aiPreview.selectedStyleId = '';
     state.aiPreview.selectedStylePreviewUrl = '';
     state.aiPreview.summary = '';
-    ['mbHomeAiPreviewUpload', 'mbHomeAiPreviewFile', 'mbHomeAiPreviewCamera'].forEach(function(id) {
+    ['mbHomeAiPreviewUpload', 'mbHomeAiPreviewFile'].forEach(function(id) {
       var node = document.getElementById(id);
       if (node) node.value = '';
     });

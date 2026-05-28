@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260527l">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260527n">
 </head>
 <body class="mb-page">
   <main class="mb-shell" id="mobileBarberApp">
@@ -83,18 +83,12 @@
           </label>
           <fieldset class="mb-field mb-ai-preview__source" id="mbHomeAiPreviewSourceFieldset" disabled>
             <legend><span data-i18n="homeAiPreviewUploadLabel"></span></legend>
-            <div class="mb-ai-preview__source-buttons">
-              <label class="mb-ai-preview__source-button">
-                <input id="mbHomeAiPreviewFile" type="file" accept="image/*" hidden>
-                <span aria-hidden="true">🖼️</span>
-                <span data-i18n="homeAiPreviewChooseFile"></span>
-              </label>
-              <label class="mb-ai-preview__source-button mb-ai-preview__source-button--primary">
-                <input id="mbHomeAiPreviewCamera" type="file" accept="image/*" capture="user" hidden>
-                <span aria-hidden="true">📷</span>
-                <span data-i18n="homeAiPreviewTakeSelfie"></span>
-              </label>
-            </div>
+            <label class="mb-ai-preview__source-button mb-ai-preview__source-button--primary mb-ai-preview__source-button--solo">
+              <input id="mbHomeAiPreviewFile" type="file" accept="image/*" hidden>
+              <span aria-hidden="true">📷</span>
+              <span data-i18n="homeAiPreviewAddPhoto"></span>
+            </label>
+            <p class="mb-form-hint" data-i18n="homeAiPreviewAddPhotoHint"></p>
           </fieldset>
           <div class="mb-ai-preview__preview" id="mbHomeAiPreviewSelfie" hidden></div>
           <div class="mb-ai-preview__actions">
@@ -235,6 +229,6 @@
   <script src="/mobile-barber/mobile-barber-agent.js?v=20260527k"></script>
   <script src="/mobile-barber/mobile-barber-voice.js?v=20260525f"></script>
   <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260527c"></script>
-  <script src="/mobile-barber/mobile-barber.js?v=20260527l"></script>
+  <script src="/mobile-barber/mobile-barber.js?v=20260527n"></script>
 </body>
 </html>

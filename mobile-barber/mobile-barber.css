@@ -1083,21 +1083,24 @@
   color: #052e16;
 }
 
-/* Promo slide gets a cinematic gold gradient OVER the barber poster so it
-   reads as a premium offer card with imagery, never as a blank gradient. */
+/* Promo slide — let the barber poster show through with a light cinematic
+   gold accent only. The bottom-readability gradient on .__::after already
+   provides legibility for the copy, so we don't double-darken the image. */
 .mb-hero-showcase-card--promo .mb-hero-showcase-card__media {
-  background-blend-mode: multiply;
   background-size: cover;
-  background-position: center 35%;
+  background-position: center 30%;
   background-color: #062138;
 }
 .mb-hero-showcase-card--promo .mb-hero-showcase-card__media::before {
   content: '';
   position: absolute;
   inset: 0;
+  /* Soft gold corner accent + subtle navy tint that preserves the
+     photo. ~0.25 alpha keeps the barber visible while still feeling
+     branded. */
   background:
-    radial-gradient(circle at 18% 25%, rgba(245, 166, 35, .55), transparent 55%),
-    linear-gradient(135deg, rgba(7, 24, 42, .82) 30%, rgba(11, 36, 60, .78) 100%);
+    radial-gradient(circle at 16% 22%, rgba(245, 166, 35, .42), transparent 48%),
+    linear-gradient(135deg, rgba(7, 24, 42, .25) 0%, rgba(7, 24, 42, .05) 60%, transparent 100%);
   pointer-events: none;
 }
 .mb-hero-showcase-card--promo {

@@ -174,6 +174,7 @@
       manualBookingCutoff: 'Too close to your time. Please pick a later slot.',
       manualBookingOverlap: 'That slot was just taken. Please pick another.',
       manualBookingGeneric: 'Could not send the booking. Please try again.',
+      manualBookingHelpLabel: 'Need help?',
       aiPreviewDisclosure: 'Sample AI-generated style preview. Real barber portfolio coming soon.',
       serviceAreaLabel: 'Service area',
       radiusLabel: 'Travel radius',
@@ -377,6 +378,7 @@
       manualBookingCutoff: 'Quá gần với giờ bạn chọn. Vui lòng chọn giờ trễ hơn.',
       manualBookingOverlap: 'Khung giờ này vừa có người đặt. Vui lòng chọn giờ khác.',
       manualBookingGeneric: 'Không gửi được lịch hẹn. Vui lòng thử lại.',
+      manualBookingHelpLabel: 'Cần trợ giúp?',
       aiPreviewDisclosure: 'Ảnh mẫu tạo bằng AI. Portfolio thật của thợ sẽ có sau.',
       serviceAreaLabel: 'Khu vực phục vụ',
       radiusLabel: 'Bán kính di chuyển',
@@ -580,6 +582,7 @@
       manualBookingCutoff: 'Demasiado cerca de la hora. Elija una más tarde.',
       manualBookingOverlap: 'Ese horario ya fue tomado. Elija otro.',
       manualBookingGeneric: 'No se pudo enviar la solicitud. Intente de nuevo.',
+      manualBookingHelpLabel: '¿Necesita ayuda?',
       aiPreviewDisclosure: 'Vista previa de estilo generada por AI. Portafolio real del barbero próximamente.',
       serviceAreaLabel: 'Área de servicio',
       radiusLabel: 'Radio de viaje',
@@ -1492,53 +1495,21 @@
     if (!panel || !service) return;
     panel.innerHTML = '';
 
+    // Just a summary line — the manual booking form opens immediately
+    // beneath it (no intermediate Book/Chat/Talk three-button panel).
+    // AI options live inside the form footer as secondary "Need help?"
+    // links so the customer never has to choose a booking flow twice.
     var text = el('div', 'mb-service-selection__text');
     var label = el('span');
     var title = el('strong');
-    var actions = el('div', 'mb-service-selection__actions');
-    var book = el('button', 'mb-button mb-button--primary');
-    var chat = el('button', 'mb-button mb-button--ghost');
-    var voice = el('button', 'mb-button mb-button--ghost');
-
     label.textContent = t('selectedServiceLabel');
     title.textContent = serviceCopy(service, 'name') + ' · ' + formatServicePrice(service.price);
-    book.type = 'button';
-    chat.type = 'button';
-    voice.type = 'button';
-    book.setAttribute('data-action', 'bookSelectedService');
-    chat.setAttribute('data-action', 'chatSelectedService');
-    voice.setAttribute('data-action', 'voiceSelectedService');
-    book.textContent = t('bookThisService');
-    chat.textContent = t('chatThisService');
-    voice.textContent = t('talkThisService');
-
-    // "Book this service" → MANUAL booking form, NOT the AI assistant.
-    // These three CTAs are intentionally three separate flows: manual,
-    // text AI, voice AI. Do not collapse them into a shared handler.
-    book.addEventListener('click', function(event) {
-      event.preventDefault();
-      event.stopPropagation();
-      state.selectedServiceId = service.id;
-      openManualBookingForm(service);
-    });
-    chat.addEventListener('click', function() {
-      state.selectedServiceId = service.id;
-      openAssistantPanel('general');
-    });
-    voice.addEventListener('click', function() {
-      state.selectedServiceId = service.id;
-      openVoiceAssistant();
-    });
-
     text.appendChild(label);
     text.appendChild(title);
-    actions.appendChild(book);
-    actions.appendChild(chat);
-    actions.appendChild(voice);
     panel.appendChild(text);
-    panel.appendChild(actions);
-    // Manual booking form mount point. Rendered on demand by the Book CTA;
-    // hidden by default so the three-CTA row stays minimal.
+
+    // Manual booking form mount point. Filled by openManualBookingForm()
+    // immediately after Select Service is tapped.
     var manualMount = el('div', 'mb-manual-booking-mount');
     manualMount.id = 'mbManualBookingMount';
     manualMount.hidden = true;
@@ -1596,16 +1567,15 @@
       row.appendChild(metaChip(t('cleanupLabel'), service.cleanupBufferMinutes + ' ' + t('minutes')));
       cta.type = 'button';
       cta.textContent = t('selectService');
-      // Selecting a service ONLY surfaces the selection panel with the three
-      // CTAs (Book / Chat / Talk). It must NOT auto-open the AI assistant —
-      // location is collected inside the manual booking form itself, or
-      // asked by the AI assistant if the customer chooses chat/voice.
+      // Tapping "Select Service" opens the manual booking form for that
+      // service IMMEDIATELY. The previous intermediate Book/Chat/Talk panel
+      // was unnecessary friction — the service is already chosen, so the
+      // next step should be filling in the appointment details. The AI
+      // options remain available as secondary "Need help?" links inside
+      // the form footer.
       cta.addEventListener('click', function() {
         selectService(service);
-        var sel = document.getElementById('mbServiceSelection');
-        if (sel && sel.scrollIntoView) {
-          try { sel.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
-        }
+        openManualBookingForm(service);
       });
 
       media.appendChild(image);
@@ -2433,6 +2403,31 @@
     actions.appendChild(submit);
     actions.appendChild(cancel);
     panel.appendChild(actions);
+
+    // Secondary "Need help? Chat with AI / Talk to AI" footer — keeps
+    // the AI booking flows available without making them a required step.
+    // The primary path is the form above; AI is an optional alternative.
+    var help = el('div', 'mb-manual-booking__help');
+    var helpLabel = el('span', 'mb-manual-booking__help-label');
+    helpLabel.textContent = t('manualBookingHelpLabel') || 'Need help?';
+    var chatBtn = el('button', 'mb-button mb-button--ghost mb-button--sm mb-manual-booking__help-btn');
+    chatBtn.type = 'button';
+    chatBtn.textContent = t('chatThisService') || 'Chat with AI to book';
+    chatBtn.addEventListener('click', function() {
+      state.selectedServiceId = service.id;
+      openAssistantPanel('general');
+    });
+    var voiceBtn = el('button', 'mb-button mb-button--ghost mb-button--sm mb-manual-booking__help-btn');
+    voiceBtn.type = 'button';
+    voiceBtn.textContent = t('talkThisService') || 'Talk to AI to book';
+    voiceBtn.addEventListener('click', function() {
+      state.selectedServiceId = service.id;
+      openVoiceAssistant();
+    });
+    help.appendChild(helpLabel);
+    help.appendChild(chatBtn);
+    help.appendChild(voiceBtn);
+    panel.appendChild(help);
 
     panel.addEventListener('input', function() {
       state.manualBooking.formDraft = readManualBookingDraft(panel);

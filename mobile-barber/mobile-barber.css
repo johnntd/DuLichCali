@@ -3943,6 +3943,31 @@
   text-align: center;
 }
 
+/* Secondary "Need help?" footer — keeps AI booking flows available
+   without making them the required next step. Quiet visual weight so
+   the manual form remains the primary path. */
+.mb-manual-booking__help {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+  margin-top: .4rem;
+  padding-top: .65rem;
+  border-top: 1px dashed rgba(255, 255, 255, .12);
+}
+.mb-manual-booking__help-label {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  font-weight: 600;
+  margin-right: .15rem;
+}
+.mb-manual-booking__help-btn {
+  flex: 0 0 auto;
+  padding: .35rem .65rem;
+  font-size: var(--text-xs);
+  min-height: 36px;
+}
+
 @media (max-width: 540px) {
   .mb-manual-booking__row { grid-template-columns: 1fr; }
   .mb-manual-booking { padding: .8rem .65rem .9rem; }

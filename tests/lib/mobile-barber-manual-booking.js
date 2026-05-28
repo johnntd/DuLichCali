@@ -13,47 +13,53 @@ function read(rel) { return fs.readFileSync(path.join(__dirname, '../../', rel),
 
 function runMobileBarberManualBookingTests(test) {
 
-  test('M1. renderSelectedService wires three SEPARATE handlers', function() {
+  test('M1. renderSelectedService renders summary only — no Book/Chat/Talk three-button row', function() {
+    // The intermediate Book/Chat/Talk panel was removed. Select Service now
+    // opens the manual booking form immediately; AI options live as small
+    // secondary "Need help?" links inside the form footer.
     var src = read('mobile-barber/mobile-barber.js');
     var startIdx = src.indexOf('function renderSelectedService');
     assert(startIdx > 0, 'renderSelectedService must exist');
     var fn = src.slice(startIdx, startIdx + 3000);
-
-    // book handler must call openManualBookingForm (manual flow)
-    var bookBlock = fn.slice(fn.indexOf('book.addEventListener'), fn.indexOf('chat.addEventListener'));
-    assert(bookBlock.indexOf('openManualBookingForm') >= 0,
-      'Book handler MUST open manual booking form. Got: ' + bookBlock.slice(0, 200));
-    assert(bookBlock.indexOf('openAssistantPanel') < 0,
-      'Book handler MUST NOT open AI assistant panel. Got: ' + bookBlock.slice(0, 200));
-    assert(bookBlock.indexOf('openVoiceAssistant') < 0,
-      'Book handler MUST NOT open voice assistant. Got: ' + bookBlock.slice(0, 200));
-    assert(bookBlock.indexOf('promptForLocation') < 0,
-      'Book handler MUST NOT call promptForLocation (which redirects to AI).');
-
-    // chat handler must open assistant
-    var chatBlock = fn.slice(fn.indexOf('chat.addEventListener'), fn.indexOf('voice.addEventListener'));
-    assert(chatBlock.indexOf("openAssistantPanel('general')") >= 0,
-      'Chat handler must open the AI assistant panel.');
-    assert(chatBlock.indexOf('openVoiceAssistant') < 0,
-      'Chat handler must not open voice.');
-
-    // voice handler must open voice
-    var voiceBlock = fn.slice(fn.indexOf('voice.addEventListener'));
-    assert(voiceBlock.indexOf('openVoiceAssistant') >= 0,
-      'Voice handler must open voice assistant.');
+    assert(fn.indexOf("t('bookThisService')") < 0,
+      'renderSelectedService must NOT include the Book this service three-button row');
+    assert(fn.indexOf("t('chatThisService')") < 0,
+      'renderSelectedService must NOT include the chat-with-AI button in the panel');
+    assert(fn.indexOf("t('talkThisService')") < 0,
+      'renderSelectedService must NOT include the talk-with-AI button in the panel');
+    assert(fn.indexOf('manualMount') >= 0,
+      'renderSelectedService must still mount the manual booking form container');
   });
 
-  test('M2. Per-card "Select Service" CTA does NOT auto-open the AI chat', function() {
+  test('M2. Per-card "Select Service" CTA opens manual form immediately (no AI redirect)', function() {
     var src = read('mobile-barber/mobile-barber.js');
-    // Locate the per-card CTA click handler inside renderServices()
     var startIdx = src.indexOf('cta.textContent = t(\'selectService\');');
     assert(startIdx > 0, 'select-service CTA must exist');
-    var handler = src.slice(startIdx, startIdx + 1200);
+    var handler = src.slice(startIdx, startIdx + 1500);
     assert(handler.indexOf('selectService(service)') >= 0, 'Select still selects the service');
+    assert(handler.indexOf('openManualBookingForm(service)') >= 0,
+      'Select Service MUST open the manual booking form immediately (no intermediate panel)');
     assert(handler.indexOf('promptForLocation') < 0,
       'Select Service MUST NOT call promptForLocation — that opens the AI panel.');
     assert(handler.indexOf('openAssistantPanel') < 0,
       'Select Service MUST NOT directly open the AI panel.');
+  });
+
+  test('M2b. Manual booking form has a "Need help?" footer with Chat + Talk AI buttons', function() {
+    var src = read('mobile-barber/mobile-barber.js');
+    var fn  = src.slice(src.indexOf('function renderManualBookingPanel'),
+                        src.indexOf('function renderManualBookingPanel') + 8000);
+    assert(fn.indexOf('mb-manual-booking__help') >= 0,
+      'Need-help footer must exist');
+    assert(fn.indexOf("openAssistantPanel('general')") >= 0,
+      'Footer chat button must open AI assistant');
+    assert(fn.indexOf('openVoiceAssistant()') >= 0,
+      'Footer voice button must open voice assistant');
+    assert(fn.indexOf("'manualBookingHelpLabel'") >= 0,
+      'Need-help label i18n key must be used');
+    // i18n key defined in all 3 languages
+    var keyCount = src.split('manualBookingHelpLabel:').length - 1;
+    assert(keyCount >= 3, 'manualBookingHelpLabel must exist in vi/en/es (found ' + keyCount + ')');
   });
 
   test('M3. openManualBookingForm + renderManualBookingPanel + submitManualBooking exist', function() {

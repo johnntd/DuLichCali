@@ -97,7 +97,9 @@
       homeAiPreviewTitle: 'See yourself in 3 AI haircut previews',
       homeAiPreviewIntro: "Upload a selfie and the AI will generate 3 photorealistic previews of your face with different hairstyles. Pick one and we'll attach it to your booking so the barber knows exactly what you want.",
       homeAiPreviewConsent: 'I agree the AI may use my selfie to generate haircut previews. The image is shared only with my assigned barber and is never used for marketing.',
-      homeAiPreviewUploadLabel: 'Upload a selfie (face + hair visible, good light)',
+      homeAiPreviewUploadLabel: 'Add a selfie (face + hair visible, good light)',
+      homeAiPreviewChooseFile: 'Choose from gallery',
+      homeAiPreviewTakeSelfie: 'Take a selfie',
       homeAiPreviewAnalyze: 'Get 3 AI hairstyle previews',
       homeAiPreviewRemove: 'Remove selfie',
       homeAiPreviewDisclosure: 'AI previews are suggestions only — final result may differ. Your selfie stays on this booking and is only shown to the assigned barber.',
@@ -240,7 +242,9 @@
       homeAiPreviewTitle: 'Xem chính bạn trong 3 kiểu tóc do AI tạo',
       homeAiPreviewIntro: 'Tải ảnh selfie và AI sẽ tạo 3 hình xem trước chân thực với các kiểu tóc khác nhau. Chọn một kiểu và tụi em sẽ đính kèm vào lịch hẹn để thợ biết chính xác bạn muốn gì.',
       homeAiPreviewConsent: 'Tôi đồng ý cho AI dùng ảnh selfie để tạo hình xem trước kiểu tóc. Ảnh chỉ chia sẻ với thợ phụ trách và không dùng cho mục đích quảng cáo.',
-      homeAiPreviewUploadLabel: 'Tải ảnh selfie (thấy rõ mặt và tóc, đủ sáng)',
+      homeAiPreviewUploadLabel: 'Thêm ảnh selfie (thấy rõ mặt và tóc, đủ sáng)',
+      homeAiPreviewChooseFile: 'Chọn từ thư viện',
+      homeAiPreviewTakeSelfie: 'Chụp ảnh selfie',
       homeAiPreviewAnalyze: 'Lấy 3 hình xem trước kiểu tóc từ AI',
       homeAiPreviewRemove: 'Xóa selfie',
       homeAiPreviewDisclosure: 'Hình AI chỉ mang tính tham khảo — kết quả thực tế có thể khác. Selfie chỉ lưu trên lịch hẹn này và chỉ thợ phụ trách xem được.',
@@ -383,7 +387,9 @@
       homeAiPreviewTitle: 'Vea su rostro en 3 cortes generados por AI',
       homeAiPreviewIntro: 'Suba una selfie y la AI generará 3 vistas previas fotorrealistas de su rostro con distintos cortes. Elija uno y lo adjuntaremos a su cita para que el barbero sepa exactamente qué quiere.',
       homeAiPreviewConsent: 'Acepto que la AI use mi selfie para generar vistas previas. La imagen se comparte solo con el barbero asignado y nunca se usa para marketing.',
-      homeAiPreviewUploadLabel: 'Suba una selfie (cara y cabello visibles, buena luz)',
+      homeAiPreviewUploadLabel: 'Agregue una selfie (cara y cabello visibles, buena luz)',
+      homeAiPreviewChooseFile: 'Elegir de la galería',
+      homeAiPreviewTakeSelfie: 'Tomar una selfie',
       homeAiPreviewAnalyze: 'Obtener 3 vistas previas con AI',
       homeAiPreviewRemove: 'Eliminar selfie',
       homeAiPreviewDisclosure: 'Las vistas previas AI son sólo sugerencias — el resultado real puede variar. Su selfie queda en esta cita y sólo la ve el barbero asignado.',
@@ -1653,10 +1659,14 @@
     // to the next booking the chat agent submits (see attachAiPreviewToBooking).
     var aiConsent  = document.getElementById('mbHomeAiPreviewConsent');
     var aiUpload   = document.getElementById('mbHomeAiPreviewUpload');
+    var aiFile     = document.getElementById('mbHomeAiPreviewFile');
+    var aiCamera   = document.getElementById('mbHomeAiPreviewCamera');
     var aiAnalyze  = document.getElementById('mbHomeAiPreviewAnalyze');
     var aiRemove   = document.getElementById('mbHomeAiPreviewRemove');
     if (aiConsent) aiConsent.addEventListener('change', handleAiConsentChange);
     if (aiUpload)  aiUpload.addEventListener('change', handleAiUpload);
+    if (aiFile)    aiFile.addEventListener('change', handleAiUpload);
+    if (aiCamera)  aiCamera.addEventListener('change', handleAiUpload);
     if (aiAnalyze) aiAnalyze.addEventListener('click', handleAiAnalyze);
     if (aiRemove)  aiRemove.addEventListener('click', function() { resetAiPreviewSelfie(false); });
   }
@@ -1748,11 +1758,20 @@
 
   function handleAiConsentChange() {
     var checkbox = document.getElementById('mbHomeAiPreviewConsent');
-    var upload   = document.getElementById('mbHomeAiPreviewUpload');
+    // After the split-source refactor: gallery + camera inputs live inside
+    // a <fieldset disabled> that we toggle. Fall back to the legacy single
+    // input ID if it's still present anywhere.
+    var fieldset = document.getElementById('mbHomeAiPreviewSourceFieldset');
+    var fileInput = document.getElementById('mbHomeAiPreviewFile');
+    var cameraInput = document.getElementById('mbHomeAiPreviewCamera');
+    var legacyUpload = document.getElementById('mbHomeAiPreviewUpload');
     var analyze  = document.getElementById('mbHomeAiPreviewAnalyze');
     state.aiPreview.consent = !!(checkbox && checkbox.checked);
-    if (upload)  upload.disabled  = !state.aiPreview.consent;
-    if (analyze) analyze.disabled = !state.aiPreview.consent || !state.aiPreview.selfieDataUrl;
+    if (fieldset)     fieldset.disabled = !state.aiPreview.consent;
+    if (fileInput)    fileInput.disabled = !state.aiPreview.consent;
+    if (cameraInput)  cameraInput.disabled = !state.aiPreview.consent;
+    if (legacyUpload) legacyUpload.disabled = !state.aiPreview.consent;
+    if (analyze)      analyze.disabled = !state.aiPreview.consent || !state.aiPreview.selfieDataUrl;
     if (!state.aiPreview.consent) resetAiPreviewSelfie(true);
   }
 
@@ -1852,8 +1871,10 @@
     state.aiPreview.selectedStyleId = '';
     state.aiPreview.selectedStylePreviewUrl = '';
     state.aiPreview.summary = '';
-    var upload = document.getElementById('mbHomeAiPreviewUpload');
-    if (upload) upload.value = '';
+    ['mbHomeAiPreviewUpload', 'mbHomeAiPreviewFile', 'mbHomeAiPreviewCamera'].forEach(function(id) {
+      var node = document.getElementById(id);
+      if (node) node.value = '';
+    });
     var analyze = document.getElementById('mbHomeAiPreviewAnalyze');
     if (analyze) analyze.disabled = !state.aiPreview.consent;
     renderAiSelfie();

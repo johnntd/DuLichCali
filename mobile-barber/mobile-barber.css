@@ -3025,6 +3025,69 @@
   gap: .4rem;
 }
 
+/* Split source picker: two clearly-labeled options instead of a single
+   file input that surprised users by jumping straight to the camera. */
+.mb-ai-preview__source {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.mb-ai-preview__source > legend {
+  display: block;
+  margin-bottom: .35rem;
+  font-size: var(--text-sm);
+  color: var(--cream);
+  font-weight: 700;
+}
+.mb-ai-preview__source[disabled] { opacity: .55; pointer-events: none; }
+
+.mb-ai-preview__source-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .55rem;
+}
+
+.mb-ai-preview__source-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  min-height: 48px;
+  padding: .65rem .85rem;
+  border-radius: var(--r-sm);
+  border: 1px solid rgba(255, 255, 255, .18);
+  background: rgba(2, 12, 22, .6);
+  color: var(--cream);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .15s ease, border-color .15s ease, transform .12s ease;
+}
+.mb-ai-preview__source-button:hover {
+  border-color: rgba(245, 166, 35, .55);
+  background: rgba(8, 30, 52, .72);
+}
+.mb-ai-preview__source-button:active { transform: translateY(1px); }
+.mb-ai-preview__source-button--primary {
+  border-color: rgba(245, 166, 35, .65);
+  background: rgba(245, 166, 35, .12);
+  color: var(--gold-lt, #ffd166);
+}
+.mb-ai-preview__source-button--primary:hover {
+  border-color: rgba(245, 166, 35, .9);
+  background: rgba(245, 166, 35, .2);
+}
+.mb-ai-preview__source-button > span[aria-hidden] {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+@media (max-width: 420px) {
+  .mb-ai-preview__source-buttons { grid-template-columns: 1fr; }
+}
+
 .mb-ai-preview__status {
   margin: 0;
   min-height: 1rem;

@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260527j">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260527k">
 </head>
 <body class="mb-page">
   <main class="mb-shell" id="mobileBarberApp">
@@ -187,6 +187,11 @@
         </label>
         <p class="mb-chat-panel__preferred-hint" id="mbPreferredBarberHint" data-i18n="preferredBarberHint"></p>
       </div>
+      <fieldset class="mb-payment-choice" id="mbPaymentChoice">
+        <legend data-i18n="paymentChoiceLegend"></legend>
+        <label><input type="radio" name="mbPaymentMethod" value="cash" checked> <span data-i18n="paymentCash"></span></label>
+        <label><input type="radio" name="mbPaymentMethod" value="zelle"> <span data-i18n="paymentZelle"></span></label>
+      </fieldset>
       <form class="mb-chat-panel__form" id="mbAssistantForm" novalidate>
         <label class="mb-chat-panel__input-wrap">
           <span class="mb-visually-hidden" data-i18n="assistantInputLabel"></span>
@@ -214,11 +219,11 @@
   </script>
   <script src="/ai-engine.js?v=20260524a"></script>
   <script src="/nailsalon/phone-intake.js?v=20260427d"></script>
-  <script src="/mobile-barber/mobile-barber-data.js?v=20260527b"></script>
-  <script src="/mobile-barber/mobile-barber-booking.js?v=20260527b"></script>
-  <script src="/mobile-barber/mobile-barber-agent.js?v=20260527b"></script>
+  <script src="/mobile-barber/mobile-barber-data.js?v=20260527k"></script>
+  <script src="/mobile-barber/mobile-barber-booking.js?v=20260527k"></script>
+  <script src="/mobile-barber/mobile-barber-agent.js?v=20260527k"></script>
   <script src="/mobile-barber/mobile-barber-voice.js?v=20260525f"></script>
   <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260527c"></script>
-  <script src="/mobile-barber/mobile-barber.js?v=20260527f"></script>
+  <script src="/mobile-barber/mobile-barber.js?v=20260527k"></script>
 </body>
 </html>

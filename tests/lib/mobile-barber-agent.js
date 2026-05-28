@@ -108,13 +108,21 @@ function runMobileBarberAgentTests(test) {
     assertEq(result.booking.source, 'ai_chat');
     assertEq(result.booking.status, 'pending_barber_confirmation');
     assertEq(result.booking.endTime, '11:15');
-    assertEq(result.booking.paymentMethod, 'unknown');
+    assertEq(result.booking.paymentMethod, 'cash');
     assertEq(result.booking.paymentStatus, 'unpaid');
     assertEq(result.booking.zellePhone, '(714) 555-0148');
     assertEq(result.booking.amountDue, result.booking.totalPrice);
     assert(result.booking.pricingExplanation.indexOf('Service price') >= 0, 'AI booking should save shared pricing explanation');
     assert(result.response.indexOf('Zelle') >= 0, 'AI confirmation should mention Zelle after-service payment');
     assert(result.response.indexOf('Booking ID') >= 0 || result.response.indexOf('Mã đặt lịch') >= 0 || result.response.indexOf('ID de reserva') >= 0, 'success reply must reference the booking id');
+  });
+
+  test('Mobile Barber AI persists explicit Zelle preference', function() {
+    var ctx = context({ id: 'ai-zelle-1' });
+    var result = MobileBarberAgent.handleMessage(null, 'My name is Kim. Phone 714-555-0100. I need haircut on 2026-06-01 at 10:00 at 123 Brookhurst St Westminster 92683. I prefer Zelle.', Object.assign(ctx, { customerLookupResult: null }));
+    assert(result.booking, 'complete Zelle request creates booking');
+    assertEq(result.booking.paymentMethod, 'zelle');
+    assertEq(result.booking.paymentStatus, 'unpaid');
   });
 
   test('Mobile Barber AI does not duplicate a booking on follow-up messages', function() {

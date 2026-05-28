@@ -31,6 +31,7 @@
     'wearRatePerMile', 'freeTravelMiles', 'customQuoteMiles',
     'minimumMobileVisitPrice', 'minimumHourlyTarget',
     'homeBaseAddress',
+    'cashEnabled', 'zelleEnabled', 'zellePhone', 'zelleEmail', 'zelleQrUrl',
     'geminiKey', 'openaiKey'
   ]);
 
@@ -296,6 +297,11 @@
       barberName: 'Demo Barber',
       phone: '(714) 555-0148',
       email: 'demo-mobile-barber@dulichcali21.com',
+      cashEnabled: true,
+      zelleEnabled: true,
+      zellePhone: '(714) 555-0148',
+      zelleEmail: 'demo-mobile-barber@dulichcali21.com',
+      zelleQrUrl: '',
       profilePhoto: '/assets/mobile-barber/profile-placeholder.jpg',
       heroImage: '/assets/mobile-barber/styles/classic-haircut.jpg',
       serviceAreas: Object.freeze(['Westminster', 'Garden Grove', 'Fountain Valley']),
@@ -316,6 +322,11 @@
       barberName: 'Michael Nguyen',
       phone: '(714) 227-6007',
       email: 'duyhoa9256@gmail.com',
+      cashEnabled: true,
+      zelleEnabled: true,
+      zellePhone: '(714) 227-6007',
+      zelleEmail: 'duyhoa9256@gmail.com',
+      zelleQrUrl: '',
       profilePhoto: '/assets/mobile-barber/michael-profile-placeholder.jpg',
       heroImage: '/assets/mobile-barber/styles/business-haircut.jpg',
       serviceAreas: Object.freeze([
@@ -349,6 +360,11 @@
       barberName: 'Tim Nguyen',
       phone: '(408) 504-3684',
       email: 'tuananhnta@gmail.com',
+      cashEnabled: true,
+      zelleEnabled: true,
+      zellePhone: '(408) 504-3684',
+      zelleEmail: 'tuananhnta@gmail.com',
+      zelleQrUrl: '',
       profilePhoto: '/assets/mobile-barber/tim-profile-placeholder.jpg',
       heroImage: '/assets/mobile-barber/styles/home-family-package.jpg',
       serviceAreas: Object.freeze([
@@ -906,6 +922,8 @@
     if (vendor.reviewCount != null) requireNumber(vendor, 'reviewCount', errors, { min: 0 });
     if (typeof vendor.addressOptional !== 'boolean') errors.push('addressOptional must be boolean.');
     if (typeof vendor.active !== 'boolean') errors.push('active must be boolean.');
+    if (vendor.cashEnabled != null && typeof vendor.cashEnabled !== 'boolean') errors.push('cashEnabled must be boolean.');
+    if (vendor.zelleEnabled != null && typeof vendor.zelleEnabled !== 'boolean') errors.push('zelleEnabled must be boolean.');
     if (Array.isArray(vendor.serviceAreas) && vendor.serviceAreas.length === 0) {
       errors.push('serviceAreas must include at least one service area.');
     }
@@ -1024,7 +1042,7 @@
     if (hasText(booking.paymentMethod) && ['cash', 'zelle', 'unknown'].indexOf(booking.paymentMethod) < 0) {
       errors.push('paymentMethod is not supported.');
     }
-    if (hasText(booking.paymentStatus) && ['unpaid', 'pending', 'paid', 'waived'].indexOf(booking.paymentStatus) < 0) {
+    if (hasText(booking.paymentStatus) && ['unpaid', 'payment_requested', 'pending', 'paid', 'waived'].indexOf(booking.paymentStatus) < 0) {
       errors.push('paymentStatus is not supported.');
     }
     if (hasText(booking.confirmationPreference) && CONFIRMATION_PREFERENCES.indexOf(booking.confirmationPreference) < 0) {

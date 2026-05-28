@@ -131,6 +131,11 @@
       assistantSend: 'Send',
       assistantGreeting: "Hi! I'm the Mobile Barber assistant. What haircut would you like, and when?",
       assistantNeedLocation: 'Tell us your city or ZIP first so we can match you with the nearest barber. The chat will unlock right after.',
+      paymentChoiceLegend: 'Preferred payment method',
+      paymentCash: 'Cash',
+      paymentZelle: 'Zelle',
+      zellePayPanelTitle: 'Pay with Zelle',
+      zelleSendPaymentTo: 'Send payment to:',
       assistantFallbackReply: 'Sorry, I did not catch that. Could you say it another way?',
       assistantErrorReply: "I'm having trouble reaching the assistant right now. Please try again in a moment, or call the barber directly.",
       preferredBarberLabel: 'Preferred barber (optional)',
@@ -269,6 +274,11 @@
       assistantSend: 'Gửi',
       assistantGreeting: 'Xin chào! Tôi là trợ lý Mobile Barber. Bạn muốn kiểu tóc nào và khi nào ạ?',
       assistantNeedLocation: 'Hãy cho biết thành phố hoặc mã ZIP để được ghép với thợ gần nhất. Sau đó khung chat sẽ mở.',
+      paymentChoiceLegend: 'Cách thanh toán muốn dùng',
+      paymentCash: 'Tiền mặt',
+      paymentZelle: 'Zelle',
+      zellePayPanelTitle: 'Thanh toán bằng Zelle',
+      zelleSendPaymentTo: 'Gửi thanh toán đến:',
       assistantFallbackReply: 'Xin lỗi, tôi chưa hiểu rõ. Bạn có thể nói lại theo cách khác không?',
       assistantErrorReply: 'Hệ thống tạm thời gặp sự cố. Vui lòng thử lại trong giây lát, hoặc gọi trực tiếp cho thợ.',
       preferredBarberLabel: 'Thợ ưu tiên (không bắt buộc)',
@@ -407,6 +417,11 @@
       assistantSend: 'Enviar',
       assistantGreeting: 'Hola! Soy el asistente Mobile Barber. ¿Qué corte deseas y cuándo?',
       assistantNeedLocation: 'Indica tu ciudad o código postal primero para conectarte con el barbero más cercano. El chat se desbloquea enseguida.',
+      paymentChoiceLegend: 'Metodo de pago preferido',
+      paymentCash: 'Efectivo',
+      paymentZelle: 'Zelle',
+      zellePayPanelTitle: 'Pagar con Zelle',
+      zelleSendPaymentTo: 'Enviar pago a:',
       assistantFallbackReply: 'Disculpa, no entendí. ¿Puedes decirlo de otra forma?',
       assistantErrorReply: 'Tengo problemas para conectar con el asistente. Intenta de nuevo en un momento o llama al barbero directamente.',
       preferredBarberLabel: 'Barbero preferido (opcional)',
@@ -806,6 +821,14 @@
     var vendor = preferredVendor();
     if (!vendor) return Promise.resolve({ response: t('assistantCopy') });
     ensureAgentSession();
+    var selectedPayment = selectedPaymentMethod();
+    if (selectedPayment && state.agentSession && state.agentSession.state) {
+      state.agentSession.state = AGENT.mergeState(
+        state.agentSession.state,
+        { paymentMethod: selectedPayment },
+        new Date()
+      );
+    }
     var finish = function(existing) {
       state.existingBookings = existing || [];
       var ctx = agentContext(vendor);
@@ -893,6 +916,59 @@
     transcript.scrollTop = transcript.scrollHeight;
   }
 
+  function selectedPaymentMethod() {
+    var checked = document.querySelector('input[name="mbPaymentMethod"]:checked');
+    var value = checked ? String(checked.value || '').toLowerCase() : 'cash';
+    return value === 'zelle' ? 'zelle' : 'cash';
+  }
+
+  function bookingVendor(booking) {
+    var vendorId = booking && booking.vendorId;
+    var vendors = (DATA && DATA.sampleVendors) || [];
+    return vendors.filter(function(v) { return v.id === vendorId; })[0] || preferredVendor() || {};
+  }
+
+  function appendZellePaymentPanel(booking) {
+    if (!booking || String(booking.paymentMethod || '').toLowerCase() !== 'zelle') return;
+    if (String(booking.paymentStatus || 'unpaid').toLowerCase() === 'paid') return;
+    var transcript = document.getElementById('mbAssistantTranscript');
+    if (!transcript) return;
+    var vendor = bookingVendor(booking);
+    var qr = String(vendor.zelleQrUrl || '').trim();
+    var phone = String(vendor.zellePhone || vendor.phone || booking.zellePhone || '').trim();
+    var email = String(vendor.zelleEmail || vendor.email || '').trim();
+    var row = document.createElement('div');
+    var panel = document.createElement('div');
+    row.className = 'mb-chat-msg mb-chat-msg--ai';
+    panel.className = 'mb-zelle-panel';
+    var title = document.createElement('h4');
+    title.textContent = t('zellePayPanelTitle');
+    panel.appendChild(title);
+    if (qr) {
+      var img = document.createElement('img');
+      img.src = qr;
+      img.alt = t('zellePayPanelTitle');
+      panel.appendChild(img);
+    }
+    var label = document.createElement('p');
+    label.className = 'mb-zelle-panel__label';
+    label.textContent = t('zelleSendPaymentTo');
+    panel.appendChild(label);
+    var value = document.createElement('p');
+    value.className = 'mb-zelle-panel__value';
+    value.textContent = qr ? (phone || email) : (phone || email);
+    panel.appendChild(value);
+    if (!qr && phone && email) {
+      var emailValue = document.createElement('p');
+      emailValue.className = 'mb-zelle-panel__value';
+      emailValue.textContent = email;
+      panel.appendChild(emailValue);
+    }
+    row.appendChild(panel);
+    transcript.appendChild(row);
+    transcript.scrollTop = transcript.scrollHeight;
+  }
+
   function seedAssistantTranscriptIfEmpty() {
     var transcript = document.getElementById('mbAssistantTranscript');
     if (!transcript || transcript.childElementCount > 0) return;
@@ -922,6 +998,7 @@
       .then(function(result) {
         var reply = (result && result.response) || t('assistantFallbackReply');
         appendChatMessage('ai', reply);
+        if (result && result.booking) appendZellePaymentPanel(result.booking);
         // After every turn, re-evaluate whether the preferred-barber
         // dropdown should be visible (it appears once the agent has the
         // customer's address and we can scope the list to vendors who

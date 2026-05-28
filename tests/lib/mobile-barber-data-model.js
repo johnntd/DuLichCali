@@ -47,6 +47,11 @@ function runMobileBarberDataModelTests(test) {
     var vendor = clone(MobileBarberData.findVendorById(MobileBarberData.SAMPLE_VENDOR_ID));
     vendor.geminiKey = 'test-gemini-key';
     vendor.openaiKey = 'test-openai-key';
+    vendor.cashEnabled = true;
+    vendor.zelleEnabled = true;
+    vendor.zellePhone = '(714) 555-0148';
+    vendor.zelleEmail = 'pay@example.com';
+    vendor.zelleQrUrl = 'data:image/jpeg;base64,abc123';
     var result = MobileBarberData.validateVendor(vendor);
     assertEq(result.valid, true, result.errors.join('; '));
   });
@@ -155,6 +160,13 @@ function runMobileBarberDataModelTests(test) {
     var bigResult = MobileBarberData.validateBooking(bigSelfie);
     assertEq(bigResult.valid, false);
     assert(bigResult.errors.some(function(err) { return err.indexOf('selfieDataUrl') >= 0; }), 'oversized selfie should fail');
+
+    var requested = clone(booking);
+    requested.paymentMethod = 'zelle';
+    requested.paymentStatus = 'payment_requested';
+    requested.zellePhone = '(714) 555-0148';
+    var requestedResult = MobileBarberData.validateBooking(requested);
+    assertEq(requestedResult.valid, true, requestedResult.errors.join('; '));
   });
 
   test('Mobile Barber AI preview module exposes compress + generate (no static fallback)', function() {

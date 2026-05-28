@@ -1460,9 +1460,9 @@
       }),
       selectedStyleId: state.aiPreview.selectedStyleId || '',
       selectedStylePreviewUrl: state.aiPreview.selectedStylePreviewUrl || '',
-      paymentMethod: (document.querySelector('input[name="mbPaymentMethod"]:checked') || {}).value || 'unknown',
+      paymentMethod: (document.querySelector('input[name="mbPaymentMethod"]:checked') || {}).value || 'cash',
       paymentStatus: 'unpaid',
-      zellePhone: (state.vendor && state.vendor.phone) || '',
+      zellePhone: (state.vendor && (state.vendor.zellePhone || state.vendor.phone)) || '',
       smsOptIn: !!(document.getElementById('mbSmsOptIn') && document.getElementById('mbSmsOptIn').checked),
       rebookedFromBookingId: state.rebookDraft && state.rebookDraft.rebookedFromBookingId,
       previousServiceName: state.rebookDraft && state.rebookDraft.previousServiceName

@@ -87,7 +87,7 @@
       filterCancelled: 'Cancelled',
       refreshButton: 'Refresh',
       settingsTitle: 'Settings',
-      settingsHint: 'Profile, services, hours, blocks, portfolio, and reviews. Tap a panel to expand.',
+      settingsHint: 'Profile, services, hours, blocks, payments, portfolio, and reviews. Tap a panel to expand.',
       settingsProfileTitle: 'Profile & contact',
       settingsProfileSub: 'Business name, barber, phone, email, service area',
       settingsServicesTitle: 'Services & pricing',
@@ -96,6 +96,8 @@
       settingsHoursSub: 'Recurring weekly schedule',
       settingsBlocksTitle: 'Unavailable blocks',
       settingsBlocksSub: 'Days off, time off, vacation',
+      settingsPaymentsTitle: 'Payments',
+      settingsPaymentsSub: 'Cash, Zelle contact, and QR code',
       settingsPortfolioTitle: 'Portfolio images',
       settingsPortfolioSub: 'Photos shown on the public vendor page',
       settingsReviewsTitle: 'Reviews & responses',
@@ -149,6 +151,17 @@
       appointmentDetails: 'Appointment',
       pricingDetails: 'Pricing',
       paymentDetails: 'Payment',
+      paymentsTitle: 'Payments',
+      savePaymentsButton: 'Save Payments',
+      cashEnabledLabel: 'Cash enabled',
+      zelleEnabledLabel: 'Zelle enabled',
+      zellePhoneLabel: 'Zelle phone',
+      zelleEmailLabel: 'Zelle email',
+      zelleQrLabel: 'Upload Zelle QR image',
+      zelleQrCurrent: 'Current QR image',
+      zellePayPanelTitle: 'Pay with Zelle',
+      zelleSendPaymentTo: 'Send payment to:',
+      zelleNoInfo: 'Add Zelle phone, email, or QR in Settings > Payments.',
       serviceType: 'Service type',
       servicePrice: 'Service price',
       travelFee: 'Travel fee',
@@ -164,8 +177,11 @@
       paymentUnknown: 'Unknown',
       paymentPaid: 'Paid',
       paymentUnpaid: 'Unpaid',
+      paymentRequested: 'Payment requested',
       paymentPending: 'Pending',
       paymentWaived: 'Waived',
+      requestZellePaymentAction: 'Request Zelle Payment',
+      requestPaymentAction: 'Request payment',
       markPaidAction: 'Mark paid',
       markUnpaidAction: 'Mark unpaid',
       setCashAction: 'Set cash',
@@ -268,7 +284,7 @@
       filterCancelled: 'Đã hủy',
       refreshButton: 'Làm mới',
       settingsTitle: 'Cài đặt',
-      settingsHint: 'Hồ sơ, dịch vụ, giờ làm, ngày nghỉ, portfolio, và đánh giá. Bấm vào từng mục để mở rộng.',
+      settingsHint: 'Hồ sơ, dịch vụ, giờ làm, ngày nghỉ, thanh toán, portfolio, và đánh giá. Bấm vào từng mục để mở rộng.',
       settingsProfileTitle: 'Hồ sơ & liên hệ',
       settingsProfileSub: 'Tên tiệm, thợ, số điện thoại, email, khu vực phục vụ',
       settingsServicesTitle: 'Dịch vụ & giá',
@@ -277,6 +293,8 @@
       settingsHoursSub: 'Lịch hàng tuần lặp lại',
       settingsBlocksTitle: 'Khoảng thời gian không nhận lịch',
       settingsBlocksSub: 'Ngày nghỉ, giờ nghỉ, kỳ nghỉ',
+      settingsPaymentsTitle: 'Thanh toán',
+      settingsPaymentsSub: 'Tiền mặt, thông tin Zelle, và mã QR',
       settingsPortfolioTitle: 'Hình portfolio',
       settingsPortfolioSub: 'Hình hiển thị trên trang vendor',
       settingsReviewsTitle: 'Đánh giá & phản hồi',
@@ -330,6 +348,17 @@
       appointmentDetails: 'Lịch hẹn',
       pricingDetails: 'Giá tiền',
       paymentDetails: 'Thanh toán',
+      paymentsTitle: 'Thanh toán',
+      savePaymentsButton: 'Lưu Thanh Toán',
+      cashEnabledLabel: 'Nhận tiền mặt',
+      zelleEnabledLabel: 'Nhận Zelle',
+      zellePhoneLabel: 'Số điện thoại Zelle',
+      zelleEmailLabel: 'Email Zelle',
+      zelleQrLabel: 'Tải mã QR Zelle',
+      zelleQrCurrent: 'Mã QR hiện tại',
+      zellePayPanelTitle: 'Thanh toán bằng Zelle',
+      zelleSendPaymentTo: 'Gửi thanh toán đến:',
+      zelleNoInfo: 'Thêm số điện thoại, email, hoặc mã QR Zelle trong Cài đặt > Thanh toán.',
       serviceType: 'Loại dịch vụ',
       servicePrice: 'Giá dịch vụ',
       travelFee: 'Phí di chuyển',
@@ -345,8 +374,11 @@
       paymentUnknown: 'Chưa rõ',
       paymentPaid: 'Đã thu',
       paymentUnpaid: 'Chưa thu',
+      paymentRequested: 'Đã yêu cầu thanh toán',
       paymentPending: 'Đang chờ',
       paymentWaived: 'Đã miễn',
+      requestZellePaymentAction: 'Yêu cầu thanh toán Zelle',
+      requestPaymentAction: 'Yêu cầu thanh toán',
       markPaidAction: 'Đánh dấu đã thu',
       markUnpaidAction: 'Đánh dấu chưa thu',
       setCashAction: 'Chọn tiền mặt',
@@ -449,7 +481,7 @@
       filterCancelled: 'Canceladas',
       refreshButton: 'Actualizar',
       settingsTitle: 'Ajustes',
-      settingsHint: 'Perfil, servicios, horario, bloques, portafolio y reseñas. Toca un panel para expandir.',
+      settingsHint: 'Perfil, servicios, horario, bloques, pagos, portafolio y reseñas. Toca un panel para expandir.',
       settingsProfileTitle: 'Perfil y contacto',
       settingsProfileSub: 'Nombre del negocio, barbero, teléfono, correo, área de servicio',
       settingsServicesTitle: 'Servicios y precios',
@@ -458,6 +490,8 @@
       settingsHoursSub: 'Horario semanal recurrente',
       settingsBlocksTitle: 'Bloques no disponibles',
       settingsBlocksSub: 'Días libres, tiempo libre, vacaciones',
+      settingsPaymentsTitle: 'Pagos',
+      settingsPaymentsSub: 'Efectivo, contacto Zelle y QR',
       settingsPortfolioTitle: 'Imágenes del portafolio',
       settingsPortfolioSub: 'Fotos mostradas en la página pública del barbero',
       settingsReviewsTitle: 'Reseñas y respuestas',
@@ -511,6 +545,17 @@
       appointmentDetails: 'Cita',
       pricingDetails: 'Precio',
       paymentDetails: 'Pago',
+      paymentsTitle: 'Pagos',
+      savePaymentsButton: 'Guardar Pagos',
+      cashEnabledLabel: 'Efectivo activo',
+      zelleEnabledLabel: 'Zelle activo',
+      zellePhoneLabel: 'Telefono Zelle',
+      zelleEmailLabel: 'Email Zelle',
+      zelleQrLabel: 'Subir QR de Zelle',
+      zelleQrCurrent: 'QR actual',
+      zellePayPanelTitle: 'Pagar con Zelle',
+      zelleSendPaymentTo: 'Enviar pago a:',
+      zelleNoInfo: 'Agrega telefono, email o QR de Zelle en Ajustes > Pagos.',
       serviceType: 'Tipo de servicio',
       servicePrice: 'Precio del servicio',
       travelFee: 'Tarifa de viaje',
@@ -526,8 +571,11 @@
       paymentUnknown: 'Desconocido',
       paymentPaid: 'Pagado',
       paymentUnpaid: 'No pagado',
+      paymentRequested: 'Pago solicitado',
       paymentPending: 'Pendiente',
       paymentWaived: 'Exento',
+      requestZellePaymentAction: 'Solicitar pago Zelle',
+      requestPaymentAction: 'Solicitar pago',
       markPaidAction: 'Marcar pagado',
       markUnpaidAction: 'Marcar no pagado',
       setCashAction: 'Usar efectivo',
@@ -1003,7 +1051,57 @@
 
   function paymentStatusLabel(status) {
     status = BOOKING && BOOKING.normalizePaymentStatus ? BOOKING.normalizePaymentStatus(status) : (status || 'unpaid');
-    return t({ paid: 'paymentPaid', unpaid: 'paymentUnpaid', pending: 'paymentPending', waived: 'paymentWaived' }[status] || 'paymentUnpaid');
+    return t({ paid: 'paymentPaid', unpaid: 'paymentUnpaid', payment_requested: 'paymentRequested', pending: 'paymentPending', waived: 'paymentWaived' }[status] || 'paymentUnpaid');
+  }
+
+  function paymentMethodCode(method) {
+    return BOOKING && BOOKING.normalizePaymentMethod ? BOOKING.normalizePaymentMethod(method) : String(method || 'cash').toLowerCase();
+  }
+
+  function paymentStatusCode(status) {
+    return BOOKING && BOOKING.normalizePaymentStatus ? BOOKING.normalizePaymentStatus(status) : String(status || 'unpaid').toLowerCase();
+  }
+
+  function paymentChip(kind, code, label) {
+    var chip = el('span', 'mb-payment-chip mb-payment-chip--' + kind + ' mb-payment-chip--' + String(code || '').replace(/[^a-z0-9_-]/gi, ''));
+    chip.textContent = label;
+    return chip;
+  }
+
+  function vendorZelleInfo() {
+    var vendor = state.vendor || {};
+    return {
+      qr: trim(vendor.zelleQrUrl),
+      phone: trim(vendor.zellePhone) || trim(vendor.phone),
+      email: trim(vendor.zelleEmail) || trim(vendor.email)
+    };
+  }
+
+  function zellePaymentPanel() {
+    var info = vendorZelleInfo();
+    var panel = el('div', 'mb-zelle-panel');
+    var title = el('h4');
+    title.textContent = t('zellePayPanelTitle');
+    panel.appendChild(title);
+    if (info.qr) {
+      var img = document.createElement('img');
+      img.src = info.qr;
+      img.alt = t('zelleQrCurrent');
+      panel.appendChild(img);
+    }
+    var label = el('p', 'mb-zelle-panel__label');
+    label.textContent = t('zelleSendPaymentTo');
+    panel.appendChild(label);
+    var value = el('p', 'mb-zelle-panel__value');
+    if (info.qr) value.textContent = info.phone || info.email || '';
+    else value.textContent = info.phone || info.email || t('zelleNoInfo');
+    panel.appendChild(value);
+    if (info.phone && info.email && !info.qr) {
+      var email = el('p', 'mb-zelle-panel__value');
+      email.textContent = info.email;
+      panel.appendChild(email);
+    }
+    return panel;
   }
 
   function confirmationPreferenceLabel(pref) {
@@ -1053,7 +1151,8 @@
       var dt = el('dt');
       var dd = el('dd');
       dt.textContent = row[0];
-      dd.textContent = row[1];
+      if (row[1] && row[1].nodeType) dd.appendChild(row[1]);
+      else dd.textContent = row[1];
       wrap.appendChild(dt);
       wrap.appendChild(dd);
       dl.appendChild(wrap);
@@ -1125,7 +1224,10 @@
     var service = serviceForBooking(booking);
     var duration = booking.durationMinutes || service.durationMinutes || '';
     var total = booking.amountDue != null ? booking.amountDue : Number(booking.servicePrice || 0) + Number(booking.travelFee || 0);
-    var zellePhone = booking.zellePhone || (state.vendor && state.vendor.phone) || '';
+    var zelleInfo = vendorZelleInfo();
+    var zellePhone = booking.zellePhone || zelleInfo.phone || '';
+    var payMethod = paymentMethodCode(booking.paymentMethod);
+    var payStatus = paymentStatusCode(booking.paymentStatus);
     var locationStr = [booking.city, booking.zip].filter(Boolean).join(' • ');
     var serviceStr = booking.serviceName || booking.serviceId || '';
 
@@ -1233,6 +1335,15 @@
       btn.addEventListener('click', function() { updateBookingPayment(booking.id, { paymentStatus: pair[0] }); });
       actions.appendChild(btn);
     });
+    if (payMethod === 'zelle') {
+      var requestBtn = el('button', 'mb-button mb-button--primary mb-button--sm');
+      requestBtn.type = 'button';
+      requestBtn.textContent = t('requestZellePaymentAction');
+      requestBtn.addEventListener('click', function() {
+        updateBookingPayment(booking.id, { paymentStatus: 'payment_requested', zellePhone: zellePhone });
+      });
+      actions.appendChild(requestBtn);
+    }
     [
       ['cash', 'setCashAction'],
       ['zelle', 'setZelleAction']
@@ -1278,11 +1389,14 @@
       [t('quoteType'), booking.quoteType || 'standard']
     ]));
     detail.appendChild(detailSection(t('paymentDetails'), [
-      [t('paymentMethod'), paymentMethodLabel(booking.paymentMethod)],
-      [t('paymentStatus'), paymentStatusLabel(booking.paymentStatus)],
-      [t('zelleNumber'), zellePhone],
+      [t('paymentMethod'), paymentChip('method', payMethod, paymentMethodLabel(payMethod))],
+      [t('paymentStatus'), paymentChip('status', payStatus, paymentStatusLabel(payStatus))],
+      [t('zelleNumber'), payMethod === 'zelle' ? zellePhone : ''],
       [t('paymentNote'), booking.paymentNote]
     ]));
+    if (payMethod === 'zelle' && payStatus !== 'paid') {
+      detail.appendChild(zellePaymentPanel());
+    }
     if (trim(booking.notes)) {
       var notes = el('p');
       notes.textContent = t('customerNotes') + ': ' + booking.notes;
@@ -1726,8 +1840,33 @@
         state.vendor.businessName || state.vendorId,
         state.vendor.barberName || '',
         state.vendor.region || (state.vendor.serviceAreas || []).slice(0, 2).join(', '),
-        'Zelle: ' + (state.vendor.phone || '')
+        'Zelle: ' + (state.vendor.zellePhone || state.vendor.zelleEmail || state.vendor.phone || '')
       ].filter(Boolean).map(function(part) { return String(part).replace(/</g, '&lt;').replace(/>/g, '&gt;'); }).join('<br>');
+    }
+  }
+
+  function renderPaymentsForm() {
+    var cash = document.getElementById('mbCashEnabled');
+    var zelle = document.getElementById('mbZelleEnabled');
+    var phone = document.getElementById('mbZellePhone');
+    var email = document.getElementById('mbZelleEmail');
+    var preview = document.getElementById('mbZelleQrPreview');
+    if (!cash || !zelle || !phone || !email) return;
+    cash.checked = state.vendor.cashEnabled !== false;
+    zelle.checked = state.vendor.zelleEnabled !== false;
+    phone.value = state.vendor.zellePhone || state.vendor.phone || '';
+    email.value = state.vendor.zelleEmail || state.vendor.email || '';
+    if (preview) {
+      preview.innerHTML = '';
+      if (state.vendor.zelleQrUrl) {
+        var label = el('p');
+        var img = document.createElement('img');
+        label.textContent = t('zelleQrCurrent');
+        img.src = state.vendor.zelleQrUrl;
+        img.alt = t('zelleQrCurrent');
+        preview.appendChild(label);
+        preview.appendChild(img);
+      }
     }
   }
 
@@ -1934,6 +2073,30 @@
     showToast();
   }
 
+  function savePayments() {
+    var qrInput = document.getElementById('mbZelleQrUpload');
+    var file = qrInput && qrInput.files && qrInput.files[0];
+    var apply = function(qrUrl) {
+      state.vendor.cashEnabled = document.getElementById('mbCashEnabled').checked;
+      state.vendor.zelleEnabled = document.getElementById('mbZelleEnabled').checked;
+      state.vendor.zellePhone = trim(document.getElementById('mbZellePhone').value);
+      state.vendor.zelleEmail = trim(document.getElementById('mbZelleEmail').value);
+      if (qrUrl != null) state.vendor.zelleQrUrl = qrUrl;
+      state.vendor.updatedAt = new Date().toISOString();
+      persistVendor();
+      renderPaymentsForm();
+      showToast();
+    };
+    if (file && root.MobileBarberAIPreview && typeof root.MobileBarberAIPreview.compressImage === 'function') {
+      root.MobileBarberAIPreview.compressImage(file).then(apply).catch(function(err) {
+        if (root.console) root.console.error('[mobile-barber-dashboard] zelle qr compress failed', err);
+        apply(null);
+      });
+    } else {
+      apply(null);
+    }
+  }
+
   function saveService() {
     var id = document.getElementById('mbDashServiceSelect').value;
     state.services = state.services.map(function(service) {
@@ -1990,6 +2153,7 @@
       btn.classList.toggle('mb-language__button--active', btn.getAttribute('data-lang') === state.lang);
     });
     renderProfileForm();
+    renderPaymentsForm();
     renderServiceForm();
     renderHours();
     renderBlocks();
@@ -2034,6 +2198,7 @@
       });
     });
     document.querySelector('[data-action="saveProfile"]').addEventListener('click', saveProfile);
+    document.querySelector('[data-action="savePayments"]').addEventListener('click', savePayments);
     document.querySelector('[data-action="saveService"]').addEventListener('click', saveService);
     document.querySelector('[data-action="saveHours"]').addEventListener('click', saveHours);
     document.querySelector('[data-action="addBlock"]').addEventListener('click', addBlock);

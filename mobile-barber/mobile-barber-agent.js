@@ -201,7 +201,7 @@
       zip: null,
       barberPreference: null,
       notes: null,
-      paymentMethod: 'unknown',
+      paymentMethod: 'cash',
       photoUrls: [],
       pendingAction: null,
       lastAvailabilityKey: null
@@ -267,7 +267,7 @@
       }
       if (key === 'paymentMethod') {
         var method = trim(value).toLowerCase();
-        if (method === 'cash' || method === 'zelle' || method === 'unknown') state.paymentMethod = method;
+        if (method === 'cash' || method === 'zelle' || method === 'unknown') state.paymentMethod = method === 'unknown' ? 'cash' : method;
         return;
       }
       if (key === 'customerName' || key === 'serviceId' || key === 'address' || key === 'city' || key === 'zip' || key === 'barberPreference' || key === 'notes' || key === 'intent' || key === 'lastAvailabilityKey') {
@@ -482,9 +482,9 @@
       city: state.city,
       zip: state.zip,
       notes: state.notes || state.barberPreference || '',
-      paymentMethod: state.paymentMethod || 'unknown',
+      paymentMethod: state.paymentMethod || 'cash',
       paymentStatus: 'unpaid',
-      zellePhone: (state.vendorPhone || '').trim(),
+      zellePhone: (state.vendorZellePhone || state.vendorPhone || '').trim(),
       photoUrls: state.photoUrls || []
     };
   }
@@ -509,7 +509,7 @@
       'Never invent availability, prices, travel radius, barber names, or internal data.',
       'Use MobileBarberBooking.calculateMobileBarberPrice for quotes; service price alone is not the final mobile total.',
       'Never confirm a booking until backend availability and service-area checks have passed.',
-      'Payment is collected after service by cash or Zelle to the barber phone number. Do not require prepayment or card payment.',
+      'Payment is collected after service by cash or Zelle. Ask for the preferred payment method when natural; default to cash if the customer does not choose. Do not require prepayment, card payment, Apple Pay, Google Pay, or Stripe.',
       'When you see a user message starting with [SYSTEM: ...], rewrite that backend result naturally in the customer language and do not expose the marker.',
       'Use the serviceBookingAgentBrain pattern: intent extraction, slot filling, one question at a time, customer lookup, service lookup, availability check, summary, then booking write.',
       'Phone lookup is always first for booking. Never ask for name, phone, address, service, date, and time in one message.'
@@ -651,7 +651,7 @@
     if (state.serviceId) slotLines.push('serviceId: ' + state.serviceId);
     if (state.date) slotLines.push('date: ' + state.date);
     if (state.time) slotLines.push('time: ' + state.time);
-    if (state.paymentMethod && state.paymentMethod !== 'unknown') slotLines.push('paymentMethod: ' + state.paymentMethod);
+    if (state.paymentMethod) slotLines.push('paymentMethod: ' + state.paymentMethod);
     if (state.customerLookupStatus) slotLines.push('customerLookupStatus: ' + state.customerLookupStatus);
     if (state.addressConfirmed) slotLines.push('addressConfirmed: true');
 
@@ -677,7 +677,7 @@
       serviceLines || '(none configured)',
       'NEVER invent prices, services, availability, addresses, or barber names not listed above.',
       'NEVER claim a booking is confirmed — only the system confirms; you wait for the system to acknowledge.',
-      'Payment is collected after the haircut. Customers can pay cash or Zelle to the barber phone number (' + (vendor.phone || 'vendor phone') + '). Ask which they prefer when natural, but do not block booking if they skip it.',
+      'Payment is collected after the haircut. Customers can pay cash or Zelle to the barber Zelle contact (' + (vendor.zellePhone || vendor.phone || vendor.zelleEmail || 'vendor settings') + '). Ask which they prefer when natural, and default to cash if they skip it.',
       '',
       'Currently collected booking slots:',
       slotLines.length ? slotLines.join('\n') : '(none yet)',
@@ -934,8 +934,8 @@
         city: draft.city,
         zip: draft.zip,
         price: money(availability.price.totalPrice),
-        zellePhone: vendor.phone || '',
-        paymentMethod: state.paymentMethod || 'unknown'
+        zellePhone: vendor.zellePhone || vendor.phone || '',
+        paymentMethod: state.paymentMethod || 'cash'
       });
       return {
         session: session,

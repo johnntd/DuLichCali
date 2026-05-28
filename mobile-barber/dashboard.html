@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260527j">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260527k">
 </head>
 <body class="mb-page mb-dashboard-page">
   <main class="mb-shell mb-dashboard-shell" id="mobileBarberDashboardApp" data-page="mobile-barber-dashboard">
@@ -167,6 +167,28 @@
           </div>
         </details>
 
+        <details class="mb-settings-panel" id="mbSettingsPayments">
+          <summary class="mb-settings-panel__summary">
+            <span class="mb-settings-panel__title" data-i18n="settingsPaymentsTitle"></span>
+            <span class="mb-settings-panel__sub" data-i18n="settingsPaymentsSub"></span>
+            <span class="mb-settings-panel__chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div class="mb-settings-panel__body">
+            <div class="mb-dashboard-panel__head">
+              <h3 id="mbPaymentsTitle" data-i18n="paymentsTitle"></h3>
+              <button class="mb-button mb-button--primary mb-button--sm" type="button" data-action="savePayments" data-i18n="savePaymentsButton"></button>
+            </div>
+            <form class="mb-dashboard-form" id="mbPaymentsForm">
+              <label class="mb-toggle-field"><input id="mbCashEnabled" type="checkbox"><span data-i18n="cashEnabledLabel"></span></label>
+              <label class="mb-toggle-field"><input id="mbZelleEnabled" type="checkbox"><span data-i18n="zelleEnabledLabel"></span></label>
+              <label class="mb-field"><span data-i18n="zellePhoneLabel"></span><input id="mbZellePhone" type="tel"></label>
+              <label class="mb-field"><span data-i18n="zelleEmailLabel"></span><input id="mbZelleEmail" type="email"></label>
+              <label class="mb-field"><span data-i18n="zelleQrLabel"></span><input id="mbZelleQrUpload" type="file" accept="image/*"></label>
+            </form>
+            <div class="mb-zelle-qr-preview" id="mbZelleQrPreview"></div>
+          </div>
+        </details>
+
         <details class="mb-settings-panel" id="mbSettingsPortfolio">
           <summary class="mb-settings-panel__summary">
             <span class="mb-settings-panel__title" data-i18n="settingsPortfolioTitle"></span>
@@ -229,8 +251,9 @@
   </script>
   <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ&libraries=places&loading=async"></script>
   <script src="/notifications.js?v=20260525a"></script>
-  <script src="/mobile-barber/mobile-barber-data.js?v=20260527b"></script>
-  <script src="/mobile-barber/mobile-barber-booking.js?v=20260527b"></script>
-  <script src="/mobile-barber/mobile-barber-dashboard.js?v=20260527d"></script>
+  <script src="/mobile-barber/mobile-barber-data.js?v=20260527k"></script>
+  <script src="/mobile-barber/mobile-barber-booking.js?v=20260527k"></script>
+  <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260527c"></script>
+  <script src="/mobile-barber/mobile-barber-dashboard.js?v=20260527k"></script>
 </body>
 </html>

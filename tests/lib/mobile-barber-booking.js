@@ -360,7 +360,7 @@ function runMobileBarberBookingTests(test) {
     assertEq(built.booking.servicePrice, 45);
     assertEq(built.booking.travelFee, 15);
     assertEq(built.booking.amountDue, 60);
-    assertEq(built.booking.paymentMethod, 'unknown');
+    assertEq(built.booking.paymentMethod, 'cash');
     assertEq(built.booking.paymentStatus, 'unpaid');
     assertEq(built.booking.zellePhone, '(714) 555-0148');
   });
@@ -371,14 +371,14 @@ function runMobileBarberBookingTests(test) {
       draft.paymentMethod = method;
       var result = check(draft);
       var built = MobileBarberBooking.buildBooking({
-        id: 'payment-' + (method || 'unknown'),
+        id: 'payment-' + (method || 'cash'),
         now: '2026-05-25T00:00:00.000Z',
         vendor: MobileBarberData.findVendorById(MobileBarberData.SAMPLE_VENDOR_ID),
         draft: draft,
         availabilityResult: result
       });
       assertEq(built.valid, true, built.errors && built.errors.join('; '));
-      assertEq(built.booking.paymentMethod, method || 'unknown');
+      assertEq(built.booking.paymentMethod, method || 'cash');
       assertEq(built.booking.paymentStatus, 'unpaid');
       assertEq(built.booking.zellePhone, '(714) 555-0148');
       assertEq(built.booking.amountDue, built.booking.servicePrice + built.booking.travelFee);

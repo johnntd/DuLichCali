@@ -56,12 +56,12 @@
 
   function normalizePaymentMethod(method) {
     method = lower(method);
-    return ['cash', 'zelle', 'unknown'].indexOf(method) >= 0 ? method : 'unknown';
+    return ['cash', 'zelle', 'unknown'].indexOf(method) >= 0 ? method : 'cash';
   }
 
   function normalizePaymentStatus(status) {
     status = lower(status);
-    return ['unpaid', 'pending', 'paid', 'waived'].indexOf(status) >= 0 ? status : 'unpaid';
+    return ['unpaid', 'payment_requested', 'pending', 'paid', 'waived'].indexOf(status) >= 0 ? status : 'unpaid';
   }
 
   // Customer confirmation channel preference. Defaults to 'text' so every
@@ -683,7 +683,7 @@
       quoteType: trim(check.price.quoteType || 'standard'),
       paymentMethod: normalizePaymentMethod(draft.paymentMethod),
       paymentStatus: normalizePaymentStatus(draft.paymentStatus),
-      zellePhone: trim(draft.zellePhone) || trim(input.vendor.phone),
+      zellePhone: trim(draft.zellePhone) || trim(input.vendor.zellePhone) || trim(input.vendor.phone),
       paymentNote: trim(draft.paymentNote),
       address: trim(draft.address),
       city: trim(draft.city),

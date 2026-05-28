@@ -2394,65 +2394,77 @@ const HAIRCUT_STYLE_PROMPTS = {
       styleId: 'business-haircut',
       title: 'Classic Professional',
       maintenance: 'Medium maintenance',
-      explanation: 'Clean side part, tapered sides, square neckline. Office-ready and timeless.',
-      barberNotes: '#3 on sides, scissor on top, square the neckline, light pomade.',
-      editPrompt: 'Same person, same face, same skin tone, same age, same ethnicity, same lighting. ONLY change the hairstyle to a classic professional men\'s haircut: clean side part, neatly tapered sides, slightly longer combed top, square neckline. Keep the beard or facial hair identical to the original. Photorealistic studio portrait quality. Do not change the face. Do not change the background drastically.'
+      explanation: 'Long combed top, deep side part, tapered sides, glossy pomade finish. Office-ready and timeless.',
+      barberNotes: '#3 on sides taper, scissor cut top ~3 inches, deep side part, square neckline, glossy pomade.',
+      editPrompt: "Transform this person's hairstyle into a CLASSIC EXECUTIVE SIDE PART: top hair clearly LONGER (about 3 inches / 7-8 cm), neatly COMBED to one side along a sharp parting line, GLOSSY pomade finish so individual strands catch the light, sides TAPERED gradually shorter from temple to ears (NOT shaved to skin), SQUARE neckline. The hair should look polished and formal, photographed for a Vanity Fair editorial. Keep the same face, skin tone, age, and beard or facial hair exactly as in the original photo. Photorealistic studio portrait quality."
     },
     {
       styleId: 'fade-haircut',
-      title: 'Modern Fade',
+      title: 'Modern Skin Fade',
       maintenance: 'Medium maintenance',
-      explanation: 'Tight skin fade from temple to neck, textured top with light styling product.',
-      barberNotes: 'Skin fade up to temple line, scissor texture on top, hard part optional.',
-      editPrompt: 'Same person, same face, same skin tone, same age, same ethnicity, same lighting. ONLY change the hairstyle to a modern skin fade: very short on the sides fading from skin near the ears up to medium length on the top, textured and lightly styled top. Keep the beard or facial hair identical. Photorealistic. Do not change the face.'
+      explanation: 'Bald skin fade on sides up to the temples, medium textured top with matte finish. Bold, modern contrast.',
+      barberNotes: 'Skin fade at zero near ears, blended up to temple line, scissor texture on top ~1.5 inches, matte clay product.',
+      editPrompt: "Transform this person's hairstyle into a MODERN HIGH SKIN FADE: sides and back are SHAVED TO THE SKIN near the ears and the entire neckline (visibly bald, no hair near the ears), with the fade gradient rising sharply up to the temple line. The TOP HAIR is MEDIUM length (about 1.5 inches / 4 cm) with VISIBLE TEXTURE and tousled separation, MATTE clay finish (no shine), optional hard-shaved part line. Strong visible CONTRAST between bald sides and textured top is essential. Keep the same face, skin tone, age, and beard or facial hair exactly as in the original photo. Photorealistic."
     },
     {
       styleId: 'classic-haircut',
-      title: 'Low-maintenance Clean Cut',
+      title: 'Buzz / Crew Cut',
       maintenance: 'Low maintenance',
-      explanation: 'Even length all around, easy to grow out, no daily styling required.',
-      barberNotes: '#4 all over, clean ear lines, clean neckline.',
-      editPrompt: 'Same person, same face, same skin tone, same age, same ethnicity, same lighting. ONLY change the hairstyle to a clean low-maintenance buzz / short crop: even short length all over the head, neat ear lines and neckline. Keep the beard or facial hair identical. Photorealistic. Do not change the face.'
+      explanation: 'Uniform very short length all around. No styling required, easy to grow out, low effort.',
+      barberNotes: '#2 guard all over the head, slightly shorter on the neckline, no product.',
+      editPrompt: "Transform this person's hairstyle into a UNIFORM BUZZ CUT: hair cut UNIFORMLY SHORT all over the head (about half an inch / 1 cm, like a #2 clipper guard), with NO STYLING PRODUCT, NO part, NO comb-over — completely uniform short bristly texture from front to back to sides. Neck and ear lines neat and clean. Looks low-maintenance, athletic, military-inspired. Keep the same face, skin tone, age, and beard or facial hair exactly as in the original photo. Photorealistic."
     }
   ],
   vi: [
     {
-      styleId: 'business-haircut', title: 'Lịch sự cổ điển', maintenance: 'Trung bình',
-      explanation: 'Rẽ ngôi gọn, hai bên tapered, gáy vuông. Phù hợp văn phòng và sự kiện.',
-      barberNotes: 'Tông #3 hai bên, kéo trên đầu, cắt vuông gáy, một chút pomade.',
-      editPrompt: 'Same person, same face, same skin tone, same age, same ethnicity, same lighting. ONLY change the hairstyle to a classic professional Vietnamese men\'s haircut: clean side part, neatly tapered sides, slightly longer combed top, square neckline. Keep the beard or facial hair identical to the original. Photorealistic. Do not change the face.'
+      styleId: 'business-haircut',
+      title: 'Lịch sự cổ điển',
+      maintenance: 'Trung bình',
+      explanation: 'Phần trên dài chải lệch, rẽ ngôi sâu, hai bên tapered, bóng nhẹ. Phù hợp văn phòng.',
+      barberNotes: 'Tông #3 tapered hai bên, kéo trên ~7-8cm, rẽ ngôi sâu, vuông gáy, pomade bóng.',
+      editPrompt: "Transform this person's hairstyle into a CLASSIC EXECUTIVE SIDE PART: top hair clearly LONGER (about 3 inches / 7-8 cm), neatly COMBED to one side along a sharp parting line, GLOSSY pomade finish, sides TAPERED gradually (NOT shaved to skin), SQUARE neckline. Polished and formal. Keep the same face, skin tone, age, and beard or facial hair exactly as in the original photo. Photorealistic."
     },
     {
-      styleId: 'fade-haircut', title: 'Fade hiện đại', maintenance: 'Trung bình',
-      explanation: 'Fade sát từ thái dương đến gáy, phần trên tạo kết cấu với chút keo.',
-      barberNotes: 'Skin fade tới thái dương, kéo tạo kết cấu trên, có thể kẻ đường.',
-      editPrompt: 'Same person, same face, same skin tone, same age, same ethnicity, same lighting. ONLY change the hairstyle to a modern skin fade. Keep the beard or facial hair identical. Photorealistic. Do not change the face.'
+      styleId: 'fade-haircut',
+      title: 'Skin Fade hiện đại',
+      maintenance: 'Trung bình',
+      explanation: 'Skin fade sát đầu gần tai và gáy, phần trên tạo kết cấu trung bình, sáp lì. Nổi bật, tương phản mạnh.',
+      barberNotes: 'Skin fade tới thái dương, kéo tạo kết cấu trên ~4cm, sáp clay lì, có thể kẻ đường.',
+      editPrompt: "Transform this person's hairstyle into a MODERN HIGH SKIN FADE: sides and back SHAVED TO THE SKIN near the ears and the neckline (visibly bald), fade gradient rising sharply up to the temple line, top hair MEDIUM length (about 1.5 inches / 4 cm) with VISIBLE TEXTURE and tousled separation, MATTE clay finish. Strong CONTRAST between bald sides and textured top is essential. Keep the same face, skin tone, age, and beard or facial hair exactly as in the original photo. Photorealistic."
     },
     {
-      styleId: 'classic-haircut', title: 'Gọn dễ giữ', maintenance: 'Dễ giữ',
-      explanation: 'Cùng độ dài quanh đầu, dễ dài ra, không cần tạo kiểu mỗi ngày.',
-      barberNotes: 'Tông #4 toàn đầu, gọn tai và gáy.',
-      editPrompt: 'Same person, same face, same skin tone, same age, same ethnicity, same lighting. ONLY change the hairstyle to a clean low-maintenance short crop. Keep the beard or facial hair identical. Photorealistic. Do not change the face.'
+      styleId: 'classic-haircut',
+      title: 'Buzz Cut',
+      maintenance: 'Dễ giữ',
+      explanation: 'Tóc cùng độ dài rất ngắn quanh đầu. Không cần tạo kiểu, dễ dài ra.',
+      barberNotes: 'Tông #2 toàn đầu, gáy ngắn hơn chút, không dùng sản phẩm.',
+      editPrompt: "Transform this person's hairstyle into a UNIFORM BUZZ CUT: hair cut UNIFORMLY SHORT all over the head (about half an inch / 1 cm, like a #2 clipper guard), with NO STYLING PRODUCT, NO part, NO comb-over — completely uniform short bristly texture. Neck and ear lines clean. Low-maintenance, athletic. Keep the same face, skin tone, age, and beard or facial hair exactly as in the original photo. Photorealistic."
     }
   ],
   es: [
     {
-      styleId: 'business-haircut', title: 'Profesional clásico', maintenance: 'Mantenimiento medio',
-      explanation: 'Raya lateral limpia, lados degradados, nuca cuadrada. Listo para la oficina.',
-      barberNotes: '#3 a los lados, tijera arriba, nuca cuadrada, pomada ligera.',
-      editPrompt: 'Same person, same face, same skin tone, same age, same ethnicity, same lighting. ONLY change the hairstyle to a classic professional men\'s haircut. Keep the beard or facial hair identical. Photorealistic. Do not change the face.'
+      styleId: 'business-haircut',
+      title: 'Ejecutivo clásico',
+      maintenance: 'Mantenimiento medio',
+      explanation: 'Parte superior larga, raya lateral marcada, lados degradados, acabado con brillo. Listo para la oficina.',
+      barberNotes: '#3 degradado lateral, tijera arriba ~7-8cm, raya marcada, nuca cuadrada, pomada brillante.',
+      editPrompt: "Transform this person's hairstyle into a CLASSIC EXECUTIVE SIDE PART: top hair clearly LONGER (about 3 inches / 7-8 cm), neatly COMBED to one side along a sharp parting line, GLOSSY pomade finish, sides TAPERED gradually (NOT shaved to skin), SQUARE neckline. Polished and formal. Keep the same face, skin tone, age, and beard or facial hair exactly as in the original photo. Photorealistic."
     },
     {
-      styleId: 'fade-haircut', title: 'Fade moderno', maintenance: 'Mantenimiento medio',
-      explanation: 'Fade ajustado de piel a largo natural, parte superior texturizada con producto ligero.',
-      barberNotes: 'Skin fade hasta la sien, textura con tijera arriba, raya marcada opcional.',
-      editPrompt: 'Same person, same face, same skin tone, same age, same ethnicity, same lighting. ONLY change the hairstyle to a modern skin fade. Keep the beard or facial hair identical. Photorealistic. Do not change the face.'
+      styleId: 'fade-haircut',
+      title: 'Skin Fade moderno',
+      maintenance: 'Mantenimiento medio',
+      explanation: 'Skin fade rapado en lados y nuca, parte superior con textura media y acabado mate. Audaz, moderno.',
+      barberNotes: 'Skin fade hasta la sien, textura con tijera arriba ~4cm, arcilla mate, raya marcada opcional.',
+      editPrompt: "Transform this person's hairstyle into a MODERN HIGH SKIN FADE: sides and back SHAVED TO THE SKIN near the ears and the neckline (visibly bald), fade gradient rising sharply up to the temple line, top hair MEDIUM length (about 1.5 inches / 4 cm) with VISIBLE TEXTURE and tousled separation, MATTE clay finish. Strong CONTRAST. Keep the same face, skin tone, age, and beard or facial hair exactly as in the original photo. Photorealistic."
     },
     {
-      styleId: 'classic-haircut', title: 'Corte limpio de bajo mantenimiento', maintenance: 'Bajo mantenimiento',
-      explanation: 'Largo parejo, fácil de dejar crecer, sin estilizado diario.',
-      barberNotes: '#4 en toda la cabeza, oreja y nuca limpias.',
-      editPrompt: 'Same person, same face, same skin tone, same age, same ethnicity, same lighting. ONLY change the hairstyle to a clean low-maintenance short crop. Keep the beard or facial hair identical. Photorealistic. Do not change the face.'
+      styleId: 'classic-haircut',
+      title: 'Buzz / Corte raso',
+      maintenance: 'Bajo mantenimiento',
+      explanation: 'Largo muy corto y uniforme en toda la cabeza. Sin estilizado, fácil de dejar crecer.',
+      barberNotes: '#2 en toda la cabeza, nuca un poco más corta, sin producto.',
+      editPrompt: "Transform this person's hairstyle into a UNIFORM BUZZ CUT: hair cut UNIFORMLY SHORT all over the head (about half an inch / 1 cm, like a #2 clipper guard), with NO STYLING PRODUCT, NO part — completely uniform short bristly texture. Neck and ear lines clean. Low-maintenance, athletic. Keep the same face, skin tone, age, and beard or facial hair exactly as in the original photo. Photorealistic."
     }
   ]
 };

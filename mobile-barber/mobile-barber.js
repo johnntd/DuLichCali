@@ -1698,10 +1698,13 @@
   // promo clips (Fade / Family / Hotel) plus an extra slide per active
   // vendor promotion. Each slide has a large visual + headline + CTA.
   // Replaces the previous lower-page "Animated mobile barber promos"
-  // section so this content lives in the customer's first impression.
+  // section AND the separate hero showcase strip below the trust chips —
+  // this IS the main hero media now. When an active promo exists, the
+  // promo slide leads the rotation; otherwise the default brand slide +
+  // 3 service clip slides rotate.
   var _heroShowcaseTimer = null;
   function renderHeroShowcase() {
-    var mount = document.getElementById('mbHeroShowcase');
+    var mount = document.getElementById('mbHeroMedia') || document.getElementById('mbHeroShowcase');
     if (!mount) return;
     if (_heroShowcaseTimer) { clearInterval(_heroShowcaseTimer); _heroShowcaseTimer = null; }
     mount.innerHTML = '';
@@ -1709,8 +1712,7 @@
     var slides = [];
 
     // Active vendor promotions lead the rotation so customers see live deals
-    // first. The single floating "promo spotlight" card was removed in favor
-    // of this integrated slide presentation — one promo surface, not two.
+    // first. One single integrated promo surface — no duplicate widgets.
     (collectActiveCustomerPromos() || []).forEach(function(promo) {
       var pct = Number(promo.discountPercent || 0);
       var byline = promo.vendorBarberName ? promo.vendorBarberName : '';
@@ -1731,7 +1733,19 @@
       });
     });
 
-    // Then the 3 hardcoded mobile-barber promo clips.
+    // Default brand slide — first in the rotation when no promo is active.
+    slides.push({
+      type:  'default',
+      key:   'heroShowcaseDefault',
+      title: t('heroCardTitle') || 'In-home haircuts at your address',
+      copy:  t('heroCardSub')   || 'Service area, price, duration, and confirmation shown before booking.',
+      cta:   t('bookNow')       || 'Book Now',
+      badge: '✓ ' + (t('heroStatus') || 'Verified barber'),
+      poster:'/assets/mobile-barber/styles/classic-haircut.jpg',
+      action: function() { openAssistantPanel('general'); }
+    });
+
+    // 3 hardcoded mobile-barber promo clips.
     slides.push({
       type: 'clip',
       key:  'heroShowcaseFade',
@@ -2895,36 +2909,6 @@
     return booking;
   }
 
-  var HERO_SLIDES = [
-    '/assets/mobile-barber/styles/classic-haircut.jpg',
-    '/assets/mobile-barber/styles/fade-haircut.jpg',
-    '/assets/mobile-barber/styles/business-haircut.jpg',
-    '/assets/mobile-barber/styles/home-family-package.jpg',
-    '/assets/mobile-barber/styles/kids-haircut.jpg',
-    '/assets/mobile-barber/styles/modern-styling.jpg'
-  ];
-
-  function startHeroRotation() {
-    var a = document.querySelector('.mb-hero__photo--a');
-    var b = document.querySelector('.mb-hero__photo--b');
-    if (!a || !b || HERO_SLIDES.length < 2) return;
-    var gradient = 'linear-gradient(180deg, rgba(7, 31, 56, .12), rgba(7, 31, 56, .82))';
-    var idx = 0;
-    var showingA = true;
-    a.style.backgroundImage = gradient + ', url("' + HERO_SLIDES[idx] + '")';
-    a.style.opacity = '1';
-    b.style.opacity = '0';
-    setInterval(function() {
-      idx = (idx + 1) % HERO_SLIDES.length;
-      var next = showingA ? b : a;
-      var current = showingA ? a : b;
-      next.style.backgroundImage = gradient + ', url("' + HERO_SLIDES[idx] + '")';
-      next.style.opacity = '1';
-      current.style.opacity = '0';
-      showingA = !showingA;
-    }, 4500);
-  }
-
   function init() {
     state.lang = getLang();
     var params = new URLSearchParams(root.location.search);
@@ -2933,7 +2917,6 @@
     bind();
     prefillLocationGate();
     setLang(state.lang);
-    startHeroRotation();
     renderHeroShowcase();
     applyRegionDeepLink();
     // Live-merge vendor.promotions from Firestore into the runtime overlay

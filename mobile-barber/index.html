@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260528h">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260528i">
 </head>
 <body class="mb-page">
   <main class="mb-shell" id="mobileBarberApp">
@@ -23,15 +23,13 @@
     </div>
 
     <section class="mb-hero" aria-labelledby="mbHeroTitle">
-      <div class="mb-hero__media" aria-hidden="true">
-        <div class="mb-hero__photo mb-hero__photo--a" data-hero-slide="0"></div>
-        <div class="mb-hero__photo mb-hero__photo--b" data-hero-slide="1"></div>
-        <div class="mb-hero__glass">
-          <span class="mb-hero__status" data-i18n="heroStatus"></span>
-          <strong data-i18n="heroCardTitle"></strong>
-          <span data-i18n="heroCardSub"></span>
-        </div>
-      </div>
+      <!-- Unified hero showcase. Populated by renderHeroMediaCarousel():
+           • When an active vendor promotion exists, the promo slide LEADS
+             the rotation (cinematic gold treatment + CTA inside the media).
+           • Otherwise the default brand slide + 3 service clip slides
+             rotate (Fade / Family / Hotel).
+           One slide visible at a time with a 5s auto-rotate. -->
+      <div class="mb-hero__media" id="mbHeroMedia" aria-live="polite" aria-label="Featured services"></div>
       <div class="mb-hero__body">
         <p class="mb-kicker" data-i18n="heroKicker"></p>
         <h1 class="mb-hero__title" id="mbHeroTitle" data-i18n="heroTitle"></h1>
@@ -51,11 +49,6 @@
           <li class="mb-trust-chip" data-i18n="trustChipTravel"></li>
           <li class="mb-trust-chip" data-i18n="trustChipFamily"></li>
         </ul>
-        <!-- Hero showcase strip — auto-rotating cards with promo clips
-             (Fade at home / Family stop / Hotel-ready) plus an extra slide
-             per active vendor promotion. Populated by renderHeroShowcase()
-             in mobile-barber.js. -->
-        <div class="mb-hero__showcase" id="mbHeroShowcase" aria-live="polite" aria-label="Featured services"></div>
       </div>
     </section>
 
@@ -211,11 +204,11 @@
   </script>
   <script src="/ai-engine.js?v=20260524a"></script>
   <script src="/nailsalon/phone-intake.js?v=20260427d"></script>
-  <script src="/mobile-barber/mobile-barber-data.js?v=20260528h"></script>
-  <script src="/mobile-barber/mobile-barber-booking.js?v=20260528h"></script>
+  <script src="/mobile-barber/mobile-barber-data.js?v=20260528i"></script>
+  <script src="/mobile-barber/mobile-barber-booking.js?v=20260528i"></script>
   <script src="/mobile-barber/mobile-barber-agent.js?v=20260527p"></script>
   <script src="/mobile-barber/mobile-barber-voice.js?v=20260525f"></script>
   <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260527c"></script>
-  <script src="/mobile-barber/mobile-barber.js?v=20260528h"></script>
+  <script src="/mobile-barber/mobile-barber.js?v=20260528i"></script>
 </body>
 </html>

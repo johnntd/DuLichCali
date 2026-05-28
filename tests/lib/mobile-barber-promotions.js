@@ -220,9 +220,12 @@ function runMobileBarberPromotionsTests(test) {
       'duplicate hero spotlight must stay removed');
     assert(src.indexOf('displayOnCustomerPage === false') >= 0, 'respects displayOnCustomerPage flag');
     var html = fs.readFileSync(path.join(__dirname, '../../mobile-barber/index.html'), 'utf8');
-    assert(html.indexOf('id="mbHeroShowcase"') >= 0, 'hero showcase slot exists in landing HTML');
+    assert(html.indexOf('id="mbHeroMedia"') >= 0,
+      'hero media (which IS the showcase carousel) exists in landing HTML');
     assert(html.indexOf('id="mbHeroPromo"') < 0,
       'duplicate hero promo slot must stay removed');
+    assert(html.indexOf('id="mbHeroShowcase"') < 0,
+      'separate showcase strip removed — it is now merged into .mb-hero__media');
   });
 }
 

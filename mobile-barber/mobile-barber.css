@@ -1156,10 +1156,32 @@
   color: rgba(255, 255, 255, .82);
   line-height: 1.35;
 }
+.mb-hero-showcase-card__meta {
+  display: block;
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, .72);
+  letter-spacing: .02em;
+}
+
 .mb-hero-showcase-card__cta {
   justify-self: start;
-  margin-top: .35rem;
+  margin-top: .45rem;
   min-height: 44px;
+}
+
+/* Promo slide gets a richer cinematic gradient + gold glow to stand apart
+   from clip slides without feeling like a separate floating widget. */
+.mb-hero-showcase-card--promo .mb-hero-showcase-card__media {
+  background:
+    radial-gradient(circle at 18% 25%, rgba(245, 166, 35, .55), transparent 55%),
+    linear-gradient(135deg, rgba(7, 24, 42, .95) 30%, rgba(11, 36, 60, .85) 100%);
+}
+.mb-hero-showcase-card--promo {
+  box-shadow: inset 0 0 0 1px rgba(245, 166, 35, .25);
+}
+.mb-hero-showcase-card--promo .mb-hero-showcase-card__badge {
+  background: linear-gradient(135deg, #f6c352, #d97706);
+  color: #0b1d33;
 }
 
 @media (min-width: 768px) {
@@ -2994,81 +3016,10 @@
 }
 /* ── /How matching works ─────────────────────────────────────────────── */
 
-/* ── Hero promo spotlight ─────────────────────────────────────────────── */
-.mb-hero__promo {
-  display: block;
-  margin: 0 0 .85rem;
-  position: relative;
-  min-height: 1px;
-}
-.mb-hero__promo[hidden] { display: none; }
-
-.mb-hero__promo-card {
-  position: relative;
-  display: none;
-  flex-direction: column;
-  gap: .35rem;
-  padding: .85rem 1rem .9rem;
-  border-radius: var(--r-md);
-  border: 1px solid rgba(245, 166, 35, .55);
-  background:
-    linear-gradient(135deg, rgba(245, 166, 35, .22), rgba(245, 166, 35, .08)),
-    rgba(8, 30, 52, .8);
-  box-shadow:
-    0 6px 22px rgba(245, 166, 35, .22),
-    inset 0 1px 0 rgba(255, 255, 255, .08);
-  animation: mbHeroPromoIn .35s ease-out both;
-}
-.mb-hero__promo-card--visible { display: flex; }
-
-.mb-hero__promo-badge {
-  align-self: flex-start;
-  padding: .2rem .55rem;
-  border-radius: 999px;
-  background: var(--gold-lt, #ffd166);
-  color: #0d2f50;
-  font-size: var(--text-xs);
-  font-weight: 900;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-}
-.mb-hero__promo-title {
-  font-family: var(--font-d, 'Bodoni Moda', serif);
-  font-size: clamp(1.1rem, 3.4vw, 1.5rem);
-  color: var(--cream);
-  line-height: 1.15;
-}
-.mb-hero__promo-meta {
-  font-size: var(--text-xs);
-  color: var(--gold-lt, #ffd166);
-  opacity: .9;
-  font-weight: 600;
-}
-.mb-hero__promo-desc {
-  font-size: var(--text-sm);
-  color: var(--text);
-  opacity: .92;
-}
-.mb-hero__promo-cta {
-  align-self: flex-start;
-  margin-top: .35rem;
-}
-
-@media (min-width: 768px) {
-  .mb-hero__promo-card {
-    padding: 1.1rem 1.3rem 1.2rem;
-  }
-}
-
-@keyframes mbHeroPromoIn {
-  0%   { opacity: 0; transform: translateY(-4px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mb-hero__promo-card { animation: none; }
-}
-/* ── /Hero promo spotlight ───────────────────────────────────────────── */
+/* The legacy floating "hero promo spotlight" card was removed. Promotions
+   now appear as the LEAD slide in the unified hero showcase rotation
+   (see .mb-hero__showcase / .mb-hero-showcase-card) so the hero presents
+   one single integrated promo surface instead of two duplicated widgets. */
 
 /* ── Vendor portal: promo chip + promo cards in Settings ─────────────── */
 .mb-promo-chip {

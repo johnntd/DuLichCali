@@ -208,16 +208,21 @@ function runMobileBarberPromotionsTests(test) {
     assert(src.indexOf('availability.price.promoApplied') >= 0, 'agent must check promoApplied before prepending');
   });
 
-  test('9. landing hero spotlight collects + renders active promos', function() {
+  test('9. landing hero showcase collects + renders active promos as lead slide', function() {
     var fs = require('fs');
     var path = require('path');
     var src = fs.readFileSync(path.join(__dirname, '../../mobile-barber/mobile-barber.js'), 'utf8');
     assert(src.indexOf('collectActiveCustomerPromos') >= 0, 'helper exists');
-    assert(src.indexOf('renderHeroPromoSpotlight') >= 0, 'hero renderer exists');
+    // The duplicate floating spotlight card was removed; promos now lead
+    // the hero showcase rotation as a single integrated promo surface.
+    assert(src.indexOf('renderHeroShowcase') >= 0, 'hero showcase renderer exists');
+    assert(src.indexOf('renderHeroPromoSpotlight') < 0,
+      'duplicate hero spotlight must stay removed');
     assert(src.indexOf('displayOnCustomerPage === false') >= 0, 'respects displayOnCustomerPage flag');
-    assert(src.indexOf('mb-hero__promo-card') >= 0, 'renders hero card markup');
     var html = fs.readFileSync(path.join(__dirname, '../../mobile-barber/index.html'), 'utf8');
-    assert(html.indexOf('id="mbHeroPromo"') >= 0, 'hero promo slot exists in landing HTML');
+    assert(html.indexOf('id="mbHeroShowcase"') >= 0, 'hero showcase slot exists in landing HTML');
+    assert(html.indexOf('id="mbHeroPromo"') < 0,
+      'duplicate hero promo slot must stay removed');
   });
 }
 

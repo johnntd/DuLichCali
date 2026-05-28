@@ -36,8 +36,12 @@ function runMobileBarberPromotionActivationTests(test) {
       'init() must call loadVendorPromosFromFirestore');
     assert(initSlice.indexOf('subscribeVendorPromos()') >= 0,
       'init() must subscribe to live promo updates');
-    assert(initSlice.indexOf('renderHeroPromoSpotlight()') >= 0,
-      'init() must re-render hero after promos merge');
+    // The standalone hero spotlight card was removed in favor of the
+    // unified hero showcase rotation. Promos lead that rotation now.
+    assert(initSlice.indexOf('renderHeroShowcase()') >= 0,
+      'init() must re-render hero showcase after promos merge');
+    assert(initSlice.indexOf('renderHeroPromoSpotlight()') < 0,
+      'duplicate hero spotlight must stay removed');
     assert(initSlice.indexOf('renderServices()') >= 0,
       'init() must re-render service cards after promos merge');
   });

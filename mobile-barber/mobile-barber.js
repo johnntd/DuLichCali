@@ -1707,7 +1707,31 @@
     mount.innerHTML = '';
 
     var slides = [];
-    // Slide 1-3: hardcoded mobile-barber promo clips.
+
+    // Active vendor promotions lead the rotation so customers see live deals
+    // first. The single floating "promo spotlight" card was removed in favor
+    // of this integrated slide presentation — one promo surface, not two.
+    (collectActiveCustomerPromos() || []).forEach(function(promo) {
+      var pct = Number(promo.discountPercent || 0);
+      var byline = promo.vendorBarberName ? promo.vendorBarberName : '';
+      if (promo.endDate) {
+        byline = (byline ? byline + ' · ' : '') +
+          interpolate(t('heroPromoUntil') || 'Through {date}', { date: promo.endDate });
+      }
+      slides.push({
+        type:  'promo',
+        key:   'heroShowcasePromo-' + (promo.id || ''),
+        title: promo.name || (pct + '% OFF'),
+        copy:  promo.description || byline,
+        meta:  promo.description ? byline : '',
+        cta:   t('heroPromoCta') || 'Book this discount',
+        badge: '🔥 ' + pct + '% ' + (t('heroPromoBadgeOff') || 'OFF'),
+        promo: promo,
+        action: function() { openAssistantPanel('general'); }
+      });
+    });
+
+    // Then the 3 hardcoded mobile-barber promo clips.
     slides.push({
       type: 'clip',
       key:  'heroShowcaseFade',
@@ -1737,21 +1761,6 @@
       video: '/assets/mobile-barber/clips/business-haircut-1.mp4',
       poster:'/assets/mobile-barber/portfolio/business-haircut-1-after.jpg',
       action: function() { openAssistantPanel('general'); }
-    });
-
-    // Slide 4+: one slide per active vendor promotion (live).
-    (collectActiveCustomerPromos() || []).forEach(function(promo) {
-      slides.push({
-        type:  'promo',
-        key:   'heroShowcasePromo-' + (promo.id || ''),
-        title: promo.name || (t('heroPromoBadgeOff') || 'OFF'),
-        copy:  promo.description ||
-               interpolate(t('heroPromoBadge') || '{pct}% OFF', { pct: Number(promo.discountPercent || 0) }),
-        cta:   t('heroPromoCta') || 'Book this discount',
-        badge: '🔥 ' + Number(promo.discountPercent || 0) + '% ' + (t('heroPromoBadgeOff') || 'OFF'),
-        promo: promo,
-        action: function() { openAssistantPanel('general'); }
-      });
     });
 
     if (!slides.length) { mount.hidden = true; return; }
@@ -1789,12 +1798,21 @@
       }
       var body = el('div', 'mb-hero-showcase-card__body');
       var title = el('strong'); title.textContent = slide.title;
-      var copy = el('p');        copy.textContent  = slide.copy;
+      body.appendChild(title);
+      if (slide.copy) {
+        var copy = el('p'); copy.textContent = slide.copy;
+        body.appendChild(copy);
+      }
+      if (slide.meta) {
+        var meta = el('span', 'mb-hero-showcase-card__meta');
+        meta.textContent = slide.meta;
+        body.appendChild(meta);
+      }
       var cta = el('button', 'mb-button mb-button--primary mb-button--sm mb-hero-showcase-card__cta');
       cta.type = 'button';
       cta.textContent = slide.cta;
       cta.addEventListener('click', function(e) { e.preventDefault(); slide.action(); });
-      body.appendChild(title); body.appendChild(copy); body.appendChild(cta);
+      body.appendChild(cta);
       card.appendChild(body);
       mount.appendChild(card);
     });
@@ -2916,15 +2934,14 @@
     prefillLocationGate();
     setLang(state.lang);
     startHeroRotation();
-    renderHeroPromoSpotlight();
+    renderHeroShowcase();
     applyRegionDeepLink();
-    // Live-merge vendor.promotions from Firestore into DATA.sampleVendors so
-    // every code path (hero spotlight, service-card pricing, AI agent,
+    // Live-merge vendor.promotions from Firestore into the runtime overlay
+    // so every code path (hero showcase, service-card pricing, AI agent,
     // booking quote) sees what the vendor just enabled in the portal — no
     // matter which device/tab made the change.
     loadVendorPromosFromFirestore()
       .then(function() {
-        renderHeroPromoSpotlight();
         renderHeroShowcase();
         renderServices();
       })
@@ -3058,7 +3075,6 @@
               if (root.console) root.console.info('[mobile-barber-promo] live update', {
                 vendorId: vendorId, count: (_vendorPromosFor(vendorId) || []).length
               });
-              renderHeroPromoSpotlight();
               renderHeroShowcase();
               renderServices();
             }
@@ -3142,13 +3158,12 @@
   }
 
   function renderPromotionHero(promotions) {
-    // Thin alias for the existing spotlight renderer. The spec promises this
-    // name; the implementation already lives in renderHeroPromoSpotlight.
-    // If a caller passes an explicit promotions array we hand it through
-    // window._mbForceHeroPromos so collectActiveCustomerPromos can prefer it.
+    // Thin alias. If a caller passes an explicit promotions array we hand it
+    // through window._mbForceHeroPromos so collectActiveCustomerPromos can
+    // prefer it, then re-render the showcase rotation.
     if (Array.isArray(promotions)) window._mbForceHeroPromos = promotions;
     else window._mbForceHeroPromos = null;
-    renderHeroPromoSpotlight();
+    renderHeroShowcase();
   }
 
   if (typeof window !== 'undefined') {
@@ -3201,68 +3216,11 @@
     return promos;
   }
 
-  function _heroPromoCardHtml(promo, idx) {
-    var pctTxt = Number(promo.discountPercent || 0) + '%';
-    var serviceLabel = promo.applyToScope === 'selected'
-      ? interpolate(t('heroPromoSelectedServices') || 'on selected services', {})
-      : (t('heroPromoAllServices') || 'on all services');
-    var rangeBits = [];
-    if (promo.startDate || promo.endDate) {
-      rangeBits.push((promo.endDate
-        ? interpolate(t('heroPromoUntil') || 'Through {date}', { date: promo.endDate })
-        : interpolate(t('heroPromoFrom') || 'From {date}', { date: promo.startDate })));
-    }
-    if (promo.maxRedemptions && Number(promo.maxRedemptions) > 0) {
-      var left = Math.max(0, Number(promo.maxRedemptions) - Number(promo.currentRedemptions || 0));
-      rangeBits.push(interpolate(t('heroPromoSpotsLeft') || 'Only {n} discounted slots left', { n: left }));
-    }
-    var meta = rangeBits.join(' · ');
-    return '<div class="mb-hero__promo-card" data-idx="' + idx + '">' +
-      '<div class="mb-hero__promo-badge">🔥 ' + pctTxt + ' ' + (t('heroPromoBadgeOff') || 'OFF') + '</div>' +
-      '<div class="mb-hero__promo-title">' + (promo.name || '') + '</div>' +
-      '<div class="mb-hero__promo-meta">' + serviceLabel + (promo.vendorBarberName ? ' · ' + promo.vendorBarberName : '') + '</div>' +
-      (meta ? '<div class="mb-hero__promo-meta">' + meta + '</div>' : '') +
-      (promo.description ? '<div class="mb-hero__promo-desc">' + promo.description + '</div>' : '') +
-      '<button class="mb-button mb-button--primary mb-button--sm mb-hero__promo-cta" type="button" data-action="chat">' +
-      (t('heroPromoCta') || 'Book this discount') + '</button>' +
-    '</div>';
-  }
-
-  var _heroPromoRotateTimer = null;
-  function renderHeroPromoSpotlight() {
-    var node = document.getElementById('mbHeroPromo');
-    if (!node) return;
-    var promos = collectActiveCustomerPromos();
-    if (_heroPromoRotateTimer) { clearInterval(_heroPromoRotateTimer); _heroPromoRotateTimer = null; }
-    if (!promos.length) {
-      node.hidden = true;
-      node.innerHTML = '';
-      return;
-    }
-    node.hidden = false;
-    node.innerHTML = promos.map(_heroPromoCardHtml).join('');
-    // Wire CTA(s) to open chat.
-    node.querySelectorAll('[data-action="chat"]').forEach(function(btn) {
-      btn.addEventListener('click', function() { openAssistantPanel('general'); });
-    });
-    // If more than one promo, rotate every 7s by hiding all but the active one.
-    if (promos.length > 1) {
-      var cards = node.querySelectorAll('.mb-hero__promo-card');
-      cards.forEach(function(c, i) { c.classList.toggle('mb-hero__promo-card--visible', i === 0); });
-      var active = 0;
-      _heroPromoRotateTimer = setInterval(function() {
-        cards[active].classList.remove('mb-hero__promo-card--visible');
-        active = (active + 1) % cards.length;
-        cards[active].classList.add('mb-hero__promo-card--visible');
-      }, 7000);
-    } else {
-      var only = node.querySelector('.mb-hero__promo-card');
-      if (only) only.classList.add('mb-hero__promo-card--visible');
-    }
-  }
-  // Expose for tests + manual triggering after vendor updates.
+  // Expose collectActiveCustomerPromos for tests + the showcase renderer.
+  // The old standalone floating hero spotlight card was removed — promos
+  // now lead the renderHeroShowcase rotation as the single integrated
+  // promo presentation in the hero.
   if (typeof window !== 'undefined') {
-    window._mbRenderHeroPromoSpotlight = renderHeroPromoSpotlight;
     window._mbCollectActiveCustomerPromos = collectActiveCustomerPromos;
   }
 

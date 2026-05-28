@@ -24,8 +24,12 @@ function runMobileBarberPromotionActivationTests(test) {
       'loadVendorPromosFromFirestore must exist');
     assert(src.indexOf('function subscribeVendorPromos') >= 0,
       'subscribeVendorPromos onSnapshot listener must exist');
-    assert(src.indexOf('_applyVendorPromosPatch') >= 0,
-      'merge helper must exist');
+    // The original `_applyVendorPromosPatch` mutated frozen objects (silent
+    // no-op). Replaced by the runtime overlay map + helpers — assert those.
+    assert(src.indexOf('window._mbVendorPromosByVendor') >= 0,
+      'runtime overlay map must exist');
+    assert(src.indexOf('function _vendorPromosFor') >= 0,
+      'overlay reader must exist');
     // init() must kick the bridge off so first paint can show promos.
     var initSlice = src.slice(src.indexOf('function init()'), src.indexOf('function init()') + 1500);
     assert(initSlice.indexOf('loadVendorPromosFromFirestore()') >= 0,

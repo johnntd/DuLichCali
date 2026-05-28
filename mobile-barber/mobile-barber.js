@@ -937,33 +937,45 @@
 
   function preferredVendor() {
     var vendors = DATA && DATA.sampleVendors ? DATA.sampleVendors.filter(function(vendor) { return vendor.active !== false; }) : [];
+    var picked = null;
     // 1) An explicit Find-My-Barber gate match wins. This is the marketplace
     //    auto-routing result and reflects the customer's actual address.
     if (state.routedVendor && state.routedVendor.active !== false) {
       var stillValid = vendors.filter(function(vendor) { return vendor.id === state.routedVendor.id; })[0];
-      if (stillValid) return stillValid;
+      if (stillValid) picked = stillValid;
     }
     // 2) Customer barber preference expressed to the AI agent (override).
-    var sessionState = state.agentSession && state.agentSession.state;
-    var preference = String(sessionState && sessionState.barberPreference || '').toLowerCase();
-    if (preference) {
-      var matched = vendors.filter(function(vendor) {
-        return String(vendor.businessName + ' ' + vendor.barberName + ' ' + vendor.id).toLowerCase().indexOf(preference.split(/\s+/)[0]) >= 0;
-      })[0];
-      if (matched) return matched;
+    if (!picked) {
+      var sessionState = state.agentSession && state.agentSession.state;
+      var preference = String(sessionState && sessionState.barberPreference || '').toLowerCase();
+      if (preference) {
+        var matched = vendors.filter(function(vendor) {
+          return String(vendor.businessName + ' ' + vendor.barberName + ' ' + vendor.id).toLowerCase().indexOf(preference.split(/\s+/)[0]) >= 0;
+        })[0];
+        if (matched) picked = matched;
+      }
     }
     // 3) Address-based fallback before the customer has touched the gate, so
     //    a returning visitor with a saved location still talks to the right
     //    vendor on first message.
-    var saved = readSavedLocation();
-    if (saved && BOOKING && typeof BOOKING.findVendorForAddress === 'function') {
-      var routed = BOOKING.findVendorForAddress(saved, { vendors: vendors });
-      if (routed) return routed;
+    if (!picked) {
+      var saved = readSavedLocation();
+      if (saved && BOOKING && typeof BOOKING.findVendorForAddress === 'function') {
+        var routed = BOOKING.findVendorForAddress(saved, { vendors: vendors });
+        if (routed) picked = routed;
+      }
     }
-    var service = selectedService();
-    if (service && DATA.findVendorById) return DATA.findVendorById(service.vendorId);
-    if (DATA.findVendorById && DATA.MICHAEL_VENDOR_ID) return DATA.findVendorById(DATA.MICHAEL_VENDOR_ID);
-    return vendors[0] || null;
+    if (!picked) {
+      var service = selectedService();
+      if (service && DATA.findVendorById) picked = DATA.findVendorById(service.vendorId);
+    }
+    if (!picked && DATA.findVendorById && DATA.MICHAEL_VENDOR_ID) picked = DATA.findVendorById(DATA.MICHAEL_VENDOR_ID);
+    if (!picked) picked = vendors[0] || null;
+    // Always enrich with the runtime promo overlay so downstream consumers
+    // (AGENT.buildPrompt, BOOKING.calculateMobileBarberPrice) see the
+    // Firestore-saved vendor.promotions. The static catalog vendors are
+    // Object.freeze'd so we cannot mutate them in place.
+    return picked ? _vendorWithPromos(picked) : null;
   }
 
   function servicesForVendor(vendorId) {
@@ -2226,7 +2238,7 @@
     }
 
     var addressObj = { address: draft.address, city: draft.city, zip: draft.zip };
-    var vendor = BOOKING.findVendorForAddress(addressObj);
+    var vendor = _vendorWithPromos(BOOKING.findVendorForAddress(addressObj));
     if (!vendor) {
       var msgV = t('manualBookingNoVendor') || 'No barber covers this address yet. Try a different ZIP.';
       state.manualBooking.lastSubmissionError = msgV;
@@ -2531,7 +2543,7 @@
     }
     // Find the right vendor by service area
     var addressObj = { address: draft.address, city: draft.city, zip: draft.zip };
-    var vendor = BOOKING.findVendorForAddress(addressObj);
+    var vendor = _vendorWithPromos(BOOKING.findVendorForAddress(addressObj));
     if (!vendor) {
       var msgV = t('homeAiPreviewBookNoVendor') || 'No barber covers this address yet. Try a different ZIP.';
       state.aiPreview.lastSubmissionError = msgV;
@@ -2871,16 +2883,55 @@
       .catch(function() { /* fail open — landing still works without promos */ });
   }
 
-  // ── Vendor promotion bridge (Firestore → static catalog) ───────────────
-  // The vendor portal writes promotions to firestore vendors/{id}.promotions.
-  // Before this bridge existed the customer landing only ever saw promos
-  // hard-coded into DATA.sampleVendors — so enabling a promo in the dashboard
-  // had ZERO effect on the public page. Root cause of the activation bug.
+  // ── Vendor promotion bridge (Firestore → runtime map → renderers) ─────
+  //
+  // FIX HISTORY:
+  // 1. First attempt mutated DATA.sampleVendors[i].promotions — silently
+  //    failed because every entry is Object.freeze'd. The mutation was a
+  //    no-op so nothing ever showed.
+  // 2. Read from `db.collection('vendors')` — wrong collection. The
+  //    dashboard writes to `mobileBarberVendors` (DATA.COLLECTIONS.vendors).
+  //    These two never overlapped.
+  //
+  // This implementation stores loaded promos in a side map keyed by vendor
+  // id and exposes _vendorPromosFor(id) so every renderer (hero, service
+  // card, booking quote, AI agent) reads the runtime overlay instead of
+  // hitting the frozen catalog. Every place that takes a vendor object goes
+  // through _vendorWithPromos(vendor) to get a writable shallow clone with
+  // .promotions populated from the overlay.
+  window._mbVendorPromosByVendor = window._mbVendorPromosByVendor || {};
+
+  function _vendorPromosFor(vendorId) {
+    if (!vendorId) return [];
+    if (Array.isArray(window._mbVendorPromosByVendor[vendorId])) {
+      return window._mbVendorPromosByVendor[vendorId];
+    }
+    // Fall back to whatever the static seed declared on the (frozen) vendor.
+    var v = (DATA && typeof DATA.findVendorById === 'function')
+      ? DATA.findVendorById(vendorId)
+      : null;
+    return (v && Array.isArray(v.promotions)) ? v.promotions : [];
+  }
+
+  // Returns a shallow clone of the vendor with `.promotions` set to the
+  // current runtime overlay. Safe to pass to BOOKING / AGENT helpers that
+  // expect to read vendor.promotions. Pass-through (returns same ref) when
+  // the runtime overlay has nothing to add.
+  function _vendorWithPromos(vendor) {
+    if (!vendor || !vendor.id) return vendor;
+    var promos = _vendorPromosFor(vendor.id);
+    if (!promos || !promos.length) return vendor;
+    var clone = {};
+    for (var k in vendor) { if (Object.prototype.hasOwnProperty.call(vendor, k)) clone[k] = vendor[k]; }
+    clone.promotions = promos.slice();
+    return clone;
+  }
+  if (typeof window !== 'undefined') window._mbVendorWithPromos = _vendorWithPromos;
+
   function _mbVendorIds() {
     var vendors = (DATA && DATA.sampleVendors) ? DATA.sampleVendors : [];
     var ids = [];
     vendors.forEach(function(v) {
-      // Only mobile-barber vendors — avoid pulling unrelated docs.
       if (!v || !v.id) return;
       if (v.providerType && v.providerType !== 'mobile-barber') return;
       ids.push(v.id);
@@ -2888,62 +2939,82 @@
     return ids;
   }
 
-  function _applyVendorPromosPatch(vendorId, promos) {
-    var vendors = (DATA && DATA.sampleVendors) ? DATA.sampleVendors : [];
-    for (var i = 0; i < vendors.length; i++) {
-      if (vendors[i] && vendors[i].id === vendorId) {
-        vendors[i].promotions = Array.isArray(promos) ? promos.slice() : [];
-        return true;
-      }
-    }
-    return false;
+  function _setVendorPromos(vendorId, promos) {
+    window._mbVendorPromosByVendor[vendorId] = Array.isArray(promos) ? promos.slice() : [];
+  }
+
+  function _mbCollection() {
+    return (DATA && DATA.COLLECTIONS && DATA.COLLECTIONS.vendors) || 'mobileBarberVendors';
   }
 
   function loadVendorPromosFromFirestore() {
+    var diag = { collection: _mbCollection(), vendorIds: _mbVendorIds(), promosByVendor: {}, errors: {} };
     if (typeof firebase === 'undefined' || !firebase.firestore || !firebase.apps || !firebase.apps.length) {
-      return Promise.resolve(false);
+      diag.skipped = 'firebase-unavailable';
+      if (root.console) root.console.info('[mobile-barber-promo] load skipped', diag);
+      return Promise.resolve(diag);
     }
     var db = firebase.firestore();
-    var ids = _mbVendorIds();
-    if (!ids.length) return Promise.resolve(false);
+    var ids = diag.vendorIds;
+    if (!ids.length) {
+      if (root.console) root.console.info('[mobile-barber-promo] load skipped — no vendor ids', diag);
+      return Promise.resolve(diag);
+    }
     return Promise.all(ids.map(function(vendorId) {
-      return db.collection('vendors').doc(vendorId).get()
+      return db.collection(diag.collection).doc(vendorId).get()
         .then(function(doc) {
-          if (!doc.exists) return false;
-          var data = doc.data() || {};
+          var data = doc.exists ? (doc.data() || {}) : {};
+          // ONLY override the runtime overlay when Firestore explicitly
+          // carries a `promotions` array (even if empty — vendor may have
+          // deliberately cleared everything). If the field is absent, leave
+          // the runtime map untouched so _vendorPromosFor falls back to the
+          // static seed and the demo promo continues to show.
           if (Array.isArray(data.promotions)) {
-            _applyVendorPromosPatch(vendorId, data.promotions);
-            return true;
+            _setVendorPromos(vendorId, data.promotions);
+            diag.promosByVendor[vendorId] = data.promotions.length;
+          } else {
+            diag.promosByVendor[vendorId] = 'using-seed';
           }
-          return false;
+          return diag.promosByVendor[vendorId];
         })
-        .catch(function() { return false; });
-    })).then(function() { return true; });
+        .catch(function(err) {
+          diag.errors[vendorId] = (err && err.code) || (err && err.message) || 'error';
+          return 0;
+        });
+    })).then(function() {
+      if (root.console) root.console.info('[mobile-barber-promo] loaded from ' + diag.collection, diag);
+      return diag;
+    });
   }
 
   var _vendorPromoUnsubs = [];
   function subscribeVendorPromos() {
     if (typeof firebase === 'undefined' || !firebase.firestore || !firebase.apps || !firebase.apps.length) return;
-    // Clear any previous listeners first (idempotent — called once per init,
-    // but defensive in case of HMR / SPA navigation in future).
     _vendorPromoUnsubs.forEach(function(fn) { try { fn(); } catch (e) {} });
     _vendorPromoUnsubs = [];
     var db = firebase.firestore();
+    var collection = _mbCollection();
     _mbVendorIds().forEach(function(vendorId) {
       try {
-        var unsub = db.collection('vendors').doc(vendorId)
+        var unsub = db.collection(collection).doc(vendorId)
           .onSnapshot(function(doc) {
             if (!doc.exists) return;
             var data = doc.data() || {};
-            var current = (DATA.findVendorById && DATA.findVendorById(vendorId)) || null;
-            var before = current && JSON.stringify(current.promotions || []);
-            _applyVendorPromosPatch(vendorId, Array.isArray(data.promotions) ? data.promotions : []);
-            var after = current && JSON.stringify(current.promotions || []);
+            var before = JSON.stringify(_vendorPromosFor(vendorId) || []);
+            if (Array.isArray(data.promotions)) {
+              _setVendorPromos(vendorId, data.promotions);
+            }
+            var after = JSON.stringify(_vendorPromosFor(vendorId) || []);
             if (before !== after) {
+              if (root.console) root.console.info('[mobile-barber-promo] live update', {
+                vendorId: vendorId, count: (_vendorPromosFor(vendorId) || []).length
+              });
               renderHeroPromoSpotlight();
               renderServices();
             }
-          }, function() { /* listener errors are non-fatal */ });
+          }, function(err) {
+            if (root.console) root.console.warn('[mobile-barber-promo] listener error', vendorId, err && err.code);
+          });
         _vendorPromoUnsubs.push(unsub);
       } catch (e) {}
     });
@@ -2961,7 +3032,9 @@
     vendors.forEach(function(vendor) {
       if (!vendor || vendor.active === false) return;
       if (opts.vendorId && vendor.id !== opts.vendorId) return;
-      (Array.isArray(vendor.promotions) ? vendor.promotions : []).forEach(function(p) {
+      // Read from the runtime overlay so Firestore-saved promos surface even
+      // though the static vendor object is frozen.
+      _vendorPromosFor(vendor.id).forEach(function(p) {
         if (!p || p.active !== true) return;
         if (p.displayOnCustomerPage === false) return;
         if (p.startDate && iso < p.startDate) return;
@@ -3049,7 +3122,9 @@
     var promos = [];
     vendors.forEach(function(vendor) {
       if (!vendor || vendor.active === false) return;
-      var list = Array.isArray(vendor.promotions) ? vendor.promotions : [];
+      // Runtime overlay first (Firestore + seed); falls back to the
+      // (frozen) static catalog when nothing is loaded yet.
+      var list = _vendorPromosFor(vendor.id);
       list.forEach(function(p) {
         if (!p || p.active !== true) return;
         if (p.displayOnCustomerPage === false) return;

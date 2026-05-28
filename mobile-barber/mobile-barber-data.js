@@ -54,7 +54,7 @@
   var DEFAULT_PROMOTION_SCOPE = 'all';
 
   var SERVICE_FIELDS = Object.freeze([
-    'id', 'vendorId', 'name', 'description', 'durationMinutes', 'price',
+    'id', 'slug', 'vendorId', 'name', 'description', 'durationMinutes', 'price',
     'cleanupBufferMinutes', 'travelBufferMinutes', 'category', 'active',
     'imageUrl', 'imagePrompt', 'imageAlt', 'isAIGenerated'
   ]);
@@ -425,7 +425,13 @@
   function makeService(vendorId, slug, name, description, price, mins, category) {
     var image = SERVICE_IMAGE_TEMPLATES[slug] || SERVICE_IMAGE_TEMPLATES['classic-haircut'];
     return Object.freeze({
+      // Composite id keeps per-vendor uniqueness so two vendors can each
+      // offer "classic-haircut" without colliding.
       id: vendorId + '-' + slug,
+      // Canonical menu slug — same value as the SERVICE_IMAGE_TEMPLATES key.
+      // The customer landing carousel joins template ↔ service on this
+      // field so prices render correctly regardless of vendor id.
+      slug: slug,
       vendorId: vendorId,
       name: name,
       description: description,

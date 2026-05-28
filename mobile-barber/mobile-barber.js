@@ -58,6 +58,7 @@
       regionGateBannerBay: 'Bay Area coverage selected. Enter your city or ZIP to get matched with the nearest barber.',
       barberMatchedAnnounce: 'Got it. The AI assistant will confirm the right barber for {city}.',
       priceLabel: 'Price',
+      priceUnavailable: 'Price unavailable',
       durationLabel: 'Duration',
       travelBufferLabel: 'Travel buffer',
       cleanupLabel: 'Cleanup',
@@ -258,6 +259,7 @@
       regionGateBannerBay: 'Đã chọn khu vực Bay Area. Nhập thành phố hoặc mã ZIP để được ghép với thợ gần nhất.',
       barberMatchedAnnounce: 'Đã ghi nhận. Trợ lý AI sẽ xác nhận thợ phù hợp cho {city}.',
       priceLabel: 'Giá',
+      priceUnavailable: 'Giá đang cập nhật',
       durationLabel: 'Thời lượng',
       travelBufferLabel: 'Thời gian di chuyển',
       cleanupLabel: 'Dọn dẹp',
@@ -458,6 +460,7 @@
       regionGateBannerBay: 'Cobertura en Bay Area seleccionada. Ingrese su ciudad o código postal para conectarle con el barbero más cercano.',
       barberMatchedAnnounce: 'Listo. El asistente AI confirmará el barbero adecuado para {city}.',
       priceLabel: 'Precio',
+      priceUnavailable: 'Precio no disponible',
       durationLabel: 'Duración',
       travelBufferLabel: 'Tiempo de viaje',
       cleanupLabel: 'Limpieza',
@@ -679,6 +682,26 @@
 
   function formatMoney(value) {
     return '$' + Number(value || 0).toFixed(0);
+  }
+
+  // Use this everywhere a customer-facing price is rendered. Returns either
+  // a real `$X` string or an explicit "Price unavailable" label — never
+  // silently falls back to $0. Per the spec: a paid service must never
+  // display $0; if the price is missing that is a data bug worth surfacing.
+  function formatServicePrice(value) {
+    var num = Number(value);
+    if (!isFinite(num)) {
+      if (root.console) root.console.error('[mobile-barber] missing service price', value);
+      return t('priceUnavailable') || 'Price unavailable';
+    }
+    if (num <= 0) {
+      // Service catalogue may legitimately include free add-ons in the
+      // future, but today every menu item is paid. Treat 0 as a data bug
+      // and surface it instead of pretending the haircut is free.
+      if (root.console) root.console.error('[mobile-barber] service price <= 0 — treating as unavailable', value);
+      return t('priceUnavailable') || 'Price unavailable';
+    }
+    return '$' + num.toFixed(0);
   }
 
   function interpolate(template, values) {
@@ -1351,7 +1374,18 @@
       var templates = DATA.listStyleTemplates();
       if (templates && templates.length) {
         return templates.map(function(tmpl) {
-          var service = (services || []).filter(function(s) { return s.id === tmpl.id; })[0] || null;
+          // Services are created with id = `${vendorId}-${slug}` and now
+          // carry a separate `slug` field. Match on slug first so the
+          // template -> service join is deterministic regardless of vendor;
+          // fall back to legacy id match for any caller that constructs
+          // services without the slug field.
+          var service = (services || []).filter(function(s) {
+            return s && (s.slug === tmpl.id || s.id === tmpl.id);
+          })[0] || null;
+          if (!service && root.console) {
+            root.console.warn('[mobile-barber] no matching service for template ' + tmpl.id +
+              ' — carousel will show "Price unavailable" instead of a fake $0');
+          }
           return {
             id: tmpl.id,
             title: service ? serviceCopy(service, 'name') : tmpl.title,
@@ -1362,7 +1396,7 @@
             isAIGenerated: tmpl.isAIGenerated === true,
             active: tmpl.active !== false,
             displayOrder: tmpl.displayOrder,
-            price: service && service.price,
+            price: service && typeof service.price === 'number' ? service.price : null,
             imageAlt: tmpl.imageAlt || tmpl.title
           };
         }).filter(function(item) { return item.active; });
@@ -1449,7 +1483,7 @@
     var voice = el('button', 'mb-button mb-button--ghost');
 
     label.textContent = t('selectedServiceLabel');
-    title.textContent = serviceCopy(service, 'name') + ' · ' + formatMoney(service.price);
+    title.textContent = serviceCopy(service, 'name') + ' · ' + formatServicePrice(service.price);
     book.type = 'button';
     chat.type = 'button';
     voice.type = 'button';
@@ -1532,12 +1566,12 @@
         var priceChip = el('span', 'mb-chip mb-chip--promo');
         priceChip.innerHTML =
           '<strong class="mb-chip__label">' + t('priceLabel') + ':</strong> ' +
-          '<span class="mb-chip__original">' + formatMoney(pricing.originalPrice) + '</span> ' +
-          '<span class="mb-chip__final">' + formatMoney(pricing.discountedPrice) + '</span> ' +
+          '<span class="mb-chip__original">' + formatServicePrice(pricing.originalPrice) + '</span> ' +
+          '<span class="mb-chip__final">' + formatServicePrice(pricing.discountedPrice) + '</span> ' +
           '<span class="mb-chip__pct">-' + pricing.discountPercent + '%</span>';
         row.appendChild(priceChip);
       } else {
-        row.appendChild(metaChip(t('priceLabel'), formatMoney(service.price)));
+        row.appendChild(metaChip(t('priceLabel'), formatServicePrice(service.price)));
       }
       row.appendChild(metaChip(t('durationLabel'), service.durationMinutes + ' ' + t('minutes')));
       row.appendChild(metaChip(t('travelBufferLabel'), service.travelBufferMinutes + ' ' + t('minutes')));
@@ -1589,14 +1623,26 @@
       var img = document.createElement('img');
       var body = el('div', 'mb-promo__card-body');
       var title = el('strong');
-      var price = el('span');
+      var price = el('span', 'mb-promo__card-price');
       card.setAttribute('data-promo-id', item.id);
       card.setAttribute('data-promo-category', item.category);
       img.src = item.imageUrl;
       img.alt = item.imageAlt;
       img.loading = 'lazy';
       title.textContent = item.title;
-      price.textContent = formatMoney(item.price);
+      // Apply any active vendor promo for this slug so the carousel
+      // mirrors the same price the customer would see when they book.
+      var pricing = (typeof applyPromotionToServicePrice === 'function')
+        ? applyPromotionToServicePrice({ id: item.id, slug: item.id, price: item.price })
+        : null;
+      if (pricing && pricing.promoApplied) {
+        price.innerHTML =
+          '<span class="mb-promo__card-original">' + formatServicePrice(pricing.originalPrice) + '</span> ' +
+          '<span class="mb-promo__card-final">' + formatServicePrice(pricing.discountedPrice) + '</span> ' +
+          '<span class="mb-promo__card-pct">-' + pricing.discountPercent + '%</span>';
+      } else {
+        price.textContent = formatServicePrice(item.price);
+      }
       body.appendChild(title);
       body.appendChild(price);
       card.appendChild(img);
@@ -2042,7 +2088,7 @@
     var summaryName = el('span', 'mb-manual-booking__summary-name');
     summaryName.textContent = serviceCopy(service, 'name');
     var summaryPrice = el('span', 'mb-manual-booking__summary-price');
-    summaryPrice.textContent = formatMoney(service.price);
+    summaryPrice.textContent = formatServicePrice(service.price);
     summary.appendChild(summaryName);
     summary.appendChild(summaryPrice);
     panel.appendChild(summary);

@@ -105,6 +105,7 @@ var MBP = require('./lib/mobile-barber-promotions');
 var MBS = require('./lib/mobile-barber-ai-style-booking');
 var MBM = require('./lib/mobile-barber-manual-booking');
 var MPA = require('./lib/mobile-barber-promotion-activation');
+var MZP = require('./lib/mobile-barber-zero-price');
 var HPV = require('./lib/homepage-visibility');
 
 var BIZ      = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/biz.json')));
@@ -1540,6 +1541,9 @@ MBM.runMobileBarberManualBookingTests(test);
 
 group('Mobile Barber Promotion Activation', 'mirrored-unit-logic | static-source-check');
 MPA.runMobileBarberPromotionActivationTests(test);
+
+group('Mobile Barber Zero-Price Bug', 'mirrored-unit-logic | static-source-check');
+MZP.runMobileBarberZeroPriceTests(test);
 
 group('Homepage Public Visibility Filter', 'static-source-check');
 HPV.runHomepageVisibilityTests(test);

@@ -1688,8 +1688,8 @@ function _isVendorActive(vendorId) {
 // Cache-driven gate: is there at least one currently-active vendor in this
 // (category, region)? Used by the hero carousel + marketplace region cards
 // so we never surface a category that has no real underlying provider.
-// Consults three sources in order; falls OPEN when no source has data so a
-// missing cache never silently empties the homepage.
+// Consults three sources in order; falls OPEN when no source has authoritative
+// data ABOUT THIS CATEGORY so a missing cache never silently empties the homepage.
 function _hasActiveVendorInCategory(category, regionId) {
   const cat = String(category || '').toLowerCase();
   if (!cat) return false;
@@ -1701,30 +1701,36 @@ function _hasActiveVendorInCategory(category, regionId) {
     return accept.indexOf(v) >= 0;
   }
 
-  let sawAnyData = false;
+  // CRITICAL: track whether any source had data ABOUT THIS CATEGORY (not
+  // just any data at all). Previous logic flipped `sawAnyData` to true the
+  // moment the Firestore cache had any vendor row, which incorrectly
+  // suppressed the fall-open even when the cache had ZERO barber rows.
+  // Result: the Mobile Barber routing card was hidden on the main homepage
+  // because the homepage doesn't load mobile-barber-data.js, no Firestore
+  // mobile-barber doc carries a `category` field, and MARKETPLACE has no
+  // barber entries — so all three sources had silently insufficient data.
+  let sawMatchingData = false;
 
   // Pass 1: Firestore-derived cache (loadVendorAdminStatuses).
   const meta = window._vendorAdminMeta || {};
   const ids  = Object.keys(meta);
-  if (ids.length) {
-    sawAnyData = true;
-    for (let i = 0; i < ids.length; i++) {
-      const m = meta[ids[i]];
-      if (!m || !m.active) continue;
-      if (!matchesCat(m.category)) continue;
-      if (window._vendorAdminStatus[ids[i]] && window._vendorAdminStatus[ids[i]] !== 'active') continue;
-      if (regionId && m.region && !_regionMatchesId(m.region, regionId)) continue;
-      return true;
-    }
+  for (let i = 0; i < ids.length; i++) {
+    const m = meta[ids[i]];
+    if (!m || !matchesCat(m.category)) continue;
+    sawMatchingData = true;
+    if (!m.active) continue;
+    if (window._vendorAdminStatus[ids[i]] && window._vendorAdminStatus[ids[i]] !== 'active') continue;
+    if (regionId && m.region && !_regionMatchesId(m.region, regionId)) continue;
+    return true;
   }
 
   // Pass 2: static MARKETPLACE catalogue (nails / hair / food).
   if (window.MARKETPLACE && Array.isArray(window.MARKETPLACE.businesses)) {
     for (let i = 0; i < window.MARKETPLACE.businesses.length; i++) {
       const b = window.MARKETPLACE.businesses[i];
-      if (!b || !b.active || b.disabled === true || b.homepageActive === false) continue;
-      if (!matchesCat(b.category)) continue;
-      sawAnyData = true;
+      if (!b || !matchesCat(b.category)) continue;
+      sawMatchingData = true;
+      if (!b.active || b.disabled === true || b.homepageActive === false) continue;
       if (regionId && !(Array.isArray(b.featuredRegions) && b.featuredRegions.indexOf(regionId) >= 0)) continue;
       if (!_isVendorActive(b.id)) continue;
       return true;
@@ -1733,17 +1739,18 @@ function _hasActiveVendorInCategory(category, regionId) {
 
   // Pass 3: mobile-barber static catalogue. These vendors live in
   // MobileBarberData.sampleVendors (NOT MARKETPLACE) and don't always carry
-  // a `category` field on their Firestore doc, so Pass 1 / 2 miss them.
-  // Without Pass 3 the Mobile Barber routing card was hidden even when
-  // active barbers served the region — the bug this fix targets.
+  // a `category` field on their Firestore doc. Only loaded on the mobile-
+  // barber landing — on the main homepage this module is absent, so the
+  // fall-open below handles that case.
   if (cat === 'barber' && window.MobileBarberData && Array.isArray(window.MobileBarberData.sampleVendors)) {
     const mbRegionKey = regionId === 'bayarea' ? 'bay'
       : regionId === 'oc' ? 'oc'
       : (regionId || '');
     for (let i = 0; i < window.MobileBarberData.sampleVendors.length; i++) {
       const v = window.MobileBarberData.sampleVendors[i];
-      if (!v || v.active === false) continue;
-      sawAnyData = true;
+      if (!v) continue;
+      sawMatchingData = true;
+      if (v.active === false) continue;
       if (!_isVendorActive(v.id)) continue;
       if (!regionId) return true;
       const vRegion = String(v.region || '').toLowerCase();
@@ -1762,9 +1769,12 @@ function _hasActiveVendorInCategory(category, regionId) {
     }
   }
 
-  // Fall OPEN when no data source had anything to say. Never silently
-  // empty the homepage just because the cache hasn't loaded yet.
-  return !sawAnyData;
+  // Fall OPEN when no source had authoritative data about THIS category.
+  // The Mobile Barber routing card relies on this — the main homepage
+  // doesn't load mobile-barber-data.js, so no source has category="barber"
+  // data and the card should show by default (clicking takes the customer
+  // to /mobile-barber where the landing handles inactive-vendor state).
+  return !sawMatchingData;
 }
 
 // Canonical single-item visibility filter. EVERY homepage surface that lists

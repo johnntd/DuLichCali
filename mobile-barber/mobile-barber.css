@@ -704,13 +704,14 @@
 }
 
 .mb-service-selection {
-  position: sticky;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + .75rem);
-  z-index: var(--z-float);
+  /* Single-column stack: summary chip on top, manual form full-width
+     below. Sticky positioning was appropriate when this panel was a
+     thin Book/Chat/Talk CTA row, but the manual form is too tall to
+     pin to the viewport bottom. */
   display: grid;
-  gap: .7rem;
+  gap: .85rem;
   margin-top: .9rem;
-  padding: .85rem;
+  padding: 1rem;
   border: 1px solid rgba(255, 200, 87, .34);
   border-radius: var(--r-md);
   background: rgba(8, 28, 48, .94);
@@ -5001,13 +5002,11 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  /* On desktop the panel stays single-column so the manual form spans
+     the full panel width — the Book/Chat/Talk three-button row that
+     used to live in the right column was removed. */
   .mb-service-selection {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-  }
-
-  .mb-service-selection__actions {
-    grid-template-columns: repeat(3, max-content);
+    padding: 1.25rem;
   }
 
   .mb-vendor-service-list {

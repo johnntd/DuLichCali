@@ -168,14 +168,14 @@ function runHomepageVisibilityTests(test) {
     // false even when active barbers served the region, hiding the routing
     // card from the homepage marketplace. Pin Pass 3 + region heuristics.
     var fn = src.slice(src.indexOf('function _hasActiveVendorInCategory'),
-                       src.indexOf('function _hasActiveVendorInCategory') + 3500);
+                       src.indexOf('function _hasActiveVendorInCategory') + 5500);
     assertContains(fn, 'window.MobileBarberData', 'Pass 3 must consult MobileBarberData');
     assertContains(fn, 'sampleVendors', 'Pass 3 must walk sampleVendors');
     assertContains(fn, 'serviceAreas', 'Pass 3 must check serviceAreas');
     assertContains(fn, "endsWith('-' + mbRegionKey)", 'Pass 3 must fall back to id-suffix hint');
     assertContains(fn, "synonyms", 'category synonyms must allow barber === mobile-barber');
-    assertContains(fn, 'return !sawAnyData',
-      'Filter must fall OPEN when no data source has been consulted (prevents silent homepage blanking)');
+    assertContains(fn, 'return !sawMatchingData',
+      'Filter must fall OPEN when no source had data ABOUT THIS CATEGORY (prevents silent blanking of categories whose data module is not loaded on a given page — e.g. Mobile Barber on the main homepage which does NOT load mobile-barber-data.js)');
   });
 }
 

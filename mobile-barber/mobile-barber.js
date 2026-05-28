@@ -1524,7 +1524,21 @@
       disclosure.textContent = t('aiPreviewDisclosure');
       title.textContent = serviceCopy(service, 'name');
       desc.textContent = serviceCopy(service, 'desc');
-      row.appendChild(metaChip(t('priceLabel'), formatMoney(service.price)));
+      // Promo-aware price chip: if any active vendor in the customer's
+      // region has a promo applying to this service, show the discounted
+      // final price with the original struck through.
+      var pricing = applyPromotionToServicePrice(service);
+      if (pricing.promoApplied) {
+        var priceChip = el('span', 'mb-chip mb-chip--promo');
+        priceChip.innerHTML =
+          '<strong class="mb-chip__label">' + t('priceLabel') + ':</strong> ' +
+          '<span class="mb-chip__original">' + formatMoney(pricing.originalPrice) + '</span> ' +
+          '<span class="mb-chip__final">' + formatMoney(pricing.discountedPrice) + '</span> ' +
+          '<span class="mb-chip__pct">-' + pricing.discountPercent + '%</span>';
+        row.appendChild(priceChip);
+      } else {
+        row.appendChild(metaChip(t('priceLabel'), formatMoney(service.price)));
+      }
       row.appendChild(metaChip(t('durationLabel'), service.durationMinutes + ' ' + t('minutes')));
       row.appendChild(metaChip(t('travelBufferLabel'), service.travelBufferMinutes + ' ' + t('minutes')));
       row.appendChild(metaChip(t('cleanupLabel'), service.cleanupBufferMinutes + ' ' + t('minutes')));
@@ -2798,6 +2812,182 @@
     startHeroRotation();
     renderHeroPromoSpotlight();
     applyRegionDeepLink();
+    // Live-merge vendor.promotions from Firestore into DATA.sampleVendors so
+    // every code path (hero spotlight, service-card pricing, AI agent,
+    // booking quote) sees what the vendor just enabled in the portal — no
+    // matter which device/tab made the change.
+    loadVendorPromosFromFirestore()
+      .then(function() {
+        renderHeroPromoSpotlight();
+        renderServices();
+      })
+      .then(function() { subscribeVendorPromos(); })
+      .catch(function() { /* fail open — landing still works without promos */ });
+  }
+
+  // ── Vendor promotion bridge (Firestore → static catalog) ───────────────
+  // The vendor portal writes promotions to firestore vendors/{id}.promotions.
+  // Before this bridge existed the customer landing only ever saw promos
+  // hard-coded into DATA.sampleVendors — so enabling a promo in the dashboard
+  // had ZERO effect on the public page. Root cause of the activation bug.
+  function _mbVendorIds() {
+    var vendors = (DATA && DATA.sampleVendors) ? DATA.sampleVendors : [];
+    var ids = [];
+    vendors.forEach(function(v) {
+      // Only mobile-barber vendors — avoid pulling unrelated docs.
+      if (!v || !v.id) return;
+      if (v.providerType && v.providerType !== 'mobile-barber') return;
+      ids.push(v.id);
+    });
+    return ids;
+  }
+
+  function _applyVendorPromosPatch(vendorId, promos) {
+    var vendors = (DATA && DATA.sampleVendors) ? DATA.sampleVendors : [];
+    for (var i = 0; i < vendors.length; i++) {
+      if (vendors[i] && vendors[i].id === vendorId) {
+        vendors[i].promotions = Array.isArray(promos) ? promos.slice() : [];
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function loadVendorPromosFromFirestore() {
+    if (typeof firebase === 'undefined' || !firebase.firestore || !firebase.apps || !firebase.apps.length) {
+      return Promise.resolve(false);
+    }
+    var db = firebase.firestore();
+    var ids = _mbVendorIds();
+    if (!ids.length) return Promise.resolve(false);
+    return Promise.all(ids.map(function(vendorId) {
+      return db.collection('vendors').doc(vendorId).get()
+        .then(function(doc) {
+          if (!doc.exists) return false;
+          var data = doc.data() || {};
+          if (Array.isArray(data.promotions)) {
+            _applyVendorPromosPatch(vendorId, data.promotions);
+            return true;
+          }
+          return false;
+        })
+        .catch(function() { return false; });
+    })).then(function() { return true; });
+  }
+
+  var _vendorPromoUnsubs = [];
+  function subscribeVendorPromos() {
+    if (typeof firebase === 'undefined' || !firebase.firestore || !firebase.apps || !firebase.apps.length) return;
+    // Clear any previous listeners first (idempotent — called once per init,
+    // but defensive in case of HMR / SPA navigation in future).
+    _vendorPromoUnsubs.forEach(function(fn) { try { fn(); } catch (e) {} });
+    _vendorPromoUnsubs = [];
+    var db = firebase.firestore();
+    _mbVendorIds().forEach(function(vendorId) {
+      try {
+        var unsub = db.collection('vendors').doc(vendorId)
+          .onSnapshot(function(doc) {
+            if (!doc.exists) return;
+            var data = doc.data() || {};
+            var current = (DATA.findVendorById && DATA.findVendorById(vendorId)) || null;
+            var before = current && JSON.stringify(current.promotions || []);
+            _applyVendorPromosPatch(vendorId, Array.isArray(data.promotions) ? data.promotions : []);
+            var after = current && JSON.stringify(current.promotions || []);
+            if (before !== after) {
+              renderHeroPromoSpotlight();
+              renderServices();
+            }
+          }, function() { /* listener errors are non-fatal */ });
+        _vendorPromoUnsubs.push(unsub);
+      } catch (e) {}
+    });
+  }
+
+  // ── Canonical promo helpers (public surface promised by the spec) ──────
+  // These wrap the existing DATA module so the customer-facing layer has a
+  // simple, predictable API regardless of how the underlying lookup evolves.
+  function getActiveMobileBarberPromotions(opts) {
+    opts = opts || {};
+    var now = opts.now || new Date();
+    var iso = now.toISOString().slice(0, 10);
+    var vendors = (DATA && DATA.sampleVendors) ? DATA.sampleVendors : [];
+    var out = [];
+    vendors.forEach(function(vendor) {
+      if (!vendor || vendor.active === false) return;
+      if (opts.vendorId && vendor.id !== opts.vendorId) return;
+      (Array.isArray(vendor.promotions) ? vendor.promotions : []).forEach(function(p) {
+        if (!p || p.active !== true) return;
+        if (p.displayOnCustomerPage === false) return;
+        if (p.startDate && iso < p.startDate) return;
+        if (p.endDate && iso > p.endDate) return;
+        var max = Number(p.maxRedemptions || 0);
+        var cur = Number(p.currentRedemptions || 0);
+        if (max > 0 && cur >= max) return;
+        if (opts.serviceId && p.applyToScope === 'selected') {
+          if (!(Array.isArray(p.appliesToServiceIds) && p.appliesToServiceIds.indexOf(opts.serviceId) >= 0)) return;
+        }
+        out.push(Object.assign({}, p, { vendorId: vendor.id }));
+      });
+    });
+    return out;
+  }
+
+  function getBestPromotionForService(service, promotions) {
+    if (!service) return null;
+    var pool = Array.isArray(promotions)
+      ? promotions
+      : getActiveMobileBarberPromotions({ serviceId: service.id });
+    if (!pool.length) return null;
+    var matching = pool.filter(function(p) {
+      if (!p) return false;
+      if (p.applyToScope === 'selected') {
+        return Array.isArray(p.appliesToServiceIds) && p.appliesToServiceIds.indexOf(service.id) >= 0;
+      }
+      return true;
+    });
+    if (!matching.length) return null;
+    matching.sort(function(a, b) {
+      var pctDiff = Number(b.discountPercent || 0) - Number(a.discountPercent || 0);
+      if (pctDiff !== 0) return pctDiff;
+      var aEnd = a.endDate || '9999-12-31';
+      var bEnd = b.endDate || '9999-12-31';
+      return aEnd < bEnd ? -1 : (aEnd > bEnd ? 1 : 0);
+    });
+    return matching[0];
+  }
+
+  function applyPromotionToServicePrice(service, promotions) {
+    var base = Number(service && service.price || 0);
+    var best = getBestPromotionForService(service, promotions);
+    if (!best) return { promotion: null, originalPrice: base, discountedPrice: base, discountPercent: 0, promoApplied: false };
+    var applied = DATA && DATA.applyPromotionToPrice
+      ? DATA.applyPromotionToPrice(base, best)
+      : { discountPercent: Number(best.discountPercent || 0), originalPrice: base, discountedPrice: Math.round(base * (1 - Number(best.discountPercent || 0) / 100)) };
+    return {
+      promotion: best,
+      originalPrice: applied.originalPrice,
+      discountedPrice: applied.discountedPrice,
+      discountPercent: applied.discountPercent,
+      promoApplied: applied.discountPercent > 0
+    };
+  }
+
+  function renderPromotionHero(promotions) {
+    // Thin alias for the existing spotlight renderer. The spec promises this
+    // name; the implementation already lives in renderHeroPromoSpotlight.
+    // If a caller passes an explicit promotions array we hand it through
+    // window._mbForceHeroPromos so collectActiveCustomerPromos can prefer it.
+    if (Array.isArray(promotions)) window._mbForceHeroPromos = promotions;
+    else window._mbForceHeroPromos = null;
+    renderHeroPromoSpotlight();
+  }
+
+  if (typeof window !== 'undefined') {
+    window.getActiveMobileBarberPromotions = getActiveMobileBarberPromotions;
+    window.getBestPromotionForService     = getBestPromotionForService;
+    window.applyPromotionToServicePrice   = applyPromotionToServicePrice;
+    window.renderPromotionHero            = renderPromotionHero;
+    window._mbLoadVendorPromosFromFirestore = loadVendorPromosFromFirestore;
   }
 
   // ── Hero promo spotlight ───────────────────────────────────────────────
@@ -2805,6 +2995,8 @@
   // to feature in the hero. Priority: highest discountPercent, then nearest
   // expiration. If none → hide the slot. If 2+ → rotate every 7s.
   function collectActiveCustomerPromos() {
+    // Allow callers to force a specific list via renderPromotionHero(arr).
+    if (Array.isArray(window._mbForceHeroPromos)) return window._mbForceHeroPromos.slice();
     var vendors = (DATA && DATA.sampleVendors) ? DATA.sampleVendors : [];
     var now = new Date();
     var iso = now.toISOString().slice(0, 10);

@@ -867,6 +867,35 @@
   border: 1px solid rgba(245, 166, 35, .28);
 }
 
+/* Promo-aware price chip: shows original (strikethrough) + final + percent.
+   Used on service cards when an active vendor promo applies to that service. */
+.mb-chip--promo {
+  background: linear-gradient(135deg, rgba(245, 166, 35, .25), rgba(245, 166, 35, .12)) !important;
+  color: #fcd34d !important;
+  border: 1px solid rgba(245, 166, 35, .55) !important;
+  gap: .35rem;
+}
+.mb-chip--promo .mb-chip__label  { color: #fde68a; }
+.mb-chip--promo .mb-chip__original {
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  color: rgba(253, 230, 138, .65);
+  font-weight: 600;
+}
+.mb-chip--promo .mb-chip__final {
+  color: #fff;
+  font-weight: 800;
+}
+.mb-chip--promo .mb-chip__pct {
+  font-weight: 800;
+  background: rgba(220, 38, 38, .8);
+  color: #fff;
+  padding: .05rem .35rem;
+  border-radius: var(--r-pill);
+  font-size: 10px;
+  letter-spacing: .03em;
+}
+
 .mb-promo {
   display: grid;
   gap: 1rem;

@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260527o">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260527p">
 </head>
 <body class="mb-page mb-dashboard-page">
   <main class="mb-shell mb-dashboard-shell" id="mobileBarberDashboardApp" data-page="mobile-barber-dashboard">
@@ -212,6 +212,45 @@
           </div>
         </details>
 
+        <details class="mb-settings-panel" id="mbSettingsPromotions">
+          <summary class="mb-settings-panel__summary">
+            <span class="mb-settings-panel__title" data-i18n="settingsPromotionsTitle"></span>
+            <span class="mb-settings-panel__sub" data-i18n="settingsPromotionsSub"></span>
+            <span class="mb-settings-panel__chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div class="mb-settings-panel__body">
+            <div class="mb-dashboard-panel__head">
+              <h3 id="mbPromotionsTitle" data-i18n="promotionsTitle"></h3>
+              <button class="mb-button mb-button--primary mb-button--sm" type="button" data-action="addPromotion" data-i18n="promotionsAddButton"></button>
+            </div>
+            <p class="mb-form-hint" data-i18n="promotionsHint"></p>
+            <form class="mb-dashboard-form" id="mbPromotionForm">
+              <label class="mb-field"><span data-i18n="promotionNameLabel"></span><input id="mbPromoName" type="text" maxlength="80"></label>
+              <label class="mb-field"><span data-i18n="promotionDescriptionLabel"></span><textarea id="mbPromoDescription" rows="2" maxlength="200"></textarea></label>
+              <label class="mb-field"><span data-i18n="promotionDiscountLabel"></span><input id="mbPromoDiscount" type="number" min="1" max="90" step="1"></label>
+              <fieldset class="mb-radio-group">
+                <legend class="mb-radio-group__legend" data-i18n="promotionScopeLabel"></legend>
+                <label class="mb-radio-pill"><input type="radio" name="mbPromoScope" value="all" checked><span data-i18n="promotionScopeAll"></span></label>
+                <label class="mb-radio-pill"><input type="radio" name="mbPromoScope" value="selected"><span data-i18n="promotionScopeSelected"></span></label>
+              </fieldset>
+              <label class="mb-field" id="mbPromoServicesField" hidden>
+                <span data-i18n="promotionServicesLabel"></span>
+                <select id="mbPromoServices" multiple size="4"></select>
+              </label>
+              <div class="mb-dashboard-form-row">
+                <label class="mb-field"><span data-i18n="promotionStartLabel"></span><input id="mbPromoStart" type="date"></label>
+                <label class="mb-field"><span data-i18n="promotionEndLabel"></span><input id="mbPromoEnd" type="date"></label>
+              </div>
+              <label class="mb-field"><span data-i18n="promotionMaxRedemptionsLabel"></span><input id="mbPromoMaxRedemptions" type="number" min="0" step="1" placeholder="0 = unlimited"></label>
+              <label class="mb-field"><span data-i18n="promotionCodeLabel"></span><input id="mbPromoCode" type="text" maxlength="40" autocomplete="off"></label>
+              <label class="mb-checkbox-field"><input id="mbPromoActive" type="checkbox" checked><span data-i18n="promotionActiveLabel"></span></label>
+              <label class="mb-checkbox-field"><input id="mbPromoDisplayOnCustomerPage" type="checkbox" checked><span data-i18n="promotionDisplayOnCustomerLabel"></span></label>
+              <p class="mb-field-warning" id="mbPromoFormError" hidden></p>
+            </form>
+            <div class="mb-dashboard-list" id="mbPromotionsManageList"></div>
+          </div>
+        </details>
+
         <details class="mb-settings-panel" id="mbSettingsReviews">
           <summary class="mb-settings-panel__summary">
             <span class="mb-settings-panel__title" data-i18n="settingsReviewsTitle"></span>
@@ -251,9 +290,9 @@
   </script>
   <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ&libraries=places&loading=async"></script>
   <script src="/notifications.js?v=20260525a"></script>
-  <script src="/mobile-barber/mobile-barber-data.js?v=20260527k"></script>
-  <script src="/mobile-barber/mobile-barber-booking.js?v=20260527k"></script>
+  <script src="/mobile-barber/mobile-barber-data.js?v=20260527p"></script>
+  <script src="/mobile-barber/mobile-barber-booking.js?v=20260527p"></script>
   <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260527c"></script>
-  <script src="/mobile-barber/mobile-barber-dashboard.js?v=20260527k"></script>
+  <script src="/mobile-barber/mobile-barber-dashboard.js?v=20260527p"></script>
 </body>
 </html>

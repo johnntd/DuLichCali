@@ -1951,7 +1951,111 @@
     prefillLocationGate();
     setLang(state.lang);
     startHeroRotation();
+    renderHeroPromoSpotlight();
     applyRegionDeepLink();
+  }
+
+  // ── Hero promo spotlight ───────────────────────────────────────────────
+  // Walks every active mobile-barber vendor and finds the best active promo
+  // to feature in the hero. Priority: highest discountPercent, then nearest
+  // expiration. If none → hide the slot. If 2+ → rotate every 7s.
+  function collectActiveCustomerPromos() {
+    var vendors = (DATA && DATA.sampleVendors) ? DATA.sampleVendors : [];
+    var now = new Date();
+    var iso = now.toISOString().slice(0, 10);
+    var promos = [];
+    vendors.forEach(function(vendor) {
+      if (!vendor || vendor.active === false) return;
+      var list = Array.isArray(vendor.promotions) ? vendor.promotions : [];
+      list.forEach(function(p) {
+        if (!p || p.active !== true) return;
+        if (p.displayOnCustomerPage === false) return;
+        if (p.startDate && iso < p.startDate) return;
+        if (p.endDate && iso > p.endDate) return;
+        var max = Number(p.maxRedemptions || 0);
+        var cur = Number(p.currentRedemptions || 0);
+        if (max > 0 && cur >= max) return;
+        promos.push(Object.assign({}, p, {
+          vendorBarberName: vendor.barberName || vendor.businessName || ''
+        }));
+      });
+    });
+    // Highest discount first, then nearest expiration (earliest endDate),
+    // then quickest to sell out (max-cur ratio).
+    promos.sort(function(a, b) {
+      var pctDiff = Number(b.discountPercent || 0) - Number(a.discountPercent || 0);
+      if (pctDiff !== 0) return pctDiff;
+      var aEnd = a.endDate || '9999-12-31';
+      var bEnd = b.endDate || '9999-12-31';
+      if (aEnd !== bEnd) return aEnd < bEnd ? -1 : 1;
+      return 0;
+    });
+    return promos;
+  }
+
+  function _heroPromoCardHtml(promo, idx) {
+    var pctTxt = Number(promo.discountPercent || 0) + '%';
+    var serviceLabel = promo.applyToScope === 'selected'
+      ? interpolate(t('heroPromoSelectedServices') || 'on selected services', {})
+      : (t('heroPromoAllServices') || 'on all services');
+    var rangeBits = [];
+    if (promo.startDate || promo.endDate) {
+      rangeBits.push((promo.endDate
+        ? interpolate(t('heroPromoUntil') || 'Through {date}', { date: promo.endDate })
+        : interpolate(t('heroPromoFrom') || 'From {date}', { date: promo.startDate })));
+    }
+    if (promo.maxRedemptions && Number(promo.maxRedemptions) > 0) {
+      var left = Math.max(0, Number(promo.maxRedemptions) - Number(promo.currentRedemptions || 0));
+      rangeBits.push(interpolate(t('heroPromoSpotsLeft') || 'Only {n} discounted slots left', { n: left }));
+    }
+    var meta = rangeBits.join(' · ');
+    return '<div class="mb-hero__promo-card" data-idx="' + idx + '">' +
+      '<div class="mb-hero__promo-badge">🔥 ' + pctTxt + ' ' + (t('heroPromoBadgeOff') || 'OFF') + '</div>' +
+      '<div class="mb-hero__promo-title">' + (promo.name || '') + '</div>' +
+      '<div class="mb-hero__promo-meta">' + serviceLabel + (promo.vendorBarberName ? ' · ' + promo.vendorBarberName : '') + '</div>' +
+      (meta ? '<div class="mb-hero__promo-meta">' + meta + '</div>' : '') +
+      (promo.description ? '<div class="mb-hero__promo-desc">' + promo.description + '</div>' : '') +
+      '<button class="mb-button mb-button--primary mb-button--sm mb-hero__promo-cta" type="button" data-action="chat">' +
+      (t('heroPromoCta') || 'Book this discount') + '</button>' +
+    '</div>';
+  }
+
+  var _heroPromoRotateTimer = null;
+  function renderHeroPromoSpotlight() {
+    var node = document.getElementById('mbHeroPromo');
+    if (!node) return;
+    var promos = collectActiveCustomerPromos();
+    if (_heroPromoRotateTimer) { clearInterval(_heroPromoRotateTimer); _heroPromoRotateTimer = null; }
+    if (!promos.length) {
+      node.hidden = true;
+      node.innerHTML = '';
+      return;
+    }
+    node.hidden = false;
+    node.innerHTML = promos.map(_heroPromoCardHtml).join('');
+    // Wire CTA(s) to open chat.
+    node.querySelectorAll('[data-action="chat"]').forEach(function(btn) {
+      btn.addEventListener('click', function() { openAssistantPanel('general'); });
+    });
+    // If more than one promo, rotate every 7s by hiding all but the active one.
+    if (promos.length > 1) {
+      var cards = node.querySelectorAll('.mb-hero__promo-card');
+      cards.forEach(function(c, i) { c.classList.toggle('mb-hero__promo-card--visible', i === 0); });
+      var active = 0;
+      _heroPromoRotateTimer = setInterval(function() {
+        cards[active].classList.remove('mb-hero__promo-card--visible');
+        active = (active + 1) % cards.length;
+        cards[active].classList.add('mb-hero__promo-card--visible');
+      }, 7000);
+    } else {
+      var only = node.querySelector('.mb-hero__promo-card');
+      if (only) only.classList.add('mb-hero__promo-card--visible');
+    }
+  }
+  // Expose for tests + manual triggering after vendor updates.
+  if (typeof window !== 'undefined') {
+    window._mbRenderHeroPromoSpotlight = renderHeroPromoSpotlight;
+    window._mbCollectActiveCustomerPromos = collectActiveCustomerPromos;
   }
 
   function applyRegionDeepLink() {

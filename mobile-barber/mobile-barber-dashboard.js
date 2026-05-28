@@ -102,6 +102,43 @@
       settingsPortfolioSub: 'Photos shown on the public vendor page',
       settingsReviewsTitle: 'Reviews & responses',
       settingsReviewsSub: 'Customer reviews and your replies',
+      settingsPromotionsTitle: 'Promotions & discounts',
+      settingsPromotionsSub: 'Date-range, quantity-limited, or combined promos',
+      promotionsTitle: 'Promotions',
+      promotionsHint: 'Create date-range or quantity-limited promotions. Active promos automatically discount the customer\'s price and appear on your landing page.',
+      promotionsAddButton: 'Add promotion',
+      promotionNameLabel: 'Promotion name (e.g. "Father\'s Day 20% off")',
+      promotionDescriptionLabel: 'Description (optional)',
+      promotionDiscountLabel: 'Discount % (1 — 90)',
+      promotionScopeLabel: 'Applies to',
+      promotionScopeAll: 'All my services',
+      promotionScopeSelected: 'Selected services only',
+      promotionServicesLabel: 'Select services (hold Ctrl/Cmd to pick multiple)',
+      promotionStartLabel: 'Start date (optional)',
+      promotionEndLabel: 'End date (optional)',
+      promotionMaxRedemptionsLabel: 'Max redemptions (0 = unlimited)',
+      promotionCodeLabel: 'Promo code (optional)',
+      promotionActiveLabel: 'Active',
+      promotionDisplayOnCustomerLabel: 'Show on customer landing page',
+      promotionsErrorName: 'Promotion name is required.',
+      promotionsErrorDiscount: 'Discount must be between 1 and 90.',
+      promotionsErrorDates: 'End date must be on or after start date.',
+      promotionsErrorServices: 'Pick at least one service for a selected-services promo.',
+      promotionsAdded: 'Promotion added.',
+      promotionsRemoved: 'Promotion removed.',
+      promotionsEmpty: 'No promotions yet. Create one above.',
+      promotionsBadgeActive: 'Active',
+      promotionsBadgeInactive: 'Inactive',
+      promotionsRangeAny: 'No date limit',
+      promotionsRedeemed: 'redeemed',
+      promotionsUnlimited: 'Unlimited',
+      promotionsScopeAll: 'All services',
+      promotionsScopeSelected: 'Selected services',
+      promotionsPauseAction: 'Pause',
+      promotionsResumeAction: 'Resume',
+      promotionsDeleteAction: 'Delete',
+      promotionsDeleteConfirm: 'Delete this promotion? Customers will no longer see it.',
+      promoChipApplied: '{pct}% promo applied',
       profileTitle: 'Profile and contact',
       saveButton: 'Save Profile',
       businessNameLabel: 'Business name',
@@ -299,6 +336,43 @@
       settingsPortfolioSub: 'Hình hiển thị trên trang vendor',
       settingsReviewsTitle: 'Đánh giá & phản hồi',
       settingsReviewsSub: 'Đánh giá khách và phản hồi của bạn',
+      settingsPromotionsTitle: 'Khuyến mãi & giảm giá',
+      settingsPromotionsSub: 'Theo ngày, theo số lượng, hoặc kết hợp',
+      promotionsTitle: 'Khuyến mãi',
+      promotionsHint: 'Tạo khuyến mãi theo ngày hoặc theo số lượt. Khuyến mãi đang chạy sẽ tự động giảm giá cho khách và hiện trên trang chính.',
+      promotionsAddButton: 'Thêm khuyến mãi',
+      promotionNameLabel: 'Tên khuyến mãi (vd: "Cuối tuần Father\'s Day giảm 20%")',
+      promotionDescriptionLabel: 'Mô tả (không bắt buộc)',
+      promotionDiscountLabel: 'Phần trăm giảm (1 — 90)',
+      promotionScopeLabel: 'Áp dụng cho',
+      promotionScopeAll: 'Tất cả dịch vụ',
+      promotionScopeSelected: 'Chỉ dịch vụ chọn',
+      promotionServicesLabel: 'Chọn dịch vụ (giữ Ctrl/Cmd để chọn nhiều)',
+      promotionStartLabel: 'Ngày bắt đầu (không bắt buộc)',
+      promotionEndLabel: 'Ngày kết thúc (không bắt buộc)',
+      promotionMaxRedemptionsLabel: 'Số lượt tối đa (0 = không giới hạn)',
+      promotionCodeLabel: 'Mã khuyến mãi (không bắt buộc)',
+      promotionActiveLabel: 'Đang chạy',
+      promotionDisplayOnCustomerLabel: 'Hiển thị trên trang khách',
+      promotionsErrorName: 'Phải có tên khuyến mãi.',
+      promotionsErrorDiscount: 'Phần trăm giảm phải từ 1 đến 90.',
+      promotionsErrorDates: 'Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.',
+      promotionsErrorServices: 'Chọn ít nhất một dịch vụ cho khuyến mãi theo dịch vụ.',
+      promotionsAdded: 'Đã thêm khuyến mãi.',
+      promotionsRemoved: 'Đã xóa khuyến mãi.',
+      promotionsEmpty: 'Chưa có khuyến mãi. Tạo ở trên.',
+      promotionsBadgeActive: 'Đang chạy',
+      promotionsBadgeInactive: 'Tạm dừng',
+      promotionsRangeAny: 'Không giới hạn ngày',
+      promotionsRedeemed: 'đã dùng',
+      promotionsUnlimited: 'Không giới hạn',
+      promotionsScopeAll: 'Tất cả dịch vụ',
+      promotionsScopeSelected: 'Dịch vụ chọn',
+      promotionsPauseAction: 'Tạm dừng',
+      promotionsResumeAction: 'Tiếp tục',
+      promotionsDeleteAction: 'Xóa',
+      promotionsDeleteConfirm: 'Xóa khuyến mãi này? Khách sẽ không còn thấy.',
+      promoChipApplied: 'Đã áp khuyến mãi {pct}%',
       profileTitle: 'Hồ sơ và liên hệ',
       saveButton: 'Lưu Hồ Sơ',
       businessNameLabel: 'Tên doanh nghiệp',
@@ -496,6 +570,43 @@
       settingsPortfolioSub: 'Fotos mostradas en la página pública del barbero',
       settingsReviewsTitle: 'Reseñas y respuestas',
       settingsReviewsSub: 'Reseñas de clientes y tus respuestas',
+      settingsPromotionsTitle: 'Promociones y descuentos',
+      settingsPromotionsSub: 'Por rango de fechas, cantidad limitada o combinado',
+      promotionsTitle: 'Promociones',
+      promotionsHint: 'Cree promociones por rango de fechas o cantidad limitada. Las activas descuentan el precio del cliente automáticamente y aparecen en la página principal.',
+      promotionsAddButton: 'Agregar promoción',
+      promotionNameLabel: 'Nombre de la promoción (ej: "Día del Padre 20% off")',
+      promotionDescriptionLabel: 'Descripción (opcional)',
+      promotionDiscountLabel: 'Descuento % (1 — 90)',
+      promotionScopeLabel: 'Aplica a',
+      promotionScopeAll: 'Todos mis servicios',
+      promotionScopeSelected: 'Solo servicios seleccionados',
+      promotionServicesLabel: 'Seleccionar servicios (Ctrl/Cmd para varios)',
+      promotionStartLabel: 'Fecha de inicio (opcional)',
+      promotionEndLabel: 'Fecha de fin (opcional)',
+      promotionMaxRedemptionsLabel: 'Máximo de canjes (0 = ilimitado)',
+      promotionCodeLabel: 'Código promo (opcional)',
+      promotionActiveLabel: 'Activa',
+      promotionDisplayOnCustomerLabel: 'Mostrar en la página del cliente',
+      promotionsErrorName: 'El nombre de la promoción es obligatorio.',
+      promotionsErrorDiscount: 'El descuento debe estar entre 1 y 90.',
+      promotionsErrorDates: 'La fecha final debe ser igual o posterior a la inicial.',
+      promotionsErrorServices: 'Elija al menos un servicio para una promoción por servicio.',
+      promotionsAdded: 'Promoción agregada.',
+      promotionsRemoved: 'Promoción eliminada.',
+      promotionsEmpty: 'Aún no hay promociones. Cree una arriba.',
+      promotionsBadgeActive: 'Activa',
+      promotionsBadgeInactive: 'Inactiva',
+      promotionsRangeAny: 'Sin límite de fecha',
+      promotionsRedeemed: 'canjeados',
+      promotionsUnlimited: 'Ilimitado',
+      promotionsScopeAll: 'Todos los servicios',
+      promotionsScopeSelected: 'Servicios elegidos',
+      promotionsPauseAction: 'Pausar',
+      promotionsResumeAction: 'Reanudar',
+      promotionsDeleteAction: 'Eliminar',
+      promotionsDeleteConfirm: '¿Eliminar esta promoción? Los clientes ya no la verán.',
+      promoChipApplied: 'Promoción del {pct}% aplicada',
       profileTitle: 'Perfil y contacto',
       saveButton: 'Guardar Perfil',
       businessNameLabel: 'Nombre del negocio',
@@ -1280,6 +1391,13 @@
       head.appendChild(appChip);
     }
 
+    // Promo chip — surfaces when a vendor promotion discounted this booking.
+    if (booking.promoApplied && Number(booking.discountPercent || 0) > 0) {
+      var promoChip = el('span', 'mb-confirmation-chip mb-promo-chip');
+      promoChip.textContent = '🎟️ ' + interpolate(t('promoChipApplied') || '{pct}% promo applied', { pct: Number(booking.discountPercent || 0) });
+      head.appendChild(promoChip);
+    }
+
     var chevron = el('span', 'mb-booking-row__chevron');
     chevron.setAttribute('aria-hidden', 'true');
     chevron.textContent = '▾';
@@ -1381,13 +1499,19 @@
     detail.appendChild(detailSection(t('customerAddress'), [
       [t('customerAddress'), [booking.address, booking.city, booking.zip].filter(Boolean).join(', ')]
     ]));
-    detail.appendChild(detailSection(t('pricingDetails'), [
+    var pricingRows = [
       [t('servicePrice'), formatMoney(booking.servicePrice)],
       [t('travelFee'), formatMoney(booking.travelFee)],
-      [t('vehicleWearCost'), booking.vehicleWearCost ? formatMoney(booking.vehicleWearCost) : formatMoney(0)],
-      [t('amountDue'), formatMoney(total)],
-      [t('quoteType'), booking.quoteType || 'standard']
-    ]));
+      [t('vehicleWearCost'), booking.vehicleWearCost ? formatMoney(booking.vehicleWearCost) : formatMoney(0)]
+    ];
+    if (booking.promoApplied && Number(booking.discountPercent || 0) > 0) {
+      pricingRows.push(['Original', formatMoney(booking.originalPrice || total)]);
+      pricingRows.push([(t('promoChipApplied') || 'Promo')
+        .replace('{pct}', Number(booking.discountPercent || 0)), booking.promotionName || '']);
+    }
+    pricingRows.push([t('amountDue'), formatMoney(total)]);
+    pricingRows.push([t('quoteType'), booking.quoteType || 'standard']);
+    detail.appendChild(detailSection(t('pricingDetails'), pricingRows));
     detail.appendChild(detailSection(t('paymentDetails'), [
       [t('paymentMethod'), paymentChip('method', payMethod, paymentMethodLabel(payMethod))],
       [t('paymentStatus'), paymentChip('status', payStatus, paymentStatusLabel(payStatus))],
@@ -2042,6 +2166,208 @@
     showToast();
   }
 
+  // ── Promotions (Settings → Promotions accordion) ─────────────────────
+  function togglePromoServicesField() {
+    var scope = (document.querySelector('input[name="mbPromoScope"]:checked') || {}).value || 'all';
+    var field = document.getElementById('mbPromoServicesField');
+    if (field) field.hidden = scope !== 'selected';
+  }
+
+  function populatePromoServicesSelect() {
+    var select = document.getElementById('mbPromoServices');
+    if (!select) return;
+    select.innerHTML = '';
+    (state.services || []).filter(function(s) { return s.active !== false; }).forEach(function(s) {
+      var opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.name + ' · $' + Number(s.price || 0).toFixed(0);
+      select.appendChild(opt);
+    });
+  }
+
+  function readPromoForm() {
+    var scope = (document.querySelector('input[name="mbPromoScope"]:checked') || {}).value || 'all';
+    var selectedIds = [];
+    if (scope === 'selected') {
+      var select = document.getElementById('mbPromoServices');
+      if (select) {
+        for (var i = 0; i < select.options.length; i++) {
+          if (select.options[i].selected) selectedIds.push(select.options[i].value);
+        }
+      }
+    }
+    return {
+      name: trim(document.getElementById('mbPromoName').value),
+      description: trim(document.getElementById('mbPromoDescription').value),
+      discountPercent: Number(document.getElementById('mbPromoDiscount').value || 0),
+      applyToScope: scope,
+      appliesToServiceIds: selectedIds,
+      startDate: trim(document.getElementById('mbPromoStart').value),
+      endDate: trim(document.getElementById('mbPromoEnd').value),
+      maxRedemptions: Number(document.getElementById('mbPromoMaxRedemptions').value || 0),
+      promoCode: trim(document.getElementById('mbPromoCode').value),
+      active: !!document.getElementById('mbPromoActive').checked,
+      displayOnCustomerPage: !!document.getElementById('mbPromoDisplayOnCustomerPage').checked
+    };
+  }
+
+  function resetPromoForm() {
+    ['mbPromoName', 'mbPromoDescription', 'mbPromoDiscount', 'mbPromoStart', 'mbPromoEnd', 'mbPromoMaxRedemptions', 'mbPromoCode'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    var scope = document.querySelector('input[name="mbPromoScope"][value="all"]');
+    if (scope) scope.checked = true;
+    var active = document.getElementById('mbPromoActive');
+    if (active) active.checked = true;
+    var disp = document.getElementById('mbPromoDisplayOnCustomerPage');
+    if (disp) disp.checked = true;
+    togglePromoServicesField();
+    var err = document.getElementById('mbPromoFormError');
+    if (err) { err.hidden = true; err.textContent = ''; }
+  }
+
+  function showPromoError(msg) {
+    var err = document.getElementById('mbPromoFormError');
+    if (!err) return;
+    if (!msg) { err.hidden = true; err.textContent = ''; return; }
+    err.hidden = false;
+    err.textContent = msg;
+  }
+
+  function addPromotionFromForm() {
+    var draft = readPromoForm();
+    if (!draft.name) { showPromoError(t('promotionsErrorName') || 'Promotion name is required.'); return; }
+    if (!draft.discountPercent || draft.discountPercent < 1 || draft.discountPercent > 90) {
+      showPromoError(t('promotionsErrorDiscount') || 'Discount must be between 1 and 90.');
+      return;
+    }
+    if (draft.startDate && draft.endDate && draft.endDate < draft.startDate) {
+      showPromoError(t('promotionsErrorDates') || 'End date must be on or after start date.');
+      return;
+    }
+    if (draft.applyToScope === 'selected' && (!draft.appliesToServiceIds || !draft.appliesToServiceIds.length)) {
+      showPromoError(t('promotionsErrorServices') || 'Pick at least one service for a selected-services promo.');
+      return;
+    }
+    var now = new Date().toISOString();
+    var promo = {
+      id: 'promo-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6),
+      vendorId: state.vendorId || (state.vendor && state.vendor.id) || '',
+      name: draft.name,
+      description: draft.description,
+      discountPercent: draft.discountPercent,
+      applyToScope: draft.applyToScope,
+      appliesToServiceIds: draft.appliesToServiceIds,
+      startDate: draft.startDate,
+      endDate: draft.endDate,
+      maxRedemptions: draft.maxRedemptions || 0,
+      currentRedemptions: 0,
+      active: draft.active,
+      promoCode: draft.promoCode,
+      displayOnCustomerPage: draft.displayOnCustomerPage !== false,
+      createdAt: now,
+      updatedAt: now
+    };
+    // Final validator pass — defends against any schema-level edge.
+    if (DATA && typeof DATA.validatePromotion === 'function') {
+      var v = DATA.validatePromotion(promo);
+      if (!v.valid) { showPromoError(v.errors[0]); return; }
+    }
+    if (!Array.isArray(state.vendor.promotions)) state.vendor.promotions = [];
+    state.vendor.promotions.push(promo);
+    state.vendor.updatedAt = now;
+    persistVendorPromotions();
+    resetPromoForm();
+    renderPromotionsList();
+    showToast(t('promotionsAdded') || 'Promotion added.');
+  }
+
+  function deletePromotion(promoId) {
+    if (!Array.isArray(state.vendor.promotions)) return;
+    state.vendor.promotions = state.vendor.promotions.filter(function(p) { return p.id !== promoId; });
+    state.vendor.updatedAt = new Date().toISOString();
+    persistVendorPromotions();
+    renderPromotionsList();
+    showToast(t('promotionsRemoved') || 'Promotion removed.');
+  }
+
+  function togglePromotionActive(promoId, active) {
+    if (!Array.isArray(state.vendor.promotions)) return;
+    state.vendor.promotions = state.vendor.promotions.map(function(p) {
+      if (p.id !== promoId) return p;
+      return Object.assign({}, p, { active: !!active, updatedAt: new Date().toISOString() });
+    });
+    persistVendorPromotions();
+    renderPromotionsList();
+  }
+
+  function persistVendorPromotions() {
+    // Mirror into local storage for offline / static-fallback rendering.
+    if (state.vendor) writeJson(STORAGE.vendor, state.vendor);
+    // Push to Firestore via the same merge pattern used by saveProfile.
+    if (!canUseFirestore() || !state.vendorId) return;
+    var patch = { promotions: state.vendor.promotions || [], updatedAt: state.vendor.updatedAt };
+    root.firebase.firestore().collection(DATA.COLLECTIONS.vendors).doc(state.vendorId)
+      .set(patch, { merge: true })
+      .catch(function(err) {
+        if (root.console) root.console.error('[mobile-barber-dashboard] save promotions failed', err);
+      });
+  }
+
+  function renderPromotionsList() {
+    var list = document.getElementById('mbPromotionsManageList');
+    if (!list) return;
+    list.innerHTML = '';
+    var promos = (state.vendor && Array.isArray(state.vendor.promotions)) ? state.vendor.promotions : [];
+    if (!promos.length) {
+      var empty = el('div', 'mb-empty');
+      empty.textContent = t('promotionsEmpty') || 'No promotions yet. Create one above.';
+      list.appendChild(empty);
+      return;
+    }
+    promos.forEach(function(promo) {
+      var card = el('article', 'mb-promo-card');
+      var head = el('div', 'mb-promo-card__head');
+      var title = el('strong'); title.textContent = (promo.discountPercent || 0) + '% — ' + (promo.name || '');
+      var badge = el('span', 'mb-promo-card__badge mb-promo-card__badge--' + (promo.active ? 'on' : 'off'));
+      badge.textContent = promo.active ? (t('promotionsBadgeActive') || 'Active') : (t('promotionsBadgeInactive') || 'Inactive');
+      head.appendChild(title); head.appendChild(badge);
+      card.appendChild(head);
+      var meta = el('p', 'mb-promo-card__meta');
+      var range = [promo.startDate, promo.endDate].filter(Boolean).join(' → ') || (t('promotionsRangeAny') || 'No date limit');
+      var redemption = (promo.maxRedemptions > 0)
+        ? ((promo.currentRedemptions || 0) + '/' + promo.maxRedemptions + ' ' + (t('promotionsRedeemed') || 'redeemed'))
+        : (t('promotionsUnlimited') || 'Unlimited');
+      var scopeLabel = promo.applyToScope === 'selected'
+        ? ((t('promotionsScopeSelected') || 'Selected services') + ' (' + (promo.appliesToServiceIds || []).length + ')')
+        : (t('promotionsScopeAll') || 'All services');
+      meta.textContent = scopeLabel + ' · ' + range + ' · ' + redemption;
+      card.appendChild(meta);
+      if (trim(promo.description)) {
+        var desc = el('p', 'mb-promo-card__desc');
+        desc.textContent = promo.description;
+        card.appendChild(desc);
+      }
+      var actions = el('div', 'mb-promo-card__actions');
+      var toggle = el('button', 'mb-button mb-button--ghost mb-button--sm');
+      toggle.type = 'button';
+      toggle.textContent = promo.active ? (t('promotionsPauseAction') || 'Pause') : (t('promotionsResumeAction') || 'Resume');
+      toggle.addEventListener('click', function() { togglePromotionActive(promo.id, !promo.active); });
+      actions.appendChild(toggle);
+      var del = el('button', 'mb-button mb-button--ghost mb-button--sm');
+      del.type = 'button';
+      del.textContent = '🗑 ' + (t('promotionsDeleteAction') || 'Delete');
+      del.addEventListener('click', function() {
+        if (root.confirm && !root.confirm(t('promotionsDeleteConfirm') || 'Delete this promotion? Customers will no longer see it.')) return;
+        deletePromotion(promo.id);
+      });
+      actions.appendChild(del);
+      card.appendChild(actions);
+      list.appendChild(card);
+    });
+  }
+
   function saveReviewResponses() {
     var byId = {};
     document.querySelectorAll('#mbReviewsManageList textarea[data-review-id]').forEach(function(input) {
@@ -2155,6 +2481,8 @@
     renderProfileForm();
     renderPaymentsForm();
     renderServiceForm();
+    populatePromoServicesSelect();
+    renderPromotionsList();
     renderHours();
     renderBlocks();
     renderPortfolio();
@@ -2203,6 +2531,11 @@
     document.querySelector('[data-action="saveHours"]').addEventListener('click', saveHours);
     document.querySelector('[data-action="addBlock"]').addEventListener('click', addBlock);
     document.querySelector('[data-action="addPortfolio"]').addEventListener('click', addPortfolioImage);
+    var addPromoBtn = document.querySelector('[data-action="addPromotion"]');
+    if (addPromoBtn) addPromoBtn.addEventListener('click', addPromotionFromForm);
+    document.querySelectorAll('input[name="mbPromoScope"]').forEach(function(r) {
+      r.addEventListener('change', togglePromoServicesField);
+    });
     document.querySelector('[data-action="saveReviewResponses"]').addEventListener('click', saveReviewResponses);
     document.querySelector('[data-action="enableSoundAlerts"]').addEventListener('click', unlockSoundAlerts);
     document.querySelector('[data-action="toggleSoundAlerts"]').addEventListener('click', function() {

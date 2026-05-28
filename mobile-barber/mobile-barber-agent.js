@@ -42,6 +42,7 @@
       saved: "Perfect. {service} on {date} at {time} sent to {barber}. You'll get a confirmation once they accept. Booking ID: {id}. Estimated total {price}. Payment after the haircut by cash or Zelle to {zellePhone}.",
       cancelled: 'I can help with cancellation or rescheduling, but this phase does not change existing bookings yet. Please call the barber for existing booking changes.',
       alreadyBooked: "Your booking is already in (ID: {id}). The barber will confirm shortly. If you need to change or cancel, please call the barber directly.",
+      promoApplied: "🎟️ Good news — {pct}% promotion applied ({name}). Original {original}, you pay {discounted}.",
       fallback: 'I can help collect a mobile barber booking request. What phone number should I use first?'
     },
     vi: {
@@ -70,6 +71,7 @@
       saved: 'Tuyệt vời. Đã gửi {service} ngày {date} lúc {time} cho {barber}. Bạn sẽ nhận xác nhận khi thợ chấp nhận. Mã đặt lịch: {id}. Tổng ước tính {price}. Thanh toán sau dịch vụ bằng tiền mặt hoặc Zelle tới {zellePhone}.',
       cancelled: 'Em có thể hỗ trợ hướng dẫn hủy hoặc đổi lịch, nhưng phase này chưa thay đổi lịch đã có. Vui lòng gọi trực tiếp cho thợ.',
       alreadyBooked: 'Lịch hẹn của bạn đã được gửi (Mã: {id}). Thợ sẽ xác nhận trong giây lát. Nếu cần đổi hoặc hủy, vui lòng gọi trực tiếp cho thợ.',
+      promoApplied: '🎟️ Tin vui — đã áp khuyến mãi {pct}% ({name}). Giá gốc {original}, bạn trả {discounted}.',
       fallback: 'Em có thể nhận yêu cầu đặt thợ cắt tóc tại nhà. Mình cho em số điện thoại trước nhé?'
     },
     es: {
@@ -98,6 +100,7 @@
       saved: 'Perfecto. {service} el {date} a las {time} enviado a {barber}. Recibirá confirmación cuando lo acepte. ID de reserva: {id}. Total estimado {price}. Pago despues del servicio en efectivo o Zelle a {zellePhone}.',
       cancelled: 'Puedo ayudar con cancelación o cambio, pero esta fase todavía no modifica reservas existentes. Llame directamente al barbero.',
       alreadyBooked: 'Su reserva ya está enviada (ID: {id}). El barbero confirmará en breve. Si necesita cambiar o cancelar, llame directamente al barbero.',
+      promoApplied: '🎟️ Buenas noticias — promoción del {pct}% aplicada ({name}). Original {original}, paga {discounted}.',
       fallback: 'Puedo recopilar una solicitud de barbero móvil. ¿Qué teléfono debo usar primero?'
     }
   };
@@ -500,20 +503,43 @@
     var services = (ctx.services || []).map(function(service) {
       return service.name + ' — $' + service.price + ' (' + service.durationMinutes + ' min, travel buffer ' + service.travelBufferMinutes + ' min)';
     }).join('\n');
+    // Surface active vendor promotions to the brain so it can mention them
+    // naturally ("Michael currently has a 20% promotion on Classic Haircut").
+    var activePromos = [];
+    if (vendor && Array.isArray(vendor.promotions)) {
+      var iso = (ctx.now instanceof Date ? ctx.now : new Date()).toISOString().slice(0, 10);
+      vendor.promotions.forEach(function(p) {
+        if (!p || p.active !== true) return;
+        if (p.startDate && iso < p.startDate) return;
+        if (p.endDate && iso > p.endDate) return;
+        var max = Number(p.maxRedemptions || 0);
+        var cur = Number(p.currentRedemptions || 0);
+        if (max > 0 && cur >= max) return;
+        activePromos.push(p);
+      });
+    }
+    var promoLines = activePromos.map(function(p) {
+      var scope = p.applyToScope === 'selected'
+        ? ('selected services: ' + (Array.isArray(p.appliesToServiceIds) ? p.appliesToServiceIds.join(', ') : ''))
+        : 'all services';
+      var range = [p.startDate, p.endDate].filter(Boolean).join(' to ');
+      return '- ' + p.discountPercent + '% off — ' + (p.name || '') + ' (' + scope + (range ? '; ' + range : '') + ')';
+    }).join('\n');
     return [
       'You are the Du Lich Cali Mobile Barber booking assistant.',
       'Respond in this language code unless the customer changes language: ' + (VALID_LANGS[lang] ? lang : 'en') + '.',
       'Vendor scope: ' + vendor.businessName + ' / ' + vendor.barberName + '.',
       'Service areas: ' + (vendor.serviceAreas || []).join(', ') + '. Travel radius miles: ' + vendor.travelRadiusMiles + '.',
       'Services and prices:\n' + services,
+      promoLines ? ('Active promotions (mention naturally when the customer asks about price or chooses a matching service):\n' + promoLines) : '',
       'Never invent availability, prices, travel radius, barber names, or internal data.',
-      'Use MobileBarberBooking.calculateMobileBarberPrice for quotes; service price alone is not the final mobile total.',
+      'Use MobileBarberBooking.calculateMobileBarberPrice for quotes; service price alone is not the final mobile total. The pricing engine already applies any active promotion — quote the discounted total.',
       'Never confirm a booking until backend availability and service-area checks have passed.',
       'Payment is collected after service by cash or Zelle. Ask for the preferred payment method when natural; default to cash if the customer does not choose. Do not require prepayment, card payment, Apple Pay, Google Pay, or Stripe.',
       'When you see a user message starting with [SYSTEM: ...], rewrite that backend result naturally in the customer language and do not expose the marker.',
       'Use the serviceBookingAgentBrain pattern: intent extraction, slot filling, one question at a time, customer lookup, service lookup, availability check, summary, then booking write.',
       'Phone lookup is always first for booking. Never ask for name, phone, address, service, date, and time in one message.'
-    ].join('\n');
+    ].filter(Boolean).join('\n');
   }
 
   function systemReason(type, details) {
@@ -966,17 +992,29 @@
     session.lastBooking = built.booking;
     session.lastSystemContext = systemReason('booking_created', { id: built.booking.id, status: built.booking.status });
     var barberDisplay = (vendor.barberName || vendor.businessName || '').trim() || 'the barber';
+    // When a vendor promo is applied, prepend a natural acknowledgement so
+    // the customer sees the discount called out in the saved confirmation.
+    var savedReply = reply(lang, 'saved', {
+      id: built.booking.id,
+      zellePhone: built.booking.zellePhone || vendor.phone || '',
+      barber: barberDisplay,
+      service: availability.service.name,
+      date: draft.requestedDate,
+      time: BOOKING.formatTime12Hour ? BOOKING.formatTime12Hour(draft.startTime) : draft.startTime,
+      price: money(availability.price.totalPrice)
+    });
+    if (availability.price && availability.price.promoApplied && Number(availability.price.discountPercent || 0) > 0) {
+      var promoLine = reply(lang, 'promoApplied', {
+        pct: Number(availability.price.discountPercent || 0),
+        name: availability.price.promotionName || '',
+        original: money(availability.price.originalPrice || availability.price.totalPrice),
+        discounted: money(availability.price.discountedPrice || availability.price.totalPrice)
+      });
+      if (promoLine) savedReply = promoLine + '\n\n' + savedReply;
+    }
     return {
       session: session,
-      response: reply(lang, 'saved', {
-        id: built.booking.id,
-        zellePhone: built.booking.zellePhone || vendor.phone || '',
-        barber: barberDisplay,
-        service: availability.service.name,
-        date: draft.requestedDate,
-        time: BOOKING.formatTime12Hour ? BOOKING.formatTime12Hour(draft.startTime) : draft.startTime,
-        price: money(availability.price.totalPrice)
-      }),
+      response: savedReply,
       booking: built.booking
     };
   }

@@ -32,8 +32,26 @@
     'minimumMobileVisitPrice', 'minimumHourlyTarget',
     'homeBaseAddress',
     'cashEnabled', 'zelleEnabled', 'zellePhone', 'zelleEmail', 'zelleQrUrl',
+    'promotions',
     'geminiKey', 'openaiKey'
   ]);
+
+  // Promotion fields — promotions live as an array on the vendor doc.
+  // applyToScope is one of: 'all' (every active service) | 'selected'
+  // (whitelist by serviceId in appliesToServiceIds). Discount is a
+  // percentage 1-90. Date range + maxRedemptions are independent gates;
+  // both must pass when set. `currentRedemptions` is bumped server-side
+  // after a successful booking.
+  var PROMOTION_FIELDS = Object.freeze([
+    'id', 'vendorId', 'name', 'description', 'discountPercent',
+    'applyToScope', 'appliesToServiceIds',
+    'startDate', 'endDate',
+    'maxRedemptions', 'currentRedemptions',
+    'active', 'promoCode', 'displayOnCustomerPage',
+    'createdAt', 'updatedAt'
+  ]);
+  var PROMOTION_SCOPES = Object.freeze(['all', 'selected']);
+  var DEFAULT_PROMOTION_SCOPE = 'all';
 
   var SERVICE_FIELDS = Object.freeze([
     'id', 'vendorId', 'name', 'description', 'durationMinutes', 'price',
@@ -63,6 +81,10 @@
     'selfieDataUrl', 'aiAnalysisSummary', 'aiAnalysisConsent',
     'recommendedStyles', 'selectedStyleId', 'selectedStylePreviewUrl',
     'barberCuttingNotes',
+    // Vendor promotion applied (optional). All fields written together
+    // by buildBooking when a promo is active.
+    'promotionId', 'promotionName', 'discountPercent',
+    'originalPrice', 'discountedPrice', 'promoApplied',
     'createdAt', 'updatedAt'
   ]);
 
@@ -930,7 +952,109 @@
     if (Array.isArray(vendor.languages) && vendor.languages.length === 0) {
       errors.push('languages must include at least one language code.');
     }
+    if (vendor.promotions != null) {
+      if (!Array.isArray(vendor.promotions)) {
+        errors.push('promotions must be an array when present.');
+      } else {
+        vendor.promotions.forEach(function(p, idx) {
+          var r = validatePromotion(p);
+          if (!r.valid) {
+            r.errors.forEach(function(e) { errors.push('promotions[' + idx + ']: ' + e); });
+          }
+        });
+      }
+    }
     return { valid: errors.length === 0, errors: errors };
+  }
+
+  // Single-promotion validator. Accepts a plain object with the
+  // PROMOTION_FIELDS shape. Stricter rules: discountPercent 1-90,
+  // endDate >= startDate when both present, maxRedemptions integer >= 0
+  // (0 means unlimited).
+  function validatePromotion(promo) {
+    var errors = [];
+    if (!isPlainObject(promo)) return { valid: false, errors: ['promotion must be an object.'] };
+    hasOnlyKnownFields(promo, PROMOTION_FIELDS, errors, 'promotion');
+    ['id', 'vendorId', 'name'].forEach(function(field) {
+      requireText(promo, field, errors);
+    });
+    requireNumber(promo, 'discountPercent', errors, { min: 1 });
+    if (typeof promo.discountPercent === 'number' && (promo.discountPercent < 1 || promo.discountPercent > 90)) {
+      errors.push('discountPercent must be between 1 and 90.');
+    }
+    if (hasText(promo.applyToScope) && PROMOTION_SCOPES.indexOf(promo.applyToScope) < 0) {
+      errors.push('applyToScope must be "all" or "selected".');
+    }
+    if (promo.appliesToServiceIds != null && !Array.isArray(promo.appliesToServiceIds)) {
+      errors.push('appliesToServiceIds must be an array when present.');
+    }
+    if (promo.applyToScope === 'selected' && (!Array.isArray(promo.appliesToServiceIds) || promo.appliesToServiceIds.length === 0)) {
+      errors.push('appliesToServiceIds must include at least one serviceId when applyToScope is "selected".');
+    }
+    if (hasText(promo.startDate) && !/^\d{4}-\d{2}-\d{2}$/.test(promo.startDate)) {
+      errors.push('startDate must be YYYY-MM-DD when present.');
+    }
+    if (hasText(promo.endDate) && !/^\d{4}-\d{2}-\d{2}$/.test(promo.endDate)) {
+      errors.push('endDate must be YYYY-MM-DD when present.');
+    }
+    if (hasText(promo.startDate) && hasText(promo.endDate) && promo.endDate < promo.startDate) {
+      errors.push('endDate must be on or after startDate.');
+    }
+    if (promo.maxRedemptions != null) {
+      requireNumber(promo, 'maxRedemptions', errors, { min: 0 });
+    }
+    if (promo.currentRedemptions != null) {
+      requireNumber(promo, 'currentRedemptions', errors, { min: 0 });
+    }
+    if (typeof promo.active !== 'boolean') errors.push('active must be boolean.');
+    if (promo.displayOnCustomerPage != null && typeof promo.displayOnCustomerPage !== 'boolean') {
+      errors.push('displayOnCustomerPage must be boolean when present.');
+    }
+    return { valid: errors.length === 0, errors: errors };
+  }
+
+  // Pure helper: given a vendor + service + optional clock, return the
+  // active promotion that applies (or null). Rules:
+  //   - vendor must have a promotion with `active === true`
+  //   - if startDate present, today >= startDate
+  //   - if endDate   present, today <= endDate
+  //   - if maxRedemptions > 0, currentRedemptions < maxRedemptions
+  //   - applyToScope === 'all' or service.id in appliesToServiceIds
+  // When multiple promos match, the highest discountPercent wins.
+  function findActivePromotionForService(vendor, service, now) {
+    if (!vendor || !Array.isArray(vendor.promotions) || !service) return null;
+    var today = (now instanceof Date ? now : new Date());
+    var iso = today.toISOString().slice(0, 10);
+    var match = null;
+    for (var i = 0; i < vendor.promotions.length; i++) {
+      var p = vendor.promotions[i];
+      if (!p || p.active !== true) continue;
+      if (hasText(p.startDate) && iso < p.startDate) continue;
+      if (hasText(p.endDate) && iso > p.endDate) continue;
+      var max = Number(p.maxRedemptions || 0);
+      var cur = Number(p.currentRedemptions || 0);
+      if (max > 0 && cur >= max) continue;
+      var scope = p.applyToScope || DEFAULT_PROMOTION_SCOPE;
+      if (scope === 'selected') {
+        var ids = Array.isArray(p.appliesToServiceIds) ? p.appliesToServiceIds : [];
+        if (ids.indexOf(service.id) < 0) continue;
+      }
+      var pct = Number(p.discountPercent || 0);
+      if (pct < 1 || pct > 90) continue;
+      if (!match || pct > Number(match.discountPercent || 0)) match = p;
+    }
+    return match;
+  }
+
+  // Apply a promo to a raw total. Returns { discountPercent, originalPrice,
+  // discountedPrice }. Rounds discounted price to nearest cent.
+  function applyPromotionToPrice(originalPrice, promotion) {
+    var orig = Number(originalPrice) || 0;
+    if (!promotion || !promotion.active) return { discountPercent: 0, originalPrice: orig, discountedPrice: orig };
+    var pct = Number(promotion.discountPercent || 0);
+    if (pct < 1 || pct > 90) return { discountPercent: 0, originalPrice: orig, discountedPrice: orig };
+    var discounted = Math.max(0, Math.round((orig * (1 - pct / 100)) * 100) / 100);
+    return { discountPercent: pct, originalPrice: orig, discountedPrice: discounted };
   }
 
   function validatePortfolioImage(image, opts) {
@@ -1253,6 +1377,9 @@
     CUSTOMER_FIELDS: CUSTOMER_FIELDS,
     PORTFOLIO_IMAGE_FIELDS: PORTFOLIO_IMAGE_FIELDS,
     REVIEW_FIELDS: REVIEW_FIELDS,
+    PROMOTION_FIELDS: PROMOTION_FIELDS,
+    PROMOTION_SCOPES: PROMOTION_SCOPES,
+    DEFAULT_PROMOTION_SCOPE: DEFAULT_PROMOTION_SCOPE,
     SERVICE_BADGES: SERVICE_BADGES,
     BOOKING_STATUSES: BOOKING_STATUSES,
     BOOKING_SOURCES: BOOKING_SOURCES,
@@ -1273,6 +1400,9 @@
     samplePortfolioImages: samplePortfolioImages,
     sampleReviews: sampleReviews,
     validateVendor: validateVendor,
+    validatePromotion: validatePromotion,
+    findActivePromotionForService: findActivePromotionForService,
+    applyPromotionToPrice: applyPromotionToPrice,
     validateService: validateService,
     validateServiceImage: validateServiceImage,
     validateBooking: validateBooking,

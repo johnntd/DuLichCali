@@ -469,12 +469,36 @@
         quoteType = 'vendor_review';
       }
     }
+    // Apply vendor promotion if one is active for this service today.
+    // Discount is applied to the FINAL total (service + travel + any
+    // distance/profitability adjustment) so the customer gets the full
+    // discount on the out-the-door price, matching what the promo banner
+    // advertises.
+    var originalTotal = total;
+    var promotion = (DATA && typeof DATA.findActivePromotionForService === 'function')
+      ? DATA.findActivePromotionForService(vendor, service, input.now || new Date())
+      : null;
+    var promoApplied = false;
+    var promoPct = 0;
+    var promoId = '';
+    var promoName = '';
+    if (promotion) {
+      var promoResult = DATA.applyPromotionToPrice(originalTotal, promotion);
+      if (promoResult.discountPercent > 0) {
+        promoPct = promoResult.discountPercent;
+        total = promoResult.discountedPrice;
+        promoApplied = true;
+        promoId = promotion.id || '';
+        promoName = promotion.name || '';
+      }
+    }
     var explanation = [
       'Service price ' + base,
       'mobile travel fee ' + travel,
       'estimated vehicle wear ' + vehicleWearCost.toFixed(2),
       estimatedDistance ? ('estimated distance ' + estimatedDistance + ' miles') : 'distance unavailable; used configured/fallback travel tier',
       distanceAdjustment ? ('profitability adjustment ' + distanceAdjustment) : '',
+      promoApplied ? ('promotion ' + promoName + ' ' + promoPct + '% off (was $' + originalTotal.toFixed(2) + ')') : '',
       quoteType === 'vendor_review' ? 'vendor review required for distance/profitability' : 'payment due after service by cash or Zelle'
     ].filter(Boolean).join('; ');
     return {
@@ -491,7 +515,15 @@
       quoteType: quoteType,
       grossProfitEstimate: Math.round((total - vehicleWearCost) * 100) / 100,
       estimatedHourlyGross: Math.round(estimatedHourlyGross * 100) / 100,
-      reviewRequired: quoteType === 'vendor_review' || !isWithinServiceArea(vendor, address || {})
+      reviewRequired: quoteType === 'vendor_review' || !isWithinServiceArea(vendor, address || {}),
+      // Promotion fields — buildBooking copies these onto the booking doc.
+      promotion: promotion || null,
+      promotionId: promoId,
+      promotionName: promoName,
+      discountPercent: promoPct,
+      originalPrice: originalTotal,
+      discountedPrice: promoApplied ? total : originalTotal,
+      promoApplied: promoApplied
     };
   }
 
@@ -711,6 +743,15 @@
       selectedStyleId: trim(draft.selectedStyleId),
       selectedStylePreviewUrl: trim(draft.selectedStylePreviewUrl),
       barberCuttingNotes: trim(draft.barberCuttingNotes),
+      // Promotion fields — populated by calculateMobileBarberPrice when an
+      // active vendor promotion applies. All default to empty/0/false so
+      // bookings without a promo stay valid.
+      promotionId: trim(check.price && check.price.promotionId),
+      promotionName: trim(check.price && check.price.promotionName),
+      discountPercent: Number((check.price && check.price.discountPercent) || 0),
+      originalPrice: Number((check.price && check.price.originalPrice) || amountDue),
+      discountedPrice: Number((check.price && check.price.discountedPrice) || amountDue),
+      promoApplied: !!(check.price && check.price.promoApplied),
       createdAt: now,
       updatedAt: now
     };

@@ -12,6 +12,7 @@
     portfolio: 'dlc_mobile_barber_portfolio_overrides',
     reviews: 'dlc_mobile_barber_review_overrides',
     notified: 'dlc_mobile_barber_notified_booking_ids',
+    ownerNotifications: 'dlc_mobile_barber_owner_notifications',
     sound: 'dlc_mobile_barber_sound_alerts'
   };
 
@@ -39,6 +40,14 @@
       toggleSoundOn: 'Turn sound on',
       toggleSoundOff: 'Turn sound off',
       newBookingAlertTitle: 'New Mobile Barber Booking',
+      newBarberBookingAlertTitle: 'New Barber Booking',
+      newRideBookingAlertTitle: 'New Ride Booking',
+      newTourBookingAlertTitle: 'New Tour Booking',
+      notifBellAria: 'Open notification center',
+      notifDrawerTitle: 'Notifications',
+      notifMarkAllRead: 'Mark all read',
+      notifCloseDrawer: 'Close notifications',
+      notifEmpty: 'No notifications yet',
       viewBookingAction: 'View Booking',
       dismissAction: 'Dismiss',
       statToday: 'Today',
@@ -290,6 +299,14 @@
       toggleSoundOn: 'Bật âm thanh',
       toggleSoundOff: 'Tắt âm thanh',
       newBookingAlertTitle: 'Lịch Mobile Barber Mới',
+      newBarberBookingAlertTitle: 'Lịch Cắt Tóc Mới',
+      newRideBookingAlertTitle: 'Lịch Đưa Đón Mới',
+      newTourBookingAlertTitle: 'Lịch Tour Mới',
+      notifBellAria: 'Mở trung tâm thông báo',
+      notifDrawerTitle: 'Thông báo',
+      notifMarkAllRead: 'Đánh dấu đã đọc',
+      notifCloseDrawer: 'Đóng thông báo',
+      notifEmpty: 'Chưa có thông báo',
       viewBookingAction: 'Xem Lịch',
       dismissAction: 'Bỏ qua',
       statToday: 'Hôm nay',
@@ -541,6 +558,14 @@
       toggleSoundOn: 'Activar sonido',
       toggleSoundOff: 'Desactivar sonido',
       newBookingAlertTitle: 'Nueva Reserva de Barbero Móvil',
+      newBarberBookingAlertTitle: 'Nueva Reserva de Barbero',
+      newRideBookingAlertTitle: 'Nueva Reserva de Viaje',
+      newTourBookingAlertTitle: 'Nueva Reserva de Tour',
+      notifBellAria: 'Abrir centro de notificaciones',
+      notifDrawerTitle: 'Notificaciones',
+      notifMarkAllRead: 'Marcar todo leído',
+      notifCloseDrawer: 'Cerrar notificaciones',
+      notifEmpty: 'Aún no hay notificaciones',
       viewBookingAction: 'Ver Reserva',
       dismissAction: 'Descartar',
       statToday: 'Hoy',
@@ -797,8 +822,13 @@
     bookingFilter: 'upcoming',
     summaryFilter: 'today',
     bookingAlertUnsubscribe: null,
+    bookingAlertRefreshTimer: null,
     bookingAlertInitialSnapshot: true,
     notifiedBookingIds: {},
+    ownerNotifications: [],
+    notificationDrawerOpen: false,
+    notificationFilter: 'all',
+    beforeUnloadBound: false,
     soundAlertsEnabled: true,
     soundReady: false,
     soundBlocked: false,
@@ -857,6 +887,10 @@
 
   function notifiedStorageKey() {
     return STORAGE.notified + '_' + (state.vendorId || 'unknown');
+  }
+
+  function ownerNotificationsStorageKey() {
+    return STORAGE.ownerNotifications + '_' + (state.ownerId || 'unknown');
   }
 
   function soundStorageKey() {
@@ -1185,6 +1219,107 @@
     if (last) last.textContent = state.lastBookingAlert || t('lastAlertNone');
     if (toggle) toggle.textContent = state.soundAlertsEnabled ? t('toggleSoundOff') : t('toggleSoundOn');
     if (enable) enable.hidden = state.soundReady && !state.soundBlocked;
+  }
+
+  function notificationIcon(serviceType) {
+    return serviceType === 'ride' ? '🚗' : (serviceType === 'tour' ? '🧭' : '💈');
+  }
+
+  function renderNotificationDrawer() {
+    var bell = document.getElementById('mbNotifBell');
+    var badge = document.getElementById('mbNotifBadge');
+    var drawer = document.getElementById('mbNotifDrawer');
+    var list = document.getElementById('mbNotifList');
+    var tabs = document.getElementById('mbNotifTabs');
+    var close = document.querySelector('[data-action="closeNotifDrawer"] .mb-notif-drawer__close') || document.querySelector('.mb-notif-drawer__close');
+    if (bell) {
+      bell.hidden = !state.ownerMode;
+      bell.setAttribute('aria-label', t('notifBellAria'));
+    }
+    if (close) close.setAttribute('aria-label', t('notifCloseDrawer'));
+    if (!state.ownerMode) {
+      if (drawer) drawer.hidden = true;
+      return;
+    }
+    var unread = (state.ownerNotifications || []).filter(function(item) { return !item.read; }).length;
+    if (badge) {
+      badge.textContent = String(unread > 99 ? '99+' : unread);
+      badge.hidden = unread === 0;
+    }
+    if (drawer) {
+      drawer.hidden = !state.notificationDrawerOpen;
+      drawer.classList.toggle('mb-notif-drawer--open', !!state.notificationDrawerOpen);
+    }
+    if (tabs) {
+      var defs = [
+        { key: 'all', label: 'filterAll' },
+        { key: 'barber', label: 'filterBarber' },
+        { key: 'ride', label: 'filterRide' },
+        { key: 'tour', label: 'filterTour' }
+      ];
+      tabs.innerHTML = '';
+      defs.forEach(function(def) {
+        var btn = el('button', 'mb-notif-tabs__btn');
+        var active = (state.notificationFilter || 'all') === def.key;
+        btn.type = 'button';
+        btn.setAttribute('role', 'tab');
+        btn.setAttribute('aria-selected', active ? 'true' : 'false');
+        btn.classList.toggle('mb-notif-tabs__btn--active', active);
+        btn.textContent = t(def.label);
+        btn.addEventListener('click', function() {
+          state.notificationFilter = def.key;
+          renderNotificationDrawer();
+        });
+        tabs.appendChild(btn);
+      });
+    }
+    if (!list) return;
+    var filter = state.notificationFilter || 'all';
+    var rows = (state.ownerNotifications || []).filter(function(item) {
+      return filter === 'all' || item.serviceType === filter;
+    });
+    list.innerHTML = '';
+    if (!rows.length) {
+      var empty = el('p', 'mb-notif-empty');
+      empty.textContent = t('notifEmpty');
+      list.appendChild(empty);
+      return;
+    }
+    rows.forEach(function(item) {
+      var row = el('button', 'mb-notif-item');
+      row.type = 'button';
+      row.classList.toggle('mb-notif-item--unread', !item.read);
+      row.setAttribute('data-notif-id', item.id);
+      var icon = el('span', 'mb-notif-item__icon');
+      icon.setAttribute('aria-hidden', 'true');
+      icon.textContent = notificationIcon(item.serviceType);
+      var body = el('span', 'mb-notif-item__body');
+      var title = el('strong');
+      var message = el('span');
+      title.textContent = item.title || t(alertTitleKeyFor(item));
+      message.textContent = item.message || '';
+      body.appendChild(title);
+      body.appendChild(message);
+      var dot = el('span', 'mb-notif-item__dot');
+      dot.setAttribute('aria-hidden', 'true');
+      row.appendChild(icon);
+      row.appendChild(body);
+      row.appendChild(dot);
+      row.addEventListener('click', function() { openBookingFromNotification(item); });
+      list.appendChild(row);
+    });
+  }
+
+  function openNotificationDrawer() {
+    if (!state.ownerMode) return;
+    if (!state.soundReady) unlockSoundAlerts();
+    state.notificationDrawerOpen = true;
+    renderNotificationDrawer();
+  }
+
+  function closeNotificationDrawer() {
+    state.notificationDrawerOpen = false;
+    renderNotificationDrawer();
   }
 
   function unlockSoundAlerts() {
@@ -1874,9 +2009,24 @@
     renderBookings();
   }
 
-  function markBookingNotified(bookingId) {
-    if (!bookingId) return;
-    state.notifiedBookingIds[bookingId] = Date.now();
+  function serviceTypeForBooking(booking) {
+    var raw = booking && (booking.serviceType || booking.rawServiceType || booking.bookingType || '');
+    var bucket = root.OwnerModel && root.OwnerModel.serviceBucket ? root.OwnerModel.serviceBucket(raw) : raw;
+    if (bucket === 'barber' || bucket === 'ride' || bucket === 'tour') return bucket;
+    if (booking && booking.sourceCollection === 'travel_bookings') return 'tour';
+    return 'barber';
+  }
+
+  function notificationDedupeKey(booking) {
+    var bookingId = booking && (booking.id || booking.bookingId || '');
+    if (!bookingId) return '';
+    return state.ownerMode ? serviceTypeForBooking(booking) + ':' + bookingId : bookingId;
+  }
+
+  function markBookingNotified(bookingOrId) {
+    var key = typeof bookingOrId === 'object' ? notificationDedupeKey(bookingOrId) : bookingOrId;
+    if (!key) return;
+    state.notifiedBookingIds[key] = Date.now();
     var ids = Object.keys(state.notifiedBookingIds).sort(function(a, b) {
       return Number(state.notifiedBookingIds[b] || 0) - Number(state.notifiedBookingIds[a] || 0);
     }).slice(0, 80);
@@ -1887,9 +2037,12 @@
   }
 
   function shouldAlertForBooking(booking, changeType) {
-    if (!booking || booking.vendorId !== state.vendorId) return false;
+    if (!booking) return false;
+    if (!state.ownerMode && booking.vendorId !== state.vendorId) return false;
+    if (state.ownerMode && booking.ownerId && booking.ownerId !== state.ownerId) return false;
     var bookingId = booking.id || booking.bookingId || '';
-    if (!bookingId || state.notifiedBookingIds[bookingId]) return false;
+    var dedupeKey = notificationDedupeKey(booking);
+    if (!bookingId || !dedupeKey || state.notifiedBookingIds[dedupeKey]) return false;
     var status = booking.status || '';
     var alertStatuses = {
       pending_barber_confirmation: true,
@@ -1904,7 +2057,36 @@
     return [booking.address, booking.city, booking.zip].filter(Boolean).join(', ');
   }
 
+  function alertTitleKeyFor(booking) {
+    if (!state.ownerMode) return 'newBookingAlertTitle';
+    var serviceType = serviceTypeForBooking(booking);
+    if (serviceType === 'ride') return 'newRideBookingAlertTitle';
+    if (serviceType === 'tour') return 'newTourBookingAlertTitle';
+    if (serviceType === 'barber') return 'newBarberBookingAlertTitle';
+    return 'newBookingAlertTitle';
+  }
+
+  function displayServiceName(booking) {
+    if (!booking) return '';
+    if (booking.serviceLabelKey) return t(booking.serviceLabelKey);
+    if (serviceTypeForBooking(booking) === 'barber') return booking.serviceName || booking.serviceId || t('svcBarber');
+    if (serviceTypeForBooking(booking) === 'ride') return booking.serviceName || t('svcPrivateRide');
+    if (serviceTypeForBooking(booking) === 'tour') return booking.serviceName || t('svcTour');
+    return booking.serviceName || booking.serviceId || '';
+  }
+
+  function compactNotificationMessage(booking) {
+    return [
+      booking.customerName || booking.name || '',
+      displayServiceName(booking),
+      booking.requestedDate || '',
+      formatTime12Hour(booking.startTime),
+      statusLabel(booking.status)
+    ].filter(Boolean).join(' • ');
+  }
+
   function formatAlertMessage(booking) {
+    if (state.ownerMode) return compactNotificationMessage(booking);
     var amount = booking.amountDue != null ? booking.amountDue : Number(booking.servicePrice || 0) + Number(booking.travelFee || 0);
     return [
       'Customer: ' + (booking.customerName || ''),
@@ -1933,6 +2115,70 @@
     }, 30);
   }
 
+  function persistOwnerNotifications() {
+    if (!state.ownerMode || !state.ownerId) return;
+    writeJson(ownerNotificationsStorageKey(), state.ownerNotifications.slice(0, 120));
+  }
+
+  function addNotification(booking) {
+    if (!state.ownerMode || !state.ownerId || !booking) return null;
+    var id = notificationDedupeKey(booking);
+    var bookingId = booking.id || booking.bookingId || '';
+    if (!id || !bookingId) return null;
+    var existing = (state.ownerNotifications || []).filter(function(item) { return item.id === id; })[0];
+    if (existing) return existing;
+    var entry = {
+      id: id,
+      ownerId: state.ownerId,
+      serviceType: serviceTypeForBooking(booking),
+      bookingId: bookingId,
+      sourceCollection: booking.sourceCollection || DATA.COLLECTIONS.bookings,
+      title: t(alertTitleKeyFor(booking)),
+      message: compactNotificationMessage(booking),
+      status: booking.status || '',
+      read: false,
+      createdAt: Date.now()
+    };
+    state.ownerNotifications.unshift(entry);
+    state.ownerNotifications = state.ownerNotifications.slice(0, 120);
+    persistOwnerNotifications();
+    renderNotificationDrawer();
+    return entry;
+  }
+
+  function markNotificationRead(id) {
+    var changed = false;
+    state.ownerNotifications = (state.ownerNotifications || []).map(function(item) {
+      if (item.id !== id || item.read) return item;
+      changed = true;
+      return Object.assign({}, item, { read: true });
+    });
+    if (changed) persistOwnerNotifications();
+    renderNotificationDrawer();
+  }
+
+  function markAllNotificationsRead() {
+    var changed = false;
+    state.ownerNotifications = (state.ownerNotifications || []).map(function(item) {
+      if (item.read) return item;
+      changed = true;
+      return Object.assign({}, item, { read: true });
+    });
+    if (changed) persistOwnerNotifications();
+    renderNotificationDrawer();
+  }
+
+  function openBookingFromNotification(item) {
+    if (!item) return;
+    markNotificationRead(item.id);
+    state.serviceTypeFilter = item.serviceType || 'all';
+    state.summaryFilter = item.status === 'pending_confirmation' || item.status === 'pending_barber_confirmation' || item.status === 'vendor_review'
+      ? 'pending'
+      : 'upcoming';
+    closeNotificationDrawer();
+    viewBooking(item.bookingId);
+  }
+
   function showBookingAlert(booking) {
     var region = document.getElementById('mbBookingAlertRegion');
     if (!region) return;
@@ -1943,13 +2189,22 @@
     var actions = el('div', 'mb-booking-alert__actions');
     var view = el('button', 'mb-button mb-button--primary mb-button--sm');
     var dismiss = el('button', 'mb-button mb-button--ghost mb-button--sm');
-    title.textContent = t('newBookingAlertTitle');
+    title.textContent = t(alertTitleKeyFor(booking));
     message.textContent = formatAlertMessage(booking);
     view.type = 'button';
     view.textContent = t('viewBookingAction');
     view.addEventListener('click', function() {
       popup.remove();
-      viewBooking(bookingId);
+      if (state.ownerMode) {
+        openBookingFromNotification({
+          id: notificationDedupeKey(booking),
+          bookingId: bookingId,
+          serviceType: serviceTypeForBooking(booking),
+          status: booking.status || ''
+        });
+      } else {
+        viewBooking(bookingId);
+      }
     });
     dismiss.type = 'button';
     dismiss.textContent = t('dismissAction');
@@ -1964,13 +2219,22 @@
     renderNotificationControls();
     if ('Notification' in root && root.Notification.permission === 'granted') {
       try {
-        var nativeNotice = new root.Notification(t('newBookingAlertTitle'), {
-          body: [booking.customerName || '', booking.serviceName || '', booking.requestedDate || '', formatTime12Hour(booking.startTime)].filter(Boolean).join(' • '),
+        var nativeNotice = new root.Notification(t(alertTitleKeyFor(booking)), {
+          body: state.ownerMode ? compactNotificationMessage(booking) : [booking.customerName || '', booking.serviceName || '', booking.requestedDate || '', formatTime12Hour(booking.startTime)].filter(Boolean).join(' • '),
           tag: 'mobile-barber-' + bookingId
         });
         nativeNotice.onclick = function() {
           try { root.focus(); } catch (e) {}
-          viewBooking(bookingId);
+          if (state.ownerMode) {
+            openBookingFromNotification({
+              id: notificationDedupeKey(booking),
+              bookingId: bookingId,
+              serviceType: serviceTypeForBooking(booking),
+              status: booking.status || ''
+            });
+          } else {
+            viewBooking(bookingId);
+          }
           nativeNotice.close();
         };
       } catch (e) {}
@@ -1982,22 +2246,117 @@
 
   function handleBookingAlert(booking, changeType) {
     var bookingId = booking && (booking.id || booking.bookingId || '');
-    if (bookingId && state.bookingAlertInitialSnapshot) {
-      markBookingNotified(bookingId);
+    if (bookingId && (booking._alertInitialSnapshot || state.bookingAlertInitialSnapshot)) {
+      markBookingNotified(booking);
       return;
     }
     if (!shouldAlertForBooking(booking, changeType)) {
       return;
     }
-    markBookingNotified(bookingId);
+    markBookingNotified(booking);
+    addNotification(booking);
     showBookingAlert(booking);
     playBookingChime();
+  }
+
+  function debounceBookingRefresh() {
+    if (state.bookingAlertRefreshTimer) root.clearTimeout(state.bookingAlertRefreshTimer);
+    state.bookingAlertRefreshTimer = root.setTimeout(function() {
+      state.bookingAlertRefreshTimer = null;
+      loadBookings().then(renderBookings);
+    }, 250);
+  }
+
+  function unsubscribeBookingAlerts() {
+    if (state.bookingAlertUnsubscribe) {
+      try { state.bookingAlertUnsubscribe(); } catch (e) {}
+      state.bookingAlertUnsubscribe = null;
+    }
+    if (state.bookingAlertRefreshTimer) {
+      root.clearTimeout(state.bookingAlertRefreshTimer);
+      state.bookingAlertRefreshTimer = null;
+    }
+  }
+
+  function normalizeOwnerAlertBooking(data, sourceCollection, bucketHint) {
+    if (bucketHint === 'barber' && root.OwnerBookings && root.OwnerBookings.normalizeBarber) {
+      return root.OwnerBookings.normalizeBarber(data);
+    }
+    if (bucketHint === 'travel_tour' && root.OwnerBookings && root.OwnerBookings.normalizeTour) {
+      return root.OwnerBookings.normalizeTour(data, sourceCollection);
+    }
+    if (bucketHint === 'ride_tour') {
+      var bucket = root.OwnerModel && root.OwnerModel.serviceBucket ? root.OwnerModel.serviceBucket(data.serviceType) : data.serviceType;
+      if (bucket === 'tour' && root.OwnerBookings && root.OwnerBookings.normalizeTour) return root.OwnerBookings.normalizeTour(data, sourceCollection);
+      if (bucket === 'ride' && root.OwnerBookings && root.OwnerBookings.normalizeRide) return root.OwnerBookings.normalizeRide(data);
+      return null;
+    }
+    data.sourceCollection = sourceCollection;
+    return data;
+  }
+
+  function attachOwnerAlertListener(db, collectionName, query, unsubscribes, bucketHint) {
+    var initial = true;
+    var unsubscribe = query.limit(25).onSnapshot(function(snapshot) {
+      snapshot.docChanges().forEach(function(change) {
+        var data = change.doc.data() || {};
+        data.id = data.id || change.doc.id;
+        data = normalizeOwnerAlertBooking(data, collectionName, bucketHint);
+        if (!data) return;
+        data._alertInitialSnapshot = initial;
+        handleBookingAlert(data, change.type);
+      });
+      initial = false;
+      debounceBookingRefresh();
+    }, function(err) {
+      if (root.console) root.console.warn('[mobile-barber-dashboard] owner booking alert listener failed', collectionName, err);
+    });
+    unsubscribes.push(unsubscribe);
+  }
+
+  function subscribeOwnerBookingAlerts(db) {
+    var unsubscribes = [];
+    var barberIds = root.OwnerBookings && root.OwnerBookings.barberVendorIdsFor
+      ? root.OwnerBookings.barberVendorIdsFor(state.ownerId)
+      : [];
+    barberIds.forEach(function(vendorId) {
+      attachOwnerAlertListener(
+        db,
+        DATA.COLLECTIONS.bookings,
+        db.collection(DATA.COLLECTIONS.bookings).where('vendorId', '==', vendorId),
+        unsubscribes,
+        'barber'
+      );
+    });
+    attachOwnerAlertListener(
+      db,
+      'bookings',
+      db.collection('bookings').where('ownerId', '==', state.ownerId),
+      unsubscribes,
+      'ride_tour'
+    );
+    attachOwnerAlertListener(
+      db,
+      'travel_bookings',
+      db.collection('travel_bookings').where('ownerId', '==', state.ownerId),
+      unsubscribes,
+      'travel_tour'
+    );
+    state.bookingAlertUnsubscribe = function() {
+      unsubscribes.forEach(function(fn) {
+        try { fn(); } catch (e) {}
+      });
+    };
   }
 
   function subscribeBookingAlerts() {
     var db = firestoreDb();
     if (!db || !DATA || !DATA.COLLECTIONS || !DATA.COLLECTIONS.bookings || !state.vendorId) return;
-    if (state.bookingAlertUnsubscribe) state.bookingAlertUnsubscribe();
+    unsubscribeBookingAlerts();
+    if (state.ownerMode && state.ownerId) {
+      subscribeOwnerBookingAlerts(db);
+      return;
+    }
     state.bookingAlertInitialSnapshot = true;
     var query = db.collection(DATA.COLLECTIONS.bookings)
       .where('vendorId', '==', state.vendorId)
@@ -2762,6 +3121,7 @@
     renderReviews();
     renderBookings();
     renderNotificationControls();
+    renderNotificationDrawer();
   }
 
   function setLang(lang) {
@@ -2811,6 +3171,13 @@
     });
     document.querySelector('[data-action="saveReviewResponses"]').addEventListener('click', saveReviewResponses);
     document.querySelector('[data-action="enableSoundAlerts"]').addEventListener('click', unlockSoundAlerts);
+    var notifBell = document.getElementById('mbNotifBell');
+    if (notifBell) notifBell.addEventListener('click', openNotificationDrawer);
+    document.querySelectorAll('[data-action="closeNotifDrawer"]').forEach(function(btn) {
+      btn.addEventListener('click', closeNotificationDrawer);
+    });
+    var markAllRead = document.querySelector('[data-action="markAllNotificationsRead"]');
+    if (markAllRead) markAllRead.addEventListener('click', markAllNotificationsRead);
     document.querySelector('[data-action="toggleSoundAlerts"]').addEventListener('click', function() {
       state.soundAlertsEnabled = !state.soundAlertsEnabled;
       state.soundBlocked = false;
@@ -2819,6 +3186,10 @@
       renderNotificationControls();
     });
     document.getElementById('mbDashServiceSelect').addEventListener('change', fillSelectedService);
+    if (!state.beforeUnloadBound) {
+      root.addEventListener('beforeunload', unsubscribeBookingAlerts);
+      state.beforeUnloadBound = true;
+    }
   }
 
   function initLang() {
@@ -2839,6 +3210,9 @@
     state.soundAlertsEnabled = readString(soundStorageKey(), 'on') !== 'off';
     loadVendor();
     resolveOwnerMode();
+    state.ownerNotifications = state.ownerMode ? readJson(ownerNotificationsStorageKey(), []) : [];
+    if (!Array.isArray(state.ownerNotifications)) state.ownerNotifications = [];
+    state.ownerNotifications = state.ownerNotifications.slice(0, 120);
     loadServices();
     loadAvailability();
     loadBlocks();

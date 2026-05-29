@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260528p">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260529d">
 </head>
 <body class="mb-page mb-dashboard-page">
   <main class="mb-shell mb-dashboard-shell" id="mobileBarberDashboardApp" data-page="mobile-barber-dashboard">
@@ -28,7 +28,13 @@
         <h1 id="mbDashboardTitle" data-i18n="dashboardTitle"></h1>
         <p id="mbDashboardSubtitle"></p>
       </div>
-      <a class="mb-button mb-button--ghost" id="mbPublicVendorLink" href=""></a>
+      <div class="mb-dashboard-hero__actions">
+        <button class="mb-notif-bell" id="mbNotifBell" type="button" hidden>
+          <span aria-hidden="true">🔔</span>
+          <span class="mb-notif-badge" id="mbNotifBadge" hidden>0</span>
+        </button>
+        <a class="mb-button mb-button--ghost" id="mbPublicVendorLink" href=""></a>
+      </div>
     </section>
 
     <section class="mb-dashboard-vendor-card" id="mbDashboardVendorCard" aria-label="Vendor"></section>
@@ -270,6 +276,20 @@
     </section>
 
     <div class="mb-dashboard-toast" id="mbDashboardToast" hidden></div>
+    <div class="mb-notif-drawer" id="mbNotifDrawer" hidden>
+      <div class="mb-notif-drawer__backdrop" data-action="closeNotifDrawer"></div>
+      <aside class="mb-notif-drawer__panel" aria-labelledby="mbNotifDrawerTitle">
+        <header class="mb-notif-drawer__head">
+          <h2 id="mbNotifDrawerTitle" data-i18n="notifDrawerTitle"></h2>
+          <div class="mb-notif-drawer__actions">
+            <button class="mb-button mb-button--ghost mb-button--sm" type="button" data-action="markAllNotificationsRead" data-i18n="notifMarkAllRead"></button>
+            <button class="mb-icon-button mb-notif-drawer__close" type="button" data-action="closeNotifDrawer"></button>
+          </div>
+        </header>
+        <div class="mb-notif-tabs" id="mbNotifTabs" role="tablist"></div>
+        <div class="mb-notif-list" id="mbNotifList"></div>
+      </aside>
+    </div>
     <div class="mb-booking-alert-region" id="mbBookingAlertRegion" aria-live="polite"></div>
   </main>
 
@@ -297,6 +317,6 @@
   <script src="/mobile-barber/mobile-barber-data.js?v=20260528q"></script>
   <script src="/mobile-barber/mobile-barber-booking.js?v=20260529c"></script>
   <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260527c"></script>
-  <script src="/mobile-barber/mobile-barber-dashboard.js?v=20260528s"></script>
+  <script src="/mobile-barber/mobile-barber-dashboard.js?v=20260529d"></script>
 </body>
 </html>

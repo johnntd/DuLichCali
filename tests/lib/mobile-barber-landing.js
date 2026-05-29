@@ -88,7 +88,7 @@ function runMobileBarberLandingTests(test) {
   });
 
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
-    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260528q');
+    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260529d');
     assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260528q');
     assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260529c');
     assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260529b');
@@ -283,7 +283,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/vendor/**"');
     assertContains(firebase, '"destination": "/mobile-barber/vendor.html"');
     assertContains(vendorHtml, 'id="mobileBarberVendorApp"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260528q');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260529d');
     assertContains(vendorHtml, 'id="mbVendorName"');
     assertContains(vendorHtml, 'id="mbVendorServices"');
     assertContains(vendorHtml, 'id="mbBookingTitle"');
@@ -546,11 +546,15 @@ function runMobileBarberLandingTests(test) {
     assertContains(dashboardHtml, 'id="mobileBarberDashboardApp"');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260528q');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260529c');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260528s');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260528p');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260529d');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260529d');
     assertContains(dashboardHtml, 'firebase-auth-compat.js');
     assertContains(dashboardHtml, '/notifications.js?v=20260525a');
     assertContains(dashboardHtml, 'id="mbBookingAlertRegion"');
+    assertContains(dashboardHtml, 'id="mbNotifBell"');
+    assertContains(dashboardHtml, 'id="mbNotifBadge"');
+    assertContains(dashboardHtml, 'id="mbNotifDrawer"');
+    assertContains(dashboardHtml, 'id="mbNotifList"');
     assertContains(dashboardHtml, 'data-action="enableSoundAlerts"');
     assertContains(dashboardJs, 'function gateAndInit');
     assertContains(dashboardJs, "vendorUsers");
@@ -562,6 +566,26 @@ function runMobileBarberLandingTests(test) {
     assertContains(dashboardJs, 'markBookingNotified');
     assertContains(dashboardJs, 'playBookingChime');
     assertContains(dashboardJs, 'new root.Notification');
+    assertContains(dashboardJs, 'function subscribeOwnerBookingAlerts');
+    assertContains(dashboardJs, 'function attachOwnerAlertListener(db, collectionName, query, unsubscribes, bucketHint)');
+    assertContains(dashboardJs, 'function normalizeOwnerAlertBooking(data, sourceCollection, bucketHint)');
+    assertContains(dashboardJs, "bucketHint === 'barber'");
+    assertContains(dashboardJs, "bucketHint === 'ride_tour'");
+    assertContains(dashboardJs, "bucketHint === 'travel_tour'");
+    assertContains(dashboardJs, "db.collection('bookings').where('ownerId', '==', state.ownerId)");
+    assertContains(dashboardJs, "db.collection('travel_bookings').where('ownerId', '==', state.ownerId)");
+    assertContains(dashboardJs, "db.collection(DATA.COLLECTIONS.bookings).where('vendorId', '==', vendorId)");
+    assertContains(dashboardJs, "if (state.ownerMode && state.ownerId) {\n      subscribeOwnerBookingAlerts(db);\n      return;\n    }");
+    assertContains(dashboardJs, "notificationDedupeKey");
+    assertContains(dashboardJs, "serviceTypeForBooking(booking) + ':' + bookingId");
+    assertContains(dashboardJs, "return state.ownerMode ? serviceTypeForBooking(booking) + ':' + bookingId : bookingId");
+    assertContains(dashboardJs, 'state.ownerNotifications.slice(0, 120)');
+    assertContains(dashboardJs, 'state.ownerNotifications = state.ownerNotifications.slice(0, 120)');
+    assertContains(dashboardJs, 'function addNotification');
+    assertContains(dashboardJs, 'function renderNotificationDrawer');
+    assertContains(dashboardJs, 'if (!state.soundReady) unlockSoundAlerts()');
+    assertContains(dashboardJs, 'beforeUnloadBound: false');
+    assertContains(dashboardJs, 'if (!state.beforeUnloadBound)');
     assertNotContains(dashboardHtml, 'vendor-admin.html');
     assertNotContains(dashboardHtml, 'salon-admin.html');
     assertNotContains(dashboardHtml, 'admin.html');

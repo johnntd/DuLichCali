@@ -54,8 +54,13 @@ check_grep_absent() {
 
 run_node_check() {
   local label="$1" cmd="$2"
-  if node -e "$cmd" 2>/dev/null; then check_pass "$label"
-  else check_fail "$label"; fi
+  if node -e "$cmd" 2>/dev/null; then
+    check_pass "$label"
+    return 0
+  else
+    check_fail "$label"
+    return 1
+  fi
 }
 
 set +e
@@ -182,11 +187,13 @@ set +e
       check_grep "Voice mode present" "_speakReply\|_speakVia" "nailsalon/voice-mode.js"
       echo
       echo "-- Syntax stability --"
-      run_node_check "receptionist.js parses without syntax error" \
-        "require('./nailsalon/receptionist.js'); process.exit(0)" 2>/dev/null || \
-      run_node_check "receptionist.js static parse" \
-        "const fs=require('fs'); const src=fs.readFileSync('nailsalon/receptionist.js','utf8'); new Function(src); process.exit(0)" 2>/dev/null || \
-      check_fail "receptionist.js syntax check failed"
+      if node -e "require('./nailsalon/receptionist.js'); process.exit(0)" 2>/dev/null; then
+        check_pass "receptionist.js parses without syntax error"
+      elif node -e "const fs=require('fs'); const src=fs.readFileSync('nailsalon/receptionist.js','utf8'); new Function(src); process.exit(0)" 2>/dev/null; then
+        check_pass "receptionist.js static parse"
+      else
+        check_fail "receptionist.js syntax check failed"
+      fi
       ;;
 
     phone-intake)

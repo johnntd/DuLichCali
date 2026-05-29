@@ -1468,7 +1468,42 @@ window.RideIntake = (function () {
     }
     var db = firebase.firestore();
     var ts = firebase.firestore.FieldValue.serverTimestamp();
-    db.collection('bookings').doc(bookingId).set(data)
+    var guardReq = {
+      ownerId: data.ownerId,
+      serviceType: 'ride',
+      customerPhone: data.customerPhone,
+      customerName: data.customerName,
+      customerEmail: data.customerEmail,
+      requestedStart: data.datetime || ((data.arrivalDate || data.departureDate || data.rideDate || '') + 'T' + (data.arrivalTime || data.departureTime || data.rideTime || '')),
+      serviceDurationMinutes: data.estimatedDuration || null,
+      travelBufferMinutes: 15,
+      pickupAddress: data.pickupAddress,
+      serviceAddress: data.pickupAddress || data.dropoffAddress,
+      city: data.city,
+      zip: data.zip,
+      source: 'web-intake'
+    };
+    function writeRideBooking(tx) {
+      var ref = db.collection('bookings').doc(bookingId);
+      if (tx && tx.set) {
+        tx.set(ref, data);
+        return Promise.resolve();
+      }
+      return ref.set(data);
+    }
+    var guardPromise;
+    if (window.BookingGuard && data.ownerId) {
+      guardPromise = window.BookingGuard.guardedWrite(guardReq, writeRideBooking, { db: db });
+    } else {
+      if (window.BookingGuard && !data.ownerId && window.console) {
+        console.warn('[ride-intake] booking guard skipped - no ownerId resolved');
+      }
+      guardPromise = writeRideBooking().then(function() { return { ok: true }; });
+    }
+    guardPromise
+      .then(function (guardResult) {
+        if (guardResult && guardResult.ok === false) throw new Error('booking_guard_' + guardResult.reason);
+      })
       .then(function () {
         // Admin notification
         return db.collection('vendors').doc('admin-dlc').collection('notifications').add({

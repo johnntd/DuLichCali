@@ -822,8 +822,9 @@ var TravelBooking = (function() {
           showWizardError(conflictResult.reason + ' Your booking is still being submitted.');
         }
 
+      var _tbOwnerRegion = _pickupRegion || 'bayarea';
       var _tbOwnerId = (window.OwnerModel && window.OwnerModel.resolveBookingOwner)
-        ? window.OwnerModel.resolveBookingOwner({ serviceType: 'tour', region: _pickupRegion })
+        ? window.OwnerModel.resolveBookingOwner({ serviceType: 'tour', region: _tbOwnerRegion })
         : null;
       var bookingDoc = {
         bookingId:    bookingId,
@@ -866,8 +867,41 @@ var TravelBooking = (function() {
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         created_at: firebase.firestore.FieldValue.serverTimestamp(),
       };
-      return _db.collection('travel_bookings').doc(bookingId).set(bookingDoc)
-        .then(function() { return bookingDoc; });
+      var guardReq = {
+        ownerId: bookingDoc.ownerId,
+        serviceType: 'tour',
+        customerPhone: bookingDoc.customer_phone,
+        customerName: bookingDoc.customer_name,
+        customerEmail: bookingDoc.customer_email,
+        requestedStart: bookingDoc.travel_date ? bookingDoc.travel_date + 'T09:00:00' : '',
+        serviceDurationMinutes: Number(bookingDoc.duration_days || 1) * 480,
+        travelBufferMinutes: 30,
+        pickupAddress: bookingDoc.pickup_address,
+        city: '',
+        zip: '',
+        source: 'web-intake'
+      };
+      function writeTravelBooking(tx) {
+        var ref = _db.collection('travel_bookings').doc(bookingId);
+        if (tx && tx.set) {
+          tx.set(ref, bookingDoc);
+          return Promise.resolve();
+        }
+        return ref.set(bookingDoc);
+      }
+      var guardPromise;
+      if (window.BookingGuard && bookingDoc.ownerId) {
+        guardPromise = window.BookingGuard.guardedWrite(guardReq, writeTravelBooking, { db: _db });
+      } else {
+        if (window.BookingGuard && !bookingDoc.ownerId && window.console) {
+          console.warn('[travel-booking] booking guard skipped - no ownerId resolved');
+        }
+        guardPromise = writeTravelBooking().then(function() { return { ok: true }; });
+      }
+      return guardPromise.then(function(guardResult) {
+        if (guardResult && guardResult.ok === false) throw new Error('booking_guard_' + guardResult.reason);
+        return bookingDoc;
+      });
       });  // end detectTravelBookingConflict.then()
     }).then(function(bookingDoc) {
       if (!bookingDoc) return;  // early exit from duplicate check

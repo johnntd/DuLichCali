@@ -109,6 +109,7 @@ var MPV = require('./lib/mobile-barber-promotion-visibility');
 var MZP = require('./lib/mobile-barber-zero-price');
 var HPV = require('./lib/homepage-visibility');
 var OAM = require('./lib/owner-account-model');
+var BG  = require('../booking-conflict-guard');
 
 var BIZ      = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/biz.json')));
 var BOOK_FIX = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/bookings.json')));
@@ -1555,6 +1556,233 @@ HPV.runHomepageVisibilityTests(test);
 
 group('Unified Owner Account Model (Phase 1)', 'unit-logic | static-source-check');
 OAM.runOwnerAccountModelTests(test);
+
+group('Unified Booking Conflict Guard', 'mirrored-unit-logic');
+
+function guardReq(overrides) {
+  return Object.assign({
+    ownerId: 'michael-nguyen',
+    serviceType: 'ride',
+    customerName: 'Alex Tran',
+    customerPhone: '4089163439',
+    requestedStart: '2026-06-01T09:30:00',
+    serviceDurationMinutes: 45,
+    city: 'Garden Grove',
+    zip: '92840',
+    source: 'test'
+  }, overrides || {});
+}
+function barberBooking(overrides) {
+  return Object.assign({
+    id: 'barber-0900',
+    bookingId: 'barber-0900',
+    sourceCollection: 'mobileBarberBookings',
+    serviceType: 'barber',
+    vendorId: 'michael-nguyen-oc',
+    ownerId: 'michael-nguyen',
+    customerName: 'Other Customer',
+    customerPhone: '7145550000',
+    requestedDate: '2026-06-01',
+    startTime: '09:00',
+    endTime: '09:45',
+    status: 'confirmed'
+  }, overrides || {});
+}
+function rideBooking(overrides) {
+  return Object.assign({
+    id: 'ride-0900',
+    bookingId: 'ride-0900',
+    sourceCollection: 'bookings',
+    serviceType: 'private_ride',
+    ownerId: 'michael-nguyen',
+    customerName: 'Other Customer',
+    customerPhone: '7145550001',
+    rideDate: '2026-06-01',
+    rideTime: '09:00',
+    status: 'confirmed',
+    serviceDurationMinutes: 90
+  }, overrides || {});
+}
+function tourBooking(overrides) {
+  return Object.assign({
+    id: 'tour-0900',
+    bookingId: 'tour-0900',
+    sourceCollection: 'travel_bookings',
+    serviceType: 'tour',
+    ownerId: 'michael-nguyen',
+    customerName: 'Other Customer',
+    customerPhone: '7145550002',
+    travel_date: '2026-06-01',
+    status: 'confirmed',
+    serviceDurationMinutes: 480
+  }, overrides || {});
+}
+function okGuard(req, rows, options) {
+  return BG._evaluate(req, rows || [], Object.assign({ origin: { city: 'Garden Grove', zip: '92840', lat: 33.7743, lng: -117.9379 } }, options || {}));
+}
+
+test('1. barber 9:00-9:45 + buffer blocks ride at 9:30', function() {
+  var r = okGuard(guardReq(), [barberBooking()]);
+  assertEq(r.reason, 'time_conflict');
+  assertEq(r.conflicts[0].serviceType, 'barber');
+});
+test('2. barber 9:00-9:45 allows ride at 10:30', function() {
+  var r = okGuard(guardReq({ requestedStart: '2026-06-01T10:30:00' }), [barberBooking()]);
+  assertEq(r.reason, 'available');
+});
+test('3. ride blocks overlapping tour for same owner', function() {
+  var r = okGuard(guardReq({ serviceType: 'tour', requestedStart: '2026-06-01T09:30:00' }), [rideBooking()]);
+  assertEq(r.reason, 'time_conflict');
+});
+test('4. tour blocks overlapping barber for same owner', function() {
+  var r = okGuard(guardReq({ serviceType: 'barber', vendorId: 'michael-nguyen-oc', requestedStart: '2026-06-01T10:00:00' }), [tourBooking()]);
+  assertEq(r.reason, 'time_conflict');
+});
+test('5. non-blocking statuses do not block', function() {
+  ['cancelled', 'rejected', 'completed', 'expired'].forEach(function(status) {
+    var r = okGuard(guardReq(), [barberBooking({ status: status })]);
+    assertEq(r.reason, 'available', status);
+  });
+});
+test('6. blocking statuses do block', function() {
+  ['pending', 'confirmed', 'in_progress', 'traveling'].forEach(function(status) {
+    var r = okGuard(guardReq(), [barberBooking({ status: status })]);
+    assertEq(r.reason, 'time_conflict', status);
+  });
+});
+test('7. same customer same-time duplicate is likely', function() {
+  var r = okGuard(guardReq({ serviceType: 'barber', vendorId: 'michael-nguyen-oc' }), [barberBooking({ customerPhone: '4089163439' })]);
+  assertEq(r.reason, 'customer_duplicate');
+  assertEq(r.customerDuplicateRisk.level, 'likely');
+});
+test('8. same customer at different non-overlapping time is available', function() {
+  var r = okGuard(guardReq({ requestedStart: '2026-06-01T12:00:00' }), [rideBooking({ customerPhone: '4089163439' })]);
+  assertEq(r.reason, 'available');
+  assertEq(r.customerDuplicateRisk.level, 'none');
+});
+test('9. phone normalization matches last 10 digits', function() {
+  assertEq(BG.normalizePhone('+1 (408) 916-3439'), '4089163439');
+});
+test('10. lat/lng over 30 miles blocks radius', function() {
+  var r = okGuard(guardReq({ lat: 32.7157, lng: -117.1611 }), [], { origin: { lat: 33.7743, lng: -117.9379 } });
+  assertEq(r.reason, 'outside_service_radius');
+});
+test('11. lat/lng within 30 miles passes radius', function() {
+  var r = okGuard(guardReq({ lat: 33.8366, lng: -117.9143 }), [], { origin: { lat: 33.7743, lng: -117.9379 } });
+  assert(r.reason !== 'outside_service_radius');
+});
+test('12. unresolvable location requires vendor review', function() {
+  var r = BG._evaluate(guardReq({ city: '', zip: '', serviceAddress: '' }), [], { origin: {} });
+  assertEq(r.reason, 'vendor_review_required');
+  assertEq(r.withinServiceRadius, null);
+});
+test('13. suggested slots are conflict-free', function() {
+  var rows = [barberBooking()];
+  var r = okGuard(guardReq(), rows);
+  assert(r.suggestedSlots.length >= 3 && r.suggestedSlots.length <= 5, 'suggestion count');
+  r.suggestedSlots.forEach(function(slot) {
+    var check = okGuard(guardReq({ requestedStart: slot.start, requestedEnd: slot.end - 15 * 60000 }), rows);
+    assert(check.reason !== 'time_conflict', 'suggested slot conflicts');
+  });
+});
+test('14. lock prevents two simultaneous identical writes', function() {
+  var locks = {};
+  var fakeDb = {
+    collection: function() {
+      return {
+        doc: function(id) { return { id: id }; }
+      };
+    },
+    runTransaction: function(fn) {
+      var tx = {
+        get: function(ref) { return Promise.resolve({ exists: !!locks[ref.id] }); },
+        set: function(ref) { locks[ref.id] = true; }
+      };
+      return Promise.resolve(fn(tx));
+    }
+  };
+  var req = guardReq({ requestedStart: '2026-06-01T15:00:00' });
+  return BG.guardedWrite(req, function() { return Promise.resolve({ saved: true }); }, { db: fakeDb, existingBookings: [], origin: { city: 'Garden Grove', zip: '92840' } })
+    .then(function(first) {
+      assertEq(first.ok, true);
+      return BG.guardedWrite(req, function() { return Promise.resolve({ saved: true }); }, { db: fakeDb, existingBookings: [], origin: { city: 'Garden Grove', zip: '92840' } });
+    })
+    .then(function(second) {
+      assertEq(second.ok, false);
+      assertEq(second.reason, 'time_conflict');
+    });
+});
+
+group('Booking Guard AI Workflow Coverage', 'static-source-check');
+var workflowSource = fs.readFileSync(path.join(__dirname, '..', 'workflowEngine.js'), 'utf8');
+var chatSource = fs.readFileSync(path.join(__dirname, '..', 'chat.js'), 'utf8');
+var homepageSource = fs.readFileSync(path.join(__dirname, '..', 'script.js'), 'utf8');
+var rideIntakeSource = fs.readFileSync(path.join(__dirname, '..', 'ride-intake.js'), 'utf8');
+var travelBookingSource = fs.readFileSync(path.join(__dirname, '..', 'travel-booking.js'), 'utf8');
+
+test('workflowEngine guards AI airport ride write before notifications', function() {
+  var idx = workflowSource.indexOf('var airGuardReq = {');
+  assert(idx >= 0, 'airport guard request must exist');
+  assert(workflowSource.indexOf('runGuardedBookingWrite(airGuardReq', idx) >= 0, 'airport write must use guardedWrite wrapper');
+  assert(workflowSource.indexOf("serviceType: airBookingDoc.serviceType", idx) >= 0, 'airport guard must carry serviceType');
+});
+
+test('workflowEngine guards AI tour write before notifications', function() {
+  var idx = workflowSource.indexOf('var tourGuardReq = {');
+  assert(idx >= 0, 'tour guard request must exist');
+  assert(workflowSource.indexOf('runGuardedBookingWrite(tourGuardReq', idx) >= 0, 'tour write must use guardedWrite wrapper');
+  assert(workflowSource.indexOf("serviceType: 'tour'", idx) >= 0, 'tour guard must normalize serviceType');
+});
+
+test('workflowEngine guards AI private ride write before notifications', function() {
+  var idx = workflowSource.indexOf('var privateRideGuardReq = {');
+  assert(idx >= 0, 'private ride guard request must exist');
+  assert(workflowSource.indexOf('runGuardedBookingWrite(privateRideGuardReq', idx) >= 0, 'private ride write must use guardedWrite wrapper');
+  assert(workflowSource.indexOf("serviceType: 'private_ride'", idx) >= 0, 'private ride guard must carry serviceType');
+});
+
+test('chat routes guard rejection through English SYSTEM note to AI', function() {
+  assert(chatSource.indexOf("guardSystemNote = '[SYSTEM: booking_guard_'") >= 0,
+    'guard rejection must be passed as English SYSTEM note');
+  assert(chatSource.indexOf('return await callClaude') >= 0,
+    'guard rejection must go through AI reply path');
+});
+
+test('legacy homepage booking write is guarded', function() {
+  assert(homepageSource.indexOf('window.BookingGuard.guardedWrite(guardReq') >= 0,
+    'legacy homepage booking write must call BookingGuard');
+  assert(homepageSource.indexOf("source: 'homepage_legacy_form'") >= 0,
+    'legacy homepage guard request must identify source');
+  assert(homepageSource.indexOf("'Booking requires review: ' + guardResult.reason") < 0,
+    'homepage must not expose raw guard reason to customers');
+});
+
+test('ride-intake booking write is guarded and warns on ownerId skip', function() {
+  assert(rideIntakeSource.indexOf('window.BookingGuard.guardedWrite(guardReq') >= 0,
+    'ride-intake write must call BookingGuard');
+  assert(rideIntakeSource.indexOf('[ride-intake] booking guard skipped - no ownerId resolved') >= 0,
+    'ride-intake ownerId bypass must be visible in console');
+});
+
+test('travel-booking write resolves owner fallback and is guarded', function() {
+  assert(travelBookingSource.indexOf("var _tbOwnerRegion = _pickupRegion || 'bayarea'") >= 0,
+    'travel booking must fall back to bayarea owner region');
+  assert(travelBookingSource.indexOf('window.BookingGuard.guardedWrite(guardReq') >= 0,
+    'travel booking write must call BookingGuard');
+  assert(travelBookingSource.indexOf('[travel-booking] booking guard skipped - no ownerId resolved') >= 0,
+    'travel ownerId bypass must be visible in console');
+});
+
+test('marketplace.js does not write guarded owner booking collections', function() {
+  assert(!/[^.]\bcollection\(['"]bookings['"]\)/.test(mkSrc),
+    'marketplace must not write top-level bookings collection');
+  assert(mkSrc.indexOf(".collection('vendors').doc") >= 0 && mkSrc.indexOf(".collection('bookings')") >= 0,
+    'marketplace booking writes are vendor subcollection orders');
+  assert(mkSrc.indexOf("collection('travel_bookings')") < 0 && mkSrc.indexOf('collection(\"travel_bookings\")') < 0,
+    'marketplace must not write travel_bookings collection');
+  assert(mkSrc.indexOf("collection('mobileBarberBookings')") < 0 && mkSrc.indexOf('collection(\"mobileBarberBookings\")') < 0,
+    'marketplace must not write mobileBarberBookings collection');
+});
 
 // ══════════════════════════════════════════════════════════════════════════
 // FINAL REPORT

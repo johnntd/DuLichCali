@@ -117,6 +117,14 @@
     return String(date.getHours()).padStart(2, '0') + ':' + String(date.getMinutes()).padStart(2, '0');
   }
 
+  function minutesToTime(total) {
+    total = Number(total);
+    if (!isFinite(total)) return '';
+    var h = Math.floor(total / 60);
+    var m = total % 60;
+    return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+  }
+
   function dayKey(dateStr) {
     var parts = parseDateParts(dateStr);
     if (!parts) return '';
@@ -313,6 +321,36 @@
 
   function checkBookingOverlap(vendorId, draft, timing, existingBookings) {
     existingBookings = existingBookings || [];
+    if (root.BookingGuard && root.BookingGuard._evaluate) {
+      // Synchronous pre-validation only. saveBooking() remains the authoritative
+      // atomic check because it uses BookingGuard.guardedWrite().
+      var ownerId = trim(draft.ownerId || (root.OwnerModel && root.OwnerModel.ownerForBusiness ? root.OwnerModel.ownerForBusiness(vendorId) : ''));
+      var guarded = root.BookingGuard._evaluate({
+        ownerId: ownerId || 'vendor:' + vendorId,
+        serviceType: 'barber',
+        vendorId: vendorId,
+        customerPhone: draft.customerPhone,
+        customerName: draft.customerName,
+        customerUid: draft.customerUid,
+        customerEmail: draft.customerEmail,
+        requestedDate: draft.requestedDate,
+        startTime: minutesToTime(timing.startMinutes),
+        endTime: minutesToTime(timing.endMinutes),
+        city: draft.city,
+        zip: draft.zip,
+        serviceAddress: draft.address,
+        source: 'barber_overlap_check'
+      }, existingBookings, { origin: { city: draft.city, zip: draft.zip } });
+      if (!guarded.ok && (guarded.reason === 'time_conflict' || guarded.reason === 'customer_duplicate')) {
+        return {
+          valid: false,
+          key: guarded.reason === 'customer_duplicate' ? 'customer_duplicate' : 'booking_overlap',
+          bookingId: guarded.conflicts[0] && guarded.conflicts[0].bookingId,
+          guardResult: guarded
+        };
+      }
+      return { valid: true, key: 'no_overlap', guardResult: guarded };
+    }
     for (var i = 0; i < existingBookings.length; i++) {
       var booking = existingBookings[i] || {};
       if (booking.vendorId !== vendorId) continue;
@@ -1008,8 +1046,67 @@
     return { saved: true, source: 'local', method: 'local', booking: booking };
   }
 
+  function unifiedGuardRequestFromBooking(booking) {
+    booking = booking || {};
+    return {
+      ownerId: trim(booking.ownerId || (root.OwnerModel && root.OwnerModel.resolveOwnerId ? root.OwnerModel.resolveOwnerId(booking) : '')),
+      serviceType: 'barber',
+      vendorId: trim(booking.vendorId),
+      customerPhone: booking.customerPhone,
+      customerName: booking.customerName,
+      customerUid: booking.customerUid,
+      customerEmail: booking.customerEmail,
+      requestedDate: booking.requestedDate,
+      startTime: booking.startTime,
+      endTime: booking.endTime,
+      requestedStart: booking.requestedStart,
+      requestedEnd: booking.requestedEnd,
+      serviceAddress: booking.address,
+      city: booking.city,
+      zip: booking.zip,
+      lat: booking.lat || booking.latitude,
+      lng: booking.lng || booking.longitude,
+      serviceDurationMinutes: booking.serviceDurationMinutes || booking.durationMinutes,
+      travelBufferMinutes: booking.travelBufferMinutes,
+      source: booking.source || 'barber'
+    };
+  }
+
+  function bookingGuardError(result) {
+    var error = new Error('booking_guard_' + (result && result.reason ? result.reason : 'invalid_request'));
+    error.code = result && result.reason;
+    error.guardResult = result;
+    return error;
+  }
+
   function saveBooking(booking, options) {
     options = options || {};
+    var guard = root.BookingGuard;
+    var guardReq = unifiedGuardRequestFromBooking(booking);
+    if (guard && guardReq.ownerId && options.skipUnifiedGuard !== true) {
+      return guard.guardedWrite(guardReq, function(tx) {
+        if (canUseFirestore()) {
+          var ref = root.firebase.firestore().collection(DATA.COLLECTIONS.bookings).doc(booking.id);
+          if (tx && tx.set) {
+            tx.set(ref, booking);
+            return { saved: true, source: 'firestore', method: 'transaction', booking: booking };
+          }
+          return ref.set(booking).then(function() {
+            return { saved: true, source: 'firestore', method: 'firestore', booking: booking };
+          });
+        }
+        return saveBookingLocal(booking);
+      }, { origin: options.origin || options.vendor || {}, barberVendorIds: options.barberVendorIds })
+        .then(function(result) {
+          if (!result || result.ok === false) return Promise.reject(bookingGuardError(result));
+          return result.writeResult || { saved: true, source: 'guard', method: 'guard', booking: booking };
+        })
+        .catch(function(error) {
+          if (error && error.guardResult) return Promise.reject(error);
+          if (options.requireDatabase) return Promise.reject(error);
+          return saveBookingLocal(booking);
+        });
+    }
     if (canUseFirestore()) {
       return root.firebase.firestore().collection(DATA.COLLECTIONS.bookings).doc(booking.id).set(booking)
         .then(function() { return { saved: true, source: 'firestore', method: 'firestore', booking: booking }; })

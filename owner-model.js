@@ -25,6 +25,8 @@
   // Canonical service types an owner can operate. Matches the customer-facing
   // categories but is INTERNAL only (customers still see separate services).
   var SERVICE_TYPES = Object.freeze(['barber', 'ride', 'tour']);
+  var DEFAULT_WORKING_HOURS = Object.freeze({ start: '08:00', end: '18:00' });
+  var DEFAULT_TOUR_DAILY_CAP = 1;
 
   // Owner accounts. `emails` lists every email that should resolve to this
   // owner on login (the owner's personal email plus any business emails).
@@ -36,7 +38,9 @@
       emails: Object.freeze(['duyhoa9256@gmail.com']),
       phone: '(714) 227-6007',
       defaultLang: 'en',
-      homeRegion: 'Orange County'
+      homeRegion: 'Orange County',
+      workingHours: Object.freeze({ start: '08:00', end: '18:00' }),
+      tourDailyCap: 1
     }),
     'tim-nguyen': Object.freeze({
       id: 'tim-nguyen',
@@ -109,6 +113,27 @@
   function findOwner(ownerId) {
     if (!ownerId) return null;
     return OWNERS[ownerId] || null;
+  }
+
+  function _validTime(value) {
+    return typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+  }
+
+  function workingHoursFor(ownerId) {
+    var owner = findOwner(ownerId);
+    var hours = owner && owner.workingHours;
+    if (hours && _validTime(hours.start) && _validTime(hours.end)) {
+      return { start: hours.start, end: hours.end };
+    }
+    return { start: DEFAULT_WORKING_HOURS.start, end: DEFAULT_WORKING_HOURS.end };
+  }
+
+  function tourDailyCapFor(ownerId) {
+    var owner = findOwner(ownerId);
+    var raw = owner && owner.tourDailyCap;
+    var cap = Number(raw);
+    if (isFinite(cap) && cap > 0) return Math.floor(cap);
+    return DEFAULT_TOUR_DAILY_CAP;
   }
 
   // All businesses for an owner, optionally filtered by service type.
@@ -257,10 +282,14 @@
 
   return {
     SERVICE_TYPES: SERVICE_TYPES,
+    DEFAULT_WORKING_HOURS: DEFAULT_WORKING_HOURS,
+    DEFAULT_TOUR_DAILY_CAP: DEFAULT_TOUR_DAILY_CAP,
     OWNERS: OWNERS,
     BUSINESSES: BUSINESSES,
     listOwners: listOwners,
     findOwner: findOwner,
+    workingHoursFor: workingHoursFor,
+    tourDailyCapFor: tourDailyCapFor,
     businessesForOwner: businessesForOwner,
     findBusiness: findBusiness,
     ownerForBusiness: ownerForBusiness,

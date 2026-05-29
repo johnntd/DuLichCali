@@ -177,6 +177,50 @@
     var owner = root.OwnerModel && root.OwnerModel.findOwner ? root.OwnerModel.findOwner(req.ownerId) : null;
     return { lat: null, lng: null, city: _lower(origin.city || (owner && owner.homeRegion)), zip: _s(origin.zip) };
   }
+  function timeToMinutes(value) {
+    var raw = _s(value);
+    var m = raw.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
+    if (!m) return null;
+    return Number(m[1]) * 60 + Number(m[2]);
+  }
+  function millisToLocalMinutes(ms) {
+    var d = new Date(ms);
+    return d.getHours() * 60 + d.getMinutes();
+  }
+  function getOwnerModel() {
+    return root.OwnerModel || null;
+  }
+  function outsideWorkingHours(req, requested) {
+    var ownerModel = getOwnerModel();
+    if (!ownerModel || typeof ownerModel.workingHoursFor !== 'function' || !requested) return false;
+    var hours = ownerModel.workingHoursFor(req.ownerId);
+    if (!hours) return false;
+    var start = timeToMinutes(hours.start);
+    var end = timeToMinutes(hours.end);
+    if (start == null || end == null || end <= start) return false;
+    var reqStart = millisToLocalMinutes(requested.rawStart);
+    var reqEnd = millisToLocalMinutes(requested.rawEnd);
+    return reqStart < start || reqEnd > end;
+  }
+  function tourDailyCapReached(req, rows, requested, serviceType) {
+    if (serviceType !== 'tour' || !requested) return false;
+    var ownerModel = getOwnerModel();
+    if (!ownerModel || typeof ownerModel.tourDailyCapFor !== 'function') return false;
+    var cap = Number(ownerModel.tourDailyCapFor(req.ownerId));
+    if (!isFinite(cap) || cap <= 0) return false;
+    var requestDate = dateString(requested.rawStart);
+    var count = 0;
+    (rows || []).forEach(function(row) {
+      if (!isBlockingStatus(row.status)) return;
+      var rowServiceType = normalizeServiceType(row.serviceType || row.rawServiceType);
+      if (!rowServiceType && row.sourceCollection === COLLECTIONS.travel) rowServiceType = 'tour';
+      if (rowServiceType !== 'tour') return;
+      var win = bookingWindow(row);
+      if (!win || dateString(win.rawStart) !== requestDate) return;
+      count++;
+    });
+    return count >= Math.floor(cap);
+  }
   function haversineMiles(a, b) {
     var R = 3958.8;
     var toRad = function(x) { return x * Math.PI / 180; };
@@ -277,6 +321,8 @@
     else if (timeConflict) reason = 'time_conflict';
     else if (radius.withinServiceRadius === false) reason = 'outside_service_radius';
     else if (radius.resolvable === false) reason = 'vendor_review_required';
+    else if (tourDailyCapReached(req, rows, requested, serviceType)) reason = 'tour_daily_cap';
+    else if (outsideWorkingHours(req, requested)) reason = 'outside_working_hours';
     return finish(reason === 'available', reason, conflicts, requested, dup, radius, req, rows, options);
   }
   function finish(ok, reason, conflicts, requested, dup, radius, req, rows, options) {

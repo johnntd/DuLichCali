@@ -8,6 +8,7 @@
 var fs = require('fs');
 var path = require('path');
 var OM = require('../../owner-model');
+var BCG = require('./booking-conflict-guard');
 
 function assert(cond, msg) {
   if (!cond) throw new Error(msg || 'Assertion failed');
@@ -145,6 +146,16 @@ function runOwnerAccountModelTests(test) {
     assertContains(html, 'dashboardUrl');
     assertContains(html, 'customerUrl');
   });
+
+  test('OWN-16: owner scheduling helpers expose safe defaults', function() {
+    assertEq(typeof OM.workingHoursFor, 'function');
+    assertEq(typeof OM.tourDailyCapFor, 'function');
+    assertEq(OM.workingHoursFor('unknown-owner').start, '08:00');
+    assertEq(OM.workingHoursFor('unknown-owner').end, '18:00');
+    assertEq(OM.tourDailyCapFor('unknown-owner'), 1);
+  });
+
+  BCG.runBookingConflictGuardTests(test);
 }
 
 module.exports = { runOwnerAccountModelTests: runOwnerAccountModelTests };

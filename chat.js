@@ -1746,7 +1746,22 @@ BEHAVIOR GUIDELINES:
           };
         } catch (e) {
           console.error('finalize error', e);
-          return `Xin lỗi, có lỗi khi lưu đơn. Vui lòng thử lại hoặc gọi ${regionPhone()}.`;
+          if (e && e.guardResult) {
+            const guardReason = e.guardResult.reason || e.code || 'booking_guard_rejected';
+            const guardSystemNote = '[SYSTEM: booking_guard_' + guardReason + ']';
+            try {
+              return await callClaude([...(history || []), { role: 'user', content: guardSystemNote }]);
+            } catch (aiErr) {
+              console.warn('guard rejection AI reply failed', aiErr);
+              return 'Sorry, this booking could not be submitted automatically. Please call ' + regionPhone() + ' so we can review it.';
+            }
+          }
+          try {
+            return await callClaude([...(history || []), { role: 'user', content: '[SYSTEM: booking_error_retry]' }]);
+          } catch (aiErr) {
+            console.warn('booking error AI reply failed', aiErr);
+            return 'Sorry, this booking could not be saved automatically. Please call ' + regionPhone() + ' so we can help.';
+          }
         }
       }
       if (result && typeof result === 'object' && result.type === 'message') return result;

@@ -840,6 +840,14 @@ function getTourOrigin(serviceType) {
   return '';
 }
 
+function bookingCityFromAddress(address) {
+  return String(address || '')
+    .split(',')
+    .map(part => part.trim())
+    .filter(Boolean)
+    .slice(-2, -1)[0] || '';
+}
+
 // Inline fallbacks (used only if pricing.js fails to load)
 // Uses simplified Uber-based pricing: estimate Uber then discount 20%
 function fallbackTransfer(miles, passengers) {
@@ -939,29 +947,70 @@ async function submitBooking(event) {
 
   document.getElementById('bookingSummary').value = summary;
 
+  const regionId = (window.DLCRegion && window.DLCRegion.current) ? window.DLCRegion.current.id : null;
+  const ownerId = (window.OwnerModel && window.OwnerModel.resolveBookingOwner)
+    ? window.OwnerModel.resolveBookingOwner({ serviceType, region: regionId })
+    : null;
+  const bookingDoc = {
+    bookingId,
+    trackingToken,
+    ownerId:      ownerId || null,
+    status:       'pending',
+    datetime,
+    name,
+    phone,
+    airport,
+    address,
+    serviceType,
+    lodging,
+    passengers:   parseInt(passengers) || 1,
+    days:         parseInt(days) || 1,
+    distance:     lastCalculatedMiles,
+    createdAt:    firebase.firestore.FieldValue.serverTimestamp(),
+    driver:       null,
+    vehicleLat:   null,
+    vehicleLng:   null,
+    vehicleHeading: null,
+    etaMinutes:   null
+  };
+  const serviceBucket = window.OwnerModel && window.OwnerModel.serviceBucket
+    ? window.OwnerModel.serviceBucket(serviceType)
+    : (['pickup', 'dropoff', 'private_ride'].includes(serviceType) ? 'ride' : 'tour');
+  const guardReq = {
+    ownerId: bookingDoc.ownerId,
+    serviceType: serviceBucket === 'tour' ? 'tour' : serviceType,
+    customerPhone: phone,
+    customerName: name,
+    requestedStart: datetime,
+    serviceDurationMinutes: serviceBucket === 'tour' ? ((parseInt(days) || 1) * 480) : 90,
+    travelBufferMinutes: serviceBucket === 'tour' ? 30 : 15,
+    serviceAddress: address,
+    pickupAddress: address,
+    city: bookingCityFromAddress(address),
+    source: 'homepage_legacy_form'
+  };
+
   // Write to Firestore
   try {
-    await db.collection('bookings').doc(bookingId).set({
-      bookingId,
-      trackingToken,
-      status:       'pending',
-      datetime,
-      name,
-      phone,
-      airport,
-      address,
-      serviceType,
-      lodging,
-      passengers:   parseInt(passengers) || 1,
-      days:         parseInt(days) || 1,
-      distance:     lastCalculatedMiles,
-      createdAt:    firebase.firestore.FieldValue.serverTimestamp(),
-      driver:       null,
-      vehicleLat:   null,
-      vehicleLng:   null,
-      vehicleHeading: null,
-      etaMinutes:   null
-    });
+    if (window.BookingGuard && bookingDoc.ownerId) {
+      const guardResult = await window.BookingGuard.guardedWrite(guardReq, function(tx) {
+        const ref = db.collection('bookings').doc(bookingId);
+        if (tx && tx.set) {
+          tx.set(ref, bookingDoc);
+          return Promise.resolve();
+        }
+        return ref.set(bookingDoc);
+      }, { db });
+      if (guardResult && guardResult.ok === false) {
+        console.warn('[homepage booking] booking guard rejected', guardResult.reason || guardResult);
+        document.getElementById('slotWarning').textContent = 'Booking requires review. Please call to confirm.';
+        submitBtn.disabled = false;
+        submitBtn.textContent = origText;
+        return false;
+      }
+    } else {
+      await db.collection('bookings').doc(bookingId).set(bookingDoc);
+    }
   } catch (err) {
     console.error('Firestore write failed:', err);
   }

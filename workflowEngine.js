@@ -2541,6 +2541,27 @@
     var finalApptInfo     = null;  // set for nail/hair — returned to caller
     var finalDispatchState = null; // set for ride intents — returned to caller
 
+    function guardError(result) {
+      var error = new Error('booking_guard_' + (result && result.reason ? result.reason : 'invalid_request'));
+      error.code = result && result.reason;
+      error.guardResult = result;
+      return error;
+    }
+
+    function runGuardedBookingWrite(req, writeFn) {
+      if (window.BookingGuard && req && req.ownerId) {
+        return window.BookingGuard.guardedWrite(req, writeFn, { db: db }).then(function(result) {
+          if (result && result.ok === false) throw guardError(result);
+          return result;
+        });
+      }
+      // Guard rejections intentionally propagate with error.guardResult; chat.js
+      // catches that shape and turns it into an English [SYSTEM: ...] AI note.
+      return Promise.resolve(writeFn()).then(function(writeResult) {
+        return { ok: true, writeResult: writeResult };
+      });
+    }
+
     if (draft.intent === 'food_order') {
       var item     = typeof f.item === 'object' ? f.item : {};
       var vendorId = item.vendorId || 'nha-bep-emily';
@@ -2653,7 +2674,7 @@
       var _apOwnerId = (window.OwnerModel && window.OwnerModel.resolveBookingOwner)
         ? window.OwnerModel.resolveBookingOwner({ serviceType: isPickup?'pickup':'dropoff', region: ridRegionId })
         : null;
-      await db.collection('bookings').doc(orderId).set({
+      var airBookingDoc = {
         bookingId:orderId, trackingToken, ownerId: _apOwnerId || null,
         status:airBookStatus, serviceType:isPickup?'pickup':'dropoff', datetime,
         airport:f.airport||'', airline:f.airline||'', terminal:f.terminal||'',
@@ -2683,6 +2704,28 @@
         status: _apAvailNote ? 'pending_confirm' : airBookStatus,
         availabilityNote: _apAvailNote ? ('Slot may be busy (' + _apAvailNote + '). Please confirm with customer.') : null,
         createdAt:fv.serverTimestamp(),
+      };
+      var airGuardReq = {
+        ownerId: airBookingDoc.ownerId,
+        serviceType: airBookingDoc.serviceType,
+        customerPhone: airBookingDoc.customerPhone,
+        customerName: airBookingDoc.customerName,
+        customerEmail: airBookingDoc.customerEmail,
+        requestedStart: datetime,
+        serviceDurationMinutes: 90,
+        travelBufferMinutes: 15,
+        pickupAddress: airBookingDoc.pickupAddress,
+        serviceAddress: addrField,
+        city: _cityFromAddress(addrField),
+        source: 'ai_chat_workflow'
+      };
+      await runGuardedBookingWrite(airGuardReq, function(tx) {
+        var ref = db.collection('bookings').doc(orderId);
+        if (tx && tx.set) {
+          tx.set(ref, airBookingDoc);
+          return Promise.resolve();
+        }
+        return ref.set(airBookingDoc);
       });
       await db.collection('vendors').doc('admin-dlc').collection('notifications').add({
         type:'new_booking',
@@ -2837,7 +2880,7 @@
       var _tourOwnerId = (window.OwnerModel && window.OwnerModel.resolveBookingOwner)
         ? window.OwnerModel.resolveBookingOwner({ serviceType: 'tour', region: tourRegionId })
         : null;
-      await db.collection('bookings').doc(orderId).set({
+      var tourBookingDoc = {
         bookingId:orderId, trackingToken, ownerId: _tourOwnerId || null,
         status:'pending', serviceType:dest.id||'tour', datetime:f.requestedDate||'',
         address:f.startingPoint||'', passengers:f.passengers||1, days:f.days||1,
@@ -2848,6 +2891,27 @@
         region:tourRegionId,  // fleet region derived from pickup address
         driver:null,vehicleLat:null,vehicleLng:null,vehicleHeading:null,etaMinutes:null,
         createdAt:fv.serverTimestamp(),
+      };
+      var tourGuardReq = {
+        ownerId: tourBookingDoc.ownerId,
+        serviceType: 'tour',
+        customerPhone: tourBookingDoc.phone,
+        customerName: tourBookingDoc.name,
+        requestedStart: f.requestedDate ? f.requestedDate + 'T09:00:00' : '',
+        serviceDurationMinutes: Number(f.days || 1) * 480,
+        travelBufferMinutes: 30,
+        pickupAddress: f.startingPoint || '',
+        serviceAddress: f.startingPoint || '',
+        city: _cityFromAddress(f.startingPoint),
+        source: 'ai_chat_workflow'
+      };
+      await runGuardedBookingWrite(tourGuardReq, function(tx) {
+        var ref = db.collection('bookings').doc(orderId);
+        if (tx && tx.set) {
+          tx.set(ref, tourBookingDoc);
+          return Promise.resolve();
+        }
+        return ref.set(tourBookingDoc);
       });
       await db.collection('vendors').doc('admin-dlc').collection('notifications').add({
         type:'new_booking',
@@ -2913,7 +2977,7 @@
       var _prOwnerId = (window.OwnerModel && window.OwnerModel.resolveBookingOwner)
         ? window.OwnerModel.resolveBookingOwner({ serviceType: 'private_ride', region: f.region })
         : null;
-      await db.collection('bookings').doc(orderId).set({
+      var privateRideBookingDoc = {
         bookingId:orderId, trackingToken, ownerId: _prOwnerId || null,
         status:prBookStatus, serviceType:'private_ride', datetime,
         pickupAddress:f.pickupAddress||'', dropoffAddress:f.dropoffAddress||'',
@@ -2938,6 +3002,28 @@
         status: _prAvailNote ? 'pending_confirm' : prBookStatus,
         availabilityNote: _prAvailNote ? ('Slot may be busy (' + _prAvailNote + '). Please confirm with customer.') : null,
         createdAt:fv.serverTimestamp(),
+      };
+      var privateRideGuardReq = {
+        ownerId: privateRideBookingDoc.ownerId,
+        serviceType: 'private_ride',
+        customerPhone: privateRideBookingDoc.customerPhone,
+        customerName: privateRideBookingDoc.customerName,
+        customerEmail: privateRideBookingDoc.customerEmail,
+        requestedStart: datetime,
+        serviceDurationMinutes: privateRideBookingDoc.estimatedDuration || 90,
+        travelBufferMinutes: 15,
+        pickupAddress: privateRideBookingDoc.pickupAddress,
+        serviceAddress: privateRideBookingDoc.pickupAddress,
+        city: _cityFromAddress(privateRideBookingDoc.pickupAddress),
+        source: 'ai_chat_workflow'
+      };
+      await runGuardedBookingWrite(privateRideGuardReq, function(tx) {
+        var ref = db.collection('bookings').doc(orderId);
+        if (tx && tx.set) {
+          tx.set(ref, privateRideBookingDoc);
+          return Promise.resolve();
+        }
+        return ref.set(privateRideBookingDoc);
       });
       await db.collection('vendors').doc('admin-dlc').collection('notifications').add({
         type:'new_booking',

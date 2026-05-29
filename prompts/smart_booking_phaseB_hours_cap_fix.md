@@ -68,18 +68,18 @@ Extend `tests/lib/booking-conflict-guard.js` (and stub `OwnerModel` config as ne
   a same-customer duplicate still → `block`).
 
 ## Allowed files
-- `owner-model.js`
-- `booking-conflict-guard.js`
-- `index.html`
-- `travel.html`
-- `airport.html`
-- `script.js`
-- `mobile-barber/index.html`
-- `mobile-barber/dashboard.html`
-- `mobile-barber/vendor.html`
-- `tests/lib/booking-conflict-guard.js`
-- `tests/lib/owner-account-model.js`
-- `docs/smart_booking_phaseB_hours_cap_report.md`
+- owner-model.js
+- booking-conflict-guard.js
+- index.html
+- travel.html
+- airport.html
+- script.js
+- mobile-barber/index.html
+- mobile-barber/dashboard.html
+- mobile-barber/vendor.html
+- tests/lib/booking-conflict-guard.js
+- tests/lib/owner-account-model.js
+- docs/smart_booking_phaseB_hours_cap_report.md
 
 (Note: `owner-model.js` and `booking-conflict-guard.js` are browser-loaded — bump `?v=` in
 every HTML file that loads each. Discover them with

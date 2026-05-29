@@ -66,13 +66,13 @@ dashboard test — grep to confirm):
   runtime.)
 
 ## Allowed files
-- `mobile-barber/mobile-barber-dashboard.js`
-- `mobile-barber/dashboard.html`
-- `mobile-barber/mobile-barber.css`
-- `mobile-barber/index.html`
-- `mobile-barber/vendor.html`
-- `tests/lib/mobile-barber-landing.js`
-- `docs/smart_booking_phaseD_dashboard_review_report.md`
+- mobile-barber/mobile-barber-dashboard.js
+- mobile-barber/dashboard.html
+- mobile-barber/mobile-barber.css
+- mobile-barber/index.html
+- mobile-barber/vendor.html
+- tests/lib/mobile-barber-landing.js
+- docs/smart_booking_phaseD_dashboard_review_report.md
 
 ## DO NOT BREAK
 - Single-service vendor dashboards: NO review queue shown (this is owner-mode only, mirror

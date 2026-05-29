@@ -76,16 +76,16 @@ Extend `tests/lib/booking-conflict-guard.js`:
   lock-collision fallback with `disposition: 'review'`.
 
 ## Allowed files
-- `booking-conflict-guard.js`
-- `owner-model.js`
-- `index.html`
-- `travel.html`
-- `airport.html`
-- `mobile-barber/index.html`
-- `mobile-barber/dashboard.html`
-- `mobile-barber/vendor.html`
-- `tests/lib/booking-conflict-guard.js`
-- `docs/smart_booking_phaseC_multiday_travel_lock_report.md`
+- booking-conflict-guard.js
+- owner-model.js
+- index.html
+- travel.html
+- airport.html
+- mobile-barber/index.html
+- mobile-barber/dashboard.html
+- mobile-barber/vendor.html
+- tests/lib/booking-conflict-guard.js
+- docs/smart_booking_phaseC_multiday_travel_lock_report.md
 
 ## DO NOT BREAK
 - Single-day, single-location bookings must behave exactly as after Phase B.

@@ -84,6 +84,7 @@ Extend `tests/lib/booking-conflict-guard.js`:
 - mobile-barber/index.html
 - mobile-barber/dashboard.html
 - mobile-barber/vendor.html
+- owner-dashboard.html
 - tests/lib/booking-conflict-guard.js
 - docs/smart_booking_phaseC_multiday_travel_lock_report.md
 

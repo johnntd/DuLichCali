@@ -1012,7 +1012,8 @@
       vendor: vendor,
       vendorId: vendor && vendor.id,
       services: servicesForVendor(vendor && vendor.id),
-      availability: DATA && DATA.sampleAvailability,
+      availability: _vendorAvailabilityRows(),
+      unavailableBlocks: _vendorUnavailableBlocks(vendor && vendor.id),
       existingBookings: state.existingBookings,
       now: new Date(),
       phoneIntake: root.PhoneIntake || null,
@@ -2498,7 +2499,8 @@
       if (statusEl) { statusEl.textContent = msgS; statusEl.classList.add('mb-manual-booking__status--error'); }
       return;
     }
-    var availability = (DATA && DATA.sampleAvailability) || [];
+    var availability = _vendorAvailabilityRows();
+    var unavailableBlocks = _vendorUnavailableBlocks(vendor.id);
 
     state.manualBooking.submitting = true;
     if (statusEl) {
@@ -2554,6 +2556,7 @@
           vendor: vendor,
           services: services,
           availability: availability,
+          unavailableBlocks: unavailableBlocks,
           draft: finalDraft,
           existingBookings: existing,
           now: new Date()
@@ -2799,7 +2802,8 @@
       if (statusEl) { statusEl.textContent = msgS; statusEl.classList.add('mb-ai-rec-card__booking-status--error'); }
       return;
     }
-    var availability = (DATA && DATA.sampleAvailability) || [];
+    var availability = _vendorAvailabilityRows();
+    var unavailableBlocks = _vendorUnavailableBlocks(vendor.id);
 
     state.aiPreview.submitting = true;
     if (statusEl) {
@@ -2847,6 +2851,7 @@
           vendor: vendor,
           services: services,
           availability: availability,
+          unavailableBlocks: unavailableBlocks,
           draft: finalDraft,
           existingBookings: existing,
           now: new Date()
@@ -3108,6 +3113,12 @@
   // through _vendorWithPromos(vendor) to get a writable shallow clone with
   // .promotions populated from the overlay.
   window._mbVendorPromosByVendor = window._mbVendorPromosByVendor || {};
+  // Parallel overlays for the other two pieces of live vendor data the
+  // booking guard needs: working hours (availability) and calendar blocks.
+  // Same Firestore source (mobileBarberVendors/{id}), same hydrate path as
+  // promos, so every booking path reads what the vendor set in the portal.
+  window._mbVendorAvailByVendor = window._mbVendorAvailByVendor || {};
+  window._mbVendorBlocksByVendor = window._mbVendorBlocksByVendor || {};
 
   function _vendorPromosFor(vendorId) {
     if (!vendorId) return [];
@@ -3135,6 +3146,37 @@
     return clone;
   }
   if (typeof window !== 'undefined') window._mbVendorWithPromos = _vendorWithPromos;
+
+  // Builds the availabilityRows array checkAvailability expects, merging the
+  // static seed (DATA.sampleAvailability) with any live per-vendor hours the
+  // vendor published from the portal. Live overrides win; vendors with no
+  // published hours keep their static seed → no behavior change. Fail-open.
+  function _vendorAvailabilityRows() {
+    var base = (DATA && Array.isArray(DATA.sampleAvailability)) ? DATA.sampleAvailability.slice() : [];
+    var overlay = window._mbVendorAvailByVendor || {};
+    var ids = Object.keys(overlay);
+    if (!ids.length) return base;
+    var rows = base.map(function(row) {
+      return (row && overlay[row.vendorId]) ? overlay[row.vendorId] : row;
+    });
+    // Append live availability for vendors not present in the static seed.
+    ids.forEach(function(vendorId) {
+      var inBase = base.some(function(row) { return row && row.vendorId === vendorId; });
+      if (!inBase) rows.push(overlay[vendorId]);
+    });
+    return rows;
+  }
+  if (typeof window !== 'undefined') window._mbVendorAvailabilityRows = _vendorAvailabilityRows;
+
+  // Returns the live calendar blocks for one vendor (empty array = no blocks,
+  // which is a no-op in checkUnavailableBlocks). Each block already carries
+  // vendorId/date/startTime/endTime from the dashboard's addBlock().
+  function _vendorUnavailableBlocks(vendorId) {
+    if (!vendorId) return [];
+    var blocks = (window._mbVendorBlocksByVendor || {})[vendorId];
+    return Array.isArray(blocks) ? blocks.slice() : [];
+  }
+  if (typeof window !== 'undefined') window._mbVendorUnavailableBlocks = _vendorUnavailableBlocks;
 
   function _mbVendorIds() {
     var vendors = (DATA && DATA.sampleVendors) ? DATA.sampleVendors : [];
@@ -3183,6 +3225,15 @@
           } else {
             diag.promosByVendor[vendorId] = 'using-seed';
           }
+          // Live working hours + calendar blocks ride on the same doc. Only
+          // override when the field is present so a vendor who never opened
+          // the hours/blocks tab still falls back to the static seed.
+          if (data.availability && typeof data.availability === 'object') {
+            window._mbVendorAvailByVendor[vendorId] = data.availability;
+          }
+          if (Array.isArray(data.unavailableBlocks)) {
+            window._mbVendorBlocksByVendor[vendorId] = data.unavailableBlocks.slice();
+          }
           return diag.promosByVendor[vendorId];
         })
         .catch(function(err) {
@@ -3211,6 +3262,14 @@
             var before = JSON.stringify(_vendorPromosFor(vendorId) || []);
             if (Array.isArray(data.promotions)) {
               _setVendorPromos(vendorId, data.promotions);
+            }
+            // Keep live hours + blocks in sync on every snapshot so a block
+            // the vendor adds mid-session immediately gates new bookings.
+            if (data.availability && typeof data.availability === 'object') {
+              window._mbVendorAvailByVendor[vendorId] = data.availability;
+            }
+            if (Array.isArray(data.unavailableBlocks)) {
+              window._mbVendorBlocksByVendor[vendorId] = data.unavailableBlocks.slice();
             }
             var after = JSON.stringify(_vendorPromosFor(vendorId) || []);
             if (before !== after) {

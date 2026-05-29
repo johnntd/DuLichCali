@@ -1185,12 +1185,31 @@
     var rows = readJson(STORAGE.availability, {});
     rows[state.vendorId] = state.availability;
     writeJson(STORAGE.availability, rows);
+    // Publish working hours to Firestore so the customer landing, AI agent,
+    // and manual booking on any device read the vendor's live hours — same
+    // merge pattern as persistVendorPromotions. Blocks/hours used to live in
+    // this browser's localStorage only, so no customer device could see them.
+    if (!canUseFirestore() || !state.vendorId) return;
+    root.firebase.firestore().collection(DATA.COLLECTIONS.vendors).doc(state.vendorId)
+      .set({ availability: state.availability, updatedAt: new Date().toISOString() }, { merge: true })
+      .catch(function(err) {
+        if (root.console) root.console.error('[mobile-barber-dashboard] save availability failed', err);
+      });
   }
 
   function persistBlocks() {
     var rows = readJson(STORAGE.blocks, {});
     rows[state.vendorId] = state.blocks;
     writeJson(STORAGE.blocks, rows);
+    // Publish calendar blocks to Firestore so the booking guard on every
+    // customer device (manual + AI) treats the vendor's blocked slots as
+    // unavailable. Field name matches checkAvailability's `unavailableBlocks`.
+    if (!canUseFirestore() || !state.vendorId) return;
+    root.firebase.firestore().collection(DATA.COLLECTIONS.vendors).doc(state.vendorId)
+      .set({ unavailableBlocks: state.blocks, updatedAt: new Date().toISOString() }, { merge: true })
+      .catch(function(err) {
+        if (root.console) root.console.error('[mobile-barber-dashboard] save blocks failed', err);
+      });
   }
 
   function persistPortfolio() {

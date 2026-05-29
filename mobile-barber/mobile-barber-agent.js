@@ -498,6 +498,33 @@
     });
   }
 
+  // Live active-promotion filter shared by both prompt builders so the
+  // conversational brain and the legacy prompt never diverge from the price
+  // engine's own check (mobile-barber-data.js findActivePromotionForService).
+  function _activePromotions(vendor, now) {
+    if (!vendor || !Array.isArray(vendor.promotions)) return [];
+    var iso = (now instanceof Date ? now : new Date()).toISOString().slice(0, 10);
+    return vendor.promotions.filter(function(p) {
+      if (!p || p.active !== true) return false;
+      if (p.startDate && iso < p.startDate) return false;
+      if (p.endDate && iso > p.endDate) return false;
+      var max = Number(p.maxRedemptions || 0);
+      var cur = Number(p.currentRedemptions || 0);
+      if (max > 0 && cur >= max) return false;
+      return true;
+    });
+  }
+
+  function _promoLines(promos) {
+    return (promos || []).map(function(p) {
+      var scope = p.applyToScope === 'selected'
+        ? ('selected services: ' + (Array.isArray(p.appliesToServiceIds) ? p.appliesToServiceIds.join(', ') : ''))
+        : 'all services';
+      var range = [p.startDate, p.endDate].filter(Boolean).join(' to ');
+      return '- ' + p.discountPercent + '% off — ' + (p.name || '') + ' (' + scope + (range ? '; ' + range : '') + ')';
+    }).join('\n');
+  }
+
   function buildPrompt(ctx, lang) {
     var vendor = ctx.vendor;
     var services = (ctx.services || []).map(function(service) {
@@ -505,26 +532,7 @@
     }).join('\n');
     // Surface active vendor promotions to the brain so it can mention them
     // naturally ("Michael currently has a 20% promotion on Classic Haircut").
-    var activePromos = [];
-    if (vendor && Array.isArray(vendor.promotions)) {
-      var iso = (ctx.now instanceof Date ? ctx.now : new Date()).toISOString().slice(0, 10);
-      vendor.promotions.forEach(function(p) {
-        if (!p || p.active !== true) return;
-        if (p.startDate && iso < p.startDate) return;
-        if (p.endDate && iso > p.endDate) return;
-        var max = Number(p.maxRedemptions || 0);
-        var cur = Number(p.currentRedemptions || 0);
-        if (max > 0 && cur >= max) return;
-        activePromos.push(p);
-      });
-    }
-    var promoLines = activePromos.map(function(p) {
-      var scope = p.applyToScope === 'selected'
-        ? ('selected services: ' + (Array.isArray(p.appliesToServiceIds) ? p.appliesToServiceIds.join(', ') : ''))
-        : 'all services';
-      var range = [p.startDate, p.endDate].filter(Boolean).join(' to ');
-      return '- ' + p.discountPercent + '% off — ' + (p.name || '') + ' (' + scope + (range ? '; ' + range : '') + ')';
-    }).join('\n');
+    var promoLines = _promoLines(_activePromotions(vendor, ctx.now));
     return [
       'You are the Du Lich Cali Mobile Barber booking assistant.',
       'Respond in this language code unless the customer changes language: ' + (VALID_LANGS[lang] ? lang : 'en') + '.',
@@ -687,6 +695,9 @@
     var serviceAreas = (vendor.serviceAreas || []).join(', ') || 'Bay Area & Orange County';
     var vendorName = vendor.businessName || vendor.barberName || 'Mobile Barber';
     var barberName = vendor.barberName || vendorName;
+    var promoLines = _promoLines(_activePromotions(vendor, ctx && ctx.now));
+    var todayIso = (ctx && ctx.todayIso)
+      || ((ctx && ctx.now instanceof Date ? ctx.now : new Date()).toISOString().slice(0, 10));
 
     return [
       'LANGUAGE LOCK: Customer-facing text MUST be entirely in ' + langName + '. Never mix languages. Match the customer completely.',
@@ -698,6 +709,11 @@
       'Available services:',
       serviceLines || '(none configured)',
       'NEVER invent prices, services, availability, addresses, or barber names not listed above.',
+      '',
+      '=== ACTIVE PROMOTIONS (live from the vendor portal) ===',
+      promoLines
+        ? ('The vendor currently has these live promotions. Mention them naturally when the customer asks about price or selects a matching service. The pricing engine already applies the discount to the quoted total — never invent, stack, or change a promotion:\n' + promoLines)
+        : 'No active promotions right now. Do not invent or imply any discount.',
       '',
       '=== LANGUAGE ===',
       'Detect the customer language from the active session and respond ENTIRELY in that same language.',
@@ -742,7 +758,7 @@
       'Reference-only marker examples, not customer-facing replies:',
       '  [STATE:{"customerName":"John"}]',
       '  [STATE:{"addressConfirmed":true}]',
-      '  [STATE:{"serviceId":"classic-mobile-cut","date":"' + (ctx && ctx.todayIso ? ctx.todayIso : '2026-05-26') + '","time":"17:00"}]',
+      '  [STATE:{"serviceId":"classic-mobile-cut","date":"' + todayIso + '","time":"17:00"}]',
       '',
       'Allowed STATE keys: customerName, phone, address, city, zip, serviceId, date, time, addressConfirmed, intent, barberPreference, notes, paymentMethod.',
       'Allowed serviceId values: ' + (services.map(function(s) { return s.id; }).join(', ') || '(none)') + '.',
@@ -952,6 +968,7 @@
       vendor: vendor,
       services: services,
       availability: ctx.availability || DATA.sampleAvailability,
+      unavailableBlocks: ctx.unavailableBlocks || [],
       draft: draft,
       existingBookings: ctx.existingBookings || []
     });

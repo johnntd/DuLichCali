@@ -43,6 +43,10 @@
   var SERVICE_RADIUS_MILES = 30;
   var SLOT_STEP_MINUTES = 30;
   var MAX_QUERY_LIMIT = 250;
+  var TRAVEL_SPEED_MPH = 30;
+  var MAX_TRAVEL_BUFFER_MINUTES = 120;
+  var LOCK_TTL_MS = 2 * 60 * 1000;
+  var MS_PER_DAY = 86400000;
 
   function _s(v) { return v == null ? '' : String(v).trim(); }
   function _lower(v) { return _s(v).toLowerCase(); }
@@ -117,10 +121,10 @@
     var duration = Number(req.serviceDurationMinutes || req.durationMinutes || defaults.durationMinutes);
     var end = toMillis(req.requestedEnd);
     if (end == null && req.endTime && req.requestedDate) end = parseTime(req.requestedDate, req.endTime);
-    if (end == null && start != null) end = start + duration * 60000;
+    if ((end == null || end <= start) && start != null) end = start + duration * 60000;
     var buffer = Number(req.travelBufferMinutes != null ? req.travelBufferMinutes : defaults.travelBufferMinutes);
     if (start == null || end == null || !isFinite(duration) || !isFinite(buffer) || end <= start) return null;
-    return { start: start, end: end + buffer * 60000, rawStart: start, rawEnd: end, bufferMinutes: buffer, durationMinutes: duration };
+    return { start: start, end: end + buffer * 60000, rawStart: start, rawEnd: end, serviceType: serviceType, bufferMinutes: buffer, durationMinutes: duration };
   }
   function bookingWindow(row) {
     var serviceType = normalizeServiceType(row.serviceType || row.rawServiceType);
@@ -137,13 +141,88 @@
     var end = toMillis(row.requestedEnd || row.end || row.appointmentEnd);
     if (end == null && row.endTime) end = parseTime(row.requestedDate || row.arrivalDate || row.departureDate || row.rideDate || row.travel_date || row.date, row.endTime);
     var duration = Number(row.serviceDurationMinutes || row.durationMinutes || defaults.durationMinutes);
-    if (end == null && start != null) end = start + duration * 60000;
+    if ((end == null || end <= start) && start != null) end = start + duration * 60000;
     var buffer = Number(row.travelBufferMinutes != null ? row.travelBufferMinutes : defaults.travelBufferMinutes);
     if (start == null || end == null || end <= start) return null;
-    return { start: start, end: end + buffer * 60000, rawStart: start, rawEnd: end, serviceType: serviceType, bufferMinutes: buffer };
+    return { start: start, end: end + buffer * 60000, rawStart: start, rawEnd: end, serviceType: serviceType, bufferMinutes: buffer, durationMinutes: duration };
   }
   function overlaps(a, b) {
     return a && b && a.start < b.end && b.start < a.end;
+  }
+  function baseWindow(item) {
+    if (!item) return null;
+    if (item.sourceCollection || item.bookingId || item.id || item.status) return bookingWindow(item);
+    if (item.requestedStart || item.requestedDate || item.serviceDurationMinutes || item.durationMinutes) return normalizeWindow(item);
+    return bookingWindow(item);
+  }
+  function ownerWorkingHours(ownerId) {
+    var ownerModel = getOwnerModel();
+    if (ownerModel && typeof ownerModel.workingHoursFor === 'function') {
+      var hours = ownerModel.workingHoursFor(ownerId);
+      if (hours && timeToMinutes(hours.start) != null && timeToMinutes(hours.end) != null) return hours;
+    }
+    return { start: '08:00', end: '18:00' };
+  }
+  function tourDayCount(item, win) {
+    var rawDays = Number(item.duration_days || item.durationDays || item.days);
+    var durationDays = isFinite(rawDays) && rawDays > 0 ? Math.ceil(rawDays) : 0;
+    var durationMinutes = Number(item.serviceDurationMinutes || item.durationMinutes || (win && win.durationMinutes));
+    var minutesDays = isFinite(durationMinutes) && durationMinutes > SERVICE_DEFAULTS.tour.durationMinutes ? Math.ceil(durationMinutes / SERVICE_DEFAULTS.tour.durationMinutes) : 0;
+    var spanDays = 0;
+    if (win && win.rawStart != null && win.rawEnd != null) {
+      var startDay = new Date(new Date(win.rawStart).getFullYear(), new Date(win.rawStart).getMonth(), new Date(win.rawStart).getDate()).getTime();
+      var endPoint = Math.max(win.rawStart, win.rawEnd - 1);
+      var endDay = new Date(new Date(endPoint).getFullYear(), new Date(endPoint).getMonth(), new Date(endPoint).getDate()).getTime();
+      spanDays = Math.floor((endDay - startDay) / MS_PER_DAY) + 1;
+    }
+    return Math.max(1, durationDays, minutesDays, spanDays);
+  }
+  function localDayStart(ms, offsetDays) {
+    var d = new Date(ms);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate() + (offsetDays || 0), 0, 0, 0, 0).getTime();
+  }
+  function expandWindows(item) {
+    var win = baseWindow(item);
+    if (!win) return [];
+    var serviceType = normalizeServiceType(item.serviceType || item.rawServiceType || win.serviceType);
+    if (!serviceType && item.sourceCollection === COLLECTIONS.travel) serviceType = 'tour';
+    if (serviceType !== 'tour') return [win];
+    var days = tourDayCount(item, win);
+    if (days <= 1) return [win];
+    var hours = ownerWorkingHours(item.ownerId);
+    var workStart = timeToMinutes(hours.start);
+    var workEnd = timeToMinutes(hours.end);
+    if (workStart == null || workEnd == null || workEnd <= workStart) {
+      workStart = 8 * 60;
+      workEnd = 18 * 60;
+    }
+    var out = [];
+    for (var i = 0; i < days; i++) {
+      var dayStart = localDayStart(win.rawStart, i);
+      var rawStart = dayStart + workStart * 60000;
+      var rawEnd = dayStart + workEnd * 60000;
+      if (i === 0) rawStart = Math.max(win.rawStart, rawStart);
+      out.push({
+        start: rawStart,
+        end: rawEnd + win.bufferMinutes * 60000,
+        rawStart: rawStart,
+        rawEnd: rawEnd,
+        serviceType: serviceType,
+        bufferMinutes: win.bufferMinutes,
+        durationMinutes: (rawEnd - rawStart) / 60000
+      });
+    }
+    return out;
+  }
+  function pointFrom(item) {
+    item = item || {};
+    var loc = item.location || item.serviceLocation || item.pickupLocation || item.destination || item.geo || {};
+    var lat = _num(item.lat != null ? item.lat : item.latitude);
+    var lng = _num(item.lng != null ? item.lng : item.longitude);
+    if (lat == null) lat = _num(loc.lat != null ? loc.lat : loc.latitude);
+    if (lng == null) lng = _num(loc.lng != null ? loc.lng : loc.longitude);
+    if (lat == null || lng == null) return null;
+    return { lat: lat, lng: lng };
   }
   function conflictRow(row, win) {
     return {
@@ -231,6 +310,31 @@
     var h = s1 * s1 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * s2 * s2;
     return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
   }
+  function defaultTravelBufferMinutes(a, b) {
+    var at = normalizeServiceType(a && (a.serviceType || a.rawServiceType));
+    var bt = normalizeServiceType(b && (b.serviceType || b.rawServiceType));
+    var ad = SERVICE_DEFAULTS[at] && SERVICE_DEFAULTS[at].travelBufferMinutes;
+    var bd = SERVICE_DEFAULTS[bt] && SERVICE_DEFAULTS[bt].travelBufferMinutes;
+    var vals = [Number(ad), Number(bd), Number(a && a.travelBufferMinutes), Number(b && b.travelBufferMinutes)].filter(function(n) { return isFinite(n) && n >= 0; });
+    return vals.length ? Math.max.apply(Math, vals) : SERVICE_DEFAULTS.ride.travelBufferMinutes;
+  }
+  function travelBufferMinutesBetween(a, b) {
+    var floor = defaultTravelBufferMinutes(a, b);
+    var pa = pointFrom(a);
+    var pb = pointFrom(b);
+    if (!pa || !pb) return floor;
+    var miles = haversineMiles(pa, pb);
+    if (!isFinite(miles) || miles <= 0) return floor;
+    var minutes = Math.round((miles / TRAVEL_SPEED_MPH) * 60);
+    return Math.max(floor, Math.min(MAX_TRAVEL_BUFFER_MINUTES, minutes));
+  }
+  function windowsConflict(req, row, reqWin, rowWin) {
+    if (!reqWin || !rowWin) return false;
+    if (reqWin.rawStart < rowWin.rawEnd && rowWin.rawStart < reqWin.rawEnd) return true;
+    var buffer = travelBufferMinutesBetween(req, row) * 60000;
+    if (reqWin.rawEnd <= rowWin.rawStart) return reqWin.rawEnd + buffer > rowWin.rawStart;
+    return rowWin.rawEnd + buffer > reqWin.rawStart;
+  }
   function radiusDecision(req, options) {
     var lat = _num(req.lat != null ? req.lat : req.latitude);
     var lng = _num(req.lng != null ? req.lng : req.longitude);
@@ -303,10 +407,20 @@
     }
     var radius = radiusDecision(req, options);
     _log('input', { ownerId: req.ownerId, serviceType: serviceType, vendorId: req.vendorId || '', start: requested.start, end: requested.end, source: req.source || '' });
+    var requestWindows = expandWindows(req);
     (rows || []).forEach(function(row) {
       if (!isBlockingStatus(row.status)) return;
-      var win = bookingWindow(row);
-      if (!win || !overlaps(requested, win)) return;
+      var rowWindows = expandWindows(row);
+      var win = null;
+      for (var i = 0; i < requestWindows.length && !win; i++) {
+        for (var j = 0; j < rowWindows.length; j++) {
+          if (windowsConflict(req, row, requestWindows[i], rowWindows[j])) {
+            win = rowWindows[j];
+            break;
+          }
+        }
+      }
+      if (!win) return;
       var cr = conflictRow(row, win);
       var sameService = normalizeServiceType(row.serviceType || row.rawServiceType) === serviceType;
       var matchedBy = sameService ? identityMatch(req, row) : '';
@@ -358,7 +472,11 @@
           serviceDurationMinutes: rawDuration || defaults.durationMinutes
         });
         var win = normalizeWindow(candidateReq);
-        var blocked = rows.some(function(row) { return isBlockingStatus(row.status) && overlaps(win, bookingWindow(row)); });
+        var blocked = rows.some(function(row) {
+          if (!isBlockingStatus(row.status)) return false;
+          var rowWindows = expandWindows(row);
+          return rowWindows.some(function(rowWin) { return windowsConflict(candidateReq, row, win, rowWin); });
+        });
         if (!blocked) out.push({ start: win.start, end: win.end });
       }
     }
@@ -392,13 +510,21 @@
       return db.runTransaction(function(tx) {
         return tx.get(ref).then(function(snap) {
           if (snap && snap.exists) {
-            return { locked: true };
+            var lockData = typeof snap.data === 'function' ? (snap.data() || {}) : {};
+            var createdMs = toMillis(lockData.createdAt);
+            if (createdMs == null || Date.now() - createdMs <= LOCK_TTL_MS) {
+              return { locked: true };
+            }
           }
           tx.set(ref, { ownerId: req.ownerId, serviceType: normalizeServiceType(req.serviceType), start: win.start, end: win.end, createdAt: new Date().toISOString() });
           return validateUnifiedBookingRequest(req, options).then(function(second) {
-            if (second.disposition === 'block') return second;
+            if (second.disposition === 'block') {
+              if (tx && typeof tx.delete === 'function') tx.delete(ref);
+              return second;
+            }
             var secondMeta = { disposition: second.disposition, reason: second.reason, conflicts: second.conflicts || [] };
             return Promise.resolve(writeFn(tx, secondMeta)).then(function(writeResult) {
+              if (tx && typeof tx.delete === 'function') tx.delete(ref);
               return Object.assign({}, second, { writeResult: writeResult });
             });
           });
@@ -424,6 +550,8 @@
     isBlockingStatus: isBlockingStatus,
     dispositionFor: dispositionFor,
     normalizeWindow: normalizeWindow,
+    expandWindows: expandWindows,
+    travelBufferMinutesBetween: travelBufferMinutesBetween,
     validateUnifiedBookingRequest: validateUnifiedBookingRequest,
     guardedWrite: guardedWrite,
     _evaluate: evaluate,

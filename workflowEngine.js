@@ -2551,14 +2551,14 @@
     function runGuardedBookingWrite(req, writeFn) {
       if (window.BookingGuard && req && req.ownerId) {
         return window.BookingGuard.guardedWrite(req, writeFn, { db: db }).then(function(result) {
-          if (result && result.ok === false) throw guardError(result);
+          if (result && result.disposition === 'block') throw guardError(result);
           return result;
         });
       }
       // Guard rejections intentionally propagate with error.guardResult; chat.js
       // catches that shape and turns it into an English [SYSTEM: ...] AI note.
       return Promise.resolve(writeFn()).then(function(writeResult) {
-        return { ok: true, writeResult: writeResult };
+        return { ok: true, disposition: 'confirm', writeResult: writeResult };
       });
     }
 
@@ -2719,7 +2719,11 @@
         city: _cityFromAddress(addrField),
         source: 'ai_chat_workflow'
       };
-      await runGuardedBookingWrite(airGuardReq, function(tx) {
+      var airGuardResult = await runGuardedBookingWrite(airGuardReq, function(tx, guardMeta) {
+        guardMeta = guardMeta || {};
+        airBookingDoc.status = guardMeta.disposition === 'review' ? 'vendor_review' : (_apAvailNote ? 'pending_confirm' : airBookStatus);
+        airBookingDoc.reviewReason = guardMeta.disposition === 'review' ? (guardMeta.reason || '') : null;
+        airBookingDoc.reviewConflicts = guardMeta.disposition === 'review' ? (guardMeta.conflicts || []) : [];
         var ref = db.collection('bookings').doc(orderId);
         if (tx && tx.set) {
           tx.set(ref, airBookingDoc);
@@ -2727,6 +2731,11 @@
         }
         return ref.set(airBookingDoc);
       });
+      if (airGuardResult && airGuardResult.disposition === 'review') {
+        airBookingDoc.status = 'vendor_review';
+        airBookingDoc.reviewReason = airGuardResult.reason || '';
+        airBookingDoc.reviewConflicts = airGuardResult.conflicts || [];
+      }
       await db.collection('vendors').doc('admin-dlc').collection('notifications').add({
         type:'new_booking',
         title:(isPickup?'✈️ Đón sân bay':'✈️ Ra sân bay')+' — '+(f.customerName||''),
@@ -2770,10 +2779,10 @@
         createdAt: fv.serverTimestamp(),
       }).catch(function(e){ console.warn('[dispatchQueue] write failed:', e.message); });
       finalDispatchState = {
-        status: _apAvailNote ? 'pending_confirm' : airBookStatus,
+        status: airBookingDoc.status,
         eligibleCount: eligIds.length,
         preAssigned: null,
-        availNote: _apAvailNote || null, // 'no_schedule' | 'fully_booked' | null
+        availNote: (airGuardResult && airGuardResult.disposition === 'review') ? (airGuardResult.reason || 'vendor_review_required') : (_apAvailNote || null),
       };
       // Phase 5A: queue confirmation email (non-blocking, no-op if no email)
       if (typeof DLCNotifications !== 'undefined') {
@@ -2784,7 +2793,7 @@
           airport: f.airport||'', airline: f.airline||'', terminal: f.terminal||'',
           datetime: datetime, address: addrField,
           passengers: f.passengers||1, trackingToken: trackingToken||'',
-          status: airBookStatus,
+          status: airBookingDoc.status,
           driver: null,
         }, draft.lang || 'en');
         // Phase 5B: in-app notifications (admin + customer)
@@ -2905,7 +2914,11 @@
         city: _cityFromAddress(f.startingPoint),
         source: 'ai_chat_workflow'
       };
-      await runGuardedBookingWrite(tourGuardReq, function(tx) {
+      var tourGuardResult = await runGuardedBookingWrite(tourGuardReq, function(tx, guardMeta) {
+        guardMeta = guardMeta || {};
+        tourBookingDoc.status = guardMeta.disposition === 'review' ? 'vendor_review' : 'pending';
+        tourBookingDoc.reviewReason = guardMeta.disposition === 'review' ? (guardMeta.reason || '') : null;
+        tourBookingDoc.reviewConflicts = guardMeta.disposition === 'review' ? (guardMeta.conflicts || []) : [];
         var ref = db.collection('bookings').doc(orderId);
         if (tx && tx.set) {
           tx.set(ref, tourBookingDoc);
@@ -2913,6 +2926,11 @@
         }
         return ref.set(tourBookingDoc);
       });
+      if (tourGuardResult && tourGuardResult.disposition === 'review') {
+        tourBookingDoc.status = 'vendor_review';
+        tourBookingDoc.reviewReason = tourGuardResult.reason || '';
+        tourBookingDoc.reviewConflicts = tourGuardResult.conflicts || [];
+      }
       await db.collection('vendors').doc('admin-dlc').collection('notifications').add({
         type:'new_booking',
         title:'🗺️ Tour ' + (dest.name||'') + ' — ' + (f.customerName||''),
@@ -3017,7 +3035,11 @@
         city: _cityFromAddress(privateRideBookingDoc.pickupAddress),
         source: 'ai_chat_workflow'
       };
-      await runGuardedBookingWrite(privateRideGuardReq, function(tx) {
+      var privateRideGuardResult = await runGuardedBookingWrite(privateRideGuardReq, function(tx, guardMeta) {
+        guardMeta = guardMeta || {};
+        privateRideBookingDoc.status = guardMeta.disposition === 'review' ? 'vendor_review' : (_prAvailNote ? 'pending_confirm' : prBookStatus);
+        privateRideBookingDoc.reviewReason = guardMeta.disposition === 'review' ? (guardMeta.reason || '') : null;
+        privateRideBookingDoc.reviewConflicts = guardMeta.disposition === 'review' ? (guardMeta.conflicts || []) : [];
         var ref = db.collection('bookings').doc(orderId);
         if (tx && tx.set) {
           tx.set(ref, privateRideBookingDoc);
@@ -3025,6 +3047,11 @@
         }
         return ref.set(privateRideBookingDoc);
       });
+      if (privateRideGuardResult && privateRideGuardResult.disposition === 'review') {
+        privateRideBookingDoc.status = 'vendor_review';
+        privateRideBookingDoc.reviewReason = privateRideGuardResult.reason || '';
+        privateRideBookingDoc.reviewConflicts = privateRideGuardResult.conflicts || [];
+      }
       await db.collection('vendors').doc('admin-dlc').collection('notifications').add({
         type:'new_booking',
         title:'🚗 Xe riêng — ' + (f.customerName||''),
@@ -3064,10 +3091,10 @@
         createdAt: fv.serverTimestamp(),
       }).catch(function(e){ console.warn('[dispatchQueue] write failed:', e.message); });
       finalDispatchState = {
-        status: _prAvailNote ? 'pending_confirm' : prBookStatus,
+        status: privateRideBookingDoc.status,
         eligibleCount: prEligIds.length,
         preAssigned: null,
-        availNote: _prAvailNote || null,
+        availNote: (privateRideGuardResult && privateRideGuardResult.disposition === 'review') ? (privateRideGuardResult.reason || 'vendor_review_required') : (_prAvailNote || null),
       };
       // Phase 5A: queue confirmation email (non-blocking, no-op if no email)
       if (typeof DLCNotifications !== 'undefined') {
@@ -3079,7 +3106,7 @@
           datetime: datetime, passengers: f.passengers||1,
           estimatedPrice: rideEst ? rideEst.ourPrice : null,
           trackingToken: trackingToken||'',
-          status: prBookStatus,
+          status: privateRideBookingDoc.status,
           driver: null,
         }, draft.lang || 'en');
         // Phase 5B: in-app notifications (admin + customer)

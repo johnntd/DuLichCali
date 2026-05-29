@@ -387,7 +387,7 @@ function runMobileBarberBookingTests(test) {
 
   test('Mobile Barber status lifecycle normalizes legacy statuses', function() {
     assertEq(MobileBarberBooking.normalizeBookingStatus('pending_confirmation'), 'pending_barber_confirmation');
-    assertEq(MobileBarberBooking.normalizeBookingStatus('vendor_review'), 'pending_barber_confirmation');
+    assertEq(MobileBarberBooking.normalizeBookingStatus('vendor_review'), 'vendor_review');
     assertEq(MobileBarberBooking.normalizeBookingStatus('confirmed'), 'confirmed');
     assertEq(MobileBarberBooking.normalizeBookingStatus('unknown'), 'pending_barber_confirmation');
   });

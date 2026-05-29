@@ -43,6 +43,8 @@ window.RideIntake = (function () {
       successTitle: 'Booking Confirmed!',
       successSub:   'Your booking ID:',
       successMsg:   'We\'ll confirm within <strong>30 minutes</strong>.<br>Urgent? Call <a href="tel:4089163439">(408) 916-3439</a>.',
+      bookingPendingReviewTitle: 'Booking Received',
+      bookingPendingReviewMsg: 'Your booking is pending provider confirmation.<br>We will contact you with the final details.',
       closeBtn:     'Close',
       // ── Picker, labels, placeholders, validation ──
       pickerTitle:      'Book a Ride',
@@ -150,6 +152,8 @@ window.RideIntake = (function () {
       successTitle: 'Đặt Xe Thành Công!',
       successSub:   'Mã đặt chỗ của bạn:',
       successMsg:   'Chúng tôi sẽ xác nhận trong <strong>30 phút</strong>.<br>Cần gấp? Gọi <a href="tel:4089163439">(408) 916-3439</a>.',
+      bookingPendingReviewTitle: 'Đã Nhận Đặt Xe',
+      bookingPendingReviewMsg: 'Đặt xe của bạn đang chờ nhà cung cấp xác nhận.<br>Chúng tôi sẽ liên hệ với thông tin cuối cùng.',
       closeBtn:     'Đóng',
       // ── Picker, labels, placeholders, validation ──
       pickerTitle:      'Đặt Xe Đưa Đón',
@@ -257,6 +261,8 @@ window.RideIntake = (function () {
       successTitle: '¡Reserva Confirmada!',
       successSub:   'Tu ID de reserva:',
       successMsg:   'Confirmaremos en <strong>30 minutos</strong>.<br>¿Urgente? Llama al <a href="tel:4089163439">(408) 916-3439</a>.',
+      bookingPendingReviewTitle: 'Reserva Recibida',
+      bookingPendingReviewMsg: 'Tu reserva está pendiente de confirmación del proveedor.<br>Te contactaremos con los detalles finales.',
       closeBtn:     'Cerrar',
       // ── Picker, labels, placeholders, validation ──
       pickerTitle:      'Reservar un Viaje',
@@ -495,6 +501,7 @@ window.RideIntake = (function () {
   var _driverCoords  = null; // { lat, lng } — driver's real-time GPS from Firestore
   var _lastOrigin    = null; // saved for GPS map links
   var _lastDest      = null;
+  var _lastGuardDisposition = 'confirm';
 
   // ── iOS keyboard / visualViewport shrink ─────────────────────────────────────
   // When the software keyboard opens on iOS the visual viewport shrinks and shifts.
@@ -1453,6 +1460,7 @@ window.RideIntake = (function () {
   function _doFirestoreSubmit(btn, availResult) {
     var bookingId = generateId();
     var data      = buildBookingData(bookingId);
+    _lastGuardDisposition = 'confirm';
 
     // If availability check flagged a potential conflict, mark the booking so
     // the admin knows to confirm with the customer before dispatching.
@@ -1483,7 +1491,11 @@ window.RideIntake = (function () {
       zip: data.zip,
       source: 'web-intake'
     };
-    function writeRideBooking(tx) {
+    function writeRideBooking(tx, guardMeta) {
+      guardMeta = guardMeta || {};
+      data.status = guardMeta.disposition === 'review' ? 'vendor_review' : data.status;
+      if (guardMeta.disposition === 'review') data.reviewReason = guardMeta.reason || '';
+      if (guardMeta.disposition === 'review') data.reviewConflicts = guardMeta.conflicts || [];
       var ref = db.collection('bookings').doc(bookingId);
       if (tx && tx.set) {
         tx.set(ref, data);
@@ -1502,7 +1514,13 @@ window.RideIntake = (function () {
     }
     guardPromise
       .then(function (guardResult) {
-        if (guardResult && guardResult.ok === false) throw new Error('booking_guard_' + guardResult.reason);
+        if (guardResult && guardResult.disposition === 'block') throw new Error('booking_guard_' + guardResult.reason);
+        _lastGuardDisposition = guardResult && guardResult.disposition ? guardResult.disposition : 'confirm';
+        if (guardResult && guardResult.disposition === 'review') {
+          data.status = 'vendor_review';
+          data.reviewReason = guardResult.reason || '';
+          data.reviewConflicts = guardResult.conflicts || [];
+        }
       })
       .then(function () {
         // Admin notification
@@ -1668,7 +1686,8 @@ window.RideIntake = (function () {
     setHide('riProgressWrap', true);
     setHide('riStepQuestion', true);
     setHide('riTitle', false);
-    setText('riTitle', _T.successTitle);
+    var pendingReview = _lastGuardDisposition === 'review';
+    setText('riTitle', pendingReview ? _T.bookingPendingReviewTitle : _T.successTitle);
     // Update static success text nodes to current language
     var subEl = document.querySelector('#riSuccess .ri-success__sub');
     if (subEl) subEl.textContent = _T.successSub;
@@ -1677,7 +1696,9 @@ window.RideIntake = (function () {
       // Show driver's direct number if we have it; otherwise fall back to business number.
       var driverPhone = _driverVehicle && _driverVehicle.driverPhone;
       var driverName  = _driverVehicle && _driverVehicle.driverName;
-      if (driverPhone) {
+      if (pendingReview) {
+        msgEl.innerHTML = _T.bookingPendingReviewMsg;
+      } else if (driverPhone) {
         var telHref = 'tel:' + driverPhone.replace(/\D/g, '');
         var nameTag = driverName ? '<strong>' + driverName + '</strong>' : _T.driverLabel || 'your driver';
         var driverMsg = {

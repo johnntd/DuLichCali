@@ -78,6 +78,11 @@
     if (NON_BLOCKING_STATUSES.indexOf(s) >= 0) return false;
     return BLOCKING_STATUSES.indexOf(s) >= 0;
   }
+  function dispositionFor(reason) {
+    if (reason === 'available') return 'confirm';
+    if (reason === 'customer_duplicate' || reason === 'invalid_request') return 'block';
+    return 'review';
+  }
   function parseTime(date, time) {
     var d = _s(date);
     var t = _s(time);
@@ -275,8 +280,10 @@
     return finish(reason === 'available', reason, conflicts, requested, dup, radius, req, rows, options);
   }
   function finish(ok, reason, conflicts, requested, dup, radius, req, rows, options) {
+    var disposition = dispositionFor(reason);
     var out = {
-      ok: !!ok,
+      ok: disposition === 'confirm',
+      disposition: disposition,
       reason: reason,
       conflicts: conflicts || [],
       suggestedSlots: requested ? suggestedSlots(req, rows || [], options, requested) : [],
@@ -285,7 +292,7 @@
       distanceMiles: radius ? radius.distanceMiles : null,
       withinServiceRadius: radius ? radius.withinServiceRadius : null
     };
-    _log('verdict', { ok: out.ok, reason: out.reason, conflicts: out.conflicts.length });
+    _log('verdict', { ok: out.ok, disposition: out.disposition, reason: out.reason, conflicts: out.conflicts.length });
     return out;
   }
   function suggestedSlots(req, rows, options, requested) {
@@ -327,9 +334,10 @@
     var first;
     return validateUnifiedBookingRequest(req, options).then(function(result) {
       first = result;
-      if (!result.ok) return result;
+      if (result.disposition === 'block') return result;
+      var guardMeta = { disposition: result.disposition, reason: result.reason, conflicts: result.conflicts || [] };
       if (!db || typeof db.runTransaction !== 'function') {
-        return Promise.resolve(writeFn()).then(function(writeResult) {
+        return Promise.resolve(writeFn(null, guardMeta)).then(function(writeResult) {
           return Object.assign({}, first, { writeResult: writeResult });
         });
       }
@@ -342,8 +350,9 @@
           }
           tx.set(ref, { ownerId: req.ownerId, serviceType: normalizeServiceType(req.serviceType), start: win.start, end: win.end, createdAt: new Date().toISOString() });
           return validateUnifiedBookingRequest(req, options).then(function(second) {
-            if (!second.ok) return second;
-            return Promise.resolve(writeFn(tx)).then(function(writeResult) {
+            if (second.disposition === 'block') return second;
+            var secondMeta = { disposition: second.disposition, reason: second.reason, conflicts: second.conflicts || [] };
+            return Promise.resolve(writeFn(tx, secondMeta)).then(function(writeResult) {
               return Object.assign({}, second, { writeResult: writeResult });
             });
           });
@@ -367,6 +376,7 @@
     normalizePhone: normalizePhone,
     normalizeStatus: normalizeStatus,
     isBlockingStatus: isBlockingStatus,
+    dispositionFor: dispositionFor,
     normalizeWindow: normalizeWindow,
     validateUnifiedBookingRequest: validateUnifiedBookingRequest,
     guardedWrite: guardedWrite,

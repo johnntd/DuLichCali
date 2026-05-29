@@ -35,6 +35,8 @@ var TravelBooking = (function() {
       tpConfirm:        'Confirm Booking',
       tpSuccessTitle:   'Booking Confirmed!',
       tpSuccessSub:     "We'll call you within 2 hours to confirm details.",
+      bookingPendingReviewTitle: 'Booking Received',
+      bookingPendingReview: "Your booking is pending provider confirmation. We'll contact you with the final details.",
       tpSubtotal:       'Subtotal',
       tpTaxes:          'Taxes (8.75%)',
       tpTotal:          'Total',
@@ -74,6 +76,8 @@ var TravelBooking = (function() {
       tpConfirm:        'Xác Nhận Đặt Tour',
       tpSuccessTitle:   'Đặt Tour Thành Công!',
       tpSuccessSub:     'Chúng tôi sẽ gọi cho bạn trong 2 giờ để xác nhận.',
+      bookingPendingReviewTitle: 'Đã Nhận Đặt Tour',
+      bookingPendingReview: 'Đặt tour của bạn đang chờ nhà cung cấp xác nhận. Chúng tôi sẽ liên hệ với thông tin cuối cùng.',
       tpSubtotal:       'Tạm tính',
       tpTaxes:          'Thuế (8.75%)',
       tpTotal:          'Tổng cộng',
@@ -113,6 +117,8 @@ var TravelBooking = (function() {
       tpConfirm:        'Confirmar Reserva',
       tpSuccessTitle:   '¡Reserva Confirmada!',
       tpSuccessSub:     'Te llamaremos en 2 horas para confirmar los detalles.',
+      bookingPendingReviewTitle: 'Reserva Recibida',
+      bookingPendingReview: 'Tu reserva está pendiente de confirmación del proveedor. Te contactaremos con los detalles finales.',
       tpSubtotal:       'Subtotal',
       tpTaxes:          'Impuestos (8.75%)',
       tpTotal:          'Total',
@@ -881,7 +887,20 @@ var TravelBooking = (function() {
         zip: '',
         source: 'web-intake'
       };
-      function writeTravelBooking(tx) {
+      if (bookingDoc.lat != null && bookingDoc.lng != null) {
+        guardReq.lat = bookingDoc.lat;
+        guardReq.lng = bookingDoc.lng;
+      }
+      function writeTravelBooking(tx, guardMeta) {
+        guardMeta = guardMeta || {};
+        bookingDoc.status = guardMeta.disposition === 'review' ? 'vendor_review' : 'pending';
+        if (guardMeta.disposition === 'review') {
+          bookingDoc.reviewReason = guardMeta.reason || '';
+          bookingDoc.reviewConflicts = guardMeta.conflicts || [];
+        } else {
+          delete bookingDoc.reviewReason;
+          delete bookingDoc.reviewConflicts;
+        }
         var ref = _db.collection('travel_bookings').doc(bookingId);
         if (tx && tx.set) {
           tx.set(ref, bookingDoc);
@@ -899,7 +918,12 @@ var TravelBooking = (function() {
         guardPromise = writeTravelBooking().then(function() { return { ok: true }; });
       }
       return guardPromise.then(function(guardResult) {
-        if (guardResult && guardResult.ok === false) throw new Error('booking_guard_' + guardResult.reason);
+        if (guardResult && guardResult.disposition === 'block') throw new Error('booking_guard_' + guardResult.reason);
+        if (guardResult && guardResult.disposition === 'review') {
+          bookingDoc.status = 'vendor_review';
+          bookingDoc.reviewReason = guardResult.reason || '';
+          bookingDoc.reviewConflicts = guardResult.conflicts || [];
+        }
         return bookingDoc;
       });
       });  // end detectTravelBookingConflict.then()
@@ -911,6 +935,11 @@ var TravelBooking = (function() {
       }
       var idEl = document.getElementById('tpSuccessId');
       if (idEl) idEl.textContent = 'Booking ID: ' + bookingId;
+      var isPendingReview = bookingDoc.status === 'vendor_review';
+      var titleEl = document.querySelector('#tpSuccess .tp-success__title');
+      var subEl = document.querySelector('#tpSuccess .tp-success__sub');
+      if (titleEl) titleEl.textContent = isPendingReview ? t('bookingPendingReviewTitle') : t('tpSuccessTitle');
+      if (subEl) subEl.textContent = isPendingReview ? t('bookingPendingReview') : t('tpSuccessSub');
 
       // ── Populate confirmation breakdown ────────────────────────────────────
       var breakdownEl = document.getElementById('tpSuccessBreakdown');

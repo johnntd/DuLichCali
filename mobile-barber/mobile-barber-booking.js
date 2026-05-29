@@ -14,10 +14,9 @@
   var PENDING_STATUS = 'pending_barber_confirmation';
   var STATUS_ALIASES = {
     pending_confirmation: 'pending_barber_confirmation',
-    vendor_review: 'pending_barber_confirmation',
     pending: 'pending_barber_confirmation'
   };
-  var STATUS_LIFECYCLE = ['pending_barber_confirmation', 'confirmed', 'declined', 'completed', 'cancelled'];
+  var STATUS_LIFECYCLE = ['pending_barber_confirmation', 'vendor_review', 'confirmed', 'declined', 'completed', 'cancelled'];
   var DEFAULT_SLOT_STEP_MINUTES = 30;
   var DEFAULT_SAME_DAY_CUTOFF_MINUTES = 120;
   var DEFAULT_PRICING = {
@@ -341,10 +340,10 @@
         serviceAddress: draft.address,
         source: 'barber_overlap_check'
       }, existingBookings, { origin: { city: draft.city, zip: draft.zip } });
-      if (!guarded.ok && (guarded.reason === 'time_conflict' || guarded.reason === 'customer_duplicate')) {
+      if (guarded.disposition === 'block') {
         return {
           valid: false,
-          key: guarded.reason === 'customer_duplicate' ? 'customer_duplicate' : 'booking_overlap',
+          key: guarded.reason === 'customer_duplicate' ? 'customer_duplicate' : guarded.reason,
           bookingId: guarded.conflicts[0] && guarded.conflicts[0].bookingId,
           guardResult: guarded
         };
@@ -1084,7 +1083,11 @@
     var guard = root.BookingGuard;
     var guardReq = unifiedGuardRequestFromBooking(booking);
     if (guard && guardReq.ownerId && options.skipUnifiedGuard !== true) {
-      return guard.guardedWrite(guardReq, function(tx) {
+      return guard.guardedWrite(guardReq, function(tx, guardMeta) {
+        guardMeta = guardMeta || {};
+        booking.status = guardMeta.disposition === 'review' ? 'vendor_review' : normalizeBookingStatus(booking.status);
+        if (guardMeta.disposition === 'review') booking.reviewReason = guardMeta.reason || '';
+        if (guardMeta.disposition === 'review') booking.reviewConflicts = guardMeta.conflicts || [];
         if (canUseFirestore()) {
           var ref = root.firebase.firestore().collection(DATA.COLLECTIONS.bookings).doc(booking.id);
           if (tx && tx.set) {
@@ -1098,7 +1101,12 @@
         return saveBookingLocal(booking);
       }, { origin: options.origin || options.vendor || {}, barberVendorIds: options.barberVendorIds })
         .then(function(result) {
-          if (!result || result.ok === false) return Promise.reject(bookingGuardError(result));
+          if (!result || result.disposition === 'block') return Promise.reject(bookingGuardError(result));
+          if (result.disposition === 'review') {
+            booking.status = 'vendor_review';
+            booking.reviewReason = result.reason || '';
+            booking.reviewConflicts = result.conflicts || [];
+          }
           return result.writeResult || { saved: true, source: 'guard', method: 'guard', booking: booking };
         })
         .catch(function(error) {

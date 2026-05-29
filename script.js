@@ -272,6 +272,8 @@ var _UI_STRINGS = {
     chatStatus:'Booking assistant · Online',
     chatEmptyTitle:'Hello!', chatEmptySub:'Ask me about tours, rides, or nearby services',
     chatPh:'Ask about tours, prices, bookings...',
+    bookingPendingReview:'Booking received. The provider will review it and confirm the final details.',
+    bookingBlocked:'This booking cannot be submitted automatically. Please call us for help.',
   },
   vi: {
     navHome:'Trang Chủ', navTravel:'Du Lịch', navMarket:'Mua Sắm', navRides:'Đặt Xe', navTranslate:'Dịch Thuật',
@@ -295,6 +297,8 @@ var _UI_STRINGS = {
     chatStatus:'Trợ lý đặt xe · Trực tuyến',
     chatEmptyTitle:'Xin chào!', chatEmptySub:'Hỏi về tour, xe, hoặc dịch vụ gần bạn',
     chatPh:'Nhắn tin Du Lịch Cali...',
+    bookingPendingReview:'Đã nhận đặt chỗ. Nhà cung cấp sẽ xem lại và xác nhận thông tin cuối cùng.',
+    bookingBlocked:'Không thể tự động gửi đặt chỗ này. Vui lòng gọi chúng tôi để được hỗ trợ.',
   },
   es: {
     navHome:'Inicio', navTravel:'Viajes', navMarket:'Mercado', navRides:'Paseos', navTranslate:'Traducir',
@@ -318,8 +322,15 @@ var _UI_STRINGS = {
     chatStatus:'Asistente de reservas · En línea',
     chatEmptyTitle:'¡Hola!', chatEmptySub:'Pregúntame sobre tours, viajes o servicios cercanos',
     chatPh:'Mensaje a Du Lich Cali...',
+    bookingPendingReview:'Reserva recibida. El proveedor la revisará y confirmará los detalles finales.',
+    bookingBlocked:'Esta reserva no se puede enviar automáticamente. Llámanos para recibir ayuda.',
   }
 };
+
+function _uiText(key) {
+  var T = _UI_STRINGS[_siteLang] || _UI_STRINGS.en;
+  return T[key] || _UI_STRINGS.en[key] || key;
+}
 
 function _applyUiLang(lang) {
   var T = _UI_STRINGS[lang] || _UI_STRINGS.en;
@@ -892,6 +903,7 @@ async function submitBooking(event) {
   const selectedTime = new Date(datetime);
 
   // Conflict check
+  let legacyReviewReason = '';
   try {
     const snapshot = await db.collection('bookings').get();
     for (const doc of snapshot.docs) {
@@ -902,11 +914,9 @@ async function submitBooking(event) {
       const bufferMinutes = Math.ceil(distance * 2) + 15;
       const diff          = Math.abs((selectedTime - bookedTime) / 60000);
       if (diff < bufferMinutes) {
-        document.getElementById('slotWarning').textContent =
-          `Time conflict with existing booking at ${bookedTime.toLocaleTimeString()} (requires ${bufferMinutes} min gap).`;
-        submitBtn.disabled = false;
-        submitBtn.textContent = origText;
-        return false;
+        legacyReviewReason = 'time_conflict';
+        document.getElementById('slotWarning').textContent = _uiText('bookingBlocked');
+        break;
       }
     }
   } catch (err) {
@@ -966,6 +976,7 @@ async function submitBooking(event) {
     passengers:   parseInt(passengers) || 1,
     days:         parseInt(days) || 1,
     distance:     lastCalculatedMiles,
+    reviewReason: legacyReviewReason || null,
     createdAt:    firebase.firestore.FieldValue.serverTimestamp(),
     driver:       null,
     vehicleLat:   null,
@@ -993,7 +1004,11 @@ async function submitBooking(event) {
   // Write to Firestore
   try {
     if (window.BookingGuard && bookingDoc.ownerId) {
-      const guardResult = await window.BookingGuard.guardedWrite(guardReq, function(tx) {
+      const guardResult = await window.BookingGuard.guardedWrite(guardReq, function(tx, guardMeta) {
+        guardMeta = guardMeta || {};
+        bookingDoc.status = guardMeta.disposition === 'review' ? 'vendor_review' : 'pending';
+        bookingDoc.reviewReason = guardMeta.disposition === 'review' ? (guardMeta.reason || '') : (legacyReviewReason || null);
+        bookingDoc.reviewConflicts = guardMeta.disposition === 'review' ? (guardMeta.conflicts || []) : [];
         const ref = db.collection('bookings').doc(bookingId);
         if (tx && tx.set) {
           tx.set(ref, bookingDoc);
@@ -1001,14 +1016,21 @@ async function submitBooking(event) {
         }
         return ref.set(bookingDoc);
       }, { db });
-      if (guardResult && guardResult.ok === false) {
+      if (guardResult && guardResult.disposition === 'block') {
         console.warn('[homepage booking] booking guard rejected', guardResult.reason || guardResult);
-        document.getElementById('slotWarning').textContent = 'Booking requires review. Please call to confirm.';
+        document.getElementById('slotWarning').textContent = _uiText('bookingPendingReview');
         submitBtn.disabled = false;
         submitBtn.textContent = origText;
         return false;
       }
+      if (guardResult && guardResult.disposition === 'review') {
+        bookingDoc.status = 'vendor_review';
+        bookingDoc.reviewReason = guardResult.reason || '';
+        bookingDoc.reviewConflicts = guardResult.conflicts || [];
+        document.getElementById('slotWarning').textContent = _uiText('bookingPendingReview');
+      }
     } else {
+      if (legacyReviewReason) bookingDoc.status = 'vendor_review';
       await db.collection('bookings').doc(bookingId).set(bookingDoc);
     }
   } catch (err) {

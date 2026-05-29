@@ -89,6 +89,29 @@ Patch cycle (prompt-driven):
 scripts/ai/patch_cycle.sh prompts/<prompt>.md [--scope <scope>]
 ```
 
+Codex-Claude loop (prompt-driven, multi-phase):
+```
+bash scripts/ai/ai_dev_loop.sh prompts/<prompt>.md --max-loops 3
+```
+
+### Codex-Claude loop — ESTABLISHED, do NOT re-verify each run
+
+This setup is installed and has been working. Do **not** re-read `ai_dev_loop.sh`, re-check
+the API key, re-check the codex CLI, or re-audit prerequisites before every run — just run it.
+Treat the following as known-true unless a run actually fails and tells you otherwise:
+
+- Codex is the **implementer** (`codex exec -s workspace-write`); the Anthropic API is the
+  **reviewer** (emits a `VERDICT` line). `ANTHROPIC_API_KEY` is configured; the `codex` CLI
+  is installed.
+- The loop **never pushes, deploys, or commits** on its own.
+- Each fix-type prompt MUST contain a `## Allowed files` bullet list (scope enforcement reads
+  it) and a filename containing `fix`/`patch` to trigger the full dry-run gate.
+- The loop wants a reasonably clean tree. Pre-existing untracked docs/prompts normally don't
+  block it; if a run reports a dirty-tree/scope failure, pass `--allow-dirty` and/or
+  `--auto-commit --commit-message "..."` — that is the fix, not another round of inspection.
+- Run multi-phase prompt sets sequentially; do not start the next phase until the current
+  one reports `FINAL: PASS` or a clear blocker.
+
 Run artifacts are written to `.ai_runs/latest/` — never committed (gitignored).
 
 Missing checks are always SKIPPED, not PASS.

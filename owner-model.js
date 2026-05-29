@@ -204,6 +204,35 @@
     return matches.length === 1 ? matches[0].ownerId : null;
   }
 
+  // Known tour destination ids (mirror of destinations.js DESTINATIONS ids).
+  // Chat-created tours historically stored the destination id directly in
+  // `serviceType` (e.g. 'lasvegas'), so the bucketer must recognize them as
+  // tours. Kept as a frozen set here so owner-model.js stays self-contained
+  // (it loads standalone in pages and in the node backfill, where the
+  // destinations.js global is not available). Adding a destination is a
+  // one-line edit here alongside destinations.js.
+  var _TOUR_DESTINATION_IDS = Object.freeze({
+    lasvegas: 1, yosemite: 1, sanfrancisco: 1, losangeles: 1, sandiego: 1,
+    anaheim: 1, napavalley: 1, laketahoe: 1, monterey: 1, '17miledrive': 1,
+    palmsprings: 1, sequoia: 1, santabarbara: 1, solvang: 1, grandcanyon: 1
+  });
+
+  // Single source of truth for normalizing a raw serviceType → barber|ride|tour
+  // (or the raw token / null when it cannot be classified). Handles the
+  // customer-facing ride variants and legacy airport_* + destination-id forms.
+  function _bucketOf(serviceType) {
+    var st = _norm(serviceType);
+    if (!st) return null;
+    if (st === 'barber') return 'barber';
+    if (st === 'tour') return 'tour';
+    if (st === 'ride' || st === 'private_ride' || st === 'privateride' ||
+        st === 'pickup' || st === 'dropoff' ||
+        st === 'airport_pickup' || st === 'airportpickup' ||
+        st === 'airport_dropoff' || st === 'airportdropoff') return 'ride';
+    if (_TOUR_DESTINATION_IDS[st]) return 'tour';
+    return st;
+  }
+
   // Canonical owner resolution for a booking at CREATION time. Barber bookings
   // resolve from their vendor; ride/tour resolve by (serviceType, region).
   // Customer-facing 'serviceType' values (private_ride/pickup/dropoff) are
@@ -211,11 +240,7 @@
   // store null rather than guessing when ownership is genuinely unknown.
   function resolveBookingOwner(opts) {
     opts = opts || {};
-    var st = _norm(opts.serviceType);
-    var bucket = (st === 'barber') ? 'barber'
-      : (st === 'tour') ? 'tour'
-      : (st === 'ride' || st === 'private_ride' || st === 'pickup' || st === 'dropoff') ? 'ride'
-      : st;
+    var bucket = _bucketOf(opts.serviceType);
     if (bucket === 'barber') {
       return resolveOwnerId({ id: opts.vendorId || opts.providerId, ownerId: opts.ownerId });
     }
@@ -227,11 +252,7 @@
 
   // Normalize a raw booking serviceType to the internal bucket barber|ride|tour.
   function serviceBucket(serviceType) {
-    var st = _norm(serviceType);
-    if (st === 'barber') return 'barber';
-    if (st === 'tour') return 'tour';
-    if (st === 'ride' || st === 'private_ride' || st === 'pickup' || st === 'dropoff') return 'ride';
-    return st || null;
+    return _bucketOf(serviceType);
   }
 
   return {

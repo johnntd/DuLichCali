@@ -352,11 +352,45 @@ function runMobileBarberAgentTests(test) {
     state.step = 'ASK_ADDRESS';
     var prompt = MobileBarberAgent.buildAIBrainPrompt(state, ctx, 'vi');
     assert(prompt.indexOf('Mobile Barber') >= 0, 'prompt must name the assistant');
-    assert(prompt.indexOf('tiếng Việt') >= 0, 'Vietnamese instruction must be present for vi lang');
+    assert(prompt.indexOf('Tiếng Việt') >= 0, 'Vietnamese instruction must be present for vi lang');
     assert(prompt.indexOf('customerName: Linh') >= 0, 'collected slots must be in prompt');
     assert(prompt.indexOf('Next step the deterministic agent will run: ASK_ADDRESS') >= 0, 'next step guidance present');
     assert(prompt.indexOf('STATE MARKER PROTOCOL') >= 0, 'marker contract present');
     assert(prompt.indexOf('classic-mobile-cut') >= 0, 'allowed serviceId values listed');
+  });
+
+  test('buildAIBrainPrompt locks Vietnamese at start and end without unfenced English reply examples', function() {
+    var ctx = context();
+    var state = MobileBarberAgent.mergeState(MobileBarberAgent.emptyState('vi'), {
+      phone: '7145550100', customerName: 'Linh'
+    }, new Date('2026-05-25T12:00:00'));
+    state.step = 'ASK_DATE_TIME';
+    var prompt = MobileBarberAgent.buildAIBrainPrompt(state, ctx, 'vi');
+    var firstLine = prompt.split('\n')[0];
+    var lastLine = prompt.split('\n').slice(-1)[0];
+    assert(firstLine.indexOf('LANGUAGE LOCK') === 0 && firstLine.indexOf('Tiếng Việt') >= 0,
+      'Vietnamese lock must be first line');
+    assert(lastLine.indexOf('FINAL LANGUAGE LOCK') === 0 && lastLine.indexOf('Tiếng Việt') >= 0,
+      'Vietnamese lock must be last line');
+    assert(prompt.indexOf('=== VIETNAMESE OUTPUT RULES') >= 0, 'Vietnamese anti-drift rules must be present');
+    assert(prompt.indexOf('BookingGuard') >= 0, 'availability/guard contract must be present');
+    assert(prompt.indexOf('Customer: "My name is John"') < 0, 'English visible reply examples must not be unfenced');
+  });
+
+  test('buildAIBrainPrompt locks Spanish at start and end and keeps English available', function() {
+    var ctx = context();
+    var esState = MobileBarberAgent.mergeState(MobileBarberAgent.emptyState('es'), {
+      phone: '7145550100'
+    }, new Date('2026-05-25T12:00:00'));
+    var esPrompt = MobileBarberAgent.buildAIBrainPrompt(esState, ctx, 'es');
+    var esLines = esPrompt.split('\n');
+    assert(esLines[0].indexOf('Español') >= 0, 'Spanish lock must be first line');
+    assert(esLines[esLines.length - 1].indexOf('Español') >= 0, 'Spanish lock must be last line');
+    assert(esPrompt.indexOf('=== SPANISH OUTPUT RULES') >= 0, 'Spanish anti-drift rules must be present');
+
+    var enState = MobileBarberAgent.emptyState('en');
+    var enPrompt = MobileBarberAgent.buildAIBrainPrompt(enState, ctx, 'en');
+    assert(enPrompt.split('\n')[0].indexOf('English') >= 0, 'English lock must still work');
   });
 
   test('handleMessageAsync calls aiBrainProvider and uses paraphrased reply', function() {

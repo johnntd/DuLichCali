@@ -1541,13 +1541,19 @@ window.RideIntake = (function () {
       if (fullLink) fullRouteLink = fullLink;
     }
 
+    var _svcType = _type === 'ride' ? 'private_ride' : (_type === 'pickup' ? 'pickup' : 'dropoff');
+    var _region = (window.DLCRegion && window.DLCRegion.current) ? window.DLCRegion.current.id : null;
+    var _ownerId = (window.OwnerModel && window.OwnerModel.resolveBookingOwner)
+      ? window.OwnerModel.resolveBookingOwner({ serviceType: _svcType, region: _region })
+      : null;
     var base = {
       bookingId: bookingId, status: 'dispatching',
+      ownerId: _ownerId || null,
       vehicle: resolvedVehicle,
       vehicleCapacity: vehicleCapacity,
       pricingTier: pricingTier,
       driverId: _driverVehicle ? _driverVehicle.driverId : null,
-      serviceType: _type === 'ride' ? 'private_ride' : (_type === 'pickup' ? 'pickup' : 'dropoff'),
+      serviceType: _svcType,
       passengers:    pax,
       customerName:  val(_type === 'pickup' ? 'ri_p_name'  : _type === 'dropoff' ? 'ri_d_name'  : 'ri_r_name'),
       customerPhone: val(_type === 'pickup' ? 'ri_p_phone' : _type === 'dropoff' ? 'ri_d_phone' : 'ri_r_phone'),
@@ -1558,7 +1564,7 @@ window.RideIntake = (function () {
       uberEstimate:      _quote ? _quote.uberEstimate    : null,
       savings:           _quote ? _quote.savings         : null,
       routeLink:         fullRouteLink,
-      region:            (window.DLCRegion && window.DLCRegion.current) ? window.DLCRegion.current.id : null,
+      region:            _region,
       feasibilityStatus: 'feasible', // passed validation in step 3
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     };

@@ -822,8 +822,13 @@ var TravelBooking = (function() {
           showWizardError(conflictResult.reason + ' Your booking is still being submitted.');
         }
 
+      var _tbOwnerId = (window.OwnerModel && window.OwnerModel.resolveBookingOwner)
+        ? window.OwnerModel.resolveBookingOwner({ serviceType: 'tour', region: _pickupRegion })
+        : null;
       var bookingDoc = {
         bookingId:    bookingId,
+        ownerId:      _tbOwnerId || null,
+        serviceType:  'tour',
         packageId:    _pkg.id,
         package_id:   _pkg.id,    // spec field name alias
         packageName:  _pkg.name,

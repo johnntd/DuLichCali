@@ -72,8 +72,8 @@
       providerId: null,
       name: 'Michael Airport & Rides OC',
       region: 'Orange County',
-      status: 'coming_soon',
-      dashboardUrl: '/driver-admin.html',
+      status: 'active',
+      dashboardUrl: '/mobile-barber/dashboard.html?type=ride',
       customerUrl: '/airport'
     }),
     Object.freeze({
@@ -83,8 +83,8 @@
       providerId: null,
       name: 'Michael Private Tours OC',
       region: 'Orange County',
-      status: 'coming_soon',
-      dashboardUrl: '/tour',
+      status: 'active',
+      dashboardUrl: '/mobile-barber/dashboard.html?type=tour',
       customerUrl: '/tour'
     }),
     Object.freeze({
@@ -176,6 +176,64 @@
     return businessesForOwner(ownerId).length > 1;
   }
 
+  // Region aliases: bookings store region as a short id (DLCRegion.current.id,
+  // e.g. 'oc' / 'bayarea'); BUSINESSES store the human label ('Orange County').
+  // Normalize both sides to the same token so a region match works either way.
+  var _REGION_ALIASES = Object.freeze({
+    'oc': 'orange county', 'orange county': 'orange county', 'orangecounty': 'orange county',
+    'bayarea': 'bay area', 'bay area': 'bay area', 'sf': 'bay area'
+  });
+  function _normRegion(r) {
+    var n = _norm(r);
+    return _REGION_ALIASES[n] || n;
+  }
+
+  // Find the owner that operates a given (serviceType, region). Data-driven off
+  // BUSINESSES so onboarding a future driver/operator is a table edit, not a
+  // code change at the booking call sites. Returns ownerId or null.
+  function defaultOwnerForServiceRegion(serviceType, region) {
+    if (!serviceType) return null;
+    var rn = _normRegion(region);
+    var matches = BUSINESSES.filter(function(b) { return b.serviceType === serviceType; });
+    if (rn) {
+      var regionMatch = matches.filter(function(b) { return _normRegion(b.region) === rn; });
+      if (regionMatch.length) return regionMatch[0].ownerId;
+    }
+    // No region match: only safe to infer an owner when exactly one operates
+    // this service type (true today — Michael is the sole ride/tour operator).
+    return matches.length === 1 ? matches[0].ownerId : null;
+  }
+
+  // Canonical owner resolution for a booking at CREATION time. Barber bookings
+  // resolve from their vendor; ride/tour resolve by (serviceType, region).
+  // Customer-facing 'serviceType' values (private_ride/pickup/dropoff) are
+  // normalized to the internal 'ride' bucket. Returns ownerId or null; callers
+  // store null rather than guessing when ownership is genuinely unknown.
+  function resolveBookingOwner(opts) {
+    opts = opts || {};
+    var st = _norm(opts.serviceType);
+    var bucket = (st === 'barber') ? 'barber'
+      : (st === 'tour') ? 'tour'
+      : (st === 'ride' || st === 'private_ride' || st === 'pickup' || st === 'dropoff') ? 'ride'
+      : st;
+    if (bucket === 'barber') {
+      return resolveOwnerId({ id: opts.vendorId || opts.providerId, ownerId: opts.ownerId });
+    }
+    if (bucket === 'ride' || bucket === 'tour') {
+      return defaultOwnerForServiceRegion(bucket, opts.region);
+    }
+    return null;
+  }
+
+  // Normalize a raw booking serviceType to the internal bucket barber|ride|tour.
+  function serviceBucket(serviceType) {
+    var st = _norm(serviceType);
+    if (st === 'barber') return 'barber';
+    if (st === 'tour') return 'tour';
+    if (st === 'ride' || st === 'private_ride' || st === 'pickup' || st === 'dropoff') return 'ride';
+    return st || null;
+  }
+
   return {
     SERVICE_TYPES: SERVICE_TYPES,
     OWNERS: OWNERS,
@@ -187,6 +245,9 @@
     ownerForBusiness: ownerForBusiness,
     resolveOwnerId: resolveOwnerId,
     ownerForEmail: ownerForEmail,
-    ownerHasMultipleBusinesses: ownerHasMultipleBusinesses
+    ownerHasMultipleBusinesses: ownerHasMultipleBusinesses,
+    defaultOwnerForServiceRegion: defaultOwnerForServiceRegion,
+    resolveBookingOwner: resolveBookingOwner,
+    serviceBucket: serviceBucket
   };
 });

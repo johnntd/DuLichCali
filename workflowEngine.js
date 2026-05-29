@@ -2650,8 +2650,11 @@
       // Capacity-matched vehicle type
       var airVehicleType = DLCPricing && DLCPricing.getVehicle ? DLCPricing.getVehicle(f.passengers||1) : null;
 
+      var _apOwnerId = (window.OwnerModel && window.OwnerModel.resolveBookingOwner)
+        ? window.OwnerModel.resolveBookingOwner({ serviceType: isPickup?'pickup':'dropoff', region: ridRegionId })
+        : null;
       await db.collection('bookings').doc(orderId).set({
-        bookingId:orderId, trackingToken,
+        bookingId:orderId, trackingToken, ownerId: _apOwnerId || null,
         status:airBookStatus, serviceType:isPickup?'pickup':'dropoff', datetime,
         airport:f.airport||'', airline:f.airline||'', terminal:f.terminal||'',
         // Normalized address fields (ride-intake compatible names)
@@ -2831,8 +2834,11 @@
       ];
       var tourMsg = tourMsgLines.filter(function(v){return v!==null;}).join('\n');
 
+      var _tourOwnerId = (window.OwnerModel && window.OwnerModel.resolveBookingOwner)
+        ? window.OwnerModel.resolveBookingOwner({ serviceType: 'tour', region: tourRegionId })
+        : null;
       await db.collection('bookings').doc(orderId).set({
-        bookingId:orderId, trackingToken,
+        bookingId:orderId, trackingToken, ownerId: _tourOwnerId || null,
         status:'pending', serviceType:dest.id||'tour', datetime:f.requestedDate||'',
         address:f.startingPoint||'', passengers:f.passengers||1, days:f.days||1,
         lodging, hotelArea:f.hotelArea||'', hotelBudget:f.hotelBudget||'',
@@ -2904,8 +2910,11 @@
       var prBookStatus   = 'dispatching'; // Phase 13: all rides go through offer/accept flow
 
       var prVehicleType = DLCPricing && DLCPricing.getVehicle ? DLCPricing.getVehicle(f.passengers||1) : (rideEst ? rideEst.vehicle : null);
+      var _prOwnerId = (window.OwnerModel && window.OwnerModel.resolveBookingOwner)
+        ? window.OwnerModel.resolveBookingOwner({ serviceType: 'private_ride', region: f.region })
+        : null;
       await db.collection('bookings').doc(orderId).set({
-        bookingId:orderId, trackingToken,
+        bookingId:orderId, trackingToken, ownerId: _prOwnerId || null,
         status:prBookStatus, serviceType:'private_ride', datetime,
         pickupAddress:f.pickupAddress||'', dropoffAddress:f.dropoffAddress||'',
         // Normalized date fields (ride-intake compatible split fields)

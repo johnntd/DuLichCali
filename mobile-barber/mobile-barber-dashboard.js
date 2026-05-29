@@ -46,6 +46,20 @@
       statPending: 'Pending',
       statInProgress: 'In progress',
       statCompleted: 'Completed today',
+      filterAll: 'All',
+      filterBarber: 'Barber',
+      filterRide: 'Ride',
+      filterTour: 'Tour',
+      svcBarber: 'Barber',
+      svcAirportPickup: 'Airport Pickup',
+      svcAirportDropoff: 'Airport Drop-off',
+      svcPrivateRide: 'Private Ride',
+      svcTour: 'Tour',
+      passengersLabel: 'Passengers',
+      routeLabel: 'Route',
+      durationDaysLabel: 'Duration (days)',
+      navigateAction: 'Navigate',
+      airportLabel: 'Airport',
       appointmentListTitle: 'Appointments',
       appointmentListHint: 'Tap a card above to switch the list.',
       appointmentListHintToday: 'Showing appointments scheduled for today.',
@@ -283,6 +297,20 @@
       statPending: 'Chờ xác nhận',
       statInProgress: 'Đang làm',
       statCompleted: 'Hoàn tất hôm nay',
+      filterAll: 'Tất cả',
+      filterBarber: 'Cắt tóc',
+      filterRide: 'Đưa đón',
+      filterTour: 'Tour',
+      svcBarber: 'Cắt tóc',
+      svcAirportPickup: 'Đón sân bay',
+      svcAirportDropoff: 'Tiễn sân bay',
+      svcPrivateRide: 'Xe riêng',
+      svcTour: 'Tour du lịch',
+      passengersLabel: 'Số khách',
+      routeLabel: 'Lộ trình',
+      durationDaysLabel: 'Số ngày',
+      navigateAction: 'Chỉ đường',
+      airportLabel: 'Sân bay',
       appointmentListTitle: 'Lịch hẹn',
       appointmentListHint: 'Bấm thẻ ở trên để chuyển danh sách.',
       appointmentListHintToday: 'Hiển thị lịch hẹn cho hôm nay.',
@@ -520,6 +548,20 @@
       statPending: 'Pendientes',
       statInProgress: 'En curso',
       statCompleted: 'Completadas hoy',
+      filterAll: 'Todos',
+      filterBarber: 'Barbero',
+      filterRide: 'Viaje',
+      filterTour: 'Tour',
+      svcBarber: 'Barbero',
+      svcAirportPickup: 'Recogida aeropuerto',
+      svcAirportDropoff: 'Entrega aeropuerto',
+      svcPrivateRide: 'Viaje privado',
+      svcTour: 'Tour',
+      passengersLabel: 'Pasajeros',
+      routeLabel: 'Ruta',
+      durationDaysLabel: 'Duración (días)',
+      navigateAction: 'Navegar',
+      airportLabel: 'Aeropuerto',
       appointmentListTitle: 'Citas',
       appointmentListHint: 'Toca una tarjeta arriba para cambiar la lista.',
       appointmentListHintToday: 'Mostrando citas programadas para hoy.',
@@ -743,6 +785,9 @@
     lang: 'en',
     vendorId: '',
     vendor: null,
+    ownerId: null,
+    ownerMode: false,
+    serviceTypeFilter: 'all',
     services: [],
     availability: null,
     bookings: [],
@@ -856,6 +901,32 @@
     state.vendor = Object.assign({}, clone(base || {}), overrides[state.vendorId] || {});
   }
 
+  // Owner mode: when the logged-in barber vendor belongs to an owner that
+  // operates more than one business (e.g. Michael — barber + ride + tour),
+  // the dashboard loads ALL of that owner's bookings, not just barber. A
+  // single-business owner (e.g. Tim) keeps the normal per-vendor behavior.
+  function resolveOwnerMode() {
+    state.ownerId = null;
+    state.ownerMode = false;
+    if (!root.OwnerModel || !root.OwnerModel.resolveOwnerId) return;
+    var oid = root.OwnerModel.resolveOwnerId({
+      id: state.vendorId,
+      ownerId: (state.vendor && state.vendor.ownerId) || null
+    });
+    if (!oid) return;
+    state.ownerId = oid;
+    state.ownerMode = !!(root.OwnerModel.ownerHasMultipleBusinesses
+      && root.OwnerModel.ownerHasMultipleBusinesses(oid)
+      && root.OwnerBookings && root.OwnerBookings.load);
+    // The owner hub deep-links into a specific service via ?type=ride|tour|barber.
+    if (state.ownerMode) {
+      try {
+        var t = new URLSearchParams(root.location.search).get('type');
+        if (t && ['barber', 'ride', 'tour'].indexOf(t) !== -1) state.serviceTypeFilter = t;
+      } catch (e) {}
+    }
+  }
+
   // Hydrate state.vendor from Firestore so the dashboard reflects the portal's
   // true persisted state across devices. Firestore is the source of truth for
   // vendor-owned fields (promotions, profile). loadVendor() runs first to give
@@ -921,6 +992,17 @@
     };
     var db = firestoreDb();
     if (!db) return Promise.resolve(localRows());
+    // Owner mode: pull barber + ride + tour bookings via the unified loader,
+    // normalized into the same row shape the dashboard already renders.
+    if (state.ownerMode && root.OwnerBookings && root.OwnerBookings.load) {
+      return root.OwnerBookings.load(db, state.ownerId, {
+        barberVendorIds: root.OwnerBookings.barberVendorIdsFor(state.ownerId)
+      }).then(function(rows) {
+        return normalizeRows(rows);
+      }).catch(function() {
+        return localRows();
+      });
+    }
     return db.collection(DATA.COLLECTIONS.bookings)
       .where('vendorId', '==', state.vendorId)
       .get()
@@ -1000,8 +1082,25 @@
     writeJson(STORAGE.reviews, rows);
   }
 
+  function bookingById(bookingId) {
+    return (state.bookings || []).filter(function(b) {
+      return b.id === bookingId || b.bookingId === bookingId;
+    })[0] || null;
+  }
+
+  // Owner mode routes writes to the row's own collection (barber →
+  // mobileBarberBookings, ride/airport → bookings, tour → travel_bookings).
+  // Outside owner mode every row is a barber booking, so this returns the
+  // barber collection and existing behavior is unchanged.
+  function targetCollectionFor(bookingId) {
+    var b = bookingById(bookingId);
+    if (b && b.sourceCollection) return b.sourceCollection;
+    return DATA.COLLECTIONS.bookings;
+  }
+
   function updateBookingStatus(bookingId, status) {
-    var booking = (state.bookings || []).filter(function(b) { return b.id === bookingId; })[0] || null;
+    var booking = bookingById(bookingId);
+    var isBarber = !booking || !booking.serviceType || booking.serviceType === 'barber';
     var all = readJson(STORAGE.bookings, []);
     all = all.map(function(b) {
       if (b.id !== bookingId) return b;
@@ -1009,13 +1108,14 @@
     });
     writeJson(STORAGE.bookings, all);
     var writePromise = canUseFirestore()
-      ? root.firebase.firestore().collection(DATA.COLLECTIONS.bookings).doc(bookingId).set({
+      ? root.firebase.firestore().collection(targetCollectionFor(bookingId)).doc(bookingId).set({
           status: status,
           updatedAt: new Date().toISOString()
         }, { merge: true })
       : Promise.resolve();
     writePromise.then(function() {
-      if (booking && root.DLCNotifications && typeof root.DLCNotifications.queueMobileBarberStatusChange === 'function') {
+      // Barber status-change SMS only; ride/tour notifications are Phase 2.
+      if (isBarber && booking && root.DLCNotifications && typeof root.DLCNotifications.queueMobileBarberStatusChange === 'function') {
         try {
           root.DLCNotifications.queueMobileBarberStatusChange(
             Object.assign({}, booking, { status: status }),
@@ -1328,7 +1428,7 @@
     });
     render();
     if (canUseFirestore()) {
-      root.firebase.firestore().collection(DATA.COLLECTIONS.bookings).doc(bookingId).set(patch, { merge: true })
+      root.firebase.firestore().collection(targetCollectionFor(bookingId)).doc(bookingId).set(patch, { merge: true })
         .catch(function(err) {
           if (root.console) root.console.error('[mobile-barber-dashboard] booking patch failed', err);
         });
@@ -1382,12 +1482,25 @@
     var payMethod = paymentMethodCode(booking.paymentMethod);
     var payStatus = paymentStatusCode(booking.paymentStatus);
     var locationStr = [booking.city, booking.zip].filter(Boolean).join(' • ');
-    var serviceStr = booking.serviceName || booking.serviceId || '';
+    var serviceStr = booking.serviceName
+      || (booking.serviceLabelKey ? t(booking.serviceLabelKey) : '')
+      || booking.serviceId || '';
 
     // Head — single tappable button so the whole row toggles expansion
     var head = el('button', 'mb-booking-row__head');
     head.type = 'button';
     head.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+
+    // Owner mode: a per-row service-type badge (💈/🚗/🧭) so barber, ride, and
+    // tour rows are distinguishable at a glance in the unified list.
+    if (state.ownerMode && booking.serviceType) {
+      var typeIcon = booking.serviceType === 'ride' ? '🚗'
+        : booking.serviceType === 'tour' ? '🧭' : '💈';
+      var typeBadge = el('span', 'mb-booking-row__type mb-type-badge mb-type-badge--' + booking.serviceType);
+      typeBadge.textContent = typeIcon;
+      typeBadge.setAttribute('aria-label', t('filter' + booking.serviceType.charAt(0).toUpperCase() + booking.serviceType.slice(1)));
+      head.appendChild(typeBadge);
+    }
 
     var pill = el('span', 'mb-booking-row__status mb-status-pill mb-status-pill--' + bucket);
     pill.textContent = statusLabel(booking.status);
@@ -1462,6 +1575,15 @@
       link.rel = 'noopener';
       link.textContent = t('mapLink');
       actions.appendChild(link);
+    }
+    // Navigate (turn-by-turn) — ride rows carry a precomputed routeLink.
+    if (trim(booking.routeLink)) {
+      var nav = el('a', 'mb-button mb-button--ghost mb-button--sm');
+      nav.href = booking.routeLink;
+      nav.target = '_blank';
+      nav.rel = 'noopener';
+      nav.textContent = t('navigateAction');
+      actions.appendChild(nav);
     }
     // SMS confirmation launcher — opens the vendor's native SMS app composing
     // to the customer with a prefilled confirmation template. Shown only when
@@ -1541,6 +1663,19 @@
     detail.appendChild(detailSection(t('customerAddress'), [
       [t('customerAddress'), [booking.address, booking.city, booking.zip].filter(Boolean).join(', ')]
     ]));
+    // Owner mode: surface ride/tour-specific fields the barber schema lacks.
+    if (booking.serviceType === 'ride') {
+      detail.appendChild(detailSection(t('svcPrivateRide'), [
+        [t('passengersLabel'), booking.passengers || ''],
+        [t('serviceType'), booking.serviceLabelKey ? t(booking.serviceLabelKey) : ''],
+        [t('airportLabel'), booking.airport || '']
+      ]));
+    } else if (booking.serviceType === 'tour') {
+      detail.appendChild(detailSection(t('svcTour'), [
+        [t('passengersLabel'), booking.passengers || ''],
+        [t('durationDaysLabel'), booking.durationDays || '']
+      ]));
+    }
     var pricingRows = [
       [t('servicePrice'), formatMoney(booking.servicePrice)],
       [t('travelFee'), formatMoney(booking.travelFee)],
@@ -1894,6 +2029,49 @@
     });
   }
 
+  // Owner-only All/Barber/Ride/Tour filter bar. Built once and inserted just
+  // above the appointment list; hidden entirely for single-service vendors so
+  // their dashboard is unchanged.
+  function renderServiceTypeFilter() {
+    var bar = document.getElementById('mbServiceTypeFilter');
+    if (!state.ownerMode) {
+      if (bar) bar.parentNode.removeChild(bar);
+      return;
+    }
+    var list = document.getElementById('mbAppointmentList');
+    if (!list) return;
+    var titleEl = document.getElementById('mbAppointmentListTitle');
+    var anchor = titleEl || list;
+    if (!bar) {
+      bar = el('div', 'mb-service-filter');
+      bar.id = 'mbServiceTypeFilter';
+      bar.setAttribute('role', 'tablist');
+      anchor.parentNode.insertBefore(bar, anchor);
+    }
+    var defs = [
+      { key: 'all', label: 'filterAll', icon: '' },
+      { key: 'barber', label: 'filterBarber', icon: '💈' },
+      { key: 'ride', label: 'filterRide', icon: '🚗' },
+      { key: 'tour', label: 'filterTour', icon: '🧭' }
+    ];
+    bar.innerHTML = '';
+    defs.forEach(function(def) {
+      var btn = el('button', 'mb-service-filter__btn');
+      btn.type = 'button';
+      btn.setAttribute('role', 'tab');
+      var isActive = (state.serviceTypeFilter || 'all') === def.key;
+      btn.classList.toggle('mb-service-filter__btn--active', isActive);
+      btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      btn.textContent = (def.icon ? def.icon + ' ' : '') + t(def.label);
+      btn.addEventListener('click', function() {
+        state.serviceTypeFilter = def.key;
+        state.expandedBookingId = null;
+        renderBookings();
+      });
+      bar.appendChild(btn);
+    });
+  }
+
   function renderBookingList(id, rows) {
     var list = document.getElementById(id);
     if (!list) return;
@@ -1909,13 +2087,25 @@
     });
   }
 
+  // Owner mode adds an All/Barber/Ride/Tour filter on top of the summary cards.
+  // Outside owner mode (single-service vendors) this returns every booking, so
+  // existing behavior is unchanged.
+  function bookingsInScope() {
+    var rows = state.bookings || [];
+    if (state.ownerMode && state.serviceTypeFilter && state.serviceTypeFilter !== 'all') {
+      rows = rows.filter(function(b) { return b.serviceType === state.serviceTypeFilter; });
+    }
+    return rows;
+  }
+
   // Bucket rows by summary-card filter. Sorting is by start time except for
   // completed_today which sorts most-recent first since the operator usually
   // wants to see the freshly finished bookings at the top.
   function bookingsForSummaryFilter(filter, now) {
     now = now || new Date();
     var today = getTodayIso();
-    var active = (state.bookings || []).filter(function(b) {
+    var scope = bookingsInScope();
+    var active = scope.filter(function(b) {
       return b.status !== 'cancelled' && b.status !== 'completed';
     });
     var rows;
@@ -1932,7 +2122,7 @@
         return b.status === 'in_progress' || b.status === 'traveling';
       });
     } else if (filter === 'completed_today') {
-      rows = (state.bookings || []).filter(function(b) {
+      rows = scope.filter(function(b) {
         return b.status === 'completed' && b.requestedDate === today;
       });
       return rows.sort(function(a, b) { return bookingStartMillis(b) - bookingStartMillis(a); });
@@ -1945,7 +2135,9 @@
   function renderBookings() {
     var now = new Date();
     var today = getTodayIso();
-    var active = state.bookings.filter(function(booking) { return booking.status !== 'cancelled' && booking.status !== 'completed'; });
+    renderServiceTypeFilter();
+    var scope = bookingsInScope();
+    var active = scope.filter(function(booking) { return booking.status !== 'cancelled' && booking.status !== 'completed'; });
     var todayRows = active.filter(function(booking) { return booking.requestedDate === today; });
     var upcomingRows = active.filter(function(booking) { return isUpcomingBooking(booking, now); });
     var pendingRows = active.filter(function(booking) {
@@ -1954,7 +2146,7 @@
     var inProgressRows = active.filter(function(booking) {
       return booking.status === 'in_progress' || booking.status === 'traveling';
     });
-    var completedTodayRows = state.bookings.filter(function(booking) {
+    var completedTodayRows = scope.filter(function(booking) {
       return booking.status === 'completed' && booking.requestedDate === today;
     });
     // Counters stay live and synced regardless of which filter is active.
@@ -2646,6 +2838,7 @@
     state.notifiedBookingIds = readJson(notifiedStorageKey(), {});
     state.soundAlertsEnabled = readString(soundStorageKey(), 'on') !== 'off';
     loadVendor();
+    resolveOwnerMode();
     loadServices();
     loadAvailability();
     loadBlocks();

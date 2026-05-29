@@ -693,9 +693,15 @@
     var servicePrice = Number(check.price.servicePrice || check.service.price || 0);
     var travelFee = Number(check.price.travelFee || 0);
     var amountDue = Number(check.price.totalPrice != null ? check.price.totalPrice : (servicePrice + travelFee));
+    var _ownerId = input.vendor.ownerId
+      || (root && root.OwnerModel && root.OwnerModel.resolveBookingOwner
+          ? root.OwnerModel.resolveBookingOwner({ serviceType: 'barber', vendorId: input.vendor.id, ownerId: input.vendor.ownerId })
+          : null);
     var booking = {
       id: id,
       vendorId: input.vendor.id,
+      ownerId: _ownerId || null,
+      serviceType: 'barber',
       customerName: trim(draft.customerName),
       customerPhone: digits(draft.customerPhone),
       customerEmail: trim(draft.customerEmail),

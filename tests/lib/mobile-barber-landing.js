@@ -88,7 +88,7 @@ function runMobileBarberLandingTests(test) {
   });
 
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
-    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260529d');
+    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260529e');
     assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260528q');
     assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260529e');
     assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260529b');
@@ -283,7 +283,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/vendor/**"');
     assertContains(firebase, '"destination": "/mobile-barber/vendor.html"');
     assertContains(vendorHtml, 'id="mobileBarberVendorApp"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260529d');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260529e');
     assertContains(vendorHtml, 'id="mbVendorName"');
     assertContains(vendorHtml, 'id="mbVendorServices"');
     assertContains(vendorHtml, 'id="mbBookingTitle"');
@@ -546,8 +546,8 @@ function runMobileBarberLandingTests(test) {
     assertContains(dashboardHtml, 'id="mobileBarberDashboardApp"');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260528q');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260529e');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260529d');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260529d');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260529e');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260529e');
     assertContains(dashboardHtml, 'firebase-auth-compat.js');
     assertContains(dashboardHtml, '/notifications.js?v=20260525a');
     assertContains(dashboardHtml, 'id="mbBookingAlertRegion"');
@@ -555,6 +555,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(dashboardHtml, 'id="mbNotifBadge"');
     assertContains(dashboardHtml, 'id="mbNotifDrawer"');
     assertContains(dashboardHtml, 'id="mbNotifList"');
+    assertContains(dashboardHtml, 'data-owner-review-queue="appointments"');
     assertContains(dashboardHtml, 'data-action="enableSoundAlerts"');
     assertContains(dashboardJs, 'function gateAndInit');
     assertContains(dashboardJs, "vendorUsers");
@@ -658,6 +659,73 @@ function runMobileBarberLandingTests(test) {
     assertContains(dashboardJs, 'customerPhone');
     assertContains(dashboardJs, 'customerEmail');
     assertContains(dashboardJs, 'photoUrls');
+  });
+
+  test('Mobile Barber owner review queue is i18n driven and guard validated', function() {
+    var reviewKeys = [
+      'filterNeedsReview',
+      'appointmentListHintNeedsReview',
+      'reviewQueueBadge',
+      'reviewReasonLabel',
+      'reviewConflictsLabel',
+      'reviewReasonTimeConflict',
+      'reviewReasonOutsideServiceRadius',
+      'reviewReasonVendorReviewRequired',
+      'reviewReasonTourDailyCap',
+      'reviewReasonOutsideWorkingHours',
+      'reviewReasonUnknown',
+      'reviewApproveAction',
+      'reviewRescheduleAction',
+      'reviewDeclineAction',
+      'reviewRescheduleDateLabel',
+      'reviewRescheduleTimeLabel',
+      'reviewApproveOverrideConfirm',
+      'reviewDeclinePrompt',
+      'reviewApproveSuccess',
+      'reviewRescheduleConfirmSuccess',
+      'reviewRescheduleReviewSuccess',
+      'reviewDeclineSuccess',
+      'reviewApproveBlocked',
+      'reviewGuardUnavailable',
+      'reviewOwnerOnly',
+      'reviewRescheduleMissing',
+      'statusRejected'
+    ];
+    ['en', 'vi', 'es'].forEach(function(lang, idx, langs) {
+      var langPos = dashboardJs.indexOf(lang + ': {');
+      assert(langPos >= 0, 'dashboard i18n missing language: ' + lang);
+      var nextPos = idx + 1 < langs.length ? dashboardJs.indexOf(langs[idx + 1] + ': {', langPos + 1) : dashboardJs.indexOf('  };', langPos);
+      var langBlock = dashboardJs.slice(langPos, nextPos >= 0 ? nextPos : dashboardJs.length);
+      reviewKeys.forEach(function(key) {
+        assertContains(langBlock, key + ':', lang + ' missing review key ' + key);
+      });
+    });
+    [
+      "time_conflict: 'reviewReasonTimeConflict'",
+      "outside_service_radius: 'reviewReasonOutsideServiceRadius'",
+      "vendor_review_required: 'reviewReasonVendorReviewRequired'",
+      "tour_daily_cap: 'reviewReasonTourDailyCap'",
+      "outside_working_hours: 'reviewReasonOutsideWorkingHours'"
+    ].forEach(function(mapping) {
+      assertContains(dashboardJs, mapping);
+    });
+    assertContains(dashboardHtml, 'data-owner-review-queue="appointments"');
+    assertContains(dashboardJs, "{ key: 'needs_review', label: 'filterNeedsReview', icon: '' }");
+    assertContains(dashboardJs, "state.serviceTypeFilter === 'needs_review'");
+    assertContains(dashboardJs, 'function approveReviewBooking');
+    assertContains(dashboardJs, 'function rescheduleReviewBooking');
+    assertContains(dashboardJs, 'function declineReviewBooking');
+    assertContains(dashboardJs, 'function buildReviewActions');
+    assertContains(dashboardJs, "data-review-actions");
+    assertContains(dashboardJs, "data-review-action");
+    assertContains(dashboardJs, 'BookingGuard.validateUnifiedBookingRequest');
+    assertContains(dashboardJs, "existingBookings: ownerReviewRowsExcept");
+    assertContains(dashboardJs, "status: 'confirmed'");
+    assertContains(dashboardJs, "status: 'rejected'");
+    assertContains(dashboardJs, "reviewReason: null");
+    assertContains(css, '.mb-booking-row--vendor-review');
+    assertContains(css, '.mb-review-actions');
+    assertContains(css, '.mb-review-chip');
   });
 
   test('Mobile Barber dashboard keeps customer address vendor-only', function() {

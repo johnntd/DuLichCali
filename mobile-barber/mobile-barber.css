@@ -2872,6 +2872,10 @@
 .mb-booking-row--traveling   { border-left-color: #38bdf8; }
 .mb-booking-row--completed   { border-left-color: #94a3b8; opacity: .82; }
 .mb-booking-row--cancelled   { border-left-color: #f87171; opacity: .68; }
+.mb-booking-row--vendor-review {
+  border-left-color: #f97316;
+  background: rgba(40, 18, 8, .62);
+}
 
 .mb-booking-row--expanded {
   background: rgba(8, 30, 52, .82);
@@ -2975,6 +2979,26 @@
   padding-top: .25rem;
 }
 
+.mb-review-actions {
+  display: grid;
+  gap: .5rem;
+  width: 100%;
+  padding: .65rem;
+  border: 1px solid rgba(249, 115, 22, .34);
+  border-radius: var(--r-sm);
+  background: rgba(249, 115, 22, .08);
+}
+
+.mb-review-actions__reschedule,
+.mb-review-actions__buttons {
+  display: grid;
+  gap: .45rem;
+}
+
+.mb-review-actions__field {
+  margin: 0;
+}
+
 /* Sticky filter bar treatment for the upcoming panel head */
 .mb-dashboard-filters {
   display: flex;
@@ -2994,6 +3018,13 @@
   .mb-booking-row__customer { font-size: var(--text-md); }
   .mb-booking-row__service,
   .mb-booking-row__city { font-size: var(--text-sm); }
+  .mb-review-actions__reschedule {
+    grid-template-columns: repeat(2, minmax(0, 12rem));
+  }
+  .mb-review-actions__buttons {
+    display: flex;
+    flex-wrap: wrap;
+  }
 }
 
 /* ---------- Owner-mode service-type filter + badges ---------- */
@@ -3229,6 +3260,14 @@
   background: rgba(148, 163, 184, .18);
   color: #cbd5e1;
   border: 1px solid rgba(148, 163, 184, .45);
+}
+
+.mb-review-chip {
+  background: rgba(249, 115, 22, .18);
+  color: #fed7aa;
+  border: 1px solid rgba(249, 115, 22, .56);
+  max-width: min(100%, 24rem);
+  white-space: normal;
 }
 
 @keyframes mbChipPulse {

@@ -266,6 +266,33 @@
       statusRescheduled: 'Rescheduled',
       statusCancelled: 'Cancelled',
       statusCompleted: 'Completed',
+      statusRejected: 'Declined',
+      filterNeedsReview: 'Needs review',
+      appointmentListHintNeedsReview: 'Showing owner bookings that need review before confirmation.',
+      reviewQueueBadge: 'Needs review',
+      reviewReasonLabel: 'Review reason',
+      reviewConflictsLabel: 'Conflicts found',
+      reviewReasonTimeConflict: 'Time conflict with another owner booking',
+      reviewReasonOutsideServiceRadius: 'Outside service radius',
+      reviewReasonVendorReviewRequired: 'Location or booking details need owner review',
+      reviewReasonTourDailyCap: 'Tour daily cap reached',
+      reviewReasonOutsideWorkingHours: 'Outside working hours',
+      reviewReasonUnknown: 'Owner review required',
+      reviewApproveAction: 'Approve',
+      reviewRescheduleAction: 'Reschedule',
+      reviewDeclineAction: 'Decline',
+      reviewRescheduleDateLabel: 'New date',
+      reviewRescheduleTimeLabel: 'New time',
+      reviewApproveOverrideConfirm: 'This booking still needs review. Approve it anyway?',
+      reviewDeclinePrompt: 'Optional decline reason',
+      reviewApproveSuccess: 'Booking approved.',
+      reviewRescheduleConfirmSuccess: 'Booking rescheduled and confirmed.',
+      reviewRescheduleReviewSuccess: 'Booking rescheduled and kept in review.',
+      reviewDeclineSuccess: 'Booking declined.',
+      reviewApproveBlocked: 'This booking cannot be approved because the guard blocked it.',
+      reviewGuardUnavailable: 'Booking guard is unavailable. Try again after refresh.',
+      reviewOwnerOnly: 'Only the owner dashboard can review this booking.',
+      reviewRescheduleMissing: 'Choose a new date and time.',
       minutesShort: 'min',
       dayMonday: 'Monday',
       dayTuesday: 'Tuesday',
@@ -525,6 +552,33 @@
       statusRescheduled: 'Đã đổi lịch',
       statusCancelled: 'Đã hủy',
       statusCompleted: 'Hoàn tất',
+      statusRejected: 'Đã từ chối',
+      filterNeedsReview: 'Cần xem xét',
+      appointmentListHintNeedsReview: 'Đang hiển thị lịch của chủ cần xem xét trước khi xác nhận.',
+      reviewQueueBadge: 'Cần xem xét',
+      reviewReasonLabel: 'Lý do cần xem xét',
+      reviewConflictsLabel: 'Xung đột tìm thấy',
+      reviewReasonTimeConflict: 'Trùng giờ với lịch khác của chủ',
+      reviewReasonOutsideServiceRadius: 'Ngoài bán kính phục vụ',
+      reviewReasonVendorReviewRequired: 'Địa điểm hoặc thông tin đặt lịch cần chủ xem xét',
+      reviewReasonTourDailyCap: 'Đã đạt giới hạn tour trong ngày',
+      reviewReasonOutsideWorkingHours: 'Ngoài giờ làm việc',
+      reviewReasonUnknown: 'Cần chủ xem xét',
+      reviewApproveAction: 'Duyệt',
+      reviewRescheduleAction: 'Đổi lịch',
+      reviewDeclineAction: 'Từ chối',
+      reviewRescheduleDateLabel: 'Ngày mới',
+      reviewRescheduleTimeLabel: 'Giờ mới',
+      reviewApproveOverrideConfirm: 'Lịch này vẫn cần xem xét. Vẫn duyệt lịch?',
+      reviewDeclinePrompt: 'Lý do từ chối nếu có',
+      reviewApproveSuccess: 'Đã duyệt lịch.',
+      reviewRescheduleConfirmSuccess: 'Đã đổi lịch và xác nhận.',
+      reviewRescheduleReviewSuccess: 'Đã đổi lịch và giữ trong mục xem xét.',
+      reviewDeclineSuccess: 'Đã từ chối lịch.',
+      reviewApproveBlocked: 'Không thể duyệt lịch này vì hệ thống kiểm tra đã chặn.',
+      reviewGuardUnavailable: 'Chưa tải được Booking Guard. Vui lòng làm mới rồi thử lại.',
+      reviewOwnerOnly: 'Chỉ bảng điều khiển của chủ mới được xem xét lịch này.',
+      reviewRescheduleMissing: 'Chọn ngày và giờ mới.',
       minutesShort: 'phút',
       dayMonday: 'Thứ Hai',
       dayTuesday: 'Thứ Ba',
@@ -784,6 +838,33 @@
       statusRescheduled: 'Reprogramada',
       statusCancelled: 'Cancelada',
       statusCompleted: 'Completada',
+      statusRejected: 'Rechazada',
+      filterNeedsReview: 'Requiere revisión',
+      appointmentListHintNeedsReview: 'Mostrando reservas del dueño que requieren revisión antes de confirmar.',
+      reviewQueueBadge: 'Requiere revisión',
+      reviewReasonLabel: 'Razón de revisión',
+      reviewConflictsLabel: 'Conflictos encontrados',
+      reviewReasonTimeConflict: 'Conflicto de horario con otra reserva del dueño',
+      reviewReasonOutsideServiceRadius: 'Fuera del radio de servicio',
+      reviewReasonVendorReviewRequired: 'La ubicación o los detalles requieren revisión del dueño',
+      reviewReasonTourDailyCap: 'Límite diario de tours alcanzado',
+      reviewReasonOutsideWorkingHours: 'Fuera del horario de trabajo',
+      reviewReasonUnknown: 'Revisión del dueño requerida',
+      reviewApproveAction: 'Aprobar',
+      reviewRescheduleAction: 'Reprogramar',
+      reviewDeclineAction: 'Rechazar',
+      reviewRescheduleDateLabel: 'Nueva fecha',
+      reviewRescheduleTimeLabel: 'Nueva hora',
+      reviewApproveOverrideConfirm: 'Esta reserva aún requiere revisión. ¿Aprobar de todos modos?',
+      reviewDeclinePrompt: 'Razón opcional de rechazo',
+      reviewApproveSuccess: 'Reserva aprobada.',
+      reviewRescheduleConfirmSuccess: 'Reserva reprogramada y confirmada.',
+      reviewRescheduleReviewSuccess: 'Reserva reprogramada y mantenida en revisión.',
+      reviewDeclineSuccess: 'Reserva rechazada.',
+      reviewApproveBlocked: 'Esta reserva no se puede aprobar porque el guard la bloqueó.',
+      reviewGuardUnavailable: 'Booking Guard no está disponible. Actualice e intente de nuevo.',
+      reviewOwnerOnly: 'Solo el panel del dueño puede revisar esta reserva.',
+      reviewRescheduleMissing: 'Elija una nueva fecha y hora.',
       minutesShort: 'min',
       dayMonday: 'Lunes',
       dayTuesday: 'Martes',
@@ -804,7 +885,15 @@
     vendor_review: 'statusVendorReview',
     rescheduled: 'statusRescheduled',
     cancelled: 'statusCancelled',
-    completed: 'statusCompleted'
+    completed: 'statusCompleted',
+    rejected: 'statusRejected'
+  };
+  var REVIEW_REASON_LABELS = {
+    time_conflict: 'reviewReasonTimeConflict',
+    outside_service_radius: 'reviewReasonOutsideServiceRadius',
+    vendor_review_required: 'reviewReasonVendorReviewRequired',
+    tour_daily_cap: 'reviewReasonTourDailyCap',
+    outside_working_hours: 'reviewReasonOutsideWorkingHours'
   };
   var state = {
     lang: 'en',
@@ -1132,6 +1221,10 @@
     return DATA.COLLECTIONS.bookings;
   }
 
+  function isInactiveStatus(status) {
+    return ['cancelled', 'completed', 'rejected', 'expired', 'no_show'].indexOf(String(status || '').toLowerCase()) >= 0;
+  }
+
   function updateBookingStatus(bookingId, status) {
     var booking = bookingById(bookingId);
     var isBarber = !booking || !booking.serviceType || booking.serviceType === 'barber';
@@ -1179,9 +1272,9 @@
     });
   }
 
-  function showToast() {
+  function showToast(key) {
     var toast = document.getElementById('mbDashboardToast');
-    toast.textContent = t('savedToast');
+    toast.textContent = t(key || 'savedToast');
     toast.hidden = false;
     root.setTimeout(function() { toast.hidden = true; }, 1800);
   }
@@ -1563,11 +1656,13 @@
     });
     render();
     if (canUseFirestore()) {
-      root.firebase.firestore().collection(targetCollectionFor(bookingId)).doc(bookingId).set(patch, { merge: true })
+      return root.firebase.firestore().collection(targetCollectionFor(bookingId)).doc(bookingId).set(patch, { merge: true })
         .catch(function(err) {
           if (root.console) root.console.error('[mobile-barber-dashboard] booking patch failed', err);
+          throw err;
         });
     }
+    return Promise.resolve();
   }
 
   function updateBookingPayment(bookingId, patch) {
@@ -1592,8 +1687,215 @@
       case 'traveling':    return 'traveling';
       case 'completed':    return 'completed';
       case 'cancelled':    return 'cancelled';
+      case 'rejected':     return 'cancelled';
       default:             return 'pending';
     }
+  }
+
+  function reviewReasonKey(reason) {
+    return REVIEW_REASON_LABELS[String(reason || '').toLowerCase()] || 'reviewReasonUnknown';
+  }
+
+  function reviewReasonLabel(booking) {
+    return t(reviewReasonKey(booking && booking.reviewReason));
+  }
+
+  function isOwnerReviewBooking(booking) {
+    return !!(state.ownerMode && booking && booking.status === 'vendor_review');
+  }
+
+  function ownerCanReviewBooking(booking) {
+    if (!isOwnerReviewBooking(booking) || !state.ownerId) return false;
+    if (booking.ownerId && booking.ownerId !== state.ownerId) return false;
+    if (booking.serviceType === 'barber' && root.OwnerBookings && root.OwnerBookings.barberVendorIdsFor) {
+      var ids = root.OwnerBookings.barberVendorIdsFor(state.ownerId) || [];
+      return ids.indexOf(booking.vendorId) >= 0;
+    }
+    return true;
+  }
+
+  function addMinutesToTime(time, minutes) {
+    var raw = String(time || '').slice(0, 5);
+    var m = raw.match(/^(\d{1,2}):([0-5]\d)$/);
+    if (!m) return '';
+    var total = Number(m[1]) * 60 + Number(m[2]) + Number(minutes || 0);
+    total = Math.max(0, Math.min(1439, total));
+    return String(Math.floor(total / 60)).padStart(2, '0') + ':' + String(total % 60).padStart(2, '0');
+  }
+
+  function reviewGuardRequest(booking, overrides) {
+    overrides = overrides || {};
+    var service = serviceForBooking(booking);
+    var requestedDate = overrides.requestedDate || booking.requestedDate || booking.date || booking.travel_date || '';
+    var startTime = overrides.startTime || booking.startTime || booking.time || '';
+    var duration = Number(booking.durationMinutes || booking.serviceDurationMinutes || service.durationMinutes || 60);
+    var endTime = overrides.endTime || booking.endTime || addMinutesToTime(startTime, duration);
+    return Object.assign({}, booking, overrides, {
+      ownerId: state.ownerId || booking.ownerId || '',
+      serviceType: serviceTypeForBooking(booking),
+      vendorId: booking.vendorId || state.vendorId || '',
+      requestedDate: requestedDate,
+      startTime: startTime,
+      endTime: endTime,
+      serviceDurationMinutes: duration,
+      durationMinutes: duration,
+      source: 'owner_dashboard_review'
+    });
+  }
+
+  function ownerReviewRowsExcept(bookingId) {
+    return (state.bookings || []).filter(function(row) {
+      var id = row.id || row.bookingId || '';
+      return id !== bookingId;
+    });
+  }
+
+  function validateReviewBooking(booking, overrides) {
+    if (!root.BookingGuard || typeof root.BookingGuard.validateUnifiedBookingRequest !== 'function') {
+      showToast('reviewGuardUnavailable');
+      return Promise.resolve({ disposition: 'block', reason: 'invalid_request', conflicts: [] });
+    }
+    return root.BookingGuard.validateUnifiedBookingRequest(reviewGuardRequest(booking, overrides), {
+      existingBookings: ownerReviewRowsExcept(booking.id || booking.bookingId || '')
+    });
+  }
+
+  function clearReviewPatch(extra) {
+    return Object.assign({
+      reviewReason: null,
+      reviewConflicts: [],
+      reviewDisposition: null
+    }, extra || {});
+  }
+
+  function approveReviewBooking(bookingId) {
+    var booking = bookingById(bookingId);
+    if (!ownerCanReviewBooking(booking)) {
+      showToast('reviewOwnerOnly');
+      return;
+    }
+    validateReviewBooking(booking).then(function(result) {
+      if (result.disposition === 'block') {
+        showToast('reviewApproveBlocked');
+        return;
+      }
+      if (result.disposition === 'review' && (!root.confirm || !root.confirm(t('reviewApproveOverrideConfirm')))) return;
+      updateBookingPatch(bookingId, clearReviewPatch({ status: 'confirmed' }))
+        .then(function() { showToast('reviewApproveSuccess'); });
+    }).catch(function(err) {
+      if (root.console) root.console.error('[mobile-barber-dashboard] review approve failed', err);
+      showToast('reviewApproveBlocked');
+    });
+  }
+
+  function rescheduleReviewBooking(bookingId) {
+    var booking = bookingById(bookingId);
+    if (!ownerCanReviewBooking(booking)) {
+      showToast('reviewOwnerOnly');
+      return;
+    }
+    var dateEl = document.getElementById('mbReviewDate-' + bookingId);
+    var timeEl = document.getElementById('mbReviewTime-' + bookingId);
+    var requestedDate = dateEl && dateEl.value;
+    var startTime = timeEl && timeEl.value;
+    if (!requestedDate || !startTime) {
+      showToast('reviewRescheduleMissing');
+      return;
+    }
+    var service = serviceForBooking(booking);
+    var duration = Number(booking.durationMinutes || booking.serviceDurationMinutes || service.durationMinutes || 60);
+    var endTime = addMinutesToTime(startTime, duration);
+    validateReviewBooking(booking, {
+      requestedDate: requestedDate,
+      startTime: startTime,
+      endTime: endTime,
+      serviceDurationMinutes: duration,
+      durationMinutes: duration
+    }).then(function(result) {
+      if (result.disposition === 'block') {
+        showToast('reviewApproveBlocked');
+        return;
+      }
+      var patch = {
+        requestedDate: requestedDate,
+        startTime: startTime,
+        endTime: endTime,
+        durationMinutes: duration,
+        serviceDurationMinutes: duration
+      };
+      if (result.disposition === 'confirm') {
+        patch = clearReviewPatch(Object.assign(patch, { status: 'confirmed' }));
+      } else {
+        patch.status = 'vendor_review';
+        patch.reviewReason = result.reason || 'vendor_review_required';
+        patch.reviewConflicts = result.conflicts || [];
+        patch.reviewDisposition = result.disposition || 'review';
+      }
+      updateBookingPatch(bookingId, patch).then(function() {
+        showToast(result.disposition === 'confirm' ? 'reviewRescheduleConfirmSuccess' : 'reviewRescheduleReviewSuccess');
+      });
+    }).catch(function(err) {
+      if (root.console) root.console.error('[mobile-barber-dashboard] review reschedule failed', err);
+      showToast('reviewApproveBlocked');
+    });
+  }
+
+  function declineReviewBooking(bookingId) {
+    var booking = bookingById(bookingId);
+    if (!ownerCanReviewBooking(booking)) {
+      showToast('reviewOwnerOnly');
+      return;
+    }
+    var reason = root.prompt ? root.prompt(t('reviewDeclinePrompt'), booking.declineReason || '') : '';
+    if (reason == null) return;
+    updateBookingPatch(bookingId, clearReviewPatch({
+      status: 'rejected',
+      declineReason: trim(reason)
+    })).then(function() {
+      showToast('reviewDeclineSuccess');
+    });
+  }
+
+  function buildReviewActions(booking) {
+    var panel = el('div', 'mb-review-actions');
+    panel.setAttribute('data-review-actions', booking.id || '');
+    var reschedule = el('div', 'mb-review-actions__reschedule');
+    var dateLabel = el('label', 'mb-field mb-review-actions__field');
+    var dateText = el('span');
+    var dateInput = el('input');
+    dateText.textContent = t('reviewRescheduleDateLabel');
+    dateInput.id = 'mbReviewDate-' + booking.id;
+    dateInput.type = 'date';
+    dateInput.value = booking.requestedDate || '';
+    dateLabel.appendChild(dateText);
+    dateLabel.appendChild(dateInput);
+    var timeLabel = el('label', 'mb-field mb-review-actions__field');
+    var timeText = el('span');
+    var timeInput = el('input');
+    timeText.textContent = t('reviewRescheduleTimeLabel');
+    timeInput.id = 'mbReviewTime-' + booking.id;
+    timeInput.type = 'time';
+    timeInput.value = String(booking.startTime || '').slice(0, 5);
+    timeLabel.appendChild(timeText);
+    timeLabel.appendChild(timeInput);
+    reschedule.appendChild(dateLabel);
+    reschedule.appendChild(timeLabel);
+    panel.appendChild(reschedule);
+    var row = el('div', 'mb-review-actions__buttons');
+    [
+      ['reviewApproveAction', approveReviewBooking],
+      ['reviewRescheduleAction', rescheduleReviewBooking],
+      ['reviewDeclineAction', declineReviewBooking]
+    ].forEach(function(pair) {
+      var btn = el('button', 'mb-button mb-button--ghost mb-button--sm');
+      btn.type = 'button';
+      btn.setAttribute('data-review-action', pair[0]);
+      btn.textContent = t(pair[0]);
+      btn.addEventListener('click', function() { pair[1](booking.id); });
+      row.appendChild(btn);
+    });
+    panel.appendChild(row);
+    return panel;
   }
 
   function bookingCard(booking) {
@@ -1603,6 +1905,7 @@
     var row = el('article', 'mb-booking-row');
     var bucket = statusBucket(booking.status);
     row.classList.add('mb-booking-row--' + bucket);
+    if (isOwnerReviewBooking(booking)) row.classList.add('mb-booking-row--vendor-review');
     row.id = 'mbBookingCard-' + String(booking.id || '').replace(/[^a-zA-Z0-9_-]/g, '');
     row.setAttribute('data-booking-id', booking.id || '');
     row.setAttribute('data-status', booking.status || '');
@@ -1688,6 +1991,12 @@
       head.appendChild(promoChip);
     }
 
+    if (isOwnerReviewBooking(booking)) {
+      var reviewChip = el('span', 'mb-confirmation-chip mb-review-chip');
+      reviewChip.textContent = t('reviewQueueBadge') + ': ' + reviewReasonLabel(booking);
+      head.appendChild(reviewChip);
+    }
+
     var chevron = el('span', 'mb-booking-row__chevron');
     chevron.setAttribute('aria-hidden', 'true');
     chevron.textContent = '▾';
@@ -1730,18 +2039,22 @@
       smsBtn.setAttribute('aria-label', t('sendConfirmationTextAria'));
       actions.appendChild(smsBtn);
     }
-    [
-      ['confirmed', 'acceptAction'],
-      ['rescheduled', 'rescheduleAction'],
-      ['cancelled', 'cancelAction'],
-      ['completed', 'completeAction']
-    ].forEach(function(pair) {
-      var btn = el('button', 'mb-button mb-button--ghost mb-button--sm');
-      btn.type = 'button';
-      btn.textContent = t(pair[1]);
-      btn.addEventListener('click', function() { updateBookingStatus(booking.id, pair[0]); });
-      actions.appendChild(btn);
-    });
+    if (isOwnerReviewBooking(booking)) {
+      actions.appendChild(buildReviewActions(booking));
+    } else {
+      [
+        ['confirmed', 'acceptAction'],
+        ['rescheduled', 'rescheduleAction'],
+        ['cancelled', 'cancelAction'],
+        ['completed', 'completeAction']
+      ].forEach(function(pair) {
+        var btn = el('button', 'mb-button mb-button--ghost mb-button--sm');
+        btn.type = 'button';
+        btn.textContent = t(pair[1]);
+        btn.addEventListener('click', function() { updateBookingStatus(booking.id, pair[0]); });
+        actions.appendChild(btn);
+      });
+    }
     [
       ['paid', 'markPaidAction'],
       ['unpaid', 'markUnpaidAction']
@@ -1809,6 +2122,13 @@
       detail.appendChild(detailSection(t('svcTour'), [
         [t('passengersLabel'), booking.passengers || ''],
         [t('durationDaysLabel'), booking.durationDays || '']
+      ]));
+    }
+    if (isOwnerReviewBooking(booking)) {
+      var conflictCount = Array.isArray(booking.reviewConflicts) ? booking.reviewConflicts.length : 0;
+      detail.appendChild(detailSection(t('reviewQueueBadge'), [
+        [t('reviewReasonLabel'), reviewReasonLabel(booking)],
+        [t('reviewConflictsLabel'), conflictCount ? String(conflictCount) : '0']
       ]));
     }
     var pricingRows = [
@@ -2409,6 +2729,7 @@
     }
     var defs = [
       { key: 'all', label: 'filterAll', icon: '' },
+      { key: 'needs_review', label: 'filterNeedsReview', icon: '' },
       { key: 'barber', label: 'filterBarber', icon: '💈' },
       { key: 'ride', label: 'filterRide', icon: '🚗' },
       { key: 'tour', label: 'filterTour', icon: '🧭' }
@@ -2424,6 +2745,8 @@
       btn.textContent = (def.icon ? def.icon + ' ' : '') + t(def.label);
       btn.addEventListener('click', function() {
         state.serviceTypeFilter = def.key;
+        if (def.key === 'needs_review') state.summaryFilter = 'needs_review';
+        else if (state.summaryFilter === 'needs_review') state.summaryFilter = 'today';
         state.expandedBookingId = null;
         renderBookings();
       });
@@ -2451,7 +2774,9 @@
   // existing behavior is unchanged.
   function bookingsInScope() {
     var rows = state.bookings || [];
-    if (state.ownerMode && state.serviceTypeFilter && state.serviceTypeFilter !== 'all') {
+    if (state.ownerMode && state.serviceTypeFilter === 'needs_review') {
+      rows = rows.filter(function(b) { return b.status === 'vendor_review'; });
+    } else if (state.ownerMode && state.serviceTypeFilter && state.serviceTypeFilter !== 'all') {
       rows = rows.filter(function(b) { return b.serviceType === state.serviceTypeFilter; });
     }
     return rows;
@@ -2465,10 +2790,12 @@
     var today = getTodayIso();
     var scope = bookingsInScope();
     var active = scope.filter(function(b) {
-      return b.status !== 'cancelled' && b.status !== 'completed';
+      return !isInactiveStatus(b.status);
     });
     var rows;
-    if (filter === 'today') {
+    if (filter === 'needs_review') {
+      rows = scope.filter(function(b) { return b.status === 'vendor_review'; });
+    } else if (filter === 'today') {
       rows = active.filter(function(b) { return b.requestedDate === today; });
     } else if (filter === 'upcoming') {
       rows = active.filter(function(b) { return isUpcomingBooking(b, now); });
@@ -2496,7 +2823,7 @@
     var today = getTodayIso();
     renderServiceTypeFilter();
     var scope = bookingsInScope();
-    var active = scope.filter(function(booking) { return booking.status !== 'cancelled' && booking.status !== 'completed'; });
+    var active = scope.filter(function(booking) { return !isInactiveStatus(booking.status); });
     var todayRows = active.filter(function(booking) { return booking.requestedDate === today; });
     var upcomingRows = active.filter(function(booking) { return isUpcomingBooking(booking, now); });
     var pendingRows = active.filter(function(booking) {
@@ -2544,6 +2871,7 @@
     else if (filter === 'pending') labelKey = 'statPending';
     else if (filter === 'in_progress') labelKey = 'statInProgress';
     else if (filter === 'completed_today') labelKey = 'statCompleted';
+    else if (filter === 'needs_review') labelKey = 'filterNeedsReview';
     else labelKey = 'upcomingTitle';
     return t(labelKey) + ' (' + (count || 0) + ')';
   }
@@ -2555,6 +2883,7 @@
     else if (filter === 'pending') key = 'appointmentListHintPending';
     else if (filter === 'in_progress') key = 'appointmentListHintInProgress';
     else if (filter === 'completed_today') key = 'appointmentListHintCompleted';
+    else if (filter === 'needs_review') key = 'appointmentListHintNeedsReview';
     else key = 'appointmentListHint';
     return t(key);
   }

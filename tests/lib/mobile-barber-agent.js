@@ -56,7 +56,12 @@ function runMobileBarberAgentTests(test) {
     assert(result.session.lastSystemContext.indexOf('missing_fields') === 0, 'missing fields should use system context');
     assert(result.session.state.serviceId, 'service should be extracted');
     assertEq(result.session.state.date, '2026-05-24');
-    assertEq(result.session.state.time, '17:00');
+    // "after 5 PM" is an OPEN time band now (search + offer real slots after
+    // 5pm), not a fixed 17:00 clock time — so the agent never locks one minute.
+    assertEq(result.session.state.time, null);
+    assert(result.session.state.flexibleWindow && result.session.state.flexibleWindow.kind === 'after',
+      'after 5 PM should set an "after" availability window');
+    assertEq(result.session.state.flexibleWindow.startMin, 17 * 60);
   });
 
   test('Mobile Barber AI asks phone first before collecting booking details', function() {
@@ -679,6 +684,38 @@ function runMobileBarberAgentTests(test) {
     });
     assert(r.response.indexOf(MobileBarberBooking.formatTime12Hour(offered[0].startTime)) >= 0,
       'reply must list the real offered times');
+  });
+
+  test('BUG1: a bare "today" (no flexible keyword) offers REAL slots instead of looping on time', function() {
+    var r = MobileBarberAgent.handleMessage(null,
+      'My name is Kim. Phone 714-555-0100. Haircut at 123 Brookhurst St Westminster 92683. Can I come in today?',
+      openCtx({ id: 'bug1-today' }));
+    assert(!r.booking, 'a bare day must not auto-book an invented time');
+    assertEq(r.session.state.step, 'OFFER_SLOTS');
+    assert((r.session.state.offeredSlots || []).length >= 1, 'a bare "today" must offer at least one real slot');
+  });
+
+  test('BUG1: Vietnamese "hôm nay được không" sets today + no fixed time (so slots get offered)', function() {
+    var upd = MobileBarberAgent.extractUpdate('Hôm nay được không?', openCtx({ lang: 'vi' }), MobileBarberAgent.emptyState('vi'));
+    assert(upd.date, '"hôm nay" must resolve to a concrete date');
+    assert(!upd.time, '"hôm nay" must not bind a fixed clock time');
+  });
+
+  test('BUG1: "tôi muốn cắt tóc" is NOT mis-read as evening (tôi != tối)', function() {
+    var upd = MobileBarberAgent.extractUpdate('tôi muốn cắt tóc ngày mai', openCtx({ lang: 'vi' }), MobileBarberAgent.emptyState('vi'));
+    assert(!(upd.flexibleWindow && upd.flexibleWindow.kind === 'evening'), '"tôi" (I) must not trigger an evening window');
+  });
+
+  test('BUG1: "after 5" is a band — any offered slots are at or after 5pm', function() {
+    var r = MobileBarberAgent.handleMessage(null,
+      'My name is Kim. Phone 714-555-0100. Haircut at 123 Brookhurst St Westminster 92683. Any time after 5.',
+      openCtx({ id: 'bug1-after5' }));
+    assert(!r.session.state.time, 'after 5 must not lock a fixed clock time');
+    if (r.session.state.step !== 'OFFER_SLOTS') return; // no evening slots available — acceptable
+    (r.session.state.offeredSlots || []).forEach(function(s) {
+      var mins = Number(s.startTime.slice(0, 2)) * 60 + Number(s.startTime.slice(3, 5));
+      assert(mins >= 17 * 60, 'after-5 slot ' + s.startTime + ' must be at or after 17:00');
+    });
   });
 
   test('BUG1: picking an offered slot books at exactly that time', function() {

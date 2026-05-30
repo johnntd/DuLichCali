@@ -401,11 +401,42 @@
     if (/\b(afternoon|buoi chieu|chieu|por la tarde)\b/.test(t)) {
       return { kind: 'afternoon', startMin: 12 * 60, endMin: 17 * 60 };
     }
-    if (/\b(evening|tonight|buoi toi|toi|por la noche|night)\b/.test(t)) {
+    // NOTE: do NOT match a bare "toi" — after stripDiacritics, "tôi" (Vietnamese
+    // for "I") collapses to "toi" and would be mis-read as "tối" (evening),
+    // corrupting availability for the very common "tôi muốn..." phrasing. Match
+    // the unambiguous evening forms only ("buổi tối", "tối nay").
+    if (/\b(evening|tonight|buoi toi|toi nay|por la noche|night)\b/.test(t)) {
       return { kind: 'evening', startMin: 17 * 60, endMin: null };
     }
     if (/\b(all day|any ?time|anytime|when ?ever|flexible|free all|available all|am available|i am available|im available|are you free|todo el dia|cualquier hora|disponible todo|ranh ca ngay|ca ngay|ranh)\b/.test(t)) {
       return { kind: 'allday', startMin: null, endMin: null, fromNow: true };
+    }
+    return null;
+  }
+
+  // "after 5" / "sau 5 giờ" / "before noon" → an OPEN time band, not a fixed
+  // clock minute. Must run BEFORE normalizeTime (which would otherwise lock
+  // "after 5" to exactly 17:00) so the agent offers every real slot in the band.
+  function parseTimeBandWindow(message) {
+    var t = stripDiacritics(trim(message).toLowerCase());
+    function toMinutes(hStr, mStr, suf) {
+      var h = Number(hStr); var m = Number(mStr || 0);
+      suf = (suf || '').toLowerCase();
+      if (suf === 'pm' && h < 12) h += 12;
+      else if (suf === 'am' && h === 12) h = 0;
+      else if (!suf && h < 8) h += 12; // bare "5" in a service context means 5pm
+      if (h < 0 || h > 23 || m < 0 || m > 59) return null;
+      return h * 60 + m;
+    }
+    var after = /\b(?:after|from|sau|tu|a partir de|despues de)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/.exec(t);
+    if (after) {
+      var startMin = toMinutes(after[1], after[2], after[3]);
+      if (startMin != null) return { kind: 'after', startMin: startMin, endMin: null };
+    }
+    var before = /\b(?:before|truoc|antes de)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/.exec(t);
+    if (before) {
+      var endMin = toMinutes(before[1], before[2], before[3]);
+      if (endMin != null) return { kind: 'before', startMin: null, endMin: endMin };
     }
     return null;
   }
@@ -481,13 +512,21 @@
     var isoDate = /\b(20\d{2}-\d{2}-\d{2})\b/.exec(lower);
     if (isoDate) update.date = isoDate[1];
 
-    var time = normalizeTime(message);
-    if (time) update.time = time;
-    else {
-      // No concrete clock time — detect a flexible availability window so the
-      // agent can search the live schedule and offer real slots (BUG 1).
-      var flex = parseFlexibleWindow(message);
-      if (flex) update.flexibleWindow = flex;
+    // "after 5" / "before noon" are time BANDS, not fixed minutes — detect them
+    // first so they become a flexible window (search + offer real slots) instead
+    // of locking to one clock time.
+    var band = parseTimeBandWindow(message);
+    if (band) {
+      update.flexibleWindow = band;
+    } else {
+      var time = normalizeTime(message);
+      if (time) update.time = time;
+      else {
+        // No concrete clock time — detect a flexible availability window so the
+        // agent can search the live schedule and offer real slots (BUG 1).
+        var flex = parseFlexibleWindow(message);
+        if (flex) update.flexibleWindow = flex;
+      }
     }
     if (service) update.serviceId = service.id;
 
@@ -1082,32 +1121,44 @@
     var now = (ctx && ctx.now instanceof Date) ? ctx.now : new Date();
     var todayIso = localISODate(now);
     var startDate = (state.date && state.date >= todayIso) ? state.date : todayIso;
-    var endDate = fw.multiDay ? addDays(now, 13) : startDate;
     var fromNowMin = fw.fromNow ? (now.getHours() * 60 + now.getMinutes()) : null;
-    var slots = [];
-    try {
-      slots = BOOKING.findNextAvailableSlots(vendor.id, state.serviceId, { start: startDate, end: endDate }, {
-        vendor: vendor,
-        services: services,
-        availability: (ctx && ctx.availability) || DATA.sampleAvailability,
-        existingBookings: (ctx && ctx.existingBookings) || [],
-        unavailableBlocks: (ctx && ctx.unavailableBlocks) || [],
-        now: now,
-        windowStartMinutes: fw.startMin,
-        windowEndMinutes: fw.endMin,
-        fromNowMinutes: fromNowMin,
-        limit: 5
-      }) || [];
-    } catch (e) { slots = []; }
+    var baseOpts = {
+      vendor: vendor,
+      services: services,
+      availability: (ctx && ctx.availability) || DATA.sampleAvailability,
+      existingBookings: (ctx && ctx.existingBookings) || [],
+      unavailableBlocks: (ctx && ctx.unavailableBlocks) || [],
+      now: now,
+      windowStartMinutes: fw.startMin,
+      windowEndMinutes: fw.endMin,
+      fromNowMinutes: fromNowMin,
+      limit: 5
+    };
+    function search(endDate) {
+      try {
+        return BOOKING.findNextAvailableSlots(vendor.id, state.serviceId, { start: startDate, end: endDate }, baseOpts) || [];
+      } catch (e) { return []; }
+    }
+    // Stage 1: the requested day (or a multi-day span for open-ended phrases).
+    var slots = search(fw.multiDay ? addDays(now, 13) : startDate);
+    // Stage 2 (forward fallback): the requested day is full → keep the same time
+    // band but search the next ~2 weeks so the customer always gets the NEXT real
+    // openings ("Tim is full today — next open is tomorrow 9:00 / 10:30 / 1:00").
+    var usedFallback = false;
+    if (!slots.length && !fw.multiDay) {
+      usedFallback = true;
+      slots = search(addDays(now, 14));
+    }
     if (typeof console !== 'undefined' && console.log) {
       try {
         console.log('[mb-agent-availability]', JSON.stringify({
           vendorId: vendor.id,
           serviceId: state.serviceId,
           requestedWindowStart: startDate + (fw.startMin != null ? ' ' + Math.floor(fw.startMin / 60) + ':00' : ''),
-          requestedWindowEnd: (fw.multiDay ? '(forward)' : startDate) + (fw.endMin != null ? ' ' + Math.floor(fw.endMin / 60) + ':00' : ''),
+          requestedWindowEnd: ((fw.multiDay || usedFallback) ? '(forward)' : startDate) + (fw.endMin != null ? ' ' + Math.floor(fw.endMin / 60) + ':00' : ''),
           fixedTime: false,
-          flexibleKind: fw.kind || null,
+          flexibleKind: fw.kind || (trim(state.date) ? 'specific-day' : null),
+          usedForwardFallback: usedFallback,
           slotsReturned: slots.length,
           conflicts: 0,
           source: 'live-db'
@@ -1242,7 +1293,13 @@
     // (b) Flexible window + everything except the time present → search the live
     // schedule and offer real open slots (never invent / never loop on time).
     var _preTimeMissing = ['customerName', 'address', 'city', 'serviceId'].filter(function(k) { return !trim(state[k]); });
-    if (!_preTimeMissing.length && !trim(state.time) && state.flexibleWindow) {
+    // Offer real slots whenever the customer has given a day OR a flexible window
+    // but no concrete clock time — never loop asking "what time?". A bare date
+    // ("hôm nay" / "today" / a specific day) means "any open time that day"; if
+    // that day is full, _offerFlexibleSlots searches forward for the next real
+    // openings. A concrete time (state.time) skips this and books directly.
+    var _hasDayOrWindow = state.flexibleWindow || trim(state.date);
+    if (!_preTimeMissing.length && !trim(state.time) && _hasDayOrWindow) {
       var realSlots = _offerFlexibleSlots(state, ctx, vendor, services);
       if (realSlots && realSlots.length) {
         state.offeredSlots = realSlots;

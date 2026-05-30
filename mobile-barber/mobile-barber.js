@@ -223,6 +223,9 @@
       paymentChoiceLegend: 'Preferred payment method',
       paymentCash: 'Cash',
       paymentZelle: 'Zelle',
+      paymentChipLabel: 'Payment',
+      barberChipLabel: 'Barber',
+      controlChange: 'Change',
       zellePayPanelTitle: 'Pay with Zelle',
       zelleSendPaymentTo: 'Send payment to:',
       assistantFallbackReply: 'Sorry, I did not catch that. Could you say it another way?',
@@ -451,6 +454,9 @@
       paymentChoiceLegend: 'Cách thanh toán muốn dùng',
       paymentCash: 'Tiền mặt',
       paymentZelle: 'Zelle',
+      paymentChipLabel: 'Thanh toán',
+      barberChipLabel: 'Thợ',
+      controlChange: 'Đổi',
       zellePayPanelTitle: 'Thanh toán bằng Zelle',
       zelleSendPaymentTo: 'Gửi thanh toán đến:',
       assistantFallbackReply: 'Xin lỗi, tôi chưa hiểu rõ. Bạn có thể nói lại theo cách khác không?',
@@ -679,6 +685,9 @@
       paymentChoiceLegend: 'Metodo de pago preferido',
       paymentCash: 'Efectivo',
       paymentZelle: 'Zelle',
+      paymentChipLabel: 'Pago',
+      barberChipLabel: 'Barbero',
+      controlChange: 'Cambiar',
       zellePayPanelTitle: 'Pagar con Zelle',
       zelleSendPaymentTo: 'Enviar pago a:',
       assistantFallbackReply: 'Disculpa, no entendí. ¿Puedes decirlo de otra forma?',
@@ -1303,6 +1312,9 @@
     if (sendBtn)  sendBtn.disabled = false;
 
     seedAssistantTranscriptIfEmpty();
+    // Start with the payment selector collapsed to a chip so the conversation
+    // gets the vertical space; the barber chip appears once an address routes.
+    renderPaymentControls(false);
     panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setTimeout(function() {
       if (input && typeof input.focus === 'function') input.focus();
@@ -1328,6 +1340,50 @@
     var checked = document.querySelector('input[name="mbPaymentMethod"]:checked');
     var value = checked ? String(checked.value || '').toLowerCase() : 'cash';
     return value === 'zelle' ? 'zelle' : 'cash';
+  }
+
+  // Collapse the payment selector into a compact chip ("Payment: Cash [Change]")
+  // so the chat conversation stays the focus on small screens. expand=true
+  // re-opens the radio fieldset. The radios stay in the DOM, so
+  // selectedPaymentMethod() is unaffected.
+  function renderPaymentControls(expand) {
+    var fieldset = document.getElementById('mbPaymentChoice');
+    var chip = document.getElementById('mbPaymentChip');
+    var valueEl = document.getElementById('mbPaymentChipValue');
+    if (!fieldset || !chip || !valueEl) return;
+    if (expand) { fieldset.hidden = false; chip.hidden = true; return; }
+    var method = selectedPaymentMethod();
+    valueEl.textContent = method === 'zelle' ? t('paymentZelle') : t('paymentCash');
+    fieldset.hidden = true;
+    chip.hidden = false;
+  }
+
+  function hideBarberControls() {
+    var wrap = document.getElementById('mbPreferredBarberWrap');
+    var chip = document.getElementById('mbBarberChip');
+    if (wrap) wrap.hidden = true;
+    if (chip) chip.hidden = true;
+  }
+
+  // Collapse the preferred-barber dropdown into a compact chip showing the
+  // routed/selected barber ("Barber: Tim Nguyen [Change]"). The <select> stays
+  // in the DOM so handlePreferredBarberChange + preferredVendor() are unaffected.
+  function renderBarberChip() {
+    var wrap = document.getElementById('mbPreferredBarberWrap');
+    var chip = document.getElementById('mbBarberChip');
+    var valueEl = document.getElementById('mbBarberChipValue');
+    var select = document.getElementById('mbPreferredBarberSelect');
+    if (!wrap || !chip || !valueEl) return;
+    var vendor = null;
+    if (select && select.value && DATA && typeof DATA.findVendorById === 'function') {
+      vendor = DATA.findVendorById(select.value);
+    }
+    if (!vendor) vendor = state.routedVendor || preferredVendor();
+    var name = vendor && (vendor.barberName || vendor.businessName || vendor.id);
+    if (!name) { wrap.hidden = false; chip.hidden = true; return; }
+    valueEl.textContent = name;
+    wrap.hidden = true;
+    chip.hidden = false;
   }
 
   function bookingVendor(booking) {
@@ -1433,7 +1489,7 @@
     if (!wrap || !select) return;
     var agentState = state.agentSession && state.agentSession.state;
     var hasAddress = !!(agentState && (agentState.city || agentState.zip || agentState.address));
-    if (!hasAddress) { wrap.hidden = true; return; }
+    if (!hasAddress) { hideBarberControls(); return; }
 
     var location = {
       city: (agentState && agentState.city) || '',
@@ -1449,7 +1505,7 @@
     // If no vendor matches the area, fall back to "no vendors here" — the
     // dropdown stays hidden because the agent will refuse out-of-area
     // bookings via service_area_out_of_range anyway.
-    if (!vendorsForArea.length) { wrap.hidden = true; return; }
+    if (!vendorsForArea.length) { hideBarberControls(); return; }
 
     var current = select.value;
     select.innerHTML = '';
@@ -1466,7 +1522,8 @@
     });
     // Restore prior selection if still valid; otherwise default to none.
     select.value = vendorsForArea.some(function(v) { return v.id === current; }) ? current : '';
-    wrap.hidden = false;
+    // Collapse to a compact chip (routed/selected barber); [Change] re-opens it.
+    renderBarberChip();
   }
 
   function handlePreferredBarberChange() {
@@ -1482,6 +1539,7 @@
       agentState.barberPreference = '';
       state.routedVendor = null;
       appendChatMessage('ai', t('preferredBarberAckAuto') || "Got it — I'll match you with the best available barber.");
+      renderBarberChip();
       return;
     }
     var vendor = (DATA && typeof DATA.findVendorById === 'function')
@@ -1515,6 +1573,7 @@
     state.routedVendor = vendor;
     appendChatMessage('ai', interpolate(t('preferredBarberAckChosen') ||
       "Great — I'll route this to {name}.", { name: vendor.barberName || vendor.businessName }));
+    renderBarberChip();
   }
 
   function openVoiceAssistant() {
@@ -2302,6 +2361,22 @@
 
     var preferredSelect = document.getElementById('mbPreferredBarberSelect');
     if (preferredSelect) preferredSelect.addEventListener('change', handlePreferredBarberChange);
+
+    // Compact-chip controls: "Change" re-opens the full selector; selecting a
+    // payment method re-collapses it to the chip with the new value.
+    var barberChangeBtn = document.querySelector('[data-action="changeBarber"]');
+    if (barberChangeBtn) barberChangeBtn.addEventListener('click', function() {
+      var wrap = document.getElementById('mbPreferredBarberWrap');
+      var chip = document.getElementById('mbBarberChip');
+      if (wrap) wrap.hidden = false;
+      if (chip) chip.hidden = true;
+      if (preferredSelect && typeof preferredSelect.focus === 'function') preferredSelect.focus();
+    });
+    var paymentChangeBtn = document.querySelector('[data-action="changePayment"]');
+    if (paymentChangeBtn) paymentChangeBtn.addEventListener('click', function() { renderPaymentControls(true); });
+    Array.prototype.forEach.call(document.querySelectorAll('input[name="mbPaymentMethod"]'), function(radio) {
+      radio.addEventListener('change', function() { renderPaymentControls(false); });
+    });
 
     var list = document.getElementById('mbServiceList');
     if (list) {

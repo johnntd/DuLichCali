@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260530h">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260530l">
 </head>
 <body class="mb-page">
   <main class="mb-shell" id="mobileBarberApp">
@@ -214,11 +214,19 @@
         </label>
         <p class="mb-chat-panel__preferred-hint" id="mbPreferredBarberHint" data-i18n="preferredBarberHint"></p>
       </div>
+      <div class="mb-control-chip" id="mbBarberChip" hidden>
+        <span class="mb-control-chip__text"><span data-i18n="barberChipLabel"></span>: <strong id="mbBarberChipValue"></strong></span>
+        <button type="button" class="mb-control-chip__change" data-action="changeBarber" data-i18n="controlChange"></button>
+      </div>
       <fieldset class="mb-payment-choice" id="mbPaymentChoice">
         <legend data-i18n="paymentChoiceLegend"></legend>
         <label><input type="radio" name="mbPaymentMethod" value="cash" checked> <span data-i18n="paymentCash"></span></label>
         <label><input type="radio" name="mbPaymentMethod" value="zelle"> <span data-i18n="paymentZelle"></span></label>
       </fieldset>
+      <div class="mb-control-chip" id="mbPaymentChip" hidden>
+        <span class="mb-control-chip__text"><span data-i18n="paymentChipLabel"></span>: <strong id="mbPaymentChipValue"></strong></span>
+        <button type="button" class="mb-control-chip__change" data-action="changePayment" data-i18n="controlChange"></button>
+      </div>
       <form class="mb-chat-panel__form" id="mbAssistantForm" novalidate>
         <label class="mb-chat-panel__input-wrap">
           <span class="mb-visually-hidden" data-i18n="assistantInputLabel"></span>
@@ -263,9 +271,9 @@
   <script src="/mobile-barber/mobile-barber-lightbox.js?v=20260530f"></script>
   <script src="/mobile-barber/mobile-barber-data.js?v=20260530k"></script>
   <script src="/mobile-barber/mobile-barber-booking.js?v=20260530k"></script>
-  <script src="/mobile-barber/mobile-barber-agent.js?v=20260530k"></script>
+  <script src="/mobile-barber/mobile-barber-agent.js?v=20260530l"></script>
   <script src="/mobile-barber/mobile-barber-voice.js?v=20260525f"></script>
   <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260530a"></script>
-  <script src="/mobile-barber/mobile-barber.js?v=20260530k"></script>
+  <script src="/mobile-barber/mobile-barber.js?v=20260530l"></script>
 </body>
 </html>

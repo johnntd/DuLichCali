@@ -88,6 +88,17 @@ async function check(name, promise) {
   await check('ADMIN (johnntd) CAN write any vendor data', assertSucceeds(admin.doc('mobileBarberVendors/michael-nguyen-oc').update({ active: true })));
   await check('ADMIN can write vendor subcollection', assertSucceeds(admin.doc('vendors/michael-nguyen-oc/menuItems/x').set({ name: 'ok' })));
 
+  console.log('\n── securityAlerts (defense-in-depth log) ──');
+  var validAlert = { severity: 'high', type: 'xss_payload_detected', message: 'test', resolved: false, createdAt: '2026-05-30T00:00:00Z', vendorId: 'michael-nguyen-oc' };
+  await check('anon client CAN create a validated alert', assertSucceeds(anon.doc('securityAlerts/a1').set(validAlert)));
+  await check('create with bad severity is denied', assertFails(anon.doc('securityAlerts/a2').set(Object.assign({}, validAlert, { severity: 'boom' }))));
+  await check('create with resolved=true is denied', assertFails(anon.doc('securityAlerts/a3').set(Object.assign({}, validAlert, { resolved: true }))));
+  await check('public/anon CANNOT read alerts', assertFails(anonB.doc('securityAlerts/a1').get()));
+  await check('admin CAN read alerts', assertSucceeds(admin.doc('securityAlerts/a1').get()));
+  await check('vendor member CAN read alerts scoped to their vendor', assertSucceeds(vendorMember.doc('securityAlerts/a1').get()));
+  await check('admin CAN mark resolved', assertSucceeds(admin.doc('securityAlerts/a1').update({ resolved: true, resolvedAt: 'x', resolvedBy: 'a' })));
+  await check('anon CANNOT mark resolved', assertFails(anon.doc('securityAlerts/a1').update({ resolved: true })));
+
   console.log('\n=== RULE TESTS:', pass + ' passed,', fail + ' failed ===');
   await env.cleanup();
   process.exit(fail > 0 ? 1 : 0);

@@ -50,6 +50,7 @@
       { "source": "/vendor",               "destination": "/vendor-detail.html" },
       { "source": "/vendor-subscription",  "destination": "/vendor-subscription.html" },
       { "source": "/vendor-signup",         "destination": "/vendor-signup.html" },
+      { "source": "/security-alerts",       "destination": "/security-alerts.html" },
       { "source": "/mobile-barber",         "destination": "/mobile-barber/index.html" },
       { "source": "/mobile-barber/dashboard", "destination": "/mobile-barber/dashboard.html" },
       { "source": "/mobile-barber/vendor/**", "destination": "/mobile-barber/vendor.html" }

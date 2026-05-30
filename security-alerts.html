@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Security Alerts — DuLichCali</title>
+  <style>
+    :root { --bg:#0d1b2a; --card:#16263a; --line:rgba(255,255,255,.12); --text:#e8eef5; --muted:#9fb2c8; --gold:#c9a24a; }
+    * { box-sizing:border-box; } html,body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif; }
+    header { padding:1rem 1.25rem; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:1rem; flex-wrap:wrap; }
+    header h1 { font-size:1.15rem; margin:0; }
+    .badge-unread { background:#c0392b; color:#fff; border-radius:999px; padding:.1rem .5rem; font-weight:800; font-size:.8rem; }
+    main { padding:1.25rem; max-width:1000px; margin:0 auto; }
+    .filters { display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:1rem; }
+    .filters button { background:var(--card); color:var(--text); border:1px solid var(--line); border-radius:999px; padding:.35rem .8rem; cursor:pointer; font:inherit; font-weight:700; }
+    .filters button.active { background:var(--gold); color:#1b1206; border-color:var(--gold); }
+    .alert { background:var(--card); border:1px solid var(--line); border-left-width:5px; border-radius:10px; padding:.85rem 1rem; margin-bottom:.7rem; }
+    .alert.critical { border-left-color:#e74c3c; } .alert.high { border-left-color:#e67e22; }
+    .alert.medium { border-left-color:#f1c40f; } .alert.low { border-left-color:#3498db; }
+    .alert.resolved { opacity:.55; }
+    .alert .top { display:flex; align-items:center; gap:.6rem; flex-wrap:wrap; }
+    .sev { font-weight:900; text-transform:uppercase; font-size:.72rem; letter-spacing:.04em; padding:.12rem .5rem; border-radius:6px; }
+    .sev.critical { background:#e74c3c; color:#fff; } .sev.high { background:#e67e22; color:#fff; }
+    .sev.medium { background:#f1c40f; color:#1b1206; } .sev.low { background:#3498db; color:#fff; }
+    .type { font-weight:800; } .time { color:var(--muted); font-size:.82rem; margin-left:auto; }
+    .msg { margin:.4rem 0 .3rem; } .meta { color:var(--muted); font-size:.82rem; word-break:break-word; }
+    .resolve { background:transparent; color:var(--gold); border:1px solid var(--gold); border-radius:7px; padding:.25rem .65rem; cursor:pointer; font:inherit; font-weight:800; }
+    .gate { max-width:380px; margin:5rem auto; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:1.5rem; }
+    .gate input { width:100%; padding:.6rem; margin:.4rem 0; border-radius:8px; border:1px solid var(--line); background:#0b1622; color:var(--text); font:inherit; }
+    .gate button { width:100%; padding:.65rem; border:0; border-radius:8px; background:var(--gold); color:#1b1206; font-weight:900; cursor:pointer; }
+    .muted { color:var(--muted); } .empty { color:var(--muted); padding:2rem; text-align:center; }
+  </style>
+</head>
+<body>
+  <div id="app" hidden>
+    <header>
+      <h1>🔒 Security Alerts</h1>
+      <span id="unread" class="badge-unread" hidden>0</span>
+      <span id="who" class="muted" style="margin-left:auto"></span>
+    </header>
+    <main>
+      <div class="filters" id="filters">
+        <button data-f="unresolved" class="active">Unresolved</button>
+        <button data-f="critical">Critical</button>
+        <button data-f="high">High</button>
+        <button data-f="medium">Medium</button>
+        <button data-f="low">Low</button>
+        <button data-f="resolved">Resolved</button>
+        <button data-f="all">All</button>
+      </div>
+      <div id="list"><p class="empty">Loading…</p></div>
+    </main>
+  </div>
+
+  <div id="gate" class="gate" hidden>
+    <h2 style="margin-top:0">Admin sign-in</h2>
+    <p class="muted" id="gateMsg">Security Alerts is restricted to admin operators.</p>
+    <input id="email" type="email" placeholder="admin email" autocomplete="username">
+    <input id="pass" type="password" placeholder="password" autocomplete="current-password">
+    <button id="signin">Sign in</button>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script>
+    // Keep in sync with firestore.rules isAdmin() allowlist.
+    var ADMIN_EMAILS = ['johnntd@gmail.com'];
+    firebase.initializeApp({
+      apiKey: 'AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ',
+      authDomain: 'dulichcali-booking-calendar.firebaseapp.com',
+      projectId: 'dulichcali-booking-calendar',
+      storageBucket: 'dulichcali-booking-calendar.appspot.com'
+    });
+    var db = firebase.firestore(), auth = firebase.auth();
+    var app = document.getElementById('app'), gate = document.getElementById('gate');
+    var listEl = document.getElementById('list'), unreadEl = document.getElementById('unread');
+    var filter = 'unresolved', cache = [];
+
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+    function isAdmin(u){ return u && u.email && ADMIN_EMAILS.indexOf((u.email||'').toLowerCase()) >= 0; }
+
+    auth.onAuthStateChanged(function(u){
+      if (isAdmin(u)) { gate.hidden = true; app.hidden = false; document.getElementById('who').textContent = u.email; subscribe(); }
+      else { app.hidden = true; gate.hidden = false; if (u) document.getElementById('gateMsg').textContent = 'This account is not an admin. Sign in with an admin email.'; }
+    });
+    document.getElementById('signin').onclick = function(){
+      auth.signInWithEmailAndPassword(document.getElementById('email').value.trim(), document.getElementById('pass').value)
+        .catch(function(e){ document.getElementById('gateMsg').textContent = 'Sign-in failed: ' + e.message; });
+    };
+
+    function subscribe(){
+      db.collection('securityAlerts').orderBy('createdAt','desc').limit(300).onSnapshot(function(snap){
+        cache = snap.docs.map(function(d){ return Object.assign({ id:d.id }, d.data()); });
+        render();
+      }, function(err){ listEl.innerHTML = '<p class="empty">Could not load alerts: ' + esc(err.message) + '</p>'; });
+    }
+
+    function render(){
+      var unresolved = cache.filter(function(a){ return !a.resolved; });
+      var crit = unresolved.filter(function(a){ return a.severity==='critical'; }).length;
+      unreadEl.textContent = unresolved.length + (crit ? ' (' + crit + ' critical)' : '');
+      unreadEl.hidden = unresolved.length === 0;
+      var rows = cache.filter(function(a){
+        if (filter==='all') return true;
+        if (filter==='unresolved') return !a.resolved;
+        if (filter==='resolved') return a.resolved;
+        return a.severity === filter;
+      });
+      if (!rows.length) { listEl.innerHTML = '<p class="empty">No alerts for this filter.</p>'; return; }
+      listEl.innerHTML = rows.map(function(a){
+        return '<div class="alert ' + esc(a.severity) + (a.resolved?' resolved':'') + '">' +
+          '<div class="top"><span class="sev ' + esc(a.severity) + '">' + esc(a.severity) + '</span>' +
+          '<span class="type">' + esc(a.type) + '</span>' +
+          '<span class="time">' + esc((a.createdAt||'').replace('T',' ').slice(0,19)) + '</span></div>' +
+          '<div class="msg">' + esc(a.message) + '</div>' +
+          '<div class="meta">' + (a.route?'route: '+esc(a.route)+' · ':'') + (a.vendorId?'vendor: '+esc(a.vendorId)+' · ':'') +
+            (a.userId?'uid: '+esc(a.userId.slice(0,12))+' · ':'') + (a.metadata?'meta: '+esc(String(a.metadata).slice(0,160)):'') + '</div>' +
+          (a.resolved ? '' : '<div style="margin-top:.5rem"><button class="resolve" data-id="' + esc(a.id) + '">Mark resolved</button></div>') +
+        '</div>';
+      }).join('');
+      Array.prototype.forEach.call(listEl.querySelectorAll('.resolve'), function(btn){
+        btn.onclick = function(){
+          db.collection('securityAlerts').doc(btn.getAttribute('data-id')).update({
+            resolved: true, resolvedAt: new Date().toISOString(), resolvedBy: (auth.currentUser && auth.currentUser.email) || ''
+          }).catch(function(e){ alert('Could not resolve: ' + e.message); });
+        };
+      });
+    }
+
+    Array.prototype.forEach.call(document.querySelectorAll('#filters button'), function(b){
+      b.onclick = function(){
+        filter = b.getAttribute('data-f');
+        Array.prototype.forEach.call(document.querySelectorAll('#filters button'), function(x){ x.classList.remove('active'); });
+        b.classList.add('active'); render();
+      };
+    });
+  </script>
+</body>
+</html>

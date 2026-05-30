@@ -42,7 +42,8 @@ The `vendors/{vendorId}` rule is `allow read: if true`, so **anyone can read the
 - Deployed pages — `https://www.dulichcali21.com/`, `/mobile-barber/`, `/ai-engine.js`, `/aiOrchestrator.js` → **no private key in the served bytes** (only the public Firebase web key).
 
 ### Secrets found / removed
-- **Found:** 10 keys (above). **Removal from Firestore was attempted but correctly blocked** by the safety gate (production data deletion needs explicit owner approval). **Awaiting authorization** to delete those fields.
+- **Found:** 10 keys (above). **Removed:** with owner authorization, the `aiKey`/`openaiKey`/`geminiKey` fields were deleted from all 4 docs (Admin SDK) — **verified 0 remain**. Public Firestore exposure is stopped.
+- **STILL REQUIRED — rotation:** the removed keys were exposed and must be assumed compromised. The owner must rotate Anthropic/OpenAI/Gemini in their consoles and store the new values only in Functions secrets. Until rotated, the leaked values remain valid for an attacker who already copied them.
 
 ### Keys that MUST be rotated (urgent — assume compromised)
 1. **Anthropic** (`sk-ant…`) · 2. **OpenAI** (`sk-proj…`) · 3. **Gemini / Google AI Studio** (`AIza…`). Rotate in each provider console **now**; put the new values **only** in Functions secrets (`firebase functions:secrets:set CLAUDE_API_KEY` / `OPENAI_API_KEY` / `GEMINI_API_KEY`).
@@ -58,8 +59,12 @@ bash scripts/security/scan_secrets.sh --selftest # proves detection on planted f
 ```
 Wire into `npm test`, the Codex-Claude loop, and the deploy checklist.
 
-### Security alert feature
-Specified; **not yet built** (the live key exposure took priority). Next deliverable: a `securityAlerts` collection (admin/owner-read, validated create), a `security-alerts.js` logger, runtime guards (XSS-looking input, protected-field tamper, vendorId/ownerId mismatch, spam), and an admin-only alert center.
+### Security alert feature (built + emulator-verified)
+- **`securityAlerts` collection + rules:** client runtime guards (incl. anonymous) may **create** a validated alert (severity ∈ critical/high/medium/low, type/message length-capped, `resolved=false`); **read + mark-resolved** are restricted to `isAdmin()` or the vendor the alert is scoped to; never public; delete admin-only. Verified by 8 emulator rule tests (anon create ok; bad severity / `resolved=true` denied; anon read denied; admin + vendor read ok; admin resolve ok; anon resolve denied).
+- **`security-alerts.js`** — best-effort logger `SecurityAlerts.log({severity,type,message,route,vendorId,ownerId,userId,metadata})` writing the spec'd alert schema, plus guards: `looksLikeXss`, `scanInput` (logs `xss_payload_detected`), `guardProtectedFields` (logs `protected_field_modify` if a client tries to set status/price/payment/vendorId/etc.), `guardVendorOwnerMismatch`.
+- **Runtime guard wired:** the mobile-barber customer chat scans input via `SecurityAlerts.scanInput` (defense-in-depth; the message is still rendered with `textContent`).
+- **Admin alert center:** `security-alerts.html` (route `/security-alerts`, `noindex`) — admin-email-gated, live `onSnapshot` feed, filters (Critical/High/Medium/Low/Unresolved/Resolved/All), unread+critical badge, **Mark resolved**. Not visible to public users.
+- **Alert types covered:** `xss_payload_detected`, `protected_field_modify`, `vendor_owner_mismatch`, plus the schema for `unauthorized_portal_access`, `permission_denied_spike`, `failed_vendor_login`, `booking_spam`, `ai_prompt_injection`, `storage_upload_rejected`, `device_booking_flood`, `secret_exposure_suspected` (wire additional emitters as a follow-up). Email/SMS for critical alerts: follow-up (the report's notification infra exists).
 
 ---
 

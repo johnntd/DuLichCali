@@ -1450,6 +1450,11 @@
     if (!input) return;
     var message = String(input.value || '').trim();
     if (!message) return;
+    // Defense-in-depth: log XSS-looking chat input to the security-alert center.
+    // (The message is rendered via textContent, so this is monitoring, not a boundary.)
+    if (root.SecurityAlerts && typeof root.SecurityAlerts.scanInput === 'function') {
+      try { root.SecurityAlerts.scanInput(message, { route: '/mobile-barber', field: 'chat', vendorId: (preferredVendor() || {}).id }); } catch (e) {}
+    }
     input.value = '';
     appendChatMessage('user', message);
 

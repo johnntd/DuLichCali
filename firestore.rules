@@ -391,6 +391,26 @@ service cloud.firestore {
       allow read, update, delete: if false;
     }
 
+    // ── Security alerts — defense-in-depth event log ─────────────────────────────
+    // Client-side runtime guards (which run in any visitor's browser, incl.
+    // anonymous) may CREATE a validated alert. Only an admin (or the vendor the
+    // alert is scoped to) may READ them or mark them resolved — never public.
+    // This is a monitoring aid, NOT a security boundary; the Firestore rules
+    // above are the real enforcement.
+    match /securityAlerts/{alertId} {
+      allow create: if request.resource.data.keys().hasAll(['severity', 'type', 'message', 'resolved', 'createdAt'])
+                 && request.resource.data.severity in ['critical', 'high', 'medium', 'low']
+                 && request.resource.data.type is string
+                 && request.resource.data.type.size() <= 80
+                 && request.resource.data.message is string
+                 && request.resource.data.message.size() <= 1000
+                 && request.resource.data.resolved == false;
+      allow read:   if isAdmin() || isVendorMember(resource.data.vendorId);
+      allow update: if (isAdmin() || isVendorMember(resource.data.vendorId))
+                 && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['resolved', 'resolvedAt', 'resolvedBy']);
+      allow delete: if isAdmin();
+    }
+
     // ── Default deny ──────────────────────────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

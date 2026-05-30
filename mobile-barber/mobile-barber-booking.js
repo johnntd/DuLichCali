@@ -693,6 +693,14 @@
     var range = normalizeDateRange(dateRange, opts.now);
     var limit = Number(opts.limit || 5);
     var step = Number(opts.stepMinutes || DEFAULT_SLOT_STEP_MINUTES);
+    // Optional intra-day window (minutes from midnight) so a flexible request
+    // ("morning" / "afternoon" / "after 5") only searches that band. When a
+    // fromNowMinutes is given, slots earlier than that on TODAY are skipped.
+    var winStart = (opts.windowStartMinutes != null) ? Number(opts.windowStartMinutes) : null;
+    var winEnd = (opts.windowEndMinutes != null) ? Number(opts.windowEndMinutes) : null;
+    var nowRef = (opts.now instanceof Date) ? opts.now : (opts.now ? new Date(opts.now) : new Date());
+    var todayStr = dateStringFromDate(nowRef);
+    var fromNowMin = (opts.fromNowMinutes != null) ? Number(opts.fromNowMinutes) : null;
     var slots = [];
     for (var cursor = new Date(range.start.getTime()); cursor <= range.end && slots.length < limit; cursor = addDays(cursor, 1)) {
       var dateStr = dateStringFromDate(cursor);
@@ -701,7 +709,11 @@
       var open = minutesFromTime(row.start);
       var close = minutesFromTime(row.end);
       if (open == null || close == null) continue;
-      for (var minute = open; minute < close && slots.length < limit; minute += step) {
+      var lo = open, hi = close;
+      if (winStart != null) lo = Math.max(lo, winStart);
+      if (winEnd != null) hi = Math.min(hi, winEnd);
+      if (fromNowMin != null && dateStr === todayStr) lo = Math.max(lo, fromNowMin);
+      for (var minute = lo; minute < hi && slots.length < limit; minute += step) {
         var draft = { requestedDate: dateStr, startTime: timeFromMinutes(minute) };
         var timing = calculateTiming(service, draft, vendor);
         var result = checkWindowAvailability(

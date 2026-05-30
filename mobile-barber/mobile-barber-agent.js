@@ -13,6 +13,8 @@
 })(typeof window !== 'undefined' ? window : globalThis, function(DATA, BOOKING, AIEngine) {
   var VALID_LANGS = { en: 1, vi: 1, es: 1 };
   var VALID_PENDING = { booking_summary: 1, final_confirmation: 1 };
+  // Persisted slots that a stray AI [STATE]:null must never wipe once set.
+  var PROTECTED_FROM_NULL = { address: 1, city: 1, zip: 1, customerName: 1, phone: 1 };
   var ACTIVE_STATUSES = ['pending_confirmation', 'confirmed', 'vendor_review'];
 
   var STRINGS = {
@@ -33,6 +35,8 @@
       confirmPartialAddress: 'I heard {partial}. Is that correct?',
       askService: 'What barber service would you like?',
       askDateTime: 'What day and time would you like?',
+      offerSlots: 'Here are the next open times: {slots}. Which one works for you?',
+      noSlots: 'There are no open times in that window. Could you pick another day, or give me a specific time to check?',
       priceOnly: '{service} is {price}. With the mobile travel fee, the estimated total due after service is {total}. Pay by cash or Zelle after the haircut.',
       language: 'Yes. This assistant can help in English, Vietnamese, or Spanish.',
       photo: 'Yes. Upload a reference photo in the photo field and I will attach it to the booking request.',
@@ -62,6 +66,8 @@
       confirmPartialAddress: 'Dạ em nghe {partial}. Đúng không ạ?',
       askService: 'Mình muốn đặt dịch vụ barber nào ạ?',
       askDateTime: 'Mình muốn đặt ngày nào và giờ nào ạ?',
+      offerSlots: 'Dạ có các khung giờ trống sau: {slots}. Anh/chị chọn giờ nào ạ?',
+      noSlots: 'Dạ khung giờ đó hiện không còn chỗ trống. Anh/chị chọn ngày khác, hoặc cho mình một giờ cụ thể để kiểm tra nhé?',
       priceOnly: '{service} là {price}. Cộng phí di chuyển, tổng ước tính trả sau khi cắt là {total}. Thanh toán bằng tiền mặt hoặc Zelle sau dịch vụ.',
       language: 'Dạ có. Trợ lý này hỗ trợ tiếng Việt, tiếng Anh, hoặc tiếng Tây Ban Nha.',
       photo: 'Dạ được. Tải ảnh tham khảo ở ô ảnh và em sẽ đính kèm vào yêu cầu đặt lịch.',
@@ -91,6 +97,8 @@
       confirmPartialAddress: 'Escuché {partial}. ¿Es correcto?',
       askService: '¿Qué servicio de barbería quiere?',
       askDateTime: '¿Qué día y hora prefiere?',
+      offerSlots: 'Estos son los próximos horarios disponibles: {slots}. ¿Cuál le funciona?',
+      noSlots: 'No hay horarios libres en ese rango. ¿Puede elegir otro día o darme una hora específica para verificar?',
       priceOnly: '{service} cuesta {price}. Con la tarifa móvil, el total estimado después del servicio es {total}. Puede pagar en efectivo o Zelle después del corte.',
       language: 'Sí. Este asistente puede ayudar en inglés, vietnamita, o español.',
       photo: 'Sí. Suba una foto de referencia en el campo de foto y la adjuntaré a la solicitud.',
@@ -207,7 +215,9 @@
       paymentMethod: 'cash',
       photoUrls: [],
       pendingAction: null,
-      lastAvailabilityKey: null
+      lastAvailabilityKey: null,
+      flexibleWindow: null,
+      offeredSlots: null
     };
   }
 
@@ -218,6 +228,10 @@
     Object.keys(update).forEach(function(key) {
       var value = update[key];
       if (value === null) {
+        // Defense-in-depth (BUG 2): the AI [STATE] marker sometimes echoes a
+        // full state with nulls for fields it did not capture this turn. Never
+        // let that wipe an already-collected persisted slot.
+        if (PROTECTED_FROM_NULL[key] && trim(state[key])) return;
         state[key] = null;
         return;
       }
@@ -261,7 +275,20 @@
         return;
       }
       if (key === 'time') {
-        if (/^\d{1,2}:\d{2}$/.test(value)) state.time = value.length === 4 ? '0' + value : value;
+        if (/^\d{1,2}:\d{2}$/.test(value)) {
+          state.time = value.length === 4 ? '0' + value : value;
+          // A concrete time supersedes any flexible window / pending offer.
+          state.flexibleWindow = null;
+          state.offeredSlots = null;
+        }
+        return;
+      }
+      if (key === 'flexibleWindow') {
+        state.flexibleWindow = (value && typeof value === 'object') ? value : null;
+        return;
+      }
+      if (key === 'offeredSlots') {
+        state.offeredSlots = Array.isArray(value) ? value : null;
         return;
       }
       if (key === 'photoUrls') {
@@ -334,6 +361,86 @@
     return parsed;
   }
 
+  // Representative ZIP per known service-area city. Routing only needs the
+  // CITY (isWithinServiceArea matches city OR zip), but the booking WRITE
+  // requires a zip (validateRequiredFields). When a customer gives a
+  // city-routable address without a ZIP we derive a representative one here so
+  // the agent never loops asking for the ZIP ("address again") and the booking
+  // still persists. The street + city remain the customer's real values.
+  var CITY_REP_ZIP = {
+    // Orange County (Michael)
+    'westminster': '92683', 'garden grove': '92840', 'santa ana': '92704',
+    'fountain valley': '92708', 'huntington beach': '92647', 'costa mesa': '92627',
+    'irvine': '92614', 'orange': '92868', 'anaheim': '92805',
+    // Bay Area (Tim)
+    'san jose': '95112', 'santa clara': '95050', 'milpitas': '95035',
+    'sunnyvale': '94085', 'mountain view': '94040', 'cupertino': '95014',
+    'los gatos': '95030', 'campbell': '95008', 'fremont': '94536'
+  };
+  function cityRepZip(city) {
+    return CITY_REP_ZIP[trim(city).toLowerCase()] || '';
+  }
+
+  // BUG 1 — flexible time. Map a natural availability phrase to a search window
+  // (minutes-of-day band, single/multi-day, from-now). Returns null when the
+  // message has no flexible signal (a concrete time is handled by normalizeTime).
+  function parseFlexibleWindow(message) {
+    var t = stripDiacritics(trim(message).toLowerCase());
+    if (/\b(earliest|soonest|asap|as soon as possible|next available|first available|som nhat|sm nhat|cuanto antes|lo antes posible)\b/.test(t)) {
+      return { kind: 'earliest', startMin: null, endMin: null, fromNow: true, multiDay: true };
+    }
+    if (/\b(this weekend|cuoi tuan|fin de semana)\b/.test(t)) {
+      return { kind: 'weekend', startMin: null, endMin: null, multiDay: true, weekend: true };
+    }
+    if (/\b(before noon|before 12|before midday|truoc trua|antes del mediodia)\b/.test(t)) {
+      return { kind: 'morning', startMin: 0, endMin: 12 * 60 };
+    }
+    if (/\b(morning|buoi sang|sang|por la manana)\b/.test(t)) {
+      return { kind: 'morning', startMin: 0, endMin: 12 * 60 };
+    }
+    if (/\b(afternoon|buoi chieu|chieu|por la tarde)\b/.test(t)) {
+      return { kind: 'afternoon', startMin: 12 * 60, endMin: 17 * 60 };
+    }
+    if (/\b(evening|tonight|buoi toi|toi|por la noche|night)\b/.test(t)) {
+      return { kind: 'evening', startMin: 17 * 60, endMin: null };
+    }
+    if (/\b(all day|any ?time|anytime|when ?ever|flexible|free all|available all|am available|i am available|im available|are you free|todo el dia|cualquier hora|disponible todo|ranh ca ngay|ca ngay|ranh)\b/.test(t)) {
+      return { kind: 'allday', startMin: null, endMin: null, fromNow: true };
+    }
+    return null;
+  }
+
+  // Match the customer's reply to one of the slots we just offered, by ordinal
+  // ("first" / "1" / "the second one") or by a concrete time.
+  function _pickOfferedSlot(message, slots) {
+    if (!Array.isArray(slots) || !slots.length) return null;
+    var t = trim(message).toLowerCase();
+    var ordinals = [
+      [/\b(1st|first|earliest|soonest|one|number 1|number one|cai dau|primero|primera)\b/, 0],
+      [/\b(2nd|second|two|number 2|number two|cai hai|segundo|segunda)\b/, 1],
+      [/\b(3rd|third|three|number 3|cai ba|tercero|tercera)\b/, 2],
+      [/\b(4th|fourth|four)\b/, 3],
+      [/\b(5th|fifth|five)\b/, 4]
+    ];
+    for (var i = 0; i < ordinals.length; i++) {
+      if (ordinals[i][0].test(t) && slots[ordinals[i][1]]) return slots[ordinals[i][1]];
+    }
+    var tm = normalizeTime(message);
+    if (tm) {
+      for (var j = 0; j < slots.length; j++) {
+        if (slots[j].startTime === tm) return slots[j];
+      }
+    }
+    // A bare number "1".."5"
+    var n = /^\s*([1-5])\s*$/.exec(t);
+    if (n && slots[Number(n[1]) - 1]) return slots[Number(n[1]) - 1];
+    return null;
+  }
+
+  function _fmt12(hhmm) {
+    return (BOOKING && BOOKING.formatTime12Hour) ? BOOKING.formatTime12Hour(hhmm) : hhmm;
+  }
+
   function matchService(text, services) {
     var lower = trim(text).toLowerCase();
     services = services || [];
@@ -376,6 +483,12 @@
 
     var time = normalizeTime(message);
     if (time) update.time = time;
+    else {
+      // No concrete clock time — detect a flexible availability window so the
+      // agent can search the live schedule and offer real slots (BUG 1).
+      var flex = parseFlexibleWindow(message);
+      if (flex) update.flexibleWindow = flex;
+    }
     if (service) update.serviceId = service.id;
 
     var phone = /(?:\+?1[\s.-]?)?(?:\(?\d{3}\)?[\s.-]?)\d{3}[\s.-]?\d{4}/.exec(message);
@@ -442,7 +555,18 @@
       if (prevStep === 'ASK_ADDRESS' && trimmedMsg.length <= 160) {
         var parts = trimmedMsg.split(',').map(function(p) { return p.trim(); }).filter(Boolean);
         if (!update.address) {
-          var addrCandidate = (parseAddressParts(trimmedMsg, ctx).address) || parts[0] || trimmedMsg;
+          // A regex-matched street (parseAddressParts) is always trusted.
+          // The loose first-comma-part fallback is ONLY accepted when it
+          // looks like a street (leading house number) and we don't already
+          // hold a good street — otherwise a follow-up reply like a bare ZIP
+          // ("95121") or non-address text ("classic haircut at 5pm") would
+          // clobber the real street the customer already gave. That was the
+          // address-pollution bug found 2026-05-29.
+          var strictAddr = parseAddressParts(trimmedMsg, ctx).address;
+          var existingStreet = currentState && /^\d{1,6}\s+\S/.test(trim(currentState.address || ''));
+          var looseAddr = parts[0] || trimmedMsg;
+          var looseLooksLikeStreet = /^\d{1,6}\s+\S/.test(looseAddr) && !/^9\d{4}$/.test(looseAddr);
+          var addrCandidate = strictAddr || ((!existingStreet && looseLooksLikeStreet) ? looseAddr : '');
           if (addrCandidate && addrCandidate.length >= 3 && addrCandidate.length <= 120) {
             update.address = addrCandidate;
           }
@@ -649,10 +773,27 @@
     ASK_ADDRESS: 'Ask for the service address (street, city, ZIP). One question only.',
     ASK_SERVICE: 'Ask which barber service they would like. List a couple of options if helpful.',
     ASK_DATE_TIME: 'Ask what day and time they would prefer.',
+    OFFER_SLOTS: 'The system has found REAL open times from the live schedule (listed in the system note). Offer exactly those times and ask the customer to pick one. Never invent or imply other availability.',
     CHECK_AVAILABILITY: 'Acknowledge the request and wait for the system availability result. Do not promise the slot.',
     CONFIRM_SUMMARY: 'Read back the booking summary (service, date/time, address, total). Ask the customer to reply yes to send it.',
     CREATE_BOOKING: 'Acknowledge the booking is being sent.',
     DONE: 'Confirm the request was sent and mention the barber still needs to confirm.'
+  };
+
+  // English reason instructions handed to the AI brain (via a [SYSTEM: ...]
+  // note) when a booking cannot be completed, so it can explain WHY in the
+  // customer's language. These are AI instructions, not user-facing strings
+  // (RULE #2 compliant — the AI rephrases them in the customer locale).
+  var AVAIL_REASONS = {
+    service_area_out_of_range: 'The address is outside every mobile-barber service area we cover. We currently serve Orange County (barber Michael) and the Bay Area (barber Tim). Tell the customer we do not have a barber who can travel to that address, and name the areas we do serve.',
+    closed_day: 'The barber is closed on the requested day. Ask the customer to choose a day the barber is open.',
+    outside_hours: 'The requested time is outside the barber working hours for that day. Ask for a time within working hours.',
+    unavailable_block: 'The barber has blocked off the requested time. Ask the customer to pick a different time.',
+    same_day_cutoff: 'The requested time is too soon to schedule today (past the same-day cutoff). Ask for a later time or a different day.',
+    availability_missing: 'This barber has not published working hours yet. Ask the customer to try another day or contact the barber directly.',
+    blackout_date: 'The barber is not available on that date. Ask the customer to choose another date.',
+    invalid_hours: 'The barber working hours for that day are not set correctly. Ask the customer to try a different day.',
+    required_fields: 'Some required booking details are still missing. Ask only for the missing detail (such as the ZIP code) and do not say the booking is done.'
   };
 
   function _parseStateMarker(reply) {
@@ -758,7 +899,7 @@
       'Reference-only marker examples, not customer-facing replies:',
       '  [STATE:{"customerName":"John"}]',
       '  [STATE:{"addressConfirmed":true}]',
-      '  [STATE:{"serviceId":"classic-mobile-cut","date":"' + todayIso + '","time":"17:00"}]',
+      '  [STATE:{"serviceId":"' + ((services[0] && services[0].id) || 'service-id') + '","date":"' + todayIso + '","time":"17:00"}]',
       '',
       'Allowed STATE keys: customerName, phone, address, city, zip, serviceId, date, time, addressConfirmed, intent, barberPreference, notes, paymentMethod.',
       'Allowed serviceId values: ' + (services.map(function(s) { return s.id; }).join(', ') || '(none)') + '.',
@@ -767,6 +908,29 @@
       'The marker is stripped from the user-visible reply automatically. NEVER paraphrase the marker or read it aloud.',
       'FINAL LANGUAGE LOCK: Customer-facing text MUST be entirely in ' + langName + '. Never mix languages. Match the customer completely.'
     ].join('\n');
+  }
+
+  // Ground-truth status of what the deterministic core actually did this turn.
+  // Fed to the AI brain so its narration can never claim a booking is submitted
+  // when the core did not build one (the root cause of "AI said booked but the
+  // vendor portal was empty"). Returns an English instruction string; the AI
+  // rephrases it in the customer's language (RULE #2 compliant).
+  function _authoritativeOutcome(baseResult) {
+    if (!baseResult) return '';
+    if (baseResult.booking && baseResult.booking.id) {
+      if (baseResult.booking.status === 'vendor_review') {
+        return 'BOOKING_RESULT=submitted_for_review. The system created booking ' + baseResult.booking.id +
+          ', but it needs the barber to personally confirm the details (travel distance / special quote). ' +
+          'Tell the customer their request was sent and the barber will personally confirm shortly. ' +
+          'Do NOT say it is fully confirmed, and do not alter any detail.';
+      }
+      return 'BOOKING_RESULT=submitted. The system created and is sending booking ' + baseResult.booking.id +
+        '. Tell the customer their request was sent and the barber will confirm shortly. Do not alter any detail.';
+    }
+    var note = trim((baseResult.session && baseResult.session.lastSystemContext) || '');
+    return 'BOOKING_RESULT=not_submitted. ' + (note ? (note + ' ') : '') +
+      'A booking was NOT created this turn. Do NOT tell the customer it is booked, confirmed, submitted, or done. ' +
+      'Ask only for the next missing detail, or if a reason is given above, explain that reason in the customer language.';
   }
 
   function _runAIBrain(session, message, ctx, baseResult) {
@@ -793,6 +957,14 @@
 
     // Keep history bounded (last 20 turns) to limit token spend.
     var historyForAI = history.slice(-20);
+
+    // Append the deterministic ground truth for THIS turn so the AI narration
+    // matches reality (cannot fabricate a confirmation). Appended only to the
+    // copy sent to the model — never persisted — so these notes cannot pile up.
+    var outcomeNote = _authoritativeOutcome(baseResult);
+    if (outcomeNote) {
+      historyForAI = historyForAI.concat([{ role: 'user', content: '[SYSTEM: ' + outcomeNote + ']' }]);
+    }
 
     return Promise.resolve(provider({
       systemPrompt: systemPrompt,
@@ -860,6 +1032,89 @@
         reply: trim(response || '').substring(0, 120)
       }));
     } catch (e) { /* logging is best-effort */ }
+  }
+
+  // Schedule diagnostic — emitted on both the green-light path (before a
+  // booking write) and every schedule-type rejection, so production logs show
+  // exactly what the availability engine decided and which alternates (if any)
+  // were offered. See spec: [mobile-barber-agent-schedule].
+  function logScheduleCheck(session, vendor, draft, availability, suggested) {
+    if (typeof console === 'undefined' || !console.log) return;
+    try {
+      console.log('[mobile-barber-agent-schedule]', JSON.stringify({
+        sessionId: (session && session.id) || null,
+        assignedBarberId: (vendor && (vendor.assignedBarberId || vendor.barberId || vendor.id)) || null,
+        requestedStart: trim(((draft && draft.requestedDate) || '') + ' ' + ((draft && draft.startTime) || '')),
+        requestedEnd: (availability && availability.timing && availability.timing.endTime) || '',
+        availabilityResult: availability ? (availability.canCreate ? 'available' : availability.key) : 'unknown',
+        conflicts: availability && availability.canCreate ? [] : [availability && availability.key].filter(Boolean),
+        suggestedSlots: (suggested || []).map(function(s) { return s.requestedDate + ' ' + s.startTime; })
+      }));
+    } catch (e) { /* logging is best-effort */ }
+  }
+
+  // Booking-write diagnostic — emitted the moment the deterministic core builds
+  // a booking, BEFORE the caller persists it. See spec:
+  // [mobile-barber-agent-booking-write].
+  function logBookingWrite(session, booking) {
+    if (typeof console === 'undefined' || !console.log) return;
+    try {
+      console.log('[mobile-barber-agent-booking-write]', JSON.stringify({
+        sessionId: (session && session.id) || null,
+        bookingId: (booking && booking.id) || null,
+        status: (booking && booking.status) || null,
+        vendorId: (booking && booking.vendorId) || null,
+        assignedBarberId: (booking && booking.assignedBarberId) || null,
+        ownerId: (booking && booking.ownerId) || null,
+        routingReason: (booking && booking.routingReason) || null,
+        previousCustomerMatched: !!(booking && booking.previousCustomerMatched),
+        source: (booking && booking.source) || null
+      }));
+    } catch (e) { /* logging is best-effort */ }
+  }
+
+  // BUG 1 — flexible time: search the LIVE schedule for real open slots inside
+  // the customer's flexible window. Returns an array of {requestedDate,
+  // startTime, endTime} (possibly empty). Never invents availability.
+  function _offerFlexibleSlots(state, ctx, vendor, services) {
+    if (!BOOKING || typeof BOOKING.findNextAvailableSlots !== 'function' || !vendor) return [];
+    var fw = state.flexibleWindow || {};
+    var now = (ctx && ctx.now instanceof Date) ? ctx.now : new Date();
+    var todayIso = localISODate(now);
+    var startDate = (state.date && state.date >= todayIso) ? state.date : todayIso;
+    var endDate = fw.multiDay ? addDays(now, 13) : startDate;
+    var fromNowMin = fw.fromNow ? (now.getHours() * 60 + now.getMinutes()) : null;
+    var slots = [];
+    try {
+      slots = BOOKING.findNextAvailableSlots(vendor.id, state.serviceId, { start: startDate, end: endDate }, {
+        vendor: vendor,
+        services: services,
+        availability: (ctx && ctx.availability) || DATA.sampleAvailability,
+        existingBookings: (ctx && ctx.existingBookings) || [],
+        unavailableBlocks: (ctx && ctx.unavailableBlocks) || [],
+        now: now,
+        windowStartMinutes: fw.startMin,
+        windowEndMinutes: fw.endMin,
+        fromNowMinutes: fromNowMin,
+        limit: 5
+      }) || [];
+    } catch (e) { slots = []; }
+    if (typeof console !== 'undefined' && console.log) {
+      try {
+        console.log('[mb-agent-availability]', JSON.stringify({
+          vendorId: vendor.id,
+          serviceId: state.serviceId,
+          requestedWindowStart: startDate + (fw.startMin != null ? ' ' + Math.floor(fw.startMin / 60) + ':00' : ''),
+          requestedWindowEnd: (fw.multiDay ? '(forward)' : startDate) + (fw.endMin != null ? ' ' + Math.floor(fw.endMin / 60) + ':00' : ''),
+          fixedTime: false,
+          flexibleKind: fw.kind || null,
+          slotsReturned: slots.length,
+          conflicts: 0,
+          source: 'live-db'
+        }));
+      } catch (e) {}
+    }
+    return slots;
   }
 
   function _handleMessageCore(session, message, ctx) {
@@ -945,6 +1200,66 @@
       applySavedAddress(state);
     }
 
+    // BUG 2 fix — route by city: when the customer gave a city-routable address
+    // without a ZIP, derive a representative ZIP so the agent never loops asking
+    // for it ("address again") and the booking still writes. Street + city are
+    // the customer's real values; the ZIP is a city representative only.
+    if (trim(state.city) && !trim(state.zip)) {
+      var derivedZip = cityRepZip(state.city);
+      if (derivedZip) {
+        state.zip = derivedZip;
+        state.zipDerivedFromCity = true;
+      }
+    }
+    // Address-repeat guard diagnostic.
+    if (typeof console !== 'undefined' && console.log) {
+      try {
+        var _hasRoutableAddr = !!(trim(state.address) && (trim(state.city) || trim(state.zip)));
+        var _wouldAskAddr = !!trim(state.customerName) && (!trim(state.address) || !trim(state.city));
+        console.log('[mb-agent-address-repeat-guard]', JSON.stringify({
+          alreadyHasAddress: _hasRoutableAddr,
+          attemptedToAskAddressAgain: _hasRoutableAddr && _wouldAskAddr,
+          blockedRepeatQuestion: _hasRoutableAddr && !_wouldAskAddr,
+          address: trim(state.address) || null,
+          city: trim(state.city) || null,
+          zip: trim(state.zip) || null,
+          zipDerived: !!state.zipDerivedFromCity
+        }));
+      } catch (e) {}
+    }
+
+    // ── BUG 1 — flexible time → real slots ────────────────────────────────
+    // (a) Customer is picking from slots we already offered.
+    if (Array.isArray(state.offeredSlots) && state.offeredSlots.length && !trim(state.time)) {
+      var picked = _pickOfferedSlot(message, state.offeredSlots);
+      if (picked) {
+        state.date = picked.requestedDate;
+        state.time = picked.startTime;
+        state.flexibleWindow = null;
+        state.offeredSlots = null;
+      }
+    }
+    // (b) Flexible window + everything except the time present → search the live
+    // schedule and offer real open slots (never invent / never loop on time).
+    var _preTimeMissing = ['customerName', 'address', 'city', 'serviceId'].filter(function(k) { return !trim(state[k]); });
+    if (!_preTimeMissing.length && !trim(state.time) && state.flexibleWindow) {
+      var realSlots = _offerFlexibleSlots(state, ctx, vendor, services);
+      if (realSlots && realSlots.length) {
+        state.offeredSlots = realSlots;
+        state.step = 'OFFER_SLOTS';
+        var listText = realSlots.map(function(s, i) {
+          return (i + 1) + ') ' + s.requestedDate + ' ' + _fmt12(s.startTime);
+        }).join('; ');
+        session.lastSystemContext = 'These are REAL open times from the live schedule. Offer exactly these and ask the customer to pick one; never invent other times: ' + listText;
+        return { session: session, response: reply(lang, 'offerSlots', { slots: listText }) };
+      }
+      // No real slots in the window → drop the flexible flag and ask for a day.
+      state.flexibleWindow = null;
+      state.step = 'ASK_DATE_TIME';
+      session.lastSystemContext = 'No open times were found in the requested window. Apologize briefly and ask the customer to choose a different day or give a specific time.';
+      return { session: session, response: reply(lang, 'noSlots') };
+    }
+
     var nextQuestion = nextMissingQuestion(state, lang);
     if (nextQuestion) {
       var missing = missingFields(state);
@@ -975,8 +1290,49 @@
     state.lastAvailabilityKey = availability.key;
 
     if (!availability.canCreate) {
-      session.lastSystemContext = systemReason('availability_failed', { key: availability.key });
-      return { session: session, response: reply(lang, 'unavailable') };
+      // Hand the AI a specific, human reason so it can explain WHY the booking
+      // could not be completed instead of a generic "not available".
+      var failReason = AVAIL_REASONS[availability.key]
+        || ('The booking could not be completed (reason code: ' + availability.key + '). Apologize and explain we could not complete it.');
+
+      // Schedule-type failures (closed day, outside hours, blocked time,
+      // same-day cutoff, overlap, duplicate) get up to 3 real alternate slots
+      // from the same availability engine, handed to the AI as data so it can
+      // offer them in the customer's language. Service-area and missing-field
+      // failures are not schedule problems → no alternate-time list.
+      var scheduleFail = availability.key !== 'service_area_out_of_range' &&
+        availability.key !== 'required_fields' && availability.key !== 'service_missing';
+      var suggested = [];
+      if (scheduleFail && typeof BOOKING.findNextAvailableSlots === 'function' && trim(state.serviceId)) {
+        try {
+          suggested = BOOKING.findNextAvailableSlots(vendor.id, state.serviceId, { start: draft.requestedDate }, {
+            vendor: vendor,
+            services: services,
+            availability: ctx.availability || DATA.sampleAvailability,
+            existingBookings: ctx.existingBookings || [],
+            unavailableBlocks: ctx.unavailableBlocks || [],
+            now: ctx.now,
+            limit: 3
+          }) || [];
+        } catch (e) { suggested = []; }
+      }
+      if (suggested.length) {
+        var slotText = suggested.map(function(s) {
+          var t = BOOKING.formatTime12Hour ? BOOKING.formatTime12Hour(s.startTime) : s.startTime;
+          return s.requestedDate + ' ' + t;
+        }).join('; ');
+        failReason += ' Offer these next available times and ask the customer to pick one: ' + slotText + '.';
+      }
+      session.lastSystemContext = failReason;
+      logScheduleCheck(session, vendor, draft, availability, suggested);
+
+      // Deterministic fallback (used only when the AI brain is unavailable): an
+      // out-of-area address gets the area-specific line; everything else gets
+      // the generic "pick another time" line.
+      var detReply = availability.key === 'service_area_out_of_range'
+        ? reply(lang, 'outOfArea')
+        : reply(lang, 'unavailable');
+      return { session: session, response: detReply };
     }
 
     // Out-of-area + review-required quotes still need one round of explicit
@@ -1007,12 +1363,39 @@
       };
     }
 
+    // Schedule cleared → log the green-light snapshot before writing.
+    logScheduleCheck(session, vendor, draft, availability, []);
+
+    // Routing + customer-memory audit trail stamped onto the booking doc so the
+    // vendor portal can see which barber the request was routed to and why.
+    var routedReason = trim(ctx.routingReason) ||
+      ('address_match ' + trim((state.city || '') + ' ' + (state.zip || '')) + ' -> ' + (vendor.id || ''));
+    var record = state.customerRecord || {};
+    var prefSnapshot = {
+      preferredBarber: state.barberPreference || record.preferredBarber || '',
+      lastServiceId: record.lastServiceId || state.previousServiceId || '',
+      lastServiceName: record.lastServiceName || state.previousServiceName || '',
+      notes: state.notes || ''
+    };
+    var schedSnapshot = {
+      key: availability.key,
+      date: draft.requestedDate,
+      startTime: draft.startTime,
+      endTime: availability.timing && availability.timing.endTime,
+      quoteType: availability.price && availability.price.quoteType
+    };
     var built = BOOKING.buildBooking({
       vendor: vendor,
       draft: draft,
       availabilityResult: availability,
       id: ctx.id,
-      now: ctx.nowIso
+      now: ctx.nowIso,
+      meta: {
+        routingReason: routedReason,
+        previousCustomerMatched: state.customerLookupStatus === 'found',
+        customerPreferenceSnapshot: prefSnapshot,
+        scheduleCheckSnapshot: schedSnapshot
+      }
     });
     if (!built.valid) {
       session.lastSystemContext = systemReason('booking_build_failed', { errors: built.errors.join(',') });
@@ -1024,11 +1407,21 @@
       barberPreference: state.barberPreference || '',
       notes: state.notes || ''
     });
+    // Long-distance / low-profitability quotes (quoteType === 'vendor_review')
+    // need the barber to personally confirm the travel quote → mark the booking
+    // vendor_review so it lands in the barber's review queue, not as a normal
+    // pending request. The save-time conflict guard can also elevate to
+    // vendor_review independently; that path is unaffected.
+    var needsVendorReview = !!(availability.price && availability.price.quoteType === 'vendor_review');
+    if (needsVendorReview) built.booking.status = 'vendor_review';
     state.pendingAction = null;
     state.step = 'DONE';
     session.lastAvailabilityResult = availability;
     session.lastBooking = built.booking;
-    session.lastSystemContext = systemReason('booking_created', { id: built.booking.id, status: built.booking.status });
+    logBookingWrite(session, built.booking);
+    session.lastSystemContext = needsVendorReview
+      ? systemReason('booking_vendor_review', { id: built.booking.id })
+      : systemReason('booking_created', { id: built.booking.id, status: built.booking.status });
     var barberDisplay = (vendor.barberName || vendor.businessName || '').trim() || 'the barber';
     // When a vendor promo is applied, prepend a natural acknowledgement so
     // the customer sees the discount called out in the saved confirmation.

@@ -17,8 +17,8 @@ function assertEq(actual, expected, msg) {
 function context(overrides) {
   overrides = overrides || {};
   return {
-    vendor: MobileBarberData.findVendorById(MobileBarberData.SAMPLE_VENDOR_ID),
-    services: MobileBarberData.listServicesForVendor(MobileBarberData.SAMPLE_VENDOR_ID),
+    vendor: MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID),
+    services: MobileBarberData.listServicesForVendor(MobileBarberData.MICHAEL_VENDOR_ID),
     availability: MobileBarberData.sampleAvailability,
     existingBookings: overrides.existingBookings || [],
     now: overrides.now || new Date('2026-05-23T12:00:00-07:00'),
@@ -30,7 +30,7 @@ function context(overrides) {
 function runMobileBarberAgentTests(test) {
   test('Mobile Barber AI agent builds vendor-scoped prompt with booking guardrails', function() {
     var prompt = MobileBarberAgent.buildPrompt(context(), 'en');
-    assert(prompt.indexOf('Vendor scope: OC Mobile Barber Demo / Demo Barber') >= 0, 'prompt must be vendor scoped');
+    assert(prompt.indexOf('Vendor scope: Michael Mobile Barber OC / Michael Nguyen') >= 0, 'prompt must be vendor scoped');
     assert(prompt.indexOf('Never invent availability') >= 0, 'prompt must forbid invented availability');
     assert(prompt.indexOf('[SYSTEM: ...]') >= 0, 'prompt must route backend reasons through AI system context');
   });
@@ -82,7 +82,7 @@ function runMobileBarberAgentTests(test) {
         city: 'Westminster',
         zip: '92683',
         lastServiceName: 'Fade Haircut',
-        preferredBarber: 'Demo Barber'
+        preferredBarber: 'Michael Nguyen'
       }
     }));
     assertEq(result.session.state.customerLookupStatus, 'found');
@@ -110,7 +110,7 @@ function runMobileBarberAgentTests(test) {
     assertEq(result.booking.endTime, '11:15');
     assertEq(result.booking.paymentMethod, 'cash');
     assertEq(result.booking.paymentStatus, 'unpaid');
-    assertEq(result.booking.zellePhone, '(714) 555-0148');
+    assertEq(result.booking.zellePhone, '(714) 227-6007');
     assertEq(result.booking.amountDue, result.booking.totalPrice);
     assert(result.booking.pricingExplanation.indexOf('Service price') >= 0, 'AI booking should save shared pricing explanation');
     assert(result.response.indexOf('Zelle') >= 0, 'AI confirmation should mention Zelle after-service payment');
@@ -194,7 +194,7 @@ function runMobileBarberAgentTests(test) {
     var ctx = context({
       existingBookings: [{
         id: 'overlap-1',
-        vendorId: MobileBarberData.SAMPLE_VENDOR_ID,
+        vendorId: MobileBarberData.MICHAEL_VENDOR_ID,
         requestedDate: '2026-06-01',
         startTime: '10:30',
         endTime: '11:00',
@@ -320,10 +320,10 @@ function runMobileBarberAgentTests(test) {
 
   test('Mobile Barber AI session carries id, vendorId, and lastReply across turns', function() {
     var ctx = context({ id: 'sess-test' });
-    ctx.vendorId = 'oc-mobile-barber-demo';
+    ctx.vendorId = 'michael-nguyen-oc';
     var r1 = MobileBarberAgent.handleMessage(null, '714-555-0150', ctx);
     assert(r1.session.id, 'session must receive an id');
-    assertEq(r1.session.vendorId, 'oc-mobile-barber-demo');
+    assertEq(r1.session.vendorId, 'michael-nguyen-oc');
     var firstId = r1.session.id;
     var r2 = MobileBarberAgent.handleMessage(r1.session, '', Object.assign({}, ctx, { customerLookupResult: null }));
     assertEq(r2.session.id, firstId, 'session id must persist across turns');
@@ -356,7 +356,7 @@ function runMobileBarberAgentTests(test) {
     assert(prompt.indexOf('customerName: Linh') >= 0, 'collected slots must be in prompt');
     assert(prompt.indexOf('Next step the deterministic agent will run: ASK_ADDRESS') >= 0, 'next step guidance present');
     assert(prompt.indexOf('STATE MARKER PROTOCOL') >= 0, 'marker contract present');
-    assert(prompt.indexOf('classic-mobile-cut') >= 0, 'allowed serviceId values listed');
+    assert(prompt.indexOf('michael-nguyen-oc-classic-haircut') >= 0, 'allowed serviceId values listed');
   });
 
   test('buildAIBrainPrompt locks Vietnamese at start and end without unfenced English reply examples', function() {
@@ -460,16 +460,247 @@ function runMobileBarberAgentTests(test) {
 
   test('handleMessageAsync sends customer_lookup_miss system context to AI after no-record', function() {
     var ctx = context();
-    var sentSystem = null;
+    var sawLookupMiss = false;
     ctx.aiBrainProvider = function(req) {
-      var last = req.history[req.history.length - 1];
-      if (last && last.content && last.content.indexOf('[SYSTEM:') === 0) sentSystem = last.content;
+      sawLookupMiss = (req.history || []).some(function(m) {
+        return m && m.content && m.content.indexOf('customer_lookup_miss') >= 0;
+      });
       return Promise.resolve({ text: 'No record yet — what name should I use? [STATE:{}]' });
     };
     ctx.customerLookupProvider = function() { return Promise.resolve(null); };
     return MobileBarberAgent.handleMessageAsync(null, '714-555-0177', ctx).then(function() {
-      assert(sentSystem && sentSystem.indexOf('customer_lookup_miss') >= 0,
-        'AI must see [SYSTEM: customer_lookup_miss] after no-record lookup');
+      assert(sawLookupMiss,
+        'AI must see [SYSTEM: customer_lookup_miss] in history after no-record lookup');
+    });
+  });
+
+  // ── Routing / Schedule / Booking-write (Phase: agent repair) ────────────────
+  // These 10 tests pin the address→barber routing, the schedule-before-confirm
+  // gate, the alternate-time suggestions, the full booking-write metadata, and
+  // the three diagnostic log channels the production agent emits.
+
+  var ALL_VENDORS = MobileBarberData.sampleVendors;
+  var COMPLETE_OC_MSG = 'My name is Kim. Phone 714-555-0100. I need haircut on 2026-06-01 at 10:00 at 123 Brookhurst St Westminster 92683.';
+
+  function captureLogs(fn) {
+    var lines = [];
+    var orig = console.log;
+    console.log = function() {
+      lines.push(Array.prototype.slice.call(arguments).join(' '));
+    };
+    try { fn(); } finally { console.log = orig; }
+    return lines;
+  }
+
+  test('[routing] Orange County address routes to Michael', function() {
+    var routed = MobileBarberBooking.findVendorForAddress({ address: '123 Brookhurst St', city: 'Irvine', zip: '92614' }, { vendors: ALL_VENDORS });
+    assert(routed, 'OC address must resolve a barber');
+    assertEq(routed.id, 'michael-nguyen-oc', 'Irvine must route to Michael (OC)');
+  });
+
+  test('[routing] Bay Area address routes to Tim', function() {
+    var routed = MobileBarberBooking.findVendorForAddress({ address: '123 Main St', city: 'San Jose', zip: '95112' }, { vendors: ALL_VENDORS });
+    assert(routed, 'Bay Area address must resolve a barber');
+    assertEq(routed.id, 'tim-nguyen-bay', 'San Jose must route to Tim (Bay Area)');
+  });
+
+  test('[routing] address outside every service area routes to no barber', function() {
+    var routed = MobileBarberBooking.findVendorForAddress({ address: '1 Capitol Mall', city: 'Sacramento', zip: '95814' }, { vendors: ALL_VENDORS });
+    assertEq(routed, null, 'an out-of-region address must not be force-routed to any barber');
+  });
+
+  test('[booking-write] booking carries full routing + schedule audit metadata', function() {
+    var ctx = context({ id: 'bw-meta-1' });
+    ctx.routingReason = 'address_match Westminster -> michael-nguyen-oc';
+    var result = MobileBarberAgent.handleMessage(null, COMPLETE_OC_MSG, Object.assign(ctx, { customerLookupResult: null }));
+    assert(result.booking, 'complete in-area request must create a booking');
+    var b = result.booking;
+    assertEq(b.assignedBarberId, 'michael-nguyen-oc');
+    assertEq(b.vendorId, 'michael-nguyen-oc');
+    assertEq(b.ownerId, 'michael-nguyen', 'ownerId must come from the routed vendor');
+    assertEq(b.routingReason, 'address_match Westminster -> michael-nguyen-oc', 'routingReason must be stamped from ctx');
+    var sched = JSON.parse(b.scheduleCheckSnapshot);
+    assertEq(sched.date, '2026-06-01');
+    assertEq(sched.startTime, '10:00');
+    assertEq(sched.endTime, '11:15');
+    // Every required customer/service/time field must be present on the doc.
+    ['customerName', 'customerPhone', 'address', 'city', 'zip', 'serviceId', 'serviceName', 'requestedDate', 'startTime', 'endTime', 'status'].forEach(function(k) {
+      assert(b[k] !== undefined && b[k] !== '', 'booking field "' + k + '" must be populated, got ' + JSON.stringify(b[k]));
+    });
+  });
+
+  test('[booking-write] returning customer is matched and preference snapshot saved', function() {
+    var record = {
+      customerName: 'John', customerPhone: '7145550100',
+      address: '123 Brookhurst St', city: 'Westminster', zip: '92683',
+      lastServiceName: 'Fade Haircut', lastServiceId: 'michael-nguyen-oc-classic-haircut',
+      preferredBarber: 'Michael Nguyen'
+    };
+    var ctx1 = Object.assign(context({ id: 'bw-return-1' }), { customerLookupResult: record });
+    var r1 = MobileBarberAgent.handleMessage(null, 'My number is 714-555-0100', ctx1);
+    assertEq(r1.session.state.customerLookupStatus, 'found', 'phone lookup must mark the customer found');
+    var r2 = MobileBarberAgent.handleMessage(r1.session, 'Yes that address. Haircut on 2026-06-01 at 10:00.', ctx1);
+    assert(r2.booking, 'returning customer must be able to complete a booking');
+    assertEq(r2.booking.previousCustomerMatched, true, 'previousCustomerMatched must be true for a matched phone');
+    var pref = JSON.parse(r2.booking.customerPreferenceSnapshot);
+    assertEq(pref.preferredBarber, 'Michael Nguyen');
+    assertEq(pref.lastServiceName, 'Fade Haircut');
+  });
+
+  test('[schedule] availability is checked before confirming and overlap is blocked', function() {
+    var ctx = context({
+      id: 'sch-block-1',
+      existingBookings: [{
+        id: 'ov-1', vendorId: MobileBarberData.MICHAEL_VENDOR_ID,
+        requestedDate: '2026-06-01', startTime: '10:30', endTime: '11:00', status: 'confirmed'
+      }]
+    });
+    var result = MobileBarberAgent.handleMessage(null, COMPLETE_OC_MSG, Object.assign(ctx, { customerLookupResult: null }));
+    assertEq(result.session.state.lastAvailabilityKey, 'booking_overlap', 'overlapping slot must fail the schedule check');
+    assert(!result.booking, 'a schedule conflict must NOT create a booking');
+    assert(result.session.lastSystemContext.indexOf('Offer these next available times') >= 0,
+      'a schedule conflict must hand the AI alternate times to offer');
+  });
+
+  test('[schedule] alternate slots are real openings within working hours', function() {
+    var overlap = [{
+      id: 'ov-2', vendorId: MobileBarberData.MICHAEL_VENDOR_ID,
+      requestedDate: '2026-06-01', startTime: '10:30', endTime: '11:00', status: 'confirmed'
+    }];
+    var slots = MobileBarberBooking.findNextAvailableSlots('michael-nguyen-oc', 'michael-nguyen-oc-classic-haircut', { start: '2026-06-01' }, {
+      vendor: MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID),
+      services: MobileBarberData.listServicesForVendor(MobileBarberData.MICHAEL_VENDOR_ID),
+      availability: MobileBarberData.sampleAvailability,
+      existingBookings: overlap,
+      now: new Date('2026-05-23T12:00:00-07:00'),
+      limit: 3
+    });
+    assert(slots.length >= 1 && slots.length <= 3, 'must suggest 1-3 alternates, got ' + slots.length);
+    slots.forEach(function(s) {
+      var startMin = parseInt(s.startTime.split(':')[0], 10) * 60 + parseInt(s.startTime.split(':')[1], 10);
+      assert(startMin >= 9 * 60 && startMin < 19 * 60, 'alternate ' + s.startTime + ' must be inside Michael working hours');
+      // 2026-06-01 is a Monday; none of the suggestions should collide with the held 10:30 slot.
+      assert(!(s.startTime === '10:30'), 'alternate must not be the already-booked slot');
+    });
+  });
+
+  test('[schedule] the same slot cannot be double-booked across sessions', function() {
+    var first = MobileBarberAgent.handleMessage(null, COMPLETE_OC_MSG, Object.assign(context({ id: 'dbl-1' }), { customerLookupResult: null }));
+    assert(first.booking, 'first request must create the booking');
+    // Feed the just-created booking back as an existing booking for a fresh session.
+    var ctx2 = context({ id: 'dbl-2', existingBookings: [first.booking] });
+    var second = MobileBarberAgent.handleMessage(null, COMPLETE_OC_MSG, Object.assign(ctx2, { customerLookupResult: null }));
+    assert(!second.booking, 'the same slot must not be booked twice');
+    assert(['booking_overlap', 'booking_duplicate'].indexOf(second.session.state.lastAvailabilityKey) >= 0,
+      'second attempt must fail as overlap/duplicate, got ' + second.session.state.lastAvailabilityKey);
+  });
+
+  test('[logging] green-light path emits schedule + booking-write diagnostics', function() {
+    var lines = captureLogs(function() {
+      MobileBarberAgent.handleMessage(null, COMPLETE_OC_MSG, Object.assign(context({ id: 'log-ok-1' }), { customerLookupResult: null }));
+    });
+    var sched = lines.filter(function(l) { return l.indexOf('[mobile-barber-agent-schedule]') === 0; });
+    var write = lines.filter(function(l) { return l.indexOf('[mobile-barber-agent-booking-write]') === 0; });
+    assert(sched.length >= 1, 'schedule diagnostic must be emitted');
+    assert(write.length >= 1, 'booking-write diagnostic must be emitted');
+    assert(sched[sched.length - 1].indexOf('"availabilityResult":"available"') >= 0, 'green-light schedule log must report available');
+    assert(write[0].indexOf('"bookingId":"log-ok-1"') >= 0, 'booking-write log must carry the booking id');
+    assert(write[0].indexOf('"assignedBarberId":"michael-nguyen-oc"') >= 0, 'booking-write log must carry the assigned barber');
+  });
+
+  test('[logging] conflict path emits schedule diagnostic with conflict + suggestions', function() {
+    var lines = captureLogs(function() {
+      MobileBarberAgent.handleMessage(null, COMPLETE_OC_MSG, Object.assign(context({
+        id: 'log-conf-1',
+        existingBookings: [{
+          id: 'ov-3', vendorId: MobileBarberData.MICHAEL_VENDOR_ID,
+          requestedDate: '2026-06-01', startTime: '10:30', endTime: '11:00', status: 'confirmed'
+        }]
+      }), { customerLookupResult: null }));
+    });
+    var sched = lines.filter(function(l) { return l.indexOf('[mobile-barber-agent-schedule]') === 0; });
+    var write = lines.filter(function(l) { return l.indexOf('[mobile-barber-agent-booking-write]') === 0; });
+    assert(sched.length >= 1, 'schedule diagnostic must be emitted on conflict');
+    assert(write.length === 0, 'no booking-write diagnostic when the slot conflicts');
+    assert(sched[0].indexOf('"availabilityResult":"booking_overlap"') >= 0, 'conflict schedule log must report booking_overlap');
+    assert(sched[0].indexOf('"suggestedSlots":[') >= 0 && sched[0].indexOf('"suggestedSlots":[]') < 0,
+      'conflict schedule log must include non-empty suggestedSlots');
+  });
+
+  // ── BUG FIX: address state (BUG 2) + flexible-time real slots (BUG 1) ──────
+
+  function openCtx(over) {
+    // A Monday morning when Michael is open, for flexible "today" tests.
+    return Object.assign(context(Object.assign({ now: new Date('2026-06-01T08:00:00-07:00') }, over || {})), { customerLookupResult: null });
+  }
+
+  test('BUG2: city-routable address WITHOUT a ZIP books (derives zip, no address loop)', function() {
+    var ctx = openCtx({ id: 'bug2-1' });
+    var r = MobileBarberAgent.handleMessage(null,
+      'My name is Kim. Phone 714-555-0100. Haircut on 2026-06-01 at 10:00 at 123 Brookhurst St, Westminster.', ctx);
+    assert(r.booking, 'a city-only address (no ZIP) must still create a booking');
+    assertEq(r.booking.city, 'Westminster');
+    assertEq(r.booking.zip, '92683', 'ZIP must be derived from the routable city');
+    assert(r.response.indexOf('address') < 0 || r.response.indexOf('Booking ID') >= 0 || r.response.indexOf('Mã') >= 0,
+      'agent must not re-ask for the address after routing');
+  });
+
+  test('BUG2: a stray null in an AI STATE update never wipes a collected address', function() {
+    var state = MobileBarberAgent.emptyState('en');
+    MobileBarberAgent.mergeState(state, { address: '123 Brookhurst St', city: 'Westminster', zip: '92683' }, new Date());
+    // The AI brain sometimes echoes a full state with nulls for untouched fields.
+    MobileBarberAgent.mergeState(state, { address: null, city: null, zip: null, time: '10:00' }, new Date());
+    assertEq(state.address, '123 Brookhurst St', 'address must survive a null update');
+    assertEq(state.city, 'Westminster');
+    assertEq(state.zip, '92683');
+    assertEq(state.time, '10:00');
+  });
+
+  test('BUG1: extractUpdate sets a flexible window for "all day today" but not for a clock time', function() {
+    var ctx = openCtx();
+    var flex = MobileBarberAgent.extractUpdate('I am available all day today', ctx, MobileBarberAgent.emptyState('en'));
+    assert(flex.flexibleWindow && flex.flexibleWindow.kind === 'allday', 'flexible "all day" must set a flexibleWindow, not a time');
+    assert(!flex.time, 'flexible phrase must not bind a concrete time');
+    var fixed = MobileBarberAgent.extractUpdate('today at 9am', ctx, MobileBarberAgent.emptyState('en'));
+    assertEq(fixed.time, '09:00', 'a concrete time must still bind');
+    assert(!fixed.flexibleWindow, 'a concrete time must not set a flexible window');
+  });
+
+  test('BUG1: "all day today" offers REAL slots from the live schedule (no invented time)', function() {
+    var ctx = openCtx({ id: 'bug1-offer' });
+    var r = MobileBarberAgent.handleMessage(null,
+      'My name is Kim. Phone 714-555-0100. Haircut at 123 Brookhurst St Westminster 92683. I am available all day today.', ctx);
+    assert(!r.booking, 'flexible request must NOT auto-book an invented time');
+    assertEq(r.session.state.step, 'OFFER_SLOTS');
+    var offered = r.session.state.offeredSlots || [];
+    assert(offered.length >= 1 && offered.length <= 5, 'must offer 1-5 real slots');
+    offered.forEach(function(s) {
+      assert(/^\d{2}:\d{2}$/.test(s.startTime) && s.requestedDate, 'each offered slot must be a real date+time');
+    });
+    assert(r.response.indexOf(MobileBarberBooking.formatTime12Hour(offered[0].startTime)) >= 0,
+      'reply must list the real offered times');
+  });
+
+  test('BUG1: picking an offered slot books at exactly that time', function() {
+    var ctx = openCtx({ id: 'bug1-pick' });
+    var r1 = MobileBarberAgent.handleMessage(null,
+      'My name is Kim. Phone 714-555-0100. Haircut at 123 Brookhurst St Westminster 92683. I am free all day today.', ctx);
+    assertEq(r1.session.state.step, 'OFFER_SLOTS');
+    var first = r1.session.state.offeredSlots[0];
+    var r2 = MobileBarberAgent.handleMessage(r1.session, 'the first one', openCtx({ id: 'bug1-pick' }));
+    assert(r2.booking, 'picking an offered slot must create the booking');
+    assertEq(r2.booking.startTime, first.startTime, 'booking time must equal the picked slot');
+    assertEq(r2.booking.requestedDate, first.requestedDate);
+  });
+
+  test('BUG1: "this afternoon" only offers slots inside the afternoon window', function() {
+    var ctx = openCtx({ id: 'bug1-afternoon' });
+    var r = MobileBarberAgent.handleMessage(null,
+      'My name is Kim. Phone 714-555-0100. Haircut at 123 Brookhurst St Westminster 92683. I am available this afternoon.', ctx);
+    if (r.session.state.step !== 'OFFER_SLOTS') return; // no afternoon slots that day — acceptable
+    (r.session.state.offeredSlots || []).forEach(function(s) {
+      var mins = Number(s.startTime.slice(0, 2)) * 60 + Number(s.startTime.slice(3));
+      assert(mins >= 12 * 60 && mins < 17 * 60, 'afternoon slot ' + s.startTime + ' must be within 12:00-17:00');
     });
   });
 }

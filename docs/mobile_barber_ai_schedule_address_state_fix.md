@@ -111,6 +111,19 @@ The public booking flow signs in **anonymously** (`index.html` → `signInAnonym
 
 **Live verification + cleanup (2026-05-30):** drove a full booking on production → **saved cleanly** (no warning; doc `mb-mpsnugva-qkha4g` written) → **deleted it** via the Firestore admin API (HTTP 200 → re-fetch 404). No other artifact created (the booking flow writes no customer profile). 536/536 tests pass.
 
+## Follow-up — server-side owner-wide conflict guard (restores cross-vendor protection)
+
+Skipping the client `BookingGuard` for anonymous customers (above) removed their owner-wide cross-vendor conflict detection (which was already non-functional for them — its query was permission-denied). Restored it **server-side** where the Admin SDK bypasses Firestore rules:
+
+**New Cloud Function** `onMobileBarberBookingCreated` (`functions/index.js`): on each `mobileBarberBookings` create, sweeps the owner's bookings across **all** service collections (`mobileBarberBookings` + `bookings` + `travel_bookings`) via Admin SDK and elevates the new booking to `status: vendor_review` + `reviewReason: owner_conflict` on a real **time overlap** (mirrors the client guard's per-service buffers + blocking statuses). Safety: checks overlap **only** (never elevates on distance/working-hours), **never deletes**, idempotent (skips already-`vendor_review`/terminal). Test added (landing suite).
+
+**Live verification (production, 2026-05-30):** created a real booking → Function fired:
+```
+[mb-server-conflict-check] {"bookingId":"mb-mpso9ycd-3zou0s","ownerId":"michael-nguyen","conflictsFound":0,"source":"admin-sdk"}
+[mb-server-conflict-check] no owner-wide conflict — left as-is
+```
+The owner-wide sweep ran via Admin SDK (no permission error), found 0 conflicts (correct — each owner currently has one vendor), and left the booking untouched. **Test booking deleted** (HTTP 200 → 404). It's a forward-looking safeguard: when an owner gains multiple vendors/services, an overlapping customer booking auto-routes to `vendor_review`. Deployed `functions:onMobileBarberBookingCreated`.
+
 ## Verdict: **PASS**
 AI checks the live schedule before offering times; "all day today" returns real available slots; address is not re-asked after successful routing; bookings still write to the correct vendor portal. 49/49 agent tests, 535/535 suite, FINAL: PASS.
 

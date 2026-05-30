@@ -563,6 +563,28 @@ function runMobileBarberLandingTests(test) {
     assertContains(functionsJs, 'SMS disabled');
   });
 
+  test('Server-side owner-wide conflict guard for anonymous customer bookings', function() {
+    // Anonymous customer bookings skip the client BookingGuard (rules deny its
+    // reads), so a Cloud Function restores owner-wide cross-vendor conflict
+    // detection on the server (Admin SDK bypasses rules).
+    assertContains(functionsJs, "exports.onMobileBarberBookingCreated = onDocumentCreated(",
+      'must add the server-side conflict-check trigger');
+    assertContains(functionsJs, "document:       'mobileBarberBookings/{bookingId}'",
+      'must fire on mobileBarberBookings creation');
+    assertContains(functionsJs, "where('ownerId', '==', ownerId)",
+      'must sweep owner-wide bookings');
+    // Sweeps all three service collections (barber + ride + tour).
+    assertContains(functionsJs, "['mobileBarberBookings', 'bookings', 'travel_bookings']",
+      'must check barber + ride + tour collections for the owner');
+    // Elevates to review on real overlap — never deletes; never elevates on distance.
+    assertContains(functionsJs, "status: 'vendor_review'", 'conflict must elevate to vendor_review');
+    assertContains(functionsJs, "reviewReason: 'owner_conflict'", 'must record the conflict reason');
+    assertNotContains(functionsJs, 'snap.ref.delete(', 'must NOT delete the customer booking');
+    // Idempotency + safety guards.
+    assertContains(functionsJs, "status === 'vendor_review'", 'must skip already-reviewed bookings (no loop)');
+    assertContains(functionsJs, 'MB_NON_BLOCKING', 'must ignore terminal/cancelled bookings');
+  });
+
   test('Mobile Barber dashboard route and assets are isolated', function() {
     assertContains(firebase, '"source": "/mobile-barber/dashboard"');
     assertContains(firebase, '"destination": "/mobile-barber/dashboard.html"');

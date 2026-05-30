@@ -3011,6 +3011,131 @@ async function _queryEligibleDrivers(serviceType, airport, skipDriverIds) {
   return afterSkip.map(d => Object.assign({ id: d.id }, d.data()));
 }
 
+// ── onMobileBarberBookingCreated — server-side OWNER-WIDE conflict guard ──────
+//
+// The public booking flow signs in anonymously and therefore CANNOT run the
+// client-side BookingGuard (its transaction reads owner-scoped bookings, which
+// Firestore rules deny for anonymous customers). So customer barber bookings are
+// written with a plain create. This Cloud Function restores the owner-wide
+// cross-vendor / cross-service conflict check on the server (Admin SDK bypasses
+// rules): when an owner is the SAME person across multiple vendors/services
+// (barber + ride + tour), a new barber booking that overlaps any of the owner's
+// other bookings is elevated to `vendor_review` so the human resolves it — it is
+// NEVER auto-deleted. Mirrors the client guard's service buffers + blocking
+// statuses; checks TIME OVERLAP only (no distance / working-hours elevation).
+//
+// Idempotent: fires once on create; the elevation is an update (no re-fire).
+const MB_SVC_DUR    = { barber: 45, ride: 90, tour: 480, airport: 90, pickup: 90, dropoff: 90, private_ride: 120 };
+const MB_SVC_BUFFER = { barber: 20, ride: 15, tour: 30 };
+const MB_NON_BLOCKING = new Set(['cancelled', 'rejected', 'completed', 'expired', 'no_show']);
+
+function mbNormSvc(s) {
+  s = String(s || '').toLowerCase().trim();
+  if (s === 'airport' || s === 'pickup' || s === 'dropoff' || s === 'private_ride') return 'ride';
+  if (s === 'travel') return 'tour';
+  return s;
+}
+function mbParseDT(dateStr, timeStr) {
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dateStr || ''));
+  var t = /^(\d{1,2}):(\d{2})$/.exec(String(timeStr || ''));
+  if (!m || !t) return null;
+  // UTC keeps the comparison timezone-consistent (conflict detection is relative).
+  return Date.UTC(+m[1], +m[2] - 1, +m[3], +t[1], +t[2]);
+}
+function mbBookingWindow(row, collection) {
+  var svc = mbNormSvc(row.serviceType || row.rawServiceType ||
+    (collection === 'travel_bookings' ? 'tour' : (collection === 'mobileBarberBookings' ? 'barber' : 'ride')));
+  if (svc === 'tour') {
+    var sd = row.startDate || row.requestedDate || row.date;
+    var ed = row.endDate || sd;
+    var ts = mbParseDT(sd, '00:00');
+    if (ts == null) return null;
+    var te = mbParseDT(ed, '23:59');
+    return { start: ts, end: (te == null ? ts + 86400000 : te), svc: svc };
+  }
+  var start = mbParseDT(row.requestedDate || row.date, row.startTime || row.pickupTime || row.scheduledTime || row.time);
+  if (start == null) return null;
+  var end = mbParseDT(row.requestedDate || row.date, row.endTime);
+  if (end == null) end = start + (MB_SVC_DUR[svc] || 90) * 60000;
+  return { start: start, end: end + (MB_SVC_BUFFER[svc] || 15) * 60000, svc: svc };
+}
+function mbOverlaps(a, b) { return a && b && a.start < b.end && b.start < a.end; }
+
+exports.onMobileBarberBookingCreated = onDocumentCreated(
+  {
+    document:       'mobileBarberBookings/{bookingId}',
+    region:         'us-central1',
+    timeoutSeconds: 60,
+    retry:          false,
+  },
+  async (event) => {
+    const bookingId = event.params.bookingId;
+    const snap = event.data;
+    const booking = snap && snap.data();
+    const log = (msg) => console.log(`[mb-server-conflict-check][${bookingId}] ${msg}`);
+    if (!booking) return;
+
+    const ownerId = String(booking.ownerId || '').trim();
+    if (!ownerId) { log('skip — no ownerId'); return; }
+    const status = String(booking.status || '').toLowerCase();
+    if (MB_NON_BLOCKING.has(status)) { log(`skip — terminal status (${status})`); return; }
+    if (status === 'vendor_review') { log('skip — already vendor_review (client guard or agent set it)'); return; }
+
+    const win = mbBookingWindow(booking, 'mobileBarberBookings');
+    if (!win) { log('skip — no usable time window'); return; }
+
+    // Owner-wide sweep across all service collections (Admin SDK bypasses rules).
+    const conflicts = [];
+    const cols = ['mobileBarberBookings', 'bookings', 'travel_bookings'];
+    for (const col of cols) {
+      let qs;
+      try {
+        qs = await db.collection(col).where('ownerId', '==', ownerId).limit(250).get();
+      } catch (e) {
+        log(`query ${col} failed (non-fatal): ${e.message}`);
+        continue;
+      }
+      qs.forEach((d) => {
+        if (col === 'mobileBarberBookings' && d.id === bookingId) return; // exclude self
+        const other = d.data() || {};
+        if (MB_NON_BLOCKING.has(String(other.status || '').toLowerCase())) return;
+        const ow = mbBookingWindow(other, col);
+        if (mbOverlaps(win, ow)) {
+          conflicts.push({
+            collection: col,
+            bookingId: d.id,
+            serviceType: String(other.serviceType || ow.svc || ''),
+            status: String(other.status || ''),
+            start: ow.start,
+            end: ow.end,
+          });
+        }
+      });
+    }
+
+    console.log('[mb-server-conflict-check]', JSON.stringify({
+      bookingId, ownerId, vendorId: booking.vendorId || '',
+      requestedDate: booking.requestedDate || '', startTime: booking.startTime || '',
+      conflictsFound: conflicts.length, source: 'admin-sdk',
+    }));
+
+    if (!conflicts.length) { log('no owner-wide conflict — left as-is'); return; }
+
+    try {
+      await snap.ref.update({
+        status: 'vendor_review',
+        reviewReason: 'owner_conflict',
+        reviewConflicts: conflicts.slice(0, 10),
+        ownerConflictCheckedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: new Date().toISOString(),
+      });
+      log(`elevated to vendor_review — ${conflicts.length} owner-wide conflict(s)`);
+    } catch (e) {
+      log(`failed to elevate: ${e.message}`);
+    }
+  }
+);
+
 // ── onDispatchQueue ──────────────────────────────────────────────────────────
 // Triggered when a new dispatchQueue doc is created (booking creation or rejection retry).
 exports.onDispatchQueue = onDocumentCreated(

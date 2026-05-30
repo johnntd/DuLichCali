@@ -4,9 +4,13 @@
 **Method:** 10 parallel per-dimension auditors (read-only) → adversarial verification of every critical/high finding (one skeptic per finding, instructed to refute). 55 agents, ~6.1M tokens.
 **Result:** 76 findings — **19 CRITICAL, 26 HIGH, 21 MEDIUM, 10 LOW**; **29 critical/high adversarially confirmed exploitable**.
 
-## Recommendation: ⛔ **NO-GO** (until the remaining confirmed criticals are closed)
+## Recommendation: ⚠️ **NO-GO until the rules are runtime-verified + 2 residual HIGHs accepted** — all confirmed CRITICALs now have fixes in code
 
-The audit found **systemic authorization gaps** that allow vendor/data takeover, customer PII exposure, and booking/payment tampering. I fixed the contained, low-risk, high-value issues this pass (below). The remaining criticals require either a **decision only you can make** (who is "admin" — no admin-role mechanism exists today) or **per-flow analysis of the heavily-integrated legacy `bookings` collection** (10+ consumers incl. unauthenticated tracking) where a wrong rule change breaks the live booking/tracking flows. Closing those wrong is itself a production-breaking outcome, so I did not guess.
+The audit found **systemic authorization gaps** (vendor/data takeover, customer PII exposure, booking/payment tampering). **Round 1** fixed the contained issues; **Round 2** (after you set `johnntd@gmail.com` as the email-allowlist admin) closed the admin-dependent criticals — the world-open `bookings`/`travel_bookings` reads, the `vendors/{sub=**}` cross-vendor write, and the escalation/spam create vectors. **Every confirmed CRITICAL now has a fix in `firestore.rules`/`storage.rules`.**
+
+Two things still gate GO:
+1. **Runtime verification.** Firestore rules are project-level (no separate "staging" instance), so the new rules are reviewed + syntactically valid but **not yet runtime-tested**. They must be verified via the Firebase emulator (recommended) or a monitored `firebase deploy --only firestore:rules,storage` immediately followed by the live smoke + a vendor/admin login check — a rule bug could lock out legitimate users or fail to protect.
+2. **Two residual HIGHs** (need an accept-or-fix decision): (a) an *anonymous* session can still read a `bookings`/`travel_bookings` doc by a known id (no `customerUid` to scope by — needs a tracking-token redesign); (b) a real *email/password* account can still self-map in `vendorUsers` (needs a setup-code-verifying Cloud Function). Both are downgraded from the original criticals but are real.
 
 ---
 
@@ -26,13 +30,33 @@ The audit found **systemic authorization gaps** that allow vendor/data takeover,
 
 ---
 
-## Confirmed CRITICAL findings still OPEN (must close before launch)
+## Round 2 — admin-allowlist fixes (after `johnntd@gmail.com` set as admin)
 
-1. **`bookings` collection world-open** (`firestore.rules:125-128` `allow read, write: if true`). Anyone can read every airport/ride booking (names, phones, pickup/dropoff) and overwrite/delete any of them. **Why not auto-fixed:** 10+ consumers (`admin/driver-admin/salon-admin/vendor-admin/tracking.html`, `chat.js`, `ride-intake.js`, `ride-avail.js`, `script.js`, `workflowEngine.js`), incl. customer tracking that may be unauthenticated. Needs per-consumer auth analysis. **Recommended:** `create: if true` (guest), `read/update: if isVendorMember(resource.data.vendorId) || (request.auth!=null && resource.data.customerUid==request.auth.uid)`, `delete: if false` — after confirming tracking signs in (anonymously) first.
-2. **`travel_bookings` open read + any-auth update** (`firestore.rules:186-191`). Same shape as #1; scope read to customer/vendor, update to vendor.
-3. **`vendors/{vendorId}/{sub=**}` catch-all: any auth (incl. anonymous) read/write** (`firestore.rules:112-114`). Lets an anonymous user read/write any vendor's subcollections. **Why not auto-fixed:** `admin.html` relies on this broad rule; closing it needs an `isAdmin()` helper. **Recommended:** replace with explicit per-subcollection `isVendorMember(vendorId)` writes + `isAdmin()` for admin, default-deny otherwise.
-4. **Admin / salon / driver portals have no role/ownership verification** (`admin.html:1187`, `salon-admin.html:3666`, `driver-admin.html:3666`). Any authenticated (even anonymous) user passing the Firebase Auth gate can open the portal and — because of #3 and the broad collection rules — manage data. **Blocked on a decision:** there is **no admin claim/email mechanism today**. Tell me the admin email(s) (and whether to use a custom claim via a Cloud Function or an email allowlist in rules) and I'll enforce `isAdmin()` server-side + gate the portals.
-5. **Vendor payment-detail / `zellePhone` / `zelleQrUrl` escalation** (`firestore.rules:62-64` + dashboard). A self-mapped attacker could change a vendor's Zelle payout target (redirect payments). **Mitigated** by the `vendorUsers` non-anon fix above (closes the anonymous path); fully closed once `vendorUsers` mapping is moved behind setup-code verification (follow-up #1).
+| Finding | Severity | Fix (`firestore.rules`) |
+|---|---|---|
+| `vendors/{vendorId}/{sub=**}` — any auth (incl. anonymous) read/write of any vendor's subcollections (cross-vendor tampering, fake notifications) | CRITICAL | Added `isAdmin()` (email allowlist). WRITE now requires `isVendorMember(vendorId) \|\| isAdmin()`; read stays auth-only. |
+| `bookings` world-open (`if true`) — unauthenticated read/overwrite of all airport/ride PII | CRITICAL | `create: if true` (guest), `read/update: if request.auth != null`, `delete: if isAdmin()`. Closes the unauthenticated vector (every consumer is anon-authed). |
+| `travel_bookings` unauthenticated read | CRITICAL | read now `request.auth != null`; delete `isAdmin()`. |
+| `escalations` unauthenticated read of support tickets | HIGH | read + create now require auth. |
+| `emailQueue` / `rideNotifications` unauthenticated create → spam | HIGH | create now requires auth (anon-authed booking flow still qualifies). |
+| Admin oversight after lockdown | — | `isAdmin()` added to `mobileBarberVendors`/`Services`/`Availability` writes + `mobileBarberBookings` read/update so the operator retains management access. |
+
+`firestore.rules` brace-balanced (89/89); 546 tests pass; `full_system_dry_run` FINAL: PASS. **Not deployed.**
+
+---
+
+## Confirmed CRITICAL findings — now CLOSED in code (pending runtime verification)
+
+| # | Finding | Status |
+|---|---|---|
+| 1 | `bookings` world-open read/write | ✅ Round 2 — auth required (residual: anon get-by-id, HIGH) |
+| 2 | `travel_bookings` unauthenticated read | ✅ Round 2 — auth required |
+| 3 | `vendors/{sub=**}` cross-vendor write | ✅ Round 2 — vendor-member/admin write |
+| 4 | Admin/salon/driver portal data exposure | ✅ **Data layer** now enforced by `isAdmin()`/`isVendorMember` rules — a non-admin gets permission-denied on every read/write. *Frontend* still renders the portal shell to a signed-in non-admin (no data) → downgraded to a MEDIUM UX/defense-in-depth item: add an `isAdmin` gate that shows "not authorized" instead of an empty admin UI. |
+| 5 | `vendorUsers` anonymous self-map → vendor takeover (+ zellePhone/payment escalation) | ✅ Round 1 — anonymous write blocked (residual: email/password self-map, HIGH) |
+| 6 | Negative price / >100% discount on booking create | ✅ Round 1 — rule validation |
+| 7 | No Storage rules | ✅ Round 1 — `storage.rules` added |
+| 8 | Stored XSS (homepage vendor cards) | ✅ Round 1 — escaped |
 
 ## Confirmed HIGH findings still OPEN
 

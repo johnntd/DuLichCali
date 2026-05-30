@@ -19,6 +19,15 @@ service cloud.firestore {
           );
     }
 
+    // isAdmin: operator account, identified by an email allowlist. Email/password
+    // (and Google) sign-ins carry request.auth.token.email; anonymous sessions do
+    // not, so they can never match. Keep this list in sync with admin operators.
+    function isAdmin() {
+      return request.auth != null
+          && request.auth.token.firebase.sign_in_provider != 'anonymous'
+          && request.auth.token.email in ['johnntd@gmail.com'];
+    }
+
     function isMobileBarberBookingCustomer() {
       return request.auth != null
           && resource.data.customerUid is string
@@ -77,7 +86,7 @@ service cloud.firestore {
     // Write: only authenticated members of that specific vendor (not just any auth user).
     match /vendors/{vendorId} {
       allow read:  if true;
-      allow write: if isVendorMember(vendorId);
+      allow write: if isVendorMember(vendorId) || isAdmin();
     }
 
     // ── Staff schedule/availability — public read, vendor-member write ────────────
@@ -118,15 +127,22 @@ service cloud.firestore {
     // Public create only (booking flow is unauthenticated). Read/update gated to
     // authenticated callers; Functions trigger uses admin SDK so it bypasses rules.
     match /vendors/{vendorId}/emailQueue/{queueId} {
-      allow create: if true;
+      // Create now requires auth (the booking flow signs in anonymously first),
+      // closing the unauthenticated email-spam vector. App Check / rate limiting
+      // is the recommended follow-up for anon-authed abuse.
+      allow create: if request.auth != null;
       allow read, update, delete: if request.auth != null;
     }
 
     // ── Other vendor subcollections (menuItems, notifications, etc.) ──────────────
-    // Auth required. Broad auth (not vendor-membership-only) to preserve admin.html access.
-    // staffCompensation is explicitly handled above with tighter rules.
+    // Read stays auth-only (display data, no anonymous enumeration of the path is
+    // worsened vs. before). WRITE is now restricted to the vendor's own members
+    // or an admin — previously ANY authenticated (incl. anonymous) user could
+    // write any vendor's subcollections (cross-vendor tampering / fake
+    // notifications). staffCompensation/payroll are handled above with tighter rules.
     match /vendors/{vendorId}/{sub=**} {
-      allow read, write: if request.auth != null;
+      allow read:  if request.auth != null;
+      allow write: if isVendorMember(vendorId) || isAdmin();
     }
 
     // ── Vendor user mappings ──────────────────────────────────────────────────────
@@ -143,9 +159,20 @@ service cloud.firestore {
                 && request.auth.token.firebase.sign_in_provider != 'anonymous';
     }
 
-    // ── Bookings — open (customer booking flow is unauthenticated) ────────────────
+    // ── Bookings (airport/ride) ───────────────────────────────────────────────────
+    // Was fully open (allow read, write: if true) — an unauthenticated attacker
+    // could read every customer's name/phone/pickup-dropoff and overwrite/delete
+    // any booking. Every real consumer (booking form, tracking.html, drivers,
+    // admin) signs in (anonymously or with an account) first, so requiring auth
+    // closes the unauthenticated hole without breaking the flows. Guest create
+    // stays open. Dispatch Cloud Functions use the Admin SDK (bypass rules).
+    // Residual (documented): an anonymous session can still read a booking by a
+    // known id — finer per-customer scoping needs a customerUid/token (follow-up).
     match /bookings/{doc=**} {
-      allow read, write: if true;
+      allow create: if true;
+      allow read:   if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if isAdmin();
     }
 
     // ── Driver profiles — public read, auth write ─────────────────────────────────
@@ -165,9 +192,10 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
 
-    // ── Ride notifications — public create, auth read/update ─────────────────────
+    // ── Ride notifications — create requires auth (anon booking flow qualifies) ──
+    // Was public create → unauthenticated push-notification spam to drivers.
     match /rideNotifications/{notifId} {
-      allow create: if true;
+      allow create: if request.auth != null;
       allow read, update: if request.auth != null;
     }
 
@@ -177,10 +205,12 @@ service cloud.firestore {
       allow read:   if request.auth != null;
     }
 
-    // ── AI escalations — public create+read, auth update ─────────────────────────
+    // ── AI escalations — create open (anon booking flow), read auth-only ─────────
+    // Read was public, leaking support-ticket contents (disputes, PII) to
+    // unauthenticated requests. Now requires auth.
     match /escalations/{escalationId} {
-      allow create: if true;
-      allow read:   if true;
+      allow create: if request.auth != null;
+      allow read:   if request.auth != null;
       allow update: if request.auth != null;
     }
 
@@ -204,11 +234,14 @@ service cloud.firestore {
       allow write: if false; // seeded server-side only
     }
 
-    // ── Travel bookings — open create (unauthenticated booking flow) ──────────────
+    // ── Travel bookings ───────────────────────────────────────────────────────────
+    // Guest create stays open; read now requires auth (was public — leaked all
+    // customer names/phones/destinations to unauthenticated requests).
     match /travel_bookings/{bookingId} {
       allow create: if true;
-      allow read:   if true;
+      allow read:   if request.auth != null;
       allow update: if request.auth != null;
+      allow delete: if isAdmin();
     }
 
     // ── Travel drivers — public read, auth write ──────────────────────────────────
@@ -272,17 +305,17 @@ service cloud.firestore {
     // ── Mobile Barber public catalog — safe public data only ─────────────────────
     match /mobileBarberVendors/{vendorId} {
       allow read: if true;
-      allow write: if isVendorMember(vendorId);
+      allow write: if isVendorMember(vendorId) || isAdmin();
     }
 
     match /mobileBarberServices/{serviceId} {
       allow read: if true;
-      allow write: if isVendorMember(request.resource.data.vendorId);
+      allow write: if isVendorMember(request.resource.data.vendorId) || isAdmin();
     }
 
     match /mobileBarberAvailability/{availabilityId} {
       allow read: if true;
-      allow write: if isVendorMember(request.resource.data.vendorId);
+      allow write: if isVendorMember(request.resource.data.vendorId) || isAdmin();
     }
 
     // ── Mobile Barber private bookings — customer address protected ──────────────
@@ -291,13 +324,15 @@ service cloud.firestore {
     match /mobileBarberBookings/{bookingId} {
       allow create: if isValidMobileBarberBookingCreate();
       allow read: if isMobileBarberBookingCustomer()
-               || isVendorMember(resource.data.vendorId);
+               || isVendorMember(resource.data.vendorId)
+               || isAdmin();
       // The assigned vendor/owner has full control (accept, reschedule, mark
       // paid, complete). The booking owner (customer) may only edit benign
       // fields and cancel — they can NEVER change money, vendor, or flip status
       // to confirmed/paid/completed. This is the server-side enforcement of
       // "customers cannot tamper with booking status/price/payment".
       allow update: if isVendorMember(resource.data.vendorId)
+                 || isAdmin()
                  || (
                       isMobileBarberBookingCustomer()
                       && !request.resource.data.diff(resource.data).affectedKeys().hasAny([

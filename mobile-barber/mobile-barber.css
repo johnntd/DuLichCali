@@ -3722,9 +3722,11 @@
 /* Result-card extras: audience chip, per-option recommendation rows, and the
    "style inspiration" badge shown when identity preservation is uncertain. */
 .mb-ai-rec-card__audience {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
   margin-left: .4rem;
-  padding: .1rem .5rem;
+  padding: .12rem .55rem;
   border-radius: 999px;
   font-size: .72rem;
   font-weight: 600;
@@ -3744,6 +3746,113 @@
   opacity: .92;
 }
 .mb-ai-rec-card__safety { opacity: .78; font-style: italic; }
+/* Small gold leading icon on each spec row so the card scans at a glance. */
+.mb-ai-rec-card__row-ico {
+  color: var(--gold-lt, #ffd166);
+  opacity: .85;
+  margin-right: .15rem;
+}
+.mb-ai-rec-card__audience .mb-ico-svg {
+  color: var(--gold-lt, #ffd166);
+  opacity: .9;
+}
+/* Maintenance pill: clock icon inherits the pill's blue + sits inline. */
+.mb-ai-rec-card__maintenance .mb-ico-svg { opacity: .9; margin-right: .1rem; vertical-align: -0.1em; }
+
+/* Tap-to-enlarge affordance on the preview thumbnail. */
+.mb-ai-rec-card__thumb--zoomable img { cursor: zoom-in; }
+.mb-ai-rec-card__expand {
+  position: absolute;
+  bottom: .45rem;
+  right: .45rem;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(7, 24, 42, .78);
+  color: var(--cream);
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  transition: background .15s ease, transform .1s ease;
+}
+.mb-ai-rec-card__expand:hover { background: rgba(7, 24, 42, .95); }
+.mb-ai-rec-card__expand:active { transform: scale(.92); }
+.mb-ai-rec-card__expand .mb-ico-svg { width: 18px; height: 18px; }
+
+/* Full-screen image lightbox (AI preview detail view). */
+.mb-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(env(safe-area-inset-top, 0px) + 1rem) 1rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
+  background: rgba(3, 12, 22, .93);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity .18s ease;
+}
+.mb-lightbox--open { opacity: 1; }
+.mb-lightbox__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .6rem;
+  max-width: 100%;
+  max-height: 100%;
+}
+.mb-lightbox__img {
+  max-width: 100%;
+  max-height: 78vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: var(--r-sm);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, .6);
+}
+.mb-lightbox__caption {
+  margin: 0;
+  color: var(--cream);
+  font-weight: 600;
+  font-size: 1rem;
+  text-align: center;
+}
+.mb-lightbox__hint {
+  margin: 0;
+  color: var(--muted, #9fb3c8);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+.mb-lightbox__close {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + .6rem);
+  right: .6rem;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .12);
+  color: #fff;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+.mb-lightbox__close:hover { background: rgba(255, 255, 255, .22); }
+.mb-lightbox__close .mb-ico-svg { width: 22px; height: 22px; }
+@media (prefers-reduced-motion: reduce) {
+  .mb-lightbox { transition: none; }
+  .mb-ai-rec-card__expand { transition: none; }
+}
 .mb-ai-rec-card__inspiration {
   position: absolute;
   left: .4rem;

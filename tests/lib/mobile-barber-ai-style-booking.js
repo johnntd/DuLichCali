@@ -344,9 +344,49 @@ function runMobileBarberAiStyleBookingTests(test) {
 
   test('A16. inline rec-card renders all 5 (loops over recommendations)', function() {
     var src = read('mobile-barber/mobile-barber.js');
-    var rr = src.slice(src.indexOf('function renderAiResults'), src.indexOf('function renderAiResults') + 2800);
+    var rr = src.slice(src.indexOf('function renderAiResults'), src.indexOf('function renderAiResults') + 4200);
     assert(/recs\.forEach/.test(rr), 'must iterate all recommendations (supports 5)');
     assert(rr.indexOf('mb-ai-rec-card__audience') >= 0, 'card must show audience chip');
+  });
+
+  test('A17. result cards use SVG row icons (MBIcons) + a new icon set', function() {
+    var src = read('mobile-barber/mobile-barber.js');
+    var icons = read('mobile-barber/mobile-barber-icons.js');
+    var css = read('mobile-barber/mobile-barber.css');
+    // appendAiRecRow takes a leading icon; rows pass icon names.
+    assert(/function appendAiRecRow\(body, labelKey, value, className, icoName\)/.test(src), 'appendAiRecRow must accept an icon name');
+    assert(src.indexOf("'mb-ai-rec-card__why', 'smile'") >= 0, 'why row uses smile icon');
+    assert(src.indexOf("'palette'") >= 0 && src.indexOf("'waves'") >= 0 && src.indexOf("'sun'") >= 0, 'color/highlight/texture icons wired');
+    assert(src.indexOf('mb-ai-rec-card__row-ico') >= 0, 'row icon class applied');
+    // badge/audience/maintenance/notes/CTA use icoLabel.
+    assert(src.indexOf("icoLabel(badge, 'sparkles'") >= 0, 'AI badge uses sparkles');
+    assert(src.indexOf("icoLabel(audChip, 'user'") >= 0, 'audience chip uses user icon');
+    assert(src.indexOf("icoLabel(meta, 'clock'") >= 0, 'maintenance uses clock icon');
+    assert(src.indexOf("icoLabel(bookBtn, 'scissors'") >= 0, 'book CTA uses scissors icon');
+    // New icons exist in the set.
+    ['clock', 'user', 'smile', 'palette', 'sun', 'waves', 'info', 'alert-triangle']
+      .forEach(function(n) { assert(icons.indexOf("'" + n + "'") >= 0, 'MBIcons must define ' + n); });
+    assert(css.indexOf('.mb-ai-rec-card__row-ico') >= 0, 'row icon CSS must exist');
+  });
+
+  test('A18. tapping a preview image opens a full-screen lightbox', function() {
+    var src = read('mobile-barber/mobile-barber.js');
+    var css = read('mobile-barber/mobile-barber.css');
+    var icons = read('mobile-barber/mobile-barber-icons.js');
+    assert(src.indexOf('function openImageLightbox') >= 0, 'openImageLightbox must exist');
+    assert(src.indexOf('function closeImageLightbox') >= 0, 'closeImageLightbox must exist');
+    assert(src.indexOf('mbImageLightbox') >= 0, 'lightbox overlay id must be used');
+    assert(src.indexOf("openImageLightbox(imgSrc, rec.title") >= 0, 'image/expand opens the lightbox');
+    assert(src.indexOf('mb-ai-rec-card__expand') >= 0, 'expand affordance must exist');
+    assert(src.indexOf("aria-modal") >= 0 || src.indexOf("'aria-modal'") >= 0, 'lightbox must be a modal dialog');
+    assert(src.indexOf('_lightboxKeydown') >= 0 && src.indexOf('Escape') >= 0, 'Escape must close the lightbox');
+    assert(src.indexOf("document.body.style.overflow = 'hidden'") >= 0, 'background scroll must lock');
+    assert(icons.indexOf("'maximize'") >= 0 && icons.indexOf("'x'") >= 0, 'maximize + x icons must exist');
+    assert(css.indexOf('.mb-lightbox') >= 0 && css.indexOf('.mb-lightbox__img') >= 0, 'lightbox CSS must exist');
+    assert(css.indexOf('.mb-lightbox__close') >= 0, 'lightbox close button CSS must exist');
+    // Multilingual lightbox strings (en + vi + es).
+    ['lightboxOpen', 'lightboxClose', 'lightboxHint', 'lightboxLabel']
+      .forEach(function(k) { assertEq(count(src, k + ':'), 3, k + ' must be defined in en+vi+es'); });
   });
 }
 

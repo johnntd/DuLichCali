@@ -123,6 +123,10 @@
       homeAiPreviewWhyLabel: 'Why it fits:',
       homeAiPreviewSafetyLabel: 'Note:',
       homeAiPreviewInspirationWarning: 'Style inspiration — your real result may differ.',
+      lightboxOpen: 'Enlarge',
+      lightboxClose: 'Close',
+      lightboxLabel: 'Enlarged preview',
+      lightboxHint: 'AI preview — final result may vary. Tap outside to close.',
       homeAiPreviewConsent: 'I agree the AI may use my selfie to generate haircut previews. The image is shared only with my assigned barber and is never used for marketing.',
       homeAiPreviewUploadLabel: 'Add a selfie (face + hair visible, good light)',
       homeAiPreviewAddPhoto: 'Add a photo or selfie',
@@ -347,6 +351,10 @@
       homeAiPreviewWhyLabel: 'Vì sao hợp:',
       homeAiPreviewSafetyLabel: 'Lưu ý:',
       homeAiPreviewInspirationWarning: 'Hình tham khảo — kết quả thật có thể khác.',
+      lightboxOpen: 'Phóng to',
+      lightboxClose: 'Đóng',
+      lightboxLabel: 'Xem phóng to',
+      lightboxHint: 'Hình AI — kết quả thật có thể khác. Chạm bên ngoài để đóng.',
       homeAiPreviewConsent: 'Tôi đồng ý cho AI dùng ảnh selfie để tạo hình xem trước kiểu tóc. Ảnh chỉ chia sẻ với thợ phụ trách và không dùng cho mục đích quảng cáo.',
       homeAiPreviewUploadLabel: 'Thêm ảnh selfie (thấy rõ mặt và tóc, đủ sáng)',
       homeAiPreviewAddPhoto: 'Thêm ảnh hoặc selfie',
@@ -571,6 +579,10 @@
       homeAiPreviewWhyLabel: 'Por qué le queda:',
       homeAiPreviewSafetyLabel: 'Nota:',
       homeAiPreviewInspirationWarning: 'Estilo de inspiración — su resultado real puede variar.',
+      lightboxOpen: 'Ampliar',
+      lightboxClose: 'Cerrar',
+      lightboxLabel: 'Vista ampliada',
+      lightboxHint: 'Vista previa AI — el resultado real puede variar. Toque fuera para cerrar.',
       homeAiPreviewConsent: 'Acepto que la AI use mi selfie para generar vistas previas. La imagen se comparte solo con el barbero asignado y nunca se usa para marketing.',
       homeAiPreviewUploadLabel: 'Agregue una selfie (cara y cabello visibles, buena luz)',
       homeAiPreviewAddPhoto: 'Agregar foto o selfie',
@@ -2398,14 +2410,81 @@
   // Append a "<label> value" paragraph to an AI rec card only when the value is
   // non-empty (color/highlight/texture recs are empty unless the customer
   // asked the AI to explore them).
-  function appendAiRecRow(body, labelKey, value, className) {
+  function appendAiRecRow(body, labelKey, value, className, icoName) {
     var val = (value == null) ? '' : String(value).trim();
     if (!val) return;
     var p = el('p', className || 'mb-ai-rec-card__rec-row');
+    if (icoName) {
+      var ic = (root.MBIcons && root.MBIcons.node) ? root.MBIcons.node(icoName) : null;
+      if (ic) { ic.classList.add('mb-ai-rec-card__row-ico'); p.appendChild(ic); p.appendChild(document.createTextNode(' ')); }
+    }
     var strong = el('strong'); strong.textContent = (t(labelKey) || '') + ' ';
     p.appendChild(strong);
     p.appendChild(document.createTextNode(val));
     body.appendChild(p);
+  }
+
+  // ── Full-screen image lightbox ────────────────────────────────────────
+  // Tapping an AI preview image opens it full-screen for a detailed look.
+  // Closes on backdrop tap, the X button, or Escape. Restores focus + scroll.
+  function _lightboxKeydown(e) {
+    if (e.key === 'Escape' || e.keyCode === 27) closeImageLightbox();
+  }
+  function closeImageLightbox() {
+    var ov = document.getElementById('mbImageLightbox');
+    if (ov && ov.parentNode) ov.parentNode.removeChild(ov);
+    document.removeEventListener('keydown', _lightboxKeydown);
+    try { document.body.style.overflow = state._lightboxPrevOverflow || ''; } catch (e) {}
+    if (state._lightboxReturnFocus && state._lightboxReturnFocus.focus) {
+      try { state._lightboxReturnFocus.focus(); } catch (e) {}
+    }
+    state._lightboxReturnFocus = null;
+  }
+  function openImageLightbox(src, caption, returnFocusEl) {
+    if (!src) return;
+    closeImageLightbox();
+    state._lightboxReturnFocus = returnFocusEl || null;
+
+    var overlay = el('div', 'mb-lightbox');
+    overlay.id = 'mbImageLightbox';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-label', caption || (t('lightboxLabel') || 'Enlarged preview'));
+
+    var inner = el('div', 'mb-lightbox__inner');
+    var img = document.createElement('img');
+    img.className = 'mb-lightbox__img';
+    img.src = src;
+    img.alt = caption || '';
+    inner.appendChild(img);
+    if (caption) {
+      var cap = el('p', 'mb-lightbox__caption');
+      cap.textContent = caption;
+      inner.appendChild(cap);
+    }
+    var hint = el('p', 'mb-lightbox__hint');
+    hint.textContent = t('lightboxHint') || 'AI preview — final result may vary.';
+    inner.appendChild(hint);
+
+    var close = el('button', 'mb-lightbox__close mb-ico');
+    close.type = 'button';
+    close.setAttribute('aria-label', t('lightboxClose') || 'Close');
+    close.innerHTML = icoMarkup('x');
+    close.addEventListener('click', function(e) { e.stopPropagation(); closeImageLightbox(); });
+
+    overlay.appendChild(inner);
+    overlay.appendChild(close);
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay || e.target === inner) closeImageLightbox();
+    });
+
+    try { state._lightboxPrevOverflow = document.body.style.overflow; document.body.style.overflow = 'hidden'; } catch (e) {}
+    document.body.appendChild(overlay);
+    document.addEventListener('keydown', _lightboxKeydown);
+    requestAnimationFrame(function() {
+      overlay.classList.add('mb-lightbox--open');
+      try { close.focus({ preventScroll: true }); } catch (e) {}
+    });
   }
 
   function renderAiResults() {
@@ -2440,14 +2519,25 @@
       img.alt = rec.title || '';
       img.loading = 'lazy';
       thumb.appendChild(img);
-      var badge = el('span', 'mb-ai-rec-card__ai-badge');
-      badge.textContent = t('homeAiPreviewBadge') || 'AI suggestion';
+      // Tap the image (or the corner expand button) → full-screen detail view.
+      if (imgSrc) {
+        thumb.classList.add('mb-ai-rec-card__thumb--zoomable');
+        img.addEventListener('click', function() { openImageLightbox(imgSrc, rec.title || '', img); });
+        var expandBtn = el('button', 'mb-ai-rec-card__expand mb-ico');
+        expandBtn.type = 'button';
+        expandBtn.setAttribute('aria-label', (t('lightboxOpen') || 'Enlarge') + (rec.title ? ' — ' + rec.title : ''));
+        expandBtn.innerHTML = icoMarkup('maximize');
+        expandBtn.addEventListener('click', function(e) { e.stopPropagation(); openImageLightbox(imgSrc, rec.title || '', expandBtn); });
+        thumb.appendChild(expandBtn);
+      }
+      var badge = el('span', 'mb-ai-rec-card__ai-badge mb-ico');
+      icoLabel(badge, 'sparkles', t('homeAiPreviewBadge') || 'AI suggestion');
       thumb.appendChild(badge);
       // When the AI is not confident it preserved the exact person, the
       // preview is labelled "style inspiration" rather than "your preview".
       if (rec.previewKind === 'style_inspiration') {
-        var inspWarn = el('span', 'mb-ai-rec-card__inspiration');
-        inspWarn.textContent = t('homeAiPreviewInspirationWarning') || 'Style inspiration — your real result may differ.';
+        var inspWarn = el('span', 'mb-ai-rec-card__inspiration mb-ico');
+        icoLabel(inspWarn, 'alert-triangle', t('homeAiPreviewInspirationWarning') || 'Style inspiration — your real result may differ.');
         thumb.appendChild(inspWarn);
       }
 
@@ -2456,8 +2546,8 @@
       // Audience chip (man / woman / child / neutral) so the customer sees the
       // style is matched to the right person.
       if (rec.targetAudience) {
-        var audChip = el('span', 'mb-ai-rec-card__audience');
-        audChip.textContent = aiAudienceLabel(rec.targetAudience);
+        var audChip = el('span', 'mb-ai-rec-card__audience mb-ico');
+        icoLabel(audChip, 'user', aiAudienceLabel(rec.targetAudience));
         body.appendChild(title);
         body.appendChild(audChip);
       } else {
@@ -2465,30 +2555,37 @@
       }
       var meta = el('span', 'mb-ai-rec-card__maintenance');
       if (rec.maintenance) {
-        meta.textContent = (t('homeAiPreviewMaintenanceLabel') || 'Maintenance:') + ' ' + rec.maintenance;
+        meta.classList.add('mb-ico');
+        icoLabel(meta, 'clock', (t('homeAiPreviewMaintenanceLabel') || 'Maintenance:') + ' ' + rec.maintenance);
       }
       var desc = el('p', 'mb-ai-rec-card__desc'); desc.textContent = rec.explanation || '';
       var notes = el('p', 'mb-ai-rec-card__barber-notes');
-      notes.textContent = (t('homeAiPreviewBarberNotesLabel') || 'Barber notes:') + ' ' + (rec.barberNotes || '');
+      icoLabel(notes, 'scissors', (t('homeAiPreviewBarberNotesLabel') || 'Barber notes:') + ' ' + (rec.barberNotes || ''));
+      if (notes.firstChild && notes.firstChild.classList) notes.firstChild.classList.add('mb-ai-rec-card__row-ico');
       if (rec.maintenance) body.appendChild(meta);
       body.appendChild(desc);
-      // Why-it-fits + per-option recommendations (only shown when present).
-      appendAiRecRow(body, 'homeAiPreviewWhyLabel', rec.whyItFitsFace, 'mb-ai-rec-card__why');
-      appendAiRecRow(body, 'homeAiPreviewColorLabel', rec.colorRecommendation, 'mb-ai-rec-card__color');
-      appendAiRecRow(body, 'homeAiPreviewHighlightLabel', rec.highlightRecommendation, 'mb-ai-rec-card__highlight');
-      appendAiRecRow(body, 'homeAiPreviewTextureLabel', rec.curlStraightRecommendation, 'mb-ai-rec-card__texture');
+      // Why-it-fits + per-option recommendations (only shown when present). Each
+      // row gets a small leading icon so the card scans like a spec sheet.
+      appendAiRecRow(body, 'homeAiPreviewWhyLabel', rec.whyItFitsFace, 'mb-ai-rec-card__why', 'smile');
+      appendAiRecRow(body, 'homeAiPreviewColorLabel', rec.colorRecommendation, 'mb-ai-rec-card__color', 'palette');
+      appendAiRecRow(body, 'homeAiPreviewHighlightLabel', rec.highlightRecommendation, 'mb-ai-rec-card__highlight', 'sun');
+      appendAiRecRow(body, 'homeAiPreviewTextureLabel', rec.curlStraightRecommendation, 'mb-ai-rec-card__texture', 'waves');
       body.appendChild(notes);
-      appendAiRecRow(body, 'homeAiPreviewSafetyLabel', rec.safetyNotes, 'mb-ai-rec-card__safety');
+      appendAiRecRow(body, 'homeAiPreviewSafetyLabel', rec.safetyNotes, 'mb-ai-rec-card__safety', 'info');
 
       var actions = el('div', 'mb-ai-rec-card__actions');
       var bookBtn = el('button', 'mb-button mb-button--primary mb-ai-rec-card__cta');
       bookBtn.type = 'button';
       bookBtn.setAttribute('data-style-id', styleId);
-      bookBtn.textContent = isExpanded
-        ? (t('homeAiPreviewBookCancel') || 'Close')
-        : (isSubmitted
-          ? (t('homeAiPreviewBookAgain') || 'Book another time')
-          : (t('homeAiPreviewBookCta') || 'Book this style'));
+      // "Book this style" carries a scissors icon; Close / Book-again are text-only.
+      if (isExpanded) {
+        bookBtn.textContent = t('homeAiPreviewBookCancel') || 'Close';
+      } else if (isSubmitted) {
+        bookBtn.textContent = t('homeAiPreviewBookAgain') || 'Book another time';
+      } else {
+        bookBtn.classList.add('mb-ico');
+        icoLabel(bookBtn, 'scissors', t('homeAiPreviewBookCta') || 'Book this style');
+      }
       bookBtn.addEventListener('click', function() {
         toggleInlineBooking(rec, imgSrc);
       });

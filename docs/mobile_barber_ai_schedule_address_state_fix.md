@@ -95,6 +95,22 @@ Driven via Playwright against `https://www.dulichcali21.com/mobile-barber` (no f
 
 (Tim's "no slots" on the tested dates is genuine live availability data, correctly reflected — not a code issue; `_vendorAvailabilityRows()` carries all vendors' hours.)
 
+## Follow-up fix — booking SAVE was permission-denied (found during the live smoke test)
+
+**Symptom:** A full live booking built correctly (routing + zip + real slot all worked) but the chat showed *"⚠️ We couldn't save the booking just now."* The Firestore doc was never written (verified 404).
+
+**Root cause (systematic debugging, live prod console logs):**
+```
+[booking-guard] query failed mobileBarberBookings vendorId Missing or insufficient permissions
+@firebase/firestore: BatchGetDocuments failed {"code":"permission-denied"}
+[mobile-barber-agent] booking save FAILED FirebaseError: Missing or insufficient permissions.
+```
+The public booking flow signs in **anonymously** (`index.html` → `signInAnonymously`). `persistBooking` routed the write through `BookingGuard.guardedWrite`, whose **Firestore transaction** reads a lock doc (`COLLECTIONS.locks`) and queries owner-scoped `mobileBarberBookings` for conflicts. `firestore.rules` keep those **reads owner/vendor-scoped**, so the anonymous customer's transactional read was denied → the whole save rejected. The plain create path is **explicitly allowed for guests** (`isValidMobileBarberBookingCreate` requires no auth). The guard's conflict query was *also* denied for anon, so it gave customers **no** conflict detection — it only blocked the save. This affected **both** AI-chat and manual customer bookings; not caused by the agent changes above.
+
+**Fix** (`mobile-barber-booking.js`): `_isAnonymousWriter()` — anonymous writers use the plain (rules-allowed) guest create path; authenticated vendor/owner writes keep the full guard. `vendor_review` elevation is unaffected (set by the agent from `quoteType` + the area check). Test A0 added. `booking.js → 20260530j`.
+
+**Live verification + cleanup (2026-05-30):** drove a full booking on production → **saved cleanly** (no warning; doc `mb-mpsnugva-qkha4g` written) → **deleted it** via the Firestore admin API (HTTP 200 → re-fetch 404). No other artifact created (the booking flow writes no customer profile). 536/536 tests pass.
+
 ## Verdict: **PASS**
 AI checks the live schedule before offering times; "all day today" returns real available slots; address is not re-asked after successful routing; bookings still write to the correct vendor portal. 49/49 agent tests, 535/535 suite, FINAL: PASS.
 

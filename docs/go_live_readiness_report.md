@@ -9,12 +9,12 @@
 
 The code is in strong shape and **every fix is verified** (50 emulator rule tests + 546 unit tests + live smoke). But the go-live criteria are not met for one dominant reason and three specific blockers:
 
-1. **NOTHING IS DEPLOYED.** Every hardening (rules, storage rules, headers, functions, audit log, the AI-key changes) lives in Git only. **Production at `www.dulichcali21.com` still runs the OLD, vulnerable rules + old code.** Until you `firebase deploy`, the live site is exploitable. This alone is NO-GO.
-2. **`vendorUsers` email/password self-map** (CRITICAL, confirmed exploitable) — any free email/password account can write `vendorUsers/{theirUid}` mapping to `michael-nguyen-oc`/`tim-nguyen-bay` and gain full vendor authority. Needs a setup-code Cloud Function (rule → `write: if false`).
+1. **NOTHING IS DEPLOYED.** Every hardening (rules, storage rules, headers, functions, audit log, the AI-key changes, the vendorUsers fix) lives in Git only. **Production at `www.dulichcali21.com` still runs the OLD, vulnerable rules + old code.** Until you `firebase deploy`, the live site is exploitable. This alone is NO-GO.
+2. ~~`vendorUsers` email/password self-map~~ — ✅ **CLOSED in code** (update, 2026-05-30): the `claimVendorMembership` setup-code Cloud Function verifies the PIN server-side; the rule is now `vendorUsers write: if isAdmin() || isVendorMember(vendorId)` so a non-member cannot self-map; verified by 53 emulator rule tests. **Deploy-pending** + needs a vendor-login smoke (register with right/wrong PIN).
 3. **Exposed AI keys not yet rotated** — the Anthropic/OpenAI/Gemini keys that were publicly readable must be rotated; the leaked values still work until then.
 4. **No Firestore backups enabled** — PITR + scheduled exports are documented but not yet turned on (data-loss exposure).
 
-With #1 done (deploy + smoke), #2 closed, #3 rotated, and #4 enabled, this flips to **GO**.
+All confirmed CRITICALs now have fixes in code. With **#1 deploy + smoke**, **#3 rotate**, and **#4 enable backups**, this flips to **GO**.
 
 ---
 
@@ -24,7 +24,7 @@ With #1 done (deploy + smoke), #2 closed, #3 rotated, and #4 enabled, this flips
 |---|---|
 | **No critical security issue remains** | ⚠️ Code-fixed + verified, but `vendorUsers` self-map (CRITICAL) still open + **nothing deployed** → not met until deploy + #2 |
 | **No booking write failures** | ✅ Live smoke: anon create accepted; 546 + 50 tests pass |
-| **No vendor auth bypass** | ⚠️ Anonymous self-map BLOCKED; email/password self-map OPEN (blocker #2) |
+| **No vendor auth bypass** | ✅ Anonymous **and** email/password self-map both BLOCKED (`claimVendorMembership` CF + rule); deploy-pending |
 | **Firestore ownership rules pass** | ✅ 50 emulator tests (isVendorMember/isAdmin/field-restrictions) |
 | **No secrets exposed** | ✅ Keys removed from Firestore + proxy-only + secured `config/aiSecrets`; scanner clean. ⚠️ rotation still required |
 | **No duplicate bookings possible** | ✅ Deterministic idempotency key (live-verified 409) |
@@ -69,7 +69,7 @@ With #1 done (deploy + smoke), #2 closed, #3 rotated, and #4 enabled, this flips
    node tests/live/mb-go-live-smoke.js        # expect 14/14, auto-cleanup
    # + a vendor login + admin login sanity check
    ```
-2. **Close `vendorUsers` self-map:** add an `onCall` `claimVendorMembership({vendorId, setupCode})` that verifies the PIN server-side (Admin SDK), switch the vendor-login clients to call it, then flip the rule to `vendorUsers write: if false`.
+2. ~~Close `vendorUsers` self-map~~ — ✅ **DONE in code** (`claimVendorMembership` CF + rule `isAdmin() || isVendorMember(vendorId)` + `vendor-login.html` now calls the CF). After deploy, smoke it: register with the correct PIN (succeeds) and a wrong PIN (rejected).
 3. **Rotate** Anthropic/OpenAI/Gemini keys; set new values via the admin secured form (`config/aiSecrets`) or `functions:secrets:set`.
 4. **Enable backups:** Firestore PITR + the daily GCS export schedule (per the DR plan).
 

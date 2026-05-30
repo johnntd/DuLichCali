@@ -31,6 +31,7 @@ async function check(name, promise) {
   const emailUser = env.authenticatedContext('evilEmailUser', { email: 'evil@x.com', firebase: { sign_in_provider: 'password' } }).firestore();
   const admin = env.authenticatedContext('adminUser', { email: 'johnntd@gmail.com', firebase: { sign_in_provider: 'password' } }).firestore();
   const vendorMember = env.authenticatedContext('michaelUid', { email: 'm@x.com', firebase: { sign_in_provider: 'password' } }).firestore();
+  const driver = env.authenticatedContext('driver1', { email: 'd1@x.com', firebase: { sign_in_provider: 'password' } }).firestore();
 
   // Seed fixtures with rules disabled.
   await env.withSecurityRulesDisabled(async (ctx) => {
@@ -47,6 +48,8 @@ async function check(name, promise) {
     await db.doc('bookings/ride1').set({ customerName: 'C', customerPhone: '999', ownerId: 'o', datetime: '2026-06-01T10:00' });
     await db.doc('vendors/michael-nguyen-oc/menuItems/item1').set({ name: 'cut' });
     await db.doc('auditLogs/log1').set({ vendorId: 'michael-nguyen-oc', action: 'update', changedFields: ['status'], at: new Date().toISOString() });
+    await db.doc('drivers/driver1').set({ name: 'Driver One', complianceStatus: 'pending_documents', adminStatus: 'pending', licExpiry: '2027-01-01' });
+    await db.doc('driver_compliance/driver1').set({ overallStatus: 'approved' });
   });
 
   const validBooking = {
@@ -106,6 +109,16 @@ async function check(name, promise) {
   await check('admin CAN write (set/rotate) keys', assertSucceeds(admin.doc('config/aiSecrets').set({ claudeKey: 'sk-x', openaiKey: 'sk-y', geminiKey: 'AIza-z' })));
   await check('non-admin email user CANNOT write keys', assertFails(emailUser.doc('config/aiSecrets').set({ claudeKey: 'sk-x' })));
   await check('anon CANNOT write keys', assertFails(anon.doc('config/aiSecrets').set({ claudeKey: 'sk-x' })));
+
+  console.log('\n── airport/ride bookings + driver fraud (workflow findings) ──');
+  await check('anon CANNOT forge a bookings update (status/paid)', assertFails(anon.doc('bookings/ride1').update({ status: 'completed', paymentStatus: 'paid' })));
+  await check('staff (non-anon) CAN update a bookings doc', assertSucceeds(emailUser.doc('bookings/ride1').update({ status: 'assigned' })));
+  await check('anon CANNOT self-insert an approved driver', assertFails(anon.doc('drivers/attacker').set({ complianceStatus: 'approved', adminStatus: 'active' })));
+  await check('driver CANNOT self-approve (complianceStatus admin-only)', assertFails(driver.doc('drivers/driver1').update({ complianceStatus: 'approved' })));
+  await check('driver CAN edit own non-approval field', assertSucceeds(driver.doc('drivers/driver1').update({ name: 'Renamed' })));
+  await check('admin CAN approve a driver', assertSucceeds(admin.doc('drivers/driver1').update({ complianceStatus: 'approved' })));
+  await check('anon CANNOT write driver_compliance', assertFails(anon.doc('driver_compliance/driver1').set({ overallStatus: 'approved' })));
+  await check('create with paymentStatus=paid is denied', assertFails(anon.doc('mobileBarberBookings/payfraud').set(Object.assign({}, validBooking, { customerUid: 'anonA', paymentStatus: 'paid' }))));
 
   console.log('\n── auditLogs (immutable, server-written) ──');
   await check('client CANNOT create/forge an audit log', assertFails(anon.doc('auditLogs/forged').set({ vendorId: 'michael-nguyen-oc', action: 'update' })));

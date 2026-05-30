@@ -64,6 +64,9 @@ service cloud.firestore {
                     && request.resource.data.discountPercent >= 0
                     && request.resource.data.discountPercent <= 100))
           // Customer-controlled status is already pinned to a pending value above.
+          // paymentStatus may only be created as unpaid/pending — never 'paid'.
+          && (!('paymentStatus' in request.resource.data)
+                || request.resource.data.paymentStatus in ['unpaid', 'pending'])
           && request.resource.data.customerName.size() <= 120
           && request.resource.data.address.size() <= 300;
     }
@@ -187,15 +190,31 @@ service cloud.firestore {
       allow get:    if request.auth != null;
       allow list:   if isAdmin()
                  || (request.auth != null && request.auth.token.firebase.sign_in_provider != 'anonymous');
-      allow update: if request.auth != null;
+      // Updates (status/payment/driver/price) come only from admin + the driver
+      // portal, both NON-anonymous. Block anonymous updates so a customer can't
+      // forge status='completed' / paymentStatus='paid' / a different driver.
+      allow update: if isAdmin()
+                 || (request.auth != null && request.auth.token.firebase.sign_in_provider != 'anonymous');
       allow delete: if isAdmin();
     }
 
-    // ── Driver profiles — public read, auth write ─────────────────────────────────
-    // Homepage availability check runs unauthenticated; drivers sign in to write.
+    // ── Driver profiles — public read; admin-managed; driver self-edits non-approval fields ──
+    // Homepage availability check runs unauthenticated (public read). Admin creates
+    // drivers + owns the compliance/approval fields. A driver may edit their own
+    // profile but can NEVER self-approve: complianceStatus + the licence/registration/
+    // insurance expiry mirrors (which gate availability) are admin-only. Anonymous
+    // accounts cannot write at all — previously any anon user could self-insert an
+    // "approved/active" driver and receive customer rides + PII.
     match /drivers/{driverId} {
-      allow read:  if true;
-      allow write: if request.auth != null;
+      allow read:   if true;
+      allow create: if isAdmin();
+      allow delete: if isAdmin();
+      allow update: if isAdmin()
+                 || (request.auth != null
+                     && request.auth.token.firebase.sign_in_provider != 'anonymous'
+                     && request.auth.uid == driverId
+                     && !request.resource.data.diff(resource.data).affectedKeys()
+                          .hasAny(['complianceStatus', 'adminStatus', 'licExpiry', 'regExpiry', 'insExpiry']));
     }
 
     // ── Driver user mappings — auth only ─────────────────────────────────────────
@@ -203,9 +222,15 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
 
-    // ── Driver compliance — auth only (sensitive license/insurance/registration) ──
+    // ── Driver compliance — sensitive (license/insurance/registration) ──
+    // Read: admin or the driver's own docs. Write: admin (review/approve) or the
+    // driver editing their OWN submission (non-anonymous). Anonymous blocked.
     match /driver_compliance/{driverId} {
-      allow read, write: if request.auth != null;
+      allow read:  if isAdmin() || (request.auth != null && request.auth.uid == driverId);
+      allow write: if isAdmin()
+                || (request.auth != null
+                    && request.auth.token.firebase.sign_in_provider != 'anonymous'
+                    && request.auth.uid == driverId);
     }
 
     // ── Ride notifications — create requires auth (anon booking flow qualifies) ──
@@ -258,7 +283,11 @@ service cloud.firestore {
       allow get:    if request.auth != null;
       allow list:   if isAdmin()
                  || (request.auth != null && request.auth.token.firebase.sign_in_provider != 'anonymous');
-      allow update: if request.auth != null;
+      // Updates (status/payment/driver/price) come only from admin + the driver
+      // portal, both NON-anonymous. Block anonymous updates so a customer can't
+      // forge status='completed' / paymentStatus='paid' / a different driver.
+      allow update: if isAdmin()
+                 || (request.auth != null && request.auth.token.firebase.sign_in_provider != 'anonymous');
       allow delete: if isAdmin();
     }
 

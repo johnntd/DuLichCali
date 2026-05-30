@@ -81,8 +81,10 @@
 
 .mb-hero__media {
   position: relative;
-  min-height: 340px;
-  max-height: 420px;
+  /* Cinematic: the image dominates the fold (~56-60% of the viewport) so the
+     craft leads, not the text. svh keeps it stable under the iOS address bar. */
+  min-height: 56svh;
+  max-height: 60svh;
   border-radius: var(--r-md);
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, .12);
@@ -93,11 +95,11 @@
 }
 
 @media (min-width: 480px) {
-  .mb-hero__media { min-height: 380px; max-height: 460px; }
+  .mb-hero__media { min-height: 52svh; max-height: 58svh; }
 }
 
 @media (min-width: 680px) {
-  .mb-hero__media { min-height: 34dvh; max-height: 48dvh; }
+  .mb-hero__media { min-height: 40dvh; max-height: 52dvh; }
 }
 
 .mb-vendor-hero__image-wrap::after {
@@ -135,13 +137,14 @@
 }
 
 .mb-hero__title {
-  max-width: 20ch;
+  max-width: 18ch;
   color: var(--cream);
   font-family: var(--font-d);
-  font-size: 1.65rem;
-  line-height: 1.05;
+  font-size: clamp(1.4rem, 5.4vw, 1.85rem);
+  line-height: 1.06;
   font-weight: 400;
   margin: 0;
+  text-wrap: balance;
 }
 
 @media (min-width: 480px) {
@@ -178,37 +181,35 @@
   .mb-hero__copy { font-size: var(--text-md); line-height: var(--leading-relaxed); }
 }
 
+/* One primary CTA + a compact icon row: [ Book Now ][💬][☎].
+   Cuts the previous 3-button stack (~127px) to a single ~52px row. */
 .mb-hero__actions {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-areas: 'primary' 'chat' 'talk';
+  display: flex;
+  align-items: stretch;
   gap: .5rem;
   margin-top: .35rem;
 }
-.mb-hero__actions > :nth-child(1) { grid-area: primary; min-height: 48px; }
-.mb-hero__actions > :nth-child(2) { grid-area: chat;    min-height: 44px; }
-.mb-hero__actions > :nth-child(3) { grid-area: talk;    min-height: 44px; }
-
-@media (min-width: 380px) {
-  .mb-hero__actions {
-    grid-template-columns: 1fr 1fr;
-    grid-template-areas:
-      'primary primary'
-      'chat    talk';
-    gap: .55rem;
-  }
+.mb-hero__cta-primary {
+  flex: 1 1 auto;
+  min-height: 52px;
 }
+.mb-hero__action-icons {
+  display: flex;
+  gap: .5rem;
+  flex: 0 0 auto;
+}
+.mb-hero__icon-cta {
+  width: 52px;
+  min-height: 52px;
+  padding: 0;
+  flex: 0 0 auto;
+}
+.mb-hero__icon-cta .mb-ico-svg { width: 22px; height: 22px; }
+.mb-hero__icon-cta:focus-visible { outline: 2px solid rgba(245, 166, 35, .9); outline-offset: 2px; }
 
 @media (min-width: 680px) {
-  .mb-hero__actions {
-    grid-template-columns: auto auto auto;
-    grid-template-areas: 'primary chat talk';
-    gap: .65rem;
-    justify-content: start;
-  }
-  .mb-hero__actions > :nth-child(1) { min-height: 52px; padding: 0 1.5rem; }
-  .mb-hero__actions > :nth-child(2),
-  .mb-hero__actions > :nth-child(3) { min-height: 48px; padding: 0 1.1rem; }
+  .mb-hero__actions { justify-content: start; }
+  .mb-hero__cta-primary { flex: 0 0 auto; min-height: 52px; padding: 0 1.6rem; }
 }
 
 .mb-button,

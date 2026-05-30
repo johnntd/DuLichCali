@@ -35,12 +35,17 @@
         <h1 class="mb-hero__title" id="mbHeroTitle" data-i18n="heroTitle"></h1>
         <p class="mb-hero__copy" data-i18n="heroCopy"></p>
         <div class="mb-hero__actions" aria-label="">
-          <button class="mb-button mb-button--primary" type="button" data-action="chat" data-i18n="bookNow"></button>
-          <button class="mb-button mb-button--ghost" type="button" data-action="chat" data-i18n="chatAssistant"></button>
-          <button class="mb-icon-button" type="button" data-action="voice" aria-label="">
-            <span class="mb-icon-button__icon mb-ico" data-mb-ico="phone" aria-hidden="true"></span>
-            <span data-i18n="talkAssistant"></span>
-          </button>
+          <button class="mb-button mb-button--primary mb-hero__cta-primary" type="button" data-action="chat" data-i18n="bookNow"></button>
+          <div class="mb-hero__action-icons" role="group" aria-label="">
+            <button class="mb-icon-button mb-hero__icon-cta" type="button" data-action="chat">
+              <span class="mb-ico" data-mb-ico="message-circle" aria-hidden="true"></span>
+              <span class="mb-visually-hidden" data-i18n="chatAssistant"></span>
+            </button>
+            <button class="mb-icon-button mb-hero__icon-cta" type="button" data-action="voice" aria-label="">
+              <span class="mb-ico" data-mb-ico="phone" aria-hidden="true"></span>
+              <span class="mb-visually-hidden" data-i18n="talkAssistant"></span>
+            </button>
+          </div>
         </div>
         <ul class="mb-hero__trust-chips" aria-label="Trust signals">
           <li class="mb-trust-chip" data-i18n="trustChipLicensed"></li>

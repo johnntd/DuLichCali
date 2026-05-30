@@ -2096,7 +2096,9 @@
     }
     card.appendChild(media);
 
-    if (slide.badge) {
+    // Promo slides already show the discount in the persistent ribbon badge —
+    // skip the corner card badge to avoid a duplicate "20% OFF".
+    if (slide.badge && slide.type !== 'promo') {
       var badge = el('span', 'mb-hero-showcase-card__badge');
       if (slide.badgeIcon) { badge.classList.add('mb-ico'); icoLabel(badge, slide.badgeIcon, slide.badge); }
       else { badge.textContent = slide.badge; }

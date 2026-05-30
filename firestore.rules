@@ -391,6 +391,16 @@ service cloud.firestore {
       allow read, update, delete: if false;
     }
 
+    // ── Audit logs — IMMUTABLE, server-written ───────────────────────────────────
+    // Written ONLY by Cloud Function triggers (Admin SDK, which bypasses these
+    // rules). No client may create, modify, or delete an audit entry — so the
+    // record of who-changed-what-when cannot be forged or erased. Admins read
+    // all; a vendor reads entries scoped to their own vendorId.
+    match /auditLogs/{logId} {
+      allow read:   if isAdmin() || isVendorMember(resource.data.vendorId);
+      allow create, update, delete: if false;
+    }
+
     // ── AI provider keys — SECURED, server-only ──────────────────────────────────
     // The Gemini/OpenAI/Claude keys used by the AI Cloud Functions (aiProxy /
     // aiOrchestrate / aiTtsProxy) live here. The functions read them via the

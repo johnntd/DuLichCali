@@ -46,6 +46,7 @@ async function check(name, promise) {
     });
     await db.doc('bookings/ride1').set({ customerName: 'C', customerPhone: '999', ownerId: 'o', datetime: '2026-06-01T10:00' });
     await db.doc('vendors/michael-nguyen-oc/menuItems/item1').set({ name: 'cut' });
+    await db.doc('auditLogs/log1').set({ vendorId: 'michael-nguyen-oc', action: 'update', changedFields: ['status'], at: new Date().toISOString() });
   });
 
   const validBooking = {
@@ -105,6 +106,13 @@ async function check(name, promise) {
   await check('admin CAN write (set/rotate) keys', assertSucceeds(admin.doc('config/aiSecrets').set({ claudeKey: 'sk-x', openaiKey: 'sk-y', geminiKey: 'AIza-z' })));
   await check('non-admin email user CANNOT write keys', assertFails(emailUser.doc('config/aiSecrets').set({ claudeKey: 'sk-x' })));
   await check('anon CANNOT write keys', assertFails(anon.doc('config/aiSecrets').set({ claudeKey: 'sk-x' })));
+
+  console.log('\n── auditLogs (immutable, server-written) ──');
+  await check('client CANNOT create/forge an audit log', assertFails(anon.doc('auditLogs/forged').set({ vendorId: 'michael-nguyen-oc', action: 'update' })));
+  await check('admin CAN read audit logs', assertSucceeds(admin.doc('auditLogs/log1').get()));
+  await check('vendor CAN read their own audit log', assertSucceeds(vendorMember.doc('auditLogs/log1').get()));
+  await check('unrelated anon CANNOT read audit logs', assertFails(anonB.doc('auditLogs/log1').get()));
+  await check('NO ONE can delete an audit log (immutable)', assertFails(admin.doc('auditLogs/log1').delete()));
 
   console.log('\n=== RULE TESTS:', pass + ' passed,', fail + ' failed ===');
   await env.cleanup();

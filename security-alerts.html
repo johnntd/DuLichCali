@@ -40,6 +40,10 @@
       <span id="who" class="muted" style="margin-left:auto"></span>
     </header>
     <main>
+      <!-- System Health — early-warning summary. Failure metrics (notification/
+           AI/payment failures, permission-denial spikes) surface here as security
+           alerts of the matching type once their emitters are wired. -->
+      <div id="healthGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.6rem;margin-bottom:1.1rem;"></div>
       <div class="filters" id="filters">
         <button data-f="unresolved" class="active">Unresolved</button>
         <button data-f="critical">Critical</button>
@@ -82,9 +86,38 @@
     function isAdmin(u){ return u && u.email && ADMIN_EMAILS.indexOf((u.email||'').toLowerCase()) >= 0; }
 
     auth.onAuthStateChanged(function(u){
-      if (isAdmin(u)) { gate.hidden = true; app.hidden = false; document.getElementById('who').textContent = u.email; subscribe(); }
+      if (isAdmin(u)) { gate.hidden = true; app.hidden = false; document.getElementById('who').textContent = u.email; subscribe(); loadHealth(); }
       else { app.hidden = true; gate.hidden = false; if (u) document.getElementById('gateMsg').textContent = 'This account is not an admin. Sign in with an admin email.'; }
     });
+
+    function healthCard(label, value, tone){
+      var color = tone==='bad' ? '#e74c3c' : tone==='warn' ? '#f1c40f' : '#7ac87a';
+      return '<div style="background:var(--card);border:1px solid var(--line);border-left:4px solid '+color+';border-radius:10px;padding:.7rem .9rem;">' +
+        '<div style="font-size:1.6rem;font-weight:900;line-height:1;">'+value+'</div>' +
+        '<div style="color:var(--muted);font-size:.78rem;margin-top:.25rem;">'+label+'</div></div>';
+    }
+    async function loadHealth(){
+      var grid = document.getElementById('healthGrid');
+      try {
+        var today = new Date().toISOString().slice(0,10);
+        var unresolved = cache.filter(function(a){ return !a.resolved; });
+        var crit = unresolved.filter(function(a){ return a.severity==='critical'; }).length;
+        var byType = function(t){ return unresolved.filter(function(a){ return a.type===t; }).length; };
+        // bookings (admin can read all)
+        var bSnap = await db.collection('mobileBarberBookings').get();
+        var bookingsToday = 0, review = 0;
+        bSnap.forEach(function(d){ var b=d.data()||{}; if((b.requestedDate||(b.createdAt||'').slice(0,10))===today) bookingsToday++; if(b.status==='vendor_review') review++; });
+        grid.innerHTML = [
+          healthCard('Bookings today', bookingsToday, 'ok'),
+          healthCard('Awaiting vendor review', review, review>0?'warn':'ok'),
+          healthCard('Unresolved alerts', unresolved.length, crit>0?'bad':(unresolved.length>0?'warn':'ok')),
+          healthCard('Critical alerts', crit, crit>0?'bad':'ok'),
+          healthCard('Permission-denial alerts', byType('permission_denied_spike'), byType('permission_denied_spike')>0?'warn':'ok'),
+          healthCard('AI failures', byType('ai_failure'), byType('ai_failure')>0?'warn':'ok'),
+          healthCard('Payment-failure alerts', byType('payment_failure'), byType('payment_failure')>0?'warn':'ok')
+        ].join('');
+      } catch(e){ grid.innerHTML = '<div class="muted">Health metrics unavailable: '+esc(e.message)+'</div>'; }
+    }
     document.getElementById('signin').onclick = function(){
       auth.signInWithEmailAndPassword(document.getElementById('email').value.trim(), document.getElementById('pass').value)
         .catch(function(e){ document.getElementById('gateMsg').textContent = 'Sign-in failed: ' + e.message; });
@@ -127,6 +160,7 @@
           }).catch(function(e){ alert('Could not resolve: ' + e.message); });
         };
       });
+      loadHealth();
     }
 
     Array.prototype.forEach.call(document.querySelectorAll('#filters button'), function(b){

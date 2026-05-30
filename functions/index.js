@@ -20,7 +20,7 @@
  *   AI:    OPENAI_API_KEY, GEMINI_API_KEY, CLAUDE_API_KEY
  */
 
-const { onDocumentCreated } = require('firebase-functions/v2/firestore');
+const { onDocumentCreated, onDocumentWritten } = require('firebase-functions/v2/firestore');
 const { onCall, onRequest } = require('firebase-functions/v2/https');
 const { onSchedule }        = require('firebase-functions/v2/scheduler');
 const { defineSecret }      = require('firebase-functions/params');
@@ -3871,3 +3871,59 @@ function buildDriverNotifyEmail(data) {
 
   return { textBody, htmlBody };
 }
+
+// ── Immutable audit log ───────────────────────────────────────────────────────
+// Cloud Function triggers record sensitive changes (status, payment, price,
+// promotion, vendor settings) to the immutable `auditLogs` collection with
+// before/after. Written via the Admin SDK, so no client can forge or delete an
+// entry (firestore.rules: auditLogs create/update/delete = false). Admins read
+// all; vendors read their own (scoped by vendorId).
+const AUDIT_FIELDS = {
+  mobileBarberBookings: ['status', 'paymentStatus', 'servicePrice', 'amountDue', 'totalPrice',
+    'discountPercent', 'discountedPrice', 'promotionId', 'promoApplied', 'vendorId', 'ownerId', 'assignedBarberId'],
+  mobileBarberVendors:  ['active', 'promotions', 'zellePhone', 'zelleQrUrl', 'zelleEmail', 'workingHours', 'unavailableBlocks'],
+  mobileBarberServices: ['price', 'active', 'name', 'durationMinutes'],
+};
+function _auditEq(a, b) { try { return JSON.stringify(a === undefined ? null : a) === JSON.stringify(b === undefined ? null : b); } catch (e) { return a === b; } }
+function makeAuditTrigger(collection) {
+  return onDocumentWritten(
+    { document: `${collection}/{docId}`, region: 'us-central1', timeoutSeconds: 30, retry: false },
+    async (event) => {
+      const beforeSnap = event.data && event.data.before;
+      const afterSnap  = event.data && event.data.after;
+      const before = beforeSnap && beforeSnap.exists ? beforeSnap.data() : null;
+      const after  = afterSnap  && afterSnap.exists  ? afterSnap.data()  : null;
+      const action = !before ? 'create' : (!after ? 'delete' : 'update');
+      const fields = AUDIT_FIELDS[collection] || [];
+      const changedFields = [], beforeSub = {}, afterSub = {};
+      fields.forEach((f) => {
+        const b = before ? before[f] : undefined;
+        const a = after ? after[f] : undefined;
+        if (!_auditEq(b, a)) { changedFields.push(f); beforeSub[f] = b === undefined ? null : b; afterSub[f] = a === undefined ? null : a; }
+      });
+      // Only log meaningful changes (skip no-op updates / non-audited field churn).
+      if (action === 'update' && changedFields.length === 0) return;
+      const vendorId = (after && (after.vendorId || after.ownerId)) || (before && (before.vendorId || before.ownerId)) || '';
+      const actor = (after && (after.lastModifiedBy || after.updatedBy)) ||
+                    (before && (before.lastModifiedBy || before.updatedBy)) || 'system_or_unknown';
+      try {
+        await db.collection('auditLogs').add({
+          collection,
+          docId: event.params.docId,
+          vendorId: String(vendorId),
+          action,
+          changedFields,
+          before: action === 'create' ? null : beforeSub,
+          after:  action === 'delete' ? null : afterSub,
+          actor: String(actor).slice(0, 128),
+          at: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      } catch (e) {
+        console.error('[audit] log write failed for', collection, event.params.docId, e && e.message);
+      }
+    }
+  );
+}
+exports.onMobileBarberBookingAudit = makeAuditTrigger('mobileBarberBookings');
+exports.onMobileBarberVendorAudit  = makeAuditTrigger('mobileBarberVendors');
+exports.onMobileBarberServiceAudit = makeAuditTrigger('mobileBarberServices');

@@ -3657,21 +3657,40 @@
 .mb-ai-chip {
   display: inline-flex;
   align-items: center;
-  gap: .3rem;
-  padding: .42rem .7rem;
+  justify-content: flex-start;
+  gap: .4rem;
+  flex: 0 1 auto;
+  max-width: 100%;
+  padding: .45rem .7rem;
   border: 1.5px solid rgba(245, 166, 35, .4);
-  border-radius: 999px;
+  border-radius: var(--r-pill, 999px);
   font-size: var(--text-sm);
+  line-height: 1.2;
   color: var(--cream);
   cursor: pointer;
   user-select: none;
   background: rgba(255, 255, 255, .03);
   transition: background .15s ease, border-color .15s ease, transform .1s ease;
-  min-height: 38px;
+}
+.mb-ai-chip > span {
+  white-space: nowrap;
 }
 .mb-ai-chip:hover { border-color: rgba(245, 166, 35, .8); }
 .mb-ai-chip:active { transform: scale(.97); }
-.mb-ai-chip input { accent-color: #f5a623; margin: 0; }
+/* Constrain the native radio/checkbox to a small fixed size. Without this the
+   global ".mb-field input" rule (min-height:3rem, full padding) would inflate
+   each control into a giant blob. Mirrors the existing .mb-radio-pill pattern. */
+.mb-ai-chip input[type="radio"],
+.mb-ai-chip input[type="checkbox"] {
+  flex: 0 0 auto;
+  width: 1.05rem;
+  height: 1.05rem;
+  min-height: 0;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  accent-color: #f5a623;
+}
 .mb-ai-chip:has(input:checked) {
   background: rgba(245, 166, 35, .18);
   border-color: rgba(245, 166, 35, .95);

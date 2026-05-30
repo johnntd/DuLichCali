@@ -111,7 +111,7 @@ function runMobileBarberLandingTests(test) {
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
     assertContains(html, '/mobile-barber/mobile-barber.css?v=20260530h');
     assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260530a');
-    assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260530i');
+    assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260530j');
     assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260530i');
     assertContains(html, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
     assertContains(html, '/mobile-barber/mobile-barber-icons.js?v=20260530g');
@@ -314,7 +314,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorHtml, 'id="mbSelectedServiceSummary"');
     assertContains(vendorHtml, 'class="mb-mobile-sticky-cta"');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260530a');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260530i');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260530j');
     assertContains(vendorHtml, '/ai-engine.js?v=20260524a');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-agent.js?v=20260530i');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-voice.js?v=20260525f');
@@ -568,7 +568,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"destination": "/mobile-barber/dashboard.html"');
     assertContains(dashboardHtml, 'id="mobileBarberDashboardApp"');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260530a');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260530i');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260530j');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-lightbox.js?v=20260530f');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260530f');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260530h');

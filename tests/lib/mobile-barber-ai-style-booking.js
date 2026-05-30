@@ -342,6 +342,21 @@ function runMobileBarberAiStyleBookingTests(test) {
     assert(src.indexOf('preference: preference') >= 0, 'callable payload must include preference');
   });
 
+  test('A0. anonymous customer bookings skip the unified guard (guest create path)', function() {
+    // The public booking flow signs in anonymously; the unified BookingGuard's
+    // transaction reads (lock doc + owner-scoped conflict query) are denied by
+    // Firestore rules for anon users, which blocked the save with
+    // permission-denied. Anonymous writers must use the plain create path that
+    // the rules explicitly allow for guest bookings.
+    var src = read('mobile-barber/mobile-barber-booking.js');
+    assert(src.indexOf('function _isAnonymousWriter') >= 0, 'anon-writer detection must exist');
+    assert(src.indexOf('!_isAnonymousWriter()') >= 0, 'persistBooking must skip the unified guard for anonymous writers');
+    assert(src.indexOf('user.isAnonymous === true') >= 0, 'must detect Firebase anonymous auth');
+    // Guard is still applied for authenticated vendor/owner writes.
+    assert(/guard && guardReq\.ownerId && options\.skipUnifiedGuard !== true && !_isAnonymousWriter\(\)/.test(src),
+      'authenticated writers must still go through the unified guard');
+  });
+
   test('A16. inline rec-card renders all 5 (loops over recommendations)', function() {
     var src = read('mobile-barber/mobile-barber.js');
     var rr = src.slice(src.indexOf('function renderAiResults'), src.indexOf('function renderAiResults') + 4200);

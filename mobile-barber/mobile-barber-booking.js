@@ -1346,11 +1346,29 @@
     });
   }
 
+  // The unified BookingGuard runs a Firestore TRANSACTION that reads a lock doc
+  // and queries owner-scoped bookings for cross-service conflict detection.
+  // Anonymous customers (the public booking flow signs in anonymously) cannot
+  // perform those reads under Firestore rules, so the guarded transaction is
+  // denied ("permission-denied" on BatchGetDocuments) and the booking never
+  // saves. Worse, the guard's conflict query is ALSO denied for anon, so it was
+  // never providing customers any conflict detection — it only blocked the save.
+  // Anonymous writers therefore use the plain create path, which the rules
+  // explicitly allow for guest booking requests (isValidMobileBarberBookingCreate).
+  // Authenticated vendor/owner writes keep the full guard (they can read).
+  function _isAnonymousWriter() {
+    try {
+      var auth = (root.firebase && typeof root.firebase.auth === 'function') ? root.firebase.auth() : null;
+      var user = auth && auth.currentUser;
+      return !user || user.isAnonymous === true;
+    } catch (e) { return true; } // fail-safe: treat as guest → plain create (rules allow it)
+  }
+
   function persistBooking(booking, options) {
     options = options || {};
     var guard = root.BookingGuard;
     var guardReq = unifiedGuardRequestFromBooking(booking);
-    if (guard && guardReq.ownerId && options.skipUnifiedGuard !== true) {
+    if (guard && guardReq.ownerId && options.skipUnifiedGuard !== true && !_isAnonymousWriter()) {
       return guard.guardedWrite(guardReq, function(tx, guardMeta) {
         guardMeta = guardMeta || {};
         booking.status = guardMeta.disposition === 'review' ? 'vendor_review' : normalizeBookingStatus(booking.status);

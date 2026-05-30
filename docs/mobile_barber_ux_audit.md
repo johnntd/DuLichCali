@@ -153,5 +153,30 @@ Each phase: implement → screenshot-verify at 393px + 1280px → run `node test
 
 ---
 
+---
+
+## Implementation results (Phases 1–4 — shipped 2026-05-30)
+
+Measured at iPhone 14 Pro (393×852) before vs after:
+
+| Metric | Before | After |
+|---|---|---|
+| Hero image height | 340px (40% of screen) | **477px (56%)** — image dominates |
+| Hero title | 26.4px, wraps | **22.4px** + `text-wrap:balance` |
+| CTA footprint | 127px (3 stacked) | **51px** (1 primary + 💬/☎ icon row) |
+| Promo "20% OFF" badges | 2 (duplicate) | **1** |
+| AI Hairstyle Preview position | ~2113px (≈2.5 screens down) | **~1447px**, above Services |
+
+**Phase 1** — cinematic promo-led hero (`56–60svh`, vh fallback), tighter type, 1-primary-CTA + accessible icon row, deduped badge.
+**Phase 2** — AI preview reordered above services (`init()`, flash-free); iOS keyboard focus-scroll for booking fields. (Service cards + direct booking already at standard.)
+**Phase 3** — completed dashboard status-pill color scheme (pending was uncolored). Inbox rail / expandable rows / quick actions / notification center / collapsible settings already shipped.
+**Phase 4** — homepage active-only filtering verified robust (adminStatus=active, public-visibility gate, admin-cache await, hero sync) and **locked with a regression test**.
+
+**Adversarial review** (4 dimensions, each finding independently verified): 4 confirmed → all fixed (empty group `aria-label`; `prefers-reduced-motion` button guard; duplicate `--traveling` pill; `svh` vh-fallback).
+
+**Gate:** 529 tests pass · `full_system_dry_run.sh` → `FINAL: PASS`. **Deployed** to `www.dulichcali21.com` at `?v=20260530g`. Untouched: booking engine, AI/voice booking, promotions, notifications, Tim/Michael routing.
+
+---
+
 ## Verdict (audit phase)
 The Mobile Barber experience is **functionally solid** (booking engine, AI preview, routing, promotions, notifications, accessible chips/lightbox all work) but **not yet visually premium above the fold**. The four Critical issues (hero image dominance, typography weight, CTA hierarchy, promo/AI placement) are the highest-leverage conversion fixes. None require touching the booking/routing engine. Recommend proceeding with **Phase 1** first for the biggest perceived-quality jump.

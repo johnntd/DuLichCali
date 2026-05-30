@@ -57,9 +57,15 @@ async function check(name, promise) {
   console.log('\n── bookings (airport/ride) ──');
   await check('UNAUTHENTICATED cannot read /bookings (PII)', assertFails(unauth.doc('bookings/ride1').get()));
   await check('UNAUTHENTICATED cannot write /bookings', assertFails(unauth.doc('bookings/ride1').update({ status: 'paid' })));
+  await check('anon CAN get its booking by id (tracking link)', assertSucceeds(anon.doc('bookings/ride1').get()));
+  await check('anon CANNOT list/enumerate all bookings', assertFails(anon.collection('bookings').get()));
+  await check('staff (non-anon) CAN list bookings', assertSucceeds(emailUser.collection('bookings').get()));
+  await check('admin CAN list bookings', assertSucceeds(admin.collection('bookings').get()));
 
   console.log('\n── vendorUsers self-map (vendor takeover) ──');
   await check('ANONYMOUS cannot create a vendorUsers mapping', assertFails(anon.doc('vendorUsers/anonA').set({ vendorId: 'michael-nguyen-oc' })));
+  await check('non-anon user CANNOT write ANOTHER uid mapping (hijack)', assertFails(emailUser.doc('vendorUsers/michaelUid').set({ vendorId: 'evil' })));
+  await check('admin CAN write any vendorUsers mapping', assertSucceeds(admin.doc('vendorUsers/someVendorUid').set({ vendorId: 'michael-nguyen-oc' })));
 
   console.log('\n── mobileBarberBookings field-level update ──');
   await check('customer (owner) CANNOT set paymentStatus=paid', assertFails(anon.doc('mobileBarberBookings/bk1').update({ paymentStatus: 'paid' })));

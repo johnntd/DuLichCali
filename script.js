@@ -2753,7 +2753,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     onOpen: async function (_, dateStr, instance) {
       if (!dateStr) return;
       const dateOnlyStr = dateStr.split(' ')[0];
-      const snapshot = await db.collection('bookings').get();
+      // Advisory slot-conflict preview. Listing all bookings is now restricted
+      // to staff accounts (anti-enumeration), so for public visitors this query
+      // is denied — degrade gracefully (the server-side dispatch guard is the
+      // real conflict check). A Cloud Function aggregate is the follow-up.
+      let snapshot;
+      try { snapshot = await db.collection('bookings').get(); }
+      catch (e) { console.warn('Slot conflict preview unavailable (non-critical):', e && e.message); return; }
       const unavailable = [];
       snapshot.forEach(doc => {
         const datetimeStr = getBookingDatetime(doc);

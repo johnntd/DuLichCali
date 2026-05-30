@@ -4,7 +4,13 @@
 **Method:** 10 parallel per-dimension auditors (read-only) → adversarial verification of every critical/high finding (one skeptic per finding, instructed to refute). 55 agents, ~6.1M tokens.
 **Result:** 76 findings — **19 CRITICAL, 26 HIGH, 21 MEDIUM, 10 LOW**; **29 critical/high adversarially confirmed exploitable**.
 
-## Recommendation: ⚠️ **NO-GO until the rules are runtime-verified + 2 residual HIGHs accepted** — all confirmed CRITICALs now have fixes in code
+## Recommendation: ⚠️ **CONDITIONAL GO — deploy + verify, then close 1 residual + frontend gating**
+
+**Update (round 3):** the rules are now **runtime-verified** — `tests/security-rules/rules.test.js` runs against the Firebase emulator and **24/24 pass** (unauthenticated/anonymous lockdowns, customer field restrictions, vendor isolation, admin allowlist, price validation, booking get-by-id-but-no-list). Residual HIGH #1 (booking enumeration) is **fixed** (get/list split). Residual HIGH #2 (`vendorUsers`) is **hardened** — anonymous self-map and mapping-hijack are blocked and verified; the last sliver (a non-anonymous account self-mapping its *own* uid) needs a setup-code Cloud Function + login-client switch (a critical-auth change that must be deploy-verified). Remaining before launch: **(1)** `firebase deploy --only firestore:rules,storage,hosting` + post-deploy smoke; **(2)** the `vendorUsers` setup-code CF; **(3)** frontend admin/salon portal gating (MEDIUM — data is already protected server-side). With (1) done and (2)+(3) scheduled, this is launch-ready.
+
+---
+
+### (superseded) earlier verdict
 
 The audit found **systemic authorization gaps** (vendor/data takeover, customer PII exposure, booking/payment tampering). **Round 1** fixed the contained issues; **Round 2** (after you set `johnntd@gmail.com` as the email-allowlist admin) closed the admin-dependent criticals — the world-open `bookings`/`travel_bookings` reads, the `vendors/{sub=**}` cross-vendor write, and the escalation/spam create vectors. **Every confirmed CRITICAL now has a fix in `firestore.rules`/`storage.rules`.**
 

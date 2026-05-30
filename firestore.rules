@@ -155,8 +155,16 @@ service cloud.firestore {
     // moves mapping creation behind a setup-code-verifying Cloud Function.)
     match /vendorUsers/{uid} {
       allow read:  if request.auth != null;
-      allow write: if request.auth != null
-                && request.auth.token.firebase.sign_in_provider != 'anonymous';
+      // A non-anonymous account may only write its OWN mapping doc (admin may
+      // write any). This blocks the anonymous self-map AND hijacking another
+      // user's mapping. Residual (documented): a non-anonymous account can still
+      // map ITS OWN uid to an arbitrary vendorId — fully closed by a
+      // setup-code-verifying Cloud Function + flipping this to `write: if false`
+      // once the login clients call that function.
+      allow write: if isAdmin()
+                || (request.auth != null
+                    && request.auth.token.firebase.sign_in_provider != 'anonymous'
+                    && request.auth.uid == uid);
     }
 
     // ── Bookings (airport/ride) ───────────────────────────────────────────────────
@@ -170,7 +178,15 @@ service cloud.firestore {
     // known id — finer per-customer scoping needs a customerUid/token (follow-up).
     match /bookings/{doc=**} {
       allow create: if true;
-      allow read:   if request.auth != null;
+      // get (single doc by id) is how a customer tracks their own booking via
+      // the link they were sent — kept open to any auth session. list (querying
+      // the whole collection) is restricted to admin/vendor/driver accounts so
+      // an anonymous attacker cannot enumerate every customer's PII. (The
+      // homepage's advisory conflict check listed all bookings as anon; it now
+      // degrades gracefully and a Cloud Function aggregate is the follow-up.)
+      allow get:    if request.auth != null;
+      allow list:   if isAdmin()
+                 || (request.auth != null && request.auth.token.firebase.sign_in_provider != 'anonymous');
       allow update: if request.auth != null;
       allow delete: if isAdmin();
     }
@@ -239,7 +255,9 @@ service cloud.firestore {
     // customer names/phones/destinations to unauthenticated requests).
     match /travel_bookings/{bookingId} {
       allow create: if true;
-      allow read:   if request.auth != null;
+      allow get:    if request.auth != null;
+      allow list:   if isAdmin()
+                 || (request.auth != null && request.auth.token.firebase.sign_in_provider != 'anonymous');
       allow update: if request.auth != null;
       allow delete: if isAdmin();
     }

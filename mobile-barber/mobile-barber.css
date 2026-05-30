@@ -3625,6 +3625,100 @@
   gap: .4rem;
 }
 
+/* All-audience question groups: who the style is for + what to explore +
+   the desired vibe. Selectable chips, mobile-first, wrap freely. */
+.mb-ai-preview__options-fieldset {
+  border: 0;
+  padding: 0;
+  margin: .25rem 0 .5rem;
+}
+.mb-ai-preview__options-fieldset[disabled] { opacity: .55; pointer-events: none; }
+.mb-ai-preview__options {
+  display: flex;
+  flex-direction: column;
+  gap: .85rem;
+}
+.mb-ai-option-group {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+}
+.mb-ai-option-group__label {
+  font-size: var(--text-sm);
+  color: var(--cream);
+  font-weight: 600;
+  opacity: .9;
+}
+.mb-ai-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+.mb-ai-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .42rem .7rem;
+  border: 1.5px solid rgba(245, 166, 35, .4);
+  border-radius: 999px;
+  font-size: var(--text-sm);
+  color: var(--cream);
+  cursor: pointer;
+  user-select: none;
+  background: rgba(255, 255, 255, .03);
+  transition: background .15s ease, border-color .15s ease, transform .1s ease;
+  min-height: 38px;
+}
+.mb-ai-chip:hover { border-color: rgba(245, 166, 35, .8); }
+.mb-ai-chip:active { transform: scale(.97); }
+.mb-ai-chip input { accent-color: #f5a623; margin: 0; }
+.mb-ai-chip:has(input:checked) {
+  background: rgba(245, 166, 35, .18);
+  border-color: rgba(245, 166, 35, .95);
+  font-weight: 600;
+}
+.mb-ai-chip:has(input:focus-visible) { outline: 2px solid #f5a623; outline-offset: 2px; }
+
+/* Result-card extras: audience chip, per-option recommendation rows, and the
+   "style inspiration" badge shown when identity preservation is uncertain. */
+.mb-ai-rec-card__audience {
+  display: inline-block;
+  margin-left: .4rem;
+  padding: .1rem .5rem;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 600;
+  background: rgba(245, 166, 35, .16);
+  color: var(--cream);
+  vertical-align: middle;
+}
+.mb-ai-rec-card__why,
+.mb-ai-rec-card__color,
+.mb-ai-rec-card__highlight,
+.mb-ai-rec-card__texture,
+.mb-ai-rec-card__safety {
+  margin: .25rem 0 0;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  color: var(--cream);
+  opacity: .92;
+}
+.mb-ai-rec-card__safety { opacity: .78; font-style: italic; }
+.mb-ai-rec-card__inspiration {
+  position: absolute;
+  left: .4rem;
+  bottom: .4rem;
+  max-width: calc(100% - .8rem);
+  padding: .2rem .5rem;
+  border-radius: 8px;
+  font-size: .68rem;
+  font-weight: 600;
+  line-height: 1.25;
+  background: rgba(20, 20, 20, .78);
+  color: #ffd27a;
+  backdrop-filter: blur(2px);
+}
+
 /* Split source picker: two clearly-labeled options instead of a single
    file input that surprised users by jumping straight to the camera. */
 .mb-ai-preview__source {

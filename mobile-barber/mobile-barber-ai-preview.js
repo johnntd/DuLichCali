@@ -3,9 +3,11 @@
 // Mobile Barber — REAL AI Haircut Preview
 //
 // Image-to-image hairstyle preview via the `generateHaircutPreviews`
-// Firebase Function, which proxies Google Gemini 2.5 Flash Image (Nano
-// Banana) to produce 3 previews that preserve the same person, same face,
-// same skin tone — only the hairstyle changes.
+// Firebase Function, which proxies Google Gemini 2.5 Flash (vision analysis)
+// + 2.5 Flash Image (Nano Banana) to produce 5 audience-matched previews
+// (men / women / children + optional color / highlights / curly / straight)
+// that preserve the same person, same face, same skin tone, same age — only
+// the hairstyle (and color, when requested) changes.
 //
 // EXPLICIT NON-FALLBACK CONTRACT
 // ─────────────────────────────────────────────────────────────────────────
@@ -79,6 +81,12 @@
     opts = opts || {};
     var dataUrl = opts.dataUrl;
     var lang    = opts.lang || 'en';
+    // Audience + style preferences (men / women / children + haircut / color /
+    // highlights / curly / straight + vibe). All optional — the Function
+    // defaults to a neutral audience and a haircut-only exploration.
+    var audience   = opts.audience || 'neutral';
+    var explore    = Array.isArray(opts.explore) ? opts.explore : (opts.explore ? [opts.explore] : ['haircut']);
+    var preference = opts.preference || '';
 
     if (!dataUrl) {
       return Promise.resolve({
@@ -113,7 +121,7 @@
       });
     }
 
-    return callable({ selfieDataUrl: dataUrl, lang: lang })
+    return callable({ selfieDataUrl: dataUrl, lang: lang, audience: audience, explore: explore, preference: preference })
       .then(function (result) {
         var payload = (result && result.data) || {};
         if (!payload.ok) {
@@ -139,6 +147,9 @@
         return {
           ok: true,
           analysis: payload.analysis || '',
+          audience: payload.audience || '',
+          explore: payload.explore || [],
+          preference: payload.preference || '',
           recommendations: recs,
           provider: payload.provider || 'gemini',
           generationTimeMs: payload.generationTimeMs || 0

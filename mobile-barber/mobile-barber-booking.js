@@ -10,13 +10,13 @@
     root.MobileBarberBooking = factory(root.MobileBarberData, root);
   }
 })(typeof window !== 'undefined' ? window : globalThis, function(DATA, root) {
-  var ACTIVE_BOOKING_STATUSES = ['pending_barber_confirmation', 'pending_confirmation', 'confirmed', 'vendor_review'];
+  var ACTIVE_BOOKING_STATUSES = ['pending', 'pending_barber_confirmation', 'pending_confirmation', 'confirmed', 'in_progress', 'traveling', 'vendor_review'];
   var PENDING_STATUS = 'pending_barber_confirmation';
   var STATUS_ALIASES = {
     pending_confirmation: 'pending_barber_confirmation',
     pending: 'pending_barber_confirmation'
   };
-  var STATUS_LIFECYCLE = ['pending_barber_confirmation', 'vendor_review', 'confirmed', 'declined', 'completed', 'cancelled'];
+  var STATUS_LIFECYCLE = ['pending_barber_confirmation', 'vendor_review', 'confirmed', 'in_progress', 'traveling', 'declined', 'completed', 'cancelled'];
   var DEFAULT_SLOT_STEP_MINUTES = 30;
   var DEFAULT_SAME_DAY_CUTOFF_MINUTES = 120;
   var DEFAULT_PRICING = {
@@ -45,6 +45,11 @@
 
   function hasText(value) {
     return trim(value).length > 0;
+  }
+
+  function safeLog(tag, payload) {
+    if (typeof console === 'undefined' || !console.log) return;
+    try { console.log(tag, JSON.stringify(payload || {})); } catch (e) {}
   }
 
   function normalizeBookingStatus(status) {
@@ -223,16 +228,41 @@
     var allVendors = Array.isArray(options.vendors) && options.vendors.length
       ? options.vendors
       : (root.MobileBarberData && Array.isArray(root.MobileBarberData.sampleVendors) ? root.MobileBarberData.sampleVendors : []);
-    if (!address || !allVendors.length) return null;
+    if (!address || !allVendors.length) {
+      safeLog('[booking-route]', {
+        address: address && address.address || '',
+        city: address && address.city || '',
+        zip: address && address.zip || '',
+        assignedVendorId: null,
+        reason: 'missing_address_or_vendors'
+      });
+      return null;
+    }
     var candidates = [];
     for (var i = 0; i < allVendors.length; i++) {
       var v = allVendors[i];
       if (options.excludeVendorId && v && v.id === options.excludeVendorId) continue;
       if (isWithinServiceArea(v, address)) candidates.push(v);
     }
-    if (!candidates.length) return null;
+    if (!candidates.length) {
+      safeLog('[booking-route]', {
+        address: address.address || '',
+        city: address.city || '',
+        zip: address.zip || '',
+        assignedVendorId: null,
+        reason: hasText(address.city) || hasText(address.zip) ? 'outside_service_area' : 'ambiguous_location'
+      });
+      return null;
+    }
     candidates.sort(function(a, b) {
       return vendorRoutingScore(b) - vendorRoutingScore(a);
+    });
+    safeLog('[booking-route]', {
+      address: address.address || '',
+      city: address.city || '',
+      zip: address.zip || '',
+      assignedVendorId: candidates[0].id,
+      reason: 'service_area_match'
     });
     return candidates[0];
   }
@@ -573,12 +603,32 @@
   function checkWindowAvailability(vendor, availabilityRows, existingBookings, unavailableBlocks, draft, timing, now) {
     var availability = findAvailability(availabilityRows, vendor.id);
     var cutoffResult = checkSameDayCutoff(vendor, draft, timing, now);
-    if (!cutoffResult.valid) return cutoffResult;
+    if (!cutoffResult.valid) {
+      logConflictCheck(draft, timing, [cutoffResult.key], 'block');
+      return cutoffResult;
+    }
     var weeklyResult = checkWeeklyAvailability(availability, draft, timing);
-    if (!weeklyResult.valid) return weeklyResult;
+    if (!weeklyResult.valid) {
+      logConflictCheck(draft, timing, [weeklyResult.key], 'block');
+      return weeklyResult;
+    }
     var blockResult = checkUnavailableBlocks(vendor.id, draft, timing, unavailableBlocks);
-    if (!blockResult.valid) return blockResult;
-    return checkBookingOverlap(vendor.id, draft, timing, existingBookings);
+    if (!blockResult.valid) {
+      logConflictCheck(draft, timing, [blockResult.key], 'block');
+      return blockResult;
+    }
+    var overlap = checkBookingOverlap(vendor.id, draft, timing, existingBookings);
+    logConflictCheck(draft, timing, overlap.valid ? [] : [overlap.key], overlap.valid ? 'allow' : 'block');
+    return overlap;
+  }
+
+  function logConflictCheck(draft, timing, conflicts, result) {
+    safeLog('[booking-conflict-check]', {
+      requestedStart: trim((draft && draft.requestedDate || '') + ' ' + (draft && draft.startTime || '')),
+      requestedEnd: trim((draft && draft.requestedDate || '') + ' ' + (timing && timing.endTime || '')),
+      conflicts: conflicts || [],
+      result: result || 'unknown'
+    });
   }
 
   function checkMobileBarberAvailability(vendorId, start, end, opts) {
@@ -681,6 +731,14 @@
     var unavailableBlocks = input.unavailableBlocks || [];
     var errors = validateRequiredFields(draft);
 
+    safeLog('[booking-live-data]', {
+      vendorId: vendor && vendor.id || '',
+      servicesLoaded: services.length,
+      promotionsLoaded: vendor && Array.isArray(vendor.promotions) ? vendor.promotions.length : 0,
+      scheduleLoaded: availabilityRows.some(function(row) { return row && row.vendorId === (vendor && vendor.id) && row.weeklyHours; }),
+      source: input.liveDataSource || input.source || (input.usedStaticFallback ? 'static-fallback' : 'provided')
+    });
+
     if (!vendor) errors.push('missing_vendor');
     if (errors.length) return { valid: false, canCreate: false, key: 'required_fields', errors: errors };
 
@@ -734,11 +792,27 @@
       || (root && root.OwnerModel && root.OwnerModel.resolveBookingOwner
           ? root.OwnerModel.resolveBookingOwner({ serviceType: 'barber', vendorId: input.vendor.id, ownerId: input.vendor.ownerId })
           : null);
+    // The mobile-barber model treats each barber as a vendor doc, so the
+    // assigned barber IS the routed vendor. Prefer explicit barber id fields
+    // when present so future multi-barber-per-vendor setups still resolve.
+    var meta = input.meta || {};
+    var _assignedBarberId = trim(input.vendor.assignedBarberId || input.vendor.barberId || input.vendor.id);
+    function metaJson(value) {
+      if (value == null || value === '') return '';
+      if (typeof value === 'string') return value;
+      try { return JSON.stringify(value); } catch (e) { return ''; }
+    }
+    var haircutRef = buildHaircutReference(draft, check.service, now);
     var booking = {
       id: id,
       vendorId: input.vendor.id,
       ownerId: _ownerId || null,
       serviceType: 'barber',
+      assignedBarberId: _assignedBarberId,
+      routingReason: trim(meta.routingReason),
+      previousCustomerMatched: meta.previousCustomerMatched === true,
+      customerPreferenceSnapshot: metaJson(meta.customerPreferenceSnapshot),
+      scheduleCheckSnapshot: metaJson(meta.scheduleCheckSnapshot),
       customerName: trim(draft.customerName),
       customerPhone: digits(draft.customerPhone),
       customerEmail: trim(draft.customerEmail),
@@ -796,7 +870,27 @@
       selectedAiMaintenanceLevel: trim(draft.selectedAiMaintenanceLevel),
       selectedStyleId: trim(draft.selectedAiStyleId || draft.selectedStyleId),
       selectedStylePreviewUrl: trim(draft.selectedStylePreviewUrl || draft.selectedAiStyleImage),
+      // All-audience AI hairstyle attributes. Audience: man|woman|child|neutral.
+      // Color/highlight/texture recommendations are populated only when the
+      // customer asked the AI to explore those options.
+      selectedAudienceType: trim(draft.selectedAudienceType),
+      selectedColorRecommendation: trim(draft.selectedColorRecommendation),
+      selectedHighlightRecommendation: trim(draft.selectedHighlightRecommendation),
+      selectedTexturePreference: trim(draft.selectedTexturePreference),
       barberCuttingNotes: trim(draft.barberCuttingNotes),
+      selectedHaircutSource: haircutRef.selectedHaircutSource,
+      selectedHaircutTitle: haircutRef.selectedHaircutTitle,
+      selectedHaircutDescription: haircutRef.selectedHaircutDescription,
+      selectedHaircutImageUrl: haircutRef.selectedHaircutImageUrl,
+      selectedHaircutImageStoragePath: haircutRef.selectedHaircutImageStoragePath,
+      selectedHaircutThumbnailUrl: haircutRef.selectedHaircutThumbnailUrl,
+      selectedHaircutBarberNotes: haircutRef.selectedHaircutBarberNotes,
+      selectedHaircutMaintenanceLevel: haircutRef.selectedHaircutMaintenanceLevel,
+      selectedHaircutGeneratedAt: haircutRef.selectedHaircutGeneratedAt,
+      selectedHaircutPromptSnapshot: haircutRef.selectedHaircutPromptSnapshot,
+      customerSelfieUrl: haircutRef.customerSelfieUrl,
+      customerSelfieStoragePath: haircutRef.customerSelfieStoragePath,
+      aiPreviewSessionId: trim(draft.aiPreviewSessionId),
       // Promotion fields — populated by calculateMobileBarberPrice when an
       // active vendor promotion applies. All default to empty/0/false so
       // bookings without a promo stay valid.
@@ -809,6 +903,13 @@
       createdAt: now,
       updatedAt: now
     };
+    safeLog('[haircut-reference]', {
+      bookingId: booking.id,
+      source: booking.selectedHaircutSource,
+      imageUrl: booking.selectedHaircutImageUrl,
+      storagePath: booking.selectedHaircutImageStoragePath,
+      barberNotes: booking.selectedHaircutBarberNotes
+    });
     var validationBooking = Object.assign({}, booking);
     delete validationBooking.smsOptIn;
     if (validationBooking.status === 'pending_barber_confirmation') {
@@ -816,6 +917,44 @@
     }
     var validation = DATA && DATA.validateBooking ? DATA.validateBooking(validationBooking) : { valid: true, errors: [] };
     return validation.valid ? { valid: true, booking: booking, errors: [] } : { valid: false, errors: validation.errors };
+  }
+
+  function buildHaircutReference(draft, service, now) {
+    draft = draft || {};
+    service = service || {};
+    var selectedAiImage = trim(draft.selectedAiStyleImage || draft.selectedStylePreviewUrl);
+    var hasAi = hasText(draft.selectedAiStyleId || draft.selectedAiStyleName || selectedAiImage);
+    var selfieConsented = draft.aiAnalysisConsent === true || draft.aiAnalysisConsent === 'true';
+    if (hasAi) {
+      return {
+        selectedHaircutSource: 'ai_generated',
+        selectedHaircutTitle: trim(draft.selectedAiStyleName || draft.selectedAiStyleId || service.name),
+        selectedHaircutDescription: trim(draft.selectedAiStyleDescription || draft.aiAnalysisSummary || service.description),
+        selectedHaircutImageUrl: selectedAiImage,
+        selectedHaircutImageStoragePath: trim(draft.selectedAiStyleStoragePath || draft.selectedHaircutImageStoragePath),
+        selectedHaircutThumbnailUrl: trim(draft.selectedAiStyleThumbnailUrl || selectedAiImage),
+        selectedHaircutBarberNotes: trim(draft.selectedAiBarberNotes || draft.barberCuttingNotes || service.barberNotes),
+        selectedHaircutMaintenanceLevel: trim(draft.selectedAiMaintenanceLevel),
+        selectedHaircutGeneratedAt: trim(draft.selectedHaircutGeneratedAt || draft.aiGeneratedAt || now),
+        selectedHaircutPromptSnapshot: trim(draft.selectedHaircutPromptSnapshot || draft.aiPromptSnapshot || draft.aiAnalysisSummary),
+        customerSelfieUrl: selfieConsented ? trim(draft.customerSelfieUrl || draft.selfieDataUrl) : '',
+        customerSelfieStoragePath: selfieConsented ? trim(draft.customerSelfieStoragePath) : ''
+      };
+    }
+    return {
+      selectedHaircutSource: 'service_list',
+      selectedHaircutTitle: trim(service.name || draft.serviceName),
+      selectedHaircutDescription: trim(service.description || draft.serviceDescription),
+      selectedHaircutImageUrl: trim(service.imageUrl || draft.serviceImageUrl),
+      selectedHaircutImageStoragePath: trim(service.imageStoragePath || draft.serviceImageStoragePath),
+      selectedHaircutThumbnailUrl: trim(service.thumbnailUrl || service.imageUrl || draft.serviceImageUrl),
+      selectedHaircutBarberNotes: trim(service.barberNotes || draft.barberNotes || draft.notes),
+      selectedHaircutMaintenanceLevel: trim(service.maintenanceLevel || draft.maintenanceLevel),
+      selectedHaircutGeneratedAt: '',
+      selectedHaircutPromptSnapshot: trim(service.imagePrompt || ''),
+      customerSelfieUrl: '',
+      customerSelfieStoragePath: ''
+    };
   }
 
   function canUseFirestore() {
@@ -1078,7 +1217,124 @@
     return error;
   }
 
+  // ── Durable image storage ──────────────────────────────────────────────────
+  // AI-generated hairstyle previews (and consented selfies) start life as inline
+  // data URLs on the draft so the flow works with zero backend. At write time we
+  // upload them to Firebase Storage under the SAME path the nailsalon flow uses
+  // (vendors/{vendorId}/bookings/{bookingId}/...), which the live storage rules
+  // already permit, then store the durable download URL on the booking instead of
+  // the bulky data URL — keeping the Firestore doc small. Upload is best-effort:
+  // if Storage is unavailable or the upload fails, the inline data URL stays in
+  // place (prior behaviour) so the booking still completes and the vendor still
+  // sees the reference.
+  var HAIRCUT_IMAGE_FIELDS = ['selectedHaircutImageUrl', 'selectedHaircutThumbnailUrl', 'selectedAiStyleImage', 'selectedStylePreviewUrl'];
+
+  function isDataUrl(value) {
+    return typeof value === 'string' && value.indexOf('data:') === 0;
+  }
+
+  function canUseStorage() {
+    return typeof root.firebase !== 'undefined'
+        && typeof root.firebase.storage === 'function'
+        && root.firebase.apps && root.firebase.apps.length;
+  }
+
+  function firstDataUrl(values) {
+    for (var i = 0; i < values.length; i++) {
+      if (isDataUrl(values[i])) return values[i];
+    }
+    return '';
+  }
+
+  function bookingHaircutDataUrls(booking) {
+    return HAIRCUT_IMAGE_FIELDS.map(function(field) { return booking[field]; });
+  }
+
+  // Prefer the full-resolution copy the customer page cached in localStorage
+  // (keyed by AI preview session + style) so the barber sees a crisp reference
+  // rather than the compressed inline thumbnail kept for offline fallback.
+  function fullResHaircutDataUrl(booking) {
+    try {
+      var AIP = root.MobileBarberAIPreview;
+      if (!AIP || typeof AIP.readLocalCopy !== 'function') return '';
+      var styleId = trim(booking.selectedAiStyleId || booking.selectedStyleId);
+      var sessionId = trim(booking.aiPreviewSessionId);
+      if (!sessionId && !styleId) return '';
+      var full = AIP.readLocalCopy(sessionId, styleId);
+      return isDataUrl(full) ? full : '';
+    } catch (e) { return ''; }
+  }
+
+  function uploadDataUrlToStorage(dataUrl, path) {
+    var ref = root.firebase.storage().ref(path);
+    return ref.putString(dataUrl, 'data_url').then(function() {
+      return ref.getDownloadURL();
+    });
+  }
+
+  function hasUploadableImages(booking) {
+    if (!booking) return false;
+    if (firstDataUrl(bookingHaircutDataUrls(booking))) return true;
+    return isDataUrl(booking.customerSelfieUrl);
+  }
+
+  // A synchronous thenable so saveBooking keeps its (test- and stub-relied-upon)
+  // synchronous return shape when there is nothing to upload.
+  function syncResolved(value) {
+    return { then: function(cb) { return cb ? cb(value) : value; } };
+  }
+
+  function uploadBookingImages(booking) {
+    if (!canUseStorage() || !booking || !booking.id || !booking.vendorId || !hasUploadableImages(booking)) {
+      return syncResolved(booking);
+    }
+    var ts = Date.now();
+    var basePath = 'vendors/' + booking.vendorId + '/bookings/' + booking.id;
+    var tasks = [];
+
+    var imageDataUrl = fullResHaircutDataUrl(booking) || firstDataUrl(bookingHaircutDataUrls(booking));
+    if (imageDataUrl) {
+      var imgPath = basePath + '/ai_haircut_' + ts + '.png';
+      tasks.push(
+        uploadDataUrlToStorage(imageDataUrl, imgPath).then(function(url) {
+          HAIRCUT_IMAGE_FIELDS.forEach(function(field) {
+            if (isDataUrl(booking[field])) booking[field] = url;
+          });
+          if (!hasText(booking.selectedHaircutImageUrl)) booking.selectedHaircutImageUrl = url;
+          if (!hasText(booking.selectedHaircutThumbnailUrl)) booking.selectedHaircutThumbnailUrl = url;
+          booking.selectedHaircutImageStoragePath = imgPath;
+          safeLog('[haircut-storage]', { bookingId: booking.id, field: 'haircutImage', storagePath: imgPath, uploaded: true });
+        }).catch(function(e) {
+          safeLog('[haircut-storage]', { bookingId: booking.id, field: 'haircutImage', uploaded: false, error: e && e.message });
+        })
+      );
+    }
+
+    if (isDataUrl(booking.customerSelfieUrl)) {
+      var selfiePath = basePath + '/selfie_' + ts + '.jpg';
+      tasks.push(
+        uploadDataUrlToStorage(booking.customerSelfieUrl, selfiePath).then(function(url) {
+          booking.customerSelfieUrl = url;
+          booking.customerSelfieStoragePath = selfiePath;
+          safeLog('[haircut-storage]', { bookingId: booking.id, field: 'customerSelfie', storagePath: selfiePath, uploaded: true });
+        }).catch(function(e) {
+          safeLog('[haircut-storage]', { bookingId: booking.id, field: 'customerSelfie', uploaded: false, error: e && e.message });
+        })
+      );
+    }
+
+    if (!tasks.length) return syncResolved(booking);
+    return Promise.all(tasks).then(function() { return booking; });
+  }
+
   function saveBooking(booking, options) {
+    options = options || {};
+    return uploadBookingImages(booking).then(function() {
+      return persistBooking(booking, options);
+    });
+  }
+
+  function persistBooking(booking, options) {
     options = options || {};
     var guard = root.BookingGuard;
     var guardReq = unifiedGuardRequestFromBooking(booking);
@@ -1092,13 +1348,17 @@
           var ref = root.firebase.firestore().collection(DATA.COLLECTIONS.bookings).doc(booking.id);
           if (tx && tx.set) {
             tx.set(ref, booking);
+            safeLog('[booking-write]', { bookingId: booking.id, vendorId: booking.vendorId, status: booking.status, source: 'firestore' });
             return { saved: true, source: 'firestore', method: 'transaction', booking: booking };
           }
           return ref.set(booking).then(function() {
+            safeLog('[booking-write]', { bookingId: booking.id, vendorId: booking.vendorId, status: booking.status, source: 'firestore' });
             return { saved: true, source: 'firestore', method: 'firestore', booking: booking };
           });
         }
-        return saveBookingLocal(booking);
+        var localResult = saveBookingLocal(booking);
+        safeLog('[booking-write]', { bookingId: booking.id, vendorId: booking.vendorId, status: booking.status, source: 'static-fallback' });
+        return localResult;
       }, { origin: options.origin || options.vendor || {}, barberVendorIds: options.barberVendorIds })
         .then(function(result) {
           if (!result || result.disposition === 'block') return Promise.reject(bookingGuardError(result));
@@ -1117,7 +1377,10 @@
     }
     if (canUseFirestore()) {
       return root.firebase.firestore().collection(DATA.COLLECTIONS.bookings).doc(booking.id).set(booking)
-        .then(function() { return { saved: true, source: 'firestore', method: 'firestore', booking: booking }; })
+        .then(function() {
+          safeLog('[booking-write]', { bookingId: booking.id, vendorId: booking.vendorId, status: booking.status, source: 'firestore' });
+          return { saved: true, source: 'firestore', method: 'firestore', booking: booking };
+        })
         .catch(function(error) {
           if (options.requireDatabase) return Promise.reject(error);
           return saveBookingLocal(booking);
@@ -1125,7 +1388,9 @@
     }
     if (options.requireDatabase) return Promise.reject(new Error('firestore_unavailable'));
     try {
-      return Promise.resolve(saveBookingLocal(booking));
+      var savedLocal = saveBookingLocal(booking);
+      safeLog('[booking-write]', { bookingId: booking.id, vendorId: booking.vendorId, status: booking.status, source: 'static-fallback' });
+      return Promise.resolve(savedLocal);
     } catch (e) {
       return Promise.reject(e);
     }
@@ -1214,6 +1479,7 @@
     lookupReturningCustomer: lookupReturningCustomer,
     loadCustomerBookings: loadCustomerBookings,
     loadExistingBookings: loadExistingBookings,
+    uploadBookingImages: uploadBookingImages,
     saveBooking: saveBooking,
     updateBookingStatus: updateBookingStatus,
     updateBookingPayment: updateBookingPayment,

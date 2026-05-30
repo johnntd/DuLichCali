@@ -97,15 +97,39 @@
       howMatchingStep5Title: 'Barber confirms',
       howMatchingStep5Body: " — Your matched barber accepts and you receive a confirmation with their name and arrival time.",
       homeAiPreviewKicker: 'Optional',
-      homeAiPreviewTitle: 'See yourself in 3 AI haircut previews',
-      homeAiPreviewIntro: "Upload a selfie and the AI will generate 3 photorealistic previews of your face with different hairstyles. Pick one and we'll attach it to your booking so the barber knows exactly what you want.",
+      homeAiPreviewTitle: 'See yourself in 5 AI hairstyle previews',
+      homeAiPreviewIntro: "For men, women, and children. Upload a selfie, tell us who it's for and what to explore, and the AI generates 5 photorealistic previews of YOUR face with hairstyles matched to you. Pick one and we'll attach it to your booking so the barber knows exactly what you want.",
+      homeAiPreviewWhoForLabel: 'Who is this style for?',
+      homeAiPreviewAudienceMan: 'Man',
+      homeAiPreviewAudienceWoman: 'Woman',
+      homeAiPreviewAudienceChild: 'Child',
+      homeAiPreviewAudienceNeutral: 'No preference',
+      homeAiPreviewExploreLabel: 'What do you want to explore?',
+      homeAiPreviewExploreHaircut: 'Haircut',
+      homeAiPreviewExploreColor: 'Hair color',
+      homeAiPreviewExploreHighlights: 'Highlights',
+      homeAiPreviewExploreCurly: 'Curly style',
+      homeAiPreviewExploreStraight: 'Straight style',
+      homeAiPreviewVibeLabel: 'Style preference',
+      homeAiPreviewVibeProfessional: 'Professional',
+      homeAiPreviewVibeTrendy: 'Trendy',
+      homeAiPreviewVibeLowMaintenance: 'Low maintenance',
+      homeAiPreviewVibeNatural: 'Natural',
+      homeAiPreviewVibeBold: 'Bold',
+      homeAiPreviewAudienceLabel: 'For:',
+      homeAiPreviewColorLabel: 'Color:',
+      homeAiPreviewHighlightLabel: 'Highlights:',
+      homeAiPreviewTextureLabel: 'Texture:',
+      homeAiPreviewWhyLabel: 'Why it fits:',
+      homeAiPreviewSafetyLabel: 'Note:',
+      homeAiPreviewInspirationWarning: 'Style inspiration — your real result may differ.',
       homeAiPreviewConsent: 'I agree the AI may use my selfie to generate haircut previews. The image is shared only with my assigned barber and is never used for marketing.',
       homeAiPreviewUploadLabel: 'Add a selfie (face + hair visible, good light)',
       homeAiPreviewAddPhoto: 'Add a photo or selfie',
       homeAiPreviewAddPhotoHint: "Your phone will let you take a new selfie or pick one from your library.",
       homeAiPreviewChooseFile: 'Choose from gallery',
       homeAiPreviewTakeSelfie: 'Take a selfie',
-      homeAiPreviewAnalyze: 'Get 3 AI hairstyle previews',
+      homeAiPreviewAnalyze: 'Get 5 AI hairstyle previews',
       homeAiPreviewRemove: 'Remove selfie',
       homeAiPreviewDisclosure: 'AI previews are suggestions only — final result may differ. Your selfie stays on this booking and is only shown to the assigned barber.',
       homeAiPreviewBadge: 'AI suggestion',
@@ -115,8 +139,8 @@
       homeAiPreviewCompressing: 'Preparing image…',
       homeAiPreviewCompressFailed: 'Could not read that photo. Try a different one.',
       homeAiPreviewReady: 'Ready. Tap "Get 3 AI hairstyle previews".',
-      homeAiPreviewAnalyzing: 'Generating 3 previews… this can take ~10 seconds.',
-      homeAiPreviewDone: '3 previews ready. Pick one to attach to your booking, or scroll past.',
+      homeAiPreviewAnalyzing: 'Analyzing your photo and generating 5 previews… this can take ~15-20 seconds.',
+      homeAiPreviewDone: '5 previews ready. Pick one to attach to your booking, or scroll past.',
       homeAiPreviewProviderError: 'AI preview is temporarily unavailable. You can still book without it — the barber will discuss styles in person.',
       homeAiPreviewSelectedAck: 'Style attached. Continue booking with the chat below.',
       homeAiPreviewRemoved: 'Selfie removed.',
@@ -204,11 +228,7 @@
       preferredBarberNoneOption: 'No preference — match me automatically',
       preferredBarberAckAuto: "Got it — I'll match you with the best available barber.",
       preferredBarberAckChosen: "Great — I'll route this to {name}.",
-      preferredBarberNotAvailable: "{name} doesn't cover {city}. Would you like the next available barber?",
-      serviceClassicName: 'Classic Mobile Haircut',
-      serviceClassicDesc: 'In-home haircut with time reserved for setup and cleanup.',
-      serviceComboName: 'Haircut and Beard Trim',
-      serviceComboDesc: 'Mobile haircut, beard shaping, and light cleanup at your address.'
+      preferredBarberNotAvailable: "{name} doesn't cover {city}. Would you like the next available barber?"
     },
     vi: {
       pageTitle: 'Thợ Cắt Tóc Tại Nhà | Du Lich Cali',
@@ -301,15 +321,39 @@
       howMatchingStep5Title: 'Thợ xác nhận',
       howMatchingStep5Body: ' — Thợ được ghép sẽ chấp nhận và bạn nhận xác nhận có tên thợ và giờ đến.',
       homeAiPreviewKicker: 'Không bắt buộc',
-      homeAiPreviewTitle: 'Xem chính bạn trong 3 kiểu tóc do AI tạo',
-      homeAiPreviewIntro: 'Tải ảnh selfie và AI sẽ tạo 3 hình xem trước chân thực với các kiểu tóc khác nhau. Chọn một kiểu và tụi em sẽ đính kèm vào lịch hẹn để thợ biết chính xác bạn muốn gì.',
+      homeAiPreviewTitle: 'Xem chính bạn trong 5 kiểu tóc do AI tạo',
+      homeAiPreviewIntro: 'Dành cho nam, nữ và trẻ em. Tải ảnh selfie, cho biết kiểu này dành cho ai và muốn thử gì, AI sẽ tạo 5 hình xem trước chân thực trên KHUÔN MẶT của bạn với các kiểu tóc phù hợp. Chọn một kiểu và tụi em sẽ đính kèm vào lịch hẹn để thợ biết chính xác bạn muốn gì.',
+      homeAiPreviewWhoForLabel: 'Kiểu tóc này dành cho ai?',
+      homeAiPreviewAudienceMan: 'Nam',
+      homeAiPreviewAudienceWoman: 'Nữ',
+      homeAiPreviewAudienceChild: 'Trẻ em',
+      homeAiPreviewAudienceNeutral: 'Không xác định',
+      homeAiPreviewExploreLabel: 'Bạn muốn thử gì?',
+      homeAiPreviewExploreHaircut: 'Cắt tóc',
+      homeAiPreviewExploreColor: 'Nhuộm màu',
+      homeAiPreviewExploreHighlights: 'Highlight',
+      homeAiPreviewExploreCurly: 'Kiểu xoăn',
+      homeAiPreviewExploreStraight: 'Kiểu thẳng',
+      homeAiPreviewVibeLabel: 'Phong cách mong muốn',
+      homeAiPreviewVibeProfessional: 'Lịch sự',
+      homeAiPreviewVibeTrendy: 'Thời thượng',
+      homeAiPreviewVibeLowMaintenance: 'Dễ chăm sóc',
+      homeAiPreviewVibeNatural: 'Tự nhiên',
+      homeAiPreviewVibeBold: 'Nổi bật',
+      homeAiPreviewAudienceLabel: 'Dành cho:',
+      homeAiPreviewColorLabel: 'Màu tóc:',
+      homeAiPreviewHighlightLabel: 'Highlight:',
+      homeAiPreviewTextureLabel: 'Kết cấu:',
+      homeAiPreviewWhyLabel: 'Vì sao hợp:',
+      homeAiPreviewSafetyLabel: 'Lưu ý:',
+      homeAiPreviewInspirationWarning: 'Hình tham khảo — kết quả thật có thể khác.',
       homeAiPreviewConsent: 'Tôi đồng ý cho AI dùng ảnh selfie để tạo hình xem trước kiểu tóc. Ảnh chỉ chia sẻ với thợ phụ trách và không dùng cho mục đích quảng cáo.',
       homeAiPreviewUploadLabel: 'Thêm ảnh selfie (thấy rõ mặt và tóc, đủ sáng)',
       homeAiPreviewAddPhoto: 'Thêm ảnh hoặc selfie',
       homeAiPreviewAddPhotoHint: 'Điện thoại sẽ cho bạn chụp selfie mới hoặc chọn từ thư viện.',
       homeAiPreviewChooseFile: 'Chọn từ thư viện',
       homeAiPreviewTakeSelfie: 'Chụp ảnh selfie',
-      homeAiPreviewAnalyze: 'Lấy 3 hình xem trước kiểu tóc từ AI',
+      homeAiPreviewAnalyze: 'Lấy 5 hình xem trước kiểu tóc từ AI',
       homeAiPreviewRemove: 'Xóa selfie',
       homeAiPreviewDisclosure: 'Hình AI chỉ mang tính tham khảo — kết quả thực tế có thể khác. Selfie chỉ lưu trên lịch hẹn này và chỉ thợ phụ trách xem được.',
       homeAiPreviewBadge: 'Gợi ý AI',
@@ -319,8 +363,8 @@
       homeAiPreviewCompressing: 'Đang chuẩn bị ảnh…',
       homeAiPreviewCompressFailed: 'Không đọc được ảnh đó. Vui lòng thử ảnh khác.',
       homeAiPreviewReady: 'Sẵn sàng. Nhấn "Lấy 3 hình xem trước".',
-      homeAiPreviewAnalyzing: 'Đang tạo 3 hình xem trước… mất khoảng 10 giây.',
-      homeAiPreviewDone: '3 hình đã sẵn. Chọn một để đính kèm lịch hẹn, hoặc bỏ qua.',
+      homeAiPreviewAnalyzing: 'Đang phân tích ảnh và tạo 5 hình xem trước… mất khoảng 15-20 giây.',
+      homeAiPreviewDone: '5 hình đã sẵn. Chọn một để đính kèm lịch hẹn, hoặc bỏ qua.',
       homeAiPreviewProviderError: 'AI preview tạm thời không khả dụng. Bạn vẫn có thể đặt lịch — thợ sẽ trao đổi kiểu tóc trực tiếp.',
       homeAiPreviewSelectedAck: 'Đã đính kèm kiểu tóc. Tiếp tục đặt lịch trong khung chat bên dưới.',
       homeAiPreviewRemoved: 'Đã xóa selfie.',
@@ -408,11 +452,7 @@
       preferredBarberNoneOption: 'Không yêu cầu — ghép tự động giúp em',
       preferredBarberAckAuto: 'Đã rõ — tụi em sẽ ghép với thợ phù hợp nhất.',
       preferredBarberAckChosen: 'Tuyệt — tụi em sẽ chuyển yêu cầu cho {name}.',
-      preferredBarberNotAvailable: '{name} không phục vụ {city}. Bạn có muốn dùng thợ kế tiếp đang rảnh không?',
-      serviceClassicName: 'Cắt Tóc Tận Nhà Cơ Bản',
-      serviceClassicDesc: 'Cắt tóc tại nhà với thời gian chuẩn bị và dọn dẹp.',
-      serviceComboName: 'Cắt Tóc và Tỉa Râu',
-      serviceComboDesc: 'Cắt tóc lưu động, tạo dáng râu, và dọn dẹp nhẹ tại địa chỉ của bạn.'
+      preferredBarberNotAvailable: '{name} không phục vụ {city}. Bạn có muốn dùng thợ kế tiếp đang rảnh không?'
     },
     es: {
       pageTitle: 'Barbero Móvil | Du Lich Cali',
@@ -505,15 +545,39 @@
       howMatchingStep5Title: 'El barbero confirma',
       howMatchingStep5Body: ' — El barbero asignado acepta y recibirá una confirmación con su nombre y hora de llegada.',
       homeAiPreviewKicker: 'Opcional',
-      homeAiPreviewTitle: 'Vea su rostro en 3 cortes generados por AI',
-      homeAiPreviewIntro: 'Suba una selfie y la AI generará 3 vistas previas fotorrealistas de su rostro con distintos cortes. Elija uno y lo adjuntaremos a su cita para que el barbero sepa exactamente qué quiere.',
+      homeAiPreviewTitle: 'Vea su rostro en 5 peinados generados por AI',
+      homeAiPreviewIntro: 'Para hombres, mujeres y niños. Suba una selfie, indique para quién es y qué desea explorar, y la AI generará 5 vistas previas fotorrealistas de SU rostro con peinados a su medida. Elija uno y lo adjuntaremos a su cita para que el barbero sepa exactamente qué quiere.',
+      homeAiPreviewWhoForLabel: '¿Para quién es este estilo?',
+      homeAiPreviewAudienceMan: 'Hombre',
+      homeAiPreviewAudienceWoman: 'Mujer',
+      homeAiPreviewAudienceChild: 'Niño/a',
+      homeAiPreviewAudienceNeutral: 'Sin preferencia',
+      homeAiPreviewExploreLabel: '¿Qué desea explorar?',
+      homeAiPreviewExploreHaircut: 'Corte',
+      homeAiPreviewExploreColor: 'Color',
+      homeAiPreviewExploreHighlights: 'Mechas',
+      homeAiPreviewExploreCurly: 'Estilo rizado',
+      homeAiPreviewExploreStraight: 'Estilo liso',
+      homeAiPreviewVibeLabel: 'Preferencia de estilo',
+      homeAiPreviewVibeProfessional: 'Profesional',
+      homeAiPreviewVibeTrendy: 'Moderno',
+      homeAiPreviewVibeLowMaintenance: 'Bajo mantenimiento',
+      homeAiPreviewVibeNatural: 'Natural',
+      homeAiPreviewVibeBold: 'Atrevido',
+      homeAiPreviewAudienceLabel: 'Para:',
+      homeAiPreviewColorLabel: 'Color:',
+      homeAiPreviewHighlightLabel: 'Mechas:',
+      homeAiPreviewTextureLabel: 'Textura:',
+      homeAiPreviewWhyLabel: 'Por qué le queda:',
+      homeAiPreviewSafetyLabel: 'Nota:',
+      homeAiPreviewInspirationWarning: 'Estilo de inspiración — su resultado real puede variar.',
       homeAiPreviewConsent: 'Acepto que la AI use mi selfie para generar vistas previas. La imagen se comparte solo con el barbero asignado y nunca se usa para marketing.',
       homeAiPreviewUploadLabel: 'Agregue una selfie (cara y cabello visibles, buena luz)',
       homeAiPreviewAddPhoto: 'Agregar foto o selfie',
       homeAiPreviewAddPhotoHint: 'Su teléfono le permitirá tomar una selfie o elegir una de la galería.',
       homeAiPreviewChooseFile: 'Elegir de la galería',
       homeAiPreviewTakeSelfie: 'Tomar una selfie',
-      homeAiPreviewAnalyze: 'Obtener 3 vistas previas con AI',
+      homeAiPreviewAnalyze: 'Obtener 5 vistas previas con AI',
       homeAiPreviewRemove: 'Eliminar selfie',
       homeAiPreviewDisclosure: 'Las vistas previas AI son sólo sugerencias — el resultado real puede variar. Su selfie queda en esta cita y sólo la ve el barbero asignado.',
       homeAiPreviewBadge: 'Sugerencia AI',
@@ -523,8 +587,8 @@
       homeAiPreviewCompressing: 'Preparando imagen…',
       homeAiPreviewCompressFailed: 'No pudimos leer esa foto. Pruebe otra.',
       homeAiPreviewReady: 'Listo. Toque "Obtener 3 vistas previas con AI".',
-      homeAiPreviewAnalyzing: 'Generando 3 vistas previas… toma ~10 segundos.',
-      homeAiPreviewDone: '3 vistas listas. Elija una para adjuntar a su cita, o salte.',
+      homeAiPreviewAnalyzing: 'Analizando su foto y generando 5 vistas previas… toma ~15-20 segundos.',
+      homeAiPreviewDone: '5 vistas listas. Elija una para adjuntar a su cita, o salte.',
       homeAiPreviewProviderError: 'La vista previa AI no está disponible. Puede reservar igualmente — el barbero conversará los estilos en persona.',
       homeAiPreviewSelectedAck: 'Estilo adjuntado. Continúe la reserva en el chat de abajo.',
       homeAiPreviewRemoved: 'Selfie eliminada.',
@@ -612,18 +676,11 @@
       preferredBarberNoneOption: 'Sin preferencia — empareja automáticamente',
       preferredBarberAckAuto: 'Entendido — le emparejaré con el mejor barbero disponible.',
       preferredBarberAckChosen: 'Genial — enviaré esto a {name}.',
-      preferredBarberNotAvailable: '{name} no cubre {city}. ¿Quiere el siguiente barbero disponible?',
-      serviceClassicName: 'Corte Móvil Clásico',
-      serviceClassicDesc: 'Corte a domicilio con tiempo reservado para preparación y limpieza.',
-      serviceComboName: 'Corte y Arreglo de Barba',
-      serviceComboDesc: 'Corte móvil, perfilado de barba, y limpieza ligera en su dirección.'
+      preferredBarberNotAvailable: '{name} no cubre {city}. ¿Quiere el siguiente barbero disponible?'
     }
   };
 
-  var SERVICE_COPY = {
-    'classic-mobile-cut': { name: 'serviceClassicName', desc: 'serviceClassicDesc' },
-    'mobile-haircut-beard': { name: 'serviceComboName', desc: 'serviceComboDesc' }
-  };
+  var SERVICE_COPY = {};
 
   var LOCATION_STORAGE_KEY = 'mb_customer_location';
   var LOCATION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
@@ -652,6 +709,10 @@
       consent: false,
       selfieDataUrl: '',
       summary: '',
+      // Who the style is for + what to explore + the desired vibe. Drives the
+      // all-audience AI (men / women / children + haircut / color / highlights
+      // / curly / straight). Defaults: neutral audience, haircut-only.
+      options: { audience: 'neutral', explore: ['haircut'], preference: '' },
       recommendations: [],
       selectedStyleId: '',
       selectedStylePreviewUrl: '',
@@ -987,7 +1048,69 @@
     return picked ? _vendorWithPromos(picked) : null;
   }
 
+  // Route the operating vendor from the address the customer has provided in
+  // the chat (current session + the incoming message), so the booking goes to
+  // the barber who serves that area — Orange County → Michael, Bay Area → Tim,
+  // both from the same landing page. Persists to state.routedVendor (priority 1
+  // in preferredVendor) so the choice stays stable for the rest of the session
+  // and the conversation never flips vendors mid-booking.
+  function routeVendorFromConversation(message) {
+    if (!AGENT || !BOOKING || typeof BOOKING.findVendorForAddress !== 'function') return;
+    var vendors = DATA && DATA.sampleVendors
+      ? DATA.sampleVendors.filter(function(v) { return v.active !== false; })
+      : [];
+    if (!vendors.length) return;
+    var session = state.agentSession;
+    var current = (session && session.state)
+      || (typeof AGENT.emptyState === 'function' ? AGENT.emptyState(state.lang) : {});
+    var draftState = current;
+    // Fold the incoming message into a THROWAWAY clone so we can route on the
+    // same turn the address arrives. mergeState mutates its first argument, so
+    // we clone to avoid pre-applying the update to the live session state.
+    if (message && typeof AGENT.extractUpdate === 'function' && typeof AGENT.mergeState === 'function') {
+      try {
+        var allAreas = [];
+        vendors.forEach(function(v) {
+          (v.serviceAreas || []).forEach(function(a) {
+            if (allAreas.indexOf(a) < 0) allAreas.push(a);
+          });
+        });
+        var liteCtx = { now: new Date(), services: [], vendor: { serviceAreas: allAreas } };
+        var upd = AGENT.extractUpdate(message, liteCtx, current);
+        draftState = AGENT.mergeState(Object.assign({}, current), upd, new Date());
+      } catch (e) { draftState = current; }
+    }
+    var addr = {
+      address: draftState.address || '',
+      city: draftState.city || '',
+      zip: draftState.zip || ''
+    };
+    if (!String(addr.city).trim() && !String(addr.zip).trim()) return;
+    var routed = BOOKING.findVendorForAddress(addr, { vendors: vendors });
+    if (routed) {
+      state.routedVendor = routed;
+      var area = String(addr.city || addr.zip || '').trim();
+      state.routingReason = 'address_match ' + area + ' -> ' + (routed.id || '');
+      if (root.console && root.console.log) {
+        try {
+          root.console.log('[mobile-barber-agent-routing]', JSON.stringify({
+            phone: (current && current.phone) || (draftState && draftState.phone) || null,
+            matchedCustomer: !!(current && current.customerLookupStatus === 'found'),
+            address: addr.address || '',
+            city: addr.city || '',
+            zip: addr.zip || '',
+            assignedBarberId: routed.assignedBarberId || routed.barberId || routed.id || null,
+            routingReason: state.routingReason
+          }));
+        } catch (e) { /* logging is best-effort */ }
+      }
+    }
+  }
+
   function servicesForVendor(vendorId) {
+    if (root._mbVendorServicesByVendor && Array.isArray(root._mbVendorServicesByVendor[vendorId])) {
+      return root._mbVendorServicesByVendor[vendorId].slice();
+    }
     if (DATA && typeof DATA.listServicesForVendor === 'function') return DATA.listServicesForVendor(vendorId);
     return (DATA && DATA.sampleServices ? DATA.sampleServices : []).filter(function(service) {
       return service.vendorId === vendorId && service.active !== false;
@@ -1017,9 +1140,15 @@
       existingBookings: state.existingBookings,
       now: new Date(),
       phoneIntake: root.PhoneIntake || null,
+      routingReason: state.routingReason || '',
       customerLookupProvider: function(phone) {
-        if (!BOOKING || typeof BOOKING.lookupReturningCustomer !== 'function' || !vendor) return Promise.resolve(null);
-        return BOOKING.lookupReturningCustomer(vendor.id, phone);
+        if (!BOOKING || typeof BOOKING.lookupReturningCustomer !== 'function') return Promise.resolve(null);
+        // Look up the phone across ALL barbers (omit vendorId) so a returning
+        // Bay Area customer is recognized even before their address has routed
+        // them to Tim — the default vendor before routing is Michael (OC).
+        // Routing to the correct barber happens once the saved address is
+        // applied, on the next turn.
+        return BOOKING.lookupReturningCustomer(null, phone);
       },
       aiBrainProvider: _buildAIBrainProvider()
     };
@@ -1052,9 +1181,13 @@
   function sendAgentMessage(message, options) {
     options = options || {};
     if (!AGENT || !BOOKING) return Promise.resolve({ response: t('assistantCopy') });
+    ensureAgentSession();
+    // Resolve the barber from the address the customer has given in this chat
+    // BEFORE building the agent context, so services/promos/hours/blocks and
+    // the availability check all run against the barber who serves that area.
+    routeVendorFromConversation(message);
     var vendor = preferredVendor();
     if (!vendor) return Promise.resolve({ response: t('assistantCopy') });
-    ensureAgentSession();
     var selectedPayment = selectedPaymentMethod();
     if (selectedPayment && state.agentSession && state.agentSession.state) {
       state.agentSession.state = AGENT.mergeState(
@@ -1103,9 +1236,16 @@
         return result;
       });
     };
-    return BOOKING.loadExistingBookings(vendor.id).then(finish).catch(function() {
-      return finish([]);
-    });
+    return refreshLiveBookingData(vendor)
+      .then(function(live) {
+        vendor = live.vendor || vendor;
+        return BOOKING.loadExistingBookings(vendor.id).then(finish);
+      })
+      .catch(function() {
+        return BOOKING.loadExistingBookings(vendor.id).then(finish).catch(function() {
+          return finish([]);
+        });
+      });
   }
 
   function openAssistantPanel(mode) {
@@ -2148,6 +2288,28 @@
     if (aiFile)    aiFile.addEventListener('change', handleAiUpload);
     if (aiAnalyze) aiAnalyze.addEventListener('click', handleAiAnalyze);
     if (aiRemove)  aiRemove.addEventListener('click', function() { resetAiPreviewSelfie(false); });
+    // Audience + explore + preference selectors (men / women / children +
+    // haircut / color / highlights / curly / straight + vibe). A single change
+    // listener on the container reads all three groups into state.
+    var aiOptions = document.getElementById('mbHomeAiPreviewOptions');
+    if (aiOptions) aiOptions.addEventListener('change', handleAiOptionsChange);
+  }
+
+  function handleAiOptionsChange() {
+    var root2 = document.getElementById('mbHomeAiPreviewOptions');
+    if (!root2) return;
+    var audienceNode = root2.querySelector('input[name="mbAiAudience"]:checked');
+    var prefNode = root2.querySelector('input[name="mbAiPref"]:checked');
+    var explore = [];
+    root2.querySelectorAll('input[name="mbAiExplore"]:checked').forEach(function(n) {
+      if (n.value) explore.push(n.value);
+    });
+    if (!explore.length) explore = ['haircut'];
+    state.aiPreview.options = {
+      audience: audienceNode ? String(audienceNode.value || 'neutral') : 'neutral',
+      explore: explore,
+      preference: prefNode ? String(prefNode.value || '') : ''
+    };
   }
 
   // ── AI Haircut Preview (marketplace landing) ──────────────────────────
@@ -2172,6 +2334,62 @@
     img.className = 'mb-ai-preview__selfie-img';
     node.appendChild(img);
     if (remove) remove.hidden = false;
+  }
+
+  function aiAudienceLabel(aud) {
+    var map = {
+      man: 'homeAiPreviewAudienceMan',
+      woman: 'homeAiPreviewAudienceWoman',
+      child: 'homeAiPreviewAudienceChild',
+      neutral: 'homeAiPreviewAudienceNeutral'
+    };
+    return t(map[aud] || 'homeAiPreviewAudienceNeutral') || aud;
+  }
+
+  // Lean per-style metadata persisted on booking.recommendedStyles[] so the
+  // vendor can review all 5 options (image bytes are NOT stored here — only the
+  // selected preview is kept, compressed, in selectedStylePreviewUrl).
+  function mapRecommendedStyles(recs) {
+    return (recs || []).map(function(r) {
+      return {
+        styleId: r.styleId || '',
+        title: r.title || '',
+        targetAudience: r.targetAudience || '',
+        explanation: r.explanation || '',
+        maintenance: r.maintenance || '',
+        barberNotes: r.barberNotes || '',
+        colorRecommendation: r.colorRecommendation || '',
+        highlightRecommendation: r.highlightRecommendation || '',
+        curlStraightRecommendation: r.curlStraightRecommendation || '',
+        whyItFitsFace: r.whyItFitsFace || '',
+        safetyNotes: r.safetyNotes || ''
+      };
+    });
+  }
+
+  // Canonical all-audience attributes for the SELECTED style. Threaded into
+  // every booking path (inline card, manual form, chat agent).
+  function aiSelectedStyleFields(rec) {
+    rec = rec || {};
+    return {
+      selectedAudienceType: rec.targetAudience || '',
+      selectedColorRecommendation: rec.colorRecommendation || '',
+      selectedHighlightRecommendation: rec.highlightRecommendation || '',
+      selectedTexturePreference: rec.curlStraightRecommendation || ''
+    };
+  }
+
+  // Append a "<label> value" paragraph to an AI rec card only when the value is
+  // non-empty (color/highlight/texture recs are empty unless the customer
+  // asked the AI to explore them).
+  function appendAiRecRow(body, labelKey, value, className) {
+    var val = (value == null) ? '' : String(value).trim();
+    if (!val) return;
+    var p = el('p', className || 'mb-ai-rec-card__rec-row');
+    var strong = el('strong'); strong.textContent = (t(labelKey) || '') + ' ';
+    p.appendChild(strong);
+    p.appendChild(document.createTextNode(val));
+    body.appendChild(p);
   }
 
   function renderAiResults() {
@@ -2209,9 +2427,26 @@
       var badge = el('span', 'mb-ai-rec-card__ai-badge');
       badge.textContent = t('homeAiPreviewBadge') || 'AI suggestion';
       thumb.appendChild(badge);
+      // When the AI is not confident it preserved the exact person, the
+      // preview is labelled "style inspiration" rather than "your preview".
+      if (rec.previewKind === 'style_inspiration') {
+        var inspWarn = el('span', 'mb-ai-rec-card__inspiration');
+        inspWarn.textContent = t('homeAiPreviewInspirationWarning') || 'Style inspiration — your real result may differ.';
+        thumb.appendChild(inspWarn);
+      }
 
       var body = el('div', 'mb-ai-rec-card__body');
       var title = el('strong', 'mb-ai-rec-card__title'); title.textContent = rec.title || '';
+      // Audience chip (man / woman / child / neutral) so the customer sees the
+      // style is matched to the right person.
+      if (rec.targetAudience) {
+        var audChip = el('span', 'mb-ai-rec-card__audience');
+        audChip.textContent = aiAudienceLabel(rec.targetAudience);
+        body.appendChild(title);
+        body.appendChild(audChip);
+      } else {
+        body.appendChild(title);
+      }
       var meta = el('span', 'mb-ai-rec-card__maintenance');
       if (rec.maintenance) {
         meta.textContent = (t('homeAiPreviewMaintenanceLabel') || 'Maintenance:') + ' ' + rec.maintenance;
@@ -2219,10 +2454,15 @@
       var desc = el('p', 'mb-ai-rec-card__desc'); desc.textContent = rec.explanation || '';
       var notes = el('p', 'mb-ai-rec-card__barber-notes');
       notes.textContent = (t('homeAiPreviewBarberNotesLabel') || 'Barber notes:') + ' ' + (rec.barberNotes || '');
-      body.appendChild(title);
       if (rec.maintenance) body.appendChild(meta);
       body.appendChild(desc);
+      // Why-it-fits + per-option recommendations (only shown when present).
+      appendAiRecRow(body, 'homeAiPreviewWhyLabel', rec.whyItFitsFace, 'mb-ai-rec-card__why');
+      appendAiRecRow(body, 'homeAiPreviewColorLabel', rec.colorRecommendation, 'mb-ai-rec-card__color');
+      appendAiRecRow(body, 'homeAiPreviewHighlightLabel', rec.highlightRecommendation, 'mb-ai-rec-card__highlight');
+      appendAiRecRow(body, 'homeAiPreviewTextureLabel', rec.curlStraightRecommendation, 'mb-ai-rec-card__texture');
       body.appendChild(notes);
+      appendAiRecRow(body, 'homeAiPreviewSafetyLabel', rec.safetyNotes, 'mb-ai-rec-card__safety');
 
       var actions = el('div', 'mb-ai-rec-card__actions');
       var bookBtn = el('button', 'mb-button mb-button--primary mb-ai-rec-card__cta');
@@ -2519,26 +2759,23 @@
       var rec = (aiSel.recommendations || []).filter(function(r) {
         return r && r.styleId === aiSel.selectedStyleId;
       })[0] || null;
-      aiAttachments = {
+      aiAttachments = Object.assign({
         selfieDataUrl: aiSel.selfieDataUrl || '',
         aiAnalysisSummary: aiSel.summary || '',
         aiAnalysisConsent: aiSel.consent ? 'true' : 'false',
-        recommendedStyles: (aiSel.recommendations || []).map(function(r) {
-          return {
-            styleId: r.styleId || '',
-            title: r.title || '',
-            explanation: r.explanation || '',
-            maintenance: r.maintenance || '',
-            barberNotes: r.barberNotes || ''
-          };
-        }),
+        recommendedStyles: mapRecommendedStyles(aiSel.recommendations),
         selectedAiStyleId: aiSel.selectedStyleId,
         selectedAiStyleName: rec ? rec.title || '' : '',
         selectedAiStyleImage: aiSel.selectedStylePreviewUrl || '',
         selectedAiStyleDescription: rec ? rec.explanation || '' : '',
         selectedAiBarberNotes: rec ? rec.barberNotes || '' : '',
-        selectedAiMaintenanceLevel: rec ? rec.maintenance || '' : ''
-      };
+        selectedAiMaintenanceLevel: rec ? rec.maintenance || '' : '',
+        selectedHaircutGeneratedAt: new Date().toISOString(),
+        selectedHaircutPromptSnapshot: aiSel.summary || '',
+        // Parity with the inline-card path: carry the session id so the
+        // booking-write step can pull the full-res preview from localStorage.
+        aiPreviewSessionId: aiSel.sessionId || ''
+      }, aiSelectedStyleFields(rec));
     }
 
     var finalDraft = Object.assign({
@@ -2549,7 +2786,20 @@
       source: 'customer_form'
     }, draft, aiAttachments);
 
-    BOOKING.loadExistingBookings(vendor.id)
+    refreshLiveBookingData(vendor)
+      .then(function(live) {
+        vendor = live.vendor || vendor;
+        services = live.services && live.services.length ? live.services : services;
+        resolvedService = services.filter(function(s) { return s && s.id === resolvedService.id; })[0]
+          || services.filter(function(s) { return s && s.slug === resolvedService.slug; })[0]
+          || services.filter(function(s) { return s && s.name === resolvedService.name; })[0]
+          || resolvedService;
+        finalDraft.serviceId = resolvedService.id;
+        finalDraft._liveDataSource = live.source;
+        availability = _vendorAvailabilityRows();
+        unavailableBlocks = _vendorUnavailableBlocks(vendor.id);
+        return BOOKING.loadExistingBookings(vendor.id);
+      })
       .catch(function() { return []; })
       .then(function(existing) {
         var avail = BOOKING.checkAvailability({
@@ -2559,7 +2809,8 @@
           unavailableBlocks: unavailableBlocks,
           draft: finalDraft,
           existingBookings: existing,
-          now: new Date()
+          now: new Date(),
+          liveDataSource: finalDraft._liveDataSource || 'static-fallback'
         });
         if (!avail || !avail.canCreate) {
           throw new Error(avail && avail.key ? avail.key : 'unavailable');
@@ -2815,26 +3066,21 @@
 
     // Build the AI-style draft once so both the chat-attach and direct paths
     // see the same canonical reference.
-    var aiAttachments = {
+    var aiAttachments = Object.assign({
       selfieDataUrl: state.aiPreview.selfieDataUrl || '',
       aiAnalysisSummary: state.aiPreview.summary || '',
       aiAnalysisConsent: state.aiPreview.consent ? 'true' : 'false',
-      recommendedStyles: (state.aiPreview.recommendations || []).map(function(r) {
-        return {
-          styleId: r.styleId || '',
-          title: r.title || '',
-          explanation: r.explanation || '',
-          maintenance: r.maintenance || '',
-          barberNotes: r.barberNotes || ''
-        };
-      }),
+      recommendedStyles: mapRecommendedStyles(state.aiPreview.recommendations),
       selectedAiStyleId: styleId,
       selectedAiStyleName: rec.title || '',
       selectedAiStyleImage: state.aiPreview.selectedStylePreviewUrl || fullDataUrl || '',
       selectedAiStyleDescription: rec.explanation || '',
       selectedAiBarberNotes: rec.barberNotes || '',
-      selectedAiMaintenanceLevel: rec.maintenance || ''
-    };
+      selectedAiMaintenanceLevel: rec.maintenance || '',
+      selectedHaircutGeneratedAt: new Date().toISOString(),
+      selectedHaircutPromptSnapshot: state.aiPreview.summary || '',
+      aiPreviewSessionId: state.aiPreview.sessionId || ''
+    }, aiSelectedStyleFields(rec));
 
     var finalDraft = Object.assign({
       customerEmail: '',
@@ -2844,7 +3090,20 @@
       source: 'customer_form'
     }, draft, aiAttachments);
 
-    BOOKING.loadExistingBookings(vendor.id)
+    refreshLiveBookingData(vendor)
+      .then(function(live) {
+        vendor = live.vendor || vendor;
+        services = live.services && live.services.length ? live.services : services;
+        service = services.filter(function(s) { return s && s.id === service.id; })[0]
+          || services.filter(function(s) { return s && s.slug === service.slug; })[0]
+          || services.filter(function(s) { return s && s.name === service.name; })[0]
+          || service;
+        finalDraft.serviceId = service.id;
+        finalDraft._liveDataSource = live.source;
+        availability = _vendorAvailabilityRows();
+        unavailableBlocks = _vendorUnavailableBlocks(vendor.id);
+        return BOOKING.loadExistingBookings(vendor.id);
+      })
       .catch(function() { return []; })
       .then(function(existing) {
         var avail = BOOKING.checkAvailability({
@@ -2854,7 +3113,8 @@
           unavailableBlocks: unavailableBlocks,
           draft: finalDraft,
           existingBookings: existing,
-          now: new Date()
+          now: new Date(),
+          liveDataSource: finalDraft._liveDataSource || 'static-fallback'
         });
         if (!avail || !avail.canCreate) {
           throw new Error(avail && avail.key ? avail.key : 'unavailable');
@@ -2910,11 +3170,13 @@
     // a <fieldset disabled> that we toggle. Fall back to the legacy single
     // input ID if it's still present anywhere.
     var fieldset = document.getElementById('mbHomeAiPreviewSourceFieldset');
+    var optionsFieldset = document.getElementById('mbHomeAiPreviewOptionsFieldset');
     var fileInput = document.getElementById('mbHomeAiPreviewFile');
     var legacyUpload = document.getElementById('mbHomeAiPreviewUpload');
     var analyze  = document.getElementById('mbHomeAiPreviewAnalyze');
     state.aiPreview.consent = !!(checkbox && checkbox.checked);
     if (fieldset)     fieldset.disabled = !state.aiPreview.consent;
+    if (optionsFieldset) optionsFieldset.disabled = !state.aiPreview.consent;
     if (fileInput)    fileInput.disabled = !state.aiPreview.consent;
     if (legacyUpload) legacyUpload.disabled = !state.aiPreview.consent;
     if (analyze)      analyze.disabled = !state.aiPreview.consent || !state.aiPreview.selfieDataUrl;
@@ -2963,9 +3225,13 @@
     state.aiPreview.sessionId = 'ses_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
     renderAiResults();
     setAiStatus(t('homeAiPreviewAnalyzing'));
+    var opts = state.aiPreview.options || { audience: 'neutral', explore: ['haircut'], preference: '' };
     root.MobileBarberAIPreview.generate({
       dataUrl: state.aiPreview.selfieDataUrl,
-      lang: state.lang
+      lang: state.lang,
+      audience: opts.audience || 'neutral',
+      explore: (opts.explore && opts.explore.length) ? opts.explore : ['haircut'],
+      preference: opts.preference || ''
     }).then(function(result) {
       state.aiPreview.analyzing = false;
       if (!result || !result.ok) {
@@ -3047,15 +3313,7 @@
     // Strip the bulk previewDataUrl from each rec — keep only metadata so
     // the booking doc stays under Firestore's 1 MB cap. The selected
     // preview is stored separately in selectedStylePreviewUrl (compressed).
-    booking.recommendedStyles = (ai.recommendations || []).map(function(r) {
-      return {
-        styleId: r.styleId || '',
-        title: r.title || '',
-        explanation: r.explanation || '',
-        maintenance: r.maintenance || '',
-        barberNotes: r.barberNotes || ''
-      };
-    });
+    booking.recommendedStyles = mapRecommendedStyles(ai.recommendations);
     booking.selectedStyleId = ai.selectedStyleId || '';
     booking.selectedStylePreviewUrl = ai.selectedStylePreviewUrl || '';
     // Mirror the canonical AI-style reference fields so the vendor portal
@@ -3070,6 +3328,34 @@
     booking.selectedAiStyleDescription = (selectedRec && selectedRec.explanation) || '';
     booking.selectedAiBarberNotes = (selectedRec && selectedRec.barberNotes) || '';
     booking.selectedAiMaintenanceLevel = (selectedRec && selectedRec.maintenance) || '';
+    booking.selectedAudienceType = (selectedRec && selectedRec.targetAudience) || '';
+    booking.selectedColorRecommendation = (selectedRec && selectedRec.colorRecommendation) || '';
+    booking.selectedHighlightRecommendation = (selectedRec && selectedRec.highlightRecommendation) || '';
+    booking.selectedTexturePreference = (selectedRec && selectedRec.curlStraightRecommendation) || '';
+    booking.selectedHaircutSource = 'ai_generated';
+    booking.selectedHaircutTitle = booking.selectedAiStyleName || booking.serviceName || '';
+    booking.selectedHaircutDescription = booking.selectedAiStyleDescription || booking.aiAnalysisSummary || '';
+    booking.selectedHaircutImageUrl = booking.selectedAiStyleImage || '';
+    booking.selectedHaircutImageStoragePath = '';
+    booking.selectedHaircutThumbnailUrl = booking.selectedAiStyleImage || '';
+    booking.selectedHaircutBarberNotes = booking.selectedAiBarberNotes || booking.barberCuttingNotes || '';
+    booking.selectedHaircutMaintenanceLevel = booking.selectedAiMaintenanceLevel || '';
+    booking.selectedHaircutGeneratedAt = new Date().toISOString();
+    booking.selectedHaircutPromptSnapshot = booking.aiAnalysisSummary || '';
+    booking.customerSelfieUrl = ai.consent ? (ai.selfieDataUrl || '') : '';
+    booking.customerSelfieStoragePath = '';
+    booking.aiPreviewSessionId = ai.sessionId || '';
+    if (root.console && root.console.log) {
+      try {
+        root.console.log('[haircut-reference]', JSON.stringify({
+          bookingId: booking.id || null,
+          source: booking.selectedHaircutSource,
+          imageUrl: booking.selectedHaircutImageUrl,
+          storagePath: booking.selectedHaircutImageStoragePath,
+          barberNotes: booking.selectedHaircutBarberNotes
+        }));
+      } catch (e) {}
+    }
     return booking;
   }
 
@@ -3113,6 +3399,7 @@
   // through _vendorWithPromos(vendor) to get a writable shallow clone with
   // .promotions populated from the overlay.
   window._mbVendorPromosByVendor = window._mbVendorPromosByVendor || {};
+  window._mbVendorServicesByVendor = window._mbVendorServicesByVendor || {};
   // Parallel overlays for the other two pieces of live vendor data the
   // booking guard needs: working hours (availability) and calendar blocks.
   // Same Firestore source (mobileBarberVendors/{id}), same hydrate path as
@@ -3193,6 +3480,12 @@
     window._mbVendorPromosByVendor[vendorId] = Array.isArray(promos) ? promos.slice() : [];
   }
 
+  function _setVendorServices(vendorId, services) {
+    window._mbVendorServicesByVendor[vendorId] = (services || []).filter(function(service) {
+      return service && service.active !== false;
+    });
+  }
+
   function _mbCollection() {
     return (DATA && DATA.COLLECTIONS && DATA.COLLECTIONS.vendors) || 'mobileBarberVendors';
   }
@@ -3243,6 +3536,54 @@
     })).then(function() {
       if (root.console) root.console.info('[mobile-barber-promo] loaded from ' + diag.collection, diag);
       return diag;
+    });
+  }
+
+  function refreshLiveBookingData(vendor) {
+    var vendorId = vendor && vendor.id;
+    var diag = {
+      vendorId: vendorId || '',
+      servicesLoaded: 0,
+      promotionsLoaded: vendor && Array.isArray(vendor.promotions) ? vendor.promotions.length : 0,
+      scheduleLoaded: false,
+      source: 'static-fallback'
+    };
+    if (!vendorId || typeof firebase === 'undefined' || !firebase.firestore || !firebase.apps || !firebase.apps.length) {
+      if (root.console) root.console.log('[booking-live-data]', JSON.stringify(diag));
+      return Promise.resolve({ vendor: _vendorWithPromos(vendor), services: servicesForVendor(vendorId), source: 'static-fallback' });
+    }
+    var db = firebase.firestore();
+    var liveVendor = vendor;
+    var vendorRead = db.collection(_mbCollection()).doc(vendorId).get().then(function(doc) {
+      var data = doc.exists ? (doc.data() || {}) : {};
+      if (Array.isArray(data.promotions)) _setVendorPromos(vendorId, data.promotions);
+      if (data.availability && typeof data.availability === 'object') window._mbVendorAvailByVendor[vendorId] = data.availability;
+      if (Array.isArray(data.unavailableBlocks)) window._mbVendorBlocksByVendor[vendorId] = data.unavailableBlocks.slice();
+      liveVendor = _vendorWithPromos(vendor);
+      diag.promotionsLoaded = Array.isArray(_vendorPromosFor(vendorId)) ? _vendorPromosFor(vendorId).length : 0;
+      diag.scheduleLoaded = !!(window._mbVendorAvailByVendor[vendorId] && window._mbVendorAvailByVendor[vendorId].weeklyHours);
+    });
+    var serviceRead = db.collection((DATA && DATA.COLLECTIONS && DATA.COLLECTIONS.services) || 'mobileBarberServices')
+      .where('vendorId', '==', vendorId)
+      .get()
+      .then(function(snapshot) {
+        var rows = [];
+        snapshot.forEach(function(doc) {
+          var data = doc.data() || {};
+          data.id = data.id || doc.id;
+          if (data.active !== false) rows.push(data);
+        });
+        if (rows.length) _setVendorServices(vendorId, rows);
+        diag.servicesLoaded = rows.length || servicesForVendor(vendorId).length;
+      });
+    return Promise.all([vendorRead, serviceRead]).then(function() {
+      diag.source = 'firestore';
+      if (root.console) root.console.log('[booking-live-data]', JSON.stringify(diag));
+      return { vendor: liveVendor, services: servicesForVendor(vendorId), source: 'firestore' };
+    }).catch(function() {
+      diag.servicesLoaded = servicesForVendor(vendorId).length;
+      if (root.console) root.console.log('[booking-live-data]', JSON.stringify(diag));
+      return { vendor: _vendorWithPromos(vendor), services: servicesForVendor(vendorId), source: 'static-fallback' };
     });
   }
 

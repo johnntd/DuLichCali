@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260529e">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260530a">
 </head>
 <body class="mb-page mb-vendor-page">
   <main class="mb-shell mb-vendor-shell" id="mobileBarberVendorApp" data-page="mobile-barber-vendor">
@@ -332,7 +332,9 @@
 
   <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ&libraries=places&loading=async"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
   <script>
     var firebaseConfig = {
@@ -344,16 +346,25 @@
       appId:             '1:623460884698:web:a08bd435c453a7b4db05e3'
     };
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+    // Durable Storage for AI hairstyle previews + consented selfies. Anonymous
+    // auth mirrors the nailsalon flow so uploads satisfy the live storage rules;
+    // it does not change Firestore booking behaviour (booking create stays open).
+    try {
+      window.dlcStorage = firebase.storage();
+      firebase.auth().onAuthStateChanged(function(u) {
+        if (!u) firebase.auth().signInAnonymously().catch(function() {});
+      });
+    } catch (e) {}
   </script>
   <script src="/ai-engine.js?v=20260524a"></script>
   <script src="/owner-model.js?v=20260529f"></script>
   <script src="/booking-conflict-guard.js?v=20260529g"></script>
-  <script src="/mobile-barber/mobile-barber-data.js?v=20260528q"></script>
-  <script src="/mobile-barber/mobile-barber-booking.js?v=20260529e"></script>
-  <script src="/mobile-barber/mobile-barber-agent.js?v=20260529i"></script>
+  <script src="/mobile-barber/mobile-barber-data.js?v=20260530a"></script>
+  <script src="/mobile-barber/mobile-barber-booking.js?v=20260530a"></script>
+  <script src="/mobile-barber/mobile-barber-agent.js?v=20260529l"></script>
   <script src="/mobile-barber/mobile-barber-voice.js?v=20260525f"></script>
-  <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260527c"></script>
+  <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260530a"></script>
   <script src="/notifications.js?v=20260525a"></script>
-  <script src="/mobile-barber/mobile-barber-vendor.js?v=20260527p"></script>
+  <script src="/mobile-barber/mobile-barber-vendor.js?v=20260529l"></script>
 </body>
 </html>

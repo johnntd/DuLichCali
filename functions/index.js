@@ -2367,107 +2367,341 @@ exports.uploadVendorImage = onCall(
 
 // ── Mobile Barber: REAL AI haircut preview (image-to-image, identity preserved)
 //
-// Uses Gemini 2.5 Flash Image (Nano Banana) to generate 3 hairstyle previews
-// from a customer selfie. The model is multimodal image-in / image-out and
-// preserves the input subject reasonably well across edits — that is the
-// whole point of this endpoint vs the prior text-only fallback.
+// Supports MEN, WOMEN, and CHILDREN plus optional style preferences
+// (haircut / hair color / highlights / curly / straight + a vibe).
 //
-// No silent degradation. If the GEMINI_API_KEY secret is missing or the
-// provider call fails, this Function returns { ok:false, vendorMessage,
-// debugCode } and the client shows an explicit "AI preview unavailable"
-// message rather than substituting a static catalog.
+// Two stages:
+//   STAGE 1 — Gemini 2.5 Flash (vision) analyses the selfie (face shape,
+//             jawline, forehead, hair length/texture, age category,
+//             masc/fem/neutral presentation, skin tone) honoring the
+//             customer's audience + explore + preference choices, and returns
+//             EXACTLY 5 face-matched, audience-correct styles. Customer-facing
+//             text comes back in the customer's language; the per-style
+//             image-edit prompt comes back in English (and is identity-locked).
+//   STAGE 2 — Gemini 2.5 Flash Image (Nano Banana) renders one image-to-image
+//             preview per style from the SAME selfie, preserving the same
+//             person/face/ethnicity/skin tone/age.
 //
-// Cost: ~$0.039/image × 3 styles = ~$0.12 per booking that uses the feature.
-// Latency: 3 parallel calls, ~8-20s wall-clock typical.
+// No silent degradation of IMAGES: previews are always generated from the
+// customer's own selfie — never a static catalog photo. If the analysis model
+// hiccups we fall back to a deterministic, AUDIENCE-CORRECT prompt scaffold
+// (still image-to-image from the real selfie) so 5 options are always offered
+// and women/children never get a male-only fallback. If the GEMINI_API_KEY is
+// missing or every image generation fails, the Function returns
+// { ok:false, vendorMessage, debugCode } and the client shows an explicit
+// "AI preview unavailable" message.
+//
+// Cost: ~$0.039/image × 5 + 1 vision call ≈ ~$0.20 per booking that uses it.
+// Latency: 1 analysis call (~3-6s) then 5 parallel image calls (~8-20s).
 //
 // Endpoint contract:
-//   Input:  { selfieDataUrl: 'data:image/jpeg;base64,...', lang: 'en'|'vi'|'es' }
-//   Output: { ok: true, recommendations: [ { styleId, title, explanation,
-//                                              maintenance, barberNotes,
-//                                              previewDataUrl } x 3 ],
-//                       analysis: '...short text...' }
-//   Errors: { ok: false, vendorMessage: '...', debugCode: '...' }
+//   Input:  { selfieDataUrl, lang: 'en'|'vi'|'es',
+//             audience: 'man'|'woman'|'child'|'neutral',
+//             explore: ['haircut','color','highlights','curly','straight'],
+//             preference: 'professional'|'trendy'|'low_maintenance'|'natural'|'bold'|'' }
+//   Output: { ok: true, analysis, audience, recommendations: [ {
+//               styleId, title, targetAudience, explanation, whyItFitsFace,
+//               maintenance, barberNotes, colorRecommendation,
+//               highlightRecommendation, curlStraightRecommendation,
+//               confidence, safetyNotes, previewKind, previewDataUrl } x5 ] }
+//   Errors: { ok: false, vendorMessage, debugCode }
 
-const HAIRCUT_STYLE_PROMPTS = {
-  en: [
-    {
-      styleId: 'business-haircut',
-      title: 'Classic Professional',
-      maintenance: 'Medium maintenance',
-      explanation: 'Long combed top, deep side part, tapered sides, glossy pomade finish. Office-ready and timeless.',
-      barberNotes: '#3 on sides taper, scissor cut top ~3 inches, deep side part, square neckline, glossy pomade.',
-      editPrompt: "Transform this person's hairstyle into a CLASSIC EXECUTIVE SIDE PART: top hair clearly LONGER (about 3 inches / 7-8 cm), neatly COMBED to one side along a sharp parting line, GLOSSY pomade finish so individual strands catch the light, sides TAPERED gradually shorter from temple to ears (NOT shaved to skin), SQUARE neckline. The hair should look polished and formal, photographed for a Vanity Fair editorial. Keep the same face, skin tone, age, and beard or facial hair exactly as in the original photo. Photorealistic studio portrait quality."
-    },
-    {
-      styleId: 'fade-haircut',
-      title: 'Modern Skin Fade',
-      maintenance: 'Medium maintenance',
-      explanation: 'Bald skin fade on sides up to the temples, medium textured top with matte finish. Bold, modern contrast.',
-      barberNotes: 'Skin fade at zero near ears, blended up to temple line, scissor texture on top ~1.5 inches, matte clay product.',
-      editPrompt: "Transform this person's hairstyle into a MODERN HIGH SKIN FADE: sides and back are SHAVED TO THE SKIN near the ears and the entire neckline (visibly bald, no hair near the ears), with the fade gradient rising sharply up to the temple line. The TOP HAIR is MEDIUM length (about 1.5 inches / 4 cm) with VISIBLE TEXTURE and tousled separation, MATTE clay finish (no shine), optional hard-shaved part line. Strong visible CONTRAST between bald sides and textured top is essential. Keep the same face, skin tone, age, and beard or facial hair exactly as in the original photo. Photorealistic."
-    },
-    {
-      styleId: 'classic-haircut',
-      title: 'Buzz / Crew Cut',
-      maintenance: 'Low maintenance',
-      explanation: 'Uniform very short length all around. No styling required, easy to grow out, low effort.',
-      barberNotes: '#2 guard all over the head, slightly shorter on the neckline, no product.',
-      editPrompt: "Transform this person's hairstyle into a UNIFORM BUZZ CUT: hair cut UNIFORMLY SHORT all over the head (about half an inch / 1 cm, like a #2 clipper guard), with NO STYLING PRODUCT, NO part, NO comb-over — completely uniform short bristly texture from front to back to sides. Neck and ear lines neat and clean. Looks low-maintenance, athletic, military-inspired. Keep the same face, skin tone, age, and beard or facial hair exactly as in the original photo. Photorealistic."
-    }
+const HAIRCUT_LANG_NAME = { en: 'English', vi: 'Vietnamese (tiếng Việt)', es: 'Spanish (Español)' };
+const HAIRCUT_AUDIENCES = new Set(['man', 'woman', 'child', 'neutral']);
+const HAIRCUT_EXPLORE   = new Set(['haircut', 'color', 'highlights', 'curly', 'straight']);
+const HAIRCUT_PREFS     = new Set(['professional', 'trendy', 'low_maintenance', 'natural', 'bold']);
+
+function normalizeHaircutAudience(v) {
+  v = String(v || '').toLowerCase().trim();
+  if (v === 'male' || v === 'men') v = 'man';
+  if (v === 'female' || v === 'women') v = 'woman';
+  if (v === 'kid' || v === 'kids' || v === 'children') v = 'child';
+  if (v === 'no_preference' || v === 'none' || v === 'any' || v === '') v = 'neutral';
+  return HAIRCUT_AUDIENCES.has(v) ? v : 'neutral';
+}
+function normalizeHaircutExplore(v) {
+  var arr = Array.isArray(v) ? v : (v ? [v] : []);
+  var out = [];
+  arr.forEach(function (x) {
+    var k = String(x || '').toLowerCase().trim();
+    if (k === 'colour') k = 'color';
+    if (HAIRCUT_EXPLORE.has(k) && out.indexOf(k) < 0) out.push(k);
+  });
+  if (!out.length) out.push('haircut');
+  return out;
+}
+function normalizeHaircutPref(v) {
+  v = String(v || '').toLowerCase().trim().replace(/[\s-]+/g, '_');
+  if (v === 'low' || v === 'lowmaintenance') v = 'low_maintenance';
+  return HAIRCUT_PREFS.has(v) ? v : '';
+}
+
+const IDENTITY_CLAUSE = 'CRITICAL — IDENTITY LOCK: keep the EXACT SAME PERSON from the photo — same face, same facial features and bone structure, same ethnicity and skin tone, same age, same gender presentation, same eyes, nose, mouth and complexion. Do NOT swap in a different model and do NOT beautify or change the face. Change ONLY the hair (and hair color where stated). Photorealistic, natural lighting, head-and-shoulders portrait, sharp focus.';
+const CHILD_SAFETY_CLAUSE = ' This subject is a CHILD: keep them clearly the same child of the same age, with wholesome, school-appropriate kid styling only — no adult/edgy looks, no facial hair, no aging.';
+
+// audience → instruction phrasing for the analysis model
+const HAIRCUT_AUDIENCE_BRIEF = {
+  man:     'a MAN — recommend masculine men’s hairstyles only.',
+  woman:   'a WOMAN — recommend feminine women’s hairstyles only; never default to men’s cuts.',
+  child:   'a CHILD — recommend age-appropriate children’s hairstyles only; never adult styling.',
+  neutral: 'NO STATED PREFERENCE — infer the most fitting gender presentation and age from the photo and recommend accordingly (do not assume male).'
+};
+
+// localized maintenance words for the scaffold fallback
+const HAIRCUT_MAINT_WORDS = {
+  low:    { en: 'Low maintenance',    vi: 'Dễ chăm sóc',       es: 'Bajo mantenimiento' },
+  medium: { en: 'Medium maintenance', vi: 'Chăm sóc vừa phải',  es: 'Mantenimiento medio' },
+  high:   { en: 'Higher maintenance', vi: 'Cần chăm sóc nhiều', es: 'Mayor mantenimiento' }
+};
+
+// Deterministic, AUDIENCE-CORRECT fallback archetypes used only when the vision
+// analysis is unavailable or returns junk. Customer-facing text is localized
+// (vi/en/es); editPrompt is English and identity-locked. Previews are still
+// generated image-to-image from the real selfie — never a static catalog photo.
+const HAIRCUT_SCAFFOLD = {
+  man: [
+    { styleId: 'classic-side-part', maint: 'medium', title: { en: 'Classic Side Part', vi: 'Rẽ ngôi cổ điển', es: 'Raya lateral clásica' },
+      editPrompt: 'Give this man a CLASSIC SIDE PART: top about 7-8cm combed to one side along a clean part, tapered sides (not skin-shaved), square neckline, light glossy finish.' },
+    { styleId: 'skin-fade-textured-top', maint: 'medium', title: { en: 'Skin Fade + Textured Top', vi: 'Skin fade đỉnh tạo kết cấu', es: 'Degradado con textura' },
+      editPrompt: 'Give this man a MODERN SKIN FADE: sides and back faded to the skin near the ears rising to the temples, top about 4cm with visible texture, matte finish.' },
+    { styleId: 'textured-crop', maint: 'low', title: { en: 'Textured Crop', vi: 'Crop tạo kết cấu', es: 'Crop texturizado' },
+      editPrompt: 'Give this man a FRENCH CROP: short tapered sides, a short textured fringe forward on the forehead, matte finish.' },
+    { styleId: 'buzz-crew', maint: 'low', title: { en: 'Buzz / Crew Cut', vi: 'Buzz cut', es: 'Corte al rape' },
+      editPrompt: 'Give this man a UNIFORM BUZZ/CREW CUT, about a #2 guard all over, clean neat neckline, no product.' },
+    { styleId: 'business-taper', maint: 'medium', title: { en: 'Business Taper', vi: 'Tapered công sở', es: 'Taper ejecutivo' },
+      editPrompt: 'Give this man a BUSINESS TAPER: medium top neatly combed back, gradually tapered sides, polished professional finish.' }
   ],
-  vi: [
-    {
-      styleId: 'business-haircut',
-      title: 'Lịch sự cổ điển',
-      maintenance: 'Trung bình',
-      explanation: 'Phần trên dài chải lệch, rẽ ngôi sâu, hai bên tapered, bóng nhẹ. Phù hợp văn phòng.',
-      barberNotes: 'Tông #3 tapered hai bên, kéo trên ~7-8cm, rẽ ngôi sâu, vuông gáy, pomade bóng.',
-      editPrompt: "Transform this person's hairstyle into a CLASSIC EXECUTIVE SIDE PART: top hair clearly LONGER (about 3 inches / 7-8 cm), neatly COMBED to one side along a sharp parting line, GLOSSY pomade finish, sides TAPERED gradually (NOT shaved to skin), SQUARE neckline. Polished and formal. Keep the same face, skin tone, age, and beard or facial hair exactly as in the original photo. Photorealistic."
-    },
-    {
-      styleId: 'fade-haircut',
-      title: 'Skin Fade hiện đại',
-      maintenance: 'Trung bình',
-      explanation: 'Skin fade sát đầu gần tai và gáy, phần trên tạo kết cấu trung bình, sáp lì. Nổi bật, tương phản mạnh.',
-      barberNotes: 'Skin fade tới thái dương, kéo tạo kết cấu trên ~4cm, sáp clay lì, có thể kẻ đường.',
-      editPrompt: "Transform this person's hairstyle into a MODERN HIGH SKIN FADE: sides and back SHAVED TO THE SKIN near the ears and the neckline (visibly bald), fade gradient rising sharply up to the temple line, top hair MEDIUM length (about 1.5 inches / 4 cm) with VISIBLE TEXTURE and tousled separation, MATTE clay finish. Strong CONTRAST between bald sides and textured top is essential. Keep the same face, skin tone, age, and beard or facial hair exactly as in the original photo. Photorealistic."
-    },
-    {
-      styleId: 'classic-haircut',
-      title: 'Buzz Cut',
-      maintenance: 'Dễ giữ',
-      explanation: 'Tóc cùng độ dài rất ngắn quanh đầu. Không cần tạo kiểu, dễ dài ra.',
-      barberNotes: 'Tông #2 toàn đầu, gáy ngắn hơn chút, không dùng sản phẩm.',
-      editPrompt: "Transform this person's hairstyle into a UNIFORM BUZZ CUT: hair cut UNIFORMLY SHORT all over the head (about half an inch / 1 cm, like a #2 clipper guard), with NO STYLING PRODUCT, NO part, NO comb-over — completely uniform short bristly texture. Neck and ear lines clean. Low-maintenance, athletic. Keep the same face, skin tone, age, and beard or facial hair exactly as in the original photo. Photorealistic."
-    }
+  woman: [
+    { styleId: 'long-layers', maint: 'medium', title: { en: 'Long Layers', vi: 'Tóc dài tỉa layer', es: 'Capas largas' },
+      editPrompt: 'Give this woman LONG LAYERED HAIR: shoulder-blade length with soft face-framing layers and natural movement.' },
+    { styleId: 'face-framing-lob', maint: 'medium', title: { en: 'Face-Framing Lob', vi: 'Lob ôm khuôn mặt', es: 'Lob que enmarca el rostro' },
+      editPrompt: 'Give this woman a LONG BOB (LOB) just above the shoulders with face-framing layers and a soft blunt finish.' },
+    { styleId: 'soft-waves', maint: 'medium', title: { en: 'Soft Waves', vi: 'Tóc gợn sóng nhẹ', es: 'Ondas suaves' },
+      editPrompt: 'Give this woman SOFT LOOSE WAVES at mid-length with a glossy, healthy finish.' },
+    { styleId: 'blunt-bob', maint: 'low', title: { en: 'Blunt Bob', vi: 'Bob cắt thẳng', es: 'Bob recto' },
+      editPrompt: 'Give this woman a CHIN-LENGTH BLUNT BOB with a clean straight perimeter and a subtle inward bend.' },
+    { styleId: 'curtain-bangs-medium', maint: 'medium', title: { en: 'Medium Cut + Curtain Bangs', vi: 'Tóc lửng + mái bay', es: 'Media melena con cortina' },
+      editPrompt: 'Give this woman a SHOULDER-LENGTH cut with soft CURTAIN BANGS parted in the middle, framing the face.' }
   ],
-  es: [
-    {
-      styleId: 'business-haircut',
-      title: 'Ejecutivo clásico',
-      maintenance: 'Mantenimiento medio',
-      explanation: 'Parte superior larga, raya lateral marcada, lados degradados, acabado con brillo. Listo para la oficina.',
-      barberNotes: '#3 degradado lateral, tijera arriba ~7-8cm, raya marcada, nuca cuadrada, pomada brillante.',
-      editPrompt: "Transform this person's hairstyle into a CLASSIC EXECUTIVE SIDE PART: top hair clearly LONGER (about 3 inches / 7-8 cm), neatly COMBED to one side along a sharp parting line, GLOSSY pomade finish, sides TAPERED gradually (NOT shaved to skin), SQUARE neckline. Polished and formal. Keep the same face, skin tone, age, and beard or facial hair exactly as in the original photo. Photorealistic."
-    },
-    {
-      styleId: 'fade-haircut',
-      title: 'Skin Fade moderno',
-      maintenance: 'Mantenimiento medio',
-      explanation: 'Skin fade rapado en lados y nuca, parte superior con textura media y acabado mate. Audaz, moderno.',
-      barberNotes: 'Skin fade hasta la sien, textura con tijera arriba ~4cm, arcilla mate, raya marcada opcional.',
-      editPrompt: "Transform this person's hairstyle into a MODERN HIGH SKIN FADE: sides and back SHAVED TO THE SKIN near the ears and the neckline (visibly bald), fade gradient rising sharply up to the temple line, top hair MEDIUM length (about 1.5 inches / 4 cm) with VISIBLE TEXTURE and tousled separation, MATTE clay finish. Strong CONTRAST. Keep the same face, skin tone, age, and beard or facial hair exactly as in the original photo. Photorealistic."
-    },
-    {
-      styleId: 'classic-haircut',
-      title: 'Buzz / Corte raso',
-      maintenance: 'Bajo mantenimiento',
-      explanation: 'Largo muy corto y uniforme en toda la cabeza. Sin estilizado, fácil de dejar crecer.',
-      barberNotes: '#2 en toda la cabeza, nuca un poco más corta, sin producto.',
-      editPrompt: "Transform this person's hairstyle into a UNIFORM BUZZ CUT: hair cut UNIFORMLY SHORT all over the head (about half an inch / 1 cm, like a #2 clipper guard), with NO STYLING PRODUCT, NO part — completely uniform short bristly texture. Neck and ear lines clean. Low-maintenance, athletic. Keep the same face, skin tone, age, and beard or facial hair exactly as in the original photo. Photorealistic."
-    }
+  child: [
+    { styleId: 'kids-classic', maint: 'low', title: { en: 'Clean Kids Cut', vi: 'Cắt gọn cho bé', es: 'Corte infantil limpio' },
+      editPrompt: 'Give this child a CLEAN CLASSIC KIDS CUT: short tapered sides, a little length on top combed neatly, tidy and wholesome.' },
+    { styleId: 'kids-school-side', maint: 'low', title: { en: 'School-Friendly Side Part', vi: 'Rẽ ngôi đi học', es: 'Raya lateral escolar' },
+      editPrompt: 'Give this child a NEAT SIDE-PART kids cut, short and easy, school-appropriate.' },
+    { styleId: 'kids-easy-crop', maint: 'low', title: { en: 'Easy Crop', vi: 'Crop dễ chăm', es: 'Crop fácil' },
+      editPrompt: 'Give this child a SHORT EASY CROP with a soft fringe, very low maintenance.' },
+    { styleId: 'kids-scissor-short', maint: 'low', title: { en: 'Short Scissor Cut', vi: 'Cắt kéo ngắn', es: 'Corte a tijera corto' },
+      editPrompt: 'Give this child a SOFT SCISSOR CUT, short and even all around, gentle and natural.' },
+    { styleId: 'kids-textured-fringe', maint: 'low', title: { en: 'Textured Fringe', vi: 'Mái tạo kết cấu', es: 'Flequillo texturizado' },
+      editPrompt: 'Give this child a SHORT TEXTURED FRINGE, playful but tidy and age-appropriate.' }
+  ],
+  neutral: [
+    { styleId: 'medium-layered', maint: 'medium', title: { en: 'Medium Layered Cut', vi: 'Tóc lửng tỉa layer', es: 'Corte medio en capas' },
+      editPrompt: 'Give this person a versatile MEDIUM-LENGTH LAYERED cut with soft face-framing and natural texture.' },
+    { styleId: 'tapered-natural', maint: 'low', title: { en: 'Tapered Natural', vi: 'Tapered tự nhiên', es: 'Degradado natural' },
+      editPrompt: 'Give this person a clean TAPERED cut with natural texture left on top, balanced and easy.' },
+    { styleId: 'soft-textured-crop', maint: 'low', title: { en: 'Soft Textured Crop', vi: 'Crop mềm tạo kết cấu', es: 'Crop suave texturizado' },
+      editPrompt: 'Give this person a SOFT TEXTURED CROP with a gentle fringe, modern and low effort.' },
+    { styleId: 'shoulder-length', maint: 'medium', title: { en: 'Shoulder-Length Style', vi: 'Tóc ngang vai', es: 'Estilo a los hombros' },
+      editPrompt: 'Give this person a SHOULDER-LENGTH style with soft layers and healthy shine.' },
+    { styleId: 'classic-short', maint: 'low', title: { en: 'Classic Short Cut', vi: 'Tóc ngắn cổ điển', es: 'Corte corto clásico' },
+      editPrompt: 'Give this person a CLASSIC SHORT cut, neat and timeless, suited to most face shapes.' }
   ]
 };
+
+// localized fallback recommendation snippets for optional explore choices
+const HAIRCUT_SCAFFOLD_OPT = {
+  color: {
+    en: 'Ask your barber about a shade that flatters your skin tone — a soft natural brown or subtle dimension reads modern and is easy to maintain.',
+    vi: 'Hỏi thợ về tông màu hợp với làn da — nâu tự nhiên nhẹ hoặc thêm chiều sâu nhẹ trông hiện đại và dễ chăm sóc.',
+    es: 'Pregunta a tu barbero por un tono que favorezca tu piel — un castaño natural suave o una dimensión sutil se ve moderno y es fácil de mantener.'
+  },
+  highlights: {
+    en: 'Face-framing or balayage highlights add brightness with low upkeep and grow out softly.',
+    vi: 'Highlight ôm mặt hoặc balayage tạo điểm sáng, ít phải dặm lại và phai tự nhiên.',
+    es: 'Las mechas que enmarcan el rostro o el balayage aportan luz con poco mantenimiento y crecen de forma natural.'
+  },
+  curly: {
+    en: 'Keep length to support the curl pattern; a light layered shape enhances natural curl.',
+    vi: 'Giữ độ dài để hỗ trợ lọn xoăn; tỉa layer nhẹ giúp lọn xoăn tự nhiên đẹp hơn.',
+    es: 'Mantén el largo para favorecer el rizo; una forma ligera en capas realza el rizo natural.'
+  },
+  straight: {
+    en: 'A clean blunt or lightly layered shape keeps straight hair sleek and easy to style.',
+    vi: 'Kiểu cắt thẳng gọn hoặc layer nhẹ giúp tóc thẳng mượt và dễ tạo kiểu.',
+    es: 'Una forma recta y limpia o ligeramente en capas mantiene el cabello liso y fácil de peinar.'
+  }
+};
+
+const HAIRCUT_SCAFFOLD_TXT = {
+  descTmpl: {
+    en: function (title) { return 'A ' + title.toLowerCase() + ' shaped to suit your features — a reliable, flattering choice.'; },
+    vi: function (title) { return 'Kiểu ' + title + ' được tạo dáng hợp với khuôn mặt của bạn — lựa chọn an toàn và tôn dáng.'; },
+    es: function (title) { return 'Un ' + title.toLowerCase() + ' adaptado a tus facciones — una opción favorecedora y segura.'; }
+  },
+  whyTmpl:   { en: 'Balanced proportions that flatter most face shapes.', vi: 'Tỉ lệ cân đối, tôn hầu hết các dáng mặt.', es: 'Proporciones equilibradas que favorecen la mayoría de los rostros.' },
+  barberTmpl:{ en: 'Discuss exact lengths and finish with your barber on arrival.', vi: 'Trao đổi độ dài và cách hoàn thiện cụ thể với thợ khi gặp.', es: 'Acuerda los largos exactos y el acabado con tu barbero al llegar.' },
+  safetyChild:{ en: 'Age-appropriate kids’ styling.', vi: 'Kiểu phù hợp với trẻ em.', es: 'Estilo apropiado para niños.' }
+};
+
+function buildHaircutScaffold(audience, exploreList, lang) {
+  var set = HAIRCUT_SCAFFOLD[audience] || HAIRCUT_SCAFFOLD.neutral;
+  var wantColor = exploreList.indexOf('color') >= 0;
+  var wantHi    = exploreList.indexOf('highlights') >= 0;
+  var wantCurly = exploreList.indexOf('curly') >= 0;
+  var wantStraight = exploreList.indexOf('straight') >= 0;
+  var L = function (tbl) { return tbl[lang] || tbl.en; };
+  return set.map(function (s) {
+    var title = s.title[lang] || s.title.en;
+    var edit = s.editPrompt;
+    if (wantColor) edit += ' Apply a natural, flattering hair color that suits the subject’s skin tone.';
+    if (wantHi) edit += ' Add subtle face-framing highlights for brightness.';
+    if (wantCurly) edit += ' Style with natural-looking curls/waves.';
+    if (wantStraight) edit += ' Style sleek and straight.';
+    edit += ' ' + IDENTITY_CLAUSE + (audience === 'child' ? CHILD_SAFETY_CLAUSE : '');
+    return {
+      styleId: s.styleId,
+      styleTitle: title,
+      targetAudience: audience,
+      description: HAIRCUT_SCAFFOLD_TXT.descTmpl[lang] ? HAIRCUT_SCAFFOLD_TXT.descTmpl[lang](title) : HAIRCUT_SCAFFOLD_TXT.descTmpl.en(title),
+      whyItFitsFace: L(HAIRCUT_SCAFFOLD_TXT.whyTmpl),
+      maintenanceLevel: L(HAIRCUT_MAINT_WORDS[s.maint] || HAIRCUT_MAINT_WORDS.medium),
+      haircutInstructionsForBarber: L(HAIRCUT_SCAFFOLD_TXT.barberTmpl),
+      colorRecommendation: wantColor ? L(HAIRCUT_SCAFFOLD_OPT.color) : '',
+      highlightRecommendation: wantHi ? L(HAIRCUT_SCAFFOLD_OPT.highlights) : '',
+      curlStraightRecommendation: wantCurly ? L(HAIRCUT_SCAFFOLD_OPT.curly) : (wantStraight ? L(HAIRCUT_SCAFFOLD_OPT.straight) : ''),
+      confidence: 0.6,
+      safetyNotes: audience === 'child' ? L(HAIRCUT_SCAFFOLD_TXT.safetyChild) : '',
+      imageEditPrompt: edit
+    };
+  });
+}
+
+function buildHaircutAnalysisPrompt(audience, exploreList, preference, lang) {
+  var langName = HAIRCUT_LANG_NAME[lang] || 'English';
+  var brief = HAIRCUT_AUDIENCE_BRIEF[audience] || HAIRCUT_AUDIENCE_BRIEF.neutral;
+  var wantsColorOrHi = exploreList.indexOf('color') >= 0 || exploreList.indexOf('highlights') >= 0;
+  var prefTxt = preference ? preference.replace(/_/g, ' ') : 'no specific preference';
+  return [
+    'You are a master barber and hairstylist. Analyse the ONE attached customer photo and recommend hairstyles.',
+    '',
+    'CUSTOMER CHOICES:',
+    '- Who the style is for: ' + brief,
+    '- Wants to explore: ' + exploreList.join(', ') + '.',
+    '- Style preference / vibe: ' + prefTxt + '.',
+    '',
+    'STEP 1 — From the photo, analyse: face shape, facial frame, jawline, forehead, current hair length, hair texture (if visible), current style, age category (adult or child), and masculine/feminine/neutral presentation' + (wantsColorOrHi ? ', and skin tone (for color/highlight matching)' : '') + '.',
+    '',
+    'STEP 2 — Recommend EXACTLY 5 DISTINCT hairstyles that genuinely fit THIS person and the choices above.',
+    'Rules:',
+    '- Respect the audience: never recommend men’s cuts for a woman or child, and never adult styling for a child.',
+    '- "haircut" is always in scope. Only include a colorRecommendation if "color" was requested; only a highlightRecommendation if "highlights" was requested; only a curlStraightRecommendation if "curly" or "straight" was requested — otherwise return "" for those fields.',
+    '- haircutInstructionsForBarber must be concrete, actionable cutting/styling notes a barber can follow.',
+    '- whyItFitsFace must reference the analysed face shape / features.',
+    '- confidence is a number 0..1 (how well it suits this person).',
+    '- safetyNotes: caveats (children: age-appropriateness; bold color: commitment/upkeep). May be "".',
+    '- imageEditPrompt: a precise ENGLISH instruction telling an image model how to render THIS exact hairstyle on the customer. It MUST preserve the same person, face, ethnicity, skin tone, age and gender presentation, changing only the hair' + (audience === 'child' ? ' (keep them a same-age child with wholesome kid styling only)' : '') + '.',
+    '',
+    'LANGUAGE: write every customer-facing field (styleTitle, description, whyItFitsFace, maintenanceLevel, haircutInstructionsForBarber, colorRecommendation, highlightRecommendation, curlStraightRecommendation, safetyNotes, and the top-level analysis) in ' + langName + '. Write imageEditPrompt in ENGLISH only.',
+    '',
+    'Return STRICT JSON only (no markdown, no commentary) of the form:',
+    '{"analysis":"<short summary in ' + langName + '>","styles":[{"styleId":"kebab-id","styleTitle":"","targetAudience":"man|woman|child|neutral","description":"","whyItFitsFace":"","maintenanceLevel":"","haircutInstructionsForBarber":"","colorRecommendation":"","highlightRecommendation":"","curlStraightRecommendation":"","confidence":0.0,"safetyNotes":"","imageEditPrompt":""}]}',
+    'The styles array MUST contain exactly 5 items.'
+  ].join('\n');
+}
+
+function extractHaircutJson(text) {
+  var t = String(text || '').trim();
+  t = t.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  try { return JSON.parse(t); }
+  catch (e) {
+    var a = t.indexOf('{'); var b = t.lastIndexOf('}');
+    if (a >= 0 && b > a) return JSON.parse(t.slice(a, b + 1));
+    throw new Error('analysis_unparseable');
+  }
+}
+
+async function callGeminiHaircutAnalysis(geminiKey, base64, mimeType, promptText) {
+  var body = {
+    contents: [{
+      role: 'user',
+      parts: [
+        { inline_data: { mime_type: mimeType || 'image/jpeg', data: base64 } },
+        { text: promptText }
+      ]
+    }],
+    generationConfig: { temperature: 0.7, responseMimeType: 'application/json' }
+  };
+  var raw = await httpsPost(
+    'generativelanguage.googleapis.com',
+    `/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+    {},
+    body
+  );
+  var parsed = JSON.parse(raw);
+  var cand = parsed.candidates && parsed.candidates[0];
+  var parts = cand && cand.content && cand.content.parts;
+  if (!parts || !parts.length) throw new Error('analysis_no_parts');
+  var text = parts.map(function (p) { return p.text || ''; }).join('').trim();
+  if (!text) throw new Error('analysis_empty');
+  return extractHaircutJson(text);
+}
+
+function normalizeHaircutStyle(s, audience, idx) {
+  s = s || {};
+  var title = String(s.styleTitle || s.title || '').trim() || ('Style ' + (idx + 1));
+  var childClause = (audience === 'child') ? CHILD_SAFETY_CLAUSE : '';
+  var edit = String(s.imageEditPrompt || s.editPrompt || '').trim();
+  if (edit && edit.toUpperCase().indexOf('IDENTITY LOCK') < 0) edit += ' ' + IDENTITY_CLAUSE + childClause;
+  if (!edit) edit = 'Restyle the subject’s hair into "' + title + '". ' + IDENTITY_CLAUSE + childClause;
+  var aud = String(s.targetAudience || '').toLowerCase();
+  var sid = String(s.styleId || ('style-' + (idx + 1))).toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
+  return {
+    styleId: sid || ('style-' + (idx + 1)),
+    styleTitle: title,
+    targetAudience: HAIRCUT_AUDIENCES.has(aud) ? aud : audience,
+    description: String(s.description || s.explanation || '').trim(),
+    whyItFitsFace: String(s.whyItFitsFace || '').trim(),
+    maintenanceLevel: String(s.maintenanceLevel || s.maintenance || '').trim(),
+    haircutInstructionsForBarber: String(s.haircutInstructionsForBarber || s.barberNotes || '').trim(),
+    colorRecommendation: String(s.colorRecommendation || '').trim(),
+    highlightRecommendation: String(s.highlightRecommendation || '').trim(),
+    curlStraightRecommendation: String(s.curlStraightRecommendation || '').trim(),
+    confidence: (typeof s.confidence === 'number' && s.confidence >= 0 && s.confidence <= 1) ? s.confidence : 0.7,
+    safetyNotes: String(s.safetyNotes || '').trim(),
+    imageEditPrompt: edit
+  };
+}
+
+// Plan 5 audience-correct styles. Vision analysis is primary; the deterministic
+// scaffold pads to 5 (or fully replaces) if analysis is unavailable/incomplete.
+async function planHaircutStyles(geminiKey, base64, mimeType, opts) {
+  var audience = opts.audience, exploreList = opts.explore, preference = opts.preference, lang = opts.lang;
+  var analysisText = '';
+  var analysisOk = false;
+  var styles = [];
+  try {
+    var prompt = buildHaircutAnalysisPrompt(audience, exploreList, preference, lang);
+    var plan = await callGeminiHaircutAnalysis(geminiKey, base64, mimeType, prompt);
+    analysisText = String((plan && plan.analysis) || '').trim();
+    var raw = (plan && Array.isArray(plan.styles)) ? plan.styles : [];
+    styles = raw.map(function (s, i) { return normalizeHaircutStyle(s, audience, i); })
+                .filter(function (s) { return s.imageEditPrompt; });
+    analysisOk = styles.length > 0;
+  } catch (e) {
+    console.warn('[generateHaircutPreviews] analysis failed, using scaffold:', (e && e.message) || e);
+  }
+  if (styles.length < 5) {
+    var scaffold = buildHaircutScaffold(audience, exploreList, lang)
+                     .map(function (s, i) { return normalizeHaircutStyle(s, audience, i); });
+    var seen = {};
+    styles.forEach(function (s) { seen[s.styleId] = true; });
+    for (var i = 0; i < scaffold.length && styles.length < 5; i++) {
+      if (!seen[scaffold[i].styleId]) { styles.push(scaffold[i]); seen[scaffold[i].styleId] = true; }
+    }
+  }
+  return { analysis: analysisText, styles: styles.slice(0, 5), analysisOk: analysisOk };
+}
 
 async function callGeminiImageEdit(geminiKey, inlineImageBase64, mimeType, editPrompt) {
   // Gemini 2.5 Flash Image (Nano Banana) — image-to-image edit via the
@@ -2506,8 +2740,8 @@ exports.generateHaircutPreviews = onCall(
   {
     region: 'us-central1',
     secrets: [GEMINI_API_KEY],
-    timeoutSeconds: 180,
-    memory: '512MiB',
+    timeoutSeconds: 300,
+    memory: '1GiB',
     cors: true,
   },
   async (request) => {
@@ -2517,7 +2751,13 @@ exports.generateHaircutPreviews = onCall(
     const data = request.data || {};
     const rawDataUrl = String(data.selfieDataUrl || '');
     const langParam  = String(data.lang || 'en').toLowerCase();
-    const lang = HAIRCUT_STYLE_PROMPTS[langParam] ? langParam : 'en';
+    const lang = HAIRCUT_LANG_NAME[langParam] ? langParam : 'en';
+    // Audience + explore + preference are optional (older cached clients omit
+    // them). Defaults: neutral audience (model infers from the photo), a
+    // haircut-only exploration, and no specific vibe.
+    const audience   = normalizeHaircutAudience(data.audience);
+    const explore    = normalizeHaircutExplore(data.explore || data.exploreOptions);
+    const preference = normalizeHaircutPref(data.preference || data.stylePreference);
 
     if (!rawDataUrl || rawDataUrl.indexOf('data:image/') !== 0) {
       return { ok: false, vendorMessage: 'Missing or invalid selfie image.', debugCode: 'INVALID_INPUT' };
@@ -2537,38 +2777,65 @@ exports.generateHaircutPreviews = onCall(
       return { ok: false, vendorMessage: 'AI preview is temporarily unavailable. Please continue your booking; the barber will suggest a style in person.', debugCode: 'NO_GEMINI_KEY' };
     }
 
-    const prompts = HAIRCUT_STYLE_PROMPTS[lang];
     const t0 = Date.now();
+
+    // STAGE 1 — analyse the selfie + plan 5 audience-correct styles. Always
+    // returns 5 styles (vision analysis, padded/replaced by the scaffold).
+    let plan;
+    try {
+      plan = await planHaircutStyles(geminiKey, base64, mimeType, { audience, explore, preference, lang });
+    } catch (e) {
+      console.error('[generateHaircutPreviews] planning failure', e);
+      return { ok: false, vendorMessage: 'AI preview failed. Please try again or continue without a preview.', debugCode: 'PLAN_ERROR' };
+    }
+    const styles = (plan && plan.styles) || [];
+    if (!styles.length) {
+      return { ok: false, vendorMessage: 'AI preview did not return styles. Please continue your booking.', debugCode: 'PLAN_EMPTY' };
+    }
+
+    // STAGE 2 — generate one image-to-image preview per style (parallel). Each
+    // preview is rendered from the customer's OWN selfie so identity, ethnicity,
+    // skin tone and age are preserved.
     let results;
     try {
-      // 3 parallel image edits. Each takes ~5–15 s; running in parallel
-      // keeps the wall-clock for the customer under 20 s typically.
-      results = await Promise.all(prompts.map(async (style) => {
+      results = await Promise.all(styles.map(async (style) => {
+        const baseRec = {
+          styleId: style.styleId,
+          title: style.styleTitle,
+          styleTitle: style.styleTitle,
+          targetAudience: style.targetAudience,
+          explanation: style.description,
+          description: style.description,
+          whyItFitsFace: style.whyItFitsFace,
+          maintenance: style.maintenanceLevel,
+          maintenanceLevel: style.maintenanceLevel,
+          barberNotes: style.haircutInstructionsForBarber,
+          haircutInstructionsForBarber: style.haircutInstructionsForBarber,
+          colorRecommendation: style.colorRecommendation,
+          highlightRecommendation: style.highlightRecommendation,
+          curlStraightRecommendation: style.curlStraightRecommendation,
+          confidence: style.confidence,
+          safetyNotes: style.safetyNotes
+        };
         try {
-          const edit = await callGeminiImageEdit(geminiKey, base64, mimeType, style.editPrompt);
-          return {
-            styleId: style.styleId,
-            title: style.title,
-            explanation: style.explanation,
-            maintenance: style.maintenance,
-            barberNotes: style.barberNotes,
+          const edit = await callGeminiImageEdit(geminiKey, base64, mimeType, style.imageEditPrompt);
+          return Object.assign({}, baseRec, {
             previewDataUrl: edit.dataUrl,
+            // Low-confidence renders are labelled "style inspiration" rather
+            // than "your exact preview" so we never over-promise a match.
+            previewKind: (style.confidence < 0.45) ? 'style_inspiration' : 'your_preview',
             error: null
-          };
+          });
         } catch (err) {
-          return {
-            styleId: style.styleId,
-            title: style.title,
-            explanation: style.explanation,
-            maintenance: style.maintenance,
-            barberNotes: style.barberNotes,
+          return Object.assign({}, baseRec, {
             previewDataUrl: '',
+            previewKind: 'style_inspiration',
             error: (err && err.message) || 'gemini_failed'
-          };
+          });
         }
       }));
     } catch (e) {
-      console.error('[generateHaircutPreviews] catastrophic failure', e);
+      console.error('[generateHaircutPreviews] catastrophic image failure', e);
       return { ok: false, vendorMessage: 'AI preview failed. Please try again or continue without a preview.', debugCode: 'PROVIDER_ERROR' };
     }
 
@@ -2577,7 +2844,7 @@ exports.generateHaircutPreviews = onCall(
       // Surface the underlying provider error verbatim so dev tools show
       // the real cause; the customer-facing message stays human.
       const firstErr = (results[0] && results[0].error) || 'unknown';
-      console.error('[generateHaircutPreviews] all 3 generations failed', results.map(r => r.error));
+      console.error('[generateHaircutPreviews] all generations failed', results.map(r => r.error));
       return {
         ok: false,
         vendorMessage: 'AI preview did not return a usable image. Please continue your booking; you can discuss styles with the barber in person.',
@@ -2589,7 +2856,10 @@ exports.generateHaircutPreviews = onCall(
     const tookMs = Date.now() - t0;
     return {
       ok: true,
-      analysis: '', // future: a true vision call can populate this; today we omit fake text
+      analysis: (plan && plan.analysis) || '',
+      audience: audience,
+      explore: explore,
+      preference: preference,
       recommendations: results,
       provider: 'gemini-2.5-flash-image',
       generationTimeMs: tookMs,

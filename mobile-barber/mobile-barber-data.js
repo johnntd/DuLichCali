@@ -91,10 +91,36 @@
     'selectedAiStyleId', 'selectedAiStyleName', 'selectedAiStyleImage',
     'selectedAiStyleDescription', 'selectedAiBarberNotes',
     'selectedAiMaintenanceLevel',
+    // All-audience AI hairstyle attributes (men / women / children + optional
+    // color / highlights / curly|straight). All default to '' so bookings
+    // without the AI preview, and bookings that only used a haircut, stay valid.
+    'selectedAudienceType', 'selectedColorRecommendation',
+    'selectedHighlightRecommendation', 'selectedTexturePreference',
+    // Durable haircut reference shown in the barber portal. These fields
+    // identify the exact selected/generated haircut independently of legacy
+    // AI preview mirrors.
+    'selectedHaircutSource', 'selectedHaircutTitle',
+    'selectedHaircutDescription', 'selectedHaircutImageUrl',
+    'selectedHaircutImageStoragePath', 'selectedHaircutThumbnailUrl',
+    'selectedHaircutBarberNotes', 'selectedHaircutMaintenanceLevel',
+    'selectedHaircutGeneratedAt', 'selectedHaircutPromptSnapshot',
+    'customerSelfieUrl', 'customerSelfieStoragePath',
+    // AI preview session id (small string) — lets the booking-write step pull the
+    // full-resolution generated image from the customer device's localStorage and
+    // upload it to durable Storage before the doc is persisted.
+    'aiPreviewSessionId',
     // Vendor promotion applied (optional). All fields written together
     // by buildBooking when a promo is active.
     'promotionId', 'promotionName', 'discountPercent',
     'originalPrice', 'discountedPrice', 'promoApplied',
+    // Routing + schedule audit trail (optional). Written by the AI/voice
+    // booking agent so the vendor portal can see WHICH barber the request
+    // was routed to, WHY, whether the caller was a known customer, and the
+    // schedule-guard snapshot taken at submit time. Snapshots are stored as
+    // JSON strings to keep the booking doc flat. All default empty/false so
+    // form bookings without routing context stay valid.
+    'assignedBarberId', 'routingReason', 'previousCustomerMatched',
+    'customerPreferenceSnapshot', 'scheduleCheckSnapshot',
     'createdAt', 'updatedAt'
   ]);
 
@@ -109,7 +135,7 @@
 
   var PORTFOLIO_IMAGE_FIELDS = Object.freeze([
     'id', 'vendorId', 'title', 'description', 'imageUrl', 'beforeImageUrl',
-    'afterImageUrl', 'alt', 'displayOrder', 'hidden', 'createdAt', 'updatedAt',
+    'afterImageUrl', 'clipUrl', 'alt', 'displayOrder', 'hidden', 'createdAt', 'updatedAt',
     'category', 'active', 'isAIGenerated', 'requiresReplacementWithRealWork',
     'beforeImagePrompt', 'afterImagePrompt'
   ]);
@@ -130,7 +156,11 @@
 
   var BOOKING_STATUSES = Object.freeze([
     'pending_confirmation',
+    'pending_barber_confirmation',
+    'pending',
     'confirmed',
+    'in_progress',
+    'traveling',
     'vendor_review',
     'cancelled',
     'completed',
@@ -141,12 +171,12 @@
     'customer_form',
     'ai_chat',
     'ai_voice',
+    'ai_preview',
     'vendor_admin',
     'seed'
   ]);
 
   var SEED_TIMESTAMP = '2026-05-23T00:00:00.000Z';
-  var SAMPLE_VENDOR_ID = 'oc-mobile-barber-demo';
   var MICHAEL_VENDOR_ID = 'michael-nguyen-oc';
   var TIM_VENDOR_ID = 'tim-nguyen-bay';
 
@@ -324,31 +354,6 @@
 
   var sampleVendors = Object.freeze([
     Object.freeze({
-      id: SAMPLE_VENDOR_ID,
-      businessName: 'OC Mobile Barber Demo',
-      barberName: 'Demo Barber',
-      phone: '(714) 555-0148',
-      email: 'demo-mobile-barber@dulichcali21.com',
-      cashEnabled: true,
-      zelleEnabled: true,
-      zellePhone: '(714) 555-0148',
-      zelleEmail: 'demo-mobile-barber@dulichcali21.com',
-      zelleQrUrl: '',
-      profilePhoto: '/assets/mobile-barber/profile-placeholder.jpg',
-      heroImage: '/assets/mobile-barber/styles/classic-haircut.jpg',
-      serviceAreas: Object.freeze(['Westminster', 'Garden Grove', 'Fountain Valley']),
-      travelRadiusMiles: 12,
-      baseTravelFee: 15,
-      addressOptional: true,
-      languages: Object.freeze(['en', 'vi']),
-      active: false,
-      rating: 4.9,
-      reviewCount: 2,
-      serviceBadges: Object.freeze(['fade', 'beardTrim', 'kidsCut', 'seniorCut', 'vietnameseSpeaking', 'spanishSpeaking']),
-      createdAt: SEED_TIMESTAMP,
-      updatedAt: SEED_TIMESTAMP
-    }),
-    Object.freeze({
       id: MICHAEL_VENDOR_ID,
       ownerId: 'michael-nguyen',
       serviceType: 'barber',
@@ -505,64 +510,15 @@
     });
   }
 
-  var sampleServices = Object.freeze([
-    Object.freeze({
-      id: 'classic-mobile-cut',
-      vendorId: SAMPLE_VENDOR_ID,
-      name: 'Classic Mobile Haircut',
-      description: 'In-home haircut with cleanup buffer included.',
-      durationMinutes: 45,
-      price: 45,
-      cleanupBufferMinutes: 10,
-      travelBufferMinutes: 20,
-      category: 'haircut',
-      active: true,
-      imageUrl: SERVICE_IMAGE_TEMPLATES['classic-haircut'].imageUrl,
-      imagePrompt: SERVICE_IMAGE_TEMPLATES['classic-haircut'].imagePrompt,
-      imageAlt: SERVICE_IMAGE_TEMPLATES['classic-haircut'].imageAlt,
-      isAIGenerated: true
-    }),
-    Object.freeze({
-      id: 'mobile-haircut-beard',
-      vendorId: SAMPLE_VENDOR_ID,
-      name: 'Haircut and Beard Trim',
-      description: 'Mobile haircut, beard shaping, and light cleanup.',
-      durationMinutes: 65,
-      price: 65,
-      cleanupBufferMinutes: 10,
-      travelBufferMinutes: 25,
-      category: 'combo',
-      active: true,
-      imageUrl: SERVICE_IMAGE_TEMPLATES['haircut-beard'].imageUrl,
-      imagePrompt: SERVICE_IMAGE_TEMPLATES['haircut-beard'].imagePrompt,
-      imageAlt: SERVICE_IMAGE_TEMPLATES['haircut-beard'].imageAlt,
-      isAIGenerated: true
-    })
-  ].concat(buildMenuForVendor(MICHAEL_VENDOR_ID)).concat(buildMenuForVendor(TIM_VENDOR_ID)));
+  var sampleServices = Object.freeze(
+    buildMenuForVendor(MICHAEL_VENDOR_ID).concat(buildMenuForVendor(TIM_VENDOR_ID))
+  );
 
-  var sampleServiceImages = Object.freeze([
-    makeServiceImage(SAMPLE_VENDOR_ID, 'classic-mobile-cut', 'classic-haircut', 'haircut'),
-    makeServiceImage(SAMPLE_VENDOR_ID, 'mobile-haircut-beard', 'haircut-beard', 'combo')
-  ].concat(buildServiceImagesForVendor(MICHAEL_VENDOR_ID)).concat(buildServiceImagesForVendor(TIM_VENDOR_ID)));
+  var sampleServiceImages = Object.freeze(
+    buildServiceImagesForVendor(MICHAEL_VENDOR_ID).concat(buildServiceImagesForVendor(TIM_VENDOR_ID))
+  );
 
   var sampleAvailability = Object.freeze([
-    Object.freeze({
-      id: 'demo-weekly-default',
-      vendorId: SAMPLE_VENDOR_ID,
-      timezone: 'America/Los_Angeles',
-      weeklyHours: Object.freeze({
-        monday: Object.freeze({ active: true, start: '10:00', end: '18:00' }),
-        tuesday: Object.freeze({ active: true, start: '10:00', end: '18:00' }),
-        wednesday: Object.freeze({ active: true, start: '10:00', end: '18:00' }),
-        thursday: Object.freeze({ active: true, start: '10:00', end: '18:00' }),
-        friday: Object.freeze({ active: true, start: '10:00', end: '18:00' }),
-        saturday: Object.freeze({ active: true, start: '09:00', end: '16:00' }),
-        sunday: Object.freeze({ active: false, start: null, end: null })
-      }),
-      blackoutDates: Object.freeze([]),
-      createdAt: SEED_TIMESTAMP,
-      updatedAt: SEED_TIMESTAMP
-    }),
     Object.freeze({
       id: 'michael-weekly-default',
       vendorId: MICHAEL_VENDOR_ID,
@@ -719,65 +675,12 @@
     return rows;
   }
 
-  var samplePortfolioImages = Object.freeze([
-    Object.freeze({
-      id: 'demo-low-fade-before-after',
-      vendorId: SAMPLE_VENDOR_ID,
-      title: 'Low fade cleanup',
-      description: 'Before and after mobile haircut sample.',
-      imageUrl: '',
-      beforeImageUrl: '/assets/mobile-barber/portfolio-before-placeholder.jpg',
-      afterImageUrl: '/assets/mobile-barber/portfolio-after-placeholder.jpg',
-      alt: 'Low fade before and after',
-      displayOrder: 10,
-      hidden: false,
-      createdAt: SEED_TIMESTAMP,
-      updatedAt: SEED_TIMESTAMP
-    }),
-    Object.freeze({
-      id: 'demo-beard-trim-finish',
-      vendorId: SAMPLE_VENDOR_ID,
-      title: 'Beard trim finish',
-      description: 'Finished beard trim and neckline cleanup.',
-      imageUrl: '/assets/mobile-barber/portfolio-beard-placeholder.jpg',
-      beforeImageUrl: '',
-      afterImageUrl: '',
-      alt: 'Finished beard trim',
-      displayOrder: 20,
-      hidden: false,
-      createdAt: SEED_TIMESTAMP,
-      updatedAt: SEED_TIMESTAMP
-    })
-  ].concat(buildAIPortfolioForVendor(MICHAEL_VENDOR_ID, 100))
-   .concat(buildAIPortfolioForVendor(TIM_VENDOR_ID, 100)));
+  var samplePortfolioImages = Object.freeze(
+    buildAIPortfolioForVendor(MICHAEL_VENDOR_ID, 100)
+      .concat(buildAIPortfolioForVendor(TIM_VENDOR_ID, 100))
+  );
 
   var sampleReviews = Object.freeze([
-    Object.freeze({
-      id: 'demo-review-1',
-      vendorId: SAMPLE_VENDOR_ID,
-      customerName: 'Minh T.',
-      rating: 5,
-      body: 'Clean fade, arrived on time, and kept the setup easy at home.',
-      serviceName: 'Classic Mobile Haircut',
-      lang: 'en',
-      hidden: false,
-      vendorResponse: 'Thank you, Minh. Glad the home setup worked smoothly.',
-      createdAt: '2026-05-22T16:00:00.000Z',
-      updatedAt: '2026-05-22T16:00:00.000Z'
-    }),
-    Object.freeze({
-      id: 'demo-review-2',
-      vendorId: SAMPLE_VENDOR_ID,
-      customerName: 'Carlos R.',
-      rating: 5,
-      body: 'Good kids cut and beard trim. Easy booking.',
-      serviceName: 'Haircut and Beard Trim',
-      lang: 'en',
-      hidden: false,
-      vendorResponse: '',
-      createdAt: '2026-05-21T16:00:00.000Z',
-      updatedAt: '2026-05-21T16:00:00.000Z'
-    }),
     Object.freeze({
       id: 'michael-review-1',
       vendorId: MICHAEL_VENDOR_ID,
@@ -1422,7 +1325,6 @@
     BOOKING_SOURCES: BOOKING_SOURCES,
     CONFIRMATION_PREFERENCES: CONFIRMATION_PREFERENCES,
     DEFAULT_CONFIRMATION_PREFERENCE: DEFAULT_CONFIRMATION_PREFERENCE,
-    SAMPLE_VENDOR_ID: SAMPLE_VENDOR_ID,
     MICHAEL_VENDOR_ID: MICHAEL_VENDOR_ID,
     TIM_VENDOR_ID: TIM_VENDOR_ID,
     SERVICE_IMAGE_TEMPLATES: SERVICE_IMAGE_TEMPLATES,

@@ -27,7 +27,12 @@ function runMobileBarberAiStyleBookingTests(test) {
   test('A1. BOOKING_FIELDS includes the 6 canonical selectedAi* fields', function() {
     var f = DATA.BOOKING_FIELDS;
     ['selectedAiStyleId', 'selectedAiStyleName', 'selectedAiStyleImage',
-     'selectedAiStyleDescription', 'selectedAiBarberNotes', 'selectedAiMaintenanceLevel']
+     'selectedAiStyleDescription', 'selectedAiBarberNotes', 'selectedAiMaintenanceLevel',
+     'selectedHaircutSource', 'selectedHaircutTitle', 'selectedHaircutDescription',
+     'selectedHaircutImageUrl', 'selectedHaircutImageStoragePath',
+     'selectedHaircutThumbnailUrl', 'selectedHaircutBarberNotes',
+     'selectedHaircutMaintenanceLevel', 'selectedHaircutGeneratedAt',
+     'selectedHaircutPromptSnapshot', 'customerSelfieUrl', 'customerSelfieStoragePath']
       .forEach(function(k) {
         assert(f.indexOf(k) >= 0, 'BOOKING_FIELDS missing ' + k);
       });
@@ -61,6 +66,18 @@ function runMobileBarberAiStyleBookingTests(test) {
       selectedAiStyleDescription: 'Sharp skin fade, scissor on top',
       selectedAiBarberNotes: '#0 sides, scissor top, matte finish',
       selectedAiMaintenanceLevel: 'Every 3 weeks',
+      selectedHaircutSource: 'ai_generated',
+      selectedHaircutTitle: 'Modern Skin Fade',
+      selectedHaircutDescription: 'Sharp skin fade, scissor on top',
+      selectedHaircutImageUrl: '/assets/mobile-barber/styles/fade-haircut.jpg',
+      selectedHaircutImageStoragePath: '',
+      selectedHaircutThumbnailUrl: '/assets/mobile-barber/styles/fade-haircut.jpg',
+      selectedHaircutBarberNotes: '#0 sides, scissor top, matte finish',
+      selectedHaircutMaintenanceLevel: 'Every 3 weeks',
+      selectedHaircutGeneratedAt: '2026-05-27T00:00:00.000Z',
+      selectedHaircutPromptSnapshot: 'fade prompt snapshot',
+      customerSelfieUrl: '',
+      customerSelfieStoragePath: '',
       createdAt: '2026-05-27T00:00:00.000Z',
       updatedAt: '2026-05-27T00:00:00.000Z'
     };
@@ -96,6 +113,10 @@ function runMobileBarberAiStyleBookingTests(test) {
     assertEq(built.booking.selectedAiStyleImage, '/assets/mobile-barber/styles/fade-haircut.jpg');
     assertEq(built.booking.selectedAiBarberNotes, '#0 sides, scissor top');
     assertEq(built.booking.selectedAiMaintenanceLevel, 'Every 3 weeks');
+    assertEq(built.booking.selectedHaircutSource, 'ai_generated');
+    assertEq(built.booking.selectedHaircutTitle, 'Modern Skin Fade');
+    assertEq(built.booking.selectedHaircutImageUrl, '/assets/mobile-barber/styles/fade-haircut.jpg');
+    assertEq(built.booking.selectedHaircutBarberNotes, '#0 sides, scissor top');
     // Legacy mirrors
     assertEq(built.booking.selectedStyleId, 'fade-haircut');
     assertEq(built.booking.selectedStylePreviewUrl, '/assets/mobile-barber/styles/fade-haircut.jpg');
@@ -171,13 +192,161 @@ function runMobileBarberAiStyleBookingTests(test) {
     var src = read('mobile-barber/mobile-barber.js');
     var startIdx = src.indexOf('function attachAiPreviewToBooking');
     assert(startIdx > 0, 'attachAiPreviewToBooking must exist');
-    var fn = src.slice(startIdx, startIdx + 2200);
+    var fn = src.slice(startIdx, startIdx + 3000);
     assert(fn.indexOf('booking.selectedAiStyleId') >= 0, 'chat path must set selectedAiStyleId');
     assert(fn.indexOf('booking.selectedAiStyleName') >= 0);
     assert(fn.indexOf('booking.selectedAiStyleImage') >= 0);
     assert(fn.indexOf('booking.selectedAiStyleDescription') >= 0);
     assert(fn.indexOf('booking.selectedAiBarberNotes') >= 0);
     assert(fn.indexOf('booking.selectedAiMaintenanceLevel') >= 0);
+    assert(fn.indexOf('booking.selectedHaircutSource') >= 0);
+    assert(fn.indexOf('booking.selectedHaircutImageUrl') >= 0);
+  });
+
+  // ── All-audience AI hairstyle support (men / women / children + options) ──
+
+  function count(hay, needle) {
+    var n = 0, i = 0;
+    while ((i = hay.indexOf(needle, i)) >= 0) { n++; i += needle.length; }
+    return n;
+  }
+
+  test('A9. BOOKING_FIELDS includes the 4 all-audience attribute fields', function() {
+    var f = DATA.BOOKING_FIELDS;
+    ['selectedAudienceType', 'selectedColorRecommendation',
+     'selectedHighlightRecommendation', 'selectedTexturePreference']
+      .forEach(function(k) { assert(f.indexOf(k) >= 0, 'BOOKING_FIELDS missing ' + k); });
+  });
+
+  test('A10. validateBooking accepts the 4 all-audience fields populated', function() {
+    var vendor = DATA.findVendorById(DATA.MICHAEL_VENDOR_ID);
+    var svc = DATA.listServicesForVendor(vendor.id)[0];
+    var booking = {
+      id: 'mb-test-aud', vendorId: vendor.id,
+      customerName: 'Jane Doe', customerPhone: '7145550111', customerEmail: '',
+      serviceId: svc.id, serviceName: svc.name, servicePrice: 45, travelFee: 5,
+      amountDue: 50, totalPrice: 50, paymentMethod: 'cash', paymentStatus: 'unpaid',
+      address: '123 Beach Blvd', city: 'Westminster', zip: '92683',
+      requestedDate: '2026-06-10', startTime: '10:00', endTime: '10:45',
+      status: 'pending_confirmation', source: 'customer_form', confirmationPreference: 'text',
+      selectedHaircutSource: 'ai_generated',
+      selectedAudienceType: 'woman',
+      selectedColorRecommendation: 'Soft caramel balayage',
+      selectedHighlightRecommendation: 'Face-framing highlights',
+      selectedTexturePreference: 'Soft loose waves',
+      createdAt: '2026-05-30T00:00:00.000Z', updatedAt: '2026-05-30T00:00:00.000Z'
+    };
+    var r = DATA.validateBooking(booking);
+    assertEq(r.valid, true, (r.errors || []).join('; '));
+  });
+
+  test('A11. buildBooking() reads the 4 all-audience fields off the draft', function() {
+    var vendor = DATA.findVendorById(DATA.MICHAEL_VENDOR_ID);
+    var svc = DATA.listServicesForVendor(vendor.id)[0];
+    var draft = {
+      customerName: 'Jane', customerPhone: '7145550111', customerEmail: '',
+      serviceId: svc.id, address: '123 Beach Blvd', city: 'Westminster', zip: '92683',
+      requestedDate: '2026-06-10', startTime: '10:00', paymentMethod: 'cash',
+      selectedAiStyleId: 'soft-waves', selectedAiStyleName: 'Soft Waves',
+      selectedAiStyleImage: '/assets/x.jpg',
+      selectedAudienceType: 'woman',
+      selectedColorRecommendation: 'Ash brown highlights',
+      selectedHighlightRecommendation: 'Balayage, mid-lengths to ends',
+      selectedTexturePreference: 'Loose beach waves'
+    };
+    var avail = BOOK.checkAvailability({
+      vendor: vendor, services: [svc], availability: DATA.sampleAvailability,
+      draft: draft, existingBookings: [], now: new Date('2026-06-10T08:00:00-07:00')
+    });
+    if (!avail.canCreate) return; // schedule edge — skip if test date isn't open
+    var built = BOOK.buildBooking({ vendor: vendor, draft: draft, availabilityResult: avail, now: '2026-06-10T08:00:00.000Z', id: 'mb-aud-test' });
+    assertEq(built.valid, true, (built.errors || []).join('; '));
+    assertEq(built.booking.selectedAudienceType, 'woman');
+    assertEq(built.booking.selectedColorRecommendation, 'Ash brown highlights');
+    assertEq(built.booking.selectedHighlightRecommendation, 'Balayage, mid-lengths to ends');
+    assertEq(built.booking.selectedTexturePreference, 'Loose beach waves');
+  });
+
+  test('A12. Firebase Function plans 5 audience-correct styles (no male-only fallback)', function() {
+    var src = read('functions/index.js');
+    // The old hardcoded 3-male-style table must be gone.
+    assert(src.indexOf('HAIRCUT_STYLE_PROMPTS') < 0, 'legacy male-only HAIRCUT_STYLE_PROMPTS must be removed');
+    // Audience-aware planning pipeline.
+    assert(src.indexOf('function planHaircutStyles') >= 0, 'planHaircutStyles must exist');
+    assert(src.indexOf('callGeminiHaircutAnalysis') >= 0, 'vision analysis call must exist');
+    assert(src.indexOf('normalizeHaircutAudience(data.audience)') >= 0, 'must read audience param');
+    assert(src.indexOf('normalizeHaircutExplore') >= 0, 'must read explore param');
+    assert(src.indexOf('normalizeHaircutPref') >= 0, 'must read preference param');
+    // Scaffold must cover women + children, not just men.
+    var scaf = src.slice(src.indexOf('HAIRCUT_SCAFFOLD = {'), src.indexOf('HAIRCUT_SCAFFOLD = {') + 4000);
+    assert(/man:\s*\[/.test(scaf), 'scaffold must include man set');
+    assert(/woman:\s*\[/.test(scaf), 'scaffold must include woman set');
+    assert(/child:\s*\[/.test(scaf), 'scaffold must include child set');
+    assert(/neutral:\s*\[/.test(scaf), 'scaffold must include neutral set');
+    // Exactly 5 styles + identity lock + per-option recs + safety + inspiration label.
+    assert(src.indexOf('EXACTLY 5') >= 0, 'analysis prompt must ask for exactly 5 styles');
+    assert(src.indexOf('IDENTITY LOCK') >= 0, 'image prompts must be identity-locked');
+    assert(src.indexOf('CHILD_SAFETY_CLAUSE') >= 0, 'child safety clause must exist');
+    assert(src.indexOf('colorRecommendation') >= 0, 'must return colorRecommendation');
+    assert(src.indexOf('highlightRecommendation') >= 0, 'must return highlightRecommendation');
+    assert(src.indexOf('curlStraightRecommendation') >= 0, 'must return curlStraightRecommendation');
+    assert(src.indexOf("style_inspiration") >= 0, 'low-confidence previews labelled style_inspiration');
+  });
+
+  test('A13. landing wires audience/explore/preference + renders all-audience cards', function() {
+    var src = read('mobile-barber/mobile-barber.js');
+    assert(src.indexOf('handleAiOptionsChange') >= 0, 'options change handler must exist');
+    assert(/options:\s*\{\s*audience/.test(src), 'aiPreview.options state must exist');
+    // generate() must forward the new params.
+    var ga = src.slice(src.indexOf('function handleAiAnalyze'), src.indexOf('function handleAiAnalyze') + 1600);
+    assert(ga.indexOf('audience:') >= 0, 'analyze must pass audience');
+    assert(ga.indexOf('explore:') >= 0, 'analyze must pass explore');
+    assert(ga.indexOf('preference:') >= 0, 'analyze must pass preference');
+    // Cards render the new fields + inspiration warning.
+    assert(src.indexOf('appendAiRecRow') >= 0, 'card rec-row helper must exist');
+    assert(src.indexOf('mb-ai-rec-card__inspiration') >= 0, 'inspiration warning element must exist');
+    assert(src.indexOf("rec.previewKind === 'style_inspiration'") >= 0, 'must honor previewKind');
+    assert(src.indexOf('aiAudienceLabel') >= 0, 'audience chip label helper must exist');
+    // All 3 booking paths attach the new selected fields.
+    assert(count(src, 'aiSelectedStyleFields(rec)') >= 2, 'inline + manual paths must attach all-audience fields');
+    assert(src.indexOf('booking.selectedAudienceType') >= 0, 'chat path must attach selectedAudienceType');
+    assert(src.indexOf('booking.selectedColorRecommendation') >= 0, 'chat path must attach color rec');
+    // Multilingual: every new customer key defined in en + vi + es (3 copies).
+    ['homeAiPreviewWhoForLabel', 'homeAiPreviewExploreLabel', 'homeAiPreviewVibeLabel',
+     'homeAiPreviewAudienceMan', 'homeAiPreviewAudienceWoman', 'homeAiPreviewAudienceChild',
+     'homeAiPreviewExploreColor', 'homeAiPreviewExploreHighlights', 'homeAiPreviewExploreCurly',
+     'homeAiPreviewExploreStraight', 'homeAiPreviewColorLabel', 'homeAiPreviewHighlightLabel',
+     'homeAiPreviewTextureLabel', 'homeAiPreviewInspirationWarning']
+      .forEach(function(k) {
+        assertEq(count(src, k + ':'), 3, k + ' must be defined in en+vi+es');
+      });
+  });
+
+  test('A14. vendor dashboard renders all-audience attributes (vi/en/es)', function() {
+    var src = read('mobile-barber/mobile-barber-dashboard.js');
+    assert(src.indexOf('booking.selectedAudienceType') >= 0, 'must read selectedAudienceType');
+    assert(src.indexOf('booking.selectedColorRecommendation') >= 0, 'must read selectedColorRecommendation');
+    assert(src.indexOf('booking.selectedHighlightRecommendation') >= 0, 'must read selectedHighlightRecommendation');
+    assert(src.indexOf('booking.selectedTexturePreference') >= 0, 'must read selectedTexturePreference');
+    ['vendorAiPreviewAudienceLabel', 'vendorAiPreviewColorLabel',
+     'vendorAiPreviewHighlightLabel', 'vendorAiPreviewTextureLabel']
+      .forEach(function(k) {
+        assertEq(count(src, k + ':'), 3, k + ' must be defined in en+vi+es');
+      });
+  });
+
+  test('A15. ai-preview client module forwards audience/explore/preference', function() {
+    var src = read('mobile-barber/mobile-barber-ai-preview.js');
+    assert(src.indexOf('audience: audience') >= 0, 'callable payload must include audience');
+    assert(src.indexOf('explore: explore') >= 0, 'callable payload must include explore');
+    assert(src.indexOf('preference: preference') >= 0, 'callable payload must include preference');
+  });
+
+  test('A16. inline rec-card renders all 5 (loops over recommendations)', function() {
+    var src = read('mobile-barber/mobile-barber.js');
+    var rr = src.slice(src.indexOf('function renderAiResults'), src.indexOf('function renderAiResults') + 2800);
+    assert(/recs\.forEach/.test(rr), 'must iterate all recommendations (supports 5)');
+    assert(rr.indexOf('mb-ai-rec-card__audience') >= 0, 'card must show audience chip');
   });
 }
 

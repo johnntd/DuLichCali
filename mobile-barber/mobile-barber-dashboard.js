@@ -97,6 +97,16 @@
       vendorAiPreviewSuggestedNotes: 'Suggested cutting notes',
       vendorAiPreviewStyleLabel: 'Style',
       vendorAiPreviewMaintenanceLabel: 'Maintenance',
+      vendorAiPreviewAudienceLabel: 'Style for',
+      vendorAiPreviewAudienceMan: 'Man',
+      vendorAiPreviewAudienceWoman: 'Woman',
+      vendorAiPreviewAudienceChild: 'Child',
+      vendorAiPreviewAudienceNeutral: 'Unspecified',
+      vendorAiPreviewColorLabel: 'Color',
+      vendorAiPreviewHighlightLabel: 'Highlights',
+      vendorAiPreviewTextureLabel: 'Texture',
+      vendorAiPreviewWhyLabel: 'Why it fits',
+      vendorAiPreviewSafetyLabel: 'Safety note',
       vendorAiPreviewBarberRefNotes: 'Barber reference notes',
       vendorAiPreviewBarberInstructions: 'Your cutting notes',
       vendorAiPreviewBarberInstructionsPlaceholder: 'Add specific instructions, e.g. #3 sides, scissor on top, square neck.',
@@ -383,6 +393,16 @@
       vendorAiPreviewSuggestedNotes: 'Ghi chú cắt gợi ý',
       vendorAiPreviewStyleLabel: 'Kiểu tóc',
       vendorAiPreviewMaintenanceLabel: 'Mức chăm sóc',
+      vendorAiPreviewAudienceLabel: 'Dành cho',
+      vendorAiPreviewAudienceMan: 'Nam',
+      vendorAiPreviewAudienceWoman: 'Nữ',
+      vendorAiPreviewAudienceChild: 'Trẻ em',
+      vendorAiPreviewAudienceNeutral: 'Không xác định',
+      vendorAiPreviewColorLabel: 'Màu tóc',
+      vendorAiPreviewHighlightLabel: 'Highlight',
+      vendorAiPreviewTextureLabel: 'Kết cấu',
+      vendorAiPreviewWhyLabel: 'Vì sao hợp',
+      vendorAiPreviewSafetyLabel: 'Lưu ý an toàn',
       vendorAiPreviewBarberRefNotes: 'Ghi chú tham khảo cho thợ',
       vendorAiPreviewBarberInstructions: 'Ghi chú cắt của bạn',
       vendorAiPreviewBarberInstructionsPlaceholder: 'Thêm hướng dẫn cụ thể, ví dụ: số 3 hai bên, kéo trên đầu, vuông gáy.',
@@ -669,6 +689,16 @@
       vendorAiPreviewSuggestedNotes: 'Notas de corte sugeridas',
       vendorAiPreviewStyleLabel: 'Estilo',
       vendorAiPreviewMaintenanceLabel: 'Mantenimiento',
+      vendorAiPreviewAudienceLabel: 'Estilo para',
+      vendorAiPreviewAudienceMan: 'Hombre',
+      vendorAiPreviewAudienceWoman: 'Mujer',
+      vendorAiPreviewAudienceChild: 'Niño/a',
+      vendorAiPreviewAudienceNeutral: 'Sin especificar',
+      vendorAiPreviewColorLabel: 'Color',
+      vendorAiPreviewHighlightLabel: 'Mechas',
+      vendorAiPreviewTextureLabel: 'Textura',
+      vendorAiPreviewWhyLabel: 'Por qué le queda',
+      vendorAiPreviewSafetyLabel: 'Nota de seguridad',
       vendorAiPreviewBarberRefNotes: 'Notas de referencia del barbero',
       vendorAiPreviewBarberInstructions: 'Sus notas de corte',
       vendorAiPreviewBarberInstructionsPlaceholder: 'Instrucciones específicas, p. ej. #3 a los lados, tijera arriba, nuca cuadrada.',
@@ -988,7 +1018,7 @@
 
   function getVendorId() {
     var params = new URLSearchParams(root.location.search);
-    return params.get('vendorId') || params.get('id') || (DATA && DATA.SAMPLE_VENDOR_ID) || '';
+    return params.get('vendorId') || params.get('id') || '';
   }
 
   function getTodayIso() {
@@ -2200,7 +2230,10 @@
     // and either uploaded a selfie OR picked a style. Selfie thumbnail is
     // vendor-only (Firestore rules already gate the booking doc).
     var hasAiPreview = trim(booking.selfieDataUrl) ||
+      trim(booking.customerSelfieUrl) ||
       trim(booking.selectedAiStyleId) ||
+      trim(booking.selectedHaircutImageUrl) ||
+      trim(booking.selectedHaircutTitle) ||
       trim(booking.selectedStyleId) ||
       (Array.isArray(booking.recommendedStyles) && booking.recommendedStyles.length);
     if (hasAiPreview) {
@@ -2223,10 +2256,11 @@
 
     var grid = el('div', 'mb-booking-ai-preview__grid');
     // Customer selfie (vendor-only, never publicly displayed)
-    if (trim(booking.selfieDataUrl)) {
+    var selfieUrl = trim(booking.customerSelfieUrl) || trim(booking.selfieDataUrl);
+    if (selfieUrl) {
       var selfieWrap = el('figure', 'mb-booking-ai-preview__media');
       var selfieImg = document.createElement('img');
-      selfieImg.src = booking.selfieDataUrl;
+      selfieImg.src = selfieUrl;
       selfieImg.alt = t('vendorAiPreviewSelfieAlt');
       selfieImg.loading = 'lazy';
       var caption = el('figcaption');
@@ -2237,8 +2271,8 @@
     }
     // Selected style preview (prefer canonical selectedAi* fields, fall back
     // to legacy selectedStyleId / selectedStylePreviewUrl mirrors).
-    var styleImgUrl = trim(booking.selectedAiStyleImage) || trim(booking.selectedStylePreviewUrl);
-    var styleNameTxt = trim(booking.selectedAiStyleName)
+    var styleImgUrl = trim(booking.selectedHaircutImageUrl) || trim(booking.selectedAiStyleImage) || trim(booking.selectedStylePreviewUrl);
+    var styleNameTxt = trim(booking.selectedHaircutTitle) || trim(booking.selectedAiStyleName)
       || recommendationTitle(booking, booking.selectedAiStyleId || booking.selectedStyleId)
       || t('vendorAiPreviewStyleCaption');
     if (styleImgUrl) {
@@ -2261,21 +2295,53 @@
     var legacyRec = (Array.isArray(booking.recommendedStyles) ? booking.recommendedStyles : [])
       .filter(function(r) { return r && r.styleId === (booking.selectedAiStyleId || booking.selectedStyleId); })[0];
     var aiName = styleNameTxt;
-    var aiDesc = trim(booking.selectedAiStyleDescription) || (legacyRec && trim(legacyRec.explanation)) || '';
-    var aiMaint = trim(booking.selectedAiMaintenanceLevel) || (legacyRec && trim(legacyRec.maintenance)) || '';
-    var aiBarberNotes = trim(booking.selectedAiBarberNotes) || (legacyRec && trim(legacyRec.barberNotes)) || '';
-    if (aiName || aiDesc || aiMaint || aiBarberNotes) {
+    var aiDesc = trim(booking.selectedHaircutDescription) || trim(booking.selectedAiStyleDescription) || (legacyRec && trim(legacyRec.explanation)) || '';
+    var aiMaint = trim(booking.selectedHaircutMaintenanceLevel) || trim(booking.selectedAiMaintenanceLevel) || (legacyRec && trim(legacyRec.maintenance)) || '';
+    var aiBarberNotes = trim(booking.selectedHaircutBarberNotes) || trim(booking.selectedAiBarberNotes) || (legacyRec && trim(legacyRec.barberNotes)) || '';
+    // All-audience attributes (men / women / children + color / highlights /
+    // texture). Prefer the canonical booking fields, fall back to the selected
+    // entry in recommendedStyles[] for bookings written before those fields.
+    var aiAudienceRaw = trim(booking.selectedAudienceType) || (legacyRec && trim(legacyRec.targetAudience)) || '';
+    var aiColor = trim(booking.selectedColorRecommendation) || (legacyRec && trim(legacyRec.colorRecommendation)) || '';
+    var aiHighlight = trim(booking.selectedHighlightRecommendation) || (legacyRec && trim(legacyRec.highlightRecommendation)) || '';
+    var aiTexture = trim(booking.selectedTexturePreference) || (legacyRec && trim(legacyRec.curlStraightRecommendation)) || '';
+    var aiWhy = (legacyRec && trim(legacyRec.whyItFitsFace)) || '';
+    var aiSafety = (legacyRec && trim(legacyRec.safetyNotes)) || '';
+    var aiAudienceTxt = aiAudienceRaw
+      ? (t('vendorAiPreviewAudience' + aiAudienceRaw.charAt(0).toUpperCase() + aiAudienceRaw.slice(1)) || aiAudienceRaw)
+      : '';
+    var promptSnapshot = trim(booking.selectedHaircutPromptSnapshot);
+    var source = trim(booking.selectedHaircutSource);
+    // Safe row builder — label via <strong>, AI value via text node (never
+    // injects AI-supplied HTML into the dashboard).
+    function aiRefRow(parent, labelKey, value, cls) {
+      var v = trim(value);
+      if (!v) return;
+      var p = el('p', cls || 'mb-booking-ai-preview__reference-meta');
+      var s = document.createElement('strong');
+      s.textContent = (t(labelKey) || '') + ': ';
+      p.appendChild(s);
+      p.appendChild(document.createTextNode(v));
+      parent.appendChild(p);
+    }
+    if (aiName || aiDesc || aiMaint || aiBarberNotes || aiAudienceTxt || aiColor || aiHighlight || aiTexture) {
       var ref = el('div', 'mb-booking-ai-preview__reference');
       if (aiName) {
         var refStyle = el('p', 'mb-booking-ai-preview__reference-name');
         refStyle.innerHTML = '<strong>' + (t('vendorAiPreviewStyleLabel') || 'Style') + ':</strong> ' + aiName;
         ref.appendChild(refStyle);
       }
+      aiRefRow(ref, 'vendorAiPreviewAudienceLabel', aiAudienceTxt, 'mb-booking-ai-preview__reference-meta');
       if (aiMaint) {
         var refMaint = el('p', 'mb-booking-ai-preview__reference-meta');
         refMaint.innerHTML = '<strong>' + (t('vendorAiPreviewMaintenanceLabel') || 'Maintenance') + ':</strong> ' + aiMaint;
         ref.appendChild(refMaint);
       }
+      aiRefRow(ref, 'vendorAiPreviewColorLabel', aiColor, 'mb-booking-ai-preview__reference-meta');
+      aiRefRow(ref, 'vendorAiPreviewHighlightLabel', aiHighlight, 'mb-booking-ai-preview__reference-meta');
+      aiRefRow(ref, 'vendorAiPreviewTextureLabel', aiTexture, 'mb-booking-ai-preview__reference-meta');
+      aiRefRow(ref, 'vendorAiPreviewWhyLabel', aiWhy, 'mb-booking-ai-preview__reference-desc');
+      aiRefRow(ref, 'vendorAiPreviewSafetyLabel', aiSafety, 'mb-booking-ai-preview__notes');
       if (aiDesc) {
         var refDesc = el('p', 'mb-booking-ai-preview__reference-desc');
         refDesc.textContent = aiDesc;
@@ -2285,6 +2351,11 @@
         var refNotes = el('p', 'mb-booking-ai-preview__notes');
         refNotes.innerHTML = '<strong>' + (t('vendorAiPreviewBarberRefNotes') || 'Barber reference notes') + ':</strong> ' + aiBarberNotes;
         ref.appendChild(refNotes);
+      }
+      if (source || promptSnapshot) {
+        var refSource = el('p', 'mb-booking-ai-preview__reference-meta');
+        refSource.textContent = [source, promptSnapshot].filter(Boolean).join(' • ');
+        ref.appendChild(refSource);
       }
       section.appendChild(ref);
     }

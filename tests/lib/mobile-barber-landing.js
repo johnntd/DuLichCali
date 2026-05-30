@@ -87,6 +87,27 @@ function runMobileBarberLandingTests(test) {
     assertContains(homeCss, 'flex: 0 0 calc(72% - .5rem)');
   });
 
+  test('Homepage marketplace shows ONLY active vendors (launch guard — no stale content)', function() {
+    // Phase 4 launch invariant: inactive vendors/services/promos must never
+    // appear on the homepage. These guards already exist in script.js; this
+    // test locks them so they cannot silently regress before production.
+    assertContains(homeJs, ".where('adminStatus', '==', 'active')",
+      'marketplace must query only adminStatus=active vendors');
+    assertContains(homeJs, 'data.active === false || data.disabled === true',
+      'must hard-skip vendors flagged active:false / disabled');
+    assertContains(homeJs, '_filterPubliclyVisibleVendors(vendors',
+      'must apply the public-visibility gate (inactive / closed / out-of-region)');
+    assertContains(homeJs, 'await window._vendorAdminCacheReady',
+      'must await the admin-status cache so inactive vendors do not leak on first paint');
+    assertContains(homeJs, 'section.hidden = true',
+      'must hide the marketplace section entirely when no active vendors are visible');
+    assertContains(homeJs, 'applyHeroSlideVisibility',
+      'hero carousel must sync to the active-vendor set');
+    // Static fallback path must also enforce active + homepageActive.
+    assertContains(homeJs, 'b.active && b.homepageActive',
+      'static-fallback marketplace must require active + homepageActive');
+  });
+
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
     assertContains(html, '/mobile-barber/mobile-barber.css?v=20260530f');
     assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260530a');

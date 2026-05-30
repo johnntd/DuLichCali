@@ -1952,6 +1952,20 @@
   color: #cbd5e1;
 }
 
+/* Bucket-based pill colors. statusBucket() emits 'pending'/'traveling' (not the
+   raw status), so these complete the scheme so the pill matches the row's left
+   status rail (pending=amber, traveling/in-progress=blue). */
+.mb-status-pill--pending {
+  background: rgba(251, 191, 36, .15);
+  border-color: rgba(251, 191, 36, .45);
+  color: #fbbf24;
+}
+.mb-status-pill--traveling {
+  background: rgba(56, 189, 248, .15);
+  border-color: rgba(56, 189, 248, .45);
+  color: #7dd3fc;
+}
+
 .mb-customer-account__grid {
   display: grid;
   gap: 1rem;

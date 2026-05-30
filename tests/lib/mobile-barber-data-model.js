@@ -30,13 +30,12 @@ function runMobileBarberDataModelTests(test) {
   });
 
   test('Mobile Barber sample vendor loads and validates', function() {
-    var vendor = MobileBarberData.findVendorById(MobileBarberData.SAMPLE_VENDOR_ID);
+    var vendor = MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID);
     var result = MobileBarberData.validateVendor(vendor);
     assert(vendor, 'sample vendor missing');
-    // Demo vendor is intentionally inactive so it doesn't show on the
-    // public landing/homepage — only Michael + Tim are real barbers.
-    // It still loads + validates so test fixtures keep working.
-    assertEq(vendor.active, false);
+    // Michael + Tim are the only real barbers and both ship active so they
+    // appear on the public landing/homepage.
+    assertEq(vendor.active, true);
     assertEq(result.valid, true, result.errors.join('; '));
     assert(vendor.serviceAreas.length >= 1, 'sample vendor needs service areas');
     assert(vendor.serviceBadges.indexOf('fade') >= 0, 'sample vendor needs service badges');
@@ -44,12 +43,12 @@ function runMobileBarberDataModelTests(test) {
   });
 
   test('Mobile Barber vendor validator accepts optional provider keys', function() {
-    var vendor = clone(MobileBarberData.findVendorById(MobileBarberData.SAMPLE_VENDOR_ID));
+    var vendor = clone(MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID));
     vendor.geminiKey = 'test-gemini-key';
     vendor.openaiKey = 'test-openai-key';
     vendor.cashEnabled = true;
     vendor.zelleEnabled = true;
-    vendor.zellePhone = '(714) 555-0148';
+    vendor.zellePhone = '(714) 227-6007';
     vendor.zelleEmail = 'pay@example.com';
     vendor.zelleQrUrl = 'data:image/jpeg;base64,abc123';
     var result = MobileBarberData.validateVendor(vendor);
@@ -57,13 +56,13 @@ function runMobileBarberDataModelTests(test) {
   });
 
   test('Mobile Barber services load for the sample vendor', function() {
-    var services = MobileBarberData.listServicesForVendor(MobileBarberData.SAMPLE_VENDOR_ID);
+    var services = MobileBarberData.listServicesForVendor(MobileBarberData.MICHAEL_VENDOR_ID);
     var vendorIds = MobileBarberData.sampleVendors.map(function(v) { return v.id; });
     assert(services.length >= 1, 'sample services missing');
     services.forEach(function(service) {
       var result = MobileBarberData.validateService(service, vendorIds);
       assertEq(result.valid, true, result.errors.join('; '));
-      assertEq(service.vendorId, MobileBarberData.SAMPLE_VENDOR_ID);
+      assertEq(service.vendorId, MobileBarberData.MICHAEL_VENDOR_ID);
     });
   });
 
@@ -85,14 +84,15 @@ function runMobileBarberDataModelTests(test) {
 
   test('Mobile Barber booking validates required fields', function() {
     var booking = {
-      id: 'demo-booking-1',
-      vendorId: MobileBarberData.SAMPLE_VENDOR_ID,
+      id: 'test-booking-1',
+      bookingRequestId: 'req-test-booking-1',
+      vendorId: MobileBarberData.MICHAEL_VENDOR_ID,
       customerName: 'Test Customer',
       customerPhone: '7145550100',
       customerEmail: '',
-      serviceId: 'classic-mobile-cut',
-      serviceName: 'Classic Mobile Haircut',
-      servicePrice: 45,
+      serviceId: 'michael-nguyen-oc-classic-haircut',
+      serviceName: 'Classic Haircut',
+      servicePrice: 40,
       address: '123 Test St',
       city: 'Westminster',
       zip: '92683',
@@ -118,6 +118,8 @@ function runMobileBarberDataModelTests(test) {
       serviceIds: MobileBarberData.sampleServices.map(function(s) { return s.id; })
     });
     assertEq(result.valid, true, result.errors.join('; '));
+    assert(MobileBarberData.BOOKING_FIELDS.indexOf('bookingRequestId') >= 0,
+      'bookingRequestId must be part of the safe booking schema');
 
     var missingAddress = clone(booking);
     delete missingAddress.address;
@@ -164,7 +166,7 @@ function runMobileBarberDataModelTests(test) {
     var requested = clone(booking);
     requested.paymentMethod = 'zelle';
     requested.paymentStatus = 'payment_requested';
-    requested.zellePhone = '(714) 555-0148';
+    requested.zellePhone = '(714) 227-6007';
     var requestedResult = MobileBarberData.validateBooking(requested);
     assertEq(requestedResult.valid, true, requestedResult.errors.join('; '));
   });
@@ -191,7 +193,7 @@ function runMobileBarberDataModelTests(test) {
   test('Mobile Barber customer profile validates preferences and vendor scope', function() {
     var customer = {
       id: 'customer-7145550100',
-      vendorId: MobileBarberData.SAMPLE_VENDOR_ID,
+      vendorId: MobileBarberData.MICHAEL_VENDOR_ID,
       customerName: 'Test Customer',
       customerPhone: '7145550100',
       customerPhoneNormalized: '7145550100',
@@ -200,9 +202,9 @@ function runMobileBarberDataModelTests(test) {
       stylePreference: 'Low fade',
       notes: 'Use scissors on top',
       photoUrls: ['style.jpg'],
-      lastServiceId: 'classic-mobile-cut',
-      lastServiceName: 'Classic Mobile Haircut',
-      lastBookingId: 'demo-booking-1',
+      lastServiceId: 'michael-nguyen-oc-classic-haircut',
+      lastServiceName: 'Classic Haircut',
+      lastBookingId: 'test-booking-1',
       createdAt: '2026-05-24T00:00:00.000Z',
       updatedAt: '2026-05-24T00:00:00.000Z'
     };
@@ -214,7 +216,7 @@ function runMobileBarberDataModelTests(test) {
 
   test('Mobile Barber portfolio images validate and hide inappropriate images', function() {
     var vendorIds = MobileBarberData.sampleVendors.map(function(v) { return v.id; });
-    var rows = MobileBarberData.listPortfolioForVendor(MobileBarberData.SAMPLE_VENDOR_ID);
+    var rows = MobileBarberData.listPortfolioForVendor(MobileBarberData.MICHAEL_VENDOR_ID);
     assert(rows.length >= 1, 'sample portfolio missing');
     rows.forEach(function(image) {
       var result = MobileBarberData.validatePortfolioImage(image, { vendorIds: vendorIds });
@@ -222,15 +224,15 @@ function runMobileBarberDataModelTests(test) {
     });
     var hidden = clone(rows[0]);
     hidden.hidden = true;
-    var visible = MobileBarberData.listPortfolioForVendor(MobileBarberData.SAMPLE_VENDOR_ID, [hidden], false);
+    var visible = MobileBarberData.listPortfolioForVendor(MobileBarberData.MICHAEL_VENDOR_ID, [hidden], false);
     assertEq(visible.length, 0, 'hidden portfolio image must not publish');
-    var withHidden = MobileBarberData.listPortfolioForVendor(MobileBarberData.SAMPLE_VENDOR_ID, [hidden], true);
+    var withHidden = MobileBarberData.listPortfolioForVendor(MobileBarberData.MICHAEL_VENDOR_ID, [hidden], true);
     assertEq(withHidden.length, 1, 'dashboard can include hidden portfolio image');
   });
 
   test('Mobile Barber reviews validate and support vendor responses', function() {
     var vendorIds = MobileBarberData.sampleVendors.map(function(v) { return v.id; });
-    var rows = MobileBarberData.listReviewsForVendor(MobileBarberData.SAMPLE_VENDOR_ID);
+    var rows = MobileBarberData.listReviewsForVendor(MobileBarberData.MICHAEL_VENDOR_ID);
     assert(rows.length >= 1, 'sample reviews missing');
     rows.forEach(function(review) {
       var result = MobileBarberData.validateReview(review, { vendorIds: vendorIds });

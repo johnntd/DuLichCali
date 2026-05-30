@@ -1,5 +1,7 @@
 'use strict';
 
+var fs = require('fs');
+var path = require('path');
 var MobileBarberData = require('../../mobile-barber/mobile-barber-data');
 var MobileBarberBooking = require('../../mobile-barber/mobile-barber-booking');
 
@@ -19,7 +21,7 @@ function baseDraft() {
     customerPhone: '714-555-0100',
     customerEmail: '',
     smsOptIn: false,
-    serviceId: 'classic-mobile-cut',
+    serviceId: 'michael-nguyen-oc-classic-haircut',
     requestedDate: '2026-06-01',
     startTime: '10:00',
     address: '123 Test St',
@@ -36,7 +38,7 @@ function sampleBuiltBooking(id) {
   var built = MobileBarberBooking.buildBooking({
     id: id || 'save-source-test',
     now: '2026-05-24T00:00:00.000Z',
-    vendor: MobileBarberData.findVendorById(MobileBarberData.SAMPLE_VENDOR_ID),
+    vendor: MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID),
     draft: draft,
     availabilityResult: result
   });
@@ -47,8 +49,8 @@ function sampleBuiltBooking(id) {
 function check(draft, existingBookings, extra) {
   extra = extra || {};
   return MobileBarberBooking.checkAvailability({
-    vendor: MobileBarberData.findVendorById(MobileBarberData.SAMPLE_VENDOR_ID),
-    services: MobileBarberData.listServicesForVendor(MobileBarberData.SAMPLE_VENDOR_ID),
+    vendor: MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID),
+    services: MobileBarberData.listServicesForVendor(MobileBarberData.MICHAEL_VENDOR_ID),
     availability: MobileBarberData.sampleAvailability,
     draft: draft,
     existingBookings: existingBookings || [],
@@ -108,13 +110,13 @@ function runMobileBarberBookingTests(test) {
     assertEq(result.timing.travelMinutes, 20);
     assertEq(result.timing.totalMinutes, 75);
     assertEq(result.timing.endTime, '11:15');
-    assertEq(result.price.totalPrice, 60);
+    assertEq(result.price.totalPrice, 50);
   });
 
   test('Mobile Barber manual booking blocks double booking overlap', function() {
     var result = check(baseDraft(), [{
       id: 'existing-1',
-      vendorId: MobileBarberData.SAMPLE_VENDOR_ID,
+      vendorId: MobileBarberData.MICHAEL_VENDOR_ID,
       requestedDate: '2026-06-01',
       startTime: '10:30',
       endTime: '11:00',
@@ -127,7 +129,7 @@ function runMobileBarberBookingTests(test) {
   test('Mobile Barber manual booking allows back-to-back appointment', function() {
     var result = check(baseDraft(), [{
       id: 'existing-2',
-      vendorId: MobileBarberData.SAMPLE_VENDOR_ID,
+      vendorId: MobileBarberData.MICHAEL_VENDOR_ID,
       requestedDate: '2026-06-01',
       startTime: '11:15',
       endTime: '12:00',
@@ -139,7 +141,7 @@ function runMobileBarberBookingTests(test) {
   test('Mobile Barber back-to-back check includes cleanup buffer', function() {
     var result = check(baseDraft(), [{
       id: 'existing-cleanup',
-      vendorId: MobileBarberData.SAMPLE_VENDOR_ID,
+      vendorId: MobileBarberData.MICHAEL_VENDOR_ID,
       requestedDate: '2026-06-01',
       startTime: '10:50',
       endTime: '11:30',
@@ -152,7 +154,7 @@ function runMobileBarberBookingTests(test) {
   test('Mobile Barber travel buffer blocks appointments between service locations', function() {
     var result = check(baseDraft(), [{
       id: 'existing-travel',
-      vendorId: MobileBarberData.SAMPLE_VENDOR_ID,
+      vendorId: MobileBarberData.MICHAEL_VENDOR_ID,
       requestedDate: '2026-06-01',
       startTime: '11:00',
       endTime: '11:45',
@@ -164,7 +166,7 @@ function runMobileBarberBookingTests(test) {
 
   test('Mobile Barber blocks outside working hours and unavailable days', function() {
     var early = baseDraft();
-    early.startTime = '09:30';
+    early.startTime = '08:30';
     var result = check(early);
     assertEq(result.canCreate, false);
     assertEq(result.key, 'outside_hours');
@@ -180,7 +182,7 @@ function runMobileBarberBookingTests(test) {
     var result = check(baseDraft(), [], {
       unavailableBlocks: [{
         id: 'block-lunch',
-        vendorId: MobileBarberData.SAMPLE_VENDOR_ID,
+        vendorId: MobileBarberData.MICHAEL_VENDOR_ID,
         date: '2026-06-01',
         startTime: '10:30',
         endTime: '12:00',
@@ -211,19 +213,19 @@ function runMobileBarberBookingTests(test) {
   });
 
   test('Mobile Barber service-area helper rejects out-of-area address', function() {
-    var vendor = MobileBarberData.findVendorById(MobileBarberData.SAMPLE_VENDOR_ID);
+    var vendor = MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID);
     assertEq(MobileBarberBooking.isWithinServiceArea(vendor, { city: 'Westminster', zip: '92683' }), true);
-    assertEq(MobileBarberBooking.isWithinServiceArea(vendor, { city: 'Irvine', zip: '92614' }), false);
+    assertEq(MobileBarberBooking.isWithinServiceArea(vendor, { city: 'San Jose', zip: '95121' }), false);
   });
 
   test('Mobile Barber named Phase 8 helpers calculate windows and price', function() {
-    var vendor = MobileBarberData.findVendorById(MobileBarberData.SAMPLE_VENDOR_ID);
-    var service = MobileBarberData.listServicesForVendor(MobileBarberData.SAMPLE_VENDOR_ID)[0];
+    var vendor = MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID);
+    var service = MobileBarberData.listServicesForVendor(MobileBarberData.MICHAEL_VENDOR_ID)[0];
     var window = MobileBarberBooking.calculateAppointmentWindow(service, { requestedDate: '2026-06-01', startTime: '10:00' }, vendor);
     var price = MobileBarberBooking.calculateMobileBarberPrice(vendor, service, { city: 'Westminster', zip: '92683' });
     assertEq(window.endTime, '11:15');
     assertEq(window.totalMinutes, 75);
-    assertEq(price.totalPrice, 60);
+    assertEq(price.totalPrice, 50);
     assertEq(price.reviewRequired, false);
   });
 
@@ -291,13 +293,13 @@ function runMobileBarberBookingTests(test) {
 
   test('Mobile Barber raw window availability detects overlap', function() {
     var result = MobileBarberBooking.checkMobileBarberAvailability(
-      MobileBarberData.SAMPLE_VENDOR_ID,
+      MobileBarberData.MICHAEL_VENDOR_ID,
       '2026-06-01T10:00:00',
       '2026-06-01T11:15:00',
       {
         existingBookings: [{
           id: 'existing-window',
-          vendorId: MobileBarberData.SAMPLE_VENDOR_ID,
+          vendorId: MobileBarberData.MICHAEL_VENDOR_ID,
           requestedDate: '2026-06-01',
           startTime: '10:30',
           endTime: '11:00',
@@ -311,14 +313,14 @@ function runMobileBarberBookingTests(test) {
 
   test('Mobile Barber suggests next available slots', function() {
     var slots = MobileBarberBooking.findNextAvailableSlots(
-      MobileBarberData.SAMPLE_VENDOR_ID,
-      'classic-mobile-cut',
+      MobileBarberData.MICHAEL_VENDOR_ID,
+      'michael-nguyen-oc-classic-haircut',
       { start: '2026-06-01', end: '2026-06-01' },
       {
         limit: 3,
         existingBookings: [{
           id: 'existing-first',
-          vendorId: MobileBarberData.SAMPLE_VENDOR_ID,
+          vendorId: MobileBarberData.MICHAEL_VENDOR_ID,
           requestedDate: '2026-06-01',
           startTime: '10:00',
           endTime: '11:15',
@@ -333,7 +335,7 @@ function runMobileBarberBookingTests(test) {
 
   test('Mobile Barber cannot build booking without availability check', function() {
     var built = MobileBarberBooking.buildBooking({
-      vendor: MobileBarberData.findVendorById(MobileBarberData.SAMPLE_VENDOR_ID),
+      vendor: MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID),
       draft: baseDraft(),
       availabilityResult: null
     });
@@ -348,7 +350,7 @@ function runMobileBarberBookingTests(test) {
     var built = MobileBarberBooking.buildBooking({
       id: 'manual-ok-1',
       now: '2026-05-23T00:00:00.000Z',
-      vendor: MobileBarberData.findVendorById(MobileBarberData.SAMPLE_VENDOR_ID),
+      vendor: MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID),
       draft: draft,
       availabilityResult: result
     });
@@ -357,12 +359,100 @@ function runMobileBarberBookingTests(test) {
     assertEq(built.booking.smsOptIn, true);
     assertEq(built.booking.source, 'customer_form');
     assertEq(built.booking.endTime, '11:15');
-    assertEq(built.booking.servicePrice, 45);
-    assertEq(built.booking.travelFee, 15);
-    assertEq(built.booking.amountDue, 60);
+    assertEq(built.booking.servicePrice, 40);
+    assertEq(built.booking.travelFee, 0);
+    assertEq(built.booking.amountDue, 50);
     assertEq(built.booking.paymentMethod, 'cash');
     assertEq(built.booking.paymentStatus, 'unpaid');
-    assertEq(built.booking.zellePhone, '(714) 555-0148');
+    assertEq(built.booking.zellePhone, '(714) 227-6007');
+    assertEq(built.booking.selectedHaircutSource, 'service_list');
+    assertEq(built.booking.selectedHaircutTitle, 'Classic Haircut');
+    assert(built.booking.selectedHaircutImageUrl.indexOf('/assets/mobile-barber/styles/classic-haircut.jpg') >= 0,
+      'service-list booking must carry the selected haircut image');
+    assert(built.booking.selectedHaircutPromptSnapshot,
+      'service-list booking should preserve the service image prompt as barber reference context');
+  });
+
+  test('Mobile Barber repeated submits use the same idempotency key and document id', function() {
+    var draft = baseDraft();
+    var result = check(draft);
+    var vendor = MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID);
+    var first = MobileBarberBooking.buildBooking({
+      now: '2026-05-30T00:00:00.000Z',
+      vendor: vendor,
+      draft: draft,
+      availabilityResult: result
+    });
+    var second = MobileBarberBooking.buildBooking({
+      now: '2026-05-30T00:00:01.000Z',
+      vendor: vendor,
+      draft: Object.assign({}, draft),
+      availabilityResult: result
+    });
+    assertEq(first.valid, true, first.errors && first.errors.join('; '));
+    assertEq(second.valid, true, second.errors && second.errors.join('; '));
+    assert(first.booking.id.indexOf('mb-') === 0, 'generated booking id must keep mobile barber prefix');
+    assertEq(first.booking.id, second.booking.id, 'same request must target the same Firestore doc');
+    assertEq(first.booking.bookingRequestId, second.booking.bookingRequestId, 'same request must carry same idempotency key');
+  });
+
+  test('Mobile Barber explicit bookingRequestId is honored for stronger client idempotency', function() {
+    var draft = Object.assign(baseDraft(), {
+      bookingRequestId: 'client-req-4085550199-michael-20260601-1000'
+    });
+    var result = check(draft);
+    var built = MobileBarberBooking.buildBooking({
+      now: '2026-05-30T00:00:00.000Z',
+      vendor: MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID),
+      draft: draft,
+      availabilityResult: result
+    });
+    assertEq(built.valid, true, built.errors && built.errors.join('; '));
+    assertEq(built.booking.id, 'mb-client-req-4085550199-michael-20260601-1000');
+    assertEq(built.booking.bookingRequestId, 'client-req-4085550199-michael-20260601-1000');
+  });
+
+  test('Mobile Barber AI-generated booking carries durable haircut reference fields', function() {
+    var vendor = MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID);
+    var draft = Object.assign(baseDraft(), {
+      selectedAiStyleId: 'ai-style-1',
+      selectedAiStyleName: 'Low Taper AI Preview',
+      selectedAiStyleImage: 'data:image/jpeg;base64,abc123',
+      selectedAiStyleDescription: 'Low taper with textured top.',
+      selectedAiBarberNotes: 'Keep bulk on top; low taper around ears.',
+      selectedAiMaintenanceLevel: 'Every 3 weeks',
+      selectedHaircutPromptSnapshot: 'customer requested low taper preview',
+      aiAnalysisConsent: 'true',
+      selfieDataUrl: 'data:image/jpeg;base64,selfie123'
+    });
+    var result = check(draft);
+    var built = MobileBarberBooking.buildBooking({
+      id: 'haircut-ref-ai',
+      now: '2026-06-01T08:00:00.000Z',
+      vendor: vendor,
+      draft: draft,
+      availabilityResult: result
+    });
+    assertEq(built.valid, true, built.errors && built.errors.join('; '));
+    assertEq(built.booking.selectedHaircutSource, 'ai_generated');
+    assertEq(built.booking.selectedHaircutTitle, 'Low Taper AI Preview');
+    assertEq(built.booking.selectedHaircutImageUrl, 'data:image/jpeg;base64,abc123');
+    assertEq(built.booking.selectedHaircutPromptSnapshot, 'customer requested low taper preview');
+    assertEq(built.booking.customerSelfieUrl, 'data:image/jpeg;base64,selfie123');
+  });
+
+  test('Mobile Barber in-progress bookings block overlapping slots', function() {
+    var draft = baseDraft();
+    var result = check(draft, [{
+      id: 'in-progress-1',
+      vendorId: MobileBarberData.MICHAEL_VENDOR_ID,
+      requestedDate: draft.requestedDate,
+      startTime: '10:15',
+      endTime: '10:45',
+      status: 'in_progress'
+    }]);
+    assertEq(result.canCreate, false);
+    assertEq(result.key, 'booking_overlap');
   });
 
   test('Mobile Barber manual booking stores cash and Zelle payment preferences from vendor phone', function() {
@@ -373,15 +463,15 @@ function runMobileBarberBookingTests(test) {
       var built = MobileBarberBooking.buildBooking({
         id: 'payment-' + (method || 'cash'),
         now: '2026-05-25T00:00:00.000Z',
-        vendor: MobileBarberData.findVendorById(MobileBarberData.SAMPLE_VENDOR_ID),
+        vendor: MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID),
         draft: draft,
         availabilityResult: result
       });
       assertEq(built.valid, true, built.errors && built.errors.join('; '));
       assertEq(built.booking.paymentMethod, method || 'cash');
       assertEq(built.booking.paymentStatus, 'unpaid');
-      assertEq(built.booking.zellePhone, '(714) 555-0148');
-      assertEq(built.booking.amountDue, built.booking.servicePrice + built.booking.travelFee);
+      assertEq(built.booking.zellePhone, '(714) 227-6007');
+      assertEq(built.booking.amountDue, built.booking.totalPrice);
     });
   });
 
@@ -473,19 +563,19 @@ function runMobileBarberBookingTests(test) {
 
   test('Mobile Barber customer history filters by vendor and phone', function() {
     var rows = MobileBarberBooking.filterCustomerBookings([
-      { id: 'a', vendorId: MobileBarberData.SAMPLE_VENDOR_ID, customerPhone: '(714) 555-0100', requestedDate: '2026-06-01', startTime: '10:00' },
+      { id: 'a', vendorId: MobileBarberData.MICHAEL_VENDOR_ID, customerPhone: '(714) 555-0100', requestedDate: '2026-06-01', startTime: '10:00' },
       { id: 'b', vendorId: 'other-vendor', customerPhone: '7145550100', requestedDate: '2026-06-02', startTime: '10:00' },
-      { id: 'c', vendorId: MobileBarberData.SAMPLE_VENDOR_ID, customerPhone: '9995550100', requestedDate: '2026-06-03', startTime: '10:00' }
-    ], MobileBarberData.SAMPLE_VENDOR_ID, { phone: '714-555-0100' });
+      { id: 'c', vendorId: MobileBarberData.MICHAEL_VENDOR_ID, customerPhone: '9995550100', requestedDate: '2026-06-03', startTime: '10:00' }
+    ], MobileBarberData.MICHAEL_VENDOR_ID, { phone: '714-555-0100' });
     assertEq(rows.length, 1);
     assertEq(rows[0].id, 'a');
   });
 
   test('Mobile Barber customer history separates upcoming and past bookings', function() {
     var history = MobileBarberBooking.splitCustomerBookingHistory([
-      { id: 'past', vendorId: MobileBarberData.SAMPLE_VENDOR_ID, customerPhone: '7145550100', requestedDate: '2026-05-20', startTime: '10:00', status: 'completed' },
-      { id: 'future', vendorId: MobileBarberData.SAMPLE_VENDOR_ID, customerPhone: '7145550100', requestedDate: '2026-06-01', startTime: '10:00', status: 'confirmed' }
-    ], MobileBarberData.SAMPLE_VENDOR_ID, { phone: '7145550100' }, new Date('2026-05-24T09:00:00'));
+      { id: 'past', vendorId: MobileBarberData.MICHAEL_VENDOR_ID, customerPhone: '7145550100', requestedDate: '2026-05-20', startTime: '10:00', status: 'completed' },
+      { id: 'future', vendorId: MobileBarberData.MICHAEL_VENDOR_ID, customerPhone: '7145550100', requestedDate: '2026-06-01', startTime: '10:00', status: 'confirmed' }
+    ], MobileBarberData.MICHAEL_VENDOR_ID, { phone: '7145550100' }, new Date('2026-05-24T09:00:00'));
     assertEq(history.past.length, 1);
     assertEq(history.upcoming.length, 1);
     assertEq(history.upcoming[0].id, 'future');
@@ -494,25 +584,25 @@ function runMobileBarberBookingTests(test) {
   test('Mobile Barber rebook draft preserves service and requires a new validated date/time', function() {
     var draft = MobileBarberBooking.buildRebookDraft({
       id: 'old-booking',
-      vendorId: MobileBarberData.SAMPLE_VENDOR_ID,
+      vendorId: MobileBarberData.MICHAEL_VENDOR_ID,
       customerName: 'Test Customer',
       customerPhone: '7145550100',
-      serviceId: 'classic-mobile-cut',
-      serviceName: 'Classic Mobile Haircut',
+      serviceId: 'michael-nguyen-oc-classic-haircut',
+      serviceName: 'Classic Haircut',
       address: '123 Test St',
       city: 'Westminster',
       zip: '92683',
       notes: 'Low fade',
       stylePreference: 'Low fade'
     }, { stylePreference: 'Low fade, no hard part' });
-    assertEq(draft.serviceId, 'classic-mobile-cut');
+    assertEq(draft.serviceId, 'michael-nguyen-oc-classic-haircut');
     assertEq(draft.requestedDate, '');
     assertEq(draft.startTime, '');
     assertEq(draft.rebookedFromBookingId, 'old-booking');
-    assertEq(draft.previousServiceName, 'Classic Mobile Haircut');
+    assertEq(draft.previousServiceName, 'Classic Haircut');
     assertEq(MobileBarberBooking.checkAvailability({
-      vendor: MobileBarberData.findVendorById(MobileBarberData.SAMPLE_VENDOR_ID),
-      services: MobileBarberData.listServicesForVendor(MobileBarberData.SAMPLE_VENDOR_ID),
+      vendor: MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID),
+      services: MobileBarberData.listServicesForVendor(MobileBarberData.MICHAEL_VENDOR_ID),
       availability: MobileBarberData.sampleAvailability,
       draft: draft
     }).canCreate, false);
@@ -522,7 +612,7 @@ function runMobileBarberBookingTests(test) {
     var result = check(draft);
     var built = MobileBarberBooking.buildBooking({
       id: 'rebook-ok-1',
-      vendor: MobileBarberData.findVendorById(MobileBarberData.SAMPLE_VENDOR_ID),
+      vendor: MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID),
       draft: draft,
       availabilityResult: result,
       now: '2026-05-24T00:00:00.000Z'
@@ -530,7 +620,7 @@ function runMobileBarberBookingTests(test) {
     assertEq(built.valid, true, built.errors && built.errors.join('; '));
     assertEq(built.booking.status, 'pending_barber_confirmation');
     assertEq(built.booking.rebookedFromBookingId, 'old-booking');
-    assertEq(built.booking.previousServiceName, 'Classic Mobile Haircut');
+    assertEq(built.booking.previousServiceName, 'Classic Haircut');
     assertEq(built.booking.stylePreference, 'Low fade, no hard part');
   });
 
@@ -642,6 +732,206 @@ function runMobileBarberBookingTests(test) {
         global.localStorage = originalLocalStorage;
         throw error;
       });
+  });
+
+  test('Mobile Barber chat save failure replaces confirmation copy', function() {
+    var src = fs.readFileSync(path.join(__dirname, '../../mobile-barber/mobile-barber.js'), 'utf8');
+    var failIdx = src.indexOf("booking save FAILED");
+    assert(failIdx >= 0, 'chat booking save failure handler must exist');
+    var block = src.slice(failIdx, failIdx + 700);
+    assert(block.indexOf('result.booking = null') >= 0, 'failure handler must clear booking before responding');
+    assert(block.indexOf("result.response = t('saveFailedRetry')") >= 0,
+      'failure handler must replace the confirmation copy with the save-failed copy');
+    assert(block.indexOf('(result.response || \'\') +') < 0,
+      'failure handler must not append save-failed text to a success confirmation');
+  });
+
+  function storageStub(behavior) {
+    behavior = behavior || {};
+    return {
+      apps: [{}],
+      firestore: function() { return {}; },
+      storage: function() {
+        return {
+          ref: function(path) {
+            return {
+              putString: function(dataUrl, format) {
+                if (behavior.onPutString) behavior.onPutString(dataUrl, format, path);
+                if (behavior.fail) return Promise.reject(new Error('upload-failed'));
+                return Promise.resolve();
+              },
+              getDownloadURL: function() {
+                return Promise.resolve('https://storage.example/' + path);
+              }
+            };
+          }
+        };
+      }
+    };
+  }
+
+  test('Mobile Barber uploadBookingImages is a synchronous no-op when Firebase Storage is unavailable', function() {
+    var originalFirebase = global.firebase;
+    global.firebase = { apps: [{}], firestore: function() { return {}; } };
+    try {
+      var booking = sampleBuiltBooking('storage-noop-1');
+      booking.selectedHaircutImageUrl = 'data:image/png;base64,AAAA';
+      booking.selectedHaircutImageStoragePath = '';
+      var ran = false;
+      var ret = MobileBarberBooking.uploadBookingImages(booking);
+      ret.then(function(b) { ran = (b === booking); });
+      assertEq(ran, true, 'no-op upload must resolve synchronously when Storage is unavailable');
+      assert(booking.selectedHaircutImageUrl.indexOf('data:') === 0, 'inline data URL must be preserved when Storage is unavailable');
+      assertEq(booking.selectedHaircutImageStoragePath, '', 'no storage path should be set without an upload');
+    } finally {
+      global.firebase = originalFirebase;
+    }
+  });
+
+  test('Mobile Barber uploadBookingImages uploads inline haircut data URL and rewrites fields to the download URL', function() {
+    var originalFirebase = global.firebase;
+    global.firebase = storageStub();
+    try {
+      var booking = sampleBuiltBooking('storage-haircut-1');
+      booking.selectedHaircutImageUrl = 'data:image/png;base64,AAAA';
+      booking.selectedHaircutImageStoragePath = '';
+      return MobileBarberBooking.uploadBookingImages(booking).then(function(result) {
+        assertEq(result, booking, 'uploadBookingImages should resolve with the same booking');
+        assert(booking.selectedHaircutImageUrl.indexOf('https://') === 0, 'haircut field should be rewritten to the download URL');
+        assert(booking.selectedHaircutImageStoragePath.indexOf('vendors/' + booking.vendorId + '/bookings/' + booking.id) === 0, 'storage path should follow the canonical vendor booking path');
+        assert(booking.selectedHaircutImageStoragePath.indexOf('/ai_haircut_') > -1, 'storage path should name the haircut image');
+      }).then(function() {
+        global.firebase = originalFirebase;
+      }, function(error) {
+        global.firebase = originalFirebase;
+        throw error;
+      });
+    } catch (e) {
+      global.firebase = originalFirebase;
+      throw e;
+    }
+  });
+
+  test('Mobile Barber uploadBookingImages uploads a consented selfie to a durable URL', function() {
+    var originalFirebase = global.firebase;
+    global.firebase = storageStub();
+    try {
+      var booking = sampleBuiltBooking('storage-selfie-1');
+      booking.selectedHaircutImageUrl = '';
+      booking.selectedHaircutThumbnailUrl = '';
+      booking.customerSelfieUrl = 'data:image/jpeg;base64,BBBB';
+      booking.customerSelfieStoragePath = '';
+      return MobileBarberBooking.uploadBookingImages(booking).then(function() {
+        assert(booking.customerSelfieUrl.indexOf('https://') === 0, 'selfie field should be rewritten to the download URL');
+        assert(booking.customerSelfieStoragePath.indexOf('/selfie_') > -1, 'selfie storage path should name the selfie image');
+      }).then(function() {
+        global.firebase = originalFirebase;
+      }, function(error) {
+        global.firebase = originalFirebase;
+        throw error;
+      });
+    } catch (e) {
+      global.firebase = originalFirebase;
+      throw e;
+    }
+  });
+
+  test('Mobile Barber uploadBookingImages keeps the inline data URL when the upload fails', function() {
+    var originalFirebase = global.firebase;
+    global.firebase = storageStub({ fail: true });
+    try {
+      var booking = sampleBuiltBooking('storage-fail-1');
+      booking.selectedHaircutImageUrl = 'data:image/png;base64,AAAA';
+      booking.selectedHaircutImageStoragePath = '';
+      return MobileBarberBooking.uploadBookingImages(booking).then(function() {
+        assert(booking.selectedHaircutImageUrl.indexOf('data:') === 0, 'inline data URL must survive a failed upload (fallback)');
+        assertEq(booking.selectedHaircutImageStoragePath, '', 'no storage path should be recorded after a failed upload');
+      }).then(function() {
+        global.firebase = originalFirebase;
+      }, function(error) {
+        global.firebase = originalFirebase;
+        throw error;
+      });
+    } catch (e) {
+      global.firebase = originalFirebase;
+      throw e;
+    }
+  });
+
+  test('Mobile Barber uploadBookingImages prefers the full-resolution cached copy over the inline thumbnail', function() {
+    var originalFirebase = global.firebase;
+    var originalAIPreview = global.MobileBarberAIPreview;
+    var captured = '';
+    global.firebase = storageStub({ onPutString: function(dataUrl) { if (!captured) captured = dataUrl; } });
+    global.MobileBarberAIPreview = {
+      readLocalCopy: function() { return 'data:image/png;base64,FULLRES'; }
+    };
+    try {
+      var booking = sampleBuiltBooking('storage-fullres-1');
+      booking.aiPreviewSessionId = 'sess-1';
+      booking.selectedHaircutImageUrl = 'data:image/png;base64,SMALL';
+      booking.selectedHaircutImageStoragePath = '';
+      return MobileBarberBooking.uploadBookingImages(booking).then(function() {
+        assertEq(captured, 'data:image/png;base64,FULLRES', 'upload should use the full-resolution cached copy, not the compressed inline thumbnail');
+      }).then(function() {
+        global.firebase = originalFirebase;
+        global.MobileBarberAIPreview = originalAIPreview;
+      }, function(error) {
+        global.firebase = originalFirebase;
+        global.MobileBarberAIPreview = originalAIPreview;
+        throw error;
+      });
+    } catch (e) {
+      global.firebase = originalFirebase;
+      global.MobileBarberAIPreview = originalAIPreview;
+      throw e;
+    }
+  });
+
+  test('Live-data: static-fallback availability routes booking to vendor_review', function() {
+    var draft = baseDraft();
+    var availability = MobileBarberBooking.checkAvailability({
+      vendor: MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID),
+      services: MobileBarberData.listServicesForVendor(MobileBarberData.MICHAEL_VENDOR_ID),
+      availability: MobileBarberData.sampleAvailability,
+      draft: draft,
+      existingBookings: [],
+      liveDataSource: 'static-fallback'
+    });
+    assert(availability.canCreate, 'availability should still allow create on static fallback');
+    assertEq(availability.liveDataSource, 'static-fallback', 'checkAvailability must echo liveDataSource');
+    var built = MobileBarberBooking.buildBooking({
+      id: 'stale-data-test',
+      now: '2026-05-24T00:00:00.000Z',
+      vendor: MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID),
+      draft: draft,
+      availabilityResult: availability
+    });
+    assert(built.valid, 'booking should still build on static fallback');
+    assertEq(built.booking.status, 'vendor_review', 'stale live data must route to vendor_review, never auto-confirm');
+    assertEq(built.booking.reviewReason, 'stale_vendor_data', 'review reason must flag stale vendor data');
+  });
+
+  test('Live-data: firestore-sourced availability confirms normally (no false review)', function() {
+    var draft = baseDraft();
+    var availability = MobileBarberBooking.checkAvailability({
+      vendor: MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID),
+      services: MobileBarberData.listServicesForVendor(MobileBarberData.MICHAEL_VENDOR_ID),
+      availability: MobileBarberData.sampleAvailability,
+      draft: draft,
+      existingBookings: [],
+      liveDataSource: 'firestore'
+    });
+    var built = MobileBarberBooking.buildBooking({
+      id: 'firestore-data-test',
+      now: '2026-05-24T00:00:00.000Z',
+      vendor: MobileBarberData.findVendorById(MobileBarberData.MICHAEL_VENDOR_ID),
+      draft: draft,
+      availabilityResult: availability
+    });
+    assert(built.valid, 'booking should build on live firestore data');
+    assert(built.booking.status !== 'vendor_review', 'live firestore data must NOT force vendor_review');
+    assert(!built.booking.reviewReason, 'no stale review reason when data is live');
   });
 }
 

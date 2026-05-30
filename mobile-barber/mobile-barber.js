@@ -1166,6 +1166,10 @@
       now: new Date(),
       phoneIntake: root.PhoneIntake || null,
       routingReason: state.routingReason || '',
+      // Provenance of the schedule/services this turn ran against. Set by
+      // sendAgentMessage from refreshLiveBookingData; 'static-fallback' means
+      // the live Firestore read failed, so buildBooking routes to vendor_review.
+      liveDataSource: state._agentLiveDataSource || 'provided',
       customerLookupProvider: function(phone) {
         if (!BOOKING || typeof BOOKING.lookupReturningCustomer !== 'function') return Promise.resolve(null);
         // Look up the phone across ALL barbers (omit vendorId) so a returning
@@ -1254,7 +1258,7 @@
             .catch(function(error) {
               if (root.console) root.console.error('[mobile-barber-agent] booking save FAILED', error);
               result.booking = null;
-              result.response = (result.response || '') + '\n\n⚠️ ' + t('saveFailedRetry');
+              result.response = t('saveFailedRetry') || 'Could not save the booking. Please try again or contact the barber.';
               return result;
             });
         }
@@ -1264,9 +1268,14 @@
     return refreshLiveBookingData(vendor)
       .then(function(live) {
         vendor = live.vendor || vendor;
+        // Record whether this turn's services/hours/blocks came from live
+        // Firestore or the static fallback, so agentContext can pass it to
+        // checkAvailability and buildBooking can route stale bookings to review.
+        state._agentLiveDataSource = (live && live.source) || 'static-fallback';
         return BOOKING.loadExistingBookings(vendor.id).then(finish);
       })
       .catch(function() {
+        state._agentLiveDataSource = 'static-fallback';
         return BOOKING.loadExistingBookings(vendor.id).then(finish).catch(function() {
           return finish([]);
         });

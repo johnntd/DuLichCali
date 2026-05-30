@@ -585,6 +585,8 @@
     lang: 'en',
     vendor: null,
     services: [],
+    availabilityRows: [],
+    unavailableBlocks: [],
     manualStep: 1,
     availabilityResult: null,
     existingBookings: [],
@@ -1294,7 +1296,9 @@
   }
 
   function activeAvailability(vendorId) {
-    var rows = DATA && DATA.sampleAvailability ? DATA.sampleAvailability : [];
+    var rows = state.availabilityRows && state.availabilityRows.length
+      ? state.availabilityRows
+      : (DATA && DATA.sampleAvailability ? DATA.sampleAvailability : []);
     for (var i = 0; i < rows.length; i++) {
       if (rows[i].vendorId === vendorId) return rows[i];
     }
@@ -1934,8 +1938,10 @@
         vendor: state.vendor,
         draft: draft,
         services: state.services,
-        availability: DATA.sampleAvailability,
-        existingBookings: state.existingBookings
+        availability: state.availabilityRows && state.availabilityRows.length ? state.availabilityRows : DATA.sampleAvailability,
+        unavailableBlocks: state.unavailableBlocks,
+        existingBookings: state.existingBookings,
+        liveDataSource: state.liveDataSource || 'static-fallback'
       });
       if (!result.canCreate) {
         var msg = result.key === 'booking_overlap' ? t('overlapError') : t('availabilityError');
@@ -1947,7 +1953,9 @@
       state.availabilityResult = result;
       renderSummary(result, draft);
     };
-    BOOKING.loadExistingBookings(state.vendor.id).then(finish).catch(function() {
+    hydrateLiveVendorData().then(function() {
+      return BOOKING.loadExistingBookings(state.vendor.id).then(finish);
+    }).catch(function() {
       finish([]);
     });
   }
@@ -2034,8 +2042,10 @@
       vendor: state.vendor,
       vendorId: state.vendor && state.vendor.id,
       services: state.services,
-      availability: DATA.sampleAvailability,
+      availability: state.availabilityRows && state.availabilityRows.length ? state.availabilityRows : DATA.sampleAvailability,
+      unavailableBlocks: state.unavailableBlocks,
       existingBookings: state.existingBookings,
+      liveDataSource: state.liveDataSource || 'static-fallback',
       now: new Date(),
       phoneIntake: root.PhoneIntake || null,
       customerLookupProvider: function(phone) {
@@ -2072,7 +2082,7 @@
       }
       if (result.booking) {
         if (options.source) result.booking.source = options.source;
-        return BOOKING.saveBooking(result.booking).then(function(saveResult) {
+        return BOOKING.saveBooking(result.booking, { requireDatabase: true }).then(function(saveResult) {
           state.lastBooking = saveResult.booking;
           rememberCustomerFromBooking(saveResult.booking);
           if (saveResult.source === 'firestore') queueBookingNotifications(saveResult.booking);
@@ -2090,9 +2100,80 @@
       return result;
       });
     };
-    return BOOKING.loadExistingBookings(state.vendor.id).then(finish).catch(function() {
+    return hydrateLiveVendorData().then(function() {
+      return BOOKING.loadExistingBookings(state.vendor.id).then(finish);
+    }).catch(function() {
       return finish([]);
     });
+  }
+
+  function hydrateLiveVendorData() {
+    state.availabilityRows = state.availabilityRows && state.availabilityRows.length
+      ? state.availabilityRows
+      : ((DATA && DATA.sampleAvailability) ? DATA.sampleAvailability.slice() : []);
+    state.liveDataSource = 'static-fallback';
+    var db = getFirestoreDb();
+    if (!db || !state.vendor || !state.vendor.id || !DATA || !DATA.COLLECTIONS) {
+      logBookingLiveData('static-fallback');
+      return Promise.resolve(false);
+    }
+    var vendorId = state.vendor.id;
+    var vendorRead = db.collection(DATA.COLLECTIONS.vendors).doc(vendorId).get().then(function(doc) {
+      var data = doc.exists ? (doc.data() || {}) : {};
+      if (Array.isArray(data.promotions)) {
+        state.vendor = Object.assign({}, state.vendor, { promotions: data.promotions.slice() });
+      }
+      if (data.availability && typeof data.availability === 'object') {
+        mergeAvailabilityRow(data.availability);
+      }
+      if (Array.isArray(data.unavailableBlocks)) state.unavailableBlocks = data.unavailableBlocks.slice();
+    });
+    var servicesRead = db.collection(DATA.COLLECTIONS.services).where('vendorId', '==', vendorId).get().then(function(snapshot) {
+      var rows = [];
+      snapshot.forEach(function(doc) {
+        var data = doc.data() || {};
+        data.id = data.id || doc.id;
+        if (data.active !== false) rows.push(data);
+      });
+      if (rows.length) state.services = rows;
+    });
+    return Promise.all([vendorRead, servicesRead]).then(function() {
+      state.liveDataSource = 'firestore';
+      logBookingLiveData('firestore');
+      return true;
+    }).catch(function() {
+      state.liveDataSource = 'static-fallback';
+      logBookingLiveData('static-fallback');
+      return false;
+    });
+  }
+
+  function mergeAvailabilityRow(row) {
+    if (!row || !row.vendorId) row = Object.assign({}, row || {}, { vendorId: state.vendor && state.vendor.id });
+    var rows = (DATA && DATA.sampleAvailability) ? DATA.sampleAvailability.slice() : [];
+    var replaced = false;
+    rows = rows.map(function(existing) {
+      if (existing && existing.vendorId === row.vendorId) {
+        replaced = true;
+        return row;
+      }
+      return existing;
+    });
+    if (!replaced) rows.push(row);
+    state.availabilityRows = rows;
+  }
+
+  function logBookingLiveData(source) {
+    if (!root.console || !root.console.log) return;
+    try {
+      root.console.log('[booking-live-data]', JSON.stringify({
+        vendorId: state.vendor && state.vendor.id || '',
+        servicesLoaded: state.services ? state.services.length : 0,
+        promotionsLoaded: state.vendor && Array.isArray(state.vendor.promotions) ? state.vendor.promotions.length : 0,
+        scheduleLoaded: !!activeAvailability(state.vendor && state.vendor.id),
+        source: source || state.liveDataSource || 'static-fallback'
+      }));
+    } catch (e) {}
   }
 
   function openAssistantPanel() {
@@ -2749,6 +2830,7 @@
     var vendorId = getVendorId();
     state.vendor = DATA && DATA.findVendorById ? DATA.findVendorById(vendorId) : null;
     state.services = state.vendor && DATA.listServicesForVendor ? DATA.listServicesForVendor(state.vendor.id) : [];
+    state.availabilityRows = DATA && DATA.sampleAvailability ? DATA.sampleAvailability.slice() : [];
     applyQuerySelection();
     state.lang = getLang();
     try {
@@ -2759,6 +2841,10 @@
     loadVoiceProviderKeys();
     renderVendorRealtimeControls();
     attachVendorRealtime();
+    hydrateLiveVendorData().then(function() {
+      renderVendor();
+      renderServices();
+    });
     root.addEventListener('beforeunload', detachVendorRealtime);
     root.addEventListener('pagehide', detachVendorRealtime);
     openQueryMode();

@@ -43,6 +43,30 @@
     return digits(value);
   }
 
+  function stableHash(value) {
+    value = trim(value);
+    var hash = 0;
+    for (var i = 0; i < value.length; i++) {
+      hash = ((hash << 5) - hash) + value.charCodeAt(i);
+      hash |= 0;
+    }
+    return Math.abs(hash).toString(36);
+  }
+
+  function bookingRequestKey(vendor, draft, serviceId) {
+    draft = draft || {};
+    var explicit = trim(draft.bookingRequestId || draft.idempotencyKey || draft.requestId);
+    if (explicit) return explicit.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 80);
+    var raw = [
+      normalizePhone(draft.customerPhone),
+      trim(vendor && vendor.id),
+      trim(serviceId || draft.serviceId),
+      trim(draft.requestedDate),
+      trim(draft.startTime)
+    ].join('|').toLowerCase();
+    return stableHash(raw);
+  }
+
   function hasText(value) {
     return trim(value).length > 0;
   }
@@ -784,6 +808,10 @@
       service: service,
       timing: timing,
       price: price,
+      // Echo the live-data provenance so buildBooking can route a booking to
+      // vendor_review when the schedule/services it was checked against came
+      // from the static fallback (Firestore was configured but unreachable).
+      liveDataSource: input.liveDataSource || input.source || 'provided',
       errors: []
     };
   }
@@ -796,7 +824,7 @@
       return { valid: false, errors: ['availability_check_required'] };
     }
     var now = input.now || new Date().toISOString();
-    var id = input.id || ('mb-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8));
+    var id = input.id || ('mb-' + bookingRequestKey(input.vendor, draft, check.service && check.service.id));
     var servicePrice = Number(check.price.servicePrice || check.service.price || 0);
     var travelFee = Number(check.price.travelFee || 0);
     var amountDue = Number(check.price.totalPrice != null ? check.price.totalPrice : (servicePrice + travelFee));
@@ -817,6 +845,7 @@
     var haircutRef = buildHaircutReference(draft, check.service, now);
     var booking = {
       id: id,
+      bookingRequestId: bookingRequestKey(input.vendor, draft, check.service && check.service.id),
       vendorId: input.vendor.id,
       ownerId: _ownerId || null,
       serviceType: 'barber',
@@ -928,7 +957,19 @@
       validationBooking.status = 'pending_confirmation';
     }
     var validation = DATA && DATA.validateBooking ? DATA.validateBooking(validationBooking) : { valid: true, errors: [] };
-    return validation.valid ? { valid: true, booking: booking, errors: [] } : { valid: false, errors: validation.errors };
+    if (!validation.valid) return { valid: false, errors: validation.errors };
+    // Live-data enforcement: if the availability check ran against the static
+    // fallback because the live Firestore read failed (vendor hours, blocks,
+    // services, promos may be stale), do NOT auto-confirm. Route to
+    // vendor_review so the barber re-checks against the real schedule. In
+    // tests and non-Firebase contexts liveDataSource is 'provided', so this is
+    // a no-op there; the server-side conflict guard is the second safety net.
+    var _liveSrc = trim(input.liveDataSource || (check && check.liveDataSource) || 'provided');
+    if (_liveSrc === 'static-fallback') {
+      booking.status = 'vendor_review';
+      booking.reviewReason = 'stale_vendor_data';
+    }
+    return { valid: true, booking: booking, errors: [] };
   }
 
   function buildHaircutReference(draft, service, now) {

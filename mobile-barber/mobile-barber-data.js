@@ -65,7 +65,7 @@
   ]);
 
   var BOOKING_FIELDS = Object.freeze([
-    'id', 'vendorId',
+    'id', 'bookingRequestId', 'vendorId',
     // Unified owner model (additive): ownerId is the canonical ownership field
     // queried by Michael's unified portal; serviceType buckets the row as barber.
     'ownerId', 'serviceType',

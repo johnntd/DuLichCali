@@ -8,8 +8,8 @@
 //   2. DATA.sampleVendors entries are Object.freeze'd, so the landing's
 //      `vendors[i].promotions = ...` mutation was a silent no-op.
 //
-// This suite asserts both fixes plus the demo-promo seed contract so the
-// rendering pipeline can never silently break again.
+// This suite asserts both fixes plus the vendor-portal promotion contract so
+// the rendering pipeline can never silently break again.
 
 var fs   = require('fs');
 var path = require('path');

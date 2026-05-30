@@ -1285,7 +1285,8 @@
       availability: ctx.availability || DATA.sampleAvailability,
       unavailableBlocks: ctx.unavailableBlocks || [],
       draft: draft,
-      existingBookings: ctx.existingBookings || []
+      existingBookings: ctx.existingBookings || [],
+      liveDataSource: ctx.liveDataSource || 'provided'
     });
     state.lastAvailabilityKey = availability.key;
 

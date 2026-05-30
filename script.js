@@ -2074,39 +2074,59 @@ function _withHomepageMarketplaceEntries(vendors, regionId) {
   );
 }
 
+// ── HTML/URL escaping for vendor-controlled fields (stored-XSS prevention) ──
+// Vendor docs come from Firestore and are vendor-editable, so any field
+// interpolated into innerHTML MUST be escaped — otherwise a vendor name like
+// "<img src=x onerror=...>" runs as script on every visitor's homepage.
+function _hpEsc(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function _hpSafeUrl(v) {
+  var s = String(v == null ? '' : v).trim();
+  if (/^\s*(javascript|vbscript):/i.test(s)) return '';
+  if (/^\s*data:/i.test(s) && !/^\s*data:image\//i.test(s)) return '';
+  // neutralize chars that could break out of the href/url()/attribute context
+  return s.replace(/["'<>`)\\]/g, encodeURIComponent);
+}
+
 function buildVendorCardHtml(biz) {
   const avail  = biz.availabilityLabel
     ? { status: biz.availabilityStatus || 'now', label: biz.availabilityLabel, sublabel: '' }
     : computeBizAvailability(biz);
-  const accent = _hpCatAccent(biz.category);
-  const catPath = _CAT_PATHS[biz.category] || ('marketplace/index.html?cat=' + biz.category);
-  const href   = biz.href || (biz.id ? catPath + '?id=' + biz.id : catPath);
-  const bg     = biz.heroImage
-    ? `background:${biz.heroGradient};background-image:url(${biz.heroImage});background-size:cover;background-position:center`
-    : `background:${biz.heroGradient}`;
-  const trk = `HomepagePersonalizer.track('${biz.category}')`;
-  const cta = biz.ctaText ? `<span class="hp-vendor-card__cta">${biz.ctaText}</span>` : '';
+  const accent   = _hpCatAccent(biz.category);
+  const safeCat  = String(biz.category || '').replace(/[^a-z0-9_-]/gi, '');
+  const catPath  = _CAT_PATHS[biz.category] || ('marketplace/index.html?cat=' + encodeURIComponent(biz.category || ''));
+  const href     = _hpSafeUrl(biz.href || (biz.id ? catPath + '?id=' + biz.id : catPath));
+  const heroImg  = _hpSafeUrl(biz.heroImage);
+  const grad     = _hpEsc(biz.heroGradient);
+  const bg       = heroImg
+    ? `background:${grad};background-image:url(${heroImg});background-size:cover;background-position:center`
+    : `background:${grad}`;
+  const trk = `HomepagePersonalizer.track('${safeCat}')`;
+  const cta = biz.ctaText ? `<span class="hp-vendor-card__cta">${_hpEsc(biz.ctaText)}</span>` : '';
 
   return `<a class="hp-vendor-card" role="listitem" href="${href}"
     onclick="${trk}">
     <div class="hp-vendor-card__img" style="${bg}">
-      <span class="hp-vendor-card__cat" style="--cat-accent:${accent}">${_hpCatLabel(biz.category)}</span>
-      <span class="hp-avail-badge hp-avail-badge--${avail.status}">${avail.label}</span>
+      <span class="hp-vendor-card__cat" style="--cat-accent:${_hpEsc(accent)}">${_hpEsc(_hpCatLabel(biz.category))}</span>
+      <span class="hp-avail-badge hp-avail-badge--${_hpEsc(avail.status)}">${_hpEsc(avail.label)}</span>
     </div>
     <div class="hp-vendor-card__body">
-      <div class="hp-vendor-card__name">${biz.name}</div>
-      <div class="hp-vendor-card__city">${biz.city}</div>
-      <div class="hp-vendor-card__promo">${biz.shortPromoText || biz.tagline}</div>
+      <div class="hp-vendor-card__name">${_hpEsc(biz.name)}</div>
+      <div class="hp-vendor-card__city">${_hpEsc(biz.city)}</div>
+      <div class="hp-vendor-card__promo">${_hpEsc(biz.shortPromoText || biz.tagline)}</div>
       ${cta}
     </div>
   </a>`;
 }
 
 function buildAvailChipHtml(label, sublabel, status, onclick) {
-  const sub = sublabel ? `<span class="hp-chip__sub">${sublabel}</span>` : '';
-  const oc  = onclick  ? ` onclick="${onclick}"` : '';
-  return `<div class="hp-chip hp-chip--${status}"${oc}>
-    <span class="hp-chip__label">${label}</span>${sub}
+  const sub = sublabel ? `<span class="hp-chip__sub">${_hpEsc(sublabel)}</span>` : '';
+  const oc  = onclick  ? ` onclick="${String(onclick).replace(/"/g, '&quot;')}"` : '';
+  return `<div class="hp-chip hp-chip--${_hpEsc(status)}"${oc}>
+    <span class="hp-chip__label">${_hpEsc(label)}</span>${sub}
   </div>`;
 }
 

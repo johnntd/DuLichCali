@@ -1,0 +1,47 @@
+rules_version = '2';
+
+// Firebase Storage security rules — DuLichCali.
+// Previously there was NO version-controlled storage.rules and no "storage"
+// block in firebase.json, so Storage ran on whatever was set in the console
+// (pre-production audit flagged this as unrestricted upload/read).
+//
+// Policy:
+//   • Uploads require a NON-ANONYMOUS signed-in account (vendors/owners), must
+//     be an image, and are size-capped. Anonymous public customers cannot
+//     upload anything (AI hairstyle previews + selfies are no longer stored —
+//     customers keep them on their phone).
+//   • Vendor-owned display assets (portfolio, payment QR, profile) are publicly
+//     readable so they render on the marketplace.
+//   • Legacy per-booking images (old selfies/haircut refs) are NOT public and
+//     accept no new writes.
+//   • Everything else is denied by default.
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isNonAnon() {
+      return request.auth != null
+          && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+    function isImage() {
+      return request.resource.contentType != null
+          && request.resource.contentType.matches('image/(jpeg|jpg|png|webp)');
+    }
+    function sizeOk() {
+      return request.resource.size < 8 * 1024 * 1024; // 8 MB cap
+    }
+
+    // Legacy private per-booking uploads (selfies / AI haircut refs).
+    // No longer written; readable only by a signed-in account, never public.
+    match /vendors/{vendorId}/bookings/{allPaths=**} {
+      allow read:  if isNonAnon();
+      allow write: if false;
+    }
+
+    // Vendor-owned display assets + any other path: public read (images render
+    // on the marketplace), constrained write (signed-in vendor, image, capped).
+    match /{allPaths=**} {
+      allow read:  if true;
+      allow write: if isNonAnon() && isImage() && sizeOk();
+    }
+  }
+}

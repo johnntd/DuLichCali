@@ -40,7 +40,23 @@ service cloud.firestore {
           && request.resource.data.address is string
           && request.resource.data.city is string
           && request.resource.data.zip is string
-          && request.resource.data.source in ['customer_form', 'ai_chat', 'ai_voice'];
+          && request.resource.data.source in ['customer_form', 'ai_chat', 'ai_voice']
+          // Price/discount sanity — a malicious direct write cannot inject a
+          // negative price or a >100% discount. Fields are optional (older
+          // payloads omit them), but when present they must be well-formed.
+          && (!('servicePrice' in request.resource.data)
+                || (request.resource.data.servicePrice is number && request.resource.data.servicePrice >= 0))
+          && (!('amountDue' in request.resource.data)
+                || (request.resource.data.amountDue is number && request.resource.data.amountDue >= 0))
+          && (!('totalPrice' in request.resource.data)
+                || (request.resource.data.totalPrice is number && request.resource.data.totalPrice >= 0))
+          && (!('discountPercent' in request.resource.data)
+                || (request.resource.data.discountPercent is number
+                    && request.resource.data.discountPercent >= 0
+                    && request.resource.data.discountPercent <= 100))
+          // Customer-controlled status is already pinned to a pending value above.
+          && request.resource.data.customerName.size() <= 120
+          && request.resource.data.address.size() <= 300;
     }
 
     function isMobileBarberCustomerOwner() {
@@ -115,11 +131,16 @@ service cloud.firestore {
 
     // ── Vendor user mappings ──────────────────────────────────────────────────────
     // Auth required — no anonymous enumeration of staff emails and roles.
-    // Previously: allow read: if true (needed for setup-code check) — that check
-    // actually runs AFTER Firebase Auth sign-in, so auth != null is safe here.
+    // SECURITY: writes are restricted to NON-ANONYMOUS accounts. Anonymous auth
+    // (every public customer) must never be able to create a vendorUsers doc —
+    // otherwise an anonymous attacker could self-map to any vendorId and pass
+    // isVendorMember(), taking over that vendor's data/bookings/payment settings.
+    // (Residual: a real email/password account can still self-map; a follow-up
+    // moves mapping creation behind a setup-code-verifying Cloud Function.)
     match /vendorUsers/{uid} {
       allow read:  if request.auth != null;
-      allow write: if request.auth != null;
+      allow write: if request.auth != null
+                && request.auth.token.firebase.sign_in_provider != 'anonymous';
     }
 
     // ── Bookings — open (customer booking flow is unauthenticated) ────────────────
@@ -271,8 +292,24 @@ service cloud.firestore {
       allow create: if isValidMobileBarberBookingCreate();
       allow read: if isMobileBarberBookingCustomer()
                || isVendorMember(resource.data.vendorId);
-      allow update: if isMobileBarberBookingCustomer()
-                 || isVendorMember(resource.data.vendorId);
+      // The assigned vendor/owner has full control (accept, reschedule, mark
+      // paid, complete). The booking owner (customer) may only edit benign
+      // fields and cancel — they can NEVER change money, vendor, or flip status
+      // to confirmed/paid/completed. This is the server-side enforcement of
+      // "customers cannot tamper with booking status/price/payment".
+      allow update: if isVendorMember(resource.data.vendorId)
+                 || (
+                      isMobileBarberBookingCustomer()
+                      && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+                           'vendorId', 'ownerId', 'assignedBarberId', 'serviceType',
+                           'servicePrice', 'travelFee', 'amountDue', 'totalPrice',
+                           'vehicleWearCost', 'distanceAdjustment', 'peakAdjustment',
+                           'paymentStatus', 'promotionId', 'promotionName', 'discountPercent',
+                           'originalPrice', 'discountedPrice', 'promoApplied', 'reviewReason'
+                         ])
+                      && (request.resource.data.status == resource.data.status
+                          || request.resource.data.status == 'cancelled')
+                    );
       allow delete: if false;
     }
 

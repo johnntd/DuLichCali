@@ -1380,11 +1380,55 @@
     return Promise.all(tasks).then(function() { return booking; });
   }
 
+  // AI-generated hairstyle previews + customer selfies are intentionally NOT
+  // persisted to Firestore or Firebase Storage (privacy + data-minimization).
+  // The customer saves the generated style to their phone and shows the barber
+  // in person; the booking keeps only the lightweight TEXT reference (style
+  // title/description/barber notes/color/highlight). This also removes the
+  // image-upload Storage surface flagged in the pre-production security audit.
+  var STORED_IMAGE_FIELDS = [
+    'selectedHaircutImageUrl', 'selectedHaircutThumbnailUrl', 'selectedHaircutImageStoragePath',
+    'selectedAiStyleImage', 'selectedStylePreviewUrl',
+    'customerSelfieUrl', 'customerSelfieStoragePath', 'selfieDataUrl'
+  ];
+  function isPersistedImageValue(v) {
+    return typeof v === 'string' && (
+      v.indexOf('data:') === 0 ||
+      v.indexOf('firebasestorage.googleapis') >= 0 ||
+      v.indexOf('storage.googleapis.com') >= 0 ||
+      v.indexOf('appspot.com/o/') >= 0
+    );
+  }
+  function stripUnstoredImages(booking) {
+    if (!booking) return booking;
+    STORED_IMAGE_FIELDS.forEach(function(field) {
+      // selfieDataUrl/storagePath are always cleared; URL fields are cleared
+      // only when they hold an actual uploaded/data image (keep static
+      // /assets/ catalog references so the barber still sees the style name+pic).
+      if (field === 'selfieDataUrl' || field.indexOf('StoragePath') >= 0) booking[field] = '';
+      else if (isPersistedImageValue(booking[field])) booking[field] = '';
+    });
+    if (Array.isArray(booking.photoUrls)) {
+      booking.photoUrls = booking.photoUrls.filter(function(u) { return !isPersistedImageValue(u); });
+    }
+    if (Array.isArray(booking.recommendedStyles)) {
+      booking.recommendedStyles = booking.recommendedStyles.map(function(s) {
+        if (!s || typeof s !== 'object') return s;
+        var c = Object.assign({}, s);
+        ['image', 'imageUrl', 'previewUrl', 'dataUrl', 'thumbnailUrl'].forEach(function(k) {
+          if (isPersistedImageValue(c[k])) c[k] = '';
+        });
+        return c;
+      });
+    }
+    return booking;
+  }
+
   function saveBooking(booking, options) {
     options = options || {};
-    return uploadBookingImages(booking).then(function() {
-      return persistBooking(booking, options);
-    });
+    // No image upload — strip any generated/selfie image data before persisting.
+    stripUnstoredImages(booking);
+    return persistBooking(booking, options);
   }
 
   // The unified BookingGuard runs a Firestore TRANSACTION that reads a lock doc

@@ -5186,11 +5186,14 @@
   }
 
   .mb-hero__title {
-    font-size: 4.25rem;
+    font-size: 2.85rem;
+    max-width: 16ch;
   }
 
+  /* Actions are a flex row now (primary + icon CTAs); cap the width so the
+     Book Now button doesn't stretch the full hero column on tablet/desktop. */
   .mb-hero__actions {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-width: 27rem;
   }
 
   .mb-promo {
@@ -5598,7 +5601,7 @@
   }
 
   .mb-hero__title {
-    font-size: 5.6rem;
+    font-size: 3.4rem;
   }
 
   .mb-hero__copy {

@@ -1315,6 +1315,19 @@
     return node;
   }
 
+  // Inline SVG icon helpers (MBIcons). Degrade gracefully to text-only if the
+  // icon module failed to load so labels are never lost.
+  function icoMarkup(name) {
+    var I = (typeof window !== 'undefined') && window.MBIcons;
+    return (I && I.markup) ? I.markup(name) : '';
+  }
+  function icoLabel(node, name, text) {
+    var I = (typeof window !== 'undefined') && window.MBIcons;
+    if (I && I.label) return I.label(node, name, text);
+    node.textContent = (text == null) ? '' : String(text);
+    return node;
+  }
+
   function setTranslatedText() {
     document.querySelectorAll('[data-i18n]').forEach(function(node) {
       node.textContent = t(node.getAttribute('data-i18n'));
@@ -1364,7 +1377,7 @@
   }
 
   function notificationIcon(serviceType) {
-    return serviceType === 'ride' ? '🚗' : (serviceType === 'tour' ? '🧭' : '💈');
+    return serviceType === 'ride' ? 'car' : (serviceType === 'tour' ? 'compass' : 'scissors');
   }
 
   function renderNotificationDrawer() {
@@ -1432,9 +1445,9 @@
       row.type = 'button';
       row.classList.toggle('mb-notif-item--unread', !item.read);
       row.setAttribute('data-notif-id', item.id);
-      var icon = el('span', 'mb-notif-item__icon');
+      var icon = el('span', 'mb-notif-item__icon mb-ico');
       icon.setAttribute('aria-hidden', 'true');
-      icon.textContent = notificationIcon(item.serviceType);
+      icon.innerHTML = icoMarkup(notificationIcon(item.serviceType));
       var body = el('span', 'mb-notif-item__body');
       var title = el('strong');
       var message = el('span');
@@ -1978,13 +1991,13 @@
     head.type = 'button';
     head.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
 
-    // Owner mode: a per-row service-type badge (💈/🚗/🧭) so barber, ride, and
+    // Owner mode: a per-row service-type badge (scissors/car/compass) so barber, ride, and
     // tour rows are distinguishable at a glance in the unified list.
     if (state.ownerMode && booking.serviceType) {
-      var typeIcon = booking.serviceType === 'ride' ? '🚗'
-        : booking.serviceType === 'tour' ? '🧭' : '💈';
-      var typeBadge = el('span', 'mb-booking-row__type mb-type-badge mb-type-badge--' + booking.serviceType);
-      typeBadge.textContent = typeIcon;
+      var typeIcon = booking.serviceType === 'ride' ? 'car'
+        : booking.serviceType === 'tour' ? 'compass' : 'scissors';
+      var typeBadge = el('span', 'mb-booking-row__type mb-type-badge mb-ico mb-type-badge--' + booking.serviceType);
+      typeBadge.innerHTML = icoMarkup(typeIcon);
       typeBadge.setAttribute('aria-label', t('filter' + booking.serviceType.charAt(0).toUpperCase() + booking.serviceType.slice(1)));
       head.appendChild(typeBadge);
     }
@@ -2021,22 +2034,22 @@
     if (pref === 'text') {
       var smsChip = el('span', 'mb-confirmation-chip mb-confirmation-chip--text');
       smsChip.setAttribute('aria-label', t('confirmTextChipAria'));
-      smsChip.textContent = '📱 ' + t('confirmTextChip');
+      icoLabel(smsChip, 'smartphone', t('confirmTextChip'));
       head.appendChild(smsChip);
     } else if (pref === 'call') {
       var callChip = el('span', 'mb-confirmation-chip mb-confirmation-chip--call');
-      callChip.textContent = '📞 ' + t('confirmCallChip');
+      icoLabel(callChip, 'phone', t('confirmCallChip'));
       head.appendChild(callChip);
     } else if (pref === 'app') {
       var appChip = el('span', 'mb-confirmation-chip mb-confirmation-chip--app');
-      appChip.textContent = '🔔 ' + t('confirmAppChip');
+      icoLabel(appChip, 'bell', t('confirmAppChip'));
       head.appendChild(appChip);
     }
 
     // Promo chip — surfaces when a vendor promotion discounted this booking.
     if (booking.promoApplied && Number(booking.discountPercent || 0) > 0) {
       var promoChip = el('span', 'mb-confirmation-chip mb-promo-chip');
-      promoChip.textContent = '🎟️ ' + interpolate(t('promoChipApplied') || '{pct}% promo applied', { pct: Number(booking.discountPercent || 0) });
+      icoLabel(promoChip, 'ticket', interpolate(t('promoChipApplied') || '{pct}% promo applied', { pct: Number(booking.discountPercent || 0) }));
       head.appendChild(promoChip);
     }
 
@@ -2048,7 +2061,8 @@
 
     var chevron = el('span', 'mb-booking-row__chevron');
     chevron.setAttribute('aria-hidden', 'true');
-    chevron.textContent = '▾';
+    chevron.classList.add('mb-ico');
+    chevron.innerHTML = icoMarkup('chevron-down');
     head.appendChild(chevron);
 
     head.addEventListener('click', function() {
@@ -2084,7 +2098,7 @@
     if (pref === 'text' && trim(booking.customerPhone)) {
       var smsBtn = el('a', 'mb-button mb-button--primary mb-button--sm mb-sms-button');
       smsBtn.href = buildConfirmationSmsHref(booking);
-      smsBtn.textContent = '📱 ' + t('sendConfirmationTextAction');
+      icoLabel(smsBtn, 'smartphone', t('sendConfirmationTextAction'));
       smsBtn.setAttribute('aria-label', t('sendConfirmationTextAria'));
       actions.appendChild(smsBtn);
     }
@@ -2251,7 +2265,7 @@
     section.appendChild(heading);
 
     var aiLabel = el('span', 'mb-confirmation-chip mb-confirmation-chip--app');
-    aiLabel.textContent = '🤖 ' + t('vendorAiPreviewBadge');
+    icoLabel(aiLabel, 'sparkles', t('vendorAiPreviewBadge'));
     section.appendChild(aiLabel);
 
     var grid = el('div', 'mb-booking-ai-preview__grid');
@@ -2393,7 +2407,7 @@
     if (trim(booking.selfieDataUrl)) {
       var deleteSelfie = el('button', 'mb-button mb-button--ghost mb-button--sm');
       deleteSelfie.type = 'button';
-      deleteSelfie.textContent = '🗑 ' + t('vendorAiPreviewDeleteSelfie');
+      icoLabel(deleteSelfie, 'trash', t('vendorAiPreviewDeleteSelfie'));
       deleteSelfie.addEventListener('click', function() {
         if (root.confirm && !root.confirm(t('vendorAiPreviewDeleteConfirm'))) return;
         updateBookingPatch(booking.id, { selfieDataUrl: '' });
@@ -2820,9 +2834,9 @@
     var defs = [
       { key: 'all', label: 'filterAll', icon: '' },
       { key: 'needs_review', label: 'filterNeedsReview', icon: '' },
-      { key: 'barber', label: 'filterBarber', icon: '💈' },
-      { key: 'ride', label: 'filterRide', icon: '🚗' },
-      { key: 'tour', label: 'filterTour', icon: '🧭' }
+      { key: 'barber', label: 'filterBarber', icon: 'scissors' },
+      { key: 'ride', label: 'filterRide', icon: 'car' },
+      { key: 'tour', label: 'filterTour', icon: 'compass' }
     ];
     bar.innerHTML = '';
     defs.forEach(function(def) {
@@ -2832,7 +2846,8 @@
       var isActive = (state.serviceTypeFilter || 'all') === def.key;
       btn.classList.toggle('mb-service-filter__btn--active', isActive);
       btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
-      btn.textContent = (def.icon ? def.icon + ' ' : '') + t(def.label);
+      if (def.icon) { btn.classList.add('mb-ico'); icoLabel(btn, def.icon, t(def.label)); }
+      else { btn.textContent = t(def.label); }
       btn.addEventListener('click', function() {
         state.serviceTypeFilter = def.key;
         if (def.key === 'needs_review') state.summaryFilter = 'needs_review';
@@ -3408,7 +3423,7 @@
       actions.appendChild(toggle);
       var del = el('button', 'mb-button mb-button--ghost mb-button--sm');
       del.type = 'button';
-      del.textContent = '🗑 ' + (t('promotionsDeleteAction') || 'Delete');
+      icoLabel(del, 'trash', t('promotionsDeleteAction') || 'Delete');
       del.addEventListener('click', function() {
         if (root.confirm && !root.confirm(t('promotionsDeleteConfirm') || 'Delete this promotion? Customers will no longer see it.')) return;
         deletePromotion(promo.id);

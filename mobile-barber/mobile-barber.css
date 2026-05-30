@@ -3704,6 +3704,21 @@
   .mb-ai-chip:active { transform: none; }
 }
 
+/* Inline SVG icon set (MBIcons). Icons inherit the current text color and size
+   (1em) so they sit cleanly inside buttons, chips, badges and nav. */
+.mb-ico-svg {
+  width: 1em;
+  height: 1em;
+  flex: 0 0 auto;
+  display: inline-block;
+  vertical-align: -0.125em;
+}
+.mb-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Result-card extras: audience chip, per-option recommendation rows, and the
    "style inspiration" badge shown when identity preservation is uncertain. */
 .mb-ai-rec-card__audience {

@@ -786,6 +786,19 @@
     return node;
   }
 
+  // Inline SVG icon helpers (MBIcons). Degrade to text-only if the module is
+  // unavailable so nothing disappears.
+  function icoMarkup(name) {
+    var I = root.MBIcons;
+    return (I && I.markup) ? I.markup(name) : '';
+  }
+  function icoLabel(node, name, text) {
+    var I = root.MBIcons;
+    if (I && I.label) return I.label(node, name, text);
+    node.textContent = (text == null) ? '' : String(text);
+    return node;
+  }
+
   function metaChip(label, value) {
     var chip = el('span', 'mb-chip');
     chip.textContent = label + ': ' + value;
@@ -1794,10 +1807,10 @@
       'English / Vietnamese support'
     ].forEach(function(text) {
       var card = el('article', 'mb-convenience-card');
-      var icon = el('span');
+      var icon = el('span', 'mb-ico');
       var body = el('strong');
       icon.setAttribute('aria-hidden', 'true');
-      icon.textContent = '✓';
+      icon.innerHTML = icoMarkup('check');
       body.textContent = text;
       card.appendChild(icon);
       card.appendChild(body);
@@ -1850,7 +1863,7 @@
 
   function _hashSlideSet(slides) {
     return JSON.stringify(slides.map(function(s) {
-      return [s.key, s.title, s.copy, s.meta, s.badge, s.poster, s.video,
+      return [s.key, s.title, s.copy, s.meta, s.badge, s.badgeIcon, s.poster, s.video,
               (s.services || []).map(function(x) {
                 return [x.slug, x.name, x.originalPrice, x.discountedPrice];
               })];
@@ -1881,7 +1894,8 @@
         copy:  promo.description || '',
         meta:  byline,
         cta:   t('heroPromoCta') || 'Book this discount',
-        badge: '🔥 ' + pct + '% ' + (t('heroPromoBadgeOff') || 'OFF'),
+        badge: pct + '% ' + (t('heroPromoBadgeOff') || 'OFF'),
+        badgeIcon: 'flame',
         poster: PROMO_HERO_FALLBACK,
         services: services,
         promo: promo,
@@ -1896,7 +1910,8 @@
       title: t('heroCardTitle') || 'In-home haircuts at your address',
       copy:  t('heroCardSub')   || 'Service area, price, duration, and confirmation shown before booking.',
       cta:   t('bookNow')       || 'Book Now',
-      badge: '✓ ' + (t('heroStatus') || 'Verified barber'),
+      badge: t('heroStatus') || 'Verified barber',
+      badgeIcon: 'check',
       poster: DEFAULT_HERO_POSTER,
       action: function() { openAssistantPanel('general'); }
     });
@@ -2024,14 +2039,14 @@
       detailBits.push(interpolate(t('heroPromoUntil') || 'Through {date}', { date: promo.endDate }));
     }
     ribbon.innerHTML =
-      '<span class="mb-hero-showcase__ribbon-badge">🔥 ' + pct + '% ' +
+      '<span class="mb-hero-showcase__ribbon-badge mb-ico">' + icoMarkup('flame') + ' ' + pct + '% ' +
       (t('heroPromoBadgeOff') || 'OFF') + '</span>' +
       '<span class="mb-hero-showcase__ribbon-copy">' +
         '<strong>' + name + '</strong>' +
         (detailBits.length ? '<span>' + detailBits.join(' · ') + '</span>' : '') +
       '</span>' +
       '<span class="mb-hero-showcase__ribbon-cta">' +
-        (t('heroPromoCta') || 'Book') + ' →</span>';
+        (t('heroPromoCta') || 'Book') + ' ' + icoMarkup('arrow-right') + '</span>';
     ribbon.setAttribute('aria-label',
       pct + '% off promotion — ' + name + (vendor ? ' by ' + vendor : '') + ' — tap to book');
     ribbon.addEventListener('click', function(e) {
@@ -2071,7 +2086,8 @@
 
     if (slide.badge) {
       var badge = el('span', 'mb-hero-showcase-card__badge');
-      badge.textContent = slide.badge;
+      if (slide.badgeIcon) { badge.classList.add('mb-ico'); icoLabel(badge, slide.badgeIcon, slide.badge); }
+      else { badge.textContent = slide.badge; }
       card.appendChild(badge);
     }
 
@@ -2094,7 +2110,7 @@
         var pr = el('span', 'mb-hero-showcase-card__service-prices');
         pr.innerHTML =
           '<span class="mb-hero-showcase-card__service-original">' + formatMoney(svc.originalPrice) + '</span>' +
-          ' <span class="mb-hero-showcase-card__service-arrow">→</span> ' +
+          ' <span class="mb-hero-showcase-card__service-arrow mb-ico">' + icoMarkup('arrow-right') + '</span> ' +
           '<span class="mb-hero-showcase-card__service-final">' + formatMoney(svc.discountedPrice) + '</span>';
         li.appendChild(nm); li.appendChild(pr);
         grid.appendChild(li);

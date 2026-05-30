@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260530c">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260530d">
 </head>
 <body class="mb-page">
   <main class="mb-shell" id="mobileBarberApp">
@@ -38,7 +38,7 @@
           <button class="mb-button mb-button--primary" type="button" data-action="chat" data-i18n="bookNow"></button>
           <button class="mb-button mb-button--ghost" type="button" data-action="chat" data-i18n="chatAssistant"></button>
           <button class="mb-icon-button" type="button" data-action="voice" aria-label="">
-            <span class="mb-icon-button__icon" aria-hidden="true">☎</span>
+            <span class="mb-icon-button__icon mb-ico" data-mb-ico="phone" aria-hidden="true"></span>
             <span data-i18n="talkAssistant"></span>
           </button>
         </div>
@@ -91,7 +91,7 @@
             <legend><span data-i18n="homeAiPreviewUploadLabel"></span></legend>
             <label class="mb-ai-preview__source-button mb-ai-preview__source-button--primary mb-ai-preview__source-button--solo">
               <input id="mbHomeAiPreviewFile" type="file" accept="image/*" hidden>
-              <span aria-hidden="true">📷</span>
+              <span class="mb-ico" data-mb-ico="camera" aria-hidden="true"></span>
               <span data-i18n="homeAiPreviewAddPhoto"></span>
             </label>
             <p class="mb-form-hint" data-i18n="homeAiPreviewAddPhotoHint"></p>
@@ -150,17 +150,17 @@
         <p data-i18n="trustHomeCopy"></p>
       </article>
       <article>
-        <span aria-hidden="true">✓</span>
+        <span class="mb-ico" data-mb-ico="check" aria-hidden="true"></span>
         <strong data-i18n="trustVerifiedTitle"></strong>
         <p data-i18n="trustVerifiedCopy"></p>
       </article>
       <article>
-        <span aria-hidden="true">$</span>
+        <span class="mb-ico" data-mb-ico="dollar-sign" aria-hidden="true"></span>
         <strong data-i18n="trustPricingTitle"></strong>
         <p data-i18n="trustPricingCopy"></p>
       </article>
       <article>
-        <span aria-hidden="true">↗</span>
+        <span class="mb-ico" data-mb-ico="arrow-up-right" aria-hidden="true"></span>
         <strong data-i18n="trustConfirmTitle"></strong>
         <p data-i18n="trustConfirmCopy"></p>
       </article>
@@ -254,11 +254,12 @@
   <script src="/nailsalon/phone-intake.js?v=20260427d"></script>
   <script src="/owner-model.js?v=20260529f"></script>
   <script src="/booking-conflict-guard.js?v=20260529g"></script>
+  <script src="/mobile-barber/mobile-barber-icons.js?v=20260530d"></script>
   <script src="/mobile-barber/mobile-barber-data.js?v=20260530a"></script>
   <script src="/mobile-barber/mobile-barber-booking.js?v=20260530a"></script>
   <script src="/mobile-barber/mobile-barber-agent.js?v=20260529l"></script>
   <script src="/mobile-barber/mobile-barber-voice.js?v=20260525f"></script>
   <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260530a"></script>
-  <script src="/mobile-barber/mobile-barber.js?v=20260530a"></script>
+  <script src="/mobile-barber/mobile-barber.js?v=20260530d"></script>
 </body>
 </html>

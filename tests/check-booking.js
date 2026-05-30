@@ -1,7 +1,7 @@
 'use strict';
 const path  = require('path');
 const admin = require(path.join(__dirname, '../functions/node_modules/firebase-admin'));
-admin.initializeApp({ credential: admin.credential.cert(require(path.join(__dirname, '../dulichcali-booking-calendar-6796caee41ac.json'))) });
+admin.initializeApp({ credential: admin.credential.applicationDefault(), projectId: 'dulichcali-booking-calendar' });
 const db = admin.firestore();
 
 (async () => {

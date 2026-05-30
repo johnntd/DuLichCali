@@ -17,9 +17,8 @@
 'use strict';
 
 const admin   = require('firebase-admin');
-const sa      = require('../../dulichcali-booking-calendar-6796caee41ac.json');
 
-admin.initializeApp({ credential: admin.credential.cert(sa) });
+admin.initializeApp({ credential: admin.credential.applicationDefault(), projectId: 'dulichcali-booking-calendar' });
 const db  = admin.firestore();
 const fv  = admin.firestore.FieldValue;
 

@@ -23,7 +23,6 @@ const path  = require('path');
 const admin = require(path.join(__dirname, '../functions/node_modules/firebase-admin'));
 
 // ── Config ───────────────────────────────────────────────────────────────────
-const SERVICE_ACCOUNT = path.join(__dirname, '../dulichcali-booking-calendar-6796caee41ac.json');
 const POLL_INTERVAL_MS = 1500;   // check every 1.5 s
 const POLL_TIMEOUT_MS  = 25000;  // give up after 25 s (Cloud Function cold start can be slow)
 
@@ -33,7 +32,8 @@ const keepDocs   = args.includes('--keep');
 
 // ── Init Admin SDK ────────────────────────────────────────────────────────────
 admin.initializeApp({
-  credential: admin.credential.cert(require(SERVICE_ACCOUNT)),
+  credential: admin.credential.applicationDefault(),
+  projectId: 'dulichcali-booking-calendar',
 });
 const db  = admin.firestore();
 const fv  = admin.firestore.FieldValue;

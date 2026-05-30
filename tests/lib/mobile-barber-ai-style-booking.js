@@ -369,24 +369,42 @@ function runMobileBarberAiStyleBookingTests(test) {
     assert(css.indexOf('.mb-ai-rec-card__row-ico') >= 0, 'row icon CSS must exist');
   });
 
-  test('A18. tapping a preview image opens a full-screen lightbox', function() {
+  test('A18. customer card image opens the shared lightbox', function() {
     var src = read('mobile-barber/mobile-barber.js');
     var css = read('mobile-barber/mobile-barber.css');
     var icons = read('mobile-barber/mobile-barber-icons.js');
-    assert(src.indexOf('function openImageLightbox') >= 0, 'openImageLightbox must exist');
-    assert(src.indexOf('function closeImageLightbox') >= 0, 'closeImageLightbox must exist');
-    assert(src.indexOf('mbImageLightbox') >= 0, 'lightbox overlay id must be used');
+    assert(src.indexOf('function openImageLightbox') >= 0, 'openImageLightbox wrapper must exist');
+    assert(src.indexOf('root.MBLightbox.open') >= 0, 'must delegate to the shared MBLightbox');
     assert(src.indexOf("openImageLightbox(imgSrc, rec.title") >= 0, 'image/expand opens the lightbox');
     assert(src.indexOf('mb-ai-rec-card__expand') >= 0, 'expand affordance must exist');
-    assert(src.indexOf("aria-modal") >= 0 || src.indexOf("'aria-modal'") >= 0, 'lightbox must be a modal dialog');
-    assert(src.indexOf('_lightboxKeydown') >= 0 && src.indexOf('Escape') >= 0, 'Escape must close the lightbox');
-    assert(src.indexOf("document.body.style.overflow = 'hidden'") >= 0, 'background scroll must lock');
     assert(icons.indexOf("'maximize'") >= 0 && icons.indexOf("'x'") >= 0, 'maximize + x icons must exist');
     assert(css.indexOf('.mb-lightbox') >= 0 && css.indexOf('.mb-lightbox__img') >= 0, 'lightbox CSS must exist');
     assert(css.indexOf('.mb-lightbox__close') >= 0, 'lightbox close button CSS must exist');
-    // Multilingual lightbox strings (en + vi + es).
+    // Multilingual lightbox strings (en + vi + es) on the customer page.
     ['lightboxOpen', 'lightboxClose', 'lightboxHint', 'lightboxLabel']
       .forEach(function(k) { assertEq(count(src, k + ':'), 3, k + ' must be defined in en+vi+es'); });
+  });
+
+  test('A19. shared MBLightbox module + vendor dashboard image zoom', function() {
+    var lb = read('mobile-barber/mobile-barber-lightbox.js');
+    var dash = read('mobile-barber/mobile-barber-dashboard.js');
+    // Shared module owns the actual implementation.
+    assert(/root\.MBLightbox\s*=\s*factory\(\)/.test(lb), 'must expose the MBLightbox global');
+    assert(/function open\(/.test(lb) && /function close\(/.test(lb), 'open/close must exist');
+    assert(lb.indexOf("'mbImageLightbox'") >= 0, 'overlay id must be defined');
+    assert(lb.indexOf("'aria-modal'") >= 0, 'must be an aria-modal dialog');
+    assert(lb.indexOf('Escape') >= 0, 'Escape must close');
+    assert(lb.indexOf("document.body.style.overflow = 'hidden'") >= 0, 'background scroll must lock');
+    assert(lb.indexOf('_returnFocus') >= 0, 'must restore focus to the trigger');
+    // Dashboard wires both the customer selfie and the selected style image.
+    assert(dash.indexOf('function makeImageZoomable') >= 0, 'dashboard zoom helper must exist');
+    assert(dash.indexOf('window.MBLightbox') >= 0, 'dashboard must use the shared MBLightbox');
+    assert(dash.indexOf('makeImageZoomable(selfieWrap, selfieImg, selfieUrl') >= 0, 'selfie image must be zoomable');
+    assert(dash.indexOf('makeImageZoomable(styleWrap, styleImg, styleImgUrl') >= 0, 'style image must be zoomable');
+    assert(dash.indexOf('mb-booking-ai-preview__zoom') >= 0, 'dashboard zoom button class must be used');
+    // Multilingual lightbox strings on the dashboard (en + vi + es).
+    ['lightboxOpen', 'lightboxClose', 'lightboxHint', 'lightboxLabel']
+      .forEach(function(k) { assertEq(count(dash, k + ':'), 3, k + ' must be defined in en+vi+es on the dashboard'); });
   });
 }
 

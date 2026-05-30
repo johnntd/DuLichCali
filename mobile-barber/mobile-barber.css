@@ -3782,6 +3782,7 @@
 }
 .mb-ai-rec-card__expand:hover { background: rgba(7, 24, 42, .95); }
 .mb-ai-rec-card__expand:active { transform: scale(.92); }
+.mb-ai-rec-card__expand:focus-visible { outline: 2px solid rgba(245, 166, 35, .9); outline-offset: 2px; }
 .mb-ai-rec-card__expand .mb-ico-svg { width: 18px; height: 18px; }
 
 /* Full-screen image lightbox (AI preview detail view). */
@@ -3848,11 +3849,39 @@
   transition: background .15s ease;
 }
 .mb-lightbox__close:hover { background: rgba(255, 255, 255, .22); }
+.mb-lightbox__close:focus-visible { outline: 2px solid rgba(245, 166, 35, .95); outline-offset: 2px; }
 .mb-lightbox__close .mb-ico-svg { width: 22px; height: 22px; }
 @media (prefers-reduced-motion: reduce) {
   .mb-lightbox { transition: none; }
   .mb-ai-rec-card__expand { transition: none; }
+  .mb-booking-ai-preview__zoom { transition: none; }
 }
+
+/* Vendor dashboard: tap-to-enlarge the customer selfie / selected style image. */
+.mb-booking-ai-preview__media { position: relative; }
+.mb-booking-ai-preview__media--zoomable img { cursor: zoom-in; }
+.mb-booking-ai-preview__zoom {
+  position: absolute;
+  top: .4rem;
+  right: .4rem;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(7, 24, 42, .78);
+  color: var(--cream);
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  transition: background .15s ease;
+}
+.mb-booking-ai-preview__zoom:hover { background: rgba(7, 24, 42, .95); }
+.mb-booking-ai-preview__zoom:focus-visible { outline: 2px solid rgba(245, 166, 35, .9); outline-offset: 2px; }
+.mb-booking-ai-preview__zoom .mb-ico-svg { width: 17px; height: 17px; }
 .mb-ai-rec-card__inspiration {
   position: absolute;
   left: .4rem;

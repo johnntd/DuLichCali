@@ -2426,64 +2426,16 @@
 
   // ── Full-screen image lightbox ────────────────────────────────────────
   // Tapping an AI preview image opens it full-screen for a detailed look.
-  // Closes on backdrop tap, the X button, or Escape. Restores focus + scroll.
-  function _lightboxKeydown(e) {
-    if (e.key === 'Escape' || e.keyCode === 27) closeImageLightbox();
-  }
-  function closeImageLightbox() {
-    var ov = document.getElementById('mbImageLightbox');
-    if (ov && ov.parentNode) ov.parentNode.removeChild(ov);
-    document.removeEventListener('keydown', _lightboxKeydown);
-    try { document.body.style.overflow = state._lightboxPrevOverflow || ''; } catch (e) {}
-    if (state._lightboxReturnFocus && state._lightboxReturnFocus.focus) {
-      try { state._lightboxReturnFocus.focus(); } catch (e) {}
-    }
-    state._lightboxReturnFocus = null;
-  }
+  // Implementation lives in the shared MBLightbox module (also used by the
+  // vendor dashboard); this wrapper passes the customer-page translations.
   function openImageLightbox(src, caption, returnFocusEl) {
-    if (!src) return;
-    closeImageLightbox();
-    state._lightboxReturnFocus = returnFocusEl || null;
-
-    var overlay = el('div', 'mb-lightbox');
-    overlay.id = 'mbImageLightbox';
-    overlay.setAttribute('role', 'dialog');
-    overlay.setAttribute('aria-modal', 'true');
-    overlay.setAttribute('aria-label', caption || (t('lightboxLabel') || 'Enlarged preview'));
-
-    var inner = el('div', 'mb-lightbox__inner');
-    var img = document.createElement('img');
-    img.className = 'mb-lightbox__img';
-    img.src = src;
-    img.alt = caption || '';
-    inner.appendChild(img);
-    if (caption) {
-      var cap = el('p', 'mb-lightbox__caption');
-      cap.textContent = caption;
-      inner.appendChild(cap);
-    }
-    var hint = el('p', 'mb-lightbox__hint');
-    hint.textContent = t('lightboxHint') || 'AI preview — final result may vary.';
-    inner.appendChild(hint);
-
-    var close = el('button', 'mb-lightbox__close mb-ico');
-    close.type = 'button';
-    close.setAttribute('aria-label', t('lightboxClose') || 'Close');
-    close.innerHTML = icoMarkup('x');
-    close.addEventListener('click', function(e) { e.stopPropagation(); closeImageLightbox(); });
-
-    overlay.appendChild(inner);
-    overlay.appendChild(close);
-    overlay.addEventListener('click', function(e) {
-      if (e.target === overlay || e.target === inner) closeImageLightbox();
-    });
-
-    try { state._lightboxPrevOverflow = document.body.style.overflow; document.body.style.overflow = 'hidden'; } catch (e) {}
-    document.body.appendChild(overlay);
-    document.addEventListener('keydown', _lightboxKeydown);
-    requestAnimationFrame(function() {
-      overlay.classList.add('mb-lightbox--open');
-      try { close.focus({ preventScroll: true }); } catch (e) {}
+    if (!src || !root.MBLightbox || !root.MBLightbox.open) return;
+    root.MBLightbox.open(src, {
+      caption: caption || '',
+      hint: t('lightboxHint') || 'AI preview — final result may vary.',
+      closeLabel: t('lightboxClose') || 'Close',
+      ariaLabel: t('lightboxLabel') || caption || 'Enlarged preview',
+      returnFocus: returnFocusEl || null
     });
   }
 

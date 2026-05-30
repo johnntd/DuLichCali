@@ -107,6 +107,10 @@
       vendorAiPreviewTextureLabel: 'Texture',
       vendorAiPreviewWhyLabel: 'Why it fits',
       vendorAiPreviewSafetyLabel: 'Safety note',
+      lightboxOpen: 'Enlarge',
+      lightboxClose: 'Close',
+      lightboxLabel: 'Enlarged image',
+      lightboxHint: 'Tap outside or press Esc to close.',
       vendorAiPreviewBarberRefNotes: 'Barber reference notes',
       vendorAiPreviewBarberInstructions: 'Your cutting notes',
       vendorAiPreviewBarberInstructionsPlaceholder: 'Add specific instructions, e.g. #3 sides, scissor on top, square neck.',
@@ -403,6 +407,10 @@
       vendorAiPreviewTextureLabel: 'Kết cấu',
       vendorAiPreviewWhyLabel: 'Vì sao hợp',
       vendorAiPreviewSafetyLabel: 'Lưu ý an toàn',
+      lightboxOpen: 'Phóng to',
+      lightboxClose: 'Đóng',
+      lightboxLabel: 'Xem phóng to',
+      lightboxHint: 'Chạm bên ngoài hoặc nhấn Esc để đóng.',
       vendorAiPreviewBarberRefNotes: 'Ghi chú tham khảo cho thợ',
       vendorAiPreviewBarberInstructions: 'Ghi chú cắt của bạn',
       vendorAiPreviewBarberInstructionsPlaceholder: 'Thêm hướng dẫn cụ thể, ví dụ: số 3 hai bên, kéo trên đầu, vuông gáy.',
@@ -699,6 +707,10 @@
       vendorAiPreviewTextureLabel: 'Textura',
       vendorAiPreviewWhyLabel: 'Por qué le queda',
       vendorAiPreviewSafetyLabel: 'Nota de seguridad',
+      lightboxOpen: 'Ampliar',
+      lightboxClose: 'Cerrar',
+      lightboxLabel: 'Vista ampliada',
+      lightboxHint: 'Toque fuera o presione Esc para cerrar.',
       vendorAiPreviewBarberRefNotes: 'Notas de referencia del barbero',
       vendorAiPreviewBarberInstructions: 'Sus notas de corte',
       vendorAiPreviewBarberInstructionsPlaceholder: 'Instrucciones específicas, p. ej. #3 a los lados, tijera arriba, nuca cuadrada.',
@@ -1326,6 +1338,30 @@
     if (I && I.label) return I.label(node, name, text);
     node.textContent = (text == null) ? '' : String(text);
     return node;
+  }
+
+  // Make a booking-card image (customer selfie / selected style) tap-to-enlarge
+  // via the shared MBLightbox. Adds a corner expand button + zoom cursor.
+  function makeImageZoomable(figure, img, src, caption) {
+    var LB = (typeof window !== 'undefined') && window.MBLightbox;
+    if (!figure || !img || !src || !LB || !LB.open) return;
+    function show(ret) {
+      LB.open(src, {
+        caption: caption || '',
+        hint: t('lightboxHint') || '',
+        closeLabel: t('lightboxClose') || 'Close',
+        ariaLabel: t('lightboxLabel') || caption || '',
+        returnFocus: ret || null
+      });
+    }
+    figure.classList.add('mb-booking-ai-preview__media--zoomable');
+    img.addEventListener('click', function () { show(img); });
+    var zoom = el('button', 'mb-booking-ai-preview__zoom mb-ico');
+    zoom.type = 'button';
+    zoom.setAttribute('aria-label', (t('lightboxOpen') || 'Enlarge') + (caption ? ' — ' + caption : ''));
+    zoom.innerHTML = icoMarkup('maximize');
+    zoom.addEventListener('click', function (e) { e.stopPropagation(); show(zoom); });
+    figure.appendChild(zoom);
   }
 
   function setTranslatedText() {
@@ -2281,6 +2317,7 @@
       caption.textContent = t('vendorAiPreviewSelfieCaption');
       selfieWrap.appendChild(selfieImg);
       selfieWrap.appendChild(caption);
+      makeImageZoomable(selfieWrap, selfieImg, selfieUrl, t('vendorAiPreviewSelfieCaption'));
       grid.appendChild(selfieWrap);
     }
     // Selected style preview (prefer canonical selectedAi* fields, fall back
@@ -2299,6 +2336,7 @@
       styleCaption.textContent = styleNameTxt;
       styleWrap.appendChild(styleImg);
       styleWrap.appendChild(styleCaption);
+      makeImageZoomable(styleWrap, styleImg, styleImgUrl, styleNameTxt);
       grid.appendChild(styleWrap);
     }
     section.appendChild(grid);

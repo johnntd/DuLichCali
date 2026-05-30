@@ -4,9 +4,62 @@
 **Method:** 10 parallel per-dimension auditors (read-only) → adversarial verification of every critical/high finding (one skeptic per finding, instructed to refute). 55 agents, ~6.1M tokens.
 **Result:** 76 findings — **19 CRITICAL, 26 HIGH, 21 MEDIUM, 10 LOW**; **29 critical/high adversarially confirmed exploitable**.
 
-## Recommendation: ⚠️ **CONDITIONAL GO — deploy + verify, then close 1 residual + frontend gating**
+## Recommendation: ⛔ **NO-GO — live private API keys are exposed (rotate immediately)**
+
+**Round 4 found a CRITICAL live exposure:** 10 real private AI keys (Anthropic `sk-ant`, OpenAI `sk-proj`, Gemini `AIza`) are stored in **publicly-readable** Firestore docs and pulled into the browser. They must be **rotated now** and the storage model changed (keys → Functions secrets only). See the "API Key Exposure Audit" section below. The rules/fix progress from rounds 1-3 still stands, but this supersedes the verdict until the keys are rotated + removed.
+
+<details><summary>(round 3 verdict — superseded by round 4)</summary>
+
+### ⚠️ CONDITIONAL GO — deploy + verify, then close 1 residual + frontend gating
 
 **Update (round 3):** the rules are now **runtime-verified** — `tests/security-rules/rules.test.js` runs against the Firebase emulator and **24/24 pass** (unauthenticated/anonymous lockdowns, customer field restrictions, vendor isolation, admin allowlist, price validation, booking get-by-id-but-no-list). Residual HIGH #1 (booking enumeration) is **fixed** (get/list split). Residual HIGH #2 (`vendorUsers`) is **hardened** — anonymous self-map and mapping-hijack are blocked and verified; the last sliver (a non-anonymous account self-mapping its *own* uid) needs a setup-code Cloud Function + login-client switch (a critical-auth change that must be deploy-verified). Remaining before launch: **(1)** `firebase deploy --only firestore:rules,storage,hosting` + post-deploy smoke; **(2)** the `vendorUsers` setup-code CF; **(3)** frontend admin/salon portal gating (MEDIUM — data is already protected server-side). With (1) done and (2)+(3) scheduled, this is launch-ready.
+</details>
+
+---
+
+## API Key Exposure Audit (round 4)
+
+**Critical requirement:** no private API keys in the frontend/public surface.
+
+### Finding — CRITICAL: private AI keys stored in public Firestore + used client-side
+A runtime scan of production Firestore (Admin SDK) found **10 real private keys**:
+
+| Doc (publicly readable) | Keys |
+|---|---|
+| `vendors/beauty-hair-oc` | `aiKey` (Anthropic `sk-ant`, 108 ch) |
+| `vendors/beauty-nails-oc` | `aiKey` (`sk-ant`), `openaiKey` (`sk-proj`, 164 ch), `geminiKey` (`AIza`) |
+| `vendors/luxurious-nails` | `aiKey`, `openaiKey`, `geminiKey` |
+| `config/platform` | `aiKey`, `openaiKey`, `geminiKey` |
+
+The `vendors/{vendorId}` rule is `allow read: if true`, so **anyone can read these docs and harvest the keys**, then bill the owner's Anthropic/OpenAI/Google accounts. `admin.html` (`platAiKey`/`platOpenAiKey`/`vendorAiKeyVal`) writes them there, and `ai-engine.js`/`aiOrchestrator.js`/`marketingEngine.js`/voice modes read them to call the providers **directly from the browser**.
+
+### Classification
+- **Private-secret (must rotate + remove):** the `sk-ant`, `sk-proj`, and `geminiKey` `AIza` values above.
+- **Public-safe (allowed):** the Firebase web `apiKey` `AIzaSyCo1Fz…71SQ` (referrer-locked) and `AIzaSyAqed…` on `testfirebase.html`.
+
+### Files scanned / deployed-page scan
+- `scripts/security/scan_secrets.sh` over all git-tracked source → **no private keys in files** (the leak is runtime Firestore data, not source).
+- Deployed pages — `https://www.dulichcali21.com/`, `/mobile-barber/`, `/ai-engine.js`, `/aiOrchestrator.js` → **no private key in the served bytes** (only the public Firebase web key).
+
+### Secrets found / removed
+- **Found:** 10 keys (above). **Removal from Firestore was attempted but correctly blocked** by the safety gate (production data deletion needs explicit owner approval). **Awaiting authorization** to delete those fields.
+
+### Keys that MUST be rotated (urgent — assume compromised)
+1. **Anthropic** (`sk-ant…`) · 2. **OpenAI** (`sk-proj…`) · 3. **Gemini / Google AI Studio** (`AIza…`). Rotate in each provider console **now**; put the new values **only** in Functions secrets (`firebase functions:secrets:set CLAUDE_API_KEY` / `OPENAI_API_KEY` / `GEMINI_API_KEY`).
+
+### Storage-model fix (in progress)
+- **Done:** `ai-engine.js` Claude path is now **proxy-only** — the browser never uses a client key; all calls go through the `aiProxy` Cloud Function (`CLAUDE_API_KEY` Functions secret).
+- **Remaining:** remove the `admin.html` key-entry UI + save handlers (stop writing keys to Firestore); route `aiOrchestrator.js`/`marketingEngine.js`/voice TTS through the `aiOrchestrate`/`aiTtsProxy` functions; delete the exposed Firestore key fields (pending authorization); stop the vendor/data layer from reading `openaiKey`/`geminiKey`.
+
+### Pre-deploy secret-scan command
+```
+bash scripts/security/scan_secrets.sh            # fails (exit 1) on any private key in source
+bash scripts/security/scan_secrets.sh --selftest # proves detection on planted fake keys
+```
+Wire into `npm test`, the Codex-Claude loop, and the deploy checklist.
+
+### Security alert feature
+Specified; **not yet built** (the live key exposure took priority). Next deliverable: a `securityAlerts` collection (admin/owner-read, validated create), a `security-alerts.js` logger, runtime guards (XSS-looking input, protected-field tamper, vendorId/ownerId mismatch, spam), and an admin-only alert center.
 
 ---
 

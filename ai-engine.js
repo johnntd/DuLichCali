@@ -136,23 +136,16 @@
   }
 
   function _callClaude(apiKey, model, maxTokens, systemPrompt, messages) {
-    if (typeof window !== 'undefined' && window.firebase && typeof window.firebase.functions === 'function') {
-      return _callClaudeViaProxy(model, maxTokens, systemPrompt, messages)
-        .catch(function (err) {
-          // Only fall back to a direct Anthropic call when (a) we actually have
-          // a client-side apiKey, and (b) the error is NOT a structured API
-          // error (which we should surface to the caller, not retry differently).
-          if (err && err.isApiError) throw err;
-          if (!apiKey) throw err;
-          console.warn('[AIEngine] aiProxy unavailable, falling back to client-direct Claude:', err && err.message);
-          var body = { model: model, max_tokens: maxTokens, messages: messages };
-          if (systemPrompt) body.system = systemPrompt;
-          return fetchWithRetry(apiKey, body);
-        });
+    // SECURITY (pre-production audit): browser AI goes ONLY through the
+    // server-side aiProxy, which holds CLAUDE_API_KEY as a Functions secret.
+    // The client never uses a key — private keys must never be stored in
+    // Firestore or shipped to the browser. The old client-direct fallback (which
+    // read a key from the vendor/platform config) is removed; if the proxy is
+    // unavailable we surface the error instead of leaking a key.
+    if (typeof window === 'undefined' || !window.firebase || typeof window.firebase.functions !== 'function') {
+      return Promise.reject(new Error('AI is temporarily unavailable (proxy not loaded).'));
     }
-    var body = { model: model, max_tokens: maxTokens, messages: messages };
-    if (systemPrompt) body.system = systemPrompt;
-    return fetchWithRetry(apiKey, body);
+    return _callClaudeViaProxy(model, maxTokens, systemPrompt, messages);
   }
 
   // ── OpenAI adapter — normalises to { content: [{ text }] } ──────────────────

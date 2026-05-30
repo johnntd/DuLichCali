@@ -68,6 +68,7 @@
   gap: .85rem;
   align-content: start;
   animation: mbFadeUp .55s ease both;
+  min-height: 100vh;  /* fallback for iOS Safari < 15.4 (no svh) */
   min-height: 100svh;
   padding-bottom: .5rem;
 }
@@ -82,8 +83,11 @@
 .mb-hero__media {
   position: relative;
   /* Cinematic: the image dominates the fold (~56-60% of the viewport) so the
-     craft leads, not the text. svh keeps it stable under the iOS address bar. */
+     craft leads, not the text. svh keeps it stable under the iOS address bar;
+     vh is the fallback for iOS Safari < 15.4. */
+  min-height: 56vh;
   min-height: 56svh;
+  max-height: 60vh;
   max-height: 60svh;
   border-radius: var(--r-md);
   overflow: hidden;
@@ -95,7 +99,7 @@
 }
 
 @media (min-width: 480px) {
-  .mb-hero__media { min-height: 52svh; max-height: 58svh; }
+  .mb-hero__media { min-height: 52vh; min-height: 52svh; max-height: 58vh; max-height: 58svh; }
 }
 
 @media (min-width: 680px) {
@@ -436,6 +440,18 @@
 .mb-icon-button:active,
 .mb-language__button:active {
   transform: translateY(1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mb-button,
+  .mb-icon-button,
+  .mb-language__button { transition: none; }
+  .mb-button:hover,
+  .mb-icon-button:hover,
+  .mb-language__button:hover,
+  .mb-button:active,
+  .mb-icon-button:active,
+  .mb-language__button:active { transform: none; }
 }
 
 .mb-icon-button {
@@ -1952,18 +1968,14 @@
   color: #cbd5e1;
 }
 
-/* Bucket-based pill colors. statusBucket() emits 'pending'/'traveling' (not the
-   raw status), so these complete the scheme so the pill matches the row's left
-   status rail (pending=amber, traveling/in-progress=blue). */
+/* Bucket-based pending pill. statusBucket() emits 'pending' (not the raw status),
+   which the earlier raw-status modifiers didn't match, so the PENDING pill
+   rendered uncolored. (The 'traveling'/'in_progress' bucket is already styled
+   further down — do not duplicate it here.) */
 .mb-status-pill--pending {
   background: rgba(251, 191, 36, .15);
   border-color: rgba(251, 191, 36, .45);
   color: #fbbf24;
-}
-.mb-status-pill--traveling {
-  background: rgba(56, 189, 248, .15);
-  border-color: rgba(56, 189, 248, .45);
-  color: #7dd3fc;
 }
 
 .mb-customer-account__grid {

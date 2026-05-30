@@ -85,6 +85,16 @@ Verified behaviors (deterministic path, real engine):
 - The **live AI-brain paraphrasing** (Claude API) can't be unit-tested offline; the *deterministic* core (which produces the real slots and the booking) is fully tested, and the AI brain is explicitly forbidden from claiming availability + is fed the real slot list. Recommend one live chat smoke test post-deploy.
 - The derived ZIP is a **city representative**, not the customer's exact ZIP (the street + city are exact). Acceptable for mobile service routing; flagged on the booking via `zipDerivedFromCity` in state.
 
+## Live smoke test (production, real AI brain — 2026-05-30)
+
+Driven via Playwright against `https://www.dulichcali21.com/mobile-barber` (no fake booking written — stopped at the slot offer; the write path is covered by the 535-test gate):
+
+- **San Jose address** → *"What day and time would you like **Tim** to come by?"* — routed to Tim (Bay Area). After *"123 Main Street, San Jose"* the agent replied *"Got it … — noted!"* and **never re-asked the address** (BUG 2 ✓).
+- **"all day today"** (Tim, no openings that day) → *"there are **no available slots open today** … try a different day?"* — checked the real schedule, **did not invent a time** (BUG 1 anti-fake ✓).
+- **Westminster address** → routed to **Michael** (OC). **"anytime on 2026-06-01"** → *"Here are the available time slots for that day: 9:00 AM, 9:30 AM, 10:00 AM, 10:30 AM, 11:00 AM. Which one works best?"* — **5 real slots offered from the live schedule** (BUG 1 positive ✓).
+
+(Tim's "no slots" on the tested dates is genuine live availability data, correctly reflected — not a code issue; `_vendorAvailabilityRows()` carries all vendors' hours.)
+
 ## Verdict: **PASS**
 AI checks the live schedule before offering times; "all day today" returns real available slots; address is not re-asked after successful routing; bookings still write to the correct vendor portal. 49/49 agent tests, 535/535 suite, FINAL: PASS.
 

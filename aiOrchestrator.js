@@ -212,13 +212,30 @@
   }
 
   // ── Provider dispatcher ────────────────────────────────────────────────────
+  // SECURITY (pre-production audit): every provider is routed through the
+  // server-side aiProxy Cloud Function, which holds the keys as Functions
+  // secrets. No client-side key is ever read or used. Browser AI is effectively
+  // Claude-only (OpenAI blocks browser CORS; Gemini model IDs drift), so the
+  // proxy runs Claude. The legacy direct callClaude/callOpenAI/callGemini +
+  // localStorage KEYS accessors are retained but no longer reachable.
   async function executeProvider(provider, taskDef) {
-    switch (provider) {
-      case 'claude':  return callClaude(taskDef);
-      case 'openai':  return callOpenAI(taskDef);
-      case 'gemini':  return callGemini(taskDef);
-      default:        throw new Error(`Unknown provider: ${provider}`);
+    if (typeof window === 'undefined' || !window.firebase || typeof window.firebase.functions !== 'function') {
+      throw new Error('AI proxy unavailable (Firebase Functions SDK not loaded)');
     }
+    let system = taskDef.system || 'You are a helpful AI assistant for Du Lịch Cali.';
+    if (taskDef.schema) system += '\n\nRespond ONLY with valid JSON. No explanation, no markdown fences.';
+    const fn = window.firebase.functions().httpsCallable('aiProxy', { timeout: 55000 });
+    const res = await fn({
+      provider:  'claude',
+      system:    system,
+      messages:  taskDef.messages || [],
+      maxTokens: taskDef.maxTokens || 1200,
+      jsonMode:  !!taskDef.schema,
+      model:     MODELS.claude
+    });
+    const data = (res && res.data) || {};
+    if (!data.ok || typeof data.text !== 'string') throw new Error('aiProxy: ' + (data.debugCode || 'no text'));
+    return data.text;
   }
 
   // ══════════════════════════════════════════════════════════════

@@ -48,9 +48,15 @@ The `vendors/{vendorId}` rule is `allow read: if true`, so **anyone can read the
 ### Keys that MUST be rotated (urgent — assume compromised)
 1. **Anthropic** (`sk-ant…`) · 2. **OpenAI** (`sk-proj…`) · 3. **Gemini / Google AI Studio** (`AIza…`). Rotate in each provider console **now**; put the new values **only** in Functions secrets (`firebase functions:secrets:set CLAUDE_API_KEY` / `OPENAI_API_KEY` / `GEMINI_API_KEY`).
 
-### Storage-model fix (in progress)
-- **Done:** `ai-engine.js` Claude path is now **proxy-only** — the browser never uses a client key; all calls go through the `aiProxy` Cloud Function (`CLAUDE_API_KEY` Functions secret).
-- **Remaining:** remove the `admin.html` key-entry UI + save handlers (stop writing keys to Firestore); route `aiOrchestrator.js`/`marketingEngine.js`/voice TTS through the `aiOrchestrate`/`aiTtsProxy` functions; delete the exposed Firestore key fields (pending authorization); stop the vendor/data layer from reading `openaiKey`/`geminiKey`.
+### Storage-model fix (complete)
+Keys now live **only** in Cloud Functions secrets; the browser never stores or uses one.
+- **`admin.html`** — the key-entry UI (`platAiKey`/`platOpenAiKey`/`platGeminiKey`/`vendorAiKeyVal`) and the `savePlatformSettings`/`saveVendorAiKey` Firestore writes are **removed**; replaced with a server-side-only notice + the `functions:secrets:set` instructions. Keys can no longer be written to Firestore. (verified 0 residual key-UI/write refs.)
+- **`ai-engine.js`** — Claude path is **proxy-only** via `aiProxy` (no client-direct fallback).
+- **`aiOrchestrator.js`** — `executeProvider` now routes **every** task through `aiProxy` (server-side); the legacy `callClaude/callOpenAI/callGemini` + localStorage key accessors are unreachable.
+- **`marketingEngine.js`** — already proxy-first in production (`aiProxy`); direct provider calls are gated to `localhost` dev only. No change needed.
+- **Voice modes** — read keys but **fall back to browser `speechSynthesis`** when keys are absent; with the Firestore keys deleted + admin entry removed there are no keys, so customer voice degrades gracefully. Routing voice TTS through `aiTtsProxy` (server-side, better quality than browser TTS) is a remaining **quality** refinement, not a security gap.
+- **Firestore key fields deleted** (owner-authorized) — verified 0 remain.
+- `scripts/security/scan_secrets.sh` clean; `ai-engine.js`/`aiOrchestrator.js` ?v=20260530m.
 
 ### Pre-deploy secret-scan command
 ```

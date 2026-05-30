@@ -2323,6 +2323,19 @@
     // listener on the container reads all three groups into state.
     var aiOptions = document.getElementById('mbHomeAiPreviewOptions');
     if (aiOptions) aiOptions.addEventListener('change', handleAiOptionsChange);
+
+    // iOS Safari: when a booking field is focused, the on-screen keyboard can
+    // cover it (and the submit button). Scroll the focused field to center
+    // after the keyboard animates so it — and the action below — stay visible.
+    document.addEventListener('focusin', function(e) {
+      var tgt = e.target;
+      if (!tgt || !tgt.closest) return;
+      if (tgt.closest('.mb-manual-booking, .mb-ai-rec-card__booking')) {
+        setTimeout(function() {
+          try { tgt.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (err) {}
+        }, 280);
+      }
+    });
   }
 
   function handleAiOptionsChange() {
@@ -3426,12 +3439,27 @@
     return booking;
   }
 
+  // Information architecture: the AI Hairstyle Preview is the flagship
+  // conversion feature, so surface it ABOVE the services list
+  // (Hero → AI Hairstyle Preview → Services → Booking). Sections live below
+  // the fold, so reordering on init is flash-free.
+  function reorderHomeSections() {
+    try {
+      var ai = document.getElementById('mbHomeAiPreview');
+      var services = document.getElementById('mbServices');
+      if (ai && services && services.parentNode && ai.compareDocumentPosition(services) & Node.DOCUMENT_POSITION_PRECEDING) {
+        services.parentNode.insertBefore(ai, services);
+      }
+    } catch (e) {}
+  }
+
   function init() {
     state.lang = getLang();
     var params = new URLSearchParams(root.location.search);
     state.selectedServiceId = params.get('serviceId') || '';
     state.region = String(params.get('region') || '').toLowerCase();
     bind();
+    reorderHomeSections();
     prefillLocationGate();
     setLang(state.lang);
     renderHeroShowcase();

@@ -12,6 +12,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
 
   <style>
     :root {
@@ -640,14 +641,6 @@
       errEl.textContent = _stMsgs[_vendorAdminStatus] || 'Cửa hàng không thể đăng ký lúc này.';
       return;
     }
-    if (!SETUP_CODE) {
-      errEl.textContent = 'Đang tải cấu hình cửa hàng... Vui lòng thử lại sau vài giây.';
-      return;
-    }
-    if (code !== SETUP_CODE) {
-      errEl.textContent = 'Mã thiết lập không đúng. Nhập PIN do admin cấp.';
-      return;
-    }
     if (pass.length < 6) {
       errEl.textContent = 'Mật khẩu phải có ít nhất 6 ký tự.';
       return;
@@ -655,19 +648,25 @@
 
     btn.disabled = true;
 
-    function writeMapping(uid) {
-      return db.collection('vendorUsers').doc(uid).get().then(function (existing) {
-        var updates = {
-          vendorIds: firebase.firestore.FieldValue.arrayUnion(VENDOR_ID),
-          email:     email,
-          role:      'owner'
-        };
-        if (!existing.exists) {
-          updates.vendorId  = VENDOR_ID;  // legacy field for new docs only
-          updates.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-        }
-        return db.collection('vendorUsers').doc(uid).set(updates, { merge: true });
-      });
+    // Mapping creation is server-side: the claimVendorMembership Cloud Function
+    // verifies the setup code (PIN) against the vendor doc and writes vendorUsers
+    // via the Admin SDK. The client can no longer write vendorUsers directly nor
+    // self-map (firestore.rules). The uid arg is ignored — the CF uses auth.uid.
+    function writeMapping(/* uid */) {
+      return firebase.functions().httpsCallable('claimVendorMembership')({ vendorId: VENDOR_ID, setupCode: code })
+        .then(function (res) {
+          var data = (res && res.data) || {};
+          if (!data.ok) {
+            var msgs = {
+              BAD_CODE: 'Mã thiết lập không đúng. Nhập PIN do admin cấp.',
+              INACTIVE: 'Cửa hàng chưa được kích hoạt. Liên hệ admin.',
+              NOT_FOUND: 'Cửa hàng không tồn tại.',
+              UNAUTHENTICATED: 'Vui lòng đăng nhập lại.'
+            };
+            throw new Error(msgs[data.code] || data.error || 'Đăng ký thất bại.');
+          }
+          return data;
+        });
     }
 
     auth.createUserWithEmailAndPassword(email, pass).then(function (cred) {
@@ -726,34 +725,28 @@
       return;
     }
     if (!code) { errEl.textContent = 'Vui lòng nhập mã thiết lập.'; return; }
-    if (!SETUP_CODE) {
-      errEl.textContent = 'Đang tải cấu hình... Vui lòng thử lại sau vài giây.';
-      return;
-    }
-    if (code !== SETUP_CODE) {
-      errEl.textContent = 'Mã thiết lập không đúng. Nhập PIN do admin cấp.';
-      return;
-    }
     var user = auth.currentUser;
     if (!user) { showScreen('login'); return; }
     btn.disabled = true;
-    db.collection('vendorUsers').doc(user.uid).get().then(function (existing) {
-      var updates = {
-        vendorIds: firebase.firestore.FieldValue.arrayUnion(VENDOR_ID),
-        email:     user.email || '',
-        role:      'owner'
-      };
-      if (!existing.exists) {
-        updates.vendorId  = VENDOR_ID;
-        updates.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-      }
-      return db.collection('vendorUsers').doc(user.uid).set(updates, { merge: true });
-    }).then(function () {
-      _redirectToVendorAdmin(VENDOR_ID);
-    }).catch(function (err) {
-      btn.disabled = false;
-      errEl.textContent = 'Lỗi: ' + err.message;
-    });
+    // Server-side setup-code verification + mapping write (Admin SDK).
+    firebase.functions().httpsCallable('claimVendorMembership')({ vendorId: VENDOR_ID, setupCode: code })
+      .then(function (res) {
+        var data = (res && res.data) || {};
+        if (!data.ok) {
+          btn.disabled = false;
+          var msgs = {
+            BAD_CODE: 'Mã thiết lập không đúng. Nhập PIN do admin cấp.',
+            INACTIVE: 'Cửa hàng chưa được kích hoạt. Liên hệ admin.',
+            NOT_FOUND: 'Cửa hàng không tồn tại.'
+          };
+          errEl.textContent = msgs[data.code] || data.error || 'Liên kết thất bại.';
+          return;
+        }
+        _redirectToVendorAdmin(VENDOR_ID);
+      }).catch(function (err) {
+        btn.disabled = false;
+        errEl.textContent = 'Lỗi: ' + err.message;
+      });
   }
 
   function doSignOutAndGoLogin() {

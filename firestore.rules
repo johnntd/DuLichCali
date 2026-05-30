@@ -150,24 +150,16 @@ service cloud.firestore {
 
     // ── Vendor user mappings ──────────────────────────────────────────────────────
     // Auth required — no anonymous enumeration of staff emails and roles.
-    // SECURITY: writes are restricted to NON-ANONYMOUS accounts. Anonymous auth
-    // (every public customer) must never be able to create a vendorUsers doc —
-    // otherwise an anonymous attacker could self-map to any vendorId and pass
-    // isVendorMember(), taking over that vendor's data/bookings/payment settings.
-    // (Residual: a real email/password account can still self-map; a follow-up
-    // moves mapping creation behind a setup-code-verifying Cloud Function.)
+    // SECURITY: clients can NO LONGER self-map. A write is allowed only for an
+    // admin, OR an existing member of the SAME vendor (so an owner can add staff
+    // to their own vendor). The FIRST membership for a vendor is created by the
+    // `claimVendorMembership` Cloud Function AFTER it verifies the setup-code (PIN)
+    // server-side (Admin SDK bypasses this rule). This fully closes the
+    // email/password self-map takeover: a non-member cannot grant itself any vendor.
     match /vendorUsers/{uid} {
       allow read:  if request.auth != null;
-      // A non-anonymous account may only write its OWN mapping doc (admin may
-      // write any). This blocks the anonymous self-map AND hijacking another
-      // user's mapping. Residual (documented): a non-anonymous account can still
-      // map ITS OWN uid to an arbitrary vendorId — fully closed by a
-      // setup-code-verifying Cloud Function + flipping this to `write: if false`
-      // once the login clients call that function.
       allow write: if isAdmin()
-                || (request.auth != null
-                    && request.auth.token.firebase.sign_in_provider != 'anonymous'
-                    && request.auth.uid == uid);
+                || isVendorMember(request.resource.data.get('vendorId', '__nomatch__'));
     }
 
     // ── Bookings (airport/ride) ───────────────────────────────────────────────────

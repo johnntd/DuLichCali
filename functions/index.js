@@ -3927,3 +3927,54 @@ function makeAuditTrigger(collection) {
 exports.onMobileBarberBookingAudit = makeAuditTrigger('mobileBarberBookings');
 exports.onMobileBarberVendorAudit  = makeAuditTrigger('mobileBarberVendors');
 exports.onMobileBarberServiceAudit = makeAuditTrigger('mobileBarberServices');
+
+// ── Vendor membership claim — server-side setup-code (PIN) verification ────────
+// Closes the vendorUsers self-map takeover: the PIN is verified HERE (Admin SDK),
+// not in the browser, and the mapping is written server-side. The client can no
+// longer self-map to an arbitrary vendor (firestore.rules: vendorUsers write is
+// admin OR an existing member only — the FIRST member is created by this CF).
+exports.claimVendorMembership = onCall(
+  { region: 'us-central1', cors: true, timeoutSeconds: 30 },
+  async (request) => {
+    const auth = request.auth;
+    const uid = auth && auth.uid;
+    const provider = auth && auth.token && auth.token.firebase && auth.token.firebase.sign_in_provider;
+    if (!uid || provider === 'anonymous') {
+      return { ok: false, code: 'UNAUTHENTICATED', error: 'Sign in with an email account first.' };
+    }
+    const email = (auth.token && auth.token.email) || '';
+    const vendorId = String((request.data && request.data.vendorId) || '').trim();
+    const setupCode = String((request.data && request.data.setupCode) || '').trim();
+    if (!vendorId || !setupCode) return { ok: false, code: 'INVALID', error: 'Missing vendorId or setup code.' };
+
+    // Resolve the vendor's stored setup code: mobile-barber first, then legacy vendors.
+    let vendor = null;
+    const mb = await db.doc(`mobileBarberVendors/${vendorId}`).get();
+    if (mb.exists) vendor = mb.data();
+    else {
+      const v = await db.doc(`vendors/${vendorId}`).get();
+      if (v.exists) vendor = v.data();
+    }
+    if (!vendor) return { ok: false, code: 'NOT_FOUND', error: 'Vendor not found.' };
+
+    const status = vendor.adminStatus || 'active';
+    if (status !== 'active') return { ok: false, code: 'INACTIVE', error: 'Vendor is not active. Contact admin.' };
+
+    const expected = String(vendor.setupCode || '');
+    if (!expected || setupCode !== expected) {
+      return { ok: false, code: 'BAD_CODE', error: 'Incorrect setup code.' };
+    }
+
+    // Verified — write the mapping (Admin SDK bypasses the client-write-blocked rule).
+    await db.doc(`vendorUsers/${uid}`).set({
+      vendorIds: admin.firestore.FieldValue.arrayUnion(vendorId),
+      vendorId: vendorId,                 // legacy single-field for older readers
+      email: email,
+      role: 'owner',
+      claimedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    console.info('[claimVendorMembership] ok', { uid, vendorId });
+    return { ok: true, vendorId };
+  }
+);

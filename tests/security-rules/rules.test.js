@@ -68,7 +68,10 @@ async function check(name, promise) {
 
   console.log('\n── vendorUsers self-map (vendor takeover) ──');
   await check('ANONYMOUS cannot create a vendorUsers mapping', assertFails(anon.doc('vendorUsers/anonA').set({ vendorId: 'michael-nguyen-oc' })));
+  await check('non-anon NON-member CANNOT self-map to a vendor (CRITICAL fix)', assertFails(emailUser.doc('vendorUsers/evilEmailUser').set({ vendorId: 'michael-nguyen-oc' })));
   await check('non-anon user CANNOT write ANOTHER uid mapping (hijack)', assertFails(emailUser.doc('vendorUsers/michaelUid').set({ vendorId: 'evil' })));
+  await check('existing vendor MEMBER can add staff for their OWN vendor', assertSucceeds(vendorMember.doc('vendorUsers/newStaffUid').set({ vendorId: 'michael-nguyen-oc', email: 's@x.com' })));
+  await check('vendor member CANNOT add a mapping for a DIFFERENT vendor', assertFails(vendorMember.doc('vendorUsers/x2').set({ vendorId: 'tim-nguyen-bay' })));
   await check('admin CAN write any vendorUsers mapping', assertSucceeds(admin.doc('vendorUsers/someVendorUid').set({ vendorId: 'michael-nguyen-oc' })));
 
   console.log('\n── mobileBarberBookings field-level update ──');

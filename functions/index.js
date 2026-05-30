@@ -54,6 +54,31 @@ const RESEND_WEBHOOK_SECRET = defineSecret('RESEND_WEBHOOK_SECRET');
 if (!admin.apps.length) admin.initializeApp();
 const db = admin.firestore();
 
+// ── AI provider keys (secured) ────────────────────────────────────────────────
+// Keys are read from the SECURED Firestore doc `config/aiSecrets` (server-only:
+// Firestore rules deny all client reads; the Admin SDK here bypasses rules),
+// falling back to the Functions secrets. Cached ~5 min to avoid a read per call.
+// This lets the keys live in "secured firestore" — never served to a browser.
+let _aiKeyCache = { at: 0, keys: {} };
+async function _loadFirestoreAiKeys() {
+  const now = Date.now();
+  if (now - _aiKeyCache.at < 5 * 60 * 1000) return _aiKeyCache.keys;
+  let keys = {};
+  try {
+    const snap = await db.doc('config/aiSecrets').get();
+    if (snap.exists) keys = snap.data() || {};
+  } catch (e) { /* fall back to Functions secrets below */ }
+  _aiKeyCache = { at: now, keys };
+  return keys;
+}
+async function getAiKey(provider) {
+  const k = await _loadFirestoreAiKeys();
+  if (provider === 'claude') return String(k.claudeKey || k.aiKey || '') || CLAUDE_API_KEY.value();
+  if (provider === 'openai') return String(k.openaiKey || '') || OPENAI_API_KEY.value();
+  if (provider === 'gemini') return String(k.geminiKey || '') || GEMINI_API_KEY.value();
+  return '';
+}
+
 // ── Travel dispatch service ───────────────────────────────────────────────────
 const travelDispatch = require('./travelDispatch');
 
@@ -1763,9 +1788,9 @@ exports.aiOrchestrate = onCall(
     // Simple system prompt — for full task prompts use aiOrchestrator.js client-side
     const system = `You are an AI assistant for Du Lịch Cali, a Vietnamese-American travel and marketplace service. Task: ${taskType}. Be concise and accurate.`;
 
-    const claudeKey = CLAUDE_API_KEY.value();
-    const openaiKey = OPENAI_API_KEY.value();
-    const geminiKey = GEMINI_API_KEY.value();
+    const claudeKey = await getAiKey('claude');
+    const openaiKey = await getAiKey('openai');
+    const geminiKey = await getAiKey('gemini');
 
     const providerFns = {
       claude: () => serverCallClaude(system, userContent, jsonMode, claudeKey),
@@ -1851,9 +1876,9 @@ exports.aiProxy = onCall(
       return { ok: false, vendorMessage: 'Yêu cầu không hợp lệ.', debugCode: 'INVALID_REQUEST' };
     }
 
-    const claudeKey = CLAUDE_API_KEY.value();
-    const openaiKey = OPENAI_API_KEY.value();
-    const geminiKey = GEMINI_API_KEY.value();
+    const claudeKey = await getAiKey('claude');
+    const openaiKey = await getAiKey('openai');
+    const geminiKey = await getAiKey('gemini');
 
     // Pass messages array through unchanged so multi-turn callers (Lily) keep
     // their conversation context. Legacy callers that pass a string instead
@@ -2009,7 +2034,7 @@ exports.aiTtsProxy = onCall(
 
     if (provider === 'gemini') {
       const safeVoice = (typeof voice === 'string' && voice.length <= 64) ? voice : 'Aoede';
-      const geminiKey = GEMINI_API_KEY.value();
+      const geminiKey = await getAiKey('gemini');
       if (!geminiKey) {
         return { ok: false, error: 'Gemini key not configured', debugCode: 'NO_GEMINI_KEY' };
       }
@@ -2042,7 +2067,7 @@ exports.aiTtsProxy = onCall(
 
     if (provider === 'openai') {
       const safeVoice = (typeof voice === 'string' && voice.length <= 64) ? voice : OPENAI_TTS_DEFAULT_VOICE;
-      const openaiKey = OPENAI_API_KEY.value();
+      const openaiKey = await getAiKey('openai');
       if (!openaiKey) {
         return { ok: false, error: 'OpenAI key not configured', debugCode: 'NO_OPENAI_KEY' };
       }

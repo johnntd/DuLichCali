@@ -222,17 +222,13 @@
     return audioCtx;
   }
 
-  function getOpenAiKey() {
-    var key = controller && (controller.openAiKey || controller.vendorOpenAiKey || controller.platformOpenAiKey || controller.firestoreOpenAiKey);
-    if (!key) { try { key = root.localStorage.getItem('dlc_openai_key') || ''; } catch (e) {} }
-    return key || '';
-  }
-
-  function getGeminiKey() {
-    var key = controller && (controller.geminiKey || controller.vendorGeminiKey || controller.platformGeminiKey || controller.firestoreGeminiKey);
-    if (!key) { try { key = root.localStorage.getItem('dlc_gemini_key') || ''; } catch (e) {} }
-    return key || '';
-  }
+  // SECURITY: the browser never holds an AI provider key. TTS goes through the
+  // aiTtsProxy Cloud Function, which reads the Gemini/OpenAI keys from the
+  // secured `config/aiSecrets` Firestore doc (server-only). These getters return
+  // empty so the legacy client-direct fetch fallback is never taken — if the
+  // proxy is unavailable, voice degrades to the browser speech synthesizer.
+  function getOpenAiKey() { return ''; }
+  function getGeminiKey() { return ''; }
 
   function buildOverlay() {
     var el = document.createElement('div');

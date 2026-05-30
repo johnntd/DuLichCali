@@ -99,6 +99,13 @@ async function check(name, promise) {
   await check('admin CAN mark resolved', assertSucceeds(admin.doc('securityAlerts/a1').update({ resolved: true, resolvedAt: 'x', resolvedBy: 'a' })));
   await check('anon CANNOT mark resolved', assertFails(anon.doc('securityAlerts/a1').update({ resolved: true })));
 
+  console.log('\n── config/aiSecrets (secured server-only key store) ──');
+  await check('config/aiSecrets is NOT readable by anyone (even admin)', assertFails(admin.doc('config/aiSecrets').get()));
+  await check('config/aiSecrets is NOT readable by anon', assertFails(anon.doc('config/aiSecrets').get()));
+  await check('admin CAN write (set/rotate) keys', assertSucceeds(admin.doc('config/aiSecrets').set({ claudeKey: 'sk-x', openaiKey: 'sk-y', geminiKey: 'AIza-z' })));
+  await check('non-admin email user CANNOT write keys', assertFails(emailUser.doc('config/aiSecrets').set({ claudeKey: 'sk-x' })));
+  await check('anon CANNOT write keys', assertFails(anon.doc('config/aiSecrets').set({ claudeKey: 'sk-x' })));
+
   console.log('\n=== RULE TESTS:', pass + ' passed,', fail + ' failed ===');
   await env.cleanup();
   process.exit(fail > 0 ? 1 : 0);

@@ -1069,20 +1069,30 @@
     <div id="tabSettings" class="tab-panel">
       <div style="max-width:640px;margin:1.5rem auto;padding:0 1rem;display:flex;flex-direction:column;gap:1.5rem;">
 
-        <!-- AI Provider Keys — SERVER-SIDE ONLY (keys are never stored in the DB
-             or entered in the browser; pre-production security audit 2026-05-30). -->
+        <!-- AI Provider Keys — written to the SECURED config/aiSecrets doc
+             (firestore.rules: read:if false, write:if isAdmin). Never readable by
+             any browser (write-only); the AI Cloud Functions read them server-side
+             via the Admin SDK. This is the safe replacement for the old public
+             vendor-doc storage that leaked (pre-production security audit). -->
         <div class="driver-card" style="padding:1.25rem 1.5rem;">
-          <div style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">AI Provider Keys — managed server-side 🔒</div>
-          <div style="font-size:0.85rem;color:var(--muted);line-height:1.65;">
-            For security, AI provider keys (Anthropic / OpenAI / Gemini) are <b>no longer stored in the database</b>
-            or entered here. They live only in Cloud Functions secrets and are used exclusively by the server-side
-            AI proxies (<code>aiProxy</code> / <code>aiOrchestrate</code> / <code>aiTtsProxy</code>) — the browser never sees a key.
-            <br><br>
-            To set or rotate a key, run from the project root:
-            <pre style="background:var(--surface2);padding:0.6rem 0.8rem;border-radius:8px;overflow:auto;font-size:0.8rem;margin:0.5rem 0 0;">firebase functions:secrets:set CLAUDE_API_KEY
-firebase functions:secrets:set OPENAI_API_KEY
-firebase functions:secrets:set GEMINI_API_KEY
-firebase deploy --only functions</pre>
+          <div style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">AI Provider Keys 🔒 (secured)</div>
+          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;line-height:1.55;">
+            Stored in the <b>secured</b> <code>config/aiSecrets</code> doc — <b>never readable by a browser</b> (write-only),
+            read only server-side by the AI proxies (<code>aiProxy</code> / <code>aiTtsProxy</code>). Voice always uses the
+            Gemini/OpenAI keys from here. Leave a field blank to keep its current value.
+          </div>
+          <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:0.25rem;">Claude (Anthropic) Key</label>
+          <input type="password" id="platAiKey" placeholder="sk-ant-api03-…" autocomplete="off"
+            style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.75rem;color:var(--text);font-size:0.85rem;box-sizing:border-box;margin-bottom:0.75rem;">
+          <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:0.25rem;">OpenAI Key (voice + booking)</label>
+          <input type="password" id="platOpenAiKey" placeholder="sk-…" autocomplete="off"
+            style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.75rem;color:var(--text);font-size:0.85rem;box-sizing:border-box;margin-bottom:0.75rem;">
+          <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:0.25rem;">Gemini Key (Vietnamese voice)</label>
+          <input type="password" id="platGeminiKey" placeholder="AIza…" autocomplete="off"
+            style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.75rem;color:var(--text);font-size:0.85rem;box-sizing:border-box;margin-bottom:1rem;">
+          <div style="display:flex;gap:0.75rem;align-items:center;">
+            <button class="btn-vend success" onclick="savePlatformSettings()">Save Keys (secured)</button>
+            <span id="platSettingsMsg" style="font-size:0.82rem;"></span>
           </div>
         </div>
 
@@ -3255,16 +3265,34 @@ firebase deploy --only functions</pre>
       // mask in the browser anymore.
     }
 
-    // Retained as safe no-ops: keys are never written to the database now. Any
-    // legacy caller just gets an explanatory message.
+    // Writes AI provider keys to the SECURED config/aiSecrets doc. That doc is
+    // read:if false (never readable by ANY browser) + write:if isAdmin, and the
+    // AI Cloud Functions read it server-side via the Admin SDK. So keys live in
+    // "secured firestore" and are never served to a client.
     async function savePlatformSettings() {
-      const msgEl = document.getElementById('platSettingsMsg');
-      if (msgEl) { msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'AI keys are managed via Functions secrets, not stored in the database.'; }
+      const aiKey     = document.getElementById('platAiKey').value.trim();
+      const openaiKey = document.getElementById('platOpenAiKey').value.trim();
+      const geminiKey = document.getElementById('platGeminiKey').value.trim();
+      const msgEl     = document.getElementById('platSettingsMsg');
+      if (!aiKey && !openaiKey && !geminiKey) { msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Enter at least one key.'; return; }
+      msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Saving…';
+      try {
+        const updates = { updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+        if (aiKey)     updates.claudeKey = aiKey;     // read by getAiKey('claude')
+        if (openaiKey) updates.openaiKey = openaiKey; // read by getAiKey('openai')
+        if (geminiKey) updates.geminiKey = geminiKey; // read by getAiKey('gemini')
+        await db.collection('config').doc('aiSecrets').set(updates, { merge: true });
+        msgEl.style.color = '#7ac87a'; msgEl.textContent = '✓ Saved to the secured store (never readable by a browser).';
+        ['platAiKey','platOpenAiKey','platGeminiKey'].forEach(function(id){ var el = document.getElementById(id); if (el) el.value = ''; });
+      } catch(e) {
+        msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Error: ' + e.message;
+      }
     }
 
+    // Per-vendor key override removed — all AI uses the platform secured store.
     async function saveVendorAiKey() {
       const msgEl = document.getElementById('vendorAiKeyMsg');
-      if (msgEl) { msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'AI keys are managed via Functions secrets, not stored in the database.'; }
+      if (msgEl) { msgEl.style.color = 'var(--muted)'; msgEl.textContent = 'Per-vendor keys are deprecated; keys are set in the secured store above.'; }
     }
 
     function loadRevenueDashboard() {

@@ -54,8 +54,9 @@ Keys now live **only** in Cloud Functions secrets; the browser never stores or u
 - **`ai-engine.js`** — Claude path is **proxy-only** via `aiProxy` (no client-direct fallback).
 - **`aiOrchestrator.js`** — `executeProvider` now routes **every** task through `aiProxy` (server-side); the legacy `callClaude/callOpenAI/callGemini` + localStorage key accessors are unreachable.
 - **`marketingEngine.js`** — already proxy-first in production (`aiProxy`); direct provider calls are gated to `localhost` dev only. No change needed.
-- **Voice modes** — read keys but **fall back to browser `speechSynthesis`** when keys are absent; with the Firestore keys deleted + admin entry removed there are no keys, so customer voice degrades gracefully. Routing voice TTS through `aiTtsProxy` (server-side, better quality than browser TTS) is a remaining **quality** refinement, not a security gap.
-- **Firestore key fields deleted** (owner-authorized) — verified 0 remain.
+- **Voice (Gemini/OpenAI TTS) — now always server-side via `aiTtsProxy`.** The mobile-barber voice client already routes TTS through `aiTtsProxy` first; its client-direct keyed fallback (`getOpenAiKey`/`getGeminiKey`) is now neutered to `''`, so it's proxy → browser only (no client key). `aiTtsProxy`/`aiProxy`/`aiOrchestrate` now read the Gemini/OpenAI/Claude keys from a **secured Firestore doc `config/aiSecrets`** (Admin SDK, 5-min cache) with the Functions-secret as fallback.
+- **Secured key store `config/aiSecrets`** — Firestore rules `read: if false` (NEVER client-readable — verified for admin + anon in the emulator) + `write: if isAdmin()`. Admin sets/rotates keys via a **write-only** form in `admin.html`; the keys live in "secured firestore" and are never served to a browser. (5 new emulator rule tests.)
+- **Firestore key fields deleted** from the old public docs (owner-authorized) — verified 0 remain.
 - `scripts/security/scan_secrets.sh` clean; `ai-engine.js`/`aiOrchestrator.js` ?v=20260530m.
 
 ### Pre-deploy secret-scan command

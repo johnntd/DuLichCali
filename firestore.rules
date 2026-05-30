@@ -391,6 +391,18 @@ service cloud.firestore {
       allow read, update, delete: if false;
     }
 
+    // ── AI provider keys — SECURED, server-only ──────────────────────────────────
+    // The Gemini/OpenAI/Claude keys used by the AI Cloud Functions (aiProxy /
+    // aiOrchestrate / aiTtsProxy) live here. The functions read them via the
+    // Admin SDK (which bypasses rules). This doc is NEVER client-readable
+    // (`read: if false`) so a key can never be served to a browser; an admin may
+    // WRITE (set/rotate) keys but cannot read them back. This is the "secured
+    // firestore" key store — the safe replacement for the old public vendor docs.
+    match /config/aiSecrets {
+      allow read:  if false;
+      allow write: if isAdmin();
+    }
+
     // ── Security alerts — defense-in-depth event log ─────────────────────────────
     // Client-side runtime guards (which run in any visitor's browser, incl.
     // anonymous) may CREATE a validated alert. Only an admin (or the vendor the

@@ -1,6 +1,4 @@
 {
-  "name": "DuLichCali Mobile Barber Vendor",
-  "short_name": "Barber Vendor",
   "description": "Mobile Barber vendor portal — manage bookings, services, hours, promotions, and booking alerts.",
   "id": "/mobile-barber/dashboard.html",
   "start_url": "/mobile-barber/dashboard.html",

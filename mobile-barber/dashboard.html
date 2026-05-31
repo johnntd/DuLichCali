@@ -10,7 +10,9 @@
   <link rel="manifest" href="/mobile-barber/manifest.webmanifest">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Barber Vendor">
+  <!-- No apple-mobile-web-app-title: it LOCKS the iOS Add-to-Home-Screen name. Omitting
+       it (and the manifest name/short_name) lets iOS pre-fill the editable <title> so each
+       vendor can set their own home-screen name (e.g. "Tim Nguyen"). -->
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="/assets/icons/mobile-barber-vendor-180.png?v=3">
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/mobile-barber-vendor-180.png?v=3">

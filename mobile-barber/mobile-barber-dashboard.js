@@ -1030,7 +1030,13 @@
 
   function getVendorId() {
     var params = new URLSearchParams(root.location.search);
-    return params.get('vendorId') || params.get('id') || '';
+    var id = params.get('vendorId') || params.get('id') || '';
+    // PWA resume: the Home Screen app launches start_url with no query param, so
+    // fall back to the last vendor authenticated on this device; persist the
+    // current one so the next launch resumes it.
+    if (!id) { try { id = root.localStorage.getItem('dlc_mb_vendor_id') || ''; } catch (e) {} }
+    else { try { root.localStorage.setItem('dlc_mb_vendor_id', id); } catch (e) {} }
+    return id;
   }
 
   function getTodayIso() {
@@ -3709,7 +3715,20 @@
     });
   }
 
+  function isStandalonePWA() {
+    try {
+      return (root.matchMedia && root.matchMedia('(display-mode: standalone)').matches) ||
+             root.navigator.standalone === true;
+    } catch (e) { return false; }
+  }
   function redirectToLogin(vendorId) {
+    // In the installed Home Screen app, navigating to /vendor-login.html leaves the
+    // /mobile-barber/ PWA scope (opens Safari) and the login wouldn't persist back
+    // into the app. Show an in-scope login screen instead so the session sticks.
+    if (isStandalonePWA() && root.MBVendorPWA && typeof root.MBVendorPWA.showLogin === 'function') {
+      root.MBVendorPWA.showLogin(vendorId);
+      return;
+    }
     var dest = '/vendor-login.html';
     if (vendorId) dest += '?id=' + encodeURIComponent(vendorId);
     root.location.href = dest;
@@ -3727,6 +3746,10 @@
       return;
     }
     var auth = firebase.auth();
+    // Vendor portal must stay logged in across launches (esp. the iOS Home Screen
+    // PWA). Force LOCAL persistence; never session-only. Default is already LOCAL,
+    // but we set it explicitly so a future change can't silently downgrade it.
+    try { auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch (e) {}
     var db = firebase.firestore();
     var unsub = auth.onAuthStateChanged(function(user) {
       unsub();

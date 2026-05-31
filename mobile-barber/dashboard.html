@@ -3,8 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#0d2f50">
-  <title></title>
+  <meta name="theme-color" content="#061b33">
+  <title>Barber Vendor</title>
+
+  <!-- PWA: installable Home Screen app (standalone) -->
+  <link rel="manifest" href="/mobile-barber/manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Barber Vendor">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="/assets/icons/mobile-barber-vendor-180.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/mobile-barber-vendor-180.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/mobile-barber-vendor-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/assets/icons/mobile-barber-vendor-512.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,6 +60,8 @@
         <p><span data-i18n="notificationPermissionLabel"></span> <strong id="mbNotificationPermissionState"></strong></p>
         <p><span data-i18n="lastBookingAlertLabel"></span> <strong id="mbLastBookingAlert"></strong></p>
       </div>
+      <button class="mb-button mb-button--primary mb-button--sm" type="button" id="mbEnableAlertsBtn"></button>
+      <p class="mb-alerts-status" id="mbAlertsStatus" data-tone="info" aria-live="polite"></p>
       <button class="mb-button mb-button--ghost mb-button--sm" type="button" data-action="toggleSoundAlerts" id="mbToggleSoundAlerts"></button>
     </section>
 
@@ -319,6 +332,7 @@
   <script src="/mobile-barber/mobile-barber-data.js?v=20260530k"></script>
   <script src="/mobile-barber/mobile-barber-booking.js?v=20260530o"></script>
   <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260530a"></script>
-  <script src="/mobile-barber/mobile-barber-dashboard.js?v=20260530q"></script>
+  <script src="/mobile-barber/mobile-barber-dashboard.js?v=20260531a"></script>
+  <script src="/mobile-barber/mobile-barber-pwa.js?v=20260531a"></script>
 </body>
 </html>

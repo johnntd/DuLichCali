@@ -50,6 +50,11 @@ const RESEND_API_KEY      = defineSecret('RESEND_API_KEY');
 // Set once:  firebase functions:secrets:set RESEND_WEBHOOK_SECRET
 const RESEND_WEBHOOK_SECRET = defineSecret('RESEND_WEBHOOK_SECRET');
 
+// Web Push (VAPID) — vendor portal PWA booking alerts. Public key is shipped in
+// mobile-barber-pwa.js; private key set via: firebase functions:secrets:set VAPID_PRIVATE_KEY
+const VAPID_PRIVATE_KEY = defineSecret('VAPID_PRIVATE_KEY');
+const VAPID_PUBLIC_KEY  = 'BBHEU_YqwysrntO1a6JPvWn8YSQmKumg6fcgLipNPcOVC-0LbZc8SU-1q0Nf_ilI7B3pFs_OXPCf-ajrSO8c0V8';
+
 // ── Firebase Admin ────────────────────────────────────────────────────────────
 if (!admin.apps.length) admin.initializeApp();
 const db = admin.firestore();
@@ -3087,6 +3092,65 @@ function mbBookingWindow(row, collection) {
   return { start: start, end: end + (MB_SVC_BUFFER[svc] || 15) * 60000, svc: svc };
 }
 function mbOverlaps(a, b) { return a && b && a.start < b.end && b.start < a.end; }
+
+// ── Web Push booking alert → the vendor's installed PWA device(s) ────────────
+// Fires on every new mobile-barber booking. Sends a Web Push to each registered
+// subscription for that vendor (stored under mobileBarberVendors/{id}/pushSubscriptions
+// by the portal PWA). Dead subscriptions are pruned. Uses the Admin SDK so it
+// bypasses Firestore rules; VAPID private key comes from a Functions secret.
+exports.sendMobileBarberBookingPush = onDocumentCreated(
+  {
+    document:       'mobileBarberBookings/{bookingId}',
+    region:         'us-central1',
+    secrets:        [VAPID_PRIVATE_KEY],
+    timeoutSeconds: 60,
+    retry:          false,
+  },
+  async (event) => {
+    const bookingId = event.params.bookingId;
+    const booking = event.data && event.data.data();
+    if (!booking) return;
+    const vendorId = String(booking.vendorId || '').trim();
+    if (!vendorId) return;
+
+    let webpush;
+    try { webpush = require('web-push'); } catch (e) { console.warn('[mb-push] web-push unavailable'); return; }
+    const priv = VAPID_PRIVATE_KEY.value();
+    if (!priv) { console.warn('[mb-push] VAPID_PRIVATE_KEY not set — skipping'); return; }
+    webpush.setVapidDetails('mailto:dulichcali21@gmail.com', VAPID_PUBLIC_KEY, priv);
+
+    const db = admin.firestore();
+    const subsSnap = await db.collection('mobileBarberVendors').doc(vendorId)
+      .collection('pushSubscriptions').get();
+    if (subsSnap.empty) { console.log(`[mb-push][${bookingId}] no subscriptions for ${vendorId}`); return; }
+
+    const parts = [booking.customerName, booking.serviceName, booking.requestedDate, booking.startTime]
+      .filter(Boolean).join(' · ');
+    const payload = JSON.stringify({
+      title: 'New booking request',
+      body: parts || 'Tap to review the booking in your portal.',
+      url: '/mobile-barber/dashboard.html',
+      tag: 'mb-booking-' + bookingId
+    });
+
+    await Promise.all(subsSnap.docs.map(async (doc) => {
+      const s = doc.data() || {};
+      if (!s.endpoint || !s.keys) return;
+      try {
+        await webpush.sendNotification({ endpoint: s.endpoint, keys: s.keys }, payload, { TTL: 3600 });
+      } catch (err) {
+        const code = err && err.statusCode;
+        if (code === 404 || code === 410) {
+          await doc.ref.delete().catch(() => {});   // expired/unsubscribed — prune
+          console.log(`[mb-push][${bookingId}] pruned dead subscription ${doc.id}`);
+        } else {
+          console.warn(`[mb-push][${bookingId}] send failed (${code}):`, err && err.message);
+        }
+      }
+    }));
+    console.log(`[mb-push][${bookingId}] dispatched to ${subsSnap.size} subscription(s) for ${vendorId}`);
+  }
+);
 
 exports.onMobileBarberBookingCreated = onDocumentCreated(
   {

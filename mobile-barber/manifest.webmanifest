@@ -1,0 +1,35 @@
+{
+  "name": "DuLichCali Mobile Barber Vendor",
+  "short_name": "Barber Vendor",
+  "description": "Mobile Barber vendor portal — manage bookings, services, hours, promotions, and booking alerts.",
+  "id": "/mobile-barber/dashboard.html",
+  "start_url": "/mobile-barber/dashboard.html",
+  "scope": "/mobile-barber/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#061b33",
+  "theme_color": "#061b33",
+  "lang": "en",
+  "categories": ["business", "productivity", "lifestyle"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/assets/icons/mobile-barber-vendor-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icons/mobile-barber-vendor-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icons/mobile-barber-vendor-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

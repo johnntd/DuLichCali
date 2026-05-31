@@ -345,6 +345,14 @@ service cloud.firestore {
     match /mobileBarberVendors/{vendorId} {
       allow read: if true;
       allow write: if isVendorMember(vendorId) || isAdmin();
+
+      // Web Push subscriptions for the vendor portal PWA. Only the authenticated
+      // vendor member (or admin) may register/read a device subscription — a
+      // customer can NEVER register themselves as a notification recipient.
+      // The send-side Cloud Function uses the Admin SDK and bypasses these rules.
+      match /pushSubscriptions/{subId} {
+        allow read, write: if isVendorMember(vendorId) || isAdmin();
+      }
     }
 
     match /mobileBarberServices/{serviceId} {

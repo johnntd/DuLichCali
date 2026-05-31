@@ -14,7 +14,7 @@
  */
 'use strict';
 
-var CACHE_VERSION = 'mb-vendor-v1-20260531';
+var CACHE_VERSION = 'mb-vendor-v2-20260531';
 var SHELL_CACHE = 'mb-shell-' + CACHE_VERSION;
 var ASSET_CACHE = 'mb-assets-' + CACHE_VERSION;
 
@@ -110,7 +110,7 @@ self.addEventListener('push', function (event) {
   var title = data.title || 'New booking request';
   var body = data.body || 'Tap to review the booking in your portal.';
   var url = data.url || '/mobile-barber/dashboard.html';
-  event.waitUntil(
+  var tasks = [
     self.registration.showNotification(title, {
       body: body,
       icon: '/assets/icons/mobile-barber-vendor-192.png',
@@ -120,7 +120,18 @@ self.addEventListener('push', function (event) {
       data: { url: url },
       vibrate: [120, 60, 120]
     })
-  );
+  ];
+  // Reflect the vendor's pending count on the HOME-SCREEN app icon while the app is
+  // backgrounded/closed (PWA Badging API). badgeCount is supplied by the
+  // sendMobileBarberBookingPush function; the foreground app reconciles to the true
+  // unread count on next open. No-op where the API is unsupported.
+  try {
+    if (self.navigator && typeof self.navigator.setAppBadge === 'function' && typeof data.badgeCount === 'number') {
+      var bp = data.badgeCount > 0 ? self.navigator.setAppBadge(data.badgeCount) : self.navigator.clearAppBadge();
+      if (bp && bp.catch) tasks.push(bp.catch(function () {}));
+    }
+  } catch (e) {}
+  event.waitUntil(Promise.all(tasks));
 });
 
 self.addEventListener('notificationclick', function (event) {

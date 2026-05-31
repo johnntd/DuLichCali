@@ -663,7 +663,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260530k');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260531f');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-lightbox.js?v=20260530f');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260531f');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260531g');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260531f');
     assertContains(dashboardHtml, 'firebase-auth-compat.js');
     assertContains(dashboardHtml, '/notifications.js?v=20260525a');

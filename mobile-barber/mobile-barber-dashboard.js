@@ -1462,6 +1462,18 @@
     return serviceType === 'ride' ? 'car' : (serviceType === 'tour' ? 'compass' : 'scissors');
   }
 
+  // Mirror the unread count onto the installed PWA's HOME-SCREEN app icon (iOS 16.4+
+  // and desktop Chromium support the Badging API). Safe no-op where unsupported or
+  // notification permission is not granted; never throws into the render path.
+  function setAppIconBadge(count) {
+    try {
+      var nav = root.navigator;
+      if (!nav || typeof nav.setAppBadge !== 'function') return;
+      if (count > 0) { var p = nav.setAppBadge(count); if (p && p.catch) p.catch(function() {}); }
+      else if (typeof nav.clearAppBadge === 'function') { var q = nav.clearAppBadge(); if (q && q.catch) q.catch(function() {}); }
+    } catch (e) {}
+  }
+
   function renderNotificationDrawer() {
     var bell = document.getElementById('mbNotifBell');
     var badge = document.getElementById('mbNotifBadge');
@@ -1479,6 +1491,7 @@
     // previous early-return on inactive scope left the badge stuck at its initial
     // hidden=0 state, so the popup appeared but the count never showed.
     var unread = (state.ownerNotifications || []).filter(function(item) { return !item.read; }).length;
+    setAppIconBadge(unread);   // home-screen app-icon count (PWA Badging API)
     if (badge) {
       badge.textContent = String(unread > 99 ? '99+' : unread);
       badge.hidden = !(active && unread > 0);

@@ -3124,13 +3124,23 @@ exports.sendMobileBarberBookingPush = onDocumentCreated(
       .collection('pushSubscriptions').get();
     if (subsSnap.empty) { console.log(`[mb-push][${bookingId}] no subscriptions for ${vendorId}`); return; }
 
+    // Count the vendor's actionable (un-actioned) bookings so the push can badge the
+    // home-screen app icon with the pending count via the service worker (Badging API).
+    let badgeCount = 0;
+    try {
+      const ACTIONABLE = new Set(['pending_confirmation', 'pending_barber_confirmation', 'vendor_review']);
+      const pend = await db.collection('mobileBarberBookings').where('vendorId', '==', vendorId).limit(250).get();
+      pend.forEach((d) => { if (ACTIONABLE.has(String((d.data() || {}).status || '').toLowerCase())) badgeCount++; });
+    } catch (e) { badgeCount = 0; }
+
     const parts = [booking.customerName, booking.serviceName, booking.requestedDate, booking.startTime]
       .filter(Boolean).join(' · ');
     const payload = JSON.stringify({
       title: 'New booking request',
       body: parts || 'Tap to review the booking in your portal.',
       url: '/mobile-barber/dashboard.html',
-      tag: 'mb-booking-' + bookingId
+      tag: 'mb-booking-' + bookingId,
+      badgeCount: badgeCount
     });
 
     await Promise.all(subsSnap.docs.map(async (doc) => {

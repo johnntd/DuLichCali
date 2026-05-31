@@ -1488,6 +1488,24 @@
     err.guardCode = (data && data.code) || 'guard_unavailable';
     return err;
   }
+  // Same customer already has a same-day haircut and the slot is NOT an exact conflict —
+  // the UI must ask whether this is a reschedule, a family member, or a mistake BEFORE any
+  // booking is created. Carries the existing booking(s) so the UI can name the time.
+  function duplicateIntentError(data) {
+    var err = new Error('booking_duplicate_intent');
+    err.duplicateIntent = true;
+    err.intentCode = (data && data.code) || 'SAME_DAY_DUPLICATE_NEEDS_INTENT';
+    err.existing = (data && data.existing) || [];
+    err.riskReasons = (data && data.riskReasons) || [];
+    return err;
+  }
+  // Too many booking requests from this customer (spam / abuse guard).
+  function bookingSpamError(data) {
+    var err = new Error('booking_too_many_requests');
+    err.bookingSpam = true;
+    err.spamCode = (data && data.code) || 'TOO_MANY_REQUESTS';
+    return err;
+  }
   function guardedCreateViaCallable(booking, options) {
     options = options || {};
     var fn = null;
@@ -1498,17 +1516,28 @@
     return fn({ booking: booking }).then(function(res) {
       var data = (res && res.data) || {};
       if (data.ok === false) {
-        // A real time conflict shows the customer the "slot taken + alternate times" message.
-        if (data.code === 'time_conflict') return Promise.reject(bookingConflictError(data));
+        var code = data.code || '';
+        // Hard time conflict (exact / overlapping slot — same or different customer):
+        // "slot taken + alternate times".
+        if (code === 'time_conflict' || code === 'DUPLICATE_EXACT' || code === 'CUSTOMER_OVERLAP') {
+          return Promise.reject(bookingConflictError(data));
+        }
+        // Same-day duplicate that needs the customer's intent (reschedule vs family member).
+        if (code === 'SAME_DAY_DUPLICATE_NEEDS_INTENT' || code === 'FAMILY_MEMBER_REQUIRED') {
+          return Promise.reject(duplicateIntentError(data));
+        }
+        if (code === 'TOO_MANY_REQUESTS') return Promise.reject(bookingSpamError(data));
         // Any other guard refusal (malformed payload, missing owner, etc.): the guard did
         // NOT authorize this booking, so we must not silently write it and report success.
         return Promise.reject(bookingUnavailableError(data));
       }
       var saved = data.booking || booking;
-      safeLog('[booking-write]', { bookingId: saved.id, vendorId: saved.vendorId, status: saved.status, source: 'callable', idempotent: !!data.idempotent });
-      return { saved: true, source: 'callable', method: 'callable', booking: saved, idempotent: !!data.idempotent };
+      safeLog('[booking-write]', { bookingId: saved.id, vendorId: saved.vendorId, status: saved.status, source: 'callable', idempotent: !!data.idempotent, intent: data.code || '' });
+      return { saved: true, source: 'callable', method: 'callable', booking: saved, idempotent: !!data.idempotent, intentCode: data.code || 'OK', rescheduled: !!data.rescheduled };
     }).catch(function(error) {
       if (error && error.bookingConflict) return Promise.reject(error);    // slot taken → conflict UI
+      if (error && error.duplicateIntent) return Promise.reject(error);    // same-day dup → intent UI
+      if (error && error.bookingSpam) return Promise.reject(error);        // rate limit → spam UI
       if (error && error.bookingUnavailable) return Promise.reject(error); // guard refused → retry UI
       // Callable unreachable (network down / functions error). The guard could not run, so
       // we CANNOT confirm the slot is free. Refuse rather than write an unguarded booking
@@ -1639,8 +1668,32 @@
     });
   }
 
+  // Stamp a customer's duplicate-intent decision onto a built booking so the guarded
+  // create honors it. type 'family_member' → verified family booking; 'self_reschedule'
+  // → move the linked existing booking in place (the callable does not create a new doc).
+  function applyDuplicateIntent(booking, decision) {
+    booking = Object.assign({}, booking || {});
+    decision = decision || {};
+    if (decision.type === 'family_member') {
+      booking.bookingFor = 'family_member';
+      booking.duplicateIntentVerified = true;
+      booking.duplicateIntentType = 'family_member';
+      booking.familyMemberName = trim(decision.familyMemberName);
+      booking.familyMemberAgeGroup = trim(decision.familyMemberAgeGroup) || '';
+      booking.primaryCustomerPhone = normalizePhone(booking.customerPhone);
+      booking.primaryCustomerName = trim(booking.customerName);
+    } else if (decision.type === 'self_reschedule') {
+      booking.bookingFor = 'self';
+      booking.duplicateIntentVerified = true;
+      booking.duplicateIntentType = 'self_reschedule';
+      booking.linkedExistingBookingId = trim(decision.linkedExistingBookingId);
+    }
+    return booking;
+  }
+
   return {
     ACTIVE_BOOKING_STATUSES: ACTIVE_BOOKING_STATUSES,
+    applyDuplicateIntent: applyDuplicateIntent,
     STATUS_LIFECYCLE: STATUS_LIFECYCLE,
     normalizeBookingStatus: normalizeBookingStatus,
     normalizePaymentMethod: normalizePaymentMethod,

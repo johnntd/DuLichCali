@@ -763,6 +763,92 @@ function runMobileBarberBookingTests(test) {
       .then(function() { global.firebase = originalFirebase; }, function(e) { global.firebase = originalFirebase; throw e; });
   });
 
+  // ── Smart duplicate / spam intent — client surfacing of guard response codes ──
+  test('Mobile Barber duplicate-intent: SAME_DAY_DUPLICATE_NEEDS_INTENT surfaces an intent error (no write)', function() {
+    var originalFirebase = global.firebase; var direct = { n: 0 };
+    global.firebase = guardedFirebaseMock(function() {
+      return Promise.resolve({ data: { ok: false, code: 'SAME_DAY_DUPLICATE_NEEDS_INTENT',
+        riskReasons: ['same_service_same_day'],
+        existing: [{ bookingId: 'B1', serviceName: 'Classic Haircut', date: '2026-06-01', startTime: '09:35', time: '09:35' }] } });
+    }, direct);
+    return MobileBarberBooking.saveBooking(sampleBuiltBooking('dup-intent-1'), { requireDatabase: true })
+      .then(function() { throw new Error('a same-day duplicate must NOT silently save'); })
+      .catch(function(error) {
+        assert(error && error.duplicateIntent, 'must reject with a duplicateIntent error the UI can act on');
+        assert(!error.bookingConflict, 'a same-day duplicate is not a hard time conflict');
+        assert((error.existing || []).length > 0, 'carries the existing booking so the UI can name the time');
+        assertEq(direct.n, 0, 'NO booking written until the customer resolves intent');
+      })
+      .then(function() { global.firebase = originalFirebase; }, function(e) { global.firebase = originalFirebase; throw e; });
+  });
+
+  test('Mobile Barber duplicate-intent: DUPLICATE_EXACT is surfaced as a hard conflict (no write)', function() {
+    var originalFirebase = global.firebase; var direct = { n: 0 };
+    global.firebase = guardedFirebaseMock(function() {
+      return Promise.resolve({ data: { ok: false, code: 'DUPLICATE_EXACT', existing: [{ bookingId: 'B1' }] } });
+    }, direct);
+    return MobileBarberBooking.saveBooking(sampleBuiltBooking('dup-exact-1'), { requireDatabase: true })
+      .then(function() { throw new Error('an exact same-customer duplicate must be blocked'); })
+      .catch(function(error) {
+        assert(error && error.bookingConflict, 'exact/overlap duplicate is surfaced as a hard conflict');
+        assertEq(direct.n, 0, 'no booking written');
+      })
+      .then(function() { global.firebase = originalFirebase; }, function(e) { global.firebase = originalFirebase; throw e; });
+  });
+
+  test('Mobile Barber duplicate-intent: TOO_MANY_REQUESTS surfaces a spam error (no write)', function() {
+    var originalFirebase = global.firebase; var direct = { n: 0 };
+    global.firebase = guardedFirebaseMock(function() {
+      return Promise.resolve({ data: { ok: false, code: 'TOO_MANY_REQUESTS', recent24h: 6 } });
+    }, direct);
+    return MobileBarberBooking.saveBooking(sampleBuiltBooking('dup-spam-1'), { requireDatabase: true })
+      .then(function() { throw new Error('spam must be blocked'); })
+      .catch(function(error) {
+        assert(error && error.bookingSpam, 'rate limit surfaces a spam error');
+        assertEq(direct.n, 0, 'no booking written');
+      })
+      .then(function() { global.firebase = originalFirebase; }, function(e) { global.firebase = originalFirebase; throw e; });
+  });
+
+  test('Mobile Barber duplicate-intent: verified family booking is accepted (OK_FAMILY_MEMBER)', function() {
+    var originalFirebase = global.firebase; var direct = { n: 0 }; var sent = null;
+    global.firebase = guardedFirebaseMock(function(payload) {
+      sent = payload.booking;
+      return Promise.resolve({ data: { ok: true, code: 'OK_FAMILY_MEMBER', booking: payload.booking } });
+    }, direct);
+    var fam = MobileBarberBooking.applyDuplicateIntent(sampleBuiltBooking('dup-fam-1'), { type: 'family_member', familyMemberName: 'Liam', familyMemberAgeGroup: 'child' });
+    assertEq(fam.bookingFor, 'family_member');
+    assertEq(fam.familyMemberName, 'Liam');
+    assertEq(fam.duplicateIntentVerified, true);
+    return MobileBarberBooking.saveBooking(fam, { requireDatabase: true })
+      .then(function(saved) {
+        assertEq(saved.saved, true);
+        assertEq(saved.source, 'callable');
+        assert(sent && sent.duplicateIntentVerified === true, 'verified intent is sent to the guard');
+        assertEq(sent.familyMemberName, 'Liam');
+      })
+      .then(function() { global.firebase = originalFirebase; }, function(e) { global.firebase = originalFirebase; throw e; });
+  });
+
+  test('Mobile Barber duplicate-intent: self_reschedule sends the linked id (no second booking)', function() {
+    var originalFirebase = global.firebase; var direct = { n: 0 }; var sent = null;
+    global.firebase = guardedFirebaseMock(function(payload) {
+      sent = payload.booking;
+      return Promise.resolve({ data: { ok: true, code: 'OK_RESCHEDULED', rescheduled: true, booking: payload.booking } });
+    }, direct);
+    var re = MobileBarberBooking.applyDuplicateIntent(sampleBuiltBooking('dup-resched-1'), { type: 'self_reschedule', linkedExistingBookingId: 'B1' });
+    assertEq(re.duplicateIntentType, 'self_reschedule');
+    assertEq(re.linkedExistingBookingId, 'B1');
+    return MobileBarberBooking.saveBooking(re, { requireDatabase: true })
+      .then(function(saved) {
+        assertEq(saved.saved, true);
+        assertEq(saved.rescheduled, true, 'result flags a reschedule, not a new booking');
+        assert(sent && sent.linkedExistingBookingId === 'B1', 'linked existing id is sent to the guard');
+        assertEq(direct.n, 0, 'no direct client write');
+      })
+      .then(function() { global.firebase = originalFirebase; }, function(e) { global.firebase = originalFirebase; throw e; });
+  });
+
   test('Mobile Barber manual confirm can require database write failure to reject', function() {
     var originalFirebase = global.firebase;
     var originalLocalStorage = global.localStorage;
@@ -811,7 +897,7 @@ function runMobileBarberBookingTests(test) {
     var src = fs.readFileSync(path.join(__dirname, '../../mobile-barber/mobile-barber.js'), 'utf8');
     var failIdx = src.indexOf("booking save FAILED");
     assert(failIdx >= 0, 'chat booking save failure handler must exist');
-    var block = src.slice(failIdx, failIdx + 700);
+    var block = src.slice(failIdx, failIdx + 1400);
     assert(block.indexOf('result.booking = null') >= 0, 'failure handler must clear booking before responding');
     assert(block.indexOf("t('saveFailedRetry')") >= 0,
       'failure handler must replace the confirmation copy with the save-failed copy');

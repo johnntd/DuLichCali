@@ -3092,6 +3092,23 @@ function mbBookingWindow(row, collection) {
   return { start: start, end: end + (MB_SVC_BUFFER[svc] || 15) * 60000, svc: svc };
 }
 function mbOverlaps(a, b) { return a && b && a.start < b.end && b.start < a.end; }
+// ── Smart duplicate / spam intent helpers ────────────────────────────────────
+function mbLower(v) { return String(v == null ? '' : v).toLowerCase().trim(); }
+// US 10-digit normalization (strip non-digits, drop a leading country 1).
+function mbNormPhone(v) {
+  var d = String(v == null ? '' : v).replace(/\D/g, '');
+  if (d.length === 11 && d[0] === '1') d = d.slice(1);
+  return d.length >= 10 ? d.slice(-10) : d;
+}
+// Same customer = same normalized phone OR same email (the strong, low-false-positive
+// signals). Name alone is too weak; address is only a soft risk signal (below).
+function mbSameCustomer(reqId, row) {
+  var op = mbNormPhone(row.customerPhone || row.phone || row.customerPhoneNumber);
+  if (reqId.phone && op && reqId.phone === op) return true;
+  var oe = mbLower(row.customerEmail || row.email);
+  if (reqId.email && oe && reqId.email === oe) return true;
+  return false;
+}
 
 // ── Web Push booking alert → the vendor's installed PWA device(s) ────────────
 // Fires on every new mobile-barber booking. Sends a Web Push to each registered
@@ -3333,34 +3350,95 @@ exports.createMobileBarberBookingGuarded = onCall(
       }
     }
 
-    // Owner-wide blocking windows (Admin SDK bypasses rules). Collect ALL of them so
-    // suggestions are accurate, then derive the conflicts that overlap the request.
+    // ── Identity + intent inputs for smart duplicate/spam detection ─────────────
+    const reqId = { phone: mbNormPhone(booking.customerPhone), email: mbLower(booking.customerEmail) };
+    const reqSvc = mbNormSvc(booking.serviceType || 'barber');
+    const reqDate = String(booking.requestedDate || booking.date || '');
+    const reqStart = win.start;
+    const nowMs = Date.now();
+    const DAY_MS = 86400000, FOUR_H_MS = 4 * 3600 * 1000;
+    const intentType = String(booking.duplicateIntentType || '').trim();
+    // Reschedule mode: "change my existing appointment" — move the linked booking IN
+    // PLACE (no second booking). Its new window is still overlap-checked (excluded below).
+    const rescheduleId = intentType === 'self_reschedule'
+      ? String(booking.linkedExistingBookingId || '').trim() : '';
+
+    // Owner-wide bookings (Admin SDK bypasses rules). Capture customer identity so the
+    // same person's duplicates are detectable; count this customer's 24h activity (any
+    // status) for spam limits. allBusy holds ACTIVE windows only.
     const cols = ['mobileBarberBookings', 'bookings', 'travel_bookings'];
     const allBusy = [];
+    let recent24h = 0;
     for (const col of cols) {
       let qs;
       try { qs = await db.collection(col).where('ownerId', '==', ownerId).limit(250).get(); }
       catch (e) { continue; }
       qs.forEach((d) => {
-        if (col === 'mobileBarberBookings' && d.id === bookingId) return; // exclude self
+        if (col === 'mobileBarberBookings' && (d.id === bookingId || d.id === rescheduleId)) return;
         const other = d.data() || {};
+        const isSame = mbSameCustomer(reqId, other);
+        if (isSame) {
+          const cMs = (d.createTime && d.createTime.toMillis) ? d.createTime.toMillis() : (Date.parse(other.createdAt || '') || 0);
+          if (cMs && nowMs - cMs <= DAY_MS) recent24h++;
+        }
         if (MB_NON_BLOCKING.has(String(other.status || '').toLowerCase())) return;
         const ow = mbBookingWindow(other, col);
-        if (ow) allBusy.push({ collection: col, bookingId: d.id, status: String(other.status || ''), start: ow.start, end: ow.end });
+        if (!ow) return;
+        allBusy.push({
+          collection: col, bookingId: d.id, status: String(other.status || ''),
+          start: ow.start, end: ow.end, svc: ow.svc, sameCust: isSame,
+          serviceName: String(other.serviceName || ''),
+          requestedDate: String(other.requestedDate || other.date || ''), startTime: String(other.startTime || ''),
+        });
       });
     }
+
     const conflicts = allBusy.filter((b) => mbOverlaps(win, b));
+    const sameCust = allBusy.filter((b) => b.sameCust);
+    const sameCustExact = sameCust.find((b) => b.start === reqStart);
+    const sameCustOverlap = sameCust.find((b) => mbOverlaps(win, b));
+    const sameDayCuts = sameCust.filter((b) => b.svc === 'barber' && b.requestedDate === reqDate);
+    const within4h = sameDayCuts.filter((b) => Math.abs(b.start - reqStart) < FOUR_H_MS);
 
-    console.log('[booking-guard-callable]', JSON.stringify({
-      bookingId, vendorId, ownerId, requestedStart: win.start, requestedEnd: win.end,
-      busy: allBusy.length, conflictsFound: conflicts.length, result: conflicts.length ? 'blocked' : 'clear',
+    const riskReasons = [];
+    if (within4h.length) riskReasons.push('within_4h');
+    if (sameDayCuts.length >= 2) riskReasons.push('multiple_same_day');
+    if (reqSvc === 'barber' && sameDayCuts.length >= 1) riskReasons.push('same_service_same_day');
+    const riskScore = riskReasons.length;
+    const verifiedFamily = booking.duplicateIntentVerified === true
+      && String(booking.bookingFor || '') === 'family_member'
+      && !!String(booking.familyMemberName || '').trim();
+    const tooManySameDay = sameDayCuts.length >= 3;
+
+    const logCheck = (result) => console.log('[duplicate-intent-check]', JSON.stringify({
+      customerPhone: reqId.phone, requestedStart: reqStart, existingActiveBookings: sameCust.length,
+      sameDayHaircuts: sameDayCuts.length, recent24h, riskScore, riskReasons, result,
     }));
+    const existingOf = (b) => ({ bookingId: b.bookingId, serviceName: b.serviceName, date: b.requestedDate, startTime: b.startTime, time: mbFmtHHMM(b.start) });
 
+    // 1) SPAM / ABUSE — same customer hard limits (>5 attempts/24h, or >3 same-day
+    //    haircuts when not a verified family booking). Blocks before slot allocation.
+    if (recent24h >= 5 || (tooManySameDay && !verifiedFamily)) {
+      logCheck('spam_blocked');
+      return { ok: false, code: 'TOO_MANY_REQUESTS', reason: 'rate_limited', recent24h, sameDayHaircuts: sameDayCuts.length };
+    }
+
+    // 2) Same person, exact or overlapping time → hard block (one barber, one chair —
+    //    a family member can't occupy an overlapping slot either).
+    if (sameCustExact || sameCustOverlap) {
+      const hit = sameCustExact || sameCustOverlap;
+      logCheck(sameCustExact ? 'duplicate_exact' : 'customer_overlap');
+      return {
+        ok: false, code: sameCustExact ? 'DUPLICATE_EXACT' : 'CUSTOMER_OVERLAP',
+        reason: 'same_customer_time_conflict', existing: [existingOf(hit)],
+        suggestions: mbSuggestAlternativeTimes(win, allBusy),
+      };
+    }
+
+    // 3) Generic owner time-overlap — a DIFFERENT customer holds the slot → time_conflict.
     if (conflicts.length) {
-      console.log('[booking-write-blocked]', JSON.stringify({
-        bookingId, reason: 'time_conflict', via: 'callable',
-        conflicts: conflicts.slice(0, 5).map((c) => ({ bookingId: c.bookingId, collection: c.collection, status: c.status })),
-      }));
+      logCheck('time_conflict');
+      console.log('[booking-write-blocked]', JSON.stringify({ bookingId, reason: 'time_conflict', via: 'callable' }));
       return {
         ok: false, code: 'time_conflict', reason: 'slot_unavailable',
         conflicts: conflicts.slice(0, 5).map((c) => ({ bookingId: c.bookingId, status: c.status })),
@@ -3368,12 +3446,53 @@ exports.createMobileBarberBookingGuarded = onCall(
       };
     }
 
-    // Clear — write the booking exactly as validated (deterministic id = idempotent).
-    await ref.set(Object.assign({}, booking, {
-      ownerConflictCheckedAt: admin.firestore.FieldValue.serverTimestamp(),
-    }));
-    console.log('[booking-write-guarded]', JSON.stringify({ bookingId, vendorId, ownerId, status: booking.status }));
-    return { ok: true, booking: Object.assign({ id: bookingId }, booking) };
+    // 4) Same person, same day, NON-overlapping haircut → require intent (self vs family)
+    //    unless already verified as a family member or this is an explicit reschedule.
+    if (riskScore > 0 && !verifiedFamily && !rescheduleId) {
+      logCheck('needs_intent');
+      return {
+        ok: false, code: 'SAME_DAY_DUPLICATE_NEEDS_INTENT', reason: 'duplicate_intent_required',
+        riskScore, riskReasons, existing: sameDayCuts.slice(0, 3).map(existingOf),
+      };
+    }
+
+    // ── Cleared. Reschedule in place, or write the new booking. ─────────────────
+    const ts = admin.firestore.FieldValue.serverTimestamp();
+    if (rescheduleId) {
+      const rRef = db.collection('mobileBarberBookings').doc(rescheduleId);
+      const rSnap = await rRef.get();
+      if (!rSnap.exists) return { ok: false, code: 'invalid_request', reason: 'reschedule target not found' };
+      await rRef.set({
+        requestedDate: reqDate, startTime: String(booking.startTime || ''), endTime: String(booking.endTime || ''),
+        rescheduledAt: ts, updatedAt: new Date().toISOString(), ownerConflictCheckedAt: ts,
+      }, { merge: true });
+      logCheck('rescheduled');
+      const merged = Object.assign({ id: rescheduleId }, rSnap.data() || {}, {
+        requestedDate: reqDate, startTime: String(booking.startTime || ''), endTime: String(booking.endTime || ''),
+      });
+      return { ok: true, code: 'OK_RESCHEDULED', rescheduled: true, booking: merged };
+    }
+
+    const writeDoc = Object.assign({}, booking, {
+      ownerConflictCheckedAt: ts, duplicateRiskScore: riskScore, duplicateRiskReasons: riskReasons,
+    });
+    if (verifiedFamily) {
+      writeDoc.bookingFor = 'family_member';
+      writeDoc.duplicateIntentVerified = true;
+      writeDoc.duplicateIntentType = 'family_member';
+      // A verified family booking that pushes the same-day count high is allowed but
+      // routed to the barber for a sanity check rather than silently piling up.
+      if (tooManySameDay && !MB_NON_BLOCKING.has(String(writeDoc.status || '').toLowerCase())) {
+        writeDoc.status = 'vendor_review';
+        writeDoc.reviewReason = 'high_volume_family';
+      }
+    } else if (!writeDoc.bookingFor) {
+      writeDoc.bookingFor = 'self';
+    }
+    await ref.set(writeDoc);
+    logCheck(verifiedFamily ? 'ok_family_member' : 'ok');
+    console.log('[booking-write-guarded]', JSON.stringify({ bookingId, vendorId, ownerId, status: writeDoc.status, bookingFor: writeDoc.bookingFor }));
+    return { ok: true, code: verifiedFamily ? 'OK_FAMILY_MEMBER' : 'OK', booking: Object.assign({ id: bookingId }, writeDoc) };
   }
 );
 

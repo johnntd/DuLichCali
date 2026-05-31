@@ -111,12 +111,12 @@ function runMobileBarberLandingTests(test) {
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
     assertContains(html, '/mobile-barber/mobile-barber.css?v=20260531f');
     assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260530k');
-    assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260531f');
+    assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260531h');
     assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260530l');
     assertContains(html, '/mobile-barber/mobile-barber-voice.js?v=20260530m');
     assertContains(html, '/mobile-barber/mobile-barber-icons.js?v=20260530g');
     assertContains(html, '/mobile-barber/mobile-barber-lightbox.js?v=20260530f');
-    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260531f');
+    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260531h');
   });
 
   test('Mobile Barber pages load Firebase before local runtime scripts', function() {
@@ -314,7 +314,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorHtml, 'id="mbSelectedServiceSummary"');
     assertContains(vendorHtml, 'class="mb-mobile-sticky-cta"');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260530k');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260531f');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260531h');
     assertContains(vendorHtml, '/ai-engine.js?v=20260530m');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-agent.js?v=20260530l');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-voice.js?v=20260530m');
@@ -603,7 +603,7 @@ function runMobileBarberLandingTests(test) {
     // The conflict path must NOT write the booking (set is only on the clear branch).
     var callIdx = functionsJs.indexOf('exports.createMobileBarberBookingGuarded');
     var blockIdx = functionsJs.indexOf("code: 'time_conflict', reason: 'slot_unavailable'", callIdx);
-    var setIdx = functionsJs.indexOf('await ref.set(Object.assign({}, booking', callIdx);
+    var setIdx = functionsJs.indexOf('await ref.set(', callIdx);
     assert(blockIdx >= 0 && setIdx >= 0 && blockIdx < setIdx,
       'the conflict return must come BEFORE (and instead of) the booking write');
     // Frontend: the customer write path routes through the callable, surfaces conflicts.
@@ -661,7 +661,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"destination": "/mobile-barber/dashboard.html"');
     assertContains(dashboardHtml, 'id="mobileBarberDashboardApp"');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260530k');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260531f');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260531h');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-lightbox.js?v=20260530f');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260531g');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260531f');

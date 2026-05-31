@@ -202,6 +202,20 @@
       manualBookingCutoff: 'Too close to your time. Please pick a later slot.',
       manualBookingOverlap: 'That slot was just taken. Please pick another.',
       bookingConflictNextTimes: 'That time is no longer available. Next available: {times}.',
+      dupIntentQuestion: 'I see you already have a haircut appointment today at {time}. Did you mean to change that appointment, or is this haircut for someone else in your family?',
+      dupAskFamilyName: 'Got it — who is this haircut for?',
+      dupRescheduled: 'Done — I moved your existing appointment to the new time. The barber will confirm shortly.',
+      dupFamilyBooked: 'Great — I booked a haircut for {name}. The barber will confirm shortly.',
+      dupCancelled: "No problem — I won't create a second booking. Your existing appointment is unchanged.",
+      dupUnclear: "Just to confirm: is this haircut for you (I'll change your existing time), for a family member, or did you not mean to book again?",
+      dupSpam: 'You already have several booking requests today. Please contact the barber directly or try again later.',
+      dupModalTitle: 'You already have a haircut today',
+      dupModalBody: 'We found an existing haircut appointment today at {time}. Is this new request for another person?',
+      dupBtnReschedule: 'Change my existing appointment',
+      dupBtnFamily: 'Book for a family member',
+      dupBtnCancel: 'Cancel this request',
+      dupFamilyNameLabel: 'Who is this haircut for?',
+      dupFamilyNamePlaceholder: 'Family member name',
       manualBookingGeneric: 'Could not send the booking. Please try again.',
       manualBookingHelpLabel: 'Need help?',
       aiPreviewDisclosure: 'Sample AI-generated style preview. Real barber portfolio coming soon.',
@@ -434,6 +448,20 @@
       manualBookingCutoff: 'Quá gần với giờ bạn chọn. Vui lòng chọn giờ trễ hơn.',
       manualBookingOverlap: 'Khung giờ này vừa có người đặt. Vui lòng chọn giờ khác.',
       bookingConflictNextTimes: 'Khung giờ đó không còn trống. Giờ trống kế tiếp: {times}.',
+      dupIntentQuestion: 'Tôi thấy bạn đã có lịch cắt tóc hôm nay lúc {time}. Bạn muốn đổi lịch hẹn đó, hay lần cắt này là cho người khác trong gia đình?',
+      dupAskFamilyName: 'Được rồi — lần cắt tóc này là cho ai?',
+      dupRescheduled: 'Xong — tôi đã chuyển lịch hẹn hiện tại sang giờ mới. Thợ sẽ xác nhận sớm.',
+      dupFamilyBooked: 'Tuyệt — tôi đã đặt lịch cắt tóc cho {name}. Thợ sẽ xác nhận sớm.',
+      dupCancelled: 'Không sao — tôi sẽ không tạo lịch thứ hai. Lịch hẹn hiện tại của bạn không thay đổi.',
+      dupUnclear: 'Xin xác nhận: lần cắt này là cho bạn (tôi sẽ đổi giờ hiện tại), cho người thân, hay bạn không có ý đặt lại?',
+      dupSpam: 'Bạn đã có nhiều yêu cầu đặt lịch hôm nay. Vui lòng liên hệ trực tiếp với thợ hoặc thử lại sau.',
+      dupModalTitle: 'Bạn đã có lịch cắt tóc hôm nay',
+      dupModalBody: 'Chúng tôi thấy bạn đã có lịch cắt tóc hôm nay lúc {time}. Yêu cầu mới này có phải cho người khác không?',
+      dupBtnReschedule: 'Đổi lịch hẹn hiện tại của tôi',
+      dupBtnFamily: 'Đặt cho người thân',
+      dupBtnCancel: 'Hủy yêu cầu này',
+      dupFamilyNameLabel: 'Lần cắt tóc này là cho ai?',
+      dupFamilyNamePlaceholder: 'Tên người thân',
       manualBookingGeneric: 'Không gửi được lịch hẹn. Vui lòng thử lại.',
       manualBookingHelpLabel: 'Cần trợ giúp?',
       aiPreviewDisclosure: 'Ảnh mẫu tạo bằng AI. Portfolio thật của thợ sẽ có sau.',
@@ -666,6 +694,20 @@
       manualBookingCutoff: 'Demasiado cerca de la hora. Elija una más tarde.',
       manualBookingOverlap: 'Ese horario ya fue tomado. Elija otro.',
       bookingConflictNextTimes: 'Ese horario ya no está disponible. Próximos disponibles: {times}.',
+      dupIntentQuestion: 'Veo que ya tiene una cita de corte hoy a las {time}. ¿Desea cambiar esa cita o este corte es para otro miembro de su familia?',
+      dupAskFamilyName: 'Entendido — ¿para quién es este corte?',
+      dupRescheduled: 'Listo — moví su cita existente a la nueva hora. El barbero confirmará pronto.',
+      dupFamilyBooked: 'Perfecto — reservé un corte para {name}. El barbero confirmará pronto.',
+      dupCancelled: 'No hay problema — no crearé una segunda reserva. Su cita actual no cambia.',
+      dupUnclear: 'Para confirmar: ¿este corte es para usted (cambio su hora actual), para un familiar, o no quería reservar de nuevo?',
+      dupSpam: 'Ya tiene varias solicitudes de reserva hoy. Comuníquese directamente con el barbero o intente más tarde.',
+      dupModalTitle: 'Ya tiene un corte hoy',
+      dupModalBody: 'Encontramos una cita de corte hoy a las {time}. ¿Esta nueva solicitud es para otra persona?',
+      dupBtnReschedule: 'Cambiar mi cita existente',
+      dupBtnFamily: 'Reservar para un familiar',
+      dupBtnCancel: 'Cancelar esta solicitud',
+      dupFamilyNameLabel: '¿Para quién es este corte?',
+      dupFamilyNamePlaceholder: 'Nombre del familiar',
       manualBookingGeneric: 'No se pudo enviar la solicitud. Intente de nuevo.',
       manualBookingHelpLabel: '¿Necesita ayuda?',
       aiPreviewDisclosure: 'Vista previa de estilo generada por AI. Portafolio real del barbero próximamente.',
@@ -1219,10 +1261,72 @@
     return state.agentSession;
   }
 
+  // ── Smart duplicate-intent conversational flow (shared by AI chat + voice) ───
+  // When the guarded create returns SAME_DAY_DUPLICATE_NEEDS_INTENT, we stash the
+  // attempted booking on the session and ask the customer: reschedule / family / mistake.
+  function dupExistingTime(existing) {
+    var e = (existing && existing[0]) || {};
+    var hhmm = e.time || e.startTime || '';
+    return (BOOKING && BOOKING.formatTime12Hour) ? BOOKING.formatTime12Hour(hhmm) : hhmm;
+  }
+  function parseIntentAnswer(message) {
+    var s = String(message || '').toLowerCase();
+    if (/\b(cancel|mistake|never\s?mind|nvm|don'?t|do not)\b/.test(s) ||
+        /(hủy|nhầm|đừng|không đặt)/.test(s) || /(cancelar|error|equivoqu|no quería|no queria)/.test(s)) return 'mistake';
+    if (/\b(family|son|daughter|wife|husband|kid|child|brother|sister|father|mother|mom|dad|cousin|friend|grand|someone else|another person|for (him|her|them|my))\b/.test(s) ||
+        /(gia đình|con trai|con gái|vợ|chồng|con tôi|anh|chị|bố|mẹ|người khác|người thân|cho con)/.test(s) ||
+        /(familia|hijo|hija|esposa|esposo|niñ|herman|padre|madre|otra persona|para mi (hijo|hija|familiar))/.test(s)) return 'family';
+    if (/\b(me|myself|my own|same|change|reschedule|move|mine|for me|i am|it'?s mine)\b/.test(s) ||
+        /(chính tôi|của tôi|cho tôi|đổi giờ|đổi lịch|dời)/.test(s) || /(para mí|para mi$|yo mismo|cambiar|mover|mi cita)/.test(s)) return 'self';
+    return 'unclear';
+  }
+  function dupSaveErrorResponse(error) {
+    if (state.agentSession) state.agentSession.pendingDuplicateIntent = null;
+    if (error && error.bookingConflict) return { response: bookingConflictMessage(error.suggestions) };
+    if (error && error.bookingSpam) return { response: t('dupSpam') };
+    return { response: t('saveFailedRetry') || 'Could not save the booking. Please try again or contact the barber.' };
+  }
+  function resolveDuplicateIntent(message) {
+    var sess = state.agentSession;
+    var pend = sess && sess.pendingDuplicateIntent;
+    if (!pend) return null;
+    var booking = pend.booking;
+    if (pend.awaitingName) {
+      var name = String(message || '').trim();
+      if (!name) return Promise.resolve({ response: t('dupAskFamilyName') });
+      var famBooking = BOOKING.applyDuplicateIntent(booking, { type: 'family_member', familyMemberName: name });
+      return BOOKING.saveBooking(famBooking, { requireDatabase: true })
+        .then(function(saved) {
+          sess.pendingDuplicateIntent = null; state.lastBooking = saved.booking;
+          return { response: interpolate(t('dupFamilyBooked'), { name: name }), booking: saved.booking };
+        })
+        .catch(dupSaveErrorResponse);
+    }
+    var ans = parseIntentAnswer(message);
+    if (ans === 'mistake') { sess.pendingDuplicateIntent = null; return Promise.resolve({ response: t('dupCancelled') }); }
+    if (ans === 'self') {
+      var existingId = (pend.existing && pend.existing[0] && pend.existing[0].bookingId) || '';
+      var reBooking = BOOKING.applyDuplicateIntent(booking, { type: 'self_reschedule', linkedExistingBookingId: existingId });
+      return BOOKING.saveBooking(reBooking, { requireDatabase: true })
+        .then(function(saved) {
+          sess.pendingDuplicateIntent = null; state.lastBooking = saved.booking;
+          return { response: t('dupRescheduled'), booking: saved.booking };
+        })
+        .catch(dupSaveErrorResponse);
+    }
+    if (ans === 'family') { pend.awaitingName = true; return Promise.resolve({ response: t('dupAskFamilyName') }); }
+    return Promise.resolve({ response: t('dupUnclear') });
+  }
+
   function sendAgentMessage(message, options) {
     options = options || {};
     if (!AGENT || !BOOKING) return Promise.resolve({ response: t('assistantCopy') });
     ensureAgentSession();
+    // A pending duplicate-intent question takes priority — this message is the answer.
+    if (state.agentSession && state.agentSession.pendingDuplicateIntent) {
+      var resolved = resolveDuplicateIntent(message);
+      if (resolved) return Promise.resolve(resolved);
+    }
     // Resolve the barber from the address the customer has given in this chat
     // BEFORE building the agent context, so services/promos/hours/blocks and
     // the availability check all run against the barber who serves that area.
@@ -1269,12 +1373,21 @@
             })
             .catch(function(error) {
               if (root.console) root.console.error('[mobile-barber-agent] booking save FAILED', error);
+              // Same-day duplicate → stash the attempt and ask intent (reschedule / family / mistake).
+              if (error && error.duplicateIntent && state.agentSession) {
+                state.agentSession.pendingDuplicateIntent = { booking: result.booking, existing: error.existing || [], awaitingName: false };
+                result.booking = null;
+                result.response = interpolate(t('dupIntentQuestion'), { time: dupExistingTime(error.existing) });
+                return result;
+              }
               result.booking = null;
               // A time conflict is not a failure to retry blindly — tell the customer
               // the slot is taken and offer the next available times.
               result.response = (error && error.bookingConflict)
                 ? bookingConflictMessage(error.suggestions)
-                : (t('saveFailedRetry') || 'Could not save the booking. Please try again or contact the barber.');
+                : (error && error.bookingSpam)
+                  ? t('dupSpam')
+                  : (t('saveFailedRetry') || 'Could not save the booking. Please try again or contact the barber.');
               return result;
             });
         }
@@ -2996,6 +3109,7 @@
           throw new Error((built && built.errors && built.errors.join(', ')) || 'invalid_booking');
         }
         built.booking.source = 'customer_form';
+        state._pendingDupBooking = built.booking;
         return BOOKING.saveBooking(built.booking, { requireDatabase: true });
       })
       .then(function(saved) {
@@ -3016,16 +3130,23 @@
       })
       .catch(function(error) {
         state.manualBooking.submitting = false;
+        if (submitBtn) submitBtn.disabled = false;
+        // Same-day duplicate → show the intent modal (change existing / family / cancel).
+        if (error && error.duplicateIntent) {
+          handleDuplicateIntentForForm(error, state._pendingDupBooking, statusEl, submitBtn);
+          return;
+        }
         var rawMessage = (error && error.message) || 'submit_failed';
         var human = (error && error.bookingConflict)
           ? bookingConflictMessage(error.suggestions)
-          : manualBookingErrorMessage(rawMessage);
+          : (error && error.bookingSpam)
+            ? t('dupSpam')
+            : manualBookingErrorMessage(rawMessage);
         state.manualBooking.lastSubmissionError = human;
         if (statusEl) {
           statusEl.textContent = human;
           statusEl.classList.add('mb-manual-booking__status--error');
         }
-        if (submitBtn) submitBtn.disabled = false;
         if (root.console) root.console.error('[mobile-barber] manual booking failed', rawMessage);
       });
   }
@@ -3058,6 +3179,102 @@
       service_missing: t('manualBookingNoService') || 'No service available for this barber right now.'
     };
     return map[key] || (t('manualBookingGeneric') || 'Could not send the booking. Please try again.');
+  }
+
+  // ── Duplicate-intent modal (manual + inline form paths) ──────────────────────
+  function _escDup(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function(c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c];
+    });
+  }
+  function closeDuplicateIntentModal() {
+    var ex = document.getElementById('mbDupIntentModal');
+    if (ex && ex.parentNode) ex.parentNode.removeChild(ex);
+  }
+  function _dupBtnStyle(bg, color, border) {
+    return 'display:block;width:100%;margin-top:10px;padding:12px;border:' + (border || 'none') +
+      ';border-radius:11px;background:' + bg + ';color:' + color + ';font-weight:700;font-size:.95rem;cursor:pointer;';
+  }
+  // Modal with the 3 required choices: change existing / book for family / cancel.
+  // onReschedule(), onFamily(name), onCancel() callbacks drive the re-submit.
+  function showDuplicateIntentModal(opts) {
+    opts = opts || {};
+    closeDuplicateIntentModal();
+    var e0 = (opts.existing && opts.existing[0]) || {};
+    var timeLabel = (BOOKING && BOOKING.formatTime12Hour)
+      ? BOOKING.formatTime12Hour(e0.time || e0.startTime || '') : (e0.time || e0.startTime || '');
+    var ov = document.createElement('div');
+    ov.id = 'mbDupIntentModal';
+    ov.setAttribute('style', 'position:fixed;inset:0;z-index:99998;display:flex;align-items:flex-start;justify-content:center;padding:24px;padding-top:max(24px,env(safe-area-inset-top,24px));overflow-y:auto;-webkit-overflow-scrolling:touch;background:rgba(4,17,32,.74);');
+    ov.innerHTML = '' +
+      '<div role="dialog" aria-modal="true" style="width:100%;max-width:380px;background:#0c2c50;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:22px;color:#eaf1fb;font-family:Jost,system-ui,sans-serif;box-shadow:0 24px 60px rgba(0,0,0,.45);">' +
+        '<div style="font-weight:700;font-size:1.05rem;margin-bottom:8px;">' + _escDup(t('dupModalTitle')) + '</div>' +
+        '<div style="font-size:.9rem;opacity:.85;margin-bottom:16px;">' + _escDup(interpolate(t('dupModalBody'), { time: timeLabel })) + '</div>' +
+        '<div id="mbDupFamilyWrap" hidden style="margin-bottom:6px;">' +
+          '<label style="display:block;font-size:.8rem;opacity:.85;margin-bottom:4px;">' + _escDup(t('dupFamilyNameLabel')) + '</label>' +
+          '<input id="mbDupFamilyName" type="text" autocomplete="off" placeholder="' + _escDup(t('dupFamilyNamePlaceholder')) + '" style="width:100%;box-sizing:border-box;padding:11px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#08233f;color:#fff;font-size:16px;-webkit-user-select:text;user-select:text;">' +
+        '</div>' +
+        '<button id="mbDupReschedule" type="button" style="' + _dupBtnStyle('#f0be60', '#08233f') + '">' + _escDup(t('dupBtnReschedule')) + '</button>' +
+        '<button id="mbDupFamily" type="button" style="' + _dupBtnStyle('transparent', '#eaf1fb', '1px solid rgba(255,255,255,.25)') + '">' + _escDup(t('dupBtnFamily')) + '</button>' +
+        '<button id="mbDupCancel" type="button" style="' + _dupBtnStyle('transparent', '#8fb4e6', 'none') + '">' + _escDup(t('dupBtnCancel')) + '</button>' +
+      '</div>';
+    document.body.appendChild(ov);
+    var famWrap = document.getElementById('mbDupFamilyWrap');
+    var famInput = document.getElementById('mbDupFamilyName');
+    var famMode = false;
+    document.getElementById('mbDupReschedule').addEventListener('click', function() {
+      closeDuplicateIntentModal(); if (opts.onReschedule) opts.onReschedule();
+    });
+    document.getElementById('mbDupCancel').addEventListener('click', function() {
+      closeDuplicateIntentModal(); if (opts.onCancel) opts.onCancel();
+    });
+    document.getElementById('mbDupFamily').addEventListener('click', function() {
+      if (!famMode) { if (famWrap) famWrap.hidden = false; famMode = true; if (famInput) { try { famInput.focus(); } catch (e) {} } return; }
+      var name = famInput ? String(famInput.value || '').trim() : '';
+      if (!name) { if (famInput) { try { famInput.focus(); } catch (e) {} } return; }
+      closeDuplicateIntentModal(); if (opts.onFamily) opts.onFamily(name);
+    });
+  }
+  // Render a manual/inline re-submit (reschedule or family) result into the form.
+  function renderManualBookingResult(promise, statusEl, submitBtn, successMsg) {
+    return promise.then(function(saved) {
+      state.lastBooking = saved.booking;
+      if (state.manualBooking) state.manualBooking.lastSubmissionError = '';
+      var mount = document.getElementById('mbManualBookingMount');
+      if (mount) {
+        mount.innerHTML = '';
+        var s = el('div', 'mb-manual-booking__success');
+        s.setAttribute('role', 'status');
+        s.textContent = successMsg || (t('manualBookingSuccess') || 'Booking sent. The barber will confirm shortly.');
+        mount.appendChild(s);
+      } else if (statusEl) {
+        statusEl.textContent = successMsg || (t('manualBookingSuccess') || 'Booking sent.');
+      }
+      if (submitBtn) submitBtn.disabled = false;
+      return saved;
+    }).catch(function(error) {
+      var msg = (error && error.bookingConflict) ? bookingConflictMessage(error.suggestions)
+        : (error && error.bookingSpam) ? t('dupSpam')
+        : manualBookingErrorMessage((error && error.message) || 'submit_failed');
+      if (statusEl) { statusEl.textContent = msg; statusEl.classList.add('mb-manual-booking__status--error'); }
+      if (submitBtn) submitBtn.disabled = false;
+    });
+  }
+  // Wire a form catch's duplicate-intent error to the modal + re-submit.
+  function handleDuplicateIntentForForm(error, attemptedBooking, statusEl, submitBtn) {
+    var existId = (error.existing && error.existing[0] && error.existing[0].bookingId) || '';
+    showDuplicateIntentModal({
+      existing: error.existing,
+      onReschedule: function() {
+        renderManualBookingResult(BOOKING.saveBooking(BOOKING.applyDuplicateIntent(attemptedBooking,
+          { type: 'self_reschedule', linkedExistingBookingId: existId }), { requireDatabase: true }), statusEl, submitBtn, t('dupRescheduled'));
+      },
+      onFamily: function(name) {
+        renderManualBookingResult(BOOKING.saveBooking(BOOKING.applyDuplicateIntent(attemptedBooking,
+          { type: 'family_member', familyMemberName: name }), { requireDatabase: true }), statusEl, submitBtn, interpolate(t('dupFamilyBooked'), { name: name }));
+      },
+      onCancel: function() { if (statusEl) statusEl.textContent = t('dupCancelled'); }
+    });
   }
 
   // Toggle the inline booking panel under an AI hairstyle card.
@@ -3319,6 +3536,7 @@
           throw new Error((built && built.errors && built.errors.join(', ')) || 'invalid_booking');
         }
         built.booking.source = 'customer_form';
+        state._pendingDupBooking = built.booking;
         return BOOKING.saveBooking(built.booking, { requireDatabase: true });
       })
       .then(function(saved) {
@@ -3334,16 +3552,37 @@
       })
       .catch(function(error) {
         state.aiPreview.submitting = false;
+        if (submitBtn) submitBtn.disabled = false;
+        if (error && error.duplicateIntent) {
+          var attempted = state._pendingDupBooking;
+          var existId = (error.existing && error.existing[0] && error.existing[0].bookingId) || '';
+          var resubmit = function(decision, successMsg) {
+            BOOKING.saveBooking(BOOKING.applyDuplicateIntent(attempted, decision), { requireDatabase: true })
+              .then(function(saved) { state.lastBooking = saved.booking; setAiStatus(successMsg); })
+              .catch(function(e2) {
+                setAiStatus((e2 && e2.bookingConflict) ? bookingConflictMessage(e2.suggestions)
+                  : (e2 && e2.bookingSpam) ? t('dupSpam') : inlineBookingErrorMessage((e2 && e2.message) || 'submit_failed'));
+              });
+          };
+          showDuplicateIntentModal({
+            existing: error.existing,
+            onReschedule: function() { resubmit({ type: 'self_reschedule', linkedExistingBookingId: existId }, t('dupRescheduled')); },
+            onFamily: function(name) { resubmit({ type: 'family_member', familyMemberName: name }, interpolate(t('dupFamilyBooked'), { name: name })); },
+            onCancel: function() { setAiStatus(t('dupCancelled')); }
+          });
+          return;
+        }
         var rawMessage = (error && error.message) || 'submit_failed';
         var human = (error && error.bookingConflict)
           ? bookingConflictMessage(error.suggestions)
-          : inlineBookingErrorMessage(rawMessage);
+          : (error && error.bookingSpam)
+            ? t('dupSpam')
+            : inlineBookingErrorMessage(rawMessage);
         state.aiPreview.lastSubmissionError = human;
         if (statusEl) {
           statusEl.textContent = human;
           statusEl.classList.add('mb-ai-rec-card__booking-status--error');
         }
-        if (submitBtn) submitBtn.disabled = false;
         if (root.console) root.console.error('[mobile-barber] inline AI booking failed', rawMessage);
       });
   }

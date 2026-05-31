@@ -2797,7 +2797,9 @@ exports.generateHaircutPreviews = onCall(
       return { ok: false, vendorMessage: 'Selfie is too large. Please use a smaller photo.', debugCode: 'IMAGE_TOO_LARGE' };
     }
 
-    const geminiKey = GEMINI_API_KEY.value();
+    // Nano Banana (Gemini 2.5 Flash Image) uses the same Gemini key, read the
+    // secured way: config/aiSecrets first, then the Functions secret fallback.
+    const geminiKey = await getAiKey('gemini');
     if (!geminiKey) {
       return { ok: false, vendorMessage: 'AI preview is temporarily unavailable. Please continue your booking; the barber will suggest a style in person.', debugCode: 'NO_GEMINI_KEY' };
     }

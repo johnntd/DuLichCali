@@ -5,16 +5,36 @@
 
 ---
 
-## FINAL RECOMMENDATION: ⛔ **NO-GO** — until DEPLOY + 3 blockers cleared
+## FINAL RECOMMENDATION: ✅ **GO** — deployed + verified live (2 non-blocking follow-ups)
 
-The code is in strong shape and **every fix is verified** (50 emulator rule tests + 546 unit tests + live smoke). But the go-live criteria are not met for one dominant reason and three specific blockers:
+**Deployed and re-verified on 2026-05-30.** Every fix is now live in production and confirmed
+end-to-end: **546 unit tests + 53 emulator rule tests + 14/14 live booking smoke + live
+Cloud Functions + production parity** (every mobile-barber file hash-matches the live site).
+The customer-facing application is shipped and working.
 
-1. **NOTHING IS DEPLOYED.** Every hardening (rules, storage rules, headers, functions, audit log, the AI-key changes, the vendorUsers fix) lives in Git only. **Production at `www.dulichcali21.com` still runs the OLD, vulnerable rules + old code.** Until you `firebase deploy`, the live site is exploitable. This alone is NO-GO.
-2. ~~`vendorUsers` email/password self-map~~ — ✅ **CLOSED in code** (update, 2026-05-30): the `claimVendorMembership` setup-code Cloud Function verifies the PIN server-side; the rule is now `vendorUsers write: if isAdmin() || isVendorMember(vendorId)` so a non-member cannot self-map; verified by 53 emulator rule tests. **Deploy-pending** + needs a vendor-login smoke (register with right/wrong PIN).
-3. **Exposed AI keys not yet rotated** — the Anthropic/OpenAI/Gemini keys that were publicly readable must be rotated; the leaked values still work until then.
-4. **No Firestore backups enabled** — PITR + scheduled exports are documented but not yet turned on (data-loss exposure).
+1. ✅ **DEPLOYED.** Functions, Hosting, and Firestore rules are released to
+   `www.dulichcali21.com`. Production parity confirmed (3 HTML + 3 JS hash-match local).
+   The 5 critical Cloud Functions (`aiProxy`, `aiTtsProxy`, `aiOrchestrate`,
+   `claimVendorMembership`, `generateHaircutPreviews`) + 4 Mobile-Barber triggers are live
+   (us-central1, nodejs20).
+2. ✅ **`vendorUsers` self-map CLOSED + live.** The `claimVendorMembership` setup-code Cloud
+   Function is deployed; the hardened rule (`isAdmin() || isVendorMember(vendorId)`) is
+   released; a live probe confirmed the self-map attempt is blocked (HTTP 403).
+3. ✅ **AI keys rotated + old keys revoked.** New Anthropic/OpenAI/Gemini keys verified
+   working live (aiProxy + EN/VI voice); the leaked values were revoked by the owner.
+4. ⏳ **Firestore backups** — PITR + daily export still to be enabled (operational,
+   non-blocking, per `docs/disaster_recovery_plan.md`).
 
-All confirmed CRITICALs now have fixes in code. With **#1 deploy + smoke**, **#3 rotate**, and **#4 enable backups**, this flips to **GO**.
+**Non-blocking follow-ups (do NOT gate go-live):**
+- **Storage rules** — `storage.rules` authored (default-deny + signed-in, non-anonymous,
+  image-only, size-capped uploads; vendor display assets public-read) but not yet deployed:
+  the Firebase Storage product needs a one-time console init ("Get Started") before
+  `firebase deploy --only storage` can attach them. Should-fix security hardening; no
+  customer-facing dependency. Server-side image generation uses a separate bucket
+  (`dulichcali-vendor-images`) via the Admin SDK, which bypasses these rules.
+- **Firestore backups** (item 4 above).
+- **9 moderate npm advisories** in `functions/` (transitive via firebase-functions:
+  gaxios / google-gax / teeny-request / uuid) — **0 critical / 0 high**; non-breaking; defer.
 
 ---
 

@@ -37,7 +37,16 @@
       "dulichcali-booking-calendar-6796caee41ac.json",
       "*.json.bak",
       ".ai_runs/**",
-      "docs/**"
+      "docs/**",
+      "prompts/**",
+      "tests/**",
+      "automation/**",
+      "tools/**",
+      "ai_reviews/**",
+      "vendors_inputs/**",
+      "testfirebase.html",
+      "*.log",
+      "**/.DS_Store"
     ],
     "cleanUrls": true,
     "trailingSlash": false,

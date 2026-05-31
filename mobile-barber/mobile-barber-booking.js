@@ -265,8 +265,11 @@
     var candidates = [];
     for (var i = 0; i < allVendors.length; i++) {
       var v = allVendors[i];
-      // Never route a booking to an INACTIVE vendor.
-      if (v && (v.active === false || (v.adminStatus && v.adminStatus !== 'active'))) continue;
+      // NOTE: do NOT filter by status here. The vendor list passed in is already
+      // the live ACTIVE set (resolved upstream by serviceAreas). A status gate at
+      // this layer wrongly dropped live vendors (their docs carry an adminStatus
+      // that isn't the literal 'active'), so findVendorForAddress returned null
+      // and broke page-init routing + the AI preview. Keep this loop status-free.
       if (options.excludeVendorId && v && v.id === options.excludeVendorId) continue;
       if (isWithinServiceArea(v, address)) candidates.push(v);
     }

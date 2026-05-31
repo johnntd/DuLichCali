@@ -66,7 +66,9 @@
 .mb-hero {
   display: grid;
   gap: .85rem;
-  align-content: start;
+  /* Media row stretches to fill the fold; body anchors directly below it, so a
+     short body no longer leaves dead space at the bottom of the 100svh hero. */
+  grid-template-rows: 1fr auto;
   animation: mbFadeUp .55s ease both;
   min-height: 100vh;  /* fallback for iOS Safari < 15.4 (no svh) */
   min-height: 100svh;
@@ -77,6 +79,7 @@
   .mb-hero {
     gap: 1.4rem;
     min-height: auto;
+    grid-template-rows: none;  /* desktop: content-sized rows, original layout */
   }
 }
 
@@ -87,8 +90,8 @@
      vh is the fallback for iOS Safari < 15.4. */
   min-height: 56vh;
   min-height: 56svh;
-  max-height: 60vh;
-  max-height: 60svh;
+  /* No max-height on phones: the media stretches to fill the hero fold (grid 1fr
+     row) so the showcase fills the dead space instead of capping at 60svh. */
   border-radius: var(--r-md);
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, .12);
@@ -99,7 +102,7 @@
 }
 
 @media (min-width: 480px) {
-  .mb-hero__media { min-height: 52vh; min-height: 52svh; max-height: 58vh; max-height: 58svh; }
+  .mb-hero__media { min-height: 52vh; min-height: 52svh; }
 }
 
 @media (min-width: 680px) {

@@ -135,8 +135,11 @@
     if (existing) { existing.style.display = 'flex'; return; }
     var ov = doc.createElement('div');
     ov.id = 'mbLoginOverlay';
-    ov.setAttribute('style', 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;background:#061b33;');
-    var inp = 'width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#08233f;color:#fff;font-size:1rem;';
+    // Scrollable + top-aligned so the iOS keyboard can't trap a focused input off-screen
+    // (a centered, non-scrollable fixed overlay is a known iOS-standalone "can't type" cause).
+    ov.setAttribute('style', 'position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-start;justify-content:center;padding:24px;padding-top:max(24px,env(safe-area-inset-top,24px));overflow-y:auto;-webkit-overflow-scrolling:touch;background:#061b33;');
+    // Explicit text-selectable + 16px font (no iOS zoom, never inherit user-select:none).
+    var inp = 'width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#08233f;color:#fff;font-size:16px;-webkit-user-select:text;user-select:text;';
     ov.innerHTML = '' +
       '<div style="width:100%;max-width:380px;background:#0c2c50;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:26px 22px;box-shadow:0 24px 60px rgba(0,0,0,.45);font-family:Jost,system-ui,sans-serif;color:#eaf1fb;">' +
         '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">' +
@@ -188,7 +191,8 @@
     }
     btn.addEventListener('click', submit);
     passEl.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') submit(); });
-    try { emailEl.focus(); } catch (e) {}
+    // No programmatic auto-focus: in an iOS standalone PWA a focus() on load can leave
+    // the field unable to summon the keyboard until tapped — let the user tap to focus.
   }
   function setStatus(msg, tone) {
     var el = doc.getElementById('mbAlertsStatus');

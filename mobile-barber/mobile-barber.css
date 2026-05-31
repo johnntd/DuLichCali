@@ -380,6 +380,15 @@
   color: #fca5a5;
 }
 
+/* Time-conflict decline — bold, solid red so it is unmistakable that the booking
+   was auto-declined for overlapping another booking (never an active appointment). */
+.mb-status-pill--conflict {
+  background: #dc2626;
+  color: #fff;
+  border: 1px solid #fca5a5;
+  letter-spacing: .02em;
+}
+
 .mb-status-pill--completed {
   background: rgba(148, 163, 184, .18);
   color: #cbd5e1;

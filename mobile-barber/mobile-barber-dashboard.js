@@ -285,6 +285,7 @@
       statusCancelled: 'Cancelled',
       statusCompleted: 'Completed',
       statusRejected: 'Declined',
+      statusDeclinedTimeConflict: 'DECLINED — TIME CONFLICT',
       filterNeedsReview: 'Needs review',
       appointmentListHintNeedsReview: 'Showing owner bookings that need review before confirmation.',
       reviewQueueBadge: 'Needs review',
@@ -589,6 +590,7 @@
       statusCancelled: 'Đã hủy',
       statusCompleted: 'Hoàn tất',
       statusRejected: 'Đã từ chối',
+      statusDeclinedTimeConflict: 'ĐÃ TỪ CHỐI — TRÙNG GIỜ',
       filterNeedsReview: 'Cần xem xét',
       appointmentListHintNeedsReview: 'Đang hiển thị lịch của chủ cần xem xét trước khi xác nhận.',
       reviewQueueBadge: 'Cần xem xét',
@@ -893,6 +895,7 @@
       statusCancelled: 'Cancelada',
       statusCompleted: 'Completada',
       statusRejected: 'Rechazada',
+      statusDeclinedTimeConflict: 'RECHAZADA — CONFLICTO DE HORARIO',
       filterNeedsReview: 'Requiere revisión',
       appointmentListHintNeedsReview: 'Mostrando reservas del dueño que requieren revisión antes de confirmar.',
       reviewQueueBadge: 'Requiere revisión',
@@ -940,7 +943,8 @@
     rescheduled: 'statusRescheduled',
     cancelled: 'statusCancelled',
     completed: 'statusCompleted',
-    rejected: 'statusRejected'
+    rejected: 'statusRejected',
+    declined: 'statusRejected'
   };
   var REVIEW_REASON_LABELS = {
     time_conflict: 'reviewReasonTimeConflict',
@@ -1315,7 +1319,10 @@
   }
 
   function isInactiveStatus(status) {
-    return ['cancelled', 'completed', 'rejected', 'expired', 'no_show'].indexOf(String(status || '').toLowerCase()) >= 0;
+    // 'declined' is the status the server conflict guard writes for auto-declined
+    // time conflicts; it MUST be treated as terminal (same as 'rejected') so a
+    // declined booking is never counted as active/upcoming.
+    return ['cancelled', 'completed', 'rejected', 'declined', 'expired', 'no_show'].indexOf(String(status || '').toLowerCase()) >= 0;
   }
 
   function updateBookingStatus(bookingId, status) {
@@ -1643,8 +1650,14 @@
   }
 
   function isUpcomingBooking(booking, now) {
-    var status = booking.status || '';
-    return status !== 'cancelled' && status !== 'completed' && bookingStartMillis(booking) >= now.getTime();
+    // Upcoming = active, confirmable bookings only. Exclude every terminal status
+    // (cancelled/completed/rejected/declined/expired/no_show) AND vendor_review —
+    // a vendor_review/conflict booking lives in the Review filter, never in
+    // "Upcoming", so the vendor sees only genuine upcoming work (no double-booking
+    // card and no auto-declined card padding the count).
+    var status = String(booking.status || '').toLowerCase();
+    if (isInactiveStatus(status) || status === 'vendor_review') return false;
+    return bookingStartMillis(booking) >= now.getTime();
   }
 
   function filteredBookings(now) {
@@ -1824,7 +1837,8 @@
       case 'traveling':    return 'traveling';
       case 'completed':    return 'completed';
       case 'cancelled':    return 'cancelled';
-      case 'rejected':     return 'cancelled';
+      case 'rejected':
+      case 'declined':     return 'cancelled';
       default:             return 'pending';
     }
   }
@@ -2072,7 +2086,17 @@
     // ── Top line: status + service type + flag chips (wraps, never clips) ──
     var topline = el('div', 'mb-booking-row__topline');
     var pill = el('span', 'mb-booking-row__status mb-status-pill mb-status-pill--' + bucket);
-    pill.textContent = statusLabel(booking.status);
+    var declineReason = String(booking.declineReason || '').toLowerCase();
+    var isTimeConflictDecline = (booking.status === 'declined' || booking.status === 'rejected')
+      && declineReason === 'time_conflict';
+    if (isTimeConflictDecline) {
+      // Make a time-conflict decline unmistakable: a bold red "DECLINED — TIME CONFLICT"
+      // chip so the vendor immediately understands why it is not an active booking.
+      pill.classList.add('mb-status-pill--conflict');
+      pill.textContent = t('statusDeclinedTimeConflict');
+    } else {
+      pill.textContent = statusLabel(booking.status);
+    }
     topline.appendChild(pill);
 
     if (state.ownerMode && booking.serviceType) {
@@ -2644,6 +2668,21 @@
     persistOwnerNotifications();
     renderNotificationDrawer();
     return entry;
+  }
+
+  // Seed the unread badge from existing actionable bookings on load. Without this
+  // the badge only reflected LIVE alerts (new bookings arriving while the dashboard
+  // is open) — on a fresh load / refresh / PWA resume it showed 0 even when pending
+  // bookings were waiting. addNotification() is idempotent (dedupes by booking key)
+  // and skips bookings already in the persisted list, so a booking the vendor marked
+  // read stays read across refresh; only genuinely-new actionable bookings are added.
+  function seedInitialNotifications() {
+    if (!notificationsActive()) return;
+    var actionable = { pending_confirmation: true, pending_barber_confirmation: true, vendor_review: true };
+    (state.bookings || []).forEach(function(booking) {
+      if (booking && actionable[booking.status]) addNotification(booking);
+    });
+    renderNotificationDrawer();
   }
 
   function markNotificationRead(id) {
@@ -3763,6 +3802,7 @@
       return loadBookings();
     }).then(function() {
       render();
+      seedInitialNotifications();
       subscribeBookingAlerts();
     });
   }

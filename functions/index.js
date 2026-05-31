@@ -3170,7 +3170,13 @@ exports.onMobileBarberBookingCreated = onDocumentCreated(
     if (!ownerId) { log('skip — no ownerId'); return; }
     const status = String(booking.status || '').toLowerCase();
     if (MB_NON_BLOCKING.has(status)) { log(`skip — terminal status (${status})`); return; }
-    if (status === 'vendor_review') { log('skip — already vendor_review (client guard or agent set it)'); return; }
+    // NOTE: a booking created directly as 'vendor_review' (client guard / agent) is
+    // NOT skipped — it must still be conflict-checked so a true time overlap
+    // auto-declines it instead of lingering as an actionable "Upcoming" card. This is
+    // an UPDATE (not a create), so it never re-triggers this onCreate handler; and the
+    // earliest-by-createTime winner logic below guarantees only the LATER overlapping
+    // booking declines (the earliest always stands → no double-booking).
+    if (status === 'vendor_review') { log('vendor_review — still running owner-wide conflict check'); }
 
     const win = mbBookingWindow(booking, 'mobileBarberBookings');
     if (!win) { log('skip — no usable time window'); return; }

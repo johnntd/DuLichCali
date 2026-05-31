@@ -109,7 +109,7 @@ function runMobileBarberLandingTests(test) {
   });
 
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
-    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260531a');
+    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260531b');
     assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260530k');
     assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260530o');
     assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260530l');
@@ -306,7 +306,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/vendor/**"');
     assertContains(firebase, '"destination": "/mobile-barber/vendor.html"');
     assertContains(vendorHtml, 'id="mobileBarberVendorApp"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260531a');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260531b');
     assertContains(vendorHtml, 'id="mbVendorName"');
     assertContains(vendorHtml, 'id="mbVendorServices"');
     assertContains(vendorHtml, 'id="mbBookingTitle"');
@@ -582,9 +582,37 @@ function runMobileBarberLandingTests(test) {
     assertContains(functionsJs, "declineReason: 'time_conflict'", 'must record the decline reason');
     assertContains(functionsJs, 'conflictBookingId', 'must record which booking it conflicts with');
     assertNotContains(functionsJs, 'snap.ref.delete(', 'must NOT delete the customer booking');
-    // Idempotency + safety guards.
-    assertContains(functionsJs, "status === 'vendor_review'", 'must skip already-reviewed bookings (no loop)');
+    // vendor_review bookings must NOT be early-returned — a booking created directly
+    // as vendor_review (client guard / agent) must still be conflict-checked so a true
+    // time overlap auto-declines it instead of lingering as an actionable Upcoming card.
+    assertNotContains(functionsJs, 'skip — already vendor_review',
+      'must NOT early-return on vendor_review — it must be conflict-checked');
+    assertContains(functionsJs, 'vendor_review — still running owner-wide conflict check',
+      'vendor_review must proceed to the owner-wide conflict check');
     assertContains(functionsJs, 'MB_NON_BLOCKING', 'must ignore terminal/cancelled bookings');
+  });
+
+  test('Mobile Barber dashboard excludes conflict/declined bookings from Upcoming + seeds badge', function() {
+    // Screenshot regression: an overlapping booking showed as a second "Upcoming"
+    // card and the unread badge stayed empty. Lock the fixes so they cannot regress.
+    // 1) 'declined' (what the server conflict guard writes) is terminal/inactive.
+    assertContains(dashboardJs, "['cancelled', 'completed', 'rejected', 'declined', 'expired', 'no_show']",
+      'isInactiveStatus must treat server-written declined as terminal');
+    // 2) Upcoming excludes vendor_review (and every terminal status).
+    assertContains(dashboardJs, "if (isInactiveStatus(status) || status === 'vendor_review') return false;",
+      'isUpcomingBooking must exclude vendor_review + terminal statuses');
+    // 3) declined maps to the cancelled (red) bucket, not the default pending bucket.
+    assertContains(dashboardJs, "case 'declined':     return 'cancelled';",
+      'statusBucket must bucket declined as cancelled (red), not pending');
+    // 4) Badge seeded from existing actionable bookings on load (persists across refresh).
+    assertContains(dashboardJs, 'function seedInitialNotifications()',
+      'must seed the unread badge from existing actionable bookings');
+    assertContains(dashboardJs, 'seedInitialNotifications();',
+      'init must call seedInitialNotifications after the first render');
+    // 5) "DECLINED — TIME CONFLICT" label exists in all three languages.
+    assertContains(dashboardJs, "statusDeclinedTimeConflict: 'DECLINED — TIME CONFLICT'", 'en conflict label');
+    assertContains(dashboardJs, "statusDeclinedTimeConflict: 'ĐÃ TỪ CHỐI — TRÙNG GIỜ'", 'vi conflict label');
+    assertContains(dashboardJs, "statusDeclinedTimeConflict: 'RECHAZADA — CONFLICTO DE HORARIO'", 'es conflict label');
   });
 
   test('Mobile Barber dashboard route and assets are isolated', function() {
@@ -594,8 +622,8 @@ function runMobileBarberLandingTests(test) {
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260530k');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260530o');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-lightbox.js?v=20260530f');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260531c');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260531a');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260531d');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260531b');
     assertContains(dashboardHtml, 'firebase-auth-compat.js');
     assertContains(dashboardHtml, '/notifications.js?v=20260525a');
     assertContains(dashboardHtml, 'id="mbBookingAlertRegion"');

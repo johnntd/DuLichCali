@@ -226,6 +226,8 @@
         global._rideServiceAvailable = avail.length > 0;
         global._availableDrivers = avail;
         global._activeDrivers = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
+        // Re-gate landing-page call CTAs now that live active providers are known.
+        if (typeof global._patchLandingCallBtns === 'function') global._patchLandingCallBtns();
 
         if (avail.length) {
           renderRidesReady(el, avail[0]);
@@ -805,24 +807,30 @@
 
       // Patch call buttons with region-specific host phone (rides/tours only)
       if (cfg.category === 'rides' || cfg.category === 'tour') {
-        var _patchCallBtns = function (region) {
-          if (!region || !region.hosts || !region.hosts[0]) return;
-          var h = region.hosts[0];
-          var tel = 'tel:' + h.phone;
+        // Gate landing-page call CTAs on the LIVE active provider — never the
+        // hardcoded region host. When no active provider serves the region, hide
+        // every phone CTA entirely (owner directive: no phone if none active).
+        // Re-invoked by checkRides() once live availability resolves.
+        var _patchCallBtns = function () {
+          var list    = ((global._regionalDrivers || global._availableDrivers) || [])
+                          .filter(function (d) { return d && d.phone; });
+          var p       = list[0];
           var callEls = document.querySelectorAll('.app-bar__call, .lp-contact__call');
-          for (var i = 0; i < callEls.length; i++) callEls[i].href = tel;
-          var numEls = document.querySelectorAll('.lp-contact__num');
-          for (var j = 0; j < numEls.length; j++) {
-            numEls[j].href        = tel;
-            numEls[j].textContent = h.display;
-          }
-          // Also patch rides empty-state "Questions? Call" link
+          var numEls  = document.querySelectorAll('.lp-contact__num');
           var aiLinks = document.querySelectorAll('.lp-empty__ai[href^="tel:"]');
-          for (var k = 0; k < aiLinks.length; k++) {
-            aiLinks[k].href        = tel;
-            aiLinks[k].textContent = 'Questions? Call ' + h.display;
+          if (!p) {
+            for (var a = 0; a < callEls.length; a++) callEls[a].style.display = 'none';
+            for (var b = 0; b < numEls.length;  b++) numEls[b].style.display  = 'none';
+            for (var c = 0; c < aiLinks.length; c++) aiLinks[c].style.display = 'none';
+            return;
           }
+          var tel  = 'tel:' + String(p.phone).replace(/\D/g, '');
+          var disp = p.phoneDisplay || p.phone;
+          for (var i = 0; i < callEls.length; i++) { callEls[i].href = tel; callEls[i].style.display = ''; }
+          for (var j = 0; j < numEls.length;  j++) { numEls[j].href = tel; numEls[j].textContent = disp; numEls[j].style.display = ''; }
+          for (var k = 0; k < aiLinks.length; k++) { aiLinks[k].href = tel; aiLinks[k].textContent = 'Questions? Call ' + disp; aiLinks[k].style.display = ''; }
         };
+        global._patchLandingCallBtns = _patchCallBtns;
         if (global.DLCRegion && global.DLCRegion.current) {
           _patchCallBtns(global.DLCRegion.current);
         } else if (global.DLCRegion && global.DLCRegion.init) {

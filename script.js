@@ -67,6 +67,14 @@ async function selectDriverForTravelBooking(vehicleType, dateStr) {
     const candidates = snap.docs
       .map(d => Object.assign({ id: d.id }, d.data()))
       .filter(d => {
+        // Never assign an INACTIVE/unapproved/expired driver. Belt-and-suspenders
+        // for both schemas: only excludes when the field exists and fails.
+        if (d.adminStatus && d.adminStatus !== 'active') return false;
+        if (d.complianceStatus && d.complianceStatus !== 'approved') return false;
+        const today = new Date().toISOString().split('T')[0];
+        if (d.licExpiry && d.licExpiry < today) return false;
+        if (d.regExpiry && d.regExpiry < today) return false;
+        if (d.insExpiry && d.insExpiry < today) return false;
         // Support both old schema (d.vehicle.name) and new schema (d.vehicle_name)
         const vname = (d.vehicle_name || (d.vehicle && d.vehicle.name) || '').toLowerCase();
         return vname.includes(vtLower);
@@ -1421,27 +1429,75 @@ function renderTourChoiceGrid() {
   }).join('');
 }
 
+// ── Contact-phone gating ──────────────────────────────────────
+// POLICY (owner directive): never display a hardcoded or INACTIVE provider's
+// number. Show a phone ONLY when a live, active+approved provider serves this
+// region (window._regionalDrivers, set by checkRideServiceAvailability). When
+// none is active, EVERY phone surface is hidden entirely — no business-line
+// fallback. Each number shown is that active provider's own number.
+function _fmtPhone(raw) {
+  var s = String(raw || '').replace(/\D/g, '').slice(-10);
+  return s.length === 10 ? s.slice(0, 3) + '-' + s.slice(3, 6) + '-' + s.slice(6) : String(raw || '');
+}
+function refreshContactPhones() {
+  var list    = window._regionalDrivers || window._availableDrivers || [];
+  var drivers = list.filter(function (d) { return d && d.phone; });
+  var primary = drivers[0] || null;
+  var show    = !!primary;
+  var tel     = primary ? 'tel:' + String(primary.phone).replace(/\D/g, '') : '';
+  var disp    = primary ? (primary.phoneDisplay || _fmtPhone(primary.phone)) : '';
+  function setShow(el, on) { if (el) el.style.display = on ? '' : 'none'; }
+
+  // App-bar call button
+  var callBtn = document.getElementById('appBarCallBtn');
+  if (callBtn) { setShow(callBtn, show); if (show) callBtn.href = tel; }
+
+  // Prominent phone strip
+  var pstrip = document.getElementById('vendorPhoneStrip');
+  var link   = document.getElementById('vendorPhoneLink');
+  var num    = document.getElementById('vendorPhoneNum');
+  setShow(pstrip, show);
+  if (show) { if (link) link.href = tel; if (num) num.textContent = disp; }
+
+  // Bottom-nav call tab
+  var tab = document.getElementById('tabCall');
+  if (tab) { setShow(tab, show); if (show) tab.href = tel; }
+
+  // Expandable contact strip — one entry per live active provider
+  var cstrip = document.getElementById('contactStrip');
+  if (cstrip) {
+    if (show) {
+      cstrip.innerHTML = drivers.map(function (h, i) {
+        var hTel  = String(h.phone).replace(/\D/g, '');
+        var hDisp = h.phoneDisplay || _fmtPhone(h.phone);
+        var hName = h.fullName || h.name || '';
+        return (i > 0 ? '<div class="contact-strip__divider"></div>' : '') +
+          '<a href="tel:' + hTel + '" class="contact-strip__item">' +
+            '<span class="contact-strip__name">' + hName + '</span>' +
+            '<span class="contact-strip__num">' + hDisp + '</span>' +
+          '</a>';
+      }).join('');
+      cstrip.style.display = '';
+    } else { cstrip.innerHTML = ''; cstrip.style.display = 'none'; }
+  }
+
+  // Booking-form "Or call us" alt link
+  var callAlt = document.getElementById('submitCallAlt');
+  if (callAlt) { setShow(callAlt, show); if (show) { callAlt.href = tel; callAlt.textContent = 'Or call us: ' + disp; } }
+}
+if (typeof window !== 'undefined') window.refreshContactPhones = refreshContactPhones;
+
 // ── Region UI ─────────────────────────────────────────────────
 /**
  * Renders all region-dependent UI elements from a single region config.
  * Called by DLCRegion.init() on load and DLCRegion.setRegion() on manual change.
  */
 function updateRegionUI(region) {
-  // 1. App bar call button → primary host
-  const callBtn = document.getElementById('appBarCallBtn');
-  if (callBtn) {
-    callBtn.href = `tel:${region.hosts[0].phone}`;
-  }
-
-  // 1b. Vendor phone strip (prominent phone on home screen)
-  const phoneLink = document.getElementById('vendorPhoneLink');
-  const phoneNum  = document.getElementById('vendorPhoneNum');
-  if (phoneLink) phoneLink.href = `tel:${region.hosts[0].phone}`;
-  if (phoneNum)  phoneNum.textContent = region.hosts[0].display;
-
-  // 1c. Bottom nav call tab
-  const callTab = document.getElementById('tabCall');
-  if (callTab) callTab.href = `tel:${region.hosts[0].phone}`;
+  // 1. Contact phones (app-bar call, prominent phone strip, bottom-nav call tab,
+  //    contact strip, booking call-alt) are gated on LIVE active+approved
+  //    providers — NEVER the hardcoded region host. Hidden entirely when no
+  //    active provider serves the region. Re-runs after availability resolves.
+  refreshContactPhones();
 
   // 2. Region tag strip
   const regionTag = document.getElementById('regionTag');
@@ -1461,24 +1517,9 @@ function updateRegionUI(region) {
     regionTag.hidden = false;
   }
 
-  // 3. Contact strip → all hosts for this region
-  const strip = document.getElementById('contactStrip');
-  if (strip) {
-    strip.innerHTML = region.hosts.map((h, i) =>
-      (i > 0 ? '<div class="contact-strip__divider"></div>' : '') +
-      `<a href="tel:${h.phone}" class="contact-strip__item">` +
-        `<span class="contact-strip__name">${h.name}</span>` +
-        `<span class="contact-strip__num">${h.display}</span>` +
-      `</a>`
-    ).join('');
-  }
-
-  // 4. Booking form call-alt link → primary host
-  const callAlt = document.getElementById('submitCallAlt');
-  if (callAlt) {
-    callAlt.href        = `tel:${region.hosts[0].phone}`;
-    callAlt.textContent = `Or call us: ${region.hosts[0].display}`;
-  }
+  // 3 & 4. Contact strip + booking call-alt are rendered from live active
+  //         providers inside refreshContactPhones() (called above). Region
+  //         hosts are NEVER used for any phone surface.
 
   // 5. Airport chips + booking form dropdown → region airports
   renderAirportChips();
@@ -1598,6 +1639,10 @@ async function checkRideServiceAvailability(regionId) {
       });
     }
     updateRideServiceCards(hasAvailable);
+    // Reveal/populate contact phones from the now-known live active providers.
+    // (On the catch/fail-open path below we deliberately do NOT reveal a phone —
+    //  we never show a number we couldn't verify against live status.)
+    if (typeof refreshContactPhones === 'function') refreshContactPhones();
     return hasAvailable;
   } catch (_) {
     window._rideServiceAvailable = true; // fail open

@@ -96,9 +96,9 @@
     {
       id: 'luxurious-nails', name: 'Luxurious Nails & Spa',
       category: 'nails', region: 'Bay Area', city: 'San Jose',
-      contact: 'Dung Pham', phone: '408-859-6718',
+      contact: 'Du Lịch Cali', phone: '',
       hours: 'T2-6: 9am-7pm · T7: 9am-6pm · CN: 10am-5pm',
-      bookingNote: 'Đặt lịch: 408-859-6718.',
+      bookingNote: 'Đặt lịch qua ứng dụng Du Lịch Cali.',
       services: [
         { keywords: ['manicure','làm móng tay'],          name: 'Manicure',         priceMin: 20 },
         { keywords: ['pedicure','làm móng chân'],          name: 'Pedicure',         priceMin: 30 },
@@ -188,11 +188,22 @@
   // Always read from DLCRegion.current at call time so replies reflect
   // the live region without needing to restart the chat session.
 
+  // Phone/host shown in AI replies come from the LIVE active+approved provider
+  // (window._regionalDrivers/_availableDrivers, set by checkRideServiceAvailability).
+  // Never the hardcoded region host — that could expose an INACTIVE driver/vendor.
+  // When no active provider exists, fall back to the company booking line / name
+  // (408-916-3439 / "Du Lịch Cali") — never an individual's hardcoded number.
+  function _activeProvider() {
+    var list = (window._regionalDrivers || window._availableDrivers || []);
+    return list.filter(function (d) { return d && d.phone; })[0] || null;
+  }
   function regionPhone() {
-    return window.DLCRegion ? DLCRegion.current.hosts[0].display : '408-916-3439';
+    var p = _activeProvider();
+    return p ? (p.phoneDisplay || p.phone) : '408-916-3439';
   }
   function regionHostName() {
-    return window.DLCRegion ? DLCRegion.current.hosts[0].name : 'Duy Hoa';
+    var p = _activeProvider();
+    return p ? (p.fullName || p.name || 'Du Lịch Cali') : 'Du Lịch Cali';
   }
   // Resolve region from query text; falls back to current UI region.
   function resolveRegion(text) {
@@ -751,7 +762,7 @@
     const phone     = extractPhone(text);
 
     if (!bookingId && !phone) {
-      return 'Để kiểm tra đơn đặt chỗ, vui lòng cho tôi biết:\n• **Số điện thoại** bạn đã dùng khi đặt chỗ\n• Hoặc **mã đặt chỗ** (ví dụ: DLC-ABC123)\n\nVí dụ: "Kiểm tra đơn 408-859-6718"';
+      return 'Để kiểm tra đơn đặt chỗ, vui lòng cho tôi biết:\n• **Số điện thoại** bạn đã dùng khi đặt chỗ\n• Hoặc **mã đặt chỗ** (ví dụ: DLC-ABC123)\n\nVí dụ: "Kiểm tra đơn 408-555-0123"';
     }
 
     try {

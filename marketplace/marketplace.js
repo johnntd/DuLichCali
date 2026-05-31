@@ -660,6 +660,8 @@
     // append them to the grid if any are found.
     if (window.VendorDataService) {
       VendorDataService.fetchVendors(categoryId, _getRegionName()).then(function (fullList) {
+        // Never render an INACTIVE vendor (blocked/deactivated/archived/pending).
+        fullList = (fullList || []).filter(function (v) { var s = v && v.adminStatus; return !s || s === 'active'; });
         if (fullList.length <= bizList.length) return; // nothing new
         var grid = _container.querySelector('.mp-grid');
         if (!grid) return;
@@ -771,7 +773,9 @@
             _t('Loading...','Đang tải...','Cargando...') +
           '</p></div>';
         VendorDataService.fetchVendor(businessId).then(function (fbBiz) {
-          if (!fbBiz) { _renderDetailNotFound(); return; }
+          // An INACTIVE vendor's detail page must not render — treat as not found.
+          var s = fbBiz && fbBiz.adminStatus;
+          if (!fbBiz || (s && s !== 'active')) { _renderDetailNotFound(); return; }
           _dispatchDetail(fbBiz);
         });
         return;
@@ -5102,7 +5106,10 @@
     }
 
     if (window.VendorDataService) {
-      VendorDataService.fetchVendors(_categoryId, region).then(_applyList);
+      VendorDataService.fetchVendors(_categoryId, region).then(function (list) {
+        // Never list an INACTIVE vendor.
+        _applyList((list || []).filter(function (v) { var s = v && v.adminStatus; return !s || s === 'active'; }));
+      });
     } else {
       _applyList(MARKETPLACE.getBusinesses(_categoryId, region));
     }

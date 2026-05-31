@@ -208,11 +208,20 @@ window.DLCRegion = {
     return null;
   },
 
-  /** Primary phone display string for current region (first host). */
-  get phone() { return this.current.hosts[0].display; },
+  /** Live active-provider phone for current region — NEVER the hardcoded host
+   *  (which could be an inactive driver). Falls back to the company line. */
+  get phone() {
+    var list = (typeof window !== 'undefined' && (window._regionalDrivers || window._availableDrivers)) || [];
+    var p = list.filter(function (d) { return d && d.phone; })[0];
+    return p ? (p.phoneDisplay || p.phone) : '408-916-3439';
+  },
 
-  /** Primary host name for current region (first host). */
-  get hostName() { return this.current.hosts[0].name; },
+  /** Live active-provider name for current region — NEVER the hardcoded host. */
+  get hostName() {
+    var list = (typeof window !== 'undefined' && (window._regionalDrivers || window._availableDrivers)) || [];
+    var p = list.filter(function (d) { return d && d.phone; })[0];
+    return p ? (p.fullName || p.name || 'Du Lịch Cali') : 'Du Lịch Cali';
+  },
 
   /**
    * Build AI system prompt context block.
@@ -220,20 +229,18 @@ window.DLCRegion = {
    * AI can answer cross-region questions correctly.
    */
   buildAIRegionContext() {
-    const active    = this.current;
-    const hostsStr  = active.hosts.map(h => `  ${h.name}: ${h.display}`).join('\n');
-
+    const active = this.current;
+    // Host names/phones are intentionally NOT injected. Provider identity + phone
+    // are LIVE, status-gated values — hardcoding them here would let the AI surface
+    // an INACTIVE driver/vendor. Direct customers to the in-app booking tab or the
+    // main company line; the receptionist resolves the live active number at runtime.
     const allProfiles = Object.values(_DLC_REGIONS).map(r => {
-      const hList = r.hosts.map(h => `${h.name} (${h.display})`).join(', ');
-      return `  ${r.name}:\n    Hosts: ${hList}\n    Vehicle: ${r.vehicle.name} (max ${r.vehicle.seats} seats)\n    Airports: ${r.airports.join(', ')}\n    Coverage: ${r.serviceNoteEn}`;
+      return `  ${r.name}:\n    Vehicle: ${r.vehicle.name} (max ${r.vehicle.seats} seats)\n    Airports: ${r.airports.join(', ')}\n    Coverage: ${r.serviceNoteEn}`;
     }).join('\n\n');
 
     return `
 ACTIVE SERVICE REGION: ${active.name} (${active.nameVi})
 ${active.serviceNoteEn}
-
-HOSTS FOR THIS REGION:
-${hostsStr}
 
 VEHICLE: ${active.vehicle.name} — up to ${active.vehicle.seats} seats
 AIRPORTS SERVED: ${active.airports.join(', ')}
@@ -242,11 +249,10 @@ ALL REGIONAL SERVICE PROFILES (use for cross-region questions):
 ${allProfiles}
 
 REGIONAL RULES FOR AI:
-- Bay Area hosts: Dung Pham (408-859-6718) — driver/service contact
 - Bay Area vehicle: Toyota Sienna, 8 seats max
-- Orange County hosts: Du Lịch Cali (408-916-3439)
 - Orange County vehicles: Tesla Model Y (1-3 pax) or Mercedes Van (4-12 pax)
 - Main booking line: Du Lịch Cali 408-916-3439 (serves both regions)
+- NEVER name a specific driver/host or give a personal phone number — direct customers to the in-app "Đặt chỗ" booking tab or the main booking line.
 - If user asks capacity for Bay Area, answer: Toyota Sienna, up to 8 seats
 - If region is unclear, ask: "Bạn đang ở vùng nào — Bay Area hay Orange County?"`;
   },

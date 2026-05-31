@@ -265,6 +265,8 @@
     var candidates = [];
     for (var i = 0; i < allVendors.length; i++) {
       var v = allVendors[i];
+      // Never route a booking to an INACTIVE vendor.
+      if (v && (v.active === false || (v.adminStatus && v.adminStatus !== 'active'))) continue;
       if (options.excludeVendorId && v && v.id === options.excludeVendorId) continue;
       if (isWithinServiceArea(v, address)) candidates.push(v);
     }

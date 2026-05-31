@@ -169,19 +169,21 @@ async function anonCreate(idToken, docId, booking) {
   const dupCount = afterDup.docs.filter(d => d.id === ID1).length;
   check('Exactly one document exists for the duplicate id', dupCount === 1, 'count=' + dupCount);
 
-  // ── PHASE 4 — overlapping booking elevated by live Cloud Function ────────────
-  console.log('\n── Phase 4: overlapping booking → server conflict guard ──');
+  // ── PHASE 4 — overlapping booking AUTO-DECLINED by live Cloud Function ────────
+  console.log('\n── Phase 4: overlapping booking → server auto-decline (no double-booking) ──');
   const c2 = await anonCreate(idToken, ID2, michaelBooking(ID2, '10:20', '11:00'));
   check('Overlapping booking created (pending) for conflict test', c2.status === 200, 'HTTP ' + c2.status);
-  let elevated = null;
+  let declined = null;
   for (let i = 0; i < 12 && c2.status === 200; i++) {
     await sleep(2500);
     const d2 = await db.collection(COLLECTION).doc(ID2).get();
     const s = d2.exists ? d2.data().status : null;
-    if (s === 'vendor_review') { elevated = d2.data(); break; }
+    if (s === 'declined') { declined = d2.data(); break; }
   }
-  check('onMobileBarberBookingCreated elevated overlap to vendor_review', !!elevated,
-    elevated ? ('reviewReason=' + (elevated.reviewReason || '')) : 'still not vendor_review after ~30s');
+  check('onMobileBarberBookingCreated auto-declined the later overlap (no double-booking)', !!declined,
+    declined ? ('declineReason=' + (declined.declineReason || '')) : 'still not declined after ~30s');
+  check('decline reason is time_conflict', !!declined && declined.declineReason === 'time_conflict',
+    declined ? (declined.declineReason || 'n/a') : 'n/a');
 
   // ── PHASE 5 — cleanup ───────────────────────────────────────────────────────
   console.log('\n── Phase 5: cleanup (delete all SMOKE_TEST_ docs) ──');

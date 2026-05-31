@@ -168,6 +168,18 @@
       var P = root.firebase.auth.Auth.Persistence.LOCAL;
       Promise.resolve(auth.setPersistence ? auth.setPersistence(P) : null)
         .then(function () { return auth.signInWithEmailAndPassword(email, pass); })
+        .then(function (cred) {
+          // The Home Screen app launches start_url with no ?id=, so remember which
+          // vendor this account maps to (vendorUsers/{uid}) — the gate resumes it.
+          var uid = cred && cred.user && cred.user.uid;
+          if (uid && root.firebase.firestore) {
+            return root.firebase.firestore().collection('vendorUsers').doc(uid).get().then(function (d) {
+              var data = (d && d.exists) ? d.data() : null;
+              var vid = data && (data.vendorId || (Array.isArray(data.vendorIds) && data.vendorIds[0]));
+              if (vid) { try { root.localStorage.setItem('dlc_mb_vendor_id', vid); } catch (e) {} }
+            }).catch(function () {});
+          }
+        })
         .then(function () { root.location.reload(); })
         .catch(function () {
           btn.disabled = false; errEl.style.display = 'block';

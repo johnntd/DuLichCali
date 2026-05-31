@@ -3261,6 +3261,112 @@ exports.onMobileBarberBookingCreated = onDocumentCreated(
   }
 );
 
+// ── createMobileBarberBookingGuarded (onCall) ────────────────────────────────
+// Authoritative PRE-WRITE conflict guard for the CUSTOMER booking flow. The public
+// frontend signs in anonymously and (under Firestore rules) cannot run the
+// owner-scoped conflict query itself, so it used to write the booking directly and
+// only get auto-declined AFTER the fact — the customer saw "success" for a booking
+// that overlapped another. This callable runs the SAME owner-wide time-overlap
+// check the trigger uses, BEFORE writing, and REFUSES to create an overlapping
+// booking (returning suggested free times instead). Every customer booking path
+// (manual / AI chat / voice / AI-style / promo) routes through it, so a second
+// booking for a taken slot is blocked before the success screen. The onCreate
+// trigger above stays as a race-safety net for the rare simultaneous double-write.
+function mbFmtHHMM(ms) {
+  const d = new Date(ms);
+  return String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0');
+}
+function mbSuggestAlternativeTimes(win, allBusy) {
+  // Step forward from the requested start by the service's duration+buffer and
+  // return up to 3 same-day start times that overlap NO existing blocking booking.
+  const stepMin = (MB_SVC_DUR[win.svc] || 45) + (MB_SVC_BUFFER[win.svc] || 15);
+  const durMs = win.end - win.start; // already includes the service buffer
+  const baseDay = new Date(win.start).getUTCDate();
+  const out = [];
+  for (let k = 1; k <= 24 && out.length < 3; k++) {
+    const s = win.start + k * stepMin * 60000;
+    if (new Date(s).getUTCDate() !== baseDay) break; // same calendar day only
+    const cand = { start: s, end: s + durMs };
+    const clash = allBusy.some((b) => cand.start < b.end && b.start < cand.end);
+    if (!clash) out.push(mbFmtHHMM(s));
+  }
+  return out;
+}
+exports.createMobileBarberBookingGuarded = onCall(
+  { region: 'us-central1', cors: true, timeoutSeconds: 30 },
+  async (request) => {
+    const booking = (request.data && request.data.booking) || null;
+    if (!booking || typeof booking !== 'object') {
+      return { ok: false, code: 'invalid_request', reason: 'missing booking payload' };
+    }
+    const bookingId = String(booking.id || booking.bookingId || '').trim();
+    const ownerId = String(booking.ownerId || '').trim();
+    const vendorId = String(booking.vendorId || '').trim();
+    if (!bookingId) return { ok: false, code: 'invalid_request', reason: 'missing booking id' };
+    if (!ownerId)   return { ok: false, code: 'invalid_request', reason: 'missing ownerId' };
+    if (!vendorId)  return { ok: false, code: 'invalid_request', reason: 'missing vendorId' };
+
+    const win = mbBookingWindow(booking, 'mobileBarberBookings');
+    if (!win) return { ok: false, code: 'invalid_request', reason: 'invalid date/time' };
+
+    const ref = db.collection('mobileBarberBookings').doc(bookingId);
+
+    // Idempotency: the same submission (deterministic id) retried is NOT a double
+    // booking — return the existing doc as success (unless it is terminal, in which
+    // case the slot is free to re-book).
+    const existingSnap = await ref.get();
+    if (existingSnap.exists) {
+      const ex = existingSnap.data() || {};
+      if (!MB_NON_BLOCKING.has(String(ex.status || '').toLowerCase())) {
+        console.log('[booking-guard-callable]', JSON.stringify({ bookingId, vendorId, ownerId, result: 'idempotent' }));
+        return { ok: true, idempotent: true, booking: Object.assign({ id: bookingId }, ex) };
+      }
+    }
+
+    // Owner-wide blocking windows (Admin SDK bypasses rules). Collect ALL of them so
+    // suggestions are accurate, then derive the conflicts that overlap the request.
+    const cols = ['mobileBarberBookings', 'bookings', 'travel_bookings'];
+    const allBusy = [];
+    for (const col of cols) {
+      let qs;
+      try { qs = await db.collection(col).where('ownerId', '==', ownerId).limit(250).get(); }
+      catch (e) { continue; }
+      qs.forEach((d) => {
+        if (col === 'mobileBarberBookings' && d.id === bookingId) return; // exclude self
+        const other = d.data() || {};
+        if (MB_NON_BLOCKING.has(String(other.status || '').toLowerCase())) return;
+        const ow = mbBookingWindow(other, col);
+        if (ow) allBusy.push({ collection: col, bookingId: d.id, status: String(other.status || ''), start: ow.start, end: ow.end });
+      });
+    }
+    const conflicts = allBusy.filter((b) => mbOverlaps(win, b));
+
+    console.log('[booking-guard-callable]', JSON.stringify({
+      bookingId, vendorId, ownerId, requestedStart: win.start, requestedEnd: win.end,
+      busy: allBusy.length, conflictsFound: conflicts.length, result: conflicts.length ? 'blocked' : 'clear',
+    }));
+
+    if (conflicts.length) {
+      console.log('[booking-write-blocked]', JSON.stringify({
+        bookingId, reason: 'time_conflict', via: 'callable',
+        conflicts: conflicts.slice(0, 5).map((c) => ({ bookingId: c.bookingId, collection: c.collection, status: c.status })),
+      }));
+      return {
+        ok: false, code: 'time_conflict', reason: 'slot_unavailable',
+        conflicts: conflicts.slice(0, 5).map((c) => ({ bookingId: c.bookingId, status: c.status })),
+        suggestions: mbSuggestAlternativeTimes(win, allBusy),
+      };
+    }
+
+    // Clear — write the booking exactly as validated (deterministic id = idempotent).
+    await ref.set(Object.assign({}, booking, {
+      ownerConflictCheckedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }));
+    console.log('[booking-write-guarded]', JSON.stringify({ bookingId, vendorId, ownerId, status: booking.status }));
+    return { ok: true, booking: Object.assign({ id: bookingId }, booking) };
+  }
+);
+
 // ── onDispatchQueue ──────────────────────────────────────────────────────────
 // Triggered when a new dispatchQueue doc is created (booking creation or rejection retry).
 exports.onDispatchQueue = onDocumentCreated(

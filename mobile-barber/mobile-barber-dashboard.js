@@ -1117,8 +1117,15 @@
   // Notifications/unread badge are NOT owner-only: every vendor sees their own
   // count, scoped to ownerId (multi-business owner) or vendorId (single vendor),
   // so Tim and Michael never see each other's counts.
-  function notifyScopeId() { return state.ownerId || state.vendorId || ''; }
-  function notificationsActive() { return !!notifyScopeId(); }
+  function notifyScopeId() {
+    return state.ownerId || state.vendorId || (state.vendor && state.vendor.id) || '';
+  }
+  // The bell + unread badge belong to the loaded vendor portal. Gate on "is the
+  // dashboard loaded for a vendor" (NOT on a non-empty scope id), so a momentary
+  // empty ownerId/vendorId during PWA resume can never hide the badge — the popup
+  // toast was always firing while the badge silently no-op'd because this returned
+  // false. Storage still scopes by notifyScopeId() so vendors stay isolated.
+  function notificationsActive() { return !!(notifyScopeId() || state.vendor); }
 
   // Hydrate state.vendor from Firestore so the dashboard reflects the portal's
   // true persisted state across devices. Firestore is the source of truth for
@@ -1462,27 +1469,42 @@
     var list = document.getElementById('mbNotifList');
     var tabs = document.getElementById('mbNotifTabs');
     var close = document.querySelector('[data-action="closeNotifDrawer"] .mb-notif-drawer__close') || document.querySelector('.mb-notif-drawer__close');
+    var active = notificationsActive();
     if (bell) {
-      bell.hidden = !notificationsActive();
+      bell.hidden = !active;
       bell.setAttribute('aria-label', t('notifBellAria'));
     }
     if (close) close.setAttribute('aria-label', t('notifCloseDrawer'));
-    if (!notificationsActive()) {
-      if (drawer) drawer.hidden = true;
-      return;
-    }
+    // Compute + render the badge UNCONDITIONALLY (before any early return). The
+    // previous early-return on inactive scope left the badge stuck at its initial
+    // hidden=0 state, so the popup appeared but the count never showed.
     var unread = (state.ownerNotifications || []).filter(function(item) { return !item.read; }).length;
     if (badge) {
       badge.textContent = String(unread > 99 ? '99+' : unread);
-      badge.hidden = unread === 0;
+      badge.hidden = !(active && unread > 0);
     }
     try {
-      if (root.console && root.console.info) root.console.info('[notification-count]', JSON.stringify({
-        scopeId: notifyScopeId(), ownerId: state.ownerId || '', vendorId: state.vendorId || '',
-        totalNotifications: (state.ownerNotifications || []).length, unreadCount: unread,
-        renderedBadgeCount: badge ? badge.textContent : ''
-      }));
+      if (root.console && root.console.info) {
+        var rect = badge && badge.getBoundingClientRect ? badge.getBoundingClientRect() : null;
+        var cs = (badge && root.getComputedStyle) ? root.getComputedStyle(badge) : null;
+        root.console.info('[badge-render]', JSON.stringify({
+          ownerId: state.ownerId || '', vendorId: state.vendorId || '', scopeId: notifyScopeId(),
+          unreadCount: unread, badgeElementFound: !!badge, bellHidden: bell ? !!bell.hidden : null,
+          isMobile: (root.innerWidth || 0) > 0 ? (root.innerWidth < 768) : null,
+          visible: !!(rect && rect.width > 0 && rect.height > 0),
+          display: cs ? cs.display : '', opacity: cs ? cs.opacity : ''
+        }));
+        root.console.info('[notification-count]', JSON.stringify({
+          scopeId: notifyScopeId(), ownerId: state.ownerId || '', vendorId: state.vendorId || '',
+          totalNotifications: (state.ownerNotifications || []).length, unreadCount: unread,
+          renderedBadgeCount: badge ? badge.textContent : ''
+        }));
+      }
     } catch (e) {}
+    if (!active) {
+      if (drawer) drawer.hidden = true;
+      return;
+    }
     if (drawer) {
       drawer.hidden = !state.notificationDrawerOpen;
       drawer.classList.toggle('mb-notif-drawer--open', !!state.notificationDrawerOpen);

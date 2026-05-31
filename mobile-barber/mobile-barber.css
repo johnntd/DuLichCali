@@ -2589,7 +2589,13 @@
   font-weight: 800;
   line-height: 1;
   border: 2px solid #06111f;
+  z-index: 2;
 }
+
+/* The `display: inline-flex` above out-specifies the UA `[hidden]{display:none}`
+   rule, so without this the badge would always render (even at 0). Restore the
+   hidden semantics so the badge shows ONLY when there is an unread count. */
+.mb-notif-badge[hidden] { display: none; }
 
 .mb-dashboard-vendor-card {
   padding: .9rem 1rem;

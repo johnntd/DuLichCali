@@ -201,6 +201,7 @@
       manualBookingOutsideHours: 'That time is outside the barber’s hours.',
       manualBookingCutoff: 'Too close to your time. Please pick a later slot.',
       manualBookingOverlap: 'That slot was just taken. Please pick another.',
+      bookingConflictNextTimes: 'That time is no longer available. Next available: {times}.',
       manualBookingGeneric: 'Could not send the booking. Please try again.',
       manualBookingHelpLabel: 'Need help?',
       aiPreviewDisclosure: 'Sample AI-generated style preview. Real barber portfolio coming soon.',
@@ -432,6 +433,7 @@
       manualBookingOutsideHours: 'Giờ này nằm ngoài khung làm việc của thợ.',
       manualBookingCutoff: 'Quá gần với giờ bạn chọn. Vui lòng chọn giờ trễ hơn.',
       manualBookingOverlap: 'Khung giờ này vừa có người đặt. Vui lòng chọn giờ khác.',
+      bookingConflictNextTimes: 'Khung giờ đó không còn trống. Giờ trống kế tiếp: {times}.',
       manualBookingGeneric: 'Không gửi được lịch hẹn. Vui lòng thử lại.',
       manualBookingHelpLabel: 'Cần trợ giúp?',
       aiPreviewDisclosure: 'Ảnh mẫu tạo bằng AI. Portfolio thật của thợ sẽ có sau.',
@@ -663,6 +665,7 @@
       manualBookingOutsideHours: 'Esa hora está fuera del horario del barbero.',
       manualBookingCutoff: 'Demasiado cerca de la hora. Elija una más tarde.',
       manualBookingOverlap: 'Ese horario ya fue tomado. Elija otro.',
+      bookingConflictNextTimes: 'Ese horario ya no está disponible. Próximos disponibles: {times}.',
       manualBookingGeneric: 'No se pudo enviar la solicitud. Intente de nuevo.',
       manualBookingHelpLabel: '¿Necesita ayuda?',
       aiPreviewDisclosure: 'Vista previa de estilo generada por AI. Portafolio real del barbero próximamente.',
@@ -1267,7 +1270,11 @@
             .catch(function(error) {
               if (root.console) root.console.error('[mobile-barber-agent] booking save FAILED', error);
               result.booking = null;
-              result.response = t('saveFailedRetry') || 'Could not save the booking. Please try again or contact the barber.';
+              // A time conflict is not a failure to retry blindly — tell the customer
+              // the slot is taken and offer the next available times.
+              result.response = (error && error.bookingConflict)
+                ? bookingConflictMessage(error.suggestions)
+                : (t('saveFailedRetry') || 'Could not save the booking. Please try again or contact the barber.');
               return result;
             });
         }
@@ -3010,7 +3017,9 @@
       .catch(function(error) {
         state.manualBooking.submitting = false;
         var rawMessage = (error && error.message) || 'submit_failed';
-        var human = manualBookingErrorMessage(rawMessage);
+        var human = (error && error.bookingConflict)
+          ? bookingConflictMessage(error.suggestions)
+          : manualBookingErrorMessage(rawMessage);
         state.manualBooking.lastSubmissionError = human;
         if (statusEl) {
           statusEl.textContent = human;
@@ -3019,6 +3028,23 @@
         if (submitBtn) submitBtn.disabled = false;
         if (root.console) root.console.error('[mobile-barber] manual booking failed', rawMessage);
       });
+  }
+
+  // Format a "HH:MM" (24h) slot as a friendly 12-hour label for suggestions.
+  function formatSlotLabel(hhmm) {
+    var m = /^(\d{1,2}):(\d{2})$/.exec(String(hhmm || ''));
+    if (!m) return String(hhmm || '');
+    var h = +m[1], ap = h >= 12 ? 'PM' : 'AM', h12 = (h % 12) || 12;
+    return h12 + ':' + m[2] + ' ' + ap;
+  }
+
+  // Build the pre-write conflict message ("that time is no longer available" +
+  // alternate times) shown when the server guard blocks an overlapping booking.
+  function bookingConflictMessage(suggestions) {
+    var times = (suggestions || []).map(formatSlotLabel).filter(Boolean);
+    if (!times.length) return t('manualBookingOverlap') || 'That slot was just taken. Please pick another.';
+    var tpl = t('bookingConflictNextTimes') || 'That time is no longer available. Next available: {times}.';
+    return tpl.replace('{times}', times.join(', '));
   }
 
   function manualBookingErrorMessage(key) {
@@ -3309,7 +3335,9 @@
       .catch(function(error) {
         state.aiPreview.submitting = false;
         var rawMessage = (error && error.message) || 'submit_failed';
-        var human = inlineBookingErrorMessage(rawMessage);
+        var human = (error && error.bookingConflict)
+          ? bookingConflictMessage(error.suggestions)
+          : inlineBookingErrorMessage(rawMessage);
         state.aiPreview.lastSubmissionError = human;
         if (statusEl) {
           statusEl.textContent = human;

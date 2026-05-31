@@ -1454,6 +1454,69 @@
     } catch (e) { return true; } // fail-safe: treat as guest → plain create (rules allow it)
   }
 
+  function canUseFunctions() {
+    try { return !!(root.firebase && typeof root.firebase.functions === 'function'); }
+    catch (e) { return false; }
+  }
+
+  // A structured rejection the booking UI inspects (err.bookingConflict) so it can
+  // show "that time is no longer available" + alternate times instead of "success".
+  function bookingConflictError(data) {
+    var err = new Error('booking_time_conflict');
+    err.bookingConflict = true;
+    err.conflictCode = (data && data.code) || 'time_conflict';
+    err.conflicts = (data && data.conflicts) || [];
+    err.suggestions = (data && data.suggestions) || [];
+    return err;
+  }
+
+  // Customer booking create through the server guard. Returns the saved booking on
+  // success, REJECTS with a bookingConflict error when the slot is taken (never
+  // silently writes an overlap), and only falls back to a direct write if the
+  // callable itself is unreachable (offline / functions down) — the onCreate trigger
+  // remains the post-write safety net in that degraded case.
+  // Structured rejection for "the server guard could not run / did not authorize this
+  // booking" (callable unreachable, functions SDK missing, or a non-conflict guard
+  // refusal). The UI treats this as a retry-able FAILURE, never a success. The customer
+  // (anonymous) flow cannot run the owner-scoped conflict query under Firestore rules,
+  // so this callable is the ONLY safe gate — writing directly and showing "success"
+  // when it cannot run is exactly how an overlapping booking reached a "confirmed"
+  // screen. NO SUCCESS WITHOUT A GUARDED WRITE.
+  function bookingUnavailableError(data) {
+    var err = new Error('booking_guard_unavailable');
+    err.bookingUnavailable = true;
+    err.guardCode = (data && data.code) || 'guard_unavailable';
+    return err;
+  }
+  function guardedCreateViaCallable(booking, options) {
+    options = options || {};
+    var fn = null;
+    try { fn = root.firebase.functions().httpsCallable('createMobileBarberBookingGuarded'); }
+    catch (e) { fn = null; }
+    // No callable → the conflict guard cannot run → refuse rather than write blindly.
+    if (!fn) return Promise.reject(bookingUnavailableError());
+    return fn({ booking: booking }).then(function(res) {
+      var data = (res && res.data) || {};
+      if (data.ok === false) {
+        // A real time conflict shows the customer the "slot taken + alternate times" message.
+        if (data.code === 'time_conflict') return Promise.reject(bookingConflictError(data));
+        // Any other guard refusal (malformed payload, missing owner, etc.): the guard did
+        // NOT authorize this booking, so we must not silently write it and report success.
+        return Promise.reject(bookingUnavailableError(data));
+      }
+      var saved = data.booking || booking;
+      safeLog('[booking-write]', { bookingId: saved.id, vendorId: saved.vendorId, status: saved.status, source: 'callable', idempotent: !!data.idempotent });
+      return { saved: true, source: 'callable', method: 'callable', booking: saved, idempotent: !!data.idempotent };
+    }).catch(function(error) {
+      if (error && error.bookingConflict) return Promise.reject(error);    // slot taken → conflict UI
+      if (error && error.bookingUnavailable) return Promise.reject(error); // guard refused → retry UI
+      // Callable unreachable (network down / functions error). The guard could not run, so
+      // we CANNOT confirm the slot is free. Refuse rather than write an unguarded booking
+      // that flashes "success" and is then auto-declined by the onCreate trigger.
+      return Promise.reject(bookingUnavailableError());
+    });
+  }
+
   function persistBooking(booking, options) {
     options = options || {};
     var guard = root.BookingGuard;
@@ -1496,6 +1559,13 @@
         });
     }
     if (canUseFirestore()) {
+      // Customer path (anonymous writers can't run the owner-scoped guard query under
+      // Firestore rules). Route through the server callable that runs the conflict
+      // guard BEFORE the write, so a second booking for a taken slot is blocked at
+      // submission instead of being auto-declined after a "success" screen.
+      if (canUseFunctions() && options.skipGuardedCallable !== true) {
+        return guardedCreateViaCallable(booking, options);
+      }
       return root.firebase.firestore().collection(DATA.COLLECTIONS.bookings).doc(booking.id).set(booking)
         .then(function() {
           safeLog('[booking-write]', { bookingId: booking.id, vendorId: booking.vendorId, status: booking.status, source: 'firestore' });

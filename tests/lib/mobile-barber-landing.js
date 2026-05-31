@@ -109,14 +109,14 @@ function runMobileBarberLandingTests(test) {
   });
 
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
-    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260531b');
+    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260531f');
     assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260530k');
-    assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260530o');
+    assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260531f');
     assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260530l');
     assertContains(html, '/mobile-barber/mobile-barber-voice.js?v=20260530m');
     assertContains(html, '/mobile-barber/mobile-barber-icons.js?v=20260530g');
     assertContains(html, '/mobile-barber/mobile-barber-lightbox.js?v=20260530f');
-    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260530m');
+    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260531f');
   });
 
   test('Mobile Barber pages load Firebase before local runtime scripts', function() {
@@ -306,7 +306,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/vendor/**"');
     assertContains(firebase, '"destination": "/mobile-barber/vendor.html"');
     assertContains(vendorHtml, 'id="mobileBarberVendorApp"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260531b');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260531f');
     assertContains(vendorHtml, 'id="mbVendorName"');
     assertContains(vendorHtml, 'id="mbVendorServices"');
     assertContains(vendorHtml, 'id="mbBookingTitle"');
@@ -314,7 +314,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(vendorHtml, 'id="mbSelectedServiceSummary"');
     assertContains(vendorHtml, 'class="mb-mobile-sticky-cta"');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260530k');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260530o');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260531f');
     assertContains(vendorHtml, '/ai-engine.js?v=20260530m');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-agent.js?v=20260530l');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-voice.js?v=20260530m');
@@ -592,6 +592,47 @@ function runMobileBarberLandingTests(test) {
     assertContains(functionsJs, 'MB_NON_BLOCKING', 'must ignore terminal/cancelled bookings');
   });
 
+  test('Mobile Barber customer booking is guarded BEFORE the write via a callable', function() {
+    var bookingJs = read('mobile-barber/mobile-barber-booking.js');
+    // Server: a callable that conflict-checks BEFORE writing and refuses overlaps.
+    assertContains(functionsJs, 'exports.createMobileBarberBookingGuarded = onCall(',
+      'must add the pre-write guarded create callable');
+    assertContains(functionsJs, "code: 'time_conflict'", 'callable must return a time_conflict code on overlap');
+    assertContains(functionsJs, 'mbSuggestAlternativeTimes(win, allBusy)', 'callable must return alternate times');
+    assertContains(functionsJs, '[booking-write-guarded]', 'callable must log a guarded write');
+    // The conflict path must NOT write the booking (set is only on the clear branch).
+    var callIdx = functionsJs.indexOf('exports.createMobileBarberBookingGuarded');
+    var blockIdx = functionsJs.indexOf("code: 'time_conflict', reason: 'slot_unavailable'", callIdx);
+    var setIdx = functionsJs.indexOf('await ref.set(Object.assign({}, booking', callIdx);
+    assert(blockIdx >= 0 && setIdx >= 0 && blockIdx < setIdx,
+      'the conflict return must come BEFORE (and instead of) the booking write');
+    // Frontend: the customer write path routes through the callable, surfaces conflicts.
+    assertContains(bookingJs, "httpsCallable('createMobileBarberBookingGuarded')",
+      'frontend must call the guarded create callable');
+    assertContains(bookingJs, 'function guardedCreateViaCallable(',
+      'frontend must route customer writes through the guarded callable');
+    assertContains(bookingJs, "if (canUseFunctions() && options.skipGuardedCallable !== true)",
+      'persistBooking must prefer the guarded callable for the customer path');
+    assertContains(bookingJs, 'err.bookingConflict = true', 'a blocked slot must reject with a conflict flag (not success)');
+    // UI: every booking surface shows the conflict + alternate times, never success.
+    assertContains(js, 'function bookingConflictMessage(', 'UI must build a conflict + alternate-times message');
+    assertContains(js, 'error.bookingConflict', 'manual/inline/agent catch must detect a booking conflict');
+    assertContains(js, "bookingConflictNextTimes: 'That time is no longer available. Next available: {times}.'", 'en conflict copy');
+    assertContains(js, 'bookingConflictNextTimes:', 'conflict copy present');
+  });
+
+  test('Mobile Barber unread badge renders unconditionally + hidden attr actually hides', function() {
+    // BLOCKER 2: popup worked but the badge never showed. Lock the fixes.
+    assertContains(dashboardJs, 'badge.hidden = !(active && unread > 0);',
+      'badge must be computed/rendered before any early return');
+    assertContains(dashboardJs, "root.console.info('[badge-render]'",
+      'must emit the [badge-render] diagnostic');
+    assertContains(dashboardJs, '!!(notifyScopeId() || state.vendor)',
+      'notificationsActive must be true whenever the vendor portal is loaded');
+    assertContains(css, '.mb-notif-badge[hidden] { display: none; }',
+      'the hidden attribute must override display:inline-flex so 0 is truly hidden');
+  });
+
   test('Mobile Barber dashboard excludes conflict/declined bookings from Upcoming + seeds badge', function() {
     // Screenshot regression: an overlapping booking showed as a second "Upcoming"
     // card and the unread badge stayed empty. Lock the fixes so they cannot regress.
@@ -620,10 +661,10 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"destination": "/mobile-barber/dashboard.html"');
     assertContains(dashboardHtml, 'id="mobileBarberDashboardApp"');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260530k');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260530o');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260531f');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-lightbox.js?v=20260530f');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260531d');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260531b');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260531f');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260531f');
     assertContains(dashboardHtml, 'firebase-auth-compat.js');
     assertContains(dashboardHtml, '/notifications.js?v=20260525a');
     assertContains(dashboardHtml, 'id="mbBookingAlertRegion"');

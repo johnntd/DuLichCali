@@ -690,6 +690,79 @@ function runMobileBarberBookingTests(test) {
     }
   });
 
+  // ── Guarded customer booking (anonymous flow → createMobileBarberBookingGuarded) ──
+  // The public booking flow signs in anonymously and cannot run the owner-scoped
+  // conflict query under Firestore rules, so the server callable is the ONLY safe
+  // pre-write gate. These three tests pin the contract: a conflict is BLOCKED, a clear
+  // slot saves through the callable, and a guard that cannot run NEVER reports success.
+  function guardedFirebaseMock(callableImpl, directWriteCounter) {
+    return {
+      apps: [{}],
+      firestore: function() {
+        return {
+          collection: function() {
+            return { doc: function() { return { set: function() { directWriteCounter.n++; return Promise.resolve(); } }; } };
+          }
+        };
+      },
+      functions: function() {
+        return {
+          httpsCallable: function(name) {
+            assertEq(name, 'createMobileBarberBookingGuarded', 'customer booking must call the guarded callable');
+            return callableImpl;
+          }
+        };
+      }
+    };
+  }
+
+  test('Mobile Barber customer booking is BLOCKED when the server guard reports a time conflict', function() {
+    var originalFirebase = global.firebase;
+    var direct = { n: 0 };
+    global.firebase = guardedFirebaseMock(function() {
+      return Promise.resolve({ data: { ok: false, code: 'time_conflict', suggestions: ['10:45', '11:30'] } });
+    }, direct);
+    return MobileBarberBooking.saveBooking(sampleBuiltBooking('guard-conflict-1'), { requireDatabase: true })
+      .then(function() { throw new Error('a conflicting slot must NOT save'); })
+      .catch(function(error) {
+        assert(error && error.bookingConflict, 'rejection must be a bookingConflict the UI can show as "slot taken"');
+        assert((error.suggestions || []).length > 0, 'conflict must carry alternate times to offer the customer');
+        assertEq(direct.n, 0, 'a blocked booking must never fall back to a direct write');
+      })
+      .then(function() { global.firebase = originalFirebase; }, function(e) { global.firebase = originalFirebase; throw e; });
+  });
+
+  test('Mobile Barber customer booking saves through the server guard (callable source)', function() {
+    var originalFirebase = global.firebase;
+    var direct = { n: 0 };
+    global.firebase = guardedFirebaseMock(function(payload) {
+      return Promise.resolve({ data: { ok: true, booking: payload.booking } });
+    }, direct);
+    return MobileBarberBooking.saveBooking(sampleBuiltBooking('guard-ok-1'), { requireDatabase: true })
+      .then(function(saved) {
+        assertEq(saved.saved, true);
+        assertEq(saved.source, 'callable', 'a guarded customer booking must report the callable as the write source');
+        assertEq(direct.n, 0, 'the callable writes server-side; the client must not ALSO direct-write');
+      })
+      .then(function() { global.firebase = originalFirebase; }, function(e) { global.firebase = originalFirebase; throw e; });
+  });
+
+  test('Mobile Barber customer booking refuses (no false success) when the guard callable is unreachable', function() {
+    var originalFirebase = global.firebase;
+    var direct = { n: 0 };
+    global.firebase = guardedFirebaseMock(function() {
+      return Promise.reject(new Error('functions/internal'));
+    }, direct);
+    return MobileBarberBooking.saveBooking(sampleBuiltBooking('guard-down-1'), { requireDatabase: true })
+      .then(function() { throw new Error('an unguarded write must NOT report success'); })
+      .catch(function(error) {
+        assert(error, 'a guard that cannot run must reject');
+        assert(!error.bookingConflict, 'an outage is not a time conflict');
+        assertEq(direct.n, 0, 'NO SUCCESS BEFORE SAFE WRITE: must not silently direct-write when the guard cannot run');
+      })
+      .then(function() { global.firebase = originalFirebase; }, function(e) { global.firebase = originalFirebase; throw e; });
+  });
+
   test('Mobile Barber manual confirm can require database write failure to reject', function() {
     var originalFirebase = global.firebase;
     var originalLocalStorage = global.localStorage;
@@ -740,8 +813,10 @@ function runMobileBarberBookingTests(test) {
     assert(failIdx >= 0, 'chat booking save failure handler must exist');
     var block = src.slice(failIdx, failIdx + 700);
     assert(block.indexOf('result.booking = null') >= 0, 'failure handler must clear booking before responding');
-    assert(block.indexOf("result.response = t('saveFailedRetry')") >= 0,
+    assert(block.indexOf("t('saveFailedRetry')") >= 0,
       'failure handler must replace the confirmation copy with the save-failed copy');
+    assert(block.indexOf('error.bookingConflict') >= 0,
+      'failure handler must distinguish a time conflict (slot taken) and offer alternate times');
     assert(block.indexOf('(result.response || \'\') +') < 0,
       'failure handler must not append save-failed text to a success confirmation');
   });

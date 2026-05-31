@@ -29,6 +29,10 @@
       notificationPermissionLabel: 'Browser notifications:',
       lastBookingAlertLabel: 'Last booking alert:',
       enableSoundAlerts: 'Enable Sound Alerts',
+      tapToView: 'Tap to view details',
+      tapToCollapse: 'Tap to collapse',
+      customerFallback: 'Customer',
+      soundLockedHint: 'Tap “Enable Sound Alerts” to hear booking sounds.',
       soundAlertsOn: 'On',
       soundAlertsOff: 'Off',
       soundAlertsBlocked: 'Needs enable',
@@ -329,6 +333,10 @@
       notificationPermissionLabel: 'Thông báo trình duyệt:',
       lastBookingAlertLabel: 'Báo lịch gần nhất:',
       enableSoundAlerts: 'Bật Âm Thanh Báo Lịch',
+      tapToView: 'Nhấn để xem chi tiết',
+      tapToCollapse: 'Nhấn để thu gọn',
+      customerFallback: 'Khách hàng',
+      soundLockedHint: 'Nhấn “Bật Âm Thanh Báo Lịch” để nghe âm báo đặt lịch.',
       soundAlertsOn: 'Bật',
       soundAlertsOff: 'Tắt',
       soundAlertsBlocked: 'Cần bật',
@@ -629,6 +637,10 @@
       notificationPermissionLabel: 'Notificaciones del navegador:',
       lastBookingAlertLabel: 'Última alerta:',
       enableSoundAlerts: 'Activar Sonido',
+      tapToView: 'Toque para ver detalles',
+      tapToCollapse: 'Toque para contraer',
+      customerFallback: 'Cliente',
+      soundLockedHint: 'Toque “Activar Sonido” para escuchar las alertas de reservas.',
       soundAlertsOn: 'Activo',
       soundAlertsOff: 'Inactivo',
       soundAlertsBlocked: 'Necesita activar',
@@ -2036,82 +2048,81 @@
       || (booking.serviceLabelKey ? t(booking.serviceLabelKey) : '')
       || booking.serviceId || '';
 
-    // Head — single tappable button so the whole row toggles expansion
+    // Head — a single tappable button laid out as a clean VERTICAL stack so it
+    // reads top-to-bottom on a phone with no clipping (who / what / when / where):
+    //   top line: status pill + service-type badge + flag chips (compact, wraps)
+    //   time → customer → service · price → city → "tap to view details"
     var head = el('button', 'mb-booking-row__head');
     head.type = 'button';
     head.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
 
-    // Owner mode: a per-row service-type badge (scissors/car/compass) so barber, ride, and
-    // tour rows are distinguishable at a glance in the unified list.
+    // ── Top line: status + service type + flag chips (wraps, never clips) ──
+    var topline = el('div', 'mb-booking-row__topline');
+    var pill = el('span', 'mb-booking-row__status mb-status-pill mb-status-pill--' + bucket);
+    pill.textContent = statusLabel(booking.status);
+    topline.appendChild(pill);
+
     if (state.ownerMode && booking.serviceType) {
       var typeIcon = booking.serviceType === 'ride' ? 'car'
         : booking.serviceType === 'tour' ? 'compass' : 'scissors';
-      var typeBadge = el('span', 'mb-booking-row__type mb-type-badge mb-ico mb-type-badge--' + booking.serviceType);
-      typeBadge.innerHTML = icoMarkup(typeIcon);
-      typeBadge.setAttribute('aria-label', t('filter' + booking.serviceType.charAt(0).toUpperCase() + booking.serviceType.slice(1)));
-      head.appendChild(typeBadge);
+      var typeBadge = el('span', 'mb-booking-row__type mb-type-badge mb-type-badge--' + booking.serviceType);
+      icoLabel(typeBadge, typeIcon, t('filter' + booking.serviceType.charAt(0).toUpperCase() + booking.serviceType.slice(1)));
+      topline.appendChild(typeBadge);
     }
 
-    var pill = el('span', 'mb-booking-row__status mb-status-pill mb-status-pill--' + bucket);
-    pill.textContent = statusLabel(booking.status);
-    head.appendChild(pill);
-
-    var time = el('span', 'mb-booking-row__time');
-    time.textContent = formatTime12Hour(booking.startTime) || booking.requestedDate || '';
-    head.appendChild(time);
-
-    var meat = el('span', 'mb-booking-row__meat');
-    var who = el('strong', 'mb-booking-row__customer');
-    who.textContent = booking.customerName || '—';
-    meat.appendChild(who);
-    var svc = el('span', 'mb-booking-row__service');
-    svc.textContent = serviceStr;
-    meat.appendChild(svc);
-    if (locationStr) {
-      var loc = el('span', 'mb-booking-row__city');
-      loc.textContent = locationStr;
-      meat.appendChild(loc);
-    }
-    head.appendChild(meat);
-
-    var price = el('span', 'mb-booking-row__price');
-    price.textContent = formatMoney(total);
-    head.appendChild(price);
-
-    // Confirmation preference chip — highlighted when customer wants TEXT
-    // so the vendor can see at a glance which rows need an SMS confirmation.
     var pref = String(booking.confirmationPreference || 'text').toLowerCase();
     if (pref === 'text') {
       var smsChip = el('span', 'mb-confirmation-chip mb-confirmation-chip--text');
       smsChip.setAttribute('aria-label', t('confirmTextChipAria'));
       icoLabel(smsChip, 'smartphone', t('confirmTextChip'));
-      head.appendChild(smsChip);
+      topline.appendChild(smsChip);
     } else if (pref === 'call') {
       var callChip = el('span', 'mb-confirmation-chip mb-confirmation-chip--call');
       icoLabel(callChip, 'phone', t('confirmCallChip'));
-      head.appendChild(callChip);
+      topline.appendChild(callChip);
     } else if (pref === 'app') {
       var appChip = el('span', 'mb-confirmation-chip mb-confirmation-chip--app');
       icoLabel(appChip, 'bell', t('confirmAppChip'));
-      head.appendChild(appChip);
+      topline.appendChild(appChip);
     }
-
-    // Promo chip — surfaces when a vendor promotion discounted this booking.
     if (booking.promoApplied && Number(booking.discountPercent || 0) > 0) {
       var promoChip = el('span', 'mb-confirmation-chip mb-promo-chip');
       icoLabel(promoChip, 'ticket', interpolate(t('promoChipApplied') || '{pct}% promo applied', { pct: Number(booking.discountPercent || 0) }));
-      head.appendChild(promoChip);
+      topline.appendChild(promoChip);
     }
-
     if (isOwnerReviewBooking(booking)) {
       var reviewChip = el('span', 'mb-confirmation-chip mb-review-chip');
       reviewChip.textContent = t('reviewQueueBadge') + ': ' + reviewReasonLabel(booking);
-      head.appendChild(reviewChip);
+      topline.appendChild(reviewChip);
     }
+    head.appendChild(topline);
 
-    var chevron = el('span', 'mb-booking-row__chevron');
+    // ── When ──
+    var whenStr = [booking.requestedDate, formatTime12Hour(booking.startTime)].filter(Boolean).join(' · ');
+    if (whenStr) { var time = el('div', 'mb-booking-row__time'); time.textContent = whenStr; head.appendChild(time); }
+
+    // ── Who ──
+    var who = el('div', 'mb-booking-row__customer');
+    who.textContent = booking.customerName || (t('customerFallback') || 'Customer');
+    head.appendChild(who);
+
+    // ── What · price ──
+    var line2 = el('div', 'mb-booking-row__line2');
+    if (serviceStr) { var svc = el('span', 'mb-booking-row__service'); svc.textContent = serviceStr; line2.appendChild(svc); }
+    var priceStr = formatMoney(total);
+    if (priceStr) { var price = el('span', 'mb-booking-row__price'); price.textContent = priceStr; line2.appendChild(price); }
+    if (line2.childNodes.length) head.appendChild(line2);
+
+    // ── Where ──
+    if (locationStr) { var loc = el('div', 'mb-booking-row__city'); loc.textContent = locationStr; head.appendChild(loc); }
+
+    // ── Action hint + chevron ──
+    var hint = el('div', 'mb-booking-row__hint');
+    hint.textContent = isExpanded ? (t('tapToCollapse') || 'Tap to collapse')
+                                  : (t('tapToView') || 'Tap to view details');
+    head.appendChild(hint);
+    var chevron = el('span', 'mb-booking-row__chevron mb-ico');
     chevron.setAttribute('aria-hidden', 'true');
-    chevron.classList.add('mb-ico');
     chevron.innerHTML = icoMarkup('chevron-down');
     head.appendChild(chevron);
 
@@ -2689,6 +2700,13 @@
     actions.appendChild(dismiss);
     popup.appendChild(title);
     popup.appendChild(message);
+    // iOS/PWA: audio is locked until a user gesture. If alerts are on but sound
+    // isn't unlocked, prompt the barber so future bookings make a sound.
+    if (state.soundAlertsEnabled && (!state.soundReady || state.soundBlocked)) {
+      var soundHint = el('p', 'mb-booking-alert__hint');
+      soundHint.textContent = t('soundLockedHint') || 'Tap “Enable Sound Alerts” to hear booking sounds.';
+      popup.appendChild(soundHint);
+    }
     popup.appendChild(actions);
     region.appendChild(popup);
     state.lastBookingAlert = [booking.customerName || bookingId, booking.requestedDate, formatTime12Hour(booking.startTime)].filter(Boolean).join(' • ');
@@ -2733,6 +2751,27 @@
     addNotification(booking);
     showBookingAlert(booking);
     playBookingChime();
+    highlightNewBooking(booking);
+  }
+
+  // Briefly highlight the freshly-arrived booking row, and auto-scroll to it only
+  // if the list is already on screen (don't yank the barber away mid-task).
+  function highlightNewBooking(booking) {
+    var bookingId = booking && (booking.id || booking.bookingId || '');
+    if (!bookingId) return;
+    root.setTimeout(function() {
+      var card = null;
+      document.querySelectorAll('[data-booking-id]').forEach(function(node) {
+        if (node.getAttribute('data-booking-id') === String(bookingId)) card = node;
+      });
+      if (!card) return;
+      card.classList.add('mb-booking-card--highlight');
+      var rect = card.getBoundingClientRect();
+      if (rect.top >= -40 && rect.top < (root.innerHeight || 800)) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      root.setTimeout(function() { card.classList.remove('mb-booking-card--highlight'); }, 3200);
+    }, 420);
   }
 
   function debounceBookingRefresh() {

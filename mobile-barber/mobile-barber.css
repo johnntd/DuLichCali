@@ -2968,19 +2968,19 @@
 }
 
 .mb-booking-row__head {
-  display: grid;
-  grid-template-columns: auto auto 1fr auto auto;
-  align-items: center;
-  gap: .55rem;
+  display: flex;
+  flex-direction: column;
+  gap: .28rem;
   width: 100%;
-  padding: .6rem .75rem;
+  /* right padding reserves room for the absolutely-positioned chevron */
+  padding: .85rem 2.5rem .9rem 1rem;
+  position: relative;
   border: 0;
   background: transparent;
   color: var(--cream);
   text-align: left;
   cursor: pointer;
   font: inherit;
-  min-height: 56px;
 }
 
 .mb-booking-row__head:focus-visible {
@@ -2988,45 +2988,49 @@
   outline-offset: -2px;
 }
 
-.mb-booking-row__status {
-  flex-shrink: 0;
+/* Top line: status pill + service-type badge + flag chips — wraps, never clips */
+.mb-booking-row__topline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem;
+  margin-bottom: .15rem;
 }
+.mb-booking-row__status { flex: 0 0 auto; }
 
 .mb-booking-row__time {
   font-family: var(--font-d, 'Bodoni Moda', serif);
   font-size: var(--text-md);
   font-weight: 800;
   color: var(--gold-lt);
-  white-space: nowrap;
   letter-spacing: .01em;
 }
 
-.mb-booking-row__meat {
+.mb-booking-row__customer {
+  font-size: var(--text-lg);
+  font-weight: 800;
+  color: var(--cream);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.mb-booking-row__line2 {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: .15rem .55rem;
-  min-width: 0;
-  overflow: hidden;
+  gap: .2rem .55rem;
 }
 
-.mb-booking-row__customer {
+.mb-booking-row__service {
   font-size: var(--text-sm);
-  font-weight: 800;
-  color: var(--cream);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
+  color: var(--text);
+  overflow-wrap: anywhere;
 }
 
-.mb-booking-row__service,
 .mb-booking-row__city {
   font-size: var(--text-xs);
   color: var(--muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
 }
 
 .mb-booking-row__price {
@@ -3036,7 +3040,17 @@
   white-space: nowrap;
 }
 
+.mb-booking-row__hint {
+  margin-top: .2rem;
+  font-size: var(--text-xs);
+  color: var(--muted);
+  opacity: .82;
+}
+
 .mb-booking-row__chevron {
+  position: absolute;
+  top: .9rem;
+  right: .95rem;
   width: 1.25rem;
   text-align: center;
   font-size: var(--text-sm);
@@ -3098,8 +3112,7 @@
 }
 
 @media (min-width: 680px) {
-  .mb-booking-row__head { grid-template-columns: auto auto 1fr auto auto; padding: .7rem 1rem; }
-  .mb-booking-row__customer { font-size: var(--text-md); }
+  .mb-booking-row__head { padding: .9rem 2.5rem .95rem 1.15rem; }
   .mb-booking-row__service,
   .mb-booking-row__city { font-size: var(--text-sm); }
   .mb-review-actions__reschedule {
@@ -3146,16 +3159,25 @@
 }
 
 .mb-type-badge {
-  flex-shrink: 0;
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
+  gap: .28rem;
+  padding: .14rem .52rem;
   border-radius: 999px;
-  font-size: var(--text-sm);
-  line-height: 1;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  line-height: 1.25;
   background: rgba(255, 255, 255, .08);
+  color: var(--cream);
+}
+.mb-type-badge svg,
+.mb-type-badge .mb-ico { width: .82rem; height: .82rem; flex: 0 0 auto; }
+.mb-booking-alert__hint {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--gold-lt);
+  opacity: .92;
 }
 
 .mb-type-badge--barber { background: rgba(212, 175, 55, .18); }
@@ -4948,13 +4970,29 @@
 
 .mb-booking-alert-region {
   position: fixed;
-  right: max(1rem, env(safe-area-inset-right, 0px));
-  bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  /* Mobile: top-center so a new booking is impossible to miss. */
+  top: max(.7rem, env(safe-area-inset-top, 0px));
+  left: 50%;
+  transform: translateX(-50%);
   z-index: var(--z-toast, 1100);
   display: grid;
   gap: .75rem;
-  width: min(26rem, calc(100vw - 2rem));
+  width: min(30rem, calc(100vw - 1.4rem));
   pointer-events: none;
+}
+@media (min-width: 680px) {
+  .mb-booking-alert-region {
+    left: auto;
+    transform: none;
+    right: max(1rem, env(safe-area-inset-right, 0px));
+  }
+}
+.mb-booking-alert {
+  animation: mbBookingAlertIn .34s cubic-bezier(.2, .9, .3, 1) both;
+}
+@keyframes mbBookingAlertIn {
+  from { opacity: 0; transform: translateY(-14px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .mb-booking-alert {

@@ -166,7 +166,7 @@ function runBookingConflictGuardTests(test) {
   test('BG-PB-06: hard precedence beats soft hours and cap checks', function() {
     withOwnerModel(config(1), function() {
       var overlap = evaluate(req({ requestedStart: '2026-06-01T06:15:00' }), [barber()]);
-      assertEq(overlap.disposition, 'review');
+      assertEq(overlap.disposition, 'block');
       assertEq(overlap.reason, 'time_conflict');
 
       var duplicate = evaluate(req({
@@ -202,7 +202,7 @@ function runBookingConflictGuardTests(test) {
         serviceDurationMinutes: 1440
       })]);
       assertEq(r.reason, 'time_conflict');
-      assertEq(r.disposition, 'review');
+      assertEq(r.disposition, 'block');
     });
   });
 
@@ -242,7 +242,7 @@ function runBookingConflictGuardTests(test) {
         lng: -118.2437
       })]);
       assertEq(far.reason, 'time_conflict');
-      assertEq(far.disposition, 'review');
+      assertEq(far.disposition, 'block');
 
       var samePoint = evaluate(req({
         serviceType: 'barber',
@@ -266,7 +266,7 @@ function runBookingConflictGuardTests(test) {
     assertEq(BG.travelBufferMinutesBetween({ serviceType: 'barber' }, { serviceType: 'barber', lat: 33.7, lng: -117.9 }), 20);
   });
 
-  test('BG-PC-05: stale locks are overwritten, fresh locks route to review', function() {
+  test('BG-PC-05: stale locks are overwritten, fresh locks route to block (time conflict)', function() {
     var request = req({ requestedStart: '2026-06-01T15:00:00' });
     var staleDb = fakeDbWithLock({ createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString() }, request);
     var freshDb = fakeDbWithLock({ createdAt: new Date(Date.now() - 10 * 1000).toISOString() }, request);
@@ -282,7 +282,7 @@ function runBookingConflictGuardTests(test) {
         }, { db: freshDb, existingBookings: [], origin: { city: 'Garden Grove', zip: '92840', lat: 33.7743, lng: -117.9379 } });
       })
       .then(function(fresh) {
-        assertEq(fresh.disposition, 'review');
+        assertEq(fresh.disposition, 'block');
         assertEq(fresh.reason, 'time_conflict');
       });
   });

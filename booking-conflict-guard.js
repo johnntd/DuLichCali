@@ -36,6 +36,7 @@
   var NON_BLOCKING_STATUSES = Object.freeze([
     'cancelled',
     'rejected',
+    'declined',
     'completed',
     'expired',
     'no_show'
@@ -84,7 +85,8 @@
   }
   function dispositionFor(reason) {
     if (reason === 'available') return 'confirm';
-    if (reason === 'customer_duplicate' || reason === 'invalid_request') return 'block';
+    // A time overlap is a hard BLOCK now (no double-booking), not a soft review.
+    if (reason === 'customer_duplicate' || reason === 'invalid_request' || reason === 'time_conflict') return 'block';
     return 'review';
   }
   function parseTime(date, time) {

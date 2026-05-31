@@ -1033,7 +1033,7 @@
   }
 
   function ownerNotificationsStorageKey() {
-    return STORAGE.ownerNotifications + '_' + (state.ownerId || 'unknown');
+    return STORAGE.ownerNotifications + '_' + (notifyScopeId() || 'unknown');
   }
 
   function soundStorageKey() {
@@ -1109,6 +1109,12 @@
       } catch (e) {}
     }
   }
+
+  // Notifications/unread badge are NOT owner-only: every vendor sees their own
+  // count, scoped to ownerId (multi-business owner) or vendorId (single vendor),
+  // so Tim and Michael never see each other's counts.
+  function notifyScopeId() { return state.ownerId || state.vendorId || ''; }
+  function notificationsActive() { return !!notifyScopeId(); }
 
   // Hydrate state.vendor from Firestore so the dashboard reflects the portal's
   // true persisted state across devices. Firestore is the source of truth for
@@ -1450,11 +1456,11 @@
     var tabs = document.getElementById('mbNotifTabs');
     var close = document.querySelector('[data-action="closeNotifDrawer"] .mb-notif-drawer__close') || document.querySelector('.mb-notif-drawer__close');
     if (bell) {
-      bell.hidden = !state.ownerMode;
+      bell.hidden = !notificationsActive();
       bell.setAttribute('aria-label', t('notifBellAria'));
     }
     if (close) close.setAttribute('aria-label', t('notifCloseDrawer'));
-    if (!state.ownerMode) {
+    if (!notificationsActive()) {
       if (drawer) drawer.hidden = true;
       return;
     }
@@ -1463,6 +1469,13 @@
       badge.textContent = String(unread > 99 ? '99+' : unread);
       badge.hidden = unread === 0;
     }
+    try {
+      if (root.console && root.console.info) root.console.info('[notification-count]', JSON.stringify({
+        scopeId: notifyScopeId(), ownerId: state.ownerId || '', vendorId: state.vendorId || '',
+        totalNotifications: (state.ownerNotifications || []).length, unreadCount: unread,
+        renderedBadgeCount: badge ? badge.textContent : ''
+      }));
+    } catch (e) {}
     if (drawer) {
       drawer.hidden = !state.notificationDrawerOpen;
       drawer.classList.toggle('mb-notif-drawer--open', !!state.notificationDrawerOpen);
@@ -1528,7 +1541,7 @@
   }
 
   function openNotificationDrawer() {
-    if (!state.ownerMode) return;
+    if (!notificationsActive()) return;
     if (!state.soundReady) unlockSoundAlerts();
     state.notificationDrawerOpen = true;
     renderNotificationDrawer();
@@ -2603,12 +2616,12 @@
   }
 
   function persistOwnerNotifications() {
-    if (!state.ownerMode || !state.ownerId) return;
+    if (!notificationsActive()) return;
     writeJson(ownerNotificationsStorageKey(), state.ownerNotifications.slice(0, 120));
   }
 
   function addNotification(booking) {
-    if (!state.ownerMode || !state.ownerId || !booking) return null;
+    if (!notificationsActive() || !booking) return null;
     var id = notificationDedupeKey(booking);
     var bookingId = booking.id || booking.bookingId || '';
     if (!id || !bookingId) return null;
@@ -3735,7 +3748,7 @@
     state.soundAlertsEnabled = readString(soundStorageKey(), 'on') !== 'off';
     loadVendor();
     resolveOwnerMode();
-    state.ownerNotifications = state.ownerMode ? readJson(ownerNotificationsStorageKey(), []) : [];
+    state.ownerNotifications = notificationsActive() ? readJson(ownerNotificationsStorageKey(), []) : [];
     if (!Array.isArray(state.ownerNotifications)) state.ownerNotifications = [];
     state.ownerNotifications = state.ownerNotifications.slice(0, 120);
     loadServices();

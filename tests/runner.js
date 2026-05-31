@@ -1623,7 +1623,7 @@ function okGuard(req, rows, options) {
 
 test('0. dispositionFor maps guard reasons', function() {
   assertEq(BG.dispositionFor('available'), 'confirm');
-  assertEq(BG.dispositionFor('time_conflict'), 'review');
+  assertEq(BG.dispositionFor('time_conflict'), 'block');
   assertEq(BG.dispositionFor('outside_service_radius'), 'review');
   assertEq(BG.dispositionFor('vendor_review_required'), 'review');
   assertEq(BG.dispositionFor('customer_duplicate'), 'block');
@@ -1634,7 +1634,7 @@ test('0. dispositionFor maps guard reasons', function() {
 test('1. barber 9:00-9:45 + buffer blocks ride at 9:30', function() {
   var r = okGuard(guardReq(), [barberBooking()]);
   assertEq(r.reason, 'time_conflict');
-  assertEq(r.disposition, 'review');
+  assertEq(r.disposition, 'block');
   assertEq(r.ok, false);
   assertEq(r.conflicts[0].serviceType, 'barber');
 });
@@ -1647,12 +1647,12 @@ test('2. barber 9:00-9:45 allows ride at 10:30', function() {
 test('3. ride blocks overlapping tour for same owner', function() {
   var r = okGuard(guardReq({ serviceType: 'tour', requestedStart: '2026-06-01T09:30:00' }), [rideBooking()]);
   assertEq(r.reason, 'time_conflict');
-  assertEq(r.disposition, 'review');
+  assertEq(r.disposition, 'block');
 });
 test('4. tour blocks overlapping barber for same owner', function() {
   var r = okGuard(guardReq({ serviceType: 'barber', vendorId: 'michael-nguyen-oc', requestedStart: '2026-06-01T10:00:00' }), [tourBooking()]);
   assertEq(r.reason, 'time_conflict');
-  assertEq(r.disposition, 'review');
+  assertEq(r.disposition, 'block');
 });
 test('5. non-blocking statuses do not block', function() {
   ['cancelled', 'rejected', 'completed', 'expired'].forEach(function(status) {
@@ -1728,22 +1728,21 @@ test('14. lock prevents two simultaneous identical writes', function() {
     .then(function(second) {
       assertEq(second.ok, false);
       assertEq(second.reason, 'time_conflict');
-      assertEq(second.disposition, 'review');
+      assertEq(second.disposition, 'block');
     });
 });
-test('15. guardedWrite writes review disposition and blocks duplicates', function() {
-  var reviewWrites = 0;
+test('15. guardedWrite BLOCKS time conflicts and duplicates (no write)', function() {
+  var conflictWrites = 0;
   var blockWrites = 0;
-  return BG.guardedWrite(guardReq(), function(tx, meta) {
-    reviewWrites++;
-    assertEq(tx, null);
-    assertEq(meta.disposition, 'review');
-    assertEq(meta.reason, 'time_conflict');
+  // A time overlap is now a hard block: writeFn must NOT run, no booking is written.
+  return BG.guardedWrite(guardReq(), function() {
+    conflictWrites++;
     return Promise.resolve({ saved: true });
   }, { existingBookings: [barberBooking()], origin: { city: 'Garden Grove', zip: '92840' } })
-    .then(function(reviewResult) {
-      assertEq(reviewResult.disposition, 'review');
-      assertEq(reviewWrites, 1);
+    .then(function(conflictResult) {
+      assertEq(conflictResult.disposition, 'block');
+      assertEq(conflictResult.reason, 'time_conflict');
+      assertEq(conflictWrites, 0);
       return BG.guardedWrite(guardReq({ serviceType: 'barber', vendorId: 'michael-nguyen-oc' }), function() {
         blockWrites++;
         return Promise.resolve({ saved: true });

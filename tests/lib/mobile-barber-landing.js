@@ -576,9 +576,11 @@ function runMobileBarberLandingTests(test) {
     // Sweeps all three service collections (barber + ride + tour).
     assertContains(functionsJs, "['mobileBarberBookings', 'bookings', 'travel_bookings']",
       'must check barber + ride + tour collections for the owner');
-    // Elevates to review on real overlap — never deletes; never elevates on distance.
-    assertContains(functionsJs, "status: 'vendor_review'", 'conflict must elevate to vendor_review');
-    assertContains(functionsJs, "reviewReason: 'owner_conflict'", 'must record the conflict reason');
+    // Auto-declines the LATER booking on a real time overlap (race-safe by createTime);
+    // never deletes the doc.
+    assertContains(functionsJs, "status: 'declined'", 'time overlap must auto-decline the later booking');
+    assertContains(functionsJs, "declineReason: 'time_conflict'", 'must record the decline reason');
+    assertContains(functionsJs, 'conflictBookingId', 'must record which booking it conflicts with');
     assertNotContains(functionsJs, 'snap.ref.delete(', 'must NOT delete the customer booking');
     // Idempotency + safety guards.
     assertContains(functionsJs, "status === 'vendor_review'", 'must skip already-reviewed bookings (no loop)');
@@ -592,7 +594,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260530k');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260530o');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-lightbox.js?v=20260530f');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260531b');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260531c');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260531a');
     assertContains(dashboardHtml, 'firebase-auth-compat.js');
     assertContains(dashboardHtml, '/notifications.js?v=20260525a');

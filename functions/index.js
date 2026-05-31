@@ -3059,7 +3059,7 @@ async function _queryEligibleDrivers(serviceType, airport, skipDriverIds) {
 // Idempotent: fires once on create; the elevation is an update (no re-fire).
 const MB_SVC_DUR    = { barber: 45, ride: 90, tour: 480, airport: 90, pickup: 90, dropoff: 90, private_ride: 120 };
 const MB_SVC_BUFFER = { barber: 20, ride: 15, tour: 30 };
-const MB_NON_BLOCKING = new Set(['cancelled', 'rejected', 'completed', 'expired', 'no_show']);
+const MB_NON_BLOCKING = new Set(['cancelled', 'rejected', 'declined', 'completed', 'expired', 'no_show']);
 
 function mbNormSvc(s) {
   s = String(s || '').toLowerCase().trim();
@@ -3199,30 +3199,58 @@ exports.onMobileBarberBookingCreated = onDocumentCreated(
             status: String(other.status || ''),
             start: ow.start,
             end: ow.end,
+            createMs: (d.createTime && d.createTime.toMillis) ? d.createTime.toMillis() : (Date.parse(other.createdAt || '') || 0),
           });
         }
       });
     }
 
-    console.log('[mb-server-conflict-check]', JSON.stringify({
-      bookingId, ownerId, vendorId: booking.vendorId || '',
-      requestedDate: booking.requestedDate || '', startTime: booking.startTime || '',
-      conflictsFound: conflicts.length, source: 'admin-sdk',
+    const myCreateMs = (snap.createTime && snap.createTime.toMillis) ? snap.createTime.toMillis()
+      : (Date.parse(booking.createdAt || '') || Date.now());
+
+    console.log('[booking-conflict-guard]', JSON.stringify({
+      source: booking.source || booking.bookingSource || booking.channel || 'unknown',
+      vendorId: booking.vendorId || '', ownerId,
+      requestedStart: win.start, requestedEnd: win.end,
+      existingBookingsChecked: 'owner-wide(mobileBarberBookings,bookings,travel_bookings)',
+      conflictsFound: conflicts.length,
+      result: conflicts.length ? 'overlap' : 'clear',
     }));
 
     if (!conflicts.length) { log('no owner-wide conflict — left as-is'); return; }
 
+    // Race-safe winner: the EARLIEST-created booking in an overlap set wins; any
+    // later overlapping booking auto-declines ITSELF. Each trigger decides
+    // independently by Firestore createTime, so exactly the later one(s) get
+    // declined and the earliest stands — no double-booking, no mutual-decline race.
+    const earlier = conflicts.find((c) =>
+      c.createMs < myCreateMs || (c.createMs === myCreateMs && String(c.bookingId) < String(bookingId)));
+
+    if (!earlier) {
+      log(`earliest of ${conflicts.length} overlap(s) — stands`);
+      return;
+    }
+
+    console.log('[booking-write-blocked]', JSON.stringify({
+      bookingId,
+      reason: 'time_conflict',
+      conflicts: conflicts.slice(0, 10).map((c) => ({ bookingId: c.bookingId, collection: c.collection, status: c.status })),
+      conflictWith: earlier.bookingId,
+    }));
+
     try {
       await snap.ref.update({
-        status: 'vendor_review',
-        reviewReason: 'owner_conflict',
+        status: 'declined',
+        declineReason: 'time_conflict',
+        declinedBy: 'system',
+        conflictBookingId: earlier.bookingId,
         reviewConflicts: conflicts.slice(0, 10),
         ownerConflictCheckedAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: new Date().toISOString(),
       });
-      log(`elevated to vendor_review — ${conflicts.length} owner-wide conflict(s)`);
+      log(`AUTO-DECLINED — overlaps earlier booking ${earlier.bookingId} (${conflicts.length} conflict(s))`);
     } catch (e) {
-      log(`failed to elevate: ${e.message}`);
+      log(`failed to auto-decline: ${e.message}`);
     }
   }
 );

@@ -96,7 +96,10 @@ async function cleanup() { for (const id of IDS) { try { await db.collection(COL
   check('5b. Existing booking A moved to the new time', aMoved.exists && (aMoved.data() || {}).startTime === '16:00', 'startTime=' + ((aMoved.data() || {}).startTime));
   check('5c. No second booking created for the reschedule', !(await db.collection(COL).doc(IDS[5]).get()).exists);
 
-  // Spam — P2 gets 3 same-day haircuts (verified family), the 4th UNVERIFIED → TOO_MANY_REQUESTS.
+  // Clear P1's bookings first so the P2 spam phase is isolated from earlier test windows.
+  for (const id of IDS.slice(0, 6)) { try { await db.collection(COL).doc(id).delete(); } catch (e) {} }
+  await sleep(900);
+  // Spam — P2 gets 3 non-overlapping same-day haircuts (verified family), 4th UNVERIFIED → TOO_MANY_REQUESTS.
   await call(bk(IDS[6], P2, 'Spam Tester', 'michael-nguyen-oc-classic-haircut', 'Classic Haircut', '08:00', '08:45'));
   await call(bk(IDS[7], P2, 'Spam Tester', 'michael-nguyen-oc-classic-haircut', 'Classic Haircut', '10:00', '10:45',
     { duplicateIntentVerified: true, bookingFor: 'family_member', familyMemberName: 'Kid2' }));

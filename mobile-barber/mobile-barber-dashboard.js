@@ -1115,6 +1115,14 @@
         state.vendor = remoteTs > localTs
           ? Object.assign({}, state.vendor, remote)
           : Object.assign({}, remote, state.vendor);
+        // Promotions are written straight to Firestore on every add/edit/delete,
+        // so the remote doc is ALWAYS authoritative for them. The last-write-wins
+        // merge above could let a stale/empty local cache (promotions: []) clobber
+        // the saved promos at load — making them "disappear" from the portal even
+        // though they're intact in Firestore. Always take the remote array.
+        if (Array.isArray(remote.promotions)) {
+          state.vendor.promotions = remote.promotions.slice();
+        }
         var rows = readJson(STORAGE.vendor, {});
         rows[state.vendorId] = state.vendor;
         writeJson(STORAGE.vendor, rows);

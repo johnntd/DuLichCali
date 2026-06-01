@@ -79,9 +79,14 @@ profile-memory tests in `tests/lib/mobile-barber-profile-memory.js`).
   only path that can serve anonymous-by-phone customers; clients still cannot write another
   customer's profile.
 - Vendor read is now scoped to **assigned bookings** via the Admin-written `vendorAccess` marker —
-  strictly more restrictive than before (can only deny more, never grant more). No emulator harness
-  exists in-repo; the change was rule-compile-validated on deploy + locked with static tests, and
-  the customer flow + own-profile reads are unaffected.
+  strictly more restrictive than before (can only deny more, never grant more). The customer flow +
+  own-profile reads are unaffected.
+- **Firestore rules emulator harness** (`tests/rules/firestore-rules.test.js`, run with
+  `npm run test:rules`) now locks this rule against the real `firestore.rules` in the Firestore
+  emulator — **12/12**: assigned vendor reads ✓, vendor with no `vendorAccess` marker denied ✓,
+  non-assigned vendor denied ✓, vendor cannot modify the profile ✓, customer own/cross-customer
+  read + notification field-guard ✓. Uses `@firebase/rules-unit-testing` (JDK 11+ via Homebrew
+  `openjdk@17`); kept separate from the always-on static gate so it never requires Java/network there.
 - **No AI hairstyle images / selfies** are persisted — only text style references (verified live).
 
 ## Verdict

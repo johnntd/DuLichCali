@@ -20,5 +20,11 @@ dulichcali-booking-calendar-*.json
 # Firebase local deploy cache
 .firebase/
 
+# Firebase emulator debug logs (rules tests)
+firestore-debug.log
+firebase-debug.log
+*-debug.log
+ui-debug.log
+
 # MCP config (contains API keys — never commit)
 .mcp.json

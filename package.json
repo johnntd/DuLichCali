@@ -4,6 +4,7 @@
   "description": "Du Lich Cali — static hosting project. No build step.",
   "scripts": {
     "test:receptionist": "node tests/runner.js",
+    "test:rules": "bash scripts/ai/rules_test.sh",
     "auto:hair": "bash automation/auto_run.sh automation/prompts/hair_salon_system_audit.md",
     "auto:full": "bash automation/auto_run.sh automation/prompts/full_app_system_audit.md",
     "auto:phase1": "bash automation/auto_run.sh automation/prompts/phase1_hair_salon_fix.md"
@@ -12,6 +13,8 @@
     "node": ">=14"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.1",
+    "firebase": "^12.14.0",
     "firebase-admin": "^13.7.0"
   }
 }

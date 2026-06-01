@@ -86,7 +86,10 @@ profile-memory tests in `tests/lib/mobile-barber-profile-memory.js`).
   emulator — **12/12**: assigned vendor reads ✓, vendor with no `vendorAccess` marker denied ✓,
   non-assigned vendor denied ✓, vendor cannot modify the profile ✓, customer own/cross-customer
   read + notification field-guard ✓. Uses `@firebase/rules-unit-testing` (JDK 11+ via Homebrew
-  `openjdk@17`); kept separate from the always-on static gate so it never requires Java/network there.
+  `openjdk@17`). Wired into `scripts/ai/full_system_dry_run.sh` **skip-aware**: it runs when the
+  firebase CLI + dev deps + a JDK 11+ are present (and fails the gate if the rules test fails),
+  and SKIPs (never PASS/FAIL) when those prerequisites are missing — so the gate never hard-requires
+  Java/network.
 - **No AI hairstyle images / selfies** are persisted — only text style references (verified live).
 
 ## Verdict

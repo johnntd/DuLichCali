@@ -105,6 +105,22 @@ check_pass() { echo "  PASS  $1"; PASS_COUNT=$((PASS_COUNT + 1)); }
 check_fail() { echo "  FAIL  $1"; FAIL_COUNT=$((FAIL_COUNT + 1)); }
 check_skip() { echo "  SKIP  $1"; SKIP_COUNT=$((SKIP_COUNT + 1)); }
 
+# True if a JDK 11+ is reachable (the Firestore emulator needs it). Mirrors the
+# candidate order in scripts/ai/rules_test.sh. System java may be 8 -> not enough.
+_rules_have_jdk11() {
+  local cand ver
+  for cand in "${JAVA_HOME:+$JAVA_HOME/bin/java}" \
+              /opt/homebrew/opt/openjdk@17/bin/java /opt/homebrew/opt/openjdk@21/bin/java \
+              /opt/homebrew/opt/openjdk@11/bin/java /opt/homebrew/opt/openjdk/bin/java \
+              /usr/local/opt/openjdk@17/bin/java java; do
+    [ -n "$cand" ] || continue
+    { command -v "$cand" >/dev/null 2>&1 || [ -x "$cand" ]; } || continue
+    ver="$("$cand" -version 2>&1 | head -1 | grep -oE '[0-9]+' | head -1)"
+    if [ -n "$ver" ] && [ "$ver" -ge 11 ] 2>/dev/null; then return 0; fi
+  done
+  return 1
+}
+
 set +e
 {
   echo "== $PROJECT_NAME — FULL DRY RUN =="
@@ -131,6 +147,31 @@ set +e
     echo "  To configure: add 'safe_validation_commands' to $CONFIG_FILE"
     SKIP_COUNT=$((SKIP_COUNT + 1))
     TEST_RC=0
+  fi
+
+  # ── Firestore security rules (emulator-backed) ──────────────────────────────
+  # Skip-aware: only runs when the firebase CLI, the dev deps, and a JDK 11+ are
+  # all present (missing prerequisites SKIP, never PASS). When it DOES run, a
+  # failure prints a "  FAIL  " line and fails the gate.
+  echo
+  echo "== Firestore rules (emulator) =="
+  if [ ! -f tests/rules/firestore-rules.test.js ]; then
+    check_skip "Rules test not present (tests/rules/firestore-rules.test.js)"
+  elif ! command -v firebase >/dev/null 2>&1; then
+    check_skip "firebase CLI not available — rules emulator test skipped"
+  elif [ ! -d node_modules/@firebase/rules-unit-testing ]; then
+    check_skip "@firebase/rules-unit-testing not installed (npm i) — rules emulator test skipped"
+  elif ! _rules_have_jdk11; then
+    check_skip "No JDK 11+ for the Firestore emulator — rules test skipped"
+  else
+    RULES_LOG="$RUN_DIR/rules-test.log"
+    if npm run --silent test:rules >"$RULES_LOG" 2>&1; then
+      RULES_N="$(grep -cE '^  PASS ' "$RULES_LOG" 2>/dev/null || echo '?')"
+      check_pass "Firestore rules emulator tests ($RULES_N cases) — npm run test:rules"
+    else
+      check_fail "Firestore rules emulator tests FAILED — see $RULES_LOG"
+      tail -25 "$RULES_LOG" 2>/dev/null | sed 's/^/         /'
+    fi
   fi
 
   echo

@@ -73,7 +73,9 @@ function runMobileBarberManualBookingTests(test) {
   test('M4. submitManualBooking goes direct (no chat agent)', function() {
     var src = read('mobile-barber/mobile-barber.js');
     var startIdx = src.indexOf('function submitManualBooking');
-    var fn = src.slice(startIdx, startIdx + 7000);
+    // Window covers the whole function — it grew when route-aware address
+    // validation + best-slot alternates were added before the buildBooking call.
+    var fn = src.slice(startIdx, startIdx + 11500);
     assert(fn.indexOf('BOOKING.findVendorForAddress') >= 0, 'must route via findVendorForAddress');
     assert(fn.indexOf('BOOKING.checkAvailability') >= 0, 'must call checkAvailability');
     assert(fn.indexOf('BOOKING.buildBooking') >= 0, 'must call buildBooking');
@@ -86,7 +88,9 @@ function runMobileBarberManualBookingTests(test) {
   test('M5. Manual booking attaches selected AI hairstyle if present', function() {
     var src = read('mobile-barber/mobile-barber.js');
     var startIdx = src.indexOf('function submitManualBooking');
-    var fn = src.slice(startIdx, startIdx + 7000);
+    // Window covers the whole function — it grew when route-aware address
+    // validation + best-slot alternates were added before the buildBooking call.
+    var fn = src.slice(startIdx, startIdx + 11500);
     assert(fn.indexOf('state.aiPreview') >= 0, 'must read AI preview state');
     assert(fn.indexOf('selectedAiStyleId') >= 0, 'must attach selectedAiStyleId');
     assert(fn.indexOf('selectedAiStyleName') >= 0, 'must attach selectedAiStyleName');

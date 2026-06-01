@@ -19,6 +19,14 @@
   var STATUS_LIFECYCLE = ['pending_barber_confirmation', 'vendor_review', 'confirmed', 'in_progress', 'traveling', 'declined', 'completed', 'cancelled'];
   var DEFAULT_SLOT_STEP_MINUTES = 30;
   var DEFAULT_SAME_DAY_CUTOFF_MINUTES = 120;
+  // ── Route-aware slot scoring weights (tunable; reviewed as named consts) ──
+  var ROUTE_RADIUS_DEFAULT_MILES = 30;   // service radius cap when vendor has none
+  var ROUTE_RECOMMEND_THRESHOLD = 70;    // score at/above this → isRecommended
+  var ROUTE_DEAD_GAP_MIN = 90;           // idle minutes beyond travel = "dead gap"
+  var ROUTE_FREE_TRAVEL_MILES = 10;      // miles before per-mile distance penalty
+  var ROUTE_ADJACENCY_BONUS = 15;        // bonus for a tight, sufficient adjacency
+  var ROUTE_EARLIEST_BONUS = 8;          // bonus for earliest slot (no preference)
+  var ROUTE_ADJACENCY_SLACK_MAX = 30;    // slack ≤ this (and ≥0) = efficient cluster
   var DEFAULT_PRICING = {
     wearRatePerMile: 0.67,
     freeTravelMiles: 5,
@@ -762,6 +770,178 @@
     return slots;
   }
 
+  // ── Route-aware slot scoring ────────────────────────────────────────────────
+  // PURE + SYNCHRONOUS. Every candidate passed in is ALREADY conflict-free
+  // (findNextAvailableSlots → checkWindowAvailability), so the scorer only ranks by
+  // travel/gap/route efficiency — it never re-checks conflicts. Travel times come
+  // from an OPTIONAL googleMapsTravelTimes map (neighbor booking id OR address →
+  // minutes); when a pair is absent it falls back to the service travelBuffer, so
+  // the engine works with OR without live Maps data (graceful degradation).
+  //
+  // Travel-feasibility model: each appointment window already reserves a generic
+  // travelBuffer at its end (calculateAppointmentWindow), so the time available to
+  // drive before a candidate = (gap to the previous window) + travelBuffer. A slot
+  // is infeasible only when that available time is less than the REAL travel time.
+  function _toMinutes(v) {
+    if (v == null) return null;
+    if (typeof v === 'number') return v;
+    return minutesFromTime(String(v));
+  }
+  function _clampNum(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+  function _travelLookup(map, neighbor, fallback) {
+    if (!map || !neighbor) return fallback;
+    var keys = [neighbor.id, neighbor.bookingId, neighbor.address, trim(neighbor.address)];
+    for (var i = 0; i < keys.length; i++) {
+      if (keys[i] != null && map[keys[i]] != null) return Number(map[keys[i]]);
+    }
+    return fallback;
+  }
+
+  function scoreMobileBarberSlot(opts) {
+    opts = opts || {};
+    var slot = opts.slot || {};
+    var date = slot.requestedDate || opts.requestedDate || '';
+    var serviceMinutes = Number(opts.serviceDuration != null ? opts.serviceDuration : 0);
+    var cleanupBuffer = Number(opts.cleanupBuffer || 0);
+    var travelBuffer = Number(opts.travelBuffer || 0);
+    var candStart = _toMinutes(opts.candidateStart != null ? opts.candidateStart : slot.startTime);
+    var candEnd = _toMinutes(opts.candidateEnd != null ? opts.candidateEnd : slot.endTime);
+    if (candStart != null && candEnd == null) candEnd = candStart + serviceMinutes + cleanupBuffer;
+
+    var existing = (opts.existingBookings || []).filter(function(b) {
+      if (!b) return false;
+      var bd = b.requestedDate || b.date || '';
+      if (date && bd && bd !== date) return false;
+      var st = String(b.status || 'pending_barber_confirmation').toLowerCase();
+      return ACTIVE_BOOKING_STATUSES.indexOf(st) >= 0;
+    }).map(function(b) {
+      var s = _toMinutes(b.startTime || b.time);
+      var e = _toMinutes(b.endTime);
+      if (e == null && s != null) e = s + serviceMinutes + cleanupBuffer;
+      return { ref: b, start: s, end: e };
+    }).filter(function(b) { return b.start != null; }).sort(function(a, b) { return a.start - b.start; });
+
+    var prev = null, next = null;
+    for (var i = 0; i < existing.length; i++) {
+      if (candStart != null && existing[i].end <= candStart) prev = existing[i];
+      else if (candEnd != null && existing[i].start >= candEnd && !next) next = existing[i];
+    }
+
+    var gapBefore = (prev && candStart != null) ? (candStart - prev.end) : null;
+    var gapAfter = (next && candEnd != null) ? (next.start - candEnd) : null;
+    var travelFromPrev = prev ? _travelLookup(opts.googleMapsTravelTimes, prev.ref, travelBuffer) : 0;
+    var travelToNext = next ? _travelLookup(opts.googleMapsTravelTimes, next.ref, travelBuffer) : 0;
+    // Available drive time = gap + the buffer already reserved in the window.
+    var availBefore = (gapBefore != null) ? (gapBefore + travelBuffer) : null;
+    var availAfter = (gapAfter != null) ? (gapAfter + travelBuffer) : null;
+
+    var reasons = [];
+    var score = 100;
+    var hardFail = false;
+
+    // HARD FAIL — not enough time to drive between adjacent appointments.
+    if (prev && availBefore < travelFromPrev) { hardFail = true; if (reasons.indexOf('travel_gap_insufficient') < 0) reasons.push('travel_gap_insufficient'); }
+    if (next && availAfter < travelToNext) { hardFail = true; if (reasons.indexOf('travel_gap_insufficient') < 0) reasons.push('travel_gap_insufficient'); }
+
+    // Travel-fit — a far neighbor downgrades; a tight, sufficient adjacency is great.
+    var maxTravel = Math.max(travelFromPrev, travelToNext);
+    if (maxTravel > 10) score += _clampNum(-2 * (maxTravel - 10), -40, 0);
+    var slackBefore = (availBefore != null) ? (availBefore - travelFromPrev) : null;
+    var slackAfter = (availAfter != null) ? (availAfter - travelToNext) : null;
+    if ((slackBefore != null && slackBefore >= 0 && slackBefore <= ROUTE_ADJACENCY_SLACK_MAX) ||
+        (slackAfter != null && slackAfter >= 0 && slackAfter <= ROUTE_ADJACENCY_SLACK_MAX)) {
+      score += ROUTE_ADJACENCY_BONUS;
+      if (reasons.indexOf('efficient_route_adjacent') < 0) reasons.push('efficient_route_adjacent');
+    }
+
+    // Dead-gap — large idle next to a neighbor strands the barber.
+    [slackBefore, slackAfter].forEach(function(idle) {
+      if (idle != null && idle > ROUTE_DEAD_GAP_MIN) {
+        score += _clampNum(-0.15 * idle, -30, 0);
+        if (reasons.indexOf('dead_gap') < 0) reasons.push('dead_gap');
+      }
+    });
+
+    // Distance from base / service radius.
+    var distanceMiles = Number(opts.distanceMiles || 0);
+    var radius = Number(opts.serviceRadiusMiles || ROUTE_RADIUS_DEFAULT_MILES);
+    var beyondRadius = distanceMiles > radius;
+    if (beyondRadius) { if (reasons.indexOf('beyond_service_radius') < 0) reasons.push('beyond_service_radius'); }
+    else if (distanceMiles > ROUTE_FREE_TRAVEL_MILES) { score += _clampNum(-0.5 * (distanceMiles - ROUTE_FREE_TRAVEL_MILES), -20, 0); }
+
+    // Preference proximity / earliest-available.
+    var preferred = (opts.preferredStartMinutes != null) ? Number(opts.preferredStartMinutes) : null;
+    if (preferred != null && candStart != null) {
+      score += _clampNum(-0.05 * Math.abs(candStart - preferred), -20, 0);
+    } else if (opts.isEarliest) {
+      score += ROUTE_EARLIEST_BONUS;
+      if (reasons.indexOf('earliest_available') < 0) reasons.push('earliest_available');
+    }
+
+    // Address confidence.
+    var avStatus = opts.addressValidationStatus || '';
+    if (avStatus === 'city_zip_only') { score += -10; if (reasons.indexOf('address_low_confidence') < 0) reasons.push('address_low_confidence'); }
+
+    var routeEfficiency = (serviceMinutes + travelFromPrev + travelToNext) > 0
+      ? Math.round(100 * serviceMinutes / (serviceMinutes + travelFromPrev + travelToNext)) : 100;
+
+    if (hardFail) score = -Infinity;
+    var isRecommended = !hardFail && score >= ROUTE_RECOMMEND_THRESHOLD && !beyondRadius && avStatus !== 'invalid';
+    if (!reasons.length) reasons.push('available');
+
+    return {
+      slot: {
+        vendorId: slot.vendorId || opts.vendorId || '',
+        serviceId: slot.serviceId || opts.serviceId || '',
+        requestedDate: date,
+        startTime: candStart != null ? timeFromMinutes(candStart) : trim(slot.startTime),
+        endTime: candEnd != null ? timeFromMinutes(candEnd) : trim(slot.endTime)
+      },
+      score: score,
+      reasons: reasons,
+      travelMinutesFromPrevious: travelFromPrev,
+      travelMinutesToNext: travelToNext,
+      gapBeforeMinutes: gapBefore,
+      gapAfterMinutes: gapAfter,
+      routeEfficiency: routeEfficiency,
+      isRecommended: isRecommended
+    };
+  }
+
+  // findBestMobileBarberSlots — generate a conflict-free candidate pool via
+  // findNextAvailableSlots (requested window first, forward-fallback), score each,
+  // drop hard-fails, sort by score, return the top 3–5 with route metadata.
+  function findBestMobileBarberSlots(opts) {
+    opts = opts || {};
+    var limit = Number(opts.limit || 5);
+    var services = opts.services || (DATA && DATA.sampleServices) || [];
+    var service = opts.service || findService(services, opts.serviceId);
+    var vendor = opts.vendor || findVendor(opts.vendorId, opts.vendors);
+    var poolOpts = Object.assign({}, opts, { limit: Math.max(limit * 4, 12) });
+    var candidates = findNextAvailableSlots(opts.vendorId, opts.serviceId, opts.preferredWindow || opts.dateRange, poolOpts);
+    if (!candidates.length) return [];
+    var serviceMinutes = Number((service && service.durationMinutes) || 0);
+    var cleanupBuffer = Number((service && service.cleanupBufferMinutes) || 0);
+    var travelBuffer = Number((service && (service.travelBufferMinutes != null ? service.travelBufferMinutes : (vendor && vendor.travelBufferMinutes))) || 0);
+    var preferredStartMinutes = (opts.preferredStartMinutes != null) ? Number(opts.preferredStartMinutes)
+      : (opts.preferredTime ? minutesFromTime(opts.preferredTime) : null);
+    var scored = candidates.map(function(c, idx) {
+      return scoreMobileBarberSlot({
+        slot: c, vendorId: opts.vendorId, serviceId: opts.serviceId,
+        candidateStart: c.startTime, candidateEnd: c.endTime,
+        serviceDuration: serviceMinutes, cleanupBuffer: cleanupBuffer, travelBuffer: travelBuffer,
+        existingBookings: opts.existingBookings || [],
+        googleMapsTravelTimes: opts.googleMapsTravelTimes,
+        distanceMiles: opts.distanceMiles, serviceRadiusMiles: opts.serviceRadiusMiles,
+        addressValidationStatus: opts.addressValidationStatus,
+        preferredStartMinutes: preferredStartMinutes,
+        isEarliest: (preferredStartMinutes == null && idx === 0)
+      });
+    }).filter(function(s) { return s.score !== -Infinity; });
+    scored.sort(function(a, b) { return b.score - a.score; });
+    return scored.slice(0, limit);
+  }
+
   function checkAvailability(input) {
     input = input || {};
     var vendor = input.vendor;
@@ -829,6 +1009,7 @@
       return { valid: false, errors: ['availability_check_required'] };
     }
     var now = input.now || new Date().toISOString();
+    var _rc = input.routeContext || draft.routeContext || {};
     var id = input.id || ('mb-' + bookingRequestKey(input.vendor, draft, check.service && check.service.id));
     var servicePrice = Number(check.price.servicePrice || check.service.price || 0);
     var travelFee = Number(check.price.travelFee || 0);
@@ -951,6 +1132,27 @@
       originalPrice: Number((check.price && check.price.originalPrice) || amountDue),
       discountedPrice: Number((check.price && check.price.discountedPrice) || amountDue),
       promoApplied: !!(check.price && check.price.promoApplied),
+      // Route-aware address validation + optimization snapshot. Read from
+      // input.routeContext (set by each booking channel). All default to
+      // empty/0/null/false so bookings without route data stay valid.
+      formattedAddress: trim(_rc.formattedAddress),
+      lat: (typeof _rc.lat === 'number') ? _rc.lat : null,
+      lng: (typeof _rc.lng === 'number') ? _rc.lng : null,
+      placeId: trim(_rc.placeId),
+      addressValidationStatus: trim(_rc.addressValidationStatus) || 'unverified',
+      distanceMiles: Number(_rc.distanceMiles || (check.price && check.price.estimatedDistanceMiles) || 0),
+      routeConfidence: trim(_rc.routeConfidence) || (_rc.googleMapsUsed ? 'high' : 'low'),
+      routeOptimizationSnapshot: {
+        selectedSlotScore: Number(_rc.selectedSlotScore || 0),
+        selectedSlotReasons: Array.isArray(_rc.selectedSlotReasons) ? _rc.selectedSlotReasons.slice() : [],
+        travelFromPreviousMinutes: Number(_rc.travelFromPreviousMinutes || 0),
+        travelToNextMinutes: Number(_rc.travelToNextMinutes || 0),
+        gapBeforeMinutes: (_rc.gapBeforeMinutes == null ? null : Number(_rc.gapBeforeMinutes)),
+        gapAfterMinutes: (_rc.gapAfterMinutes == null ? null : Number(_rc.gapAfterMinutes)),
+        addressValidationStatus: trim(_rc.addressValidationStatus) || 'unverified',
+        distanceMiles: Number(_rc.distanceMiles || 0),
+        googleMapsUsed: _rc.googleMapsUsed === true
+      },
       createdAt: now,
       updatedAt: now
     };
@@ -1519,6 +1721,28 @@
     err.spamCode = (data && data.code) || 'TOO_MANY_REQUESTS';
     return err;
   }
+  // Frontend wrapper for the server-side Google Maps proxy. ALWAYS resolves (never
+  // rejects) — on any failure it returns a safe city/ZIP fallback so a Maps outage
+  // never blocks the booking flow (just lowers confidence). Returns a routeContext
+  // shape that buildBooking can persist directly.
+  function validateAddressAndDistance(serviceAddress, vendorOrigin) {
+    serviceAddress = serviceAddress || {};
+    var hasLoc = !!((serviceAddress.city || '') || (serviceAddress.zip || ''));
+    var fallback = {
+      ok: true, formattedAddress: trim(serviceAddress.address || ''),
+      lat: null, lng: null, placeId: '',
+      addressValidationStatus: hasLoc ? 'city_zip_only' : 'unverified',
+      distanceMiles: 0, travelMinutes: 0, routeConfidence: 'low', googleMapsUsed: false
+    };
+    var fn = null;
+    try { fn = root.firebase && root.firebase.functions && root.firebase.functions().httpsCallable('validateAddressAndDistance'); }
+    catch (e) { fn = null; }
+    if (!fn) return Promise.resolve(fallback);
+    return fn({ serviceAddress: serviceAddress, vendorOrigin: vendorOrigin || {} })
+      .then(function(res) { return (res && res.data && res.data.ok) ? res.data : fallback; })
+      .catch(function() { return fallback; });
+  }
+
   function guardedCreateViaCallable(booking, options) {
     options = options || {};
     var fn = null;
@@ -1732,8 +1956,11 @@
     formatTime12Hour: formatTime12Hour,
     checkMobileBarberAvailability: checkMobileBarberAvailability,
     findNextAvailableSlots: findNextAvailableSlots,
+    scoreMobileBarberSlot: scoreMobileBarberSlot,
+    findBestMobileBarberSlots: findBestMobileBarberSlots,
     calculateMobileBarberPrice: calculateMobileBarberPrice,
     requestDistanceMatrix: requestDistanceMatrix,
+    validateAddressAndDistance: validateAddressAndDistance,
     calculateTiming: calculateTiming,
     checkUnavailableBlocks: checkUnavailableBlocks,
     checkSameDayCutoff: checkSameDayCutoff,

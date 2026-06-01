@@ -43,6 +43,10 @@ const TWILIO_FROM_NUMBER = defineSecret('TWILIO_FROM_NUMBER');
 const OPENAI_API_KEY  = defineSecret('OPENAI_API_KEY');
 const GEMINI_API_KEY  = defineSecret('GEMINI_API_KEY');
 const CLAUDE_API_KEY  = defineSecret('CLAUDE_API_KEY');
+// Google Maps (Geocoding + Distance Matrix) — server-side ONLY. The key is never
+// exposed to the frontend; the validateAddressAndDistance callable proxies it and
+// degrades to a city/ZIP centroid haversine when the key is absent or Maps errors.
+const GOOGLE_MAPS_API_KEY = defineSecret('GOOGLE_MAPS_API_KEY');
 
 // Email provider secret (Resend — https://resend.com)
 const RESEND_API_KEY      = defineSecret('RESEND_API_KEY');
@@ -1937,6 +1941,114 @@ exports.aiProxy = onCall(
   }
 );
 
+// ── validateAddressAndDistance ───────────────────────────────────────────────
+// Server-side Google Maps proxy (key never exposed to the frontend). Geocodes the
+// customer service address and measures distance/travel time from the barber's
+// origin. Degrades gracefully to a city/ZIP centroid haversine when the key is
+// absent or Maps errors — so a Maps outage NEVER blocks booking (it just lowers
+// confidence). Input:  { serviceAddress:{address,city,zip}|string, vendorOrigin:{lat,lng}|{address,city,zip} }
+// Output: { ok, formattedAddress, lat, lng, placeId, addressValidationStatus, distanceMiles, travelMinutes, routeConfidence, googleMapsUsed }
+const MB_CITY_CENTROIDS = {
+  // Bay Area (barber: Tim)
+  'san jose': { lat: 37.3382, lng: -121.8863 }, 'santa clara': { lat: 37.3541, lng: -121.9552 },
+  'sunnyvale': { lat: 37.3688, lng: -122.0363 }, 'milpitas': { lat: 37.4323, lng: -121.8996 },
+  'fremont': { lat: 37.5485, lng: -121.9886 }, 'mountain view': { lat: 37.3861, lng: -122.0839 },
+  'cupertino': { lat: 37.3229, lng: -122.0322 }, 'campbell': { lat: 37.2872, lng: -121.9500 },
+  // Orange County (barber: Michael)
+  'irvine': { lat: 33.6846, lng: -117.8265 }, 'santa ana': { lat: 33.7455, lng: -117.8677 },
+  'anaheim': { lat: 33.8366, lng: -117.9143 }, 'garden grove': { lat: 33.7739, lng: -117.9414 },
+  'westminster': { lat: 33.7514, lng: -117.9940 }, 'costa mesa': { lat: 33.6411, lng: -117.9187 },
+  'tustin': { lat: 33.7458, lng: -117.8261 }, 'orange': { lat: 33.7879, lng: -117.8531 },
+  'huntington beach': { lat: 33.6595, lng: -117.9988 }, 'fountain valley': { lat: 33.7092, lng: -117.9536 },
+};
+const MB_ZIP3_CENTROIDS = {
+  '951': { lat: 37.3382, lng: -121.8863 }, '950': { lat: 37.3688, lng: -122.0363 }, // San Jose / Sunnyvale
+  '945': { lat: 37.5485, lng: -121.9886 }, // Fremont
+  '926': { lat: 33.6846, lng: -117.8265 }, '927': { lat: 33.7455, lng: -117.8677 }, // Irvine / Santa Ana
+  '928': { lat: 33.8366, lng: -117.9143 }, '920': { lat: 33.7514, lng: -117.9940 }, // Anaheim / Westminster
+};
+function mbCityCentroid(city, zip) {
+  const c = String(city || '').trim().toLowerCase();
+  if (c && MB_CITY_CENTROIDS[c]) return MB_CITY_CENTROIDS[c];
+  const z3 = String(zip || '').replace(/\D/g, '').slice(0, 3);
+  if (z3 && MB_ZIP3_CENTROIDS[z3]) return MB_ZIP3_CENTROIDS[z3];
+  return null;
+}
+function mbHaversineMiles(a, b) {
+  if (!a || !b) return 0;
+  const R = 3958.8, toRad = (d) => d * Math.PI / 180;
+  const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng);
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
+}
+exports.validateAddressAndDistance = onCall(
+  { region: 'us-central1', secrets: [GOOGLE_MAPS_API_KEY], timeoutSeconds: 30, cors: true },
+  async (request) => {
+    const d = request.data || {};
+    const addr = d.serviceAddress || {};
+    const origin = d.vendorOrigin || {};
+    const isStr = typeof addr === 'string';
+    const city = isStr ? '' : String(addr.city || '').trim();
+    const zip = isStr ? '' : String(addr.zip || '').trim();
+    const addressStr = isStr ? addr : [addr.address, addr.city, addr.zip].filter(Boolean).join(', ');
+    const key = GOOGLE_MAPS_API_KEY.value();
+
+    function fallback(reason) {
+      const dest = mbCityCentroid(city, zip);
+      const orig = (typeof origin.lat === 'number' && typeof origin.lng === 'number')
+        ? { lat: origin.lat, lng: origin.lng } : mbCityCentroid(origin.city || '', origin.zip || '');
+      let dist = 0;
+      if (dest && orig) dist = Math.round(mbHaversineMiles(orig, dest) * 1.3 * 10) / 10; // 1.3x road factor
+      const hasLoc = !!(city || zip);
+      return {
+        ok: true, formattedAddress: addressStr,
+        lat: dest ? dest.lat : null, lng: dest ? dest.lng : null, placeId: '',
+        addressValidationStatus: hasLoc ? 'city_zip_only' : 'invalid',
+        distanceMiles: dist, travelMinutes: dist ? Math.round(dist * 2) : 0,
+        routeConfidence: 'low', googleMapsUsed: false, reason: reason || 'fallback',
+      };
+    }
+
+    // A real Google Maps key is ~39 chars; treat missing/short/placeholder values
+    // as "not configured" so we fall back without a doomed network call.
+    if (!key || String(key).trim().length < 20) return fallback('no_maps_key');
+    if (!addressStr) return { ok: true, formattedAddress: '', lat: null, lng: null, placeId: '', addressValidationStatus: 'invalid', distanceMiles: 0, travelMinutes: 0, routeConfidence: 'low', googleMapsUsed: false };
+
+    try {
+      const geo = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(addressStr)}&key=${key}`).then((r) => r.json());
+      if (!geo || geo.status === 'ZERO_RESULTS' || !geo.results || !geo.results.length) {
+        if (geo && geo.status === 'ZERO_RESULTS') {
+          return { ok: true, formattedAddress: addressStr, lat: null, lng: null, placeId: '', addressValidationStatus: 'invalid', distanceMiles: 0, travelMinutes: 0, routeConfidence: 'low', googleMapsUsed: true };
+        }
+        return fallback('geocode_' + ((geo && geo.status) || 'error'));
+      }
+      const g = geo.results[0];
+      const loc = (g.geometry && g.geometry.location) || {};
+      const locType = (g.geometry && g.geometry.location_type) || '';
+      const precise = (locType === 'ROOFTOP' || locType === 'RANGE_INTERPOLATED');
+      let distanceMiles = 0, travelMinutes = 0;
+      const originStr = (typeof origin.lat === 'number' && typeof origin.lng === 'number')
+        ? `${origin.lat},${origin.lng}` : (origin.address || [origin.city, origin.zip].filter(Boolean).join(', '));
+      if (originStr && loc.lat != null) {
+        try {
+          const dm = await fetch(`https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(originStr)}&destinations=${loc.lat},${loc.lng}&key=${key}`).then((r) => r.json());
+          const el = dm && dm.rows && dm.rows[0] && dm.rows[0].elements && dm.rows[0].elements[0];
+          if (el && el.status === 'OK') { distanceMiles = Math.round(el.distance.value / 1609.34 * 10) / 10; travelMinutes = Math.round(el.duration.value / 60); }
+        } catch (e) { /* distance optional — keep geocode result */ }
+      }
+      return {
+        ok: true, formattedAddress: g.formatted_address || addressStr,
+        lat: loc.lat != null ? loc.lat : null, lng: loc.lng != null ? loc.lng : null, placeId: g.place_id || '',
+        addressValidationStatus: precise ? 'precise' : 'approximate',
+        distanceMiles, travelMinutes, routeConfidence: precise ? 'high' : 'medium', googleMapsUsed: true,
+      };
+    } catch (err) {
+      console.warn('[validateAddressAndDistance] maps error:', err && err.message);
+      return fallback('maps_exception');
+    }
+  }
+);
+
 // ── aiTtsProxy ─────────────────────────────────────────────────────────────────
 // Callable function: server-side TTS proxy so the client never needs a Gemini
 // API key. Reuses the existing GEMINI_API_KEY Functions secret (the "latest
@@ -3060,6 +3172,9 @@ async function _queryEligibleDrivers(serviceType, airport, skipDriverIds) {
 const MB_SVC_DUR    = { barber: 45, ride: 90, tour: 480, airport: 90, pickup: 90, dropoff: 90, private_ride: 120 };
 const MB_SVC_BUFFER = { barber: 20, ride: 15, tour: 30 };
 const MB_NON_BLOCKING = new Set(['cancelled', 'rejected', 'declined', 'completed', 'expired', 'no_show']);
+// Default service radius (miles) for the route-aware confirm gate. Beyond this the
+// guard routes a booking to vendor_review rather than auto-confirming.
+const MB_SERVICE_RADIUS_DEFAULT = 30;
 
 function mbNormSvc(s) {
   s = String(s || '').toLowerCase().trim();
@@ -3884,6 +3999,27 @@ exports.createMobileBarberBookingGuarded = onCall(
     } else if (!writeDoc.bookingFor) {
       writeDoc.bookingFor = 'self';
     }
+
+    // ── Route-aware confirm gate (server-authoritative) ─────────────────────────
+    // The server is the source of truth for "can this be confirmed?". An
+    // unvalidated address or a job beyond the service radius is routed to
+    // vendor_review (NOT hard-rejected — keeps customer churn low while flagging
+    // the barber). Hard travel-gap infeasibility is handled upstream by the slot
+    // scorer (those slots are never offered) and window overlaps by mbOverlaps above.
+    (function applyRouteGate() {
+      if (MB_NON_BLOCKING.has(String(writeDoc.status || '').toLowerCase())) return;
+      const av = String(booking.addressValidationStatus || '').toLowerCase();
+      const distanceMiles = Number(booking.distanceMiles || 0);
+      const radius = MB_SERVICE_RADIUS_DEFAULT;
+      if (!av || av === 'invalid') {
+        writeDoc.status = 'vendor_review';
+        writeDoc.reviewReason = writeDoc.reviewReason || 'address_unvalidated';
+      } else if (distanceMiles > radius) {
+        writeDoc.status = 'vendor_review';
+        writeDoc.reviewReason = writeDoc.reviewReason || 'beyond_service_radius';
+      }
+    })();
+
     await ref.set(writeDoc);
     logCheck(verifiedFamily ? 'ok_family_member' : 'ok');
     console.log('[booking-write-guarded]', JSON.stringify({ bookingId, vendorId, ownerId, status: writeDoc.status, bookingFor: writeDoc.bookingFor }));

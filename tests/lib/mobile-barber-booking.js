@@ -46,6 +46,13 @@ function sampleBuiltBooking(id) {
   return built.booking;
 }
 
+// Fixture bookings sit on 2026-06-01; pin "now" a week earlier by default so the
+// same-day cutoff never fires (and tests are deterministic regardless of the real
+// calendar date). Individual tests can still override with extra.now.
+// Must be a Date — checkSameDayCutoff ignores a string `now` and uses the real
+// clock, which would make these fixtures fail once the calendar reaches 2026-06-01.
+var FIXTURE_NOW = new Date('2026-05-24T00:00:00.000Z');
+
 function check(draft, existingBookings, extra) {
   extra = extra || {};
   return MobileBarberBooking.checkAvailability({
@@ -55,7 +62,7 @@ function check(draft, existingBookings, extra) {
     draft: draft,
     existingBookings: existingBookings || [],
     unavailableBlocks: extra.unavailableBlocks || [],
-    now: extra.now
+    now: extra.now || FIXTURE_NOW
   });
 }
 
@@ -68,7 +75,7 @@ function checkVendor(vendorId, draft, existingBookings, extra) {
     draft: draft,
     existingBookings: existingBookings || [],
     unavailableBlocks: extra.unavailableBlocks || [],
-    now: extra.now
+    now: extra.now || FIXTURE_NOW
   });
 }
 
@@ -267,7 +274,8 @@ function runMobileBarberBookingTests(test) {
       services: MobileBarberData.listServicesForVendor(vendor.id),
       availability: MobileBarberData.sampleAvailability,
       draft: draft,
-      existingBookings: []
+      existingBookings: [],
+      now: FIXTURE_NOW
     });
     var built = MobileBarberBooking.buildBooking({
       id: 'pricing-fields-test',
@@ -297,6 +305,7 @@ function runMobileBarberBookingTests(test) {
       '2026-06-01T10:00:00',
       '2026-06-01T11:15:00',
       {
+        now: FIXTURE_NOW,
         existingBookings: [{
           id: 'existing-window',
           vendorId: MobileBarberData.MICHAEL_VENDOR_ID,
@@ -1057,6 +1066,7 @@ function runMobileBarberBookingTests(test) {
       availability: MobileBarberData.sampleAvailability,
       draft: draft,
       existingBookings: [],
+      now: FIXTURE_NOW,
       liveDataSource: 'static-fallback'
     });
     assert(availability.canCreate, 'availability should still allow create on static fallback');
@@ -1081,6 +1091,7 @@ function runMobileBarberBookingTests(test) {
       availability: MobileBarberData.sampleAvailability,
       draft: draft,
       existingBookings: [],
+      now: FIXTURE_NOW,
       liveDataSource: 'firestore'
     });
     var built = MobileBarberBooking.buildBooking({
@@ -1093,6 +1104,136 @@ function runMobileBarberBookingTests(test) {
     assert(built.valid, 'booking should build on live firestore data');
     assert(built.booking.status !== 'vendor_review', 'live firestore data must NOT force vendor_review');
     assert(!built.booking.reviewReason, 'no stale review reason when data is live');
+  });
+
+  // ── Route-aware booking engine (13 spec tests) ─────────────────────────────
+  var RV = MobileBarberData.MICHAEL_VENDOR_ID;
+  var RSVC = 'michael-nguyen-oc-classic-haircut';
+  function rVendor() { return MobileBarberData.findVendorById(RV); }
+  function rSvcList() { return MobileBarberData.listServicesForVendor(RV); }
+  function rAvail() { return MobileBarberData.sampleAvailability; }
+  function rScore(o) { return MobileBarberBooking.scoreMobileBarberSlot(o); }
+  function rExisting(start, end, id) { return { id: id || 'p', vendorId: RV, requestedDate: '2026-06-01', startTime: start, endTime: end, status: 'confirmed' }; }
+
+  test('Route 1: an all-day request returns 3–5 best slots sorted by score', function() {
+    var best = MobileBarberBooking.findBestMobileBarberSlots({
+      vendorId: RV, serviceId: RSVC, vendor: rVendor(), services: rSvcList(), availability: rAvail(),
+      existingBookings: [], now: new Date('2026-05-30T08:00:00'), dateRange: { start: '2026-06-01', end: '2026-06-01' }, limit: 5
+    });
+    assert(best.length >= 3 && best.length <= 5, 'expected 3–5 slots, got ' + best.length);
+    for (var i = 1; i < best.length; i++) assert(best[i - 1].score >= best[i].score, 'slots sorted by score desc');
+    assert(best[0].reasons && best[0].reasons.length, 'each slot carries a reason');
+    assert(best.every(function(s) { return s.slot && s.slot.startTime; }), 'each result has a slot');
+  });
+
+  test('Route 2: a requested-time conflict still yields conflict-free alternates', function() {
+    var existing = [rExisting('10:00', '11:15', 'x')];
+    var avail0 = check(baseDraft(), existing);
+    assertEq(avail0.canCreate, false);
+    var best = MobileBarberBooking.findBestMobileBarberSlots({
+      vendorId: RV, serviceId: RSVC, vendor: rVendor(), services: rSvcList(), availability: rAvail(),
+      existingBookings: existing, now: new Date('2026-05-30T08:00:00'), dateRange: { start: '2026-06-01', end: '2026-06-01' }, limit: 5
+    });
+    assert(best.length >= 1, 'alternates returned');
+    assert(best.every(function(s) { return s.slot.startTime !== '10:00'; }), 'alternates exclude the conflicting 10:00 window');
+  });
+
+  test('Route 3: an invalid address is never recommended', function() {
+    var s = rScore({ slot: { requestedDate: '2026-06-01', startTime: '10:00', endTime: '10:45' }, candidateStart: '10:00', candidateEnd: '10:45', serviceDuration: 45, existingBookings: [], addressValidationStatus: 'invalid' });
+    assertEq(s.isRecommended, false);
+  });
+
+  test('Route 4: an address beyond the service radius is flagged + not recommended (+ guard gate)', function() {
+    var s = rScore({ slot: { requestedDate: '2026-06-01', startTime: '10:00', endTime: '10:45' }, candidateStart: '10:00', candidateEnd: '10:45', serviceDuration: 45, existingBookings: [], distanceMiles: 35, serviceRadiusMiles: 30 });
+    assert(s.reasons.indexOf('beyond_service_radius') >= 0, 'beyond_service_radius reason');
+    assertEq(s.isRecommended, false);
+    var fns = fs.readFileSync(path.join(__dirname, '../../functions/index.js'), 'utf8');
+    assert(fns.indexOf("reviewReason = writeDoc.reviewReason || 'beyond_service_radius'") >= 0, 'guard routes beyond-radius to vendor_review');
+  });
+
+  test('Route 5: a nearby existing booking makes the adjacent slot rank highest', function() {
+    var existing = [rExisting('10:00', '10:45')];
+    var travel = { p: 10 };
+    var adj = rScore({ slot: { requestedDate: '2026-06-01', startTime: '11:00', endTime: '11:45' }, candidateStart: '11:00', candidateEnd: '11:45', serviceDuration: 45, cleanupBuffer: 0, travelBuffer: 0, existingBookings: existing, googleMapsTravelTimes: travel });
+    var far = rScore({ slot: { requestedDate: '2026-06-01', startTime: '15:00', endTime: '15:45' }, candidateStart: '15:00', candidateEnd: '15:45', serviceDuration: 45, cleanupBuffer: 0, travelBuffer: 0, existingBookings: existing, googleMapsTravelTimes: travel });
+    assert(adj.reasons.indexOf('efficient_route_adjacent') >= 0, 'adjacent slot flagged');
+    assert(adj.score > far.score, 'adjacent slot scores higher than the isolated one');
+  });
+
+  test('Route 6: a far previous appointment downgrades the candidate', function() {
+    var existing = [rExisting('09:00', '09:45')];
+    var near = rScore({ slot: { requestedDate: '2026-06-01', startTime: '10:30', endTime: '11:15' }, candidateStart: '10:30', candidateEnd: '11:15', serviceDuration: 45, cleanupBuffer: 0, travelBuffer: 0, existingBookings: existing, googleMapsTravelTimes: { p: 10 } });
+    var far = rScore({ slot: { requestedDate: '2026-06-01', startTime: '10:30', endTime: '11:15' }, candidateStart: '10:30', candidateEnd: '11:15', serviceDuration: 45, cleanupBuffer: 0, travelBuffer: 0, existingBookings: existing, googleMapsTravelTimes: { p: 40 } });
+    assert(far.score < near.score, 'far travel scores lower than near travel');
+  });
+
+  test('Route 7: a gap too short for travel is a hard fail (slot excluded)', function() {
+    var existing = [rExisting('10:00', '10:40')];
+    var s = rScore({ slot: { requestedDate: '2026-06-01', startTime: '11:00', endTime: '11:45' }, candidateStart: '11:00', candidateEnd: '11:45', serviceDuration: 45, cleanupBuffer: 0, travelBuffer: 0, existingBookings: existing, googleMapsTravelTimes: { p: 35 } });
+    assertEq(s.score, -Infinity);
+    assert(s.reasons.indexOf('travel_gap_insufficient') >= 0, 'travel_gap_insufficient reason');
+    assertEq(s.isRecommended, false);
+  });
+
+  test('Route 8: a dead gap lowers the slot score', function() {
+    var existing = [rExisting('10:00', '10:45')];
+    var dead = rScore({ slot: { requestedDate: '2026-06-01', startTime: '14:00', endTime: '14:45' }, candidateStart: '14:00', candidateEnd: '14:45', serviceDuration: 45, cleanupBuffer: 0, travelBuffer: 0, existingBookings: existing, googleMapsTravelTimes: { p: 15 } });
+    var tight = rScore({ slot: { requestedDate: '2026-06-01', startTime: '11:00', endTime: '11:45' }, candidateStart: '11:00', candidateEnd: '11:45', serviceDuration: 45, cleanupBuffer: 0, travelBuffer: 0, existingBookings: existing, googleMapsTravelTimes: { p: 15 } });
+    assert(dead.reasons.indexOf('dead_gap') >= 0, 'dead gap flagged');
+    assert(dead.score < tight.score, 'dead-gap slot scores lower than a tightly-packed slot');
+  });
+
+  test('Route 9: the manual booking flow uses the slot engine + address validation', function() {
+    var src = fs.readFileSync(path.join(__dirname, '../../mobile-barber/mobile-barber.js'), 'utf8');
+    assert(src.indexOf('BOOKING.findBestMobileBarberSlots') >= 0, 'manual flow calls findBestMobileBarberSlots');
+    assert(src.indexOf('BOOKING.validateAddressAndDistance') >= 0, 'manual flow validates the address');
+    assert(src.indexOf('ue.bestSlots') >= 0, 'manual failure surfaces alternates');
+  });
+
+  test('Route 10: the AI chat agent offers ranked route-aware slots', function() {
+    var src = fs.readFileSync(path.join(__dirname, '../../mobile-barber/mobile-barber-agent.js'), 'utf8');
+    assert(src.indexOf('BOOKING.findBestMobileBarberSlots') >= 0, 'agent uses findBestMobileBarberSlots');
+    assert(src.indexOf('slotReasonLabel') >= 0, 'agent renders localized slot reasons');
+    assert(src.indexOf('state.routeContext = Object.assign') >= 0, 'agent carries route context into the booking');
+  });
+
+  test('Route 11: the voice agent reuses the same chat/agent slot engine', function() {
+    var src = fs.readFileSync(path.join(__dirname, '../../mobile-barber/mobile-barber-voice.js'), 'utf8');
+    assert(src.indexOf("controller.sendMessage(transcript, { source: 'ai_voice' })") >= 0, 'voice delegates to the shared chat controller (same engine)');
+  });
+
+  test('Route 12: a built booking carries the routeOptimizationSnapshot + address fields', function() {
+    var draft = baseDraft();
+    draft.routeContext = {
+      formattedAddress: '123 Test St, Westminster, CA', lat: 33.75, lng: -117.99, placeId: 'abc',
+      addressValidationStatus: 'precise', distanceMiles: 5.2, routeConfidence: 'high', googleMapsUsed: true,
+      selectedSlotScore: 115, selectedSlotReasons: ['efficient_route_adjacent'],
+      travelFromPreviousMinutes: 10, travelToNextMinutes: 0, gapBeforeMinutes: 15, gapAfterMinutes: null
+    };
+    var built = MobileBarberBooking.buildBooking({ id: 'route-snap-test', now: '2026-05-24T00:00:00.000Z', vendor: rVendor(), draft: draft, availabilityResult: check(draft) });
+    assert(built.valid, 'booking builds with route context: ' + (built.errors || []).join(','));
+    var b = built.booking;
+    assertEq(b.addressValidationStatus, 'precise');
+    assertEq(b.distanceMiles, 5.2);
+    assertEq(b.formattedAddress, '123 Test St, Westminster, CA');
+    assert(b.routeOptimizationSnapshot && b.routeOptimizationSnapshot.selectedSlotScore === 115, 'snapshot score persisted');
+    assert(Array.isArray(b.routeOptimizationSnapshot.selectedSlotReasons), 'snapshot reasons persisted');
+    assertEq(b.routeOptimizationSnapshot.googleMapsUsed, true);
+  });
+
+  test('Route 13: Maps-unavailable fallback (city_zip_only) still builds + scores via travelBuffer', function() {
+    var draft = baseDraft();
+    draft.routeContext = { addressValidationStatus: 'city_zip_only', distanceMiles: 0, routeConfidence: 'low', googleMapsUsed: false };
+    var built = MobileBarberBooking.buildBooking({ id: 'route-fallback-test', now: '2026-05-24T00:00:00.000Z', vendor: rVendor(), draft: draft, availabilityResult: check(draft) });
+    assert(built.valid, 'fallback booking still builds');
+    assertEq(built.booking.addressValidationStatus, 'city_zip_only');
+    assertEq(built.booking.routeConfidence, 'low');
+    var s = rScore({ slot: { requestedDate: '2026-06-01', startTime: '11:00', endTime: '11:45' }, candidateStart: '11:00', candidateEnd: '11:45', serviceDuration: 45, cleanupBuffer: 0, travelBuffer: 20, existingBookings: [rExisting('10:00', '10:45')] });
+    assert(s.score !== -Infinity, 'fallback uses travelBuffer; a normal gap is feasible');
+    // Server proxy degrades safely too.
+    var fns = fs.readFileSync(path.join(__dirname, '../../functions/index.js'), 'utf8');
+    assert(fns.indexOf('exports.validateAddressAndDistance') >= 0, 'server Maps proxy exists');
+    assert(fns.indexOf("return fallback('no_maps_key')") >= 0, 'proxy falls back when no Maps key');
   });
 }
 

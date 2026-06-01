@@ -151,7 +151,9 @@ function runMobileBarberAiStyleBookingTests(test) {
     var src = read('mobile-barber/mobile-barber.js');
     var startIdx = src.indexOf('function submitInlineStyleBooking');
     assert(startIdx > 0, 'submitInlineStyleBooking must exist');
-    var fn = src.slice(startIdx, startIdx + 6000);
+    // Window covers the whole function — it grew with route-aware address
+    // validation + best-slot alternates added before the buildBooking call.
+    var fn = src.slice(startIdx, startIdx + 11000);
     assert(fn.indexOf('BOOKING.findVendorForAddress') >= 0, 'must route via findVendorForAddress');
     assert(fn.indexOf('BOOKING.checkAvailability') >= 0, 'must call checkAvailability');
     assert(fn.indexOf('BOOKING.buildBooking') >= 0, 'must call buildBooking');

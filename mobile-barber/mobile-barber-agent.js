@@ -36,7 +36,13 @@
       confirmPartialAddress: 'I heard {partial}. Is that correct?',
       askService: 'What barber service would you like?',
       askDateTime: 'What day and time would you like?',
-      offerSlots: 'Here are the next open times: {slots}. Which one works for you?',
+      offerSlots: 'Here are the best openings: {slots}. Which one works for you?',
+      reasonAdjacent: 'right after a nearby appointment',
+      reasonEarliest: 'earliest available',
+      reasonLessEfficient: 'available but more travel time',
+      reasonFar: 'farther out — the barber will review it',
+      reasonAddress: 'please confirm the address',
+      reasonOpen: 'open',
       noSlots: 'There are no open times in that window. Could you pick another day, or give me a specific time to check?',
       priceOnly: '{service} is {price}. With the mobile travel fee, the estimated total due after service is {total}. Pay by cash or Zelle after the haircut.',
       language: 'Yes. This assistant can help in English, Vietnamese, or Spanish.',
@@ -68,7 +74,13 @@
       confirmPartialAddress: 'Dạ em nghe {partial}. Đúng không ạ?',
       askService: 'Mình muốn đặt dịch vụ barber nào ạ?',
       askDateTime: 'Mình muốn đặt ngày nào và giờ nào ạ?',
-      offerSlots: 'Dạ có các khung giờ trống sau: {slots}. Anh/chị chọn giờ nào ạ?',
+      offerSlots: 'Dạ đây là các khung giờ phù hợp nhất: {slots}. Anh/chị chọn giờ nào ạ?',
+      reasonAdjacent: 'ngay sau một lịch hẹn gần đó',
+      reasonEarliest: 'sớm nhất',
+      reasonLessEfficient: 'còn trống nhưng phải đi xa hơn',
+      reasonFar: 'hơi xa — thợ sẽ xem lại',
+      reasonAddress: 'vui lòng xác nhận địa chỉ',
+      reasonOpen: 'còn trống',
       noSlots: 'Dạ khung giờ đó hiện không còn chỗ trống. Anh/chị chọn ngày khác, hoặc cho mình một giờ cụ thể để kiểm tra nhé?',
       priceOnly: '{service} là {price}. Cộng phí di chuyển, tổng ước tính trả sau khi cắt là {total}. Thanh toán bằng tiền mặt hoặc Zelle sau dịch vụ.',
       language: 'Dạ có. Trợ lý này hỗ trợ tiếng Việt, tiếng Anh, hoặc tiếng Tây Ban Nha.',
@@ -100,7 +112,13 @@
       confirmPartialAddress: 'Escuché {partial}. ¿Es correcto?',
       askService: '¿Qué servicio de barbería quiere?',
       askDateTime: '¿Qué día y hora prefiere?',
-      offerSlots: 'Estos son los próximos horarios disponibles: {slots}. ¿Cuál le funciona?',
+      offerSlots: 'Estos son los mejores horarios: {slots}. ¿Cuál le funciona?',
+      reasonAdjacent: 'justo después de una cita cercana',
+      reasonEarliest: 'lo más temprano',
+      reasonLessEfficient: 'disponible pero con más viaje',
+      reasonFar: 'más lejos — el barbero lo revisará',
+      reasonAddress: 'confirme la dirección, por favor',
+      reasonOpen: 'disponible',
       noSlots: 'No hay horarios libres en ese rango. ¿Puede elegir otro día o darme una hora específica para verificar?',
       priceOnly: '{service} cuesta {price}. Con la tarifa móvil, el total estimado después del servicio es {total}. Puede pagar en efectivo o Zelle después del corte.',
       language: 'Sí. Este asistente puede ayudar en inglés, vietnamita, o español.',
@@ -661,7 +679,10 @@
       paymentMethod: state.paymentMethod || 'cash',
       paymentStatus: 'unpaid',
       zellePhone: (state.vendorZellePhone || state.vendorPhone || '').trim(),
-      photoUrls: state.photoUrls || []
+      photoUrls: state.photoUrls || [],
+      // Route-aware address validation + chosen-slot metrics → buildBooking persists
+      // them as the routeOptimizationSnapshot. Empty when no route data was gathered.
+      routeContext: state.routeContext || null
     };
   }
 
@@ -1154,6 +1175,22 @@
   // BUG 1 — flexible time: search the LIVE schedule for real open slots inside
   // the customer's flexible window. Returns an array of {requestedDate,
   // startTime, endTime} (possibly empty). Never invents availability.
+  // Localized, customer-friendly label for a scored slot's reasons. Reason
+  // strings live in the reply tables (vi/en/es) — never hardcoded here.
+  function slotReasonLabel(lang, reasons) {
+    reasons = reasons || [];
+    var map = {
+      efficient_route_adjacent: 'reasonAdjacent', earliest_available: 'reasonEarliest',
+      beyond_service_radius: 'reasonFar', dead_gap: 'reasonLessEfficient',
+      address_low_confidence: 'reasonAddress', available: 'reasonOpen'
+    };
+    var order = ['efficient_route_adjacent', 'earliest_available', 'beyond_service_radius', 'dead_gap', 'address_low_confidence', 'available'];
+    for (var i = 0; i < order.length; i++) {
+      if (reasons.indexOf(order[i]) >= 0) return reply(lang, map[order[i]]);
+    }
+    return reply(lang, 'reasonOpen');
+  }
+
   function _offerFlexibleSlots(state, ctx, vendor, services) {
     if (!BOOKING || typeof BOOKING.findNextAvailableSlots !== 'function' || !vendor) return [];
     var fw = state.flexibleWindow || {};
@@ -1175,7 +1212,28 @@
     };
     function search(endDate) {
       try {
-        return BOOKING.findNextAvailableSlots(vendor.id, state.serviceId, { start: startDate, end: endDate }, baseOpts) || [];
+        var range = { start: startDate, end: endDate };
+        // Route-aware ranking when the engine is available; fall back to the raw
+        // chronological slot list on older deploys (graceful degradation).
+        if (BOOKING && typeof BOOKING.findBestMobileBarberSlots === 'function') {
+          var rc = state.routeContext || {};
+          var ranked = BOOKING.findBestMobileBarberSlots(Object.assign({}, baseOpts, {
+            vendorId: vendor.id, serviceId: state.serviceId, preferredWindow: range,
+            distanceMiles: rc.distanceMiles, addressValidationStatus: rc.addressValidationStatus,
+            serviceRadiusMiles: rc.serviceRadiusMiles, googleMapsTravelTimes: rc.googleMapsTravelTimes,
+            preferredStartMinutes: (fw.startMin != null ? fw.startMin : null), limit: 5
+          })) || [];
+          if (ranked.length) {
+            return ranked.map(function(r) {
+              return Object.assign({}, r.slot, {
+                _routeScore: r.score, _routeReasons: r.reasons || [], _isRecommended: r.isRecommended,
+                travelMinutesFromPrevious: r.travelMinutesFromPrevious, travelMinutesToNext: r.travelMinutesToNext,
+                gapBeforeMinutes: r.gapBeforeMinutes, gapAfterMinutes: r.gapAfterMinutes, routeEfficiency: r.routeEfficiency
+              });
+            });
+          }
+        }
+        return BOOKING.findNextAvailableSlots(vendor.id, state.serviceId, range, baseOpts) || [];
       } catch (e) { return []; }
     }
     // Stage 1: the requested day (or a multi-day span for open-ended phrases).
@@ -1342,6 +1400,18 @@
         state.time = picked.startTime;
         state.flexibleWindow = null;
         state.offeredSlots = null;
+        // Carry the chosen slot's route metrics into routeContext so buildBooking
+        // persists the routeOptimizationSnapshot.
+        if (picked._routeScore != null) {
+          state.routeContext = Object.assign({}, state.routeContext, {
+            selectedSlotScore: picked._routeScore,
+            selectedSlotReasons: picked._routeReasons || [],
+            travelFromPreviousMinutes: picked.travelMinutesFromPrevious || 0,
+            travelToNextMinutes: picked.travelMinutesToNext || 0,
+            gapBeforeMinutes: picked.gapBeforeMinutes,
+            gapAfterMinutes: picked.gapAfterMinutes
+          });
+        }
       }
     }
     // (b) Flexible window + everything except the time present → search the live
@@ -1359,7 +1429,8 @@
         state.offeredSlots = realSlots;
         state.step = 'OFFER_SLOTS';
         var listText = realSlots.map(function(s, i) {
-          return (i + 1) + ') ' + s.requestedDate + ' ' + _fmt12(s.startTime);
+          var reasonTxt = (s._routeReasons && s._routeReasons.length) ? ' — ' + slotReasonLabel(lang, s._routeReasons) : '';
+          return (i + 1) + ') ' + s.requestedDate + ' ' + _fmt12(s.startTime) + reasonTxt;
         }).join('; ');
         session.lastSystemContext = 'These are REAL open times from the live schedule. Offer exactly these and ask the customer to pick one; never invent other times: ' + listText;
         return { session: session, response: reply(lang, 'offerSlots', { slots: listText }) };
@@ -1397,6 +1468,10 @@
       unavailableBlocks: ctx.unavailableBlocks || [],
       draft: draft,
       existingBookings: ctx.existingBookings || [],
+      // Forward the conversation clock so the same-day cutoff uses the agent's
+      // `now` (deterministic in tests; the real clock in production) rather than
+      // silently falling back to wall-clock time.
+      now: ctx.now,
       liveDataSource: ctx.liveDataSource || 'provided'
     });
     state.lastAvailabilityKey = availability.key;

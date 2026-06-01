@@ -125,7 +125,17 @@
     // form bookings without routing context stay valid.
     'assignedBarberId', 'routingReason', 'previousCustomerMatched',
     'customerPreferenceSnapshot', 'scheduleCheckSnapshot',
+    // Route-aware booking optimization (optional). Address validation result +
+    // the route/travel snapshot for the chosen slot. All default empty/0/null/
+    // false so bookings without route data stay valid (backward compatible).
+    'formattedAddress', 'lat', 'lng', 'placeId', 'addressValidationStatus',
+    'distanceMiles', 'routeConfidence', 'routeOptimizationSnapshot',
     'createdAt', 'updatedAt'
+  ]);
+
+  // Allowed address-validation states (validateBooking enforces when present).
+  var ADDRESS_VALIDATION_STATUSES = Object.freeze([
+    'precise', 'approximate', 'city_zip_only', 'unverified', 'invalid'
   ]);
 
   var CONFIRMATION_PREFERENCES = Object.freeze(['call', 'text', 'app']);
@@ -1155,6 +1165,16 @@
     }
     if (booking.photoUrls != null && !Array.isArray(booking.photoUrls)) {
       errors.push('photoUrls must be an array when present.');
+    }
+    // Route-aware optimization fields (all optional).
+    if (hasText(booking.addressValidationStatus) && ADDRESS_VALIDATION_STATUSES.indexOf(booking.addressValidationStatus) < 0) {
+      errors.push('addressValidationStatus is not supported.');
+    }
+    if (booking.distanceMiles != null) requireNumber(booking, 'distanceMiles', errors, { min: 0 });
+    if (booking.lat != null && !isFiniteNumber(booking.lat)) errors.push('lat must be a number when present.');
+    if (booking.lng != null && !isFiniteNumber(booking.lng)) errors.push('lng must be a number when present.');
+    if (booking.routeOptimizationSnapshot != null && !isPlainObject(booking.routeOptimizationSnapshot)) {
+      errors.push('routeOptimizationSnapshot must be an object when present.');
     }
     if (booking.customerUid != null && booking.customerUid !== '' && !hasText(booking.customerUid)) {
       errors.push('customerUid must be a non-empty string when present.');

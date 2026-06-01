@@ -192,6 +192,7 @@
       manualBookingSubmit: 'Send booking request',
       manualBookingSubmitting: 'Sending…',
       manualBookingSuccess: 'Booking sent. The barber will confirm shortly.',
+      manualBookingAltTimes: 'Recommended times:',
       manualBookingCancel: 'Cancel',
       manualBookingMissing: 'Please fill the required fields.',
       manualBookingNoVendor: 'No barber covers this address yet. Try a different ZIP.',
@@ -438,6 +439,7 @@
       manualBookingSubmit: 'Gửi yêu cầu đặt',
       manualBookingSubmitting: 'Đang gửi…',
       manualBookingSuccess: 'Đã gửi lịch hẹn. Thợ sẽ xác nhận sớm.',
+      manualBookingAltTimes: 'Giờ gợi ý:',
       manualBookingCancel: 'Hủy',
       manualBookingMissing: 'Vui lòng điền các ô bắt buộc.',
       manualBookingNoVendor: 'Hiện chưa có thợ phục vụ địa chỉ này. Thử ZIP khác giúp em.',
@@ -684,6 +686,7 @@
       manualBookingSubmit: 'Enviar solicitud',
       manualBookingSubmitting: 'Enviando…',
       manualBookingSuccess: 'Solicitud enviada. El barbero confirmará pronto.',
+      manualBookingAltTimes: 'Horarios recomendados:',
       manualBookingCancel: 'Cancelar',
       manualBookingMissing: 'Por favor complete los campos requeridos.',
       manualBookingNoVendor: 'Ningún barbero cubre esta dirección. Pruebe otro código postal.',
@@ -3091,26 +3094,58 @@
       })
       .catch(function() { return []; })
       .then(function(existing) {
-        var avail = BOOKING.checkAvailability({
-          vendor: vendor,
-          services: services,
-          availability: availability,
-          unavailableBlocks: unavailableBlocks,
-          draft: finalDraft,
-          existingBookings: existing,
-          now: new Date(),
-          liveDataSource: finalDraft._liveDataSource || 'static-fallback'
+        // Route-aware: validate the address + measure distance via the server Maps
+        // proxy (best-effort — always resolves to a safe fallback) so buildBooking
+        // persists the routeOptimizationSnapshot and the guard can gate on it.
+        var origin = { city: (vendor.serviceAreas && vendor.serviceAreas[0]) || vendor.city || '', zip: vendor.zip || '' };
+        if (typeof vendor.lat === 'number' && typeof vendor.lng === 'number') { origin.lat = vendor.lat; origin.lng = vendor.lng; }
+        var validateP = (typeof BOOKING.validateAddressAndDistance === 'function')
+          ? BOOKING.validateAddressAndDistance({ address: finalDraft.address, city: finalDraft.city, zip: finalDraft.zip }, origin)
+          : Promise.resolve(null);
+        return validateP.then(function(addr) {
+          if (addr) {
+            finalDraft.routeContext = {
+              formattedAddress: addr.formattedAddress, lat: addr.lat, lng: addr.lng, placeId: addr.placeId,
+              addressValidationStatus: addr.addressValidationStatus, distanceMiles: addr.distanceMiles,
+              routeConfidence: addr.routeConfidence, googleMapsUsed: addr.googleMapsUsed
+            };
+          }
+          var avail = BOOKING.checkAvailability({
+            vendor: vendor,
+            services: services,
+            availability: availability,
+            unavailableBlocks: unavailableBlocks,
+            draft: finalDraft,
+            existingBookings: existing,
+            now: new Date(),
+            liveDataSource: finalDraft._liveDataSource || 'static-fallback'
+          });
+          if (!avail || !avail.canCreate) {
+            // Don't dead-end: offer the best route-aware alternates instead.
+            var alts = [];
+            try {
+              if (typeof BOOKING.findBestMobileBarberSlots === 'function') {
+                alts = BOOKING.findBestMobileBarberSlots({
+                  vendorId: vendor.id, serviceId: finalDraft.serviceId, vendor: vendor, services: services,
+                  availability: availability, unavailableBlocks: unavailableBlocks, existingBookings: existing,
+                  now: new Date(), preferredTime: finalDraft.startTime,
+                  distanceMiles: (addr && addr.distanceMiles) || 0,
+                  addressValidationStatus: (addr && addr.addressValidationStatus) || '', limit: 5
+                }) || [];
+              }
+            } catch (e) {}
+            var ue = new Error(avail && avail.key ? avail.key : 'unavailable');
+            ue.bestSlots = alts;
+            throw ue;
+          }
+          var built = BOOKING.buildBooking({ vendor: vendor, draft: finalDraft, availabilityResult: avail });
+          if (!built || !built.valid) {
+            throw new Error((built && built.errors && built.errors.join(', ')) || 'invalid_booking');
+          }
+          built.booking.source = 'customer_form';
+          state._pendingDupBooking = built.booking;
+          return BOOKING.saveBooking(built.booking, { requireDatabase: true });
         });
-        if (!avail || !avail.canCreate) {
-          throw new Error(avail && avail.key ? avail.key : 'unavailable');
-        }
-        var built = BOOKING.buildBooking({ vendor: vendor, draft: finalDraft, availabilityResult: avail });
-        if (!built || !built.valid) {
-          throw new Error((built && built.errors && built.errors.join(', ')) || 'invalid_booking');
-        }
-        built.booking.source = 'customer_form';
-        state._pendingDupBooking = built.booking;
-        return BOOKING.saveBooking(built.booking, { requireDatabase: true });
       })
       .then(function(saved) {
         state.manualBooking.submitting = false;
@@ -3142,6 +3177,15 @@
           : (error && error.bookingSpam)
             ? t('dupSpam')
             : manualBookingErrorMessage(rawMessage);
+        // Route-aware: when the requested time isn't available, append the best
+        // alternate openings instead of dead-ending on an error.
+        if (error && Array.isArray(error.bestSlots) && error.bestSlots.length) {
+          var altText = error.bestSlots.slice(0, 5).map(function(s) {
+            var slot = s.slot || s;
+            return (slot.requestedDate || '') + ' ' + formatSlotLabel(slot.startTime || '');
+          }).join(' · ');
+          human += ' ' + (t('manualBookingAltTimes') || 'Recommended times:') + ' ' + altText;
+        }
         state.manualBooking.lastSubmissionError = human;
         if (statusEl) {
           statusEl.textContent = human;
@@ -3518,26 +3562,58 @@
       })
       .catch(function() { return []; })
       .then(function(existing) {
-        var avail = BOOKING.checkAvailability({
-          vendor: vendor,
-          services: services,
-          availability: availability,
-          unavailableBlocks: unavailableBlocks,
-          draft: finalDraft,
-          existingBookings: existing,
-          now: new Date(),
-          liveDataSource: finalDraft._liveDataSource || 'static-fallback'
+        // Route-aware: validate the address + measure distance via the server Maps
+        // proxy (best-effort — always resolves to a safe fallback) so buildBooking
+        // persists the routeOptimizationSnapshot and the guard can gate on it.
+        var origin = { city: (vendor.serviceAreas && vendor.serviceAreas[0]) || vendor.city || '', zip: vendor.zip || '' };
+        if (typeof vendor.lat === 'number' && typeof vendor.lng === 'number') { origin.lat = vendor.lat; origin.lng = vendor.lng; }
+        var validateP = (typeof BOOKING.validateAddressAndDistance === 'function')
+          ? BOOKING.validateAddressAndDistance({ address: finalDraft.address, city: finalDraft.city, zip: finalDraft.zip }, origin)
+          : Promise.resolve(null);
+        return validateP.then(function(addr) {
+          if (addr) {
+            finalDraft.routeContext = {
+              formattedAddress: addr.formattedAddress, lat: addr.lat, lng: addr.lng, placeId: addr.placeId,
+              addressValidationStatus: addr.addressValidationStatus, distanceMiles: addr.distanceMiles,
+              routeConfidence: addr.routeConfidence, googleMapsUsed: addr.googleMapsUsed
+            };
+          }
+          var avail = BOOKING.checkAvailability({
+            vendor: vendor,
+            services: services,
+            availability: availability,
+            unavailableBlocks: unavailableBlocks,
+            draft: finalDraft,
+            existingBookings: existing,
+            now: new Date(),
+            liveDataSource: finalDraft._liveDataSource || 'static-fallback'
+          });
+          if (!avail || !avail.canCreate) {
+            // Don't dead-end: offer the best route-aware alternates instead.
+            var alts = [];
+            try {
+              if (typeof BOOKING.findBestMobileBarberSlots === 'function') {
+                alts = BOOKING.findBestMobileBarberSlots({
+                  vendorId: vendor.id, serviceId: finalDraft.serviceId, vendor: vendor, services: services,
+                  availability: availability, unavailableBlocks: unavailableBlocks, existingBookings: existing,
+                  now: new Date(), preferredTime: finalDraft.startTime,
+                  distanceMiles: (addr && addr.distanceMiles) || 0,
+                  addressValidationStatus: (addr && addr.addressValidationStatus) || '', limit: 5
+                }) || [];
+              }
+            } catch (e) {}
+            var ue = new Error(avail && avail.key ? avail.key : 'unavailable');
+            ue.bestSlots = alts;
+            throw ue;
+          }
+          var built = BOOKING.buildBooking({ vendor: vendor, draft: finalDraft, availabilityResult: avail });
+          if (!built || !built.valid) {
+            throw new Error((built && built.errors && built.errors.join(', ')) || 'invalid_booking');
+          }
+          built.booking.source = 'customer_form';
+          state._pendingDupBooking = built.booking;
+          return BOOKING.saveBooking(built.booking, { requireDatabase: true });
         });
-        if (!avail || !avail.canCreate) {
-          throw new Error(avail && avail.key ? avail.key : 'unavailable');
-        }
-        var built = BOOKING.buildBooking({ vendor: vendor, draft: finalDraft, availabilityResult: avail });
-        if (!built || !built.valid) {
-          throw new Error((built && built.errors && built.errors.join(', ')) || 'invalid_booking');
-        }
-        built.booking.source = 'customer_form';
-        state._pendingDupBooking = built.booking;
-        return BOOKING.saveBooking(built.booking, { requireDatabase: true });
       })
       .then(function(saved) {
         state.aiPreview.submitting = false;

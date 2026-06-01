@@ -112,7 +112,11 @@
 
     var callable;
     try {
-      callable = firebase.functions().httpsCallable('generateHaircutPreviews');
+      // The server function allows up to 300s to generate 5 Gemini images; the
+      // Firebase client default callable timeout is only 70s, which throws
+      // "deadline-exceeded" while the server is still working (especially on a
+      // cold start). Raise the client timeout to 180s so it waits for the result.
+      callable = firebase.functions().httpsCallable('generateHaircutPreviews', { timeout: 180000 });
     } catch (e) {
       return Promise.resolve({
         ok: false,

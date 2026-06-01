@@ -116,7 +116,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(html, '/mobile-barber/mobile-barber-voice.js?v=20260530m');
     assertContains(html, '/mobile-barber/mobile-barber-icons.js?v=20260530g');
     assertContains(html, '/mobile-barber/mobile-barber-lightbox.js?v=20260530f');
-    assertContains(html, '/mobile-barber/mobile-barber-ai-preview.js?v=20260531i');
+    assertContains(html, '/mobile-barber/mobile-barber-ai-preview.js?v=20260601c');
     assertContains(html, '/mobile-barber/mobile-barber-customer.js?v=20260601b');
     assertContains(html, '/mobile-barber/mobile-barber.js?v=20260601c');
   });

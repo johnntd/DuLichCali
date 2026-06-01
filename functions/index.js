@@ -3179,6 +3179,199 @@ exports.sendMobileBarberBookingPush = onDocumentCreated(
   }
 );
 
+function mbCustomerNotificationCopy(status) {
+  const s = String(status || '').toLowerCase();
+  if (s === 'confirmed') {
+    return { type: 'booking_confirmed', title: 'Booking confirmed', body: 'Your haircut appointment is confirmed.' };
+  }
+  if (s === 'vendor_review' || s === 'needs_info' || s === 'more_info_needed') {
+    return { type: 'booking_needs_info', title: 'More information needed', body: 'Your barber needs more information about your appointment.' };
+  }
+  if (s === 'rescheduled') {
+    return { type: 'booking_rescheduled', title: 'Appointment changed', body: 'Your appointment time has changed.' };
+  }
+  if (s === 'cancelled') {
+    return { type: 'booking_cancelled', title: 'Appointment cancelled', body: 'Your haircut appointment was cancelled.' };
+  }
+  if (s === 'rejected' || s === 'declined') {
+    return { type: 'booking_rejected', title: 'Appointment not accepted', body: 'Your barber could not accept this appointment.' };
+  }
+  if (s === 'completed') {
+    return { type: 'booking_completed', title: 'Haircut completed', body: 'Your haircut is complete. We can remind you when it may be time to book again.' };
+  }
+  return null;
+}
+
+async function mbWriteCustomerNotification(bookingId, booking, copy) {
+  const customerId = String(booking.customerId || booking.customerUid || '').trim();
+  if (!customerId || !copy) return;
+  const id = `${bookingId}_${copy.type}`;
+  await db.collection('customerNotifications').doc(id).set({
+    id,
+    customerId,
+    bookingId,
+    vendorId: String(booking.vendorId || ''),
+    ownerId: String(booking.ownerId || ''),
+    type: copy.type,
+    title: copy.title,
+    body: copy.body,
+    status: String(booking.status || ''),
+    read: false,
+    openUrl: `/mobile-barber?panel=notifications&bookingId=${encodeURIComponent(bookingId)}`,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+}
+
+async function mbScheduleHaircutReminder(bookingId, booking) {
+  const customerId = String(booking.customerId || booking.customerUid || '').trim();
+  if (!customerId) return;
+  const customerRef = db.collection('mobileBarberCustomers').doc(customerId);
+  const prefRef = db.collection('customerReminderPreferences').doc(customerId);
+  const prefSnap = await prefRef.get().catch(() => null);
+  const customerSnap = await customerRef.get().catch(() => null);
+  const pref = prefSnap && prefSnap.exists ? (prefSnap.data() || {}) : {};
+  const customer = customerSnap && customerSnap.exists ? (customerSnap.data() || {}) : {};
+  const weeks = Number(pref.reminderPreferenceWeeks || customer.reminderPreferenceWeeks || 4);
+  const enabled = pref.enabled !== false && weeks > 0;
+  const lastDate = String(booking.requestedDate || '').trim() || new Date().toISOString().slice(0, 10);
+  const next = new Date(`${lastDate}T12:00:00Z`);
+  next.setUTCDate(next.getUTCDate() + (enabled ? weeks * 7 : 0));
+  const payload = {
+    id: customerId,
+    customerId,
+    reminderPreferenceWeeks: weeks,
+    enabled,
+    lastHaircutDate: lastDate,
+    nextReminderDate: enabled ? next.toISOString().slice(0, 10) : '',
+    preferredBarber: String(booking.assignedBarberId || booking.vendorId || ''),
+    lastService: String(booking.serviceName || ''),
+    lastBookingId: bookingId,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  };
+  await prefRef.set(Object.assign({ createdAt: admin.firestore.FieldValue.serverTimestamp() }, payload), { merge: true });
+  await customerRef.set({
+    lastHaircutDate: payload.lastHaircutDate,
+    nextReminderDate: payload.nextReminderDate,
+    preferredBarber: payload.preferredBarber,
+    lastService: payload.lastService,
+    lastBookingId: bookingId,
+    reminderPreferenceWeeks: weeks,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+}
+
+exports.onMobileBarberCustomerBookingStatus = onDocumentWritten(
+  {
+    document: 'mobileBarberBookings/{bookingId}',
+    region: 'us-central1',
+    timeoutSeconds: 60,
+    retry: false,
+  },
+  async (event) => {
+    const before = event.data && event.data.before && event.data.before.exists ? event.data.before.data() : null;
+    const after = event.data && event.data.after && event.data.after.exists ? event.data.after.data() : null;
+    if (!after) return;
+    const prevStatus = before ? String(before.status || '').toLowerCase() : '';
+    const nextStatus = String(after.status || '').toLowerCase();
+    if (!nextStatus || prevStatus === nextStatus) return;
+    const copy = mbCustomerNotificationCopy(nextStatus);
+    if (copy) await mbWriteCustomerNotification(event.params.bookingId, after, copy);
+    if (nextStatus === 'completed') await mbScheduleHaircutReminder(event.params.bookingId, after);
+  }
+);
+
+exports.sendMobileBarberCustomerPush = onDocumentCreated(
+  {
+    document: 'customerNotifications/{notificationId}',
+    region: 'us-central1',
+    secrets: [VAPID_PRIVATE_KEY],
+    timeoutSeconds: 60,
+    retry: false,
+  },
+  async (event) => {
+    const notification = event.data && event.data.data();
+    if (!notification) return;
+    const customerId = String(notification.customerId || '').trim();
+    if (!customerId) return;
+    let webpush;
+    try { webpush = require('web-push'); } catch (e) { console.warn('[mb-customer-push] web-push unavailable'); return; }
+    const priv = VAPID_PRIVATE_KEY.value();
+    if (!priv) { console.warn('[mb-customer-push] VAPID_PRIVATE_KEY not set — skipping'); return; }
+    webpush.setVapidDetails('mailto:dulichcali21@gmail.com', VAPID_PUBLIC_KEY, priv);
+    const subsSnap = await db.collection('mobileBarberCustomers').doc(customerId).collection('pushSubscriptions').get();
+    if (subsSnap.empty) return;
+    let badgeCount = 0;
+    try {
+      const unread = await db.collection('customerNotifications').where('customerId', '==', customerId).where('read', '==', false).limit(100).get();
+      badgeCount = unread.size;
+    } catch (e) {}
+    const payload = JSON.stringify({
+      audience: 'customer',
+      title: String(notification.title || 'Mobile Barber update'),
+      body: String(notification.body || 'Tap to review your booking update.'),
+      url: String(notification.openUrl || '/mobile-barber?panel=notifications'),
+      tag: 'mb-customer-' + event.params.notificationId,
+      badgeCount,
+    });
+    await Promise.all(subsSnap.docs.map(async (docSnap) => {
+      const s = docSnap.data() || {};
+      if (!s.endpoint || !s.keys) return;
+      try {
+        await webpush.sendNotification({ endpoint: s.endpoint, keys: s.keys }, payload, { TTL: 3600 });
+      } catch (err) {
+        const code = err && err.statusCode;
+        if (code === 404 || code === 410) await docSnap.ref.delete().catch(() => {});
+      }
+    }));
+  }
+);
+
+exports.checkMobileBarberCustomerReminders = onSchedule(
+  {
+    schedule: 'every day 09:00',
+    timeZone: 'America/Los_Angeles',
+    region: 'us-central1',
+    retryCount: 0,
+  },
+  async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const snap = await db.collection('customerReminderPreferences')
+      .where('enabled', '==', true)
+      .where('nextReminderDate', '<=', today)
+      .limit(100)
+      .get();
+    await Promise.all(snap.docs.map(async (docSnap) => {
+      const pref = docSnap.data() || {};
+      const customerId = String(pref.customerId || docSnap.id || '').trim();
+      if (!customerId) return;
+      const id = `${customerId}_haircut_reminder_${today}`;
+      await db.collection('customerNotifications').doc(id).set({
+        id,
+        customerId,
+        bookingId: String(pref.lastBookingId || ''),
+        vendorId: String(pref.preferredBarber || ''),
+        ownerId: '',
+        type: 'future_haircut_reminder',
+        title: 'Time for your next haircut?',
+        body: 'It may be time for your next haircut. Would you like to book again?',
+        status: 'reminder_due',
+        read: false,
+        openUrl: '/mobile-barber?panel=notifications&reminder=haircut',
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      const weeks = Number(pref.reminderPreferenceWeeks || 4);
+      const next = new Date(`${today}T12:00:00Z`);
+      next.setUTCDate(next.getUTCDate() + Math.max(1, weeks) * 7);
+      await docSnap.ref.set({
+        nextReminderDate: next.toISOString().slice(0, 10),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    }));
+  }
+);
+
 exports.onMobileBarberBookingCreated = onDocumentCreated(
   {
     document:       'mobileBarberBookings/{bookingId}',

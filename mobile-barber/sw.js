@@ -14,16 +14,20 @@
  */
 'use strict';
 
-var CACHE_VERSION = 'mb-vendor-v2-20260531';
+var CACHE_VERSION = 'mb-customer-v3-20260531i';
 var SHELL_CACHE = 'mb-shell-' + CACHE_VERSION;
 var ASSET_CACHE = 'mb-assets-' + CACHE_VERSION;
 
 // Minimal app shell — keep small; everything else is fetched on demand.
 var SHELL_URLS = [
   '/mobile-barber/dashboard.html',
+  '/mobile-barber/index.html',
   '/mobile-barber/manifest.webmanifest',
+  '/mobile-barber/manifest-customer.webmanifest',
   '/assets/icons/mobile-barber-vendor-192.png',
-  '/assets/icons/mobile-barber-vendor-512.png'
+  '/assets/icons/mobile-barber-vendor-512.png',
+  '/assets/icons/mobile-barber-customer-192.png',
+  '/assets/icons/mobile-barber-customer-512.png'
 ];
 
 self.addEventListener('install', function (event) {
@@ -107,14 +111,16 @@ self.addEventListener('push', function (event) {
   try { data = event.data ? event.data.json() : {}; } catch (e) {
     try { data = { body: event.data ? event.data.text() : '' }; } catch (e2) {}
   }
-  var title = data.title || 'New booking request';
-  var body = data.body || 'Tap to review the booking in your portal.';
+  var title = data.title || 'Mobile Barber update';
+  var body = data.body || 'Tap to review the latest update.';
   var url = data.url || '/mobile-barber/dashboard.html';
+  var isCustomer = String(data.audience || '') === 'customer';
+  if (isCustomer && (!data.url || data.url === '/mobile-barber/dashboard.html')) url = '/mobile-barber?panel=notifications';
   var tasks = [
     self.registration.showNotification(title, {
       body: body,
-      icon: '/assets/icons/mobile-barber-vendor-192.png',
-      badge: '/assets/icons/mobile-barber-vendor-192.png',
+      icon: isCustomer ? '/assets/icons/mobile-barber-customer-192.png' : '/assets/icons/mobile-barber-vendor-192.png',
+      badge: isCustomer ? '/assets/icons/mobile-barber-customer-192.png' : '/assets/icons/mobile-barber-vendor-192.png',
       tag: data.tag || 'mb-booking',
       renotify: true,
       data: { url: url },

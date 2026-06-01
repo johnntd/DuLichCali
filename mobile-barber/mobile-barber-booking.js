@@ -895,6 +895,11 @@
       rebookedFromBookingId: trim(draft.rebookedFromBookingId),
       previousServiceName: trim(draft.previousServiceName),
       customerUid: trim(draft.customerUid),
+      customerId: trim(draft.customerId || draft.customerUid),
+      normalizedPhone: normalizePhone(draft.normalizedPhone || draft.customerPhone),
+      customerProfileSnapshot: draft.customerProfileSnapshot && typeof draft.customerProfileSnapshot === 'object'
+        ? Object.assign({}, draft.customerProfileSnapshot)
+        : {},
       confirmationPreference: normalizeConfirmationPreference(draft.confirmationPreference),
       confirmationSentAt: '',
       // Optional AI haircut preview (all default to empty so bookings stay

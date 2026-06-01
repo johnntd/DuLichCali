@@ -5842,3 +5842,191 @@
   .mb-hero { min-height: 880px; gap: 4rem; }
   .mb-hero__media { min-height: 780px; }
 }
+/* Customer account / PWA notification layer */
+.mb-customer-bar {
+  position: fixed;
+  top: max(14px, env(safe-area-inset-top));
+  right: 14px;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mb-customer-bell {
+  position: relative;
+}
+
+.mb-customer-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #e64848;
+  color: #fff;
+  font-size: 11px;
+  line-height: 18px;
+  font-weight: 700;
+}
+
+.mb-customer-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: max(18px, env(safe-area-inset-top)) 14px max(18px, env(safe-area-inset-bottom));
+  background: rgba(2, 13, 27, .72);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mb-customer-panel__card {
+  width: min(100%, 480px);
+  margin-top: 18px;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 8px;
+  background: #071f39;
+  color: #f7fbff;
+  box-shadow: 0 22px 60px rgba(0,0,0,.38);
+  padding: 22px;
+}
+
+.mb-customer-panel__close {
+  float: right;
+  border: 0;
+  background: transparent;
+  color: #f7fbff;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.mb-customer-form,
+.mb-customer-reminders {
+  display: grid;
+  gap: 12px;
+}
+
+.mb-customer-form label,
+.mb-customer-reminders label {
+  display: grid;
+  gap: 6px;
+  font-size: .9rem;
+  color: rgba(247,251,255,.82);
+}
+
+.mb-customer-form input,
+.mb-customer-reminders select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 8px;
+  background: #0b2b4d;
+  color: #fff;
+  min-height: 44px;
+  padding: 10px 12px;
+  font-size: 16px;
+}
+
+.mb-customer-strength {
+  width: 100%;
+}
+
+.mb-customer-muted {
+  color: rgba(247,251,255,.72);
+}
+
+.mb-customer-error {
+  color: #ffc0c0;
+  margin: 0;
+}
+
+.mb-customer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.mb-ai-preview--locked {
+  position: relative;
+}
+
+.mb-ai-preview--locked .mb-ai-preview__body {
+  opacity: .32;
+  pointer-events: none;
+}
+
+.mb-ai-login-gate {
+  position: absolute;
+  inset: 12px;
+  z-index: 3;
+  display: grid;
+  place-content: center;
+  gap: 10px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 8px;
+  background: rgba(6, 27, 51, .92);
+  color: #fff;
+  padding: 22px;
+}
+
+.mb-customer-notification-list,
+.mb-customer-booking {
+  display: grid;
+  gap: 10px;
+}
+
+.mb-customer-notification,
+.mb-customer-booking {
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 8px;
+  background: rgba(255,255,255,.06);
+  padding: 12px;
+}
+
+.mb-customer-notification--unread {
+  border-color: rgba(240,190,96,.62);
+  background: rgba(240,190,96,.12);
+}
+
+.mb-customer-notification__open {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mb-customer-toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  z-index: 140;
+  transform: translateX(-50%);
+  max-width: min(92vw, 420px);
+  border-radius: 8px;
+  background: #061b33;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.16);
+  box-shadow: 0 18px 40px rgba(0,0,0,.35);
+  padding: 12px 14px;
+}
+
+@media (max-width: 520px) {
+  .mb-customer-bar {
+    top: auto;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    right: 12px;
+  }
+}

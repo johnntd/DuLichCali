@@ -100,6 +100,7 @@ var PC  = require('./lib/prompt-checker');
 var MBD = require('./lib/mobile-barber-data-model');
 var MBL = require('./lib/mobile-barber-landing');
 var MBB = require('./lib/mobile-barber-booking');
+var MBC = require('./lib/mobile-barber-customer');
 var MBA = require('./lib/mobile-barber-agent');
 var MBP = require('./lib/mobile-barber-promotions');
 var MBS = require('./lib/mobile-barber-ai-style-booking');
@@ -1529,6 +1530,9 @@ MBL.runMobileBarberLandingTests(test);
 
 group('Mobile Barber Manual Booking', 'mirrored-unit-logic');
 MBB.runMobileBarberBookingTests(test);
+
+group('Mobile Barber Customer Accounts + PWA', 'static-source-check');
+MBC.runMobileBarberCustomerTests(test);
 
 group('Mobile Barber AI Chat Agent', 'mirrored-unit-logic | static-source-check');
 MBA.runMobileBarberAgentTests(test);

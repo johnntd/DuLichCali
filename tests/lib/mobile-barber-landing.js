@@ -109,14 +109,16 @@ function runMobileBarberLandingTests(test) {
   });
 
   test('Mobile Barber page loads scoped CSS and versioned JS', function() {
-    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260531f');
-    assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260530k');
-    assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260531h');
+    assertContains(html, '/mobile-barber/mobile-barber.css?v=20260531i');
+    assertContains(html, '/mobile-barber/mobile-barber-data.js?v=20260531i');
+    assertContains(html, '/mobile-barber/mobile-barber-booking.js?v=20260531i');
     assertContains(html, '/mobile-barber/mobile-barber-agent.js?v=20260530l');
     assertContains(html, '/mobile-barber/mobile-barber-voice.js?v=20260530m');
     assertContains(html, '/mobile-barber/mobile-barber-icons.js?v=20260530g');
     assertContains(html, '/mobile-barber/mobile-barber-lightbox.js?v=20260530f');
-    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260531h');
+    assertContains(html, '/mobile-barber/mobile-barber-ai-preview.js?v=20260531i');
+    assertContains(html, '/mobile-barber/mobile-barber-customer.js?v=20260531i');
+    assertContains(html, '/mobile-barber/mobile-barber.js?v=20260531i');
   });
 
   test('Mobile Barber pages load Firebase before local runtime scripts', function() {
@@ -306,15 +308,15 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/vendor/**"');
     assertContains(firebase, '"destination": "/mobile-barber/vendor.html"');
     assertContains(vendorHtml, 'id="mobileBarberVendorApp"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260531f');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber.css?v=20260531i');
     assertContains(vendorHtml, 'id="mbVendorName"');
     assertContains(vendorHtml, 'id="mbVendorServices"');
     assertContains(vendorHtml, 'id="mbBookingTitle"');
     assertContains(vendorHtml, 'id="mbVendorPromoTitle"');
     assertContains(vendorHtml, 'id="mbSelectedServiceSummary"');
     assertContains(vendorHtml, 'class="mb-mobile-sticky-cta"');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260530k');
-    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260531h');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-data.js?v=20260531i');
+    assertContains(vendorHtml, '/mobile-barber/mobile-barber-booking.js?v=20260531i');
     assertContains(vendorHtml, '/ai-engine.js?v=20260530m');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-agent.js?v=20260530l');
     assertContains(vendorHtml, '/mobile-barber/mobile-barber-voice.js?v=20260530m');
@@ -660,11 +662,11 @@ function runMobileBarberLandingTests(test) {
     assertContains(firebase, '"source": "/mobile-barber/dashboard"');
     assertContains(firebase, '"destination": "/mobile-barber/dashboard.html"');
     assertContains(dashboardHtml, 'id="mobileBarberDashboardApp"');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260530k');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260531h');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260531i');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260531i');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-lightbox.js?v=20260530f');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260531g');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260531f');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260531i');
     assertContains(dashboardHtml, 'firebase-auth-compat.js');
     assertContains(dashboardHtml, '/notifications.js?v=20260525a');
     assertContains(dashboardHtml, 'id="mbBookingAlertRegion"');
@@ -884,7 +886,10 @@ function runMobileBarberLandingTests(test) {
     assertContains(firestoreRules, 'allow read: if isMobileBarberBookingCustomer()');
     assertContains(firestoreRules, '|| isVendorMember(resource.data.vendorId)');
     assertContains(firestoreRules, 'match /mobileBarberCustomers/{customerId}');
-    assertContains(firestoreRules, 'allow read, update: if isMobileBarberCustomerOwner()');
+    // Vendors may READ their customers (booking context) but only the OWNER may UPDATE
+    // the customer-owned profile — vendors must not be able to modify customer PII.
+    assertContains(firestoreRules, 'allow read: if isMobileBarberCustomerOwner()');
+    assertContains(firestoreRules, 'allow update: if isMobileBarberCustomerOwner();');
     assertContains(firestoreRules, 'allow read:  if true;');
     assertContains(firestoreRules, 'match /mobileBarberWaitlist/{waitlistId}');
     assertContains(firestoreRules, 'allow create: if request.resource.data.email is string');

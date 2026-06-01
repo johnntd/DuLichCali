@@ -30,8 +30,10 @@ service cloud.firestore {
 
     function isMobileBarberBookingCustomer() {
       return request.auth != null
-          && resource.data.customerUid is string
-          && resource.data.customerUid == request.auth.uid;
+          && (
+              (resource.data.customerUid is string && resource.data.customerUid == request.auth.uid)
+              || (resource.data.customerId is string && resource.data.customerId == request.auth.uid)
+          );
     }
 
     function isValidMobileBarberBookingCreate() {
@@ -49,7 +51,9 @@ service cloud.firestore {
           && request.resource.data.address is string
           && request.resource.data.city is string
           && request.resource.data.zip is string
-          && request.resource.data.source in ['customer_form', 'ai_chat', 'ai_voice']
+          && request.resource.data.source in ['customer_form', 'ai_chat', 'ai_voice', 'ai_preview']
+          && (!('customerId' in request.resource.data) || request.resource.data.customerId == request.auth.uid)
+          && (!('customerUid' in request.resource.data) || request.resource.data.customerUid == request.auth.uid)
           // Price/discount sanity — a malicious direct write cannot inject a
           // negative price or a >100% discount. Fields are optional (older
           // payloads omit them), but when present they must be well-formed.
@@ -73,15 +77,35 @@ service cloud.firestore {
 
     function isMobileBarberCustomerOwner() {
       return request.auth != null
-          && resource.data.customerUid is string
-          && resource.data.customerUid == request.auth.uid;
+          && (
+              (resource.data.customerUid is string && resource.data.customerUid == request.auth.uid)
+              || (resource.data.customerId is string && resource.data.customerId == request.auth.uid)
+          );
     }
 
     function isValidMobileBarberCustomerCreate() {
       return request.auth != null
-          && request.resource.data.customerUid == request.auth.uid
-          && request.resource.data.vendorId is string
-          && request.resource.data.customerPhoneNormalized is string;
+          && (
+              request.resource.data.customerUid == request.auth.uid
+              || request.resource.data.customerId == request.auth.uid
+          )
+          && (
+              request.resource.data.customerPhoneNormalized is string
+              || request.resource.data.normalizedPhone is string
+          );
+    }
+
+    function isCustomerScopedCreate() {
+      return request.auth != null
+          && request.resource.data.customerId is string
+          && request.resource.data.customerId == request.auth.uid
+          && request.resource.data.size() <= 60;
+    }
+
+    function isCustomerScopedRead() {
+      return request.auth != null
+          && resource.data.customerId is string
+          && resource.data.customerId == request.auth.uid;
     }
 
     // ── Vendor top-level docs ─────────────────────────────────────────────────────
@@ -398,8 +422,40 @@ service cloud.firestore {
     // ── Mobile Barber customer profiles — private owner/vendor cut history ───────
     match /mobileBarberCustomers/{customerId} {
       allow create: if isValidMobileBarberCustomerCreate();
-      allow read, update: if isMobileBarberCustomerOwner()
-                       || isVendorMember(resource.data.vendorId);
+      allow read: if isMobileBarberCustomerOwner()
+               || (resource.data.vendorId is string && isVendorMember(resource.data.vendorId));
+      // Vendors READ their customers (booking context) but must NOT modify the
+      // customer-owned profile (PII / saved addresses / preferences / history).
+      // Only the owner writes it client-side; Cloud Functions use the Admin SDK.
+      allow update: if isMobileBarberCustomerOwner();
+      allow delete: if false;
+
+      match /pushSubscriptions/{subId} {
+        allow read, write: if request.auth != null && customerId == request.auth.uid;
+      }
+    }
+
+    match /customerNotifications/{notificationId} {
+      allow read: if isCustomerScopedRead();
+      // Customer may only flip benign read/dismiss flags — never rewrite vendor-set
+      // content or reassign customerId (so a notification can't be reparented to another user).
+      allow update: if isCustomerScopedRead()
+                 && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt', 'updatedAt', 'dismissedAt']);
+      allow create: if isCustomerScopedCreate();
+      allow delete: if false;
+    }
+
+    match /customerSavedStyles/{styleId} {
+      allow create: if isCustomerScopedCreate();
+      allow read: if isCustomerScopedRead();
+      allow update: if isCustomerScopedCreate() && isCustomerScopedRead();
+      allow delete: if isCustomerScopedRead();
+    }
+
+    match /customerReminderPreferences/{prefId} {
+      allow create: if request.auth != null && prefId == request.auth.uid && isCustomerScopedCreate();
+      allow read: if request.auth != null && prefId == request.auth.uid && isCustomerScopedRead();
+      allow update: if request.auth != null && prefId == request.auth.uid && isCustomerScopedCreate();
       allow delete: if false;
     }
 

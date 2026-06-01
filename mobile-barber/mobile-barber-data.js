@@ -17,6 +17,9 @@
     availability: 'mobileBarberAvailability',
     bookings: 'mobileBarberBookings',
     customers: 'mobileBarberCustomers',
+    customerNotifications: 'customerNotifications',
+    customerSavedStyles: 'customerSavedStyles',
+    customerReminderPreferences: 'customerReminderPreferences',
     agentSessions: 'mobileBarberAgentSessions',
     portfolioImages: 'mobileBarberPortfolioImages',
     reviews: 'mobileBarberReviews'
@@ -70,6 +73,7 @@
     // queried by Michael's unified portal; serviceType buckets the row as barber.
     'ownerId', 'serviceType',
     'customerName', 'customerPhone', 'customerEmail',
+    'customerId', 'normalizedPhone', 'customerProfileSnapshot',
     'serviceId', 'serviceName', 'servicePrice', 'travelFee',
     'vehicleWearCost', 'distanceAdjustment', 'peakAdjustment',
     'amountDue', 'totalPrice', 'estimatedDistanceMiles',
@@ -130,7 +134,28 @@
   var CUSTOMER_FIELDS = Object.freeze([
     'id', 'vendorId', 'customerName', 'customerPhone', 'customerPhoneNormalized',
     'customerEmail', 'customerUid', 'stylePreference', 'notes', 'photoUrls',
-    'lastServiceId', 'lastServiceName', 'lastBookingId', 'createdAt', 'updatedAt'
+    'lastServiceId', 'lastServiceName', 'lastBookingId',
+    'customerId', 'phone', 'normalizedPhone', 'name', 'email',
+    'preferredLanguage', 'preferredAddress', 'savedAddresses',
+    'bookingHistory', 'preferredBarber', 'haircutPreferences',
+    'notificationPreferences', 'reminderPreferenceWeeks', 'lastHaircutDate',
+    'nextReminderDate', 'lastService', 'createdAt', 'updatedAt'
+  ]);
+
+  var CUSTOMER_NOTIFICATION_FIELDS = Object.freeze([
+    'id', 'customerId', 'bookingId', 'type', 'title', 'body', 'status',
+    'read', 'createdAt', 'updatedAt', 'openUrl', 'vendorId', 'ownerId'
+  ]);
+
+  var CUSTOMER_SAVED_STYLE_FIELDS = Object.freeze([
+    'id', 'customerId', 'styleId', 'title', 'previewUrl', 'description',
+    'barberNotes', 'sourceBookingId', 'createdAt', 'updatedAt'
+  ]);
+
+  var CUSTOMER_REMINDER_FIELDS = Object.freeze([
+    'id', 'customerId', 'reminderPreferenceWeeks', 'lastHaircutDate',
+    'nextReminderDate', 'preferredBarber', 'lastService', 'enabled',
+    'createdAt', 'updatedAt'
   ]);
 
   var PORTFOLIO_IMAGE_FIELDS = Object.freeze([
@@ -1315,6 +1340,9 @@
     SERVICE_IMAGE_FIELDS: SERVICE_IMAGE_FIELDS,
     BOOKING_FIELDS: BOOKING_FIELDS,
     CUSTOMER_FIELDS: CUSTOMER_FIELDS,
+    CUSTOMER_NOTIFICATION_FIELDS: CUSTOMER_NOTIFICATION_FIELDS,
+    CUSTOMER_SAVED_STYLE_FIELDS: CUSTOMER_SAVED_STYLE_FIELDS,
+    CUSTOMER_REMINDER_FIELDS: CUSTOMER_REMINDER_FIELDS,
     PORTFOLIO_IMAGE_FIELDS: PORTFOLIO_IMAGE_FIELDS,
     REVIEW_FIELDS: REVIEW_FIELDS,
     PROMOTION_FIELDS: PROMOTION_FIELDS,

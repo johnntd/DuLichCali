@@ -1,0 +1,35 @@
+{
+  "name": "DuLichCali Mobile Barber",
+  "short_name": "Mobile Barber",
+  "description": "Customer app for Mobile Barber bookings, AI hairstyle previews, notifications, and haircut reminders.",
+  "id": "/mobile-barber/",
+  "start_url": "/mobile-barber",
+  "scope": "/mobile-barber/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#061b33",
+  "theme_color": "#061b33",
+  "lang": "en",
+  "categories": ["lifestyle", "beauty", "utilities"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/assets/icons/mobile-barber-customer-192.png?v=20260531i",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icons/mobile-barber-customer-512.png?v=20260531i",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icons/mobile-barber-customer-maskable-512.png?v=20260531i",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

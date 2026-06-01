@@ -3314,6 +3314,94 @@ async function mbScheduleHaircutReminder(bookingId, booking) {
   }, { merge: true });
 }
 
+// ── Customer profile memory: upsert the profile from a booking, on EVERY booking
+// write (create + status change), for BOTH logged-in (uid) and anonymous (phone)
+// customers. Admin SDK bypasses rules — the only write path that can serve the
+// anonymous-by-phone case. Stores ONLY text style references (never AI hairstyle
+// images / selfies — per product rule). Also maintains a vendorAccess marker so the
+// Firestore read rule can scope vendor reads to customers they actually booked.
+async function mbUpsertCustomerProfileFromBooking(booking, bookingId) {
+  booking = booking || {};
+  const uid = String(booking.customerUid || booking.customerId || '').trim();
+  const phone = mbNormPhone(booking.customerPhone || booking.phone || booking.normalizedPhone || '');
+  if (!uid && !phone) return; // nothing to key on
+  const docId = uid || ('phone_' + phone);
+  const vendorId = String(booking.vendorId || '').trim();
+  const ref = db.collection('mobileBarberCustomers').doc(docId);
+
+  let existing = {};
+  try { const s = await ref.get(); existing = (s.exists && s.data()) || {}; } catch (e) {}
+
+  const trimv = (x) => String(x == null ? '' : x).trim();
+  const set = {};
+  const put = (k, v) => { const t = trimv(v); if (t) set[k] = t; };
+  put('customerName', booking.customerName || booking.name);
+  put('name', booking.customerName || booking.name);
+  if (phone) { set.phone = booking.customerPhone || booking.phone || phone; set.normalizedPhone = phone; set.customerPhone = booking.customerPhone || phone; set.customerPhoneNormalized = phone; }
+  put('email', booking.customerEmail || booking.email);
+  if (uid) { set.customerId = uid; set.customerUid = uid; }
+  set.id = docId;
+  if (vendorId) set.vendorId = vendorId;
+  put('preferredBarber', booking.assignedBarberId || booking.preferredBarber || vendorId);
+  put('preferredAddress', booking.address);
+  put('address', booking.address);
+  put('city', booking.city);
+  put('zip', booking.zip);
+  put('lastServiceId', booking.serviceId || booking.lastServiceId);
+  put('lastServiceName', booking.serviceName || booking.lastServiceName);
+  if (bookingId) set.lastBookingId = bookingId;
+  put('paymentMethod', booking.paymentMethod);
+  put('paymentPreference', booking.paymentMethod);
+  put('confirmationPreference', booking.confirmationPreference);
+  // Language: NEVER overwrite a value the customer set — only fill when absent.
+  if (!trimv(existing.preferredLanguage)) {
+    const lng = mbNormLang(booking.preferredLanguage || (booking.customerProfileSnapshot && booking.customerProfileSnapshot.preferredLanguage) || booking.lang);
+    if (lng) set.preferredLanguage = lng;
+  }
+
+  // Style memory — TEXT references only (no images/selfies).
+  const style = Object.assign({}, existing.haircutPreferences || {});
+  const styleMap = {
+    styleId: booking.selectedAiStyleId, styleName: booking.selectedAiStyleName,
+    styleDescription: booking.selectedAiStyleDescription, color: booking.selectedColorRecommendation,
+    highlight: booking.selectedHighlightRecommendation, texture: booking.selectedTexturePreference,
+    stylePreference: booking.stylePreference, barberNotes: booking.selectedHaircutBarberNotes,
+  };
+  let styleChanged = false;
+  Object.keys(styleMap).forEach((k) => { const v = trimv(styleMap[k]); if (v) { style[k] = v; styleChanged = true; } });
+  if (styleChanged) set.haircutPreferences = style;
+
+  // Bounded booking history (last 20, de-duped by bookingId).
+  const history = Array.isArray(existing.bookingHistory) ? existing.bookingHistory.slice() : [];
+  if (bookingId) {
+    const entry = {
+      bookingId,
+      serviceId: trimv(booking.serviceId || booking.lastServiceId),
+      serviceName: trimv(booking.serviceName || booking.lastServiceName),
+      requestedDate: trimv(booking.requestedDate),
+      startTime: trimv(booking.startTime),
+      status: trimv(booking.status),
+      vendorId,
+      price: Number(booking.totalPrice || booking.amountDue || 0) || 0,
+    };
+    const idx = history.findIndex((h) => h && h.bookingId === bookingId);
+    if (idx >= 0) history[idx] = entry; else history.push(entry);
+    set.bookingHistory = history.slice(-20);
+  }
+
+  set.updatedAt = admin.firestore.FieldValue.serverTimestamp();
+  if (!existing || !Object.keys(existing).length) set.createdAt = admin.firestore.FieldValue.serverTimestamp();
+
+  await ref.set(set, { merge: true });
+
+  // vendorAccess marker → lets the read rule scope vendor reads to assigned customers.
+  if (vendorId) {
+    await ref.collection('vendorAccess').doc(vendorId).set({
+      vendorId, lastBookingId: bookingId || '', updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true }).catch(() => {});
+  }
+}
+
 exports.onMobileBarberCustomerBookingStatus = onDocumentWritten(
   {
     document: 'mobileBarberBookings/{bookingId}',
@@ -3325,6 +3413,10 @@ exports.onMobileBarberCustomerBookingStatus = onDocumentWritten(
     const before = event.data && event.data.before && event.data.before.exists ? event.data.before.data() : null;
     const after = event.data && event.data.after && event.data.after.exists ? event.data.after.data() : null;
     if (!after) return;
+    // Save/refresh the customer profile memory after EVERY booking write (create +
+    // any update), before the status-change short-circuit so it also fires on create.
+    try { await mbUpsertCustomerProfileFromBooking(after, event.params.bookingId); }
+    catch (e) { console.warn('[mb-customer-profile] upsert failed', e && e.message); }
     const prevStatus = before ? String(before.status || '').toLowerCase() : '';
     const nextStatus = String(after.status || '').toLowerCase();
     if (!nextStatus || prevStatus === nextStatus) return;

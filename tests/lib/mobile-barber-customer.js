@@ -44,7 +44,7 @@ function runMobileBarberCustomerTests(test) {
   });
 
   test('Mobile Barber customer auth uses LOCAL persistence and phone-derived identity', function() {
-    assertContains(html, '/mobile-barber/mobile-barber-customer.js?v=20260601a');
+    assertContains(html, '/mobile-barber/mobile-barber-customer.js?v=20260601b');
     assertContains(customerJs, 'Auth.Persistence.LOCAL');
     assertContains(customerJs, 'customerEmailForPhone');
     assertContains(customerJs, '@mobile-barber.dulichcali21.local');

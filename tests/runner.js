@@ -101,6 +101,7 @@ var MBD = require('./lib/mobile-barber-data-model');
 var MBL = require('./lib/mobile-barber-landing');
 var MBB = require('./lib/mobile-barber-booking');
 var MBC = require('./lib/mobile-barber-customer');
+var MBPM = require('./lib/mobile-barber-profile-memory');
 var MBA = require('./lib/mobile-barber-agent');
 var MBP = require('./lib/mobile-barber-promotions');
 var MBS = require('./lib/mobile-barber-ai-style-booking');
@@ -1533,6 +1534,8 @@ MBB.runMobileBarberBookingTests(test);
 
 group('Mobile Barber Customer Accounts + PWA', 'static-source-check');
 MBC.runMobileBarberCustomerTests(test);
+
+MBPM.runMobileBarberProfileMemoryTests(test);
 
 group('Mobile Barber AI Chat Agent', 'mirrored-unit-logic | static-source-check');
 MBA.runMobileBarberAgentTests(test);

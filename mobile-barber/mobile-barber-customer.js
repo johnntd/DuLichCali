@@ -496,6 +496,8 @@
       savedAddresses: data.savedAddresses || [],
       bookingHistory: data.bookingHistory || [],
       preferredBarber: data.preferredBarber || '',
+      paymentPreference: data.paymentPreference || '',
+      confirmationPreference: data.confirmationPreference || '',
       haircutPreferences: data.haircutPreferences || {},
       notificationPreferences: data.notificationPreferences || defaultNotifPrefs(),
       reminderPreferenceWeeks: data.reminderPreferenceWeeks || 4,

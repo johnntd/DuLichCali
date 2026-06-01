@@ -25,6 +25,7 @@
       askPhoneRepair: "I didn't catch the number clearly. Could you say the digits one by one?",
       checkingPhone: 'Thanks. I am checking that phone number now.',
       foundCustomer: 'I found your record, {name}. Do you want to use the same address in {city}?',
+      foundCustomerStyle: 'Welcome back, {name}! Want the same address in {city} and the same {service} as last time?',
       foundCustomerNoAddress: 'I found your record, {name}. What service address should the barber visit?',
       newCustomerName: "I don't see a record yet. What name should I put on the booking?",
       askName: 'What name should I put on the booking?',
@@ -56,6 +57,7 @@
       askPhoneRepair: 'Dạ em nghe số chưa rõ. Mình đọc từng số chậm giúp em nhé?',
       checkingPhone: 'Dạ em đang kiểm tra số điện thoại đó.',
       foundCustomer: 'Em thấy hồ sơ của anh/chị {name}. Mình muốn dùng lại địa chỉ ở {city} không ạ?',
+      foundCustomerStyle: 'Chào mừng anh/chị {name} quay lại! Mình dùng lại địa chỉ ở {city} và {service} như lần trước nhé?',
       foundCustomerNoAddress: 'Em thấy hồ sơ của anh/chị {name}. Thợ sẽ đến địa chỉ nào ạ?',
       newCustomerName: 'Em chưa thấy hồ sơ với số này. Mình cho em tên để đặt lịch nhé?',
       askName: 'Mình cho em tên để đặt lịch nhé?',
@@ -87,6 +89,7 @@
       askPhoneRepair: 'No escuché bien el número. ¿Puede decir los dígitos uno por uno?',
       checkingPhone: 'Gracias. Estoy revisando ese número ahora.',
       foundCustomer: 'Encontré su registro, {name}. ¿Quiere usar la misma dirección en {city}?',
+      foundCustomerStyle: '¡Bienvenido de nuevo, {name}! ¿La misma dirección en {city} y el mismo {service} que la última vez?',
       foundCustomerNoAddress: 'Encontré su registro, {name}. ¿A qué dirección debe ir el barbero?',
       newCustomerName: 'No veo un registro con ese número. ¿Qué nombre pongo en la reserva?',
       askName: '¿Qué nombre pongo en la reserva?',
@@ -203,6 +206,9 @@
       customerLookupStatus: null,
       customerRecord: null,
       addressConfirmed: false,
+      styleConfirmed: false,
+      previousServiceId: null,
+      previousServiceName: null,
       step: 'START',
       serviceId: null,
       date: null,
@@ -253,6 +259,10 @@
       }
       if (key === 'addressConfirmed') {
         state.addressConfirmed = value === true;
+        return;
+      }
+      if (key === 'styleConfirmed') {
+        state.styleConfirmed = value === true;
         return;
       }
       if (key === 'step') {
@@ -748,6 +758,13 @@
     if (record.lastServiceName && !state.previousServiceName) state.previousServiceName = record.lastServiceName;
     if (record.preferredBarber && !state.barberPreference) state.barberPreference = record.preferredBarber;
     if (record.barberName && !state.barberPreference) state.barberPreference = record.barberName;
+    // Prefill payment preference from memory when the customer hasn't chosen one
+    // this session (still the 'cash' default). Language is intentionally NOT forced
+    // here — in-session detection/switch wins; the saved language is surfaced to the
+    // AI brain via the prompt (preferredLanguage slot) instead.
+    if (record.paymentMethod && (!state.paymentMethod || state.paymentMethod === 'cash')) {
+      state.paymentMethod = record.paymentMethod;
+    }
   }
 
   function applySavedAddress(state) {
@@ -807,7 +824,7 @@
     ASK_PHONE: 'Politely ask for the customer phone number so you can look up their record.',
     LOOKUP_CUSTOMER: 'Acknowledge you are checking the phone number. Do not ask another question yet.',
     IF_NEW_CUSTOMER_ASK_NAME: 'Say you do not see a record yet. Ask what name should go on the booking.',
-    IF_EXISTING_CUSTOMER_CONFIRM_PROFILE: 'Greet the customer by their saved name. If you have a saved address, offer it for reuse; otherwise ask for the service address.',
+    IF_EXISTING_CUSTOMER_CONFIRM_PROFILE: 'Greet the returning customer warmly by their saved name (use the customerName/preferredBarber/previousService/previousAddress memory above — never invent any of it). If you have BOTH a saved address (previousAddress) and a previous service (previousService), ask in ONE question whether they want the same address AND the same previous service as last time. If only the address is saved, offer just the address. If nothing is saved, ask for the service address. Do not ask for name/phone again.',
     ASK_NAME: 'Ask for the customer name.',
     ASK_ADDRESS: 'Ask for the service address (street, city, ZIP). One question only.',
     ASK_SERVICE: 'Ask which barber service they would like. List a couple of options if helpful.',
@@ -847,6 +864,13 @@
     return reply.replace(STATE_MARKER_RE, '').replace(ACTION_MARKER_RE, '').replace(/\s+\n/g, '\n').trim();
   }
 
+  // Sanitize customer-derived profile values before injecting into the system
+  // prompt: strip brackets/braces/newlines so a stored value can't forge a
+  // [STATE:{...}]/[ACTION:] marker or break the language lock, and cap length.
+  function _sanitizeForPrompt(v) {
+    return String(v == null ? '' : v).replace(/[\[\]{}\n\r]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+  }
+
   function _buildAIBrainPrompt(state, ctx, lang) {
     var vendor = (ctx && ctx.vendor) || {};
     var services = (ctx && ctx.services) || [];
@@ -869,6 +893,21 @@
     if (state.paymentMethod) slotLines.push('paymentMethod: ' + state.paymentMethod);
     if (state.customerLookupStatus) slotLines.push('customerLookupStatus: ' + state.customerLookupStatus);
     if (state.addressConfirmed) slotLines.push('addressConfirmed: true');
+    if (state.styleConfirmed) slotLines.push('styleConfirmed: true');
+
+    // ── Returning-customer MEMORY (sanitized) — lets the brain greet by name and
+    // offer the same address/barber/style as last time instead of cold-starting.
+    var _rec = state.customerRecord || {};
+    if (trim(state.barberPreference)) slotLines.push('preferredBarber: ' + _sanitizeForPrompt(state.barberPreference));
+    if (trim(state.previousServiceName)) slotLines.push('previousService: ' + _sanitizeForPrompt(state.previousServiceName));
+    var _prevAddr = trim((_rec.address || '') + (_rec.city ? ', ' + _rec.city : ''));
+    if (_prevAddr) slotLines.push('previousAddress: ' + _sanitizeForPrompt(_prevAddr));
+    if (trim(_rec.preferredLanguage)) slotLines.push('preferredLanguage: ' + _sanitizeForPrompt(_rec.preferredLanguage));
+    if (trim(_rec.paymentMethod)) slotLines.push('previousPayment: ' + _sanitizeForPrompt(_rec.paymentMethod));
+    if (trim(_rec.notes)) slotLines.push('customerNotes: ' + _sanitizeForPrompt(_rec.notes));
+    if (trim(_rec.lastServiceName)) {
+      slotLines.push('bookingHistorySummary: ' + _sanitizeForPrompt('last visit ' + _rec.lastServiceName + (_rec.city ? ' in ' + _rec.city : '')));
+    }
 
     var guidance = AI_STEP_GUIDANCE[state.step] || AI_STEP_GUIDANCE.START;
 
@@ -1241,7 +1280,13 @@
     if (state.customerLookupStatus === 'found' && state.customerRecord && !state.addressConfirmed && !state.address) {
       state.step = 'IF_EXISTING_CUSTOMER_CONFIRM_PROFILE';
       var foundName = state.customerName || state.customerRecord.customerName || state.customerRecord.name || '';
-      if (state.customerRecord.address || state.customerRecord.serviceAddress || state.customerRecord.lastAddress) {
+      var _hasAddr = state.customerRecord.address || state.customerRecord.serviceAddress || state.customerRecord.lastAddress;
+      var _prevSvc = state.previousServiceName || state.customerRecord.lastServiceName || '';
+      if (_hasAddr && _prevSvc) {
+        // Spec step 4: one combined "same address AND same service as last time?" question.
+        return { session: session, response: reply(lang, 'foundCustomerStyle', { name: foundName, city: publicAddressCity(state.customerRecord), service: _prevSvc }) };
+      }
+      if (_hasAddr) {
         return { session: session, response: reply(lang, 'foundCustomer', { name: foundName, city: publicAddressCity(state.customerRecord) }) };
       }
       return { session: session, response: reply(lang, 'foundCustomerNoAddress', { name: foundName }) };
@@ -1249,6 +1294,15 @@
 
     if (state.addressConfirmed && state.customerRecord) {
       applySavedAddress(state);
+      // Spec step 4→5: if the customer affirmed the combined "same address AND same
+      // {service} as last time?" question, adopt the previous service so the flow
+      // skips ASK_SERVICE and moves to date/time. Gated on the confirm-profile step
+      // so a bare "yes" answered elsewhere never auto-selects a service.
+      if (previousStep === 'IF_EXISTING_CUSTOMER_CONFIRM_PROFILE' && !state.styleConfirmed &&
+          state.previousServiceId && !trim(state.serviceId)) {
+        state.serviceId = state.previousServiceId;
+        state.styleConfirmed = true;
+      }
     }
 
     // BUG 2 fix — route by city: when the customer gave a city-routable address

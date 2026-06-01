@@ -1068,7 +1068,15 @@
       lastServiceId: firstValue(data, ['lastServiceId', 'serviceId']),
       lastServiceName: firstValue(data, ['lastServiceName', 'serviceName', 'previousServiceName']),
       lastBookingId: firstValue(data, ['lastBookingId', 'id', 'bookingId']),
-      notes: firstValue(data, ['notes', 'safeNotes', 'stylePreference'])
+      notes: firstValue(data, ['notes', 'safeNotes', 'stylePreference']),
+      // Returning-customer memory fields (added for profile memory). Backward
+      // compatible — existing keys above are unchanged.
+      preferredLanguage: firstValue(data, ['preferredLanguage']),
+      paymentMethod: firstValue(data, ['paymentMethod', 'paymentPreference']),
+      confirmationPreference: firstValue(data, ['confirmationPreference']),
+      reminderPreferenceWeeks: Number(data.reminderPreferenceWeeks || 0) || 0,
+      haircutPreferences: (data.haircutPreferences && typeof data.haircutPreferences === 'object') ? data.haircutPreferences : {},
+      bookingHistory: Array.isArray(data.bookingHistory) ? data.bookingHistory.slice(-5) : []
     };
   }
 

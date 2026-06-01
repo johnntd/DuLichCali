@@ -422,9 +422,16 @@ service cloud.firestore {
     // ── Mobile Barber customer profiles — private owner/vendor cut history ───────
     match /mobileBarberCustomers/{customerId} {
       allow create: if isValidMobileBarberCustomerCreate();
+      // Vendors may read a customer profile ONLY for a customer they have an
+      // assigned booking with: the profile's current vendorId must be one they are
+      // a member of AND a vendorAccess marker (written by the Admin-SDK booking
+      // trigger when a booking exists) must be present. This scopes vendor reads to
+      // assigned bookings and prevents reads via a stale/forged vendorId field.
       allow read: if (request.auth != null && customerId == request.auth.uid)
                || isMobileBarberCustomerOwner()
-               || (resource.data.vendorId is string && isVendorMember(resource.data.vendorId));
+               || (resource.data.vendorId is string
+                   && isVendorMember(resource.data.vendorId)
+                   && exists(/databases/$(database)/documents/mobileBarberCustomers/$(customerId)/vendorAccess/$(resource.data.vendorId)));
       // Vendors READ their customers (booking context) but must NOT modify the
       // customer-owned profile (PII / saved addresses / preferences / history).
       // Only the owner writes it client-side; Cloud Functions use the Admin SDK.
@@ -436,6 +443,13 @@ service cloud.firestore {
 
       match /pushSubscriptions/{subId} {
         allow read, write: if request.auth != null && customerId == request.auth.uid;
+      }
+
+      // vendorAccess markers are maintained only by the Admin-SDK booking trigger
+      // (which bypasses rules). The parent read rule's exists() check on these docs
+      // works regardless of these client rules, so clients get no direct access.
+      match /vendorAccess/{vid} {
+        allow read, write: if false;
       }
     }
 

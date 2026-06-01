@@ -37,6 +37,7 @@
       saveStyle: 'Save style',
       styleSaved: 'Style saved.',
       historyTitle: 'My bookings',
+      bookHaircut: 'Book a haircut',
       upcoming: 'Upcoming',
       past: 'Past',
       noBookings: 'No bookings yet.',
@@ -87,6 +88,7 @@
       saveStyle: 'Lưu kiểu',
       styleSaved: 'Đã lưu kiểu tóc.',
       historyTitle: 'Lịch đặt của tôi',
+      bookHaircut: 'Đặt lịch cắt tóc',
       upcoming: 'Sắp tới',
       past: 'Đã qua',
       noBookings: 'Chưa có lịch đặt.',
@@ -137,6 +139,7 @@
       saveStyle: 'Guardar estilo',
       styleSaved: 'Estilo guardado.',
       historyTitle: 'Mis reservas',
+      bookHaircut: 'Reservar un corte',
       upcoming: 'Próximas',
       past: 'Pasadas',
       noBookings: 'Aún no hay reservas.',
@@ -261,10 +264,21 @@
       body.innerHTML =
         '<p class="mb-customer-muted">' + esc(t('loggedInAs', { phone: state.profile && state.profile.phone || state.user.email || '' })) + '</p>' +
         '<div class="mb-customer-actions">' +
-          '<button class="mb-button mb-button--primary" type="button" id="mbCustomerHistoryBtn">' + esc(t('historyTitle')) + '</button>' +
+          '<button class="mb-button mb-button--primary" type="button" id="mbCustomerBookBtn">' + esc(t('bookHaircut')) + '</button>' +
+        '</div>' +
+        '<div class="mb-customer-actions">' +
+          '<button class="mb-button mb-button--ghost" type="button" id="mbCustomerHistoryBtn">' + esc(t('historyTitle')) + '</button>' +
           '<button class="mb-button mb-button--ghost" type="button" id="mbCustomerLogoutBtn">' + esc(t('logout')) + '</button>' +
         '</div>' +
         reminderHtml();
+      // The clear "next step" after sign-up/login: close the account panel and jump to
+      // the service list so the customer can actually book (fixes the dead-end where the
+      // panel ended at the reminder dropdown with nowhere to go).
+      body.querySelector('#mbCustomerBookBtn').addEventListener('click', function() {
+        var panel = body.closest('.mb-customer-panel'); if (panel) panel.remove();
+        var svc = doc.getElementById('mbServices');
+        if (svc && svc.scrollIntoView) svc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
       body.querySelector('#mbCustomerLogoutBtn').addEventListener('click', function() { auth().signOut(); });
       body.querySelector('#mbCustomerHistoryBtn').addEventListener('click', openHistoryPanel);
       wireReminder(body);
@@ -660,7 +674,7 @@
       state.profile = snap.exists ? snap.data() : null;
       renderAccountButton();
       patchBookingBuilder();
-    });
+    }, function(e) { if (root.console && root.console.warn) root.console.warn('[mb-customer] profile listener', e && e.code); });
     state.unsubNotifications = db().collection('customerNotifications')
       .where('customerId', '==', user.uid)
       .limit(50)
@@ -672,7 +686,7 @@
         refreshNotificationsPanel();
         var unread = state.notifications.filter(function(n) { return !n.read; }).length;
         if (unread > previousUnread && state.notifications[0]) toast(state.notifications[0].body || state.notifications[0].title || t('notifications'));
-      });
+      }, function(e) { if (root.console && root.console.warn) root.console.warn('[mb-customer] notifications listener', e && e.code); });
     state.unsubBookings = db().collection('mobileBarberBookings')
       .where('customerId', '==', user.uid)
       .limit(50)
@@ -680,7 +694,7 @@
         state.bookings = [];
         qs.forEach(function(d) { state.bookings.push(Object.assign({ id: d.id }, d.data() || {})); });
         state.bookings.sort(function(a, b) { return String(b.requestedDate || '').localeCompare(String(a.requestedDate || '')); });
-      });
+      }, function(e) { if (root.console && root.console.warn) root.console.warn('[mb-customer] bookings listener', e && e.code); });
   }
   function renderAccountButton() {
     var btn = doc.getElementById('mbCustomerAccountBtn');

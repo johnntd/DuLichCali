@@ -422,12 +422,16 @@ service cloud.firestore {
     // ── Mobile Barber customer profiles — private owner/vendor cut history ───────
     match /mobileBarberCustomers/{customerId} {
       allow create: if isValidMobileBarberCustomerCreate();
-      allow read: if isMobileBarberCustomerOwner()
+      allow read: if (request.auth != null && customerId == request.auth.uid)
+               || isMobileBarberCustomerOwner()
                || (resource.data.vendorId is string && isVendorMember(resource.data.vendorId));
       // Vendors READ their customers (booking context) but must NOT modify the
       // customer-owned profile (PII / saved addresses / preferences / history).
       // Only the owner writes it client-side; Cloud Functions use the Admin SDK.
-      allow update: if isMobileBarberCustomerOwner();
+      // Owner is matched by the doc id (== uid) so a read succeeds even before the
+      // profile doc is first written (avoids a permission-denied race right after sign-up).
+      allow update: if (request.auth != null && customerId == request.auth.uid)
+                 || isMobileBarberCustomerOwner();
       allow delete: if false;
 
       match /pushSubscriptions/{subId} {

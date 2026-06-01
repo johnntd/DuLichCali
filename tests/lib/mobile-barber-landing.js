@@ -117,7 +117,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(html, '/mobile-barber/mobile-barber-icons.js?v=20260530g');
     assertContains(html, '/mobile-barber/mobile-barber-lightbox.js?v=20260530f');
     assertContains(html, '/mobile-barber/mobile-barber-ai-preview.js?v=20260531i');
-    assertContains(html, '/mobile-barber/mobile-barber-customer.js?v=20260531i');
+    assertContains(html, '/mobile-barber/mobile-barber-customer.js?v=20260531j');
     assertContains(html, '/mobile-barber/mobile-barber.js?v=20260531i');
   });
 
@@ -888,8 +888,9 @@ function runMobileBarberLandingTests(test) {
     assertContains(firestoreRules, 'match /mobileBarberCustomers/{customerId}');
     // Vendors may READ their customers (booking context) but only the OWNER may UPDATE
     // the customer-owned profile — vendors must not be able to modify customer PII.
-    assertContains(firestoreRules, 'allow read: if isMobileBarberCustomerOwner()');
-    assertContains(firestoreRules, 'allow update: if isMobileBarberCustomerOwner();');
+    assertContains(firestoreRules, 'allow read: if (request.auth != null && customerId == request.auth.uid)');
+    assertContains(firestoreRules, 'allow update: if (request.auth != null && customerId == request.auth.uid)');
+    assertContains(firestoreRules, 'isMobileBarberCustomerOwner()');
     assertContains(firestoreRules, 'allow read:  if true;');
     assertContains(firestoreRules, 'match /mobileBarberWaitlist/{waitlistId}');
     assertContains(firestoreRules, 'allow create: if request.resource.data.email is string');

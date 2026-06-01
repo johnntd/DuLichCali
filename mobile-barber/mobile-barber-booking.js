@@ -1773,26 +1773,30 @@
       .filter(function(x) { return x && String(x).trim(); }).join(', ');
 
     function clientPath() {
-      if (typeof root.google === 'undefined' || !root.google.maps || !root.google.maps.Geocoder || !addrStr) return Promise.resolve(null);
-      return geocodeAddressClient(addrStr).then(function(geo) {
-        if (!geo || geo.lat == null) return null;
-        // Build a vendor-shim origin for the existing client DistanceMatrix helper.
-        var originVendor = {
-          id: vendorOrigin.id || 'mb-origin',
-          homeBaseAddress: vendorOrigin.address
-            || (vendorOrigin.city ? (vendorOrigin.city + (vendorOrigin.zip ? ' ' + vendorOrigin.zip : '') + ', CA') : ''),
-          serviceAreas: vendorOrigin.city ? [vendorOrigin.city] : []
-        };
-        var destForDistance = (geo.lat != null && geo.lng != null) ? (geo.lat + ',' + geo.lng) : addrStr;
-        return requestDistanceMatrix(originVendor, destForDistance).then(function(dm) {
-          var precise = (geo.locationType === 'ROOFTOP' || geo.locationType === 'RANGE_INTERPOLATED');
+      // Mirror rideshare EXACTLY: the project's Maps key has Distance Matrix /
+      // Directions enabled (works in-browser) but the Geocoding API is NOT
+      // (forward geocode returns REQUEST_DENIED). So validate + measure via
+      // DistanceMatrixService with address strings — a returned route implicitly
+      // validates the address. Forward geocode is an OPTIONAL bonus (lat/lng +
+      // 'precise') that auto-upgrades if the Geocoding API is ever enabled.
+      if (typeof root.google === 'undefined' || !root.google.maps || !root.google.maps.DistanceMatrixService || !addrStr) return Promise.resolve(null);
+      var originVendor = {
+        id: vendorOrigin.id || 'mb-origin',
+        homeBaseAddress: vendorOrigin.address
+          || (vendorOrigin.city ? (vendorOrigin.city + (vendorOrigin.zip ? ' ' + vendorOrigin.zip : '') + ', CA') : ''),
+        serviceAreas: vendorOrigin.city ? [vendorOrigin.city] : []
+      };
+      return requestDistanceMatrix(originVendor, { address: serviceAddress.address, city: serviceAddress.city, zip: serviceAddress.zip }).then(function(dm) {
+        if (!dm || !isFinite(dm.distanceMiles)) return null; // no route → fall through
+        return geocodeAddressClient(addrStr).then(function(geo) {
+          var precise = !!(geo && (geo.locationType === 'ROOFTOP' || geo.locationType === 'RANGE_INTERPOLATED'));
           return {
             ok: true,
-            formattedAddress: geo.formattedAddress || addrStr,
-            lat: geo.lat, lng: geo.lng, placeId: geo.placeId || '',
+            formattedAddress: (geo && geo.formattedAddress) || addrStr,
+            lat: geo ? geo.lat : null, lng: geo ? geo.lng : null, placeId: (geo && geo.placeId) || '',
             addressValidationStatus: precise ? 'precise' : 'approximate',
-            distanceMiles: (dm && isFinite(dm.distanceMiles)) ? Math.round(dm.distanceMiles * 10) / 10 : 0,
-            travelMinutes: (dm && isFinite(dm.travelMinutes)) ? Math.round(dm.travelMinutes) : 0,
+            distanceMiles: Math.round(dm.distanceMiles * 10) / 10,
+            travelMinutes: isFinite(dm.travelMinutes) ? Math.round(dm.travelMinutes) : 0,
             routeConfidence: precise ? 'high' : 'medium',
             googleMapsUsed: true
           };

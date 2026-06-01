@@ -3179,27 +3179,80 @@ exports.sendMobileBarberBookingPush = onDocumentCreated(
   }
 );
 
-function mbCustomerNotificationCopy(status) {
+function mbNormLang(lang) {
+  const l = String(lang || '').toLowerCase().slice(0, 2);
+  return (l === 'vi' || l === 'es') ? l : 'en';
+}
+// Localized customer notification copy (RULE #2 — no hardcoded single-language user text).
+// Picked by the customer's preferredLanguage; English is the default/fallback.
+function mbCustomerNotifStrings(lang) {
+  const T = {
+    en: {
+      confirmedTitle: 'Booking confirmed', confirmedBody: 'Your haircut appointment is confirmed.',
+      infoTitle: 'More information needed', infoBody: 'Your barber needs more information about your appointment.',
+      reschedTitle: 'Appointment changed', reschedBody: 'Your appointment time has changed.',
+      cancelTitle: 'Appointment cancelled', cancelBody: 'Your haircut appointment was cancelled.',
+      rejectTitle: 'Appointment not accepted', rejectBody: 'Your barber could not accept this appointment.',
+      completeTitle: 'Haircut completed', completeBody: 'Your haircut is complete. We can remind you when it may be time to book again.',
+      haircutTitle: 'Time for your next haircut?', haircutBody: 'It may be time for your next haircut. Would you like to book again?',
+      apptTitle: 'Appointment tomorrow', apptBody: 'Reminder: your haircut is scheduled for {when}.',
+    },
+    vi: {
+      confirmedTitle: 'Đã xác nhận lịch', confirmedBody: 'Lịch cắt tóc của bạn đã được xác nhận.',
+      infoTitle: 'Cần thêm thông tin', infoBody: 'Thợ cần thêm thông tin về lịch hẹn của bạn.',
+      reschedTitle: 'Lịch hẹn đã đổi', reschedBody: 'Giờ hẹn của bạn đã thay đổi.',
+      cancelTitle: 'Lịch hẹn đã huỷ', cancelBody: 'Lịch cắt tóc của bạn đã bị huỷ.',
+      rejectTitle: 'Lịch hẹn không được nhận', rejectBody: 'Thợ không thể nhận lịch hẹn này.',
+      completeTitle: 'Đã cắt xong', completeBody: 'Bạn đã cắt tóc xong. Chúng tôi có thể nhắc khi đến lúc đặt lại.',
+      haircutTitle: 'Đến lúc cắt tóc chưa?', haircutBody: 'Có thể đã đến lúc cắt tóc tiếp theo. Bạn muốn đặt lại không?',
+      apptTitle: 'Lịch hẹn ngày mai', apptBody: 'Nhắc nhở: lịch cắt tóc của bạn vào {when}.',
+    },
+    es: {
+      confirmedTitle: 'Reserva confirmada', confirmedBody: 'Su cita de corte está confirmada.',
+      infoTitle: 'Se necesita más información', infoBody: 'Su barbero necesita más información sobre su cita.',
+      reschedTitle: 'Cita modificada', reschedBody: 'La hora de su cita ha cambiado.',
+      cancelTitle: 'Cita cancelada', cancelBody: 'Su cita de corte fue cancelada.',
+      rejectTitle: 'Cita no aceptada', rejectBody: 'Su barbero no pudo aceptar esta cita.',
+      completeTitle: 'Corte completado', completeBody: 'Su corte está completo. Podemos recordarle cuando sea hora de reservar de nuevo.',
+      haircutTitle: '¿Hora de su próximo corte?', haircutBody: 'Puede ser hora de su próximo corte. ¿Desea reservar de nuevo?',
+      apptTitle: 'Cita mañana', apptBody: 'Recordatorio: su corte está programado para {when}.',
+    },
+  };
+  return T[mbNormLang(lang)] || T.en;
+}
+function mbCustomerNotificationCopy(status, lang) {
   const s = String(status || '').toLowerCase();
-  if (s === 'confirmed') {
-    return { type: 'booking_confirmed', title: 'Booking confirmed', body: 'Your haircut appointment is confirmed.' };
-  }
-  if (s === 'vendor_review' || s === 'needs_info' || s === 'more_info_needed') {
-    return { type: 'booking_needs_info', title: 'More information needed', body: 'Your barber needs more information about your appointment.' };
-  }
-  if (s === 'rescheduled') {
-    return { type: 'booking_rescheduled', title: 'Appointment changed', body: 'Your appointment time has changed.' };
-  }
-  if (s === 'cancelled') {
-    return { type: 'booking_cancelled', title: 'Appointment cancelled', body: 'Your haircut appointment was cancelled.' };
-  }
-  if (s === 'rejected' || s === 'declined') {
-    return { type: 'booking_rejected', title: 'Appointment not accepted', body: 'Your barber could not accept this appointment.' };
-  }
-  if (s === 'completed') {
-    return { type: 'booking_completed', title: 'Haircut completed', body: 'Your haircut is complete. We can remind you when it may be time to book again.' };
-  }
+  const S = mbCustomerNotifStrings(lang);
+  if (s === 'confirmed') return { type: 'booking_confirmed', title: S.confirmedTitle, body: S.confirmedBody };
+  if (s === 'vendor_review' || s === 'needs_info' || s === 'more_info_needed') return { type: 'booking_needs_info', title: S.infoTitle, body: S.infoBody };
+  if (s === 'rescheduled') return { type: 'booking_rescheduled', title: S.reschedTitle, body: S.reschedBody };
+  if (s === 'cancelled') return { type: 'booking_cancelled', title: S.cancelTitle, body: S.cancelBody };
+  if (s === 'rejected' || s === 'declined') return { type: 'booking_rejected', title: S.rejectTitle, body: S.rejectBody };
+  if (s === 'completed') return { type: 'booking_completed', title: S.completeTitle, body: S.completeBody };
   return null;
+}
+// Map a notification type → the customer toggle key that controls it (see
+// NOTIF_TYPE_KEYS in mobile-barber-customer.js). Empty string = always send.
+function mbCustomerNotifPrefKey(type) {
+  const t = String(type || '');
+  if (t === 'booking_confirmed') return 'confirmations';
+  if (t === 'booking_rescheduled') return 'reschedules';
+  if (t === 'future_haircut_reminder') return 'haircutReminders';
+  if (t === 'appointment_reminder') return 'appointmentReminders';
+  if (t.indexOf('booking_') === 0) return 'bookingUpdates';
+  return '';
+}
+function mbNotifTypeEnabled(prefs, prefKey) {
+  if (!prefKey) return true;
+  return !prefs || prefs[prefKey] !== false; // default ON
+}
+// One read of the customer profile → both the toggle prefs and preferred language.
+async function mbGetCustomerNotifContext(customerId) {
+  try {
+    const snap = await db.collection('mobileBarberCustomers').doc(customerId).get();
+    const data = (snap.exists && snap.data()) || {};
+    return { prefs: data.notificationPreferences || {}, lang: mbNormLang(data.preferredLanguage) };
+  } catch (e) { return { prefs: {}, lang: 'en' }; }
 }
 
 async function mbWriteCustomerNotification(bookingId, booking, copy) {
@@ -3275,8 +3328,17 @@ exports.onMobileBarberCustomerBookingStatus = onDocumentWritten(
     const prevStatus = before ? String(before.status || '').toLowerCase() : '';
     const nextStatus = String(after.status || '').toLowerCase();
     if (!nextStatus || prevStatus === nextStatus) return;
-    const copy = mbCustomerNotificationCopy(nextStatus);
-    if (copy) await mbWriteCustomerNotification(event.params.bookingId, after, copy);
+    const customerId = String(after.customerId || after.customerUid || '').trim();
+    if (customerId) {
+      const ctx = await mbGetCustomerNotifContext(customerId);
+      const copy = mbCustomerNotificationCopy(nextStatus, ctx.lang);
+      // Respect the customer's per-type notification preferences (default ON).
+      if (copy && mbNotifTypeEnabled(ctx.prefs, mbCustomerNotifPrefKey(copy.type))) {
+        await mbWriteCustomerNotification(event.params.bookingId, after, copy);
+      } else if (copy) {
+        console.log(`[mb-customer-notif] suppressed ${copy.type} for ${customerId} (toggle off)`);
+      }
+    }
     if (nextStatus === 'completed') await mbScheduleHaircutReminder(event.params.bookingId, after);
   }
 );
@@ -3336,6 +3398,9 @@ exports.checkMobileBarberCustomerReminders = onSchedule(
   },
   async () => {
     const today = new Date().toISOString().slice(0, 10);
+    const tomorrow = (() => { const d = new Date(`${today}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10); })();
+
+    // ── Haircut "time to book again" reminders (interval-based) ──
     const snap = await db.collection('customerReminderPreferences')
       .where('enabled', '==', true)
       .where('nextReminderDate', '<=', today)
@@ -3345,6 +3410,21 @@ exports.checkMobileBarberCustomerReminders = onSchedule(
       const pref = docSnap.data() || {};
       const customerId = String(pref.customerId || docSnap.id || '').trim();
       if (!customerId) return;
+      const ctx = await mbGetCustomerNotifContext(customerId);
+      const weeks = Number(pref.reminderPreferenceWeeks || 4);
+      const next = new Date(`${today}T12:00:00Z`);
+      next.setUTCDate(next.getUTCDate() + Math.max(1, weeks) * 7);
+      // Always advance the schedule so we don't re-fire daily, but only write the
+      // notification if the customer still has haircut reminders enabled.
+      await docSnap.ref.set({
+        nextReminderDate: next.toISOString().slice(0, 10),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      if (!mbNotifTypeEnabled(ctx.prefs, 'haircutReminders')) {
+        console.log(`[mb-customer-reminder] haircut reminder suppressed for ${customerId} (toggle off)`);
+        return;
+      }
+      const S = mbCustomerNotifStrings(ctx.lang);
       const id = `${customerId}_haircut_reminder_${today}`;
       await db.collection('customerNotifications').doc(id).set({
         id,
@@ -3353,22 +3433,52 @@ exports.checkMobileBarberCustomerReminders = onSchedule(
         vendorId: String(pref.preferredBarber || ''),
         ownerId: '',
         type: 'future_haircut_reminder',
-        title: 'Time for your next haircut?',
-        body: 'It may be time for your next haircut. Would you like to book again?',
+        title: S.haircutTitle,
+        body: S.haircutBody,
         status: 'reminder_due',
         read: false,
         openUrl: '/mobile-barber?panel=notifications&reminder=haircut',
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       }, { merge: true });
-      const weeks = Number(pref.reminderPreferenceWeeks || 4);
-      const next = new Date(`${today}T12:00:00Z`);
-      next.setUTCDate(next.getUTCDate() + Math.max(1, weeks) * 7);
-      await docSnap.ref.set({
-        nextReminderDate: next.toISOString().slice(0, 10),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      }, { merge: true });
     }));
+
+    // ── Appointment reminders (day before a still-active appointment) ──
+    const TERMINAL = ['cancelled', 'canceled', 'declined', 'rejected', 'completed', 'no_show', 'expired'];
+    try {
+      const apptSnap = await db.collection('mobileBarberBookings')
+        .where('requestedDate', '==', tomorrow)
+        .limit(300)
+        .get();
+      await Promise.all(apptSnap.docs.map(async (d) => {
+        const bk = d.data() || {};
+        const customerId = String(bk.customerId || bk.customerUid || '').trim();
+        if (!customerId) return; // anonymous bookings get no customer reminder
+        if (TERMINAL.indexOf(String(bk.status || '').toLowerCase()) >= 0) return;
+        const ctx = await mbGetCustomerNotifContext(customerId);
+        if (!mbNotifTypeEnabled(ctx.prefs, 'appointmentReminders')) return;
+        const S = mbCustomerNotifStrings(ctx.lang);
+        const when = [bk.requestedDate, bk.startTime].filter(Boolean).join(' ');
+        const id = `${d.id}_appointment_reminder`;
+        await db.collection('customerNotifications').doc(id).set({
+          id,
+          customerId,
+          bookingId: d.id,
+          vendorId: String(bk.vendorId || ''),
+          ownerId: String(bk.ownerId || ''),
+          type: 'appointment_reminder',
+          title: S.apptTitle,
+          body: S.apptBody.replace('{when}', when),
+          status: String(bk.status || ''),
+          read: false,
+          openUrl: `/mobile-barber?panel=notifications&bookingId=${encodeURIComponent(d.id)}`,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+      }));
+    } catch (e) {
+      console.warn('[mb-customer-reminder] appointment scan failed', e && e.message);
+    }
   }
 );
 

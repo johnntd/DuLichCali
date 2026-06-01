@@ -52,15 +52,43 @@
       pushDenied: 'Notifications are blocked in settings.',
       reminderTitle: 'Haircut reminders',
       reminderWeeks: 'Reminder timing',
+      reminder2: '2 weeks',
       reminder3: '3 weeks',
       reminder4: '4 weeks',
       reminder6: '6 weeks',
+      reminder8: '8 weeks',
+      reminderCustom: 'Custom',
+      reminderCustomWeeks: 'Weeks between haircuts',
       reminderOff: 'Off',
       reminderSaved: 'Reminder preference saved.',
       bookAgain: 'Book again',
       remindLater: 'Remind me later',
       turnOffReminders: 'Turn off reminders',
-      bookingAccountPrompt: 'Create an account to track this booking and receive updates?'
+      bookingAccountPrompt: 'Create an account to track this booking and receive updates?',
+      settingsTitle: 'Settings',
+      notifStatusLabel: 'Notification status',
+      notifEnabled: 'Enabled',
+      notifDisabled: 'Disabled',
+      notifUnsupported: 'Not supported',
+      notifTypesTitle: 'Notification types',
+      notifBookingUpdates: 'Booking updates',
+      notifConfirmations: 'Confirmation alerts',
+      notifReschedules: 'Reschedule alerts',
+      notifAppointmentReminders: 'Appointment reminders',
+      notifHaircutReminders: 'Haircut reminders',
+      prefsSaved: 'Notification preferences saved.',
+      preferredBarber: 'Preferred barber',
+      barberAny: 'No preference',
+      fPayment: 'Payment',
+      fPromo: 'Promo',
+      fBarber: 'Barber',
+      stPending: 'Pending',
+      stConfirmed: 'Confirmed',
+      stRescheduled: 'Rescheduled',
+      stReview: 'Awaiting barber',
+      stCompleted: 'Completed',
+      stCancelled: 'Cancelled',
+      stDeclined: 'Not accepted'
     },
     vi: {
       account: 'Tài khoản',
@@ -104,15 +132,43 @@
       pushDenied: 'Thông báo bị chặn trong cài đặt.',
       reminderTitle: 'Nhắc cắt tóc',
       reminderWeeks: 'Thời gian nhắc',
+      reminder2: '2 tuần',
       reminder3: '3 tuần',
       reminder4: '4 tuần',
       reminder6: '6 tuần',
+      reminder8: '8 tuần',
+      reminderCustom: 'Tuỳ chỉnh',
+      reminderCustomWeeks: 'Số tuần giữa các lần cắt',
       reminderOff: 'Tắt',
       reminderSaved: 'Đã lưu tuỳ chọn nhắc.',
       bookAgain: 'Đặt lại',
       remindLater: 'Nhắc sau',
       turnOffReminders: 'Tắt nhắc nhở',
-      bookingAccountPrompt: 'Tạo tài khoản để theo dõi lịch này và nhận cập nhật?'
+      bookingAccountPrompt: 'Tạo tài khoản để theo dõi lịch này và nhận cập nhật?',
+      settingsTitle: 'Cài đặt',
+      notifStatusLabel: 'Trạng thái thông báo',
+      notifEnabled: 'Đã bật',
+      notifDisabled: 'Đã tắt',
+      notifUnsupported: 'Không hỗ trợ',
+      notifTypesTitle: 'Loại thông báo',
+      notifBookingUpdates: 'Cập nhật lịch đặt',
+      notifConfirmations: 'Thông báo xác nhận',
+      notifReschedules: 'Thông báo đổi lịch',
+      notifAppointmentReminders: 'Nhắc lịch hẹn',
+      notifHaircutReminders: 'Nhắc cắt tóc',
+      prefsSaved: 'Đã lưu tuỳ chọn thông báo.',
+      preferredBarber: 'Thợ ưu tiên',
+      barberAny: 'Không ưu tiên',
+      fPayment: 'Thanh toán',
+      fPromo: 'Ưu đãi',
+      fBarber: 'Thợ cắt',
+      stPending: 'Chờ duyệt',
+      stConfirmed: 'Đã xác nhận',
+      stRescheduled: 'Đã đổi lịch',
+      stReview: 'Chờ thợ',
+      stCompleted: 'Hoàn tất',
+      stCancelled: 'Đã huỷ',
+      stDeclined: 'Không nhận'
     },
     es: {
       account: 'Cuenta',
@@ -156,15 +212,43 @@
       pushDenied: 'Las notificaciones están bloqueadas en ajustes.',
       reminderTitle: 'Recordatorios de corte',
       reminderWeeks: 'Tiempo del recordatorio',
+      reminder2: '2 semanas',
       reminder3: '3 semanas',
       reminder4: '4 semanas',
       reminder6: '6 semanas',
+      reminder8: '8 semanas',
+      reminderCustom: 'Personalizado',
+      reminderCustomWeeks: 'Semanas entre cortes',
       reminderOff: 'Apagado',
       reminderSaved: 'Preferencia de recordatorio guardada.',
       bookAgain: 'Reservar otra vez',
       remindLater: 'Recordarme después',
       turnOffReminders: 'Desactivar recordatorios',
-      bookingAccountPrompt: '¿Crear una cuenta para seguir esta reserva y recibir actualizaciones?'
+      bookingAccountPrompt: '¿Crear una cuenta para seguir esta reserva y recibir actualizaciones?',
+      settingsTitle: 'Ajustes',
+      notifStatusLabel: 'Estado de notificaciones',
+      notifEnabled: 'Activadas',
+      notifDisabled: 'Desactivadas',
+      notifUnsupported: 'No compatible',
+      notifTypesTitle: 'Tipos de notificación',
+      notifBookingUpdates: 'Actualizaciones de reserva',
+      notifConfirmations: 'Alertas de confirmación',
+      notifReschedules: 'Alertas de cambio',
+      notifAppointmentReminders: 'Recordatorios de cita',
+      notifHaircutReminders: 'Recordatorios de corte',
+      prefsSaved: 'Preferencias de notificación guardadas.',
+      preferredBarber: 'Barbero preferido',
+      barberAny: 'Sin preferencia',
+      fPayment: 'Pago',
+      fPromo: 'Promo',
+      fBarber: 'Barbero',
+      stPending: 'Pendiente',
+      stConfirmed: 'Confirmada',
+      stRescheduled: 'Reprogramada',
+      stReview: 'Esperando barbero',
+      stCompleted: 'Completada',
+      stCancelled: 'Cancelada',
+      stDeclined: 'No aceptada'
     }
   };
 
@@ -209,6 +293,51 @@
   function auth() { return root.firebase && root.firebase.auth ? root.firebase.auth() : null; }
   function serverTimestamp() {
     return root.firebase.firestore.FieldValue.serverTimestamp();
+  }
+
+  // The five customer-facing notification toggles. Default ON (true) so existing
+  // customers keep receiving everything until they explicitly turn a type off.
+  // Keys MUST match the server gate in functions/index.js (mbCustomerNotifPrefKey).
+  var NOTIF_TYPE_KEYS = ['bookingUpdates', 'confirmations', 'reschedules', 'appointmentReminders', 'haircutReminders'];
+  function defaultNotifPrefs() {
+    var p = { app: true, push: false, reminders: true };
+    NOTIF_TYPE_KEYS.forEach(function(k) { p[k] = true; });
+    return p;
+  }
+  function notifPrefs() {
+    var stored = (state.profile && state.profile.notificationPreferences) || {};
+    var out = defaultNotifPrefs();
+    Object.keys(stored).forEach(function(k) { out[k] = stored[k]; });
+    // Any typed key left undefined (older profile) defaults to enabled.
+    NOTIF_TYPE_KEYS.forEach(function(k) { if (out[k] === undefined) out[k] = true; });
+    return out;
+  }
+  // 'unsupported' (no push API) | 'enabled' (granted) | 'disabled' (denied) | 'default' (not yet asked)
+  function notifPermissionStatus() {
+    if (!pushSupported()) return 'unsupported';
+    var perm = (root.Notification && root.Notification.permission) || 'default';
+    if (perm === 'granted') return 'enabled';
+    if (perm === 'denied') return 'disabled';
+    return 'default';
+  }
+  // Mirror the unread count onto the Home Screen / app icon badge (PWA Badging API).
+  function setAppBadgeSafe(count) {
+    var nav = root.navigator || {};
+    try {
+      if (count > 0 && typeof nav.setAppBadge === 'function') nav.setAppBadge(count);
+      else if (typeof nav.clearAppBadge === 'function') nav.clearAppBadge();
+    } catch (e) {}
+  }
+  function statusLabel(status) {
+    var s = String(status || '').toLowerCase();
+    var map = {
+      pending_barber_confirmation: 'stPending', pending: 'stPending',
+      confirmed: 'stConfirmed', rescheduled: 'stRescheduled',
+      vendor_review: 'stReview', needs_info: 'stReview', more_info_needed: 'stReview',
+      completed: 'stCompleted', cancelled: 'stCancelled', canceled: 'stCancelled',
+      declined: 'stDeclined', rejected: 'stDeclined'
+    };
+    return map[s] ? t(map[s]) : (status || '');
   }
 
   function passwordScore(pass) {
@@ -271,9 +400,13 @@
         '</div>' +
         '<div class="mb-customer-actions">' +
           '<button class="mb-button mb-button--ghost" type="button" id="mbCustomerHistoryBtn">' + esc(t('historyTitle')) + '</button>' +
-          '<button class="mb-button mb-button--ghost" type="button" id="mbCustomerLogoutBtn">' + esc(t('logout')) + '</button>' +
+          '<button class="mb-button mb-button--ghost" type="button" id="mbCustomerNotifBtn">' + esc(t('notifications')) + '</button>' +
         '</div>' +
-        reminderHtml();
+        settingsHtml() +
+        reminderHtml() +
+        '<div class="mb-customer-actions">' +
+          '<button class="mb-button mb-button--ghost" type="button" id="mbCustomerLogoutBtn">' + esc(t('logout')) + '</button>' +
+        '</div>';
       // The clear "next step" after sign-up/login: close the account panel and jump to
       // the service list so the customer can actually book (fixes the dead-end where the
       // panel ended at the reminder dropdown with nowhere to go).
@@ -284,7 +417,9 @@
       });
       body.querySelector('#mbCustomerLogoutBtn').addEventListener('click', function() { auth().signOut(); });
       body.querySelector('#mbCustomerHistoryBtn').addEventListener('click', openHistoryPanel);
+      body.querySelector('#mbCustomerNotifBtn').addEventListener('click', openNotificationsPanel);
       wireReminder(body);
+      wireSettings(body);
       return;
     }
     body.innerHTML =
@@ -362,7 +497,7 @@
       bookingHistory: data.bookingHistory || [],
       preferredBarber: data.preferredBarber || '',
       haircutPreferences: data.haircutPreferences || {},
-      notificationPreferences: data.notificationPreferences || { app: true, push: false, reminders: true },
+      notificationPreferences: data.notificationPreferences || defaultNotifPrefs(),
       reminderPreferenceWeeks: data.reminderPreferenceWeeks || 4,
       createdAt: data.createdAt || serverTimestamp(),
       updatedAt: serverTimestamp()
@@ -412,15 +547,25 @@
 
   function reminderHtml() {
     var current = state.profile && state.profile.reminderPreferenceWeeks;
+    var n = (current == null) ? null : Number(current);
+    var fixed = [2, 3, 4, 6, 8, 0];
+    var isCustom = (n != null) && fixed.indexOf(n) < 0;
+    function opt(v, key) {
+      var selected = (!isCustom && (n === v || (v === 4 && n == null))) ? ' selected' : '';
+      return '<option value="' + v + '"' + selected + '>' + esc(t(key)) + '</option>';
+    }
     return '<div class="mb-customer-reminders">' +
       '<h3>' + esc(t('reminderTitle')) + '</h3>' +
       '<label>' + esc(t('reminderWeeks')) +
         '<select id="mbReminderWeeks">' +
-          '<option value="3"' + (current === 3 ? ' selected' : '') + '>' + esc(t('reminder3')) + '</option>' +
-          '<option value="4"' + (!current || current === 4 ? ' selected' : '') + '>' + esc(t('reminder4')) + '</option>' +
-          '<option value="6"' + (current === 6 ? ' selected' : '') + '>' + esc(t('reminder6')) + '</option>' +
-          '<option value="0"' + (current === 0 ? ' selected' : '') + '>' + esc(t('reminderOff')) + '</option>' +
+          opt(2, 'reminder2') + opt(3, 'reminder3') + opt(4, 'reminder4') +
+          opt(6, 'reminder6') + opt(8, 'reminder8') +
+          '<option value="custom"' + (isCustom ? ' selected' : '') + '>' + esc(t('reminderCustom')) + '</option>' +
+          opt(0, 'reminderOff') +
         '</select>' +
+      '</label>' +
+      '<label id="mbReminderCustomWrap"' + (isCustom ? '' : ' hidden') + '>' + esc(t('reminderCustomWeeks')) +
+        '<input type="number" id="mbReminderCustom" min="1" max="52" inputmode="numeric" value="' + esc(isCustom ? String(n) : '') + '">' +
       '</label>' +
       '<p class="mb-customer-muted" id="mbReminderStatus"></p>' +
     '</div>';
@@ -428,22 +573,99 @@
   function wireReminder(body) {
     var sel = body.querySelector('#mbReminderWeeks');
     if (!sel || !isCustomerUser()) return;
-    sel.addEventListener('change', function() {
-      var weeks = Number(sel.value || 0);
-      var payload = {
-        id: state.user.uid,
-        customerId: state.user.uid,
-        reminderPreferenceWeeks: weeks,
-        enabled: weeks > 0,
-        updatedAt: serverTimestamp()
-      };
-      db().collection('customerReminderPreferences').doc(state.user.uid).set(payload, { merge: true });
+    var customWrap = body.querySelector('#mbReminderCustomWrap');
+    var customInput = body.querySelector('#mbReminderCustom');
+    function chosenWeeks() {
+      if (sel.value === 'custom') return Math.max(1, Math.min(52, Math.round(Number(customInput && customInput.value) || 0)));
+      return Number(sel.value || 0);
+    }
+    function save() {
+      // For Custom, wait until a positive number is entered before persisting.
+      if (sel.value === 'custom' && !(Number(customInput && customInput.value) > 0)) return;
+      var weeks = chosenWeeks();
+      db().collection('customerReminderPreferences').doc(state.user.uid).set({
+        id: state.user.uid, customerId: state.user.uid,
+        reminderPreferenceWeeks: weeks, enabled: weeks > 0, updatedAt: serverTimestamp()
+      }, { merge: true });
+      // Nested map merge (NOT a literal dotted key) so we update just this sub-field.
       db().collection('mobileBarberCustomers').doc(state.user.uid).set({
         reminderPreferenceWeeks: weeks,
-        'notificationPreferences.reminders': weeks > 0,
+        notificationPreferences: { reminders: weeks > 0 },
         updatedAt: serverTimestamp()
       }, { merge: true });
-      body.querySelector('#mbReminderStatus').textContent = t('reminderSaved');
+      var st = body.querySelector('#mbReminderStatus'); if (st) st.textContent = t('reminderSaved');
+    }
+    sel.addEventListener('change', function() {
+      var custom = sel.value === 'custom';
+      if (customWrap) customWrap.hidden = !custom;
+      if (custom) { if (customInput) customInput.focus(); return; }
+      save();
+    });
+    if (customInput) customInput.addEventListener('change', save);
+  }
+
+  function knownBarbers() {
+    var seen = {}, list = [];
+    (state.bookings || []).forEach(function(b) {
+      var name = b.assignedBarberName || b.barberName || b.vendorName || b.assignedBarberId || b.vendorId;
+      if (name) { name = String(name); if (!seen[name]) { seen[name] = 1; list.push(name); } }
+    });
+    return list;
+  }
+  function barberOptionsHtml(current) {
+    current = String(current || '');
+    var list = knownBarbers();
+    if (current && list.indexOf(current) < 0) list.push(current);
+    var html = '<option value=""' + (current ? '' : ' selected') + '>' + esc(t('barberAny')) + '</option>';
+    list.forEach(function(name) {
+      html += '<option value="' + esc(name) + '"' + (name === current ? ' selected' : '') + '>' + esc(name) + '</option>';
+    });
+    return html;
+  }
+  function notifTogglesHtml() {
+    var prefs = notifPrefs();
+    var rows = [
+      ['bookingUpdates', 'notifBookingUpdates'],
+      ['confirmations', 'notifConfirmations'],
+      ['reschedules', 'notifReschedules'],
+      ['appointmentReminders', 'notifAppointmentReminders'],
+      ['haircutReminders', 'notifHaircutReminders']
+    ];
+    return '<div class="mb-customer-notif-types">' +
+      '<h4>' + esc(t('notifTypesTitle')) + '</h4>' +
+      rows.map(function(r) {
+        return '<label class="mb-customer-toggle">' +
+          '<input type="checkbox" data-notif-key="' + r[0] + '"' + (prefs[r[0]] !== false ? ' checked' : '') + '>' +
+          '<span>' + esc(t(r[1])) + '</span></label>';
+      }).join('') + '</div>';
+  }
+  function settingsHtml() {
+    return '<div class="mb-customer-settings">' +
+      '<h3>' + esc(t('settingsTitle')) + '</h3>' +
+      '<label>' + esc(t('preferredBarber')) +
+        '<select id="mbPreferredBarber">' + barberOptionsHtml(state.profile && state.profile.preferredBarber || '') + '</select>' +
+      '</label>' +
+      notifTogglesHtml() +
+      '<p class="mb-customer-muted" id="mbSettingsStatus"></p>' +
+    '</div>';
+  }
+  function wireSettings(body) {
+    if (!isCustomerUser()) return;
+    function status() { var st = body.querySelector('#mbSettingsStatus'); if (st) st.textContent = t('prefsSaved'); }
+    var barber = body.querySelector('#mbPreferredBarber');
+    if (barber) barber.addEventListener('change', function() {
+      db().collection('mobileBarberCustomers').doc(state.user.uid)
+        .set({ preferredBarber: barber.value || '', updatedAt: serverTimestamp() }, { merge: true });
+      status();
+    });
+    Array.prototype.forEach.call(body.querySelectorAll('[data-notif-key]'), function(cb) {
+      cb.addEventListener('change', function() {
+        var prefs = {};
+        prefs[cb.getAttribute('data-notif-key')] = !!cb.checked;
+        db().collection('mobileBarberCustomers').doc(state.user.uid)
+          .set({ notificationPreferences: prefs, updatedAt: serverTimestamp() }, { merge: true });
+        status();
+      });
     });
   }
 
@@ -462,21 +684,38 @@
   }
   function bookingListHtml(label, rows) {
     return '<h3>' + esc(label) + '</h3>' + (rows.length ? rows.map(function(b) {
+      var barber = b.assignedBarberName || b.barberName || b.vendorName || b.assignedBarberId || b.vendorId || '';
+      var promo = b.promoApplied ? [b.promotionName, b.discountPercent ? b.discountPercent + '%' : ''].filter(Boolean).join(' ') : '';
+      var line1 = [b.requestedDate, b.startTime, statusLabel(b.status)].filter(Boolean).join(' · ');
+      var line2 = [barber ? t('fBarber') + ': ' + barber : '', b.address].filter(Boolean).join(' · ');
+      var line3 = [
+        b.paymentMethod ? t('fPayment') + ': ' + b.paymentMethod : '',
+        promo ? t('fPromo') + ': ' + promo : '',
+        b.totalPrice ? '$' + b.totalPrice : ''
+      ].filter(Boolean).join(' · ');
       return '<article class="mb-customer-booking" id="booking-' + esc(b.id || '') + '">' +
         '<strong>' + esc(b.serviceName || '') + '</strong>' +
-        '<span>' + esc([b.requestedDate, b.startTime, b.status].filter(Boolean).join(' · ')) + '</span>' +
-        '<span>' + esc([b.assignedBarberId || b.vendorId, b.address, b.totalPrice ? '$' + b.totalPrice : ''].filter(Boolean).join(' · ')) + '</span>' +
+        '<span>' + esc(line1) + '</span>' +
+        (line2 ? '<span>' + esc(line2) + '</span>' : '') +
+        (line3 ? '<span>' + esc(line3) + '</span>' : '') +
       '</article>';
     }).join('') : '<p class="mb-customer-muted">' + esc(t('noBookings')) + '</p>');
   }
 
   function openNotificationsPanel() {
     var body = panelShell('mbCustomerNotificationsPanel', 'notifications');
+    var st = notifPermissionStatus();
+    var statusText = st === 'enabled' ? t('notifEnabled') : (st === 'disabled' ? t('notifDisabled') : (st === 'unsupported' ? t('notifUnsupported') : ''));
+    // Per spec: request permission ONLY after the user taps — show the CTA only when the
+    // browser supports push and the customer has not yet decided (permission 'default').
+    var showEnable = (st === 'default');
     body.innerHTML =
-      '<button class="mb-button mb-button--primary mb-button--sm" type="button" id="mbEnableCustomerPush">' + esc(t('enableNotifications')) + '</button>' +
+      '<p class="mb-customer-notif-status"><strong>' + esc(t('notifStatusLabel')) + ':</strong> <span id="mbNotifStatusValue">' + esc(statusText) + '</span></p>' +
+      (showEnable ? '<button class="mb-button mb-button--primary mb-button--sm" type="button" id="mbEnableCustomerPush">' + esc(t('enableNotifications')) + '</button>' : '') +
       '<p class="mb-customer-muted" id="mbCustomerPushStatus"></p>' +
       '<div class="mb-customer-notification-list">' + notificationsHtml() + '</div>';
-    body.querySelector('#mbEnableCustomerPush').addEventListener('click', enablePush);
+    var enableBtn = body.querySelector('#mbEnableCustomerPush');
+    if (enableBtn) enableBtn.addEventListener('click', enablePush);
     // Wire clicks on the FIRST render too (not only on later refreshes) so tapping a
     // notification opens its booking immediately.
     wireNotificationClicks(body.querySelector('.mb-customer-notification-list'));
@@ -501,6 +740,9 @@
     var badge = doc.getElementById('mbCustomerBadge');
     var count = state.notifications.filter(function(n) { return !n.read; }).length;
     if (badge) { badge.hidden = count <= 0; badge.textContent = String(count); }
+    // Mirror the unread count onto the Home Screen / app-icon badge (PWA Badging API)
+    // so it persists across refresh and is visible from the installed app.
+    setAppBadgeSafe(count);
   }
   function wireNotificationClicks(rootNode) {
     Array.prototype.forEach.call(rootNode.querySelectorAll('.mb-customer-notification'), function(row) {

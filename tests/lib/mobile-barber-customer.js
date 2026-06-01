@@ -44,7 +44,7 @@ function runMobileBarberCustomerTests(test) {
   });
 
   test('Mobile Barber customer auth uses LOCAL persistence and phone-derived identity', function() {
-    assertContains(html, '/mobile-barber/mobile-barber-customer.js?v=20260531k');
+    assertContains(html, '/mobile-barber/mobile-barber-customer.js?v=20260601a');
     assertContains(customerJs, 'Auth.Persistence.LOCAL');
     assertContains(customerJs, 'customerEmailForPhone');
     assertContains(customerJs, '@mobile-barber.dulichcali21.local');
@@ -124,6 +124,98 @@ function runMobileBarberCustomerTests(test) {
     assertContains(customerJs, "addEventListener('click', openAccountPanel)");
     // The modal is dismissible (close X removes the panel).
     assertContains(customerJs, "querySelector('.mb-customer-panel__close').addEventListener('click', function() { panel.remove(); })");
+  });
+
+  test('Mobile Barber login persistence is set before auth and never cleared on the page', function() {
+    // Persistence is LOCAL and applied BEFORE login/signup (ensureAuthReady wraps both).
+    assertContains(customerJs, 'function ensureAuthReady()');
+    assertContains(customerJs, 'a.setPersistence ? a.setPersistence(P)');
+    assertContains(customerJs, 'ensureAuthReady().then(function(a) {');
+    // No code path signs the user out except the explicit logout button.
+    var signOutCount = (customerJs.match(/\.signOut\(\)/g) || []).length;
+    assert(signOutCount === 1, 'exactly one signOut() — the explicit Log out button (found ' + signOutCount + ')');
+    assertContains(customerJs, 'id="mbCustomerLogoutBtn"');
+    assertContains(customerJs, "querySelector('#mbCustomerLogoutBtn').addEventListener('click', function() { auth().signOut(); })");
+  });
+
+  test('Mobile Barber notification settings expose status + 5 per-type toggles', function() {
+    // Status indicator: Enabled / Disabled / Not supported.
+    assertContains(customerJs, 'function notifPermissionStatus()');
+    assertContains(customerJs, 'notifStatusLabel');
+    assertContains(customerJs, 'notifEnabled');
+    assertContains(customerJs, 'notifDisabled');
+    assertContains(customerJs, 'notifUnsupported');
+    // Permission requested only on tap (CTA only when status is undecided).
+    assertContains(customerJs, "var showEnable = (st === 'default')");
+    // Five typed toggles, default ON, matching the server gate keys.
+    assertContains(customerJs, "var NOTIF_TYPE_KEYS = ['bookingUpdates', 'confirmations', 'reschedules', 'appointmentReminders', 'haircutReminders']");
+    assertContains(customerJs, 'function notifTogglesHtml()');
+    assertContains(customerJs, 'data-notif-key=');
+    assertContains(customerJs, 'function wireSettings(body)');
+    assertContains(customerJs, "set({ notificationPreferences: prefs, updatedAt: serverTimestamp() }, { merge: true })");
+  });
+
+  test('Mobile Barber haircut reminder offers 2/3/4/6/8 weeks + custom', function() {
+    assertContains(customerJs, 'reminder2');
+    assertContains(customerJs, 'reminder8');
+    assertContains(customerJs, 'reminderCustom');
+    assertContains(customerJs, 'mbReminderCustom');
+    assertContains(customerJs, "opt(2, 'reminder2')");
+    assertContains(customerJs, "opt(8, 'reminder8')");
+    // The old literal-dotted-key bug is gone; nested-map merge is used instead.
+    assert(customerJs.indexOf("'notificationPreferences.reminders'") < 0,
+      'must not write a literal dotted key — use a nested map merge');
+    assertContains(customerJs, 'notificationPreferences: { reminders: weeks > 0 }');
+  });
+
+  test('Mobile Barber unread count mirrors to the Home Screen app-icon badge', function() {
+    assertContains(customerJs, 'function setAppBadgeSafe(count)');
+    assertContains(customerJs, 'nav.setAppBadge(count)');
+    assertContains(customerJs, 'nav.clearAppBadge()');
+    assertContains(customerJs, 'setAppBadgeSafe(count);');
+  });
+
+  test('Mobile Barber My Bookings shows status, barber, payment and promotion', function() {
+    assertContains(customerJs, 'function statusLabel(status)');
+    assertContains(customerJs, "t('fPayment') + ': ' + b.paymentMethod");
+    assertContains(customerJs, 'b.promoApplied');
+    assertContains(customerJs, "t('fPromo') + ': ' + promo");
+    assertContains(customerJs, "t('fBarber') + ': ' + barber");
+  });
+
+  test('Mobile Barber server gates customer notifications by per-type preference', function() {
+    assertContains(functionsJs, 'function mbCustomerNotifPrefKey(type)');
+    assertContains(functionsJs, 'function mbNotifTypeEnabled(prefs, prefKey)');
+    assertContains(functionsJs, 'function mbGetCustomerNotifContext(customerId)');
+    assertContains(functionsJs, 'mbNotifTypeEnabled(ctx.prefs, mbCustomerNotifPrefKey(copy.type))');
+    // Haircut reminders + appointment reminders are gated too.
+    assertContains(functionsJs, "mbNotifTypeEnabled(ctx.prefs, 'haircutReminders')");
+    assertContains(functionsJs, "mbNotifTypeEnabled(ctx.prefs, 'appointmentReminders')");
+    assertContains(functionsJs, "type: 'appointment_reminder'");
+    assertContains(functionsJs, "where('requestedDate', '==', tomorrow)");
+  });
+
+  test('Mobile Barber server notification copy is multilingual (vi/en/es)', function() {
+    assertContains(functionsJs, 'function mbCustomerNotifStrings(lang)');
+    assertContains(functionsJs, 'function mbNormLang(lang)');
+    // English (default) + Vietnamese + Spanish copies all present.
+    assertContains(functionsJs, "confirmedBody: 'Your haircut appointment is confirmed.'");
+    assertContains(functionsJs, 'Lịch cắt tóc của bạn đã được xác nhận.');
+    assertContains(functionsJs, 'Su cita de corte está confirmada.');
+    assertContains(functionsJs, 'mbCustomerNotificationCopy(nextStatus, ctx.lang)');
+  });
+
+  test('Mobile Barber new settings strings exist in all three languages', function() {
+    var keys = ['settingsTitle', 'preferredBarber', 'notifConfirmations', 'notifAppointmentReminders', 'reminderCustomWeeks', 'fPayment', 'stConfirmed'];
+    ['en', 'vi', 'es'].forEach(function(lng) {
+      var blockStart = customerJs.indexOf(lng + ': {');
+      assert(blockStart >= 0, lng + ' language block exists');
+    });
+    keys.forEach(function(k) {
+      // Each key must appear at least 3 times (once per language table).
+      var count = customerJs.split(k + ':').length - 1;
+      assert(count >= 3, 'string "' + k + '" must exist in vi/en/es (found ' + count + ')');
+    });
   });
 }
 

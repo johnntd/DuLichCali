@@ -5921,7 +5921,9 @@
 }
 
 .mb-customer-form input,
-.mb-customer-reminders select {
+.mb-customer-reminders select,
+.mb-customer-reminders input,
+.mb-customer-settings select {
   width: 100%;
   box-sizing: border-box;
   border: 1px solid rgba(255,255,255,.18);
@@ -5931,6 +5933,52 @@
   min-height: 44px;
   padding: 10px 12px;
   font-size: 16px;
+}
+
+/* Account settings (preferred barber + notification toggles) */
+.mb-customer-settings {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,.12);
+}
+.mb-customer-settings > label {
+  display: grid;
+  gap: 6px;
+  font-size: .9rem;
+  color: rgba(247,251,255,.82);
+}
+.mb-customer-notif-types {
+  display: grid;
+  gap: 8px;
+}
+.mb-customer-notif-types h4 {
+  margin: 0;
+  font-size: .92rem;
+  color: rgba(247,251,255,.9);
+}
+.mb-customer-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  font-size: .92rem;
+  color: rgba(247,251,255,.86);
+  cursor: pointer;
+}
+.mb-customer-toggle input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  accent-color: #f0be60;
+}
+.mb-customer-notif-status {
+  margin: 0 0 4px;
+  color: rgba(247,251,255,.82);
+}
+.mb-customer-notif-status strong {
+  color: #fff;
 }
 
 .mb-customer-strength {

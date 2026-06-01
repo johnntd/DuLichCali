@@ -1551,11 +1551,22 @@
     });
   }
 
+  // Customer-originated booking sources. These writers (anonymous OR a logged-in
+  // CUSTOMER) cannot run the owner-scoped client conflict query under Firestore rules,
+  // so they MUST go through the server callable. Only vendor-portal writes ('manual' /
+  // 'snapshot') use the client BookingGuard, since a vendor can read the owner's bookings.
+  var CUSTOMER_WRITE_SOURCES = { customer_form: 1, ai_chat: 1, ai_voice: 1, ai_preview: 1, landing_no_match: 1 };
+  function _isCustomerWrite(booking) {
+    return !!CUSTOMER_WRITE_SOURCES[String((booking && booking.source) || '')];
+  }
   function persistBooking(booking, options) {
     options = options || {};
     var guard = root.BookingGuard;
     var guardReq = unifiedGuardRequestFromBooking(booking);
-    if (guard && guardReq.ownerId && options.skipUnifiedGuard !== true && !_isAnonymousWriter()) {
+    // Client BookingGuard is for VENDOR writes only — a logged-in customer is
+    // authenticated but NOT a vendor, so it cannot read owner bookings (the guard's
+    // conflict query is denied and the write hangs). Route customer writes to the callable.
+    if (guard && guardReq.ownerId && options.skipUnifiedGuard !== true && !_isAnonymousWriter() && !_isCustomerWrite(booking)) {
       return guard.guardedWrite(guardReq, function(tx, guardMeta) {
         guardMeta = guardMeta || {};
         booking.status = guardMeta.disposition === 'review' ? 'vendor_review' : normalizeBookingStatus(booking.status);

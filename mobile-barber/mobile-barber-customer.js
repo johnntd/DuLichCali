@@ -38,6 +38,7 @@
       styleSaved: 'Style saved.',
       historyTitle: 'My bookings',
       bookHaircut: 'Book a haircut',
+      signedIn: "You're signed in.",
       upcoming: 'Upcoming',
       past: 'Past',
       noBookings: 'No bookings yet.',
@@ -89,6 +90,7 @@
       styleSaved: 'Đã lưu kiểu tóc.',
       historyTitle: 'Lịch đặt của tôi',
       bookHaircut: 'Đặt lịch cắt tóc',
+      signedIn: 'Bạn đã đăng nhập.',
       upcoming: 'Sắp tới',
       past: 'Đã qua',
       noBookings: 'Chưa có lịch đặt.',
@@ -140,6 +142,7 @@
       styleSaved: 'Estilo guardado.',
       historyTitle: 'Mis reservas',
       bookHaircut: 'Reservar un corte',
+      signedIn: 'Sesión iniciada.',
       upcoming: 'Próximas',
       past: 'Pasadas',
       noBookings: 'Aún no hay reservas.',
@@ -377,14 +380,14 @@
     }).then(function(cred) {
       state.user = cred.user;
       return saveProfile(cred.user.uid, data);
-    }).then(function() { openAccountPanel(); })
+    }).then(function() { closeAccountModal(); toast(t('signedIn')); })
       .catch(function() { showAuthError(form, t('authFailed')); });
   }
   function login(form) {
     var data = formData(form);
     ensureAuthReady().then(function(a) {
       return a.signInWithEmailAndPassword(customerEmailForPhone(data.phone), data.password);
-    }).then(function() { openAccountPanel(); })
+    }).then(function() { closeAccountModal(); toast(t('signedIn')); })
       .catch(function() { showAuthError(form, t('authFailed')); });
   }
   function resetPassword(form) {
@@ -399,6 +402,13 @@
       });
   }
   function openAccountPanel() { authForm(isCustomerUser() ? 'signedin' : 'login'); }
+  // After a successful signup/login the account modal must NOT stay open and trap the
+  // customer — close it and let them continue on the page. The auth-state listener
+  // updates the small account button and removes the AI login gate (= resume context).
+  function closeAccountModal() {
+    var p = doc.getElementById('mbCustomerAccountPanel');
+    if (p) p.remove();
+  }
 
   function reminderHtml() {
     var current = state.profile && state.profile.reminderPreferenceWeeks;

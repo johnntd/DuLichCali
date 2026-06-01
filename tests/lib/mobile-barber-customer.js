@@ -44,7 +44,7 @@ function runMobileBarberCustomerTests(test) {
   });
 
   test('Mobile Barber customer auth uses LOCAL persistence and phone-derived identity', function() {
-    assertContains(html, '/mobile-barber/mobile-barber-customer.js?v=20260531j');
+    assertContains(html, '/mobile-barber/mobile-barber-customer.js?v=20260531k');
     assertContains(customerJs, 'Auth.Persistence.LOCAL');
     assertContains(customerJs, 'customerEmailForPhone');
     assertContains(customerJs, '@mobile-barber.dulichcali21.local');
@@ -107,6 +107,23 @@ function runMobileBarberCustomerTests(test) {
     assertContains(customerJs, 'loginForAi');
     assertContains(customerJs, 'enableNotifications');
     assertContains(customerJs, 'bookingAccountPrompt');
+  });
+
+  test('Mobile Barber login/signup closes the account modal instead of trapping the user', function() {
+    assertContains(customerJs, 'function closeAccountModal()');
+    // Success handlers must CLOSE the modal (+ toast), not re-open the account panel.
+    assertContains(customerJs, "closeAccountModal(); toast(t('signedIn'))");
+    assert(customerJs.indexOf('}).then(function() { openAccountPanel(); })') < 0,
+      'signup/login success must close the account modal, not re-open it');
+    // The auth-state listener must NOT auto-open the modal (no trap on refresh).
+    var authIdx = customerJs.indexOf('onAuthStateChanged(function(user)');
+    assert(authIdx >= 0, 'auth state listener must exist');
+    assert(customerJs.slice(authIdx, authIdx + 350).indexOf('openAccountPanel(') < 0,
+      'auth state listener must NOT auto-open the account modal');
+    // Account panel opens only when the small account button is tapped.
+    assertContains(customerJs, "addEventListener('click', openAccountPanel)");
+    // The modal is dismissible (close X removes the panel).
+    assertContains(customerJs, "querySelector('.mb-customer-panel__close').addEventListener('click', function() { panel.remove(); })");
   });
 }
 

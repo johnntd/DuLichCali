@@ -105,8 +105,15 @@ snapshot), `mobile-barber-agent.js` (ranked offers + reasons + `routeContext` + 
   unvalidated→`vendor_review`/`address_unvalidated`; 50mi→`vendor_review`/`beyond_service_radius`.
 
 ## Limitations
-- **No real Maps key yet** — production runs the city/ZIP centroid fallback (low confidence). Set
-  `GOOGLE_MAPS_API_KEY` to enable precise geocoding + live travel times (no code change).
+- **Maps key is referrer-restricted → server calls get `REQUEST_DENIED`.** The site's existing
+  browser key (`AIzaSyCo1…`, used by the Maps JS SDK in the HTML) is HTTP-referrer-restricted, so
+  Cloud Functions (which send no referrer) cannot use it for Geocoding / Distance Matrix — verified
+  live: `validateAddressAndDistance` returns `geocode_REQUEST_DENIED` and safely falls back to the
+  city/ZIP centroid estimate (`city_zip_only`, `googleMapsUsed:false`). To enable real server-side
+  geocoding/travel: create (or re-restrict) a key with **Geocoding API + Distance Matrix API**
+  enabled and **no HTTP-referrer restriction** (use "None" or IP-based), then
+  `firebase functions:secrets:set GOOGLE_MAPS_API_KEY` + redeploy `validateAddressAndDistance` — no
+  code change. Until then the city/ZIP centroid fallback runs (low confidence).
 - Single vendor timezone assumed (PT). The exposed Firebase web key in the HTML is unchanged this
   pass (referrer-restricted; authoritative validation is server-side) — key hardening is a follow-up.
 - Travel-time batching (`buildTravelTimesMap`, P1) not yet wired; the scorer uses the `travelBuffer`

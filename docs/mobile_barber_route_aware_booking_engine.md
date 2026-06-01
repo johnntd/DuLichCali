@@ -43,7 +43,22 @@ Base 100, then:
 Travel times come from an **optional** `googleMapsTravelTimes` map (neighbor id/address → minutes);
 absent entries fall back to the service `travelBuffer`, so the scorer works with or without Maps.
 
-## Google Maps integration (server-side only)
+## Google Maps integration (CLIENT-SIDE primary — mirrors rideshare; updated 2026-06-01)
+
+The working pattern (confirmed by auditing the rideshare/airport flow + live in-browser diag):
+the project Maps key has **Distance Matrix + Directions + Places enabled but NOT the Geocoding
+API** (forward geocode → `REQUEST_DENIED`), and the key is **HTTP-referrer-restricted** so it only
+works **in the browser**. So `validateAddressAndDistance` (frontend, `mobile-barber-booking.js`) now
+does Maps **client-side first** — `requestDistanceMatrix` → `google.maps.DistanceMatrixService` with
+address strings (a returned route implicitly validates the address) → real `distanceMiles` +
+`travelMinutes`, `addressValidationStatus:'approximate'`, `googleMapsUsed:true`. A forward geocode is
+attempted as an **optional bonus** for `lat/lng`/`placeId`/`'precise'` and auto-upgrades if the
+Geocoding API is ever enabled (currently it returns null). It falls through to the server callable
+(used only if the SDK isn't loaded) then the city/ZIP centroid fallback. **Verified live** on
+`www.dulichcali21.com/mobile-barber`: `googleMapsUsed:true`, `addressValidationStatus:'approximate'`,
+real `distanceMiles` (e.g. 9.7 mi Cupertino→San Jose). No key/secret change, no new frontend key.
+
+### Server proxy (fallback only)
 
 `validateAddressAndDistance` (onCall, secret `GOOGLE_MAPS_API_KEY`) geocodes the address
 (formattedAddress/lat/lng/placeId + `precise|approximate`) and measures distance/travel via Distance
@@ -105,15 +120,16 @@ snapshot), `mobile-barber-agent.js` (ranked offers + reasons + `routeContext` + 
   unvalidated→`vendor_review`/`address_unvalidated`; 50mi→`vendor_review`/`beyond_service_radius`.
 
 ## Limitations
-- **Maps key is referrer-restricted → server calls get `REQUEST_DENIED`.** The site's existing
-  browser key (`AIzaSyCo1…`, used by the Maps JS SDK in the HTML) is HTTP-referrer-restricted, so
-  Cloud Functions (which send no referrer) cannot use it for Geocoding / Distance Matrix — verified
-  live: `validateAddressAndDistance` returns `geocode_REQUEST_DENIED` and safely falls back to the
-  city/ZIP centroid estimate (`city_zip_only`, `googleMapsUsed:false`). To enable real server-side
-  geocoding/travel: create (or re-restrict) a key with **Geocoding API + Distance Matrix API**
-  enabled and **no HTTP-referrer restriction** (use "None" or IP-based), then
-  `firebase functions:secrets:set GOOGLE_MAPS_API_KEY` + redeploy `validateAddressAndDistance` — no
-  code change. Until then the city/ZIP centroid fallback runs (low confidence).
+- **Maps runs client-side** (the working rideshare pattern), so real distance/validation needs the
+  customer's browser to load the SDK; if it can't (ad-blocker/offline), it falls through to the
+  server callable (which gets `REQUEST_DENIED` with the referrer-restricted key) then the city/ZIP
+  centroid fallback — booking is never blocked.
+- **`lat`/`lng`/`placeId` are not populated** because the **Geocoding API is not enabled** on the
+  key (forward geocode → `REQUEST_DENIED`). Distance + validation are real (Distance Matrix);
+  precise rooftop coordinates would require enabling the Geocoding API on the key (the code already
+  attempts geocode as a bonus and will auto-populate lat/lng once it's enabled).
+- The server proxy (`validateAddressAndDistance`) only works if a **non-referrer-restricted** key
+  with Geocoding + Distance Matrix is set as `GOOGLE_MAPS_API_KEY`; it's currently a fallback only.
 - Single vendor timezone assumed (PT). The exposed Firebase web key in the HTML is unchanged this
   pass (referrer-restricted; authoritative validation is server-side) — key hardening is a follow-up.
 - Travel-time batching (`buildTravelTimesMap`, P1) not yet wired; the scorer uses the `travelBuffer`

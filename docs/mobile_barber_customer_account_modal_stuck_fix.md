@@ -38,5 +38,32 @@
 | 5 | "My bookings" opens modal only when tapped | ✅ (bound to account-button click) |
 | 6 | iPhone Safari layout not trapped | ✅ (Playwright WebKit signup → modal gone) |
 
+## Full signup→book E2E — and a SECOND critical bug it caught
+
+Running the full flow on production (Playwright/WebKit) surfaced a separate critical bug:
+after signup/login auto-closed the modal correctly, the **booking itself hung at "Sending…"**
+for a logged-in customer. Console: `[booking-guard] query failed mobileBarberBookings
+vendorId Missing or insufficient permissions.`
+
+**Root cause:** `persistBooking` routed the write through the **client** `BookingGuard.guardedWrite`
+(which queries the owner's bookings) whenever the writer was not anonymous (`!_isAnonymousWriter()`).
+That proxy assumed "authenticated == vendor" — but a logged-in **customer** is authenticated yet
+not a vendor, so the owner-scoped query is denied and the write hangs. (Anonymous customers were
+unaffected — they already fell through to the server callable.)
+
+**Fix:** the client guard is now **vendor-only**; customer-originated sources (`customer_form`,
+`ai_chat`, `ai_voice`, `ai_preview`, `landing_no_match`) always use the server callable
+`createMobileBarberBookingGuarded` (Admin SDK checks conflicts), whether the customer is logged in
+or anonymous. Vendor-portal writes (`manual`/`snapshot`) keep the client guard. `booking.js v=…i→j`.
+
+**E2E result (production):** signup → modal auto-closes → tap service → fill form → submit →
+**booking SUCCESS** via the callable → Firestore booking **linked to the customer**
+(`customerId` MATCH, `customerProfileSnapshot` present, `source=customer_form`,
+`status=pending_barber_confirmation`). Also confirmed: login → modal auto-closes → book; the
+duplicate/double-booking guard, vendor PWA, and customer isolation (9/9) remain intact.
+
 ## Verdict
-**PASS** — successful signup/login no longer traps the customer in the account modal; it closes automatically and returns them to the booking flow. The modal is dismissible, opens only on tap, and account remains optional for booking.
+**PASS** — (1) successful signup/login no longer traps the customer in the account modal (it
+auto-closes and returns to the page), and (2) a logged-in customer can now complete a booking
+end-to-end (the booking no longer hangs). The modal is dismissible, opens only on tap, and account
+remains optional for booking.

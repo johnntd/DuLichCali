@@ -327,6 +327,7 @@ function runMobileBarberBookingTests(test) {
       { start: '2026-06-01', end: '2026-06-01' },
       {
         limit: 3,
+        now: FIXTURE_NOW,
         existingBookings: [{
           id: 'existing-first',
           vendorId: MobileBarberData.MICHAEL_VENDOR_ID,

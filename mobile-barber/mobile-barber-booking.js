@@ -1721,12 +1721,47 @@
     err.spamCode = (data && data.code) || 'TOO_MANY_REQUESTS';
     return err;
   }
-  // Frontend wrapper for the server-side Google Maps proxy. ALWAYS resolves (never
-  // rejects) — on any failure it returns a safe city/ZIP fallback so a Maps outage
-  // never blocks the booking flow (just lowers confidence). Returns a routeContext
-  // shape that buildBooking can persist directly.
+  // Client-side geocode (mirrors the rideshare/airport flow which runs Maps in the
+  // browser). The page already loads the Maps JS SDK with the referrer-restricted
+  // key, so a browser geocode carries the page referrer and succeeds. ALWAYS
+  // resolves (null on any failure) — never rejects.
+  function geocodeAddressClient(addrStr) {
+    return new Promise(function(resolve) {
+      try {
+        if (typeof root.google === 'undefined' || !root.google.maps || !root.google.maps.Geocoder || !addrStr) return resolve(null);
+        var cacheKey = 'mb_geo_' + String(addrStr).toLowerCase();
+        try {
+          var cached = root.sessionStorage && root.sessionStorage.getItem(cacheKey);
+          if (cached) { var p = JSON.parse(cached); if (p && p.lat != null) return resolve(p); }
+        } catch (e) {}
+        var geocoder = new root.google.maps.Geocoder();
+        geocoder.geocode({ address: addrStr }, function(results, status) {
+          if (status !== 'OK' || !results || !results[0]) return resolve(null);
+          var r = results[0];
+          var loc = r.geometry && r.geometry.location;
+          var out = {
+            formattedAddress: r.formatted_address || '',
+            lat: loc ? loc.lat() : null,
+            lng: loc ? loc.lng() : null,
+            placeId: r.place_id || '',
+            locationType: (r.geometry && r.geometry.location_type) || ''
+          };
+          try { root.sessionStorage && root.sessionStorage.setItem(cacheKey, JSON.stringify(out)); } catch (e) {}
+          resolve(out);
+        });
+      } catch (e) { resolve(null); }
+    });
+  }
+
+  // Validate a service address + measure distance. Mirrors the PROVEN rideshare
+  // approach: do Maps CLIENT-SIDE first (browser SDK with the referrer key works),
+  // then fall through to the server callable (used only if the SDK isn't loaded;
+  // a referrer-restricted key returns REQUEST_DENIED there), then to a city/ZIP
+  // fallback. ALWAYS resolves so a Maps outage never blocks booking. Returns the
+  // routeContext shape buildBooking persists.
   function validateAddressAndDistance(serviceAddress, vendorOrigin) {
     serviceAddress = serviceAddress || {};
+    vendorOrigin = vendorOrigin || {};
     var hasLoc = !!((serviceAddress.city || '') || (serviceAddress.zip || ''));
     var fallback = {
       ok: true, formattedAddress: trim(serviceAddress.address || ''),
@@ -1734,13 +1769,51 @@
       addressValidationStatus: hasLoc ? 'city_zip_only' : 'unverified',
       distanceMiles: 0, travelMinutes: 0, routeConfidence: 'low', googleMapsUsed: false
     };
-    var fn = null;
-    try { fn = root.firebase && root.firebase.functions && root.firebase.functions().httpsCallable('validateAddressAndDistance'); }
-    catch (e) { fn = null; }
-    if (!fn) return Promise.resolve(fallback);
-    return fn({ serviceAddress: serviceAddress, vendorOrigin: vendorOrigin || {} })
-      .then(function(res) { return (res && res.data && res.data.ok) ? res.data : fallback; })
-      .catch(function() { return fallback; });
+    var addrStr = [serviceAddress.address, serviceAddress.city, serviceAddress.zip]
+      .filter(function(x) { return x && String(x).trim(); }).join(', ');
+
+    function clientPath() {
+      if (typeof root.google === 'undefined' || !root.google.maps || !root.google.maps.Geocoder || !addrStr) return Promise.resolve(null);
+      return geocodeAddressClient(addrStr).then(function(geo) {
+        if (!geo || geo.lat == null) return null;
+        // Build a vendor-shim origin for the existing client DistanceMatrix helper.
+        var originVendor = {
+          id: vendorOrigin.id || 'mb-origin',
+          homeBaseAddress: vendorOrigin.address
+            || (vendorOrigin.city ? (vendorOrigin.city + (vendorOrigin.zip ? ' ' + vendorOrigin.zip : '') + ', CA') : ''),
+          serviceAreas: vendorOrigin.city ? [vendorOrigin.city] : []
+        };
+        var destForDistance = (geo.lat != null && geo.lng != null) ? (geo.lat + ',' + geo.lng) : addrStr;
+        return requestDistanceMatrix(originVendor, destForDistance).then(function(dm) {
+          var precise = (geo.locationType === 'ROOFTOP' || geo.locationType === 'RANGE_INTERPOLATED');
+          return {
+            ok: true,
+            formattedAddress: geo.formattedAddress || addrStr,
+            lat: geo.lat, lng: geo.lng, placeId: geo.placeId || '',
+            addressValidationStatus: precise ? 'precise' : 'approximate',
+            distanceMiles: (dm && isFinite(dm.distanceMiles)) ? Math.round(dm.distanceMiles * 10) / 10 : 0,
+            travelMinutes: (dm && isFinite(dm.travelMinutes)) ? Math.round(dm.travelMinutes) : 0,
+            routeConfidence: precise ? 'high' : 'medium',
+            googleMapsUsed: true
+          };
+        });
+      }).catch(function() { return null; });
+    }
+
+    function serverPath() {
+      var fn = null;
+      try { fn = root.firebase && root.firebase.functions && root.firebase.functions().httpsCallable('validateAddressAndDistance'); }
+      catch (e) { fn = null; }
+      if (!fn) return Promise.resolve(fallback);
+      return fn({ serviceAddress: serviceAddress, vendorOrigin: vendorOrigin })
+        .then(function(res) { return (res && res.data && res.data.ok) ? res.data : fallback; })
+        .catch(function() { return fallback; });
+    }
+
+    return clientPath().then(function(client) {
+      if (client && client.googleMapsUsed) return client; // browser Maps worked (like rideshare)
+      return serverPath();                                 // SDK absent → server, then city/ZIP fallback
+    }).catch(function() { return fallback; });
   }
 
   function guardedCreateViaCallable(booking, options) {

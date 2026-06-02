@@ -322,6 +322,22 @@
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   var db   = firebase.firestore();
   var auth = firebase.auth();
+  // Stay logged in across refresh / browser restart / Home Screen app until the
+  // vendor explicitly logs out. LOCAL is Firebase's default, but set it explicitly
+  // so it can never be silently downgraded.
+  try { auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch (e) {}
+  // Read vendorUsers/{uid} with retry. A TRANSIENT read failure must NOT log an
+  // authenticated vendor out or bounce them to the login form — retry with backoff
+  // and only fall back after several genuine failures (session stays intact).
+  function getVendorUserWithRetry(uid, onResult, onGiveUp, attempt) {
+    attempt = attempt || 0;
+    db.collection('vendorUsers').doc(uid).get().then(onResult).catch(function (err) {
+      if (attempt >= 5) { onGiveUp(err); return; }
+      var delay = Math.min(8000, 500 * Math.pow(2, attempt));
+      if (window.console) console.warn('[vendor-login] vendorUsers read failed (attempt ' + (attempt + 1) + '), retrying in ' + delay + 'ms', err && err.code);
+      setTimeout(function () { getVendorUserWithRetry(uid, onResult, onGiveUp, attempt + 1); }, delay);
+    });
+  }
 
   // ── getVendorById: Firestore-primary vendor config lookup ─────────────────
   // Firestore is the source of truth. VENDOR_REGISTRY is fallback only.
@@ -408,7 +424,7 @@
   auth.onAuthStateChanged(function (user) {
     if (user) {
       if (!VENDOR_ID) {
-        db.collection('vendorUsers').doc(user.uid).get().then(function (doc) {
+        getVendorUserWithRetry(user.uid, function (doc) {
           if (doc.exists) {
             var d0 = doc.data();
             // Prefer vendorIds array (updated list) over legacy vendorId field.
@@ -419,18 +435,20 @@
               : (d0.vendorId || null);
             _redirectToVendorAdmin(primaryId);
           } else {
+            // Definitive: this signed-in account has no vendor mapping.
             auth.signOut().then(function () {
               document.getElementById('authChecking').classList.add('hidden');
               showPicker();
             });
           }
-        }).catch(function () {
+        }, function () {
+          // Transient read failures exhausted — do NOT sign out (session stays).
           document.getElementById('authChecking').classList.add('hidden');
           showPicker();
         });
         return;
       }
-      db.collection('vendorUsers').doc(user.uid).get().then(function (doc) {
+      getVendorUserWithRetry(user.uid, function (doc) {
         if (doc.exists && (doc.data().vendorId === VENDOR_ID || (doc.data().vendorIds || []).includes(VENDOR_ID))) {
           _redirectToVendorAdmin(VENDOR_ID);
         } else if (!doc.exists) {
@@ -439,6 +457,7 @@
           if (display) display.textContent = user.email || '';
           showScreen('claim');
         } else {
+          // Definitive: account exists but is not authorized for this store.
           auth.signOut().then(function () {
             document.getElementById('authChecking').classList.add('hidden');
             document.getElementById('loginError').textContent =
@@ -446,7 +465,9 @@
             showScreen('login');
           });
         }
-      }).catch(function () {
+      }, function () {
+        // Transient read failures exhausted — keep the session; show login as a
+        // last resort (re-login is instant since the session persists).
         document.getElementById('authChecking').classList.add('hidden');
         showScreen('login');
       });

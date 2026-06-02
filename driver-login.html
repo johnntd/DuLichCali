@@ -157,6 +157,9 @@
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   var db   = firebase.firestore();
   var auth = firebase.auth();
+  // Stay logged in until explicit logout (LOCAL is the default; set explicitly so
+  // it can never be silently downgraded).
+  try { auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch (e) {}
 
   // ── Auth state — redirect if already signed in as an active driver ──────
   auth.onAuthStateChanged(function (user) {

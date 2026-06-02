@@ -3884,41 +3884,54 @@
         redirectToLogin(requestedVendorId);
         return;
       }
-      Promise.all([
-        db.collection('vendorUsers').doc(user.uid).get(),
-        db.collection('vendors').doc(requestedVendorId).get()
-      ]).then(function(results) {
-        var uDoc = results[0];
-        var vDoc = results[1];
-        if (!uDoc.exists) {
-          console.warn('[mobile-barber-dashboard] no vendorUsers/{uid} mapping for', user.uid);
-          auth.signOut().then(function() { redirectToLogin(requestedVendorId); });
-          return;
-        }
-        var uData = uDoc.data() || {};
-        var allowed = uData.vendorId === requestedVendorId
-                   || (Array.isArray(uData.vendorIds) && uData.vendorIds.indexOf(requestedVendorId) >= 0);
-        if (!allowed) {
-          console.warn('[mobile-barber-dashboard] user not authorized for vendor', requestedVendorId);
-          auth.signOut().then(function() { redirectToLogin(requestedVendorId); });
-          return;
-        }
-        if (!vDoc.exists) {
-          console.warn('[mobile-barber-dashboard] vendor doc missing for', requestedVendorId);
-          redirectToLogin(requestedVendorId);
-          return;
-        }
-        var vData = vDoc.data() || {};
-        if (vData.adminStatus && vData.adminStatus !== 'active') {
-          console.warn('[mobile-barber-dashboard] vendor adminStatus=', vData.adminStatus);
-          auth.signOut().then(function() { redirectToLogin(requestedVendorId); });
-          return;
-        }
-        init();
-      }).catch(function(err) {
-        console.error('[mobile-barber-dashboard] auth check failed', err);
-        redirectToLogin(requestedVendorId);
-      });
+      // Run the vendor status gate. A logged-in barber must STAY logged in until
+      // they explicitly log out — so a TRANSIENT Firestore read failure (offline /
+      // network blip / cold start) must NEVER bounce them to login or sign them
+      // out. We retry the status read with backoff and keep the (LOCAL-persisted)
+      // session. signOut / redirect happens ONLY when the read SUCCEEDS and the
+      // data is definitively bad (no mapping, wrong vendor, status != active).
+      function runGate(attempt) {
+        Promise.all([
+          db.collection('vendorUsers').doc(user.uid).get(),
+          db.collection('vendors').doc(requestedVendorId).get()
+        ]).then(function(results) {
+          var uDoc = results[0];
+          var vDoc = results[1];
+          if (!uDoc.exists) {
+            console.warn('[mobile-barber-dashboard] no vendorUsers/{uid} mapping for', user.uid);
+            auth.signOut().then(function() { redirectToLogin(requestedVendorId); });
+            return;
+          }
+          var uData = uDoc.data() || {};
+          var allowed = uData.vendorId === requestedVendorId
+                     || (Array.isArray(uData.vendorIds) && uData.vendorIds.indexOf(requestedVendorId) >= 0);
+          if (!allowed) {
+            console.warn('[mobile-barber-dashboard] user not authorized for vendor', requestedVendorId);
+            auth.signOut().then(function() { redirectToLogin(requestedVendorId); });
+            return;
+          }
+          if (!vDoc.exists) {
+            console.warn('[mobile-barber-dashboard] vendor doc missing for', requestedVendorId);
+            redirectToLogin(requestedVendorId);
+            return;
+          }
+          var vData = vDoc.data() || {};
+          if (vData.adminStatus && vData.adminStatus !== 'active') {
+            console.warn('[mobile-barber-dashboard] vendor adminStatus=', vData.adminStatus);
+            auth.signOut().then(function() { redirectToLogin(requestedVendorId); });
+            return;
+          }
+          init();
+        }).catch(function(err) {
+          // TRANSIENT read failure — the barber IS authenticated. Do NOT sign out
+          // and do NOT redirect to login. Retry with capped backoff so the portal
+          // loads as soon as connectivity returns; the session stays intact.
+          var delay = Math.min(15000, 600 * Math.pow(2, attempt));
+          console.warn('[mobile-barber-dashboard] status read failed (attempt ' + (attempt + 1) + ') — keeping session, retrying in ' + delay + 'ms', err && err.code);
+          setTimeout(function() { runGate(attempt + 1); }, delay);
+        });
+      }
+      runGate(0);
     });
   }
 

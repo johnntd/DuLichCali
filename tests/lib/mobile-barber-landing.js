@@ -121,6 +121,39 @@ function runMobileBarberLandingTests(test) {
     assertContains(html, '/mobile-barber/mobile-barber.js?v=20260601c');
   });
 
+  test('Persistent login: LOCAL persistence + no logout on transient read failure', function() {
+    var dashJs = read('mobile-barber/mobile-barber-dashboard.js');
+    var custJs = read('mobile-barber/mobile-barber-customer.js');
+    var vLogin = read('vendor-login.html');
+    var vAdmin = read('vendor-admin.html');
+    var dLogin = read('driver-login.html');
+
+    // LOCAL persistence set explicitly on every auth surface (customer + barber + driver).
+    assertContains(custJs, 'Auth.Persistence.LOCAL');
+    assertContains(dashJs, 'setPersistence(firebase.auth.Auth.Persistence.LOCAL)');
+    assertContains(vLogin, 'setPersistence(firebase.auth.Auth.Persistence.LOCAL)');
+    assertContains(vAdmin, 'setPersistence(firebase.auth.Auth.Persistence.LOCAL)');
+    assertContains(dLogin, 'setPersistence(firebase.auth.Auth.Persistence.LOCAL)');
+
+    // Barber dashboard: a transient status-read failure RETRIES and keeps the
+    // session — it must NOT redirect to login from the catch handler.
+    assertContains(dashJs, 'function runGate(attempt)');
+    assertContains(dashJs, 'setTimeout(function() { runGate(attempt + 1); }, delay)');
+    var dashCatch = dashJs.slice(dashJs.indexOf('}).catch(function(err) {', dashJs.indexOf('function runGate')));
+    assert(dashCatch.slice(0, 400).indexOf('redirectToLogin') < 0,
+      'dashboard transient-failure catch must NOT redirect to login (keep session)');
+
+    // vendor-login + vendor-admin: read with retry; the give-up path must NOT signOut.
+    assertContains(vLogin, 'function getVendorUserWithRetry');
+    assertContains(vAdmin, 'function _vendorUserGetRetry');
+    var vAdminCatch = vAdmin.slice(vAdmin.indexOf('Retries exhausted'));
+    assert(vAdminCatch.slice(0, 300).indexOf('signOut') < 0,
+      'vendor-admin transient-failure path must NOT signOut the vendor');
+
+    // Customer: exactly one signOut (the explicit logout button) — never auto-logout.
+    assert((custJs.match(/\.signOut\(\)/g) || []).length === 1, 'customer module signs out only on explicit logout');
+  });
+
   test('Mobile Barber pages load Firebase before local runtime scripts', function() {
     assertFirebaseLoadsBeforeMobileBarberScripts(html, 'index.html');
     assertFirebaseLoadsBeforeMobileBarberScripts(vendorHtml, 'vendor.html');
@@ -665,7 +698,7 @@ function runMobileBarberLandingTests(test) {
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-data.js?v=20260601c');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-booking.js?v=20260601e');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber-lightbox.js?v=20260530f');
-    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260531g');
+    assertContains(dashboardHtml, '/mobile-barber/mobile-barber-dashboard.js?v=20260602a');
     assertContains(dashboardHtml, '/mobile-barber/mobile-barber.css?v=20260601a');
     assertContains(dashboardHtml, 'firebase-auth-compat.js');
     assertContains(dashboardHtml, '/notifications.js?v=20260525a');

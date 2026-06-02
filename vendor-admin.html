@@ -2118,6 +2118,20 @@
   var db      = firebase.firestore();
   var storage = firebase.storage();
   var auth    = firebase.auth();
+  // Stay logged in until the vendor explicitly logs out (LOCAL is the default; set
+  // it explicitly so it can never be silently downgraded).
+  try { auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch (e) {}
+  // Read vendorUsers/{uid} with retry so a TRANSIENT failure never logs an
+  // authenticated vendor out. Rejects only after several genuine failures.
+  function _vendorUserGetRetry(uid, attempt) {
+    attempt = attempt || 0;
+    return db.collection('vendorUsers').doc(uid).get().catch(function (err) {
+      if (attempt >= 5) throw err;
+      var delay = Math.min(8000, 500 * Math.pow(2, attempt));
+      if (window.console) console.warn('[vendor-admin] vendorUsers read failed (attempt ' + (attempt + 1) + '), retrying in ' + delay + 'ms', err && err.code);
+      return new Promise(function (res) { setTimeout(res, delay); }).then(function () { return _vendorUserGetRetry(uid, attempt + 1); });
+    });
+  }
 
   // ── State ─────────────────────────────────────────────────────────────────
   var allItems          = {};
@@ -2145,8 +2159,8 @@
       goToLogin(null);
       return;
     }
-    // Look up which vendor this user manages
-    db.collection('vendorUsers').doc(user.uid).get().then(function (doc) {
+    // Look up which vendor this user manages (with retry on transient failure)
+    _vendorUserGetRetry(user.uid, 0).then(function (doc) {
       if (!doc.exists) {
         auth.signOut().then(function () { goToLogin(null); });
         return;
@@ -2225,9 +2239,11 @@
         startApp();
       });
     }).catch(function (err) {
-      // Sign out before redirecting to prevent redirect loop
-      console.error('[DLC] vendor-admin auth error:', err);
-      auth.signOut().then(function() { goToLogin(null); }).catch(function() { goToLogin(null); });
+      // Retries exhausted (rare). The vendor IS authenticated — do NOT sign out on
+      // a transient read failure; keep the session and show login as a last resort
+      // (re-entry is instant since the session persists).
+      console.error('[DLC] vendor-admin auth read failed after retries:', err && err.code);
+      goToLogin(null);
     });
   });
 

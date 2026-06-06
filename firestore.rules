@@ -28,6 +28,24 @@ service cloud.firestore {
           && request.auth.token.email in ['johnntd@gmail.com'];
     }
 
+    function isAssignedDriver() {
+      return request.auth != null
+          && 'driver' in resource.data
+          && resource.data.driver.driverId == request.auth.uid;
+    }
+
+    function isPortalVendorUser() {
+      return request.auth != null
+          && request.auth.token.firebase.sign_in_provider != 'anonymous'
+          && exists(/databases/$(database)/documents/vendorUsers/$(request.auth.uid));
+    }
+
+    function driverUpdateFieldsOk() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['status','statusUpdatedAt','statusUpdatedBy','statusHistory',
+                         'acceptedAt','startedAt','completedAt','driverNotes']);
+    }
+
     function isMobileBarberBookingCustomer() {
       return request.auth != null
           && (
@@ -204,13 +222,12 @@ service cloud.firestore {
       // homepage's advisory conflict check listed all bookings as anon; it now
       // degrades gracefully and a Cloud Function aggregate is the follow-up.)
       allow get:    if request.auth != null;
-      allow list:   if isAdmin()
-                 || (request.auth != null && request.auth.token.firebase.sign_in_provider != 'anonymous');
+      allow list:   if isAdmin() || isPortalVendorUser() || isAssignedDriver();
       // Updates (status/payment/driver/price) come only from admin + the driver
       // portal, both NON-anonymous. Block anonymous updates so a customer can't
       // forge status='completed' / paymentStatus='paid' / a different driver.
-      allow update: if isAdmin()
-                 || (request.auth != null && request.auth.token.firebase.sign_in_provider != 'anonymous');
+      allow update: if isAdmin() || isPortalVendorUser()
+                 || (isAssignedDriver() && driverUpdateFieldsOk());
       allow delete: if isAdmin();
     }
 
@@ -231,6 +248,10 @@ service cloud.firestore {
                      && request.auth.uid == driverId
                      && !request.resource.data.diff(resource.data).affectedKeys()
                           .hasAny(['complianceStatus', 'adminStatus', 'licExpiry', 'regExpiry', 'insExpiry']));
+    }
+
+    match /drivers/{driverId}/pushSubscriptions/{subId} {
+      allow read, write: if request.auth != null && request.auth.uid == driverId;
     }
 
     // ── Driver user mappings — auth only ─────────────────────────────────────────
@@ -297,13 +318,11 @@ service cloud.firestore {
     match /travel_bookings/{bookingId} {
       allow create: if true;
       allow get:    if request.auth != null;
-      allow list:   if isAdmin()
-                 || (request.auth != null && request.auth.token.firebase.sign_in_provider != 'anonymous');
+      allow list:   if isAdmin() || isPortalVendorUser();
       // Updates (status/payment/driver/price) come only from admin + the driver
       // portal, both NON-anonymous. Block anonymous updates so a customer can't
       // forge status='completed' / paymentStatus='paid' / a different driver.
-      allow update: if isAdmin()
-                 || (request.auth != null && request.auth.token.firebase.sign_in_provider != 'anonymous');
+      allow update: if isAdmin() || isPortalVendorUser();
       allow delete: if isAdmin();
     }
 
@@ -331,7 +350,8 @@ service cloud.firestore {
     // Drivers read: travel_driver_id == their ID (enforced client-side; all auth users may read)
     // No client write — Cloud Function (Admin SDK) owns these docs.
     match /travelAssignments/{docId} {
-      allow read:  if request.auth != null;
+      allow read:  if isAdmin() || isPortalVendorUser()
+                || (request.auth != null && resource.data.travel_driver_id == request.auth.uid);
       allow write: if false; // Admin SDK (Cloud Function) only
     }
 

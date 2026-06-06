@@ -15,7 +15,7 @@
 const fs = require('fs');
 const path = require('path');
 const { initializeTestEnvironment, assertFails, assertSucceeds } = require('@firebase/rules-unit-testing');
-const { doc, getDoc, setDoc, updateDoc } = require('firebase/firestore');
+const { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } = require('firebase/firestore');
 
 const PROJECT = process.env.GCLOUD_PROJECT || 'demo-dulichcali';
 const RULES = fs.readFileSync(path.join(__dirname, '../../firestore.rules'), 'utf8');
@@ -43,12 +43,27 @@ async function denied(name, p) { try { await assertFails(p); rec(name, true); } 
     // cust-2: profile stores vendor-x but NO vendorAccess marker (no assigned booking).
     await setDoc(doc(adb, 'mobileBarberCustomers/cust-2'), { customerId: 'cust-2', customerUid: 'cust-2', vendorId: 'vendor-x', name: 'Bob', normalizedPhone: '4085550002' });
     await setDoc(doc(adb, 'customerNotifications/n1'), { customerId: 'cust-1', title: 'x', body: 'y', read: false });
+
+    await setDoc(doc(adb, 'vendorUsers/michael-uid'), { vendorId: 'michael-nguyen-oc' });
+    await setDoc(doc(adb, 'driverUsers/driverA'), { driverId: 'driverA' });
+    await setDoc(doc(adb, 'driverUsers/driverB'), { driverId: 'driverB' });
+    await setDoc(doc(adb, 'bookings/rideA'), { driver: { driverId: 'driverA' }, ownerId: 'michael-nguyen', status: 'assigned', paymentStatus: 'unpaid' });
+    await setDoc(doc(adb, 'bookings/rideB'), { driver: { driverId: 'driverB' }, ownerId: 'michael-nguyen', status: 'assigned' });
+    await setDoc(doc(adb, 'travel_bookings/tourA'), { ownerId: 'michael-nguyen', status: 'confirmed' });
+    await setDoc(doc(adb, 'travelAssignments/taA'), { travel_driver_id: 'driverA' });
+    await setDoc(doc(adb, 'travelAssignments/taB'), { travel_driver_id: 'driverB' });
   });
 
   const cust1 = testEnv.authenticatedContext('cust-1').firestore();
   const cust2 = testEnv.authenticatedContext('cust-2').firestore();
   const vendorX = testEnv.authenticatedContext('vendorX-user').firestore();
   const vendorY = testEnv.authenticatedContext('vendorY-user').firestore();
+  const nonAnonToken = { firebase: { sign_in_provider: 'password' } };
+  const anonToken = { firebase: { sign_in_provider: 'anonymous' } };
+  const driverA = testEnv.authenticatedContext('driverA', nonAnonToken).firestore();
+  const driverB = testEnv.authenticatedContext('driverB', nonAnonToken).firestore();
+  const michael = testEnv.authenticatedContext('michael-uid', nonAnonToken).firestore();
+  const anon = testEnv.authenticatedContext('anon-customer', anonToken).firestore();
 
   // ── Customer owns their profile ──
   await allowed('customer reads OWN profile', getDoc(doc(cust1, 'mobileBarberCustomers/cust-1')));
@@ -67,6 +82,59 @@ async function denied(name, p) { try { await assertFails(p); rec(name, true); } 
   await denied('customer CANNOT read another customer notification', getDoc(doc(cust2, 'customerNotifications/n1')));
   await allowed('customer can flip read flag on own notification', updateDoc(doc(cust1, 'customerNotifications/n1'), { read: true }));
   await denied('customer CANNOT rewrite notification content', updateDoc(doc(cust1, 'customerNotifications/n1'), { title: 'tampered' }));
+
+  // ── Driver isolation, owner portal preservation, customer booking/tracking ──
+  await allowed(
+    'driverA lists ONLY assigned rides',
+    getDocs(query(collection(driverA, 'bookings'), where('driver.driverId', '==', 'driverA')))
+  );
+  await denied('driverA CANNOT list all rides', getDocs(collection(driverA, 'bookings')));
+  await denied(
+    'driverA CANNOT list driverB rides',
+    getDocs(query(collection(driverA, 'bookings'), where('driver.driverId', '==', 'driverB')))
+  );
+
+  await allowed(
+    'driverA can update pinned status fields on own ride',
+    updateDoc(doc(driverA, 'bookings/rideA'), { status: 'on_the_way', statusUpdatedAt: '2026-06-06T12:00:00.000Z' })
+  );
+  await denied('driverA CANNOT update paymentStatus', updateDoc(doc(driverA, 'bookings/rideA'), { paymentStatus: 'paid' }));
+  await denied('driverA CANNOT reassign driver field', updateDoc(doc(driverA, 'bookings/rideA'), { 'driver.driverId': 'x' }));
+  await denied('driverA CANNOT rewrite ownerId', updateDoc(doc(driverA, 'bookings/rideA'), { ownerId: 'x' }));
+  await denied('driverA CANNOT update driverB ride', updateDoc(doc(driverA, 'bookings/rideB'), { status: 'on_the_way' }));
+
+  await allowed(
+    'Michael owner portal lists own ride bookings',
+    getDocs(query(collection(michael, 'bookings'), where('ownerId', '==', 'michael-nguyen')))
+  );
+  await allowed(
+    'Michael owner portal lists own travel bookings',
+    getDocs(query(collection(michael, 'travel_bookings'), where('ownerId', '==', 'michael-nguyen')))
+  );
+  await allowed('Michael legacy travel bookings compat scan still works', getDocs(collection(michael, 'travel_bookings')));
+
+  await allowed(
+    'anonymous customer can create booking',
+    setDoc(doc(anon, 'bookings/new1'), { customerName: 'Anon', status: 'pending', pickup: 'SNA', dropoff: 'Westminster' })
+  );
+  await allowed('anonymous customer can track booking by id', getDoc(doc(anon, 'bookings/rideA')));
+  await denied(
+    'anonymous customer CANNOT list bookings',
+    getDocs(query(collection(anon, 'bookings'), where('ownerId', '==', 'michael-nguyen')))
+  );
+
+  await allowed('driverA reads own travel assignment', getDoc(doc(driverA, 'travelAssignments/taA')));
+  await denied('driverA CANNOT read driverB travel assignment', getDoc(doc(driverA, 'travelAssignments/taB')));
+  await allowed('Michael reads travel assignment', getDoc(doc(michael, 'travelAssignments/taA')));
+
+  await allowed(
+    'driverA can write own push subscription',
+    setDoc(doc(driverA, 'drivers/driverA/pushSubscriptions/s1'), { endpoint: 'https://push.example/a', createdAt: '2026-06-06T12:00:00.000Z' })
+  );
+  await denied(
+    'driverA CANNOT write driverB push subscription',
+    setDoc(doc(driverA, 'drivers/driverB/pushSubscriptions/s1'), { endpoint: 'https://push.example/b', createdAt: '2026-06-06T12:00:00.000Z' })
+  );
 
   await testEnv.cleanup();
   console.log(`\n  RESULT: ${pass} passed, ${fail} failed\n`);

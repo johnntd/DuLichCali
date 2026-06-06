@@ -3294,6 +3294,99 @@ exports.sendMobileBarberBookingPush = onDocumentCreated(
   }
 );
 
+// ── Web Push ride offer alert → the selected driver's device(s) ─────────────
+// Best-effort background push for newly-created bookingOffers. Foreground
+// PortalNotify listeners remain primary; this does not alter the offer window
+// or accept/decline lifecycle. Dead subscriptions are pruned.
+exports.sendDriverRidePush = onDocumentCreated(
+  {
+    document:       'bookingOffers/{bookingId}',
+    region:         'us-central1',
+    secrets:        [VAPID_PRIVATE_KEY],
+    timeoutSeconds: 60,
+    retry:          false,
+  },
+  async (event) => {
+    const bookingId = event.params.bookingId;
+    try {
+      const offer = event.data && event.data.data();
+      if (!offer) return;
+      const driverId = String(offer.driverId || '').trim();
+      if (!driverId) return;
+
+      let webpush;
+      try { webpush = require('web-push'); } catch (e) { console.warn('[driver-push] web-push unavailable'); return; }
+      const priv = VAPID_PRIVATE_KEY.value();
+      if (!priv) { console.warn('[driver-push] VAPID_PRIVATE_KEY not set — skipping'); return; }
+      webpush.setVapidDetails('mailto:dulichcali21@gmail.com', VAPID_PUBLIC_KEY, priv);
+
+      const db = admin.firestore();
+      const subsSnap = await db.collection('drivers').doc(driverId).collection('pushSubscriptions').get();
+      if (subsSnap.empty) { console.log(`[driver-push][${bookingId}] no subscriptions for ${driverId}`); return; }
+
+      let booking = {};
+      const sourceBookingId = String(offer.bookingId || bookingId || '').trim();
+      if (sourceBookingId) {
+        try {
+          const bookingSnap = await db.collection('bookings').doc(sourceBookingId).get();
+          booking = bookingSnap.exists ? (bookingSnap.data() || {}) : {};
+        } catch (e) { booking = {}; }
+      }
+
+      let badgeCount = 0;
+      try {
+        const pendingOffers = await db.collection('bookingOffers')
+          .where('driverId', '==', driverId)
+          .where('status', '==', 'pending')
+          .limit(50)
+          .get();
+        const activeRides = await db.collection('bookings')
+          .where('driver.driverId', '==', driverId)
+          .where('status', 'in', ['assigned', 'driver_confirmed'])
+          .limit(50)
+          .get();
+        badgeCount = pendingOffers.size + activeRides.size;
+      } catch (e) { badgeCount = 0; }
+
+      const service = offer.serviceType || offer.serviceLabel || booking.serviceType || booking.serviceLabel || 'Ride';
+      const airport = offer.airport || booking.airport || '';
+      const pickupRaw = offer.pickupTime || offer.datetime || offer.rideTime || offer.arrivalTime || offer.departureTime ||
+        booking.pickupTime || booking.datetime || booking.rideTime || booking.arrivalTime || booking.departureTime || '';
+      const pickupDate = offer.pickupDate || offer.rideDate || offer.arrivalDate || offer.departureDate ||
+        booking.pickupDate || booking.rideDate || booking.arrivalDate || booking.departureDate || '';
+      const pickup = [pickupDate, pickupRaw].filter(Boolean).join(' ');
+      const body = [service, airport, pickup].filter(Boolean).join(' · ') || 'Tap to review the offer in your driver dashboard.';
+      const payload = JSON.stringify({
+        title: 'New ride offer',
+        body: body,
+        url: '/driver/dashboard.html',
+        tag: 'dlc-ride-offer',
+        audience: 'driver',
+        badgeCount: badgeCount
+      });
+
+      await Promise.all(subsSnap.docs.map(async (doc) => {
+        const s = doc.data() || {};
+        if (!s.endpoint || !s.keys) return;
+        try {
+          await webpush.sendNotification({ endpoint: s.endpoint, keys: s.keys }, payload, { TTL: 3600 });
+        } catch (err) {
+          const code = err && err.statusCode;
+          if (code === 404 || code === 410) {
+            await doc.ref.delete().catch(() => {});
+            console.log(`[driver-push][${bookingId}] pruned dead subscription ${doc.id}`);
+          } else {
+            console.warn(`[driver-push][${bookingId}] send failed (${code}):`, err && err.message);
+          }
+        }
+      }));
+      console.log(`[driver-push][${bookingId}] dispatched to ${subsSnap.size} subscription(s) for ${driverId}`);
+    } catch (err) {
+      console.warn(`[driver-push][${bookingId}] skipped after error:`, err && err.message);
+    }
+  }
+);
+
 function mbNormLang(lang) {
   const l = String(lang || '').toLowerCase().slice(0, 2);
   return (l === 'vi' || l === 'es') ? l : 'en';

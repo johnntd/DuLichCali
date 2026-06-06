@@ -81,7 +81,7 @@
   <script src="/driver-compliance.js"></script>
   <script src="/ride-booking.js"></script>
   <script src="/notifications.js"></script>
-  <script src="/driver/driver-portal.js?v=20260606a" defer></script>
+  <script src="/driver/driver-portal.js?v=20260606b" defer></script>
 </head>
 <body>
   <main class="pk-shell" id="driverApp">
@@ -165,9 +165,11 @@
           <div class="pk-card__actions">
             <button class="pk-btn pk-btn--primary" type="button" data-action="enableAlerts" data-i18n="enableAlerts"></button>
             <button class="pk-btn" type="button" data-action="toggleSound" data-i18n="toggleSound"></button>
-            <button class="pk-btn" type="button" data-action="pushPlaceholder" data-i18n="enablePush"></button>
+            <button class="pk-btn" type="button" data-action="enablePush" data-i18n="enablePush"></button>
+            <button class="pk-btn" type="button" data-action="disablePush" data-i18n="disablePush"></button>
           </div>
           <p id="alertsStatus" class="driver-muted"></p>
+          <p id="pushStatus" class="driver-muted" data-i18n="pushDisabled"></p>
         </div>
       </details>
       <details class="pk-accordion">

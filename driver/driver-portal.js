@@ -9,7 +9,7 @@
       complianceAccordion: 'Compliance documents', alertsAccordion: 'Alerts', gpsAccordion: 'GPS sharing', calendarAccordion: 'Calendar', earningsAccordion: 'Earnings & ratings', languageAccordion: 'Language',
       nameLabel: 'Name', phoneLabel: 'Phone', makeLabel: 'Make', modelLabel: 'Model', yearLabel: 'Year', colorLabel: 'Color', seatsLabel: 'Seats', plateLabel: 'Plate',
       save: 'Save', add: 'Add', blackoutDateLabel: 'Date', bayarea: 'Bay Area', oc: 'Orange County', enabled: 'Enabled', start: 'Start', end: 'End',
-      notificationsTitle: 'Notifications', close: 'Close', toggleSound: 'Toggle sound', enablePush: 'Enable Push', pushLater: 'Push subscription is coming in Phase 3.',
+      notificationsTitle: 'Notifications', close: 'Close', toggleSound: 'Toggle sound', enablePush: 'Enable push', disablePush: 'Disable push', pushEnabled: 'Push notifications enabled.', pushDisabled: 'Push notifications disabled.', pushUnsupported: 'Push notifications are not supported on this device.', pushLater: 'Push subscription is coming in Phase 3.',
       gpsStart: 'Start GPS', gpsStop: 'Stop GPS', gpsOff: 'Location sharing is off.', gpsLoading: 'Getting location', gpsUnsupported: 'GPS is not supported on this device.', gpsError: 'GPS error',
       saved: 'Saved', saveError: 'Save failed', emptyList: 'No driver work matches this filter.', rideAlreadyTaken: 'This ride was already taken by another driver.', offerAccepted: 'Ride accepted. Contact the customer.',
       skipped: 'Skipped for now.', declined: 'Declined', map: 'Map', navigate: 'Navigate', accept: 'Accept', decline: 'Decline', advance: 'Advance status', call: 'Call', text: 'Text', email: 'Email',
@@ -32,7 +32,7 @@
       complianceAccordion: 'Hồ sơ pháp lý', alertsAccordion: 'Thông báo', gpsAccordion: 'Chia sẻ GPS', calendarAccordion: 'Lịch', earningsAccordion: 'Thu nhập & đánh giá', languageAccordion: 'Ngôn ngữ',
       nameLabel: 'Tên', phoneLabel: 'Điện thoại', makeLabel: 'Hãng xe', modelLabel: 'Đời xe', yearLabel: 'Năm', colorLabel: 'Màu', seatsLabel: 'Số ghế', plateLabel: 'Biển số',
       save: 'Lưu', add: 'Thêm', blackoutDateLabel: 'Ngày', bayarea: 'Bay Area', oc: 'Orange County', enabled: 'Bật', start: 'Bắt đầu', end: 'Kết thúc',
-      notificationsTitle: 'Thông báo', close: 'Đóng', toggleSound: 'Bật/tắt âm thanh', enablePush: 'Bật Push', pushLater: 'Đăng ký push sẽ được thêm ở Phase 3.',
+      notificationsTitle: 'Thông báo', close: 'Đóng', toggleSound: 'Bật/tắt âm thanh', enablePush: 'Bật push', disablePush: 'Tắt push', pushEnabled: 'Đã bật thông báo push.', pushDisabled: 'Đã tắt thông báo push.', pushUnsupported: 'Thiết bị này không hỗ trợ thông báo push.', pushLater: 'Đăng ký push sẽ được thêm ở Phase 3.',
       gpsStart: 'Bật GPS', gpsStop: 'Dừng GPS', gpsOff: 'Vị trí đang tắt.', gpsLoading: 'Đang lấy vị trí', gpsUnsupported: 'Thiết bị không hỗ trợ GPS.', gpsError: 'Lỗi GPS',
       saved: 'Đã lưu', saveError: 'Lưu thất bại', emptyList: 'Không có việc nào khớp bộ lọc.', rideAlreadyTaken: 'Chuyến này đã có tài xế khác nhận.', offerAccepted: 'Đã nhận chuyến. Liên hệ khách ngay.',
       skipped: 'Đã bỏ qua tạm thời.', declined: 'Đã từ chối', map: 'Bản đồ', navigate: 'Chỉ đường', accept: 'Nhận chuyến', decline: 'Từ chối', advance: 'Cập nhật trạng thái', call: 'Gọi', text: 'Nhắn tin', email: 'Email',
@@ -55,7 +55,7 @@
       complianceAccordion: 'Documentos', alertsAccordion: 'Alertas', gpsAccordion: 'GPS', calendarAccordion: 'Calendario', earningsAccordion: 'Ingresos y calificaciones', languageAccordion: 'Idioma',
       nameLabel: 'Nombre', phoneLabel: 'Teléfono', makeLabel: 'Marca', modelLabel: 'Modelo', yearLabel: 'Año', colorLabel: 'Color', seatsLabel: 'Asientos', plateLabel: 'Placa',
       save: 'Guardar', add: 'Agregar', blackoutDateLabel: 'Fecha', bayarea: 'Bay Area', oc: 'Orange County', enabled: 'Activo', start: 'Inicio', end: 'Fin',
-      notificationsTitle: 'Notificaciones', close: 'Cerrar', toggleSound: 'Activar sonido', enablePush: 'Activar Push', pushLater: 'La suscripción push llega en Phase 3.',
+      notificationsTitle: 'Notificaciones', close: 'Cerrar', toggleSound: 'Activar sonido', enablePush: 'Activar push', disablePush: 'Desactivar push', pushEnabled: 'Notificaciones push activadas.', pushDisabled: 'Notificaciones push desactivadas.', pushUnsupported: 'Este dispositivo no admite notificaciones push.', pushLater: 'La suscripción push llega en Phase 3.',
       gpsStart: 'Iniciar GPS', gpsStop: 'Detener GPS', gpsOff: 'Ubicación desactivada.', gpsLoading: 'Obteniendo ubicación', gpsUnsupported: 'Este dispositivo no soporta GPS.', gpsError: 'Error de GPS',
       saved: 'Guardado', saveError: 'No se pudo guardar', emptyList: 'No hay trabajos para este filtro.', rideAlreadyTaken: 'Otro conductor ya tomó este viaje.', offerAccepted: 'Viaje aceptado. Contacta al cliente.',
       skipped: 'Omitido por ahora.', declined: 'Rechazado', map: 'Mapa', navigate: 'Navegar', accept: 'Aceptar', decline: 'Rechazar', advance: 'Avanzar estado', call: 'Llamar', text: 'Texto', email: 'Email',
@@ -96,6 +96,7 @@
   var TOUR_STATUS_NEXT = { assigned: 'confirmed', confirmed: 'picked_up', picked_up: 'in_progress', in_progress: 'completed' };
   var ACTIVE_STATUSES = ['assigned', 'driver_confirmed', 'on_the_way', 'arrived', 'in_progress'];
   var IN_PROGRESS = ['on_the_way', 'arrived', 'in_progress'];
+  var DRIVER_VAPID_PUBLIC_KEY = 'BBHEU_YqwysrntO1a6JPvWn8YSQmKumg6fcgLipNPcOVC-0LbZc8SU-1q0Nf_ilI7B3pFs_OXPCf-ajrSO8c0V8';
 
   function readLang() {
     try { return root.localStorage.getItem('dlc_lang') || root.localStorage.getItem('dlcLang') || 'vi'; } catch (e) { return 'vi'; }
@@ -222,7 +223,8 @@
       if (action === 'toggleRide') toggleDriverField('rideServiceEnabled');
       if (action === 'enableAlerts') enableAlerts();
       if (action === 'toggleSound') enableAlerts();
-      if (action === 'pushPlaceholder') showToast('pushLater');
+      if (action === 'enablePush') enablePush();
+      if (action === 'disablePush') disablePush();
       if (action === 'closeDrawer') root.PortalNotify.closeDrawer();
       if (action === 'saveProfile') saveProfile();
       if (action === 'addBlackout') addBlackout();
@@ -285,7 +287,84 @@
     root.PortalNotify.enableAlerts().then(function () {
       var el = $('alertsStatus');
       if (el) el.textContent = t('enableAlerts') + ': ' + t('on');
+      enablePush();
     });
+  }
+  function enablePush() {
+    if (!root.PortalPWA || typeof root.PortalPWA.subscribePush !== 'function') {
+      setPushStatus('pushUnsupported');
+      return Promise.resolve(null);
+    }
+    return root.PortalPWA.subscribePush({ vapidPublicKey: DRIVER_VAPID_PUBLIC_KEY }).then(function (sub) {
+      if (!sub || !sub.endpoint || !sub.keys) {
+        setPushStatus('pushUnsupported');
+        return null;
+      }
+      state.pushSubscriptionEndpoint = sub.endpoint;
+      writePushSubscription(sub);
+      setPushStatus('pushEnabled');
+      return sub;
+    }).catch(function () {
+      setPushStatus('pushUnsupported');
+      return null;
+    });
+  }
+  function disablePush() {
+    readCurrentPushSubscription().then(function (sub) {
+      var endpoint = (sub && sub.endpoint) || state.pushSubscriptionEndpoint || '';
+      if (root.PortalPWA && typeof root.PortalPWA.unsubscribePush === 'function') {
+        return root.PortalPWA.unsubscribePush().catch(function () { return false; }).then(function () {
+          deletePushSubscription(endpoint);
+          state.pushSubscriptionEndpoint = '';
+          setPushStatus('pushDisabled');
+        });
+      }
+      deletePushSubscription(endpoint);
+      state.pushSubscriptionEndpoint = '';
+      setPushStatus('pushDisabled');
+    }).catch(function () {
+      setPushStatus('pushDisabled');
+    });
+  }
+  function writePushSubscription(sub) {
+    if (!state.driverId || !sub || !sub.endpoint) return;
+    var uid = auth.currentUser && auth.currentUser.uid;
+    var payload = {
+      endpoint: sub.endpoint,
+      keys: sub.keys || {},
+      uid: uid || '',
+      platform: root.PortalPWA && root.PortalPWA.isStandalone && root.PortalPWA.isStandalone() ? 'home-screen' : 'browser',
+      userAgent: (root.navigator.userAgent || '').slice(0, 300),
+      updatedAt: FieldValue.serverTimestamp()
+    };
+    db.collection('drivers').doc(state.driverId).collection('pushSubscriptions').doc(hashEndpoint(sub.endpoint)).set(payload, { merge: true }).catch(function () {});
+  }
+  function deletePushSubscription(endpoint) {
+    if (!state.driverId || !endpoint) return;
+    db.collection('drivers').doc(state.driverId).collection('pushSubscriptions').doc(hashEndpoint(endpoint)).delete().catch(function () {});
+  }
+  function readCurrentPushSubscription() {
+    if (!root.navigator.serviceWorker || !('PushManager' in root)) return Promise.resolve(null);
+    return root.navigator.serviceWorker.ready.then(function (registration) {
+      if (!registration || !registration.pushManager) return null;
+      return registration.pushManager.getSubscription();
+    }).then(function (subscription) {
+      if (!subscription) return null;
+      var json = typeof subscription.toJSON === 'function' ? subscription.toJSON() : subscription;
+      return { endpoint: json.endpoint || '', keys: json.keys || {} };
+    }).catch(function () { return null; });
+  }
+  function setPushStatus(key) {
+    var el = $('pushStatus') || $('alertsStatus');
+    if (el) el.textContent = t(key);
+  }
+  function hashEndpoint(endpoint) {
+    var hash = 0;
+    var input = String(endpoint || '');
+    for (var i = 0; i < input.length; i += 1) {
+      hash = ((hash << 5) - hash + input.charCodeAt(i)) | 0;
+    }
+    return 'sub_' + Math.abs(hash).toString(36);
   }
 
   function attachDataListeners() {

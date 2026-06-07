@@ -1136,7 +1136,7 @@
     // Fallback rough estimate — 3-tier vehicle selection
     var vehicleName = (DLCPricing && DLCPricing.getVehicle) ? DLCPricing.getVehicle(p)
                     : (p > 7 ? 'Mercedes Van' : p > 3 ? 'Toyota Sienna' : 'Tesla Model Y');
-    var minFare = vehicleName === 'Mercedes Van' ? 150 : vehicleName === 'Toyota Sienna' ? 120 : 100;
+    var minFare = vehicleName === 'Mercedes Van' ? 55 : vehicleName === 'Toyota Sienna' ? 35 : 25;  // sync with pricing.js dlcMin
     var uberEst = Math.round(minFare / 0.8);
     return {
       ourPrice: minFare,

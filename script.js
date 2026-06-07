@@ -878,7 +878,7 @@ function fallbackTransfer(miles, passengers) {
   const uberEst = base + miles * perMile + estMin * perMin + 4;
   let price = uberEst * 0.80; // 20% less
   if (miles > 300) price += 250;
-  return Math.round(Math.max(price, isVan ? 120 : 100));
+  return Math.round(Math.max(price, isVan ? 35 : 25));  // sync with pricing.js dlcMin (was 120/100)
 }
 function fallbackTour(miles, passengers, days, lodging) {
   const gas = window._gasCaliPrice || CALIFORNIA_AVG_FUEL_PRICE;

@@ -96,7 +96,9 @@ const DLCPricing = (() => {
     const isAirport   = !!(opts && opts.airport);
     const vehicleName = getVehicle(pax, regionId);
     const r           = VEHICLE_RATE_CARDS[vehicleName] || VEHICLE_RATE_CARDS['Tesla Model Y'];
-    const totalMiles  = miles + dh;
+    // Bill deadhead (driver→pickup) but cap it at the ride distance, so a far-away
+    // driver can't inflate a short fare (e.g. 11mi ride + 18mi deadhead was $70).
+    const totalMiles  = miles + Math.min(dh, miles);
     const round5      = n => Math.ceil(n / 5) * 5;
     // Uber-equivalent market rate: base + booking + distance + time
     const uberRaw     = r.base + r.bookingFee + (totalMiles * r.perMile) + (durMins * r.perMin);

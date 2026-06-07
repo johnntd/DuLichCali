@@ -122,5 +122,20 @@ ok('11. transferCost (AI/wizard) 10mi 3pax is competitive (<=$60, not $120/$100)
    (() => { const c = P.transferCost(10, 3); return c <= 60 && c !== 120 && c !== 100; })(),
    'transferCost(10,3) = $' + P.transferCost(10, 3));
 
+// 12) Deadhead (driver→pickup) is capped at the ride distance — a far driver can't
+//     inflate a short fare. Regression for the "11mi airport drop-off = $70" report.
+const dCap   = (m, dh) => P.quoteRide(m, dur(m), { passengers: 1, airport: true, deadheadMiles: dh }).dlcPrice;
+const noDh   = dCap(11, 0);
+const cap11  = dCap(11, 11);
+const far18  = dCap(11, 18);
+const far50  = dCap(11, 50);
+const small5 = dCap(11, 5);
+ok('12a. 11mi + 18mi deadhead is capped at ride distance (was $70 uncapped, now <=$55)',
+   far18 === cap11 && far18 <= 55 && far18 < 70, '18mi-dh=$' + far18 + ' / 11mi-dh=$' + cap11);
+ok('12b. deadhead beyond ride distance does NOT increase the fare further',
+   far50 === cap11, 'dh50=$' + far50 + ' / dh11=$' + cap11);
+ok('12c. deadhead within ride distance is still billed (5mi between no-dh and capped)',
+   small5 > noDh && small5 < far18, 'noDh=$' + noDh + ' / 5mi=$' + small5 + ' / capped=$' + far18);
+
 console.log('\n  RESULT: ' + pass + ' passed, ' + fail + ' failed\n');
 process.exit(fail ? 1 : 0);

@@ -130,17 +130,14 @@ Every significant Claude task must end with:
 
 ## Current Work Context
 
-Phase 1 queued: Beauty Hair OC hair salon page correctness.
+No specific phase is queued here. (The former "Phase 1 — Beauty Hair OC hair salon"
+queue and its `patch_cycle.sh` command were superseded by the unified vendor/driver
+portal work and removed to avoid stale instructions.)
 
-Known finding (2026-04-26):
-- `hairsalon/index.html` loads `/nailsalon/salon.css`, `/nailsalon/receptionist.js`, `/nailsalon/voice-mode.js`
-- Targeted dry run: FINAL: FAIL (1 confirmed finding)
-- Full dry run baseline: FINAL: PASS (211/211 tests)
-
-To begin Phase 1:
-```
-scripts/ai/patch_cycle.sh prompts/phase1_hair_salon_fix.md --scope hair-salon
-```
+Backlog / known (not blocking):
+- `hairsalon/index.html` still loads shared `/nailsalon/` assets (`salon.css`,
+  `receptionist.js`, `voice-mode.js`) rather than hair-specific files. Works today;
+  refactor when the hair salon gets dedicated assets.
 
 ---
 
@@ -281,29 +278,23 @@ Firebase Hosting sets `cache-control: immutable, max-age=31536000`. Once a brows
 git log --all -p -- nailsalon/index.html | grep "filename.js"
 ```
 
-**Always use a version string HIGHER than the highest previously deployed:**
-- Check the highest previously used string (e.g. `v=20260414b`)
-- Use the next letter on that date OR the next calendar date with `a` suffix
-- Current safe floor: `v=20260415a` (April 15, 2026) — do NOT use any version string before this date for `marketplace.css` or `marketplace.js`
+**Always use a version string HIGHER than the highest previously deployed.**
+Do NOT keep a hardcoded high-water table here — it goes stale on every deploy and can
+mislead you into reusing an already-deployed string (silent cache regression). Read the
+actual highest deployed version straight from git before bumping (replace `FILE`):
 
-**Version string high-water marks (as of 2026-04-09):**
-| File | Last safe version | Next safe version |
-|------|-------------------|-------------------|
-| `marketplace/marketplace.js` | `v=20260415a` | `v=20260415b` |
-| `marketplace/marketplace.css` | `v=20260415a` | `v=20260415b` |
-| `nailsalon/receptionist.js` | `v=20260409c` | `v=20260415a` |
-| `marketplace/services-data.js` | `v=20260414a` | `v=20260415a` |
-| `ai-engine.js` | `v=20260412j` | `v=20260415a` |
+```bash
+git log --all -p -- '*.html' | grep -oE 'FILE\.js\?v=[0-9]{8}[a-z]*' | sort -u | tail -1
+```
+Then use the next letter on that date, or the next calendar date with an `a` suffix.
 
-### Affected JS files and their HTML consumers
+### Find every HTML consumer of a JS file (before bumping)
 
-| JS file | HTML files that load it |
-|---------|------------------------|
-| `marketplace/marketplace.js` | `nailsalon/index.html`, `foods/index.html`, `hairsalon/index.html` |
-| `marketplace/services-data.js` | `nailsalon/index.html`, `foods/index.html`, `hairsalon/index.html` |
-| `nailsalon/receptionist.js` | `nailsalon/index.html` |
-| `hairsalon/receptionist.js` | `hairsalon/index.html` |
-| `ai-engine.js` | All marketplace pages |
+```bash
+grep -rn 'FILENAME\.js' . --include='*.html'
+```
+Bump the `?v=` in EVERY match. Do not rely on a hardcoded consumer list — new pages get
+added (e.g. `vendor-detail.html`, `mobile-barber/`), so a static table silently goes stale.
 
 ### Failure condition
 
@@ -431,7 +422,7 @@ A change that works on mobile but breaks desktop (or vice versa) is **not comple
 | `salon-admin.html` + all salon-ai-os modules | ✅ vi / en / es | Uses `salon-ai-os/i18n.js` + `_LABELS` in salon-admin.html |
 | `admin.html` | ✅ vi / en / es | Must have a lang switcher wired to `_LABELS`-style table |
 | `vendor-admin.html` | ✅ vi / en / es | Must have a lang switcher |
-| `driver-admin.html` | ✅ vi / en / es | Must have a lang switcher |
+| `/driver/` portal PWA | ✅ vi / en / es | `driver-portal.js` / `login.html` / `dashboard.html` must support a lang switcher (`driver-admin.html` is now a redirect stub) |
 | Login pages (driver/vendor) | ✅ vi / en / es | All UI strings must be translatable |
 
 ### How Language Is Detected and Propagated
@@ -684,6 +675,8 @@ DuLichCali uses a **two-tier provider system**: Vendors (food/nail/hair) and Dri
 
 ### Driver Auth Flow
 
+> **Architecture note (2026-06):** `driver-admin.html` and `driver-login.html` are now thin **redirect stubs**. The live driver experience is the PWA under **`/driver/`** (`/driver/login.html`, `/driver/dashboard.html`, `/driver/driver-portal.js`, built on `portal-kit/`). Where this doc still says `driver-login.html` / `driver-admin.html`, read it as the `/driver/` portal.
+
 1. Admin creates driver in `admin.html` — Firebase Auth account is pre-created via REST API with derived credentials:
    - Email: `d{10-digit-phone}@dlc.app`
    - Password: `pin.padEnd(6,'0')` (PIN padded to 6 chars)
@@ -788,7 +781,7 @@ driver_compliance/{driverId}
 
 ### Shared Utility
 
-`driver-compliance.js` — loaded by both `driver-admin.html` and `admin.html`.
+`driver-compliance.js` — loaded by both `/driver/dashboard.html` (the driver portal PWA) and `admin.html`.
 Provides: `computeOverall()`, `computeExpirationWarning()`, `daysUntil()`, labels, CSS classes.
 **Both pages must load this file before their own scripts.**
 

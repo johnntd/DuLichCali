@@ -67,6 +67,8 @@ async function denied(name, p) { try { await assertFails(p); rec(name, true); } 
   const michael = testEnv.authenticatedContext('michael-uid', nonAnonToken).firestore();
   const anon = testEnv.authenticatedContext('anon-customer', anonToken).firestore();
   const admin = testEnv.authenticatedContext('admin-uid', { email: 'johnntd@gmail.com', firebase: { sign_in_provider: 'password' } }).firestore();
+  // Owner operator account (iCloud) — must be in the isAdmin() allowlist alongside the gmail account.
+  const adminIcloud = testEnv.authenticatedContext('admin-icloud-uid', { email: 'johnntd21@icloud.com', firebase: { sign_in_provider: 'password' } }).firestore();
 
   // ── Customer owns their profile ──
   await allowed('customer reads OWN profile', getDoc(doc(cust1, 'mobileBarberCustomers/cust-1')));
@@ -149,6 +151,10 @@ async function denied(name, p) { try { await assertFails(p); rec(name, true); } 
   await allowed(
     'admin CAN enable a driver (active + rideServiceEnabled)',
     updateDoc(doc(admin, 'drivers/driverA'), { active: true, rideServiceEnabled: true })
+  );
+  await allowed(
+    'iCloud owner (admin allowlist) CAN enable a driver (active + rideServiceEnabled)',
+    updateDoc(doc(adminIcloud, 'drivers/driverA'), { active: false, rideServiceEnabled: false })
   );
 
   await denied(

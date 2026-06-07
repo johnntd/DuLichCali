@@ -247,7 +247,8 @@ service cloud.firestore {
                      && request.auth.token.firebase.sign_in_provider != 'anonymous'
                      && request.auth.uid == driverId
                      && !request.resource.data.diff(resource.data).affectedKeys()
-                          .hasAny(['complianceStatus', 'adminStatus', 'licExpiry', 'regExpiry', 'insExpiry']));
+                          .hasAny(['complianceStatus', 'adminStatus', 'licExpiry', 'regExpiry', 'insExpiry',
+                                   'active', 'rideServiceEnabled']));  // ride availability is admin-only (isAdmin path above)
     }
 
     match /drivers/{driverId}/pushSubscriptions/{subId} {

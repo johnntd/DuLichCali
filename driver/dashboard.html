@@ -81,7 +81,7 @@
   <script src="/driver-compliance.js"></script>
   <script src="/ride-booking.js"></script>
   <script src="/notifications.js"></script>
-  <script src="/driver/driver-portal.js?v=20260606b" defer></script>
+  <script src="/driver/driver-portal.js?v=20260606c" defer></script>
 </head>
 <body>
   <main class="pk-shell" id="driverApp">
@@ -103,8 +103,7 @@
           </div>
         </div>
         <div class="driver-toggle-row">
-          <button class="pk-btn driver-toggle" id="activeToggle" type="button" data-action="toggleActive" aria-pressed="false"><span data-i18n="activeToggle"></span><strong id="activeToggleState"></strong></button>
-          <button class="pk-btn driver-toggle" id="rideToggle" type="button" data-action="toggleRide" aria-pressed="false"><span data-i18n="rideToggle"></span><strong id="rideToggleState"></strong></button>
+          <span class="pk-status driver-toggle" id="availStatus" aria-live="polite"></span>
           <button class="pk-btn pk-btn--primary" id="enableAlertsBtn" type="button" data-i18n="enableAlerts"></button>
         </div>
       </div>

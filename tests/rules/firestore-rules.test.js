@@ -52,6 +52,8 @@ async function denied(name, p) { try { await assertFails(p); rec(name, true); } 
     await setDoc(doc(adb, 'travel_bookings/tourA'), { ownerId: 'michael-nguyen', status: 'confirmed' });
     await setDoc(doc(adb, 'travelAssignments/taA'), { travel_driver_id: 'driverA' });
     await setDoc(doc(adb, 'travelAssignments/taB'), { travel_driver_id: 'driverB' });
+    // Driver profile doc — for admin-enable + driver-self-write tests.
+    await setDoc(doc(adb, 'drivers/driverA'), { fullName: 'Driver A', phone: '4080000001', adminStatus: 'active', complianceStatus: 'approved', active: false, rideServiceEnabled: false, regions: ['bayarea'] });
   });
 
   const cust1 = testEnv.authenticatedContext('cust-1').firestore();
@@ -64,6 +66,7 @@ async function denied(name, p) { try { await assertFails(p); rec(name, true); } 
   const driverB = testEnv.authenticatedContext('driverB', nonAnonToken).firestore();
   const michael = testEnv.authenticatedContext('michael-uid', nonAnonToken).firestore();
   const anon = testEnv.authenticatedContext('anon-customer', anonToken).firestore();
+  const admin = testEnv.authenticatedContext('admin-uid', { email: 'johnntd@gmail.com', firebase: { sign_in_provider: 'password' } }).firestore();
 
   // ── Customer owns their profile ──
   await allowed('customer reads OWN profile', getDoc(doc(cust1, 'mobileBarberCustomers/cust-1')));
@@ -131,6 +134,23 @@ async function denied(name, p) { try { await assertFails(p); rec(name, true); } 
     'driverA can write own push subscription',
     setDoc(doc(driverA, 'drivers/driverA/pushSubscriptions/s1'), { endpoint: 'https://push.example/a', createdAt: '2026-06-06T12:00:00.000Z' })
   );
+  await denied(
+    'driverA CANNOT self-enable (write active on own driver doc)',
+    updateDoc(doc(driverA, 'drivers/driverA'), { active: true })
+  );
+  await denied(
+    'driverA CANNOT self-enable rideServiceEnabled',
+    updateDoc(doc(driverA, 'drivers/driverA'), { rideServiceEnabled: true })
+  );
+  await allowed(
+    'driverA CAN still edit allowed profile fields (phone)',
+    updateDoc(doc(driverA, 'drivers/driverA'), { phone: '4080000099' })
+  );
+  await allowed(
+    'admin CAN enable a driver (active + rideServiceEnabled)',
+    updateDoc(doc(admin, 'drivers/driverA'), { active: true, rideServiceEnabled: true })
+  );
+
   await denied(
     'driverA CANNOT write driverB push subscription',
     setDoc(doc(driverA, 'drivers/driverB/pushSubscriptions/s1'), { endpoint: 'https://push.example/b', createdAt: '2026-06-06T12:00:00.000Z' })

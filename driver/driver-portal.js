@@ -3,7 +3,7 @@
 
   var STRINGS = {
     en: {
-      appTitle: 'Driver Portal', loading: 'Loading', signOut: 'Sign out', activeToggle: 'Available for work', rideToggle: 'Ride service', enableAlerts: 'Enable alerts',
+      appTitle: 'Driver Portal', loading: 'Loading', signOut: 'Sign out', activeToggle: 'Available for work', rideToggle: 'Ride service', enableAlerts: 'Enable alerts', availLabel: 'Availability', availSetByAdmin: 'set by admin', availOn: 'Enabled for rides', availOff: 'Not enabled',
       on: 'On', off: 'Off', all: 'All', rides: 'Rides', tours: 'Tours', today: 'Today', upcoming: 'Upcoming', pending: 'Pending', inProgress: 'In progress', completedToday: 'Completed today',
       profileAccordion: 'Profile & contact', vehicleAccordion: 'Vehicle', regionsAccordion: 'Service regions', hoursAccordion: 'Working hours', blackoutAccordion: 'Blackout dates',
       complianceAccordion: 'Compliance documents', alertsAccordion: 'Alerts', gpsAccordion: 'GPS sharing', calendarAccordion: 'Calendar', earningsAccordion: 'Earnings & ratings', languageAccordion: 'Language',
@@ -26,7 +26,7 @@
       noCompleted: 'No completed trips yet.', ratingsTitle: 'Customer ratings', reviewCount: 'ratings', notFound: 'Driver account was not found.'
     },
     vi: {
-      appTitle: 'Cổng Tài Xế', loading: 'Đang tải', signOut: 'Đăng xuất', activeToggle: 'Sẵn sàng làm việc', rideToggle: 'Dịch vụ xe', enableAlerts: 'Bật thông báo',
+      appTitle: 'Cổng Tài Xế', loading: 'Đang tải', signOut: 'Đăng xuất', activeToggle: 'Sẵn sàng làm việc', rideToggle: 'Dịch vụ xe', enableAlerts: 'Bật thông báo', availLabel: 'Trạng thái nhận khách', availSetByAdmin: 'do admin cài đặt', availOn: 'Đã bật nhận chuyến', availOff: 'Chưa được bật',
       on: 'Bật', off: 'Tắt', all: 'Tất cả', rides: 'Chuyến xe', tours: 'Tour', today: 'Hôm nay', upcoming: 'Sắp tới', pending: 'Đang chờ', inProgress: 'Đang chạy', completedToday: 'Hoàn tất hôm nay',
       profileAccordion: 'Hồ sơ & liên hệ', vehicleAccordion: 'Xe', regionsAccordion: 'Khu vực phục vụ', hoursAccordion: 'Giờ làm việc', blackoutAccordion: 'Ngày nghỉ',
       complianceAccordion: 'Hồ sơ pháp lý', alertsAccordion: 'Thông báo', gpsAccordion: 'Chia sẻ GPS', calendarAccordion: 'Lịch', earningsAccordion: 'Thu nhập & đánh giá', languageAccordion: 'Ngôn ngữ',
@@ -49,7 +49,7 @@
       noCompleted: 'Chưa có chuyến hoàn thành.', ratingsTitle: 'Đánh giá của khách', reviewCount: 'đánh giá', notFound: 'Tài khoản tài xế không tồn tại.'
     },
     es: {
-      appTitle: 'Portal de Conductores', loading: 'Cargando', signOut: 'Salir', activeToggle: 'Disponible', rideToggle: 'Servicio de viajes', enableAlerts: 'Activar alertas',
+      appTitle: 'Portal de Conductores', loading: 'Cargando', signOut: 'Salir', activeToggle: 'Disponible', rideToggle: 'Servicio de viajes', enableAlerts: 'Activar alertas', availLabel: 'Disponibilidad', availSetByAdmin: 'configurado por admin', availOn: 'Habilitado para viajes', availOff: 'No habilitado',
       on: 'Activo', off: 'Inactivo', all: 'Todo', rides: 'Viajes', tours: 'Tours', today: 'Hoy', upcoming: 'Próximos', pending: 'Pendientes', inProgress: 'En curso', completedToday: 'Completados hoy',
       profileAccordion: 'Perfil y contacto', vehicleAccordion: 'Vehículo', regionsAccordion: 'Zonas de servicio', hoursAccordion: 'Horario', blackoutAccordion: 'Días bloqueados',
       complianceAccordion: 'Documentos', alertsAccordion: 'Alertas', gpsAccordion: 'GPS', calendarAccordion: 'Calendario', earningsAccordion: 'Ingresos y calificaciones', languageAccordion: 'Idioma',
@@ -219,8 +219,6 @@
       var action = node.getAttribute('data-action');
       if (action === 'lang') setLang(node.getAttribute('data-lang'));
       if (action === 'signOut') auth.signOut().then(function () { root.location.href = '/driver/login'; });
-      if (action === 'toggleActive') toggleDriverField('active');
-      if (action === 'toggleRide') toggleDriverField('rideServiceEnabled');
       if (action === 'enableAlerts') enableAlerts();
       if (action === 'toggleSound') enableAlerts();
       if (action === 'enablePush') enablePush();
@@ -396,11 +394,14 @@
     renderCalendarPanel();
   }
   function renderToggles() {
-    var active = $('activeToggle'), ride = $('rideToggle');
-    if (active) active.setAttribute('aria-pressed', state.active ? 'true' : 'false');
-    if (ride) ride.setAttribute('aria-pressed', state.rideServiceEnabled ? 'true' : 'false');
-    if ($('activeToggleState')) $('activeToggleState').textContent = state.active ? t('on') : t('off');
-    if ($('rideToggleState')) $('rideToggleState').textContent = state.rideServiceEnabled ? t('on') : t('off');
+    // Availability is admin-controlled (read-only here). Driver cannot self-enable.
+    var avail = $('availStatus');
+    if (avail) {
+      var on = state.active === true;
+      avail.textContent = t('availLabel') + ': ' + (on ? t('availOn') : t('availOff')) + ' · ' + t('availSetByAdmin');
+      avail.classList.toggle('pk-status--active', on);
+      avail.classList.toggle('pk-status--cancelled', !on);
+    }
   }
   function renderCounters() {
     var counts = computeCounts();
@@ -641,15 +642,6 @@
     }).catch(function () { showToast('saveError', true); });
   }
 
-  function toggleDriverField(field) {
-    var key = field === 'active' ? 'active' : 'rideServiceEnabled';
-    state[key] = !state[key];
-    renderToggles();
-    var payload = {};
-    payload[key] = state[key];
-    payload.updatedAt = FieldValue.serverTimestamp();
-    db.collection('drivers').doc(state.driverId).update(payload).catch(function () { showToast('saveError', true); });
-  }
   function saveProfile() {
     var weeklySchedule = {};
     Object.keys(state.weeklySchedule).forEach(function (day) {
@@ -658,8 +650,8 @@
     var payload = {
       fullName: getValue('fName'),
       phone: getValue('fPhone'),
-      active: state.active,
-      rideServiceEnabled: state.rideServiceEnabled,
+      // active / rideServiceEnabled are admin-controlled — driver portal must NOT write them
+      // (Firestore rules block driver self-writes of those fields).
       regions: state.regions.slice(),
       vehicle: { make: getValue('fMake'), model: getValue('fModel'), year: getValue('fYear'), color: getValue('fColor'), seats: parseInt(getValue('fSeats'), 10) || 4, plate: getValue('fPlate') },
       availability: { timezone: 'America/Los_Angeles', weeklySchedule: weeklySchedule, blackoutDates: state.blackoutDates.slice() },

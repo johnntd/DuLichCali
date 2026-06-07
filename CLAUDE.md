@@ -197,13 +197,41 @@ When debugging AI or booking behavior, always identify:
 - Which execution path each platform takes (Claude API vs fallback)
 - Whether the platforms are using the same code path
 
+### Desktop parity — CSS & breakpoints
+
+Mobile-first applies to CSS too: every change must work on BOTH mobile and desktop (no exceptions).
+
+- **CSS**: write mobile-first base styles, then add `@media (min-width: 768px)` and `@media (min-width: 1200px)` desktop overrides.
+- **New components**: test mentally at 375px (mobile), 768px (tablet), and 1280px (desktop) before committing.
+- **Layouts**: no hardcoded pixel widths that only make sense on one form factor — use `max-width` + `margin: auto` for centering and `clamp()` for fluid typography.
+- **New pages**: must link `<link rel="stylesheet" href="/desktop.css">` (or `../desktop.css` from subdirectories) — the shared desktop upgrade layer.
+- **New CSS files**: must contain their own `@media (min-width: 768px)` and `@media (min-width: 1200px)` sections.
+
+| Breakpoint | Target |
+|---|---|
+| base (no media query) | Mobile 375px–767px |
+| `min-width: 640px` | Large mobile / small tablet |
+| `min-width: 768px` | Tablet (iPad) |
+| `min-width: 1200px` | Desktop (sidebar nav layout) |
+| `min-width: 1600px` | Wide monitor |
+
+A change that works on mobile but breaks desktop (or vice versa) is **not complete** — fix both before committing.
+
 ---
 
-## RULE #2 — NO HARDCODED STRINGS IN ANY LANGUAGE (ABSOLUTE RULE)
+## RULE #2 — MULTI-LANGUAGE & NO HARDCODED STRINGS (ABSOLUTE RULE)
 
-**NEVER hardcode user-facing text in any language — not Vietnamese, not English, not Spanish — anywhere in this webapp. This applies to customer-facing pages AND all admin/vendor/driver internal tools equally.**
+**Every surface — customer-facing AND internal admin/vendor/driver tools — must support Vietnamese, English, and Spanish, and NEVER hardcode user-facing text in any language (not Vietnamese, not English, not Spanish).** There are no Vietnamese-only exceptions; the language switcher must work everywhere. Operators, vendors, and drivers may also prefer English or Spanish.
 
-This applies to:
+### Supported languages
+
+| Code | Language | Role |
+|------|----------|------|
+| `vi` | Vietnamese | Primary — default when no preference is stored |
+| `en` | English | Full support on ALL surfaces (customer and admin) |
+| `es` | Spanish | Full support on ALL surfaces (customer and admin) |
+
+The no-hardcoded-strings rule applies to:
 - All `.js` files (receptionist.js, ai-engine.js, marketplace.js, salon-ai-os/*.js, etc.)
 - All HTML inline scripts
 - All Firebase Cloud Functions
@@ -248,6 +276,51 @@ return 'Sorry, the salon is closed on ' + d + '. Would you like to pick a differ
 // Then: biz._aiHistory.push({ role: 'user', content: '[SYSTEM: ' + reason + ']' })
 // Then: AIEngine.call(...) → AI responds in customer language
 ```
+
+### Surface coverage
+
+| Surface | Multi-language? | Notes |
+|---------|----------------|-------|
+| AI chat + workflow engine | ✅ vi / en / es | Auto-detects from user input; switches mid-conversation |
+| Ride intake form | ✅ vi / en / es | Driven by `?lang=` URL param |
+| Thank-you / confirmation page | ✅ vi / en / es | `?lang=` passed forward from booking |
+| Email notifications | ✅ vi / en / es | `lang` param passed to all `DLCNotifications` functions |
+| Homepage + landing pages | ✅ vi / en / es | Customer-facing — text must support all 3 |
+| Marketplace pages (food/nail/hair) | ✅ vi / en / es | Customer-facing UI text must support all 3 |
+| `salon-admin.html` + all salon-ai-os modules | ✅ vi / en / es | Uses `salon-ai-os/i18n.js` + `_LABELS` in salon-admin.html |
+| `admin.html` | ✅ vi / en / es | Must have a lang switcher wired to `_LABELS`-style table |
+| `vendor-admin.html` | ✅ vi / en / es | Must have a lang switcher |
+| `/driver/` portal PWA | ✅ vi / en / es | `driver-portal.js` / `login.html` / `dashboard.html` must support a lang switcher (`driver-admin.html` is now a redirect stub) |
+| Login pages (driver/vendor) | ✅ vi / en / es | All UI strings must be translatable |
+
+### How language is detected and propagated
+
+1. **AI chat (primary path)**: `AIEngine.detectLang(text)` reads user input → returns `'vi'`, `'en'`, or `'es'` → stored as `draft.lang` in workflow state. Auto-updates if the user switches language mid-conversation.
+2. **URL param (forms and confirmation)**: `?lang=vi|en|es` — set when opening ride intake or launching `thankyou.html`. `ride-intake.js` reads it as `_lang`; `thankyou.html` reads the same param.
+3. **Admin tools (salon-admin.html, admin.html, etc.)**: Lang switcher buttons call `dlcSetLang(l)` → stores in `localStorage('dlc_lang')` → applies to all nav labels, panel titles, and buttons via a `_LABELS` lookup table or `SalonI18n.t('key')`.
+4. **Default**: `'vi'` when no stored preference is found.
+
+### Where to add new strings
+
+| Layer | File | Pattern |
+|-------|------|---------|
+| AI workflow (confirmations, questions, field labels) | `workflowEngine.js` → `CONFIRM_STRINGS` | Add key to all 3 tables (`vi`, `en`, `es`). Access via `S('key')` |
+| Ride intake form (step nav, fare card, success screen) | `ride-intake.js` → `_RIDE_T` | Add key to `vi`, `en`, `es` tables. Access via `_T.key` |
+| Email notifications | `notifications.js` | Use the `lang` param already passed to each function |
+| Salon AI OS modules (`salon-ai-os/*.js`) | `salon-ai-os/i18n.js` | Add key to `vi`, `en`, `es` objects. Access via `SalonI18n.t('key')` or `_T('key')` inside the module |
+| Salon admin nav + panel labels | `salon-admin.html` → `_LABELS` | Add key to all 3 `_LABELS` tables; wire into `_applyLang()` and `navMap` |
+
+### Hard rules
+
+- **Every new string — on any surface, customer or admin — must exist in vi + en + es in the same commit.** Never ship a string that only works in one language.
+- Never hardcode a UI string in any language (Vietnamese, English, or Spanish) directly in HTML or JS. Always use a translation key lookup.
+- Never leave a language entry as an empty string or a copy of another language's text as a placeholder. Translate correctly or flag it explicitly.
+- When adding a new admin module or page: include a `_LABELS`-style object or use `SalonI18n.t()`, and wire a lang switcher that persists to `localStorage('dlc_lang')`.
+- Do NOT create new Vietnamese-only pages or modules. The historical Vietnamese-only exceptions in admin tools are a bug to be fixed, not a pattern to follow.
+
+### Failure condition
+
+Any string that exists only in one language — on any surface, customer-facing or internal — is an incomplete implementation. Add all 3 entries before deploying.
 
 ---
 
@@ -302,38 +375,20 @@ Changing a JS file without bumping the version string → browsers serve cached 
 
 ---
 
-## HOSTING ARCHITECTURE — NON-NEGOTIABLE
+## HOSTING & PRODUCTION DEPLOYMENT — NON-NEGOTIABLE
 
 | Role | Platform | Detail |
 |------|----------|--------|
 | **Live website host** | **Firebase Hosting** | Serves the production app to real users |
-| **Production domain** | **`https://www.dulichcali21.com`** | The only URL that counts as "done" |
-| **Source control / backup** | GitHub (`johnntd/DuLichCali`) | Code repo and version history — NOT a web host |
-| **Staging / preview only** | `https://dulichcali-booking-calendar.web.app` | For testing — never treat as production |
+| **Production domain** | **`https://www.dulichcali21.com`** | The ONLY URL that counts as "done" |
+| **Source control / backup** | GitHub (`johnntd/DuLichCali`) | Code repo + history — NOT a web host |
+| **Staging / preview only** | `https://dulichcali-booking-calendar.web.app` | Testing only — never treat as production |
 
-**GitHub is NOT the live website host.**
-`git push origin main` keeps the repo current but does NOT deploy the live site.
-Deploying to `web.app` only is NOT production.
-A task is NOT complete until changes are visible at `https://www.dulichcali21.com`.
-
-### Anti-patterns — NEVER do these:
-
-- Treating `git push origin main` as the production deploy step
-- Treating `https://dulichcali-booking-calendar.web.app` as the production URL
-- Finishing a session without verifying `https://www.dulichcali21.com` reflects the latest changes
-- Enabling or relying on GitHub Pages as a hosting path for this project
-
----
-
-## PRODUCTION DOMAIN — NON-NEGOTIABLE RULE
-
-**Production URL:** `https://www.dulichcali21.com` — this is the ONLY launch URL that matters.
+**GitHub is NOT the live website host.** `git push origin main` keeps the repo current but does NOT deploy the live site. Deploying to `web.app` only is NOT production. A task is NOT complete until changes are visible at `https://www.dulichcali21.com`.
 
 **Deployment method:** `firebase deploy --only hosting` → Firebase Hosting serves `www.dulichcali21.com`.
 
-**Firebase web.app URL** (`https://dulichcali-booking-calendar.web.app`) is staging/test only. Never treat it as done.
-
-### Deploy workflow (every task):
+### Deploy workflow (every task)
 
 1. Edit and test locally at `http://localhost:8080` (`python3 -m http.server 8080` from project root)
 2. Commit: `git add <files> && git commit`
@@ -342,117 +397,19 @@ A task is NOT complete until changes are visible at `https://www.dulichcali21.co
 5. Verify: `curl -s "https://www.dulichcali21.com/<changed-file>" | head -5`
 6. Confirm: `✔ Production domain updated — https://www.dulichcali21.com`
 
-Steps 2–3 (git) and step 4 (firebase deploy) are both required. Git keeps the repo current; only Firebase deploy updates the live site.
+Steps 2–3 (git) and step 4 (firebase deploy) are BOTH required — git keeps the repo current; only `firebase deploy` updates the live site.
 
-### Multi-phase work: local testing first
+### Multi-phase work: hold the deploy
 
-When working on a series of phases or features before a final release:
-- **Do NOT deploy between phases** — accumulate changes locally, commit to git, but hold the deploy.
-- Only `firebase deploy --only hosting` when ALL phases in the current batch are complete and locally verified.
-- After the final deploy, verify production by curling a changed file.
-- End every completed batch with: `✔ Production domain updated — https://www.dulichcali21.com`
+When working a series of phases before a release: do NOT deploy between phases — accumulate locally, commit to git, but hold the deploy. Only `firebase deploy --only hosting` once ALL phases in the batch are complete and locally verified, then verify production by curling a changed file and end with `✔ Production domain updated — https://www.dulichcali21.com`.
 
-### Single-task deploys (default when no batch is active):
+### Anti-patterns / failure conditions — NEVER do these
 
-1. Commit changes with `git add <files> && git commit`
-2. Push to repo: `git push origin main`
-3. Deploy: `firebase deploy --only hosting`
-4. Verify production by curling a changed file
-5. Confirm: `✔ Production domain updated — https://www.dulichcali21.com`
-
-### Failure conditions:
-
-- Changes committed and pushed but `firebase deploy` not run → production is NOT updated. Run `firebase deploy --only hosting`.
-- Task "complete" but `www.dulichcali21.com` shows old content → NOT done. Deploy and verify.
-- Deployed only to `web.app` → NOT production. That is staging only.
-- Session ended without confirming production → failure. Never finish with undeployed completed work.
-
----
-
-## DESKTOP + MOBILE — MANDATORY COMPATIBILITY RULE
-
-**Every change must work on BOTH desktop and mobile.** No exceptions.
-
-### What this means in practice:
-
-- **CSS changes**: Always write mobile-first base styles, then add `@media (min-width: 768px)` and `@media (min-width: 1200px)` overrides for desktop.
-- **New components**: Test mentally at 375px (mobile), 768px (tablet), and 1280px (desktop) before committing.
-- **Layouts**: No hardcoded pixel widths that only make sense on one form factor. Use `max-width` + `margin: auto` for centering, `clamp()` for fluid typography.
-- **New pages**: Must include `<link rel="stylesheet" href="/desktop.css">` (or `../desktop.css` from subdirectories). This is the shared desktop upgrade layer.
-- **New CSS files**: Must contain their own `@media (min-width: 768px)` and `@media (min-width: 1200px)` sections.
-
-### Breakpoints used across this project:
-
-| Breakpoint | Target |
-|---|---|
-| base (no media query) | Mobile 375px–767px |
-| `min-width: 640px` | Large mobile / small tablet |
-| `min-width: 768px` | Tablet (iPad) |
-| `min-width: 1200px` | Desktop (sidebar nav layout) |
-| `min-width: 1600px` | Wide monitor |
-
-### Failure condition:
-
-A change that works on mobile but breaks desktop (or vice versa) is **not complete**. Fix both before committing.
-
----
-
-## MULTI-LANGUAGE — NON-NEGOTIABLE
-
-**Every surface in this webapp — customer-facing AND internal admin tools — must support Vietnamese, English, and Spanish.** There are no Vietnamese-only exceptions. Operators, vendors, and drivers may also prefer English or Spanish; the language switcher must work everywhere.
-
-### Supported Languages
-
-| Code | Language | Role |
-|------|----------|------|
-| `vi` | Vietnamese | Primary — default when no preference is stored |
-| `en` | English | Full support on ALL surfaces (customer and admin) |
-| `es` | Spanish | Full support on ALL surfaces (customer and admin) |
-
-### Surface Coverage
-
-| Surface | Multi-language? | Notes |
-|---------|----------------|-------|
-| AI chat + workflow engine | ✅ vi / en / es | Auto-detects from user input; switches mid-conversation |
-| Ride intake form | ✅ vi / en / es | Driven by `?lang=` URL param |
-| Thank-you / confirmation page | ✅ vi / en / es | `?lang=` passed forward from booking |
-| Email notifications | ✅ vi / en / es | `lang` param passed to all `DLCNotifications` functions |
-| Homepage + landing pages | ✅ vi / en / es | Customer-facing — text must support all 3 |
-| Marketplace pages (food/nail/hair) | ✅ vi / en / es | Customer-facing UI text must support all 3 |
-| `salon-admin.html` + all salon-ai-os modules | ✅ vi / en / es | Uses `salon-ai-os/i18n.js` + `_LABELS` in salon-admin.html |
-| `admin.html` | ✅ vi / en / es | Must have a lang switcher wired to `_LABELS`-style table |
-| `vendor-admin.html` | ✅ vi / en / es | Must have a lang switcher |
-| `/driver/` portal PWA | ✅ vi / en / es | `driver-portal.js` / `login.html` / `dashboard.html` must support a lang switcher (`driver-admin.html` is now a redirect stub) |
-| Login pages (driver/vendor) | ✅ vi / en / es | All UI strings must be translatable |
-
-### How Language Is Detected and Propagated
-
-1. **AI chat (primary path)**: `AIEngine.detectLang(text)` reads user input → returns `'vi'`, `'en'`, or `'es'` → stored as `draft.lang` in workflow state. Auto-updates if the user switches language mid-conversation.
-2. **URL param (forms and confirmation)**: `?lang=vi|en|es` — set when opening ride intake or launching `thankyou.html`. `ride-intake.js` reads it as `_lang`; `thankyou.html` reads the same param.
-3. **Admin tools (salon-admin.html, admin.html, etc.)**: Lang switcher buttons call `dlcSetLang(l)` → stores in `localStorage('dlc_lang')` → applies to all nav labels, panel titles, and buttons via a `_LABELS` lookup table or `SalonI18n.t('key')`.
-4. **Default**: `'vi'` when no stored preference is found.
-
-### Where to Add New Strings
-
-| Layer | File | Pattern |
-|-------|------|---------|
-| AI workflow (confirmations, questions, field labels) | `workflowEngine.js` → `CONFIRM_STRINGS` | Add key to all 3 tables (`vi`, `en`, `es`). Access via `S('key')` |
-| Ride intake form (step nav, fare card, success screen) | `ride-intake.js` → `_RIDE_T` | Add key to `vi`, `en`, `es` tables. Access via `_T.key` |
-| Email notifications | `notifications.js` | Use the `lang` param already passed to each function |
-| Salon AI OS modules (`salon-ai-os/*.js`) | `salon-ai-os/i18n.js` | Add key to `vi`, `en`, `es` objects. Access via `SalonI18n.t('key')` or `_T('key')` inside the module |
-| Salon admin nav + panel labels | `salon-admin.html` → `_LABELS` | Add key to all 3 `_LABELS` tables; wire into `_applyLang()` and `navMap` |
-
-### Hard Rules
-
-- **Every new string — on any surface, customer or admin — must exist in vi + en + es in the same commit.** Never ship a string that only works in one language.
-- Never hardcode a UI string in any language (Vietnamese, English, or Spanish) directly in HTML or JS. Always use a translation key lookup.
-- Never leave a language entry as an empty string or a copy of another language's text as a placeholder. Translate correctly or flag it explicitly.
-- When adding a new admin module or page: include a `_LABELS`-style object or use `SalonI18n.t()`, and wire a lang switcher that persists to `localStorage('dlc_lang')`.
-- Do NOT create new Vietnamese-only pages or modules. The historical Vietnamese-only exceptions in admin tools are a bug to be fixed, not a pattern to follow.
-
-### Failure Condition
-
-Any string that exists only in one language — on any surface, customer-facing or internal — is an incomplete implementation. Add all 3 entries before deploying.
+- Committing/pushing but NOT running `firebase deploy` — `git push origin main` is not a deploy; production is NOT updated until you run `firebase deploy --only hosting`.
+- Treating or deploying only to `https://dulichcali-booking-calendar.web.app` as production — that is staging only.
+- Finishing a session without verifying `https://www.dulichcali21.com` reflects the latest changes.
+- Marking a task "complete" while `www.dulichcali21.com` shows old content → NOT done. Deploy and verify.
+- Enabling or relying on GitHub Pages as a hosting path for this project.
 
 ---
 

@@ -1284,6 +1284,8 @@ window.RideIntake = (function () {
     var paxId = _type === 'pickup' ? 'ri_p_passengers' : _type === 'dropoff' ? 'ri_d_passengers' : 'ri_r_passengers';
     var pax   = Math.max(1, parseInt(val(paxId) || '1', 10) || 1);
     var regionId = (window.DLCRegion && window.DLCRegion.current) ? window.DLCRegion.current.id : null;
+    // Airport trips (pickup/dropoff) carry the once-per-trip airport fee; generic 'ride' does not.
+    var isAirport = (_type === 'pickup' || _type === 'dropoff');
 
     var ridePromise = _routeMatrix(pair.origin, pair.destination);
 
@@ -1294,12 +1296,12 @@ window.RideIntake = (function () {
       Promise.all([ridePromise, deadheadPromise]).then(function(results) {
         var ride     = results[0];
         var deadhead = results[1];
-        _quote = DLCPricing.quoteRide(ride.distMiles, ride.durMins, { deadheadMiles: deadhead.distMiles, passengers: pax, regionId: regionId });
+        _quote = DLCPricing.quoteRide(ride.distMiles, ride.durMins, { deadheadMiles: deadhead.distMiles, passengers: pax, regionId: regionId, airport: isAirport });
         showPrice(_quote);
       }).catch(function() {
         // Deadhead failed — fall back to ride-only price
         ridePromise.then(function(ride) {
-          _quote = DLCPricing.quoteRide(ride.distMiles, ride.durMins, { passengers: pax, regionId: regionId });
+          _quote = DLCPricing.quoteRide(ride.distMiles, ride.durMins, { passengers: pax, regionId: regionId, airport: isAirport });
           showPrice(_quote);
         }).catch(function() {
           showPriceHint(_T.noRoute);
@@ -1308,7 +1310,7 @@ window.RideIntake = (function () {
     } else {
       // No driver GPS yet — price on ride distance only
       ridePromise.then(function(ride) {
-        _quote = DLCPricing.quoteRide(ride.distMiles, ride.durMins, { passengers: pax, regionId: regionId });
+        _quote = DLCPricing.quoteRide(ride.distMiles, ride.durMins, { passengers: pax, regionId: regionId, airport: isAirport });
         showPrice(_quote);
       }).catch(function() {
         showPriceHint(_T.noRoute);

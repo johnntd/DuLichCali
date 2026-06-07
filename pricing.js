@@ -19,8 +19,10 @@ const DLCPricing = (() => {
   const VAN_MPG         = 14;    // Mercedes-Benz Sprinter Van fuel economy
   const SIENNA_MPG      = 20;    // Toyota Sienna Hybrid fuel economy
   const TESLA_RATE      = 0.22;  // $/mile energy equivalent for Tesla Model Y
-  const BASE_MIN        = 100;   // Minimum transfer fare
+  const BASE_MIN        = 25;    // Sedan short-trip floor (was 100 — forced 10mi rides to $100, ~4x Uber)
   const UBER_DISCOUNT   = 0.20;  // We charge 20% less than Uber
+  const AIRPORT_FEE     = 5;     // Flat airport access/parking fee — applied ONCE per airport trip, NEVER per passenger
+  const SHARED_DISCOUNT_FACTOR = 0.6;  // Shared/pool ride = 60% of the private fare (40% off)
 
   // ── Uber-equivalent rate estimation (per-mile + per-minute) ──
   // Based on average Uber/Lyft rates in California (2025-2026 market data).
@@ -91,16 +93,24 @@ const DLCPricing = (() => {
     const dh          = (opts && opts.deadheadMiles) || 0;
     const pax         = Math.max(1, parseInt((opts && opts.passengers) || 1));
     const regionId    = (opts && opts.regionId) || null;
+    const isAirport   = !!(opts && opts.airport);
     const vehicleName = getVehicle(pax, regionId);
     const r           = VEHICLE_RATE_CARDS[vehicleName] || VEHICLE_RATE_CARDS['Tesla Model Y'];
     const totalMiles  = miles + dh;
+    const round5      = n => Math.ceil(n / 5) * 5;
     // Uber-equivalent market rate: base + booking + distance + time
     const uberRaw     = r.base + r.bookingFee + (totalMiles * r.perMile) + (durMins * r.perMin);
     const uberEst     = Math.max(uberRaw, r.minFare);
-    // DLC price = Uber baseline × (1 − 20% discount), rounded up to nearest $5
-    // dlcMin floor ensures consistency with transferCost() minimums across both booking paths
-    const dlcRaw      = uberEst * (1 - UBER_DISCOUNT);
-    const dlcPrice    = Math.ceil(Math.max(dlcRaw, r.dlcMin || 80) / 5) * 5;
+    // Airport access/parking fee — added ONCE per trip, never multiplied by passengers.
+    const airportFee  = isAirport ? AIRPORT_FEE : 0;
+    // DLC metered price = Uber baseline × (1 − 20% discount) + airport fee.
+    const dlcMetered  = uberEst * (1 - UBER_DISCOUNT) + airportFee;
+    // Competitive minimum-fare floor by vehicle (dlcMin). Replaces the old flat
+    // $100/$120/$140 floors that forced short airport rides to 3–4x Uber.
+    const floor       = r.dlcMin || BASE_MIN;
+    const dlcPrice    = round5(Math.max(dlcMetered, floor));               // private fare
+    // Shared/pool fare = private metered × discount factor, with its own lower floor.
+    const sharedPrice = round5(Math.max(dlcMetered * SHARED_DISCOUNT_FACTOR, floor * SHARED_DISCOUNT_FACTOR));
     return {
       miles:         Math.round(miles),
       minutes:       Math.round(durMins),
@@ -108,8 +118,10 @@ const DLCPricing = (() => {
       totalMiles:    Math.round(totalMiles),
       vehicleName,
       vehicleSeats:  r.seats,
+      airportFee,
       uberEstimate:  Math.round(uberEst),
-      dlcPrice,
+      dlcPrice,                       // private fare (displayed + saved by ride-intake.js)
+      sharedPrice,                    // shared/pool fare (engine-ready; UI toggle is a follow-up)
       savings:       Math.round(uberEst) - dlcPrice,
     };
   }
@@ -339,9 +351,9 @@ const DLCPricing = (() => {
   const VEHICLE_RATE_CARDS = {
     // minFare = Uber-equivalent floor (applied before discount)
     // dlcMin  = DLC price floor after 20% discount (must match transferCost() minimums)
-    'Tesla Model Y': { seats: 4,  base: 3.00, perMile: 2.30, perMin: 0.30, bookingFee: 2.50, minFare: 25.00, dlcMin: 100 },
-    'Toyota Sienna': { seats: 7,  base: 4.00, perMile: 3.00, perMin: 0.40, bookingFee: 3.50, minFare: 35.00, dlcMin: 120 },
-    'Mercedes Van':  { seats: 12, base: 6.00, perMile: 3.80, perMin: 0.55, bookingFee: 5.00, minFare: 60.00, dlcMin: 140 },
+    'Tesla Model Y': { seats: 4,  base: 3.00, perMile: 2.30, perMin: 0.30, bookingFee: 2.50, minFare: 25.00, dlcMin: 25 },
+    'Toyota Sienna': { seats: 7,  base: 4.00, perMile: 3.00, perMin: 0.40, bookingFee: 3.50, minFare: 35.00, dlcMin: 35 },
+    'Mercedes Van':  { seats: 12, base: 6.00, perMile: 3.80, perMin: 0.55, bookingFee: 5.00, minFare: 60.00, dlcMin: 55 },
   };
 
   function getVehicle(passengers, regionId) {
@@ -407,8 +419,9 @@ const DLCPricing = (() => {
       ourPrice += miles * 0.10;
     }
 
-    // Enforce minimum fare by vehicle tier
-    const minFare = isVan ? 140 : isSienna ? 120 : BASE_MIN;
+    // Enforce competitive minimum fare by vehicle tier (was 140/120/100 — forced
+    // short airport/transfer rides to 3–4x Uber). Kept in sync with quoteRide() dlcMin.
+    const minFare = isVan ? 55 : isSienna ? 35 : BASE_MIN;
     ourPrice = Math.max(minFare, ourPrice);
 
     return Math.round(ourPrice);
@@ -528,7 +541,8 @@ const DLCPricing = (() => {
              || lookupAirportMiles(airport)
              || lookupCityMiles(airport);
     if (!miles) return null;
-    const cost = transferCost(miles, p);
+    // Airport access fee applied ONCE per trip (not per passenger), matching quoteRide().
+    const cost = transferCost(miles, p) + AIRPORT_FEE;
     return {
       type:       'transfer',
       total:      cost,

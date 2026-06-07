@@ -594,8 +594,8 @@ const AIRPORTS = [
 
 /** Static quick estimates for display (no Distance Matrix needed) */
 const QUICK_ESTIMATES = {
-  pickup:        { label: 'Đón sân bay',              range: 'từ $100',       detail: 'Phụ thuộc vào khoảng cách. Tesla (≤3 khách) hoặc Mercedes Van (≥4 khách).' },
-  dropoff:       { label: 'Đưa sân bay',              range: 'từ $100',       detail: 'Phụ thuộc vào khoảng cách. Tesla (≤3 khách) hoặc Mercedes Van (≥4 khách).' },
+  pickup:        { label: 'Đón sân bay',              range: 'từ $35',       detail: 'Phụ thuộc vào khoảng cách. Tesla (≤3 khách) hoặc Mercedes Van (≥4 khách).' },
+  dropoff:       { label: 'Đưa sân bay',              range: 'từ $35',       detail: 'Phụ thuộc vào khoảng cách. Tesla (≤3 khách) hoặc Mercedes Van (≥4 khách).' },
   lasvegas:      { label: 'Tour Las Vegas',            range: '$450 – $650',   detail: 'Khứ hồi từ OC. 2–3 ngày. Không bao gồm chỗ ở.' },
   yosemite:      { label: 'Tour Yosemite',             range: '$380 – $550',   detail: 'Khứ hồi từ OC. 2–4 ngày. Không bao gồm chỗ ở.' },
   sanfrancisco:  { label: 'Tour San Francisco',        range: '$420 – $600',   detail: 'Khứ hồi từ OC. 2–4 ngày. Không bao gồm chỗ ở.' },
@@ -652,7 +652,7 @@ Orange County airports: ${ocAirports}
 Bay Area airports: ${bayAirports}
 OC vehicles: Tesla Model Y (1–3 passengers), Mercedes Van (4–12 passengers)
 Bay Area vehicle: Toyota Sienna (up to 8 passengers)
-Starting from $100, priced by distance.
+Starting from $35, priced by distance.
 
 CONTACT:
 Phone: +1 (408) 916-3439

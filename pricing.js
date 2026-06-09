@@ -66,10 +66,7 @@ const DLCPricing = (() => {
    */
   function getVehiclePricingTier(passengers, regionId) {
     const pax = Math.max(1, parseInt(passengers) || 1);
-    const isBayArea = regionId === 'bayarea' ||
-      (typeof window !== 'undefined' && window.DLCRegion && window.DLCRegion.current.id === 'bayarea' && !regionId);
-
-    if (isBayArea) return 'sienna'; // Bay Area only has Sienna
+    // Pricing tier by passenger need in ALL regions (the Bay Area also has a Model Y).
     if (pax <= 3) return 'sedan';
     if (pax <= 7) return 'sienna';
     return 'van';
@@ -96,9 +93,10 @@ const DLCPricing = (() => {
     const isAirport   = !!(opts && opts.airport);
     const vehicleName = getVehicle(pax, regionId);
     const r           = VEHICLE_RATE_CARDS[vehicleName] || VEHICLE_RATE_CARDS['Tesla Model Y'];
-    // Bill deadhead (driver→pickup) but cap it at the ride distance, so a far-away
-    // driver can't inflate a short fare (e.g. 11mi ride + 18mi deadhead was $70).
-    const totalMiles  = miles + Math.min(dh, miles);
+    // Deadhead (driver→pickup) is NOT billed to the customer — repositioning is an
+    // operational cost (matches UberX, which doesn't charge it). `dh` is kept in the
+    // return for dispatch/info only.
+    const totalMiles  = miles;
     const round5      = n => Math.ceil(n / 5) * 5;
     // Uber-equivalent market rate: base + booking + distance + time
     const uberRaw     = r.base + r.bookingFee + (totalMiles * r.perMile) + (durMins * r.perMin);
@@ -360,15 +358,11 @@ const DLCPricing = (() => {
 
   function getVehicle(passengers, regionId) {
     var pax = Math.max(1, parseInt(passengers) || 1);
-    var isBayArea = regionId === 'bayarea' ||
-      (typeof window !== 'undefined' && window.DLCRegion &&
-       window.DLCRegion.current && window.DLCRegion.current.id === 'bayarea' && !regionId);
-    if (isBayArea) {
-      // Bay Area: no Tesla in fleet — Sienna is the base vehicle
-      return pax > 7 ? 'Mercedes Van' : 'Toyota Sienna';
-    }
-    // SoCal + default: 3-tier capacity matching
-    if (pax <= 3) return 'Tesla Model Y';   // 1–3 pax → 4-seat Tesla
+    // Uniform 3-tier capacity matching in ALL regions — the Bay Area also has a
+    // Tesla Model Y, so a small party is no longer forced into Sienna pricing.
+    // Actual dispatch availability is data-driven from active drivers (ride-booking.js
+    // getRegionVehicles); this is the default tier by passenger count.
+    if (pax <= 3) return 'Tesla Model Y';   // 1–3 pax → 4-seat Tesla Model Y
     if (pax <= 7) return 'Toyota Sienna';   // 4–7 pax → 7-seat Sienna
     return 'Mercedes Van';                  // 8+ pax → 12-seat Van
   }

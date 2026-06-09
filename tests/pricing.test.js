@@ -49,10 +49,10 @@ ok('2. 10mi airport pickup, 3 pax (SoCal) → NOT $120 and NOT $100',
    t2.dlcPrice !== 120 && t2.dlcPrice !== 100 && t2.dlcPrice <= 50,
    'got $' + t2.dlcPrice + ' / ' + t2.vehicleName);
 
-// 2b) Bay Area variant of the repro (Sienna-only fleet) — was the literal $120 case
+// 2b) Bay Area variant — was forced to Sienna ($120/$70); now picks Model Y like SoCal
 const t2b = q(10, 3, { airport: true, regionId: 'bayarea' });
-ok('2b. 10mi airport pickup, 3 pax (Bay Area Sienna) → NOT $120 (<=$55)',
-   t2b.dlcPrice !== 120 && t2b.dlcPrice <= 55,
+ok('2b. 10mi airport pickup, 3 pax (Bay Area) → Model Y, competitive (<=$40, not $120)',
+   t2b.vehicleName === 'Tesla Model Y' && t2b.dlcPrice !== 120 && t2b.dlcPrice <= 40,
    'got $' + t2b.dlcPrice + ' / ' + t2b.vehicleName);
 
 // 3) 10-mile airport pickup, 4 passengers → bumps to Sienna (modest surcharge)
@@ -122,20 +122,25 @@ ok('11. transferCost (AI/wizard) 10mi 3pax is competitive (<=$60, not $120/$100)
    (() => { const c = P.transferCost(10, 3); return c <= 60 && c !== 120 && c !== 100; })(),
    'transferCost(10,3) = $' + P.transferCost(10, 3));
 
-// 12) Deadhead (driver→pickup) is capped at the ride distance — a far driver can't
-//     inflate a short fare. Regression for the "11mi airport drop-off = $70" report.
-const dCap   = (m, dh) => P.quoteRide(m, dur(m), { passengers: 1, airport: true, deadheadMiles: dh }).dlcPrice;
-const noDh   = dCap(11, 0);
-const cap11  = dCap(11, 11);
-const far18  = dCap(11, 18);
-const far50  = dCap(11, 50);
-const small5 = dCap(11, 5);
-ok('12a. 11mi + 18mi deadhead is capped at ride distance (was $70 uncapped, now <=$55)',
-   far18 === cap11 && far18 <= 55 && far18 < 70, '18mi-dh=$' + far18 + ' / 11mi-dh=$' + cap11);
-ok('12b. deadhead beyond ride distance does NOT increase the fare further',
-   far50 === cap11, 'dh50=$' + far50 + ' / dh11=$' + cap11);
-ok('12c. deadhead within ride distance is still billed (5mi between no-dh and capped)',
-   small5 > noDh && small5 < far18, 'noDh=$' + noDh + ' / 5mi=$' + small5 + ' / capped=$' + far18);
+// 12) Deadhead (driver→pickup) is NOT billed to the customer (matches UberX).
+const dh = (m, d) => P.quoteRide(m, dur(m), { passengers: 1, airport: true, deadheadMiles: d }).dlcPrice;
+ok('12a. deadhead does NOT change the fare (0 vs 18mi identical)',
+   dh(11, 0) === dh(11, 18), '0dh=$' + dh(11, 0) + ' / 18dh=$' + dh(11, 18));
+ok('12b. a far driver (50mi away) does NOT inflate the fare',
+   dh(11, 50) === dh(11, 0), '0dh=$' + dh(11, 0) + ' / 50dh=$' + dh(11, 50));
+
+// 13) Bay Area picks the Tesla Model Y (sedan rate) for ≤3 pax — the SJ→SJC fix.
+const ba1 = P.quoteRide(11, dur(11), { passengers: 1, airport: true, regionId: 'bayarea', deadheadMiles: 10 });
+const sc1 = P.quoteRide(11, dur(11), { passengers: 1, airport: true });
+ok('13a. Bay Area ≤3 pax → Tesla Model Y (was forced to Sienna)',
+   ba1.vehicleName === 'Tesla Model Y', 'got ' + ba1.vehicleName);
+ok('13b. SJ→SJC 1 pax (Bay Area) is competitive (~$35, was $70)',
+   ba1.dlcPrice <= 40, 'got $' + ba1.dlcPrice);
+ok('13c. Bay Area price == SoCal price for the same ride (no region penalty)',
+   ba1.dlcPrice === sc1.dlcPrice, 'BA=$' + ba1.dlcPrice + ' / SoCal=$' + sc1.dlcPrice);
+ok('13d. Bay Area 4–7 pax still gets the Sienna',
+   P.quoteRide(10, dur(10), { passengers: 5, airport: true, regionId: 'bayarea' }).vehicleName === 'Toyota Sienna',
+   'got ' + P.quoteRide(10, dur(10), { passengers: 5, airport: true, regionId: 'bayarea' }).vehicleName);
 
 console.log('\n  RESULT: ' + pass + ' passed, ' + fail + ' failed\n');
 process.exit(fail ? 1 : 0);

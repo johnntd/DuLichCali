@@ -125,6 +125,17 @@
       // SP-6 facial-harmony display.
       aiNoticed: 'AI noticed', aiRecommends: 'AI recommends', harmonyScoresLabel: 'Style guidance',
       score_naturalness: 'Naturalness', score_harmony: 'Harmony', score_professional: 'Professional', score_youthfulness: 'Youthfulness', score_maintenance: 'Easy upkeep',
+      // SP-7 WOW front page
+      demo_upload: 'Upload a selfie', demo_analyzing: 'AI analyzing your features…', demo_before: 'Before', demo_after: 'Your best look ✨',
+      baTitle: 'See your best look', baSub: 'Real AI transformations — before → after. Swipe to explore.',
+      wowTitle: 'What would you look like?', wowSub: 'One selfie. See a natural, more confident you.', wowCta: 'Try it on your photo',
+      storiesTitle: 'Real transformations', stickyCta: 'Try AI Style Studio',
+      tx_master_t: 'AI Master Stylist', tx_master_e: 'A fresher, younger, confident look.',
+      tx_wig_t: 'AI Wig Match', tx_wig_e: 'Thin hair → natural, fuller hair.',
+      tx_color_t: 'Hair Color Preview', tx_color_e: 'See a new shade before you commit.',
+      tx_wedding_t: 'Wedding Look', tx_wedding_e: 'Elegant and picture-perfect for the big day.',
+      tx_exec_t: 'Executive Look', tx_exec_e: 'Sharp, polished, professional presence.',
+      tx_vacation_t: 'Vacation Look', tx_vacation_e: 'Fresh, relaxed, ready for the trip.',
       err_DAILY_LIMIT: 'You’ve reached today’s limit — please try again tomorrow.',
       // Customer account (reuses the mobile-barber customer auth).
       logIn: 'Log in', signUp: 'Sign up', logInOrSignUp: 'Log in / Sign up',
@@ -279,6 +290,17 @@
       selfieTips: 'Để có kết quả tốt nhất: nhìn thẳng máy ảnh, đủ sáng, thấy rõ tóc và chân tóc, không đội mũ hay kính râm, nền đơn giản.',
       aiNoticed: 'AI nhận thấy', aiRecommends: 'AI gợi ý', harmonyScoresLabel: 'Gợi ý phong cách',
       score_naturalness: 'Tự nhiên', score_harmony: 'Hài hòa', score_professional: 'Chuyên nghiệp', score_youthfulness: 'Trẻ trung', score_maintenance: 'Dễ chăm sóc',
+      // SP-7 WOW front page
+      demo_upload: 'Tải lên ảnh selfie', demo_analyzing: 'AI đang phân tích gương mặt…', demo_before: 'Trước', demo_after: 'Diện mạo đẹp nhất ✨',
+      baTitle: 'Xem diện mạo đẹp nhất của bạn', baSub: 'Biến đổi thật bằng AI — trước → sau. Vuốt để khám phá.',
+      wowTitle: 'Bạn sẽ trông như thế nào?', wowSub: 'Một ảnh selfie. Thấy phiên bản tự nhiên, tự tin hơn của bạn.', wowCta: 'Thử với ảnh của bạn',
+      storiesTitle: 'Những biến đổi thực tế', stickyCta: 'Thử AI Style Studio',
+      tx_master_t: 'AI Tạo Kiểu Tổng Thể', tx_master_e: 'Diện mạo tươi mới, trẻ trung, tự tin hơn.',
+      tx_wig_t: 'AI Ghép Tóc', tx_wig_e: 'Tóc thưa → tóc dày, tự nhiên.',
+      tx_color_t: 'Xem Trước Màu Tóc', tx_color_e: 'Thử màu mới trước khi quyết định.',
+      tx_wedding_t: 'Diện Mạo Đám Cưới', tx_wedding_e: 'Thanh lịch, hoàn hảo cho ngày trọng đại.',
+      tx_exec_t: 'Diện Mạo Lãnh Đạo', tx_exec_e: 'Sắc sảo, chỉn chu, chuyên nghiệp.',
+      tx_vacation_t: 'Diện Mạo Du Lịch', tx_vacation_e: 'Tươi mới, thư giãn, sẵn sàng cho chuyến đi.',
       err_DAILY_LIMIT: 'Bạn đã đạt giới hạn hôm nay — vui lòng thử lại vào ngày mai.',
       // Tài khoản khách hàng (dùng chung hệ thống đăng nhập Mobile Barber).
       logIn: 'Đăng nhập', signUp: 'Đăng ký', logInOrSignUp: 'Đăng nhập / Đăng ký',
@@ -433,6 +455,17 @@
       selfieTips: 'Para mejores resultados: mira a la cámara, buena luz, cabello y nacimiento del pelo visibles, sin gorra ni gafas de sol, fondo simple.',
       aiNoticed: 'La IA notó', aiRecommends: 'La IA recomienda', harmonyScoresLabel: 'Guía de estilo',
       score_naturalness: 'Naturalidad', score_harmony: 'Armonía', score_professional: 'Profesional', score_youthfulness: 'Juventud', score_maintenance: 'Fácil cuidado',
+      // SP-7 WOW front page
+      demo_upload: 'Sube una selfie', demo_analyzing: 'La IA analiza tus rasgos…', demo_before: 'Antes', demo_after: 'Tu mejor look ✨',
+      baTitle: 'Mira tu mejor look', baSub: 'Transformaciones reales con IA — antes → después. Desliza para explorar.',
+      wowTitle: '¿Cómo te verías?', wowSub: 'Una selfie. Descubre una versión natural y más segura de ti.', wowCta: 'Pruébalo en tu foto',
+      storiesTitle: 'Transformaciones reales', stickyCta: 'Prueba AI Style Studio',
+      tx_master_t: 'Estilista Maestro IA', tx_master_e: 'Un look más fresco, joven y seguro.',
+      tx_wig_t: 'AI Wig Match', tx_wig_e: 'Cabello fino → cabello natural y abundante.',
+      tx_color_t: 'Vista previa de color', tx_color_e: 'Mira un nuevo tono antes de decidir.',
+      tx_wedding_t: 'Look de boda', tx_wedding_e: 'Elegante y perfecto para el gran día.',
+      tx_exec_t: 'Look ejecutivo', tx_exec_e: 'Presencia pulida y profesional.',
+      tx_vacation_t: 'Look de vacaciones', tx_vacation_e: 'Fresco, relajado, listo para el viaje.',
       err_DAILY_LIMIT: 'Has alcanzado el límite de hoy — inténtalo de nuevo mañana.',
       // Cuenta de cliente (reutiliza el inicio de sesión de Mobile Barber).
       logIn: 'Iniciar sesión', signUp: 'Registrarse', logInOrSignUp: 'Iniciar sesión / Registrarse',
@@ -653,6 +686,10 @@
     buildAudienceSeg();
     buildGallery();
     buildShowcase();
+    buildHeroDemo();
+    buildBaShowcase();
+    buildStories();
+    buildWow();
     buildWigExamples();
     buildTestimonials();
     refreshWigUi();
@@ -2483,14 +2520,132 @@
     buildAudienceSeg();
     buildGallery();
     buildShowcase();
+    buildHeroDemo();
+    buildBaShowcase();
+    buildStories();
+    buildWow();
     buildWigExamples();
     buildTestimonials();
+    initStickyCta();
     syncLangButtons();
     renderAccount();
     refreshButtons();
     refreshWigUi();
     initAuth();
     logUi({ event: 'init' });
+  }
+
+  // ── SP-7: WOW front-page — honest before/after transformation pairs ──────
+  var TX_BASE = '/assets/style-studio/showcase/transformations/';
+  var TRANSFORMATIONS = [
+    { key: 'master-young',   titleKey: 'tx_master_t',   emoKey: 'tx_master_e' },
+    { key: 'wig-fuller',     titleKey: 'tx_wig_t',      emoKey: 'tx_wig_e' },
+    { key: 'color-woman',    titleKey: 'tx_color_t',    emoKey: 'tx_color_e' },
+    { key: 'wedding-woman',  titleKey: 'tx_wedding_t',  emoKey: 'tx_wedding_e' },
+    { key: 'executive-man',  titleKey: 'tx_exec_t',     emoKey: 'tx_exec_e' },
+    { key: 'vacation-woman', titleKey: 'tx_vacation_t', emoKey: 'tx_vacation_e' },
+  ];
+  function txSrc(key, which) { return TX_BASE + key + '-' + which + '.webp'; }
+  function prefersReduced() { try { return root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } }
+
+  // Live hero demo: upload → analyzing → before → after, looping (CSS-driven, no video).
+  function buildHeroDemo() {
+    var host = doc.getElementById('ssHeroDemo');
+    if (!host) return;
+    host.innerHTML = '';
+    var pair = TRANSFORMATIONS[0];
+    var stage = elt('div', 'ss-demo__stage');
+    var b = doc.createElement('img'); b.className = 'ss-demo__img ss-demo__img--before'; b.src = txSrc(pair.key, 'before'); b.alt = ''; b.loading = 'eager';
+    var a = doc.createElement('img'); a.className = 'ss-demo__img ss-demo__img--after'; a.src = txSrc(pair.key, 'after'); a.alt = ''; a.loading = 'eager';
+    var scan = elt('div', 'ss-demo__scan');
+    var glyph = elt('div', 'ss-demo__glyph'); glyph.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L8 8m4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>';
+    var cap = elt('span', 'ss-demo__caption');
+    stage.appendChild(b); stage.appendChild(a); stage.appendChild(scan); stage.appendChild(glyph); stage.appendChild(cap);
+    host.appendChild(stage);
+    if (state._demoTimer) { root.clearInterval(state._demoTimer); state._demoTimer = 0; }
+    if (prefersReduced()) { stage.className = 'ss-demo__stage is-after'; cap.textContent = t('demo_after'); return; }
+    var steps = [['is-upload', 'demo_upload'], ['is-analyzing', 'demo_analyzing'], ['is-before', 'demo_before'], ['is-after', 'demo_after']];
+    var i = 0;
+    function tick() { var s = steps[i % steps.length]; stage.className = 'ss-demo__stage ' + s[0]; cap.textContent = t(s[1]); i++; }
+    tick(); state._demoTimer = root.setInterval(tick, 1700);
+  }
+
+  // Before/After showcase — swipeable carousel of the transformation pairs.
+  function buildBaShowcase() {
+    var host = doc.getElementById('ssBaShowcase');
+    if (!host) return;
+    host.innerHTML = '';
+    TRANSFORMATIONS.forEach(function (tx) {
+      var card = elt('article', 'ss-ba-card');
+      var after = txSrc(tx.key, 'after'), before = txSrc(tx.key, 'before');
+      var item = { src: after, before: before, title: t(tx.titleKey), why: t(tx.emoKey) };
+      var ba = buildBeforeAfter(after, before, (function (it) { return function () { openViewer([it], 0); }; })(item));
+      card.appendChild(ba);
+      var body = elt('div', 'ss-ba-card__body');
+      body.appendChild(elt('h3', 'ss-ba-card__title', t(tx.titleKey)));
+      body.appendChild(elt('p', 'ss-ba-card__emo', t(tx.emoKey)));
+      card.appendChild(body);
+      host.appendChild(card);
+    });
+  }
+
+  // Success-story cards: before → after with a short outcome label.
+  function buildStories() {
+    var host = doc.getElementById('ssStories');
+    if (!host) return;
+    host.innerHTML = '';
+    TRANSFORMATIONS.forEach(function (tx) {
+      var card = elt('button', 'ss-story'); card.type = 'button';
+      card.setAttribute('aria-label', t(tx.titleKey));
+      var pairWrap = elt('div', 'ss-story__pair');
+      ['before', 'after'].forEach(function (w) {
+        var fig = elt('div', 'ss-story__fig ss-story__fig--' + w);
+        var img = doc.createElement('img'); img.src = txSrc(tx.key, w); img.alt = ''; img.loading = 'lazy';
+        fig.appendChild(img);
+        fig.appendChild(elt('span', 'ss-story__tag', t(w)));
+        pairWrap.appendChild(fig);
+      });
+      card.appendChild(pairWrap);
+      card.appendChild(elt('span', 'ss-story__label', t(tx.titleKey)));
+      var after = txSrc(tx.key, 'after'), before = txSrc(tx.key, 'before');
+      card.addEventListener('click', (function (it) { return function () { openViewer([it], 0); }; })({ src: after, before: before, title: t(tx.titleKey), why: t(tx.emoKey) }));
+      host.appendChild(card);
+    });
+  }
+
+  // WOW section — "What would you look like?" with two dramatic before/afters.
+  function buildWow() {
+    var host = doc.getElementById('ssWow');
+    if (!host) return;
+    host.innerHTML = '';
+    ['wig-fuller', 'master-young'].forEach(function (key) {
+      var tx = TRANSFORMATIONS.filter(function (x) { return x.key === key; })[0]; if (!tx) return;
+      var after = txSrc(key, 'after'), before = txSrc(key, 'before');
+      var card = elt('div', 'ss-wowcard');
+      card.appendChild(buildBeforeAfter(after, before, (function (it) { return function () { openViewer([it], 0); }; })({ src: after, before: before, title: t(tx.titleKey), why: t(tx.emoKey) })));
+      card.appendChild(elt('p', 'ss-wowcard__cap', t(tx.emoKey)));
+      host.appendChild(card);
+    });
+  }
+
+  // Sticky "Try AI Style Studio" button — appears after scrolling past the hero.
+  function initStickyCta() {
+    var btn = doc.getElementById('ssStickyCta');
+    var hero = doc.querySelector('.ss-hero');
+    if (!btn || !hero) return;
+    var scrollToUpload = function () {
+      var up = doc.getElementById('ssUploadBtn') || doc.getElementById('ssGenerateBest');
+      if (up) try { up.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+    };
+    btn.addEventListener('click', scrollToUpload);
+    var wowCta = doc.getElementById('ssWowCta');
+    if (wowCta) wowCta.addEventListener('click', scrollToUpload);
+    var onScroll = function () {
+      var past = (hero.getBoundingClientRect().bottom < 40);
+      btn.classList.toggle('ss-sticky-cta--show', past);
+    };
+    root.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
   }
 
   root.StyleStudioPublic = { init: init, setLang: setLang, _t: t, _state: state, _strings: SS_STRINGS, _openViewer: openViewer, _closeViewer: closeViewer, _onWigGenerate: onWigGenerate, _buildShowcase: buildShowcase, _buildGallery: buildGallery, _buildWigExamples: buildWigExamples, _buildTestimonials: buildTestimonials, _renderMasterpiece: renderMasterpiece, _openAuthPanel: openAuthPanel, _closeAuthPanel: closeAuthPanel, _openAccountPanel: openAccountPanel, _closeAccountPanel: closeAccountPanel, _customerEmailForPhone: customerEmailForPhone, _normalizePhone: normalizePhone, _isCustomerUser: isCustomerUser };

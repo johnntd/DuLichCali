@@ -978,3 +978,67 @@ body.ss-viewer-open { overflow: hidden; }
   .ss-gcard__media { height: 250px; }
   .ss-showcase-card__media { height: 260px; }
 }
+
+/* ════════════════ SP-7 — WOW front page ════════════════ */
+.ss-section-title { font-family: var(--font-d); font-weight: 400; font-size: clamp(1.5rem, 6vw, 2.1rem); color: var(--cream); text-align: center; margin: 0 0 .3rem; }
+.ss-section-sub { font-family: var(--font-b); font-size: .9rem; color: var(--muted); text-align: center; margin: 0 auto 1.2rem; max-width: 46ch; line-height: 1.5; }
+
+/* Live hero demo (upload → analyzing → before → after, looping) */
+.ss-demo { width: 100%; max-width: 420px; margin: 0 auto 1.4rem; }
+.ss-demo__stage { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: 22px; overflow: hidden; border: 1px solid rgba(192,132,252,.4); box-shadow: 0 22px 60px -28px rgba(0,0,0,.85); background: var(--navy-900); }
+.ss-demo__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 22%; }
+.ss-demo__img--after { opacity: 0; transition: opacity .7s ease; }
+.ss-demo__stage.is-after .ss-demo__img--after { opacity: 1; }
+.ss-demo__stage.is-upload .ss-demo__img--before { filter: brightness(.5) blur(2px); }
+.ss-demo__glyph { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; color: #fff; z-index: 3; }
+.ss-demo__glyph svg { width: 54px; height: 54px; opacity: .92; }
+.ss-demo__stage.is-upload .ss-demo__glyph { display: flex; }
+.ss-demo__scan { position: absolute; left: 0; right: 0; top: 0; height: 34%; z-index: 2; opacity: 0; background: linear-gradient(180deg, rgba(192,132,252,0) 0%, rgba(192,132,252,.45) 80%, rgba(255,255,255,.85) 100%); box-shadow: 0 0 24px rgba(192,132,252,.6); }
+.ss-demo__stage.is-analyzing .ss-demo__scan { opacity: 1; animation: ssScan 1.5s ease-in-out infinite; }
+@keyframes ssScan { 0% { transform: translateY(-40%); } 100% { transform: translateY(300%); } }
+.ss-demo__caption { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; padding: 1.5rem .9rem .8rem; font-family: var(--font-b); font-weight: 600; font-size: .92rem; color: #fff; text-align: center; background: linear-gradient(180deg, transparent, rgba(8,10,24,.82)); text-shadow: 0 1px 10px rgba(0,0,0,.7); }
+
+/* Before/After showcase carousel */
+.ss-ba-wrap { padding: 1.8rem 1rem .6rem; }
+.ss-ba-carousel { display: flex; align-items: flex-start; gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; padding-bottom: .6rem; }
+.ss-ba-carousel::-webkit-scrollbar { height: 6px; }
+.ss-ba-carousel::-webkit-scrollbar-thumb { background: var(--border-g); border-radius: 99px; }
+.ss-ba-card { flex: 0 0 84%; max-width: 360px; scroll-snap-align: center; background: var(--navy-800); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; box-shadow: 0 18px 48px -26px rgba(0,0,0,.85); }
+.ss-ba-card__body { padding: .9rem 1.05rem 1.1rem; }
+.ss-ba-card__title { font-family: var(--font-d); font-weight: 400; font-size: 1.2rem; color: var(--cream); margin: 0 0 .25rem; }
+.ss-ba-card__emo { font-family: var(--font-b); font-size: .85rem; color: var(--muted); margin: 0; line-height: 1.45; }
+
+/* WOW section */
+.ss-wow { padding: 2rem 1rem .8rem; text-align: center; background: radial-gradient(120% 80% at 50% 0%, rgba(192,132,252,.12) 0%, transparent 60%); }
+.ss-wow__grid { display: grid; grid-template-columns: 1fr; gap: 1rem; max-width: 760px; margin: 0 auto 1.2rem; }
+.ss-wowcard { border-radius: 20px; overflow: hidden; border: 1px solid rgba(192,132,252,.35); }
+.ss-wowcard__cap { font-family: var(--font-b); font-size: .9rem; color: var(--cream); margin: 0; padding: .7rem .9rem; background: var(--navy-800); }
+.ss-wow__cta { max-width: 360px; margin: 0 auto; }
+
+/* Success stories */
+.ss-stories-wrap { padding: 1.8rem 1rem .6rem; }
+.ss-stories { display: flex; align-items: flex-start; gap: .9rem; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; padding-bottom: .6rem; }
+.ss-story { flex: 0 0 70%; max-width: 280px; scroll-snap-align: center; display: flex; flex-direction: column; gap: .5rem; padding: 0; background: transparent; border: 0; cursor: pointer; text-align: left; }
+.ss-story__pair { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem; }
+.ss-story__fig { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 1 / 1; }
+.ss-story__fig img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
+.ss-story__tag { position: absolute; left: .35rem; bottom: .35rem; font-family: var(--font-b); font-weight: 700; font-size: .6rem; text-transform: uppercase; letter-spacing: .04em; color: #fff; background: rgba(8,10,24,.6); padding: .15rem .4rem; border-radius: 6px; }
+.ss-story__fig--after .ss-story__tag { background: linear-gradient(135deg, #c084fc, var(--gold)); color: var(--navy-900); }
+.ss-story__label { font-family: var(--font-b); font-weight: 600; font-size: .82rem; color: var(--cream); }
+
+/* Sticky "Try AI Style Studio" CTA */
+.ss-sticky-cta { position: fixed; left: 50%; bottom: 1rem; transform: translate(-50%, 220%); z-index: 60; display: inline-flex; align-items: center; gap: .4rem; min-height: 48px; padding: .7rem 1.4rem; border: 0; border-radius: 99px; background: linear-gradient(135deg, var(--gold) 0%, #d9bd6a 100%); color: var(--navy-900); font-family: var(--font-b); font-weight: 700; font-size: .9rem; box-shadow: 0 10px 30px -8px rgba(0,0,0,.6); cursor: pointer; transition: transform .3s ease; }
+.ss-sticky-cta--show { transform: translate(-50%, 0); }
+
+@media (min-width: 768px) {
+  .ss-ba-card { flex-basis: 46%; }
+  .ss-story { flex-basis: 32%; }
+  .ss-wow__grid { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 1200px) {
+  .ss-ba-card { flex-basis: 31%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ss-demo__stage.is-analyzing .ss-demo__scan { animation: none; }
+  .ss-sticky-cta { transition: none; }
+}

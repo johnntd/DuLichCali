@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260419m">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/style-studio.css?v=20260614f">
+  <link rel="stylesheet" href="/style-studio.css?v=20260614g">
 
   <!-- Google Analytics 4 -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-5S0P4XMCJR"></script>
@@ -67,6 +67,9 @@
       <p class="ss-hero__sub" data-ss-i18n="heroSub"></p>
       <p class="ss-hero__benefit" data-ss-i18n="heroBenefit"></p>
 
+      <!-- SP-7: live animated demo — upload → analyzing → before → after (loops) -->
+      <div class="ss-demo" id="ssHeroDemo" aria-hidden="true"></div>
+
       <div class="ss-flagship">
         <label class="ss-consent">
           <input type="checkbox" id="ssConsent">
@@ -99,6 +102,27 @@
         <div class="ss-master-result" id="ssMasterResult"></div>
       </div>
     </div>
+  </section>
+
+  <!-- SP-7: Before → After showcase carousel -->
+  <section class="ss-ba-wrap" id="ssBaWrap">
+    <h2 class="ss-section-title" data-ss-i18n="baTitle"></h2>
+    <p class="ss-section-sub" data-ss-i18n="baSub"></p>
+    <div class="ss-ba-carousel" id="ssBaShowcase" role="list"></div>
+  </section>
+
+  <!-- SP-7: WOW — "What would you look like?" -->
+  <section class="ss-wow" id="ssWowWrap">
+    <h2 class="ss-section-title" data-ss-i18n="wowTitle"></h2>
+    <p class="ss-section-sub" data-ss-i18n="wowSub"></p>
+    <div class="ss-wow__grid" id="ssWow"></div>
+    <button class="ss-cta ss-wow__cta" id="ssWowCta" type="button" data-ss-i18n="wowCta"></button>
+  </section>
+
+  <!-- SP-7: Success stories -->
+  <section class="ss-stories-wrap" id="ssStoriesWrap">
+    <h2 class="ss-section-title" data-ss-i18n="storiesTitle"></h2>
+    <div class="ss-stories" id="ssStories" role="list"></div>
   </section>
 
   <!-- 3. AI Style Showcase — swipeable carousel -->
@@ -176,6 +200,9 @@
 
 </div>
 
+<!-- SP-7: floating "Try AI Style Studio" CTA (shown after scrolling past the hero) -->
+<button class="ss-sticky-cta" id="ssStickyCta" type="button"><span aria-hidden="true">✨</span> <span data-ss-i18n="stickyCta"></span></button>
+
 <!-- Firebase compat SDK + anon-auth + Style Studio engine -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -193,6 +220,6 @@
   if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 </script>
 <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260613a"></script>
-<script src="/style-studio-public.js?v=20260614f"></script>
+<script src="/style-studio-public.js?v=20260614g"></script>
 </body>
 </html>

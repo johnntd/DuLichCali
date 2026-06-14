@@ -2581,6 +2581,11 @@ function normalizeHaircutPref(v) {
 }
 
 const IDENTITY_CLAUSE = 'CRITICAL — IDENTITY LOCK: keep the EXACT SAME PERSON from the photo — same face, same facial features and bone structure, same ethnicity and skin tone, same age, same gender presentation, same eyes, nose, mouth and complexion. Do NOT swap in a different model and do NOT beautify or change the face. Change ONLY the hair (and hair color where stated). Photorealistic, natural lighting, head-and-shoulders portrait, sharp focus.';
+// Wig + hair-system modes are full-hair REPLACEMENTS, not in-place edits. The
+// in-place IDENTITY_CLAUSE ("change ONLY the hair") contradicts the task and
+// makes the image model produce weak/empty output, so those modes use this
+// replacement-forcing clause instead (still locks identity).
+const REPLACE_HAIR_CLAUSE = 'CRITICAL — IDENTITY LOCK: preserve the person\'s identity, face shape, eyes, nose, lips, skin tone and age — do NOT swap the person or beautify the face. REPLACE the existing hair with the selected style. Blend it naturally with the lighting, hairline and head position so it looks realistic and natural, NOT costume-like or like a wig cap. Photorealistic, natural lighting, head-and-shoulders portrait, sharp focus.';
 const CHILD_SAFETY_CLAUSE = ' This subject is a CHILD: keep them clearly the same child of the same age, with wholesome, school-appropriate kid styling only — no adult/edgy looks, no facial hair, no aging.';
 
 // audience → instruction phrasing for the analysis model
@@ -2791,13 +2796,22 @@ async function callGeminiHaircutAnalysis(geminiKey, base64, mimeType, promptText
   return extractHaircutJson(text);
 }
 
-function normalizeHaircutStyle(s, audience, idx) {
+function normalizeHaircutStyle(s, audience, idx, mode) {
   s = s || {};
   var title = String(s.styleTitle || s.title || '').trim() || ('Style ' + (idx + 1));
   var childClause = (audience === 'child') ? CHILD_SAFETY_CLAUSE : '';
+  // wig / hair-system need actual replacement; every other mode is an in-place edit.
+  var isReplace = (mode === 'wig' || mode === 'hairsystem');
+  var lockClause = isReplace ? REPLACE_HAIR_CLAUSE : IDENTITY_CLAUSE;
   var edit = String(s.imageEditPrompt || s.editPrompt || '').trim();
-  if (edit && edit.toUpperCase().indexOf('IDENTITY LOCK') < 0) edit += ' ' + IDENTITY_CLAUSE + childClause;
-  if (!edit) edit = 'Restyle the subject’s hair into "' + title + '". ' + IDENTITY_CLAUSE + childClause;
+  if (isReplace && edit) {
+    // Force the replacement clause even if the vision model already emitted an
+    // in-place identity lock — wig/hair-system must visibly replace the hair.
+    edit += ' ' + lockClause + childClause;
+  } else if (edit && edit.toUpperCase().indexOf('IDENTITY LOCK') < 0) {
+    edit += ' ' + lockClause + childClause;
+  }
+  if (!edit) edit = (isReplace ? 'Replace the subject’s hair with "' : 'Restyle the subject’s hair into "') + title + '". ' + lockClause + childClause;
   var aud = String(s.targetAudience || '').toLowerCase();
   var sid = String(s.styleId || ('style-' + (idx + 1))).toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
   return {
@@ -2829,7 +2843,7 @@ async function planHaircutStyles(geminiKey, base64, mimeType, opts) {
     var plan = await callGeminiHaircutAnalysis(geminiKey, base64, mimeType, prompt);
     analysisText = String((plan && plan.analysis) || '').trim();
     var raw = (plan && Array.isArray(plan.styles)) ? plan.styles : [];
-    styles = raw.map(function (s, i) { return normalizeHaircutStyle(s, audience, i); })
+    styles = raw.map(function (s, i) { return normalizeHaircutStyle(s, audience, i, 'haircut'); })
                 .filter(function (s) { return s.imageEditPrompt; });
     analysisOk = styles.length > 0;
   } catch (e) {
@@ -2837,7 +2851,7 @@ async function planHaircutStyles(geminiKey, base64, mimeType, opts) {
   }
   if (styles.length < 5) {
     var scaffold = buildHaircutScaffold(audience, exploreList, lang)
-                     .map(function (s, i) { return normalizeHaircutStyle(s, audience, i); });
+                     .map(function (s, i) { return normalizeHaircutStyle(s, audience, i, 'haircut'); });
     var seen = {};
     styles.forEach(function (s) { seen[s.styleId] = true; });
     for (var i = 0; i < scaffold.length && styles.length < 5; i++) {
@@ -3063,7 +3077,7 @@ async function runStudioPlan(geminiKey, base64, mimeType, opts) {
   };
   const rawStyles = (plan && Array.isArray(plan.styles)) ? plan.styles : [];
   const styles = rawStyles
-    .map((s, i) => normalizeHaircutStyle(s, opts.audience, i)) // reused: appends IDENTITY/CHILD clauses
+    .map((s, i) => normalizeHaircutStyle(s, opts.audience, i, opts.mode)) // mode selects in-place vs replacement clause
     .filter((s) => s.imageEditPrompt)
     .slice(0, 5);
   return { analysis, styles };

@@ -63,4 +63,12 @@ assert.ok(!/\.set\(|\.add\(|\.update\(|uploadBytes|putString/.test(studioSrc.rep
   'studio module performs no Firestore/Storage write'); ok('studio writes nothing server-side');
 assert.ok(/localStorage/.test(studioSrc), 'studio uses localStorage for favorites/cache'); ok('studio uses localStorage');
 
+// Guard: wig/hair-system replacement fix — mode-aware clause is wired correctly.
+assert.ok(/const REPLACE_HAIR_CLAUSE\s*=/.test(src), 'REPLACE_HAIR_CLAUSE defined'); ok('REPLACE_HAIR_CLAUSE present');
+assert.ok(/function normalizeHaircutStyle\(s, audience, idx, mode\)/.test(src), 'normalizeHaircutStyle takes mode'); ok('normalizeHaircutStyle mode param');
+assert.ok(/mode === 'wig' \|\| mode === 'hairsystem'/.test(src), 'wig/hairsystem select replacement clause'); ok('replace-mode selection');
+// generateHaircutPreviews codepath must stay in-place: its calls pass 'haircut'.
+assert.ok((src.match(/normalizeHaircutStyle\(s, audience, i, 'haircut'\)/g) || []).length >= 2, 'planHaircutStyles pins haircut mode'); ok('haircut mode pinned (no regression)');
+assert.ok(/normalizeHaircutStyle\(s, opts\.audience, i, opts\.mode\)/.test(src), 'studio passes opts.mode'); ok('studio passes mode');
+
 console.log(`\nstyle-studio pure tests: ${n} passed`);

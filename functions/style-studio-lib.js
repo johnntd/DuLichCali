@@ -69,7 +69,8 @@ function normalizeStudioScores(raw) {
   raw = raw || {};
   const out = {};
   SCORE_KEYS.forEach((k) => {
-    const v = Number(raw[k]);
+    const r = raw[k];
+    const v = (typeof r === 'number' || typeof r === 'string') ? Number(r) : NaN;
     out[k] = Number.isFinite(v) ? Math.max(0, Math.min(100, Math.round(v))) : null;
   });
   return out;

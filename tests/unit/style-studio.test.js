@@ -34,4 +34,17 @@ assert.strictEqual(sc.professional, 0, 'under clamps to 0'); ok('scores clamp lo
 assert.strictEqual(sc.confidence, 70, 'string coerced'); ok('scores coerce string');
 assert.strictEqual(sc.softness, null, 'missing -> null'); ok('scores missing null');
 
+// normalizeStudioScores rejects booleans, arrays, and objects (returns null)
+const scBad = S.normalizeStudioScores({ professional: true, confidence: false, symmetry: [50], softness: {} });
+assert.strictEqual(scBad.professional, null, 'boolean true -> null'); ok('scores boolean true -> null');
+assert.strictEqual(scBad.confidence, null, 'boolean false -> null'); ok('scores boolean false -> null');
+assert.strictEqual(scBad.symmetry, null, 'array -> null'); ok('scores array -> null');
+assert.strictEqual(scBad.softness, null, 'object -> null'); ok('scores object -> null');
+
+// normalizeStudioOptions: bad values fall back to defaults AND missing keys use default
+assert.deepStrictEqual(
+  S.normalizeStudioOptions('beard', { length: 'short', density: 'bogus' }),
+  { length: 'short', density: 'natural', shape: 'rounded' }
+); ok('beard options: valid kept, bad->default, missing->default');
+
 console.log(`\nstyle-studio pure tests: ${n} passed`);

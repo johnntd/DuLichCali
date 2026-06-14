@@ -2571,6 +2571,25 @@
     tick(); state._demoTimer = root.setInterval(tick, 1700);
   }
 
+  // Static before/after split for the SWIPEABLE carousel — a fixed 50/50 reveal
+  // with NO drag handler and NO touch-action lock, so a horizontal swipe scrolls
+  // the carousel (the draggable compare slider lives in the full-screen viewer on
+  // tap). Avoids the gesture conflict that blocked carousel swiping.
+  function staticBeforeAfter(afterSrc, beforeSrc, onTap) {
+    var box = elt('button', 'ss-split'); box.type = 'button';
+    box.setAttribute('aria-label', t('beforeAfter'));
+    var a = doc.createElement('img'); a.className = 'ss-split__img'; a.src = afterSrc; a.alt = ''; a.loading = 'lazy';
+    box.appendChild(a);
+    var clip = elt('div', 'ss-split__clip');
+    var bi = doc.createElement('img'); bi.className = 'ss-split__img'; bi.src = beforeSrc; bi.alt = ''; bi.loading = 'lazy';
+    clip.appendChild(bi); box.appendChild(clip);
+    box.appendChild(elt('span', 'ss-split__divider'));
+    box.appendChild(elt('span', 'ss-split__lbl ss-split__lbl--before', t('before')));
+    box.appendChild(elt('span', 'ss-split__lbl ss-split__lbl--after', t('after')));
+    box.addEventListener('click', onTap);
+    return box;
+  }
+
   // Before/After showcase — swipeable carousel of the transformation pairs.
   function buildBaShowcase() {
     var host = doc.getElementById('ssBaShowcase');
@@ -2580,7 +2599,7 @@
       var card = elt('article', 'ss-ba-card');
       var after = txSrc(tx.key, 'after'), before = txSrc(tx.key, 'before');
       var item = { src: after, before: before, title: t(tx.titleKey), why: t(tx.emoKey) };
-      var ba = buildBeforeAfter(after, before, (function (it) { return function () { openViewer([it], 0); }; })(item));
+      var ba = staticBeforeAfter(after, before, (function (it) { return function () { openViewer([it], 0); }; })(item));
       card.appendChild(ba);
       var body = elt('div', 'ss-ba-card__body');
       body.appendChild(elt('h3', 'ss-ba-card__title', t(tx.titleKey)));

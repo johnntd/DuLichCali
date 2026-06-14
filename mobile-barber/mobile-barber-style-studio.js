@@ -218,6 +218,109 @@
     root.setTimeout(function () { el.hidden = true; }, 2600);
   }
 
+  function renderResults(container, recs) {
+    if (!container) return;
+    container.innerHTML = '';
+    (recs || []).forEach(function (rec) {
+      var imgSrc = rec.previewDataUrl || '';
+      var card = elt('article', 'mb-studio-card'); card.setAttribute('data-style-id', rec.styleId || '');
+      if (imgSrc) {
+        var img = root.document.createElement('img'); img.className = 'mb-studio-card__img'; img.src = imgSrc; img.alt = rec.title || ''; img.loading = 'lazy';
+        img.addEventListener('click', function () { openLightbox(imgSrc, rec.title || ''); });
+        card.appendChild(img);
+      }
+      if (rec.previewKind === 'style_inspiration') card.appendChild(elt('span', 'mb-studio-card__insp', '★'));
+      card.appendChild(elt('strong', 'mb-studio-card__title', rec.title || ''));
+      if (rec.whyItFitsFace) card.appendChild(elt('p', 'mb-studio-card__why', rec.whyItFitsFace));
+      if (rec.maintenance) card.appendChild(elt('p', 'mb-studio-card__meta', rec.maintenance));
+      if (rec.barberNotes) card.appendChild(elt('p', 'mb-studio-card__notes', rec.barberNotes));
+      [['colorRecommendation'], ['highlightRecommendation'], ['curlStraightRecommendation']].forEach(function (k) {
+        if (rec[k[0]]) card.appendChild(elt('p', 'mb-studio-card__rec', rec[k[0]]));
+      });
+
+      var actions = elt('div', 'mb-studio-card__actions');
+      var saveBtn = elt('button', 'mb-button mb-button--ghost mb-button--sm', t('saveToPhone')); saveBtn.type = 'button';
+      saveBtn.addEventListener('click', function () { saveToPhone(imgSrc, rec); });
+      var favBtn = elt('button', 'mb-button mb-button--ghost mb-button--sm', isFav(rec.styleId) ? t('unfavorite') : t('favorite')); favBtn.type = 'button';
+      favBtn.addEventListener('click', function () { toggleFav(rec, imgSrc); favBtn.textContent = isFav(rec.styleId) ? t('unfavorite') : t('favorite'); });
+      var cmpBtn = elt('button', 'mb-button mb-button--ghost mb-button--sm', t('compare')); cmpBtn.type = 'button';
+      cmpBtn.addEventListener('click', function () { addCompare(rec, imgSrc); });
+      actions.appendChild(saveBtn); actions.appendChild(favBtn); actions.appendChild(cmpBtn);
+      card.appendChild(actions);
+      container.appendChild(card);
+
+      // Cache FULL-res to localStorage on this device only (reuses AIP helper).
+      var AIP = root.MobileBarberAIPreview;
+      if (AIP && typeof AIP.saveLocalCopy === 'function' && imgSrc) {
+        try { AIP.saveLocalCopy(state.sessionId, rec.styleId || '', imgSrc); } catch (e) {}
+      }
+    });
+  }
+
+  function openLightbox(src, caption) {
+    if (!src || !root.MBLightbox || !root.MBLightbox.open) return;
+    root.MBLightbox.open(src, { caption: caption || '', closeLabel: 'Close', ariaLabel: caption || 'Preview' });
+  }
+
+  // Save-to-phone: trigger a native download of the full-res data URL. No upload.
+  function saveToPhone(src, rec) {
+    if (!src) return;
+    var a = root.document.createElement('a');
+    a.href = src; a.download = ((rec && rec.styleId) || 'style') + '.jpg';
+    root.document.body.appendChild(a); a.click(); root.document.body.removeChild(a);
+  }
+
+  // Favorites: session/local only — NO Firestore. Stores text ref + on-device key.
+  var FAV_KEY = 'mb_studio_favorites';
+  function readFavs() { try { return JSON.parse(root.localStorage.getItem(FAV_KEY) || '[]'); } catch (e) { return []; } }
+  function writeFavs(list) { try { root.localStorage.setItem(FAV_KEY, JSON.stringify(list.slice(0, 60))); } catch (e) {} }
+  function isFav(id) { return readFavs().some(function (f) { return f.styleId === id; }); }
+  function toggleFav(rec, imgSrc) {
+    var list = readFavs(); var id = rec.styleId || '';
+    if (list.some(function (f) { return f.styleId === id; })) {
+      list = list.filter(function (f) { return f.styleId !== id; });
+    } else {
+      // text reference only (+ local cache key); no image bytes in this store.
+      list.push({ styleId: id, title: rec.title || '', mode: state.mode, sessionId: state.sessionId,
+                  whyItFitsFace: rec.whyItFitsFace || '', barberNotes: rec.barberNotes || '' });
+    }
+    writeFavs(list);
+  }
+  function renderFavorites() {
+    var wrap = elt('div', 'mb-studio-panel__body mb-studio-favorites');
+    var list = readFavs();
+    if (!list.length) { wrap.appendChild(elt('p', 'mb-studio-empty', '—')); return wrap; }
+    list.forEach(function (f) {
+      var row = elt('div', 'mb-studio-fav-row');
+      var AIP = root.MobileBarberAIPreview;
+      var cached = AIP && AIP.readLocalCopy ? AIP.readLocalCopy(f.sessionId, f.styleId) : '';
+      if (cached) { var im = root.document.createElement('img'); im.src = cached; im.alt = ''; row.appendChild(im); }
+      row.appendChild(elt('span', null, f.title || f.styleId));
+      wrap.appendChild(row);
+    });
+    return wrap;
+  }
+
+  // Compare: side-by-side (the existing MBLightbox is single-image). Collect 2.
+  function addCompare(rec, imgSrc) {
+    if (!imgSrc) return;
+    state.compareIds = (state.compareIds || []).concat([{ src: imgSrc, title: rec.title || '' }]).slice(-2);
+    if (state.compareIds.length === 2) showCompare();
+  }
+  function showCompare() {
+    var existing = root.document.getElementById('mbStudioCompare'); if (existing) existing.remove();
+    var ov = elt('div', 'mb-studio-compare'); ov.id = 'mbStudioCompare';
+    state.compareIds.forEach(function (c) {
+      var fig = elt('figure', 'mb-studio-compare__col');
+      var im = root.document.createElement('img'); im.src = c.src; im.alt = c.title; fig.appendChild(im);
+      fig.appendChild(elt('figcaption', null, c.title)); ov.appendChild(fig);
+    });
+    var close = elt('button', 'mb-studio-compare__close', '×'); close.type = 'button';
+    close.addEventListener('click', function () { ov.remove(); state.compareIds = []; });
+    ov.appendChild(close);
+    root.document.body.appendChild(ov);
+  }
+
   // Thin client for the vendor callable. Mirrors mobile-barber-ai-preview.js
   // generate() but targets generateStyleStudio and passes mode/options/goal.
   function callStudio(opts) {

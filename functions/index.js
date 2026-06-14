@@ -21,7 +21,7 @@
  */
 
 const { onDocumentCreated, onDocumentWritten } = require('firebase-functions/v2/firestore');
-const { onCall, onRequest } = require('firebase-functions/v2/https');
+const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https');
 const { onSchedule }        = require('firebase-functions/v2/scheduler');
 const { defineSecret }      = require('firebase-functions/params');
 const admin                 = require('firebase-admin');
@@ -32,6 +32,8 @@ const path                  = require('path');
 const fs                    = require('fs');
 const ffmpegPath            = require('ffmpeg-static');
 const ffmpeg                = require('fluent-ffmpeg');
+// Pure, dependency-free Style Studio helpers (unit-tested in tests/unit/style-studio.test.js).
+const StudioLib             = require('./style-studio-lib.js');
 
 // ── Secrets (Google Cloud Secret Manager) ────────────────────────────────────
 // These are injected at runtime — never stored in code or .env files.
@@ -3008,6 +3010,149 @@ exports.generateHaircutPreviews = onCall(
       provider: 'gemini-2.5-flash-image',
       generationTimeMs: tookMs,
       successCount: successful.length
+    };
+  }
+);
+
+// ────────────────────────────────────────────────────────────────────────
+// AI STYLE STUDIO — vendor-only expansion of the AI hairstyle engine.
+// Isolated from generateHaircutPreviews (which stays public + unchanged).
+// Reuses the same Gemini vision + image-edit helpers. No images persist.
+// ────────────────────────────────────────────────────────────────────────
+
+// Require an authenticated mobile-barber VENDOR. Customers (anonymous on the
+// /mobile-barber landing) must NOT be able to call the studio.
+async function requireMobileBarberVendor(request) {
+  const auth = request.auth;
+  if (!auth || !auth.uid) {
+    throw new HttpsError('unauthenticated', 'Sign in as a vendor to use the Style Studio.');
+  }
+  const provider = auth.token && auth.token.firebase && auth.token.firebase.sign_in_provider;
+  if (provider === 'anonymous') {
+    throw new HttpsError('permission-denied', 'Anonymous users cannot use the Style Studio.');
+  }
+  // vendorUsers/{uid} maps an authed user to a vendor (same rule as the portal's
+  // isPortalVendorUser()). Uses the module-scoped `db` (admin.firestore()).
+  const snap = await db.collection('vendorUsers').doc(auth.uid).get();
+  if (!snap.exists) {
+    throw new HttpsError('permission-denied', 'This account is not a registered vendor.');
+  }
+  return snap.data() || {};
+}
+
+// Plan analysis + 5 styles for a studio mode. Mirrors planHaircutStyles but
+// with the richer analysis schema (features + scores + strategy + thinning).
+async function runStudioPlan(geminiKey, base64, mimeType, opts) {
+  const prompt = StudioLib.buildStudioAnalysisPrompt(
+    opts.mode, opts.options, opts.audience, opts.preference, opts.goal, opts.lang
+  );
+  const plan = await callGeminiHaircutAnalysis(geminiKey, base64, mimeType, prompt); // reused vision call
+  const rawAnalysis = (plan && plan.analysis) || {};
+  const analysis = {
+    features: (rawAnalysis.features && typeof rawAnalysis.features === 'object') ? rawAnalysis.features : {},
+    scores: StudioLib.normalizeStudioScores(rawAnalysis.scores),
+    strategy: {
+      emphasize: Array.isArray(rawAnalysis.strategy && rawAnalysis.strategy.emphasize) ? rawAnalysis.strategy.emphasize.slice(0, 6) : [],
+      balance: Array.isArray(rawAnalysis.strategy && rawAnalysis.strategy.balance) ? rawAnalysis.strategy.balance.slice(0, 6) : [],
+    },
+    thinning: {
+      level: ['none', 'mild', 'moderate', 'advanced'].indexOf(String(rawAnalysis.thinning && rawAnalysis.thinning.level)) >= 0
+        ? rawAnalysis.thinning.level : 'none',
+      note: String((rawAnalysis.thinning && rawAnalysis.thinning.note) || '').trim(),
+    },
+  };
+  const rawStyles = (plan && Array.isArray(plan.styles)) ? plan.styles : [];
+  const styles = rawStyles
+    .map((s, i) => normalizeHaircutStyle(s, opts.audience, i)) // reused: appends IDENTITY/CHILD clauses
+    .filter((s) => s.imageEditPrompt)
+    .slice(0, 5);
+  return { analysis, styles };
+}
+
+exports.generateStyleStudio = onCall(
+  {
+    region: 'us-central1',
+    secrets: [GEMINI_API_KEY],
+    timeoutSeconds: 300,
+    memory: '1GiB',
+    cors: true,
+  },
+  async (request) => {
+    await requireMobileBarberVendor(request); // throws HttpsError on non-vendor
+
+    const data = request.data || {};
+    const mode = StudioLib.normalizeStudioMode(data.mode);
+    const audience = StudioLib.audienceForMode(mode, data.audience);
+    const options = StudioLib.normalizeStudioOptions(mode, data.options);
+    const preference = StudioLib.normalizeStudioPref(data.preference);
+    const goal = StudioLib.normalizeStudioGoal(data.goal);
+    const langParam = String(data.lang || 'en').toLowerCase();
+    const lang = HAIRCUT_LANG_NAME[langParam] ? langParam : 'en';
+
+    const rawDataUrl = String(data.selfieDataUrl || '');
+    if (rawDataUrl.indexOf('data:image/') !== 0) {
+      return { ok: false, vendorMessage: 'Missing or invalid selfie image.', debugCode: 'INVALID_INPUT' };
+    }
+    const match = rawDataUrl.match(/^data:(image\/(?:jpeg|png|webp));base64,(.+)$/);
+    if (!match) return { ok: false, vendorMessage: 'Selfie format not supported (use JPEG/PNG/WebP).', debugCode: 'BAD_MIME' };
+    const mimeType = match[1];
+    const base64 = match[2];
+    if (base64.length > 1_500_000) {
+      return { ok: false, vendorMessage: 'Selfie is too large. Please use a smaller photo.', debugCode: 'IMAGE_TOO_LARGE' };
+    }
+
+    const geminiKey = await getAiKey('gemini');
+    if (!geminiKey) {
+      return { ok: false, vendorMessage: 'AI Style Studio is temporarily unavailable.', debugCode: 'NO_GEMINI_KEY' };
+    }
+
+    const t0 = Date.now();
+    let plan;
+    try {
+      plan = await runStudioPlan(geminiKey, base64, mimeType, { mode, options, audience, preference, goal, lang });
+    } catch (e) {
+      console.error('[generateStyleStudio] planning failure', e);
+      return { ok: false, vendorMessage: 'Style Studio analysis failed. Please try again.', debugCode: 'PLAN_ERROR' };
+    }
+    const styles = (plan && plan.styles) || [];
+    if (!styles.length) {
+      return { ok: false, vendorMessage: 'Style Studio returned no styles. Try a clearer photo.', debugCode: 'PLAN_EMPTY' };
+    }
+
+    let recommendations;
+    try {
+      recommendations = await Promise.all(styles.map(async (style) => {
+        const baseRec = {
+          styleId: style.styleId, title: style.styleTitle, styleTitle: style.styleTitle,
+          targetAudience: style.targetAudience, explanation: style.description, description: style.description,
+          whyItFitsFace: style.whyItFitsFace, maintenance: style.maintenanceLevel, maintenanceLevel: style.maintenanceLevel,
+          barberNotes: style.haircutInstructionsForBarber, haircutInstructionsForBarber: style.haircutInstructionsForBarber,
+          colorRecommendation: style.colorRecommendation, highlightRecommendation: style.highlightRecommendation,
+          curlStraightRecommendation: style.curlStraightRecommendation, confidence: style.confidence,
+          safetyNotes: style.safetyNotes,
+        };
+        try {
+          const edit = await callGeminiImageEdit(geminiKey, base64, mimeType, style.imageEditPrompt); // reused
+          return Object.assign({}, baseRec, {
+            previewDataUrl: edit.dataUrl,
+            previewKind: (style.confidence >= 0.5) ? 'your_preview' : 'style_inspiration',
+          });
+        } catch (e) {
+          return Object.assign({}, baseRec, { previewDataUrl: '', previewKind: 'style_inspiration', error: (e && e.message) || 'edit_failed' });
+        }
+      }));
+    } catch (e) {
+      console.error('[generateStyleStudio] image edit failure', e);
+      return { ok: false, vendorMessage: 'Style Studio could not render previews. Please try again.', debugCode: 'EDIT_ERROR' };
+    }
+
+    return {
+      ok: true,
+      mode, audience, options, preference, goal,
+      analysis: plan.analysis,            // vendor-only; caller must NOT persist
+      recommendations,
+      provider: 'gemini-2.5-flash-image',
+      generationTimeMs: Date.now() - t0,
     };
   }
 );

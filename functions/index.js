@@ -3286,16 +3286,24 @@ function requireAuthedGuest(request) {
 // READ-ONLY: resolve today's free-preview limit and how many this uid has used.
 // No write — the counter is incremented AFTER a successful generation so a failed
 // render does not consume a free preview.
-async function checkPublicQuota(uid) {
+async function checkPublicQuota(uid, isAnonymous) {
   const promo = await getStyleStudioPromo();
   const todayISO = new Date().toISOString().slice(0, 10);
-  const limit = StudioLib.resolveDailyLimit(promo, todayISO);
+  // GUEST (anonymous) = the 14-day launch promo limit (resolveDailyLimit → 0
+  // once the promo ends, which triggers the create-account wall). A logged-in
+  // MEMBER is NOT a guest: they get a generous member daily limit and must NEVER
+  // be shown "create a free account" — they already have one. Member limit is
+  // configurable via config/styleStudioPromo.memberGenerationsPerUser (default 100).
+  const guestLimit = StudioLib.resolveDailyLimit(promo, todayISO);
+  const memberLimit = (promo && Number(promo.memberGenerationsPerUser) > 0)
+    ? Math.floor(promo.memberGenerationsPerUser) : 100;
+  const limit = isAnonymous ? guestLimit : memberLimit;
   let used = 0;
   try {
     const snap = await db.collection('styleStudioUsage').doc(uid).collection('days').doc(todayISO).get();
     used = (snap.exists && Number(snap.data().count)) || 0;
   } catch (e) { used = 0; }
-  return { allowed: used < limit, limit, used, today: todayISO };
+  return { allowed: used < limit, limit, used, today: todayISO, isAnonymous: !!isAnonymous };
 }
 
 // Transactionally bump the per-uid daily counter (called only on ok:true).
@@ -3317,6 +3325,11 @@ exports.generateStyleStudioPublic = onCall(
   },
   async (request) => {
     const uid = requireAuthedGuest(request); // anonymous OK; throws only if unauthenticated
+    // Distinguish a GUEST (anonymous session) from a logged-in MEMBER (real
+    // account). Members are never subject to the guest promo/create-account wall.
+    const signInProvider = request.auth && request.auth.token && request.auth.token.firebase &&
+      request.auth.token.firebase.sign_in_provider;
+    const isAnonymous = (signInProvider === 'anonymous');
 
     const data = request.data || {};
     // The public callable allows the flagship 'master' mode (the vendor studio
@@ -3347,11 +3360,21 @@ exports.generateStyleStudioPublic = onCall(
     }
 
     // READ-ONLY quota check first (no write yet — count only after a success).
-    const q = await checkPublicQuota(uid);
+    const q = await checkPublicQuota(uid, isAnonymous);
     if (!q.allowed) {
+      if (isAnonymous) {
+        // Guest over the free-preview limit → the create-account wall.
+        return {
+          ok: false, code: 'LIMIT_REACHED', requireLogin: true,
+          vendorMessage: 'You have used your free previews. Create a free account to keep going.',
+          limit: q.limit,
+        };
+      }
+      // Logged-in MEMBER over their generous daily limit → a "try again
+      // tomorrow" message, NOT a create-account prompt (they already have one).
       return {
-        ok: false, code: 'LIMIT_REACHED', requireLogin: true,
-        vendorMessage: 'You have used your free previews. Create a free account to keep going.',
+        ok: false, code: 'DAILY_LIMIT', requireLogin: false,
+        vendorMessage: 'You have reached today\'s limit. Please try again tomorrow.',
         limit: q.limit,
       };
     }

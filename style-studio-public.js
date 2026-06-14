@@ -1,6 +1,6 @@
 'use strict';
 // ─────────────────────────────────────────────────────────────────────────
-// AI Style Studio — PUBLIC client  (style-studio-public.js?v=20260613f)
+// AI Style Studio — PUBLIC client  (style-studio-public.js?v=20260613g)
 //
 // Powers /style-studio: the one-click AI Master Stylist hero + the 9 manual
 // modes. Signs the visitor in with Firebase ANONYMOUS auth, then calls the
@@ -1212,7 +1212,7 @@
     if (!host) return;
     host.innerHTML = '';
     var slides = [
-      { key: 'sc1', icon: 'stylist', accent: 'a', action: scrollToFlagship },
+      { key: 'sc1', icon: 'stylist', accent: 'a', action: function () { scrollToFlagship(); onGenerateBest(); } },
       { key: 'sc2', icon: 'wig', accent: 'b', action: scrollToWigMatch },
       { key: 'sc3', icon: 'color', accent: 'c', action: function () { openModePanel('color'); } },
       { key: 'sc4', icon: 'groom', accent: 'd', action: function () { openModePanel('eyebrow'); } },

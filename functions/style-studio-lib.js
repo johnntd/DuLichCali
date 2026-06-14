@@ -28,7 +28,11 @@ const STUDIO_MODES = {
 
 const STUDIO_AUDIENCES = ['man', 'woman', 'child', 'neutral'];
 const STUDIO_PREFS = ['professional', 'trendy', 'low_maintenance', 'natural', 'bold'];
-const STUDIO_GOALS = ['professional', 'youthful', 'elegant', 'masculine', 'feminine', 'soft', 'confident', 'vacation', 'wedding', 'party'];
+const STUDIO_GOALS = ['professional', 'youthful', 'elegant', 'executive', 'natural', 'confident', 'wedding', 'vacation', 'party', 'business', 'soft', 'masculine', 'feminine', 'cute', 'glamorous'];
+
+// Master Stylist composite attributes the model may auto-decide for the single
+// best look. Used by normalizeMasterpiece to coerce the model's object safely.
+const MASTER_ATTR_KEYS = ['haircut', 'color', 'texture', 'bangs', 'eyebrows', 'beard', 'wigOrSystem'];
 
 function normalizeStudioMode(v) {
   const m = String(v || '').toLowerCase().trim();
@@ -104,9 +108,46 @@ function buildStudioAnalysisPrompt(mode, options, audience, preference, goal, la
   ].join('\n');
 }
 
+// ── Master Stylist (one-click best look) ─────────────────────────────────────
+// Coerce the model's `bestLook` object into a safe masterpiece shape. Null-safe:
+// always returns string fields + an attributes object (possibly empty).
+function normalizeMasterpiece(raw) {
+  raw = raw || {};
+  const attrsIn = (raw.attributes && typeof raw.attributes === 'object' && !Array.isArray(raw.attributes)) ? raw.attributes : {};
+  const attributes = {};
+  MASTER_ATTR_KEYS.forEach((k) => { if (attrsIn[k]) attributes[k] = String(attrsIn[k]).trim(); });
+  return {
+    title: String(raw.title || raw.styleTitle || 'Your best look').trim(),
+    explanation: String(raw.explanation || raw.whyItFitsFace || '').trim(),
+    imageEditPrompt: String(raw.imageEditPrompt || raw.editPrompt || '').trim(),
+    attributes,
+  };
+}
+
+// Single-pass prompt for the AI Master Stylist: analyse the selfie and design
+// THE one best overall look (not 5 options) + a customer-facing explanation.
+function buildMasterStylistPrompt(audience, goal, lang) {
+  const langName = STUDIO_LANG_NAME[lang] || 'English';
+  return [
+    'You are an elite celebrity stylist + personal image consultant. Analyse ONE selfie and design the SINGLE BEST overall look for this person — not random options. Output is shown to the customer.',
+    'SAFETY (absolute): POSITIVE language only. Never say ugly/bad/balding/old-looking/unattractive or make a medical claim. Use "balance", "soften", "emphasize", "enhance", "fuller appearance", "youthful-looking". Children: wholesome, age-appropriate only.',
+    'Customer audience: ' + audience + '. Style goal: ' + (goal || 'most flattering overall') + '.',
+    '',
+    'First produce an "analysis" object: features { faceShape, forehead, eyes, eyelids, brows, nose, lips, cheeks, jawChin, ears, hairline, hairDensity, beardDensity, skinToneBand, approxAgeRange } (short positive phrases in ' + langName + '); scores { symmetry, youthfulness, professional, confidence, softness, maintenance } as integer 0..100 PROPORTION/HARMONY metrics (not a rating of the person); strategy { emphasize:[], balance:[] } positive phrasing; thinning { level (none|mild|moderate|advanced), note } soft language.',
+    '',
+    'Then choose THE SINGLE BEST look ("bestLook"): auto-decide haircut, color, texture, bangs, eyebrows, beard (men only), and a wig/hair-system ONLY if it clearly improves fullness or harmony. Return:',
+    '{ "title":"", "attributes":{ "haircut":"","color":"","texture":"","bangs":"","eyebrows":"","beard":"","wigOrSystem":"" }, "explanation":"", "imageEditPrompt":"" }',
+    'explanation: 2-3 sentences in ' + langName + ' on WHY this look suits them (what it emphasizes/balances), e.g. "adds volume near the crown, balances proportions, softens the jawline, emphasizes the eyes; the warm chestnut complements your skin tone for a youthful, professional appearance."',
+    'imageEditPrompt: ONE precise ENGLISH instruction to render the FULL transformation on the SAME person (preserve identity/eyes/nose/lips/age/ethnicity/skin tone/bone structure; enhance hair, color, eyebrows, beard, and wig/hair-system if chosen).',
+    '',
+    'Return STRICT JSON only: {"analysis":{...},"bestLook":{...}}',
+  ].join('\n');
+}
+
 module.exports = {
-  STUDIO_MODES, STUDIO_AUDIENCES, STUDIO_PREFS, STUDIO_GOALS,
+  STUDIO_MODES, STUDIO_AUDIENCES, STUDIO_PREFS, STUDIO_GOALS, MASTER_ATTR_KEYS,
   normalizeStudioMode, normalizeStudioOptions, normalizeStudioAudience,
   normalizeStudioPref, normalizeStudioGoal, audienceForMode,
   STUDIO_LANG_NAME, SCORE_KEYS, normalizeStudioScores, buildStudioAnalysisPrompt,
+  normalizeMasterpiece, buildMasterStylistPrompt,
 };

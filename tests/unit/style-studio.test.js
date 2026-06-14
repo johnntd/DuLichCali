@@ -71,4 +71,15 @@ assert.ok(/mode === 'wig' \|\| mode === 'hairsystem'/.test(src), 'wig/hairsystem
 assert.ok((src.match(/normalizeHaircutStyle\(s, audience, i, 'haircut'\)/g) || []).length >= 2, 'planHaircutStyles pins haircut mode'); ok('haircut mode pinned (no regression)');
 assert.ok(/normalizeHaircutStyle\(s, opts\.audience, i, opts\.mode\)/.test(src), 'studio passes opts.mode'); ok('studio passes mode');
 
+// ── Task 1: Master Stylist — expanded goals + the master prompt builder ──────
+assert.ok(S.STUDIO_GOALS.includes('executive') && S.STUDIO_GOALS.includes('business') && S.STUDIO_GOALS.includes('glamorous'), 'goals expanded'); ok('goals expanded');
+const mp = S.buildMasterStylistPrompt('man', 'professional', 'en');
+assert.ok(/single best look|ONE/i.test(mp) && /bestLook/.test(mp), 'master prompt asks one best look'); ok('master prompt one look');
+assert.ok(/imageEditPrompt/.test(mp) && /explanation/.test(mp), 'master prompt requests edit + explanation'); ok('master prompt edit+why');
+assert.ok(/positive/i.test(mp) && /never.*(balding|medical)/i.test(mp), 'master prompt safety'); ok('master prompt safety');
+// normalizeMasterpiece coerces a partial model object into the masterpiece shape.
+const m = S.normalizeMasterpiece({ title:'X', explanation:'Y', imageEditPrompt:'Z', attributes:{ haircut:'a' } });
+assert.strictEqual(m.title,'X'); assert.strictEqual(m.imageEditPrompt,'Z'); assert.strictEqual(m.attributes.haircut,'a'); ok('normalizeMasterpiece ok');
+assert.deepStrictEqual(S.normalizeMasterpiece(null).attributes, {}); ok('normalizeMasterpiece null-safe');
+
 console.log(`\nstyle-studio pure tests: ${n} passed`);

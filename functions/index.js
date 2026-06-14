@@ -3521,13 +3521,18 @@ exports.generateStyleStudioPublic = onCall(
 
     // READ-ONLY quota check first (no write yet — count only after a success).
     const q = await checkPublicQuota(uid, isAnonymous);
+    // SP-8: quota METADATA for the conversion/membership UI (NOT generation logic).
+    // Lets the client show "N free previews left today" + member status.
+    const quotaMeta = function (usedAfter) {
+      return { used: usedAfter, limit: q.limit, remaining: Math.max(0, q.limit - usedAfter), isAnonymous: isAnonymous };
+    };
     if (!q.allowed) {
       if (isAnonymous) {
         // Guest over the free-preview limit → the create-account wall.
         return {
           ok: false, code: 'LIMIT_REACHED', requireLogin: true,
           vendorMessage: 'You have used your free previews. Create a free account to keep going.',
-          limit: q.limit,
+          limit: q.limit, quota: quotaMeta(q.used),
         };
       }
       // Logged-in MEMBER over their generous daily limit → a "try again
@@ -3535,7 +3540,7 @@ exports.generateStyleStudioPublic = onCall(
       return {
         ok: false, code: 'DAILY_LIMIT', requireLogin: false,
         vendorMessage: 'You have reached today\'s limit. Please try again tomorrow.',
-        limit: q.limit,
+        limit: q.limit, quota: quotaMeta(q.used),
       };
     }
 
@@ -3549,6 +3554,7 @@ exports.generateStyleStudioPublic = onCall(
       // Count this success against the daily quota. Best-effort: never fail the
       // response if the counter write hiccups.
       try { await incrementPublicUsage(uid, q.today); } catch (e) { /* ignore */ }
+      result.quota = quotaMeta(q.used + 1); // metadata only — generation unchanged
     }
     return result;
   }

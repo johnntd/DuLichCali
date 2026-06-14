@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260419m">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/style-studio.css?v=20260614i">
+  <link rel="stylesheet" href="/style-studio.css?v=20260614j">
 
   <!-- Google Analytics 4 -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-5S0P4XMCJR"></script>
@@ -98,6 +98,9 @@
         </button>
 
         <span class="ss-status" id="ssStatus"></span>
+
+        <!-- SP-8: free-trial / member status (quota display) -->
+        <div class="ss-quota" id="ssQuota"></div>
 
         <div class="ss-master-result" id="ssMasterResult"></div>
       </div>
@@ -187,6 +190,8 @@
     <h2 class="ss-membership__title" data-ss-i18n="membershipTitle"></h2>
     <p class="ss-membership__sub" data-ss-i18n="membershipPrompt"></p>
     <button class="ss-membership__cta" id="ssMembershipCta" type="button" data-ss-i18n="membershipCta"></button>
+    <!-- SP-8: future Premium tier placeholder (coming soon, not charging) -->
+    <div class="ss-membership__premium" id="ssMembershipPremium"></div>
   </section>
 
   <!-- 8. Privacy note -->
@@ -220,6 +225,6 @@
   if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 </script>
 <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260613a"></script>
-<script src="/style-studio-public.js?v=20260614i"></script>
+<script src="/style-studio-public.js?v=20260614j"></script>
 </body>
 </html>

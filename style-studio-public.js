@@ -102,6 +102,13 @@
       backHome: '← Back to Du Lich Cali',
       error: 'Something went wrong. Please try again.',
       loginWall: 'You have reached your free preview limit. Create a free account to continue.',
+      // SP-8 conversion: quota display + Premium tier placeholder.
+      quotaTrial: 'Free previews during launch — try it now', quotaFreeLeft: 'free previews left today',
+      quotaOut: 'Free previews used today', quotaCreateLink: 'Create free account',
+      quotaMember: 'Member', quotaSavedLink: 'Saved looks',
+      premiumTitle: 'Premium', premiumBadge: 'Coming soon', premiumSub: 'Everything you love — without limits.',
+      premiumF1: 'Unlimited previews', premiumF2: 'Saved looks across devices', premiumF3: 'Priority generation', premiumF4: 'Exclusive styles & studios',
+      premiumCta: 'Coming soon', premiumNote: 'You won’t be charged — Premium isn’t live yet.',
       viewerClose: 'Close', viewerPrev: 'Previous look', viewerNext: 'Next look',
       pressHold: 'Press and hold the image to save to Photos.',
       err_INVALID_INPUT: 'Please choose a valid photo.',
@@ -270,6 +277,12 @@
       backHome: '← Quay lại Du Lich Cali',
       error: 'Đã có lỗi xảy ra. Vui lòng thử lại.',
       loginWall: 'Bạn đã đạt giới hạn xem trước miễn phí. Tạo tài khoản miễn phí để tiếp tục.',
+      quotaTrial: 'Xem trước miễn phí trong thời gian ra mắt — thử ngay', quotaFreeLeft: 'lượt xem trước miễn phí còn lại hôm nay',
+      quotaOut: 'Đã dùng hết lượt miễn phí hôm nay', quotaCreateLink: 'Tạo tài khoản miễn phí',
+      quotaMember: 'Thành viên', quotaSavedLink: 'Kiểu đã lưu',
+      premiumTitle: 'Premium', premiumBadge: 'Sắp ra mắt', premiumSub: 'Mọi thứ bạn yêu thích — không giới hạn.',
+      premiumF1: 'Xem trước không giới hạn', premiumF2: 'Lưu kiểu trên mọi thiết bị', premiumF3: 'Ưu tiên tạo kiểu', premiumF4: 'Kiểu & studio độc quyền',
+      premiumCta: 'Sắp ra mắt', premiumNote: 'Bạn sẽ không bị tính phí — Premium chưa hoạt động.',
       viewerClose: 'Đóng', viewerPrev: 'Kiểu trước', viewerNext: 'Kiểu tiếp',
       pressHold: 'Nhấn giữ ảnh để lưu vào Ảnh.',
       err_INVALID_INPUT: 'Vui lòng chọn một ảnh hợp lệ.',
@@ -435,6 +448,12 @@
       backHome: '← Volver a Du Lich Cali',
       error: 'Algo salió mal. Por favor inténtalo de nuevo.',
       loginWall: 'Has alcanzado tu límite de vistas previas gratuitas. Crea una cuenta gratis para continuar.',
+      quotaTrial: 'Vistas previas gratis durante el lanzamiento — pruébalo', quotaFreeLeft: 'vistas previas gratis restantes hoy',
+      quotaOut: 'Vistas previas gratis agotadas hoy', quotaCreateLink: 'Crear cuenta gratis',
+      quotaMember: 'Miembro', quotaSavedLink: 'Looks guardados',
+      premiumTitle: 'Premium', premiumBadge: 'Próximamente', premiumSub: 'Todo lo que te encanta — sin límites.',
+      premiumF1: 'Vistas previas ilimitadas', premiumF2: 'Looks guardados en todos tus dispositivos', premiumF3: 'Generación prioritaria', premiumF4: 'Estilos y estudios exclusivos',
+      premiumCta: 'Próximamente', premiumNote: 'No se te cobrará — Premium aún no está activo.',
       viewerClose: 'Cerrar', viewerPrev: 'Look anterior', viewerNext: 'Look siguiente',
       pressHold: 'Mantén presionada la imagen para guardarla en Fotos.',
       err_INVALID_INPUT: 'Por favor elige una foto válida.',
@@ -599,6 +618,8 @@
     // P0 never-silent: queued generation while anon auth completes, plus the
     // live progress-cycle interval + watchdog timer handles (so busy can never stick).
     pendingGenerate: '', progressTimer: 0, watchdogTimer: 0,
+    // SP-8 conversion: latest quota metadata from the callable ({used,limit,remaining,isAnonymous}).
+    quota: null,
   };
 
   var IS_IOS = (function () {
@@ -695,6 +716,7 @@
     refreshWigUi();
     syncLangButtons();
     renderAccount();
+    renderMembershipExtras();
     var authPanel = doc.getElementById('ssAuthPanel');
     if (authPanel && !authPanel.hidden) renderAuthPanel();
     var acctPanel = doc.getElementById('ssAccountPanel');
@@ -923,16 +945,19 @@
     }
     return callable(payload).then(function (result) {
       var p = (result && result.data) || {};
+      // SP-8: capture quota metadata (free previews left / member status) from any
+      // response and refresh the conversion UI. Single funnel for all generations.
+      if (p.quota) { state.quota = p.quota; renderQuota(); }
       if (p.ok) return p;
       // GUEST over the free-preview limit → the create-account wall. Only anonymous
       // guests get requireLogin:true from the backend (members never do).
       if (p.requireLogin === true || p.code === 'LIMIT_REACHED') {
-        return { ok: false, code: p.code || 'LIMIT_REACHED', requireLogin: true, message: t('loginWall') };
+        return { ok: false, code: p.code || 'LIMIT_REACHED', requireLogin: true, message: t('loginWall'), quota: p.quota };
       }
       // Everything else (including the new member-only DAILY_LIMIT) → localized
       // message by code, with no create-account prompt. requireLogin stays false.
       var code = p.debugCode || p.code || '';
-      return { ok: false, code: code, requireLogin: false, message: t('err_' + code) || t('error') };
+      return { ok: false, code: code, requireLogin: false, message: t('err_' + code) || t('error'), quota: p.quota };
     }).catch(function (err) {
       // The callable itself threw (network / transport) — distinct from an AI
       // service error. Surface the generic error string; never swallow.
@@ -2043,9 +2068,73 @@
   function profileIcon() {
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>';
   }
+  // ── SP-8: conversion — quota display + Premium tier placeholder ──────────
+  // Free-trial / member status near the hero so the funnel is obvious:
+  // guest → "N free previews left" → (at 0) create a free account → member.
+  function renderQuota() {
+    var host = doc.getElementById('ssQuota');
+    if (!host) return;
+    host.innerHTML = '';
+    var q = state.quota;
+    var chip = elt('span', 'ss-quota__chip');
+    if (state.isCustomer) {
+      chip.classList.add('ss-quota__chip--member');
+      chip.innerHTML = '<span class="ss-quota__dot" aria-hidden="true"></span>' + t('quotaMember');
+      host.appendChild(chip);
+      var link = elt('button', 'ss-quota__link', t('quotaSavedLink')); link.type = 'button';
+      link.addEventListener('click', openAccountPanel);
+      host.appendChild(link);
+      return;
+    }
+    if (q && typeof q.remaining === 'number' && q.limit > 0) {
+      var hasLeft = q.remaining > 0;
+      chip.classList.add(hasLeft ? 'ss-quota__chip--free' : 'ss-quota__chip--out');
+      chip.textContent = hasLeft ? (q.remaining + '/' + q.limit + ' ' + t('quotaFreeLeft')) : t('quotaOut');
+      host.appendChild(chip);
+      if (q.remaining <= 1) {
+        var nudge = elt('button', 'ss-quota__link', t('quotaCreateLink')); nudge.type = 'button';
+        nudge.addEventListener('click', function () { openAuthPanel('signup'); });
+        host.appendChild(nudge);
+      }
+    } else {
+      chip.classList.add('ss-quota__chip--free');
+      chip.textContent = t('quotaTrial');
+      host.appendChild(chip);
+    }
+  }
+
+  // Upgrade-ready Premium tier PLACEHOLDER — clearly "coming soon", never charges.
+  function buildPremiumCard() {
+    var card = elt('div', 'ss-premium');
+    var head = elt('div', 'ss-premium__head');
+    head.appendChild(elt('span', 'ss-premium__title', t('premiumTitle')));
+    head.appendChild(elt('span', 'ss-premium__badge', t('premiumBadge')));
+    card.appendChild(head);
+    card.appendChild(elt('p', 'ss-premium__sub', t('premiumSub')));
+    var ul = elt('ul', 'ss-premium__feats');
+    ['premiumF1', 'premiumF2', 'premiumF3', 'premiumF4'].forEach(function (k) {
+      var li = elt('li', 'ss-premium__feat');
+      li.innerHTML = '<span class="ss-premium__check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span>' + t(k) + '</span>';
+      ul.appendChild(li);
+    });
+    card.appendChild(ul);
+    var btn = elt('button', 'ss-premium__cta', t('premiumCta'));
+    btn.type = 'button'; btn.disabled = true; btn.setAttribute('aria-disabled', 'true');
+    card.appendChild(btn);
+    card.appendChild(elt('p', 'ss-premium__note', t('premiumNote')));
+    return card;
+  }
+  // Fill the membership-wall Premium tease (guests see the future tier too).
+  function renderMembershipExtras() {
+    var slot = doc.getElementById('ssMembershipPremium');
+    if (!slot) return;
+    slot.innerHTML = '';
+    slot.appendChild(buildPremiumCard());
+  }
+
   function renderAccount() {
     var host = doc.getElementById('ssAccount');
-    if (!host) return;
+    if (!host) { renderQuota(); return; }
     host.innerHTML = '';
     if (state.isCustomer) {
       var label = state.account.name || state.account.phone || t('myAccount');
@@ -2073,6 +2162,7 @@
       login.addEventListener('click', function () { openAuthPanel('login'); });
       host.appendChild(login);
     }
+    renderQuota(); // keep the free-trial / member status in sync with account state
   }
 
   // ── Customer account panel (profile + Favorites + Saved looks) ──────────
@@ -2140,6 +2230,8 @@
       card.appendChild(grid);
       if (tab === 'favorites') card.appendChild(elt('p', 'ss-acct__hint', t('favoritesHint')));
     }
+    // SP-8: upgrade-ready Premium tier placeholder in the member dashboard.
+    card.appendChild(buildPremiumCard());
     panel.appendChild(card);
   }
   // A saved/favorited look tile. The image is read back from the on-device
@@ -2529,6 +2621,7 @@
     initStickyCta();
     syncLangButtons();
     renderAccount();
+    renderMembershipExtras();
     refreshButtons();
     refreshWigUi();
     initAuth();

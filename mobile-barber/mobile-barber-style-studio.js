@@ -99,7 +99,124 @@
     render();
   }
 
-  function render() { /* implemented in Task 7–9 */ applyI18n(); }
+  // 9 studios + their option controls. Data-driven so each mode is declared once.
+  var STUDIO_DEFS = [
+    { mode: 'haircut', label: 'modeHaircut', controls: [] },
+    { mode: 'color', label: 'modeColor', controls: [{ key: 'type', values: ['highlight', 'balayage', 'ombre', 'gray_blend', 'fashion'] }] },
+    { mode: 'texture', label: 'modeTexture', controls: [{ key: 'texture', values: ['curly', 'straight', 'wavy'] }] },
+    { mode: 'eyebrow', label: 'modeEyebrow', controls: [{ key: 'shape', values: ['natural', 'arched', 'straight', 'rounded', 'soft_angled'] }] },
+    { mode: 'beard', label: 'modeBeard', controls: [{ key: 'length', values: ['stubble', 'short', 'medium', 'full'] }, { key: 'shape', values: ['rounded', 'angular', 'tapered'] }] },
+    { mode: 'wig', label: 'modeWig', controls: [{ key: 'family', values: ['natural', 'business', 'modern', 'long', 'layered', 'curly', 'elegant', 'glamorous', 'cute', 'simple', 'school'] }] },
+    { mode: 'hairsystem', label: 'modeHairsystem', controls: [{ key: 'type', values: ['frontal', 'partial', 'full', 'topper', 'crown'] }] },
+    { mode: 'event', label: 'modeEvent', controls: [{ key: 'occasion', values: ['wedding', 'cruise', 'disneyland', 'vegas', 'beach', 'birthday', 'graduation', 'holiday'] }] },
+    { mode: 'vacation', label: 'modeVacation', controls: [{ key: 'destination', values: ['hawaii', 'europe', 'california_coast', 'theme_parks', 'luxury_resorts'] }] },
+  ];
+
+  function elt(tag, cls, text) { var e = root.document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+  function render() {
+    var host = root.document.getElementById('mbStyleStudioRoot');
+    if (!host) return;
+    host.innerHTML = '';
+
+    // Header + consent + upload + generate
+    var head = elt('div', 'mb-studio-head');
+    head.appendChild(elt('h2', 'mb-studio-title', t('studioTitle')));
+    head.appendChild(elt('p', 'mb-studio-sub', t('studioSub')));
+    var consent = elt('label', 'mb-studio-consent');
+    var cb = root.document.createElement('input'); cb.type = 'checkbox';
+    cb.addEventListener('change', function () { state.consent = cb.checked; refreshControls(); });
+    consent.appendChild(cb); consent.appendChild(elt('span', null, t('studioConsent')));
+    head.appendChild(consent);
+
+    var upload = root.document.createElement('input');
+    upload.type = 'file'; upload.accept = 'image/*'; upload.className = 'mb-studio-upload'; upload.id = 'mbStudioUpload';
+    upload.addEventListener('change', onUpload);
+    var uploadBtn = elt('label', 'mb-button mb-button--ghost', t('studioUpload')); uploadBtn.setAttribute('for', 'mbStudioUpload');
+    head.appendChild(uploadBtn); head.appendChild(upload);
+    host.appendChild(head);
+
+    var selfiePreview = elt('div', 'mb-studio-selfie'); selfiePreview.id = 'mbStudioSelfie';
+    if (state.selfieDataUrl) { var im = root.document.createElement('img'); im.src = state.selfieDataUrl; im.alt = ''; selfiePreview.appendChild(im); }
+    host.appendChild(selfiePreview);
+
+    host.appendChild(renderConsultation()); // Task 9
+
+    // Accordion of 9 studios
+    var acc = elt('div', 'mb-studio-accordion');
+    STUDIO_DEFS.forEach(function (def) {
+      var d = root.document.createElement('details'); d.className = 'mb-studio-panel'; d.setAttribute('data-mode', def.mode);
+      var sum = root.document.createElement('summary'); sum.className = 'mb-studio-panel__summary';
+      sum.appendChild(elt('span', 'mb-studio-panel__title', t(def.label)));
+      d.appendChild(sum);
+      var body = elt('div', 'mb-studio-panel__body');
+      def.controls.forEach(function (ctrl) {
+        var sel = root.document.createElement('select'); sel.className = 'mb-studio-select'; sel.setAttribute('data-ctrl', ctrl.key);
+        ctrl.values.forEach(function (v) { var o = root.document.createElement('option'); o.value = v; o.textContent = v.replace(/_/g, ' '); sel.appendChild(o); });
+        body.appendChild(sel);
+      });
+      var gen = elt('button', 'mb-button mb-button--primary mb-studio-generate', t('studioGenerate'));
+      gen.type = 'button'; gen.disabled = !(state.consent && state.selfieDataUrl);
+      gen.addEventListener('click', function () { onGenerate(def, body); });
+      body.appendChild(gen);
+      body.appendChild(elt('div', 'mb-studio-results', '')); // results container
+      d.appendChild(body); acc.appendChild(d);
+    });
+    // Favorites panel (session/local; no Firestore)
+    var fav = root.document.createElement('details'); fav.className = 'mb-studio-panel mb-studio-panel--favorites';
+    var fsum = root.document.createElement('summary'); fsum.className = 'mb-studio-panel__summary';
+    fsum.appendChild(elt('span', 'mb-studio-panel__title', t('favorites')));
+    fav.appendChild(fsum);
+    fav.appendChild(renderFavorites()); // Task 8
+    acc.appendChild(fav);
+    host.appendChild(acc);
+
+    applyI18n(host);
+  }
+
+  function refreshControls() {
+    root.document.querySelectorAll('.mb-studio-generate').forEach(function (b) {
+      b.disabled = !(state.consent && state.selfieDataUrl);
+    });
+  }
+
+  function onUpload(ev) {
+    var file = ev && ev.target && ev.target.files && ev.target.files[0];
+    if (!file) return;
+    if (!state.consent) { toast(t('studioConsentRequired')); ev.target.value = ''; return; }
+    var AIP = root.MobileBarberAIPreview;
+    if (!AIP || typeof AIP.compressImage !== 'function') { toast(t('studioError')); return; }
+    AIP.compressImage(file).then(function (dataUrl) {
+      state.selfieDataUrl = dataUrl; toast(t('studioReady')); render();
+    }).catch(function () { toast(t('studioError')); });
+  }
+
+  function onGenerate(def, bodyEl) {
+    if (state.analyzing) return;
+    state.analyzing = true; state.mode = def.mode;
+    var opts = {};
+    bodyEl.querySelectorAll('.mb-studio-select').forEach(function (s) { opts[s.getAttribute('data-ctrl')] = s.value; });
+    state.options = opts;
+    state.sessionId = 'studio_' + def.mode + '_' + Math.random().toString(36).slice(2, 9);
+    var resultsEl = bodyEl.querySelector('.mb-studio-results');
+    if (resultsEl) resultsEl.textContent = t('studioGenerating');
+    callStudio({ dataUrl: state.selfieDataUrl, mode: def.mode, options: opts,
+                 audience: state.options.audience || 'neutral' }).then(function (res) {
+      state.analyzing = false;
+      if (!res.ok) { if (resultsEl) resultsEl.textContent = res.message || t('studioError'); return; }
+      state.analysis = res.analysis || null;
+      state.recommendations = res.recommendations || [];
+      renderResults(resultsEl, res.recommendations); // Task 8
+      renderConsultationInto(); // Task 9 refresh
+    });
+  }
+
+  function toast(msg) {
+    var el = root.document.getElementById('mbDashboardToast');
+    if (!el) { if (root.console) root.console.log('[style-studio]', msg); return; }
+    el.textContent = msg; el.hidden = false;
+    root.setTimeout(function () { el.hidden = true; }, 2600);
+  }
 
   // Thin client for the vendor callable. Mirrors mobile-barber-ai-preview.js
   // generate() but targets generateStyleStudio and passes mode/options/goal.

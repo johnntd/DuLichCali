@@ -3173,19 +3173,9 @@ async function runStudioGeneration(params) {
         safetyNotes: style.safetyNotes,
       };
       try {
-        const edit = await callGeminiImageEdit(geminiKey, base64, mimeType, style.imageEditPrompt); // reused (pass 1)
-        let previewUrl = edit.dataUrl;
-        // Pass 2 — realism refine for wig/hair-system so the result stops looking
-        // costume-like. The 5 styles run in Promise.all, so wall-clock stays ~2×
-        // a single edit, not 2×5. On any refine failure we keep the pass-1 image.
-        if (mode === 'wig' || mode === 'hairsystem') {
-          try {
-            const refined = await refineHairRealism(geminiKey, previewUrl);
-            if (refined) previewUrl = refined;
-          } catch (e2) { /* keep pass 1 */ }
-        }
+        const edit = await callGeminiImageEdit(geminiKey, base64, mimeType, style.imageEditPrompt); // first pass
         return Object.assign({}, baseRec, {
-          previewDataUrl: previewUrl,
+          previewDataUrl: edit.dataUrl,
           // Intentional: studio uses a slightly stricter "your_preview" bar (>=0.5)
           // than generateHaircutPreviews (<0.45). Do not "fix" to match.
           previewKind: (style.confidence >= 0.5) ? 'your_preview' : 'style_inspiration',
@@ -3197,6 +3187,25 @@ async function runStudioGeneration(params) {
   } catch (e) {
     console.error('[runStudioGeneration] image edit failure', e);
     return { ok: false, vendorMessage: 'Style Studio could not render previews. Please try again.', debugCode: 'EDIT_ERROR' };
+  }
+
+  // Realism refine for wig/hair-system: refine ONLY the best-match (highest
+  // confidence) preview — one extra pass, not five. This keeps the realism gain
+  // on the featured "best natural match" the client shows, while avoiding the
+  // multi-pass latency that pushed full wig runs past the timeout. Refine failure
+  // keeps the first-pass image.
+  if (mode === 'wig' || mode === 'hairsystem') {
+    let bestIdx = -1, bestConf = -1;
+    recommendations.forEach((r, i) => {
+      const c = Number(r.confidence) || 0;
+      if (r.previewDataUrl && !r.error && c > bestConf) { bestConf = c; bestIdx = i; }
+    });
+    if (bestIdx >= 0) {
+      try {
+        const refined = await refineHairRealism(geminiKey, recommendations[bestIdx].previewDataUrl);
+        if (refined) recommendations[bestIdx] = Object.assign({}, recommendations[bestIdx], { previewDataUrl: refined });
+      } catch (e) { /* keep the first-pass best image */ }
+    }
   }
 
   return {

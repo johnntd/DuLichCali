@@ -25,6 +25,7 @@
       scoreConfidence: 'Confidence', scoreSoftness: 'Softness', scoreMaintenance: 'Maintenance',
       emphasize: 'Emphasize', balance: 'Balance', thinning: 'Hair fullness',
       audienceLabel: 'Audience', audMan: 'Man', audWoman: 'Woman', audChild: 'Child', audNeutral: 'Auto',
+      lightboxClose: 'Close', lightboxPreview: 'Preview',
     },
     vi: {
       studioTitle: 'Studio Tạo Kiểu AI', studioSub: 'Tư vấn cho thợ — phân tích ảnh, khám phá kiểu',
@@ -42,6 +43,7 @@
       scoreConfidence: 'Tự Tin', scoreSoftness: 'Mềm Mại', scoreMaintenance: 'Bảo Dưỡng',
       emphasize: 'Nhấn Mạnh', balance: 'Cân Bằng', thinning: 'Độ Dày Tóc',
       audienceLabel: 'Đối tượng', audMan: 'Nam', audWoman: 'Nữ', audChild: 'Trẻ em', audNeutral: 'Tự động',
+      lightboxClose: 'Đóng', lightboxPreview: 'Xem trước',
     },
     es: {
       studioTitle: 'Estudio de Estilo AI', studioSub: 'Consulta del vendedor — analiza una selfie, explora looks',
@@ -59,11 +61,12 @@
       scoreConfidence: 'Confianza', scoreSoftness: 'Suavidad', scoreMaintenance: 'Mantenimiento',
       emphasize: 'Destacar', balance: 'Equilibrar', thinning: 'Densidad capilar',
       audienceLabel: 'Audiencia', audMan: 'Hombre', audWoman: 'Mujer', audChild: 'Niño', audNeutral: 'Automático',
+      lightboxClose: 'Cerrar', lightboxPreview: 'Vista previa',
     },
   };
 
   var state = { lang: 'en', consent: false, selfieDataUrl: '', mode: 'haircut', options: {},
-                audience: 'neutral',
+                audience: 'neutral', modeOptions: {},
                 analyzing: false, analysis: null, recommendations: [], sessionId: '',
                 favorites: [], compareIds: [] };
 
@@ -92,14 +95,18 @@
     render();
   }
 
+  var _langBound = false;
   function init() {
     var rootEl = root.document.getElementById('mbStyleStudioRoot');
     if (!rootEl) return; // not on this page
     state.lang = detectLang();
     // Re-translate when the dashboard's language buttons are clicked (additive).
-    root.document.querySelectorAll('.mb-language__button[data-lang]').forEach(function (btn) {
-      btn.addEventListener('click', function () { setLang(btn.getAttribute('data-lang')); });
-    });
+    if (!_langBound) {
+      root.document.querySelectorAll('.mb-language__button[data-lang]').forEach(function (btn) {
+        btn.addEventListener('click', function () { setLang(btn.getAttribute('data-lang')); });
+      });
+      _langBound = true;
+    }
     render();
   }
 
@@ -170,7 +177,8 @@
       var body = elt('div', 'mb-studio-panel__body');
       def.controls.forEach(function (ctrl) {
         var sel = root.document.createElement('select'); sel.className = 'mb-studio-select'; sel.setAttribute('data-ctrl', ctrl.key);
-        ctrl.values.forEach(function (v) { var o = root.document.createElement('option'); o.value = v; o.textContent = v.replace(/_/g, ' '); sel.appendChild(o); });
+        ctrl.values.forEach(function (v) { var o = root.document.createElement('option'); o.value = v; o.textContent = v.replace(/_/g, ' '); o.selected = !!(state.modeOptions[def.mode] && state.modeOptions[def.mode][ctrl.key] === v); sel.appendChild(o); });
+        sel.addEventListener('change', function () { state.modeOptions[def.mode] = state.modeOptions[def.mode] || {}; state.modeOptions[def.mode][ctrl.key] = sel.value; });
         body.appendChild(sel);
       });
       var gen = elt('button', 'mb-button mb-button--primary mb-studio-generate', t('studioGenerate'));
@@ -277,14 +285,15 @@
 
   function openLightbox(src, caption) {
     if (!src || !root.MBLightbox || !root.MBLightbox.open) return;
-    root.MBLightbox.open(src, { caption: caption || '', closeLabel: 'Close', ariaLabel: caption || 'Preview' });
+    root.MBLightbox.open(src, { caption: caption || '', closeLabel: t('lightboxClose'), ariaLabel: caption || t('lightboxPreview') });
   }
 
   // Save-to-phone: trigger a native download of the full-res data URL. No upload.
+  function extFromDataUrl(src) { var m = /^data:image\/(\w+)/.exec(src || ''); return m ? (m[1] === 'jpeg' ? 'jpg' : m[1]) : 'jpg'; }
   function saveToPhone(src, rec) {
     if (!src) return;
     var a = root.document.createElement('a');
-    a.href = src; a.download = ((rec && rec.styleId) || 'style') + '.jpg';
+    a.href = src; a.download = ((rec && rec.styleId) || 'style') + '.' + extFromDataUrl(src);
     root.document.body.appendChild(a); a.click(); root.document.body.removeChild(a);
   }
 
@@ -292,8 +301,9 @@
   var FAV_KEY = 'mb_studio_favorites';
   function readFavs() { try { return JSON.parse(root.localStorage.getItem(FAV_KEY) || '[]'); } catch (e) { return []; } }
   function writeFavs(list) { try { root.localStorage.setItem(FAV_KEY, JSON.stringify(list.slice(0, 60))); } catch (e) {} }
-  function isFav(id) { return readFavs().some(function (f) { return f.styleId === id; }); }
+  function isFav(id) { return !!id && readFavs().some(function (f) { return f.styleId === id; }); }
   function toggleFav(rec, imgSrc) {
+    if (!rec || !rec.styleId) return;
     var list = readFavs(); var id = rec.styleId || '';
     if (list.some(function (f) { return f.styleId === id; })) {
       list = list.filter(function (f) { return f.styleId !== id; });
@@ -389,10 +399,12 @@
     }
 
     // Strategy (emphasize / balance) + thinning (soft language)
-    if (a.strategy && (a.strategy.emphasize.length || a.strategy.balance.length)) {
+    var emph = (a.strategy && Array.isArray(a.strategy.emphasize)) ? a.strategy.emphasize : [];
+    var bal  = (a.strategy && Array.isArray(a.strategy.balance)) ? a.strategy.balance : [];
+    if (emph.length || bal.length) {
       var st = elt('div', 'mb-studio-consult__strategy'); st.appendChild(elt('h4', null, t('consultStrategy')));
-      if (a.strategy.emphasize.length) st.appendChild(elt('p', null, t('emphasize') + ': ' + a.strategy.emphasize.join(', ')));
-      if (a.strategy.balance.length) st.appendChild(elt('p', null, t('balance') + ': ' + a.strategy.balance.join(', ')));
+      if (emph.length) st.appendChild(elt('p', null, t('emphasize') + ': ' + emph.join(', ')));
+      if (bal.length) st.appendChild(elt('p', null, t('balance') + ': ' + bal.join(', ')));
       body.appendChild(st);
     }
     if (a.thinning && a.thinning.note) {

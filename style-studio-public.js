@@ -1,6 +1,6 @@
 'use strict';
 // ─────────────────────────────────────────────────────────────────────────
-// AI Style Studio — PUBLIC client  (style-studio-public.js?v=20260613e)
+// AI Style Studio — PUBLIC client  (style-studio-public.js?v=20260613f)
 //
 // Powers /style-studio: the one-click AI Master Stylist hero + the 9 manual
 // modes. Signs the visitor in with Firebase ANONYMOUS auth, then calls the
@@ -55,6 +55,17 @@
       generating: 'Designing your best look…',
       signingIn: 'Starting your free session…',
       ready: 'Ready — upload a selfie to begin.',
+      // Never-silent feedback + progress + retry (P0 fix).
+      busyWait: 'A look is still generating — please wait…',
+      needSelfie: 'Please upload a selfie first.',
+      preparingSession: 'Starting your free session…',
+      sessionError: 'Couldn’t start your session. Please refresh and try again.',
+      prog_analyzing: 'Analyzing your face…',
+      prog_harmony: 'Studying facial harmony…',
+      prog_designing: 'Designing your best look…',
+      prog_generating: 'Generating your masterpiece…',
+      genFailed: 'We couldn’t create your look right now.',
+      retry: 'Try again',
       masterTitle: 'Your AI Master Stylist look',
       explanationLabel: 'Why this look suits you',
       attr_haircut: 'Haircut', attr_color: 'Color', attr_texture: 'Texture', attr_bangs: 'Bangs',
@@ -145,6 +156,17 @@
       generating: 'Đang thiết kế diện mạo đẹp nhất cho bạn…',
       signingIn: 'Đang bắt đầu phiên miễn phí của bạn…',
       ready: 'Sẵn sàng — tải ảnh selfie để bắt đầu.',
+      // Phản hồi luôn hiển thị + tiến trình + thử lại (sửa lỗi P0).
+      busyWait: 'Một kiểu đang được tạo — vui lòng đợi…',
+      needSelfie: 'Vui lòng tải ảnh selfie trước.',
+      preparingSession: 'Đang bắt đầu phiên miễn phí của bạn…',
+      sessionError: 'Không thể bắt đầu phiên. Vui lòng tải lại trang và thử lại.',
+      prog_analyzing: 'Đang phân tích gương mặt của bạn…',
+      prog_harmony: 'Đang nghiên cứu sự hài hòa khuôn mặt…',
+      prog_designing: 'Đang thiết kế diện mạo đẹp nhất cho bạn…',
+      prog_generating: 'Đang tạo tác phẩm của bạn…',
+      genFailed: 'Hiện chúng tôi chưa thể tạo diện mạo cho bạn.',
+      retry: 'Thử lại',
       masterTitle: 'Diện mạo từ Chuyên Gia Tạo Kiểu AI',
       explanationLabel: 'Vì sao kiểu này hợp với bạn',
       attr_haircut: 'Kiểu tóc', attr_color: 'Màu tóc', attr_texture: 'Kết cấu tóc', attr_bangs: 'Mái tóc',
@@ -235,6 +257,17 @@
       generating: 'Diseñando tu mejor look…',
       signingIn: 'Iniciando tu sesión gratuita…',
       ready: 'Listo — sube una selfie para empezar.',
+      // Retroalimentación siempre visible + progreso + reintento (corrección P0).
+      busyWait: 'Aún se está generando un look — por favor espera…',
+      needSelfie: 'Por favor sube una selfie primero.',
+      preparingSession: 'Iniciando tu sesión gratuita…',
+      sessionError: 'No pudimos iniciar tu sesión. Actualiza la página e inténtalo de nuevo.',
+      prog_analyzing: 'Analizando tu rostro…',
+      prog_harmony: 'Estudiando la armonía facial…',
+      prog_designing: 'Diseñando tu mejor look…',
+      prog_generating: 'Generando tu obra maestra…',
+      genFailed: 'No pudimos crear tu look en este momento.',
+      retry: 'Intentar de nuevo',
       masterTitle: 'Tu look del Estilista Maestro AI',
       explanationLabel: 'Por qué este look te favorece',
       attr_haircut: 'Corte', attr_color: 'Color', attr_texture: 'Textura', attr_bangs: 'Flequillo',
@@ -335,6 +368,9 @@
     // (non-anonymous) signed-in customer; account = display name / phone of that user.
     user: null, isCustomer: false, account: { name: '', phone: '' },
     authMode: 'login', authBusy: false,
+    // P0 never-silent: queued generation while anon auth completes, plus the
+    // live progress-cycle interval + watchdog timer handles (so busy can never stick).
+    pendingGenerate: '', progressTimer: 0, watchdogTimer: 0,
   };
 
   var IS_IOS = (function () {
@@ -358,6 +394,8 @@
     } catch (e) {}
   }
   function logDl(o) { try { root.console && root.console.log('[style-studio-download]', o || {}); } catch (e) {} }
+  // Master Stylist lifecycle log — every step is observable; nothing is swallowed.
+  function logMaster(event, data) { try { root.console && root.console.log('[master-stylist]', event, data || {}); } catch (e) {} }
 
   // ── i18n helpers ───────────────────────────────────────────────────────
   function t(key) {
@@ -408,6 +446,11 @@
     if (!s) return;
     s.textContent = msg || '';
     s.classList.toggle('ss-status--error', !!isError);
+  }
+  // Toggle the inline loading spinner on the status line (used during progress).
+  function setStatusLoading(on) {
+    var s = doc.getElementById('ssStatus');
+    if (s) s.classList.toggle('ss-status--loading', !!on);
   }
 
   // ── Goal chips (replaces the thin select) ──────────────────────────────
@@ -491,7 +534,7 @@
         body.appendChild(group);
       });
       var gen = elt('button', 'ss-cta', t('modeGenerate'));
-      gen.type = 'button'; gen.disabled = !canGenerate();
+      gen.type = 'button'; gen.disabled = !canSubmit();
       gen.setAttribute('data-mode-generate', def.mode);
       var results = elt('div', 'ss-mode-results');
       results.setAttribute('data-results-for', def.mode);
@@ -501,9 +544,15 @@
     });
   }
 
+  // Internal readiness check (includes signedIn) — used by generation entry points.
   function canGenerate() { return !!(state.consent && state.selfieDataUrl && state.signedIn && !state.busy); }
+  // Button-enable check: deliberately does NOT require signedIn, so the buttons are
+  // tappable as soon as consent + selfie are set, even while anonymous auth is still
+  // completing in the background. The handlers then queue via pendingGenerate. This is
+  // the core of the P0 fix — the flagship button is never dead/silent.
+  function canSubmit() { return !!(state.consent && state.selfieDataUrl && !state.busy); }
   function refreshButtons() {
-    var ok = canGenerate();
+    var ok = canSubmit();
     var best = doc.getElementById('ssGenerateBest');
     if (best) best.disabled = !ok;
     var wig = doc.getElementById('ssWigGenerate');
@@ -568,23 +617,136 @@
   }
 
   // ── Master Stylist flow ────────────────────────────────────────────────
+  // P0: the flagship button must NEVER silently fail. Every blocked state shows
+  // explicit feedback, busy can never stick (always-reset + watchdog), and a
+  // pending generation auto-runs once anonymous auth completes (no double-tap).
   function onGenerateBest() {
-    if (!canGenerate()) { if (!state.consent) setStatus(t('consentRequired'), true); return; }
+    logMaster('buttonClicked', { consent: state.consent, hasSelfie: !!state.selfieDataUrl, signedIn: state.signedIn, busy: state.busy });
+    if (state.busy)           { setStatus(t('busyWait'), false); return; }
+    if (!state.consent)       { setStatus(t('consentRequired'), true); return; }
+    if (!state.selfieDataUrl) { setStatus(t('needSelfie'), true); return; }
+    if (!state.signedIn)      { setStatus(t('preparingSession'), false); state.pendingGenerate = 'master'; ensureSignedIn(); return; }
+    startMasterGeneration();
+  }
+
+  // Kick anonymous sign-in if Firebase Auth has no current user yet. Never silent
+  // on failure — logs and surfaces sessionError. onAuthStateChanged drains the
+  // pendingGenerate queue when a user appears.
+  function ensureSignedIn() {
+    var a = (root.firebase && root.firebase.auth) ? root.firebase.auth() : null;
+    if (!a) { state.pendingGenerate = ''; setStatus(t('sessionError'), true); return; }
+    if (a.currentUser) return; // onAuthStateChanged already fired / will fire
+    try {
+      a.signInAnonymously().catch(function (err) {
+        if (root.console) root.console.error('[style-studio] anon sign-in failed', err);
+        state.pendingGenerate = '';
+        logMaster('error', { message: 'session_' + ((err && err.message) || String(err)) });
+        setStatus(t('sessionError'), true);
+      });
+    } catch (e) {
+      state.pendingGenerate = '';
+      logMaster('error', { message: 'session_' + ((e && e.message) || String(e)) });
+      setStatus(t('sessionError'), true);
+    }
+  }
+
+  // Drain a queued generation once we are signed in (called from onAuthStateChanged).
+  function runPendingGenerate() {
+    var pending = state.pendingGenerate;
+    if (!pending) return;
+    state.pendingGenerate = '';
+    if (pending === 'master') { startMasterGeneration(); return; }
+    if (pending === 'wig') { onWigGenerate(); return; }
+  }
+
+  // ── Loading progress (cycles the staged messages with a spinner) ───────
+  function startProgress() {
+    stopProgress(true); // clear any stale interval without removing the spinner
+    var steps = ['prog_analyzing', 'prog_harmony', 'prog_designing', 'prog_generating'];
+    var i = 0;
+    setStatusLoading(true);
+    setStatus(t(steps[0]), false);
+    state.progressTimer = root.setInterval(function () {
+      if (i < steps.length - 1) i++; // hold on the last message
+      setStatus(t(steps[i]), false);
+    }, 4000);
+  }
+  function stopProgress(keepSpinner) {
+    if (state.progressTimer) { root.clearInterval(state.progressTimer); state.progressTimer = 0; }
+    if (!keepSpinner) setStatusLoading(false);
+  }
+
+  // Always-clears guard so busy can NEVER stick: stop progress, reset busy, clear
+  // the watchdog and re-enable the buttons. Called from every terminal branch.
+  function endMasterBusy() {
+    stopProgress();
+    state.busy = false;
+    if (state.watchdogTimer) { root.clearTimeout(state.watchdogTimer); state.watchdogTimer = 0; }
+    refreshButtons();
+  }
+
+  // Error card with a Retry button, rendered into the master result host.
+  function masterError(msg) {
+    var text = msg || t('genFailed');
+    logMaster('error', { message: text });
+    setStatus('');
+    var host = doc.getElementById('ssMasterResult');
+    if (!host) { setStatus(text, true); return; }
+    host.innerHTML = '';
+    var card = elt('div', 'ss-error-card');
+    card.appendChild(elt('p', 'ss-error-card__msg', text));
+    var retry = elt('button', 'ss-error-card__retry', t('retry'));
+    retry.type = 'button';
+    retry.addEventListener('click', function () { onGenerateBest(); });
+    card.appendChild(retry);
+    host.appendChild(card);
+  }
+
+  function startMasterGeneration() {
     state.busy = true; refreshButtons();
     state.sessionId = 'ss_master_' + Math.random().toString(36).slice(2, 9);
-    setStatus(t('generating'));
+    var thisSession = state.sessionId;
     var resultEl = doc.getElementById('ssMasterResult');
     if (resultEl) resultEl.innerHTML = '';
+    startProgress();
     logUi({ event: 'generate-master' });
+    logMaster('payloadBuilt', { mode: 'master', goal: state.goal || 'auto', audience: state.audience, lang: state.lang });
+
+    // Watchdog: if the request never resolves, busy must still be released and the
+    // user shown an error — busy can NEVER stick permanently.
+    state.watchdogTimer = root.setTimeout(function () {
+      if (state.busy && state.sessionId === thisSession) {
+        logMaster('error', { message: 'watchdog_timeout' });
+        endMasterBusy();
+        masterError(t('genFailed'));
+      }
+    }, 185000);
+
+    logMaster('requestSent', {});
     callPublic({
       selfieDataUrl: state.selfieDataUrl, lang: state.lang,
       mode: 'master', goal: state.goal, audience: state.audience,
     }).then(function (res) {
-      state.busy = false; refreshButtons();
+      // Ignore a late response if the watchdog already fired for this session.
+      if (!state.busy || state.sessionId !== thisSession) { return; }
+      endMasterBusy();
+      logMaster('responseReceived', { ok: !!(res && res.ok), code: (res && res.code) || '', requireLogin: !!(res && res.requireLogin) });
       if (res.requireLogin) { revealMembership(); setStatus(t('loginWall'), true); return; }
-      if (!res.ok || !res.masterpiece) { setStatus(res.message || t('error'), true); return; }
+      if (!res.ok || !res.masterpiece) {
+        logMaster('error', { message: res.message || '', code: res.code || '' });
+        masterError(res.message || t('genFailed'));
+        return;
+      }
+      logMaster('imageGenerated', { has: !!res.masterpiece.previewDataUrl });
       setStatus('');
       renderMasterpiece(res.masterpiece);
+      logMaster('carouselUpdated', {});
+    }).catch(function (err) {
+      // callPublic resolves rather than rejects, but never swallow anything.
+      if (state.sessionId !== thisSession) { return; }
+      endMasterBusy();
+      logMaster('error', { message: (err && err.message) || String(err) });
+      masterError(t('genFailed'));
     });
   }
 
@@ -604,7 +766,7 @@
       img.src = src; img.alt = item.title; img.loading = 'lazy';
       figure.appendChild(img);
       figure.appendChild(zoomBadge());
-      figure.addEventListener('click', function () { openViewer([item], 0); });
+      figure.addEventListener('click', function () { logMaster('viewerReady', {}); openViewer([item], 0); });
       card.appendChild(figure);
     }
 
@@ -638,7 +800,18 @@
 
   // ── Manual mode flow → swipeable carousel ──────────────────────────────
   function onModeGenerate(def, bodyEl, resultsEl) {
-    if (!canGenerate()) { if (!state.consent) setStatus(t('consentRequired'), true); return; }
+    // Never-silent guards (mirror the master flow). Show feedback in the mode's own
+    // results slot so it's visible right by the button the user tapped.
+    function modeMsg(msg, isError) {
+      resultsEl.innerHTML = '';
+      var p = elt('p', 'ss-mode-results__status', msg);
+      if (isError) p.classList.add('ss-status--error');
+      resultsEl.appendChild(p);
+    }
+    if (state.busy)           { modeMsg(t('busyWait'), false); return; }
+    if (!state.consent)       { setStatus(t('consentRequired'), true); modeMsg(t('consentRequired'), true); return; }
+    if (!state.selfieDataUrl) { modeMsg(t('needSelfie'), true); return; }
+    if (!state.signedIn)      { modeMsg(t('preparingSession'), false); ensureSignedIn(); return; }
     state.busy = true; refreshButtons();
     state.sessionId = 'ss_' + def.mode + '_' + Math.random().toString(36).slice(2, 9);
     var opts = {};
@@ -1022,11 +1195,11 @@
 
   // ── AI Wig Match flagship flow ─────────────────────────────────────────
   function onWigGenerate() {
-    if (!canGenerate()) {
-      if (!state.consent) setStatus(t('consentRequired'), true);
-      else if (!state.selfieDataUrl) wigStatus(t('wigNeedSelfie'), true);
-      return;
-    }
+    // Never-silent guards (mirror the master flow).
+    if (state.busy)           { wigStatus(t('busyWait'), false); return; }
+    if (!state.consent)       { setStatus(t('consentRequired'), true); wigStatus(t('consentRequired'), true); return; }
+    if (!state.selfieDataUrl) { wigStatus(t('needSelfie'), true); return; }
+    if (!state.signedIn)      { wigStatus(t('preparingSession'), false); state.pendingGenerate = 'wig'; ensureSignedIn(); return; }
     state.busy = true; refreshButtons();
     state.sessionId = 'ss_wig_' + Math.random().toString(36).slice(2, 9);
     wigStatus(t('wigGenerating'));
@@ -1421,7 +1594,13 @@
           // Generate flows now run under whatever uid is current (anon guest OR
           // the real customer — member quota — automatically).
           applyAccountFromUser(user);
-          setStatus(state.selfieDataUrl ? t('photoReady') : t('ready'));
+          if (state.pendingGenerate) {
+            // A generation was queued while auth was still completing — run it now
+            // so the user never has to tap twice (seamless).
+            runPendingGenerate();
+          } else if (!state.busy) {
+            setStatus(state.selfieDataUrl ? t('photoReady') : t('ready'));
+          }
         } else {
           state.signedIn = false; refreshButtons();
           applyAccountFromUser(null);

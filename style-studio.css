@@ -1,5 +1,5 @@
 /* ──────────────────────────────────────────────────────────────────────────
-   AI Style Studio — public page styles  (style-studio.css?v=20260613e)
+   AI Style Studio — public page styles  (style-studio.css?v=20260613f)
    Mobile-first. Uses the global :root palette/typography from /style.css.
    Breakpoints: base (375–767) → 768 (tablet) → 1200 (desktop, max-width 1280).
    ────────────────────────────────────────────────────────────────────────── */
@@ -203,6 +203,37 @@ body { overflow-y: auto; overflow-x: hidden; }
   margin-top: .8rem; line-height: 1.4;
 }
 .ss-status--error { color: #fca5a5; }
+/* Inline loading spinner shown before the status text while a look is generating. */
+.ss-status--loading::before {
+  content: ""; display: inline-block; vertical-align: -2px;
+  width: 13px; height: 13px; margin-right: .5rem;
+  border: 2px solid rgba(192,132,252,.35); border-top-color: #c084fc;
+  border-radius: 50%; animation: ss-spin .8s linear infinite;
+}
+@keyframes ss-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .ss-status--loading::before { animation-duration: 2.4s; }
+}
+
+/* Generation error card with a Retry button (never leave the user wondering). */
+.ss-error-card {
+  margin-top: 1.3rem; padding: 1.2rem 1.1rem;
+  background: rgba(252,165,165,.06); border: 1px solid rgba(252,165,165,.35);
+  border-radius: 16px; text-align: center;
+}
+.ss-error-card__msg {
+  font-family: var(--font-b); font-size: .92rem; line-height: 1.55;
+  color: var(--cream); margin: 0 0 1rem;
+}
+.ss-error-card__retry {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 44px; padding: .7rem 1.6rem;
+  background: var(--gold); color: var(--navy-900);
+  font-family: var(--font-b); font-weight: 700; font-size: .9rem; letter-spacing: .03em;
+  border: none; border-radius: 99px; cursor: pointer;
+  touch-action: manipulation; transition: background .18s;
+}
+.ss-error-card__retry:hover { background: var(--gold-lt); }
 
 /* Masterpiece result */
 .ss-master-result { margin-top: 1.3rem; }

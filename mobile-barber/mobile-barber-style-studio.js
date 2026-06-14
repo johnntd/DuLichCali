@@ -24,6 +24,7 @@
       scoreSymmetry: 'Symmetry', scoreYouthfulness: 'Youthfulness', scoreProfessional: 'Professional',
       scoreConfidence: 'Confidence', scoreSoftness: 'Softness', scoreMaintenance: 'Maintenance',
       emphasize: 'Emphasize', balance: 'Balance', thinning: 'Hair fullness',
+      audienceLabel: 'Audience', audMan: 'Man', audWoman: 'Woman', audChild: 'Child', audNeutral: 'Auto',
     },
     vi: {
       studioTitle: 'Studio Tạo Kiểu AI', studioSub: 'Tư vấn cho thợ — phân tích ảnh, khám phá kiểu',
@@ -40,6 +41,7 @@
       scoreSymmetry: 'Cân Đối', scoreYouthfulness: 'Trẻ Trung', scoreProfessional: 'Chuyên Nghiệp',
       scoreConfidence: 'Tự Tin', scoreSoftness: 'Mềm Mại', scoreMaintenance: 'Bảo Dưỡng',
       emphasize: 'Nhấn Mạnh', balance: 'Cân Bằng', thinning: 'Độ Dày Tóc',
+      audienceLabel: 'Đối tượng', audMan: 'Nam', audWoman: 'Nữ', audChild: 'Trẻ em', audNeutral: 'Tự động',
     },
     es: {
       studioTitle: 'Estudio de Estilo AI', studioSub: 'Consulta del vendedor — analiza una selfie, explora looks',
@@ -56,10 +58,12 @@
       scoreSymmetry: 'Simetría', scoreYouthfulness: 'Juventud', scoreProfessional: 'Profesional',
       scoreConfidence: 'Confianza', scoreSoftness: 'Suavidad', scoreMaintenance: 'Mantenimiento',
       emphasize: 'Destacar', balance: 'Equilibrar', thinning: 'Densidad capilar',
+      audienceLabel: 'Audiencia', audMan: 'Hombre', audWoman: 'Mujer', audChild: 'Niño', audNeutral: 'Automático',
     },
   };
 
   var state = { lang: 'en', consent: false, selfieDataUrl: '', mode: 'haircut', options: {},
+                audience: 'neutral',
                 analyzing: false, analysis: null, recommendations: [], sessionId: '',
                 favorites: [], compareIds: [] };
 
@@ -134,6 +138,20 @@
     upload.addEventListener('change', onUpload);
     var uploadBtn = elt('label', 'mb-button mb-button--ghost', t('studioUpload')); uploadBtn.setAttribute('for', 'mbStudioUpload');
     head.appendChild(uploadBtn); head.appendChild(upload);
+
+    // Audience selector — controls which audience the backend targets
+    var audWrap = elt('div', 'mb-studio-audience-wrap');
+    var audLabel = elt('label', 'mb-studio-audience-label', t('audienceLabel'));
+    var audSel = root.document.createElement('select'); audSel.className = 'mb-studio-audience';
+    [['neutral', t('audNeutral')], ['man', t('audMan')], ['woman', t('audWoman')], ['child', t('audChild')]].forEach(function (pair) {
+      var o = root.document.createElement('option'); o.value = pair[0]; o.textContent = pair[1];
+      if (pair[0] === state.audience) o.selected = true;
+      audSel.appendChild(o);
+    });
+    audSel.addEventListener('change', function () { state.audience = audSel.value; });
+    audWrap.appendChild(audLabel); audWrap.appendChild(audSel);
+    head.appendChild(audWrap);
+
     host.appendChild(head);
 
     var selfiePreview = elt('div', 'mb-studio-selfie'); selfiePreview.id = 'mbStudioSelfie';
@@ -201,7 +219,7 @@
     var resultsEl = bodyEl.querySelector('.mb-studio-results');
     if (resultsEl) resultsEl.textContent = t('studioGenerating');
     callStudio({ dataUrl: state.selfieDataUrl, mode: def.mode, options: opts,
-                 audience: state.options.audience || 'neutral' }).then(function (res) {
+                 audience: state.audience || 'neutral' }).then(function (res) {
       state.analyzing = false;
       if (!res.ok) { if (resultsEl) resultsEl.textContent = res.message || t('studioError'); return; }
       state.analysis = res.analysis || null;

@@ -6078,3 +6078,35 @@
     right: 12px;
   }
 }
+
+/* ── AI Style Studio (vendor-only) ───────────────────────────────────── */
+.mb-style-studio-root { display: grid; gap: .75rem; }
+.mb-studio-head { display: grid; gap: .5rem; }
+.mb-studio-title { font-family: var(--font-d, serif); margin: 0; }
+.mb-studio-consent { display: flex; gap: .5rem; align-items: center; font-size: .9rem; }
+.mb-studio-selfie img { max-width: 140px; border-radius: 12px; }
+.mb-studio-accordion { display: grid; gap: .5rem; }
+.mb-studio-panel { border: 1px solid rgba(255,255,255,.14); border-radius: 12px; overflow: hidden; }
+.mb-studio-panel__summary { cursor: pointer; padding: .75rem 1rem; font-weight: 600; list-style: none; }
+.mb-studio-panel__body { padding: .75rem 1rem; display: grid; gap: .6rem; }
+.mb-studio-select { width: 100%; padding: .5rem; border-radius: 8px; }
+.mb-studio-results { display: grid; gap: .75rem; grid-template-columns: 1fr; }
+.mb-studio-card { border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: .6rem; display: grid; gap: .35rem; }
+.mb-studio-card__img { width: 100%; border-radius: 8px; cursor: zoom-in; }
+.mb-studio-card__actions { display: flex; flex-wrap: wrap; gap: .4rem; }
+.mb-studio-consult { border: 1px dashed rgba(255,200,120,.4); border-radius: 12px; padding: .75rem; }
+.mb-studio-consult__note { font-size: .75rem; opacity: .7; margin: .15rem 0 .6rem; }
+.mb-studio-score { display: grid; grid-template-columns: 7rem 1fr 2.5rem; gap: .5rem; align-items: center; }
+.mb-studio-score__bar { height: 8px; background: rgba(255,255,255,.12); border-radius: 99px; }
+.mb-studio-score__fill { height: 100%; background: linear-gradient(90deg,#c9a24a,#f4d27a); border-radius: 99px; }
+.mb-studio-compare { position: fixed; inset: 0; z-index: 1000; background: rgba(4,12,24,.94); display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 2rem; }
+.mb-studio-compare__col img { width: 100%; border-radius: 10px; }
+.mb-studio-compare__close { position: absolute; top: 1rem; right: 1rem; font-size: 1.6rem; background: none; border: none; color: #fff; }
+
+@media (min-width: 768px) {
+  .mb-studio-results { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1200px) {
+  .mb-studio-results { grid-template-columns: repeat(3, 1fr); }
+  .mb-style-studio-root { max-width: 1280px; margin: 0 auto; }
+}

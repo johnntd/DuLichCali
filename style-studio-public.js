@@ -115,6 +115,13 @@
       err_PLAN_EMPTY: 'No styles could be generated. Try a clearer photo.',
       err_EDIT_ERROR: 'The previews could not be rendered. Please try again.',
       err_EDIT_ALL_FAILED: 'Could not generate a preview image. Please try again with a clear, well-lit photo.',
+      err_REALISM_FAILED: 'We couldn’t create a natural-looking result from this photo. Please try a clearer selfie with good lighting (face the camera, hair visible, no hat or sunglasses).',
+      // Wig-intelligence: explains why a wig was / was not recommended.
+      wigNote_none: 'Your current hair volume looks workable — AI recommends a natural haircut/style improvement instead of added hair.',
+      wigNote_optional: 'A fuller look may help, but a subtle natural hairstyle may be enough.',
+      wigNote_recommended: 'A natural fuller-hair option may create a more balanced, youthful look.',
+      // Pre-upload photo guidance for the best, most natural results.
+      selfieTips: 'For best results: face the camera, good lighting, hair & hairline visible, no hat or sunglasses, simple background.',
       err_DAILY_LIMIT: 'You’ve reached today’s limit — please try again tomorrow.',
       // Customer account (reuses the mobile-barber customer auth).
       logIn: 'Log in', signUp: 'Sign up', logInOrSignUp: 'Log in / Sign up',
@@ -262,6 +269,11 @@
       err_PLAN_EMPTY: 'Không tạo được kiểu nào. Hãy thử ảnh rõ nét hơn.',
       err_EDIT_ERROR: 'Không thể dựng bản xem trước. Vui lòng thử lại.',
       err_EDIT_ALL_FAILED: 'Không tạo được ảnh xem trước. Vui lòng thử lại với ảnh rõ nét, đủ sáng.',
+      err_REALISM_FAILED: 'Chưa tạo được kết quả trông tự nhiên từ ảnh này. Vui lòng thử ảnh selfie rõ hơn, đủ sáng (nhìn thẳng máy ảnh, thấy rõ tóc, không đội mũ hay đeo kính râm).',
+      wigNote_none: 'Lượng tóc hiện tại của bạn khá ổn — AI gợi ý cải thiện kiểu cắt/tạo kiểu tự nhiên thay vì thêm tóc.',
+      wigNote_optional: 'Tóc dày hơn có thể đẹp hơn, nhưng một kiểu tóc tự nhiên nhẹ nhàng có thể đã đủ.',
+      wigNote_recommended: 'Lựa chọn tóc dày tự nhiên có thể tạo diện mạo cân đối và trẻ trung hơn.',
+      selfieTips: 'Để có kết quả tốt nhất: nhìn thẳng máy ảnh, đủ sáng, thấy rõ tóc và chân tóc, không đội mũ hay kính râm, nền đơn giản.',
       err_DAILY_LIMIT: 'Bạn đã đạt giới hạn hôm nay — vui lòng thử lại vào ngày mai.',
       // Tài khoản khách hàng (dùng chung hệ thống đăng nhập Mobile Barber).
       logIn: 'Đăng nhập', signUp: 'Đăng ký', logInOrSignUp: 'Đăng nhập / Đăng ký',
@@ -409,6 +421,11 @@
       err_PLAN_EMPTY: 'No se pudo generar ningún estilo. Prueba una foto más nítida.',
       err_EDIT_ERROR: 'No se pudieron generar las vistas previas. Inténtalo de nuevo.',
       err_EDIT_ALL_FAILED: 'No se pudo generar una imagen de vista previa. Inténtalo de nuevo con una foto nítida y bien iluminada.',
+      err_REALISM_FAILED: 'No pudimos crear un resultado de aspecto natural con esta foto. Prueba una selfie más nítida con buena luz (mira a la cámara, cabello visible, sin gorra ni gafas de sol).',
+      wigNote_none: 'Tu volumen de cabello actual se ve aprovechable — la IA recomienda mejorar el corte/estilo natural en lugar de añadir cabello.',
+      wigNote_optional: 'Un look más abundante puede ayudar, pero un peinado natural sutil podría ser suficiente.',
+      wigNote_recommended: 'Una opción de cabello más abundante y natural puede crear un look más equilibrado y juvenil.',
+      selfieTips: 'Para mejores resultados: mira a la cámara, buena luz, cabello y nacimiento del pelo visibles, sin gorra ni gafas de sol, fondo simple.',
       err_DAILY_LIMIT: 'Has alcanzado el límite de hoy — inténtalo de nuevo mañana.',
       // Cuenta de cliente (reutiliza el inicio de sesión de Mobile Barber).
       logIn: 'Iniciar sesión', signUp: 'Registrarse', logInOrSignUp: 'Iniciar sesión / Registrarse',
@@ -1058,6 +1075,11 @@
       var p = elt('p', 'ss-explain__text'); p.id = 'ssExplanation'; p.textContent = mp.explanation;
       ex.appendChild(p); body.appendChild(ex);
     }
+    // Wig-intelligence: transparent note on WHY a wig was / was not recommended
+    // (Master Stylist must not silently default to a wig).
+    var wd = mp.wigDecision || {};
+    var wnKey = { none: 'wigNote_none', optional: 'wigNote_optional', recommended: 'wigNote_recommended', strong_recommend: 'wigNote_recommended' }[wd.needed];
+    if (wnKey) body.appendChild(elt('p', 'ss-card__meta', t(wnKey)));
     var attrs = mp.attributes || {};
     var attrKeys = MASTER_ATTR_KEYS.filter(function (k) { return attrs[k]; });
     if (attrKeys.length) {

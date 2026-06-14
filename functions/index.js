@@ -2585,11 +2585,15 @@ const IDENTITY_CLAUSE = 'CRITICAL — IDENTITY LOCK: keep the EXACT SAME PERSON 
 // in-place IDENTITY_CLAUSE ("change ONLY the hair") contradicts the task and
 // makes the image model produce weak/empty output, so those modes use this
 // replacement-forcing clause instead (still locks identity).
-const REPLACE_HAIR_CLAUSE = 'CRITICAL — IDENTITY LOCK: keep the EXACT SAME PERSON — same face shape, eyes, nose, lips, skin tone, age and gender presentation; do NOT swap the person or beautify the face. REPLACE the existing hair with the selected style rendered as REAL, NATURAL-GROWING HUMAN HAIR that looks indistinguishable from the person\'s own hair — NOT a wig, NOT a hairpiece, NOT a costume. Render a SEAMLESS, slightly IRREGULAR natural hairline that blends softly into the forehead and temples with fine baby hairs and a few flyaways — NO hard edge, NO straight wig-cap line, NO visible lace front, NO helmet shape. Vary the hair density, thickness and direction naturally (not uniform); show a realistic scalp/part where the style calls for it, with natural strand detail. Soft, matte-to-natural sheen — NOT plastic, glossy or synthetic. Match the hair colour and undertone to the person\'s complexion and the photo lighting so the roots and hairline read as truly their own. Photorealistic, natural lighting, head-and-shoulders portrait, sharp focus.';
+// NATURAL-HAIR framing (do NOT say "wig"/"hairpiece"/"costume" — image models key
+// on those nouns even when negated, which produces costume output). Describe the
+// RESULT as the person's own fuller, salon-quality growing hair, and preserve the
+// whole photo (identity + head angle + lighting + shadows + background + neck).
+const REPLACE_HAIR_CLAUSE = 'NATURAL HAIR EDIT — this is a photo retouch of this EXACT photograph: change ONLY the hair, nothing else. Keep the identical person and identity (same face, eyes, nose, lips, skin tone, age, ethnicity, head shape and facial structure), the SAME head tilt and camera angle, the SAME lighting direction, highlights and shadows, the SAME background, and the SAME neck and shoulders. Give them a fuller, natural, salon-fresh head of hair that looks exactly like their OWN healthy growing hair: a soft, slightly irregular hairline that melts into the forehead and temples with fine baby hairs (never a hard edge or straight band), a realistic part and scalp where visible, natural density and volume with strand-level detail and natural movement, and a hair colour and shine matched to their complexion and the photo light so the roots read as truly their own. The hair must sit with correct scale and perspective on the head and cast natural shadows. Keep it photorealistic and seamlessly blended — no pasted-on edge, no helmet shape, no flat cap line, no plastic or glossy synthetic sheen.';
 // Two-pass realism refine prompt for wig/hair-system: the first-pass image is
 // fed BACK into the image model with this realism-only instruction to dissolve
 // the wig seam and remove the "costume" look without changing the style.
-const WIG_REFINE_CLAUSE = 'REFINE PASS — keep the EXACT SAME PERSON and the SAME hairstyle, cut, length and colour shown in this image; do NOT change the face or the style. Make ONLY the hair read as 100% real, naturally-growing human hair: dissolve any wig edge, lace line or hard hairline into the forehead and temples with fine baby hairs and soft flyaways; add natural density and individual-strand variation; remove any helmet shape, plastic shine or costume look; integrate the roots, part and scalp so it looks like the person\'s own hair under the photo\'s exact lighting and skin tone. Sharp, photorealistic, natural lighting, head-and-shoulders portrait.';
+const WIG_REFINE_CLAUSE = 'REFINE PASS — keep the EXACT SAME PERSON and the SAME hairstyle, cut, length and colour in this image; do NOT change the face, the style, the lighting, the head angle or the background. Make ONLY the hair read as 100% real, naturally-growing human hair: dissolve any hard hairline, edge or band into the forehead and temples with fine baby hairs and soft flyaways; add natural density and individual-strand variation; remove any helmet shape, flat cap line, plastic shine or pasted-on look; integrate the roots, part and scalp and match the hair to the photo\'s exact lighting and skin tone so it reads as the person\'s own hair. Sharp, photorealistic, seamlessly blended.';
 // Refine a first-pass replacement edit. Returns the refined dataUrl, or null on
 // any failure (caller keeps the first pass). callGeminiImageEdit is hoisted.
 async function refineHairRealism(geminiKey, firstPassDataUrl) {
@@ -2601,10 +2605,64 @@ async function refineHairRealism(geminiKey, firstPassDataUrl) {
   const out = await callGeminiImageEdit(geminiKey, m[2], m[1], WIG_REFINE_CLAUSE, 1);
   return (out && out.dataUrl) ? out.dataUrl : null;
 }
+
+// Stricter natural-realism instruction appended on a quality-gate RETRY (when the
+// first result was judged fake/costume-like). Pushes hard on natural integration.
+const REALISM_MAX_CLAUSE = ' MAXIMUM REALISM: the previous attempt looked fake or pasted-on — fix that. Render the hair as THIS person\'s own natural growing hair: dissolve the hairline into the skin with fine baby hairs (no edge, band or cap line), vary density and direction, match colour, sheen and lighting exactly to the face and photo, with correct scale and natural shadows. Absolutely no helmet shape, no plastic or synthetic shine, no pasted-on look. Keep the same person, face, angle, lighting and background.';
+
+// Realism quality gate: ask a fast vision model whether the HAIR in a generated
+// result looks like real natural hair or an obvious fake/costume. Returns
+// { natural, score, issues }. IMPORTANT: any assessment failure returns
+// natural:true (never block a genuine result on a checker hiccup); the gate only
+// acts on a confident "fake" verdict.
+const REALISM_JUDGE_PROMPT = 'Image 1 is a person\'s ORIGINAL photo. Image 2 is an AI hair makeover of the SAME person. As a strict QA checker, judge two things: (a) IDENTITY — is image 2 clearly the SAME person with the same face (not distorted, not a different or much-younger model, face not changed too much)? (b) HAIR REALISM — does the hair in image 2 look like REAL, natural, growing human hair, or an obvious fake/costume with a visible cap line, hard pasted edge, helmet shape, plastic/synthetic shine, unnatural giant volume, or colour/lighting that does not match the face? Return STRICT JSON only, no markdown: {"identityStable": true|false, "natural": true|false, "score": 0.0, "issues": ["short-tag"]}. Use natural=false and score below 0.5 when the hair looks fake/costume/pasted/over-volumized/mismatched; identityStable=false when the face changed too much; score above 0.7 only when identity holds AND the hair is convincingly real.';
+// Pass the ORIGINAL selfie too so the judge can detect identity drift, not just
+// costume look. Any assessment failure returns pass=true (never block a genuine
+// result on a checker hiccup) — the gate only acts on a confident negative verdict.
+async function assessHairRealism(geminiKey, resultDataUrl, originalBase64, originalMime) {
+  const m = /^data:(image\/[a-z0-9.+-]+);base64,(.+)$/i.exec(resultDataUrl || '');
+  if (!m) return { natural: true, score: 1, issues: [] };
+  try {
+    const parts = [];
+    if (originalBase64) parts.push({ inline_data: { mime_type: originalMime || 'image/jpeg', data: originalBase64 } });
+    parts.push({ inline_data: { mime_type: m[1], data: m[2] } });
+    parts.push({ text: REALISM_JUDGE_PROMPT });
+    const body = { contents: [{ role: 'user', parts: parts }], generationConfig: { temperature: 0.1, responseMimeType: 'application/json' } };
+    const raw = await httpsPost('generativelanguage.googleapis.com', `/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {}, body);
+    const parsed = JSON.parse(raw);
+    const txt = (((parsed.candidates || [])[0] || {}).content && parsed.candidates[0].content.parts || [])
+      .map(function (p) { return p.text || ''; }).join('').trim();
+    const j = JSON.parse(txt.replace(/^```json\s*|\s*```$/g, ''));
+    const score = (typeof j.score === 'number') ? j.score : (j.natural === false ? 0.3 : 0.8);
+    const pass = (j.natural !== false) && (j.identityStable !== false) && score >= 0.5;
+    return { natural: pass, score: score, issues: Array.isArray(j.issues) ? j.issues : [], identityStable: j.identityStable !== false };
+  } catch (e) {
+    return { natural: true, score: 1, issues: [] }; // never block on a checker failure
+  }
+}
+
+// Run the realism gate on a featured image: assess → if it looks fake, RETRY the
+// edit once with the max-realism clause → re-assess. Returns the best dataUrl we
+// have plus whether it ultimately passed. base64/mime are the ORIGINAL selfie.
+async function realismGate(geminiKey, dataUrl, base64, mimeType, editPrompt) {
+  let first = await assessHairRealism(geminiKey, dataUrl, base64, mimeType);
+  if (first.natural) return { dataUrl: dataUrl, passed: true, score: first.score };
+  console.warn('[realismGate] first result judged unnatural', first);
+  try {
+    const retry = await callGeminiImageEdit(geminiKey, base64, mimeType, editPrompt + REALISM_MAX_CLAUSE, 2);
+    const second = await assessHairRealism(geminiKey, retry.dataUrl, base64, mimeType);
+    if (second.natural) return { dataUrl: retry.dataUrl, passed: true, score: second.score };
+    // Keep the higher-scoring of the two so we still show our best attempt.
+    return { dataUrl: (second.score >= first.score ? retry.dataUrl : dataUrl), passed: false, score: Math.max(first.score, second.score) };
+  } catch (e) {
+    return { dataUrl: dataUrl, passed: false, score: first.score };
+  }
+}
+
 const CHILD_SAFETY_CLAUSE = ' This subject is a CHILD: keep them clearly the same child of the same age, with wholesome, school-appropriate kid styling only — no adult/edgy looks, no facial hair, no aging.';
 // Master Stylist composite edit: lock facial identity but allow hair/color/
 // eyebrow/beard enhancement (+ wig/hair-system if beneficial).
-const MASTER_STYLIST_CLAUSE = 'CRITICAL — IDENTITY LOCK: keep the EXACT SAME PERSON — same face, eyes, nose, lips, age range, ethnicity, skin tone and facial bone structure; do NOT swap the person or alter facial features. You MAY enhance the hair (cut, color, texture, bangs), eyebrows and facial hair/beard, and add a natural wig or hair system ONLY if it clearly improves fullness or harmony. Produce the single most flattering, harmonious, youthful, confident and natural result. Photorealistic, natural lighting, head-and-shoulders portrait, sharp focus.';
+const MASTER_STYLIST_CLAUSE = 'NATURAL LOOK EDIT — keep the EXACT SAME PERSON: same face, eyes, nose, lips, age range, ethnicity, skin tone and facial bone structure, and the SAME head angle, lighting, shadows and background; do NOT swap the person or alter facial features. Enhance PRIMARILY with a flattering haircut, natural hair colour, texture/shape, eyebrows and (men) a groomed beard. Only add MORE fullness where the hair genuinely looks thin, and render any added fullness as the person\'s OWN natural growing hair — a soft irregular hairline with fine baby hairs, realistic part/scalp, natural density and matched colour/lighting; never a pasted-on, helmet, cap-line, plastic or synthetic look. Produce the single most flattering, harmonious, youthful, confident and natural result, photorealistic and seamlessly blended.';
 
 // audience → instruction phrasing for the analysis model
 const HAIRCUT_AUDIENCE_BRIEF = {
@@ -2822,6 +2880,20 @@ function normalizeHaircutStyle(s, audience, idx, mode) {
   var isReplace = (mode === 'wig' || mode === 'hairsystem');
   var lockClause = isReplace ? REPLACE_HAIR_CLAUSE : IDENTITY_CLAUSE;
   var edit = String(s.imageEditPrompt || s.editPrompt || '').trim();
+  // Neutralize costume nouns in the MODEL'S image instruction BEFORE we append our
+  // house clause (image models render "wig"/"hairpiece"/"costume" as a costume even
+  // in an edit). Run it on the raw model text + the fallback title only — NOT over
+  // the house clause (which legitimately uses "synthetic" in a negative). The
+  // customer-facing title/description keep their original wording.
+  var reframe = function (txt) {
+    return String(txt).replace(/\bwigs?\b/gi, 'fuller natural hairstyle')
+                      .replace(/\bhair[-\s]?pieces?\b/gi, 'natural hair')
+                      .replace(/\bhair[-\s]?replacements?\b/gi, 'fuller natural hair')
+                      .replace(/\bcostumes?\b/gi, 'style')
+                      .replace(/\blace[-\s]?fronts?\b/gi, 'natural hairline')
+                      .replace(/\bsynthetic\b/gi, 'natural');
+  };
+  if (isReplace && edit) edit = reframe(edit);
   if (isReplace && edit) {
     // Force the replacement clause even if the vision model already emitted an
     // in-place identity lock — wig/hair-system must visibly replace the hair.
@@ -2829,7 +2901,7 @@ function normalizeHaircutStyle(s, audience, idx, mode) {
   } else if (edit && edit.toUpperCase().indexOf('IDENTITY LOCK') < 0) {
     edit += ' ' + lockClause + childClause;
   }
-  if (!edit) edit = (isReplace ? 'Replace the subject’s hair with "' : 'Restyle the subject’s hair into "') + title + '". ' + lockClause + childClause;
+  if (!edit) edit = (isReplace ? 'Restyle the subject’s hair into a fuller, natural version of "' + reframe(title) : 'Restyle the subject’s hair into "' + title) + '". ' + lockClause + childClause;
   var aud = String(s.targetAudience || '').toLowerCase();
   var sid = String(s.styleId || ('style-' + (idx + 1))).toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
   return {
@@ -3108,6 +3180,21 @@ function normalizeStudioAnalysis(rawAnalysis) {
         ? rawAnalysis.thinning.level : 'none',
       note: String((rawAnalysis.thinning && rawAnalysis.thinning.note) || '').trim(),
     },
+    // Wig-intelligence: the model first assesses current hair volume, then makes
+    // an explicit, transparent wig decision. Coerced to known enums so the client
+    // can show "why a wig was / was not recommended" and never over-suggest one.
+    hairVolumeAssessment: ['adequate', 'mild_thinning', 'moderate_thinning', 'advanced_thinning']
+      .indexOf(String(rawAnalysis.hairVolumeAssessment)) >= 0 ? rawAnalysis.hairVolumeAssessment : '',
+    wigDecision: (function () {
+      const wd = (rawAnalysis.wigDecision && typeof rawAnalysis.wigDecision === 'object' && !Array.isArray(rawAnalysis.wigDecision)) ? rawAnalysis.wigDecision : {};
+      return {
+        needed: ['none', 'optional', 'recommended', 'strong_recommend'].indexOf(String(wd.needed)) >= 0 ? wd.needed : 'none',
+        reason: String(wd.reason || '').trim(),
+        naturalAlternative: String(wd.naturalAlternative || '').trim(),
+        selectedApproach: ['haircut', 'color', 'texture', 'eyebrow_beard', 'subtle_volume', 'topper', 'hair_system', 'wig']
+          .indexOf(String(wd.selectedApproach)) >= 0 ? wd.selectedApproach : '',
+      };
+    })(),
   };
 }
 
@@ -3159,11 +3246,26 @@ async function runStudioGeneration(params) {
       console.error('[runStudioGeneration] master edit failure', e);
       return { ok: false, vendorMessage: 'Master Stylist could not render the look. Please try again.', debugCode: 'MASTER_EDIT_ERROR' };
     }
+    // Realism quality gate: if the look reads as fake/costume, retry once with the
+    // max-realism clause; if it STILL fails, return a clear "try a better photo"
+    // error rather than showing an unnatural result.
+    const masterGate = await realismGate(
+      geminiKey, edit.dataUrl, base64, mimeType,
+      best.imageEditPrompt + ' ' + MASTER_STYLIST_CLAUSE + (audience === 'child' ? CHILD_SAFETY_CLAUSE : '')
+    );
+    if (!masterGate.passed) {
+      return { ok: false, vendorMessage: 'We couldn’t create a natural-looking result. Please try another photo with better lighting (face the camera, hair visible, no hat or sunglasses).', debugCode: 'REALISM_FAILED' };
+    }
     return {
       ok: true,
       mode: 'master', audience,
       analysis,
-      masterpiece: { previewDataUrl: edit.dataUrl, title: best.title, explanation: best.explanation, attributes: best.attributes },
+      masterpiece: {
+        previewDataUrl: masterGate.dataUrl, title: best.title, explanation: best.explanation, attributes: best.attributes,
+        // Carry the transparent wig decision to the customer (the analysis object
+        // itself stays vendor-scoped); the client shows "why a wig was/wasn't used".
+        wigDecision: analysis.wigDecision, hairVolumeAssessment: analysis.hairVolumeAssessment,
+      },
       provider: 'gemini-2.5-flash-image',
       generationTimeMs: Date.now() - t0,
     };
@@ -3223,10 +3325,23 @@ async function runStudioGeneration(params) {
       if (r.previewDataUrl && !r.error && c > bestConf) { bestConf = c; bestIdx = i; }
     });
     if (bestIdx >= 0) {
+      // Realism refine polish, THEN the quality gate (assess → stricter retry →
+      // re-assess) on the featured best-match the client shows.
       try {
         const refined = await refineHairRealism(geminiKey, recommendations[bestIdx].previewDataUrl);
         if (refined) recommendations[bestIdx] = Object.assign({}, recommendations[bestIdx], { previewDataUrl: refined });
       } catch (e) { /* keep the first-pass best image */ }
+      let gatePassed = true;
+      try {
+        const gate = await realismGate(geminiKey, recommendations[bestIdx].previewDataUrl, base64, mimeType, (styles[bestIdx] && styles[bestIdx].imageEditPrompt) || '');
+        recommendations[bestIdx] = Object.assign({}, recommendations[bestIdx], { previewDataUrl: gate.dataUrl });
+        gatePassed = gate.passed;
+      } catch (e) { /* checker error → don't block */ }
+      if (!gatePassed) {
+        // The featured best-match still reads as fake after a stricter retry —
+        // don't present an unnatural wig result; ask for a better photo.
+        return { ok: false, vendorMessage: 'We couldn’t create a natural-looking result. Please try another photo with better lighting (face the camera, hair visible, no hat or sunglasses).', debugCode: 'REALISM_FAILED' };
+      }
     }
   }
 

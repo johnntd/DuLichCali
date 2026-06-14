@@ -88,4 +88,11 @@ assert.ok(/async function runStudioGeneration\(/.test(src), 'runStudioGeneration
 assert.ok(/exports\.generateStyleStudio\s*=\s*onCall\(/.test(src), 'vendor studio intact'); ok('vendor studio intact');
 assert.ok(/mode === 'master'/.test(src), 'master branch present'); ok('master branch');
 
+// ── Task 3: public quota resolver (pure) + public callable wiring ────────────
+// resolveDailyLimit(promo, todayISO) → number of free generations allowed today
+assert.strictEqual(S.resolveDailyLimit({active:true,startDate:'2026-06-13',endDate:'2026-06-27',freeGenerationsPerUser:5},'2026-06-20'),5); ok('promo active → limit');
+assert.strictEqual(S.resolveDailyLimit({active:true,startDate:'2026-06-13',endDate:'2026-06-27',freeGenerationsPerUser:5},'2026-07-01'),0); ok('after window → 0');
+assert.strictEqual(S.resolveDailyLimit({active:false,freeGenerationsPerUser:5},'2026-06-20'),0); ok('inactive → 0');
+assert.strictEqual(S.resolveDailyLimit(null,'2026-06-20'),0); ok('no config → 0');
+
 console.log(`\nstyle-studio pure tests: ${n} passed`);

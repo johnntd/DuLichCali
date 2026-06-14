@@ -3228,6 +3228,127 @@ exports.generateStyleStudio = onCall(
   }
 );
 
+// ────────────────────────────────────────────────────────────────────────
+// PUBLIC AI STYLE STUDIO — anon-auth, promo-gated reuse of the studio engine.
+// Same Gemini engine as the vendor studio (runStudioGeneration), but open to
+// anonymous customers on /style-studio, capped by a launch promo window and a
+// per-uid daily counter. Privacy-first: only an integer counter is stored, never
+// an image. The vendor callable above is UNCHANGED.
+// ────────────────────────────────────────────────────────────────────────
+
+// 5-min cache of the `config/styleStudioPromo` doc (clone of the getAiKey/
+// _loadFirestoreAiKeys pattern). Reads via the module-scoped Admin SDK `db`,
+// which bypasses the rules `allow read: if false` on this doc.
+let _promoCache = null, _promoCacheAt = 0;
+async function getStyleStudioPromo() {
+  if (_promoCache && (Date.now() - _promoCacheAt) < 5 * 60 * 1000) return _promoCache;
+  let promo = {};
+  try {
+    const snap = await db.collection('config').doc('styleStudioPromo').get();
+    if (snap.exists) promo = snap.data() || {};
+  } catch (e) { /* fall back to empty (limit resolves to 0) */ }
+  _promoCache = promo;
+  _promoCacheAt = Date.now();
+  return _promoCache;
+}
+
+// Require an authenticated guest. Anonymous Firebase Auth is OK (the public page
+// signs the visitor in anonymously); only a fully-unauthenticated call is rejected.
+function requireAuthedGuest(request) {
+  if (!request.auth || !request.auth.uid) {
+    throw new HttpsError('unauthenticated', 'Open the page so we can start a free session.');
+  }
+  return request.auth.uid;
+}
+
+// READ-ONLY: resolve today's free-preview limit and how many this uid has used.
+// No write — the counter is incremented AFTER a successful generation so a failed
+// render does not consume a free preview.
+async function checkPublicQuota(uid) {
+  const promo = await getStyleStudioPromo();
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const limit = StudioLib.resolveDailyLimit(promo, todayISO);
+  let used = 0;
+  try {
+    const snap = await db.collection('styleStudioUsage').doc(uid).collection('days').doc(todayISO).get();
+    used = (snap.exists && Number(snap.data().count)) || 0;
+  } catch (e) { used = 0; }
+  return { allowed: used < limit, limit, used, today: todayISO };
+}
+
+// Transactionally bump the per-uid daily counter (called only on ok:true).
+async function incrementPublicUsage(uid, today) {
+  const ref = db.collection('styleStudioUsage').doc(uid).collection('days').doc(today);
+  await ref.set({
+    count: admin.firestore.FieldValue.increment(1),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+}
+
+exports.generateStyleStudioPublic = onCall(
+  {
+    region: 'us-central1',
+    secrets: [GEMINI_API_KEY],
+    timeoutSeconds: 300,
+    memory: '1GiB',
+    cors: true,
+  },
+  async (request) => {
+    const uid = requireAuthedGuest(request); // anonymous OK; throws only if unauthenticated
+
+    const data = request.data || {};
+    // The public callable allows the flagship 'master' mode (the vendor studio
+    // does not). normalizeStudioMode would fall back to 'haircut' for 'master',
+    // so accept it explicitly; otherwise normalize to one of the 9 modes.
+    const mode = (data.mode === 'master') ? 'master' : StudioLib.normalizeStudioMode(data.mode);
+    // Master mode auto-decides everything: pass audience through the plain
+    // normalizer (no beard-forcing, which only applies to mode 'beard').
+    const audience = (mode === 'master')
+      ? StudioLib.normalizeStudioAudience(data.audience)
+      : StudioLib.audienceForMode(mode, data.audience);
+    const options = StudioLib.normalizeStudioOptions(mode === 'master' ? 'haircut' : mode, data.options);
+    const preference = StudioLib.normalizeStudioPref(data.preference);
+    const goal = StudioLib.normalizeStudioGoal(data.goal);
+    const langParam = String(data.lang || 'en').toLowerCase();
+    const lang = HAIRCUT_LANG_NAME[langParam] ? langParam : 'en';
+
+    const rawDataUrl = String(data.selfieDataUrl || '');
+    if (rawDataUrl.indexOf('data:image/') !== 0) {
+      return { ok: false, vendorMessage: 'Missing or invalid selfie image.', debugCode: 'INVALID_INPUT' };
+    }
+    const match = rawDataUrl.match(/^data:(image\/(?:jpeg|png|webp));base64,(.+)$/);
+    if (!match) return { ok: false, vendorMessage: 'Selfie format not supported (use JPEG/PNG/WebP).', debugCode: 'BAD_MIME' };
+    const mimeType = match[1];
+    const base64 = match[2];
+    if (base64.length > 1_500_000) {
+      return { ok: false, vendorMessage: 'Selfie is too large. Please use a smaller photo.', debugCode: 'IMAGE_TOO_LARGE' };
+    }
+
+    // READ-ONLY quota check first (no write yet — count only after a success).
+    const q = await checkPublicQuota(uid);
+    if (!q.allowed) {
+      return {
+        ok: false, code: 'LIMIT_REACHED', requireLogin: true,
+        vendorMessage: 'You have used your free previews. Create a free account to keep going.',
+        limit: q.limit,
+      };
+    }
+
+    const geminiKey = await getAiKey('gemini');
+    if (!geminiKey) {
+      return { ok: false, vendorMessage: 'AI Style Studio is temporarily unavailable.', debugCode: 'NO_GEMINI_KEY' };
+    }
+
+    const result = await runStudioGeneration({ mode, options, audience, preference, goal, lang, base64, mimeType, geminiKey });
+    if (result && result.ok) {
+      // Count this success against the daily quota. Best-effort: never fail the
+      // response if the counter write hiccups.
+      try { await incrementPublicUsage(uid, q.today); } catch (e) { /* ignore */ }
+    }
+    return result;
+  }
+);
+
 // ── Phase 13: Automatic Driver Dispatch ──────────────────────────────────────
 //
 // Flow:

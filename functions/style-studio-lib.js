@@ -144,10 +144,24 @@ function buildMasterStylistPrompt(audience, goal, lang) {
   ].join('\n');
 }
 
+// ── Public Style Studio promo quota (pure) ───────────────────────────────────
+// How many free public generations a single (anonymous) user gets today, given
+// the `config/styleStudioPromo` doc and today's ISO date (YYYY-MM-DD). Returns 0
+// unless the promo is explicitly active AND today is within [startDate,endDate].
+// Integers only — never touches images.
+function resolveDailyLimit(promo, todayISO) {
+  if (!promo || promo.active !== true) return 0;
+  const t = String(todayISO || ''); const s = String(promo.startDate || ''); const e = String(promo.endDate || '');
+  if (s && t < s) return 0;
+  if (e && t > e) return 0;
+  const n = Number(promo.freeGenerationsPerUser);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+}
+
 module.exports = {
   STUDIO_MODES, STUDIO_AUDIENCES, STUDIO_PREFS, STUDIO_GOALS, MASTER_ATTR_KEYS,
   normalizeStudioMode, normalizeStudioOptions, normalizeStudioAudience,
   normalizeStudioPref, normalizeStudioGoal, audienceForMode,
   STUDIO_LANG_NAME, SCORE_KEYS, normalizeStudioScores, buildStudioAnalysisPrompt,
-  normalizeMasterpiece, buildMasterStylistPrompt,
+  normalizeMasterpiece, buildMasterStylistPrompt, resolveDailyLimit,
 };

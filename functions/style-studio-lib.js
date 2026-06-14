@@ -62,8 +62,50 @@ function audienceForMode(mode, audience) {
   return normalizeStudioMode(mode) === 'beard' ? 'man' : normalizeStudioAudience(audience);
 }
 
+const STUDIO_LANG_NAME = { en: 'English', vi: 'Vietnamese (tiếng Việt)', es: 'Spanish (Español)' };
+const SCORE_KEYS = ['symmetry', 'youthfulness', 'professional', 'confidence', 'softness', 'maintenance'];
+
+function normalizeStudioScores(raw) {
+  raw = raw || {};
+  const out = {};
+  SCORE_KEYS.forEach((k) => {
+    const v = Number(raw[k]);
+    out[k] = Number.isFinite(v) ? Math.max(0, Math.min(100, Math.round(v))) : null;
+  });
+  return out;
+}
+
+function buildStudioAnalysisPrompt(mode, options, audience, preference, goal, lang) {
+  const langName = STUDIO_LANG_NAME[lang] || 'English';
+  const m = normalizeStudioMode(mode);
+  const guidance = STUDIO_MODES[m].guidance;
+  const optsLine = Object.keys(options || {}).length ? JSON.stringify(options) : '(none)';
+  return [
+    'You are a professional barber/stylist consultant analysing ONE customer selfie for a vendor-only studio tool. The OUTPUT IS READ ONLY BY THE BARBER, never shown to the customer.',
+    'SAFETY (absolute): use POSITIVE, respectful language only. Do NOT diagnose any medical condition, do NOT judge attractiveness, do NOT make ethnicity assumptions, NEVER make a medical claim (e.g. about hair loss — say "appears thinner", never "balding"). Children: wholesome, age-appropriate only.',
+    '',
+    'STUDIO MODE: ' + m + '. ' + guidance,
+    'Options: ' + optsLine + '. Customer audience: ' + audience + '. Preference: ' + (preference || 'none') + '. Goal: ' + (goal || 'none') + '.',
+    '',
+    'First, analyse the face and return a structured "analysis" object with:',
+    '- features: { faceShape (oval|round|square|diamond|heart|triangle|oblong), forehead, eyes, eyelids, brows, nose, lips, cheeks, jawChin, ears, hairline, hairDensity, beardDensity, skinToneBand, approxAgeRange } — each a SHORT positive phrase in ' + langName + '.',
+    '- scores: integer 0..100 for symmetry, youthfulness, professional, confidence, softness, maintenance. These are PROPORTION/HARMONY metrics, NOT a rating of the person.',
+    '- strategy: { emphasize: [..], balance: [..] } — positive phrasing only, in ' + langName + '.',
+    '- thinning: { level (none|mild|moderate|advanced), note } — soft language, never a medical claim.',
+    '',
+    'Then recommend EXACTLY 5 styles for this mode. Each style:',
+    '{ "styleId":"kebab-id","styleTitle":"","targetAudience":"man|woman|child|neutral","description":"","whyItFitsFace":"","maintenanceLevel":"","haircutInstructionsForBarber":"","colorRecommendation":"","highlightRecommendation":"","curlStraightRecommendation":"","confidence":0.0,"safetyNotes":"","imageEditPrompt":"" }',
+    'imageEditPrompt: precise ENGLISH instruction to render THIS look on the SAME person (preserve identity, face, ethnicity, skin tone, age, gender presentation; change only what this mode targets).',
+    '',
+    'LANGUAGE: write every customer-facing field AND the analysis in ' + langName + '. Write imageEditPrompt in ENGLISH only.',
+    'Return STRICT JSON only (no markdown) of the form:',
+    '{"analysis":{"features":{},"scores":{},"strategy":{"emphasize":[],"balance":[]},"thinning":{"level":"","note":""}},"styles":[ ... 5 items ... ]}',
+  ].join('\n');
+}
+
 module.exports = {
   STUDIO_MODES, STUDIO_AUDIENCES, STUDIO_PREFS, STUDIO_GOALS,
   normalizeStudioMode, normalizeStudioOptions, normalizeStudioAudience,
   normalizeStudioPref, normalizeStudioGoal, audienceForMode,
+  STUDIO_LANG_NAME, SCORE_KEYS, normalizeStudioScores, buildStudioAnalysisPrompt,
 };

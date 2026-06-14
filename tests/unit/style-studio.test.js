@@ -56,4 +56,11 @@ assert.ok(/exports\.generateStyleStudio\s*=\s*onCall\(/.test(src), 'generateStyl
 ['function callGeminiImageEdit', 'function callGeminiHaircutAnalysis', 'function normalizeHaircutStyle', 'async function getAiKey']
   .forEach((sig) => { assert.ok(src.indexOf(sig) >= 0, sig + ' present'); ok(sig.replace('function ', '') + ' present'); });
 
+// Guard: the studio module must never write image bytes to Firestore. It may
+// only use localStorage/sessionStorage + native download. Static source scan.
+const studioSrc = fs.readFileSync(require('path').join(__dirname, '../../mobile-barber/mobile-barber-style-studio.js'), 'utf8');
+assert.ok(!/\.set\(|\.add\(|\.update\(|uploadBytes|putString/.test(studioSrc.replace(/setItem|setLang|setTimeout|setAttribute|addEventListener/g, '')),
+  'studio module performs no Firestore/Storage write'); ok('studio writes nothing server-side');
+assert.ok(/localStorage/.test(studioSrc), 'studio uses localStorage for favorites/cache'); ok('studio uses localStorage');
+
 console.log(`\nstyle-studio pure tests: ${n} passed`);

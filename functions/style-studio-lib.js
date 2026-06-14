@@ -28,7 +28,7 @@ const STUDIO_MODES = {
 
 const STUDIO_AUDIENCES = ['man', 'woman', 'child', 'neutral'];
 const STUDIO_PREFS = ['professional', 'trendy', 'low_maintenance', 'natural', 'bold'];
-const STUDIO_GOALS = ['professional', 'youthful', 'elegant', 'executive', 'natural', 'confident', 'wedding', 'vacation', 'party', 'business', 'soft', 'masculine', 'feminine', 'cute', 'glamorous'];
+const STUDIO_GOALS = ['professional', 'youthful', 'elegant', 'executive', 'natural', 'confident', 'wedding', 'vacation', 'party', 'casual', 'business', 'soft', 'masculine', 'feminine', 'cute', 'glamorous'];
 
 // Master Stylist composite attributes the model may auto-decide for the single
 // best look. Used by normalizeMasterpiece to coerce the model's object safely.
@@ -67,7 +67,11 @@ function audienceForMode(mode, audience) {
 }
 
 const STUDIO_LANG_NAME = { en: 'English', vi: 'Vietnamese (tiếng Việt)', es: 'Spanish (Español)' };
-const SCORE_KEYS = ['symmetry', 'youthfulness', 'professional', 'confidence', 'softness', 'maintenance'];
+// Harmony/proportion metrics (NOT attractiveness). SP-6 adds customer-safe
+// 'harmony' + 'naturalness' alongside the existing vendor metrics.
+const SCORE_KEYS = ['symmetry', 'harmony', 'naturalness', 'youthfulness', 'professional', 'confidence', 'softness', 'maintenance'];
+// The customer-safe subset surfaced on the public result (style guidance only).
+const CUSTOMER_SCORE_KEYS = ['naturalness', 'harmony', 'professional', 'youthfulness', 'maintenance'];
 
 function normalizeStudioScores(raw) {
   raw = raw || {};
@@ -94,7 +98,7 @@ function buildStudioAnalysisPrompt(mode, options, audience, preference, goal, la
     '',
     'First, analyse the face and return a structured "analysis" object with:',
     '- features: { faceShape (oval|round|square|diamond|heart|triangle|oblong), forehead, eyes, eyelids, brows, nose, lips, cheeks, jawChin, ears, hairline, hairDensity, beardDensity, skinToneBand, approxAgeRange } — each a SHORT positive phrase in ' + langName + '.',
-    '- scores: integer 0..100 for symmetry, youthfulness, professional, confidence, softness, maintenance. These are PROPORTION/HARMONY metrics, NOT a rating of the person.',
+    '- scores: integer 0..100 for symmetry, harmony, naturalness, youthfulness, professional, confidence, softness, maintenance. These are PROPORTION/HARMONY/STYLE-GUIDANCE metrics, NOT attractiveness and NOT a rating of the person.',
     '- strategy: { emphasize: [..], balance: [..] } — positive phrasing only, in ' + langName + '.',
     '- thinning: { level (none|mild|moderate|advanced), note } — soft language, never a medical claim.',
     '',
@@ -116,12 +120,26 @@ function normalizeMasterpiece(raw) {
   const attrsIn = (raw.attributes && typeof raw.attributes === 'object' && !Array.isArray(raw.attributes)) ? raw.attributes : {};
   const attributes = {};
   MASTER_ATTR_KEYS.forEach((k) => { if (attrsIn[k]) attributes[k] = String(attrsIn[k]).trim(); });
+  // SP-6: customer-friendly harmony summary (plain language, no clinical numbers).
+  const harmonyIn = (raw.harmony && typeof raw.harmony === 'object' && !Array.isArray(raw.harmony)) ? raw.harmony : {};
+  const toShortList = (v) => (Array.isArray(v) ? v : [])
+    .map((x) => String(x || '').trim()).filter(Boolean).slice(0, 4);
   return {
     title: String(raw.title || raw.styleTitle || 'Your best look').trim(),
     explanation: String(raw.explanation || raw.whyItFitsFace || '').trim(),
     imageEditPrompt: String(raw.imageEditPrompt || raw.editPrompt || '').trim(),
     attributes,
+    harmony: { noticed: toShortList(harmonyIn.noticed), recommends: toShortList(harmonyIn.recommends) },
   };
+}
+
+// Pick the customer-safe subset of harmony scores (style guidance only — never
+// attractiveness). Returns { key: 0..100|null } for the CUSTOMER_SCORE_KEYS.
+function customerScores(scores) {
+  scores = scores || {};
+  const out = {};
+  CUSTOMER_SCORE_KEYS.forEach((k) => { out[k] = (typeof scores[k] === 'number') ? scores[k] : null; });
+  return out;
 }
 
 // Single-pass prompt for the AI Master Stylist: analyse the selfie and design
@@ -133,13 +151,14 @@ function buildMasterStylistPrompt(audience, goal, lang) {
     'SAFETY (absolute): POSITIVE language only. Never say ugly/bad/balding/old-looking/unattractive or make a medical claim. Use "balance", "soften", "emphasize", "enhance", "fuller appearance", "youthful-looking". Children: wholesome, age-appropriate only.',
     'Customer audience: ' + audience + '. Style goal: ' + (goal || 'most flattering overall') + '.',
     '',
-    'First produce an "analysis" object: features { faceShape, forehead, eyes, eyelids, brows, nose, lips, cheeks, jawChin, ears, hairline, hairDensity, crownVisibility, currentHairLength, beardDensity, skinToneBand, approxAgeRange } (short positive phrases in ' + langName + '); scores { symmetry, youthfulness, professional, confidence, softness, maintenance } as integer 0..100 PROPORTION/HARMONY metrics (not a rating of the person); strategy { emphasize:[], balance:[] } positive phrasing; thinning { level (none|mild|moderate|advanced), note } soft language.',
+    'First produce an "analysis" object: features { faceShape, faceLengthWidth, forehead, eyes, eyelids, brows, nose, lips, cheeks, jawChin, ears, hairline, hairDensity, crownVisibility, currentHairLength, beardDensity, skinToneBand, approxAgeRange } (short POSITIVE phrases in ' + langName + '); scores { symmetry, harmony, naturalness, youthfulness, professional, confidence, softness, maintenance } as integer 0..100 PROPORTION/HARMONY/STYLE-GUIDANCE metrics (NOT attractiveness, NOT a rating of the person); strategy { emphasize:[], balance:[] } positive phrasing (emphasize = strengths like eyes/smile/cheekbones/jawline; balance = proportions to soften like forehead/face length/jaw width); thinning { level (none|mild|moderate|advanced), note } soft language.',
     'ALSO in analysis: hairVolumeAssessment = one of "adequate" | "mild_thinning" | "moderate_thinning" | "advanced_thinning" (assess CURRENT volume/density/hairline/crown honestly but kindly), and wigDecision = { needed: "none"|"optional"|"recommended"|"strong_recommend", reason: short positive sentence in ' + langName + ', naturalAlternative: the haircut/colour/style that helps without added hair (in ' + langName + '), selectedApproach: "haircut"|"color"|"texture"|"eyebrow_beard"|"subtle_volume"|"topper"|"hair_system"|"wig" }.',
     'WIG DECISION RULES (do NOT over-recommend a wig): adequate volume → needed="none", solve with haircut/color/texture; mild_thinning → needed="optional", prefer a subtle fuller hairstyle; moderate_thinning → needed="recommended", a natural fuller style or topper/hair-system; advanced_thinning → needed="strong_recommend", a natural hair-system. NEVER pick "wig" as selectedApproach for "Find My Best Look" unless advanced_thinning.',
     '',
     'Then choose THE SINGLE BEST look ("bestLook") following this PRIORITY ORDER: 1) better haircut, 2) better shape/texture, 3) better colour/highlight, 4) eyebrow/beard grooming, 5) SUBTLE volume improvement, 6) topper/hair-system ONLY if truly beneficial per wigDecision. Improve the person GENTLY and BELIEVABLY (subtle fuller crown, cleaner shape, better layering, natural hairline, age-appropriate) — NOT a giant-volume or dramatic transformation. Set wigOrSystem to "" unless wigDecision.needed is "recommended"/"strong_recommend"; NEVER describe it as a "wig". Return:',
-    '{ "title":"", "attributes":{ "haircut":"","color":"","texture":"","bangs":"","eyebrows":"","beard":"","wigOrSystem":"" }, "explanation":"", "imageEditPrompt":"" }',
-    'explanation: 2-3 sentences in ' + langName + ' on WHY this look suits them (what it emphasizes/balances), e.g. "adds volume near the crown, balances proportions, softens the jawline, emphasizes the eyes; the warm chestnut complements your skin tone for a youthful, professional appearance."',
+    '{ "title":"", "attributes":{ "haircut":"","color":"","texture":"","bangs":"","eyebrows":"","beard":"","wigOrSystem":"" }, "harmony":{ "noticed":[], "recommends":[] }, "explanation":"", "imageEditPrompt":"" }',
+    'harmony.noticed: 2-4 SHORT, friendly, plain-language positives the AI noticed (in ' + langName + '), e.g. "expressive eyes", "balanced cheekbones", "warm skin tone" — NO clinical measurements, NO numbers. harmony.recommends: 2-4 SHORT plain-language recommendations (in ' + langName + '), e.g. "soft layered cut", "natural chestnut tone", "light eyebrow cleanup".',
+    'explanation: 2-3 warm sentences in ' + langName + ' on WHY this look suits them AND why it fits the "' + (goal || 'most flattering') + '" goal (what it emphasizes/balances), e.g. "This look emphasizes your eyes and adds natural volume around the crown for a balanced, confident, professional appearance; the warm chestnut complements your skin tone." Speak to the customer ("your").',
     'imageEditPrompt: ONE precise ENGLISH instruction to render the transformation on the SAME person (preserve identity/eyes/nose/lips/age/ethnicity/skin tone/bone structure, head angle, lighting and background). Describe everything as the person\'s OWN natural growing hair — do NOT use the word "wig"/"hairpiece". If extra fullness is added, demand a soft natural hairline with baby hairs, realistic density/scalp and matched colour/lighting; never a pasted-on, cap-line, helmet, plastic or costume look.',
     '',
     'Return STRICT JSON only: {"analysis":{...},"bestLook":{...}}',
@@ -164,6 +183,6 @@ module.exports = {
   STUDIO_MODES, STUDIO_AUDIENCES, STUDIO_PREFS, STUDIO_GOALS, MASTER_ATTR_KEYS,
   normalizeStudioMode, normalizeStudioOptions, normalizeStudioAudience,
   normalizeStudioPref, normalizeStudioGoal, audienceForMode,
-  STUDIO_LANG_NAME, SCORE_KEYS, normalizeStudioScores, buildStudioAnalysisPrompt,
+  STUDIO_LANG_NAME, SCORE_KEYS, CUSTOMER_SCORE_KEYS, normalizeStudioScores, customerScores, buildStudioAnalysisPrompt,
   normalizeMasterpiece, buildMasterStylistPrompt, resolveDailyLimit,
 };

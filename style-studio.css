@@ -204,6 +204,19 @@ body { overflow-y: auto; overflow-x: hidden; }
 .ss-upload input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .ss-upload__tips { margin: .5rem 0 0; font-family: var(--font-b); font-size: .76rem; line-height: 1.45; color: var(--muted); }
 
+/* SP-6 — facial-harmony summary on the Master result (AI noticed / recommends + scores) */
+.ss-harmony { display: flex; flex-direction: column; gap: .7rem; margin-top: .2rem; padding-top: .8rem; border-top: 1px solid var(--border); }
+.ss-harmony__group { display: flex; flex-direction: column; gap: .4rem; }
+.ss-harmony__label { font-family: var(--font-b); font-weight: 700; font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; color: #d8b4fe; }
+.ss-harmony__chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.ss-harmony__chip { display: inline-flex; align-items: center; padding: .3rem .7rem; border-radius: 99px; background: rgba(192,132,252,.12); border: 1px solid rgba(192,132,252,.32); color: var(--cream); font-family: var(--font-b); font-size: .78rem; }
+.ss-harmony__scores { display: flex; flex-direction: column; gap: .45rem; }
+.ss-scorebar { display: grid; grid-template-columns: 6.5rem 1fr 1.9rem; align-items: center; gap: .5rem; }
+.ss-scorebar__k { font-family: var(--font-b); font-size: .74rem; color: var(--muted); }
+.ss-scorebar__track { height: 7px; border-radius: 99px; background: var(--navy-900); border: 1px solid var(--border); overflow: hidden; }
+.ss-scorebar__track i { display: block; height: 100%; background: linear-gradient(90deg, #c084fc 0%, var(--gold) 130%); }
+.ss-scorebar__v { font-family: var(--font-b); font-weight: 600; font-size: .74rem; color: var(--cream); text-align: right; }
+
 .ss-cta {
   display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
   width: 100%; background: var(--gold); color: var(--navy-900);

@@ -48,7 +48,7 @@
       goalBest: 'Best Overall',
       goal_professional: 'Professional', goal_youthful: 'Youthful', goal_elegant: 'Elegant',
       goal_executive: 'Executive', goal_natural: 'Natural', goal_confident: 'Confident',
-      goal_wedding: 'Wedding', goal_vacation: 'Vacation', goal_party: 'Party',
+      goal_wedding: 'Wedding', goal_vacation: 'Vacation', goal_party: 'Party', goal_casual: 'Casual',
       goal_business: 'Business', goal_soft: 'Soft', goal_masculine: 'Masculine',
       goal_feminine: 'Feminine', goal_cute: 'Cute', goal_glamorous: 'Glamorous',
       generateBest: 'Generate My Best Look',
@@ -122,6 +122,9 @@
       wigNote_recommended: 'A natural fuller-hair option may create a more balanced, youthful look.',
       // Pre-upload photo guidance for the best, most natural results.
       selfieTips: 'For best results: face the camera, good lighting, hair & hairline visible, no hat or sunglasses, simple background.',
+      // SP-6 facial-harmony display.
+      aiNoticed: 'AI noticed', aiRecommends: 'AI recommends', harmonyScoresLabel: 'Style guidance',
+      score_naturalness: 'Naturalness', score_harmony: 'Harmony', score_professional: 'Professional', score_youthfulness: 'Youthfulness', score_maintenance: 'Easy upkeep',
       err_DAILY_LIMIT: 'You’ve reached today’s limit — please try again tomorrow.',
       // Customer account (reuses the mobile-barber customer auth).
       logIn: 'Log in', signUp: 'Sign up', logInOrSignUp: 'Log in / Sign up',
@@ -202,7 +205,7 @@
       goalBest: 'Đẹp Nhất Tổng Thể',
       goal_professional: 'Chuyên nghiệp', goal_youthful: 'Trẻ trung', goal_elegant: 'Thanh lịch',
       goal_executive: 'Lãnh đạo', goal_natural: 'Tự nhiên', goal_confident: 'Tự tin',
-      goal_wedding: 'Đám cưới', goal_vacation: 'Du lịch', goal_party: 'Tiệc tùng',
+      goal_wedding: 'Đám cưới', goal_vacation: 'Du lịch', goal_party: 'Tiệc tùng', goal_casual: 'Thường ngày',
       goal_business: 'Công sở', goal_soft: 'Dịu dàng', goal_masculine: 'Nam tính',
       goal_feminine: 'Nữ tính', goal_cute: 'Dễ thương', goal_glamorous: 'Quyến rũ',
       generateBest: 'Tạo Diện Mạo Đẹp Nhất',
@@ -274,6 +277,8 @@
       wigNote_optional: 'Tóc dày hơn có thể đẹp hơn, nhưng một kiểu tóc tự nhiên nhẹ nhàng có thể đã đủ.',
       wigNote_recommended: 'Lựa chọn tóc dày tự nhiên có thể tạo diện mạo cân đối và trẻ trung hơn.',
       selfieTips: 'Để có kết quả tốt nhất: nhìn thẳng máy ảnh, đủ sáng, thấy rõ tóc và chân tóc, không đội mũ hay kính râm, nền đơn giản.',
+      aiNoticed: 'AI nhận thấy', aiRecommends: 'AI gợi ý', harmonyScoresLabel: 'Gợi ý phong cách',
+      score_naturalness: 'Tự nhiên', score_harmony: 'Hài hòa', score_professional: 'Chuyên nghiệp', score_youthfulness: 'Trẻ trung', score_maintenance: 'Dễ chăm sóc',
       err_DAILY_LIMIT: 'Bạn đã đạt giới hạn hôm nay — vui lòng thử lại vào ngày mai.',
       // Tài khoản khách hàng (dùng chung hệ thống đăng nhập Mobile Barber).
       logIn: 'Đăng nhập', signUp: 'Đăng ký', logInOrSignUp: 'Đăng nhập / Đăng ký',
@@ -354,7 +359,7 @@
       goalBest: 'Mejor en General',
       goal_professional: 'Profesional', goal_youthful: 'Juvenil', goal_elegant: 'Elegante',
       goal_executive: 'Ejecutivo', goal_natural: 'Natural', goal_confident: 'Seguro',
-      goal_wedding: 'Boda', goal_vacation: 'Vacaciones', goal_party: 'Fiesta',
+      goal_wedding: 'Boda', goal_vacation: 'Vacaciones', goal_party: 'Fiesta', goal_casual: 'Casual',
       goal_business: 'Negocios', goal_soft: 'Suave', goal_masculine: 'Masculino',
       goal_feminine: 'Femenino', goal_cute: 'Tierno', goal_glamorous: 'Glamoroso',
       generateBest: 'Generar Mi Mejor Look',
@@ -426,6 +431,8 @@
       wigNote_optional: 'Un look más abundante puede ayudar, pero un peinado natural sutil podría ser suficiente.',
       wigNote_recommended: 'Una opción de cabello más abundante y natural puede crear un look más equilibrado y juvenil.',
       selfieTips: 'Para mejores resultados: mira a la cámara, buena luz, cabello y nacimiento del pelo visibles, sin gorra ni gafas de sol, fondo simple.',
+      aiNoticed: 'La IA notó', aiRecommends: 'La IA recomienda', harmonyScoresLabel: 'Guía de estilo',
+      score_naturalness: 'Naturalidad', score_harmony: 'Armonía', score_professional: 'Profesional', score_youthfulness: 'Juventud', score_maintenance: 'Fácil cuidado',
       err_DAILY_LIMIT: 'Has alcanzado el límite de hoy — inténtalo de nuevo mañana.',
       // Cuenta de cliente (reutiliza el inicio de sesión de Mobile Barber).
       logIn: 'Iniciar sesión', signUp: 'Registrarse', logInOrSignUp: 'Iniciar sesión / Registrarse',
@@ -497,7 +504,7 @@
 
   // 15 style goals (mirror functions/style-studio-lib.js STUDIO_GOALS).
   var GOALS = ['professional', 'youthful', 'elegant', 'executive', 'natural', 'confident',
-               'wedding', 'vacation', 'party', 'business', 'soft', 'masculine',
+               'wedding', 'vacation', 'party', 'casual', 'business', 'soft', 'masculine',
                'feminine', 'cute', 'glamorous'];
 
   var STUDIO_DEFS = [
@@ -1040,6 +1047,45 @@
     });
   }
 
+  // SP-6 — friendly facial-harmony summary: "AI noticed / AI recommends" + a few
+  // customer-safe style-guidance scores. No clinical measurements are ever shown.
+  function buildHarmonySection(mp) {
+    var h = mp.harmony || {};
+    var noticed = (h.noticed || []).filter(Boolean);
+    var recommends = (h.recommends || []).filter(Boolean);
+    var scores = mp.harmonyScores || {};
+    var scoreKeys = ['naturalness', 'harmony', 'professional', 'youthfulness', 'maintenance']
+      .filter(function (k) { return typeof scores[k] === 'number'; });
+    if (!noticed.length && !recommends.length && !scoreKeys.length) return null;
+    var wrap = elt('div', 'ss-harmony');
+    function chipGroup(labelKey, items) {
+      if (!items.length) return;
+      var g = elt('div', 'ss-harmony__group');
+      g.appendChild(elt('span', 'ss-harmony__label', t(labelKey)));
+      var chips = elt('div', 'ss-harmony__chips');
+      items.forEach(function (it) { chips.appendChild(elt('span', 'ss-harmony__chip', it)); });
+      g.appendChild(chips); wrap.appendChild(g);
+    }
+    chipGroup('aiNoticed', noticed);
+    chipGroup('aiRecommends', recommends);
+    if (scoreKeys.length) {
+      var sg = elt('div', 'ss-harmony__scores');
+      sg.appendChild(elt('span', 'ss-harmony__label', t('harmonyScoresLabel')));
+      scoreKeys.forEach(function (k) {
+        var v = Math.max(0, Math.min(100, Math.round(scores[k])));
+        var row = elt('div', 'ss-scorebar');
+        row.appendChild(elt('span', 'ss-scorebar__k', t('score_' + k)));
+        var track = elt('span', 'ss-scorebar__track');
+        var fill = doc.createElement('i'); fill.style.width = v + '%';
+        track.appendChild(fill); row.appendChild(track);
+        row.appendChild(elt('span', 'ss-scorebar__v', String(v)));
+        sg.appendChild(row);
+      });
+      wrap.appendChild(sg);
+    }
+    return wrap;
+  }
+
   function renderMasterpiece(mp) {
     var host = doc.getElementById('ssMasterResult');
     if (!host) return;
@@ -1080,6 +1126,8 @@
     var wd = mp.wigDecision || {};
     var wnKey = { none: 'wigNote_none', optional: 'wigNote_optional', recommended: 'wigNote_recommended', strong_recommend: 'wigNote_recommended' }[wd.needed];
     if (wnKey) body.appendChild(elt('p', 'ss-card__meta', t(wnKey)));
+    var harmonyEl = buildHarmonySection(mp);
+    if (harmonyEl) body.appendChild(harmonyEl);
     var attrs = mp.attributes || {};
     var attrKeys = MASTER_ATTR_KEYS.filter(function (k) { return attrs[k]; });
     if (attrKeys.length) {
@@ -2445,7 +2493,7 @@
     logUi({ event: 'init' });
   }
 
-  root.StyleStudioPublic = { init: init, setLang: setLang, _t: t, _state: state, _strings: SS_STRINGS, _openViewer: openViewer, _closeViewer: closeViewer, _onWigGenerate: onWigGenerate, _buildShowcase: buildShowcase, _buildGallery: buildGallery, _buildWigExamples: buildWigExamples, _buildTestimonials: buildTestimonials, _openAuthPanel: openAuthPanel, _closeAuthPanel: closeAuthPanel, _openAccountPanel: openAccountPanel, _closeAccountPanel: closeAccountPanel, _customerEmailForPhone: customerEmailForPhone, _normalizePhone: normalizePhone, _isCustomerUser: isCustomerUser };
+  root.StyleStudioPublic = { init: init, setLang: setLang, _t: t, _state: state, _strings: SS_STRINGS, _openViewer: openViewer, _closeViewer: closeViewer, _onWigGenerate: onWigGenerate, _buildShowcase: buildShowcase, _buildGallery: buildGallery, _buildWigExamples: buildWigExamples, _buildTestimonials: buildTestimonials, _renderMasterpiece: renderMasterpiece, _openAuthPanel: openAuthPanel, _closeAuthPanel: closeAuthPanel, _openAccountPanel: openAccountPanel, _closeAccountPanel: closeAccountPanel, _customerEmailForPhone: customerEmailForPhone, _normalizePhone: normalizePhone, _isCustomerUser: isCustomerUser };
 
   if (doc.readyState === 'loading') {
     doc.addEventListener('DOMContentLoaded', init);

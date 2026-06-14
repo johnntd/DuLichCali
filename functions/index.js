@@ -3265,6 +3265,9 @@ async function runStudioGeneration(params) {
         // Carry the transparent wig decision to the customer (the analysis object
         // itself stays vendor-scoped); the client shows "why a wig was/wasn't used".
         wigDecision: analysis.wigDecision, hairVolumeAssessment: analysis.hairVolumeAssessment,
+        // SP-6 facial-harmony: friendly "AI noticed / AI recommends" + customer-safe
+        // style-guidance scores (never attractiveness; not stored unless the user saves).
+        harmony: best.harmony, harmonyScores: StudioLib.customerScores(analysis.scores),
       },
       provider: 'gemini-2.5-flash-image',
       generationTimeMs: Date.now() - t0,

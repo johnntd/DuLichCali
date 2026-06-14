@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260419m">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/style-studio.css?v=20260613b">
+  <link rel="stylesheet" href="/style-studio.css?v=20260613c">
 
   <!-- Google Analytics 4 -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-5S0P4XMCJR"></script>
@@ -71,8 +71,8 @@
         </div>
 
         <div class="ss-field">
-          <label class="ss-field__label" for="ssGoal" data-ss-i18n="goalLabel"></label>
-          <select class="ss-select" id="ssGoal"></select>
+          <span class="ss-field__label" data-ss-i18n="goalLabel"></span>
+          <div class="ss-chips" id="ssGoalChips" role="group" aria-label="Style goal"></div>
         </div>
 
         <button class="ss-cta" id="ssGenerateBest" type="button" disabled>
@@ -143,7 +143,6 @@
   if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 </script>
 <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260613a"></script>
-<script src="/mobile-barber/mobile-barber-lightbox.js?v=20260530f"></script>
-<script src="/style-studio-public.js?v=20260613b"></script>
+<script src="/style-studio-public.js?v=20260613c"></script>
 </body>
 </html>

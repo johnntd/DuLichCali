@@ -1,5 +1,5 @@
 /* ──────────────────────────────────────────────────────────────────────────
-   AI Style Studio — public page styles  (style-studio.css?v=20260613b)
+   AI Style Studio — public page styles  (style-studio.css?v=20260613c)
    Mobile-first. Uses the global :root palette/typography from /style.css.
    Breakpoints: base (375–767) → 768 (tablet) → 1200 (desktop, max-width 1280).
    ────────────────────────────────────────────────────────────────────────── */
@@ -267,6 +267,98 @@ body { overflow-y: auto; overflow-x: hidden; }
 .ss-back:hover { color: var(--cream); }
 
 [hidden] { display: none !important; }
+
+/* ── Goal chips (replaces the thin select) ─────────────────────────────── */
+.ss-chips { display: flex; flex-wrap: wrap; gap: .5rem; }
+.ss-chip {
+  min-height: 44px; padding: .55rem .95rem;
+  background: var(--navy-900); color: var(--cream);
+  border: 1px solid var(--border); border-radius: 99px;
+  font-family: var(--font-b); font-weight: 600; font-size: .8rem;
+  cursor: pointer; transition: background .16s, border-color .16s, color .16s;
+  touch-action: manipulation;
+}
+.ss-chip:hover { border-color: var(--border-g); }
+.ss-chip--active { background: #c084fc; color: var(--navy-900); border-color: #c084fc; }
+
+/* Touch sizing for interactive controls */
+.ss-cta, .ss-lang__btn, .ss-card__btn, .ss-action-btn { touch-action: manipulation; }
+.ss-action-btn { min-height: 44px; }
+
+/* Tap-to-expand figures + zoom badge */
+.ss-card__figure, .ss-master-card__figure {
+  position: relative; display: block; width: 100%; padding: 0; border: 0;
+  background: var(--navy-900); cursor: zoom-in; overflow: hidden;
+}
+.ss-card__figure { aspect-ratio: 3/4; }
+.ss-zoom-badge {
+  position: absolute; top: .5rem; right: .5rem; width: 30px; height: 30px; border-radius: 8px;
+  background: rgba(8,18,34,.55); display: flex; align-items: center; justify-content: center;
+  color: #fff; pointer-events: none;
+}
+.ss-zoom-badge svg { width: 15px; height: 15px; }
+
+/* ── Result carousel (swipeable) ───────────────────────────────────────── */
+.ss-mode-results { display: block; }          /* override the old 2-col grid */
+.ss-carousel {
+  display: flex; gap: .7rem; overflow-x: auto; scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain;
+  padding: .2rem .1rem .5rem;
+}
+.ss-carousel::-webkit-scrollbar { height: 6px; }
+.ss-carousel::-webkit-scrollbar-thumb { background: var(--border-g); border-radius: 99px; }
+.ss-carousel .ss-card { flex: 0 0 78%; max-width: 340px; scroll-snap-align: center; }
+.ss-carousel__hint { text-align: center; font-family: var(--font-b); font-size: .74rem; color: var(--muted); margin: .1rem 0 0; letter-spacing: .25em; }
+
+/* ── Full-screen image viewer (self-contained; iOS-safe) ───────────────── */
+body.ss-viewer-open { overflow: hidden; }
+.ss-viewer {
+  position: fixed; inset: 0; z-index: 2000; background: rgba(6,14,26,.97);
+  display: flex; flex-direction: column; touch-action: none;
+}
+.ss-viewer__stage {
+  flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden;
+  padding-top: env(safe-area-inset-top, 0);
+}
+.ss-viewer__img {
+  max-width: 100%; max-height: 100%; object-fit: contain; will-change: transform;
+  touch-action: none; -webkit-touch-callout: default; user-select: none;
+}
+.ss-viewer__close {
+  position: absolute; top: calc(env(safe-area-inset-top, 0px) + .6rem); right: .7rem;
+  width: 44px; height: 44px; border-radius: 50%; border: 0;
+  background: rgba(255,255,255,.14); color: #fff; cursor: pointer; z-index: 2;
+  display: flex; align-items: center; justify-content: center; touch-action: manipulation;
+}
+.ss-viewer__close svg { width: 22px; height: 22px; }
+.ss-viewer__nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 44px; height: 64px; border: 0; background: rgba(255,255,255,.1); color: #fff;
+  font-size: 2rem; line-height: 1; cursor: pointer; touch-action: manipulation;
+  display: flex; align-items: center; justify-content: center;
+}
+.ss-viewer__nav--prev { left: 0; border-radius: 0 10px 10px 0; }
+.ss-viewer__nav--next { right: 0; border-radius: 10px 0 0 10px; }
+.ss-viewer__bar {
+  padding: .9rem 1rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
+  background: linear-gradient(0deg, rgba(6,14,26,.95), transparent);
+  display: flex; flex-direction: column; gap: .55rem; align-items: center; text-align: center;
+}
+.ss-viewer__title { font-family: var(--font-b); font-size: .85rem; color: #fff; margin: 0; }
+.ss-viewer__hint { font-family: var(--font-b); font-size: .74rem; color: #d8b4fe; margin: 0; }
+.ss-viewer__actions { display: flex; gap: .6rem; }
+.ss-viewer__btn {
+  min-height: 44px; display: inline-flex; align-items: center; gap: .4rem;
+  background: rgba(255,255,255,.13); color: #fff; border: 0; border-radius: 99px;
+  font-family: var(--font-b); font-weight: 600; font-size: .82rem; padding: .55rem 1.2rem;
+  cursor: pointer; touch-action: manipulation;
+}
+.ss-viewer__btn svg { width: 16px; height: 16px; }
+@media (prefers-reduced-motion: reduce) { .ss-carousel { scroll-behavior: auto; } }
+
+/* Carousel sizing on larger screens */
+@media (min-width: 768px) { .ss-carousel .ss-card { flex-basis: 46%; } }
+@media (min-width: 1200px) { .ss-carousel .ss-card { flex-basis: 30%; } }
 
 /* ── Tablet (≥768px) ───────────────────────────────────────────────────── */
 @media (min-width: 768px) {

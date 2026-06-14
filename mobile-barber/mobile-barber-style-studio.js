@@ -101,6 +101,37 @@
 
   function render() { /* implemented in Task 7–9 */ applyI18n(); }
 
+  // Thin client for the vendor callable. Mirrors mobile-barber-ai-preview.js
+  // generate() but targets generateStyleStudio and passes mode/options/goal.
+  function callStudio(opts) {
+    opts = opts || {};
+    if (!opts.dataUrl) return Promise.resolve({ ok: false, code: 'no_image', message: 'No selfie.' });
+    if (typeof root.firebase === 'undefined' || !root.firebase.functions) {
+      return Promise.resolve({ ok: false, code: 'firebase_unavailable', message: t('studioError') });
+    }
+    var callable;
+    try {
+      callable = root.firebase.functions().httpsCallable('generateStyleStudio', { timeout: 180000 });
+    } catch (e) {
+      return Promise.resolve({ ok: false, code: 'callable_init_failed', message: t('studioError') });
+    }
+    return callable({
+      selfieDataUrl: opts.dataUrl, lang: state.lang, mode: opts.mode,
+      options: opts.options || {}, audience: opts.audience || 'neutral',
+      preference: opts.preference || '', goal: opts.goal || '',
+    }).then(function (result) {
+      var p = (result && result.data) || {};
+      if (!p.ok) return { ok: false, code: p.debugCode || 'provider_error', message: p.vendorMessage || t('studioError') };
+      var recs = (p.recommendations || []).filter(function (r) { return r && r.previewDataUrl && !r.error; });
+      if (!recs.length) return { ok: false, code: 'empty', message: t('studioError') };
+      return { ok: true, mode: p.mode, analysis: p.analysis || null, recommendations: recs,
+               provider: p.provider || 'gemini', generationTimeMs: p.generationTimeMs || 0 };
+    }).catch(function (err) {
+      if (root.console) root.console.error('[style-studio] callable failed', err);
+      return { ok: false, code: 'callable_threw', message: t('studioError') };
+    });
+  }
+
   root.MobileBarberStyleStudio = { init: init, setLang: setLang, _t: t, _state: state };
 
   if (root.document.readyState === 'loading') {

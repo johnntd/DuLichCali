@@ -2379,6 +2379,27 @@
     if (consent) consent.addEventListener('change', function () { state.consent = consent.checked; refreshButtons(); });
     var upload = doc.getElementById('ssSelfieInput');
     if (upload) upload.addEventListener('change', onUpload);
+    // Belt-and-suspenders for iOS Safari: the file input lives inside a <label>
+    // (native tap-to-open), but iOS occasionally fails to fire that activation.
+    // Trigger the input EXPLICITLY from this trusted tap so the picker reliably
+    // opens. preventDefault + stopPropagation suppress the label's own native
+    // activation so the picker can NEVER open twice; a short re-entrancy guard is
+    // a second safeguard. The <label> stays in the markup as a no-JS fallback, so
+    // native behavior is preserved if this handler ever fails to attach. Works on
+    // desktop (click) and iPhone (tap), and on the preview <img> after re-upload.
+    var uploadBtn = doc.getElementById('ssUploadBtn');
+    if (uploadBtn && upload) {
+      var pickerOpening = false;
+      uploadBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (pickerOpening) return;          // ignore a duplicate within the window
+        pickerOpening = true;
+        logUi({ event: 'upload-tap' });
+        try { upload.click(); } catch (err) { if (root.console) root.console.error('[style-studio] upload.click failed', err); }
+        root.setTimeout(function () { pickerOpening = false; }, 800);
+      });
+    }
     var best = doc.getElementById('ssGenerateBest');
     if (best) best.addEventListener('click', onGenerateBest);
     var wig = doc.getElementById('ssWigGenerate');

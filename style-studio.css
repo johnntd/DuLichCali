@@ -343,7 +343,7 @@ body { overflow-y: auto; overflow-x: hidden; }
 }
 .ss-showcase-card__bg {
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-  filter: saturate(1.02);
+  object-position: center 28%; filter: saturate(1.02);
 }
 .ss-showcase-card__media::before {
   content: ""; position: absolute; inset: 0; z-index: 1;
@@ -407,6 +407,40 @@ body { overflow-y: auto; overflow-x: hidden; }
   font-family: var(--font-b); font-size: .85rem; line-height: 1.5;
   color: var(--muted); margin: 0 0 1.1rem; max-width: 42ch;
 }
+/* SP-4 — Wig Match example strip (two beautiful example looks, male + female) */
+.ss-wigmatch__examples {
+  display: grid; grid-template-columns: 1fr 1fr; gap: .7rem;
+  margin: 0 0 1.2rem;
+}
+.ss-wigex-header {
+  grid-column: 1 / -1;
+  font-family: var(--font-b); font-weight: 600; font-size: .7rem;
+  letter-spacing: .08em; text-transform: uppercase; color: #d8b4fe;
+  margin: 0 0 .1rem;
+}
+.ss-wigex {
+  position: relative; margin: 0; border-radius: 14px; overflow: hidden;
+  border: 1px solid rgba(192,132,252,.32);
+  background: linear-gradient(150deg, #2a1d4d 0%, #3a1f52 100%);
+  box-shadow: 0 12px 32px -22px rgba(0,0,0,.85);
+}
+.ss-wigex__img {
+  display: block; width: 100%; height: 220px; object-fit: cover;
+  object-position: center 22%;
+}
+.ss-wigex::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 58%;
+  background: linear-gradient(180deg, transparent 0%, rgba(8,10,24,.82) 100%);
+  pointer-events: none;
+}
+.ss-wigex__cap {
+  position: absolute; left: .7rem; right: .7rem; bottom: .6rem; z-index: 1;
+  font-family: var(--font-b); font-weight: 600; font-size: .76rem; line-height: 1.35;
+  color: var(--cream); text-shadow: 0 1px 8px rgba(0,0,0,.7);
+}
+.ss-wigex--gradient .ss-wigex__img { display: none; }
+.ss-wigex--gradient { min-height: 220px; }
+
 /* SP-3 — co-flagship benefits checklist */
 .ss-wigmatch__benefits {
   list-style: none; margin: 0 0 1.2rem; padding: 0;
@@ -527,7 +561,7 @@ body { overflow-y: auto; overflow-x: hidden; }
   position: relative; width: 100%; height: 200px; overflow: hidden;
   display: flex; align-items: flex-end;
 }
-.ss-gcard__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ss-gcard__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 28%; }
 .ss-gcard__media::before {
   content: ""; position: absolute; inset: 0; z-index: 1;
   background: linear-gradient(180deg, rgba(8,18,34,.05) 0%, rgba(8,18,34,.72) 100%);

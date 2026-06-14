@@ -144,6 +144,10 @@
       wigBenefit2: 'Younger appearance',
       wigBenefit3: 'Natural look',
       wigBenefit4: 'Professional style',
+      // SP-4 — Wig Match example strip (style inspiration, not AI output).
+      wigExHeader: 'See the look',
+      wigExMale: 'Modern Korean — full, natural hair',
+      wigExFemale: 'Elegant layers — youthful volume',
       // SP-3 — Studio Gallery (Netflix-style cards): emotional one-liners.
       gallery_haircut: 'Find the cut that frames your face.',
       gallery_color: 'See a new shade before you commit.',
@@ -286,6 +290,10 @@
       wigBenefit2: 'Diện mạo trẻ trung',
       wigBenefit3: 'Trông tự nhiên',
       wigBenefit4: 'Phong cách chuyên nghiệp',
+      // SP-4 — dải ví dụ Ghép Tóc (gợi ý phong cách, không phải ảnh AI).
+      wigExHeader: 'Xem diện mạo',
+      wigExMale: 'Hàn Quốc hiện đại — tóc dày, tự nhiên',
+      wigExFemale: 'Lớp tóc thanh lịch — bồng bềnh trẻ trung',
       // SP-3 — Studio (thẻ kiểu Netflix): câu mô tả cảm xúc.
       gallery_haircut: 'Tìm kiểu tóc tôn lên gương mặt bạn.',
       gallery_color: 'Xem màu tóc mới trước khi quyết định.',
@@ -428,6 +436,10 @@
       wigBenefit2: 'Apariencia más joven',
       wigBenefit3: 'Aspecto natural',
       wigBenefit4: 'Estilo profesional',
+      // SP-4 — tira de ejemplos de Peluca (inspiración de estilo, no salida de IA).
+      wigExHeader: 'Mira el look',
+      wigExMale: 'Coreano moderno — cabello abundante y natural',
+      wigExFemale: 'Capas elegantes — volumen juvenil',
       // SP-3 — Estudio (tarjetas estilo Netflix): frases emocionales.
       gallery_haircut: 'Encuentra el corte que enmarca tu rostro.',
       gallery_color: 'Mira un nuevo tono antes de decidir.',
@@ -480,20 +492,24 @@
     { mode: 'vacation', label: 'mode_vacation', controls: [{ key: 'destination', values: ['hawaii', 'europe', 'california_coast', 'theme_parks', 'luxury_resorts'] }] },
   ];
 
-  // SP-3 — Studio Gallery card imagery. Honest photos where they exist; a
-  // premium gradient + icon card where no truthful photo exists (eyebrows,
-  // wigs, hair systems, event, vacation). NEVER mislabel a haircut photo as a
-  // wig/eyebrow result. Photo paths verified to return 200 from the server.
+  // SP-4 — Studio Gallery card imagery. Every mode now has a real, on-brand
+  // photo (Asian-majority, beauty-magazine quality, hair/face as the hero) so
+  // NO card is ever blank. Curated free-license stock (Pexels/Unsplash, free
+  // for commercial use) lives in /assets/style-studio/showcase/. The card still
+  // never MISLABELS — each photo shows the actual look that mode produces
+  // (e.g. balayage for color, full natural hair for hair systems). 'beard'
+  // keeps an existing in-repo grooming photo (the diversity slot). If a webp
+  // is ever missing the card falls back to a premium gradient (never broken).
   var GALLERY_CARDS = {
-    haircut:    { img: '/assets/mobile-barber/styles/modern-styling.jpg', icon: 'stylist', accent: 'a' },
-    color:      { img: '/images/hair-3.jpg',                              icon: 'color',   accent: 'c' },
-    texture:    { img: '/images/hair-2.jpg',                              icon: 'texture', accent: 'a' },
-    eyebrow:    { img: '',                                                icon: 'groom',   accent: 'd' },
-    beard:      { img: '/assets/mobile-barber/styles/haircut-beard.jpg',  icon: 'groom',   accent: 'd' },
-    wig:        { img: '',                                                icon: 'wig',     accent: 'b' },
-    hairsystem: { img: '',                                                icon: 'wig',     accent: 'b' },
-    event:      { img: '',                                                icon: 'event',   accent: 'e' },
-    vacation:   { img: '',                                                icon: 'event',   accent: 'e' },
+    haircut:    { img: '/assets/style-studio/showcase/hair-styles-asian-female.webp',   icon: 'stylist', accent: 'a' },
+    color:      { img: '/assets/style-studio/showcase/hair-color-asian-female.webp',    icon: 'color',   accent: 'c' },
+    texture:    { img: '/assets/style-studio/showcase/hair-texture-asian-female.webp',  icon: 'texture', accent: 'a' },
+    eyebrow:    { img: '/assets/style-studio/showcase/eyebrow-beard-asian-male.webp',   icon: 'groom',   accent: 'd' },
+    beard:      { img: '/assets/mobile-barber/styles/haircut-beard.jpg',                icon: 'groom',   accent: 'd' },
+    wig:        { img: '/assets/style-studio/showcase/wig-match-asian-female.webp',     icon: 'wig',     accent: 'b' },
+    hairsystem: { img: '/assets/style-studio/showcase/wig-match-asian-male.webp',       icon: 'wig',     accent: 'b' },
+    event:      { img: '/assets/style-studio/showcase/event-vacation-asian-female.webp', icon: 'event',  accent: 'e' },
+    vacation:   { img: '/assets/style-studio/showcase/event-vacation-asian-male.webp',  icon: 'event',   accent: 'e' },
   };
 
   var MASTER_ATTR_KEYS = ['haircut', 'color', 'texture', 'bangs', 'eyebrows', 'beard', 'wigOrSystem'];
@@ -610,6 +626,7 @@
     buildAudienceSeg();
     buildGallery();
     buildShowcase();
+    buildWigExamples();
     buildTestimonials();
     refreshWigUi();
     syncLangButtons();
@@ -706,7 +723,17 @@
       var media = elt('div', 'ss-gcard__media');
       if (meta.img) {
         var img = doc.createElement('img'); img.className = 'ss-gcard__img';
-        img.src = meta.img; img.alt = ''; img.loading = 'lazy';
+        img.src = meta.img; img.alt = t(def.label); img.loading = 'lazy';
+        // Premium gradient fallback if a curated photo ever fails to load — a
+        // card is never left visibly broken (and never silently blank).
+        img.addEventListener('error', function () {
+          media.classList.add('ss-gcard__media--gradient');
+          if (!media.querySelector('.ss-gcard__icon')) {
+            var fico = elt('span', 'ss-gcard__icon'); fico.innerHTML = showcaseIcon(meta.icon);
+            media.insertBefore(fico, media.firstChild);
+          }
+          if (img.parentNode) img.parentNode.removeChild(img);
+        });
         media.appendChild(img);
       } else {
         media.classList.add('ss-gcard__media--gradient');
@@ -1604,11 +1631,11 @@
     // gradient + icon otherwise. CTA wiring is preserved exactly (sc1 →
     // scroll-to-flagship+generate, sc2 → wig, sc3 color, sc4 groom, sc5 event).
     var slides = [
-      { key: 'sc1', icon: 'stylist', accent: 'a', img: '/assets/mobile-barber/styles/modern-styling.jpg', action: function () { scrollToFlagship(); onGenerateBest(); } },
-      { key: 'sc2', icon: 'wig', accent: 'b', img: '', action: scrollToWigMatch },
-      { key: 'sc3', icon: 'color', accent: 'c', img: '/images/hair-3.jpg', action: function () { openModePanel('color'); } },
-      { key: 'sc4', icon: 'groom', accent: 'd', img: '/assets/mobile-barber/styles/haircut-beard.jpg', action: function () { openModePanel('eyebrow'); } },
-      { key: 'sc5', icon: 'event', accent: 'e', img: '', action: function () { openModePanel('event'); } },
+      { key: 'sc1', icon: 'stylist', accent: 'a', img: '/assets/style-studio/showcase/master-stylist-asian-male.webp', action: function () { scrollToFlagship(); onGenerateBest(); } },
+      { key: 'sc2', icon: 'wig', accent: 'b', img: '/assets/style-studio/showcase/wig-match-asian-female.webp', action: scrollToWigMatch },
+      { key: 'sc3', icon: 'color', accent: 'c', img: '/assets/style-studio/showcase/hair-color-asian-female.webp', action: function () { openModePanel('color'); } },
+      { key: 'sc4', icon: 'groom', accent: 'd', img: '/assets/style-studio/showcase/eyebrow-beard-asian-male.webp', action: function () { openModePanel('eyebrow'); } },
+      { key: 'sc5', icon: 'event', accent: 'e', img: '/assets/style-studio/showcase/event-vacation-asian-female.webp', action: function () { openModePanel('event'); } },
     ];
     slides.forEach(function (s) {
       var card = elt('div', 'ss-showcase-card ss-showcase-card--' + s.accent);
@@ -1616,7 +1643,8 @@
       var media = elt('div', 'ss-showcase-card__media');
       if (s.img) {
         var img = doc.createElement('img'); img.className = 'ss-showcase-card__bg';
-        img.src = s.img; img.alt = ''; img.loading = 'lazy';
+        img.src = s.img; img.alt = t(s.key + '_title'); img.loading = 'lazy';
+        img.addEventListener('error', function () { media.classList.add('ss-showcase-card__media--gradient'); if (img.parentNode) img.parentNode.removeChild(img); });
         media.appendChild(img);
       } else {
         media.classList.add('ss-showcase-card__media--gradient');
@@ -1633,6 +1661,31 @@
       info.appendChild(cta);
       card.appendChild(info);
       host.appendChild(card);
+    });
+  }
+
+  // ── Wig Match example strip ─────────────────────────────────────────────
+  // SP-4: the flagship Wig Match section shows two beautiful example looks (an
+  // Asian man + an Asian woman) so the value is visible before the user taps.
+  // These are STYLE INSPIRATION photos (curated free-license stock), NOT AI
+  // outputs — labelled as "the look", never as a fake before/after result.
+  function buildWigExamples() {
+    var host = doc.getElementById('ssWigExamples');
+    if (!host) return;
+    host.innerHTML = '';
+    host.appendChild(elt('span', 'ss-wigex-header', t('wigExHeader')));
+    var EX = [
+      { img: '/assets/style-studio/showcase/wig-match-asian-male.webp', cap: 'wigExMale' },
+      { img: '/assets/style-studio/showcase/wig-match-asian-female.webp', cap: 'wigExFemale' },
+    ];
+    EX.forEach(function (e) {
+      var fig = elt('figure', 'ss-wigex');
+      var img = doc.createElement('img'); img.className = 'ss-wigex__img';
+      img.src = e.img; img.alt = t(e.cap); img.loading = 'lazy';
+      img.addEventListener('error', function () { fig.classList.add('ss-wigex--gradient'); if (img.parentNode) img.parentNode.removeChild(img); });
+      fig.appendChild(img);
+      fig.appendChild(elt('figcaption', 'ss-wigex__cap', t(e.cap)));
+      host.appendChild(fig);
     });
   }
 
@@ -2328,6 +2381,7 @@
     buildAudienceSeg();
     buildGallery();
     buildShowcase();
+    buildWigExamples();
     buildTestimonials();
     syncLangButtons();
     renderAccount();
@@ -2337,7 +2391,7 @@
     logUi({ event: 'init' });
   }
 
-  root.StyleStudioPublic = { init: init, setLang: setLang, _t: t, _state: state, _strings: SS_STRINGS, _openViewer: openViewer, _closeViewer: closeViewer, _onWigGenerate: onWigGenerate, _buildShowcase: buildShowcase, _buildGallery: buildGallery, _buildTestimonials: buildTestimonials, _openAuthPanel: openAuthPanel, _closeAuthPanel: closeAuthPanel, _openAccountPanel: openAccountPanel, _closeAccountPanel: closeAccountPanel, _customerEmailForPhone: customerEmailForPhone, _normalizePhone: normalizePhone, _isCustomerUser: isCustomerUser };
+  root.StyleStudioPublic = { init: init, setLang: setLang, _t: t, _state: state, _strings: SS_STRINGS, _openViewer: openViewer, _closeViewer: closeViewer, _onWigGenerate: onWigGenerate, _buildShowcase: buildShowcase, _buildGallery: buildGallery, _buildWigExamples: buildWigExamples, _buildTestimonials: buildTestimonials, _openAuthPanel: openAuthPanel, _closeAuthPanel: closeAuthPanel, _openAccountPanel: openAccountPanel, _closeAccountPanel: closeAccountPanel, _customerEmailForPhone: customerEmailForPhone, _normalizePhone: normalizePhone, _isCustomerUser: isCustomerUser };
 
   if (doc.readyState === 'loading') {
     doc.addEventListener('DOMContentLoaded', init);

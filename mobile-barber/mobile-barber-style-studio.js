@@ -130,9 +130,10 @@
     if (!host) return;
     host.innerHTML = '';
 
-    // Header + consent + upload + generate
+    // Header + consent + upload + generate. The section <h2> title lives in
+    // dashboard.html (#mbStyleStudioHeading, translated via applyI18n() below);
+    // we render only the subtitle here to avoid a duplicate title.
     var head = elt('div', 'mb-studio-head');
-    head.appendChild(elt('h2', 'mb-studio-title', t('studioTitle')));
     head.appendChild(elt('p', 'mb-studio-sub', t('studioSub')));
     var consent = elt('label', 'mb-studio-consent');
     var cb = root.document.createElement('input'); cb.type = 'checkbox';
@@ -197,7 +198,9 @@
     acc.appendChild(fav);
     host.appendChild(acc);
 
-    applyI18n(host);
+    // Document-scope so the dashboard section heading (#mbStyleStudioHeading,
+    // a [data-studio-i18n] element OUTSIDE #mbStyleStudioRoot) also localizes.
+    applyI18n();
   }
 
   function refreshControls() {

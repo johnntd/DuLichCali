@@ -2586,6 +2586,18 @@ const IDENTITY_CLAUSE = 'CRITICAL — IDENTITY LOCK: keep the EXACT SAME PERSON 
 // makes the image model produce weak/empty output, so those modes use this
 // replacement-forcing clause instead (still locks identity).
 const REPLACE_HAIR_CLAUSE = 'CRITICAL — IDENTITY LOCK: keep the EXACT SAME PERSON — same face shape, eyes, nose, lips, skin tone, age and gender presentation; do NOT swap the person or beautify the face. REPLACE the existing hair with the selected style rendered as REAL, NATURAL-GROWING HUMAN HAIR that looks indistinguishable from the person\'s own hair — NOT a wig, NOT a hairpiece, NOT a costume. Render a SEAMLESS, slightly IRREGULAR natural hairline that blends softly into the forehead and temples with fine baby hairs and a few flyaways — NO hard edge, NO straight wig-cap line, NO visible lace front, NO helmet shape. Vary the hair density, thickness and direction naturally (not uniform); show a realistic scalp/part where the style calls for it, with natural strand detail. Soft, matte-to-natural sheen — NOT plastic, glossy or synthetic. Match the hair colour and undertone to the person\'s complexion and the photo lighting so the roots and hairline read as truly their own. Photorealistic, natural lighting, head-and-shoulders portrait, sharp focus.';
+// Two-pass realism refine prompt for wig/hair-system: the first-pass image is
+// fed BACK into the image model with this realism-only instruction to dissolve
+// the wig seam and remove the "costume" look without changing the style.
+const WIG_REFINE_CLAUSE = 'REFINE PASS — keep the EXACT SAME PERSON and the SAME hairstyle, cut, length and colour shown in this image; do NOT change the face or the style. Make ONLY the hair read as 100% real, naturally-growing human hair: dissolve any wig edge, lace line or hard hairline into the forehead and temples with fine baby hairs and soft flyaways; add natural density and individual-strand variation; remove any helmet shape, plastic shine or costume look; integrate the roots, part and scalp so it looks like the person\'s own hair under the photo\'s exact lighting and skin tone. Sharp, photorealistic, natural lighting, head-and-shoulders portrait.';
+// Refine a first-pass replacement edit. Returns the refined dataUrl, or null on
+// any failure (caller keeps the first pass). callGeminiImageEdit is hoisted.
+async function refineHairRealism(geminiKey, firstPassDataUrl) {
+  const m = /^data:(image\/[a-z0-9.+-]+);base64,(.+)$/i.exec(firstPassDataUrl || '');
+  if (!m) return null;
+  const out = await callGeminiImageEdit(geminiKey, m[2], m[1], WIG_REFINE_CLAUSE);
+  return (out && out.dataUrl) ? out.dataUrl : null;
+}
 const CHILD_SAFETY_CLAUSE = ' This subject is a CHILD: keep them clearly the same child of the same age, with wholesome, school-appropriate kid styling only — no adult/edgy looks, no facial hair, no aging.';
 // Master Stylist composite edit: lock facial identity but allow hair/color/
 // eyebrow/beard enhancement (+ wig/hair-system if beneficial).
@@ -3161,9 +3173,19 @@ async function runStudioGeneration(params) {
         safetyNotes: style.safetyNotes,
       };
       try {
-        const edit = await callGeminiImageEdit(geminiKey, base64, mimeType, style.imageEditPrompt); // reused
+        const edit = await callGeminiImageEdit(geminiKey, base64, mimeType, style.imageEditPrompt); // reused (pass 1)
+        let previewUrl = edit.dataUrl;
+        // Pass 2 — realism refine for wig/hair-system so the result stops looking
+        // costume-like. The 5 styles run in Promise.all, so wall-clock stays ~2×
+        // a single edit, not 2×5. On any refine failure we keep the pass-1 image.
+        if (mode === 'wig' || mode === 'hairsystem') {
+          try {
+            const refined = await refineHairRealism(geminiKey, previewUrl);
+            if (refined) previewUrl = refined;
+          } catch (e2) { /* keep pass 1 */ }
+        }
         return Object.assign({}, baseRec, {
-          previewDataUrl: edit.dataUrl,
+          previewDataUrl: previewUrl,
           // Intentional: studio uses a slightly stricter "your_preview" bar (>=0.5)
           // than generateHaircutPreviews (<0.45). Do not "fix" to match.
           previewKind: (style.confidence >= 0.5) ? 'your_preview' : 'style_inspiration',

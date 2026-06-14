@@ -25,7 +25,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260421b">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260601a">
+  <link rel="stylesheet" href="/mobile-barber/mobile-barber.css?v=20260613a">
 </head>
 <body class="mb-page mb-dashboard-page">
   <main class="mb-shell mb-dashboard-shell" id="mobileBarberDashboardApp" data-page="mobile-barber-dashboard">
@@ -97,6 +97,13 @@
       </div>
       <p class="mb-dashboard-appointments__hint" id="mbAppointmentListHint" data-i18n="appointmentListHint"></p>
       <div class="mb-dashboard-list mb-dashboard-list--wide" id="mbAppointmentList"></div>
+    </section>
+
+    <section class="mb-dashboard-panel mb-style-studio-section" id="mbStyleStudioSection" aria-labelledby="mbStyleStudioHeading">
+      <div class="mb-dashboard-panel__head">
+        <h2 id="mbStyleStudioHeading" data-studio-i18n="studioTitle"></h2>
+      </div>
+      <div id="mbStyleStudioRoot" class="mb-style-studio-root"></div>
     </section>
 
     <section class="mb-settings-section" id="mbSettingsSection" aria-labelledby="mbSettingsTitle">
@@ -335,6 +342,7 @@
   <script src="/mobile-barber/mobile-barber-booking.js?v=20260601e"></script>
   <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260601c"></script>
   <script src="/mobile-barber/mobile-barber-dashboard.js?v=20260602a"></script>
+  <script src="/mobile-barber/mobile-barber-style-studio.js?v=20260613a"></script>
   <script src="/mobile-barber/mobile-barber-pwa.js?v=20260531c"></script>
 </body>
 </html>

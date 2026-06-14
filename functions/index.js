@@ -2587,6 +2587,9 @@ const IDENTITY_CLAUSE = 'CRITICAL — IDENTITY LOCK: keep the EXACT SAME PERSON 
 // replacement-forcing clause instead (still locks identity).
 const REPLACE_HAIR_CLAUSE = 'CRITICAL — IDENTITY LOCK: preserve the person\'s identity, face shape, eyes, nose, lips, skin tone and age — do NOT swap the person or beautify the face. REPLACE the existing hair with the selected style. Blend it naturally with the lighting, hairline and head position so it looks realistic and natural, NOT costume-like or like a wig cap. Photorealistic, natural lighting, head-and-shoulders portrait, sharp focus.';
 const CHILD_SAFETY_CLAUSE = ' This subject is a CHILD: keep them clearly the same child of the same age, with wholesome, school-appropriate kid styling only — no adult/edgy looks, no facial hair, no aging.';
+// Master Stylist composite edit: lock facial identity but allow hair/color/
+// eyebrow/beard enhancement (+ wig/hair-system if beneficial).
+const MASTER_STYLIST_CLAUSE = 'CRITICAL — IDENTITY LOCK: keep the EXACT SAME PERSON — same face, eyes, nose, lips, age range, ethnicity, skin tone and facial bone structure; do NOT swap the person or alter facial features. You MAY enhance the hair (cut, color, texture, bangs), eyebrows and facial hair/beard, and add a natural wig or hair system ONLY if it clearly improves fullness or harmony. Produce the single most flattering, harmonious, youthful, confident and natural result. Photorealistic, natural lighting, head-and-shoulders portrait, sharp focus.';
 
 // audience → instruction phrasing for the analysis model
 const HAIRCUT_AUDIENCE_BRIEF = {
@@ -3054,15 +3057,12 @@ async function requireMobileBarberVendor(request) {
   return snap.data() || {};
 }
 
-// Plan analysis + 5 styles for a studio mode. Mirrors planHaircutStyles but
-// with the richer analysis schema (features + scores + strategy + thinning).
-async function runStudioPlan(geminiKey, base64, mimeType, opts) {
-  const prompt = StudioLib.buildStudioAnalysisPrompt(
-    opts.mode, opts.options, opts.audience, opts.preference, opts.goal, opts.lang
-  );
-  const plan = await callGeminiHaircutAnalysis(geminiKey, base64, mimeType, prompt); // reused vision call
-  const rawAnalysis = (plan && plan.analysis) || {};
-  const analysis = {
+// Coerce the model's raw analysis object into the studio analysis schema
+// (features + scores + strategy + thinning). Factored out of runStudioPlan so
+// the Master Stylist path reuses the EXACT same normalization.
+function normalizeStudioAnalysis(rawAnalysis) {
+  rawAnalysis = rawAnalysis || {};
+  return {
     features: (rawAnalysis.features && typeof rawAnalysis.features === 'object' && !Array.isArray(rawAnalysis.features)) ? rawAnalysis.features : {},
     scores: StudioLib.normalizeStudioScores(rawAnalysis.scores),
     strategy: {
@@ -3075,12 +3075,116 @@ async function runStudioPlan(geminiKey, base64, mimeType, opts) {
       note: String((rawAnalysis.thinning && rawAnalysis.thinning.note) || '').trim(),
     },
   };
+}
+
+// Plan analysis + 5 styles for a studio mode. Mirrors planHaircutStyles but
+// with the richer analysis schema (features + scores + strategy + thinning).
+async function runStudioPlan(geminiKey, base64, mimeType, opts) {
+  const prompt = StudioLib.buildStudioAnalysisPrompt(
+    opts.mode, opts.options, opts.audience, opts.preference, opts.goal, opts.lang
+  );
+  const plan = await callGeminiHaircutAnalysis(geminiKey, base64, mimeType, prompt); // reused vision call
+  const analysis = normalizeStudioAnalysis(plan && plan.analysis);
   const rawStyles = (plan && Array.isArray(plan.styles)) ? plan.styles : [];
   const styles = rawStyles
     .map((s, i) => normalizeHaircutStyle(s, opts.audience, i, opts.mode)) // mode selects in-place vs replacement clause
     .filter((s) => s.imageEditPrompt)
     .slice(0, 5);
   return { analysis, styles };
+}
+
+// Shared studio core used by BOTH the vendor and public callables. Performs the
+// analysis + per-mode (5 recs) OR master (1 masterpiece) generation. Returns the
+// response object (without ok/auth concerns). The per-mode path is the existing
+// vendor studio behavior moved here VERBATIM — response shape is unchanged.
+async function runStudioGeneration(params) {
+  const { mode, options, audience, preference, goal, lang, base64, mimeType, geminiKey } = params;
+  const t0 = Date.now();
+
+  if (mode === 'master') {
+    const prompt = StudioLib.buildMasterStylistPrompt(audience, goal, lang);
+    let plan;
+    try {
+      plan = await callGeminiHaircutAnalysis(geminiKey, base64, mimeType, prompt);
+    } catch (e) {
+      console.error('[runStudioGeneration] master analysis failure', e);
+      return { ok: false, vendorMessage: 'Master Stylist analysis failed. Please try again.', debugCode: 'MASTER_PLAN_ERROR' };
+    }
+    const analysis = normalizeStudioAnalysis(plan && plan.analysis);
+    const best = StudioLib.normalizeMasterpiece(plan && plan.bestLook);
+    if (!best.imageEditPrompt) {
+      return { ok: false, vendorMessage: 'Master Stylist could not design a look. Try a clearer photo.', debugCode: 'MASTER_EMPTY' };
+    }
+    let edit;
+    try {
+      edit = await callGeminiImageEdit(
+        geminiKey, base64, mimeType,
+        best.imageEditPrompt + ' ' + MASTER_STYLIST_CLAUSE + (audience === 'child' ? CHILD_SAFETY_CLAUSE : '')
+      );
+    } catch (e) {
+      console.error('[runStudioGeneration] master edit failure', e);
+      return { ok: false, vendorMessage: 'Master Stylist could not render the look. Please try again.', debugCode: 'MASTER_EDIT_ERROR' };
+    }
+    return {
+      ok: true,
+      mode: 'master', audience,
+      analysis,
+      masterpiece: { previewDataUrl: edit.dataUrl, title: best.title, explanation: best.explanation, attributes: best.attributes },
+      provider: 'gemini-2.5-flash-image',
+      generationTimeMs: Date.now() - t0,
+    };
+  }
+
+  // per-mode path (the existing studio behavior, moved verbatim from the callable)
+  let plan;
+  try {
+    plan = await runStudioPlan(geminiKey, base64, mimeType, { mode, options, audience, preference, goal, lang });
+  } catch (e) {
+    console.error('[runStudioGeneration] planning failure', e);
+    return { ok: false, vendorMessage: 'Style Studio analysis failed. Please try again.', debugCode: 'PLAN_ERROR' };
+  }
+  const styles = (plan && plan.styles) || [];
+  if (!styles.length) {
+    return { ok: false, vendorMessage: 'Style Studio returned no styles. Try a clearer photo.', debugCode: 'PLAN_EMPTY' };
+  }
+
+  let recommendations;
+  try {
+    recommendations = await Promise.all(styles.map(async (style) => {
+      const baseRec = {
+        styleId: style.styleId, title: style.styleTitle, styleTitle: style.styleTitle,
+        targetAudience: style.targetAudience, explanation: style.description, description: style.description,
+        whyItFitsFace: style.whyItFitsFace, maintenance: style.maintenanceLevel, maintenanceLevel: style.maintenanceLevel,
+        barberNotes: style.haircutInstructionsForBarber, haircutInstructionsForBarber: style.haircutInstructionsForBarber,
+        colorRecommendation: style.colorRecommendation, highlightRecommendation: style.highlightRecommendation,
+        curlStraightRecommendation: style.curlStraightRecommendation, confidence: style.confidence,
+        safetyNotes: style.safetyNotes,
+      };
+      try {
+        const edit = await callGeminiImageEdit(geminiKey, base64, mimeType, style.imageEditPrompt); // reused
+        return Object.assign({}, baseRec, {
+          previewDataUrl: edit.dataUrl,
+          // Intentional: studio uses a slightly stricter "your_preview" bar (>=0.5)
+          // than generateHaircutPreviews (<0.45). Do not "fix" to match.
+          previewKind: (style.confidence >= 0.5) ? 'your_preview' : 'style_inspiration',
+        });
+      } catch (e) {
+        return Object.assign({}, baseRec, { previewDataUrl: '', previewKind: 'style_inspiration', error: (e && e.message) || 'edit_failed' });
+      }
+    }));
+  } catch (e) {
+    console.error('[runStudioGeneration] image edit failure', e);
+    return { ok: false, vendorMessage: 'Style Studio could not render previews. Please try again.', debugCode: 'EDIT_ERROR' };
+  }
+
+  return {
+    ok: true,
+    mode, audience, options, preference, goal,
+    analysis: plan.analysis,            // vendor-only; caller must NOT persist
+    recommendations,
+    provider: 'gemini-2.5-flash-image',
+    generationTimeMs: Date.now() - t0,
+  };
 }
 
 exports.generateStyleStudio = onCall(
@@ -3120,56 +3224,7 @@ exports.generateStyleStudio = onCall(
       return { ok: false, vendorMessage: 'AI Style Studio is temporarily unavailable.', debugCode: 'NO_GEMINI_KEY' };
     }
 
-    const t0 = Date.now();
-    let plan;
-    try {
-      plan = await runStudioPlan(geminiKey, base64, mimeType, { mode, options, audience, preference, goal, lang });
-    } catch (e) {
-      console.error('[generateStyleStudio] planning failure', e);
-      return { ok: false, vendorMessage: 'Style Studio analysis failed. Please try again.', debugCode: 'PLAN_ERROR' };
-    }
-    const styles = (plan && plan.styles) || [];
-    if (!styles.length) {
-      return { ok: false, vendorMessage: 'Style Studio returned no styles. Try a clearer photo.', debugCode: 'PLAN_EMPTY' };
-    }
-
-    let recommendations;
-    try {
-      recommendations = await Promise.all(styles.map(async (style) => {
-        const baseRec = {
-          styleId: style.styleId, title: style.styleTitle, styleTitle: style.styleTitle,
-          targetAudience: style.targetAudience, explanation: style.description, description: style.description,
-          whyItFitsFace: style.whyItFitsFace, maintenance: style.maintenanceLevel, maintenanceLevel: style.maintenanceLevel,
-          barberNotes: style.haircutInstructionsForBarber, haircutInstructionsForBarber: style.haircutInstructionsForBarber,
-          colorRecommendation: style.colorRecommendation, highlightRecommendation: style.highlightRecommendation,
-          curlStraightRecommendation: style.curlStraightRecommendation, confidence: style.confidence,
-          safetyNotes: style.safetyNotes,
-        };
-        try {
-          const edit = await callGeminiImageEdit(geminiKey, base64, mimeType, style.imageEditPrompt); // reused
-          return Object.assign({}, baseRec, {
-            previewDataUrl: edit.dataUrl,
-            // Intentional: studio uses a slightly stricter "your_preview" bar (>=0.5)
-            // than generateHaircutPreviews (<0.45). Do not "fix" to match.
-            previewKind: (style.confidence >= 0.5) ? 'your_preview' : 'style_inspiration',
-          });
-        } catch (e) {
-          return Object.assign({}, baseRec, { previewDataUrl: '', previewKind: 'style_inspiration', error: (e && e.message) || 'edit_failed' });
-        }
-      }));
-    } catch (e) {
-      console.error('[generateStyleStudio] image edit failure', e);
-      return { ok: false, vendorMessage: 'Style Studio could not render previews. Please try again.', debugCode: 'EDIT_ERROR' };
-    }
-
-    return {
-      ok: true,
-      mode, audience, options, preference, goal,
-      analysis: plan.analysis,            // vendor-only; caller must NOT persist
-      recommendations,
-      provider: 'gemini-2.5-flash-image',
-      generationTimeMs: Date.now() - t0,
-    };
+    return runStudioGeneration({ mode, options, audience, preference, goal, lang, base64, mimeType, geminiKey });
   }
 );
 

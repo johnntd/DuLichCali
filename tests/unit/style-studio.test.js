@@ -82,4 +82,10 @@ const m = S.normalizeMasterpiece({ title:'X', explanation:'Y', imageEditPrompt:'
 assert.strictEqual(m.title,'X'); assert.strictEqual(m.imageEditPrompt,'Z'); assert.strictEqual(m.attributes.haircut,'a'); ok('normalizeMasterpiece ok');
 assert.deepStrictEqual(S.normalizeMasterpiece(null).attributes, {}); ok('normalizeMasterpiece null-safe');
 
+// ── Task 2: shared core + master mode + clause wiring (static source guards) ──
+assert.ok(/const MASTER_STYLIST_CLAUSE\s*=/.test(src), 'MASTER_STYLIST_CLAUSE present'); ok('master clause present');
+assert.ok(/async function runStudioGeneration\(/.test(src), 'runStudioGeneration extracted'); ok('shared core present');
+assert.ok(/exports\.generateStyleStudio\s*=\s*onCall\(/.test(src), 'vendor studio intact'); ok('vendor studio intact');
+assert.ok(/mode === 'master'/.test(src), 'master branch present'); ok('master branch');
+
 console.log(`\nstyle-studio pure tests: ${n} passed`);

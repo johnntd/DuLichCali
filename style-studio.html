@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260419m">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/style-studio.css?v=20260613c">
+  <link rel="stylesheet" href="/style-studio.css?v=20260613d">
 
   <!-- Google Analytics 4 -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-5S0P4XMCJR"></script>
@@ -87,27 +87,51 @@
     </div>
   </section>
 
-  <!-- 3. Launch banner -->
+  <!-- 3. AI Style Showcase — swipeable carousel -->
+  <section class="ss-showcase-wrap" id="ssShowcaseWrap">
+    <h2 class="ss-showcase__title" data-ss-i18n="showcaseTitle"></h2>
+    <div class="ss-showcase" id="ssShowcase" role="list"></div>
+  </section>
+
+  <!-- 4. AI Wig Match — flagship -->
+  <section class="ss-wigmatch" id="ssWigMatch">
+    <div class="ss-wigmatch__inner">
+      <span class="ss-wigmatch__chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a7 7 0 0 0-7 7v4a3 3 0 0 0 3 3h.5"/><path d="M12 3a7 7 0 0 1 7 7v4a3 3 0 0 1-3 3h-.5"/><path d="M9 20a3 3 0 0 0 6 0"/><circle cx="12" cy="11" r="2.2"/></svg>
+        <span data-ss-i18n="wigChip"></span>
+      </span>
+      <h2 class="ss-wigmatch__title" data-ss-i18n="wigTitle"></h2>
+      <p class="ss-wigmatch__sub" data-ss-i18n="wigSub"></p>
+      <button class="ss-cta ss-wigmatch__cta" id="ssWigGenerate" type="button" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 9.5 9.5 3 12l6.5 2.5L12 21l2.5-6.5L21 12l-6.5-2.5Z"/></svg>
+        <span data-ss-i18n="wigCta"></span>
+      </button>
+      <span class="ss-status" id="ssWigStatus"></span>
+      <div class="ss-wig-result" id="ssWigResult"></div>
+    </div>
+  </section>
+
+  <!-- 5. Launch banner -->
   <div class="ss-banner" id="ssLaunchBanner">
     <span class="ss-banner__icon" aria-hidden="true">🎁</span>
     <span data-ss-i18n="banner"></span>
   </div>
 
-  <!-- 4. Manual modes -->
+  <!-- 6. Manual modes -->
   <section class="ss-modes" id="ssModes">
     <div class="ss-modes__head">
       <h2 class="ss-modes__title" data-ss-i18n="modesTitle"></h2>
       <p class="ss-modes__sub" data-ss-i18n="modesSub"></p>
     </div>
     <div class="ss-audience-wrap">
-      <label for="ssAudience" data-ss-i18n="audienceLabel"></label>
-      <select class="ss-select ss-audience" id="ssAudience"></select>
+      <span class="ss-audience-wrap__label" data-ss-i18n="audienceLabel"></span>
+      <div class="ss-seg" id="ssAudienceSeg" role="group" aria-label="Audience"></div>
     </div>
     <div class="ss-accordion" id="ssAccordion"></div>
     <div id="ssModesResults"></div>
   </section>
 
-  <!-- 5. Membership / login wall (hidden until the free limit is reached) -->
+  <!-- 7. Membership / login wall (hidden until the free limit is reached) -->
   <section class="ss-membership" id="ssMembershipPrompt" hidden>
     <div class="ss-membership__icon" aria-hidden="true">✦</div>
     <h2 class="ss-membership__title" data-ss-i18n="membershipTitle"></h2>
@@ -115,13 +139,13 @@
     <a class="ss-membership__cta" id="ssMembershipCta" href="/mobile-barber/" data-ss-i18n="membershipCta"></a>
   </section>
 
-  <!-- 6. Privacy note -->
+  <!-- 8. Privacy note -->
   <p class="ss-privacy">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
     <span data-ss-i18n="privacyNote"></span>
   </p>
 
-  <!-- 7. Back home -->
+  <!-- 9. Back home -->
   <a href="/" class="ss-back" data-ss-i18n="backHome"></a>
 
 </div>
@@ -143,6 +167,6 @@
   if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 </script>
 <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260613a"></script>
-<script src="/style-studio-public.js?v=20260613c"></script>
+<script src="/style-studio-public.js?v=20260613d"></script>
 </body>
 </html>

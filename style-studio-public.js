@@ -1,6 +1,6 @@
 'use strict';
 // ─────────────────────────────────────────────────────────────────────────
-// AI Style Studio — PUBLIC client  (style-studio-public.js?v=20260613c)
+// AI Style Studio — PUBLIC client  (style-studio-public.js?v=20260613d)
 //
 // Powers /style-studio: the one-click AI Master Stylist hero + the 9 manual
 // modes. Signs the visitor in with Firebase ANONYMOUS auth, then calls the
@@ -61,6 +61,21 @@
       mode_eyebrow: 'Eyebrows', mode_beard: 'Beards', mode_wig: 'Wigs',
       mode_hairsystem: 'Hair Systems', mode_event: 'Event Looks', mode_vacation: 'Vacation Looks',
       modeGenerate: 'Generate looks',
+      showcaseTitle: 'What AI can design for you',
+      sc1_title: 'AI Master Stylist', sc1_benefit: 'One perfect look, designed for your face.', sc1_cta: 'Create my look',
+      sc2_title: 'AI Wig Match', sc2_benefit: 'Find the most natural wig for you.', sc2_cta: 'Match a wig',
+      sc3_title: 'Hair Color Preview', sc3_benefit: 'See yourself in a new shade — risk-free.', sc3_cta: 'Try colors',
+      sc4_title: 'Eyebrow & Beard', sc4_benefit: 'Refine your grooming with AI.', sc4_cta: 'Groom',
+      sc5_title: 'Event & Vacation Look', sc5_benefit: 'Get ready for the big day or the getaway.', sc5_cta: 'Get the look',
+      wigChip: 'AI Wig Match',
+      wigTitle: 'AI Wig Match',
+      wigSub: 'AI analyses your face and finds the most natural wig for you — see yourself wearing each one.',
+      wigCta: 'Find My Best Wig',
+      wigBest: 'Best natural match',
+      wigNeedSelfie: 'Upload a selfie above to start.',
+      wigGenerating: 'Matching the most natural wig for you…',
+      wigNaturalFit: 'Natural fit',
+      wigMore: 'More wig options',
       membershipTitle: 'Keep your momentum going',
       membershipPrompt: 'You have used your free previews. Create a free account to keep generating new looks.',
       membershipCta: 'Create a free account',
@@ -115,6 +130,21 @@
       mode_eyebrow: 'Chân Mày', mode_beard: 'Râu', mode_wig: 'Tóc Giả',
       mode_hairsystem: 'Hệ Thống Tóc', mode_event: 'Kiểu Sự Kiện', mode_vacation: 'Kiểu Du Lịch',
       modeGenerate: 'Tạo kiểu',
+      showcaseTitle: 'AI có thể thiết kế gì cho bạn',
+      sc1_title: 'Chuyên Gia Tạo Kiểu AI', sc1_benefit: 'Một diện mạo hoàn hảo, thiết kế cho gương mặt bạn.', sc1_cta: 'Tạo diện mạo',
+      sc2_title: 'Ghép Tóc Giả AI', sc2_benefit: 'Tìm bộ tóc giả tự nhiên nhất cho bạn.', sc2_cta: 'Ghép tóc giả',
+      sc3_title: 'Xem Trước Màu Tóc', sc3_benefit: 'Thử màu tóc mới — không rủi ro.', sc3_cta: 'Thử màu',
+      sc4_title: 'Chân Mày & Râu', sc4_benefit: 'Tinh chỉnh diện mạo cùng AI.', sc4_cta: 'Chỉnh tỉa',
+      sc5_title: 'Kiểu Sự Kiện & Du Lịch', sc5_benefit: 'Sẵn sàng cho ngày trọng đại hay chuyến đi.', sc5_cta: 'Xem kiểu',
+      wigChip: 'Ghép Tóc Giả AI',
+      wigTitle: 'Ghép Tóc Giả AI',
+      wigSub: 'AI phân tích gương mặt và tìm bộ tóc giả tự nhiên nhất cho bạn — thấy chính bạn đang đội từng kiểu.',
+      wigCta: 'Tìm Tóc Giả Đẹp Nhất',
+      wigBest: 'Ghép tự nhiên nhất',
+      wigNeedSelfie: 'Tải ảnh selfie ở trên để bắt đầu.',
+      wigGenerating: 'Đang ghép bộ tóc giả tự nhiên nhất cho bạn…',
+      wigNaturalFit: 'Hợp tự nhiên',
+      wigMore: 'Thêm lựa chọn tóc giả',
       membershipTitle: 'Tiếp tục khám phá',
       membershipPrompt: 'Bạn đã dùng hết lượt xem trước miễn phí. Tạo tài khoản miễn phí để tiếp tục tạo kiểu mới.',
       membershipCta: 'Tạo tài khoản miễn phí',
@@ -169,6 +199,21 @@
       mode_eyebrow: 'Cejas', mode_beard: 'Barbas', mode_wig: 'Pelucas',
       mode_hairsystem: 'Sistemas Capilares', mode_event: 'Looks de Evento', mode_vacation: 'Looks de Vacaciones',
       modeGenerate: 'Generar looks',
+      showcaseTitle: 'Lo que la AI puede diseñar para ti',
+      sc1_title: 'Estilista Maestro AI', sc1_benefit: 'Un look perfecto, diseñado para tu rostro.', sc1_cta: 'Crear mi look',
+      sc2_title: 'Match de Peluca AI', sc2_benefit: 'Encuentra la peluca más natural para ti.', sc2_cta: 'Buscar peluca',
+      sc3_title: 'Vista Previa de Color', sc3_benefit: 'Mírate con un nuevo tono — sin riesgo.', sc3_cta: 'Probar colores',
+      sc4_title: 'Cejas y Barba', sc4_benefit: 'Refina tu arreglo con AI.', sc4_cta: 'Arreglar',
+      sc5_title: 'Look de Evento y Vacaciones', sc5_benefit: 'Prepárate para el gran día o la escapada.', sc5_cta: 'Ver el look',
+      wigChip: 'Match de Peluca AI',
+      wigTitle: 'Match de Peluca AI',
+      wigSub: 'La AI analiza tu rostro y encuentra la peluca más natural para ti — mírate usando cada una.',
+      wigCta: 'Encontrar Mi Mejor Peluca',
+      wigBest: 'Match más natural',
+      wigNeedSelfie: 'Sube una selfie arriba para empezar.',
+      wigGenerating: 'Buscando la peluca más natural para ti…',
+      wigNaturalFit: 'Ajuste natural',
+      wigMore: 'Más opciones de peluca',
       membershipTitle: 'Mantén el impulso',
       membershipPrompt: 'Has usado tus vistas previas gratuitas. Crea una cuenta gratis para seguir generando nuevos looks.',
       membershipCta: 'Crear una cuenta gratis',
@@ -266,8 +311,10 @@
     doc.documentElement.setAttribute('lang', lang);
     applyI18n();
     buildGoalChips();
-    populateAudienceSelect();
+    buildAudienceSeg();
     buildAccordion();
+    buildShowcase();
+    refreshWigUi();
     syncLangButtons();
     setStatus(state.busy ? t('generating') : (state.selfieDataUrl ? t('photoReady') : t('ready')));
   }
@@ -309,18 +356,28 @@
       wrap.appendChild(chip);
     });
   }
-  function populateAudienceSelect() {
-    var sel = doc.getElementById('ssAudience');
-    if (!sel) return;
-    var prev = state.audience;
-    sel.innerHTML = '';
+  // ── Audience segmented control (replaces the native select) ────────────
+  function buildAudienceSeg() {
+    var seg = doc.getElementById('ssAudienceSeg');
+    if (!seg) return;
+    seg.innerHTML = '';
     [['neutral', 'aud_neutral'], ['man', 'aud_man'], ['woman', 'aud_woman'], ['child', 'aud_child']].forEach(function (pair) {
-      var o = doc.createElement('option'); o.value = pair[0]; o.textContent = t(pair[1]);
-      if (pair[0] === prev) o.selected = true;
-      sel.appendChild(o);
+      var btn = elt('button', 'ss-seg__btn', t(pair[1]));
+      btn.type = 'button';
+      btn.setAttribute('data-aud', pair[0]);
+      var on = pair[0] === state.audience;
+      btn.setAttribute('aria-pressed', String(on));
+      if (on) btn.classList.add('ss-seg__btn--active');
+      btn.addEventListener('click', function () {
+        state.audience = pair[0];
+        seg.querySelectorAll('.ss-seg__btn').forEach(function (b) {
+          var active = b.getAttribute('data-aud') === state.audience;
+          b.classList.toggle('ss-seg__btn--active', active);
+          b.setAttribute('aria-pressed', String(active));
+        });
+      });
+      seg.appendChild(btn);
     });
-    sel.value = prev || 'neutral';
-    sel.onchange = function () { state.audience = sel.value; };
   }
 
   // ── Accordion of 9 manual modes ────────────────────────────────────────
@@ -335,11 +392,25 @@
       d.appendChild(sum);
       var body = elt('div', 'ss-panel__body');
       def.controls.forEach(function (ctrl) {
-        var sel = doc.createElement('select'); sel.className = 'ss-select'; sel.setAttribute('data-ctrl', ctrl.key);
-        ctrl.values.forEach(function (v) {
-          var o = doc.createElement('option'); o.value = v; o.textContent = v.replace(/_/g, ' '); sel.appendChild(o);
+        var group = elt('div', 'ss-optchips'); group.setAttribute('data-ctrl', ctrl.key);
+        ctrl.values.forEach(function (v, vi) {
+          var chip = elt('button', 'ss-optchips__chip', v.replace(/_/g, ' '));
+          chip.type = 'button';
+          chip.setAttribute('data-value', v);
+          var on = vi === 0;
+          chip.setAttribute('aria-pressed', String(on));
+          if (on) { chip.classList.add('ss-optchips__chip--active'); group.setAttribute('data-selected', v); }
+          chip.addEventListener('click', function () {
+            group.setAttribute('data-selected', v);
+            group.querySelectorAll('.ss-optchips__chip').forEach(function (c) {
+              var active = c.getAttribute('data-value') === v;
+              c.classList.toggle('ss-optchips__chip--active', active);
+              c.setAttribute('aria-pressed', String(active));
+            });
+          });
+          group.appendChild(chip);
         });
-        body.appendChild(sel);
+        body.appendChild(group);
       });
       var gen = elt('button', 'ss-cta', t('modeGenerate'));
       gen.type = 'button'; gen.disabled = !canGenerate();
@@ -357,7 +428,17 @@
     var ok = canGenerate();
     var best = doc.getElementById('ssGenerateBest');
     if (best) best.disabled = !ok;
+    var wig = doc.getElementById('ssWigGenerate');
+    if (wig) wig.disabled = !ok;
     doc.querySelectorAll('[data-mode-generate]').forEach(function (b) { b.disabled = !ok; });
+  }
+  // Wig section status hint (depends on consent/selfie, not on busy).
+  function refreshWigUi() {
+    var s = doc.getElementById('ssWigStatus');
+    if (!s) return;
+    if (state.busy) return;             // a live generation message owns the status line
+    if (!state.selfieDataUrl) { s.textContent = t('wigNeedSelfie'); s.classList.remove('ss-status--error'); }
+    else s.textContent = '';
   }
 
   // ── Selfie upload ──────────────────────────────────────────────────────
@@ -372,6 +453,7 @@
       showSelfiePreview(dataUrl);
       setStatus(t('photoReady'));
       refreshButtons();
+      refreshWigUi();
     }).catch(function () { setStatus(t('error'), true); });
   }
   function showSelfiePreview(dataUrl) {
@@ -482,7 +564,11 @@
     state.busy = true; refreshButtons();
     state.sessionId = 'ss_' + def.mode + '_' + Math.random().toString(36).slice(2, 9);
     var opts = {};
-    bodyEl.querySelectorAll('select[data-ctrl]').forEach(function (s) { opts[s.getAttribute('data-ctrl')] = s.value; });
+    bodyEl.querySelectorAll('.ss-optchips[data-ctrl]').forEach(function (g) {
+      var sel = g.getAttribute('data-selected');
+      var active = g.querySelector('.ss-optchips__chip--active');
+      opts[g.getAttribute('data-ctrl')] = sel || (active && active.getAttribute('data-value')) || '';
+    });
     resultsEl.innerHTML = '';
     resultsEl.appendChild(elt('p', 'ss-mode-results__status', t('generating')));
     logUi({ event: 'generate-mode', mode: def.mode });
@@ -801,6 +887,170 @@
     logUi({ event: 'viewer-close' });
   }
 
+  // ── AI Style Showcase carousel ─────────────────────────────────────────
+  function showcaseIcon(name) {
+    var P = {
+      stylist: '<path d="M12 3 9.5 9.5 3 12l6.5 2.5L12 21l2.5-6.5L21 12l-6.5-2.5Z"/>',
+      wig: '<path d="M12 3a7 7 0 0 0-7 7v4a3 3 0 0 0 3 3h.5"/><path d="M12 3a7 7 0 0 1 7 7v4a3 3 0 0 1-3 3h-.5"/><path d="M9 20a3 3 0 0 0 6 0"/><circle cx="12" cy="11" r="2.2"/>',
+      color: '<path d="M12 21a9 9 0 1 1 9-9c0 2-1.6 3-3.5 3H16a2 2 0 0 0-1.6 3.2A1.8 1.8 0 0 1 12 21Z"/><circle cx="7.5" cy="10.5" r="1.1"/><circle cx="12" cy="7.5" r="1.1"/><circle cx="16.5" cy="10.5" r="1.1"/>',
+      groom: '<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/>',
+      event: '<path d="M12 2 9 9l-7 .5 5.5 4.5L6 21l6-3.5L18 21l-1.5-7L22 9.5 15 9Z"/>',
+    };
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (P[name] || '') + '</svg>';
+  }
+  function buildShowcase() {
+    var host = doc.getElementById('ssShowcase');
+    if (!host) return;
+    host.innerHTML = '';
+    var slides = [
+      { key: 'sc1', icon: 'stylist', accent: 'a', action: scrollToFlagship },
+      { key: 'sc2', icon: 'wig', accent: 'b', action: scrollToWigMatch },
+      { key: 'sc3', icon: 'color', accent: 'c', action: function () { openModePanel('color'); } },
+      { key: 'sc4', icon: 'groom', accent: 'd', action: function () { openModePanel('eyebrow'); } },
+      { key: 'sc5', icon: 'event', accent: 'e', action: function () { openModePanel('event'); } },
+    ];
+    slides.forEach(function (s) {
+      var card = elt('div', 'ss-showcase-card ss-showcase-card--' + s.accent);
+      card.setAttribute('role', 'listitem');
+      var ic = elt('span', 'ss-showcase-card__icon'); ic.innerHTML = showcaseIcon(s.icon);
+      card.appendChild(ic);
+      card.appendChild(elt('h3', 'ss-showcase-card__title', t(s.key + '_title')));
+      card.appendChild(elt('p', 'ss-showcase-card__benefit', t(s.key + '_benefit')));
+      var cta = elt('button', 'ss-showcase-card__cta', t(s.key + '_cta'));
+      cta.type = 'button';
+      cta.addEventListener('click', s.action);
+      card.appendChild(cta);
+      host.appendChild(card);
+    });
+  }
+  function scrollToFlagship() {
+    var el = doc.getElementById('ssGenerateBest') || doc.querySelector('.ss-flagship');
+    if (el) try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+  }
+  function scrollToWigMatch() {
+    var el = doc.getElementById('ssWigMatch');
+    if (el) try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
+  }
+  function openModePanel(mode) {
+    var panel = doc.querySelector('.ss-panel[data-mode="' + mode + '"]');
+    if (!panel) {
+      var modes = doc.getElementById('ssModes');
+      if (modes) try { modes.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
+      return;
+    }
+    panel.open = true;
+    try { panel.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
+  }
+
+  // ── AI Wig Match flagship flow ─────────────────────────────────────────
+  function onWigGenerate() {
+    if (!canGenerate()) {
+      if (!state.consent) setStatus(t('consentRequired'), true);
+      else if (!state.selfieDataUrl) wigStatus(t('wigNeedSelfie'), true);
+      return;
+    }
+    state.busy = true; refreshButtons();
+    state.sessionId = 'ss_wig_' + Math.random().toString(36).slice(2, 9);
+    wigStatus(t('wigGenerating'));
+    var resultEl = doc.getElementById('ssWigResult');
+    if (resultEl) resultEl.innerHTML = '';
+    logUi({ event: 'generate-wig' });
+    callPublic({
+      selfieDataUrl: state.selfieDataUrl, lang: state.lang,
+      mode: 'wig', audience: state.audience, goal: state.goal,
+    }).then(function (res) {
+      state.busy = false; refreshButtons();
+      if (res.requireLogin) { revealMembership(); wigStatus(t('loginWall'), true); return; }
+      if (!res.ok) { wigStatus(res.message || t('error'), true); return; }
+      var recs = (res.recommendations || []).filter(function (r) { return r && r.previewDataUrl && !r.error; });
+      if (!recs.length) { wigStatus(t('err_PLAN_EMPTY'), true); return; }
+      wigStatus('');
+      renderWigResult(recs, res.analysis);
+    });
+  }
+  function wigStatus(msg, isError) {
+    var s = doc.getElementById('ssWigStatus');
+    if (!s) return;
+    s.textContent = msg || '';
+    s.classList.toggle('ss-status--error', !!isError);
+  }
+  function renderWigResult(recs, analysis) {
+    var host = doc.getElementById('ssWigResult');
+    if (!host) return;
+    host.innerHTML = '';
+    // Highest-confidence rec is the featured "best match".
+    var sorted = recs.slice().sort(function (a, b) {
+      return (Number(b.confidence) || 0) - (Number(a.confidence) || 0);
+    });
+    var best = sorted[0];
+    var rest = sorted.slice(1);
+    state.lastResultCount = sorted.length;
+    var allItems = sorted.map(function (rec) {
+      return { src: rec.previewDataUrl || '', title: rec.title || '', why: rec.whyItFitsFace || '' };
+    });
+    var hasScores = !!(analysis && analysis.scores && typeof analysis.scores === 'object' &&
+                       Object.keys(analysis.scores).length);
+
+    // Featured best match.
+    var bestCard = elt('article', 'ss-wig-best');
+    var bSrc = best.previewDataUrl || '';
+    if (bSrc) {
+      var fig = elt('button', 'ss-wig-best__figure'); fig.type = 'button';
+      fig.setAttribute('aria-label', t('expand'));
+      var img = doc.createElement('img'); img.className = 'ss-wig-best__img';
+      img.src = bSrc; img.alt = best.title || ''; img.loading = 'lazy';
+      fig.appendChild(img); fig.appendChild(zoomBadge());
+      fig.appendChild(elt('span', 'ss-wig-best__badge', t('wigBest')));
+      fig.addEventListener('click', function () { openViewer(allItems, 0); });
+      bestCard.appendChild(fig);
+    }
+    var bBody = elt('div', 'ss-wig-best__body');
+    if (best.title) bBody.appendChild(elt('strong', 'ss-wig-best__title', best.title));
+    if (hasScores) bBody.appendChild(elt('span', 'ss-wig-fit-chip', t('wigNaturalFit')));
+    if (best.whyItFitsFace) bBody.appendChild(elt('p', 'ss-wig-best__why', best.whyItFitsFace));
+    if (best.maintenance) bBody.appendChild(elt('p', 'ss-card__meta', best.maintenance));
+    bBody.appendChild(buildActions(bSrc, best.styleId || best.title || 'best-wig', allItems, 0));
+    bestCard.appendChild(bBody);
+    host.appendChild(bestCard);
+    cacheLocal(state.sessionId, best.styleId || '', bSrc);
+
+    // Remaining wig options as a swipeable carousel (indexes 1..n into allItems).
+    if (rest.length) {
+      host.appendChild(elt('p', 'ss-wig-more', t('wigMore')));
+      var track = elt('div', 'ss-carousel'); track.setAttribute('role', 'list');
+      rest.forEach(function (rec, ri) {
+        var idx = ri + 1; // position within allItems
+        var src = rec.previewDataUrl || '';
+        var card = elt('article', 'ss-card'); card.setAttribute('role', 'listitem');
+        if (src) {
+          var figure = elt('button', 'ss-card__figure'); figure.type = 'button';
+          figure.setAttribute('aria-label', t('expand'));
+          var cimg = doc.createElement('img'); cimg.className = 'ss-card__img';
+          cimg.src = src; cimg.alt = rec.title || ''; cimg.loading = 'lazy';
+          figure.appendChild(cimg); figure.appendChild(zoomBadge());
+          figure.addEventListener('click', function () { openViewer(allItems, idx); });
+          card.appendChild(figure);
+        }
+        var body = elt('div', 'ss-card__body');
+        if (rec.title) body.appendChild(elt('strong', 'ss-card__title', rec.title));
+        if (hasScores) body.appendChild(elt('span', 'ss-wig-fit-chip', t('wigNaturalFit')));
+        if (rec.whyItFitsFace) body.appendChild(elt('p', 'ss-card__why', rec.whyItFitsFace));
+        if (rec.maintenance) body.appendChild(elt('p', 'ss-card__meta', rec.maintenance));
+        body.appendChild(buildActions(src, rec.styleId || rec.title || ('wig-' + idx), allItems, idx));
+        card.appendChild(body);
+        track.appendChild(card);
+        cacheLocal(state.sessionId, rec.styleId || '', src);
+      });
+      host.appendChild(track);
+      if (sorted.length > 1) {
+        var hint = elt('p', 'ss-carousel__hint'); hint.textContent = '‹ ' + sorted.length + ' ›';
+        host.appendChild(hint);
+      }
+    }
+    try { bestCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+    logUi({ event: 'wig-rendered' });
+  }
+
   function revealMembership() {
     var el = doc.getElementById('ssMembershipPrompt');
     if (el) { el.hidden = false; try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {} }
@@ -841,18 +1091,22 @@
     if (upload) upload.addEventListener('change', onUpload);
     var best = doc.getElementById('ssGenerateBest');
     if (best) best.addEventListener('click', onGenerateBest);
+    var wig = doc.getElementById('ssWigGenerate');
+    if (wig) wig.addEventListener('click', onWigGenerate);
 
     applyI18n();
     buildGoalChips();
-    populateAudienceSelect();
+    buildAudienceSeg();
     buildAccordion();
+    buildShowcase();
     syncLangButtons();
     refreshButtons();
+    refreshWigUi();
     initAuth();
     logUi({ event: 'init' });
   }
 
-  root.StyleStudioPublic = { init: init, setLang: setLang, _t: t, _state: state, _strings: SS_STRINGS, _openViewer: openViewer, _closeViewer: closeViewer };
+  root.StyleStudioPublic = { init: init, setLang: setLang, _t: t, _state: state, _strings: SS_STRINGS, _openViewer: openViewer, _closeViewer: closeViewer, _onWigGenerate: onWigGenerate, _buildShowcase: buildShowcase };
 
   if (doc.readyState === 'loading') {
     doc.addEventListener('DOMContentLoaded', init);

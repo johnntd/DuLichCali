@@ -3049,7 +3049,7 @@ async function runStudioPlan(geminiKey, base64, mimeType, opts) {
   const plan = await callGeminiHaircutAnalysis(geminiKey, base64, mimeType, prompt); // reused vision call
   const rawAnalysis = (plan && plan.analysis) || {};
   const analysis = {
-    features: (rawAnalysis.features && typeof rawAnalysis.features === 'object') ? rawAnalysis.features : {},
+    features: (rawAnalysis.features && typeof rawAnalysis.features === 'object' && !Array.isArray(rawAnalysis.features)) ? rawAnalysis.features : {},
     scores: StudioLib.normalizeStudioScores(rawAnalysis.scores),
     strategy: {
       emphasize: Array.isArray(rawAnalysis.strategy && rawAnalysis.strategy.emphasize) ? rawAnalysis.strategy.emphasize.slice(0, 6) : [],
@@ -3135,6 +3135,8 @@ exports.generateStyleStudio = onCall(
           const edit = await callGeminiImageEdit(geminiKey, base64, mimeType, style.imageEditPrompt); // reused
           return Object.assign({}, baseRec, {
             previewDataUrl: edit.dataUrl,
+            // Intentional: studio uses a slightly stricter "your_preview" bar (>=0.5)
+            // than generateHaircutPreviews (<0.45). Do not "fix" to match.
             previewKind: (style.confidence >= 0.5) ? 'your_preview' : 'style_inspiration',
           });
         } catch (e) {

@@ -1,6 +1,6 @@
 'use strict';
 // ─────────────────────────────────────────────────────────────────────────
-// AI Style Studio — PUBLIC client  (style-studio-public.js?v=20260613d)
+// AI Style Studio — PUBLIC client  (style-studio-public.js?v=20260613e)
 //
 // Powers /style-studio: the one-click AI Master Stylist hero + the 9 manual
 // modes. Signs the visitor in with Firebase ANONYMOUS auth, then calls the
@@ -9,6 +9,14 @@
 // compression / local cache). Image viewing uses a SELF-CONTAINED full-screen
 // viewer (ss-viewer) — NOT the vendor MBLightbox (whose CSS isn't on this page,
 // which caused the post-generate scroll-lock/freeze).
+//
+// CUSTOMER ACCOUNT — REUSES the mobile-barber customer auth scheme exactly:
+// derived email = normalizePhone(phone) + '@mobile-barber.dulichcali21.local',
+// Firebase email/password auth with LOCAL persistence, profile written to
+// mobileBarberCustomers/{uid} (matching isValidMobileBarberCustomerCreate). The
+// SAME account works on /mobile-barber and here — no new auth identity. The
+// account UI is a non-trapping inline panel (no scroll lock). Anonymous guest
+// flow is preserved: logout re-signs-in anonymously.
 //
 // MOBILE UX: full-screen viewer with pinch-zoom + swipe + close; iOS-safe
 // scroll lock that RESTORES on close (position:fixed technique); goal chips
@@ -95,6 +103,27 @@
       err_PLAN_ERROR: 'Style analysis failed. Please try again.',
       err_PLAN_EMPTY: 'No styles could be generated. Try a clearer photo.',
       err_EDIT_ERROR: 'The previews could not be rendered. Please try again.',
+      // Customer account (reuses the mobile-barber customer auth).
+      logIn: 'Log in', signUp: 'Sign up', logInOrSignUp: 'Log in / Sign up',
+      myAccount: 'My account', logout: 'Log out', close: 'Close',
+      authTitleLogin: 'Log in to your account',
+      authTitleSignup: 'Create a free account',
+      authIntro: 'Your account works across Du Lich Cali — keep your looks and book with one tap.',
+      name: 'Your name', phone: 'Phone number', password: 'Password',
+      authToggleToSignup: 'New here? Create an account',
+      authToggleToLogin: 'Already have an account? Log in',
+      submitLogin: 'Log in', submitSignup: 'Create account',
+      passwordHelp: 'Use at least 8 characters with a mix of letters and numbers.',
+      welcomeBack: 'Welcome back',
+      authMissingFields: 'Please enter your phone and password.',
+      authWeakPassword: 'Please choose a stronger password (at least 8 characters).',
+      authInvalidPhone: 'Please enter a valid phone number.',
+      authError: 'We could not sign you in. Please check your details and try again.',
+      authEmailInUse: 'An account already exists for this phone. Try logging in instead.',
+      authWrongPassword: 'Incorrect phone or password. Please try again.',
+      authUserNotFound: 'No account found for this phone. Create one to continue.',
+      authTooManyRequests: 'Too many attempts. Please wait a moment and try again.',
+      working: 'Please wait…',
     },
     vi: {
       heroChip: 'Chuyên Gia Tạo Kiểu AI',
@@ -164,6 +193,27 @@
       err_PLAN_ERROR: 'Phân tích kiểu dáng thất bại. Vui lòng thử lại.',
       err_PLAN_EMPTY: 'Không tạo được kiểu nào. Hãy thử ảnh rõ nét hơn.',
       err_EDIT_ERROR: 'Không thể dựng bản xem trước. Vui lòng thử lại.',
+      // Tài khoản khách hàng (dùng chung hệ thống đăng nhập Mobile Barber).
+      logIn: 'Đăng nhập', signUp: 'Đăng ký', logInOrSignUp: 'Đăng nhập / Đăng ký',
+      myAccount: 'Tài khoản', logout: 'Đăng xuất', close: 'Đóng',
+      authTitleLogin: 'Đăng nhập tài khoản',
+      authTitleSignup: 'Tạo tài khoản miễn phí',
+      authIntro: 'Tài khoản của bạn dùng chung trên Du Lich Cali — lưu kiểu dáng và đặt lịch chỉ với một chạm.',
+      name: 'Tên của bạn', phone: 'Số điện thoại', password: 'Mật khẩu',
+      authToggleToSignup: 'Lần đầu? Tạo tài khoản',
+      authToggleToLogin: 'Đã có tài khoản? Đăng nhập',
+      submitLogin: 'Đăng nhập', submitSignup: 'Tạo tài khoản',
+      passwordHelp: 'Dùng ít nhất 8 ký tự, kết hợp chữ và số.',
+      welcomeBack: 'Chào mừng trở lại',
+      authMissingFields: 'Vui lòng nhập số điện thoại và mật khẩu.',
+      authWeakPassword: 'Vui lòng chọn mật khẩu mạnh hơn (ít nhất 8 ký tự).',
+      authInvalidPhone: 'Vui lòng nhập số điện thoại hợp lệ.',
+      authError: 'Không thể đăng nhập. Vui lòng kiểm tra lại thông tin và thử lại.',
+      authEmailInUse: 'Đã có tài khoản cho số này. Hãy thử đăng nhập.',
+      authWrongPassword: 'Sai số điện thoại hoặc mật khẩu. Vui lòng thử lại.',
+      authUserNotFound: 'Không tìm thấy tài khoản cho số này. Hãy tạo mới để tiếp tục.',
+      authTooManyRequests: 'Quá nhiều lần thử. Vui lòng chờ một chút rồi thử lại.',
+      working: 'Vui lòng đợi…',
     },
     es: {
       heroChip: 'Estilista Maestro AI',
@@ -233,6 +283,27 @@
       err_PLAN_ERROR: 'El análisis de estilo falló. Inténtalo de nuevo.',
       err_PLAN_EMPTY: 'No se pudo generar ningún estilo. Prueba una foto más nítida.',
       err_EDIT_ERROR: 'No se pudieron generar las vistas previas. Inténtalo de nuevo.',
+      // Cuenta de cliente (reutiliza el inicio de sesión de Mobile Barber).
+      logIn: 'Iniciar sesión', signUp: 'Registrarse', logInOrSignUp: 'Iniciar sesión / Registrarse',
+      myAccount: 'Mi cuenta', logout: 'Cerrar sesión', close: 'Cerrar',
+      authTitleLogin: 'Inicia sesión en tu cuenta',
+      authTitleSignup: 'Crea una cuenta gratis',
+      authIntro: 'Tu cuenta funciona en todo Du Lich Cali — guarda tus looks y reserva con un toque.',
+      name: 'Tu nombre', phone: 'Número de teléfono', password: 'Contraseña',
+      authToggleToSignup: '¿Nuevo aquí? Crea una cuenta',
+      authToggleToLogin: '¿Ya tienes cuenta? Inicia sesión',
+      submitLogin: 'Iniciar sesión', submitSignup: 'Crear cuenta',
+      passwordHelp: 'Usa al menos 8 caracteres combinando letras y números.',
+      welcomeBack: 'Bienvenido de nuevo',
+      authMissingFields: 'Por favor ingresa tu teléfono y contraseña.',
+      authWeakPassword: 'Por favor elige una contraseña más segura (al menos 8 caracteres).',
+      authInvalidPhone: 'Por favor ingresa un número de teléfono válido.',
+      authError: 'No pudimos iniciar tu sesión. Revisa tus datos e inténtalo de nuevo.',
+      authEmailInUse: 'Ya existe una cuenta para este teléfono. Intenta iniciar sesión.',
+      authWrongPassword: 'Teléfono o contraseña incorrectos. Inténtalo de nuevo.',
+      authUserNotFound: 'No se encontró una cuenta para este teléfono. Crea una para continuar.',
+      authTooManyRequests: 'Demasiados intentos. Espera un momento e inténtalo de nuevo.',
+      working: 'Por favor espera…',
     },
   };
 
@@ -260,6 +331,10 @@
     audience: 'neutral', goal: '',
     signedIn: false, busy: false, sessionId: '',
     lastResultCount: 0,
+    // Customer account (reuses mobile-barber customer auth). isCustomer = a real
+    // (non-anonymous) signed-in customer; account = display name / phone of that user.
+    user: null, isCustomer: false, account: { name: '', phone: '' },
+    authMode: 'login', authBusy: false,
   };
 
   var IS_IOS = (function () {
@@ -316,6 +391,9 @@
     buildShowcase();
     refreshWigUi();
     syncLangButtons();
+    renderAccount();
+    var authPanel = doc.getElementById('ssAuthPanel');
+    if (authPanel && !authPanel.hidden) renderAuthPanel();
     setStatus(state.busy ? t('generating') : (state.selfieDataUrl ? t('photoReady') : t('ready')));
   }
   function syncLangButtons() {
@@ -1056,17 +1134,297 @@
     if (el) { el.hidden = false; try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {} }
   }
 
-  // ── Anonymous auth ─────────────────────────────────────────────────────
+  // ── Customer account ───────────────────────────────────────────────────
+  // REUSE of the mobile-barber customer auth scheme (do NOT invent a new
+  // identity): the same derived email + Firebase email/password account works
+  // on /mobile-barber and here. See mobile-barber-customer.js.
+  function normalizePhone(phone) {
+    var d = String(phone || '').replace(/\D/g, '');
+    if (d.length === 11 && d.charAt(0) === '1') d = d.slice(1);
+    return d.slice(-10);
+  }
+  function customerEmailForPhone(phone) {
+    return normalizePhone(phone) + '@mobile-barber.dulichcali21.local';
+  }
+  function isCustomerUser(user) {
+    return !!(user && !user.isAnonymous && user.uid);
+  }
+  function authDb() { return root.firebase && root.firebase.firestore ? root.firebase.firestore() : null; }
+  function ensureAuthPersistence() {
+    var a = (root.firebase && root.firebase.auth) ? root.firebase.auth() : null;
+    if (!a) return Promise.reject(new Error('auth_unavailable'));
+    var P = root.firebase.auth.Auth.Persistence.LOCAL;
+    return Promise.resolve(a.setPersistence ? a.setPersistence(P) : null).then(function () { return a; });
+  }
+  // Build the profile payload that satisfies isValidMobileBarberCustomerCreate
+  // (customerUid/customerId == uid, and customerPhoneNormalized/normalizedPhone
+  // is a string). Mirrors profilePayload() in mobile-barber-customer.js. No image
+  // fields are ever written — privacy-first.
+  function customerProfilePayload(uid, name, phone) {
+    var normalized = normalizePhone(phone);
+    var ts = root.firebase.firestore.FieldValue.serverTimestamp();
+    return {
+      id: uid, customerId: uid, customerUid: uid,
+      phone: phone, normalizedPhone: normalized,
+      customerPhone: phone, customerPhoneNormalized: normalized,
+      name: name || '', customerName: name || '',
+      email: '', customerEmail: '',
+      preferredLanguage: state.lang,
+      preferredAddress: '', savedAddresses: [], bookingHistory: [],
+      preferredBarber: '', paymentPreference: '', confirmationPreference: '',
+      haircutPreferences: {},
+      createdAt: ts, updatedAt: ts,
+    };
+  }
+  function mapAuthError(err) {
+    var code = (err && err.code) || '';
+    if (code === 'auth/email-already-in-use') return t('authEmailInUse');
+    if (code === 'auth/wrong-password' || code === 'auth/invalid-credential' || code === 'auth/invalid-login-credentials') return t('authWrongPassword');
+    if (code === 'auth/user-not-found') return t('authUserNotFound');
+    if (code === 'auth/too-many-requests') return t('authTooManyRequests');
+    if (code === 'auth/weak-password') return t('authWeakPassword');
+    if (code === 'auth/invalid-email') return t('authInvalidPhone');
+    return t('authError');
+  }
+
+  // ── Account control (top bar) ──────────────────────────────────────────
+  function renderAccount() {
+    var host = doc.getElementById('ssAccount');
+    if (!host) return;
+    host.innerHTML = '';
+    if (state.isCustomer) {
+      var label = state.account.name || state.account.phone || t('myAccount');
+      var chip = elt('span', 'ss-account__chip', label);
+      chip.setAttribute('title', label);
+      var out = elt('button', 'ss-account__logout', t('logout'));
+      out.type = 'button';
+      out.addEventListener('click', onLogout);
+      host.appendChild(chip);
+      host.appendChild(out);
+    } else {
+      var login = elt('button', 'ss-account__login', t('logInOrSignUp'));
+      login.type = 'button';
+      login.addEventListener('click', function () { openAuthPanel('login'); });
+      host.appendChild(login);
+    }
+  }
+
+  // ── Inline (non-trapping) login / signup panel ─────────────────────────
+  function openAuthPanel(mode) {
+    state.authMode = (mode === 'signup') ? 'signup' : 'login';
+    state.authBusy = false;
+    renderAuthPanel();
+    var panel = doc.getElementById('ssAuthPanel');
+    if (panel) {
+      panel.hidden = false;
+      try { panel.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+      var firstInput = panel.querySelector('input');
+      if (firstInput) try { firstInput.focus(); } catch (e) {}
+    }
+  }
+  function closeAuthPanel() {
+    var panel = doc.getElementById('ssAuthPanel');
+    if (panel) { panel.hidden = true; panel.innerHTML = ''; }
+  }
+  function renderAuthPanel() {
+    var panel = doc.getElementById('ssAuthPanel');
+    if (!panel) return;
+    var signup = state.authMode === 'signup';
+    panel.innerHTML = '';
+
+    var card = elt('div', 'ss-auth__card');
+    card.setAttribute('role', 'group');
+    card.setAttribute('aria-label', t(signup ? 'authTitleSignup' : 'authTitleLogin'));
+
+    var head = elt('div', 'ss-auth__head');
+    head.appendChild(elt('h2', 'ss-auth__title', t(signup ? 'authTitleSignup' : 'authTitleLogin')));
+    var close = elt('button', 'ss-auth__close', '×');
+    close.type = 'button';
+    close.setAttribute('aria-label', t('close'));
+    close.addEventListener('click', closeAuthPanel);
+    head.appendChild(close);
+    card.appendChild(head);
+
+    card.appendChild(elt('p', 'ss-auth__intro', t('authIntro')));
+
+    var form = doc.createElement('form');
+    form.className = 'ss-auth__form';
+    form.setAttribute('novalidate', 'novalidate');
+
+    if (signup) {
+      form.appendChild(authField('name', t('name'), 'text', 'name'));
+    }
+    form.appendChild(authField('phone', t('phone'), 'tel', 'tel'));
+    form.appendChild(authField('password', t('password'), 'password', signup ? 'new-password' : 'current-password'));
+
+    if (signup) {
+      form.appendChild(elt('p', 'ss-auth__help', t('passwordHelp')));
+    }
+
+    var err = elt('p', 'ss-auth__error', '');
+    err.id = 'ssAuthError';
+    err.hidden = true;
+    form.appendChild(err);
+
+    var submit = elt('button', 'ss-cta ss-auth__submit', t(signup ? 'submitSignup' : 'submitLogin'));
+    submit.type = 'submit';
+    form.appendChild(submit);
+
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      if (state.authBusy) return;
+      if (signup) doSignup(form); else doLogin(form);
+    });
+    card.appendChild(form);
+
+    var toggle = elt('button', 'ss-auth__toggle', t(signup ? 'authToggleToLogin' : 'authToggleToSignup'));
+    toggle.type = 'button';
+    toggle.addEventListener('click', function () { openAuthPanel(signup ? 'login' : 'signup'); });
+    card.appendChild(toggle);
+
+    panel.appendChild(card);
+  }
+  function authField(name, label, type, autocomplete) {
+    var wrap = elt('label', 'ss-auth__field');
+    wrap.appendChild(elt('span', 'ss-auth__label', label));
+    var input = doc.createElement('input');
+    input.className = 'ss-auth__input';
+    input.name = name;
+    input.type = type;
+    if (type === 'tel') input.setAttribute('inputmode', 'tel');
+    if (autocomplete) input.setAttribute('autocomplete', autocomplete);
+    wrap.appendChild(input);
+    return wrap;
+  }
+  function authValue(form, name) {
+    var el = form.querySelector('[name="' + name + '"]');
+    return el ? String(el.value || '').trim() : '';
+  }
+  function showAuthError(form, msg) {
+    var node = form.querySelector('#ssAuthError');
+    if (!node) return;
+    node.hidden = false;
+    node.textContent = msg || '';
+  }
+  function clearAuthError(form) {
+    var node = form.querySelector('#ssAuthError');
+    if (node) { node.hidden = true; node.textContent = ''; }
+  }
+  function setAuthBusy(form, busy) {
+    state.authBusy = !!busy;
+    var submit = form.querySelector('.ss-auth__submit');
+    if (submit) {
+      submit.disabled = !!busy;
+      if (busy) {
+        submit.setAttribute('data-label', submit.textContent);
+        submit.textContent = t('working');
+      } else {
+        var prev = submit.getAttribute('data-label');
+        if (prev) submit.textContent = prev;
+      }
+    }
+  }
+
+  function doLogin(form) {
+    clearAuthError(form);
+    var phone = authValue(form, 'phone');
+    var pass = form.querySelector('[name="password"]') ? form.querySelector('[name="password"]').value : '';
+    if (!phone || !pass) { showAuthError(form, t('authMissingFields')); return; }
+    if (normalizePhone(phone).length < 10) { showAuthError(form, t('authInvalidPhone')); return; }
+    setAuthBusy(form, true);
+    ensureAuthPersistence().then(function (a) {
+      return a.signInWithEmailAndPassword(customerEmailForPhone(phone), pass);
+    }).then(function () {
+      // onAuthStateChanged refreshes the UI; just close the panel.
+      closeAuthPanel();
+    }).catch(function (err) {
+      setAuthBusy(form, false);
+      showAuthError(form, mapAuthError(err));
+    });
+  }
+
+  function doSignup(form) {
+    clearAuthError(form);
+    var name = authValue(form, 'name');
+    var phone = authValue(form, 'phone');
+    var pass = form.querySelector('[name="password"]') ? form.querySelector('[name="password"]').value : '';
+    if (!phone || !pass) { showAuthError(form, t('authMissingFields')); return; }
+    if (normalizePhone(phone).length < 10) { showAuthError(form, t('authInvalidPhone')); return; }
+    if (String(pass).length < 8) { showAuthError(form, t('authWeakPassword')); return; }
+    setAuthBusy(form, true);
+    ensureAuthPersistence().then(function (a) {
+      return a.createUserWithEmailAndPassword(customerEmailForPhone(phone), pass);
+    }).then(function (cred) {
+      var uid = cred && cred.user && cred.user.uid;
+      // Auth account + LOCAL persistence are the core requirement — a profile
+      // write hiccup must NOT block account creation. Best-effort, fire-and-forget.
+      try {
+        var db = authDb();
+        if (db && uid) {
+          db.collection('mobileBarberCustomers').doc(uid)
+            .set(customerProfilePayload(uid, name, phone), { merge: true })
+            .catch(function (e) { if (root.console) root.console.warn('[style-studio] profile write skipped', e); });
+        }
+      } catch (e) { if (root.console) root.console.warn('[style-studio] profile write error', e); }
+      closeAuthPanel();
+    }).catch(function (err) {
+      setAuthBusy(form, false);
+      showAuthError(form, mapAuthError(err));
+    });
+  }
+
+  function onLogout() {
+    var a = (root.firebase && root.firebase.auth) ? root.firebase.auth() : null;
+    if (a) a.signOut().catch(function () {});
+    // onAuthStateChanged then re-signs-in anonymously → account UI resets to
+    // "Log in / Sign up" and the anonymous guest flow continues uninterrupted.
+  }
+
+  // ── Anonymous auth + customer account state ────────────────────────────
+  function applyAccountFromUser(user) {
+    state.user = user || null;
+    state.isCustomer = isCustomerUser(user);
+    if (!state.isCustomer) {
+      state.account = { name: '', phone: '' };
+      renderAccount();
+      return;
+    }
+    // Seed the chip from the derived email so it shows immediately, then refine
+    // with the customer's saved name/phone from their profile doc (best-effort).
+    var derivedPhone = '';
+    try { derivedPhone = String(user.email || '').split('@')[0] || ''; } catch (e) {}
+    state.account = { name: '', phone: derivedPhone };
+    renderAccount();
+    try {
+      var db = authDb();
+      if (db && user.uid) {
+        db.collection('mobileBarberCustomers').doc(user.uid).get().then(function (snap) {
+          if (!snap || !snap.exists) return;
+          var d = snap.data() || {};
+          state.account = {
+            name: d.name || d.customerName || '',
+            phone: d.phone || d.customerPhone || derivedPhone,
+          };
+          if (state.isCustomer) renderAccount();
+        }).catch(function () {});
+      }
+    } catch (e) {}
+  }
+
   function initAuth() {
-    if (typeof root.firebase === 'undefined' || !root.firebase.auth) { return; }
+    if (typeof root.firebase === 'undefined' || !root.firebase.auth) { renderAccount(); return; }
     setStatus(t('signingIn'));
     try {
       root.firebase.auth().onAuthStateChanged(function (user) {
         if (user) {
           state.signedIn = true; refreshButtons();
+          // Generate flows now run under whatever uid is current (anon guest OR
+          // the real customer — member quota — automatically).
+          applyAccountFromUser(user);
           setStatus(state.selfieDataUrl ? t('photoReady') : t('ready'));
         } else {
           state.signedIn = false; refreshButtons();
+          applyAccountFromUser(null);
           root.firebase.auth().signInAnonymously().catch(function (err) {
             if (root.console) root.console.error('[style-studio] anon sign-in failed', err);
             setStatus(t('error'), true);
@@ -1075,6 +1433,7 @@
       });
     } catch (e) {
       if (root.console) root.console.error('[style-studio] auth init failed', e);
+      renderAccount();
     }
   }
 
@@ -1093,6 +1452,9 @@
     if (best) best.addEventListener('click', onGenerateBest);
     var wig = doc.getElementById('ssWigGenerate');
     if (wig) wig.addEventListener('click', onWigGenerate);
+    // Login wall CTA → open the inline signup panel (no more link to /mobile-barber/).
+    var memberCta = doc.getElementById('ssMembershipCta');
+    if (memberCta) memberCta.addEventListener('click', function () { openAuthPanel('signup'); });
 
     applyI18n();
     buildGoalChips();
@@ -1100,13 +1462,14 @@
     buildAccordion();
     buildShowcase();
     syncLangButtons();
+    renderAccount();
     refreshButtons();
     refreshWigUi();
     initAuth();
     logUi({ event: 'init' });
   }
 
-  root.StyleStudioPublic = { init: init, setLang: setLang, _t: t, _state: state, _strings: SS_STRINGS, _openViewer: openViewer, _closeViewer: closeViewer, _onWigGenerate: onWigGenerate, _buildShowcase: buildShowcase };
+  root.StyleStudioPublic = { init: init, setLang: setLang, _t: t, _state: state, _strings: SS_STRINGS, _openViewer: openViewer, _closeViewer: closeViewer, _onWigGenerate: onWigGenerate, _buildShowcase: buildShowcase, _openAuthPanel: openAuthPanel, _closeAuthPanel: closeAuthPanel, _customerEmailForPhone: customerEmailForPhone, _normalizePhone: normalizePhone, _isCustomerUser: isCustomerUser };
 
   if (doc.readyState === 'loading') {
     doc.addEventListener('DOMContentLoaded', init);

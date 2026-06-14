@@ -1,5 +1,5 @@
 /* ──────────────────────────────────────────────────────────────────────────
-   AI Style Studio — public page styles  (style-studio.css?v=20260613d)
+   AI Style Studio — public page styles  (style-studio.css?v=20260613e)
    Mobile-first. Uses the global :root palette/typography from /style.css.
    Breakpoints: base (375–767) → 768 (tablet) → 1200 (desktop, max-width 1280).
    ────────────────────────────────────────────────────────────────────────── */
@@ -10,10 +10,107 @@ body { overflow-y: auto; overflow-x: hidden; }
 
 .ss-page { display: flex; flex-direction: column; background: var(--navy-900); min-height: 100vh; }
 
+/* Top bar: account control (left) + language switcher (right) */
+.ss-topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: .6rem;
+  padding: .6rem 1rem 0; flex-wrap: wrap;
+}
+
+/* ── Customer account control ───────────────────────────────────────────── */
+.ss-account { display: flex; align-items: center; gap: .45rem; min-width: 0; flex-wrap: wrap; }
+.ss-account__login {
+  min-height: 36px; padding: .4rem .85rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(192,132,252,.14); color: #d8b4fe;
+  border: 1px solid rgba(192,132,252,.4); border-radius: 99px;
+  font-family: var(--font-b); font-weight: 600; font-size: .74rem; letter-spacing: .02em;
+  cursor: pointer; transition: background .18s, color .18s, border-color .18s;
+  touch-action: manipulation;
+}
+.ss-account__login:hover { background: rgba(192,132,252,.22); color: var(--cream); border-color: #c084fc; }
+.ss-account__chip {
+  max-width: 11rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  display: inline-flex; align-items: center;
+  background: var(--navy-800); color: var(--cream);
+  border: 1px solid var(--border-g); border-radius: 99px;
+  font-family: var(--font-b); font-weight: 600; font-size: .74rem;
+  padding: .4rem .8rem; min-height: 36px;
+}
+.ss-account__logout {
+  min-height: 36px; padding: .4rem .8rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; color: var(--muted);
+  border: 1px solid var(--border); border-radius: 99px;
+  font-family: var(--font-b); font-weight: 600; font-size: .72rem;
+  cursor: pointer; transition: color .18s, border-color .18s;
+  touch-action: manipulation;
+}
+.ss-account__logout:hover { color: var(--cream); border-color: var(--border-g); }
+
+/* ── Inline (non-trapping) login / signup panel ─────────────────────────── */
+/* NOT a modal: no fixed positioning, no scroll lock — the page stays usable. */
+.ss-auth { padding: .9rem 1rem 0; }
+.ss-auth__card {
+  max-width: 460px; margin: 0 auto;
+  background: linear-gradient(135deg, var(--navy-800) 0%, #1a1140 100%);
+  border: 1px solid rgba(192,132,252,.4); border-radius: 16px;
+  padding: 1.2rem 1.2rem 1.3rem;
+  box-shadow: 0 16px 46px -24px rgba(0,0,0,.75);
+}
+.ss-auth__head { display: flex; align-items: flex-start; justify-content: space-between; gap: .6rem; margin-bottom: .5rem; }
+.ss-auth__title {
+  font-family: var(--font-d); font-weight: 400; font-size: 1.2rem;
+  color: var(--cream); margin: 0;
+}
+.ss-auth__close {
+  flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.08); color: var(--cream); border: 0;
+  font-size: 1.4rem; line-height: 1; cursor: pointer; touch-action: manipulation;
+  transition: background .18s;
+}
+.ss-auth__close:hover { background: rgba(255,255,255,.16); }
+.ss-auth__intro {
+  font-family: var(--font-b); font-size: .82rem; line-height: 1.5;
+  color: var(--muted); margin: 0 0 1rem;
+}
+.ss-auth__form { display: flex; flex-direction: column; gap: .8rem; }
+.ss-auth__field { display: flex; flex-direction: column; gap: .3rem; }
+.ss-auth__label {
+  font-family: var(--font-b); font-weight: 600; font-size: .72rem;
+  letter-spacing: .03em; text-transform: uppercase; color: var(--muted);
+}
+.ss-auth__input {
+  min-height: 44px; width: 100%; box-sizing: border-box;
+  background: var(--navy-900); color: var(--cream);
+  border: 1px solid var(--border); border-radius: 10px;
+  font-family: var(--font-b); font-size: .92rem; padding: .6rem .85rem;
+  transition: border-color .18s;
+}
+.ss-auth__input:focus { outline: none; border-color: #c084fc; }
+.ss-auth__help {
+  font-family: var(--font-b); font-size: .72rem; line-height: 1.45;
+  color: var(--muted); margin: -.2rem 0 0;
+}
+.ss-auth__error {
+  font-family: var(--font-b); font-size: .78rem; line-height: 1.4;
+  color: #fca5a5; margin: 0;
+}
+.ss-auth__submit { width: 100%; margin-top: .2rem; }
+.ss-auth__submit:disabled { opacity: .6; cursor: progress; }
+.ss-auth__toggle {
+  display: block; width: 100%; margin-top: .9rem; min-height: 44px;
+  background: transparent; color: #d8b4fe; border: 0;
+  font-family: var(--font-b); font-weight: 600; font-size: .8rem;
+  cursor: pointer; text-align: center; touch-action: manipulation;
+  transition: color .18s;
+}
+.ss-auth__toggle:hover { color: var(--cream); text-decoration: underline; }
+
 /* Language switcher */
 .ss-lang {
   display: flex; justify-content: flex-end; gap: .4rem;
-  padding: .6rem 1rem 0;
+  padding: 0;
 }
 .ss-lang__btn {
   background: var(--navy-800); color: var(--muted);
@@ -516,6 +613,7 @@ body.ss-viewer-open { overflow: hidden; }
 
 /* ── Desktop (≥1200px) — centered, capped at 1280px ────────────────────── */
 @media (min-width: 1200px) {
+  .ss-topbar,
   .ss-hero__inner,
   .ss-banner, .ss-modes, .ss-membership, .ss-privacy,
   .ss-showcase-wrap, .ss-wigmatch {

@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260419m">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/style-studio.css?v=20260613d">
+  <link rel="stylesheet" href="/style-studio.css?v=20260613e">
 
   <!-- Google Analytics 4 -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-5S0P4XMCJR"></script>
@@ -40,12 +40,20 @@
     </a>
   </header>
 
-  <!-- 1. Language switcher -->
-  <div class="ss-lang" id="ssLang" role="group" aria-label="Language">
-    <button class="ss-lang__btn" type="button" data-lang="en">EN</button>
-    <button class="ss-lang__btn" type="button" data-lang="vi">VI</button>
-    <button class="ss-lang__btn" type="button" data-lang="es">ES</button>
+  <!-- 1. Top bar: account control + language switcher -->
+  <div class="ss-topbar">
+    <!-- Account: anonymous → "Log in / Sign up"; signed-in customer → profile chip + Logout -->
+    <div class="ss-account" id="ssAccount"></div>
+
+    <div class="ss-lang" id="ssLang" role="group" aria-label="Language">
+      <button class="ss-lang__btn" type="button" data-lang="en">EN</button>
+      <button class="ss-lang__btn" type="button" data-lang="vi">VI</button>
+      <button class="ss-lang__btn" type="button" data-lang="es">ES</button>
+    </div>
   </div>
+
+  <!-- Inline collapsible login / signup panel (NOT a trapping modal). Built by JS. -->
+  <div class="ss-auth" id="ssAuthPanel" hidden></div>
 
   <!-- 2. HERO — AI Master Stylist (flagship) -->
   <section class="ss-hero">
@@ -136,7 +144,7 @@
     <div class="ss-membership__icon" aria-hidden="true">✦</div>
     <h2 class="ss-membership__title" data-ss-i18n="membershipTitle"></h2>
     <p class="ss-membership__sub" data-ss-i18n="membershipPrompt"></p>
-    <a class="ss-membership__cta" id="ssMembershipCta" href="/mobile-barber/" data-ss-i18n="membershipCta"></a>
+    <button class="ss-membership__cta" id="ssMembershipCta" type="button" data-ss-i18n="membershipCta"></button>
   </section>
 
   <!-- 8. Privacy note -->
@@ -167,6 +175,6 @@
   if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 </script>
 <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260613a"></script>
-<script src="/style-studio-public.js?v=20260613d"></script>
+<script src="/style-studio-public.js?v=20260613e"></script>
 </body>
 </html>

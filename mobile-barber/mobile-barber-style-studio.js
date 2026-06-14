@@ -321,6 +321,67 @@
     root.document.body.appendChild(ov);
   }
 
+  function renderConsultation() {
+    var wrap = elt('section', 'mb-studio-consult'); wrap.id = 'mbStudioConsult';
+    wrap.appendChild(elt('h3', 'mb-studio-consult__title', t('consult')));
+    wrap.appendChild(elt('p', 'mb-studio-consult__note', t('consultEphemeral')));
+    wrap.appendChild(elt('div', 'mb-studio-consult__body', ''));
+    fillConsultation(wrap.querySelector('.mb-studio-consult__body'));
+    return wrap;
+  }
+  function renderConsultationInto() {
+    var body = root.document.querySelector('#mbStudioConsult .mb-studio-consult__body');
+    if (body) fillConsultation(body);
+  }
+  function fillConsultation(body) {
+    if (!body) return;
+    body.innerHTML = '';
+    var a = state.analysis;
+    if (!a) { body.appendChild(elt('p', 'mb-studio-empty', '—')); return; }
+
+    // Features (positive phrases)
+    if (a.features && Object.keys(a.features).length) {
+      var fblock = elt('div', 'mb-studio-consult__features');
+      fblock.appendChild(elt('h4', null, t('consultFeatures')));
+      Object.keys(a.features).forEach(function (k) {
+        if (!a.features[k]) return;
+        var row = elt('div', 'mb-studio-consult__feature');
+        row.appendChild(elt('span', 'mb-studio-consult__k', k));
+        row.appendChild(elt('span', 'mb-studio-consult__v', String(a.features[k])));
+        fblock.appendChild(row);
+      });
+      body.appendChild(fblock);
+    }
+
+    // Harmony scores 0–100 (vendor-only; bars). Never shown to customer.
+    if (a.scores) {
+      var sblock = elt('div', 'mb-studio-consult__scores');
+      sblock.appendChild(elt('h4', null, t('consultScores')));
+      [['symmetry', 'scoreSymmetry'], ['youthfulness', 'scoreYouthfulness'], ['professional', 'scoreProfessional'],
+       ['confidence', 'scoreConfidence'], ['softness', 'scoreSoftness'], ['maintenance', 'scoreMaintenance']].forEach(function (pair) {
+        var val = a.scores[pair[0]];
+        if (val == null) return;
+        var row = elt('div', 'mb-studio-score');
+        row.appendChild(elt('span', 'mb-studio-score__label', t(pair[1])));
+        var bar = elt('div', 'mb-studio-score__bar'); var fillEl = elt('div', 'mb-studio-score__fill');
+        fillEl.style.width = Math.max(0, Math.min(100, val)) + '%'; bar.appendChild(fillEl); row.appendChild(bar);
+        row.appendChild(elt('span', 'mb-studio-score__num', String(val))); sblock.appendChild(row);
+      });
+      body.appendChild(sblock);
+    }
+
+    // Strategy (emphasize / balance) + thinning (soft language)
+    if (a.strategy && (a.strategy.emphasize.length || a.strategy.balance.length)) {
+      var st = elt('div', 'mb-studio-consult__strategy'); st.appendChild(elt('h4', null, t('consultStrategy')));
+      if (a.strategy.emphasize.length) st.appendChild(elt('p', null, t('emphasize') + ': ' + a.strategy.emphasize.join(', ')));
+      if (a.strategy.balance.length) st.appendChild(elt('p', null, t('balance') + ': ' + a.strategy.balance.join(', ')));
+      body.appendChild(st);
+    }
+    if (a.thinning && a.thinning.note) {
+      body.appendChild(elt('p', 'mb-studio-consult__thinning', t('thinning') + ': ' + a.thinning.note));
+    }
+  }
+
   // Thin client for the vendor callable. Mirrors mobile-barber-ai-preview.js
   // generate() but targets generateStyleStudio and passes mode/options/goal.
   function callStudio(opts) {

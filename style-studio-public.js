@@ -2553,7 +2553,8 @@
     var host = doc.getElementById('ssHeroDemo');
     if (!host) return;
     host.innerHTML = '';
-    var pair = TRANSFORMATIONS[0];
+    // Main hero model (chosen for the strongest, most flattering transformation).
+    var pair = TRANSFORMATIONS.filter(function (x) { return x.key === 'wig-fuller'; })[0] || TRANSFORMATIONS[0];
     var stage = elt('div', 'ss-demo__stage');
     var b = doc.createElement('img'); b.className = 'ss-demo__img ss-demo__img--before'; b.src = txSrc(pair.key, 'before'); b.alt = ''; b.loading = 'eager';
     var a = doc.createElement('img'); a.className = 'ss-demo__img ss-demo__img--after'; a.src = txSrc(pair.key, 'after'); a.alt = ''; a.loading = 'eager';

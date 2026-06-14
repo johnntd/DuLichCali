@@ -114,6 +114,7 @@
       err_PLAN_ERROR: 'Style analysis failed. Please try again.',
       err_PLAN_EMPTY: 'No styles could be generated. Try a clearer photo.',
       err_EDIT_ERROR: 'The previews could not be rendered. Please try again.',
+      err_EDIT_ALL_FAILED: 'Could not generate a preview image. Please try again with a clear, well-lit photo.',
       err_DAILY_LIMIT: 'You’ve reached today’s limit — please try again tomorrow.',
       // Customer account (reuses the mobile-barber customer auth).
       logIn: 'Log in', signUp: 'Sign up', logInOrSignUp: 'Log in / Sign up',
@@ -260,6 +261,7 @@
       err_PLAN_ERROR: 'Phân tích kiểu dáng thất bại. Vui lòng thử lại.',
       err_PLAN_EMPTY: 'Không tạo được kiểu nào. Hãy thử ảnh rõ nét hơn.',
       err_EDIT_ERROR: 'Không thể dựng bản xem trước. Vui lòng thử lại.',
+      err_EDIT_ALL_FAILED: 'Không tạo được ảnh xem trước. Vui lòng thử lại với ảnh rõ nét, đủ sáng.',
       err_DAILY_LIMIT: 'Bạn đã đạt giới hạn hôm nay — vui lòng thử lại vào ngày mai.',
       // Tài khoản khách hàng (dùng chung hệ thống đăng nhập Mobile Barber).
       logIn: 'Đăng nhập', signUp: 'Đăng ký', logInOrSignUp: 'Đăng nhập / Đăng ký',
@@ -406,6 +408,7 @@
       err_PLAN_ERROR: 'El análisis de estilo falló. Inténtalo de nuevo.',
       err_PLAN_EMPTY: 'No se pudo generar ningún estilo. Prueba una foto más nítida.',
       err_EDIT_ERROR: 'No se pudieron generar las vistas previas. Inténtalo de nuevo.',
+      err_EDIT_ALL_FAILED: 'No se pudo generar una imagen de vista previa. Inténtalo de nuevo con una foto nítida y bien iluminada.',
       err_DAILY_LIMIT: 'Has alcanzado el límite de hoy — inténtalo de nuevo mañana.',
       // Cuenta de cliente (reutiliza el inicio de sesión de Mobile Barber).
       logIn: 'Iniciar sesión', signUp: 'Registrarse', logInOrSignUp: 'Iniciar sesión / Registrarse',
@@ -2250,6 +2253,14 @@
     // isAnonymous mirrors the Firebase user. No user (signed out) is treated as
     // anonymous for gating purposes (the create-account wall remains available).
     state.isAnonymous = user ? !!user.isAnonymous : true;
+    // SP-5 (goal 6): the moment a guest becomes a logged-in member (signup/login
+    // via the wall's own CTA, or a restored session on reload), clear any stale
+    // "Create a free account" wall. revealMembership() only re-shows it for an
+    // anonymous guest, so a member never sees it again. Guests are untouched.
+    if (!state.isAnonymous) {
+      var _mp = doc.getElementById('ssMembershipPrompt');
+      if (_mp) _mp.hidden = true;
+    }
     state.isCustomer = isCustomerUser(user);
     if (!state.isCustomer) {
       state.account = { name: '', phone: '' };

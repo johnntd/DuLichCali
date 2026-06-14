@@ -2595,7 +2595,10 @@ const WIG_REFINE_CLAUSE = 'REFINE PASS — keep the EXACT SAME PERSON and the SA
 async function refineHairRealism(geminiKey, firstPassDataUrl) {
   const m = /^data:(image\/[a-z0-9.+-]+);base64,(.+)$/i.exec(firstPassDataUrl || '');
   if (!m) return null;
-  const out = await callGeminiImageEdit(geminiKey, m[2], m[1], WIG_REFINE_CLAUSE);
+  // attempts=1: this is a best-effort realism polish on an image we already
+  // have; the caller keeps the first-pass image on failure, so no retry here
+  // (keeps wig run latency bounded — the main edits above already retry).
+  const out = await callGeminiImageEdit(geminiKey, m[2], m[1], WIG_REFINE_CLAUSE, 1);
   return (out && out.dataUrl) ? out.dataUrl : null;
 }
 const CHILD_SAFETY_CLAUSE = ' This subject is a CHILD: keep them clearly the same child of the same age, with wholesome, school-appropriate kid styling only — no adult/edgy looks, no facial hair, no aging.';
@@ -2876,37 +2879,56 @@ async function planHaircutStyles(geminiKey, base64, mimeType, opts) {
   return { analysis: analysisText, styles: styles.slice(0, 5), analysisOk: analysisOk };
 }
 
-async function callGeminiImageEdit(geminiKey, inlineImageBase64, mimeType, editPrompt) {
-  // Gemini 2.5 Flash Image (Nano Banana) — image-to-image edit via the
-  // Generative Language REST API. Returns one or more inline_data parts.
-  const body = {
-    contents: [{
-      role: 'user',
-      parts: [
-        { inline_data: { mime_type: mimeType || 'image/jpeg', data: inlineImageBase64 } },
-        { text: editPrompt }
-      ]
-    }],
-    generationConfig: {
-      responseModalities: ['IMAGE']
+// SP-5 RELIABILITY: Gemini 2.5 Flash Image intermittently returns a text-only /
+// empty response for face edits (a refusal/description with no image part) or a
+// transient 5xx/429. Previously a single such response was a hard failure that
+// surfaced as a text-only / "no image" result. We now RETRY up to `attempts`
+// times; on each retry we re-assert "output an edited IMAGE of the SAME person,
+// not text" (which both nudges the model off a text-only reply and re-locks
+// identity). The function still THROWS after exhausting attempts, so callers'
+// existing error handling (clear error, never text-as-result) is preserved.
+const IMAGE_RETRY_SUFFIX = ' IMPORTANT: Output an EDITED PHOTOGRAPH (an image) of the SAME person — do NOT reply with text, a caption, or a description. Keep the EXACT same face, eyes, nose, lips, skin tone, age and bone structure; change ONLY the hair / style as instructed. Return the image only.';
+async function callGeminiImageEdit(geminiKey, inlineImageBase64, mimeType, editPrompt, attempts) {
+  const maxAttempts = Math.max(1, attempts == null ? 2 : attempts);
+  let lastErr;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const prompt = attempt === 0 ? editPrompt : (editPrompt + IMAGE_RETRY_SUFFIX);
+    const body = {
+      contents: [{
+        role: 'user',
+        parts: [
+          { inline_data: { mime_type: mimeType || 'image/jpeg', data: inlineImageBase64 } },
+          { text: prompt }
+        ]
+      }],
+      generationConfig: { responseModalities: ['IMAGE'] }
+    };
+    try {
+      const raw = await httpsPost(
+        'generativelanguage.googleapis.com',
+        `/v1beta/models/gemini-2.5-flash-image:generateContent?key=${geminiKey}`,
+        {},
+        body
+      );
+      const parsed = JSON.parse(raw);
+      const cand = parsed.candidates && parsed.candidates[0];
+      const parts = cand && cand.content && cand.content.parts;
+      const imagePart = parts && parts.find(p => p.inline_data || p.inlineData);
+      if (imagePart) {
+        const inline = imagePart.inline_data || imagePart.inlineData;
+        return { dataUrl: `data:${inline.mime_type || inline.mimeType || 'image/png'};base64,${inline.data}` };
+      }
+      // 200 OK but no image part = text-only / safety refusal → retry.
+      lastErr = new Error(
+        (!parsed.candidates || !parsed.candidates.length) ? 'no_candidates'
+          : (!parts || !parts.length) ? 'no_parts' : 'no_inline_data'
+      );
+    } catch (e) {
+      lastErr = e; // network / non-2xx (5xx, 429) → retry
     }
-  };
-  const raw = await httpsPost(
-    'generativelanguage.googleapis.com',
-    `/v1beta/models/gemini-2.5-flash-image:generateContent?key=${geminiKey}`,
-    {},
-    body
-  );
-  const parsed = JSON.parse(raw);
-  if (!parsed.candidates || !parsed.candidates.length) throw new Error('no_candidates');
-  const parts = parsed.candidates[0].content && parsed.candidates[0].content.parts;
-  if (!parts || !parts.length) throw new Error('no_parts');
-  const imagePart = parts.find(p => p.inline_data || p.inlineData);
-  if (!imagePart) throw new Error('no_inline_data');
-  const inline = imagePart.inline_data || imagePart.inlineData;
-  return {
-    dataUrl: `data:${inline.mime_type || inline.mimeType || 'image/png'};base64,${inline.data}`
-  };
+    if (attempt < maxAttempts - 1) await new Promise(r => setTimeout(r, 500));
+  }
+  throw lastErr || new Error('image_edit_failed');
 }
 
 exports.generateHaircutPreviews = onCall(
@@ -3206,6 +3228,17 @@ async function runStudioGeneration(params) {
         if (refined) recommendations[bestIdx] = Object.assign({}, recommendations[bestIdx], { previewDataUrl: refined });
       } catch (e) { /* keep the first-pass best image */ }
     }
+  }
+
+  // SP-5 RELIABILITY (goal 3 — never a text-only "success"): if EVERY style's
+  // image edit failed (all retries exhausted → empty previewDataUrl), the run
+  // produced no usable image. Do NOT return ok:true with text-only recs (the
+  // old contract let wig "succeed" with zero images). Fail explicitly so the
+  // client shows a clear retry message instead of a text-only result.
+  const usable = recommendations.filter(r => r.previewDataUrl && !r.error);
+  if (!usable.length) {
+    console.error('[runStudioGeneration] all image edits failed for mode', mode);
+    return { ok: false, vendorMessage: 'Could not generate a preview image. Please try again with a clear, well-lit photo.', debugCode: 'EDIT_ALL_FAILED' };
   }
 
   return {

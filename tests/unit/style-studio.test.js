@@ -47,4 +47,13 @@ assert.deepStrictEqual(
   { length: 'short', density: 'natural', shape: 'rounded' }
 ); ok('beard options: valid kept, bad->default, missing->default');
 
+// Guard: generateHaircutPreviews signature + the reused helpers still exist and
+// were not renamed/broken by the studio addition (static source check — no exec).
+const fs = require('fs');
+const src = fs.readFileSync(require('path').join(__dirname, '../../functions/index.js'), 'utf8');
+assert.ok(/exports\.generateHaircutPreviews\s*=\s*onCall\(/.test(src), 'generateHaircutPreviews intact'); ok('generateHaircutPreviews intact');
+assert.ok(/exports\.generateStyleStudio\s*=\s*onCall\(/.test(src), 'generateStyleStudio added'); ok('generateStyleStudio present');
+['function callGeminiImageEdit', 'function callGeminiHaircutAnalysis', 'function normalizeHaircutStyle', 'async function getAiKey']
+  .forEach((sig) => { assert.ok(src.indexOf(sig) >= 0, sig + ' present'); ok(sig.replace('function ', '') + ' present'); });
+
 console.log(`\nstyle-studio pure tests: ${n} passed`);

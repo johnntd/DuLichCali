@@ -54,6 +54,11 @@ async function denied(name, p) { try { await assertFails(p); rec(name, true); } 
     await setDoc(doc(adb, 'travelAssignments/taB'), { travel_driver_id: 'driverB' });
     // Driver profile doc — for admin-enable + driver-self-write tests.
     await setDoc(doc(adb, 'drivers/driverA'), { fullName: 'Driver A', phone: '4080000001', adminStatus: 'active', complianceStatus: 'approved', active: false, rideServiceEnabled: false, regions: ['bayarea'] });
+
+    // Style Studio promo config + per-uid usage counters (server-written).
+    await setDoc(doc(adb, 'config/styleStudioPromo'), { active: true, startDate: '2026-06-13', endDate: '2026-06-27', freeGenerationsPerUser: 5 });
+    await setDoc(doc(adb, 'styleStudioUsage/cust-1'), { lastDay: '2026-06-13' });
+    await setDoc(doc(adb, 'styleStudioUsage/cust-1/days/2026-06-13'), { count: 2 });
   });
 
   const cust1 = testEnv.authenticatedContext('cust-1').firestore();
@@ -161,6 +166,21 @@ async function denied(name, p) { try { await assertFails(p); rec(name, true); } 
     'driverA CANNOT write driverB push subscription',
     setDoc(doc(driverA, 'drivers/driverB/pushSubscriptions/s1'), { endpoint: 'https://push.example/b', createdAt: '2026-06-06T12:00:00.000Z' })
   );
+
+  // ── Style Studio public promo config + per-uid usage counters ──
+  // Promo config is server-read only: NO browser (authed or anon) may read it.
+  await denied('authed client CANNOT read styleStudioPromo config', getDoc(doc(cust1, 'config/styleStudioPromo')));
+  await denied('anon client CANNOT read styleStudioPromo config', getDoc(doc(anon, 'config/styleStudioPromo')));
+  await denied('non-admin client CANNOT write styleStudioPromo config', setDoc(doc(cust1, 'config/styleStudioPromo'), { active: false }));
+  // Admin manages the promo window/quota.
+  await allowed('admin CAN write styleStudioPromo config', setDoc(doc(admin, 'config/styleStudioPromo'), { active: true, startDate: '2026-06-13', endDate: '2026-06-30', freeGenerationsPerUser: 3 }));
+  // Usage counters: owner may READ own; client may NEVER write (Admin SDK only).
+  await allowed('owner CAN read OWN styleStudioUsage parent doc', getDoc(doc(cust1, 'styleStudioUsage/cust-1')));
+  await allowed('owner CAN read OWN daily usage counter', getDoc(doc(cust1, 'styleStudioUsage/cust-1/days/2026-06-13')));
+  await denied('other uid CANNOT read another user usage parent', getDoc(doc(cust2, 'styleStudioUsage/cust-1')));
+  await denied('other uid CANNOT read another user daily counter', getDoc(doc(cust2, 'styleStudioUsage/cust-1/days/2026-06-13')));
+  await denied('owner CANNOT write OWN daily usage counter (no self-reset)', setDoc(doc(cust1, 'styleStudioUsage/cust-1/days/2026-06-13'), { count: 0 }));
+  await denied('owner CANNOT write OWN usage parent doc', setDoc(doc(cust1, 'styleStudioUsage/cust-1'), { lastDay: '2026-06-14' }));
 
   await testEnv.cleanup();
   console.log(`\n  RESULT: ${pass} passed, ${fail} failed\n`);

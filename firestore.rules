@@ -537,6 +537,34 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ── Style Studio launch promo config — admin-managed, server-read only ───────
+    // Holds the public AI Style Studio promo window + per-user free quota
+    // (active, startDate, endDate, freeGenerationsPerUser). The
+    // generateStyleStudioPublic Cloud Function reads it via the Admin SDK (which
+    // bypasses rules); browsers must NEVER read it (so the quota cannot be probed
+    // or the window inferred client-side). An admin may WRITE to open/close the
+    // promo or tune the quota.
+    match /config/styleStudioPromo {
+      allow read:  if false;
+      allow write: if isAdmin();
+    }
+
+    // ── Style Studio per-user daily usage counters — owner-read, server-write ────
+    // styleStudioUsage/{uid}/days/{YYYY-MM-DD} = { count }. Written ONLY by the
+    // generateStyleStudioPublic Cloud Function (Admin SDK bypasses rules) inside a
+    // transaction — a client can NEVER write/reset its own counter to bypass the
+    // free-preview quota. The owner uid may READ its own usage (to show remaining
+    // free previews); no other user can read it (no cross-user enumeration).
+    match /styleStudioUsage/{uid} {
+      allow read:  if request.auth != null && request.auth.uid == uid;
+      allow write: if false; // Functions Admin SDK only
+
+      match /days/{day} {
+        allow read:  if request.auth != null && request.auth.uid == uid;
+        allow write: if false; // Functions Admin SDK only
+      }
+    }
+
     // ── Security alerts — defense-in-depth event log ─────────────────────────────
     // Client-side runtime guards (which run in any visitor's browser, incl.
     // anonymous) may CREATE a validated alert. Only an admin (or the vendor the

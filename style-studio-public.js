@@ -114,6 +114,7 @@
       err_PLAN_ERROR: 'Style analysis failed. Please try again.',
       err_PLAN_EMPTY: 'No styles could be generated. Try a clearer photo.',
       err_EDIT_ERROR: 'The previews could not be rendered. Please try again.',
+      err_DAILY_LIMIT: 'You’ve reached today’s limit — please try again tomorrow.',
       // Customer account (reuses the mobile-barber customer auth).
       logIn: 'Log in', signUp: 'Sign up', logInOrSignUp: 'Log in / Sign up',
       myAccount: 'My account', logout: 'Log out', close: 'Close',
@@ -215,6 +216,7 @@
       err_PLAN_ERROR: 'Phân tích kiểu dáng thất bại. Vui lòng thử lại.',
       err_PLAN_EMPTY: 'Không tạo được kiểu nào. Hãy thử ảnh rõ nét hơn.',
       err_EDIT_ERROR: 'Không thể dựng bản xem trước. Vui lòng thử lại.',
+      err_DAILY_LIMIT: 'Bạn đã đạt giới hạn hôm nay — vui lòng thử lại vào ngày mai.',
       // Tài khoản khách hàng (dùng chung hệ thống đăng nhập Mobile Barber).
       logIn: 'Đăng nhập', signUp: 'Đăng ký', logInOrSignUp: 'Đăng nhập / Đăng ký',
       myAccount: 'Tài khoản', logout: 'Đăng xuất', close: 'Đóng',
@@ -316,6 +318,7 @@
       err_PLAN_ERROR: 'El análisis de estilo falló. Inténtalo de nuevo.',
       err_PLAN_EMPTY: 'No se pudo generar ningún estilo. Prueba una foto más nítida.',
       err_EDIT_ERROR: 'No se pudieron generar las vistas previas. Inténtalo de nuevo.',
+      err_DAILY_LIMIT: 'Has alcanzado el límite de hoy — inténtalo de nuevo mañana.',
       // Cuenta de cliente (reutiliza el inicio de sesión de Mobile Barber).
       logIn: 'Iniciar sesión', signUp: 'Registrarse', logInOrSignUp: 'Iniciar sesión / Registrarse',
       myAccount: 'Mi cuenta', logout: 'Cerrar sesión', close: 'Cerrar',
@@ -364,6 +367,11 @@
     audience: 'neutral', goal: '',
     signedIn: false, busy: false, sessionId: '',
     lastResultCount: 0,
+    // Auth identity. isAnonymous mirrors user.isAnonymous; a logged-in real
+    // customer = signedIn && !isAnonymous. _anonInFlight guards against duplicate
+    // anonymous sign-ins. profileExists tracks whether the customer's
+    // mobileBarberCustomers/{uid} doc has been confirmed/created (best-effort).
+    isAnonymous: true, _anonInFlight: false, profileExists: false,
     // Customer account (reuses mobile-barber customer auth). isCustomer = a real
     // (non-anonymous) signed-in customer; account = display name / phone of that user.
     user: null, isCustomer: false, account: { name: '', phone: '' },
@@ -396,6 +404,37 @@
   function logDl(o) { try { root.console && root.console.log('[style-studio-download]', o || {}); } catch (e) {} }
   // Master Stylist lifecycle log — every step is observable; nothing is swallowed.
   function logMaster(event, data) { try { root.console && root.console.log('[master-stylist]', event, data || {}); } catch (e) {} }
+  // Auth-state log — fires on EVERY onAuthStateChanged (and after login/signup/logout).
+  // promoUsage/generationCount are server-side counters not exposed to the client; the
+  // keys are included with best-effort values (null when unknown) so the shape is stable.
+  function logAuth(extra) {
+    var u = state.user || {};
+    try {
+      root.console && root.console.log('[style-auth]', Object.assign({
+        uid: u.uid || null,
+        isAnonymous: state.isAnonymous,
+        email: u.email || null,
+        profileLoaded: !!state.profileExists,
+        membershipTier: (state.signedIn && !state.isAnonymous) ? 'member' : 'guest',
+        promoUsage: null,
+        generationCount: null,
+        gateReason: null,
+      }, extra || {}));
+    } catch (e) {}
+  }
+  // Gate-decision log — fires whenever a generation response yields a gate decision.
+  function logGate(res) {
+    res = res || {};
+    try {
+      root.console && root.console.log('[style-gate]', {
+        signedIn: state.signedIn,
+        isAnonymous: state.isAnonymous,
+        profileExists: !!state.profileExists,
+        allowed: !!res.ok,
+        reason: res.code || (res.requireLogin ? 'requireLogin' : (res.ok ? 'ok' : 'error')),
+      });
+    } catch (e) {}
+  }
 
   // ── i18n helpers ───────────────────────────────────────────────────────
   function t(key) {
@@ -605,12 +644,18 @@
     return callable(payload).then(function (result) {
       var p = (result && result.data) || {};
       if (p.ok) return p;
-      if (p.requireLogin || p.code === 'LIMIT_REACHED') {
-        return { ok: false, requireLogin: true, message: t('loginWall') };
+      // GUEST over the free-preview limit → the create-account wall. Only anonymous
+      // guests get requireLogin:true from the backend (members never do).
+      if (p.requireLogin === true || p.code === 'LIMIT_REACHED') {
+        return { ok: false, code: p.code || 'LIMIT_REACHED', requireLogin: true, message: t('loginWall') };
       }
+      // Everything else (including the new member-only DAILY_LIMIT) → localized
+      // message by code, with no create-account prompt. requireLogin stays false.
       var code = p.debugCode || p.code || '';
-      return { ok: false, code: code, message: t('err_' + code) || t('error') };
+      return { ok: false, code: code, requireLogin: false, message: t('err_' + code) || t('error') };
     }).catch(function (err) {
+      // The callable itself threw (network / transport) — distinct from an AI
+      // service error. Surface the generic error string; never swallow.
       if (root.console) root.console.error('[style-studio] callable failed', err);
       return { ok: false, message: t('error') };
     });
@@ -635,15 +680,18 @@
   function ensureSignedIn() {
     var a = (root.firebase && root.firebase.auth) ? root.firebase.auth() : null;
     if (!a) { state.pendingGenerate = ''; setStatus(t('sessionError'), true); return; }
-    if (a.currentUser) return; // onAuthStateChanged already fired / will fire
+    if (a.currentUser) return; // onAuthStateChanged already fired / will fire — never anon-over them
+    if (state._anonInFlight) return; // an anon sign-in is already running; don't duplicate
     try {
+      state._anonInFlight = true;
       a.signInAnonymously().catch(function (err) {
         if (root.console) root.console.error('[style-studio] anon sign-in failed', err);
         state.pendingGenerate = '';
         logMaster('error', { message: 'session_' + ((err && err.message) || String(err)) });
         setStatus(t('sessionError'), true);
-      });
+      }).finally(function () { state._anonInFlight = false; });
     } catch (e) {
+      state._anonInFlight = false;
       state.pendingGenerate = '';
       logMaster('error', { message: 'session_' + ((e && e.message) || String(e)) });
       setStatus(t('sessionError'), true);
@@ -731,7 +779,13 @@
       if (!state.busy || state.sessionId !== thisSession) { return; }
       endMasterBusy();
       logMaster('responseReceived', { ok: !!(res && res.ok), code: (res && res.code) || '', requireLogin: !!(res && res.requireLogin) });
-      if (res.requireLogin) { revealMembership(); setStatus(t('loginWall'), true); return; }
+      logGate(res);
+      // GUEST-only create-account wall: fire ONLY when the backend returned
+      // requireLogin:true (anonymous guest over the free-preview limit).
+      if (res.requireLogin === true) { revealMembership(); setStatus(t('loginWall'), true); return; }
+      // MEMBER over their generous daily limit (code DAILY_LIMIT): a localized
+      // "try again tomorrow" message — never the membership prompt.
+      if (res.code === 'DAILY_LIMIT') { masterError(t('err_DAILY_LIMIT')); return; }
       if (!res.ok || !res.masterpiece) {
         logMaster('error', { message: res.message || '', code: res.code || '' });
         masterError(res.message || t('genFailed'));
@@ -829,7 +883,11 @@
     }).then(function (res) {
       state.busy = false; refreshButtons();
       resultsEl.innerHTML = '';
-      if (res.requireLogin) { revealMembership(); resultsEl.appendChild(elt('p', 'ss-mode-results__status', t('loginWall'))); return; }
+      logGate(res);
+      // Guest-only create-account wall (requireLogin:true). Members never see it.
+      if (res.requireLogin === true) { revealMembership(); resultsEl.appendChild(elt('p', 'ss-mode-results__status', t('loginWall'))); return; }
+      // Member daily-limit (DAILY_LIMIT): localized "try tomorrow", no prompt.
+      if (res.code === 'DAILY_LIMIT') { resultsEl.appendChild(elt('p', 'ss-mode-results__status', t('err_DAILY_LIMIT'))); return; }
       if (!res.ok) { resultsEl.appendChild(elt('p', 'ss-mode-results__status', res.message || t('error'))); return; }
       var recs = (res.recommendations || []).filter(function (r) { return r && r.previewDataUrl && !r.error; });
       if (!recs.length) { resultsEl.appendChild(elt('p', 'ss-mode-results__status', t('err_PLAN_EMPTY'))); return; }
@@ -1211,7 +1269,11 @@
       mode: 'wig', audience: state.audience, goal: state.goal,
     }).then(function (res) {
       state.busy = false; refreshButtons();
-      if (res.requireLogin) { revealMembership(); wigStatus(t('loginWall'), true); return; }
+      logGate(res);
+      // Guest-only create-account wall (requireLogin:true). Members never see it.
+      if (res.requireLogin === true) { revealMembership(); wigStatus(t('loginWall'), true); return; }
+      // Member daily-limit (DAILY_LIMIT): localized "try tomorrow", no prompt.
+      if (res.code === 'DAILY_LIMIT') { wigStatus(t('err_DAILY_LIMIT'), true); return; }
       if (!res.ok) { wigStatus(res.message || t('error'), true); return; }
       var recs = (res.recommendations || []).filter(function (r) { return r && r.previewDataUrl && !r.error; });
       if (!recs.length) { wigStatus(t('err_PLAN_EMPTY'), true); return; }
@@ -1303,6 +1365,10 @@
   }
 
   function revealMembership() {
+    // The create-account prompt is for ANONYMOUS guests only. A logged-in member
+    // already has an account — defensively no-op so they can never see it, even if
+    // a caller reaches here by mistake.
+    if (!state.isAnonymous) { logGate({ ok: false, code: 'membership_suppressed_member' }); return; }
     var el = doc.getElementById('ssMembershipPrompt');
     if (el) { el.hidden = false; try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {} }
   }
@@ -1509,6 +1575,7 @@
       return a.signInWithEmailAndPassword(customerEmailForPhone(phone), pass);
     }).then(function () {
       // onAuthStateChanged refreshes the UI; just close the panel.
+      logAuth({ gateReason: 'login_success' });
       closeAuthPanel();
     }).catch(function (err) {
       setAuthBusy(form, false);
@@ -1539,6 +1606,9 @@
             .catch(function (e) { if (root.console) root.console.warn('[style-studio] profile write skipped', e); });
         }
       } catch (e) { if (root.console) root.console.warn('[style-studio] profile write error', e); }
+      // The signup write IS the profile — mark it present so repair won't re-create.
+      state.profileExists = true;
+      logAuth({ gateReason: 'signup_success' });
       closeAuthPanel();
     }).catch(function (err) {
       setAuthBusy(form, false);
@@ -1546,7 +1616,10 @@
     });
   }
 
+  // The ONLY place signOut is ever called — explicit user logout. Everything else
+  // (language switch, generation, modal close, reload) leaves the session intact.
   function onLogout() {
+    logAuth({ gateReason: 'logout_requested' });
     var a = (root.firebase && root.firebase.auth) ? root.firebase.auth() : null;
     if (a) a.signOut().catch(function () {});
     // onAuthStateChanged then re-signs-in anonymously → account UI resets to
@@ -1556,9 +1629,13 @@
   // ── Anonymous auth + customer account state ────────────────────────────
   function applyAccountFromUser(user) {
     state.user = user || null;
+    // isAnonymous mirrors the Firebase user. No user (signed out) is treated as
+    // anonymous for gating purposes (the create-account wall remains available).
+    state.isAnonymous = user ? !!user.isAnonymous : true;
     state.isCustomer = isCustomerUser(user);
     if (!state.isCustomer) {
       state.account = { name: '', phone: '' };
+      state.profileExists = false;
       renderAccount();
       return;
     }
@@ -1568,52 +1645,98 @@
     try { derivedPhone = String(user.email || '').split('@')[0] || ''; } catch (e) {}
     state.account = { name: '', phone: derivedPhone };
     renderAccount();
+    repairCustomerProfile(user, derivedPhone);
+  }
+
+  // PROFILE AUTO-REPAIR — when a real (non-anonymous) customer signs in, make sure
+  // their mobileBarberCustomers/{uid} doc exists. If the read shows it missing,
+  // create it from the known name/phone (derive phone from the account email when a
+  // saved phone isn't available). Best-effort; never blocks the UI. NO image writes.
+  function repairCustomerProfile(user, derivedPhone) {
+    state.profileExists = false;
+    if (!user || user.isAnonymous || !user.uid) return;
+    var db = authDb();
+    if (!db) return;
+    var ref = db.collection('mobileBarberCustomers').doc(user.uid);
     try {
-      var db = authDb();
-      if (db && user.uid) {
-        db.collection('mobileBarberCustomers').doc(user.uid).get().then(function (snap) {
-          if (!snap || !snap.exists) return;
+      ref.get().then(function (snap) {
+        if (snap && snap.exists) {
+          state.profileExists = true;
           var d = snap.data() || {};
           state.account = {
             name: d.name || d.customerName || '',
             phone: d.phone || d.customerPhone || derivedPhone,
           };
           if (state.isCustomer) renderAccount();
-        }).catch(function () {});
-      }
-    } catch (e) {}
+          logAuth({ gateReason: 'profile_loaded' });
+          return;
+        }
+        // Doc missing — create it (logged in but no profile). Use the known name
+        // (none yet) and the phone derived from the account email.
+        var phone = state.account.phone || derivedPhone || '';
+        ref.set(customerProfilePayload(user.uid, state.account.name || '', phone), { merge: true })
+          .then(function () {
+            state.profileExists = true;
+            if (state.isCustomer) renderAccount();
+            logAuth({ gateReason: 'profile_created' });
+          })
+          .catch(function (e) { if (root.console) root.console.warn('[style-studio] profile repair write skipped', e); });
+      }).catch(function (e) { if (root.console) root.console.warn('[style-studio] profile repair read skipped', e); });
+    } catch (e) { if (root.console) root.console.warn('[style-studio] profile repair error', e); }
   }
 
   function initAuth() {
     if (typeof root.firebase === 'undefined' || !root.firebase.auth) { renderAccount(); return; }
     setStatus(t('signingIn'));
-    try {
-      root.firebase.auth().onAuthStateChanged(function (user) {
-        if (user) {
-          state.signedIn = true; refreshButtons();
-          // Generate flows now run under whatever uid is current (anon guest OR
-          // the real customer — member quota — automatically).
-          applyAccountFromUser(user);
-          if (state.pendingGenerate) {
-            // A generation was queued while auth was still completing — run it now
-            // so the user never has to tap twice (seamless).
-            runPendingGenerate();
-          } else if (!state.busy) {
-            setStatus(state.selfieDataUrl ? t('photoReady') : t('ready'));
+    var auth = root.firebase.auth();
+    // PERSISTENCE — set LOCAL globally, BEFORE any auth listener/sign-in, so the
+    // session survives reloads and tab closes until an EXPLICIT logout. Never
+    // SESSION/NONE. We do NOT clear auth/local/sessionStorage on load, and we do
+    // NOT sign out anywhere except the Logout button. If setPersistence fails we
+    // still attach the listener (Firebase default is already LOCAL).
+    var P = (root.firebase.auth.Auth && root.firebase.auth.Auth.Persistence)
+      ? root.firebase.auth.Auth.Persistence.LOCAL : null;
+    var ready = (P && auth.setPersistence)
+      ? auth.setPersistence(P).catch(function (e) { if (root.console) root.console.warn('[style-studio] setPersistence failed', e); })
+      : Promise.resolve();
+    ready.then(function () {
+      try {
+        auth.onAuthStateChanged(function (user) {
+          if (user) {
+            state.signedIn = true; refreshButtons();
+            // Generate flows run under whatever uid is current (anon guest OR a real
+            // customer — member quota — automatically). We NEVER sign a real user out
+            // or replace them with an anonymous session here.
+            applyAccountFromUser(user);
+            logAuth({ gateReason: state.pendingGenerate ? 'pending_generate' : 'auth_ready' });
+            if (state.pendingGenerate) {
+              // A generation was queued while auth was still completing — run it now
+              // so the user never has to tap twice (seamless).
+              runPendingGenerate();
+            } else if (!state.busy) {
+              setStatus(state.selfieDataUrl ? t('photoReady') : t('ready'));
+            }
+          } else {
+            // Only kick anonymous sign-in when there is genuinely NO user. The guard
+            // prevents duplicate anon sign-ins and guarantees we never anon-over a
+            // real user (a real user is never null here).
+            state.signedIn = false; refreshButtons();
+            applyAccountFromUser(null);
+            logAuth({ gateReason: 'no_user_signing_in_anon' });
+            if (!state._anonInFlight) {
+              state._anonInFlight = true;
+              auth.signInAnonymously().catch(function (err) {
+                if (root.console) root.console.error('[style-studio] anon sign-in failed', err);
+                setStatus(t('error'), true);
+              }).finally(function () { state._anonInFlight = false; });
+            }
           }
-        } else {
-          state.signedIn = false; refreshButtons();
-          applyAccountFromUser(null);
-          root.firebase.auth().signInAnonymously().catch(function (err) {
-            if (root.console) root.console.error('[style-studio] anon sign-in failed', err);
-            setStatus(t('error'), true);
-          });
-        }
-      });
-    } catch (e) {
-      if (root.console) root.console.error('[style-studio] auth init failed', e);
-      renderAccount();
-    }
+        });
+      } catch (e) {
+        if (root.console) root.console.error('[style-studio] auth init failed', e);
+        renderAccount();
+      }
+    });
   }
 
   // ── Wire up ────────────────────────────────────────────────────────────

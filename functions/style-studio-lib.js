@@ -17,7 +17,7 @@ const STUDIO_MODES = {
                            density: ['natural', 'fuller'], shape: ['rounded', 'angular', 'tapered'] },
                 guidance: 'Men only. Recommend 5 beard styles that flatter the jaw and face proportions.' },
   wig:        { options: { family: ['natural', 'business', 'modern', 'long', 'layered', 'curly', 'elegant', 'glamorous', 'cute', 'simple', 'school'] },
-                guidance: 'Recommend 5 realistic WIG looks appropriate to the audience. Render as a natural-looking wig on the same person.' },
+                guidance: 'Recommend 5 looks for this person rendered as natural-growing human hair that is INDISTINGUISHABLE from their own hair — never costume-like, never an obvious wig. For each, the imageEditPrompt MUST demand: a seamless slightly irregular hairline blending into the forehead and temples with fine baby hairs and flyaways (no hard edge, no lace front, no wig-cap line, no helmet shape), natural density/thickness variation and individual strand detail, a realistic part/scalp, soft matte-to-natural sheen (not plastic or glossy), and hair colour/undertone matched to the skin tone and lighting.' },
   hairsystem: { options: { type: ['frontal', 'partial', 'full', 'topper', 'crown'] },
                 guidance: 'Recommend 5 hair-system looks that restore natural fullness. Frame as before/after fullness. NEVER a medical claim.' },
   event:      { options: { occasion: ['wedding', 'cruise', 'disneyland', 'vegas', 'beach', 'birthday', 'graduation', 'holiday'] },

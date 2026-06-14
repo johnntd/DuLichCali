@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260419m">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/style-studio.css?v=20260613f">
+  <link rel="stylesheet" href="/style-studio.css?v=20260614a">
 
   <!-- Google Analytics 4 -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-5S0P4XMCJR"></script>
@@ -55,12 +55,17 @@
   <!-- Inline collapsible login / signup panel (NOT a trapping modal). Built by JS. -->
   <div class="ss-auth" id="ssAuthPanel" hidden></div>
 
+  <!-- Inline customer account panel (profile + Favorites + Saved looks). Built by JS. Local-only. -->
+  <div class="ss-acct" id="ssAccountPanel" hidden></div>
+
   <!-- 2. HERO — AI Master Stylist (flagship) -->
   <section class="ss-hero">
     <div class="ss-hero__inner">
       <span class="ss-hero__chip"><span aria-hidden="true">✨</span> <span data-ss-i18n="heroChip"></span></span>
+      <span class="ss-hero__tagline" data-ss-i18n="heroTagline"></span>
       <h1 class="ss-hero__title" data-ss-i18n="heroTitle"></h1>
       <p class="ss-hero__sub" data-ss-i18n="heroSub"></p>
+      <p class="ss-hero__benefit" data-ss-i18n="heroBenefit"></p>
 
       <div class="ss-flagship">
         <label class="ss-consent">
@@ -110,6 +115,12 @@
       </span>
       <h2 class="ss-wigmatch__title" data-ss-i18n="wigTitle"></h2>
       <p class="ss-wigmatch__sub" data-ss-i18n="wigSub"></p>
+      <ul class="ss-wigmatch__benefits" aria-label="Benefits">
+        <li class="ss-wigmatch__benefit"><span class="ss-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span data-ss-i18n="wigBenefit1"></span></li>
+        <li class="ss-wigmatch__benefit"><span class="ss-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span data-ss-i18n="wigBenefit2"></span></li>
+        <li class="ss-wigmatch__benefit"><span class="ss-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span data-ss-i18n="wigBenefit3"></span></li>
+        <li class="ss-wigmatch__benefit"><span class="ss-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span data-ss-i18n="wigBenefit4"></span></li>
+      </ul>
       <button class="ss-cta ss-wigmatch__cta" id="ssWigGenerate" type="button" disabled>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 9.5 9.5 3 12l6.5 2.5L12 21l2.5-6.5L21 12l-6.5-2.5Z"/></svg>
         <span data-ss-i18n="wigCta"></span>
@@ -125,18 +136,23 @@
     <span data-ss-i18n="banner"></span>
   </div>
 
-  <!-- 6. Manual modes -->
+  <!-- 6. Studio Gallery — large Netflix-style mode cards -->
   <section class="ss-modes" id="ssModes">
     <div class="ss-modes__head">
-      <h2 class="ss-modes__title" data-ss-i18n="modesTitle"></h2>
-      <p class="ss-modes__sub" data-ss-i18n="modesSub"></p>
+      <h2 class="ss-modes__title" data-ss-i18n="galleryTitle"></h2>
+      <p class="ss-modes__sub" data-ss-i18n="gallerySub"></p>
     </div>
     <div class="ss-audience-wrap">
       <span class="ss-audience-wrap__label" data-ss-i18n="audienceLabel"></span>
       <div class="ss-seg" id="ssAudienceSeg" role="group" aria-label="Audience"></div>
     </div>
-    <div class="ss-accordion" id="ssAccordion"></div>
-    <div id="ssModesResults"></div>
+    <div class="ss-gallery" id="ssGallery"></div>
+  </section>
+
+  <!-- 6b. Testimonials -->
+  <section class="ss-testimonials" id="ssTestimonialsWrap">
+    <h2 class="ss-testimonials__title" data-ss-i18n="testimonialsTitle"></h2>
+    <div class="ss-testimonials__grid" id="ssTestimonials"></div>
   </section>
 
   <!-- 7. Membership / login wall (hidden until the free limit is reached) -->
@@ -175,6 +191,6 @@
   if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 </script>
 <script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260613a"></script>
-<script src="/style-studio-public.js?v=20260613g"></script>
+<script src="/style-studio-public.js?v=20260614a"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 'use strict';
 // ─────────────────────────────────────────────────────────────────────────
-// AI Style Studio — PUBLIC client  (style-studio-public.js?v=20260613g)
+// AI Style Studio — PUBLIC client  (style-studio-public.js?v=20260614a)
 //
 // Powers /style-studio: the one-click AI Master Stylist hero + the 9 manual
 // modes. Signs the visitor in with Firebase ANONYMOUS auth, then calls the
@@ -136,6 +136,46 @@
       authUserNotFound: 'No account found for this phone. Create one to continue.',
       authTooManyRequests: 'Too many attempts. Please wait a moment and try again.',
       working: 'Please wait…',
+      // SP-3 — emotional taglines + section framing.
+      heroTagline: 'Discover your best look.',
+      heroBenefit: 'Look younger. Feel confident.',
+      // SP-3 — AI Wig Match co-flagship benefits checklist.
+      wigBenefit1: 'Fuller hair',
+      wigBenefit2: 'Younger appearance',
+      wigBenefit3: 'Natural look',
+      wigBenefit4: 'Professional style',
+      // SP-3 — Studio Gallery (Netflix-style cards): emotional one-liners.
+      gallery_haircut: 'Find the cut that frames your face.',
+      gallery_color: 'See a new shade before you commit.',
+      gallery_texture: 'Curly, straight or wavy — try it on.',
+      gallery_eyebrow: 'Frame your eyes with the perfect brow.',
+      gallery_beard: 'Shape the beard that suits your jaw.',
+      gallery_wig: 'Discover the most natural wig for you.',
+      gallery_hairsystem: 'Restore fuller hair, naturally.',
+      gallery_event: 'Get ready for the big day.',
+      gallery_vacation: 'Pack your best look for the trip.',
+      galleryTitle: 'The Studio',
+      gallerySub: 'Nine ways to reimagine your look — same AI engine, more control.',
+      optionsLabel: 'Choose a style',
+      generate: 'Generate',
+      // SP-3 — Before / After (real selfie → AI result).
+      before: 'Before', after: 'After',
+      beforeAfter: 'Before / After', dragToCompare: 'Drag to compare',
+      showOriginal: 'Show original', showResult: 'Show result',
+      viewerToggleBefore: 'See your photo', viewerToggleAfter: 'See the result',
+      // SP-3 — Testimonials (LAUNCH PLACEHOLDERS — replace with real reviews).
+      testimonialsTitle: 'Loved by people like you',
+      testimonial1: 'I never knew this hairstyle would fit me so well.',
+      testimonial2: 'This helped me decide on a wig before buying.',
+      testimonial3: 'I looked years younger — and finally felt confident.',
+      testimonialName1: 'Lan', testimonialName2: 'Maria', testimonialName3: 'David',
+      // SP-3 — Account panel (favorites + history, all local).
+      accountTitle: 'My account',
+      tabFavorites: 'Favorites', tabHistory: 'Saved looks',
+      noFavorites: 'Tap the heart on any look to save it here.',
+      noHistory: 'Your generated looks will appear here.',
+      favoritesHint: 'Saved on this device only.',
+      removeFavorite: 'Remove',
     },
     vi: {
       heroChip: 'Chuyên Gia Tạo Kiểu AI',
@@ -238,6 +278,46 @@
       authUserNotFound: 'Không tìm thấy tài khoản cho số này. Hãy tạo mới để tiếp tục.',
       authTooManyRequests: 'Quá nhiều lần thử. Vui lòng chờ một chút rồi thử lại.',
       working: 'Vui lòng đợi…',
+      // SP-3 — câu khẩu hiệu cảm xúc + khung mô tả.
+      heroTagline: 'Khám phá diện mạo đẹp nhất của bạn.',
+      heroBenefit: 'Trẻ trung hơn. Tự tin hơn.',
+      // SP-3 — danh sách lợi ích của Ghép Tóc Giả AI.
+      wigBenefit1: 'Tóc dày hơn',
+      wigBenefit2: 'Diện mạo trẻ trung',
+      wigBenefit3: 'Trông tự nhiên',
+      wigBenefit4: 'Phong cách chuyên nghiệp',
+      // SP-3 — Studio (thẻ kiểu Netflix): câu mô tả cảm xúc.
+      gallery_haircut: 'Tìm kiểu tóc tôn lên gương mặt bạn.',
+      gallery_color: 'Xem màu tóc mới trước khi quyết định.',
+      gallery_texture: 'Xoăn, thẳng hay gợn sóng — thử ngay.',
+      gallery_eyebrow: 'Định hình chân mày hoàn hảo cho đôi mắt.',
+      gallery_beard: 'Tạo dáng bộ râu hợp với khuôn hàm bạn.',
+      gallery_wig: 'Khám phá bộ tóc giả tự nhiên nhất cho bạn.',
+      gallery_hairsystem: 'Phục hồi mái tóc dày một cách tự nhiên.',
+      gallery_event: 'Sẵn sàng cho ngày trọng đại.',
+      gallery_vacation: 'Mang theo diện mạo đẹp nhất cho chuyến đi.',
+      galleryTitle: 'Studio',
+      gallerySub: 'Chín cách làm mới diện mạo — cùng công nghệ AI, nhiều tùy chọn hơn.',
+      optionsLabel: 'Chọn một kiểu',
+      generate: 'Tạo kiểu',
+      // SP-3 — Trước / Sau (ảnh selfie thật → kết quả AI).
+      before: 'Trước', after: 'Sau',
+      beforeAfter: 'Trước / Sau', dragToCompare: 'Kéo để so sánh',
+      showOriginal: 'Xem ảnh gốc', showResult: 'Xem kết quả',
+      viewerToggleBefore: 'Xem ảnh của bạn', viewerToggleAfter: 'Xem kết quả',
+      // SP-3 — Đánh giá (CHỖ TRỐNG RA MẮT — thay bằng đánh giá thật).
+      testimonialsTitle: 'Được yêu thích bởi những người như bạn',
+      testimonial1: 'Tôi chưa từng nghĩ kiểu tóc này lại hợp với mình đến vậy.',
+      testimonial2: 'Điều này giúp tôi chọn được bộ tóc giả trước khi mua.',
+      testimonial3: 'Tôi trông trẻ hơn nhiều — và cuối cùng đã thấy tự tin.',
+      testimonialName1: 'Lan', testimonialName2: 'Maria', testimonialName3: 'David',
+      // SP-3 — Bảng tài khoản (yêu thích + lịch sử, đều lưu cục bộ).
+      accountTitle: 'Tài khoản của tôi',
+      tabFavorites: 'Yêu thích', tabHistory: 'Kiểu đã lưu',
+      noFavorites: 'Chạm vào trái tim trên bất kỳ kiểu nào để lưu vào đây.',
+      noHistory: 'Các kiểu bạn tạo sẽ hiển thị tại đây.',
+      favoritesHint: 'Chỉ lưu trên thiết bị này.',
+      removeFavorite: 'Xóa',
     },
     es: {
       heroChip: 'Estilista Maestro AI',
@@ -340,6 +420,46 @@
       authUserNotFound: 'No se encontró una cuenta para este teléfono. Crea una para continuar.',
       authTooManyRequests: 'Demasiados intentos. Espera un momento e inténtalo de nuevo.',
       working: 'Por favor espera…',
+      // SP-3 — eslóganes emocionales + marco de secciones.
+      heroTagline: 'Descubre tu mejor look.',
+      heroBenefit: 'Luce más joven. Siéntete seguro.',
+      // SP-3 — lista de beneficios de Match de Peluca AI.
+      wigBenefit1: 'Cabello más abundante',
+      wigBenefit2: 'Apariencia más joven',
+      wigBenefit3: 'Aspecto natural',
+      wigBenefit4: 'Estilo profesional',
+      // SP-3 — Estudio (tarjetas estilo Netflix): frases emocionales.
+      gallery_haircut: 'Encuentra el corte que enmarca tu rostro.',
+      gallery_color: 'Mira un nuevo tono antes de decidir.',
+      gallery_texture: 'Rizado, liso u ondulado — pruébalo.',
+      gallery_eyebrow: 'Enmarca tus ojos con la ceja perfecta.',
+      gallery_beard: 'Da forma a la barba que favorece tu mandíbula.',
+      gallery_wig: 'Descubre la peluca más natural para ti.',
+      gallery_hairsystem: 'Recupera un cabello más abundante, con naturalidad.',
+      gallery_event: 'Prepárate para el gran día.',
+      gallery_vacation: 'Lleva tu mejor look al viaje.',
+      galleryTitle: 'El Estudio',
+      gallerySub: 'Nueve formas de reinventar tu look — el mismo motor AI, más control.',
+      optionsLabel: 'Elige un estilo',
+      generate: 'Generar',
+      // SP-3 — Antes / Después (selfie real → resultado AI).
+      before: 'Antes', after: 'Después',
+      beforeAfter: 'Antes / Después', dragToCompare: 'Arrastra para comparar',
+      showOriginal: 'Ver original', showResult: 'Ver resultado',
+      viewerToggleBefore: 'Ver tu foto', viewerToggleAfter: 'Ver el resultado',
+      // SP-3 — Testimonios (MARCADORES DE LANZAMIENTO — reemplazar con reseñas reales).
+      testimonialsTitle: 'Amado por personas como tú',
+      testimonial1: 'Nunca imaginé que este peinado me quedaría tan bien.',
+      testimonial2: 'Esto me ayudó a decidir una peluca antes de comprarla.',
+      testimonial3: 'Me veía años más joven — y por fin me sentí seguro.',
+      testimonialName1: 'Lan', testimonialName2: 'Maria', testimonialName3: 'David',
+      // SP-3 — Panel de cuenta (favoritos + historial, todo local).
+      accountTitle: 'Mi cuenta',
+      tabFavorites: 'Favoritos', tabHistory: 'Looks guardados',
+      noFavorites: 'Toca el corazón en cualquier look para guardarlo aquí.',
+      noHistory: 'Tus looks generados aparecerán aquí.',
+      favoritesHint: 'Guardado solo en este dispositivo.',
+      removeFavorite: 'Quitar',
     },
   };
 
@@ -360,7 +480,31 @@
     { mode: 'vacation', label: 'mode_vacation', controls: [{ key: 'destination', values: ['hawaii', 'europe', 'california_coast', 'theme_parks', 'luxury_resorts'] }] },
   ];
 
+  // SP-3 — Studio Gallery card imagery. Honest photos where they exist; a
+  // premium gradient + icon card where no truthful photo exists (eyebrows,
+  // wigs, hair systems, event, vacation). NEVER mislabel a haircut photo as a
+  // wig/eyebrow result. Photo paths verified to return 200 from the server.
+  var GALLERY_CARDS = {
+    haircut:    { img: '/assets/mobile-barber/styles/modern-styling.jpg', icon: 'stylist', accent: 'a' },
+    color:      { img: '/images/hair-3.jpg',                              icon: 'color',   accent: 'c' },
+    texture:    { img: '/images/hair-2.jpg',                              icon: 'texture', accent: 'a' },
+    eyebrow:    { img: '',                                                icon: 'groom',   accent: 'd' },
+    beard:      { img: '/assets/mobile-barber/styles/haircut-beard.jpg',  icon: 'groom',   accent: 'd' },
+    wig:        { img: '',                                                icon: 'wig',     accent: 'b' },
+    hairsystem: { img: '',                                                icon: 'wig',     accent: 'b' },
+    event:      { img: '',                                                icon: 'event',   accent: 'e' },
+    vacation:   { img: '',                                                icon: 'event',   accent: 'e' },
+  };
+
   var MASTER_ATTR_KEYS = ['haircut', 'color', 'texture', 'bangs', 'eyebrows', 'beard', 'wigOrSystem'];
+
+  // SP-3 — local-only stores (NEVER Firestore/Storage). Favorites = looks the
+  // user hearted; recent looks = a rolling history of generated looks. Both keep
+  // a text reference + an on-device cache key (image stays in MobileBarberAIPreview
+  // localStorage). No selfie/result image is ever uploaded.
+  var FAV_KEY = 'ss_public_favorites';
+  var HISTORY_KEY = 'ss_recent_looks';
+  var HISTORY_MAX = 24;
 
   var state = {
     lang: 'en', consent: false, selfieDataUrl: '',
@@ -375,7 +519,7 @@
     // Customer account (reuses mobile-barber customer auth). isCustomer = a real
     // (non-anonymous) signed-in customer; account = display name / phone of that user.
     user: null, isCustomer: false, account: { name: '', phone: '' },
-    authMode: 'login', authBusy: false,
+    authMode: 'login', authBusy: false, acctTab: 'history',
     // P0 never-silent: queued generation while anon auth completes, plus the
     // live progress-cycle interval + watchdog timer handles (so busy can never stick).
     pendingGenerate: '', progressTimer: 0, watchdogTimer: 0,
@@ -464,13 +608,16 @@
     applyI18n();
     buildGoalChips();
     buildAudienceSeg();
-    buildAccordion();
+    buildGallery();
     buildShowcase();
+    buildTestimonials();
     refreshWigUi();
     syncLangButtons();
     renderAccount();
     var authPanel = doc.getElementById('ssAuthPanel');
     if (authPanel && !authPanel.hidden) renderAuthPanel();
+    var acctPanel = doc.getElementById('ssAccountPanel');
+    if (acctPanel && !acctPanel.hidden) renderAccountPanel();
     setStatus(state.busy ? t('generating') : (state.selfieDataUrl ? t('photoReady') : t('ready')));
   }
   function syncLangButtons() {
@@ -540,46 +687,88 @@
     });
   }
 
-  // ── Accordion of 9 manual modes ────────────────────────────────────────
-  function buildAccordion() {
-    var acc = doc.getElementById('ssAccordion');
-    if (!acc) return;
-    acc.innerHTML = '';
+  // ── Studio Gallery — large Netflix-style cards (replaces the accordion) ──
+  // Each of the 9 modes is a big image/gradient card with a title, an emotional
+  // one-liner and a Generate button that runs that mode via the EXISTING
+  // onModeGenerate(def, body, results). Modes with meaningful options reveal
+  // chips (tap "Choose a style") before Generate — never a native select. The
+  // per-card body/results contract that onModeGenerate reads is unchanged.
+  function buildGallery() {
+    var grid = doc.getElementById('ssGallery');
+    if (!grid) return;
+    grid.innerHTML = '';
     STUDIO_DEFS.forEach(function (def) {
-      var d = doc.createElement('details'); d.className = 'ss-panel'; d.setAttribute('data-mode', def.mode);
-      var sum = doc.createElement('summary'); sum.className = 'ss-panel__summary';
-      sum.appendChild(elt('span', null, t(def.label)));
-      d.appendChild(sum);
-      var body = elt('div', 'ss-panel__body');
-      def.controls.forEach(function (ctrl) {
-        var group = elt('div', 'ss-optchips'); group.setAttribute('data-ctrl', ctrl.key);
-        ctrl.values.forEach(function (v, vi) {
-          var chip = elt('button', 'ss-optchips__chip', v.replace(/_/g, ' '));
-          chip.type = 'button';
-          chip.setAttribute('data-value', v);
-          var on = vi === 0;
-          chip.setAttribute('aria-pressed', String(on));
-          if (on) { chip.classList.add('ss-optchips__chip--active'); group.setAttribute('data-selected', v); }
-          chip.addEventListener('click', function () {
-            group.setAttribute('data-selected', v);
-            group.querySelectorAll('.ss-optchips__chip').forEach(function (c) {
-              var active = c.getAttribute('data-value') === v;
-              c.classList.toggle('ss-optchips__chip--active', active);
-              c.setAttribute('aria-pressed', String(active));
+      var meta = GALLERY_CARDS[def.mode] || { img: '', icon: 'stylist', accent: 'a' };
+      var card = elt('article', 'ss-gcard ss-gcard--' + meta.accent);
+      card.setAttribute('data-mode', def.mode);
+
+      // Visual: an honest photo when one exists, else a premium gradient + icon.
+      var media = elt('div', 'ss-gcard__media');
+      if (meta.img) {
+        var img = doc.createElement('img'); img.className = 'ss-gcard__img';
+        img.src = meta.img; img.alt = ''; img.loading = 'lazy';
+        media.appendChild(img);
+      } else {
+        media.classList.add('ss-gcard__media--gradient');
+        var ico = elt('span', 'ss-gcard__icon'); ico.innerHTML = showcaseIcon(meta.icon);
+        media.appendChild(ico);
+      }
+      media.appendChild(elt('span', 'ss-gcard__media-title', t(def.label)));
+      card.appendChild(media);
+
+      var body = elt('div', 'ss-gcard__body');
+      body.appendChild(elt('p', 'ss-gcard__desc', t('gallery_' + def.mode)));
+
+      // Option chips revealed on demand (kept collapsed so the card stays clean).
+      if (def.controls.length) {
+        var optWrap = elt('div', 'ss-gcard__opts'); optWrap.hidden = true;
+        def.controls.forEach(function (ctrl) {
+          var group = elt('div', 'ss-optchips'); group.setAttribute('data-ctrl', ctrl.key);
+          ctrl.values.forEach(function (v, vi) {
+            var chip = elt('button', 'ss-optchips__chip', v.replace(/_/g, ' '));
+            chip.type = 'button';
+            chip.setAttribute('data-value', v);
+            var on = vi === 0;
+            chip.setAttribute('aria-pressed', String(on));
+            if (on) { chip.classList.add('ss-optchips__chip--active'); group.setAttribute('data-selected', v); }
+            chip.addEventListener('click', function () {
+              group.setAttribute('data-selected', v);
+              group.querySelectorAll('.ss-optchips__chip').forEach(function (c) {
+                var active = c.getAttribute('data-value') === v;
+                c.classList.toggle('ss-optchips__chip--active', active);
+                c.setAttribute('aria-pressed', String(active));
+              });
             });
+            group.appendChild(chip);
           });
-          group.appendChild(chip);
+          optWrap.appendChild(group);
         });
-        body.appendChild(group);
-      });
-      var gen = elt('button', 'ss-cta', t('modeGenerate'));
+        var optToggle = elt('button', 'ss-gcard__optbtn', t('optionsLabel'));
+        optToggle.type = 'button';
+        optToggle.setAttribute('aria-expanded', 'false');
+        optToggle.addEventListener('click', function () {
+          var show = optWrap.hidden;
+          optWrap.hidden = !show;
+          optToggle.setAttribute('aria-expanded', String(show));
+          optToggle.classList.toggle('ss-gcard__optbtn--open', show);
+        });
+        body.appendChild(optToggle);
+        body.appendChild(optWrap);
+      }
+
+      var gen = elt('button', 'ss-cta ss-gcard__gen', t('generate'));
       gen.type = 'button'; gen.disabled = !canSubmit();
       gen.setAttribute('data-mode-generate', def.mode);
       var results = elt('div', 'ss-mode-results');
       results.setAttribute('data-results-for', def.mode);
-      gen.addEventListener('click', function () { onModeGenerate(def, body, results); });
+      // The body element passed to onModeGenerate must contain the option chips it
+      // reads (.ss-optchips[data-ctrl]) — for cards with options that's optWrap,
+      // for option-less cards it's the body itself.
+      var optHost = body.querySelector('.ss-gcard__opts') || body;
+      gen.addEventListener('click', function () { onModeGenerate(def, optHost, results); });
       body.appendChild(gen); body.appendChild(results);
-      d.appendChild(body); acc.appendChild(d);
+      card.appendChild(body);
+      grid.appendChild(card);
     });
   }
 
@@ -810,10 +999,17 @@
     host.innerHTML = '';
     var src = mp.previewDataUrl || '';
     state.lastResultCount = src ? 1 : 0;
-    var item = { src: src, title: mp.title || t('masterTitle'), why: mp.explanation || '' };
+    // Honest before/after: before = the user's real selfie, after = the result.
+    var before = state.selfieDataUrl || '';
+    var item = { src: src, before: before, title: mp.title || t('masterTitle'), why: mp.explanation || '' };
+    var lookRec = { mode: 'master', title: item.title, why: item.why, sessionId: state.sessionId, styleId: 'master' };
     var card = elt('article', 'ss-master-card');
 
-    if (src) {
+    if (src && before) {
+      // Draggable before→after comparison; tap the result to open the viewer.
+      var ba = buildBeforeAfter(src, before, function () { logMaster('viewerReady', {}); openViewer([item], 0); });
+      card.appendChild(ba);
+    } else if (src) {
       var figure = elt('button', 'ss-master-card__figure'); figure.type = 'button';
       figure.setAttribute('aria-label', t('expand'));
       var img = doc.createElement('img'); img.className = 'ss-master-card__img';
@@ -844,10 +1040,12 @@
       });
       body.appendChild(wrap);
     }
-    body.appendChild(buildActions(src, item.title || 'best-look', [item], 0));
+    body.appendChild(buildActions(src, item.title || 'best-look', [item], 0, lookRec));
     card.appendChild(body);
     host.appendChild(card);
     cacheLocal(state.sessionId, 'master', src);
+    recordLook('master', item.title, item.why, state.sessionId, 'master');
+    if (state.isCustomer) { var ap = doc.getElementById('ssAccountPanel'); if (ap && !ap.hidden) renderAccountPanel(); }
     try { card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
     logUi({ event: 'master-rendered' });
   }
@@ -891,20 +1089,24 @@
       if (!res.ok) { resultsEl.appendChild(elt('p', 'ss-mode-results__status', res.message || t('error'))); return; }
       var recs = (res.recommendations || []).filter(function (r) { return r && r.previewDataUrl && !r.error; });
       if (!recs.length) { resultsEl.appendChild(elt('p', 'ss-mode-results__status', t('err_PLAN_EMPTY'))); return; }
-      renderCarousel(resultsEl, recs);
+      renderCarousel(resultsEl, recs, def.mode);
     });
   }
 
-  function renderCarousel(container, recs) {
+  function renderCarousel(container, recs, mode) {
     container.innerHTML = '';
     state.lastResultCount = recs.length;
+    var before = state.selfieDataUrl || '';
+    // items carry the real selfie as `before` so the viewer's before/after
+    // toggle shows the honest pairing for every look in the carousel.
     var items = recs.map(function (rec) {
-      return { src: rec.previewDataUrl || '', title: rec.title || '', why: rec.whyItFitsFace || '' };
+      return { src: rec.previewDataUrl || '', before: before, title: rec.title || '', why: rec.whyItFitsFace || '' };
     });
     var track = elt('div', 'ss-carousel');
     track.setAttribute('role', 'list');
     recs.forEach(function (rec, i) {
       var src = items[i].src;
+      var styleId = rec.styleId || rec.title || ('look-' + (i + 1));
       var card = elt('article', 'ss-card'); card.setAttribute('role', 'listitem');
       if (src) {
         var figure = elt('button', 'ss-card__figure'); figure.type = 'button'; figure.setAttribute('aria-label', t('expand'));
@@ -918,16 +1120,19 @@
       if (rec.title) body.appendChild(elt('strong', 'ss-card__title', rec.title));
       if (rec.whyItFitsFace) body.appendChild(elt('p', 'ss-card__why', rec.whyItFitsFace));
       if (rec.maintenance) body.appendChild(elt('p', 'ss-card__meta', rec.maintenance));
-      body.appendChild(buildActions(src, rec.styleId || rec.title || ('look-' + (i + 1)), items, i));
+      var lookRec = { mode: mode || '', title: rec.title || styleId, why: rec.whyItFitsFace || '', sessionId: state.sessionId, styleId: rec.styleId || '' };
+      body.appendChild(buildActions(src, styleId, items, i, lookRec));
       card.appendChild(body);
       track.appendChild(card);
       cacheLocal(state.sessionId, rec.styleId || '', src);
+      recordLook(mode || '', rec.title || styleId, rec.whyItFitsFace || '', state.sessionId, rec.styleId || '');
     });
     container.appendChild(track);
     if (recs.length > 1) {
       var hint = elt('p', 'ss-carousel__hint'); hint.textContent = '‹ ' + recs.length + ' ›';
       container.appendChild(hint);
     }
+    if (state.isCustomer) { var ap = doc.getElementById('ssAccountPanel'); if (ap && !ap.hidden) renderAccountPanel(); }
     logUi({ event: 'carousel-rendered' });
   }
 
@@ -937,9 +1142,33 @@
     return b;
   }
 
-  // ── Actions (Save / Share / Expand) ────────────────────────────────────
-  function buildActions(src, baseName, items, index) {
+  // ── Actions (Favorite / Save / Share / Expand) ─────────────────────────
+  // lookRec (optional) carries the text reference for the local Favorites store:
+  // { mode, title, why, sessionId, styleId }. When present, a heart toggle is
+  // shown — favorites are localStorage only (never Firestore/Storage).
+  function buildActions(src, baseName, items, index, lookRec) {
     var actions = elt('div', 'ss-actions');
+
+    if (lookRec && (lookRec.title || lookRec.styleId)) {
+      var fav = elt('button', 'ss-action-btn ss-action-btn--fav');
+      fav.type = 'button';
+      var paint = function () {
+        var on = isFavorited(lookRec);
+        fav.classList.toggle('ss-action-btn--faved', on);
+        fav.setAttribute('aria-pressed', String(on));
+        fav.innerHTML = (on ? heartFilledIcon() : icon('heart')) +
+          '<span>' + t(on ? 'unfavorite' : 'favorite') + '</span>';
+      };
+      paint();
+      fav.addEventListener('click', function () {
+        toggleFavorite(lookRec);
+        paint();
+        var ap = doc.getElementById('ssAccountPanel');
+        if (ap && !ap.hidden) renderAccountPanel();
+      });
+      actions.appendChild(fav);
+    }
+
     var save = elt('button', 'ss-action-btn');
     save.type = 'button';
     save.innerHTML = icon('download') + '<span>' + t('saveToPhone') + '</span>';
@@ -959,14 +1188,91 @@
     actions.appendChild(ex);
     return actions;
   }
+  // ── Before / After (honest: real selfie → AI result) ───────────────────
+  // A draggable comparison slider. "Before" = the user's uploaded selfie
+  // (state.selfieDataUrl), "After" = the generated result. Used in the master
+  // result, the wig result, and the full-screen viewer. If there is no selfie,
+  // callers simply render the plain result image (no fake before).
+  function buildBeforeAfter(afterSrc, beforeSrc, onExpand) {
+    var ba = elt('div', 'ss-ba');
+    var pos = 55; // % shown of the "after" layer
+
+    var imgAfter = doc.createElement('img');
+    imgAfter.className = 'ss-ba__img ss-ba__img--after'; imgAfter.src = afterSrc; imgAfter.alt = ''; imgAfter.loading = 'lazy';
+    ba.appendChild(imgAfter);
+
+    var clip = elt('div', 'ss-ba__clip');
+    var imgBefore = doc.createElement('img');
+    imgBefore.className = 'ss-ba__img ss-ba__img--before'; imgBefore.src = beforeSrc; imgBefore.alt = ''; imgBefore.loading = 'lazy';
+    clip.appendChild(imgBefore);
+    ba.appendChild(clip);
+
+    var lblB = elt('span', 'ss-ba__label ss-ba__label--before', t('before'));
+    var lblA = elt('span', 'ss-ba__label ss-ba__label--after', t('after'));
+    ba.appendChild(lblB); ba.appendChild(lblA);
+
+    var handle = elt('div', 'ss-ba__handle');
+    handle.setAttribute('role', 'slider');
+    handle.setAttribute('aria-label', t('dragToCompare'));
+    handle.setAttribute('tabindex', '0');
+    handle.innerHTML = '<span class="ss-ba__grip">' + icon('compare') + '</span>';
+    ba.appendChild(handle);
+
+    function setPos(p) {
+      pos = Math.max(0, Math.min(100, p));
+      // Reveal the "before" layer left-to-right via clip-path inset (both layers
+      // stay full-size and aligned). Handle tracks the divider position.
+      clip.style.clipPath = 'inset(0 ' + (100 - pos) + '% 0 0)';
+      handle.style.left = pos + '%';
+      handle.setAttribute('aria-valuenow', String(Math.round(pos)));
+    }
+    setPos(pos);
+
+    var dragging = false;
+    function clientToPos(clientX) {
+      var rect = ba.getBoundingClientRect();
+      if (!rect.width) return pos;
+      return ((clientX - rect.left) / rect.width) * 100;
+    }
+    function onDown(e) { dragging = true; ba.classList.add('ss-ba--drag'); move(e); }
+    function move(e) {
+      if (!dragging) return;
+      var x = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+      if (typeof x === 'number') { setPos(clientToPos(x)); if (e.cancelable) e.preventDefault(); }
+    }
+    function onUp() { dragging = false; ba.classList.remove('ss-ba--drag'); }
+    handle.addEventListener('mousedown', onDown);
+    ba.addEventListener('mousemove', move);
+    root.addEventListener('mouseup', onUp);
+    handle.addEventListener('touchstart', onDown, { passive: true });
+    ba.addEventListener('touchmove', move, { passive: false });
+    root.addEventListener('touchend', onUp);
+    handle.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowLeft') { setPos(pos - 5); e.preventDefault(); }
+      else if (e.key === 'ArrowRight') { setPos(pos + 5); e.preventDefault(); }
+    });
+    // Tapping the after image (not the handle) opens the full-screen viewer.
+    if (typeof onExpand === 'function') {
+      imgAfter.style.cursor = 'zoom-in';
+      imgAfter.addEventListener('click', function () { onExpand(); });
+    }
+    return ba;
+  }
+
   function icon(name) {
     var P = {
       download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
       share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',
       expand: '<path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/>',
+      heart: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/>',
+      compare: '<rect x="3" y="5" width="18" height="14" rx="2"/><line x1="12" y1="5" x2="12" y2="19"/>',
       x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
     };
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (P[name] || '') + '</svg>';
+  }
+  // Filled heart variant (favorited state).
+  function heartFilledIcon() {
+    return '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>';
   }
 
   // ── iOS-robust Save: Web Share file → desktop download → press&hold ─────
@@ -1025,17 +1331,74 @@
     }
   }
 
-  // ── Favorites (local only) ─────────────────────────────────────────────
+  // ── On-device image cache (full-quality look stays in localStorage) ─────
   function cacheLocal(sessionId, styleId, src) {
     var AIP = root.MobileBarberAIPreview;
     if (AIP && typeof AIP.saveLocalCopy === 'function' && src) {
       try { AIP.saveLocalCopy(sessionId, styleId || '', src); } catch (e) {}
     }
   }
+  function readCachedImage(sessionId, styleId) {
+    var AIP = root.MobileBarberAIPreview;
+    if (AIP && typeof AIP.readLocalCopy === 'function') {
+      try { return AIP.readLocalCopy(sessionId, styleId || '') || ''; } catch (e) {}
+    }
+    return '';
+  }
+
+  // ── Favorites + History (LOCAL ONLY — never Firestore/Storage) ──────────
+  // Each record stores a text reference (title + mode) and a pointer to the
+  // on-device image cache (sessionId + styleId) — NOT the image bytes inline.
+  // The image is read back from MobileBarberAIPreview.readLocalCopy on demand.
+  function loadStore(key) {
+    try {
+      var raw = root.localStorage.getItem(key);
+      var arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+  }
+  function saveStore(key, arr) {
+    try { root.localStorage.setItem(key, JSON.stringify(arr || [])); } catch (e) {}
+  }
+  function lookKey(rec) { return (rec.sessionId || '') + '__' + (rec.styleId || '') + '__' + (rec.title || ''); }
+
+  // Record a generated look into the rolling history (newest first, capped).
+  function recordLook(mode, title, why, sessionId, styleId) {
+    if (!title && !styleId) return;
+    var list = loadStore(HISTORY_KEY);
+    var rec = { mode: mode || '', title: title || '', why: why || '',
+                sessionId: sessionId || '', styleId: styleId || '', savedAt: Date.now() };
+    var k = lookKey(rec);
+    list = list.filter(function (r) { return lookKey(r) !== k; });
+    list.unshift(rec);
+    if (list.length > HISTORY_MAX) list = list.slice(0, HISTORY_MAX);
+    saveStore(HISTORY_KEY, list);
+  }
+  function isFavorited(rec) {
+    var k = lookKey(rec);
+    return loadStore(FAV_KEY).some(function (r) { return lookKey(r) === k; });
+  }
+  function toggleFavorite(rec) {
+    var list = loadStore(FAV_KEY);
+    var k = lookKey(rec);
+    var existed = list.some(function (r) { return lookKey(r) === k; });
+    if (existed) { list = list.filter(function (r) { return lookKey(r) !== k; }); }
+    else {
+      list.unshift({ mode: rec.mode || '', title: rec.title || '', why: rec.why || '',
+                     sessionId: rec.sessionId || '', styleId: rec.styleId || '', savedAt: Date.now() });
+    }
+    saveStore(FAV_KEY, list);
+    return !existed; // true = now favorited
+  }
+  function removeFavorite(rec) {
+    var k = lookKey(rec);
+    saveStore(FAV_KEY, loadStore(FAV_KEY).filter(function (r) { return lookKey(r) !== k; }));
+  }
 
   // ── Self-contained full-screen VIEWER (pinch / swipe / close) ──────────
   var viewer = { open: false, items: [], index: 0, scrollY: 0, scale: 1, tx: 0, ty: 0,
-                 startDist: 0, startScale: 1, lastX: 0, lastY: 0, lastTap: 0, moved: false, panStart: null };
+                 startDist: 0, startScale: 1, lastX: 0, lastY: 0, lastTap: 0, moved: false, panStart: null,
+                 showingBefore: false };
 
   function lockScroll() {
     viewer.scrollY = root.scrollY || root.pageYOffset || 0;
@@ -1084,8 +1447,22 @@
     bar.appendChild(elt('p', 'ss-viewer__title', '')); // filled by show()
     if (withSaveHint || IS_IOS) bar.appendChild(elt('p', 'ss-viewer__hint', t('pressHold')));
     var barActions = elt('div', 'ss-viewer__actions');
+
+    // Before/After toggle — swaps between the user's selfie and the AI result.
+    // Only meaningful when the current item carries a real `before` selfie.
+    viewer.showingBefore = false;
+    var vToggle = elt('button', 'ss-viewer__btn ss-viewer__btn--toggle'); vToggle.type = 'button'; vToggle.id = 'ssViewerToggle';
+    vToggle.addEventListener('click', function () {
+      var it = viewer.items[viewer.index] || {};
+      if (!it.before) return;
+      viewer.showingBefore = !viewer.showingBefore;
+      showViewerImage();
+    });
+    barActions.appendChild(vToggle);
+
     var vSave = elt('button', 'ss-viewer__btn'); vSave.type = 'button';
     vSave.innerHTML = icon('download') + '<span>' + t('saveToPhone') + '</span>';
+    // Save always exports the AI RESULT (never the original selfie).
     vSave.addEventListener('click', function () { saveImage(viewer.items[viewer.index].src, viewer.items[viewer.index].title || 'look', viewer.items, viewer.index); });
     barActions.appendChild(vSave);
     if (root.navigator && typeof root.navigator.share === 'function') {
@@ -1114,14 +1491,25 @@
     var img = doc.getElementById('ssViewerImg');
     if (!img) return;
     var it = viewer.items[viewer.index] || {};
+    var hasBefore = !!it.before;
+    var showingBefore = hasBefore && viewer.showingBefore;
     resetZoom(img);
-    img.src = it.src; img.alt = it.title || '';
+    img.src = showingBefore ? it.before : it.src;
+    img.alt = it.title || '';
     var titleEl = doc.querySelector('#ssViewer .ss-viewer__title');
     if (titleEl) titleEl.textContent = (it.title || '') + (viewer.items.length > 1 ? '  (' + (viewer.index + 1) + '/' + viewer.items.length + ')' : '');
+    // Before/After toggle: show only when an honest selfie exists for this item.
+    var toggle = doc.getElementById('ssViewerToggle');
+    if (toggle) {
+      toggle.hidden = !hasBefore;
+      toggle.innerHTML = icon('compare') + '<span>' + t(showingBefore ? 'viewerToggleAfter' : 'viewerToggleBefore') + '</span>';
+      toggle.classList.toggle('ss-viewer__btn--toggle-on', showingBefore);
+    }
   }
   function navViewer(dir) {
     if (viewer.items.length < 2) return;
     viewer.index = (viewer.index + dir + viewer.items.length) % viewer.items.length;
+    viewer.showingBefore = false; // reset to the result when moving between looks
     showViewerImage();
     logUi({ event: 'viewer-nav' });
   }
@@ -1204,6 +1592,7 @@
       color: '<path d="M12 21a9 9 0 1 1 9-9c0 2-1.6 3-3.5 3H16a2 2 0 0 0-1.6 3.2A1.8 1.8 0 0 1 12 21Z"/><circle cx="7.5" cy="10.5" r="1.1"/><circle cx="12" cy="7.5" r="1.1"/><circle cx="16.5" cy="10.5" r="1.1"/>',
       groom: '<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/>',
       event: '<path d="M12 2 9 9l-7 .5 5.5 4.5L6 21l6-3.5L18 21l-1.5-7L22 9.5 15 9Z"/>',
+      texture: '<path d="M4 7c2-3 6-3 8 0s6 3 8 0"/><path d="M4 13c2-3 6-3 8 0s6 3 8 0"/><path d="M4 19c2-3 6-3 8 0s6 3 8 0"/>',
     };
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (P[name] || '') + '</svg>';
   }
@@ -1211,24 +1600,65 @@
     var host = doc.getElementById('ssShowcase');
     if (!host) return;
     host.innerHTML = '';
+    // Larger swipeable image cards. Honest photos where they exist; premium
+    // gradient + icon otherwise. CTA wiring is preserved exactly (sc1 →
+    // scroll-to-flagship+generate, sc2 → wig, sc3 color, sc4 groom, sc5 event).
     var slides = [
-      { key: 'sc1', icon: 'stylist', accent: 'a', action: function () { scrollToFlagship(); onGenerateBest(); } },
-      { key: 'sc2', icon: 'wig', accent: 'b', action: scrollToWigMatch },
-      { key: 'sc3', icon: 'color', accent: 'c', action: function () { openModePanel('color'); } },
-      { key: 'sc4', icon: 'groom', accent: 'd', action: function () { openModePanel('eyebrow'); } },
-      { key: 'sc5', icon: 'event', accent: 'e', action: function () { openModePanel('event'); } },
+      { key: 'sc1', icon: 'stylist', accent: 'a', img: '/assets/mobile-barber/styles/modern-styling.jpg', action: function () { scrollToFlagship(); onGenerateBest(); } },
+      { key: 'sc2', icon: 'wig', accent: 'b', img: '', action: scrollToWigMatch },
+      { key: 'sc3', icon: 'color', accent: 'c', img: '/images/hair-3.jpg', action: function () { openModePanel('color'); } },
+      { key: 'sc4', icon: 'groom', accent: 'd', img: '/assets/mobile-barber/styles/haircut-beard.jpg', action: function () { openModePanel('eyebrow'); } },
+      { key: 'sc5', icon: 'event', accent: 'e', img: '', action: function () { openModePanel('event'); } },
     ];
     slides.forEach(function (s) {
       var card = elt('div', 'ss-showcase-card ss-showcase-card--' + s.accent);
       card.setAttribute('role', 'listitem');
+      var media = elt('div', 'ss-showcase-card__media');
+      if (s.img) {
+        var img = doc.createElement('img'); img.className = 'ss-showcase-card__bg';
+        img.src = s.img; img.alt = ''; img.loading = 'lazy';
+        media.appendChild(img);
+      } else {
+        media.classList.add('ss-showcase-card__media--gradient');
+      }
       var ic = elt('span', 'ss-showcase-card__icon'); ic.innerHTML = showcaseIcon(s.icon);
-      card.appendChild(ic);
-      card.appendChild(elt('h3', 'ss-showcase-card__title', t(s.key + '_title')));
-      card.appendChild(elt('p', 'ss-showcase-card__benefit', t(s.key + '_benefit')));
+      media.appendChild(ic);
+      card.appendChild(media);
+      var info = elt('div', 'ss-showcase-card__info');
+      info.appendChild(elt('h3', 'ss-showcase-card__title', t(s.key + '_title')));
+      info.appendChild(elt('p', 'ss-showcase-card__benefit', t(s.key + '_benefit')));
       var cta = elt('button', 'ss-showcase-card__cta', t(s.key + '_cta'));
       cta.type = 'button';
       cta.addEventListener('click', s.action);
-      card.appendChild(cta);
+      info.appendChild(cta);
+      card.appendChild(info);
+      host.appendChild(card);
+    });
+  }
+
+  // ── Testimonials (LAUNCH PLACEHOLDERS) ─────────────────────────────────
+  // SVG stars (never emoji). Quotes are clearly-marked launch placeholders in
+  // SS_STRINGS — replace testimonial1/2/3 with real reviews before scaling.
+  function starRow() {
+    var wrap = elt('span', 'ss-stars');
+    wrap.setAttribute('aria-hidden', 'true');
+    for (var i = 0; i < 5; i++) {
+      var s = elt('span', 'ss-star');
+      s.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2 9.2 8.6 2 9.2l5.4 4.7L5.8 21 12 17.3 18.2 21l-1.6-7.1L22 9.2l-7.2-.6Z"/></svg>';
+      wrap.appendChild(s);
+    }
+    return wrap;
+  }
+  function buildTestimonials() {
+    var host = doc.getElementById('ssTestimonials');
+    if (!host) return;
+    host.innerHTML = '';
+    [1, 2, 3].forEach(function (n) {
+      var card = elt('figure', 'ss-tcard');
+      card.appendChild(starRow());
+      var q = elt('blockquote', 'ss-tcard__quote', '“' + t('testimonial' + n) + '”');
+      card.appendChild(q);
+      card.appendChild(elt('figcaption', 'ss-tcard__name', '— ' + t('testimonialName' + n)));
       host.appendChild(card);
     });
   }
@@ -1241,14 +1671,22 @@
     if (el) try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
   }
   function openModePanel(mode) {
-    var panel = doc.querySelector('.ss-panel[data-mode="' + mode + '"]');
-    if (!panel) {
+    var card = doc.querySelector('.ss-gcard[data-mode="' + mode + '"]');
+    if (!card) {
       var modes = doc.getElementById('ssModes');
       if (modes) try { modes.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
       return;
     }
-    panel.open = true;
-    try { panel.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
+    // Reveal the option chips (if any) so the user lands ready to generate.
+    var opts = card.querySelector('.ss-gcard__opts');
+    var toggle = card.querySelector('.ss-gcard__optbtn');
+    if (opts && opts.hidden) {
+      opts.hidden = false;
+      if (toggle) { toggle.setAttribute('aria-expanded', 'true'); toggle.classList.add('ss-gcard__optbtn--open'); }
+    }
+    card.classList.add('ss-gcard--highlight');
+    root.setTimeout(function () { card.classList.remove('ss-gcard--highlight'); }, 1600);
+    try { card.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
   }
 
   // ── AI Wig Match flagship flow ─────────────────────────────────────────
@@ -1298,16 +1736,23 @@
     var best = sorted[0];
     var rest = sorted.slice(1);
     state.lastResultCount = sorted.length;
+    var before = state.selfieDataUrl || '';
     var allItems = sorted.map(function (rec) {
-      return { src: rec.previewDataUrl || '', title: rec.title || '', why: rec.whyItFitsFace || '' };
+      return { src: rec.previewDataUrl || '', before: before, title: rec.title || '', why: rec.whyItFitsFace || '' };
     });
     var hasScores = !!(analysis && analysis.scores && typeof analysis.scores === 'object' &&
                        Object.keys(analysis.scores).length);
 
-    // Featured best match.
+    // Featured best match — honest before→after slider (selfie → AI wig result).
     var bestCard = elt('article', 'ss-wig-best');
     var bSrc = best.previewDataUrl || '';
-    if (bSrc) {
+    if (bSrc && before) {
+      var baWrap = elt('div', 'ss-wig-best__figure ss-wig-best__figure--ba');
+      var ba = buildBeforeAfter(bSrc, before, function () { openViewer(allItems, 0); });
+      baWrap.appendChild(ba);
+      baWrap.appendChild(elt('span', 'ss-wig-best__badge', t('wigBest')));
+      bestCard.appendChild(baWrap);
+    } else if (bSrc) {
       var fig = elt('button', 'ss-wig-best__figure'); fig.type = 'button';
       fig.setAttribute('aria-label', t('expand'));
       var img = doc.createElement('img'); img.className = 'ss-wig-best__img';
@@ -1322,10 +1767,12 @@
     if (hasScores) bBody.appendChild(elt('span', 'ss-wig-fit-chip', t('wigNaturalFit')));
     if (best.whyItFitsFace) bBody.appendChild(elt('p', 'ss-wig-best__why', best.whyItFitsFace));
     if (best.maintenance) bBody.appendChild(elt('p', 'ss-card__meta', best.maintenance));
-    bBody.appendChild(buildActions(bSrc, best.styleId || best.title || 'best-wig', allItems, 0));
+    var bestRec = { mode: 'wig', title: best.title || 'best-wig', why: best.whyItFitsFace || '', sessionId: state.sessionId, styleId: best.styleId || '' };
+    bBody.appendChild(buildActions(bSrc, best.styleId || best.title || 'best-wig', allItems, 0, bestRec));
     bestCard.appendChild(bBody);
     host.appendChild(bestCard);
     cacheLocal(state.sessionId, best.styleId || '', bSrc);
+    recordLook('wig', best.title || 'best-wig', best.whyItFitsFace || '', state.sessionId, best.styleId || '');
 
     // Remaining wig options as a swipeable carousel (indexes 1..n into allItems).
     if (rest.length) {
@@ -1349,10 +1796,12 @@
         if (hasScores) body.appendChild(elt('span', 'ss-wig-fit-chip', t('wigNaturalFit')));
         if (rec.whyItFitsFace) body.appendChild(elt('p', 'ss-card__why', rec.whyItFitsFace));
         if (rec.maintenance) body.appendChild(elt('p', 'ss-card__meta', rec.maintenance));
-        body.appendChild(buildActions(src, rec.styleId || rec.title || ('wig-' + idx), allItems, idx));
+        var rRec = { mode: 'wig', title: rec.title || ('wig-' + idx), why: rec.whyItFitsFace || '', sessionId: state.sessionId, styleId: rec.styleId || '' };
+        body.appendChild(buildActions(src, rec.styleId || rec.title || ('wig-' + idx), allItems, idx, rRec));
         card.appendChild(body);
         track.appendChild(card);
         cacheLocal(state.sessionId, rec.styleId || '', src);
+        recordLook('wig', rec.title || ('wig-' + idx), rec.whyItFitsFace || '', state.sessionId, rec.styleId || '');
       });
       host.appendChild(track);
       if (sorted.length > 1) {
@@ -1360,6 +1809,7 @@
         host.appendChild(hint);
       }
     }
+    if (state.isCustomer) { var ap = doc.getElementById('ssAccountPanel'); if (ap && !ap.hidden) renderAccountPanel(); }
     try { bestCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
     logUi({ event: 'wig-rendered' });
   }
@@ -1427,25 +1877,140 @@
   }
 
   // ── Account control (top bar) ──────────────────────────────────────────
+  function profileIcon() {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>';
+  }
   function renderAccount() {
     var host = doc.getElementById('ssAccount');
     if (!host) return;
     host.innerHTML = '';
     if (state.isCustomer) {
       var label = state.account.name || state.account.phone || t('myAccount');
-      var chip = elt('span', 'ss-account__chip', label);
+      // The chip is now a button: tapping it opens the account panel
+      // (profile + Favorites + Saved looks). Stays signed in until Logout.
+      var chip = elt('button', 'ss-account__chip ss-account__chip--btn');
+      chip.type = 'button';
       chip.setAttribute('title', label);
+      chip.setAttribute('aria-label', t('myAccount'));
+      var ic = elt('span', 'ss-account__avatar'); ic.innerHTML = profileIcon();
+      chip.appendChild(ic);
+      chip.appendChild(elt('span', 'ss-account__name', label));
+      chip.addEventListener('click', openAccountPanel);
       var out = elt('button', 'ss-account__logout', t('logout'));
       out.type = 'button';
       out.addEventListener('click', onLogout);
       host.appendChild(chip);
       host.appendChild(out);
     } else {
-      var login = elt('button', 'ss-account__login', t('logInOrSignUp'));
+      var login = elt('button', 'ss-account__login');
       login.type = 'button';
+      var lic = elt('span', 'ss-account__login-ic'); lic.innerHTML = profileIcon();
+      login.appendChild(lic);
+      login.appendChild(elt('span', null, t('logInOrSignUp')));
       login.addEventListener('click', function () { openAuthPanel('login'); });
       host.appendChild(login);
     }
+  }
+
+  // ── Customer account panel (profile + Favorites + Saved looks) ──────────
+  // Inline, non-trapping panel (like the auth panel). Favorites + history are
+  // LOCAL only (localStorage) — no Firestore reads/writes, no image uploads.
+  function openAccountPanel() {
+    state.acctTab = state.acctTab || 'history';
+    renderAccountPanel();
+    var panel = doc.getElementById('ssAccountPanel');
+    if (panel) {
+      panel.hidden = false;
+      try { panel.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+    }
+  }
+  function closeAccountPanel() {
+    var panel = doc.getElementById('ssAccountPanel');
+    if (panel) { panel.hidden = true; panel.innerHTML = ''; }
+  }
+  function renderAccountPanel() {
+    var panel = doc.getElementById('ssAccountPanel');
+    if (!panel) return;
+    panel.innerHTML = '';
+    var tab = state.acctTab === 'favorites' ? 'favorites' : 'history';
+
+    var card = elt('div', 'ss-acct__card');
+    card.setAttribute('role', 'group');
+    card.setAttribute('aria-label', t('accountTitle'));
+
+    var head = elt('div', 'ss-acct__head');
+    var who = elt('div', 'ss-acct__who');
+    var av = elt('span', 'ss-acct__avatar'); av.innerHTML = profileIcon();
+    who.appendChild(av);
+    var meta = elt('div', 'ss-acct__meta');
+    meta.appendChild(elt('strong', 'ss-acct__name', state.account.name || t('myAccount')));
+    if (state.account.phone) meta.appendChild(elt('span', 'ss-acct__phone', state.account.phone));
+    who.appendChild(meta);
+    head.appendChild(who);
+    var close = elt('button', 'ss-auth__close', '×');
+    close.type = 'button'; close.setAttribute('aria-label', t('close'));
+    close.addEventListener('click', closeAccountPanel);
+    head.appendChild(close);
+    card.appendChild(head);
+
+    // Tabs (segmented, never a select).
+    var tabs = elt('div', 'ss-acct__tabs'); tabs.setAttribute('role', 'group');
+    [['history', 'tabHistory'], ['favorites', 'tabFavorites']].forEach(function (pair) {
+      var b = elt('button', 'ss-acct__tab', t(pair[1]));
+      b.type = 'button';
+      var on = pair[0] === tab;
+      b.classList.toggle('ss-acct__tab--active', on);
+      b.setAttribute('aria-pressed', String(on));
+      b.addEventListener('click', function () { state.acctTab = pair[0]; renderAccountPanel(); });
+      tabs.appendChild(b);
+    });
+    card.appendChild(tabs);
+
+    var list = loadStore(tab === 'favorites' ? FAV_KEY : HISTORY_KEY);
+    if (!list.length) {
+      card.appendChild(elt('p', 'ss-acct__empty', t(tab === 'favorites' ? 'noFavorites' : 'noHistory')));
+    } else {
+      var grid = elt('div', 'ss-acct__grid');
+      list.forEach(function (rec) {
+        grid.appendChild(buildAccountLook(rec, tab));
+      });
+      card.appendChild(grid);
+      if (tab === 'favorites') card.appendChild(elt('p', 'ss-acct__hint', t('favoritesHint')));
+    }
+    panel.appendChild(card);
+  }
+  // A saved/favorited look tile. The image is read back from the on-device
+  // cache (MobileBarberAIPreview) — text reference only is persisted in the store.
+  function buildAccountLook(rec, tab) {
+    var tile = elt('article', 'ss-acct__look');
+    var cached = readCachedImage(rec.sessionId, rec.styleId);
+    var item = { src: cached, before: state.selfieDataUrl || '', title: rec.title || '', why: rec.why || '' };
+    if (cached) {
+      var fig = elt('button', 'ss-acct__look-fig'); fig.type = 'button';
+      fig.setAttribute('aria-label', t('expand'));
+      var img = doc.createElement('img'); img.className = 'ss-acct__look-img';
+      img.src = cached; img.alt = rec.title || ''; img.loading = 'lazy';
+      fig.appendChild(img);
+      fig.addEventListener('click', function () { openAccountPanelLook(item); });
+      tile.appendChild(fig);
+    } else {
+      var ph = elt('div', 'ss-acct__look-ph'); ph.innerHTML = showcaseIcon('stylist');
+      tile.appendChild(ph);
+    }
+    var body = elt('div', 'ss-acct__look-body');
+    if (rec.title) body.appendChild(elt('strong', 'ss-acct__look-title', rec.title));
+    if (tab === 'favorites') {
+      var rm = elt('button', 'ss-acct__look-rm', t('removeFavorite'));
+      rm.type = 'button';
+      rm.addEventListener('click', function () { removeFavorite(rec); renderAccountPanel(); });
+      body.appendChild(rm);
+    }
+    tile.appendChild(body);
+    return tile;
+  }
+  function openAccountPanelLook(item) {
+    if (!item || !item.src) return;
+    openViewer([item], 0);
   }
 
   // ── Inline (non-trapping) login / signup panel ─────────────────────────
@@ -1761,8 +2326,9 @@
     applyI18n();
     buildGoalChips();
     buildAudienceSeg();
-    buildAccordion();
+    buildGallery();
     buildShowcase();
+    buildTestimonials();
     syncLangButtons();
     renderAccount();
     refreshButtons();
@@ -1771,7 +2337,7 @@
     logUi({ event: 'init' });
   }
 
-  root.StyleStudioPublic = { init: init, setLang: setLang, _t: t, _state: state, _strings: SS_STRINGS, _openViewer: openViewer, _closeViewer: closeViewer, _onWigGenerate: onWigGenerate, _buildShowcase: buildShowcase, _openAuthPanel: openAuthPanel, _closeAuthPanel: closeAuthPanel, _customerEmailForPhone: customerEmailForPhone, _normalizePhone: normalizePhone, _isCustomerUser: isCustomerUser };
+  root.StyleStudioPublic = { init: init, setLang: setLang, _t: t, _state: state, _strings: SS_STRINGS, _openViewer: openViewer, _closeViewer: closeViewer, _onWigGenerate: onWigGenerate, _buildShowcase: buildShowcase, _buildGallery: buildGallery, _buildTestimonials: buildTestimonials, _openAuthPanel: openAuthPanel, _closeAuthPanel: closeAuthPanel, _openAccountPanel: openAccountPanel, _closeAccountPanel: closeAccountPanel, _customerEmailForPhone: customerEmailForPhone, _normalizePhone: normalizePhone, _isCustomerUser: isCustomerUser };
 
   if (doc.readyState === 'loading') {
     doc.addEventListener('DOMContentLoaded', init);

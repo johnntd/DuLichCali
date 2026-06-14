@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a2344">
+  <title>AI Style Studio · Du Lich Cali</title>
+  <meta name="description" content="AI Master Stylist — upload a selfie and let AI create your best look. Try hairstyles, colors, eyebrows, beards, wigs, and event looks with AI.">
+  <meta property="og:title" content="AI Style Studio · Du Lich Cali">
+  <meta property="og:description" content="AI Master Stylist — upload a selfie and let AI design your best look.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,300;0,6..96,400;1,6..96,300;1,6..96,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/style.css?v=20260419m">
+  <link rel="stylesheet" href="/desktop.css">
+  <link rel="stylesheet" href="/style-studio.css?v=20260613b">
+
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5S0P4XMCJR"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-5S0P4XMCJR');
+  </script>
+  <script src="/analytics.js?v=20260420a"></script>
+</head>
+<body>
+<div class="ss-page">
+
+  <header class="app-bar">
+    <a href="/" class="app-bar__brand" style="text-decoration:none; color:var(--cream);">✦ Du Lich Cali</a>
+    <a href="mailto:dulichcali21@gmail.com" class="app-bar__call">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/>
+      </svg>
+      Email
+    </a>
+  </header>
+
+  <!-- 1. Language switcher -->
+  <div class="ss-lang" id="ssLang" role="group" aria-label="Language">
+    <button class="ss-lang__btn" type="button" data-lang="en">EN</button>
+    <button class="ss-lang__btn" type="button" data-lang="vi">VI</button>
+    <button class="ss-lang__btn" type="button" data-lang="es">ES</button>
+  </div>
+
+  <!-- 2. HERO — AI Master Stylist (flagship) -->
+  <section class="ss-hero">
+    <div class="ss-hero__inner">
+      <span class="ss-hero__chip"><span aria-hidden="true">✨</span> <span data-ss-i18n="heroChip"></span></span>
+      <h1 class="ss-hero__title" data-ss-i18n="heroTitle"></h1>
+      <p class="ss-hero__sub" data-ss-i18n="heroSub"></p>
+
+      <div class="ss-flagship">
+        <label class="ss-consent">
+          <input type="checkbox" id="ssConsent">
+          <span data-ss-i18n="consent"></span>
+        </label>
+
+        <div class="ss-field">
+          <label class="ss-upload">
+            <span class="ss-upload__btn" id="ssUploadBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3.5"/></svg>
+              <span data-ss-i18n="uploadCta"></span>
+            </span>
+            <input type="file" id="ssSelfieInput" accept="image/*">
+          </label>
+        </div>
+
+        <div class="ss-field">
+          <label class="ss-field__label" for="ssGoal" data-ss-i18n="goalLabel"></label>
+          <select class="ss-select" id="ssGoal"></select>
+        </div>
+
+        <button class="ss-cta" id="ssGenerateBest" type="button" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 9.5 9.5 3 12l6.5 2.5L12 21l2.5-6.5L21 12l-6.5-2.5Z"/></svg>
+          <span data-ss-i18n="generateBest"></span>
+        </button>
+
+        <span class="ss-status" id="ssStatus"></span>
+
+        <div class="ss-master-result" id="ssMasterResult"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Launch banner -->
+  <div class="ss-banner" id="ssLaunchBanner">
+    <span class="ss-banner__icon" aria-hidden="true">🎁</span>
+    <span data-ss-i18n="banner"></span>
+  </div>
+
+  <!-- 4. Manual modes -->
+  <section class="ss-modes" id="ssModes">
+    <div class="ss-modes__head">
+      <h2 class="ss-modes__title" data-ss-i18n="modesTitle"></h2>
+      <p class="ss-modes__sub" data-ss-i18n="modesSub"></p>
+    </div>
+    <div class="ss-audience-wrap">
+      <label for="ssAudience" data-ss-i18n="audienceLabel"></label>
+      <select class="ss-select ss-audience" id="ssAudience"></select>
+    </div>
+    <div class="ss-accordion" id="ssAccordion"></div>
+    <div id="ssModesResults"></div>
+  </section>
+
+  <!-- 5. Membership / login wall (hidden until the free limit is reached) -->
+  <section class="ss-membership" id="ssMembershipPrompt" hidden>
+    <div class="ss-membership__icon" aria-hidden="true">✦</div>
+    <h2 class="ss-membership__title" data-ss-i18n="membershipTitle"></h2>
+    <p class="ss-membership__sub" data-ss-i18n="membershipPrompt"></p>
+    <a class="ss-membership__cta" id="ssMembershipCta" href="/mobile-barber/" data-ss-i18n="membershipCta"></a>
+  </section>
+
+  <!-- 6. Privacy note -->
+  <p class="ss-privacy">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
+    <span data-ss-i18n="privacyNote"></span>
+  </p>
+
+  <!-- 7. Back home -->
+  <a href="/" class="ss-back" data-ss-i18n="backHome"></a>
+
+</div>
+
+<!-- Firebase compat SDK + anon-auth + Style Studio engine -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+<script>
+  var firebaseConfig = {
+    apiKey:            'AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ',
+    authDomain:        'dulichcali-booking-calendar.firebaseapp.com',
+    projectId:         'dulichcali-booking-calendar',
+    storageBucket:     'dulichcali-booking-calendar.appspot.com',
+    messagingSenderId: '623460884698',
+    appId:             '1:623460884698:web:a08bd435c453a7b4db05e3'
+  };
+  if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+</script>
+<script src="/mobile-barber/mobile-barber-ai-preview.js?v=20260613a"></script>
+<script src="/mobile-barber/mobile-barber-lightbox.js?v=20260530f"></script>
+<script src="/style-studio-public.js?v=20260613b"></script>
+</body>
+</html>

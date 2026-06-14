@@ -64,6 +64,7 @@
       { "source": "/vendor-subscription",  "destination": "/vendor-subscription.html" },
       { "source": "/vendor-signup",         "destination": "/vendor-signup.html" },
       { "source": "/security-alerts",       "destination": "/security-alerts.html" },
+      { "source": "/style-studio",          "destination": "/style-studio.html" },
       { "source": "/driver",                "destination": "/driver/dashboard.html" },
       { "source": "/driver/login",          "destination": "/driver/login.html" },
       { "source": "/mobile-barber",         "destination": "/mobile-barber/index.html" },

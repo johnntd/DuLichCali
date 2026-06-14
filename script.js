@@ -282,6 +282,12 @@ var _UI_STRINGS = {
     chatPh:'Ask about tours, prices, bookings...',
     bookingPendingReview:'Booking received. The provider will review it and confirm the final details.',
     bookingBlocked:'This booking cannot be submitted automatically. Please call us for help.',
+    catNails:'Nail Salon', catHair:'Hair Salon', catFood:'Food', catBarber:'Mobile Barber',
+    catStyleStudio:'AI Style Studio',
+    studioCardName:'AI Style Studio',
+    studioCardSub:'Try hairstyles, wigs, colors, eyebrows, beards, and event looks with AI.',
+    studioCardCity:'Powered by AI · All of California',
+    studioCardCta:'Try It Free',
   },
   vi: {
     navHome:'Trang Chủ', navTravel:'Du Lịch', navMarket:'Mua Sắm', navRides:'Đặt Xe', navTranslate:'Dịch Thuật',
@@ -307,6 +313,12 @@ var _UI_STRINGS = {
     chatPh:'Nhắn tin Du Lịch Cali...',
     bookingPendingReview:'Đã nhận đặt chỗ. Nhà cung cấp sẽ xem lại và xác nhận thông tin cuối cùng.',
     bookingBlocked:'Không thể tự động gửi đặt chỗ này. Vui lòng gọi chúng tôi để được hỗ trợ.',
+    catNails:'Tiệm Nail', catHair:'Tiệm Tóc', catFood:'Ẩm Thực', catBarber:'Cắt Tóc Lưu Động',
+    catStyleStudio:'Phòng Tạo Mẫu AI',
+    studioCardName:'Phòng Tạo Mẫu AI',
+    studioCardSub:'Thử kiểu tóc, tóc giả, màu tóc, chân mày, râu và kiểu cho sự kiện với AI.',
+    studioCardCity:'Hỗ trợ bởi AI · Toàn California',
+    studioCardCta:'Dùng Thử Miễn Phí',
   },
   es: {
     navHome:'Inicio', navTravel:'Viajes', navMarket:'Mercado', navRides:'Paseos', navTranslate:'Traducir',
@@ -332,6 +344,12 @@ var _UI_STRINGS = {
     chatPh:'Mensaje a Du Lich Cali...',
     bookingPendingReview:'Reserva recibida. El proveedor la revisará y confirmará los detalles finales.',
     bookingBlocked:'Esta reserva no se puede enviar automáticamente. Llámanos para recibir ayuda.',
+    catNails:'Salón de Uñas', catHair:'Peluquería', catFood:'Comida', catBarber:'Barbero a Domicilio',
+    catStyleStudio:'Estudio de Estilo IA',
+    studioCardName:'Estudio de Estilo IA',
+    studioCardSub:'Prueba peinados, pelucas, colores, cejas, barbas y looks de evento con IA.',
+    studioCardCity:'Impulsado por IA · Toda California',
+    studioCardCta:'Pruébalo Gratis',
   }
 };
 
@@ -367,6 +385,12 @@ window.setUiLang = function(lang) {
   });
   // Sync ride intake module if loaded
   if (window.RideIntake && RideIntake.setLang) RideIntake.setLang(lang);
+  // Homepage vendor cards are rendered as raw HTML (not data-i18n elements),
+  // so their category labels / localized routing-card text won't update via
+  // _applyUiLang. Re-render them so labels follow the language switcher.
+  if (typeof renderHomepageVendors === 'function') {
+    try { renderHomepageVendors(window.DLCRegion?.current?.id || null); } catch (_) {}
+  }
 };
 
 // Close language dropdown when tapping outside it
@@ -2039,8 +2063,14 @@ function getFeaturedVendors(regionId) {
     .sort((a, b) => (a.featuredPriority || 99) - (b.featuredPriority || 99));
 }
 
-function _hpCatLabel(c)  { return { nails: 'Nail Salon', hair: 'Hair Salon', food: 'Food', barber: 'Mobile Barber' }[c] || c; }
-function _hpCatAccent(c) { return { nails: '#f472b6', hair: '#38bdf8', food: '#f59e0b', barber: '#22c55e' }[c] || 'var(--gold)'; }
+// Category label — routed through the site i18n table (_UI_STRINGS via _uiText)
+// so the label respects the vi/en/es language switcher. Keep the raw category
+// as the final fallback for any unmapped value (never hardcode a localized string).
+function _hpCatLabel(c) {
+  var key = { nails: 'catNails', hair: 'catHair', food: 'catFood', barber: 'catBarber', 'style-studio': 'catStyleStudio' }[c];
+  return key ? _uiText(key) : (c || '');
+}
+function _hpCatAccent(c) { return { nails: '#f472b6', hair: '#38bdf8', food: '#f59e0b', barber: '#22c55e', 'style-studio': '#a855f7' }[c] || 'var(--gold)'; }
 
 // Normalize a vendor region string to a region ID ('oc', 'bayarea', 'la', …)
 function _regionMatchesId(regionStr, regionId) {
@@ -2053,9 +2083,40 @@ function _regionMatchesId(regionStr, regionId) {
 }
 
 // ── HTML builders ─────────────────────────────────────────────
-const _CAT_PATHS = { nails: 'nailsalon/', hair: 'hairsalon/', food: 'foods/', barber: 'https://www.dulichcali21.com/mobile-barber' };
+const _CAT_PATHS = { nails: 'nailsalon/', hair: 'hairsalon/', food: 'foods/', barber: 'https://www.dulichcali21.com/mobile-barber', 'style-studio': '/style-studio' };
 
 const HOMEPAGE_MARKETPLACE_ENTRIES = [
+  {
+    // Prominent, region-agnostic routing card → /style-studio. Surfaced at the
+    // top of the Marketplace panel (lowest featuredPriority sorts first). Its
+    // display fields are localized via the nameKey/promoKey/cityKey/ctaKey i18n
+    // keys below (resolved in buildVendorCardHtml) so the card respects the
+    // vi/en/es switcher.
+    id: 'ai-style-studio',
+    category: 'style-studio',
+    active: true,
+    homepageActive: true,
+    featuredPriority: 0.5,
+    // No featuredRegions → shown in every region (handled below). _allRegions
+    // tells _withHomepageMarketplaceEntries to skip its region filter, and
+    // _skipVendorPoolCheck skips the active-provider gate (it's a static tool,
+    // not a vendor pool).
+    _allRegions: true,
+    _skipVendorPoolCheck: true,
+    nameKey: 'studioCardName',
+    promoKey: 'studioCardSub',
+    cityKey: 'studioCardCity',
+    ctaKey:  'studioCardCta',
+    name: 'AI Style Studio',
+    city: 'Powered by AI · All of California',
+    shortPromoText: 'Try hairstyles, wigs, colors, eyebrows, beards, and event looks with AI.',
+    heroImage: '/assets/mobile-barber/styles/modern-styling.jpg',
+    heroGradient: 'linear-gradient(135deg,#2e1065 0%,#7c3aed 50%,#172554 100%)',
+    href: '/style-studio',
+    ctaText: 'Try It Free',
+    availabilityLabel: 'Try Now',
+    availabilityStatus: 'now'
+  },
   {
     id: 'mobile-barber-oc',
     category: 'barber',
@@ -2096,13 +2157,18 @@ function _withHomepageMarketplaceEntries(vendors, regionId) {
   const list = Array.isArray(vendors) ? vendors.slice() : [];
   HOMEPAGE_MARKETPLACE_ENTRIES.forEach(entry => {
     if (!entry.active || !entry.homepageActive || !_isVendorActive(entry.id)) return;
-    if (regionId && !(entry.featuredRegions || []).includes(regionId)) return;
+    // Region-agnostic entries (e.g. AI Style Studio, a static tool that serves
+    // all of California) opt out of the per-region filter via _allRegions.
+    if (!entry._allRegions && regionId && !(entry.featuredRegions || []).includes(regionId)) return;
     // CRITICAL: never surface a region routing card whose underlying provider
     // pool is empty. e.g. don't show "Mobile Barber — OC" if there are zero
     // active barbers serving OC. Falls open ONLY when the cache hasn't loaded
     // yet AND the static catalog also has zero entries (very edge-case).
-    const targetRegion = (entry.featuredRegions || [])[0] || regionId || null;
-    if (!_hasActiveVendorInCategory(entry.category, targetRegion)) return;
+    // Entries flagged _skipVendorPoolCheck (static tools, not vendor pools) bypass.
+    if (!entry._skipVendorPoolCheck) {
+      const targetRegion = (entry.featuredRegions || [])[0] || regionId || null;
+      if (!_hasActiveVendorInCategory(entry.category, targetRegion)) return;
+    }
     // Tag with the bypass flag so isPublicProviderVisible doesn't gate them
     // on business-hours (they're always-available routing placeholders).
     const tagged = Object.assign({}, entry, { _homepageMarketplaceEntry: true });
@@ -2150,7 +2216,15 @@ function buildVendorCardHtml(biz) {
     ? `background:${grad};background-image:url(${heroImg});background-size:cover;background-position:center`
     : `background:${grad}`;
   const trk = `HomepagePersonalizer.track('${safeCat}')`;
-  const cta = biz.ctaText ? `<span class="hp-vendor-card__cta">${_hpEsc(biz.ctaText)}</span>` : '';
+  // i18n-aware display fields: routing cards (e.g. AI Style Studio) carry
+  // nameKey/promoKey/cityKey/ctaKey so their text respects the vi/en/es
+  // switcher. Vendor-supplied names (from Firestore) have no key and render
+  // as-is. Never hardcode a localized literal here — go through _uiText.
+  const cardName = biz.nameKey  ? _uiText(biz.nameKey)  : biz.name;
+  const cardCity = biz.cityKey  ? _uiText(biz.cityKey)  : biz.city;
+  const cardPromo = biz.promoKey ? _uiText(biz.promoKey) : (biz.shortPromoText || biz.tagline);
+  const ctaText  = biz.ctaKey   ? _uiText(biz.ctaKey)   : biz.ctaText;
+  const cta = ctaText ? `<span class="hp-vendor-card__cta">${_hpEsc(ctaText)}</span>` : '';
 
   return `<a class="hp-vendor-card" role="listitem" href="${href}"
     onclick="${trk}">
@@ -2159,9 +2233,9 @@ function buildVendorCardHtml(biz) {
       <span class="hp-avail-badge hp-avail-badge--${_hpEsc(avail.status)}">${_hpEsc(avail.label)}</span>
     </div>
     <div class="hp-vendor-card__body">
-      <div class="hp-vendor-card__name">${_hpEsc(biz.name)}</div>
-      <div class="hp-vendor-card__city">${_hpEsc(biz.city)}</div>
-      <div class="hp-vendor-card__promo">${_hpEsc(biz.shortPromoText || biz.tagline)}</div>
+      <div class="hp-vendor-card__name">${_hpEsc(cardName)}</div>
+      <div class="hp-vendor-card__city">${_hpEsc(cardCity)}</div>
+      <div class="hp-vendor-card__promo">${_hpEsc(cardPromo)}</div>
       ${cta}
     </div>
   </a>`;

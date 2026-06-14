@@ -893,12 +893,17 @@ body.ss-viewer-open { overflow: hidden; }
   .ss-auth, .ss-acct,
   .ss-banner, .ss-modes, .ss-membership, .ss-privacy,
   .ss-showcase-wrap, .ss-wigmatch, .ss-testimonials {
-    max-width: var(--ss-maxw); margin-left: auto; margin-right: auto;
+    width: 100%; max-width: var(--ss-maxw); margin-left: auto; margin-right: auto;
   }
   .ss-hero { padding: 3.4rem 2.5rem 2.4rem; }
   .ss-hero__inner { max-width: var(--ss-maxw); margin: 0 auto; }
   .ss-modes { padding-left: 2.5rem; padding-right: 2.5rem; }
-  .ss-showcase { padding-left: 2.5rem; padding-right: 2.5rem; scroll-padding-left: 2.5rem; }
+  /* Desktop: show ALL showcase cards in a grid (no edge-clipping horizontal scroll). */
+  .ss-showcase {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1.2rem; overflow: visible;
+    padding-left: 2.5rem; padding-right: 2.5rem;
+  }
   .ss-showcase__title, .ss-testimonials__title { padding-left: 2.5rem; padding-right: 2.5rem; }
   /* Master + wig sections sit side-by-side feel via larger inner caps. */
   .ss-flagship { max-width: 680px; }
@@ -907,7 +912,7 @@ body.ss-viewer-open { overflow: hidden; }
   /* Gallery becomes a 3-col grid; showcase cards larger. */
   .ss-gallery { grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
   .ss-gcard__media { height: 230px; }
-  .ss-showcase-card { flex-basis: 32%; max-width: 420px; }
+  .ss-showcase-card { flex: none; max-width: none; }   /* grid item on desktop */
   .ss-showcase-card__media { height: 220px; }
 }
 
@@ -915,8 +920,7 @@ body.ss-viewer-open { overflow: hidden; }
 @media (min-width: 1200px) {
   .ss-gallery { grid-template-columns: repeat(4, 1fr); }
   .ss-gcard__media { height: 220px; }
-  .ss-showcase-card { flex-basis: 30%; max-width: 440px; }
-  .ss-showcase-card__media { height: 240px; }
+  .ss-showcase-card__media { height: 240px; }   /* showcase is a grid on desktop (≥1024) */
   /* The master result + wig best look read large on desktop. */
   .ss-master-card, .ss-wig-best { max-width: 520px; margin-left: auto; margin-right: auto; }
 }
